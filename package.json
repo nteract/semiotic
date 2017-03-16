@@ -1,7 +1,7 @@
 {
-  "name": "abacus-viz-framework",
+  "name": "semiotic",
   "version": "0.7.5",
-  "description": "The abacus-viz-framework JavaScript package",
+  "description": "The semiotic JavaScript package",
   "main": "lib/index.js",
   "files": [
     "lib"
@@ -21,7 +21,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "ssh://git@stash.corp.netflix.com:7999/abacus/abacus-viz-framework.git"
+    "url": "https://github.com/emeeks/semiotic.git"
   },
   "config": {
     "is-component": "y"
