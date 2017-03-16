@@ -6,9 +6,6 @@
   "files": [
     "lib"
   ],
-  "publishConfig": {
-    "registry": "http://artifacts.netflix.com/api/npm/npm-local"
-  },
   "scripts": {
     "build": "babel src -d lib && npm run less",
     "less": "lessc less/default.less less/default.css",
