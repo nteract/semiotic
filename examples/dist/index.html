@@ -1,0 +1,453 @@
+<!doctype html>
+<head>
+	<meta charset="utf-8">
+	<title>Abacus Viz Framework Examples</title>
+	<meta name="viewport" content="initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width">
+	<meta name="keywords" content="react,reactjs,react component,component,select,form,autocomplete,control,ui,javascript">
+	<link rel="stylesheet" href="example.css">
+</head>
+<body>
+	<header class="page-header">
+		<div class="container">
+			<img src="img/abacus.png"/>
+			<h1>Abacus</h1>
+			<h2>Viz Framework</h2>
+		</div>
+	</header>
+	<div class="sub-header">
+		<div class="container">
+			<p>
+				Documentation for the Abacus Viz Framework, <a href="https://stash.corp.netflix.com/projects/ABACUS/repos/abacus-viz-framework/browse">stash repo</a>.
+			</p>
+		</div>
+	</div>
+	<div class="page-body">
+		<div class="container">
+			<h2>Philosophy</h2>
+			<p>Abacus Viz Framework is a React-based library for creating data visualization products. It has two primary abstractions: marks and frames. The marks (which include the Mark component and the Glyph component) can be used without using any other components and are meant to be used in place of SVG elements. The frames (XYFrame which stands for a frame that has data plotted on an <b>X</b> & <b>Y</b> axes and ORFrame which stands for a frame that plots data on <b>O</b>rdinal and <b>R</b>ange axes) are designed to deploy common data visualization forms that share the same visualization techniques. You can use frames without ever touching any other components.</p>
+			<p>Frames are designed so that you can pass in data and get a variety of different data  visualization types based on simply changing the props of the frame. So the frame can be a pie chart if that's most suitable or a bar chart or histogram, based simply on adjusting the props that determine whether the data should be displayed in columns or arcs and whether or not it represents distributions or totals.</p>
+			<p>This isn't meant to be a charting library like ReCharts or Victory, but it should eventually have some LineChart, Scatterplot, BarChart and so on that make it easy enough to spin up those common charts. For now, the way to deploy a bar chart or pie chart or line chart with Abacus Viz Framework is to use the corresponding frame and change its settings to match up with those you see below.</p>
+			<p>While this currently relies on React, it only does so because it needs a mechanism for easily generating DOM elements in a one-to-many fashion.</p>
+			<h2>Contents</h2>
+			<ul>
+			<li><a href="#how-to-use">How To Use</a></li>
+			<li><a href="#elements">Elements</a></li>
+				<ul>
+					<li><a href="#mark">Mark</a></li>
+						<ul>
+							<li><a href="#mark-examples">Examples</a></li>
+						</ul>
+					<li><a href="#dividedLine">Divided Line</a></li>
+						<ul>
+							<li><a href="#dividedLine-examples">Examples</a></li>
+						</ul>
+					<li><a href="#visualization">MarkContext</a></li>
+						<ul>
+							<li><a href="#visualization-examples">Examples</a></li>
+						</ul>
+					</ul>
+					<li><a href="#axis">Axis</a></li>
+						<ul>
+							<li><a href="#axis-examples">Examples</a></li>
+						</ul>
+					</ul>
+			<li><a href="#frames">Frames</a></li>
+				<ul>
+					<li><a href="#xyFrame">XYFrame</a></li>
+						<ul>
+							<li><a href="#xyFramePoint-examples">Point Examples</a></li>
+							<li><a href="#xyFrame-examples-customlinetype">Custom Line Type Examples</a></li>
+							<li><a href="#xyFrame-examples-misc">Examples of axis, hover behavior, etc</a></li>
+							<li><a href="#xyFrame-examples-minimap">Brushable Minimap</a></li>
+							<li><a href="#custom-annotation-behavior">Custom Annotation Behavior</a></li>
+						</ul>
+					<li><a href="#orFrame">ORFrame</a></li>
+						<ul>
+							<li><a href="#orFramePiece-examples">Examples of bars, swarm & point</a></li>
+
+							<li><a href="#orFrameGroup-examples">Examples of aggregated viz (boxplot, violin, etc)</a></li>
+
+							<li><a href="#orFrameConnector-examples">Examples of connectors</a></li>
+
+						</ul>
+					<li><a href="#charts">Built in charts</a></li>
+						<ul>
+							<li><a href="#barLine-examples">Bar/Line Chart</a></li>
+
+						</ul>
+				</ul>
+			</ul>
+
+<!--			<li><a href="#frames">Charts</a></li>
+				<ul>
+					<li><a href="#lineChart">Line Chart</a></li>
+						<ul>
+							<li><a href="#lineChart-examples">Examples</a></li>
+						</ul>
+					<li><a href="#barChart">Bar Chart</a></li>
+						<ul>
+							<li><a href="#barChart-examples">Examples</a></li>
+						</ul>
+					<li><a href="#scatterplot">Scatterplot Chart</a></li>
+						<ul>
+							<li><a href="#scatterplot-examples">Examples</a></li>
+						</ul>
+				</ul>
+			<li><a href="#styling">Styling</a></li>
+			</ul>
+!-->
+
+			<h2 id="how-to-use">How To Use</h2>
+			<ol>
+				<li>Add this as a <code>.npmrc</code> file to the root of your repository so your app can access Netflix's internal npm packages.
+				<p><code>
+				_auth="YXJ0aXBpcGU6QVB2ZWo5VkdKczZDVnFraWozSGl0NXplNTE="
+				dev=false
+				always-auth=true
+				email=ArtifactoryAdmins@netflix.com
+				registry = http://artifacts.netflix.com/api/npm/npm-netflix
+				</code>
+				</p>
+
+				</li>
+				<li>Run the following in your project's root folder<p><code>npm i -SE abacus-viz-framework</code></p></li>
+				<li>To use a specific component you can import it. For example to access the Select component: <p><code>import { XYFrame } from 'abacus-viz-framework';</code></p> </li>
+			</ol>
+
+			<h2 id="elements">Elements</h2>
+			<p>The abacus-viz-framework package exposes a few individual elements that you can use if you want access to some built-in behavior like dragging or divided lines or sketchy rendering. These elements, known as Marks and Glyphs, are meant to be nested inside a MarkContext component. MarkContext takes marks as children.</p>
+			<img src="img/avf_children.png"/>
+			<div className="section" id="mark">
+	           	<h3 className="section-heading">Marks</h3>
+	            <p>Mark components take all the props of any traditional SVG object and create a g-wrapped element that can be draggable or might be rendered in a different method.
+	            </p>
+
+	            <h4>Props</h4>
+	            <p><b>draggable: (boolean)</b></p>
+	            <p>Enables drag-and-drop API so that the Translate attribute of the Mark is based on its state and that can be changed by clicking on the mark and dragging it.</p>
+	            <p><i>The blue square has draggable enabled. You can drag it anywhere on the canvas. Note that it does not update any data associated with the element, just its position.</i></p>
+	            <p><b>freezeX: (boolean)</b></p>
+	            <p>Dragging does not modify the x position of the Mark.</p>
+	            <p><b>freezeY: (boolean)</b></p>
+	            <p>Dragging does not modify the y position of the Mark.</p>
+	            <p><b>resetAfter: (boolean)</b></p>
+	            <p>Only works if draggable is set to true. This restores the element to its original position after dragging.</p>
+	            <p><i>The green square has draggable & resetAfter set to true. If you drag it, it will return to its starting position after moving it around.</i></p>
+	            <p><b>dropFunction: (fn)</b></p>
+	            <p>Only works if draggable is set to true and the Mark is in a MarkContext. This function is fired and sent the dragged Mark and the Mark that your cursor is currently over.</p>
+	            <p><b>markType: required(string)</b></p>
+	            <p>The markType string accepts any SVG:element type along with some abacus-viz-framework specific element types, currently limited to "verticalbar" and "horizontalbar". Each of these draws an svg:rect element but adjusts its y and x position to draw it using y as the baseline (for verticalbar) or x as the baseline (for horizontalbar) and drawing the rect out to the height specified with width set to the other dimension. This means that horizontal bar will have a screen "width" of its height setting.</p>
+	            <p><i>The red and gold bars both have the same x and y coordinates and the same height and width but the red bar is a "verticalbar" and the gold bar is a "horizontalbar".</i></p>
+	            <p><b>label: (string)</b></p>
+	            <p><b>hoverBehavior: (fn)</b></p>
+	            <p>Only works with a Mark that is a child of a MarkContext. Hover behavior defines a function to fire on a Mark that will update the "hover" uiContext of the parent MarkContext.</p>
+	            <p><b>renderMode: (string)</b></p>
+	            <p>You can render any mark as a sketchy mark by setting the renderMode to "sketchy".</p>
+	            <p><i>The orange square has renderMode set to "sketchy".</i></p>
+
+				<div id="mark-examples"></div>
+				<div id="drag-and-drop-examples"></div>
+			</div>
+
+			<div className="section" id="dividedLine">
+	           	<h3 className="section-heading">Divided Line</h3>
+
+	            <p>A line that's split into multiple paths based on a function that defines thresholds that the line might cross.
+	            </p>
+	            <p>The line below is sliced by this parameter function:</p>
+	            <p>function parameters(point) {
+			          if (point.x < 100) {
+			            return styleMap.before
+			          }
+			          if (point.x > 400) {
+			            return styleMap.after
+			          }
+			          if (point.y < 150) {
+			            return styleMap.above
+			          }
+			          if (point.y > 350) {
+			            return styleMap.below
+			          }
+			          return styleMap.normal
+			        }</p>
+	            <h4>Props</h4>
+	            <p><b>parameters: required(function)</b></p>
+	            <p>The test for each point that makes up the line to determine how the line should be dissected. For instance, if you wanted a line that was drawn red if it had a y value greater than 100 and black if not then you would pass to parameters:</p>
+<p class="code"><pre>
+d => d.y > 100 ? {stroke: "red"} : {stroke: "black"}
+</pre></p>
+
+				<div id="dividedLine-examples"></div>
+			</div>
+			<h2 id="frames">Frames</h2>
+			<p>Frames are a combination of MarkContext, AnnotationLayer and InteractionLayer with custom logic for rendering axes and annotations and processing data to produce the charts that exist within that frame's definition. They can be thought of as a step between a visualization kernel like D3 and a charting library.</p>
+			<img src="img/frame_model.png"/>
+			<p>While frames are rather abstract, they are designed to allow the data presented within them to transition from one mode to another smoothly and effectively, so that you can prep your data for an XYFrame and get back line charts or stacked area charts or other kinds of charts you might expect from that kind of data.</p>
+			<p>There are currently two kinds of frames available: XYFrame for data that maps two continuous ranges for things like line charts and scatterplots, and ORFrame for data that maps one continuous range of data and one categorical (or ordinal) class of data for things like histograms, beeswarm plots and pie charts.</p>
+			<h3>Shared Frame Props</h3>
+			<h4>General</h4>
+            <p><b>title: (string or JSX)</b></p>
+            <p>A string or JSX that is placed in a centered title on top of the chart. An additional 20px margin will be added to the top of the chart.</p>
+            <p><b>size: (array)</b></p>
+            <p>An array of [width,height] of the frame. Titles, margins and axes will be subtracted from the width and height for the final frame.</p>
+            <p><b>position: (array)</b></p>
+            <p>An array of [left,top] of the frame that offsets the visualization.</p>
+            <p><b>margin: (integer or object)</b></p>
+            <p>An integer for the overall margin or an object with {top: , bottom: , left: , right: } to describe the margin on each side. If it's not set, frames try to create smart margins, giving 50px for any axes and 30px top margin for a title. But once you send any specfic margin, no smart margins are set.</p>
+			<h4>Decoration</h4>
+            <p><b>backgroundGraphics: (JSX SVG elements)</b></p>
+            <p>Rendered behind the visualization</p>
+            <p><b>foregroundGraphics: (JSX SVG elements)</b></p>
+            <p>Rendered in front of the visualization (but still below the annotation layer)</p>
+			<h4>Annotation</h4>
+            <p><b>hoverAnnotation: (boolean)</b></p>
+            <p>Turn on voronoi-based hover annotation of the lines. There is a default behavior that exposes the data from the points, along with other options to allow you to customize hover behavior.</p>
+            <p><b>tooltipContent: (function returning JSX)</b> Allows you to set custom content for the hover box such as: tooltipContent={(d) => [< p>{moment(d.date).format("MMMM Do YYYY")}</ p>,< p>{numeral(d.value).format(yFormat)}</ p>]}</p>
+            <p><b>annotations: (array)</b> </p>
+            <p><b>svgAnnotationRules: (function returning JSX SVG elements)</b> </p>
+            <p><b>htmlAnnotationRules: (function returning JSX HTML elements)</b> </p>
+            <p><b>customClickBehavior: (function)</b></p>
+            <p>If hoverAnnotation is enabled, this fires a function whenever any annotation region is clicked. The function is passed { pieces, summary } associated with the annotation region in ORFrame or the datapoint associated with the annotation region in the XYFrame. </p>
+            <p><b>customHoverBehavior: (function)</b></p>
+            <p>If hoverAnnotation is enabled, this fires a function whenever any annotation region is moused over. The function is passed { pieces, summary } associated with the annotation region in ORFrame or the datapoint associated with the annotation region in the XYFrame. </p>
+
+			<div className="section" id="xyFrame">
+	           	<h3 className="section-heading">XYFrame</h3>
+
+	            <p>An XYFrame is useful when you want to visualize data that has two continuous dimensions. Typically this means line charts and scatterplots. Each axis is continuous, so it's showing a count of visitors over time or the number of visitors compared to the temperature for a scatterplot.
+	            </p>
+
+	            <h4>Props</h4>
+	            <h5>Shared</h5>
+	            <p><b>xAccessor: (function)</b></p>
+	            <p>A function describing how to access the x-coordinate of your line or point from each individual coordinate item in the array accessed using lineDataAccessor or pointDataAccessor. Defaults to d => d.x</p>
+            	<p><b>yAccessor: (function)</b></p>
+	            <p>A function describing how to access the y-coordinate of your line or point from each individual coordinate item in the array accessed using lineDataAccessor or pointDataAccessor. Defaults to d => d.y</p>
+	            <p><b>axes: (Array of Objects)</b></p>
+	            <p>An array of objects with entries corresponding to the parameters for an Axis component. The orient of the axis (top, bottom, left, right) determines which scale it uses for its generation.</p>
+				<h5>Points</h5>
+				Point-based charts (scatterplots primarily) can be generated by passing an array of point data to the points property. The points data uses the same x and y accessor functions as the line data and the overall range of the chart will consist of the maximum range of point and line data if shown together. Hover annotation works the same way, generating a voronoi overlay if hoverAnnotation is set to true.
+				<div id="xyFramePoint-examples"></div>
+				<p class="code"><pre>
+< XYFrame
+title="Points"
+size={[ 500,frameHeight ]}
+points={testData}
+xAccessor={d => d.x}
+yAccessor={d => d.y}
+pointStyle={d => ({ fill: d.color, stroke: "black", strokeWidth: 1 })}
+canvasPoints={(d,i) => i%3 === 0}
+customPointMark={
+(d,i) => i%2 ? < Mark markType="circle" r="5" /> :
+< Mark markType="rect" x={-4} y={-4} width={8} height={8} />
+}
+margin={10}
+/ >
+				</pre></p>
+	            <p><b>points: (array)</b></p>
+	            <p>An array of objects that have coordinates to draw your points. Your xAccessor and yAccessor props should correspond to how to derive x and y values from these points.</p>
+	            <p><b>customPointMark: (function returning JSX)</b></p>
+	            <p>A function that returns the mark each point represents. Do not apply style using this function use pointStyle.</p>
+	            <p><b>pointStyle: (function returning object)</b></p>
+	            <p>A function that returns the React-formated style object for each point.</p>
+	            <p><b>canvasPoints: (function returning boolean)</b></p>
+	            <p>Whether or not these points should be rendered with HTML5 canvas. Takes the data for the point and returns true to render to canvas.</p>
+				<h5>Lines</h5>
+				<p>Line data is an array of objects where each object has a set of coordinates in the coordinate system specified by your x and y accessors.</p>
+	            <p><b>lines: (array)</b></p>
+	            <p>An array of objects that have coordinates to draw your lines.</p>
+	            <p><b>lineDataAccessor: (function)</b></p>
+	            <p>A function describing how to access the coordinates of the lines. Defaults to d => d.coordinates</p>
+	            <p><b>lineStyle: (function returning object)</b></p>
+	            <p>A function returning a React-formatted style object.</p>
+	            <p><b>canvasLines: (function returning boolean)</b></p>
+	            <p>Whether or not these lines should be rendered with HTML5 canvas. Takes the data for the point and returns true to render to canvas.</p>
+	            <p><b>lineClass: (function returning String)</b> </p>
+	            <p>Used to set the class of the lines you generate based on the data.</p>
+	            <p><b>customLineType: (string or object)</b></p>
+	            <p>There are a few different ways you might represent your time series data. If you pass a string, it uses the default settings. If you pass an object it has the following possible settings:</p>
+	            <p><b>#customLineType.type: (string) required</b><p>
+	            <p>The object needs to have a type key that corresponds to one of the string values below that describes the kind of visualization method.</p>
+	            <p><b>#customLineType.interpolator: (d3v4 interpolator function)</b></p>
+	            <p>The interpolator to use. Defaults to curveLinear.</p>
+	            <p><b>#customLineType.sort: (sorting function)</b><p>
+	            <p>Sorting function (a,b) for stacked area charts. Defaults to total value of the line's yAccessor value over the entire line for stackedarea charts. Set to null to not sort at all.</p>
+	            <p>Each string value (or object key .type) corresponds to one of the following chart types:</p>
+	            <ul>
+	            <li><b>line</b>: (default) A simple line chart where the line's y position corresponds to its absolute value as declared in the xAccessor function.</li>
+	            <li><b>difference</b>: Only works on a line chart with two lines. Highlights the difference between the two trends, showing when one is higher than the other and the amoung of difference.</li>
+	            <li><b>stackedarea</b>: Creates a stacked area chart sorted so that the line with the greatest total value is on the bottom and then lines with lower values are stacked on top. Useful for showing cumulative magnitude as the primary data view, ratio as a secondary data view, while obscuring individual magnitude and numerically precise comparison between trends.</li>
+	            <li><b>bumpline</b>: Creates a bump line chart, which shows each line at its rank. Useful when rank is primarily important (like competitions) but it completely obscures the numerical values from which those ranks were derived.</li>
+	            <li><b>bumparea</b>: An area chart where the position at each step is determined by the rank of the line at that step. Like the stacked area chart, it shows cumulative magnitude and also encodes when individual trends surpass other trends. In charts with a lot of rank changes it can be too noisy.</li>
+	            </ul>
+				<div id="xyFrame-examples-customlinetype"></div>
+<p class="code"><pre>
+< XYFrame
+size={[ 500,frameHeight ]}
+lines={displayData}
+lineDataAccessor={d => d.data}
+xAccessor={d => d.x}
+yAccessor={d => d.y}
+lineStyle={d => ({ fill: d.color, fillOpacity: 0.5, stroke: d.color })}
+canvasLines={(d,i) => i%2 === 0}
+customLineType={this.state.customLineType}
+margin={10}
+/>
+
+Second chart:
+customLineType={{ type: this.state.customLineType, interpolator: curveBasis, sort: null }}
+
+</pre></p>
+	            <p><b>customLineMark: (JSX Element)</b> Allows you to send a custom defined line generator such as a DividedLine (example below). Remember to set a unique key if you are creating multiple lines.
+	            </p>
+<p class="code"><pre>
+customLineMark={(d,i) => < DividedLine
+lineDataAccessor={d => d.coordinates}
+interpolate={"basis"}
+xAccessor={d => d.x}
+yAccessor={d => d.y}
+data={d}
+key={"customline" + i}
+parameters= {d => d.x > 50 ? { strokeDasharray: "8 10"} : {} />}
+</pre></p>
+				<h4>Other Features</h4>
+	            <p><b>lineRenderMode: (function)</b></p>
+	            <p>Allows you to set a render function that corresponds to the renderMode exposed in the Mark. For instance, you could render all or some of your lines as "sketchy".</p>
+				<div id="xyFrame-examples-misc"></div>
+				<h4>MiniMapXYFrame</h4>
+				<p>The MiniMapXYFrame includes built-in functionality for a brushable mini-map, typically used to show a larger set of the data and allow the user to brush a subset. You define the minimap settings with the minimap property.</p>
+				<div id="xyFrame-examples-minimap"></div>
+<p class="code"><pre>
+updateDateRange (e) {
+    this.setState({ extent: e })
+}
+
+< MinimapXYFrame
+mini
+axes={axes}
+size={[ frameWidth, 300 ]}
+lines={finaldisplayData}
+lineDataAccessor={d => d.data.filter(p => p.x >= this.state.extent[0] && p.x <= this.state.extent[1])}
+xAccessor={d => d.x}
+yAccessor={d => d.y}
+lineStyle={d => ({ fill: d.color, fillOpacity: 0.5, stroke: d.color })}
+customLineType={{ type: this.state.customLineType, interpolator: curveHash[this.state.curve], sort: null }}
+minimap={
+{
+lineStyle: d => ({ fill: d.color, fillOpacity: 0.5, stroke: d.color }),
+customLineType: { type: this.state.customLineType,
+interpolator: curveHash[this.state.curve], sort: null },
+brushEnd: this.updateDateRange, yBrushable: false,
+xBrushExtent: this.state.extent, lines: finaldisplayData,
+lineDataAccessor: d => d.data, position: [ 0,-10 ],
+size: [ frameWidth, 150 ], axes: axes }
+}
+margin={5}
+/>
+</pre></p>
+				<h4 id="custom-annotation-behavior">Custom Annotation Behavior</h4>
+				<p>The example below exposes an HTML form (as an annotation type) whenever you click on the chart. The form let's you write an annotation and select one of the default-supported annotation types (x, y or xy) to display your annotation.</p>
+				<p>This requires a few steps:</p>
+				<ol>
+				<li>Enable hover annotation with hoverAnnotation={true}</li>
+				<li>Send this.state.annotations to the frame with annotations={this.state.annotations}</li>
+				<li>Define customClickBehavior to insert a form annotation in the annotations array</li>
+				<li>Create an HTML annotation rule for your "form" annotation type to generate your form when an annotation like this exists</li>
+				<li>On form submission, update the annotations array to have the new annotation and delete the form annotation</li>
+				</ol>
+				<p>Click on the frame below to enter and annotation. Select an annotation type from the dropdown and click submit and writing your annotation.</p>
+				<div id="xyFrame-examples-annotation"></div>
+			</div>
+			<div className="section" id="orFrame">
+	           	<h3 className="section-heading">ORFrame</h3>
+
+	            <p>ORFrames represent ordinal by range data, like bar charts, pie charts, boxplots and beeswarm plots. Currently only supports vertical and horizontal projection. Radial coming soon.
+	            </p>
+
+	            <h4>Props</h4>
+	            <p><b>oAccessor: (function)</b></p>
+	            <p>Returns the categorical value of data to split into columns or rows or pie slices. Defaults to array position.</p>
+	            <p><b>rAccessor: (function)</b></p>
+	            <p>Returns the range value for data. Defaults to d.value. Set to a fixed value for a fixed-height chart (like a single bar chart or a pie chart).</p>
+	            <p><b>data: (array)</b></p>
+	            <p>An array of data for rendering "pieces" (whether points in a swarm of scatterplot or pieces of bars are pie arcs) or "summaries" (boxplots and histograms and such).</p>
+	            <p><b>oLabel: (boolean or function returning JSX)</b></p>
+	            <p>If set to true will label each column/row with the oAccessor value. Otherwise, pass a function that takes (oAcessorValue, data) and returns the appropriate label JSX element for the column/row (this element will be nested in a < g > so it needs to be SVG).</p>
+	            <p><b>columnWidth: (string "fixed" or "relative")</b></p>
+	            <p>Whether the width of columns should be based on data. Defaults to fixed. Use relative for pie charts.</p>
+	            <p><b>projection: (string defaults to "vertical")</b></p>
+	            <p>Accepts "vertical", "horizontal", "radial" and draws the charts accordingly.</p>
+	            <p><b>axis: (Object or Array of Objects)</b></p>
+	            <p>An axis is only generated for the R side of the chart, and if you try to set the orient to the O side, it will override it. If you want to label the O side, use the oLabel prop.</p>
+
+	            <h4>Piece Rendering (Bar, Pie, Point & Swarm Charts)</h4>
+	            <p><b>type: (string or object)</b></p>
+	            <p>Any rendering of individual items in each category is covered by setting the type property of an ORFrame. If not set, then individual pieces will not be rendered. The current available types are: </p>
+	            <ul>
+	            <li><b>bar</b>: Represent the pieces as a bar in a bar chart. Pieces that make up the same bar can be rendered with different colors (to create a stacked bar chart) or with the same color.</li>
+	            <li><b>point</b>: Represent the pieces as points along a single axis scatterplot.</li>
+	            <li><b>swarm</b>: Represent the pieces as clustered points using a force simulation.</li>
+	            </ul>
+	            <div id="orFramePiece-examples"></div>
+	            <h4>Summary Rendering (Boxplot, Violin, Heatmap)</h4>
+	            <p><b>summaryType: (string or object)</b></p>
+	            <p>ORFrame provides a few mechanisms to summarize your pieces using tradtional summary/distribution visualization methods by setting summaryType. The current available types are:
+	            <ul>
+	            <li><b>boxplot</b>: (default) Represent the summary as a boxplot, which shows quantiles.</li>
+	            <li><b>violin</b>: Show the distribution as a violin plot which maps it to a mirrored polygon.</li>
+	            <li><b>heatmap</b>: Show the distribution as colored bars. This mode overrides any opacity style settings as opacity is used to show the density of pieces in that bucket.</li>
+	            <li><b>histogram</b>: Traditional bar chart representation of distribution.</li>
+	            <li><b>ekg</b>: Half a violin plot.</li>
+
+	            </ul>
+	            <p><b>summaryValueAccessor: (function)</b></p>
+	            <p>Summaries (except boxplot) bin values. By default, this function is set to binnedValues => binnedValues.length, so summaries show the number of values in the bin. If you want, you can instead show the average of the values or sum or any other summary value based on a bin of values such as binnedValues => d3.mean(binnedValues.map(p => p.someValue)).</p>
+				<div id="orFrameGroup-examples"></div>
+				<h4>Connector Rendering</h4>
+				<div id="orFrameConnector-examples"></div>
+			</div>
+			<div className="section" id="axis">
+	           	<h3 className="section-heading">Axis</h3>
+	           	<p>Abacus Viz Framework includes a simple wrapper for d3 v3 axis. You can send the axis settings as props to the component.</p>
+	            <h4>Props</h4>
+	            <p><b>size: (array)</b></p>
+	            <p>[width, height]</p>
+	            <p><b>position: (array)</b></p>
+	            <p>[left offset, top offset]</p>
+	            <p><b>tickSize: (int)</b></p>
+	            <p>Sets tickSize, but if not set, will be automatically calculated based on orientation and size of the axis.</p>
+	            <p><b>scale: (d3.scale instance)</b></p>
+	            <p>Sets the scale of the axis.</p>
+	            <p><b>ticks: (array)</b></p>
+	            <p>Specific ticks, otherwise uses default d3 axis tick generation.</p>
+	            <p><b>tickValues: (array)</b></p>
+	            <p>Specific tick values, otherwise uses default d3 axis tickValue generation.</p>
+	            <p><b>tickFormat: (formatting function)</b></p>
+	            <p>Species tick formatting function.</p>
+	            <p><b>format: (string)</b></p>
+	            <p>Convenience prop to send a numeral.js string to format ticks.</p>
+
+	        </div>
+
+			<div className="section" id="charts">
+			<h2>Built-in Charts</h2>
+			<p>There will be a few standard chart abstractions for common chart types that you'd need to compose using frames. Currently there aren't any implemented.</p>
+				<div id="barLine-examples"></div>
+			</div>
+
+
+			<h2 id="styling">Styling</h2>
+			<p><a href="https://stash.corp.netflix.com/projects/ABACUS/repos/abacus-viz-framework/browse/less/default.css">Basic CSS</a> (highly recommend)</p>
+			<p><a href="https://stash.corp.netflix.com/projects/ABACUS/repos/abacus-viz-framework/browse/examples/src/example.less">Example additions</a> to the basic styling used on this page</p>
+		</div>
+	</div>
+
+	<footer class="page-footer">
+		<div class="container">
+			<span>Made by DEA - Product Analytics, <a href="mailto:abacus-users@netflix.com">abacus-users@netflix.com</a></span>
+		</div>
+	</footer>
+	<script src="common.js"></script>
+	<script src="bundle.js"></script>
+	<script src="app.js"></script>
+</body>

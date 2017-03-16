@@ -1,0 +1,1 @@
+<g class=""><rect label="Test Mark" x="5" y="5" width="20" height="100" style="fill:pink;stroke:blue;" class=""></rect></g>

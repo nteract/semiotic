@@ -1,0 +1,200 @@
+
+
+// import select field styles
+@import "../../less/default.less";
+
+// Constants
+// ------------------------------
+@heading-color:                  black;
+@heading-bg:					 #464D70;
+@text-color:                     #333;
+@link-color:                     #8870CA;
+@light-link-color:               #bdb0e0;
+@red:                            #F9847C;
+@gutter:                         30px;
+
+
+@select-item-bg:                 fade(@link-color, 8%);
+@select-item-border-color:       fade(@link-color, 24%);
+@select-item-color:              @link-color;
+
+
+
+
+// Base
+// ------------------------------
+
+.annotation-xy-label {
+  background: white;
+  border: 1px solid black;
+  color: black;
+  padding: 10px;
+  bottom: -20px;
+  z-index: 99;
+}
+
+.annotation-xy-label:before {
+  background: white;
+  border-right: 1px solid black;
+  border-bottom: 1px solid black;
+  content: "";
+  padding: 0px;
+  transform: rotate(45deg);
+  width: 15px;
+  height: 15px;
+  position: absolute;
+  bottom: -10px;
+  left: 67px;
+  z-index: 99;
+}
+
+body {
+	color: @text-color;
+	font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+	font-size: 14px;
+	line-height: 1.4;
+	margin: 0;
+	padding: 0;
+}
+
+a {
+	color: @link-color;
+	text-decoration: none;
+
+	&:hover {
+		text-decoration: underline;
+	}
+}
+
+.container {
+	margin-left: auto;
+	margin-right: auto;
+	max-width: 400px;
+	padding: 0 @gutter;
+
+	img {
+		width: 100%;
+	}
+}
+
+
+// Headings
+// ------------------------------
+
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+	color: @heading-color;
+	font-weight: 500;
+	line-height: 1;
+	margin-bottom: .66em;
+	margin-top: 0;
+}
+
+h1, .h1 {
+	font-size: 3em;
+}
+h2, .h2 {
+	font-size: 2em;
+	font-weight: 300;
+	margin-top: 2em;
+}
+
+h3 {
+	text-transform: uppercase;
+	font-weight: 300;
+	font-size: 1.7em;
+	margin-top: 2em;
+}
+h4, .h4 {
+	font-size: 1.4em;
+	text-transform: uppercase;
+	margin-top: 2em;
+}
+h5, .h5 {
+	font-size: 1em;
+}
+h6, .h6 {
+	font-size: .75em;
+}
+
+
+// Layout
+// ------------------------------
+
+// common
+
+.page-footer,
+.page-header {
+	padding: @gutter 0;
+}
+
+// header
+
+.page-header {
+	background-color: @heading-bg;
+	color: mix(white, @heading-bg, 75%);
+	text-align: center;
+
+	h1, h2, h3 {
+		color: white;
+	}
+
+	img {
+		width: 150px;
+	}
+
+	p {
+		font-size: 1.2em;
+		margin: 0;
+	}
+	a {
+		border-bottom: 1px solid fade(white, 30%);
+		color: white;
+		text-decoration: none;
+
+		&:hover,
+		&:focus {
+			border-bottom-color: white;
+			outline: none;
+			text-decoration: none;
+		}
+	}
+}
+
+// footer
+.page-footer {
+	background-color: #fafafa;
+	// border-top: 1px solid #eee;
+	color: #999;
+	padding: @gutter 0;
+	text-align: center;
+
+	a {
+		color: black;
+	}
+}
+
+.domain {
+  fill: none;
+}
+
+.tick line {
+  stroke: lightgray;
+}
+
+rect.extent {
+	fill-opacity: 0.25;
+	stroke: black;
+	stroke-opacity: 0.75;
+}
+g.resize > rect {
+	fill-opacity: 0.25;
+	stroke: black;
+	stroke-opacity: 0.75;
+}
+
+#scrolly-frame {
+	position: fixed;
+	top: 0;
+	right: 0;
+}

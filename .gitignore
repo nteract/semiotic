@@ -1,0 +1,11 @@
+/tests/output/coverage/**/*
+/lib
+/.idea/
+.agignore
+.npmrc
+.nyc_output/
+/node_modules
+npm-debug.log
+logs/*
+*-compiled*
+build
