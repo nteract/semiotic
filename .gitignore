@@ -1,5 +1,4 @@
 /tests/output/coverage/**/*
-/lib
 /.idea/
 .agignore
 .npmrc
