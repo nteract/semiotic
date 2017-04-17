@@ -1,6 +1,6 @@
 {
   "name": "semiotic",
-  "version": "0.7.5",
+  "version": "1.0.0-alpha.0",
   "description": "The semiotic JavaScript package",
   "main": "lib/index.js",
   "files": [
@@ -59,7 +59,11 @@
     "sinon": "1.17.3",
     "tap-difflet": "0.4.0",
     "tap-notify": "1.0.0",
+    "react-dom": "15.4.0",
     "tape": "4.4.0"
+  },
+  "peerDependencies": {
+    "react": "^15.0.0"
   },
   "dependencies": {
     "assert": "1.4.1",
@@ -79,13 +83,10 @@
     "d3-transition": "1.0.3",
     "d3-voronoi": "1.0.2",
     "in-publish": "2.0.0",
+    "json2csv": "3.7.3",
     "lodash": "^4.11.1",
     "moment": "2.10.6",
-    "numeral": "^1.5.3",
-    "react": "15.4.0",
-    "react-bootstrap": "^0.27.3",
-    "react-dom": "15.4.0",
-    "rxjs": "5.0.3"
+    "numeral": "^1.5.3"
   },
   "nyc": {
     "exclude": [

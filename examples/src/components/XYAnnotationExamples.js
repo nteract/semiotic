@@ -55,7 +55,13 @@ class XYFrameExamples extends React.Component {
         this.clickPoint = this.clickPoint.bind(this)
         this.customHTMLRules = this.customHTMLRules.bind(this)
         this.updateAnnotations = this.updateAnnotations.bind(this)
-        this.state = { annotations: [] }
+        this.changeLineType = this.changeLineType.bind(this);
+
+        this.state = { annotations: [], lineType: "bumparea" }
+    }
+
+    changeLineType() {
+        this.setState({ lineType: this.state.lineType === "bumparea" ? "line" : "bumparea" });
     }
 
     clickPoint(d) {
@@ -88,14 +94,21 @@ class XYFrameExamples extends React.Component {
 
        const exampleAnnotations = [
         { x: 3, y: 3, type: "xy", label: "xy" },
+        { x: 4, id: "linedata-222", type: "xy", label: "xy ID" },
+        { x: 4, id: "linedata-3", type: "xy", label: "xy ID" },
+        { type: "enclose", rp: "top", rd: 25, coordinates: [ { x: 6, id: "linedata-3" }, { x: 6, id: "linedata-4" } ], label: "enclose ID" },
         { x: 3, y: 90, dy: -30, type: "x", label: "x" },
+        { x: { lineID: "line-1", pointID: "point-17" }, y: 90, dy: -30, type: "x", label: "x" },
         { x: 240, y: 3, type: "y", label: "y" },
         { type: "enclose", rp: "top", rd: 25, coordinates: [ { x: 1, y: 5 }, { x: 2, y: 8 }, { x: 2, y: 10 } ], label: "enclose" }
        ]
 
        const allAnnotations = [ ...exampleAnnotations, ...this.state.annotations ]
 
+       console.log(this.state.lineType)
+
         return <div>
+            <button onClick={this.changeLineType}>Change Type Line</button>
             <XYFrame
             size={[ 500,frameHeight ]}
             lines={displayData}
@@ -107,7 +120,7 @@ class XYFrameExamples extends React.Component {
             customClickBehavior={this.clickPoint}
             annotations={allAnnotations}
             htmlAnnotationRules={this.customHTMLRules}
-            customLineType={{ type: "bumparea", interpolator: curveCardinal, sort: null }}
+            customLineType={{ type: this.state.lineType, interpolator: curveCardinal, sort: null }}
             margin={10}
             />
             </div>

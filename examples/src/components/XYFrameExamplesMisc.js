@@ -108,6 +108,21 @@ class XYFrameExamplesMisc extends React.Component {
             axes={axes}
             margin={ 50 }
             />
+            <XYFrame
+            title="fixed single extent"
+            size={[ 500,400 ]}
+            lines={testData}
+            lineDataAccessor={d => d.data}
+            xAccessor={d => d.x}
+            yAccessor={d => d.y}
+            xExtent={[ undefined, 3 ]}
+            yExtent={[ undefined, 8 ]}
+            lineStyle={d => ({ fill: d.color, fillOpacity: 0.5, stroke: d.color })}
+            hoverAnnotation={true}
+            customLineType={"line"}
+            axes={axes}
+            margin={ 50 }
+            />
             </div>
 
     }

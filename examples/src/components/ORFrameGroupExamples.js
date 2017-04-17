@@ -1,8 +1,7 @@
 import React from 'react'
-import { ORFrame } from 'abacus-viz-framework';
+import { ORFrame } from 'abacus-viz-framework'
 import { randomNormal } from 'd3-random'
-
-import d3 from 'd3'
+import { sum } from 'd3-array'
 
 const colors = [
     "#00a2ce",
@@ -121,7 +120,7 @@ class ORFrameSummaryExamples extends React.Component {
               summaryType={"histogram"}
               data={testData}
               summaryStyle={(d) => ({ stroke: d.color, fill: d.color, fillOpacity: 0.5, strokeOpacity: 0.5 })}
-              summaryValueAccessor={(d) => d3.sum(d.map(p => p.value2))}
+              summaryValueAccessor={(d) => sum(d.map(p => p.value2))}
               oAccessor={d => d.color}
               rAccessor={d => d.value}
               oPadding={5}
@@ -136,7 +135,7 @@ class ORFrameSummaryExamples extends React.Component {
 <p className="code">{"size={[ 500,frameHeight ]}"}</p>
 <p className="code">{"summaryType={'histogram'}"}</p>
 <p className="code">{"summaryStyle={(d) => ({ stroke: d.color, fill: d.color, fillOpacity: 0.5, strokeOpacity: 0.5 })}"}</p>
-<p className="code">{"summaryValueAccessor={(d) => d3.sum(d.map(p => p.value2))}"}</p>
+<p className="code">{"summaryValueAccessor={(d) => sum(d.map(p => p.value2))}"}</p>
 <p className="code">{"oAccessor={d => d.color}"}</p>
 <p className="code">{"rAccessor={d => d.value}"}</p>
 <p className="code">{"style={d => {return { fill: d.color, fillOpacity: 0.5, stroke: d.color, strokeOpacity: 0 }}}"}</p>

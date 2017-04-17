@@ -27,8 +27,6 @@ export const projectLineData = ({ data, lineDataAccessor, xProp, yProp, yPropTop
 }
 
 export const differenceLine = ({ data, yProp, yPropTop, yPropBottom }) => {
-//  assert(data.length === 2 || data[0].data.length === data[1].data.length, 'Difference line line can only be created with an array of two sets of points where both have the same number of points');
-
   data.forEach((l, i) =>
     {
       l.data.forEach((point, q) => {
@@ -209,4 +207,19 @@ export function funnelize ({ data, steps, key }) {
 
   return funnelData
 
+}
+
+export function relativeY({ point, lines, projectedYMiddle, projectedY, projectedX, xAccessor, yAccessor, yScale, xScale, idAccessor }) {
+  if (idAccessor(point)) {
+    const thisLine = lines.find(l => idAccessor(l) ===  idAccessor(point))
+    if (!thisLine) {
+      return null
+    }
+    const thisPoint = thisLine.data.find(p => xScale(p[projectedX]) === xScale(xAccessor(point)))
+    if (!thisPoint) {
+      return null
+    }
+    point = thisPoint
+  }
+  return yScale(point[projectedYMiddle] || point[projectedY] || yAccessor(point))
 }

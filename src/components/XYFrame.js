@@ -14,15 +14,14 @@ import AnnotationLayer from './AnnotationLayer'
 import InteractionLayer from './InteractionLayer'
 import Axis from './Axis'
 import VisualizationLayer from './VisualizationLayer'
+import DownloadButton from './DownloadButton'
 
 import { line } from 'd3-shape'
-import { projectLineData, differenceLine, stackedArea, bumpChart, lineChart } from '../svg/lineDrawing'
-
+import { projectLineData, differenceLine, stackedArea, bumpChart, lineChart, relativeY } from '../svg/lineDrawing'
 import { annotationXYThreshold, annotationCalloutCircle } from 'd3-svg-annotation'
-
 import { calculateMargin } from '../svg/frameFunctions'
-
 import { packEnclose } from 'd3-hierarchy'
+import { xyDownloadMapping } from '../downloadDataMapping'
 
 let PropTypes = React.PropTypes;
 
@@ -100,8 +99,6 @@ class XYFrame extends React.Component {
         this.clickVoronoi = this.clickVoronoi.bind(this)
 
         this.changeZoom = this.changeZoom.bind(this)
-
-        this.adjustedPositionSize = this.adjustedPositionSize.bind(this)
 
         this.renderBody = this.renderBody.bind(this)
 
@@ -197,13 +194,14 @@ class XYFrame extends React.Component {
         return data => lineType({ ...options, data })
       }
 
-      let xExtent = currentProps.xExtent || zoomExtent && zoomExtent[0] || extent(fullDataset, d => d[projectedX])
-//      let yMin = currentProps.yExtent ? currentProps.yExtent[0] : zoomExtent && zoomExtent[1] || min(fullDataset, d => d[projectedY])
-//      let yMax = currentProps.yExtent ? currentProps.yExtent[1] : zoomExtent && zoomExtent[1] || max(fullDataset, d => d[projectedYAdjusted] && d[projectedOffset] ? d[projectedYAdjusted] + d[projectedOffset] : d[projectedY])
-      let yMin = currentProps.yExtent ? currentProps.yExtent[0] : zoomExtent && zoomExtent[0] || min(fullDataset.map(d => d[projectedYBottom] === undefined ? d[projectedY] : d[projectedYBottom]))
-      let yMax = currentProps.yExtent ? currentProps.yExtent[1] : zoomExtent && zoomExtent[1] || max(fullDataset.map(d => d[projectedYTop] === undefined ? d[projectedY] : d[projectedYTop]))
+      let xMin = currentProps.xExtent && currentProps.xExtent[0] !== undefined ? currentProps.xExtent[0] : zoomExtent && zoomExtent[0] && zoomExtent[0][0] || min(fullDataset.map(d => d[projectedX]))
+      let xMax = currentProps.xExtent && currentProps.xExtent[1] !== undefined ? currentProps.xExtent[1] : zoomExtent && zoomExtent[1] && zoomExtent[0][1] || max(fullDataset.map(d => d[projectedX]))
+
+      let yMin = currentProps.yExtent && currentProps.yExtent[0] !== undefined ? currentProps.yExtent[0] : zoomExtent && zoomExtent[0] && zoomExtent[1][0] || min(fullDataset.map(d => d[projectedYBottom] === undefined ? d[projectedY] : d[projectedYBottom]))
+      let yMax = currentProps.yExtent && currentProps.yExtent[1] !== undefined ? currentProps.yExtent[1] : zoomExtent && zoomExtent[1] && zoomExtent[1][1] || max(fullDataset.map(d => d[projectedYTop] === undefined ? d[projectedY] : d[projectedYTop]))
 
       let yExtent = [ yMin, yMax ]
+      let xExtent = [ xMin, xMax ]
 
       if (currentProps.invertX) {
         xExtent = [ xExtent[1],xExtent[0] ]
@@ -232,7 +230,7 @@ class XYFrame extends React.Component {
 
     calculateXYFrame(currentProps, zoomExtent) {
       let margin = calculateMargin(currentProps)
-      let { adjustedPosition, adjustedSize } = this.adjustedPositionSize()
+      let { adjustedPosition, adjustedSize } = this.adjustedPositionSize(currentProps)
 
       let xExtent, yExtent, projectedLines, projectedPoints, fullDataset
 
@@ -444,7 +442,7 @@ class XYFrame extends React.Component {
         if (this.props.zoomable === "number") {
           zoomAmount = this.props.zoomable / 2
         }
-          if (xExtent && yExtent) {
+        if (xExtent && yExtent) {
           const mod = 0.5 + (direction === "out" ? zoomAmount : -zoomAmount)
           const yDiff = (yExtent[1] - yExtent[0]) * mod
           const xDiff = (xExtent[1] - xExtent[0]) * mod
@@ -468,15 +466,21 @@ class XYFrame extends React.Component {
       let yScale = this.yScale
 
       let screenCoordinates = []
+      const idAccessor = this.props.lineIDAccessor || (l => l.id)
 
-      let { adjustedPosition, adjustedSize } = this.adjustedPositionSize()
+      let { adjustedPosition, adjustedSize } = this.adjustedPositionSize(this.props)
       if (!d.coordinates) {
         const xCoord = d[projectedX] || xAccessor(d)
-        const yCoord = d[projectedYMiddle] || d[projectedY] || yAccessor(d)
-        screenCoordinates = [ xScale(xCoord) + adjustedPosition[0], yScale(yCoord) + adjustedPosition[1] ]
+        screenCoordinates = [ xScale(xCoord), relativeY({ point: d, lines, projectedYMiddle, projectedY, projectedX, xAccessor, yAccessor, yScale, xScale, idAccessor }) ]
+      if (screenCoordinates[0] === undefined || screenCoordinates[1] === undefined || screenCoordinates[0] === null || screenCoordinates[1] === null) {
+        //NO ANNOTATION IF INVALID SCREEN COORDINATES
+        return null
+      }
+      screenCoordinates[0] + adjustedPosition[0]
+      screenCoordinates[1] + adjustedPosition[1]
       }
       else {
-        screenCoordinates = d.coordinates.map(p => [ xScale(xAccessor(p)) + adjustedPosition[0], yScale(yAccessor(p)) + adjustedPosition[1] ])
+        screenCoordinates = d.coordinates.map(p => [ xScale(xAccessor(p)) + adjustedPosition[0], relativeY({ point: p, lines, projectedYMiddle, projectedY, projectedX, xAccessor, yAccessor, yScale,  xScale,idAccessor }) + adjustedPosition[1] ])
       }
 
       const margin = calculateMargin(this.props)
@@ -569,7 +573,7 @@ class XYFrame extends React.Component {
       }
       else if (d.type === "x") {
         
-        const yPosition = margin.top + annotationLayer.position[1];
+        const yPosition = annotationLayer.position[1];
 
         const noteData = Object.assign({
             dx: 50,
@@ -698,17 +702,22 @@ class XYFrame extends React.Component {
 
       let screenCoordinates = []
 
-      let { adjustedPosition/*, adjustedSize*/ } = this.adjustedPositionSize()
+      const idAccessor = this.props.lineIDAccessor || (l => l.id)
+
+      let { adjustedPosition/*, adjustedSize*/ } = this.adjustedPositionSize(this.props)
       if (!d.coordinates) {
         const xCoord = d[projectedX] || xAccessor(d)
-        const yCoord = d[projectedYMiddle] || d[projectedY] || yAccessor(d)
-        screenCoordinates = [ xScale(xCoord) + adjustedPosition[0], yScale(yCoord) + adjustedPosition[1] ]
+        screenCoordinates = [ xScale(xCoord), relativeY({ point: d, lines, projectedYMiddle, projectedY, projectedX, xAccessor, yAccessor, yScale, xScale, idAccessor }) ]
+      if (screenCoordinates[0] === undefined || screenCoordinates[1] === undefined || screenCoordinates[0] === null || screenCoordinates[1] === null) {
+        //NO ANNOTATION IF INVALID SCREEN COORDINATES
+        return null
+      }
+      screenCoordinates[0] + adjustedPosition[0]
+      screenCoordinates[1] + adjustedPosition[1]
       }
       else {
-        screenCoordinates = d.coordinates.map(p => [ xScale(xAccessor(p)) + adjustedPosition[0], yScale(yAccessor(p)) + adjustedPosition[1] ])
+        screenCoordinates = d.coordinates.map(p => [ xScale(xAccessor(p)) + adjustedPosition[0], relativeY({ point: p, lines, projectedYMiddle, projectedY, projectedX, xAccessor, yAccessor, yScale,  xScale,idAccessor }) + adjustedPosition[1] ])
       }
-
-//      const margin = calculateMargin(this.props)
 
       if (this.props.htmlAnnotationRules && this.props.htmlAnnotationRules({ d, i, screenCoordinates, xScale, yScale, xAccessor, yAccessor, xyFrameProps: this.props, xyFrameState: this.state, areas, points, lines }) !== null) {
         return this.props.htmlAnnotationRules({ d, i, screenCoordinates, xScale, yScale, xAccessor, yAccessor, xyFrameProps: this.props, xyFrameState: this.state, areas, points, lines })
@@ -738,15 +747,15 @@ class XYFrame extends React.Component {
 
     }
 
-    adjustedPositionSize() {
-      let margin = calculateMargin(this.props)
+    adjustedPositionSize(props) {
+      let margin = calculateMargin(props)
 
-      let position = this.props.position || [ 0, 0 ];
+      let position = props.position || [ 0, 0 ];
       let heightAdjust = margin.top + margin.bottom;
       let widthAdjust = margin.left + margin.right;
 
       let adjustedPosition = [ position[0], position[1] ]
-      let adjustedSize = [ this.props.size[0] - widthAdjust, this.props.size[1] - heightAdjust ]
+      let adjustedSize = [ props.size[0] - widthAdjust, props.size[1] - heightAdjust ]
 
       return { adjustedPosition, adjustedSize }
 
@@ -782,7 +791,7 @@ class XYFrame extends React.Component {
       }
 
       let zoomButtons
-
+      
       if (this.props.zoomable) {
         zoomButtons = <div className="xyframe-zoom-controls">
           <button onClick={() => {this.doubleclickVoronoi(undefined, this.state.xExtent, this.state.yExtent)}} className="xyframe-zoom-button">+</button>
@@ -791,6 +800,23 @@ class XYFrame extends React.Component {
           </div>
       }
 
+      let downloadButton
+      if (this.props.download){
+        downloadButton = <DownloadButton 
+          csvName={`${this.props.name}-${new Date().toJSON()}` }
+          width={this.props.size[0]}
+          data={xyDownloadMapping({ 
+            data: this.props.lines || this.props.points,
+            xAccessor: this.props.xAccessor,
+            yAccessor: this.props.yAccessor,
+            
+            dataAccessor: this.props.lineDataAccessor, // || this.props.points?,
+            fields: this.props.downloadFields
+          })}
+        />
+      }
+      
+             
       return <div className={this.props.className + " frame"} style={{ background: "none" }}>
         {/*<DebugComponent>{this.state.ignoredVoronoiPoints.length > 0 ? this.state.ignoredVoronoiPoints.length + " ignored voronoi points" : null }</DebugComponent> */}
         <div className="xyframe-before-elements">
@@ -881,6 +907,7 @@ class XYFrame extends React.Component {
         </div>
         <div className="xyframe-after-elements">
         {zoomButtons}
+        {downloadButton}
         {afterElements}
         </div>
       </div>
@@ -888,6 +915,7 @@ class XYFrame extends React.Component {
     }
 }
 
+//Do lines, points, and areas need to be added here?   downloadCSV(fields){
 XYFrame.propTypes = {
     name: PropTypes.string,
     orient: PropTypes.string,
@@ -914,9 +942,11 @@ XYFrame.propTypes = {
     x1Accessor: PropTypes.func,
     yAccessor: PropTypes.func.isRequired,
     y1Accessor: PropTypes.func,
-    lineDataAccessor: PropTypes.func,
+    lineDataAccessor: PropTypes.func, //are you missing a point data accessor? 
     areaDataAccessor: PropTypes.func,
-    annotations: PropTypes.array
+    annotations: PropTypes.array,
+    download: PropTypes.bool, //add a download button for graphs data as csv
+    downloadFields: PropTypes.array //additional fields aside from x,y to add to the csv
   };
 
 module.exports = XYFrame;

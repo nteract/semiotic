@@ -12,7 +12,7 @@ const testData = [
 class XYFrameExamples extends React.Component {
     constructor(props){
         super(props);
-        this.state = { customLineType: "line", curve: "basis" }
+        this.state = { customLineType: "difference", curve: "basis" }
         this.changeCustomLineType = this.changeCustomLineType.bind(this)
         this.changeCurve = this.changeCurve.bind(this)
     }

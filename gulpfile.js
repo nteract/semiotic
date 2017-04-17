@@ -6,7 +6,6 @@ var taskConfig = {
         file: 'index.js',
         name: 'index',
         dependencies: [
-            'react-bootstrap',
             'moment',
             'react',
             'react-dom'
