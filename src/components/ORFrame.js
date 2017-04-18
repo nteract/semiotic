@@ -10,7 +10,7 @@ import { uniq, clone } from 'lodash'
 
 import { scaleBand, scaleOrdinal, scaleLinear } from 'd3-scale'
 
-import { histogram, sum, max, quantile } from 'd3-array'
+import { histogram, sum, max, min, quantile } from 'd3-array'
 
 import { area, curveCatmullRom, arc } from 'd3-shape'
 
@@ -138,6 +138,7 @@ class orFrame extends React.Component {
 
 //      const dataAccessor = currentProps.dataAccessor || function (d) {return d}
       let margin = calculateMargin(currentProps)
+      const { adjustedPosition, adjustedSize } = this.adjustedPositionSize(this.props)
 
       let title = null
       if (typeof currentProps.title === "string") {
@@ -148,20 +149,38 @@ class orFrame extends React.Component {
         title = currentProps.title
       }
 
+      const positiveData = allData.filter(d => rAccessor(d) >= 0)
+      const negativeData = allData.filter(d => rAccessor(d) <= 0)
+
+/*
       const nestedData = nest()
         .key(oAccessor)
         .rollup(leaves => sum(leaves.map(rAccessor)))
         .entries(allData)
+*/
+      const nestedPositiveData = nest()
+        .key(oAccessor)
+        .rollup(leaves => sum(leaves.map(rAccessor)))
+        .entries(positiveData)
+
+      const nestedNegativeData = nest()
+        .key(oAccessor)
+        .rollup(leaves => sum(leaves.map(rAccessor)))
+        .entries(negativeData)
 
       let oExtent = currentProps.oExtent || uniq(allData.map((d,i) => oAccessor(d,i)))
 
-      let rExtent = currentProps.rExtent || [ 0, max(nestedData, d => d.value) ]
+      let rExtent = currentProps.rExtent || [ 0, nestedPositiveData.length === 0 ? 0 :Math.max(max(nestedPositiveData, d => d.value), 0) ]
+      let totalRExtent = currentProps.rExtent || [ 0,  Math.max(max(allData, rAccessor), 0) ]
 
-      const { adjustedPosition, adjustedSize } = this.adjustedPositionSize(this.props)
+      let subZeroRExtent = currentProps.rExtent || [ 0, nestedNegativeData.length === 0 ? 0 : Math.min(min(nestedNegativeData, d => d.value), 0) ]
+      let subZeroTotalExtent = currentProps.rExtent || [ 0, Math.min(min(allData, rAccessor), 0) ]
 
-      let totalRExtent = currentProps.rExtent || [ 0, max(allData, rAccessor) ]
       if (summaryType.type || pieceType.type === "swarm" || pieceType.type === "point") {
-        rExtent = totalRExtent
+        rExtent = [ subZeroTotalExtent[1], totalRExtent[1] ]
+      }
+      else {
+        rExtent = [ subZeroRExtent[1], rExtent[1] ]        
       }
 
       if (currentProps.yBaseline !== undefined && !currentProps.rExtent) {
@@ -173,6 +192,7 @@ class orFrame extends React.Component {
       }
       if (currentProps.invertR) {
         rExtent = [ rExtent[1],rExtent[0] ]
+        subZeroRExtent = [ subZeroRExtent[1],subZeroRExtent[0] ]
       }
 
       let oDomain = [ margin.left, adjustedSize[0] + margin.left ]
@@ -354,6 +374,9 @@ class orFrame extends React.Component {
           })
       }
       else if (pieceType.type === "bar") {
+
+        const zeroValue = rScale(0)
+        const canvasHeight = rScale.range()[1]
         oExtent.forEach((ordset, ordsetI) => {
           const projectedOrd = []
           projectedPieces.push(projectedOrd)
@@ -362,21 +385,36 @@ class orFrame extends React.Component {
 
           //STACKING
           let currentOffset = 0;
+          let negativeCurrentOffset = 0;
           const renderedPieces = pieceData[ordsetI].map((d,i) => {
 
-          const pieceHeight = rScale(rAccessor(d,i)) - rScale.range()[0]
+          const pieceValue = rAccessor(d,i)
+
+          const pieceSize = rScale(pieceValue) - zeroValue
+
           const renderMode = currentProps.renderFn && currentProps.renderFn(d,i)
 
           let xPosition = projectedColumns[ordset].x
-          let yPosition = margin.top + rScale.range()[1] - currentOffset - rScale(rAccessor(d,i))
+          let yPosition = canvasHeight - zeroValue - currentOffset - pieceSize + margin.top
           let finalWidth = barColumnWidth
-          let finalHeight = pieceHeight
+          let finalHeight = pieceSize
+
+          console.log("pieceSize", pieceSize)
+          if (pieceSize < 0) {
+            console.log("zeroValue", zeroValue)
+            console.log("negativeCurrentOffset", negativeCurrentOffset)
+            console.log("currentOffset", currentOffset)
+            yPosition = canvasHeight - zeroValue + negativeCurrentOffset + margin.top
+            finalHeight = -pieceSize
+            console.log("yPosition", yPosition)
+          }
 
           if (projection === "horizontal") {
+            //TODO: NEGATIVE FOR HORIZONTAL
             yPosition = projectedColumns[ordset].x
             xPosition = margin.left + currentOffset
             finalHeight = barColumnWidth
-            finalWidth = pieceHeight
+            finalWidth = pieceSize
 
           }
           projectedOrd.push({ data: d, x: xPosition, offset: finalWidth, y: yPosition, size: finalHeight })
@@ -387,7 +425,7 @@ class orFrame extends React.Component {
             pieceMarkType = "path"
             const arcGenerator = arc()
               .innerRadius(currentOffset / 2)
-              .outerRadius(pieceHeight / 2 + currentOffset / 2)
+              .outerRadius(pieceSize / 2 + currentOffset / 2)
             let angle = 1 / oExtent.length
             let startAngle = angle * ordsetI
             let endAngle = startAngle + angle
@@ -421,7 +459,12 @@ class orFrame extends React.Component {
             onMouseEnter={() => {this.onPieceEnter(d,i)}}
             onMouseOut={() => {this.onPieceOut(d,i)}}
             />
-          currentOffset = currentOffset + pieceHeight
+          if (pieceSize >= 0) {
+            currentOffset = currentOffset + pieceSize
+          }
+          else {
+            negativeCurrentOffset = negativeCurrentOffset - pieceSize
+          }
           return piece
         })
           bars = [ ...bars, ...renderedPieces ]

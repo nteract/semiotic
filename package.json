@@ -1,7 +1,7 @@
 {
   "name": "semiotic",
-  "version": "1.0.0-alpha.0",
-  "description": "The semiotic JavaScript package",
+  "version": "1.0.0-alpha.3",
+  "description": "The semiotic JavaScript data visualization framework",
   "main": "lib/index.js",
   "files": [
     "lib"

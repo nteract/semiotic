@@ -56,6 +56,18 @@ const stackedPieData = [
   { pie: "three", color: "#b6a756", value: 5 }
 ]
 
+const stackedPieDataWithNegatives = [
+  { pie: "one", color: "#00a2ce", value: 25 },
+  { pie: "one", color: "#b3331d", value: 50 },
+  { pie: "one", color: "#b6a756", value: 10 },
+  { pie: "two", color: "#00a2ce", value: -25 },
+  { pie: "two", color: "#b3331d", value: -50 },
+  { pie: "two", color: "#b6a756", value: -10 },
+  { pie: "three", color: "#00a2ce", value: 25 },
+  { pie: "three", color: "#b3331d", value: -50 },
+  { pie: "three", color: "#b6a756", value: 10 }
+]
+
 const funnelData = funnelize({ data: funnel, steps: [ "visits", "registration", "mop", "signups", "streamed", "paid" ], key: "color" })
 
 class ORFramePieceExamples extends React.Component {
@@ -144,6 +156,34 @@ class ORFramePieceExamples extends React.Component {
               oAccessor={d => d.stepName}
               rAccessor={rAccessor}
               style={d => {return { fill: d.funnelKey, stroke: "black" }}}
+              hoverAnnotation={true}
+              columnWidth={this.state.rAccessor === "fixed" ? d => d.stepValue : undefined}
+              margin={{ left: 25, top: 0, bottom: 25, right: 0 }}
+            />
+<p><b>Stacked</b></p>
+<p className="code">{"<ORFrame"}</p>
+<p className="code">{"size={[ 500,frameHeight ]}"}</p>
+<p className="code">{"data={funnelData}"}</p>
+<p className="code">{"oLabel={true}"}</p>
+<p className="code">{"axis={axis}"}</p>
+<p className="code">{"projection={this.state.projection}"}</p>
+<p className="code">{"type={this.state.type}"}</p>
+<p className="code">{"oAccessor={d => d.stepName}"}</p>
+<p className="code">{"rAccessor={d => d.stepValue}"}</p>
+<p className="code">{"style={d => {return { fill: d.funnelKey, stroke: 'black' }}}"}</p>
+<p className="code">{"hoverAnnotation={true}"}</p>
+<p className="code">{"columnWidth={this.state.columnWidth}"}</p>
+<p className="code">{"margin={{ left: 10, top: 0, bottom: 0, right: 0 }}"}</p>
+            <ORFrame
+              size={[ 500,frameHeight ]}
+              renderFn={reFn}
+              data={stackedPieDataWithNegatives}
+              axis={axis}
+              projection={this.state.projection}
+              type={this.state.type}
+              oAccessor={d => d.pie}
+              rAccessor={rAccessor}
+              style={d => {return { fill: d.color, stroke: "black" }}}
               hoverAnnotation={true}
               columnWidth={this.state.rAccessor === "fixed" ? d => d.stepValue : undefined}
               margin={{ left: 25, top: 0, bottom: 25, right: 0 }}
