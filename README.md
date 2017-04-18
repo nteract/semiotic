@@ -11,8 +11,7 @@ Documentation in the examples folder.
 npm run examples
 ```
 
-This module exports Mark, MarkContext, XYFrame, AnnotationLayer, InteractionLayer, DividedLine, MiniMap, MinimapXYFrame, Axis and Brush.
-
+This module exports Mark, MarkContext, XYFrame, AnnotationLayer, InteractionLayer, VisualizationLayer, DividedLine, MiniMap, MinimapXYFrame, Axis and Brush.
 
 Example
 
@@ -20,3 +19,5 @@ Example
 import { Mark } from 'semiotic'
 
 ```
+
+Semiotic icon based on an icon by André Schauer

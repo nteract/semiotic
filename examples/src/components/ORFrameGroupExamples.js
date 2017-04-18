@@ -1,5 +1,5 @@
 import React from 'react'
-import { ORFrame } from 'abacus-viz-framework'
+import { ORFrame } from 'semiotic'
 import { randomNormal } from 'd3-random'
 import { sum } from 'd3-array'
 

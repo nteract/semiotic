@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mark } from 'abacus-viz-framework';
+import { Mark } from 'semiotic';
 
 class MarkExamples extends React.Component {
     constructor(props){

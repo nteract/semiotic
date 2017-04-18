@@ -1,5 +1,5 @@
 import React from 'react'
-import { XYFrame } from 'abacus-viz-framework';
+import { XYFrame } from 'semiotic';
 
 const testData = [
     { id: "linedata-1", color: "#00a2ce", data: [ { y: 5, x: 1 }, { y: 7, x: 2 }, { y: 7, x: 3 }, { y: 4, x: 4 }, { y: 2, x: 5 }, { y: 3, x: 6 }, { y: 5, x: 7 } ] },

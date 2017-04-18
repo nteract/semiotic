@@ -1,5 +1,5 @@
 import React from 'react'
-import { XYFrame } from 'abacus-viz-framework';
+import { XYFrame } from 'semiotic';
 import { curveBasis, curveCardinal, curveCatmullRom, curveLinear, curveNatural, curveMonotoneX, curveStep  } from 'd3-shape'
 
 const testData = [
@@ -12,7 +12,7 @@ const testData = [
 class XYFrameExamples extends React.Component {
     constructor(props){
         super(props);
-        this.state = { customLineType: "difference", curve: "basis" }
+        this.state = { customLineType: "difference", curve: "curveBasis" }
         this.changeCustomLineType = this.changeCustomLineType.bind(this)
         this.changeCurve = this.changeCurve.bind(this)
     }

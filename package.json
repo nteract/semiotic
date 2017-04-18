@@ -60,6 +60,7 @@
     "tap-difflet": "0.4.0",
     "tap-notify": "1.0.0",
     "react-dom": "15.4.0",
+    "react": "15.4.0",
     "tape": "4.4.0"
   },
   "peerDependencies": {
@@ -79,7 +80,7 @@
     "d3-scale": "1.0.3",
     "d3-selection": "1.0.2",
     "d3-shape": "1.0.3",
-    "d3-svg-annotation": "1.5.0",
+    "d3-svg-annotation": "1.12.1",
     "d3-transition": "1.0.3",
     "d3-voronoi": "1.0.2",
     "in-publish": "2.0.0",

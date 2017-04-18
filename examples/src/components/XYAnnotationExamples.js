@@ -1,5 +1,5 @@
 import React from 'react'
-import { XYFrame } from 'abacus-viz-framework';
+import { XYFrame } from 'semiotic';
 import { curveCardinal } from 'd3-shape'
 
 const testData = [
@@ -104,8 +104,6 @@ class XYFrameExamples extends React.Component {
        ]
 
        const allAnnotations = [ ...exampleAnnotations, ...this.state.annotations ]
-
-       console.log(this.state.lineType)
 
         return <div>
             <button onClick={this.changeLineType}>Change Type Line</button>

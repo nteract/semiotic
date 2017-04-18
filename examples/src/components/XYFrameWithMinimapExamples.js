@@ -1,5 +1,5 @@
 import React from 'react'
-import { MinimapXYFrame } from 'abacus-viz-framework';
+import { MinimapXYFrame } from 'semiotic';
 import { curveBasis, curveCardinal, curveCatmullRom, curveLinear, curveNatural, curveMonotoneX, curveStep  } from 'd3-shape'
 
 const testData = [

@@ -1,7 +1,7 @@
 <!doctype html>
 <head>
 	<meta charset="utf-8">
-	<title>Abacus Viz Framework Examples</title>
+	<title>Semiotic Examples</title>
 	<meta name="viewport" content="initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width">
 	<meta name="keywords" content="react,reactjs,react component,component,select,form,autocomplete,control,ui,javascript">
 	<link rel="stylesheet" href="example.css">
@@ -9,24 +9,24 @@
 <body>
 	<header class="page-header">
 		<div class="container">
-			<img src="img/abacus.png"/>
-			<h1>Abacus</h1>
-			<h2>Viz Framework</h2>
+			<img src="img/semiotic_icon.png"/>
+			<h1>Semiotic</h1>
+			<h2>A Data Visualization Framework</h2>
 		</div>
 	</header>
 	<div class="sub-header">
 		<div class="container">
 			<p>
-				Documentation for the Abacus Viz Framework, <a href="https://stash.corp.netflix.com/projects/ABACUS/repos/abacus-viz-framework/browse">stash repo</a>.
+				Documentation for Semiotic, a data visualization framework. <a href="https://github.com/emeeks/semiotic/">Github repo</a>.
 			</p>
 		</div>
 	</div>
 	<div class="page-body">
 		<div class="container">
 			<h2>Philosophy</h2>
-			<p>Abacus Viz Framework is a React-based library for creating data visualization products. It has two primary abstractions: marks and frames. The marks (which include the Mark component and the Glyph component) can be used without using any other components and are meant to be used in place of SVG elements. The frames (XYFrame which stands for a frame that has data plotted on an <b>X</b> & <b>Y</b> axes and ORFrame which stands for a frame that plots data on <b>O</b>rdinal and <b>R</b>ange axes) are designed to deploy common data visualization forms that share the same visualization techniques. You can use frames without ever touching any other components.</p>
+			<p>Semiotic is a React-based library for creating data visualization products. It has two primary abstractions: marks and frames. The marks (which include the Mark component and the Glyph component) can be used without using any other components and are meant to be used in place of SVG elements. The frames (XYFrame which stands for a frame that has data plotted on an <b>X</b> & <b>Y</b> axes and ORFrame which stands for a frame that plots data on <b>O</b>rdinal and <b>R</b>ange axes) are designed to deploy common data visualization forms that share the same visualization techniques. You can use frames without ever touching any other components.</p>
 			<p>Frames are designed so that you can pass in data and get a variety of different data  visualization types based on simply changing the props of the frame. So the frame can be a pie chart if that's most suitable or a bar chart or histogram, based simply on adjusting the props that determine whether the data should be displayed in columns or arcs and whether or not it represents distributions or totals.</p>
-			<p>This isn't meant to be a charting library like ReCharts or Victory, but it should eventually have some LineChart, Scatterplot, BarChart and so on that make it easy enough to spin up those common charts. For now, the way to deploy a bar chart or pie chart or line chart with Abacus Viz Framework is to use the corresponding frame and change its settings to match up with those you see below.</p>
+			<p>This isn't meant to be a charting library like ReCharts or Victory, but it should eventually have some LineChart, Scatterplot, BarChart and so on that make it easy enough to spin up those common charts. For now, the way to deploy a bar chart or pie chart or line chart with Semiotic is to use the corresponding frame and change its settings to match up with those you see below.</p>
 			<p>While this currently relies on React, it only does so because it needs a mechanism for easily generating DOM elements in a one-to-many fashion.</p>
 			<h2>Contents</h2>
 			<ul>
@@ -110,12 +110,12 @@
 				</p>
 
 				</li>
-				<li>Run the following in your project's root folder<p><code>npm i -SE abacus-viz-framework</code></p></li>
-				<li>To use a specific component you can import it. For example to access the Select component: <p><code>import { XYFrame } from 'abacus-viz-framework';</code></p> </li>
+				<li>Run the following in your project's root folder<p><code>npm i -SE semiotic</code></p></li>
+				<li>To use a specific component you can import it. For example to access the Select component: <p><code>import { XYFrame } from 'semiotic';</code></p> </li>
 			</ol>
 
 			<h2 id="elements">Elements</h2>
-			<p>The abacus-viz-framework package exposes a few individual elements that you can use if you want access to some built-in behavior like dragging or divided lines or sketchy rendering. These elements, known as Marks and Glyphs, are meant to be nested inside a MarkContext component. MarkContext takes marks as children.</p>
+			<p>The semiotic package exposes a few individual elements that you can use if you want access to some built-in behavior like dragging or divided lines or sketchy rendering. These elements, known as Marks and Glyphs, are meant to be nested inside a MarkContext component. MarkContext takes marks as children.</p>
 			<img src="img/avf_children.png"/>
 			<div className="section" id="mark">
 	           	<h3 className="section-heading">Marks</h3>
@@ -136,7 +136,7 @@
 	            <p><b>dropFunction: (fn)</b></p>
 	            <p>Only works if draggable is set to true and the Mark is in a MarkContext. This function is fired and sent the dragged Mark and the Mark that your cursor is currently over.</p>
 	            <p><b>markType: required(string)</b></p>
-	            <p>The markType string accepts any SVG:element type along with some abacus-viz-framework specific element types, currently limited to "verticalbar" and "horizontalbar". Each of these draws an svg:rect element but adjusts its y and x position to draw it using y as the baseline (for verticalbar) or x as the baseline (for horizontalbar) and drawing the rect out to the height specified with width set to the other dimension. This means that horizontal bar will have a screen "width" of its height setting.</p>
+	            <p>The markType string accepts any SVG:element type along with some semiotic specific element types, currently limited to "verticalbar" and "horizontalbar". Each of these draws an svg:rect element but adjusts its y and x position to draw it using y as the baseline (for verticalbar) or x as the baseline (for horizontalbar) and drawing the rect out to the height specified with width set to the other dimension. This means that horizontal bar will have a screen "width" of its height setting.</p>
 	            <p><i>The red and gold bars both have the same x and y coordinates and the same height and width but the red bar is a "verticalbar" and the gold bar is a "horizontalbar".</i></p>
 	            <p><b>label: (string)</b></p>
 	            <p><b>hoverBehavior: (fn)</b></p>
@@ -408,7 +408,7 @@ margin={5}
 			</div>
 			<div className="section" id="axis">
 	           	<h3 className="section-heading">Axis</h3>
-	           	<p>Abacus Viz Framework includes a simple wrapper for d3 v3 axis. You can send the axis settings as props to the component.</p>
+	           	<p>Semiotic includes a simple wrapper for d3 v3 axis. You can send the axis settings as props to the component.</p>
 	            <h4>Props</h4>
 	            <p><b>size: (array)</b></p>
 	            <p>[width, height]</p>
@@ -437,14 +437,12 @@ margin={5}
 
 
 			<h2 id="styling">Styling</h2>
-			<p><a href="https://stash.corp.netflix.com/projects/ABACUS/repos/abacus-viz-framework/browse/less/default.css">Basic CSS</a> (highly recommend)</p>
-			<p><a href="https://stash.corp.netflix.com/projects/ABACUS/repos/abacus-viz-framework/browse/examples/src/example.less">Example additions</a> to the basic styling used on this page</p>
 		</div>
 	</div>
 
 	<footer class="page-footer">
 		<div class="container">
-			<span>Made by DEA - Product Analytics, <a href="mailto:abacus-users@netflix.com">abacus-users@netflix.com</a></span>
+			<span>Made by Elijah Meeks at DEA - Product Analytics at Netflix</span>
 		</div>
 	</footer>
 	<script src="common.js"></script>

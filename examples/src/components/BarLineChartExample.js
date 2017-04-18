@@ -1,5 +1,5 @@
 import React from 'react'
-import { XYFrame, ORFrame } from 'abacus-viz-framework';
+import { XYFrame, ORFrame } from 'semiotic';
 import { curveBasis } from 'd3-shape'
 
 const testData = [

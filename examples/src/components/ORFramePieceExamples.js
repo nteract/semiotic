@@ -1,5 +1,5 @@
 import React from 'react'
-import { ORFrame, funnelize } from 'abacus-viz-framework';
+import { ORFrame, funnelize } from 'semiotic';
 //import d3 from 'd3'
 
 // const d3colors = d3.scale.category20c()

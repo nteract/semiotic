@@ -4,7 +4,6 @@ export function _mouseup(component) {
 
     let finalTranslate = [ 0,0 ]
     if (!component.props.resetAfter) finalTranslate = component.state.translate;
-    console.log("finalTranslate", finalTranslate)
 
     component.setState({ dragging: false, translate: finalTranslate, uiUpdate: false } )
     if (component.props.droppable && component.props.context && component.props.context.dragSource) {

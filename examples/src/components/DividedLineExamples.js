@@ -1,5 +1,5 @@
 import React from 'react'
-import { DividedLine } from 'abacus-viz-framework';
+import { DividedLine } from 'semiotic';
 import { curveBasis } from 'd3-shape'
 
 class DividedLineExample extends React.Component {

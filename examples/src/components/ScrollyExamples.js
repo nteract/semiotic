@@ -1,5 +1,5 @@
 import React from 'react'
-import { SmartFrame } from 'abacus-viz-framework';
+import { SmartFrame } from 'semiotic';
 //import { curveBasis, curveCardinal, curveCatmullRom, curveLinear, curveNatural, curveMonotoneX, curveStep  } from 'd3-shape'
 import { randomNormal } from 'd3-random'
 //import d3 from 'd3'

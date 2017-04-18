@@ -13,9 +13,10 @@ import Axis from './components/Axis'
 import Brush from './components/Brush'
 import DebugComponent from './Debug'
 import InteractionLayer from './components/InteractionLayer'
+import VisualizationLayer from './components/VisualizationLayer'
 import { funnelize } from './svg/lineDrawing'
 
 export default {
-  DraggableMark, Mark, MarkContext, Scatterplot, AnnotationLayer, DividedLine, XYFrame, MinimapXYFrame, MiniMap, Brush, Axis, InteractionLayer, DebugComponent, ORFrame, funnelize, SmartFrame
+  DraggableMark, Mark, MarkContext, Scatterplot, AnnotationLayer, DividedLine, XYFrame, MinimapXYFrame, MiniMap, Brush, Axis, InteractionLayer, VisualizationLayer, DebugComponent, ORFrame, funnelize, SmartFrame
 }
 

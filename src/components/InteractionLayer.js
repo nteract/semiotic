@@ -41,20 +41,20 @@ class InteractionLayer extends React.Component {
     }
 
     createBrush() {
-        let abacusBrush/* = brush() */
+        let semioticBrush/* = brush() */
         let mappingFn = d => !d ? null : [ [ this.props.xScale.invert(d[0][0]),this.props.yScale.invert(d[0][1]) ],[ this.props.xScale.invert(d[1][0]),this.props.yScale.invert(d[1][1]) ] ]
 /*       
         if (this.props.xScale && !this.props.yScale) {
 */
             mappingFn = d => !d ? null : [ this.props.xScale.invert(d[0]),this.props.xScale.invert(d[1]) ]
-            abacusBrush = brushX()
+            semioticBrush = brushX()
 /*        }
         else if (!this.props.xScale && this.props.yScale) {
             mappingFn = d => !d ? null : [ this.props.yScale.invert(d[0]),this.props.yScale.invert(d[1]) ]
-            abacusBrush = brushY()
+            semioticBrush = brushY()
         }
 */
-        abacusBrush
+        semioticBrush
             .extent([ [ this.props.margin.left, this.props.margin.top ], [ this.props.size[0] + this.props.margin.left, this.props.size[1] + this.props.margin.top ] ])
             .on("start", () => {this.brushStart(mappingFn(event.selection))})
             .on("brush", () => {this.brush(mappingFn(event.selection))})
@@ -62,11 +62,11 @@ class InteractionLayer extends React.Component {
 
         const selectedExtent = this.props.interaction.extent.map(d => this.props.xScale(d))
 
-        return <Brush selectedExtent={selectedExtent} svgBrush={abacusBrush} size={this.props.size} />
+        return <Brush selectedExtent={selectedExtent} svgBrush={semioticBrush} size={this.props.size} />
     }
 
     createColumnsBrush() {
-        let abacusBrush
+        let semioticBrush
         const max = this.props.rScale.domain()[1]
         const mappingFn = d => !d ? null : [ Math.abs(this.props.rScale.invert(d[0]) - max),Math.abs(this.props.rScale.invert(d[1]) - max) ]
 
@@ -74,8 +74,8 @@ class InteractionLayer extends React.Component {
 
         const columnHash = this.props.oColumns
         const brushes = Object.keys(columnHash).map(c => {
-            abacusBrush = brushY()
-            abacusBrush
+            semioticBrush = brushY()
+            semioticBrush
                 .extent([ [ 0,rRange[0] ],[ columnHash[c].width, rRange[1] ] ])
                 .on("start", () => {this.brushStart(mappingFn(event.selection), c)})
                 .on("brush", () => {this.brush(mappingFn(event.selection), c)})
@@ -84,28 +84,28 @@ class InteractionLayer extends React.Component {
 //            const selectedExtent = this.props.interaction.extent[c] ? this.props.interaction.extent[c].map(d => this.props.rScale(d)) : this.props.rScale.domain()
             const selectedExtent = this.props.interaction.extent[c] ? this.props.interaction.extent[c].map(d => this.props.rScale(d)) : rRange
 
-            return <Brush position={[ columnHash[c].x,0 ]} key={"orbrush" + c} selectedExtent={selectedExtent} svgBrush={abacusBrush} size={this.props.size} />
+            return <Brush position={[ columnHash[c].x,0 ]} key={"orbrush" + c} selectedExtent={selectedExtent} svgBrush={semioticBrush} size={this.props.size} />
         })
         return brushes
     }
     render() {
-        let abacusBrush = null;
+        let semioticBrush = null;
         let enabled = this.props.enabled
 
         if (this.props.interaction && this.props.interaction.brush) {
             enabled = true;
-            abacusBrush = this.createBrush();
+            semioticBrush = this.createBrush();
         }
         if (this.props.interaction && this.props.interaction.columnsBrush) {
             enabled = true;
-            abacusBrush = this.createColumnsBrush();
+            semioticBrush = this.createColumnsBrush();
         }
 
       return <div className="xyframe-interaction-layer" style={{ position: "absolute", background: "none", pointerEvents: "none" }}>
         <svg height={this.props.svgSize[1]} width={this.props.svgSize[0]} style={{ background: "none", pointerEvents: "none" }}>
             <g transform={"translate(" + this.props.position + ")"} style={{ pointerEvents: enabled ? "all" : "none" }} >
             {this.props.overlay}
-            {abacusBrush}
+            {semioticBrush}
             </g>
         </svg>
       </div>

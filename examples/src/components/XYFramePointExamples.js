@@ -1,5 +1,5 @@
 import React from 'react'
-import { XYFrame, Mark } from 'abacus-viz-framework';
+import { XYFrame, Mark } from 'semiotic';
 
 const colors = [
     "#00a2ce",

@@ -74,16 +74,40 @@ export function createLines({ xScale, yScale, props, canvasDrawing, lineData }) 
 
   if (customLine.type === "difference" && lineData.length === 2) {
       //Create the overlay line for the difference chart
-      const diffdata = lineData[0]
-      let doClassname = props.lineClass ? "xyframe-line " + props.lineClass(diffdata) : "xyframe-line"
+
+      const diffdataA = lineData[0].data.map((basedata, baseI) => {
+        const linePoint = basedata._xyfYTop > lineData[1].data[baseI]._xyfYTop ? basedata._xyfYTop : basedata._xyfYBottom
+        return {
+          _xyfX: basedata._xyfX,
+          _xyfY: linePoint,
+          _xyfYBottom: linePoint,
+          _xyfYTop: linePoint
+        }
+      })
+
+      const diffdataB = lineData[0].data.map((basedata, baseI) => {
+        const linePoint = lineData[1].data[baseI]._xyfYTop > basedata._xyfYTop ? lineData[1].data[baseI]._xyfYTop : lineData[1].data[baseI]._xyfYBottom
+        return {
+          _xyfX: basedata._xyfX,
+          _xyfY: linePoint,
+          _xyfYBottom: linePoint,
+          _xyfYTop: linePoint
+        }
+      })
+
+      let doClassname = props.lineClass ? "xyframe-line " + props.lineClass(diffdataA) : "xyframe-line"
 
       const overLine = line()
 
       lineGeneratorDecorator({ props, generator: overLine, xScale, yScale, interpolator, singleLine: true })
 
-      let baseStyle = props.lineStyle ? props.lineStyle(diffdata, 0) : {}
-      let diffOverlay = <Mark key={"xyline-diff"} className={doClassname} markType="path" d={overLine(diffdata.data)} style={Object.assign(baseStyle, { fill: "none", pointerEvents: "none" })} />
-      mappedLines.push(diffOverlay)
+//      let baseStyle = props.lineStyle ? props.lineStyle(diffdata, 0) : {}
+      let diffOverlayA = <Mark key={"xyline-diff-a"} className={doClassname + " difference-overlay-a"} markType="path" d={overLine(diffdataA)} style={{ fill: "none", pointerEvents: "none" }} />
+      mappedLines.push(diffOverlayA)
+
+      let diffOverlayB = <Mark key={"xyline-diff-b"} className={doClassname + " difference-overlay-b"} markType="path" d={overLine(diffdataB)} style={{ fill: "none", pointerEvents: "none" }} />
+      mappedLines.push(diffOverlayB)
+
     }
 
   return mappedLines

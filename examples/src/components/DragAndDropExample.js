@@ -1,5 +1,5 @@
 import React from 'react';
-import { DraggableMark, MarkContext } from 'abacus-viz-framework';
+import { DraggableMark, MarkContext } from 'semiotic';
 
 class DragAndDropExample extends React.Component {
     constructor(props){
