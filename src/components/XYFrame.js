@@ -272,17 +272,20 @@ class XYFrame extends React.Component {
         const voronoiDataset = []
         const voronoiUniqueHash = {}
 
-        fullDataset.forEach(d => {
-          const pointKey = parseInt(xScale(d[projectedX])) + "," + parseInt(yScale(d[projectedYMiddle] || d[projectedY]))
-          if (!voronoiUniqueHash[pointKey]) {
-            voronoiDataset.push(d)
-            voronoiUniqueHash[pointKey] = [ d ]
+        fullDataset.forEach(function (d) {
+          const xValue = parseInt(xScale(d[projectedX]))
+          const yValue = parseInt(yScale(d[projectedYMiddle] || d[projectedY]))
+          if (xValue && yValue && isNaN(xValue) === false &&  isNaN(yValue) === false) {
+            const pointKey = xValue + "," + yValue;
+            if (!voronoiUniqueHash[pointKey]) {
+              voronoiDataset.push(d);
+              voronoiUniqueHash[pointKey] = [ d ];
+            } else {
+              //replace with real error
+              voronoiUniqueHash[pointKey].push(d);
+            }
           }
-          else {
-            //replace with real error
-            voronoiUniqueHash[pointKey].push(d)
-          }
-        })
+        });
 
 
         const voronoiData = voronoiDiagram.polygons(voronoiDataset)
