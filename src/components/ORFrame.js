@@ -170,11 +170,11 @@ class orFrame extends React.Component {
 
       let oExtent = currentProps.oExtent || uniq(allData.map((d,i) => oAccessor(d,i)))
 
-      let rExtent = currentProps.rExtent || [ 0, nestedPositiveData.length === 0 ? 0 :Math.max(max(nestedPositiveData, d => d.value), 0) ]
-      let totalRExtent = currentProps.rExtent || [ 0,  Math.max(max(allData, rAccessor), 0) ]
+      let rExtent = currentProps.rExtent ? [ 0, currentProps.rExtent[1] ] : [ 0, nestedPositiveData.length === 0 ? 0 :Math.max(max(nestedPositiveData, d => d.value), 0) ]
+      let totalRExtent = currentProps.rExtent ? [ 0, currentProps.rExtent[1] ] : [ 0,  Math.max(max(allData, rAccessor), 0) ]
 
-      let subZeroRExtent = currentProps.rExtent || [ 0, nestedNegativeData.length === 0 ? 0 : Math.min(min(nestedNegativeData, d => d.value), 0) ]
-      let subZeroTotalExtent = currentProps.rExtent || [ 0, Math.min(min(allData, rAccessor), 0) ]
+      let subZeroRExtent = currentProps.rExtent ? [ 0, currentProps.rExtent[0] ] : [ 0, nestedNegativeData.length === 0 ? 0 : Math.min(min(nestedNegativeData, d => d.value), 0) ]
+      let subZeroTotalExtent = currentProps.rExtent ? [ 0, currentProps.rExtent[0] ] : [ 0, Math.min(min(allData, rAccessor), 0) ]
 
       if (summaryType.type || pieceType.type === "swarm" || pieceType.type === "point") {
         rExtent = [ subZeroTotalExtent[1], totalRExtent[1] ]
@@ -399,14 +399,9 @@ class orFrame extends React.Component {
           let finalWidth = barColumnWidth
           let finalHeight = pieceSize
 
-          console.log("pieceSize", pieceSize)
           if (pieceSize < 0) {
-            console.log("zeroValue", zeroValue)
-            console.log("negativeCurrentOffset", negativeCurrentOffset)
-            console.log("currentOffset", currentOffset)
             yPosition = canvasHeight - zeroValue + negativeCurrentOffset + margin.top
             finalHeight = -pieceSize
-            console.log("yPosition", yPosition)
           }
 
           if (projection === "horizontal") {
@@ -1036,7 +1031,14 @@ class orFrame extends React.Component {
 
       const { adjustedPosition, adjustedSize } = this.adjustedPositionSize(this.props)
 
-      const mappedMiddles = this.mappedMiddles(oScale, adjustedSize[0] + padding, padding)
+      const margin = calculateMargin(this.props);
+
+      let mappedMiddleSize = adjustedSize[0] + margin.left;
+      if (this.props.projection === "horizontal") {
+        mappedMiddleSize = adjustedSize[1] + margin.top;
+      }
+
+      const mappedMiddles = this.mappedMiddles(oScale, mappedMiddleSize, padding);
 
       //TODO: Process your rules first
       if (this.props.htmlAnnotationRules && this.props.htmlAnnotationRules({ d, i, oScale, rScale, oAccessor, rAccessor, orFrameProps: this.props }) !== null) {
