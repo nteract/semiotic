@@ -119,10 +119,11 @@ class orFrame extends React.Component {
       const projection = !currentProps.projection || currentProps.projection === "radial" && pieceType.type !== "bar" ? "vertical" : currentProps.projection
 
       const barData = currentProps.data ? currentProps.data.map((d, i) => {
+        const renderKey = currentProps.renderKey ? currentProps.renderKey(d,i) : i
         if (typeof d !== "object") {
-          return { value: d, renderKey: i }
+          return { value: d, renderKey: renderKey }
         }
-        return Object.assign(d, { renderKey: i })
+        return Object.assign(d, { renderKey: renderKey })
       }) : []
 
       const oAccessor = currentProps.oAccessor || function (d) {return d.renderKey};
@@ -798,7 +799,7 @@ class orFrame extends React.Component {
         })
 
         if (projection === "vertical") {
-          oLabels = <g transform={"translate(0," + (15 + margin.top + rScale.range()[1]) + ")"}>{labelArray}</g>
+          oLabels = <g transform={"translate(0," + (15 + rScale.range()[1]) + ")"}>{labelArray}</g>
         }
         else if (projection === "horizontal") {
           oLabels = <g transform={"translate(0,0)"}>{labelArray}</g>
@@ -1047,7 +1048,8 @@ class orFrame extends React.Component {
 
       if (d.type === "xy" || d.type === "frame-hover") {
         const maxPiece = max(d.pieces.map(rAccessor))
-        const sumPiece = sum(d.pieces.map(rAccessor))
+        //we need to ignore negative pieces to make sure the hover behavior populates on top of the positive bar
+        const sumPiece = sum(d.pieces.map(rAccessor).filter(p => p > 0))
         const positionValue = [ "swarm", "point" ].indexOf(this.props.type) !== -1 ? maxPiece : sumPiece
         let xPosition = mappedMiddles[oAccessor(d.pieces[0])] + adjustedPosition[0]
         let yPosition = rScale(positionValue) + adjustedPosition[1] + 10
@@ -1079,8 +1081,8 @@ class orFrame extends React.Component {
           className="annotation annotation-xy-label"
           style={{ position: "absolute",
             bottom: yPosition + "px",
-            left: xPosition - 75 + "px",
-            width: "150px" }} >
+            left: xPosition - 75 + "px"
+          }} >
           {content}
           </div>
       }
