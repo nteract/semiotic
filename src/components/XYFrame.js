@@ -287,7 +287,6 @@ class XYFrame extends React.Component {
           }
         });
 
-
         const voronoiData = voronoiDiagram.polygons(voronoiDataset)
 
         voronoiPaths = voronoiData.map((d, i) => {
@@ -298,7 +297,7 @@ class XYFrame extends React.Component {
             onMouseLeave={() => {this.changeVoronoi()}}
             key={"interactionVoronoi" + i}
             d={"M" + d.join("L") + "Z"}
-            style={{ opacity: 0 }} />
+            style={{ fillOpacity: 0 }} />
         }, this)
       }
 
@@ -337,6 +336,7 @@ class XYFrame extends React.Component {
             orient={d.orient}
             size={axisSize}
             position={axisPosition}
+            margin={margin}
             ticks={d.ticks}
             tickSize={d.tickSize}
             tickFormat={d.tickFormat}
@@ -344,7 +344,8 @@ class XYFrame extends React.Component {
             format={d.format}
             scale={axisScale}
             className={d.className}
-            name={d.name} />
+            name={d.name}
+            annotationFunction={currentProps.axisAnnotationFunction} />
         })
       }
 
@@ -531,6 +532,7 @@ class XYFrame extends React.Component {
           connector: { end: "arrow" }
         }, d, { type: typeof d.type === "function" ? d.type : undefined })
             return <Annotation
+              key={i}
               noteData={noteData}
             />
       }
@@ -571,6 +573,7 @@ class XYFrame extends React.Component {
             //TODO: Support .ra (setting angle)
 
             return <Annotation
+              key={i}
               noteData={noteData}
             />
       }
@@ -592,6 +595,7 @@ class XYFrame extends React.Component {
             }
          })
             return <Annotation
+              key={i}
               noteData={noteData}
             />
       }
@@ -612,6 +616,7 @@ class XYFrame extends React.Component {
             }
          })
             return <Annotation
+              key={i}
               noteData={noteData}
             />
       }

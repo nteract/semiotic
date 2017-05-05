@@ -57,7 +57,7 @@ class XYFrameExamples extends React.Component {
         this.updateAnnotations = this.updateAnnotations.bind(this)
         this.changeLineType = this.changeLineType.bind(this);
 
-        this.state = { annotations: [], lineType: "bumparea" }
+        this.state = { annotations: [], lineType: "bumparea", axisAnnotation: { type: "y", y: 0, label: "click on axis to add an annotation" } }
     }
 
     changeLineType() {
@@ -103,6 +103,11 @@ class XYFrameExamples extends React.Component {
         { type: "enclose", rp: "top", rd: 25, coordinates: [ { x: 1, y: 5 }, { x: 2, y: 8 }, { x: 2, y: 10 } ], label: "enclose" }
        ]
 
+      const axes = [
+        { key: "yAxis", orient: "left", className: "yscale", name: "CountAxis", tickFormat: (d) => d + "%" },
+        { key: "xAxis", orient: "bottom", className: "xscale", name: "TimeAxis", tickValues: [ 1, 2, 3, 4, 5, 6, 7 ], tickFormat: d => d + " day" }
+      ]
+
        const allAnnotations = [ ...exampleAnnotations, ...this.state.annotations ]
 
         return <div>
@@ -120,6 +125,21 @@ class XYFrameExamples extends React.Component {
             htmlAnnotationRules={this.customHTMLRules}
             customLineType={{ type: this.state.lineType, interpolator: curveCardinal, sort: null }}
             margin={10}
+            />
+            <XYFrame
+            title="axisAnnotationFunction sends { type, value }"
+            size={[ 500,400 ]}
+            lines={testData}
+            lineDataAccessor={d => d.data}
+            xAccessor={d => d.x}
+            yAccessor={d => d.y}
+            lineStyle={d => ({ fill: d.color, fillOpacity: 0.5, stroke: d.color })}
+            hoverAnnotation={true}
+            customLineType={"line"}
+            axes={axes}
+            axisAnnotationFunction={d => this.setState({ axisAnnotation: { type: d.type, [d.type]: d.value, label: "clicked annotation" } })}
+            margin={ 50 }
+            annotations={[ this.state.axisAnnotation ]}
             />
             </div>
     }
