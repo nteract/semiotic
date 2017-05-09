@@ -87,7 +87,8 @@
     "json2csv": "3.7.3",
     "lodash": "^4.11.1",
     "moment": "2.10.6",
-    "numeral": "^1.5.3"
+    "numeral": "^1.5.3",
+    "react-dimensions": "1.3.0"
   },
   "nyc": {
     "exclude": [
