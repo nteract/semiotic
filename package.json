@@ -1,6 +1,6 @@
 {
   "name": "semiotic",
-  "version": "1.0.0-alpha.3",
+  "version": "1.0.0-alpha.7",
   "description": "The semiotic JavaScript data visualization framework",
   "main": "lib/index.js",
   "files": [
@@ -52,15 +52,15 @@
     "jsdom": "8.1.0",
     "less": "2.7.1",
     "nyc": "5.5.0",
-    "react-addons-create-fragment": "15.4.0",
-    "react-addons-test-utils": "15.4.0",
+    "react-addons-create-fragment": "15.4.2",
+    "react-addons-test-utils": "15.4.2",
     "react-element-to-jsx-string": "2.2.0",
     "react-component-gulp-tasks": "git://github.com/susielu/react-component-gulp-tasks.git#0594e863bc3dc399d5bcbb504321f4acf1ed0e73",
     "sinon": "1.17.3",
     "tap-difflet": "0.4.0",
     "tap-notify": "1.0.0",
-    "react-dom": "15.4.0",
-    "react": "15.4.0",
+    "react-dom": "15.4.2",
+    "react": "15.4.2",
     "tape": "4.4.0"
   },
   "peerDependencies": {

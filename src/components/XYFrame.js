@@ -4,7 +4,7 @@ import React from 'react'
 
 import { voronoi } from 'd3-voronoi'
 import { clone } from 'lodash'
-import { max, min, extent } from 'd3-array'
+import { extent } from 'd3-array'
 import { scaleLinear } from 'd3-scale'
 
 // components
@@ -17,58 +17,19 @@ import VisualizationLayer from './VisualizationLayer'
 import DownloadButton from './DownloadButton'
 
 import { line } from 'd3-shape'
-import { projectLineData, differenceLine, stackedArea, bumpChart, lineChart, relativeY } from '../svg/lineDrawing'
+import { relativeY } from '../svg/lineDrawing'
 import { annotationXYThreshold, annotationCalloutCircle } from 'd3-svg-annotation'
-import { calculateMargin } from '../svg/frameFunctions'
+import { calculateMargin, drawMarginPath } from '../svg/frameFunctions'
 import { packEnclose } from 'd3-hierarchy'
 import { xyDownloadMapping } from '../downloadDataMapping'
+import { projectedX, projectedY, projectedYTop, projectedYMiddle, projectedYBottom } from '../constants/coordinateNames'
+import { calculateDataExtent } from '../data/dataFunctions'
 
 let PropTypes = React.PropTypes;
-
-/*
-Use symbols for x/y/offset to avoid conflicts when projecting the dataset
-But how to expose those for custom hover rules?
-*/
-
-/*
-const projectedX = Symbol("x");
-const projectedY = Symbol("y");
-const projectedYMiddle = Symbol("y-middle");
-const projectedYAdjusted = Symbol("yAdjusted");
-const projectedOffset = Symbol("offset");
-*/
-const projectedX = "_xyfX"
-const projectedY = "_xyfY"
-const projectedYMiddle = "_xyfYMiddle"
-const projectedYAdjusted = "_xyfYAdjusted"
-const projectedOffset = "_xyfYOffset"
-const projectedYTop = "_xyfYTop"
-const projectedYBottom = "_xyfYBottom"
 
 let xyframeKey = '';
 const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 for (let i = 32; i > 0; --i) xyframeKey += chars[Math.floor(Math.random() * chars.length)];
-
-const builtInTransformations = {
-  stackedarea: stackedArea,
-  "stackedarea-invert": stackedArea,
-  stackedpercent: stackedArea,
-  "stackedpercent-invert": stackedArea,
-  difference: differenceLine,
-  bumparea: bumpChart,
-  bumpline: bumpChart,
-  "bumparea-invert": bumpChart,
-  line: lineChart
-
-}
-
-function drawMarginPath(margin, size) {
-    const interiorRing = drawRing([ [ margin.left, margin.top ],[ size[0] - margin.right, size[1] - margin.bottom ] ])
-    return interiorRing
-    function drawRing(bbox) {
-        return "M" + bbox[0][0] + "," + bbox[0][1] + "L" + bbox[1][0] + "," + bbox[0][1] + "L" + bbox[1][0] + "," + bbox[1][1] + "L" + bbox[0][0] + "," + bbox[1][1] + "Z"
-    }
-}
 
 function linetypeChange(oldProps, newProps) {
   if (!oldProps.customLineType && !newProps.customLineType) {
@@ -98,8 +59,6 @@ class XYFrame extends React.Component {
         this.doubleclickVoronoi = this.doubleclickVoronoi.bind(this)
         this.clickVoronoi = this.clickVoronoi.bind(this)
 
-        this.changeZoom = this.changeZoom.bind(this)
-
         this.renderBody = this.renderBody.bind(this)
 
         this.state = {
@@ -120,9 +79,7 @@ class XYFrame extends React.Component {
           axes: null,
           renderNumber: 0,
           canvasContext: null,
-          symbols: { projectedX, projectedY, projectedYMiddle, projectedYAdjusted, projectedOffset },
-          margin: { top: 0, bottom: 0, left: 0, right: 0 },
-          zoomExtent: null
+          margin: { top: 0, bottom: 0, left: 0, right: 0 }
         }
 
         this.xAccessor = null;
@@ -134,84 +91,6 @@ class XYFrame extends React.Component {
 
     setCanvasContext(actualContext) {
       this.setState({ canvasContext: actualContext })
-    }
-
-    changeZoom(previousZoom, nextZoom) {
-      if (this.props.onZoomChange) {
-        this.props.onZoomChange(previousZoom, nextZoom)
-      }
-    }
-
-    calculateDataExtent(currentProps, zoomExtent, state) {
-      zoomExtent = zoomExtent === 0 ? null : zoomExtent || state.zoomExtent
-      let fullDataset = [];
-      let lineDataAccessor = currentProps.lineDataAccessor || function (d) {return d.coordinates}
-      let xAccessor = currentProps.xAccessor || function (d) {return d[0]}
-      let yAccessor = currentProps.yAccessor || function (d) {return d[1]}
-      let initialProjectedLines = []
-
-      let projectedPoints = [], projectedLines = []
-
-      if (currentProps.points) {
-        projectedPoints = currentProps.points.map((d, i) => {
-        const x = xAccessor(d,i)
-        const y = yAccessor(d,i)
-        return Object.assign({ [projectedX]: x, [projectedY]: y }, d)
-      })
-        fullDataset = projectedPoints
-      }
-      else if (currentProps.lines) {
-        let lines = currentProps.lines;
-
-        initialProjectedLines = projectLineData({ data: lines, lineDataAccessor, xProp: projectedX, yProp: projectedY, yPropTop: projectedYTop, yPropBottom: projectedYBottom, xAccessor: xAccessor, yAccessor: yAccessor })
-
-        const optionsObject = { xProp: projectedX, yProp: projectedY, offsetProp: projectedOffset, yPropAdjusted: projectedYAdjusted, yPropMiddle: projectedYMiddle, yPropTop: projectedYTop, yPropBottom: projectedYBottom }
-
-        projectedLines = lineTransformation(currentProps.customLineType, optionsObject)(initialProjectedLines)
-
-        projectedLines.forEach(d => {
-          fullDataset = [ ...fullDataset, ...d.data.map(p => Object.assign({ parentLine: d }, p)) ]
-        })
-
-//Handle "expose points on lines" option now that sending points and lines simultaneously is no longer allowed
-        if (currentProps.showLinePoints) {
-          projectedPoints = fullDataset
-        }
-      }
-
-
-      function lineTransformation(lineType = { type: "line" }, options) {
-        const differenceCatch = (olineType, data) => lineType === "difference" && data.length !== 2 ? "line" : olineType
-        if (builtInTransformations[lineType]) {
-          return data => builtInTransformations[differenceCatch(lineType, data)]({ type: lineType, ...options, data })
-        }
-
-        if (builtInTransformations[lineType.type]) {
-          return data => builtInTransformations[differenceCatch(lineType.type, data)]({ ...lineType, ...options, data })
-        }
-
-        //otherwise assume a function
-        return data => lineType({ ...options, data })
-      }
-
-      let xMin = currentProps.xExtent && currentProps.xExtent[0] !== undefined ? currentProps.xExtent[0] : zoomExtent && zoomExtent[0] && zoomExtent[0][0] || min(fullDataset.map(d => d[projectedX]))
-      let xMax = currentProps.xExtent && currentProps.xExtent[1] !== undefined ? currentProps.xExtent[1] : zoomExtent && zoomExtent[1] && zoomExtent[0][1] || max(fullDataset.map(d => d[projectedX]))
-
-      let yMin = currentProps.yExtent && currentProps.yExtent[0] !== undefined ? currentProps.yExtent[0] : zoomExtent && zoomExtent[0] && zoomExtent[1][0] || min(fullDataset.map(d => d[projectedYBottom] === undefined ? d[projectedY] : d[projectedYBottom]))
-      let yMax = currentProps.yExtent && currentProps.yExtent[1] !== undefined ? currentProps.yExtent[1] : zoomExtent && zoomExtent[1] && zoomExtent[1][1] || max(fullDataset.map(d => d[projectedYTop] === undefined ? d[projectedY] : d[projectedYTop]))
-
-      let yExtent = [ yMin, yMax ]
-      let xExtent = [ xMin, xMax ]
-
-      if (currentProps.invertX) {
-        xExtent = [ xExtent[1],xExtent[0] ]
-      }
-      if (currentProps.invertY) {
-        yExtent = [ yExtent[1],yExtent[0] ]
-      }
-
-      return { xExtent, yExtent, projectedLines, projectedPoints, fullDataset }
-
     }
 
     screenScales({ xExtent, yExtent, currentProps, margin, adjustedSize }) {
@@ -228,14 +107,16 @@ class XYFrame extends React.Component {
 
     }
 
-    calculateXYFrame(currentProps, zoomExtent) {
+    calculateXYFrame(currentProps) {
       let margin = calculateMargin(currentProps)
       let { adjustedPosition, adjustedSize } = this.adjustedPositionSize(currentProps)
 
-      let xExtent, yExtent, projectedLines, projectedPoints, fullDataset
+      let { xExtent, yExtent, projectedLines, projectedPoints, fullDataset } = currentProps
 
       if (!currentProps.dataVersion || currentProps.dataVersion && currentProps.dataVersion !== this.state.dataVersion) {
-        ({ xExtent, yExtent, projectedLines, projectedPoints, fullDataset } = this.calculateDataExtent(currentProps, zoomExtent, this.state))
+        if (!xExtent || !yExtent || !fullDataset || !projectedLines && !projectedPoints) {
+          ({ xExtent, yExtent, projectedLines, projectedPoints, fullDataset } = calculateDataExtent(currentProps))
+        }
       }
       else {
         ({ xExtent, yExtent, projectedLines, projectedPoints, fullDataset } = this.state)
@@ -272,18 +153,20 @@ class XYFrame extends React.Component {
         const voronoiDataset = []
         const voronoiUniqueHash = {}
 
-        fullDataset.forEach(d => {
-          const pointKey = parseInt(xScale(d[projectedX])) + "," + parseInt(yScale(d[projectedYMiddle] || d[projectedY]))
-          if (!voronoiUniqueHash[pointKey]) {
-            voronoiDataset.push(d)
-            voronoiUniqueHash[pointKey] = [ d ]
+        fullDataset.forEach(function (d) {
+          const xValue = parseInt(xScale(d[projectedX]))
+          const yValue = parseInt(yScale(d[projectedYMiddle] || d[projectedY]))
+          if (xValue && yValue && isNaN(xValue) === false &&  isNaN(yValue) === false) {
+            const pointKey = xValue + "," + yValue;
+            if (!voronoiUniqueHash[pointKey]) {
+              voronoiDataset.push(d);
+              voronoiUniqueHash[pointKey] = [ d ];
+            } else {
+              //replace with real error
+              voronoiUniqueHash[pointKey].push(d);
+            }
           }
-          else {
-            //replace with real error
-            voronoiUniqueHash[pointKey].push(d)
-          }
-        })
-
+        });
 
         const voronoiData = voronoiDiagram.polygons(voronoiDataset)
 
@@ -295,7 +178,7 @@ class XYFrame extends React.Component {
             onMouseLeave={() => {this.changeVoronoi()}}
             key={"interactionVoronoi" + i}
             d={"M" + d.join("L") + "Z"}
-            style={{ opacity: 0 }} />
+            style={{ fillOpacity: 0 }} />
         }, this)
       }
 
@@ -334,6 +217,7 @@ class XYFrame extends React.Component {
             orient={d.orient}
             size={axisSize}
             position={axisPosition}
+            margin={margin}
             ticks={d.ticks}
             tickSize={d.tickSize}
             tickFormat={d.tickFormat}
@@ -341,12 +225,13 @@ class XYFrame extends React.Component {
             format={d.format}
             scale={axisScale}
             className={d.className}
-            name={d.name} />
+            name={d.name}
+            annotationFunction={currentProps.axisAnnotationFunction} />
         })
       }
 
       let marginGraphic
-      if (currentProps.zoomable) {
+      if (currentProps.matte) {
         marginGraphic = <path style={{ fill: "blue", opacity: 0.25 }} d={drawMarginPath(margin, currentProps.size)} className="xyframe-matte" />
       }
 
@@ -377,8 +262,7 @@ class XYFrame extends React.Component {
           xExtent,
           yExtent,
           margin,
-          matte: marginGraphic,
-          zoomExtent: zoomExtent
+          matte: marginGraphic
 
         })
 
@@ -436,25 +320,9 @@ class XYFrame extends React.Component {
         this.props.customClickBehavior(d)
       }
     }
-    doubleclickVoronoi(d, xExtent, yExtent, direction) {
-      if (this.props.zoomable) {
-        let zoomAmount = .25
-        if (this.props.zoomable === "number") {
-          zoomAmount = this.props.zoomable / 2
-        }
-        if (xExtent && yExtent) {
-          const mod = 0.5 + (direction === "out" ? zoomAmount : -zoomAmount)
-          const yDiff = (yExtent[1] - yExtent[0]) * mod
-          const xDiff = (xExtent[1] - xExtent[0]) * mod
-          const dX = d ? this.props.xAccessor(d) : (xExtent[1] - xExtent[0]) / 2 + xExtent[0]
-          const dY = d ? this.props.yAccessor(d) : (yExtent[1] - yExtent[0]) / 2 + yExtent[0]
-          this.changeZoom(this.state.zoomExtent, [ [ dX - xDiff, dX + xDiff ], [ dY - yDiff, dY + yDiff ] ])
-          this.calculateXYFrame(this.props, [ [ dX - xDiff, dX + xDiff ], [ dY - yDiff, dY + yDiff ] ])
-        }
-        else {
-          this.changeZoom(this.state.zoomExtent, undefined)
-          this.calculateXYFrame(this.props, 0)
-        }
+    doubleclickVoronoi(d) {
+      if (this.props.customDoubleClickBehavior) {
+        this.props.customClickBehavior(d)
       }
     }
 
@@ -528,6 +396,7 @@ class XYFrame extends React.Component {
           connector: { end: "arrow" }
         }, d, { type: typeof d.type === "function" ? d.type : undefined })
             return <Annotation
+              key={i}
               noteData={noteData}
             />
       }
@@ -568,6 +437,7 @@ class XYFrame extends React.Component {
             //TODO: Support .ra (setting angle)
 
             return <Annotation
+              key={i}
               noteData={noteData}
             />
       }
@@ -589,6 +459,7 @@ class XYFrame extends React.Component {
             }
          })
             return <Annotation
+              key={i}
               noteData={noteData}
             />
       }
@@ -609,6 +480,7 @@ class XYFrame extends React.Component {
             }
          })
             return <Annotation
+              key={i}
               noteData={noteData}
             />
       }
@@ -790,15 +662,6 @@ class XYFrame extends React.Component {
         />
       }
 
-      let zoomButtons
-      
-      if (this.props.zoomable) {
-        zoomButtons = <div className="xyframe-zoom-controls">
-          <button onClick={() => {this.doubleclickVoronoi(undefined, this.state.xExtent, this.state.yExtent)}} className="xyframe-zoom-button">+</button>
-          <button onClick={() => {this.doubleclickVoronoi(undefined, this.state.xExtent, this.state.yExtent, "out")}} className="xyframe-zoom-button">-</button>
-          <button onClick={() => {this.doubleclickVoronoi()}} className="xyframe-zoom-button">100%</button>
-          </div>
-      }
 
       let downloadButton
       if (this.props.download){
@@ -872,7 +735,6 @@ class XYFrame extends React.Component {
           pointClass={this.props.pointClass}
           canvasPoints={this.props.canvasPoints}
           defined={this.props.defined}
-          zoomable={this.props.zoomable}
           position={this.state.adjustedPosition}
           size={this.state.adjustedSize}
           extent={this.state.extent}
@@ -906,7 +768,6 @@ class XYFrame extends React.Component {
         {annotationLayer}
         </div>
         <div className="xyframe-after-elements">
-        {zoomButtons}
         {downloadButton}
         {afterElements}
         </div>

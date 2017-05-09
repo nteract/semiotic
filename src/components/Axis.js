@@ -16,7 +16,7 @@ class Axis extends React.Component {
     constructor(props){
         super(props);
         this.drawAxis = this.drawAxis.bind(this);
-
+        this.state = { hoverAnnotation: 0 }
     }
 
     componentDidMount() {
@@ -24,6 +24,7 @@ class Axis extends React.Component {
     }
 
     componentDidUpdate() {
+      //TODO: DON'T UPDATE WITH JUST HOVERANNOTATION CHANGE
       this.drawAxis()
     }
 
@@ -98,7 +99,21 @@ class Axis extends React.Component {
 
       let position = this.props.position || [ 0,0 ];
       const width = this.props.size[0] || 0
-      const height =this.props.size[1] || 0
+      const height = this.props.size[1] || 0
+      const margin = this.props.margin || { left: 0, right: 0, top: 0, bottom: 0 }
+      let hoverWidth = 50
+      let hoverHeight = height
+      let hoverX = 0
+      let hoverY = margin.top
+      let hoverFunction = e => this.setState({ hoverAnnotation: e.nativeEvent.offsetY - margin.top })
+      let circleX = 25
+      let textX = -25
+      let textY = 18
+      let lineWidth = width + 25
+      let lineHeight = 0
+      let circleY = this.state.hoverAnnotation
+      let annotationOffset = margin.left
+      let annotationType = "y"
 
       if (this.props.orient === "left") {
         position = [ width + position[0], position[1] ];
@@ -106,17 +121,57 @@ class Axis extends React.Component {
 
       if (this.props.orient === "right") {
         position = [ position[0], position[1] ];
+        hoverX = width
       }
 
       if (this.props.orient === "top") {
         position = [ position[0], height + position[1] ];
+        hoverWidth = width
+        hoverHeight = 50
+        hoverY = 0
+         annotationType = "x"
       }
 
       if (this.props.orient === "bottom") {
         position = [ position[0], position[1] ];
+        hoverWidth = width
+        hoverHeight = 50
+        hoverY = height + 50
+        hoverX = margin.left
+        hoverFunction = e => this.setState({ hoverAnnotation: e.nativeEvent.offsetX - margin.left })
+        circleX = this.state.hoverAnnotation
+        circleY = 25
+        textX = 10
+        textY = 5
+        lineWidth = 0
+        lineHeight = -height - 25
+        annotationOffset = margin.top
+         annotationType = "x"
+      }
+      let annotationBrush
+      if (this.props.annotationFunction) {
+        const annotationSymbol = this.state.hoverAnnotation ? <g
+        style={{ pointerEvents: "none" }}
+        transform={`translate(${circleX},${circleY})`}>
+        <text x={textX} y={textY}>{ numeral(this.props.scale.invert(this.state.hoverAnnotation + annotationOffset)).format(this.props.format)}</text>
+        <circle r={5} />
+        <line x1={lineWidth} y1={lineHeight}
+        style={{ stroke: "black" }} />
+        </g> : null
+        annotationBrush = <g className="annotation-brush" transform={`translate(${hoverX},${hoverY})`}>
+      <rect style={{ fillOpacity: 0 }} height={hoverHeight} width={hoverWidth} 
+        onMouseMove={hoverFunction/*this.setState()*/}
+        onClick={() => this.props.annotationFunction({ type: annotationType, value: this.props.scale.invert(this.state.hoverAnnotation + annotationOffset) })}
+        onMouseOut={() => this.setState({ hoverAnnotation: undefined })}
+      />
+      {annotationSymbol}
+      </g>
       }
 
-      return <g ref={node => this.node = node} className={this.props.className} transform={"translate(" + position +")"} ></g>;
+
+      return <g><g transform={`translate(${position})`} ref={node => this.node = node} className={this.props.className} ></g>
+      {annotationBrush}
+      </g>;
     }
 }
 

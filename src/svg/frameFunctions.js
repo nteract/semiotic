@@ -1,3 +1,11 @@
+export const drawMarginPath = (margin, size) => {
+    const interiorRing = drawRing([ [ margin.left, margin.top ],[ size[0] - margin.right, size[1] - margin.bottom ] ])
+    return interiorRing
+    function drawRing(bbox) {
+        return "M" + bbox[0][0] + "," + bbox[0][1] + "L" + bbox[1][0] + "," + bbox[0][1] + "L" + bbox[1][0] + "," + bbox[1][1] + "L" + bbox[0][0] + "," + bbox[1][1] + "Z"
+    }
+}
+
 export const trueAxis = (orient, props) => {
   if (props.projection === "horizontal" && [ "top", "bottom" ].indexOf(orient) === -1) {
     return "bottom"

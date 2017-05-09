@@ -20,11 +20,13 @@ import DebugComponent from './Debug'
 import InteractionLayer from './components/InteractionLayer'
 import VisualizationLayer from './components/VisualizationLayer'
 import { funnelize } from './svg/lineDrawing'
+import { calculateDataExtent } from './data/dataFunctions'
 
 export default {
   DraggableMark, Mark, MarkContext, Scatterplot, AnnotationLayer, DividedLine, 
   XYFrame, ORFrame, SmartFrame, MinimapXYFrame, 
   ResponsiveXYFrame, ResponsiveORFrame, ResponsiveSmartFrame, ResponsiveMinimapXYFrame,
   MiniMap, Brush, Axis, InteractionLayer, VisualizationLayer, DebugComponent, funnelize, 
+  calculateDataExtent
 }
 
