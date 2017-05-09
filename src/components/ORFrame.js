@@ -171,11 +171,20 @@ class orFrame extends React.Component {
 
       let oExtent = currentProps.oExtent || uniq(allData.map((d,i) => oAccessor(d,i)))
 
-      let rExtent = currentProps.rExtent ? [ 0, currentProps.rExtent[1] ] : [ 0, nestedPositiveData.length === 0 ? 0 :Math.max(max(nestedPositiveData, d => d.value), 0) ]
-      let totalRExtent = currentProps.rExtent ? [ 0, currentProps.rExtent[1] ] : [ 0,  Math.max(max(allData, rAccessor), 0) ]
+      let bottomR = currentProps.rExtent && currentProps.rExtent[0]
+      let topR = currentProps.rExtent && currentProps.rExtent[1]
 
-      let subZeroRExtent = currentProps.rExtent ? [ 0, currentProps.rExtent[0] ] : [ 0, nestedNegativeData.length === 0 ? 0 : Math.min(min(nestedNegativeData, d => d.value), 0) ]
-      let subZeroTotalExtent = currentProps.rExtent ? [ 0, currentProps.rExtent[0] ] : [ 0, Math.min(min(allData, rAccessor), 0) ]
+      if (currentProps.rExtent && currentProps.rExtent[0] > currentProps.rExtent[1]) {
+        //Assume a flipped rExtent
+        bottomR = currentProps.rExtent && currentProps.rExtent[1]
+        topR = currentProps.rExtent && currentProps.rExtent[0]
+      }
+
+      let rExtent = currentProps.rExtent ? [ 0, topR ] : [ 0, nestedPositiveData.length === 0 ? 0 : Math.max(max(nestedPositiveData, d => d.value), 0) ]
+      let totalRExtent = currentProps.rExtent ? [ 0, topR ] : [ 0,  Math.max(max(allData, rAccessor), 0) ]
+
+      let subZeroRExtent = currentProps.rExtent ? [ 0, bottomR ] : [ 0, nestedNegativeData.length === 0 ? 0 : Math.min(min(nestedNegativeData, d => d.value), 0) ]
+      let subZeroTotalExtent = currentProps.rExtent ? [ 0, bottomR ] : [ 0, Math.min(min(allData, rAccessor), 0) ]
 
       if (summaryType.type || pieceType.type === "swarm" || pieceType.type === "point") {
         rExtent = [ subZeroTotalExtent[1], totalRExtent[1] ]
@@ -191,7 +200,7 @@ class orFrame extends React.Component {
       if (currentProps.sortO) {
         oExtent = oExtent.sort(currentProps.sortO)
       }
-      if (currentProps.invertR) {
+      if (currentProps.invertR || currentProps.rExtent && currentProps.rExtent[0] > currentProps.rExtent[1]) {
         rExtent = [ rExtent[1],rExtent[0] ]
         subZeroRExtent = [ subZeroRExtent[1],subZeroRExtent[0] ]
       }
@@ -615,6 +624,7 @@ class orFrame extends React.Component {
             if (projection === "horizontal") {
               translate = "translate(" + margin.left + "," + projectedColumns[oAccessor(thisSummaryData[0])].middle + ")"
             }
+
       if (summaryType.type === "heatmap") {
 
                     const tiles = bins.map((d,i) => {
@@ -647,6 +657,7 @@ class orFrame extends React.Component {
                 </g>)
         }
         else if (summaryType.type === "histogram") {
+            console.log("bins", bins)
             const tiles = bins.map((d,i) => {
               const opacity = d.value / binMax
               let rectX = -columnWidth/2
