@@ -1,4 +1,6 @@
 # semiotic
+[![Semiotic](semiotic_logo_horizontal.png "semiotic")](https://github.com/emeeks/semiotic/wiki/)
+
 A data visualization framework combining React &amp; D3
 
 This repo is in a holding state while the documentation is written.
