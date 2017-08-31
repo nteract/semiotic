@@ -1,21 +1,21 @@
-import React from "react";
-import { HashRouter, Route } from "react-router-dom";
-import Home from "./Home";
-import Documentation from "./Documentation";
-import injectTapEventPlugin from "react-tap-event-plugin";
-injectTapEventPlugin();
-import LayoutFooter from "./layout/Footer";
-import MuiThemeProvider from "material-ui/styles/MuiThemeProvider";
-import getMuiTheme from "material-ui/styles/getMuiTheme";
-import theme from "./theme.js";
-import "./flexboxgrid.css";
-import "./prism.css";
-import "./index.css";
+import React from "react"
+import { HashRouter, Route } from "react-router-dom"
+import Home from "./Home"
+import Documentation from "./Documentation"
+import injectTapEventPlugin from "react-tap-event-plugin"
+injectTapEventPlugin()
+import LayoutFooter from "./layout/Footer"
+import MuiThemeProvider from "material-ui/styles/MuiThemeProvider"
+import getMuiTheme from "material-ui/styles/getMuiTheme"
+import theme from "./theme.js"
+import "./flexboxgrid.css"
+import "./prism.css"
+import "./index.css"
 
-const gh = "emeeks/semiotic";
+const gh = "emeeks/semiotic"
 const basename = process.env.REACT_APP_GH_PAGES_PATH
   ? `/${process.env.REACT_APP_GH_PAGES_PATH}`
-  : "";
+  : ""
 
 const Docs = test => {
   return (
@@ -34,9 +34,9 @@ const Docs = test => {
                         <Home />
                         <Documentation />
                       </div>
-                    );
+                    )
                   }
-                  return null;
+                  return null
                 }}
               />
               <Route path="/:component" component={Documentation} />
@@ -46,7 +46,7 @@ const Docs = test => {
         </HashRouter>
       </div>
     </MuiThemeProvider>
-  );
-};
+  )
+}
 
-export default Docs;
+export default Docs
