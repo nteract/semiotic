@@ -271,13 +271,19 @@ g.resize > rect {
 
 .example-wrapper {
   display: inline-block;
-  width: 30%;
+  width: 100%;
   height: 300px;
   border: 1px solid lightgray;
-  margin: 0.5%;
   overflow: hidden;
   position: relative;
   cursor: pointer;
+}
+
+@media (min-width: 700px) {
+  .example-wrapper {
+    width: 30%;
+    margin: 0.5%;
+  }
 }
 
 .example-wrapper h1 {
