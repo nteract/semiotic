@@ -3,6 +3,7 @@
 Semiotic is a data visualization framework combining React &amp; D3
 
 [Interactive Documentation](https://emeeks.github.io/semiotic/)
+
 [API Docs on the wiki](https://github.com/emeeks/semiotic/wiki)
 
 Installation
