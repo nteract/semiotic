@@ -5,6 +5,7 @@ import { edgeData } from "../example_settings/networkframe";
 import RaisedButton from "material-ui/RaisedButton";
 import SelectField from "material-ui/SelectField";
 import MenuItem from "material-ui/MenuItem";
+import Icon from "material-ui/svg-icons/social/share";
 
 const components = [];
 // Add your component proptype data here
@@ -354,3 +355,4 @@ export default class NetworkFrameDocs extends React.Component {
 }
 
 NetworkFrameDocs.title = "NetworkFrame";
+NetworkFrameDocs.icon = <Icon />;

@@ -22,21 +22,7 @@ import { testData } from "../example_settings/xyframe";
 import RaisedButton from "material-ui/RaisedButton";
 import SelectField from "material-ui/SelectField";
 import MenuItem from "material-ui/MenuItem";
-
-/*
-
-TODO:
-Still missing:
-  Precalculated data:
-    projectedLines={precalculatedData1.projectedLines}
-    fullDataset={precalculatedData1.fullDataset}
-    xExtent={precalculatedData1.xExtent}
-    yExtent={[ precalculatedData1.yExtent[0], precalculatedData2.yExtent[1] ]}
-
-  area label customization
-    areaType={{ type: 'alpha', alpha: 0.001, label: d => ({ position: 'bottom', content: f => `Positioned Label: ${f.id} ${d.id}` }) }} 
-
-*/
+import Icon from "material-ui/svg-icons/action/timeline";
 
 class NameForm extends React.Component {
   constructor(props) {
@@ -57,8 +43,6 @@ class NameForm extends React.Component {
 
   handleSubmit(event) {
     event.preventDefault();
-    //You could also mutate the existing annotation
-    //this.props.updateAnnotations(Object.assign(this.props.dataPoint, { type: 'x', label: this.state.value }))
     this.props.updateAnnotations(
       Object.assign({}, this.props.dataPoint, {
         type: this.state.type,
@@ -1510,3 +1494,5 @@ export default class XYFrameDocs extends React.Component {
 }
 
 XYFrameDocs.title = "XYFrame";
+
+XYFrameDocs.icon = <Icon />;

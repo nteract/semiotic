@@ -616,7 +616,7 @@ export default class InformationModel extends React.Component {
           data={funnelData}
           oPadding={10}
           oLabel={true}
-          margin={{ left: 50, bottom: 50, right: 0, top: 10 }}
+          margin={{ left: 50, bottom: 50, right: 0, top: 30 }}
           axis={{ orient: "left" }}
           {...stepSettings[this.state.step]}
         />

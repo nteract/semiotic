@@ -7,6 +7,7 @@ import RaisedButton from "material-ui/RaisedButton";
 import { sum } from "d3-array";
 import SelectField from "material-ui/SelectField";
 import MenuItem from "material-ui/MenuItem";
+import Icon from "material-ui/svg-icons/content/sort";
 
 const monthHash = {};
 
@@ -651,3 +652,4 @@ export default class ORFrameDocs extends React.Component {
 }
 
 ORFrameDocs.title = "ORFrame";
+ORFrameDocs.icon = <Icon />;
