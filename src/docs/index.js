@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Route } from "react-router-dom";
+import { HashRouter, Route } from "react-router-dom";
 import Home from "./Home";
 import Documentation from "./Documentation";
 import injectTapEventPlugin from "react-tap-event-plugin";
@@ -21,7 +21,7 @@ const Docs = test => {
   return (
     <MuiThemeProvider muiTheme={getMuiTheme(theme)}>
       <div className="container-fluid">
-        <BrowserRouter basename={basename}>
+        <HashRouter basename={basename}>
           <div className="App">
             <div className="container-fluid">
               <Route
@@ -43,7 +43,7 @@ const Docs = test => {
             </div>
             <LayoutFooter gh={gh} />
           </div>
-        </BrowserRouter>
+        </HashRouter>
       </div>
     </MuiThemeProvider>
   );
