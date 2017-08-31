@@ -24,21 +24,24 @@ const intro = (
       allow for convenient ideation and design of data visualization.
     </p>
     <p>
-      We found that successful custom data visualization meant more
-      than putting a few charts in front of an audience. We wanted to enable our
-      stakeholders to make meaning with visualizations at a quick glance and
-      seamlessly be able to dig deeper into visualizations to uncover
-      non-obvious insights. Semiotic was designed to enable designers and
-      stakeholders to test a variety of visualizations, while still providing
-      control over interactivity and presentation of the data.{" "}
+      We found that successful custom data visualization meant more than putting
+      a few charts in front of an audience. We wanted to enable our stakeholders
+      to make meaning with visualizations at a quick glance and seamlessly be
+      able to dig deeper into visualizations to uncover non-obvious insights.
+      Semiotic was designed to enable designers and stakeholders to test a
+      variety of visualizations, while still providing control over
+      interactivity and presentation of the data.{" "}
     </p>
+    <div style={{ textAlign: "center" }}>
+      <img width="400px" src="/semiotic/layers.png" />
+    </div>
     <p>
       Semiotic uses a layer model for data visualization, separating interactive
-      and annotation elements from graphical elements representing data. (See
-      figure A) This allows for optimized rendering and also allows developers
-      to focus on creating the different pieces of an effective chart or diagram
-      without using the same mental model for interaction elements, labels or
-      other related but distinct components.
+      and annotation elements from graphical elements representing data. This
+      allows for optimized rendering and also allows developers to focus on
+      creating the different pieces of an effective chart or diagram without
+      using the same mental model for interaction elements, labels or other
+      related but distinct components.
     </p>
   </div>
 );

@@ -282,7 +282,7 @@ export default class NetworkFrameDocs extends React.Component {
             zoomToFit={true}
             nodeLabels={true}
             hoverAnnotation={true}
-            download={true}
+            download={false}
             annotationSettings={{
               pointSizeFunction: d => (d.subject && d.subject.radius) || 5,
               labelSizeFunction: noteData => {

@@ -19,7 +19,7 @@ const nRando = randomNormal(50, 15);
 for (let x = 1; x < 500; x++) {
   groupData.push({
     x: nRando(),
-    value: Math.min(100, Math.max(0, nRando())),
+    value: Math.max(0, Math.min(100, Math.max(0, nRando()))),
     color: colors[x % 4],
     value2: x
   });
@@ -256,15 +256,15 @@ export default class ORFrameDocs extends React.Component {
     super(props);
     this.state = {
       projection: "vertical",
-      type: "bar",
-      summaryType: "none",
+      type: "none",
+      summaryType: "histogram",
       dynamicColumnWidth: "fixed",
       rAccessor: "relative",
       renderFn: "none",
       connector: "off",
       annotations: "off",
       oPadding: 50,
-      dataType: "stacked",
+      dataType: "group",
       hoverBehavior: "general",
       example: "basic"
     };
@@ -352,19 +352,17 @@ export default class ORFrameDocs extends React.Component {
       this.state.renderFn === "none" ? undefined : () => this.state.renderFn;
 
     const buttons = [
-      this.state.summaryType === "none" ? null : (
-        <div key="button-0">
-          <span>
-            <SelectField
-              floatingLabelText="Data Type"
-              value={this.state.dataType}
-              onChange={(e, i, value) => this.setState({ dataType: value })}
-            >
-              {dataTypeOptions}
-            </SelectField>
-          </span>
-        </div>
-      ),
+      <div key="button-0">
+        <span>
+          <SelectField
+            floatingLabelText="Data Type"
+            value={this.state.dataType}
+            onChange={(e, i, value) => this.setState({ dataType: value })}
+          >
+            {dataTypeOptions}
+          </SelectField>
+        </span>
+      </div>,
       <div key="button-1">
         <span>
           <SelectField
@@ -381,7 +379,8 @@ export default class ORFrameDocs extends React.Component {
           <SelectField
             floatingLabelText="summaryType"
             value={this.state.summaryType}
-            onChange={(e, i, value) => this.setState({ summaryType: value })}
+            onChange={(e, i, value) =>
+              this.setState({ dataType: "group", summaryType: value })}
           >
             {summaryOptions}
           </SelectField>
@@ -554,7 +553,7 @@ export default class ORFrameDocs extends React.Component {
                 undefined
               )
             }
-            download={true}
+            download={false}
             downloadFields={["funnelKey"]}
           />
         </div>
@@ -633,13 +632,18 @@ export default class ORFrameDocs extends React.Component {
         buttons={buttons}
       >
         <p>
-          The ORFrame lets you create scatterplots, line charts and area
-          visualizations like contours and alpha shapes.
+          The ORFrame lets you create bar charts, pie charts and distribution
+          visualizations like violin plots and heatmaps.
+        </p>
+        <p>
+          Adjust the settings to see the code necessary to deploy that chart.
+          For instance change summaryType to "violin" to see violin plots.
         </p>
 
         <p>
-          Data are sent to the data properties with summary types and connector
-          rules determining whether summaries and connectors are drawn.
+          Data are sent as an array of objects to the data property with summary
+          types and connector rules determining whether summaries and connectors
+          are drawn.
         </p>
       </DocumentComponent>
     );

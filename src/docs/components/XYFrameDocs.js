@@ -132,11 +132,6 @@ const curveHash = {
   curveMonotoneX,
   curveStep
 };
-const marginHash = {
-  none: undefined,
-  number: 10,
-  object: { top: 60, bottom: 65, left: 60, right: 120 }
-};
 
 const axesLabelHash = {
   basic: `[
@@ -681,7 +676,7 @@ export default class XYFrameDocs extends React.Component {
       annotations: "off",
       curve: "none",
       margin: "object",
-      axes: "none",
+      axes: "basic",
       renderMode: "none",
       defined: "active",
       hoverAnnotation: "on",
@@ -706,7 +701,8 @@ export default class XYFrameDocs extends React.Component {
       clickAnnotation: undefined,
       backgroundGraphics: "off",
       foregroundGraphics: "off",
-      customScale: "none"
+      customScale: "none",
+      legend: "off"
     };
 
     //In constructor to get access to this
@@ -759,6 +755,17 @@ export default class XYFrameDocs extends React.Component {
     const dataTypeOptions = ["line", "point", "area"].map(d => (
       <MenuItem key={"data-type-option-" + d} primaryText={d} value={d} />
     ));
+
+    const marginHash = {
+      none: undefined,
+      number: 10,
+      object: {
+        top: 60,
+        bottom: 65,
+        left: 60,
+        right: this.state.legend === "on" ? 120 : 20
+      }
+    };
 
     const options = [
       "none",
@@ -1099,7 +1106,7 @@ export default class XYFrameDocs extends React.Component {
             )
           }
           yScaleType={customScaleType[this.state.customScale]}
-          download={true}
+          download={false}
           //            legend={{ title: "test", position: "right", width: 200, legendGroups: [
           //              { label: "Red stuff", styleFn: (d,i) => ({ fill: "red", fillOpacity: i * .25 + .25 }), items: [{ label: "a" }, { label: "b" }, { label: "c" }] },
           //              { label: "Blue stuff", styleFn: (d,i) => ({ fill: "blue", fillOpacity: i * .25 + .25 }), items: [{ label: "d" }, { label: "e" }, { label: "f" }] }
@@ -1485,31 +1492,17 @@ export default class XYFrameDocs extends React.Component {
       >
         <p>
           The XYFrame lets you create scatterplots, line charts and area
-          visualizations like contours and alpha shapes.
-        </p>
-
-        <p>
-          Data are sent to the lines, points and areas properties. For points,
-          an array of objects is expected, each with an attribute that
-          corresponds to the xAccessor and yAccessor value you set for the
-          frame. Areas and lines are also sent as an an array of objects but
-          each is expected to have an array of points that are used to draw the
-          line or area. By default, the frame looks for this array of points in
-          the "coordinates" property but you can specify a different property
-          using areaDataAccessor or lineDataAccessor respectively. Display and
-          formatting is based on the corresponding style, class functions.
+          visualizations like contours and alpha shapes. You can experiment with
+          the settings to see the code necessary to deploy that chart in your
+          app.
         </p>
         <p>
-          The interactive example below allows you to adjust the frame settings
-          to produce different visualizations. The code adjusts to reflect the
-          current settings.
+          For instance, adjust the lineType property to see different variations
+          of the line chart, such as a bump chart or stacked area chart.
         </p>
         <p>
-          There's a bug with the MinimapXYFrame that you can only get the right
-          brush once, so if you want to see it for areas or points, first switch
-          to that datatype then switch to MinimapXYFrame, and refresh the page
-          if you've already looked at MinimapXYFrame in line mode. This should
-          be fixed soon.
+          Or turn on annotations to see how semiotic automatically processes
+          annotations.
         </p>
       </DocumentComponent>
     );

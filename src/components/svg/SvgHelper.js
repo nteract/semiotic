@@ -83,7 +83,6 @@ export const groupBarMark = ({
   i,
   binMax,
   columnWidth,
-  bucketSize,
   projection,
   adjustedSize,
   chartSize,
@@ -104,16 +103,16 @@ export const groupBarMark = ({
     type.type === "heatmap" ? columnWidth : columnWidth * opacity;
   let xProp = -columnWidth / 2;
   let yProp = d.y;
-  let height = Math.ceil(bucketSize);
+  let height = d.y1;
   let width = finalColumnWidth;
   if (projection === "horizontal") {
     yProp =
       type.type === "heatmap"
         ? -columnWidth / 2
         : columnWidth / 2 - finalColumnWidth;
-    xProp = d.y - bucketSize;
+    xProp = d.y - d.y1;
     height = finalColumnWidth;
-    width = bucketSize;
+    width = d.y1;
   } else if (projection === "radial") {
     const arcGenerator = arc()
       .innerRadius((d.y - margin.left) / 2)

@@ -436,12 +436,10 @@ export function bucketizedRenderingFn({
     const binOffset = projection === "vertical" ? binDomain[0] : 0;
     let binBuckets = [];
 
-    for (let x = 0; x < buckets - 1; x++) {
-      binBuckets.push(
-        binDomain[0] + x / (buckets - 1) * (chartSize - binOffset)
-      );
+    for (let x = 0; x < buckets; x++) {
+      binBuckets.push(binDomain[0] + x / buckets * (chartSize - binOffset));
     }
-    binBuckets.push(binDomain[1]);
+    //    binBuckets.push(binDomain[1]);
 
     const xyValue =
       projection === "vertical" ? p => p.xy.y : p => p.piece._orFR;
