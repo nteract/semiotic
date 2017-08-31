@@ -1,0 +1,15 @@
+/tests/output/coverage/**/*
+/.idea/
+.agignore
+.npmrc
+.nyc_output/
+/node_modules
+/lib
+npm-debug.log
+logs/*
+*-compiled*
+build
+
+examples/dist/bundle.js
+.eslintrc
+.prettierrc

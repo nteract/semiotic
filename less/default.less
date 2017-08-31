@@ -1,0 +1,108 @@
+/* Settings > Colors */
+@grey: #aaa;
+@grey-light: #D3D4CD;
+
+@blue: #2F4761;
+@blue-light: #769DC7;
+@yellow: #dda50c;
+@green: #72a254;
+
+@white: white;
+@black: #000;
+
+@link-color: #ac9739;
+@light-link-color: #ac9739;
+
+textarea,
+textbox {
+  outline: none;
+}
+
+.code {
+  font-family: Courier New, monospace;
+  color: #2c472e;
+  font-size: 11px;
+  margin: 2px;
+  padding: 0;
+}
+
+pre {
+  font-size: 11px;
+  margin: 2px;
+  padding: 0;
+}
+
+.annotation-x-line {
+  stroke: blue;
+  stroke-width: 1px;
+  stroke-dasharray: 5 5;
+}
+
+.annotation-y-line {
+  stroke: purple;
+  stroke-width: 1px;
+  stroke-dasharray: 10 10;
+}
+
+.divided-line-xy .xscale .tick > line {
+  stroke-opacity: 0;
+}
+
+.divided-line-xy .yscale .tick > line {
+  stroke: #00a2ce;
+  stroke-opacity: 0.5;
+}
+
+.divided-line-or .yscale .tick > line {
+  stroke: #b3331d;
+  stroke-opacity: 0.5;
+}
+
+.divided-line-xy .yscale .tick > text {
+  fill: #00a2ce;
+  fill-opacity: 0.5;
+}
+
+.divided-line-or .yscale .tick > text {
+  fill: #b3331d;
+  fill-opacity: 0.5;
+}
+
+.annotations path {
+  fill: none;
+  stroke: @link-color;
+  stroke-width: 1px;
+}
+
+.annotations .badge path {
+  fill: @light-link-color;
+}
+
+.annotations text {
+  fill: @link-color;
+}
+
+path.connector-arrow {
+  fill: @link-color;
+}
+
+.annotation-note rect {
+  fill: none;
+}
+
+.annotation.badge path.subject-pointer,
+.annotation.badge path.subject {
+  fill: @light-link-color;
+  stroke-width: 3px;
+  stroke-linecap: round;
+}
+
+.annotation.badge path.subject-ring {
+  fill: white;
+  stroke-width: 3px;
+}
+
+.annotation.badge .badge-text {
+  fill: white;
+  font-size: .7em;
+}

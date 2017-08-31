@@ -2,18 +2,27 @@
 
 Semiotic is a data visualization framework combining React &amp; D3
 
-This repo is in a holding state while the documentation is written.
+[Interactive Documentation](https://emeeks.github.io/semiotic/)
+[API Docs on the wiki](https://github.com/emeeks/semiotic/wiki)
 
 Installation
 ```
-npm i semiotic -SE
+npm i semiotic
 ```
 
 Example
 
 ```js
-import { Mark } from 'semiotic'
-
+import { XYFrame } from 'semiotic'
 ```
 
 _Semiotic icon based on an icon by André Schauer_
+
+It may not be apparent in the commit logs but development of this library owes a lot to:
+
+* Susie Lu
+* Jason Reid
+* James Womack
+* Matt Herman
+* Shelby Sturgis
+* Tristan Reid
