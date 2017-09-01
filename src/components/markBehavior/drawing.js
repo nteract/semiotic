@@ -377,6 +377,7 @@ export function sketchy(markType, cloneProps) {
     }
     const fills = [];
     const outlines = [];
+    const sketchKey = Math.random().toString();
 
     if (cloneProps.d) {
       select("body")
@@ -397,6 +398,7 @@ export function sketchy(markType, cloneProps) {
             const fillProps = Object.assign({}, cloneProps);
             const fillStyle = Object.assign({}, cloneProps.style);
             const sketchyFill = cheapSketchy(pathNode, fillStyle.fillOpacity);
+            fillStyle.clipPath = `url(#clip-path-${sketchKey})`;
             fillProps.style = fillStyle;
             fillProps.d = sketchyFill;
             fillStyle.stroke = fillStyle.fill;
@@ -404,7 +406,7 @@ export function sketchy(markType, cloneProps) {
             //            fillStyle.strokeOpacity = fillStyle.fillOpacity ? fillStyle.fillOpacity : 1;
             fillStyle.fill = "none";
             fillProps.key = `sketchFill-${i}`;
-            fills.push(React.createElement("path", fillProps));
+            fills.push(<path {...fillProps} />);
           }
           if (
             cloneProps.style &&
@@ -419,7 +421,7 @@ export function sketchy(markType, cloneProps) {
             outlineProps.d = sketchyOutline;
             outlineProps.key = `sketchOutline-${i}`;
             outlineProps.style.fill = "none";
-            outlines.push(React.createElement("path", outlineProps));
+            outlines.push(<path {...outlineProps} />);
           }
         });
     }
@@ -427,6 +429,9 @@ export function sketchy(markType, cloneProps) {
     select("#sketchyTempSVG").remove();
 
     return [
+      <clipPath key="sketchy-clip-overlay" id={`clip-path-${sketchKey}`}>
+        <path d={cloneProps.d} style={{ opacity: 0 }} />
+      </clipPath>,
       <path
         key="sketchy-interaction-overlay"
         d={cloneProps.d}

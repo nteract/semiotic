@@ -452,6 +452,7 @@ let displayData = testData.map(d => {
 
 const exampleAnnotations = [
   {
+    className: "annotation-class-1",
     px: 4,
     py: 300,
     dx: -30,
@@ -461,6 +462,7 @@ const exampleAnnotations = [
     subject: { text: "A", radius: 12 }
   },
   {
+    className: "annotation-class-2",
     px: 5,
     py: 1000,
     dx: -30,

@@ -271,7 +271,7 @@ class XYFrame extends React.Component {
             tickValues={tickValues}
             format={d.format}
             scale={axisScale}
-            className={d.className}
+            className={d.className || ""}
             name={d.name}
             padding={d.padding}
             rotate={d.rotate}
@@ -305,7 +305,8 @@ class XYFrame extends React.Component {
         const lineType = currentProps.lineType || currentProps.customLineType;
         const typeString = lineType && lineType.type ? lineType.type : lineType;
         const type =
-          ["stackedarea", "stackedpercent", "bumparea"].indexOf(typeString) === -1
+          ["stackedarea", "stackedpercent", "bumparea"].indexOf(typeString) ===
+          -1
             ? "line"
             : "fill";
         const legendGroups = [
@@ -485,7 +486,7 @@ class XYFrame extends React.Component {
     } else if (d.type === "xy" || d.type === "frame-hover") {
       const laLine = (
         <Mark
-          className={"annotation " + d.type}
+          className={`annotation ${d.type} ${d.className || ""} `}
           key={"annotationpoint" + i}
           markType="circle"
           cx={screenCoordinates[0]}
@@ -503,7 +504,7 @@ class XYFrame extends React.Component {
             forceUpdate={true}
             x={screenCoordinates[0]}
             y={10 + screenCoordinates[1]}
-            className="annotation annotation-xy-label"
+            className={`annotation annotation-xy-label ${d.className || ""} `}
           >
             {d.label}
           </Mark>
@@ -653,7 +654,7 @@ class XYFrame extends React.Component {
             y1Position +
             "Z"
           }
-          className="annotation annotation-bounds"
+          className={`annotation annotation-bounds ${d.className || ""} `}
         />
       );
 
@@ -664,7 +665,7 @@ class XYFrame extends React.Component {
           forceUpdate={true}
           x={5 + x0Position}
           y={-5 + y0Position}
-          className="annotation annotation annotation-bounds-label"
+          className={`annotation annotation-bounds-label ${d.className || ""} `}
         >
           {d.label}
         </Mark>
@@ -681,7 +682,7 @@ class XYFrame extends React.Component {
           key={d.label + "annotationline" + i}
           markType="path"
           d={lineD}
-          className="annotation annotation-line"
+          className={`annotation annotation-line ${d.className || ""} `}
         />
       );
 
@@ -691,7 +692,7 @@ class XYFrame extends React.Component {
           key={d.label + "annotationlinetext" + i}
           x={(screenCoordinates[0][0] + screenCoordinates[1][0]) / 2}
           y={(screenCoordinates[0][1] + screenCoordinates[1][1]) / 2}
-          className="annotation annotation-line-label"
+          className={`annotation annotation-line-label ${d.className || ""} `}
         >
           {d.label}
         </Mark>
@@ -716,7 +717,7 @@ class XYFrame extends React.Component {
           markType="path"
           transform={"translate(" + annotationLayer.position + ")"}
           d={mappedCoordinates}
-          className="annotation annotation-area"
+          className={`annotation annotation-area ${d.className || ""} `}
         />
       );
 
@@ -728,7 +729,7 @@ class XYFrame extends React.Component {
           x={xCenter}
           y={yCenter}
           transform={"translate(" + annotationLayer.position + ")"}
-          className="annotation annotation-area-label"
+          className={`annotation annotation-area-label ${d.className || ""} `}
           style={{ textAnchor: "middle" }}
         >
           {d.label}
@@ -853,7 +854,7 @@ class XYFrame extends React.Component {
       return (
         <div
           key={"xylabel" + i}
-          className="annotation annotation-xy-label"
+          className={`annotation annotation-xy-label ${d.className || ""} `}
           style={{
             position: "absolute",
             bottom: this.props.size[1] - screenCoordinates[1] + "px",

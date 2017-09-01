@@ -41,7 +41,7 @@ export default class BarLineDocs extends React.Component {
                 className='divided-line-or'
                 data={displayData[0].data}
                 type={'bar'}
-                renderFn={() => 'sketchy'}
+                renderMode={"sketchy"}
                 oAccessor={d => d.x}
                 rAccessor={d => d.leads}
                 style={() => ({ fill: '#b3331d', opacity: 1, stroke: 'white' })}
@@ -55,6 +55,7 @@ export default class BarLineDocs extends React.Component {
                 axes={axes}
                 lines={displayData}
                 lineDataAccessor={d => d.data}
+                lineRenderMode={"sketchy"}
                 xAccessor={d => d.x}
                 yAccessor={d => d.sales}
                 lineStyle={() => ({ stroke: '#00a2ce', strokeWidth: '2px' })}

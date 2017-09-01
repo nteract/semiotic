@@ -1134,7 +1134,7 @@ class networkFrame extends React.Component {
       return (
         <div
           key={"xylabel" + i}
-          className="annotation annotation-xy-label"
+          className={`annotation annotation-network-label ${d.className || ""}`}
           style={{
             position: "absolute",
             bottom: this.props.size[1] - d.y + "px",

@@ -15,12 +15,15 @@ const Home = ({ match }) => {
             <h1 className="accent-font">semiotic</h1>
             <h2 className="tagline">charts that carry the conversation</h2>
             <p>
-              <a href="https://github.com/emeeks/semiotic">
-                Semiotic
-              </a>{" "}
-              is an opinionated framework optimized to enable effective
-              communication through data visualization.
+              <a href="https://github.com/emeeks/semiotic">Semiotic</a> is an
+              opinionated framework optimized to enable effective communication
+              through data visualization.
             </p>
+            <RaisedButton
+              primary
+              label={"Interactive Examples"}
+              containerElement={<Link to="examples" />}
+            />
             <RaisedButton
               primary
               label={"Github Repo"}
@@ -62,9 +65,7 @@ const Home = ({ match }) => {
           </p>
           <h2>Getting Started</h2>
           <hr />
-          <p>
-            Install and save the component to your project.
-          </p>
+          <p>Install and save the component to your project.</p>
           <pre>
             <PrismCode className="language-bash">npm i -SE semiotic</PrismCode>
           </pre>

@@ -923,21 +923,19 @@ class orFrame extends React.Component {
         orFrameState: this.state
       });
     } else if (d.type === "or") {
-      const label = (
+      return (
         <Mark
           markType="text"
           key={d.label + "annotationtext" + i}
           forceUpdate={true}
           x={screenCoordinates[0] + (projection === "horizontal" ? 10 : 0)}
           y={screenCoordinates[1] + (projection === "vertical" ? 10 : 0)}
-          className="annotation annotation-or-label"
+          className={`annotation annotation-or-label ${d.className || ""}`}
           textAnchor="middle"
         >
           {d.label}
         </Mark>
       );
-
-      return label;
     } else if (d.type === "d3-annotation" || typeof d.type === "function") {
       const noteData = Object.assign(
         {
@@ -1110,7 +1108,7 @@ class orFrame extends React.Component {
         <div
           key={"xylabel" + i}
           className={`annotation annotation-or-label tooltip ${this.props
-            .projection}`}
+            .projection} ${d.className || ""}`}
           style={{
             position: "absolute",
             bottom: `${10 + this.props.size[1] - d.y}px`,
@@ -1173,7 +1171,7 @@ class orFrame extends React.Component {
         <div
           key={"orlabel" + i}
           className={`annotation annotation-or-label tooltip ${this.props
-            .projection}`}
+            .projection} ${d.className || ""}`}
           style={{
             position: "absolute",
             bottom: yPosition + "px",
