@@ -257,15 +257,15 @@ export default class ORFrameDocs extends React.Component {
     super(props);
     this.state = {
       projection: "vertical",
-      type: "none",
-      summaryType: "histogram",
+      type: "bar",
+      summaryType: "none",
       dynamicColumnWidth: "fixed",
       rAccessor: "relative",
       renderFn: "none",
       connector: "off",
       annotations: "off",
       oPadding: 50,
-      dataType: "group",
+      dataType: "stacked",
       hoverBehavior: "general",
       example: "basic"
     };
