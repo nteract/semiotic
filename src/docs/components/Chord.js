@@ -50,7 +50,7 @@ export default class Chord extends React.Component {
 
     const buttons = [
       <span key="button-1-0-0">
-        padAngle<SelectField
+        <SelectField
           floatingLabelText="padAngle"
           value={this.state.padAngle}
           onChange={(e, i, value) => this.setState({ padAngle: value })}

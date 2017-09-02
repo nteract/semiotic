@@ -10,6 +10,11 @@ b {
   font-family: Helvetica, Arial, sans-serif;
 }
 
+body {
+  background-color: white;
+  color: black;
+}
+
 div#root {
   margin-top: 60px;
 }
@@ -363,4 +368,46 @@ circle.frame-hover {
 
 .bar-line-or .axis-labels {
   fill: rgba(0, 162, 206, 0.5);
+}
+
+.st0 {
+  fill: #5b5b5b;
+}
+.st1 {
+  fill: #7f7f7f;
+}
+.st2 {
+  fill: #ffffff;
+}
+.st3 {
+  fill: #a98c48;
+}
+.st4 {
+  fill: #68836a;
+}
+.st5 {
+  fill: #aa8d43;
+}
+.st6 {
+  font-family: "ArialMT";
+}
+.st7 {
+  font-size: 11px;
+}
+.st8 {
+  fill: #a88b49;
+}
+.st9 {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+.st10 {
+  fill: #ffffff;
+  stroke: #ffffff;
+}
+.st11 {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 1.5;
 }

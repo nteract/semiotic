@@ -24,6 +24,7 @@ import DonutChart from "./components/DonutChart";
 import JoyPlot from "./components/JoyPlot";
 import WaterfallChart from "./components/WaterfallChart";
 import NeighborhoodMap from "./components/NeighborhoodMap";
+import BaseballMap from "./components/BaseballMap";
 import WordCloud from "./components/WordCloud";
 import SwarmBrush from "./components/SwarmBrush";
 import DivergingStackedBar from "./components/DivergingStackedBar";
@@ -45,8 +46,9 @@ const components = {
   xyframe: { docs: XYFrameDocs },
   regionatedlinechart: { docs: RegionatedLineChartDocs, parent: "xyframe" },
   barline: { docs: BarLineDocs, parent: "xyframe" },
-  neighborhoodmap: { docs: NeighborhoodMap, parent: "xyframe" },
   annotations: { docs: AppleStockChart, parent: "xyframe" },
+  homerunmap: { docs: BaseballMap, parent: "xyframe" },
+  neighborhoodmap: { docs: NeighborhoodMap, parent: "xyframe" },
   orframe: { docs: ORFrameDocs },
   temperaturesummaries: { docs: TemperatureSummaries, parent: "orframe" },
   parallelcoordinates: { docs: ParallelCoordinates, parent: "orframe" },
