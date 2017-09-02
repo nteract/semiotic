@@ -20,7 +20,7 @@ const intro = (
       commonplace. Most solutions today, however, focus on enabling generic
       chart types simply visualizing a dataset versus optimizing communication
       of the data through a visual medium. Semiotic provides a different
-      approach: highight the shared structure of different charting methods to
+      approach: highlight the shared structure of different charting methods to
       allow for convenient ideation and design of data visualization.
     </p>
     <p>
