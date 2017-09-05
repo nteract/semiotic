@@ -61,7 +61,7 @@ export const calculateMargin = ({
     finalMargin.top = 30;
   }
   let orient = trueAxis(null, projection);
-  if (axis) {
+  if (axis && projection !== "radial") {
     orient = trueAxis(axis.orient, projection);
     finalMargin[orient] += 50;
   }

@@ -208,8 +208,8 @@ export function boxplotRenderFn({
         summaryDataNest[0] / 2
       );
 
-      translate = `translate(${adjustedSize[0] / 2},${margin.top +
-        adjustedSize[1] / 2})`;
+      translate = `translate(${adjustedSize[0] / 2 +
+        margin.left},${adjustedSize[1] / 2 + margin.top})`;
 
       renderedSummaryMarks.push(
         <g
@@ -485,7 +485,7 @@ export function bucketizedRenderingFn({
         });
       });
       if (projection === "radial") {
-        translate = `translate(0,${margin.top})`;
+        translate = `translate(${margin.left},${margin.top})`;
       }
 
       renderedSummaryMarks.push(
@@ -516,8 +516,8 @@ export function bucketizedRenderingFn({
         const angle = summary.pct - summary.pct_padding / 2;
         const midAngle = summary.pct_middle;
 
-        translate = `translate(${adjustedSize[0] / 2},${adjustedSize[1] / 2 +
-          margin.top})`;
+        translate = `translate(${adjustedSize[0] / 2 +
+          margin.left},${adjustedSize[1] / 2 + margin.top})`;
 
         violinArea = inbins => {
           const forward = [];
@@ -590,7 +590,7 @@ export function bucketizedRenderingFn({
         const angle = summary.pct - summary.pct_padding / 2;
         const midAngle = summary.pct_start + summary.pct_padding / 2;
 
-        translate = `translate(0,${margin.top})`;
+        translate = `translate(${margin.left},${margin.top})`;
 
         joyArea = inbins => {
           const forward = [];

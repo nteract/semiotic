@@ -264,7 +264,7 @@ export default class ORFrameDocs extends React.Component {
       renderFn: "none",
       connector: "off",
       annotations: "off",
-      oPadding: 50,
+      oPadding: "20",
       dataType: "stacked",
       hoverBehavior: "general",
       example: "basic"

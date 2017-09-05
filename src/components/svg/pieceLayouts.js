@@ -76,22 +76,27 @@ export function clusterBarLayout({
           startAngle: startAngle * twoPI,
           endAngle: endAngle * twoPI
         });
-        translate = `translate(${adjustedSize[0] / 2},${adjustedSize[1] / 2 +
-          margin.top})`;
+        const xOffset = adjustedSize[0] / 2 + margin.left;
+        const yOffset = adjustedSize[1] / 2 + margin.top;
+        translate = `translate(${xOffset},${yOffset})`;
+
         const centroid = arcGenerator.centroid({
           startAngle: startAngle * twoPI,
           endAngle: endAngle * twoPI
         });
         finalHeight = undefined;
         finalWidth = undefined;
-        xPosition = centroid[0];
-        yPosition = centroid[1];
+        xPosition = centroid[0] + xOffset;
+        yPosition = centroid[1] + yOffset;
+
         markProps = { markType: "path", d: markD };
       } else {
+        xPosition += currentX;
+        yPosition += currentY;
         markProps = {
           markType: "rect",
-          x: xPosition + currentX,
-          y: yPosition + currentY,
+          x: xPosition,
+          y: yPosition,
           width: finalWidth,
           height: finalHeight,
           rx: 0,
@@ -104,8 +109,8 @@ export function clusterBarLayout({
       const calculatedPiece = {
         o: key,
         xy: {
-          x: xPosition + currentX,
-          y: yPosition + currentY,
+          x: xPosition,
+          y: yPosition,
           middle: clusterWidth / 2,
           height: finalHeight,
           width: finalWidth
@@ -183,7 +188,8 @@ export function barLayout({
         let outerSize = piece._orFR / 2 + (piece._orFRBottom - margin.top) / 2;
         if (innerRadius) {
           innerRadius = parseInt(innerRadius);
-          const canvasRadius = adjustedSize[1] / 2;
+          const canvasRadius =
+            (adjustedSize[1] - margin.left - margin.right) / 2;
           const donutMod = (canvasRadius - innerRadius) / canvasRadius;
           innerSize = innerSize * donutMod + innerRadius;
           outerSize = outerSize * donutMod + innerRadius;
@@ -196,7 +202,7 @@ export function barLayout({
 
         let angle = ordset.pct;
         let startAngle = ordset.pct_start;
-        let endAngle = startAngle + angle;
+        let endAngle = startAngle + angle - ordset.pct_padding / 2;
 
         markD = arcGenerator({
           startAngle: startAngle * twoPI,
@@ -208,14 +214,11 @@ export function barLayout({
         });
         finalHeight = undefined;
         finalWidth = undefined;
-        xPosition = centroid[0];
-        yPosition = centroid[1];
-        translate =
-          "translate(" +
-          adjustedSize[0] / 2 +
-          "," +
-          (adjustedSize[1] / 2 + margin.top) +
-          ")";
+        const xOffset = adjustedSize[0] / 2 + margin.left;
+        const yOffset = adjustedSize[1] / 2 + margin.top;
+        xPosition = centroid[0] + xOffset;
+        yPosition = centroid[1] + yOffset;
+        translate = `translate(${xOffset},${yOffset})`;
         markProps = { markType: "path", d: markD };
       } else {
         markProps = {
@@ -289,13 +292,14 @@ export function pointLayout({
         xPosition = piece._orFR;
       } else if (projection === "radial") {
         const angle = ordset.pct_middle;
+
         const rPosition = (piece._orFR - margin.left) / 2;
         const baseCentroid = pointOnArcAtAngle(
           [adjustedSize[0] / 2, adjustedSize[1] / 2],
           angle,
           rPosition
         );
-        xPosition = baseCentroid[0];
+        xPosition = baseCentroid[0] + margin.left;
         yPosition = baseCentroid[1] + margin.top;
       }
 
@@ -391,7 +395,7 @@ export function swarmLayout({
           xAngle,
           rPosition
         );
-        xPosition = baseCentroid[0];
+        xPosition = baseCentroid[0] + margin.left;
         yPosition = baseCentroid[1] + margin.top;
       }
 

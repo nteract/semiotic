@@ -363,19 +363,17 @@ class orFrame extends React.Component {
       if (cwHash) {
         projectedColumns[o].width = cwHash[o] - padding;
         projectedColumns[o].pct = cwHash[o] / cwHash.total;
-        projectedColumns[o].pct_start =
-          (projectedColumns[o].x - margin.left) / cwHash.total;
+        projectedColumns[o].pct_start = projectedColumns[o].x / cwHash.total;
         projectedColumns[o].pct_padding = padding / cwHash.total;
         projectedColumns[o].pct_middle =
-          (projectedColumns[o].middle - margin.left) / cwHash.total;
+          projectedColumns[o].middle / cwHash.total;
       } else {
         projectedColumns[o].width = columnWidth - padding;
-        projectedColumns[o].pct = columnWidth / adjustedSize[0];
-        projectedColumns[o].pct_start =
-          (projectedColumns[o].x - margin.left) / adjustedSize[0];
-        projectedColumns[o].pct_padding = padding / adjustedSize[0];
+        projectedColumns[o].pct = columnWidth / adjustedSize[1];
+        projectedColumns[o].pct_start = projectedColumns[o].x / adjustedSize[1];
+        projectedColumns[o].pct_padding = padding / adjustedSize[1];
         projectedColumns[o].pct_middle =
-          (projectedColumns[o].middle - margin.left) / adjustedSize[0];
+          projectedColumns[o].middle / adjustedSize[1];
       }
     });
 
@@ -676,6 +674,7 @@ class orFrame extends React.Component {
             <g
               key={`orframe-radial-axis-element-${t}`}
               className="axis axis-label axis-tick"
+              transform={`translate(${margin.left},0)`}
             >
               <path
                 id={ref}
@@ -740,6 +739,7 @@ class orFrame extends React.Component {
         projection === "horizontal" ? d => (d.middle ? d.middle : 0) : () => 0;
       const xMod =
         projection === "vertical" ? d => (d.middle ? d.middle : 0) : () => 0;
+
       pieceDataXY = calculatedPieceData.map(d =>
         Object.assign({}, d.piece, {
           type: "frame-hover",
@@ -795,7 +795,6 @@ class orFrame extends React.Component {
     };
 
     this.setState({
-      voronoiHover: null,
       pieceDataXY,
       adjustedPosition: adjustedPosition,
       adjustedSize: adjustedSize,
@@ -872,9 +871,19 @@ class orFrame extends React.Component {
     const margin = calculateMargin(this.props);
 
     const screenProject = p => {
-      let o = oAccessor(p);
-      if (o) {
-        o = projectedColumns[o].middle;
+      const oColumn = projectedColumns[oAccessor(p)];
+      let o;
+      if (oColumn) {
+        o = oColumn.middle;
+      } else {
+        o = 0;
+      }
+      if (oColumn && projection === "radial") {
+        return pointOnArcAtAngle(
+          [adjustedSize[0] / 2 + margin.left, adjustedSize[1] / 2 + margin.top],
+          oColumn.pct_middle,
+          (rScale(rAccessor(p)) - margin.left) / 2
+        );
       }
       if (projection !== "vertical") {
         return [rScale(rAccessor(p)), o];
@@ -1001,7 +1010,31 @@ class orFrame extends React.Component {
       return <Annotation key={i} noteData={noteData} />;
     } else if (d.type === "r") {
       let x, y, xPosition, yPosition, subject, dx, dy;
-      if (this.props.projection !== "vertical") {
+      if (this.props.projection === "radial") {
+        return (
+          <Annotation
+            key={i}
+            noteData={Object.assign(
+              {
+                dx: 50,
+                dy: 50,
+                note: { label: d.label },
+                connector: { end: "arrow" }
+              },
+              d,
+              {
+                type: annotationCalloutCircle,
+                subject: {
+                  radius: (rScale(rAccessor(d)) - margin.left) / 2,
+                  radiusPadding: 0
+                },
+                x: adjustedSize[0] / 2 + margin.left,
+                y: adjustedSize[1] / 2 + margin.top
+              }
+            )}
+          />
+        );
+      } else if (this.props.projection === "horizontal") {
         dx = 50;
         dy = 50;
         yPosition = d.offset || margin.top + i * 25;
@@ -1209,7 +1242,6 @@ class orFrame extends React.Component {
     const {
       className = "",
       annotationSettings = {},
-      margin,
       size,
       downloadFields,
       rAccessor,
@@ -1239,6 +1271,7 @@ class orFrame extends React.Component {
       columnOverlays,
       axesTickLines,
       axes,
+      margin,
       pieceDataXY,
       oLabels = []
     } = this.state;
