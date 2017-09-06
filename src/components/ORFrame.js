@@ -127,6 +127,7 @@ class orFrame extends React.Component {
     const pieceStyle = stringToFn(currentProps.style, () => ({}), true);
     const pieceClass = stringToFn(currentProps.pieceClass, () => "", true);
     const summaryClass = stringToFn(currentProps.summaryClass, () => "", true);
+    const summaryPosition = currentProps.summaryPosition || (position => position);
 
     let allData = [...barData];
 
@@ -779,6 +780,7 @@ class orFrame extends React.Component {
         data: projectedColumns,
         styleFn: stringToFn(summaryStyle, () => {}, true),
         classFn: stringToFn(summaryClass, () => "", true),
+        positionFn: summaryPosition,
         renderMode: stringToFn(summaryRenderMode, undefined, true),
         canvasRender: stringToFn(canvasSummaries, undefined, true),
         type: summaryType,
@@ -1387,6 +1389,7 @@ orFrame.propTypes = {
   style: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
   connectorStyle: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
   summaryStyle: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
+  summaryPosition: PropTypes.func,
   oLabel: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
   hoverAnnotation: PropTypes.bool,
   axis: PropTypes.object,
