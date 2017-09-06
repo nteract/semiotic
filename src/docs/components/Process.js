@@ -44,7 +44,7 @@ const xyPossibilities = [
   },
   {
     areas: [{ label: "Area", coordinates: or_data }],
-    areaType: "alpha",
+    areaType: "contour",
     xAccessor: d => d.years[0],
     yAccessor: d => d.years[8]
   }

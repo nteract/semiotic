@@ -13,6 +13,19 @@ import {
 
 import PropTypes from "prop-types";
 
+function formatValue(value, props) {
+  if (props.tickFormat) {
+    return props.tickFormat(value);
+  }
+  if (props.format) {
+    return numeral(value).format(props.format);
+  }
+  if (value.toString) {
+    return value.toString();
+  }
+  return value;
+}
+
 class Axis extends React.Component {
   constructor(props) {
     super(props);
@@ -148,11 +161,12 @@ class Axis extends React.Component {
       ) : (
         <g>
           <text x={textX} y={textY}>
-            {numeral(
+            {formatValue(
               this.props.scale.invert(
                 this.state.hoverAnnotation + annotationOffset
-              )
-            ).format(this.props.format)}
+              ),
+              this.props
+            )}
           </text>
           <circle r={5} />
           <line x1={lineWidth} y1={lineHeight} style={{ stroke: "black" }} />

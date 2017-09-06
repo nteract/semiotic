@@ -274,29 +274,12 @@ const areaStyleHash = {
     stroke: "black",
     strokeWidth: "1px",
     fillOpacity: 0.5
-  }),
-  alphaShapes: d => ({
-    fill: d.id,
-    stroke: d.id,
-    strokeWidth: "1px",
-    fillOpacity: 0.25,
-    strokeOpacity: 0.1
   })
 };
-areaStyleHash.labelAlphaShape = areaStyleHash.alphaShapes;
 
 const areaTypeHash = {
   basic: undefined,
-  contours: { type: "contour" },
-  alphaShapes: { type: "alpha", alpha: 0.001, label: true },
-  labelAlphaShape: {
-    type: "alpha",
-    alpha: 0.001,
-    label: d => ({
-      position: "bottom",
-      content: f => `Positioned Label: ${f.id} ${d.id}`
-    })
-  }
+  contours: { type: "contour" }
 };
 
 const titleTypesHash = {
@@ -573,28 +556,11 @@ const pointAnnotations = pointTestData
     )
   );
 
-const alphaAreaData = [
-  {
-    id: "#00a2ce",
-    coordinates: pointTestData.filter(d => d.cat === "#00a2ce")
-  },
-  {
-    id: "#4d430c",
-    coordinates: pointTestData.filter(d => d.cat === "#4d430c")
-  },
-  {
-    id: "#b3331d",
-    coordinates: pointTestData.filter(d => d.cat === "#b3331d")
-  },
-  { id: "#b6a756", coordinates: pointTestData.filter(d => d.cat === "#b6a756") }
-];
 const contourAreaData = [{ id: "#00a2ce", coordinates: pointTestData }];
 
 const areaDataHash = {
   basic: areaTestData,
-  contours: contourAreaData,
-  alphaShapes: alphaAreaData,
-  labelAlphaShape: alphaAreaData
+  contours: contourAreaData
 };
 
 const annotationSettingTypes = {
@@ -826,12 +792,7 @@ export default class XYFrameDocs extends React.Component {
       <MenuItem key={"custom-point-option-" + d} primaryText={d} value={d} />
     ));
 
-    const areaTypeOptions = [
-      "basic",
-      "alphaShapes",
-      "contours",
-      "labelAlphaShape"
-    ].map(d => (
+    const areaTypeOptions = ["basic", "contours"].map(d => (
       <MenuItem key={"area-type-option-" + d} primaryText={d} value={d} />
     ));
 
@@ -1478,9 +1439,8 @@ export default class XYFrameDocs extends React.Component {
       >
         <p>
           The XYFrame lets you create scatterplots, line charts and area
-          visualizations like contours and alpha shapes. You can experiment with
-          the settings to see the code necessary to deploy that chart in your
-          app.
+          visualizations like contours. You can experiment with the settings to
+          see the code necessary to deploy that chart in your app.
         </p>
         <p>
           For instance, adjust the lineType property to see different variations

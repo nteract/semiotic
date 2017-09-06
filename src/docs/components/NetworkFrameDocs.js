@@ -341,14 +341,11 @@ export default class NetworkFrameDocs extends React.Component {
         buttons={buttons}
       >
         <p>
-          The NetworkFrame lets you create scatterplots, line charts and area
-          visualizations like contours and alpha shapes.
+          The NetworkFrame lets you create network diagrams like chord diagrams,
+          sankey diagrams and force-directed network diagrams.
         </p>
 
-        <p>
-          Data are sent to the data properties with summary types and connector
-          rules determining whether summaries and connectors are drawn.
-        </p>
+        <p>Data are sent to the nodes and edges properties.</p>
       </DocumentComponent>
     );
   }

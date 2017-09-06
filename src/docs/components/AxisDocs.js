@@ -1,7 +1,7 @@
 import React from "react";
 import DocumentComponent from "../layout/DocumentComponent";
 import { Axis } from "../../components";
-import { scaleLinear } from "d3-scale";
+import { scaleLinear, scaleTime } from "d3-scale";
 
 const components = [];
 // Add your component proptype data here
@@ -41,14 +41,25 @@ export default class AxisDocs extends React.Component {
       name: "Basic",
       demo: (
         <svg style={{ height: "400px", width: "800px" }}>
-          <g transform={"translate(300,0)"}>
+          <g transform={"translate(100,20)"}>
             <Axis
-              size={[20, 200]}
+              size={[200, 200]}
               scale={scaleLinear()
                 .domain([10, 1000])
-                .range([20, 200])}
+                .range([200, 0])}
               orient={"left"}
               label={"Just an Axis (left)"}
+            />
+          </g>
+          <g transform={"translate(400,20)"}>
+            <Axis
+              size={[200, 200]}
+              scale={scaleTime()
+                .domain([new Date(2017, 1, 1), new Date(2017, 10, 17)])
+                .range([0, 200])}
+              orient={"bottom"}
+              tickFormat={d => `${d.getMonth()}-${d.getDate()}`}
+              label={"Format Your Dates"}
             />
           </g>
         </svg>
@@ -57,14 +68,27 @@ export default class AxisDocs extends React.Component {
       import { Axis } from 'semiotic';
 
         <svg style={{ height: '400px', width: '800px' }}>
-        <g transform={'translate(300,0)'}>
+          <g transform={"translate(100,20)"}>
             <Axis
-            size={[ 20,200 ]}
-            scale={scaleLinear().domain([ 10, 1000 ]).range([ 20, 200 ])}
-            orient={'left'}
-            label={'Just an Axis'}
-            position={[ 100,0 ]}
-        />
+              size={[200, 200]}
+              scale={scaleLinear()
+                .domain([10, 1000])
+                .range([200, 0])}
+              orient={"left"}
+              label={"Just an Axis (left)"}
+            />
+          </g>
+          <g transform={"translate(400,20)"}>
+            <Axis
+              size={[200, 200]}
+              scale={scaleTime()
+                .domain([new Date(2017, 1, 1), new Date(2017, 10, 17)])
+                .range([0, 200])}
+              orient={"bottom"}
+              tickFormat={d => ${"`${d.getMonth()}-${d.getDate()}`"}}
+              label={"Format Your Dates"}
+            />
+          </g>
         </g>
         </svg>
       `
@@ -81,6 +105,12 @@ export default class AxisDocs extends React.Component {
         <p>
           The Axis lets you create a traditional D3 axis that can be labeled and
           is capable of being brushable.
+        </p>
+        <p>
+          The tickFormat function can return SVG JSX. Remember if you're using
+          dates and scaleTime that you need to format your dates otherwise
+          they'll defaul to the js .toString() (and very long) version for
+          display.
         </p>
 
         <p>

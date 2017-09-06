@@ -12,7 +12,7 @@ import {
   bumpChart,
   lineChart
 } from "../svg/lineDrawing";
-import { contouring, alphaShaping } from "../svg/areaDrawing";
+import { contouring } from "../svg/areaDrawing";
 import { max, min } from "d3-array";
 
 const builtInTransformations = {
@@ -227,16 +227,6 @@ export const calculateDataExtent = ({
       projectedY,
       finalXExtent,
       finalYExtent
-    });
-  } else if (
-    areaType &&
-    (areaType === "alpha" || (areaType.type && areaType.type === "alpha"))
-  ) {
-    projectedAreas = alphaShaping({
-      areaType,
-      data: projectedAreas,
-      projectedX,
-      projectedY
     });
   } else if (
     typeof areaType === "function" ||
