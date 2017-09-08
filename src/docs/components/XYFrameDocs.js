@@ -548,7 +548,7 @@ const pointAnnotations = pointTestData
       {
         color: d.cat,
         dx: 30,
-        dy: -30,
+        dy: -50,
         type: annotationCalloutElbow,
         note: { title: `Note ${i + 1}` }
       },
