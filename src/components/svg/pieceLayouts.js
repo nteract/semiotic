@@ -184,12 +184,11 @@ export function barLayout({
 
       if (projection === "radial") {
         let { innerRadius } = type;
-        let innerSize = (piece._orFRBottom - margin.top) / 2;
-        let outerSize = piece._orFR / 2 + (piece._orFRBottom - margin.top) / 2;
+        let innerSize = (piece._orFRBottom - margin.left) / 2;
+        let outerSize = piece._orFR / 2 + (piece._orFRBottom - margin.left) / 2;
         if (innerRadius) {
           innerRadius = parseInt(innerRadius);
-          const canvasRadius =
-            (adjustedSize[1] - margin.left - margin.right) / 2;
+          const canvasRadius = adjustedSize[0] / 2;
           const donutMod = (canvasRadius - innerRadius) / canvasRadius;
           innerSize = innerSize * donutMod + innerRadius;
           outerSize = outerSize * donutMod + innerRadius;

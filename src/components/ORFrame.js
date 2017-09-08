@@ -363,14 +363,16 @@ class orFrame extends React.Component {
       if (cwHash) {
         projectedColumns[o].width = cwHash[o] - padding;
         projectedColumns[o].pct = cwHash[o] / cwHash.total;
-        projectedColumns[o].pct_start = projectedColumns[o].x / cwHash.total;
+        projectedColumns[o].pct_start =
+          (projectedColumns[o].x - oDomain[0]) / cwHash.total;
         projectedColumns[o].pct_padding = padding / cwHash.total;
         projectedColumns[o].pct_middle =
           projectedColumns[o].middle / cwHash.total;
       } else {
         projectedColumns[o].width = columnWidth - padding;
         projectedColumns[o].pct = columnWidth / adjustedSize[1];
-        projectedColumns[o].pct_start = projectedColumns[o].x / adjustedSize[1];
+        projectedColumns[o].pct_start =
+          (projectedColumns[o].x - oDomain[0]) / adjustedSize[1];
         projectedColumns[o].pct_padding = padding / adjustedSize[1];
         projectedColumns[o].pct_middle =
           projectedColumns[o].middle / adjustedSize[1];
@@ -399,7 +401,10 @@ class orFrame extends React.Component {
           startAngle: startAngle * twoPI,
           endAngle: endAngle * twoPI
         });
-        const translate = [adjustedSize[0] / 2, adjustedSize[1] / 2];
+        const translate = [
+          adjustedSize[0] / 2 + margin.left,
+          adjustedSize[1] / 2 + margin.top
+        ];
         const centroid = arcGenerator.centroid({
           startAngle: startAngle * twoPI,
           endAngle: endAngle * twoPI
