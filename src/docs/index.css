@@ -184,13 +184,15 @@ header {
   font-size: 0.8em;
 }
 
-.annotation-xy-label .tooltip-content {
+.annotation-xy-label .tooltip-content,
+.annotation-network-label .tooltip-content {
   bottom: 19px;
   position: relative;
   left: -75px;
 }
 
-.annotation-xy-label .tooltip-content:before {
+.annotation-xy-label .tooltip-content:before,
+.annotation-network-label .tooltip-content:before {
   border-right: 1px solid black;
   border-bottom: 1px solid black;
   bottom: -10px;

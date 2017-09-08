@@ -532,12 +532,14 @@ class networkFrame extends React.Component {
 
     if (changedData || networkSettingsChanged) {
       const graph = new Graph({ multi: !!networkSettings.multi });
+      const graphologyNodes = projectedNodes.map(d => ({
+        key: nodeIDAccessor(d),
+        originalNode: d
+      }));
+
       graph.import({
         attributes: { name: "Graph for Processing" },
-        nodes: projectedNodes.map(d => ({
-          key: nodeIDAccessor(d),
-          originalNode: d
-        })),
+        nodes: graphologyNodes,
         edges: projectedEdges.map(d => ({
           source: nodeIDAccessor(d.source),
           target: nodeIDAccessor(d.target),
@@ -860,6 +862,18 @@ class networkFrame extends React.Component {
           });
         });
       }
+      this.graphSettings = networkSettings;
+      this.graphSettings.numberOfNodes = nodes.length;
+      this.graphSettings.numberOfEdges = edges.length;
+    } else if (typeof networkSettings.type === "function") {
+      const customProjectedGraph = networkSettings.type({
+        nodes: projectedNodes,
+        edges: projectedEdges
+      });
+
+      projectedEdges = customProjectedGraph.edges || [];
+      projectedNodes = customProjectedGraph.nodes || [];
+
       this.graphSettings = networkSettings;
       this.graphSettings.numberOfNodes = nodes.length;
       this.graphSettings.numberOfEdges = edges.length;

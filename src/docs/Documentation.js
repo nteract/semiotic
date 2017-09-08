@@ -30,6 +30,7 @@ import SwarmBrush from "./components/SwarmBrush";
 import DivergingStackedBar from "./components/DivergingStackedBar";
 import Sankey from "./components/Sankey";
 import Chord from "./components/Chord";
+import Dendrogram from "./components/Dendrogram";
 //import Process from "./components/Process";
 import BarToParallel from "./components/BarToParallel";
 import AppleStockChart from "./components/AppleStockChart";
@@ -64,6 +65,7 @@ const components = {
   wordcloud: { docs: WordCloud, parent: "networkframe" },
   sankey: { docs: Sankey, parent: "networkframe" },
   chord: { docs: Chord, parent: "networkframe" },
+  dendrogram: { docs: Dendrogram, parent: "networkframe" },
   mark: { docs: MarkDocs },
   axis: { docs: AxisDocs },
   legend: { docs: LegendDocs },
