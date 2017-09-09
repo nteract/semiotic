@@ -14,7 +14,7 @@ import MarkDocs from "./components/MarkDocs";
 
 //Examples
 import RegionatedLineChartDocs from "./components/RegionatedLineChartDocs";
-import TemperatureSummaries from "./components/TemperatureSummaries";
+import Violin from "./components/Violin";
 import ParallelCoordinates from "./components/ParallelCoordinates";
 import BarLineDocs from "./components/BarLineDocs";
 import HeatMap from "./components/HeatMap";
@@ -51,7 +51,7 @@ const components = {
   homerunmap: { docs: BaseballMap, parent: "xyframe" },
   neighborhoodmap: { docs: NeighborhoodMap, parent: "xyframe" },
   orframe: { docs: ORFrameDocs },
-  temperaturesummaries: { docs: TemperatureSummaries, parent: "orframe" },
+  violin: { docs: Violin, parent: "orframe" },
   parallelcoordinates: { docs: ParallelCoordinates, parent: "orframe" },
   heatmap: { docs: HeatMap, parent: "orframe" },
   marimekko: { docs: Marimekko, parent: "orframe" },

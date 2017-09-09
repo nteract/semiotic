@@ -9,7 +9,7 @@ import DonutChartRaw from "../components/DonutChartRaw";
 import HeatMapRaw from "../components/HeatMapRaw";
 import JoyPlotRaw from "../components/JoyPlotRaw";
 import MarimekkoRaw from "../components/MarimekkoRaw";
-import TemperatureSummariesRaw from "../components/TemperatureSummariesRaw";
+import ViolinRaw from "../components/ViolinRaw";
 import WaterfallChartRaw from "../components/WaterfallChartRaw";
 import SwarmBrushRaw from "../components/SwarmBrushRaw";
 import DivergingStackedBarRaw from "../components/DivergingStackedBarRaw";
@@ -43,7 +43,7 @@ const exampos = [
   { label: "Heat Map", viz: HeatMapRaw, path: "heatmap" },
   { label: "Joy Plot", viz: JoyPlotRaw, path: "joyplot" },
   { label: "Marimekko Chart", viz: MarimekkoRaw, path: "marimekko" },
-  { label: "Violin Plot", viz: TemperatureSummariesRaw, path: "violin" },
+  { label: "Violin Plot", viz: ViolinRaw, path: "violin" },
   { label: "Waterfall Chart", viz: WaterfallChartRaw, path: "waterfall" },
   { label: "XY Charts", viz: genericLineChart, path: "xyframe" },
   { label: "Ordinal Charts", viz: genericBarChart, path: "orframe" },

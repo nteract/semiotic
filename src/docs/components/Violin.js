@@ -1,21 +1,21 @@
 import React from "react";
 import DocumentComponent from "../layout/DocumentComponent";
-import TemperatureSummariesRaw from "./TemperatureSummariesRaw";
+import ViolinRaw from "./ViolinRaw";
 
 const components = [];
 // Add your component proptype data here
 // multiple component proptype documentation supported
 
 components.push({
-  name: "Temperature Summaries"
+  name: "Violin Chart"
 });
 
-export default class TemperatureSummaries extends React.Component {
+export default class ViolinPlot extends React.Component {
   render() {
     const examples = [];
     examples.push({
       name: "Basic",
-      demo: TemperatureSummariesRaw,
+      demo: ViolinRaw,
       source: `
 const summaryChart = {
     rAccessor: d => d.stepValue,
@@ -58,4 +58,4 @@ const axis = { orient: 'left', tickFormat: d => d, label: {
   }
 }
 
-TemperatureSummaries.title = "Violin";
+ViolinPlot.title = "Violin";

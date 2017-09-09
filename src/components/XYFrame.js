@@ -157,7 +157,23 @@ class XYFrame extends React.Component {
       projectedLines,
       projectedPoints,
       projectedAreas,
-      fullDataset
+      fullDataset,
+      lineType = "line",
+      customLineMark,
+      customPointMark,
+      areaStyle,
+      areaRenderMode,
+      lineStyle,
+      lineRenderMode,
+      lineClass,
+      pointStyle,
+      pointRenderMode,
+      pointClass,
+      areaClass,
+      canvasLines,
+      canvasPoints,
+      canvasAreas,
+      defined
     } = currentProps;
 
     const xAccessor = stringToFn(currentProps.xAccessor);
@@ -357,6 +373,38 @@ class XYFrame extends React.Component {
       });
     }
 
+    const xyFrameRender = {
+      lines: {
+        data: projectedLines,
+        styleFn: stringToFn(lineStyle, () => {}, true),
+        classFn: stringToFn(lineClass, () => "", true),
+        renderMode: stringToFn(lineRenderMode, undefined, true),
+        canvasRender: stringToFn(canvasLines, undefined, true),
+        customMark: customLineMark,
+        type: lineType,
+        defined: defined,
+        behavior: createLines
+      },
+      areas: {
+        data: projectedAreas,
+        styleFn: stringToFn(areaStyle, () => {}, true),
+        classFn: stringToFn(areaClass, () => {}, true),
+        renderMode: stringToFn(areaRenderMode, undefined, true),
+        canvasRender: stringToFn(canvasAreas, undefined, true),
+        type: areaType,
+        behavior: createAreas
+      },
+      points: {
+        data: projectedPoints,
+        styleFn: stringToFn(pointStyle, () => {}, true),
+        classFn: stringToFn(pointClass, () => {}, true),
+        renderMode: stringToFn(pointRenderMode, undefined, true),
+        canvasRender: stringToFn(canvasPoints, undefined, true),
+        customMark: stringToFn(customPointMark, undefined, true),
+        behavior: createPoints
+      }
+    };
+
     this.setState({
       voronoiHover: null,
       lineData: currentProps.lines,
@@ -385,7 +433,8 @@ class XYFrame extends React.Component {
       margin,
       legendSettings,
       matte: marginGraphic,
-      areaAnnotations
+      areaAnnotations,
+      xyFrameRender
     });
   }
 
@@ -883,28 +932,10 @@ class XYFrame extends React.Component {
       name = "xyframe",
       download,
       size,
-      areaType,
       className = "",
       annotationSettings = {},
       annotations = [],
       additionalDefs,
-      customLineType,
-      lineType = customLineType,
-      customLineMark,
-      customPointMark,
-      areaStyle,
-      areaRenderMode,
-      lineStyle,
-      lineRenderMode,
-      lineClass,
-      pointStyle,
-      pointRenderMode,
-      pointClass,
-      areaClass,
-      canvasLines,
-      canvasPoints,
-      canvasAreas,
-      defined,
       hoverAnnotation,
       interaction,
       customClickBehavior,
@@ -921,9 +952,6 @@ class XYFrame extends React.Component {
       adjustedSize,
       margin,
       matte,
-      projectedPoints,
-      projectedLines,
-      projectedAreas,
       axes,
       axesTickLines,
       extent,
@@ -932,7 +960,8 @@ class XYFrame extends React.Component {
       dataVersion,
       fullDataset,
       areaAnnotations,
-      legendSettings
+      legendSettings,
+      xyFrameRender
     } = this.state;
 
     let downloadButton;
@@ -958,38 +987,6 @@ class XYFrame extends React.Component {
     });
 
     // foreground and background graphics should handle either JSX or a function that passes size & margin and returns JSX
-    const xyFrameRender = {
-      lines: {
-        data: projectedLines,
-        styleFn: stringToFn(lineStyle, () => {}, true),
-        classFn: stringToFn(lineClass, () => "", true),
-        renderMode: stringToFn(lineRenderMode, undefined, true),
-        canvasRender: stringToFn(canvasLines, undefined, true),
-        customMark: customLineMark,
-        type: lineType,
-        defined: defined,
-        behavior: createLines
-      },
-      areas: {
-        data: projectedAreas,
-        styleFn: stringToFn(areaStyle, () => {}, true),
-        classFn: stringToFn(areaClass, () => {}, true),
-        renderMode: stringToFn(areaRenderMode, undefined, true),
-        canvasRender: stringToFn(canvasAreas, undefined, true),
-        type: areaType,
-        behavior: createAreas
-      },
-      points: {
-        data: projectedPoints,
-        styleFn: stringToFn(pointStyle, () => {}, true),
-        classFn: stringToFn(pointClass, () => {}, true),
-        renderMode: stringToFn(pointRenderMode, undefined, true),
-        canvasRender: stringToFn(canvasPoints, undefined, true),
-        customMark: stringToFn(customPointMark, undefined, true),
-        behavior: createPoints
-      }
-    };
-
     return (
       <Frame
         name="xyframe"

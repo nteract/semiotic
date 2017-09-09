@@ -1132,7 +1132,7 @@ export default class XYFrameDocs extends React.Component {
       ${dataTypeSource[this.state.dataType]}
       ${this.state.fixedExtent === "none"
         ? ""
-        : `yExtent={[ ${fixedExtentLabelHash[this.state.fixedExtent]} ]}`}
+        : `yExtent={${fixedExtentLabelHash[this.state.fixedExtent]}}`}
       ${this.state.matte === "off" ? "" : "matte={true}"}
       xAccessor={"px"}
       yAccessor={"py"}
@@ -1183,7 +1183,7 @@ export default class XYFrameDocs extends React.Component {
           value={this.state.lineType}
           onChange={(e, i, value) =>
             this.setState({
-              lineType: value === "none" ? undefined : value
+              lineType: value
             })}
         >
           {options}

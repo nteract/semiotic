@@ -6,7 +6,7 @@ injectTapEventPlugin();
 
 describe("Mark", () => {
   it("renders without crashing", () => {
-    mount(<Mark name="Test" />);
+    mount(<Mark markType="path" name="Test" />);
   });
 
   it("renders a rectangle in a g", () => {
