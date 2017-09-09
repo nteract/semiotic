@@ -243,8 +243,8 @@ const frameHash = {
 
 const fixedExtentHash = {
   none: undefined,
-  partial: [undefined, 5],
-  full: [2, 5]
+  partial: [undefined, 500],
+  full: [200, 500]
 };
 
 const fixedExtentLabelHash = {
