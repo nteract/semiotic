@@ -611,7 +611,12 @@ class networkFrame extends React.Component {
           chordEdge.d = chordD;
         });
       } else if (networkSettings.type === "sankey") {
-        const { orient = "center", iterations = 100 } = networkSettings;
+        const {
+          orient = "center",
+          iterations = 100,
+          nodePadding = 8,
+          nodeWidth = 24
+        } = networkSettings;
         const sankeyOrient = sankeyOrientHash[orient];
 
         const frameSankey = sankey()
@@ -623,6 +628,8 @@ class networkFrame extends React.Component {
           .nodes(projectedNodes)
           .nodeAlign(sankeyOrient)
           .nodeId(nodeIDAccessor)
+          .nodePadding(nodePadding)
+          .nodeWidth(nodeWidth)
           .iterations(iterations);
 
         frameSankey();
