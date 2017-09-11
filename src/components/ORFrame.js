@@ -500,7 +500,7 @@ class orFrame extends React.Component {
         if (projection === "horizontal") {
           yPosition = projectedColumns[d].x;
           xPosition = margin.left;
-          width = rScale.range()[1];
+          width = rScale.range()[1] - margin.left;
           height = barColumnWidth;
         }
 
@@ -1179,7 +1179,7 @@ class orFrame extends React.Component {
           adjustedPosition[0] +
           margin.top +
           margin.bottom;
-        xPosition = positionValue + adjustedPosition[0];
+        xPosition = positionValue + adjustedPosition[0] + margin.left;
       } else if (this.props.projection === "radial") {
         [xPosition, yPosition] = pointOnArcAtAngle(
           d.arcAngles.translate,
