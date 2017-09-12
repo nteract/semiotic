@@ -23,6 +23,7 @@ import DotPlot from "./components/DotPlot";
 import DonutChart from "./components/DonutChart";
 import JoyPlot from "./components/JoyPlot";
 import WaterfallChart from "./components/WaterfallChart";
+import BulletChart from "./components/BulletChart";
 import NeighborhoodMap from "./components/NeighborhoodMap";
 import BaseballMap from "./components/BaseballMap";
 import WordCloud from "./components/WordCloud";
@@ -58,9 +59,10 @@ const components = {
   dotplot: { docs: DotPlot, parent: "orframe" },
   donutchart: { docs: DonutChart, parent: "orframe" },
   joyplot: { docs: JoyPlot, parent: "orframe" },
-  waterfall: { docs: WaterfallChart, parent: "orframe" },
   swarmbrush: { docs: SwarmBrush, parent: "orframe" },
   divergingstackedbar: { docs: DivergingStackedBar, parent: "orframe" },
+  waterfall: { docs: WaterfallChart, parent: "orframe" },
+  bullet: { docs: BulletChart, parent: "orframe" },
   networkframe: { docs: NetworkFrameDocs },
   wordcloud: { docs: WordCloud, parent: "networkframe" },
   sankey: { docs: Sankey, parent: "networkframe" },

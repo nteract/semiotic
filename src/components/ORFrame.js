@@ -151,7 +151,11 @@ class orFrame extends React.Component {
       pieceType.type = undefined;
     }
 
-    if (currentProps.rExtent) {
+    if (
+      currentProps.rExtent &&
+      currentProps.rExtent[0] &&
+      currentProps.rExtent[1]
+    ) {
       rExtent = currentProps.rExtent;
     } else if (pieceType.type !== "bar") {
       rExtent = extent(allData, rAccessor);
@@ -200,12 +204,25 @@ class orFrame extends React.Component {
           ];
       rExtent = [subZeroRExtent[1], rExtent[1]];
     }
+
     if (pieceType.type === "clusterbar") {
       rExtent[0] = 0;
     }
+    console.log("currentProps.rExtent", currentProps.rExtent);
+    if (
+      currentProps.rExtent &&
+      currentProps.rExtent[1] !== undefined &&
+      currentProps.rExtent[0] === undefined
+    ) {
+      rExtent[1] = currentProps.rExtent[1];
+    }
 
-    if (currentProps.rBaseline !== undefined && !currentProps.rExtent) {
-      rExtent[0] = currentProps.rBaseline;
+    if (
+      currentProps.rExtent &&
+      currentProps.rExtent[0] !== undefined &&
+      currentProps.rExtent[1] === undefined
+    ) {
+      rExtent[0] = currentProps.rExtent[0];
     }
 
     if (currentProps.sortO) {
