@@ -610,7 +610,8 @@ class orFrame extends React.Component {
           ticks: d.ticks,
           orient,
           size: axisSize,
-          margin
+          margin,
+          footer: d.footer
         });
         const axisTickLines = axisLines({ axisParts, orient });
         axesTickLines.push(axisTickLines);

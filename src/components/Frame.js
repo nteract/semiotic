@@ -81,7 +81,6 @@ class Frame extends React.Component {
           legendSettings={legendSettings}
           margin={margin}
           axes={axes}
-          //          axesTickLines,}
           annotationHandling={annotationSettings.layout}
           pointSizeFunction={annotationSettings.pointSizeFunction}
           labelSizeFunction={annotationSettings.labelSizeFunction}

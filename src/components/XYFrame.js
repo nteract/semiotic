@@ -264,7 +264,8 @@ class XYFrame extends React.Component {
           ticks: d.ticks,
           orient: d.orient,
           size: axisSize,
-          margin
+          margin,
+          footer: d.footer
         });
         const axisTickLines = (
           <g key={`axes-tick-lines-${i}`} className={`axis ${d.className}`}>

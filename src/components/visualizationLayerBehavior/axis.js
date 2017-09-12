@@ -10,7 +10,8 @@ export function axisPieces({
   ticks,
   orient = "left",
   size,
-  margin = { left: 0, right: 0, top: 0, bottom: 0 }
+  margin = { left: 0, right: 0, top: 0, bottom: 0 },
+  footer = false
 }) {
   //returns x1 (start of line), x2 (end of line) associated with the value of the tick
   let axisDomain = [],
@@ -29,7 +30,9 @@ export function axisPieces({
       position2 = "x2";
       domain1 = "y1";
       domain2 = "y2";
-      axisDomain = [margin.top, size[1] + margin.top];
+      axisDomain = footer
+        ? [10, margin.top]
+        : [margin.top, size[1] + margin.top];
       tposition1 = "tx";
       tposition2 = "ty";
       textPositionMod -= 20 - padding;
@@ -39,7 +42,9 @@ export function axisPieces({
       position2 = "x2";
       domain1 = "y2";
       domain2 = "y1";
-      axisDomain = [size[1] + margin.top, margin.top];
+      axisDomain = footer
+        ? [size[1] + margin.top + 10, size[1] + margin.top]
+        : [size[1] + margin.top, margin.top];
       tposition1 = "tx";
       tposition2 = "ty";
       textPositionMod += 20 + padding;
@@ -49,7 +54,9 @@ export function axisPieces({
       position2 = "y1";
       domain1 = "x2";
       domain2 = "x1";
-      axisDomain = [size[0] + margin.left, margin.left];
+      axisDomain = footer
+        ? [size[0] + margin.left, size[0] + margin.left + 10]
+        : [size[0] + margin.left, margin.left];
       tposition1 = "ty";
       tposition2 = "tx";
       textPositionMod += 5 + padding;
@@ -62,7 +69,9 @@ export function axisPieces({
       position2 = "y2";
       domain1 = "x1";
       domain2 = "x2";
-      axisDomain = [margin.left, size[0] + margin.left];
+      axisDomain = footer
+        ? [margin.left - 10, margin.left]
+        : [margin.left, size[0] + margin.left];
       tposition1 = "ty";
       tposition2 = "tx";
       textPositionMod -= 5 + padding;

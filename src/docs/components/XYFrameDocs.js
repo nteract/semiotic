@@ -164,7 +164,7 @@ const axesHash = {
   none: undefined,
   basic: [
     { orient: "left", tickFormat: d => d },
-    { orient: "bottom", tickFormat: d => d }
+    { orient: "bottom", tickFormat: d => d, footer: true }
   ],
   labeled: [
     {

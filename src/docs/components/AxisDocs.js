@@ -40,7 +40,7 @@ export default class AxisDocs extends React.Component {
     examples.push({
       name: "Basic",
       demo: (
-        <svg style={{ height: "400px", width: "800px" }}>
+        <svg style={{ height: "600px", width: "700px" }}>
           <g transform={"translate(100,20)"}>
             <Axis
               size={[200, 200]}
@@ -60,6 +60,29 @@ export default class AxisDocs extends React.Component {
               orient={"bottom"}
               tickFormat={d => `${d.getMonth()}-${d.getDate()}`}
               label={"Format Your Dates"}
+            />
+          </g>
+          <g transform={"translate(100,320)"}>
+            <Axis
+              size={[200, 200]}
+              scale={scaleLinear()
+                .domain([10, 1000])
+                .range([200, 0])}
+              orient={"left"}
+              label={"Footer Left"}
+              footer={true}
+            />
+          </g>
+          <g transform={"translate(400,320)"}>
+            <Axis
+              size={[200, 200]}
+              scale={scaleTime()
+                .domain([new Date(2017, 1, 1), new Date(2017, 10, 17)])
+                .range([0, 200])}
+              orient={"bottom"}
+              tickFormat={d => `${d.getMonth()}-${d.getDate()}`}
+              label={"Footer Bottom"}
+              footer={true}
             />
           </g>
         </svg>
@@ -87,6 +110,29 @@ export default class AxisDocs extends React.Component {
               orient={"bottom"}
               tickFormat={d => ${"`${d.getMonth()}-${d.getDate()}`"}}
               label={"Format Your Dates"}
+            />
+          </g>
+          <g transform={"translate(100,320)"}>
+            <Axis
+              size={[200, 200]}
+              scale={scaleLinear()
+                .domain([10, 1000])
+                .range([200, 0])}
+              orient={"left"}
+              label={"Footer Left"}
+              footer={true}
+            />
+          </g>
+          <g transform={"translate(400,320)"}>
+            <Axis
+              size={[200, 200]}
+              scale={scaleTime()
+                .domain([new Date(2017, 1, 1), new Date(2017, 10, 17)])
+                .range([0, 200])}
+              orient={"bottom"}
+              tickFormat={d => ${"`${d.getMonth()}-${d.getDate()}`"}}
+              label={"Footer Bottom"}
+              footer={true}
             />
           </g>
         </g>

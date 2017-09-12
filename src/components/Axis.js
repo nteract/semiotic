@@ -48,7 +48,8 @@ class Axis extends React.Component {
       padding,
       tickValues,
       scale,
-      ticks
+      ticks,
+      footer
     } = this.props;
 
     let axisTickLines;
@@ -62,7 +63,8 @@ class Axis extends React.Component {
         ticks,
         orient,
         size,
-        margin
+        margin,
+        footer
       });
       axisTickLines = (
         <g className={`axis ${className}`}>
