@@ -70,7 +70,6 @@ function generateBulletChart({ data, rScale, adjustedSize, margin }) {
 
   // Each chart is a separate ORFrame with a single column called "fixed"
   const column = data.fixed;
-  console.log("column", column);
   column.pieceData.forEach((d, i) => {
     let pieceShape = {
       key: `bullet-piece-${i}`,

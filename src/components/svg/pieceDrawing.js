@@ -13,6 +13,14 @@ export function pointOnArcAtAngle(center, angle, distance) {
 export const renderLaidOutPieces = ({ data, shouldRender }) =>
   !shouldRender
     ? null
-    : data.map((d, i) => (
-        <Mark key={d.renderKey || `piece-render-${i}`} {...d.renderElement} />
-      ));
+    : data.map(
+        (d, i) =>
+          React.isValidElement(d.renderElement) ? (
+            d.renderElement
+          ) : (
+            <Mark
+              key={d.renderKey || `piece-render-${i}`}
+              {...d.renderElement}
+            />
+          )
+      );

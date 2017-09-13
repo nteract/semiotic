@@ -208,7 +208,7 @@ class orFrame extends React.Component {
     if (pieceType.type === "clusterbar") {
       rExtent[0] = 0;
     }
-    console.log("currentProps.rExtent", currentProps.rExtent);
+
     if (
       currentProps.rExtent &&
       currentProps.rExtent[1] !== undefined &&
