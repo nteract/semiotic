@@ -63,6 +63,18 @@ function linetypeChange(oldProps, newProps) {
   return true;
 }
 
+function mapParentsToPoints(fullDataset) {
+  return fullDataset.map(d => {
+    if (d.parentLine) {
+      return Object.assign({}, d, d.parentLine);
+    }
+    if (d.parentArea) {
+      return Object.assign({}, d, d.parentArea);
+    }
+    return d;
+  });
+}
+
 class XYFrame extends React.Component {
   constructor(props) {
     super(props);
@@ -967,14 +979,24 @@ class XYFrame extends React.Component {
 
     let downloadButton;
     if (download) {
+      const downloadData =
+        download === "points"
+          ? mapParentsToPoints(fullDataset)
+          : points || lines || areas;
       downloadButton = (
         <DownloadButton
           csvName={`${name}-${new Date().toJSON()}`}
           width={parseInt(size[0])}
           data={xyDownloadMapping({
-            data: points || lines || areas,
-            xAccessor: points ? stringToFn(xAccessor) : undefined,
-            yAccessor: points ? stringToFn(yAccessor) : undefined,
+            data: downloadData,
+            xAccessor:
+              download === "points" || points
+                ? stringToFn(xAccessor)
+                : undefined,
+            yAccessor:
+              download === "points" || points
+                ? stringToFn(yAccessor)
+                : undefined,
             fields: downloadFields
           })}
         />
@@ -1084,7 +1106,7 @@ XYFrame.propTypes = {
   tooltipContent: PropTypes.func,
   annotations: PropTypes.array,
   interaction: PropTypes.object,
-  download: PropTypes.bool, //add a download button for graphs data as csv
+  download: PropTypes.oneOfType([PropTypes.bool, PropTypes.string]), //add a download button for graphs data as csv
   downloadFields: PropTypes.array //additional fields aside from x,y to add to the csv
 };
 

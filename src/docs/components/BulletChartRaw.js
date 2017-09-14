@@ -43,7 +43,7 @@ const bulletData = [
 //type, data, renderMode, eventListenersGenerator, styleFn, projection, classFn, adjustedSize, margin, rScale
 function generateBulletChart({ data, rScale, adjustedSize, margin }) {
   const rangeColors = ["eee", "ddd", "ccc"];
-  const measureColors = ["lightsteelblue", "steelblue"];
+  const measureColors = ["rgb(0, 162, 206)", "rgb(0, 113, 144)"];
   const markerColors = ["black"];
 
   const colorHash = {
@@ -134,7 +134,7 @@ export default bulletData.map(data => {
       rExtent={[0, undefined]}
       oAccessor={() => "fixed"}
       projection={"horizontal"}
-      axis={{ orient: "bottom", ticks: 6 }}
+      axis={{ orient: "bottom", ticks: 6, footer: true }}
       style={d => ({
         fill: d.value > 0 ? "green" : "red",
         stroke: "darkgray",
