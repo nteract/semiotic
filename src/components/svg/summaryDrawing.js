@@ -21,6 +21,7 @@ export function boxplotRenderFn({
   eventListenersGenerator,
   styleFn,
   classFn,
+  positionFn = (position => position),
   projection,
   adjustedSize,
   margin,
@@ -77,7 +78,9 @@ export function boxplotRenderFn({
         quantile(summaryDataNest, 1.0)
       ];
 
-      translate = `translate(${summary.middle},${margin.top})`;
+      const xPosition = positionFn(summary.middle, key, summaryI);
+
+      translate = `translate(${xPosition},${margin.top})`;
       extentlineX1 = 0;
       extentlineX2 = 0;
       extentlineY1 = summaryDataNest[0];
@@ -109,7 +112,9 @@ export function boxplotRenderFn({
         quantile(summaryDataNest, 1.0)
       ];
 
-      translate = `translate(0,${summary.middle})`;
+      const yPosition = positionFn(summary.middle, key, summaryI);
+
+      translate = `translate(0,${yPosition})`;
       extentlineY1 = 0;
       extentlineY2 = 0;
       extentlineX1 = summaryDataNest[0];
@@ -632,6 +637,7 @@ export const drawSummaries = ({
   eventListenersGenerator,
   styleFn,
   classFn,
+  positionFn,
   projection,
   adjustedSize,
   margin
@@ -647,6 +653,7 @@ export const drawSummaries = ({
     eventListenersGenerator,
     styleFn,
     classFn,
+    positionFn,
     projection,
     adjustedSize,
     margin,
