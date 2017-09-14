@@ -438,6 +438,7 @@ class orFrame extends React.Component {
     }
 
     if (currentProps.oLabel) {
+      const positioningFn = currentProps.oLabelPosition || (pos => pos);
       let labelingFn;
       if (currentProps.oLabel === true) {
         labelingFn = d => (
@@ -454,12 +455,15 @@ class orFrame extends React.Component {
       }
 
       oExtent.forEach((d, i) => {
-        let xPosition = projectedColumns[d].middle;
-        let yPosition = 0;
+        let xPosition;
+        let yPosition;
 
-        if (projection === "horizontal") {
+        if (projection === "vertical") {
+          xPosition = positioningFn(projectedColumns[d].middle, d, i);
+          yPosition = 0;
+        } else if (projection === "horizontal") {
           yPosition = projectedColumns[d].middle;
-          xPosition = margin.left - 3;
+          xPosition = positioningFn(margin.left - 3, d, i);
         } else if (projection === "radial") {
           xPosition = pieArcs[i].centroid[0] + pieArcs[i].translate[0];
           yPosition =
@@ -1411,6 +1415,7 @@ orFrame.propTypes = {
   connectorStyle: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
   summaryStyle: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
   oLabel: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
+  oLabelPosition: PropTypes.func,
   hoverAnnotation: PropTypes.bool,
   axis: PropTypes.object,
   backgroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
