@@ -1,47 +1,25 @@
-import React from "react";
-import { select } from "d3-selection";
-import { annotation } from "d3-svg-annotation";
+import React from "react"
+import { AnnotationLabel } from "react-annotation"
 
-import PropTypes from "prop-types";
+import PropTypes from "prop-types"
 
 class Annotation extends React.Component {
-  constructor(props) {
-    super(props);
-    this.createAnnotation = this.createAnnotation.bind(this);
-  }
-
-  componentDidMount() {
-    this.createAnnotation();
-  }
-
-  componentDidUpdate() {
-    this.createAnnotation();
-  }
-
-  createAnnotation() {
-    const node = this.node;
-    const noteData = this.props.noteData;
+  render() {
+    const noteData = this.props.noteData
 
     noteData.type =
-      typeof noteData.type === "function" ? noteData.type : undefined;
+      typeof noteData.type === "function" ? noteData.type : AnnotationLabel
 
-    const makeAnnotations = annotation().annotations([noteData]);
+    //TODO come back and implement event listeners
 
-    select(node)
-      .selectAll("*")
-      .remove();
-
-    select(node).call(makeAnnotations);
-  }
-
-  render() {
-    const eventListeners = this.props.noteData.eventListeners || {};
-    return <g {...eventListeners} ref={node => (this.node = node)} />;
+    // const eventListeners = this.props.noteData.eventListeners || {};
+    // return <g {...eventListeners} ref={node => (this.node = node)} />;
+    return <noteData.type {...noteData} />
   }
 }
 
 Annotation.propTypes = {
   noteData: PropTypes.object
-};
+}
 
-export default Annotation;
+export default Annotation

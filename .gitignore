@@ -4,7 +4,6 @@
 .npmrc
 .nyc_output/
 /node_modules
-/lib
 npm-debug.log
 logs/*
 *-compiled*
