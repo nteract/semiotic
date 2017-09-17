@@ -232,10 +232,15 @@ export function orFrameConnectionRenderer({
       if (nextColumn) {
         const matchArray = nextColumn.map((d, i) => connectionRule(d.piece, i));
         pieceArray.forEach((piece, pieceI) => {
+          const thisConnectionPiece = connectionRule(piece.piece, pieceI);
           const matchingPieceIndex = matchArray.indexOf(
             connectionRule(piece.piece, pieceI)
           );
-          if (matchingPieceIndex !== -1) {
+          if (
+            thisConnectionPiece !== undefined &&
+            thisConnectionPiece !== null &&
+            matchingPieceIndex !== -1
+          ) {
             const matchingPiece = nextColumn[matchingPieceIndex];
             let markD;
             const { xy } = piece;
