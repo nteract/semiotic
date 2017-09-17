@@ -1,87 +1,87 @@
-import React from "react";
+import React from "react"
 
-import { extent } from "d3-array";
-import { scaleLinear } from "d3-scale";
+import { extent } from "d3-array"
+import { scaleLinear } from "d3-scale"
 
-import { axisPieces, axisLines } from "./visualizationLayerBehavior/axis";
+import { axisPieces, axisLines } from "./visualizationLayerBehavior/axis"
 
 // components
-import Mark from "./Mark";
-import Annotation from "./Annotation";
-import Axis from "./Axis";
-import DownloadButton from "./DownloadButton";
-import Frame from "./Frame";
+import Mark from "./Mark"
+import Annotation from "./Annotation"
+import Axis from "./Axis"
+import DownloadButton from "./DownloadButton"
+import Frame from "./Frame"
 
 import {
   createPoints,
   createLines,
   createAreas
-} from "./visualizationLayerBehavior/general";
+} from "./visualizationLayerBehavior/general"
 
-import { line } from "d3-shape";
-import { relativeY } from "./svg/lineDrawing";
+import { line } from "d3-shape"
+import { relativeY } from "./svg/lineDrawing"
 import {
-  annotationXYThreshold,
-  annotationCallout,
-  annotationCalloutCircle
-} from "d3-svg-annotation";
+  AnnotationXYThreshold,
+  AnnotationCallout,
+  AnnotationCalloutCircle
+} from "react-annotation"
 import {
   calculateMargin,
   drawMarginPath,
   adjustedPositionSize,
   generateFrameTitle
-} from "./svg/frameFunctions";
-import { packEnclose } from "d3-hierarchy";
-import { xyDownloadMapping } from "./downloadDataMapping";
+} from "./svg/frameFunctions"
+import { packEnclose } from "d3-hierarchy"
+import { xyDownloadMapping } from "./downloadDataMapping"
 import {
   projectedX,
   projectedY,
   projectedYTop,
   projectedYMiddle,
   projectedYBottom
-} from "./constants/coordinateNames";
-import { calculateDataExtent, stringToFn } from "./data/dataFunctions";
-import { filterDefs } from "./constants/jsx";
+} from "./constants/coordinateNames"
+import { calculateDataExtent, stringToFn } from "./data/dataFunctions"
+import { filterDefs } from "./constants/jsx"
 
-import PropTypes from "prop-types";
+import PropTypes from "prop-types"
 
-let xyframeKey = "";
-const chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+let xyframeKey = ""
+const chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 for (let i = 32; i > 0; --i)
-  xyframeKey += chars[Math.floor(Math.random() * chars.length)];
+  xyframeKey += chars[Math.floor(Math.random() * chars.length)]
 
 function linetypeChange(oldProps, newProps) {
-  const oLT = oldProps.lineType || oldProps.customLineType;
-  const nLT = newProps.lineType || newProps.customLineType;
+  const oLT = oldProps.lineType || oldProps.customLineType
+  const nLT = newProps.lineType || newProps.customLineType
   if (!oLT && !nLT) {
-    return false;
+    return false
   } else if (typeof oLT === "string" && oLT === nLT) {
-    return false;
+    return false
   } else if (oLT && nLT && oLT.type && nLT.type && oLT.type === nLT.type) {
-    return false;
+    return false
   }
-  return true;
+  return true
 }
 
 function mapParentsToPoints(fullDataset) {
   return fullDataset.map(d => {
     if (d.parentLine) {
-      return Object.assign({}, d, d.parentLine);
+      return Object.assign({}, d, d.parentLine)
     }
     if (d.parentArea) {
-      return Object.assign({}, d, d.parentArea);
+      return Object.assign({}, d, d.parentArea)
     }
-    return d;
-  });
+    return d
+  })
 }
 
 class XYFrame extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
 
-    this.calculateXYFrame = this.calculateXYFrame.bind(this);
+    this.calculateXYFrame = this.calculateXYFrame.bind(this)
 
-    this.renderBody = this.renderBody.bind(this);
+    this.renderBody = this.renderBody.bind(this)
 
     this.state = {
       lineData: null,
@@ -99,21 +99,21 @@ class XYFrame extends React.Component {
       axes: null,
       renderNumber: 0,
       margin: { top: 0, bottom: 0, left: 0, right: 0 }
-    };
+    }
 
-    this.xAccessor = null;
-    this.yAccessor = null;
-    this.xScale = null;
-    this.yScale = null;
+    this.xAccessor = null
+    this.yAccessor = null
+    this.xScale = null
+    this.yScale = null
   }
 
   componentWillMount() {
-    this.calculateXYFrame(this.props);
+    this.calculateXYFrame(this.props)
   }
 
   componentWillReceiveProps(nextProps) {
     if (!this.state.dataVersion || !this.state.fullDataset) {
-      this.calculateXYFrame(nextProps);
+      this.calculateXYFrame(nextProps)
     } else if (
       linetypeChange(this.props, nextProps) ||
       this.state.dataVersion !== nextProps.dataVersion ||
@@ -133,35 +133,35 @@ class XYFrame extends React.Component {
       this.props.size[0] !== nextProps.size[0] ||
       this.props.size[1] !== nextProps.size[1]
     ) {
-      this.calculateXYFrame(nextProps);
+      this.calculateXYFrame(nextProps)
     }
   }
 
   screenScales({ xExtent, yExtent, currentProps, margin, adjustedSize }) {
-    let xDomain = [margin.left, adjustedSize[0] + margin.left];
-    let yDomain = [adjustedSize[1] + margin.top, margin.top];
+    let xDomain = [margin.left, adjustedSize[0] + margin.left]
+    let yDomain = [adjustedSize[1] + margin.top, margin.top]
 
-    let xScaleType = currentProps.xScaleType || scaleLinear();
-    let yScaleType = currentProps.yScaleType || scaleLinear();
+    let xScaleType = currentProps.xScaleType || scaleLinear()
+    let yScaleType = currentProps.yScaleType || scaleLinear()
 
-    let xScale = xScaleType;
-    let yScale = yScaleType;
+    let xScale = xScaleType
+    let yScale = yScaleType
 
     if (xScaleType.domain) {
-      xScaleType.domain(xExtent);
+      xScaleType.domain(xExtent)
     }
     if (yScaleType.domain) {
-      yScaleType.domain(yExtent);
+      yScaleType.domain(yExtent)
     }
-    xScaleType.range(xDomain);
-    yScaleType.range(yDomain);
+    xScaleType.range(xDomain)
+    yScaleType.range(yDomain)
 
-    return { xScale, yScale };
+    return { xScale, yScale }
   }
 
   calculateXYFrame(currentProps) {
-    let margin = calculateMargin(currentProps);
-    let { adjustedPosition, adjustedSize } = adjustedPositionSize(currentProps);
+    let margin = calculateMargin(currentProps)
+    let { adjustedPosition, adjustedSize } = adjustedPositionSize(currentProps)
 
     let {
       xExtent,
@@ -186,11 +186,11 @@ class XYFrame extends React.Component {
       canvasPoints,
       canvasAreas,
       defined
-    } = currentProps;
+    } = currentProps
 
-    const xAccessor = stringToFn(currentProps.xAccessor);
-    const yAccessor = stringToFn(currentProps.yAccessor);
-    const lineIDAccessor = stringToFn(currentProps.lineIDAccessor, l => l.id);
+    const xAccessor = stringToFn(currentProps.xAccessor)
+    const yAccessor = stringToFn(currentProps.yAccessor)
+    const lineIDAccessor = stringToFn(currentProps.lineIDAccessor, l => l.id)
 
     if (
       !currentProps.dataVersion ||
@@ -203,24 +203,24 @@ class XYFrame extends React.Component {
         !fullDataset ||
         (!projectedLines && !projectedPoints && !projectedAreas)
       ) {
-        ({
+        ;({
           xExtent,
           yExtent,
           projectedLines,
           projectedPoints,
           projectedAreas,
           fullDataset
-        } = calculateDataExtent(currentProps));
+        } = calculateDataExtent(currentProps))
       }
     } else {
-      ({
+      ;({
         xExtent,
         yExtent,
         projectedLines,
         projectedPoints,
         projectedAreas,
         fullDataset
-      } = this.state);
+      } = this.state)
     }
 
     const { xScale, yScale } = this.screenScales({
@@ -229,45 +229,45 @@ class XYFrame extends React.Component {
       currentProps,
       margin,
       adjustedSize
-    });
+    })
 
-    let canvasDrawing = [];
+    let canvasDrawing = []
 
-    const title = generateFrameTitle(currentProps);
+    const title = generateFrameTitle(currentProps)
 
     //TODO: blow this shit up
-    this.xScale = xScale;
-    this.yScale = yScale;
-    this.xAccessor = xAccessor;
-    this.yAccessor = yAccessor;
+    this.xScale = xScale
+    this.yScale = yScale
+    this.xAccessor = xAccessor
+    this.yAccessor = yAccessor
 
-    let axes = null;
-    let axesTickLines = null;
+    let axes = null
+    let axesTickLines = null
 
     if (currentProps.axes) {
-      axesTickLines = [];
+      axesTickLines = []
       axes = currentProps.axes.map((d, i) => {
-        let axisScale = yScale;
+        let axisScale = yScale
         if (d.orient === "top" || d.orient === "bottom") {
-          axisScale = xScale;
+          axisScale = xScale
         }
 
-        let tickValues;
+        let tickValues
         if (d.tickValues && Array.isArray(d.tickValues)) {
-          tickValues = d.tickValues;
+          tickValues = d.tickValues
         } else if (d.tickValues) {
           //otherwise assume a function
-          tickValues = d.tickValues(fullDataset, currentProps.size, axisScale);
+          tickValues = d.tickValues(fullDataset, currentProps.size, axisScale)
         }
-        let axisSize = [adjustedSize[0], adjustedSize[1]];
-        let axisPosition = [margin.left, 0];
+        let axisSize = [adjustedSize[0], adjustedSize[1]]
+        let axisPosition = [margin.left, 0]
 
         if (d.orient === "top") {
-          axisPosition = [0, 0];
+          axisPosition = [0, 0]
         } else if (d.orient === "bottom") {
-          axisPosition = [0, margin.top];
+          axisPosition = [0, margin.top]
         } else if (d.orient === "right") {
-          axisPosition = [0, 0];
+          axisPosition = [0, 0]
         }
         const axisParts = axisPieces({
           padding: d.padding,
@@ -278,13 +278,13 @@ class XYFrame extends React.Component {
           size: axisSize,
           margin,
           footer: d.footer
-        });
+        })
         const axisTickLines = (
           <g key={`axes-tick-lines-${i}`} className={`axis ${d.className}`}>
             {axisLines({ axisParts, orient: d.orient })}
           </g>
-        );
-        axesTickLines.push(axisTickLines);
+        )
+        axesTickLines.push(axisTickLines)
         return (
           <Axis
             label={d.label}
@@ -307,11 +307,11 @@ class XYFrame extends React.Component {
             annotationFunction={d.axisAnnotationFunction}
             glyphFunction={d.glyphFunction}
           />
-        );
-      });
+        )
+      })
     }
 
-    let marginGraphic;
+    let marginGraphic
     if (currentProps.matte) {
       marginGraphic = (
         <path
@@ -323,21 +323,21 @@ class XYFrame extends React.Component {
           })}
           className="xyframe-matte"
         />
-      );
+      )
     }
 
-    let legendSettings;
+    let legendSettings
 
     if (currentProps.legend) {
-      legendSettings = currentProps.legend === true ? {} : currentProps.legend;
+      legendSettings = currentProps.legend === true ? {} : currentProps.legend
       if (currentProps.lines && !legendSettings.legendGroups) {
-        const lineType = currentProps.lineType || currentProps.customLineType;
-        const typeString = lineType && lineType.type ? lineType.type : lineType;
+        const lineType = currentProps.lineType || currentProps.customLineType
+        const typeString = lineType && lineType.type ? lineType.type : lineType
         const type =
           ["stackedarea", "stackedpercent", "bumparea"].indexOf(typeString) ===
           -1
             ? "line"
-            : "fill";
+            : "fill"
         const legendGroups = [
           {
             styleFn: currentProps.lineStyle,
@@ -346,28 +346,28 @@ class XYFrame extends React.Component {
               Object.assign({ label: lineIDAccessor(d) }, d)
             )
           }
-        ];
-        legendSettings.legendGroups = legendGroups;
+        ]
+        legendSettings.legendGroups = legendGroups
       }
     }
-    const areaAnnotations = [];
-    const areaType = currentProps.areaType;
+    const areaAnnotations = []
+    const areaType = currentProps.areaType
     if (areaType && areaType.label && projectedAreas) {
       projectedAreas.forEach((d, i) => {
         if (d.bounds) {
-          const bounds = Array.isArray(d.bounds) ? d.bounds : [d.bounds];
+          const bounds = Array.isArray(d.bounds) ? d.bounds : [d.bounds]
           bounds.forEach(labelBounds => {
             const label =
               typeof areaType.label === "function"
                 ? areaType.label(d)
-                : areaType.label;
+                : areaType.label
             if (label && label !== null) {
-              const labelPosition = label.position || "center";
+              const labelPosition = label.position || "center"
               const labelCenter = [
                 xScale(labelBounds[labelPosition][0]),
                 yScale(labelBounds[labelPosition][1])
-              ] || [xScale(d._xyfCoordinates[0]), yScale(d._xyfCoordinates[1])];
-              const labelContent = label.content || (p => p.value || p.id || i);
+              ] || [xScale(d._xyfCoordinates[0]), yScale(d._xyfCoordinates[1])]
+              const labelContent = label.content || (p => p.value || p.id || i)
 
               areaAnnotations.push({
                 x: labelCenter[0],
@@ -375,15 +375,15 @@ class XYFrame extends React.Component {
                 dx: label.dx,
                 dy: label.dy,
                 className: label.className,
-                type: label.type || annotationCallout,
+                type: label.type || AnnotationCallout,
                 note: label.note || { title: labelContent(d) },
                 subject: label.subject || { text: labelContent(d) },
                 connector: label.connector
-              });
+              })
             }
-          });
+          })
         }
-      });
+      })
     }
 
     const xyFrameRender = {
@@ -416,7 +416,7 @@ class XYFrame extends React.Component {
         customMark: stringToFn(customPointMark, undefined, true),
         behavior: createPoints
       }
-    };
+    }
 
     this.setState({
       voronoiHover: null,
@@ -448,23 +448,23 @@ class XYFrame extends React.Component {
       matte: marginGraphic,
       areaAnnotations,
       xyFrameRender
-    });
+    })
   }
 
   defaultXYSVGRule({ d, i, annotationLayer, lines, areas, points }) {
-    let xAccessor = this.xAccessor;
-    let yAccessor = this.yAccessor;
+    let xAccessor = this.xAccessor
+    let yAccessor = this.yAccessor
 
-    let xScale = this.xScale;
-    let yScale = this.yScale;
+    let xScale = this.xScale
+    let yScale = this.yScale
 
-    let screenCoordinates = [];
-    const idAccessor = this.props.lineIDAccessor || (l => l.id);
+    let screenCoordinates = []
+    const idAccessor = this.props.lineIDAccessor || (l => l.id)
 
-    let { adjustedPosition, adjustedSize } = adjustedPositionSize(this.props);
+    let { adjustedPosition, adjustedSize } = adjustedPositionSize(this.props)
 
     if (!d.coordinates) {
-      const xCoord = d[projectedX] || xAccessor(d);
+      const xCoord = d[projectedX] || xAccessor(d)
       screenCoordinates = [
         xScale(xCoord),
         relativeY({
@@ -479,7 +479,7 @@ class XYFrame extends React.Component {
           xScale,
           idAccessor
         })
-      ];
+      ]
       if (
         screenCoordinates[0] === undefined ||
         screenCoordinates[1] === undefined ||
@@ -487,7 +487,7 @@ class XYFrame extends React.Component {
         screenCoordinates[1] === null
       ) {
         //NO ANNOTATION IF INVALID SCREEN COORDINATES
-        return null;
+        return null
       }
     } else {
       screenCoordinates = d.coordinates.map(p => [
@@ -504,10 +504,10 @@ class XYFrame extends React.Component {
           xScale,
           idAccessor
         }) + adjustedPosition[1]
-      ]);
+      ])
     }
 
-    const margin = calculateMargin(this.props);
+    const margin = calculateMargin(this.props)
 
     //point xy
     //y
@@ -544,7 +544,7 @@ class XYFrame extends React.Component {
         areas,
         points,
         lines
-      });
+      })
     } else if (d.type === "xy" || d.type === "frame-hover") {
       const laLine = (
         <Mark
@@ -556,8 +556,8 @@ class XYFrame extends React.Component {
           forceUpdate={true}
           r={5}
         />
-      );
-      let laLabel;
+      )
+      let laLabel
       if (d.type === "xy") {
         laLabel = (
           <Mark
@@ -570,11 +570,11 @@ class XYFrame extends React.Component {
           >
             {d.label}
           </Mark>
-        );
+        )
       }
 
-      return [laLine, laLabel];
-    } else if (d.type === "d3-annotation" || typeof d.type === "function") {
+      return [laLine, laLabel]
+    } else if (d.type === "react-annotation" || typeof d.type === "function") {
       const noteData = Object.assign(
         {
           dx: 0,
@@ -586,16 +586,16 @@ class XYFrame extends React.Component {
         {
           type: d.type
         }
-      );
+      )
 
-      noteData.x = noteData.x ? noteData.x : screenCoordinates[0];
-      noteData.y = noteData.y ? noteData.y : screenCoordinates[1];
+      noteData.x = noteData.x ? noteData.x : screenCoordinates[0]
+      noteData.y = noteData.y ? noteData.y : screenCoordinates[1]
 
-      return <Annotation key={i} noteData={noteData} />;
+      return <Annotation key={i} noteData={noteData} />
     } else if (d.type === "enclose") {
       const circle = packEnclose(
         screenCoordinates.map(p => ({ x: p[0], y: p[1], r: 2 }))
-      );
+      )
       const noteData = Object.assign(
         {
           dx: 0,
@@ -607,38 +607,38 @@ class XYFrame extends React.Component {
         {
           x: circle.x,
           y: circle.y,
-          type: annotationCalloutCircle,
+          type: AnnotationCalloutCircle,
           subject: {
             radius: circle.r,
             radiusPadding: 5 || d.radiusPadding
           }
         }
-      );
+      )
 
       if (noteData.rp) {
         switch (noteData.rp) {
           case "top":
-            noteData.dx = 0;
-            noteData.dy = -circle.r - noteData.rd;
-            break;
+            noteData.dx = 0
+            noteData.dy = -circle.r - noteData.rd
+            break
           case "bottom":
-            noteData.dx = 0;
-            noteData.dy = circle.r + noteData.rd;
-            break;
+            noteData.dx = 0
+            noteData.dy = circle.r + noteData.rd
+            break
           case "left":
-            noteData.dx = -circle.r - noteData.rd;
-            noteData.dy = 0;
-            break;
+            noteData.dx = -circle.r - noteData.rd
+            noteData.dy = 0
+            break
           default:
-            noteData.dx = circle.r + noteData.rd;
-            noteData.dy = 0;
+            noteData.dx = circle.r + noteData.rd
+            noteData.dy = 0
         }
       }
       //TODO: Support .ra (setting angle)
 
-      return <Annotation key={i} noteData={noteData} />;
+      return <Annotation key={i} noteData={noteData} />
     } else if (d.type === "x") {
-      const yPosition = annotationLayer.position[1];
+      const yPosition = annotationLayer.position[1]
 
       const noteData = Object.assign(
         {
@@ -650,7 +650,7 @@ class XYFrame extends React.Component {
         },
         d,
         {
-          type: annotationXYThreshold,
+          type: AnnotationXYThreshold,
           x: screenCoordinates[0],
           subject: {
             x: screenCoordinates[0],
@@ -658,10 +658,10 @@ class XYFrame extends React.Component {
             y2: adjustedSize[1] + margin.top
           }
         }
-      );
-      return <Annotation key={i} noteData={noteData} />;
+      )
+      return <Annotation key={i} noteData={noteData} />
     } else if (d.type === "y") {
-      const xPosition = margin.left + i * 25;
+      const xPosition = margin.left + i * 25
 
       const noteData = Object.assign(
         {
@@ -673,7 +673,7 @@ class XYFrame extends React.Component {
         },
         d,
         {
-          type: annotationXYThreshold,
+          type: AnnotationXYThreshold,
           y: screenCoordinates[1],
           subject: {
             y: screenCoordinates[1],
@@ -681,17 +681,17 @@ class XYFrame extends React.Component {
             x2: adjustedSize[0] + adjustedPosition[0] + margin.left
           }
         }
-      );
-      return <Annotation key={i} noteData={noteData} />;
+      )
+      return <Annotation key={i} noteData={noteData} />
     } else if (d.type === "bounds") {
       const x0Position =
-        xScale(xAccessor(d.bounds[0])) + annotationLayer.position[0];
+        xScale(xAccessor(d.bounds[0])) + annotationLayer.position[0]
       const y0Position =
-        yScale(yAccessor(d.bounds[0])) + annotationLayer.position[1];
+        yScale(yAccessor(d.bounds[0])) + annotationLayer.position[1]
       const x1Position =
-        xScale(xAccessor(d.bounds[1])) + annotationLayer.position[0];
+        xScale(xAccessor(d.bounds[1])) + annotationLayer.position[0]
       const y1Position =
-        yScale(yAccessor(d.bounds[1])) + annotationLayer.position[1];
+        yScale(yAccessor(d.bounds[1])) + annotationLayer.position[1]
 
       const laLine = (
         <Mark
@@ -718,7 +718,7 @@ class XYFrame extends React.Component {
           }
           className={`annotation annotation-bounds ${d.className || ""} `}
         />
-      );
+      )
 
       const laLabel = (
         <Mark
@@ -731,14 +731,14 @@ class XYFrame extends React.Component {
         >
           {d.label}
         </Mark>
-      );
+      )
 
-      return [laLine, laLabel];
+      return [laLine, laLabel]
     } else if (d.type === "line") {
       const lineGenerator = line()
         .x(p => p[0])
-        .y(p => p[1]);
-      const lineD = lineGenerator(screenCoordinates);
+        .y(p => p[1])
+      const lineD = lineGenerator(screenCoordinates)
       const laLine = (
         <Mark
           key={d.label + "annotationline" + i}
@@ -746,7 +746,7 @@ class XYFrame extends React.Component {
           d={lineD}
           className={`annotation annotation-line ${d.className || ""} `}
         />
-      );
+      )
 
       const laLabel = (
         <Mark
@@ -758,20 +758,20 @@ class XYFrame extends React.Component {
         >
           {d.label}
         </Mark>
-      );
+      )
 
-      return [laLine, laLabel];
+      return [laLine, laLabel]
     } else if (d.type === "area") {
       const mappedCoordinates =
         "M" +
         d.coordinates
           .map(p => [xScale(xAccessor(p)), yScale(yAccessor(p))])
           .join("L") +
-        "Z";
-      const xBounds = extent(d.coordinates.map(p => xScale(xAccessor(p))));
-      const yBounds = extent(d.coordinates.map(p => yScale(yAccessor(p))));
-      const xCenter = (xBounds[0] + xBounds[1]) / 2;
-      const yCenter = (yBounds[0] + yBounds[1]) / 2;
+        "Z"
+      const xBounds = extent(d.coordinates.map(p => xScale(xAccessor(p))))
+      const yBounds = extent(d.coordinates.map(p => yScale(yAccessor(p))))
+      const xCenter = (xBounds[0] + xBounds[1]) / 2
+      const yCenter = (yBounds[0] + yBounds[1]) / 2
 
       const laLine = (
         <Mark
@@ -781,7 +781,7 @@ class XYFrame extends React.Component {
           d={mappedCoordinates}
           className={`annotation annotation-area ${d.className || ""} `}
         />
-      );
+      )
 
       const laLabel = (
         <Mark
@@ -796,34 +796,34 @@ class XYFrame extends React.Component {
         >
           {d.label}
         </Mark>
-      );
+      )
 
-      return [laLine, laLabel];
+      return [laLine, laLabel]
     }
-    return null;
+    return null
   }
 
   defaultXYHTMLRule({ d, i, lines, areas, points }) {
-    let xAccessor = this.xAccessor;
-    let yAccessor = this.yAccessor;
+    let xAccessor = this.xAccessor
+    let yAccessor = this.yAccessor
 
-    let xScale = this.xScale;
-    let yScale = this.yScale;
+    let xScale = this.xScale
+    let yScale = this.yScale
     //y
     //area
 
-    let screenCoordinates = [];
+    let screenCoordinates = []
 
-    const idAccessor = this.props.lineIDAccessor || (l => l.id);
-    const xCoord = d[projectedX] || xAccessor(d);
-    const yCoord = d[projectedY] || yAccessor(d);
+    const idAccessor = this.props.lineIDAccessor || (l => l.id)
+    const xCoord = d[projectedX] || xAccessor(d)
+    const yCoord = d[projectedY] || yAccessor(d)
 
-    const xString = xCoord && xCoord.toString ? xCoord.toString() : xCoord;
-    const yString = yCoord && yCoord.toString ? yCoord.toString() : yCoord;
+    const xString = xCoord && xCoord.toString ? xCoord.toString() : xCoord
+    const yString = yCoord && yCoord.toString ? yCoord.toString() : yCoord
 
     let { adjustedPosition /*, adjustedSize*/ } = adjustedPositionSize(
       this.props
-    );
+    )
     if (!d.coordinates) {
       screenCoordinates = [
         xScale(xCoord),
@@ -839,7 +839,7 @@ class XYFrame extends React.Component {
           xScale,
           idAccessor
         })
-      ];
+      ]
       if (
         screenCoordinates[0] === undefined ||
         screenCoordinates[1] === undefined ||
@@ -847,7 +847,7 @@ class XYFrame extends React.Component {
         screenCoordinates[1] === null
       ) {
         //NO ANNOTATION IF INVALID SCREEN COORDINATES
-        return null;
+        return null
       }
     } else {
       screenCoordinates = d.coordinates.map(p => [
@@ -864,7 +864,7 @@ class XYFrame extends React.Component {
           xScale,
           idAccessor
         }) + adjustedPosition[1]
-      ]);
+      ])
     }
 
     if (
@@ -897,7 +897,7 @@ class XYFrame extends React.Component {
         areas,
         points,
         lines
-      });
+      })
     }
 
     if (d.type === "frame-hover") {
@@ -907,10 +907,10 @@ class XYFrame extends React.Component {
           <p key="html-annotation-content-1">{xString}</p>
           <p key="html-annotation-content-2">{yString}</p>
         </div>
-      );
+      )
 
       if (d.type === "frame-hover" && this.props.tooltipContent) {
-        content = this.props.tooltipContent(d);
+        content = this.props.tooltipContent(d)
       }
 
       return (
@@ -925,13 +925,13 @@ class XYFrame extends React.Component {
         >
           {content}
         </div>
-      );
+      )
     }
-    return null;
+    return null
   }
 
   render() {
-    return this.renderBody({});
+    return this.renderBody({})
   }
 
   renderBody({ afterElements, beforeElements }) {
@@ -955,7 +955,7 @@ class XYFrame extends React.Component {
       customHoverBehavior,
       customDoubleClickBehavior,
       renderKey
-    } = this.props;
+    } = this.props
 
     const {
       title,
@@ -975,14 +975,14 @@ class XYFrame extends React.Component {
       areaAnnotations,
       legendSettings,
       xyFrameRender
-    } = this.state;
+    } = this.state
 
-    let downloadButton;
+    let downloadButton
     if (download) {
       const downloadData =
         download === "points"
           ? mapParentsToPoints(fullDataset)
-          : points || lines || areas;
+          : points || lines || areas
       downloadButton = (
         <DownloadButton
           csvName={`${name}-${new Date().toJSON()}`}
@@ -1000,14 +1000,14 @@ class XYFrame extends React.Component {
             fields: downloadFields
           })}
         />
-      );
+      )
     }
 
     const finalFilterDefs = filterDefs({
       matte: matte,
       key: xyframeKey,
       additionalDefs: additionalDefs
-    });
+    })
 
     // foreground and background graphics should handle either JSX or a function that passes size & margin and returns JSX
     return (
@@ -1055,7 +1055,7 @@ class XYFrame extends React.Component {
         afterElements={afterElements}
         downloadButton={downloadButton}
       />
-    );
+    )
   }
 }
 
@@ -1108,6 +1108,6 @@ XYFrame.propTypes = {
   interaction: PropTypes.object,
   download: PropTypes.oneOfType([PropTypes.bool, PropTypes.string]), //add a download button for graphs data as csv
   downloadFields: PropTypes.array //additional fields aside from x,y to add to the csv
-};
+}
 
-module.exports = XYFrame;
+module.exports = XYFrame
