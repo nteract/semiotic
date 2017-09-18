@@ -1,5 +1,6 @@
 import React from "react";
 
+import Axis from "../Axis";
 import Mark from "../Mark";
 import { contouring } from "../svg/areaDrawing";
 import { quantile } from "d3-array";
@@ -8,6 +9,8 @@ import { groupBarMark } from "../svg/SvgHelper";
 import { area, line, curveCatmullRom, arc } from "d3-shape";
 import { pointOnArcAtAngle } from "./pieceDrawing";
 import { orFrameSummaryRenderer } from "./frameFunctions";
+import { axisPieces, axisLines } from "../visualizationLayerBehavior/axis";
+import { scaleLinear } from "d3-scale";
 
 const contourMap = d => [d.xy.x, d.xy.y];
 
@@ -21,7 +24,7 @@ export function boxplotRenderFn({
   eventListenersGenerator,
   styleFn,
   classFn,
-  positionFn = (position => position),
+  positionFn = position => position,
   projection,
   adjustedSize,
   margin,
@@ -398,6 +401,31 @@ export function contourRenderFn({
   return renderedSummaryMarks;
 }
 
+function axisGenerator(axisProps, i, axisScale) {
+  return (
+    <Axis
+      label={axisProps.label}
+      key={axisProps.key || `orframe-summary-axis-${i}`}
+      orient={axisProps.orient}
+      size={axisProps.size}
+      margin={{ top: 0, bottom: 0, left: 0, right: 0 }}
+      ticks={axisProps.ticks}
+      tickSize={axisProps.tickSize}
+      tickFormat={axisProps.tickFormat}
+      tickValues={axisProps.tickValues}
+      format={axisProps.format}
+      rotate={axisProps.rotate}
+      scale={axisScale}
+      className={axisProps.className}
+      name={axisProps.name}
+    />
+  );
+}
+
+function radialAxisGenerator(axisProps) {
+  return <circle style={{ fill: "pink" }} r={20} />;
+}
+
 export function bucketizedRenderingFn({
   data,
   type,
@@ -414,20 +442,33 @@ export function bucketizedRenderingFn({
 
   const buckets = type.bins || 25;
   const summaryValueAccessor = type.binValue || (d => d.length);
+  let axisCreator;
+  if (type.axis) {
+    type.axis.orient =
+      projection === "horizontal" &&
+      ["left", "right"].indexOf(type.axis.orient) === -1
+        ? "left"
+        : type.axis.orient;
+    type.axis.orient =
+      projection === "vertical" &&
+      ["bottom", "top"].indexOf(type.axis.orient) === -1
+        ? "bottom"
+        : type.axis.orient;
+    axisCreator = axisGenerator;
+    if (projection === "radial") {
+      axisCreator = radialAxisGenerator;
+    }
+  }
 
   const bucketSize = chartSize / buckets;
 
   const keys = Object.keys(data);
-  keys.forEach((key, summaryI) => {
+  let binMax = 0;
+  const calculatedBins = keys.map((key, summaryI) => {
     const summary = data[key];
-    const eventListeners = eventListenersGenerator(summary, summaryI);
 
-    const renderValue = renderMode && renderMode(summary, summaryI);
     const thisSummaryData = summary.xyData;
-    const columnWidth = summary.width;
 
-    const calculatedSummaryStyle = styleFn(thisSummaryData[0].piece, summaryI);
-    const calculatedSummaryClass = classFn(thisSummaryData[0].piece, summaryI);
     const xySorting =
       projection === "vertical" ? verticalXYSorting : horizontalXYSorting;
 
@@ -449,12 +490,12 @@ export function bucketizedRenderingFn({
     const xyValue =
       projection === "vertical" ? p => p.xy.y : p => p.piece._orFR;
 
-    let bins = violinHist
+    let calculatedBins = violinHist
       .domain(binDomain)
       .thresholds(binBuckets)
       .value(xyValue)(summaryDataNest);
 
-    bins = bins
+    calculatedBins = calculatedBins
       .map(d => ({
         y: d.x0,
         y1: d.x1 - d.x0,
@@ -462,7 +503,16 @@ export function bucketizedRenderingFn({
       }))
       .filter(d => d.value !== 0);
 
-    const binMax = max(bins.map(d => d.value));
+    binMax = Math.max(binMax, max(calculatedBins.map(d => d.value)));
+    return { bins: calculatedBins, summary, summaryI, thisSummaryData };
+  });
+  calculatedBins.forEach(({ bins, summary, summaryI, thisSummaryData }) => {
+    const eventListeners = eventListenersGenerator(summary, summaryI);
+    const columnWidth = summary.width;
+    const renderValue = renderMode && renderMode(summary, summaryI);
+
+    const calculatedSummaryStyle = styleFn(thisSummaryData[0].piece, summaryI);
+    const calculatedSummaryClass = classFn(thisSummaryData[0].piece, summaryI);
 
     let translate = `translate(${summary.middle},0)`;
     if (projection === "horizontal") {
@@ -493,6 +543,38 @@ export function bucketizedRenderingFn({
         translate = `translate(${margin.left},${margin.top})`;
       }
 
+      if (type.axis && type.type === "histogram") {
+        let axisTranslate = `translate(${summary.x},${margin.top})`;
+        let axisDomain = [0, binMax];
+        if (projection === "horizontal") {
+          axisTranslate = `translate(${bucketSize + margin.left},${summary.x})`;
+          axisDomain = [binMax, 0];
+        } else if (projection === "radial") {
+          axisTranslate = `translate(${margin.left},${margin.top})`;
+        }
+
+        const axisWidth =
+          projection === "horizontal" ? adjustedSize[0] : columnWidth;
+        const axisHeight =
+          projection === "vertical"
+            ? adjustedSize[1] - margin.top
+            : columnWidth;
+        type.axis.size = [axisWidth, axisHeight];
+        const axisScale = scaleLinear()
+          .domain(axisDomain)
+          .range([0, columnWidth]);
+        const renderedSummaryAxis = axisCreator(type.axis, summaryI, axisScale);
+
+        renderedSummaryMarks.push(
+          <g
+            className="summary-axis"
+            key={`summaryPiece-axis-${summaryI}`}
+            transform={axisTranslate}
+          >
+            {renderedSummaryAxis}
+          </g>
+        );
+      }
       renderedSummaryMarks.push(
         <g
           {...eventListeners}

@@ -1,34 +1,34 @@
-import React from "react"
+import React from "react";
 
-import { nest } from "d3-collection"
+import { nest } from "d3-collection";
 
-import uniq from "lodash.uniq"
+import uniq from "lodash.uniq";
 
-import { scaleBand, scaleOrdinal, scaleLinear, scaleIdentity } from "d3-scale"
+import { scaleBand, scaleOrdinal, scaleLinear, scaleIdentity } from "d3-scale";
 
-import { sum, max, min, extent } from "d3-array"
+import { sum, max, min, extent } from "d3-array";
 
-import { circlePath } from "./markBehavior/drawing"
+import { circlePath } from "./markBehavior/drawing";
 
-import { arc } from "d3-shape"
+import { arc } from "d3-shape";
 
-import { axisPieces, axisLines } from "./visualizationLayerBehavior/axis"
-import { filterDefs } from "./constants/jsx"
-import Annotation from "./Annotation"
+import { axisPieces, axisLines } from "./visualizationLayerBehavior/axis";
+import { filterDefs } from "./constants/jsx";
+import Annotation from "./Annotation";
 
-import { packEnclose } from "d3-hierarchy"
+import { packEnclose } from "d3-hierarchy";
 import {
   AnnotationXYThreshold,
   AnnotationCalloutCircle
-} from "react-annotation"
+} from "react-annotation";
 
-import Axis from "./Axis"
+import Axis from "./Axis";
 
-import Frame from "./Frame"
-import Mark from "./Mark"
-import DownloadButton from "./DownloadButton"
+import Frame from "./Frame";
+import Mark from "./Mark";
+import DownloadButton from "./DownloadButton";
 
-import { orDownloadMapping } from "./downloadDataMapping"
+import { orDownloadMapping } from "./downloadDataMapping";
 
 import {
   trueAxis,
@@ -39,39 +39,39 @@ import {
   adjustedPositionSize,
   generateFrameTitle,
   orFrameConnectionRenderer
-} from "./svg/frameFunctions"
-import { pointOnArcAtAngle, renderLaidOutPieces } from "./svg/pieceDrawing"
+} from "./svg/frameFunctions";
+import { pointOnArcAtAngle, renderLaidOutPieces } from "./svg/pieceDrawing";
 import {
   clusterBarLayout,
   barLayout,
   pointLayout,
   swarmLayout
-} from "./svg/pieceLayouts"
+} from "./svg/pieceLayouts";
 
-import { drawSummaries } from "./svg/summaryDrawing"
-import { stringToFn } from "./data/dataFunctions"
+import { drawSummaries } from "./svg/summaryDrawing";
+import { stringToFn } from "./data/dataFunctions";
 
-import PropTypes from "prop-types"
+import PropTypes from "prop-types";
 
-const xScale = scaleIdentity()
-const yScale = scaleIdentity()
+const xScale = scaleIdentity();
+const yScale = scaleIdentity();
 
 const layoutHash = {
   clusterbar: clusterBarLayout,
   bar: barLayout,
   point: pointLayout,
   swarm: swarmLayout
-}
+};
 
 class orFrame extends React.Component {
   constructor(props) {
-    super(props)
+    super(props);
 
-    this.calculateORFrame = this.calculateORFrame.bind(this)
-    this.defaultORHTMLRule = this.defaultORHTMLRule.bind(this)
-    this.defaultORSVGRule = this.defaultORSVGRule.bind(this)
+    this.calculateORFrame = this.calculateORFrame.bind(this);
+    this.defaultORHTMLRule = this.defaultORHTMLRule.bind(this);
+    this.defaultORSVGRule = this.defaultORSVGRule.bind(this);
 
-    this.renderBody = this.renderBody.bind(this)
+    this.renderBody = this.renderBody.bind(this);
 
     this.state = {
       adjustedPosition: null,
@@ -81,72 +81,76 @@ class orFrame extends React.Component {
       axisData: null,
       axis: null,
       renderNumber: 0
-    }
+    };
 
-    this.oAccessor = null
-    this.rAccessor = null
-    this.oScale = null
-    this.rScale = null
+    this.oAccessor = null;
+    this.rAccessor = null;
+    this.oScale = null;
+    this.rScale = null;
   }
 
   calculateORFrame(currentProps) {
-    let oLabels
-    const projectedColumns = {}
+    let oLabels;
+    const projectedColumns = {};
 
-    const padding = currentProps.oPadding ? currentProps.oPadding : 0
+    const padding = currentProps.oPadding ? currentProps.oPadding : 0;
 
-    const summaryType = objectifyType(currentProps.summaryType)
-    const pieceType = objectifyType(currentProps.type)
-    const connectorType = objectifyType(currentProps.connectorType)
+    const summaryType = objectifyType(currentProps.summaryType);
+    const pieceType = objectifyType(currentProps.type);
+    const connectorType = objectifyType(currentProps.connectorType);
 
     const {
       projection = "vertical",
       customHoverBehavior,
       customClickBehavior
-    } = currentProps
+    } = currentProps;
     const eventListenersGenerator = generateORFrameEventListeners(
       customHoverBehavior,
       customClickBehavior
-    )
+    );
 
-    const barData = keyAndObjectifyBarData(currentProps)
+    const barData = keyAndObjectifyBarData(currentProps);
 
-    const oAccessor = stringToFn(currentProps.oAccessor, d => d.renderKey)
-    const rAccessor = stringToFn(currentProps.rAccessor, d => d.value)
+    const oAccessor = stringToFn(currentProps.oAccessor, d => d.renderKey);
+    const rAccessor = stringToFn(currentProps.rAccessor, d => d.value);
 
     const connectorStyle = stringToFn(
       currentProps.connectorStyle,
       () => ({}),
       true
-    )
-    const summaryStyle = stringToFn(currentProps.summaryStyle, () => ({}), true)
-    const pieceStyle = stringToFn(currentProps.style, () => ({}), true)
-    const pieceClass = stringToFn(currentProps.pieceClass, () => "", true)
-    const summaryClass = stringToFn(currentProps.summaryClass, () => "", true)
+    );
+    const summaryStyle = stringToFn(
+      currentProps.summaryStyle,
+      () => ({}),
+      true
+    );
+    const pieceStyle = stringToFn(currentProps.style, () => ({}), true);
+    const pieceClass = stringToFn(currentProps.pieceClass, () => "", true);
+    const summaryClass = stringToFn(currentProps.summaryClass, () => "", true);
     const summaryPosition =
-      currentProps.summaryPosition || (position => position)
+      currentProps.summaryPosition || (position => position);
 
-    let allData = [...barData]
+    let allData = [...barData];
 
     //      const dataAccessor = currentProps.dataAccessor || function (d) {return d}
-    const margin = calculateMargin(currentProps)
+    const margin = calculateMargin(currentProps);
     const { adjustedPosition, adjustedSize } = adjustedPositionSize(
       currentProps
-    )
-    const title = generateFrameTitle(currentProps)
+    );
+    const title = generateFrameTitle(currentProps);
 
     let oExtent =
-      currentProps.oExtent || uniq(allData.map((d, i) => oAccessor(d, i)))
+      currentProps.oExtent || uniq(allData.map((d, i) => oAccessor(d, i)));
 
-    let rExtent
-    let subZeroRExtent = [0, 0]
+    let rExtent;
+    let subZeroRExtent = [0, 0];
 
     if (
       pieceType.type === "bar" &&
       summaryType.type &&
       summaryType.type !== "none"
     ) {
-      pieceType.type = undefined
+      pieceType.type = undefined;
     }
 
     if (
@@ -154,57 +158,59 @@ class orFrame extends React.Component {
       currentProps.rExtent[0] &&
       currentProps.rExtent[1]
     ) {
-      rExtent = currentProps.rExtent
+      rExtent = currentProps.rExtent;
     } else if (pieceType.type !== "bar") {
-      rExtent = extent(allData, rAccessor)
+      rExtent = extent(allData, rAccessor);
     } else {
-      const positiveData = allData.filter(d => rAccessor(d) >= 0)
-      const negativeData = allData.filter(d => rAccessor(d) <= 0)
+      const positiveData = allData.filter(d => rAccessor(d) >= 0);
+      const negativeData = allData.filter(d => rAccessor(d) <= 0);
 
       const nestedPositiveData = nest()
         .key(oAccessor)
         .rollup(leaves => sum(leaves.map(rAccessor)))
-        .entries(positiveData)
+        .entries(positiveData);
 
       const nestedNegativeData = nest()
         .key(oAccessor)
         .rollup(leaves => sum(leaves.map(rAccessor)))
-        .entries(negativeData)
+        .entries(negativeData);
 
-      let topR = currentProps.rExtent && currentProps.rExtent[1]
+      let topR = currentProps.rExtent && currentProps.rExtent[1];
 
-      rExtent = currentProps.rExtent
-        ? [0, topR]
-        : [
-            0,
-            nestedPositiveData.length === 0
-              ? 0
-              : Math.max(max(nestedPositiveData, d => d.value), 0)
-          ]
+      rExtent =
+        currentProps.rExtent && topR
+          ? [0, topR]
+          : [
+              0,
+              nestedPositiveData.length === 0
+                ? 0
+                : Math.max(max(nestedPositiveData, d => d.value), 0)
+            ];
 
-      let bottomR = currentProps.rExtent && currentProps.rExtent[0]
+      let bottomR = currentProps.rExtent && currentProps.rExtent[0];
 
       if (
         currentProps.rExtent &&
+        topR &&
+        bottomR &&
         currentProps.rExtent[0] > currentProps.rExtent[1]
       ) {
         //Assume a flipped rExtent
-        bottomR = currentProps.rExtent && currentProps.rExtent[1]
-        topR = currentProps.rExtent && currentProps.rExtent[0]
+        bottomR = currentProps.rExtent && currentProps.rExtent[1];
+        topR = currentProps.rExtent && currentProps.rExtent[0];
       }
-      subZeroRExtent = currentProps.rExtent
+      subZeroRExtent = bottomR
         ? [0, bottomR]
         : [
             0,
             nestedNegativeData.length === 0
               ? 0
               : Math.min(min(nestedNegativeData, d => d.value), 0)
-          ]
-      rExtent = [subZeroRExtent[1], rExtent[1]]
-    }
-
-    if (pieceType.type === "clusterbar") {
-      rExtent[0] = 0
+          ];
+      rExtent = [subZeroRExtent[1], rExtent[1]];
+      if (pieceType.type === "clusterbar") {
+        rExtent[0] = 0;
+      }
     }
 
     if (
@@ -212,7 +218,7 @@ class orFrame extends React.Component {
       currentProps.rExtent[1] !== undefined &&
       currentProps.rExtent[0] === undefined
     ) {
-      rExtent[1] = currentProps.rExtent[1]
+      rExtent[1] = currentProps.rExtent[1];
     }
 
     if (
@@ -220,210 +226,210 @@ class orFrame extends React.Component {
       currentProps.rExtent[0] !== undefined &&
       currentProps.rExtent[1] === undefined
     ) {
-      rExtent[0] = currentProps.rExtent[0]
+      rExtent[0] = currentProps.rExtent[0];
     }
 
     if (currentProps.sortO) {
-      oExtent = oExtent.sort(currentProps.sortO)
+      oExtent = oExtent.sort(currentProps.sortO);
     }
     if (
       currentProps.invertR ||
       (currentProps.rExtent &&
         currentProps.rExtent[0] > currentProps.rExtent[1])
     ) {
-      rExtent = [rExtent[1], rExtent[0]]
+      rExtent = [rExtent[1], rExtent[0]];
     }
 
-    let rDomain = [margin.left, adjustedSize[0] + margin.left]
-    let oDomain = [margin.top, adjustedSize[1] + margin.top]
+    let rDomain = [margin.left, adjustedSize[0] + margin.left];
+    let oDomain = [margin.top, adjustedSize[1] + margin.top];
 
     if (projection === "vertical") {
-      oDomain = [margin.left, adjustedSize[0] + margin.left]
-      rDomain = [margin.top, adjustedSize[1]]
+      oDomain = [margin.left, adjustedSize[0] + margin.left];
+      rDomain = [margin.top, adjustedSize[1]];
     }
 
-    const oScaleType = currentProps.oScaleType || scaleBand
-    const rScaleType = currentProps.rScaleType || scaleLinear
+    const oScaleType = currentProps.oScaleType || scaleBand;
+    const rScaleType = currentProps.rScaleType || scaleLinear;
 
-    let cwHash
+    let cwHash;
 
-    let oScale
+    let oScale;
 
     if (currentProps.dynamicColumnWidth) {
-      let columnValueCreator
+      let columnValueCreator;
       if (typeof currentProps.dynamicColumnWidth === "string") {
         columnValueCreator = d =>
-          sum(d.map(p => p[currentProps.dynamicColumnWidth]))
+          sum(d.map(p => p[currentProps.dynamicColumnWidth]));
       } else {
-        columnValueCreator = currentProps.dynamicColumnWidth
+        columnValueCreator = currentProps.dynamicColumnWidth;
       }
       const thresholdDomain =
-        projection === "vertical" ? [margin.left] : [margin.top]
-      let maxColumnValues = 0
-      const columnValues = []
+        projection === "vertical" ? [margin.left] : [margin.top];
+      let maxColumnValues = 0;
+      const columnValues = [];
 
       oExtent.forEach((d, i) => {
         const oValue = columnValueCreator(
           barData.filter((p, q) => oAccessor(p, q) === d)
-        )
-        columnValues.push(oValue)
-        maxColumnValues += oValue
-      })
+        );
+        columnValues.push(oValue);
+        maxColumnValues += oValue;
+      });
 
-      cwHash = { total: 0 }
+      cwHash = { total: 0 };
       oExtent.forEach((d, i) => {
-        const oValue = columnValues[i]
-        const stepValue = oValue / maxColumnValues * (oDomain[1] - oDomain[0])
-        cwHash[d] = stepValue
-        cwHash.total += stepValue
+        const oValue = columnValues[i];
+        const stepValue = oValue / maxColumnValues * (oDomain[1] - oDomain[0]);
+        cwHash[d] = stepValue;
+        cwHash.total += stepValue;
         if (i !== oExtent.length - 1) {
-          thresholdDomain.push(stepValue + thresholdDomain[i])
+          thresholdDomain.push(stepValue + thresholdDomain[i]);
         }
-      })
+      });
 
       oScale = scaleOrdinal()
         .domain(oExtent)
-        .range(thresholdDomain)
+        .range(thresholdDomain);
     } else {
       oScale = oScaleType()
         .domain(oExtent)
-        .range(oDomain)
+        .range(oDomain);
     }
 
     const rScale = rScaleType()
       .domain(rExtent)
-      .range(rDomain)
+      .range(rDomain);
 
     const rScaleReverse = rScaleType()
       .domain(rDomain)
-      .range(rDomain.reverse())
+      .range(rDomain.reverse());
 
-    this.oScale = oScale
-    this.rScale = rScale
+    this.oScale = oScale;
+    this.rScale = rScale;
 
-    this.oAccessor = oAccessor
-    this.rAccessor = rAccessor
+    this.oAccessor = oAccessor;
+    this.rAccessor = rAccessor;
 
-    let columnWidth = cwHash ? 0 : oScale.bandwidth()
+    let columnWidth = cwHash ? 0 : oScale.bandwidth();
 
     let pieceData = [],
-      mappedMiddles
+      mappedMiddles;
 
-    let mappedMiddleSize = adjustedSize[1] + margin.top
+    let mappedMiddleSize = adjustedSize[1] + margin.top;
     if (projection === "vertical") {
-      mappedMiddleSize = adjustedSize[0] + margin.left
+      mappedMiddleSize = adjustedSize[0] + margin.left;
     }
-    mappedMiddles = this.mappedMiddles(oScale, mappedMiddleSize, padding)
+    mappedMiddles = this.mappedMiddles(oScale, mappedMiddleSize, padding);
 
-    const nestedPieces = {}
+    const nestedPieces = {};
     nest()
       .key(oAccessor)
       .entries(barData)
       .forEach(d => {
-        nestedPieces[d.key] = d.values
-      })
-    pieceData = oExtent.map(d => nestedPieces[d])
+        nestedPieces[d.key] = d.values;
+      });
+    pieceData = oExtent.map(d => nestedPieces[d]);
 
     const zeroValue =
-      projection === "vertical" ? rScaleReverse(rScale(0)) : rScale(0)
+      projection === "vertical" ? rScaleReverse(rScale(0)) : rScale(0);
 
     oExtent.forEach((o, i) => {
-      projectedColumns[o] = { name: o, padding, pieceData: pieceData[i] }
-      projectedColumns[o].x = oScale(o) + padding / 2
+      projectedColumns[o] = { name: o, padding, pieceData: pieceData[i] };
+      projectedColumns[o].x = oScale(o) + padding / 2;
       projectedColumns[o].y =
-        projection === "vertical" ? margin.top : margin.left
-      projectedColumns[o].middle = mappedMiddles[o] + padding / 2
+        projection === "vertical" ? margin.top : margin.left;
+      projectedColumns[o].middle = mappedMiddles[o] + padding / 2;
 
-      let negativeOffset = zeroValue
-      let positiveOffset = zeroValue
+      let negativeOffset = zeroValue;
+      let positiveOffset = zeroValue;
 
       projectedColumns[o].pieceData.forEach(piece => {
-        const pieceValue = rAccessor(piece)
-        let valPosition
+        const pieceValue = rAccessor(piece);
+        let valPosition;
 
         if (pieceType.type !== "bar" && pieceType.type !== "clusterbar") {
-          valPosition = rScale(pieceValue)
-          piece._orFR = valPosition
+          valPosition = rScale(pieceValue);
+          piece._orFR = valPosition;
         } else {
           valPosition =
             projection === "vertical"
               ? rScaleReverse(rScale(pieceValue))
-              : rScale(pieceValue)
-          piece._orFR = Math.abs(zeroValue - valPosition)
+              : rScale(pieceValue);
+          piece._orFR = Math.abs(zeroValue - valPosition);
         }
-        piece._orFV = pieceValue
-        piece._orFX = projectedColumns[o].x
-        piece._orFRZ = valPosition - zeroValue
+        piece._orFV = pieceValue;
+        piece._orFX = projectedColumns[o].x;
+        piece._orFRZ = valPosition - zeroValue;
         if (pieceValue >= 0) {
-          piece._orFRBase = zeroValue
-          piece._orFRBottom = positiveOffset
-          piece._orFRMiddle = piece._orFR / 2 + positiveOffset
+          piece._orFRBase = zeroValue;
+          piece._orFRBottom = positiveOffset;
+          piece._orFRMiddle = piece._orFR / 2 + positiveOffset;
           positiveOffset =
             projection === "vertical"
               ? positiveOffset - piece._orFR
-              : positiveOffset + piece._orFR
-          piece.negative = false
+              : positiveOffset + piece._orFR;
+          piece.negative = false;
         } else {
-          piece._orFRBase = zeroValue
-          piece._orFRBottom = negativeOffset
-          piece._orFRMiddle = positiveOffset - piece._orFR / 2
+          piece._orFRBase = zeroValue;
+          piece._orFRBottom = negativeOffset;
+          piece._orFRMiddle = positiveOffset - piece._orFR / 2;
           negativeOffset =
             projection === "vertical"
               ? negativeOffset + piece._orFR
-              : negativeOffset - piece._orFR
-          piece.negative = true
+              : negativeOffset - piece._orFR;
+          piece.negative = true;
         }
-      })
+      });
 
       if (cwHash) {
-        projectedColumns[o].width = cwHash[o] - padding
-        projectedColumns[o].pct = cwHash[o] / cwHash.total
+        projectedColumns[o].width = cwHash[o] - padding;
+        projectedColumns[o].pct = cwHash[o] / cwHash.total;
         projectedColumns[o].pct_start =
-          (projectedColumns[o].x - oDomain[0]) / cwHash.total
-        projectedColumns[o].pct_padding = padding / cwHash.total
+          (projectedColumns[o].x - oDomain[0]) / cwHash.total;
+        projectedColumns[o].pct_padding = padding / cwHash.total;
         projectedColumns[o].pct_middle =
-          projectedColumns[o].middle / cwHash.total
+          projectedColumns[o].middle / cwHash.total;
       } else {
-        projectedColumns[o].width = columnWidth - padding
-        projectedColumns[o].pct = columnWidth / adjustedSize[1]
+        projectedColumns[o].width = columnWidth - padding;
+        projectedColumns[o].pct = columnWidth / adjustedSize[1];
         projectedColumns[o].pct_start =
-          (projectedColumns[o].x - oDomain[0]) / adjustedSize[1]
-        projectedColumns[o].pct_padding = padding / adjustedSize[1]
+          (projectedColumns[o].x - oDomain[0]) / adjustedSize[1];
+        projectedColumns[o].pct_padding = padding / adjustedSize[1];
         projectedColumns[o].pct_middle =
-          projectedColumns[o].middle / adjustedSize[1]
+          projectedColumns[o].middle / adjustedSize[1];
       }
-    })
+    });
 
-    const labelArray = []
+    const labelArray = [];
 
-    const pieArcs = []
+    const pieArcs = [];
 
     if (currentProps.oLabel || currentProps.hoverAnnotation) {
       oExtent.forEach((d, i) => {
         const arcGenerator = arc()
           .innerRadius(0)
-          .outerRadius(rScale.range()[1] / 2)
-        let angle = 1 / oExtent.length
-        let startAngle = angle * i
-        let twoPI = Math.PI * 2
-        angle = projectedColumns[d].pct
-        startAngle = projectedColumns[d].pct_start
+          .outerRadius(rScale.range()[1] / 2);
+        let angle = 1 / oExtent.length;
+        let startAngle = angle * i;
+        let twoPI = Math.PI * 2;
+        angle = projectedColumns[d].pct;
+        startAngle = projectedColumns[d].pct_start;
 
-        let endAngle = startAngle + angle
-        let midAngle = startAngle + angle / 2
+        let endAngle = startAngle + angle;
+        let midAngle = startAngle + angle / 2;
 
         const markD = arcGenerator({
           startAngle: startAngle * twoPI,
           endAngle: endAngle * twoPI
-        })
+        });
         const translate = [
           adjustedSize[0] / 2 + margin.left,
           adjustedSize[1] / 2 + margin.top
-        ]
+        ];
         const centroid = arcGenerator.centroid({
           startAngle: startAngle * twoPI,
           endAngle: endAngle * twoPI
-        })
+        });
         pieArcs.push({
           startAngle,
           endAngle,
@@ -431,12 +437,12 @@ class orFrame extends React.Component {
           markD,
           translate,
           centroid
-        })
-      })
+        });
+      });
     }
 
     if (currentProps.oLabel) {
-      let labelingFn
+      let labelingFn;
       if (currentProps.oLabel === true) {
         labelingFn = d => (
           <text
@@ -446,29 +452,29 @@ class orFrame extends React.Component {
           >
             {d}
           </text>
-        )
+        );
       } else if (typeof currentProps.oLabel === "function") {
-        labelingFn = currentProps.oLabel
+        labelingFn = currentProps.oLabel;
       }
 
       oExtent.forEach((d, i) => {
-        let xPosition = projectedColumns[d].middle
-        let yPosition = 0
+        let xPosition = projectedColumns[d].middle;
+        let yPosition = 0;
 
         if (projection === "horizontal") {
-          yPosition = projectedColumns[d].middle
-          xPosition = margin.left - 3
+          yPosition = projectedColumns[d].middle;
+          xPosition = margin.left - 3;
         } else if (projection === "radial") {
-          xPosition = pieArcs[i].centroid[0] + pieArcs[i].translate[0]
+          xPosition = pieArcs[i].centroid[0] + pieArcs[i].translate[0];
           yPosition =
-            pieArcs[i].centroid[1] + pieArcs[i].translate[1] + margin.top
+            pieArcs[i].centroid[1] + pieArcs[i].translate[1] + margin.top;
         }
         const label = labelingFn(
           d,
           currentProps.data
             ? currentProps.data.filter((p, q) => oAccessor(p, q) === d)
             : undefined
-        )
+        );
         labelArray.push(
           <g
             key={"olabel-" + i}
@@ -476,8 +482,8 @@ class orFrame extends React.Component {
           >
             {label}
           </g>
-        )
-      })
+        );
+      });
 
       if (projection === "vertical") {
         oLabels = (
@@ -487,40 +493,40 @@ class orFrame extends React.Component {
           >
             {labelArray}
           </g>
-        )
+        );
       } else if (projection === "horizontal") {
         oLabels = (
           <g key="orframe-labels-container" transform={"translate(0,0)"}>
             {labelArray}
           </g>
-        )
+        );
       } else if (projection === "radial") {
         oLabels = (
           <g key="orframe-labels-container" transform={"translate(0,0)"}>
             {labelArray}
           </g>
-        )
+        );
       }
     }
 
-    let columnOverlays
+    let columnOverlays;
 
     if (currentProps.hoverAnnotation) {
       columnOverlays = oExtent.map((d, i) => {
-        const barColumnWidth = projectedColumns[d].width
-        let xPosition = projectedColumns[d].x
-        let yPosition = margin.top
-        let height = rScale.range()[1]
-        let width = barColumnWidth + padding
+        const barColumnWidth = projectedColumns[d].width;
+        let xPosition = projectedColumns[d].x;
+        let yPosition = margin.top;
+        let height = rScale.range()[1];
+        let width = barColumnWidth + padding;
         if (projection === "horizontal") {
-          yPosition = projectedColumns[d].x
-          xPosition = margin.left
-          width = rScale.range()[1] - margin.left
-          height = barColumnWidth
+          yPosition = projectedColumns[d].x;
+          xPosition = margin.left;
+          width = rScale.range()[1] - margin.left;
+          height = barColumnWidth;
         }
 
         if (projection === "radial") {
-          const { markD, centroid, translate, midAngle } = pieArcs[i]
+          const { markD, centroid, translate, midAngle } = pieArcs[i];
           return {
             markType: "path",
             key: "hover" + d,
@@ -550,7 +556,7 @@ class orFrame extends React.Component {
               }
             }),
             onMouseLeave: () => ({})
-          }
+          };
         }
 
         return {
@@ -572,50 +578,50 @@ class orFrame extends React.Component {
             summary: projectedColumns[d].pieceData
           }),
           onMouseLeave: () => ({})
-        }
-      })
+        };
+      });
     }
 
-    let axis = null
-    let axesTickLines = null
+    let axis = null;
+    let axesTickLines = null;
 
     if (projection !== "radial" && currentProps.axis) {
-      axesTickLines = []
-      let axisPosition = [0, 0]
-      let axisSize = [0, 0]
+      axesTickLines = [];
+      let axisPosition = [0, 0];
+      let axisSize = [0, 0];
       const axes = Array.isArray(currentProps.axis)
         ? currentProps.axis
-        : [currentProps.axis]
+        : [currentProps.axis];
       axis = axes.map((d, i) => {
-        let tickValues
+        let tickValues;
 
-        let axisScale = rScaleType().domain(rScale.domain())
+        let axisScale = rScaleType().domain(rScale.domain());
 
-        let orient = trueAxis(d.orient, currentProps.projection)
+        let orient = trueAxis(d.orient, currentProps.projection);
 
-        axisSize = adjustedSize
+        axisSize = adjustedSize;
 
         if (orient === "right") {
-          axisScale.range([rScale.range()[1], rScale.range()[0]])
+          axisScale.range([rScale.range()[1], rScale.range()[0]]);
         } else if (orient === "left") {
-          axisPosition = [margin.left, 0]
-          axisScale.range([rScale.range()[1], rScale.range()[0]])
+          axisPosition = [margin.left, 0];
+          axisScale.range([rScale.range()[1], rScale.range()[0]]);
         } else if (orient === "top") {
-          axisScale.range(rScale.range())
+          axisScale.range(rScale.range());
         } else if (orient === "bottom") {
-          axisPosition = [0, margin.top]
-          axisScale.range(rScale.range())
+          axisPosition = [0, margin.top];
+          axisScale.range(rScale.range());
         }
 
         if (d.tickValues && Array.isArray(d.tickValues)) {
-          tickValues = d.tickValues
+          tickValues = d.tickValues;
         } else if (d.tickValues) {
           //otherwise assume a function
           tickValues = d.tickValues(
             currentProps.data,
             currentProps.size,
             rScale
-          )
+          );
         }
 
         const axisParts = axisPieces({
@@ -627,9 +633,9 @@ class orFrame extends React.Component {
           size: axisSize,
           margin,
           footer: d.footer
-        })
-        const axisTickLines = axisLines({ axisParts, orient })
-        axesTickLines.push(axisTickLines)
+        });
+        const axisTickLines = axisLines({ axisParts, orient });
+        axesTickLines.push(axisTickLines);
 
         return (
           <Axis
@@ -650,31 +656,31 @@ class orFrame extends React.Component {
             className={d.className}
             name={d.name}
           />
-        )
-      })
+        );
+      });
     } else if (projection === "radial" && currentProps.axis) {
-      const { innerRadius = 0 } = pieceType
+      const { innerRadius = 0 } = pieceType;
       const {
         tickValues = rScale.ticks(
           Math.max(2, (adjustedSize[0] / 2 - innerRadius) / 50)
         ),
         label,
         tickFormat = d => d
-      } = currentProps.axis
+      } = currentProps.axis;
 
       const tickScale = rScaleType()
         .domain(rExtent)
-        .range([innerRadius, adjustedSize[0] / 2])
+        .range([innerRadius, adjustedSize[0] / 2]);
       const ticks = tickValues.map((t, i) => {
-        const tickSize = tickScale(t)
+        const tickSize = tickScale(t);
         if (!(innerRadius === 0 && t === 0)) {
-          let axisLabel
-          let ref = ""
+          let axisLabel;
+          let ref = "";
           if (label && i === tickValues.length - 1) {
             const labelSettings =
-              typeof label === "string" ? { name: label } : label
-            const { locationDistance = 15 } = labelSettings
-            ref = `${Math.random().toString} `
+              typeof label === "string" ? { name: label } : label;
+            const { locationDistance = 15 } = labelSettings;
+            ref = `${Math.random().toString} `;
             axisLabel = (
               <g
                 className="axis-label"
@@ -689,7 +695,7 @@ class orFrame extends React.Component {
                   </textPath>
                 </text>
               </g>
-            )
+            );
           }
           return (
             <g
@@ -709,10 +715,10 @@ class orFrame extends React.Component {
               </text>
               {axisLabel}
             </g>
-          )
+          );
         }
-        return null
-      })
+        return null;
+      });
       axis = (
         <g
           key={currentProps.axis.key || `orframe-radial-axis-container`}
@@ -721,7 +727,7 @@ class orFrame extends React.Component {
         >
           {ticks}
         </g>
-      )
+      );
     }
     const {
       renderMode,
@@ -730,18 +736,18 @@ class orFrame extends React.Component {
       connectorClass,
       connectorRenderMode,
       canvasConnectors
-    } = currentProps
+    } = currentProps;
 
-    let pieceDataXY
-    const pieceRenderMode = stringToFn(renderMode, undefined, true)
+    let pieceDataXY;
+    const pieceRenderMode = stringToFn(renderMode, undefined, true);
     //    const pieceCanvasRender = stringToFn(canvasPieces, undefined, true)
 
     const pieceTypeForXY =
-      pieceType.type && pieceType.type !== "none" ? pieceType.type : "point"
+      pieceType.type && pieceType.type !== "none" ? pieceType.type : "point";
     const pieceTypeLayout =
       typeof pieceTypeForXY === "function"
         ? pieceTypeForXY
-        : layoutHash[pieceTypeForXY]
+        : layoutHash[pieceTypeForXY];
     const calculatedPieceData = pieceTypeLayout({
       type: pieceType,
       data: projectedColumns,
@@ -753,13 +759,13 @@ class orFrame extends React.Component {
       adjustedSize,
       margin,
       rScale
-    })
+    });
 
     if (currentProps.pieceHoverAnnotation && calculatedPieceData) {
       const yMod =
-        projection === "horizontal" ? d => (d.middle ? d.middle : 0) : () => 0
+        projection === "horizontal" ? d => (d.middle ? d.middle : 0) : () => 0;
       const xMod =
-        projection === "vertical" ? d => (d.middle ? d.middle : 0) : () => 0
+        projection === "vertical" ? d => (d.middle ? d.middle : 0) : () => 0;
 
       pieceDataXY = calculatedPieceData.map(d =>
         Object.assign({}, d.piece, {
@@ -767,20 +773,20 @@ class orFrame extends React.Component {
           x: d.xy.x + xMod(d.xy),
           y: d.xy.y + yMod(d.xy)
         })
-      )
+      );
     }
 
     const keyedData = calculatedPieceData.reduce((p, c) => {
       if (!p[c.o]) {
-        p[c.o] = []
+        p[c.o] = [];
       }
-      p[c.o].push(c)
-      return p
-    }, {})
+      p[c.o].push(c);
+      return p;
+    }, {});
 
     Object.keys(projectedColumns).forEach(d => {
-      projectedColumns[d].xyData = keyedData[d]
-    })
+      projectedColumns[d].xyData = keyedData[d];
+    });
 
     const orFrameRender = {
       connectors: {
@@ -814,7 +820,7 @@ class orFrame extends React.Component {
         data: calculatedPieceData,
         behavior: renderLaidOutPieces
       }
-    }
+    };
 
     this.setState({
       pieceDataXY,
@@ -840,15 +846,15 @@ class orFrame extends React.Component {
       legendSettings: currentProps.legend,
       eventListenersGenerator,
       orFrameRender
-    })
+    });
   }
 
   componentWillMount() {
-    this.calculateORFrame(this.props)
+    this.calculateORFrame(this.props);
   }
 
   componentWillReceiveProps(nextProps) {
-    this.calculateORFrame(nextProps)
+    this.calculateORFrame(nextProps);
   }
 
   clonedAppliedElement({
@@ -862,68 +868,68 @@ class orFrame extends React.Component {
     classFn,
     baseClass
   }) {
-    markProps.style = styleFn ? styleFn(d, i) : {}
-    markProps.renderMode = renderFn ? renderFn(d, i) : undefined
+    markProps.style = styleFn ? styleFn(d, i) : {};
+    markProps.renderMode = renderFn ? renderFn(d, i) : undefined;
 
     if (tx || ty) {
-      markProps.transform = "translate(" + tx || 0 + "," + ty || 0 + ")"
+      markProps.transform = "translate(" + tx || 0 + "," + ty || 0 + ")";
     }
 
-    markProps.className = baseClass
+    markProps.className = baseClass;
 
-    markProps.key = baseClass + "-" + i
+    markProps.key = baseClass + "-" + i;
 
     if (classFn) {
-      markProps.className = baseClass + " " + classFn(d, i)
+      markProps.className = baseClass + " " + classFn(d, i);
     }
 
-    return <Mark {...markProps} />
+    return <Mark {...markProps} />;
   }
 
   defaultORSVGRule({ d, i, annotationLayer }) {
-    const oAccessor = this.oAccessor
-    const rAccessor = this.rAccessor
-    const oScale = this.oScale
-    const rScale = this.rScale
+    const oAccessor = this.oAccessor;
+    const rAccessor = this.rAccessor;
+    const oScale = this.oScale;
+    const rScale = this.rScale;
 
-    const { projection } = this.props
-    const { projectedColumns } = this.state
+    const { projection } = this.props;
+    const { projectedColumns } = this.state;
 
-    const { adjustedPosition, adjustedSize } = adjustedPositionSize(this.props)
-    const margin = calculateMargin(this.props)
+    const { adjustedPosition, adjustedSize } = adjustedPositionSize(this.props);
+    const margin = calculateMargin(this.props);
 
     const screenProject = p => {
-      const oColumn = projectedColumns[oAccessor(p)]
-      let o
+      const oColumn = projectedColumns[oAccessor(p)];
+      let o;
       if (oColumn) {
-        o = oColumn.middle
+        o = oColumn.middle;
       } else {
-        o = 0
+        o = 0;
       }
       if (oColumn && projection === "radial") {
         return pointOnArcAtAngle(
           [adjustedSize[0] / 2 + margin.left, adjustedSize[1] / 2 + margin.top],
           oColumn.pct_middle,
           (rScale(rAccessor(p)) - margin.left) / 2
-        )
+        );
       }
       if (projection !== "vertical") {
-        return [rScale(rAccessor(p)), o]
+        return [rScale(rAccessor(p)), o];
       }
       const newScale = scaleLinear()
         .domain(rScale.domain())
-        .range(rScale.range().reverse())
+        .range(rScale.range().reverse());
 
-      return [o, newScale(rAccessor(p))]
-    }
+      return [o, newScale(rAccessor(p))];
+    };
 
-    let screenCoordinates = [0, 0]
+    let screenCoordinates = [0, 0];
 
     //TODO: Support radial??
     if (d.coordinates) {
-      screenCoordinates = d.coordinates.map(p => screenProject(p))
+      screenCoordinates = d.coordinates.map(p => screenProject(p));
     } else {
-      screenCoordinates = screenProject(d)
+      screenCoordinates = screenProject(d);
     }
 
     //TODO: Process your rules first
@@ -952,7 +958,7 @@ class orFrame extends React.Component {
         adjustedSize,
         annotationLayer,
         orFrameState: this.state
-      })
+      });
     } else if (d.type === "or") {
       return (
         <Mark
@@ -966,7 +972,7 @@ class orFrame extends React.Component {
         >
           {d.label}
         </Mark>
-      )
+      );
     } else if (d.type === "react-annotation" || typeof d.type === "function") {
       const noteData = Object.assign(
         {
@@ -979,12 +985,12 @@ class orFrame extends React.Component {
         },
         d,
         { type: typeof d.type === "function" ? d.type : undefined }
-      )
-      return <Annotation key={i} noteData={noteData} />
+      );
+      return <Annotation key={i} noteData={noteData} />;
     } else if (d.type === "enclose") {
       const circle = packEnclose(
         screenCoordinates.map(p => ({ x: p[0], y: p[1], r: 2 }))
-      )
+      );
       const noteData = Object.assign(
         {
           dx: 0,
@@ -1002,36 +1008,36 @@ class orFrame extends React.Component {
             radiusPadding: 5 || d.radiusPadding
           }
         }
-      )
+      );
 
       if (noteData.rp) {
         switch (noteData.rp) {
           case "top":
-            noteData.dx = 0
-            noteData.dy = -circle.r - noteData.rd
-            break
+            noteData.dx = 0;
+            noteData.dy = -circle.r - noteData.rd;
+            break;
           case "bottom":
-            noteData.dx = 0
-            noteData.dy = circle.r + noteData.rd
-            break
+            noteData.dx = 0;
+            noteData.dy = circle.r + noteData.rd;
+            break;
           case "left":
-            noteData.dx = -circle.r - noteData.rd
-            noteData.dy = 0
-            break
+            noteData.dx = -circle.r - noteData.rd;
+            noteData.dy = 0;
+            break;
           case "right":
-            noteData.dx = circle.r + noteData.rd
-            noteData.dy = 0
-            break
+            noteData.dx = circle.r + noteData.rd;
+            noteData.dy = 0;
+            break;
           default:
-            noteData.dx = 0
-            noteData.dy = 0
+            noteData.dx = 0;
+            noteData.dy = 0;
         }
       }
       //TODO: Support .ra (setting angle)
 
-      return <Annotation key={i} noteData={noteData} />
+      return <Annotation key={i} noteData={noteData} />;
     } else if (d.type === "r") {
-      let x, y, xPosition, yPosition, subject, dx, dy
+      let x, y, xPosition, yPosition, subject, dx, dy;
       if (this.props.projection === "radial") {
         return (
           <Annotation
@@ -1055,29 +1061,29 @@ class orFrame extends React.Component {
               }
             )}
           />
-        )
+        );
       } else if (this.props.projection === "horizontal") {
-        dx = 50
-        dy = 50
-        yPosition = d.offset || margin.top + i * 25
-        x = screenCoordinates[0]
-        y = yPosition
+        dx = 50;
+        dy = 50;
+        yPosition = d.offset || margin.top + i * 25;
+        x = screenCoordinates[0];
+        y = yPosition;
         subject = {
           x,
           y1: margin.top,
           y2: adjustedSize[1] + adjustedPosition[1] + margin.top
-        }
+        };
       } else {
-        dx = 50
-        dy = -20
-        xPosition = d.offset || margin.left + i * 25
-        y = screenCoordinates[1]
-        x = xPosition
+        dx = 50;
+        dy = -20;
+        xPosition = d.offset || margin.left + i * 25;
+        y = screenCoordinates[1];
+        x = xPosition;
         subject = {
           y,
           x1: margin.left,
           x2: adjustedSize[0] + adjustedPosition[0] + margin.left
-        }
+        };
       }
 
       const noteData = Object.assign(
@@ -1094,32 +1100,32 @@ class orFrame extends React.Component {
           y,
           subject
         }
-      )
-      return <Annotation key={i} noteData={noteData} />
+      );
+      return <Annotation key={i} noteData={noteData} />;
     }
-    return null
+    return null;
   }
 
   defaultORHTMLRule({ d, i }) {
-    const oAccessor = this.oAccessor
-    const rAccessor = this.rAccessor
-    const oScale = this.oScale
-    const rScale = this.rScale
+    const oAccessor = this.oAccessor;
+    const rAccessor = this.rAccessor;
+    const oScale = this.oScale;
+    const rScale = this.rScale;
 
-    const { htmlAnnotationRules, tooltipContent } = this.props
+    const { htmlAnnotationRules, tooltipContent } = this.props;
 
     const type =
       typeof this.props.type === "object"
         ? this.props.type
-        : { type: this.props.type }
+        : { type: this.props.type };
     const summaryType =
       typeof this.props.summaryType === "object"
         ? this.props.summaryType
-        : { type: this.props.summaryType }
+        : { type: this.props.summaryType };
 
-    const { adjustedPosition, adjustedSize } = adjustedPositionSize(this.props)
+    const { adjustedPosition, adjustedSize } = adjustedPositionSize(this.props);
 
-    const margin = calculateMargin(this.props)
+    const margin = calculateMargin(this.props);
 
     //TODO: Process your rules first
     if (
@@ -1143,7 +1149,7 @@ class orFrame extends React.Component {
         oAccessor,
         rAccessor,
         orFrameProps: this.props
-      })
+      });
     }
 
     if (d.type === "frame-hover") {
@@ -1153,10 +1159,10 @@ class orFrame extends React.Component {
           <p key="html-annotation-content-1">{oAccessor(d).toString()}</p>
           <p key="html-annotation-content-2">{rAccessor(d).toString()}</p>
         </div>
-      )
+      );
 
       if (d.type === "frame-hover" && tooltipContent) {
-        content = tooltipContent(d)
+        content = tooltipContent(d);
       }
 
       return (
@@ -1172,22 +1178,22 @@ class orFrame extends React.Component {
         >
           {content}
         </div>
-      )
+      );
     } else if (d.type === "column-hover") {
-      const maxPiece = max(d.pieces.map(d => d._orFR))
+      const maxPiece = max(d.pieces.map(d => d._orFR));
       //we need to ignore negative pieces to make sure the hover behavior populates on top of the positive bar
-      const sumPiece = sum(d.pieces.map(d => d._orFR).filter(p => p > 0))
+      const sumPiece = sum(d.pieces.map(d => d._orFR).filter(p => p > 0));
       const positionValue =
         summaryType.type ||
         ["swarm", "point", "clusterbar"].find(d => d === type.type)
           ? maxPiece
-          : sumPiece
+          : sumPiece;
 
       let xPosition =
         this.state.projectedColumns[oAccessor(d.pieces[0])].middle +
-        adjustedPosition[0]
-      let yPosition = positionValue
-      yPosition += margin.bottom + margin.top + 10
+        adjustedPosition[0];
+      let yPosition = positionValue;
+      yPosition += margin.bottom + margin.top + 10;
 
       if (this.props.projection === "horizontal") {
         yPosition =
@@ -1195,15 +1201,15 @@ class orFrame extends React.Component {
           this.state.projectedColumns[oAccessor(d.pieces[0])].middle +
           adjustedPosition[0] +
           margin.top +
-          margin.bottom
-        xPosition = positionValue + adjustedPosition[0] + margin.left
+          margin.bottom;
+        xPosition = positionValue + adjustedPosition[0] + margin.left;
       } else if (this.props.projection === "radial") {
-        ;[xPosition, yPosition] = pointOnArcAtAngle(
+        [xPosition, yPosition] = pointOnArcAtAngle(
           d.arcAngles.translate,
           d.arcAngles.midAngle,
           d.arcAngles.length
-        )
-        yPosition = 10 + adjustedSize[1] - yPosition
+        );
+        yPosition = 10 + adjustedSize[1] - yPosition;
       }
 
       //To string because React gives a DOM error if it gets a date
@@ -1212,14 +1218,14 @@ class orFrame extends React.Component {
           <p key="or-annotation-1">{oAccessor(d.pieces[0]).toString()}</p>
           <p key="or-annotation-2">{sumPiece}</p>
         </div>
-      )
+      );
 
       if (d.type === "column-hover" && this.props.tooltipContent) {
-        content = this.props.tooltipContent(d)
+        content = this.props.tooltipContent(d);
       }
 
       if (d.type === "xy") {
-        content = d.label
+        content = d.label;
       }
 
       return (
@@ -1235,29 +1241,29 @@ class orFrame extends React.Component {
         >
           {content}
         </div>
-      )
+      );
     }
-    return null
+    return null;
   }
 
   mappedMiddles(oScale, middleMax, padding) {
-    const oScaleDomainValues = oScale.domain()
+    const oScaleDomainValues = oScale.domain();
 
-    const mappedMiddles = {}
+    const mappedMiddles = {};
     oScaleDomainValues.forEach((p, q) => {
-      const base = oScale(p) - padding
+      const base = oScale(p) - padding;
       const next = oScaleDomainValues[q + 1]
         ? oScale(oScaleDomainValues[q + 1])
-        : middleMax
-      const diff = (next - base) / 2
-      mappedMiddles[p] = base + diff
-    })
+        : middleMax;
+      const diff = (next - base) / 2;
+      mappedMiddles[p] = base + diff;
+    });
 
-    return mappedMiddles
+    return mappedMiddles;
   }
 
   render() {
-    return this.renderBody({ afterElements: this.props.afterElements })
+    return this.renderBody({ afterElements: this.props.afterElements });
   }
 
   renderBody({ afterElements }) {
@@ -1282,7 +1288,7 @@ class orFrame extends React.Component {
       backgroundGraphics,
       foregroundGraphics = [],
       beforeElements
-    } = this.props
+    } = this.props;
 
     const {
       orFrameRender,
@@ -1296,9 +1302,9 @@ class orFrame extends React.Component {
       margin,
       pieceDataXY,
       oLabels = []
-    } = this.state
+    } = this.state;
 
-    let downloadButton
+    let downloadButton;
 
     if (download) {
       downloadButton = (
@@ -1312,13 +1318,13 @@ class orFrame extends React.Component {
             fields: downloadFields
           })}
         />
-      )
+      );
     }
 
     const finalFilterDefs = filterDefs({
       key: "orframe",
       additionalDefs: this.props.additionalDefs
-    })
+    });
 
     return (
       <Frame
@@ -1360,7 +1366,7 @@ class orFrame extends React.Component {
         rScale={this.rScale}
         projection={projection}
       />
-    )
+    );
   }
 }
 
@@ -1415,6 +1421,6 @@ orFrame.propTypes = {
   axis: PropTypes.object,
   backgroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
   foregroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array])
-}
+};
 
-module.exports = orFrame
+module.exports = orFrame;
