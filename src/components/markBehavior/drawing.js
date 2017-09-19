@@ -48,41 +48,45 @@ export function horizontalbar(props) {
 
 export function pathStr({ x, y, width, height, cx, cy, r }) {
   if (cx !== undefined) {
-    return [
-      "M",
-      roundToTenth(cx - r),
-      roundToTenth(cy),
-      "a",
-      r,
-      r,
-      0,
-      1,
-      0,
-      r * 2,
-      0,
-      "a",
-      r,
-      r,
-      0,
-      1,
-      0,
-      -(r * 2),
-      0
-    ].join(" ");
+    return (
+      [
+        "M",
+        roundToTenth(cx - r),
+        roundToTenth(cy),
+        "a",
+        r,
+        r,
+        0,
+        1,
+        0,
+        r * 2,
+        0,
+        "a",
+        r,
+        r,
+        0,
+        1,
+        0,
+        -(r * 2),
+        0
+      ].join(" ") + "Z"
+    );
   }
-  return [
-    "M",
-    roundToTenth(x),
-    roundToTenth(y),
-    "h",
-    width,
-    "v",
-    height,
-    "h",
-    -width,
-    "v",
-    -height
-  ].join(" ");
+  return (
+    [
+      "M",
+      roundToTenth(x),
+      roundToTenth(y),
+      "h",
+      width,
+      "v",
+      height,
+      "h",
+      -width,
+      "v",
+      -height
+    ].join(" ") + "Z"
+  );
 }
 
 export function circlePath(cx, cy, r) {
@@ -398,7 +402,9 @@ export function sketchy(markType, cloneProps) {
             const fillProps = Object.assign({}, cloneProps);
             const fillStyle = Object.assign({}, cloneProps.style);
             const sketchyFill = cheapSketchy(pathNode, fillStyle.fillOpacity);
-            fillStyle.clipPath = `url(#clip-path-${sketchKey})`;
+            if (markType !== "rect" && markType !== "circle") {
+              fillStyle.clipPath = `url(#clip-path-${sketchKey})`;
+            }
             fillProps.style = fillStyle;
             fillProps.d = sketchyFill;
             fillStyle.stroke = fillStyle.fill;
@@ -427,11 +433,17 @@ export function sketchy(markType, cloneProps) {
     }
 
     select("#sketchyTempSVG").remove();
+    let generatedClipPath;
+    if (markType !== "rect" && markType !== "circle") {
+      generatedClipPath = (
+        <clipPath key="sketchy-clip-overlay" id={`clip-path-${sketchKey}`}>
+          <path d={cloneProps.d} style={{ opacity: 0 }} />
+        </clipPath>
+      );
+    }
 
     return [
-      <clipPath key="sketchy-clip-overlay" id={`clip-path-${sketchKey}`}>
-        <path d={cloneProps.d} style={{ opacity: 0 }} />
-      </clipPath>,
+      generatedClipPath,
       <path
         key="sketchy-interaction-overlay"
         d={cloneProps.d}

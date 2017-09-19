@@ -9,7 +9,6 @@ import { groupBarMark } from "../svg/SvgHelper";
 import { area, line, curveCatmullRom, arc } from "d3-shape";
 import { pointOnArcAtAngle } from "./pieceDrawing";
 import { orFrameSummaryRenderer } from "./frameFunctions";
-import { axisPieces, axisLines } from "../visualizationLayerBehavior/axis";
 import { scaleLinear } from "d3-scale";
 
 const contourMap = d => [d.xy.x, d.xy.y];
@@ -456,7 +455,8 @@ export function bucketizedRenderingFn({
         : type.axis.orient;
     axisCreator = axisGenerator;
     if (projection === "radial") {
-      axisCreator = radialAxisGenerator;
+      console.error("Summary axes cannot be drawn for radial histograms");
+      axisCreator = () => null;
     }
   }
 

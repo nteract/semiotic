@@ -1,6 +1,4 @@
 import React from "react";
-import IconButton from "material-ui/IconButton";
-import NavigationClose from "material-ui/svg-icons/navigation/close";
 import Introduction from "./Introduction";
 import Examples from "./Examples";
 
@@ -36,6 +34,8 @@ import Dendrogram from "./components/Dendrogram";
 import BarToParallel from "./components/BarToParallel";
 import AppleStockChart from "./components/AppleStockChart";
 
+import CreatingBarChart from "./components/CreatingBarChart";
+
 import "./../components/styles.css";
 import Drawer from "material-ui/Drawer";
 import AppBar from "material-ui/AppBar";
@@ -45,6 +45,7 @@ import { Link } from "react-router-dom";
 
 const components = {
   informationmodel: { docs: BarToParallel },
+  creatingbarchart: { docs: CreatingBarChart },
   xyframe: { docs: XYFrameDocs },
   regionatedlinechart: { docs: RegionatedLineChartDocs, parent: "xyframe" },
   barline: { docs: BarLineDocs, parent: "xyframe" },
@@ -80,7 +81,7 @@ export default class Documentation extends React.Component {
   };
 
   render() {
-    const { match } = this.props;
+    const { match, history } = this.props;
     const selected = match && match.params.component;
     const selectedComponent = components[selected];
 
@@ -159,7 +160,15 @@ export default class Documentation extends React.Component {
           containerStyle={{ overflowX: "hidden" }}
         >
           <AppBar
-            title="Semiotic"
+            title={
+              <span
+                style={{ cursor: "pointer" }}
+                onClick={() =>
+                  this.props.history ? this.props.history.push("/") : null}
+              >
+                Semiotic
+              </span>
+            }
             className="appbar"
             iconClassNameRight="muidocs-icon-navigation-expand-more"
             onLeftIconButtonTouchTap={() =>
@@ -168,7 +177,15 @@ export default class Documentation extends React.Component {
           <Menu>{allDocs}</Menu>
         </Drawer>
         <AppBar
-          title="Semiotic"
+          title={
+            <span
+              style={{ cursor: "pointer" }}
+              onClick={() =>
+                this.props.history ? this.props.history.push("/") : null}
+            >
+              Semiotic
+            </span>
+          }
           className="appbar"
           style={{ position: "fixed", top: 0, left: 0 }}
           iconClassNameRight="muidocs-icon-navigation-expand-more"
