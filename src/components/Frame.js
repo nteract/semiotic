@@ -109,45 +109,52 @@ class Frame extends React.Component {
     }
 
     return (
-      <div className={className + " frame"} style={{ background: "none" }}>
+      <div
+        className={className + " frame"}
+        style={{
+          background: "none"
+        }}
+      >
         <div className={`${name} frame-before-elements`}>{beforeElements}</div>
         <div className="frame-elements" style={{ height: size[1] + "px" }}>
-          <canvas
-            className="frame-canvas"
-            ref={canvasContext => (this.canvasContext = canvasContext)}
-            style={{ position: "absolute" }}
-            width={size[0]}
-            height={size[1]}
-          />
-          <svg
-            className="visualization-layer"
-            style={{ position: "absolute" }}
-            width={size[0]}
-            height={size[1]}
-          >
-            {finalFilterDefs}
-            <g>{backgroundGraphics}</g>
-            <VisualizationLayer
-              renderPipeline={renderPipeline}
-              position={adjustedPosition}
-              size={adjustedSize}
-              extent={extent}
-              projectedCoordinateNames={projectedCoordinateNames}
-              xScale={xScale}
-              yScale={yScale}
-              axes={axes}
-              axesTickLines={axesTickLines}
-              title={title}
-              frameKey={frameKey}
-              canvasContext={this.state.canvasContext}
-              dataVersion={dataVersion}
-              matte={matte}
+          <div className="visualization-layer" style={{ position: "absolute" }}>
+            <canvas
+              className="frame-canvas"
+              ref={canvasContext => (this.canvasContext = canvasContext)}
+              style={{ position: "absolute" }}
+              width={size[0]}
+              height={size[1]}
             />
-            <g>
-              {title}
-              {foregroundGraphics}
-            </g>
-          </svg>
+            <svg
+              className="visualization-layer"
+              style={{ position: "absolute" }}
+              width={size[0]}
+              height={size[1]}
+            >
+              {finalFilterDefs}
+              <g>{backgroundGraphics}</g>
+              <VisualizationLayer
+                renderPipeline={renderPipeline}
+                position={adjustedPosition}
+                size={adjustedSize}
+                extent={extent}
+                projectedCoordinateNames={projectedCoordinateNames}
+                xScale={xScale}
+                yScale={yScale}
+                axes={axes}
+                axesTickLines={axesTickLines}
+                title={title}
+                frameKey={frameKey}
+                canvasContext={this.state.canvasContext}
+                dataVersion={dataVersion}
+                matte={matte}
+              />
+              <g>
+                {title}
+                {foregroundGraphics}
+              </g>
+            </svg>
+          </div>
           <InteractionLayer
             hoverAnnotation={hoverAnnotation}
             projectedX={projectedCoordinateNames.x}
