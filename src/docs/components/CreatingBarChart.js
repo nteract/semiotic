@@ -205,7 +205,6 @@ export default class CreatingBarChart extends React.Component {
             axis={{ orient: "left", label: "Tweets + Favorites + Retweets" }}
             margin={{ left: 70, bottom: 50, right: 5, top: 5 }}
             oPadding={5}
-            renderMode={"painty"}
           />
         </div>
       ),
