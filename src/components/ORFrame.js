@@ -153,10 +153,12 @@ class orFrame extends React.Component {
       pieceType.type = undefined;
     }
 
+    console.log("currentProps.rExtent", currentProps.rExtent);
+
     if (
       currentProps.rExtent &&
-      currentProps.rExtent[0] &&
-      currentProps.rExtent[1]
+      currentProps.rExtent[0] !== undefined &&
+      currentProps.rExtent[1] !== undefined
     ) {
       rExtent = currentProps.rExtent;
     } else if (pieceType.type !== "bar") {
