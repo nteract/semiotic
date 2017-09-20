@@ -111,6 +111,7 @@ export default class CreatingBarChart extends React.Component {
             and add some padding (oPadding).
           </p>
           <ORFrame
+            title={"A Bar Chart"}
             size={[300, 500]}
             data={barChartData}
             oAccessor={"user"}
@@ -121,12 +122,13 @@ export default class CreatingBarChart extends React.Component {
               <text transform="translate(-15,0)rotate(45)">{d}</text>
             )}
             axis={{ orient: "left", label: "Favorites + Retweets" }}
-            margin={{ left: 70, bottom: 50, right: 5, top: 5 }}
+            margin={{ left: 70, bottom: 50, right: 5, top: 55 }}
             oPadding={5}
           />
         </div>
       ),
       source: `<ORFrame
+            title={"A Bar Chart"}
             size={[300, 500]}
             data={barChartData}
             oAccessor={"user"}
@@ -137,7 +139,7 @@ export default class CreatingBarChart extends React.Component {
               <text transform="translate(-15,0)rotate(45)">{d}</text>
             )}
             axis={{ orient: "left", label: "Favorites + Retweets" }}
-            margin={{ left: 70, bottom: 50, right: 5, top: 5 }}
+            margin={{ left: 70, bottom: 50, right: 5, top: 55 }}
             oPadding={5}
           />`
     });
@@ -203,6 +205,7 @@ export default class CreatingBarChart extends React.Component {
             axis={{ orient: "left", label: "Tweets + Favorites + Retweets" }}
             margin={{ left: 70, bottom: 50, right: 5, top: 5 }}
             oPadding={5}
+            renderMode={"painty"}
           />
         </div>
       ),

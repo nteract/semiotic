@@ -1277,7 +1277,6 @@ class orFrame extends React.Component {
       name,
       download,
       annotations = [],
-      title,
       matte,
       renderKey,
       interaction,
@@ -1301,7 +1300,8 @@ class orFrame extends React.Component {
       axes,
       margin,
       pieceDataXY,
-      oLabels = []
+      oLabels = [],
+      title
     } = this.state;
 
     let downloadButton;
