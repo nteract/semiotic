@@ -71,7 +71,7 @@ export const calculateMargin = ({
       finalMargin[orient] += 50;
     });
   }
-  if (oLabel) {
+  if (oLabel && projection !== "radial") {
     if (orient === "bottom" || orient === "top") {
       finalMargin.left += 50;
     } else {
