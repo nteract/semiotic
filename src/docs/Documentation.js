@@ -35,6 +35,7 @@ import BarToParallel from "./components/BarToParallel";
 import AppleStockChart from "./components/AppleStockChart";
 
 import CreatingBarChart from "./components/CreatingBarChart";
+import CreatingPieChart from "./components/CreatingPieChart";
 
 import "./../components/styles.css";
 import Drawer from "material-ui/Drawer";
@@ -46,6 +47,7 @@ import { Link } from "react-router-dom";
 const components = {
   informationmodel: { docs: BarToParallel },
   creatingbarchart: { docs: CreatingBarChart },
+  creatingpiechart: { docs: CreatingPieChart },
   xyframe: { docs: XYFrameDocs },
   regionatedlinechart: { docs: RegionatedLineChartDocs, parent: "xyframe" },
   barline: { docs: BarLineDocs, parent: "xyframe" },
