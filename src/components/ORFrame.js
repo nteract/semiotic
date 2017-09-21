@@ -113,7 +113,7 @@ class orFrame extends React.Component {
     const barData = keyAndObjectifyBarData(currentProps);
 
     const oAccessor = stringToFn(currentProps.oAccessor, d => d.renderKey);
-    const rAccessor = stringToFn(currentProps.rAccessor, d => d.value);
+    const rAccessor = stringToFn(currentProps.rAccessor, d => d.value || 1);
 
     const connectorStyle = stringToFn(
       currentProps.connectorStyle,
