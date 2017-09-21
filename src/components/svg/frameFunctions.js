@@ -118,7 +118,7 @@ export function keyAndObjectifyBarData({ data, renderKey = (d, i) => i }) {
 }
 
 export function adjustedPositionSize({
-  size,
+  size = [500, 500],
   position = [0, 0],
   margin,
   axis,

@@ -102,7 +102,8 @@ class orFrame extends React.Component {
     const {
       projection = "vertical",
       customHoverBehavior,
-      customClickBehavior
+      customClickBehavior,
+      size = [500, 500]
     } = currentProps;
     const eventListenersGenerator = generateORFrameEventListeners(
       customHoverBehavior,
@@ -617,11 +618,7 @@ class orFrame extends React.Component {
           tickValues = d.tickValues;
         } else if (d.tickValues) {
           //otherwise assume a function
-          tickValues = d.tickValues(
-            currentProps.data,
-            currentProps.size,
-            rScale
-          );
+          tickValues = d.tickValues(currentProps.data, size, rScale);
         }
 
         const axisParts = axisPieces({
@@ -1270,7 +1267,7 @@ class orFrame extends React.Component {
     const {
       className = "",
       annotationSettings = {},
-      size,
+      size = [500, 500],
       downloadFields,
       rAccessor,
       oAccessor,

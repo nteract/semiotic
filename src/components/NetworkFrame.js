@@ -1,4 +1,4 @@
-import React from "react"
+import React from "react";
 
 import {
   /*forceCenter,*/ forceSimulation,
@@ -6,49 +6,49 @@ import {
   forceY,
   /*forceCollide,*/ forceLink,
   forceManyBody
-} from "d3-force"
+} from "d3-force";
 
-import { bboxCollide } from "d3-bboxCollide"
+import { bboxCollide } from "d3-bboxCollide";
 
-import { scaleLinear, scaleIdentity } from "d3-scale"
+import { scaleLinear, scaleIdentity } from "d3-scale";
 
-import { min, max } from "d3-array"
+import { min, max } from "d3-array";
 
-import { filterDefs } from "./constants/jsx"
-import Annotation from "./Annotation"
+import { filterDefs } from "./constants/jsx";
+import Annotation from "./Annotation";
 
-import { packEnclose, packSiblings } from "d3-hierarchy"
+import { packEnclose, packSiblings } from "d3-hierarchy";
 import {
   /*annotationXYThreshold,*/ AnnotationCalloutCircle,
   AnnotationLabel
-} from "react-annotation"
+} from "react-annotation";
 
-import Frame from "./Frame"
-import Mark from "./Mark"
+import Frame from "./Frame";
+import Mark from "./Mark";
 
-import DownloadButton from "./DownloadButton"
+import DownloadButton from "./DownloadButton";
 
 import {
   calculateMargin,
   adjustedPositionSize,
   generateFrameTitle
-} from "./svg/frameFunctions"
+} from "./svg/frameFunctions";
 
-import { drawNodes, drawEdges } from "./svg/networkDrawing"
+import { drawNodes, drawEdges } from "./svg/networkDrawing";
 
-import { stringToFn } from "./data/dataFunctions"
+import { stringToFn } from "./data/dataFunctions";
 
 import {
   networkNodeDownloadMapping,
   networkEdgeDownloadMapping
-} from "./downloadDataMapping"
+} from "./downloadDataMapping";
 
-import Graph from "graphology"
+import Graph from "graphology";
 //import louvain from 'graphology-communities-louvain'
 import {
   connectedComponents,
   stronglyConnectedComponents
-} from "graphology-components"
+} from "graphology-components";
 
 import {
   sankey,
@@ -56,12 +56,12 @@ import {
   sankeyRight,
   sankeyCenter,
   sankeyJustify
-} from "d3-sankey"
-import { interpolateNumber } from "d3-interpolate"
-import { chord, ribbon } from "d3-chord"
-import { arc } from "d3-shape"
+} from "d3-sankey";
+import { interpolateNumber } from "d3-interpolate";
+import { chord, ribbon } from "d3-chord";
+import { arc } from "d3-shape";
 
-import PropTypes from "prop-types"
+import PropTypes from "prop-types";
 
 /*
 const customEdgeHashProject = {
@@ -79,12 +79,12 @@ const sankeyOrientHash = {
   right: sankeyRight,
   center: sankeyCenter,
   justify: sankeyJustify
-}
+};
 
-const xScale = scaleIdentity()
-const yScale = scaleIdentity()
+const xScale = scaleIdentity();
+const yScale = scaleIdentity();
 
-const curvature = 0.5
+const curvature = 0.5;
 
 const areaLink = d => {
   const x0 = d.source.x1,
@@ -95,7 +95,7 @@ const areaLink = d => {
     y0 = d.y0 - d.sankeyWidth / 2,
     y1 = d.y1 - d.sankeyWidth / 2,
     y2 = d.y1 + d.sankeyWidth / 2,
-    y3 = d.y0 + d.sankeyWidth / 2
+    y3 = d.y0 + d.sankeyWidth / 2;
 
   if (y3 - y0 < 30000) {
     return (
@@ -132,9 +132,9 @@ const areaLink = d => {
       "," +
       y3 +
       "Z"
-    )
+    );
   } else {
-    const offset = (x1 - x0) / 4
+    const offset = (x1 - x0) / 4;
     return (
       "M" +
       x0 +
@@ -173,9 +173,9 @@ const areaLink = d => {
       "," +
       y3 +
       "Z"
-    )
+    );
   }
-}
+};
 
 const matrixify = ({
   edgeHash,
@@ -184,39 +184,39 @@ const matrixify = ({
   edgeWidthAccessor,
   nodeIDAccessor
 }) => {
-  const matrix = []
+  const matrix = [];
   nodes.forEach(nodeSource => {
-    const nodeSourceID = nodeIDAccessor(nodeSource)
-    const sourceRow = []
-    matrix.push(sourceRow)
+    const nodeSourceID = nodeIDAccessor(nodeSource);
+    const sourceRow = [];
+    matrix.push(sourceRow);
     nodes.forEach(nodeTarget => {
-      const nodeTargetID = nodeIDAccessor(nodeTarget)
-      const theEdge = edgeHash.get(`${nodeSourceID}|${nodeTargetID}`)
+      const nodeTargetID = nodeIDAccessor(nodeTarget);
+      const theEdge = edgeHash.get(`${nodeSourceID}|${nodeTargetID}`);
       if (theEdge) {
-        sourceRow.push(edgeWidthAccessor(theEdge))
+        sourceRow.push(edgeWidthAccessor(theEdge));
       } else {
-        sourceRow.push(0)
+        sourceRow.push(0);
       }
-    })
-  })
-  return matrix
-}
+    });
+  });
+  return matrix;
+};
 
 class networkFrame extends React.Component {
   constructor(props) {
-    super(props)
+    super(props);
 
-    this.calculateNetworkFrame = this.calculateNetworkFrame.bind(this)
-    this.defaultNetworkHTMLRule = this.defaultNetworkHTMLRule.bind(this)
-    this.defaultNetworkSVGRule = this.defaultNetworkSVGRule.bind(this)
+    this.calculateNetworkFrame = this.calculateNetworkFrame.bind(this);
+    this.defaultNetworkHTMLRule = this.defaultNetworkHTMLRule.bind(this);
+    this.defaultNetworkSVGRule = this.defaultNetworkSVGRule.bind(this);
 
-    this.renderBody = this.renderBody.bind(this)
+    this.renderBody = this.renderBody.bind(this);
 
     this.graphSettings = {
       numberOfNodes: 0,
       numberOfEdges: 0,
       type: "empty-start"
-    }
+    };
     this.state = {
       nodeData: null,
       edgeData: null,
@@ -228,37 +228,37 @@ class networkFrame extends React.Component {
       projectedEdges: undefined,
       renderNumber: 0,
       voronoiHover: null
-    }
+    };
 
-    this.oAccessor = null
-    this.rAccessor = null
-    this.oScale = null
-    this.rScale = null
+    this.oAccessor = null;
+    this.rAccessor = null;
+    this.oScale = null;
+    this.rScale = null;
   }
 
   componentWillMount() {
-    this.calculateNetworkFrame(this.props)
+    this.calculateNetworkFrame(this.props);
   }
 
   componentWillReceiveProps(nextProps) {
-    this.calculateNetworkFrame(nextProps)
+    this.calculateNetworkFrame(nextProps);
   }
 
   onNodeClick(d, i) {
     if (this.props.onNodeClick) {
-      this.props.onNodeClick(d, i)
+      this.props.onNodeClick(d, i);
     }
   }
 
   onNodeEnter(d, i) {
     if (this.props.onNodeEnter) {
-      this.props.onNodeEnter(d, i)
+      this.props.onNodeEnter(d, i);
     }
   }
 
   onNodeOut(d, i) {
     if (this.props.onNodeOut) {
-      this.props.onNodeOut(d, i)
+      this.props.onNodeOut(d, i);
     }
   }
 
@@ -278,73 +278,73 @@ class networkFrame extends React.Component {
       edgeRenderMode,
       nodeLabels
       /*, customHoverBehavior, customClickBehavior, renderFn, nodeClass = (() => ''), edgeClass = (() => '')*/
-    } = currentProps
+    } = currentProps;
     //    const eventListenersGenerator = generatenetworkFrameEventListeners(customHoverBehavior, customClickBehavior)
 
-    let { edgeType, customNodeIcon, customEdgeIcon } = currentProps
+    let { edgeType, customNodeIcon, customEdgeIcon } = currentProps;
 
-    let networkSettings
+    let networkSettings;
 
     if (typeof networkType === "string") {
-      networkSettings = { type: networkType, iterations: 500 }
+      networkSettings = { type: networkType, iterations: 500 };
     } else {
-      networkSettings = networkType
+      networkSettings = networkType;
     }
 
-    const nodeIDAccessor = stringToFn(currentProps.nodeIDAccessor, d => d.id)
+    const nodeIDAccessor = stringToFn(currentProps.nodeIDAccessor, d => d.id);
     const sourceAccessor = stringToFn(
       currentProps.sourceAccessor,
       d => d.source
-    )
+    );
     const targetAccessor = stringToFn(
       currentProps.targetAccessor,
       d => d.target
-    )
+    );
     const nodeSizeAccessor =
       typeof currentProps.nodeSizeAccessor === "number"
         ? () => currentProps.nodeSizeAccessor
-        : stringToFn(currentProps.nodeSizeAccessor, () => 5)
+        : stringToFn(currentProps.nodeSizeAccessor, () => 5);
     const edgeWidthAccessor = stringToFn(
       currentProps.edgeWidthAccessor,
       d => d.weight || 1
-    )
-    const nodeStyleFn = stringToFn(nodeStyle, () => {}, true)
-    const nodeClassFn = stringToFn(nodeClass, () => "", true)
-    const nodeRenderModeFn = stringToFn(nodeRenderMode, undefined, true)
-    const nodeCanvasRenderFn = stringToFn(canvasNodes, undefined, true)
+    );
+    const nodeStyleFn = stringToFn(nodeStyle, () => {}, true);
+    const nodeClassFn = stringToFn(nodeClass, () => "", true);
+    const nodeRenderModeFn = stringToFn(nodeRenderMode, undefined, true);
+    const nodeCanvasRenderFn = stringToFn(canvasNodes, undefined, true);
 
-    const margin = calculateMargin(currentProps)
+    const margin = calculateMargin(currentProps);
     const { adjustedPosition, adjustedSize } = adjustedPositionSize(
       currentProps
-    )
-    const title = generateFrameTitle(currentProps)
+    );
+    const title = generateFrameTitle(currentProps);
 
-    let { projectedNodes, projectedEdges } = this.state
+    let { projectedNodes, projectedEdges } = this.state;
 
     const changedData =
       !this.state.projectedNodes ||
       !this.state.projectedEdges ||
       this.graphSettings.numberOfNodes !== (nodes ? nodes.length : undefined) ||
-      edges.length !== this.graphSettings.numberOfEdges
+      edges.length !== this.graphSettings.numberOfEdges;
 
     if (changedData) {
-      this.edgeHash = new Map()
-      this.nodeHash = new Map()
-      projectedNodes = []
-      projectedEdges = []
+      this.edgeHash = new Map();
+      this.nodeHash = new Map();
+      projectedNodes = [];
+      projectedEdges = [];
       nodes.forEach(node => {
-        const id = nodeIDAccessor(node)
-        this.nodeHash.set(id, node)
-        this.nodeHash.set(node, node)
-        projectedNodes.push(node)
-        node.inDegree = 0
-        node.outDegree = 0
-        node.degree = 0
-      })
+        const id = nodeIDAccessor(node);
+        this.nodeHash.set(id, node);
+        this.nodeHash.set(node, node);
+        projectedNodes.push(node);
+        node.inDegree = 0;
+        node.outDegree = 0;
+        node.degree = 0;
+      });
 
       edges.forEach(edge => {
-        const source = sourceAccessor(edge)
-        const target = targetAccessor(edge)
+        const source = sourceAccessor(edge);
+        const target = targetAccessor(edge);
         if (!this.nodeHash.get(source)) {
           const sourceNode =
             typeof source === "object"
@@ -359,9 +359,9 @@ class networkFrame extends React.Component {
                   outDegree: 0,
                   degree: 0,
                   createdByFrame: true
-                }
-          this.nodeHash.set(source, sourceNode)
-          projectedNodes.push(sourceNode)
+                };
+          this.nodeHash.set(source, sourceNode);
+          projectedNodes.push(sourceNode);
         }
         if (!this.nodeHash.get(target)) {
           const targetNode =
@@ -377,46 +377,46 @@ class networkFrame extends React.Component {
                   outDegree: 0,
                   degree: 0,
                   createdByFrame: true
-                }
-          this.nodeHash.set(target, targetNode)
-          projectedNodes.push(targetNode)
+                };
+          this.nodeHash.set(target, targetNode);
+          projectedNodes.push(targetNode);
         }
-        const edgeWeight = edge.weight || 1
-        this.nodeHash.get(target).inDegree += edgeWeight
-        this.nodeHash.get(source).outDegree += edgeWeight
-        this.nodeHash.get(target).degree += edgeWeight
-        this.nodeHash.get(source).degree += edgeWeight
+        const edgeWeight = edge.weight || 1;
+        this.nodeHash.get(target).inDegree += edgeWeight;
+        this.nodeHash.get(source).outDegree += edgeWeight;
+        this.nodeHash.get(target).degree += edgeWeight;
+        this.nodeHash.get(source).degree += edgeWeight;
 
         const edgeKey = `${nodeIDAccessor(source) || source}|${nodeIDAccessor(
           target
-        ) || target}`
+        ) || target}`;
         const newEdge = Object.assign({}, edge, {
           source: this.nodeHash.get(source),
           target: this.nodeHash.get(target)
-        })
-        this.edgeHash.set(edgeKey, newEdge)
-        projectedEdges.push(newEdge)
-      })
+        });
+        this.edgeHash.set(edgeKey, newEdge);
+        projectedEdges.push(newEdge);
+      });
     } else {
-      this.edgeHash = new Map()
+      this.edgeHash = new Map();
       projectedEdges.forEach(edge => {
         const edgeKey = `${nodeIDAccessor(edge.source) ||
-          edge.source}|${nodeIDAccessor(edge.target) || edge.target}`
-        this.edgeHash.set(edgeKey, edge)
-      })
+          edge.source}|${nodeIDAccessor(edge.target) || edge.target}`;
+        this.edgeHash.set(edgeKey, edge);
+      });
     }
 
-    const networkSettingsKeys = Object.keys(networkSettings)
-    let networkSettingsChanged = false
+    const networkSettingsKeys = Object.keys(networkSettings);
+    let networkSettingsChanged = false;
 
     networkSettingsKeys.forEach(key => {
       if (
         key !== "edgeType" &&
         networkSettings[key] !== this.graphSettings[key]
       ) {
-        networkSettingsChanged = true
+        networkSettingsChanged = true;
       }
-    })
+    });
     if (networkSettings.type === "sankey") {
       customNodeIcon = ({
         d,
@@ -443,7 +443,7 @@ class networkFrame extends React.Component {
           ry={0}
           style={nodeStyleFn(d)}
         />
-      )
+      );
     } else if (networkSettings.type === "chord") {
       customNodeIcon = ({
         d,
@@ -465,7 +465,7 @@ class networkFrame extends React.Component {
           d={d.d}
           style={styleFn(d, i)}
         />
-      )
+      );
 
       customEdgeIcon = ({
         d,
@@ -488,7 +488,7 @@ class networkFrame extends React.Component {
           d={d.d}
           style={styleFn(d, i)}
         />
-      )
+      );
     } else if (networkSettings.type === "wordcloud") {
       customNodeIcon = ({
         d,
@@ -499,19 +499,19 @@ class networkFrame extends React.Component {
         className,
         transform
       }) => {
-        const textStyle = styleFn(d, i)
-        textStyle.fontSize = `${d.fontSize}px`
-        textStyle.fontWeight = d.fontWeight
-        textStyle.textAnchor = "middle"
-        let textTransform, textY, textX
-        textTransform = `scale(${d.scale})`
+        const textStyle = styleFn(d, i);
+        textStyle.fontSize = `${d.fontSize}px`;
+        textStyle.fontWeight = d.fontWeight;
+        textStyle.textAnchor = "middle";
+        let textTransform, textY, textX;
+        textTransform = `scale(${d.scale})`;
 
         if (!d.rotate) {
-          textY = d.textHeight / 4
-          textTransform = `scale(${d.scale})`
+          textY = d.textHeight / 4;
+          textTransform = `scale(${d.scale})`;
         } else {
-          textTransform = `rotate(90) scale(${d.scale})`
-          textY = d.textHeight / 4
+          textTransform = `rotate(90) scale(${d.scale})`;
+          textY = d.textHeight / 4;
         }
 
         return (
@@ -526,16 +526,16 @@ class networkFrame extends React.Component {
               {d._NWFText}
             </text>
           </g>
-        )
-      }
+        );
+      };
     }
 
     if (changedData || networkSettingsChanged) {
-      const graph = new Graph({ multi: !!networkSettings.multi })
+      const graph = new Graph({ multi: !!networkSettings.multi });
       const graphologyNodes = projectedNodes.map(d => ({
         key: nodeIDAccessor(d),
         originalNode: d
-      }))
+      }));
 
       graph.import({
         attributes: { name: "Graph for Processing" },
@@ -545,13 +545,13 @@ class networkFrame extends React.Component {
           target: nodeIDAccessor(d.target),
           originalEdge: d
         }))
-      })
+      });
       const components = connectedComponents(graph).sort(
         (a, b) => b.length - a.length
-      )
+      );
       const strongComponents = stronglyConnectedComponents(graph).sort(
         (a, b) => b.length - a.length
-      )
+      );
 
       //check for components first
       if (
@@ -560,17 +560,17 @@ class networkFrame extends React.Component {
       ) {
         console.error(
           "Sankey diagram cannot display a network with cycles, defaulting to force-directed layout"
-        )
-        networkSettings.type = "force"
+        );
+        networkSettings.type = "force";
       }
       if (networkSettings.type === "chord") {
-        const radius = size[1] / 2
-        const { groupWidth = 20, padAngle = 0.01 } = networkSettings
+        const radius = size[1] / 2;
+        const { groupWidth = 20, padAngle = 0.01 } = networkSettings;
         const arcGenerator = arc()
           .innerRadius(radius - groupWidth)
-          .outerRadius(radius)
+          .outerRadius(radius);
 
-        const ribbonGenerator = ribbon().radius(radius - groupWidth)
+        const ribbonGenerator = ribbon().radius(radius - groupWidth);
 
         const matrixifiedNetwork = matrixify({
           edgeHash: this.edgeHash,
@@ -578,44 +578,46 @@ class networkFrame extends React.Component {
           edges: projectedEdges,
           edgeWidthAccessor,
           nodeIDAccessor
-        })
+        });
 
-        const chordLayout = chord().padAngle(padAngle)
+        const chordLayout = chord().padAngle(padAngle);
         //          .sortGroups((a,b) => a - b)
 
-        const chords = chordLayout(matrixifiedNetwork)
-        const groups = chords.groups
+        const chords = chordLayout(matrixifiedNetwork);
+        const groups = chords.groups;
 
         groups.forEach(group => {
-          const groupCentroid = arcGenerator.centroid(group)
-          const groupD = arcGenerator(group)
-          const groupNode = projectedNodes[group.index]
-          groupNode.d = groupD
-          groupNode.index = group.index
-          groupNode.x = groupCentroid[0] + size[0] / 2
-          groupNode.y = groupCentroid[1] + size[1] / 2
-        })
+          const groupCentroid = arcGenerator.centroid(group);
+          const groupD = arcGenerator(group);
+          const groupNode = projectedNodes[group.index];
+          groupNode.d = groupD;
+          groupNode.index = group.index;
+          groupNode.x = groupCentroid[0] + size[0] / 2;
+          groupNode.y = groupCentroid[1] + size[1] / 2;
+        });
 
         chords.forEach(chord => {
-          const chordD = ribbonGenerator(chord)
+          const chordD = ribbonGenerator(chord);
           //this is incorrect should use edgeHash
           const nodeSourceID = nodeIDAccessor(
             projectedNodes[chord.source.index]
-          )
+          );
           const nodeTargetID = nodeIDAccessor(
             projectedNodes[chord.target.index]
-          )
-          const chordEdge = this.edgeHash.get(`${nodeSourceID}|${nodeTargetID}`)
-          chordEdge.d = chordD
-        })
+          );
+          const chordEdge = this.edgeHash.get(
+            `${nodeSourceID}|${nodeTargetID}`
+          );
+          chordEdge.d = chordD;
+        });
       } else if (networkSettings.type === "sankey") {
         const {
           orient = "center",
           iterations = 100,
           nodePadding = 8,
           nodeWidth = 24
-        } = networkSettings
-        const sankeyOrient = sankeyOrientHash[orient]
+        } = networkSettings;
+        const sankeyOrient = sankeyOrientHash[orient];
 
         const frameSankey = sankey()
           .extent([
@@ -628,24 +630,24 @@ class networkFrame extends React.Component {
           .nodeId(nodeIDAccessor)
           .nodePadding(nodePadding)
           .nodeWidth(nodeWidth)
-          .iterations(iterations)
+          .iterations(iterations);
 
-        frameSankey()
+        frameSankey();
 
         projectedNodes.forEach(d => {
-          d.height = d.y1 - d.y0
-          d.width = d.x1 - d.x0
-          d.x = d.x0 + d.width / 2
-          d.y = d.y0 + d.height / 2
-          d.radius = d.height / 2
-        })
+          d.height = d.y1 - d.y0;
+          d.width = d.x1 - d.x0;
+          d.x = d.x0 + d.width / 2;
+          d.y = d.y0 + d.height / 2;
+          d.radius = d.height / 2;
+        });
 
         projectedEdges.forEach(d => {
-          d.sankeyWidth = d.width
-          d.width = undefined
-        })
+          d.sankeyWidth = d.width;
+          d.width = undefined;
+        });
 
-        edgeType = areaLink
+        edgeType = areaLink;
       } else if (networkSettings.type === "wordcloud") {
         const {
           iterations = 500,
@@ -653,29 +655,29 @@ class networkFrame extends React.Component {
           rotate,
           fontWeight = 300,
           textAccessor = d => d.text
-        } = networkSettings
+        } = networkSettings;
 
-        const fontWeightMod = (fontWeight / 300 - 1) / 5 + 1
-        const fontWidth = fontSize / 1.5 * fontWeightMod
+        const fontWeightMod = (fontWeight / 300 - 1) / 5 + 1;
+        const fontWidth = fontSize / 1.5 * fontWeightMod;
 
         nodes.forEach((d, i) => {
-          const size = nodeSizeAccessor(d)
-          d._NWFText = textAccessor(d)
-          const textWidth = fontWidth * d._NWFText.length * size * 1.4
-          const textHeight = fontSize * size
+          const size = nodeSizeAccessor(d);
+          d._NWFText = textAccessor(d);
+          const textWidth = fontWidth * d._NWFText.length * size * 1.4;
+          const textHeight = fontSize * size;
 
-          d.textHeight = textHeight + 4
-          d.textWidth = textWidth + 4
-          d.rotate = rotate ? rotate(d, i) : 0
-          d.fontSize = fontSize * size
-          d.fontWeight = fontWeight
-          d.radius = d.r = textWidth / 2
-        })
+          d.textHeight = textHeight + 4;
+          d.textWidth = textWidth + 4;
+          d.rotate = rotate ? rotate(d, i) : 0;
+          d.fontSize = fontSize * size;
+          d.fontWeight = fontWeight;
+          d.radius = d.r = textWidth / 2;
+        });
 
-        nodes.sort((a, b) => b.textWidth - a.textWidth)
+        nodes.sort((a, b) => b.textWidth - a.textWidth);
 
         //bubblepack for initial position
-        packSiblings(nodes)
+        packSiblings(nodes);
 
         //        if (rotate) {
         const collide = bboxCollide(d => {
@@ -683,76 +685,76 @@ class networkFrame extends React.Component {
             return [
               [-d.textHeight / 2, -d.textWidth / 2],
               [d.textHeight / 2, d.textWidth / 2]
-            ]
+            ];
           }
           return [
             [-d.textWidth / 2, -d.textHeight / 2],
             [d.textWidth / 2, d.textHeight / 2]
-          ]
-        }).iterations(1)
+          ];
+        }).iterations(1);
 
-        const xCenter = size[0] / 2
-        const yCenter = size[1] / 2
+        const xCenter = size[0] / 2;
+        const yCenter = size[1] / 2;
 
         const simulation = forceSimulation(nodes)
           .velocityDecay(0.6)
           .force("x", forceX(xCenter).strength(1.2))
           .force("y", forceY(yCenter).strength(1.2))
-          .force("collide", collide)
+          .force("collide", collide);
 
-        simulation.stop()
+        simulation.stop();
 
-        for (let i = 0; i < iterations; ++i) simulation.tick()
+        for (let i = 0; i < iterations; ++i) simulation.tick();
         //      }
 
         const xMin = min(
           projectedNodes.map(
             p => p.x - (p.rotate ? p.textHeight / 2 : p.textWidth / 2)
           )
-        )
+        );
         const xMax = max(
           projectedNodes.map(
             p => p.x + (p.rotate ? p.textHeight / 2 : p.textWidth / 2)
           )
-        )
+        );
         const yMin = min(
           projectedNodes.map(
             p => p.y - (p.rotate ? p.textWidth / 2 : p.textHeight / 2)
           )
-        )
+        );
         const yMax = max(
           projectedNodes.map(
             p => p.y + (p.rotate ? p.textWidth / 2 : p.textHeight / 2)
           )
-        )
+        );
         const projectionScaleX = scaleLinear()
           .domain([xMin, xMax])
-          .range([margin.left, size[0] - margin.right])
+          .range([margin.left, size[0] - margin.right]);
         const projectionScaleY = scaleLinear()
           .domain([yMin, yMax])
-          .range([margin.top, size[1] - margin.bottom])
-        const xMod = (size[0] - margin.right) / xMax
-        const yMod = (size[1] - margin.bottom) / yMax
+          .range([margin.top, size[1] - margin.bottom]);
+        const xMod = (size[0] - margin.right) / xMax;
+        const yMod = (size[1] - margin.bottom) / yMax;
 
-        const sizeMod = Math.min(xMod, yMod) * 1.2
+        const sizeMod = Math.min(xMod, yMod) * 1.2;
         projectedNodes.forEach(node => {
-          node.x = projectionScaleX(node.x)
-          node.y = projectionScaleY(node.y)
-          node.fontSize = node.fontSize * sizeMod
-          node.scale = 1
+          node.x = projectionScaleX(node.x);
+          node.y = projectionScaleY(node.y);
+          node.fontSize = node.fontSize * sizeMod;
+          node.scale = 1;
           node.radius = node.r = Math.max(
             node.textHeight / 4 * yMod,
             node.textWidth / 4 * xMod
-          )
+          );
           //      node.textHeight = projectionScaleY(node.textHeight)
           //      node.textWidth = projectionScaleY(node.textWidth)
-        })
+        });
       } else if (networkSettings.type === "force") {
-        const { iterations = 500, edgeStrength = 0.1 } = networkSettings
+        const { iterations = 500, edgeStrength = 0.1 } = networkSettings;
 
         const linkForce = forceLink().strength(
           d => (d.weight ? d.weight * edgeStrength : edgeStrength)
-        )
+        );
 
         const simulation = forceSimulation()
           .force(
@@ -767,66 +769,66 @@ class networkFrame extends React.Component {
           .force("x", forceX(size[0] / 2))
           .force("y", forceY(size[1] / 2))
           .force("link", linkForce)
-          .nodes(projectedNodes)
+          .nodes(projectedNodes);
 
-        simulation.force("link").links(projectedEdges)
+        simulation.force("link").links(projectedEdges);
 
-        simulation.stop()
+        simulation.stop();
 
-        for (let i = 0; i < iterations; ++i) simulation.tick()
+        for (let i = 0; i < iterations; ++i) simulation.tick();
       } else if (networkSettings.type === "motifs") {
         const largestComponent = Math.max(
           projectedNodes.length / 3,
           components[0].length
-        )
+        );
 
-        const layoutSize = size[0] > size[1] ? size[1] : size[0]
-        const layoutDirection = size[0] > size[1] ? "horizontal" : "vertical"
+        const layoutSize = size[0] > size[1] ? size[1] : size[0];
+        const layoutDirection = size[0] > size[1] ? "horizontal" : "vertical";
 
         //        louvain.assign(graph)
-        const { iterations = 500, edgeStrength = 0.1 } = networkSettings
+        const { iterations = 500, edgeStrength = 0.1 } = networkSettings;
 
-        let currentX = 0
-        let currentY = 0
+        let currentX = 0;
+        let currentY = 0;
 
         components.forEach(component => {
           const componentNodes = projectedNodes.filter(
             d => component.indexOf(nodeIDAccessor(d)) !== -1
-          )
+          );
           const componentEdges = projectedEdges.filter(
             d =>
               component.indexOf(nodeIDAccessor(d.source)) !== -1 ||
               component.indexOf(nodeIDAccessor(d.target)) !== -1
-          )
+          );
 
           const linkForce = forceLink().strength(
             d => (d.weight ? d.weight * edgeStrength : edgeStrength)
-          )
+          );
 
           const componentLayoutSize =
-            Math.max(component.length / largestComponent, 0.2) * layoutSize
+            Math.max(component.length / largestComponent, 0.2) * layoutSize;
 
-          const xBound = componentLayoutSize + currentX
-          const yBound = componentLayoutSize + currentY
+          const xBound = componentLayoutSize + currentX;
+          const yBound = componentLayoutSize + currentY;
 
           if (layoutDirection === "horizontal") {
             if (yBound > size[1]) {
-              currentX = componentLayoutSize + currentX
-              currentY = componentLayoutSize
+              currentX = componentLayoutSize + currentX;
+              currentY = componentLayoutSize;
             } else {
-              currentY = componentLayoutSize + currentY
+              currentY = componentLayoutSize + currentY;
             }
           } else {
             if (xBound > size[0]) {
-              currentY = componentLayoutSize + currentY
-              currentX = componentLayoutSize
+              currentY = componentLayoutSize + currentY;
+              currentX = componentLayoutSize;
             } else {
-              currentX = componentLayoutSize + currentX
+              currentX = componentLayoutSize + currentX;
             }
           }
 
-          const xCenter = currentX - componentLayoutSize / 2
-          const yCenter = currentY - componentLayoutSize / 2
+          const xCenter = currentX - componentLayoutSize / 2;
+          const yCenter = currentY - componentLayoutSize / 2;
 
           const simulation = forceSimulation()
             .force(
@@ -836,52 +838,52 @@ class networkFrame extends React.Component {
                   (d => -25 * nodeSizeAccessor(d))
               )
             )
-            .force("link", linkForce)
+            .force("link", linkForce);
 
           simulation
             .force("x", forceX(xCenter))
             .force("y", forceY(yCenter))
-            .nodes(componentNodes)
+            .nodes(componentNodes);
 
-          simulation.force("link").links(componentEdges)
+          simulation.force("link").links(componentEdges);
 
-          simulation.stop()
+          simulation.stop();
 
-          for (let i = 0; i < iterations; ++i) simulation.tick()
+          for (let i = 0; i < iterations; ++i) simulation.tick();
 
-          const maxX = max(componentNodes.map(d => d.x))
-          const maxY = max(componentNodes.map(d => d.y))
-          const minX = min(componentNodes.map(d => d.x))
-          const minY = min(componentNodes.map(d => d.y))
+          const maxX = max(componentNodes.map(d => d.x));
+          const maxY = max(componentNodes.map(d => d.y));
+          const minX = min(componentNodes.map(d => d.x));
+          const minY = min(componentNodes.map(d => d.y));
 
           const resetX = scaleLinear()
             .domain([minX, maxX])
-            .range([currentX - componentLayoutSize, currentX - 20])
+            .range([currentX - componentLayoutSize, currentX - 20]);
           const resetY = scaleLinear()
             .domain([minY, maxY])
-            .range([currentY - componentLayoutSize, currentY - 20])
+            .range([currentY - componentLayoutSize, currentY - 20]);
 
           componentNodes.forEach(node => {
-            node.x = resetX(node.x)
-            node.y = resetY(node.y)
-          })
-        })
+            node.x = resetX(node.x);
+            node.y = resetY(node.y);
+          });
+        });
       }
-      this.graphSettings = networkSettings
-      this.graphSettings.numberOfNodes = nodes.length
-      this.graphSettings.numberOfEdges = edges.length
+      this.graphSettings = networkSettings;
+      this.graphSettings.numberOfNodes = nodes.length;
+      this.graphSettings.numberOfEdges = edges.length;
     } else if (typeof networkSettings.type === "function") {
       const customProjectedGraph = networkSettings.type({
         nodes: projectedNodes,
         edges: projectedEdges
-      })
+      });
 
-      projectedEdges = customProjectedGraph.edges || []
-      projectedNodes = customProjectedGraph.nodes || []
+      projectedEdges = customProjectedGraph.edges || [];
+      projectedNodes = customProjectedGraph.nodes || [];
 
-      this.graphSettings = networkSettings
-      this.graphSettings.numberOfNodes = nodes.length
-      this.graphSettings.numberOfEdges = edges.length
+      this.graphSettings = networkSettings;
+      this.graphSettings.numberOfNodes = nodes.length;
+      this.graphSettings.numberOfEdges = edges.length;
     }
 
     if (
@@ -889,35 +891,35 @@ class networkFrame extends React.Component {
       networkSettings.type !== "chord" &&
       networkSettings.type !== "sankey"
     ) {
-      const xMin = min(projectedNodes.map(p => p.x - nodeSizeAccessor(p)))
-      const xMax = max(projectedNodes.map(p => p.x + nodeSizeAccessor(p)))
-      const yMin = min(projectedNodes.map(p => p.y - nodeSizeAccessor(p)))
-      const yMax = max(projectedNodes.map(p => p.y + nodeSizeAccessor(p)))
+      const xMin = min(projectedNodes.map(p => p.x - nodeSizeAccessor(p)));
+      const xMax = max(projectedNodes.map(p => p.x + nodeSizeAccessor(p)));
+      const yMin = min(projectedNodes.map(p => p.y - nodeSizeAccessor(p)));
+      const yMax = max(projectedNodes.map(p => p.y + nodeSizeAccessor(p)));
 
       const projectionScaleX = scaleLinear()
         .domain([xMin, xMax])
-        .range([margin.left, size[0] - margin.right])
+        .range([margin.left, size[0] - margin.right]);
       const projectionScaleY = scaleLinear()
         .domain([yMin, yMax])
-        .range([margin.top, size[1] - margin.bottom])
+        .range([margin.top, size[1] - margin.bottom]);
       projectedNodes.forEach(node => {
-        node.x = projectionScaleX(node.x)
-        node.y = projectionScaleY(node.y)
-      })
+        node.x = projectionScaleX(node.x);
+        node.y = projectionScaleY(node.y);
+      });
     }
 
     projectedNodes.forEach(node => {
-      node.nodeSize = nodeSizeAccessor(node)
-    })
+      node.nodeSize = nodeSizeAccessor(node);
+    });
 
     projectedEdges.forEach(edge => {
-      edge.width = edgeWidthAccessor(edge)
-    })
+      edge.width = edgeWidthAccessor(edge);
+    });
 
-    let legendSettings
+    let legendSettings;
 
     if (currentProps.legend) {
-      legendSettings = currentProps.legend === true ? {} : currentProps.legend
+      legendSettings = currentProps.legend === true ? {} : currentProps.legend;
       if (!legendSettings.legendGroups) {
         ///Something auto for networks
         const legendGroups = [
@@ -926,8 +928,8 @@ class networkFrame extends React.Component {
             type: "fill",
             items: ["put", "nodes", "here"]
           }
-        ]
-        legendSettings.legendGroups = legendGroups
+        ];
+        legendSettings.legendGroups = legendGroups;
       }
     }
 
@@ -954,16 +956,16 @@ class networkFrame extends React.Component {
         customMark: customNodeIcon,
         behavior: drawNodes
       }
-    }
+    };
 
-    let nodeLabelAnnotations = []
+    let nodeLabelAnnotations = [];
     if (this.props.nodeLabels && projectedNodes) {
       projectedNodes.forEach((node, nodei) => {
         if (nodeLabels === true || (nodeLabels && nodeLabels(node, nodei))) {
           const actualLabel =
             nodeLabels === true
               ? nodeIDAccessor(node, nodei)
-              : nodeLabels(node, nodei)
+              : nodeLabels(node, nodei);
           const nodeLabel = {
             className: "node-label",
             dx: 0,
@@ -974,10 +976,10 @@ class networkFrame extends React.Component {
             connector: { end: "none" },
             type: AnnotationLabel,
             subject: { radius: nodeSizeAccessor(node) + 2 }
-          }
-          nodeLabelAnnotations.push(nodeLabel)
+          };
+          nodeLabelAnnotations.push(nodeLabel);
         }
-      })
+      });
     }
 
     this.setState({
@@ -1001,7 +1003,7 @@ class networkFrame extends React.Component {
       legendSettings,
       networkFrameRender,
       nodeLabelAnnotations
-    })
+    });
   }
 
   defaultNetworkSVGRule({ d, i }) {
@@ -1009,8 +1011,8 @@ class networkFrame extends React.Component {
       projectedNodes /*, projectedEdges*/,
       nodeIDAccessor,
       nodeSizeAccessor
-    } = this.state
-    const { svgAnnotationRules } = this.props
+    } = this.state;
+    const { svgAnnotationRules } = this.props;
 
     if (svgAnnotationRules) {
       const customAnnotation = svgAnnotationRules({
@@ -1020,16 +1022,16 @@ class networkFrame extends React.Component {
         networkFrameState: this.state,
         nodes: this.state.projectedNodes,
         edges: this.state.projectedEdges
-      })
+      });
       if (customAnnotation !== null) {
-        return customAnnotation
+        return customAnnotation;
       }
     }
     if (d.type === "node") {
       const selectedNode =
-        d.x && d.y ? d : projectedNodes.find(p => nodeIDAccessor(p) === d.id)
+        d.x && d.y ? d : projectedNodes.find(p => nodeIDAccessor(p) === d.id);
       if (!selectedNode) {
-        return null
+        return null;
       }
       const noteData = Object.assign(
         {
@@ -1047,13 +1049,13 @@ class networkFrame extends React.Component {
             radius: d.radius || selectedNode.radius || nodeSizeAccessor(d)
           }
         }
-      )
-      return <Annotation key={i} noteData={noteData} />
+      );
+      return <Annotation key={i} noteData={noteData} />;
     } else if (d.type === "react-annotation" || typeof d.type === "function") {
       const selectedNode =
-        d.x && d.y ? d : projectedNodes.find(p => nodeIDAccessor(p) === d.id)
+        d.x && d.y ? d : projectedNodes.find(p => nodeIDAccessor(p) === d.id);
       if (!selectedNode) {
-        return null
+        return null;
       }
       const noteData = Object.assign(
         {
@@ -1066,18 +1068,18 @@ class networkFrame extends React.Component {
         },
         d,
         { type: typeof d.type === "function" ? d.type : undefined }
-      )
-      return <Annotation key={i} noteData={noteData} />
+      );
+      return <Annotation key={i} noteData={noteData} />;
     } else if (d.type === "enclose") {
       const selectedNodes = projectedNodes.filter(
         p => d.ids.indexOf(nodeIDAccessor(p)) !== -1
-      )
+      );
       if (selectedNodes.length === 0) {
-        return null
+        return null;
       }
       const circle = packEnclose(
         selectedNodes.map(p => ({ x: p.x, y: p.y, r: nodeSizeAccessor(p) }))
-      )
+      );
       const noteData = Object.assign(
         {
           dx: d.dx || -25,
@@ -1095,32 +1097,32 @@ class networkFrame extends React.Component {
             radiusPadding: 5 || d.radiusPadding
           }
         }
-      )
+      );
 
       if (noteData.rp) {
         switch (noteData.rp) {
           case "top":
-            noteData.dx = 0
-            noteData.dy = -circle.r - noteData.rd
-            break
+            noteData.dx = 0;
+            noteData.dy = -circle.r - noteData.rd;
+            break;
           case "bottom":
-            noteData.dx = 0
-            noteData.dy = circle.r + noteData.rd
-            break
+            noteData.dx = 0;
+            noteData.dy = circle.r + noteData.rd;
+            break;
           case "left":
-            noteData.dx = -circle.r - noteData.rd
-            noteData.dy = 0
-            break
+            noteData.dx = -circle.r - noteData.rd;
+            noteData.dy = 0;
+            break;
           default:
-            noteData.dx = circle.r + noteData.rd
-            noteData.dy = 0
+            noteData.dx = circle.r + noteData.rd;
+            noteData.dy = 0;
         }
       }
       //TODO: Support .ra (setting angle)
 
-      return <Annotation key={i} noteData={noteData} />
+      return <Annotation key={i} noteData={noteData} />;
     }
-    return null
+    return null;
   }
 
   defaultNetworkHTMLRule({ d, i }) {
@@ -1132,9 +1134,9 @@ class networkFrame extends React.Component {
         networkFrameState: this.state,
         nodes: this.state.projectedNodes,
         edges: this.state.projectedEdges
-      })
+      });
       if (customAnnotation !== null) {
-        return customAnnotation
+        return customAnnotation;
       }
     }
     if (d.type === "frame-hover") {
@@ -1144,10 +1146,10 @@ class networkFrame extends React.Component {
           <p key="html-annotation-content-1">{d.id}</p>
           <p key="html-annotation-content-2">Degree: {d.degree}</p>
         </div>
-      )
+      );
 
       if (d.type === "frame-hover" && this.props.tooltipContent) {
-        content = this.props.tooltipContent(d)
+        content = this.props.tooltipContent(d);
       }
 
       return (
@@ -1162,13 +1164,13 @@ class networkFrame extends React.Component {
         >
           {content}
         </div>
-      )
+      );
     }
-    return null
+    return null;
   }
 
   render() {
-    return this.renderBody({})
+    return this.renderBody({});
   }
 
   renderBody({ afterElements }) {
@@ -1179,14 +1181,14 @@ class networkFrame extends React.Component {
       customClickBehavior,
       customDoubleClickBehavior,
       customHoverBehavior,
-      size,
+      size = [500, 500],
       matte,
       renderKey,
       hoverAnnotation,
       beforeElements,
       interaction,
       title
-    } = this.props
+    } = this.props;
     const {
       backgroundGraphics,
       foregroundGraphics,
@@ -1197,9 +1199,9 @@ class networkFrame extends React.Component {
       adjustedSize,
       networkFrameRender,
       nodeLabelAnnotations = []
-    } = this.state
+    } = this.state;
 
-    let downloadButton = []
+    let downloadButton = [];
 
     if (this.props.download && this.state.projectedNodes.length > 0) {
       downloadButton.push(
@@ -1214,7 +1216,7 @@ class networkFrame extends React.Component {
             fields: this.props.downloadFields
           })}
         />
-      )
+      );
     }
     if (this.props.download && this.state.projectedEdges.length > 0) {
       downloadButton.push(
@@ -1229,13 +1231,13 @@ class networkFrame extends React.Component {
             fields: this.props.downloadFields
           })}
         />
-      )
+      );
     }
 
     const finalFilterDefs = filterDefs({
       key: "networkFrame",
       additionalDefs: this.props.additionalDefs
-    })
+    });
 
     return (
       <Frame
@@ -1271,7 +1273,7 @@ class networkFrame extends React.Component {
         afterElements={afterElements}
         downloadButton={downloadButton}
       />
-    )
+    );
   }
 }
 
@@ -1307,6 +1309,6 @@ networkFrame.propTypes = {
   hoverAnnotation: PropTypes.bool,
   backgroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
   foregroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array])
-}
+};
 
-module.exports = networkFrame
+module.exports = networkFrame;

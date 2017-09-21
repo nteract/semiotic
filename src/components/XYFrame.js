@@ -185,7 +185,8 @@ class XYFrame extends React.Component {
       canvasLines,
       canvasPoints,
       canvasAreas,
-      defined
+      defined,
+      size = [500, 500]
     } = currentProps;
 
     const xAccessor = stringToFn(currentProps.xAccessor);
@@ -318,7 +319,7 @@ class XYFrame extends React.Component {
           fill="white"
           d={drawMarginPath({
             margin,
-            size: currentProps.size,
+            size: size,
             inset: currentProps.matte.inset
           })}
           className="xyframe-matte"
@@ -814,6 +815,8 @@ class XYFrame extends React.Component {
 
     let screenCoordinates = [];
 
+    const { size = [500, 500] } = this.props;
+
     const idAccessor = this.props.lineIDAccessor || (l => l.id);
     const xCoord = d[projectedX] || xAccessor(d);
     const yCoord = d[projectedY] || yAccessor(d);
@@ -919,7 +922,7 @@ class XYFrame extends React.Component {
           className={`annotation annotation-xy-label ${d.className || ""} `}
           style={{
             position: "absolute",
-            bottom: this.props.size[1] - screenCoordinates[1] + "px",
+            bottom: size[1] - screenCoordinates[1] + "px",
             left: screenCoordinates[0] + "px"
           }}
         >
@@ -944,7 +947,7 @@ class XYFrame extends React.Component {
       areas,
       name = "xyframe",
       download,
-      size,
+      size = [500, 500],
       className = "",
       annotationSettings = {},
       annotations = [],
