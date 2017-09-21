@@ -1202,7 +1202,10 @@ class orFrame extends React.Component {
         xPosition = positionValue + adjustedPosition[0] + margin.left;
       } else if (this.props.projection === "radial") {
         [xPosition, yPosition] = pointOnArcAtAngle(
-          d.arcAngles.translate,
+          [
+            d.arcAngles.translate[0] - margin.left,
+            d.arcAngles.translate[1] - margin.top
+          ],
           d.arcAngles.midAngle,
           d.arcAngles.length
         );
