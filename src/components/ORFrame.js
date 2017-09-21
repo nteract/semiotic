@@ -677,7 +677,7 @@ class orFrame extends React.Component {
             const labelSettings =
               typeof label === "string" ? { name: label } : label;
             const { locationDistance = 15 } = labelSettings;
-            ref = `${Math.random().toString} `;
+            ref = `${Math.random().toString()} `;
             axisLabel = (
               <g
                 className="axis-label"
