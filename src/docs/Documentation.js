@@ -36,6 +36,7 @@ import AppleStockChart from "./components/AppleStockChart";
 
 import CreatingBarChart from "./components/CreatingBarChart";
 import CreatingPieChart from "./components/CreatingPieChart";
+import CreatingLineChart from "./components/CreatingLineChart";
 
 import "./../components/styles.css";
 import Drawer from "material-ui/Drawer";
@@ -46,6 +47,7 @@ import { Link } from "react-router-dom";
 
 const components = {
   informationmodel: { docs: BarToParallel },
+  creatinglinechart: { docs: CreatingLineChart },
   creatingbarchart: { docs: CreatingBarChart },
   creatingpiechart: { docs: CreatingPieChart },
   xyframe: { docs: XYFrameDocs },
