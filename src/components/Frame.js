@@ -134,6 +134,7 @@ class Frame extends React.Component {
               {finalFilterDefs}
               <g>{backgroundGraphics}</g>
               <VisualizationLayer
+                disableContext={this.props.disableContext}
                 renderPipeline={renderPipeline}
                 position={adjustedPosition}
                 size={adjustedSize}

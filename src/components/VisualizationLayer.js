@@ -24,7 +24,7 @@ class VisualizationLayer extends React.PureComponent {
   componentDidUpdate() {
     const adjustedPosition = this.props.position || [0, 0];
     let context;
-    if (this.props.canvasContext) {
+    if (this.props.canvasContext && !this.props.disableContext) {
       context = this.props.canvasContext.getContext("2d");
       context.setTransform(1, 0, 0, 1, 0, 0);
       context.clearRect(0, 0, this.props.size[0] * 2, this.props.size[1] * 2);

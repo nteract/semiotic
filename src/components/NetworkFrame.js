@@ -417,6 +417,7 @@ class networkFrame extends React.Component {
         networkSettingsChanged = true;
       }
     });
+    //Support bubble chart with circle pack and with force
     if (networkSettings.type === "sankey") {
       customNodeIcon = ({
         d,
@@ -1187,7 +1188,8 @@ class networkFrame extends React.Component {
       hoverAnnotation,
       beforeElements,
       interaction,
-      title
+      title,
+      disableContext
     } = this.props;
     const {
       backgroundGraphics,
@@ -1272,6 +1274,7 @@ class networkFrame extends React.Component {
         beforeElements={beforeElements}
         afterElements={afterElements}
         downloadButton={downloadButton}
+        disableContext={disableContext}
       />
     );
   }
@@ -1281,7 +1284,7 @@ networkFrame.propTypes = {
   name: PropTypes.string,
   title: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
   margin: PropTypes.oneOfType([PropTypes.number, PropTypes.object]),
-  size: PropTypes.array.isRequired,
+  size: PropTypes.array,
   position: PropTypes.array,
   nodeIDAccessor: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
   sourceAccessor: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),

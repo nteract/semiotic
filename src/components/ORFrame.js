@@ -1286,7 +1286,8 @@ class orFrame extends React.Component {
       projection = "vertical",
       backgroundGraphics,
       foregroundGraphics = [],
-      beforeElements
+      beforeElements,
+      disableContext
     } = this.props;
 
     const {
@@ -1365,6 +1366,7 @@ class orFrame extends React.Component {
         overlay={columnOverlays}
         rScale={this.rScale}
         projection={projection}
+        disableContext={disableContext}
       />
     );
   }
@@ -1377,7 +1379,7 @@ orFrame.propTypes = {
   margin: PropTypes.oneOfType([PropTypes.number, PropTypes.object]),
   format: PropTypes.string,
   properties: PropTypes.object,
-  size: PropTypes.array.isRequired,
+  size: PropTypes.array,
   position: PropTypes.array,
   oScaleType: PropTypes.func,
   rScaleType: PropTypes.func,

@@ -1057,6 +1057,7 @@ class XYFrame extends React.Component {
         beforeElements={beforeElements}
         afterElements={afterElements}
         downloadButton={downloadButton}
+        disableContext={this.props.disableContext}
       />
     );
   }
@@ -1072,7 +1073,7 @@ XYFrame.propTypes = {
   dataVersion: PropTypes.string,
   axes: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
   matte: PropTypes.oneOfType([PropTypes.bool, PropTypes.object]),
-  size: PropTypes.array.isRequired,
+  size: PropTypes.array,
   position: PropTypes.array,
   xScaleType: PropTypes.func,
   yScaleType: PropTypes.func,

@@ -1,6 +1,14 @@
 import React from "react";
 import DocumentComponent from "../layout/DocumentComponent";
 import { NetworkFrame } from "../../components";
+
+const networkSettings = {
+  type: "wordcloud",
+  rotate: d => d.score < 0.1,
+  fontSize: 36,
+  fontWeight: 900
+};
+
 const words = [
   {
     token_text: "sankey",
@@ -172,6 +180,19 @@ components.push({
 });
 
 export default class WordCloudDocs extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      additionalAnnotation: {
+        type: "node",
+        dy: -100,
+        dx: 0,
+        id: "semiotic",
+        label: "awesome?"
+      }
+    };
+  }
+
   render() {
     const examples = [];
     examples.push({
@@ -183,12 +204,7 @@ export default class WordCloudDocs extends React.Component {
           nodeStyle={d => ({ fill: d.color })}
           nodeSizeAccessor={d => d.score}
           nodeIDAccessor={d => d.token_text}
-          networkType={{
-            type: "wordcloud",
-            rotate: d => d.score < 0.1,
-            fontSize: 36,
-            fontWeight: 900
-          }}
+          networkType={networkSettings}
           annotations={[
             {
               type: "node",
@@ -196,7 +212,8 @@ export default class WordCloudDocs extends React.Component {
               dx: 0,
               id: "datavisualization",
               label: "hashtag?"
-            }
+            },
+            this.state.additionalAnnotation
           ]}
           hoverAnnotation={true}
           tooltipContent={d => (
@@ -205,6 +222,18 @@ export default class WordCloudDocs extends React.Component {
               <p>Score: {d.score}</p>
             </div>
           )}
+          customClickBehavior={d => {
+            console.log("d", d);
+            this.setState({
+              additionalAnnotation: Object.assign({
+                type: "node",
+                dy: -100,
+                dx: 0,
+                id: d.token_text,
+                label: "awesome?"
+              })
+            });
+          }}
         />
       ),
       source: `
