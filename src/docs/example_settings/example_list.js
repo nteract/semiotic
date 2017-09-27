@@ -36,7 +36,7 @@ const exampos = [
     path: "regionatedlinechart"
   },
   {
-    label: "Pie/Donut/Nightengale",
+    label: "Pie/Donut/Nightingale",
     viz: DonutChartRaw({ kind: "pie" }),
     path: "donutchart"
   },
