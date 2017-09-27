@@ -24,7 +24,7 @@ export default class PieDonutDocs extends React.Component {
   render() {
     const examples = [];
 
-    const kindOptions = ["pie", "nightengale"].map(d => (
+    const kindOptions = ["pie", "nightingale"].map(d => (
       <MenuItem key={"kind-option" + d} label={d} value={d}>
         {d}
       </MenuItem>
