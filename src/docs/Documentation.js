@@ -38,6 +38,9 @@ import CreatingBarChart from "./components/CreatingBarChart";
 import CreatingPieChart from "./components/CreatingPieChart";
 import CreatingLineChart from "./components/CreatingLineChart";
 
+import RealtimeORFrame from "./components/RealtimeORFrame";
+import RealtimeXYFrame from "./components/RealtimeXYFrame";
+
 import "./../components/styles.css";
 import Drawer from "material-ui/Drawer";
 import AppBar from "material-ui/AppBar";
@@ -56,6 +59,7 @@ const components = {
   annotations: { docs: AppleStockChart, parent: "xyframe" },
   homerunmap: { docs: BaseballMap, parent: "xyframe" },
   neighborhoodmap: { docs: NeighborhoodMap, parent: "xyframe" },
+  realtimeline: { docs: RealtimeXYFrame, parent: "xyframe" },
   orframe: { docs: ORFrameDocs },
   violin: { docs: Violin, parent: "orframe" },
   parallelcoordinates: { docs: ParallelCoordinates, parent: "orframe" },
@@ -68,6 +72,7 @@ const components = {
   divergingstackedbar: { docs: DivergingStackedBar, parent: "orframe" },
   waterfall: { docs: WaterfallChart, parent: "orframe" },
   bullet: { docs: BulletChart, parent: "orframe" },
+  realtimebar: { docs: RealtimeORFrame, parent: "orframe" },
   networkframe: { docs: NetworkFrameDocs },
   wordcloud: { docs: WordCloud, parent: "networkframe" },
   sankey: { docs: Sankey, parent: "networkframe" },
