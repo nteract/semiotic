@@ -223,7 +223,6 @@ export default class WordCloudDocs extends React.Component {
             </div>
           )}
           customClickBehavior={d => {
-            console.log("d", d);
             this.setState({
               additionalAnnotation: Object.assign({
                 type: "node",

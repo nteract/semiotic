@@ -460,7 +460,7 @@ class XYFrame extends React.Component {
     let yScale = this.yScale;
 
     let screenCoordinates = [];
-    const idAccessor = this.props.lineIDAccessor || (l => l.id);
+    const idAccessor = stringToFn(this.props.lineIDAccessor, l => l.id);
 
     let { adjustedPosition, adjustedSize } = adjustedPositionSize(this.props);
 
@@ -592,7 +592,7 @@ class XYFrame extends React.Component {
       noteData.x = noteData.x ? noteData.x : screenCoordinates[0];
       noteData.y = noteData.y ? noteData.y : screenCoordinates[1];
 
-      return <Annotation key={i} noteData={noteData} />;
+      return <Annotation key={Math.random() + "key"} noteData={noteData} />;
     } else if (d.type === "enclose") {
       const circle = packEnclose(
         screenCoordinates.map(p => ({ x: p[0], y: p[1], r: 2 }))
@@ -637,7 +637,7 @@ class XYFrame extends React.Component {
       }
       //TODO: Support .ra (setting angle)
 
-      return <Annotation key={i} noteData={noteData} />;
+      return <Annotation key={Math.random() + "key"} noteData={noteData} />;
     } else if (d.type === "x") {
       const yPosition = annotationLayer.position[1];
 
@@ -660,7 +660,7 @@ class XYFrame extends React.Component {
           }
         }
       );
-      return <Annotation key={i} noteData={noteData} />;
+      return <Annotation key={Math.random() + "key"} noteData={noteData} />;
     } else if (d.type === "y") {
       const xPosition = margin.left + i * 25;
 
@@ -683,7 +683,7 @@ class XYFrame extends React.Component {
           }
         }
       );
-      return <Annotation key={i} noteData={noteData} />;
+      return <Annotation key={Math.random() + "key"} noteData={noteData} />;
     } else if (d.type === "bounds") {
       const x0Position =
         xScale(xAccessor(d.bounds[0])) + annotationLayer.position[0];
@@ -817,7 +817,7 @@ class XYFrame extends React.Component {
 
     const { size = [500, 500] } = this.props;
 
-    const idAccessor = this.props.lineIDAccessor || (l => l.id);
+    const idAccessor = stringToFn(this.props.lineIDAccessor, l => l.id);
     const xCoord = d[projectedX] || xAccessor(d);
     const yCoord = d[projectedY] || yAccessor(d);
 

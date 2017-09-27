@@ -910,7 +910,7 @@ class orFrame extends React.Component {
           (rScale(rAccessor(p)) - margin.left) / 2
         );
       }
-      if (projection !== "vertical") {
+      if (projection === "horizontal") {
         return [rScale(rAccessor(p)), o];
       }
       const newScale = scaleLinear()
@@ -983,7 +983,7 @@ class orFrame extends React.Component {
         d,
         { type: typeof d.type === "function" ? d.type : undefined }
       );
-      return <Annotation key={i} noteData={noteData} />;
+      return <Annotation key={Math.random() + "key"} noteData={noteData} />;
     } else if (d.type === "enclose") {
       const circle = packEnclose(
         screenCoordinates.map(p => ({ x: p[0], y: p[1], r: 2 }))
@@ -1032,13 +1032,13 @@ class orFrame extends React.Component {
       }
       //TODO: Support .ra (setting angle)
 
-      return <Annotation key={i} noteData={noteData} />;
+      return <Annotation key={Math.random() + "key"} noteData={noteData} />;
     } else if (d.type === "r") {
       let x, y, xPosition, yPosition, subject, dx, dy;
       if (this.props.projection === "radial") {
         return (
           <Annotation
-            key={i}
+            key={Math.random() + "key"}
             noteData={Object.assign(
               {
                 dx: 50,
@@ -1098,7 +1098,7 @@ class orFrame extends React.Component {
           subject
         }
       );
-      return <Annotation key={i} noteData={noteData} />;
+      return <Annotation key={Math.random() + "key"} noteData={noteData} />;
     }
     return null;
   }

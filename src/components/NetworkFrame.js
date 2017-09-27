@@ -1051,7 +1051,7 @@ class networkFrame extends React.Component {
           }
         }
       );
-      return <Annotation key={i} noteData={noteData} />;
+      return <Annotation key={Math.random() + "key"} noteData={noteData} />;
     } else if (d.type === "react-annotation" || typeof d.type === "function") {
       const selectedNode =
         d.x && d.y ? d : projectedNodes.find(p => nodeIDAccessor(p) === d.id);
@@ -1070,7 +1070,7 @@ class networkFrame extends React.Component {
         d,
         { type: typeof d.type === "function" ? d.type : undefined }
       );
-      return <Annotation key={i} noteData={noteData} />;
+      return <Annotation key={Math.random() + "key"} noteData={noteData} />;
     } else if (d.type === "enclose") {
       const selectedNodes = projectedNodes.filter(
         p => d.ids.indexOf(nodeIDAccessor(p)) !== -1
@@ -1121,7 +1121,7 @@ class networkFrame extends React.Component {
       }
       //TODO: Support .ra (setting angle)
 
-      return <Annotation key={i} noteData={noteData} />;
+      return <Annotation key={Math.random() + "key"} noteData={noteData} />;
     }
     return null;
   }
