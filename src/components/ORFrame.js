@@ -384,6 +384,12 @@ class orFrame extends React.Component {
 
       if (cwHash) {
         projectedColumns[o].width = cwHash[o] - padding;
+        if (currentProps.ordinalAlign === "center") {
+          projectedColumns[o].x =
+            projectedColumns[o].x - projectedColumns[o].width / 2;
+          projectedColumns[o].middle =
+            projectedColumns[o].middle - projectedColumns[o].width / 2;
+        }
         projectedColumns[o].pct = cwHash[o] / cwHash.total;
         projectedColumns[o].pct_start =
           (projectedColumns[o].x - oDomain[0]) / cwHash.total;
@@ -392,6 +398,12 @@ class orFrame extends React.Component {
           projectedColumns[o].middle / cwHash.total;
       } else {
         projectedColumns[o].width = columnWidth - padding;
+        if (currentProps.ordinalAlign === "center") {
+          projectedColumns[o].x =
+            projectedColumns[o].x - projectedColumns[o].width / 2;
+          projectedColumns[o].middle =
+            projectedColumns[o].middle - projectedColumns[o].width / 2;
+        }
         projectedColumns[o].pct = columnWidth / adjustedSize[1];
         projectedColumns[o].pct_start =
           (projectedColumns[o].x - oDomain[0]) / adjustedSize[1];

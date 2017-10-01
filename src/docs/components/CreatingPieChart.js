@@ -289,7 +289,7 @@ export default class CreatingPieChart extends React.Component {
             data={windRoseData}
             oAccessor={"angle"}
             rAccessor={"wind"}
-            style={{ fill: "#00a2ce", stroke: "white" }}
+            style={{ fill: "#00a2ce" }}
             type={"bar"}
             projection={"radial"}
             axis={{
@@ -298,6 +298,7 @@ export default class CreatingPieChart extends React.Component {
             oPadding={1}
             margin={{ bottom: 50, top: 70, left: 25, right: 25 }}
             hoverAnnotation={true}
+            ordinalAlign="center"
           />
         </div>
       ),
@@ -406,7 +407,7 @@ export default class CreatingPieChart extends React.Component {
             axis={{
               label: { name: "Casualties", locationDistance: 15 }
             }}
-            margin={{ bottom: 50, top: 70, left: 25, right: 25 }}
+            margin={{ bottom: 50, top: 70, left: 40, right: 40 }}
             hoverAnnotation={true}
           />
         </div>
