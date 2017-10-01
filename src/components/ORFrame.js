@@ -479,8 +479,7 @@ class orFrame extends React.Component {
           xPosition = margin.left - 3;
         } else if (projection === "radial") {
           xPosition = pieArcs[i].centroid[0] + pieArcs[i].translate[0];
-          yPosition =
-            pieArcs[i].centroid[1] + pieArcs[i].translate[1] + margin.top;
+          yPosition = pieArcs[i].centroid[1] + pieArcs[i].translate[1];
         }
         const label = labelingFn(
           d,

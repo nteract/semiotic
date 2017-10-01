@@ -51,10 +51,16 @@ export const calculateMargin = ({
   projection
 }) => {
   if (margin) {
+    let tempMargin;
     if (typeof margin !== "object") {
-      return { top: margin, bottom: margin, left: margin, right: margin };
+      tempMargin = { top: margin, bottom: margin, left: margin, right: margin };
     }
-    return Object.assign({ top: 0, bottom: 0, left: 0, right: 0 }, margin);
+    tempMargin = Object.assign(
+      { top: 0, bottom: 0, left: 0, right: 0 },
+      margin
+    );
+
+    return tempMargin;
   }
   const finalMargin = { top: 0, bottom: 0, left: 0, right: 0 };
   if (title && title.length !== 0) {
@@ -141,6 +147,10 @@ export function adjustedPositionSize({
 
   let adjustedPosition = [position[0], position[1]];
   let adjustedSize = [size[0] - widthAdjust, size[1] - heightAdjust];
+  if (projection === "radial") {
+    const minSize = Math.min(adjustedSize[0], adjustedSize[1]);
+    adjustedSize = [minSize, minSize];
+  }
 
   return { adjustedPosition, adjustedSize };
 }

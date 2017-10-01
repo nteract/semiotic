@@ -400,15 +400,17 @@ export default class CreatingPieChart extends React.Component {
             style={d => ({
               fill: colorHash[d.type],
               fillOpacity: 0.75,
-              stroke: colorHash[d.type]
+              stroke: colorHash[d.type],
+              strokeWidth: 0.5
             })}
             type={"bar"}
             projection={"radial"}
             axis={{
               label: { name: "Casualties", locationDistance: 15 }
             }}
-            margin={{ bottom: 50, top: 70, left: 40, right: 40 }}
+            margin={{ bottom: 50, top: 60, left: 40, right: 40 }}
             hoverAnnotation={true}
+            oLabel={true}
           />
         </div>
       ),
