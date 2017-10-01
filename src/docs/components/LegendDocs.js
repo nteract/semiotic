@@ -53,26 +53,68 @@ export default class LegendDocs extends React.Component {
         <svg style={{ height: "400px", width: "800px" }}>
           <g transform={"translate(50,0)"}>
             <Legend
-              label={"Test Area Legend"}
+              title={"Test Area Legend"}
               legendGroups={areaLegendGroups}
             />
           </g>
 
           <g transform={"translate(200,0)"}>
             <Legend
-              label={"Test Line Legend"}
+              title={"Test Line Legend"}
               legendGroups={lineLegendGroups}
             />
           </g>
           <g transform={"translate(350,0)"}>
             <Legend
-              label={"Both Legend"}
+              title={"Both Legend"}
               legendGroups={[...lineLegendGroups, ...areaLegendGroups]}
             />
           </g>
         </svg>
       ),
       source: `
+const areaLegendGroups = [
+  {
+    styleFn: d => ({ fill: d.color, stroke: "black" }),
+    items: [
+      { label: "Area 1", color: "#b3331d" },
+      { label: "Area 2", color: "#007190" }
+    ]
+  }
+];
+
+const lineLegendGroups = [
+  {
+    type: "line",
+    styleFn: d => ({ stroke: d.color }),
+    items: [
+      { label: "Line 1", color: "#b3331d" },
+      { label: "Line 2", color: "#007190" }
+    ]
+  }
+];
+
+<svg style={{ height: "400px", width: "800px" }}>
+    <g transform={"translate(50,0)"}>
+      <Legend
+        title={"Test Area Legend"}
+        legendGroups={areaLegendGroups}
+      />
+    </g>
+
+    <g transform={"translate(200,0)"}>
+      <Legend
+        title={"Test Line Legend"}
+        legendGroups={lineLegendGroups}
+      />
+    </g>
+    <g transform={"translate(350,0)"}>
+      <Legend
+        title={"Both Legend"}
+        legendGroups={[...lineLegendGroups, ...areaLegendGroups]}
+      />
+    </g>
+  </svg>
       `
     });
 
