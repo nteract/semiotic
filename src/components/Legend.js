@@ -38,10 +38,10 @@ class Legend extends React.Component {
     let offset = 30;
     const renderedGroups = [];
     legendGroups.forEach((l, i) => {
-      offset += 15;
+      offset += 5;
       renderedGroups.push(
         <line
-          key={`legend-symbol-${i}`}
+          key={`legend-top-line legend-symbol-${i}`}
           stroke="gray"
           x1={0}
           y1={offset}
@@ -49,6 +49,7 @@ class Legend extends React.Component {
           y2={offset}
         />
       );
+      offset += 10;
       if (l.label) {
         offset += 20;
         renderedGroups.push(
