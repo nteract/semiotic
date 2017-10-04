@@ -23,7 +23,8 @@ import { relativeY } from "./svg/lineDrawing";
 import {
   AnnotationXYThreshold,
   AnnotationCallout,
-  AnnotationCalloutCircle
+  AnnotationCalloutCircle,
+  AnnotationCalloutRect
 } from "react-annotation";
 import {
   calculateMargin,
@@ -490,7 +491,7 @@ class XYFrame extends React.Component {
         //NO ANNOTATION IF INVALID SCREEN COORDINATES
         return null;
       }
-    } else {
+    } else if (!d.bounds) {
       screenCoordinates = d.coordinates.map(p => [
         xScale(xAccessor(p)) + adjustedPosition[0],
         relativeY({
@@ -685,56 +686,39 @@ class XYFrame extends React.Component {
       );
       return <Annotation key={Math.random() + "key"} noteData={noteData} />;
     } else if (d.type === "bounds") {
-      const x0Position =
-        xScale(xAccessor(d.bounds[0])) + annotationLayer.position[0];
-      const y0Position =
-        yScale(yAccessor(d.bounds[0])) + annotationLayer.position[1];
-      const x1Position =
-        xScale(xAccessor(d.bounds[1])) + annotationLayer.position[0];
-      const y1Position =
-        yScale(yAccessor(d.bounds[1])) + annotationLayer.position[1];
+      const startXValue = xAccessor(d.bounds[0]);
+      const startYValue = yAccessor(d.bounds[0]);
+      const endXValue = xAccessor(d.bounds[1]);
+      const endYValue = yAccessor(d.bounds[1]);
 
-      const laLine = (
-        <Mark
-          key={d.label + "annotationbounds" + i}
-          markType="path"
-          d={
-            "M" +
-            x0Position +
-            "," +
-            y0Position +
-            "L" +
-            x1Position +
-            "," +
-            y0Position +
-            "L" +
-            x1Position +
-            "," +
-            y1Position +
-            "L" +
-            x0Position +
-            "," +
-            y1Position +
-            "Z"
+      const x0Position = startXValue ? xScale(startXValue) : margin.left;
+      const y0Position = startYValue
+        ? yScale(startYValue)
+        : adjustedSize[1] + margin.top;
+      const x1Position = endXValue
+        ? xScale(endXValue)
+        : adjustedSize[0] + margin.left;
+      const y1Position = endYValue ? yScale(endYValue) : margin.top;
+
+      const noteData = Object.assign(
+        {
+          dx: 250,
+          dy: -20,
+          note: { label: d.label },
+          connector: { end: "arrow" }
+        },
+        d,
+        {
+          type: AnnotationCalloutRect,
+          x: Math.min(x0Position, x1Position),
+          y: Math.min(y0Position, y1Position),
+          subject: {
+            width: Math.abs(x1Position - x0Position),
+            height: Math.abs(y0Position - y1Position)
           }
-          className={`annotation annotation-bounds ${d.className || ""} `}
-        />
+        }
       );
-
-      const laLabel = (
-        <Mark
-          markType="text"
-          key={d.label + "annotationtext" + i}
-          forceUpdate={true}
-          x={5 + x0Position}
-          y={-5 + y0Position}
-          className={`annotation annotation-bounds-label ${d.className || ""} `}
-        >
-          {d.label}
-        </Mark>
-      );
-
-      return [laLine, laLabel];
+      return <Annotation key={Math.random() + "key"} noteData={noteData} />;
     } else if (d.type === "line") {
       const lineGenerator = line()
         .x(p => p[0])
