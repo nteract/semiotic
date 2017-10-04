@@ -10,14 +10,6 @@ const lineStyle = {
   strokeWidth: 1
 };
 
-const mileAnnotations = [
-  {
-    type: "bounds",
-    bounds: [{ date: new Date("1/2/1999") }, { date: new Date("1/2/2001") }],
-    label: "test bounds"
-  }
-];
-
 export default (data, startEvent, duringEvent, endEvent) => {
   return (
     <div style={{ marginTop: "50px" }}>
@@ -44,7 +36,6 @@ export default (data, startEvent, duringEvent, endEvent) => {
           brush: "xBrush",
           extent: [new Date("1/2/1997"), new Date("1/2/2003")]
         }}
-        annotations={mileAnnotations}
       />
     </div>
   );
