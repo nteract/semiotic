@@ -32,7 +32,7 @@ const createResponsiveFrame = Frame =>
       const {
         responsiveWidth,
         responsiveHeight,
-        size,
+        size = [500, 500],
         dataVersion
       } = this.props;
 
