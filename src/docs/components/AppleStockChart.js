@@ -46,19 +46,26 @@ return (<DividedLine
     />)}
 
 const annotations = [
-    { type: "x", date: "7/9/1997", note: { label: "Steve Jobs Returns", align: "middle" }, color: "rgb(0, 162, 206)", dy: -10, dx: 0, connector: { end: "none" } },
-    { type: "x", date: "8/15/1998", note: { label: "iMac Release", align: "middle" }, color: "rgb(0, 162, 206)", dy: -10, dx: 0, connector: { end: "none" } },
-    { type: "x", date: "10/23/2001", note: { label: "iPod Release", align: "middle" }, color: "rgb(0, 162, 206)", dy: -10, dx: 0, connector: { end: "none" } },
-    { type: "y", close: 100, label: "Over $100", color: "rgb(182, 167, 86)", x: 350, dx: -15 },
-    { type: "enclose", label: "Stock Split", dy: 0, dx: 50, color: "rgba(179, 51, 29, 0.75)", connector: { end: "none" }, coordinates: [
-        {
-            "date": "6/21/2000",
-            "close": 55.62
-        }, {
-            "date": "6/20/2000",
-            "close": 101.25
-        }
-    ] },
+  {
+    className: "dot-com-bubble",
+    type: "bounds",
+    bounds: [{ date: new Date("1/2/1997") }, { date: new Date("1/2/2001") }],
+    label: "The dot-com bubble",
+    dx: 350
+  },
+  { type: "x", date: "7/9/1997", note: { label: "Steve Jobs Returns", align: "middle" }, color: "rgb(0, 162, 206)", dy: -10, dx: 0, connector: { end: "none" } },
+  { type: "x", date: "8/15/1998", note: { label: "iMac Release", align: "middle" }, color: "rgb(0, 162, 206)", dy: -10, dx: 0, connector: { end: "none" } },
+  { type: "x", date: "10/23/2001", note: { label: "iPod Release", align: "middle" }, color: "rgb(0, 162, 206)", dy: -10, dx: 0, connector: { end: "none" } },
+  { type: "y", close: 100, label: "Over $100", color: "rgb(182, 167, 86)", x: 350, dx: -15 },
+  { type: "enclose", label: "Stock Split", dy: 0, dx: 50, color: "rgba(179, 51, 29, 0.75)", connector: { end: "none" }, coordinates: [
+      {
+          "date": "6/21/2000",
+          "close": 55.62
+      }, {
+          "date": "6/20/2000",
+          "close": 101.25
+      }
+  ] },
 ]
 
 const customTooltip = d => <div className="tooltip-content">

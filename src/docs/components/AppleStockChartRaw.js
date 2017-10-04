@@ -27,6 +27,13 @@ const thresholdLine = ({ d, i, xScale, yScale }) => {
 
 const annotations = [
   {
+    className: "dot-com-bubble",
+    type: "bounds",
+    bounds: [{ date: new Date("1/2/1997") }, { date: new Date("1/2/2001") }],
+    label: "The dot-com bubble",
+    dx: 350
+  },
+  {
     type: "x",
     date: "7/9/1997",
     note: { label: "Steve Jobs Returns", align: "middle" },
@@ -83,14 +90,17 @@ const annotations = [
 
 const customTooltip = d => (
   <div className="tooltip-content">
-    <p>Date: {d.date}</p>
+    <p>
+      Date:{" "}
+      {d.date.getMonth() + "-" + d.date.getDate() + "-" + d.date.getYear()}
+    </p>
     <p>Closing Price: ${d.close}</p>
   </div>
 );
 
 export default (
   <XYFrame
-    size={[750, 300]}
+    size={[700, 300]}
     xScaleType={scaleTime()}
     xAccessor={d => new Date(d.date)}
     yAccessor={"close"}
@@ -99,8 +109,14 @@ export default (
     customLineMark={thresholdLine}
     axes={chartAxes}
     annotations={annotations}
-    margin={50}
+    margin={{ top: 50, left: 40, right: 10, bottom: 40 }}
     hoverAnnotation={true}
     tooltipContent={customTooltip}
+    additionalDefs={
+      <linearGradient id="bubbleGradient">
+        <stop offset="5%" stopColor="#F60" />
+        <stop offset="95%" stopColor="#FF6" />
+      </linearGradient>
+    }
   />
 );
