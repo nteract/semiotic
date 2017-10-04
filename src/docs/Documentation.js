@@ -26,6 +26,7 @@ import NeighborhoodMap from "./components/NeighborhoodMap";
 import BaseballMap from "./components/BaseballMap";
 import WordCloud from "./components/WordCloud";
 import SwarmBrush from "./components/SwarmBrush";
+import LineBrush from "./components/LineBrush";
 import DivergingStackedBar from "./components/DivergingStackedBar";
 import Sankey from "./components/Sankey";
 import Chord from "./components/Chord";
@@ -60,6 +61,7 @@ const components = {
   homerunmap: { docs: BaseballMap, parent: "xyframe" },
   neighborhoodmap: { docs: NeighborhoodMap, parent: "xyframe" },
   realtimeline: { docs: RealtimeXYFrame, parent: "xyframe" },
+  linebrush: { docs: LineBrush, parent: "xyframe" },
   orframe: { docs: ORFrameDocs },
   violin: { docs: Violin, parent: "orframe" },
   parallelcoordinates: { docs: ParallelCoordinates, parent: "orframe" },

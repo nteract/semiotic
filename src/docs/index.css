@@ -270,10 +270,10 @@ g.resize > rect {
 }
 
 .difference-overlay-a {
-  stroke: blue;
+  stroke: rgba(0, 162, 206, 0.5);
 }
 .difference-overlay-b {
-  stroke: red;
+  stroke: rgba(179, 51, 29, 0.5);
 }
 
 .example-wrapper {
@@ -412,4 +412,11 @@ circle.frame-hover {
   fill: none;
   stroke: #ffffff;
   stroke-width: 1.5;
+}
+
+.dot-com-bubble .annotation-subject path {
+  fill-opacity: 0.1;
+  opacity: 1;
+  stroke-opacity: 0;
+  fill: url(#bubbleGradient);
 }
