@@ -626,28 +626,68 @@ export default class CreatingLineChart extends React.Component {
       ),
       source: `import { curveCardinal } from "d3-shape";
 
-      <XYFrame
-            title={"Two Movies"}
-            size={[700, 400]}
-            lines={movies}
-            xAccessor={"week"}
-            yAccessor={"grossWeekly"}
-            lineStyle={{ stroke: "#00a2ce" }}
-            lineType={{ type: "line", interpolator: curveCardinal }}
-            lineRenderMode={"sketchy"}
-            showLinePoints={true}
-            pointStyle={{ fill: "#00a2ce" }}
-            hoverAnnotation={true}
-            margin={{ left: 80, bottom: 50, right: 10, top: 40 }}
-            axes={[
-              {
-                orient: "left"
-              },
-              {
-                orient: "bottom"
-              }
-            ]}
-          />`
+export default class CreatingLineChart extends React.Component {
+  constructor(props) {
+    super(props);
+    this.lineHoverBehavior = this.lineHoverBehavior.bind(this);
+    this.state = {
+      hoverPoint: undefined
+    };
+  }
+  lineHoverBehavior(d) {
+    this.setState({ hoverPoint: d });
+  }
+
+  lineAnnotater({ d, xScale, yScale }) {
+    if (!d.type === "hover") {
+      return null;
+    }
+
+    return (
+      <circle
+        r={10}
+        style={{ fill: "none", stroke: "red", strokeWidth: 5 }}
+        cx={xScale(d.week)}
+        cy={yScale(d.grossWeekly)}
+      />
+    );
+  }
+
+  render() {
+
+  <XYFrame
+    title={"Two Movies"}
+    size={[700, 400]}
+    lines={movies}
+    xAccessor={"week"}
+    yAccessor={"grossWeekly"}
+    lineStyle={{ stroke: "#00a2ce" }}
+    lineType={{ type: "line", interpolator: curveCardinal }}
+    showLinePoints={true}
+    pointStyle={{ fill: "#00a2ce" }}
+    hoverAnnotation={true}
+    margin={{ left: 80, bottom: 50, right: 10, top: 40 }}
+    axes={[
+      {
+        orient: "left"
+      },
+      {
+        orient: "bottom"
+      }
+    ]}
+    customHoverBehavior={this.lineHoverBehavior}
+    lineRenderMode="sketchy"
+    annotations={
+      this.state.hoverPoint ? (
+        [Object.assign({}, this.state.hoverPoint, { type: "hover" })]
+      ) : (
+        undefined
+      )
+    }
+    svgAnnotationRules={this.lineAnnotater}
+  />
+}
+}`
     });
 
     examples.push({
