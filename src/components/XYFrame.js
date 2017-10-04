@@ -51,6 +51,8 @@ const chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 for (let i = 32; i > 0; --i)
   xyframeKey += chars[Math.floor(Math.random() * chars.length)];
 
+const xyframeSettings = ["margin"];
+
 function linetypeChange(oldProps, newProps) {
   const oLT = oldProps.lineType || oldProps.customLineType;
   const nLT = newProps.lineType || newProps.customLineType;
@@ -106,6 +108,11 @@ class XYFrame extends React.Component {
     this.yAccessor = null;
     this.xScale = null;
     this.yScale = null;
+
+    this.settingsMap = new Map();
+    xyframeSettings.forEach(d => {
+      this.settingsMap.set(d, new Map());
+    });
   }
 
   componentWillMount() {

@@ -6,6 +6,23 @@ import { curveMonotoneX, curveCardinal } from "d3-shape";
 import DocumentComponent from "../layout/DocumentComponent";
 
 const components = [];
+const curvedCardinalLine = { type: "line", interpolator: curveCardinal };
+const interactiveLineStyle = { stroke: "#00a2ce" };
+const interactivePointStyle = () => ({
+  fill: "#00a2ce"
+});
+const interactiveXAccessor = d => d.week;
+const interactiveYAccessor = d => d.grossWeekly;
+
+const interactiveChartMargin = { left: 80, bottom: 50, right: 10, top: 40 };
+const interactiveChartAxes = [
+  {
+    orient: "left"
+  },
+  {
+    orient: "bottom"
+  }
+];
 
 const movies = [
   {
@@ -330,6 +347,32 @@ components.push({
 });
 
 export default class CreatingLineChart extends React.Component {
+  constructor(props) {
+    super(props);
+    this.lineHoverBehavior = this.lineHoverBehavior.bind(this);
+    this.state = {
+      hoverPoint: undefined
+    };
+  }
+  lineHoverBehavior(d) {
+    this.setState({ hoverPoint: d });
+  }
+
+  lineAnnotater({ d, xScale, yScale }) {
+    if (!d.type === "hover") {
+      return null;
+    }
+
+    return (
+      <circle
+        r={10}
+        style={{ fill: "none", stroke: "red", strokeWidth: 5 }}
+        cx={xScale(d.week)}
+        cy={yScale(d.grossWeekly)}
+      />
+    );
+  }
+
   render() {
     const examples = [];
     examples.push({
@@ -414,6 +457,7 @@ export default class CreatingLineChart extends React.Component {
           <XYFrame
             title={"Two Movies"}
             size={[700, 400]}
+            dataVersion="fixed"
             lines={movies}
             xAccessor={"week"}
             yAccessor={"grossWeekly"}
@@ -479,6 +523,7 @@ export default class CreatingLineChart extends React.Component {
           <XYFrame
             title={"Two Movies"}
             size={[700, 400]}
+            dataVersion="fixed"
             lines={movies}
             xAccessor={"week"}
             yAccessor={"grossWeekly"}
@@ -497,6 +542,85 @@ export default class CreatingLineChart extends React.Component {
                 orient: "bottom"
               }
             ]}
+          />
+        </div>
+      ),
+      source: `import { curveCardinal } from "d3-shape";
+
+      <XYFrame
+            title={"Two Movies"}
+            size={[700, 400]}
+            lines={movies}
+            xAccessor={"week"}
+            yAccessor={"grossWeekly"}
+            lineStyle={{ stroke: "#00a2ce" }}
+            lineType={{ type: "line", interpolator: curveCardinal }}
+            lineRenderMode={"sketchy"}
+            showLinePoints={true}
+            pointStyle={{ fill: "#00a2ce" }}
+            hoverAnnotation={true}
+            margin={{ left: 80, bottom: 50, right: 10, top: 40 }}
+            axes={[
+              {
+                orient: "left"
+              },
+              {
+                orient: "bottom"
+              }
+            ]}
+          />`
+    });
+
+    examples.push({
+      name: "Line Chart with Interactivity",
+      demo: (
+        <div>
+          <p>
+            If you want to add interactivity to highlight a point, you can do so
+            by writing a custom annotation rule and passing the hovered point
+            information into your annotations. Once you start using custom
+            interaction and sending new data to an XYFrame, you can take
+            advantage of the dataVersion prop to tell the frame if the data has
+            changed. If it is passed a dataVersion, the frame will only update
+            the data visualization portion of the frame if the dataVersion value
+            changes. This is a simple way to optimize your chart when you can't
+            ensure that you're sending the same literal for the data and various
+            settings. In this case, we set the dataVersion to "fixed" because
+            the data will never change. The text "fixed" isn't a special case,
+            it could have been "no" or 8 or any other value, it's the fact that
+            the value doesn't change that keeps it from updating. We're still
+            sending different settings to the chart via the annotations setting
+            but it's only updating the annotation layer.
+          </p>
+          <p>
+            A red circular ring is drawn on the hovered point because we define
+            a custom rule to handle that dynamic annotation.
+          </p>
+
+          <XYFrame
+            title={"Two Movies"}
+            size={[700, 400]}
+            dataVersion="fixed"
+            lines={movies}
+            xAccessor={interactiveXAccessor}
+            yAccessor={interactiveYAccessor}
+            lineStyle={interactiveLineStyle}
+            lineType={curvedCardinalLine}
+            showLinePoints={true}
+            pointStyle={interactivePointStyle}
+            hoverAnnotation={true}
+            margin={interactiveChartMargin}
+            axes={interactiveChartAxes}
+            customHoverBehavior={this.lineHoverBehavior}
+            lineRenderMode="sketchy"
+            annotations={
+              this.state.hoverPoint ? (
+                [Object.assign({}, this.state.hoverPoint, { type: "hover" })]
+              ) : (
+                undefined
+              )
+            }
+            svgAnnotationRules={this.lineAnnotater}
           />
         </div>
       ),
@@ -547,6 +671,7 @@ export default class CreatingLineChart extends React.Component {
             title={"Two Movies"}
             size={[700, 400]}
             lines={movies}
+            dataVersion="fixed"
             xScaleType={scaleTime()}
             xAccessor={d => new Date(d.date)}
             yAccessor={"grossWeekly"}
@@ -607,6 +732,7 @@ export default class CreatingLineChart extends React.Component {
             title={"Two Movies"}
             size={[700, 400]}
             lines={movies}
+            dataVersion="fixed"
             xScaleType={scaleTime()}
             xAccessor={d => new Date(d.date)}
             yAccessor={"grossWeekly"}
