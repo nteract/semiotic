@@ -15,6 +15,7 @@ const contourMap = d => [d.xy.x, d.xy.y];
 
 const verticalXYSorting = (a, b) => a.xy.y - b.xy.y;
 const horizontalXYSorting = (a, b) => b.xy.x - a.xy.x;
+const emptyObjectReturnFn = () => ({});
 
 export function boxplotRenderFn({
   data,
@@ -29,6 +30,8 @@ export function boxplotRenderFn({
   margin,
   chartSize
 }) {
+  const summaryElementStylingFn = type.elementStyleFn || emptyObjectReturnFn;
+
   const keys = Object.keys(data);
   const renderedSummaryMarks = [];
   keys.forEach((key, summaryI) => {
@@ -54,10 +57,18 @@ export function boxplotRenderFn({
       midLineX2,
       bottomLineX1,
       bottomLineX2,
-      rectWidth,
-      rectHeight,
-      rectY,
-      rectX,
+      rectTopWidth,
+      rectTopHeight,
+      rectTopY,
+      rectTopX,
+      rectBottomWidth,
+      rectBottomHeight,
+      rectBottomY,
+      rectBottomX,
+      rectWholeWidth,
+      rectWholeHeight,
+      rectWholeY,
+      rectWholeX,
       topLineY1,
       topLineY2,
       bottomLineY1,
@@ -93,10 +104,18 @@ export function boxplotRenderFn({
       midLineX2 = columnWidth / 2;
       bottomLineX1 = -columnWidth / 2;
       bottomLineX2 = columnWidth / 2;
-      rectWidth = columnWidth;
-      rectHeight = summaryDataNest[1] - summaryDataNest[3];
-      rectY = summaryDataNest[3];
-      rectX = -columnWidth / 2;
+      rectBottomWidth = columnWidth;
+      rectBottomHeight = summaryDataNest[1] - summaryDataNest[2];
+      rectBottomY = summaryDataNest[2];
+      rectBottomX = -columnWidth / 2;
+      rectTopWidth = columnWidth;
+      rectTopHeight = summaryDataNest[2] - summaryDataNest[3];
+      rectWholeWidth = columnWidth;
+      rectWholeHeight = summaryDataNest[1] - summaryDataNest[3];
+      rectWholeY = summaryDataNest[3];
+      rectWholeX = -columnWidth / 2;
+      rectTopY = summaryDataNest[3];
+      rectTopX = -columnWidth / 2;
       topLineY1 = summaryDataNest[0];
       topLineY2 = summaryDataNest[0];
       bottomLineY1 = summaryDataNest[4];
@@ -127,10 +146,18 @@ export function boxplotRenderFn({
       midLineY2 = columnWidth / 2;
       bottomLineY1 = -columnWidth / 2;
       bottomLineY2 = columnWidth / 2;
-      rectHeight = columnWidth;
-      rectWidth = summaryDataNest[3] - summaryDataNest[1];
-      rectX = summaryDataNest[1];
-      rectY = -columnWidth / 2;
+      rectTopHeight = columnWidth;
+      rectTopWidth = summaryDataNest[3] - summaryDataNest[2];
+      rectTopX = summaryDataNest[2];
+      rectTopY = -columnWidth / 2;
+      rectBottomHeight = columnWidth;
+      rectBottomWidth = summaryDataNest[2] - summaryDataNest[1];
+      rectBottomX = summaryDataNest[1];
+      rectBottomY = -columnWidth / 2;
+      rectWholeHeight = columnWidth;
+      rectWholeWidth = summaryDataNest[3] - summaryDataNest[1];
+      rectWholeX = summaryDataNest[1];
+      rectWholeY = -columnWidth / 2;
       topLineX1 = summaryDataNest[0];
       topLineX2 = summaryDataNest[0];
       bottomLineX1 = summaryDataNest[4];
@@ -162,10 +189,14 @@ export function boxplotRenderFn({
       midLineX2 = columnWidth / 2;
       bottomLineX1 = -columnWidth / 2;
       bottomLineX2 = columnWidth / 2;
-      rectWidth = columnWidth;
-      rectHeight = summaryDataNest[1] - summaryDataNest[3];
-      rectY = summaryDataNest[3];
-      rectX = -columnWidth / 2;
+      rectTopWidth = columnWidth;
+      rectTopHeight = summaryDataNest[1] - summaryDataNest[3];
+      rectTopY = summaryDataNest[3];
+      rectTopX = -columnWidth / 2;
+      rectBottomWidth = columnWidth;
+      rectBottomHeight = summaryDataNest[1] - summaryDataNest[3];
+      rectBottomY = summaryDataNest[3];
+      rectBottomX = -columnWidth / 2;
       topLineY1 = summaryDataNest[0];
       topLineY2 = summaryDataNest[0];
       bottomLineY1 = summaryDataNest[4];
@@ -177,28 +208,37 @@ export function boxplotRenderFn({
 
       const bottomLineArcGenerator = arc()
         .innerRadius(bottomLineY1 / 2)
-        .outerRadius(bottomLineY1 / 2)
-        .padAngle(summary.pct_padding * twoPI);
+        .outerRadius(bottomLineY1 / 2);
+      //        .padAngle(summary.pct_padding * twoPI);
 
       const topLineArcGenerator = arc()
         .innerRadius(topLineY1 / 2)
-        .outerRadius(topLineY1 / 2)
-        .padAngle(summary.pct_padding * twoPI);
+        .outerRadius(topLineY1 / 2);
+      //        .padAngle(summary.pct_padding * twoPI);
 
       const midLineArcGenerator = arc()
         .innerRadius(midLineY1 / 2)
-        .outerRadius(midLineY1 / 2)
-        .padAngle(summary.pct_padding * twoPI);
+        .outerRadius(midLineY1 / 2);
+      //        .padAngle(summary.pct_padding * twoPI);
 
-      const bodyArcGenerator = arc()
+      const bodyArcTopGenerator = arc()
         .innerRadius(summaryDataNest[1] / 2)
-        .outerRadius(summaryDataNest[3] / 2)
-        .padAngle(summary.pct_padding * twoPI);
+        .outerRadius(midLineY1 / 2);
+      //        .padAngle(summary.pct_padding * twoPI);
 
-      let startAngle = summary.pct_start;
-      let endAngle = summary.pct + summary.pct_start;
+      const bodyArcBottomGenerator = arc()
+        .innerRadius(midLineY1 / 2)
+        .outerRadius(summaryDataNest[3] / 2);
+      //        .padAngle(summary.pct_padding * twoPI);
+
+      const bodyArcWholeGenerator = arc()
+        .innerRadius(summaryDataNest[1] / 2)
+        .outerRadius(summaryDataNest[3] / 2);
+      //        .padAngle(summary.pct_padding * twoPI);
+
+      let startAngle = summary.pct_start + summary.pct_padding / 2;
+      let endAngle = summary.pct + summary.pct_start - summary.pct_padding / 2;
       let midAngle = summary.pct / 2 + summary.pct_start;
-
       startAngle *= twoPI;
       endAngle *= twoPI;
 
@@ -227,42 +267,82 @@ export function boxplotRenderFn({
         >
           <Mark
             renderMode={renderValue}
-            markType="path"
-            d={topLineArcGenerator({ startAngle, endAngle })}
-            style={Object.assign({ strokeWidth: 4 }, calculatedSummaryStyle, {
-              fill: "none"
-            })}
-          />
-          <Mark
-            renderMode={renderValue}
-            markType="path"
-            d={midLineArcGenerator({ startAngle, endAngle })}
-            style={Object.assign({ strokeWidth: 4 }, calculatedSummaryStyle, {
-              fill: "none"
-            })}
-          />
-          <Mark
-            renderMode={renderValue}
-            markType="path"
-            d={bottomLineArcGenerator({ startAngle, endAngle })}
-            style={Object.assign({ strokeWidth: 4 }, calculatedSummaryStyle, {
-              fill: "none"
-            })}
-          />
-          <Mark
-            renderMode={renderValue}
-            markType="path"
-            d={bodyArcGenerator({ startAngle, endAngle })}
-            style={Object.assign({ strokeWidth: 4 }, calculatedSummaryStyle)}
-          />
-          <Mark
-            renderMode={renderValue}
             markType="line"
             x1={bottomPoint[0]}
             x2={topPoint[0]}
             y1={bottomPoint[1]}
             y2={topPoint[1]}
-            style={Object.assign({ strokeWidth: 2 }, calculatedSummaryStyle)}
+            style={Object.assign(
+              { strokeWidth: 2 },
+              calculatedSummaryStyle,
+              summaryElementStylingFn("whisker")
+            )}
+          />
+          <Mark
+            renderMode={renderValue}
+            markType="path"
+            d={topLineArcGenerator({ startAngle, endAngle })}
+            style={Object.assign(
+              { strokeWidth: 4 },
+              calculatedSummaryStyle,
+              { fill: "none" },
+              summaryElementStylingFn("max")
+            )}
+          />
+          <Mark
+            renderMode={renderValue}
+            markType="path"
+            d={midLineArcGenerator({ startAngle, endAngle })}
+            style={Object.assign(
+              { strokeWidth: 4 },
+              calculatedSummaryStyle,
+              { fill: "none" },
+              summaryElementStylingFn("median")
+            )}
+          />
+          <Mark
+            renderMode={renderValue}
+            markType="path"
+            d={bottomLineArcGenerator({ startAngle, endAngle })}
+            style={Object.assign(
+              { strokeWidth: 4 },
+              calculatedSummaryStyle,
+              { fill: "none" },
+              summaryElementStylingFn("min")
+            )}
+          />
+          <Mark
+            renderMode={renderValue}
+            markType="path"
+            d={bodyArcWholeGenerator({ startAngle, endAngle })}
+            style={Object.assign(
+              { strokeWidth: 4 },
+              calculatedSummaryStyle,
+              summaryElementStylingFn("iqrarea")
+            )}
+          />
+
+          <Mark
+            renderMode={renderValue}
+            markType="path"
+            d={bodyArcTopGenerator({ startAngle, endAngle })}
+            style={Object.assign(
+              {},
+              calculatedSummaryStyle,
+              { fill: "none", stroke: "none" },
+              summaryElementStylingFn("q3area")
+            )}
+          />
+          <Mark
+            renderMode={renderValue}
+            markType="path"
+            d={bodyArcBottomGenerator({ startAngle, endAngle })}
+            style={Object.assign(
+              {},
+              calculatedSummaryStyle,
+              { fill: "none", stroke: "none" },
+              summaryElementStylingFn("q1area")
+            )}
           />
         </g>
       );
@@ -283,7 +363,8 @@ export function boxplotRenderFn({
             y2={extentlineY2}
             style={Object.assign(
               { strokeWidth: "2px" },
-              calculatedSummaryStyle
+              calculatedSummaryStyle,
+              summaryElementStylingFn("whisker")
             )}
           />
           <Mark
@@ -295,7 +376,8 @@ export function boxplotRenderFn({
             y2={topLineY2}
             style={Object.assign(
               { strokeWidth: "2px" },
-              calculatedSummaryStyle
+              calculatedSummaryStyle,
+              summaryElementStylingFn("min")
             )}
           />
           <Mark
@@ -307,7 +389,50 @@ export function boxplotRenderFn({
             y2={bottomLineY2}
             style={Object.assign(
               { strokeWidth: "2px" },
-              calculatedSummaryStyle
+              calculatedSummaryStyle,
+              summaryElementStylingFn("max")
+            )}
+          />
+          <Mark
+            renderMode={renderValue}
+            markType="rect"
+            x={rectWholeX}
+            width={rectWholeWidth}
+            y={rectWholeY}
+            height={rectWholeHeight}
+            style={Object.assign(
+              { strokeWidth: "1px" },
+              calculatedSummaryStyle,
+              summaryElementStylingFn("iqrarea")
+            )}
+          />
+
+          <Mark
+            renderMode={renderValue}
+            markType="rect"
+            x={rectTopX}
+            width={rectTopWidth}
+            y={rectTopY}
+            height={rectTopHeight}
+            style={Object.assign(
+              {},
+              calculatedSummaryStyle,
+              { fill: "none", stroke: "none" },
+              summaryElementStylingFn("q3area")
+            )}
+          />
+          <Mark
+            renderMode={renderValue}
+            markType="rect"
+            x={rectBottomX}
+            width={rectBottomWidth}
+            y={rectBottomY}
+            height={rectBottomHeight}
+            style={Object.assign(
+              {},
+              calculatedSummaryStyle,
+              { fill: "none", stroke: "none" },
+              summaryElementStylingFn("q1area")
             )}
           />
           <Mark
@@ -318,20 +443,9 @@ export function boxplotRenderFn({
             y1={midLineY1}
             y2={midLineY2}
             style={Object.assign(
-              { strokeWidth: "4px" },
-              calculatedSummaryStyle
-            )}
-          />
-          <Mark
-            renderMode={renderValue}
-            markType="rect"
-            x={rectX}
-            width={rectWidth}
-            y={rectY}
-            height={rectHeight}
-            style={Object.assign(
-              { strokeWidth: "1px" },
-              calculatedSummaryStyle
+              { strokeWidth: "2px" },
+              calculatedSummaryStyle,
+              summaryElementStylingFn("median")
             )}
           />
         </g>

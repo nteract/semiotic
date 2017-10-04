@@ -196,8 +196,8 @@ export function barLayout({
 
         const arcGenerator = arc()
           .innerRadius(innerSize)
-          .outerRadius(outerSize)
-          .padAngle(ordset.pct_padding * twoPI);
+          .outerRadius(outerSize);
+        //          .padAngle(ordset.pct_padding * twoPI);
 
         let angle = ordset.pct;
         let startAngle = ordset.pct_start;
