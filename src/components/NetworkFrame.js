@@ -870,17 +870,16 @@ class networkFrame extends React.Component {
           });
         });
       }
-      this.graphSettings = networkSettings;
-      this.graphSettings.numberOfNodes = nodes.length;
-      this.graphSettings.numberOfEdges = edges.length;
-    } else if (typeof networkSettings.type === "function") {
-      const customProjectedGraph = networkSettings.type({
-        nodes: projectedNodes,
-        edges: projectedEdges
-      });
 
-      projectedEdges = customProjectedGraph.edges || [];
-      projectedNodes = customProjectedGraph.nodes || [];
+      else if (typeof networkSettings.type === "function") {
+        // console.log("networkSettings is a function")
+        // console.log(networkSettings)
+        const customProjectedGraph = networkSettings.type({
+          nodes: projectedNodes,
+          edges: projectedEdges
+        });
+
+      } 
 
       this.graphSettings = networkSettings;
       this.graphSettings.numberOfNodes = nodes.length;
