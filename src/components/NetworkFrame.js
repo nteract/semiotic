@@ -419,6 +419,8 @@ class networkFrame extends React.Component {
     });
     //Support bubble chart with circle pack and with force
     if (networkSettings.type === "sankey") {
+      let initCustomNodeIcon = customNodeIcon
+
       customNodeIcon = ({
         d,
         i,
@@ -429,22 +431,33 @@ class networkFrame extends React.Component {
         key,
         className,
         transform
-      }) => (
-        <Mark
-          renderMode={renderMode ? renderMode(d, i) : undefined}
-          key={key}
-          className={className}
-          transform={transform}
-          markType="rect"
-          height={d.height}
-          width={d.width}
-          x={-d.width / 2}
-          y={-d.height / 2}
-          rx={0}
-          ry={0}
-          style={nodeStyleFn(d)}
-        />
-      );
+      }) => {
+        if (initCustomNodeIcon === undefined){
+          return (
+            <Mark
+              renderMode={renderMode ? renderMode(d, i) : undefined}
+              key={key}
+              className={className}
+              transform={transform}
+              markType="rect"
+              height={d.height}
+              width={d.width}
+              x={-d.width / 2}
+              y={-d.height / 2}
+              rx={0}
+              ry={0}
+              style={nodeStyleFn(d)}
+            />
+          );
+        }
+        else {
+          return initCustomNodeIcon({
+            d,i,renderKeyFn,
+            styleFn,classFn,renderMode,
+            key, className,transform
+          })
+        }
+      }
     } else if (networkSettings.type === "chord") {
       customNodeIcon = ({
         d,
