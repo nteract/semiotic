@@ -1105,4 +1105,4 @@ XYFrame.propTypes = {
   downloadFields: PropTypes.array //additional fields aside from x,y to add to the csv
 };
 
-module.exports = XYFrame;
+export default XYFrame;

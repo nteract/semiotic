@@ -65,4 +65,4 @@ MinimapXYFrame.propTypes = {
   renderBefore: PropTypes.oneOfType([PropTypes.array, PropTypes.object])
 };
 
-module.exports = MinimapXYFrame;
+export default MinimapXYFrame;

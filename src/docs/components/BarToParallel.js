@@ -1,6 +1,6 @@
 import React from "react";
 import { ORFrame } from "../../components";
-import RaisedButton from "material-ui/RaisedButton";
+import Button from "material-ui/Button";
 
 const stepColors = {
   home: "#007190",
@@ -591,22 +591,26 @@ export default class InformationModel extends React.Component {
       <div className="infomodel-proto infomodel">
         <div className="infomodel-buttons">
           {this.state.step === 0 ? null : (
-            <RaisedButton
-              primary
-              label={"Back!"}
+            <Button
+              raised
+              color="primary"
               onTouchTap={() => {
                 this.setState({ step: this.state.step - 1 });
               }}
-            />
+            >
+              Back!
+            </Button>
           )}
           {this.state.step === stepSettings.length - 1 ? null : (
-            <RaisedButton
-              primary
-              label={"Forward!"}
+            <Button
+              raised
+              color="primary"
               onTouchTap={() => {
                 this.setState({ step: this.state.step + 1 });
               }}
-            />
+            >
+              Forward!
+            </Button>
           )}
         </div>
         <ORFrame

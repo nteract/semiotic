@@ -385,4 +385,4 @@ InteractionLayer.propTypes = {
   margin: PropTypes.object
 };
 
-module.exports = InteractionLayer;
+export default InteractionLayer;

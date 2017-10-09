@@ -3,11 +3,13 @@ import DocumentComponent from "../layout/DocumentComponent";
 import { ORFrame } from "../../components";
 import { randomNormal } from "d3-random";
 import { funnelData } from "../example_settings/orframe";
-import RaisedButton from "material-ui/RaisedButton";
+import Button from "material-ui/Button";
 import { sum } from "d3-array";
-import SelectField from "material-ui/SelectField";
-import MenuItem from "material-ui/MenuItem";
-import Icon from "material-ui/svg-icons/content/sort";
+import Select from "material-ui/Select";
+import { MenuItem } from "material-ui/Menu";
+import Icon from "material-ui-icons/Sort";
+import Input, { InputLabel } from "material-ui/Input";
+import { FormControl, FormHelperText } from "material-ui/Form";
 
 const monthHash = {};
 
@@ -354,127 +356,130 @@ export default class ORFrameDocs extends React.Component {
 
     const buttons = [
       <div key="button-0">
-        <span>
-          <SelectField
-            floatingLabelText="Data Type"
+        <FormControl>
+          <InputLabel htmlFor="data-type-input">Data Type</InputLabel>
+          <Select
             value={this.state.dataType}
-            onChange={(e, i, value) => this.setState({ dataType: value })}
+            onChange={e => this.setState({ dataType: e.target.value })}
           >
             {dataTypeOptions}
-          </SelectField>
-        </span>
+          </Select>
+        </FormControl>
       </div>,
       <div key="button-1">
-        <span>
-          <SelectField
-            floatingLabelText="type"
+        <FormControl>
+          <InputLabel htmlFor="type-input">type</InputLabel>
+          <Select
             value={this.state.type}
-            onChange={(e, i, value) => this.setState({ type: value })}
+            onChange={e => this.setState({ type: e.target.value })}
           >
             {typeOptions}
-          </SelectField>
-        </span>
+          </Select>
+        </FormControl>
       </div>,
       <div key="button-1-0">
-        <span>
-          <SelectField
-            floatingLabelText="summaryType"
+        <FormControl>
+          <InputLabel htmlFor="summary-type-input">summaryType</InputLabel>
+          <Select
             value={this.state.summaryType}
-            onChange={(e, i, value) =>
-              this.setState({ dataType: "group", summaryType: value })}
+            onChange={e =>
+              this.setState({ dataType: "group", summaryType: e.target.value })}
           >
             {summaryOptions}
-          </SelectField>
-        </span>
+          </Select>
+        </FormControl>
       </div>,
       <div key="button-2">
-        <span>
-          <SelectField
-            floatingLabelText="projection"
+        <FormControl>
+          <InputLabel htmlFor="projection-input">projection</InputLabel>
+          <Select
             value={this.state.projection}
-            onChange={(e, i, value) => this.setState({ projection: value })}
+            onChange={e => this.setState({ projection: e.target.value })}
           >
             {projectionOptions}
-          </SelectField>
-        </span>
+          </Select>
+        </FormControl>
       </div>,
       <div key="button-3">
-        <span>
-          <SelectField
-            floatingLabelText="dynamicColumnWidth"
+        <FormControl>
+          <InputLabel htmlFor="dynamic-column-width-input">
+            dynamicColumnWidth
+          </InputLabel>
+          <Select
             value={this.state.dynamicColumnWidth}
-            onChange={(e, i, value) =>
-              this.setState({ dynamicColumnWidth: value })}
+            onChange={e =>
+              this.setState({ dynamicColumnWidth: e.target.value })}
           >
             {cwOptions}
-          </SelectField>
-        </span>
+          </Select>
+        </FormControl>
       </div>,
       <div key="button-4">
-        <span>
-          <SelectField
-            floatingLabelText="rAccessor"
+        <FormControl>
+          <InputLabel htmlFor="r-accessor-input">rAccessor</InputLabel>
+          <Select
             value={this.state.rAccessor}
-            onChange={(e, i, value) => this.setState({ rAccessor: value })}
+            onChange={e => this.setState({ rAccessor: e.target.value })}
           >
             {rAccessorOptions}
-          </SelectField>
-        </span>
+          </Select>
+        </FormControl>
       </div>,
       <div key="button-5">
-        <span>
-          <SelectField
-            floatingLabelText="renderMode"
+        <FormControl>
+          <InputLabel htmlFor="render-mode-input">renderMode</InputLabel>
+          <Select
             value={this.state.renderFn}
-            onChange={(e, i, value) => this.setState({ renderFn: value })}
+            onChange={e => this.setState({ renderFn: e.target.value })}
           >
             {renderFnOptions}
-          </SelectField>
-        </span>
+          </Select>
+        </FormControl>
       </div>,
       <div key="button-6">
-        <span>
-          <SelectField
-            floatingLabelText="connector"
+        <FormControl>
+          <InputLabel htmlFor="connector-input">connector</InputLabel>
+          <Select
             value={this.state.connector}
-            onChange={(e, i, value) => this.setState({ connector: value })}
+            onChange={e => this.setState({ connector: e.target.value })}
           >
             {connectorOptions}
-          </SelectField>
-        </span>
+          </Select>
+        </FormControl>
       </div>,
       <div key="button-7">
-        <span>
-          <SelectField
-            floatingLabelText="annotations"
+        <FormControl>
+          <InputLabel htmlFor="annotations-input">annotations</InputLabel>
+          <Select
             value={this.state.annotations}
-            onChange={(e, i, value) => this.setState({ annotations: value })}
+            onChange={e => this.setState({ annotations: e.target.value })}
           >
             {annotationOptions}
-          </SelectField>
-        </span>
+          </Select>
+        </FormControl>
       </div>,
       <div key="button-8">
-        <span>
-          <SelectField
-            floatingLabelText="oPadding"
+        <FormControl>
+          <InputLabel htmlFor="o-padding-input">oPadding</InputLabel>
+          <Select
             value={this.state.oPadding}
-            onChange={(e, i, value) => this.setState({ oPadding: value })}
+            onChange={e => this.setState({ oPadding: e.target.value })}
           >
             {oPaddingOptions}
-          </SelectField>
-        </span>
+          </Select>
+        </FormControl>
       </div>,
       <div key="button-9">
-        <span>
-          <SelectField
+        <FormControl>
+          <InputLabel htmlFor="hover-behavior-input">hoverBehavior</InputLabel>
+          <Select
             floatingLabelText="hoverBehavior"
             value={this.state.hoverBehavior}
-            onChange={(e, i, value) => this.setState({ hoverBehavior: value })}
+            onChange={e => this.setState({ hoverBehavior: e.target.value })}
           >
             {hoverOptions}
-          </SelectField>
-        </span>
+          </Select>
+        </FormControl>
       </div>
     ];
 
@@ -493,12 +498,14 @@ export default class ORFrameDocs extends React.Component {
       name: "Basic",
       demo: (
         <div>
-          <RaisedButton
-            primary
-            label={"ORFrame API"}
+          <Button
+            color="primary"
+            raised
             onTouchTap={() =>
               window.open(`https://github.com/emeeks/semiotic/wiki/orframe`)}
-          />
+          >
+            ORFrame API
+          </Button>
           <ORFrame
             size={[700, 700]}
             renderFn={reFn}

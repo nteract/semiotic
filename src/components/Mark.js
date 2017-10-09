@@ -14,6 +14,8 @@ import {
   reactCSSNameStyleHash
 } from "./constants/markTransition";
 
+import PropTypes from "prop-types";
+
 // components
 
 function coordsOrPathstring(d) {
@@ -23,8 +25,6 @@ function coordsOrPathstring(d) {
     .map(p => `M${p}`);
   return { length: splitToMs.length, coords: splitToMs };
 }
-
-import PropTypes from "prop-types";
 
 //@draggable
 class Mark extends React.Component {

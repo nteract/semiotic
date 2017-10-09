@@ -1,26 +1,29 @@
-import React from "react"
-import { HashRouter, Route } from "react-router-dom"
-import Home from "./Home"
-import Documentation from "./Documentation"
-import injectTapEventPlugin from "react-tap-event-plugin"
-import LayoutFooter from "./layout/Footer"
-import MuiThemeProvider from "material-ui/styles/MuiThemeProvider"
-import getMuiTheme from "material-ui/styles/getMuiTheme"
-import theme from "./theme.js"
-import "./flexboxgrid.css"
-import "./prism.css"
-import "./index.css"
+import React from "react";
+import { HashRouter, Route } from "react-router-dom";
+import Home from "./Home";
+import Documentation from "./Documentation";
+import injectTapEventPlugin from "react-tap-event-plugin";
+import LayoutFooter from "./layout/Footer";
+import { MuiThemeProvider, createMuiTheme } from "material-ui/styles";
+import theme from "./theme.js";
+import "./flexboxgrid.css";
+import "./prism.css";
+import "./index.css";
 
-injectTapEventPlugin()
+injectTapEventPlugin();
 
-const gh = "emeeks/semiotic"
+const gh = "emeeks/semiotic";
 const basename = process.env.REACT_APP_GH_PAGES_PATH
   ? `/${process.env.REACT_APP_GH_PAGES_PATH}`
-  : ""
+  : "";
+
+console.log("theme", theme);
+
+const muiTheme = createMuiTheme(theme);
 
 const Docs = test => {
   return (
-    <MuiThemeProvider muiTheme={getMuiTheme(theme)}>
+    <MuiThemeProvider theme={muiTheme}>
       <div className="container-fluid">
         <HashRouter basename={basename}>
           <div className="App">
@@ -35,9 +38,9 @@ const Docs = test => {
                         <Home />
                         <Documentation />
                       </div>
-                    )
+                    );
                   }
-                  return null
+                  return null;
                 }}
               />
               <Route path="/:component" component={Documentation} />
@@ -47,7 +50,7 @@ const Docs = test => {
         </HashRouter>
       </div>
     </MuiThemeProvider>
-  )
-}
+  );
+};
 
-export default Docs
+export default Docs;

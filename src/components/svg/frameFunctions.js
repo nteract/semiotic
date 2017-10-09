@@ -3,16 +3,10 @@ import React from "react";
 import { drawAreaConnector } from "../svg/SvgHelper";
 import Mark from "../Mark";
 import {
-  clusterBarRenderFn,
-  swarmRenderFn,
-  barRenderFn,
-  pointRenderFn
-} from "../svg/pieceDrawing";
-import {
   boxplotRenderFn,
   contourRenderFn,
   bucketizedRenderingFn
-} from "../svg/summaryDrawing";
+} from "./summaryLayouts";
 
 export const drawMarginPath = ({ margin, size, inset = 5 }) => {
   const iSize = [size[0] - inset, size[1] - inset];
@@ -173,50 +167,6 @@ export function generateFrameTitle({ title, size }) {
     finalTitle = title;
   }
   return finalTitle;
-}
-
-const pieceRenderHash = {
-  swarm: swarmRenderFn,
-  bar: barRenderFn,
-  clusterbar: clusterBarRenderFn,
-  point: pointRenderFn
-};
-
-export function orFramePieceRenderer({
-  type,
-  data,
-  renderMode,
-  eventListenersGenerator,
-  styleFn,
-  projection,
-  classFn,
-  adjustedSize,
-  margin
-}) {
-  let pieceRenderFn = null;
-  if (typeof type.type === "function") {
-    pieceRenderFn = type;
-  } else if (pieceRenderHash[type.type]) {
-    pieceRenderFn = pieceRenderHash[type.type];
-  } else {
-    console.error(
-      `Invalid piece type: ${type.type} - Must be a function or one of the following strings: none, ${Object.keys(
-        pieceRenderHash
-      )}`
-    );
-    return;
-  }
-  return pieceRenderFn({
-    type,
-    data,
-    renderMode,
-    eventListenersGenerator,
-    styleFn,
-    projection,
-    classFn,
-    adjustedSize,
-    margin
-  });
 }
 
 export function orFrameConnectionRenderer({

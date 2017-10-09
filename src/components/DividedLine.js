@@ -66,4 +66,4 @@ DividedLine.propTypes = {
   searchIterations: PropTypes.number
 };
 
-module.exports = DividedLine;
+export default DividedLine;

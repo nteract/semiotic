@@ -48,7 +48,7 @@ import {
   swarmLayout
 } from "./svg/pieceLayouts";
 
-import { drawSummaries } from "./svg/summaryDrawing";
+import { drawSummaries } from "./svg/summaryLayouts";
 import { stringToFn } from "./data/dataFunctions";
 
 import PropTypes from "prop-types";
@@ -63,7 +63,7 @@ const layoutHash = {
   swarm: swarmLayout
 };
 
-class orFrame extends React.Component {
+class ORFrame extends React.Component {
   constructor(props) {
     super(props);
 
@@ -1383,7 +1383,7 @@ class orFrame extends React.Component {
   }
 }
 
-orFrame.propTypes = {
+ORFrame.propTypes = {
   name: PropTypes.string,
   orient: PropTypes.string,
   title: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
@@ -1436,4 +1436,4 @@ orFrame.propTypes = {
   foregroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array])
 };
 
-module.exports = orFrame;
+export default ORFrame;

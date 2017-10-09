@@ -1,8 +1,10 @@
 import React from "react";
 import DocumentComponent from "../layout/DocumentComponent";
 import SankeyRaw from "./SankeyRaw";
-import SelectField from "material-ui/SelectField";
-import MenuItem from "material-ui/MenuItem";
+import Select from "material-ui/Select";
+import { MenuItem } from "material-ui/Menu";
+import Input, { InputLabel } from "material-ui/Input";
+import { FormControl, FormHelperText } from "material-ui/Form";
 
 const components = [];
 
@@ -36,24 +38,28 @@ export default class Sankey extends React.Component {
     ));
 
     const buttons = [
-      <span key="button-1-0-0">
-        <SelectField
+      <FormControl key="button-1-0-0">
+        <InputLabel htmlFor="o-padding-input">oPadding</InputLabel>
+        <Select
           floatingLabelText="Chart Type"
           value={this.state.type}
           onChange={(e, i, value) => this.setState({ type: value })}
         >
           {typeOptions}
-        </SelectField>
-      </span>,
-      <span key="button-2-0-0">
-        <SelectField
+        </Select>
+        <FormHelperText>Alignment with an input</FormHelperText>
+      </FormControl>,
+      <FormControl key="button-2-0-0">
+        <InputLabel htmlFor="o-padding-input">oPadding</InputLabel>
+        <Select
           floatingLabelText="orient"
           value={this.state.orient}
           onChange={(e, i, value) => this.setState({ orient: value })}
         >
           {orientOptions}
-        </SelectField>
-      </span>
+        </Select>
+        <FormHelperText>Alignment with an input</FormHelperText>
+      </FormControl>
     ];
 
     const annotations = [

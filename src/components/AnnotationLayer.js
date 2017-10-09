@@ -296,4 +296,4 @@ AnnotationLayer.propTypes = {
   position: PropTypes.array
 };
 
-module.exports = AnnotationLayer;
+export default AnnotationLayer;

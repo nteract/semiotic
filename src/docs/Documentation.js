@@ -10,6 +10,13 @@ import LegendDocs from "./components/LegendDocs";
 import DividedLineDocs from "./components/DividedLineDocs";
 import MarkDocs from "./components/MarkDocs";
 
+import { withStyles } from "material-ui/styles";
+import Divider from "material-ui/Divider";
+import ChevronLeftIcon from "material-ui-icons/ChevronLeft";
+import ChevronRightIcon from "material-ui-icons/ChevronRight";
+
+import classNames from "classnames";
+
 //Examples
 import RegionatedLineChartDocs from "./components/RegionatedLineChartDocs";
 import Violin from "./components/Violin";
@@ -45,9 +52,12 @@ import RealtimeXYFrame from "./components/RealtimeXYFrame";
 import "./../components/styles.css";
 import Drawer from "material-ui/Drawer";
 import AppBar from "material-ui/AppBar";
-import Menu from "material-ui/Menu";
-import MenuItem from "material-ui/MenuItem";
+import List, { ListItem, ListItemIcon, ListItemText } from "material-ui/List";
+import MenuIcon from "material-ui-icons/Menu";
 import { Link } from "react-router-dom";
+import Toolbar from "material-ui/Toolbar";
+import Typography from "material-ui/Typography";
+import IconButton from "material-ui/IconButton";
 
 const components = {
   informationmodel: { docs: BarToParallel },
@@ -86,13 +96,99 @@ const components = {
   dividedline: { docs: DividedLineDocs }
 };
 
+const drawerWidth = 240;
+
+const styles = theme => ({
+  root: {
+    width: "100%",
+    height: 430,
+    marginTop: theme.spacing.unit * 3,
+    zIndex: 1,
+    overflow: "hidden"
+  },
+  appFrame: {
+    position: "relative",
+    display: "flex",
+    width: "100%",
+    height: "100%"
+  },
+  appBar: {
+    position: "absolute",
+    transition: theme.transitions.create(["margin", "width"], {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.leavingScreen
+    })
+  },
+  appBarShift: {
+    marginLeft: drawerWidth,
+    width: `calc(100% - ${drawerWidth}px)`,
+    transition: theme.transitions.create(["margin", "width"], {
+      easing: theme.transitions.easing.easeOut,
+      duration: theme.transitions.duration.enteringScreen
+    })
+  },
+  menuButton: {
+    marginLeft: 12,
+    marginRight: 20
+  },
+  hide: {
+    display: "none"
+  },
+  drawerPaper: {
+    position: "relative",
+    height: "100%",
+    width: drawerWidth
+  },
+  drawerHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    padding: "0 8px",
+    ...theme.mixins.toolbar
+  },
+  content: {
+    width: "100%",
+    marginLeft: -drawerWidth,
+    flexGrow: 1,
+    backgroundColor: theme.palette.background.default,
+    padding: theme.spacing.unit * 3,
+    transition: theme.transitions.create("margin", {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.leavingScreen
+    }),
+    height: "calc(100% - 56px)",
+    marginTop: 56,
+    [theme.breakpoints.up("sm")]: {
+      content: {
+        height: "calc(100% - 64px)",
+        marginTop: 64
+      }
+    }
+  },
+  contentShift: {
+    marginLeft: 0,
+    transition: theme.transitions.create("margin", {
+      easing: theme.transitions.easing.easeOut,
+      duration: theme.transitions.duration.enteringScreen
+    })
+  }
+});
+
 export default class Documentation extends React.Component {
   state = {
     open: false
   };
 
+  handleDrawerOpen = () => {
+    this.setState({ open: true });
+  };
+
+  handleDrawerClose = () => {
+    this.setState({ open: false });
+  };
+
   render() {
-    const { match, history } = this.props;
+    const { match, history, classes = {}, theme = {} } = this.props;
     const selected = match && match.params.component;
     const selectedComponent = components[selected];
 
@@ -103,18 +199,16 @@ export default class Documentation extends React.Component {
     };
 
     const allDocs = [
-      <MenuItem
-        key="home"
-        primaryText="Home"
-        style={!selected ? selectedStyles : undefined}
-        containerElement={<Link to={"/"} />}
-      />,
-      <MenuItem
-        key="examples"
-        primaryText="Examples"
-        style={selected === "examples" ? selectedStyles : undefined}
-        containerElement={<Link to={"/examples"} />}
-      />
+      <Link to={"/"}>
+        <ListItem button>
+          <ListItemText primary="Home" />
+        </ListItem>
+      </Link>,
+      <Link to={"/examples"}>
+        <ListItem button>
+          <ListItemText primary="Examples" />
+        </ListItem>
+      </Link>
     ];
     Object.keys(components).forEach(c => {
       const cTitle = components[c].docs.title;
@@ -141,13 +235,11 @@ export default class Documentation extends React.Component {
               }
             : styleOver;
         allDocs.push(
-          <MenuItem
-            leftIcon={cIcon}
-            key={cTitle}
-            primaryText={cTitle}
-            style={finalStyle}
-            containerElement={<Link to={`/${c}`} />}
-          />
+          <Link to={`/${c}`}>
+            <ListItem leftIcon={cIcon} key={cTitle} style={finalStyle}>
+              <ListItemText primary={cTitle} />
+            </ListItem>
+          </Link>
         );
       }
     });
@@ -164,60 +256,79 @@ export default class Documentation extends React.Component {
     }
 
     return (
-      <div>
-        <Drawer
-          width={250}
-          docked={this.state.open}
-          containerStyle={{ overflowX: "hidden" }}
-        >
+      <div className={classes.root}>
+        <div className={classes.appFrame}>
           <AppBar
-            title={
-              <span
-                style={{ cursor: "pointer" }}
-                onClick={() =>
-                  this.props.history ? this.props.history.push("/") : null}
-              >
-                Semiotic
-              </span>
-            }
-            className="appbar"
-            iconClassNameRight="muidocs-icon-navigation-expand-more"
-            onLeftIconButtonTouchTap={() =>
-              this.setState({ open: !this.state.open })}
-          />
-          <Menu>{allDocs}</Menu>
-        </Drawer>
-        <AppBar
-          title={
-            <span
-              style={{ cursor: "pointer" }}
-              onClick={() =>
-                this.props.history ? this.props.history.push("/") : null}
+            className={classNames(
+              classes.appBar,
+              this.state.open && classes.appBarShift
+            )}
+          >
+            <Toolbar
+              disableGutters={!this.state.open}
+              className="semiotic-header"
             >
-              Semiotic
-            </span>
-          }
-          className="appbar"
-          style={{ position: "fixed", top: 0, left: 0 }}
-          iconClassNameRight="muidocs-icon-navigation-expand-more"
-          onLeftIconButtonTouchTap={() =>
-            this.setState({ open: !this.state.open })}
-        >
-          <img
-            style={{ paddingTop: "10px", width: "40px", height: "40px" }}
-            src="/semiotic/semiotic_white.png"
-          />
-        </AppBar>
-        <div className="row">
-          <div className="col-xs-8 col-xs-offset-2">
+              <IconButton
+                color="contrast"
+                aria-label="open drawer"
+                onClick={this.handleDrawerOpen}
+                className={classNames(
+                  classes.menuButton,
+                  this.state.open && classes.hide
+                )}
+              >
+                <MenuIcon style={{ cursor: "pointer", color: "white" }} />
+              </IconButton>
+              <Typography type="title" color="inherit">
+                <span
+                  style={{ cursor: "pointer", color: "white" }}
+                  onClick={() =>
+                    this.props.history ? this.props.history.push("/") : null}
+                >
+                  Semiotic
+                </span>
+                <img
+                  style={{ paddingTop: "10px", width: "40px", height: "40px" }}
+                  src="/semiotic/semiotic_white.png"
+                />
+              </Typography>
+            </Toolbar>
+          </AppBar>
+          <Drawer
+            type="persistent"
+            classes={{
+              paper: classes.drawerPaper
+            }}
+            open={this.state.open}
+          >
+            <div className={classes.drawerInner}>
+              <div className={"drawer-title"}>
+                <IconButton onClick={this.handleDrawerClose}>
+                  <ChevronLeftIcon />
+                </IconButton>Semiotic
+              </div>
+              <Divider />
+              <List className={classes.list}>{allDocs}</List>
+            </div>
+          </Drawer>
+          <main
+            className={classNames(
+              classes.content,
+              this.state.open && classes.contentShift
+            )}
+          >
             {selected === "examples" ? (
-              Examples
+              <div className="row">
+                <div className="col-xs-8 col-xs-offset-2">{Examples}</div>
+              </div>
             ) : !selectedDoc ? (
-              Introduction
+              <div className="row">
+                <div className="col-xs-8 col-xs-offset-2">{Introduction}</div>
+              </div>
             ) : null}
-          </div>
+            {selectedDoc}
+          </main>
         </div>
-        {selectedDoc}
       </div>
     );
   }

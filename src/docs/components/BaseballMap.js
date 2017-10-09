@@ -1,10 +1,12 @@
 import React from "react";
 import DocumentComponent from "../layout/DocumentComponent";
 import BaseballMapRaw from "./BaseballMapRaw";
-import SelectField from "material-ui/SelectField";
-import MenuItem from "material-ui/MenuItem";
+import Select from "material-ui/Select";
+import { MenuItem } from "material-ui/Menu";
 import { Mark } from "../../components";
 import { scaleTime } from "d3-scale";
+import Input, { InputLabel } from "material-ui/Input";
+import { FormControl, FormHelperText } from "material-ui/Form";
 
 const components = [];
 const modes = {
@@ -100,15 +102,16 @@ export default class BaseballMapDocs extends React.Component {
     ));
 
     const buttons = [
-      <span key="button-1-0-0">
-        <SelectField
-          floatingLabelText="Mode"
+      <FormControl key="button-1-0-0">
+        <InputLabel htmlFor="mode-input">Mode</InputLabel>
+        <Select
           value={this.state.mode}
           onChange={(e, i, value) => this.setState({ mode: value })}
         >
           {modeOptions}
-        </SelectField>
-      </span>
+        </Select>
+        <FormHelperText>Alignment with an input</FormHelperText>
+      </FormControl>
     ];
 
     const examples = [];

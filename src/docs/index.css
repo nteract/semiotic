@@ -75,11 +75,6 @@ body {
   text-align: center;
 }
 
-header {
-  margin-top: 50px;
-  margin-bottom: 50px;
-}
-
 .docs-example {
   position: relative;
   padding: 3em 1em 1em;
@@ -419,4 +414,39 @@ circle.frame-hover {
   opacity: 1;
   stroke-opacity: 0;
   fill: url(#bubbleGradient);
+}
+
+.drawer-title {
+  background-color: #ac9739;
+  box-shadow: 0px 2px 4px -1px rgba(0, 0, 0, 0.2),
+    0px 4px 5px 0px rgba(0, 0, 0, 0.14), 0px 1px 10px 0px rgba(0, 0, 0, 0.12);
+}
+@media (max-width: 10000px) {
+  .drawer-title {
+    min-height: 64px;
+  }
+}
+@media (max-width: 600px) {
+  .drawer-title {
+    min-height: 48px;
+  }
+}
+
+.semiotic-header {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0px;
+  padding-top: 0px;
+  letter-spacing: 0px;
+  font-size: 24px;
+  font-weight: 400;
+  color: rgb(255, 255, 255);
+  height: 64px;
+  line-height: 64px;
+  flex: 1 1 0%;
+}
+
+.docs-example button {
+  color: white;
 }

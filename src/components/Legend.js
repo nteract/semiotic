@@ -93,4 +93,4 @@ Legend.propTypes = {
   legendGroups: PropTypes.array
 };
 
-module.exports = Legend;
+export default Legend;

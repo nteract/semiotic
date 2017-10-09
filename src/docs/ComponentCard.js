@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 // import {Card, CardTitle /*, CardActions, CardHeader, CardMedia, CardText*/ } from 'material-ui/Card';
-import RaisedButton from "material-ui/RaisedButton";
+import Button from "material-ui/Button";
 
 const ComponentCard = ({ path, title, selected }) => {
   const labelStyle = {
@@ -13,7 +13,8 @@ const ComponentCard = ({ path, title, selected }) => {
   };
   return (
     <Link to={`/${path}`}>
-      <RaisedButton
+      <Button
+        raised
         label={title}
         labelStyle={labelStyle}
         style={style}

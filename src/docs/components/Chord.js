@@ -2,8 +2,10 @@ import React from "react";
 import DocumentComponent from "../layout/DocumentComponent";
 import { NetworkFrame } from "../../components";
 import ChordRaw from "./ChordRaw";
-import SelectField from "material-ui/SelectField";
-import MenuItem from "material-ui/MenuItem";
+import Select from "material-ui/Select";
+import { MenuItem } from "material-ui/Menu";
+import Input, { InputLabel } from "material-ui/Input";
+import { FormControl, FormHelperText } from "material-ui/Form";
 
 const dematrixifiedEdges = [
   { source: "a", target: "a", value: 11975 },
@@ -49,15 +51,16 @@ export default class Chord extends React.Component {
     ));
 
     const buttons = [
-      <span key="button-1-0-0">
-        <SelectField
-          floatingLabelText="padAngle"
+      <FormControl key="button-1-0-0">
+        <InputLabel htmlFor="pad-angle-input">padAngle</InputLabel>
+        <Select
           value={this.state.padAngle}
           onChange={(e, i, value) => this.setState({ padAngle: value })}
         >
           {padAngleOptions}
-        </SelectField>
-      </span>
+        </Select>
+        <FormHelperText>Alignment with an input</FormHelperText>
+      </FormControl>
     ];
 
     const examples = [];

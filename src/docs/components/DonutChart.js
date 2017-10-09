@@ -2,8 +2,11 @@ import React from "react";
 import DocumentComponent from "../layout/DocumentComponent";
 import { ORFrame } from "../../components";
 import DonutChartRaw from "./DonutChartRaw";
-import SelectField from "material-ui/SelectField";
-import MenuItem from "material-ui/MenuItem";
+import Select from "material-ui/Select";
+import { MenuItem } from "material-ui/Menu";
+import Input, { InputLabel } from "material-ui/Input";
+import { FormControl, FormHelperText } from "material-ui/Form";
+
 const components = [];
 
 components.push({
@@ -42,37 +45,42 @@ export default class PieDonutDocs extends React.Component {
 
     const buttons = [
       <div key="button-0">
-        <span>
-          <SelectField
+        <FormControl>
+          <InputLabel htmlFor="type-input">Type</InputLabel>
+          <Select
             floatingLabelText="Kind of Chart"
             value={this.state.kind}
             onChange={(e, i, value) => this.setState({ kind: value })}
           >
             {kindOptions}
-          </SelectField>
-        </span>
+          </Select>
+          <FormHelperText>Alignment with an input</FormHelperText>
+        </FormControl>
       </div>,
       <div key="button-1">
-        <span>
-          <SelectField
-            floatingLabelText="innerRadius"
+        <FormControl>
+          <InputLabel htmlFor="inner-radius-input">innerRadius</InputLabel>
+          <Select
             value={this.state.innerRadius}
             onChange={(e, i, value) => this.setState({ innerRadius: value })}
           >
             {innerOptions}
-          </SelectField>
-        </span>
+          </Select>
+          <FormHelperText>Alignment with an input</FormHelperText>
+        </FormControl>
       </div>,
       <div key="button-2">
-        <span>
-          <SelectField
+        <FormControl>
+          <InputLabel htmlFor="padding-input">padding</InputLabel>
+          <Select
             floatingLabelText="padding"
             value={this.state.padding}
             onChange={(e, i, value) => this.setState({ padding: value })}
           >
             {paddingOptions}
-          </SelectField>
-        </span>
+          </Select>
+          <FormHelperText>Alignment with an input</FormHelperText>
+        </FormControl>
       </div>
     ];
 

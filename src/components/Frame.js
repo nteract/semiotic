@@ -211,4 +211,4 @@ Frame.propTypes = {
   foregroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array])
 };
 
-module.exports = Frame;
+export default Frame;

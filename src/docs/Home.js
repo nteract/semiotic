@@ -1,6 +1,6 @@
 import React from "react";
 import { PrismCode } from "react-prism";
-import RaisedButton from "material-ui/RaisedButton";
+import Button from "material-ui/Button";
 import { Link } from "react-router-dom";
 
 const Home = ({ match }) => {
@@ -19,33 +19,37 @@ const Home = ({ match }) => {
               opinionated framework optimized to enable effective communication
               through data visualization.
             </p>
-            <RaisedButton
-              primary
-              label={"Interactive Examples"}
-              containerElement={<Link to="examples" />}
-            />
-            <RaisedButton
-              primary
-              label={"Github Repo"}
+            <Button color="primary" raised>
+              <Link to="examples">Interactive Examples</Link>
+            </Button>
+            <Button
+              color="primary"
+              raised
               onTouchTap={() =>
                 window.open(`https://github.com/emeeks/semiotic`)}
-            />
-            <RaisedButton
-              primary
-              label={"API Docs"}
+            >
+              Github Repo
+            </Button>
+            <Button
+              color="primary"
+              raised
               onTouchTap={() =>
                 window.open(
                   `https://github.com/emeeks/semiotic/wiki/API-Reference`
                 )}
-            />
-            <RaisedButton
-              primary
-              label={"Tutorials"}
+            >
+              API Docs
+            </Button>
+            <Button
+              color="primary"
+              raised
               onTouchTap={() =>
                 window.open(
                   `https://github.com/emeeks/semiotic/wiki/Tutorials`
                 )}
-            />
+            >
+              Tutorials
+            </Button>
           </header>
         </div>
       </div>

@@ -1,7 +1,7 @@
 import React from "react";
 import { PrismCode } from "react-prism";
 import { dedent } from "dentist";
-import CodeIcon from "material-ui/svg-icons/action/code";
+import CodeIcon from "material-ui-icons/Code";
 import IconButton from "material-ui/IconButton";
 
 const DocumentProptypes = props => {

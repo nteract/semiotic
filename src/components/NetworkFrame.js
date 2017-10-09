@@ -202,7 +202,7 @@ const matrixify = ({
   return matrix;
 };
 
-class networkFrame extends React.Component {
+class NetworkFrame extends React.Component {
   constructor(props) {
     super(props);
 
@@ -419,7 +419,7 @@ class networkFrame extends React.Component {
     });
     //Support bubble chart with circle pack and with force
     if (networkSettings.type === "sankey") {
-      let initCustomNodeIcon = customNodeIcon
+      let initCustomNodeIcon = customNodeIcon;
 
       customNodeIcon = ({
         d,
@@ -432,7 +432,7 @@ class networkFrame extends React.Component {
         className,
         transform
       }) => {
-        if (initCustomNodeIcon === undefined){
+        if (initCustomNodeIcon === undefined) {
           return (
             <Mark
               renderMode={renderMode ? renderMode(d, i) : undefined}
@@ -449,15 +449,20 @@ class networkFrame extends React.Component {
               style={nodeStyleFn(d)}
             />
           );
-        }
-        else {
+        } else {
           return initCustomNodeIcon({
-            d,i,renderKeyFn,
-            styleFn,classFn,renderMode,
-            key, className,transform
-          })
+            d,
+            i,
+            renderKeyFn,
+            styleFn,
+            classFn,
+            renderMode,
+            key,
+            className,
+            transform
+          });
         }
-      }
+      };
     } else if (networkSettings.type === "chord") {
       customNodeIcon = ({
         d,
@@ -882,17 +887,14 @@ class networkFrame extends React.Component {
             node.y = resetY(node.y);
           });
         });
-      }
-
-      else if (typeof networkSettings.type === "function") {
+      } else if (typeof networkSettings.type === "function") {
         // console.log("networkSettings is a function")
         // console.log(networkSettings)
         const customProjectedGraph = networkSettings.type({
           nodes: projectedNodes,
           edges: projectedEdges
         });
-
-      } 
+      }
 
       this.graphSettings = networkSettings;
       this.graphSettings.numberOfNodes = nodes.length;
@@ -1292,7 +1294,7 @@ class networkFrame extends React.Component {
   }
 }
 
-networkFrame.propTypes = {
+NetworkFrame.propTypes = {
   name: PropTypes.string,
   title: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
   margin: PropTypes.oneOfType([PropTypes.number, PropTypes.object]),
@@ -1326,4 +1328,4 @@ networkFrame.propTypes = {
   foregroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array])
 };
 
-module.exports = networkFrame;
+export default NetworkFrame;

@@ -314,4 +314,4 @@ Axis.propTypes = {
   ticks: PropTypes.oneOfType([PropTypes.array, PropTypes.number])
 };
 
-module.exports = Axis;
+export default Axis;

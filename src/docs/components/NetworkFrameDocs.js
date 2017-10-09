@@ -2,10 +2,12 @@ import React from "react";
 import DocumentComponent from "../layout/DocumentComponent";
 import { NetworkFrame, Mark } from "../../components";
 import { edgeData } from "../example_settings/networkframe";
-import RaisedButton from "material-ui/RaisedButton";
-import SelectField from "material-ui/SelectField";
-import MenuItem from "material-ui/MenuItem";
-import Icon from "material-ui/svg-icons/social/share";
+import Button from "material-ui/Button";
+import Select from "material-ui/Select";
+import { MenuItem } from "material-ui/Menu";
+import Icon from "material-ui-icons/Share";
+import Input, { InputLabel } from "material-ui/Input";
+import { FormControl, FormHelperText } from "material-ui/Form";
 
 const components = [];
 // Add your component proptype data here
@@ -163,59 +165,66 @@ export default class NetworkFrameDocs extends React.Component {
     ];
     const buttons = [
       <div key="button-0">
-        <span>
-          <SelectField
+        <FormControl>
+          <InputLabel htmlFor="edge-type-input">edgeType</InputLabel>
+          <Select
             floatingLabelText="edgeType"
             value={this.state.edge}
-            onChange={(e, i, value) => this.setState({ edge: value })}
+            onChange={e => this.setState({ edge: e.target.value })}
           >
             {edgeOptions}
-          </SelectField>
-        </span>
+          </Select>
+        </FormControl>
       </div>,
       <div key="button-1">
-        <span>
-          <SelectField
+        <FormControl>
+          <InputLabel htmlFor="node-size-input">nodeSize</InputLabel>
+          <Select
             floatingLabelText="nodeSize"
             value={this.state.nodeSize}
-            onChange={(e, i, value) => this.setState({ nodeSize: value })}
+            onChange={e => this.setState({ nodeSize: e.target.value })}
           >
             {nodeSizeOptions}
-          </SelectField>
-        </span>
+          </Select>
+        </FormControl>
       </div>,
       <div key="button-2">
-        <span>
-          <SelectField
+        <FormControl>
+          <InputLabel htmlFor="annotations-input">annotations</InputLabel>
+          <Select
             floatingLabelText="annotations"
             value={this.state.annotations}
-            onChange={(e, i, value) => this.setState({ annotations: value })}
+            onChange={e => this.setState({ annotations: e.target.value })}
           >
             {annotationOptions}
-          </SelectField>
-        </span>
+          </Select>
+        </FormControl>
       </div>,
       <div key="button-3">
-        <span>
-          <SelectField
+        <FormControl>
+          <InputLabel htmlFor="network-type-input">networkType</InputLabel>
+          <Select
             floatingLabelText="networkType"
             value={this.state.networkType}
-            onChange={(e, i, value) => this.setState({ networkType: value })}
+            onChange={e => this.setState({ networkType: e.target.value })}
           >
             {networkTypeOptions}
-          </SelectField>
-        </span>
+          </Select>
+        </FormControl>
       </div>,
       <div key="button-4">
-        <span>
-          <SelectField
+        <FormControl>
+          <InputLabel htmlFor="custom-node-input">customNodeIcon</InputLabel>
+          <Select
             floatingLabelText="customNodeIcon"
             value={this.state.customNodeIcon}
-            onChange={(e, i, value) => this.setState({ customNodeIcon: value })}
+            onChange={e => {
+              this.setState({ customNodeIcon: e.target.value });
+            }}
           >
             {customNodeOptions}
-          </SelectField>
-        </span>
+          </Select>
+        </FormControl>
       </div>
     ];
 
@@ -224,14 +233,16 @@ export default class NetworkFrameDocs extends React.Component {
       name: "Basic",
       demo: (
         <div>
-          <RaisedButton
-            primary
-            label={"NetworkFrame API"}
+          <Button
+            color="primary"
+            raised
             onTouchTap={() =>
               window.open(
                 `https://github.com/emeeks/semiotic/wiki/networkframe`
               )}
-          />
+          >
+            NetworkFrame API
+          </Button>
           <NetworkFrame
             size={[750, 500]}
             edges={edgeData}
