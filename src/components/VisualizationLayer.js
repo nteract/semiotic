@@ -107,7 +107,7 @@ class VisualizationLayer extends React.PureComponent {
         const pipe = renderPipeline[k];
         if (
           (pipe.data && typeof pipe.data === "object") ||
-          pipe.data.length > 0
+          (pipe.data && pipe.data.length > 0)
         ) {
           const renderedPipe = pipe.behavior({
             xScale,

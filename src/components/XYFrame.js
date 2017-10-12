@@ -600,7 +600,9 @@ class XYFrame extends React.Component {
       noteData.x = noteData.x ? noteData.x : screenCoordinates[0];
       noteData.y = noteData.y ? noteData.y : screenCoordinates[1];
 
-      return <Annotation key={Math.random() + "key"} noteData={noteData} />;
+      return (
+        <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
+      );
     } else if (d.type === "enclose") {
       const circle = packEnclose(
         screenCoordinates.map(p => ({ x: p[0], y: p[1], r: 2 }))
@@ -645,7 +647,9 @@ class XYFrame extends React.Component {
       }
       //TODO: Support .ra (setting angle)
 
-      return <Annotation key={Math.random() + "key"} noteData={noteData} />;
+      return (
+        <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
+      );
     } else if (d.type === "x") {
       const yPosition = annotationLayer.position[1];
 
@@ -668,7 +672,9 @@ class XYFrame extends React.Component {
           }
         }
       );
-      return <Annotation key={Math.random() + "key"} noteData={noteData} />;
+      return (
+        <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
+      );
     } else if (d.type === "y") {
       const xPosition = margin.left + i * 25;
 
@@ -691,7 +697,9 @@ class XYFrame extends React.Component {
           }
         }
       );
-      return <Annotation key={Math.random() + "key"} noteData={noteData} />;
+      return (
+        <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
+      );
     } else if (d.type === "bounds") {
       const startXValue = xAccessor(d.bounds[0]);
       const startYValue = yAccessor(d.bounds[0]);
@@ -725,7 +733,9 @@ class XYFrame extends React.Component {
           }
         }
       );
-      return <Annotation key={Math.random() + "key"} noteData={noteData} />;
+      return (
+        <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
+      );
     } else if (d.type === "line") {
       const lineGenerator = line()
         .x(p => p[0])

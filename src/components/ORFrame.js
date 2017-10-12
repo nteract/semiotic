@@ -48,13 +48,16 @@ import {
   swarmLayout
 } from "./svg/pieceLayouts";
 
-import { drawSummaries } from "./svg/summaryLayouts";
+import { drawSummaries, renderLaidOutSummaries } from "./svg/summaryLayouts";
 import { stringToFn } from "./data/dataFunctions";
 
 import PropTypes from "prop-types";
 
 const xScale = scaleIdentity();
 const yScale = scaleIdentity();
+
+const midMod = d => (d.middle ? d.middle : 0);
+const zeroFunction = () => 0;
 
 const layoutHash = {
   clusterbar: clusterBarLayout,
@@ -769,21 +772,6 @@ class ORFrame extends React.Component {
       rScale
     });
 
-    if (currentProps.pieceHoverAnnotation && calculatedPieceData) {
-      const yMod =
-        projection === "horizontal" ? d => (d.middle ? d.middle : 0) : () => 0;
-      const xMod =
-        projection === "vertical" ? d => (d.middle ? d.middle : 0) : () => 0;
-
-      pieceDataXY = calculatedPieceData.map(d =>
-        Object.assign({}, d.piece, {
-          type: "frame-hover",
-          x: d.xy.x + xMod(d.xy),
-          y: d.xy.y + yMod(d.xy)
-        })
-      );
-    }
-
     const keyedData = calculatedPieceData.reduce((p, c) => {
       if (!p[c.o]) {
         p[c.o] = [];
@@ -795,6 +783,51 @@ class ORFrame extends React.Component {
     Object.keys(projectedColumns).forEach(d => {
       projectedColumns[d].xyData = keyedData[d];
     });
+    let calculatedSummaries = {};
+
+    if (summaryType.type) {
+      calculatedSummaries = drawSummaries({
+        data: projectedColumns,
+        type: summaryType,
+        renderMode: stringToFn(summaryRenderMode, undefined, true),
+        styleFn: stringToFn(summaryStyle, () => {}, true),
+        classFn: stringToFn(summaryClass, () => "", true),
+        canvasRender: stringToFn(canvasSummaries, undefined, true),
+        positionFn: summaryPosition,
+        projection,
+        eventListenersGenerator,
+        adjustedSize,
+        margin
+      });
+    }
+
+    if (
+      currentProps.pieceHoverAnnotation &&
+      (calculatedPieceData ||
+        (calculatedSummaries && calculatedSummaries.xyPoints))
+    ) {
+      const yMod = projection === "horizontal" ? midMod : zeroFunction;
+      const xMod = projection === "vertical" ? midMod : zeroFunction;
+
+      if (calculatedSummaries && calculatedSummaries.xyPoints) {
+        pieceDataXY = calculatedSummaries.xyPoints.map(d =>
+          Object.assign({}, d, {
+            type: "frame-hover",
+            isSummaryData: true,
+            x: d.x,
+            y: d.y
+          })
+        );
+      } else {
+        pieceDataXY = calculatedPieceData.map(d =>
+          Object.assign({}, d.piece, {
+            type: "frame-hover",
+            x: d.xy.x + xMod(d.xy),
+            y: d.xy.y + yMod(d.xy)
+          })
+        );
+      }
+    }
 
     const orFrameRender = {
       connectors: {
@@ -810,18 +843,8 @@ class ORFrame extends React.Component {
         margin
       },
       summaries: {
-        projection,
-        data: projectedColumns,
-        styleFn: stringToFn(summaryStyle, () => {}, true),
-        classFn: stringToFn(summaryClass, () => "", true),
-        positionFn: summaryPosition,
-        renderMode: stringToFn(summaryRenderMode, undefined, true),
-        canvasRender: stringToFn(canvasSummaries, undefined, true),
-        type: summaryType,
-        behavior: drawSummaries,
-        eventListenersGenerator,
-        adjustedSize,
-        margin
+        data: calculatedSummaries.marks,
+        behavior: renderLaidOutSummaries
       },
       pieces: {
         shouldRender: pieceType.type && pieceType.type !== "none",
@@ -994,7 +1017,9 @@ class ORFrame extends React.Component {
         d,
         { type: typeof d.type === "function" ? d.type : undefined }
       );
-      return <Annotation key={Math.random() + "key"} noteData={noteData} />;
+      return (
+        <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
+      );
     } else if (d.type === "enclose") {
       const circle = packEnclose(
         screenCoordinates.map(p => ({ x: p[0], y: p[1], r: 2 }))
@@ -1043,13 +1068,15 @@ class ORFrame extends React.Component {
       }
       //TODO: Support .ra (setting angle)
 
-      return <Annotation key={Math.random() + "key"} noteData={noteData} />;
+      return (
+        <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
+      );
     } else if (d.type === "r") {
       let x, y, xPosition, yPosition, subject, dx, dy;
       if (this.props.projection === "radial") {
         return (
           <Annotation
-            key={Math.random() + "key"}
+            key={d.key || `annotation-${i}`}
             noteData={Object.assign(
               {
                 dx: 50,
@@ -1109,7 +1136,9 @@ class ORFrame extends React.Component {
           subject
         }
       );
-      return <Annotation key={Math.random() + "key"} noteData={noteData} />;
+      return (
+        <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
+      );
     }
     return null;
   }
@@ -1162,12 +1191,35 @@ class ORFrame extends React.Component {
 
     if (d.type === "frame-hover") {
       //To string because React gives a DOM error if it gets a date
-      let content = (
-        <div className="tooltip-content">
-          <p key="html-annotation-content-1">{oAccessor(d).toString()}</p>
+      let contentFill;
+      if (d.isSummaryData) {
+        let summaryLabel = <p key="html-annotation-content-2">{d.label}</p>;
+        if (d.pieces && d.pieces.length !== 0) {
+          if (d.pieces.length === 1) {
+            summaryLabel = (
+              <p key="html-annotation-content-2">{rAccessor(d.pieces[0])}</p>
+            );
+          } else {
+            const pieceData = extent(d.pieces.map(rAccessor));
+            summaryLabel = (
+              <p key="html-annotation-content-2">
+                From {pieceData[0]} to {pieceData[1]}
+              </p>
+            );
+          }
+        }
+        contentFill = [
+          <p key="html-annotation-content-1">{d.key}</p>,
+          summaryLabel,
+          <p key="html-annotation-content-3">{d.value}</p>
+        ];
+      } else {
+        contentFill = [
+          <p key="html-annotation-content-1">{oAccessor(d).toString()}</p>,
           <p key="html-annotation-content-2">{rAccessor(d).toString()}</p>
-        </div>
-      );
+        ];
+      }
+      let content = <div className="tooltip-content">{contentFill}</div>;
 
       if (d.type === "frame-hover" && tooltipContent) {
         content = tooltipContent(d);

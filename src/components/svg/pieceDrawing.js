@@ -15,12 +15,12 @@ export const renderLaidOutPieces = ({ data, shouldRender }) =>
     ? null
     : data.map(
         (d, i) =>
-          React.isValidElement(d.renderElement) ? (
-            d.renderElement
+          React.isValidElement(d.renderElement || d) ? (
+            d.renderElement || d
           ) : (
             <Mark
               key={d.renderKey || `piece-render-${i}`}
-              {...d.renderElement}
+              {...d.renderElement || d}
             />
           )
       );

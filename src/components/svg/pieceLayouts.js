@@ -1,3 +1,4 @@
+import React from "react";
 import { forceSimulation, forceX, forceY, forceCollide } from "d3-force";
 import { /*area, curveCatmullRom,*/ arc } from "d3-shape";
 
@@ -106,17 +107,23 @@ export function clusterBarLayout({
 
       const eventListeners = eventListenersGenerator(piece, i);
 
-      const calculatedPiece = {
-        o: key,
-        xy: {
-          x: xPosition,
-          y: yPosition,
-          middle: clusterWidth / 2,
-          height: finalHeight,
-          width: finalWidth
-        },
-        piece,
-        renderElement: {
+      const xy = {
+        x: xPosition,
+        y: yPosition,
+        middle: clusterWidth / 2,
+        height: finalHeight,
+        width: finalWidth
+      };
+
+      const renderElementObject = type.customMark ? (
+        <g
+          key={"piece-" + piece.renderKey}
+          transform={`translate(${xPosition},${yPosition})`}
+        >
+          {type.customMark(piece, i, xy)}
+        </g>
+      ) : (
+        {
           className: classFn(piece, i),
           renderMode: renderValue,
           key: "piece-" + piece.renderKey,
@@ -125,6 +132,13 @@ export function clusterBarLayout({
           ...markProps,
           ...eventListeners
         }
+      );
+
+      const calculatedPiece = {
+        o: key,
+        xy,
+        piece,
+        renderElement: renderElementObject
       };
       if (projection === "horizontal") {
         currentY += finalHeight;
@@ -232,18 +246,23 @@ export function barLayout({
       }
 
       const eventListeners = eventListenersGenerator(piece, i);
+      const xy = {
+        x: xPosition,
+        y: yPosition,
+        middle: barColumnWidth / 2,
+        height: finalHeight,
+        width: finalWidth
+      };
 
-      const calculatedPiece = {
-        o: key,
-        xy: {
-          x: xPosition,
-          y: yPosition,
-          middle: barColumnWidth / 2,
-          height: finalHeight,
-          width: finalWidth
-        },
-        piece,
-        renderElement: {
+      const renderElementObject = type.customMark ? (
+        <g
+          key={"piece-" + piece.renderKey}
+          transform={`translate(${xPosition},${yPosition})`}
+        >
+          {type.customMark(piece, i, xy)}
+        </g>
+      ) : (
+        {
           className: classFn(piece, i),
           renderMode: renderValue,
           key: "piece-" + piece.renderKey,
@@ -252,6 +271,13 @@ export function barLayout({
           ...eventListeners,
           ...markProps
         }
+      );
+
+      const calculatedPiece = {
+        o: key,
+        xy,
+        piece,
+        renderElement: renderElementObject
       };
       return calculatedPiece;
     });
@@ -309,14 +335,15 @@ export function pointLayout({
           : circleRadius;
       const eventListeners = eventListenersGenerator(piece, i);
 
-      const calculatedPiece = {
-        o: key,
-        xy: {
-          x: xPosition,
-          y: yPosition
-        },
-        piece,
-        renderElement: {
+      const renderElementObject = type.customMark ? (
+        <g
+          key={"piece-" + piece.renderKey}
+          transform={`translate(${xPosition},${yPosition})`}
+        >
+          {type.customMark(piece, i)}
+        </g>
+      ) : (
+        {
           className: classFn(piece, i),
           markType: "rect",
           renderMode: renderValue,
@@ -330,6 +357,16 @@ export function pointLayout({
           style: styleFn(piece, ordsetI),
           ...eventListeners
         }
+      );
+
+      const calculatedPiece = {
+        o: key,
+        xy: {
+          x: xPosition,
+          y: yPosition
+        },
+        piece,
+        renderElement: renderElementObject
       };
 
       calculatedPieces.push(calculatedPiece);
@@ -405,6 +442,30 @@ export function swarmLayout({
 
       const eventListeners = eventListenersGenerator(piece, i);
 
+      const renderElementObject = type.customMark ? (
+        <g
+          key={"piece-" + piece.renderKey}
+          transform={`translate(${xPosition},${yPosition})`}
+        >
+          {type.customMark(piece, i)}
+        </g>
+      ) : (
+        {
+          className: classFn(piece, i),
+          markType: "rect",
+          renderMode: renderValue,
+          key: "piece-" + piece.renderKey,
+          height: actualCircleRadius * 2,
+          width: actualCircleRadius * 2,
+          x: xPosition - actualCircleRadius,
+          y: yPosition - actualCircleRadius,
+          rx: actualCircleRadius,
+          ry: actualCircleRadius,
+          style: styleFn(piece, ordsetI),
+          ...eventListeners
+        }
+      );
+
       const calculatedPiece = {
         o: key,
         xy: {
@@ -412,20 +473,7 @@ export function swarmLayout({
           y: yPosition
         },
         piece,
-        renderElement: {
-          className: classFn(piece, i),
-          markType: "rect",
-          height: actualCircleRadius * 2,
-          width: actualCircleRadius * 2,
-          x: xPosition - actualCircleRadius,
-          y: yPosition - actualCircleRadius,
-          rx: actualCircleRadius,
-          ry: actualCircleRadius,
-          renderMode: renderValue,
-          key: "piece-" + piece.renderKey,
-          style: styleFn(piece, ordsetI),
-          ...eventListeners
-        }
+        renderElement: renderElementObject
       };
 
       return calculatedPiece;

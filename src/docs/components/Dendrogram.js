@@ -2,6 +2,10 @@ import React from "react";
 import DocumentComponent from "../layout/DocumentComponent";
 import { NetworkFrame } from "../../components";
 import DendrogramRaw from "./DendrogramRaw";
+import { MenuItem } from "material-ui/Menu";
+import Input, { InputLabel } from "material-ui/Input";
+import { FormControl, FormHelperText } from "material-ui/Form";
+import Select from "material-ui/Select";
 
 const components = [];
 
@@ -10,44 +14,69 @@ components.push({
 });
 
 export default class Dendrogram extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      type: "dendrogram"
+    };
+  }
   render() {
-    const buttons = [];
+    const typeOptions = ["sankey", "force", "dendrogram"].map(d => (
+      <MenuItem key={"type-option-" + d} label={d} value={d}>
+        {d}
+      </MenuItem>
+    ));
+
+    const buttons = [
+      <FormControl key="button-1-0-0">
+        <InputLabel htmlFor="chart-type-input">Chart Type</InputLabel>
+        <Select
+          value={this.state.type}
+          onChange={e => this.setState({ type: e.target.value })}
+        >
+          {typeOptions}
+        </Select>
+        <FormHelperText>Alignment with an input</FormHelperText>
+      </FormControl>
+    ];
+
+    const annotations = [];
 
     const examples = [];
+
     examples.push({
       name: "Basic",
-      demo: DendrogramRaw,
+      demo: DendrogramRaw({
+        annotations,
+        type: this.state.type
+      }),
       source: `import React from "react";
-import { NetworkFrame } from "../../components";
-import { tree, hierarchy } from "d3-hierarchy";
+import { NetworkFrame } from "semiotic";
 import { data } from "../sampledata/d3_api";
-
-const root = hierarchy(data, d => d.children);
-
-const treeChart = tree();
-treeChart.size([500, 500]);
-
-const treeNodes = treeChart(root).descendants();
-treeNodes.forEach((d, i) => {
-  d.id = ${"`node-${i}`;"}
-});
-
-const treeEdges = [
-  ...treeNodes.filter(d => d.parent !== null).map(d => ({
-    source: d.parent.id,
-    target: d.id,
-    weight: 1
-  }))
-];
+import { cluster } from "d3-hierarchy";
 
 const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"];
+const data = {
+  name: "d3",
+  children: [
+    { name: "version", leafColor: "#fdcc8a", blockCalls: 1 },
+    {
+      name: "behavior",
+      children: [
+        { name: "drag", leafColor: "#e34a33", blockCalls: 242 },
+        { name: "zoom", leafColor: "#e34a33", blockCalls: 189 }
+      ],
+      leafColor: "#e34a33",
+      blockCalls: 394
+    }
+    ]
+}
 
-const layoutFunction = ({ edges, nodes }) => ({ edges, nodes });
 
   <NetworkFrame
     size={[700, 400]}
-    edges={treeEdges}
-    nodes={treeNodes}
+    edges={data}
     nodeStyle={(d, i) => ({ fill: colors[d.depth], stroke: colors[d.depth] })}
     edgeStyle={(d, i) => ({
       fill: colors[d.source.depth],
@@ -55,17 +84,23 @@ const layoutFunction = ({ edges, nodes }) => ({ edges, nodes });
       opacity: 0.5
     })}
     nodeSizeAccessor={1}
-    sourceAccessor={"source"}
-    targetAccessor={"target"}
-    nodeIDAccessor={"id"}
+    nodeIDAccessor={"name"}
     hoverAnnotation={true}
-    networkType={{ type: layoutFunction }}
+    networkType={{
+      type: "dendrogram",
+      projection: "horizontal",
+      //      layout: cluster,
+      nodePadding: 1,
+      forceManyBody: -15,
+      edgeStrength: 1.5
+    }}
     tooltipContent={d => (
       <div className="tooltip-content">
         {d.parent ? <p>{d.parent.data.name}</p> : undefined}
         <p>{d.data.name}</p>
       </div>
     )}
+    annotations={annotations}
     margin={20}
   />
 `
@@ -79,13 +114,13 @@ const layoutFunction = ({ edges, nodes }) => ({ edges, nodes });
         buttons={buttons}
       >
         <p>
-          A dendrogram is a kind of tree diagram. This example passes a function
-          to the networkType that just returns the nodes and edges because we've
-          used D3's tree layout to calculate the nodes and then mapped those
-          nodes into an array of source/target kinds of objects that
-          NetworkFrame expects.
+          A dendrogram is a kind of tree diagram. uses the "dendrogram" network
+          type to lay out the data. You can pass any kind of tree layout
+          function that processes hierarchical data like that created with
+          d3-hierarchy. Hierarchical JSON can be sent to any NetworkFrame edges
+          property.
         </p>
-        <p>The dataset is the D3v3 library.</p>
+        <p>The dataset is a pruned version of the D3v3 library.</p>
       </DocumentComponent>
     );
   }

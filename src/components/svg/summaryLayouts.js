@@ -34,6 +34,7 @@ export function boxplotRenderFn({
 
   const keys = Object.keys(data);
   const renderedSummaryMarks = [];
+  const summaryXYCoords = [];
   keys.forEach((key, summaryI) => {
     const summary = data[key];
     const eventListeners = eventListenersGenerator(summary, summaryI);
@@ -45,7 +46,8 @@ export function boxplotRenderFn({
     const calculatedSummaryStyle = styleFn(thisSummaryData[0], summaryI);
     const calculatedSummaryClass = classFn(thisSummaryData[0], summaryI);
 
-    let summaryDataNest,
+    let summaryPositionNest,
+      summaryValueNest,
       translate,
       extentlineX1,
       extentlineX2,
@@ -78,17 +80,27 @@ export function boxplotRenderFn({
 
     const renderValue = renderMode ? renderMode(summary, summaryI) : undefined;
 
+    summaryValueNest = thisSummaryData.map(p => p._orFV).sort((a, b) => a - b);
+
+    summaryValueNest = [
+      quantile(summaryValueNest, 0.0),
+      quantile(summaryValueNest, 0.25),
+      quantile(summaryValueNest, 0.5),
+      quantile(summaryValueNest, 0.75),
+      quantile(summaryValueNest, 1.0)
+    ];
+
     if (projection === "vertical") {
-      summaryDataNest = thisSummaryData
+      summaryPositionNest = thisSummaryData
         .map(p => chartSize - p._orFR)
         .sort((a, b) => b - a);
 
-      summaryDataNest = [
-        quantile(summaryDataNest, 0.0),
-        quantile(summaryDataNest, 0.25),
-        quantile(summaryDataNest, 0.5),
-        quantile(summaryDataNest, 0.75),
-        quantile(summaryDataNest, 1.0)
+      summaryPositionNest = [
+        quantile(summaryPositionNest, 0.0),
+        quantile(summaryPositionNest, 0.25),
+        quantile(summaryPositionNest, 0.5),
+        quantile(summaryPositionNest, 0.75),
+        quantile(summaryPositionNest, 1.0)
       ];
 
       const xPosition = positionFn(summary.middle, key, summaryI);
@@ -96,8 +108,8 @@ export function boxplotRenderFn({
       translate = `translate(${xPosition},${margin.top})`;
       extentlineX1 = 0;
       extentlineX2 = 0;
-      extentlineY1 = summaryDataNest[0];
-      extentlineY2 = summaryDataNest[4];
+      extentlineY1 = summaryPositionNest[0];
+      extentlineY2 = summaryPositionNest[4];
       topLineX1 = -columnWidth / 2;
       topLineX2 = columnWidth / 2;
       midLineX1 = -columnWidth / 2;
@@ -105,32 +117,77 @@ export function boxplotRenderFn({
       bottomLineX1 = -columnWidth / 2;
       bottomLineX2 = columnWidth / 2;
       rectBottomWidth = columnWidth;
-      rectBottomHeight = summaryDataNest[1] - summaryDataNest[2];
-      rectBottomY = summaryDataNest[2];
+      rectBottomHeight = summaryPositionNest[1] - summaryPositionNest[2];
+      rectBottomY = summaryPositionNest[2];
       rectBottomX = -columnWidth / 2;
       rectTopWidth = columnWidth;
-      rectTopHeight = summaryDataNest[2] - summaryDataNest[3];
+      rectTopHeight = summaryPositionNest[2] - summaryPositionNest[3];
       rectWholeWidth = columnWidth;
-      rectWholeHeight = summaryDataNest[1] - summaryDataNest[3];
-      rectWholeY = summaryDataNest[3];
+      rectWholeHeight = summaryPositionNest[1] - summaryPositionNest[3];
+      rectWholeY = summaryPositionNest[3];
       rectWholeX = -columnWidth / 2;
-      rectTopY = summaryDataNest[3];
+      rectTopY = summaryPositionNest[3];
       rectTopX = -columnWidth / 2;
-      topLineY1 = summaryDataNest[0];
-      topLineY2 = summaryDataNest[0];
-      bottomLineY1 = summaryDataNest[4];
-      bottomLineY2 = summaryDataNest[4];
-      midLineY1 = summaryDataNest[2];
-      midLineY2 = summaryDataNest[2];
-    } else if (projection === "horizontal") {
-      summaryDataNest = thisSummaryData.map(p => p._orFR).sort((a, b) => a - b);
+      topLineY1 = summaryPositionNest[0];
+      topLineY2 = summaryPositionNest[0];
+      bottomLineY1 = summaryPositionNest[4];
+      bottomLineY2 = summaryPositionNest[4];
+      midLineY1 = summaryPositionNest[2];
+      midLineY2 = summaryPositionNest[2];
 
-      summaryDataNest = [
-        quantile(summaryDataNest, 0.0),
-        quantile(summaryDataNest, 0.25),
-        quantile(summaryDataNest, 0.5),
-        quantile(summaryDataNest, 0.75),
-        quantile(summaryDataNest, 1.0)
+      summaryXYCoords.push(
+        {
+          label: "Maximum",
+          key,
+          summaryPieceName: "max",
+          x: xPosition,
+          y: summaryPositionNest[4] + margin.top,
+          value: summaryValueNest[4]
+        },
+        {
+          label: "3rd Quartile",
+          key,
+          summaryPieceName: "q3area",
+          x: xPosition,
+          y: summaryPositionNest[3] + margin.top,
+          value: summaryValueNest[3]
+        },
+        {
+          label: "Median",
+          key,
+          summaryPieceName: "median",
+          x: xPosition,
+          y: summaryPositionNest[2] + margin.top,
+          value: summaryValueNest[2]
+        },
+        {
+          label: "1st Quartile",
+          key,
+          summaryPieceName: "q1area",
+          x: xPosition,
+          y: summaryPositionNest[1] + margin.top,
+          value: summaryValueNest[1]
+        },
+        {
+          label: "Minimum",
+          key,
+          summaryPieceName: "min",
+          x: xPosition,
+          y: summaryPositionNest[0] + margin.top,
+          value: summaryValueNest[0]
+        }
+      );
+    } else if (projection === "horizontal") {
+      summaryPositionNest = thisSummaryData
+        .map(p => p._orFR)
+        .sort((a, b) => a - b);
+
+      summaryPositionNest = [
+        quantile(summaryPositionNest, 0.0),
+        quantile(summaryPositionNest, 0.25),
+        quantile(summaryPositionNest, 0.5),
+        quantile(summaryPositionNest, 0.75),
+        quantile(summaryPositionNest, 1.0)
       ];
 
       const yPosition = positionFn(summary.middle, key, summaryI);
@@ -138,8 +195,8 @@ export function boxplotRenderFn({
       translate = `translate(0,${yPosition})`;
       extentlineY1 = 0;
       extentlineY2 = 0;
-      extentlineX1 = summaryDataNest[0];
-      extentlineX2 = summaryDataNest[4];
+      extentlineX1 = summaryPositionNest[0];
+      extentlineX2 = summaryPositionNest[4];
       topLineY1 = -columnWidth / 2;
       topLineY2 = columnWidth / 2;
       midLineY1 = -columnWidth / 2;
@@ -147,42 +204,85 @@ export function boxplotRenderFn({
       bottomLineY1 = -columnWidth / 2;
       bottomLineY2 = columnWidth / 2;
       rectTopHeight = columnWidth;
-      rectTopWidth = summaryDataNest[3] - summaryDataNest[2];
-      rectTopX = summaryDataNest[2];
+      rectTopWidth = summaryPositionNest[3] - summaryPositionNest[2];
+      rectTopX = summaryPositionNest[2];
       rectTopY = -columnWidth / 2;
       rectBottomHeight = columnWidth;
-      rectBottomWidth = summaryDataNest[2] - summaryDataNest[1];
-      rectBottomX = summaryDataNest[1];
+      rectBottomWidth = summaryPositionNest[2] - summaryPositionNest[1];
+      rectBottomX = summaryPositionNest[1];
       rectBottomY = -columnWidth / 2;
       rectWholeHeight = columnWidth;
-      rectWholeWidth = summaryDataNest[3] - summaryDataNest[1];
-      rectWholeX = summaryDataNest[1];
+      rectWholeWidth = summaryPositionNest[3] - summaryPositionNest[1];
+      rectWholeX = summaryPositionNest[1];
       rectWholeY = -columnWidth / 2;
-      topLineX1 = summaryDataNest[0];
-      topLineX2 = summaryDataNest[0];
-      bottomLineX1 = summaryDataNest[4];
-      bottomLineX2 = summaryDataNest[4];
-      midLineX1 = summaryDataNest[2];
-      midLineX2 = summaryDataNest[2];
+      topLineX1 = summaryPositionNest[0];
+      topLineX2 = summaryPositionNest[0];
+      bottomLineX1 = summaryPositionNest[4];
+      bottomLineX2 = summaryPositionNest[4];
+      midLineX1 = summaryPositionNest[2];
+      midLineX2 = summaryPositionNest[2];
+
+      summaryXYCoords.push(
+        {
+          label: "Maximum",
+          key,
+          summaryPieceName: "max",
+          x: summaryPositionNest[4],
+          y: yPosition,
+          value: summaryValueNest[4]
+        },
+        {
+          label: "3rd Quartile",
+          key,
+          summaryPieceName: "q3area",
+          x: summaryPositionNest[3],
+          y: yPosition,
+          value: summaryValueNest[3]
+        },
+        {
+          label: "Median",
+          key,
+          summaryPieceName: "median",
+          x: summaryPositionNest[2],
+          y: yPosition,
+          value: summaryValueNest[2]
+        },
+        {
+          label: "1st Quartile",
+          key,
+          summaryPieceName: "q1area",
+          x: summaryPositionNest[1],
+          y: yPosition,
+          value: summaryValueNest[1]
+        },
+        {
+          label: "Minimum",
+          key,
+          summaryPieceName: "min",
+          x: summaryPositionNest[0],
+          y: yPosition,
+          value: summaryValueNest[0]
+        }
+      );
     }
 
     if (projection === "radial") {
-      summaryDataNest = thisSummaryData
+      summaryPositionNest = thisSummaryData
         .map(p => p._orFR - margin.left)
         .sort((a, b) => a - b);
 
-      summaryDataNest = [
-        quantile(summaryDataNest, 0.0),
-        quantile(summaryDataNest, 0.25),
-        quantile(summaryDataNest, 0.5),
-        quantile(summaryDataNest, 0.75),
-        quantile(summaryDataNest, 1.0)
+      summaryPositionNest = [
+        quantile(summaryPositionNest, 0.0),
+        quantile(summaryPositionNest, 0.25),
+        quantile(summaryPositionNest, 0.5),
+        quantile(summaryPositionNest, 0.75),
+        quantile(summaryPositionNest, 1.0)
       ];
 
       extentlineX1 = 0;
       extentlineX2 = 0;
-      extentlineY1 = summaryDataNest[0];
-      extentlineY2 = summaryDataNest[4];
+      extentlineY1 = summaryPositionNest[0];
+      extentlineY2 = summaryPositionNest[4];
       topLineX1 = -columnWidth / 2;
       topLineX2 = columnWidth / 2;
       midLineX1 = -columnWidth / 2;
@@ -190,19 +290,19 @@ export function boxplotRenderFn({
       bottomLineX1 = -columnWidth / 2;
       bottomLineX2 = columnWidth / 2;
       rectTopWidth = columnWidth;
-      rectTopHeight = summaryDataNest[1] - summaryDataNest[3];
-      rectTopY = summaryDataNest[3];
+      rectTopHeight = summaryPositionNest[1] - summaryPositionNest[3];
+      rectTopY = summaryPositionNest[3];
       rectTopX = -columnWidth / 2;
       rectBottomWidth = columnWidth;
-      rectBottomHeight = summaryDataNest[1] - summaryDataNest[3];
-      rectBottomY = summaryDataNest[3];
+      rectBottomHeight = summaryPositionNest[1] - summaryPositionNest[3];
+      rectBottomY = summaryPositionNest[3];
       rectBottomX = -columnWidth / 2;
-      topLineY1 = summaryDataNest[0];
-      topLineY2 = summaryDataNest[0];
-      bottomLineY1 = summaryDataNest[4];
-      bottomLineY2 = summaryDataNest[4];
-      midLineY1 = summaryDataNest[2];
-      midLineY2 = summaryDataNest[2];
+      topLineY1 = summaryPositionNest[0];
+      topLineY2 = summaryPositionNest[0];
+      bottomLineY1 = summaryPositionNest[4];
+      bottomLineY2 = summaryPositionNest[4];
+      midLineY1 = summaryPositionNest[2];
+      midLineY2 = summaryPositionNest[2];
 
       const twoPI = Math.PI * 2;
 
@@ -222,18 +322,18 @@ export function boxplotRenderFn({
       //        .padAngle(summary.pct_padding * twoPI);
 
       const bodyArcTopGenerator = arc()
-        .innerRadius(summaryDataNest[1] / 2)
+        .innerRadius(summaryPositionNest[1] / 2)
         .outerRadius(midLineY1 / 2);
       //        .padAngle(summary.pct_padding * twoPI);
 
       const bodyArcBottomGenerator = arc()
         .innerRadius(midLineY1 / 2)
-        .outerRadius(summaryDataNest[3] / 2);
+        .outerRadius(summaryPositionNest[3] / 2);
       //        .padAngle(summary.pct_padding * twoPI);
 
       const bodyArcWholeGenerator = arc()
-        .innerRadius(summaryDataNest[1] / 2)
-        .outerRadius(summaryDataNest[3] / 2);
+        .innerRadius(summaryPositionNest[1] / 2)
+        .outerRadius(summaryPositionNest[3] / 2);
       //        .padAngle(summary.pct_padding * twoPI);
 
       let startAngle = summary.pct_start + summary.pct_padding / 2;
@@ -242,21 +342,81 @@ export function boxplotRenderFn({
       startAngle *= twoPI;
       endAngle *= twoPI;
 
+      const radialAdjustX = adjustedSize[0] / 2 + margin.left;
+
+      const radialAdjustY = adjustedSize[1] / 2 + margin.top;
+
       //        const bottomPoint = bottomLineArcGenerator.centroid({ startAngle, endAngle })
       //        const topPoint = topLineArcGenerator.centroid({ startAngle, endAngle })
       const bottomPoint = pointOnArcAtAngle(
         [0, 0],
         midAngle,
-        summaryDataNest[4] / 2
+        summaryPositionNest[4] / 2
       );
       const topPoint = pointOnArcAtAngle(
         [0, 0],
         midAngle,
-        summaryDataNest[0] / 2
+        summaryPositionNest[0] / 2
+      );
+      const thirdPoint = pointOnArcAtAngle(
+        [0, 0],
+        midAngle,
+        summaryPositionNest[3] / 2
+      );
+      const midPoint = pointOnArcAtAngle(
+        [0, 0],
+        midAngle,
+        summaryPositionNest[2] / 2
+      );
+      const firstPoint = pointOnArcAtAngle(
+        [0, 0],
+        midAngle,
+        summaryPositionNest[1] / 2
       );
 
-      translate = `translate(${adjustedSize[0] / 2 +
-        margin.left},${adjustedSize[1] / 2 + margin.top})`;
+      summaryXYCoords.push(
+        {
+          label: "Minimum",
+          key,
+          summaryPieceName: "min",
+          x: topPoint[0] + radialAdjustX,
+          y: topPoint[1] + radialAdjustY,
+          value: summaryValueNest[0]
+        },
+        {
+          label: "1st Quartile",
+          key,
+          summaryPieceName: "q3area",
+          x: firstPoint[0] + radialAdjustX,
+          y: firstPoint[1] + radialAdjustY,
+          value: summaryValueNest[1]
+        },
+        {
+          label: "Median",
+          key,
+          summaryPieceName: "median",
+          x: midPoint[0] + radialAdjustX,
+          y: midPoint[1] + radialAdjustY,
+          value: summaryValueNest[2]
+        },
+        {
+          label: "3rd Quartile",
+          key,
+          summaryPieceName: "q1area",
+          x: thirdPoint[0] + radialAdjustX,
+          y: thirdPoint[1] + radialAdjustY,
+          value: summaryValueNest[3]
+        },
+        {
+          label: "Maximum",
+          key,
+          summaryPieceName: "max",
+          x: bottomPoint[0] + radialAdjustX,
+          y: bottomPoint[1] + radialAdjustY,
+          value: summaryValueNest[4]
+        }
+      );
+      translate = `translate(${radialAdjustX},${radialAdjustY})`;
 
       renderedSummaryMarks.push(
         <g
@@ -453,7 +613,7 @@ export function boxplotRenderFn({
     }
   });
 
-  return renderedSummaryMarks;
+  return { marks: renderedSummaryMarks, xyPoints: summaryXYCoords };
 }
 
 export function contourRenderFn({
@@ -470,6 +630,8 @@ export function contourRenderFn({
 }) {
   const keys = Object.keys(data);
   const renderedSummaryMarks = [];
+  const summaryXYCoords = [];
+
   keys.forEach((key, ordsetI) => {
     const ordset = data[key];
     const renderValue = renderMode && renderMode(ordset, ordsetI);
@@ -511,7 +673,7 @@ export function contourRenderFn({
       <g key={`contour-container-${ordsetI}`}>{contourMarks}</g>
     );
   });
-  return renderedSummaryMarks;
+  return { marks: renderedSummaryMarks, xyPoints: summaryXYCoords };
 }
 
 function axisGenerator(axisProps, i, axisScale) {
@@ -552,6 +714,7 @@ export function bucketizedRenderingFn({
   chartSize
 }) {
   const renderedSummaryMarks = [];
+  const summaryXYCoords = [];
 
   const buckets = type.bins || 25;
   const summaryValueAccessor = type.binValue || (d => d.length);
@@ -586,7 +749,7 @@ export function bucketizedRenderingFn({
     const xySorting =
       projection === "vertical" ? verticalXYSorting : horizontalXYSorting;
 
-    const summaryDataNest = thisSummaryData.sort(xySorting);
+    const summaryPositionNest = thisSummaryData.sort(xySorting);
 
     const violinHist = histogram();
     let binDomain =
@@ -607,12 +770,13 @@ export function bucketizedRenderingFn({
     let calculatedBins = violinHist
       .domain(binDomain)
       .thresholds(binBuckets)
-      .value(xyValue)(summaryDataNest);
+      .value(xyValue)(summaryPositionNest);
 
     calculatedBins = calculatedBins
       .map(d => ({
         y: d.x0,
         y1: d.x1 - d.x0,
+        pieces: d,
         value: summaryValueAccessor(d.map(p => p.piece))
       }))
       .filter(d => d.value !== 0);
@@ -628,33 +792,36 @@ export function bucketizedRenderingFn({
     const calculatedSummaryStyle = styleFn(thisSummaryData[0].piece, summaryI);
     const calculatedSummaryClass = classFn(thisSummaryData[0].piece, summaryI);
 
-    let translate = `translate(${summary.middle},0)`;
+    let translate = [summary.middle, 0];
     if (projection === "horizontal") {
-      translate = `translate(${bucketSize},${summary.middle})`;
+      translate = [bucketSize, summary.middle];
+    } else if (projection === "radial") {
+      translate = [
+        adjustedSize[0] / 2 + margin.left,
+        adjustedSize[1] / 2 + margin.top
+      ];
     }
 
     if (type.type === "heatmap" || type.type === "histogram") {
-      const tiles = bins.map((d, i) => {
-        return groupBarMark({
-          d,
-          i,
-          binMax,
-          columnWidth,
-          bucketSize,
-          projection,
-          adjustedSize,
-          chartSize,
-          summaryI,
-          data,
-          summary,
-          renderValue,
-          summaryStyle: calculatedSummaryStyle,
-          type,
-          margin
-        });
+      const mappedBars = groupBarMark({
+        bins,
+        binMax,
+        columnWidth,
+        bucketSize,
+        projection,
+        adjustedSize,
+        chartSize,
+        summaryI,
+        data,
+        summary,
+        renderValue,
+        summaryStyle: calculatedSummaryStyle,
+        type,
+        margin
       });
+      const tiles = mappedBars.marks;
       if (projection === "radial") {
-        translate = `translate(${margin.left},${margin.top})`;
+        translate = [margin.left, margin.top];
       }
 
       if (type.axis && type.type === "histogram") {
@@ -689,10 +856,16 @@ export function bucketizedRenderingFn({
           </g>
         );
       }
+      mappedBars.points.forEach(d => {
+        d.x += translate[0];
+        d.y += translate[1];
+      });
+
+      summaryXYCoords.push(...mappedBars.points);
       renderedSummaryMarks.push(
         <g
           {...eventListeners}
-          transform={translate}
+          transform={`translate(${translate})`}
           key={`summaryPiece-${summaryI}`}
         >
           {tiles}
@@ -703,23 +876,59 @@ export function bucketizedRenderingFn({
       bins[bins.length - 1].y = bins[bins.length - 1].y + bucketSize / 2;
       let violinArea = area().curve(type.curve || curveCatmullRom);
 
+      let violinPoints = [];
+
       if (projection === "horizontal") {
         violinArea
-          .x(summaryPoint => summaryPoint.y - bucketSize / 2)
-          .y0(summaryPoint => -summaryPoint.value / binMax * columnWidth / 2)
-          .y1(summaryPoint => summaryPoint.value / binMax * columnWidth / 2);
+          .x(d => d.x)
+          .y0(d => d.y0)
+          .y1(d => d.y1);
+
+        bins.forEach(summaryPoint => {
+          const xValue = summaryPoint.y - bucketSize / 2;
+          const yValue = summaryPoint.value / binMax * columnWidth / 2;
+
+          violinPoints.push({
+            x: xValue,
+            y0: -yValue,
+            y1: yValue
+          });
+          summaryXYCoords.push({
+            key: summary.name,
+            x: xValue + translate[0],
+            y: yValue + translate[1],
+            pieces: summaryPoint.pieces.map(d => d.piece),
+            value: summaryPoint.value
+          });
+        });
       } else if (projection === "vertical") {
         violinArea
-          .y(summaryPoint => summaryPoint.y + bucketSize / 2)
-          .x0(summaryPoint => -summaryPoint.value / binMax * columnWidth / 2)
-          .x1(summaryPoint => summaryPoint.value / binMax * columnWidth / 2);
+          .y(d => d.y)
+          .x0(d => d.x0)
+          .x1(d => d.x1);
+
+        bins.forEach(summaryPoint => {
+          const yValue = summaryPoint.y + bucketSize / 2;
+          const xValue = summaryPoint.value / binMax * columnWidth / 2;
+
+          violinPoints.push({
+            y: yValue,
+            x0: -xValue,
+            x1: xValue
+          });
+
+          summaryXYCoords.push({
+            key: summary.name,
+            x: xValue + translate[0],
+            y: yValue + translate[1],
+            pieces: summaryPoint.pieces.map(d => d.piece),
+            value: summaryPoint.value
+          });
+        });
       } else if (projection === "radial") {
         const angle = summary.pct - summary.pct_padding / 2;
         const midAngle = summary.pct_middle;
-
-        translate = `translate(${adjustedSize[0] / 2 +
-          margin.left},${adjustedSize[1] / 2 + margin.top})`;
-
+        violinPoints = bins;
         violinArea = inbins => {
           const forward = [];
           const backward = [];
@@ -735,6 +944,22 @@ export function bucketizedRenderingFn({
               (bin.y + bin.y1 - margin.left - bucketSize / 2) / 2
             );
 
+            //Ugh a terrible side effect has appeared
+            summaryXYCoords.push({
+              key: summary.name,
+              x: insidePoint[0] + translate[0],
+              y: insidePoint[1] + translate[1],
+              pieces: bin.pieces.map(d => d.piece),
+              value: bin.value
+            });
+            summaryXYCoords.push({
+              key: summary.name,
+              x: outsidePoint[0] + translate[0],
+              y: outsidePoint[1] + translate[1],
+              pieces: bin.pieces.map(d => d.piece),
+              value: bin.value
+            });
+
             forward.push(outsidePoint);
             backward.push(insidePoint);
           });
@@ -747,14 +972,14 @@ export function bucketizedRenderingFn({
 
       renderedSummaryMarks.push(
         <Mark
-          transform={translate}
+          transform={`translate(${translate})`}
           key={`summaryPiece-${summaryI}`}
           {...eventListeners}
           renderMode={renderValue}
           markType="path"
           className={calculatedSummaryClass}
           style={calculatedSummaryStyle}
-          d={violinArea(bins)}
+          d={violinArea(violinPoints)}
         />
       );
     } else if (type.type === "joy") {
@@ -766,33 +991,61 @@ export function bucketizedRenderingFn({
       zeroedEnd.y = zeroedEnd.y + bucketSize / 2;
 
       const joyBins = [zeroedStart, ...bins, zeroedEnd];
+      let joyPoints = [];
 
-      let joyArea = line().curve(type.curve || curveCatmullRom);
+      let joyArea = line()
+        .curve(type.curve || curveCatmullRom)
+        .x(d => d.x)
+        .y(d => d.y);
 
       let joyHeight = type.amplitude || 0;
 
       if (projection === "horizontal") {
-        joyArea
-          .x(summaryPoint => summaryPoint.y)
-          .y(
-            summaryPoint =>
-              -summaryPoint.value / binMax * (columnWidth + joyHeight) +
-              columnWidth / 2
-          );
+        joyBins.forEach(summaryPoint => {
+          const xValue = summaryPoint.y;
+          const yValue =
+            -summaryPoint.value / binMax * (columnWidth + joyHeight) +
+            columnWidth / 2;
+
+          joyPoints.push({
+            y: yValue,
+            x: xValue
+          });
+
+          summaryXYCoords.push({
+            key: summary.name,
+            x: xValue + translate[0],
+            y: yValue + translate[1],
+            pieces: summaryPoint.pieces.map(d => d.piece),
+            value: summaryPoint.value
+          });
+        });
       } else if (projection === "vertical") {
-        joyArea
-          .y(summaryPoint => summaryPoint.y)
-          .x(
-            summaryPoint =>
-              -summaryPoint.value / binMax * (columnWidth + joyHeight) +
-              columnWidth / 2
-          );
+        joyBins.forEach(summaryPoint => {
+          const yValue = summaryPoint.y;
+          const xValue =
+            -summaryPoint.value / binMax * (columnWidth + joyHeight) +
+            columnWidth / 2;
+
+          joyPoints.push({
+            y: yValue,
+            x: xValue
+          });
+
+          summaryXYCoords.push({
+            key: summary.name,
+            x: xValue + translate[0],
+            y: yValue + translate[1],
+            pieces: summaryPoint.pieces.map(d => d.piece),
+            value: summaryPoint.value
+          });
+        });
       } else if (projection === "radial") {
         const angle = summary.pct - summary.pct_padding / 2;
         const midAngle = summary.pct_start + summary.pct_padding / 2;
 
-        translate = `translate(${margin.left},${margin.top})`;
-
+        translate = [margin.left, margin.top];
+        joyPoints = joyBins;
         joyArea = inbins => {
           const forward = [];
           inbins.forEach(bin => {
@@ -801,6 +1054,14 @@ export function bucketizedRenderingFn({
               midAngle + angle * bin.value / binMax,
               (bin.y + bin.y1 - margin.left - bucketSize / 2) / 2
             );
+            //Ugh a terrible side effect has appeared
+            summaryXYCoords.push({
+              key: summary.name,
+              x: outsidePoint[0] + translate[0],
+              y: outsidePoint[1] + translate[1],
+              pieces: bin.pieces.map(d => d.piece),
+              value: bin.value
+            });
 
             forward.push(outsidePoint);
           });
@@ -809,21 +1070,21 @@ export function bucketizedRenderingFn({
       }
 
       renderedSummaryMarks.push(
-        <g transform={translate} key={`summaryPiece-${summaryI}`}>
-          <Mark
-            {...eventListeners}
-            renderMode={renderValue}
-            markType="path"
-            className={calculatedSummaryClass}
-            style={calculatedSummaryStyle}
-            d={joyArea(joyBins)}
-          />
-        </g>
+        <Mark
+          transform={`translate(${translate})`}
+          key={`summaryPiece-${summaryI}`}
+          {...eventListeners}
+          renderMode={renderValue}
+          markType="path"
+          className={calculatedSummaryClass}
+          style={calculatedSummaryStyle}
+          d={joyArea(joyPoints)}
+        />
       );
     }
   });
 
-  return renderedSummaryMarks;
+  return { marks: renderedSummaryMarks, xyPoints: summaryXYCoords };
 }
 
 export const drawSummaries = ({
@@ -855,4 +1116,8 @@ export const drawSummaries = ({
     margin,
     chartSize
   });
+};
+
+export const renderLaidOutSummaries = ({ data }) => {
+  return data;
 };

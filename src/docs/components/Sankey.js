@@ -39,22 +39,20 @@ export default class Sankey extends React.Component {
 
     const buttons = [
       <FormControl key="button-1-0-0">
-        <InputLabel htmlFor="o-padding-input">oPadding</InputLabel>
+        <InputLabel htmlFor="chart-type-input">Chart Type</InputLabel>
         <Select
-          floatingLabelText="Chart Type"
           value={this.state.type}
-          onChange={(e, i, value) => this.setState({ type: value })}
+          onChange={e => this.setState({ type: e.target.value })}
         >
           {typeOptions}
         </Select>
         <FormHelperText>Alignment with an input</FormHelperText>
       </FormControl>,
       <FormControl key="button-2-0-0">
-        <InputLabel htmlFor="o-padding-input">oPadding</InputLabel>
+        <InputLabel htmlFor="orient-input">orient</InputLabel>
         <Select
-          floatingLabelText="orient"
           value={this.state.orient}
-          onChange={(e, i, value) => this.setState({ orient: value })}
+          onChange={e => this.setState({ orient: e.target.value })}
         >
           {orientOptions}
         </Select>

@@ -218,9 +218,8 @@ const dataTypeHash = {
     oAccessor: d => d.color,
     pieceStyle: d => ({
       fill: d.color,
-      fillOpacity: 0.5,
-      stroke: d.color,
-      strokeOpacity: 0
+      opacity: 1,
+      stroke: d.color
     }),
     connectorType: (d, i) => i,
     connectorStyle: d => ({
@@ -513,7 +512,27 @@ export default class ORFrameDocs extends React.Component {
             data={dataTypeHash[this.state.dataType].data}
             axis={axis}
             projection={this.state.projection}
-            type={this.state.type === "none" ? undefined : this.state.type}
+            //            type={this.state.type === "none" ? undefined : this.state.type}
+            type={{
+              type: "clusterbar",
+              customMark: (d, i, xy) => [
+                <rect
+                  style={{ fill: "blue" }}
+                  x={2}
+                  width={xy.width - 4}
+                  height={xy.height}
+                />,
+                <text
+                  style={{ fill: "white" }}
+                  transform={`translate(18,${xy.height}) rotate(-90)`}
+                >
+                  Label
+                </text>,
+                <circle style={{ stroke: "black", fill: "pink" }} r={8} />,
+                <circle style={{ stroke: "black", fill: "pink" }} r={4} />,
+                <circle style={{ stroke: "black", fill: "pink" }} r={2} />
+              ]
+            }}
             renderMode={this.state.renderFn}
             summaryRenderMode={this.state.renderFn}
             connectorRenderMode={this.state.renderFn}
@@ -524,6 +543,7 @@ export default class ORFrameDocs extends React.Component {
                 this.state.summaryType
               )
             }
+            rExtent={[0]}
             summaryStyle={dataTypeHash[this.state.dataType].summaryStyle}
             style={dataTypeHash[this.state.dataType].pieceStyle}
             oLabel={true}

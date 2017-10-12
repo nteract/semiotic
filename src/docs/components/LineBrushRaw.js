@@ -34,7 +34,7 @@ export default (data, startEvent, duringEvent, endEvent) => {
           during: duringEvent,
           end: endEvent,
           brush: "xBrush",
-          extent: [new Date("1/2/1997"), new Date("1/2/2003")]
+          extent: [new Date("1/2/1998"), new Date("1/2/2003")]
         }}
       />
     </div>

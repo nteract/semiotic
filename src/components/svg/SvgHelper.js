@@ -79,8 +79,7 @@ export const hexToRgb = hex => {
 };
 
 export const groupBarMark = ({
-  d,
-  i,
+  bins,
   binMax,
   columnWidth,
   projection,
@@ -94,63 +93,100 @@ export const groupBarMark = ({
   type,
   margin
 }) => {
-  const opacity = d.value / binMax;
-  const finalStyle =
-    type.type === "heatmap"
-      ? { opacity: opacity, fill: summaryStyle.fill }
-      : summaryStyle;
-  const finalColumnWidth =
-    type.type === "heatmap" ? columnWidth : columnWidth * opacity;
   let xProp = -columnWidth / 2;
-  let yProp = d.y;
-  let height = d.y1;
-  let width = finalColumnWidth;
-  if (projection === "horizontal") {
-    yProp =
+
+  const mappedBins = [];
+  const mappedPoints = [];
+
+  bins.forEach((d, i) => {
+    const opacity = d.value / binMax;
+    const finalStyle =
       type.type === "heatmap"
-        ? -columnWidth / 2
-        : columnWidth / 2 - finalColumnWidth;
-    xProp = d.y - d.y1;
-    height = finalColumnWidth;
-    width = d.y1;
-  } else if (projection === "radial") {
-    const arcGenerator = arc()
-      .innerRadius((d.y - margin.left) / 2)
-      .outerRadius((d.y + d.y1 - margin.left) / 2);
+        ? { opacity: opacity, fill: summaryStyle.fill }
+        : summaryStyle;
+    const finalColumnWidth =
+      type.type === "heatmap" ? columnWidth : columnWidth * opacity;
+    let yProp = d.y;
+    let height = d.y1;
+    let width = finalColumnWidth;
+    let xOffset =
+      type.type === "heatmap" ? finalColumnWidth / 2 : finalColumnWidth;
+    let yOffset = d.y1 / 2;
 
-    const angle = summary.pct - summary.pct_padding;
-    let startAngle = summary.pct_middle - summary.pct_padding;
+    if (projection === "horizontal") {
+      yProp =
+        type.type === "heatmap"
+          ? -columnWidth / 2
+          : columnWidth / 2 - finalColumnWidth;
+      xProp = d.y - d.y1;
+      height = finalColumnWidth;
+      width = d.y1;
+      yOffset =
+        type.type === "heatmap" ? finalColumnWidth / 2 : finalColumnWidth;
+      xOffset = d.y1 / 2;
+    } else if (projection === "radial") {
+      const arcGenerator = arc()
+        .innerRadius((d.y - margin.left) / 2)
+        .outerRadius((d.y + d.y1 - margin.left) / 2);
 
-    let endAngle =
-      type.type === "heatmap"
-        ? startAngle + angle
-        : startAngle + angle * opacity;
-    startAngle *= twoPI;
-    endAngle *= twoPI;
+      const angle = summary.pct - summary.pct_padding;
+      let startAngle = summary.pct_middle - summary.pct_padding;
 
-    const arcTranslate = `translate(${adjustedSize[0] / 2},${adjustedSize[1] /
-      2})`;
-    return (
-      <Mark
-        markType="path"
-        transform={arcTranslate}
-        renderMode={renderValue}
-        key={`groupIcon-${summaryI}-${i}`}
-        d={arcGenerator({ startAngle, endAngle })}
-        style={finalStyle}
-      />
-    );
-  }
-  return (
-    <Mark
-      markType="rect"
-      renderMode={renderValue}
-      key={`groupIcon-${summaryI}-${i}`}
-      x={xProp}
-      y={yProp}
-      height={height}
-      width={width}
-      style={finalStyle}
-    />
-  );
+      let endAngle =
+        type.type === "heatmap"
+          ? startAngle + angle
+          : startAngle + angle * opacity;
+      startAngle *= twoPI;
+      endAngle *= twoPI;
+
+      const arcAdjustX = adjustedSize[0] / 2;
+      const arcAdjustY = adjustedSize[1] / 2;
+
+      const arcTranslate = `translate(${arcAdjustX},${arcAdjustY})`;
+      const arcCenter = arcGenerator.centroid({ startAngle, endAngle });
+      mappedPoints.push({
+        key: summary.name,
+        value: d.value,
+        pieces: d.pieces.map(d => d.piece),
+        label: "Heatmap",
+        x: arcCenter[0] + arcAdjustX,
+        y: arcCenter[1] + arcAdjustY
+      });
+      mappedBins.push(
+        <Mark
+          markType="path"
+          transform={arcTranslate}
+          renderMode={renderValue}
+          key={`groupIcon-${summaryI}-${i}`}
+          d={arcGenerator({ startAngle, endAngle })}
+          style={finalStyle}
+        />
+      );
+    }
+    if (projection !== "radial") {
+      mappedPoints.push({
+        key: summary.name,
+        value: d.value,
+        pieces: d.pieces.map(d => d.piece),
+        label: "Heatmap",
+        x: xProp + xOffset,
+        y: yProp + yOffset
+      });
+
+      mappedBins.push(
+        <Mark
+          markType="rect"
+          renderMode={renderValue}
+          key={`groupIcon-${summaryI}-${i}`}
+          x={xProp}
+          y={yProp}
+          height={height}
+          width={width}
+          style={finalStyle}
+        />
+      );
+    }
+  });
+
+  return { marks: mappedBins, points: mappedPoints };
 };

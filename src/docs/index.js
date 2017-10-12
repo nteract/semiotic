@@ -17,8 +17,6 @@ const basename = process.env.REACT_APP_GH_PAGES_PATH
   ? `/${process.env.REACT_APP_GH_PAGES_PATH}`
   : "";
 
-console.log("theme", theme);
-
 const muiTheme = createMuiTheme(theme);
 
 const Docs = test => {

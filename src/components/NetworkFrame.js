@@ -60,6 +60,7 @@ import {
 import { interpolateNumber } from "d3-interpolate";
 import { chord, ribbon } from "d3-chord";
 import { arc } from "d3-shape";
+import { tree, hierarchy } from "d3-hierarchy";
 
 import PropTypes from "prop-types";
 
@@ -73,6 +74,17 @@ const customEdgeHashMutate = {
   particle: glyphMutate.particle
 }
 */
+
+function recursiveIDAccessor(idAccessor, node, accessorString) {
+  if (node.parent) {
+    accessorString = `${accessorString}-${recursiveIDAccessor(
+      idAccessor,
+      node.parent,
+      accessorString
+    )}`;
+  }
+  return `${accessorString}-${idAccessor(node.data)}`;
+}
 
 const sankeyOrientHash = {
   left: sankeyLeft,
@@ -283,12 +295,16 @@ class NetworkFrame extends React.Component {
 
     let { edgeType, customNodeIcon, customEdgeIcon } = currentProps;
 
-    let networkSettings;
+    let networkSettings, rootNode, hierarchicalNetwork;
 
     if (typeof networkType === "string") {
       networkSettings = { type: networkType, iterations: 500 };
     } else {
       networkSettings = networkType;
+    }
+
+    if (!edgeType && networkSettings.type === "sankey") {
+      edgeType = areaLink;
     }
 
     const nodeIDAccessor = stringToFn(currentProps.nodeIDAccessor, d => d.id);
@@ -325,7 +341,8 @@ class NetworkFrame extends React.Component {
       !this.state.projectedNodes ||
       !this.state.projectedEdges ||
       this.graphSettings.numberOfNodes !== (nodes ? nodes.length : undefined) ||
-      edges.length !== this.graphSettings.numberOfEdges;
+      edges.length !== this.graphSettings.numberOfEdges ||
+      networkSettings.type === "dendrogram";
 
     if (changedData) {
       this.edgeHash = new Map();
@@ -342,13 +359,43 @@ class NetworkFrame extends React.Component {
         node.degree = 0;
       });
 
-      edges.forEach(edge => {
+      let operationalEdges = edges;
+
+      if (!Array.isArray(edges)) {
+        this.hierarchicalNetwork = true;
+        let rootNode = hierarchy(edges);
+
+        if (networkSettings.type === "dendrogram") {
+          const layout = networkSettings.layout || tree;
+          const treeChart = layout();
+          treeChart.size(size);
+
+          treeChart(rootNode);
+        }
+
+        operationalEdges = rootNode
+          .descendants()
+          .filter(d => d.parent !== null)
+          .map(d => ({
+            source: Object.assign(d.parent, d.parent.data),
+            target: Object.assign(d, d.data),
+            depth: d.depth,
+            weight: 1,
+            value: 1,
+            _NWFEdgeKey: `${nodeIDAccessor(d.data)}-${recursiveIDAccessor(
+              nodeIDAccessor,
+              d.parent,
+              ""
+            )}`
+          }));
+      }
+      operationalEdges.forEach(edge => {
         const source = sourceAccessor(edge);
         const target = targetAccessor(edge);
         if (!this.nodeHash.get(source)) {
           const sourceNode =
             typeof source === "object"
-              ? Object.assign({}, source, {
+              ? Object.assign(source, {
                   degree: 0,
                   inDegree: 0,
                   outDegree: 0
@@ -361,12 +408,13 @@ class NetworkFrame extends React.Component {
                   createdByFrame: true
                 };
           this.nodeHash.set(source, sourceNode);
+
           projectedNodes.push(sourceNode);
         }
         if (!this.nodeHash.get(target)) {
           const targetNode =
             typeof target === "object"
-              ? Object.assign({}, target, {
+              ? Object.assign(target, {
                   degree: 0,
                   inDegree: 0,
                   outDegree: 0
@@ -547,30 +595,54 @@ class NetworkFrame extends React.Component {
           </g>
         );
       };
+    } else if (networkSettings.type === "dendrogram") {
+      if (networkSettings.projection === "horizontal") {
+        projectedNodes.forEach(node => {
+          const ox = node.x;
+          node.x = node.y;
+          node.y = ox;
+        });
+      }
     }
 
     if (changedData || networkSettingsChanged) {
-      const graph = new Graph({ multi: !!networkSettings.multi });
-      const graphologyNodes = projectedNodes.map(d => ({
-        key: nodeIDAccessor(d),
-        originalNode: d
-      }));
+      let components = [
+          {
+            componentNodes: projectedNodes,
+            componentEdges: projectedEdges
+          }
+        ],
+        strongComponents = projectedNodes;
+      if (!this.hierarchicalNetwork) {
+        const graph = new Graph({ multi: !!networkSettings.multi });
+        const graphologyNodes = projectedNodes.map(d => ({
+          key: d.id,
+          originalNode: d
+        }));
 
-      graph.import({
-        attributes: { name: "Graph for Processing" },
-        nodes: graphologyNodes,
-        edges: projectedEdges.map(d => ({
-          source: nodeIDAccessor(d.source),
-          target: nodeIDAccessor(d.target),
-          originalEdge: d
-        }))
-      });
-      const components = connectedComponents(graph).sort(
-        (a, b) => b.length - a.length
-      );
-      const strongComponents = stronglyConnectedComponents(graph).sort(
-        (a, b) => b.length - a.length
-      );
+        graph.import({
+          attributes: { name: "Graph for Processing" },
+          nodes: graphologyNodes,
+          edges: projectedEdges.map(d => ({
+            source: d.source.id,
+            target: d.target.id,
+            originalEdge: d
+          }))
+        });
+        components = connectedComponents(graph)
+          .sort((a, b) => b.length - a.length)
+          .map(c => ({
+            componentNodes: projectedNodes.filter(d => c.indexOf(d.id) !== -1),
+            componentEdges: projectedEdges.filter(
+              d =>
+                c.indexOf(d.source.id) !== -1 || c.indexOf(d.target.id) !== -1
+            )
+          }));
+
+        strongComponents = stronglyConnectedComponents(graph).sort(
+          (a, b) => b.length - a.length
+        );
+      }
 
       //check for components first
       if (
@@ -665,8 +737,6 @@ class NetworkFrame extends React.Component {
           d.sankeyWidth = d.width;
           d.width = undefined;
         });
-
-        edgeType = areaLink;
       } else if (networkSettings.type === "wordcloud") {
         const {
           iterations = 500,
@@ -769,7 +839,11 @@ class NetworkFrame extends React.Component {
           //      node.textWidth = projectionScaleY(node.textWidth)
         });
       } else if (networkSettings.type === "force") {
-        const { iterations = 500, edgeStrength = 0.1 } = networkSettings;
+        const {
+          iterations = 500,
+          edgeStrength = 0.1,
+          distanceMax = Infinity
+        } = networkSettings;
 
         const linkForce = forceLink().strength(
           d => (d.weight ? d.weight * edgeStrength : edgeStrength)
@@ -779,7 +853,7 @@ class NetworkFrame extends React.Component {
           .force(
             "charge",
             forceManyBody()
-              .distanceMax(networkSettings.distanceMax || Infinity)
+              .distanceMax(distanceMax)
               .strength(
                 networkSettings.forceManyBody ||
                   (d => -25 * nodeSizeAccessor(d))
@@ -798,7 +872,7 @@ class NetworkFrame extends React.Component {
       } else if (networkSettings.type === "motifs") {
         const largestComponent = Math.max(
           projectedNodes.length / 3,
-          components[0].length
+          components[0].componentNodes.length
         );
 
         const layoutSize = size[0] > size[1] ? size[1] : size[0];
@@ -810,22 +884,14 @@ class NetworkFrame extends React.Component {
         let currentX = 0;
         let currentY = 0;
 
-        components.forEach(component => {
-          const componentNodes = projectedNodes.filter(
-            d => component.indexOf(nodeIDAccessor(d)) !== -1
-          );
-          const componentEdges = projectedEdges.filter(
-            d =>
-              component.indexOf(nodeIDAccessor(d.source)) !== -1 ||
-              component.indexOf(nodeIDAccessor(d.target)) !== -1
-          );
-
+        components.forEach(({ componentNodes, componentEdges }) => {
           const linkForce = forceLink().strength(
             d => (d.weight ? d.weight * edgeStrength : edgeStrength)
           );
 
           const componentLayoutSize =
-            Math.max(component.length / largestComponent, 0.2) * layoutSize;
+            Math.max(componentNodes.length / largestComponent, 0.2) *
+            layoutSize;
 
           const xBound = componentLayoutSize + currentX;
           const yBound = componentLayoutSize + currentY;
@@ -899,6 +965,7 @@ class NetworkFrame extends React.Component {
       this.graphSettings = networkSettings;
       this.graphSettings.numberOfNodes = nodes.length;
       this.graphSettings.numberOfEdges = edges.length;
+      this.graphSettings;
     }
 
     if (
@@ -948,6 +1015,8 @@ class NetworkFrame extends React.Component {
       }
     }
 
+    console.log("projectedEdges", projectedEdges);
+
     const networkFrameRender = {
       edges: {
         data: projectedEdges,
@@ -957,7 +1026,7 @@ class NetworkFrame extends React.Component {
         canvasRender: stringToFn(canvasEdges, undefined, true),
         renderKeyFn: currentProps.edgeRenderKey
           ? currentProps.edgeRenderKey
-          : d => `${nodeIDAccessor(d.source)}-${nodeIDAccessor(d.target)}`,
+          : d => d._NWFEdgeKey || `${d.source.id}-${d.target.id}`,
         behavior: drawEdges,
         type: edgeType,
         customMark: customEdgeIcon
@@ -1065,7 +1134,9 @@ class NetworkFrame extends React.Component {
           }
         }
       );
-      return <Annotation key={Math.random() + "key"} noteData={noteData} />;
+      return (
+        <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
+      );
     } else if (d.type === "react-annotation" || typeof d.type === "function") {
       const selectedNode =
         d.x && d.y ? d : projectedNodes.find(p => nodeIDAccessor(p) === d.id);
@@ -1084,7 +1155,9 @@ class NetworkFrame extends React.Component {
         d,
         { type: typeof d.type === "function" ? d.type : undefined }
       );
-      return <Annotation key={Math.random() + "key"} noteData={noteData} />;
+      return (
+        <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
+      );
     } else if (d.type === "enclose") {
       const selectedNodes = projectedNodes.filter(
         p => d.ids.indexOf(nodeIDAccessor(p)) !== -1
@@ -1135,7 +1208,9 @@ class NetworkFrame extends React.Component {
       }
       //TODO: Support .ra (setting angle)
 
-      return <Annotation key={Math.random() + "key"} noteData={noteData} />;
+      return (
+        <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
+      );
     }
     return null;
   }

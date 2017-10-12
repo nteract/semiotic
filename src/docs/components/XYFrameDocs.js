@@ -258,7 +258,6 @@ const customPointHash = {
   none: undefined,
   basic: <Mark markType="rect" x={-4} y={-4} width={8} height={8} />,
   variable: ({ d, i }) => {
-    console.log("d", d);
     return d.step < 20 ? (
       <Mark markType="circle" r="5" />
     ) : (

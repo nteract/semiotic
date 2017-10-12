@@ -1,35 +1,15 @@
 import React from "react";
 import { NetworkFrame } from "../../components";
-import { tree, hierarchy } from "d3-hierarchy";
 import { data } from "../sampledata/d3_api";
-
-const root = hierarchy(data, d => d.children);
-
-const treeChart = tree();
-treeChart.size([500, 500]);
-
-const treeNodes = treeChart(root).descendants();
-treeNodes.forEach((d, i) => {
-  d.id = `node-${i}`;
-});
-
-const treeEdges = [
-  ...treeNodes.filter(d => d.parent !== null).map(d => ({
-    source: d.parent.id,
-    target: d.id,
-    weight: 1
-  }))
-];
+import { cluster } from "d3-hierarchy";
 
 const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"];
 
-const layoutFunction = ({ edges, nodes }) => ({ edges, nodes });
-
-export default (
+export default ({ annotations = [], type = "dendrogram" }) => (
   <NetworkFrame
     size={[700, 400]}
-    edges={treeEdges}
-    nodes={treeNodes}
+    edges={data}
+    //    nodes={treeNodes}
     nodeStyle={(d, i) => ({ fill: colors[d.depth], stroke: colors[d.depth] })}
     edgeStyle={(d, i) => ({
       fill: colors[d.source.depth],
@@ -37,17 +17,23 @@ export default (
       opacity: 0.5
     })}
     nodeSizeAccessor={1}
-    sourceAccessor={"source"}
-    targetAccessor={"target"}
-    nodeIDAccessor={"id"}
+    nodeIDAccessor={"name"}
     hoverAnnotation={true}
-    networkType={{ type: layoutFunction }}
+    networkType={{
+      type,
+      projection: "horizontal",
+      //      layout: cluster,
+      nodePadding: 1,
+      forceManyBody: -15,
+      edgeStrength: 1.5
+    }}
     tooltipContent={d => (
       <div className="tooltip-content">
         {d.parent ? <p>{d.parent.data.name}</p> : undefined}
         <p>{d.data.name}</p>
       </div>
     )}
+    annotations={annotations}
     margin={20}
   />
 );
