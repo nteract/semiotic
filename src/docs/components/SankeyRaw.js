@@ -37,7 +37,6 @@ export default ({ annotations = [], type = "sankey", orient = "left" }) => (
     sourceAccessor="source"
     targetAccessor="target"
     nodeSizeAccessor={5}
-    edgeType={"arrowhead"}
     zoomToFit={type === "force"}
     hoverAnnotation={true}
     edgeWidthAccessor={type === "chord" ? d => d.value : undefined}
