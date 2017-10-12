@@ -616,7 +616,7 @@ class NetworkFrame extends React.Component {
       if (!this.hierarchicalNetwork) {
         const graph = new Graph({ multi: !!networkSettings.multi });
         const graphologyNodes = projectedNodes.map(d => ({
-          key: d.id,
+          key: nodeIDAccessor(d),
           originalNode: d
         }));
 
@@ -954,8 +954,6 @@ class NetworkFrame extends React.Component {
           });
         });
       } else if (typeof networkSettings.type === "function") {
-        // console.log("networkSettings is a function")
-        // console.log(networkSettings)
         const customProjectedGraph = networkSettings.type({
           nodes: projectedNodes,
           edges: projectedEdges
@@ -1014,9 +1012,6 @@ class NetworkFrame extends React.Component {
         legendSettings.legendGroups = legendGroups;
       }
     }
-
-    console.log("projectedEdges", projectedEdges);
-
     const networkFrameRender = {
       edges: {
         data: projectedEdges,

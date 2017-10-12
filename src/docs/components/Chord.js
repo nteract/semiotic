@@ -55,7 +55,7 @@ export default class Chord extends React.Component {
         <InputLabel htmlFor="pad-angle-input">padAngle</InputLabel>
         <Select
           value={this.state.padAngle}
-          onChange={(e, i, value) => this.setState({ padAngle: value })}
+          onChange={e => this.setState({ padAngle: e.target.value })}
         >
           {padAngleOptions}
         </Select>

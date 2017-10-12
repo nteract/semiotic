@@ -46,15 +46,13 @@ export default class PieDonutDocs extends React.Component {
     const buttons = [
       <div key="button-0">
         <FormControl>
-          <InputLabel htmlFor="type-input">Type</InputLabel>
+          <InputLabel htmlFor="type-input">Kind of Chart</InputLabel>
           <Select
-            floatingLabelText="Kind of Chart"
             value={this.state.kind}
-            onChange={(e, i, value) => this.setState({ kind: value })}
+            onChange={e => this.setState({ kind: e.target.value })}
           >
             {kindOptions}
           </Select>
-          <FormHelperText>Alignment with an input</FormHelperText>
         </FormControl>
       </div>,
       <div key="button-1">
@@ -62,24 +60,21 @@ export default class PieDonutDocs extends React.Component {
           <InputLabel htmlFor="inner-radius-input">innerRadius</InputLabel>
           <Select
             value={this.state.innerRadius}
-            onChange={(e, i, value) => this.setState({ innerRadius: value })}
+            onChange={e => this.setState({ innerRadius: e.target.value })}
           >
             {innerOptions}
           </Select>
-          <FormHelperText>Alignment with an input</FormHelperText>
         </FormControl>
       </div>,
       <div key="button-2">
         <FormControl>
           <InputLabel htmlFor="padding-input">padding</InputLabel>
           <Select
-            floatingLabelText="padding"
             value={this.state.padding}
-            onChange={(e, i, value) => this.setState({ padding: value })}
+            onChange={e => this.setState({ padding: e.target.value })}
           >
             {paddingOptions}
           </Select>
-          <FormHelperText>Alignment with an input</FormHelperText>
         </FormControl>
       </div>
     ];

@@ -168,7 +168,6 @@ export default class NetworkFrameDocs extends React.Component {
         <FormControl>
           <InputLabel htmlFor="edge-type-input">edgeType</InputLabel>
           <Select
-            floatingLabelText="edgeType"
             value={this.state.edge}
             onChange={e => this.setState({ edge: e.target.value })}
           >
@@ -180,7 +179,6 @@ export default class NetworkFrameDocs extends React.Component {
         <FormControl>
           <InputLabel htmlFor="node-size-input">nodeSize</InputLabel>
           <Select
-            floatingLabelText="nodeSize"
             value={this.state.nodeSize}
             onChange={e => this.setState({ nodeSize: e.target.value })}
           >
@@ -192,7 +190,6 @@ export default class NetworkFrameDocs extends React.Component {
         <FormControl>
           <InputLabel htmlFor="annotations-input">annotations</InputLabel>
           <Select
-            floatingLabelText="annotations"
             value={this.state.annotations}
             onChange={e => this.setState({ annotations: e.target.value })}
           >
@@ -204,7 +201,6 @@ export default class NetworkFrameDocs extends React.Component {
         <FormControl>
           <InputLabel htmlFor="network-type-input">networkType</InputLabel>
           <Select
-            floatingLabelText="networkType"
             value={this.state.networkType}
             onChange={e => this.setState({ networkType: e.target.value })}
           >
@@ -216,7 +212,6 @@ export default class NetworkFrameDocs extends React.Component {
         <FormControl>
           <InputLabel htmlFor="custom-node-input">customNodeIcon</InputLabel>
           <Select
-            floatingLabelText="customNodeIcon"
             value={this.state.customNodeIcon}
             onChange={e => {
               this.setState({ customNodeIcon: e.target.value });

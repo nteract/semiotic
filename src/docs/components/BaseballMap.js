@@ -106,7 +106,7 @@ export default class BaseballMapDocs extends React.Component {
         <InputLabel htmlFor="mode-input">Mode</InputLabel>
         <Select
           value={this.state.mode}
-          onChange={(e, i, value) => this.setState({ mode: value })}
+          onChange={e => this.setState({ mode: e.target.value })}
         >
           {modeOptions}
         </Select>
