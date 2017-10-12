@@ -1,9 +1,11 @@
 {
   "name": "semiotic",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "The semiotic JavaScript data visualization framework",
   "main": "lib/index.js",
-  "files": ["lib"],
+  "files": [
+    "lib"
+  ],
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
@@ -110,6 +112,9 @@
     "react-resize-detector": "0.6.0"
   },
   "nyc": {
-    "exclude": ["tests/unit/lib/*.js", "tests/unit/specs/**/*.js"]
+    "exclude": [
+      "tests/unit/lib/*.js",
+      "tests/unit/specs/**/*.js"
+    ]
   }
 }
