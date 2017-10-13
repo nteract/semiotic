@@ -1350,7 +1350,8 @@ class ORFrame extends React.Component {
       backgroundGraphics,
       foregroundGraphics = [],
       beforeElements,
-      disableContext
+      disableContext,
+      summaryType
     } = this.props;
 
     const {
@@ -1389,6 +1390,28 @@ class ORFrame extends React.Component {
       key: "orframe",
       additionalDefs: this.props.additionalDefs
     });
+
+    let interactionOverflow;
+
+    if (summaryType && summaryType.amplitude) {
+      if (projection === "horizontal") {
+        interactionOverflow = {
+          top: summaryType.amplitude,
+          bottom: 0,
+          left: 0,
+          right: 0
+        };
+      } else if (projection === "radial") {
+        interactionOverflow = { top: 0, bottom: 0, left: 0, right: 0 };
+      } else {
+        interactionOverflow = {
+          top: 0,
+          bottom: 0,
+          left: summaryType.amplitude,
+          right: 0
+        };
+      }
+    }
 
     return (
       <Frame
@@ -1430,6 +1453,7 @@ class ORFrame extends React.Component {
         rScale={this.rScale}
         projection={projection}
         disableContext={disableContext}
+        interactionOverflow={interactionOverflow}
       />
     );
   }

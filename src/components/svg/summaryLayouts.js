@@ -1001,7 +1001,7 @@ export function bucketizedRenderingFn({
       let joyHeight = type.amplitude || 0;
 
       if (projection === "horizontal") {
-        joyBins.forEach(summaryPoint => {
+        joyBins.forEach((summaryPoint, i) => {
           const xValue = summaryPoint.y;
           const yValue =
             -summaryPoint.value / binMax * (columnWidth + joyHeight) +
@@ -1012,13 +1012,16 @@ export function bucketizedRenderingFn({
             x: xValue
           });
 
-          summaryXYCoords.push({
-            key: summary.name,
-            x: xValue + translate[0],
-            y: yValue + translate[1],
-            pieces: summaryPoint.pieces.map(d => d.piece),
-            value: summaryPoint.value
-          });
+          //Don't make an interaction point for the first or last
+          if (i !== 0 && i !== joyBins.length - 1) {
+            summaryXYCoords.push({
+              key: summary.name,
+              x: xValue + translate[0],
+              y: yValue + translate[1],
+              pieces: summaryPoint.pieces.map(d => d.piece),
+              value: summaryPoint.value
+            });
+          }
         });
       } else if (projection === "vertical") {
         joyBins.forEach(summaryPoint => {

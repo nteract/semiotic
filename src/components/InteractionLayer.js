@@ -157,14 +157,21 @@ class InteractionLayer extends React.Component {
       projectedYMiddle,
       margin,
       size,
-      overlay
+      overlay,
+      interactionOverflow = { top: 0, bottom: 0, left: 0, right: 0 }
     } = props;
 
     if (points && props.hoverAnnotation && !overlay) {
       let voronoiDiagram = voronoi()
         .extent([
-          [margin.left, margin.top],
-          [size[0] + margin.left, size[1] + margin.top]
+          [
+            margin.left - interactionOverflow.left,
+            margin.top - interactionOverflow.top
+          ],
+          [
+            size[0] + margin.left + interactionOverflow.right,
+            size[1] + margin.top + interactionOverflow.bottom
+          ]
         ])
         .x(d => xScale(d[projectedX]))
         .y(d => yScale(d[projectedYMiddle] || d[projectedY]));

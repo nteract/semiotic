@@ -59,7 +59,8 @@ class Frame extends React.Component {
       overlay,
       columns,
       rScale,
-      projection
+      projection,
+      interactionOverflow
     } = this.props;
 
     const { voronoiHover } = this.state;
@@ -178,6 +179,7 @@ class Frame extends React.Component {
             oColumns={columns}
             rScale={rScale}
             projection={projection}
+            interactionOverflow={interactionOverflow}
           />
           {annotationLayer}
         </div>
