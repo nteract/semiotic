@@ -1,66 +1,66 @@
-import React from "react"
-import { xyframe_data } from "../sampledata/nyc_temp"
-import { quantile } from "d3-array"
-import { DividedLine, Mark } from "../../components"
-import { scaleLinear } from "d3-scale"
-import { AnnotationCalloutElbow } from "react-annotation"
-import { curveMonotoneX, line } from "d3-shape"
+import React from "react";
+import { xyframe_data } from "../sampledata/nyc_temp";
+import { quantile } from "d3-array";
+import { DividedLine, Mark } from "../../components";
+import { scaleLinear } from "d3-scale";
+import { AnnotationCalloutElbow } from "react-annotation";
+import { curveMonotoneX, line } from "d3-shape";
 
-const blue = "rgb(0, 162, 206)"
-const red = "rgb(179, 51, 29)"
+const blue = "rgb(0, 162, 206)";
+const red = "rgb(179, 51, 29)";
 
 //const opacityScale = scaleLinear().domain([0, 148]).range([0.1, 1])
 const opacityScale = scaleLinear()
   .domain([1869, 2017])
-  .range([0.1, 1])
+  .range([0.1, 1]);
 
-const processedNYCTemp = xyframe_data
+const processedNYCTemp = xyframe_data;
 
-const monthHash = {}
-const lines = []
-const bounds = { label: "boundingRegion", bounding: [], coordinates: [] }
+const monthHash = {};
+const lines = [];
+const bounds = { label: "boundingRegion", bounding: [], coordinates: [] };
 processedNYCTemp.forEach(d => {
-  const line = { label: d.year, average: d.Annual, coordinates: [] }
-  lines.push(line)
+  const line = { label: d.year, average: d.Annual, coordinates: [] };
+  lines.push(line);
   Object.keys(d).forEach(k => {
     if (k !== "year" && k !== "Annual") {
       if (!monthHash[k]) {
-        monthHash[k] = []
+        monthHash[k] = [];
       }
-      monthHash[k].push(d[k])
+      monthHash[k].push(d[k]);
       line.coordinates.push({
         value: d[k],
         step: line.coordinates.length,
         year: d.year
-      })
+      });
     }
-  })
-})
+  });
+});
 
 Object.keys(monthHash).forEach(key => {
-  const values = monthHash[key].sort((a, b) => b - a)
+  const values = monthHash[key].sort((a, b) => b - a);
 
-  const topVal = quantile(values, 0.05)
-  const bottomVal = quantile(values, 0.95)
-  const medianVal = quantile(values, 0.5)
+  const topVal = quantile(values, 0.05);
+  const bottomVal = quantile(values, 0.95);
+  const medianVal = quantile(values, 0.5);
   bounds.bounding.push({
     top: topVal,
     bottom: bottomVal,
     step: bounds.bounding.length,
     median: medianVal
-  })
-})
+  });
+});
 
 lines.forEach(line => {
   line.coordinates.forEach(point => {
-    const thisBound = bounds.bounding[point.step]
-    point.top = thisBound.top
-    point.bottom = thisBound.bottom
-    point.delta = point.value - thisBound.median
-    point.topDelta = thisBound.top - thisBound.median
-    point.bottomDelta = thisBound.bottom - thisBound.median
-  })
-})
+    const thisBound = bounds.bounding[point.step];
+    point.top = thisBound.top;
+    point.bottom = thisBound.bottom;
+    point.delta = point.value - thisBound.median;
+    point.topDelta = thisBound.top - thisBound.median;
+    point.bottomDelta = thisBound.bottom - thisBound.median;
+  });
+});
 
 bounds.coordinates = [
   ...bounds.bounding.map(d => ({
@@ -71,10 +71,10 @@ bounds.coordinates = [
   ...bounds.bounding
     .map(d => ({ value: d.bottom, delta: d.bottom - d.median, step: d.step }))
     .sort((a, b) => b.step - a.step)
-]
+];
 
 const borderCutLine = ({ d, i, xScale, yScale }) => {
-  const lineOpacity = opacityScale(d.label)
+  const lineOpacity = opacityScale(d.label);
 
   return (
     <DividedLine
@@ -88,7 +88,7 @@ const borderCutLine = ({ d, i, xScale, yScale }) => {
             strokeWidth: 1,
             fill: "none",
             strokeOpacity: lineOpacity
-          }
+          };
         }
         //    if (p.value > p.top) {
         if (p.delta > p.topDelta) {
@@ -97,9 +97,9 @@ const borderCutLine = ({ d, i, xScale, yScale }) => {
             strokeWidth: 1,
             fill: "none",
             strokeOpacity: lineOpacity
-          }
+          };
         }
-        return { fill: "none", stroke: "gray", strokeOpacity: lineOpacity / 4 }
+        return { fill: "none", stroke: "gray", strokeOpacity: lineOpacity / 4 };
       }}
       searchIterations={20}
       customAccessors={{ x: d => xScale(d._xyfX), y: d => yScale(d._xyfY) }}
@@ -107,8 +107,8 @@ const borderCutLine = ({ d, i, xScale, yScale }) => {
       lineDataAccessor={d => d.data}
       interpolate={curveMonotoneX}
     />
-  )
-}
+  );
+};
 const monthNameHash = [
   "January",
   "February",
@@ -122,23 +122,26 @@ const monthNameHash = [
   "October",
   "November",
   "December"
-]
+];
 
-const degreeDiffFormat = d => `${d > 0 ? "+" : ""}${Math.ceil(d * 100) / 100}°`
-const monthNameFormat = (d, i) => monthNameHash[d]
+const degreeDiffFormat = d => `${d > 0 ? "+" : ""}${Math.ceil(d * 100) / 100}°`;
+const monthNameFormat = (d, i) => monthNameHash[d];
 
 const lineAnnotater = ({ d, xScale, yScale }) => {
   if (!d.parentLine) {
-    return null
+    return null;
   }
   const lineRenderer = line()
     .x(d => xScale(d._xyfX))
     .y(d => yScale(d._xyfY))
-    .curve(curveMonotoneX)
+    .curve(curveMonotoneX);
 
   return d.coincidentPoints.map((p, q) => {
-    const lineD = lineRenderer(p.parentLine.data)
-    const opacity = opacityScale(p.parentLine.label)
+    if (!p.parentLine) {
+      return null;
+    }
+    const lineD = lineRenderer(p.parentLine.data);
+    const opacity = opacityScale(p.parentLine.label);
     return (
       <path
         key={`hover-line-${q}`}
@@ -150,19 +153,19 @@ const lineAnnotater = ({ d, xScale, yScale }) => {
           strokeOpacity: opacity
         }}
       />
-    )
-  })
-}
+    );
+  });
+};
 
 const pointsAtThisPoint = ({ d, lines, xScale, yScale }) => {
   if (d && d._xyfX) {
     const thesePoints = lines.map(line => {
-      return line.data.find(p => p._xyfX === d._xyfX)
-    })
+      return line.data.find(p => p._xyfX === d._xyfX);
+    });
 
     return thesePoints.map(p => {
       const fill =
-        p.delta < p.bottomDelta ? blue : p.delta > p.topDelta ? red : "#E1E1E1"
+        p.delta < p.bottomDelta ? blue : p.delta > p.topDelta ? red : "#E1E1E1";
       return (
         <circle
           r={2}
@@ -170,11 +173,11 @@ const pointsAtThisPoint = ({ d, lines, xScale, yScale }) => {
           cx={xScale(p._xyfX)}
           cy={yScale(p._xyfY)}
         />
-      )
-    })
+      );
+    });
   }
-  return null
-}
+  return null;
+};
 
 export const regionatedLineChart = {
   title: "Monthly Temperature in New York Since 1869",
@@ -238,7 +241,7 @@ export const regionatedLineChart = {
   svgAnnotationRules: lineAnnotater,
   //    svgAnnotationRules: pointsAtThisPoint,
   hoverAnnotation: true
-}
+};
 
 export const testData = [
   {
@@ -293,4 +296,4 @@ export const testData = [
       { py: 600, px: 7 }
     ]
   }
-]
+];

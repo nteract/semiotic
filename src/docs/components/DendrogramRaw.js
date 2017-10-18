@@ -20,7 +20,7 @@ export default ({ annotations = [], type = "dendrogram" }) => (
     nodeIDAccessor={"name"}
     hoverAnnotation={true}
     networkType={{
-      type,
+      type: "force",
       projection: "horizontal",
       //      layout: cluster,
       nodePadding: 1,

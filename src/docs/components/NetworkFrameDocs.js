@@ -13,6 +13,48 @@ const components = [];
 // Add your component proptype data here
 // multiple component proptype documentation supported
 
+const nodeSizeHash = {
+  degree: d => d.degree + 2,
+  inDegree: d => d.inDegree + 2,
+  outDegree: d => d.outDegree + 2
+};
+
+const squareNodeGenerator = ({ d, transform, key }) => (
+  <Mark
+    key={key}
+    rx={0}
+    ry={0}
+    transform={transform}
+    markType="rect"
+    width={d.degree}
+    height={d.degree}
+    x={-d.degree / 2}
+    y={-d.degree / 2}
+    style={{
+      fill: d.createdByFrame ? "rgb(0, 162, 206)" : "rgb(179, 51, 29)"
+    }}
+  />
+);
+
+const chartSize = [750, 500];
+
+const networkNodeStyle = d => ({
+  fill: d.createdByFrame ? "#1aa962" : "rgb(179, 51, 29)"
+});
+
+const networkTypeHash = {
+  force: {
+    type: "force",
+    iterations: 500,
+    edgeStrength: 0.1
+  },
+  motifs: {
+    type: "motifs",
+    iterations: 500,
+    edgeStrength: 0.1
+  }
+};
+
 components.push({
   name: "NetworkFrame",
   proptypes: `
@@ -101,6 +143,13 @@ const nodeData = [
   { id: "Enrico" }
 ];
 
+const networkEdgeStyle = () => ({
+  stroke: "#4d430c",
+  fill: "#4d430c",
+  fillOpacity: 0.25,
+  strokeWidth: "1px"
+});
+
 export default class NetworkFrameDocs extends React.Component {
   constructor(props) {
     super(props);
@@ -114,6 +163,7 @@ export default class NetworkFrameDocs extends React.Component {
   }
 
   render() {
+    const networkType = networkTypeHash[this.state.networkType];
     const edgeOptions = [
       "none",
       "linearc",
@@ -239,46 +289,18 @@ export default class NetworkFrameDocs extends React.Component {
             NetworkFrame API
           </Button>
           <NetworkFrame
-            size={[750, 500]}
+            size={chartSize}
             edges={edgeData}
             nodes={nodeData}
             margin={60}
-            edgeStyle={() => ({
-              stroke: "#4d430c",
-              fill: "#4d430c",
-              fillOpacity: 0.25,
-              strokeWidth: "1px"
-            })}
-            nodeStyle={d => ({
-              fill: d.createdByFrame ? "#1aa962" : "rgb(179, 51, 29)"
-            })}
-            networkType={{
-              type: this.state.networkType,
-              iterations: 500,
-              edgeStrength: 0.1
-            }}
+            edgeStyle={networkEdgeStyle}
+            nodeStyle={networkNodeStyle}
+            networkType={networkType}
             edgeType={this.state.edge}
-            nodeSizeAccessor={d => d[this.state.nodeSize] + 2}
+            nodeSizeAccessor={nodeSizeHash[this.state.nodeSize]}
             customNodeIcon={
               this.state.customNodeIcon === "on" ? (
-                ({ d, transform, key }) => (
-                  <Mark
-                    key={key}
-                    rx={0}
-                    ry={0}
-                    transform={transform}
-                    markType="rect"
-                    width={d.degree}
-                    height={d.degree}
-                    x={-d.degree / 2}
-                    y={-d.degree / 2}
-                    style={{
-                      fill: d.createdByFrame
-                        ? "rgb(0, 162, 206)"
-                        : "rgb(179, 51, 29)"
-                    }}
-                  />
-                )
+                squareNodeGenerator
               ) : (
                 undefined
               )

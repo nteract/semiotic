@@ -9,6 +9,8 @@ const networkSettings = {
   fontWeight: 900
 };
 
+const nodeStyleFn = d => ({ fill: d.color });
+
 const words = [
   {
     token_text: "sankey",
@@ -173,6 +175,8 @@ const words = [
   }
 ];
 
+const chartSize = [700, 500];
+
 const components = [];
 
 components.push({
@@ -199,11 +203,11 @@ export default class WordCloudDocs extends React.Component {
       name: "Basic",
       demo: (
         <NetworkFrame
-          size={[700, 500]}
+          size={chartSize}
           nodes={words}
-          nodeStyle={d => ({ fill: d.color })}
-          nodeSizeAccessor={d => d.score}
-          nodeIDAccessor={d => d.token_text}
+          nodeStyle={nodeStyleFn}
+          nodeSizeAccessor={"score"}
+          nodeIDAccessor={"token_text"}
           networkType={networkSettings}
           annotations={[
             {

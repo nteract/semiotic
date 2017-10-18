@@ -37,7 +37,6 @@ export default class Dendrogram extends React.Component {
         >
           {typeOptions}
         </Select>
-        <FormHelperText>Alignment with an input</FormHelperText>
       </FormControl>
     ];
 

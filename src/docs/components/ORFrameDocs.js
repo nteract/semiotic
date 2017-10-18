@@ -28,6 +28,39 @@ for (let x = 1; x < 500; x++) {
   });
 }
 
+const customBar = {
+  type: "clusterbar",
+  customMark: (d, i, xy) => [
+    <rect
+      style={{ fill: "#00a2ce" }}
+      x={2}
+      width={xy.width - 4}
+      height={xy.height}
+    />,
+    <text
+      style={{ fill: "white" }}
+      transform={`translate(18,${xy.height}) rotate(-90)`}
+    >
+      {d.stepName}
+    </text>,
+    <circle
+      style={{ stroke: "white", fill: "#b3331d" }}
+      r={xy.width / 2}
+      cx={xy.width / 2}
+    />,
+    <circle
+      style={{ stroke: "white", fill: "#b3331d" }}
+      r={xy.width / 2 - 2}
+      cx={xy.width / 2}
+    />,
+    <circle
+      style={{ stroke: "white", fill: "#b3331d" }}
+      r={xy.width / 2 - 4}
+      cx={xy.width / 2}
+    />
+  ]
+};
+
 //Just to give it a 100 and 0 values
 groupData.push({ x: 0, value: 0, color: colors[3], value2: 503 });
 groupData.push({ x: 100, value: 100, color: colors[3], value2: 504 });
@@ -278,6 +311,7 @@ export default class ORFrameDocs extends React.Component {
       "clusterbar",
       "point",
       "swarm",
+      "custom",
       "none"
     ].map(d => (
       <MenuItem key={"type-option" + d} label={d} value={d}>
@@ -492,6 +526,9 @@ export default class ORFrameDocs extends React.Component {
       }
     };
 
+    const actualType =
+      this.state.type === "custom" ? customBar : this.state.type;
+
     const examples = [];
     examples.push({
       name: "Basic",
@@ -508,31 +545,10 @@ export default class ORFrameDocs extends React.Component {
           <ORFrame
             size={[700, 700]}
             renderFn={reFn}
-            //              data={dataTypeHash[this.state.dataType].data.filter((d,i) => i < this.state.numberOfBars)}
             data={dataTypeHash[this.state.dataType].data}
             axis={axis}
             projection={this.state.projection}
-            //            type={this.state.type === "none" ? undefined : this.state.type}
-            type={{
-              type: "clusterbar",
-              customMark: (d, i, xy) => [
-                <rect
-                  style={{ fill: "blue" }}
-                  x={2}
-                  width={xy.width - 4}
-                  height={xy.height}
-                />,
-                <text
-                  style={{ fill: "white" }}
-                  transform={`translate(18,${xy.height}) rotate(-90)`}
-                >
-                  Label
-                </text>,
-                <circle style={{ stroke: "black", fill: "pink" }} r={8} />,
-                <circle style={{ stroke: "black", fill: "pink" }} r={4} />,
-                <circle style={{ stroke: "black", fill: "pink" }} r={2} />
-              ]
-            }}
+            type={actualType}
             renderMode={this.state.renderFn}
             summaryRenderMode={this.state.renderFn}
             connectorRenderMode={this.state.renderFn}
@@ -612,7 +628,42 @@ export default class ORFrameDocs extends React.Component {
             data={data}
             axis={axis}
             projection={'${this.state.projection}'}
-            ${this.state.type !== "none" ? `type={'${this.state.type}'}` : ""}
+            ${this.state.type !== "none"
+              ? this.state.type !== "custom"
+                ? `type={'${this.state.type}'}`
+                : `{
+              type: "clusterbar",
+              customMark: (d, i, xy) => [
+                <rect
+                  style={{ fill: "#00a2ce" }}
+                  x={2}
+                  width={xy.width - 4}
+                  height={xy.height}
+                />,
+                <text
+                  style={{ fill: "white" }}
+                  transform={${"`translate(18,${xy.height}) rotate(-90)`"}}
+                >
+                  {d.stepName}
+                </text>,
+                <circle
+                  style={{ stroke: "white", fill: "#b3331d" }}
+                  r={xy.width / 2}
+                  cx={xy.width / 2}
+                />,
+                <circle
+                  style={{ stroke: "white", fill: "#b3331d" }}
+                  r={xy.width / 2 - 2}
+                  cx={xy.width / 2}
+                />,
+                <circle
+                  style={{ stroke: "white", fill: "#b3331d" }}
+                  r={xy.width / 2 - 4}
+                  cx={xy.width / 2}
+                />
+              ]
+            }`
+              : ""}
             ${this.state.summaryType !== "none"
               ? `summaryType={'${this.state.summaryType}'}`
               : ""}

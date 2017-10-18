@@ -59,7 +59,6 @@ export default class Chord extends React.Component {
         >
           {padAngleOptions}
         </Select>
-        <FormHelperText>Alignment with an input</FormHelperText>
       </FormControl>
     ];
 

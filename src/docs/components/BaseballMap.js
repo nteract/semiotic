@@ -110,7 +110,6 @@ export default class BaseballMapDocs extends React.Component {
         >
           {modeOptions}
         </Select>
-        <FormHelperText>Alignment with an input</FormHelperText>
       </FormControl>
     ];
 

@@ -46,7 +46,6 @@ export default class Sankey extends React.Component {
         >
           {typeOptions}
         </Select>
-        <FormHelperText>Alignment with an input</FormHelperText>
       </FormControl>,
       <FormControl key="button-2-0-0">
         <InputLabel htmlFor="orient-input">orient</InputLabel>
@@ -56,7 +55,6 @@ export default class Sankey extends React.Component {
         >
           {orientOptions}
         </Select>
-        <FormHelperText>Alignment with an input</FormHelperText>
       </FormControl>
     ];
 

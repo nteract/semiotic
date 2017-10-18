@@ -2,11 +2,17 @@ import React from "react";
 
 import { drawAreaConnector } from "../svg/SvgHelper";
 import Mark from "../Mark";
+
+import Axis from "../Axis";
+
+import { circlePath } from "../markBehavior/drawing";
+
 import {
   boxplotRenderFn,
   contourRenderFn,
   bucketizedRenderingFn
 } from "./summaryLayouts";
+import { axisPieces, axisLines } from "../visualizationLayerBehavior/axis";
 
 export const drawMarginPath = ({ margin, size, inset = 5 }) => {
   const iSize = [size[0] - inset, size[1] - inset];
@@ -330,3 +336,153 @@ export function orFrameSummaryRenderer({
     chartSize
   });
 }
+
+export const orFrameAxisGenerator = ({
+  projection,
+  axis,
+  adjustedSize,
+  size,
+  rScale,
+  rScaleType,
+  margin,
+  pieceType,
+  rExtent,
+  data
+}) => {
+  let generatedAxis, axesTickLines;
+  if (projection !== "radial" && axis) {
+    axesTickLines = [];
+    let axisPosition = [0, 0];
+    const axes = Array.isArray(axis) ? axis : [axis];
+    generatedAxis = axes.map((d, i) => {
+      let tickValues;
+      let axisScale = rScaleType().domain(rScale.domain());
+
+      let orient = trueAxis(d.orient, projection);
+
+      if (orient === "right") {
+        axisScale.range([rScale.range()[1], rScale.range()[0]]);
+      } else if (orient === "left") {
+        axisPosition = [margin.left, 0];
+        axisScale.range([rScale.range()[1], rScale.range()[0]]);
+      } else if (orient === "top") {
+        axisScale.range(rScale.range());
+      } else if (orient === "bottom") {
+        axisPosition = [0, margin.top];
+        axisScale.range(rScale.range());
+      }
+
+      if (d.tickValues && Array.isArray(d.tickValues)) {
+        tickValues = d.tickValues;
+      } else if (d.tickValues) {
+        //otherwise assume a function
+        tickValues = d.tickValues(data, size, rScale);
+      }
+
+      const axisParts = axisPieces({
+        padding: d.padding,
+        tickValues,
+        scale: axisScale,
+        ticks: d.ticks,
+        orient,
+        size: adjustedSize,
+        margin,
+        footer: d.footer
+      });
+      const axisTickLines = axisLines({ axisParts, orient });
+      axesTickLines.push(axisTickLines);
+
+      return (
+        <Axis
+          label={d.label}
+          axisParts={axisParts}
+          key={d.key || `orframe-axis-${i}`}
+          orient={orient}
+          size={adjustedSize}
+          margin={margin}
+          position={axisPosition}
+          ticks={d.ticks}
+          tickSize={d.tickSize}
+          tickFormat={d.tickFormat}
+          tickValues={tickValues}
+          format={d.format}
+          rotate={d.rotate}
+          scale={axisScale}
+          className={d.className}
+          name={d.name}
+        />
+      );
+    });
+  } else if (projection === "radial" && axis) {
+    const { innerRadius = 0 } = pieceType;
+    const {
+      tickValues = rScale.ticks(
+        Math.max(2, (adjustedSize[0] / 2 - innerRadius) / 50)
+      ),
+      label,
+      tickFormat = d => d
+    } = axis;
+
+    const tickScale = rScaleType()
+      .domain(rExtent)
+      .range([innerRadius, adjustedSize[0] / 2]);
+    const ticks = tickValues.map((t, i) => {
+      const tickSize = tickScale(t);
+      if (!(innerRadius === 0 && t === 0)) {
+        let axisLabel;
+        let ref = "";
+        if (label && i === tickValues.length - 1) {
+          const labelSettings =
+            typeof label === "string" ? { name: label } : label;
+          const { locationDistance = 15 } = labelSettings;
+          ref = `${Math.random().toString()} `;
+          axisLabel = (
+            <g
+              className="axis-label"
+              transform={`translate(0,${locationDistance})`}
+            >
+              <text textAnchor="middle">
+                <textPath
+                  startOffset={tickSize * Math.PI * 0.5}
+                  xlinkHref={`#${ref}`}
+                >
+                  {label.name}
+                </textPath>
+              </text>
+            </g>
+          );
+        }
+        return (
+          <g
+            key={`orframe-radial-axis-element-${t}`}
+            className="axis axis-label axis-tick"
+            transform={`translate(${margin.left},0)`}
+          >
+            <path
+              id={ref}
+              d={circlePath(0, 0, tickSize)}
+              r={tickSize}
+              stroke="gray"
+              fill="none"
+            />
+            <text y={-tickSize + 5} textAnchor="middle">
+              {tickFormat(t)}
+            </text>
+            {axisLabel}
+          </g>
+        );
+      }
+      return null;
+    });
+    generatedAxis = (
+      <g
+        key={axis.key || `orframe-radial-axis-container`}
+        transform={`translate(${adjustedSize[0] / 2},${adjustedSize[1] / 2 +
+          margin.top})`}
+      >
+        {ticks}
+      </g>
+    );
+  }
+  return { axis: generatedAxis, axesTickLines };
+};

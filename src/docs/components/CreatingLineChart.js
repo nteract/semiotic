@@ -23,6 +23,7 @@ const interactiveChartAxes = [
     orient: "bottom"
   }
 ];
+const chartSize = [700, 400];
 
 const movies = [
   {
@@ -599,8 +600,7 @@ export default class CreatingLineChart extends React.Component {
 
           <XYFrame
             title={"Two Movies"}
-            size={[700, 400]}
-            dataVersion="fixed"
+            size={chartSize}
             lines={movies}
             xAccessor={interactiveXAccessor}
             yAccessor={interactiveYAccessor}

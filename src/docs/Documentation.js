@@ -199,12 +199,12 @@ export default class Documentation extends React.Component {
     };
 
     const allDocs = [
-      <Link to={"/"}>
+      <Link to={"/"} key="home-link">
         <ListItem button>
           <ListItemText primary="Home" />
         </ListItem>
       </Link>,
-      <Link to={"/examples"}>
+      <Link to={"/examples"} key="examples-link">
         <ListItem button>
           <ListItemText primary="Examples" />
         </ListItem>
@@ -235,8 +235,9 @@ export default class Documentation extends React.Component {
               }
             : styleOver;
         allDocs.push(
-          <Link to={`/${c}`}>
-            <ListItem leftIcon={cIcon} key={cTitle} style={finalStyle}>
+          <Link to={`/${c}`} key={`${c}-link`}>
+            <ListItem key={cTitle} style={finalStyle}>
+              {cIcon ? <ListItemIcon>{cIcon}</ListItemIcon> : null}
               <ListItemText primary={cTitle} />
             </ListItem>
           </Link>

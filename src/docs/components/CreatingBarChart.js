@@ -36,11 +36,49 @@ const colorHash = {
   favorites: "#b6a756"
 };
 
+const barSize = [300, 500];
+const stackedBarStyle = d => ({ fill: colorHash[d.type], stroke: "white" });
+const stackedBarLabel = d => (
+  <text transform="translate(-15,0)rotate(45)">{d}</text>
+);
+const stackedBarAxis = {
+  orient: "left",
+  label: "Tweets + Favorites + Retweets"
+};
+const stackedBarMargin = { left: 70, bottom: 50, right: 5, top: 5 };
+
 components.push({
   name: "Creating a Bar Chart"
 });
 
 export default class CreatingBarChart extends React.Component {
+  constructor(props) {
+    super(props);
+    this.columnHoverBehavior = this.columnHoverBehavior.bind(this);
+    this.state = {
+      hoverPoint: undefined
+    };
+  }
+  columnHoverBehavior(d) {
+    this.setState({ hoverPoint: d });
+  }
+
+  barAnnotator({ d, i, categories }) {
+    if (!d.type === "hover") {
+      return null;
+    }
+
+    return (
+      <rect
+        key={`annotation-${i}`}
+        x={categories[d.user].x}
+        y={d.y}
+        height={d._orFR}
+        width={categories[d.user].width}
+        style={{ fill: "none", stroke: "#00a2ce", strokeWidth: 5 }}
+      />
+    );
+  }
   render() {
     const examples = [];
     examples.push({
@@ -193,18 +231,26 @@ export default class CreatingBarChart extends React.Component {
             columns or pieces to appear first, then pre-sort your data.
           </p>
           <ORFrame
-            size={[300, 500]}
+            size={barSize}
             data={inflatedBarChartData}
             oAccessor={"user"}
             rAccessor={"value"}
-            style={d => ({ fill: colorHash[d.type], stroke: "white" })}
+            style={stackedBarStyle}
             type={"bar"}
-            oLabel={d => (
-              <text transform="translate(-15,0)rotate(45)">{d}</text>
-            )}
-            axis={{ orient: "left", label: "Tweets + Favorites + Retweets" }}
-            margin={{ left: 70, bottom: 50, right: 5, top: 5 }}
+            oLabel={stackedBarLabel}
+            axis={stackedBarAxis}
+            margin={stackedBarMargin}
             oPadding={5}
+            pieceHoverAnnotation={true}
+            customHoverBehavior={this.lineHoverBehavior}
+            annotations={
+              this.state.hoverPoint ? (
+                [Object.assign({}, this.state.hoverPoint, { type: "hover" })]
+              ) : (
+                undefined
+              )
+            }
+            svgAnnotationRules={this.barAnnotator}
           />
         </div>
       ),
