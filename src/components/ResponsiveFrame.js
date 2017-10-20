@@ -1,5 +1,6 @@
 import React from "react";
 import ReactResizeDetector from "react-resize-detector";
+import PropTypes from "prop-types";
 import XYFrame from "./XYFrame";
 import ORFrame from "./ORFrame";
 import NetworkFrame from "./NetworkFrame";
@@ -8,14 +9,20 @@ import MinimapXYFrame from "./MinimapXYFrame";
 
 const createResponsiveFrame = Frame =>
   class ResponsiveFrame extends React.Component {
+    static propTypes = {
+      size : PropTypes.array
+    };
+
+    static defaultProps = {
+      size : [500, 500]
+    };
+    
     constructor(props) {
       super(props);
 
-      this._onResize = this._onResize.bind(this);
-
       this.state = {
-        containerHeight: props.size[1] || 500,
-        containerWidth: props.size[0] || 500
+        containerHeight: props.size[1],
+        containerWidth: props.size[0]
       };
 
       this.oAccessor = null;
@@ -24,7 +31,7 @@ const createResponsiveFrame = Frame =>
       this.rScale = null;
     }
 
-    _onResize(width, height) {
+    _onResize = (width, height) => {
       this.setState({ containerHeight: height, containerWidth: width });
     }
 
@@ -32,7 +39,7 @@ const createResponsiveFrame = Frame =>
       const {
         responsiveWidth,
         responsiveHeight,
-        size = [500, 500],
+        size,
         dataVersion
       } = this.props;
 
@@ -46,7 +53,7 @@ const createResponsiveFrame = Frame =>
         size[1] = containerHeight;
       }
 
-      let dataVersionWithSize = dataVersion + size.toString();
+      const dataVersionWithSize = dataVersion + size.toString();
 
       return (
         <div className="responsive-container">
