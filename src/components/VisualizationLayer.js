@@ -9,70 +9,66 @@ import { hexToRgb } from "./svg/SvgHelper";
 import PropTypes from "prop-types";
 
 class VisualizationLayer extends React.PureComponent {
-  constructor(props) {
-    super(props);
+  static defaultProps = { position : [0, 0] };
 
-    this.canvasDrawing = [];
+  canvasDrawing = [ ];
 
-    this.state = {
-      canvasDrawing: [],
-      dataVersion: "",
-      renderedElements: []
-    };
-  }
+  state = {
+    canvasDrawing: [],
+    dataVersion: "",
+    renderedElements: []
+  };
 
   componentDidUpdate() {
-    const adjustedPosition = this.props.position || [0, 0];
-    let context;
-    if (this.props.canvasContext && !this.props.disableContext) {
-      context = this.props.canvasContext.getContext("2d");
+    if (this.props.disableContext || !this.props.canvasContext || !this.canvasDrawing.length)
+      return;
+    
+    const context = this.props.canvasContext.getContext("2d");
+    context.setTransform(1, 0, 0, 1, 0, 0);
+    context.clearRect(0, 0, this.props.size[0] * 2, this.props.size[1] * 2);
+
+    this.canvasDrawing.forEach(piece => {
+      const style = piece.styleFn ? piece.styleFn(piece.d, piece.i) : "black";
+      let fill = style.fill ? style.fill : "black";
+      let stroke = style.stroke ? style.stroke : "black";
+      fill = !style.fillOpacity
+        ? fill
+        : `rgba(${[...hexToRgb(fill), style.fillOpacity]})`;
+      stroke = !style.strokeOpacity
+        ? stroke
+        : `rgba(${[...hexToRgb(stroke), style.strokeOpacity]})`;
       context.setTransform(1, 0, 0, 1, 0, 0);
-      context.clearRect(0, 0, this.props.size[0] * 2, this.props.size[1] * 2);
-    }
-    if (this.props.canvasContext && this.canvasDrawing.length > 0) {
-      this.canvasDrawing.forEach(piece => {
-        const style = piece.styleFn ? piece.styleFn(piece.d, piece.i) : "black";
-        let fill = style.fill ? style.fill : "black";
-        let stroke = style.stroke ? style.stroke : "black";
-        fill = !style.fillOpacity
-          ? fill
-          : "rgba(" + [...hexToRgb(fill), style.fillOpacity] + ")";
-        stroke = !style.strokeOpacity
-          ? stroke
-          : "rgba(" + [...hexToRgb(stroke), style.strokeOpacity] + ")";
-        context.setTransform(1, 0, 0, 1, 0, 0);
-        context.translate(...adjustedPosition);
-        context.translate(piece.tx, piece.ty);
-        context.fillStyle = fill;
-        context.strokeStyle = stroke;
-        context.lineWidth = style.strokeWidth ? style.strokeWidth : "black";
-        if (piece.markProps.markType === "circle") {
-          context.beginPath();
-          context.arc(0, 0, piece.markProps.r, 0, 2 * Math.PI);
-          context.stroke();
-          context.fill();
-        } else if (piece.markProps.markType === "rect") {
-          context.fillRect(
-            piece.markProps.x,
-            piece.markProps.y,
-            piece.markProps.width,
-            piece.markProps.height
-          );
-          context.strokeRect(
-            piece.markProps.x,
-            piece.markProps.y,
-            piece.markProps.width,
-            piece.markProps.height
-          );
-        } else if (piece.markProps.markType === "path") {
-          const p = new Path2D(piece.markProps.d);
-          context.stroke(p);
-          context.fill(p);
-        } else {
-          console.error("CURRENTLY UNSUPPORTED MARKTYPE FOR CANVAS RENDERING");
-        }
-      });
-    }
+      context.translate(...this.props.position);
+      context.translate(piece.tx, piece.ty);
+      context.fillStyle = fill;
+      context.strokeStyle = stroke;
+      context.lineWidth = style.strokeWidth ? style.strokeWidth : "black";
+      if (piece.markProps.markType === "circle") {
+        context.beginPath();
+        context.arc(0, 0, piece.markProps.r, 0, 2 * Math.PI);
+        context.stroke();
+        context.fill();
+      } else if (piece.markProps.markType === "rect") {
+        context.fillRect(
+          piece.markProps.x,
+          piece.markProps.y,
+          piece.markProps.width,
+          piece.markProps.height
+        );
+        context.strokeRect(
+          piece.markProps.x,
+          piece.markProps.y,
+          piece.markProps.width,
+          piece.markProps.height
+        );
+      } else if (piece.markProps.markType === "path") {
+        const p = new Path2D(piece.markProps.d);
+        context.stroke(p);
+        context.fill(p);
+      } else {
+        console.error("CURRENTLY UNSUPPORTED MARKTYPE FOR CANVAS RENDERING");
+      }
+    });
   }
 
   componentWillReceiveProps(np) {
@@ -89,7 +85,7 @@ class VisualizationLayer extends React.PureComponent {
     if (
       update === true &&
       (!np.dataVersion ||
-        (np.dataVersion && np.dataVersion !== this.state.dataVersion))
+        np.dataVersion && np.dataVersion !== this.state.dataVersion)
     ) {
       const {
         xScale,
@@ -106,8 +102,8 @@ class VisualizationLayer extends React.PureComponent {
       Object.keys(renderPipeline).forEach(k => {
         const pipe = renderPipeline[k];
         if (
-          (pipe.data && typeof pipe.data === "object") ||
-          (pipe.data && pipe.data.length > 0)
+          pipe.data && typeof pipe.data === "object" ||
+          pipe.data && pipe.data.length > 0
         ) {
           const renderedPipe = pipe.behavior({
             xScale,
@@ -140,18 +136,18 @@ class VisualizationLayer extends React.PureComponent {
       axes,
       axesTickLines,
       frameKey,
-      position = [0, 0]
+      position
     } = props;
-    let { renderedElements } = this.state;
+    const { renderedElements } = this.state;
 
     return (
-      <g transform={"translate(" + position + ")"}>
+      <g transform={`translate(${position})`}>
         <g className="axis axis-tick-lines">{axesTickLines}</g>
         <g
           className="data-visualization"
           key="visualization-clip-path"
           clipPath={
-            matteClip && matte ? "url(#matte-clip" + frameKey + ")" : undefined
+            matteClip && matte ? `url(#matte-clip${frameKey})` : undefined
           }
         >
           {renderedElements}
@@ -160,15 +156,6 @@ class VisualizationLayer extends React.PureComponent {
         <g className="axis axis-labels">{axes}</g>
       </g>
     );
-
-    /*        return <MarkContext
-          position={this.props.adjustedPosition}
-          size={this.props.adjustedSize}
-          xyFrameChildren={true}
-          renderNumber={this.props.renderNumber}
-          canvasContext={this.props.canvasContext}
-        >
-        </MarkContext> */
   }
 }
 

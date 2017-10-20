@@ -10,7 +10,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
-    "lint": "eslint src",
+    "lint": "eslint src/components",
     "prebuild": "babel src/components --out-dir lib --ignore test.js",
     "create-release-branch": "sh ./scripts/create-release-branch",
     "publish-release": "sh ./scripts/publish-release",
@@ -21,9 +21,6 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/emeeks/semiotic.git"
-  },
-  "config": {
-    "is-component": "y"
   },
   "author": {
     "name": "Elijah Meeks",
