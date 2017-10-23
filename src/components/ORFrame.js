@@ -55,6 +55,10 @@ const yScale = scaleIdentity();
 const midMod = d => (d.middle ? d.middle : 0);
 const zeroFunction = () => 0;
 
+const projectedCoordinatesObject = { y: "y", x: "x" };
+
+const defaultOverflow = { top: 0, bottom: 0, left: 0, right: 0 };
+
 const layoutHash = {
   clusterbar: clusterBarLayout,
   bar: barLayout,
@@ -62,7 +66,18 @@ const layoutHash = {
   swarm: swarmLayout
 };
 
+const emptyObject = {};
+
 class ORFrame extends React.Component {
+  static defaultProps = {
+    annotations: [],
+    foregroundGraphics: [],
+    annotationSettings: {},
+    projection: "vertical",
+    size: [500, 500],
+    className: ""
+  };
+
   constructor(props) {
     super(props);
 
@@ -79,7 +94,8 @@ class ORFrame extends React.Component {
       foregroundGraphics: null,
       axisData: null,
       axis: null,
-      renderNumber: 0
+      renderNumber: 0,
+      oLabels: []
     };
 
     this.oAccessor = null;
@@ -99,10 +115,10 @@ class ORFrame extends React.Component {
     const connectorType = objectifyType(currentProps.connectorType);
 
     const {
-      projection = "vertical",
+      projection,
       customHoverBehavior,
       customClickBehavior,
-      size = [500, 500]
+      size
     } = currentProps;
     const eventListenersGenerator = generateORFrameEventListeners(
       customHoverBehavior,
@@ -758,10 +774,12 @@ class ORFrame extends React.Component {
     ) {
       this.calculateORFrame(nextProps);
     } else if (
-      !this.state.dataVersion &&
-      orFrameChangeProps.find(d => {
-        return this.props[d] !== nextProps[d];
-      })
+      this.props.size[0] !== nextProps.size[0] ||
+      this.props.size[1] !== nextProps.size[1] ||
+      (!this.state.dataVersion &&
+        orFrameChangeProps.find(d => {
+          return this.props[d] !== nextProps[d];
+        }))
     ) {
       this.calculateORFrame(nextProps);
     }
@@ -1214,24 +1232,24 @@ class ORFrame extends React.Component {
 
   renderBody({ afterElements }) {
     const {
-      className = "",
-      annotationSettings = {},
-      size = [500, 500],
+      className,
+      annotationSettings,
+      size,
       downloadFields,
       rAccessor,
       oAccessor,
       name,
       download,
-      annotations = [],
+      annotations,
       matte,
       renderKey,
       interaction,
       customClickBehavior,
       customHoverBehavior,
       customDoubleClickBehavior,
-      projection = "vertical",
+      projection,
       backgroundGraphics,
-      foregroundGraphics = [],
+      foregroundGraphics,
       beforeElements,
       disableContext,
       summaryType
@@ -1248,7 +1266,7 @@ class ORFrame extends React.Component {
       axes,
       margin,
       pieceDataXY,
-      oLabels = [],
+      oLabels,
       title
     } = this.state;
 
@@ -1285,7 +1303,7 @@ class ORFrame extends React.Component {
           right: 0
         };
       } else if (projection === "radial") {
-        interactionOverflow = { top: 0, bottom: 0, left: 0, right: 0 };
+        interactionOverflow = defaultOverflow;
       } else {
         interactionOverflow = {
           top: 0,
@@ -1313,7 +1331,7 @@ class ORFrame extends React.Component {
         finalFilterDefs={finalFilterDefs}
         frameKey={"none"}
         renderKeyFn={renderKey}
-        projectedCoordinateNames={{ y: "y", x: "x" }}
+        projectedCoordinateNames={projectedCoordinatesObject}
         defaultSVGRule={this.defaultORSVGRule.bind(this)}
         defaultHTMLRule={this.defaultORHTMLRule.bind(this)}
         hoverAnnotation={!!pieceDataXY}
@@ -1343,6 +1361,7 @@ class ORFrame extends React.Component {
 }
 
 ORFrame.propTypes = {
+  data: PropTypes.array,
   name: PropTypes.string,
   orient: PropTypes.string,
   title: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),

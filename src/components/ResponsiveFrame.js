@@ -1,22 +1,22 @@
 import React from "react";
-import ReactResizeDetector from "react-resize-detector";
 import PropTypes from "prop-types";
 import XYFrame from "./XYFrame";
 import ORFrame from "./ORFrame";
 import NetworkFrame from "./NetworkFrame";
 import SmartFrame from "./SmartFrame";
 import MinimapXYFrame from "./MinimapXYFrame";
+import elementResizeEvent from "element-resize-event";
 
 const createResponsiveFrame = Frame =>
   class ResponsiveFrame extends React.Component {
     static propTypes = {
-      size : PropTypes.array
+      size: PropTypes.array
     };
 
     static defaultProps = {
-      size : [500, 500]
+      size: [500, 500]
     };
-    
+
     constructor(props) {
       super(props);
 
@@ -24,15 +24,23 @@ const createResponsiveFrame = Frame =>
         containerHeight: props.size[1],
         containerWidth: props.size[0]
       };
-
-      this.oAccessor = null;
-      this.rAccessor = null;
-      this.oScale = null;
-      this.rScale = null;
     }
 
     _onResize = (width, height) => {
       this.setState({ containerHeight: height, containerWidth: width });
+    };
+    componentDidMount() {
+      const element = this.node;
+      elementResizeEvent(element, () => {
+        this.setState({
+          containerHeight: element.offsetHeight,
+          containerWidth: element.offsetWidth
+        });
+      });
+      this.setState({
+        containerHeight: element.offsetHeight,
+        containerWidth: element.offsetWidth
+      });
     }
 
     render() {
@@ -45,27 +53,24 @@ const createResponsiveFrame = Frame =>
 
       const { containerHeight, containerWidth } = this.state;
 
+      const actualSize = [...size];
+
       if (responsiveWidth) {
-        size[0] = containerWidth;
+        actualSize[0] = containerWidth;
       }
 
       if (responsiveHeight) {
-        size[1] = containerHeight;
+        actualSize[1] = containerHeight;
       }
 
-      const dataVersionWithSize = dataVersion + size.toString();
+      const dataVersionWithSize = dataVersion + actualSize.toString();
 
       return (
-        <div className="responsive-container">
+        <div className="responsive-container" ref={node => (this.node = node)}>
           <Frame
             {...this.props}
-            size={size}
+            size={actualSize}
             dataVersion={dataVersion ? dataVersionWithSize : undefined}
-          />
-          <ReactResizeDetector
-            handleWidth={responsiveWidth}
-            handleHeight={responsiveHeight}
-            onResize={this._onResize}
           />
         </div>
       );

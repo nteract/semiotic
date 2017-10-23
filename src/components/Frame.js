@@ -5,6 +5,8 @@ import VisualizationLayer from "./VisualizationLayer";
 
 import PropTypes from "prop-types";
 
+const defaultZeroMargin = { top: 0, bottom: 0, left: 0, right: 0 };
+
 class Frame extends React.Component {
   constructor(props) {
     super(props);
@@ -45,7 +47,7 @@ class Frame extends React.Component {
       customHoverBehavior,
       customDoubleClickBehavior,
       points,
-      margin = { top: 0, bottom: 0, left: 0, right: 0 },
+      margin = defaultZeroMargin,
       backgroundGraphics,
       foregroundGraphics,
       beforeElements,
@@ -210,7 +212,8 @@ Frame.propTypes = {
   renderFn: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
   hoverAnnotation: PropTypes.bool,
   backgroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-  foregroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array])
+  foregroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
+  interactionOverflow: PropTypes.object
 };
 
 export default Frame;

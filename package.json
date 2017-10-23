@@ -3,9 +3,7 @@
   "version": "1.1.7",
   "description": "The semiotic JavaScript data visualization framework",
   "main": "lib/index.js",
-  "files": [
-    "lib"
-  ],
+  "files": ["lib"],
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
@@ -94,6 +92,7 @@
     "d3-shape": "1.0.3",
     "d3-transition": "1.0.3",
     "d3-voronoi": "1.0.2",
+    "element-resize-event": "2.0.9",
     "flubber": "0.4.0",
     "graphology": "0.10.2",
     "graphology-communities-louvain": "0.1.1",
@@ -105,13 +104,9 @@
     "moment": "2.10.6",
     "numeral": "^1.5.3",
     "prop-types": "15.6.0",
-    "react-annotation": "0.0.1-4",
-    "react-resize-detector": "0.6.0"
+    "react-annotation": "0.0.1-4"
   },
   "nyc": {
-    "exclude": [
-      "tests/unit/lib/*.js",
-      "tests/unit/specs/**/*.js"
-    ]
+    "exclude": ["tests/unit/lib/*.js", "tests/unit/specs/**/*.js"]
   }
 }

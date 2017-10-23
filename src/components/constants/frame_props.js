@@ -1,3 +1,5 @@
+//size is a special case and handled checking the actual values in the size array
+
 export const xyFrameChangeProps = [
   "name",
   "lines",
@@ -6,8 +8,6 @@ export const xyFrameChangeProps = [
   "title",
   "margin",
   "axes",
-  "matte",
-  "size",
   "position",
   "xScaleType",
   "yScaleType",
@@ -37,6 +37,7 @@ export const xyFrameChangeProps = [
 ];
 
 const xyFrameOtherProps = [
+  "matte",
   "tooltipContent",
   "interaction",
   "annotations",
@@ -52,12 +53,12 @@ const xyFrameOtherProps = [
 ];
 
 export const orFrameChangeProps = [
+  "data",
   "name",
   "orient",
   "title",
   "margin",
   "format",
-  "size",
   "position",
   "oScaleType",
   "rScaleType",
@@ -103,9 +104,10 @@ const orFrameOtherProps = [
 
 export const networkFrameChangeProps = [
   "name",
+  "nodes",
+  "edges",
   "title",
   "margin",
-  "size",
   "position",
   "nodeIDAccessor",
   "sourceAccessor",
