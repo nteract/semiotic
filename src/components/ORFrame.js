@@ -469,20 +469,28 @@ class ORFrame extends React.Component {
       });
     }
 
+    const labelSettings =
+      typeof currentProps.oLabel === "object"
+        ? Object.assign({ label: true }, currentProps.oLabel)
+        : { orient: "default", label: currentProps.oLabel };
+
     if (currentProps.oLabel) {
       let labelingFn;
-      if (currentProps.oLabel === true) {
+      if (labelSettings.label === true) {
         labelingFn = d => (
           <text
             style={{
-              textAnchor: projection === "horizontal" ? "end" : "middle"
+              textAnchor:
+                projection === "horizontal" && labelSettings.orient === "right"
+                  ? "start"
+                  : projection === "horizontal" ? "end" : "middle"
             }}
           >
             {d}
           </text>
         );
-      } else if (typeof currentProps.oLabel === "function") {
-        labelingFn = currentProps.oLabel;
+      } else if (typeof labelSettings.label === "function") {
+        labelingFn = labelSettings.label;
       }
 
       oExtent.forEach((d, i) => {
@@ -491,7 +499,11 @@ class ORFrame extends React.Component {
 
         if (projection === "horizontal") {
           yPosition = projectedColumns[d].middle;
-          xPosition = margin.left - 3;
+          if (labelSettings.orient === "right") {
+            xPosition = margin.left + adjustedSize[0] + 3;
+          } else {
+            xPosition = margin.left - 3;
+          }
         } else if (projection === "radial") {
           xPosition = pieArcs[i].centroid[0] + pieArcs[i].translate[0];
           yPosition = pieArcs[i].centroid[1] + pieArcs[i].translate[1];
@@ -513,10 +525,16 @@ class ORFrame extends React.Component {
       });
 
       if (projection === "vertical") {
+        let labelY;
+        if (labelSettings.orient === "top") {
+          labelY = margin.top - 15;
+        } else {
+          labelY = 15 + rScale.range()[1];
+        }
         oLabels = (
           <g
             key="orframe-labels-container"
-            transform={"translate(0," + (15 + rScale.range()[1]) + ")"}
+            transform={`translate(0,${labelY})`}
           >
             {labelArray}
           </g>
@@ -1405,7 +1423,11 @@ ORFrame.propTypes = {
   connectorStyle: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
   summaryStyle: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
   summaryPosition: PropTypes.func,
-  oLabel: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
+  oLabel: PropTypes.oneOfType([
+    PropTypes.bool,
+    PropTypes.func,
+    PropTypes.object
+  ]),
   hoverAnnotation: PropTypes.bool,
   axis: PropTypes.object,
   backgroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),

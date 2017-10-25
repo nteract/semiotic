@@ -1,8 +1,88 @@
 import React from "react";
 import { forceSimulation, forceX, forceY, forceCollide } from "d3-force";
 import { /*area, curveCatmullRom,*/ arc } from "d3-shape";
+import pathBounds from "svg-path-bounding-box";
+import Mark from "../Mark";
 
 const twoPI = Math.PI * 2;
+
+const iconBarCustomMark = ({
+  type,
+  projection,
+  finalHeight,
+  styleFn,
+  renderValue,
+  classFn
+}) => (piece, i, xy) => {
+  const iconD = typeof type.icon === "string" ? type.icon : type.icon(piece, i);
+  const { iconPadding = 1 } = type;
+
+  const iconBounds = pathBounds(iconD);
+  const iconTranslate = [
+    0 - iconBounds.x1 + iconPadding - 1,
+    0 - iconBounds.y1 + iconPadding
+  ];
+
+  const icons = [];
+  iconBounds.height += iconPadding * 2;
+  iconBounds.width += iconPadding * 2;
+
+  if (projection === "horizontal") {
+    const stackedIconSize = finalHeight / iconBounds.height;
+    let stackedIconNumber = 1;
+    let iconScale = 1;
+    if (stackedIconSize < 1) {
+      iconScale = stackedIconSize;
+    } else {
+      stackedIconNumber = Math.floor(stackedIconSize);
+      iconScale = 1 + (stackedIconSize - stackedIconNumber) / stackedIconNumber;
+    }
+    const finalIconWidth = iconBounds.width * iconScale;
+    const finalIconHeight = iconBounds.height * iconScale;
+
+    const iconValue = xy.width / finalIconWidth;
+    const iconNumber = Math.floor(iconValue);
+    const remainderValue = iconValue - iconNumber;
+
+    const randoClipID = `iso-clip-${i}-${Math.random()}`;
+    const clipPath = `url(#${randoClipID})`;
+    if (xy.width - iconPadding > 0) {
+      icons.push(
+        <clipPath key={randoClipID} id={randoClipID}>
+          <rect x={0} y={0} width={xy.width - iconPadding} height={xy.height} />
+        </clipPath>
+      );
+      const iconPieces = [];
+
+      for (let step = 0; step < xy.width; step += finalIconWidth) {
+        for (let stack = 0; stack < stackedIconNumber; stack++) {
+          iconPieces.push(
+            <Mark
+              forceUpdate={true}
+              markType="path"
+              key={`icon-${step}=${stack}`}
+              transform={`translate(${step +
+                iconTranslate[0] * iconScale},${stack *
+                iconBounds.height *
+                iconScale +
+                iconTranslate[1]}) scale(${iconScale})`}
+              d={iconD}
+              style={styleFn(piece, i)}
+              renderMode={renderValue}
+              className={classFn(piece, i)}
+            />
+          );
+        }
+      }
+      icons.push(
+        <g key={`clipped-region-${i}`} clipPath={clipPath}>
+          {iconPieces}
+        </g>
+      );
+    }
+  }
+  return icons;
+};
 
 export function pointOnArcAtAngle(center, angle, distance) {
   const radians = Math.PI * (angle + 0.75) * 2;
@@ -114,6 +194,21 @@ export function clusterBarLayout({
         height: finalHeight,
         width: finalWidth
       };
+
+      if (type.icon && projection === "horizontal") {
+        type.customMark = iconBarCustomMark({
+          type,
+          projection,
+          finalHeight,
+          styleFn,
+          renderValue,
+          classFn
+        });
+      } else if (type.icon && projection !== "horizontal") {
+        console.error(
+          "Icons are currently only supported for horizontal charts"
+        );
+      }
 
       const renderElementObject = type.customMark ? (
         <g
@@ -253,6 +348,21 @@ export function barLayout({
         height: finalHeight,
         width: finalWidth
       };
+
+      if (type.icon && projection === "horizontal") {
+        type.customMark = iconBarCustomMark({
+          type,
+          projection,
+          finalHeight,
+          styleFn,
+          renderValue,
+          classFn
+        });
+      } else if (type.icon && projection !== "horizontal") {
+        console.error(
+          "Icons are currently only supported for horizontal charts"
+        );
+      }
 
       const renderElementObject = type.customMark ? (
         <g

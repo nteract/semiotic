@@ -20,7 +20,9 @@ const Home = ({ match }) => {
               through data visualization.
             </p>
             <Button color="primary" raised>
-              <Link to="examples">Interactive Examples</Link>
+              <Link style={{ color: "black" }} to="examples">
+                Interactive Examples
+              </Link>
             </Button>
             <Button
               color="primary"
