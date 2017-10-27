@@ -10,76 +10,102 @@ const iconBarCustomMark = ({
   type,
   projection,
   finalHeight,
+  finalWidth,
   styleFn,
   renderValue,
   classFn
 }) => (piece, i, xy) => {
   const iconD = typeof type.icon === "string" ? type.icon : type.icon(piece, i);
-  const { iconPadding = 1 } = type;
+  const { iconPadding = 1, resize = "auto" } = type;
 
   const iconBounds = pathBounds(iconD);
   const iconTranslate = [
-    0 - iconBounds.x1 + iconPadding - 1,
+    0 - iconBounds.x1 + iconPadding,
     0 - iconBounds.y1 + iconPadding
   ];
-
-  const icons = [];
   iconBounds.height += iconPadding * 2;
   iconBounds.width += iconPadding * 2;
 
-  if (projection === "horizontal") {
-    const stackedIconSize = finalHeight / iconBounds.height;
-    let stackedIconNumber = 1;
-    let iconScale = 1;
+  const icons = [];
+
+  let stackedIconSize = iconBounds.height;
+  let stackedIconNumber = 1;
+  let iconScale = 1;
+  const spaceToUse = projection === "horizontal" ? finalHeight : finalWidth;
+  const sizeToFit =
+    projection === "horizontal" ? iconBounds.height : iconBounds.width;
+  const sizeToPad =
+    projection === "horizontal" ? iconBounds.width : iconBounds.height;
+  const spaceToFill = projection === "horizontal" ? xy.width : xy.height;
+  const spaceToStackFill = projection === "horizontal" ? xy.height : xy.width;
+  if (resize === "auto") {
+    stackedIconSize = spaceToUse / sizeToFit;
     if (stackedIconSize < 1) {
       iconScale = stackedIconSize;
     } else {
       stackedIconNumber = Math.floor(stackedIconSize);
       iconScale = 1 + (stackedIconSize - stackedIconNumber) / stackedIconNumber;
     }
-    const finalIconWidth = iconBounds.width * iconScale;
-    const finalIconHeight = iconBounds.height * iconScale;
+  } else if (resize === "fixed") {
+    iconScale = spaceToUse / sizeToFit;
+  }
 
-    const iconValue = xy.width / finalIconWidth;
-    const iconNumber = Math.floor(iconValue);
-    const remainderValue = iconValue - iconNumber;
+  const finalIconWidth = iconBounds.width * iconScale;
+  const finalIconHeight = iconBounds.height * iconScale;
 
-    const randoClipID = `iso-clip-${i}-${Math.random()}`;
-    const clipPath = `url(#${randoClipID})`;
-    if (xy.width - iconPadding > 0) {
-      icons.push(
-        <clipPath key={randoClipID} id={randoClipID}>
-          <rect x={0} y={0} width={xy.width - iconPadding} height={xy.height} />
-        </clipPath>
-      );
-      const iconPieces = [];
+  const spaceToStep = sizeToPad * iconScale;
+  const spaceToStackStep = sizeToFit * iconScale;
 
-      for (let step = 0; step < xy.width; step += finalIconWidth) {
-        for (let stack = 0; stack < stackedIconNumber; stack++) {
-          iconPieces.push(
-            <Mark
-              forceUpdate={true}
-              markType="path"
-              key={`icon-${step}=${stack}`}
-              transform={`translate(${step +
-                iconTranslate[0] * iconScale},${stack *
-                iconBounds.height *
-                iconScale +
-                iconTranslate[1]}) scale(${iconScale})`}
-              d={iconD}
-              style={styleFn(piece, i)}
-              renderMode={renderValue}
-              className={classFn(piece, i)}
-            />
-          );
-        }
+  iconTranslate[0] = iconTranslate[0] * iconScale;
+  iconTranslate[1] = iconTranslate[1] * iconScale;
+
+  const randoClipID = `iso-clip-${i}-${Math.random()}`;
+  const clipPath = `url(#${randoClipID})`;
+  if (xy.width > 0) {
+    icons.push(
+      <clipPath key={randoClipID} id={randoClipID}>
+        <rect x={0} y={0} width={xy.width} height={xy.height} />
+      </clipPath>
+    );
+    const iconPieces = [];
+    const stepStart =
+      projection === "horizontal" ? 0 : xy.height - finalIconHeight;
+    const stepper = projection === "horizontal" ? spaceToStep : -spaceToStep;
+    const stepTest =
+      projection === "horizontal"
+        ? (step, spaceToFill) => step < spaceToFill
+        : (step, spaceToFill, stepper) => step > 0 + stepper;
+
+    for (
+      let step = stepStart;
+      stepTest(step, spaceToFill, stepper);
+      step += stepper
+    ) {
+      for (let stack = 0; stack < spaceToStackFill; stack += spaceToStackStep) {
+        const stepX = projection === "horizontal" ? step : stack;
+        const stepY = projection === "horizontal" ? stack : step;
+        const paddedX = stepX + iconTranslate[0];
+        const paddedY = stepY + iconTranslate[1];
+        iconPieces.push(
+          <Mark
+            forceUpdate={true}
+            markType="path"
+            key={`icon-${step}-${stack}`}
+            transform={`translate(${paddedX},${paddedY}) scale(${iconScale})`}
+            vectorEffect={"non-scaling-stroke"}
+            d={iconD}
+            style={styleFn(piece, i)}
+            renderMode={renderValue}
+            className={classFn(piece, i)}
+          />
+        );
       }
-      icons.push(
-        <g key={`clipped-region-${i}`} clipPath={clipPath}>
-          {iconPieces}
-        </g>
-      );
     }
+    icons.push(
+      <g key={`clipped-region-${i}`} clipPath={clipPath}>
+        {iconPieces}
+      </g>
+    );
   }
   return icons;
 };
@@ -195,19 +221,18 @@ export function clusterBarLayout({
         width: finalWidth
       };
 
-      if (type.icon && projection === "horizontal") {
+      if (type.icon && projection !== "radial") {
         type.customMark = iconBarCustomMark({
           type,
           projection,
           finalHeight,
+          finalWidth,
           styleFn,
           renderValue,
           classFn
         });
-      } else if (type.icon && projection !== "horizontal") {
-        console.error(
-          "Icons are currently only supported for horizontal charts"
-        );
+      } else if (type.icon && projection === "radial") {
+        console.error("Icons are currently unsupported on radial charts");
       }
 
       const renderElementObject = type.customMark ? (
@@ -349,19 +374,18 @@ export function barLayout({
         width: finalWidth
       };
 
-      if (type.icon && projection === "horizontal") {
+      if (type.icon && projection !== "radial") {
         type.customMark = iconBarCustomMark({
           type,
           projection,
           finalHeight,
+          finalWidth,
           styleFn,
           renderValue,
           classFn
         });
       } else if (type.icon && projection !== "horizontal") {
-        console.error(
-          "Icons are currently only supported for horizontal charts"
-        );
+        console.error("Icons are currently unsupported in radial charts");
       }
 
       const renderElementObject = type.customMark ? (

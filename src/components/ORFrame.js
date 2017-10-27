@@ -1429,7 +1429,7 @@ ORFrame.propTypes = {
     PropTypes.object
   ]),
   hoverAnnotation: PropTypes.bool,
-  axis: PropTypes.object,
+  axis: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
   backgroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
   foregroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array])
 };

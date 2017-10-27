@@ -388,14 +388,16 @@ export function sketchy(markType, cloneProps) {
         .append("svg")
         .attr("id", "sketchyTempSVG");
 
+      const mType = cloneProps.d.substring(0, 1) === "M" ? "M" : "m";
+
       cloneProps.d
-        .split("M")
+        .split(mType)
         .filter((d, i) => i !== 0)
         .forEach((pathD, i) => {
           let pathDummy = select("#sketchyTempSVG")
             .append("path")
             .attr("class", cloneProps.className)
-            .attr("d", `M${pathD}`);
+            .attr("d", `${mType}${pathD}`);
 
           let pathNode = pathDummy.node();
           if (cloneProps.style && cloneProps.style.fill !== "none") {

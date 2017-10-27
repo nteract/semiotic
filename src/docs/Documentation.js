@@ -36,6 +36,7 @@ import SwarmBrush from "./components/SwarmBrush";
 import LineBrush from "./components/LineBrush";
 import DivergingStackedBar from "./components/DivergingStackedBar";
 import DivergingStackedIsotype from "./components/DivergingStackedIsotype";
+import VerticalIsotype from "./components/VerticalIsotype";
 import Sankey from "./components/Sankey";
 import Chord from "./components/Chord";
 import Dendrogram from "./components/Dendrogram";
@@ -84,6 +85,7 @@ const components = {
   swarmbrush: { docs: SwarmBrush, parent: "orframe" },
   divergingstackedbar: { docs: DivergingStackedBar, parent: "orframe" },
   divergingstackedisotype: { docs: DivergingStackedIsotype, parent: "orframe" },
+  verticalisotype: { docs: VerticalIsotype, parent: "orframe" },
   waterfall: { docs: WaterfallChart, parent: "orframe" },
   bullet: { docs: BulletChart, parent: "orframe" },
   realtimebar: { docs: RealtimeORFrame, parent: "orframe" },
