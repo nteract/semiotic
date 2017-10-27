@@ -32,7 +32,7 @@ export default (
     type={{
       type: "bar",
       icon: d => iconHash[d.type],
-      iconPadding: 2,
+      iconPadding: 0,
       resize: "fixed"
     }}
     projection="horizontal"
@@ -44,7 +44,7 @@ export default (
       strokeWidth: 0.5
     })}
     margin={{ top: 30, bottom: 0, left: 10, right: 80 }}
-    oPadding={0}
+    oPadding={4}
     oLabel={{ orient: "right" }}
     axis={{
       orient: "top",
