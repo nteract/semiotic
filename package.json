@@ -3,9 +3,7 @@
   "version": "1.1.9",
   "description": "The semiotic JavaScript data visualization framework",
   "main": "lib/index.js",
-  "files": [
-    "lib"
-  ],
+  "files": ["lib"],
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
@@ -30,7 +28,7 @@
     "Susie Lu <susie.lu.shan@gmail.com>",
     "James J. Womack (@james_womack)"
   ],
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "Apache-2.0",
   "devDependencies": {
     "babel-cli": "6.4.5",
     "babel-eslint": "^7.2.3",
@@ -111,9 +109,6 @@
     "svg-path-bounding-box": "1.0.4"
   },
   "nyc": {
-    "exclude": [
-      "tests/unit/lib/*.js",
-      "tests/unit/specs/**/*.js"
-    ]
+    "exclude": ["tests/unit/lib/*.js", "tests/unit/specs/**/*.js"]
   }
 }
