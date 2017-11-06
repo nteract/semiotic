@@ -631,7 +631,7 @@ export default class ORFrameDocs extends React.Component {
             ${this.state.type !== "none"
               ? this.state.type !== "custom"
                 ? `type={'${this.state.type}'}`
-                : `{
+                : `type={{
               type: "clusterbar",
               customMark: (d, i, xy) => [
                 <rect
@@ -662,7 +662,7 @@ export default class ORFrameDocs extends React.Component {
                   cx={xy.width / 2}
                 />
               ]
-            }`
+            }}`
               : ""}
             ${this.state.summaryType !== "none"
               ? `summaryType={'${this.state.summaryType}'}`
