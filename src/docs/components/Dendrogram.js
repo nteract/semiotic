@@ -71,8 +71,6 @@ const data = {
     }
     ]
 }
-
-
   <NetworkFrame
     size={[700, 400]}
     edges={data}

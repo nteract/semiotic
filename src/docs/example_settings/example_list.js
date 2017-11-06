@@ -16,6 +16,12 @@ import DivergingStackedBarRaw from "../components/DivergingStackedBarRaw";
 import ChordRaw from "../components/ChordRaw";
 import SankeyRaw from "../components/SankeyRaw";
 import AppleStockChartRaw from "../components/AppleStockChartRaw";
+import BaseballMapRaw from "../components/BaseballMapRaw";
+import BulletChartRaw from "../components/BulletChartRaw";
+import DendrogramRaw from "../components/DendrogramRaw";
+import DivergingStackedIsotypeRaw from "../components/DivergingStackedIsotypeRaw";
+import VerticalIsotypeRaw from "../components/VerticalIsotypeRaw";
+
 import {
   genericBarChart,
   genericLineChart,
@@ -23,6 +29,28 @@ import {
 } from "../components/GenericChartsRaw";
 
 const exampos = [
+  {
+    label: "Home Run Map",
+    viz: BaseballMapRaw({
+      pointStyle: { fill: "black" },
+      areaStyle: d => ({
+        stroke: "none",
+        fill: "#b3331d",
+        opacity: 0.25
+      }),
+      areaType: "contour",
+      areaRenderMode: "sketchy"
+    }),
+    path: "homerunmap"
+  },
+  { label: "Bullet Chart", viz: BulletChartRaw, path: "bullet" },
+  { label: "Dendrogram", viz: DendrogramRaw({}), path: "dendrogram" },
+  { label: "ISOTYPE 2", viz: VerticalIsotypeRaw, path: "verticalisotype" },
+  {
+    label: "ISOTYPE",
+    viz: DivergingStackedIsotypeRaw,
+    path: "divergingstackedisotype"
+  },
   { label: "Dot Plot", viz: DotPlotRaw, path: "dotplot" },
   {
     label: "Neighborhood Map",
