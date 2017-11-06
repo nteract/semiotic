@@ -113,51 +113,55 @@ function generateBulletChart({ data, rScale, adjustedSize, margin }) {
   return renderedPieces;
 }
 
-export default bulletData.map(data => {
-  const bulletRanges = data.ranges
-    .map(p => ({ class: "range", value: p }))
-    .sort((a, b) => b.value - a.value);
-  const bulletMeasures = data.measures
-    .map(p => ({
-      class: "measure",
-      value: p
-    }))
-    .sort((a, b) => b.value - a.value);
-  const bulletMarkers = data.markers
-    .map(p => ({ class: "marker", value: p }))
-    .sort((a, b) => b.value - a.value);
-  return (
-    <ORFrame
-      size={[700, 100]}
-      data={[...bulletRanges, ...bulletMeasures, ...bulletMarkers]}
-      rAccessor={d => d.value}
-      rExtent={[0, undefined]}
-      oAccessor={() => "fixed"}
-      projection={"horizontal"}
-      axis={{ orient: "bottom", ticks: 6, footer: true }}
-      style={d => ({
-        fill: d.value > 0 ? "green" : "red",
-        stroke: "darkgray",
-        strokeWidth: 1
-      })}
-      type={generateBulletChart}
-      oLabel={() => (
-        <g>
-          <text style={{ textAnchor: "end" }}>{data.title}</text>
-          <text y={18} style={{ textAnchor: "end", fill: "darkgray" }}>
-            {data.subtitle}
-          </text>
-        </g>
-      )}
-      tooltipContent={d => (
-        <div className="tooltip-content">
-          <p>{d.class}</p>
-          <p>{d.value}</p>
-        </div>
-      )}
-      margin={{ left: 130, top: 10, bottom: 40, right: 20 }}
-      oPadding={0}
-      pieceHoverAnnotation={true}
-    />
-  );
-});
+export default (
+  <div style={{ marginTop: "60px" }}>
+    {bulletData.map(data => {
+      const bulletRanges = data.ranges
+        .map(p => ({ class: "range", value: p }))
+        .sort((a, b) => b.value - a.value);
+      const bulletMeasures = data.measures
+        .map(p => ({
+          class: "measure",
+          value: p
+        }))
+        .sort((a, b) => b.value - a.value);
+      const bulletMarkers = data.markers
+        .map(p => ({ class: "marker", value: p }))
+        .sort((a, b) => b.value - a.value);
+      return (
+        <ORFrame
+          size={[700, 100]}
+          data={[...bulletRanges, ...bulletMeasures, ...bulletMarkers]}
+          rAccessor={d => d.value}
+          rExtent={[0, undefined]}
+          oAccessor={() => "fixed"}
+          projection={"horizontal"}
+          axis={{ orient: "bottom", ticks: 6, footer: true }}
+          style={d => ({
+            fill: d.value > 0 ? "green" : "red",
+            stroke: "darkgray",
+            strokeWidth: 1
+          })}
+          type={generateBulletChart}
+          oLabel={() => (
+            <g>
+              <text style={{ textAnchor: "end" }}>{data.title}</text>
+              <text y={18} style={{ textAnchor: "end", fill: "darkgray" }}>
+                {data.subtitle}
+              </text>
+            </g>
+          )}
+          tooltipContent={d => (
+            <div className="tooltip-content">
+              <p>{d.class}</p>
+              <p>{d.value}</p>
+            </div>
+          )}
+          margin={{ left: 130, top: 10, bottom: 40, right: 20 }}
+          oPadding={0}
+          pieceHoverAnnotation={true}
+        />
+      );
+    })}
+  </div>
+);
