@@ -1,6 +1,6 @@
 {
   "name": "semiotic",
-  "version": "1.1.9",
+  "version": "1.1.10",
   "description": "The semiotic JavaScript data visualization framework",
   "main": "lib/index.js",
   "files": [
