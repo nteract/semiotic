@@ -48,7 +48,8 @@ const createResponsiveFrame = Frame =>
         responsiveWidth,
         responsiveHeight,
         size,
-        dataVersion
+        dataVersion,
+        style = {}
       } = this.props;
 
       const { containerHeight, containerWidth } = this.state;
@@ -66,7 +67,11 @@ const createResponsiveFrame = Frame =>
       const dataVersionWithSize = dataVersion + actualSize.toString();
 
       return (
-        <div className="responsive-container" ref={node => (this.node = node)}>
+        <div
+          className="responsive-container"
+          style={Object.assign({ height: "100%", width: "100%" }, style)}
+          ref={node => (this.node = node)}
+        >
           <Frame
             {...this.props}
             size={actualSize}
