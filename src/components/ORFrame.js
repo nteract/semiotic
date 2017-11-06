@@ -709,7 +709,11 @@ class ORFrame extends React.Component {
       const yMod = projection === "horizontal" ? midMod : zeroFunction;
       const xMod = projection === "vertical" ? midMod : zeroFunction;
 
-      if (calculatedSummaries && calculatedSummaries.xyPoints) {
+      if (
+        calculatedSummaries &&
+        calculatedSummaries.xyPoints &&
+        !currentProps.pieceHoverAnnotation.pieces
+      ) {
         pieceDataXY = calculatedSummaries.xyPoints.map(d =>
           Object.assign({}, d, {
             type: "frame-hover",
