@@ -712,7 +712,7 @@ class ORFrame extends React.Component {
       if (
         calculatedSummaries &&
         calculatedSummaries.xyPoints &&
-        !currentProps.pieceHoverAnnotation.pieces
+        !currentProps.pieceHoverAnnotation.onlyPieces
       ) {
         pieceDataXY = calculatedSummaries.xyPoints.map(d =>
           Object.assign({}, d, {
