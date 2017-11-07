@@ -580,7 +580,7 @@ class ORFrame extends React.Component {
             style: { opacity: 0, fill: "pink" },
             onClick: () => ({
               type: "column-hover",
-              pieces: barData.filter((p, q) => oAccessor(p, q) === d),
+              pieces: projectedColumns[d].pieceData,
               summary: projectedColumns[d].pieceData,
               arcAngles: {
                 centroid,
@@ -591,7 +591,7 @@ class ORFrame extends React.Component {
             }),
             onMouseEnter: () => ({
               type: "column-hover",
-              pieces: barData.filter((p, q) => oAccessor(p, q) === d),
+              pieces: projectedColumns[d].pieceData,
               summary: projectedColumns[d].pieceData,
               arcAngles: {
                 centroid,
@@ -614,12 +614,12 @@ class ORFrame extends React.Component {
           style: { opacity: 0, stroke: "black", fill: "pink" },
           onClick: () => ({
             type: "column-hover",
-            pieces: barData.filter((p, q) => oAccessor(p, q) === d),
+            pieces: projectedColumns[d].pieceData,
             summary: projectedColumns[d].pieceData
           }),
           onMouseEnter: () => ({
             type: "column-hover",
-            pieces: barData.filter((p, q) => oAccessor(p, q) === d),
+            pieces: projectedColumns[d].pieceData,
             summary: projectedColumns[d].pieceData
           }),
           onMouseLeave: () => ({})

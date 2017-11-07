@@ -244,6 +244,7 @@ class InteractionLayer extends React.Component {
       const renderedOverlay = overlay.map(overlayRegion => {
         return (
           <Mark
+            forceUpdate={true}
             {...overlayRegion}
             onClick={() => {
               this.clickVoronoi(overlayRegion.onClick());

@@ -589,6 +589,7 @@ class NetworkFrame extends React.Component {
         />
       );
     } else if (networkSettings.type === "wordcloud") {
+      let initCustomNodeIcon = customNodeIcon;
       customNodeIcon = ({
         d,
         i,
@@ -598,34 +599,46 @@ class NetworkFrame extends React.Component {
         className,
         transform
       }) => {
-        const textStyle = styleFn(d, i);
-        textStyle.fontSize = `${d.fontSize}px`;
-        textStyle.fontWeight = d.fontWeight;
-        textStyle.textAnchor = "middle";
-        let textTransform, textY, textX;
-        textTransform = `scale(${d.scale})`;
-
-        if (!d.rotate) {
-          textY = d.textHeight / 4;
-          textTransform = `scale(${d.scale})`;
+        if (initCustomNodeIcon) {
+          return initCustomNodeIcon({
+            d,
+            i,
+            styleFn,
+            renderKeyFn,
+            key,
+            className,
+            transform
+          });
         } else {
-          textTransform = `rotate(90) scale(${d.scale})`;
-          textY = d.textHeight / 4;
-        }
+          const textStyle = styleFn(d, i);
+          textStyle.fontSize = `${d.fontSize}px`;
+          textStyle.fontWeight = d.fontWeight;
+          textStyle.textAnchor = "middle";
+          let textTransform, textY, textX;
+          textTransform = `scale(${d.scale})`;
 
-        return (
-          <g key={key} transform={transform}>
-            <text
-              style={textStyle}
-              y={textY}
-              x={textX}
-              transform={textTransform}
-              className={`${className} wordcloud`}
-            >
-              {d._NWFText}
-            </text>
-          </g>
-        );
+          if (!d.rotate) {
+            textY = d.textHeight / 4;
+            textTransform = `scale(${d.scale})`;
+          } else {
+            textTransform = `rotate(90) scale(${d.scale})`;
+            textY = d.textHeight / 4;
+          }
+
+          return (
+            <g key={key} transform={transform}>
+              <text
+                style={textStyle}
+                y={textY}
+                x={textX}
+                transform={textTransform}
+                className={`${className} wordcloud`}
+              >
+                {d._NWFText}
+              </text>
+            </g>
+          );
+        }
       };
     } else if (networkSettings.type === "dendrogram") {
       if (networkSettings.projection === "horizontal") {
