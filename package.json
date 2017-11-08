@@ -104,7 +104,7 @@
     "numeral": "^1.5.3",
     "prop-types": "15.6.0",
     "react-annotation": "1.0.1",
-    "semiotic-mark": "0.0.1",
+    "semiotic-mark": "0.0.2",
     "svg-path-bounding-box": "1.0.4"
   },
   "nyc": {
