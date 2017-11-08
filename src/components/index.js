@@ -1,6 +1,3 @@
-import Mark from "./Mark";
-import DraggableMark from "./DraggableMark";
-import MarkContext from "./MarkContext";
 import AnnotationLayer from "./AnnotationLayer";
 import DividedLine from "./DividedLine";
 import XYFrame from "./XYFrame";
@@ -27,9 +24,6 @@ import {
 } from "./ResponsiveFrame";
 
 export default {
-  DraggableMark,
-  Mark,
-  MarkContext,
   AnnotationLayer,
   DividedLine,
   XYFrame,
@@ -55,9 +49,6 @@ export default {
 };
 
 export {
-  DraggableMark,
-  Mark,
-  MarkContext,
   AnnotationLayer,
   DividedLine,
   XYFrame,

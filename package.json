@@ -3,7 +3,9 @@
   "version": "1.1.11",
   "description": "The semiotic JavaScript data visualization framework",
   "main": "lib/index.js",
-  "files": ["lib"],
+  "files": [
+    "lib"
+  ],
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
@@ -106,9 +108,13 @@
     "numeral": "^1.5.3",
     "prop-types": "15.6.0",
     "react-annotation": "1.0.1",
+    "semiotic-mark": "0.0.1",
     "svg-path-bounding-box": "1.0.4"
   },
   "nyc": {
-    "exclude": ["tests/unit/lib/*.js", "tests/unit/specs/**/*.js"]
+    "exclude": [
+      "tests/unit/lib/*.js",
+      "tests/unit/specs/**/*.js"
+    ]
   }
 }

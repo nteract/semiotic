@@ -1,11 +1,8 @@
 import React from "react";
 import DocumentComponent from "../layout/DocumentComponent";
-import {
-  XYFrame,
-  ResponsiveXYFrame,
-  MinimapXYFrame,
-  Mark
-} from "../../components";
+import { Mark } from "semiotic-mark";
+
+import { XYFrame, ResponsiveXYFrame, MinimapXYFrame } from "../../components";
 import {
   curveBasis,
   curveCardinal,

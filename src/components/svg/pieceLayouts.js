@@ -2,7 +2,7 @@ import React from "react";
 import { forceSimulation, forceX, forceY, forceCollide } from "d3-force";
 import { /*area, curveCatmullRom,*/ arc } from "d3-shape";
 import pathBounds from "svg-path-bounding-box";
-import Mark from "../Mark";
+import { Mark } from "semiotic-mark";
 
 const twoPI = Math.PI * 2;
 

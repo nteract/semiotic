@@ -3,7 +3,7 @@ import { brushX, brushY, brush } from "d3-brush";
 import { extent } from "d3-array";
 import { event } from "d3-selection";
 import { voronoi } from "d3-voronoi";
-import Mark from "./Mark";
+import { Mark } from "semiotic-mark";
 
 // components
 import Brush from "./Brush";

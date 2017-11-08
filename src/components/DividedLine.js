@@ -6,7 +6,7 @@ import { dividedLine, projectLineData } from "./svg/lineDrawing";
 
 // components
 
-import Mark from "./Mark";
+import { Mark } from "semiotic-mark";
 
 import PropTypes from "prop-types";
 

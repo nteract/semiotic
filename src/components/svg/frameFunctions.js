@@ -1,11 +1,8 @@
 import React from "react";
 
 import { drawAreaConnector } from "../svg/SvgHelper";
-import Mark from "../Mark";
-
+import { Mark } from "semiotic-mark";
 import Axis from "../Axis";
-
-import { circlePath } from "../markBehavior/drawing";
 
 import {
   boxplotRenderFn,
@@ -13,6 +10,33 @@ import {
   bucketizedRenderingFn
 } from "./summaryLayouts";
 import { axisPieces, axisLines } from "../visualizationLayerBehavior/axis";
+
+function roundToTenth(number) {
+  return Math.round(number * 10) / 10;
+}
+
+const circlePath = (cx, cy, r) =>
+  [
+    "M",
+    roundToTenth(cx - r),
+    roundToTenth(cy),
+    "a",
+    r,
+    r,
+    0,
+    1,
+    0,
+    r * 2,
+    0,
+    "a",
+    r,
+    r,
+    0,
+    1,
+    0,
+    -(r * 2),
+    0
+  ].join(" ") + "Z";
 
 export const drawMarginPath = ({ margin, size, inset = 5 }) => {
   const iSize = [size[0] - inset, size[1] - inset];

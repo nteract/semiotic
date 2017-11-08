@@ -1,5 +1,5 @@
 import React from "react";
-import Mark from "../Mark";
+import { Mark } from "semiotic-mark";
 
 export function pointOnArcAtAngle(center, angle, distance) {
   const radians = Math.PI * (angle + 0.75) * 2;

@@ -1,6 +1,6 @@
 import React from "react";
 
-import Mark from "../Mark";
+import { Mark } from "semiotic-mark";
 import { line, area, curveLinear } from "d3-shape";
 
 export function lineGeneratorDecorator({

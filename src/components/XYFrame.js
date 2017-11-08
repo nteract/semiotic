@@ -6,7 +6,7 @@ import { scaleLinear } from "d3-scale";
 import { axisPieces, axisLines } from "./visualizationLayerBehavior/axis";
 
 // components
-import Mark from "./Mark";
+import { Mark } from "semiotic-mark";
 import Annotation from "./Annotation";
 import Axis from "./Axis";
 import DownloadButton from "./DownloadButton";

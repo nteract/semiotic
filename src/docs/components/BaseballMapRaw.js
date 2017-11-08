@@ -1,8 +1,9 @@
 import React from "react";
 import { data, fieldGraphic } from "../sampledata/stanton";
-import { XYFrame, Mark } from "../../components";
+import { XYFrame } from "../../components";
 import { scaleLinear } from "d3-scale";
 import { extent } from "d3-array";
+import { Mark } from "semiotic-mark";
 
 const groupedData = [];
 const groupHash = {};

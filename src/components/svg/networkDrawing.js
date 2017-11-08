@@ -1,6 +1,6 @@
 import React from "react";
 
-import Mark from "../Mark";
+import { Mark } from "semiotic-mark";
 
 import {
   d as glyphD /*, project as glyphProject, mutate as glyphMutate*/

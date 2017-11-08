@@ -506,7 +506,6 @@ export default class ORFrameDocs extends React.Component {
         <FormControl>
           <InputLabel htmlFor="hover-behavior-input">hoverBehavior</InputLabel>
           <Select
-            floatingLabelText="hoverBehavior"
             value={this.state.hoverBehavior}
             onChange={e => this.setState({ hoverBehavior: e.target.value })}
           >

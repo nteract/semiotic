@@ -24,8 +24,7 @@ import {
 } from "react-annotation";
 
 import Frame from "./Frame";
-import Mark from "./Mark";
-
+import { Mark } from "semiotic-mark";
 import DownloadButton from "./DownloadButton";
 
 import {

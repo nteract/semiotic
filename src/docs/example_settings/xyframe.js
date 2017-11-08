@@ -1,7 +1,9 @@
 import React from "react";
 import { xyframe_data } from "../sampledata/nyc_temp";
 import { quantile } from "d3-array";
-import { DividedLine, Mark } from "../../components";
+import { DividedLine } from "../../components";
+
+import { Mark } from "semiotic-mark";
 import { scaleLinear } from "d3-scale";
 import { AnnotationCalloutElbow } from "react-annotation";
 import { curveMonotoneX, line } from "d3-shape";

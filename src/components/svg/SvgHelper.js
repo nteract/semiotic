@@ -2,7 +2,7 @@ import React from "react";
 
 import { select } from "d3-selection";
 import { arc } from "d3-shape";
-import Mark from "../Mark";
+import { Mark } from "semiotic-mark";
 
 const twoPI = Math.PI * 2;
 

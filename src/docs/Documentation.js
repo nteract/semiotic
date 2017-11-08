@@ -8,7 +8,6 @@ import NetworkFrameDocs from "./components/NetworkFrameDocs";
 import AxisDocs from "./components/AxisDocs";
 import LegendDocs from "./components/LegendDocs";
 import DividedLineDocs from "./components/DividedLineDocs";
-import MarkDocs from "./components/MarkDocs";
 
 import { withStyles } from "material-ui/styles";
 import Divider from "material-ui/Divider";
@@ -94,7 +93,6 @@ const components = {
   sankey: { docs: Sankey, parent: "networkframe" },
   chord: { docs: Chord, parent: "networkframe" },
   dendrogram: { docs: Dendrogram, parent: "networkframe" },
-  mark: { docs: MarkDocs },
   axis: { docs: AxisDocs },
   legend: { docs: LegendDocs },
   dividedline: { docs: DividedLineDocs }

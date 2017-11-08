@@ -1,7 +1,8 @@
 import React from "react";
 import { data } from "../sampledata/verticality";
 import { csvParse } from "d3-dsv";
-import { XYFrame, Mark } from "../../components";
+import { XYFrame } from "../../components";
+import { Mark } from "semiotic-mark";
 
 const groupedData = [];
 const groupHash = {};

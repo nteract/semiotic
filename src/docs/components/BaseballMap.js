@@ -3,7 +3,7 @@ import DocumentComponent from "../layout/DocumentComponent";
 import BaseballMapRaw from "./BaseballMapRaw";
 import Select from "material-ui/Select";
 import { MenuItem } from "material-ui/Menu";
-import { Mark } from "../../components";
+import { Mark } from "semiotic-mark";
 import { scaleTime } from "d3-scale";
 import Input, { InputLabel } from "material-ui/Input";
 import { FormControl, FormHelperText } from "material-ui/Form";
