@@ -15,10 +15,6 @@ body {
   color: black;
 }
 
-div#root {
-  margin-top: 60px;
-}
-
 .accent-font {
   font-family: "Monoton" !important;
 }

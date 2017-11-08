@@ -3,9 +3,7 @@
   "version": "1.1.11",
   "description": "The semiotic JavaScript data visualization framework",
   "main": "lib/index.js",
-  "files": [
-    "lib"
-  ],
+  "files": ["lib"],
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
@@ -64,7 +62,8 @@
     "reactstrap": "github:jameswomack/reactstrap#react-popper_react-dom-16",
     "tap-difflet": "0.4.0",
     "tap-notify": "1.0.0",
-    "tape": "4.4.0"
+    "tape": "4.4.0",
+    "material-design-icons-svg": "1.1.2"
   },
   "peerDependencies": {
     "react": "^15.0.0 || ^16.0.0",
@@ -103,7 +102,6 @@
     "json2csv": "3.7.3",
     "lodash.flatten": "4.4.0",
     "lodash.uniq": "4.5.0",
-    "material-design-icons-svg": "1.1.2",
     "moment": "2.10.6",
     "numeral": "^1.5.3",
     "prop-types": "15.6.0",
@@ -111,9 +109,6 @@
     "svg-path-bounding-box": "1.0.4"
   },
   "nyc": {
-    "exclude": [
-      "tests/unit/lib/*.js",
-      "tests/unit/specs/**/*.js"
-    ]
+    "exclude": ["tests/unit/lib/*.js", "tests/unit/specs/**/*.js"]
   }
 }

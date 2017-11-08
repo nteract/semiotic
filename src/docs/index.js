@@ -22,31 +22,26 @@ const muiTheme = createMuiTheme(theme);
 const Docs = test => {
   return (
     <MuiThemeProvider theme={muiTheme}>
-      <div className="container-fluid">
-        <HashRouter basename={basename}>
-          <div className="App">
-            <div className="container-fluid">
-              <Route
-                exact
-                pattern="/"
-                render={({ location }) => {
-                  if (location.pathname === "/") {
-                    return (
-                      <div>
-                        <Home />
-                        <Documentation />
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-              />
-              <Route path="/:component" component={Documentation} />
-            </div>
-            <LayoutFooter gh={gh} />
-          </div>
-        </HashRouter>
-      </div>
+      <HashRouter basename={basename}>
+        <div className="App">
+          <Route
+            exact
+            pattern="/"
+            render={({ location }) => {
+              if (location.pathname === "/") {
+                return (
+                  <div>
+                    <Documentation AdditionalContent={Home} />
+                  </div>
+                );
+              }
+              return null;
+            }}
+          />
+          <Route path="/:component" component={Documentation} />
+          <LayoutFooter gh={gh} />
+        </div>
+      </HashRouter>
     </MuiThemeProvider>
   );
 };

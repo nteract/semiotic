@@ -105,8 +105,8 @@ const drawerWidth = 240;
 const styles = theme => ({
   root: {
     width: "100%",
-    height: 430,
-    marginTop: theme.spacing.unit * 3,
+    height: "100%",
+    marginTop: 0,
     zIndex: 1,
     overflow: "hidden"
   },
@@ -178,7 +178,7 @@ const styles = theme => ({
   }
 });
 
-export default class Documentation extends React.Component {
+class Documentation extends React.Component {
   state = {
     open: false
   };
@@ -260,6 +260,8 @@ export default class Documentation extends React.Component {
       );
     }
 
+    const { AdditionalContent } = this.props;
+
     return (
       <div className={classes.root}>
         <div className={classes.appFrame}>
@@ -322,6 +324,7 @@ export default class Documentation extends React.Component {
               this.state.open && classes.contentShift
             )}
           >
+            {AdditionalContent ? <AdditionalContent /> : null}
             {selected === "examples" ? (
               <div className="row">
                 <div className="col-xs-8 col-xs-offset-2">{Examples}</div>
@@ -338,3 +341,5 @@ export default class Documentation extends React.Component {
     );
   }
 }
+
+export default withStyles(styles, { withTheme: true })(Documentation);
