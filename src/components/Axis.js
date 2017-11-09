@@ -1,8 +1,5 @@
 import React from "react";
 
-import numeral from "numeral";
-//import { wrap } from '../svg/SvgHelper';
-
 import {
   axisLabels,
   axisPieces,
@@ -16,9 +13,6 @@ import PropTypes from "prop-types";
 function formatValue(value, props) {
   if (props.tickFormat) {
     return props.tickFormat(value);
-  }
-  if (props.format) {
-    return numeral(value).format(props.format);
   }
   if (value.toString) {
     return value.toString();
@@ -38,8 +32,7 @@ class Axis extends React.Component {
       rotate,
       label,
       orient = "left",
-      format,
-      tickFormat = format ? d => numeral(d).format(format) : d => d,
+      tickFormat = d => d,
       size,
       width = size[0] || 0,
       height = size[1] || 0,
@@ -51,6 +44,10 @@ class Axis extends React.Component {
       ticks,
       footer
     } = this.props;
+
+    if (this.props.format) {
+      console.error("axis `format` has been deprecated use `tickFormat`");
+    }
 
     let axisTickLines;
     let axisParts = this.props.axisParts;

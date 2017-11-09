@@ -50,7 +50,7 @@ const iconBarCustomMark = ({
     iconScale = spaceToUse / sizeToFit;
   }
 
-  const finalIconWidth = iconBounds.width * iconScale;
+  //  const finalIconWidth = iconBounds.width * iconScale;
   const finalIconHeight = iconBounds.height * iconScale;
 
   const spaceToStep = sizeToPad * iconScale;

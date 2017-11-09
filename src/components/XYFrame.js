@@ -1,16 +1,27 @@
 import React from "react";
 
-import { extent } from "d3-array";
 import { scaleLinear } from "d3-scale";
 
 import { axisPieces, axisLines } from "./visualizationLayerBehavior/axis";
 
 // components
-import { Mark } from "semiotic-mark";
-import Annotation from "./Annotation";
+
 import Axis from "./Axis";
 import DownloadButton from "./DownloadButton";
 import Frame from "./Frame";
+import {
+  svgXYAnnotation,
+  basicReactAnnotation,
+  svgEncloseAnnotation,
+  svgXAnnotation,
+  svgYAnnotation,
+  svgBoundsAnnotation,
+  svgLineAnnotation,
+  svgAreaAnnotation,
+  svgHorizontalPointsAnnotation,
+  svgVerticalPointsAnnotation,
+  htmlTooltipAnnotation
+} from "./annotationRules/xyframeRules";
 
 import {
   createPoints,
@@ -18,21 +29,14 @@ import {
   createAreas
 } from "./visualizationLayerBehavior/general";
 
-import { line } from "d3-shape";
 import { relativeY } from "./svg/lineDrawing";
-import {
-  AnnotationXYThreshold,
-  AnnotationCallout,
-  AnnotationCalloutCircle,
-  AnnotationCalloutRect
-} from "react-annotation";
+import { AnnotationCallout } from "react-annotation";
 import {
   calculateMargin,
   drawMarginPath,
   adjustedPositionSize,
   generateFrameTitle
 } from "./svg/frameFunctions";
-import { packEnclose } from "d3-hierarchy";
 import { xyDownloadMapping } from "./downloadDataMapping";
 import {
   projectedX,
@@ -193,7 +197,8 @@ class XYFrame extends React.Component {
       canvasPoints,
       canvasAreas,
       defined,
-      size
+      size,
+      renderKey
     } = currentProps;
 
     const xAccessor = stringToFn(currentProps.xAccessor);
@@ -404,6 +409,7 @@ class XYFrame extends React.Component {
         customMark: customLineMark,
         type: lineType,
         defined: defined,
+        renderKeyFn: stringToFn(renderKey, (d, i) => `line-${i}`, true),
         behavior: createLines
       },
       areas: {
@@ -413,6 +419,7 @@ class XYFrame extends React.Component {
         renderMode: stringToFn(areaRenderMode, undefined, true),
         canvasRender: stringToFn(canvasAreas, undefined, true),
         type: areaType,
+        renderKeyFn: stringToFn(renderKey, (d, i) => `area-${i}`, true),
         behavior: createAreas
       },
       points: {
@@ -422,12 +429,12 @@ class XYFrame extends React.Component {
         renderMode: stringToFn(pointRenderMode, undefined, true),
         canvasRender: stringToFn(canvasPoints, undefined, true),
         customMark: stringToFn(customPointMark, undefined, true),
+        renderKeyFn: stringToFn(renderKey, (d, i) => `point-${i}`, true),
         behavior: createPoints
       }
     };
 
     this.setState({
-      voronoiHover: null,
       lineData: currentProps.lines,
       pointData: currentProps.points,
       areaData: currentProps.areas,
@@ -555,252 +562,74 @@ class XYFrame extends React.Component {
         lines
       });
     } else if (d.type === "xy" || d.type === "frame-hover") {
-      const laLine = (
-        <Mark
-          className={`annotation ${d.type} ${d.className || ""} `}
-          key={"annotationpoint" + i}
-          markType="circle"
-          cx={screenCoordinates[0]}
-          cy={screenCoordinates[1]}
-          forceUpdate={true}
-          r={5}
-        />
-      );
-      let laLabel;
-      if (d.type === "xy") {
-        laLabel = (
-          <Mark
-            markType="text"
-            key={d.label + "annotationtext" + i}
-            forceUpdate={true}
-            x={screenCoordinates[0]}
-            y={10 + screenCoordinates[1]}
-            className={`annotation annotation-xy-label ${d.className || ""} `}
-          >
-            {d.label}
-          </Mark>
-        );
-      }
-
-      return [laLine, laLabel];
+      return svgXYAnnotation({ d, screenCoordinates, i });
     } else if (d.type === "react-annotation" || typeof d.type === "function") {
-      const noteData = Object.assign(
-        {
-          dx: 0,
-          dy: 0,
-          note: { label: d.label },
-          connector: { end: "arrow" }
-        },
-        d,
-        {
-          type: d.type
-        }
-      );
-
-      noteData.x = noteData.x ? noteData.x : screenCoordinates[0];
-      noteData.y = noteData.y ? noteData.y : screenCoordinates[1];
-
-      return (
-        <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
-      );
+      return basicReactAnnotation({ d, screenCoordinates, i });
     } else if (d.type === "enclose") {
-      const circle = packEnclose(
-        screenCoordinates.map(p => ({ x: p[0], y: p[1], r: 2 }))
-      );
-      const noteData = Object.assign(
-        {
-          dx: 0,
-          dy: 0,
-          note: { label: d.label },
-          connector: { end: "arrow" }
-        },
-        d,
-        {
-          x: circle.x,
-          y: circle.y,
-          type: AnnotationCalloutCircle,
-          subject: {
-            radius: circle.r,
-            radiusPadding: 5 || d.radiusPadding
-          }
-        }
-      );
-
-      if (noteData.rp) {
-        switch (noteData.rp) {
-          case "top":
-            noteData.dx = 0;
-            noteData.dy = -circle.r - noteData.rd;
-            break;
-          case "bottom":
-            noteData.dx = 0;
-            noteData.dy = circle.r + noteData.rd;
-            break;
-          case "left":
-            noteData.dx = -circle.r - noteData.rd;
-            noteData.dy = 0;
-            break;
-          default:
-            noteData.dx = circle.r + noteData.rd;
-            noteData.dy = 0;
-        }
-      }
-      //TODO: Support .ra (setting angle)
-
-      return (
-        <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
-      );
+      return svgEncloseAnnotation({ d, screenCoordinates, i });
     } else if (d.type === "x") {
-      const yPosition = annotationLayer.position[1];
-
-      const noteData = Object.assign(
-        {
-          dx: 50,
-          dy: 20,
-          y: yPosition,
-          note: { label: d.label },
-          connector: { end: "arrow" }
-        },
+      return svgXAnnotation({
         d,
-        {
-          type: AnnotationXYThreshold,
-          x: screenCoordinates[0],
-          subject: {
-            x: screenCoordinates[0],
-            y1: yPosition,
-            y2: adjustedSize[1] + margin.top
-          }
-        }
-      );
-      return (
-        <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
-      );
+        screenCoordinates,
+        i,
+        annotationLayer,
+        adjustedSize,
+        margin
+      });
     } else if (d.type === "y") {
-      const xPosition = margin.left + i * 25;
-
-      const noteData = Object.assign(
-        {
-          dx: 50,
-          dy: -20,
-          x: xPosition,
-          note: { label: d.label },
-          connector: { end: "arrow" }
-        },
+      return svgYAnnotation({
         d,
-        {
-          type: AnnotationXYThreshold,
-          y: screenCoordinates[1],
-          subject: {
-            y: screenCoordinates[1],
-            x1: margin.left,
-            x2: adjustedSize[0] + adjustedPosition[0] + margin.left
-          }
-        }
-      );
-      return (
-        <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
-      );
+        screenCoordinates,
+        i,
+        annotationLayer,
+        adjustedSize,
+        adjustedPosition,
+        margin
+      });
     } else if (d.type === "bounds") {
-      const startXValue = xAccessor(d.bounds[0]);
-      const startYValue = yAccessor(d.bounds[0]);
-      const endXValue = xAccessor(d.bounds[1]);
-      const endYValue = yAccessor(d.bounds[1]);
-
-      const x0Position = startXValue ? xScale(startXValue) : margin.left;
-      const y0Position = startYValue
-        ? yScale(startYValue)
-        : adjustedSize[1] + margin.top;
-      const x1Position = endXValue
-        ? xScale(endXValue)
-        : adjustedSize[0] + margin.left;
-      const y1Position = endYValue ? yScale(endYValue) : margin.top;
-
-      const noteData = Object.assign(
-        {
-          dx: 250,
-          dy: -20,
-          note: { label: d.label },
-          connector: { end: "arrow" }
-        },
+      return svgBoundsAnnotation({
+        screenCoordinates,
         d,
-        {
-          type: AnnotationCalloutRect,
-          x: Math.min(x0Position, x1Position),
-          y: Math.min(y0Position, y1Position),
-          subject: {
-            width: Math.abs(x1Position - x0Position),
-            height: Math.abs(y0Position - y1Position)
-          }
-        }
-      );
-      return (
-        <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
-      );
+        i,
+        adjustedSize,
+        adjustedPosition,
+        xAccessor,
+        yAccessor,
+        xScale,
+        yScale,
+        margin
+      });
     } else if (d.type === "line") {
-      const lineGenerator = line()
-        .x(p => p[0])
-        .y(p => p[1]);
-      const lineD = lineGenerator(screenCoordinates);
-      const laLine = (
-        <Mark
-          key={d.label + "annotationline" + i}
-          markType="path"
-          d={lineD}
-          className={`annotation annotation-line ${d.className || ""} `}
-        />
-      );
-
-      const laLabel = (
-        <Mark
-          markType="text"
-          key={d.label + "annotationlinetext" + i}
-          x={(screenCoordinates[0][0] + screenCoordinates[1][0]) / 2}
-          y={(screenCoordinates[0][1] + screenCoordinates[1][1]) / 2}
-          className={`annotation annotation-line-label ${d.className || ""} `}
-        >
-          {d.label}
-        </Mark>
-      );
-
-      return [laLine, laLabel];
+      return svgLineAnnotation({ d, i, screenCoordinates });
     } else if (d.type === "area") {
-      const mappedCoordinates =
-        "M" +
-        d.coordinates
-          .map(p => [xScale(xAccessor(p)), yScale(yAccessor(p))])
-          .join("L") +
-        "Z";
-      const xBounds = extent(d.coordinates.map(p => xScale(xAccessor(p))));
-      const yBounds = extent(d.coordinates.map(p => yScale(yAccessor(p))));
-      const xCenter = (xBounds[0] + xBounds[1]) / 2;
-      const yCenter = (yBounds[0] + yBounds[1]) / 2;
-
-      const laLine = (
-        <Mark
-          key={d.label + "annotationarea" + i}
-          markType="path"
-          transform={"translate(" + annotationLayer.position + ")"}
-          d={mappedCoordinates}
-          className={`annotation annotation-area ${d.className || ""} `}
-        />
-      );
-
-      const laLabel = (
-        <Mark
-          markType="text"
-          key={d.label + "annotationtext" + i}
-          forceUpdate={true}
-          x={xCenter}
-          y={yCenter}
-          transform={"translate(" + annotationLayer.position + ")"}
-          className={`annotation annotation-area-label ${d.className || ""} `}
-          style={{ textAnchor: "middle" }}
-        >
-          {d.label}
-        </Mark>
-      );
-
-      return [laLine, laLabel];
+      return svgAreaAnnotation({
+        d,
+        i,
+        screenCoordinates,
+        xScale,
+        xAccessor,
+        yScale,
+        yAccessor,
+        annotationLayer
+      });
+    } else if (d.type === "horizontal-points") {
+      return svgHorizontalPointsAnnotation({
+        d,
+        lines: lines.data,
+        points: points.data,
+        xScale,
+        yScale,
+        pointStyle: points.styleFn
+      });
+    } else if (d.type === "vertical-points") {
+      return svgVerticalPointsAnnotation({
+        d,
+        lines: lines.data,
+        points: points.data,
+        xScale,
+        yScale,
+        pointStyle: points.styleFn
+      });
     }
     return null;
   }
@@ -905,7 +734,6 @@ class XYFrame extends React.Component {
     }
 
     if (d.type === "frame-hover") {
-      //To string because React gives a DOM error if it gets a date
       let content = (
         <div className="tooltip-content">
           <p key="html-annotation-content-1">{xString}</p>
@@ -916,20 +744,13 @@ class XYFrame extends React.Component {
       if (d.type === "frame-hover" && this.props.tooltipContent) {
         content = this.props.tooltipContent(d);
       }
-
-      return (
-        <div
-          key={"xylabel" + i}
-          className={`annotation annotation-xy-label ${d.className || ""} `}
-          style={{
-            position: "absolute",
-            bottom: size[1] - screenCoordinates[1] + "px",
-            left: screenCoordinates[0] + "px"
-          }}
-        >
-          {content}
-        </div>
-      );
+      return htmlTooltipAnnotation({
+        content,
+        screenCoordinates,
+        size,
+        i,
+        d
+      });
     }
     return null;
   }
@@ -957,8 +778,7 @@ class XYFrame extends React.Component {
       interaction,
       customClickBehavior,
       customHoverBehavior,
-      customDoubleClickBehavior,
-      renderKey
+      customDoubleClickBehavior
     } = this.props;
 
     const {
@@ -1033,7 +853,6 @@ class XYFrame extends React.Component {
         adjustedSize={adjustedSize}
         finalFilterDefs={finalFilterDefs}
         frameKey={xyframeKey}
-        renderKeyFn={renderKey}
         hoverAnnotation={hoverAnnotation}
         defaultSVGRule={this.defaultXYSVGRule.bind(this)}
         defaultHTMLRule={this.defaultXYHTMLRule.bind(this)}
@@ -1084,7 +903,6 @@ XYFrame.propTypes = {
   invertY: PropTypes.bool,
   xAccessor: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
   yAccessor: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
-  hoverAnnotation: PropTypes.bool,
   lineDataAccessor: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
   areaDataAccessor: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
   backgroundGraphics: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
@@ -1104,6 +922,12 @@ XYFrame.propTypes = {
   areaClass: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
   canvasPoints: PropTypes.oneOfType([PropTypes.func, PropTypes.bool]),
   customPointMark: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
+  hoverAnnotation: PropTypes.oneOfType([
+    PropTypes.object,
+    PropTypes.array,
+    PropTypes.func,
+    PropTypes.bool
+  ]),
   customLineMark: PropTypes.func,
   lineIDAccessor: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
   svgAnnotationRules: PropTypes.func,

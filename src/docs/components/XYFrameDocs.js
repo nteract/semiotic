@@ -855,8 +855,11 @@ export default class XYFrameDocs extends React.Component {
       </MenuItem>
     ));
 
-    if (this.state.lineType === "difference") {
-      displayData = testData.filter((d, i) => i < 2);
+    if (
+      this.state.lineType === "difference" ||
+      this.state.lineType === "line"
+    ) {
+      displayData = testData.filter((d, i) => i > 1);
     }
 
     const ReactFrame = frameHash[this.state.frame];
@@ -1031,7 +1034,22 @@ export default class XYFrameDocs extends React.Component {
               () => this.state.renderMode
             )
           }
-          hoverAnnotation={this.state.hoverAnnotation === "on"}
+          //          hoverAnnotation={this.state.hoverAnnotation === "on"}
+          hoverAnnotation={[
+            { type: "y", disable: ["connector", "note"] },
+            { type: "x", disable: ["connector", "note"] },
+            //            { type: "frame-hover" },
+            {
+              type: "vertical-points",
+              threshold: 5,
+              r: (d, i) => i + 5
+            },
+            {
+              type: "horizontal-points",
+              threshold: 5,
+              r: (d, i) => i + 5
+            }
+          ]}
           canvasLines={
             this.state.canvasRender === "none" ? (
               undefined
@@ -1069,6 +1087,7 @@ export default class XYFrameDocs extends React.Component {
               </text>
             )
           }
+          renderKey={(d, i) => d.id || i}
           foregroundGraphics={
             this.state.foregroundGraphics === "off" ? null : (
               <text

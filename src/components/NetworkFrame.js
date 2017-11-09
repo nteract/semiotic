@@ -1438,7 +1438,12 @@ NetworkFrame.propTypes = {
   renderFn: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
   nodeStyle: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
   edgeStyle: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
-  hoverAnnotation: PropTypes.bool,
+  hoverAnnotation: PropTypes.oneOfType([
+    PropTypes.object,
+    PropTypes.array,
+    PropTypes.func,
+    PropTypes.bool
+  ]),
   backgroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
   foregroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
   customNodeIcon: PropTypes.func,

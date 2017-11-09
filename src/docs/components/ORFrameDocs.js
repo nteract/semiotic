@@ -579,8 +579,16 @@ export default class ORFrameDocs extends React.Component {
               )
             }
             connectorStyle={dataTypeHash[this.state.dataType].connectorStyle}
-            hoverAnnotation={this.state.hoverBehavior === "general"}
-            pieceHoverAnnotation={this.state.hoverBehavior === "piece"}
+            //            hoverAnnotation={this.state.hoverBehavior === "general"}
+            pieceHoverAnnotation={[
+              { type: "r" },
+              d => ({
+                type: "or",
+                label: "here's a labeled thing at " + (d.stepValue || d.value)
+              }),
+              { type: "enclose" }
+            ]}
+            //            pieceHoverAnnotation={this.state.hoverBehavior === "piece"}
             dynamicColumnWidth={
               this.state.dynamicColumnWidth === "fixed" ? (
                 undefined

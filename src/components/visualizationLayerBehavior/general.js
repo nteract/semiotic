@@ -76,6 +76,7 @@ export function createPoints({
           markProps,
           styleFn,
           renderFn: renderMode,
+          renderKeyFn,
           classFn
         })
       );
@@ -143,6 +144,7 @@ export function createLines({
             markProps,
             styleFn,
             renderFn: renderMode,
+            renderKeyFn,
             classFn
           })
         );
@@ -267,6 +269,7 @@ export function createAreas({
     }
 
     const renderKey = renderKeyFn ? renderKeyFn(d, i) : `area-${i}`;
+
     if (canvasRender && canvasRender(d, i) === true) {
       const canvasArea = {
         type: "area",
@@ -307,6 +310,7 @@ export function clonedAppliedElement({
   styleFn,
   renderFn,
   classFn,
+  renderKeyFn,
   baseClass
 }) {
   markProps.style = styleFn ? styleFn(d, i) : {};
@@ -319,7 +323,9 @@ export function clonedAppliedElement({
 
   markProps.className = baseClass;
 
-  markProps.key = `${baseClass}-${d.key === undefined ? i : d.key}`;
+  markProps.key = renderKeyFn
+    ? renderKeyFn(d, i)
+    : `${baseClass}-${d.key === undefined ? i : d.key}`;
 
   if (classFn) {
     markProps.className = `${baseClass} ${classFn(d, i)}`;

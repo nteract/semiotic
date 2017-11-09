@@ -3,9 +3,7 @@
   "version": "1.1.13",
   "description": "The semiotic JavaScript data visualization framework",
   "main": "lib/index.js",
-  "files": [
-    "lib"
-  ],
+  "files": ["lib"],
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
@@ -90,7 +88,7 @@
     "d3-sankey": "0.7.1",
     "d3-scale": "1.0.3",
     "d3-selection": "1.1.0",
-    "d3-shape": "1.0.3",
+    "d3-shape": "1.0.4",
     "d3-voronoi": "1.0.2",
     "element-resize-event": "2.0.9",
     "graphology": "0.10.2",
@@ -100,17 +98,12 @@
     "json2csv": "3.7.3",
     "lodash.flatten": "4.4.0",
     "lodash.uniq": "4.5.0",
-    "moment": "2.10.6",
-    "numeral": "^1.5.3",
     "prop-types": "15.6.0",
     "react-annotation": "1.0.1",
     "semiotic-mark": "0.0.2",
     "svg-path-bounding-box": "1.0.4"
   },
   "nyc": {
-    "exclude": [
-      "tests/unit/lib/*.js",
-      "tests/unit/specs/**/*.js"
-    ]
+    "exclude": ["tests/unit/lib/*.js", "tests/unit/specs/**/*.js"]
   }
 }

@@ -697,10 +697,6 @@ function axisGenerator(axisProps, i, axisScale) {
   );
 }
 
-function radialAxisGenerator(axisProps) {
-  return <circle style={{ fill: "pink" }} r={20} />;
-}
-
 export function bucketizedRenderingFn({
   data,
   type,

@@ -75,7 +75,11 @@ class Frame extends React.Component {
       : areaAnnotations;
 
     if (voronoiHover) {
-      totalAnnotations.push(voronoiHover);
+      if (Array.isArray(voronoiHover)) {
+        totalAnnotations.push(...voronoiHover);
+      } else {
+        totalAnnotations.push(voronoiHover);
+      }
     }
 
     if (totalAnnotations || legendSettings) {

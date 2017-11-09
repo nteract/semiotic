@@ -29,16 +29,25 @@ class InteractionLayer extends React.Component {
     };
   }
 
-  changeVoronoi(d) {
+  changeVoronoi(d, customHoverTypes) {
     if (this.props.customHoverBehavior) {
       this.props.customHoverBehavior(d);
     }
     if (!d) {
       this.props.voronoiHover(null);
-    } else {
+    } else if (customHoverTypes === true) {
       let vorD = Object.assign({}, d);
       vorD.type = vorD.type === "column-hover" ? "column-hover" : "frame-hover";
       this.props.voronoiHover(vorD);
+    } else {
+      const arrayWrappedHoverTypes = Array.isArray(customHoverTypes)
+        ? customHoverTypes
+        : [customHoverTypes];
+      const mappedHoverTypes = arrayWrappedHoverTypes.map(c => {
+        const finalC = typeof c === "function" ? c(d) : c;
+        return Object.assign({}, d, finalC);
+      });
+      this.props.voronoiHover(mappedHoverTypes);
     }
   }
 
@@ -177,7 +186,7 @@ class InteractionLayer extends React.Component {
         ) {
           const pointKey = xValue + "," + yValue;
           if (!voronoiUniqueHash[pointKey]) {
-            const voronoiPoint = Object.assign(d, {
+            const voronoiPoint = Object.assign({}, d, {
               coincidentPoints: [d],
               voronoiX: xValue,
               voronoiY: yValue
@@ -216,6 +225,15 @@ class InteractionLayer extends React.Component {
         .y(d => d.voronoiY);
 
       const voronoiData = voronoiDiagram.polygons(voronoiDataset);
+      const voronoiLinks = voronoiDiagram.links(voronoiDataset);
+
+      //create neighbors
+      voronoiLinks.forEach(v => {
+        if (!v.source.neighbors) {
+          v.source.neighbors = [];
+        }
+        v.source.neighbors.push(v.target);
+      });
 
       voronoiPaths = voronoiData.map((d, i) => {
         return (
@@ -227,7 +245,7 @@ class InteractionLayer extends React.Component {
               this.doubleclickVoronoi(voronoiDataset[i]);
             }}
             onMouseEnter={() => {
-              this.changeVoronoi(voronoiDataset[i]);
+              this.changeVoronoi(voronoiDataset[i], props.hoverAnnotation);
             }}
             onMouseLeave={() => {
               this.changeVoronoi();
@@ -253,7 +271,10 @@ class InteractionLayer extends React.Component {
               this.doubleclickVoronoi(overlayRegion.onDoubleClick());
             }}
             onMouseEnter={() => {
-              this.changeVoronoi(overlayRegion.onMouseEnter());
+              this.changeVoronoi(
+                overlayRegion.onMouseEnter(),
+                props.hoverAnnotation
+              );
             }}
             onMouseLeave={() => {
               this.changeVoronoi();

@@ -11,14 +11,15 @@ import { sum, max, min, extent } from "d3-array";
 import { arc } from "d3-shape";
 
 import { filterDefs } from "./constants/jsx";
-import Annotation from "./Annotation";
 import { orFrameChangeProps } from "./constants/frame_props";
-
-import { packEnclose } from "d3-hierarchy";
 import {
-  AnnotationXYThreshold,
-  AnnotationCalloutCircle
-} from "react-annotation";
+  svgORRule,
+  basicReactAnnotationRule,
+  svgEncloseRule,
+  svgRRule,
+  htmlFrameHoverRule,
+  htmlColumnHoverRule
+} from "./annotationRules/orframeRules";
 
 import Frame from "./Frame";
 import { Mark } from "semiotic-mark";
@@ -701,18 +702,13 @@ class ORFrame extends React.Component {
     }
 
     if (
-      currentProps.pieceHoverAnnotation &&
-      (calculatedPieceData ||
-        (calculatedSummaries && calculatedSummaries.xyPoints))
+      currentProps.pieceHoverAnnotation ||
+      currentProps.summaryHoverAnnotation
     ) {
       const yMod = projection === "horizontal" ? midMod : zeroFunction;
       const xMod = projection === "vertical" ? midMod : zeroFunction;
 
-      if (
-        calculatedSummaries &&
-        calculatedSummaries.xyPoints &&
-        !currentProps.pieceHoverAnnotation.onlyPieces
-      ) {
+      if (currentProps.summaryHoverAnnotation && calculatedSummaries.xyPoints) {
         pieceDataXY = calculatedSummaries.xyPoints.map(d =>
           Object.assign({}, d, {
             type: "frame-hover",
@@ -721,7 +717,7 @@ class ORFrame extends React.Component {
             y: d.y
           })
         );
-      } else {
+      } else if (currentProps.pieceHoverAnnotation && calculatedPieceData) {
         pieceDataXY = calculatedPieceData.map(d =>
           Object.assign({}, d.piece, {
             type: "frame-hover",
@@ -875,8 +871,9 @@ class ORFrame extends React.Component {
     let screenCoordinates = [0, 0];
 
     //TODO: Support radial??
-    if (d.coordinates) {
-      screenCoordinates = d.coordinates.map(p => screenProject(p));
+    if (d.coordinates || (d.type === "enclose" && d.neighbors)) {
+      screenCoordinates = (d.coordinates || d.neighbors)
+        .map(p => screenProject(p));
     } else {
       screenCoordinates = screenProject(d);
     }
@@ -911,154 +908,23 @@ class ORFrame extends React.Component {
         categories: this.state.projectedColumns
       });
     } else if (d.type === "or") {
-      return (
-        <Mark
-          markType="text"
-          key={d.label + "annotationtext" + i}
-          forceUpdate={true}
-          x={screenCoordinates[0] + (projection === "horizontal" ? 10 : 0)}
-          y={screenCoordinates[1] + (projection === "vertical" ? 10 : 0)}
-          className={`annotation annotation-or-label ${d.className || ""}`}
-          textAnchor="middle"
-        >
-          {d.label}
-        </Mark>
-      );
+      return svgORRule({ d, i, screenCoordinates, projection });
     } else if (d.type === "react-annotation" || typeof d.type === "function") {
-      const noteData = Object.assign(
-        {
-          dx: 0,
-          dy: 0,
-          x: screenCoordinates[0],
-          y: screenCoordinates[1],
-          note: { label: d.label },
-          connector: { end: "arrow" }
-        },
-        d,
-        { type: typeof d.type === "function" ? d.type : undefined }
-      );
-      return (
-        <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
-      );
+      return basicReactAnnotationRule({ d, i, screenCoordinates });
     } else if (d.type === "enclose") {
-      const circle = packEnclose(
-        screenCoordinates.map(p => ({ x: p[0], y: p[1], r: 2 }))
-      );
-      const noteData = Object.assign(
-        {
-          dx: 0,
-          dy: 0,
-          x: circle.x,
-          y: circle.y,
-          note: { label: d.label },
-          connector: { end: "arrow" }
-        },
-        d,
-        {
-          type: AnnotationCalloutCircle,
-          subject: {
-            radius: circle.r,
-            radiusPadding: 5 || d.radiusPadding
-          }
-        }
-      );
-
-      if (noteData.rp) {
-        switch (noteData.rp) {
-          case "top":
-            noteData.dx = 0;
-            noteData.dy = -circle.r - noteData.rd;
-            break;
-          case "bottom":
-            noteData.dx = 0;
-            noteData.dy = circle.r + noteData.rd;
-            break;
-          case "left":
-            noteData.dx = -circle.r - noteData.rd;
-            noteData.dy = 0;
-            break;
-          case "right":
-            noteData.dx = circle.r + noteData.rd;
-            noteData.dy = 0;
-            break;
-          default:
-            noteData.dx = 0;
-            noteData.dy = 0;
-        }
-      }
-      //TODO: Support .ra (setting angle)
-
-      return (
-        <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
-      );
+      return svgEncloseRule({ d, i, screenCoordinates });
     } else if (d.type === "r") {
-      let x, y, xPosition, yPosition, subject, dx, dy;
-      if (this.props.projection === "radial") {
-        return (
-          <Annotation
-            key={d.key || `annotation-${i}`}
-            noteData={Object.assign(
-              {
-                dx: 50,
-                dy: 50,
-                note: { label: d.label },
-                connector: { end: "arrow" }
-              },
-              d,
-              {
-                type: AnnotationCalloutCircle,
-                subject: {
-                  radius: (rScale(rAccessor(d)) - margin.left) / 2,
-                  radiusPadding: 0
-                },
-                x: adjustedSize[0] / 2 + margin.left,
-                y: adjustedSize[1] / 2 + margin.top
-              }
-            )}
-          />
-        );
-      } else if (this.props.projection === "horizontal") {
-        dx = 50;
-        dy = 50;
-        yPosition = d.offset || margin.top + i * 25;
-        x = screenCoordinates[0];
-        y = yPosition;
-        subject = {
-          x,
-          y1: margin.top,
-          y2: adjustedSize[1] + adjustedPosition[1] + margin.top
-        };
-      } else {
-        dx = 50;
-        dy = -20;
-        xPosition = d.offset || margin.left + i * 25;
-        y = screenCoordinates[1];
-        x = xPosition;
-        subject = {
-          y,
-          x1: margin.left,
-          x2: adjustedSize[0] + adjustedPosition[0] + margin.left
-        };
-      }
-
-      const noteData = Object.assign(
-        {
-          dx,
-          dy,
-          note: { label: d.label },
-          connector: { end: "arrow" }
-        },
+      return svgRRule({
         d,
-        {
-          type: AnnotationXYThreshold,
-          x,
-          y,
-          subject
-        }
-      );
-      return (
-        <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
-      );
+        i,
+        screenCoordinates,
+        rScale,
+        rAccessor,
+        margin,
+        projection,
+        adjustedSize,
+        adjustedPosition
+      });
     }
     return null;
   }
@@ -1069,7 +935,14 @@ class ORFrame extends React.Component {
     const oScale = this.oScale;
     const rScale = this.rScale;
 
-    const { htmlAnnotationRules, tooltipContent } = this.props;
+    const {
+      htmlAnnotationRules,
+      tooltipContent,
+      projection,
+      size
+    } = this.props;
+
+    const { projectedColumns } = this.state;
 
     const type =
       typeof this.props.type === "object"
@@ -1112,121 +985,30 @@ class ORFrame extends React.Component {
     }
 
     if (d.type === "frame-hover") {
-      //To string because React gives a DOM error if it gets a date
-      let contentFill;
-      if (d.isSummaryData) {
-        let summaryLabel = <p key="html-annotation-content-2">{d.label}</p>;
-        if (d.pieces && d.pieces.length !== 0) {
-          if (d.pieces.length === 1) {
-            summaryLabel = (
-              <p key="html-annotation-content-2">{rAccessor(d.pieces[0])}</p>
-            );
-          } else {
-            const pieceData = extent(d.pieces.map(rAccessor));
-            summaryLabel = (
-              <p key="html-annotation-content-2">
-                From {pieceData[0]} to {pieceData[1]}
-              </p>
-            );
-          }
-        }
-        contentFill = [
-          <p key="html-annotation-content-1">{d.key}</p>,
-          summaryLabel,
-          <p key="html-annotation-content-3">{d.value}</p>
-        ];
-      } else {
-        contentFill = [
-          <p key="html-annotation-content-1">{oAccessor(d).toString()}</p>,
-          <p key="html-annotation-content-2">{rAccessor(d).toString()}</p>
-        ];
-      }
-      let content = <div className="tooltip-content">{contentFill}</div>;
-
-      if (d.type === "frame-hover" && tooltipContent) {
-        content = tooltipContent(d);
-      }
-
-      return (
-        <div
-          key={"xylabel" + i}
-          className={`annotation annotation-or-label tooltip ${this.props
-            .projection} ${d.className || ""}`}
-          style={{
-            position: "absolute",
-            bottom: `${10 + this.props.size[1] - d.y}px`,
-            left: d.x + "px"
-          }}
-        >
-          {content}
-        </div>
-      );
+      return htmlFrameHoverRule({
+        d,
+        i,
+        rAccessor,
+        oAccessor,
+        size,
+        projection,
+        tooltipContent
+      });
     } else if (d.type === "column-hover") {
-      const maxPiece = max(d.pieces.map(d => d._orFR));
-      //we need to ignore negative pieces to make sure the hover behavior populates on top of the positive bar
-      const sumPiece = sum(d.pieces.map(d => d._orFR).filter(p => p > 0));
-      const positionValue =
-        summaryType.type ||
-        ["swarm", "point", "clusterbar"].find(d => d === type.type)
-          ? maxPiece
-          : sumPiece;
-
-      let xPosition =
-        this.state.projectedColumns[oAccessor(d.pieces[0])].middle +
-        adjustedPosition[0];
-      let yPosition = positionValue;
-      yPosition += margin.bottom + margin.top + 10;
-
-      if (this.props.projection === "horizontal") {
-        yPosition =
-          adjustedSize[1] -
-          this.state.projectedColumns[oAccessor(d.pieces[0])].middle +
-          adjustedPosition[0] +
-          margin.top +
-          margin.bottom;
-        xPosition = positionValue + adjustedPosition[0] + margin.left;
-      } else if (this.props.projection === "radial") {
-        [xPosition, yPosition] = pointOnArcAtAngle(
-          [
-            d.arcAngles.translate[0] - margin.left,
-            d.arcAngles.translate[1] - margin.top
-          ],
-          d.arcAngles.midAngle,
-          d.arcAngles.length
-        );
-        yPosition = 10 + adjustedSize[1] - yPosition;
-      }
-
-      //To string because React gives a DOM error if it gets a date
-      let content = (
-        <div className="tooltip-content">
-          <p key="or-annotation-1">{oAccessor(d.pieces[0]).toString()}</p>
-          <p key="or-annotation-2">{sumPiece}</p>
-        </div>
-      );
-
-      if (d.type === "column-hover" && this.props.tooltipContent) {
-        content = this.props.tooltipContent(d);
-      }
-
-      if (d.type === "xy") {
-        content = d.label;
-      }
-
-      return (
-        <div
-          key={"orlabel" + i}
-          className={`annotation annotation-or-label tooltip ${this.props
-            .projection} ${d.className || ""}`}
-          style={{
-            position: "absolute",
-            bottom: yPosition + "px",
-            left: xPosition + "px"
-          }}
-        >
-          {content}
-        </div>
-      );
+      return htmlColumnHoverRule({
+        d,
+        i,
+        summaryType,
+        oAccessor,
+        rAccessor,
+        projectedColumns,
+        type,
+        adjustedPosition,
+        adjustedSize,
+        margin,
+        projection,
+        tooltipContent
+      });
     }
     return null;
   }
@@ -1273,7 +1055,10 @@ class ORFrame extends React.Component {
       foregroundGraphics,
       beforeElements,
       disableContext,
-      summaryType
+      summaryType,
+      summaryHoverAnnotation,
+      pieceHoverAnnotation,
+      hoverAnnotation
     } = this.props;
 
     const {
@@ -1355,7 +1140,9 @@ class ORFrame extends React.Component {
         projectedCoordinateNames={projectedCoordinatesObject}
         defaultSVGRule={this.defaultORSVGRule.bind(this)}
         defaultHTMLRule={this.defaultORHTMLRule.bind(this)}
-        hoverAnnotation={!!pieceDataXY}
+        hoverAnnotation={
+          summaryHoverAnnotation || pieceHoverAnnotation || hoverAnnotation
+        }
         annotations={annotations}
         annotationSettings={annotationSettings}
         legendSettings={legendSettings}
@@ -1431,7 +1218,24 @@ ORFrame.propTypes = {
     PropTypes.func,
     PropTypes.object
   ]),
-  hoverAnnotation: PropTypes.bool,
+  hoverAnnotation: PropTypes.oneOfType([
+    PropTypes.object,
+    PropTypes.array,
+    PropTypes.func,
+    PropTypes.bool
+  ]),
+  pieceHoverAnnotation: PropTypes.oneOfType([
+    PropTypes.object,
+    PropTypes.array,
+    PropTypes.func,
+    PropTypes.bool
+  ]),
+  summaryHoverAnnotation: PropTypes.oneOfType([
+    PropTypes.object,
+    PropTypes.array,
+    PropTypes.func,
+    PropTypes.bool
+  ]),
   axis: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
   backgroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
   foregroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array])
