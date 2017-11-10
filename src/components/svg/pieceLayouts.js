@@ -175,7 +175,6 @@ export function clusterBarLayout({
 
         let angle = (ordset.pct - ordset.pct_padding) / ordset.pieceData.length;
         let startAngle =
-          ordset.pct_padding / 2 +
           ordset.pct_start +
           i / ordset.pieceData.length * (ordset.pct - ordset.pct_padding);
         let endAngle = startAngle + angle;

@@ -461,8 +461,9 @@ const colorHash = {
             }
             size={[700, 700]}
             data={deaths1855}
-            oAccessor={"month"}
-            rAccessor={d => Math.min(d.casualties, 200)}
+            oAccessor={"type"}
+            rAccessor={"casualties"}
+            dynamicColumnWidth={d => d.length}
             style={d => ({
               fill: colorHash[d.type],
               fillOpacity: 0.75,
@@ -480,16 +481,16 @@ const colorHash = {
                       y2={xy.dy}
                     />
                     <circle
-                      r={5}
+                      r={3}
                       cx={xy.dx}
                       cy={xy.dy}
-                      style={{ fill: colorHash[d.type] }}
+                      style={{ fill: "none", stroke: colorHash[d.type] }}
                     />
                   </g>
                 );
               }
             }}
-            oPadding={10}
+            oPadding={40}
             projection={"radial"}
             rExtent={[0]}
             axis={{
