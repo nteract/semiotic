@@ -447,6 +447,62 @@ const colorHash = {
 `
     });
 
+    examples.push({
+      name: "Nightingale Chart",
+      demo: (
+        <div>
+          <p />
+          <ORFrame
+            title={
+              <g style={{ textAnchor: "middle" }} transform="translate(250,15)">
+                <text>DIAGRAM of the CAUSES of MORTALITY</text>
+                <text y={15}>in the ARMY in the EAST</text>
+              </g>
+            }
+            size={[700, 700]}
+            data={deaths1855}
+            oAccessor={"month"}
+            rAccessor={d => Math.min(d.casualties, 200)}
+            style={d => ({
+              fill: colorHash[d.type],
+              fillOpacity: 0.75,
+              stroke: colorHash[d.type],
+              strokeWidth: 0.5
+            })}
+            type={{
+              type: "clusterbar",
+              customMark: (d, i, xy) => {
+                return (
+                  <g>
+                    <line
+                      style={{ stroke: colorHash[d.type], strokeWidth: 2 }}
+                      x2={xy.dx}
+                      y2={xy.dy}
+                    />
+                    <circle
+                      r={5}
+                      cx={xy.dx}
+                      cy={xy.dy}
+                      style={{ fill: colorHash[d.type] }}
+                    />
+                  </g>
+                );
+              }
+            }}
+            oPadding={10}
+            projection={"radial"}
+            rExtent={[0]}
+            axis={{
+              label: { name: "Casualties", locationDistance: 15 }
+            }}
+            margin={{ bottom: 50, top: 60, left: 40, right: 40 }}
+            hoverAnnotation={true}
+            oLabel={true}
+          />
+        </div>
+      ),
+      source: ``
+    });
     return (
       <DocumentComponent
         name="Creating a Pie Chart"
