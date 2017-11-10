@@ -39,6 +39,8 @@ import VerticalIsotype from "./components/VerticalIsotype";
 import Sankey from "./components/Sankey";
 import Chord from "./components/Chord";
 import Dendrogram from "./components/Dendrogram";
+import NegativeStacked from "./components/NegativeStacked";
+
 //import Process from "./components/Process";
 import BarToParallel from "./components/BarToParallel";
 import AppleStockChart from "./components/AppleStockChart";
@@ -73,6 +75,7 @@ const components = {
   neighborhoodmap: { docs: NeighborhoodMap, parent: "xyframe" },
   realtimeline: { docs: RealtimeXYFrame, parent: "xyframe" },
   linebrush: { docs: LineBrush, parent: "xyframe" },
+  negativestacked: { docs: NegativeStacked, parent: "xyframe" },
   orframe: { docs: ORFrameDocs },
   violin: { docs: Violin, parent: "orframe" },
   parallelcoordinates: { docs: ParallelCoordinates, parent: "orframe" },

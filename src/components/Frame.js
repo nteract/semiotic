@@ -214,7 +214,12 @@ Frame.propTypes = {
   additionalDefs: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
   interaction: PropTypes.object,
   renderFn: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
-  hoverAnnotation: PropTypes.bool,
+  hoverAnnotation: PropTypes.oneOfType([
+    PropTypes.object,
+    PropTypes.array,
+    PropTypes.func,
+    PropTypes.bool
+  ]),
   backgroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
   foregroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
   interactionOverflow: PropTypes.object

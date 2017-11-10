@@ -101,26 +101,49 @@ export const stackedArea = ({
   }
 
   uniqXValues.forEach(xValue => {
-    let offset = 0;
+    let negativeOffset = 0;
+    let positiveOffset = 0;
     const stepValues = flatten(
       data.map(d => d.data.filter(p => datesForUnique(p[xProp]) === xValue))
     );
 
-    const stepTotal = sum(stepValues.map(d => d[yProp]));
+    const positiveStepTotal = sum(
+      stepValues.map(d => (d[yProp] > 0 ? d[yProp] : 0))
+    );
+    const negativeStepTotal = sum(
+      stepValues.map(d => (d[yProp] < 0 ? d[yProp] : 0))
+    );
 
     stepValues.forEach(l => {
-      if (type === "stackedpercent" || type === "stackedpercent-invert") {
-        const adjustment = stepTotal === 0 ? 0 : l[yProp] / stepTotal;
-
-        l[yPropBottom] = stepTotal === 0 ? 0 : offset / stepTotal;
-        l[yPropTop] = l[yPropBottom] + adjustment;
-        l[yPropMiddle] = l[yPropBottom] + adjustment / 2;
+      if (l[yProp] < 0) {
+        if (type === "stackedpercent" || type === "stackedpercent-invert") {
+          const adjustment =
+            negativeStepTotal >= 0 ? 0 : l[yProp] / negativeStepTotal;
+          l[yPropBottom] =
+            negativeStepTotal === 0 ? 0 : -(negativeOffset / negativeStepTotal);
+          l[yPropTop] = l[yPropBottom] - adjustment;
+          l[yPropMiddle] = l[yPropBottom] - adjustment / 2;
+        } else {
+          l[yPropBottom] = negativeOffset;
+          l[yPropTop] = negativeOffset + l[yProp];
+          l[yPropMiddle] = negativeOffset + l[yProp] / 2;
+        }
+        negativeOffset += l[yProp];
       } else {
-        l[yPropBottom] = offset;
-        l[yPropTop] = offset + l[yProp];
-        l[yPropMiddle] = offset + l[yProp] / 2;
+        if (type === "stackedpercent" || type === "stackedpercent-invert") {
+          const adjustment =
+            positiveStepTotal <= 0 ? 0 : l[yProp] / positiveStepTotal;
+          l[yPropBottom] =
+            positiveStepTotal === 0 ? 0 : positiveOffset / positiveStepTotal;
+          l[yPropTop] = l[yPropBottom] + adjustment;
+          l[yPropMiddle] = l[yPropBottom] + adjustment / 2;
+        } else {
+          l[yPropBottom] = positiveOffset;
+          l[yPropTop] = positiveOffset + l[yProp];
+          l[yPropMiddle] = positiveOffset + l[yProp] / 2;
+        }
+        positiveOffset += l[yProp];
       }
-      offset += l[yProp];
     });
   });
 

@@ -193,7 +193,7 @@ export const calculateDataExtent = ({
             d =>
               d[projectedYBottom] === undefined
                 ? d[projectedY]
-                : d[projectedYBottom]
+                : Math.min(d[projectedYTop], d[projectedYBottom])
           )
         );
   let yMax =
@@ -202,7 +202,9 @@ export const calculateDataExtent = ({
       : max(
           fullDataset.map(
             d =>
-              d[projectedYTop] === undefined ? d[projectedY] : d[projectedYTop]
+              d[projectedYTop] === undefined
+                ? d[projectedY]
+                : Math.max(d[projectedYBottom], d[projectedYTop])
           )
         );
 
