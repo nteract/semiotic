@@ -197,7 +197,9 @@ export const bumpChart = ({
   }
 
   uniqXValues.forEach(xValue => {
-    let offset = 0;
+    let negativeOffset = 0;
+    let positiveOffset = 0;
+
     flatten(
       data.map(d => d.data.filter(p => datesForUnique(p[xProp]) === xValue))
     )
@@ -206,10 +208,17 @@ export const bumpChart = ({
         //determine ranking and offset by the number of less than this one at each step
         l._XYFrameRank = rank;
         if (type === "bumparea" || type === "bumparea-invert") {
-          l[yPropTop] = offset + l[yProp];
-          l[yPropMiddle] = offset + l[yProp] / 2;
-          l[yPropBottom] = offset;
-          offset += l[yProp];
+          if (l[yProp] < 0) {
+            l[yPropTop] = negativeOffset + l[yProp];
+            l[yPropMiddle] = negativeOffset + l[yProp] / 2;
+            l[yPropBottom] = negativeOffset;
+            negativeOffset += l[yProp];
+          } else {
+            l[yPropTop] = positiveOffset + l[yProp];
+            l[yPropMiddle] = positiveOffset + l[yProp] / 2;
+            l[yPropBottom] = positiveOffset;
+            positiveOffset += l[yProp];
+          }
         } else {
           l[yProp] = rank;
           l[yPropTop] = rank;

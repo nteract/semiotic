@@ -1,7 +1,8 @@
 import React from "react";
 import { XYFrame } from "../../components";
+import { curveMonotoneX } from "d3-shape";
 
-const dataSeeds = [50, 30, 10, -10, -30, -50];
+const dataSeeds = [20, 10, -10, -20];
 const colors = [
   "4d430c",
   "#d38779",
@@ -16,7 +17,7 @@ function generatePoints(start, number) {
   let currentValue = start;
   for (let x = 0; x <= number; x++) {
     arrayOfPoints.push({ step: x, value: currentValue });
-    currentValue += Math.random() * 20 - 10;
+    currentValue += Math.random() * 10 - 5;
   }
   return arrayOfPoints;
 }
@@ -34,12 +35,12 @@ const lineStyle = {
   strokeWidth: 1
 };
 
-export default (
+export default (type = "stackedarea") => (
   <div style={{ marginTop: "50px" }}>
     <XYFrame
       size={[700, 700]}
       lines={generatedData}
-      lineType="stackedarea"
+      lineType={{ type, interpolator: curveMonotoneX }}
       xAccessor={"step"}
       yAccessor="value"
       lineStyle={d => ({ fill: d.label, stroke: d.label, fillOpacity: 0.75 })}
