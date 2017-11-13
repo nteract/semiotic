@@ -148,7 +148,7 @@ export function clusterBarLayout({
       let yPosition = piece._orFRBase;
       let finalWidth = clusterWidth;
       let finalHeight = piece._orFR;
-
+      const xy = {};
       if (!piece.negative) {
         yPosition -= piece._orFR;
       }
@@ -169,14 +169,14 @@ export function clusterBarLayout({
         markProps = {};
 
       if (projection === "radial") {
-        //TODO: Make clustered radial bars work
         const arcGenerator = arc()
           .innerRadius(0)
           .outerRadius(piece._orFR / 2);
 
-        let angle = ordset.pct / ordset.pieceData.length;
+        let angle = (ordset.pct - ordset.pct_padding) / ordset.pieceData.length;
         let startAngle =
-          ordset.pct_start + i / ordset.pieceData.length * ordset.pct;
+          ordset.pct_start +
+          i / ordset.pieceData.length * (ordset.pct - ordset.pct_padding);
         let endAngle = startAngle + angle;
 
         markD = arcGenerator({
@@ -187,9 +187,23 @@ export function clusterBarLayout({
         const yOffset = adjustedSize[1] / 2 + margin.top;
         translate = `translate(${xOffset},${yOffset})`;
 
+        const startAngleFinal = startAngle * twoPI;
+        const endAngleFinal = endAngle * twoPI;
+        const outerPoint = pointOnArcAtAngle(
+          [0, 0],
+          (startAngle + endAngle) / 2,
+          piece._orFR / 2
+        );
+
+        xy.arcGenerator = arcGenerator;
+        xy.startAngle = startAngleFinal;
+        xy.endAngle = endAngleFinal;
+        xy.dx = outerPoint[0];
+        xy.dy = outerPoint[1];
+
         const centroid = arcGenerator.centroid({
-          startAngle: startAngle * twoPI,
-          endAngle: endAngle * twoPI
+          startAngle: startAngleFinal,
+          endAngle: endAngleFinal
         });
         finalHeight = undefined;
         finalWidth = undefined;
@@ -213,13 +227,11 @@ export function clusterBarLayout({
 
       const eventListeners = eventListenersGenerator(piece, i);
 
-      const xy = {
-        x: xPosition,
-        y: yPosition,
-        middle: clusterWidth / 2,
-        height: finalHeight,
-        width: finalWidth
-      };
+      xy.x = xPosition;
+      xy.y = yPosition;
+      xy.middle = clusterWidth / 2;
+      xy.height = finalHeight;
+      xy.width = finalWidth;
 
       if (type.icon && projection !== "radial") {
         type.customMark = iconBarCustomMark({
@@ -238,7 +250,9 @@ export function clusterBarLayout({
       const renderElementObject = type.customMark ? (
         <g
           key={"piece-" + piece.renderKey}
-          transform={`translate(${xPosition},${yPosition})`}
+          transform={
+            translate ? translate : `translate(${xPosition},${yPosition})`
+          }
         >
           {type.customMark(piece, i, xy)}
         </g>

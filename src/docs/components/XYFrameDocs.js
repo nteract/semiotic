@@ -1038,7 +1038,8 @@ export default class XYFrameDocs extends React.Component {
           hoverAnnotation={[
             { type: "y", disable: ["connector", "note"] },
             { type: "x", disable: ["connector", "note"] },
-            //            { type: "frame-hover" },
+            d => ({ type: "xy", label: d.cat }),
+            { type: "frame-hover" },
             {
               type: "vertical-points",
               threshold: 5,
