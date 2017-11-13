@@ -18,8 +18,7 @@ export default (
     size={[700, 600]}
     axis={axis}
     {...summaryChart}
-    projection={"vertical"}
-    margin={{ top: 75, bottom: 50, left: 50, right: 50 }}
+    margin={{ top: 75, bottom: 50, left: 60, right: 50 }}
     dynamicColumnWidth={d => max(d.map(p => p.stepValue))}
     annotations={[
       {
