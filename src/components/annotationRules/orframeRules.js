@@ -3,11 +3,100 @@ import { Mark } from "semiotic-mark";
 import Annotation from "../Annotation";
 import {
   AnnotationXYThreshold,
-  AnnotationCalloutCircle
+  AnnotationCalloutCircle,
+  AnnotationBracket
 } from "react-annotation";
 import { packEnclose } from "d3-hierarchy";
-import { max, sum, extent } from "d3-array";
+import { max, min, sum, extent } from "d3-array";
 import { pointOnArcAtAngle } from "../svg/pieceDrawing";
+import { arc } from "d3-shape";
+
+function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
+  const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+
+  return {
+    x: centerX + radius * Math.cos(angleInRadians),
+    y: centerY + radius * Math.sin(angleInRadians)
+  };
+}
+
+function arcBracket({ x, y, radius, startAngle, endAngle, inset, outset }) {
+  const start = polarToCartesian(x, y, radius + outset, endAngle);
+  const end = polarToCartesian(x, y, radius + outset, startAngle);
+
+  const innerStart = polarToCartesian(x, y, radius + outset - inset, endAngle);
+  const innerEnd = polarToCartesian(x, y, radius + outset - inset, startAngle);
+
+  const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+
+  const d = [
+    "M",
+    innerStart.x,
+    innerStart.y,
+    "L",
+    start.x,
+    start.y,
+    "A",
+    radius + outset,
+    radius + outset,
+    0,
+    largeArcFlag,
+    0,
+    end.x,
+    end.y,
+    "L",
+    innerEnd.x,
+    innerEnd.y
+  ].join(" ");
+
+  const midAngle = (startAngle + endAngle) / 2;
+  let textOffset, largeTextArcFlag, finalTextEnd, finalTextStart, arcFlip;
+  const lowerArc = midAngle > 90 && midAngle < 270;
+  if (lowerArc) {
+    textOffset = 12;
+    largeTextArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+    arcFlip = 0;
+  } else {
+    largeTextArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+    textOffset = 5;
+    arcFlip = 1;
+  }
+  const textStart = polarToCartesian(
+    x,
+    y,
+    radius + outset + textOffset,
+    endAngle
+  );
+  const textEnd = polarToCartesian(
+    x,
+    y,
+    radius + outset + textOffset,
+    startAngle
+  );
+  if (lowerArc) {
+    finalTextStart = textStart;
+    finalTextEnd = textEnd;
+  } else {
+    finalTextStart = textEnd;
+    finalTextEnd = textStart;
+  }
+
+  const textD = [
+    "M",
+    finalTextStart.x,
+    finalTextStart.y,
+    "A",
+    radius + outset + textOffset,
+    radius + outset + textOffset,
+    arcFlip,
+    largeTextArcFlag,
+    arcFlip,
+    finalTextEnd.x,
+    finalTextEnd.y
+  ].join(" ");
+
+  return { arcPath: d, textArcPath: textD };
+}
 
 export const svgORRule = ({ d, i, screenCoordinates, projection }) => {
   return (
@@ -168,6 +257,114 @@ export const svgRRule = ({
     }
   );
   return <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />;
+};
+
+export const svgCategoryRule = ({
+  projection,
+  d,
+  i,
+  categories,
+  adjustedSize,
+  margin
+}) => {
+  const {
+    bracketType = "curly",
+    position = projection === "vertical" ? "top" : "left",
+    depth = 30,
+    offset = 0,
+    padding = 0
+  } = d;
+  const actualCategories = Array.isArray(d.categories)
+    ? d.categories
+    : [d.categories];
+  const cats = actualCategories.map(c => categories[c]);
+
+  if (projection === "radial") {
+    const arcPadding = padding / adjustedSize[1];
+    const leftX = min(
+      cats.map(d => d.pct_start + d.pct_padding / 2 + arcPadding / 2)
+    );
+    const rightX = max(
+      cats.map(d => d.pct_start + d.pct - d.pct_padding / 2 - arcPadding / 2)
+    );
+
+    const chartSize = Math.min(adjustedSize[0], adjustedSize[1]) / 2;
+    const centerX = adjustedSize[0] / 2 + margin.left;
+    const centerY = adjustedSize[1] / 2 + margin.top;
+
+    const { arcPath, textArcPath } = arcBracket({
+      x: 0,
+      y: 0,
+      radius: chartSize,
+      startAngle: leftX * 360,
+      endAngle: rightX * 360,
+      inset: depth,
+      outset: offset
+    });
+    const textPathID = `text-path-${i}-${Math.random()}`;
+    return (
+      <g
+        className="category-annotation annotation"
+        transform={`translate(${centerX},${centerY})`}
+      >
+        <path d={arcPath} fill="none" />
+        <path id={textPathID} d={textArcPath} style={{ display: "none" }} />
+        <text font-size="12.5">
+          <textPath
+            startOffset={"50%"}
+            textAnchor={"middle"}
+            xlinkHref={`#${textPathID}`}
+          >
+            {d.label}
+          </textPath>
+        </text>
+      </g>
+    );
+  } else {
+    const leftX = min(cats.map(d => d.x));
+    const rightX = max(cats.map(d => d.x + d.width));
+    let noteData;
+    if (projection === "vertical") {
+      let yPosition = position === "top" ? margin.top : adjustedSize[1];
+      yPosition += position === "top" ? -offset : offset;
+      let noteData = {
+        type: AnnotationBracket,
+        y: yPosition,
+        x: leftX - padding,
+        note: {
+          title: d.title || d.label,
+          label: d.title ? d.label : undefined
+        },
+        subject: {
+          type: bracketType,
+          width: rightX - leftX + padding * 2,
+          depth: position === "top" ? -depth : depth
+        }
+      };
+      return (
+        <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
+      );
+    } else if (projection === "horizontal") {
+      let yPosition =
+        position === "left" ? margin.left : adjustedSize[0] + margin.left;
+      yPosition += position === "left" ? -offset : offset;
+      let noteData = {
+        type: AnnotationBracket,
+        x: yPosition,
+        y: leftX - padding,
+        note: {
+          title: d.title || d.label,
+          label: d.title ? d.label : undefined
+        },
+        subject: {
+          type: bracketType,
+          height: rightX - leftX + padding * 2,
+          depth: position === "left" ? -depth : depth
+        }
+      };
+    }
+    return <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />;
+  }
 };
 
 export const htmlFrameHoverRule = ({

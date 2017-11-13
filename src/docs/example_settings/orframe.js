@@ -29,9 +29,8 @@ export const summaryChart = {
     label: "Monthly temperature"
   },
   oLabel: d => <text transform="translate(-10,10) rotate(45)">{d}</text>,
-  margin: { left: 60, top: 35, bottom: 70, right: 30 },
-  oPadding: 20,
-  pieceHoverAnnotation: true
+  margin: { left: 60, top: 85, bottom: 70, right: 30 },
+  oPadding: 10
 };
 
 const funnel = [
