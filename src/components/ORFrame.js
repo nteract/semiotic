@@ -17,6 +17,7 @@ import {
   basicReactAnnotationRule,
   svgEncloseRule,
   svgRRule,
+  svgCategoryRule,
   htmlFrameHoverRule,
   htmlColumnHoverRule
 } from "./annotationRules/orframeRules";
@@ -399,6 +400,7 @@ class ORFrame extends React.Component {
 
       if (cwHash) {
         projectedColumns[o].width = cwHash[o] - padding;
+
         if (currentProps.ordinalAlign === "center") {
           projectedColumns[o].x =
             projectedColumns[o].x - projectedColumns[o].width / 2;
@@ -410,7 +412,7 @@ class ORFrame extends React.Component {
           (projectedColumns[o].x - oDomain[0]) / cwHash.total;
         projectedColumns[o].pct_padding = padding / cwHash.total;
         projectedColumns[o].pct_middle =
-          projectedColumns[o].middle / cwHash.total;
+          (projectedColumns[o].middle - oDomain[0]) / cwHash.total;
       } else {
         projectedColumns[o].width = columnWidth - padding;
         if (currentProps.ordinalAlign === "center") {
@@ -419,12 +421,13 @@ class ORFrame extends React.Component {
           projectedColumns[o].middle =
             projectedColumns[o].middle - projectedColumns[o].width / 2;
         }
+
         projectedColumns[o].pct = columnWidth / adjustedSize[1];
         projectedColumns[o].pct_start =
           (projectedColumns[o].x - oDomain[0]) / adjustedSize[1];
         projectedColumns[o].pct_padding = padding / adjustedSize[1];
         projectedColumns[o].pct_middle =
-          projectedColumns[o].middle / adjustedSize[1];
+          (projectedColumns[o].middle - oDomain[0]) / adjustedSize[1];
       }
     });
 
@@ -924,6 +927,15 @@ class ORFrame extends React.Component {
         projection,
         adjustedSize,
         adjustedPosition
+      });
+    } else if (d.type === "category") {
+      return svgCategoryRule({
+        projection,
+        d,
+        i,
+        categories: this.state.projectedColumns,
+        adjustedSize,
+        margin
       });
     }
     return null;
