@@ -4,9 +4,7 @@
 .npmrc
 .nyc_output/
 /node_modules
-
-## REMOVE THIS WHEN YOU MERGE WITH PROD
-#/lib
+/lib
 
 .DS_Store
 npm-debug.log
