@@ -33,8 +33,8 @@ components.push({
       PropTypes.number,
       PropTypes.object
       // the label object takes the following properties
-      // name : string to be displayed
-      // locationDistance: offset in px from original position      
+      // name : String to be displayed
+      // locationDistance: Offset in px from original position      
       // position: Object with the following options
       //   location: One of "outside" or "inside" defaults to "outside"
       //   anchor: One of "middle", "start", or "end", defaults to "middle"
