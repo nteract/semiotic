@@ -105,6 +105,16 @@ components.push({
     PropTypes.func
   ]),
   annotations: PropTypes.array,
+  annotationSettings: PropTypes.object,
+  // layout : One of "bump" or "marginalia"
+  // if layout is bump you can include, assumes circlular collision
+  //   labelSizeFunction: PropTypes.func, defaults to 5 for circle radius
+  //   pointSizeFunction: PropTypes.func, defaults to 5 for circle radius
+  // if layout is marginalia:     
+  //   orient: One of "left", "right", "nearest"
+  //   textHeight: pixel height of label annotation text, defaults to 30
+  //   textPadding: pixel padding between labels, defaults to 5
+  //   margin: distance to right/left between chart and label, defaults to 0
   customHoverBehavior: PropTypes.func,
   customClickBehavior: PropTypes.func,
   optimizeRendering: PropTypes.bool,
