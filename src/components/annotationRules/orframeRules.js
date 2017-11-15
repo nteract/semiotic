@@ -20,7 +20,16 @@ function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
   };
 }
 
-function arcBracket({ x, y, radius, startAngle, endAngle, inset, outset }) {
+function arcBracket({
+  x,
+  y,
+  radius,
+  startAngle,
+  endAngle,
+  inset,
+  outset,
+  curly = true
+}) {
   const start = polarToCartesian(x, y, radius + outset, endAngle);
   const end = polarToCartesian(x, y, radius + outset, startAngle);
 
@@ -28,26 +37,99 @@ function arcBracket({ x, y, radius, startAngle, endAngle, inset, outset }) {
   const innerEnd = polarToCartesian(x, y, radius + outset - inset, startAngle);
 
   const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+  let d;
+  if (curly) {
+    const middleLeft = polarToCartesian(
+      x,
+      y,
+      radius + outset,
+      (startAngle + endAngle) / 2 + 10
+    );
 
-  const d = [
-    "M",
-    innerStart.x,
-    innerStart.y,
-    "L",
-    start.x,
-    start.y,
-    "A",
-    radius + outset,
-    radius + outset,
-    0,
-    largeArcFlag,
-    0,
-    end.x,
-    end.y,
-    "L",
-    innerEnd.x,
-    innerEnd.y
-  ].join(" ");
+    const middle = polarToCartesian(
+      x,
+      y,
+      radius + outset + 10,
+      (startAngle + endAngle) / 2
+    );
+    const middleRight = polarToCartesian(
+      x,
+      y,
+      radius + outset,
+      (startAngle + endAngle) / 2 - 10
+    );
+
+    d = [
+      "M",
+      innerStart.x,
+      innerStart.y,
+      "L",
+      start.x,
+      start.y,
+      "A",
+      radius + outset,
+      radius + outset,
+      0,
+      largeArcFlag,
+      0,
+      middleLeft.x,
+      middleLeft.y,
+      "A",
+      radius + outset,
+      radius + outset,
+      1,
+      largeArcFlag,
+      1,
+      middle.x,
+      middle.y,
+      "A",
+      radius + outset,
+      radius + outset,
+      1,
+      largeArcFlag,
+      1,
+      middleRight.x,
+      middleRight.y,
+
+      "A",
+      radius + outset,
+      radius + outset,
+      0,
+      largeArcFlag,
+      0,
+      end.x,
+      end.y,
+      "L",
+      innerEnd.x,
+      innerEnd.y
+    ].join(" ");
+  } else {
+    const middle = polarToCartesian(
+      x,
+      y,
+      radius + outset,
+      (startAngle + endAngle) / 2
+    );
+    d = [
+      "M",
+      innerStart.x,
+      innerStart.y,
+      "L",
+      start.x,
+      start.y,
+      "A",
+      radius + outset,
+      radius + outset,
+      0,
+      largeArcFlag,
+      0,
+      end.x,
+      end.y,
+      "L",
+      innerEnd.x,
+      innerEnd.y
+    ].join(" ");
+  }
 
   const midAngle = (startAngle + endAngle) / 2;
   let textOffset, largeTextArcFlag, finalTextEnd, finalTextStart, arcFlip;
@@ -61,6 +143,7 @@ function arcBracket({ x, y, radius, startAngle, endAngle, inset, outset }) {
     textOffset = 5;
     arcFlip = 1;
   }
+  textOffset += curly ? 10 : 0;
   const textStart = polarToCartesian(
     x,
     y,
