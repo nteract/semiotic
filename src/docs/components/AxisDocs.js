@@ -1,9 +1,9 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import { Axis } from "../../components";
-import { scaleLinear, scaleTime } from "d3-scale";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import { Axis } from "../../components"
+import { scaleLinear, scaleTime } from "d3-scale"
 
-const components = [];
+const components = []
 // Add your component proptype data here
 // multiple component proptype documentation supported
 
@@ -27,16 +27,28 @@ components.push({
     ticks: PropTypes.oneOfType([
       PropTypes.array,
       PropTypes.number
+    ]),
+    label: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.number,
+      PropTypes.object
+      // the label object takes the following properties
+      // name : String to be displayed
+      // locationDistance: Offset in px from original position      
+      // position: Object with the following options
+      //   location: One of "outside" or "inside" defaults to "outside"
+      //   anchor: One of "middle", "start", or "end", defaults to "middle"
+      //   rotation: Angle used in an svg transform rotation
     ])
     }
   `
-});
+})
 
 export default class AxisDocs extends React.Component {
   render() {
-    const buttons = [];
+    const buttons = []
 
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Basic",
       demo: (
@@ -138,7 +150,7 @@ export default class AxisDocs extends React.Component {
         </g>
         </svg>
       `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -164,8 +176,8 @@ export default class AxisDocs extends React.Component {
           rules determining whether summaries and connectors are drawn.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-AxisDocs.title = "Axis";
+AxisDocs.title = "Axis"
