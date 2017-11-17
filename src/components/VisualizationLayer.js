@@ -9,9 +9,9 @@ import { hexToRgb } from "./svg/SvgHelper";
 import PropTypes from "prop-types";
 
 class VisualizationLayer extends React.PureComponent {
-  static defaultProps = { position : [0, 0] };
+  static defaultProps = { position: [0, 0] };
 
-  canvasDrawing = [ ];
+  canvasDrawing = [];
 
   state = {
     canvasDrawing: [],
@@ -20,9 +20,13 @@ class VisualizationLayer extends React.PureComponent {
   };
 
   componentDidUpdate() {
-    if (this.props.disableContext || !this.props.canvasContext || !this.canvasDrawing.length)
+    if (
+      this.props.disableContext ||
+      !this.props.canvasContext ||
+      !this.canvasDrawing.length
+    )
       return;
-    
+
     const context = this.props.canvasContext.getContext("2d");
     context.setTransform(1, 0, 0, 1, 0, 0);
     context.clearRect(0, 0, this.props.size[0] * 2, this.props.size[1] * 2);
@@ -83,9 +87,8 @@ class VisualizationLayer extends React.PureComponent {
     });
 
     if (
-      update === true &&
-      (!np.dataVersion ||
-        np.dataVersion && np.dataVersion !== this.state.dataVersion)
+      update === true ||
+      (np.dataVersion && np.dataVersion !== this.state.dataVersion)
     ) {
       const {
         xScale,
@@ -102,8 +105,8 @@ class VisualizationLayer extends React.PureComponent {
       Object.keys(renderPipeline).forEach(k => {
         const pipe = renderPipeline[k];
         if (
-          pipe.data && typeof pipe.data === "object" ||
-          pipe.data && pipe.data.length > 0
+          (pipe.data && typeof pipe.data === "object") ||
+          (pipe.data && pipe.data.length > 0)
         ) {
           const renderedPipe = pipe.behavior({
             xScale,
@@ -130,14 +133,7 @@ class VisualizationLayer extends React.PureComponent {
 
   render() {
     const props = this.props;
-    const {
-      matte,
-      matteClip,
-      axes,
-      axesTickLines,
-      frameKey,
-      position
-    } = props;
+    const { matte, matteClip, axes, axesTickLines, frameKey, position } = props;
     const { renderedElements } = this.state;
 
     return (
