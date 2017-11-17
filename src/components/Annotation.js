@@ -12,9 +12,9 @@ class Annotation extends React.Component {
 
     //TODO come back and implement event listeners
 
-    // const eventListeners = this.props.noteData.eventListeners || {};
+    const eventListeners = this.props.noteData.eventListeners || {};
     // return <g {...eventListeners} ref={node => (this.node = node)} />;
-    return <noteData.type {...noteData} />;
+    return <noteData.type events={eventListeners} {...noteData} />;
   }
 }
 
