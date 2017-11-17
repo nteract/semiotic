@@ -762,7 +762,11 @@ class ORFrame extends React.Component {
       backgroundGraphics: currentProps.backgroundGraphics,
       foregroundGraphics: currentProps.foregroundGraphics,
       axisData: currentProps.axis,
-      axes: <g className="axis-labels">{axis}</g>,
+      axes: (
+        <g key="orframe-axis" className="axis-labels">
+          {axis}
+        </g>
+      ),
       axesTickLines,
       oLabels,
       title,
@@ -1141,7 +1145,7 @@ class ORFrame extends React.Component {
         size={size}
         xScale={xScale}
         yScale={yScale}
-        axes={axes}
+        axes={[axes]}
         axesTickLines={axesTickLines}
         title={title}
         matte={matte}
