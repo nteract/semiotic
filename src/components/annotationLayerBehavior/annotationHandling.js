@@ -1,5 +1,19 @@
 import { forceSimulation, forceX, forceY, forceCollide } from "d3-force";
 
+const basicPointSizeFunction = () => {
+  return 5;
+};
+const basicLabelSizeFunction = noteData => {
+  const text = noteData.note.label || noteData.note.title;
+
+  const textLength = text.length;
+  const circleSize =
+    noteData.note && noteData.note.wrap
+      ? Math.min(noteData.note.wrap, textLength * 3)
+      : textLength * 3;
+  return circleSize;
+};
+
 export function basicVerticalSorting({
   axes,
   adjustableAnnotations,
@@ -57,20 +71,6 @@ export function basicVerticalSorting({
 }
 
 export function bumpAnnotations(adjustableNotes, props) {
-  const basicPointSizeFunction = () => {
-    return 5;
-  };
-  const basicLabelSizeFunction = noteData => {
-    const text = noteData.note.label || noteData.note.title;
-
-    const textLength = text.length;
-    const circleSize =
-      noteData.note && noteData.note.wrap
-        ? Math.min(noteData.note.wrap, textLength * 3)
-        : textLength * 3;
-    return circleSize;
-  };
-
   let {
     pointSizeFunction = basicPointSizeFunction,
     labelSizeFunction = basicLabelSizeFunction

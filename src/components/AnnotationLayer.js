@@ -7,6 +7,7 @@ import {
 } from "./annotationLayerBehavior/annotationHandling";
 import PropTypes from "prop-types";
 import Legend from "./Legend";
+import Annotation from "./Annotation";
 
 function adjustedAnnotationKeyMapper(d) {
   return d.props.noteData.id || `${d.props.noteData.x}-${d.props.noteData.y}`;
@@ -197,6 +198,15 @@ class AnnotationLayer extends React.Component {
           annotationProcessor,
           props
         );
+      } else {
+        //Handle when style or other attributes change
+        adjustedAnnotations = adjustedAnnotations.map((d, i) => {
+          const newNoteData = Object.assign(
+            adjustableAnnotations[i].props.noteData,
+            { nx: d.props.noteData.nx, ny: d.props.noteData.ny }
+          );
+          return <Annotation key={d.key} noteData={newNoteData} />;
+        });
       }
 
       renderedSVGAnnotations = [...adjustedAnnotations, ...fixedAnnotations];

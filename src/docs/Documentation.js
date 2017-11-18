@@ -40,6 +40,7 @@ import Sankey from "./components/Sankey";
 import Chord from "./components/Chord";
 import Dendrogram from "./components/Dendrogram";
 import NegativeStacked from "./components/NegativeStacked";
+import CustomMark from "./components/CustomMark";
 
 //import Process from "./components/Process";
 import BarToParallel from "./components/BarToParallel";
@@ -86,6 +87,7 @@ const components = {
   joyplot: { docs: JoyPlot, parent: "orframe" },
   swarmbrush: { docs: SwarmBrush, parent: "orframe" },
   divergingstackedbar: { docs: DivergingStackedBar, parent: "orframe" },
+  custommark: { docs: CustomMark, parent: "orframe" },
   divergingstackedisotype: { docs: DivergingStackedIsotype, parent: "orframe" },
   verticalisotype: { docs: VerticalIsotype, parent: "orframe" },
   waterfall: { docs: WaterfallChart, parent: "orframe" },
