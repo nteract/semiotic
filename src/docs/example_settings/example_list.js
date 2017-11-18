@@ -22,6 +22,7 @@ import DendrogramRaw from "../components/DendrogramRaw";
 import DivergingStackedIsotypeRaw from "../components/DivergingStackedIsotypeRaw";
 import VerticalIsotypeRaw from "../components/VerticalIsotypeRaw";
 import NegativeStackedRaw from "../components/NegativeStackedRaw";
+import CustomMarkRaw from "../components/CustomMarkRaw";
 
 import {
   genericBarChart,
@@ -81,6 +82,11 @@ const exampos = [
     label: "Negative Stacked",
     viz: NegativeStackedRaw(),
     path: "negativestacked"
+  },
+  {
+    label: "Custom OR Type",
+    viz: CustomMarkRaw(),
+    path: "custommark"
   },
   {
     label: "Swarm Brush",
