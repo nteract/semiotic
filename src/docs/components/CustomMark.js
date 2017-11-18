@@ -147,10 +147,15 @@ function timeline({ data, rScale, adjustedSize, margin }) {
         buttons={buttons}
       >
         <p>
-          Custom mark example. One challenge of using custom marks is you can't
+          Another ORFrame custom type example (a more ambitious one is the
+          Waterfall Chart). One challenge of using custom types is you can't
           rely on Semiotic's ability to generate the extent, so in this case
           because my extent is based on the earliest birth date and the latest
           date of death or term, I need to pass a manual rExtent.
+        </p>
+        <p>
+          This uses Semiotic's built-in "marginalia" annotation handling to
+          place annotation labels in the margins.
         </p>
       </DocumentComponent>
     );
