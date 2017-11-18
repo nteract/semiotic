@@ -9,7 +9,7 @@ export default {
   output: {
     format: "umd",
     file: 'dist/semiotic.js',
-    name: 'semiotic'
+    name: 'Semiotic'
   },
   interop: false,
   globals: {
