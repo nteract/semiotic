@@ -21,6 +21,7 @@ import BulletChartRaw from "../components/BulletChartRaw";
 import DendrogramRaw from "../components/DendrogramRaw";
 import DivergingStackedIsotypeRaw from "../components/DivergingStackedIsotypeRaw";
 import VerticalIsotypeRaw from "../components/VerticalIsotypeRaw";
+import NegativeStackedRaw from "../components/NegativeStackedRaw";
 
 import {
   genericBarChart,
@@ -76,6 +77,11 @@ const exampos = [
   { label: "XY Charts", viz: genericLineChart, path: "xyframe" },
   { label: "Ordinal Charts", viz: genericBarChart, path: "orframe" },
   { label: "Network Charts", viz: genericNetworkChart, path: "networkframe" },
+  {
+    label: "Negative Stacked",
+    viz: NegativeStackedRaw(),
+    path: "negativestacked"
+  },
   {
     label: "Swarm Brush",
     viz: SwarmBrushRaw(
