@@ -36,9 +36,6 @@ export default {
         'stage-0'
       ],
       'plugins': [
-        'transform-decorators-legacy',
-        'transform-object-assign',
-        'react-require',
         'external-helpers'
       ]
     })
