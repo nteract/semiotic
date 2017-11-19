@@ -36,14 +36,17 @@ function arcBracket({
   const innerStart = polarToCartesian(x, y, radius + outset - inset, endAngle);
   const innerEnd = polarToCartesian(x, y, radius + outset - inset, startAngle);
 
-  const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+  const angleSize = endAngle - startAngle;
+  const largeArcFlag = angleSize <= 180 ? "0" : "1";
   let d;
   if (curly) {
+    const curlyOffset = Math.min(10, angleSize / 4);
+
     const middleLeft = polarToCartesian(
       x,
       y,
       radius + outset,
-      (startAngle + endAngle) / 2 + 10
+      (startAngle + endAngle) / 2 + curlyOffset
     );
 
     const middle = polarToCartesian(
@@ -56,7 +59,7 @@ function arcBracket({
       x,
       y,
       radius + outset,
-      (startAngle + endAngle) / 2 - 10
+      (startAngle + endAngle) / 2 - curlyOffset
     );
 
     d = [
@@ -70,7 +73,7 @@ function arcBracket({
       radius + outset,
       radius + outset,
       0,
-      largeArcFlag,
+      0,
       0,
       middleLeft.x,
       middleLeft.y,
@@ -78,7 +81,7 @@ function arcBracket({
       radius + outset,
       radius + outset,
       1,
-      largeArcFlag,
+      0,
       1,
       middle.x,
       middle.y,
@@ -86,7 +89,7 @@ function arcBracket({
       radius + outset,
       radius + outset,
       1,
-      largeArcFlag,
+      0,
       1,
       middleRight.x,
       middleRight.y,
@@ -95,7 +98,7 @@ function arcBracket({
       radius + outset,
       radius + outset,
       0,
-      largeArcFlag,
+      0,
       0,
       end.x,
       end.y,
@@ -382,7 +385,8 @@ export const svgCategoryRule = ({
       startAngle: leftX * 360,
       endAngle: rightX * 360,
       inset: depth,
-      outset: offset
+      outset: offset,
+      curly: bracketType === "curly"
     });
     const textPathID = `text-path-${i}-${Math.random()}`;
     return (
