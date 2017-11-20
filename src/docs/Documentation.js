@@ -34,6 +34,7 @@ import BaseballMap from "./components/BaseballMap";
 import WordCloud from "./components/WordCloud";
 import SwarmBrush from "./components/SwarmBrush";
 import LineBrush from "./components/LineBrush";
+import Minimap from "./components/Minimap";
 import DivergingStackedBar from "./components/DivergingStackedBar";
 import DivergingStackedIsotype from "./components/DivergingStackedIsotype";
 import VerticalIsotype from "./components/VerticalIsotype";
@@ -76,6 +77,7 @@ const components = {
   homerunmap: { docs: BaseballMap, parent: "xyframe" },
   neighborhoodmap: { docs: NeighborhoodMap, parent: "xyframe" },
   realtimeline: { docs: RealtimeXYFrame, parent: "xyframe" },
+  minimap: { docs: Minimap, parent: "xyframe" },
   linebrush: { docs: LineBrush, parent: "xyframe" },
   negativestacked: { docs: NegativeStacked, parent: "xyframe" },
   datasketches: { docs: DataSketchesPlot, parent: "xyframe" },

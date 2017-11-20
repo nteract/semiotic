@@ -18,13 +18,24 @@ export default class LineBrush extends React.Component {
     this.state = {
       selectedDataCountStart: 200,
       selectedDataCountDuring: 200,
-      selectedDataCountEnd: 200
+      selectedDataCountEnd: 200,
+      resetExtent: [new Date("1/2/1998"), new Date("1/2/2003")]
     };
     this.brushStart = this.brushStart.bind(this);
     this.brushDuring = this.brushDuring.bind(this);
     this.brushEnd = this.brushEnd.bind(this);
+    this.randomizeExtent = this.randomizeExtent.bind(this);
   }
 
+  randomizeExtent() {
+    const randomYear = parseInt(Math.random() * 5) + 1997;
+    this.setState({
+      resetExtent: [
+        new Date(`1/2/${randomYear}`),
+        new Date(`1/2/${randomYear + 3}`)
+      ]
+    });
+  }
   brushStart(e) {
     this.setState({
       selectedDataCountStart: data.filter(d => d.date >= e[0] && d.date <= e[1])
@@ -48,13 +59,21 @@ export default class LineBrush extends React.Component {
   render() {
     const examples = [];
 
-    const buttons = [];
+    const buttons = [
+      <button onClick={this.randomizeExtent}>Random Extent</button>
+    ];
 
     examples.push({
       name: "Basic",
       demo: (
         <div>
-          {LineBrushRaw(data, this.brushStart, this.brushDuring, this.brushEnd)}
+          {LineBrushRaw(
+            data,
+            this.brushStart,
+            this.brushDuring,
+            this.brushEnd,
+            this.state.resetExtent
+          )}
           <h2>
             {this.state.selectedDataCountStart} Selected Points (Start Event)
           </h2>

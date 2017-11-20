@@ -153,7 +153,6 @@ const speciousDataset = [
 
 export default (
   <XYFrame
-    title={"Data Sketches"}
     size={[750, 750]}
     xExtent={[-1, 1]}
     yExtent={[-1, 1]}
@@ -198,11 +197,18 @@ export default (
     )}
     hoverAnnotation={true}
     tooltipContent={d => (
-      <div className="tooltip-content" style={{ color: speciousColors[d.who] }}>
+      <div
+        className="tooltip-content"
+        style={{
+          border: "none",
+          background: speciousColors[d.who],
+          color: "white"
+        }}
+      >
         <h1
           style={{
             fontSize: "16px",
-            color: speciousColors[d.who],
+            color: "white",
             fontWeight: 900
           }}
         >

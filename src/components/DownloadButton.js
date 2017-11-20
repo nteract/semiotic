@@ -12,10 +12,10 @@ export const downloadCSV = (csvName, data) => {
     dlink.href = window.URL.createObjectURL(blob);
     dlink.onclick = () => {
       // revokeObjectURL needs a delay to work properly
-      const that = this;
-      setTimeout(() => {
-        window.URL.revokeObjectURL(that.href);
-      }, 1500);
+      const revokeFn = () => {
+        window.URL.revokeObjectURL(this.href);
+      };
+      setTimeout(revokeFn.bind(this), 1500);
     };
 
     dlink.click();

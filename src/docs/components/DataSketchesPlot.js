@@ -39,7 +39,6 @@ const speciousDataset = [
     month: "April"
   }]
   <XYFrame
-    title={"Data Sketches"}
     size={[750, 750]}
     xExtent={[-1, 1]}
     yExtent={[-1, 1]}
@@ -132,7 +131,10 @@ const speciousDataset = [
           An interactive scatterplot of all the projects from{" "}
           <a target="_blank" href="http://www.datasketch.es/">
             Data Sketches by Shirley Wu & Nadieh Bremer
-          </a>.
+          </a>{" "}
+          showing how to use backgroundGraphics to place an image and guide
+          lines, as well as axis labeling and tick formatting functions to
+          create a quadrant view.
         </p>
       </DocumentComponent>
     );

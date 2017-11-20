@@ -184,9 +184,9 @@ body {
 
 .annotation-xy-label .tooltip-content:before,
 .annotation-network-label .tooltip-content:before {
-  border-right: 1px solid black;
-  border-bottom: 1px solid black;
-  bottom: -10px;
+  border-right: inherit;
+  border-bottom: inherit;
+  bottom: -8px;
   left: 66px;
 }
 
@@ -200,7 +200,7 @@ body {
 }
 
 .tooltip-content:before {
-  background: white;
+  background: inherit;
   content: "";
   padding: 0px;
   transform: rotate(45deg);
@@ -219,8 +219,8 @@ body {
 .annotation-or-label.horizontal .tooltip-content:before {
   bottom: 45px;
   left: -9px;
-  border-left: 1px solid black;
-  border-bottom: 1px solid black;
+  border-left: inherit;
+  border-bottom: inherit;
 }
 
 .annotation-or-label.vertical .tooltip-content {
@@ -231,8 +231,8 @@ body {
 .annotation-or-label.vertical .tooltip-content:before {
   bottom: -10px;
   left: 65px;
-  border-right: 1px solid black;
-  border-bottom: 1px solid black;
+  border-right: inherit;
+  border-bottom: inherit;
 }
 
 .domain {
