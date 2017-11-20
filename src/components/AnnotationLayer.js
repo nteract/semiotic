@@ -158,8 +158,9 @@ class AnnotationLayer extends React.Component {
       renderedHTMLAnnotations = [],
       adjustedAnnotations = this.state.adjustedAnnotations,
       adjustableAnnotationsKey = this.state.adjustedAnnotationsKey,
-      adjustedAnnotationsKey = this.state.adjustedAnnotationsKey;
-    adjustedAnnotationsDataVersion = this.state.adjustedAnnotationsDataVersion;
+      adjustedAnnotationsKey = this.state.adjustedAnnotationsKey,
+      adjustedAnnotationsDataVersion = this.state
+        .adjustedAnnotationsDataVersion;
 
     const { dataVersion = "", annotations, annotationHandling = false } = props;
     const annotationProcessor =
