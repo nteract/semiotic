@@ -15,6 +15,18 @@ class Brush extends React.Component {
   componentDidMount() {
     this.createBrush();
   }
+  componentDidUpdate(lastProps) {
+    if (
+      (lastProps.selectedExtent &&
+        this.props.selectedExtent &&
+        lastProps.selectedExtent.toString() !==
+          this.props.selectedExtent.toString()) ||
+      (!lastProps.selectedExtent && this.props.selectedExtent) ||
+      (lastProps.selectedExtent && !this.props.selectedExtent)
+    ) {
+      this.createBrush();
+    }
+  }
 
   createBrush() {
     let node = this.node;

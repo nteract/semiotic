@@ -24,6 +24,7 @@ import BarLineDocs from "./components/BarLineDocs";
 import HeatMap from "./components/HeatMap";
 import Marimekko from "./components/Marimekko";
 import DotPlot from "./components/DotPlot";
+import DataSketchesPlot from "./components/DataSketchesPlot";
 import DonutChart from "./components/DonutChart";
 import JoyPlot from "./components/JoyPlot";
 import WaterfallChart from "./components/WaterfallChart";
@@ -77,6 +78,7 @@ const components = {
   realtimeline: { docs: RealtimeXYFrame, parent: "xyframe" },
   linebrush: { docs: LineBrush, parent: "xyframe" },
   negativestacked: { docs: NegativeStacked, parent: "xyframe" },
+  datasketches: { docs: DataSketchesPlot, parent: "xyframe" },
   orframe: { docs: ORFrameDocs },
   violin: { docs: Violin, parent: "orframe" },
   parallelcoordinates: { docs: ParallelCoordinates, parent: "orframe" },

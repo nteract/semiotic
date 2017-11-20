@@ -37,7 +37,8 @@ class AnnotationLayer extends React.Component {
       svgAnnotations: [],
       htmlAnnotations: [],
       adjustedAnnotations: 0,
-      adjustedAnnotationsKey: ""
+      adjustedAnnotationsKey: "",
+      adjustedAnnotationsDataVersion: ""
     };
   }
 
@@ -158,8 +159,9 @@ class AnnotationLayer extends React.Component {
       adjustedAnnotations = this.state.adjustedAnnotations,
       adjustableAnnotationsKey = this.state.adjustedAnnotationsKey,
       adjustedAnnotationsKey = this.state.adjustedAnnotationsKey;
+    adjustedAnnotationsDataVersion = this.state.adjustedAnnotationsDataVersion;
 
-    const { annotations, annotationHandling = false } = props;
+    const { dataVersion = "", annotations, annotationHandling = false } = props;
     const annotationProcessor =
       typeof annotationHandling !== "object"
         ? { type: annotationHandling }
@@ -191,7 +193,8 @@ class AnnotationLayer extends React.Component {
 
       if (
         adjustedAnnotations.length !== adjustableAnnotations.length ||
-        adjustedAnnotationsKey !== adjustableAnnotationsKey
+        adjustedAnnotationsKey !== adjustableAnnotationsKey ||
+        adjustedAnnotationsDataVersion !== dataVersion
       ) {
         adjustedAnnotations = this.processAnnotations(
           adjustableAnnotations,
@@ -223,7 +226,8 @@ class AnnotationLayer extends React.Component {
       svgAnnotations: renderedSVGAnnotations,
       htmlAnnotations: renderedHTMLAnnotations,
       adjustedAnnotations: adjustedAnnotations,
-      adjustedAnnotationsKey: adjustableAnnotationsKey
+      adjustedAnnotationsKey: adjustableAnnotationsKey,
+      adjustedAnnotationsDataVersion: dataVersion
     });
   }
 

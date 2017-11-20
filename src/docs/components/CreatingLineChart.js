@@ -23,6 +23,7 @@ const interactiveChartAxes = [
     orient: "bottom"
   }
 ];
+
 const chartSize = [700, 400];
 
 const movies = [

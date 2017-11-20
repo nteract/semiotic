@@ -15,8 +15,14 @@ const data = Array.from(Array(200), () => ({
 export default class SwarmBrush extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { selectedDataCount: 200 };
+    this.state = { selectedDataCount: 200, resetExtent: [0, 100] };
     this.brushEnd = this.brushEnd.bind(this);
+    this.randomizeExtent = this.randomizeExtent.bind(this);
+  }
+
+  randomizeExtent() {
+    const randomStart = parseInt(Math.random() * 50);
+    this.setState({ resetExtent: [randomStart, randomStart + 50] });
   }
 
   brushEnd(e) {
@@ -29,13 +35,15 @@ export default class SwarmBrush extends React.Component {
   render() {
     const examples = [];
 
-    const buttons = [];
+    const buttons = [
+      <button onClick={this.randomizeExtent}>Random Extent</button>
+    ];
 
     examples.push({
       name: "Basic",
       demo: (
         <div>
-          {SwarmBrushRaw(data, this.brushEnd)}
+          {SwarmBrushRaw(data, this.brushEnd, this.state.resetExtent)}
           <h2>{this.state.selectedDataCount} Selected Points</h2>
         </div>
       ),

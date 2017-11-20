@@ -1,7 +1,7 @@
 import React from "react";
 import { ORFrame } from "../../components";
 
-export default (data, event) => (
+export default (data, event, resetExtent) => (
   <div style={{ marginTop: "50px" }}>
     <ORFrame
       size={[700, 200]}
@@ -23,7 +23,7 @@ export default (data, event) => (
       oPadding={0}
       interaction={{
         columnsBrush: true,
-        extent: { singleColumn: [0, 100] },
+        extent: { singleColumn: resetExtent },
         end: event
       }}
     />
