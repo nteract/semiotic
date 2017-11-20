@@ -3,8 +3,10 @@
   "version": "1.2.4",
   "description": "The semiotic JavaScript data visualization framework",
   "main": "lib/index.js",
+  "unpkg": "dist/semiotic.js",
   "files": [
-    "lib"
+    "lib",
+    "dist"
   ],
   "scripts": {
     "start": "react-scripts start",
@@ -50,6 +52,7 @@
     "history": "4.2.0",
     "jsdom": "8.1.0",
     "less": "2.7.1",
+    "material-design-icons-svg": "1.1.2",
     "material-ui": "v1.0.0-beta.13",
     "material-ui-icons": "1.0.0-beta.15",
     "nyc": "5.5.0",
@@ -64,10 +67,15 @@
     "react-tap-event-plugin": "3.0.2",
     "react-test-renderer": "16.0.0",
     "reactstrap": "github:jameswomack/reactstrap#react-popper_react-dom-16",
+    "rollup": "^0.50.0",
+    "rollup-plugin-babel": "^3.0.2",
+    "rollup-plugin-commonjs": "^8.2.5",
+    "rollup-plugin-node-builtins": "^2.1.2",
+    "rollup-plugin-node-resolve": "^3.0.0",
+    "rollup-plugin-replace": "^2.0.0",
     "tap-difflet": "0.4.0",
     "tap-notify": "1.0.0",
-    "tape": "4.4.0",
-    "material-design-icons-svg": "1.1.2"
+    "tape": "4.4.0"
   },
   "peerDependencies": {
     "react": "^15.0.0 || ^16.0.0",
@@ -76,6 +84,9 @@
   "dependencies": {
     "@mapbox/polylabel": "1.0.2",
     "assert": "1.4.1",
+    "babel-plugin-external-helpers": "^6.22.0",
+    "babel-runtime": "6.26.0",
+    "classnames": "2.2.5",
     "d3-array": "1.2.0",
     "d3-bboxCollide": "1.0.3",
     "d3-brush": "1.0.4",
@@ -92,7 +103,7 @@
     "d3-selection": "1.1.0",
     "d3-shape": "1.0.4",
     "d3-voronoi": "1.0.2",
-    "element-resize-event": "2.0.9",
+    "element-resize-event": "2.0.7",
     "graphology": "0.10.2",
     "graphology-communities-louvain": "0.1.1",
     "graphology-components": "0.1.0",
