@@ -23,6 +23,7 @@ import DivergingStackedIsotypeRaw from "../components/DivergingStackedIsotypeRaw
 import VerticalIsotypeRaw from "../components/VerticalIsotypeRaw";
 import NegativeStackedRaw from "../components/NegativeStackedRaw";
 import CustomMarkRaw from "../components/CustomMarkRaw";
+import DataSketchesPlotRaw from "../components/DataSketchesPlotRaw";
 
 import {
   genericBarChart,
@@ -54,6 +55,12 @@ const exampos = [
     path: "divergingstackedisotype"
   },
   { label: "Dot Plot", viz: DotPlotRaw, path: "dotplot" },
+  {
+    label: "Background Graphics",
+    viz: DataSketchesPlotRaw,
+    path: "datasketches"
+  },
+
   {
     label: "Neighborhood Map",
     viz: NeighborhoodMapRaw,

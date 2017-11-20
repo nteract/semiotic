@@ -10,7 +10,7 @@ const lineStyle = {
   strokeWidth: 1
 };
 
-export default (data, startEvent, duringEvent, endEvent) => {
+export default (data, startEvent, duringEvent, endEvent, extent) => {
   return (
     <div style={{ marginTop: "50px" }}>
       <XYFrame
@@ -34,7 +34,7 @@ export default (data, startEvent, duringEvent, endEvent) => {
           during: duringEvent,
           end: endEvent,
           brush: "xBrush",
-          extent: [new Date("1/2/1998"), new Date("1/2/2003")]
+          extent: extent
         }}
       />
     </div>
