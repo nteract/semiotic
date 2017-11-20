@@ -20,7 +20,7 @@ const speciousDataset = [
     who: "nadieh",
     name: "A Breathing Earth",
     meaningfulFrivolous: -0.75,
-    accessibleShowingOff: -0.75,
+    accessibleShowingOff: -0.65,
     month: "April"
   },
   {
@@ -33,7 +33,7 @@ const speciousDataset = [
   {
     who: "shirley",
     name: "Explore Adventure",
-    meaningfulFrivolous: 0.5,
+    meaningfulFrivolous: 0.45,
     accessibleShowingOff: 0.5,
     month: "March"
   },
@@ -104,7 +104,7 @@ const speciousDataset = [
     who: "shirley",
     name: "Putting :Ds on the President’s Face",
     meaningfulFrivolous: 0.6,
-    accessibleShowingOff: -0.75,
+    accessibleShowingOff: -0.8,
     month: "October"
   },
   {
@@ -154,19 +154,14 @@ const speciousDataset = [
 export default (
   <XYFrame
     title={"Data Sketches"}
-    size={[1000, 1000]}
+    size={[750, 750]}
     xExtent={[-1, 1]}
     yExtent={[-1, 1]}
     points={speciousDataset}
     customPointMark={({ d }) => (
       <Mark markType="g" opacity={0.75}>
-        <Mark
-          markType="circle"
-          renderMode="sketchy"
-          style={{ fill: speciousColors[d.who] }}
-          r={3}
-        />
         <text
+          fontSize={10}
           y={18}
           textAnchor="middle"
           fill={"white"}
@@ -176,22 +171,45 @@ export default (
         >
           {d.name}
         </text>
-        <text y={18} textAnchor="middle" fill={speciousColors[d.who]}>
+        <text
+          fontSize={10}
+          y={18}
+          textAnchor="middle"
+          fill={speciousColors[d.who]}
+        >
           {d.name}
         </text>
-        <circle
-          fill="none"
-          strokeWidth={3}
-          stroke={speciousColors[d.who]}
-          r={6}
+        <Mark
+          markType="circle"
+          renderMode="sketchy"
+          style={{ fill: speciousColors[d.who] }}
+          r={8}
+        />
+        <Mark
+          markType="circle"
+          style={{
+            strokeWidth: 2,
+            stroke: "white",
+            fill: "none"
+          }}
+          r={4}
         />
       </Mark>
     )}
-    hoverAnnotaiton={true}
+    hoverAnnotation={true}
     tooltipContent={d => (
-      <div className="tooltip-content">
-        <h1>{d.name}</h1>
-        <p>{d.name}</p>
+      <div className="tooltip-content" style={{ color: speciousColors[d.who] }}>
+        <h1
+          style={{
+            fontSize: "16px",
+            color: speciousColors[d.who],
+            fontWeight: 900
+          }}
+        >
+          {d.name}
+        </h1>
+        <p>by {d.who}</p>
+        <p>{d.month}</p>
       </div>
     )}
     xAccessor={"meaningfulFrivolous"}
@@ -199,9 +217,9 @@ export default (
     margin={{ left: 100, bottom: 100, right: 100, top: 100 }}
     backgroundGraphics={
       <g>
-        <image opacity={1} xlinkHref={quadImage} x={50} y={50} height={900} />
-        <line x1={500} x2={500} y1={100} y2={900} style={{ stroke: "black" }} />
-        <line y1={500} y2={500} x1={100} x2={900} style={{ stroke: "black" }} />
+        <image opacity={1} xlinkHref={quadImage} x={50} y={50} height={650} />
+        <line x1={375} x2={375} y1={100} y2={650} style={{ stroke: "black" }} />
+        <line y1={375} y2={375} x1={100} x2={650} style={{ stroke: "black" }} />
       </g>
     }
     axes={[

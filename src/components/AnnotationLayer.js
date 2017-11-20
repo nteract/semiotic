@@ -162,11 +162,13 @@ class AnnotationLayer extends React.Component {
       adjustedAnnotationsDataVersion = this.state
         .adjustedAnnotationsDataVersion;
 
-    const { dataVersion = "", annotations, annotationHandling = false } = props;
+    const { annotations, annotationHandling = false } = props;
     const annotationProcessor =
       typeof annotationHandling !== "object"
         ? { type: annotationHandling }
         : annotationHandling;
+
+    const { dataVersion = "" } = annotationProcessor;
 
     if (this.props.svgAnnotationRule) {
       const initialSVGAnnotations = this.generateSVGAnnotations(
