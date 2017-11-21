@@ -237,12 +237,14 @@ export default (
       {
         orient: "left",
         label: "← Accessible - Showing Off →",
-        tickFormat: () => ""
+        tickFormat: () => "",
+        tickValues: [-1, -0.5, 0.5, 1]
       },
       {
         orient: "bottom",
         label: "← Meaningful - Frivolous →",
-        tickFormat: () => ""
+        tickFormat: () => "",
+        tickValues: [-1, -0.5, 0.5, 1]
       }
     ]}
   />
