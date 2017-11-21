@@ -42,13 +42,6 @@ import {
   networkEdgeDownloadMapping
 } from "./downloadDataMapping";
 
-import Graph from "graphology";
-//import louvain from 'graphology-communities-louvain'
-import {
-  connectedComponents,
-  stronglyConnectedComponents
-} from "graphology-components";
-
 import {
   sankey,
   sankeyLeft,
@@ -657,6 +650,7 @@ class NetworkFrame extends React.Component {
           }
         ],
         strongComponents = projectedNodes;
+      /* Graphology stripped out for now
       if (!this.hierarchicalNetwork) {
         const graph = new Graph({ multi: !!networkSettings.multi });
         const graphologyNodes = projectedNodes.map(d => ({
@@ -687,6 +681,7 @@ class NetworkFrame extends React.Component {
           (a, b) => b.length - a.length
         );
       }
+      */
 
       //check for components first
       if (
@@ -914,6 +909,9 @@ class NetworkFrame extends React.Component {
 
         for (let i = 0; i < iterations; ++i) simulation.tick();
       } else if (networkSettings.type === "motifs") {
+        console.error(
+          "motifs not supported in this version, please file an issue to find current status"
+        );
         const largestComponent = Math.max(
           projectedNodes.length / 3,
           components[0].componentNodes.length
