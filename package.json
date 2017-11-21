@@ -4,10 +4,7 @@
   "description": "The semiotic JavaScript data visualization framework",
   "main": "lib/index.js",
   "unpkg": "dist/semiotic.js",
-  "files": [
-    "lib",
-    "dist"
-  ],
+  "files": ["lib", "dist"],
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
@@ -87,7 +84,6 @@
     "assert": "1.4.1",
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-runtime": "6.26.0",
-    "classnames": "2.2.5",
     "d3-array": "1.2.0",
     "d3-bboxCollide": "1.0.3",
     "d3-brush": "1.0.4",
@@ -105,9 +101,6 @@
     "d3-shape": "1.0.4",
     "d3-voronoi": "1.0.2",
     "element-resize-event": "2.0.7",
-    "graphology": "0.10.2",
-    "graphology-communities-louvain": "0.1.1",
-    "graphology-components": "0.1.0",
     "in-publish": "2.0.0",
     "json2csv": "3.7.3",
     "lodash.flatten": "4.4.0",
@@ -118,9 +111,6 @@
     "svg-path-bounding-box": "1.0.4"
   },
   "nyc": {
-    "exclude": [
-      "tests/unit/lib/*.js",
-      "tests/unit/specs/**/*.js"
-    ]
+    "exclude": ["tests/unit/lib/*.js", "tests/unit/specs/**/*.js"]
   }
 }
