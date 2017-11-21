@@ -1,6 +1,5 @@
 import React from "react";
 import { XYFrame } from "../../components";
-import quadImage from "../sampledata/ds_quads.jpg";
 import { Mark } from "semiotic-mark";
 const speciousColors = {
   shirley: "#ff269d",
@@ -223,7 +222,13 @@ export default (
     margin={{ left: 100, bottom: 100, right: 100, top: 100 }}
     backgroundGraphics={
       <g>
-        <image opacity={1} xlinkHref={quadImage} x={50} y={50} height={650} />
+        <image
+          opacity={1}
+          xlinkHref={"/semiotic/ds_quads.jpg"}
+          x={50}
+          y={50}
+          height={650}
+        />
         <line x1={375} x2={375} y1={100} y2={650} style={{ stroke: "black" }} />
         <line y1={375} y2={375} x1={100} x2={650} style={{ stroke: "black" }} />
       </g>
