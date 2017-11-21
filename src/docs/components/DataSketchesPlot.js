@@ -141,4 +141,4 @@ const speciousDataset = [
   }
 }
 
-DataSketchesPlotDocs.title = "Dot Plot";
+DataSketchesPlotDocs.title = "Data Sketches";
