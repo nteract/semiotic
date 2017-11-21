@@ -348,8 +348,11 @@ export function barLayout({
         //          .padAngle(ordset.pct_padding * twoPI);
 
         let angle = ordset.pct;
-        let startAngle = ordset.pct_start;
-        let endAngle = startAngle + angle - ordset.pct_padding / 2;
+        let startAngle = ordset.pct === 1 ? 0 : ordset.pct_start;
+        let endAngle =
+          ordset.pct === 1
+            ? 1
+            : Math.max(startAngle, startAngle + angle - ordset.pct_padding / 2);
 
         markD = arcGenerator({
           startAngle: startAngle * twoPI,
