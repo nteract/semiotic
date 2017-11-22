@@ -31,7 +31,23 @@ const data = [
 ];
 
 const lineAnnotations = baseData.map(d => Object.assign({ type: "range" }, d));
-
+lineAnnotations.push({
+  type: "category",
+  categories: [
+    "Caucasus and Central Asia",
+    "Eastern Asia",
+    "Eastern Asia excluding China",
+    "Southern Asia",
+    "Southern Asia excluding India",
+    "South-eastern Asia",
+    "Western Asia"
+  ],
+  label: "Asia",
+  position: "right",
+  offset: 15,
+  depth: 10,
+  padding: 0
+});
 function drawRange({ d, rScale, orFrameState }) {
   if (d.type === "range") {
     const start = rScale(d.y1990) - dotRadius;
@@ -66,7 +82,7 @@ export default (
     type={{ type: "point", r: dotRadius }}
     projection={"horizontal"}
     axis={{ orient: "bottom", tickFormat: d => `${d}%` }}
-    margin={{ left: 215, top: 50, bottom: 40, right: 10 }}
+    margin={{ left: 215, top: 50, bottom: 40, right: 70 }}
     oPadding={10}
     svgAnnotationRules={drawRange}
     annotations={lineAnnotations}
