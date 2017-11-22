@@ -449,8 +449,10 @@ export const svgCategoryRule = ({
           depth: position === "left" ? -depth : depth
         }
       };
+      return (
+        <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
+      );
     }
-    return <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />;
   }
 };
 
