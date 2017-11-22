@@ -68,7 +68,7 @@
     "react-tap-event-plugin": "3.0.2",
     "react-test-renderer": "16.0.0",
     "reactstrap": "github:jameswomack/reactstrap#react-popper_react-dom-16",
-    "rollup": "^0.50.0",
+    "rollup": "^0.51.8",
     "rollup-plugin-babel": "^3.0.2",
     "rollup-plugin-commonjs": "^8.2.5",
     "rollup-plugin-node-builtins": "^2.1.2",
