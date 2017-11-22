@@ -10,7 +10,7 @@ const customEdgeHashD = {
   linearc: d => glyphD.lineArc(d),
   ribbon: d => glyphD.ribbon(d, d.width),
   arrowhead: d =>
-    glyphD.arrowhead(d, d.target.nodeSize, d.width, d.width * 1.5),
+    glyphD.arrowHead(d, d.target.nodeSize, d.width, d.width * 1.5),
   halfarrow: d =>
     glyphD.halfArrow(d, d.target.nodeSize, d.width, d.width * 1.5),
   nail: d => glyphD.nail(d, d.source.nodeSize),
