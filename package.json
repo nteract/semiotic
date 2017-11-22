@@ -19,7 +19,7 @@
     "deploy-docs": "sh ./scripts/docs",
     "ci-deploy-docs": "sh ./scripts/docs-ci",
     "gh-pages": "REACT_APP_GH_PAGES_PATH='semiotic' npm run build",
-    "prepublish": "rollup -c"
+    "prepublish": "rollup -c && uglifyjs ./dist/semiotic.js -o ./dist/semiotic.min.js"
   },
   "repository": {
     "type": "git",
@@ -76,7 +76,8 @@
     "rollup-plugin-replace": "^2.0.0",
     "tap-difflet": "0.4.0",
     "tap-notify": "1.0.0",
-    "tape": "4.4.0"
+    "tape": "4.4.0",
+    "uglify-js": "^3.1.10"
   },
   "peerDependencies": {
     "react": "^15.0.0 || ^16.0.0",
