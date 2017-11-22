@@ -675,7 +675,7 @@ var nest = function () {
     if (++depth > keys.length) return map$$1;
     var array,
         sortKey = _sortKeys[depth - 1];
-    if (_rollup != null && depth >= keys.length) array = map$$1.entries();else array = [], map.each(function (v, k) {
+    if (_rollup != null && depth >= keys.length) array = map$$1.entries();else array = [], map$$1.each(function (v, k) {
       array.push({ key: k, values: _entries(v, depth) });
     });
     return sortKey != null ? array.sort(function (a, b) {
@@ -724,6 +724,48 @@ function setMap(map$$1, key, value) {
   map$$1.set(key, value);
 }
 
+function Set() {}
+
+var proto = map.prototype;
+
+Set.prototype = set.prototype = {
+  constructor: Set,
+  has: proto.has,
+  add: function add(value) {
+    value += "";
+    this[prefix + value] = value;
+    return this;
+  },
+  remove: proto.remove,
+  clear: proto.clear,
+  values: proto.keys,
+  size: proto.size,
+  empty: proto.empty,
+  each: proto.each
+};
+
+function set(object, f) {
+  var set = new Set();
+
+  // Copy constructor.
+  if (object instanceof Set) object.each(function (value) {
+    set.add(value);
+  });
+
+  // Otherwise, assume it’s an array.
+  else if (object) {
+      var i = -1,
+          n = object.length;
+      if (f == null) while (++i < n) {
+        set.add(object[i]);
+      } else while (++i < n) {
+        set.add(f(object[i], i, object));
+      }
+    }
+
+  return set;
+}
+
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
   return typeof obj;
 } : function (obj) {
@@ -734,118 +776,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 
 
-var asyncGenerator = function () {
-  function AwaitValue(value) {
-    this.value = value;
-  }
 
-  function AsyncGenerator(gen) {
-    var front, back;
-
-    function send(key, arg) {
-      return new Promise(function (resolve, reject) {
-        var request = {
-          key: key,
-          arg: arg,
-          resolve: resolve,
-          reject: reject,
-          next: null
-        };
-
-        if (back) {
-          back = back.next = request;
-        } else {
-          front = back = request;
-          resume(key, arg);
-        }
-      });
-    }
-
-    function resume(key, arg) {
-      try {
-        var result = gen[key](arg);
-        var value = result.value;
-
-        if (value instanceof AwaitValue) {
-          Promise.resolve(value.value).then(function (arg) {
-            resume("next", arg);
-          }, function (arg) {
-            resume("throw", arg);
-          });
-        } else {
-          settle(result.done ? "return" : "normal", result.value);
-        }
-      } catch (err) {
-        settle("throw", err);
-      }
-    }
-
-    function settle(type, value) {
-      switch (type) {
-        case "return":
-          front.resolve({
-            value: value,
-            done: true
-          });
-          break;
-
-        case "throw":
-          front.reject(value);
-          break;
-
-        default:
-          front.resolve({
-            value: value,
-            done: false
-          });
-          break;
-      }
-
-      front = front.next;
-
-      if (front) {
-        resume(front.key, front.arg);
-      } else {
-        back = null;
-      }
-    }
-
-    this._invoke = send;
-
-    if (typeof gen.return !== "function") {
-      this.return = undefined;
-    }
-  }
-
-  if (typeof Symbol === "function" && Symbol.asyncIterator) {
-    AsyncGenerator.prototype[Symbol.asyncIterator] = function () {
-      return this;
-    };
-  }
-
-  AsyncGenerator.prototype.next = function (arg) {
-    return this._invoke("next", arg);
-  };
-
-  AsyncGenerator.prototype.throw = function (arg) {
-    return this._invoke("throw", arg);
-  };
-
-  AsyncGenerator.prototype.return = function (arg) {
-    return this._invoke("return", arg);
-  };
-
-  return {
-    wrap: function (fn) {
-      return function () {
-        return new AsyncGenerator(fn.apply(this, arguments));
-      };
-    },
-    await: function (value) {
-      return new AwaitValue(value);
-    }
-  };
-}();
 
 
 
@@ -1824,8 +1755,6 @@ function createCommonjsModule(fn, module) {
 	return module = { exports: {} }, fn(module, module.exports), module.exports;
 }
 
-"use strict";
-
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -1869,8 +1798,6 @@ var emptyFunction_1 = emptyFunction;
  *
  */
 
-'use strict';
-
 function invariant(condition, format, a, b, c, d, e, f) {
   if (!condition) {
     var error;
@@ -1892,23 +1819,12 @@ function invariant(condition, format, a, b, c, d, e, f) {
 
 var invariant_1 = invariant;
 
-/**
- * Copyright (c) 2014-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- */
-
-'use strict';
-
 /*
 object-assign
 (c) Sindre Sorhus
 @license MIT
 */
 
-'use strict';
 /* eslint-disable no-unused-vars */
 
 var getOwnPropertySymbols = Object.getOwnPropertySymbols;
@@ -2000,38 +1916,9 @@ var objectAssign = shouldUseNative() ? Object.assign : function (target, source)
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
 var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 
 var ReactPropTypesSecret_1 = ReactPropTypesSecret;
-
-/**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-'use strict';
-
-/**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-'use strict';
-
-/**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-'use strict';
 
 var factoryWithThrowingShims = function factoryWithThrowingShims() {
   function shim(props, propName, componentName, location, propFullName, secret) {
@@ -2212,8 +2099,6 @@ Legend.propTypes = {
 };
 
 var Connector_1 = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -2693,31 +2578,31 @@ var arc = function () {
   };
 
   arc.innerRadius = function (_) {
-    return arguments.length ? (innerRadius = typeof _ === "function" ? _ : constant(+_), arc) : innerRadius;
+    return arguments.length ? (innerRadius = typeof _ === "function" ? _ : constant$1(+_), arc) : innerRadius;
   };
 
   arc.outerRadius = function (_) {
-    return arguments.length ? (outerRadius = typeof _ === "function" ? _ : constant(+_), arc) : outerRadius;
+    return arguments.length ? (outerRadius = typeof _ === "function" ? _ : constant$1(+_), arc) : outerRadius;
   };
 
   arc.cornerRadius = function (_) {
-    return arguments.length ? (cornerRadius = typeof _ === "function" ? _ : constant(+_), arc) : cornerRadius;
+    return arguments.length ? (cornerRadius = typeof _ === "function" ? _ : constant$1(+_), arc) : cornerRadius;
   };
 
   arc.padRadius = function (_) {
-    return arguments.length ? (padRadius = _ == null ? null : typeof _ === "function" ? _ : constant(+_), arc) : padRadius;
+    return arguments.length ? (padRadius = _ == null ? null : typeof _ === "function" ? _ : constant$1(+_), arc) : padRadius;
   };
 
   arc.startAngle = function (_) {
-    return arguments.length ? (startAngle = typeof _ === "function" ? _ : constant(+_), arc) : startAngle;
+    return arguments.length ? (startAngle = typeof _ === "function" ? _ : constant$1(+_), arc) : startAngle;
   };
 
   arc.endAngle = function (_) {
-    return arguments.length ? (endAngle = typeof _ === "function" ? _ : constant(+_), arc) : endAngle;
+    return arguments.length ? (endAngle = typeof _ === "function" ? _ : constant$1(+_), arc) : endAngle;
   };
 
   arc.padAngle = function (_) {
-    return arguments.length ? (padAngle = typeof _ === "function" ? _ : constant(+_), arc) : padAngle;
+    return arguments.length ? (padAngle = typeof _ === "function" ? _ : constant$1(+_), arc) : padAngle;
   };
 
   arc.context = function (_) {
@@ -2798,15 +2683,15 @@ var line = function () {
   }
 
   line.x = function (_) {
-    return arguments.length ? (x = typeof _ === "function" ? _ : constant(+_), line) : x$$1;
+    return arguments.length ? (x$$1 = typeof _ === "function" ? _ : constant$1(+_), line) : x$$1;
   };
 
   line.y = function (_) {
-    return arguments.length ? (y = typeof _ === "function" ? _ : constant(+_), line) : y$$1;
+    return arguments.length ? (y$$1 = typeof _ === "function" ? _ : constant$1(+_), line) : y$$1;
   };
 
   line.defined = function (_) {
-    return arguments.length ? (defined = typeof _ === "function" ? _ : constant(!!_), line) : defined;
+    return arguments.length ? (defined = typeof _ === "function" ? _ : constant$1(!!_), line) : defined;
   };
 
   line.curve = function (_) {
@@ -2873,27 +2758,27 @@ var area = function () {
   }
 
   area.x = function (_) {
-    return arguments.length ? (x0 = typeof _ === "function" ? _ : constant(+_), x1 = null, area) : x0;
+    return arguments.length ? (x0 = typeof _ === "function" ? _ : constant$1(+_), x1 = null, area) : x0;
   };
 
   area.x0 = function (_) {
-    return arguments.length ? (x0 = typeof _ === "function" ? _ : constant(+_), area) : x0;
+    return arguments.length ? (x0 = typeof _ === "function" ? _ : constant$1(+_), area) : x0;
   };
 
   area.x1 = function (_) {
-    return arguments.length ? (x1 = _ == null ? null : typeof _ === "function" ? _ : constant(+_), area) : x1;
+    return arguments.length ? (x1 = _ == null ? null : typeof _ === "function" ? _ : constant$1(+_), area) : x1;
   };
 
   area.y = function (_) {
-    return arguments.length ? (y0 = typeof _ === "function" ? _ : constant(+_), y1 = null, area) : y0;
+    return arguments.length ? (y0 = typeof _ === "function" ? _ : constant$1(+_), y1 = null, area) : y0;
   };
 
   area.y0 = function (_) {
-    return arguments.length ? (y0 = typeof _ === "function" ? _ : constant(+_), area) : y0;
+    return arguments.length ? (y0 = typeof _ === "function" ? _ : constant$1(+_), area) : y0;
   };
 
   area.y1 = function (_) {
-    return arguments.length ? (y1 = _ == null ? null : typeof _ === "function" ? _ : constant(+_), area) : y1;
+    return arguments.length ? (y1 = _ == null ? null : typeof _ === "function" ? _ : constant$1(+_), area) : y1;
   };
 
   area.lineX0 = area.lineY0 = function () {
@@ -2909,7 +2794,7 @@ var area = function () {
   };
 
   area.defined = function (_) {
-    return arguments.length ? (defined = typeof _ === "function" ? _ : constant(!!_), area) : defined;
+    return arguments.length ? (defined = typeof _ === "function" ? _ : constant$1(!!_), area) : defined;
   };
 
   area.curve = function (_) {
@@ -2983,7 +2868,7 @@ var pie = function () {
   }
 
   pie.value = function (_) {
-    return arguments.length ? (value = typeof _ === "function" ? _ : constant(+_), pie) : value;
+    return arguments.length ? (value = typeof _ === "function" ? _ : constant$1(+_), pie) : value;
   };
 
   pie.sortValues = function (_) {
@@ -2995,15 +2880,15 @@ var pie = function () {
   };
 
   pie.startAngle = function (_) {
-    return arguments.length ? (startAngle = typeof _ === "function" ? _ : constant(+_), pie) : startAngle;
+    return arguments.length ? (startAngle = typeof _ === "function" ? _ : constant$1(+_), pie) : startAngle;
   };
 
   pie.endAngle = function (_) {
-    return arguments.length ? (endAngle = typeof _ === "function" ? _ : constant(+_), pie) : endAngle;
+    return arguments.length ? (endAngle = typeof _ === "function" ? _ : constant$1(+_), pie) : endAngle;
   };
 
   pie.padAngle = function (_) {
-    return arguments.length ? (padAngle = typeof _ === "function" ? _ : constant(+_), pie) : padAngle;
+    return arguments.length ? (padAngle = typeof _ === "function" ? _ : constant$1(+_), pie) : padAngle;
   };
 
   return pie;
@@ -3222,11 +3107,11 @@ var symbol = function () {
   }
 
   symbol.type = function (_) {
-    return arguments.length ? (type = typeof _ === "function" ? _ : constant(_), symbol) : type;
+    return arguments.length ? (type = typeof _ === "function" ? _ : constant$1(_), symbol) : type;
   };
 
   symbol.size = function (_) {
-    return arguments.length ? (size = typeof _ === "function" ? _ : constant(+_), symbol) : size;
+    return arguments.length ? (size = typeof _ === "function" ? _ : constant$1(+_), symbol) : size;
   };
 
   symbol.context = function (_) {
@@ -4164,19 +4049,19 @@ var stack = function () {
   }
 
   stack.keys = function (_) {
-    return arguments.length ? (keys = typeof _ === "function" ? _ : constant(slice.call(_)), stack) : keys;
+    return arguments.length ? (keys = typeof _ === "function" ? _ : constant$1(slice.call(_)), stack) : keys;
   };
 
   stack.value = function (_) {
-    return arguments.length ? (value = typeof _ === "function" ? _ : constant(+_), stack) : value;
+    return arguments.length ? (value = typeof _ === "function" ? _ : constant$1(+_), stack) : value;
   };
 
   stack.order = function (_) {
-    return arguments.length ? (order = _ == null ? orderNone : typeof _ === "function" ? _ : constant(slice.call(_)), stack) : order;
+    return arguments.length ? (order = _ == null ? none$1 : typeof _ === "function" ? _ : constant$1(slice.call(_)), stack) : order;
   };
 
   stack.offset = function (_) {
-    return arguments.length ? (offset = _ == null ? offsetNone : _, stack) : offset;
+    return arguments.length ? (offset = _ == null ? none : _, stack) : offset;
   };
 
   return stack;
@@ -4328,8 +4213,6 @@ var d3Shape = Object.freeze({
 });
 
 var Builder = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -4343,7 +4226,7 @@ var Builder = createCommonjsModule(function (module, exports) {
         className = _ref.className,
         classID = _ref.classID;
 
-    var lineGen = (_d3Shape.line)().curve(curve);
+    var lineGen = (0, d3Shape.line)().curve(curve);
 
     var builder = {
       type: "path",
@@ -4372,7 +4255,7 @@ var Builder = createCommonjsModule(function (module, exports) {
         className = _ref2.className,
         classID = _ref2.classID;
 
-    var lineGen = (_d3Shape.line)().curve(curve);
+    var lineGen = (0, d3Shape.line)().curve(curve);
 
     var builder = {
       type: "path",
@@ -4404,7 +4287,7 @@ var Builder = createCommonjsModule(function (module, exports) {
       data: data
     };
 
-    var arcShape = (_d3Shape.arc)().innerRadius(data.innerRadius || 0).outerRadius(data.outerRadius || data.radius || 2).startAngle(data.startAngle || 0).endAngle(data.endAngle || 2 * Math.PI);
+    var arcShape = (0, d3Shape.arc)().innerRadius(data.innerRadius || 0).outerRadius(data.outerRadius || data.radius || 2).startAngle(data.startAngle || 0).endAngle(data.endAngle || 2 * Math.PI);
 
     if (canvasContext) {
       arcShape.context(canvasContext);
@@ -4419,10 +4302,11 @@ var Builder = createCommonjsModule(function (module, exports) {
 });
 
 unwrapExports(Builder);
+var Builder_1 = Builder.arcBuilder;
+var Builder_2 = Builder.pathBuilder;
+var Builder_3 = Builder.lineBuilder;
 
 var typeLine = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -4469,15 +4353,14 @@ var typeLine = createCommonjsModule(function (module, exports) {
 
   exports.default = function (connectorData) {
     var data = lineSetup(connectorData);
-    return { components: [(_Builder.lineBuilder)({ data: data, className: "connector" })] };
+    return { components: [(0, Builder.lineBuilder)({ data: data, className: "connector" })] };
   };
 });
 
 unwrapExports(typeLine);
+var typeLine_1 = typeLine.lineSetup;
 
 var typeCurve = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -4544,9 +4427,9 @@ var typeCurve = createCommonjsModule(function (module, exports) {
     // }
 
     // let data = lineSetup({ type, subjectType })
-    var data = (_typeLine.lineSetup)({ x: x, y: y, dx: dx, dy: dy, radius: radius, outerRadius: outerRadius, width: width, height: height });
+    var data = (0, typeLine.lineSetup)({ x: x, y: y, dx: dx, dy: dy, radius: radius, outerRadius: outerRadius, width: width, height: height });
     data = [data[0]].concat(_toConsumableArray(points), [data[1]]);
-    var components = [(_Builder.lineBuilder)({ data: data, curve: curve, className: "connector" })];
+    var components = [(0, Builder.lineBuilder)({ data: data, curve: curve, className: "connector" })];
 
     return { components: components, handles: handles };
   };
@@ -4555,8 +4438,6 @@ var typeCurve = createCommonjsModule(function (module, exports) {
 unwrapExports(typeCurve);
 
 var ConnectorCurve_1 = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -4624,7 +4505,7 @@ var ConnectorCurve_1 = createCommonjsModule(function (module, exports) {
             width = _ref.width,
             height = _ref.height;
 
-        return (_typeCurve2.default)({
+        return (0, _typeCurve2.default)({
           curve: curve,
           points: points,
           x: x,
@@ -4648,8 +4529,6 @@ var ConnectorCurve_1 = createCommonjsModule(function (module, exports) {
 unwrapExports(ConnectorCurve_1);
 
 var typeElbow = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -4718,15 +4597,13 @@ var typeElbow = createCommonjsModule(function (module, exports) {
       data = [[x1, y1], [xe, ye], [x2, y2]];
     }
 
-    return { components: [(_Builder.lineBuilder)({ data: data, className: "connector" })] };
+    return { components: [(0, Builder.lineBuilder)({ data: data, className: "connector" })] };
   };
 });
 
 unwrapExports(typeElbow);
 
 var ConnectorElbow_1 = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -4793,7 +4670,7 @@ var ConnectorElbow_1 = createCommonjsModule(function (module, exports) {
             width = _ref.width,
             height = _ref.height;
 
-        return (_typeElbow2.default)({
+        return (0, _typeElbow2.default)({
           x: x,
           y: y,
           dx: dx,
@@ -4816,8 +4693,6 @@ var ConnectorElbow_1 = createCommonjsModule(function (module, exports) {
 unwrapExports(ConnectorElbow_1);
 
 var ConnectorLine_1 = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -4883,7 +4758,7 @@ var ConnectorLine_1 = createCommonjsModule(function (module, exports) {
             width = _ref.width,
             height = _ref.height;
 
-        return (_typeLine2.default)({ x: x, y: y, dx: dx, dy: dy, radius: radius, outerRadius: outerRadius, width: width, height: height });
+        return (0, _typeLine2.default)({ x: x, y: y, dx: dx, dy: dy, radius: radius, outerRadius: outerRadius, width: width, height: height });
       }
     }]);
 
@@ -4896,8 +4771,6 @@ var ConnectorLine_1 = createCommonjsModule(function (module, exports) {
 unwrapExports(ConnectorLine_1);
 
 var endDot = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -4907,7 +4780,7 @@ var endDot = createCommonjsModule(function (module, exports) {
         _ref$scale = _ref.scale,
         scale = _ref$scale === undefined ? 1 : _ref$scale;
 
-    var dot = (_Builder.arcBuilder)({
+    var dot = (0, Builder.arcBuilder)({
       className: "connector-end connector-dot",
       classID: "connector-end",
       data: { radius: 3 * Math.sqrt(scale) }
@@ -4921,8 +4794,6 @@ var endDot = createCommonjsModule(function (module, exports) {
 unwrapExports(endDot);
 
 var ConnectorEnd_1 = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -5004,8 +4875,6 @@ var ConnectorEnd_1 = createCommonjsModule(function (module, exports) {
 unwrapExports(ConnectorEnd_1);
 
 var ConnectorEndDot_1 = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -5071,7 +4940,7 @@ var ConnectorEndDot_1 = createCommonjsModule(function (module, exports) {
             lineData = _ref.lineData,
             scale = _ref.scale;
 
-        return (_endDot2.default)({ x: x, y: y, dx: dx, dy: dy, lineData: lineData, scale: scale });
+        return (0, _endDot2.default)({ x: x, y: y, dx: dx, dy: dy, lineData: lineData, scale: scale });
       }
     }]);
 
@@ -5094,8 +4963,6 @@ var ConnectorEndDot_1 = createCommonjsModule(function (module, exports) {
 unwrapExports(ConnectorEndDot_1);
 
 var endArrow = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -5146,7 +5013,7 @@ var endArrow = createCommonjsModule(function (module, exports) {
     // }
 
     return {
-      components: [(_Builder.lineBuilder)({
+      components: [(0, Builder.lineBuilder)({
         data: data,
         className: "connector-end connector-arrow",
         classID: "connector-end"
@@ -5158,8 +5025,6 @@ var endArrow = createCommonjsModule(function (module, exports) {
 unwrapExports(endArrow);
 
 var ConnectorEndArrow_1 = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -5232,7 +5097,7 @@ var ConnectorEndArrow_1 = createCommonjsModule(function (module, exports) {
           start = lineData[2];
         }
 
-        return (_endArrow2.default)({ x: x, y: y, dx: dx, dy: dy, start: start, end: end, scale: scale });
+        return (0, _endArrow2.default)({ x: x, y: y, dx: dx, dy: dy, start: start, end: end, scale: scale });
       }
     }]);
 
@@ -5339,8 +5204,6 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
       /* 0 */
       /***/function (module, exports, __webpack_require__) {
 
-        "use strict";
-
         Object.defineProperty(exports, "__esModule", {
           value: true
         });
@@ -5380,19 +5243,6 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
       /* 1 */
       /***/function (module, exports, __webpack_require__) {
 
-        "use strict";
-
-        /**
-         * Copyright (c) 2013-present, Facebook, Inc.
-         * All rights reserved.
-         *
-         * This source code is licensed under the BSD-style license found in the
-         * LICENSE file in the root directory of this source tree. An additional grant
-         * of patent rights can be found in the PATENTS file in the same directory.
-         *
-         * 
-         */
-
         function makeEmptyFunction(arg) {
           return function () {
             return arg;
@@ -5423,28 +5273,6 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
       },
       /* 2 */
       /***/function (module, exports, __webpack_require__) {
-
-        "use strict";
-        /**
-         * Copyright (c) 2013-present, Facebook, Inc.
-         * All rights reserved.
-         *
-         * This source code is licensed under the BSD-style license found in the
-         * LICENSE file in the root directory of this source tree. An additional grant
-         * of patent rights can be found in the PATENTS file in the same directory.
-         *
-         */
-
-        /**
-         * Use invariant() to assert state which your program assumes to be true.
-         *
-         * Provide sprintf-style format (only %s is supported) and arguments
-         * to provide information about what broke and what you were
-         * expecting.
-         *
-         * The invariant message will be stripped in production, but the invariant
-         * will remain to ensure logic does not differ in production.
-         */
 
         var validateFormat = function validateFormat(format) {};
 
@@ -5484,16 +5312,6 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
       /* 3 */
       /***/function (module, exports, __webpack_require__) {
 
-        "use strict";
-        /**
-         * Copyright 2013-present, Facebook, Inc.
-         * All rights reserved.
-         *
-         * This source code is licensed under the BSD-style license found in the
-         * LICENSE file in the root directory of this source tree. An additional grant
-         * of patent rights can be found in the PATENTS file in the same directory.
-         */
-
         var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 
         module.exports = ReactPropTypesSecret;
@@ -5509,8 +5327,6 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
       },
       /* 5 */
       /***/function (module, exports, __webpack_require__) {
-
-        "use strict";
 
         Object.defineProperty(exports, "__esModule", {
           value: true
@@ -5568,9 +5384,9 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
         var matchesSelectorFunc = '';
         function matchesSelector(el /*: Node*/, selector /*: string*/) /*: boolean*/{
           if (!matchesSelectorFunc) {
-            matchesSelectorFunc = (_shims.findInArray)(['matches', 'webkitMatchesSelector', 'mozMatchesSelector', 'msMatchesSelector', 'oMatchesSelector'], function (method) {
+            matchesSelectorFunc = (0, _shims.findInArray)(['matches', 'webkitMatchesSelector', 'mozMatchesSelector', 'msMatchesSelector', 'oMatchesSelector'], function (method) {
               // $FlowIgnore: Doesn't think elements are indexable
-              return (_shims.isFunction)(el[method]);
+              return (0, _shims.isFunction)(el[method]);
             });
           }
 
@@ -5623,8 +5439,8 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
           // offsetTop which is including margin. See getBoundPosition
           var height = node.clientHeight;
           var computedStyle = node.ownerDocument.defaultView.getComputedStyle(node);
-          height += (_shims.int)(computedStyle.borderTopWidth);
-          height += (_shims.int)(computedStyle.borderBottomWidth);
+          height += (0, _shims.int)(computedStyle.borderTopWidth);
+          height += (0, _shims.int)(computedStyle.borderBottomWidth);
           return height;
         }
 
@@ -5633,23 +5449,23 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
           // offsetLeft which is including margin. See getBoundPosition
           var width = node.clientWidth;
           var computedStyle = node.ownerDocument.defaultView.getComputedStyle(node);
-          width += (_shims.int)(computedStyle.borderLeftWidth);
-          width += (_shims.int)(computedStyle.borderRightWidth);
+          width += (0, _shims.int)(computedStyle.borderLeftWidth);
+          width += (0, _shims.int)(computedStyle.borderRightWidth);
           return width;
         }
         function innerHeight(node /*: HTMLElement*/) /*: number*/{
           var height = node.clientHeight;
           var computedStyle = node.ownerDocument.defaultView.getComputedStyle(node);
-          height -= (_shims.int)(computedStyle.paddingTop);
-          height -= (_shims.int)(computedStyle.paddingBottom);
+          height -= (0, _shims.int)(computedStyle.paddingTop);
+          height -= (0, _shims.int)(computedStyle.paddingBottom);
           return height;
         }
 
         function innerWidth(node /*: HTMLElement*/) /*: number*/{
           var width = node.clientWidth;
           var computedStyle = node.ownerDocument.defaultView.getComputedStyle(node);
-          width -= (_shims.int)(computedStyle.paddingLeft);
-          width -= (_shims.int)(computedStyle.paddingRight);
+          width -= (0, _shims.int)(computedStyle.paddingLeft);
+          width -= (0, _shims.int)(computedStyle.paddingRight);
           return width;
         }
 
@@ -5669,7 +5485,7 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
               y = _ref.y;
 
           // Replace unitless items with px
-          return _defineProperty({}, (_getPrefix.browserPrefixToKey)('transform', _getPrefix2.default), 'translate(' + x + 'px,' + y + 'px)');
+          return _defineProperty({}, (0, _getPrefix.browserPrefixToKey)('transform', _getPrefix2.default), 'translate(' + x + 'px,' + y + 'px)');
         }
 
         function createSVGTransform(_ref3) /*: string*/{
@@ -5680,9 +5496,9 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
         }
 
         function getTouch(e /*: MouseTouchEvent*/, identifier /*: number*/) /*: ?{clientX: number, clientY: number}*/{
-          return e.targetTouches && (_shims.findInArray)(e.targetTouches, function (t) {
+          return e.targetTouches && (0, _shims.findInArray)(e.targetTouches, function (t) {
             return identifier === t.identifier;
-          }) || e.changedTouches && (_shims.findInArray)(e.changedTouches, function (t) {
+          }) || e.changedTouches && (0, _shims.findInArray)(e.changedTouches, function (t) {
             return identifier === t.identifier;
           });
         }
@@ -5786,17 +5602,6 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
       /* 8 */
       /***/function (module, exports, __webpack_require__) {
 
-        "use strict";
-        /**
-         * Copyright 2014-2015, Facebook, Inc.
-         * All rights reserved.
-         *
-         * This source code is licensed under the BSD-style license found in the
-         * LICENSE file in the root directory of this source tree. An additional grant
-         * of patent rights can be found in the PATENTS file in the same directory.
-         *
-         */
-
         var emptyFunction = __webpack_require__(1);
 
         /**
@@ -5855,8 +5660,6 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
       /* 9 */
       /***/function (module, exports, __webpack_require__) {
 
-        "use strict";
-
         Object.defineProperty(exports, "__esModule", {
           value: true
         });
@@ -5910,20 +5713,20 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
             var boundNodeStyle = ownerWindow.getComputedStyle(boundNode);
             // Compute bounds. This is a pain with padding and offsets but this gets it exactly right.
             bounds = {
-              left: -node.offsetLeft + (_shims.int)(boundNodeStyle.paddingLeft) + (_shims.int)(nodeStyle.marginLeft),
-              top: -node.offsetTop + (_shims.int)(boundNodeStyle.paddingTop) + (_shims.int)(nodeStyle.marginTop),
-              right: (_domFns.innerWidth)(boundNode) - (_domFns.outerWidth)(node) - node.offsetLeft + (_shims.int)(boundNodeStyle.paddingRight) - (_shims.int)(nodeStyle.marginRight),
-              bottom: (_domFns.innerHeight)(boundNode) - (_domFns.outerHeight)(node) - node.offsetTop + (_shims.int)(boundNodeStyle.paddingBottom) - (_shims.int)(nodeStyle.marginBottom)
+              left: -node.offsetLeft + (0, _shims.int)(boundNodeStyle.paddingLeft) + (0, _shims.int)(nodeStyle.marginLeft),
+              top: -node.offsetTop + (0, _shims.int)(boundNodeStyle.paddingTop) + (0, _shims.int)(nodeStyle.marginTop),
+              right: (0, _domFns.innerWidth)(boundNode) - (0, _domFns.outerWidth)(node) - node.offsetLeft + (0, _shims.int)(boundNodeStyle.paddingRight) - (0, _shims.int)(nodeStyle.marginRight),
+              bottom: (0, _domFns.innerHeight)(boundNode) - (0, _domFns.outerHeight)(node) - node.offsetTop + (0, _shims.int)(boundNodeStyle.paddingBottom) - (0, _shims.int)(nodeStyle.marginBottom)
             };
           }
 
           // Keep x and y below right and bottom limits...
-          if ((_shims.isNum)(bounds.right)) x = Math.min(x, bounds.right);
-          if ((_shims.isNum)(bounds.bottom)) y = Math.min(y, bounds.bottom);
+          if ((0, _shims.isNum)(bounds.right)) x = Math.min(x, bounds.right);
+          if ((0, _shims.isNum)(bounds.bottom)) y = Math.min(y, bounds.bottom);
 
           // But above left and top limits.
-          if ((_shims.isNum)(bounds.left)) x = Math.max(x, bounds.left);
-          if ((_shims.isNum)(bounds.top)) y = Math.max(y, bounds.top);
+          if ((0, _shims.isNum)(bounds.left)) x = Math.max(x, bounds.left);
+          if ((0, _shims.isNum)(bounds.top)) y = Math.max(y, bounds.top);
 
           return [x, y];
         }
@@ -5944,18 +5747,18 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
 
         // Get {x, y} positions from event.
         function getControlPosition(e /*: MouseTouchEvent*/, touchIdentifier /*: ?number*/, draggableCore /*: DraggableCore*/) /*: ?ControlPosition*/{
-          var touchObj = typeof touchIdentifier === 'number' ? (_domFns.getTouch)(e, touchIdentifier) : null;
+          var touchObj = typeof touchIdentifier === 'number' ? (0, _domFns.getTouch)(e, touchIdentifier) : null;
           if (typeof touchIdentifier === 'number' && !touchObj) return null; // not the right touch
           var node = findDOMNode(draggableCore);
           // User can provide an offsetParent if desired.
           var offsetParent = draggableCore.props.offsetParent || node.offsetParent || node.ownerDocument.body;
-          return (_domFns.offsetXYFromParent)(touchObj || e, offsetParent);
+          return (0, _domFns.offsetXYFromParent)(touchObj || e, offsetParent);
         }
 
         // Create an data object exposed by <DraggableCore>'s events
         function createCoreData(draggable /*: DraggableCore*/, x /*: number*/, y /*: number*/) /*: DraggableData*/{
           var state = draggable.state;
-          var isStart = !(_shims.isNum)(state.lastX);
+          var isStart = !(0, _shims.isNum)(state.lastX);
           var node = findDOMNode(draggable);
 
           if (isStart) {
@@ -6014,8 +5817,6 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
       /* 10 */
       /***/function (module, exports, __webpack_require__) {
 
-        "use strict";
-        /* WEBPACK VAR INJECTION */
         (function (process) {
 
           Object.defineProperty(exports, "__esModule", {
@@ -6286,7 +6087,7 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
                     _this.handleDragStop(new MouseEvent('mouseup'));
                   } catch (err) {
                     // Old browsers
-                    var event = document.createEvent('MouseEvents') /*: any*/;
+                    var event = document.createEvent('MouseEvents');
                     // I see why this insanity was deprecated
                     // $FlowIgnore
                     event.initMouseEvent('mouseup', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
@@ -6363,11 +6164,11 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
                 if (thisNode) {
                   var ownerDocument = thisNode.ownerDocument;
 
-                  (_domFns.removeEvent)(ownerDocument, eventsFor.mouse.move, this.handleDrag);
-                  (_domFns.removeEvent)(ownerDocument, eventsFor.touch.move, this.handleDrag);
-                  (_domFns.removeEvent)(ownerDocument, eventsFor.mouse.stop, this.handleDragStop);
-                  (_domFns.removeEvent)(ownerDocument, eventsFor.touch.stop, this.handleDragStop);
-                  if (this.props.enableUserSelectHack) (_domFns.removeUserSelectStyles)(ownerDocument);
+                  (0, _domFns.removeEvent)(ownerDocument, eventsFor.mouse.move, this.handleDrag);
+                  (0, _domFns.removeEvent)(ownerDocument, eventsFor.touch.move, this.handleDrag);
+                  (0, _domFns.removeEvent)(ownerDocument, eventsFor.mouse.stop, this.handleDragStop);
+                  (0, _domFns.removeEvent)(ownerDocument, eventsFor.touch.stop, this.handleDragStop);
+                  if (this.props.enableUserSelectHack) (0, _domFns.removeUserSelectStyles)(ownerDocument);
                 }
               }
 
@@ -6379,7 +6180,7 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
                 // Reuse the child provided
                 // This makes it flexible to use whatever element is wanted (div, ul, etc)
                 return _react2.default.cloneElement(_react2.default.Children.only(this.props.children), {
-                  style: (_domFns.styleHacks)(this.props.children.props.style),
+                  style: (0, _domFns.styleHacks)(this.props.children.props.style),
 
                   // Note: mouseMove handler is attached to document so it will still function
                   // when the user drags quickly and leaves the bounds of the element.
@@ -6530,8 +6331,6 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
       /* 11 */
       /***/function (module, exports, __webpack_require__) {
 
-        "use strict";
-
         Object.defineProperty(exports, "__esModule", {
           value: true
         });
@@ -6549,8 +6348,6 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
       /* 12 */
       /***/function (module, exports, __webpack_require__) {
 
-        "use strict";
-
         var Draggable = __webpack_require__(13).default;
 
         // Previous versions of this lib exported <Draggable> as the root export. As to not break
@@ -6565,8 +6362,6 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
       },
       /* 13 */
       /***/function (module, exports, __webpack_require__) {
-
-        "use strict";
 
         Object.defineProperty(exports, "__esModule", {
           value: true
@@ -6713,10 +6508,10 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
             var _this = _possibleConstructorReturn(this, (Draggable.__proto__ || Object.getPrototypeOf(Draggable)).call(this, props));
 
             _this.onDragStart = function (e, coreData) {
-              (_log2.default)('Draggable: onDragStart: %j', coreData);
+              (0, _log2.default)('Draggable: onDragStart: %j', coreData);
 
               // Short-circuit if user's callback killed it.
-              var shouldStart = _this.props.onStart(e, (_positionFns.createDraggableData)(_this, coreData));
+              var shouldStart = _this.props.onStart(e, (0, _positionFns.createDraggableData)(_this, coreData));
               // Kills start event on core as well, so move handlers are never bound.
               if (shouldStart === false) return false;
 
@@ -6725,9 +6520,9 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
 
             _this.onDrag = function (e, coreData) {
               if (!_this.state.dragging) return false;
-              (_log2.default)('Draggable: onDrag: %j', coreData);
+              (0, _log2.default)('Draggable: onDrag: %j', coreData);
 
-              var uiData = (_positionFns.createDraggableData)(_this, coreData);
+              var uiData = (0, _positionFns.createDraggableData)(_this, coreData);
 
               var newState /*: $Shape<DraggableState>*/ = {
                 x: uiData.x,
@@ -6751,7 +6546,7 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
                 // $FlowBug
 
                 // Recalculate slack by noting how much was shaved by the boundPosition handler.
-                var _getBoundPosition = (_positionFns.getBoundPosition)(_this, newState.x, newState.y);
+                var _getBoundPosition = (0, _positionFns.getBoundPosition)(_this, newState.x, newState.y);
 
                 var _getBoundPosition2 = _slicedToArray(_getBoundPosition, 2);
 
@@ -6778,10 +6573,10 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
               if (!_this.state.dragging) return false;
 
               // Short-circuit if user's callback killed it.
-              var shouldStop = _this.props.onStop(e, (_positionFns.createDraggableData)(_this, coreData));
+              var shouldStop = _this.props.onStop(e, (0, _positionFns.createDraggableData)(_this, coreData));
               if (shouldStop === false) return false;
 
-              (_log2.default)('Draggable: onDragStop: %j', coreData);
+              (0, _log2.default)('Draggable: onDragStop: %j', coreData);
 
               var newState /*: $Shape<DraggableState>*/ = {
                 dragging: false,
@@ -6868,21 +6663,21 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
               var position = this.props.position || this.props.defaultPosition;
               var transformOpts = {
                 // Set left if horizontal drag is enabled
-                x: (_positionFns.canDragX)(this) && draggable ? this.state.x : position.x,
+                x: (0, _positionFns.canDragX)(this) && draggable ? this.state.x : position.x,
 
                 // Set top if vertical drag is enabled
-                y: (_positionFns.canDragY)(this) && draggable ? this.state.y : position.y
+                y: (0, _positionFns.canDragY)(this) && draggable ? this.state.y : position.y
               };
 
               // If this element was SVG, we use the `transform` attribute.
               if (this.state.isElementSVG) {
-                svgTransform = (_domFns.createSVGTransform)(transformOpts);
+                svgTransform = (0, _domFns.createSVGTransform)(transformOpts);
               } else {
                 // Add a CSS transform to move the element around. This allows us to move the element around
                 // without worrying about whether or not it is relatively or absolutely positioned.
                 // If the item you are dragging already has a transform set, wrap it in a <span> so <Draggable>
                 // has a clean slate.
-                style = (_domFns.createCSSTransform)(transformOpts);
+                style = (0, _domFns.createCSSTransform)(transformOpts);
               }
 
               var _props = this.props,
@@ -6892,7 +6687,7 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
 
               // Mark with class while dragging
 
-              var className = (_classnames2.default)(this.props.children.props.className || '', defaultClassName, (_classNames = {}, _defineProperty(_classNames, defaultClassNameDragging, this.state.dragging), _defineProperty(_classNames, defaultClassNameDragged, this.state.dragged), _classNames));
+              var className = (0, _classnames2.default)(this.props.children.props.className || '', defaultClassName, (_classNames = {}, _defineProperty(_classNames, defaultClassNameDragging, this.state.dragging), _defineProperty(_classNames, defaultClassNameDragged, this.state.dragged), _classNames));
 
               // Reuse the child provided
               // This makes it flexible to use whatever element is wanted (div, ul, etc)
@@ -7031,16 +6826,6 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
       },
       /* 14 */
       /***/function (module, exports, __webpack_require__) {
-
-        "use strict";
-        /**
-         * Copyright 2013-present, Facebook, Inc.
-         * All rights reserved.
-         *
-         * This source code is licensed under the BSD-style license found in the
-         * LICENSE file in the root directory of this source tree. An additional grant
-         * of patent rights can be found in the PATENTS file in the same directory.
-         */
 
         var emptyFunction = __webpack_require__(1);
         var invariant = __webpack_require__(2);
@@ -7527,16 +7312,6 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
       /* 15 */
       /***/function (module, exports, __webpack_require__) {
 
-        "use strict";
-        /**
-         * Copyright 2013-present, Facebook, Inc.
-         * All rights reserved.
-         *
-         * This source code is licensed under the BSD-style license found in the
-         * LICENSE file in the root directory of this source tree. An additional grant
-         * of patent rights can be found in the PATENTS file in the same directory.
-         */
-
         if (Object({ "DRAGGABLE_DEBUG": undefined }).NODE_ENV !== 'production') {
           var invariant = __webpack_require__(2);
           var warning = __webpack_require__(8);
@@ -7592,16 +7367,6 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
       },
       /* 16 */
       /***/function (module, exports, __webpack_require__) {
-
-        "use strict";
-        /**
-         * Copyright 2013-present, Facebook, Inc.
-         * All rights reserved.
-         *
-         * This source code is licensed under the BSD-style license found in the
-         * LICENSE file in the root directory of this source tree. An additional grant
-         * of patent rights can be found in the PATENTS file in the same directory.
-         */
 
         var emptyFunction = __webpack_require__(1);
         var invariant = __webpack_require__(2);
@@ -7660,8 +7425,6 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
         /* global define */
 
         (function () {
-          'use strict';
-
           var hasOwn = {}.hasOwnProperty;
 
           function classNames() {
@@ -7703,8 +7466,6 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
       },
       /* 18 */
       /***/function (module, exports, __webpack_require__) {
-
-        "use strict";
 
         Object.defineProperty(exports, "__esModule", {
           value: true
@@ -7963,8 +7724,6 @@ var reactDraggable = createCommonjsModule(function (module, exports) {
 unwrapExports(reactDraggable);
 
 var Handle_1 = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -8069,8 +7828,6 @@ var Handle_1 = createCommonjsModule(function (module, exports) {
 unwrapExports(Handle_1);
 
 var Subject_1 = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -8205,8 +7962,6 @@ var Subject_1 = createCommonjsModule(function (module, exports) {
 unwrapExports(Subject_1);
 
 var badge = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -8249,13 +8004,13 @@ var badge = createCommonjsModule(function (module, exports) {
     }
 
     var transform = "translate(" + x + ", " + y + ")";
-    var circlebg = (_Builder.arcBuilder)({ className: "subject", data: { radius: radius } });
+    var circlebg = (0, Builder.arcBuilder)({ className: "subject", data: { radius: radius } });
     circlebg.attrs.transform = transform;
     circlebg.attrs.fill = color;
     circlebg.attrs["stroke-linecap"] = "round";
     circlebg.attrs["stroke-width"] = "3px";
 
-    var circle = (_Builder.arcBuilder)({
+    var circle = (0, Builder.arcBuilder)({
       className: "subject-ring",
       data: { outerRadius: radius, innerRadius: innerRadius }
     });
@@ -8266,7 +8021,7 @@ var badge = createCommonjsModule(function (module, exports) {
 
     var pointer = void 0;
     if (x && y || !x && !y) {
-      pointer = (_Builder.lineBuilder)({
+      pointer = (0, Builder.lineBuilder)({
         className: "subject-pointer",
         data: [[0, 0], [x || 0, 0], [0, y || 0], [0, 0]]
       });
@@ -8276,7 +8031,7 @@ var badge = createCommonjsModule(function (module, exports) {
         return v && v / Math.sqrt(2) / Math.sqrt(2) || sign * radius / Math.sqrt(2);
       };
 
-      pointer = (_Builder.lineBuilder)({
+      pointer = (0, Builder.lineBuilder)({
         className: "subject-pointer",
         data: [[0, 0], [notCornerPointerXY(x), notCornerPointerXY(y)], [notCornerPointerXY(x, -1), notCornerPointerXY(y, -1)], [0, 0]]
       });
@@ -8331,8 +8086,6 @@ var badge = createCommonjsModule(function (module, exports) {
 unwrapExports(badge);
 
 var SubjectBadge_1 = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -8398,7 +8151,7 @@ var SubjectBadge_1 = createCommonjsModule(function (module, exports) {
             color = _ref.color,
             radius = _ref.radius;
 
-        var components = (_badge2.default)({
+        var components = (0, _badge2.default)({
           leftRight: leftRight,
           topBottom: topBottom,
           text: text,
@@ -8439,8 +8192,6 @@ var SubjectBadge_1 = createCommonjsModule(function (module, exports) {
 unwrapExports(SubjectBadge_1);
 
 var circle$1 = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -8480,7 +8231,7 @@ var circle$1 = createCommonjsModule(function (module, exports) {
         editMode = _ref2.editMode;
 
     var handles = [];
-    var c = (_Builder.arcBuilder)({
+    var c = (0, Builder.arcBuilder)({
       data: { radius: radius, outerRadius: outerRadius, innerRadius: innerRadius },
       className: "subject"
     });
@@ -8511,10 +8262,9 @@ var circle$1 = createCommonjsModule(function (module, exports) {
 });
 
 unwrapExports(circle$1);
+var circle_1 = circle$1.circleHandles;
 
 var SubjectCircle_1 = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -8588,7 +8338,7 @@ var SubjectCircle_1 = createCommonjsModule(function (module, exports) {
             radiusPadding = _ref.radiusPadding,
             editMode = _ref.editMode;
 
-        var components = (_circle2.default)({
+        var components = (0, _circle2.default)({
           radius: radius,
           radiusPadding: radiusPadding,
           innerRadius: innerRadius,
@@ -8621,8 +8371,6 @@ var SubjectCircle_1 = createCommonjsModule(function (module, exports) {
 unwrapExports(SubjectCircle_1);
 
 var rect = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -8637,7 +8385,7 @@ var rect = createCommonjsModule(function (module, exports) {
     var handles = [];
 
     var data = [[0, 0], [width, 0], [width, height], [0, height], [0, 0]];
-    var rect = (_Builder.lineBuilder)({ data: data, className: "subject" });
+    var rect = (0, Builder.lineBuilder)({ data: data, className: "subject" });
 
     if (editMode) {
       handles = [{ x: width, y: height / 2, key: "width" }, { x: width / 2, y: height, key: "height" }];
@@ -8650,8 +8398,6 @@ var rect = createCommonjsModule(function (module, exports) {
 unwrapExports(rect);
 
 var SubjectRect_1 = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -8724,7 +8470,7 @@ var SubjectRect_1 = createCommonjsModule(function (module, exports) {
             height = _ref$height === undefined ? 100 : _ref$height,
             editMode = _ref.editMode;
 
-        var components = (_rect2.default)({ width: width, height: height, editMode: editMode });
+        var components = (0, _rect2.default)({ width: width, height: height, editMode: editMode });
         components.handleKeys = { width: width, height: height };
 
         components.handleFunction = function (h, data) {
@@ -8750,8 +8496,6 @@ var SubjectRect_1 = createCommonjsModule(function (module, exports) {
 unwrapExports(SubjectRect_1);
 
 var threshold = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -8770,15 +8514,13 @@ var threshold = createCommonjsModule(function (module, exports) {
     y2 = (y2 !== undefined ? y2 : y) - y;
 
     var data = [[x1, y1], [x2, y2]];
-    return { components: [(_Builder.lineBuilder)({ data: data, className: "subject" })] };
+    return { components: [(0, Builder.lineBuilder)({ data: data, className: "subject" })] };
   };
 });
 
 unwrapExports(threshold);
 
 var SubjectThreshold_1 = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -8845,7 +8587,7 @@ var SubjectThreshold_1 = createCommonjsModule(function (module, exports) {
             y = _ref.y,
             editMode = _ref.editMode;
 
-        return (_threshold2.default)({ x1: x1, x2: x2, y1: y1, y2: y2, x: x, y: y, editMode: editMode });
+        return (0, _threshold2.default)({ x1: x1, x2: x2, y1: y1, y2: y2, x: x, y: y, editMode: editMode });
       }
     }]);
 
@@ -8868,8 +8610,6 @@ var SubjectThreshold_1 = createCommonjsModule(function (module, exports) {
 unwrapExports(SubjectThreshold_1);
 
 var bracket = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -8916,9 +8656,9 @@ var bracket = createCommonjsModule(function (module, exports) {
       } else if (width) {
         data = [[0, 0], [0, depth], [width, depth], [width, 0]];
       }
-      bracket = (_Builder.lineBuilder)({ data: data, className: "subject" });
+      bracket = (0, Builder.lineBuilder)({ data: data, className: "subject" });
     } else if (type === "curly") {
-      bracket = (_Builder.pathBuilder)({
+      bracket = (0, Builder.pathBuilder)({
         d: makeCurlyBrace(0, 0, width || 0, height || 0, height && height > 0 || width && width < 0 ? -depth : depth, 0.55),
         className: "subject"
       });
@@ -8945,8 +8685,6 @@ var bracket = createCommonjsModule(function (module, exports) {
 unwrapExports(bracket);
 
 var SubjectBracket_1 = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -9021,7 +8759,7 @@ var SubjectBracket_1 = createCommonjsModule(function (module, exports) {
             type = _ref$type === undefined ? "square" : _ref$type,
             editMode = _ref.editMode;
 
-        var components = (_bracket2.default)({ height: height, width: width, depth: depth, type: type, editMode: editMode });
+        var components = (0, _bracket2.default)({ height: height, width: width, depth: depth, type: type, editMode: editMode });
 
         var handleKeys = { height: height, width: width, depth: depth };
         components.handleFunction = function (h, data) {
@@ -9054,8 +8792,6 @@ var SubjectBracket_1 = createCommonjsModule(function (module, exports) {
 unwrapExports(SubjectBracket_1);
 
 var SubjectCustom_1 = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -9162,8 +8898,6 @@ var SubjectCustom_1 = createCommonjsModule(function (module, exports) {
 unwrapExports(SubjectCustom_1);
 
 var alignment = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -9237,10 +8971,10 @@ var alignment = createCommonjsModule(function (module, exports) {
 });
 
 unwrapExports(alignment);
+var alignment_1 = alignment.leftRightDynamic;
+var alignment_2 = alignment.topBottomDynamic;
 
 var lineTypeVertical = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -9254,7 +8988,7 @@ var lineTypeVertical = createCommonjsModule(function (module, exports) {
         bbox = _ref.bbox,
         offset = _ref.offset;
 
-    align = (_alignment.leftRightDynamic)(align, offset.y);
+    align = (0, alignment.leftRightDynamic)(align, offset.y);
 
     if (align === "top") {
       y -= bbox.height;
@@ -9263,15 +8997,13 @@ var lineTypeVertical = createCommonjsModule(function (module, exports) {
     }
 
     var data = [[x, y], [x, y + bbox.height]];
-    return { components: [(_Builder.lineBuilder)({ data: data, className: "note-line" })] };
+    return { components: [(0, Builder.lineBuilder)({ data: data, className: "note-line" })] };
   };
 });
 
 unwrapExports(lineTypeVertical);
 
 var lineTypeHorizontal = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -9285,7 +9017,7 @@ var lineTypeHorizontal = createCommonjsModule(function (module, exports) {
         offset = _ref.offset,
         bbox = _ref.bbox;
 
-    align = (_alignment.topBottomDynamic)(align, offset.x);
+    align = (0, alignment.topBottomDynamic)(align, offset.x);
 
     if (align === "right") {
       x -= bbox.width;
@@ -9294,15 +9026,13 @@ var lineTypeHorizontal = createCommonjsModule(function (module, exports) {
     }
 
     var data = [[x, y], [x + bbox.width, y]];
-    return { components: [(_Builder.lineBuilder)({ data: data, className: "note-line" })] };
+    return { components: [(0, Builder.lineBuilder)({ data: data, className: "note-line" })] };
   };
 });
 
 unwrapExports(lineTypeHorizontal);
 
 var Note_1 = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -9454,7 +9184,7 @@ var Note_1 = createCommonjsModule(function (module, exports) {
             };
             if (lineType === "vertical") noteParams.orientation = "leftRight";else if (lineType === "horizontal") noteParams.orientation = "topBottom";
 
-            var _alignment$$1 = (_alignment5.default)(noteParams),
+            var _alignment$$1 = (0, _alignment5.default)(noteParams),
                 x = _alignment$$1.x,
                 y = _alignment$$1.y;
 
@@ -9531,7 +9261,7 @@ var Note_1 = createCommonjsModule(function (module, exports) {
 
           if (lineType === "vertical") noteParams.orientation = "leftRight";else if (lineType === "horizontal") noteParams.orientation = "topBottom";
 
-          var _alignment2 = (_alignment5.default)(noteParams),
+          var _alignment2 = (0, _alignment5.default)(noteParams),
               x = _alignment2.x,
               y = _alignment2.y;
 
@@ -9552,7 +9282,7 @@ var Note_1 = createCommonjsModule(function (module, exports) {
 
           if (lineType === "vertical") _noteParams.orientation = "leftRight";else if (lineType === "horizontal") _noteParams.orientation = "topBottom";
 
-          var _alignment3 = (_alignment5.default)(_noteParams),
+          var _alignment3 = (0, _alignment5.default)(_noteParams),
               _x = _alignment3.x,
               _y = _alignment3.y;
 
@@ -9609,7 +9339,7 @@ var Note_1 = createCommonjsModule(function (module, exports) {
             offset: { x: dx, y: dy }
           };
 
-          var noteComponent = (lineType === "vertical" && (_lineTypeVertical2.default)(noteParams) || lineType === "horizontal" && (_lineTypeHorizontal2.default)(noteParams)).components[0];
+          var noteComponent = (lineType === "vertical" && (0, _lineTypeVertical2.default)(noteParams) || lineType === "horizontal" && (0, _lineTypeHorizontal2.default)(noteParams)).components[0];
 
           noteLineType = _react2.default.createElement(noteComponent.type, _extends$$1({
             className: noteComponent.className
@@ -9677,8 +9407,6 @@ var Note_1 = createCommonjsModule(function (module, exports) {
 unwrapExports(Note_1);
 
 var BracketNote_1 = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -9755,8 +9483,6 @@ var classnames = createCommonjsModule(function (module) {
 	/* global define */
 
 	(function () {
-		'use strict';
-
 		var hasOwn = {}.hasOwnProperty;
 
 		function classNames() {
@@ -9798,8 +9524,6 @@ var classnames = createCommonjsModule(function (module) {
 });
 
 var Annotation_1 = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -9881,7 +9605,7 @@ var Annotation_1 = createCommonjsModule(function (module, exports) {
           return _react2.default.cloneElement(child, _extends$$1({}, cleanedProps, child.props));
         });
         return _react2.default.createElement("g", _extends$$1({
-          className: (_classnames2.default)("annotation", this.props.className),
+          className: (0, _classnames2.default)("annotation", this.props.className),
           transform: "translate(" + x + ", " + y + ")"
         }, events), childrenWithProps);
       }
@@ -9914,8 +9638,6 @@ var Annotation_1 = createCommonjsModule(function (module, exports) {
 unwrapExports(Annotation_1);
 
 var EditableAnnotation_1 = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -10062,7 +9784,7 @@ var EditableAnnotation_1 = createCommonjsModule(function (module, exports) {
           dragEnd: this.dragEnd.bind(this),
           dragStart: this.dragStart.bind(this),
           editMode: true,
-          className: (_classnames2.default)(this.props.className, "editable")
+          className: (0, _classnames2.default)(this.props.className, "editable")
         }));
 
         return _react2.default.createElement(_Annotation2.default, cleanedProps);
@@ -10078,8 +9800,6 @@ var EditableAnnotation_1 = createCommonjsModule(function (module, exports) {
 unwrapExports(EditableAnnotation_1);
 
 var Types = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -10212,69 +9932,77 @@ var Types = createCommonjsModule(function (module, exports) {
   };
 
   function AnnotationLabel(props) {
-    var className = (_classnames2.default)("label", props.className);
+    var className = (0, _classnames2.default)("label", props.className);
     return annotationMapper(_extends({}, props, { className: className }), _ConnectorLine2.default, {
       align: "middle"
     });
   }
 
   function AnnotationCallout(props) {
-    var className = (_classnames2.default)("callout", props.className);
+    var className = (0, _classnames2.default)("callout", props.className);
     return annotationMapper(_extends({}, props, { className: className }), _ConnectorLine2.default, {
       lineType: "horizontal"
     });
   }
 
   function AnnotationCalloutElbow(props) {
-    var className = (_classnames2.default)("callout elbow", props.className);
+    var className = (0, _classnames2.default)("callout elbow", props.className);
     return annotationMapper(_extends({}, props, { className: className }), _ConnectorElbow2.default, {
       lineType: "horizontal"
     });
   }
 
   function AnnotationCalloutCurve(props) {
-    var className = (_classnames2.default)("callout curve", props.className);
+    var className = (0, _classnames2.default)("callout curve", props.className);
     return annotationMapper(_extends({}, props, { className: className }), _ConnectorCurve2.default, {
       lineType: "horizontal"
     });
   }
 
   function AnnotationCalloutCircle(props) {
-    var className = (_classnames2.default)("callout circle", props.className);
+    var className = (0, _classnames2.default)("callout circle", props.className);
     return annotationMapper(_extends({}, props, { className: className }), _ConnectorElbow2.default, { lineType: "horizontal" }, _SubjectCircle2.default, { radius: 20 });
   }
 
   function AnnotationCalloutRect(props) {
-    var className = (_classnames2.default)("callout rect", props.className);
+    var className = (0, _classnames2.default)("callout rect", props.className);
     return annotationMapper(_extends({}, props, { className: className }), _ConnectorElbow2.default, { lineType: "horizontal" }, _SubjectRect2.default, { width: 100, height: 100 });
   }
 
   function AnnotationXYThreshold(props) {
-    var className = (_classnames2.default)("callout xythreshold", props.className);
+    var className = (0, _classnames2.default)("callout xythreshold", props.className);
     return annotationMapper(_extends({}, props, { className: className }), _ConnectorElbow2.default, { lineType: "horizontal" }, _SubjectThreshold2.default);
   }
 
   function AnnotationBadge(props) {
-    var className = (_classnames2.default)("badge", props.className);
+    var className = (0, _classnames2.default)("badge", props.className);
     return annotationMapper(_extends({ disable: ["connector", "note"] }, props, { className: className }), null, null, _SubjectBadge2.default);
   }
 
   function AnnotationBracket(props) {
-    var className = (_classnames2.default)("bracket", props.className);
+    var className = (0, _classnames2.default)("bracket", props.className);
     return annotationMapper(_extends({ disable: ["connector"] }, props, { className: className }), null, null, _SubjectBracket2.default, { depth: 20 }, _BracketNote2.default);
   }
 
   function AnnotationCalloutCustom(props) {
-    var className = (_classnames2.default)("callout custom", props.className);
+    var className = (0, _classnames2.default)("callout custom", props.className);
     return annotationMapper(_extends({}, props, { className: className }), _ConnectorElbow2.default, { lineType: "horizontal" }, _SubjectCustom2.default);
   }
 });
 
 unwrapExports(Types);
+var Types_1 = Types.AnnotationLabel;
+var Types_2 = Types.AnnotationCallout;
+var Types_3 = Types.AnnotationCalloutElbow;
+var Types_4 = Types.AnnotationCalloutCurve;
+var Types_5 = Types.AnnotationCalloutCircle;
+var Types_6 = Types.AnnotationCalloutRect;
+var Types_7 = Types.AnnotationXYThreshold;
+var Types_8 = Types.AnnotationBadge;
+var Types_9 = Types.AnnotationBracket;
+var Types_10 = Types.AnnotationCalloutCustom;
 
 var lib = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -10378,12 +10106,33 @@ var lib = createCommonjsModule(function (module, exports) {
 });
 
 unwrapExports(lib);
+var lib_1 = lib.AnnotationCalloutCustom;
 var lib_2 = lib.AnnotationBracket;
+var lib_3 = lib.AnnotationBadge;
 var lib_4 = lib.AnnotationXYThreshold;
 var lib_5 = lib.AnnotationCalloutRect;
+var lib_6 = lib.AnnotationCalloutElbow;
+var lib_7 = lib.AnnotationCalloutCurve;
 var lib_8 = lib.AnnotationCalloutCircle;
 var lib_9 = lib.AnnotationCallout;
 var lib_10 = lib.AnnotationLabel;
+var lib_11 = lib.EditableAnnotation;
+var lib_12 = lib.Annotation;
+var lib_13 = lib.BracketNote;
+var lib_14 = lib.Note;
+var lib_15 = lib.SubjectCustom;
+var lib_16 = lib.SubjectBracket;
+var lib_17 = lib.SubjectThreshold;
+var lib_18 = lib.SubjectRect;
+var lib_19 = lib.SubjectCircle;
+var lib_20 = lib.SubjectBadge;
+var lib_21 = lib.Subject;
+var lib_22 = lib.ConnectorEndArrow;
+var lib_23 = lib.ConnectorEndDot;
+var lib_24 = lib.ConnectorLine;
+var lib_25 = lib.ConnectorElbow;
+var lib_26 = lib.ConnectorCurve;
+var lib_27 = lib.Connector;
 
 var Annotation = function (_React$Component) {
   inherits(Annotation, _React$Component);
@@ -10931,15 +10680,15 @@ var histogram = function () {
   }
 
   histogram.value = function (_) {
-    return arguments.length ? (value = typeof _ === "function" ? _ : constant(_), histogram) : value;
+    return arguments.length ? (value = typeof _ === "function" ? _ : constant$2(_), histogram) : value;
   };
 
   histogram.domain = function (_) {
-    return arguments.length ? (domain = typeof _ === "function" ? _ : constant([_[0], _[1]]), histogram) : domain;
+    return arguments.length ? (domain = typeof _ === "function" ? _ : constant$2([_[0], _[1]]), histogram) : domain;
   };
 
   histogram.thresholds = function (_) {
-    return arguments.length ? (threshold = typeof _ === "function" ? _ : Array.isArray(_) ? constant(slice.call(_)) : constant(_), histogram) : threshold;
+    return arguments.length ? (threshold = typeof _ === "function" ? _ : Array.isArray(_) ? constant$2(slice$1.call(_)) : constant$2(_), histogram) : threshold;
   };
 
   return histogram;
@@ -14475,7 +14224,7 @@ var interpolateString = function (a, b) {
 var interpolate = function (a, b) {
     var t = typeof b === "undefined" ? "undefined" : _typeof(b),
         c;
-    return b == null || t === "boolean" ? constant$4(b) : (t === "number" ? interpolateNumber : t === "string" ? (c = color(b)) ? (b = c, rgb) : interpolateString : b instanceof color ? interpolateRgb : b instanceof Date ? date : Array.isArray(b) ? array$1 : typeof b.valueOf !== "function" && typeof b.toString !== "function" || isNaN(b) ? object : interpolateNumber)(a, b);
+    return b == null || t === "boolean" ? constant$4(b) : (t === "number" ? interpolateNumber : t === "string" ? (c = color(b)) ? (b = c, interpolateRgb) : interpolateString : b instanceof color ? interpolateRgb : b instanceof Date ? date : Array.isArray(b) ? array$1 : typeof b.valueOf !== "function" && typeof b.toString !== "function" || isNaN(b) ? object : interpolateNumber)(a, b);
 };
 
 var interpolateRound = function (a, b) {
@@ -14599,6 +14348,8 @@ function interpolateTransform(parse, pxComma, pxParen, degParen) {
 
 var interpolateTransformCss = interpolateTransform(parseCss, "px, ", "px)", "deg)");
 var interpolateTransformSvg = interpolateTransform(parseSvg, ", ", ")", ")");
+
+var rho = Math.SQRT2;
 
 function cubehelix$1(hue$$1) {
   return function cubehelixGamma(y) {
@@ -14827,7 +14578,7 @@ function durationFunction(id, value) {
 
 function durationConstant(id, value) {
   return value = +value, function () {
-    set(this, id).duration = value;
+    set$4(this, id).duration = value;
   };
 }
 
@@ -15123,6 +14874,10 @@ function cubicInOut(t) {
   return ((t *= 2) <= 1 ? t * t * t : (t -= 2) * t * t + 2) / 2;
 }
 
+var pi$2 = Math.PI;
+
+var tau$2 = 2 * Math.PI;
+
 var defaultTiming = {
   time: null, // Set on use.
   delay: 0,
@@ -15227,8 +14982,6 @@ var polygonLength = function (polygon) {
 
   return perimeter;
 };
-
-'use strict';
 
 var paramCounts = { a: 7, c: 6, h: 1, l: 2, m: 2, r: 4, q: 4, s: 4, t: 2, v: 1, z: 0 };
 
@@ -15506,8 +15259,6 @@ var path_parse = function pathParse(svgPath) {
   };
 };
 
-'use strict';
-
 // combine 2 matrixes
 // m1, m2 - [a, b, c, d, e, g]
 //
@@ -15636,8 +15387,6 @@ Matrix.prototype.calc = function (x, y, isRelative) {
 
 var matrix = Matrix;
 
-'use strict';
-
 var operations = {
   matrix: true,
   scale: true,
@@ -15724,8 +15473,6 @@ var transform_parse = function transformParse(transformString) {
 
 // Convert an arc to a sequence of cubic bézier curves
 //
-'use strict';
-
 var TAU = Math.PI * 2;
 
 /* eslint-disable space-infix-ops */
@@ -15907,8 +15654,6 @@ var a2c = function a2c(x1, y1, x2, y2, fa, fs, rx, ry, phi) {
   });
 };
 
-'use strict';
-
 /* eslint-disable space-infix-ops */
 
 // The precision used to consider an ellipse as a circle
@@ -16000,20 +15745,6 @@ Ellipse.prototype.isDegenerate = function () {
 };
 
 var ellipse = Ellipse;
-
-// SVG Path transformations library
-//
-// Usage:
-//
-//    SvgPath('...')
-//      .translate(-150, -100)
-//      .scale(0.5)
-//      .translate(-150, -100)
-//      .toFixed(1)
-//      .toString()
-//
-
-'use strict';
 
 // Class constructor
 //
@@ -16634,8 +16365,6 @@ SvgPath.prototype.unshort = function () {
 
 var svgpath$1 = SvgPath;
 
-'use strict';
-
 var svgpath = svgpath$1;
 
 //Parses an SVG path into an object.
@@ -16894,8 +16623,6 @@ function getCubicArcLength(xs, ys, t) {
 //This file is taken from the following project: https://github.com/fontello/svgpath
 // Convert an arc to a sequence of cubic bézier curves
 //
-'use strict';
-
 var TAU$1 = Math.PI * 2;
 
 /* eslint-disable space-infix-ops */
@@ -17695,8 +17422,6 @@ function interpolateRing(fromRing, toRing, string) {
 
   return interpolatePoints(fromRing, toRing, string);
 }
-
-'use strict';
 
 var earcut_1 = earcut;
 var default_1 = earcut;
@@ -19388,31 +19113,31 @@ var arc$1 = function () {
   };
 
   arc.innerRadius = function (_) {
-    return arguments.length ? (innerRadius = typeof _ === "function" ? _ : constant(+_), arc) : innerRadius;
+    return arguments.length ? (innerRadius = typeof _ === "function" ? _ : constant$5(+_), arc) : innerRadius;
   };
 
   arc.outerRadius = function (_) {
-    return arguments.length ? (outerRadius = typeof _ === "function" ? _ : constant(+_), arc) : outerRadius;
+    return arguments.length ? (outerRadius = typeof _ === "function" ? _ : constant$5(+_), arc) : outerRadius;
   };
 
   arc.cornerRadius = function (_) {
-    return arguments.length ? (cornerRadius = typeof _ === "function" ? _ : constant(+_), arc) : cornerRadius;
+    return arguments.length ? (cornerRadius = typeof _ === "function" ? _ : constant$5(+_), arc) : cornerRadius;
   };
 
   arc.padRadius = function (_) {
-    return arguments.length ? (padRadius = _ == null ? null : typeof _ === "function" ? _ : constant(+_), arc) : padRadius;
+    return arguments.length ? (padRadius = _ == null ? null : typeof _ === "function" ? _ : constant$5(+_), arc) : padRadius;
   };
 
   arc.startAngle = function (_) {
-    return arguments.length ? (startAngle = typeof _ === "function" ? _ : constant(+_), arc) : startAngle;
+    return arguments.length ? (startAngle = typeof _ === "function" ? _ : constant$5(+_), arc) : startAngle;
   };
 
   arc.endAngle = function (_) {
-    return arguments.length ? (endAngle = typeof _ === "function" ? _ : constant(+_), arc) : endAngle;
+    return arguments.length ? (endAngle = typeof _ === "function" ? _ : constant$5(+_), arc) : endAngle;
   };
 
   arc.padAngle = function (_) {
-    return arguments.length ? (padAngle = typeof _ === "function" ? _ : constant(+_), arc) : padAngle;
+    return arguments.length ? (padAngle = typeof _ === "function" ? _ : constant$5(+_), arc) : padAngle;
   };
 
   arc.context = function (_) {
@@ -19493,15 +19218,15 @@ var line$1 = function () {
   }
 
   line.x = function (_) {
-    return arguments.length ? (x = typeof _ === "function" ? _ : constant(+_), line) : x$$1;
+    return arguments.length ? (x$$1 = typeof _ === "function" ? _ : constant$5(+_), line) : x$$1;
   };
 
   line.y = function (_) {
-    return arguments.length ? (y = typeof _ === "function" ? _ : constant(+_), line) : y$$1;
+    return arguments.length ? (y$$1 = typeof _ === "function" ? _ : constant$5(+_), line) : y$$1;
   };
 
   line.defined = function (_) {
-    return arguments.length ? (defined = typeof _ === "function" ? _ : constant(!!_), line) : defined;
+    return arguments.length ? (defined = typeof _ === "function" ? _ : constant$5(!!_), line) : defined;
   };
 
   line.curve = function (_) {
@@ -19568,27 +19293,27 @@ var area$2 = function () {
   }
 
   area.x = function (_) {
-    return arguments.length ? (x0 = typeof _ === "function" ? _ : constant(+_), x1 = null, area) : x0;
+    return arguments.length ? (x0 = typeof _ === "function" ? _ : constant$5(+_), x1 = null, area) : x0;
   };
 
   area.x0 = function (_) {
-    return arguments.length ? (x0 = typeof _ === "function" ? _ : constant(+_), area) : x0;
+    return arguments.length ? (x0 = typeof _ === "function" ? _ : constant$5(+_), area) : x0;
   };
 
   area.x1 = function (_) {
-    return arguments.length ? (x1 = _ == null ? null : typeof _ === "function" ? _ : constant(+_), area) : x1;
+    return arguments.length ? (x1 = _ == null ? null : typeof _ === "function" ? _ : constant$5(+_), area) : x1;
   };
 
   area.y = function (_) {
-    return arguments.length ? (y0 = typeof _ === "function" ? _ : constant(+_), y1 = null, area) : y0;
+    return arguments.length ? (y0 = typeof _ === "function" ? _ : constant$5(+_), y1 = null, area) : y0;
   };
 
   area.y0 = function (_) {
-    return arguments.length ? (y0 = typeof _ === "function" ? _ : constant(+_), area) : y0;
+    return arguments.length ? (y0 = typeof _ === "function" ? _ : constant$5(+_), area) : y0;
   };
 
   area.y1 = function (_) {
-    return arguments.length ? (y1 = _ == null ? null : typeof _ === "function" ? _ : constant(+_), area) : y1;
+    return arguments.length ? (y1 = _ == null ? null : typeof _ === "function" ? _ : constant$5(+_), area) : y1;
   };
 
   area.lineX0 = area.lineY0 = function () {
@@ -19604,7 +19329,7 @@ var area$2 = function () {
   };
 
   area.defined = function (_) {
-    return arguments.length ? (defined = typeof _ === "function" ? _ : constant(!!_), area) : defined;
+    return arguments.length ? (defined = typeof _ === "function" ? _ : constant$5(!!_), area) : defined;
   };
 
   area.curve = function (_) {
@@ -19678,7 +19403,7 @@ var pie$1 = function () {
   }
 
   pie.value = function (_) {
-    return arguments.length ? (value = typeof _ === "function" ? _ : constant(+_), pie) : value;
+    return arguments.length ? (value = typeof _ === "function" ? _ : constant$5(+_), pie) : value;
   };
 
   pie.sortValues = function (_) {
@@ -19690,15 +19415,15 @@ var pie$1 = function () {
   };
 
   pie.startAngle = function (_) {
-    return arguments.length ? (startAngle = typeof _ === "function" ? _ : constant(+_), pie) : startAngle;
+    return arguments.length ? (startAngle = typeof _ === "function" ? _ : constant$5(+_), pie) : startAngle;
   };
 
   pie.endAngle = function (_) {
-    return arguments.length ? (endAngle = typeof _ === "function" ? _ : constant(+_), pie) : endAngle;
+    return arguments.length ? (endAngle = typeof _ === "function" ? _ : constant$5(+_), pie) : endAngle;
   };
 
   pie.padAngle = function (_) {
-    return arguments.length ? (padAngle = typeof _ === "function" ? _ : constant(+_), pie) : padAngle;
+    return arguments.length ? (padAngle = typeof _ === "function" ? _ : constant$5(+_), pie) : padAngle;
   };
 
   return pie;
@@ -19771,16 +19496,16 @@ var radialArea$1 = function () {
   a.innerRadius = a.y0, delete a.y0;
   a.outerRadius = a.y1, delete a.y1;
   a.lineStartAngle = function () {
-    return radialLine(x0());
+    return radialLine$2(x0());
   }, delete a.lineX0;
   a.lineEndAngle = function () {
-    return radialLine(x1());
+    return radialLine$2(x1());
   }, delete a.lineX1;
   a.lineInnerRadius = function () {
-    return radialLine(y0());
+    return radialLine$2(y0());
   }, delete a.lineY0;
   a.lineOuterRadius = function () {
-    return radialLine(y1());
+    return radialLine$2(y1());
   }, delete a.lineY1;
 
   a.curve = function (_) {
@@ -19917,11 +19642,11 @@ var symbol$1 = function () {
   }
 
   symbol.type = function (_) {
-    return arguments.length ? (type = typeof _ === "function" ? _ : constant(_), symbol) : type;
+    return arguments.length ? (type = typeof _ === "function" ? _ : constant$5(_), symbol) : type;
   };
 
   symbol.size = function (_) {
-    return arguments.length ? (size = typeof _ === "function" ? _ : constant(+_), symbol) : size;
+    return arguments.length ? (size = typeof _ === "function" ? _ : constant$5(+_), symbol) : size;
   };
 
   symbol.context = function (_) {
@@ -20859,19 +20584,19 @@ var stack$1 = function () {
   }
 
   stack.keys = function (_) {
-    return arguments.length ? (keys = typeof _ === "function" ? _ : constant(slice.call(_)), stack) : keys;
+    return arguments.length ? (keys = typeof _ === "function" ? _ : constant$5(slice$2.call(_)), stack) : keys;
   };
 
   stack.value = function (_) {
-    return arguments.length ? (value = typeof _ === "function" ? _ : constant(+_), stack) : value;
+    return arguments.length ? (value = typeof _ === "function" ? _ : constant$5(+_), stack) : value;
   };
 
   stack.order = function (_) {
-    return arguments.length ? (order = _ == null ? orderNone : typeof _ === "function" ? _ : constant(slice.call(_)), stack) : order;
+    return arguments.length ? (order = _ == null ? none$4 : typeof _ === "function" ? _ : constant$5(slice$2.call(_)), stack) : order;
   };
 
   stack.offset = function (_) {
-    return arguments.length ? (offset = _ == null ? offsetNone : _, stack) : offset;
+    return arguments.length ? (offset = _ == null ? none$3 : _, stack) : offset;
   };
 
   return stack;
@@ -21059,7 +20784,7 @@ function ordinal(range) {
   };
 
   scale.range = function (_) {
-    return arguments.length ? (range = slice.call(_), scale) : range.slice();
+    return arguments.length ? (range = slice$3.call(_), scale) : range.slice();
   };
 
   scale.unknown = function (_) {
@@ -21108,11 +20833,11 @@ function band() {
   };
 
   scale.range = function (_) {
-    return arguments.length ? (range = [+_[0], +_[1]], rescale()) : range$$1.slice();
+    return arguments.length ? (range$$1 = [+_[0], +_[1]], rescale()) : range$$1.slice();
   };
 
   scale.rangeRound = function (_) {
-    return range = [+_[0], +_[1]], round = true, rescale();
+    return range$$1 = [+_[0], +_[1]], round = true, rescale();
   };
 
   scale.bandwidth = function () {
@@ -21268,15 +20993,15 @@ function continuous(deinterpolate, reinterpolate) {
   };
 
   scale.domain = function (_) {
-    return arguments.length ? (domain = map.call(_, number), rescale()) : domain.slice();
+    return arguments.length ? (domain = map$3.call(_, number$2), rescale()) : domain.slice();
   };
 
   scale.range = function (_) {
-    return arguments.length ? (range = slice.call(_), rescale()) : range.slice();
+    return arguments.length ? (range = slice$3.call(_), rescale()) : range.slice();
   };
 
   scale.rangeRound = function (_) {
-    return range = slice.call(_), interpolate = interpolateRound, rescale();
+    return range = slice$3.call(_), interpolate$$1 = interpolateRound, rescale();
   };
 
   scale.clamp = function (_) {
@@ -21284,7 +21009,7 @@ function continuous(deinterpolate, reinterpolate) {
   };
 
   scale.interpolate = function (_) {
-    return arguments.length ? (interpolate = _, rescale()) : interpolate$$1;
+    return arguments.length ? (interpolate$$1 = _, rescale()) : interpolate$$1;
   };
 
   return rescale();
@@ -21703,7 +21428,7 @@ function identity$5() {
   scale.invert = scale;
 
   scale.domain = scale.range = function (_) {
-    return arguments.length ? (domain = map.call(_, number), scale) : domain.slice();
+    return arguments.length ? (domain = map$3.call(_, number$2), scale) : domain.slice();
   };
 
   scale.copy = function () {
@@ -21930,7 +21655,7 @@ function quantile$1() {
   };
 
   scale.range = function (_) {
-    return arguments.length ? (range = slice.call(_), rescale()) : range.slice();
+    return arguments.length ? (range = slice$3.call(_), rescale()) : range.slice();
   };
 
   scale.quantiles = function () {
@@ -21968,7 +21693,7 @@ function quantize$2() {
   };
 
   scale.range = function (_) {
-    return arguments.length ? (n = (range = slice.call(_)).length - 1, rescale()) : range.slice();
+    return arguments.length ? (n = (range = slice$3.call(_)).length - 1, rescale()) : range.slice();
   };
 
   scale.invertExtent = function (y) {
@@ -21993,11 +21718,11 @@ function threshold$2() {
   }
 
   scale.domain = function (_) {
-    return arguments.length ? (domain = slice.call(_), n = Math.min(domain.length, range.length - 1), scale) : domain.slice();
+    return arguments.length ? (domain = slice$3.call(_), n = Math.min(domain.length, range.length - 1), scale) : domain.slice();
   };
 
   scale.range = function (_) {
-    return arguments.length ? (range = slice.call(_), n = Math.min(domain.length, range.length - 1), scale) : range.slice();
+    return arguments.length ? (range = slice$3.call(_), n = Math.min(domain.length, range.length - 1), scale) : range.slice();
   };
 
   scale.invertExtent = function (y) {
@@ -22066,8 +21791,8 @@ function newInterval(floori, offseti, count, field) {
 
   if (count) {
     interval.count = function (start, end) {
-      t0.setTime(+start), t1.setTime(+end);
-      floori(t0), floori(t1);
+      t0$1.setTime(+start), t1$1.setTime(+end);
+      floori(t0$1), floori(t1$1);
       return Math.floor(count(t0$1, t1$1));
     };
 
@@ -22826,7 +22551,7 @@ function formatLiteralPercent() {
 
 var locale$1;
 var timeFormat;
-
+var timeParse;
 var utcFormat;
 var utcParse;
 
@@ -22844,6 +22569,7 @@ defaultLocale$1({
 function defaultLocale$1(definition) {
   locale$1 = formatLocale$1(definition);
   timeFormat = locale$1.format;
+  timeParse = locale$1.parse;
   utcFormat = locale$1.utcFormat;
   utcParse = locale$1.utcParse;
   return locale$1;
@@ -23079,8 +22805,6 @@ var d3Scale = Object.freeze({
 });
 
 var drawing = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -23129,7 +22853,7 @@ var drawing = createCommonjsModule(function (module, exports) {
   }
 
   function areaLineGenerator(customAccessors, interpolator) {
-    var lineGenerator = (_d3Shape.area)().x0(customAccessors.x).y0(customAccessors.y).x1(customAccessors.x1).y1(customAccessors.y1).interpolate(interpolator || "linear");
+    var lineGenerator = (0, d3Shape$1.area)().x0(customAccessors.x).y0(customAccessors.y).x1(customAccessors.x1).y1(customAccessors.y1).interpolate(interpolator || "linear");
     return lineGenerator;
   }
 
@@ -23187,7 +22911,7 @@ var drawing = createCommonjsModule(function (module, exports) {
     var j = 2;
     var x = j + Math.random() * j * 5;
     var jitteredPoints = [];
-    var lineGen = (_d3Shape.line)().x(function (d) {
+    var lineGen = (0, d3Shape$1.line)().x(function (d) {
       return d.x;
     }).y(function (d) {
       return d.y;
@@ -23216,7 +22940,7 @@ var drawing = createCommonjsModule(function (module, exports) {
       //no fill
       return "";
     }
-    var opacitySketchyScale = (_d3Scale.scaleLinear)().domain([0, 1]).range([10, 1]).clamp(true);
+    var opacitySketchyScale = (0, d3Scale.scaleLinear)().domain([0, 1]).range([10, 1]).clamp(true);
     var length = path.getTotalLength();
     var drawCode = "";
     var x = 0;
@@ -23261,7 +22985,7 @@ var drawing = createCommonjsModule(function (module, exports) {
   }
 
   function randomColor(baseColor, range) {
-    var hslBase = (_d3Color.hsl)(baseColor);
+    var hslBase = (0, d3Color.hsl)(baseColor);
     hslBase.h = hslBase.h + (Math.floor(Math.random() * (range * 255)) - Math.floor(range / 2));
     hslBase.s = hslBase.s + (Math.floor(Math.random() * range) - Math.floor(range / 2));
     hslBase.l = hslBase.l + (Math.floor(Math.random() * range) - Math.floor(range / 2));
@@ -23283,7 +23007,7 @@ var drawing = createCommonjsModule(function (module, exports) {
         cloneProps.d = linePath(cloneProps.x1, cloneProps.x2, cloneProps.y1, cloneProps.y2);
       }
 
-      (_d3Selection.select)("body").append("svg").attr("id", "sketchyTempSVG");
+      (0, d3Selection.select)("body").append("svg").attr("id", "sketchyTempSVG");
 
       var fills = [];
       var outlines = [];
@@ -23291,7 +23015,7 @@ var drawing = createCommonjsModule(function (module, exports) {
       cloneProps.d.split("M").filter(function (d, i) {
         return i !== 0;
       }).forEach(function (pathD, i) {
-        var pathDummy = (_d3Selection.select)("#sketchyTempSVG").append("path").attr("class", cloneProps.className).attr("d", "M" + pathD);
+        var pathDummy = (0, d3Selection.select)("#sketchyTempSVG").append("path").attr("class", cloneProps.className).attr("d", "M" + pathD);
 
         var pathNode = pathDummy.node();
 
@@ -23331,7 +23055,7 @@ var drawing = createCommonjsModule(function (module, exports) {
         }
       });
 
-      (_d3Selection.select)("#sketchyTempSVG").remove();
+      (0, d3Selection.select)("#sketchyTempSVG").remove();
 
       return [_react2.default.createElement("path", {
         key: "painty-interaction-overlay",
@@ -23387,14 +23111,14 @@ var drawing = createCommonjsModule(function (module, exports) {
       var sketchKey = Math.random().toString();
 
       if (cloneProps.d) {
-        (_d3Selection.select)("body").append("svg").attr("id", "sketchyTempSVG");
+        (0, d3Selection.select)("body").append("svg").attr("id", "sketchyTempSVG");
 
         var mType = cloneProps.d.substring(0, 1) === "M" ? "M" : "m";
 
         cloneProps.d.split(mType).filter(function (d, i) {
           return i !== 0;
         }).forEach(function (pathD, i) {
-          var pathDummy = (_d3Selection.select)("#sketchyTempSVG").append("path").attr("class", cloneProps.className).attr("d", "" + mType + pathD);
+          var pathDummy = (0, d3Selection.select)("#sketchyTempSVG").append("path").attr("class", cloneProps.className).attr("d", "" + mType + pathD);
 
           var pathNode = pathDummy.node();
           if (cloneProps.style && cloneProps.style.fill !== "none") {
@@ -23427,7 +23151,7 @@ var drawing = createCommonjsModule(function (module, exports) {
         });
       }
 
-      (_d3Selection.select)("#sketchyTempSVG").remove();
+      (0, d3Selection.select)("#sketchyTempSVG").remove();
       var generatedClipPath = void 0;
       if (markType !== "rect" && markType !== "circle") {
         generatedClipPath = _react2.default.createElement("clipPath", { key: "sketchy-clip-overlay", id: "clip-path-" + sketchKey }, _react2.default.createElement("path", { d: cloneProps.d, style: { opacity: 0 } }));
@@ -23507,10 +23231,23 @@ var drawing = createCommonjsModule(function (module, exports) {
 });
 
 unwrapExports(drawing);
+var drawing_1 = drawing.areaLineGenerator;
+var drawing_2 = drawing.areaLine;
+var drawing_3 = drawing.verticalbar;
+var drawing_4 = drawing.horizontalbar;
+var drawing_5 = drawing.pathStr;
+var drawing_6 = drawing.circlePath;
+var drawing_7 = drawing.rectPath;
+var drawing_8 = drawing.linePath;
+var drawing_9 = drawing.jitterLine;
+var drawing_10 = drawing.cheapSketchy;
+var drawing_11 = drawing.cheapPopArtsy;
+var drawing_12 = drawing.randomColor;
+var drawing_13 = drawing.painty;
+var drawing_14 = drawing.sketchy;
+var drawing_15 = drawing.generateSVG;
 
 var markTransition = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -23528,10 +23265,11 @@ var markTransition = createCommonjsModule(function (module, exports) {
 });
 
 unwrapExports(markTransition);
+var markTransition_1 = markTransition.styleTransitionWhitelist;
+var markTransition_2 = markTransition.attributeTransitionWhitelist;
+var markTransition_3 = markTransition.reactCSSNameStyleHash;
 
 var Mark_1 = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -23621,7 +23359,7 @@ var Mark_1 = createCommonjsModule(function (module, exports) {
 
         var node = this.node;
 
-        var actualSVG = (_drawing.generateSVG)(nextProps, nextProps.className);
+        var actualSVG = (0, drawing.generateSVG)(nextProps, nextProps.className);
         var cloneProps = actualSVG.props;
 
         if (!cloneProps) {
@@ -23631,16 +23369,16 @@ var Mark_1 = createCommonjsModule(function (module, exports) {
         markTransition.attributeTransitionWhitelist.forEach(function (attr) {
           var _this2 = this;
 
-          if ((_d3Selection.select)(node).select("*").transition && (attr !== "d" || this.props.d && nextProps.d && this.props.d.match(/NaN/g) === null && nextProps.d.match(/NaN/g) === null && (this.props.d.match(/a/gi) === null && nextProps.d.match(/a/gi) === null || this.props.d.match(/a/gi) !== null && nextProps.d.match(/a/gi) !== null))) {
+          if ((0, d3Selection.select)(node).select("*").transition && (attr !== "d" || this.props.d && nextProps.d && this.props.d.match(/NaN/g) === null && nextProps.d.match(/NaN/g) === null && (this.props.d.match(/a/gi) === null && nextProps.d.match(/a/gi) === null || this.props.d.match(/a/gi) !== null && nextProps.d.match(/a/gi) !== null))) {
             if (cloneProps[attr] !== this.props[attr]) {
               if (!this.props.simpleInterpolate && !nextProps.simpleInterpolate && attr === "d" && this.props.markType === "path" && nextProps.markType === "path" && this.props.d.match(/a/gi) === null && nextProps.d.match(/a/gi) === null) {
                 var prevD = coordsOrPathstring(this.props.d);
                 var nextD = coordsOrPathstring(nextProps.d);
                 var dummy = [[0, 0], [1, 1], [2, 2]];
                 var interpolators = (nextD.length > prevD.length ? nextD : prevD).coords.map(function (c, i) {
-                  return (_flubber.interpolate)(prevD.coords[i] || dummy, nextD.coords[i] || dummy, { maxSegmentLength: _this2.props.flubberSegments || 10 });
+                  return (0, flubber.interpolate)(prevD.coords[i] || dummy, nextD.coords[i] || dummy, { maxSegmentLength: _this2.props.flubberSegments || 10 });
                 });
-                (_d3Selection.select)(node).select("*").transition(attr).duration(1000).attrTween("d", function () {
+                (0, d3Selection.select)(node).select("*").transition(attr).duration(1000).attrTween("d", function () {
                   return function (t) {
                     var interps = interpolators.map(function (d) {
                       return d(t);
@@ -23653,14 +23391,14 @@ var Mark_1 = createCommonjsModule(function (module, exports) {
                   attr = markTransition.reactCSSNameStyleHash[attr];
                 }
 
-                (_d3Selection.select)(node).select("*").transition(attr).duration(1000)
+                (0, d3Selection.select)(node).select("*").transition(attr).duration(1000)
                 //                .duration(cloneProps.transitions.attr.d.transform)
                 .attr(attr, cloneProps[attr]);
                 //                    .each('end', this.forceUpdate);
               }
             }
           } else {
-            (_d3Selection.select)(node).select("*").attr(attr, cloneProps[attr]);
+            (0, d3Selection.select)(node).select("*").attr(attr, cloneProps[attr]);
           }
         }, this);
 
@@ -23673,13 +23411,13 @@ var Mark_1 = createCommonjsModule(function (module, exports) {
                 style = markTransition.reactCSSNameStyleHash[style];
               }
 
-              if ((_d3Selection.select)(node).select("*").transition) {
-                (_d3Selection.select)(node).select("*").transition(style).duration(1000)
+              if ((0, d3Selection.select)(node).select("*").transition) {
+                (0, d3Selection.select)(node).select("*").transition(style).duration(1000)
                 //                  .duration(nextProps.transitions.attr.d.transform)
                 .style(style, nextValue);
                 //                  .each('end', this.forceUpdate);
               } else {
-                (_d3Selection.select)(node).select("*").style(style, nextValue);
+                (0, d3Selection.select)(node).select("*").style(style, nextValue);
               }
             }
           }, this);
@@ -23747,7 +23485,7 @@ var Mark_1 = createCommonjsModule(function (module, exports) {
         var mouseIn = null;
         var mouseOut = null;
 
-        var actualSVG = (_drawing.generateSVG)(this.props, className);
+        var actualSVG = (0, drawing.generateSVG)(this.props, className);
 
         if (this.props.draggable) {
           return _react2.default.createElement("g", {
@@ -23802,8 +23540,6 @@ var Mark_1 = createCommonjsModule(function (module, exports) {
 unwrapExports(Mark_1);
 
 var DraggableMark_1 = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -23892,8 +23628,6 @@ var DraggableMark_1 = createCommonjsModule(function (module, exports) {
 unwrapExports(DraggableMark_1);
 
 var MarkContext_1 = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -24020,8 +23754,6 @@ var MarkContext_1 = createCommonjsModule(function (module, exports) {
 unwrapExports(MarkContext_1);
 
 var lib$1 = createCommonjsModule(function (module, exports) {
-  "use strict";
-
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -24048,7 +23780,9 @@ var lib$1 = createCommonjsModule(function (module, exports) {
 });
 
 unwrapExports(lib$1);
+var lib_1$1 = lib$1.MarkContext;
 var lib_2$1 = lib$1.Mark;
+var lib_3$1 = lib$1.DraggableMark;
 
 // components
 
@@ -24215,7 +23949,7 @@ function axisPieces(_ref) {
     var _ref2;
 
     var tickPosition = scale(tick);
-    return _ref2 = {}, babelHelpers.defineProperty(_ref2, position1, tickPosition), babelHelpers.defineProperty(_ref2, position2, tickPosition), babelHelpers.defineProperty(_ref2, domain1, axisDomain[0]), babelHelpers.defineProperty(_ref2, domain2, axisDomain[1]), babelHelpers.defineProperty(_ref2, tposition1, tickPosition + textPositionMod2), babelHelpers.defineProperty(_ref2, tposition2, axisDomain[0] + textPositionMod), babelHelpers.defineProperty(_ref2, "defaultAnchor", defaultAnchor), babelHelpers.defineProperty(_ref2, "renderMode", renderMode(tick, i)), babelHelpers.defineProperty(_ref2, "value", tick), _ref2;
+    return _ref2 = {}, defineProperty(_ref2, position1, tickPosition), defineProperty(_ref2, position2, tickPosition), defineProperty(_ref2, domain1, axisDomain[0]), defineProperty(_ref2, domain2, axisDomain[1]), defineProperty(_ref2, tposition1, tickPosition + textPositionMod2), defineProperty(_ref2, tposition2, axisDomain[0] + textPositionMod), defineProperty(_ref2, "defaultAnchor", defaultAnchor), defineProperty(_ref2, "renderMode", renderMode(tick, i)), defineProperty(_ref2, "value", tick), _ref2;
   });
 }
 
@@ -28858,24 +28592,6 @@ function yesdrag(view, noclick) {
   }
 }
 
-function DragEvent(target, type, subject, id, active, x, y, dx, dy, dispatch) {
-  this.target = target;
-  this.type = type;
-  this.subject = subject;
-  this.identifier = id;
-  this.active = active;
-  this.x = x;
-  this.y = y;
-  this.dx = dx;
-  this.dy = dy;
-  this._ = dispatch;
-}
-
-DragEvent.prototype.on = function () {
-  var value = this._.on.apply(this._, arguments);
-  return value === this._ ? this : value;
-};
-
 var constant$8 = function (x) {
   return function () {
     return x;
@@ -29398,11 +29114,11 @@ function brush$1(dim) {
   }
 
   brush.extent = function (_) {
-    return arguments.length ? (extent = typeof _ === "function" ? _ : constant([[+_[0][0], +_[0][1]], [+_[1][0], +_[1][1]]]), brush) : extent;
+    return arguments.length ? (extent = typeof _ === "function" ? _ : constant$8([[+_[0][0], +_[0][1]], [+_[1][0], +_[1][1]]]), brush) : extent;
   };
 
   brush.filter = function (_) {
-    return arguments.length ? (filter = typeof _ === "function" ? _ : constant(!!_), brush) : filter;
+    return arguments.length ? (filter = typeof _ === "function" ? _ : constant$8(!!_), brush) : filter;
   };
 
   brush.handleSize = function (_) {
@@ -30342,11 +30058,11 @@ var voronoi = function () {
   };
 
   voronoi.x = function (_) {
-    return arguments.length ? (x = typeof _ === "function" ? _ : constant(+_), voronoi) : x$$1;
+    return arguments.length ? (x$$1 = typeof _ === "function" ? _ : constant$9(+_), voronoi) : x$$1;
   };
 
   voronoi.y = function (_) {
-    return arguments.length ? (y = typeof _ === "function" ? _ : constant(+_), voronoi) : y$$1;
+    return arguments.length ? (y$$1 = typeof _ === "function" ? _ : constant$9(+_), voronoi) : y$$1;
   };
 
   voronoi.extent = function (_) {
@@ -30967,11 +30683,11 @@ var VisualizationLayer = function (_React$PureComponent) {
       args[_key] = arguments[_key];
     }
 
-    return _ret = (_temp = (_this = babelHelpers.possibleConstructorReturn(this, (_ref = VisualizationLayer.__proto__ || Object.getPrototypeOf(VisualizationLayer)).call.apply(_ref, [this].concat(args))), _this), _this.canvasDrawing = [], _this.state = {
+    return _ret = (_temp = (_this = possibleConstructorReturn(this, (_ref = VisualizationLayer.__proto__ || Object.getPrototypeOf(VisualizationLayer)).call.apply(_ref, [this].concat(args))), _this), _this.canvasDrawing = [], _this.state = {
       canvasDrawing: [],
       dataVersion: "",
       renderedElements: []
-    }, _temp), babelHelpers.possibleConstructorReturn(_this, _ret);
+    }, _temp), possibleConstructorReturn(_this, _ret);
   }
 
   createClass(VisualizationLayer, [{
@@ -31800,14 +31516,14 @@ function packEnclose(circles) {
       sk;
 
   // Initialize the front-chain using the first three circles a, b and c.
-  a = new Node(a), b = new Node(b), c = new Node(c);
+  a = new Node$2(a), b = new Node$2(b), c = new Node$2(c);
   a.next = c.previous = b;
   b.next = a.previous = c;
   c.next = b.previous = a;
 
   // Attempt to place each remaining circle…
   pack: for (i = 3; i < n; ++i) {
-    place(a._, b._, c = circles[i]), c = new Node(c);
+    place(a._, b._, c = circles[i]), c = new Node$2(c);
 
     // Find the closest intersecting circle on the front-chain, if any.
     // “Closeness” is determined by linear distance along the front-chain.
@@ -32692,7 +32408,8 @@ function createAreas(_ref4) {
       styleFn = _ref4.styleFn,
       classFn = _ref4.classFn,
       renderKeyFn = _ref4.renderKeyFn,
-      renderMode = _ref4.renderMode;
+      renderMode = _ref4.renderMode,
+      type = _ref4.type;
 
   var areaClass = classFn || function () {
     return "";
@@ -33031,11 +32748,11 @@ var contours = function () {
   };
 
   contours.thresholds = function (_) {
-    return arguments.length ? (threshold = typeof _ === "function" ? _ : Array.isArray(_) ? constant(slice.call(_)) : constant(_), contours) : threshold;
+    return arguments.length ? (threshold = typeof _ === "function" ? _ : Array.isArray(_) ? constant$11(slice$4.call(_)) : constant$11(_), contours) : threshold;
   };
 
   contours.smooth = function (_) {
-    return arguments.length ? (smooth = _ ? smoothLinear : noop, contours) : smooth === smoothLinear;
+    return arguments.length ? (smooth = _ ? smoothLinear : noop$4, contours) : smooth === smoothLinear;
   };
 
   return contours;
@@ -33171,11 +32888,11 @@ var contourDensity = function () {
   }
 
   density.x = function (_) {
-    return arguments.length ? (x = typeof _ === "function" ? _ : constant(+_), density) : x;
+    return arguments.length ? (x = typeof _ === "function" ? _ : constant$11(+_), density) : x;
   };
 
   density.y = function (_) {
-    return arguments.length ? (y = typeof _ === "function" ? _ : constant(+_), density) : y;
+    return arguments.length ? (y = typeof _ === "function" ? _ : constant$11(+_), density) : y;
   };
 
   density.size = function (_) {
@@ -33193,7 +32910,7 @@ var contourDensity = function () {
   };
 
   density.thresholds = function (_) {
-    return arguments.length ? (threshold = typeof _ === "function" ? _ : Array.isArray(_) ? constant(slice.call(_)) : constant(_), density) : threshold;
+    return arguments.length ? (threshold = typeof _ === "function" ? _ : Array.isArray(_) ? constant$11(slice$4.call(_)) : constant$11(_), density) : threshold;
   };
 
   density.bandwidth = function (_) {
@@ -33204,8 +32921,6 @@ var contourDensity = function () {
 
   return density;
 };
-
-'use strict';
 
 var tinyqueue = TinyQueue;
 
@@ -33292,8 +33007,6 @@ TinyQueue.prototype = {
         data[pos] = item;
     }
 };
-
-'use strict';
 
 var polylabel_1 = polylabel;
 var default_1$1 = polylabel;
@@ -34032,7 +33745,9 @@ function contourRenderFn(_ref2) {
       styleFn = _ref2.styleFn,
       classFn = _ref2.classFn,
       projection = _ref2.projection,
-      adjustedSize = _ref2.adjustedSize;
+      adjustedSize = _ref2.adjustedSize,
+      margin = _ref2.margin,
+      chartSize = _ref2.chartSize;
 
   var keys = Object.keys(data);
   var renderedSummaryMarks = [];
@@ -35232,7 +34947,7 @@ var calculateDataExtent = function calculateDataExtent(_ref) {
 
       var x = xAccessor(d, i);
       var y = yAccessor(d, i);
-      return Object.assign((_Object$assign = {}, babelHelpers.defineProperty(_Object$assign, projectedX, x), babelHelpers.defineProperty(_Object$assign, projectedY, y), _Object$assign), d);
+      return Object.assign((_Object$assign = {}, defineProperty(_Object$assign, projectedX, x), defineProperty(_Object$assign, projectedY, y), _Object$assign), d);
     });
     fullDataset = projectedPoints;
   } else if (lines) {
@@ -35282,14 +34997,14 @@ var calculateDataExtent = function calculateDataExtent(_ref) {
           fullDataset = [].concat(toConsumableArray(fullDataset), toConsumableArray(multi.map(function (p, q) {
             var _Object$assign2;
 
-            return Object.assign({ parentArea: d }, baseData[q], (_Object$assign2 = {}, babelHelpers.defineProperty(_Object$assign2, projectedX, p[0]), babelHelpers.defineProperty(_Object$assign2, projectedY, p[1]), _Object$assign2));
+            return Object.assign({ parentArea: d }, baseData[q], (_Object$assign2 = {}, defineProperty(_Object$assign2, projectedX, p[0]), defineProperty(_Object$assign2, projectedY, p[1]), _Object$assign2));
           })));
         });
       } else {
         fullDataset = [].concat(toConsumableArray(fullDataset), toConsumableArray(d._xyfCoordinates.map(function (p, q) {
           var _Object$assign3;
 
-          return Object.assign({ parentArea: d }, baseData[q], (_Object$assign3 = {}, babelHelpers.defineProperty(_Object$assign3, projectedX, p[0]), babelHelpers.defineProperty(_Object$assign3, projectedY, p[1]), _Object$assign3));
+          return Object.assign({ parentArea: d }, baseData[q], (_Object$assign3 = {}, defineProperty(_Object$assign3, projectedX, p[0]), defineProperty(_Object$assign3, projectedY, p[1]), _Object$assign3));
         })));
       }
     });
@@ -36656,7 +36371,22 @@ var svgCategoryRule = function svgCategoryRule(_ref6) {
       };
       return React.createElement(Annotation, { key: d.key || "annotation-" + i, noteData: _noteData });
     } else if (projection === "horizontal") {
-      
+      var _yPosition = position === "left" ? margin.left : adjustedSize[0] + margin.left;
+      _yPosition += position === "left" ? -offset : offset;
+      var _noteData2 = {
+        type: lib_2,
+        x: _yPosition,
+        y: _leftX - padding,
+        note: {
+          title: d.title || d.label,
+          label: d.title ? d.label : undefined
+        },
+        subject: {
+          type: bracketType,
+          height: _rightX - _leftX + padding * 2,
+          depth: position === "left" ? -depth : depth
+        }
+      };
     }
     return React.createElement(Annotation, { key: d.key || "annotation-" + i, noteData: noteData });
   }
@@ -39305,7 +39035,7 @@ var customEdgeHashD = {
     return d.ribbon(d$$1, d$$1.width);
   },
   arrowhead: function arrowhead(d$$1) {
-    return d.arrowhead(d$$1, d$$1.target.nodeSize, d$$1.width, d$$1.width * 1.5);
+    return d.arrowHead(d$$1, d$$1.target.nodeSize, d$$1.width, d$$1.width * 1.5);
   },
   halfarrow: function halfarrow(d$$1) {
     return d.halfArrow(d$$1, d$$1.target.nodeSize, d$$1.width, d$$1.width * 1.5);
@@ -39359,7 +39089,8 @@ var drawNodes = function drawNodes(_ref2) {
       customMark = _ref2.customMark,
       styleFn = _ref2.styleFn,
       classFn = _ref2.classFn,
-      renderMode = _ref2.renderMode;
+      renderMode = _ref2.renderMode,
+      canvasDrawing = _ref2.canvasDrawing;
 
   var markGenerator = customMark || circleNodeGenerator;
 
@@ -39530,11 +39261,11 @@ var sankey = function () {
   };
 
   sankey.nodeId = function (_) {
-    return arguments.length ? (id = typeof _ === "function" ? _ : constant(_), sankey) : id;
+    return arguments.length ? (id = typeof _ === "function" ? _ : constant$12(_), sankey) : id;
   };
 
   sankey.nodeAlign = function (_) {
-    return arguments.length ? (align = typeof _ === "function" ? _ : constant(_), sankey) : align;
+    return arguments.length ? (align = typeof _ === "function" ? _ : constant$12(_), sankey) : align;
   };
 
   sankey.nodeWidth = function (_) {
@@ -39546,11 +39277,11 @@ var sankey = function () {
   };
 
   sankey.nodes = function (_) {
-    return arguments.length ? (nodes = typeof _ === "function" ? _ : constant(_), sankey) : nodes;
+    return arguments.length ? (nodes = typeof _ === "function" ? _ : constant$12(_), sankey) : nodes;
   };
 
   sankey.links = function (_) {
-    return arguments.length ? (links = typeof _ === "function" ? _ : constant(_), sankey) : links;
+    return arguments.length ? (links = typeof _ === "function" ? _ : constant$12(_), sankey) : links;
   };
 
   sankey.size = function (_) {
@@ -39735,6 +39466,8 @@ var sankey = function () {
 
   return sankey;
 };
+
+var pi$4 = Math.PI;
 
 function sign$2(x) {
   return x < 0 ? -1 : 1;
@@ -39948,7 +39681,7 @@ var chord = function () {
   }
 
   chord.padAngle = function (_) {
-    return arguments.length ? (padAngle = max(0, _), chord) : padAngle;
+    return arguments.length ? (padAngle = max$2(0, _), chord) : padAngle;
   };
 
   chord.sortGroups = function (_) {
@@ -40032,15 +39765,15 @@ var ribbon$1 = function () {
   }
 
   ribbon.radius = function (_) {
-    return arguments.length ? (radius = typeof _ === "function" ? _ : constant(+_), ribbon) : radius;
+    return arguments.length ? (radius = typeof _ === "function" ? _ : constant$14(+_), ribbon) : radius;
   };
 
   ribbon.startAngle = function (_) {
-    return arguments.length ? (startAngle = typeof _ === "function" ? _ : constant(+_), ribbon) : startAngle;
+    return arguments.length ? (startAngle = typeof _ === "function" ? _ : constant$14(+_), ribbon) : startAngle;
   };
 
   ribbon.endAngle = function (_) {
-    return arguments.length ? (endAngle = typeof _ === "function" ? _ : constant(+_), ribbon) : endAngle;
+    return arguments.length ? (endAngle = typeof _ === "function" ? _ : constant$14(+_), ribbon) : endAngle;
   };
 
   ribbon.source = function (_) {
@@ -40448,7 +40181,8 @@ var NetworkFrame = function (_React$Component) {
               classFn = _ref3.classFn,
               renderMode = _ref3.renderMode,
               key = _ref3.key,
-              className = _ref3.className;
+              className = _ref3.className,
+              transform = _ref3.transform;
           return React.createElement(lib_2$1, {
             renderMode: renderMode ? renderMode(d, i) : undefined,
             key: key,
@@ -40468,7 +40202,8 @@ var NetworkFrame = function (_React$Component) {
               classFn = _ref4.classFn,
               renderMode = _ref4.renderMode,
               key = _ref4.key,
-              className = _ref4.className;
+              className = _ref4.className,
+              transform = _ref4.transform;
           return React.createElement(lib_2$1, {
             renderMode: renderMode ? renderMode(d, i) : undefined,
             key: key,
@@ -41395,12 +41130,12 @@ var createResponsiveFrame = function createResponsiveFrame(Frame) {
   var _class, _temp;
 
   return _temp = _class = function (_React$Component) {
-    babelHelpers.inherits(ResponsiveFrame, _React$Component);
+    inherits(ResponsiveFrame, _React$Component);
 
     function ResponsiveFrame(props) {
-      babelHelpers.classCallCheck(this, ResponsiveFrame);
+      classCallCheck(this, ResponsiveFrame);
 
-      var _this = babelHelpers.possibleConstructorReturn(this, (ResponsiveFrame.__proto__ || Object.getPrototypeOf(ResponsiveFrame)).call(this, props));
+      var _this = possibleConstructorReturn(this, (ResponsiveFrame.__proto__ || Object.getPrototypeOf(ResponsiveFrame)).call(this, props));
 
       _this._onResize = function (width, height) {
         _this.setState({ containerHeight: height, containerWidth: width });
@@ -41413,7 +41148,7 @@ var createResponsiveFrame = function createResponsiveFrame(Frame) {
       return _this;
     }
 
-    babelHelpers.createClass(ResponsiveFrame, [{
+    createClass(ResponsiveFrame, [{
       key: "componentDidMount",
       value: function componentDidMount() {
         var _this2 = this;
@@ -41447,7 +41182,7 @@ var createResponsiveFrame = function createResponsiveFrame(Frame) {
             containerWidth = _state.containerWidth;
 
 
-        var actualSize = [].concat(babelHelpers.toConsumableArray(size));
+        var actualSize = [].concat(toConsumableArray(size));
 
         if (responsiveWidth) {
           actualSize[0] = containerWidth;
@@ -41468,7 +41203,7 @@ var createResponsiveFrame = function createResponsiveFrame(Frame) {
               return _this3.node = node;
             }
           },
-          React.createElement(Frame, babelHelpers.extends({}, this.props, {
+          React.createElement(Frame, _extends({}, this.props, {
             size: actualSize,
             dataVersion: dataVersion ? dataVersionWithSize : undefined
           }))
@@ -41477,7 +41212,7 @@ var createResponsiveFrame = function createResponsiveFrame(Frame) {
     }]);
     return ResponsiveFrame;
   }(React.Component), _class.propTypes = {
-    size: PropTypes.array
+    size: propTypes.array
   }, _class.defaultProps = {
     size: [500, 500]
   }, _temp;
