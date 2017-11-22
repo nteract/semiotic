@@ -39080,7 +39080,7 @@ var bboxCollide = function (bbox) {
   return force;
 };
 
-var arrowhead = function (d, nodeTargetSize, bodySize, headSize) {
+var arrowHead = function (d, nodeTargetSize, bodySize, headSize) {
     var diffX = d.target.y - d.source.y;
     var diffY = d.target.x - d.source.x;
 
@@ -39288,13 +39288,13 @@ var halfArrow = function (d, nodeTargetSize, bodySize, headSize) {
 };
 
 var d = {
-	arrowhead: arrowhead,
-	comet: comet,
-	nail: nail,
-	taffy: taffy,
-	ribbon: ribbon,
-	lineArc: lineArc,
-	halfArrow: halfArrow
+  arrowHead: arrowHead,
+  comet: comet,
+  nail: nail,
+  taffy: taffy,
+  ribbon: ribbon,
+  lineArc: lineArc,
+  halfArrow: halfArrow
 };
 
 var customEdgeHashD = {
