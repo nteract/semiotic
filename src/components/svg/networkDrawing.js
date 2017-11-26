@@ -64,23 +64,49 @@ export const drawNodes = ({
   styleFn,
   classFn,
   renderMode,
-  canvasDrawing
+  canvasDrawing,
+  canvasRenderFn
 }) => {
   const markGenerator = customMark || circleNodeGenerator;
+  const renderedData = [];
 
-  return data.map((d, i) => {
-    return markGenerator({
-      d,
-      i,
-      renderKeyFn,
-      styleFn,
-      classFn,
-      renderMode,
-      key: renderKeyFn ? renderKeyFn(d, i) : d.id || `node-${i}`,
-      className: `node ${classFn(d, i)}`,
-      transform: `translate(${d.x},${d.y})`
-    });
+  if (customMark && canvasRenderFn) {
+    console.error(
+      "canvas rendering currently only supports generic circle nodes based on nodeSize"
+    );
+  }
+
+  data.forEach((d, i) => {
+    if (canvasRenderFn && canvasRenderFn(d, i) === true) {
+      const canvasNode = {
+        baseClass: "frame-piece",
+        tx: d.x,
+        ty: d.y,
+        d,
+        i,
+        markProps: { markType: "circle", r: d.nodeSize },
+        styleFn,
+        renderFn: renderMode,
+        classFn
+      };
+      canvasDrawing.push(canvasNode);
+    } else {
+      renderedData.push(
+        markGenerator({
+          d,
+          i,
+          renderKeyFn,
+          styleFn,
+          classFn,
+          renderMode,
+          key: renderKeyFn ? renderKeyFn(d, i) : d.id || `node-${i}`,
+          className: `node ${classFn(d, i)}`,
+          transform: `translate(${d.x},${d.y})`
+        })
+      );
+    }
   });
+  return renderedData;
 };
 
 export const drawEdges = ({
@@ -90,43 +116,64 @@ export const drawEdges = ({
   styleFn,
   classFn,
   renderMode,
+  canvasRenderFn,
   canvasDrawing,
   type
 }) => {
   let dGenerator = genericLineGenerator;
+  const renderedData = [];
   if (customMark) {
-    return data.map((d, i) => {
-      return customMark({
-        d,
-        i,
-        renderKeyFn,
-        styleFn,
-        classFn,
-        renderMode,
-        key: renderKeyFn ? renderKeyFn(d, i) : `edge-${i}`,
-        className: `${classFn(d, i)} edge`,
-        transform: `translate(${d.x},${d.y})`
-      });
+    data.forEach((d, i) => {
+      renderedData.push(
+        customMark({
+          d,
+          i,
+          renderKeyFn,
+          styleFn,
+          classFn,
+          renderMode,
+          key: renderKeyFn ? renderKeyFn(d, i) : `edge-${i}`,
+          className: `${classFn(d, i)} edge`,
+          transform: `translate(${d.x},${d.y})`
+        })
+      );
+    });
+  } else {
+    if (type) {
+      if (typeof type === "function") {
+        dGenerator = type;
+      } else if (customEdgeHashD[type]) {
+        dGenerator = d => customEdgeHashD[type](d);
+      }
+    }
+    data.forEach((d, i) => {
+      if (canvasRenderFn && canvasRenderFn(d, i) === true) {
+        const canvasNode = {
+          baseClass: "frame-piece",
+          tx: d.x,
+          ty: d.y,
+          d,
+          i,
+          markProps: { markType: "path", d: dGenerator(d) },
+          styleFn,
+          renderFn: renderMode,
+          classFn
+        };
+        canvasDrawing.push(canvasNode);
+      } else {
+        renderedData.push(
+          <Mark
+            key={renderKeyFn ? renderKeyFn(d, i) : `edge-${i}`}
+            markType="path"
+            renderMode={renderMode ? renderMode(d, i) : undefined}
+            className={`${classFn(d)} edge`}
+            d={dGenerator(d)}
+            style={styleFn(d, i)}
+          />
+        );
+      }
     });
   }
-  if (type) {
-    if (typeof type === "function") {
-      dGenerator = type;
-    } else if (customEdgeHashD[type]) {
-      dGenerator = d => customEdgeHashD[type](d);
-    }
-  }
 
-  return data.map((d, i) => {
-    return (
-      <Mark
-        key={renderKeyFn ? renderKeyFn(d, i) : `edge-${i}`}
-        markType="path"
-        renderMode={renderMode ? renderMode(d, i) : undefined}
-        className={`${classFn(d)} edge`}
-        d={dGenerator(d)}
-        style={styleFn(d, i)}
-      />
-    );
-  });
+  return renderedData;
 };

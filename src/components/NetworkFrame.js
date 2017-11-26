@@ -1008,6 +1008,7 @@ class NetworkFrame extends React.Component {
     }
 
     if (
+      networkSettings.zoom !== false &&
       networkSettings.type !== "wordcloud" &&
       networkSettings.type !== "chord" &&
       networkSettings.type !== "sankey"
@@ -1059,7 +1060,7 @@ class NetworkFrame extends React.Component {
         styleFn: stringToFn(edgeStyle, () => {}, true),
         classFn: stringToFn(edgeClass, () => {}, true),
         renderMode: stringToFn(edgeRenderMode, undefined, true),
-        canvasRender: stringToFn(canvasEdges, undefined, true),
+        canvasRenderFn: stringToFn(canvasEdges, undefined, true),
         renderKeyFn: currentProps.edgeRenderKey
           ? currentProps.edgeRenderKey
           : d => d._NWFEdgeKey || `${d.source.id}-${d.target.id}`,
@@ -1072,7 +1073,7 @@ class NetworkFrame extends React.Component {
         styleFn: nodeStyleFn,
         classFn: nodeClassFn,
         renderMode: nodeRenderModeFn,
-        canvasRender: nodeCanvasRenderFn,
+        canvasRenderFn: nodeCanvasRenderFn,
         customMark: customNodeIcon,
         behavior: drawNodes
       }
