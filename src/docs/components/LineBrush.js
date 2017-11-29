@@ -60,7 +60,9 @@ export default class LineBrush extends React.Component {
     const examples = [];
 
     const buttons = [
-      <button onClick={this.randomizeExtent}>Random Extent</button>
+      <button key="buon" onClick={this.randomizeExtent}>
+        Random Extent
+      </button>
     ];
 
     examples.push({

@@ -12,7 +12,7 @@ components.push({
   name: "Minimap Basics"
 });
 
-export default class NegativeStacked extends React.Component {
+export default class MinimapBasics extends React.Component {
   constructor(props) {
     super(props);
     this.state = { resetExtent: [0, 40], selectedExtent: [0, 40] };
@@ -32,7 +32,9 @@ export default class NegativeStacked extends React.Component {
     const examples = [];
 
     const buttons = [
-      <button onClick={this.randomizeExtent}>Random Extent</button>
+      <button key="buon" onClick={this.randomizeExtent}>
+        Random Extent
+      </button>
     ];
 
     examples.push({
@@ -152,4 +154,4 @@ const xyFrameSettings = {
   }
 }
 
-NegativeStacked.title = "Minimap Basics";
+MinimapBasics.title = "Minimap Basics";
