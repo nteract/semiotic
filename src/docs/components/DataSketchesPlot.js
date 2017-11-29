@@ -130,7 +130,8 @@ const speciousDataset = [
         <p>
           An interactive scatterplot of all the projects from{" "}
           <a target="_blank" href="http://www.datasketch.es/">
-            Data Sketches by Shirley Wu & Nadieh Bremer
+            the Information is Beautiful Gold Medal-winning Data Sketches by
+            Shirley Wu & Nadieh Bremer
           </a>{" "}
           showing how to use backgroundGraphics to place an image and guide
           lines, as well as axis labeling and tick formatting functions to

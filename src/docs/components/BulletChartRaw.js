@@ -115,7 +115,7 @@ function generateBulletChart({ data, rScale, adjustedSize, margin }) {
 
 export default (
   <div style={{ marginTop: "60px" }}>
-    {bulletData.map(data => {
+    {bulletData.map((data, i) => {
       const bulletRanges = data.ranges
         .map(p => ({ class: "range", value: p }))
         .sort((a, b) => b.value - a.value);
@@ -130,6 +130,7 @@ export default (
         .sort((a, b) => b.value - a.value);
       return (
         <ORFrame
+          key={`orframe-${i}`}
           size={[700, 100]}
           data={[...bulletRanges, ...bulletMeasures, ...bulletMarkers]}
           rAccessor={d => d.value}
