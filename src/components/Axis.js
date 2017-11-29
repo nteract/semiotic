@@ -1,33 +1,33 @@
-import React from "react"
+import React from "react";
 
 import {
   axisLabels,
   axisPieces,
   axisLines
-} from "./visualizationLayerBehavior/axis"
+} from "./visualizationLayerBehavior/axis";
 
 // components
 
-import PropTypes from "prop-types"
+import PropTypes from "prop-types";
 
 function formatValue(value, props) {
   if (props.tickFormat) {
-    return props.tickFormat(value)
+    return props.tickFormat(value);
   }
   if (value.toString) {
-    return value.toString()
+    return value.toString();
   }
-  return value
+  return value;
 }
 
 class Axis extends React.Component {
   constructor(props) {
-    super(props)
-    this.state = { hoverAnnotation: 0 }
+    super(props);
+    this.state = { hoverAnnotation: 0 };
   }
 
   render() {
-    let position = this.props.position || [0, 0]
+    let position = this.props.position || [0, 0];
     const {
       rotate,
       label,
@@ -42,15 +42,17 @@ class Axis extends React.Component {
       tickValues,
       scale,
       ticks,
-      footer
-    } = this.props
+      footer,
+      tickSize,
+      tickLineGenerator
+    } = this.props;
 
     if (this.props.format) {
-      console.error("axis `format` has been deprecated use `tickFormat`")
+      console.error("axis `format` has been deprecated use `tickFormat`");
     }
 
-    let axisTickLines
-    let axisParts = this.props.axisParts
+    let axisTickLines;
+    let axisParts = this.props.axisParts;
 
     if (!axisParts) {
       axisParts = axisPieces({
@@ -61,92 +63,93 @@ class Axis extends React.Component {
         orient,
         size,
         margin,
-        footer
-      })
+        footer,
+        tickSize
+      });
       axisTickLines = (
         <g className={`axis ${className}`}>
-          {axisLines({ axisParts, orient })}
+          {axisLines({ axisParts, orient, tickLineGenerator })}
         </g>
-      )
+      );
     }
     if (axisParts.length === 0) {
-      return null
+      return null;
     }
 
-    let hoverWidth = 50
-    let hoverHeight = height
-    let hoverX = 0
-    let hoverY = margin.top
+    let hoverWidth = 50;
+    let hoverHeight = height;
+    let hoverX = 0;
+    let hoverY = margin.top;
     let hoverFunction = e =>
-      this.setState({ hoverAnnotation: e.nativeEvent.offsetY - margin.top })
-    let circleX = 25
-    let textX = -25
-    let textY = 18
-    let lineWidth = width + 25
-    let lineHeight = 0
-    let circleY = this.state.hoverAnnotation
-    let annotationOffset = margin.left
-    let annotationType = "y"
+      this.setState({ hoverAnnotation: e.nativeEvent.offsetY - margin.top });
+    let circleX = 25;
+    let textX = -25;
+    let textY = 18;
+    let lineWidth = width + 25;
+    let lineHeight = 0;
+    let circleY = this.state.hoverAnnotation;
+    let annotationOffset = margin.left;
+    let annotationType = "y";
 
     switch (orient) {
       case "right":
-        position = [position[0], position[1]]
-        hoverX = width
-        annotationOffset = margin.top
-        lineWidth = -width - 25
-        textX = 5
+        position = [position[0], position[1]];
+        hoverX = width;
+        annotationOffset = margin.top;
+        lineWidth = -width - 25;
+        textX = 5;
         hoverFunction = e =>
           this.setState({
             hoverAnnotation: e.nativeEvent.offsetY - annotationOffset
-          })
-        break
+          });
+        break;
       case "top":
-        position = [position[0], 0]
-        hoverWidth = width
-        hoverHeight = 50
-        hoverY = 0
-        annotationType = "x"
-        hoverX = margin.left
+        position = [position[0], 0];
+        hoverWidth = width;
+        hoverHeight = 50;
+        hoverY = 0;
+        annotationType = "x";
+        hoverX = margin.left;
         hoverFunction = e =>
           this.setState({
             hoverAnnotation: e.nativeEvent.offsetX - annotationOffset
-          })
-        circleX = this.state.hoverAnnotation
-        circleY = 25
-        textX = 0
-        textY = -10
-        lineWidth = 0
-        lineHeight = height + 25
-        break
+          });
+        circleX = this.state.hoverAnnotation;
+        circleY = 25;
+        textX = 0;
+        textY = -10;
+        lineWidth = 0;
+        lineHeight = height + 25;
+        break;
       case "bottom":
-        position = [position[0], position[1] - margin.top]
-        position = [position[0], 0]
-        hoverWidth = width
-        hoverHeight = 50
-        hoverY = height + margin.top
-        hoverX = margin.left
+        position = [position[0], position[1] - margin.top];
+        position = [position[0], 0];
+        hoverWidth = width;
+        hoverHeight = 50;
+        hoverY = height + margin.top;
+        hoverX = margin.left;
         hoverFunction = e =>
           this.setState({
             hoverAnnotation: e.nativeEvent.offsetX - annotationOffset
-          })
-        circleX = this.state.hoverAnnotation
-        circleY = 25
-        textX = 0
-        textY = 15
-        lineWidth = 0
-        lineHeight = -height - 25
-        annotationType = "x"
-        break
+          });
+        circleX = this.state.hoverAnnotation;
+        circleY = 25;
+        textX = 0;
+        textY = 15;
+        lineWidth = 0;
+        lineHeight = -height - 25;
+        annotationType = "x";
+        break;
       default:
-        position = [position[0] - margin.left, position[1]]
-        annotationOffset = margin.top
+        position = [position[0] - margin.left, position[1]];
+        annotationOffset = margin.top;
         hoverFunction = e =>
           this.setState({
             hoverAnnotation: e.nativeEvent.offsetY - annotationOffset
-          })
+          });
     }
 
-    let annotationBrush
+    let annotationBrush;
 
     if (this.props.annotationFunction) {
       const hoverGlyph = this.props.glyphFunction ? (
@@ -170,7 +173,7 @@ class Axis extends React.Component {
           <circle r={5} />
           <line x1={lineWidth} y1={lineHeight} style={{ stroke: "black" }} />
         </g>
-      )
+      );
       const annotationSymbol = this.state.hoverAnnotation ? (
         <g
           style={{ pointerEvents: "none" }}
@@ -178,7 +181,7 @@ class Axis extends React.Component {
         >
           {hoverGlyph}
         </g>
-      ) : null
+      ) : null;
       annotationBrush = (
         <g
           className="annotation-brush"
@@ -201,32 +204,32 @@ class Axis extends React.Component {
           />
           {annotationSymbol}
         </g>
-      )
+      );
     }
 
-    let axisTitle
+    let axisTitle;
 
     const axisTickLabels = axisLabels({
       tickFormat,
       axisParts,
       orient,
       rotate
-    })
+    });
     if (label) {
-      const labelName = label.name || label
-      const labelPosition = label.position || {}
-      const locationMod = labelPosition.location || "outside"
-      let anchorMod = labelPosition.anchor || "middle"
-      const distance = label.locationDistance
+      const labelName = label.name || label;
+      const labelPosition = label.position || {};
+      const locationMod = labelPosition.location || "outside";
+      let anchorMod = labelPosition.anchor || "middle";
+      const distance = label.locationDistance;
 
       const rotateHash = {
         left: -90,
         right: 90,
         top: 0,
         bottom: 0
-      }
+      };
 
-      const rotation = labelPosition.rotation || rotateHash[orient]
+      const rotation = labelPosition.rotation || rotateHash[orient];
 
       const positionHash = {
         left: {
@@ -257,18 +260,18 @@ class Axis extends React.Component {
           inside: [0, -(distance || 5)],
           outside: [0, distance || 50]
         }
-      }
+      };
 
-      const translation = positionHash[orient][anchorMod]
-      const location = positionHash[orient][locationMod]
+      const translation = positionHash[orient][anchorMod];
+      const location = positionHash[orient][locationMod];
 
-      translation[0] = translation[0] + location[0]
-      translation[1] = translation[1] + location[1]
+      translation[0] = translation[0] + location[0];
+      translation[1] = translation[1] + location[1];
 
       if (anchorMod === "start" && orient === "right") {
-        anchorMod = "end"
+        anchorMod = "end";
       } else if (anchorMod === "end" && orient === "right") {
-        anchorMod = "start"
+        anchorMod = "start";
       }
 
       axisTitle = (
@@ -281,7 +284,7 @@ class Axis extends React.Component {
         >
           <text textAnchor={anchorMod}>{labelName}</text>
         </g>
-      )
+      );
     }
     return (
       <g className={className}>
@@ -290,7 +293,7 @@ class Axis extends React.Component {
         {axisTickLines}
         {axisTitle}
       </g>
-    )
+    );
   }
 }
 
@@ -314,6 +317,6 @@ Axis.propTypes = {
     PropTypes.number,
     PropTypes.object
   ])
-}
+};
 
-export default Axis
+export default Axis;

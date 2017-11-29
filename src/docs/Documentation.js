@@ -35,6 +35,7 @@ import WordCloud from "./components/WordCloud";
 import SwarmBrush from "./components/SwarmBrush";
 import LineBrush from "./components/LineBrush";
 import Minimap from "./components/Minimap";
+import Timeline from "./components/Timeline";
 import DivergingStackedBar from "./components/DivergingStackedBar";
 import DivergingStackedIsotype from "./components/DivergingStackedIsotype";
 import VerticalIsotype from "./components/VerticalIsotype";
@@ -84,6 +85,7 @@ const components = {
   orframe: { docs: ORFrameDocs },
   violin: { docs: Violin, parent: "orframe" },
   parallelcoordinates: { docs: ParallelCoordinates, parent: "orframe" },
+  timeline: { docs: Timeline, parent: "orframe" },
   heatmap: { docs: HeatMap, parent: "orframe" },
   marimekko: { docs: Marimekko, parent: "orframe" },
   dotplot: { docs: DotPlot, parent: "orframe" },

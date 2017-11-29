@@ -25,6 +25,7 @@ import VerticalIsotypeRaw from "../components/VerticalIsotypeRaw";
 import NegativeStackedRaw from "../components/NegativeStackedRaw";
 import CustomMarkRaw from "../components/CustomMarkRaw";
 import DataSketchesPlotRaw from "../components/DataSketchesPlotRaw";
+import TimelineRaw from "../components/TimelineRaw";
 
 import {
   genericBarChart,
@@ -48,6 +49,7 @@ const exampos = [
     path: "homerunmap"
   },
   { label: "Bullet Chart", viz: BulletChartRaw, path: "bullet" },
+  { label: "Timeline", viz: TimelineRaw, path: "timeline" },
   { label: "Dendrogram", viz: DendrogramRaw({}), path: "dendrogram" },
   { label: "ISOTYPE 2", viz: VerticalIsotypeRaw, path: "verticalisotype" },
   {

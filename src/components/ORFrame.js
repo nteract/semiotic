@@ -44,7 +44,8 @@ import {
   clusterBarLayout,
   barLayout,
   pointLayout,
-  swarmLayout
+  swarmLayout,
+  timelineLayout
 } from "./svg/pieceLayouts";
 
 import { drawSummaries, renderLaidOutSummaries } from "./svg/summaryLayouts";
@@ -66,7 +67,8 @@ const layoutHash = {
   clusterbar: clusterBarLayout,
   bar: barLayout,
   point: pointLayout,
-  swarm: swarmLayout
+  swarm: swarmLayout,
+  timeline: timelineLayout
 };
 
 class ORFrame extends React.Component {
@@ -119,7 +121,8 @@ class ORFrame extends React.Component {
       projection,
       customHoverBehavior,
       customClickBehavior,
-      size
+      size,
+      pixelColumnWidth
     } = currentProps;
     const eventListenersGenerator = generateORFrameEventListeners(
       customHoverBehavior,
@@ -159,6 +162,20 @@ class ORFrame extends React.Component {
     let oExtent =
       currentProps.oExtent || uniq(allData.map((d, i) => oAccessor(d, i)));
 
+    if (pixelColumnWidth) {
+      if (projection === "radial") {
+        console.error("pixelColumnWidth is not honored in radial mode");
+      } else if (projection === "vertical") {
+        const sizeOffset = size[0] - adjustedSize[0];
+        adjustedSize[0] = oExtent.length * pixelColumnWidth;
+        size[0] = adjustedSize[0] + sizeOffset;
+      } else {
+        const sizeOffset = size[1] - adjustedSize[1];
+        adjustedSize[1] = oExtent.length * pixelColumnWidth;
+        size[1] = adjustedSize[1] + sizeOffset;
+      }
+    }
+
     let rExtent;
     let subZeroRExtent = [0, 0];
 
@@ -176,6 +193,11 @@ class ORFrame extends React.Component {
       currentProps.rExtent[1] !== undefined
     ) {
       rExtent = currentProps.rExtent;
+    } else if (pieceType.type === "timeline") {
+      const rData = allData.map(rAccessor);
+      const rMin = min(rData.map(d => d[0]));
+      const rMax = max(rData.map(d => d[1]));
+      rExtent = [rMin, rMax];
     } else if (pieceType.type !== "bar") {
       rExtent = extent(allData, rAccessor);
     } else {
@@ -364,7 +386,15 @@ class ORFrame extends React.Component {
         const pieceValue = rAccessor(piece);
         let valPosition;
 
-        if (pieceType.type !== "bar" && pieceType.type !== "clusterbar") {
+        if (pieceType.type === "timeline") {
+          valPosition = rScale(pieceValue[0]);
+          const endPosition = rScale(pieceValue[1]);
+          piece._orFR = valPosition;
+          piece._orFREnd = endPosition;
+        } else if (
+          pieceType.type !== "bar" &&
+          pieceType.type !== "clusterbar"
+        ) {
           valPosition = rScale(pieceValue);
           piece._orFR = valPosition;
         } else {
@@ -515,7 +545,8 @@ class ORFrame extends React.Component {
           d,
           currentProps.data
             ? currentProps.data.filter((p, q) => oAccessor(p, q) === d)
-            : undefined
+            : undefined,
+          i
         );
         labelArray.push(
           <g
@@ -1223,6 +1254,7 @@ ORFrame.propTypes = {
   dataAccessor: PropTypes.func,
   rBaseline: PropTypes.number,
   sortO: PropTypes.func,
+  pixelColumnWidth: PropTypes.number,
   dynamicColumnWidth: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
   renderFn: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
   style: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),

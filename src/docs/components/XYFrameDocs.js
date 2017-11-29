@@ -163,7 +163,24 @@ const axesHash = {
   none: undefined,
   basic: [
     { orient: "left", tickFormat: d => d },
-    { orient: "bottom", tickFormat: d => d, footer: true }
+    { orient: "bottom", tickFormat: d => d, footer: true },
+    {
+      orient: "bottom",
+      tickLineGenerator: ({ xy }) => (
+        <line
+          x1={xy.x1}
+          x2={xy.x2}
+          y1={xy.y1}
+          y2={xy.y2}
+          style={{
+            strokeDasharray: "5 5",
+            stroke: "green",
+            strokeOpacity: 0.5
+          }}
+        />
+      )
+    },
+    { orient: "bottom", tickSize: 10 }
   ],
   labeled: [
     {
