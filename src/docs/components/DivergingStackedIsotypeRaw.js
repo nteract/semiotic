@@ -50,37 +50,5 @@ export default (
       orient: "top",
       tickValues: [-0.3, -0.15, 0, 0.2, 0.4, 0.6, 0.8, 1]
     }}
-    additionalDefs={[
-      <filter id="displacementFilter">
-        <feTurbulence
-          type="turbulence"
-          baseFrequency="0.05"
-          numOctaves="2"
-          result="turbulence"
-        />
-        <feDisplacementMap
-          in2="turbulence"
-          in="SourceGraphic"
-          scale="3"
-          xChannelSelector="R"
-          yChannelSelector="G"
-        />
-      </filter>,
-      <filter id="displacementFilter2">
-        <feTurbulence
-          type="turbulence"
-          baseFrequency="0.05"
-          numOctaves="2"
-          result="turbulence"
-        />
-        <feDisplacementMap
-          in2="turbulence"
-          in="SourceGraphic"
-          scale="5"
-          xChannelSelector="R"
-          yChannelSelector="G"
-        />
-      </filter>
-    ]}
   />
 );
