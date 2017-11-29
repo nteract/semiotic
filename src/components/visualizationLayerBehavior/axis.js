@@ -2,6 +2,19 @@ import React from "react";
 
 import { Mark } from "semiotic-mark";
 
+const defaultTickLineGenerator = ({ xy, orient, i }) => (
+  <Mark
+    key={i}
+    markType="path"
+    renderMode={xy.renderMode}
+    stroke="black"
+    strokeWidth="1px"
+    simpleInterpolate={true}
+    d={`M${xy.x1},${xy.y1}L${xy.x2},${xy.y2}`}
+    className={`tick-line tick ${orient}`}
+  />
+);
+
 export function axisPieces({
   renderMode = () => undefined,
   padding = 5,
@@ -11,7 +24,10 @@ export function axisPieces({
   orient = "left",
   size,
   margin = { left: 0, right: 0, top: 0, bottom: 0 },
-  footer = false
+  footer = false,
+  tickSize = footer
+    ? -10
+    : ["top", "bottom"].find(d => d === orient) ? size[1] : size[0]
 }) {
   //returns x1 (start of line), x2 (end of line) associated with the value of the tick
   let axisDomain = [],
@@ -24,15 +40,14 @@ export function axisPieces({
     textPositionMod = 0,
     textPositionMod2 = 0,
     defaultAnchor = "middle";
+
   switch (orient) {
     case "top":
       position1 = "x1";
       position2 = "x2";
       domain1 = "y1";
       domain2 = "y2";
-      axisDomain = footer
-        ? [10, margin.top]
-        : [margin.top, size[1] + margin.top];
+      axisDomain = [margin.top, tickSize + margin.top];
       tposition1 = "tx";
       tposition2 = "ty";
       textPositionMod -= 20 - padding;
@@ -42,9 +57,7 @@ export function axisPieces({
       position2 = "x2";
       domain1 = "y2";
       domain2 = "y1";
-      axisDomain = footer
-        ? [size[1] + margin.top + 10, size[1] + margin.top]
-        : [size[1] + margin.top, margin.top];
+      axisDomain = [size[1] + margin.top, size[1] + margin.top - tickSize];
       tposition1 = "tx";
       tposition2 = "ty";
       textPositionMod += 20 + padding;
@@ -54,9 +67,7 @@ export function axisPieces({
       position2 = "y1";
       domain1 = "x2";
       domain2 = "x1";
-      axisDomain = footer
-        ? [size[0] + margin.left, size[0] + margin.left + 10]
-        : [size[0] + margin.left, margin.left];
+      axisDomain = [size[0] + margin.left, size[0] + margin.left - tickSize];
       tposition1 = "ty";
       tposition2 = "tx";
       textPositionMod += 5 + padding;
@@ -69,9 +80,7 @@ export function axisPieces({
       position2 = "y2";
       domain1 = "x1";
       domain2 = "x2";
-      axisDomain = footer
-        ? [margin.left - 10, margin.left]
-        : [margin.left, size[0] + margin.left];
+      axisDomain = [margin.left, tickSize + margin.left];
       tposition1 = "ty";
       tposition2 = "tx";
       textPositionMod -= 5 + padding;
@@ -128,17 +137,12 @@ export const axisLabels = ({ axisParts, orient, tickFormat, rotate = 0 }) => {
   });
 };
 
-export const axisLines = ({ axisParts, orient }) => {
-  return axisParts.map((axisPart, i) => (
-    <Mark
-      key={i}
-      markType="path"
-      renderMode={axisPart.renderMode}
-      stroke="black"
-      strokeWidth="1px"
-      simpleInterpolate={true}
-      d={`M${axisPart.x1},${axisPart.y1}L${axisPart.x2},${axisPart.y2}`}
-      className={`tick-line tick ${orient}`}
-    />
-  ));
+export const axisLines = ({
+  axisParts,
+  orient,
+  tickLineGenerator = defaultTickLineGenerator
+}) => {
+  return axisParts.map((axisPart, i) =>
+    tickLineGenerator({ xy: axisPart, orient, i })
+  );
 };

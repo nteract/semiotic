@@ -411,9 +411,14 @@ export const orFrameAxisGenerator = ({
         orient,
         size: adjustedSize,
         margin,
-        footer: d.footer
+        footer: d.footer,
+        tickSize: d.tickSize
       });
-      const axisTickLines = axisLines({ axisParts, orient });
+      const axisTickLines = axisLines({
+        axisParts,
+        orient,
+        tickLineGenerator: d.tickLineGenerator
+      });
       axesTickLines.push(axisTickLines);
 
       return (

@@ -1,9 +1,9 @@
-import React from "react"
-import DocumentComponent from "../layout/DocumentComponent"
-import { Axis } from "../../components"
-import { scaleLinear, scaleTime } from "d3-scale"
+import React from "react";
+import DocumentComponent from "../layout/DocumentComponent";
+import { Axis } from "../../components";
+import { scaleLinear, scaleTime } from "d3-scale";
 
-const components = []
+const components = [];
 // Add your component proptype data here
 // multiple component proptype documentation supported
 
@@ -42,13 +42,13 @@ components.push({
     ])
     }
   `
-})
+});
 
 export default class AxisDocs extends React.Component {
   render() {
-    const buttons = []
+    const buttons = [];
 
-    const examples = []
+    const examples = [];
     examples.push({
       name: "Basic",
       demo: (
@@ -81,8 +81,14 @@ export default class AxisDocs extends React.Component {
                 .domain([10, 1000])
                 .range([200, 0])}
               orient={"left"}
-              label={"Footer Left"}
-              footer={true}
+              label={"Custom tickLineGenerator"}
+              tickLineGenerator={({ xy }) => (
+                <path
+                  style={{ fill: "lightgrey", stroke: "grey" }}
+                  d={`M${xy.x1},${xy.y1 - 5}L${xy.x2},${xy.y1 -
+                    5}L${xy.x2},${xy.y1 + 5}L${xy.x1},${xy.y1 + 5}Z`}
+                />
+              )}
             />
           </g>
           <g transform={"translate(400,320)"}>
@@ -131,8 +137,13 @@ export default class AxisDocs extends React.Component {
                 .domain([10, 1000])
                 .range([200, 0])}
               orient={"left"}
-              label={"Footer Left"}
-              footer={true}
+              label={"Custom tickLineGenerator"}
+              tickLineGenerator={({ xy }) => (
+                <path
+                  style={{ fill: "lightgrey", stroke: "grey" }}
+                  d={${"`M${xy.x1},${xy.y1 - 5}L${xy.x2},${xy.y1 - 5}L${xy.x2},${xy.y1 + 5}L${xy.x1},${xy.y1 + 5}Z`"}}
+                />
+              )}
             />
           </g>
           <g transform={"translate(400,320)"}>
@@ -150,7 +161,7 @@ export default class AxisDocs extends React.Component {
         </g>
         </svg>
       `
-    })
+    });
 
     return (
       <DocumentComponent
@@ -176,8 +187,8 @@ export default class AxisDocs extends React.Component {
           rules determining whether summaries and connectors are drawn.
         </p>
       </DocumentComponent>
-    )
+    );
   }
 }
 
-AxisDocs.title = "Axis"
+AxisDocs.title = "Axis";

@@ -368,8 +368,12 @@ export function barLayout({
         const yOffset = adjustedSize[1] / 2 + margin.top;
         xPosition = centroid[0] + xOffset;
         yPosition = centroid[1] + yOffset;
-        translate = `translate(${xOffset},${yOffset})`;
-        markProps = { markType: "path", d: markD };
+
+        markProps = {
+          markType: "path",
+          d: markD,
+          transform: `translate(${xOffset},${yOffset})`
+        };
       } else {
         markProps = {
           markType: "rect",
@@ -417,7 +421,6 @@ export function barLayout({
           className: classFn(piece, i),
           renderMode: renderValue,
           key: "piece-" + piece.renderKey,
-          transform: translate,
           style: styleFn(piece, ordsetI),
           ...eventListeners,
           ...markProps
@@ -431,6 +434,127 @@ export function barLayout({
         renderElement: renderElementObject
       };
       return calculatedPiece;
+    });
+    allCalculatedPieces = [...allCalculatedPieces, ...calculatedPieces];
+  });
+
+  return allCalculatedPieces;
+}
+
+export function timelineLayout({
+  type,
+  data,
+  renderMode,
+  eventListenersGenerator,
+  styleFn,
+  projection,
+  classFn,
+  adjustedSize,
+  margin
+}) {
+  let allCalculatedPieces = [];
+  const keys = Object.keys(data);
+  keys.forEach((key, ordsetI) => {
+    const ordset = data[key];
+    const calculatedPieces = [];
+
+    ordset.pieceData.forEach((piece, i) => {
+      const renderValue = renderMode && renderMode(piece, i);
+      let xPosition = ordset.x;
+      let yPosition = adjustedSize[1] - piece._orFREnd + margin.top;
+      let height = piece._orFREnd - piece._orFR;
+      let width = ordset.width;
+      let markProps = {
+        markType: "rect",
+        height,
+        width,
+        x: xPosition,
+        y: yPosition
+      };
+
+      if (projection === "horizontal") {
+        yPosition = ordset.x;
+        xPosition = piece._orFR;
+        width = piece._orFREnd - piece._orFR;
+        height = ordset.width;
+        markProps = {
+          markType: "rect",
+          height,
+          width,
+          x: xPosition,
+          y: yPosition
+        };
+      } else if (projection === "radial") {
+        let { innerRadius } = type;
+        let innerSize = (piece._orFR - margin.left) / 2;
+        let outerSize = (piece._orFREnd - margin.left) / 2;
+        if (innerRadius) {
+          innerRadius = parseInt(innerRadius);
+          const canvasRadius = adjustedSize[0] / 2;
+          const donutMod = (canvasRadius - innerRadius) / canvasRadius;
+          innerSize = innerSize * donutMod + innerRadius;
+          outerSize = outerSize * donutMod + innerRadius;
+        }
+
+        const arcGenerator = arc()
+          .innerRadius(innerSize)
+          .outerRadius(outerSize);
+        //          .padAngle(ordset.pct_padding * twoPI);
+
+        let angle = ordset.pct;
+        let startAngle = ordset.pct === 1 ? 0 : ordset.pct_start;
+        let endAngle =
+          ordset.pct === 1
+            ? 1
+            : Math.max(startAngle, startAngle + angle - ordset.pct_padding / 2);
+
+        const markD = arcGenerator({
+          startAngle: startAngle * twoPI,
+          endAngle: endAngle * twoPI
+        });
+
+        const xOffset = adjustedSize[0] / 2 + margin.left;
+        const yOffset = adjustedSize[1] / 2 + margin.top;
+        markProps = {
+          markType: "path",
+          d: markD,
+          transform: `translate(${xOffset},${yOffset})`
+        };
+      }
+
+      //Only return the actual piece if you're rendering points, otherwise you just needed to iterate and calculate the points for the contour summary type
+
+      const eventListeners = eventListenersGenerator(piece, i);
+
+      const renderElementObject = type.customMark ? (
+        <g
+          key={"piece-" + piece.renderKey}
+          transform={`translate(${xPosition},${yPosition})`}
+        >
+          {type.customMark(piece, i)}
+        </g>
+      ) : (
+        {
+          className: classFn(piece, i),
+          renderMode: renderValue,
+          key: "piece-" + piece.renderKey,
+          style: styleFn(piece, ordsetI),
+          ...markProps,
+          ...eventListeners
+        }
+      );
+
+      const calculatedPiece = {
+        o: key,
+        xy: {
+          x: xPosition,
+          y: yPosition
+        },
+        piece,
+        renderElement: renderElementObject
+      };
+
+      calculatedPieces.push(calculatedPiece);
     });
     allCalculatedPieces = [...allCalculatedPieces, ...calculatedPieces];
   });
