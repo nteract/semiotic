@@ -203,5 +203,6 @@ export default (
         {d}
       </text>
     )}
+    pieceHoverAnnotation={true}
   />
 );
