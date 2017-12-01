@@ -456,6 +456,10 @@ circle.frame-hover {
   stroke-width: 1px;
 }
 
+.sharedTooltip .annotation path {
+  stroke: black;
+}
+
 .annotation path.connector-end {
   fill: #b10000;
   stroke-width: 1px;
