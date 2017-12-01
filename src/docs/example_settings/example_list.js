@@ -124,7 +124,7 @@ const exampos = [
     path: "divergingstackedbar"
   },
   { label: "Annotations", viz: AppleStockChartRaw, path: "annotations" },
-  { label: "Shared Tooltip", viz: SharedTooltipExampleRaw, path: "sharedTooltip" }
+  { label: "Shared Tooltip", viz: SharedTooltipExampleRaw("Shared"), path: "sharedTooltip" }
 ];
 
 export const wrappedExamples = exampos.map(d => (
