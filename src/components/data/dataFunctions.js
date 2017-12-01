@@ -71,7 +71,8 @@ export const calculateDataExtent = ({
       return Object.assign({ [projectedX]: x, [projectedY]: y }, d);
     });
     fullDataset = projectedPoints;
-  } else if (lines) {
+  }
+  if (lines) {
     initialProjectedLines = projectLineData({
       data: lines,
       lineDataAccessor,
