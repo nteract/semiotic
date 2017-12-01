@@ -26,6 +26,7 @@ import NegativeStackedRaw from "../components/NegativeStackedRaw";
 import CustomMarkRaw from "../components/CustomMarkRaw";
 import DataSketchesPlotRaw from "../components/DataSketchesPlotRaw";
 import TimelineRaw from "../components/TimelineRaw";
+import SharedTooltipExampleRaw from "../components/SharedTooltipExampleRaw";
 
 import {
   genericBarChart,
@@ -122,7 +123,8 @@ const exampos = [
     viz: DivergingStackedBarRaw,
     path: "divergingstackedbar"
   },
-  { label: "Annotations", viz: AppleStockChartRaw, path: "annotations" }
+  { label: "Annotations", viz: AppleStockChartRaw, path: "annotations" },
+  { label: "Shared Tooltip", viz: SharedTooltipExampleRaw, path: "sharedTooltip" }
 ];
 
 export const wrappedExamples = exampos.map(d => (
