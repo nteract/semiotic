@@ -47,27 +47,33 @@ export function createPoints({
   data.forEach((d, i) => {
     const dX = xScale(d[x]);
     const dY = yScale(d[y]);
+    const renderedCustomMark =
+      customMark && customMark({ d, i, xScale, yScale });
     const markProps = customMark
-      ? Object.assign({}, customMark({ d, i }).props)
+      ? Object.assign({}, renderedCustomMark.props)
       : { key: `piece-${i}`, markType: "circle", r: 2 };
 
-    if (canvasRender && canvasRender(d, i) === true) {
-      const canvasPoint = {
-        type: "point",
-        baseClass: "frame-piece",
-        tx: dX,
-        ty: dY,
-        d,
-        i,
-        markProps,
-        styleFn,
-        renderFn: renderMode,
-        classFn
-      };
-      canvasDrawing.push(canvasPoint);
-    } else {
+    console.log("markProps", markProps);
+
+    if (
+      renderedCustomMark &&
+      !renderedCustomMark.props.markType &&
+      (!canvasRender || canvasRender(d, i) !== true)
+    ) {
       mappedPoints.push(
-        clonedAppliedElement({
+        <g
+          transform={`translate(${dX},${dY})`}
+          key={renderKeyFn ? renderKeyFn(d, i) : `custom-point-mark-${i}`}
+          style={styleFn ? styleFn(d, i) : {}}
+          className={classFn ? classFn(d, i) : ""}
+        >
+          {renderedCustomMark}
+        </g>
+      );
+    } else {
+      if (canvasRender && canvasRender(d, i) === true) {
+        const canvasPoint = {
+          type: "point",
           baseClass: "frame-piece",
           tx: dX,
           ty: dY,
@@ -76,10 +82,25 @@ export function createPoints({
           markProps,
           styleFn,
           renderFn: renderMode,
-          renderKeyFn,
           classFn
-        })
-      );
+        };
+        canvasDrawing.push(canvasPoint);
+      } else {
+        mappedPoints.push(
+          clonedAppliedElement({
+            baseClass: "frame-piece",
+            tx: dX,
+            ty: dY,
+            d,
+            i,
+            markProps,
+            styleFn,
+            renderFn: renderMode,
+            renderKeyFn,
+            classFn
+          })
+        );
+      }
     }
   });
   return mappedPoints;
@@ -315,21 +336,25 @@ export function clonedAppliedElement({
 }) {
   markProps.style = styleFn ? styleFn(d, i) : {};
 
-  markProps.renderMode = renderFn ? renderFn(d, i) : undefined;
-
-  if (tx || ty) {
-    markProps.transform = `translate(${tx || 0},${ty || 0})`;
-  }
-
   markProps.className = baseClass;
 
   markProps.key = renderKeyFn
     ? renderKeyFn(d, i)
     : `${baseClass}-${d.key === undefined ? i : d.key}`;
 
+  if (tx || ty) {
+    markProps.transform = `translate(${tx || 0},${ty || 0})`;
+  }
+
   if (classFn) {
     markProps.className = `${baseClass} ${classFn(d, i)}`;
   }
+
+  if (!markProps.markType) {
+    return <markProps />;
+  }
+
+  markProps.renderMode = renderFn ? renderFn(d, i) : undefined;
 
   return <Mark {...markProps} />;
 }
