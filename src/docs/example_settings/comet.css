@@ -1,0 +1,14 @@
+.axis path {
+  stroke: #ddd;
+  stroke-dasharray: 1 1;
+}
+
+.axis text {
+  fill: #999;
+}
+
+.tooltip-content {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px double #ddd;
+  padding: 10px 20px;
+}

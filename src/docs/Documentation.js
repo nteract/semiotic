@@ -45,6 +45,7 @@ import Dendrogram from "./components/Dendrogram";
 import NegativeStacked from "./components/NegativeStacked";
 import CustomMark from "./components/CustomMark";
 import SharedTooltipExample from "./components/SharedTooltipExample";
+import CometPlot from "./components/CometPlot";
 
 //import Process from "./components/Process";
 import BarToParallel from "./components/BarToParallel";
@@ -84,6 +85,7 @@ const components = {
   negativestacked: { docs: NegativeStacked, parent: "xyframe" },
   datasketches: { docs: DataSketchesPlot, parent: "xyframe" },
   sharedTooltip: { docs: SharedTooltipExample, parent: "xyframe" },
+  cometplot: { docs: CometPlot, parent: "xyframe" },
   orframe: { docs: ORFrameDocs },
   violin: { docs: Violin, parent: "orframe" },
   parallelcoordinates: { docs: ParallelCoordinates, parent: "orframe" },
