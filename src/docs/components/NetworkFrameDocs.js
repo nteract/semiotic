@@ -142,7 +142,10 @@ const nodeData = [
   { id: "Susie" },
   { id: "Kai" },
   { id: "Elijah" },
-  { id: "Enrico" }
+  { id: "Enrico" },
+  { id: "j" },
+  { id: "k" },
+  { id: "l" }
 ];
 
 const networkEdgeStyle = () => ({
@@ -157,7 +160,7 @@ export default class NetworkFrameDocs extends React.Component {
     super(props);
     this.state = {
       annotations: "off",
-      networkType: "force",
+      networkType: "motifs",
       edge: "none",
       nodeSize: "degree",
       customNodeIcon: "off"
@@ -294,7 +297,7 @@ export default class NetworkFrameDocs extends React.Component {
             size={chartSize}
             edges={edgeData}
             nodes={nodeData}
-            margin={60}
+            margin={{ top: 50, bottom: 50, left: 50, right: 50 }}
             edgeStyle={networkEdgeStyle}
             nodeStyle={networkNodeStyle}
             networkType={networkType}

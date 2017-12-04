@@ -5,6 +5,7 @@ import { scaleLog, scaleLinear } from "d3-scale";
 import { Mark } from "semiotic-mark";
 import data from "../sampledata/birthdata.js";
 import { d as glyphD } from "d3-glyphedge";
+import { AnnotationCalloutCircle } from "react-annotation";
 import "../example_settings/comet.css";
 
 const processedData = csvParse(data);
@@ -78,9 +79,17 @@ export default (
         coordinates: processedData.filter(
           d => d.birthweight === " 2000 - 2499 grams"
         ),
-        dx: 100,
-        dy: -75,
+        dx: -100,
+        dy: -1,
         label: " 2000 - 2499 grams"
+      },
+      {
+        type: AnnotationCalloutCircle,
+        coordinates: processedData.filter(d => d.state === "Georgia"),
+        nx: 503,
+        ny: 80,
+        label: "Georgia",
+        subject: { radius: 6, radiusPadding: 2 }
       }
     ]}
     axes={[

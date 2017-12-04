@@ -69,6 +69,45 @@ const customEdgeHashMutate = {
 
 import { networkFrameChangeProps } from "./constants/frame_props";
 
+function breadthFirstCompontents(baseNodes, hash) {
+  const componentHash = {
+    "0": { componentNodes: [], componentEdges: [] }
+  };
+  const components = [componentHash["0"]];
+
+  let componentID = 0;
+
+  traverseNodesBF(baseNodes, true);
+
+  function traverseNodesBF(nodes, top) {
+    nodes.forEach(node => {
+      const hashNode = hash.get(node);
+      if (!hashNode) {
+        componentHash["0"].componentNodes.push(node);
+      } else if (hashNode.component === null) {
+        if (top === true) {
+          componentID++;
+          componentHash[componentID] = {
+            componentNodes: [],
+            componentEdges: []
+          };
+          components.push(componentHash[componentID]);
+        }
+
+        hashNode.component = componentID;
+        componentHash[componentID].componentNodes.push(node);
+        componentHash[componentID].componentEdges.push(...hashNode.edges);
+        const traversibleNodes = [...hashNode.connectedNodes];
+        traverseNodesBF(traversibleNodes);
+      }
+    });
+  }
+
+  return components.sort(
+    (a, b) => b.componentNodes.length - a.componentNodes.length
+  );
+}
+
 const projectedCoordinateNames = { y: "y", x: "x" };
 
 function recursiveIDAccessor(idAccessor, node, accessorString) {
@@ -909,9 +948,25 @@ class NetworkFrame extends React.Component {
 
         for (let i = 0; i < iterations; ++i) simulation.tick();
       } else if (networkSettings.type === "motifs") {
-        console.error(
-          "motifs not supported in this version, please file an issue to find current status"
-        );
+        const componentHash = new Map();
+        projectedEdges.forEach(edge => {
+          [edge.source, edge.target].forEach(node => {
+            if (!componentHash.get(node)) {
+              componentHash.set(node, {
+                node,
+                component: null,
+                connectedNodes: [],
+                edges: []
+              });
+            }
+          });
+          componentHash.get(edge.source).connectedNodes.push(edge.target);
+          componentHash.get(edge.target).connectedNodes.push(edge.source);
+          componentHash.get(edge.source).edges.push(edge);
+        });
+
+        components = breadthFirstCompontents(projectedNodes, componentHash);
+
         const largestComponent = Math.max(
           projectedNodes.length / 3,
           components[0].componentNodes.length

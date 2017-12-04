@@ -28,7 +28,5 @@ export const edgeData = [
   { source: "b", target: "c", weight: 2 },
   { source: "d", target: "e", weight: 2 },
   { source: "f", target: "g", weight: 2 },
-  { source: "h", target: "i", weight: 2 },
-  { source: "j", target: "j", weight: 2 },
-  { source: "k", target: "k", weight: 2 }
+  { source: "h", target: "i", weight: 2 }
 ];
