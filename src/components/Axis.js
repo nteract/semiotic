@@ -301,6 +301,7 @@ class Axis extends React.Component {
         {axisTickLabels}
         {axisTickLines}
         <line
+          key="baseline"
           className="axis-baseline"
           stroke="black"
           x1={baselineX}

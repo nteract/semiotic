@@ -110,7 +110,7 @@ export const basicReactAnnotation = ({ screenCoordinates, d, i }) => {
     d,
     {
       type: d.type,
-      screenCoordinates: screenCoordinates
+      screenCoordinates
     }
   )
 
