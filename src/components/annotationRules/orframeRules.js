@@ -211,7 +211,10 @@ export const basicReactAnnotationRule = ({ d, i, screenCoordinates }) => {
       connector: { end: "arrow" }
     },
     d,
-    { type: typeof d.type === "function" ? d.type : undefined }
+    {
+      type: typeof d.type === "function" ? d.type : undefined,
+      screenCoordinates
+    }
   )
   return <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
 }
