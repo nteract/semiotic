@@ -1,13 +1,13 @@
-import React from "react";
-import { XYFrame } from "../../components";
-import lines from "../sampledata/sharedTooltipData";
-import { scaleTime } from "d3-scale";
-import { timeFormat } from "d3-time-format";
+import React from "react"
+import { XYFrame } from "../../components"
+import lines from "../sampledata/sharedTooltipData"
+import { scaleTime } from "d3-scale"
+import { timeFormat } from "d3-time-format"
 
 const chartAxes = [
   { orient: "left" },
   { orient: "bottom", ticks: 6, tickFormat: d => timeFormat("%m/%d")(d) }
-];
+]
 
 const tooltipStyles = {
   header: {
@@ -24,7 +24,7 @@ const tooltipStyles = {
     minWidth: "max-content",
     whiteSpace: "nowrap"
   }
-};
+}
 
 function fetchSharedTooltipContent(passedData) {
   const points = lines
@@ -35,21 +35,21 @@ function fetchSharedTooltipContent(passedData) {
         data: point.data.find(i => {
           // Search the lines for a similar x value for vertical shared tooltip
           // Can implement a 'close enough' conditional here too (fuzzy equality)
-          return i.x.getTime() === passedData.x.getTime();
+          return i.x.getTime() === passedData.x.getTime()
         })
-      };
+      }
     })
-    .sort((a, b) => b.data.y - a.data.y);
+    .sort((a, b) => b.data.y - a.data.y)
 
   const returnArray = [
     <div key={"header_multi"} style={tooltipStyles.header}>
       {`Records for: ${timeFormat("%m/%d/%Y")(new Date(passedData.x))}`}
     </div>
-  ];
+  ]
 
   points.forEach((point, i) => {
-    const title = point.id;
-    const valString = `${point.data.y} units`;
+    const title = point.id
+    const valString = `${point.data.y} units`
 
     returnArray.push([
       <div key={`tooltip_line_${i}`} style={tooltipStyles.lineItem}>
@@ -71,19 +71,19 @@ function fetchSharedTooltipContent(passedData) {
           {valString}
         </p>
       </div>
-    ]);
-  });
+    ])
+  })
 
   return (
     <div className="tooltip-content" style={tooltipStyles.wrapper}>
       {returnArray}
     </div>
-  );
+  )
 }
 
 function fetchSingletonTooltip(d) {
-  const title = d.parentLine.id;
-  const valString = `${d.y} units`;
+  const title = d.parentLine.id
+  const valString = `${d.y} units`
 
   const returnArray = [
     <div key={"header_singleton"} style={tooltipStyles.header}>
@@ -110,13 +110,13 @@ function fetchSingletonTooltip(d) {
         {valString}
       </p>
     </div>
-  ];
+  ]
 
   return (
     <div className="tooltip-content" style={tooltipStyles.wrapper}>
       {returnArray}
     </div>
-  );
+  )
 }
 
 export default function generateSharedTooltipFrame(isShared) {
@@ -130,7 +130,7 @@ export default function generateSharedTooltipFrame(isShared) {
       yAccessor={d => d.y}
       lines={lines}
       lineStyle={d => {
-        return { stroke: d.color, strokeWidth: "2px" };
+        return { stroke: d.color, strokeWidth: "2px" }
       }}
       axes={chartAxes}
       margin={{ top: 50, left: 40, right: 10, bottom: 40 }}
@@ -139,7 +139,7 @@ export default function generateSharedTooltipFrame(isShared) {
           fill: "none",
           stroke: "black",
           strokeWidth: "1.5px"
-        };
+        }
       }}
       hoverAnnotation={
         isShared === "Shared" ? (
@@ -155,8 +155,8 @@ export default function generateSharedTooltipFrame(isShared) {
       tooltipContent={d => {
         return isShared === "Shared"
           ? fetchSharedTooltipContent(d)
-          : fetchSingletonTooltip(d);
+          : fetchSingletonTooltip(d)
       }}
     />
-  );
+  )
 }

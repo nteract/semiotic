@@ -90,4 +90,4 @@ California, 4000 - 4499 grams, 1.67, 1.12, 194276, 153362
 California, 499 grams or less, 879.21, 850.28, 2318, 2518
 California, 3500 - 3999 grams, 1.7, 1.21, 642323, 597310
 California, 500 - 999 grams, 338.35, 295.25, 8967, 9338
-California, 2000 - 2499 grams, 12.98, 9.85, 81989, 93270`;
+California, 2000 - 2499 grams, 12.98, 9.85, 81989, 93270`

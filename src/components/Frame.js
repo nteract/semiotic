@@ -1,24 +1,24 @@
-import React from "react";
-import AnnotationLayer from "./AnnotationLayer";
-import InteractionLayer from "./InteractionLayer";
-import VisualizationLayer from "./VisualizationLayer";
+import React from "react"
+import AnnotationLayer from "./AnnotationLayer"
+import InteractionLayer from "./InteractionLayer"
+import VisualizationLayer from "./VisualizationLayer"
 
-import PropTypes from "prop-types";
+import PropTypes from "prop-types"
 
-const defaultZeroMargin = { top: 0, bottom: 0, left: 0, right: 0 };
+const defaultZeroMargin = { top: 0, bottom: 0, left: 0, right: 0 }
 
 class Frame extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
 
     this.state = {
       canvasContext: null,
       voronoiHover: undefined
-    };
+    }
   }
 
   componentDidMount() {
-    this.setState({ canvasContext: this.canvasContext });
+    this.setState({ canvasContext: this.canvasContext })
   }
 
   render() {
@@ -63,22 +63,22 @@ class Frame extends React.Component {
       rScale,
       projection,
       interactionOverflow
-    } = this.props;
+    } = this.props
 
-    const { voronoiHover } = this.state;
+    const { voronoiHover } = this.state
 
-    const areaAnnotations = [];
-    let annotationLayer = null;
+    const areaAnnotations = []
+    let annotationLayer = null
 
     let totalAnnotations = annotations
       ? [...annotations, ...areaAnnotations]
-      : areaAnnotations;
+      : areaAnnotations
 
     if (voronoiHover) {
       if (Array.isArray(voronoiHover)) {
-        totalAnnotations.push(...voronoiHover);
+        totalAnnotations.push(...voronoiHover)
       } else {
-        totalAnnotations.push(voronoiHover);
+        totalAnnotations.push(voronoiHover)
       }
     }
 
@@ -112,7 +112,7 @@ class Frame extends React.Component {
             adjustedPosition[1] + margin.top
           ]}
         />
-      );
+      )
     }
 
     return (
@@ -194,7 +194,7 @@ class Frame extends React.Component {
           {afterElements}
         </div>
       </div>
-    );
+    )
   }
 }
 
@@ -223,6 +223,6 @@ Frame.propTypes = {
   backgroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
   foregroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
   interactionOverflow: PropTypes.object
-};
+}
 
-export default Frame;
+export default Frame

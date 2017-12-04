@@ -1,10 +1,10 @@
-import React from "react";
+import React from "react"
 
-import { select } from "d3-selection";
-import { arc } from "d3-shape";
-import { Mark } from "semiotic-mark";
+import { select } from "d3-selection"
+import { arc } from "d3-shape"
+import { Mark } from "semiotic-mark"
 
-const twoPI = Math.PI * 2;
+const twoPI = Math.PI * 2
 
 export const drawAreaConnector = ({
   x1,
@@ -17,8 +17,8 @@ export const drawAreaConnector = ({
   sizeY2
 }) => {
   return `M${x1},${y1}L${x2},${y2}L${x2 + sizeX2},${y2 + sizeY2}L${x1 +
-    sizeX1},${y1 + sizeY1}Z`;
-};
+    sizeX1},${y1 + sizeY1}Z`
+}
 
 export const wrap = (text, width) => {
   text.each(function() {
@@ -29,7 +29,7 @@ export const wrap = (text, width) => {
         .reverse(),
       lineHeight = 1.1, // ems
       y = textNode.attr("y"),
-      dy = parseFloat(textNode.attr("dy"));
+      dy = parseFloat(textNode.attr("dy"))
 
     let word,
       line = [],
@@ -39,44 +39,44 @@ export const wrap = (text, width) => {
         .append("tspan")
         .attr("x", 0)
         .attr("y", y)
-        .attr("dy", `${dy}em`);
+        .attr("dy", `${dy}em`)
 
     while (words.length > 0) {
-      word = words.pop();
-      line.push(word);
-      tspan.text(line.join(" "));
+      word = words.pop()
+      line.push(word)
+      tspan.text(line.join(" "))
       if (tspan.node().getComputedTextLength() > width) {
-        line.pop();
-        tspan.text(line.join(" "));
-        line = [word];
+        line.pop()
+        tspan.text(line.join(" "))
+        line = [word]
 
         tspan = text
           .append("tspan")
           .attr("x", 0)
           .attr("y", y)
           .attr("dy", `${++lineNumber * lineHeight + dy}em`)
-          .text(word);
+          .text(word)
       }
     }
-  });
-};
+  })
+}
 
 export const hexToRgb = hex => {
   if (hex.substr(0, 1).toLowerCase() === "r") {
     return hex
       .split("(")[1]
       .split(")")[0]
-      .split(",");
+      .split(",")
   }
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
   return result
     ? [
         parseInt(result[1], 16),
         parseInt(result[2], 16),
         parseInt(result[3], 16)
       ]
-    : [0, 0, 0];
-};
+    : [0, 0, 0]
+}
 
 export const groupBarMark = ({
   bins,
@@ -93,57 +93,57 @@ export const groupBarMark = ({
   type,
   margin
 }) => {
-  let xProp = -columnWidth / 2;
+  let xProp = -columnWidth / 2
 
-  const mappedBins = [];
-  const mappedPoints = [];
+  const mappedBins = []
+  const mappedPoints = []
 
   bins.forEach((d, i) => {
-    const opacity = d.value / binMax;
+    const opacity = d.value / binMax
     const finalStyle =
       type.type === "heatmap"
         ? { opacity: opacity, fill: summaryStyle.fill }
-        : summaryStyle;
+        : summaryStyle
     const finalColumnWidth =
-      type.type === "heatmap" ? columnWidth : columnWidth * opacity;
-    let yProp = d.y;
-    let height = d.y1;
-    let width = finalColumnWidth;
+      type.type === "heatmap" ? columnWidth : columnWidth * opacity
+    let yProp = d.y
+    let height = d.y1
+    let width = finalColumnWidth
     let xOffset =
-      type.type === "heatmap" ? finalColumnWidth / 2 : finalColumnWidth;
-    let yOffset = d.y1 / 2;
+      type.type === "heatmap" ? finalColumnWidth / 2 : finalColumnWidth
+    let yOffset = d.y1 / 2
 
     if (projection === "horizontal") {
       yProp =
         type.type === "heatmap"
           ? -columnWidth / 2
-          : columnWidth / 2 - finalColumnWidth;
-      xProp = d.y - d.y1;
-      height = finalColumnWidth;
-      width = d.y1;
+          : columnWidth / 2 - finalColumnWidth
+      xProp = d.y - d.y1
+      height = finalColumnWidth
+      width = d.y1
       yOffset =
-        type.type === "heatmap" ? finalColumnWidth / 2 : finalColumnWidth;
-      xOffset = d.y1 / 2;
+        type.type === "heatmap" ? finalColumnWidth / 2 : finalColumnWidth
+      xOffset = d.y1 / 2
     } else if (projection === "radial") {
       const arcGenerator = arc()
         .innerRadius((d.y - margin.left) / 2)
-        .outerRadius((d.y + d.y1 - margin.left) / 2);
+        .outerRadius((d.y + d.y1 - margin.left) / 2)
 
-      const angle = summary.pct - summary.pct_padding;
-      let startAngle = summary.pct_middle - summary.pct_padding;
+      const angle = summary.pct - summary.pct_padding
+      let startAngle = summary.pct_middle - summary.pct_padding
 
       let endAngle =
         type.type === "heatmap"
           ? startAngle + angle
-          : startAngle + angle * opacity;
-      startAngle *= twoPI;
-      endAngle *= twoPI;
+          : startAngle + angle * opacity
+      startAngle *= twoPI
+      endAngle *= twoPI
 
-      const arcAdjustX = adjustedSize[0] / 2;
-      const arcAdjustY = adjustedSize[1] / 2;
+      const arcAdjustX = adjustedSize[0] / 2
+      const arcAdjustY = adjustedSize[1] / 2
 
-      const arcTranslate = `translate(${arcAdjustX},${arcAdjustY})`;
-      const arcCenter = arcGenerator.centroid({ startAngle, endAngle });
+      const arcTranslate = `translate(${arcAdjustX},${arcAdjustY})`
+      const arcCenter = arcGenerator.centroid({ startAngle, endAngle })
       mappedPoints.push({
         key: summary.name,
         value: d.value,
@@ -151,7 +151,7 @@ export const groupBarMark = ({
         label: "Heatmap",
         x: arcCenter[0] + arcAdjustX,
         y: arcCenter[1] + arcAdjustY
-      });
+      })
       mappedBins.push(
         <Mark
           markType="path"
@@ -161,7 +161,7 @@ export const groupBarMark = ({
           d={arcGenerator({ startAngle, endAngle })}
           style={finalStyle}
         />
-      );
+      )
     }
     if (projection !== "radial") {
       mappedPoints.push({
@@ -171,7 +171,7 @@ export const groupBarMark = ({
         label: "Heatmap",
         x: xProp + xOffset,
         y: yProp + yOffset
-      });
+      })
 
       mappedBins.push(
         <Mark
@@ -184,9 +184,9 @@ export const groupBarMark = ({
           width={width}
           style={finalStyle}
         />
-      );
+      )
     }
-  });
+  })
 
-  return { marks: mappedBins, points: mappedPoints };
-};
+  return { marks: mappedBins, points: mappedPoints }
+}

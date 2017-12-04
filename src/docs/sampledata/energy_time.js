@@ -1,4 +1,4 @@
-import { csvParse } from "d3-dsv";
+import { csvParse } from "d3-dsv"
 
 export const temperature_data = `source,target,2010,2015,2020,2025,2030,2035,2040,2045,2050,total
 Coal reserves,Coal,127.93,127.93,127.93,127.93,63.965,63.965,63.965,63.965,63.965,831.545
@@ -62,28 +62,28 @@ Liquid,Domestic aviation,9.55109733,10.16371642,11.07874205,11.92797975,12.65784
 Liquid,National navigation,26.57289571,25.38306456,24.58984379,23.99670496,23.68879172,23.38482946,23.0847675,22.78855577,22.49614487,215.9855983
 Liquid,International aviation,125.0236042,141.9277504,160.7246469,170.5797952,178.7278412,190.5888908,194.9306323,196.4187558,188.5816831,1547.5036
 Liquid,International shipping,57.28499215,62.90268135,69.07127281,76.70040745,85.17220349,94.57973548,105.0263583,116.6268428,129.5086365,796.8731304
-Gas,Losses,11.41035458,12.30753698,13.70382224,15.82815018,17.9475581,19.69381594,21.20562289,22.77444364,24.11615269,158.9874572`;
+Gas,Losses,11.41035458,12.30753698,13.70382224,15.82815018,17.9475581,19.69381594,21.20562289,22.77444364,24.11615269,158.9874572`
 
-const processedEnergy = csvParse(temperature_data);
+const processedEnergy = csvParse(temperature_data)
 
 processedEnergy.forEach(d => {
   Object.keys(d).forEach(key => {
-    d[key] = key === "source" || key === "target" ? d[key] : parseFloat(d[key]);
-  });
-});
+    d[key] = key === "source" || key === "target" ? d[key] : parseFloat(d[key])
+  })
+})
 
-const processedEnergyNodeHash = {};
-const processedNodes = [];
+const processedEnergyNodeHash = {}
+const processedNodes = []
 const colors = {
   "Fossil Fuels": "#00a2ce",
   Agriculture: "#4d430c",
   Alternative: "#b3331d",
   Other: "#b6a756"
-};
+}
 
 processedEnergy.forEach(edge => {
-  const { source, target } = edge;
-  const arrayed = [source, target];
+  const { source, target } = edge
+  const arrayed = [source, target]
   arrayed.forEach(nodeVal => {
     if (!processedEnergyNodeHash[nodeVal]) {
       processedEnergyNodeHash[nodeVal] = {
@@ -91,7 +91,7 @@ processedEnergy.forEach(edge => {
         input: 0,
         output: 0,
         years: [0, 0, 0, 0, 0, 0, 0, 0, 0]
-      };
+      }
       if (
         [
           "Coal reserves",
@@ -107,11 +107,11 @@ processedEnergy.forEach(edge => {
           "Solid"
         ].indexOf(nodeVal) !== -1
       ) {
-        processedEnergyNodeHash[nodeVal].category = "Fossil Fuels";
+        processedEnergyNodeHash[nodeVal].category = "Fossil Fuels"
       } else if (
         ["Agricultural", "Agricultural 'waste'"].indexOf(nodeVal) !== -1
       ) {
-        processedEnergyNodeHash[nodeVal].category = "Agriculture";
+        processedEnergyNodeHash[nodeVal].category = "Agriculture"
       } else if (
         [
           "Bio-conversion",
@@ -127,32 +127,32 @@ processedEnergy.forEach(edge => {
           "Wind"
         ].indexOf(nodeVal) !== -1
       ) {
-        processedEnergyNodeHash[nodeVal].category = "Alternative";
+        processedEnergyNodeHash[nodeVal].category = "Alternative"
       } else {
-        processedEnergyNodeHash[nodeVal].category = "Other";
+        processedEnergyNodeHash[nodeVal].category = "Other"
       }
 
       processedEnergyNodeHash[nodeVal].color =
-        colors[processedEnergyNodeHash[nodeVal].category];
-      processedNodes.push(processedEnergyNodeHash[nodeVal]);
+        colors[processedEnergyNodeHash[nodeVal].category]
+      processedNodes.push(processedEnergyNodeHash[nodeVal])
     }
     Object.keys(edge).forEach((d, i) => {
       if (["source", "target", "total"].indexOf(d) === -1) {
-        processedEnergyNodeHash[nodeVal].years[i] += edge[d];
+        processedEnergyNodeHash[nodeVal].years[i] += edge[d]
       }
-    });
-  });
-  edge.value = edge.total;
+    })
+  })
+  edge.value = edge.total
 
-  processedEnergyNodeHash[source].output += edge.total;
-  processedEnergyNodeHash[target].input += edge.total;
-});
+  processedEnergyNodeHash[source].output += edge.total
+  processedEnergyNodeHash[target].input += edge.total
+})
 
 export const or_data = processedNodes.sort(
   (a, b) => (a.category < b.category ? -1 : a.category > b.category ? 1 : 0)
-);
+)
 
-export const network_data = processedEnergy;
+export const network_data = processedEnergy
 
 const nodes = [
   { id: "Minard" },
@@ -169,4 +169,4 @@ const nodes = [
   { id: "Bostock" },
   { id: "Fry" },
   { id: "Victor" }
-];
+]

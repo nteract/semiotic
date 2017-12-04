@@ -1,12 +1,12 @@
-import React from "react";
-import { ORFrame } from "../../components";
+import React from "react"
+import { ORFrame } from "../../components"
 
 const colors = {
   "Almond lovers": "#00a2ce",
   "Berry buyers": "#4d430c",
   "Carrots-n-more": "#b3331d",
   "Delicious-n-new": "#b6a756"
-};
+}
 const data = [
   { market: "Auburn, AL", segment: "Almond lovers", value: 3840, pct: 0.54 },
   { market: "Auburn, AL", segment: "Berry buyers", value: 1920, pct: 0.27 },
@@ -54,7 +54,7 @@ const data = [
   { market: "Durham, NC", segment: "Berry buyers", value: 480, pct: 0.26 },
   { market: "Durham, NC", segment: "Carrots-n-more", value: 640, pct: 0.35 },
   { market: "Durham, NC", segment: "Delicious-n-new", value: 400, pct: 0.22 }
-];
+]
 
 export default (
   <ORFrame
@@ -74,4 +74,4 @@ export default (
     oPadding={0}
     oLabel={d => <text transform="rotate(45)">{d}</text>}
   />
-);
+)

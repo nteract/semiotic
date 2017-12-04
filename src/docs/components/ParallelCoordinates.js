@@ -1,27 +1,27 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import { curveBasis } from "d3-shape";
-import { ORFrame } from "../../components";
-import { orframe_data } from "../sampledata/nyc_temp";
-import { degreeDiffFormat } from "../example_settings/orframe";
-import { scaleLinear } from "d3-scale";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import { curveBasis } from "d3-shape"
+import { ORFrame } from "../../components"
+import { orframe_data } from "../sampledata/nyc_temp"
+import { degreeDiffFormat } from "../example_settings/orframe"
+import { scaleLinear } from "d3-scale"
 
-const components = [];
+const components = []
 // Add your component proptype data here
 // multiple component proptype documentation supported
 
 const yearScale = scaleLinear()
   .range(["#f2f0f7", "#cbc9e2", "#9e9ac8", "#6a51a3"])
-  .domain([1869, 1900, 1950, 2017]);
+  .domain([1869, 1900, 1950, 2017])
 
 components.push({
   name: "Parallel Coordinates"
-});
+})
 
 export default class ParallelCoordinatesDocs extends React.Component {
   constructor(props) {
-    super(props);
-    this.brushing = this.brushing.bind(this);
+    super(props)
+    this.brushing = this.brushing.bind(this)
     this.state = {
       columnExtent: {
         January: undefined,
@@ -37,13 +37,13 @@ export default class ParallelCoordinatesDocs extends React.Component {
         November: undefined,
         December: undefined
       }
-    };
+    }
   }
 
   brushing(e, c) {
-    const columnExtent = this.state.columnExtent;
-    columnExtent[c] = e;
-    this.setState(columnExtent);
+    const columnExtent = this.state.columnExtent
+    columnExtent[c] = e
+    this.setState(columnExtent)
   }
 
   render() {
@@ -55,13 +55,13 @@ export default class ParallelCoordinatesDocs extends React.Component {
         position: { anchor: "middle" },
         locationDistance: 40
       }
-    };
+    }
 
-    const hiddenHash = new Map();
+    const hiddenHash = new Map()
 
     Object.keys(this.state.columnExtent).forEach(key => {
       if (this.state.columnExtent[key]) {
-        const extent = this.state.columnExtent[key].sort((a, b) => a - b);
+        const extent = this.state.columnExtent[key].sort((a, b) => a - b)
         orframe_data
           .filter(
             d =>
@@ -69,12 +69,12 @@ export default class ParallelCoordinatesDocs extends React.Component {
               (d.stepValue < extent[0] || d.stepValue > extent[1])
           )
           .forEach(p => {
-            hiddenHash.set(p.funnelKey, true);
-          });
+            hiddenHash.set(p.funnelKey, true)
+          })
       }
-    });
+    })
 
-    const examples = [];
+    const examples = []
 
     examples.push({
       name: "Basic",
@@ -170,7 +170,7 @@ export default class ParallelCoordinatesDocs extends React.Component {
               interaction={{ columnsBrush: true, end: this.brushing, extent: this.state.columnExtent }}
             />
       `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -193,8 +193,8 @@ export default class ParallelCoordinatesDocs extends React.Component {
           column.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-ParallelCoordinatesDocs.title = "Parallel Coordinates";
+ParallelCoordinatesDocs.title = "Parallel Coordinates"

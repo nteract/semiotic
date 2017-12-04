@@ -1,45 +1,45 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import SwarmBrushRaw from "./SwarmBrushRaw";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import SwarmBrushRaw from "./SwarmBrushRaw"
 
-const components = [];
+const components = []
 
 components.push({
   name: "Beeswarm Plot Brush"
-});
+})
 
 const data = Array.from(Array(200), () => ({
   value: parseInt(Math.random() * 100)
-}));
+}))
 
 export default class SwarmBrush extends React.Component {
   constructor(props) {
-    super(props);
-    this.state = { selectedDataCount: 200, resetExtent: [0, 100] };
-    this.brushEnd = this.brushEnd.bind(this);
-    this.randomizeExtent = this.randomizeExtent.bind(this);
+    super(props)
+    this.state = { selectedDataCount: 200, resetExtent: [0, 100] }
+    this.brushEnd = this.brushEnd.bind(this)
+    this.randomizeExtent = this.randomizeExtent.bind(this)
   }
 
   randomizeExtent() {
-    const randomStart = parseInt(Math.random() * 50);
-    this.setState({ resetExtent: [randomStart, randomStart + 50] });
+    const randomStart = parseInt(Math.random() * 50)
+    this.setState({ resetExtent: [randomStart, randomStart + 50] })
   }
 
   brushEnd(e) {
     this.setState({
       selectedDataCount: data.filter(d => d.value >= e[0] && d.value <= e[1])
         .length
-    });
+    })
   }
 
   render() {
-    const examples = [];
+    const examples = []
 
     const buttons = [
       <button key="buon" onClick={this.randomizeExtent}>
         Random Extent
       </button>
-    ];
+    ]
 
     examples.push({
       name: "Basic",
@@ -74,7 +74,7 @@ export default class SwarmBrush extends React.Component {
     <h2>{this.state.selectedDataCount} Selected Points</h2>
     </div>
       `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -90,8 +90,8 @@ export default class SwarmBrush extends React.Component {
           you can select a few values in a beeswarm plot.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-SwarmBrush.title = "Swarm Brush";
+SwarmBrush.title = "Swarm Brush"

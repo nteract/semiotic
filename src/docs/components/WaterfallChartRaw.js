@@ -1,7 +1,7 @@
-import React from "react";
-import { ORFrame } from "../../components";
+import React from "react"
+import { ORFrame } from "../../components"
 
-const padding = 40;
+const padding = 40
 const data = [
   { name: "Product Revenue", value: 42000 },
   { name: "Services Revenue", value: 21000 },
@@ -11,41 +11,41 @@ const data = [
   { name: "Ransoms", value: 10000 },
   { name: "Cat Rental", value: 10000 },
   { name: "Total" }
-];
+]
 
 const fillRule = d =>
-  d.name === "Total" ? "#00a2ce" : d.value > 0 ? "#4d430c" : "#b3331d";
+  d.name === "Total" ? "#00a2ce" : d.value > 0 ? "#4d430c" : "#b3331d"
 const formatLabel = (name, value) =>
-  `$${(name === "Total" ? Math.abs(value) : value) / 1000}k`;
+  `$${(name === "Total" ? Math.abs(value) : value) / 1000}k`
 
 //type, data, renderMode, eventListenersGenerator, styleFn, projection, classFn, adjustedSize, margin, rScale
 function waterfall({ data, rScale, adjustedSize, margin }) {
-  const renderedPieces = [];
-  let currentY = 0;
-  let currentValue = 0;
-  const zeroValue = rScale(0);
+  const renderedPieces = []
+  let currentY = 0
+  let currentValue = 0
+  const zeroValue = rScale(0)
 
-  const keys = Object.keys(data);
+  const keys = Object.keys(data)
 
   keys.forEach(key => {
     //assume only one per column though...
-    const thisPiece = data[key].pieceData[0];
+    const thisPiece = data[key].pieceData[0]
 
-    let value = thisPiece.value;
-    const name = thisPiece.name;
+    let value = thisPiece.value
+    const name = thisPiece.name
     if (name === "Total") {
-      value = -currentValue;
+      value = -currentValue
     } else {
-      currentValue += value;
+      currentValue += value
     }
-    const thisColumn = data[name];
-    const { x, width } = thisColumn;
-    const height = rScale(value) - zeroValue;
-    let y = adjustedSize[1] - margin.top - height;
+    const thisColumn = data[name]
+    const { x, width } = thisColumn
+    const height = rScale(value) - zeroValue
+    let y = adjustedSize[1] - margin.top - height
     if (height < 0) {
-      y = adjustedSize[1] - margin.top;
+      y = adjustedSize[1] - margin.top
     }
-    y += margin.top + currentY;
+    y += margin.top + currentY
 
     const markObject = {
       o: key,
@@ -58,9 +58,9 @@ function waterfall({ data, rScale, adjustedSize, margin }) {
         x: x + width / 2,
         y: y
       }
-    };
+    }
 
-    renderedPieces.push(markObject);
+    renderedPieces.push(markObject)
 
     markObject.renderElement.children.push(
       <rect
@@ -70,8 +70,8 @@ function waterfall({ data, rScale, adjustedSize, margin }) {
         width={width}
         style={{ fill: fillRule(thisPiece) }}
       />
-    );
-    const lineY = name === "Total" || value > 0 ? y : y + Math.abs(height);
+    )
+    const lineY = name === "Total" || value > 0 ? y : y + Math.abs(height)
 
     if (name !== "Total") {
       markObject.renderElement.children.push(
@@ -82,9 +82,9 @@ function waterfall({ data, rScale, adjustedSize, margin }) {
           y2={lineY}
           style={{ stroke: "gray", strokeDasharray: "5 5" }}
         />
-      );
+      )
     }
-    const textOffset = name === "Total" || value > 0 ? 15 : -5;
+    const textOffset = name === "Total" || value > 0 ? 15 : -5
     markObject.renderElement.children.push(
       <text
         x={x + width / 2}
@@ -93,12 +93,12 @@ function waterfall({ data, rScale, adjustedSize, margin }) {
       >
         {formatLabel(name, value)}
       </text>
-    );
+    )
 
-    currentY -= height;
-  });
+    currentY -= height
+  })
 
-  return renderedPieces;
+  return renderedPieces
 }
 
 export default (
@@ -120,4 +120,4 @@ export default (
     oPadding={padding}
     hoverAnnotation={true}
   />
-);
+)

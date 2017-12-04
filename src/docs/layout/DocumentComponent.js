@@ -1,11 +1,11 @@
-import React from "react";
-import { PrismCode } from "react-prism";
-import { dedent } from "dentist";
-import CodeIcon from "material-ui-icons/Code";
-import IconButton from "material-ui/IconButton";
+import React from "react"
+import { PrismCode } from "react-prism"
+import { dedent } from "dentist"
+import CodeIcon from "material-ui-icons/Code"
+import IconButton from "material-ui/IconButton"
 
 const DocumentProptypes = props => {
-  const { name, proptypes } = props.component;
+  const { name, proptypes } = props.component
   return (
     <div className="docs-component-props">
       <h3>{name} - PropTypes</h3>
@@ -15,11 +15,11 @@ const DocumentProptypes = props => {
         </PrismCode>
       </pre>
     </div>
-  );
-};
+  )
+}
 
 const DocumentExamples = props => {
-  const { name, demo, source } = props.component;
+  const { name, demo, source } = props.component
   return (
     <div className="docs-component-props">
       <h3>{name}</h3>
@@ -30,8 +30,8 @@ const DocumentExamples = props => {
         </pre>
       )}
     </div>
-  );
-};
+  )
+}
 
 const DocumentComponent = props => {
   const {
@@ -41,7 +41,7 @@ const DocumentComponent = props => {
     examples = [],
     buttons = [],
     api
-  } = props;
+  } = props
   return (
     <div className="docs-component-section">
       <h1>
@@ -89,7 +89,7 @@ const DocumentComponent = props => {
           )
       )}
     </div>
-  );
-};
+  )
+}
 
-export default DocumentComponent;
+export default DocumentComponent

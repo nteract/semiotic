@@ -1,7 +1,7 @@
-import React from "react";
-import { summaryChart } from "../example_settings/orframe";
-import { ORFrame } from "../../components";
-import { max } from "d3-array";
+import React from "react"
+import { summaryChart } from "../example_settings/orframe"
+import { ORFrame } from "../../components"
+import { max } from "d3-array"
 
 const axis = {
   orient: "left",
@@ -11,7 +11,7 @@ const axis = {
     position: { anchor: "middle" },
     locationDistance: 40
   }
-};
+}
 
 export default (
   <ORFrame
@@ -75,4 +75,4 @@ export default (
       }
     ]}
   />
-);
+)

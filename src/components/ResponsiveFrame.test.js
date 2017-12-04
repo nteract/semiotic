@@ -17,20 +17,24 @@ describe("ResponsiveFrameComponents", () => {
     const ResponsiveFrameComponent = ResponsiveFrameComponents[componentName]
 
     it("renders", () => {
-      mount(<ResponsiveFrameComponent 
-        dataVersion={"foo"} 
-        disableContext={true}
-        responsiveHeight={true}
-        responsiveWidth={true} />)
-    })
-  
-    it("renders a <ResizeDetector />", () => {
-      const wrapper = shallow(
-        <ResponsiveFrameComponent 
-          dataVersion={"foo"} 
+      mount(
+        <ResponsiveFrameComponent
+          dataVersion={"foo"}
           disableContext={true}
           responsiveHeight={true}
-          responsiveWidth={true} />
+          responsiveWidth={true}
+        />
+      )
+    })
+
+    it("renders a <ResizeDetector />", () => {
+      const wrapper = shallow(
+        <ResponsiveFrameComponent
+          dataVersion={"foo"}
+          disableContext={true}
+          responsiveHeight={true}
+          responsiveWidth={true}
+        />
       )
 
       expect(wrapper.find("ResizeDetector").length).toEqual(1)

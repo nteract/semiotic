@@ -1,13 +1,13 @@
-import React from "react";
-import { Mark } from "semiotic-mark";
+import React from "react"
+import { Mark } from "semiotic-mark"
 
 export function pointOnArcAtAngle(center, angle, distance) {
-  const radians = Math.PI * (angle + 0.75) * 2;
+  const radians = Math.PI * (angle + 0.75) * 2
 
-  const xPosition = center[0] + distance * Math.cos(radians);
-  const yPosition = center[1] + distance * Math.sin(radians);
+  const xPosition = center[0] + distance * Math.cos(radians)
+  const yPosition = center[1] + distance * Math.sin(radians)
 
-  return [xPosition, yPosition];
+  return [xPosition, yPosition]
 }
 
 export const renderLaidOutPieces = ({ data, shouldRender }) =>
@@ -23,4 +23,4 @@ export const renderLaidOutPieces = ({ data, shouldRender }) =>
               {...d.renderElement || d}
             />
           )
-      );
+      )

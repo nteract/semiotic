@@ -1,27 +1,27 @@
-import React from "react";
-import json2csv from "json2csv";
+import React from "react"
+import json2csv from "json2csv"
 
-import PropTypes from "prop-types";
+import PropTypes from "prop-types"
 
 export const downloadCSV = (csvName, data) => {
   json2csv(Object.assign({}, { data: data }), (err, csv) => {
-    const blob = new Blob([csv], { type: "text/csv" });
+    const blob = new Blob([csv], { type: "text/csv" })
 
-    const dlink = document.createElement("a");
-    dlink.download = csvName ? csvName.replace(/ /g, "_") + ".csv" : "vis.csv";
-    dlink.href = window.URL.createObjectURL(blob);
+    const dlink = document.createElement("a")
+    dlink.download = csvName ? csvName.replace(/ /g, "_") + ".csv" : "vis.csv"
+    dlink.href = window.URL.createObjectURL(blob)
     dlink.onclick = () => {
       // revokeObjectURL needs a delay to work properly
       const revokeFn = () => {
-        window.URL.revokeObjectURL(this.href);
-      };
-      setTimeout(revokeFn.bind(this), 1500);
-    };
+        window.URL.revokeObjectURL(this.href)
+      }
+      setTimeout(revokeFn.bind(this), 1500)
+    }
 
-    dlink.click();
-    dlink.remove();
-  });
-};
+    dlink.click()
+    dlink.remove()
+  })
+}
 
 class DownloadButton extends React.Component {
   /*
@@ -34,7 +34,7 @@ class DownloadButton extends React.Component {
     }
 */
   render() {
-    const { csvName, data, width, label = "Download" } = this.props;
+    const { csvName, data, width, label = "Download" } = this.props
     return (
       <div className="download-div" style={{ width }}>
         <button
@@ -45,7 +45,7 @@ class DownloadButton extends React.Component {
           <a>{label}</a>
         </button>
       </div>
-    );
+    )
   }
 }
 
@@ -53,6 +53,6 @@ DownloadButton.propTypes = {
   csvName: PropTypes.string,
   data: PropTypes.array,
   width: PropTypes.number
-};
+}
 
-export default DownloadButton;
+export default DownloadButton

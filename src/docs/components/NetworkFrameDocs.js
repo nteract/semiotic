@@ -1,17 +1,17 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import { NetworkFrame } from "../../components";
-import { Mark } from "semiotic-mark";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import { NetworkFrame } from "../../components"
+import { Mark } from "semiotic-mark"
 
-import { edgeData } from "../example_settings/networkframe";
-import Button from "material-ui/Button";
-import Select from "material-ui/Select";
-import { MenuItem } from "material-ui/Menu";
-import Icon from "material-ui-icons/Share";
-import Input, { InputLabel } from "material-ui/Input";
-import { FormControl, FormHelperText } from "material-ui/Form";
+import { edgeData } from "../example_settings/networkframe"
+import Button from "material-ui/Button"
+import Select from "material-ui/Select"
+import { MenuItem } from "material-ui/Menu"
+import Icon from "material-ui-icons/Share"
+import Input, { InputLabel } from "material-ui/Input"
+import { FormControl, FormHelperText } from "material-ui/Form"
 
-const components = [];
+const components = []
 // Add your component proptype data here
 // multiple component proptype documentation supported
 
@@ -19,7 +19,7 @@ const nodeSizeHash = {
   degree: d => d.degree + 2,
   inDegree: d => d.inDegree + 2,
   outDegree: d => d.outDegree + 2
-};
+}
 
 const squareNodeGenerator = ({ d, transform, key }) => (
   <Mark
@@ -36,13 +36,13 @@ const squareNodeGenerator = ({ d, transform, key }) => (
       fill: d.createdByFrame ? "rgb(0, 162, 206)" : "rgb(179, 51, 29)"
     }}
   />
-);
+)
 
-const chartSize = [750, 500];
+const chartSize = [750, 500]
 
 const networkNodeStyle = d => ({
   fill: d.createdByFrame ? "#1aa962" : "rgb(179, 51, 29)"
-});
+})
 
 const networkTypeHash = {
   force: {
@@ -55,7 +55,7 @@ const networkTypeHash = {
     iterations: 500,
     edgeStrength: 0.1
   }
-};
+}
 
 components.push({
   name: "NetworkFrame",
@@ -136,7 +136,7 @@ components.push({
   ])
     }
   `
-});
+})
 
 const nodeData = [
   { id: "Susie" },
@@ -146,29 +146,29 @@ const nodeData = [
   { id: "j" },
   { id: "k" },
   { id: "l" }
-];
+]
 
 const networkEdgeStyle = () => ({
   stroke: "#4d430c",
   fill: "#4d430c",
   fillOpacity: 0.25,
   strokeWidth: "1px"
-});
+})
 
 export default class NetworkFrameDocs extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
     this.state = {
       annotations: "off",
       networkType: "motifs",
       edge: "none",
       nodeSize: "degree",
       customNodeIcon: "off"
-    };
+    }
   }
 
   render() {
-    const networkType = networkTypeHash[this.state.networkType];
+    const networkType = networkTypeHash[this.state.networkType]
     const edgeOptions = [
       "none",
       "linearc",
@@ -182,31 +182,31 @@ export default class NetworkFrameDocs extends React.Component {
       <MenuItem key={"edgeType-option-" + d} label={d} value={d}>
         {d}
       </MenuItem>
-    ));
+    ))
 
     const nodeSizeOptions = ["degree", "inDegree", "outDegree"].map(d => (
       <MenuItem key={"nodeSize-option-" + d} label={d} value={d}>
         {d}
       </MenuItem>
-    ));
+    ))
 
     const annotationOptions = ["off", "on"].map(d => (
       <MenuItem key={"annotation-option-" + d} label={d} value={d}>
         {d}
       </MenuItem>
-    ));
+    ))
 
     const networkTypeOptions = ["force", "motifs"].map(d => (
       <MenuItem key={"networkType-option-" + d} label={d} value={d}>
         {d}
       </MenuItem>
-    ));
+    ))
 
     const customNodeOptions = ["off", "on"].map(d => (
       <MenuItem key={"customNode-option-" + d} label={d} value={d}>
         {d}
       </MenuItem>
-    ));
+    ))
 
     const annotations = [
       { type: "node", dy: 25, id: "Miles", label: "Smart guy" },
@@ -217,7 +217,7 @@ export default class NetworkFrameDocs extends React.Component {
         ids: ["Tony", "Fil", "Adam"],
         label: "Gang"
       }
-    ];
+    ]
     const buttons = [
       <div key="button-0">
         <FormControl>
@@ -269,16 +269,16 @@ export default class NetworkFrameDocs extends React.Component {
           <Select
             value={this.state.customNodeIcon}
             onChange={e => {
-              this.setState({ customNodeIcon: e.target.value });
+              this.setState({ customNodeIcon: e.target.value })
             }}
           >
             {customNodeOptions}
           </Select>
         </FormControl>
       </div>
-    ];
+    ]
 
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Basic",
       demo: (
@@ -320,7 +320,7 @@ export default class NetworkFrameDocs extends React.Component {
             annotationSettings={{
               pointSizeFunction: d => (d.subject && d.subject.radius) || 5,
               labelSizeFunction: noteData => {
-                return noteData.note.label.length * 5.5;
+                return noteData.note.label.length * 5.5
               }
             }}
           />
@@ -363,7 +363,7 @@ export default class NetworkFrameDocs extends React.Component {
               } }}
         />
       `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -380,9 +380,9 @@ export default class NetworkFrameDocs extends React.Component {
 
         <p>Data are sent to the nodes and edges properties.</p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-NetworkFrameDocs.title = "NetworkFrame";
-NetworkFrameDocs.icon = <Icon />;
+NetworkFrameDocs.title = "NetworkFrame"
+NetworkFrameDocs.icon = <Icon />

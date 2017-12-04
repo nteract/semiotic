@@ -14,7 +14,7 @@ const gold = {
   A400: "#ac9739",
   A700: "#ac9739",
   contrastDefaultColor: "light"
-};
+}
 
 export default {
   // spacing: spacing,
@@ -30,4 +30,4 @@ export default {
     // secondaryTextColor: fade(fullWhite, 0.8),
     // alternateTextColor: fullWhite
   }
-};
+}

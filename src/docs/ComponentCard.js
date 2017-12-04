@@ -1,16 +1,16 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React from "react"
+import { Link } from "react-router-dom"
 // import {Card, CardTitle /*, CardActions, CardHeader, CardMedia, CardText*/ } from 'material-ui/Card';
-import Button from "material-ui/Button";
+import Button from "material-ui/Button"
 
 const ComponentCard = ({ path, title, selected }) => {
   const labelStyle = {
     textTransform: "normal"
-  };
+  }
 
   const style = {
     margin: 10
-  };
+  }
   return (
     <Link to={`/${path}`}>
       <Button
@@ -21,7 +21,7 @@ const ComponentCard = ({ path, title, selected }) => {
         primary={selected}
       />
     </Link>
-  );
-};
+  )
+}
 
-export default ComponentCard;
+export default ComponentCard

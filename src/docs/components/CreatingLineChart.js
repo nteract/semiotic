@@ -1,20 +1,20 @@
-import React from "react";
-import { XYFrame } from "../../components";
-import { scaleTime } from "d3-scale";
-import { curveMonotoneX, curveCardinal } from "d3-shape";
+import React from "react"
+import { XYFrame } from "../../components"
+import { scaleTime } from "d3-scale"
+import { curveMonotoneX, curveCardinal } from "d3-shape"
 
-import DocumentComponent from "../layout/DocumentComponent";
+import DocumentComponent from "../layout/DocumentComponent"
 
-const components = [];
-const curvedCardinalLine = { type: "line", interpolator: curveCardinal };
-const interactiveLineStyle = { stroke: "#00a2ce" };
+const components = []
+const curvedCardinalLine = { type: "line", interpolator: curveCardinal }
+const interactiveLineStyle = { stroke: "#00a2ce" }
 const interactivePointStyle = () => ({
   fill: "#00a2ce"
-});
-const interactiveXAccessor = d => d.week;
-const interactiveYAccessor = d => d.grossWeekly;
+})
+const interactiveXAccessor = d => d.week
+const interactiveYAccessor = d => d.grossWeekly
 
-const interactiveChartMargin = { left: 80, bottom: 50, right: 10, top: 40 };
+const interactiveChartMargin = { left: 80, bottom: 50, right: 10, top: 40 }
 const interactiveChartAxes = [
   {
     orient: "left"
@@ -22,9 +22,9 @@ const interactiveChartAxes = [
   {
     orient: "bottom"
   }
-];
+]
 
-const chartSize = [700, 400];
+const chartSize = [700, 400]
 
 const movies = [
   {
@@ -335,34 +335,34 @@ const movies = [
     ],
     type: "iceberg"
   }
-];
+]
 
-const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"];
+const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"]
 
 const colorHash = {
   "Ex Machina": "#4d430c",
   "Far from the Madding Crowd": "#b6a756"
-};
+}
 
 components.push({
   name: "Creating a Line Chart"
-});
+})
 
 export default class CreatingLineChart extends React.Component {
   constructor(props) {
-    super(props);
-    this.lineHoverBehavior = this.lineHoverBehavior.bind(this);
+    super(props)
+    this.lineHoverBehavior = this.lineHoverBehavior.bind(this)
     this.state = {
       hoverPoint: undefined
-    };
+    }
   }
   lineHoverBehavior(d) {
-    this.setState({ hoverPoint: d });
+    this.setState({ hoverPoint: d })
   }
 
   lineAnnotater({ d, xScale, yScale }) {
     if (!d.type === "hover") {
-      return null;
+      return null
     }
 
     return (
@@ -372,11 +372,11 @@ export default class CreatingLineChart extends React.Component {
         cx={xScale(d.week)}
         cy={yScale(d.grossWeekly)}
       />
-    );
+    )
   }
 
   render() {
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Data",
       demo: (
@@ -437,7 +437,7 @@ export default class CreatingLineChart extends React.Component {
     type: "landslide"
   }
 ];`
-    });
+    })
 
     examples.push({
       name: "Simple",
@@ -493,7 +493,7 @@ export default class CreatingLineChart extends React.Component {
               }
             ]}
           />`
-    });
+    })
 
     examples.push({
       name: "Line Chart with Options",
@@ -571,7 +571,7 @@ export default class CreatingLineChart extends React.Component {
               }
             ]}
           />`
-    });
+    })
 
     examples.push({
       name: "Line Chart with Interactivity",
@@ -689,7 +689,7 @@ export default class CreatingLineChart extends React.Component {
   />
 }
 }`
-    });
+    })
 
     examples.push({
       name: "Stacked Area Chart",
@@ -758,7 +758,7 @@ export default class CreatingLineChart extends React.Component {
               }
             ]}
           />`
-    });
+    })
 
     examples.push({
       name: "Bump Area Chart",
@@ -822,7 +822,7 @@ export default class CreatingLineChart extends React.Component {
   ]}
   hoverAnnotation={true}
 />`
-    });
+    })
 
     return (
       <DocumentComponent
@@ -836,8 +836,8 @@ export default class CreatingLineChart extends React.Component {
           area chart using XYFrame along with hover behavior and styling.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-CreatingLineChart.title = "Creating a Line Chart";
+CreatingLineChart.title = "Creating a Line Chart"

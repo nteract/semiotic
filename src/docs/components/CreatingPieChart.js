@@ -1,10 +1,10 @@
-import React from "react";
-import { ORFrame } from "../../components";
-import { sum } from "d3-array";
+import React from "react"
+import { ORFrame } from "../../components"
+import { sum } from "d3-array"
 
-import DocumentComponent from "../layout/DocumentComponent";
+import DocumentComponent from "../layout/DocumentComponent"
 
-const components = [];
+const components = []
 // Add your component proptype data here
 // multiple component proptype documentation supported
 const pieChartData = [
@@ -12,7 +12,7 @@ const pieChartData = [
   { user: "Susie", tweets: 5, retweets: 100, favorites: 100 },
   { user: "Matt", tweets: 20, retweets: 25, favorites: 50 },
   { user: "Betty", tweets: 30, retweets: 20, favorites: 10 }
-];
+]
 
 const deaths1855 = [
   { month: "Jan", type: "Wounds & injuries", casualties: 83 },
@@ -51,7 +51,7 @@ const deaths1855 = [
   { month: "Oct", type: "Zymotic diseases", casualties: 128 },
   { month: "Nov", type: "Zymotic diseases", casualties: 178 },
   { month: "Dec", type: "Zymotic diseases", casualties: 91 }
-];
+]
 
 const windRoseData = [
   { angle: "005-015", wind: 0.37 },
@@ -89,9 +89,9 @@ const windRoseData = [
   { angle: "325-335", wind: 0.944 },
   { angle: "335-345", wind: 0.817 },
   { angle: "345-355", wind: 0.569 }
-];
+]
 
-const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"];
+const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"]
 
 const colorHash = {
   Jason: "#00a2ce",
@@ -101,15 +101,15 @@ const colorHash = {
   "Zymotic diseases": "#00a2ce",
   "Wounds & injuries": "#b3331d",
   "All other causes": "#4d430c"
-};
+}
 
 components.push({
   name: "Creating a Pie Chart"
-});
+})
 
 export default class CreatingPieChart extends React.Component {
   render() {
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Data",
       demo: (
@@ -129,7 +129,7 @@ export default class CreatingPieChart extends React.Component {
   { user: "Matt", tweets: 20, retweets: 25, favorites: 50 },
   { user: "Betty", tweets: 30, retweets: 20, favorites: 10 }
 ];      `
-    });
+    })
 
     examples.push({
       name: "Simple",
@@ -175,7 +175,7 @@ export default class CreatingPieChart extends React.Component {
             projection={"radial"}
             oLabel={true}
           />`
-    });
+    })
 
     examples.push({
       name: "Donut",
@@ -225,7 +225,7 @@ export default class CreatingPieChart extends React.Component {
             oPadding={1}
             hoverAnnotation={true}
           />`
-    });
+    })
 
     examples.push({
       name: "Wind Rose Data",
@@ -276,7 +276,7 @@ export default class CreatingPieChart extends React.Component {
   { angle: "335-345", wind: 0.817 },
   { angle: "345-355", wind: 0.569 }
 ];`
-    });
+    })
 
     examples.push({
       name: "Wind Rose",
@@ -318,7 +318,7 @@ export default class CreatingPieChart extends React.Component {
     margin={{ bottom: 50, top: 70, left: 25, right: 25 }}
     hoverAnnotation={true}
 />`
-    });
+    })
 
     // These are also seen in wind roses. In both cases the diagram requires a uniform distribution of values that is naturally cyclical (months of the year or directions).
     examples.push({
@@ -379,7 +379,7 @@ export default class CreatingPieChart extends React.Component {
   { month: "Nov", type: "Zymotic diseases", casualties: 178 },
   { month: "Dec", type: "Zymotic diseases", casualties: 91 }
 ]`
-    });
+    })
 
     examples.push({
       name: "Nightingale Chart",
@@ -445,7 +445,7 @@ const colorHash = {
     hoverAnnotation={true}
 />
 `
-    });
+    })
 
     examples.push({
       name: "Nightingale Chart",
@@ -487,7 +487,7 @@ const colorHash = {
                       style={{ fill: "none", stroke: colorHash[d.type] }}
                     />
                   </g>
-                );
+                )
               }
             }}
             oPadding={40}
@@ -503,7 +503,7 @@ const colorHash = {
         </div>
       ),
       source: ``
-    });
+    })
     return (
       <DocumentComponent
         name="Creating a Pie Chart"
@@ -516,8 +516,8 @@ const colorHash = {
           labels and an axis in Semiotic.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-CreatingPieChart.title = "Creating a Pie Chart";
+CreatingPieChart.title = "Creating a Pie Chart"

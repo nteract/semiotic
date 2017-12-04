@@ -29,4 +29,4 @@ export const edgeData = [
   { source: "d", target: "e", weight: 2 },
   { source: "f", target: "g", weight: 2 },
   { source: "h", target: "i", weight: 2 }
-];
+]

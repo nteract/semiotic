@@ -1,6 +1,6 @@
-import React from "react";
-import { XYFrame, ORFrame } from "../../components";
-import { curveBasis } from "d3-shape";
+import React from "react"
+import { XYFrame, ORFrame } from "../../components"
+import { curveBasis } from "d3-shape"
 
 const testData = [
   {
@@ -16,7 +16,7 @@ const testData = [
       { sales: 5, leads: 165, x: 7 }
     ]
   }
-];
+]
 
 let displayData = testData.map(d => {
   let moreData = [
@@ -26,9 +26,9 @@ let displayData = testData.map(d => {
       leads: p.leads + Math.random() * 100,
       x: p.x + 7
     }))
-  ];
-  return Object.assign(d, { data: moreData });
-});
+  ]
+  return Object.assign(d, { data: moreData })
+})
 
 const axes = [
   {
@@ -47,7 +47,7 @@ const axes = [
     tickValues: [2, 4, 6, 8, 10, 12],
     tickFormat: d => "day " + d
   }
-];
+]
 const axis3 = {
   key: "yAxis",
   orient: "right",
@@ -55,11 +55,11 @@ const axis3 = {
   name: "CountAxis",
   ticks: 3,
   tickFormat: d => d
-};
+}
 const sharedProps = {
   size: [500, 300],
   margin: { top: 5, bottom: 25, left: 55, right: 55 }
-};
+}
 
 export default (
   <div style={{ height: "300px" }}>
@@ -91,4 +91,4 @@ export default (
       />
     </div>
   </div>
-);
+)

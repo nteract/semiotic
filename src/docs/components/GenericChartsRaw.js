@@ -1,11 +1,11 @@
-import React from "react";
-import { scaleLinear } from "d3-scale";
-import { ORFrame, XYFrame, NetworkFrame } from "../../components";
-import { testData } from "../example_settings/xyframe";
-import { funnelData } from "../example_settings/orframe";
-import { edgeData } from "../example_settings/networkframe";
+import React from "react"
+import { scaleLinear } from "d3-scale"
+import { ORFrame, XYFrame, NetworkFrame } from "../../components"
+import { testData } from "../example_settings/xyframe"
+import { funnelData } from "../example_settings/orframe"
+import { edgeData } from "../example_settings/networkframe"
 
-const lineType = Math.random() < 0.5 ? "stackedarea" : "line";
+const lineType = Math.random() < 0.5 ? "stackedarea" : "line"
 
 export const genericLineChart = (
   <XYFrame
@@ -32,7 +32,7 @@ export const genericLineChart = (
     axes={[{ orient: "left" }, { orient: "bottom" }]}
     margin={0}
   />
-);
+)
 
 export const genericBarChart = (
   <ORFrame
@@ -46,9 +46,9 @@ export const genericBarChart = (
     oPadding={10}
     style={d => ({ fill: d.funnelKey, stroke: "black" })}
   />
-);
+)
 
-const edgeType = Math.random() < 0.5 ? "halfarrow" : "linearc";
+const edgeType = Math.random() < 0.5 ? "halfarrow" : "linearc"
 
 export const genericNetworkChart = (
   <NetworkFrame
@@ -67,4 +67,4 @@ export const genericNetworkChart = (
     nodeSizeAccessor={d => d.degree + 2}
     zoomToFit={true}
   />
-);
+)

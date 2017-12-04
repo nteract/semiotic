@@ -1,7 +1,7 @@
-import React from "react";
+import React from "react"
 
 const Footer = ({ gh }) => {
-  const [user, repo] = gh.split("/");
+  const [user, repo] = gh.split("/")
   return (
     <div className="container-fluid">
       <div className="row">
@@ -28,7 +28,7 @@ const Footer = ({ gh }) => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Footer;
+export default Footer

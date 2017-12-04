@@ -1,7 +1,7 @@
-import React from "react";
-import { ORFrame, Mark } from "../../components";
+import React from "react"
+import { ORFrame, Mark } from "../../components"
 
-const padding = 40;
+const padding = 40
 const bulletData = [
   {
     title: "Revenue",
@@ -38,38 +38,38 @@ const bulletData = [
     measures: [3.2, 4.7],
     markers: [4.4]
   }
-];
+]
 
 //type, data, renderMode, eventListenersGenerator, styleFn, projection, classFn, adjustedSize, margin, rScale
 function generateBulletChart({ data, rScale, adjustedSize, margin }) {
-  const rangeColors = ["eee", "ddd", "ccc"];
-  const measureColors = ["rgb(0, 162, 206)", "rgb(0, 113, 144)"];
-  const markerColors = ["black"];
+  const rangeColors = ["eee", "ddd", "ccc"]
+  const measureColors = ["rgb(0, 162, 206)", "rgb(0, 113, 144)"]
+  const markerColors = ["black"]
 
   const colorHash = {
     range: rangeColors,
     measure: measureColors,
     marker: markerColors
-  };
+  }
 
   const colorStepHash = {
     range: 0,
     measure: 0,
     marker: 0
-  };
+  }
 
   const widthHash = {
     range: 1,
     measure: 0.5
-  };
+  }
   const opacityHash = {
     range: 0.25,
     measure: 0.25
-  };
-  const renderedPieces = [];
+  }
+  const renderedPieces = []
 
   // Each chart is a separate ORFrame with a single column called "fixed"
-  const column = data.fixed;
+  const column = data.fixed
   column.pieceData.forEach((d, i) => {
     let pieceShape = {
       key: `bullet-piece-${i}`,
@@ -77,23 +77,23 @@ function generateBulletChart({ data, rScale, adjustedSize, margin }) {
         fill: colorHash[d.class][colorStepHash[d.class]],
         stroke: colorHash[d.class][colorStepHash[d.class]]
       }
-    };
-    colorStepHash[d.class] += 1;
-    const valuePosition = rScale(d.value);
+    }
+    colorStepHash[d.class] += 1
+    const valuePosition = rScale(d.value)
     if (d.class === "marker") {
-      pieceShape.markType = "line";
-      pieceShape.x1 = valuePosition;
-      pieceShape.x2 = valuePosition;
-      pieceShape.y1 = column.x;
-      pieceShape.y2 = column.x + column.width;
+      pieceShape.markType = "line"
+      pieceShape.x1 = valuePosition
+      pieceShape.x2 = valuePosition
+      pieceShape.y1 = column.x
+      pieceShape.y2 = column.x + column.width
     } else {
       //a rectangle
-      const pieceSize = column.width * widthHash[d.class];
-      pieceShape.markType = "rect";
-      pieceShape.x = margin.left;
-      pieceShape.y = column.middle - pieceSize / 2;
-      pieceShape.width = valuePosition - margin.left;
-      pieceShape.height = pieceSize;
+      const pieceSize = column.width * widthHash[d.class]
+      pieceShape.markType = "rect"
+      pieceShape.x = margin.left
+      pieceShape.y = column.middle - pieceSize / 2
+      pieceShape.width = valuePosition - margin.left
+      pieceShape.height = pieceSize
     }
 
     //A type render function should return an object with the column name "o", the data for the original element "piece", an object with properties to be spread in a <Mark> "renderElement" and the hover coordinates for pieceHoverAnnotation "xy"
@@ -105,12 +105,12 @@ function generateBulletChart({ data, rScale, adjustedSize, margin }) {
         x: valuePosition,
         y: column.x + column.width / 2
       }
-    };
+    }
 
-    renderedPieces.push(markObject);
-  });
+    renderedPieces.push(markObject)
+  })
 
-  return renderedPieces;
+  return renderedPieces
 }
 
 export default (
@@ -118,16 +118,16 @@ export default (
     {bulletData.map((data, i) => {
       const bulletRanges = data.ranges
         .map(p => ({ class: "range", value: p }))
-        .sort((a, b) => b.value - a.value);
+        .sort((a, b) => b.value - a.value)
       const bulletMeasures = data.measures
         .map(p => ({
           class: "measure",
           value: p
         }))
-        .sort((a, b) => b.value - a.value);
+        .sort((a, b) => b.value - a.value)
       const bulletMarkers = data.markers
         .map(p => ({ class: "marker", value: p }))
-        .sort((a, b) => b.value - a.value);
+        .sort((a, b) => b.value - a.value)
       return (
         <ORFrame
           key={`orframe-${i}`}
@@ -162,7 +162,7 @@ export default (
           oPadding={0}
           pieceHoverAnnotation={true}
         />
-      );
+      )
     })}
   </div>
-);
+)

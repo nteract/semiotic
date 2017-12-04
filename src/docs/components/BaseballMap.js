@@ -1,14 +1,14 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import BaseballMapRaw from "./BaseballMapRaw";
-import Select from "material-ui/Select";
-import { MenuItem } from "material-ui/Menu";
-import { Mark } from "semiotic-mark";
-import { scaleTime } from "d3-scale";
-import Input, { InputLabel } from "material-ui/Input";
-import { FormControl, FormHelperText } from "material-ui/Form";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import BaseballMapRaw from "./BaseballMapRaw"
+import Select from "material-ui/Select"
+import { MenuItem } from "material-ui/Menu"
+import { Mark } from "semiotic-mark"
+import { scaleTime } from "d3-scale"
+import Input, { InputLabel } from "material-ui/Input"
+import { FormControl, FormHelperText } from "material-ui/Form"
 
-const components = [];
+const components = []
 const modes = {
   basic: {
     areas: undefined,
@@ -73,19 +73,19 @@ const modes = {
     backgroundGraphics: undefined,
     areas: undefined
   }
-};
+}
 
 components.push({
   name: "BaseballMap"
-});
+})
 
 export default class BaseballMapDocs extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
 
     this.state = {
       mode: "basic"
-    };
+    }
   }
 
   render() {
@@ -99,7 +99,7 @@ export default class BaseballMapDocs extends React.Component {
       <MenuItem key={"mode-option-" + d} label={d} value={d}>
         {d}
       </MenuItem>
-    ));
+    ))
 
     const buttons = [
       <FormControl key="button-1-0-0">
@@ -111,9 +111,9 @@ export default class BaseballMapDocs extends React.Component {
           {modeOptions}
         </Select>
       </FormControl>
-    ];
+    ]
 
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Basic",
       demo: BaseballMapRaw(modes[this.state.mode]),
@@ -147,7 +147,7 @@ export default class BaseballMapDocs extends React.Component {
              }}
             />
       `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -169,8 +169,8 @@ export default class BaseballMapDocs extends React.Component {
           backgroundGraphics.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-BaseballMapDocs.title = "Home Run Map";
+BaseballMapDocs.title = "Home Run Map"

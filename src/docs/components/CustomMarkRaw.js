@@ -1,6 +1,6 @@
-import React from "react";
-import { ORFrame } from "../../components";
-import { AnnotationCallout } from "react-annotation";
+import React from "react"
+import { ORFrame } from "../../components"
+import { AnnotationCallout } from "react-annotation"
 
 const data = [
   {
@@ -169,26 +169,26 @@ const data = [
   { name: "George W. Bush", birth: 1946, start: 2001, end: 2009, death: 2018 },
   { name: "Barack Obama", birth: 1961, start: 2009, end: 2017, death: 2018 },
   { name: "Donald Trump", birth: 1946, start: 2017, end: 2018, death: 2018 }
-];
+]
 
 function timeline({ data, rScale, adjustedSize, margin }) {
-  const renderedPieces = [];
+  const renderedPieces = []
 
-  const keys = Object.keys(data);
+  const keys = Object.keys(data)
 
   keys.forEach(key => {
     //Only one piece of data per column though we'll render multiple graphical elements
-    const column = data[key];
-    const president = column.pieceData[0];
+    const column = data[key]
+    const president = column.pieceData[0]
 
     //Calculate individual start and width of each graphical band
-    const birthDate = rScale(president.birth);
-    const termStart = rScale(president.start);
-    const termEnd = rScale(president.end);
-    const deathDate = rScale(president.death);
-    const preTermWidth = termStart - birthDate;
-    const termWidth = termEnd - termStart;
-    const postTermWidth = deathDate - termEnd;
+    const birthDate = rScale(president.birth)
+    const termStart = rScale(president.start)
+    const termEnd = rScale(president.end)
+    const deathDate = rScale(president.death)
+    const preTermWidth = termStart - birthDate
+    const termWidth = termEnd - termStart
+    const postTermWidth = deathDate - termEnd
 
     //You can return an array of graphics or an array of objects with extra data (see the Waterfall chart demo)
     const markObject = (
@@ -215,16 +215,16 @@ function timeline({ data, rScale, adjustedSize, margin }) {
           y={column.x}
         />
       </g>
-    );
+    )
 
-    renderedPieces.push(markObject);
-  });
+    renderedPieces.push(markObject)
+  })
 
-  return renderedPieces;
+  return renderedPieces
 }
 
 export default (annotations = "none") => {
-  let wars = [];
+  let wars = []
   if (annotations !== "none") {
     wars = [
       {
@@ -275,7 +275,7 @@ export default (annotations = "none") => {
         name: "George W. Bush",
         label: "Iraq War"
       }
-    ];
+    ]
   }
 
   return (
@@ -318,5 +318,5 @@ export default (annotations = "none") => {
       }}
       margin={{ left: 140, top: 10, bottom: 50, right: 140 }}
     />
-  );
-};
+  )
+}

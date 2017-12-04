@@ -50,7 +50,7 @@ pre {
   stroke-width: 1px;
 }
 .annotations .badge path {
-  fill: #8870CA;
+  fill: #8870ca;
 }
 .annotations text {
   fill: #bdb0e0;
@@ -63,7 +63,7 @@ path.connector-arrow {
 }
 .annotation.badge path.subject-pointer,
 .annotation.badge path.subject {
-  fill: #8870CA;
+  fill: #8870ca;
   stroke-width: 3px;
   stroke-linecap: round;
 }
@@ -73,5 +73,5 @@ path.connector-arrow {
 }
 .annotation.badge .badge-text {
   fill: white;
-  font-size: .7em;
+  font-size: 0.7em;
 }

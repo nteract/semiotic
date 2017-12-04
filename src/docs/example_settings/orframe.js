@@ -1,9 +1,9 @@
-import React from "react";
+import React from "react"
 
-import { funnelize } from "../../components";
-import { orframe_data } from "../sampledata/nyc_temp";
+import { funnelize } from "../../components"
+import { orframe_data } from "../sampledata/nyc_temp"
 
-export const degreeDiffFormat = d => `${Math.ceil(d * 100) / 100}°`;
+export const degreeDiffFormat = d => `${Math.ceil(d * 100) / 100}°`
 
 export const summaryChart = {
   rAccessor: d => d.stepValue,
@@ -31,7 +31,7 @@ export const summaryChart = {
   oLabel: d => <text transform="translate(-10,10) rotate(45)">{d}</text>,
   margin: { left: 60, top: 85, bottom: 70, right: 30 },
   oPadding: 10
-};
+}
 
 const funnel = [
   {
@@ -61,10 +61,10 @@ const funnel = [
     streamed: 50,
     paid: 50
   }
-];
+]
 
 export const funnelData = funnelize({
   data: funnel,
   steps: ["visits", "registration", "mop", "signups", "streamed", "paid"],
   key: "color"
-});
+})

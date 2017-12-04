@@ -1,23 +1,23 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import { ORFrame } from "../../components";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import { ORFrame } from "../../components"
 
-const components = [];
+const components = []
 
-let fakeRealtimeDataInterval;
+let fakeRealtimeDataInterval
 
 components.push({
   name: "Realtime Connected Bar Chart"
-});
+})
 
-let columnNumber = 1;
+let columnNumber = 1
 
 const eventColors = {
   warning: "#4d430c",
   error: "#b3331d",
   information: "#b6a756"
-};
-const dataStart = new Date();
+}
+const dataStart = new Date()
 
 const barData = [
   {
@@ -38,7 +38,7 @@ const barData = [
     number: 1,
     column: "column-1"
   }
-];
+]
 const orAnnotation = {
   type: "or",
   time: dataStart.getTime(),
@@ -47,11 +47,11 @@ const orAnnotation = {
   dx: 0,
   id: "semiotic",
   label: "awesome?"
-};
+}
 
 export default class RealtimeORFrame extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
     this.state = {
       data: barData,
       calloutAnnotations: [
@@ -67,50 +67,50 @@ export default class RealtimeORFrame extends React.Component {
           label: "Error"
         }
       ]
-    };
+    }
   }
   componentWillUnmount() {
-    clearInterval(fakeRealtimeDataInterval);
+    clearInterval(fakeRealtimeDataInterval)
   }
 
   componentDidMount() {
     fakeRealtimeDataInterval = setInterval(() => {
-      const newData = this.state.data;
-      const now = new Date();
-      columnNumber += 1;
+      const newData = this.state.data
+      const now = new Date()
+      columnNumber += 1
       if (now.getTime() - dataStart.getTime() > 60000) {
-        clearInterval(fakeRealtimeDataInterval);
+        clearInterval(fakeRealtimeDataInterval)
       }
-      const errorAmount = parseInt(Math.random() * 3);
-      const infoAmount = parseInt(Math.random() * 8);
-      const warningAmount = parseInt(Math.random() * 5);
-      const totalEvents = errorAmount + infoAmount + warningAmount;
+      const errorAmount = parseInt(Math.random() * 3)
+      const infoAmount = parseInt(Math.random() * 8)
+      const warningAmount = parseInt(Math.random() * 5)
+      const totalEvents = errorAmount + infoAmount + warningAmount
 
       newData.push({
         time: now.getTime(),
         eventType: "information",
         number: infoAmount,
         column: `column-${columnNumber}`
-      });
+      })
       newData.push({
         time: now.getTime(),
         eventType: "warning",
         number: warningAmount,
         column: `column-${columnNumber}`
-      });
+      })
       newData.push({
         time: now.getTime(),
         eventType: "error",
         number: errorAmount,
         column: `column-${columnNumber}`
-      });
+      })
       if (newData.length > 60) {
-        newData.splice(0, 3);
+        newData.splice(0, 3)
       }
-      orAnnotation.time = now.getTime();
-      orAnnotation.column = `column-${columnNumber}`;
-      orAnnotation.number = totalEvents - errorAmount;
-      orAnnotation.label = `Non-Errrors: ${totalEvents - errorAmount}`;
+      orAnnotation.time = now.getTime()
+      orAnnotation.column = `column-${columnNumber}`
+      orAnnotation.number = totalEvents - errorAmount
+      orAnnotation.label = `Non-Errrors: ${totalEvents - errorAmount}`
       orAnnotation.label = (
         <tspan
           dy={12}
@@ -121,7 +121,7 @@ export default class RealtimeORFrame extends React.Component {
             strokeWidth: 0.5
           }}
         >{`Non-Errrors: ${totalEvents - errorAmount}`}</tspan>
-      );
+      )
       this.setState({
         data: newData,
         calloutAnnotations: [
@@ -145,12 +145,12 @@ export default class RealtimeORFrame extends React.Component {
             label: `Errors: ${errorAmount}`
           }
         ]
-      });
-    }, 1000);
+      })
+    }, 1000)
   }
 
   render() {
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Basic",
       demo: (
@@ -359,7 +359,7 @@ export default class RealtimeORFrame extends React.Component {
     }
   }
       `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -383,8 +383,8 @@ export default class RealtimeORFrame extends React.Component {
           elements being sent as data to the frame changes.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-RealtimeORFrame.title = "Realtime Bars";
+RealtimeORFrame.title = "Realtime Bars"

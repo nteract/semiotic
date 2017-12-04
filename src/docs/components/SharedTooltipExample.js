@@ -1,19 +1,19 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import SharedTooltipExampleRaw from "./SharedTooltipExampleRaw";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import SharedTooltipExampleRaw from "./SharedTooltipExampleRaw"
 
-import Select from "material-ui/Select";
-import { MenuItem } from "material-ui/Menu";
-import { InputLabel } from "material-ui/Input";
-import { FormControl } from "material-ui/Form";
+import Select from "material-ui/Select"
+import { MenuItem } from "material-ui/Menu"
+import { InputLabel } from "material-ui/Input"
+import { FormControl } from "material-ui/Form"
 
-const components = [];
+const components = []
 // Add your component proptype data here
 // multiple component proptype documentation supported
 
 components.push({
   name: "Shared Tooltip Example"
-});
+})
 
 const sharedExampleCode = `
   const tooltipStyles = {
@@ -201,30 +201,31 @@ const singletonExampleCode = `
   />
 `
 
-
 export default class SharedTooltipExample extends React.Component {
-  
   constructor(props) {
-    super(props);
+    super(props)
     this.state = {
       tooltipSelection: "Shared"
     }
   }
 
   render() {
-    const toolTipFrame = SharedTooltipExampleRaw(this.state.tooltipSelection);
-    const examples = [];
+    const toolTipFrame = SharedTooltipExampleRaw(this.state.tooltipSelection)
+    const examples = []
     examples.push({
       name: `${this.state.tooltipSelection} Tooltip`,
       demo: toolTipFrame,
-      source: this.state.tooltipSelection === "Shared" ? sharedExampleCode : singletonExampleCode
-    });
+      source:
+        this.state.tooltipSelection === "Shared"
+          ? sharedExampleCode
+          : singletonExampleCode
+    })
 
     const toolTipOptions = ["Shared", "Individual"].map(d => (
       <MenuItem key={"shared-tooltip-option-" + d} value={d}>
         {d}
       </MenuItem>
-    ));
+    ))
 
     const buttons = [
       <FormControl key="button-1">
@@ -237,7 +238,7 @@ export default class SharedTooltipExample extends React.Component {
           {toolTipOptions}
         </Select>
       </FormControl>
-    ];
+    ]
 
     return (
       <DocumentComponent
@@ -247,14 +248,16 @@ export default class SharedTooltipExample extends React.Component {
         buttons={buttons}
       >
         <p>
-          When designing a chart, you may wish to have a hover tooltip display all values for a given axis value.
-          This example shows how to implement a shared tooltip with respect to the X axis.
-          Certian style considerations such as ordering and color matching are also considered.
-          Individual (point based) tooltips are default behavior in Semiotic, and can be toggled on via chart settings.
+          When designing a chart, you may wish to have a hover tooltip display
+          all values for a given axis value. This example shows how to implement
+          a shared tooltip with respect to the X axis. Certian style
+          considerations such as ordering and color matching are also
+          considered. Individual (point based) tooltips are default behavior in
+          Semiotic, and can be toggled on via chart settings.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-SharedTooltipExample.title = "Shared Tooltips";
+SharedTooltipExample.title = "Shared Tooltips"

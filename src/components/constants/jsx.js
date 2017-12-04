@@ -1,4 +1,4 @@
-import React from "react";
+import React from "react"
 
 export const filterDefs = ({ matte, key, additionalDefs }) => (
   <defs>
@@ -35,4 +35,4 @@ export const filterDefs = ({ matte, key, additionalDefs }) => (
     <clipPath id={"matte-clip" + key}>{matte}</clipPath>
     {additionalDefs}
   </defs>
-);
+)

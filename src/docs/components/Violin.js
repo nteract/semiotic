@@ -1,18 +1,18 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import ViolinRaw from "./ViolinRaw";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import ViolinRaw from "./ViolinRaw"
 
-const components = [];
+const components = []
 // Add your component proptype data here
 // multiple component proptype documentation supported
 
 components.push({
   name: "Violin Chart"
-});
+})
 
 export default class ViolinPlot extends React.Component {
   render() {
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Basic",
       demo: ViolinRaw,
@@ -98,7 +98,7 @@ const axis = { orient: 'left', tickFormat: d => d, label: {
 />
 
       `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -109,8 +109,8 @@ const axis = { orient: 'left', tickFormat: d => d, label: {
       >
         <p>The Violin Plot.</p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-ViolinPlot.title = "Violin";
+ViolinPlot.title = "Violin"

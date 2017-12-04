@@ -1,32 +1,32 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import { NetworkFrame } from "../../components";
-import DendrogramRaw from "./DendrogramRaw";
-import { MenuItem } from "material-ui/Menu";
-import Input, { InputLabel } from "material-ui/Input";
-import { FormControl, FormHelperText } from "material-ui/Form";
-import Select from "material-ui/Select";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import { NetworkFrame } from "../../components"
+import DendrogramRaw from "./DendrogramRaw"
+import { MenuItem } from "material-ui/Menu"
+import Input, { InputLabel } from "material-ui/Input"
+import { FormControl, FormHelperText } from "material-ui/Form"
+import Select from "material-ui/Select"
 
-const components = [];
+const components = []
 
 components.push({
   name: "Dendrogram"
-});
+})
 
 export default class Dendrogram extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
 
     this.state = {
       type: "dendrogram"
-    };
+    }
   }
   render() {
     const typeOptions = ["sankey", "force", "dendrogram"].map(d => (
       <MenuItem key={"type-option-" + d} label={d} value={d}>
         {d}
       </MenuItem>
-    ));
+    ))
 
     const buttons = [
       <FormControl key="button-1-0-0">
@@ -38,11 +38,11 @@ export default class Dendrogram extends React.Component {
           {typeOptions}
         </Select>
       </FormControl>
-    ];
+    ]
 
-    const annotations = [];
+    const annotations = []
 
-    const examples = [];
+    const examples = []
 
     examples.push({
       name: "Basic",
@@ -101,7 +101,7 @@ const data = {
     margin={20}
   />
 `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -119,8 +119,8 @@ const data = {
         </p>
         <p>The dataset is a pruned version of the D3v3 library.</p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-Dendrogram.title = "Dendrogram";
+Dendrogram.title = "Dendrogram"

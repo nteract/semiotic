@@ -1,11 +1,11 @@
-import React from "react";
-import { data } from "../sampledata/verticality";
-import { csvParse } from "d3-dsv";
-import { XYFrame } from "../../components";
-import { Mark } from "semiotic-mark";
+import React from "react"
+import { data } from "../sampledata/verticality"
+import { csvParse } from "d3-dsv"
+import { XYFrame } from "../../components"
+import { Mark } from "semiotic-mark"
 
-const groupedData = [];
-const groupHash = {};
+const groupedData = []
+const groupHash = {}
 const colors = [
   "#007190",
   "#00a2ce",
@@ -13,7 +13,7 @@ const colors = [
   "#b3331d",
   "rgb(77, 67, 12)",
   "rgb(182, 167, 86)"
-];
+]
 
 const parsedData = csvParse(data).map(d => {
   const point = {
@@ -21,18 +21,18 @@ const parsedData = csvParse(data).map(d => {
     y: parseFloat(d.y),
     show_title_id: d.show_title_id,
     hood: parseInt(d.hood)
-  };
+  }
   if (!groupHash[d.hood]) {
     groupHash[d.hood] = {
       key: d.hood,
       coordinates: [],
       color: colors[parseInt(d.hood) % 6]
-    };
-    groupedData.push(groupHash[d.hood]);
+    }
+    groupedData.push(groupHash[d.hood])
   }
-  groupHash[d.hood].coordinates.push(point);
-  return point;
-});
+  groupHash[d.hood].coordinates.push(point)
+  return point
+})
 
 export default (
   <XYFrame
@@ -64,4 +64,4 @@ export default (
       neighborhood: true
     }}
   />
-);
+)

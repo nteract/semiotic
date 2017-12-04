@@ -1,17 +1,17 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import TimelineRaw from "./TimelineRaw";
-import { answers } from "../sampledata/questions";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import TimelineRaw from "./TimelineRaw"
+import { answers } from "../sampledata/questions"
 
-const components = [];
+const components = []
 
 components.push({
   name: "Timeline"
-});
+})
 
 export default class Timeline extends React.Component {
   render() {
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Basic",
       demo: TimelineRaw,
@@ -58,7 +58,7 @@ export default class Timeline extends React.Component {
       </text>
     )}
   />`
-    });
+    })
 
     return (
       <DocumentComponent
@@ -79,8 +79,8 @@ export default class Timeline extends React.Component {
           served for 0 total years.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-Timeline.title = "Timeline";
+Timeline.title = "Timeline"

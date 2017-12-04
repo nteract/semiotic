@@ -1,69 +1,69 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import LineBrushRaw from "./LineBrushRaw";
-import { data } from "../sampledata/apple_stock";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import LineBrushRaw from "./LineBrushRaw"
+import { data } from "../sampledata/apple_stock"
 
 data.forEach(d => {
-  d.date = new Date(d.date);
-});
-const components = [];
+  d.date = new Date(d.date)
+})
+const components = []
 
 components.push({
   name: "Line Chart Brush"
-});
+})
 
 export default class LineBrush extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
     this.state = {
       selectedDataCountStart: 200,
       selectedDataCountDuring: 200,
       selectedDataCountEnd: 200,
       resetExtent: [new Date("1/2/1998"), new Date("1/2/2003")]
-    };
-    this.brushStart = this.brushStart.bind(this);
-    this.brushDuring = this.brushDuring.bind(this);
-    this.brushEnd = this.brushEnd.bind(this);
-    this.randomizeExtent = this.randomizeExtent.bind(this);
+    }
+    this.brushStart = this.brushStart.bind(this)
+    this.brushDuring = this.brushDuring.bind(this)
+    this.brushEnd = this.brushEnd.bind(this)
+    this.randomizeExtent = this.randomizeExtent.bind(this)
   }
 
   randomizeExtent() {
-    const randomYear = parseInt(Math.random() * 5) + 1997;
+    const randomYear = parseInt(Math.random() * 5) + 1997
     this.setState({
       resetExtent: [
         new Date(`1/2/${randomYear}`),
         new Date(`1/2/${randomYear + 3}`)
       ]
-    });
+    })
   }
   brushStart(e) {
     this.setState({
       selectedDataCountStart: data.filter(d => d.date >= e[0] && d.date <= e[1])
         .length
-    });
+    })
   }
   brushDuring(e) {
     this.setState({
       selectedDataCountDuring: data.filter(
         d => d.date >= e[0] && d.date <= e[1]
       ).length
-    });
+    })
   }
   brushEnd(e) {
     this.setState({
       selectedDataCountEnd: data.filter(d => d.date >= e[0] && d.date <= e[1])
         .length
-    });
+    })
   }
 
   render() {
-    const examples = [];
+    const examples = []
 
     const buttons = [
       <button key="buon" onClick={this.randomizeExtent}>
         Random Extent
       </button>
-    ];
+    ]
 
     examples.push({
       name: "Basic",
@@ -175,7 +175,7 @@ data.forEach(d => {
    };
 }
   `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -189,8 +189,8 @@ data.forEach(d => {
           brush over your time series data.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-LineBrush.title = "Line Chart Brush";
+LineBrush.title = "Line Chart Brush"

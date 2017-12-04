@@ -1,33 +1,33 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import CustomMarkRaw from "./CustomMarkRaw";
-import { MenuItem } from "material-ui/Menu";
-import Input, { InputLabel } from "material-ui/Input";
-import { FormControl, FormHelperText } from "material-ui/Form";
-import Select from "material-ui/Select";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import CustomMarkRaw from "./CustomMarkRaw"
+import { MenuItem } from "material-ui/Menu"
+import Input, { InputLabel } from "material-ui/Input"
+import { FormControl, FormHelperText } from "material-ui/Form"
+import Select from "material-ui/Select"
 
-const components = [];
+const components = []
 
 components.push({
   name: "Custom Mark"
-});
+})
 
 const typeOptions = ["none", "marginalia"].map(d => (
   <MenuItem key={"type-option-" + d} label={d} value={d}>
     {d}
   </MenuItem>
-));
+))
 
 export default class CustomMark extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
     this.state = {
       type: "marginalia"
-    };
+    }
   }
 
   render() {
-    const examples = [];
+    const examples = []
 
     const buttons = [
       <FormControl key="button-1-0-0">
@@ -39,7 +39,7 @@ export default class CustomMark extends React.Component {
           {typeOptions}
         </Select>
       </FormControl>
-    ];
+    ]
 
     examples.push({
       name: "Basic",
@@ -137,7 +137,7 @@ function timeline({ data, rScale, adjustedSize, margin }) {
       margin={{ left: 140, top: 10, bottom: 50, right: 20 }}
     />
   `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -158,8 +158,8 @@ function timeline({ data, rScale, adjustedSize, margin }) {
           place annotation labels in the margins.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-CustomMark.title = "Custom Mark";
+CustomMark.title = "Custom Mark"

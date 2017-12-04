@@ -1,72 +1,72 @@
-import React from "react";
-import Introduction from "./Introduction";
-import Examples from "./Examples";
+import React from "react"
+import Introduction from "./Introduction"
+import Examples from "./Examples"
 
-import XYFrameDocs from "./components/XYFrameDocs";
-import ORFrameDocs from "./components/ORFrameDocs";
-import NetworkFrameDocs from "./components/NetworkFrameDocs";
-import AxisDocs from "./components/AxisDocs";
-import LegendDocs from "./components/LegendDocs";
-import DividedLineDocs from "./components/DividedLineDocs";
+import XYFrameDocs from "./components/XYFrameDocs"
+import ORFrameDocs from "./components/ORFrameDocs"
+import NetworkFrameDocs from "./components/NetworkFrameDocs"
+import AxisDocs from "./components/AxisDocs"
+import LegendDocs from "./components/LegendDocs"
+import DividedLineDocs from "./components/DividedLineDocs"
 
-import { withStyles } from "material-ui/styles";
-import Divider from "material-ui/Divider";
-import ChevronLeftIcon from "material-ui-icons/ChevronLeft";
-import ChevronRightIcon from "material-ui-icons/ChevronRight";
+import { withStyles } from "material-ui/styles"
+import Divider from "material-ui/Divider"
+import ChevronLeftIcon from "material-ui-icons/ChevronLeft"
+import ChevronRightIcon from "material-ui-icons/ChevronRight"
 
-import classNames from "classnames";
+import classNames from "classnames"
 
 //Examples
-import RegionatedLineChartDocs from "./components/RegionatedLineChartDocs";
-import Violin from "./components/Violin";
-import ParallelCoordinates from "./components/ParallelCoordinates";
-import BarLineDocs from "./components/BarLineDocs";
-import HeatMap from "./components/HeatMap";
-import Marimekko from "./components/Marimekko";
-import DotPlot from "./components/DotPlot";
-import DataSketchesPlot from "./components/DataSketchesPlot";
-import DonutChart from "./components/DonutChart";
-import JoyPlot from "./components/JoyPlot";
-import WaterfallChart from "./components/WaterfallChart";
-import BulletChart from "./components/BulletChart";
-import NeighborhoodMap from "./components/NeighborhoodMap";
-import BaseballMap from "./components/BaseballMap";
-import WordCloud from "./components/WordCloud";
-import SwarmBrush from "./components/SwarmBrush";
-import LineBrush from "./components/LineBrush";
-import Minimap from "./components/Minimap";
-import Timeline from "./components/Timeline";
-import DivergingStackedBar from "./components/DivergingStackedBar";
-import DivergingStackedIsotype from "./components/DivergingStackedIsotype";
-import VerticalIsotype from "./components/VerticalIsotype";
-import Sankey from "./components/Sankey";
-import Chord from "./components/Chord";
-import Dendrogram from "./components/Dendrogram";
-import NegativeStacked from "./components/NegativeStacked";
-import CustomMark from "./components/CustomMark";
-import SharedTooltipExample from "./components/SharedTooltipExample";
-import CometPlot from "./components/CometPlot";
+import RegionatedLineChartDocs from "./components/RegionatedLineChartDocs"
+import Violin from "./components/Violin"
+import ParallelCoordinates from "./components/ParallelCoordinates"
+import BarLineDocs from "./components/BarLineDocs"
+import HeatMap from "./components/HeatMap"
+import Marimekko from "./components/Marimekko"
+import DotPlot from "./components/DotPlot"
+import DataSketchesPlot from "./components/DataSketchesPlot"
+import DonutChart from "./components/DonutChart"
+import JoyPlot from "./components/JoyPlot"
+import WaterfallChart from "./components/WaterfallChart"
+import BulletChart from "./components/BulletChart"
+import NeighborhoodMap from "./components/NeighborhoodMap"
+import BaseballMap from "./components/BaseballMap"
+import WordCloud from "./components/WordCloud"
+import SwarmBrush from "./components/SwarmBrush"
+import LineBrush from "./components/LineBrush"
+import Minimap from "./components/Minimap"
+import Timeline from "./components/Timeline"
+import DivergingStackedBar from "./components/DivergingStackedBar"
+import DivergingStackedIsotype from "./components/DivergingStackedIsotype"
+import VerticalIsotype from "./components/VerticalIsotype"
+import Sankey from "./components/Sankey"
+import Chord from "./components/Chord"
+import Dendrogram from "./components/Dendrogram"
+import NegativeStacked from "./components/NegativeStacked"
+import CustomMark from "./components/CustomMark"
+import SharedTooltipExample from "./components/SharedTooltipExample"
+import CometPlot from "./components/CometPlot"
 
 //import Process from "./components/Process";
-import BarToParallel from "./components/BarToParallel";
-import AppleStockChart from "./components/AppleStockChart";
+import BarToParallel from "./components/BarToParallel"
+import AppleStockChart from "./components/AppleStockChart"
 
-import CreatingBarChart from "./components/CreatingBarChart";
-import CreatingPieChart from "./components/CreatingPieChart";
-import CreatingLineChart from "./components/CreatingLineChart";
+import CreatingBarChart from "./components/CreatingBarChart"
+import CreatingPieChart from "./components/CreatingPieChart"
+import CreatingLineChart from "./components/CreatingLineChart"
 
-import RealtimeORFrame from "./components/RealtimeORFrame";
-import RealtimeXYFrame from "./components/RealtimeXYFrame";
+import RealtimeORFrame from "./components/RealtimeORFrame"
+import RealtimeXYFrame from "./components/RealtimeXYFrame"
 
-import "./../components/styles.css";
-import Drawer from "material-ui/Drawer";
-import AppBar from "material-ui/AppBar";
-import List, { ListItem, ListItemIcon, ListItemText } from "material-ui/List";
-import MenuIcon from "material-ui-icons/Menu";
-import { Link } from "react-router-dom";
-import Toolbar from "material-ui/Toolbar";
-import Typography from "material-ui/Typography";
-import IconButton from "material-ui/IconButton";
+import "./../components/styles.css"
+import Drawer from "material-ui/Drawer"
+import AppBar from "material-ui/AppBar"
+import List, { ListItem, ListItemIcon, ListItemText } from "material-ui/List"
+import MenuIcon from "material-ui-icons/Menu"
+import { Link } from "react-router-dom"
+import Toolbar from "material-ui/Toolbar"
+import Typography from "material-ui/Typography"
+import IconButton from "material-ui/IconButton"
 
 const components = {
   informationmodel: { docs: BarToParallel },
@@ -111,9 +111,9 @@ const components = {
   axis: { docs: AxisDocs },
   legend: { docs: LegendDocs },
   dividedline: { docs: DividedLineDocs }
-};
+}
 
-const drawerWidth = 240;
+const drawerWidth = 240
 
 const styles = theme => ({
   root: {
@@ -189,31 +189,31 @@ const styles = theme => ({
       duration: theme.transitions.duration.enteringScreen
     })
   }
-});
+})
 
 class Documentation extends React.Component {
   state = {
     open: false
-  };
+  }
 
   handleDrawerOpen = () => {
-    this.setState({ open: true });
-  };
+    this.setState({ open: true })
+  }
 
   handleDrawerClose = () => {
-    this.setState({ open: false });
-  };
+    this.setState({ open: false })
+  }
 
   render() {
-    const { match, history, classes = {}, theme = {} } = this.props;
-    const selected = match && match.params.component;
-    const selectedComponent = components[selected];
+    const { match, history, classes = {}, theme = {} } = this.props
+    const selected = match && match.params.component
+    const selectedComponent = components[selected]
 
-    let selectedDoc, Doc;
+    let selectedDoc, Doc
     const selectedStyles = {
       borderTop: "5px double #ac9739",
       borderBottom: "5px double #ac9739"
-    };
+    }
 
     const allDocs = [
       <Link to={"/"} key="home-link">
@@ -226,10 +226,10 @@ class Documentation extends React.Component {
           <ListItemText primary="Examples" />
         </ListItem>
       </Link>
-    ];
+    ]
     Object.keys(components).forEach(c => {
-      const cTitle = components[c].docs.title;
-      const cIcon = components[c].docs.icon;
+      const cTitle = components[c].docs.title
+      const cIcon = components[c].docs.icon
 
       if (
         !components[c].parent ||
@@ -238,9 +238,9 @@ class Documentation extends React.Component {
           components[c].parent === selectedComponent.parent) ||
         c === selected
       ) {
-        let styleOver = {};
+        let styleOver = {}
         if (components[c].parent) {
-          styleOver = { paddingLeft: "20px" };
+          styleOver = { paddingLeft: "20px" }
         }
         const finalStyle =
           selected === c
@@ -250,7 +250,7 @@ class Documentation extends React.Component {
                 fontWeight: 900,
                 ...styleOver
               }
-            : styleOver;
+            : styleOver
         allDocs.push(
           <Link to={`/${c}`} key={`${c}-link`}>
             <ListItem key={cTitle} style={finalStyle}>
@@ -258,22 +258,22 @@ class Documentation extends React.Component {
               <ListItemText primary={cTitle} />
             </ListItem>
           </Link>
-        );
+        )
       }
-    });
+    })
 
     if (components[selected]) {
-      Doc = selectedComponent.docs;
+      Doc = selectedComponent.docs
       selectedDoc = (
         <div className="row">
           <div className="col-xs-8 col-xs-offset-2">
             <Doc />
           </div>
         </div>
-      );
+      )
     }
 
-    const { AdditionalContent } = this.props;
+    const { AdditionalContent } = this.props
 
     return (
       <div className={classes.root}>
@@ -351,8 +351,8 @@ class Documentation extends React.Component {
           </main>
         </div>
       </div>
-    );
+    )
   }
 }
 
-export default withStyles(styles, { withTheme: true })(Documentation);
+export default withStyles(styles, { withTheme: true })(Documentation)

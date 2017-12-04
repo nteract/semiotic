@@ -1,15 +1,15 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import WaterfallChartRaw from "./WaterfallChartRaw";
-const components = [];
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import WaterfallChartRaw from "./WaterfallChartRaw"
+const components = []
 
 components.push({
   name: "WaterfallChart"
-});
+})
 
 export default class WaterfallChart extends React.Component {
   render() {
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Basic",
       demo: WaterfallChartRaw,
@@ -118,7 +118,7 @@ function waterfall({ data, rScale, adjustedSize, margin }) {
             oPadding={padding}
         />
       `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -141,8 +141,8 @@ function waterfall({ data, rScale, adjustedSize, margin }) {
           than this.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-WaterfallChart.title = "Waterfall Chart";
+WaterfallChart.title = "Waterfall Chart"

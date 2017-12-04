@@ -1,6 +1,6 @@
-import React from "react";
+import React from "react"
 
-import { Mark } from "semiotic-mark";
+import { Mark } from "semiotic-mark"
 
 const defaultTickLineGenerator = ({ xy, orient, i }) => (
   <Mark
@@ -13,7 +13,7 @@ const defaultTickLineGenerator = ({ xy, orient, i }) => (
     d={`M${xy.x1},${xy.y1}L${xy.x2},${xy.y2}`}
     className={`tick-line tick ${orient}`}
   />
-);
+)
 
 export function axisPieces({
   renderMode = () => undefined,
@@ -39,67 +39,67 @@ export function axisPieces({
     tposition2,
     textPositionMod = 0,
     textPositionMod2 = 0,
-    defaultAnchor = "middle";
+    defaultAnchor = "middle"
 
   switch (orient) {
     case "top":
-      position1 = "x1";
-      position2 = "x2";
-      domain1 = "y1";
-      domain2 = "y2";
-      axisDomain = [margin.top, tickSize + margin.top];
-      tposition1 = "tx";
-      tposition2 = "ty";
-      textPositionMod -= 20 - padding;
-      break;
+      position1 = "x1"
+      position2 = "x2"
+      domain1 = "y1"
+      domain2 = "y2"
+      axisDomain = [margin.top, tickSize + margin.top]
+      tposition1 = "tx"
+      tposition2 = "ty"
+      textPositionMod -= 20 - padding
+      break
     case "bottom":
-      position1 = "x1";
-      position2 = "x2";
-      domain1 = "y2";
-      domain2 = "y1";
-      axisDomain = [size[1] + margin.top, size[1] + margin.top - tickSize];
-      tposition1 = "tx";
-      tposition2 = "ty";
-      textPositionMod += 20 + padding;
-      break;
+      position1 = "x1"
+      position2 = "x2"
+      domain1 = "y2"
+      domain2 = "y1"
+      axisDomain = [size[1] + margin.top, size[1] + margin.top - tickSize]
+      tposition1 = "tx"
+      tposition2 = "ty"
+      textPositionMod += 20 + padding
+      break
     case "right":
-      position1 = "y2";
-      position2 = "y1";
-      domain1 = "x2";
-      domain2 = "x1";
-      axisDomain = [size[0] + margin.left, size[0] + margin.left - tickSize];
-      tposition1 = "ty";
-      tposition2 = "tx";
-      textPositionMod += 5 + padding;
-      textPositionMod2 += 5;
-      defaultAnchor = "start";
-      break;
+      position1 = "y2"
+      position2 = "y1"
+      domain1 = "x2"
+      domain2 = "x1"
+      axisDomain = [size[0] + margin.left, size[0] + margin.left - tickSize]
+      tposition1 = "ty"
+      tposition2 = "tx"
+      textPositionMod += 5 + padding
+      textPositionMod2 += 5
+      defaultAnchor = "start"
+      break
     //left
     default:
-      position1 = "y1";
-      position2 = "y2";
-      domain1 = "x1";
-      domain2 = "x2";
-      axisDomain = [margin.left, tickSize + margin.left];
-      tposition1 = "ty";
-      tposition2 = "tx";
-      textPositionMod -= 5 + padding;
-      textPositionMod2 += 5;
-      defaultAnchor = "end";
-      break;
+      position1 = "y1"
+      position2 = "y2"
+      domain1 = "x1"
+      domain2 = "x2"
+      axisDomain = [margin.left, tickSize + margin.left]
+      tposition1 = "ty"
+      tposition2 = "tx"
+      textPositionMod -= 5 + padding
+      textPositionMod2 += 5
+      defaultAnchor = "end"
+      break
   }
 
-  const axisSize = Math.abs(scale.range()[1] - scale.range()[0]);
+  const axisSize = Math.abs(scale.range()[1] - scale.range()[0])
 
   if (!tickValues) {
     if (!ticks) {
-      ticks = Math.max(1, parseInt(axisSize / 40));
+      ticks = Math.max(1, parseInt(axisSize / 40))
     }
-    tickValues = scale.ticks(ticks);
+    tickValues = scale.ticks(ticks)
   }
 
   return tickValues.map((tick, i) => {
-    const tickPosition = scale(tick);
+    const tickPosition = scale(tick)
     return {
       [position1]: tickPosition,
       [position2]: tickPosition,
@@ -110,19 +110,19 @@ export function axisPieces({
       defaultAnchor,
       renderMode: renderMode(tick, i),
       value: tick
-    };
-  });
+    }
+  })
 }
 
 export const axisLabels = ({ axisParts, orient, tickFormat, rotate = 0 }) => {
   return axisParts.map((axisPart, i) => {
-    let renderedValue = tickFormat(axisPart.value);
+    let renderedValue = tickFormat(axisPart.value)
     if (typeof renderedValue !== "object" || renderedValue instanceof Date) {
       renderedValue = (
         <text textAnchor={axisPart.defaultAnchor}>
           {renderedValue.toString ? renderedValue.toString() : renderedValue}
         </text>
-      );
+      )
     }
 
     return (
@@ -133,9 +133,9 @@ export const axisLabels = ({ axisParts, orient, tickFormat, rotate = 0 }) => {
       >
         {renderedValue}
       </g>
-    );
-  });
-};
+    )
+  })
+}
 
 export const axisLines = ({
   axisParts,
@@ -144,5 +144,5 @@ export const axisLines = ({
 }) => {
   return axisParts.map((axisPart, i) =>
     tickLineGenerator({ xy: axisPart, orient, i })
-  );
-};
+  )
+}

@@ -1,39 +1,39 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React from "react"
+import { Link } from "react-router-dom"
 
-import DotPlotRaw from "../components/DotPlotRaw";
-import NeighborhoodMapRaw from "../components/NeighborhoodMapRaw";
-import BarLineRaw from "../components/BarLineRaw";
-import RegionatedLineChartRaw from "../components/RegionatedLineChartRaw";
-import DonutChartRaw from "../components/DonutChartRaw";
-import HeatMapRaw from "../components/HeatMapRaw";
-import JoyPlotRaw from "../components/JoyPlotRaw";
-import MarimekkoRaw from "../components/MarimekkoRaw";
-import ViolinRaw from "../components/ViolinRaw";
-import WaterfallChartRaw from "../components/WaterfallChartRaw";
-import SwarmBrushRaw from "../components/SwarmBrushRaw";
-import DivergingStackedBarRaw from "../components/DivergingStackedBarRaw";
-import ChordRaw from "../components/ChordRaw";
-import SankeyRaw from "../components/SankeyRaw";
-import MinimapRaw from "../components/MinimapRaw";
-import AppleStockChartRaw from "../components/AppleStockChartRaw";
-import BaseballMapRaw from "../components/BaseballMapRaw";
-import BulletChartRaw from "../components/BulletChartRaw";
-import DendrogramRaw from "../components/DendrogramRaw";
-import DivergingStackedIsotypeRaw from "../components/DivergingStackedIsotypeRaw";
-import VerticalIsotypeRaw from "../components/VerticalIsotypeRaw";
-import NegativeStackedRaw from "../components/NegativeStackedRaw";
-import CustomMarkRaw from "../components/CustomMarkRaw";
-import DataSketchesPlotRaw from "../components/DataSketchesPlotRaw";
-import TimelineRaw from "../components/TimelineRaw";
-import SharedTooltipExampleRaw from "../components/SharedTooltipExampleRaw";
-import CometPlotRaw from "../components/CometPlotRaw";
+import DotPlotRaw from "../components/DotPlotRaw"
+import NeighborhoodMapRaw from "../components/NeighborhoodMapRaw"
+import BarLineRaw from "../components/BarLineRaw"
+import RegionatedLineChartRaw from "../components/RegionatedLineChartRaw"
+import DonutChartRaw from "../components/DonutChartRaw"
+import HeatMapRaw from "../components/HeatMapRaw"
+import JoyPlotRaw from "../components/JoyPlotRaw"
+import MarimekkoRaw from "../components/MarimekkoRaw"
+import ViolinRaw from "../components/ViolinRaw"
+import WaterfallChartRaw from "../components/WaterfallChartRaw"
+import SwarmBrushRaw from "../components/SwarmBrushRaw"
+import DivergingStackedBarRaw from "../components/DivergingStackedBarRaw"
+import ChordRaw from "../components/ChordRaw"
+import SankeyRaw from "../components/SankeyRaw"
+import MinimapRaw from "../components/MinimapRaw"
+import AppleStockChartRaw from "../components/AppleStockChartRaw"
+import BaseballMapRaw from "../components/BaseballMapRaw"
+import BulletChartRaw from "../components/BulletChartRaw"
+import DendrogramRaw from "../components/DendrogramRaw"
+import DivergingStackedIsotypeRaw from "../components/DivergingStackedIsotypeRaw"
+import VerticalIsotypeRaw from "../components/VerticalIsotypeRaw"
+import NegativeStackedRaw from "../components/NegativeStackedRaw"
+import CustomMarkRaw from "../components/CustomMarkRaw"
+import DataSketchesPlotRaw from "../components/DataSketchesPlotRaw"
+import TimelineRaw from "../components/TimelineRaw"
+import SharedTooltipExampleRaw from "../components/SharedTooltipExampleRaw"
+import CometPlotRaw from "../components/CometPlotRaw"
 
 import {
   genericBarChart,
   genericLineChart,
   genericNetworkChart
-} from "../components/GenericChartsRaw";
+} from "../components/GenericChartsRaw"
 
 const exampos = [
   {
@@ -131,7 +131,7 @@ const exampos = [
     path: "sharedTooltip"
   },
   { label: "Comet Plot", viz: CometPlotRaw, path: "cometplot" }
-];
+]
 
 export const wrappedExamples = exampos.map(d => (
   <div key={d.path} className="example-wrapper">
@@ -141,4 +141,4 @@ export const wrappedExamples = exampos.map(d => (
       {d.viz}
     </Link>
   </div>
-));
+))

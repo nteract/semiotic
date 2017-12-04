@@ -1,5 +1,5 @@
-import { csvParse } from "d3-dsv";
-import { funnelize } from "../../components";
+import { csvParse } from "d3-dsv"
+import { funnelize } from "../../components"
 
 export const temperature_data = `year,January,February,March,April,May,June,July,August,September,October,November,December,Annual
 1977,22.1,33.5,46.8,53.7,65.0,70.2,79.0,75.7,68.2,54.9,47.3,35.7,54.3
@@ -41,17 +41,17 @@ export const temperature_data = `year,January,February,March,April,May,June,July
 2013,35.1,33.9,40.1,53.0,62.8,72.7,79.8,74.6,67.9,60.2,45.3,38.5,55.3
 2014,28.6,31.6,37.7,52.3,64.0,72.5,76.1,74.5,69.7,59.6,45.3,40.5,54.4
 2015,29.9,23.9,38.1,54.3,68.5,71.2,78.8,79.0,74.5,58.0,52.8,50.8,56.7
-2016,34.5,37.7,48.9,53.3,62.8,72.3,78.7,79.2,71.8,58.8,49.8,38.3,57.2`;
+2016,34.5,37.7,48.9,53.3,62.8,72.3,78.7,79.2,71.8,58.8,49.8,38.3,57.2`
 
-const processedNYCTemp = csvParse(temperature_data);
+const processedNYCTemp = csvParse(temperature_data)
 
 processedNYCTemp.forEach(d => {
   Object.keys(d).forEach(key => {
-    d[key] = key === "year" ? d[key] : parseFloat(d[key]);
-  });
-});
+    d[key] = key === "year" ? d[key] : parseFloat(d[key])
+  })
+})
 
-export const xyframe_data = processedNYCTemp;
+export const xyframe_data = processedNYCTemp
 
 export const orframe_data = funnelize({
   data: xyframe_data,
@@ -71,4 +71,4 @@ export const orframe_data = funnelize({
     "Annual"
   ],
   key: "year"
-});
+})

@@ -1,9 +1,9 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import { DividedLine } from "../../components";
-import { curveBasis } from "d3-shape";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import { DividedLine } from "../../components"
+import { curveBasis } from "d3-shape"
 
-const components = [];
+const components = []
 // Add your component proptype data here
 // multiple component proptype documentation supported
 
@@ -23,20 +23,20 @@ components.push({
     searchIterations: PropTypes.number
     }
   `
-});
+})
 
 export default class DividedLineDocs extends React.Component {
   render() {
     function randomLineGenerator(width, height, points) {
-      const pointDataSet = [];
-      let curY = 0.5;
+      const pointDataSet = []
+      let curY = 0.5
       for (let x = 0; x < points; x++) {
-        curY += Math.random() * 0.3 - 0.15;
-        curY = Math.max(curY, 0.05);
-        curY = Math.min(curY, 0.95);
-        pointDataSet.push({ x: x / points * width, y: curY * height });
+        curY += Math.random() * 0.3 - 0.15
+        curY = Math.max(curY, 0.05)
+        curY = Math.min(curY, 0.95)
+        pointDataSet.push({ x: x / points * width, y: curY * height })
       }
-      return pointDataSet;
+      return pointDataSet
     }
 
     const colors = [
@@ -44,7 +44,7 @@ export default class DividedLineDocs extends React.Component {
       "#b3331d",
       "rgb(77, 67, 12)",
       "rgb(182, 167, 86)"
-    ];
+    ]
 
     function parameters(point) {
       if (point.x < 100) {
@@ -53,7 +53,7 @@ export default class DividedLineDocs extends React.Component {
           stroke: "#b3331d",
           strokeWidth: 6,
           strokeOpacity: 1
-        };
+        }
       }
       if (point.x > 400) {
         return {
@@ -61,22 +61,22 @@ export default class DividedLineDocs extends React.Component {
           stroke: "#b3331d",
           strokeWidth: 2,
           strokeDasharray: "5 5"
-        };
+        }
       }
       if (point.y < 150) {
-        return { fill: "none", strokeWidth: 2, stroke: "#00a2ce" };
+        return { fill: "none", strokeWidth: 2, stroke: "#00a2ce" }
       }
       if (point.y > 350) {
-        return { fill: "none", strokeWidth: 2, stroke: "#b6a756" };
+        return { fill: "none", strokeWidth: 2, stroke: "#b6a756" }
       }
-      return { fill: "none", stroke: "black", strokeWidth: 1 };
+      return { fill: "none", stroke: "black", strokeWidth: 1 }
     }
 
-    const data = randomLineGenerator(500, 500, 100);
+    const data = randomLineGenerator(500, 500, 100)
 
-    const buttons = [];
+    const buttons = []
 
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Basic",
       demo: (
@@ -105,7 +105,7 @@ export default class DividedLineDocs extends React.Component {
           />
         </svg>
       `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -127,8 +127,8 @@ export default class DividedLineDocs extends React.Component {
           sections of the line at a cost of performance.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-DividedLineDocs.title = "DividedLine";
+DividedLineDocs.title = "DividedLine"

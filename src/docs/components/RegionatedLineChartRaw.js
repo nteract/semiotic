@@ -1,5 +1,5 @@
-import React from "react";
-import { XYFrame } from "../../components";
-import { regionatedLineChart } from "../example_settings/xyframe.js";
+import React from "react"
+import { XYFrame } from "../../components"
+import { regionatedLineChart } from "../example_settings/xyframe.js"
 
-export default <XYFrame {...regionatedLineChart} />;
+export default <XYFrame {...regionatedLineChart} />

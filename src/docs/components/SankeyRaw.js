@@ -1,8 +1,8 @@
-import React from "react";
-import { NetworkFrame } from "../../components";
-import { network_data, or_data } from "../sampledata/energy_time";
+import React from "react"
+import { NetworkFrame } from "../../components"
+import { network_data, or_data } from "../sampledata/energy_time"
 
-const oldColors = ["#000000", "#FFDD89", "#957244", "#F26223"];
+const oldColors = ["#000000", "#FFDD89", "#957244", "#F26223"]
 
 const mirroredNetworkData = [
   ...network_data.map(d => ({
@@ -15,7 +15,7 @@ const mirroredNetworkData = [
     source: d.target.id ? d.target.id : d.target,
     value: d["2050"]
   }))
-];
+]
 
 export default ({ annotations = [], type = "sankey", orient = "left" }) => (
   <NetworkFrame
@@ -43,4 +43,4 @@ export default ({ annotations = [], type = "sankey", orient = "left" }) => (
     networkType={{ type: type, orient: orient, iterations: 500 }}
     annotations={annotations}
   />
-);
+)

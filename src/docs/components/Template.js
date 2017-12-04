@@ -1,8 +1,8 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import { ORFrame } from "../../components";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import { ORFrame } from "../../components"
 
-const components = [];
+const components = []
 
 components.push({
   name: "Template",
@@ -19,11 +19,11 @@ components.push({
 
     }
   `
-});
+})
 
 export default class TemplateDocs extends React.Component {
   render() {
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Basic",
       demo: (
@@ -52,7 +52,7 @@ export default class TemplateDocs extends React.Component {
           />
         </svg>
       `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -67,8 +67,8 @@ export default class TemplateDocs extends React.Component {
           style object to line segments that fall into the declared parameters.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-TemplateDocs.title = "Template";
+TemplateDocs.title = "Template"

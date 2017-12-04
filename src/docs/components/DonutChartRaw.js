@@ -1,8 +1,8 @@
-import React from "react";
-import { ORFrame } from "../../components";
+import React from "react"
+import { ORFrame } from "../../components"
 
-const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"];
-const data = [5, 8, 10, 15];
+const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"]
+const data = [5, 8, 10, 15]
 
 export default state => (
   <ORFrame
@@ -28,4 +28,4 @@ export default state => (
       )
     }
   />
-);
+)

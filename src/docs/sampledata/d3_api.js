@@ -462,4 +462,4 @@ export const data = {
     { name: "xml", leafColor: "#fc8d59", blockCalls: 42 },
     { name: "hexbin", leafColor: "#fc8d59", blockCalls: 21 }
   ]
-};
+}

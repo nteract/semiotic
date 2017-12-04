@@ -1,17 +1,17 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import DivergingStackedBarRaw from "./DivergingStackedBarRaw";
-import { answers } from "../sampledata/questions";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import DivergingStackedBarRaw from "./DivergingStackedBarRaw"
+import { answers } from "../sampledata/questions"
 
-const components = [];
+const components = []
 
 components.push({
   name: "Diverging Stacked Bar Chart"
-});
+})
 
 export default class DivergingStackedBar extends React.Component {
   render() {
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Basic",
       demo: DivergingStackedBarRaw,
@@ -56,7 +56,7 @@ export default <ORFrame
     }}
   />
 />`
-    });
+    })
 
     return (
       <DocumentComponent
@@ -70,8 +70,8 @@ export default <ORFrame
           naturally make negative stacked bar charts.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-DivergingStackedBar.title = "Diverging Stacked Bar";
+DivergingStackedBar.title = "Diverging Stacked Bar"

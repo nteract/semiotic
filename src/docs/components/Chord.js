@@ -1,11 +1,11 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import { NetworkFrame } from "../../components";
-import ChordRaw from "./ChordRaw";
-import Select from "material-ui/Select";
-import { MenuItem } from "material-ui/Menu";
-import Input, { InputLabel } from "material-ui/Input";
-import { FormControl, FormHelperText } from "material-ui/Form";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import { NetworkFrame } from "../../components"
+import ChordRaw from "./ChordRaw"
+import Select from "material-ui/Select"
+import { MenuItem } from "material-ui/Menu"
+import Input, { InputLabel } from "material-ui/Input"
+import { FormControl, FormHelperText } from "material-ui/Form"
 
 const dematrixifiedEdges = [
   { source: "a", target: "a", value: 11975 },
@@ -24,23 +24,23 @@ const dematrixifiedEdges = [
   { source: "d", target: "b", value: 990 },
   { source: "d", target: "c", value: 940 },
   { source: "d", target: "d", value: 6907 }
-];
+]
 
-const components = [];
+const components = []
 
-const originalChordColors = ["#000000", "#FFDD89", "#957244", "#F26223"];
+const originalChordColors = ["#000000", "#FFDD89", "#957244", "#F26223"]
 
 components.push({
   name: "Chord"
-});
+})
 
 export default class Chord extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
 
     this.state = {
       padAngle: "0.01"
-    };
+    }
   }
 
   render() {
@@ -48,7 +48,7 @@ export default class Chord extends React.Component {
       <MenuItem key={"pad-option-" + d} label={d} value={d}>
         {d}
       </MenuItem>
-    ));
+    ))
 
     const buttons = [
       <FormControl key="button-1-0-0">
@@ -60,9 +60,9 @@ export default class Chord extends React.Component {
           {padAngleOptions}
         </Select>
       </FormControl>
-    ];
+    ]
 
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Basic",
       demo: ChordRaw({ padAngle: parseFloat(this.state.padAngle) }),
@@ -106,7 +106,7 @@ const colors = [
   networkType={{ type: "chord", padAngle: ${this.state.padAngle} }}
 />
 `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -133,8 +133,8 @@ const colors = [
           dataset.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-Chord.title = "Chord";
+Chord.title = "Chord"

@@ -1,14 +1,14 @@
-import React from "react";
-import { XYFrame } from "../../components";
-import { scaleTime } from "d3-scale";
-import { AnnotationCalloutRect } from "react-annotation";
+import React from "react"
+import { XYFrame } from "../../components"
+import { scaleTime } from "d3-scale"
+import { AnnotationCalloutRect } from "react-annotation"
 
-const chartScale = scaleTime();
+const chartScale = scaleTime()
 const lineStyle = {
   fill: "#007190",
   stroke: "#007190",
   strokeWidth: 1
-};
+}
 
 export default (data, startEvent, duringEvent, endEvent, extent) => {
   return (
@@ -38,5 +38,5 @@ export default (data, startEvent, duringEvent, endEvent, extent) => {
         }}
       />
     </div>
-  );
-};
+  )
+}

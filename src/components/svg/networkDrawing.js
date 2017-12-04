@@ -1,10 +1,10 @@
-import React from "react";
+import React from "react"
 
-import { Mark } from "semiotic-mark";
+import { Mark } from "semiotic-mark"
 
 import {
   d as glyphD /*, project as glyphProject, mutate as glyphMutate*/
-} from "d3-glyphedge";
+} from "d3-glyphedge"
 
 const customEdgeHashD = {
   linearc: d => glyphD.lineArc(d),
@@ -22,7 +22,7 @@ const customEdgeHashD = {
       d.target.nodeSize / 2,
       (d.source.nodeSize + d.target.nodeSize) / 4
     )
-};
+}
 
 const circleNodeGenerator = ({
   d,
@@ -51,11 +51,11 @@ const circleNodeGenerator = ({
       renderMode={renderMode ? renderMode(d, i) : undefined}
       className={className}
     />
-  );
-};
+  )
+}
 
 const genericLineGenerator = d =>
-  `M${d.source.x},${d.source.y}L${d.target.x},${d.target.y}`;
+  `M${d.source.x},${d.source.y}L${d.target.x},${d.target.y}`
 
 export const drawNodes = ({
   data,
@@ -67,13 +67,13 @@ export const drawNodes = ({
   canvasDrawing,
   canvasRenderFn
 }) => {
-  const markGenerator = customMark || circleNodeGenerator;
-  const renderedData = [];
+  const markGenerator = customMark || circleNodeGenerator
+  const renderedData = []
 
   if (customMark && canvasRenderFn) {
     console.error(
       "canvas rendering currently only supports generic circle nodes based on nodeSize"
-    );
+    )
   }
 
   data.forEach((d, i) => {
@@ -88,8 +88,8 @@ export const drawNodes = ({
         styleFn,
         renderFn: renderMode,
         classFn
-      };
-      canvasDrawing.push(canvasNode);
+      }
+      canvasDrawing.push(canvasNode)
     } else {
       renderedData.push(
         markGenerator({
@@ -103,11 +103,11 @@ export const drawNodes = ({
           className: `node ${classFn(d, i)}`,
           transform: `translate(${d.x},${d.y})`
         })
-      );
+      )
     }
-  });
-  return renderedData;
-};
+  })
+  return renderedData
+}
 
 export const drawEdges = ({
   data,
@@ -120,8 +120,8 @@ export const drawEdges = ({
   canvasDrawing,
   type
 }) => {
-  let dGenerator = genericLineGenerator;
-  const renderedData = [];
+  let dGenerator = genericLineGenerator
+  const renderedData = []
   if (customMark) {
     data.forEach((d, i) => {
       renderedData.push(
@@ -136,14 +136,14 @@ export const drawEdges = ({
           className: `${classFn(d, i)} edge`,
           transform: `translate(${d.x},${d.y})`
         })
-      );
-    });
+      )
+    })
   } else {
     if (type) {
       if (typeof type === "function") {
-        dGenerator = type;
+        dGenerator = type
       } else if (customEdgeHashD[type]) {
-        dGenerator = d => customEdgeHashD[type](d);
+        dGenerator = d => customEdgeHashD[type](d)
       }
     }
     data.forEach((d, i) => {
@@ -158,8 +158,8 @@ export const drawEdges = ({
           styleFn,
           renderFn: renderMode,
           classFn
-        };
-        canvasDrawing.push(canvasNode);
+        }
+        canvasDrawing.push(canvasNode)
       } else {
         renderedData.push(
           <Mark
@@ -170,10 +170,10 @@ export const drawEdges = ({
             d={dGenerator(d)}
             style={styleFn(d, i)}
           />
-        );
+        )
       }
-    });
+    })
   }
 
-  return renderedData;
-};
+  return renderedData
+}

@@ -1,9 +1,9 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import { Axis } from "../../components";
-import { scaleLinear, scaleTime } from "d3-scale";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import { Axis } from "../../components"
+import { scaleLinear, scaleTime } from "d3-scale"
 
-const components = [];
+const components = []
 // Add your component proptype data here
 // multiple component proptype documentation supported
 
@@ -42,13 +42,13 @@ components.push({
     ])
     }
   `
-});
+})
 
 export default class AxisDocs extends React.Component {
   render() {
-    const buttons = [];
+    const buttons = []
 
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Basic",
       demo: (
@@ -161,7 +161,7 @@ export default class AxisDocs extends React.Component {
         </g>
         </svg>
       `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -187,8 +187,8 @@ export default class AxisDocs extends React.Component {
           rules determining whether summaries and connectors are drawn.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-AxisDocs.title = "Axis";
+AxisDocs.title = "Axis"

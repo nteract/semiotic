@@ -1,5 +1,5 @@
-import React from "react";
-import { ORFrame } from "../../components";
+import React from "react"
+import { ORFrame } from "../../components"
 
 export default (data, event, resetExtent) => (
   <div style={{ marginTop: "50px" }}>
@@ -28,4 +28,4 @@ export default (data, event, resetExtent) => (
       }}
     />
   </div>
-);
+)

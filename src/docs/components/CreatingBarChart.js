@@ -1,9 +1,9 @@
-import React from "react";
-import { ORFrame } from "../../components";
+import React from "react"
+import { ORFrame } from "../../components"
 
-import DocumentComponent from "../layout/DocumentComponent";
+import DocumentComponent from "../layout/DocumentComponent"
 
-const components = [];
+const components = []
 // Add your component proptype data here
 // multiple component proptype documentation supported
 const barChartData = [
@@ -11,7 +11,7 @@ const barChartData = [
   { user: "Susie", tweets: 5, retweets: 100, favorites: 100 },
   { user: "Matt", tweets: 20, retweets: 25, favorites: 50 },
   { user: "Betty", tweets: 30, retweets: 20, favorites: 10 }
-];
+]
 
 const inflatedBarChartData = [
   { user: "Jason", type: "tweets", value: 10 },
@@ -26,46 +26,46 @@ const inflatedBarChartData = [
   { user: "Susie", type: "favorites", value: 100 },
   { user: "Matt", type: "favorites", value: 50 },
   { user: "Betty", type: "favorites", value: 10 }
-];
+]
 
-const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"];
+const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"]
 
 const colorHash = {
   tweets: "#4d430c",
   retweets: "#b3331d",
   favorites: "#b6a756"
-};
+}
 
-const barSize = [300, 500];
-const stackedBarStyle = d => ({ fill: colorHash[d.type], stroke: "white" });
+const barSize = [300, 500]
+const stackedBarStyle = d => ({ fill: colorHash[d.type], stroke: "white" })
 const stackedBarLabel = d => (
   <text transform="translate(-15,0)rotate(45)">{d}</text>
-);
+)
 const stackedBarAxis = {
   orient: "left",
   label: "Tweets + Favorites + Retweets"
-};
-const stackedBarMargin = { left: 70, bottom: 50, right: 5, top: 5 };
+}
+const stackedBarMargin = { left: 70, bottom: 50, right: 5, top: 5 }
 
 components.push({
   name: "Creating a Bar Chart"
-});
+})
 
 export default class CreatingBarChart extends React.Component {
   constructor(props) {
-    super(props);
-    this.columnHoverBehavior = this.columnHoverBehavior.bind(this);
+    super(props)
+    this.columnHoverBehavior = this.columnHoverBehavior.bind(this)
     this.state = {
       hoverPoint: undefined
-    };
+    }
   }
   columnHoverBehavior(d) {
-    this.setState({ hoverPoint: d });
+    this.setState({ hoverPoint: d })
   }
 
   barAnnotator({ d, i, categories }) {
     if (!d.type === "hover") {
-      return null;
+      return null
     }
 
     return (
@@ -77,10 +77,10 @@ export default class CreatingBarChart extends React.Component {
         width={categories[d.user].width}
         style={{ fill: "none", stroke: "#00a2ce", strokeWidth: 5 }}
       />
-    );
+    )
   }
   render() {
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Data",
       demo: (
@@ -100,7 +100,7 @@ export default class CreatingBarChart extends React.Component {
   { user: "Matt", tweets: 20, retweets: 25, favorites: 50 },
   { user: "Betty", tweets: 30, retweets: 20, favorites: 10 }
 ];      `
-    });
+    })
 
     examples.push({
       name: "Simple",
@@ -135,7 +135,7 @@ export default class CreatingBarChart extends React.Component {
             type={"bar"}
             oLabel={true}
           />`
-    });
+    })
 
     examples.push({
       name: "Complex",
@@ -180,7 +180,7 @@ export default class CreatingBarChart extends React.Component {
             margin={{ left: 70, bottom: 50, right: 5, top: 55 }}
             oPadding={5}
           />`
-    });
+    })
 
     examples.push({
       name: "Stacked Data",
@@ -209,7 +209,7 @@ export default class CreatingBarChart extends React.Component {
   { user: "Matt", type: "favorites", value: 50 },
   { user: "Betty", type: "favorites", value: 10 }
 ];`
-    });
+    })
 
     examples.push({
       name: "Stacked Bar Chart",
@@ -274,7 +274,7 @@ export default class CreatingBarChart extends React.Component {
             oPadding={5}
           />
 `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -288,8 +288,8 @@ export default class CreatingBarChart extends React.Component {
           labels and an axis in Semiotic.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-CreatingBarChart.title = "Creating a Bar Chart";
+CreatingBarChart.title = "Creating a Bar Chart"
