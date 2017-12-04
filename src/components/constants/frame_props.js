@@ -34,7 +34,7 @@ export const xyFrameChangeProps = [
   "customPointMark",
   "customLineMark",
   "lineIDAccessor"
-];
+]
 
 const xyFrameOtherProps = [
   "matte",
@@ -50,7 +50,7 @@ const xyFrameOtherProps = [
   "foregroundGraphics",
   "download",
   "downloadFields"
-];
+]
 
 export const orFrameChangeProps = [
   "data",
@@ -87,7 +87,7 @@ export const orFrameChangeProps = [
   "summaryPosition",
   "oLabel",
   "axis"
-];
+]
 
 const orFrameOtherProps = [
   "annotations",
@@ -100,7 +100,7 @@ const orFrameOtherProps = [
   "hoverAnnotation",
   "backgroundGraphics",
   "foregroundGraphics"
-];
+]
 
 export const networkFrameChangeProps = [
   "name",
@@ -123,7 +123,7 @@ export const networkFrameChangeProps = [
   "nodeStyle",
   "edgeStyle",
   "edgeType"
-];
+]
 
 const networkFrameOtherProps = [
   "annotations",
@@ -137,4 +137,4 @@ const networkFrameOtherProps = [
   "hoverAnnotation",
   "backgroundGraphics",
   "foregroundGraphics"
-];
+]

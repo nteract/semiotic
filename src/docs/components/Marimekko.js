@@ -1,15 +1,15 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import MarimekkoRaw from "./MarimekkoRaw";
-const components = [];
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import MarimekkoRaw from "./MarimekkoRaw"
+const components = []
 
 components.push({
   name: "Marimekko"
-});
+})
 
 export default class MarimekkoDocs extends React.Component {
   render() {
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Basic",
       demo: MarimekkoRaw,
@@ -51,7 +51,7 @@ export default class MarimekkoDocs extends React.Component {
     oPadding={0}
     oLabel={d => <text transform="rotate(45)">{d}</text>
       `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -68,8 +68,8 @@ export default class MarimekkoDocs extends React.Component {
           in a region by brand).
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-MarimekkoDocs.title = "Marimekko Chart";
+MarimekkoDocs.title = "Marimekko Chart"

@@ -1,17 +1,17 @@
-import React from "react";
-import { scaleLinear } from "d3-scale";
-import { ORFrame } from "../../components";
+import React from "react"
+import { scaleLinear } from "d3-scale"
+import { ORFrame } from "../../components"
 
-let startSeed = 0.5;
+let startSeed = 0.5
 
 const heatScale = scaleLinear()
   .domain([-10, -5, 0, 5, 10])
   .range(["#007190", "#00a2ce", "white", "#d38779", "#b3331d"])
-  .clamp(true);
+  .clamp(true)
 
 const tiles = Array(84)
   .fill()
-  .map((d, i) => ({ step: i % 12, value: (startSeed += 0.5 - Math.random()) }));
+  .map((d, i) => ({ step: i % 12, value: (startSeed += 0.5 - Math.random()) }))
 
 const daysOfTheWeek = {
   7: "Monday",
@@ -21,7 +21,7 @@ const daysOfTheWeek = {
   3: "Friday",
   2: "Saturday",
   1: "Sunday"
-};
+}
 const daysAxis = {
   orient: "left",
   tickFormat: d =>
@@ -32,7 +32,7 @@ const daysAxis = {
     ) : (
       ""
     )
-};
+}
 
 export default (
   <ORFrame
@@ -51,4 +51,4 @@ export default (
     margin={{ left: 100, top: 10, bottom: 80, right: 50 }}
     oPadding={0}
   />
-);
+)

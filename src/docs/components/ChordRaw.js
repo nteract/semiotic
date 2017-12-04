@@ -1,5 +1,5 @@
-import React from "react";
-import { NetworkFrame } from "../../components";
+import React from "react"
+import { NetworkFrame } from "../../components"
 
 const dematrixifiedEdges = [
   { source: "a", target: "a", value: 11975 },
@@ -18,9 +18,9 @@ const dematrixifiedEdges = [
   { source: "d", target: "b", value: 990 },
   { source: "d", target: "c", value: 940 },
   { source: "d", target: "d", value: 6907 }
-];
+]
 
-const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"];
+const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"]
 
 export default ({ padAngle = 0.01 }) => (
   <NetworkFrame
@@ -39,4 +39,4 @@ export default ({ padAngle = 0.01 }) => (
     edgeWidthAccessor={"value"}
     networkType={{ type: "chord", padAngle }}
   />
-);
+)

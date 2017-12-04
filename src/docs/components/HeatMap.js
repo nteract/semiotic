@@ -1,18 +1,18 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import { scaleLinear } from "d3-scale";
-import HeatMapRaw from "./HeatMapRaw";
-import { ORFrame } from "../../components";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import { scaleLinear } from "d3-scale"
+import HeatMapRaw from "./HeatMapRaw"
+import { ORFrame } from "../../components"
 
-const components = [];
+const components = []
 
 components.push({
   name: "HeatMap"
-});
+})
 
 export default class HeatMapDocs extends React.Component {
   render() {
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Basic",
       demo: HeatMapRaw,
@@ -52,7 +52,7 @@ const daysAxis = { orient: 'left',
     oPadding={0}
 />
       `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -68,8 +68,8 @@ const daysAxis = { orient: 'left',
           number of entries for each column) you can create a heatmap easily.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-HeatMapDocs.title = "Heat Map";
+HeatMapDocs.title = "Heat Map"

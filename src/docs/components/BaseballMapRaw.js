@@ -1,18 +1,18 @@
-import React from "react";
-import { data, fieldGraphic } from "../sampledata/stanton";
-import { XYFrame } from "../../components";
-import { scaleLinear } from "d3-scale";
-import { extent } from "d3-array";
-import { Mark } from "semiotic-mark";
+import React from "react"
+import { data, fieldGraphic } from "../sampledata/stanton"
+import { XYFrame } from "../../components"
+import { scaleLinear } from "d3-scale"
+import { extent } from "d3-array"
+import { Mark } from "semiotic-mark"
 
-const groupedData = [];
-const groupHash = {};
-const colors = ["#00a2ce", "#b3331d", "rgb(77, 67, 12)", "rgb(182, 167, 86)"];
+const groupedData = []
+const groupHash = {}
+const colors = ["#00a2ce", "#b3331d", "rgb(77, 67, 12)", "rgb(182, 167, 86)"]
 
-const velocityExtent = extent(data.map(d => d.exit_velocity));
+const velocityExtent = extent(data.map(d => d.exit_velocity))
 const velocityScale = scaleLinear()
   .domain(velocityExtent)
-  .range(["#00a2ce", "#b3331d"]);
+  .range(["#00a2ce", "#b3331d"])
 
 export default mode => (
   <XYFrame
@@ -39,4 +39,4 @@ export default mode => (
     backgroundGraphics={fieldGraphic}
     {...mode}
   />
-);
+)

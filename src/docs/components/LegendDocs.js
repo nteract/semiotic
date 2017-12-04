@@ -1,11 +1,11 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import { Legend } from "../../components";
-import { Axis } from "../../components";
-import { scaleLinear } from "d3-scale";
-import x from "../../components";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import { Legend } from "../../components"
+import { Axis } from "../../components"
+import { scaleLinear } from "d3-scale"
+import x from "../../components"
 
-const components = [];
+const components = []
 // Add your component proptype data here
 // multiple component proptype documentation supported
 
@@ -18,13 +18,13 @@ components.push({
     legendGroups: PropTypes.array
     }
   `
-});
+})
 
 export default class LegendDocs extends React.Component {
   render() {
-    const buttons = [];
+    const buttons = []
 
-    const examples = [];
+    const examples = []
 
     const areaLegendGroups = [
       {
@@ -34,7 +34,7 @@ export default class LegendDocs extends React.Component {
           { label: "Area 2", color: "#007190" }
         ]
       }
-    ];
+    ]
 
     const lineLegendGroups = [
       {
@@ -45,7 +45,7 @@ export default class LegendDocs extends React.Component {
           { label: "Line 2", color: "#007190" }
         ]
       }
-    ];
+    ]
 
     examples.push({
       name: "Basic",
@@ -116,7 +116,7 @@ const lineLegendGroups = [
     </g>
   </svg>
       `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -128,8 +128,8 @@ const lineLegendGroups = [
       >
         <p>The Legend lets you create a simple legend with interactivity.</p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-LegendDocs.title = "Legend";
+LegendDocs.title = "Legend"

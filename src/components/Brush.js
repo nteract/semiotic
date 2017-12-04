@@ -1,19 +1,19 @@
-import React from "react";
-import { select } from "d3-selection";
+import React from "react"
+import { select } from "d3-selection"
 
 // components
 
-import PropTypes from "prop-types";
+import PropTypes from "prop-types"
 
 class Brush extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
 
-    this.createBrush = this.createBrush.bind(this);
+    this.createBrush = this.createBrush.bind(this)
   }
 
   componentDidMount() {
-    this.createBrush();
+    this.createBrush()
   }
   componentDidUpdate(lastProps) {
     if (
@@ -24,16 +24,16 @@ class Brush extends React.Component {
       (!lastProps.selectedExtent && this.props.selectedExtent) ||
       (lastProps.selectedExtent && !this.props.selectedExtent)
     ) {
-      this.createBrush();
+      this.createBrush()
     }
   }
 
   createBrush() {
-    let node = this.node;
-    let brush = this.props.svgBrush;
-    select(node).call(brush);
+    let node = this.node
+    let brush = this.props.svgBrush
+    select(node).call(brush)
     if (this.props.selectedExtent) {
-      select(node).call(brush.move, this.props.selectedExtent);
+      select(node).call(brush.move, this.props.selectedExtent)
     }
   }
 
@@ -44,7 +44,7 @@ class Brush extends React.Component {
         transform={"translate(" + (this.props.position || [0, 0]) + ")"}
         className="xybrush"
       />
-    );
+    )
   }
 }
 
@@ -53,6 +53,6 @@ Brush.propTypes = {
   position: PropTypes.array,
   selectedExtent: PropTypes.array,
   svgBrush: PropTypes.func
-};
+}
 
-export default Brush;
+export default Brush

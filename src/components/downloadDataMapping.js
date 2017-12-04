@@ -1,9 +1,9 @@
 const cleanDates = value => {
   if (value && value.toJSON) {
-    return value.toJSON();
+    return value.toJSON()
   }
-  return value;
-};
+  return value
+}
 
 export const xyDownloadMapping = ({
   data,
@@ -11,59 +11,59 @@ export const xyDownloadMapping = ({
   yAccessor,
   fields = []
 }) => {
-  const csvData = [];
+  const csvData = []
   data.forEach(datum => {
     if (Array.isArray(datum)) {
       datum.forEach(a => {
-        const row = {};
+        const row = {}
         if (xAccessor) {
-          row.x = cleanDates(xAccessor(a));
+          row.x = cleanDates(xAccessor(a))
         } else if (a.x) {
-          row.x = a.x;
+          row.x = a.x
         }
 
         if (yAccessor) {
-          row.y = cleanDates(yAccessor(a));
+          row.y = cleanDates(yAccessor(a))
         } else if (a.y) {
-          row.y = a.y;
+          row.y = a.y
         }
 
-        if (datum.id !== undefined) row.id = datum.id;
+        if (datum.id !== undefined) row.id = datum.id
 
         if (fields && Array.isArray(fields)) {
           fields.forEach(f => {
-            row[f] = cleanDates(a[f]);
-          });
+            row[f] = cleanDates(a[f])
+          })
         }
 
-        csvData.push(row);
-      });
+        csvData.push(row)
+      })
     } else {
-      const row = {};
+      const row = {}
       if (xAccessor) {
-        row.x = cleanDates(xAccessor(datum));
+        row.x = cleanDates(xAccessor(datum))
       } else if (datum.x) {
-        row.x = datum.x;
+        row.x = datum.x
       }
 
       if (yAccessor) {
-        row.y = cleanDates(yAccessor(datum));
+        row.y = cleanDates(yAccessor(datum))
       } else if (datum.y) {
-        row.y = datum.y;
+        row.y = datum.y
       }
 
       if (datum.id !== undefined) {
-        row.id = datum.id;
+        row.id = datum.id
       }
 
       fields.forEach(f => {
-        row[f] = datum[f];
-      });
-      csvData.push(row);
+        row[f] = datum[f]
+      })
+      csvData.push(row)
     }
-  });
-  return csvData;
-};
+  })
+  return csvData
+}
 
 export const orDownloadMapping = ({
   data,
@@ -72,61 +72,61 @@ export const orDownloadMapping = ({
   rAccessor,
   fields = []
 }) => {
-  const dataKeys = Object.keys(data);
-  const csvData = [];
+  const dataKeys = Object.keys(data)
+  const csvData = []
 
   dataKeys.forEach(key => {
     data[key].pieceData.forEach(piece => {
-      const row = {};
+      const row = {}
       if (oAccessor) {
-        row.column = oAccessor(piece);
+        row.column = oAccessor(piece)
       } else if (piece.x) {
-        row.column = piece.x;
+        row.column = piece.x
       }
 
       if (rAccessor) {
-        row.value = rAccessor(piece);
+        row.value = rAccessor(piece)
       } else if (piece.renderKey) {
-        row.value = piece.renderKey;
+        row.value = piece.renderKey
       }
 
-      if (piece.id !== undefined) row.id = piece.id;
+      if (piece.id !== undefined) row.id = piece.id
 
       fields.forEach(f => {
-        row[f] = cleanDates(piece[f]);
-      });
+        row[f] = cleanDates(piece[f])
+      })
 
-      csvData.push(row);
-    });
-  });
+      csvData.push(row)
+    })
+  })
 
-  return csvData;
-};
+  return csvData
+}
 
 export const networkNodeDownloadMapping = ({ data, fields = [] }) => {
-  const csvData = [];
+  const csvData = []
   data.forEach(d => {
-    const row = {};
-    row.id = d.id;
+    const row = {}
+    row.id = d.id
     fields.forEach(f => {
-      row[f] = d[f];
-    });
-    csvData.push(row);
-  });
-  return csvData;
-};
+      row[f] = d[f]
+    })
+    csvData.push(row)
+  })
+  return csvData
+}
 
 export const networkEdgeDownloadMapping = ({ data, fields = [] }) => {
-  const csvData = [];
+  const csvData = []
   data.forEach(d => {
-    const row = {};
-    row.source = d.source.id;
-    row.target = d.target.id;
+    const row = {}
+    row.source = d.source.id
+    row.target = d.target.id
     fields.forEach(f => {
-      row[f] = d[f];
-    });
-    csvData.push(row);
-  });
+      row[f] = d[f]
+    })
+    csvData.push(row)
+  })
 
-  return csvData;
-};
+  return csvData
+}

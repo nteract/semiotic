@@ -1,6 +1,6 @@
-import React from "react";
-import { ORFrame } from "../../components";
-import Button from "material-ui/Button";
+import React from "react"
+import { ORFrame } from "../../components"
+import Button from "material-ui/Button"
 
 const stepColors = {
   home: "#007190",
@@ -9,7 +9,7 @@ const stepColors = {
   purchase: "#b3331d",
   return: "rgb(77, 67, 12)",
   extra: "rgb(182, 167, 86)"
-};
+}
 
 const regionColors = {
   Wonderland: "#007190",
@@ -18,14 +18,14 @@ const regionColors = {
   "Long Ago and Far Away": "#b3331d",
   return: "rgb(77, 67, 12)",
   extra: "rgb(182, 167, 86)"
-};
+}
 const stepValueHash = {
   home: 0,
   shop: 1,
   basket: 2,
   purchase: 3,
   return: 4
-};
+}
 
 const funnelData = [
   {
@@ -298,23 +298,23 @@ const funnelData = [
     region: "Long Ago and Far Away",
     people: 0
   }
-];
+]
 
-const funnelHash = {};
+const funnelHash = {}
 funnelData.forEach(d => {
   if (!funnelHash[d.country]) {
-    d.percent = d.people / 1200;
+    d.percent = d.people / 1200
   } else {
-    d.percent = d.people / funnelHash[d.country];
+    d.percent = d.people / funnelHash[d.country]
   }
-  funnelHash[d.country] = d.people;
-});
+  funnelHash[d.country] = d.people
+})
 
 export default class InformationModel extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
 
-    this.brushing = this.brushing.bind(this);
+    this.brushing = this.brushing.bind(this)
 
     this.state = {
       type: "Process",
@@ -330,53 +330,53 @@ export default class InformationModel extends React.Component {
         purchase: [0.25, 1.2],
         return: [0, 0.8]
       }
-    };
+    }
   }
 
   brushing(e, c) {
-    const columnExtent = this.state.columnExtent;
-    columnExtent[c] = e;
-    this.setState(columnExtent);
+    const columnExtent = this.state.columnExtent
+    columnExtent[c] = e
+    this.setState(columnExtent)
   }
 
   render() {
     const sortRegions = (a, b) => {
       if (stepValueHash[a.step] < stepValueHash[b.step]) {
-        return -1;
+        return -1
       }
       if (stepValueHash[a.step] > stepValueHash[b.step]) {
-        return 1;
+        return 1
       }
       if (a.region < b.region) {
-        return 1;
+        return 1
       }
       if (a.region > b.region) {
-        return -1;
+        return -1
       }
       if (a.country < b.country) {
-        return 1;
+        return 1
       }
       if (a.country > b.country) {
-        return -1;
+        return -1
       }
-      return -1;
-    };
+      return -1
+    }
 
-    const hiddenHash = new Map();
+    const hiddenHash = new Map()
 
     Object.keys(this.state.columnExtent).forEach(key => {
       if (this.state.columnExtent[key]) {
-        const extent = this.state.columnExtent[key];
+        const extent = this.state.columnExtent[key]
         funnelData
           .filter(
             d =>
               d.step === key && (d.percent < extent[0] || d.percent > extent[1])
           )
           .forEach(p => {
-            hiddenHash.set(p.country, true);
-          });
+            hiddenHash.set(p.country, true)
+          })
       }
-    });
+    })
 
     const stepSettings = [
       {
@@ -585,7 +585,7 @@ export default class InformationModel extends React.Component {
           </div>
         )
       }
-    ];
+    ]
 
     const contentDiv = (
       <div className="infomodel-proto infomodel">
@@ -595,7 +595,7 @@ export default class InformationModel extends React.Component {
               raised
               color="primary"
               onTouchTap={() => {
-                this.setState({ step: this.state.step - 1 });
+                this.setState({ step: this.state.step - 1 })
               }}
             >
               Back!
@@ -606,7 +606,7 @@ export default class InformationModel extends React.Component {
               raised
               color="primary"
               onTouchTap={() => {
-                this.setState({ step: this.state.step + 1 });
+                this.setState({ step: this.state.step + 1 })
               }}
             >
               Forward!
@@ -625,7 +625,7 @@ export default class InformationModel extends React.Component {
           {...stepSettings[this.state.step]}
         />
       </div>
-    );
+    )
 
     return (
       <div className="infomodel-container">
@@ -639,8 +639,8 @@ export default class InformationModel extends React.Component {
         </p>
         {contentDiv}
       </div>
-    );
+    )
   }
 }
 
-InformationModel.title = "Information Model";
+InformationModel.title = "Information Model"

@@ -1,4 +1,4 @@
-import React from "react";
+import React from "react"
 
 export const data = [
   {
@@ -358,7 +358,7 @@ export const data = [
     distance: 371,
     exit_velocity: 105.9
   }
-];
+]
 
 export const fieldGraphic = (
   <g transform={"translate(50,50) scale(1.85)"}>
@@ -486,4 +486,4 @@ export const fieldGraphic = (
       <polyline className="st11" points="234.6,94.3 125.2,203.5 17.9,96.2 	" />
     </g>
   </g>
-);
+)

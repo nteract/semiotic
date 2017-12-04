@@ -1,31 +1,31 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import { ORFrame } from "../../components";
-import { randomNormal } from "d3-random";
-import { funnelData } from "../example_settings/orframe";
-import Button from "material-ui/Button";
-import { sum } from "d3-array";
-import Select from "material-ui/Select";
-import { MenuItem } from "material-ui/Menu";
-import Icon from "material-ui-icons/Sort";
-import Input, { InputLabel } from "material-ui/Input";
-import { FormControl, FormHelperText } from "material-ui/Form";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import { ORFrame } from "../../components"
+import { randomNormal } from "d3-random"
+import { funnelData } from "../example_settings/orframe"
+import Button from "material-ui/Button"
+import { sum } from "d3-array"
+import Select from "material-ui/Select"
+import { MenuItem } from "material-ui/Menu"
+import Icon from "material-ui-icons/Sort"
+import Input, { InputLabel } from "material-ui/Input"
+import { FormControl, FormHelperText } from "material-ui/Form"
 
-const monthHash = {};
+const monthHash = {}
 
-const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"];
+const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"]
 
-const outsideHash = {};
+const outsideHash = {}
 
-const groupData = [];
-const nRando = randomNormal(50, 15);
+const groupData = []
+const nRando = randomNormal(50, 15)
 for (let x = 1; x < 500; x++) {
   groupData.push({
     x: nRando(),
     value: Math.max(0, Math.min(100, Math.max(0, nRando()))),
     color: colors[x % 4],
     value2: x
-  });
+  })
 }
 
 const customBar = {
@@ -59,16 +59,16 @@ const customBar = {
       cx={xy.width / 2}
     />
   ]
-};
+}
 
 //Just to give it a 100 and 0 values
-groupData.push({ x: 0, value: 0, color: colors[3], value2: 503 });
-groupData.push({ x: 100, value: 100, color: colors[3], value2: 504 });
-groupData.push({ x: 100, value: 100, color: colors[0], value2: 504 });
-groupData.push({ x: 100, value: 100, color: colors[1], value2: 504 });
-groupData.push({ x: 100, value: 100, color: colors[2], value2: 504 });
+groupData.push({ x: 0, value: 0, color: colors[3], value2: 503 })
+groupData.push({ x: 100, value: 100, color: colors[3], value2: 504 })
+groupData.push({ x: 100, value: 100, color: colors[0], value2: 504 })
+groupData.push({ x: 100, value: 100, color: colors[1], value2: 504 })
+groupData.push({ x: 100, value: 100, color: colors[2], value2: 504 })
 
-const components = [];
+const components = []
 // Add your component proptype data here
 // multiple component proptype documentation supported
 
@@ -182,7 +182,7 @@ components.push({
   ])
     }
   `
-});
+})
 
 const exampleAnnotations = [
   {
@@ -220,7 +220,7 @@ const exampleAnnotations = [
       onMouseLeave: () => console.log("Mouse Leave")
     }
   }
-];
+]
 
 const groupAnnotations = [
   { color: "#00a2ce", value: 50, type: "or", label: "OR at 50" },
@@ -235,7 +235,7 @@ const groupAnnotations = [
     label: "enclose of 80 and 85"
   },
   { value: 15, offset: 250, dy: -30, type: "r", label: "r at 15" }
-];
+]
 
 const dataTypeHash = {
   stacked: {
@@ -294,11 +294,11 @@ const dataTypeHash = {
     }),
     annotations: []
   }
-};
+}
 
 export default class ORFrameDocs extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
     this.state = {
       projection: "vertical",
       type: "bar",
@@ -312,7 +312,7 @@ export default class ORFrameDocs extends React.Component {
       dataType: "stacked",
       hoverBehavior: "general",
       example: "basic"
-    };
+    }
   }
 
   render() {
@@ -327,52 +327,52 @@ export default class ORFrameDocs extends React.Component {
       <MenuItem key={"type-option" + d} label={d} value={d}>
         {d}
       </MenuItem>
-    ));
+    ))
     const projectionOptions = ["vertical", "horizontal", "radial"].map(d => (
       <MenuItem key={"projection-option" + d} label={d} value={d}>
         {d}
       </MenuItem>
-    ));
+    ))
     const cwOptions = ["fixed", "relative"].map(d => (
       <MenuItem key={"cw-option" + d} label={d} value={d}>
         {d}
       </MenuItem>
-    ));
+    ))
     const rAccessorOptions = ["relative", "fixed"].map(d => (
       <MenuItem key={"rAccessor-option" + d} label={d} value={d}>
         {d}
       </MenuItem>
-    ));
+    ))
     const renderFnOptions = ["none", "sketchy", "painty"].map(d => (
       <MenuItem key={"renderfn-option" + d} label={d} value={d}>
         {d}
       </MenuItem>
-    ));
+    ))
     const connectorOptions = ["off", "on"].map(d => (
       <MenuItem key={"connector-option" + d} label={d} value={d}>
         {d}
       </MenuItem>
-    ));
+    ))
     const annotationOptions = ["off", "on"].map(d => (
       <MenuItem key={"annotation-option" + d} label={d} value={d}>
         {d}
       </MenuItem>
-    ));
+    ))
     const oPaddingOptions = [50, 20, 5, 0].map(d => (
       <MenuItem key={"opadding-option" + d} label={d} value={d}>
         {d}
       </MenuItem>
-    ));
+    ))
     const dataTypeOptions = ["stacked", "group", "simple"].map(d => (
       <MenuItem key={"dataType-option" + d} label={d} value={d}>
         {d}
       </MenuItem>
-    ));
+    ))
     const hoverOptions = ["general", "piece", "none"].map(d => (
       <MenuItem key={"hover-option" + d} label={d} value={d}>
         {d}
       </MenuItem>
-    ));
+    ))
     const summaryOptions = [
       "none",
       "violin",
@@ -385,17 +385,17 @@ export default class ORFrameDocs extends React.Component {
       <MenuItem key={"summary-option" + d} label={d} value={d}>
         {d}
       </MenuItem>
-    ));
+    ))
     const exampleOptions = ["basic", "nyc_temp"].map(d => (
       <MenuItem key={"example-option" + d} label={d} value={d}>
         {d}
       </MenuItem>
-    ));
+    ))
     //    const barNumberOptions = [1, 2, 3, 4, 5, 20].map(d => <MenuItem key={'example-option' + d} label={d} value={d}>{d}</MenuItem>)
     const rAccessor =
-      this.state.rAccessor === "fixed" ? () => 1 : d => d.stepValue || d.value;
+      this.state.rAccessor === "fixed" ? () => 1 : d => d.stepValue || d.value
     const reFn =
-      this.state.renderFn === "none" ? undefined : () => this.state.renderFn;
+      this.state.renderFn === "none" ? undefined : () => this.state.renderFn
 
     const buttons = [
       <div key="button-0">
@@ -523,7 +523,7 @@ export default class ORFrameDocs extends React.Component {
           </Select>
         </FormControl>
       </div>
-    ];
+    ]
 
     const axis = {
       orient: "left",
@@ -533,12 +533,12 @@ export default class ORFrameDocs extends React.Component {
         position: { anchor: "middle" },
         locationDistance: 40
       }
-    };
+    }
 
     const actualType =
-      this.state.type === "custom" ? customBar : this.state.type;
+      this.state.type === "custom" ? customBar : this.state.type
 
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Basic",
       demo: (
@@ -709,7 +709,7 @@ export default class ORFrameDocs extends React.Component {
               : "annotations={exampleAnnotations}"}
         />
       `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -737,9 +737,9 @@ export default class ORFrameDocs extends React.Component {
           are drawn.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-ORFrameDocs.title = "ORFrame";
-ORFrameDocs.icon = <Icon />;
+ORFrameDocs.title = "ORFrame"
+ORFrameDocs.icon = <Icon />

@@ -1,7 +1,7 @@
-import React from "react";
+import React from "react"
 
-import XYFrame from "./XYFrame";
-import ORFrame from "./ORFrame";
+import XYFrame from "./XYFrame"
+import ORFrame from "./ORFrame"
 
 // components
 
@@ -24,7 +24,7 @@ class SmartFrame extends React.Component {
           style={this.props.pieceStyle}
           type={this.props.customPieceType}
         />
-      );
+      )
     }
     return (
       <XYFrame
@@ -37,8 +37,8 @@ class SmartFrame extends React.Component {
         lineStyle={this.props.aggStyle}
         pointStyle={this.props.pieceStyle}
       />
-    );
+    )
   }
 }
 
-export default SmartFrame;
+export default SmartFrame

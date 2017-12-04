@@ -1,16 +1,16 @@
-import React from "react";
+import React from "react"
 
 // components
-import XYFrame from "./XYFrame";
-import MiniMap from "./MiniMap";
+import XYFrame from "./XYFrame"
+import MiniMap from "./MiniMap"
 
-import PropTypes from "prop-types";
+import PropTypes from "prop-types"
 
 class MinimapXYFrame extends XYFrame {
   constructor(props) {
-    super(props);
+    super(props)
 
-    this.generateMinimap = this.generateMinimap.bind(this);
+    this.generateMinimap = this.generateMinimap.bind(this)
   }
 
   generateMinimap() {
@@ -30,25 +30,25 @@ class MinimapXYFrame extends XYFrame {
       brush: () => {},
       brushEnd: () => {},
       lineType: this.props.lineType
-    };
+    }
 
-    let combinedOptions = Object.assign(miniDefaults, this.props.minimap);
+    let combinedOptions = Object.assign(miniDefaults, this.props.minimap)
 
-    combinedOptions.hoverAnnotation = false;
+    combinedOptions.hoverAnnotation = false
 
-    return <MiniMap {...combinedOptions} />;
+    return <MiniMap {...combinedOptions} />
   }
 
   render() {
-    let miniMap = this.generateMinimap();
-    const options = {};
+    let miniMap = this.generateMinimap()
+    const options = {}
     if (this.props.renderBefore) {
-      options.beforeElements = miniMap;
+      options.beforeElements = miniMap
     } else {
-      options.afterElements = miniMap;
+      options.afterElements = miniMap
     }
 
-    return this.renderBody(options);
+    return this.renderBody(options)
   }
 }
 
@@ -63,6 +63,6 @@ MinimapXYFrame.propTypes = {
   lineType: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
   minimap: PropTypes.object,
   renderBefore: PropTypes.oneOfType([PropTypes.array, PropTypes.object])
-};
+}
 
-export default MinimapXYFrame;
+export default MinimapXYFrame

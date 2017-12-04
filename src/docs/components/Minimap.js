@@ -1,41 +1,41 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import MinimapRaw from "./MinimapRaw";
-import { MenuItem } from "material-ui/Menu";
-import Input, { InputLabel } from "material-ui/Input";
-import { FormControl, FormHelperText } from "material-ui/Form";
-import Select from "material-ui/Select";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import MinimapRaw from "./MinimapRaw"
+import { MenuItem } from "material-ui/Menu"
+import Input, { InputLabel } from "material-ui/Input"
+import { FormControl, FormHelperText } from "material-ui/Form"
+import Select from "material-ui/Select"
 
-const components = [];
+const components = []
 
 components.push({
   name: "Minimap Basics"
-});
+})
 
 export default class MinimapBasics extends React.Component {
   constructor(props) {
-    super(props);
-    this.state = { resetExtent: [0, 40], selectedExtent: [0, 40] };
-    this.randomizeExtent = this.randomizeExtent.bind(this);
-    this.changeExtent = this.changeExtent.bind(this);
+    super(props)
+    this.state = { resetExtent: [0, 40], selectedExtent: [0, 40] }
+    this.randomizeExtent = this.randomizeExtent.bind(this)
+    this.changeExtent = this.changeExtent.bind(this)
   }
   randomizeExtent() {
-    const randomStart = parseInt(Math.random() * 25);
-    this.setState({ resetExtent: [randomStart, randomStart + 15] });
+    const randomStart = parseInt(Math.random() * 25)
+    this.setState({ resetExtent: [randomStart, randomStart + 15] })
   }
 
   changeExtent(e) {
-    this.setState({ selectedExtent: [Math.floor(e[0]), Math.ceil(e[1])] });
+    this.setState({ selectedExtent: [Math.floor(e[0]), Math.ceil(e[1])] })
   }
 
   render() {
-    const examples = [];
+    const examples = []
 
     const buttons = [
       <button key="buon" onClick={this.randomizeExtent}>
         Random Extent
       </button>
-    ];
+    ]
 
     examples.push({
       name: "Basic",
@@ -126,7 +126,7 @@ const xyFrameSettings = {
     }}
   />
   `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -150,8 +150,8 @@ const xyFrameSettings = {
           xBrushExtent.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-MinimapBasics.title = "Minimap Basics";
+MinimapBasics.title = "Minimap Basics"

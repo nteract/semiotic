@@ -1,9 +1,9 @@
-import React from "react";
-import { NetworkFrame } from "../../components";
-import { data } from "../sampledata/d3_api";
-import { cluster } from "d3-hierarchy";
+import React from "react"
+import { NetworkFrame } from "../../components"
+import { data } from "../sampledata/d3_api"
+import { cluster } from "d3-hierarchy"
 
-const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"];
+const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"]
 
 export default ({ annotations = [], type = "dendrogram" }) => (
   <NetworkFrame
@@ -36,4 +36,4 @@ export default ({ annotations = [], type = "dendrogram" }) => (
     annotations={annotations}
     margin={20}
   />
-);
+)

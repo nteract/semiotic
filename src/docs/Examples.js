@@ -1,7 +1,7 @@
-import React from "react";
+import React from "react"
 
-import { wrappedExamples } from "./example_settings/example_list";
-import { Link } from "react-router-dom";
+import { wrappedExamples } from "./example_settings/example_list"
+import { Link } from "react-router-dom"
 
 export default (
   <div>
@@ -16,4 +16,4 @@ export default (
     <p>Click on a chart to see the code to reproduce it using Semiotic</p>
     {wrappedExamples}
   </div>
-);
+)

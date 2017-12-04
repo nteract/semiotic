@@ -1,15 +1,15 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import { NetworkFrame } from "../../components";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import { NetworkFrame } from "../../components"
 
 const networkSettings = {
   type: "wordcloud",
   rotate: d => d.score < 0.1,
   fontSize: 36,
   fontWeight: 900
-};
+}
 
-const nodeStyleFn = d => ({ fill: d.color });
+const nodeStyleFn = d => ({ fill: d.color })
 
 const words = [
   {
@@ -173,19 +173,19 @@ const words = [
     color: "rgb(0, 162, 206)",
     text: "joy"
   }
-];
+]
 
-const chartSize = [700, 500];
+const chartSize = [700, 500]
 
-const components = [];
+const components = []
 
 components.push({
   name: "WordCloud"
-});
+})
 
 export default class WordCloudDocs extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
     this.state = {
       additionalAnnotation: {
         type: "node",
@@ -194,11 +194,11 @@ export default class WordCloudDocs extends React.Component {
         id: "semiotic",
         label: "awesome?"
       }
-    };
+    }
   }
 
   render() {
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Basic",
       demo: (
@@ -235,7 +235,7 @@ export default class WordCloudDocs extends React.Component {
                 id: d.token_text,
                 label: "awesome?"
               })
-            });
+            })
           }}
         />
       ),
@@ -256,7 +256,7 @@ const words = [
             ]}
           />
       `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -271,8 +271,8 @@ const words = [
           enable rotated words
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-WordCloudDocs.title = "Word Cloud";
+WordCloudDocs.title = "Word Cloud"

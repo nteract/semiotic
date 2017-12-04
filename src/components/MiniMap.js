@@ -1,10 +1,10 @@
-import React from "react";
+import React from "react"
 
-import XYFrame from "./XYFrame";
+import XYFrame from "./XYFrame"
 
 // components
 
-import PropTypes from "prop-types";
+import PropTypes from "prop-types"
 
 class MiniMap extends React.Component {
   render() {
@@ -12,30 +12,30 @@ class MiniMap extends React.Component {
       start: this.props.brushStart,
       during: this.props.brush,
       end: this.props.brushEnd
-    };
+    }
 
     if (this.props.xBrushable && this.props.yBrushable) {
-      interactivity.brush = "xyBrush";
-      interactivity.extent = [[], []];
+      interactivity.brush = "xyBrush"
+      interactivity.extent = [[], []]
       if (this.props.xBrushExtent) {
-        interactivity.extent[0] = this.props.xBrushExtent;
+        interactivity.extent[0] = this.props.xBrushExtent
       }
       if (this.props.yBrushExtent) {
-        interactivity.extent[1] = this.props.yBrushExtent;
+        interactivity.extent[1] = this.props.yBrushExtent
       }
     } else if (this.props.xBrushable) {
-      interactivity.brush = "xBrush";
+      interactivity.brush = "xBrush"
       if (this.props.xBrushExtent) {
-        interactivity.extent = this.props.xBrushExtent;
+        interactivity.extent = this.props.xBrushExtent
       }
     } else if (this.props.yBrushable) {
-      interactivity.brush = "yBrush";
+      interactivity.brush = "yBrush"
       if (this.props.yBrushExtent) {
-        interactivity.extent = this.props.yBrushExtent;
+        interactivity.extent = this.props.yBrushExtent
       }
     }
 
-    return <XYFrame {...this.props} interaction={interactivity} />;
+    return <XYFrame {...this.props} interaction={interactivity} />
   }
 }
 
@@ -47,6 +47,6 @@ MiniMap.propTypes = {
   yBrushExtent: PropTypes.array,
   xBrushable: PropTypes.bool,
   yBrushable: PropTypes.bool
-};
+}
 
-export default MiniMap;
+export default MiniMap

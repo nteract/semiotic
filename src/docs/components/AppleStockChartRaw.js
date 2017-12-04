@@ -1,12 +1,12 @@
-import React from "react";
-import { XYFrame, DividedLine } from "../../components";
-import { data } from "../sampledata/apple_stock";
-import { scaleTime } from "d3-scale";
+import React from "react"
+import { XYFrame, DividedLine } from "../../components"
+import { data } from "../sampledata/apple_stock"
+import { scaleTime } from "d3-scale"
 
 const chartAxes = [
   { orient: "left", tickFormat: d => `$${d}` },
   { orient: "bottom", ticks: 6, tickFormat: d => d.getFullYear() }
-];
+]
 
 const thresholdLine = ({ d, i, xScale, yScale }) => {
   return (
@@ -15,15 +15,15 @@ const thresholdLine = ({ d, i, xScale, yScale }) => {
       data={[d]}
       parameters={(p, q) => {
         if (p.close > 100) {
-          return { stroke: "rgb(182, 167, 86)", fill: "none" };
+          return { stroke: "rgb(182, 167, 86)", fill: "none" }
         }
-        return { stroke: "rgb(77, 67, 12)", fill: "none" };
+        return { stroke: "rgb(77, 67, 12)", fill: "none" }
       }}
       customAccessors={{ x: d => xScale(d._xyfX), y: d => yScale(d._xyfY) }}
       lineDataAccessor={d => d.data}
     />
-  );
-};
+  )
+}
 
 const annotations = [
   {
@@ -86,7 +86,7 @@ const annotations = [
       }
     ]
   }
-];
+]
 
 const customTooltip = d => (
   <div className="tooltip-content">
@@ -96,7 +96,7 @@ const customTooltip = d => (
     </p>
     <p>Closing Price: ${d.close}</p>
   </div>
-);
+)
 
 export default (
   <XYFrame
@@ -119,4 +119,4 @@ export default (
       </linearGradient>
     }
   />
-);
+)

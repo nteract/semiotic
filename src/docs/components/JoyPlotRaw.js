@@ -1,9 +1,9 @@
-import React from "react";
-import { ORFrame } from "../../components";
-import { xyframe_data } from "../sampledata/nyc_temp";
-import { scaleLinear } from "d3-scale";
-import { sum, max } from "d3-array";
-import { curveMonotoneX } from "d3-shape";
+import React from "react"
+import { ORFrame } from "../../components"
+import { xyframe_data } from "../sampledata/nyc_temp"
+import { scaleLinear } from "d3-scale"
+import { sum, max } from "d3-array"
+import { curveMonotoneX } from "d3-shape"
 
 const months = [
   "January",
@@ -18,16 +18,16 @@ const months = [
   "November",
   "September",
   "December"
-];
-const components = [];
-const individualData = [];
+]
+const components = []
+const individualData = []
 xyframe_data.filter(d => parseInt(d.year) > 1800).forEach(d => {
-  individualData.push({ month: 0, value: 0.1, year: d.year });
+  individualData.push({ month: 0, value: 0.1, year: d.year })
   months.forEach((m, mi) => {
-    individualData.push({ month: mi + 1, value: d[m] - 19.9, year: d.year });
-  });
-  individualData.push({ month: 13, value: 0.1, year: d.year });
-});
+    individualData.push({ month: mi + 1, value: d[m] - 19.9, year: d.year })
+  })
+  individualData.push({ month: 13, value: 0.1, year: d.year })
+})
 
 export default (
   <div style={{ background: "black" }}>
@@ -59,4 +59,4 @@ export default (
       oPadding={2}
     />
   </div>
-);
+)

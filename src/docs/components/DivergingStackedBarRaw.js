@@ -1,6 +1,6 @@
-import React from "react";
-import { answers } from "../sampledata/questions";
-import { ORFrame } from "../../components";
+import React from "react"
+import { answers } from "../sampledata/questions"
+import { ORFrame } from "../../components"
 
 export default (
   <ORFrame
@@ -36,4 +36,4 @@ export default (
       tickValues: [-0.3, -0.15, 0, 0.2, 0.4, 0.6, 0.8, 1]
     }}
   />
-);
+)

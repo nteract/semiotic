@@ -1,47 +1,47 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import { ORFrame } from "../../components";
-import DonutChartRaw from "./DonutChartRaw";
-import Select from "material-ui/Select";
-import { MenuItem } from "material-ui/Menu";
-import Input, { InputLabel } from "material-ui/Input";
-import { FormControl, FormHelperText } from "material-ui/Form";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import { ORFrame } from "../../components"
+import DonutChartRaw from "./DonutChartRaw"
+import Select from "material-ui/Select"
+import { MenuItem } from "material-ui/Menu"
+import Input, { InputLabel } from "material-ui/Input"
+import { FormControl, FormHelperText } from "material-ui/Form"
 
-const components = [];
+const components = []
 
 components.push({
   name: "PieDonut"
-});
+})
 
 export default class PieDonutDocs extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
 
     this.state = {
       innerRadius: "25",
       kind: "pie",
       padding: "0"
-    };
+    }
   }
 
   render() {
-    const examples = [];
+    const examples = []
 
     const kindOptions = ["pie", "nightingale"].map(d => (
       <MenuItem key={"kind-option" + d} label={d} value={d}>
         {d}
       </MenuItem>
-    ));
+    ))
     const innerOptions = ["25", "0", "5", "75", "150"].map(d => (
       <MenuItem key={"radius-option" + d} label={d} value={d}>
         {d}
       </MenuItem>
-    ));
+    ))
     const paddingOptions = ["0", "10", "20", "40"].map(d => (
       <MenuItem key={"padding-option" + d} label={d} value={d}>
         {d}
       </MenuItem>
-    ));
+    ))
 
     const buttons = [
       <div key="button-0">
@@ -77,7 +77,7 @@ export default class PieDonutDocs extends React.Component {
           </Select>
         </FormControl>
       </div>
-    ];
+    ]
 
     examples.push({
       name: "Basic",
@@ -109,7 +109,7 @@ export default class PieDonutDocs extends React.Component {
             />
 
       `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -125,8 +125,8 @@ export default class PieDonutDocs extends React.Component {
           and its innerRadius set to your preferred innerRadius.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-PieDonutDocs.title = "Pie/Donut";
+PieDonutDocs.title = "Pie/Donut"

@@ -1,5 +1,5 @@
-import React from "react";
-import { ORFrame } from "../../components";
+import React from "react"
+import { ORFrame } from "../../components"
 
 const data = [
   {
@@ -153,7 +153,7 @@ const data = [
   { name: "George W. Bush", start: 2001, end: 2009 },
   { name: "Barack Obama", start: 2009, end: 2017 },
   { name: "Donald Trump", start: 2017, end: 2018 }
-];
+]
 
 export default (
   <ORFrame
@@ -183,4 +183,4 @@ export default (
     )}
     pieceHoverAnnotation={true}
   />
-);
+)

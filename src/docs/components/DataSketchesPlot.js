@@ -1,16 +1,16 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import DataSketchesPlotRaw from "./DataSketchesPlotRaw";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import DataSketchesPlotRaw from "./DataSketchesPlotRaw"
 
-const components = [];
+const components = []
 
 components.push({
   name: "DataSketchesPlot"
-});
+})
 
 export default class DataSketchesPlotDocs extends React.Component {
   render() {
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Basic",
       demo: DataSketchesPlotRaw,
@@ -118,7 +118,7 @@ const speciousDataset = [
     ]}
   />
       `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -138,8 +138,8 @@ const speciousDataset = [
           create a quadrant view.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-DataSketchesPlotDocs.title = "Data Sketches";
+DataSketchesPlotDocs.title = "Data Sketches"

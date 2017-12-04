@@ -1,19 +1,19 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import { XYFrame } from "../../components";
-import { curveCardinal } from "d3-shape";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import { XYFrame } from "../../components"
+import { curveCardinal } from "d3-shape"
 
-const components = [];
+const components = []
 
 components.push({
   name: "Realtime Line CHart"
-});
+})
 
-let fakeRealtimeDataInterval;
+let fakeRealtimeDataInterval
 
-let columnNumber = 1;
+let columnNumber = 1
 
-const dataStart = new Date();
+const dataStart = new Date()
 const eventLines = {
   information: {
     lineID: "Information",
@@ -45,12 +45,8 @@ const eventLines = {
       }
     ]
   }
-};
-const eventData = [
-  eventLines.error,
-  eventLines.warning,
-  eventLines.information
-];
+}
+const eventData = [eventLines.error, eventLines.warning, eventLines.information]
 
 const xyAnnotation = {
   type: "xy",
@@ -58,53 +54,53 @@ const xyAnnotation = {
   dy: 5,
   dx: 0,
   lineID: "Error"
-};
+}
 
 export default class RealtimeXYFrame extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
     this.state = {
       data: eventData,
       calloutAnnotations: [xyAnnotation]
-    };
+    }
   }
 
   componentWillUnmount() {
-    clearInterval(fakeRealtimeDataInterval);
+    clearInterval(fakeRealtimeDataInterval)
   }
 
   componentDidMount() {
     fakeRealtimeDataInterval = setInterval(() => {
-      const newData = this.state.data;
-      const now = new Date();
-      columnNumber += 1;
+      const newData = this.state.data
+      const now = new Date()
+      columnNumber += 1
       if (now.getTime() - dataStart.getTime() > 60000) {
-        clearInterval(fakeRealtimeDataInterval);
+        clearInterval(fakeRealtimeDataInterval)
       }
-      const errorAmount = parseInt(Math.random() * 3);
-      const infoAmount = parseInt(Math.random() * 8);
-      const warningAmount = parseInt(Math.random() * 5);
-      const totalEvents = errorAmount + infoAmount + warningAmount;
+      const errorAmount = parseInt(Math.random() * 3)
+      const infoAmount = parseInt(Math.random() * 8)
+      const warningAmount = parseInt(Math.random() * 5)
+      const totalEvents = errorAmount + infoAmount + warningAmount
 
       eventLines.error.coordinates.push({
         time: now.getTime(),
         number: errorAmount
-      });
+      })
       eventLines.warning.coordinates.push({
         time: now.getTime(),
         number: warningAmount
-      });
+      })
       eventLines.information.coordinates.push({
         time: now.getTime(),
         number: infoAmount
-      });
+      })
 
-      xyAnnotation.column = `column-${columnNumber}`;
+      xyAnnotation.column = `column-${columnNumber}`
       this.setState({
         data: newData,
         calloutAnnotations: [xyAnnotation]
-      });
-      xyAnnotation.time = now.getTime();
+      })
+      xyAnnotation.time = now.getTime()
       xyAnnotation.label = (
         <tspan
           dy={-12}
@@ -115,12 +111,12 @@ export default class RealtimeXYFrame extends React.Component {
             strokeWidth: 0.5
           }}
         >{`ERRORS: ${errorAmount}`}</tspan>
-      );
-    }, 1000);
+      )
+    }, 1000)
   }
 
   render() {
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Basic",
       demo: (
@@ -295,7 +291,7 @@ export default class RealtimeXYFrame extends React.Component {
   }
 
       `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -323,8 +319,8 @@ export default class RealtimeXYFrame extends React.Component {
           interpolation of a growing line/area.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-RealtimeXYFrame.title = "Realtime Lines";
+RealtimeXYFrame.title = "Realtime Lines"

@@ -1,27 +1,27 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import SankeyRaw from "./SankeyRaw";
-import Select from "material-ui/Select";
-import { MenuItem } from "material-ui/Menu";
-import Input, { InputLabel } from "material-ui/Input";
-import { FormControl, FormHelperText } from "material-ui/Form";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import SankeyRaw from "./SankeyRaw"
+import Select from "material-ui/Select"
+import { MenuItem } from "material-ui/Menu"
+import Input, { InputLabel } from "material-ui/Input"
+import { FormControl, FormHelperText } from "material-ui/Form"
 
-const components = [];
+const components = []
 
-const oldColors = ["#000000", "#FFDD89", "#957244", "#F26223"];
+const oldColors = ["#000000", "#FFDD89", "#957244", "#F26223"]
 
 components.push({
   name: "Sankey"
-});
+})
 
 export default class Sankey extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
 
     this.state = {
       type: "sankey",
       orient: "center"
-    };
+    }
   }
 
   render() {
@@ -29,13 +29,13 @@ export default class Sankey extends React.Component {
       <MenuItem key={"type-option-" + d} label={d} value={d}>
         {d}
       </MenuItem>
-    ));
+    ))
 
     const orientOptions = ["justify", "left", "right", "center"].map(d => (
       <MenuItem key={"orient-option-" + d} label={d} value={d}>
         {d}
       </MenuItem>
-    ));
+    ))
 
     const buttons = [
       <FormControl key="button-1-0-0">
@@ -56,7 +56,7 @@ export default class Sankey extends React.Component {
           {orientOptions}
         </Select>
       </FormControl>
-    ];
+    ]
 
     const annotations = [
       {
@@ -74,9 +74,9 @@ export default class Sankey extends React.Component {
         ids: ["Wave", "Geothermal", "Hydro", "Tidal"],
         label: "Energy made with wave, tidal, hydro and geothermal"
       }
-    ];
+    ]
 
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Basic",
       demo: SankeyRaw({
@@ -129,7 +129,7 @@ ${this.state.type === "chord"
   ]}
 />
 `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -144,8 +144,8 @@ ${this.state.type === "chord"
           force-directed network.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-Sankey.title = "Sankey";
+Sankey.title = "Sankey"

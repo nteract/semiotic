@@ -1,16 +1,16 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import DotPlotRaw from "./DotPlotRaw";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import DotPlotRaw from "./DotPlotRaw"
 
-const components = [];
+const components = []
 
 components.push({
   name: "DotPlot"
-});
+})
 
 export default class DotPlotDocs extends React.Component {
   render() {
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Basic",
       demo: DotPlotRaw,
@@ -79,7 +79,7 @@ export default class DotPlotDocs extends React.Component {
       oLabel={d => <text style={{ textAnchor: "end" }} transform="translate(0,6)">{d}</text>}
     />
       `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -101,8 +101,8 @@ export default class DotPlotDocs extends React.Component {
           with the dots.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-DotPlotDocs.title = "Dot Plot";
+DotPlotDocs.title = "Dot Plot"

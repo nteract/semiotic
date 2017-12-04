@@ -1,17 +1,17 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import DivergingStackedIsotypeRaw from "./DivergingStackedIsotypeRaw";
-import { answers } from "../sampledata/questions";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import DivergingStackedIsotypeRaw from "./DivergingStackedIsotypeRaw"
+import { answers } from "../sampledata/questions"
 
-const components = [];
+const components = []
 
 components.push({
   name: "ISOTYPE Chart"
-});
+})
 
 export default class DivergingStackedBar extends React.Component {
   render() {
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Basic",
       demo: DivergingStackedIsotypeRaw,
@@ -48,7 +48,7 @@ export default (
     }}
   />
 );`
-    });
+    })
 
     return (
       <DocumentComponent
@@ -62,8 +62,8 @@ export default (
           the bars with.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-DivergingStackedBar.title = "ISOTYPE Chart";
+DivergingStackedBar.title = "ISOTYPE Chart"

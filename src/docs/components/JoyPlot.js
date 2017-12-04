@@ -1,18 +1,18 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import JoyPlotRaw from "./JoyPlotRaw";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import JoyPlotRaw from "./JoyPlotRaw"
 
-const components = [];
+const components = []
 
 components.push({
   name: "Joy Plot"
-});
+})
 
 export default class JoyPlotDocs extends React.Component {
   render() {
-    const examples = [];
+    const examples = []
 
-    const buttons = [];
+    const buttons = []
 
     examples.push({
       name: "Basic",
@@ -33,7 +33,7 @@ export default class JoyPlotDocs extends React.Component {
     oPadding={2}
 /></div>
       `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -50,8 +50,8 @@ export default class JoyPlotDocs extends React.Component {
           variation.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-JoyPlotDocs.title = "Joy Plot";
+JoyPlotDocs.title = "Joy Plot"

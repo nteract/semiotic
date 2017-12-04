@@ -1,20 +1,20 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import AppleStockChartRaw from "./AppleStockChartRaw";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import AppleStockChartRaw from "./AppleStockChartRaw"
 
-const components = [];
+const components = []
 // Add your component proptype data here
 // multiple component proptype documentation supported
 
 components.push({
   name: "AppleStockChart"
-});
+})
 
 export default class BarLineDocs extends React.Component {
   render() {
-    const buttons = [];
+    const buttons = []
 
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Basic",
       demo: AppleStockChartRaw,
@@ -89,7 +89,7 @@ const customTooltip = d => <div className="tooltip-content">
 />
 
       `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -115,8 +115,8 @@ const customTooltip = d => <div className="tooltip-content">
           tooltipContent.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-BarLineDocs.title = "Annotations";
+BarLineDocs.title = "Annotations"

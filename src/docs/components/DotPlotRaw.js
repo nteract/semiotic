@@ -1,12 +1,12 @@
-import React from "react";
-import { ORFrame } from "../../components";
+import React from "react"
+import { ORFrame } from "../../components"
 
 const colors = {
   y1990: "#00a2ce",
   y2013: "#4d430c"
-};
+}
 
-const dotRadius = 8;
+const dotRadius = 8
 
 const baseData = [
   { region: "Developed regions", y1990: 7.6, y2013: 3.4 },
@@ -23,14 +23,14 @@ const baseData = [
   { region: "Western Asia", y1990: 27.5, y2013: 13.7 },
   { region: "Oceania", y1990: 26.3, y2013: 21.3 },
   { region: "World", y1990: 33.3, y2013: 20 }
-];
+]
 
 const data = [
   ...baseData.map(d => ({ region: d.region, type: "y1990", value: d.y1990 })),
   ...baseData.map(d => ({ region: d.region, type: "y2013", value: d.y2013 }))
-];
+]
 
-const lineAnnotations = baseData.map(d => Object.assign({ type: "range" }, d));
+const lineAnnotations = baseData.map(d => Object.assign({ type: "range" }, d))
 lineAnnotations.push({
   type: "category",
   categories: [
@@ -47,12 +47,12 @@ lineAnnotations.push({
   offset: 15,
   depth: 10,
   padding: 0
-});
+})
 function drawRange({ d, rScale, orFrameState }) {
   if (d.type === "range") {
-    const start = rScale(d.y1990) - dotRadius;
-    const end = rScale(d.y2013) + dotRadius;
-    const y = orFrameState.projectedColumns[d.region].middle;
+    const start = rScale(d.y1990) - dotRadius
+    const end = rScale(d.y2013) + dotRadius
+    const y = orFrameState.projectedColumns[d.region].middle
     return (
       <line
         key={`connector-${d.region}`}
@@ -62,9 +62,9 @@ function drawRange({ d, rScale, orFrameState }) {
         y2={y}
         style={{ stroke: "black", strokeWidth: 2 }}
       />
-    );
+    )
   }
-  return null;
+  return null
 }
 
 export default (
@@ -93,4 +93,4 @@ export default (
       </text>
     )}
   />
-);
+)

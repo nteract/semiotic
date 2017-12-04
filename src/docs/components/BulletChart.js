@@ -1,21 +1,21 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import BulletChartRaw from "./BulletChartRaw";
-const components = [];
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import BulletChartRaw from "./BulletChartRaw"
+const components = []
 
 components.push({
   name: "BulletChart"
-});
+})
 
 export default class BulletChart extends React.Component {
   render() {
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Basic",
       demo: BulletChartRaw,
       source: `
       `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -42,8 +42,8 @@ export default class BulletChart extends React.Component {
           multiple ORFrames is the custom scale in each frame.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-BulletChart.title = "Bullet Chart";
+BulletChart.title = "Bullet Chart"

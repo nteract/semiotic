@@ -1,20 +1,20 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import BarLineRaw from "./BarLineRaw";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import BarLineRaw from "./BarLineRaw"
 
-const components = [];
+const components = []
 // Add your component proptype data here
 // multiple component proptype documentation supported
 
 components.push({
   name: "BarLine"
-});
+})
 
 export default class BarLineDocs extends React.Component {
   render() {
-    const buttons = [];
+    const buttons = []
 
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Basic",
       demo: BarLineRaw,
@@ -64,7 +64,7 @@ export default class BarLineDocs extends React.Component {
             </div>
             </div>
       `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -78,8 +78,8 @@ export default class BarLineDocs extends React.Component {
           line chart.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-BarLineDocs.title = "Dual Axis";
+BarLineDocs.title = "Dual Axis"

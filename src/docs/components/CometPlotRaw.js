@@ -1,33 +1,33 @@
-import React from "react";
-import { XYFrame } from "../../components";
-import { csvParse } from "d3-dsv";
-import { scaleLog, scaleLinear } from "d3-scale";
-import { Mark } from "semiotic-mark";
-import data from "../sampledata/birthdata.js";
-import { d as glyphD } from "d3-glyphedge";
-import { AnnotationCalloutCircle } from "react-annotation";
-import "../example_settings/comet.css";
+import React from "react"
+import { XYFrame } from "../../components"
+import { csvParse } from "d3-dsv"
+import { scaleLog, scaleLinear } from "d3-scale"
+import { Mark } from "semiotic-mark"
+import data from "../sampledata/birthdata.js"
+import { d as glyphD } from "d3-glyphedge"
+import { AnnotationCalloutCircle } from "react-annotation"
+import "../example_settings/comet.css"
 
-const processedData = csvParse(data);
-let diff = 0;
+const processedData = csvParse(data)
+let diff = 0
 processedData.forEach(d => {
-  d.endweight = +d.endweight;
-  d.startweight = +d.startweight;
-  d.endvalue = +d.endvalue;
-  d.startvalue = +d.startvalue;
-  d.weightDiff = d.endweight - d.startweight;
+  d.endweight = +d.endweight
+  d.startweight = +d.startweight
+  d.endvalue = +d.endvalue
+  d.startvalue = +d.startvalue
+  d.weightDiff = d.endweight - d.startweight
   if (Math.abs(d.weightDiff) > diff) {
-    diff = Math.abs(d.weightDiff);
+    diff = Math.abs(d.weightDiff)
   }
-});
+})
 
 const colorScale = scaleLinear()
   .domain([-diff, 0, diff])
-  .range(["orange", "grey", "blue"]);
+  .range(["orange", "grey", "blue"])
 
 const widthScale = scaleLinear()
   .domain([-diff, 0, diff])
-  .range([5, 1, 5]);
+  .range([5, 1, 5])
 
 function customCometMark({ d, xScale, yScale }) {
   const edge = {
@@ -39,14 +39,14 @@ function customCometMark({ d, xScale, yScale }) {
       x: 0,
       y: 0
     }
-  };
-  const circleSize = widthScale(d.weightDiff);
+  }
+  const circleSize = widthScale(d.weightDiff)
   return (
     <g>
       <path stroke={"none"} d={glyphD.comet(edge, circleSize)} />
       <circle r={circleSize} />
     </g>
-  );
+  )
 }
 
 const complexTickFormat = tickValue => {
@@ -56,10 +56,10 @@ const complexTickFormat = tickValue => {
     (tickValue >= 100 && tickValue <= 500) ||
     tickValue === 900
   ) {
-    return tickValue;
+    return tickValue
   }
-  return "";
-};
+  return ""
+}
 
 export default (
   <XYFrame
@@ -108,4 +108,4 @@ export default (
     )}
     hoverAnnotation={true}
   />
-);
+)

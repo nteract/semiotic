@@ -1,16 +1,16 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import NeighborhoodMapRaw from "./NeighborhoodMapRaw";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import NeighborhoodMapRaw from "./NeighborhoodMapRaw"
 
-const components = [];
+const components = []
 
 components.push({
   name: "NeighborhoodMap"
-});
+})
 
 export default class NeighborhoodMapDocs extends React.Component {
   render() {
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Basic",
       demo: NeighborhoodMapRaw,
@@ -34,7 +34,7 @@ export default class NeighborhoodMapDocs extends React.Component {
              }}
             />
       `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -48,8 +48,8 @@ export default class NeighborhoodMapDocs extends React.Component {
           neighborhood feature of contour area types.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-NeighborhoodMapDocs.title = "Neighborhood Map";
+NeighborhoodMapDocs.title = "Neighborhood Map"

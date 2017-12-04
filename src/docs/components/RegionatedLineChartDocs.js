@@ -1,10 +1,10 @@
-import React from "react";
-import DocumentComponent from "../layout/DocumentComponent";
-import RegionatedLineChartRaw from "./RegionatedLineChartRaw";
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import RegionatedLineChartRaw from "./RegionatedLineChartRaw"
 
 export default class RegionatedLineChartDocs extends React.Component {
   render() {
-    const examples = [];
+    const examples = []
     examples.push({
       name: "Basic",
       demo: RegionatedLineChartRaw,
@@ -93,7 +93,7 @@ export default class RegionatedLineChartDocs extends React.Component {
       />
 
       `
-    });
+    })
 
     return (
       <DocumentComponent
@@ -119,8 +119,8 @@ export default class RegionatedLineChartDocs extends React.Component {
           of the chart.
         </p>
       </DocumentComponent>
-    );
+    )
   }
 }
 
-RegionatedLineChartDocs.title = "RegionatedLineChart";
+RegionatedLineChartDocs.title = "RegionatedLineChart"

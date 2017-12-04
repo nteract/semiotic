@@ -1,10 +1,10 @@
-import React from "react";
-import { wrappedExamples } from "./example_settings/example_list";
-import { Link } from "react-router-dom";
+import React from "react"
+import { wrappedExamples } from "./example_settings/example_list"
+import { Link } from "react-router-dom"
 
 const onlyThreeWrappedExamples = wrappedExamples
   .sort(() => Math.random() - Math.random())
-  .filter((d, i) => i < 3);
+  .filter((d, i) => i < 3)
 
 const intro = (
   <div>
@@ -44,6 +44,6 @@ const intro = (
       related but distinct components.
     </p>
   </div>
-);
+)
 
-export default intro;
+export default intro

@@ -1,11 +1,11 @@
-import React from "react";
-import { XYFrame } from "../../components";
-import { Mark } from "semiotic-mark";
+import React from "react"
+import { XYFrame } from "../../components"
+import { Mark } from "semiotic-mark"
 const speciousColors = {
   shirley: "#ff269d",
   nadieh: "#4c50a9",
   guest: "#6d8f6b"
-};
+}
 
 const speciousDataset = [
   {
@@ -148,7 +148,7 @@ const speciousDataset = [
     accessibleShowingOff: 0.7,
     month: "July"
   }
-];
+]
 
 export default (
   <XYFrame
@@ -248,4 +248,4 @@ export default (
       }
     ]}
   />
-);
+)
