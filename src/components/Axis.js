@@ -80,6 +80,11 @@ class Axis extends React.Component {
     let hoverHeight = height
     let hoverX = 0
     let hoverY = margin.top
+    let baselineX = margin.left
+    let baselineY = margin.top
+    let baselineX2 = margin.left
+    let baselineY2 = margin.top + height
+
     let hoverFunction = e =>
       this.setState({ hoverAnnotation: e.nativeEvent.offsetY - margin.top })
     let circleX = 25
@@ -95,6 +100,7 @@ class Axis extends React.Component {
       case "right":
         position = [position[0], position[1]]
         hoverX = width
+        baselineX2 = baselineX = width + margin.left
         annotationOffset = margin.top
         lineWidth = -width - 25
         textX = 5
@@ -107,9 +113,9 @@ class Axis extends React.Component {
         position = [position[0], 0]
         hoverWidth = width
         hoverHeight = 50
-        hoverY = 0
         annotationType = "x"
-        hoverX = margin.left
+        baselineX2 = baselineX + width
+        baselineY2 = margin.top
         hoverFunction = e =>
           this.setState({
             hoverAnnotation: e.nativeEvent.offsetX - annotationOffset
@@ -126,8 +132,10 @@ class Axis extends React.Component {
         position = [position[0], 0]
         hoverWidth = width
         hoverHeight = 50
-        hoverY = height + margin.top
-        hoverX = margin.left
+        baselineY = baselineY2 = hoverY = height + margin.top
+        baselineX = hoverX = margin.left
+        baselineX2 = baselineX + width
+
         hoverFunction = e =>
           this.setState({
             hoverAnnotation: e.nativeEvent.offsetX - annotationOffset
@@ -286,11 +294,20 @@ class Axis extends React.Component {
         </g>
       )
     }
+
     return (
       <g className={className}>
         {annotationBrush}
         {axisTickLabels}
         {axisTickLines}
+        <line
+          className="axis-baseline"
+          stroke="black"
+          x1={baselineX}
+          x2={baselineX2}
+          y1={baselineY}
+          y2={baselineY2}
+        />
         {axisTitle}
       </g>
     )
