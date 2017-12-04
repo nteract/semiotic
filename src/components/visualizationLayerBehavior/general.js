@@ -53,8 +53,6 @@ export function createPoints({
       ? Object.assign({}, renderedCustomMark.props)
       : { key: `piece-${i}`, markType: "circle", r: 2 };
 
-    console.log("markProps", markProps);
-
     if (
       renderedCustomMark &&
       !renderedCustomMark.props.markType &&

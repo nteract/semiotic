@@ -109,7 +109,8 @@ export const basicReactAnnotation = ({ screenCoordinates, d, i }) => {
     },
     d,
     {
-      type: d.type
+      type: d.type,
+      screenCoordinates: screenCoordinates
     }
   );
 
@@ -132,6 +133,7 @@ export const svgEncloseAnnotation = ({ screenCoordinates, d, i }) => {
     },
     d,
     {
+      coordinates: undefined,
       x: circle.x,
       y: circle.y,
       type: AnnotationCalloutCircle,
