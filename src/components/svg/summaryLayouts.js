@@ -776,7 +776,10 @@ export function bucketizedRenderingFn({
       }))
       .filter(d => d.value !== 0)
 
-    binMax = Math.max(binMax, max(calculatedBins.map(d => d.value)))
+    binMax = Math.max(
+      binMax,
+      calculatedBins.length === 0 ? 0 : max(calculatedBins.map(d => d.value))
+    )
     return { bins: calculatedBins, summary, summaryI, thisSummaryData }
   })
   calculatedBins.forEach(({ bins, summary, summaryI, thisSummaryData }) => {

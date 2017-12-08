@@ -33,7 +33,7 @@ import {
   generateFrameTitle
 } from "./svg/frameFunctions"
 
-import { drawNodes, drawEdges } from "./svg/networkDrawing"
+import { drawNodes, drawEdges, topologicalSort } from "./svg/networkDrawing"
 
 import { stringToFn } from "./data/dataFunctions"
 
@@ -42,13 +42,15 @@ import {
   networkEdgeDownloadMapping
 } from "./downloadDataMapping"
 
+import { sankey } from "d3-sankey"
+
 import {
-  sankey,
   sankeyLeft,
   sankeyRight,
   sankeyCenter,
-  sankeyJustify
-} from "d3-sankey"
+  sankeyJustify,
+  sankeyCircular
+} from "d3-sankey-circular"
 import { interpolateNumber } from "d3-interpolate"
 import { chord, ribbon } from "d3-chord"
 import { arc } from "d3-shape"
@@ -144,84 +146,41 @@ const areaLink = d => {
     y2 = d.y1 + d.sankeyWidth / 2,
     y3 = d.y0 + d.sankeyWidth / 2
 
-  if (y3 - y0 < 30000) {
-    return (
-      "M" +
-      x0 +
-      "," +
-      y0 +
-      "C" +
-      x2 +
-      "," +
-      y0 +
-      " " +
-      x3 +
-      "," +
-      y1 +
-      " " +
-      x1 +
-      "," +
-      y1 +
-      "L" +
-      x1 +
-      "," +
-      y2 +
-      "C" +
-      x3 +
-      "," +
-      y2 +
-      " " +
-      x2 +
-      "," +
-      y3 +
-      " " +
-      x0 +
-      "," +
-      y3 +
-      "Z"
-    )
-  } else {
-    const offset = (x1 - x0) / 4
-    return (
-      "M" +
-      x0 +
-      "," +
-      y0 +
-      "C" +
-      x2 +
-      "," +
-      y0 +
-      " " +
-      x3 +
-      "," +
-      y1 +
-      " " +
-      (x1 - offset) +
-      "," +
-      (y1 + 0) +
-      "L" +
-      (x1 - 6) +
-      "," +
-      (y2 + y1) / 2 +
-      "L" +
-      (x1 - offset) +
-      "," +
-      (y2 + 0) +
-      "C" +
-      x3 +
-      "," +
-      y2 +
-      " " +
-      x2 +
-      "," +
-      y3 +
-      " " +
-      x0 +
-      "," +
-      y3 +
-      "Z"
-    )
-  }
+  return (
+    "M" +
+    x0 +
+    "," +
+    y0 +
+    "C" +
+    x2 +
+    "," +
+    y0 +
+    " " +
+    x3 +
+    "," +
+    y1 +
+    " " +
+    x1 +
+    "," +
+    y1 +
+    "L" +
+    x1 +
+    "," +
+    y2 +
+    "C" +
+    x3 +
+    "," +
+    y2 +
+    " " +
+    x2 +
+    "," +
+    y3 +
+    " " +
+    x0 +
+    "," +
+    y3 +
+    "Z"
+  )
 }
 
 const matrixify = ({
@@ -366,10 +325,6 @@ class NetworkFrame extends React.Component {
       networkSettings = networkType
     }
 
-    if (!edgeType && networkSettings.type === "sankey") {
-      edgeType = areaLink
-    }
-
     const nodeIDAccessor = stringToFn(currentProps.nodeIDAccessor, d => d.id)
     const sourceAccessor = stringToFn(
       currentProps.sourceAccessor,
@@ -417,6 +372,7 @@ class NetworkFrame extends React.Component {
         this.nodeHash.set(id, node)
         this.nodeHash.set(node, node)
         projectedNodes.push(node)
+        node.id = id
         node.inDegree = 0
         node.outDegree = 0
         node.degree = 0
@@ -517,6 +473,16 @@ class NetworkFrame extends React.Component {
       })
     }
 
+    if (
+      networkSettings.type === "sankey" &&
+      topologicalSort(projectedNodes, projectedEdges) === null
+    ) {
+      console.error(
+        "Sankey diagram cannot display a network with cycles, defaulting to force-directed layout"
+      )
+      networkSettings.customSankey = sankeyCircular
+    }
+
     const networkSettingsKeys = Object.keys(networkSettings)
     let networkSettingsChanged = false
 
@@ -530,6 +496,12 @@ class NetworkFrame extends React.Component {
     })
     //Support bubble chart with circle pack and with force
     if (networkSettings.type === "sankey") {
+      if (networkSettings.customSankey) {
+        edgeType = d => d.path
+      } else if (!edgeType) {
+        edgeType = areaLink
+      }
+
       let initCustomNodeIcon = customNodeIcon
 
       customNodeIcon = ({
@@ -683,55 +655,12 @@ class NetworkFrame extends React.Component {
 
     if (changedData || networkSettingsChanged) {
       let components = [
-          {
-            componentNodes: projectedNodes,
-            componentEdges: projectedEdges
-          }
-        ],
-        strongComponents = projectedNodes
-      /* Graphology stripped out for now
-      if (!this.hierarchicalNetwork) {
-        const graph = new Graph({ multi: !!networkSettings.multi });
-        const graphologyNodes = projectedNodes.map(d => ({
-          key: nodeIDAccessor(d),
-          originalNode: d
-        }));
+        {
+          componentNodes: projectedNodes,
+          componentEdges: projectedEdges
+        }
+      ]
 
-        graph.import({
-          attributes: { name: "Graph for Processing" },
-          nodes: graphologyNodes,
-          edges: projectedEdges.map(d => ({
-            source: d.source.id,
-            target: d.target.id,
-            originalEdge: d
-          }))
-        });
-        components = connectedComponents(graph)
-          .sort((a, b) => b.length - a.length)
-          .map(c => ({
-            componentNodes: projectedNodes.filter(d => c.indexOf(d.id) !== -1),
-            componentEdges: projectedEdges.filter(
-              d =>
-                c.indexOf(d.source.id) !== -1 || c.indexOf(d.target.id) !== -1
-            )
-          }));
-
-        strongComponents = stronglyConnectedComponents(graph).sort(
-          (a, b) => b.length - a.length
-        );
-      }
-      */
-
-      //check for components first
-      if (
-        networkSettings.type === "sankey" &&
-        strongComponents.length !== projectedNodes.length
-      ) {
-        console.error(
-          "Sankey diagram cannot display a network with cycles, defaulting to force-directed layout"
-        )
-        networkSettings.type = "force"
-      }
       if (networkSettings.type === "chord") {
         const radius = size[1] / 2
         const { groupWidth = 20, padAngle = 0.01 } = networkSettings
@@ -782,11 +711,12 @@ class NetworkFrame extends React.Component {
           orient = "center",
           iterations = 100,
           nodePadding = 8,
-          nodeWidth = 24
+          nodeWidth = 24,
+          customSankey
         } = networkSettings
         const sankeyOrient = sankeyOrientHash[orient]
 
-        const frameSankey = sankey()
+        const frameSankey = sankeyCircular()
           .extent([
             [margin.left, margin.top],
             [size[0] - margin.right, size[1] - margin.top]
@@ -800,6 +730,8 @@ class NetworkFrame extends React.Component {
           .iterations(iterations)
 
         frameSankey()
+
+        console.log("projected edges", projectedEdges)
 
         projectedNodes.forEach(d => {
           d.height = d.y1 - d.y0

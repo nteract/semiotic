@@ -63,7 +63,7 @@ const complexTickFormat = tickValue => {
 export default (
   <XYFrame
     size={[600, 600]}
-    margin={{ left: 50, top: 20, right: 30, bottom: 50 }}
+    margin={{ left: 70, top: 20, right: 30, bottom: 50 }}
     xScaleType={scaleLog()}
     yScaleType={scaleLog()}
     pointStyle={d => ({ fill: colorScale(d.weightDiff) })}
@@ -92,11 +92,16 @@ export default (
       }
     ]}
     axes={[
-      { orient: "left", tickFormat: complexTickFormat },
+      {
+        orient: "left",
+        tickFormat: complexTickFormat,
+        label: "Fetal Death Rate"
+      },
       {
         orient: "bottom",
         tickFormat: d => (d === 1000000 ? "1m" : d / 1000 + "k"),
-        tickValues: [1000, 10000, 100000, 1000000]
+        tickValues: [1000, 10000, 100000, 1000000],
+        label: "Number of Births"
       }
     ]}
     tooltipContent={d => (
