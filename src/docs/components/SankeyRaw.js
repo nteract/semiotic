@@ -21,17 +21,17 @@ export default ({ annotations = [], type = "sankey", orient = "left" }) => (
   <NetworkFrame
     size={[700, 400]}
     nodes={or_data}
-    edges={type === "chord" ? mirroredNetworkData : network_data}
+    edges={network_data}
     nodeStyle={d => ({
       fill: d.id === "Oil" ? "#b3331d" : "rgb(182, 167, 86)",
       stroke: "black"
     })}
     edgeStyle={d => ({
-      stroke: "black",
-      fill: "#00a2ce",
-      strokeWidth: 1,
+      stroke: "#00a2ce",
+      fill: "none",
+      strokeWidth: d.sankeyWidth,
       fillOpacity: 0.25,
-      strokeOpacity: 0.1
+      strokeOpacity: 0.75
     })}
     nodeIDAccessor="id"
     sourceAccessor="source"
