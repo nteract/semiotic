@@ -4,5 +4,6 @@ gulpfile.js
 /examples/
 /lib/
 /less/
+/dist/
 .eslintrc
 .prettierrc

@@ -477,9 +477,6 @@ class NetworkFrame extends React.Component {
       networkSettings.type === "sankey" &&
       topologicalSort(projectedNodes, projectedEdges) === null
     ) {
-      console.error(
-        "Sankey diagram cannot display a network with cycles, defaulting to force-directed layout"
-      )
       networkSettings.customSankey = sankeyCircular
     }
 
@@ -497,7 +494,7 @@ class NetworkFrame extends React.Component {
     //Support bubble chart with circle pack and with force
     if (networkSettings.type === "sankey") {
       if (networkSettings.customSankey) {
-        edgeType = d => d.path
+        edgeType = d => (d.circular ? d.path : areaLink(d))
       } else if (!edgeType) {
         edgeType = areaLink
       }
@@ -716,7 +713,9 @@ class NetworkFrame extends React.Component {
         } = networkSettings
         const sankeyOrient = sankeyOrientHash[orient]
 
-        const frameSankey = sankeyCircular()
+        const actualSankey = networkSettings.customSankey || sankey
+
+        const frameSankey = actualSankey()
           .extent([
             [margin.left, margin.top],
             [size[0] - margin.right, size[1] - margin.top]
@@ -730,8 +729,6 @@ class NetworkFrame extends React.Component {
           .iterations(iterations)
 
         frameSankey()
-
-        console.log("projected edges", projectedEdges)
 
         projectedNodes.forEach(d => {
           d.height = d.y1 - d.y0
