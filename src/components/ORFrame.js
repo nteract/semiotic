@@ -280,7 +280,7 @@ class ORFrame extends React.Component {
 
     if (projection === "vertical") {
       oDomain = [margin.left, adjustedSize[0] + margin.left]
-      rDomain = [margin.top, adjustedSize[1]]
+      rDomain = [margin.top, adjustedSize[1] + margin.top]
     }
 
     const oScaleType = currentProps.oScaleType || scaleBand
@@ -339,6 +339,10 @@ class ORFrame extends React.Component {
       .domain(rDomain)
       .range(rDomain.reverse())
 
+    const rScaleVertical = rScaleType()
+      .domain(rExtent)
+      .range(rDomain)
+
     this.oScale = oScale
     this.rScale = rScale
 
@@ -393,6 +397,7 @@ class ORFrame extends React.Component {
         ) {
           valPosition = rScale(pieceValue)
           piece._orFR = valPosition
+          piece._orFRVertical = rScaleVertical(pieceValue)
         } else {
           valPosition =
             projection === "vertical"

@@ -81,6 +81,7 @@ export const hexToRgb = hex => {
 export const groupBarMark = ({
   bins,
   binMax,
+  relativeBuckets,
   columnWidth,
   projection,
   adjustedSize,
@@ -97,9 +98,10 @@ export const groupBarMark = ({
 
   const mappedBins = []
   const mappedPoints = []
+  const actualMax = (relativeBuckets && relativeBuckets[summary.name]) || binMax
 
   bins.forEach((d, i) => {
-    const opacity = d.value / binMax
+    const opacity = d.value / actualMax
     const finalStyle =
       type.type === "heatmap"
         ? { opacity: opacity, fill: summaryStyle.fill }
