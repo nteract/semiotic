@@ -713,6 +713,7 @@ export function bucketizedRenderingFn({
   const summaryXYCoords = []
 
   const buckets = type.bins || 25
+  const relativeBuckets = type.relative ? {} : false
   const summaryValueAccessor = type.binValue || (d => d.length)
   let axisCreator
   if (type.axis) {
@@ -747,12 +748,15 @@ export function bucketizedRenderingFn({
 
     const summaryPositionNest = thisSummaryData.sort(xySorting)
 
+    console.log("margin.top", margin.top)
+
     const violinHist = histogram()
     let binDomain =
       projection === "vertical"
-        ? [margin.top, chartSize]
+        ? [margin.top, chartSize + margin.top]
         : [margin.left, chartSize + margin.left]
-    const binOffset = projection === "vertical" ? binDomain[0] : 0
+
+    const binOffset = 0
     let binBuckets = []
 
     for (let x = 0; x < buckets; x++) {
@@ -760,7 +764,8 @@ export function bucketizedRenderingFn({
     }
     //    binBuckets.push(binDomain[1]);
 
-    const xyValue = projection === "vertical" ? p => p.xy.y : p => p.piece._orFR
+    const xyValue =
+      projection === "vertical" ? p => p.xy.y : p => p.piece._orFRVertical
 
     let calculatedBins = violinHist
       .domain(binDomain)
@@ -776,10 +781,13 @@ export function bucketizedRenderingFn({
       }))
       .filter(d => d.value !== 0)
 
-    binMax = Math.max(
-      binMax,
+    const relativeMax =
       calculatedBins.length === 0 ? 0 : max(calculatedBins.map(d => d.value))
-    )
+    if (relativeBuckets) {
+      relativeBuckets[key] = relativeMax
+    }
+
+    binMax = Math.max(binMax, relativeMax)
     return { bins: calculatedBins, summary, summaryI, thisSummaryData }
   })
   calculatedBins.forEach(({ bins, summary, summaryI, thisSummaryData }) => {
@@ -800,10 +808,14 @@ export function bucketizedRenderingFn({
       ]
     }
 
+    const actualMax =
+      (relativeBuckets && relativeBuckets[summary.name]) || binMax
+
     if (type.type === "heatmap" || type.type === "histogram") {
       const mappedBars = groupBarMark({
         bins,
         binMax,
+        relativeBuckets,
         columnWidth,
         bucketSize,
         projection,
@@ -824,10 +836,10 @@ export function bucketizedRenderingFn({
 
       if (type.axis && type.type === "histogram") {
         let axisTranslate = `translate(${summary.x},${margin.top})`
-        let axisDomain = [0, binMax]
+        let axisDomain = [0, actualMax]
         if (projection === "horizontal") {
           axisTranslate = `translate(${bucketSize + margin.left},${summary.x})`
-          axisDomain = [binMax, 0]
+          axisDomain = [actualMax, 0]
         } else if (projection === "radial") {
           axisTranslate = `translate(${margin.left},${margin.top})`
         }
@@ -882,7 +894,7 @@ export function bucketizedRenderingFn({
 
         bins.forEach(summaryPoint => {
           const xValue = summaryPoint.y - bucketSize / 2
-          const yValue = summaryPoint.value / binMax * columnWidth / 2
+          const yValue = summaryPoint.value / actualMax * columnWidth / 2
 
           violinPoints.push({
             x: xValue,
@@ -905,7 +917,7 @@ export function bucketizedRenderingFn({
 
         bins.forEach(summaryPoint => {
           const yValue = summaryPoint.y + bucketSize / 2
-          const xValue = summaryPoint.value / binMax * columnWidth / 2
+          const xValue = summaryPoint.value / actualMax * columnWidth / 2
 
           violinPoints.push({
             y: yValue,
@@ -931,12 +943,12 @@ export function bucketizedRenderingFn({
           inbins.forEach(bin => {
             const outsidePoint = pointOnArcAtAngle(
               [0, 0],
-              midAngle + angle * bin.value / binMax / 2,
+              midAngle + angle * bin.value / actualMax / 2,
               (bin.y + bin.y1 - margin.left - bucketSize / 2) / 2
             )
             const insidePoint = pointOnArcAtAngle(
               [0, 0],
-              midAngle - angle * bin.value / binMax / 2,
+              midAngle - angle * bin.value / actualMax / 2,
               (bin.y + bin.y1 - margin.left - bucketSize / 2) / 2
             )
 
@@ -1000,7 +1012,7 @@ export function bucketizedRenderingFn({
         joyBins.forEach((summaryPoint, i) => {
           const xValue = summaryPoint.y
           const yValue =
-            -summaryPoint.value / binMax * (columnWidth + joyHeight) +
+            -summaryPoint.value / actualMax * (columnWidth + joyHeight) +
             columnWidth / 2
 
           joyPoints.push({
@@ -1023,7 +1035,7 @@ export function bucketizedRenderingFn({
         joyBins.forEach(summaryPoint => {
           const yValue = summaryPoint.y
           const xValue =
-            -summaryPoint.value / binMax * (columnWidth + joyHeight) +
+            -summaryPoint.value / actualMax * (columnWidth + joyHeight) +
             columnWidth / 2
 
           joyPoints.push({
@@ -1050,7 +1062,7 @@ export function bucketizedRenderingFn({
           inbins.forEach(bin => {
             const outsidePoint = pointOnArcAtAngle(
               [adjustedSize[0] / 2, adjustedSize[1] / 2],
-              midAngle + angle * bin.value / binMax,
+              midAngle + angle * bin.value / actualMax,
               (bin.y + bin.y1 - margin.left - bucketSize / 2) / 2
             )
             //Ugh a terrible side effect has appeared

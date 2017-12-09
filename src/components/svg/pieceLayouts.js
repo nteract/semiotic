@@ -585,7 +585,7 @@ export function pointLayout({
       const renderValue = renderMode && renderMode(piece, i)
 
       let xPosition = ordset.middle
-      let yPosition = adjustedSize[1] - piece._orFR + margin.top
+      let yPosition = piece._orFRVertical
 
       if (projection === "horizontal") {
         yPosition = ordset.middle
@@ -683,13 +683,22 @@ export function swarmLayout({
       .force("collide", forceCollide(circleRadius))
       .stop()
 
+    if (projection === "vertical") {
+      simulation.force(
+        "y",
+        forceY((d, i) => d._orFRVertical - margin.top).strength(
+          type.strength || 2
+        )
+      )
+    }
+
     for (let i = 0; i < iterations; ++i) simulation.tick()
 
     const calculatedPieces = oData.map((piece, i) => {
       const renderValue = renderMode && renderMode(piece, i)
 
       let xPosition = piece.x
-      let yPosition = adjustedSize[1] - piece.y + margin.top
+      let yPosition = piece.y + margin.top
 
       if (projection === "horizontal") {
         yPosition = piece.x
