@@ -75,8 +75,7 @@ export const calculateMargin = ({
   projection
 }) => {
   if (margin) {
-    let tempMargin
-    console.log("not tempMarg", margin)
+    let tempMargin = margin
     if (typeof margin !== "object") {
       tempMargin = { top: margin, bottom: margin, left: margin, right: margin }
     }

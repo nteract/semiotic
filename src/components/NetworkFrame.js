@@ -1064,7 +1064,7 @@ class NetworkFrame extends React.Component {
           {
             styleFn: currentProps.nodeStyle,
             type: "fill",
-            items: ["put", "nodes", "here"]
+            items: []
           }
         ]
         legendSettings.legendGroups = legendGroups

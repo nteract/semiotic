@@ -82,7 +82,7 @@ export default (
       fillOpacity: 1,
       strokeWidth: 1.5
     })}
-    margin={{ top: 50, bottom: 100, left: 10, right: 80 }}
+    margin={{ top: 60, bottom: 140, left: 10, right: 80 }}
     oPadding={2}
     annotations={[
       {

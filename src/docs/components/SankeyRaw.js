@@ -2,8 +2,6 @@ import React from "react"
 import { NetworkFrame } from "../../components"
 import { network_data, or_data } from "../sampledata/energy_time"
 
-const oldColors = ["#000000", "#FFDD89", "#957244", "#F26223"]
-
 const mirroredNetworkData = [
   ...network_data.map(d => ({
     source: d.source.id ? d.source.id : d.source,
@@ -38,6 +36,25 @@ if (true) {
   })
 }
 
+const colors = {
+  Oil: "#b3331d",
+  Gas: "rgb(182, 167, 86)",
+  Coal: "#00a2ce",
+  Other: "grey"
+}
+
+const areaLegendGroups = [
+  {
+    styleFn: d => ({ fill: colors[d.label], stroke: "black" }),
+    items: [
+      { label: "Oil" },
+      { label: "Gas" },
+      { label: "Coal" },
+      { label: "Other" }
+    ]
+  }
+]
+
 export default ({
   annotations = [],
   type = "sankey",
@@ -46,19 +63,19 @@ export default ({
 }) => (
   <NetworkFrame
     size={[700, 400]}
-    nodes={or_data}
+    nodes={or_data.map(d => Object.assign({}, d))}
     edges={
       type === "chord" ? network_data : cyclical ? cyclicalData : network_data
     }
     nodeStyle={d => ({
-      fill: d.id === "Oil" ? "#b3331d" : "rgb(182, 167, 86)",
+      fill: colors[d.category],
       stroke: "black"
     })}
     edgeStyle={d => ({
       stroke: "grey",
-      fill: "#00a2ce",
+      fill: colors[d.source.category],
       strokeWidth: 0.5,
-      fillOpacity: 0.25,
+      fillOpacity: 0.75,
       strokeOpacity: 0.75
     })}
     nodeIDAccessor="id"
@@ -70,5 +87,7 @@ export default ({
     edgeWidthAccessor={type === "chord" ? d => d.value : undefined}
     networkType={{ type: type, orient: orient, iterations: 500 }}
     annotations={annotations}
+    legend={{ legendGroups: areaLegendGroups }}
+    margin={{ right: 130 }}
   />
 )

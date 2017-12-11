@@ -1457,6 +1457,7 @@ export default class XYFrameDocs extends React.Component {
       </FormControl>,
       this.state.axes === "hover" ? (
         <div key="button-3-1-0">
+          <InputLabel htmlFor="hover-behavior-input">Axis Annotate</InputLabel>
           <Select
             value={this.state.axisAnnotatable}
             onChange={e => this.setState({ axisAnnotatable: e.target.value })}

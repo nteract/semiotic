@@ -541,7 +541,7 @@ export const htmlColumnHoverRule = ({
   let xPosition =
     projectedColumns[oAccessor(d.pieces[0])].middle + adjustedPosition[0]
   let yPosition = positionValue
-  yPosition += margin.bottom + margin.top + 10
+  yPosition += margin.bottom + 10
 
   if (projection === "horizontal") {
     yPosition =
