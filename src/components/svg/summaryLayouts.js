@@ -748,8 +748,6 @@ export function bucketizedRenderingFn({
 
     const summaryPositionNest = thisSummaryData.sort(xySorting)
 
-    console.log("margin.top", margin.top)
-
     const violinHist = histogram()
     let binDomain =
       projection === "vertical"
