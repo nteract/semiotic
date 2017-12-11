@@ -160,7 +160,7 @@ export default class NetworkFrameDocs extends React.Component {
     super(props)
     this.state = {
       annotations: "off",
-      networkType: "motifs",
+      networkType: "force",
       edge: "none",
       nodeSize: "degree",
       customNodeIcon: "off"

@@ -62,37 +62,39 @@ export default class Sankey extends React.Component {
         >
           {orientOptions}
         </Select>
-      </FormControl>,
-      <FormControl key="button-3-0-0">
-        <InputLabel htmlFor="orient-input">Cycles</InputLabel>
-        <Select
-          value={this.state.cycle}
-          onChange={e => this.setState({ cycle: e.target.value })}
-        >
-          {cycleOptions}
-        </Select>
       </FormControl>
     ]
 
     const annotations = [
       {
         type: "node",
-        dy: 0,
-        dx: 100,
         id: "International aviation",
-        label: "Energy spent on international aviation"
+        label: "Energy spent on international aviation",
+        ny: 250,
+        nx: 600
       },
       { type: "node", dy: -50, dx: -50, id: "Oil", label: "Big Oil" }
     ]
 
     const examples = []
     examples.push({
-      name: "Basic",
+      name: "Without Cycles",
       demo: SankeyRaw({
         annotations,
         type: this.state.type,
         orient: this.state.orient,
-        cyclical: this.state.cycle === "cycles"
+        cyclical: false
+      }),
+      source: ``
+    })
+
+    examples.push({
+      name: "With Cycles",
+      demo: SankeyRaw({
+        annotations,
+        type: this.state.type,
+        orient: this.state.orient,
+        cyclical: true
       }),
       source: `
 const or_data = [{"id":"Agricultural 'waste'","input":0,"output":262.6972158,"years":[9.282517755,14.61107771,30.99950457,31.97585802,32.98811297,34.0375862,35.12564273,36.2536977,37.42321811],"category":"Agriculture","color":"#4d430c"},
@@ -113,14 +115,42 @@ ${this.state.type === "chord"
     ]`
         : ""}
 
+const colors = {
+  Oil: "#b3331d",
+  Gas: "rgb(182, 167, 86)",
+  Coal: "#00a2ce",
+  Other: "grey"
+}
+
+const areaLegendGroups = [
+  {
+    styleFn: d => ({ fill: colors[d.label], stroke: "black" }),
+    items: [
+      { label: "Oil" },
+      { label: "Gas" },
+      { label: "Coal" },
+      { label: "Other" }
+    ]
+  }
+]
+
 <NetworkFrame
   size={[ 700,400 ]}
   nodes={or_data}
   edges={${this.state.type === "chord"
     ? "mirroredNetworkData"
     : "network_data"}}
-  nodeStyle={d => ({ fill: d.id === "Oil" ? "#b3331d" : "rgb(182, 167, 86)", stroke: "black" })}
-  edgeStyle={d => ({ stroke: "black", fill: "#00a2ce", strokeWidth: 1, fillOpacity: 0.25, strokeOpacity: 0.1 })}
+  nodeStyle={d => ({
+    fill: colors[d.category],
+    stroke: "black"
+  })}
+  edgeStyle={d => ({
+    stroke: "grey",
+    fill: colors[d.source.category],
+    strokeWidth: 0.5,
+    fillOpacity: 0.75,
+    strokeOpacity: 0.75
+  })}
   nodeIDAccessor="id"
   sourceAccessor="source"
   targetAccessor="target"
@@ -137,6 +167,8 @@ ${this.state.type === "chord"
   ,{ type: 'node', dy: 0, dx: 50, id: 'Oil', label: 'Big Oil' }
   ,{ type: 'enclose', dy: -100, dx: 50, ids: [ 'Wave', 'Geothermal', 'Hydro', 'Tidal' ], label: 'Energy made with wave, tidal, hydro and geothermal' }
   ]}
+  legend={{ legendGroups: areaLegendGroups }}
+  margin={{ right: 130 }}
 />
 `
     })

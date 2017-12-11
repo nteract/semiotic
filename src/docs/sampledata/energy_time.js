@@ -93,41 +93,20 @@ processedEnergy.forEach(edge => {
         years: [0, 0, 0, 0, 0, 0, 0, 0, 0]
       }
       if (
-        [
-          "Coal reserves",
-          "Coal",
-          "Coal imports",
-          "Oil reserves",
-          "Oil",
-          "Oil imports",
-          "Gas Reserves",
-          "Natural Gas",
-          "Gas",
-          "Liquid",
-          "Solid"
-        ].indexOf(nodeVal) !== -1
+        ["Oil reserves", "Oil", "Oil imports", "Liquid"].indexOf(nodeVal) !== -1
       ) {
-        processedEnergyNodeHash[nodeVal].category = "Fossil Fuels"
+        processedEnergyNodeHash[nodeVal].category = "Oil"
       } else if (
-        ["Agricultural", "Agricultural 'waste'"].indexOf(nodeVal) !== -1
+        ["Gas reserves", "Gas imports", "Natural Gas", "Gas"].indexOf(
+          nodeVal
+        ) !== -1
       ) {
-        processedEnergyNodeHash[nodeVal].category = "Agriculture"
+        processedEnergyNodeHash[nodeVal].category = "Gas"
       } else if (
-        [
-          "Bio-conversion",
-          "Biomass imports",
-          "Hydro",
-          "Nuclear",
-          "Solar",
-          "Solar PV",
-          "Thermal Generation",
-          "Tidal",
-          "UK land based bioenergy",
-          "Wave",
-          "Wind"
-        ].indexOf(nodeVal) !== -1
+        ["Solid", "Coal imports", "Coal reserves", "Coal"].indexOf(nodeVal) !==
+        -1
       ) {
-        processedEnergyNodeHash[nodeVal].category = "Alternative"
+        processedEnergyNodeHash[nodeVal].category = "Coal"
       } else {
         processedEnergyNodeHash[nodeVal].category = "Other"
       }

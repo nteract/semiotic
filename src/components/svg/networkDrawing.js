@@ -183,6 +183,9 @@ export function topologicalSort(nodesArray, edgesArray) {
   const nodes = []
   const nodeHash = {}
   edgesArray.forEach(edge => {
+    if (!edge.source.id || !edge.target.id) {
+      return false
+    }
     if (!nodeHash[edge.source.id]) {
       nodeHash[edge.source.id] = { _id: edge.source.id, links: [] }
       nodes.push(nodeHash[edge.source.id])
