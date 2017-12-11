@@ -17,19 +17,47 @@ const mirroredNetworkData = [
   }))
 ]
 
-export default ({ annotations = [], type = "sankey", orient = "left" }) => (
+const cyclicalData = [...network_data]
+
+if (true) {
+  cyclicalData.push({
+    source: "Gas",
+    target: "Gas reserves",
+    value: 2500
+  })
+
+  cyclicalData.push({
+    source: "Oil",
+    target: "Oil reserves",
+    value: 2500
+  })
+  cyclicalData.push({
+    source: "Thermal generation",
+    target: "Oil reserves",
+    value: 2500
+  })
+}
+
+export default ({
+  annotations = [],
+  type = "sankey",
+  orient = "left",
+  cyclical = false
+}) => (
   <NetworkFrame
     size={[700, 400]}
     nodes={or_data}
-    edges={network_data}
+    edges={
+      type === "chord" ? network_data : cyclical ? cyclicalData : network_data
+    }
     nodeStyle={d => ({
       fill: d.id === "Oil" ? "#b3331d" : "rgb(182, 167, 86)",
       stroke: "black"
     })}
     edgeStyle={d => ({
-      stroke: "#00a2ce",
-      fill: "none",
-      strokeWidth: d.sankeyWidth,
+      stroke: "grey",
+      fill: "#00a2ce",
+      strokeWidth: 0.5,
       fillOpacity: 0.25,
       strokeOpacity: 0.75
     })}

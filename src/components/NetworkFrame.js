@@ -26,6 +26,7 @@ import {
 import Frame from "./Frame"
 import { Mark } from "semiotic-mark"
 import DownloadButton from "./DownloadButton"
+import { linearRibbon } from "./svg/SvgHelper"
 
 import {
   calculateMargin,
@@ -53,7 +54,7 @@ import {
 } from "d3-sankey-circular"
 import { interpolateNumber } from "d3-interpolate"
 import { chord, ribbon } from "d3-chord"
-import { arc } from "d3-shape"
+import { arc, curveBasisClosed } from "d3-shape"
 import { tree, hierarchy } from "d3-hierarchy"
 
 import PropTypes from "prop-types"
@@ -181,6 +182,43 @@ const areaLink = d => {
     y3 +
     "Z"
   )
+}
+
+function circularAreaLink(link) {
+  const linkGenerator = linearRibbon()
+    .x(d => d.x)
+    .y(d => d.y)
+    //    .interpolate(curveBasisClosed)
+    .r(() => link.sankeyWidth / 2)
+
+  const xyForLink = [
+    {
+      x: link.circularPathData.sourceX,
+      y: link.circularPathData.sourceY
+    },
+    {
+      x: link.circularPathData.leftFullExtent,
+      y: link.circularPathData.sourceY
+    },
+    {
+      x: link.circularPathData.leftFullExtent,
+      y: link.circularPathData.verticalFullExtent
+    },
+    {
+      x: link.circularPathData.rightFullExtent,
+      y: link.circularPathData.verticalFullExtent
+    },
+    {
+      x: link.circularPathData.rightFullExtent,
+      y: link.circularPathData.targetY
+    },
+    {
+      x: link.circularPathData.targetX,
+      y: link.circularPathData.targetY
+    }
+  ]
+
+  return linkGenerator(xyForLink)
 }
 
 const matrixify = ({
@@ -493,11 +531,8 @@ class NetworkFrame extends React.Component {
     })
     //Support bubble chart with circle pack and with force
     if (networkSettings.type === "sankey") {
-      if (networkSettings.customSankey) {
-        edgeType = d => (d.circular ? d.path : areaLink(d))
-      } else if (!edgeType) {
-        edgeType = areaLink
-      }
+      edgeType = d =>
+        d.circular ? /*d.path*/ circularAreaLink(d) : areaLink(d)
 
       let initCustomNodeIcon = customNodeIcon
 

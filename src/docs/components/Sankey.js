@@ -20,7 +20,8 @@ export default class Sankey extends React.Component {
 
     this.state = {
       type: "sankey",
-      orient: "center"
+      orient: "center",
+      cycle: "no cycles"
     }
   }
 
@@ -33,6 +34,12 @@ export default class Sankey extends React.Component {
 
     const orientOptions = ["justify", "left", "right", "center"].map(d => (
       <MenuItem key={"orient-option-" + d} label={d} value={d}>
+        {d}
+      </MenuItem>
+    ))
+
+    const cycleOptions = ["no cycles", "cycles"].map(d => (
+      <MenuItem key={"cycle-option-" + d} label={d} value={d}>
         {d}
       </MenuItem>
     ))
@@ -55,6 +62,15 @@ export default class Sankey extends React.Component {
         >
           {orientOptions}
         </Select>
+      </FormControl>,
+      <FormControl key="button-3-0-0">
+        <InputLabel htmlFor="orient-input">Cycles</InputLabel>
+        <Select
+          value={this.state.cycle}
+          onChange={e => this.setState({ cycle: e.target.value })}
+        >
+          {cycleOptions}
+        </Select>
       </FormControl>
     ]
 
@@ -66,14 +82,7 @@ export default class Sankey extends React.Component {
         id: "International aviation",
         label: "Energy spent on international aviation"
       },
-      { type: "node", dy: -50, dx: -50, id: "Oil", label: "Big Oil" },
-      {
-        type: "enclose",
-        dy: -100,
-        dx: 50,
-        ids: ["Wave", "Geothermal", "Hydro", "Tidal"],
-        label: "Energy made with wave, tidal, hydro and geothermal"
-      }
+      { type: "node", dy: -50, dx: -50, id: "Oil", label: "Big Oil" }
     ]
 
     const examples = []
@@ -82,7 +91,8 @@ export default class Sankey extends React.Component {
       demo: SankeyRaw({
         annotations,
         type: this.state.type,
-        orient: this.state.orient
+        orient: this.state.orient,
+        cyclical: this.state.cycle === "cycles"
       }),
       source: `
 const or_data = [{"id":"Agricultural 'waste'","input":0,"output":262.6972158,"years":[9.282517755,14.61107771,30.99950457,31.97585802,32.98811297,34.0375862,35.12564273,36.2536977,37.42321811],"category":"Agriculture","color":"#4d430c"},
