@@ -17,7 +17,7 @@
     "ci-deploy-docs": "sh ./scripts/docs-ci",
     "gh-pages": "REACT_APP_GH_PAGES_PATH='semiotic' npm run build",
     "prepublish":
-      "rollup -c && uglifyjs ./dist/semiotic.js -o ./dist/semiotic.min.js"
+      "rollup -c && uglifyjs ./dist/semiotic.js -o ./dist/semiotic.min.js && rm ./dist/semiotic.js"
   },
   "repository": {
     "type": "git",
