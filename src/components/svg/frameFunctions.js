@@ -76,12 +76,11 @@ export const calculateMargin = ({
 }) => {
   if (margin) {
     let tempMargin
+    console.log("not tempMarg", margin)
     if (typeof margin !== "object") {
       tempMargin = { top: margin, bottom: margin, left: margin, right: margin }
     }
-    tempMargin = Object.assign({ top: 0, bottom: 0, left: 0, right: 0 }, margin)
-
-    return tempMargin
+    return Object.assign({ top: 0, bottom: 0, left: 0, right: 0 }, tempMargin)
   }
   const finalMargin = { top: 0, bottom: 0, left: 0, right: 0 }
   if (title && title.length !== 0) {
