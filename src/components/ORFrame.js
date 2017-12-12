@@ -191,9 +191,9 @@ class ORFrame extends React.Component {
       rExtent = currentProps.rExtent
     } else if (pieceType.type === "timeline") {
       const rData = allData.map(rAccessor)
-      const rMin = min(rData.map(d => d[0]))
-      const rMax = max(rData.map(d => d[1]))
-      rExtent = [rMin, rMax]
+      const leftExtent = extent(rData.map(d => d[0]))
+      const rightExtent = extent(rData.map(d => d[1]))
+      rExtent = extent([...leftExtent, ...rightExtent])
     } else if (pieceType.type !== "bar") {
       rExtent = extent(allData, rAccessor)
     } else {
@@ -389,8 +389,10 @@ class ORFrame extends React.Component {
         if (pieceType.type === "timeline") {
           valPosition = rScale(pieceValue[0])
           const endPosition = rScale(pieceValue[1])
+          piece._orFRVertical = rScaleVertical(pieceValue[0])
           piece._orFR = valPosition
           piece._orFREnd = endPosition
+          piece._orFRZ = rScaleVertical(0) - piece._orFRVertical
         } else if (
           pieceType.type !== "bar" &&
           pieceType.type !== "clusterbar"
@@ -398,16 +400,17 @@ class ORFrame extends React.Component {
           valPosition = rScale(pieceValue)
           piece._orFR = valPosition
           piece._orFRVertical = rScaleVertical(pieceValue)
+          piece._orFRZ = valPosition - zeroValue
         } else {
           valPosition =
             projection === "vertical"
               ? rScaleReverse(rScale(pieceValue))
               : rScale(pieceValue)
           piece._orFR = Math.abs(zeroValue - valPosition)
+          piece._orFRZ = valPosition - zeroValue
         }
         piece._orFV = pieceValue
         piece._orFX = projectedColumns[o].x
-        piece._orFRZ = valPosition - zeroValue
         if (pieceValue >= 0) {
           piece._orFRBase = zeroValue
           piece._orFRBottom = positiveOffset

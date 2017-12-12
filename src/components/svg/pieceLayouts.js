@@ -461,15 +461,15 @@ export function timelineLayout({
     ordset.pieceData.forEach((piece, i) => {
       const renderValue = renderMode && renderMode(piece, i)
       let xPosition = ordset.x
-      let yPosition = adjustedSize[1] - piece._orFREnd + margin.top
       let height = piece._orFREnd - piece._orFR
+      let yPosition = piece._orFRVertical - height
       let width = ordset.width
       let markProps = {
         markType: "rect",
-        height,
+        height: height < 0 ? -height : height,
         width,
         x: xPosition,
-        y: yPosition
+        y: height < 0 ? yPosition + height : yPosition
       }
 
       if (projection === "horizontal") {
@@ -480,8 +480,8 @@ export function timelineLayout({
         markProps = {
           markType: "rect",
           height,
-          width,
-          x: xPosition,
+          width: width < 0 ? -width : width,
+          x: width < 0 ? xPosition + width : xPosition,
           y: yPosition
         }
       } else if (projection === "radial") {
@@ -525,13 +525,18 @@ export function timelineLayout({
       //Only return the actual piece if you're rendering points, otherwise you just needed to iterate and calculate the points for the contour summary type
 
       const eventListeners = eventListenersGenerator(piece, i)
+      const xy = {
+        x: xPosition,
+        y: yPosition,
+        height
+      }
 
       const renderElementObject = type.customMark ? (
         <g
           key={"piece-" + piece.renderKey}
-          transform={`translate(${xPosition},${yPosition})`}
+          transform={`translate(${xPosition},${yPosition + height})`}
         >
-          {type.customMark(piece, i)}
+          {type.customMark(piece, i, xy)}
         </g>
       ) : (
         {
@@ -546,10 +551,7 @@ export function timelineLayout({
 
       const calculatedPiece = {
         o: key,
-        xy: {
-          x: xPosition,
-          y: yPosition
-        },
+        xy,
         piece,
         renderElement: renderElementObject
       }
