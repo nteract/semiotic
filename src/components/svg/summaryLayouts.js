@@ -648,8 +648,8 @@ export function contourRenderFn({
       data: projectedOrd,
       projectedX: "x",
       projectedY: "y",
-      finalXExtent: [0, adjustedSize[0]],
-      finalYExtent: [0, adjustedSize[1]]
+      finalXExtent: [0, adjustedSize[0] + margin.left + margin.right],
+      finalYExtent: [0, adjustedSize[1] + margin.top + margin.bottom]
     })
     const contourMarks = []
     oContours.forEach((d, i) => {
@@ -763,7 +763,9 @@ export function bucketizedRenderingFn({
     //    binBuckets.push(binDomain[1]);
 
     const xyValue =
-      projection === "vertical" ? p => p.xy.y : p => p.piece._orFRVertical
+      projection === "vertical"
+        ? p => p.piece._orFRVertical
+        : p => p.piece._orFR
 
     let calculatedBins = violinHist
       .domain(binDomain)
@@ -1008,7 +1010,7 @@ export function bucketizedRenderingFn({
 
       if (projection === "horizontal") {
         joyBins.forEach((summaryPoint, i) => {
-          const xValue = summaryPoint.y
+          const xValue = summaryPoint.y - bucketSize
           const yValue =
             -summaryPoint.value / actualMax * (columnWidth + joyHeight) +
             columnWidth / 2
