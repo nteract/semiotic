@@ -203,7 +203,10 @@ class XYFrame extends React.Component {
 
     const xAccessor = stringToFn(currentProps.xAccessor)
     const yAccessor = stringToFn(currentProps.yAccessor)
-    const lineIDAccessor = stringToFn(currentProps.lineIDAccessor, l => l.id)
+    const lineIDAccessor = stringToFn(
+      currentProps.lineIDAccessor,
+      l => l.semioticLineID
+    )
 
     if (
       !currentProps.dataVersion ||
@@ -480,7 +483,10 @@ class XYFrame extends React.Component {
     let yScale = this.yScale
 
     let screenCoordinates = []
-    const idAccessor = stringToFn(this.props.lineIDAccessor, l => l.id)
+    const idAccessor = stringToFn(
+      this.props.lineIDAccessor,
+      l => l.semioticLineID
+    )
 
     let { adjustedPosition, adjustedSize } = adjustedPositionSize(this.props)
 
@@ -652,7 +658,10 @@ class XYFrame extends React.Component {
 
     const { size } = this.props
 
-    const idAccessor = stringToFn(this.props.lineIDAccessor, l => l.id)
+    const idAccessor = stringToFn(
+      this.props.lineIDAccessor,
+      l => l.semioticLineID
+    )
     const xCoord = d[projectedX] || xAccessor(d)
     const yCoord = d[projectedY] || yAccessor(d)
 
@@ -737,7 +746,6 @@ class XYFrame extends React.Component {
         lines
       })
     }
-
     if (d.type === "frame-hover") {
       let content = (
         <div className="tooltip-content">
