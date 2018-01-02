@@ -529,6 +529,7 @@ class NetworkFrame extends React.Component {
         networkSettingsChanged = true
       }
     })
+
     //Support bubble chart with circle pack and with force
     if (networkSettings.type === "sankey") {
       edgeType = d =>
@@ -889,8 +890,9 @@ class NetworkFrame extends React.Component {
           d => (d.weight ? d.weight * edgeStrength : edgeStrength)
         )
 
-        const simulation = forceSimulation()
-          .force(
+        const simulation =
+          networkSettings.simulation ||
+          forceSimulation().force(
             "charge",
             forceManyBody()
               .distanceMax(distanceMax)
@@ -899,12 +901,27 @@ class NetworkFrame extends React.Component {
                   (d => -25 * nodeSizeAccessor(d))
               )
           )
-          .force("x", forceX(size[0] / 2))
-          .force("y", forceY(size[1] / 2))
-          .force("link", linkForce)
-          .nodes(projectedNodes)
 
-        simulation.force("link").links(projectedEdges)
+        //        simulation.force("link", linkForce).nodes(projectedNodes)
+
+        simulation.nodes(projectedNodes)
+
+        if (!simulation.force("x")) {
+          simulation.force("x", forceX(size[0] / 2))
+        }
+        if (!simulation.force("y")) {
+          simulation.force("y", forceY(size[1] / 2))
+        }
+
+        if (projectedEdges.length !== 0 && !simulation.force("link")) {
+          simulation.force("link", linkForce)
+          simulation.force("link").links(projectedEdges)
+        }
+
+        //reset alpha if it's too cold
+        if (simulation.alpha() < 0.1) {
+          simulation.alpha(1)
+        }
 
         simulation.stop()
 
@@ -1325,7 +1342,9 @@ class NetworkFrame extends React.Component {
       beforeElements,
       interaction,
       title,
-      disableContext
+      disableContext,
+      canvasPostProcess,
+      baseMarkProps
     } = this.props
     const {
       backgroundGraphics,
@@ -1411,6 +1430,8 @@ class NetworkFrame extends React.Component {
         afterElements={afterElements}
         downloadButton={downloadButton}
         disableContext={disableContext}
+        canvasPostProcess={canvasPostProcess}
+        baseMarkProps={baseMarkProps}
       />
     )
   }
@@ -1444,6 +1465,7 @@ NetworkFrame.propTypes = {
   className: PropTypes.string,
   additionalDefs: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
   interaction: PropTypes.object,
+  baseMarkProps: PropTypes.object,
   renderFn: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
   nodeStyle: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
   edgeStyle: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
@@ -1453,6 +1475,7 @@ NetworkFrame.propTypes = {
     PropTypes.func,
     PropTypes.bool
   ]),
+  canvasPostProcess: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
   backgroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
   foregroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
   customNodeIcon: PropTypes.func,

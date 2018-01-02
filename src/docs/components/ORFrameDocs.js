@@ -17,6 +17,22 @@ const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"]
 
 const outsideHash = {}
 
+const glowyCanvas = (canvas, context, size) => {
+  const dataURL = canvas.toDataURL("image/png")
+  const baseImage = document.createElement("img")
+
+  baseImage.src = dataURL
+  baseImage.onload = () => {
+    context.clearRect(0, 0, size[0] + 120, size[1] + 120)
+    context.filter = "blur(10px)"
+    context.drawImage(baseImage, 0, 0)
+    context.filter = "blur(5px)"
+    context.drawImage(baseImage, 0, 0)
+    context.filter = "none"
+    context.drawImage(baseImage, 0, 0)
+  }
+}
+
 const groupData = []
 const nRando = randomNormal(50, 15)
 for (let x = 1; x < 500; x++) {
@@ -241,7 +257,7 @@ const dataTypeHash = {
   stacked: {
     data: funnelData,
     oAccessor: d => d.stepName,
-    pieceStyle: d => ({ fill: d.funnelKey, stroke: "black" }),
+    pieceStyle: d => ({ fill: d.funnelKey, stroke: d.funnelKey }),
     connectorType: d => d.funnelKey,
     connectorStyle: d => ({
       fill: d.source.funnelKey,
@@ -606,6 +622,9 @@ export default class ORFrameDocs extends React.Component {
                 undefined
               )
             }
+            baseMarkProps={{ transitionDuration: 3000 }}
+            //            canvasPieces={true}
+            //            canvasPostProcess={glowyCanvas}
             download={false}
             downloadFields={["funnelKey"]}
           />

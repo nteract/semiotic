@@ -791,7 +791,9 @@ class XYFrame extends React.Component {
       interaction,
       customClickBehavior,
       customHoverBehavior,
-      customDoubleClickBehavior
+      customDoubleClickBehavior,
+      canvasPostProcess,
+      baseMarkProps
     } = this.props
 
     const {
@@ -891,6 +893,8 @@ class XYFrame extends React.Component {
         afterElements={afterElements}
         downloadButton={downloadButton}
         disableContext={this.props.disableContext}
+        canvasPostProcess={canvasPostProcess}
+        baseMarkProps={baseMarkProps}
       />
     )
   }
@@ -920,6 +924,7 @@ XYFrame.propTypes = {
   areaDataAccessor: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
   backgroundGraphics: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
   foregroundGraphics: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
+  canvasPostProcess: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
   additionalDefs: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
   customHoverBehavior: PropTypes.func,
   customClickBehavior: PropTypes.func,
@@ -948,6 +953,7 @@ XYFrame.propTypes = {
   tooltipContent: PropTypes.func,
   annotations: PropTypes.array,
   interaction: PropTypes.object,
+  baseMarkProps: PropTypes.object,
   download: PropTypes.oneOfType([PropTypes.bool, PropTypes.string]), //add a download button for graphs data as csv
   downloadFields: PropTypes.array //additional fields aside from x,y to add to the csv
 }

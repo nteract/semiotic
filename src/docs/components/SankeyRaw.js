@@ -72,7 +72,7 @@ export default ({
       stroke: "black"
     })}
     edgeStyle={d => ({
-      stroke: "grey",
+      stroke: colors[d.source.category],
       fill: colors[d.source.category],
       strokeWidth: 0.5,
       fillOpacity: 0.75,
@@ -86,8 +86,9 @@ export default ({
     hoverAnnotation={true}
     edgeWidthAccessor={type === "chord" ? d => d.value : undefined}
     networkType={{ type: type, orient: orient, iterations: 500 }}
-    annotations={annotations}
     legend={{ legendGroups: areaLegendGroups }}
     margin={{ right: 130 }}
+    canvasEdges={(d, i) =>
+      d.source.category === "Oil" || d.source.category === "Coal"}
   />
 )

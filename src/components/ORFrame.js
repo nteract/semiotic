@@ -684,12 +684,15 @@ class ORFrame extends React.Component {
       summaryRenderMode,
       connectorClass,
       connectorRenderMode,
-      canvasConnectors
+      canvasConnectors,
+      canvasPieces
     } = currentProps
 
     let pieceDataXY
     const pieceRenderMode = stringToFn(renderMode, undefined, true)
-    //    const pieceCanvasRender = stringToFn(canvasPieces, undefined, true)
+    const pieceCanvasRender = stringToFn(canvasPieces, undefined, true)
+    const summaryCanvasRender = stringToFn(canvasPieces, undefined, true)
+    const connectorCanvasRender = stringToFn(canvasPieces, undefined, true)
 
     const pieceTypeForXY =
       pieceType.type && pieceType.type !== "none" ? pieceType.type : "point"
@@ -735,7 +738,8 @@ class ORFrame extends React.Component {
         projection,
         eventListenersGenerator,
         adjustedSize,
-        margin
+        margin,
+        baseMarkProps: currentProps.baseMarkProps || {}
       })
     }
 
@@ -773,7 +777,7 @@ class ORFrame extends React.Component {
         styleFn: stringToFn(connectorStyle, () => {}, true),
         classFn: stringToFn(connectorClass, () => "", true),
         renderMode: stringToFn(connectorRenderMode, undefined, true),
-        canvasRender: stringToFn(canvasConnectors, undefined, true),
+        canvasRender: connectorCanvasRender,
         behavior: orFrameConnectionRenderer,
         type: connectorType,
         eventListenersGenerator,
@@ -781,12 +785,18 @@ class ORFrame extends React.Component {
       },
       summaries: {
         data: calculatedSummaries.marks,
-        behavior: renderLaidOutSummaries
+        behavior: renderLaidOutSummaries,
+        canvasRender: summaryCanvasRender,
+        styleFn: stringToFn(summaryStyle, () => {}, true),
+        classFn: stringToFn(summaryClass, () => "", true)
       },
       pieces: {
         shouldRender: pieceType.type && pieceType.type !== "none",
         data: calculatedPieceData,
-        behavior: renderLaidOutPieces
+        behavior: renderLaidOutPieces,
+        canvasRender: pieceCanvasRender,
+        styleFn: stringToFn(pieceStyle, () => {}, true),
+        classFn: stringToFn(pieceClass, () => "", true)
       }
     }
 
@@ -1104,7 +1114,9 @@ class ORFrame extends React.Component {
       summaryType,
       summaryHoverAnnotation,
       pieceHoverAnnotation,
-      hoverAnnotation
+      hoverAnnotation,
+      canvasPostProcess,
+      baseMarkProps
     } = this.props
 
     const {
@@ -1209,6 +1221,8 @@ class ORFrame extends React.Component {
         projection={projection}
         disableContext={disableContext}
         interactionOverflow={interactionOverflow}
+        canvasPostProcess={canvasPostProcess}
+        baseMarkProps={baseMarkProps}
       />
     )
   }
@@ -1249,6 +1263,7 @@ ORFrame.propTypes = {
   className: PropTypes.string,
   additionalDefs: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
   interaction: PropTypes.object,
+  baseMarkProps: PropTypes.object,
   renderKey: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
   dataAccessor: PropTypes.func,
   rBaseline: PropTypes.number,
@@ -1284,6 +1299,7 @@ ORFrame.propTypes = {
     PropTypes.bool
   ]),
   axis: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
+  canvasPostProcess: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
   backgroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
   foregroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array])
 }

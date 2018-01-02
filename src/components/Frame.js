@@ -62,7 +62,9 @@ class Frame extends React.Component {
       columns,
       rScale,
       projection,
-      interactionOverflow
+      interactionOverflow,
+      canvasPostProcess,
+      baseMarkProps
     } = this.props
 
     const { voronoiHover } = this.state
@@ -156,6 +158,9 @@ class Frame extends React.Component {
                 canvasContext={this.state.canvasContext}
                 dataVersion={dataVersion}
                 matte={matte}
+                margin={margin}
+                canvasPostProcess={canvasPostProcess}
+                baseMarkProps={baseMarkProps}
               />
               <g>
                 {title}
