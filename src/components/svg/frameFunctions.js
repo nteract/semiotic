@@ -201,7 +201,10 @@ export function orFrameConnectionRenderer({
   eventListenersGenerator,
   styleFn,
   classFn,
-  projection
+  projection,
+  canvasRender,
+  canvasDrawing,
+  baseMarkProps
 }) {
   if (!type.type) {
     return null
@@ -277,18 +280,32 @@ export function orFrameConnectionRenderer({
               { source: piece.piece, target: matchingPiece.piece },
               pieceI
             )
-
-            renderedConnectorMarks.push(
-              <Mark
-                {...eventListeners}
-                renderMode={renderValue}
-                markType="path"
-                d={markD}
-                className={classFn ? classFn(piece.piece, pieceI) : ""}
-                key={"connector" + piece.piece.renderKey}
-                style={calculatedStyle}
-              />
-            )
+            if (canvasRender && canvasRender(piece.piece) === true) {
+              const canvasConnector = {
+                baseClass: "xyframe-line",
+                tx: 0,
+                ty: 0,
+                d: { source: piece.piece, target: matchingPiece.piece },
+                markProps: { d: markD, markType: "path" },
+                styleFn: styleFn,
+                renderFn: renderMode,
+                classFn
+              }
+              canvasDrawing.push(canvasConnector)
+            } else {
+              renderedConnectorMarks.push(
+                <Mark
+                  {...baseMarkProps}
+                  {...eventListeners}
+                  renderMode={renderValue}
+                  markType="path"
+                  d={markD}
+                  className={classFn ? classFn(piece.piece, pieceI) : ""}
+                  key={"connector" + piece.piece.renderKey}
+                  style={calculatedStyle}
+                />
+              )
+            }
           }
         })
       }
@@ -321,7 +338,8 @@ export function orFrameSummaryRenderer({
   projection,
   adjustedSize,
   margin,
-  chartSize
+  chartSize,
+  baseMarkProps
 }) {
   let summaryRenderFn
   if (typeof type.type === "function") {
@@ -347,7 +365,8 @@ export function orFrameSummaryRenderer({
     projection,
     adjustedSize,
     margin,
-    chartSize
+    chartSize,
+    baseMarkProps
   })
 }
 

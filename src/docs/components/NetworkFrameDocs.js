@@ -11,6 +11,22 @@ import Icon from "material-ui-icons/Share"
 import Input, { InputLabel } from "material-ui/Input"
 import { FormControl, FormHelperText } from "material-ui/Form"
 
+const glowyCanvas = (canvas, context, size) => {
+  const dataURL = canvas.toDataURL("image/png")
+  const baseImage = document.createElement("img")
+
+  baseImage.src = dataURL
+  baseImage.onload = () => {
+    context.clearRect(0, 0, size[0] + 120, size[1] + 120)
+    context.filter = "blur(10px)"
+    context.drawImage(baseImage, 0, 0)
+    context.filter = "blur(5px)"
+    context.drawImage(baseImage, 0, 0)
+    context.filter = "none"
+    context.drawImage(baseImage, 0, 0)
+  }
+}
+
 const components = []
 // Add your component proptype data here
 // multiple component proptype documentation supported
@@ -41,7 +57,8 @@ const squareNodeGenerator = ({ d, transform, key }) => (
 const chartSize = [750, 500]
 
 const networkNodeStyle = d => ({
-  fill: d.createdByFrame ? "#1aa962" : "rgb(179, 51, 29)"
+  fill: d.createdByFrame ? "#1aa962" : "gold",
+  stroke: d.createdByFrame ? "#1aa962" : "gold"
 })
 
 const networkTypeHash = {
@@ -314,9 +331,12 @@ export default class NetworkFrameDocs extends React.Component {
               this.state.annotations === "on" ? annotations : undefined
             }
             zoomToFit={true}
-            nodeLabels={true}
+            nodeLabels={false}
             hoverAnnotation={true}
             download={false}
+            canvasNodes={true}
+            canvasEdges={true}
+            canvasPostProcess={glowyCanvas}
             annotationSettings={{
               pointSizeFunction: d => (d.subject && d.subject.radius) || 5,
               labelSizeFunction: noteData => {

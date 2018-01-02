@@ -46,6 +46,7 @@ import NegativeStacked from "./components/NegativeStacked"
 import CustomMark from "./components/CustomMark"
 import SharedTooltipExample from "./components/SharedTooltipExample"
 import CometPlot from "./components/CometPlot"
+import Networks from "./components/Networks"
 
 //import Process from "./components/Process";
 import BarToParallel from "./components/BarToParallel"
@@ -108,6 +109,7 @@ const components = {
   sankey: { docs: Sankey, parent: "networkframe" },
   chord: { docs: Chord, parent: "networkframe" },
   dendrogram: { docs: Dendrogram, parent: "networkframe" },
+  networks: { docs: Networks, parent: "networkframe" },
   axis: { docs: AxisDocs },
   legend: { docs: LegendDocs },
   dividedline: { docs: DividedLineDocs }

@@ -28,7 +28,8 @@ export function boxplotRenderFn({
   projection,
   adjustedSize,
   margin,
-  chartSize
+  chartSize,
+  baseMarkProps
 }) {
   const summaryElementStylingFn = type.elementStyleFn || emptyObjectReturnFn
 
@@ -426,6 +427,7 @@ export function boxplotRenderFn({
           key={`summaryPiece-${summaryI}`}
         >
           <Mark
+            {...baseMarkProps}
             renderMode={renderValue}
             markType="line"
             x1={bottomPoint[0]}
@@ -439,6 +441,7 @@ export function boxplotRenderFn({
             )}
           />
           <Mark
+            {...baseMarkProps}
             renderMode={renderValue}
             markType="path"
             d={topLineArcGenerator({ startAngle, endAngle })}
@@ -450,6 +453,7 @@ export function boxplotRenderFn({
             )}
           />
           <Mark
+            {...baseMarkProps}
             renderMode={renderValue}
             markType="path"
             d={midLineArcGenerator({ startAngle, endAngle })}
@@ -461,6 +465,7 @@ export function boxplotRenderFn({
             )}
           />
           <Mark
+            {...baseMarkProps}
             renderMode={renderValue}
             markType="path"
             d={bottomLineArcGenerator({ startAngle, endAngle })}
@@ -472,6 +477,7 @@ export function boxplotRenderFn({
             )}
           />
           <Mark
+            {...baseMarkProps}
             renderMode={renderValue}
             markType="path"
             d={bodyArcWholeGenerator({ startAngle, endAngle })}
@@ -483,6 +489,7 @@ export function boxplotRenderFn({
           />
 
           <Mark
+            {...baseMarkProps}
             renderMode={renderValue}
             markType="path"
             d={bodyArcTopGenerator({ startAngle, endAngle })}
@@ -494,6 +501,7 @@ export function boxplotRenderFn({
             )}
           />
           <Mark
+            {...baseMarkProps}
             renderMode={renderValue}
             markType="path"
             d={bodyArcBottomGenerator({ startAngle, endAngle })}
@@ -515,6 +523,7 @@ export function boxplotRenderFn({
           key={`summaryPiece-${summaryI}`}
         >
           <Mark
+            {...baseMarkProps}
             renderMode={renderValue}
             markType="line"
             x1={extentlineX1}
@@ -528,6 +537,7 @@ export function boxplotRenderFn({
             )}
           />
           <Mark
+            {...baseMarkProps}
             renderMode={renderValue}
             markType="line"
             x1={topLineX1}
@@ -541,6 +551,7 @@ export function boxplotRenderFn({
             )}
           />
           <Mark
+            {...baseMarkProps}
             renderMode={renderValue}
             markType="line"
             x1={bottomLineX1}
@@ -554,6 +565,7 @@ export function boxplotRenderFn({
             )}
           />
           <Mark
+            {...baseMarkProps}
             renderMode={renderValue}
             markType="rect"
             x={rectWholeX}
@@ -568,6 +580,7 @@ export function boxplotRenderFn({
           />
 
           <Mark
+            {...baseMarkProps}
             renderMode={renderValue}
             markType="rect"
             x={rectTopX}
@@ -582,6 +595,7 @@ export function boxplotRenderFn({
             )}
           />
           <Mark
+            {...baseMarkProps}
             renderMode={renderValue}
             markType="rect"
             x={rectBottomX}
@@ -596,6 +610,7 @@ export function boxplotRenderFn({
             )}
           />
           <Mark
+            {...baseMarkProps}
             renderMode={renderValue}
             markType="line"
             x1={midLineX1}
@@ -626,7 +641,8 @@ export function contourRenderFn({
   projection,
   adjustedSize,
   margin,
-  chartSize
+  chartSize,
+  baseMarkProps
 }) {
   const keys = Object.keys(data)
   const renderedSummaryMarks = []
@@ -657,6 +673,7 @@ export function contourRenderFn({
         const eventListeners = eventListenersGenerator(d, i)
         contourMarks.push(
           <Mark
+            {...baseMarkProps}
             {...eventListeners}
             renderMode={renderValue}
             simpleInterpolate={true}
@@ -707,7 +724,8 @@ export function bucketizedRenderingFn({
   projection,
   adjustedSize,
   margin,
-  chartSize
+  chartSize,
+  baseMarkProps
 }) {
   const renderedSummaryMarks = []
   const summaryXYCoords = []
@@ -827,7 +845,8 @@ export function bucketizedRenderingFn({
         renderValue,
         summaryStyle: calculatedSummaryStyle,
         type,
-        margin
+        margin,
+        baseMarkProps
       })
       const tiles = mappedBars.marks
       if (projection === "radial") {
@@ -980,6 +999,7 @@ export function bucketizedRenderingFn({
 
       renderedSummaryMarks.push(
         <Mark
+          {...baseMarkProps}
           transform={`translate(${translate})`}
           key={`summaryPiece-${summaryI}`}
           {...eventListeners}
@@ -1082,6 +1102,7 @@ export function bucketizedRenderingFn({
 
       renderedSummaryMarks.push(
         <Mark
+          {...baseMarkProps}
           transform={`translate(${translate})`}
           key={`summaryPiece-${summaryI}`}
           {...eventListeners}
@@ -1108,7 +1129,10 @@ export const drawSummaries = ({
   positionFn,
   projection,
   adjustedSize,
-  margin
+  margin,
+  canvasRender,
+  canvasDrawing,
+  baseMarkProps
 }) => {
   if (!type || !type.type) return
   type = typeof type === "string" ? { type } : type
@@ -1125,7 +1149,10 @@ export const drawSummaries = ({
     projection,
     adjustedSize,
     margin,
-    chartSize
+    chartSize,
+    canvasRender,
+    canvasDrawing,
+    baseMarkProps
   })
 }
 

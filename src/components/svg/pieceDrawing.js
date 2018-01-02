@@ -10,17 +10,44 @@ export function pointOnArcAtAngle(center, angle, distance) {
   return [xPosition, yPosition]
 }
 
-export const renderLaidOutPieces = ({ data, shouldRender }) =>
-  !shouldRender
-    ? null
-    : data.map(
-        (d, i) =>
-          React.isValidElement(d.renderElement || d) ? (
-            d.renderElement || d
-          ) : (
-            <Mark
-              key={d.renderKey || `piece-render-${i}`}
-              {...d.renderElement || d}
-            />
-          )
-      )
+export const renderLaidOutPieces = ({
+  data,
+  shouldRender,
+  canvasRender,
+  canvasDrawing,
+  styleFn,
+  classFn,
+  baseMarkProps
+}) => {
+  if (!shouldRender) return null
+  const renderedPieces = []
+  data.forEach((d, i) => {
+    if (canvasRender && canvasRender(d) === true) {
+      const canvasPiece = {
+        baseClass: "orframe-piece",
+        tx: d.renderElement.tx || 0,
+        ty: d.renderElement.ty || 0,
+        d: d.piece,
+        i,
+        markProps: d.renderElement || d,
+        styleFn: styleFn,
+        classFn
+      }
+      canvasDrawing.push(canvasPiece)
+    } else {
+      if (React.isValidElement(d.renderElement || d)) {
+        renderedPieces.push(d.renderElement || d)
+      } else {
+        renderedPieces.push(
+          <Mark
+            {...baseMarkProps}
+            key={d.renderKey || `piece-render-${i}`}
+            {...d.renderElement || d}
+          />
+        )
+      }
+    }
+  })
+
+  return renderedPieces
+}

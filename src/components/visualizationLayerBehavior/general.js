@@ -40,7 +40,8 @@ export function createPoints({
   styleFn,
   classFn,
   renderKeyFn,
-  renderMode
+  renderMode,
+  baseMarkProps
 }) {
   const { y, x } = projectedCoordinateNames
   const mappedPoints = []
@@ -50,8 +51,8 @@ export function createPoints({
     const renderedCustomMark =
       customMark && customMark({ d, i, xScale, yScale })
     const markProps = customMark
-      ? Object.assign({}, renderedCustomMark.props)
-      : { key: `piece-${i}`, markType: "circle", r: 2 }
+      ? Object.assign(baseMarkProps, renderedCustomMark.props)
+      : { ...baseMarkProps, key: `piece-${i}`, markType: "circle", r: 2 }
 
     if (
       renderedCustomMark &&
@@ -117,7 +118,8 @@ export function createLines({
   renderMode,
   renderKeyFn,
   type,
-  defined
+  defined,
+  baseMarkProps
 }) {
   const customLine = typeof type === "object" ? type : { type }
   const interpolator = customLine.interpolator
@@ -139,7 +141,11 @@ export function createLines({
     if (customMark && typeof customMark === "function") {
       mappedLines.push(customMark({ d, i, xScale, yScale, canvasDrawing }))
     } else {
-      const markProps = { markType: "path", d: lineGenerator(d.data) }
+      const markProps = {
+        ...baseMarkProps,
+        markType: "path",
+        d: lineGenerator(d.data)
+      }
       if (canvasRender && canvasRender(d, i) === true) {
         const canvasLine = {
           type: "line",
@@ -254,7 +260,8 @@ export function createAreas({
   classFn,
   renderKeyFn,
   renderMode,
-  type
+  type,
+  baseMarkProps
 }) {
   const areaClass = classFn || (() => "")
   const areaStyle = styleFn || (() => ({}))
@@ -306,6 +313,7 @@ export function createAreas({
     } else {
       renderedAreas.push(
         <Mark
+          {...baseMarkProps}
           key={renderKey}
           forceUpdate={true}
           renderMode={renderFn ? renderFn(d, i) : undefined}

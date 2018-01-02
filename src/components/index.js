@@ -22,6 +22,7 @@ import {
   ResponsiveSmartFrame,
   ResponsiveXYFrame
 } from "./ResponsiveFrame"
+import { chuckCloseCanvasTransform } from "./canvas/basicCanvasEffects"
 
 export default {
   AnnotationLayer,
@@ -45,7 +46,8 @@ export default {
   ResponsiveNetworkFrame,
   ResponsiveSmartFrame,
   ResponsiveXYFrame,
-  Legend
+  Legend,
+  chuckCloseCanvasTransform
 }
 
 export {
@@ -70,5 +72,6 @@ export {
   ResponsiveNetworkFrame,
   ResponsiveSmartFrame,
   ResponsiveXYFrame,
-  Legend
+  Legend,
+  chuckCloseCanvasTransform
 }

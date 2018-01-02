@@ -210,7 +210,12 @@ export function clusterBarLayout({
         xPosition = centroid[0] + xOffset
         yPosition = centroid[1] + yOffset
 
-        markProps = { markType: "path", d: markD }
+        markProps = {
+          markType: "path",
+          d: markD,
+          tx: xOffset,
+          ty: yOffset
+        }
       } else {
         xPosition += currentX
         yPosition += currentY
@@ -372,6 +377,8 @@ export function barLayout({
         markProps = {
           markType: "path",
           d: markD,
+          tx: xOffset,
+          ty: yOffset,
           transform: `translate(${xOffset},${yOffset})`
         }
       } else {
@@ -518,7 +525,9 @@ export function timelineLayout({
         markProps = {
           markType: "path",
           d: markD,
-          transform: `translate(${xOffset},${yOffset})`
+          transform: `translate(${xOffset},${yOffset})`,
+          tx: xOffset,
+          ty: yOffset
         }
       }
 

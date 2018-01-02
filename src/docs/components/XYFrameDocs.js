@@ -1032,7 +1032,6 @@ export default class XYFrameDocs extends React.Component {
             )
           }
           margin={marginHash[this.state.margin]}
-          flubberSegments={4}
           defined={
             this.state.defined === "inactive" ? undefined : d => d.py !== 0
           }
