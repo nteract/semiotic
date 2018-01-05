@@ -5,27 +5,33 @@ import { cluster } from "d3-hierarchy"
 
 const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"]
 
-export default ({ annotations = [], type = "dendrogram" }) => (
+export default ({ annotations = [], type = "dendrogram", projection }) => (
   <NetworkFrame
-    size={[700, 400]}
+    size={[700, 700]}
     edges={data}
     //    nodes={treeNodes}
-    nodeStyle={(d, i) => ({ fill: colors[d.depth], stroke: colors[d.depth] })}
+    nodeStyle={(d, i) => ({
+      fill: colors[d.depth],
+      stroke: "black",
+      opacity: 0.75
+    })}
     edgeStyle={(d, i) => ({
       fill: colors[d.source.depth],
       stroke: colors[d.source.depth],
       opacity: 0.5
     })}
-    nodeSizeAccessor={1}
+    //    nodeSizeAccessor={}
     nodeIDAccessor={"name"}
     hoverAnnotation={true}
     networkType={{
       type,
-      projection: "horizontal",
+      projection: projection,
       //      layout: cluster,
       nodePadding: 1,
       forceManyBody: -15,
-      edgeStrength: 1.5
+      edgeStrength: 1.5,
+      padding: 0,
+      hierarchySum: d => d.blockCalls
     }}
     tooltipContent={d => (
       <div className="tooltip-content">
@@ -34,6 +40,6 @@ export default ({ annotations = [], type = "dendrogram" }) => (
       </div>
     )}
     annotations={annotations}
-    margin={20}
+    margin={50}
   />
 )

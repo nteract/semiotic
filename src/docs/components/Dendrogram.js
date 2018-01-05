@@ -18,16 +18,30 @@ export default class Dendrogram extends React.Component {
     super(props)
 
     this.state = {
-      type: "dendrogram"
+      type: "treemap",
+      projection: "vertical"
     }
   }
   render() {
-    const typeOptions = ["sankey", "force", "dendrogram"].map(d => (
+    const typeOptions = [
+      "sankey",
+      "force",
+      "tree",
+      "cluster",
+      "circlepack",
+      "treemap",
+      "partition"
+    ].map(d => (
       <MenuItem key={"type-option-" + d} label={d} value={d}>
         {d}
       </MenuItem>
     ))
 
+    const projectionOptions = ["vertical", "horizontal", "radial"].map(d => (
+      <MenuItem key={"type-option-" + d} label={d} value={d}>
+        {d}
+      </MenuItem>
+    ))
     const buttons = [
       <FormControl key="button-1-0-0">
         <InputLabel htmlFor="chart-type-input">Chart Type</InputLabel>
@@ -36,6 +50,15 @@ export default class Dendrogram extends React.Component {
           onChange={e => this.setState({ type: e.target.value })}
         >
           {typeOptions}
+        </Select>
+      </FormControl>,
+      <FormControl key="button-2-0-0">
+        <InputLabel htmlFor="chart-projection-input">Projection</InputLabel>
+        <Select
+          value={this.state.projection}
+          onChange={e => this.setState({ projection: e.target.value })}
+        >
+          {projectionOptions}
         </Select>
       </FormControl>
     ]
@@ -48,9 +71,11 @@ export default class Dendrogram extends React.Component {
       name: "Basic",
       demo: DendrogramRaw({
         annotations,
-        type: this.state.type
+        type: this.state.type,
+        projection: this.state.projection
       }),
-      source: `import React from "react";
+      source:
+        "" /*`import React from "react";
 import { NetworkFrame } from "semiotic";
 import { data } from "../sampledata/d3_api";
 import { cluster } from "d3-hierarchy";
@@ -100,7 +125,7 @@ const data = {
     annotations={annotations}
     margin={20}
   />
-`
+`*/
     })
 
     return (
