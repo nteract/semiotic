@@ -17,7 +17,7 @@ import { min, max } from "d3-array"
 import { filterDefs } from "./constants/jsx"
 import Annotation from "./Annotation"
 
-import { packEnclose, packSiblings } from "d3-hierarchy"
+import { packEnclose, packSiblings, stratify } from "d3-hierarchy"
 import {
   /*annotationXYThreshold,*/ AnnotationCalloutCircle,
   AnnotationLabel
@@ -33,8 +33,20 @@ import {
   adjustedPositionSize,
   generateFrameTitle
 } from "./svg/frameFunctions"
+import { pointOnArcAtAngle } from "./svg/pieceDrawing"
 
-import { drawNodes, drawEdges, topologicalSort } from "./svg/networkDrawing"
+import {
+  drawNodes,
+  drawEdges,
+  topologicalSort,
+  hierarchicalRectNodeGenerator,
+  radialRectNodeGenerator,
+  chordNodeGenerator,
+  chordEdgeGenerator,
+  sankeyNodeGenerator,
+  wordcloudNodeGenerator,
+  circleNodeGenerator
+} from "./svg/networkDrawing"
 
 import { stringToFn } from "./data/dataFunctions"
 
@@ -55,9 +67,46 @@ import {
 import { interpolateNumber } from "d3-interpolate"
 import { chord, ribbon } from "d3-chord"
 import { arc, curveBasisClosed } from "d3-shape"
-import { tree, hierarchy } from "d3-hierarchy"
+import {
+  tree,
+  hierarchy,
+  pack,
+  cluster,
+  treemap,
+  partition
+} from "d3-hierarchy"
 
 import PropTypes from "prop-types"
+import { networkFrameChangeProps } from "./constants/frame_props"
+
+const hierarchicalTypeHash = {
+  dendrogram: tree,
+  tree,
+  circlepack: pack,
+  cluster,
+  treemap,
+  partition
+}
+
+const hierarchicalCustomNodeHash = {
+  partition: hierarchicalRectNodeGenerator,
+  treemap: hierarchicalRectNodeGenerator,
+  circlepack: circleNodeGenerator
+}
+
+const hierarchicalProjectable = {
+  partition: true,
+  cluster: true,
+  tree: true,
+  dendrogram: true
+}
+
+const radialProjectable = {
+  partition: true,
+  cluster: true,
+  tree: true,
+  dendrogram: true
+}
 
 /*
 const customEdgeHashProject = {
@@ -69,8 +118,6 @@ const customEdgeHashMutate = {
   particle: glyphMutate.particle
 }
 */
-
-import { networkFrameChangeProps } from "./constants/frame_props"
 
 function breadthFirstCompontents(baseNodes, hash) {
   const componentHash = {
@@ -375,7 +422,7 @@ class NetworkFrame extends React.Component {
     const nodeSizeAccessor =
       typeof currentProps.nodeSizeAccessor === "number"
         ? () => currentProps.nodeSizeAccessor
-        : stringToFn(currentProps.nodeSizeAccessor, () => 5)
+        : stringToFn(currentProps.nodeSizeAccessor, d => d.r || 5)
     const edgeWidthAccessor = stringToFn(
       currentProps.edgeWidthAccessor,
       d => d.weight || 1
@@ -398,7 +445,7 @@ class NetworkFrame extends React.Component {
       !this.state.projectedEdges ||
       this.graphSettings.nodes !== currentProps.nodes ||
       this.graphSettings.edges !== currentProps.edges ||
-      networkSettings.type === "dendrogram"
+      hierarchicalTypeHash[networkSettings.type]
 
     if (changedData) {
       this.edgeHash = new Map()
@@ -422,12 +469,32 @@ class NetworkFrame extends React.Component {
         this.hierarchicalNetwork = true
         let rootNode = hierarchy(edges)
 
-        if (networkSettings.type === "dendrogram") {
-          const layout = networkSettings.layout || tree
-          const treeChart = layout()
-          treeChart.size(size)
+        rootNode.sum(networkSettings.hierarchySum || (d => d.value))
 
-          treeChart(rootNode)
+        if (hierarchicalTypeHash[networkSettings.type]) {
+          const layout =
+            networkSettings.layout || hierarchicalTypeHash[networkSettings.type]
+          const hierarchicalLayout = layout()
+          const networkSettingKeys = Object.keys(networkSettings)
+
+          networkSettingKeys.forEach(key => {
+            if (hierarchicalLayout[key]) {
+              hierarchicalLayout[key](networkSettings[key])
+            }
+          })
+          const layoutSize =
+            networkSettings.projection === "horizontal" &&
+            hierarchicalProjectable[networkSettings.type]
+              ? [
+                  size[1] - margin.top - margin.bottom,
+                  size[0] - margin.right - margin.left
+                ]
+              : [
+                  size[0] - margin.right - margin.left,
+                  size[1] - margin.top - margin.bottom
+                ]
+          hierarchicalLayout.size(layoutSize)
+          hierarchicalLayout(rootNode)
         }
 
         operationalEdges = rootNode
@@ -536,154 +603,70 @@ class NetworkFrame extends React.Component {
         d.circular ? /*d.path*/ circularAreaLink(d) : areaLink(d)
 
       let initCustomNodeIcon = customNodeIcon
-
-      customNodeIcon = ({
-        d,
-        i,
-        renderKeyFn,
-        styleFn,
-        classFn,
-        renderMode,
-        key,
-        className,
-        transform
-      }) => {
-        if (initCustomNodeIcon === undefined) {
-          return (
-            <Mark
-              renderMode={renderMode ? renderMode(d, i) : undefined}
-              key={key}
-              className={className}
-              transform={transform}
-              markType="rect"
-              height={d.height}
-              width={d.width}
-              x={-d.width / 2}
-              y={-d.height / 2}
-              rx={0}
-              ry={0}
-              style={nodeStyleFn(d)}
-            />
-          )
-        } else {
-          return initCustomNodeIcon({
-            d,
-            i,
-            renderKeyFn,
-            styleFn,
-            classFn,
-            renderMode,
-            key,
-            className,
-            transform
-          })
-        }
-      }
+      customNodeIcon = customNodeIcon ? customNodeIcon : sankeyNodeGenerator
     } else if (networkSettings.type === "chord") {
-      customNodeIcon = ({
-        d,
-        i,
-        renderKeyFn,
-        styleFn,
-        classFn,
-        renderMode,
-        key,
-        className,
-        transform
-      }) => (
-        <Mark
-          renderMode={renderMode ? renderMode(d, i) : undefined}
-          key={key}
-          className={className}
-          transform={`translate(${size[0] / 2},${size[1] / 2})`}
-          markType="path"
-          d={d.d}
-          style={styleFn(d, i)}
-        />
-      )
-
-      customEdgeIcon = ({
-        d,
-        i,
-        renderKeyFn,
-        styleFn,
-        classFn,
-        renderMode,
-        key,
-        className,
-        transform
-      }) => (
-        <Mark
-          renderMode={renderMode ? renderMode(d, i) : undefined}
-          key={key}
-          className={className}
-          simpleInterpolate={true}
-          transform={`translate(${size[0] / 2},${size[1] / 2})`}
-          markType="path"
-          d={d.d}
-          style={styleFn(d, i)}
-        />
-      )
+      customNodeIcon = chordNodeGenerator(size)
+      customEdgeIcon = chordEdgeGenerator(size)
     } else if (networkSettings.type === "wordcloud") {
-      let initCustomNodeIcon = customNodeIcon
-      customNodeIcon = ({
-        d,
-        i,
-        styleFn,
-        renderKeyFn,
-        key,
-        className,
-        transform
-      }) => {
-        if (initCustomNodeIcon) {
-          return initCustomNodeIcon({
-            d,
-            i,
-            styleFn,
-            renderKeyFn,
-            key,
-            className,
-            transform
-          })
-        } else {
-          const textStyle = styleFn(d, i)
-          textStyle.fontSize = `${d.fontSize}px`
-          textStyle.fontWeight = d.fontWeight
-          textStyle.textAnchor = "middle"
-          let textTransform, textY, textX
-          textTransform = `scale(${d.scale})`
-
-          if (!d.rotate) {
-            textY = d.textHeight / 4
-            textTransform = `scale(${d.scale})`
-          } else {
-            textTransform = `rotate(90) scale(${d.scale})`
-            textY = d.textHeight / 4
-          }
-
-          return (
-            <g key={key} transform={transform}>
-              <text
-                style={textStyle}
-                y={textY}
-                x={textX}
-                transform={textTransform}
-                className={`${className} wordcloud`}
-              >
-                {d._NWFText}
-              </text>
-            </g>
-          )
-        }
+      customNodeIcon = customNodeIcon ? customNodeIcon : wordcloudNodeGenerator
+    } else if (hierarchicalTypeHash[networkSettings.type]) {
+      if (hierarchicalCustomNodeHash[networkSettings.type]) {
+        customNodeIcon = hierarchicalCustomNodeHash[networkSettings.type]
+        customEdgeIcon = () => null
       }
-    } else if (networkSettings.type === "dendrogram") {
-      if (networkSettings.projection === "horizontal") {
-        projectedNodes.forEach(node => {
+      const radialSize = [
+        size[0] - margin.left - margin.right,
+        size[1] - margin.top - margin.bottom
+      ]
+      const radialCenter = [
+        radialSize[0] / 2 + margin.left,
+        radialSize[1] / 2 + margin.top
+      ]
+      projectedNodes.forEach(node => {
+        if (
+          (networkSettings.type === "partition" ||
+            networkSettings.type === "treemap") &&
+          networkSettings.projection === "radial"
+        ) {
+          customNodeIcon = radialRectNodeGenerator(radialSize, radialCenter)
+        } else if (
+          hierarchicalProjectable[networkSettings.type] &&
+          networkSettings.projection === "horizontal"
+        ) {
           const ox = node.x
-          node.x = node.y
-          node.y = ox
-        })
-      }
+          node.x = node.y + margin.left
+          node.y = ox + margin.top
+
+          if (node.x0 !== undefined) {
+            const ox0 = node.x0
+            const ox1 = node.x1
+            node.x0 = node.y0 + margin.left
+            node.x1 = node.y1 + margin.left
+            node.y0 = ox0 + margin.top
+            node.y1 = ox1 + margin.top
+          }
+        } else if (
+          radialProjectable[networkSettings.type] &&
+          networkSettings.projection === "radial"
+        ) {
+          const radialPoint = pointOnArcAtAngle(
+            radialCenter,
+            node.x / radialSize[0],
+            node.y / 2
+          )
+          node.x = radialPoint[0]
+          node.y = radialPoint[1]
+        } else {
+          node.x = node.x + margin.left
+          node.y = node.y + margin.top
+          if (node.x0 !== undefined) {
+            node.x0 = node.x0 + margin.left
+            node.x1 = node.x1 + margin.left
+            node.y0 = node.y0 + margin.top
+            node.y1 = node.y1 + margin.top
+          }
+        }
+      })
     }
 
     if (changedData || networkSettingsChanged) {
@@ -1033,6 +1016,11 @@ class NetworkFrame extends React.Component {
           nodes: projectedNodes,
           edges: projectedEdges
         })
+      } else {
+        projectedNodes.forEach(node => {
+          node.x = node.x || (node.x0 + node.x1) / 2
+          node.y = node.y || node.y0
+        })
       }
 
       this.graphSettings = networkSettings
@@ -1044,7 +1032,8 @@ class NetworkFrame extends React.Component {
       networkSettings.zoom !== false &&
       networkSettings.type !== "wordcloud" &&
       networkSettings.type !== "chord" &&
-      networkSettings.type !== "sankey"
+      networkSettings.type !== "sankey" &&
+      hierarchicalTypeHash[networkSettings.type] === undefined
     ) {
       const xMin = min(projectedNodes.map(p => p.x - nodeSizeAccessor(p)))
       const xMax = max(projectedNodes.map(p => p.x + nodeSizeAccessor(p)))

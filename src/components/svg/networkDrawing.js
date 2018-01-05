@@ -6,6 +6,8 @@ import {
   d as glyphD /*, project as glyphProject, mutate as glyphMutate*/
 } from "d3-glyphedge"
 
+import { arc } from "d3-shape"
+
 const customEdgeHashD = {
   linearc: d => glyphD.lineArc(d),
   ribbon: d => glyphD.ribbon(d, d.width),
@@ -24,7 +26,7 @@ const customEdgeHashD = {
     )
 }
 
-const circleNodeGenerator = ({
+export const circleNodeGenerator = ({
   d,
   i,
   renderKeyFn,
@@ -47,6 +49,181 @@ const circleNodeGenerator = ({
       rx={d.nodeSize * 2}
       x={-d.nodeSize}
       y={-d.nodeSize}
+      style={styleFn(d, i)}
+      renderMode={renderMode ? renderMode(d, i) : undefined}
+      className={className}
+    />
+  )
+}
+
+export const chordEdgeGenerator = size => ({
+  d,
+  i,
+  renderKeyFn,
+  styleFn,
+  classFn,
+  renderMode,
+  key,
+  className,
+  transform
+}) => (
+  <Mark
+    renderMode={renderMode ? renderMode(d, i) : undefined}
+    key={key}
+    className={className}
+    simpleInterpolate={true}
+    transform={`translate(${size[0] / 2},${size[1] / 2})`}
+    markType="path"
+    d={d.d}
+    style={styleFn(d, i)}
+  />
+)
+
+export const wordcloudNodeGenerator = ({
+  d,
+  i,
+  renderKeyFn,
+  styleFn,
+  classFn,
+  renderMode,
+  key,
+  className,
+  transform
+}) => {
+  const textStyle = styleFn(d, i)
+  textStyle.fontSize = `${d.fontSize}px`
+  textStyle.fontWeight = d.fontWeight
+  textStyle.textAnchor = "middle"
+  let textTransform, textY, textX
+  textTransform = `scale(${d.scale})`
+
+  if (!d.rotate) {
+    textY = d.textHeight / 4
+    textTransform = `scale(${d.scale})`
+  } else {
+    textTransform = `rotate(90) scale(${d.scale})`
+    textY = d.textHeight / 4
+  }
+
+  return (
+    <g key={key} transform={transform}>
+      <text
+        style={textStyle}
+        y={textY}
+        x={textX}
+        transform={textTransform}
+        className={`${className} wordcloud`}
+      >
+        {d._NWFText}
+      </text>
+    </g>
+  )
+}
+
+export const sankeyNodeGenerator = ({
+  d,
+  i,
+  renderKeyFn,
+  styleFn,
+  classFn,
+  renderMode,
+  key,
+  className,
+  transform
+}) => (
+  <Mark
+    renderMode={renderMode ? renderMode(d, i) : undefined}
+    key={key}
+    className={className}
+    transform={transform}
+    markType="rect"
+    height={d.height}
+    width={d.width}
+    x={-d.width / 2}
+    y={-d.height / 2}
+    rx={0}
+    ry={0}
+    style={styleFn(d)}
+  />
+)
+
+export const chordNodeGenerator = size => ({
+  d,
+  i,
+  renderKeyFn,
+  styleFn,
+  classFn,
+  renderMode,
+  key,
+  className,
+  transform
+}) => (
+  <Mark
+    renderMode={renderMode ? renderMode(d, i) : undefined}
+    key={key}
+    className={className}
+    transform={`translate(${size[0] / 2},${size[1] / 2})`}
+    markType="path"
+    d={d.d}
+    style={styleFn(d, i)}
+  />
+)
+
+export const radialRectNodeGenerator = (size, center) => {
+  const radialArc = arc()
+  return ({
+    d,
+    i,
+    renderKeyFn,
+    styleFn,
+    classFn,
+    renderMode,
+    key,
+    className,
+    transform
+  }) => {
+    radialArc.innerRadius(d.y0 / 2).outerRadius(d.y1 / 2)
+
+    return (
+      <Mark
+        key={key}
+        transform={`translate(${center})`}
+        markType="path"
+        d={radialArc({
+          startAngle: d.x0 / size[0] * Math.PI * 2,
+          endAngle: d.x1 / size[0] * Math.PI * 2
+        })}
+        style={styleFn(d, i)}
+        renderMode={renderMode ? renderMode(d, i) : undefined}
+        className={className}
+      />
+    )
+  }
+}
+
+export const hierarchicalRectNodeGenerator = ({
+  d,
+  i,
+  renderKeyFn,
+  styleFn,
+  classFn,
+  renderMode,
+  key,
+  className,
+  transform
+}) => {
+  //this is repetitious
+  return (
+    <Mark
+      key={key}
+      transform={`translate(0,0)`}
+      markType="rect"
+      width={d.x1 - d.x0}
+      height={d.y1 - d.y0}
+      x={d.x0}
+      y={d.y0}
+      rx={0}
+      ry={0}
       style={styleFn(d, i)}
       renderMode={renderMode ? renderMode(d, i) : undefined}
       className={className}
