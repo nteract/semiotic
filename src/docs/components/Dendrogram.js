@@ -74,8 +74,7 @@ export default class Dendrogram extends React.Component {
         type: this.state.type,
         projection: this.state.projection
       }),
-      source:
-        "" /*`import React from "react";
+      source: `import React from "react";
 import { NetworkFrame } from "semiotic";
 import { data } from "../sampledata/d3_api";
 import { cluster } from "d3-hierarchy";
@@ -109,8 +108,8 @@ const data = {
     nodeIDAccessor={"name"}
     hoverAnnotation={true}
     networkType={{
-      type: "dendrogram",
-      projection: "horizontal",
+      type: "${this.state.type}",
+      projection: "${this.state.projection}",
       //      layout: cluster,
       nodePadding: 1,
       forceManyBody: -15,
@@ -125,7 +124,7 @@ const data = {
     annotations={annotations}
     margin={20}
   />
-`*/
+`
     })
 
     return (
@@ -136,13 +135,21 @@ const data = {
         buttons={buttons}
       >
         <p>
-          A dendrogram is a kind of tree diagram. uses the "dendrogram" network
-          type to lay out the data. You can pass any kind of tree layout
-          function that processes hierarchical data like that created with
-          d3-hierarchy. Hierarchical JSON can be sent to any NetworkFrame edges
-          property.
+          If you send hierarchical data to NetworkFrame (hierarchical JSON to
+          the edges property) you can use the various hierarchical diagrams in
+          D3 to display that data--"tree", "cluster", "circlepack", "partition"
+          and "treemap" which all correspond to D3's tree, cluster, pack,
+          partition and treemap layouts. In cases where a layout can honor
+          differences in projection (such as "radial", "horizontal" or
+          "vertical" for cluster or radial for partition to make a sunburst) it
+          will honor those as a projection property of networkType. Other
+          properties passed to networkType that correspond to properties
+          specific to those layouts, such as padding for treemap and partition,
+          will be passed through. You can pass any kind of tree layout function
+          that processes hierarchical data like that created with d3-hierarchy.
+          Hierarchical JSON can be sent to any NetworkFrame edges property.
         </p>
-        <p>The dataset is a pruned version of the D3v3 library.</p>
+        <p>The dataset is a pruned map of the D3v3 library.</p>
       </DocumentComponent>
     )
   }
