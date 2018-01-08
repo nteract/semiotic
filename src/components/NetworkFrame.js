@@ -79,6 +79,13 @@ import {
 import PropTypes from "prop-types"
 import { networkFrameChangeProps } from "./constants/frame_props"
 
+import {
+  htmlFrameHoverRule,
+  svgNodeRule,
+  svgReactAnnotationRule,
+  svgEncloseRule
+} from "./annotationRules/networkframeRules"
+
 const hierarchicalTypeHash = {
   dendrogram: tree,
   tree,
@@ -516,43 +523,27 @@ class NetworkFrame extends React.Component {
       operationalEdges.forEach(edge => {
         const source = sourceAccessor(edge)
         const target = targetAccessor(edge)
-        if (!this.nodeHash.get(source)) {
-          const sourceNode =
-            typeof source === "object"
-              ? Object.assign(source, {
-                  degree: 0,
-                  inDegree: 0,
-                  outDegree: 0
-                })
-              : {
-                  id: source,
-                  inDegree: 0,
-                  outDegree: 0,
-                  degree: 0,
-                  createdByFrame: true
-                }
-          this.nodeHash.set(source, sourceNode)
-
-          projectedNodes.push(sourceNode)
-        }
-        if (!this.nodeHash.get(target)) {
-          const targetNode =
-            typeof target === "object"
-              ? Object.assign(target, {
-                  degree: 0,
-                  inDegree: 0,
-                  outDegree: 0
-                })
-              : {
-                  id: target,
-                  inDegree: 0,
-                  outDegree: 0,
-                  degree: 0,
-                  createdByFrame: true
-                }
-          this.nodeHash.set(target, targetNode)
-          projectedNodes.push(targetNode)
-        }
+        const sourceTarget = [source, target]
+        sourceTarget.forEach(nodeDirection => {
+          if (!this.nodeHash.get(nodeDirection)) {
+            const nodeObject =
+              typeof nodeDirection === "object"
+                ? Object.assign(nodeDirection, {
+                    degree: 0,
+                    inDegree: 0,
+                    outDegree: 0
+                  })
+                : {
+                    id: nodeDirection,
+                    inDegree: 0,
+                    outDegree: 0,
+                    degree: 0,
+                    createdByFrame: true
+                  }
+            this.nodeHash.set(nodeDirection, nodeObject)
+            projectedNodes.push(nodeObject)
+          }
+        })
         const edgeWeight = edge.weight || 1
         this.nodeHash.get(target).inDegree += edgeWeight
         this.nodeHash.get(source).outDegree += edgeWeight
@@ -622,14 +613,16 @@ class NetworkFrame extends React.Component {
         radialSize[0] / 2 + margin.left,
         radialSize[1] / 2 + margin.top
       ]
+      if (
+        (networkSettings.type === "partition" ||
+          networkSettings.type === "treemap") &&
+        networkSettings.projection === "radial"
+      ) {
+        customNodeIcon = radialRectNodeGenerator(radialSize, radialCenter)
+      }
+
       projectedNodes.forEach(node => {
         if (
-          (networkSettings.type === "partition" ||
-            networkSettings.type === "treemap") &&
-          networkSettings.projection === "radial"
-        ) {
-          customNodeIcon = radialRectNodeGenerator(radialSize, radialCenter)
-        } else if (
           hierarchicalProjectable[networkSettings.type] &&
           networkSettings.projection === "horizontal"
         ) {
@@ -649,6 +642,10 @@ class NetworkFrame extends React.Component {
           radialProjectable[networkSettings.type] &&
           networkSettings.projection === "radial"
         ) {
+          if (node.x0 !== undefined) {
+            node.x = (node.x0 + node.x1) / 2
+            node.y = (node.y0 + node.y1) / 2
+          }
           const radialPoint = pointOnArcAtAngle(
             radialCenter,
             node.x / radialSize[0],
@@ -1018,8 +1015,8 @@ class NetworkFrame extends React.Component {
         })
       } else {
         projectedNodes.forEach(node => {
-          node.x = node.x || (node.x0 + node.x1) / 2
-          node.y = node.y || node.y0
+          node.x = node.x === undefined ? (node.x0 + node.x1) / 2 : node.x
+          node.y = node.y === undefined ? node.y0 : node.y
         })
       }
 
@@ -1076,6 +1073,7 @@ class NetworkFrame extends React.Component {
         legendSettings.legendGroups = legendGroups
       }
     }
+
     const networkFrameRender = {
       edges: {
         data: projectedEdges,
@@ -1171,104 +1169,27 @@ class NetworkFrame extends React.Component {
       }
     }
     if (d.type === "node") {
-      const selectedNode =
-        d.x && d.y ? d : projectedNodes.find(p => nodeIDAccessor(p) === d.id)
-      if (!selectedNode) {
-        return null
-      }
-      const noteData = Object.assign(
-        {
-          dx: d.dx || -25,
-          dy: d.dy || -25,
-          x: selectedNode.x,
-          y: selectedNode.y,
-          note: { label: d.label },
-          connector: { end: "arrow" }
-        },
+      return svgNodeRule({
         d,
-        {
-          type: AnnotationCalloutCircle,
-          subject: {
-            radius: d.radius || selectedNode.radius || nodeSizeAccessor(d)
-          }
-        }
-      )
-      return <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
+        i,
+        projectedNodes,
+        nodeIDAccessor,
+        nodeSizeAccessor
+      })
     } else if (d.type === "react-annotation" || typeof d.type === "function") {
-      const selectedNode =
-        d.x && d.y ? d : projectedNodes.find(p => nodeIDAccessor(p) === d.id)
-      if (!selectedNode) {
-        return null
-      }
-      const noteData = Object.assign(
-        {
-          dx: 0,
-          dy: 0,
-          x: selectedNode.x,
-          y: selectedNode.y,
-          note: { label: d.label },
-          connector: { end: "arrow" }
-        },
+      return svgReactAnnotationRule({
         d,
-        { type: typeof d.type === "function" ? d.type : undefined }
-      )
-      return <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
+        projectedNodes,
+        nodeIDAccessor
+      })
     } else if (d.type === "enclose") {
-      const selectedNodes = projectedNodes.filter(
-        p => d.ids.indexOf(nodeIDAccessor(p)) !== -1
-      )
-      if (selectedNodes.length === 0) {
-        return null
-      }
-      const circle = packEnclose(
-        selectedNodes.map(p => ({ x: p.x, y: p.y, r: nodeSizeAccessor(p) }))
-      )
-      const noteData = Object.assign(
-        {
-          dx: d.dx || -25,
-          dy: d.dy || -25,
-          x: circle.x,
-          y: circle.y,
-          note: { label: d.label },
-          connector: { end: "arrow" }
-        },
-        d,
-        {
-          type: AnnotationCalloutCircle,
-          subject: {
-            radius: circle.r,
-            radiusPadding: 5 || d.radiusPadding
-          }
-        }
-      )
-
-      if (noteData.rp) {
-        switch (noteData.rp) {
-          case "top":
-            noteData.dx = 0
-            noteData.dy = -circle.r - noteData.rd
-            break
-          case "bottom":
-            noteData.dx = 0
-            noteData.dy = circle.r + noteData.rd
-            break
-          case "left":
-            noteData.dx = -circle.r - noteData.rd
-            noteData.dy = 0
-            break
-          default:
-            noteData.dx = circle.r + noteData.rd
-            noteData.dy = 0
-        }
-      }
-      //TODO: Support .ra (setting angle)
-
-      return <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
+      svgEncloseRule({ d, i, projectedNodes, nodeIDAccessor, nodeSizeAccessor })
     }
     return null
   }
 
   defaultNetworkHTMLRule({ d, i }) {
+    const { tooltipContent, size } = this.props
     if (this.props.htmlAnnotationRules) {
       const customAnnotation = this.props.htmlAnnotationRules({
         d,
@@ -1283,31 +1204,7 @@ class NetworkFrame extends React.Component {
       }
     }
     if (d.type === "frame-hover") {
-      //To string because React gives a DOM error if it gets a date
-      let content = (
-        <div className="tooltip-content">
-          <p key="html-annotation-content-1">{d.id}</p>
-          <p key="html-annotation-content-2">Degree: {d.degree}</p>
-        </div>
-      )
-
-      if (d.type === "frame-hover" && this.props.tooltipContent) {
-        content = this.props.tooltipContent(d)
-      }
-
-      return (
-        <div
-          key={"xylabel" + i}
-          className={`annotation annotation-network-label ${d.className || ""}`}
-          style={{
-            position: "absolute",
-            bottom: this.props.size[1] - d.y + "px",
-            left: d.x + "px"
-          }}
-        >
-          {content}
-        </div>
-      )
+      return htmlFrameHoverRule({ d, i, tooltipContent, size })
     }
     return null
   }

@@ -4,10 +4,7 @@
   "description": "The semiotic JavaScript data visualization framework",
   "main": "lib/index.js",
   "unpkg": "dist/semiotic.js",
-  "files": [
-    "lib",
-    "dist"
-  ],
+  "files": ["lib", "dist"],
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
@@ -19,7 +16,8 @@
     "deploy-docs": "sh ./scripts/docs",
     "ci-deploy-docs": "sh ./scripts/docs-ci",
     "gh-pages": "REACT_APP_GH_PAGES_PATH='semiotic' npm run build",
-    "prepublish": "rollup -c && uglifyjs ./dist/semiotic.js -o ./dist/semiotic.min.js && rm ./dist/semiotic.js"
+    "prepublish":
+      "rollup -c && uglifyjs ./dist/semiotic.js -o ./dist/semiotic.min.js && rm ./dist/semiotic.js"
   },
   "repository": {
     "type": "git",
@@ -61,7 +59,7 @@
     "react-dimensions": "github:AlesJiranek/react-dimensions",
     "react-dom": "^16.0.0",
     "react-element-to-jsx-string": "^12.0.0",
-    "react-prism": "4.3.1",
+    "react-prism": "4.3.2",
     "react-router": "^4.0.0-beta.6",
     "react-router-dom": "4.2.2",
     "react-scripts": "1.0.13",
@@ -117,9 +115,6 @@
     "svg-path-bounding-box": "1.0.4"
   },
   "nyc": {
-    "exclude": [
-      "tests/unit/lib/*.js",
-      "tests/unit/specs/**/*.js"
-    ]
+    "exclude": ["tests/unit/lib/*.js", "tests/unit/specs/**/*.js"]
   }
 }

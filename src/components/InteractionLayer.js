@@ -179,8 +179,8 @@ class InteractionLayer extends React.Component {
         const xValue = parseInt(xScale(d[projectedX]))
         const yValue = parseInt(yScale(d[projectedYMiddle] || d[projectedY]))
         if (
-          xValue &&
-          yValue &&
+          xValue !== undefined &&
+          yValue !== undefined &&
           isNaN(xValue) === false &&
           isNaN(yValue) === false
         ) {
@@ -213,7 +213,7 @@ class InteractionLayer extends React.Component {
             size[0] + margin.left + interactionOverflow.right
           ),
           Math.max(
-            voronoiXExtent[1],
+            voronoiYExtent[1],
             size[1] + margin.top + interactionOverflow.bottom
           )
         ]
