@@ -42,6 +42,7 @@ import VerticalIsotype from "./components/VerticalIsotype"
 import Sankey from "./components/Sankey"
 import Chord from "./components/Chord"
 import Dendrogram from "./components/Dendrogram"
+import Sunburst from "./components/Sunburst"
 import NegativeStacked from "./components/NegativeStacked"
 import CustomMark from "./components/CustomMark"
 import SharedTooltipExample from "./components/SharedTooltipExample"
@@ -109,6 +110,7 @@ const components = {
   sankey: { docs: Sankey, parent: "networkframe" },
   chord: { docs: Chord, parent: "networkframe" },
   dendrogram: { docs: Dendrogram, parent: "networkframe" },
+  sunburst: { docs: Sunburst, parent: "networkframe" },
   networks: { docs: Networks, parent: "networkframe" },
   axis: { docs: AxisDocs },
   legend: { docs: LegendDocs },
@@ -305,7 +307,8 @@ class Documentation extends React.Component {
                 <span
                   style={{ cursor: "pointer", color: "white" }}
                   onClick={() =>
-                    this.props.history ? this.props.history.push("/") : null}
+                    this.props.history ? this.props.history.push("/") : null
+                  }
                 >
                   Semiotic
                 </span>

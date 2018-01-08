@@ -35,11 +35,13 @@ export const circleNodeGenerator = ({
   renderMode,
   key,
   className,
-  transform
+  transform,
+  baseMarkProps
 }) => {
   //this is repetitious
   return (
     <Mark
+      {...baseMarkProps}
       key={key}
       transform={transform}
       markType="rect"
@@ -65,9 +67,11 @@ export const chordEdgeGenerator = size => ({
   renderMode,
   key,
   className,
-  transform
+  transform,
+  baseMarkProps
 }) => (
   <Mark
+    {...baseMarkProps}
     renderMode={renderMode ? renderMode(d, i) : undefined}
     key={key}
     className={className}
@@ -88,7 +92,8 @@ export const wordcloudNodeGenerator = ({
   renderMode,
   key,
   className,
-  transform
+  transform,
+  baseMarkProps
 }) => {
   const textStyle = styleFn(d, i)
   textStyle.fontSize = `${d.fontSize}px`
@@ -129,9 +134,11 @@ export const sankeyNodeGenerator = ({
   renderMode,
   key,
   className,
-  transform
+  transform,
+  baseMarkProps
 }) => (
   <Mark
+    {...baseMarkProps}
     renderMode={renderMode ? renderMode(d, i) : undefined}
     key={key}
     className={className}
@@ -156,9 +163,11 @@ export const chordNodeGenerator = size => ({
   renderMode,
   key,
   className,
-  transform
+  transform,
+  baseMarkProps
 }) => (
   <Mark
+    {...baseMarkProps}
     renderMode={renderMode ? renderMode(d, i) : undefined}
     key={key}
     className={className}
@@ -180,12 +189,14 @@ export const radialRectNodeGenerator = (size, center) => {
     renderMode,
     key,
     className,
-    transform
+    transform,
+    baseMarkProps
   }) => {
     radialArc.innerRadius(d.y0 / 2).outerRadius(d.y1 / 2)
 
     return (
       <Mark
+        {...baseMarkProps}
         key={key}
         transform={`translate(${center})`}
         markType="path"
@@ -210,11 +221,13 @@ export const hierarchicalRectNodeGenerator = ({
   renderMode,
   key,
   className,
-  transform
+  transform,
+  baseMarkProps
 }) => {
   //this is repetitious
   return (
     <Mark
+      {...baseMarkProps}
       key={key}
       transform={`translate(0,0)`}
       markType="rect"
@@ -242,7 +255,8 @@ export const drawNodes = ({
   classFn,
   renderMode,
   canvasDrawing,
-  canvasRenderFn
+  canvasRenderFn,
+  baseMarkProps
 }) => {
   const markGenerator = customMark || circleNodeGenerator
   const renderedData = []
@@ -278,7 +292,8 @@ export const drawNodes = ({
           renderMode,
           key: renderKeyFn ? renderKeyFn(d, i) : d.id || `node-${i}`,
           className: `node ${classFn(d, i)}`,
-          transform: `translate(${d.x},${d.y})`
+          transform: `translate(${d.x},${d.y})`,
+          baseMarkProps
         })
       )
     }
@@ -295,7 +310,8 @@ export const drawEdges = ({
   renderMode,
   canvasRenderFn,
   canvasDrawing,
-  type
+  type,
+  baseMarkProps
 }) => {
   let dGenerator = genericLineGenerator
   const renderedData = []
@@ -311,7 +327,8 @@ export const drawEdges = ({
           renderMode,
           key: renderKeyFn ? renderKeyFn(d, i) : `edge-${i}`,
           className: `${classFn(d, i)} edge`,
-          transform: `translate(${d.x},${d.y})`
+          transform: `translate(${d.x},${d.y})`,
+          baseMarkProps
         })
       )
     })
@@ -340,6 +357,7 @@ export const drawEdges = ({
       } else {
         renderedData.push(
           <Mark
+            {...baseMarkProps}
             key={renderKeyFn ? renderKeyFn(d, i) : `edge-${i}`}
             markType="path"
             renderMode={renderMode ? renderMode(d, i) : undefined}
