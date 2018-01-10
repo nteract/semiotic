@@ -83,7 +83,8 @@ import {
   htmlFrameHoverRule,
   svgNodeRule,
   svgReactAnnotationRule,
-  svgEncloseRule
+  svgEncloseRule,
+  svgRectEncloseRule
 } from "./annotationRules/networkframeRules"
 
 const hierarchicalTypeHash = {
@@ -622,6 +623,10 @@ class NetworkFrame extends React.Component {
       }
 
       projectedNodes.forEach(node => {
+        if (node.x0 !== undefined) {
+          node.x = (node.x0 + node.x1) / 2
+          node.y = (node.y0 + node.y1) / 2
+        }
         if (
           hierarchicalProjectable[networkSettings.type] &&
           networkSettings.projection === "horizontal"
@@ -642,10 +647,6 @@ class NetworkFrame extends React.Component {
           radialProjectable[networkSettings.type] &&
           networkSettings.projection === "radial"
         ) {
-          if (node.x0 !== undefined) {
-            node.x = (node.x0 + node.x1) / 2
-            node.y = (node.y0 + node.y1) / 2
-          }
           const radialPoint = pointOnArcAtAngle(
             radialCenter,
             node.x / radialSize[0],
@@ -1183,7 +1184,21 @@ class NetworkFrame extends React.Component {
         nodeIDAccessor
       })
     } else if (d.type === "enclose") {
-      svgEncloseRule({ d, i, projectedNodes, nodeIDAccessor, nodeSizeAccessor })
+      return svgEncloseRule({
+        d,
+        i,
+        projectedNodes,
+        nodeIDAccessor,
+        nodeSizeAccessor
+      })
+    } else if (d.type === "enclose-rect") {
+      return svgRectEncloseRule({
+        d,
+        i,
+        projectedNodes,
+        nodeIDAccessor,
+        nodeSizeAccessor
+      })
     }
     return null
   }

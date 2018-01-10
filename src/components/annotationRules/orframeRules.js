@@ -10,6 +10,7 @@ import { packEnclose } from "d3-hierarchy"
 import { max, min, sum, extent } from "d3-array"
 import { pointOnArcAtAngle } from "../svg/pieceDrawing"
 import { arc } from "d3-shape"
+import { circleEnclosure, rectangleEnclosure } from "./baseRules"
 
 function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
   const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0
@@ -223,51 +224,8 @@ export const svgEncloseRule = ({ d, i, screenCoordinates }) => {
   const circle = packEnclose(
     screenCoordinates.map(p => ({ x: p[0], y: p[1], r: 2 }))
   )
-  const noteData = Object.assign(
-    {
-      dx: 0,
-      dy: 0,
-      x: circle.x,
-      y: circle.y,
-      note: { label: d.label },
-      connector: { end: "arrow" }
-    },
-    d,
-    {
-      type: AnnotationCalloutCircle,
-      subject: {
-        radius: circle.r,
-        radiusPadding: 5 || d.radiusPadding
-      }
-    }
-  )
 
-  if (noteData.rp) {
-    switch (noteData.rp) {
-      case "top":
-        noteData.dx = 0
-        noteData.dy = -circle.r - noteData.rd
-        break
-      case "bottom":
-        noteData.dx = 0
-        noteData.dy = circle.r + noteData.rd
-        break
-      case "left":
-        noteData.dx = -circle.r - noteData.rd
-        noteData.dy = 0
-        break
-      case "right":
-        noteData.dx = circle.r + noteData.rd
-        noteData.dy = 0
-        break
-      default:
-        noteData.dx = 0
-        noteData.dy = 0
-    }
-  }
-  //TODO: Support .ra (setting angle)
-
-  return <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
+  return circleEnclosure({ d, i, circle })
 }
 
 export const svgRRule = ({
@@ -593,4 +551,17 @@ export const htmlColumnHoverRule = ({
       {content}
     </div>
   )
+}
+
+export const svgRectEncloseRule = ({ d, i, screenCoordinates }) => {
+  const bboxNodes = screenCoordinates.map(p => {
+    return {
+      x0: (p.x0 = p[0]),
+      x1: (p.x1 = p[0]),
+      y0: (p.y0 = p[1]),
+      y1: (p.y1 = p[1])
+    }
+  })
+
+  return rectangleEnclosure({ bboxNodes, d, i })
 }

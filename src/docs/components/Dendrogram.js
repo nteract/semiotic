@@ -70,60 +70,11 @@ export default class Dendrogram extends React.Component {
     examples.push({
       name: "Basic",
       demo: DendrogramRaw({
-        annotations,
+        annotations: undefined,
         type: this.state.type,
         projection: this.state.projection
       }),
-      source: `import React from "react";
-import { NetworkFrame } from "semiotic";
-import { data } from "../sampledata/d3_api";
-import { cluster } from "d3-hierarchy";
-
-const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"];
-const data = {
-  name: "d3",
-  children: [
-    { name: "version", leafColor: "#fdcc8a", blockCalls: 1 },
-    {
-      name: "behavior",
-      children: [
-        { name: "drag", leafColor: "#e34a33", blockCalls: 242 },
-        { name: "zoom", leafColor: "#e34a33", blockCalls: 189 }
-      ],
-      leafColor: "#e34a33",
-      blockCalls: 394
-    }
-    ]
-}
-  <NetworkFrame
-    size={[700, 400]}
-    edges={data}
-    nodeStyle={(d, i) => ({ fill: colors[d.depth], stroke: colors[d.depth] })}
-    edgeStyle={(d, i) => ({
-      fill: colors[d.source.depth],
-      stroke: colors[d.source.depth],
-      opacity: 0.5
-    })}
-    nodeSizeAccessor={1}
-    nodeIDAccessor={"name"}
-    hoverAnnotation={true}
-    networkType={{
-      type: "${this.state.type}",
-      projection: "${this.state.projection}",
-      //      layout: cluster,
-      nodePadding: 1,
-      forceManyBody: -15,
-      edgeStrength: 1.5
-    }}
-    tooltipContent={d => (
-      <div className="tooltip-content">
-        {d.parent ? <p>{d.parent.data.name}</p> : undefined}
-        <p>{d.data.name}</p>
-      </div>
-    )}
-    annotations={annotations}
-    margin={20}
-  />
+      source: `
 `
     })
 

@@ -4,12 +4,14 @@ import Annotation from "../Annotation"
 import {
   AnnotationXYThreshold,
   AnnotationCalloutCircle,
+  AnnotationCalloutRect,
   AnnotationBracket
 } from "react-annotation"
 import { packEnclose } from "d3-hierarchy"
 import { max, min, sum, extent } from "d3-array"
 import { pointOnArcAtAngle } from "../svg/pieceDrawing"
 import { arc } from "d3-shape"
+import { circleEnclosure, rectangleEnclosure } from "./baseRules"
 
 export const htmlFrameHoverRule = ({ d, i, tooltipContent, size }) => {
   let content = (
@@ -112,45 +114,31 @@ export const svgEncloseRule = ({
   const circle = packEnclose(
     selectedNodes.map(p => ({ x: p.x, y: p.y, r: nodeSizeAccessor(p) }))
   )
-  const noteData = Object.assign(
-    {
-      dx: d.dx || -25,
-      dy: d.dy || -25,
-      x: circle.x,
-      y: circle.y,
-      note: { label: d.label },
-      connector: { end: "arrow" }
-    },
-    d,
-    {
-      type: AnnotationCalloutCircle,
-      subject: {
-        radius: circle.r,
-        radiusPadding: 5 || d.radiusPadding
-      }
-    }
+  return circleEnclosure({ circle, d })
+}
+
+export const svgRectEncloseRule = ({
+  d,
+  i,
+  projectedNodes,
+  nodeIDAccessor,
+  nodeSizeAccessor
+}) => {
+  const selectedNodes = projectedNodes.filter(
+    p => d.ids.indexOf(nodeIDAccessor(p)) !== -1
   )
-
-  if (noteData.rp) {
-    switch (noteData.rp) {
-      case "top":
-        noteData.dx = 0
-        noteData.dy = -circle.r - noteData.rd
-        break
-      case "bottom":
-        noteData.dx = 0
-        noteData.dy = circle.r + noteData.rd
-        break
-      case "left":
-        noteData.dx = -circle.r - noteData.rd
-        noteData.dy = 0
-        break
-      default:
-        noteData.dx = circle.r + noteData.rd
-        noteData.dy = 0
-    }
+  if (selectedNodes.length === 0) {
+    return null
   }
-  //TODO: Support .ra (setting angle)
 
-  return <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
+  const bboxNodes = selectedNodes.map(p => {
+    const nodeSize = nodeSizeAccessor(p)
+    return {
+      x0: p.x0 === undefined ? p.x - nodeSize : p.x0,
+      x1: p.x1 === undefined ? p.x + nodeSize : p.x1,
+      y0: p.y0 === undefined ? p.y - nodeSize : p.y0,
+      y1: p.y1 === undefined ? p.y + nodeSize : p.y1
+    }
+  })
+  return rectangleEnclosure({ bboxNodes, d, i })
 }
