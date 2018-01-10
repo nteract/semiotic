@@ -7,11 +7,11 @@ import { MenuItem } from "material-ui/Menu"
 import { InputLabel } from "material-ui/Input"
 import { FormControl } from "material-ui/Form"
 
-import {extent, mean} from 'd3-array'
-import {scaleLinear} from 'd3-scale'
-import {format} from 'd3-format'
-import {AnnotationCalloutCircle} from 'react-annotation'
-import {MATRIX_DATA} from "../sampledata/matrixData"
+import { extent, mean } from "d3-array"
+import { scaleLinear } from "d3-scale"
+import { format } from "d3-format"
+import { AnnotationCalloutCircle } from "react-annotation"
+import { MATRIX_DATA } from "../sampledata/matrixData"
 
 const components = []
 const MIN_RADIUS = 10
@@ -136,7 +136,6 @@ const decisionMatrixCode = `
     />
 `
 
-
 export default class DecisionMatrixExample extends React.Component {
   constructor(props) {
     super(props)
@@ -151,10 +150,14 @@ export default class DecisionMatrixExample extends React.Component {
     examples.push({
       name: `Vendor Evaluation`,
       demo: decisionMatrixFrame,
-      source:decisionMatrixCode    
+      source: decisionMatrixCode
     })
 
-    const toolTipOptions = ["Previous Contracts", "Number of Employees", "None"].map(d => (
+    const toolTipOptions = [
+      "Previous Contracts",
+      "Number of Employees",
+      "None"
+    ].map(d => (
       <MenuItem key={"size-by-option-" + d} value={d}>
         {d}
       </MenuItem>
@@ -162,63 +165,72 @@ export default class DecisionMatrixExample extends React.Component {
 
     let legend = null
 
-    if(this.state.sizeBy !== "None"){
-      let ext = extent(MATRIX_DATA.map((d)=>{ return +d[this.state.sizeBy]}))
+    if (this.state.sizeBy !== "None") {
+      let ext = extent(
+        MATRIX_DATA.map(d => {
+          return +d[this.state.sizeBy]
+        })
+      )
 
       const scale = scaleLinear()
         .domain(ext)
-        .range([MIN_RADIUS,MAX_RADIUS]);
+        .range([MIN_RADIUS, MAX_RADIUS])
 
-      function fetchLabel(val,sizeBy){
+      function fetchLabel(val, sizeBy) {
         let label = val
-        console.log(sizeBy,val)
-        switch(sizeBy){
-          case 'Number of Employees':
+        switch (sizeBy) {
+          case "Number of Employees":
             label = `${val} Employees`
-            break;
-          case 'Previous Contracts': 
+            break
+          case "Previous Contracts":
             label = `${val} Contracts`
-            break;
+            break
         }
         return label
       }
 
       const radiusArray = [
         {
-          r:scale(ext[0]),
-          val: format(',.0f')(ext[0])
+          r: scale(ext[0]),
+          val: format(",.0f")(ext[0])
         },
         {
-          r:scale(mean(ext)),
-          val: format(',.0f')(mean(ext))
+          r: scale(mean(ext)),
+          val: format(",.0f")(mean(ext))
         },
         {
-          r:scale(ext[1]),
-          val: format(',.0f')(ext[1])
+          r: scale(ext[1]),
+          val: format(",.0f")(ext[1])
         }
       ]
 
-      const legendCircles = radiusArray.map((d,i)=>{
-        return <AnnotationCalloutCircle
-          x={40}
-          y={90 - (i*((MAX_RADIUS-MIN_RADIUS)/2))}
-          dy={-(d.r + (d.r * 0.15))}
-          dx={MAX_RADIUS + 20}
-          key={`circle_annotation_${i}`}
-          color={"black"}
-          note={{
-            "label":fetchLabel(d.val,this.state.sizeBy),
-            "lineType":"horizontal",
-            "align":'left'
-          }}
-          connector={{"type":"elbow"}}
-          subject={{"radius":d.r,"radiusPadding":0}}
-       />
+      const legendCircles = radiusArray.map((d, i) => {
+        return (
+          <AnnotationCalloutCircle
+            x={40}
+            y={90 - i * ((MAX_RADIUS - MIN_RADIUS) / 2)}
+            dy={-(d.r + d.r * 0.15)}
+            dx={MAX_RADIUS + 20}
+            key={`circle_annotation_${i}`}
+            color={"black"}
+            note={{
+              label: fetchLabel(d.val, this.state.sizeBy),
+              lineType: "horizontal",
+              align: "left"
+            }}
+            connector={{ type: "elbow" }}
+            subject={{ radius: d.r, radiusPadding: 0 }}
+          />
+        )
       })
 
-      legend = <div style= {{marginTop: "20px"}}>
-          <svg className = "decisionMatrixLegend" width="210px">{legendCircles}</svg>
+      legend = (
+        <div style={{ marginTop: "20px" }}>
+          <svg className="decisionMatrixLegend" width="210px">
+            {legendCircles}
+          </svg>
         </div>
+      )
     }
 
     const buttons = [
@@ -243,18 +255,21 @@ export default class DecisionMatrixExample extends React.Component {
         buttons={buttons}
       >
         <p>
-        As a visual metaphor, decision matrices reside in the space between a 
-        traditional scatterplot and an ordinal layout. 
-        They still take advantage of xy positioning, but are purposefully 
-        constrained to ordinal buckets along the x and y axes. 
-        This leads to the marker in a cell view seen below.
-        <br/><br/>
-        Decision matrices are commonly sourced by manually generated, small data (less than 100 rows)
-        and are used to compare two or three metrics within the data set.
-        <br/><br/>
-        Below we’ve highlighted the potential use case of vendor evaluation.
-        Delivery speed and price can be compared by position in the matrix, with an optional 
-        radius sizing for other, less critical, metrics. 
+          As a visual metaphor, decision matrices reside in the space between a
+          traditional scatterplot and an ordinal layout. They still take
+          advantage of xy positioning, but are purposefully constrained to
+          ordinal buckets along the x and y axes. This leads to the marker in a
+          cell view seen below.
+          <br />
+          <br />
+          Decision matrices are commonly sourced by manually generated, small
+          data (less than 100 rows) and are used to compare two or three metrics
+          within the data set.
+          <br />
+          <br />
+          Below we’ve highlighted the potential use case of vendor evaluation.
+          Delivery speed and price can be compared by position in the matrix,
+          with an optional radius sizing for other, less critical, metrics.
         </p>
       </DocumentComponent>
     )

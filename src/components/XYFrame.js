@@ -13,6 +13,7 @@ import {
   svgXYAnnotation,
   basicReactAnnotation,
   svgEncloseAnnotation,
+  svgRectEncloseRule,
   svgXAnnotation,
   svgYAnnotation,
   svgBoundsAnnotation,
@@ -578,6 +579,8 @@ class XYFrame extends React.Component {
       return basicReactAnnotation({ d, screenCoordinates, i })
     } else if (d.type === "enclose") {
       return svgEncloseAnnotation({ d, screenCoordinates, i })
+    } else if (d.type === "enclose-rect") {
+      return svgRectEncloseRule({ d, screenCoordinates, i })
     } else if (d.type === "x") {
       return svgXAnnotation({
         d,
@@ -872,11 +875,9 @@ class XYFrame extends React.Component {
         defaultSVGRule={this.defaultXYSVGRule.bind(this)}
         defaultHTMLRule={this.defaultXYHTMLRule.bind(this)}
         annotations={
-          areaAnnotations.length > 0 ? (
-            [...annotations, ...areaAnnotations]
-          ) : (
-            annotations
-          )
+          areaAnnotations.length > 0
+            ? [...annotations, ...areaAnnotations]
+            : annotations
         }
         annotationSettings={annotationSettings}
         legendSettings={legendSettings}

@@ -16,6 +16,7 @@ import {
   svgORRule,
   basicReactAnnotationRule,
   svgEncloseRule,
+  svgRectEncloseRule,
   svgRRule,
   svgCategoryRule,
   htmlFrameHoverRule,
@@ -924,8 +925,9 @@ class ORFrame extends React.Component {
 
     //TODO: Support radial??
     if (d.coordinates || (d.type === "enclose" && d.neighbors)) {
-      screenCoordinates = (d.coordinates || d.neighbors)
-        .map(p => screenProject(p))
+      screenCoordinates = (d.coordinates || d.neighbors).map(p =>
+        screenProject(p)
+      )
     } else {
       screenCoordinates = screenProject(d)
     }
@@ -965,6 +967,8 @@ class ORFrame extends React.Component {
       return basicReactAnnotationRule({ d, i, screenCoordinates })
     } else if (d.type === "enclose") {
       return svgEncloseRule({ d, i, screenCoordinates })
+    } else if (d.type === "enclose-rect") {
+      return svgRectEncloseRule({ d, screenCoordinates, i })
     } else if (d.type === "r") {
       return svgRRule({
         d,

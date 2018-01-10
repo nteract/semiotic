@@ -36,8 +36,7 @@ export const data = {
         { name: "drag", leafColor: "#e34a33", blockCalls: 242 },
         { name: "zoom", leafColor: "#e34a33", blockCalls: 189 }
       ],
-      leafColor: "#e34a33",
-      blockCalls: 394
+      leafColor: "#e34a33"
     },
     { name: "rebind", leafColor: "#e34a33", blockCalls: 128 },
     { name: "dispatch", leafColor: "#e34a33", blockCalls: 177 },
@@ -46,8 +45,7 @@ export const data = {
     {
       name: "selection",
       children: [{ name: "enter", leafColor: "#fdcc8a", blockCalls: 1 }],
-      leafColor: "#e34a33",
-      blockCalls: 94
+      leafColor: "#e34a33"
     },
     {
       name: "ns",
@@ -61,13 +59,11 @@ export const data = {
             { name: "xml", leafColor: "#fdcc8a", blockCalls: 1 },
             { name: "xmlns", leafColor: "#fdcc8a", blockCalls: 1 }
           ],
-          leafColor: "#fc8d59",
-          blockCalls: 32
+          leafColor: "#fc8d59"
         },
         { name: "qualify", leafColor: "#fc8d59", blockCalls: 29 }
       ],
-      leafColor: "#fc8d59",
-      blockCalls: 38
+      leafColor: "#fc8d59"
     },
     { name: "select", leafColor: "#7f0000", blockCalls: 4195 },
     { name: "selectAll", leafColor: "#b30000", blockCalls: 600 },
@@ -91,8 +87,7 @@ export const data = {
         { name: "format", leafColor: "#fc8d59", blockCalls: 12 },
         { name: "formatRows", leafColor: "#fdcc8a", blockCalls: 1 }
       ],
-      leafColor: "#e34a33",
-      blockCalls: 492
+      leafColor: "#e34a33"
     },
     {
       name: "tsv",
@@ -102,14 +97,12 @@ export const data = {
         { name: "format", leafColor: "#fc8d59", blockCalls: 13 },
         { name: "formatRows", leafColor: "#fdcc8a", blockCalls: 1 }
       ],
-      leafColor: "#e34a33",
-      blockCalls: 148
+      leafColor: "#e34a33"
     },
     {
       name: "timer",
       children: [{ name: "flush", leafColor: "#e34a33", blockCalls: 54 }],
-      leafColor: "#e34a33",
-      blockCalls: 269
+      leafColor: "#e34a33"
     },
     { name: "round", leafColor: "#e34a33", blockCalls: 52 },
     { name: "formatPrefix", leafColor: "#fc8d59", blockCalls: 28 },
@@ -140,14 +133,12 @@ export const data = {
               blockCalls: 1
             }
           ],
-          leafColor: "#fc8d59",
-          blockCalls: 42
+          leafColor: "#fc8d59"
         },
         {
           name: "years",
           children: [{ name: "utc", leafColor: "#fdcc8a", blockCalls: 1 }],
-          leafColor: "#fc8d59",
-          blockCalls: 38
+          leafColor: "#fc8d59"
         },
         {
           name: "day",
@@ -179,18 +170,15 @@ export const data = {
         {
           name: "months",
           children: [{ name: "utc", leafColor: "#fdcc8a", blockCalls: 1 }],
-          leafColor: "#fc8d59",
-          blockCalls: 43
+          leafColor: "#fc8d59"
         },
         {
           name: "scale",
           children: [{ name: "utc", leafColor: "#fdcc8a", blockCalls: 1 }],
-          leafColor: "#e34a33",
-          blockCalls: 365
+          leafColor: "#e34a33"
         }
       ],
-      leafColor: "#b30000",
-      blockCalls: 700
+      leafColor: "#b30000"
     },
     { name: "locale", leafColor: "#fc8d59", blockCalls: 11 },
     { name: "format", leafColor: "#e34a33", blockCalls: 343 },
@@ -205,8 +193,7 @@ export const data = {
         {
           name: "conicEqualArea",
           children: [{ name: "raw", leafColor: "#fdcc8a", blockCalls: 1 }],
-          leafColor: "#fc8d59",
-          blockCalls: 25
+          leafColor: "#fc8d59"
         },
         { name: "albers", leafColor: "#e34a33", blockCalls: 181 },
         { name: "albersUsa", leafColor: "#e34a33", blockCalls: 112 },
@@ -217,8 +204,7 @@ export const data = {
         {
           name: "equirectangular",
           children: [{ name: "raw", leafColor: "#fdcc8a", blockCalls: 1 }],
-          leafColor: "#e34a33",
-          blockCalls: 95
+          leafColor: "#e34a33"
         },
         { name: "rotation", leafColor: "#fc8d59", blockCalls: 21 },
         { name: "circle", leafColor: "#fc8d59", blockCalls: 42 },
@@ -235,12 +221,10 @@ export const data = {
               children: [
                 { name: "invert", leafColor: "#fdcc8a", blockCalls: 1 }
               ],
-              leafColor: "#fc8d59",
-              blockCalls: 5
+              leafColor: "#fc8d59"
             }
           ],
-          leafColor: "#fc8d59",
-          blockCalls: 39
+          leafColor: "#fc8d59"
         },
         {
           name: "azimuthalEquidistant",
@@ -254,20 +238,17 @@ export const data = {
               blockCalls: 5
             }
           ],
-          leafColor: "#fc8d59",
-          blockCalls: 35
+          leafColor: "#fc8d59"
         },
         {
           name: "conicConformal",
           children: [{ name: "raw", leafColor: "#fdcc8a", blockCalls: 1 }],
-          leafColor: "#fc8d59",
-          blockCalls: 33
+          leafColor: "#fc8d59"
         },
         {
           name: "conicEquidistant",
           children: [{ name: "raw", leafColor: "#fdcc8a", blockCalls: 1 }],
-          leafColor: "#fc8d59",
-          blockCalls: 27
+          leafColor: "#fc8d59"
         },
         {
           name: "gnomonic",
@@ -277,12 +258,10 @@ export const data = {
               children: [
                 { name: "invert", leafColor: "#fdcc8a", blockCalls: 1 }
               ],
-              leafColor: "#fdcc8a",
-              blockCalls: 4
+              leafColor: "#fdcc8a"
             }
           ],
-          leafColor: "#fc8d59",
-          blockCalls: 36
+          leafColor: "#fc8d59"
         },
         {
           name: "mercator",
@@ -296,8 +275,7 @@ export const data = {
               blockCalls: 1
             }
           ],
-          leafColor: "#e34a33",
-          blockCalls: 222
+          leafColor: "#e34a33"
         },
         {
           name: "orthographic",
@@ -311,8 +289,7 @@ export const data = {
               blockCalls: 1
             }
           ],
-          leafColor: "#e34a33",
-          blockCalls: 93
+          leafColor: "#e34a33"
         },
         {
           name: "stereographic",
@@ -326,8 +303,7 @@ export const data = {
               blockCalls: 1
             }
           ],
-          leafColor: "#fc8d59",
-          blockCalls: 25
+          leafColor: "#fc8d59"
         },
         {
           name: "transverseMercator",
@@ -345,8 +321,7 @@ export const data = {
           blockCalls: 20
         }
       ],
-      leafColor: "#b30000",
-      blockCalls: 1015
+      leafColor: "#b30000"
     },
     {
       name: "geom",
@@ -357,8 +332,7 @@ export const data = {
         { name: "delaunay", leafColor: "#fc8d59", blockCalls: 34 },
         { name: "quadtree", leafColor: "#e34a33", blockCalls: 97 }
       ],
-      leafColor: "#e34a33",
-      blockCalls: 234
+      leafColor: "#e34a33"
     },
     { name: "interpolateRgb", leafColor: "#e34a33", blockCalls: 94 },
     { name: "interpolateObject", leafColor: "#fc8d59", blockCalls: 24 },
@@ -390,8 +364,7 @@ export const data = {
         { name: "cluster", leafColor: "#fc8d59", blockCalls: 41 },
         { name: "treemap", leafColor: "#e34a33", blockCalls: 52 }
       ],
-      leafColor: "#b30000",
-      blockCalls: 672
+      leafColor: "#b30000"
     },
     {
       name: "random",
@@ -421,8 +394,7 @@ export const data = {
         { name: "threshold", leafColor: "#fc8d59", blockCalls: 42 },
         { name: "identity", leafColor: "#fc8d59", blockCalls: 47 }
       ],
-      leafColor: "#7f0000",
-      blockCalls: 2391
+      leafColor: "#7f0000"
     },
     {
       name: "svg",
@@ -431,29 +403,25 @@ export const data = {
         {
           name: "line",
           children: [{ name: "radial", leafColor: "#fc8d59", blockCalls: 37 }],
-          leafColor: "#b30000",
-          blockCalls: 550
+          leafColor: "#b30000"
         },
         {
           name: "area",
           children: [{ name: "radial", leafColor: "#fc8d59", blockCalls: 27 }],
-          leafColor: "#e34a33",
-          blockCalls: 142
+          leafColor: "#e34a33"
         },
         { name: "chord", leafColor: "#e34a33", blockCalls: 57 },
         {
           name: "diagonal",
           children: [{ name: "radial", leafColor: "#fc8d59", blockCalls: 36 }],
-          leafColor: "#e34a33",
-          blockCalls: 86
+          leafColor: "#e34a33"
         },
         { name: "symbol", leafColor: "#e34a33", blockCalls: 56 },
         { name: "symbolTypes", leafColor: "#fc8d59", blockCalls: 29 },
         { name: "axis", leafColor: "#b30000", blockCalls: 782 },
         { name: "brush", leafColor: "#e34a33", blockCalls: 195 }
       ],
-      leafColor: "#b30000",
-      blockCalls: 1434
+      leafColor: "#b30000"
     },
     { name: "transition", leafColor: "#e34a33", blockCalls: 81 },
     { name: "text", leafColor: "#fc8d59", blockCalls: 37 },

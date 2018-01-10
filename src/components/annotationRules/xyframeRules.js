@@ -10,6 +10,7 @@ import {
 import { line } from "d3-shape"
 import { packEnclose } from "d3-hierarchy"
 import { extent } from "d3-array"
+import { circleEnclosure, rectangleEnclosure } from "./baseRules"
 
 const pointsAlong = along => ({
   d,
@@ -124,48 +125,8 @@ export const svgEncloseAnnotation = ({ screenCoordinates, d, i }) => {
   const circle = packEnclose(
     screenCoordinates.map(p => ({ x: p[0], y: p[1], r: 2 }))
   )
-  const noteData = Object.assign(
-    {
-      dx: 0,
-      dy: 0,
-      note: { label: d.label },
-      connector: { end: "arrow" }
-    },
-    d,
-    {
-      coordinates: undefined,
-      x: circle.x,
-      y: circle.y,
-      type: AnnotationCalloutCircle,
-      subject: {
-        radius: circle.r,
-        radiusPadding: 5 || d.radiusPadding
-      }
-    }
-  )
 
-  if (noteData.rp) {
-    switch (noteData.rp) {
-      case "top":
-        noteData.dx = 0
-        noteData.dy = -circle.r - noteData.rd
-        break
-      case "bottom":
-        noteData.dx = 0
-        noteData.dy = circle.r + noteData.rd
-        break
-      case "left":
-        noteData.dx = -circle.r - noteData.rd
-        noteData.dy = 0
-        break
-      default:
-        noteData.dx = circle.r + noteData.rd
-        noteData.dy = 0
-    }
-  }
-  //TODO: Support .ra (setting angle)
-
-  return <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
+  return circleEnclosure({ d, circle })
 }
 
 export const svgXAnnotation = ({
@@ -380,4 +341,17 @@ export const htmlTooltipAnnotation = ({
       {content}
     </div>
   )
+}
+
+export const svgRectEncloseRule = ({ d, i, screenCoordinates }) => {
+  const bboxNodes = screenCoordinates.map(p => {
+    return {
+      x0: (p.x0 = p[0]),
+      x1: (p.x1 = p[0]),
+      y0: (p.y0 = p[1]),
+      y1: (p.y1 = p[1])
+    }
+  })
+
+  return rectangleEnclosure({ bboxNodes, d, i })
 }

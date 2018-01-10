@@ -23,45 +23,7 @@ export default class Sunburst extends React.Component {
     }
   }
   render() {
-    const typeOptions = [
-      "sankey",
-      "force",
-      "tree",
-      "cluster",
-      "circlepack",
-      "treemap",
-      "partition"
-    ].map(d => (
-      <MenuItem key={"type-option-" + d} label={d} value={d}>
-        {d}
-      </MenuItem>
-    ))
-
-    const projectionOptions = ["vertical", "horizontal", "radial"].map(d => (
-      <MenuItem key={"type-option-" + d} label={d} value={d}>
-        {d}
-      </MenuItem>
-    ))
-    const buttons = [
-      <FormControl key="button-1-0-0">
-        <InputLabel htmlFor="chart-type-input">Chart Type</InputLabel>
-        <Select
-          value={this.state.type}
-          onChange={e => this.setState({ type: e.target.value })}
-        >
-          {typeOptions}
-        </Select>
-      </FormControl>,
-      <FormControl key="button-2-0-0">
-        <InputLabel htmlFor="chart-projection-input">Projection</InputLabel>
-        <Select
-          value={this.state.projection}
-          onChange={e => this.setState({ projection: e.target.value })}
-        >
-          {projectionOptions}
-        </Select>
-      </FormControl>
-    ]
+    const buttons = []
 
     const annotations = []
 
@@ -75,6 +37,50 @@ export default class Sunburst extends React.Component {
         projection: this.state.projection
       }),
       source: `
+      const data = {
+        name: "flare",
+        children: [
+          {
+            name: "analytics",
+            children: [
+              {
+                name: "cluster",
+                children: [
+                  { name: "AgglomerativeCluster", size: 3938 },
+                  { name: "CommunityStructure", size: 3812 },
+                  { name: "HierarchicalCluster", size: 6714 },
+                  { name: "MergeEdge", size: 743 }
+                ]
+              }
+            }
+          ]
+        }
+
+        <NetworkFrame
+          size={[700, 700]}
+          edges={data}
+          //    nodes={treeNodes}
+          nodeStyle={(d, i) => ({
+            fill: colors[d.depth],
+            stroke: "black",
+            opacity: 0.75
+          })}
+          nodeIDAccessor={"name"}
+          hoverAnnotation={true}
+          networkType={{
+            type: "partition",
+            projection: "radial",
+            nodePadding: 1,
+            hierarchySum: d => d.size
+          }}
+          tooltipContent={d => (
+            <div className="tooltip-content">
+              {d.parent ? <p>{d.parent.data.name}</p> : undefined}
+              <p>{d.data.name}</p>
+            </div>
+          )}
+          margin={10}
+        />
 `
     })
 
@@ -85,7 +91,10 @@ export default class Sunburst extends React.Component {
         examples={examples}
         buttons={buttons}
       >
-        <p>.</p>
+        <p>
+          In Semiotic, a Sunburst Chart is not a separate chart type, it is a
+          Partition layout with a radial projection in a NetworkFrame.
+        </p>
       </DocumentComponent>
     )
   }
