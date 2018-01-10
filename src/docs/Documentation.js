@@ -46,6 +46,7 @@ import Sunburst from "./components/Sunburst"
 import NegativeStacked from "./components/NegativeStacked"
 import CustomMark from "./components/CustomMark"
 import SharedTooltipExample from "./components/SharedTooltipExample"
+import DecisionMatrix from "./components/DecisionMatrix"
 import CometPlot from "./components/CometPlot"
 import Networks from "./components/Networks"
 
@@ -87,6 +88,7 @@ const components = {
   negativestacked: { docs: NegativeStacked, parent: "xyframe" },
   datasketches: { docs: DataSketchesPlot, parent: "xyframe" },
   sharedTooltip: { docs: SharedTooltipExample, parent: "xyframe" },
+  decisionMatrix: { docs: DecisionMatrix, parent: "xyframe" },
   cometplot: { docs: CometPlot, parent: "xyframe" },
   orframe: { docs: ORFrameDocs },
   violin: { docs: Violin, parent: "orframe" },

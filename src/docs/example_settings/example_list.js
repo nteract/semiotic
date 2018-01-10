@@ -27,6 +27,7 @@ import CustomMarkRaw from "../components/CustomMarkRaw"
 import DataSketchesPlotRaw from "../components/DataSketchesPlotRaw"
 import TimelineRaw from "../components/TimelineRaw"
 import SharedTooltipExampleRaw from "../components/SharedTooltipExampleRaw"
+import DecisionMatrixRaw from "../components/DecisionMatrixRaw"
 import CometPlotRaw from "../components/CometPlotRaw"
 
 import {
@@ -127,8 +128,13 @@ const exampos = [
   { label: "Annotations", viz: AppleStockChartRaw, path: "annotations" },
   {
     label: "Shared Tooltip",
-    viz: SharedTooltipExampleRaw("Shared"),
+    viz: SharedTooltipExampleRaw("Previous Contracts"),
     path: "sharedTooltip"
+  },
+  {
+    label: "Decision Matrix",
+    viz: DecisionMatrixRaw("Shared"),
+    path: "decisionMatrix"
   },
   { label: "Comet Plot", viz: CometPlotRaw, path: "cometplot" }
 ]
