@@ -19,7 +19,8 @@ export default class Dendrogram extends React.Component {
 
     this.state = {
       type: "treemap",
-      projection: "vertical"
+      projection: "vertical",
+      annotation: "rectangle"
     }
   }
   render() {
@@ -42,6 +43,12 @@ export default class Dendrogram extends React.Component {
         {d}
       </MenuItem>
     ))
+    const annotationOptions = ["rectangle", "circle"].map(d => (
+      <MenuItem key={"type-option-" + d} label={d} value={d}>
+        {d}
+      </MenuItem>
+    ))
+
     const buttons = [
       <FormControl key="button-1-0-0">
         <InputLabel htmlFor="chart-type-input">Chart Type</InputLabel>
@@ -60,6 +67,15 @@ export default class Dendrogram extends React.Component {
         >
           {projectionOptions}
         </Select>
+      </FormControl>,
+      <FormControl key="button-2-0-0">
+        <InputLabel htmlFor="chart-projection-input">Annotation</InputLabel>
+        <Select
+          value={this.state.annotation}
+          onChange={e => this.setState({ annotation: e.target.value })}
+        >
+          {annotationOptions}
+        </Select>
       </FormControl>
     ]
 
@@ -70,12 +86,80 @@ export default class Dendrogram extends React.Component {
     examples.push({
       name: "Basic",
       demo: DendrogramRaw({
-        annotations: undefined,
+        annotation: this.state.annotation,
         type: this.state.type,
         projection: this.state.projection
       }),
-      source: `
-`
+      source: `const annotations = [
+        {
+          type: "enclose${
+            this.state.annotation === "rectangle" ? "-rect" : ""
+          }",
+          ids: [
+            "identity",
+            "linear",
+            "pow",
+            "category20",
+            "category20",
+            "log",
+            "sqrt",
+            "ordinal",
+            "threshold",
+            "quantize"
+          ],
+          label: "Scales",
+          padding: 5,
+          dy: -150,
+          nx: 650
+        }
+      ]
+      const data = {
+        name: "d3",
+        children: [
+          { name: "version", leafColor: "#fdcc8a", blockCalls: 1 },
+          { name: "ascending", leafColor: "#e34a33", blockCalls: 120 },
+          { name: "descending", leafColor: "#e34a33", blockCalls: 119 },
+          { name: "min", leafColor: "#b30000", blockCalls: 1200 },
+          { name: "max", leafColor: "#b30000", blockCalls: 721 }
+        ]
+      }
+
+      const colors = ["#00a2ce", "#b6a756", "#4d430c", "#b3331d"]
+
+      <NetworkFrame
+        size={[700, 700]}
+        edges={data}
+        nodeStyle={(d, i) => ({
+          fill: colors[d.depth],
+          stroke: "black",
+          strokeOpacity: 0.25,
+          fillOpacity: 0.25
+        })}
+        edgeStyle={(d, i) => ({
+          fill: colors[d.source.depth],
+          stroke: colors[d.source.depth],
+          opacity: 0.5
+        })}
+        nodeIDAccessor={"name"}
+        hoverAnnotation={true}
+        networkType={{
+          type: "${this.state.type}",
+          projection: "${this.state.projection}",
+          nodePadding: 1,
+          forceManyBody: -15,
+          edgeStrength: 1.5,
+          padding: type === "treemap" ? 3 : type === "circlepack" ? 2 : 0,
+          hierarchySum: d => d.blockCalls
+        }}
+        tooltipContent={d => (
+          <div className="tooltip-content">
+            {d.parent ? <p>{d.parent.data.name}</p> : undefined}
+            <p>{d.data.name}</p>
+          </div>
+        )}
+        annotations={annotations}
+        margin={50}
+      />`
     })
 
     return (

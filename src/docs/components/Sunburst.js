@@ -59,7 +59,6 @@ export default class Sunburst extends React.Component {
         <NetworkFrame
           size={[700, 700]}
           edges={data}
-          //    nodes={treeNodes}
           nodeStyle={(d, i) => ({
             fill: colors[d.depth],
             stroke: "black",
