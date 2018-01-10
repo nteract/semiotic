@@ -10,7 +10,7 @@ import Select from "material-ui/Select"
 const components = []
 
 components.push({
-  name: "Dendrogram"
+  name: "Hierarchical Charts"
 })
 
 export default class Dendrogram extends React.Component {
@@ -164,7 +164,7 @@ export default class Dendrogram extends React.Component {
 
     return (
       <DocumentComponent
-        name="Dendrogram"
+        name="Hierarchical Charts"
         components={components}
         examples={examples}
         buttons={buttons}
@@ -190,4 +190,4 @@ export default class Dendrogram extends React.Component {
   }
 }
 
-Dendrogram.title = "Dendrogram"
+Dendrogram.title = "Hierarchical Charts"
