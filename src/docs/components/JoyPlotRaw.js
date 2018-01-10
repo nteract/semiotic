@@ -40,7 +40,8 @@ export default (
         type: "joy",
         amplitude: 40,
         curve: curveMonotoneX,
-        binValue: d => sum(d.map(p => p.value))
+        binValue: d => sum(d.map(p => p.value)),
+        useBins: false
       }}
       summaryStyle={d => ({
         fill: "black",
@@ -54,8 +55,9 @@ export default (
       oLabel={d =>
         parseInt(d) % 10 === 0 ? (
           <text style={{ textAnchor: "end" }}>{d}</text>
-        ) : null}
-      margin={{ left: 0, top: 50, bottom: 10, right: 10 }}
+        ) : null
+      }
+      margin={{ left: 20, top: 50, bottom: 10, right: 10 }}
       oPadding={2}
     />
   </div>

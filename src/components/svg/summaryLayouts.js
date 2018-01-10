@@ -730,7 +730,7 @@ export function bucketizedRenderingFn({
   const renderedSummaryMarks = []
   const summaryXYCoords = []
 
-  const buckets = type.bins || 25
+  let buckets = type.bins || 25
   const relativeBuckets = type.relative ? {} : false
   const summaryValueAccessor = type.binValue || (d => d.length)
   let axisCreator
@@ -752,7 +752,7 @@ export function bucketizedRenderingFn({
     }
   }
 
-  const bucketSize = chartSize / buckets
+  let bucketSize = chartSize / buckets
 
   const keys = Object.keys(data)
   let binMax = 0
@@ -785,10 +785,25 @@ export function bucketizedRenderingFn({
         ? p => p.piece._orFRVertical
         : p => p.piece._orFR
 
-    let calculatedBins = violinHist
-      .domain(binDomain)
-      .thresholds(binBuckets)
-      .value(xyValue)(summaryPositionNest)
+    let calculatedBins
+    if (type.useBins === false) {
+      const calculatedValues = summaryPositionNest.map(value => xyValue(value))
+      calculatedBins = summaryPositionNest
+        .map((value, i) => {
+          const bucketArray = []
+          bucketArray.x0 = calculatedValues[i]
+          bucketArray.x1 = calculatedValues[i] + 1
+          bucketArray.push(value)
+          return bucketArray
+        })
+        .sort((a, b) => a.x0 - b.x0)
+      bucketSize = 1
+    } else {
+      calculatedBins = violinHist
+        .domain(binDomain)
+        .thresholds(binBuckets)
+        .value(xyValue)(summaryPositionNest)
+    }
 
     calculatedBins = calculatedBins
       .map(d => ({
@@ -806,6 +821,7 @@ export function bucketizedRenderingFn({
     }
 
     binMax = Math.max(binMax, relativeMax)
+
     return { bins: calculatedBins, summary, summaryI, thisSummaryData }
   })
   calculatedBins.forEach(({ bins, summary, summaryI, thisSummaryData }) => {
