@@ -471,7 +471,7 @@ class NetworkFrame extends React.Component {
 
       if (!Array.isArray(edges)) {
         this.hierarchicalNetwork = true
-        let rootNode = hierarchy(edges)
+        let rootNode = hierarchy(edges, networkSettings.hierarchyChildren)
 
         rootNode.sum(networkSettings.hierarchySum || (d => d.value))
 
