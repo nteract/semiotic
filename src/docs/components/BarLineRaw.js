@@ -1,5 +1,5 @@
 import React from "react"
-import { XYFrame, ORFrame } from "../../components"
+import { XYFrame, OrdinalFrame } from "../../components"
 import { curveBasis } from "d3-shape"
 
 const testData = [
@@ -64,7 +64,7 @@ const sharedProps = {
 export default (
   <div style={{ height: "300px" }}>
     <div style={{ position: "absolute" }}>
-      <ORFrame
+      <OrdinalFrame
         {...sharedProps}
         className="bar-line-or"
         data={displayData[0].data}

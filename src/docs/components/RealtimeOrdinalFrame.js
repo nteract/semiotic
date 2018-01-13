@@ -1,6 +1,6 @@
 import React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
-import { ORFrame } from "../../components"
+import { OrdinalFrame } from "../../components"
 
 const components = []
 
@@ -49,7 +49,7 @@ const orAnnotation = {
   label: "awesome?"
 }
 
-export default class RealtimeORFrame extends React.Component {
+export default class RealtimeOrdinalFrame extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
@@ -81,9 +81,9 @@ export default class RealtimeORFrame extends React.Component {
       if (now.getTime() - dataStart.getTime() > 60000) {
         clearInterval(fakeRealtimeDataInterval)
       }
-      const errorAmount = parseInt(Math.random() * 3)
-      const infoAmount = parseInt(Math.random() * 8)
-      const warningAmount = parseInt(Math.random() * 5)
+      const errorAmount = parseInt(Math.random() * 3, 10)
+      const infoAmount = parseInt(Math.random() * 8, 10)
+      const warningAmount = parseInt(Math.random() * 5, 10)
       const totalEvents = errorAmount + infoAmount + warningAmount
 
       newData.push({
@@ -154,7 +154,7 @@ export default class RealtimeORFrame extends React.Component {
     examples.push({
       name: "Basic",
       demo: (
-        <ORFrame
+        <OrdinalFrame
           size={[700, 300]}
           data={barData}
           oAccessor={"column"}
@@ -226,7 +226,7 @@ const orAnnotation = {
   label: "awesome?"
 };
 
-export default class RealtimeORFrame extends React.Component {
+export default class RealtimeOrdinalFrame extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -327,7 +327,7 @@ export default class RealtimeORFrame extends React.Component {
   }
 
   render() {
-        <ORFrame
+        <OrdinalFrame
           size={[700, 300]}
           data={barData}
           oAccessor={"column"}
@@ -369,9 +369,9 @@ export default class RealtimeORFrame extends React.Component {
         buttons={[]}
       >
         <p>
-          A simple example of how to serve streaming data into an ORFrame. This
-          creates a stream using a simple setInterval script. The settings are
-          the same as you would see elsewhere (except with some behavior to
+          A simple example of how to serve streaming data into an OrdinalFrame.
+          This creates a stream using a simple setInterval script. The settings
+          are the same as you would see elsewhere (except with some behavior to
           filter the data and update annotations) but the important thing to
           notice is the use of{" "}
           <span style={{ fontWeight: 900 }}>renderKey</span>. When you set
@@ -387,4 +387,4 @@ export default class RealtimeORFrame extends React.Component {
   }
 }
 
-RealtimeORFrame.title = "Realtime Bars"
+RealtimeOrdinalFrame.title = "Realtime Bars"

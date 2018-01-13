@@ -1,7 +1,6 @@
 import React from "react"
-import { ORFrame, Mark } from "../../components"
+import { OrdinalFrame } from "../../components"
 
-const padding = 40
 const bulletData = [
   {
     title: "Revenue",
@@ -62,13 +61,10 @@ function generateBulletChart({ data, rScale, adjustedSize, margin }) {
     range: 1,
     measure: 0.5
   }
-  const opacityHash = {
-    range: 0.25,
-    measure: 0.25
-  }
+
   const renderedPieces = []
 
-  // Each chart is a separate ORFrame with a single column called "fixed"
+  // Each chart is a separate OrdinalFrame with a single column called "fixed"
   const column = data.fixed
   column.pieceData.forEach((d, i) => {
     let pieceShape = {
@@ -129,7 +125,7 @@ export default (
         .map(p => ({ class: "marker", value: p }))
         .sort((a, b) => b.value - a.value)
       return (
-        <ORFrame
+        <OrdinalFrame
           key={`orframe-${i}`}
           size={[700, 100]}
           data={[...bulletRanges, ...bulletMeasures, ...bulletMarkers]}

@@ -77,10 +77,9 @@ export default class RealtimeXYFrame extends React.Component {
       if (now.getTime() - dataStart.getTime() > 60000) {
         clearInterval(fakeRealtimeDataInterval)
       }
-      const errorAmount = parseInt(Math.random() * 3)
-      const infoAmount = parseInt(Math.random() * 8)
-      const warningAmount = parseInt(Math.random() * 5)
-      const totalEvents = errorAmount + infoAmount + warningAmount
+      const errorAmount = parseInt(Math.random() * 3, 10)
+      const infoAmount = parseInt(Math.random() * 8, 10)
+      const warningAmount = parseInt(Math.random() * 5, 10)
 
       eventLines.error.coordinates.push({
         time: now.getTime(),
@@ -124,7 +123,8 @@ export default class RealtimeXYFrame extends React.Component {
           size={[700, 300]}
           lines={eventData}
           lineDataAccessor={d =>
-            d.coordinates.filter((p, q) => q > d.coordinates.length - 10)}
+            d.coordinates.filter((p, q) => q > d.coordinates.length - 10)
+          }
           xAccessor={"time"}
           yAccessor={"number"}
           lineType={{

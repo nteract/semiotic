@@ -36,22 +36,6 @@ export const xyFrameChangeProps = [
   "lineIDAccessor"
 ]
 
-const xyFrameOtherProps = [
-  "matte",
-  "tooltipContent",
-  "interaction",
-  "annotations",
-  "svgAnnotationRules",
-  "htmlAnnotationRules",
-  "customHoverBehavior",
-  "customClickBehavior",
-  "customDoubleclickBehavior",
-  "backgroundGraphics",
-  "foregroundGraphics",
-  "download",
-  "downloadFields"
-]
-
 export const orFrameChangeProps = [
   "data",
   "name",
@@ -89,19 +73,6 @@ export const orFrameChangeProps = [
   "axis"
 ]
 
-const orFrameOtherProps = [
-  "annotations",
-  "htmlAnnotationRules",
-  "tooltipContent",
-  "interaction",
-  "customHoverBehavior",
-  "customClickBehavior",
-  "svgAnnotationRules",
-  "hoverAnnotation",
-  "backgroundGraphics",
-  "foregroundGraphics"
-]
-
 export const networkFrameChangeProps = [
   "name",
   "nodes",
@@ -125,6 +96,36 @@ export const networkFrameChangeProps = [
   "edgeType"
 ]
 
+/*
+const xyFrameOtherProps = [
+  "matte",
+  "tooltipContent",
+  "interaction",
+  "annotations",
+  "svgAnnotationRules",
+  "htmlAnnotationRules",
+  "customHoverBehavior",
+  "customClickBehavior",
+  "customDoubleclickBehavior",
+  "backgroundGraphics",
+  "foregroundGraphics",
+  "download",
+  "downloadFields"
+]
+
+const orFrameOtherProps = [
+  "annotations",
+  "htmlAnnotationRules",
+  "tooltipContent",
+  "interaction",
+  "customHoverBehavior",
+  "customClickBehavior",
+  "svgAnnotationRules",
+  "hoverAnnotation",
+  "backgroundGraphics",
+  "foregroundGraphics"
+]
+
 const networkFrameOtherProps = [
   "annotations",
   "htmlAnnotationRules",
@@ -138,3 +139,4 @@ const networkFrameOtherProps = [
   "backgroundGraphics",
   "foregroundGraphics"
 ]
+*/

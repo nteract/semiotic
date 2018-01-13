@@ -104,7 +104,7 @@ function waterfall({ data, rScale, adjustedSize, margin }) {
     return renderedPieces
 }
 
-        <ORFrame
+        <OrdinalFrame
             size={[ 700,400 ]}
             data={data}
             rExtent={[ 0,65000 ]}

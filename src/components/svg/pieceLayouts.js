@@ -333,14 +333,14 @@ export function barLayout({
         }
       }
 
-      let markD, translate, markProps
+      let markD, markProps
 
       if (projection === "radial") {
         let { innerRadius } = type
         let innerSize = (piece._orFRBottom - margin.left) / 2
         let outerSize = piece._orFR / 2 + (piece._orFRBottom - margin.left) / 2
         if (innerRadius) {
-          innerRadius = parseInt(innerRadius)
+          innerRadius = parseInt(innerRadius, 10)
           const canvasRadius = adjustedSize[0] / 2
           const donutMod = (canvasRadius - innerRadius) / canvasRadius
           innerSize = innerSize * donutMod + innerRadius
@@ -496,7 +496,7 @@ export function timelineLayout({
         let innerSize = (piece._orFR - margin.left) / 2
         let outerSize = (piece._orFREnd - margin.left) / 2
         if (innerRadius) {
-          innerRadius = parseInt(innerRadius)
+          innerRadius = parseInt(innerRadius, 10)
           const canvasRadius = adjustedSize[0] / 2
           const donutMod = (canvasRadius - innerRadius) / canvasRadius
           innerSize = innerSize * donutMod + innerRadius

@@ -22,12 +22,6 @@ const generatedData = dataSeeds.map((s, i) => {
   }
 })
 
-const lineStyle = {
-  fill: "#007190",
-  stroke: "#007190",
-  strokeWidth: 1
-}
-
 const xyFrameSettings = {
   lines: generatedData,
   lineType: { type: "line", interpolator: curveMonotoneX },

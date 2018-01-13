@@ -55,7 +55,7 @@ export default class SwarmBrush extends React.Component {
     }
 
     <div>
-    <ORFrame
+    <OrdinalFrame
         size={[ 700,200 ]}
         data={data}
         rAccessor={d => d.value}
@@ -86,8 +86,8 @@ export default class SwarmBrush extends React.Component {
         <p>
           The parallel coordinates example is a very complex use of brushes and
           the minimap functionality is pretty magical, so here's an example of
-          how to use an ORFrame's interaction property to define a brush so that
-          you can select a few values in a beeswarm plot.
+          how to use an OrdinalFrame's interaction property to define a brush so
+          that you can select a few values in a beeswarm plot.
         </p>
       </DocumentComponent>
     )

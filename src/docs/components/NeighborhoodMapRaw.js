@@ -15,23 +15,22 @@ const colors = [
   "rgb(182, 167, 86)"
 ]
 
-const parsedData = csvParse(data).map(d => {
+csvParse(data).forEach(d => {
   const point = {
-    x: parseFloat(d.x),
-    y: parseFloat(d.y),
+    x: +d.x,
+    y: +d.y,
     show_title_id: d.show_title_id,
-    hood: parseInt(d.hood)
+    hood: +d.hood
   }
   if (!groupHash[d.hood]) {
     groupHash[d.hood] = {
       key: d.hood,
       coordinates: [],
-      color: colors[parseInt(d.hood) % 6]
+      color: colors[+d.hood % 6]
     }
     groupedData.push(groupHash[d.hood])
   }
   groupHash[d.hood].coordinates.push(point)
-  return point
 })
 
 export default (

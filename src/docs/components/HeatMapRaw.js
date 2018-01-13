@@ -1,6 +1,6 @@
 import React from "react"
 import { scaleLinear } from "d3-scale"
-import { ORFrame } from "../../components"
+import { OrdinalFrame } from "../../components"
 
 let startSeed = 0.5
 
@@ -35,7 +35,7 @@ const daysAxis = {
 }
 
 export default (
-  <ORFrame
+  <OrdinalFrame
     size={[700, 400]}
     data={tiles}
     rAccessor={() => 1}

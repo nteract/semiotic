@@ -9,7 +9,7 @@ export default (
     <p>
       Each of the examples below uses custom settings and styles to display one
       of the three frame types in Semiotic (<Link to="xyframe">XYFrame</Link>,{" "}
-      <Link to="orframe">ORFrame</Link>,{" "}
+      <Link to="orframe">OrdinalFrame</Link>,{" "}
       <Link to="networkframe">NetworkFrame</Link>) to present a traditional
       chart type.
     </p>

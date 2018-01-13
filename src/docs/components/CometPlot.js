@@ -139,6 +139,7 @@ const complexTickFormat = tickValue => {
           <a
             href="https://bl.ocks.org/zanarmstrong/f7793345e15b0916d353ee33c54478c4"
             target="_blank"
+            rel="noopener noreferrer"
           >
             Zan Armstrong's concept of a Comet Plot
           </a>{" "}

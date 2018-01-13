@@ -93,7 +93,7 @@ export function axisPieces({
 
   if (!tickValues) {
     if (!ticks) {
-      ticks = Math.max(1, parseInt(axisSize / 40))
+      ticks = Math.max(1, parseInt(axisSize / 40, 10))
     }
     tickValues = scale.ticks(ticks)
   }

@@ -1,5 +1,5 @@
 import React from "react"
-import { ORFrame } from "../../components"
+import { OrdinalFrame } from "../../components"
 
 const colors = {
   "Almond lovers": "#00a2ce",
@@ -57,7 +57,7 @@ const data = [
 ]
 
 export default (
-  <ORFrame
+  <OrdinalFrame
     size={[700, 400]}
     data={data}
     rAccessor={d => d.pct}

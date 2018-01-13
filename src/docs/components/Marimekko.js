@@ -38,7 +38,7 @@ export default class MarimekkoDocs extends React.Component {
         {"market": "Durham, NC", "segment": "Carrots-n-more", "value": 640, pct: .35},
         {"market": "Durham, NC", "segment": "Delicious-n-new", "value": 400, pct: .22}
     ]
-      <ORFrame
+      <OrdinalFrame
     size={[ 700,400 ]}
     data={data}
     rAccessor={d => d.pct}

@@ -1,26 +1,13 @@
 import React from "react"
-import { summaryChart } from "../example_settings/orframe"
 import { NetworkFrame } from "../../components"
-import { max } from "d3-array"
 import data from "../sampledata/flare.json"
 import {
   /*forceCenter,*/ forceSimulation,
   forceX,
   forceY,
   forceCollide,
-  forceLink,
   forceManyBody
 } from "d3-force"
-
-const axis = {
-  orient: "left",
-  tickFormat: d => d,
-  label: {
-    name: "axis label",
-    position: { anchor: "middle" },
-    locationDistance: 40
-  }
-}
 
 const colors = ["#4d430c", "#b3331d", "#b6a756", "black"]
 

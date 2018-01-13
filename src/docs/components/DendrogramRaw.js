@@ -1,7 +1,6 @@
 import React from "react"
 import { NetworkFrame } from "../../components"
 import { data } from "../sampledata/d3_api"
-import { scaleLinear } from "d3-scale"
 
 const colors = ["#00a2ce", "#b6a756", "#4d430c", "#b3331d"]
 
@@ -10,11 +9,6 @@ export default ({
   type = "dendrogram",
   projection
 }) => {
-  const sizeScale = scaleLinear()
-    .domain([0, 1000])
-    .range([1, 10])
-    .clamp(true)
-
   return (
     <NetworkFrame
       title={"D3v3 API"}

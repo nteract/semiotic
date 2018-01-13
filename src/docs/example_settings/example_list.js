@@ -109,7 +109,9 @@ const exampos = [
   {
     label: "Swarm Brush",
     viz: SwarmBrushRaw(
-      Array.from(Array(200), () => ({ value: parseInt(Math.random() * 100) })),
+      Array.from(Array(200), () => ({
+        value: parseInt(Math.random() * 100, 10)
+      })),
       () => {}
     ),
     path: "swarmbrush"

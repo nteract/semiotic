@@ -25,13 +25,13 @@ export default class BulletChart extends React.Component {
         buttons={[]}
       >
         <p>
-          This demonstrates a custom type which uses multiple ORFrames to create
-          a bullet chart. The bullet chart has multiple bar-like elements as
-          well as a single line element to relay different information.
+          This demonstrates a custom type which uses multiple OrdinalFrames to
+          create a bullet chart. The bullet chart has multiple bar-like elements
+          as well as a single line element to relay different information.
         </p>
         <p>
-          A custom type function in ORFrame returns a structured object for each
-          element to be displayed on the frame. That object has a an "o"
+          A custom type function in OrdinalFrame returns a structured object for
+          each element to be displayed on the frame. That object has a an "o"
           attribute that takes the name of the column, a "piece" attribute that
           holds the original data associated with the graphical object, a
           "renderElement" which is either an object with properties suitable to
@@ -39,7 +39,7 @@ export default class BulletChart extends React.Component {
           "y" value for hover annotations when pieceHoverAnnotation is turned
           on. In this way you can create a bullet chart like the one above that
           has interactive tooltips on all elements. The main reason for using
-          multiple ORFrames is the custom scale in each frame.
+          multiple OrdinalFrames is the custom scale in each frame.
         </p>
       </DocumentComponent>
     )

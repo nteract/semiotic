@@ -1,7 +1,6 @@
 import React from "react"
-import { ORFrame } from "../../components"
+import { OrdinalFrame } from "../../components"
 import { xyframe_data } from "../sampledata/nyc_temp"
-import { scaleLinear } from "d3-scale"
 import { sum, max } from "d3-array"
 import { curveMonotoneX } from "d3-shape"
 
@@ -19,9 +18,8 @@ const months = [
   "September",
   "December"
 ]
-const components = []
 const individualData = []
-xyframe_data.filter(d => parseInt(d.year) > 1800).forEach(d => {
+xyframe_data.filter(d => +d.year > 1800).forEach(d => {
   individualData.push({ month: 0, value: 0.1, year: d.year })
   months.forEach((m, mi) => {
     individualData.push({ month: mi + 1, value: d[m] - 19.9, year: d.year })
@@ -31,7 +29,7 @@ xyframe_data.filter(d => parseInt(d.year) > 1800).forEach(d => {
 
 export default (
   <div style={{ background: "black" }}>
-    <ORFrame
+    <OrdinalFrame
       size={[700, 500]}
       data={individualData}
       projection={"horizontal"}
@@ -53,9 +51,7 @@ export default (
       rAccessor={d => d.month}
       dynamicColumnWidth={d => max(d.map(p => p.month))}
       oLabel={d =>
-        parseInt(d) % 10 === 0 ? (
-          <text style={{ textAnchor: "end" }}>{d}</text>
-        ) : null
+        +d % 10 === 0 ? <text style={{ textAnchor: "end" }}>{d}</text> : null
       }
       margin={{ left: 20, top: 50, bottom: 10, right: 10 }}
       oPadding={2}

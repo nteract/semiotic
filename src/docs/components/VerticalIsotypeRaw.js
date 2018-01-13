@@ -1,5 +1,5 @@
 import React from "react"
-import { ORFrame } from "../../components"
+import { OrdinalFrame } from "../../components"
 import { AnnotationCalloutElbow } from "react-annotation"
 //import cow from "material-design-icons-svg/paths/cow";
 //import cat from "material-design-icons-svg/paths/cat";
@@ -63,7 +63,7 @@ const colorHash = {
 }
 
 export default (
-  <ORFrame
+  <OrdinalFrame
     size={[700, 438]}
     data={vizzers}
     type={{

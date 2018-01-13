@@ -34,7 +34,7 @@ import {
   calculateMargin,
   objectifyType,
   keyAndObjectifyBarData,
-  generateORFrameEventListeners,
+  generateOrdinalFrameEventListeners,
   adjustedPositionSize,
   generateFrameTitle,
   orFrameConnectionRenderer,
@@ -72,7 +72,7 @@ const layoutHash = {
   timeline: timelineLayout
 }
 
-class ORFrame extends React.Component {
+class OrdinalFrame extends React.Component {
   static defaultProps = {
     annotations: [],
     foregroundGraphics: [],
@@ -85,7 +85,7 @@ class ORFrame extends React.Component {
   constructor(props) {
     super(props)
 
-    this.calculateORFrame = this.calculateORFrame.bind(this)
+    this.calculateOrdinalFrame = this.calculateOrdinalFrame.bind(this)
     this.defaultORHTMLRule = this.defaultORHTMLRule.bind(this)
     this.defaultORSVGRule = this.defaultORSVGRule.bind(this)
 
@@ -108,7 +108,7 @@ class ORFrame extends React.Component {
     this.rScale = null
   }
 
-  calculateORFrame(currentProps) {
+  calculateOrdinalFrame(currentProps) {
     let oLabels
     const projectedColumns = {}
 
@@ -125,7 +125,7 @@ class ORFrame extends React.Component {
       size,
       pixelColumnWidth
     } = currentProps
-    const eventListenersGenerator = generateORFrameEventListeners(
+    const eventListenersGenerator = generateOrdinalFrameEventListeners(
       customHoverBehavior,
       customClickBehavior
     )
@@ -693,7 +693,7 @@ class ORFrame extends React.Component {
     const pieceRenderMode = stringToFn(renderMode, undefined, true)
     const pieceCanvasRender = stringToFn(canvasPieces, undefined, true)
     const summaryCanvasRender = stringToFn(canvasPieces, undefined, true)
-    const connectorCanvasRender = stringToFn(canvasPieces, undefined, true)
+    const connectorCanvasRender = stringToFn(canvasConnectors, undefined, true)
 
     const pieceTypeForXY =
       pieceType.type && pieceType.type !== "none" ? pieceType.type : "point"
@@ -833,7 +833,7 @@ class ORFrame extends React.Component {
   }
 
   componentWillMount() {
-    this.calculateORFrame(this.props)
+    this.calculateOrdinalFrame(this.props)
   }
 
   componentWillReceiveProps(nextProps) {
@@ -842,7 +842,7 @@ class ORFrame extends React.Component {
         this.state.dataVersion !== nextProps.dataVersion) ||
       !this.state.projectedColumns
     ) {
-      this.calculateORFrame(nextProps)
+      this.calculateOrdinalFrame(nextProps)
     } else if (
       this.props.size[0] !== nextProps.size[0] ||
       this.props.size[1] !== nextProps.size[1] ||
@@ -851,7 +851,7 @@ class ORFrame extends React.Component {
           return this.props[d] !== nextProps[d]
         }))
     ) {
-      this.calculateORFrame(nextProps)
+      this.calculateOrdinalFrame(nextProps)
     }
   }
 
@@ -1232,7 +1232,7 @@ class ORFrame extends React.Component {
   }
 }
 
-ORFrame.propTypes = {
+OrdinalFrame.propTypes = {
   data: PropTypes.array,
   name: PropTypes.string,
   orient: PropTypes.string,
@@ -1308,4 +1308,4 @@ ORFrame.propTypes = {
   foregroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array])
 }
 
-export default ORFrame
+export default OrdinalFrame

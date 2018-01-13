@@ -1,7 +1,7 @@
 import React from "react"
 
 import XYFrame from "./XYFrame"
-import ORFrame from "./ORFrame"
+import OrdinalFrame from "./OrdinalFrame"
 
 // components
 
@@ -11,7 +11,7 @@ class SmartFrame extends React.Component {
   render() {
     if (this.props.frameType === "orFrame") {
       return (
-        <ORFrame
+        <OrdinalFrame
           {...this.props}
           oAccessor={this.props.xAccessor}
           rAccessor={this.props.yAccessor}

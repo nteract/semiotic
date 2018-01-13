@@ -1,5 +1,5 @@
 import React from "react"
-import { ORFrame } from "../../components"
+import { OrdinalFrame } from "../../components"
 
 const data = [
   {
@@ -156,7 +156,7 @@ const data = [
 ]
 
 export default (
-  <ORFrame
+  <OrdinalFrame
     size={[700, 500]}
     data={data}
     rAccessor={d => [d.start, d.end]}

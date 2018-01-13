@@ -1,5 +1,3 @@
-import { min, max } from "d3-array"
-
 export const chuckCloseCanvasTransform = (
   canvas,
   context,
@@ -43,9 +41,9 @@ export const chuckCloseCanvasTransform = (
       for (let p = 0; p < pixelSize * 4; p += pixelSize * 4) {
         for (let q = 0; q < pixelSize * rgbWidth; q += rgbWidth) {
           if (imageArray[p + i + q + 3] !== -1) {
-            const hashVal = `rgba(${imageArray[p + i + q]},${imageArray[
-              p + i + q + 1
-            ]},${imageArray[p + i + q + 2]},${imageArray[p + i + q + 3]})`
+            const hashVal = `rgba(${imageArray[p + i + q]},${
+              imageArray[p + i + q + 1]
+            },${imageArray[p + i + q + 2]},${imageArray[p + i + q + 3]})`
             rgbHash[hashVal] = rgbHash[hashVal] ? rgbHash[hashVal] + 1 : 1
             totalHash += 1
           }

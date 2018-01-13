@@ -15,16 +15,12 @@ import { scaleLinear, scaleIdentity } from "d3-scale"
 import { min, max } from "d3-array"
 
 import { filterDefs } from "./constants/jsx"
-import Annotation from "./Annotation"
 
-import { packEnclose, packSiblings, stratify } from "d3-hierarchy"
-import {
-  /*annotationXYThreshold,*/ AnnotationCalloutCircle,
-  AnnotationLabel
-} from "react-annotation"
+import { packSiblings, stratify } from "d3-hierarchy"
+import { AnnotationLabel } from "react-annotation"
 
 import Frame from "./Frame"
-import { Mark } from "semiotic-mark"
+
 import DownloadButton from "./DownloadButton"
 import { linearRibbon } from "./svg/SvgHelper"
 
@@ -66,7 +62,7 @@ import {
 } from "d3-sankey-circular"
 import { interpolateNumber } from "d3-interpolate"
 import { chord, ribbon } from "d3-chord"
-import { arc, curveBasisClosed } from "d3-shape"
+import { arc } from "d3-shape"
 import {
   tree,
   hierarchy,
@@ -410,7 +406,7 @@ class NetworkFrame extends React.Component {
 
     let { edgeType, customNodeIcon, customEdgeIcon } = currentProps
 
-    let networkSettings, rootNode, hierarchicalNetwork
+    let networkSettings
 
     if (typeof networkType === "string") {
       networkSettings = { type: networkType, iterations: 500 }
@@ -594,7 +590,6 @@ class NetworkFrame extends React.Component {
       edgeType = d =>
         d.circular ? /*d.path*/ circularAreaLink(d) : areaLink(d)
 
-      let initCustomNodeIcon = customNodeIcon
       customNodeIcon = customNodeIcon ? customNodeIcon : sankeyNodeGenerator
     } else if (networkSettings.type === "chord") {
       customNodeIcon = chordNodeGenerator(size)
@@ -730,7 +725,7 @@ class NetworkFrame extends React.Component {
         } = networkSettings
         const sankeyOrient = sankeyOrientHash[orient]
 
-        const actualSankey = networkSettings.customSankey || sankey
+        const actualSankey = customSankey || sankey
 
         const frameSankey = actualSankey()
           .extent([
@@ -1010,7 +1005,7 @@ class NetworkFrame extends React.Component {
           })
         })
       } else if (typeof networkSettings.type === "function") {
-        const customProjectedGraph = networkSettings.type({
+        networkSettings.type({
           nodes: projectedNodes,
           edges: projectedEdges
         })

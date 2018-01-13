@@ -1,6 +1,5 @@
 import React from "react"
-import { scaleLinear } from "d3-scale"
-import { ORFrame, XYFrame, NetworkFrame } from "../../components"
+import { OrdinalFrame, XYFrame, NetworkFrame } from "../../components"
 import { testData } from "../example_settings/xyframe"
 import { funnelData } from "../example_settings/orframe"
 import { edgeData } from "../example_settings/networkframe"
@@ -35,7 +34,7 @@ export const genericLineChart = (
 )
 
 export const genericBarChart = (
-  <ORFrame
+  <OrdinalFrame
     size={[500, 500]}
     data={funnelData}
     oAccessor={"stepName"}

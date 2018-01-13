@@ -110,7 +110,7 @@ export function objectifyType(type) {
   return typeof type === "object" && type !== null ? type : { type: type }
 }
 
-export function generateORFrameEventListeners(
+export function generateOrdinalFrameEventListeners(
   customHoverBehavior,
   customClickBehavior
 ) {
@@ -348,7 +348,9 @@ export function orFrameSummaryRenderer({
     summaryRenderFn = summaryRenderHash[type.type]
   } else {
     console.error(
-      `Invalid summary type: ${type.type} - Must be a function or one of the following strings: ${Object.keys(
+      `Invalid summary type: ${
+        type.type
+      } - Must be a function or one of the following strings: ${Object.keys(
         summaryRenderHash
       )}`
     )

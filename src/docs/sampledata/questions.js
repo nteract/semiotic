@@ -19,29 +19,29 @@ processedQuestions.forEach(d => {
     question: d.question,
     type: "disagree",
     color: "#d38779",
-    value: -parseInt(d["2"]),
-    percent: -(parseInt(d["2"]) / parseInt(d["n"]))
+    value: -parseInt(d["2"], 10),
+    percent: -(parseInt(d["2"], 10) / parseInt(d["n"], 10))
   })
   processedAnswers.push({
     question: d.question,
     type: "stronglydisagree",
     color: "#b3331d",
-    value: -parseInt(d["1"]),
-    percent: -(parseInt(d["1"]) / parseInt(d["n"]))
+    value: -parseInt(d["1"], 10),
+    percent: -(parseInt(d["1"], 10) / parseInt(d["n"], 10))
   })
   processedAnswers.push({
     question: d.question,
     type: "agree",
     color: "#00a2ce",
-    value: parseInt(d["4"]),
-    percent: parseInt(d["4"]) / parseInt(d["n"])
+    value: parseInt(d["4"], 10),
+    percent: parseInt(d["4"], 10) / parseInt(d["n"], 10)
   })
   processedAnswers.push({
     question: d.question,
     type: "stronglyagree",
     color: "#007190",
-    value: parseInt(d["5"]),
-    percent: parseInt(d["5"]) / parseInt(d["n"])
+    value: parseInt(d["5"], 10),
+    percent: parseInt(d["5"], 10) / parseInt(d["n"], 10)
   })
 })
 

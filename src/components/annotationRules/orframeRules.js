@@ -9,7 +9,6 @@ import {
 import { packEnclose } from "d3-hierarchy"
 import { max, min, sum, extent } from "d3-array"
 import { pointOnArcAtAngle } from "../svg/pieceDrawing"
-import { arc } from "d3-shape"
 import { circleEnclosure, rectangleEnclosure } from "./baseRules"
 
 function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
@@ -108,12 +107,6 @@ function arcBracket({
       innerEnd.y
     ].join(" ")
   } else {
-    const middle = polarToCartesian(
-      x,
-      y,
-      radius + outset,
-      (startAngle + endAngle) / 2
-    )
     d = [
       "M",
       innerStart.x,
@@ -371,11 +364,11 @@ export const svgCategoryRule = ({
   } else {
     const leftX = min(cats.map(d => d.x))
     const rightX = max(cats.map(d => d.x + d.width))
-    let noteData
+
     if (projection === "vertical") {
       let yPosition = position === "top" ? margin.top : adjustedSize[1]
       yPosition += position === "top" ? -offset : offset
-      let noteData = {
+      const noteData = {
         type: AnnotationBracket,
         y: yPosition,
         x: leftX - padding,
@@ -394,7 +387,7 @@ export const svgCategoryRule = ({
       let yPosition =
         position === "left" ? margin.left : adjustedSize[0] + margin.left
       yPosition += position === "left" ? -offset : offset
-      let noteData = {
+      const noteData = {
         type: AnnotationBracket,
         x: yPosition,
         y: leftX - padding,

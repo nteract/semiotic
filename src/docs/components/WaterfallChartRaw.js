@@ -1,5 +1,5 @@
 import React from "react"
-import { ORFrame } from "../../components"
+import { OrdinalFrame } from "../../components"
 
 const padding = 40
 const data = [
@@ -102,7 +102,7 @@ function waterfall({ data, rScale, adjustedSize, margin }) {
 }
 
 export default (
-  <ORFrame
+  <OrdinalFrame
     size={[700, 400]}
     data={data}
     rExtent={[0, 65000]}

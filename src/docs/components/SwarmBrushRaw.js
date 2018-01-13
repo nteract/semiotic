@@ -1,9 +1,9 @@
 import React from "react"
-import { ORFrame } from "../../components"
+import { OrdinalFrame } from "../../components"
 
 export default (data, event, resetExtent) => (
   <div style={{ marginTop: "50px" }}>
-    <ORFrame
+    <OrdinalFrame
       size={[700, 200]}
       data={data}
       rAccessor={d => d.value}

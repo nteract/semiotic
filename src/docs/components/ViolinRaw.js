@@ -1,6 +1,6 @@
 import React from "react"
 import { summaryChart } from "../example_settings/orframe"
-import { ORFrame } from "../../components"
+import { OrdinalFrame } from "../../components"
 import { max } from "d3-array"
 
 const axis = {
@@ -14,7 +14,7 @@ const axis = {
 }
 
 export default (
-  <ORFrame
+  <OrdinalFrame
     size={[700, 600]}
     axis={axis}
     {...summaryChart}
