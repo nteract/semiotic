@@ -159,7 +159,8 @@ const lineAnnotater = ({ d, xScale, yScale }) => {
   })
 }
 
-const pointsAtThisPoint = ({ d, lines, xScale, yScale }) => {
+/*
+function pointsAtThisPoint({ d, lines, xScale, yScale }) {
   if (d && d._xyfX) {
     const thesePoints = lines.map(line => {
       return line.data.find(p => p._xyfX === d._xyfX)
@@ -180,6 +181,7 @@ const pointsAtThisPoint = ({ d, lines, xScale, yScale }) => {
   }
   return null
 }
+*/
 
 export const regionatedLineChart = {
   title: "Monthly Temperature in New York Since 1869",

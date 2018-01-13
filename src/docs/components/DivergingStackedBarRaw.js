@@ -1,9 +1,9 @@
 import React from "react"
 import { answers } from "../sampledata/questions"
-import { ORFrame } from "../../components"
+import { OrdinalFrame } from "../../components"
 
 export default (
-  <ORFrame
+  <OrdinalFrame
     size={[700, 500]}
     data={answers}
     type="bar"

@@ -28,7 +28,8 @@ const Home = ({ match }) => {
               color="primary"
               raised
               onTouchTap={() =>
-                window.open(`https://github.com/emeeks/semiotic`)}
+                window.open(`https://github.com/emeeks/semiotic`)
+              }
             >
               Github Repo
             </Button>
@@ -38,7 +39,8 @@ const Home = ({ match }) => {
               onTouchTap={() =>
                 window.open(
                   `https://github.com/emeeks/semiotic/wiki/API-Reference`
-                )}
+                )
+              }
             >
               API Docs
             </Button>
@@ -46,9 +48,8 @@ const Home = ({ match }) => {
               color="primary"
               raised
               onTouchTap={() =>
-                window.open(
-                  `https://github.com/emeeks/semiotic/wiki/Tutorials`
-                )}
+                window.open(`https://github.com/emeeks/semiotic/wiki/Tutorials`)
+              }
             >
               Tutorials
             </Button>
@@ -62,7 +63,7 @@ const Home = ({ match }) => {
               Semiotic is a data visualization framework for React.
             </span>{" "}
             It provides three types of frames (<Link to="xyframe">XYFrame</Link>,{" "}
-            <Link to="orframe">ORFrame</Link>,{" "}
+            <Link to="orframe">OrdinalFrame</Link>,{" "}
             <Link to="networkframe">NetworkFrame</Link>) which allow you to
             deploy a wide variety of charts that share the same rules for how to
             display information. By adjusting the settings of a frame, you can

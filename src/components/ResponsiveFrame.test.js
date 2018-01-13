@@ -6,7 +6,7 @@ injectTapEventPlugin()
 
 /* 
 export const ResponsiveXYFrame = createResponsiveFrame(XYFrame);
-export const ResponsiveORFrame = createResponsiveFrame(ORFrame);
+export const ResponsiveOrdinalFrame = createResponsiveFrame(OrdinalFrame);
 export const ResponsiveNetworkFrame = createResponsiveFrame(NetworkFrame);
 export const ResponsiveSmartFrame = createResponsiveFrame(SmartFrame);
 export const ResponsiveMinimapXYFrame = createResponsiveFrame(MinimapXYFrame);

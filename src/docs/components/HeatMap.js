@@ -2,7 +2,7 @@ import React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 import { scaleLinear } from "d3-scale"
 import HeatMapRaw from "./HeatMapRaw"
-import { ORFrame } from "../../components"
+import { OrdinalFrame } from "../../components"
 
 const components = []
 
@@ -39,7 +39,7 @@ const daysAxis = { orient: 'left',
     tickFormat: d => daysOfTheWeek[d] ? 
     <text style={{ textAnchor: "end" }} y={20}>{daysOfTheWeek[d]}</text> : "" }
 
-<ORFrame
+<OrdinalFrame
     size={[ 700,400 ]}
     data={tiles}
     rAccessor={() => 1}

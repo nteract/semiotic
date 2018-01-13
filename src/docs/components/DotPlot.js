@@ -62,7 +62,7 @@ export default class DotPlotDocs extends React.Component {
       return null
     }
 
-    <ORFrame
+    <OrdinalFrame
       title={"Neonatal Mortality Rate by Region"}
       size={[ 700,500 ]}
       data={data}

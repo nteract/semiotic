@@ -176,8 +176,11 @@ class InteractionLayer extends React.Component {
       const voronoiUniqueHash = {}
 
       points.forEach(d => {
-        const xValue = parseInt(xScale(d[projectedX]))
-        const yValue = parseInt(yScale(d[projectedYMiddle] || d[projectedY]))
+        const xValue = parseInt(xScale(d[projectedX]), 10)
+        const yValue = parseInt(
+          yScale(d[projectedYMiddle] || d[projectedY]),
+          10
+        )
         if (
           xValue !== undefined &&
           yValue !== undefined &&

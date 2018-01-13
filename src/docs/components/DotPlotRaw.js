@@ -1,5 +1,5 @@
 import React from "react"
-import { ORFrame } from "../../components"
+import { OrdinalFrame } from "../../components"
 
 const colors = {
   y1990: "#00a2ce",
@@ -68,7 +68,7 @@ function drawRange({ d, rScale, orFrameState }) {
 }
 
 export default (
-  <ORFrame
+  <OrdinalFrame
     title={"Neonatal Mortality Rate by Region"}
     size={[700, 500]}
     data={data}

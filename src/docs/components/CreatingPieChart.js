@@ -1,5 +1,5 @@
 import React from "react"
-import { ORFrame } from "../../components"
+import { OrdinalFrame } from "../../components"
 import { sum } from "d3-array"
 
 import DocumentComponent from "../layout/DocumentComponent"
@@ -91,8 +91,6 @@ const windRoseData = [
   { angle: "345-355", wind: 0.569 }
 ]
 
-const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"]
-
 const colorHash = {
   Jason: "#00a2ce",
   Susie: "#4d430c",
@@ -115,7 +113,7 @@ export default class CreatingPieChart extends React.Component {
       demo: (
         <div>
           <p>
-            ORFrame operates on an array of data referred to in the API as
+            OrdinalFrame operates on an array of data referred to in the API as
             "pieces". These pieces can be shown individually or stacked in a bar
             chart, or as points on a dot plot or you can show summary
             visualizations of the patterns of the data.
@@ -153,7 +151,7 @@ export default class CreatingPieChart extends React.Component {
             If labels are turned on in radial projection the labels are placed
             on the centroid of the pie slice.
           </p>
-          <ORFrame
+          <OrdinalFrame
             size={[300, 300]}
             data={pieChartData}
             oAccessor={"user"}
@@ -165,7 +163,7 @@ export default class CreatingPieChart extends React.Component {
           />
         </div>
       ),
-      source: `<ORFrame
+      source: `<OrdinalFrame
             size={[300, 300]}
             data={pieChartData}
             oAccessor={"user"}
@@ -183,21 +181,21 @@ export default class CreatingPieChart extends React.Component {
         <div>
           <p>
             Instead of just passing "bar" you can send an object with "type":
-            "bar" to the ORFrame type and also send an innerRadius value to make
-            a donut chart. This example also uses a colorHash to set the color
-            of each slice and sets the oPadding value to show how you can also
-            use padding with your pie and donut charts.
+            "bar" to the OrdinalFrame type and also send an innerRadius value to
+            make a donut chart. This example also uses a colorHash to set the
+            color of each slice and sets the oPadding value to show how you can
+            also use padding with your pie and donut charts.
           </p>
           <p>
-            The size of ORFrame pie charts is based on the total width of the
-            frame, which means if you want to make a smaller pie chart you can
-            adjust the left and right margins or the width of the frame.
+            The size of OrdinalFrame pie charts is based on the total width of
+            the frame, which means if you want to make a smaller pie chart you
+            can adjust the left and right margins or the width of the frame.
           </p>
           <p>
             This example sets hoverAnnotation to true to give simple tooltips.
             Mouse over the slices to see their glory.
           </p>
-          <ORFrame
+          <OrdinalFrame
             title={"A Donut Chart with Padding and Tooltips"}
             size={[300, 300]}
             data={pieChartData}
@@ -212,7 +210,7 @@ export default class CreatingPieChart extends React.Component {
           />
         </div>
       ),
-      source: `<ORFrame
+      source: `<OrdinalFrame
             title={"A Donut Chart with Padding and Tooltips"}
             size={[300, 300]}
             data={pieChartData}
@@ -283,7 +281,7 @@ export default class CreatingPieChart extends React.Component {
       demo: (
         <div>
           <p>For charts like these, you can also turn on a radial axis.</p>
-          <ORFrame
+          <OrdinalFrame
             title={"Wind Rose"}
             size={[500, 500]}
             data={windRoseData}
@@ -302,7 +300,7 @@ export default class CreatingPieChart extends React.Component {
           />
         </div>
       ),
-      source: `<ORFrame
+      source: `<OrdinalFrame
     title={"Wind Rose"}
     size={[500, 500]}
     data={windRoseData}
@@ -337,7 +335,7 @@ export default class CreatingPieChart extends React.Component {
             appear in a particular order or the stacked elements to appear in a
             particular order, just use the JavaScript .sort() method on the
             array to sort the elements how you want before you pass them to the
-            ORFrame.
+            OrdinalFrame.
           </p>
         </div>
       ),
@@ -386,7 +384,7 @@ export default class CreatingPieChart extends React.Component {
       demo: (
         <div>
           <p />
-          <ORFrame
+          <OrdinalFrame
             title={
               <g style={{ textAnchor: "middle" }} transform="translate(250,15)">
                 <text>DIAGRAM of the CAUSES of MORTALITY</text>
@@ -420,7 +418,7 @@ const colorHash = {
   "Wounds & injuries": "#b3331d",
   "All other causes": "#4d430c"
 };
-<ORFrame
+<OrdinalFrame
     title={
         <g style={{ textAnchor: "middle" }} transform="translate(250,15)">
         <text>DIAGRAM of the CAUSES of MORTALITY</text>
@@ -452,7 +450,7 @@ const colorHash = {
       demo: (
         <div>
           <p />
-          <ORFrame
+          <OrdinalFrame
             title={
               <g style={{ textAnchor: "middle" }} transform="translate(250,15)">
                 <text>DIAGRAM of the CAUSES of MORTALITY</text>

@@ -828,7 +828,7 @@ class XYFrame extends React.Component {
       downloadButton = (
         <DownloadButton
           csvName={`${name}-${new Date().toJSON()}`}
-          width={parseInt(size[0])}
+          width={parseInt(size[0], 10)}
           data={xyDownloadMapping({
             data: downloadData,
             xAccessor:

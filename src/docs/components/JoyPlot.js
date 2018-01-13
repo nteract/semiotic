@@ -19,7 +19,7 @@ export default class JoyPlotDocs extends React.Component {
       demo: JoyPlotRaw,
       source: `
 <div style={{ background: "black" }}>
-<ORFrame
+<OrdinalFrame
     size={[ 700,500 ]}
     data={individualData}
     projection={"horizontal"}

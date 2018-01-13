@@ -337,8 +337,6 @@ const movies = [
   }
 ]
 
-const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"]
-
 const colorHash = {
   "Ex Machina": "#4d430c",
   "Far from the Madding Crowd": "#b6a756"
@@ -615,11 +613,9 @@ export default class CreatingLineChart extends React.Component {
             customHoverBehavior={this.lineHoverBehavior}
             lineRenderMode="sketchy"
             annotations={
-              this.state.hoverPoint ? (
-                [Object.assign({}, this.state.hoverPoint, { type: "hover" })]
-              ) : (
-                undefined
-              )
+              this.state.hoverPoint
+                ? [Object.assign({}, this.state.hoverPoint, { type: "hover" })]
+                : undefined
             }
             svgAnnotationRules={this.lineAnnotater}
           />

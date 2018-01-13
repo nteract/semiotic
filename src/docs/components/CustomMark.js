@@ -102,7 +102,7 @@ function timeline({ data, rScale, adjustedSize, margin }) {
   return renderedPieces;
 }
 
-          <ORFrame
+          <OrdinalFrame
       projection="horizontal"
       data={data}
       size={[700, 700]}
@@ -147,7 +147,7 @@ function timeline({ data, rScale, adjustedSize, margin }) {
         buttons={buttons}
       >
         <p>
-          Another ORFrame custom type example (a more ambitious one is the
+          Another OrdinalFrame custom type example (a more ambitious one is the
           Waterfall Chart). One challenge of using custom types is you can't
           rely on Semiotic's ability to generate the extent, so in this case
           because my extent is based on the earliest birth date and the latest

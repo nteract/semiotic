@@ -19,7 +19,7 @@ export default class BarLineDocs extends React.Component {
       name: "Basic",
       demo: BarLineRaw,
       source: `
-      import { XYFrame, ORFrame } from 'semiotic'
+      import { XYFrame, OrdinalFrame } from 'semiotic'
       import { curveBasis } from 'd3-shape'
       
       const axes = [
@@ -36,7 +36,7 @@ export default class BarLineDocs extends React.Component {
 
         <div style={{ height: '300px' }}>
             <div style={{ position: 'absolute' }}>
-            <ORFrame
+            <OrdinalFrame
                 { ...sharedProps }
                 className='divided-line-or'
                 data={displayData[0].data}

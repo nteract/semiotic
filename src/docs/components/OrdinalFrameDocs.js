@@ -1,6 +1,6 @@
 import React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
-import { ORFrame } from "../../components"
+import { OrdinalFrame } from "../../components"
 import { randomNormal } from "d3-random"
 import { funnelData } from "../example_settings/orframe"
 import Button from "material-ui/Button"
@@ -89,7 +89,7 @@ const components = []
 // multiple component proptype documentation supported
 
 components.push({
-  name: "ORFrame",
+  name: "OrdinalFrame",
   proptypes: `
     {
   name: PropTypes.string,
@@ -312,7 +312,7 @@ const dataTypeHash = {
   }
 }
 
-export default class ORFrameDocs extends React.Component {
+export default class OrdinalFrameDocs extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
@@ -442,7 +442,8 @@ export default class ORFrameDocs extends React.Component {
           <Select
             value={this.state.summaryType}
             onChange={e =>
-              this.setState({ dataType: "group", summaryType: e.target.value })}
+              this.setState({ dataType: "group", summaryType: e.target.value })
+            }
           >
             {summaryOptions}
           </Select>
@@ -467,7 +468,8 @@ export default class ORFrameDocs extends React.Component {
           <Select
             value={this.state.dynamicColumnWidth}
             onChange={e =>
-              this.setState({ dynamicColumnWidth: e.target.value })}
+              this.setState({ dynamicColumnWidth: e.target.value })
+            }
           >
             {cwOptions}
           </Select>
@@ -563,11 +565,12 @@ export default class ORFrameDocs extends React.Component {
             color="primary"
             raised
             onTouchTap={() =>
-              window.open(`https://github.com/emeeks/semiotic/wiki/orframe`)}
+              window.open(`https://github.com/emeeks/semiotic/wiki/orframe`)
+            }
           >
-            ORFrame API
+            OrdinalFrame API
           </Button>
-          <ORFrame
+          <OrdinalFrame
             size={[700, 700]}
             renderFn={reFn}
             data={dataTypeHash[this.state.dataType].data}
@@ -578,11 +581,9 @@ export default class ORFrameDocs extends React.Component {
             summaryRenderMode={this.state.renderFn}
             connectorRenderMode={this.state.renderFn}
             summaryType={
-              this.state.summaryType === "none" ? (
-                undefined
-              ) : (
-                this.state.summaryType
-              )
+              this.state.summaryType === "none"
+                ? undefined
+                : this.state.summaryType
             }
             rExtent={[0]}
             summaryStyle={dataTypeHash[this.state.dataType].summaryStyle}
@@ -591,36 +592,28 @@ export default class ORFrameDocs extends React.Component {
             oPadding={parseInt(this.state.oPadding)}
             oAccessor={dataTypeHash[this.state.dataType].oAccessor}
             rAccessor={
-              this.state.rAccessor === "fixed" ? (
-                () => 1
-              ) : (
-                dataTypeHash[this.state.dataType].rAccessor
-              )
+              this.state.rAccessor === "fixed"
+                ? () => 1
+                : dataTypeHash[this.state.dataType].rAccessor
             }
             connectorType={
-              this.state.connector === "on" ? (
-                dataTypeHash[this.state.dataType].connectorType
-              ) : (
-                undefined
-              )
+              this.state.connector === "on"
+                ? dataTypeHash[this.state.dataType].connectorType
+                : undefined
             }
             connectorStyle={dataTypeHash[this.state.dataType].connectorStyle}
             hoverAnnotation={this.state.hoverBehavior === "general"}
             pieceHoverAnnotation={this.state.hoverBehavior === "piece"}
             dynamicColumnWidth={
-              this.state.dynamicColumnWidth === "fixed" ? (
-                undefined
-              ) : (
-                d => sum(d.map(dataTypeHash[this.state.dataType].rAccessor))
-              )
+              this.state.dynamicColumnWidth === "fixed"
+                ? undefined
+                : d => sum(d.map(dataTypeHash[this.state.dataType].rAccessor))
             }
             margin={{ left: 55, top: 50, bottom: 90, right: 55 }}
             annotations={
-              this.state.annotations === "on" ? (
-                dataTypeHash[this.state.dataType].annotations
-              ) : (
-                undefined
-              )
+              this.state.annotations === "on"
+                ? dataTypeHash[this.state.dataType].annotations
+                : undefined
             }
             baseMarkProps={{ transitionDuration: 3000 }}
             //            canvasPieces={true}
@@ -631,7 +624,7 @@ export default class ORFrameDocs extends React.Component {
         </div>
       ),
       source: `
-      import { ORFrame } from 'semiotic';
+      import { OrdinalFrame } from 'semiotic';
 
     const axis = {
       orient: "left",
@@ -646,20 +639,23 @@ export default class ORFrameDocs extends React.Component {
     const data = ${JSON.stringify(
       dataTypeHash[this.state.dataType].data.filter((d, i) => i < 3)
     )}
-    ${this.state.annotations === "off"
-      ? ""
-      : `const exampleAnnotations = ${JSON.stringify(
-          dataTypeHash[this.state.dataType].annotations
-        )}`}
-        <ORFrame
+    ${
+      this.state.annotations === "off"
+        ? ""
+        : `const exampleAnnotations = ${JSON.stringify(
+            dataTypeHash[this.state.dataType].annotations
+          )}`
+    }
+        <OrdinalFrame
             size={[ 700,700 ]}
             data={data}
             axis={axis}
             projection={'${this.state.projection}'}
-            ${this.state.type !== "none"
-              ? this.state.type !== "custom"
-                ? `type={'${this.state.type}'}`
-                : `type={{
+            ${
+              this.state.type !== "none"
+                ? this.state.type !== "custom"
+                  ? `type={'${this.state.type}'}`
+                  : `type={{
               type: "clusterbar",
               customMark: (d, i, xy) => [
                 <rect
@@ -691,59 +687,78 @@ export default class ORFrameDocs extends React.Component {
                 />
               ]
             }}`
-              : ""}
-            ${this.state.summaryType !== "none"
-              ? `summaryType={'${this.state.summaryType}'}`
-              : ""}
-            ${reFn && this.state.type !== "none"
-              ? `renderMode={ '${this.state.renderFn}'}`
-              : ""}
-            ${reFn && this.state.summaryType !== "none"
-              ? `summaryRenderMode={ '${this.state.renderFn}'}`
-              : ""}
+                : ""
+            }
+            ${
+              this.state.summaryType !== "none"
+                ? `summaryType={'${this.state.summaryType}'}`
+                : ""
+            }
+            ${
+              reFn && this.state.type !== "none"
+                ? `renderMode={ '${this.state.renderFn}'}`
+                : ""
+            }
+            ${
+              reFn && this.state.summaryType !== "none"
+                ? `summaryRenderMode={ '${this.state.renderFn}'}`
+                : ""
+            }
             oLabel={true}
             oPadding={${this.state.oPadding}}
             oAccessor={d => d.stepName}
-            ${this.state.dataType === "simple"
-              ? ""
-              : `rAccessor={${this.state.dataType === "stacked"
-                  ? "'stepValue'"
-                  : "'value'"}}`}
-            ${this.state.connector === "off"
-              ? ""
-              : `connectorType={d => d.funnelKey}
-            connectorStyle={d => {return { fill: d.source.funnelKey, stroke: d.source.funnelKey }}}`}
+            ${
+              this.state.dataType === "simple"
+                ? ""
+                : `rAccessor={${
+                    this.state.dataType === "stacked"
+                      ? "'stepValue'"
+                      : "'value'"
+                  }}`
+            }
+            ${
+              this.state.connector === "off"
+                ? ""
+                : `connectorType={d => d.funnelKey}
+            connectorStyle={d => {return { fill: d.source.funnelKey, stroke: d.source.funnelKey }}}`
+            }
             style={d => {return { fill: d.funnelKey, stroke: 'black' }}}
-            ${this.state.hoverBehavior === "none"
-              ? ""
-              : this.state.hoverBehavior === "piece"
-                ? "pieceHoverAnnotation={true}"
-                : "hoverAnnotation={true}"}
-            ${this.state.dynamicColumnWidth === "fixed"
-              ? ""
-              : "dynamicColumnWidth={'stepValue'}"}
+            ${
+              this.state.hoverBehavior === "none"
+                ? ""
+                : this.state.hoverBehavior === "piece"
+                  ? "pieceHoverAnnotation={true}"
+                  : "hoverAnnotation={true}"
+            }
+            ${
+              this.state.dynamicColumnWidth === "fixed"
+                ? ""
+                : "dynamicColumnWidth={'stepValue'}"
+            }
             margin={{ left: 55, top: 0, bottom: 50, right: 0 }}
-            ${this.state.annotations === "off"
-              ? ""
-              : "annotations={exampleAnnotations}"}
+            ${
+              this.state.annotations === "off"
+                ? ""
+                : "annotations={exampleAnnotations}"
+            }
         />
       `
     })
 
     return (
       <DocumentComponent
-        name="ORFrame"
-        api="https://github.com/emeeks/semiotic/wiki/ORFrame"
+        name="OrdinalFrame"
+        api="https://github.com/emeeks/semiotic/wiki/OrdinalFrame"
         components={components}
         examples={examples}
         buttons={buttons}
       >
         <p>
-          The ORFrame lets you create bar charts, pie charts and distribution
-          visualizations like violin plots and heatmaps. The 'O' and 'R' stand
-          for Ordinal and Range data, meaning you have data split into discrete
-          ordered categories (your rows or columns) that you're measuring the
-          difference between.
+          The OrdinalFrame lets you create bar charts, pie charts and
+          distribution visualizations like violin plots and heatmaps. The 'O'
+          and 'R' stand for Ordinal and Range data, meaning you have data split
+          into discrete ordered categories (your rows or columns) that you're
+          measuring the difference between.
         </p>
         <p>
           Adjust the settings to see the code necessary to deploy that chart.
@@ -760,5 +775,5 @@ export default class ORFrameDocs extends React.Component {
   }
 }
 
-ORFrameDocs.title = "ORFrame"
-ORFrameDocs.icon = <Icon />
+OrdinalFrameDocs.title = "OrdinalFrame"
+OrdinalFrameDocs.icon = <Icon />

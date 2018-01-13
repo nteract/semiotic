@@ -1,5 +1,5 @@
 import React from "react"
-import { ORFrame } from "../../components"
+import { OrdinalFrame } from "../../components"
 
 import DocumentComponent from "../layout/DocumentComponent"
 
@@ -27,8 +27,6 @@ const inflatedBarChartData = [
   { user: "Matt", type: "favorites", value: 50 },
   { user: "Betty", type: "favorites", value: 10 }
 ]
-
-const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"]
 
 const colorHash = {
   tweets: "#4d430c",
@@ -86,7 +84,7 @@ export default class CreatingBarChart extends React.Component {
       demo: (
         <div>
           <p>
-            ORFrame operates on an array of data referred to in the API as
+            OrdinalFrame operates on an array of data referred to in the API as
             "pieces". These pieces can be shown individually or stacked in a bar
             chart, or as points on a dot plot or you can show summary
             visualizations of the patterns of the data.
@@ -108,14 +106,14 @@ export default class CreatingBarChart extends React.Component {
         <div>
           <p>
             To get a bar chart of that data, pass it to the data property of
-            ORFrame and pass the attribute you want to split by into the
+            OrdinalFrame and pass the attribute you want to split by into the
             oAccessor (the "ordinal" or categorical mapping) and the attribute
             you want to measure into the rAccessor (the "range" or quantitative
-            mappong). You also want to give the ORFrame a "size" which is an
-            array of [height, width]. This example also turns on labels
+            mappong). You also want to give the OrdinalFrame a "size" which is
+            an array of [height, width]. This example also turns on labels
             (oLabel), margins and a title.
           </p>
-          <ORFrame
+          <OrdinalFrame
             size={[300, 500]}
             data={barChartData}
             oAccessor={"user"}
@@ -126,7 +124,7 @@ export default class CreatingBarChart extends React.Component {
           />
         </div>
       ),
-      source: `<ORFrame
+      source: `<OrdinalFrame
             size={[300, 500]}
             data={barChartData}
             oAccessor={"user"}
@@ -148,7 +146,7 @@ export default class CreatingBarChart extends React.Component {
             them as you like. You can adjust margins and easily turn on an axis
             and add some padding (oPadding).
           </p>
-          <ORFrame
+          <OrdinalFrame
             title={"A Bar Chart"}
             size={[300, 500]}
             data={barChartData}
@@ -165,7 +163,7 @@ export default class CreatingBarChart extends React.Component {
           />
         </div>
       ),
-      source: `<ORFrame
+      source: `<OrdinalFrame
             title={"A Bar Chart"}
             size={[300, 500]}
             data={barChartData}
@@ -187,11 +185,11 @@ export default class CreatingBarChart extends React.Component {
       demo: (
         <div>
           <p>
-            Because of the way ORFrame models information, it can be useful to
-            reformat your data to slice it into smaller pieces so that you can
-            use its automatic stacking and other data visualization modes. So,
-            for instance, we could take the original dataset and make it a bit
-            more verbose to make a stacked chart.
+            Because of the way OrdinalFrame models information, it can be useful
+            to reformat your data to slice it into smaller pieces so that you
+            can use its automatic stacking and other data visualization modes.
+            So, for instance, we could take the original dataset and make it a
+            bit more verbose to make a stacked chart.
           </p>
         </div>
       ),
@@ -226,11 +224,11 @@ export default class CreatingBarChart extends React.Component {
             that colors each piece based on its type.
           </p>
           <p>
-            One thing to notice is that the sorting of items in ORFrame is based
-            on the sorting of the data array you send in, so if you want certain
-            columns or pieces to appear first, then pre-sort your data.
+            One thing to notice is that the sorting of items in OrdinalFrame is
+            based on the sorting of the data array you send in, so if you want
+            certain columns or pieces to appear first, then pre-sort your data.
           </p>
-          <ORFrame
+          <OrdinalFrame
             size={barSize}
             data={inflatedBarChartData}
             oAccessor={"user"}
@@ -244,11 +242,9 @@ export default class CreatingBarChart extends React.Component {
             pieceHoverAnnotation={true}
             customHoverBehavior={this.lineHoverBehavior}
             annotations={
-              this.state.hoverPoint ? (
-                [Object.assign({}, this.state.hoverPoint, { type: "hover" })]
-              ) : (
-                undefined
-              )
+              this.state.hoverPoint
+                ? [Object.assign({}, this.state.hoverPoint, { type: "hover" })]
+                : undefined
             }
             svgAnnotationRules={this.barAnnotator}
           />
@@ -259,7 +255,7 @@ export default class CreatingBarChart extends React.Component {
   retweets: "#b3331d",
   favorites: "#b6a756"
 }
-          <ORFrame
+          <OrdinalFrame
             size={[300, 500]}
             data={inflatedBarChartData}
             oAccessor={"user"}

@@ -1,5 +1,5 @@
 import React from "react"
-import { ORFrame } from "../../components"
+import { OrdinalFrame } from "../../components"
 import { AnnotationCallout } from "react-annotation"
 
 const data = [
@@ -279,7 +279,7 @@ export default (annotations = "none") => {
   }
 
   return (
-    <ORFrame
+    <OrdinalFrame
       projection="horizontal"
       data={data}
       size={[700, 700]}

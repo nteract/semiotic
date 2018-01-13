@@ -105,6 +105,7 @@ const customTooltip = d => <div className="tooltip-content">
           <a
             href="https://bl.ocks.org/susielu/23dc3082669ee026c552b85081d90976"
             target="_blank"
+            rel="noopener noreferrer"
           >
             Susie Lu's Apple stock chart
           </a>.

@@ -1,6 +1,6 @@
 import React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
-import { ORFrame } from "../../components"
+import { OrdinalFrame } from "../../components"
 
 const components = []
 

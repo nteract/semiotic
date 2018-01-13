@@ -1,16 +1,7 @@
 import React from "react"
-import { Mark } from "semiotic-mark"
 import Annotation from "../Annotation"
-import {
-  AnnotationXYThreshold,
-  AnnotationCalloutCircle,
-  AnnotationCalloutRect,
-  AnnotationBracket
-} from "react-annotation"
+import { AnnotationCalloutCircle } from "react-annotation"
 import { packEnclose } from "d3-hierarchy"
-import { max, min, sum, extent } from "d3-array"
-import { pointOnArcAtAngle } from "../svg/pieceDrawing"
-import { arc } from "d3-shape"
 import { circleEnclosure, rectangleEnclosure } from "./baseRules"
 
 export const htmlFrameHoverRule = ({ d, i, tooltipContent, size }) => {

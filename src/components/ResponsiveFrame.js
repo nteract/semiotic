@@ -1,7 +1,7 @@
 import React from "react"
 import PropTypes from "prop-types"
 import XYFrame from "./XYFrame"
-import ORFrame from "./ORFrame"
+import OrdinalFrame from "./OrdinalFrame"
 import NetworkFrame from "./NetworkFrame"
 import SmartFrame from "./SmartFrame"
 import MinimapXYFrame from "./MinimapXYFrame"
@@ -83,7 +83,8 @@ const createResponsiveFrame = Frame =>
   }
 
 export const ResponsiveXYFrame = createResponsiveFrame(XYFrame)
-export const ResponsiveORFrame = createResponsiveFrame(ORFrame)
+export const ResponsiveOrdinalFrame = createResponsiveFrame(OrdinalFrame)
+export const ResponsiveORFrame = createResponsiveFrame(OrdinalFrame)
 export const ResponsiveNetworkFrame = createResponsiveFrame(NetworkFrame)
 export const ResponsiveSmartFrame = createResponsiveFrame(SmartFrame)
 export const ResponsiveMinimapXYFrame = createResponsiveFrame(MinimapXYFrame)

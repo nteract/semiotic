@@ -1,7 +1,6 @@
 import React from "react"
 import { XYFrame } from "../../components"
 import { scaleTime } from "d3-scale"
-import { AnnotationCalloutRect } from "react-annotation"
 
 const chartScale = scaleTime()
 const lineStyle = {

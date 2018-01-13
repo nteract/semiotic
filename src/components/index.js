@@ -1,7 +1,7 @@
 import AnnotationLayer from "./AnnotationLayer"
 import DividedLine from "./DividedLine"
 import XYFrame from "./XYFrame"
-import ORFrame from "./ORFrame"
+import OrdinalFrame from "./OrdinalFrame"
 import SmartFrame from "./SmartFrame"
 import MinimapXYFrame from "./MinimapXYFrame"
 import MiniMap from "./MiniMap"
@@ -18,11 +18,13 @@ import { calculateDataExtent } from "./data/dataFunctions"
 import {
   ResponsiveNetworkFrame,
   ResponsiveMinimapXYFrame,
-  ResponsiveORFrame,
+  ResponsiveOrdinalFrame,
   ResponsiveSmartFrame,
-  ResponsiveXYFrame
+  ResponsiveXYFrame,
+  ResponsiveORFrame
 } from "./ResponsiveFrame"
 import { chuckCloseCanvasTransform } from "./canvas/basicCanvasEffects"
+const ORFrame = OrdinalFrame
 
 export default {
   AnnotationLayer,
@@ -35,6 +37,7 @@ export default {
   InteractionLayer,
   VisualizationLayer,
   DebugComponent,
+  OrdinalFrame,
   ORFrame,
   funnelize,
   SmartFrame,
@@ -42,6 +45,7 @@ export default {
   Annotation,
   NetworkFrame,
   ResponsiveMinimapXYFrame,
+  ResponsiveOrdinalFrame,
   ResponsiveORFrame,
   ResponsiveNetworkFrame,
   ResponsiveSmartFrame,
@@ -61,6 +65,7 @@ export {
   InteractionLayer,
   VisualizationLayer,
   DebugComponent,
+  OrdinalFrame,
   ORFrame,
   funnelize,
   SmartFrame,
@@ -68,6 +73,7 @@ export {
   Annotation,
   NetworkFrame,
   ResponsiveMinimapXYFrame,
+  ResponsiveOrdinalFrame,
   ResponsiveORFrame,
   ResponsiveNetworkFrame,
   ResponsiveSmartFrame,

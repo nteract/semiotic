@@ -20,9 +20,9 @@ export default class DivergingStackedBar extends React.Component {
   {"question":"Question 1", "type":"stronglydisagree", "color":"#b3331d", "value":-24, "percent":-0.007},
   {"question":"Question 1", "type":"agree", "color":"#00a2ce", "value":1927, "percent":0.59}
 ]
-import { ORFrame } from 'semiotic'
+import { OrdinalFrame } from 'semiotic'
 
-export default <ORFrame
+export default <OrdinalFrame
     size={[700, 500]}
     data={answers}
     type="bar"

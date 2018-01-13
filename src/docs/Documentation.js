@@ -3,7 +3,7 @@ import Introduction from "./Introduction"
 import Examples from "./Examples"
 
 import XYFrameDocs from "./components/XYFrameDocs"
-import ORFrameDocs from "./components/ORFrameDocs"
+import OrdinalFrameDocs from "./components/OrdinalFrameDocs"
 import NetworkFrameDocs from "./components/NetworkFrameDocs"
 import AxisDocs from "./components/AxisDocs"
 import LegendDocs from "./components/LegendDocs"
@@ -58,7 +58,7 @@ import CreatingBarChart from "./components/CreatingBarChart"
 import CreatingPieChart from "./components/CreatingPieChart"
 import CreatingLineChart from "./components/CreatingLineChart"
 
-import RealtimeORFrame from "./components/RealtimeORFrame"
+import RealtimeOrdinalFrame from "./components/RealtimeOrdinalFrame"
 import RealtimeXYFrame from "./components/RealtimeXYFrame"
 
 import "./../components/styles.css"
@@ -90,7 +90,7 @@ const components = {
   sharedTooltip: { docs: SharedTooltipExample, parent: "xyframe" },
   decisionMatrix: { docs: DecisionMatrix, parent: "xyframe" },
   cometplot: { docs: CometPlot, parent: "xyframe" },
-  orframe: { docs: ORFrameDocs },
+  orframe: { docs: OrdinalFrameDocs },
   violin: { docs: Violin, parent: "orframe" },
   parallelcoordinates: { docs: ParallelCoordinates, parent: "orframe" },
   timeline: { docs: Timeline, parent: "orframe" },
@@ -106,7 +106,7 @@ const components = {
   verticalisotype: { docs: VerticalIsotype, parent: "orframe" },
   waterfall: { docs: WaterfallChart, parent: "orframe" },
   bullet: { docs: BulletChart, parent: "orframe" },
-  realtimebar: { docs: RealtimeORFrame, parent: "orframe" },
+  realtimebar: { docs: RealtimeOrdinalFrame, parent: "orframe" },
   networkframe: { docs: NetworkFrameDocs },
   wordcloud: { docs: WordCloud, parent: "networkframe" },
   sankey: { docs: Sankey, parent: "networkframe" },

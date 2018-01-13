@@ -17,7 +17,7 @@ export default class DivergingStackedBar extends React.Component {
       demo: DivergingStackedIsotypeRaw,
       source: `import React from "react";
 import { answers } from "../sampledata/questions";
-import { ORFrame } from "../../components";
+import { OrdinalFrame } from "../../components";
 import cow from "material-design-icons-svg/paths/cow";
 import cat from "material-design-icons-svg/paths/cat";
 import cake from "material-design-icons-svg/paths/cake";
@@ -31,7 +31,7 @@ const iconHash = {
 };
 
 export default (
-  <ORFrame
+  <OrdinalFrame
     size={[700, 700]}
     data={answers}
     type={{ type: "bar", icon: d => iconHash[d.type], iconPadding: 2 }}

@@ -132,20 +132,3 @@ export const or_data = processedNodes.sort(
 )
 
 export const network_data = processedEnergy
-
-const nodes = [
-  { id: "Minard" },
-  { id: "Sankey" },
-  { id: "Preistley" },
-  { id: "Playfair" },
-  { id: "Nightingale" },
-  { id: "Brinton" },
-  { id: "Neurath" },
-  { id: "Bertin" },
-  { id: "Wilkinson" },
-  { id: "Wickham" },
-  { id: "Heer" },
-  { id: "Bostock" },
-  { id: "Fry" },
-  { id: "Victor" }
-]

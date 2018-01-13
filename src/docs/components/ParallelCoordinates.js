@@ -1,7 +1,7 @@
 import React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 import { curveBasis } from "d3-shape"
-import { ORFrame } from "../../components"
+import { OrdinalFrame } from "../../components"
 import { orframe_data } from "../sampledata/nyc_temp"
 import { degreeDiffFormat } from "../example_settings/orframe"
 import { scaleLinear } from "d3-scale"
@@ -79,7 +79,7 @@ export default class ParallelCoordinatesDocs extends React.Component {
     examples.push({
       name: "Basic",
       demo: (
-        <ORFrame
+        <OrdinalFrame
           size={[700, 500]}
           axis={axis}
           rExtent={[0, 85]}
@@ -112,7 +112,8 @@ export default class ParallelCoordinatesDocs extends React.Component {
           renderKey={d =>
             d.source
               ? `${d.source.stepName}-${d.source.funnelKey}`
-              : `${d.stepName}-${d.funnelKey}`}
+              : `${d.stepName}-${d.funnelKey}`
+          }
           interaction={{
             columnsBrush: true,
             end: this.brushing,
@@ -151,7 +152,7 @@ export default class ParallelCoordinatesDocs extends React.Component {
           })
       }
     })
-            <ORFrame
+            <OrdinalFrame
               size={[ 700,500 ]}
               axis={axis}
               rExtent={[ 0, 85 ]}
@@ -180,7 +181,7 @@ export default class ParallelCoordinatesDocs extends React.Component {
         buttons={[]}
       >
         <p>
-          An ORFrame can be turned into a simple Parallel Coordinates by
+          An OrdinalFrame can be turned into a simple Parallel Coordinates by
           enabling column brushing and tying the brushes for each column to a
           filter for the dataset bound to the frame.
         </p>

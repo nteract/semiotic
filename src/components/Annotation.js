@@ -1,5 +1,5 @@
 import React from "react"
-import { AnnotationLabel, Annotation, SubjectCircle } from "react-annotation"
+import { AnnotationLabel } from "react-annotation"
 
 import PropTypes from "prop-types"
 

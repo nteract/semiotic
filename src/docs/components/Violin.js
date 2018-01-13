@@ -35,7 +35,7 @@ const axis = { orient: 'left', tickFormat: d => d, label: {
     locationDistance: 40
 } }
 
-<ORFrame
+<OrdinalFrame
     size={[ 700,500 ]}
     axis={axis}
     { ...summaryChart }

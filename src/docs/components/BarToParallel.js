@@ -1,5 +1,5 @@
 import React from "react"
-import { ORFrame } from "../../components"
+import { OrdinalFrame } from "../../components"
 import Button from "material-ui/Button"
 
 const stepColors = {
@@ -613,7 +613,7 @@ export default class InformationModel extends React.Component {
             </Button>
           )}
         </div>
-        <ORFrame
+        <OrdinalFrame
           size={[700, 500]}
           rAccessor={"people"}
           oAccessor={"step"}
@@ -633,9 +633,9 @@ export default class InformationModel extends React.Component {
         <p>
           This simple stepper lets you move from a bar chart representation of
           funnel data to a sophisticated parallel coordinates represenatation of
-          that same data simply by changing the settings of ORFrame. It's meant
-          to mimic the process of iterative design of data visualization with
-          stakeholders.
+          that same data simply by changing the settings of OrdinalFrame. It's
+          meant to mimic the process of iterative design of data visualization
+          with stakeholders.
         </p>
         {contentDiv}
       </div>

@@ -65,7 +65,9 @@ export default ({
     size={[700, 400]}
     nodes={or_data.map(d => Object.assign({}, d))}
     edges={
-      type === "chord" ? network_data : cyclical ? cyclicalData : network_data
+      type === "chord"
+        ? mirroredNetworkData
+        : cyclical ? cyclicalData : network_data
     }
     nodeStyle={d => ({
       fill: colors[d.category],
@@ -89,6 +91,7 @@ export default ({
     legend={{ legendGroups: areaLegendGroups }}
     margin={{ right: 130 }}
     canvasEdges={(d, i) =>
-      d.source.category === "Oil" || d.source.category === "Coal"}
+      d.source.category === "Oil" || d.source.category === "Coal"
+    }
   />
 )

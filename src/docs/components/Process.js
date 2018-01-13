@@ -1,5 +1,5 @@
 import React from "react"
-import { NetworkFrame, XYFrame, ORFrame } from "../../components"
+import { NetworkFrame, XYFrame, OrdinalFrame } from "../../components"
 import { network_data, or_data } from "../sampledata/energy_time"
 import { scaleLinear } from "d3-scale"
 import Button from "material-ui/Button"
@@ -163,8 +163,8 @@ const renderNetworkFrame = additionalSettings => (
   />
 )
 
-const renderORFrame = additionalSettings => (
-  <ORFrame {...sharedSettings} {...orSettings} {...additionalSettings} />
+const renderOrdinalFrame = additionalSettings => (
+  <OrdinalFrame {...sharedSettings} {...orSettings} {...additionalSettings} />
 )
 
 const renderXYFrame = additionalSettings => (
@@ -206,7 +206,7 @@ export default class Process extends React.Component {
         {renderXYFrame(designedXYSettings)}
       </div>,
       <div key="pf-2" style={{ display: "inline-block", width: "400px" }}>
-        {renderORFrame(designedORSettings)}
+        {renderOrdinalFrame(designedORSettings)}
       </div>,
       <div key="pf-3" style={{ display: "inline-block", width: "400px" }}>
         {renderNetworkFrame(designedNetworkSettings)}
@@ -223,7 +223,7 @@ export default class Process extends React.Component {
         })}
       </div>,
       <div key="psf-2" style={{ display: "inline-block", width: "400px" }}>
-        {renderORFrame({
+        {renderOrdinalFrame({
           ...designedORSettings,
           renderMode: "sketchy",
           summaryRenderMode: "sketchy"
@@ -243,7 +243,7 @@ export default class Process extends React.Component {
         {renderXYFrame({ ...designedXYSettings, ...productionSettings })}
       </div>,
       <div key="psf-2" style={{ display: "inline-block", width: "400px" }}>
-        {renderORFrame({ ...designedORSettings, ...productionSettings })}
+        {renderOrdinalFrame({ ...designedORSettings, ...productionSettings })}
       </div>,
       <div key="psf-3" style={{ display: "inline-block", width: "400px" }}>
         {renderNetworkFrame({

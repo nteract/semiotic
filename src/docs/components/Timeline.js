@@ -32,7 +32,7 @@ export default class Timeline extends React.Component {
     death: 1826
   }]
   
-   <ORFrame
+   <OrdinalFrame
     size={[700, 500]}
     data={data}
     rAccessor={d => [d.start, d.end]}

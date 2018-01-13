@@ -1,6 +1,6 @@
 import React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
-import { ORFrame } from "../../components"
+import { OrdinalFrame } from "../../components"
 import DonutChartRaw from "./DonutChartRaw"
 import Select from "material-ui/Select"
 import { MenuItem } from "material-ui/Menu"
@@ -91,19 +91,21 @@ export default class PieDonutDocs extends React.Component {
           ]
           const data = [ 5, 8, 10, 15 ]
 
-           <ORFrame
+           <OrdinalFrame
               size={[ 700,400 ]}
               data={data}
               projection={"radial"}
               style={d => ({ fill: "red", stroke: "darkgray", strokeWidth: 1 })}
               type={{ type: "bar", innerRadius: ${this.state.innerRadius} }}
               oLabel={true}
-              ${this.state.kind === "pie"
-                ? "dynamicColumnWidth={d => d.value}"
-                : ""}
-              rAccessor={${this.state.kind === "pie"
-                ? "() => 1"
-                : "d => d.value"}}
+              ${
+                this.state.kind === "pie"
+                  ? "dynamicColumnWidth={d => d.value}"
+                  : ""
+              }
+              rAccessor={${
+                this.state.kind === "pie" ? "() => 1" : "d => d.value"
+              }}
               margin={{ left: 20, top: 20, bottom: 20, right: 20 }}
               oPadding={${this.state.padding}}
             />
@@ -120,9 +122,9 @@ export default class PieDonutDocs extends React.Component {
       >
         <p>
           Pie charts aren't evil and people love donut charts. They're just
-          radially projected ORFrames of the "bar" type. If you want to make a
-          donut chart, send an object as your type, with its type set to "bar"
-          and its innerRadius set to your preferred innerRadius.
+          radially projected OrdinalFrames of the "bar" type. If you want to
+          make a donut chart, send an object as your type, with its type set to
+          "bar" and its innerRadius set to your preferred innerRadius.
         </p>
       </DocumentComponent>
     )
