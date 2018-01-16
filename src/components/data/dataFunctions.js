@@ -51,7 +51,8 @@ export const calculateDataExtent = ({
   invertY,
   areaDataAccessor,
   projection,
-  areaType
+  areaType,
+  defined = () => true
 }) => {
   lineDataAccessor = stringToFn(lineDataAccessor, d => d.coordinates)
   xAccessor = stringToFn(xAccessor, d => d[0])
@@ -99,7 +100,9 @@ export const calculateDataExtent = ({
     projectedLines.forEach(d => {
       fullDataset = [
         ...fullDataset,
-        ...d.data.map(p => Object.assign({ parentLine: d }, p))
+        ...d.data
+          .filter(p => defined(p))
+          .map(p => Object.assign({ parentLine: d }, p))
       ]
     })
   }

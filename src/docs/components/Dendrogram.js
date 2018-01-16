@@ -68,7 +68,7 @@ export default class Dendrogram extends React.Component {
           {projectionOptions}
         </Select>
       </FormControl>,
-      <FormControl key="button-2-0-0">
+      <FormControl key="button-3-0-0">
         <InputLabel htmlFor="chart-projection-input">Annotation</InputLabel>
         <Select
           value={this.state.annotation}
