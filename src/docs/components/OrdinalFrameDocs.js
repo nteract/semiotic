@@ -755,10 +755,10 @@ export default class OrdinalFrameDocs extends React.Component {
       >
         <p>
           The OrdinalFrame lets you create bar charts, pie charts and
-          distribution visualizations like violin plots and heatmaps. The 'O'
-          and 'R' stand for Ordinal and Range data, meaning you have data split
-          into discrete ordered categories (your rows or columns) that you're
-          measuring the difference between.
+          distribution visualizations like violin plots and heatmaps. It's
+          called 'Ordinal' because you're looking at data split into discrete
+          ordered categories (your rows or columns) that you're measuring the
+          difference between.
         </p>
         <p>
           Adjust the settings to see the code necessary to deploy that chart.

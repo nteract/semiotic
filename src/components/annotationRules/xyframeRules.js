@@ -17,6 +17,7 @@ const pointsAlong = along => ({
   pointStyle
 }) => {
   const alongScale = along === "_xyfX" ? xScale : yScale
+  along = along === "_xyfYTop" && d["_xyfYMiddle"] ? "_xyfYMiddle" : along
   if (d && d[along]) {
     const { threshold = 1, r = () => 4, styleFn = pointStyle } = d
     const foundPoints = []
@@ -55,14 +56,14 @@ const pointsAlong = along => ({
         r={r(p, i)}
         style={styleFn(p, i)}
         cx={xScale(p._xyfX)}
-        cy={yScale(p._xyfY)}
+        cy={yScale(p._xyfYMiddle || p._xyfYTop)}
       />
     ))
   }
   return null
 }
 
-export const svgHorizontalPointsAnnotation = pointsAlong("_xyfY")
+export const svgHorizontalPointsAnnotation = pointsAlong("_xyfYTop")
 export const svgVerticalPointsAnnotation = pointsAlong("_xyfX")
 
 export const svgXYAnnotation = ({ screenCoordinates, i, d }) => {
@@ -115,14 +116,6 @@ export const basicReactAnnotation = ({ screenCoordinates, d, i }) => {
   noteData.y = noteData.y ? noteData.y : screenCoordinates[1]
 
   return <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
-}
-
-export const svgEncloseAnnotation = ({ screenCoordinates, d, i }) => {
-  const circle = packEnclose(
-    screenCoordinates.map(p => ({ x: p[0], y: p[1], r: 2 }))
-  )
-
-  return circleEnclosure({ d, circle })
 }
 
 export const svgXAnnotation = ({
@@ -350,4 +343,12 @@ export const svgRectEncloseRule = ({ d, i, screenCoordinates }) => {
   })
 
   return rectangleEnclosure({ bboxNodes, d, i })
+}
+
+export const svgEncloseAnnotation = ({ screenCoordinates, d, i }) => {
+  const circle = packEnclose(
+    screenCoordinates.map(p => ({ x: p[0], y: p[1], r: 2 }))
+  )
+
+  return circleEnclosure({ d, circle })
 }
