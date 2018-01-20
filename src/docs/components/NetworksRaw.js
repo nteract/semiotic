@@ -8,6 +8,13 @@ import {
   forceCollide,
   forceManyBody
 } from "d3-force"
+import ProcessViz from "./ProcessViz"
+/*
+  <div>
+    <ProcessViz frameSettings={regionatedLineChart} frameType="XYFrame" />
+    <XYFrame {...regionatedLineChart} />
+  </div>
+*/
 
 const colors = ["#4d430c", "#b3331d", "#b6a756", "black"]
 

@@ -10,6 +10,7 @@ import { MenuItem } from "material-ui/Menu"
 import Icon from "material-ui-icons/Share"
 import Input, { InputLabel } from "material-ui/Input"
 import { FormControl, FormHelperText } from "material-ui/Form"
+import ProcessViz from "./ProcessViz"
 
 const glowyCanvas = (canvas, context, size) => {
   const dataURL = canvas.toDataURL("image/png")
@@ -295,6 +296,36 @@ export default class NetworkFrameDocs extends React.Component {
       </div>
     ]
 
+    const networkChart = {
+      size: chartSize,
+      edges: edgeData,
+      nodes: nodeData,
+      margin: { top: 50, bottom: 50, left: 50, right: 50 },
+      edgeStyle: networkEdgeStyle,
+      nodeStyle: networkNodeStyle,
+      networkType: networkType,
+      edgeType: this.state.edge,
+      nodeSizeAccessor: nodeSizeHash[this.state.nodeSize],
+      zoomToFit: true,
+      nodeLabels: true,
+      hoverAnnotation: true,
+      download: true,
+      canvasEdges: true,
+      canvasPostProcess: glowyCanvas,
+      annotationSettings: {
+        pointSizeFunction: d => (d.subject && d.subject.radius) || 5,
+        labelSizeFunction: noteData => {
+          return noteData.note.label.length * 5.5
+        }
+      }
+    }
+    if (this.state.customNodeIcon === "on") {
+      networkChart.customNodeIcon = squareNodeGenerator
+    }
+    if (this.state.customNodeIcon === "on") {
+      networkChart.annotations = annotations
+    }
+
     const examples = []
     examples.push({
       name: "Basic",
@@ -311,38 +342,8 @@ export default class NetworkFrameDocs extends React.Component {
           >
             NetworkFrame API
           </Button>
-          <NetworkFrame
-            size={chartSize}
-            edges={edgeData}
-            nodes={nodeData}
-            margin={{ top: 50, bottom: 50, left: 50, right: 50 }}
-            edgeStyle={networkEdgeStyle}
-            nodeStyle={networkNodeStyle}
-            networkType={networkType}
-            edgeType={this.state.edge}
-            nodeSizeAccessor={nodeSizeHash[this.state.nodeSize]}
-            customNodeIcon={
-              this.state.customNodeIcon === "on"
-                ? squareNodeGenerator
-                : undefined
-            }
-            annotations={
-              this.state.annotations === "on" ? annotations : undefined
-            }
-            zoomToFit={true}
-            nodeLabels={false}
-            hoverAnnotation={true}
-            download={false}
-            canvasNodes={true}
-            canvasEdges={true}
-            canvasPostProcess={glowyCanvas}
-            annotationSettings={{
-              pointSizeFunction: d => (d.subject && d.subject.radius) || 5,
-              labelSizeFunction: noteData => {
-                return noteData.note.label.length * 5.5
-              }
-            }}
-          />
+          <ProcessViz frameSettings={networkChart} frameType="NetworkFrame" />
+          <NetworkFrame {...networkChart} />
         </div>
       ),
       source: `

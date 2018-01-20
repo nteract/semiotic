@@ -1,6 +1,13 @@
 import React from "react"
 import { OrdinalFrame } from "../../components"
 import { AnnotationCallout } from "react-annotation"
+import ProcessViz from "./ProcessViz"
+/*
+  <div>
+    <ProcessViz frameSettings={regionatedLineChart} frameType="XYFrame" />
+    <XYFrame {...regionatedLineChart} />
+  </div>
+*/
 
 const data = [
   {

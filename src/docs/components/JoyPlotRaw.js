@@ -1,8 +1,14 @@
 import React from "react"
 import { OrdinalFrame } from "../../components"
-import { xyframe_data } from "../sampledata/nyc_temp"
+import probsRaw from "../sampledata/probly"
+import { csvParse } from "d3-dsv"
 import { sum, max } from "d3-array"
-import { curveMonotoneX } from "d3-shape"
+import { curveMonotoneX, curveStep } from "d3-shape"
+import ProcessViz from "./ProcessViz"
+
+const probsData = csvParse(probsRaw)
+
+const colors = ["#4d430c", "#00a2ce", "#b6a756", "#b3331d"]
 
 const months = [
   "January",
@@ -18,43 +24,46 @@ const months = [
   "September",
   "December"
 ]
-const individualData = []
-xyframe_data.filter(d => +d.year > 1800).forEach(d => {
-  individualData.push({ month: 0, value: 0.1, year: d.year })
-  months.forEach((m, mi) => {
-    individualData.push({ month: mi + 1, value: d[m] - 19.9, year: d.year })
+const probsPoints = []
+probsData.forEach((d, i) => {
+  Object.keys(d).forEach(key => {
+    probsPoints.push({ term: key, value: +d[key] })
   })
-  individualData.push({ month: 13, value: 0.1, year: d.year })
 })
 
+const joyChartSettings = {
+  size: [700, 500],
+  data: probsPoints,
+  projection: "horizontal",
+  summaryType: {
+    type: "joy",
+    bins: 10,
+    amplitude: 50,
+    curve: curveMonotoneX
+    //        binValue: d => sum(d.map(p => p.value))
+  },
+  summaryStyle: (d, i) => ({
+    fill: colors[i % 4],
+    stroke: "black",
+    strokeWidth: 2,
+    fillOpacity: 0.5,
+    strokeOpacity: 0.25
+  }),
+  oAccessor: "term",
+  rAccessor: "value",
+  oLabel: d => <text style={{ textAnchor: "end" }}>{d}</text>,
+  margin: { left: 150, top: 50, bottom: 55, right: 15 },
+  axis: { orient: "bottom", label: "Percent" },
+  oLabel: d => (
+    <text style={{ textAnchor: "end", fill: "grey" }} x={-10} y={5}>
+      {d}
+    </text>
+  )
+}
+
 export default (
-  <div style={{ background: "black" }}>
-    <OrdinalFrame
-      size={[700, 500]}
-      data={individualData}
-      projection={"horizontal"}
-      type={"none"}
-      summaryType={{
-        type: "joy",
-        amplitude: 40,
-        curve: curveMonotoneX,
-        binValue: d => sum(d.map(p => p.value)),
-        useBins: false
-      }}
-      summaryStyle={d => ({
-        fill: "black",
-        stroke: "white",
-        strokeWidth: 1,
-        opacity: 1
-      })}
-      oAccessor={d => d.year}
-      rAccessor={d => d.month}
-      dynamicColumnWidth={d => max(d.map(p => p.month))}
-      oLabel={d =>
-        +d % 10 === 0 ? <text style={{ textAnchor: "end" }}>{d}</text> : null
-      }
-      margin={{ left: 20, top: 50, bottom: 10, right: 10 }}
-      oPadding={2}
-    />
+  <div>
+    <ProcessViz frameSettings={joyChartSettings} frameType="XYFrame" />
+    <OrdinalFrame {...joyChartSettings} />
   </div>
 )

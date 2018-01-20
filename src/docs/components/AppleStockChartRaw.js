@@ -2,6 +2,7 @@ import React from "react"
 import { XYFrame, DividedLine } from "../../components"
 import { data } from "../sampledata/apple_stock"
 import { scaleTime } from "d3-scale"
+import ProcessViz from "./ProcessViz"
 
 const chartAxes = [
   { orient: "left", tickFormat: d => `$${d}` },
@@ -98,25 +99,29 @@ const customTooltip = d => (
   </div>
 )
 
+const appleChart = {
+  size: [700, 300],
+  xScaleType: scaleTime(),
+  xAccessor: d => new Date(d.date),
+  yAccessor: "close",
+  lines: [{ label: "Apple Stock", coordinates: data }],
+  customLineMark: thresholdLine,
+  axes: chartAxes,
+  annotations: annotations,
+  margin: { top: 50, left: 40, right: 10, bottom: 40 },
+  hoverAnnotation: true,
+  tooltipContent: customTooltip,
+  additionalDefs: (
+    <linearGradient id="bubbleGradient">
+      <stop offset="5%" stopColor="#F60" />
+      <stop offset="95%" stopColor="#FF6" />
+    </linearGradient>
+  )
+}
+
 export default (
-  <XYFrame
-    size={[700, 300]}
-    xScaleType={scaleTime()}
-    xAccessor={d => new Date(d.date)}
-    yAccessor={"close"}
-    lines={[{ label: "Apple Stock", coordinates: data }]}
-    lineStyle={{ stroke: "red" }}
-    customLineMark={thresholdLine}
-    axes={chartAxes}
-    annotations={annotations}
-    margin={{ top: 50, left: 40, right: 10, bottom: 40 }}
-    hoverAnnotation={true}
-    tooltipContent={customTooltip}
-    additionalDefs={
-      <linearGradient id="bubbleGradient">
-        <stop offset="5%" stopColor="#F60" />
-        <stop offset="95%" stopColor="#FF6" />
-      </linearGradient>
-    }
-  />
+  <div>
+    <ProcessViz frameSettings={appleChart} frameType="XYFrame" />
+    <XYFrame {...appleChart} />
+  </div>
 )

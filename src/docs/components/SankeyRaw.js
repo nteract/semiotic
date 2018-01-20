@@ -1,6 +1,7 @@
 import React from "react"
 import { NetworkFrame } from "../../components"
 import { network_data, or_data } from "../sampledata/energy_time"
+import ProcessViz from "./ProcessViz"
 
 const mirroredNetworkData = [
   ...network_data.map(d => ({
@@ -60,38 +61,43 @@ export default ({
   type = "sankey",
   orient = "left",
   cyclical = false
-}) => (
-  <NetworkFrame
-    size={[700, 400]}
-    nodes={or_data.map(d => Object.assign({}, d))}
-    edges={
+}) => {
+  const sankeyChart = {
+    size: [700, 400],
+    nodes: or_data.map(d => Object.assign({}, d)),
+    edges:
       type === "chord"
         ? mirroredNetworkData
-        : cyclical ? cyclicalData : network_data
-    }
-    nodeStyle={d => ({
+        : cyclical ? cyclicalData : network_data,
+    nodeStyle: d => ({
       fill: colors[d.category],
       stroke: "black"
-    })}
-    edgeStyle={d => ({
+    }),
+    edgeStyle: d => ({
       stroke: colors[d.source.category],
       fill: colors[d.source.category],
       strokeWidth: 0.5,
       fillOpacity: 0.75,
       strokeOpacity: 0.75
-    })}
-    nodeIDAccessor="id"
-    sourceAccessor="source"
-    targetAccessor="target"
-    nodeSizeAccessor={5}
-    zoomToFit={type === "force"}
-    hoverAnnotation={true}
-    edgeWidthAccessor={type === "chord" ? d => d.value : undefined}
-    networkType={{ type: type, orient: orient, iterations: 500 }}
-    legend={{ legendGroups: areaLegendGroups }}
-    margin={{ right: 130 }}
-    canvasEdges={(d, i) =>
+    }),
+    nodeIDAccessor: "id",
+    sourceAccessor: "source",
+    targetAccessor: "target",
+    nodeSizeAccessor: 5,
+    zoomToFit: type === "force",
+    hoverAnnotation: true,
+    edgeWidthAccessor: type === "chord" ? d => d.value : undefined,
+    networkType: { type: type, orient: orient, iterations: 500 },
+    legend: { legendGroups: areaLegendGroups },
+    margin: { right: 130 },
+    canvasEdges: (d, i) =>
       d.source.category === "Oil" || d.source.category === "Coal"
-    }
-  />
-)
+  }
+
+  return (
+    <div>
+      <ProcessViz frameSettings={sankeyChart} frameType="NetworkFrame" />
+      <NetworkFrame {...sankeyChart} />
+    </div>
+  )
+}

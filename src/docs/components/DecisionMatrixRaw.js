@@ -5,6 +5,13 @@ import { forceSimulation, forceX, forceY, forceCollide } from "d3-force"
 import { Mark } from "semiotic-mark"
 import { MATRIX_DATA } from "../sampledata/matrixData"
 import { XYFrame } from "../../components"
+import ProcessViz from "./ProcessViz"
+/*
+  <div>
+    <ProcessViz frameSettings={regionatedLineChart} frameType="XYFrame" />
+    <XYFrame {...regionatedLineChart} />
+  </div>
+*/
 
 const speedLabels = ["6 Weeks", "3 Months", "6 Months", "1 Year", "2 Years"]
 const expenseLabels = ["$1K", "$10K", "$100K", "$1M", "$10M"]

@@ -1,6 +1,7 @@
 import React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 import { NetworkFrame } from "../../components"
+import ProcessViz from "./ProcessViz"
 
 const networkSettings = {
   type: "wordcloud",
@@ -199,45 +200,49 @@ export default class WordCloudDocs extends React.Component {
 
   render() {
     const examples = []
+    const wordcloudChart = {
+      size: chartSize,
+      nodes: words,
+      nodeStyle: nodeStyleFn,
+      nodeSizeAccessor: "score",
+      nodeIDAccessor: "token_text",
+      networkType: networkSettings,
+      annotations: [
+        {
+          type: "node",
+          dy: -100,
+          dx: 0,
+          id: "datavisualization",
+          label: "hashtag?"
+        },
+        this.state.additionalAnnotation
+      ],
+      hoverAnnotation: true,
+      tooltipContent: d => (
+        <div className="tooltip-content">
+          <p>Token: "{d.token_text}"</p>
+          <p>Score: {d.score}</p>
+        </div>
+      ),
+      customClickBehavior: d => {
+        this.setState({
+          additionalAnnotation: Object.assign({
+            type: "node",
+            dy: -100,
+            dx: 0,
+            id: d.token_text,
+            label: "awesome?"
+          })
+        })
+      }
+    }
     examples.push({
       name: "Basic",
       demo: (
-        <NetworkFrame
-          size={chartSize}
-          nodes={words}
-          nodeStyle={nodeStyleFn}
-          nodeSizeAccessor={"score"}
-          nodeIDAccessor={"token_text"}
-          networkType={networkSettings}
-          annotations={[
-            {
-              type: "node",
-              dy: -100,
-              dx: 0,
-              id: "datavisualization",
-              label: "hashtag?"
-            },
-            this.state.additionalAnnotation
-          ]}
-          hoverAnnotation={true}
-          tooltipContent={d => (
-            <div className="tooltip-content">
-              <p>Token: "{d.token_text}"</p>
-              <p>Score: {d.score}</p>
-            </div>
-          )}
-          customClickBehavior={d => {
-            this.setState({
-              additionalAnnotation: Object.assign({
-                type: "node",
-                dy: -100,
-                dx: 0,
-                id: d.token_text,
-                label: "awesome?"
-              })
-            })
-          }}
-        />
+        <div>
+          <ProcessViz frameSettings={wordcloudChart} frameType="NetworkFrame" />
+          <NetworkFrame {...wordcloudChart} />
+        </div>
       ),
       source: `
 const words = [

@@ -1,5 +1,6 @@
 import React from "react"
 import { NetworkFrame } from "../../components"
+import ProcessViz from "./ProcessViz"
 
 const dematrixifiedEdges = [
   { source: "a", target: "a", value: 11975 },
@@ -22,21 +23,27 @@ const dematrixifiedEdges = [
 
 const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"]
 
-export default ({ padAngle = 0.01 }) => (
-  <NetworkFrame
-    size={[700, 400]}
-    edges={dematrixifiedEdges}
-    nodeStyle={(d, i) => ({ fill: colors[d.index], stroke: "black" })}
-    edgeStyle={(d, i) => ({
+export default ({ padAngle = 0.01 }) => {
+  const chordChart = {
+    size: [700, 400],
+    edges: dematrixifiedEdges,
+    nodeStyle: (d, i) => ({ fill: colors[d.index], stroke: "black" }),
+    edgeStyle: (d, i) => ({
       fill: colors[d.source.index],
       stroke: "black",
       opacity: 0.5
-    })}
-    nodeSizeAccessor={5}
-    sourceAccessor={"source"}
-    targetAccessor={"target"}
-    hoverAnnotation={true}
-    edgeWidthAccessor={"value"}
-    networkType={{ type: "chord", padAngle }}
-  />
-)
+    }),
+    nodeSizeAccessor: 5,
+    sourceAccessor: "source",
+    targetAccessor: "target",
+    hoverAnnotation: true,
+    edgeWidthAccessor: "value",
+    networkType: { type: "chord", padAngle }
+  }
+  return (
+    <div>
+      <ProcessViz frameSettings={chordChart} frameType="NetworkFrame" />
+      <NetworkFrame {...chordChart} />
+    </div>
+  )
+}

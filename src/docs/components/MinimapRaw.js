@@ -1,6 +1,7 @@
 import React from "react"
 import { MinimapXYFrame } from "../../components"
 import { curveMonotoneX } from "d3-shape"
+import ProcessViz from "./ProcessViz"
 
 const dataSeeds = [20, 10, -10, -20]
 const colors = ["4d430c", "#d38779", "#b3331d", "#00a2ce", "#007190", "#b6a756"]
@@ -37,20 +38,26 @@ const xyFrameSettings = {
   ]
 }
 
-export default (brushFunction, extent, selectedExtent) => (
-  <MinimapXYFrame
-    size={[700, 700]}
-    {...xyFrameSettings}
-    xExtent={selectedExtent}
-    matte={true}
-    margin={{ left: 50, top: 10, bottom: 50, right: 20 }}
-    minimap={{
+export default (brushFunction, extent, selectedExtent) => {
+  const minimapChart = {
+    size: [700, 700],
+    ...xyFrameSettings,
+    xExtent: selectedExtent,
+    matte: true,
+    margin: { left: 50, top: 10, bottom: 50, right: 20 },
+    minimap: {
       margin: { top: 20, bottom: 35, left: 20, right: 20 },
       ...xyFrameSettings,
       brushEnd: brushFunction,
       yBrushable: false,
       xBrushExtent: extent,
       size: [700, 150]
-    }}
-  />
-)
+    }
+  }
+  return (
+    <div>
+      <ProcessViz frameSettings={minimapChart} frameType="MinimapXYFrame" />
+      <MinimapXYFrame {...minimapChart} />
+    </div>
+  )
+}

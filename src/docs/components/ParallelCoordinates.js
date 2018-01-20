@@ -5,6 +5,13 @@ import { OrdinalFrame } from "../../components"
 import { orframe_data } from "../sampledata/nyc_temp"
 import { degreeDiffFormat } from "../example_settings/orframe"
 import { scaleLinear } from "d3-scale"
+import ProcessViz from "./ProcessViz"
+/*
+  <div>
+    <ProcessViz frameSettings={regionatedLineChart} frameType="XYFrame" />
+    <XYFrame {...regionatedLineChart} />
+  </div>
+*/
 
 const components = []
 // Add your component proptype data here

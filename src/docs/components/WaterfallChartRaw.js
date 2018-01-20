@@ -1,5 +1,6 @@
 import React from "react"
 import { OrdinalFrame } from "../../components"
+import ProcessViz from "./ProcessViz"
 
 const padding = 40
 const data = [
@@ -101,23 +102,27 @@ function waterfall({ data, rScale, adjustedSize, margin }) {
   return renderedPieces
 }
 
+const waterfallChart = {
+  size: [700, 400],
+  data: data,
+  rExtent: [0, 65000],
+  rAccessor: d => d.value,
+  oAccessor: d => d.name,
+  axis: { tickFormat: d => `$${d / 1000}k` },
+  style: d => ({
+    fill: d.value > 0 ? "green" : "red",
+    stroke: "darkgray",
+    strokeWidth: 1
+  }),
+  type: waterfall,
+  oLabel: d => <text transform="rotate(45)">{d}</text>,
+  margin: { left: 60, top: 20, bottom: 100, right: 20 },
+  oPadding: padding,
+  hoverAnnotation: true
+}
 export default (
-  <OrdinalFrame
-    size={[700, 400]}
-    data={data}
-    rExtent={[0, 65000]}
-    rAccessor={d => d.value}
-    oAccessor={d => d.name}
-    axis={{ tickFormat: d => `$${d / 1000}k` }}
-    style={d => ({
-      fill: d.value > 0 ? "green" : "red",
-      stroke: "darkgray",
-      strokeWidth: 1
-    })}
-    type={waterfall}
-    oLabel={d => <text transform="rotate(45)">{d}</text>}
-    margin={{ left: 60, top: 20, bottom: 100, right: 20 }}
-    oPadding={padding}
-    hoverAnnotation={true}
-  />
+  <div>
+    <ProcessViz frameSettings={waterfallChart} frameType="OrdinalFrame" />
+    <OrdinalFrame {...waterfallChart} />
+  </div>
 )

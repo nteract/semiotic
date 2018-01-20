@@ -4,6 +4,13 @@ import { scaleTime } from "d3-scale"
 import { curveMonotoneX, curveCardinal } from "d3-shape"
 
 import DocumentComponent from "../layout/DocumentComponent"
+import ProcessViz from "./ProcessViz"
+/*
+  <div>
+    <ProcessViz frameSettings={regionatedLineChart} frameType="XYFrame" />
+    <XYFrame {...regionatedLineChart} />
+  </div>
+*/
 
 const components = []
 const curvedCardinalLine = { type: "line", interpolator: curveCardinal }

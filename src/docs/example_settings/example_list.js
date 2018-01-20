@@ -88,6 +88,11 @@ const exampos = [
     viz: DonutChartRaw({ kind: "pie" }),
     path: "donutchart"
   },
+  {
+    label: "Sunburst",
+    viz: DonutChartRaw,
+    path: "sunburst"
+  },
   { label: "Heat Map", viz: HeatMapRaw, path: "heatmap" },
   { label: "Joy Plot", viz: JoyPlotRaw, path: "joyplot" },
   { label: "Marimekko Chart", viz: MarimekkoRaw, path: "marimekko" },

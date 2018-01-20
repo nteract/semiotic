@@ -1,6 +1,13 @@
 import React from "react"
 import { XYFrame } from "../../components"
 import { curveMonotoneX } from "d3-shape"
+import ProcessViz from "./ProcessViz"
+/*
+  <div>
+    <ProcessViz frameSettings={regionatedLineChart} frameType="XYFrame" />
+    <XYFrame {...regionatedLineChart} />
+  </div>
+*/
 
 const dataSeeds = [20, 10, -10, -20]
 const colors = ["4d430c", "#d38779", "#b3331d", "#00a2ce", "#007190", "#b6a756"]
