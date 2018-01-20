@@ -74,8 +74,8 @@ body {
 .docs-example {
   position: relative;
   padding: 3em 1em 1em;
-  border: 1px solid #d8d8d8;
   margin: 1.5rem 0 0;
+  background: white;
 }
 
 .docs-example::before {
@@ -115,8 +115,6 @@ body {
 }
 
 .docs-example + pre {
-  border: 1px solid #d8d8d8;
-  border-top: none;
   padding: 1em;
   margin-top: 0 !important;
   clear: both;
@@ -465,58 +463,58 @@ circle.frame-hover {
   stroke-width: 2.5px;
   stroke-dasharray: 0;
 }
- 
+
 .matrixWrapper .hiddenTickLine path {
   stroke-width: 0px;
 }
 
-.matrixWrapper .axis-title text{
+.matrixWrapper .axis-title text {
   font-size: 20px;
   font-weight: bold;
 }
 
 .matrixWrapper .annotation-xy-label {
-    background: rgba(255,255,255,1);
-    border: 2px black solid;
-    font-size: 16px;
-    color: black;
-    padding: 10px;
-    min-width: 100px;
-    white-space: nowrap;
-    font-family: 'Source Sans Pro', sans-serif !important;
-    text-align: center;
-    color: #212121;
-    font-size: 13px;
-    z-index: 2000;
-    margin-left: -50px;
-    margin-bottom: 20px;
+  background: rgba(255, 255, 255, 1);
+  border: 2px black solid;
+  font-size: 16px;
+  color: black;
+  padding: 10px;
+  min-width: 100px;
+  white-space: nowrap;
+  font-family: "Source Sans Pro", sans-serif !important;
+  text-align: center;
+  color: #212121;
+  font-size: 13px;
+  z-index: 2000;
+  margin-left: -50px;
+  margin-bottom: 20px;
 }
 
-.matrixWrapper  .annotation-xy-label:before {
-    border-right: 2px black solid;
-    border-bottom: 2px black solid;
-    background: rgba(255,255,255,1);
-    content: "";
-    padding: 5px;
-    transform: rotate(45deg);
-    width: 5px;
-    height: 5px;
-    position: absolute;
-    bottom: -9px;
-    left:40px;
-    z-index: 2000;
+.matrixWrapper .annotation-xy-label:before {
+  border-right: 2px black solid;
+  border-bottom: 2px black solid;
+  background: rgba(255, 255, 255, 1);
+  content: "";
+  padding: 5px;
+  transform: rotate(45deg);
+  width: 5px;
+  height: 5px;
+  position: absolute;
+  bottom: -9px;
+  left: 40px;
+  z-index: 2000;
 }
 
-.matrixWrapper .annotation-layer-svg circle{
-  fill:black;
+.matrixWrapper .annotation-layer-svg circle {
+  fill: black;
 }
 
-.decisionMatrixLegend path{
-  stroke:black;
+.decisionMatrixLegend path {
+  stroke: black;
 }
 
-.decisionMatrixLegend tspan{
-  stroke:black;
+.decisionMatrixLegend tspan {
+  stroke: black;
 }
 
 .annotation path.connector-end {

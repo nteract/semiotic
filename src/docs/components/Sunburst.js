@@ -31,11 +31,7 @@ export default class Sunburst extends React.Component {
 
     examples.push({
       name: "Basic",
-      demo: SunburstRaw({
-        annotations,
-        type: this.state.type,
-        projection: this.state.projection
-      }),
+      demo: SunburstRaw,
       source: `
       const data = {
         name: "flare",

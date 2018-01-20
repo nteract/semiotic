@@ -1,6 +1,13 @@
 import React from "react"
 import { XYFrame } from "../../components"
 import { scaleTime } from "d3-scale"
+import ProcessViz from "./ProcessViz"
+/*
+  <div>
+    <ProcessViz frameSettings={regionatedLineChart} frameType="XYFrame" />
+    <XYFrame {...regionatedLineChart} />
+  </div>
+*/
 
 const chartScale = scaleTime()
 const lineStyle = {

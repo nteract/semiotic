@@ -1,5 +1,6 @@
 import React from "react"
 import { OrdinalFrame } from "../../components"
+import ProcessViz from "./ProcessViz"
 
 const data = [
   {
@@ -155,32 +156,37 @@ const data = [
   { name: "Donald Trump", start: 2017, end: 2018 }
 ]
 
+const timelineChart = {
+  size: [700, 500],
+  data: data,
+  rAccessor: d => [d.start, d.end],
+  oAccessor: "name",
+  type: "timeline",
+  projection: "horizontal",
+  oPadding: 2,
+  annotations: [
+    {
+      type: "category",
+      categories: ["George Washington", "Abraham Lincoln"],
+      label: "Antebellum",
+      position: "left",
+      offset: 80
+    }
+  ],
+  style: { fill: "lightblue", stroke: "blue" },
+  axis: { orient: "left" },
+  margin: { left: 200, top: 20, right: 20, bottom: 50 },
+  oLabel: d => (
+    <text y={2} textAnchor="end" fontSize={8}>
+      {d}
+    </text>
+  ),
+  pieceHoverAnnotation: true
+}
+
 export default (
-  <OrdinalFrame
-    size={[700, 500]}
-    data={data}
-    rAccessor={d => [d.start, d.end]}
-    oAccessor="name"
-    type="timeline"
-    projection="horizontal"
-    oPadding={2}
-    annotations={[
-      {
-        type: "category",
-        categories: ["George Washington", "Abraham Lincoln"],
-        label: "Antebellum",
-        position: "left",
-        offset: 80
-      }
-    ]}
-    style={{ fill: "lightblue", stroke: "blue" }}
-    axis={{ orient: "left" }}
-    margin={{ left: 200, top: 20, right: 20, bottom: 50 }}
-    oLabel={d => (
-      <text y={2} textAnchor="end" fontSize={8}>
-        {d}
-      </text>
-    )}
-    pieceHoverAnnotation={true}
-  />
+  <div>
+    <ProcessViz frameSettings={timelineChart} frameType="OrdinalFrame" />
+    <OrdinalFrame {...timelineChart} />
+  </div>
 )

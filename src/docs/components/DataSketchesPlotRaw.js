@@ -1,6 +1,14 @@
 import React from "react"
 import { XYFrame } from "../../components"
 import { Mark } from "semiotic-mark"
+import ProcessViz from "./ProcessViz"
+/*
+  <div>
+    <ProcessViz frameSettings={regionatedLineChart} frameType="XYFrame" />
+    <XYFrame {...regionatedLineChart} />
+  </div>
+*/
+
 const speciousColors = {
   shirley: "#ff269d",
   nadieh: "#4c50a9",

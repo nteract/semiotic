@@ -1,6 +1,13 @@
 import React from "react"
 import { scaleLinear } from "d3-scale"
 import { OrdinalFrame } from "../../components"
+import ProcessViz from "./ProcessViz"
+/*
+  <div>
+    <ProcessViz frameSettings={regionatedLineChart} frameType="XYFrame" />
+    <XYFrame {...regionatedLineChart} />
+  </div>
+*/
 
 let startSeed = 0.5
 

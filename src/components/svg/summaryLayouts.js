@@ -791,13 +791,13 @@ export function bucketizedRenderingFn({
       calculatedBins = summaryPositionNest
         .map((value, i) => {
           const bucketArray = []
-          bucketArray.x0 = calculatedValues[i]
+          bucketArray.x0 = calculatedValues[i] - 1
           bucketArray.x1 = calculatedValues[i] + 1
           bucketArray.push(value)
           return bucketArray
         })
         .sort((a, b) => a.x0 - b.x0)
-      bucketSize = 1
+      bucketSize = 2
     } else {
       calculatedBins = violinHist
         .domain(binDomain)
@@ -805,14 +805,16 @@ export function bucketizedRenderingFn({
         .value(xyValue)(summaryPositionNest)
     }
 
-    calculatedBins = calculatedBins
-      .map(d => ({
-        y: d.x0,
-        y1: d.x1 - d.x0,
-        pieces: d,
-        value: summaryValueAccessor(d.map(p => p.piece))
-      }))
-      .filter(d => d.value !== 0)
+    calculatedBins = calculatedBins.map(d => ({
+      y: d.x0,
+      y1: d.x1 - d.x0,
+      pieces: d,
+      value: summaryValueAccessor(d.map(p => p.piece))
+    }))
+
+    if (type.type === "histogram" || type.type === "heatmap") {
+      calculatedBins = calculatedBins.filter(d => d.value !== 0)
+    }
 
     const relativeMax =
       calculatedBins.length === 0 ? 0 : max(calculatedBins.map(d => d.value))
@@ -829,8 +831,12 @@ export function bucketizedRenderingFn({
     const columnWidth = summary.width
     const renderValue = renderMode && renderMode(summary, summaryI)
 
-    const calculatedSummaryStyle = styleFn(thisSummaryData[0].piece, summaryI)
-    const calculatedSummaryClass = classFn(thisSummaryData[0].piece, summaryI)
+    const calculatedSummaryStyle = thisSummaryData[0]
+      ? styleFn(thisSummaryData[0].piece, summaryI)
+      : {}
+    const calculatedSummaryClass = thisSummaryData[0]
+      ? classFn(thisSummaryData[0].piece, summaryI)
+      : ""
 
     let translate = [summary.middle, 0]
     if (projection === "horizontal") {
@@ -1046,7 +1052,7 @@ export function bucketizedRenderingFn({
 
       if (projection === "horizontal") {
         joyBins.forEach((summaryPoint, i) => {
-          const xValue = summaryPoint.y - bucketSize
+          const xValue = summaryPoint.y - bucketSize / 2
           const yValue =
             -summaryPoint.value / actualMax * (columnWidth + joyHeight) +
             columnWidth / 2
@@ -1069,7 +1075,7 @@ export function bucketizedRenderingFn({
         })
       } else if (projection === "vertical") {
         joyBins.forEach(summaryPoint => {
-          const yValue = summaryPoint.y
+          const yValue = summaryPoint.y + bucketSize / 2
           const xValue =
             -summaryPoint.value / actualMax * (columnWidth + joyHeight) +
             columnWidth / 2

@@ -1,6 +1,13 @@
 import React from "react"
 import { NetworkFrame } from "../../components"
 import { data } from "../sampledata/d3_api"
+import ProcessViz from "./ProcessViz"
+/*
+  <div>
+    <ProcessViz frameSettings={regionatedLineChart} frameType="XYFrame" />
+    <XYFrame {...regionatedLineChart} />
+  </div>
+*/
 
 const colors = ["#00a2ce", "#b6a756", "#4d430c", "#b3331d"]
 

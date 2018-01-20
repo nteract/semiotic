@@ -1,6 +1,13 @@
 import React from "react"
 import { answers } from "../sampledata/questions"
 import { OrdinalFrame } from "../../components"
+import ProcessViz from "./ProcessViz"
+/*
+  <div>
+    <ProcessViz frameSettings={regionatedLineChart} frameType="XYFrame" />
+    <XYFrame {...regionatedLineChart} />
+  </div>
+*/
 
 export default (
   <OrdinalFrame

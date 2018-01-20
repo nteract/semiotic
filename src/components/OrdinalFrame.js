@@ -368,7 +368,7 @@ class OrdinalFrame extends React.Component {
       .forEach(d => {
         nestedPieces[d.key] = d.values
       })
-    pieceData = oExtent.map(d => nestedPieces[d])
+    pieceData = oExtent.map(d => (nestedPieces[d] ? nestedPieces[d] : []))
 
     const zeroValue =
       projection === "vertical" ? rScaleReverse(rScale(0)) : rScale(0)
@@ -723,7 +723,7 @@ class OrdinalFrame extends React.Component {
     }, {})
 
     Object.keys(projectedColumns).forEach(d => {
-      projectedColumns[d].xyData = keyedData[d]
+      projectedColumns[d].xyData = keyedData[d] || []
     })
     let calculatedSummaries = {}
 
@@ -1235,10 +1235,8 @@ class OrdinalFrame extends React.Component {
 OrdinalFrame.propTypes = {
   data: PropTypes.array,
   name: PropTypes.string,
-  orient: PropTypes.string,
   title: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
   margin: PropTypes.oneOfType([PropTypes.number, PropTypes.object]),
-  format: PropTypes.string,
   size: PropTypes.array,
   position: PropTypes.array,
   oScaleType: PropTypes.func,

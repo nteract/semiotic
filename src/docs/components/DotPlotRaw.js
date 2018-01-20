@@ -1,5 +1,12 @@
 import React from "react"
 import { OrdinalFrame } from "../../components"
+import ProcessViz from "./ProcessViz"
+/*
+  <div>
+    <ProcessViz frameSettings={regionatedLineChart} frameType="XYFrame" />
+    <XYFrame {...regionatedLineChart} />
+  </div>
+*/
 
 const colors = {
   y1990: "#00a2ce",

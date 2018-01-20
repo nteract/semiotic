@@ -6,8 +6,8 @@ import { orframe_data } from "../sampledata/nyc_temp"
 export const degreeDiffFormat = d => `${Math.ceil(d * 100) / 100}°`
 
 export const summaryChart = {
-  rAccessor: d => d.stepValue,
-  oAccessor: d => d.stepName,
+  rAccessor: "stepValue",
+  oAccessor: "stepName",
   summaryStyle: () => ({
     fill: "#d38779",
     fillOpacity: 0.5,

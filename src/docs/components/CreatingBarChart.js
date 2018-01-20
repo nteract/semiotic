@@ -2,6 +2,13 @@ import React from "react"
 import { OrdinalFrame } from "../../components"
 
 import DocumentComponent from "../layout/DocumentComponent"
+import ProcessViz from "./ProcessViz"
+/*
+  <div>
+    <ProcessViz frameSettings={regionatedLineChart} frameType="XYFrame" />
+    <XYFrame {...regionatedLineChart} />
+  </div>
+*/
 
 const components = []
 // Add your component proptype data here

@@ -3,6 +3,7 @@ import { XYFrame } from "../../components"
 import lines from "../sampledata/sharedTooltipData"
 import { scaleTime } from "d3-scale"
 import { timeFormat } from "d3-time-format"
+import ProcessViz from "./ProcessViz"
 
 const chartAxes = [
   { orient: "left" },
@@ -120,43 +121,44 @@ function fetchSingletonTooltip(d) {
 }
 
 export default function generateSharedTooltipFrame(isShared) {
-  return (
-    <XYFrame
-      size={[700, 300]}
-      className={"sharedTooltip"}
-      xScaleType={scaleTime()}
-      lineDataAccessor={d => d.data}
-      xAccessor={d => d.x}
-      yAccessor={d => d.y}
-      lines={lines}
-      lineStyle={d => {
-        return { stroke: d.color, strokeWidth: "2px" }
-      }}
-      axes={chartAxes}
-      margin={{ top: 50, left: 40, right: 10, bottom: 40 }}
-      pointStyle={() => {
-        return {
-          fill: "none",
-          stroke: "black",
-          strokeWidth: "1.5px"
-        }
-      }}
-      hoverAnnotation={
-        isShared === "Shared" ? (
-          [
+  const sharedTooltipChart = {
+    size: [700, 300],
+    className: "sharedTooltip",
+    xScaleType: scaleTime(),
+    lineDataAccessor: "data",
+    xAccessor: "x",
+    yAccessor: "y",
+    lines: lines,
+    lineStyle: d => {
+      return { stroke: d.color, strokeWidth: "2px" }
+    },
+    axes: chartAxes,
+    margin: { top: 50, left: 40, right: 10, bottom: 40 },
+    pointStyle: () => {
+      return {
+        fill: "none",
+        stroke: "black",
+        strokeWidth: "1.5px"
+      }
+    },
+    hoverAnnotation:
+      isShared === "Shared"
+        ? [
             { type: "x", disable: ["connector", "note"] },
             { type: "frame-hover" },
             { type: "vertical-points", threshold: 0.1, r: () => 5 }
           ]
-        ) : (
-          true
-        )
-      }
-      tooltipContent={d => {
-        return isShared === "Shared"
-          ? fetchSharedTooltipContent(d)
-          : fetchSingletonTooltip(d)
-      }}
-    />
+        : true,
+    tooltipContent: d => {
+      return isShared === "Shared"
+        ? fetchSharedTooltipContent(d)
+        : fetchSingletonTooltip(d)
+    }
+  }
+  return (
+    <div>
+      <ProcessViz frameSettings={sharedTooltipChart} frameType="XYFrame" />
+      <XYFrame {...sharedTooltipChart} />
+    </div>
   )
 }
