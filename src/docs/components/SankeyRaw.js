@@ -86,12 +86,15 @@ export default ({
     nodeSizeAccessor: 5,
     zoomToFit: type === "force",
     hoverAnnotation: true,
-    edgeWidthAccessor: type === "chord" ? d => d.value : undefined,
     networkType: { type: type, orient: orient, iterations: 500 },
     legend: { legendGroups: areaLegendGroups },
     margin: { right: 130 },
     canvasEdges: (d, i) =>
       d.source.category === "Oil" || d.source.category === "Coal"
+  }
+
+  if (type === "chord") {
+    sankeyChart.edgeWidthAccessor = d => d.value
   }
 
   return (

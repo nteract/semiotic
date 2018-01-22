@@ -2,12 +2,6 @@ import React from "react"
 import { scaleLinear } from "d3-scale"
 import { OrdinalFrame } from "../../components"
 import ProcessViz from "./ProcessViz"
-/*
-  <div>
-    <ProcessViz frameSettings={regionatedLineChart} frameType="XYFrame" />
-    <XYFrame {...regionatedLineChart} />
-  </div>
-*/
 
 let startSeed = 0.5
 
@@ -40,22 +34,25 @@ const daysAxis = {
       ""
     )
 }
-
+const heatmapChart = {
+  size: [700, 400],
+  data: tiles,
+  rAccessor: () => 1,
+  oAccessor: "step",
+  style: d => ({
+    fill: heatScale(d.value),
+    stroke: "darkgray",
+    strokeWidth: 1
+  }),
+  type: "bar",
+  axis: daysAxis,
+  oLabel: d => <text transform="rotate(90)">Week {d}</text>,
+  margin: { left: 100, top: 10, bottom: 80, right: 50 },
+  oPadding: 0
+}
 export default (
-  <OrdinalFrame
-    size={[700, 400]}
-    data={tiles}
-    rAccessor={() => 1}
-    oAccessor={d => d.step}
-    style={d => ({
-      fill: heatScale(d.value),
-      stroke: "darkgray",
-      strokeWidth: 1
-    })}
-    type={"bar"}
-    axis={daysAxis}
-    oLabel={d => <text transform="rotate(90)">Week {d}</text>}
-    margin={{ left: 100, top: 10, bottom: 80, right: 50 }}
-    oPadding={0}
-  />
+  <div>
+    <ProcessViz frameSettings={heatmapChart} frameType="OrdinalFrame" />
+    <OrdinalFrame {...heatmapChart} />
+  </div>
 )

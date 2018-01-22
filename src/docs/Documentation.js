@@ -272,7 +272,7 @@ class Documentation extends React.Component {
       Doc = selectedComponent.docs
       selectedDoc = (
         <div className="row">
-          <div className="col-xs-8 col-xs-offset-2">
+          <div className="col-xs-10 col-xs-offset-1">
             <Doc />
           </div>
         </div>
@@ -347,11 +347,11 @@ class Documentation extends React.Component {
             {AdditionalContent ? <AdditionalContent /> : null}
             {selected === "examples" ? (
               <div className="row">
-                <div className="col-xs-8 col-xs-offset-2">{Examples}</div>
+                <div className="col-xs-10 col-xs-offset-1">{Examples}</div>
               </div>
             ) : !selectedDoc ? (
               <div className="row">
-                <div className="col-xs-8 col-xs-offset-2">{Introduction}</div>
+                <div className="col-xs-10 col-xs-offset-1">{Introduction}</div>
               </div>
             ) : null}
             {selectedDoc}

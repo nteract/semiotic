@@ -1,12 +1,6 @@
 import React from "react"
 import { OrdinalFrame } from "../../components"
 import ProcessViz from "./ProcessViz"
-/*
-  <div>
-    <ProcessViz frameSettings={regionatedLineChart} frameType="XYFrame" />
-    <XYFrame {...regionatedLineChart} />
-  </div>
-*/
 
 const colors = {
   y1990: "#00a2ce",
@@ -74,30 +68,35 @@ function drawRange({ d, rScale, orFrameState }) {
   return null
 }
 
+const dotPlotChart = {
+  title: "Neonatal Mortality Rate by Region",
+  size: [700, 500],
+  data: data,
+  rAccessor: d => d.value,
+  oAccessor: d => d.region,
+  style: (d, i) => ({
+    fill: colors[d.type],
+    stroke: "white",
+    strokeWidth: 1
+  }),
+  type: { type: "point", r: dotRadius },
+  projection: "horizontal",
+  axis: { orient: "bottom", tickFormat: d => `${d}%` },
+  margin: { left: 215, top: 50, bottom: 40, right: 70 },
+  oPadding: 10,
+  svgAnnotationRules: drawRange,
+  annotations: lineAnnotations,
+  pieceHoverAnnotation: true,
+  oLabel: d => (
+    <text style={{ textAnchor: "end" }} transform="translate(-15,6)">
+      {d}
+    </text>
+  )
+}
+
 export default (
-  <OrdinalFrame
-    title={"Neonatal Mortality Rate by Region"}
-    size={[700, 500]}
-    data={data}
-    rAccessor={d => d.value}
-    oAccessor={d => d.region}
-    style={(d, i) => ({
-      fill: colors[d.type],
-      stroke: "white",
-      strokeWidth: 1
-    })}
-    type={{ type: "point", r: dotRadius }}
-    projection={"horizontal"}
-    axis={{ orient: "bottom", tickFormat: d => `${d}%` }}
-    margin={{ left: 215, top: 50, bottom: 40, right: 70 }}
-    oPadding={10}
-    svgAnnotationRules={drawRange}
-    annotations={lineAnnotations}
-    pieceHoverAnnotation={true}
-    oLabel={d => (
-      <text style={{ textAnchor: "end" }} transform="translate(-15,6)">
-        {d}
-      </text>
-    )}
-  />
+  <div>
+    <ProcessViz frameSettings={dotPlotChart} frameType="OrdinalFrame" />
+    <OrdinalFrame {...dotPlotChart} />
+  </div>
 )

@@ -6,12 +6,6 @@ import { orframe_data } from "../sampledata/nyc_temp"
 import { degreeDiffFormat } from "../example_settings/orframe"
 import { scaleLinear } from "d3-scale"
 import ProcessViz from "./ProcessViz"
-/*
-  <div>
-    <ProcessViz frameSettings={regionatedLineChart} frameType="XYFrame" />
-    <XYFrame {...regionatedLineChart} />
-  </div>
-*/
 
 const components = []
 // Add your component proptype data here
@@ -83,50 +77,57 @@ export default class ParallelCoordinatesDocs extends React.Component {
 
     const examples = []
 
+    const parralelCoordinatesChart = {
+      size: [700, 500],
+      axis: axis,
+      rExtent: [0, 85],
+      data: orframe_data,
+      rAccessor: "stepValue",
+      oAccessor: "stepName",
+      style: d => ({
+        fill: hiddenHash.get(d.funnelKey)
+          ? "none"
+          : yearScale(parseInt(d.funnelKey)),
+        fillOpacity: 0.75
+      }),
+      connectorType: d => d.funnelKey,
+      connectorStyle: d => ({
+        stroke: hiddenHash.get(d.source.funnelKey)
+          ? "lightgray"
+          : yearScale(parseInt(d.source.funnelKey)),
+        strokeWidth: 1,
+        strokeOpacity: hiddenHash.get(d.source.funnelKey) ? 0.99 : 0.99
+      }),
+      type: { type: "point", r: 1 },
+      axis: {
+        orient: "left",
+        tickFormat: degreeDiffFormat,
+        label: "Monthly temperature"
+      },
+      oLabel: d => <text transform="rotate(45) translate(0,20)">{d}</text>,
+      margin: { left: 60, top: 20, bottom: 50, right: 30 },
+      oPadding: 5,
+      renderKey: d =>
+        d.source
+          ? `${d.source.stepName}-${d.source.funnelKey}`
+          : `${d.stepName}-${d.funnelKey}`,
+      interaction: {
+        columnsBrush: true,
+        end: this.brushing,
+        extent: this.state.columnExtent
+      }
+    }
+
     examples.push({
       name: "Basic",
       demo: (
-        <OrdinalFrame
-          size={[700, 500]}
-          axis={axis}
-          rExtent={[0, 85]}
-          data={orframe_data}
-          rAccessor={d => d.stepValue}
-          oAccessor={d => d.stepName}
-          style={d => ({
-            fill: hiddenHash.get(d.funnelKey)
-              ? "none"
-              : yearScale(parseInt(d.funnelKey)),
-            fillOpacity: 0.75
-          })}
-          connectorType={d => d.funnelKey}
-          connectorStyle={d => ({
-            stroke: hiddenHash.get(d.source.funnelKey)
-              ? "lightgray"
-              : yearScale(parseInt(d.source.funnelKey)),
-            strokeWidth: 1,
-            strokeOpacity: hiddenHash.get(d.source.funnelKey) ? 0.99 : 0.99
-          })}
-          type={{ type: "point", r: 1 }}
-          axis={{
-            orient: "left",
-            tickFormat: degreeDiffFormat,
-            label: "Monthly temperature"
-          }}
-          oLabel={d => <text transform="rotate(45) translate(0,20)">{d}</text>}
-          margin={{ left: 60, top: 20, bottom: 50, right: 30 }}
-          oPadding={5}
-          renderKey={d =>
-            d.source
-              ? `${d.source.stepName}-${d.source.funnelKey}`
-              : `${d.stepName}-${d.funnelKey}`
-          }
-          interaction={{
-            columnsBrush: true,
-            end: this.brushing,
-            extent: this.state.columnExtent
-          }}
-        />
+        <div>
+          <ProcessViz
+            frameSettings={parralelCoordinatesChart}
+            frameType="OrdinalFrame"
+          />
+          <OrdinalFrame {...parralelCoordinatesChart} />
+        </div>
       ),
       source: `
     constructor(props) {
@@ -164,8 +165,8 @@ export default class ParallelCoordinatesDocs extends React.Component {
               axis={axis}
               rExtent={[ 0, 85 ]}
               data={orframe_data.filter(d => !hiddenHash.get(d.funnelKey))}
-              rAccessor={d => d.stepValue}
-              oAccessor={d => d.stepName}
+              rAccessor: "stepValue",
+              oAccessor: "stepName",
               style={d => ({ fill: hiddenHash.get(d.funnelKey) ? "none" : yearScale(parseInt(d.funnelKey)), fillOpacity: 0.75 })}
               connectorType={d => d.funnelKey}
               connectorStyle={d => ({ stroke: hiddenHash.get(d.source.funnelKey) ? "lightgray" : yearScale(parseInt(d.source.funnelKey)), strokeWidth: 1, strokeOpacity: 0.75 })}

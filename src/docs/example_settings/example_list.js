@@ -149,9 +149,9 @@ const exampos = [
 export const wrappedExamples = exampos.map(d => (
   <div key={d.path} className="example-wrapper">
     <Link to={`/${d.path}`}>
-      <h1>{d.label}</h1>
+      <h1 style={{ background: "none", margin: 0 }}>{d.label}</h1>
       <div className="frame-cover" />
-      {d.viz}
+      <img width="400px" src={`${d.path}.png`} />
     </Link>
   </div>
 ))

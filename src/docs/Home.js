@@ -10,7 +10,7 @@ const Home = ({ match }) => {
   return (
     <div>
       <div className="row">
-        <div className="col-xs-8 col-xs-offset-2">
+        <div className="col-xs-10 col-xs-offset-1">
           <header className="box-row center nav-buttons">
             <h1 className="accent-font">semiotic</h1>
             <h2 className="tagline">charts that carry the conversation</h2>
@@ -57,7 +57,7 @@ const Home = ({ match }) => {
         </div>
       </div>
       <div className="row">
-        <div className="col-xs-8 col-xs-offset-2">
+        <div className="col-xs-10 col-xs-offset-1">
           <p>
             <span style={{ fontWeight: 900 }}>
               Semiotic is a data visualization framework for React.

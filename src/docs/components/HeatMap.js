@@ -43,7 +43,7 @@ const daysAxis = { orient: 'left',
     size={[ 700,400 ]}
     data={tiles}
     rAccessor={() => 1}
-    oAccessor={d => d.step}
+    oAccessor={"step"}
     style={d => ({ fill: heatScale(d.value), stroke: "darkgray", strokeWidth: 1 })}
     type={"bar"}
     axis={daysAxis}

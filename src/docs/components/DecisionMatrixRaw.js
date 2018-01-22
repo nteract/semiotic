@@ -6,12 +6,6 @@ import { Mark } from "semiotic-mark"
 import { MATRIX_DATA } from "../sampledata/matrixData"
 import { XYFrame } from "../../components"
 import ProcessViz from "./ProcessViz"
-/*
-  <div>
-    <ProcessViz frameSettings={regionatedLineChart} frameType="XYFrame" />
-    <XYFrame {...regionatedLineChart} />
-  </div>
-*/
 
 const speedLabels = ["6 Weeks", "3 Months", "6 Months", "1 Year", "2 Years"]
 const expenseLabels = ["$1K", "$10K", "$100K", "$1M", "$10M"]
@@ -134,50 +128,46 @@ function fetchTooltipContent(d) {
 }
 
 export default function DecisionMatrixRaw(sizeBy) {
+  const decisionMatrixChart = {
+    size: [750, 550],
+    margin: { top: 10, right: 80, bottom: 80, left: 100 },
+    name: "Decision Matrix",
+    className: "decisionMatrix",
+    points: processData(MATRIX_DATA, sizeBy),
+    pointStyle: d => {
+      return { fill: "white", stroke: "black", strokeWidth: "3px" }
+    },
+    customPointMark: ({ d }) => {
+      return <Mark markType="circle" r={d.radius} />
+    },
+    renderKey: d => {
+      return d["Index"]
+    },
+    axes: axes,
+    xAccessor: d => d.x,
+    yAccessor: d => d.y,
+    xExtent: [0.5, 5.5],
+    yExtent: [0.5, 5.5],
+    backgroundGraphics: (
+      <rect fill={"url(#gradient)"} x={100} y={10} width={570} height={460} />
+    ),
+    additionalDefs: (
+      //Linear Gradient gives stoplight color zones to encode desirability
+      <linearGradient id="gradient" x1="0%" y1="100%" x2="100%" y2="0%">
+        <stop offset="10%" stopColor="green" stopOpacity={0.3} />
+        <stop offset="50%" stopColor="gold" stopOpacity={0.3} />
+        <stop offset="90%" stopColor="red" stopOpacity={0.3} />
+      </linearGradient>
+    ),
+    hoverAnnotation: true,
+    tooltipContent: d => {
+      return fetchTooltipContent(d)
+    }
+  }
   return (
     <div className="matrixWrapper">
-      <XYFrame
-        size={[750, 550]}
-        margin={{ top: 10, right: 80, bottom: 80, left: 100 }}
-        name={"Decision Matrix"}
-        className="decisionMatrix"
-        points={processData(MATRIX_DATA, sizeBy)}
-        pointStyle={d => {
-          return { fill: "white", stroke: "black", strokeWidth: "3px" }
-        }}
-        customPointMark={({ d }) => {
-          return <Mark markType="circle" r={d.radius} />
-        }}
-        renderKey={d => {
-          return d["Index"]
-        }}
-        axes={axes}
-        xAccessor={d => d.x}
-        yAccessor={d => d.y}
-        xExtent={[0.5, 5.5]}
-        yExtent={[0.5, 5.5]}
-        backgroundGraphics={
-          <rect
-            fill={"url(#gradient)"}
-            x={100}
-            y={10}
-            width={570}
-            height={460}
-          />
-        }
-        additionalDefs={
-          //Linear Gradient gives stoplight color zones to encode desirability
-          <linearGradient id="gradient" x1="0%" y1="100%" x2="100%" y2="0%">
-            <stop offset="10%" stopColor="green" stopOpacity={0.3} />
-            <stop offset="50%" stopColor="gold" stopOpacity={0.3} />
-            <stop offset="90%" stopColor="red" stopOpacity={0.3} />
-          </linearGradient>
-        }
-        hoverAnnotation={true}
-        tooltipContent={d => {
-          return fetchTooltipContent(d)
-        }}
-      />
+      <ProcessViz frameSettings={decisionMatrixChart} frameType="XYFrame" />
+      <XYFrame {...decisionMatrixChart} />
     </div>
   )
 }

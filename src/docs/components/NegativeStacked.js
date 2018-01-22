@@ -44,7 +44,26 @@ export default class NegativeStacked extends React.Component {
     examples.push({
       name: "Basic",
       demo: NegativeStackedRaw(this.state.type),
-      source: `
+      source: `const chartSettings = {
+        size: [700, 700],
+        lines: generatedData,
+        lineType: { type, interpolator: curveMonotoneX },
+        xAccessor: "step",
+        yAccessor: "value",
+        lineStyle: d => ({ fill: d.label, stroke: d.label, fillOpacity: 0.75 }),
+        axes: [
+          { orient: "left" },
+          {
+            orient: "bottom",
+            ticks: 6
+          }
+        ],
+        margin: { left: 50, top: 10, bottom: 50, right: 20 }
+      }
+
+      <XYFrame
+        {...chartSettings}
+      />
   `
     })
 
