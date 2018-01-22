@@ -41,14 +41,13 @@ export default class MarimekkoDocs extends React.Component {
       <OrdinalFrame
     size={[ 700,400 ]}
     data={data}
-    rAccessor={d => d.pct}
-    oAccessor={d => d.market}
-    dynamicColumnWidth={"value"}
+    rAccessor="pct"
+    oAccessor="market"
+    dynamicColumnWidth="value"
     style={(d,i) => ({ fill: colors[d.segment], stroke: "white", strokeWidth: 1 })}
     type={"bar"}
     axis={{ orient: 'left', tickFormat: d => Math.floor(d * 100) + "%"}}
     margin={{ left: 45, top: 10, bottom: 80, right: 50 }}
-    oPadding={0}
     oLabel={d => <text transform="rotate(45)">{d}</text>
       `
     })

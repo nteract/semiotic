@@ -2,12 +2,6 @@ import React from "react"
 import { OrdinalFrame } from "../../components"
 import { AnnotationCallout } from "react-annotation"
 import ProcessViz from "./ProcessViz"
-/*
-  <div>
-    <ProcessViz frameSettings={regionatedLineChart} frameType="XYFrame" />
-    <XYFrame {...regionatedLineChart} />
-  </div>
-*/
 
 const data = [
   {
@@ -285,45 +279,49 @@ export default (annotations = "none") => {
     ]
   }
 
+  const customMarkChart = {
+    projection: "horizontal",
+    data: data,
+    size: [700, 700],
+    rExtent: [1732, 2018],
+    rAccessor: "start",
+    oAccessor: "name",
+    oLabel: (d, i) => (
+      <text style={{ textAnchor: "end", opacity: i % 2 ? 0.5 : 1 }} y={4}>
+        {d}
+      </text>
+    ),
+    oPadding: 3,
+    type: {
+      type: timeline
+    },
+    hoverAnnotation: true,
+    annotations: wars,
+    annotationSettings: { layout: { type: "marginalia", textPadding: 30 } },
+    tooltipContent: d => (
+      <div className="tooltip-content">
+        <p>{d.pieces[0].name}</p>
+        <p>
+          {d.pieces[0].birth} - {d.pieces[0].death}
+        </p>
+        <p>
+          Age at Start of Presidency: {d.pieces[0].start - d.pieces[0].birth}
+        </p>
+        <p>Age at End of Presidency: {d.pieces[0].end - d.pieces[0].birth}</p>
+        <p>Age at Death: {d.pieces[0].death - d.pieces[0].birth}</p>
+      </div>
+    ),
+    axis: {
+      orient: "left",
+      tickValues: [1750, 1800, 1850, 1900, 1950, 2000]
+    },
+    margin: { left: 140, top: 10, bottom: 50, right: 140 }
+  }
+
   return (
-    <OrdinalFrame
-      projection="horizontal"
-      data={data}
-      size={[700, 700]}
-      rExtent={[1732, 2018]}
-      rAccessor="start"
-      oAccessor="name"
-      oLabel={(d, i) => (
-        <text style={{ textAnchor: "end", opacity: i % 2 ? 0.5 : 1 }} y={4}>
-          {d}
-        </text>
-      )}
-      oPadding={3}
-      type={{
-        type: timeline
-      }}
-      hoverAnnotation={true}
-      annotations={wars}
-      annotationSettings={{ layout: { type: "marginalia", textPadding: 30 } }}
-      tooltipContent={d => (
-        <div className="tooltip-content">
-          <p>{d.pieces[0].name}</p>
-          <p>
-            {d.pieces[0].birth} - {d.pieces[0].death}
-          </p>
-          <p>
-            Age at Start of Presidency: {d.pieces[0].start - d.pieces[0].birth}
-          </p>
-          <p>Age at End of Presidency: {d.pieces[0].end - d.pieces[0].birth}</p>
-          <p>Age at Death: {d.pieces[0].death - d.pieces[0].birth}</p>
-        </div>
-      )}
-      lineStyle={d => ({ fill: d.label, stroke: d.label, fillOpacity: 0.75 })}
-      axis={{
-        orient: "left",
-        tickValues: [1750, 1800, 1850, 1900, 1950, 2000]
-      }}
-      margin={{ left: 140, top: 10, bottom: 50, right: 140 }}
-    />
+    <div>
+      <ProcessViz frameSettings={customMarkChart} frameType="OrdinalFrame" />
+      <OrdinalFrame {...customMarkChart} />
+    </div>
   )
 }

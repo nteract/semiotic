@@ -51,7 +51,6 @@ const joyChartSettings = {
   }),
   oAccessor: "term",
   rAccessor: "value",
-  oLabel: d => <text style={{ textAnchor: "end" }}>{d}</text>,
   margin: { left: 150, top: 50, bottom: 55, right: 15 },
   axis: { orient: "bottom", label: "Percent" },
   oLabel: d => (
@@ -63,7 +62,7 @@ const joyChartSettings = {
 
 export default (
   <div>
-    <ProcessViz frameSettings={joyChartSettings} frameType="XYFrame" />
+    <ProcessViz frameSettings={joyChartSettings} frameType="OrdinalFrame" />
     <OrdinalFrame {...joyChartSettings} />
   </div>
 )

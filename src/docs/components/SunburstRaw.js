@@ -30,7 +30,7 @@ const sunburstSettings = {
 }
 export default (
   <div>
-    <ProcessViz frameSettings={sunburstSettings} frameType="OrdinalFrame" />
+    <ProcessViz frameSettings={sunburstSettings} frameType="NetworkFrame" />
     <NetworkFrame {...sunburstSettings} />
   </div>
 )

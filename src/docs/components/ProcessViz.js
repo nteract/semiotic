@@ -2,6 +2,7 @@ import React from "react"
 
 const actualTypeof = thing => {
   if (Array.isArray(thing)) return "array"
+  if (React.isValidElement(thing)) return "jsx"
   return typeof thing
 }
 
@@ -11,7 +12,8 @@ const typeColors = {
   boolean: "#C45E5E",
   object: "#5EBDC4",
   number: "#5E67C4",
-  array: "#A0C45E"
+  array: "#A0C45E",
+  jsx: "#295770"
 }
 
 const typeSymbols = {
@@ -20,7 +22,8 @@ const typeSymbols = {
   boolean: "!",
   object: "{ }",
   number: "#",
-  array: "[ ]"
+  array: "[ ]",
+  jsx: "</>"
 }
 
 const processNodes = [
@@ -43,7 +46,14 @@ const processNodes = [
     label: "FRAME",
     keys: {
       size: true,
-      margin: true
+      margin: true,
+      NetworkFrame: true,
+      OrdinalFrame: true,
+      XYFrame: true,
+      ResponsiveNetworkFrame: true,
+      ResponsiveOrdinalFrame: true,
+      ResponsiveXYFrame: true,
+      MinimapXYFrame: true
     }
   },
   {
@@ -93,6 +103,7 @@ const processNodes = [
     label: "ASSIGN",
     keys: {
       style: true,
+      connectorStyle: true,
       summaryStyle: true,
       pointStyle: true,
       lineStyle: true,
@@ -110,6 +121,7 @@ const processNodes = [
       baseMarkProps: true,
       renderKey: true,
       renderFn: true,
+      className: true,
       pointRenderMode: true,
       lineRenderMode: true,
       areaRenderMode: true
@@ -130,6 +142,7 @@ const processNodes = [
       customLineMark: true,
       showLinePoints: true,
       nodeSizeAccessor: true,
+      edgeWidthAccessor: true,
       customNodeIcon: true,
       edgeType: true
     }
@@ -162,7 +175,7 @@ const processNodes = [
     label: "ANNOTATE",
     keys: {
       annotations: true,
-      annotationHandling: true,
+      annotationSettings: true,
       lineIDAccessor: true,
       svgAnnotationRules: true,
       htmlAnnotationRules: true,
@@ -193,12 +206,16 @@ export default class ProcessViz extends React.Component {
   render() {
     const width = 1000
     const { frameSettings, frameType } = this.props
-    frameSettings.frame = frameType
-    const frameKeys = Object.keys(frameSettings)
+    const frameKeys = Object.keys(frameSettings).filter(
+      d => this.props.frameSettings[d] !== undefined
+    )
+    frameKeys.unshift(frameType)
     let processPosition = 0
     const mappedFrames = processNodes.map((process, i) =>
       frameKeys.filter(k => process.keys[k])
     )
+    console.log("framekeys", frameKeys)
+    console.log("mappedFrames", mappedFrames)
 
     const shortPieces = mappedFrames.filter(d => d.length === 0).length
 

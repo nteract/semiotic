@@ -1,12 +1,6 @@
 import React from "react"
 import { OrdinalFrame } from "../../components"
 import ProcessViz from "./ProcessViz"
-/*
-  <div>
-    <ProcessViz frameSettings={regionatedLineChart} frameType="XYFrame" />
-    <XYFrame {...regionatedLineChart} />
-  </div>
-*/
 
 const colors = {
   "Almond lovers": "#00a2ce",
@@ -63,22 +57,26 @@ const data = [
   { market: "Durham, NC", segment: "Delicious-n-new", value: 400, pct: 0.22 }
 ]
 
+const mekkoChart = {
+  size: [700, 400],
+  data: data,
+  rAccessor: "pct",
+  oAccessor: "market",
+  dynamicColumnWidth: "value",
+  style: (d, i) => ({
+    fill: colors[d.segment],
+    stroke: "white",
+    strokeWidth: 1
+  }),
+  type: "bar",
+  axis: { orient: "left", tickFormat: d => Math.floor(d * 100) + "%" },
+  margin: { left: 55, top: 10, bottom: 80, right: 50 },
+  oLabel: d => <text transform="rotate(45)">{d}</text>
+}
+
 export default (
-  <OrdinalFrame
-    size={[700, 400]}
-    data={data}
-    rAccessor={d => d.pct}
-    oAccessor={d => d.market}
-    dynamicColumnWidth={"value"}
-    style={(d, i) => ({
-      fill: colors[d.segment],
-      stroke: "white",
-      strokeWidth: 1
-    })}
-    type={"bar"}
-    axis={{ orient: "left", tickFormat: d => Math.floor(d * 100) + "%" }}
-    margin={{ left: 55, top: 10, bottom: 80, right: 50 }}
-    oPadding={0}
-    oLabel={d => <text transform="rotate(45)">{d}</text>}
-  />
+  <div>
+    <ProcessViz frameSettings={mekkoChart} frameType="OrdinalFrame" />
+    <OrdinalFrame {...mekkoChart} />
+  </div>
 )

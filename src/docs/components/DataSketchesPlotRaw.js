@@ -2,12 +2,6 @@ import React from "react"
 import { XYFrame } from "../../components"
 import { Mark } from "semiotic-mark"
 import ProcessViz from "./ProcessViz"
-/*
-  <div>
-    <ProcessViz frameSettings={regionatedLineChart} frameType="XYFrame" />
-    <XYFrame {...regionatedLineChart} />
-  </div>
-*/
 
 const speciousColors = {
   shirley: "#ff269d",
@@ -158,102 +152,107 @@ const speciousDataset = [
   }
 ]
 
-export default (
-  <XYFrame
-    size={[750, 750]}
-    xExtent={[-1, 1]}
-    yExtent={[-1, 1]}
-    points={speciousDataset}
-    customPointMark={({ d }) => (
-      <Mark markType="g" opacity={0.75}>
-        <text
-          fontSize={10}
-          y={18}
-          textAnchor="middle"
-          fill={"white"}
-          stroke="white"
-          strokeWidth={4}
-          opacity={0.9}
-        >
-          {d.name}
-        </text>
-        <text
-          fontSize={10}
-          y={18}
-          textAnchor="middle"
-          fill={speciousColors[d.who]}
-        >
-          {d.name}
-        </text>
-        <Mark
-          markType="circle"
-          renderMode="sketchy"
-          style={{ fill: speciousColors[d.who] }}
-          r={8}
-        />
-        <Mark
-          markType="circle"
-          style={{
-            strokeWidth: 2,
-            stroke: "white",
-            fill: "none"
-          }}
-          r={4}
-        />
-      </Mark>
-    )}
-    hoverAnnotation={true}
-    tooltipContent={d => (
-      <div
-        className="tooltip-content"
+const datasketchesChart = {
+  size: [750, 750],
+  xExtent: [-1, 1],
+  yExtent: [-1, 1],
+  points: speciousDataset,
+  customPointMark: ({ d }) => (
+    <Mark markType="g" opacity={0.75}>
+      <text
+        fontSize={10}
+        y={18}
+        textAnchor="middle"
+        fill={"white"}
+        stroke="white"
+        strokeWidth={4}
+        opacity={0.9}
+      >
+        {d.name}
+      </text>
+      <text
+        fontSize={10}
+        y={18}
+        textAnchor="middle"
+        fill={speciousColors[d.who]}
+      >
+        {d.name}
+      </text>
+      <Mark
+        markType="circle"
+        renderMode="sketchy"
+        style={{ fill: speciousColors[d.who] }}
+        r={8}
+      />
+      <Mark
+        markType="circle"
         style={{
-          border: "none",
-          background: speciousColors[d.who],
-          color: "white"
+          strokeWidth: 2,
+          stroke: "white",
+          fill: "none"
+        }}
+        r={4}
+      />
+    </Mark>
+  ),
+  hoverAnnotation: true,
+  tooltipContent: d => (
+    <div
+      className="tooltip-content"
+      style={{
+        border: "none",
+        background: speciousColors[d.who],
+        color: "white"
+      }}
+    >
+      <h1
+        style={{
+          fontSize: "16px",
+          color: "white",
+          fontWeight: 900
         }}
       >
-        <h1
-          style={{
-            fontSize: "16px",
-            color: "white",
-            fontWeight: 900
-          }}
-        >
-          {d.name}
-        </h1>
-        <p>by {d.who}</p>
-        <p>{d.month}</p>
-      </div>
-    )}
-    xAccessor={"meaningfulFrivolous"}
-    yAccessor={"accessibleShowingOff"}
-    margin={{ left: 100, bottom: 100, right: 100, top: 100 }}
-    backgroundGraphics={
-      <g>
-        <image
-          opacity={1}
-          xlinkHref={"/semiotic/ds_quads.jpg"}
-          x={50}
-          y={50}
-          height={650}
-        />
-        <line x1={375} x2={375} y1={100} y2={650} style={{ stroke: "black" }} />
-        <line y1={375} y2={375} x1={100} x2={650} style={{ stroke: "black" }} />
-      </g>
+        {d.name}
+      </h1>
+      <p>by {d.who}</p>
+      <p>{d.month}</p>
+    </div>
+  ),
+  xAccessor: "meaningfulFrivolous",
+  yAccessor: "accessibleShowingOff",
+  margin: { left: 100, bottom: 100, right: 100, top: 100 },
+  backgroundGraphics: (
+    <g>
+      <image
+        opacity={1}
+        xlinkHref={"/semiotic/ds_quads.jpg"}
+        x={50}
+        y={50}
+        height={650}
+      />
+      <line x1={375} x2={375} y1={100} y2={650} style={{ stroke: "black" }} />
+      <line y1={375} y2={375} x1={100} x2={650} style={{ stroke: "black" }} />
+    </g>
+  ),
+  axes: [
+    {
+      orient: "left",
+      label: "← Accessible - Showing Off →",
+      tickFormat: () => "",
+      tickValues: [-1, -0.5, 0.5, 1]
+    },
+    {
+      orient: "bottom",
+      label: "← Meaningful - Frivolous →",
+      tickFormat: () => "",
+      tickValues: [-1, -0.5, 0.5, 1]
     }
-    axes={[
-      {
-        orient: "left",
-        label: "← Accessible - Showing Off →",
-        tickFormat: () => "",
-        tickValues: [-1, -0.5, 0.5, 1]
-      },
-      {
-        orient: "bottom",
-        label: "← Meaningful - Frivolous →",
-        tickFormat: () => "",
-        tickValues: [-1, -0.5, 0.5, 1]
-      }
-    ]}
-  />
+  ]
+}
+
+export default (
+  <div>
+    <ProcessViz frameSettings={datasketchesChart} frameType="XYFrame" />
+    <XYFrame {...datasketchesChart} />
+  </div>
 )
