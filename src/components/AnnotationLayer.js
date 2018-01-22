@@ -158,12 +158,22 @@ class AnnotationLayer extends React.Component {
       leftNodes.forEach((note, i) => {
         note.props.noteData.ny = leftSortedNodes[i].currentPos
         note.props.noteData.nx = 20 + leftSortedNodes[i].layerIndex * 20
+        if (note.props.noteData.note) {
+          note.props.noteData.note.orientation = "leftRight"
+          note.props.noteData.note.align = "middle"
+        }
       })
 
       rightNodes.forEach((note, i) => {
         note.props.noteData.ny = rightSortedNodes[i].currentPos
         note.props.noteData.nx = 620 + rightSortedNodes[i].layerIndex * 20
+        if (note.props.noteData.note) {
+          note.props.noteData.note.orientation = "leftRight"
+          note.props.noteData.note.align = "middle"
+        }
       })
+
+      console.log("rightNodes", rightNodes)
 
       topNodes.forEach((note, i) => {
         note.props.noteData.nx = topSortedNodes[i].currentPos

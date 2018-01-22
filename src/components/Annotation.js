@@ -32,6 +32,8 @@ class SemioticAnnotation extends React.Component {
       return <g events={eventListeners}>{notes}</g>
     }
 
+    console.log("noteData", noteData)
+
     return <noteData.type events={eventListeners} {...noteData} />
   }
 }
