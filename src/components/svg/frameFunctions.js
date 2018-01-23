@@ -429,6 +429,7 @@ export const orFrameAxisGenerator = ({
         margin,
         footer: d.footer,
         tickSize: d.tickSize
+
       })
       const axisTickLines = axisLines({
         axisParts,
@@ -483,7 +484,7 @@ export const orFrameAxisGenerator = ({
           ref = `${Math.random().toString()} `
           axisLabel = (
             <g
-              className="axis-label"
+              className="axis-label radial"
               transform={`translate(0,${locationDistance})`}
             >
               <text textAnchor="middle">
@@ -500,7 +501,7 @@ export const orFrameAxisGenerator = ({
         return (
           <g
             key={`orframe-radial-axis-element-${t}`}
-            className="axis axis-label axis-tick"
+            className="axis axis-label axis-tick radial"
             transform={`translate(${margin.left},0)`}
           >
             <path
