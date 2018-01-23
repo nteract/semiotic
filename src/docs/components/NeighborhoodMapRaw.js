@@ -16,11 +16,12 @@ const colors = [
   "rgb(182, 167, 86)"
 ]
 
-csvParse(data).forEach(d => {
+const annotationData = []
+
+csvParse(data).forEach((d, i) => {
   const point = {
-    x: +d.x,
-    y: +d.y,
-    show_title_id: d.show_title_id,
+    posx: +d.x,
+    posy: +d.y,
     hood: +d.hood
   }
   if (!groupHash[d.hood]) {
@@ -32,14 +33,27 @@ csvParse(data).forEach(d => {
     groupedData.push(groupHash[d.hood])
   }
   groupHash[d.hood].coordinates.push(point)
+  if (i % 6 === 0) {
+    annotationData.push(
+      Object.assign({}, point, {
+        type: "react-annotation",
+        dx: 0,
+        dy: 0,
+        label: d.hood + "-" + i
+      })
+    )
+  }
 })
 
+console.log("annotationData", annotationData)
+
 const neighborhoodMapChart = {
+  size: [700, 700],
   areas: groupedData,
   lineDataAccessor: "d",
   showLinePoints: true,
-  xAccessor: "x",
-  yAccessor: "y",
+  xAccessor: "posx",
+  yAccessor: "posy",
   areaStyle: d => ({
     stroke: "none",
     fill: d.parentArea.color,
@@ -50,16 +64,21 @@ const neighborhoodMapChart = {
     strokeOpacity: 0,
     fill: colors[d.hood % 6]
   }),
+  annotationSettings: {
+    layout: { type: "labella", orient: "left" }
+  },
   customPointMark: () => <Mark markType="circle" r="1" />,
   canvasPoints: true,
   hoverAnnotation: true,
+  annotations: annotationData,
   tooltipContent: d => <div className="tooltip-content">{d.hood}</div>,
   areaType: {
     type: "contour",
     thresholds: 4,
     bandwidth: 5,
     neighborhood: true
-  }
+  },
+  margin: 100
 }
 
 export default (
