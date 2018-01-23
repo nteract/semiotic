@@ -264,10 +264,16 @@ class XYFrame extends React.Component {
     if (currentProps.axes) {
       axesTickLines = []
       axes = currentProps.axes.map((d, i) => {
+        let axisClassname = d.className || ""
+        axisClassname += " axis"
         let axisScale = yScale
         if (d.orient === "top" || d.orient === "bottom") {
+          axisClassname += " x"
           axisScale = xScale
+        } else {
+          axisClassname += " y"
         }
+        axisClassname += " " + d.orient
 
         let tickValues
         if (d.tickValues && Array.isArray(d.tickValues)) {
@@ -298,7 +304,7 @@ class XYFrame extends React.Component {
           tickSize: d.tickSize
         })
         const axisTickLines = (
-          <g key={`axes-tick-lines-${i}`} className={`axis ${d.className}`}>
+          <g key={`axes-tick-lines-${i}`} className={`axis ${axisClassname}`}>
             {axisLines({
               axisParts,
               orient: d.orient,
@@ -322,7 +328,7 @@ class XYFrame extends React.Component {
             tickValues={tickValues}
             format={d.format}
             scale={axisScale}
-            className={d.className || ""}
+            className={axisClassname}
             name={d.name}
             padding={d.padding}
             rotate={d.rotate}

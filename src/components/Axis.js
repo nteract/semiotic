@@ -207,7 +207,8 @@ class Axis extends React.Component {
                 value: this.props.scale.invert(
                   this.state.hoverAnnotation + annotationOffset
                 )
-              })}
+              })
+            }
             onMouseOut={() => this.setState({ hoverAnnotation: undefined })}
           />
           {annotationSymbol}
@@ -304,6 +305,7 @@ class Axis extends React.Component {
           key="baseline"
           className="axis-baseline"
           stroke="black"
+          strokeLinecap="square"
           x1={baselineX}
           x2={baselineX2}
           y1={baselineY}
