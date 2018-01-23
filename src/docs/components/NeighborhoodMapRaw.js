@@ -45,8 +45,6 @@ csvParse(data).forEach((d, i) => {
   }
 })
 
-console.log("annotationData", annotationData)
-
 const neighborhoodMapChart = {
   size: [700, 700],
   areas: groupedData,
@@ -65,7 +63,7 @@ const neighborhoodMapChart = {
     fill: colors[d.hood % 6]
   }),
   annotationSettings: {
-    layout: { type: "labella", orient: "left" }
+    layout: { type: "marginalia", orient: ["left", "top"] }
   },
   customPointMark: () => <Mark markType="circle" r="1" />,
   canvasPoints: true,

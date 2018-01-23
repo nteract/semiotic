@@ -214,8 +214,6 @@ export default class ProcessViz extends React.Component {
     const mappedFrames = processNodes.map((process, i) =>
       frameKeys.filter(k => process.keys[k])
     )
-    console.log("framekeys", frameKeys)
-    console.log("mappedFrames", mappedFrames)
 
     const shortPieces = mappedFrames.filter(d => d.length === 0).length
 

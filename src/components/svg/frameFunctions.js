@@ -390,6 +390,7 @@ export const orFrameAxisGenerator = ({
     let axisPosition = [0, 0]
     const axes = Array.isArray(axis) ? axis : [axis]
     generatedAxis = axes.map((d, i) => {
+      let axisClassname = d.className || ""
       let tickValues
       let axisScale = rScaleType().domain(rScale.domain())
 
@@ -397,12 +398,16 @@ export const orFrameAxisGenerator = ({
 
       if (orient === "right") {
         axisScale.range([rScale.range()[1], rScale.range()[0]])
+        axisClassname += " right y"
       } else if (orient === "left") {
+        axisClassname += " left y"
         axisPosition = [margin.left, 0]
         axisScale.range([rScale.range()[1], rScale.range()[0]])
       } else if (orient === "top") {
+        axisClassname += " top x"
         axisScale.range(rScale.range())
       } else if (orient === "bottom") {
+        axisClassname += " bottom x"
         axisPosition = [0, margin.top]
         axisScale.range(rScale.range())
       }
@@ -448,7 +453,7 @@ export const orFrameAxisGenerator = ({
           format={d.format}
           rotate={d.rotate}
           scale={axisScale}
-          className={d.className}
+          className={axisClassname}
           name={d.name}
         />
       )
