@@ -14,62 +14,6 @@ const basicLabelSizeFunction = noteData => {
   return circleSize
 }
 
-export function basicVerticalSorting({
-  axes,
-  adjustableAnnotations,
-  margin,
-  size,
-  orient,
-  textHeight = 30,
-  textPadding = 5,
-  textMargin = 0
-}) {
-  let x = size[0] - margin.right + 10 + textMargin
-  if (axes && axes.find(d => d.props.orient === "right")) {
-    x += 65
-  }
-  if (orient === "left") {
-    x = margin.left - 10 - textMargin
-    if (axes && axes.find(d => d.props.orient === "left")) {
-      x -= 65
-    }
-  }
-
-  let gap = 0
-  let lastPosition = 0
-  adjustableAnnotations.forEach(baseNote => {
-    const note = baseNote.props.noteData
-    note.nx = x
-    note.ny = textHeight * 2
-    note.align = "bottom"
-  })
-  adjustableAnnotations.forEach((baseNote, notei) => {
-    let note = baseNote.props.noteData
-    const nextBaseNote = adjustableAnnotations[notei + 1]
-
-    if (
-      nextBaseNote &&
-      note.ny + textHeight + textPadding > nextBaseNote.props.noteData.ny
-    ) {
-      const nextNote = nextBaseNote.props.noteData
-      nextNote.ny = note.ny + textHeight + textPadding
-    } else {
-      for (let step = lastPosition; step <= notei; step++) {
-        adjustableAnnotations[step].props.noteData.ny -= gap
-      }
-      if (nextBaseNote) {
-        const nextNote = nextBaseNote.props.noteData
-        gap = Math.min(
-          80,
-          Math.max(0, nextNote.ny - (note.ny + textHeight + textPadding))
-        )
-        lastPosition = notei + 1
-      }
-    }
-  })
-  return adjustableAnnotations
-}
-
 export function bumpAnnotations(adjustableNotes, props) {
   let {
     pointSizeFunction = basicPointSizeFunction,
