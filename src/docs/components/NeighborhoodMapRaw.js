@@ -33,13 +33,14 @@ csvParse(data).forEach((d, i) => {
     groupedData.push(groupHash[d.hood])
   }
   groupHash[d.hood].coordinates.push(point)
-  if (i % 6 === 0) {
+  if (i % 4 === 0) {
     annotationData.push(
       Object.assign({}, point, {
         type: "react-annotation",
         dx: 0,
         dy: 0,
-        label: d.hood + "-" + i
+        label: "Note " + (annotationData.length + 1),
+        color: colors[+d.hood % 6]
       })
     )
   }
@@ -63,7 +64,15 @@ const neighborhoodMapChart = {
     fill: colors[d.hood % 6]
   }),
   annotationSettings: {
-    layout: { type: "marginalia", orient: ["left", "top"] }
+    layout: {
+      type: "bump",
+      orient: "nearest",
+      characterWidth: 8,
+      lineWidth: 20,
+      padding: 2,
+      iterations: 1000,
+      pointSizeFunction: () => 2
+    }
   },
   customPointMark: () => <Mark markType="circle" r="1" />,
   canvasPoints: true,
