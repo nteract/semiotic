@@ -9,15 +9,15 @@ export default function() {
 
   let max_move = 5.0,
     max_angle = 0.5,
-    acc = 0
-  rej = 0
+    acc = 0,
+    rej = 0
 
   // weights
   let w_len = 0.2, // leader line length
     w_inter = 1.0, // leader line intersection
     w_lab2 = 30.0, // label-label overlap
-    w_lab_anc = 30.0 // label-anchor overlap
-  w_orient = 3.0 // orientation bias
+    w_lab_anc = 30.0, // label-anchor overlap
+    w_orient = 3.0 // orientation bias
 
   // booleans for user defined functions
   let user_energy = false,
@@ -25,7 +25,7 @@ export default function() {
 
   let user_defined_energy, user_defined_schedule
 
-  energy = function(index) {
+  const energy = function(index) {
     // energy function, tailored for label placement
 
     let m = lab.length,
@@ -34,8 +34,8 @@ export default function() {
       dy = anc[index].y - lab[index].y,
       dist = Math.sqrt(dx * dx + dy * dy),
       overlap = true,
-      amount = 0
-    theta = 0
+      amount = 0,
+      theta = 0
 
     // penalty for length of leader line
     if (dist > 0) ener += dist * w_len
@@ -60,9 +60,9 @@ export default function() {
     let x11, x12, y11, y12, x_overlap, y_overlap, overlap_area
 
     for (let i = 0; i < m; i++) {
-      if (i != index) {
+      if (i !== index) {
         // penalty for intersection of leader lines
-        overlap = intersect(
+        const overlap = intersect(
           anc[index].x,
           lab[index].x,
           anc[i].x,
@@ -98,7 +98,7 @@ export default function() {
     return ener
   }
 
-  mcmove = function(currT) {
+  const mcmove = function(currT) {
     // Monte Carlo translation move
 
     // select a random label
@@ -147,7 +147,7 @@ export default function() {
     }
   }
 
-  mcrotate = function(currT) {
+  const mcrotate = function(currT) {
     // Monte Carlo rotation move
 
     // select a random label
@@ -210,7 +210,7 @@ export default function() {
     }
   }
 
-  intersect = function(x1, x2, x3, x4, y1, y2, y3, y4) {
+  const intersect = function(x1, x2, x3, x4, y1, y2, y3, y4) {
     // returns true if two lines intersect, else false
     // from http://paulbourke.net/geometry/lineline2d/
 
@@ -230,7 +230,7 @@ export default function() {
     return false
   }
 
-  cooling_schedule = function(currT, initialT, nsweeps) {
+  const cooling_schedule = function(currT, initialT, nsweeps) {
     // linear cooling
     return currT - initialT / nsweeps
   }
