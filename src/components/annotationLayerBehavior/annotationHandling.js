@@ -1,28 +1,37 @@
 import { forceSimulation, forceX, forceY, forceCollide } from "d3-force"
 
+import labeler from "./d3labeler"
+
 const basicPointSizeFunction = () => {
   return 5
 }
-const basicLabelSizeFunction = noteData => {
+const basicLabelSizeFunction = (
+  noteData,
+  characterWidth,
+  lineHeight,
+  padding
+) => {
   const text = noteData.note.label || noteData.note.title
 
   const textLength = text.length
-  const circleSize =
-    noteData.note && noteData.note.wrap
-      ? Math.min(noteData.note.wrap, textLength * 3)
-      : textLength * 3
-  return circleSize
+  const wrap = noteData.note.wrap || 120
+  const width = Math.min(wrap, textLength * characterWidth) + padding * 2
+  const height =
+    Math.ceil(textLength * characterWidth / 120) * lineHeight + padding * 2
+  return [width, height]
 }
 
-export function bumpAnnotations(adjustableNotes, props) {
-  let {
+export function bumpAnnotations(adjustableNotes, props, processor) {
+  let { size } = props
+
+  const {
+    padding = 1,
+    characterWidth = 8,
+    lineHeight = 20,
+    iterations = 500,
     pointSizeFunction = basicPointSizeFunction,
     labelSizeFunction = basicLabelSizeFunction
-  } = props
-
-  //      if (this.state.font) {
-  //        return adjustableNotes
-  //      }
+  } = processor
 
   const labels = adjustableNotes.map((d, i) => {
     const anchorX =
@@ -35,19 +44,29 @@ export function bumpAnnotations(adjustableNotes, props) {
       (d.props.noteData.dy !== undefined
         ? d.props.noteData.dy
         : (i % 3 - 1) * 10)
+
+    const [labelWidth, labelHeight] = labelSizeFunction(
+      d.props.noteData,
+      characterWidth,
+      lineHeight,
+      padding
+    )
     return {
-      anchorX,
-      anchorY,
+      x: anchorX,
+      y: anchorY,
       above: anchorY < d.props.noteData.y,
       left: anchorX < d.props.noteData.x,
-      r: labelSizeFunction(d.props.noteData),
+      width: labelWidth,
+      height: labelHeight,
       type: "label",
+      name: "",
       originalNote: d
     }
   })
+
   const points = adjustableNotes.map(d => ({
-    anchorX: d.props.noteData.x,
-    anchorY: d.props.noteData.y,
+    x: d.props.noteData.x,
+    y: d.props.noteData.y,
     fx: d.props.noteData.x,
     fy: d.props.noteData.y,
     r: pointSizeFunction(d.props.noteData),
@@ -57,31 +76,31 @@ export function bumpAnnotations(adjustableNotes, props) {
 
   const labelsAndPoints = [...labels, ...points]
 
-  const labelSim = forceSimulation()
-    .force(
-      "x",
-      forceX(a => a.anchorX).strength(
-        a => (a.left && a.originalNote.props.noteData.x > a.x ? 3 : 1)
-      )
-    )
-    .force(
-      "y",
-      forceY(a => a.anchorY).strength(
-        a => (a.top && a.originalNote.props.noteData.y > a.y ? 3 : 1)
-      )
-    )
-    .force("collision", forceCollide(a => a.r).iterations(2))
-    .alpha(0.5)
-    .nodes(labelsAndPoints)
+  const newLabels = labeler()
+    .label(labels)
+    .anchor(points)
+    .width(size[0])
+    .height(size[1])
+    .start(iterations)
 
-  for (let i = 0; i < 300; ++i) labelSim.tick()
-
-  labelsAndPoints.forEach(d => {
+  labels.forEach(d => {
     if (d.type === "label") {
-      d.originalNote.props.noteData.nx = d.x
-      d.originalNote.props.noteData.ny = d.y
+      const adjusted = adjustedXY(d.originalNote.props.noteData, d, padding)
+      d.originalNote.props.noteData.nx = adjusted[0]
+      d.originalNote.props.noteData.ny = adjusted[1]
     }
   })
 
   return adjustableNotes
+}
+
+function adjustedXY(note, calculated, padding) {
+  if (note.y > calculated.y) {
+    //below
+    return [
+      calculated.x + calculated.width / 2,
+      calculated.y - calculated.height
+    ]
+  }
+  return [calculated.x + calculated.width / 2, calculated.y]
 }
