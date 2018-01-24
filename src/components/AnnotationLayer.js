@@ -99,7 +99,11 @@ class AnnotationLayer extends React.Component {
     const { padding = 2 } = annotationProcessor
 
     if (annotationProcessor.type === "bump") {
-      const adjustedAnnotations = bumpAnnotations(adjustableAnnotations, props)
+      const adjustedAnnotations = bumpAnnotations(
+        adjustableAnnotations,
+        props,
+        annotationProcessor
+      )
       return adjustedAnnotations
     } else if (annotationProcessor.type === "marginalia") {
       const finalOrientation =
