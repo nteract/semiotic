@@ -9,6 +9,7 @@ Semiotic is a data visualization framework combining React &amp; D3
 [Examples](https://github.com/emeeks/semiotic-examples)
 
 Installation
+
 ```
 npm i semiotic
 ```
@@ -16,8 +17,22 @@ npm i semiotic
 Example
 
 ```js
-import { XYFrame } from 'semiotic'
+import { XYFrame } from "semiotic"
 ```
+
+You can also use the static distribution:
+
+```
+https://unpkg.com/semiotic/dist/semiotic.min.js
+```
+
+In which case the elements are exposed as properties of a `Semiotic` object:
+
+```js
+const { XYFrame } = Semiotic
+```
+
+This is how it's used in [these Codepen examples](https://codepen.io/emeeks/).
 
 _Semiotic icon based on an icon by André Schauer_
 

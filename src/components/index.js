@@ -24,6 +24,7 @@ import {
   ResponsiveORFrame
 } from "./ResponsiveFrame"
 import { chuckCloseCanvasTransform } from "./canvas/basicCanvasEffects"
+import { Mark } from "semiotic-mark"
 const ORFrame = OrdinalFrame
 
 export default {
@@ -51,7 +52,8 @@ export default {
   ResponsiveSmartFrame,
   ResponsiveXYFrame,
   Legend,
-  chuckCloseCanvasTransform
+  chuckCloseCanvasTransform,
+  Mark
 }
 
 export {
@@ -79,5 +81,6 @@ export {
   ResponsiveSmartFrame,
   ResponsiveXYFrame,
   Legend,
-  chuckCloseCanvasTransform
+  chuckCloseCanvasTransform,
+  Mark
 }
