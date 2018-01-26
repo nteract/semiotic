@@ -401,6 +401,8 @@ class InteractionLayer extends React.Component {
           background: "none",
           pointerEvents: "none"
         }}
+        role='presentation'
+        aria-hidden='true'
       >
         <svg
           height={svgSize[1]}

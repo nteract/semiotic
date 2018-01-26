@@ -111,7 +111,7 @@ class VisualizationLayer extends React.PureComponent {
         context.filter = "blur(5px)"
         context.drawImage(baseImage, 0, 0)
         context.filter = "none"
-        context.drawImage(baseImage, 0, 0) 
+        context.drawImage(baseImage, 0, 0)
       } */
     }
   }
@@ -160,7 +160,12 @@ class VisualizationLayer extends React.PureComponent {
             ...pipe
           })
           renderedElements.push(
-            <g key={k} className={k}>
+            <g
+              key={k}
+              className={k}
+              role={k === "pieces" ? "list" : ""}
+              tabIndex={k === "pieces" ? 0 : -1}
+            >
               {renderedPipe}
             </g>
           )
@@ -181,7 +186,13 @@ class VisualizationLayer extends React.PureComponent {
 
     return (
       <g transform={`translate(${position})`}>
-        <g className="axis axis-tick-lines">{axesTickLines}</g>
+        <g
+          className="axis axis-tick-lines"
+          role="presentation"
+          aria-hidden="true"
+        >
+          {axesTickLines}
+        </g>
         <g
           className="data-visualization"
           key="visualization-clip-path"
@@ -192,7 +203,13 @@ class VisualizationLayer extends React.PureComponent {
           {renderedElements}
         </g>
         {matte}
-        <g className="axis axis-labels">{axes}</g>
+        <g
+        className="axis axis-labels"
+          role="presentation"
+          aria-hidden="true"
+        >
+          {axes}
+        </g>
       </g>
     )
   }

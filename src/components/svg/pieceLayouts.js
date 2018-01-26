@@ -429,6 +429,9 @@ export function barLayout({
           renderMode: renderValue,
           key: "piece-" + piece.renderKey,
           style: styleFn(piece, ordsetI),
+          "aria-label": piece.stepName + ": " + piece._orFV,
+          role: "listitem",
+          tabIndex: -1,
           ...eventListeners,
           ...markProps
         }
