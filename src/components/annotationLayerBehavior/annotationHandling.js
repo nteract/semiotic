@@ -22,15 +22,19 @@ const basicLabelSizeFunction = (
 }
 
 export function bumpAnnotations(adjustableNotes, props, processor) {
-  let { size } = props
+  let {
+    size,
+    pointSizeFunction: propsPointSizeFunction,
+    labelSizeFunction: propsLabelSizeFunction
+  } = props
 
   const {
     padding = 1,
     characterWidth = 8,
     lineHeight = 20,
     iterations = 500,
-    pointSizeFunction = basicPointSizeFunction,
-    labelSizeFunction = basicLabelSizeFunction
+    pointSizeFunction = propsPointSizeFunction || basicPointSizeFunction,
+    labelSizeFunction = propsLabelSizeFunction || basicLabelSizeFunction
   } = processor
 
   const labels = adjustableNotes.map((d, i) => {

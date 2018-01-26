@@ -18,7 +18,11 @@ function noteDataWidth(noteData, charWidth = 8) {
 
 function noteDataHeight(noteData, charWidth = 8, lineHeight = 20) {
   const wrap = (noteData.note && noteData.note.wrap) || 120
-  return Math.ceil(noteData.note.label.length * charWidth / wrap) * lineHeight
+  const text = noteData.note.label || noteData.note.title || ""
+  return (
+    Math.ceil(text.length * charWidth / wrap) * lineHeight +
+    (noteData.note.label && noteData.note.title ? lineHeight : 0)
+  )
 }
 
 function objectStringKey(object) {
