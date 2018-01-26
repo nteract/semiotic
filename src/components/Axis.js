@@ -160,6 +160,10 @@ class Axis extends React.Component {
     let annotationBrush
 
     if (this.props.annotationFunction) {
+      const formattedValue = formatValue(
+        this.props.scale.invert(this.state.hoverAnnotation + annotationOffset),
+        this.props
+      )
       const hoverGlyph = this.props.glyphFunction ? (
         this.props.glyphFunction({
           lineHeight,
@@ -170,14 +174,13 @@ class Axis extends React.Component {
         })
       ) : (
         <g>
-          <text x={textX} y={textY}>
-            {formatValue(
-              this.props.scale.invert(
-                this.state.hoverAnnotation + annotationOffset
-              ),
-              this.props
-            )}
-          </text>
+          {React.isValidElement(formattedValue) ? (
+            <g transform={`translate(${textX},${textY})`}>{formattedValue}</g>
+          ) : (
+            <text x={textX} y={textY}>
+              {formattedValue}
+            </text>
+          )}
           <circle r={5} />
           <line x1={lineWidth} y1={lineHeight} style={{ stroke: "black" }} />
         </g>
@@ -291,7 +294,11 @@ class Axis extends React.Component {
             translation[1] + position[1]
           ]}) rotate(${rotation})`}
         >
-          <text textAnchor={anchorMod}>{labelName}</text>
+          {React.isValidElement(labelName) ? (
+            labelName
+          ) : (
+            <text textAnchor={anchorMod}>{labelName}</text>
+          )}
         </g>
       )
     }

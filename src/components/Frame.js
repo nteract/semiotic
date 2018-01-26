@@ -21,6 +21,10 @@ class Frame extends React.Component {
     this.setState({ canvasContext: this.canvasContext })
   }
 
+  getChildContext() {
+    return { canvas: this.canvasContext }
+  }
+
   render() {
     const {
       name,
@@ -100,14 +104,16 @@ class Frame extends React.Component {
               i,
               annotationLayer: thisALayer,
               ...renderPipeline
-            })}
+            })
+          }
           htmlAnnotationRule={(d, i, thisALayer) =>
             defaultHTMLRule({
               d,
               i,
               annotationLayer: thisALayer,
               ...renderPipeline
-            })}
+            })
+          }
           size={size}
           position={[
             adjustedPosition[0] + margin.left,
@@ -228,6 +234,10 @@ Frame.propTypes = {
   backgroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
   foregroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
   interactionOverflow: PropTypes.object
+}
+
+Frame.childContextTypes = {
+  canvas: PropTypes.object
 }
 
 export default Frame
