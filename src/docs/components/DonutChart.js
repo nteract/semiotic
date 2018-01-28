@@ -83,19 +83,19 @@ export default class PieDonutDocs extends React.Component {
       name: "Basic",
       demo: DonutChartRaw(this.state),
       source: `
-          const colors = [
-              '#00a2ce',
-              '#4d430c',
-              '#b3331d',
-              '#b6a756'
-          ]
+          const colorMap = {
+            5: '#00a2ce',
+            8: '#4d430c',
+            10: '#b3331d',
+            15: '#b6a756'
+          };
           const data = [ 5, 8, 10, 15 ]
 
            <OrdinalFrame
               size={[ 700,400 ]}
               data={data}
               projection={"radial"}
-              style={d => ({ fill: "red", stroke: "darkgray", strokeWidth: 1 })}
+              style={d => ({ fill: colorMap[d.value], stroke: "darkgray", strokeWidth: 1 })}
               type={{ type: "bar", innerRadius: ${this.state.innerRadius} }}
               oLabel={true}
               ${
