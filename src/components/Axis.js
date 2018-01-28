@@ -44,7 +44,8 @@ class Axis extends React.Component {
       ticks,
       footer,
       tickSize,
-      tickLineGenerator
+      tickLineGenerator,
+      baseline = true
     } = this.props
 
     if (this.props.format) {
@@ -308,16 +309,18 @@ class Axis extends React.Component {
         {annotationBrush}
         {axisTickLabels}
         {axisTickLines}
-        <line
-          key="baseline"
-          className="axis-baseline"
-          stroke="black"
-          strokeLinecap="square"
-          x1={baselineX}
-          x2={baselineX2}
-          y1={baselineY}
-          y2={baselineY2}
-        />
+        {baseline ? (
+          <line
+            key="baseline"
+            className="axis-baseline"
+            stroke="black"
+            strokeLinecap="square"
+            x1={baselineX}
+            x2={baselineX2}
+            y1={baselineY}
+            y2={baselineY2}
+          />
+        ) : null}
         {axisTitle}
       </g>
     )
@@ -338,6 +341,7 @@ Axis.propTypes = {
   tickFormat: PropTypes.func,
   tickValues: PropTypes.array,
   padding: PropTypes.number,
+  baseline: PropTypes.bool,
   ticks: PropTypes.oneOfType([PropTypes.array, PropTypes.number]),
   label: PropTypes.oneOfType([
     PropTypes.string,
