@@ -261,6 +261,9 @@ class XYFrame extends React.Component {
     let axes = null
     let axesTickLines = null
 
+    let axisXBaseline = false,
+      axisYBaseline = false
+
     if (currentProps.axes) {
       axesTickLines = []
       axes = currentProps.axes.map((d, i) => {
@@ -268,9 +271,17 @@ class XYFrame extends React.Component {
         axisClassname += " axis"
         let axisScale = yScale
         if (d.orient === "top" || d.orient === "bottom") {
+          if (axisXBaseline) {
+            d.baseline = d.baseline || false
+          }
+          axisXBaseline = true
           axisClassname += " x"
           axisScale = xScale
         } else {
+          if (axisYBaseline) {
+            d.baseline = d.baseline || false
+          }
+          axisYBaseline = true
           axisClassname += " y"
         }
         axisClassname += " " + d.orient
@@ -334,6 +345,7 @@ class XYFrame extends React.Component {
             rotate={d.rotate}
             annotationFunction={d.axisAnnotationFunction}
             glyphFunction={d.glyphFunction}
+            baseline={d.baseline}
           />
         )
       })

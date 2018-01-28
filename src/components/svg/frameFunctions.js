@@ -389,7 +389,13 @@ export const orFrameAxisGenerator = ({
     axesTickLines = []
     let axisPosition = [0, 0]
     const axes = Array.isArray(axis) ? axis : [axis]
+    let axisBaseline = false
     generatedAxis = axes.map((d, i) => {
+      if (axisBaseline) {
+        d.axis = d.axis || false
+      }
+      axisBaseline = true
+
       let axisClassname = d.className || ""
       let tickValues
       let axisScale = rScaleType().domain(rScale.domain())
@@ -429,7 +435,6 @@ export const orFrameAxisGenerator = ({
         margin,
         footer: d.footer,
         tickSize: d.tickSize
-
       })
       const axisTickLines = axisLines({
         axisParts,
@@ -456,6 +461,7 @@ export const orFrameAxisGenerator = ({
           scale={axisScale}
           className={axisClassname}
           name={d.name}
+          baseline={d.baseline}
         />
       )
     })
