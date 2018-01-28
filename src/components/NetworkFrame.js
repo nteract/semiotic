@@ -1103,17 +1103,30 @@ class NetworkFrame extends React.Component {
             nodeLabels === true
               ? nodeIDAccessor(node, nodei)
               : nodeLabels(node, nodei)
-          const nodeLabel = {
-            className: "node-label",
-            dx: 0,
-            dy: 0,
-            x: node.x,
-            y: node.y,
-            note: { label: actualLabel },
-            connector: { end: "none" },
-            type: AnnotationLabel,
-            subject: { radius: nodeSizeAccessor(node) + 2 }
+
+          let nodeLabel
+
+          if (React.isValidElement(actualLabel)) {
+            nodeLabel = {
+              type: "basic-node-label",
+              x: node.x,
+              y: node.y,
+              element: actualLabel
+            }
+          } else {
+            nodeLabel = {
+              className: "node-label",
+              dx: 0,
+              dy: 0,
+              x: node.x,
+              y: node.y,
+              note: { label: actualLabel },
+              connector: { end: "none" },
+              type: AnnotationLabel,
+              subject: { radius: nodeSizeAccessor(node) + 2 }
+            }
           }
+
           nodeLabelAnnotations.push(nodeLabel)
         }
       })
@@ -1172,6 +1185,8 @@ class NetworkFrame extends React.Component {
         nodeIDAccessor,
         nodeSizeAccessor
       })
+    } else if (d.type === "basic-node-label") {
+      return <g transform={`translate(${d.x},${d.y})`}>{d.element}</g>
     } else if (d.type === "react-annotation" || typeof d.type === "function") {
       return svgReactAnnotationRule({
         d,
