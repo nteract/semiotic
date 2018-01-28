@@ -93,7 +93,7 @@ export function boxplotRenderFn({
 
     if (projection === "vertical") {
       summaryPositionNest = thisSummaryData
-        .map(p => chartSize - p._orFR)
+        .map(p => p._orFRVertical)
         .sort((a, b) => b - a)
 
       summaryPositionNest = [
@@ -106,7 +106,7 @@ export function boxplotRenderFn({
 
       const xPosition = positionFn(summary.middle, key, summaryI)
 
-      translate = `translate(${xPosition},${margin.top})`
+      translate = `translate(${xPosition},0)`
       extentlineX1 = 0
       extentlineX2 = 0
       extentlineY1 = summaryPositionNest[0]
