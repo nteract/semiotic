@@ -1,5 +1,6 @@
 import React from "react"
 //import ReactDOM from 'react-dom'
+
 //import MarkContext from './MarkContext'
 import { hexToRgb } from "./svg/SvgHelper"
 
@@ -119,8 +120,8 @@ class VisualizationLayer extends React.PureComponent {
 
     if (this.piecesGroup && this.state.focusedPieceIndex !== null) {
       const focusElParent = this.piecesGroup[this.state.focusedPieceIndex]
-      const focusEl = [...focusElParent.childNodes].find(child => child.getAttribute("aria-label"))
-      focusEl.focus()
+      const focusEl = focusElParent && [...focusElParent.childNodes].find(child => child.getAttribute("aria-label"))
+      focusEl && focusEl.focus()
     }
 
   }
@@ -169,7 +170,8 @@ class VisualizationLayer extends React.PureComponent {
             ...pipe
           })
           let ariaLabel = ""
-          if (k === "pieces") {
+          const piecesPipeline = k === "pieces"
+          if (piecesPipeline) {
             const title = this.props.title ? `titled ${this.props.title.children}` : "with no title"
             ariaLabel = `Visualization ${title}. Use arrow keys to navigate elements.`
           }
@@ -177,11 +179,11 @@ class VisualizationLayer extends React.PureComponent {
             <g
               key={k}
               className={k}
-              role={k === "pieces" ? "group" : "presentation"}
-              tabIndex={k === "pieces" ? 0 : -1}
+              role={piecesPipeline ? "group" : "presentation"}
+              tabIndex={piecesPipeline ? 0 : -1}
               aria-label={ariaLabel}
-              onKeyDown={(e) => k === "pieces" && this.handleKeyDown(e)}
-              ref={thisNode => k === "pieces" && thisNode ? this.piecesGroup = thisNode.childNodes : null}
+              onKeyDown={(e) => piecesPipeline && this.handleKeyDown(e)}
+              ref={thisNode => piecesPipeline && thisNode ? this.piecesGroup = thisNode.childNodes : null}
             >
               {renderedPipe}
             </g>
