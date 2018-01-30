@@ -1,4 +1,5 @@
 import React from "react"
+//import ReactDOM from 'react-dom'
 //import MarkContext from './MarkContext'
 import { hexToRgb } from "./svg/SvgHelper"
 
@@ -229,9 +230,7 @@ class VisualizationLayer extends React.PureComponent {
 
     return (
       <g transform={`translate(${position})`}>
-        <g className="axis axis-tick-lines" >
-          {axesTickLines}
-        </g>
+        <g className="axis axis-tick-lines">{axesTickLines}</g>
         <g
           className="data-visualization"
           key="visualization-clip-path"
@@ -242,9 +241,7 @@ class VisualizationLayer extends React.PureComponent {
           {renderedElements}
         </g>
         {matte}
-        <g className="axis axis-labels">
-          {axes}
-        </g>
+        <g className="axis axis-labels">{axes}</g>
       </g>
     )
   }
