@@ -24,7 +24,6 @@ class VisualizationLayer extends React.PureComponent {
   }
 
   componentDidUpdate() {
-    console.log(this.props)
     if (
       this.props.disableContext ||
       !this.props.canvasContext ||
@@ -123,7 +122,6 @@ class VisualizationLayer extends React.PureComponent {
       const focusEl = focusElParent && [...focusElParent.childNodes].find(child => child.getAttribute("aria-label"))
       focusEl && focusEl.focus()
     }
-
   }
 
   componentWillReceiveProps(np) {
