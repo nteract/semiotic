@@ -149,8 +149,6 @@ class VisualizationLayer extends React.PureComponent {
       } = np
       this.canvasDrawing = []
       const canvasDrawing = this.canvasDrawing
-      const focusedPieceIndex = this.state.focusedPieceIndex
-
 
       const renderedElements = []
       Object.keys(renderPipeline).forEach(k => {
@@ -166,7 +164,6 @@ class VisualizationLayer extends React.PureComponent {
             projectedCoordinateNames,
             renderKeyFn,
             baseMarkProps,
-            focusedPieceIndex,
             ...pipe
           })
           renderedElements.push(

@@ -146,7 +146,7 @@ class Frame extends React.Component {
               width={size[0]}
               height={size[1]}
               role="group"
-              tabIndex={0}
+              tabIndex="0"
             >
               {finalFilterDefs}
               <g>{backgroundGraphics}</g>
@@ -170,7 +170,7 @@ class Frame extends React.Component {
                 canvasPostProcess={canvasPostProcess}
                 baseMarkProps={baseMarkProps}
               />
-              <g role='presentation' aria-hidden='true'>
+              <g role="presentation" aria-hidden="true">
                 {title}
                 {foregroundGraphics}
               </g>
