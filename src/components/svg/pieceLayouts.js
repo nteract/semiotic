@@ -420,7 +420,7 @@ export function barLayout({
         <g
           key={"piece-" + piece.renderKey}
           transform={`translate(${xPosition},${yPosition})`}
-          role="listitem"
+          role="img"
           tabindex="-1"
         >
           {type.customMark(piece, i, xy)}
@@ -432,7 +432,7 @@ export function barLayout({
           key: "piece-" + piece.renderKey,
           style: styleFn(piece, ordsetI),
           "aria-label": `${piece.stepName}: ${piece._orFV}`,
-          role: "listitem",
+          role: "img",
           tabIndex: -1,
           ...eventListeners,
           ...markProps

@@ -22,6 +22,7 @@ class VisualizationLayer extends React.PureComponent {
   }
 
   componentDidUpdate() {
+    console.log(this.props)
     if (
       this.props.disableContext ||
       !this.props.canvasContext ||
@@ -166,14 +167,20 @@ class VisualizationLayer extends React.PureComponent {
             baseMarkProps,
             ...pipe
           })
+          let ariaLabel = ""
+          if (k === "pieces") {
+            const title = this.props.title ? `titled ${this.props.title.children}` : "with no title"
+            ariaLabel = `Visualization ${title}. Use arrow keys to navigate elements.`
+          }
           renderedElements.push(
             <g
               key={k}
               className={k}
-              role={k === "pieces" ? "list" : ""}
+              role={k === "pieces" ? "group" : "presentation"}
               tabIndex={k === "pieces" ? 0 : -1}
+              aria-label={ariaLabel}
               onKeyDown={(e) => k === "pieces" && this.handleKeyDown(e)}
-              ref={thisNode => k === "pieces" ? this.piecesGroup = thisNode.childNodes : null}
+              ref={thisNode => k === "pieces" && thisNode ? this.piecesGroup = thisNode.childNodes : null}
             >
               {renderedPipe}
             </g>
@@ -222,11 +229,7 @@ class VisualizationLayer extends React.PureComponent {
 
     return (
       <g transform={`translate(${position})`}>
-        <g
-          className="axis axis-tick-lines"
-          role="presentation"
-          aria-hidden="true"
-        >
+        <g className="axis axis-tick-lines" >
           {axesTickLines}
         </g>
         <g
@@ -239,11 +242,7 @@ class VisualizationLayer extends React.PureComponent {
           {renderedElements}
         </g>
         {matte}
-        <g
-        className="axis axis-labels"
-          role="presentation"
-          aria-hidden="true"
-        >
+        <g className="axis axis-labels">
           {axes}
         </g>
       </g>

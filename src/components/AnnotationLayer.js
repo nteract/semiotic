@@ -434,8 +434,6 @@ class AnnotationLayer extends React.Component {
           pointerEvents: "none",
           background: "none"
         }}
-        role="presentation"
-        aria-hidden="true"
       >
         <div
           className="annotation-layer-html"
