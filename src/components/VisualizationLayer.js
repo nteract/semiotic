@@ -1,6 +1,4 @@
 import React from "react"
-//import ReactDOM from 'react-dom'
-
 //import MarkContext from './MarkContext'
 import { hexToRgb } from "./svg/SvgHelper"
 
@@ -14,11 +12,13 @@ class VisualizationLayer extends React.PureComponent {
   static defaultProps = { position: [0, 0] }
 
   canvasDrawing = []
+  piecesGroup = null
 
   state = {
     canvasDrawing: [],
     dataVersion: "",
-    renderedElements: []
+    renderedElements: [],
+    focusedPieceIndex: null
   }
 
   componentDidUpdate() {
@@ -114,6 +114,13 @@ class VisualizationLayer extends React.PureComponent {
         context.drawImage(baseImage, 0, 0)
       } */
     }
+
+    if (this.piecesGroup && this.state.focusedPieceIndex !== null) {
+      const focusElParent = this.piecesGroup[this.state.focusedPieceIndex]
+      const focusEl = [...focusElParent.childNodes].find(child => child.getAttribute("aria-label"))
+      focusEl.focus()
+    }
+
   }
 
   componentWillReceiveProps(np) {
@@ -142,6 +149,8 @@ class VisualizationLayer extends React.PureComponent {
       } = np
       this.canvasDrawing = []
       const canvasDrawing = this.canvasDrawing
+      const focusedPieceIndex = this.state.focusedPieceIndex
+
 
       const renderedElements = []
       Object.keys(renderPipeline).forEach(k => {
@@ -157,6 +166,7 @@ class VisualizationLayer extends React.PureComponent {
             projectedCoordinateNames,
             renderKeyFn,
             baseMarkProps,
+            focusedPieceIndex,
             ...pipe
           })
           renderedElements.push(
@@ -165,6 +175,8 @@ class VisualizationLayer extends React.PureComponent {
               className={k}
               role={k === "pieces" ? "list" : ""}
               tabIndex={k === "pieces" ? 0 : -1}
+              onKeyDown={(e) => k === "pieces" && this.handleKeyDown(e)}
+              ref={thisNode => k === "pieces" ? this.piecesGroup = thisNode.childNodes : null}
             >
               {renderedPipe}
             </g>
@@ -178,6 +190,33 @@ class VisualizationLayer extends React.PureComponent {
       })
     }
   }
+
+  handleKeyDown(e) {
+    // If enter, focus on the first element
+    const pushed = e.keyCode
+    if (pushed !== 37 && pushed !== 39 && pushed !== 13) return
+
+    let newPieceIndex
+
+    // If a user pressed ener, highlight the first one
+    // Let a user move up and down in stacked bar by getting keys of bars?
+    if (this.state.focusedPieceIndex === null || pushed === 13) {
+      newPieceIndex = 0
+    } else if (pushed === 37) {
+      newPieceIndex = this.state.focusedPieceIndex - 1;
+    } else if (pushed === 39) {
+      newPieceIndex = this.state.focusedPieceIndex + 1;
+    }
+
+    newPieceIndex = newPieceIndex < 0 ?
+      this.piecesGroup.length + newPieceIndex : newPieceIndex % this.piecesGroup.length
+
+    this.setState({
+      focusedPieceIndex: newPieceIndex
+    })
+
+  }
+
 
   render() {
     const props = this.props
