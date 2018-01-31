@@ -1120,7 +1120,8 @@ class OrdinalFrame extends React.Component {
       pieceHoverAnnotation,
       hoverAnnotation,
       canvasPostProcess,
-      baseMarkProps
+      baseMarkProps,
+      useSpans
     } = this.props
 
     const {
@@ -1192,6 +1193,7 @@ class OrdinalFrame extends React.Component {
         xScale={xScale}
         yScale={yScale}
         axes={[axes]}
+        useSpans={useSpans}
         axesTickLines={axesTickLines}
         title={title}
         matte={matte}

@@ -74,7 +74,7 @@ export const calculateMargin = ({
   oLabel,
   projection
 }) => {
-  if (margin) {
+  if (margin !== undefined) {
     let tempMargin = margin
     if (typeof margin !== "object") {
       tempMargin = { top: margin, bottom: margin, left: margin, right: margin }

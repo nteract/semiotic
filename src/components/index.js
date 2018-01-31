@@ -23,6 +23,12 @@ import {
   ResponsiveXYFrame,
   ResponsiveORFrame
 } from "./ResponsiveFrame"
+import {
+  SparkNetworkFrame,
+  SparkOrdinalFrame,
+  SparkSmartFrame,
+  SparkXYFrame
+} from "./SparkFrame"
 import { chuckCloseCanvasTransform } from "./canvas/basicCanvasEffects"
 import { Mark } from "semiotic-mark"
 const ORFrame = OrdinalFrame
@@ -51,6 +57,10 @@ export default {
   ResponsiveNetworkFrame,
   ResponsiveSmartFrame,
   ResponsiveXYFrame,
+  SparkOrdinalFrame,
+  SparkNetworkFrame,
+  SparkSmartFrame,
+  SparkXYFrame,
   Legend,
   chuckCloseCanvasTransform,
   Mark
@@ -80,6 +90,10 @@ export {
   ResponsiveNetworkFrame,
   ResponsiveSmartFrame,
   ResponsiveXYFrame,
+  SparkOrdinalFrame,
+  SparkNetworkFrame,
+  SparkSmartFrame,
+  SparkXYFrame,
   Legend,
   chuckCloseCanvasTransform,
   Mark

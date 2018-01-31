@@ -2,6 +2,7 @@ import React from "react"
 import AnnotationLayer from "./AnnotationLayer"
 import InteractionLayer from "./InteractionLayer"
 import VisualizationLayer from "./VisualizationLayer"
+import SpanOrDiv from "./SpanOrDiv"
 
 import PropTypes from "prop-types"
 
@@ -68,7 +69,8 @@ class Frame extends React.Component {
       projection,
       interactionOverflow,
       canvasPostProcess,
-      baseMarkProps
+      baseMarkProps,
+      useSpans
     } = this.props
 
     const { voronoiHover } = this.state
@@ -114,6 +116,7 @@ class Frame extends React.Component {
               ...renderPipeline
             })
           }
+          useSpans={useSpans}
           size={size}
           position={[
             adjustedPosition[0] + margin.left,
@@ -122,17 +125,55 @@ class Frame extends React.Component {
         />
       )
     }
+    const interactionLayer = (
+      <InteractionLayer
+        useSpans={useSpans}
+        hoverAnnotation={hoverAnnotation}
+        projectedX={projectedCoordinateNames.x}
+        projectedY={projectedCoordinateNames.y}
+        projectedYMiddle={projectedYMiddle}
+        interaction={interaction}
+        voronoiHover={d => this.setState({ voronoiHover: d })}
+        customClickBehavior={customClickBehavior}
+        customHoverBehavior={customHoverBehavior}
+        customDoubleClickBehavior={customDoubleClickBehavior}
+        points={points}
+        position={adjustedPosition}
+        margin={margin}
+        size={adjustedSize}
+        svgSize={size}
+        xScale={xScale}
+        yScale={yScale}
+        enabled={true}
+        overlay={overlay}
+        oColumns={columns}
+        rScale={rScale}
+        projection={projection}
+        interactionOverflow={interactionOverflow}
+      />
+    )
 
     return (
-      <div
+      <SpanOrDiv
+        span={useSpans}
         className={className + " frame"}
         style={{
           background: "none"
         }}
       >
-        <div className={`${name} frame-before-elements`}>{beforeElements}</div>
-        <div className="frame-elements" style={{ height: size[1] + "px" }}>
-          <div className="visualization-layer" style={{ position: "absolute" }}>
+        <SpanOrDiv span={useSpans} className={`${name} frame-before-elements`}>
+          {beforeElements}
+        </SpanOrDiv>
+        <SpanOrDiv
+          span={useSpans}
+          className="frame-elements"
+          style={{ height: size[1] + "px" }}
+        >
+          <SpanOrDiv
+            span={useSpans}
+            className="visualization-layer"
+            style={{ position: "absolute" }}
+          >
             <canvas
               className="frame-canvas"
               ref={canvasContext => (this.canvasContext = canvasContext)}
@@ -173,38 +214,15 @@ class Frame extends React.Component {
                 {foregroundGraphics}
               </g>
             </svg>
-          </div>
-          <InteractionLayer
-            hoverAnnotation={hoverAnnotation}
-            projectedX={projectedCoordinateNames.x}
-            projectedY={projectedCoordinateNames.y}
-            projectedYMiddle={projectedYMiddle}
-            interaction={interaction}
-            voronoiHover={d => this.setState({ voronoiHover: d })}
-            customClickBehavior={customClickBehavior}
-            customHoverBehavior={customHoverBehavior}
-            customDoubleClickBehavior={customDoubleClickBehavior}
-            points={points}
-            position={adjustedPosition}
-            margin={margin}
-            size={adjustedSize}
-            svgSize={size}
-            xScale={xScale}
-            yScale={yScale}
-            enabled={true}
-            overlay={overlay}
-            oColumns={columns}
-            rScale={rScale}
-            projection={projection}
-            interactionOverflow={interactionOverflow}
-          />
+          </SpanOrDiv>
+          {interactionLayer}
           {annotationLayer}
-        </div>
-        <div className={`${name} frame-after-elements`}>
+        </SpanOrDiv>
+        <SpanOrDiv span={useSpans} className={`${name} frame-after-elements`}>
           {downloadButton}
           {afterElements}
-        </div>
-      </div>
+        </SpanOrDiv>
+      </SpanOrDiv>
     )
   }
 }

@@ -29,6 +29,8 @@ import TimelineRaw from "../components/TimelineRaw"
 import SharedTooltipExampleRaw from "../components/SharedTooltipExampleRaw"
 import DecisionMatrixRaw from "../components/DecisionMatrixRaw"
 import CometPlotRaw from "../components/CometPlotRaw"
+import SparklineRaw from "../components/SparklineRaw"
+import SparkBarRaw from "../components/SparkBarRaw"
 
 import {
   genericBarChart,
@@ -107,8 +109,18 @@ const exampos = [
     path: "negativestacked"
   },
   {
+    label: "Sparkline",
+    viz: SparklineRaw,
+    path: "sparkline"
+  },
+  {
+    label: "SparkBar",
+    viz: SparkBarRaw,
+    path: "sparkbar"
+  },
+  {
     label: "Custom OR Type",
-    viz: CustomMarkRaw(),
+    viz: CustomMarkRaw,
     path: "custommark"
   },
   {
