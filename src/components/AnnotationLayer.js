@@ -6,6 +6,7 @@ import PropTypes from "prop-types"
 import Legend from "./Legend"
 import Annotation from "./Annotation"
 import labella from "labella"
+import SpanOrDiv from "./SpanOrDiv"
 
 function adjustedAnnotationKeyMapper(d) {
   return d.props.noteData.id || `${d.props.noteData.x}-${d.props.noteData.y}`
@@ -405,29 +406,31 @@ class AnnotationLayer extends React.Component {
 
   render() {
     const { svgAnnotations, htmlAnnotations } = this.state
+    const { useSpans, legendSettings } = this.props
 
     let renderedLegend
-    if (this.props.legendSettings) {
-      const { width = 100 } = this.props.legendSettings
+    if (legendSettings) {
+      const { width = 100 } = legendSettings
       const positionHash = {
         left: [15, 15],
         right: [this.props.size[0] - width - 15, 15]
       }
-      const { position = "right", title = "Legend" } = this.props.legendSettings
+      const { position = "right", title = "Legend" } = legendSettings
       const legendPosition = positionHash[position] || position
       renderedLegend = (
         <g transform={`translate(${legendPosition})`}>
-          <Legend
-            {...this.props.legendSettings}
-            title={title}
-            position={position}
-          />
+          <Legend {...legendSettings} title={title} position={position} />
         </g>
       )
     }
+    const svgStyle = { background: "none", pointerEvents: "none" }
+    if (useSpans) {
+      svgStyle.overflow = "visible"
+    }
 
     return (
-      <div
+      <SpanOrDiv
+        span={useSpans}
         className="annotation-layer"
         style={{
           position: "absolute",
@@ -435,28 +438,30 @@ class AnnotationLayer extends React.Component {
           background: "none"
         }}
       >
-        <div
-          className="annotation-layer-html"
-          style={{
-            background: "none",
-            pointerEvents: "none",
-            position: "absolute",
-            height: this.props.size[1] + "px",
-            width: this.props.size[0] + "px"
-          }}
-        >
-          {htmlAnnotations}
-        </div>
+        {useSpans ? null : (
+          <div
+            className="annotation-layer-html"
+            style={{
+              background: "none",
+              pointerEvents: "none",
+              position: "absolute",
+              height: this.props.size[1] + "px",
+              width: this.props.size[0] + "px"
+            }}
+          >
+            {htmlAnnotations}
+          </div>
+        )}
         <svg
           className="annotation-layer-svg"
           height={this.props.size[1]}
           width={this.props.size[0]}
-          style={{ background: "none", pointerEvents: "none" }}
+          style={svgStyle}
         >
           {renderedLegend}
           {svgAnnotations}
         </svg>
-      </div>
+      </SpanOrDiv>
     )
   }
 }

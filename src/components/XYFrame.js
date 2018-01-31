@@ -814,7 +814,8 @@ class XYFrame extends React.Component {
       customHoverBehavior,
       customDoubleClickBehavior,
       canvasPostProcess,
-      baseMarkProps
+      baseMarkProps,
+      useSpans
     } = this.props
 
     const {
@@ -914,6 +915,7 @@ class XYFrame extends React.Component {
         disableContext={this.props.disableContext}
         canvasPostProcess={canvasPostProcess}
         baseMarkProps={baseMarkProps}
+        useSpans={useSpans}
       />
     )
   }

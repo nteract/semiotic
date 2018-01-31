@@ -497,7 +497,9 @@ class NetworkFrame extends React.Component {
                   size[0] - margin.right - margin.left,
                   size[1] - margin.top - margin.bottom
                 ]
-          hierarchicalLayout.size(layoutSize)
+          if (!networkSettings.nodeSize) {
+            hierarchicalLayout.size(layoutSize)
+          }
           hierarchicalLayout(rootNode)
         }
 
@@ -688,7 +690,6 @@ class NetworkFrame extends React.Component {
         })
 
         const chordLayout = chord().padAngle(padAngle)
-        //          .sortGroups((a,b) => a - b)
 
         const chords = chordLayout(matrixifiedNetwork)
         const groups = chords.groups
@@ -859,12 +860,17 @@ class NetworkFrame extends React.Component {
         const {
           iterations = 500,
           edgeStrength = 0.1,
-          distanceMax = Infinity
+          distanceMax = Infinity,
+          edgeDistance
         } = networkSettings
 
         const linkForce = forceLink().strength(
           d => (d.weight ? d.weight * edgeStrength : edgeStrength)
         )
+
+        if (edgeDistance) {
+          linkForce.distance(edgeDistance)
+        }
 
         const simulation =
           networkSettings.simulation ||
@@ -931,7 +937,11 @@ class NetworkFrame extends React.Component {
         const layoutDirection = size[0] > size[1] ? "horizontal" : "vertical"
 
         //        louvain.assign(graph)
-        const { iterations = 500, edgeStrength = 0.1 } = networkSettings
+        const {
+          iterations = 500,
+          edgeStrength = 0.1,
+          edgeDistance
+        } = networkSettings
 
         let currentX = 0
         let currentY = 0
@@ -940,6 +950,10 @@ class NetworkFrame extends React.Component {
           const linkForce = forceLink().strength(
             d => (d.weight ? d.weight * edgeStrength : edgeStrength)
           )
+
+          if (edgeDistance) {
+            linkForce.distance(edgeDistance)
+          }
 
           const componentLayoutSize =
             Math.max(componentNodes.length / largestComponent, 0.2) * layoutSize
@@ -1026,7 +1040,8 @@ class NetworkFrame extends React.Component {
       networkSettings.type !== "wordcloud" &&
       networkSettings.type !== "chord" &&
       networkSettings.type !== "sankey" &&
-      hierarchicalTypeHash[networkSettings.type] === undefined
+      (hierarchicalTypeHash[networkSettings.type] === undefined ||
+        networkSettings.nodeSize)
     ) {
       const xMin = min(projectedNodes.map(p => p.x - nodeSizeAccessor(p)))
       const xMax = max(projectedNodes.map(p => p.x + nodeSizeAccessor(p)))
@@ -1255,7 +1270,8 @@ class NetworkFrame extends React.Component {
       title,
       disableContext,
       canvasPostProcess,
-      baseMarkProps
+      baseMarkProps,
+      useSpans
     } = this.props
     const {
       backgroundGraphics,
@@ -1343,6 +1359,7 @@ class NetworkFrame extends React.Component {
         disableContext={disableContext}
         canvasPostProcess={canvasPostProcess}
         baseMarkProps={baseMarkProps}
+        useSpans={useSpans}
       />
     )
   }

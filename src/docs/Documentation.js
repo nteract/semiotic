@@ -49,6 +49,8 @@ import SharedTooltipExample from "./components/SharedTooltipExample"
 import DecisionMatrix from "./components/DecisionMatrix"
 import CometPlot from "./components/CometPlot"
 import Networks from "./components/Networks"
+import SparkBar from "./components/SparkBar"
+import Sparkline from "./components/Sparkline"
 
 //import Process from "./components/Process";
 import BarToParallel from "./components/BarToParallel"
@@ -86,6 +88,7 @@ const components = {
   minimap: { docs: Minimap, parent: "xyframe" },
   linebrush: { docs: LineBrush, parent: "xyframe" },
   negativestacked: { docs: NegativeStacked, parent: "xyframe" },
+  sparkline: { docs: Sparkline, parent: "xyframe" },
   datasketches: { docs: DataSketchesPlot, parent: "xyframe" },
   sharedTooltip: { docs: SharedTooltipExample, parent: "xyframe" },
   decisionMatrix: { docs: DecisionMatrix, parent: "xyframe" },
@@ -102,6 +105,7 @@ const components = {
   swarmbrush: { docs: SwarmBrush, parent: "orframe" },
   divergingstackedbar: { docs: DivergingStackedBar, parent: "orframe" },
   custommark: { docs: CustomMark, parent: "orframe" },
+  sparkbar: { docs: SparkBar, parent: "orframe" },
   divergingstackedisotype: { docs: DivergingStackedIsotype, parent: "orframe" },
   verticalisotype: { docs: VerticalIsotype, parent: "orframe" },
   waterfall: { docs: WaterfallChart, parent: "orframe" },

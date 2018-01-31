@@ -9,6 +9,7 @@ import { Mark } from "semiotic-mark"
 import Brush from "./Brush"
 
 import PropTypes from "prop-types"
+import SpanOrDiv from "./SpanOrDiv"
 
 class InteractionLayer extends React.Component {
   constructor(props) {
@@ -382,7 +383,7 @@ class InteractionLayer extends React.Component {
     let semioticBrush = null
     const { interaction, position, svgSize } = this.props
     const { overlayRegions } = this.state
-    let { enabled } = this.props
+    let { enabled, useSpans } = this.props
 
     if (interaction && interaction.brush) {
       enabled = true
@@ -394,7 +395,8 @@ class InteractionLayer extends React.Component {
     }
 
     return (
-      <div
+      <SpanOrDiv
+        span={useSpans}
         className="interaction-layer"
         style={{
           position: "absolute",
@@ -416,7 +418,7 @@ class InteractionLayer extends React.Component {
             {semioticBrush}
           </g>
         </svg>
-      </div>
+      </SpanOrDiv>
     )
   }
 }
