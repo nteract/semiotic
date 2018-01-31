@@ -88,6 +88,7 @@ export default ({
     hoverAnnotation: true,
     networkType: { type: type, orient: orient, iterations: 500 },
     legend: { legendGroups: areaLegendGroups },
+    nodeLabels: d => <text textAnchor="middle">{d.id}</text>,
     margin: { right: 130 },
     canvasEdges: (d, i) =>
       d.source.category === "Oil" || d.source.category === "Coal"
