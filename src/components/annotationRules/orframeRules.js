@@ -227,7 +227,6 @@ export const svgRRule = ({
   screenCoordinates,
   rScale,
   rAccessor,
-  margin,
   adjustedSize,
   adjustedPosition,
   projection
@@ -248,11 +247,11 @@ export const svgRRule = ({
           {
             type: AnnotationCalloutCircle,
             subject: {
-              radius: (rScale(rAccessor(d)) - margin.left) / 2,
+              radius: rScale(rAccessor(d)) / 2,
               radiusPadding: 0
             },
-            x: adjustedSize[0] / 2 + margin.left,
-            y: adjustedSize[1] / 2 + margin.top
+            x: adjustedSize[0] / 2,
+            y: adjustedSize[1] / 2
           }
         )}
       />
@@ -260,24 +259,24 @@ export const svgRRule = ({
   } else if (projection === "horizontal") {
     dx = 50
     dy = 50
-    yPosition = d.offset || margin.top + i * 25
+    yPosition = d.offset || i * 25
     x = screenCoordinates[0]
     y = yPosition
     subject = {
       x,
-      y1: margin.top,
-      y2: adjustedSize[1] + adjustedPosition[1] + margin.top
+      y1: 0,
+      y2: adjustedSize[1] + adjustedPosition[1]
     }
   } else {
     dx = 50
     dy = -20
-    xPosition = d.offset || margin.left + i * 25
+    xPosition = d.offset || i * 25
     y = screenCoordinates[1]
     x = xPosition
     subject = {
       y,
-      x1: margin.left,
-      x2: adjustedSize[0] + adjustedPosition[0] + margin.left
+      x1: 0,
+      x2: adjustedSize[0] + adjustedPosition[0]
     }
   }
 
@@ -304,8 +303,7 @@ export const svgCategoryRule = ({
   d,
   i,
   categories,
-  adjustedSize,
-  margin
+  adjustedSize
 }) => {
   const {
     bracketType = "curly",
@@ -329,8 +327,8 @@ export const svgCategoryRule = ({
     )
 
     const chartSize = Math.min(adjustedSize[0], adjustedSize[1]) / 2
-    const centerX = adjustedSize[0] / 2 + margin.left
-    const centerY = adjustedSize[1] / 2 + margin.top
+    const centerX = adjustedSize[0] / 2
+    const centerY = adjustedSize[1] / 2
 
     const { arcPath, textArcPath } = arcBracket({
       x: 0,
@@ -366,7 +364,7 @@ export const svgCategoryRule = ({
     const rightX = max(cats.map(d => d.x + d.width))
 
     if (projection === "vertical") {
-      let yPosition = position === "top" ? margin.top : adjustedSize[1]
+      let yPosition = position === "top" ? 0 : adjustedSize[1]
       yPosition += position === "top" ? -offset : offset
       const noteData = {
         type: AnnotationBracket,
@@ -384,8 +382,7 @@ export const svgCategoryRule = ({
       }
       return <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
     } else if (projection === "horizontal") {
-      let yPosition =
-        position === "left" ? margin.left : adjustedSize[0] + margin.left
+      let yPosition = position === "left" ? 0 : adjustedSize[0]
       yPosition += position === "left" ? -offset : offset
       const noteData = {
         type: AnnotationBracket,
@@ -457,8 +454,8 @@ export const htmlFrameHoverRule = ({
         ""}`}
       style={{
         position: "absolute",
-        bottom: `${10 + size[1] - d.y}px`,
-        left: d.x + "px"
+        top: `${d.y}px`,
+        left: `${d.x}px`
       }}
     >
       {content}
@@ -476,12 +473,12 @@ export const htmlColumnHoverRule = ({
   type,
   adjustedPosition,
   adjustedSize,
-  margin,
   projection,
   tooltipContent
 }) => {
   const maxPiece = max(d.pieces.map(d => d._orFR))
   //we need to ignore negative pieces to make sure the hover behavior populates on top of the positive bar
+  console.log("d.piedes", d.pieces)
   const sumPiece = sum(d.pieces.map(d => d._orFR).filter(p => p > 0))
   const positionValue =
     summaryType.type ||
@@ -492,26 +489,18 @@ export const htmlColumnHoverRule = ({
   let xPosition =
     projectedColumns[oAccessor(d.pieces[0])].middle + adjustedPosition[0]
   let yPosition = positionValue
-  yPosition += margin.bottom + 10
+  yPosition += 10
 
   if (projection === "horizontal") {
-    yPosition =
-      adjustedSize[1] -
-      projectedColumns[oAccessor(d.pieces[0])].middle +
-      adjustedPosition[0] +
-      margin.top +
-      margin.bottom
-    xPosition = positionValue + adjustedPosition[0] + margin.left
+    yPosition = projectedColumns[oAccessor(d.pieces[0])].middle
+    xPosition = positionValue + adjustedPosition[0]
   } else if (projection === "radial") {
     ;[xPosition, yPosition] = pointOnArcAtAngle(
-      [
-        d.arcAngles.translate[0] - margin.left,
-        d.arcAngles.translate[1] - margin.top
-      ],
+      [d.arcAngles.translate[0], d.arcAngles.translate[1]],
       d.arcAngles.midAngle,
       d.arcAngles.length
     )
-    yPosition = 10 + adjustedSize[1] - yPosition
+    yPosition += 10
   }
 
   //To string because React gives a DOM error if it gets a date
@@ -537,7 +526,7 @@ export const htmlColumnHoverRule = ({
         ""}`}
       style={{
         position: "absolute",
-        bottom: yPosition + "px",
+        top: yPosition + "px",
         left: xPosition + "px"
       }}
     >

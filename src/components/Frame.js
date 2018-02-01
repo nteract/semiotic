@@ -7,10 +7,13 @@ import SpanOrDiv from "./SpanOrDiv"
 import PropTypes from "prop-types"
 
 const defaultZeroMargin = { top: 0, bottom: 0, left: 0, right: 0 }
+let vorFn
 
 class Frame extends React.Component {
   constructor(props) {
     super(props)
+
+    vorFn = d => this.setState({ voronoiHover: d })
 
     this.state = {
       canvasContext: null,
@@ -117,7 +120,7 @@ class Frame extends React.Component {
             })
           }
           useSpans={useSpans}
-          size={size}
+          size={adjustedSize}
           position={[
             adjustedPosition[0] + margin.left,
             adjustedPosition[1] + margin.top
@@ -133,7 +136,7 @@ class Frame extends React.Component {
         projectedY={projectedCoordinateNames.y}
         projectedYMiddle={projectedYMiddle}
         interaction={interaction}
-        voronoiHover={d => this.setState({ voronoiHover: d })}
+        voronoiHover={vorFn}
         customClickBehavior={customClickBehavior}
         customHoverBehavior={customHoverBehavior}
         customDoubleClickBehavior={customDoubleClickBehavior}

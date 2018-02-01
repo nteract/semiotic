@@ -406,7 +406,7 @@ class AnnotationLayer extends React.Component {
 
   render() {
     const { svgAnnotations, htmlAnnotations } = this.state
-    const { useSpans, legendSettings } = this.props
+    const { useSpans, legendSettings, margin } = this.props
 
     let renderedLegend
     if (legendSettings) {
@@ -423,10 +423,16 @@ class AnnotationLayer extends React.Component {
         </g>
       )
     }
-    const svgStyle = { background: "none", pointerEvents: "none" }
-    if (useSpans) {
-      svgStyle.overflow = "visible"
+    const svgStyle = {
+      background: "none",
+      pointerEvents: "none",
+      position: "absolute",
+      left: `${margin.left}px`,
+      top: `${margin.top}px`
     }
+    //    if (useSpans) {
+    svgStyle.overflow = "visible"
+    //    }
 
     return (
       <SpanOrDiv
@@ -446,7 +452,9 @@ class AnnotationLayer extends React.Component {
               pointerEvents: "none",
               position: "absolute",
               height: this.props.size[1] + "px",
-              width: this.props.size[0] + "px"
+              width: this.props.size[0] + "px",
+              left: `${margin.left}px`,
+              top: `${margin.top}px`
             }}
           >
             {htmlAnnotations}
@@ -458,8 +466,10 @@ class AnnotationLayer extends React.Component {
           width={this.props.size[0]}
           style={svgStyle}
         >
-          {renderedLegend}
-          {svgAnnotations}
+          <g>
+            {renderedLegend}
+            {svgAnnotations}
+          </g>
         </svg>
       </SpanOrDiv>
     )

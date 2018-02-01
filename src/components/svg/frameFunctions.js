@@ -337,7 +337,6 @@ export function orFrameSummaryRenderer({
   positionFn,
   projection,
   adjustedSize,
-  margin,
   chartSize,
   baseMarkProps
 }) {
@@ -366,7 +365,6 @@ export function orFrameSummaryRenderer({
     positionFn,
     projection,
     adjustedSize,
-    margin,
     chartSize,
     baseMarkProps
   })
@@ -379,7 +377,6 @@ export const orFrameAxisGenerator = ({
   size,
   rScale,
   rScaleType,
-  margin,
   pieceType,
   rExtent,
   data
@@ -407,14 +404,12 @@ export const orFrameAxisGenerator = ({
         axisClassname += " right y"
       } else if (orient === "left") {
         axisClassname += " left y"
-        axisPosition = [margin.left, 0]
         axisScale.range([rScale.range()[1], rScale.range()[0]])
       } else if (orient === "top") {
         axisClassname += " top x"
         axisScale.range(rScale.range())
       } else if (orient === "bottom") {
         axisClassname += " bottom x"
-        axisPosition = [0, margin.top]
         axisScale.range(rScale.range())
       }
 
@@ -432,7 +427,6 @@ export const orFrameAxisGenerator = ({
         ticks: d.ticks,
         orient,
         size: adjustedSize,
-        margin,
         footer: d.footer,
         tickSize: d.tickSize
       })
@@ -450,7 +444,6 @@ export const orFrameAxisGenerator = ({
           key={d.key || `orframe-axis-${i}`}
           orient={orient}
           size={adjustedSize}
-          margin={margin}
           position={axisPosition}
           ticks={d.ticks}
           tickSize={d.tickSize}
@@ -508,7 +501,7 @@ export const orFrameAxisGenerator = ({
           <g
             key={`orframe-radial-axis-element-${t}`}
             className="axis axis-label axis-tick radial"
-            transform={`translate(${margin.left},0)`}
+            transform={`translate(0,0)`}
           >
             <path
               id={ref}
@@ -529,8 +522,7 @@ export const orFrameAxisGenerator = ({
     generatedAxis = (
       <g
         key={axis.key || `orframe-radial-axis-container`}
-        transform={`translate(${adjustedSize[0] / 2},${adjustedSize[1] / 2 +
-          margin.top})`}
+        transform={`translate(${adjustedSize[0] / 2},${adjustedSize[1] / 2})`}
       >
         {ticks}
       </g>

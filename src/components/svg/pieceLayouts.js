@@ -127,8 +127,7 @@ export function clusterBarLayout({
   styleFn,
   projection,
   classFn,
-  adjustedSize,
-  margin
+  adjustedSize
 }) {
   let allCalculatedPieces = []
   const keys = Object.keys(data)
@@ -183,8 +182,8 @@ export function clusterBarLayout({
           startAngle: startAngle * twoPI,
           endAngle: endAngle * twoPI
         })
-        const xOffset = adjustedSize[0] / 2 + margin.left
-        const yOffset = adjustedSize[1] / 2 + margin.top
+        const xOffset = adjustedSize[0] / 2
+        const yOffset = adjustedSize[1] / 2
         translate = `translate(${xOffset},${yOffset})`
 
         const startAngleFinal = startAngle * twoPI
@@ -301,8 +300,7 @@ export function barLayout({
   styleFn,
   projection,
   classFn,
-  adjustedSize,
-  margin
+  adjustedSize
 }) {
   const keys = Object.keys(data)
   let allCalculatedPieces = []
@@ -337,8 +335,8 @@ export function barLayout({
 
       if (projection === "radial") {
         let { innerRadius } = type
-        let innerSize = (piece._orFRBottom - margin.left) / 2
-        let outerSize = piece._orFR / 2 + (piece._orFRBottom - margin.left) / 2
+        let innerSize = piece._orFRBottom / 2
+        let outerSize = piece._orFR / 2 + piece._orFRBottom / 2
         if (innerRadius) {
           innerRadius = parseInt(innerRadius, 10)
           const canvasRadius = adjustedSize[0] / 2
@@ -369,8 +367,8 @@ export function barLayout({
         })
         finalHeight = undefined
         finalWidth = undefined
-        const xOffset = adjustedSize[0] / 2 + margin.left
-        const yOffset = adjustedSize[1] / 2 + margin.top
+        const xOffset = adjustedSize[0] / 2
+        const yOffset = adjustedSize[1] / 2
         xPosition = centroid[0] + xOffset
         yPosition = centroid[1] + yOffset
 
@@ -456,8 +454,7 @@ export function timelineLayout({
   styleFn,
   projection,
   classFn,
-  adjustedSize,
-  margin
+  adjustedSize
 }) {
   let allCalculatedPieces = []
   const keys = Object.keys(data)
@@ -493,8 +490,8 @@ export function timelineLayout({
         }
       } else if (projection === "radial") {
         let { innerRadius } = type
-        let innerSize = (piece._orFR - margin.left) / 2
-        let outerSize = (piece._orFREnd - margin.left) / 2
+        let innerSize = piece._orFR / 2
+        let outerSize = piece._orFREnd / 2
         if (innerRadius) {
           innerRadius = parseInt(innerRadius, 10)
           const canvasRadius = adjustedSize[0] / 2
@@ -520,8 +517,8 @@ export function timelineLayout({
           endAngle: endAngle * twoPI
         })
 
-        const xOffset = adjustedSize[0] / 2 + margin.left
-        const yOffset = adjustedSize[1] / 2 + margin.top
+        const xOffset = adjustedSize[0] / 2
+        const yOffset = adjustedSize[1] / 2
         markProps = {
           markType: "path",
           d: markD,
@@ -581,8 +578,7 @@ export function pointLayout({
   styleFn,
   projection,
   classFn,
-  adjustedSize,
-  margin
+  adjustedSize
 }) {
   const circleRadius = type.r || 3
   let allCalculatedPieces = []
@@ -604,14 +600,14 @@ export function pointLayout({
       } else if (projection === "radial") {
         const angle = ordset.pct_middle
 
-        const rPosition = (piece._orFR - margin.left) / 2
+        const rPosition = piece._orFR / 2
         const baseCentroid = pointOnArcAtAngle(
           [adjustedSize[0] / 2, adjustedSize[1] / 2],
           angle,
           rPosition
         )
-        xPosition = baseCentroid[0] + margin.left
-        yPosition = baseCentroid[1] + margin.top
+        xPosition = baseCentroid[0]
+        yPosition = baseCentroid[1]
       }
 
       //Only return the actual piece if you're rendering points, otherwise you just needed to iterate and calculate the points for the contour summary type
@@ -671,8 +667,7 @@ export function swarmLayout({
   styleFn,
   projection,
   classFn,
-  adjustedSize,
-  margin
+  adjustedSize
 }) {
   let allCalculatedPieces = []
   const iterations = type.iterations || 120
@@ -697,9 +692,7 @@ export function swarmLayout({
     if (projection === "vertical") {
       simulation.force(
         "y",
-        forceY((d, i) => d._orFRVertical - margin.top).strength(
-          type.strength || 2
-        )
+        forceY((d, i) => d._orFRVertical).strength(type.strength || 2)
       )
     }
 
@@ -709,7 +702,7 @@ export function swarmLayout({
       const renderValue = renderMode && renderMode(piece, i)
 
       let xPosition = piece.x
-      let yPosition = piece.y + margin.top
+      let yPosition = piece.y
 
       if (projection === "horizontal") {
         yPosition = piece.x
@@ -718,15 +711,15 @@ export function swarmLayout({
         const angle = oColumn.pct_middle
         xPosition =
           (piece.x - oColumn.middle) / adjustedColumnWidth * anglePiece
-        const rPosition = (piece._orFR - margin.left) / 2
+        const rPosition = piece._orFR / 2
         const xAngle = angle + xPosition
         const baseCentroid = pointOnArcAtAngle(
           [adjustedSize[0] / 2, adjustedSize[1] / 2],
           xAngle,
           rPosition
         )
-        xPosition = baseCentroid[0] + margin.left
-        yPosition = baseCentroid[1] + margin.top
+        xPosition = baseCentroid[0]
+        yPosition = baseCentroid[1]
       }
 
       const actualCircleRadius =

@@ -123,16 +123,13 @@ export const svgXAnnotation = ({
   d,
   i,
   annotationLayer,
-  adjustedSize,
-  margin
+  adjustedSize
 }) => {
-  const yPosition = annotationLayer.position[1]
-
   const noteData = Object.assign(
     {
       dx: 50,
       dy: 20,
-      y: yPosition,
+      y: 0,
       note: { label: d.label },
       connector: { end: "arrow" }
     },
@@ -142,8 +139,8 @@ export const svgXAnnotation = ({
       x: screenCoordinates[0],
       subject: {
         x: screenCoordinates[0],
-        y1: yPosition,
-        y2: adjustedSize[1] + margin.top
+        y1: 0,
+        y2: adjustedSize[1]
       }
     }
   )
@@ -156,10 +153,9 @@ export const svgYAnnotation = ({
   i,
   annotationLayer,
   adjustedSize,
-  adjustedPosition,
-  margin
+  adjustedPosition
 }) => {
-  const xPosition = margin.left + i * 25
+  const xPosition = i * 25
 
   const noteData = Object.assign(
     {
@@ -175,8 +171,8 @@ export const svgYAnnotation = ({
       y: screenCoordinates[1],
       subject: {
         y: screenCoordinates[1],
-        x1: margin.left,
-        x2: adjustedSize[0] + adjustedPosition[0] + margin.left
+        x1: 0,
+        x2: adjustedSize[0] + adjustedPosition[0]
       }
     }
   )
@@ -192,22 +188,17 @@ export const svgBoundsAnnotation = ({
   xAccessor,
   yAccessor,
   xScale,
-  yScale,
-  margin
+  yScale
 }) => {
   const startXValue = xAccessor(d.bounds[0])
   const startYValue = yAccessor(d.bounds[0])
   const endXValue = xAccessor(d.bounds[1])
   const endYValue = yAccessor(d.bounds[1])
 
-  const x0Position = startXValue ? xScale(startXValue) : margin.left
-  const y0Position = startYValue
-    ? yScale(startYValue)
-    : adjustedSize[1] + margin.top
-  const x1Position = endXValue
-    ? xScale(endXValue)
-    : adjustedSize[0] + margin.left
-  const y1Position = endYValue ? yScale(endYValue) : margin.top
+  const x0Position = startXValue ? xScale(startXValue) : 0
+  const y0Position = startYValue ? yScale(startYValue) : adjustedSize[1]
+  const x1Position = endXValue ? xScale(endXValue) : adjustedSize[0]
+  const y1Position = endYValue ? yScale(endYValue) : 0
 
   const noteData = Object.assign(
     {

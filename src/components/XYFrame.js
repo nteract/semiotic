@@ -150,8 +150,8 @@ class XYFrame extends React.Component {
   }
 
   screenScales({ xExtent, yExtent, currentProps, margin, adjustedSize }) {
-    let xDomain = [margin.left, adjustedSize[0] + margin.left]
-    let yDomain = [adjustedSize[1] + margin.top, margin.top]
+    let xDomain = [0, adjustedSize[0]]
+    let yDomain = [adjustedSize[1], 0]
 
     let xScaleType = currentProps.xScaleType || scaleLinear()
     let yScaleType = currentProps.yScaleType || scaleLinear()
@@ -294,15 +294,7 @@ class XYFrame extends React.Component {
           tickValues = d.tickValues(fullDataset, currentProps.size, axisScale)
         }
         let axisSize = [adjustedSize[0], adjustedSize[1]]
-        let axisPosition = [margin.left, 0]
 
-        if (d.orient === "top") {
-          axisPosition = [0, 0]
-        } else if (d.orient === "bottom") {
-          axisPosition = [0, margin.top]
-        } else if (d.orient === "right") {
-          axisPosition = [0, 0]
-        }
         const axisParts = axisPieces({
           padding: d.padding,
           tickValues,
@@ -331,7 +323,6 @@ class XYFrame extends React.Component {
             key={d.key || `axis-${i}`}
             orient={d.orient}
             size={axisSize}
-            position={axisPosition}
             margin={margin}
             ticks={d.ticks}
             tickSize={d.tickSize}
@@ -356,6 +347,7 @@ class XYFrame extends React.Component {
       marginGraphic = (
         <path
           fill="white"
+          transform={`translate(${-margin.left},${-margin.top})`}
           d={drawMarginPath({
             margin,
             size: size,

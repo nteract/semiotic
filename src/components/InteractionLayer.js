@@ -124,13 +124,7 @@ class InteractionLayer extends React.Component {
     }
 
     semioticBrush
-      .extent([
-        [this.props.margin.left, this.props.margin.top],
-        [
-          this.props.size[0] + this.props.margin.left,
-          this.props.size[1] + this.props.margin.top
-        ]
-      ])
+      .extent([[0, 0], [this.props.size[0], this.props.size[1]]])
       .on("start", () => {
         this.brushStart(mappingFn(event.selection))
       })
@@ -166,7 +160,6 @@ class InteractionLayer extends React.Component {
       projectedX,
       projectedY,
       projectedYMiddle,
-      margin,
       size,
       overlay,
       interactionOverflow = { top: 0, bottom: 0, left: 0, right: 0 }
@@ -208,18 +201,12 @@ class InteractionLayer extends React.Component {
 
       const voronoiExtent = [
         [
-          Math.min(voronoiXExtent[0], margin.left - interactionOverflow.left),
-          Math.min(voronoiYExtent[0], margin.top - interactionOverflow.top)
+          Math.min(voronoiXExtent[0], -interactionOverflow.left),
+          Math.min(voronoiYExtent[0], -interactionOverflow.top)
         ],
         [
-          Math.max(
-            voronoiXExtent[1],
-            size[0] + margin.left + interactionOverflow.right
-          ),
-          Math.max(
-            voronoiYExtent[1],
-            size[1] + margin.top + interactionOverflow.bottom
-          )
+          Math.max(voronoiXExtent[1], size[0] + interactionOverflow.right),
+          Math.max(voronoiYExtent[1], size[1] + interactionOverflow.bottom)
         ]
       ]
 
@@ -292,14 +279,7 @@ class InteractionLayer extends React.Component {
   }
 
   createColumnsBrush() {
-    const {
-      projection,
-      rScale,
-      interaction,
-      size,
-      oColumns,
-      margin
-    } = this.props
+    const { projection, rScale, interaction, size, oColumns } = this.props
 
     let semioticBrush, mappingFn
 
@@ -344,9 +324,7 @@ class InteractionLayer extends React.Component {
           })
       } else {
         selectedExtent = interaction.extent[c]
-          ? interaction.extent[c]
-              .map(d => margin.top + rRange[1] - rScale(d))
-              .reverse()
+          ? interaction.extent[c].map(d => rRange[1] - rScale(d)).reverse()
           : rRange
         brushPosition = [columnHash[c].x, 0]
         semioticBrush = brushY()
@@ -381,7 +359,7 @@ class InteractionLayer extends React.Component {
 
   render() {
     let semioticBrush = null
-    const { interaction, position, svgSize } = this.props
+    const { interaction, position, svgSize, margin } = this.props
     const { overlayRegions } = this.state
     let { enabled, useSpans } = this.props
 
@@ -411,7 +389,7 @@ class InteractionLayer extends React.Component {
         >
           <g
             className="interaction-overlay"
-            transform={"translate(" + position + ")"}
+            transform={`translate(${margin.left},${margin.top})`}
             style={{ pointerEvents: enabled ? "all" : "none" }}
           >
             <g className="interaction-regions">{overlayRegions}</g>
@@ -431,8 +409,7 @@ InteractionLayer.propTypes = {
   xScale: PropTypes.func,
   yScale: PropTypes.func,
   rScale: PropTypes.func,
-  svgSize: PropTypes.array,
-  margin: PropTypes.object
+  svgSize: PropTypes.array
 }
 
 export default InteractionLayer
