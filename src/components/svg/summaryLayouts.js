@@ -43,8 +43,8 @@ export function boxplotRenderFn({
 
     const thisSummaryData = summary.pieceData
 
-    const calculatedSummaryStyle = styleFn(thisSummaryData[0], summaryI)
-    const calculatedSummaryClass = classFn(thisSummaryData[0], summaryI)
+    const calculatedSummaryStyle = styleFn(thisSummaryData[0].data, summaryI)
+    const calculatedSummaryClass = classFn(thisSummaryData[0].data, summaryI)
 
     let summaryPositionNest,
       summaryValueNest,
@@ -80,7 +80,7 @@ export function boxplotRenderFn({
 
     const renderValue = renderMode ? renderMode(summary, summaryI) : undefined
 
-    summaryValueNest = thisSummaryData.map(p => p._orFV).sort((a, b) => a - b)
+    summaryValueNest = thisSummaryData.map(p => p.value).sort((a, b) => a - b)
 
     summaryValueNest = [
       quantile(summaryValueNest, 0.0),
@@ -92,7 +92,7 @@ export function boxplotRenderFn({
 
     if (projection === "vertical") {
       summaryPositionNest = thisSummaryData
-        .map(p => p._orFRVertical)
+        .map(p => p.scaledVerticalValue)
         .sort((a, b) => b - a)
 
       summaryPositionNest = [
@@ -179,7 +179,7 @@ export function boxplotRenderFn({
       )
     } else if (projection === "horizontal") {
       summaryPositionNest = thisSummaryData
-        .map(p => p._orFR)
+        .map(p => p.scaledValue)
         .sort((a, b) => a - b)
 
       summaryPositionNest = [
@@ -268,7 +268,7 @@ export function boxplotRenderFn({
 
     if (projection === "radial") {
       summaryPositionNest = thisSummaryData
-        .map(p => p._orFR)
+        .map(p => p.scaledValue)
         .sort((a, b) => a - b)
 
       summaryPositionNest = [
@@ -676,7 +676,7 @@ export function contourRenderFn({
             renderMode={renderValue}
             simpleInterpolate={true}
             key={`${i}-${ii}`}
-            style={styleFn(ordset.pieceData[0], ordsetI)}
+            style={styleFn(ordset.pieceData[0].data, ordsetI)}
             markType={"path"}
             d={`M${d.coordinates[0].map(p => p.join(",")).join("L")}Z`}
           />
@@ -775,8 +775,8 @@ export function bucketizedRenderingFn({
 
     const xyValue =
       projection === "vertical"
-        ? p => p.piece._orFRVertical
-        : p => p.piece._orFR
+        ? p => p.piece.scaledVerticalValue
+        : p => p.piece.scaledValue
 
     let calculatedBins
     if (type.useBins === false) {
@@ -825,10 +825,10 @@ export function bucketizedRenderingFn({
     const renderValue = renderMode && renderMode(summary, summaryI)
 
     const calculatedSummaryStyle = thisSummaryData[0]
-      ? styleFn(thisSummaryData[0].piece, summaryI)
+      ? styleFn(thisSummaryData[0].piece.data, summaryI)
       : {}
     const calculatedSummaryClass = thisSummaryData[0]
-      ? classFn(thisSummaryData[0].piece, summaryI)
+      ? classFn(thisSummaryData[0].piece.data, summaryI)
       : ""
 
     let translate = [summary.middle, 0]

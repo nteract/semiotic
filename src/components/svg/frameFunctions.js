@@ -135,9 +135,13 @@ export function keyAndObjectifyBarData({ data, renderKey = (d, i) => i }) {
     ? data.map((d, i) => {
         const appliedKey = renderKey(d, i)
         if (typeof d !== "object") {
-          return { value: d, renderKey: appliedKey }
+          return {
+            data: { value: d, renderKey: appliedKey },
+            value: d,
+            renderKey: appliedKey
+          }
         }
-        return Object.assign(d, { renderKey: appliedKey })
+        return { renderKey: appliedKey, data: d }
       })
     : []
 }

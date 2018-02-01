@@ -94,9 +94,9 @@ const iconBarCustomMark = ({
             transform={`translate(${paddedX},${paddedY}) scale(${iconScale})`}
             vectorEffect={"non-scaling-stroke"}
             d={iconD}
-            style={styleFn(piece, i)}
+            style={styleFn(piece.data, i)}
             renderMode={renderValue}
-            className={classFn(piece, i)}
+            className={classFn(piece.data, i)}
           />
         )
       }
@@ -141,25 +141,25 @@ export function clusterBarLayout({
     let currentY = 0
 
     const calculatedPieces = ordset.pieceData.map((piece, i) => {
-      const renderValue = renderMode && renderMode(piece, i)
+      const renderValue = renderMode && renderMode(piece.data, i)
 
-      let xPosition = piece._orFX
-      let yPosition = piece._orFRBase
+      let xPosition = piece.x
+      let yPosition = piece.base
       let finalWidth = clusterWidth
-      let finalHeight = piece._orFR
+      let finalHeight = piece.scaledValue
       const xy = {}
       if (!piece.negative) {
-        yPosition -= piece._orFR
+        yPosition -= piece.scaledValue
       }
 
       if (projection === "horizontal") {
         //TODO: NEGATIVE FOR HORIZONTAL
-        yPosition = piece._orFX
-        xPosition = piece._orFRBase
+        yPosition = piece.x
+        xPosition = piece.base
         finalHeight = clusterWidth
-        finalWidth = piece._orFR
+        finalWidth = piece.scaledValue
         if (piece.negative) {
-          xPosition -= piece._orFR
+          xPosition -= piece.scaledValue
         }
       }
 
@@ -170,7 +170,7 @@ export function clusterBarLayout({
       if (projection === "radial") {
         const arcGenerator = arc()
           .innerRadius(0)
-          .outerRadius(piece._orFR / 2)
+          .outerRadius(piece.scaledValue / 2)
 
         let angle = (ordset.pct - ordset.pct_padding) / ordset.pieceData.length
         let startAngle =
@@ -191,7 +191,7 @@ export function clusterBarLayout({
         const outerPoint = pointOnArcAtAngle(
           [0, 0],
           (startAngle + endAngle) / 2,
-          piece._orFR / 2
+          piece.scaledValue / 2
         )
 
         xy.arcGenerator = arcGenerator
@@ -262,11 +262,11 @@ export function clusterBarLayout({
         </g>
       ) : (
         {
-          className: classFn(piece, i),
+          className: classFn(piece.data, i),
           renderMode: renderValue,
           key: "piece-" + piece.renderKey,
           transform: translate,
-          style: styleFn(piece, ordsetI),
+          style: styleFn(piece.data, ordsetI),
           ...markProps,
           ...eventListeners
         }
@@ -309,25 +309,25 @@ export function barLayout({
     const barColumnWidth = ordset.width
 
     const calculatedPieces = ordset.pieceData.map((piece, i) => {
-      const pieceSize = piece._orFR
-      const renderValue = renderMode && renderMode(piece, i)
+      const pieceSize = piece.scaledValue
+      const renderValue = renderMode && renderMode(piece.data, i)
 
-      let xPosition = piece._orFX
-      let yPosition = piece._orFRBottom
+      let xPosition = piece.x
+      let yPosition = piece.bottom
       let finalWidth = barColumnWidth
       let finalHeight = pieceSize
 
       if (!piece.negative) {
-        yPosition -= piece._orFR
+        yPosition -= piece.scaledValue
       }
 
       if (projection === "horizontal") {
-        yPosition = piece._orFX
-        xPosition = piece._orFRBottom
+        yPosition = piece.x
+        xPosition = piece.bottom
         finalHeight = barColumnWidth
         finalWidth = pieceSize
         if (piece.negative) {
-          xPosition = piece._orFRBottom - piece._orFR
+          xPosition = piece.bottom - piece.scaledValue
         }
       }
 
@@ -335,8 +335,8 @@ export function barLayout({
 
       if (projection === "radial") {
         let { innerRadius } = type
-        let innerSize = piece._orFRBottom / 2
-        let outerSize = piece._orFR / 2 + piece._orFRBottom / 2
+        let innerSize = piece.bottom / 2
+        let outerSize = piece.scaledValue / 2 + piece.bottom / 2
         if (innerRadius) {
           innerRadius = parseInt(innerRadius, 10)
           const canvasRadius = adjustedSize[0] / 2
@@ -423,10 +423,10 @@ export function barLayout({
         </g>
       ) : (
         {
-          className: classFn(piece, i),
+          className: classFn(piece.data, i),
           renderMode: renderValue,
           key: "piece-" + piece.renderKey,
-          style: styleFn(piece, ordsetI),
+          style: styleFn(piece.data, ordsetI),
           ...eventListeners,
           ...markProps
         }
@@ -463,10 +463,10 @@ export function timelineLayout({
     const calculatedPieces = []
 
     ordset.pieceData.forEach((piece, i) => {
-      const renderValue = renderMode && renderMode(piece, i)
+      const renderValue = renderMode && renderMode(piece.data, i)
       let xPosition = ordset.x
-      let height = piece._orFREnd - piece._orFR
-      let yPosition = piece._orFRVertical - height
+      let height = piece.scaledEndValue - piece.scaledValue
+      let yPosition = piece.scaledVerticalValue - height
       let width = ordset.width
       let markProps = {
         markType: "rect",
@@ -478,8 +478,8 @@ export function timelineLayout({
 
       if (projection === "horizontal") {
         yPosition = ordset.x
-        xPosition = piece._orFR
-        width = piece._orFREnd - piece._orFR
+        xPosition = piece.scaledValue
+        width = piece.scaledEndValue - piece.scaledValue
         height = ordset.width
         markProps = {
           markType: "rect",
@@ -490,8 +490,8 @@ export function timelineLayout({
         }
       } else if (projection === "radial") {
         let { innerRadius } = type
-        let innerSize = piece._orFR / 2
-        let outerSize = piece._orFREnd / 2
+        let innerSize = piece.scaledValue / 2
+        let outerSize = piece.scaledEndValue / 2
         if (innerRadius) {
           innerRadius = parseInt(innerRadius, 10)
           const canvasRadius = adjustedSize[0] / 2
@@ -546,10 +546,10 @@ export function timelineLayout({
         </g>
       ) : (
         {
-          className: classFn(piece, i),
+          className: classFn(piece.data, i),
           renderMode: renderValue,
           key: "piece-" + piece.renderKey,
-          style: styleFn(piece, ordsetI),
+          style: styleFn(piece.data, ordsetI),
           ...markProps,
           ...eventListeners
         }
@@ -589,18 +589,18 @@ export function pointLayout({
     const calculatedPieces = []
 
     ordset.pieceData.forEach((piece, i) => {
-      const renderValue = renderMode && renderMode(piece, i)
+      const renderValue = renderMode && renderMode(piece.data, i)
 
       let xPosition = ordset.middle
-      let yPosition = piece._orFRVertical
+      let yPosition = piece.scaledVerticalValue
 
       if (projection === "horizontal") {
         yPosition = ordset.middle
-        xPosition = piece._orFR
+        xPosition = piece.scaledValue
       } else if (projection === "radial") {
         const angle = ordset.pct_middle
 
-        const rPosition = piece._orFR / 2
+        const rPosition = piece.scaledValue / 2
         const baseCentroid = pointOnArcAtAngle(
           [adjustedSize[0] / 2, adjustedSize[1] / 2],
           angle,
@@ -626,7 +626,7 @@ export function pointLayout({
         </g>
       ) : (
         {
-          className: classFn(piece, i),
+          className: classFn(piece.data, i),
           markType: "rect",
           renderMode: renderValue,
           key: "piece-" + piece.renderKey,
@@ -636,7 +636,7 @@ export function pointLayout({
           y: yPosition - actualCircleRadius,
           rx: actualCircleRadius,
           ry: actualCircleRadius,
-          style: styleFn(piece, ordsetI),
+          style: styleFn(piece.data, ordsetI),
           ...eventListeners
         }
       )
@@ -684,7 +684,7 @@ export function swarmLayout({
       type.r || Math.max(2, Math.min(5, 4 * adjustedColumnWidth / oData.length))
 
     const simulation = forceSimulation(oData)
-      .force("y", forceY((d, i) => d._orFR).strength(type.strength || 2))
+      .force("y", forceY((d, i) => d.scaledValue).strength(type.strength || 2))
       .force("x", forceX(oColumn.middle))
       .force("collide", forceCollide(circleRadius))
       .stop()
@@ -692,14 +692,14 @@ export function swarmLayout({
     if (projection === "vertical") {
       simulation.force(
         "y",
-        forceY((d, i) => d._orFRVertical).strength(type.strength || 2)
+        forceY((d, i) => d.scaledVerticalValue).strength(type.strength || 2)
       )
     }
 
     for (let i = 0; i < iterations; ++i) simulation.tick()
 
     const calculatedPieces = oData.map((piece, i) => {
-      const renderValue = renderMode && renderMode(piece, i)
+      const renderValue = renderMode && renderMode(piece.data, i)
 
       let xPosition = piece.x
       let yPosition = piece.y
@@ -711,7 +711,7 @@ export function swarmLayout({
         const angle = oColumn.pct_middle
         xPosition =
           (piece.x - oColumn.middle) / adjustedColumnWidth * anglePiece
-        const rPosition = piece._orFR / 2
+        const rPosition = piece.scaledValue / 2
         const xAngle = angle + xPosition
         const baseCentroid = pointOnArcAtAngle(
           [adjustedSize[0] / 2, adjustedSize[1] / 2],
@@ -738,7 +738,7 @@ export function swarmLayout({
         </g>
       ) : (
         {
-          className: classFn(piece, i),
+          className: classFn(piece.data, i),
           markType: "rect",
           renderMode: renderValue,
           key: "piece-" + piece.renderKey,
@@ -748,7 +748,7 @@ export function swarmLayout({
           y: yPosition - actualCircleRadius,
           rx: actualCircleRadius,
           ry: actualCircleRadius,
-          style: styleFn(piece, ordsetI),
+          style: styleFn(piece.data, ordsetI),
           ...eventListeners
         }
       )

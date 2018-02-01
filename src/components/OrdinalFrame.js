@@ -130,10 +130,9 @@ class OrdinalFrame extends React.Component {
       customClickBehavior
     )
 
-    const barData = keyAndObjectifyBarData(currentProps)
-
     const oAccessor = stringToFn(currentProps.oAccessor, d => d.renderKey)
     const rAccessor = stringToFn(currentProps.rAccessor, d => d.value || 1)
+    const renderKeyFn = stringToFn(currentProps.renderKey, (d, i) => i)
 
     const connectorStyle = stringToFn(
       currentProps.connectorStyle,
@@ -147,7 +146,9 @@ class OrdinalFrame extends React.Component {
     const summaryPosition =
       currentProps.summaryPosition || (position => position)
 
-    let allData = [...barData]
+    const barData = keyAndObjectifyBarData(currentProps)
+
+    let allData = barData.map(d => d.data)
 
     //      const dataAccessor = currentProps.dataAccessor || function (d) {return d}
     const margin = calculateMargin(currentProps)
@@ -249,6 +250,8 @@ class OrdinalFrame extends React.Component {
       }
     }
 
+    console.log("rExtent", rExtent)
+
     if (
       currentProps.rExtent &&
       currentProps.rExtent[1] !== undefined &&
@@ -290,6 +293,8 @@ class OrdinalFrame extends React.Component {
     let cwHash
 
     let oScale
+    console.log("oExtent", oExtent)
+    console.log("barData", barData)
 
     if (currentProps.dynamicColumnWidth) {
       let columnValueCreator
@@ -305,7 +310,7 @@ class OrdinalFrame extends React.Component {
 
       oExtent.forEach((d, i) => {
         const oValue = columnValueCreator(
-          barData.filter((p, q) => oAccessor(p, q) === d)
+          barData.filter((p, q) => oAccessor(p.data, q) === d)
         )
         columnValues.push(oValue)
         maxColumnValues += oValue
@@ -362,7 +367,7 @@ class OrdinalFrame extends React.Component {
 
     const nestedPieces = {}
     nest()
-      .key(oAccessor)
+      .key((d, i) => oAccessor(d.data, i))
       .entries(barData)
       .forEach(d => {
         nestedPieces[d.key] = d.values
@@ -382,51 +387,48 @@ class OrdinalFrame extends React.Component {
       let positiveOffset = zeroValue
 
       projectedColumns[o].pieceData.forEach(piece => {
-        const pieceValue = rAccessor(piece)
         let valPosition
+        piece.value = rAccessor(piece.data)
 
         if (pieceType.type === "timeline") {
-          valPosition = rScale(pieceValue[0])
-          const endPosition = rScale(pieceValue[1])
-          piece._orFRVertical = rScaleVertical(pieceValue[0])
-          piece._orFR = valPosition
-          piece._orFREnd = endPosition
-          piece._orFRZ = rScaleVertical(0) - piece._orFRVertical
+          piece.scaledValue = rScale(piece.value[0])
+          piece.scaledEndValue = rScale(piece.value[1])
+          piece.scaledVerticalValue = rScaleVertical(piece.value[0])
+          piece.scaledZeroOffset = rScaleVertical(0) - piece.scaledVerticalValue
         } else if (
           pieceType.type !== "bar" &&
           pieceType.type !== "clusterbar"
         ) {
-          valPosition = rScale(pieceValue)
-          piece._orFR = valPosition
-          piece._orFRVertical = rScaleVertical(pieceValue)
-          piece._orFRZ = valPosition - zeroValue
+          piece.scaledValue = rScale(piece.value)
+          piece.scaledVerticalValue = rScaleVertical(piece.value)
+          piece.scaledZeroOffset = piece.scaledValue - zeroValue
         } else {
           valPosition =
             projection === "vertical"
-              ? rScaleReverse(rScale(pieceValue))
-              : rScale(pieceValue)
-          piece._orFR = Math.abs(zeroValue - valPosition)
-          piece._orFRZ = valPosition - zeroValue
+              ? rScaleReverse(rScale(piece.value))
+              : rScale(piece.value)
+          piece.scaledValue = Math.abs(zeroValue - valPosition)
+          piece.scaledZeroOffset = valPosition - zeroValue
         }
-        piece._orFV = pieceValue
-        piece._orFX = projectedColumns[o].x
-        if (pieceValue >= 0) {
-          piece._orFRBase = zeroValue
-          piece._orFRBottom = positiveOffset
-          piece._orFRMiddle = piece._orFR / 2 + positiveOffset
+
+        piece.x = projectedColumns[o].x
+        if (piece.value >= 0) {
+          piece.base = zeroValue
+          piece.bottom = positiveOffset
+          piece.middle = piece.scaledValue / 2 + positiveOffset
           positiveOffset =
             projection === "vertical"
-              ? positiveOffset - piece._orFR
-              : positiveOffset + piece._orFR
+              ? positiveOffset - piece.scaledValue
+              : positiveOffset + piece.scaledValue
           piece.negative = false
         } else {
-          piece._orFRBase = zeroValue
-          piece._orFRBottom = negativeOffset
-          piece._orFRMiddle = positiveOffset - piece._orFR / 2
+          piece.base = zeroValue
+          piece.bottom = negativeOffset
+          piece.middle = positiveOffset - piece.scaledValue / 2
           negativeOffset =
             projection === "vertical"
-              ? negativeOffset + piece._orFR
-              : negativeOffset - piece._orFR
+              ? negativeOffset + piece.scaledValue
+              : negativeOffset - piece.scaledValue
           piece.negative = true
         }
       })
