@@ -157,7 +157,7 @@ export const wrappedExamples = exampos.map(d => (
     <Link to={`/${d.path}`}>
       <h1 style={{ background: "none", margin: 0 }}>{d.label}</h1>
       <div className="frame-cover" />
-      <img width="400px" src={`${d.path}.png`} />
+      <img width="400px" src={`/semiotic/${d.path}.png`} />
     </Link>
   </div>
 ))
