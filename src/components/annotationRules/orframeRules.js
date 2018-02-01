@@ -419,10 +419,10 @@ export const htmlFrameHoverRule = ({
     if (d.pieces && d.pieces.length !== 0) {
       if (d.pieces.length === 1) {
         summaryLabel = (
-          <p key="html-annotation-content-2">{rAccessor(d.pieces[0])}</p>
+          <p key="html-annotation-content-2">{rAccessor(d.pieces[0].data)}</p>
         )
       } else {
-        const pieceData = extent(d.pieces.map(rAccessor))
+        const pieceData = extent(d.pieces.map(d => d.data).map(rAccessor))
         summaryLabel = (
           <p key="html-annotation-content-2">
             From {pieceData[0]} to {pieceData[1]}
@@ -476,10 +476,10 @@ export const htmlColumnHoverRule = ({
   projection,
   tooltipContent
 }) => {
-  const maxPiece = max(d.pieces.map(d => d._orFR))
+  const maxPiece = max(d.pieces.map(d => d.value))
   //we need to ignore negative pieces to make sure the hover behavior populates on top of the positive bar
   console.log("d.piedes", d.pieces)
-  const sumPiece = sum(d.pieces.map(d => d._orFR).filter(p => p > 0))
+  const sumPiece = sum(d.pieces.map(d => d.value).filter(p => p > 0))
   const positionValue =
     summaryType.type ||
     ["swarm", "point", "clusterbar"].find(d => d === type.type)
@@ -487,12 +487,12 @@ export const htmlColumnHoverRule = ({
       : sumPiece
 
   let xPosition =
-    projectedColumns[oAccessor(d.pieces[0])].middle + adjustedPosition[0]
+    projectedColumns[oAccessor(d.pieces[0].data)].middle + adjustedPosition[0]
   let yPosition = positionValue
   yPosition += 10
 
   if (projection === "horizontal") {
-    yPosition = projectedColumns[oAccessor(d.pieces[0])].middle
+    yPosition = projectedColumns[oAccessor(d.pieces[0].data)].middle
     xPosition = positionValue + adjustedPosition[0]
   } else if (projection === "radial") {
     ;[xPosition, yPosition] = pointOnArcAtAngle(
@@ -506,7 +506,7 @@ export const htmlColumnHoverRule = ({
   //To string because React gives a DOM error if it gets a date
   let content = (
     <div className="tooltip-content">
-      <p key="or-annotation-1">{oAccessor(d.pieces[0]).toString()}</p>
+      <p key="or-annotation-1">{oAccessor(d.pieces[0].data).toString()}</p>
       <p key="or-annotation-2">{sumPiece}</p>
     </div>
   )
