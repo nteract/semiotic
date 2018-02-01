@@ -92,7 +92,6 @@ export const groupBarMark = ({
   renderValue,
   summaryStyle,
   type,
-  margin,
   baseMarkProps
 }) => {
   let xProp = -columnWidth / 2
@@ -129,8 +128,8 @@ export const groupBarMark = ({
       xOffset = d.y1 / 2
     } else if (projection === "radial") {
       const arcGenerator = arc()
-        .innerRadius((d.y - margin.left) / 2)
-        .outerRadius((d.y + d.y1 - margin.left) / 2)
+        .innerRadius(d.y / 2)
+        .outerRadius((d.y + d.y1) / 2)
 
       const angle = summary.pct - summary.pct_padding
       let startAngle = summary.pct_middle - summary.pct_padding

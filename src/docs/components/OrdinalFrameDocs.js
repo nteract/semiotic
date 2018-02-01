@@ -316,17 +316,17 @@ export default class OrdinalFrameDocs extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      projection: "vertical",
-      type: "bar",
-      summaryType: "none",
+      projection: "horizontal",
+      type: "none",
+      summaryType: "joy",
       dynamicColumnWidth: "fixed",
       rAccessor: "relative",
       renderFn: "none",
       connector: "off",
       annotations: "off",
       oPadding: "20",
-      dataType: "stacked",
-      hoverBehavior: "general",
+      dataType: "group",
+      hoverBehavior: "summary",
       example: "basic"
     }
   }
@@ -544,7 +544,7 @@ export default class OrdinalFrameDocs extends React.Component {
     ]
 
     const axis = {
-      orient: "left",
+      orient: "top",
       tickFormat: d => d,
       label: {
         name: "axis label",

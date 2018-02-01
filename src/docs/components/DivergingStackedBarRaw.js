@@ -34,7 +34,8 @@ const divStackedBarChart = {
   axis: {
     orient: "top",
     tickValues: [-0.3, -0.15, 0, 0.2, 0.4, 0.6, 0.8, 1]
-  }
+  },
+  hoverAnnotation: true
 }
 
 export default (
