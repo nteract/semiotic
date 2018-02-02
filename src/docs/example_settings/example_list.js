@@ -142,12 +142,12 @@ const exampos = [
   {
     label: "Shared Tooltip",
     viz: SharedTooltipExampleRaw("Previous Contracts"),
-    path: "sharedTooltip"
+    path: "sharedtooltip"
   },
   {
     label: "Decision Matrix",
     viz: DecisionMatrixRaw("Shared"),
-    path: "decisionMatrix"
+    path: "decisionmatrix"
   },
   { label: "Comet Plot", viz: CometPlotRaw, path: "cometplot" }
 ]
