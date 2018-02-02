@@ -72,7 +72,7 @@ const DocumentComponent = props => {
             }}
           >
             {buttons.length > 0 ? (
-              <div style={{ padding: "10px", marginTop: "250px" }}>
+              <div style={{ padding: "10px", marginTop: "300px" }}>
                 <h3>Adjust chart settings</h3>
                 {buttons}
               </div>
