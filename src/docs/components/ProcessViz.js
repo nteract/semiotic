@@ -28,10 +28,6 @@ const typeSymbols = {
 
 const processNodes = [
   {
-    label: "PRE",
-    keys: { customPreprocess: true }
-  },
-  {
     label: "DATA",
     keys: {
       data: true,
@@ -43,7 +39,7 @@ const processNodes = [
     }
   },
   {
-    label: "FRAME",
+    label: "SIZE",
     keys: {
       size: true,
       margin: true,
@@ -103,7 +99,7 @@ const processNodes = [
     }
   },
   {
-    label: "ASSIGN",
+    label: "CUSTOMIZE",
     keys: {
       style: true,
       connectorStyle: true,
@@ -127,7 +123,14 @@ const processNodes = [
       className: true,
       pointRenderMode: true,
       lineRenderMode: true,
-      areaRenderMode: true
+      areaRenderMode: true,
+      title: true,
+      foregroundGraphics: true,
+      backgroundGraphics: true,
+      axes: true,
+      axis: true,
+      matte: true,
+      minimap: true
     }
   },
   {
@@ -148,18 +151,6 @@ const processNodes = [
       edgeWidthAccessor: true,
       customNodeIcon: true,
       edgeType: true
-    }
-  },
-  {
-    label: "DECORATE",
-    keys: {
-      title: true,
-      foregroundGraphics: true,
-      backgroundGraphics: true,
-      axes: true,
-      axis: true,
-      matte: true,
-      minimap: true
     }
   },
   {
@@ -192,7 +183,7 @@ const processNodes = [
 function closedProcessPiece(position, label, height) {
   return (
     <g key={`closed-${label}`} transform={`translate(${position},0)`}>
-      <rect style={{ fill: "#ac9739" }} height={height} width={20} />
+      <rect style={{ fill: "#c4b674" }} height={height} width={20} />
       <rect style={{ fill: "black" }} height={height} width={4} x={20} />
       <text
         transform="rotate(-90)"
@@ -212,7 +203,6 @@ export default class ProcessViz extends React.Component {
     const frameKeys = Object.keys(frameSettings).filter(
       d => this.props.frameSettings[d] !== undefined
     )
-    frameKeys.unshift(frameType)
     let processPosition = 0
     const mappedFrames = processNodes.map((process, i) =>
       frameKeys.filter(k => process.keys[k])
@@ -220,8 +210,10 @@ export default class ProcessViz extends React.Component {
 
     const shortPieces = mappedFrames.filter(d => d.length === 0).length
 
-    const step =
+    const step = Math.min(
+      150,
       (width - shortPieces * 30) / (processNodes.length - shortPieces)
+    )
 
     const maxHeight = Math.max(
       100,
@@ -242,7 +234,7 @@ export default class ProcessViz extends React.Component {
         processPosition += 30
       } else {
         const renderedFrameKeys = activeFrameKeys.map((k, q) => (
-          <g key={"rendered-key" + q} transform={`translate(5,${40 + q * 22})`}>
+          <g key={"rendered-key" + q} transform={`translate(5,${54 + q * 24})`}>
             <circle
               cx={10}
               r={10}
@@ -272,19 +264,19 @@ export default class ProcessViz extends React.Component {
             key={`process-${process.label}`}
             transform={`translate(${processPosition},0)`}
           >
-            <rect style={{ fill: "#ac9739" }} height={20} width={step - 10} />
+            <rect style={{ fill: "#c4b674" }} height={30} width={step - 10} />
             <line
               x1={0}
               x2={0}
-              y1={20}
+              y1={30}
               y2={maxHeight}
               style={{ stroke: "lightgray" }}
             />
             <text
               style={{ fill: "black", textAnchor: "start", fontWeight: 600 }}
               fontSize={"16px"}
-              y={16}
-              x={4}
+              y={22}
+              x={8}
             >
               {process.label}
             </text>
@@ -304,9 +296,12 @@ export default class ProcessViz extends React.Component {
     })
     return (
       <div>
+        <div style={{ fontSize: "40px", fontWeight: 100, margin: "10px 0" }}>
+          {this.props.frameType}
+        </div>
         <svg
           style={{ overflow: "visible", background: "white" }}
-          width={width}
+          width={processPosition}
           height={maxHeight + 10}
         >
           {renderedProcessNodes}
