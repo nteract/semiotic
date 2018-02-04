@@ -41,7 +41,7 @@ const bulletData = [
 ]
 
 //type, data, renderMode, eventListenersGenerator, styleFn, projection, classFn, adjustedSize, margin, rScale
-function generateBulletChart({ data, rScale, adjustedSize, margin }) {
+function generateBulletChart({ data, rScale, adjustedSize }) {
   const rangeColors = ["eee", "ddd", "ccc"]
   const measureColors = ["rgb(0, 162, 206)", "rgb(0, 113, 144)"]
   const markerColors = ["black"]
@@ -71,13 +71,13 @@ function generateBulletChart({ data, rScale, adjustedSize, margin }) {
     let pieceShape = {
       key: `bullet-piece-${i}`,
       style: {
-        fill: colorHash[d.class][colorStepHash[d.class]],
-        stroke: colorHash[d.class][colorStepHash[d.class]]
+        fill: colorHash[d.data.class][colorStepHash[d.data.class]],
+        stroke: colorHash[d.data.class][colorStepHash[d.data.class]]
       }
     }
-    colorStepHash[d.class] += 1
-    const valuePosition = rScale(d.value)
-    if (d.class === "marker") {
+    colorStepHash[d.data.class] += 1
+    const valuePosition = rScale(d.data.value)
+    if (d.data.class === "marker") {
       pieceShape.markType = "line"
       pieceShape.x1 = valuePosition
       pieceShape.x2 = valuePosition
@@ -85,11 +85,11 @@ function generateBulletChart({ data, rScale, adjustedSize, margin }) {
       pieceShape.y2 = column.x + column.width
     } else {
       //a rectangle
-      const pieceSize = column.width * widthHash[d.class]
+      const pieceSize = column.width * widthHash[d.data.class]
       pieceShape.markType = "rect"
-      pieceShape.x = margin.left
+      pieceShape.x = 0
       pieceShape.y = column.middle - pieceSize / 2
-      pieceShape.width = valuePosition - margin.left
+      pieceShape.width = valuePosition
       pieceShape.height = pieceSize
     }
 

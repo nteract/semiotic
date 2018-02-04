@@ -202,6 +202,10 @@ export default class CreatingPieChart extends React.Component {
             This example sets hoverAnnotation to true to give simple tooltips.
             Mouse over the slices to see their glory.
           </p>
+          <p>
+            OrdinalFrame honors a tooltipContent setting of "pie" that will give
+            the percent of the pie slice and name of the column.
+          </p>
           <OrdinalFrame
             title={"A Donut Chart with Padding and Tooltips"}
             size={[300, 300]}
@@ -214,6 +218,7 @@ export default class CreatingPieChart extends React.Component {
             margin={{ top: 50, bottom: 50, left: 50, right: 50 }}
             oPadding={1}
             hoverAnnotation={true}
+            tooltipContent="pie"
           />
         </div>
       ),
@@ -229,6 +234,7 @@ export default class CreatingPieChart extends React.Component {
             margin={{ top: 50, bottom: 50, left: 50, right: 50 }}
             oPadding={1}
             hoverAnnotation={true}
+            tooltipContent="pie"
           />`
     })
 
@@ -481,7 +487,7 @@ const colorHash = {
                 return (
                   <g>
                     <line
-                      style={{ stroke: colorHash[d.type], strokeWidth: 2 }}
+                      style={{ stroke: colorHash[d.data.type], strokeWidth: 2 }}
                       x2={xy.dx}
                       y2={xy.dy}
                     />
@@ -489,7 +495,7 @@ const colorHash = {
                       r={3}
                       cx={xy.dx}
                       cy={xy.dy}
-                      style={{ fill: "none", stroke: colorHash[d.type] }}
+                      style={{ fill: "none", stroke: colorHash[d.data.type] }}
                     />
                   </g>
                 )

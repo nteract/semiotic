@@ -112,8 +112,8 @@ export const basicReactAnnotation = ({ screenCoordinates, d, i }) => {
     }
   )
 
-  noteData.x = noteData.x ? noteData.x : screenCoordinates[0]
-  noteData.y = noteData.y ? noteData.y : screenCoordinates[1]
+  noteData.x = noteData.fixedX ? noteData.fixedX : screenCoordinates[0]
+  noteData.y = noteData.fixedY ? noteData.fixedY : screenCoordinates[1]
 
   return <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
 }
@@ -314,7 +314,7 @@ export const htmlTooltipAnnotation = ({
       className={`annotation annotation-xy-label ${d.className || ""} `}
       style={{
         position: "absolute",
-        bottom: size[1] - screenCoordinates[1] + "px",
+        top: screenCoordinates[1] + "px",
         left: screenCoordinates[0] + "px"
       }}
     >

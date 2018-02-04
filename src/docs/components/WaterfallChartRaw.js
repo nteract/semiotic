@@ -20,17 +20,16 @@ const formatLabel = (name, value) =>
   `$${(name === "Total" ? Math.abs(value) : value) / 1000}k`
 
 //type, data, renderMode, eventListenersGenerator, styleFn, projection, classFn, adjustedSize, margin, rScale
-function waterfall({ data, rScale, adjustedSize, margin }) {
+function waterfall({ data, rScale, adjustedSize }) {
   const renderedPieces = []
   let currentY = 0
   let currentValue = 0
   const zeroValue = rScale(0)
-
   const keys = Object.keys(data)
 
   keys.forEach(key => {
     //assume only one per column though...
-    const thisPiece = data[key].pieceData[0]
+    const thisPiece = data[key].pieceData[0].data
 
     let value = thisPiece.value
     const name = thisPiece.name
@@ -42,11 +41,11 @@ function waterfall({ data, rScale, adjustedSize, margin }) {
     const thisColumn = data[name]
     const { x, width } = thisColumn
     const height = rScale(value) - zeroValue
-    let y = adjustedSize[1] - margin.top - height
+    let y = adjustedSize[1] - height
     if (height < 0) {
-      y = adjustedSize[1] - margin.top
+      y = adjustedSize[1]
     }
-    y += margin.top + currentY
+    y += currentY
 
     const markObject = {
       o: key,

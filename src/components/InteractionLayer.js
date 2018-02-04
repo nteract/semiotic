@@ -31,13 +31,15 @@ class InteractionLayer extends React.Component {
   }
 
   changeVoronoi(d, customHoverTypes) {
+    //Until semiotic 2
+    const dataObject = d && d.data ? { ...d.data, ...d } : d
     if (this.props.customHoverBehavior) {
-      this.props.customHoverBehavior(d)
+      this.props.customHoverBehavior(dataObject)
     }
     if (!d) {
       this.props.voronoiHover(null)
     } else if (customHoverTypes === true) {
-      let vorD = Object.assign({}, d)
+      let vorD = Object.assign({}, dataObject)
       vorD.type = vorD.type === "column-hover" ? "column-hover" : "frame-hover"
       this.props.voronoiHover(vorD)
     } else {
@@ -45,21 +47,27 @@ class InteractionLayer extends React.Component {
         ? customHoverTypes
         : [customHoverTypes]
       const mappedHoverTypes = arrayWrappedHoverTypes.map(c => {
-        const finalC = typeof c === "function" ? c(d) : c
-        return Object.assign({}, d, finalC)
+        const finalC = typeof c === "function" ? c(dataObject) : c
+        return Object.assign({}, dataObject, finalC)
       })
       this.props.voronoiHover(mappedHoverTypes)
     }
   }
 
   clickVoronoi(d) {
+    //Until semiotic 2
+    const dataObject = d.data ? { ...d.data, ...d } : d
+
     if (this.props.customClickBehavior) {
-      this.props.customClickBehavior(d)
+      this.props.customClickBehavior(dataObject)
     }
   }
   doubleclickVoronoi(d) {
+    //Until semiotic 2
+    const dataObject = d.data ? { ...d.data, ...d } : d
+
     if (this.props.customDoubleClickBehavior) {
-      this.props.customClickBehavior(d)
+      this.props.customClickBehavior(dataObject)
     }
   }
 

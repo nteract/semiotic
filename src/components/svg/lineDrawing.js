@@ -38,12 +38,13 @@ export const projectLineData = ({
   return data.map((d, i) => {
     let originalLineData = Object.assign({}, d)
     originalLineData.data = lineDataAccessor(d).map((p, q) => {
-      let originalCoords = Object.assign({}, p)
+      let originalCoords = {}
 
       originalCoords[xProp] = xAccessor(p, q)
       originalCoords[yProp] = yAccessor(p, q)
       originalCoords[yPropTop] = originalCoords[yProp]
       originalCoords[yPropBottom] = originalCoords[yProp]
+      originalCoords.data = p
 
       return originalCoords
     })

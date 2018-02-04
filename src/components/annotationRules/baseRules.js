@@ -67,14 +67,14 @@ export const rectangleEnclosure = ({ bboxNodes, d, i }) => {
     {
       dx: d.dx || -25,
       dy: d.dy || -25,
-      x: bbox[0][0],
-      y: bbox[0][1],
       note: { label: d.label },
       connector: { end: "arrow" }
     },
     d,
     {
       type: AnnotationCalloutRect,
+      x: bbox[0][0],
+      y: bbox[0][1],
       subject: {
         width: bbox[1][0] - bbox[0][0],
         height: bbox[1][1] - bbox[0][1]

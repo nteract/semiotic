@@ -14,7 +14,8 @@ function adjustedAnnotationKeyMapper(d) {
 
 function noteDataWidth(noteData, charWidth = 8) {
   const wrap = (noteData.note && noteData.note.wrap) || 120
-  return Math.min(wrap, noteData.note.label.length * charWidth)
+  const noteText = noteData.note.label || noteData.note.label || ""
+  return Math.min(wrap, noteText.length * charWidth)
 }
 
 function noteDataHeight(noteData, charWidth = 8, lineHeight = 20) {
@@ -111,12 +112,22 @@ class AnnotationLayer extends React.Component {
       )
       return adjustedAnnotations
     } else if (annotationProcessor.type === "marginalia") {
+      let { marginOffset } = annotationProcessor
       const finalOrientation =
         !annotationProcessor.orient || annotationProcessor.orient === "nearest"
           ? ["left", "right", "top", "bottom"]
           : Array.isArray(annotationProcessor.orient)
             ? annotationProcessor.orient
             : [annotationProcessor.orient]
+      let marginOffsetFn = (orient, axes) => {
+        if (axes.find(d => d.props.orient === orient)) {
+          return 50
+        }
+        return 10
+      }
+      if (typeof marginOffset === "number") {
+        marginOffsetFn = () => marginOffset
+      }
 
       const leftOn = finalOrientation.find(d => d === "left")
       const rightOn = finalOrientation.find(d => d === "right")
@@ -131,9 +142,9 @@ class AnnotationLayer extends React.Component {
       adjustableAnnotations.forEach(aNote => {
         const noteData = aNote.props.noteData
         const leftDist = leftOn ? noteData.x : Infinity
-        const rightDist = rightOn ? 700 - noteData.x : Infinity
+        const rightDist = rightOn ? size[0] - noteData.x : Infinity
         const topDist = topOn ? noteData.y : Infinity
-        const bottomDist = bottomOn ? 700 - noteData.y : Infinity
+        const bottomDist = bottomOn ? size[1] - noteData.y : Infinity
 
         const minDist = Math.min(leftDist, rightDist, topDist, bottomDist)
 
@@ -151,8 +162,8 @@ class AnnotationLayer extends React.Component {
       //Adjust the margins based on which regions are active
 
       const leftForce = new labella.Force({
-        minPos: 0,
-        maxPos: bottomOn ? size[1] - margin.bottom : size[1]
+        minPos: 0 - margin.top,
+        maxPos: bottomOn ? size[1] : size[1] + margin.bottom
       })
         .nodes(
           leftNodes.map(
@@ -170,8 +181,8 @@ class AnnotationLayer extends React.Component {
         .compute()
 
       const rightForce = new labella.Force({
-        minPos: topOn ? margin.top : 0,
-        maxPos: size[1]
+        minPos: topOn ? 0 : 0 - margin.top,
+        maxPos: size[1] + margin.bottom
       })
         .nodes(
           rightNodes.map(
@@ -189,8 +200,8 @@ class AnnotationLayer extends React.Component {
         .compute()
 
       const topForce = new labella.Force({
-        minPos: leftOn ? margin.left : 0,
-        maxPos: size[0]
+        minPos: leftOn ? 0 : 0 - margin.left,
+        maxPos: size[0] + margin.right
       })
         .nodes(
           topNodes.map(
@@ -207,8 +218,8 @@ class AnnotationLayer extends React.Component {
         .compute()
 
       const bottomForce = new labella.Force({
-        minPos: 0,
-        maxPos: rightOn ? size[0] - margin.right : size[0]
+        minPos: 0 - margin.left,
+        maxPos: rightOn ? size[0] : size[0] + margin.right
       })
         .nodes(
           bottomNodes.map(
@@ -273,39 +284,41 @@ class AnnotationLayer extends React.Component {
       leftNodes.forEach((note, i) => {
         note.props.noteData.ny = leftSortedNodes[i].currentPos
         note.props.noteData.nx =
-          margin.left - leftSortedNodes[i].layerIndex * leftOffset - 5
+          0 -
+          leftSortedNodes[i].layerIndex * leftOffset -
+          marginOffsetFn("left", axes)
         if (note.props.noteData.note) {
           note.props.noteData.note.orientation = "leftRight"
-          note.props.noteData.note.align = "middle"
+          note.props.noteData.note.align = "right"
         }
       })
 
       rightNodes.forEach((note, i) => {
         note.props.noteData.ny = rightSortedNodes[i].currentPos
         note.props.noteData.nx =
-          size[0] -
-          margin.right +
+          size[0] +
           rightSortedNodes[i].layerIndex * rightOffset +
-          5
+          marginOffsetFn("right", axes)
         if (note.props.noteData.note) {
           note.props.noteData.note.orientation = "leftRight"
-          note.props.noteData.note.align = "middle"
+          note.props.noteData.note.align = "left"
         }
       })
 
       topNodes.forEach((note, i) => {
         note.props.noteData.nx = topSortedNodes[i].currentPos
         note.props.noteData.ny =
-          margin.top - topSortedNodes[i].layerIndex * topOffset - 5
+          0 -
+          topSortedNodes[i].layerIndex * topOffset -
+          marginOffsetFn("top", axes)
       })
 
       bottomNodes.forEach((note, i) => {
         note.props.noteData.nx = bottomSortedNodes[i].currentPos
         note.props.noteData.ny =
-          size[1] -
-          margin.bottom +
+          size[1] +
           bottomSortedNodes[i].layerIndex * bottomOffset +
-          5
+          marginOffsetFn("bottom", axes)
       })
       return adjustableAnnotations
     }

@@ -1,25 +1,25 @@
-import React from "react";
+import React from "react"
 
-import { line, curveLinear } from "d3-shape";
+import { line, curveLinear } from "d3-shape"
 
-import { dividedLine, projectLineData } from "./svg/lineDrawing";
+import { dividedLine, projectLineData } from "./svg/lineDrawing"
 
 // components
 
-import { Mark } from "semiotic-mark";
+import { Mark } from "semiotic-mark"
 
-import PropTypes from "prop-types";
+import PropTypes from "prop-types"
 
 class DividedLine extends React.Component {
   constructor(props) {
-    super(props);
-    this.createLineSegments = this.createLineSegments.bind(this);
+    super(props)
+    this.createLineSegments = this.createLineSegments.bind(this)
   }
 
   createLineSegments() {
-    let params = this.props.parameters;
-    let className = this.props.className;
-    let interpolate = this.props.interpolate || curveLinear;
+    let params = this.props.parameters
+    let className = this.props.className
+    let interpolate = this.props.interpolate || curveLinear
 
     let data = projectLineData({
       data: this.props.data,
@@ -28,14 +28,19 @@ class DividedLine extends React.Component {
       yProp: "_y",
       xAccessor: this.props.customAccessors.x,
       yAccessor: this.props.customAccessors.y
-    });
+    })
 
-    let lines = dividedLine(params, data[0].data, this.props.searchIterations);
+    //Compatibility before Semiotic 2
+    data.forEach(projectedD => {
+      projectedD.data = projectedD.data.map(d => ({ ...d.data, ...d }))
+    })
+
+    let lines = dividedLine(params, data[0].data, this.props.searchIterations)
 
     let lineRender = line()
       .curve(interpolate)
       .x(d => d._x)
-      .y(d => d._y);
+      .y(d => d._y)
 
     return lines.map((d, i) => (
       <Mark
@@ -46,13 +51,13 @@ class DividedLine extends React.Component {
         style={d.key}
         d={lineRender(d.points)}
       />
-    ));
+    ))
   }
 
   render() {
-    let lines = this.createLineSegments();
+    let lines = this.createLineSegments()
 
-    return <g>{lines}</g>;
+    return <g>{lines}</g>
   }
 }
 
@@ -64,6 +69,6 @@ DividedLine.propTypes = {
   lineDataAccessor: PropTypes.func,
   customAccessors: PropTypes.object,
   searchIterations: PropTypes.number
-};
+}
 
-export default DividedLine;
+export default DividedLine

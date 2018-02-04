@@ -1,10 +1,8 @@
-export const projectedX = "_xyfX"
-export const projectedY = "_xyfY"
-export const projectedYMiddle = "_xyfYMiddle"
-export const projectedYAdjusted = "_xyfYAdjusted"
-export const projectedOffset = "_xyfYOffset"
-export const projectedYTop = "_xyfYTop"
-export const projectedYBottom = "_xyfYBottom"
+export const projectedX = "x"
+export const projectedY = "y"
+export const projectedYMiddle = "yMiddle"
+export const projectedYTop = "yTop"
+export const projectedYBottom = "yBottom"
 
 /*
 Use symbols for x/y/offset to avoid conflicts when projecting the dataset

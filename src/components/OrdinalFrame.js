@@ -250,8 +250,6 @@ class OrdinalFrame extends React.Component {
       }
     }
 
-    console.log("rExtent", rExtent)
-
     if (
       currentProps.rExtent &&
       currentProps.rExtent[1] !== undefined &&
@@ -293,27 +291,26 @@ class OrdinalFrame extends React.Component {
     let cwHash
 
     let oScale
-    console.log("oExtent", oExtent)
-    console.log("barData", barData)
 
     if (currentProps.dynamicColumnWidth) {
       let columnValueCreator
       if (typeof currentProps.dynamicColumnWidth === "string") {
         columnValueCreator = d =>
-          sum(d.map(p => p[currentProps.dynamicColumnWidth]))
+          sum(d.map(p => p.data[currentProps.dynamicColumnWidth]))
       } else {
-        columnValueCreator = currentProps.dynamicColumnWidth
+        columnValueCreator = d =>
+          currentProps.dynamicColumnWidth(d.map(p => p.data))
       }
       const thresholdDomain = [0]
       let maxColumnValues = 0
       const columnValues = []
 
       oExtent.forEach((d, i) => {
-        const oValue = columnValueCreator(
-          barData.filter((p, q) => oAccessor(p.data, q) === d)
-        )
-        columnValues.push(oValue)
-        maxColumnValues += oValue
+        const oValues = barData.filter((p, q) => oAccessor(p.data, q) === d)
+        const columnValue = columnValueCreator(oValues)
+
+        columnValues.push(columnValue)
+        maxColumnValues += columnValue
       })
 
       cwHash = { total: 0 }
@@ -996,7 +993,13 @@ class OrdinalFrame extends React.Component {
     const oScale = this.oScale
     const rScale = this.rScale
 
-    const { htmlAnnotationRules, tooltipContent, projection, size } = this.props
+    const {
+      htmlAnnotationRules,
+      tooltipContent,
+      projection,
+      size,
+      dynamicColumnWidth
+    } = this.props
 
     const { projectedColumns } = this.state
 
@@ -1256,7 +1259,7 @@ OrdinalFrame.propTypes = {
   ]),
   summaryType: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
   connectorType: PropTypes.func,
-  tooltipContent: PropTypes.func,
+  tooltipContent: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
   className: PropTypes.string,
   additionalDefs: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
   interaction: PropTypes.object,

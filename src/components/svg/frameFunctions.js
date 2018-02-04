@@ -222,11 +222,13 @@ export function orFrameConnectionRenderer({
       const pieceArray = data[key]
       const nextColumn = data[keys[pieceArrayI + 1]]
       if (nextColumn) {
-        const matchArray = nextColumn.map((d, i) => connectionRule(d.piece, i))
+        const matchArray = nextColumn.map((d, i) =>
+          connectionRule(d.piece.data, i)
+        )
         pieceArray.forEach((piece, pieceI) => {
-          const thisConnectionPiece = connectionRule(piece.piece, pieceI)
+          const thisConnectionPiece = connectionRule(piece.piece.data, pieceI)
           const matchingPieceIndex = matchArray.indexOf(
-            connectionRule(piece.piece, pieceI)
+            connectionRule(piece.piece.data, pieceI)
           )
           if (
             thisConnectionPiece !== undefined &&
@@ -276,12 +278,12 @@ export function orFrameConnectionRenderer({
             const renderValue = renderMode && renderMode(piece.piece, pieceI)
 
             const calculatedStyle = styleFn({
-              source: piece.piece,
+              source: piece.piece.data,
               target: matchingPiece.piece
             })
 
             const eventListeners = eventListenersGenerator(
-              { source: piece.piece, target: matchingPiece.piece },
+              { source: piece.piece.data, target: matchingPiece.piece.data },
               pieceI
             )
             if (canvasRender && canvasRender(piece.piece) === true) {
@@ -304,7 +306,7 @@ export function orFrameConnectionRenderer({
                   renderMode={renderValue}
                   markType="path"
                   d={markD}
-                  className={classFn ? classFn(piece.piece, pieceI) : ""}
+                  className={classFn ? classFn(piece.piece.data, pieceI) : ""}
                   key={"connector" + piece.piece.renderKey}
                   style={calculatedStyle}
                 />

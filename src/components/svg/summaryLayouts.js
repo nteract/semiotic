@@ -917,11 +917,6 @@ export function bucketizedRenderingFn({
       let violinPoints = []
 
       if (projection === "horizontal") {
-        violinArea
-          .x(d => d.x)
-          .y0(d => d.y0)
-          .y1(d => d.y1)
-
         bins.forEach(summaryPoint => {
           const xValue = summaryPoint.y - bucketSize / 2
           const yValue = summaryPoint.value / actualMax * columnWidth / 2
@@ -939,12 +934,17 @@ export function bucketizedRenderingFn({
             value: summaryPoint.value
           })
         })
-      } else if (projection === "vertical") {
         violinArea
-          .y(d => d.y)
-          .x0(d => d.x0)
-          .x1(d => d.x1)
-
+          .x(d => d.x)
+          .y0(d => d.y0)
+          .y1(d => d.y1)
+          .defined(
+            (d, i) =>
+              d.y0 !== 0 ||
+              ((violinPoints[i - 1] && violinPoints[i - 1].y0 !== 0) ||
+                (violinPoints[i + 1] && violinPoints[i + 1].y0 !== 0))
+          )
+      } else if (projection === "vertical") {
         bins.forEach(summaryPoint => {
           const yValue = summaryPoint.y + bucketSize / 2
           const xValue = summaryPoint.value / actualMax * columnWidth / 2
@@ -963,6 +963,16 @@ export function bucketizedRenderingFn({
             value: summaryPoint.value
           })
         })
+        violinArea
+          .y(d => d.y)
+          .x0(d => d.x0)
+          .x1(d => d.x1)
+          .defined(
+            (d, i) =>
+              d.x0 !== 0 ||
+              ((violinPoints[i - 1] && violinPoints[i - 1].x0 !== 0) ||
+                (violinPoints[i + 1] && violinPoints[i + 1].x0 !== 0))
+          )
       } else if (projection === "radial") {
         const angle = summary.pct - summary.pct_padding / 2
         const midAngle = summary.pct_middle

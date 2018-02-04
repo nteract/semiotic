@@ -16,7 +16,8 @@ const divStackedBarChart = {
   oLabel: (d, column, i) => (
     <g>
       <rect
-        width={620}
+        x={3}
+        width={570}
         height={50}
         y={-25}
         style={{
