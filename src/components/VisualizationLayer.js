@@ -99,20 +99,6 @@ class VisualizationLayer extends React.PureComponent {
       chuckCloseCanvasTransform(this.props.canvasContext, context, size)
     } else if (typeof this.props.canvasPostProcess === "function") {
       this.props.canvasPostProcess(this.props.canvasContext, context, size)
-
-      /*      const dataURL = this.props.canvasContext.toDataURL("image/png")
-      const baseImage = document.createElement("img")
-
-      baseImage.src = dataURL
-      baseImage.onload = () => {
-        context.clearRect(0, 0, size[0] + 120, size[1] + 120)
-        context.filter = "blur(10px)"
-        context.drawImage(baseImage, 0, 0)
-        context.filter = "blur(5px)"
-        context.drawImage(baseImage, 0, 0)
-        context.filter = "none"
-        context.drawImage(baseImage, 0, 0) 
-      } */
     }
   }
 
@@ -147,7 +133,9 @@ class VisualizationLayer extends React.PureComponent {
       Object.keys(renderPipeline).forEach(k => {
         const pipe = renderPipeline[k]
         if (
-          (pipe.data && typeof pipe.data === "object") ||
+          (pipe.data &&
+            typeof pipe.data === "object" &&
+            !Array.isArray(pipe.data)) ||
           (pipe.data && pipe.data.length > 0)
         ) {
           const renderedPipe = pipe.behavior({
@@ -159,11 +147,14 @@ class VisualizationLayer extends React.PureComponent {
             baseMarkProps,
             ...pipe
           })
-          renderedElements.push(
-            <g key={k} className={k}>
-              {renderedPipe}
-            </g>
-          )
+
+          if (renderedPipe.length > 0) {
+            renderedElements.push(
+              <g key={k} className={k}>
+                {renderedPipe}
+              </g>
+            )
+          }
         }
       })
 
@@ -179,9 +170,18 @@ class VisualizationLayer extends React.PureComponent {
     const { matte, matteClip, axes, axesTickLines, frameKey, position } = props
     const { renderedElements } = this.state
 
-    return (
-      <g transform={`translate(${position})`}>
-        <g className="axis axis-tick-lines">{axesTickLines}</g>
+    const renderedAxes = axes && (
+      <g key="visualization-axis-labels" className="axis axis-labels">
+        {axes}
+      </g>
+    )
+    const renderedAxesTickLines = axesTickLines && (
+      <g key="visualization-tick-lines" className="axis axis-tick-lines">
+        {axesTickLines}
+      </g>
+    )
+    const renderedDataVisualization = renderedElements &&
+      renderedElements.length > 0 && (
         <g
           className="data-visualization"
           key="visualization-clip-path"
@@ -191,10 +191,17 @@ class VisualizationLayer extends React.PureComponent {
         >
           {renderedElements}
         </g>
-        {matte}
-        <g className="axis axis-labels">{axes}</g>
-      </g>
-    )
+      )
+
+    const renderedVisualizationLayer = (renderedAxes ||
+      renderedAxesTickLines ||
+      renderedDataVisualization) && [
+      renderedAxesTickLines,
+      renderedDataVisualization,
+      matte
+    ]
+
+    return renderedVisualizationLayer
   }
 }
 
