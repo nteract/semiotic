@@ -49,7 +49,7 @@ export function createPoints({
     const dX = xScale(d[x])
     const dY = yScale(d[y])
     const renderedCustomMark =
-      customMark && customMark({ d, i, xScale, yScale })
+      customMark && customMark({ d: d.data, i, xScale, yScale })
     const markProps = customMark
       ? Object.assign(baseMarkProps, renderedCustomMark.props)
       : { ...baseMarkProps, key: `piece-${i}`, markType: "circle", r: 2 }
@@ -57,20 +57,20 @@ export function createPoints({
     if (
       renderedCustomMark &&
       !renderedCustomMark.props.markType &&
-      (!canvasRender || canvasRender(d, i) !== true)
+      (!canvasRender || canvasRender(d.data, i) !== true)
     ) {
       mappedPoints.push(
         <g
           transform={`translate(${dX},${dY})`}
-          key={renderKeyFn ? renderKeyFn(d, i) : `custom-point-mark-${i}`}
-          style={styleFn ? styleFn(d, i) : {}}
-          className={classFn ? classFn(d, i) : ""}
+          key={renderKeyFn ? renderKeyFn(d.data, i) : `custom-point-mark-${i}`}
+          style={styleFn ? styleFn(d.data, i) : {}}
+          className={classFn ? classFn(d.data, i) : ""}
         >
           {renderedCustomMark}
         </g>
       )
     } else {
-      if (canvasRender && canvasRender(d, i) === true) {
+      if (canvasRender && canvasRender(d.data, i) === true) {
         const canvasPoint = {
           type: "point",
           baseClass: "frame-piece",
@@ -90,7 +90,7 @@ export function createPoints({
             baseClass: "frame-piece",
             tx: dX,
             ty: dY,
-            d,
+            d: d.data || d,
             i,
             markProps,
             styleFn,
@@ -139,7 +139,14 @@ export function createLines({
   const mappedLines = []
   data.forEach((d, i) => {
     if (customMark && typeof customMark === "function") {
-      mappedLines.push(customMark({ d, i, xScale, yScale, canvasDrawing }))
+      //shim to make customLineMark work until Semiotic 2
+      const compatibleData = {
+        ...d,
+        data: d.data.map(p => ({ ...p.data, ...p }))
+      }
+      mappedLines.push(
+        customMark({ d: compatibleData, i, xScale, yScale, canvasDrawing })
+      )
     } else {
       const markProps = {
         ...baseMarkProps,

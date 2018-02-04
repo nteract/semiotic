@@ -175,9 +175,8 @@ body {
 
 .annotation-xy-label .tooltip-content,
 .annotation-network-label .tooltip-content {
-  bottom: 19px;
   position: relative;
-  left: -75px;
+  transform: translate(calc(-50% + 7px), calc(-100% - 20px));
 }
 
 .annotation-xy-label .tooltip-content:before,
@@ -185,7 +184,7 @@ body {
   border-right: inherit;
   border-bottom: inherit;
   bottom: -8px;
-  left: 66px;
+  left: calc(50% - 15px);
 }
 
 .tooltip-content {
@@ -484,8 +483,7 @@ circle.frame-hover {
   color: #212121;
   font-size: 13px;
   z-index: 2000;
-  margin-left: -50px;
-  margin-bottom: 20px;
+  left: 50%;
 }
 
 .matrixWrapper .annotation-xy-label:before {
@@ -499,7 +497,7 @@ circle.frame-hover {
   height: 5px;
   position: absolute;
   bottom: -9px;
-  left: 40px;
+  left: calc(50% - 20px);
   z-index: 2000;
 }
 

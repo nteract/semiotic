@@ -41,6 +41,7 @@ function simpleValueAccessor(props, d) {
         ? d[props.yAccessor]
         : props.yAccessor(d)
   }
+
   return value.toString ? value.toString() : value
 }
 

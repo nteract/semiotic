@@ -113,7 +113,7 @@ class Axis extends React.Component {
         hoverWidth = width
         hoverHeight = 50
         annotationType = "x"
-        baselineX2 = baselineX + width
+        baselineX2 = width
         baselineY2 = 0
         hoverFunction = e =>
           this.setState({
@@ -133,7 +133,7 @@ class Axis extends React.Component {
         hoverHeight = 50
         baselineY = baselineY2 = hoverY = height
         baselineX = hoverX = 0
-        baselineX2 = baselineX + width
+        baselineX2 = width
 
         hoverFunction = e =>
           this.setState({

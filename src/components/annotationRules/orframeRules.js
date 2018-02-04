@@ -199,17 +199,19 @@ export const basicReactAnnotationRule = ({ d, i, screenCoordinates }) => {
     {
       dx: 0,
       dy: 0,
-      x: screenCoordinates[0],
-      y: screenCoordinates[1],
       note: { label: d.label },
       connector: { end: "arrow" }
     },
     d,
     {
+      x: screenCoordinates[0],
+      y: screenCoordinates[1],
       type: typeof d.type === "function" ? d.type : undefined,
       screenCoordinates
     }
   )
+  if (d.fixedX) noteData.x = d.fixedX
+  if (d.fixedY) noteData.y = d.fixedY
   return <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
 }
 
@@ -437,8 +439,8 @@ export const htmlFrameHoverRule = ({
     ]
   } else {
     contentFill = [
-      <p key="html-annotation-content-1">{oAccessor(d).toString()}</p>,
-      <p key="html-annotation-content-2">{rAccessor(d).toString()}</p>
+      <p key="html-annotation-content-1">{oAccessor(d.data).toString()}</p>,
+      <p key="html-annotation-content-2">{rAccessor(d.data).toString()}</p>
     ]
   }
   let content = <div className="tooltip-content">{contentFill}</div>
@@ -476,19 +478,17 @@ export const htmlColumnHoverRule = ({
   projection,
   tooltipContent
 }) => {
-  const maxPiece = max(d.pieces.map(d => d.value))
   //we need to ignore negative pieces to make sure the hover behavior populates on top of the positive bar
-  console.log("d.piedes", d.pieces)
-  const sumPiece = sum(d.pieces.map(d => d.value).filter(p => p > 0))
   const positionValue =
     summaryType.type ||
     ["swarm", "point", "clusterbar"].find(d => d === type.type)
-      ? maxPiece
-      : sumPiece
+      ? max(d.pieces.map(d => d.scaledValue))
+      : sum(d.pieces.map(d => d.scaledValue).filter(p => p > 0))
 
-  let xPosition =
-    projectedColumns[oAccessor(d.pieces[0].data)].middle + adjustedPosition[0]
-  let yPosition = positionValue
+  const column = projectedColumns[oAccessor(d.pieces[0].data)]
+
+  let xPosition = column.middle + adjustedPosition[0]
+  let yPosition = adjustedSize[1] - positionValue
   yPosition += 10
 
   if (projection === "horizontal") {
@@ -507,12 +507,27 @@ export const htmlColumnHoverRule = ({
   let content = (
     <div className="tooltip-content">
       <p key="or-annotation-1">{oAccessor(d.pieces[0].data).toString()}</p>
-      <p key="or-annotation-2">{sumPiece}</p>
+      <p key="or-annotation-2">
+        {sum(d.pieces.map(d => d.value).filter(p => p > 0))}
+      </p>
     </div>
   )
 
   if (d.type === "column-hover" && tooltipContent) {
-    content = tooltipContent(d)
+    if (tooltipContent === "pie") {
+      content = (
+        <div className="tooltip-content">
+          <p key="or-annotation-1">{oAccessor(d.pieces[0].data).toString()}</p>
+          <p key="or-annotation-2">{`${(column.pct * 100).toFixed(0)}%`}</p>
+        </div>
+      )
+    } else {
+      content = tooltipContent({
+        ...d,
+        pieces: d.pieces.map(p => p.data),
+        column
+      })
+    }
   }
 
   if (d.type === "xy") {

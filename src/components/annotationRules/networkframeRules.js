@@ -22,7 +22,7 @@ export const htmlFrameHoverRule = ({ d, i, tooltipContent, size }) => {
       className={`annotation annotation-network-label ${d.className || ""}`}
       style={{
         position: "absolute",
-        bottom: size[1] - d.y + "px",
+        top: d.y + "px",
         left: d.x + "px"
       }}
     >

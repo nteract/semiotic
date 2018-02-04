@@ -15,7 +15,8 @@ const iconBarCustomMark = ({
   renderValue,
   classFn
 }) => (piece, i, xy) => {
-  const iconD = typeof type.icon === "string" ? type.icon : type.icon(piece, i)
+  const iconD =
+    typeof type.icon === "string" ? type.icon : type.icon(piece.data, i)
   const { iconPadding = 1, resize = "auto" } = type
 
   const iconBounds = pathBounds(iconD)

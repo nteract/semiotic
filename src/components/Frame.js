@@ -7,13 +7,10 @@ import SpanOrDiv from "./SpanOrDiv"
 import PropTypes from "prop-types"
 
 const defaultZeroMargin = { top: 0, bottom: 0, left: 0, right: 0 }
-let vorFn
 
 class Frame extends React.Component {
   constructor(props) {
     super(props)
-
-    vorFn = d => this.setState({ voronoiHover: d })
 
     this.state = {
       canvasContext: null,
@@ -128,34 +125,6 @@ class Frame extends React.Component {
         />
       )
     }
-    const interactionLayer = (
-      <InteractionLayer
-        useSpans={useSpans}
-        hoverAnnotation={hoverAnnotation}
-        projectedX={projectedCoordinateNames.x}
-        projectedY={projectedCoordinateNames.y}
-        projectedYMiddle={projectedYMiddle}
-        interaction={interaction}
-        voronoiHover={vorFn}
-        customClickBehavior={customClickBehavior}
-        customHoverBehavior={customHoverBehavior}
-        customDoubleClickBehavior={customDoubleClickBehavior}
-        points={points}
-        position={adjustedPosition}
-        margin={margin}
-        size={adjustedSize}
-        svgSize={size}
-        xScale={xScale}
-        yScale={yScale}
-        enabled={true}
-        overlay={overlay}
-        oColumns={columns}
-        rScale={rScale}
-        projection={projection}
-        interactionOverflow={interactionOverflow}
-      />
-    )
-
     return (
       <SpanOrDiv
         span={useSpans}
@@ -180,7 +149,11 @@ class Frame extends React.Component {
             <canvas
               className="frame-canvas"
               ref={canvasContext => (this.canvasContext = canvasContext)}
-              style={{ position: "absolute" }}
+              style={{
+                position: "absolute",
+                left: `${margin.left}px`,
+                top: `${margin.left}px`
+              }}
               width={size[0]}
               height={size[1]}
             />
@@ -218,7 +191,31 @@ class Frame extends React.Component {
               </g>
             </svg>
           </SpanOrDiv>
-          {interactionLayer}
+          <InteractionLayer
+            useSpans={useSpans}
+            hoverAnnotation={hoverAnnotation}
+            projectedX={projectedCoordinateNames.x}
+            projectedY={projectedCoordinateNames.y}
+            projectedYMiddle={projectedYMiddle}
+            interaction={interaction}
+            voronoiHover={d => this.setState({ voronoiHover: d })}
+            customClickBehavior={customClickBehavior}
+            customHoverBehavior={customHoverBehavior}
+            customDoubleClickBehavior={customDoubleClickBehavior}
+            points={points}
+            position={adjustedPosition}
+            margin={margin}
+            size={adjustedSize}
+            svgSize={size}
+            xScale={xScale}
+            yScale={yScale}
+            enabled={true}
+            overlay={overlay}
+            oColumns={columns}
+            rScale={rScale}
+            projection={projection}
+            interactionOverflow={interactionOverflow}
+          />
           {annotationLayer}
         </SpanOrDiv>
         <SpanOrDiv span={useSpans} className={`${name} frame-after-elements`}>

@@ -316,17 +316,17 @@ export default class OrdinalFrameDocs extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      projection: "horizontal",
-      type: "none",
-      summaryType: "joy",
+      projection: "vertical",
+      type: "bar",
+      summaryType: "none",
       dynamicColumnWidth: "fixed",
       rAccessor: "relative",
       renderFn: "none",
       connector: "off",
       annotations: "off",
       oPadding: "20",
-      dataType: "group",
-      hoverBehavior: "summary",
+      dataType: "stacked",
+      hoverBehavior: "general",
       example: "basic"
     }
   }

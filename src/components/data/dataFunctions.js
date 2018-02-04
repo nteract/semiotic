@@ -69,7 +69,7 @@ export const calculateDataExtent = ({
     projectedPoints = points.map((d, i) => {
       const x = xAccessor(d, i)
       const y = yAccessor(d, i)
-      return Object.assign({ [projectedX]: x, [projectedY]: y }, d)
+      return { [projectedX]: x, [projectedY]: y, data: d }
     })
     fullDataset = projectedPoints
   }
@@ -100,12 +100,18 @@ export const calculateDataExtent = ({
     projectedLines.forEach(d => {
       fullDataset = [
         ...fullDataset,
-        ...d.data
-          .filter(p => defined(p))
-          .map(p => Object.assign({ parentLine: d }, p))
+        ...d.data.filter(p => defined(p)).map(p => ({
+          parentLine: d,
+          [projectedY]: p[projectedY],
+          [projectedX]: p[projectedX],
+          [projectedYTop]: p[projectedYTop],
+          [projectedYBottom]: p[projectedYBottom],
+          data: p.data
+        }))
       ]
     })
   }
+
   if (areas) {
     projectedAreas = projectAreaData({
       data: areas,
