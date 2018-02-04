@@ -30,7 +30,6 @@ import SharedTooltipExampleRaw from "../components/SharedTooltipExampleRaw"
 import DecisionMatrixRaw from "../components/DecisionMatrixRaw"
 import CometPlotRaw from "../components/CometPlotRaw"
 import SparklineRaw from "../components/SparklineRaw"
-import SparkBarRaw from "../components/SparkBarRaw"
 
 import {
   genericBarChart,
@@ -114,11 +113,6 @@ const exampos = [
     path: "sparkline"
   },
   {
-    label: "SparkBar",
-    viz: SparkBarRaw,
-    path: "sparkbar"
-  },
-  {
     label: "Custom OR Type",
     viz: CustomMarkRaw,
     path: "custommark"
@@ -148,12 +142,12 @@ const exampos = [
   {
     label: "Shared Tooltip",
     viz: SharedTooltipExampleRaw("Previous Contracts"),
-    path: "sharedTooltip"
+    path: "sharedtooltip"
   },
   {
     label: "Decision Matrix",
     viz: DecisionMatrixRaw("Shared"),
-    path: "decisionMatrix"
+    path: "decisionmatrix"
   },
   { label: "Comet Plot", viz: CometPlotRaw, path: "cometplot" }
 ]
@@ -163,7 +157,7 @@ export const wrappedExamples = exampos.map(d => (
     <Link to={`/${d.path}`}>
       <h1 style={{ background: "none", margin: 0 }}>{d.label}</h1>
       <div className="frame-cover" />
-      <img width="400px" src={`${d.path}.png`} />
+      <img width="400px" src={`/semiotic/${d.path}.png`} />
     </Link>
   </div>
 ))

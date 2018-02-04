@@ -111,7 +111,7 @@ function generateBulletChart({ data, rScale, adjustedSize }) {
 }
 
 export default (
-  <div style={{ marginTop: "60px" }}>
+  <div>
     {bulletData.map((data, i) => {
       const bulletRanges = data.ranges
         .map(p => ({ class: "range", value: p }))
