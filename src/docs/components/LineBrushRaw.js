@@ -36,7 +36,7 @@ export default (data, startEvent, duringEvent, endEvent, extent) => {
     }
   }
   return (
-    <div style={{ marginTop: "50px" }}>
+    <div>
       <ProcessViz frameSettings={lineBrushChart} frameType="XYFrame" />
       <XYFrame {...lineBrushChart} />
     </div>

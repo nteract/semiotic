@@ -32,7 +32,7 @@ export default (data, event, resetExtent) => {
   }
 
   return (
-    <div style={{ marginTop: "50px" }}>
+    <div>
       <ProcessViz frameSettings={swarmBrushChart} frameType="OrdinalFrame" />
       <OrdinalFrame {...swarmBrushChart} />
     </div>

@@ -119,27 +119,8 @@ export default (type = "stackedarea") => {
       <p style={{ fontSize: "20px", lineHeight: "28px" }}>
         Line charts may be typical, but that doesn't keep a sparkline from being
         a
-        <SparkXYFrame
-          {...negativeChart}
-          renderKey={d => d.label}
-          hoverAnnotation={true}
-          lineRenderMode="sketchy"
-          annotations={[
-            {
-              type: "react-annotation",
-              lineWrap: 150,
-              note: {
-                title: "Spark...line?",
-                label: "You can annotate sparklines, of course."
-              },
-              step: 39,
-              value: 40,
-              dx: 90,
-              dy: 50
-            }
-          ]}
-        />{" "}
-        or maybe even a
+        <SparkXYFrame {...negativeChart} renderKey={d => d.label} /> or maybe
+        even a
         <SparkOrdinalFrame
           data={[8, 4, 12, 3, 4, 5, 6, 7]}
           size={[50, 100]}
