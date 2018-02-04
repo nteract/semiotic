@@ -76,7 +76,6 @@ class Frame extends React.Component {
     const { voronoiHover } = this.state
 
     const areaAnnotations = []
-    let annotationLayer = null
 
     let totalAnnotations = annotations
       ? [...annotations, ...areaAnnotations]
@@ -90,42 +89,42 @@ class Frame extends React.Component {
       }
     }
 
-    if (totalAnnotations || legendSettings) {
-      annotationLayer = (
-        <AnnotationLayer
-          legendSettings={legendSettings}
-          margin={margin}
-          axes={axes}
-          annotationHandling={annotationSettings.layout}
-          pointSizeFunction={annotationSettings.pointSizeFunction}
-          labelSizeFunction={annotationSettings.labelSizeFunction}
-          annotations={totalAnnotations}
-          svgAnnotationRule={(d, i, thisALayer) =>
-            defaultSVGRule({
-              d,
-              i,
-              annotationLayer: thisALayer,
-              ...renderPipeline
-            })
-          }
-          htmlAnnotationRule={(d, i, thisALayer) =>
-            defaultHTMLRule({
-              d,
-              i,
-              annotationLayer: thisALayer,
-              ...renderPipeline
-            })
-          }
-          useSpans={useSpans}
-          size={size}
-          position={[
-            adjustedPosition[0] + margin.left,
-            adjustedPosition[1] + margin.top
-          ]}
-        />
-      )
-    }
-    const interactionLayer = (
+    const annotationLayer = ((totalAnnotations &&
+      totalAnnotations.length > 0) ||
+      legendSettings) && (
+      <AnnotationLayer
+        legendSettings={legendSettings}
+        margin={margin}
+        axes={axes}
+        annotationHandling={annotationSettings.layout}
+        pointSizeFunction={annotationSettings.pointSizeFunction}
+        labelSizeFunction={annotationSettings.labelSizeFunction}
+        annotations={totalAnnotations}
+        svgAnnotationRule={(d, i, thisALayer) =>
+          defaultSVGRule({
+            d,
+            i,
+            annotationLayer: thisALayer,
+            ...renderPipeline
+          })
+        }
+        htmlAnnotationRule={(d, i, thisALayer) =>
+          defaultHTMLRule({
+            d,
+            i,
+            annotationLayer: thisALayer,
+            ...renderPipeline
+          })
+        }
+        useSpans={useSpans}
+        size={size}
+        position={[
+          adjustedPosition[0] + margin.left,
+          adjustedPosition[1] + margin.top
+        ]}
+      />
+    )
+    const interactionLayer = (hoverAnnotation || overlay) && (
       <InteractionLayer
         useSpans={useSpans}
         hoverAnnotation={hoverAnnotation}
@@ -153,6 +152,9 @@ class Frame extends React.Component {
       />
     )
 
+    console.log("title", title)
+    console.log("foregroundGraphics", foregroundGraphics)
+
     return (
       <SpanOrDiv
         span={useSpans}
@@ -161,9 +163,14 @@ class Frame extends React.Component {
           background: "none"
         }}
       >
-        <SpanOrDiv span={useSpans} className={`${name} frame-before-elements`}>
-          {beforeElements}
-        </SpanOrDiv>
+        {beforeElements && (
+          <SpanOrDiv
+            span={useSpans}
+            className={`${name} frame-before-elements`}
+          >
+            {beforeElements}
+          </SpanOrDiv>
+        )}
         <SpanOrDiv
           span={useSpans}
           className="frame-elements"
@@ -188,7 +195,7 @@ class Frame extends React.Component {
               height={size[1]}
             >
               {finalFilterDefs}
-              <g>{backgroundGraphics}</g>
+              {backgroundGraphics && <g>{backgroundGraphics}</g>}
               <VisualizationLayer
                 disableContext={this.props.disableContext}
                 renderPipeline={renderPipeline}
@@ -209,19 +216,23 @@ class Frame extends React.Component {
                 canvasPostProcess={canvasPostProcess}
                 baseMarkProps={baseMarkProps}
               />
-              <g>
-                {title}
-                {foregroundGraphics}
-              </g>
+              {(title || foregroundGraphics) && (
+                <g>
+                  {title}
+                  {foregroundGraphics && <g>{foregroundGraphics}</g>}
+                </g>
+              )}
             </svg>
           </SpanOrDiv>
           {interactionLayer}
           {annotationLayer}
         </SpanOrDiv>
-        <SpanOrDiv span={useSpans} className={`${name} frame-after-elements`}>
-          {downloadButton}
-          {afterElements}
-        </SpanOrDiv>
+        {(downloadButton || afterElements) && (
+          <SpanOrDiv span={useSpans} className={`${name} frame-after-elements`}>
+            {downloadButton}
+            {afterElements}
+          </SpanOrDiv>
+        )}
       </SpanOrDiv>
     )
   }

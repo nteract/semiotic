@@ -120,10 +120,11 @@ const createSparkFrame = (Frame, defaults) =>
 
       const actualSize = []
 
-      actualSize[0] = size[0] ? size[0] : containerHeight
+      actualSize[0] =
+        typeof size === "number" ? size : size[0] ? size[0] : containerHeight
       actualSize[1] = containerHeight
 
-      const dataVersionWithSize = dataVersion + actualSize.toString()
+      console.log("actualSize", actualSize)
 
       return (
         <span
@@ -138,12 +139,7 @@ const createSparkFrame = (Frame, defaults) =>
           )}
           ref={node => (this.node = node)}
         >
-          <Frame
-            {...defaults(this.props)}
-            size={actualSize}
-            dataVersion={dataVersion ? dataVersionWithSize : undefined}
-            useSpans={true}
-          />
+          <Frame {...defaults(this.props)} size={actualSize} useSpans={true} />
         </span>
       )
     }
