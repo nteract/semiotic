@@ -23,7 +23,6 @@ export function axisPieces({
   ticks,
   orient = "left",
   size,
-  margin = { left: 0, right: 0, top: 0, bottom: 0 },
   footer = false,
   tickSize = footer
     ? -10
@@ -47,7 +46,7 @@ export function axisPieces({
       position2 = "x2"
       domain1 = "y1"
       domain2 = "y2"
-      axisDomain = [margin.top, tickSize + margin.top]
+      axisDomain = [0, tickSize]
       tposition1 = "tx"
       tposition2 = "ty"
       textPositionMod -= 20 - padding
@@ -57,7 +56,7 @@ export function axisPieces({
       position2 = "x2"
       domain1 = "y2"
       domain2 = "y1"
-      axisDomain = [size[1] + margin.top, size[1] + margin.top - tickSize]
+      axisDomain = [size[1], size[1] - tickSize]
       tposition1 = "tx"
       tposition2 = "ty"
       textPositionMod += 20 + padding
@@ -67,7 +66,7 @@ export function axisPieces({
       position2 = "y1"
       domain1 = "x2"
       domain2 = "x1"
-      axisDomain = [size[0] + margin.left, size[0] + margin.left - tickSize]
+      axisDomain = [size[0], size[0] - tickSize]
       tposition1 = "ty"
       tposition2 = "tx"
       textPositionMod += 5 + padding
@@ -80,7 +79,7 @@ export function axisPieces({
       position2 = "y2"
       domain1 = "x1"
       domain2 = "x2"
-      axisDomain = [margin.left, tickSize + margin.left]
+      axisDomain = [0, tickSize]
       tposition1 = "ty"
       tposition2 = "tx"
       textPositionMod -= 5 + padding

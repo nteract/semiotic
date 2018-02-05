@@ -135,9 +135,13 @@ export function keyAndObjectifyBarData({ data, renderKey = (d, i) => i }) {
     ? data.map((d, i) => {
         const appliedKey = renderKey(d, i)
         if (typeof d !== "object") {
-          return { value: d, renderKey: appliedKey }
+          return {
+            data: { value: d, renderKey: appliedKey },
+            value: d,
+            renderKey: appliedKey
+          }
         }
-        return Object.assign(d, { renderKey: appliedKey })
+        return { renderKey: appliedKey, data: d }
       })
     : []
 }
@@ -218,11 +222,13 @@ export function orFrameConnectionRenderer({
       const pieceArray = data[key]
       const nextColumn = data[keys[pieceArrayI + 1]]
       if (nextColumn) {
-        const matchArray = nextColumn.map((d, i) => connectionRule(d.piece, i))
+        const matchArray = nextColumn.map((d, i) =>
+          connectionRule(d.piece.data, i)
+        )
         pieceArray.forEach((piece, pieceI) => {
-          const thisConnectionPiece = connectionRule(piece.piece, pieceI)
+          const thisConnectionPiece = connectionRule(piece.piece.data, pieceI)
           const matchingPieceIndex = matchArray.indexOf(
-            connectionRule(piece.piece, pieceI)
+            connectionRule(piece.piece.data, pieceI)
           )
           if (
             thisConnectionPiece !== undefined &&
@@ -272,12 +278,12 @@ export function orFrameConnectionRenderer({
             const renderValue = renderMode && renderMode(piece.piece, pieceI)
 
             const calculatedStyle = styleFn({
-              source: piece.piece,
+              source: piece.piece.data,
               target: matchingPiece.piece
             })
 
             const eventListeners = eventListenersGenerator(
-              { source: piece.piece, target: matchingPiece.piece },
+              { source: piece.piece.data, target: matchingPiece.piece.data },
               pieceI
             )
             if (canvasRender && canvasRender(piece.piece) === true) {
@@ -300,7 +306,7 @@ export function orFrameConnectionRenderer({
                   renderMode={renderValue}
                   markType="path"
                   d={markD}
-                  className={classFn ? classFn(piece.piece, pieceI) : ""}
+                  className={classFn ? classFn(piece.piece.data, pieceI) : ""}
                   key={"connector" + piece.piece.renderKey}
                   style={calculatedStyle}
                 />
@@ -337,7 +343,6 @@ export function orFrameSummaryRenderer({
   positionFn,
   projection,
   adjustedSize,
-  margin,
   chartSize,
   baseMarkProps
 }) {
@@ -366,7 +371,6 @@ export function orFrameSummaryRenderer({
     positionFn,
     projection,
     adjustedSize,
-    margin,
     chartSize,
     baseMarkProps
   })
@@ -379,7 +383,6 @@ export const orFrameAxisGenerator = ({
   size,
   rScale,
   rScaleType,
-  margin,
   pieceType,
   rExtent,
   data
@@ -407,14 +410,12 @@ export const orFrameAxisGenerator = ({
         axisClassname += " right y"
       } else if (orient === "left") {
         axisClassname += " left y"
-        axisPosition = [margin.left, 0]
         axisScale.range([rScale.range()[1], rScale.range()[0]])
       } else if (orient === "top") {
         axisClassname += " top x"
         axisScale.range(rScale.range())
       } else if (orient === "bottom") {
         axisClassname += " bottom x"
-        axisPosition = [0, margin.top]
         axisScale.range(rScale.range())
       }
 
@@ -432,7 +433,6 @@ export const orFrameAxisGenerator = ({
         ticks: d.ticks,
         orient,
         size: adjustedSize,
-        margin,
         footer: d.footer,
         tickSize: d.tickSize
       })
@@ -450,7 +450,6 @@ export const orFrameAxisGenerator = ({
           key={d.key || `orframe-axis-${i}`}
           orient={orient}
           size={adjustedSize}
-          margin={margin}
           position={axisPosition}
           ticks={d.ticks}
           tickSize={d.tickSize}
@@ -508,7 +507,7 @@ export const orFrameAxisGenerator = ({
           <g
             key={`orframe-radial-axis-element-${t}`}
             className="axis axis-label axis-tick radial"
-            transform={`translate(${margin.left},0)`}
+            transform={`translate(0,0)`}
           >
             <path
               id={ref}
@@ -529,8 +528,7 @@ export const orFrameAxisGenerator = ({
     generatedAxis = (
       <g
         key={axis.key || `orframe-radial-axis-container`}
-        transform={`translate(${adjustedSize[0] / 2},${adjustedSize[1] / 2 +
-          margin.top})`}
+        transform={`translate(${adjustedSize[0] / 2},${adjustedSize[1] / 2})`}
       >
         {ticks}
       </g>

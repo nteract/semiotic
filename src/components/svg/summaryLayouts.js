@@ -27,7 +27,6 @@ export function boxplotRenderFn({
   positionFn = position => position,
   projection,
   adjustedSize,
-  margin,
   chartSize,
   baseMarkProps
 }) {
@@ -44,8 +43,8 @@ export function boxplotRenderFn({
 
     const thisSummaryData = summary.pieceData
 
-    const calculatedSummaryStyle = styleFn(thisSummaryData[0], summaryI)
-    const calculatedSummaryClass = classFn(thisSummaryData[0], summaryI)
+    const calculatedSummaryStyle = styleFn(thisSummaryData[0].data, summaryI)
+    const calculatedSummaryClass = classFn(thisSummaryData[0].data, summaryI)
 
     let summaryPositionNest,
       summaryValueNest,
@@ -81,7 +80,7 @@ export function boxplotRenderFn({
 
     const renderValue = renderMode ? renderMode(summary, summaryI) : undefined
 
-    summaryValueNest = thisSummaryData.map(p => p._orFV).sort((a, b) => a - b)
+    summaryValueNest = thisSummaryData.map(p => p.value).sort((a, b) => a - b)
 
     summaryValueNest = [
       quantile(summaryValueNest, 0.0),
@@ -93,7 +92,7 @@ export function boxplotRenderFn({
 
     if (projection === "vertical") {
       summaryPositionNest = thisSummaryData
-        .map(p => p._orFRVertical)
+        .map(p => p.scaledVerticalValue)
         .sort((a, b) => b - a)
 
       summaryPositionNest = [
@@ -142,7 +141,7 @@ export function boxplotRenderFn({
           key,
           summaryPieceName: "max",
           x: xPosition,
-          y: summaryPositionNest[4] + margin.top,
+          y: summaryPositionNest[4],
           value: summaryValueNest[4]
         },
         {
@@ -150,7 +149,7 @@ export function boxplotRenderFn({
           key,
           summaryPieceName: "q3area",
           x: xPosition,
-          y: summaryPositionNest[3] + margin.top,
+          y: summaryPositionNest[3],
           value: summaryValueNest[3]
         },
         {
@@ -158,7 +157,7 @@ export function boxplotRenderFn({
           key,
           summaryPieceName: "median",
           x: xPosition,
-          y: summaryPositionNest[2] + margin.top,
+          y: summaryPositionNest[2],
           value: summaryValueNest[2]
         },
         {
@@ -166,7 +165,7 @@ export function boxplotRenderFn({
           key,
           summaryPieceName: "q1area",
           x: xPosition,
-          y: summaryPositionNest[1] + margin.top,
+          y: summaryPositionNest[1],
           value: summaryValueNest[1]
         },
         {
@@ -174,13 +173,13 @@ export function boxplotRenderFn({
           key,
           summaryPieceName: "min",
           x: xPosition,
-          y: summaryPositionNest[0] + margin.top,
+          y: summaryPositionNest[0],
           value: summaryValueNest[0]
         }
       )
     } else if (projection === "horizontal") {
       summaryPositionNest = thisSummaryData
-        .map(p => p._orFR)
+        .map(p => p.scaledValue)
         .sort((a, b) => a - b)
 
       summaryPositionNest = [
@@ -269,7 +268,7 @@ export function boxplotRenderFn({
 
     if (projection === "radial") {
       summaryPositionNest = thisSummaryData
-        .map(p => p._orFR - margin.left)
+        .map(p => p.scaledValue)
         .sort((a, b) => a - b)
 
       summaryPositionNest = [
@@ -343,9 +342,9 @@ export function boxplotRenderFn({
       startAngle *= twoPI
       endAngle *= twoPI
 
-      const radialAdjustX = adjustedSize[0] / 2 + margin.left
+      const radialAdjustX = adjustedSize[0] / 2
 
-      const radialAdjustY = adjustedSize[1] / 2 + margin.top
+      const radialAdjustY = adjustedSize[1] / 2
 
       //        const bottomPoint = bottomLineArcGenerator.centroid({ startAngle, endAngle })
       //        const topPoint = topLineArcGenerator.centroid({ startAngle, endAngle })
@@ -640,7 +639,6 @@ export function contourRenderFn({
   classFn,
   projection,
   adjustedSize,
-  margin,
   chartSize,
   baseMarkProps
 }) {
@@ -664,8 +662,8 @@ export function contourRenderFn({
       data: projectedOrd,
       projectedX: "x",
       projectedY: "y",
-      finalXExtent: [0, adjustedSize[0] + margin.left + margin.right],
-      finalYExtent: [0, adjustedSize[1] + margin.top + margin.bottom]
+      finalXExtent: [0, adjustedSize[0]],
+      finalYExtent: [0, adjustedSize[1]]
     })
     const contourMarks = []
     oContours.forEach((d, i) => {
@@ -678,7 +676,7 @@ export function contourRenderFn({
             renderMode={renderValue}
             simpleInterpolate={true}
             key={`${i}-${ii}`}
-            style={styleFn(ordset.pieceData[0], ordsetI)}
+            style={styleFn(ordset.pieceData[0].data, ordsetI)}
             markType={"path"}
             d={`M${d.coordinates[0].map(p => p.join(",")).join("L")}Z`}
           />
@@ -700,7 +698,6 @@ function axisGenerator(axisProps, i, axisScale) {
       key={axisProps.key || `orframe-summary-axis-${i}`}
       orient={axisProps.orient}
       size={axisProps.size}
-      margin={{ top: 0, bottom: 0, left: 0, right: 0 }}
       ticks={axisProps.ticks}
       tickSize={axisProps.tickSize}
       tickFormat={axisProps.tickFormat}
@@ -723,7 +720,6 @@ export function bucketizedRenderingFn({
   classFn,
   projection,
   adjustedSize,
-  margin,
   chartSize,
   baseMarkProps
 }) {
@@ -767,10 +763,7 @@ export function bucketizedRenderingFn({
     const summaryPositionNest = thisSummaryData.sort(xySorting)
 
     const violinHist = histogram()
-    let binDomain =
-      projection === "vertical"
-        ? [margin.top, chartSize + margin.top]
-        : [margin.left, chartSize + margin.left]
+    let binDomain = projection === "vertical" ? [0, chartSize] : [0, chartSize]
 
     const binOffset = 0
     let binBuckets = []
@@ -782,8 +775,8 @@ export function bucketizedRenderingFn({
 
     const xyValue =
       projection === "vertical"
-        ? p => p.piece._orFRVertical
-        : p => p.piece._orFR
+        ? p => p.piece.scaledVerticalValue
+        : p => p.piece.scaledValue
 
     let calculatedBins
     if (type.useBins === false) {
@@ -832,20 +825,17 @@ export function bucketizedRenderingFn({
     const renderValue = renderMode && renderMode(summary, summaryI)
 
     const calculatedSummaryStyle = thisSummaryData[0]
-      ? styleFn(thisSummaryData[0].piece, summaryI)
+      ? styleFn(thisSummaryData[0].piece.data, summaryI)
       : {}
     const calculatedSummaryClass = thisSummaryData[0]
-      ? classFn(thisSummaryData[0].piece, summaryI)
+      ? classFn(thisSummaryData[0].piece.data, summaryI)
       : ""
 
     let translate = [summary.middle, 0]
     if (projection === "horizontal") {
       translate = [bucketSize, summary.middle]
     } else if (projection === "radial") {
-      translate = [
-        adjustedSize[0] / 2 + margin.left,
-        adjustedSize[1] / 2 + margin.top
-      ]
+      translate = [adjustedSize[0] / 2, adjustedSize[1] / 2]
     }
 
     const actualMax =
@@ -867,28 +857,27 @@ export function bucketizedRenderingFn({
         renderValue,
         summaryStyle: calculatedSummaryStyle,
         type,
-        margin,
         baseMarkProps
       })
       const tiles = mappedBars.marks
       if (projection === "radial") {
-        translate = [margin.left, margin.top]
+        translate = [0, 0]
       }
 
       if (type.axis && type.type === "histogram") {
-        let axisTranslate = `translate(${summary.x},${margin.top})`
+        let axisTranslate = `translate(${summary.x},0)`
         let axisDomain = [0, actualMax]
         if (projection === "horizontal") {
-          axisTranslate = `translate(${bucketSize + margin.left},${summary.x})`
+          axisTranslate = `translate(${bucketSize},${summary.x})`
           axisDomain = [actualMax, 0]
         } else if (projection === "radial") {
-          axisTranslate = `translate(${margin.left},${margin.top})`
+          axisTranslate = translate(0, 0)
         }
 
         const axisWidth =
           projection === "horizontal" ? adjustedSize[0] : columnWidth
         const axisHeight =
-          projection === "vertical" ? adjustedSize[1] - margin.top : columnWidth
+          projection === "vertical" ? adjustedSize[1] : columnWidth
         type.axis.size = [axisWidth, axisHeight]
         const axisScale = scaleLinear()
           .domain(axisDomain)
@@ -928,11 +917,6 @@ export function bucketizedRenderingFn({
       let violinPoints = []
 
       if (projection === "horizontal") {
-        violinArea
-          .x(d => d.x)
-          .y0(d => d.y0)
-          .y1(d => d.y1)
-
         bins.forEach(summaryPoint => {
           const xValue = summaryPoint.y - bucketSize / 2
           const yValue = summaryPoint.value / actualMax * columnWidth / 2
@@ -950,12 +934,17 @@ export function bucketizedRenderingFn({
             value: summaryPoint.value
           })
         })
-      } else if (projection === "vertical") {
         violinArea
-          .y(d => d.y)
-          .x0(d => d.x0)
-          .x1(d => d.x1)
-
+          .x(d => d.x)
+          .y0(d => d.y0)
+          .y1(d => d.y1)
+          .defined(
+            (d, i) =>
+              d.y0 !== 0 ||
+              ((violinPoints[i - 1] && violinPoints[i - 1].y0 !== 0) ||
+                (violinPoints[i + 1] && violinPoints[i + 1].y0 !== 0))
+          )
+      } else if (projection === "vertical") {
         bins.forEach(summaryPoint => {
           const yValue = summaryPoint.y + bucketSize / 2
           const xValue = summaryPoint.value / actualMax * columnWidth / 2
@@ -974,6 +963,16 @@ export function bucketizedRenderingFn({
             value: summaryPoint.value
           })
         })
+        violinArea
+          .y(d => d.y)
+          .x0(d => d.x0)
+          .x1(d => d.x1)
+          .defined(
+            (d, i) =>
+              d.x0 !== 0 ||
+              ((violinPoints[i - 1] && violinPoints[i - 1].x0 !== 0) ||
+                (violinPoints[i + 1] && violinPoints[i + 1].x0 !== 0))
+          )
       } else if (projection === "radial") {
         const angle = summary.pct - summary.pct_padding / 2
         const midAngle = summary.pct_middle
@@ -985,12 +984,12 @@ export function bucketizedRenderingFn({
             const outsidePoint = pointOnArcAtAngle(
               [0, 0],
               midAngle + angle * bin.value / actualMax / 2,
-              (bin.y + bin.y1 - margin.left - bucketSize / 2) / 2
+              (bin.y + bin.y1 - bucketSize / 2) / 2
             )
             const insidePoint = pointOnArcAtAngle(
               [0, 0],
               midAngle - angle * bin.value / actualMax / 2,
-              (bin.y + bin.y1 - margin.left - bucketSize / 2) / 2
+              (bin.y + bin.y1 - bucketSize / 2) / 2
             )
 
             //Ugh a terrible side effect has appeared
@@ -1097,7 +1096,7 @@ export function bucketizedRenderingFn({
         const angle = summary.pct - summary.pct_padding / 2
         const midAngle = summary.pct_start + summary.pct_padding / 2
 
-        translate = [margin.left, margin.top]
+        translate = [0, 0]
         joyPoints = joyBins
         joyArea = inbins => {
           const forward = []
@@ -1105,7 +1104,7 @@ export function bucketizedRenderingFn({
             const outsidePoint = pointOnArcAtAngle(
               [adjustedSize[0] / 2, adjustedSize[1] / 2],
               midAngle + angle * bin.value / actualMax,
-              (bin.y + bin.y1 - margin.left - bucketSize / 2) / 2
+              (bin.y + bin.y1 - bucketSize / 2) / 2
             )
             //Ugh a terrible side effect has appeared
             summaryXYCoords.push({
@@ -1151,7 +1150,6 @@ export const drawSummaries = ({
   positionFn,
   projection,
   adjustedSize,
-  margin,
   canvasRender,
   canvasDrawing,
   baseMarkProps
@@ -1170,7 +1168,6 @@ export const drawSummaries = ({
     positionFn,
     projection,
     adjustedSize,
-    margin,
     chartSize,
     canvasRender,
     canvasDrawing,

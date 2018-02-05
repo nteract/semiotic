@@ -180,7 +180,7 @@ function timeline({ data, rScale, adjustedSize, margin }) {
   keys.forEach(key => {
     //Only one piece of data per column though we'll render multiple graphical elements
     const column = data[key]
-    const president = column.pieceData[0]
+    const president = column.pieceData[0].data
 
     //Calculate individual start and width of each graphical band
     const birthDate = rScale(president.birth)
@@ -298,7 +298,7 @@ export default (annotations = "none") => {
     hoverAnnotation: true,
     annotations: wars,
     annotationSettings: {
-      layout: { type: "marginalia", orient: ["top", "right"], textPadding: 30 }
+      layout: { type: "marginalia", orient: "right", textPadding: 30 }
     },
     tooltipContent: d => (
       <div className="tooltip-content">
@@ -317,7 +317,7 @@ export default (annotations = "none") => {
       orient: "left",
       tickValues: [1750, 1800, 1850, 1900, 1950, 2000]
     },
-    margin: { left: 140, top: 100, bottom: 50, right: 140 }
+    margin: { left: 140, top: 10, bottom: 50, right: 50 }
   }
 
   return (
