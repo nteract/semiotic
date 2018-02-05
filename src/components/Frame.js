@@ -76,7 +76,6 @@ class Frame extends React.Component {
     const { voronoiHover } = this.state
 
     const areaAnnotations = []
-    let annotationLayer = null
 
     let totalAnnotations = annotations
       ? [...annotations, ...areaAnnotations]
@@ -125,6 +124,7 @@ class Frame extends React.Component {
         />
       )
     }
+
     return (
       <SpanOrDiv
         span={useSpans}
@@ -133,9 +133,14 @@ class Frame extends React.Component {
           background: "none"
         }}
       >
-        <SpanOrDiv span={useSpans} className={`${name} frame-before-elements`}>
-          {beforeElements}
-        </SpanOrDiv>
+        {beforeElements && (
+          <SpanOrDiv
+            span={useSpans}
+            className={`${name} frame-before-elements`}
+          >
+            {beforeElements}
+          </SpanOrDiv>
+        )}
         <SpanOrDiv
           span={useSpans}
           className="frame-elements"
@@ -164,7 +169,7 @@ class Frame extends React.Component {
               height={size[1]}
             >
               {finalFilterDefs}
-              <g>{backgroundGraphics}</g>
+              {backgroundGraphics && <g>{backgroundGraphics}</g>}
               <VisualizationLayer
                 disableContext={this.props.disableContext}
                 renderPipeline={renderPipeline}
@@ -185,10 +190,12 @@ class Frame extends React.Component {
                 canvasPostProcess={canvasPostProcess}
                 baseMarkProps={baseMarkProps}
               />
-              <g>
-                {title}
-                {foregroundGraphics}
-              </g>
+              {(title || foregroundGraphics) && (
+                <g>
+                  {title}
+                  {foregroundGraphics && <g>{foregroundGraphics}</g>}
+                </g>
+              )}
             </svg>
           </SpanOrDiv>
           <InteractionLayer
@@ -218,10 +225,12 @@ class Frame extends React.Component {
           />
           {annotationLayer}
         </SpanOrDiv>
-        <SpanOrDiv span={useSpans} className={`${name} frame-after-elements`}>
-          {downloadButton}
-          {afterElements}
-        </SpanOrDiv>
+        {(downloadButton || afterElements) && (
+          <SpanOrDiv span={useSpans} className={`${name} frame-after-elements`}>
+            {downloadButton}
+            {afterElements}
+          </SpanOrDiv>
+        )}
       </SpanOrDiv>
     )
   }

@@ -82,7 +82,7 @@ function mapParentsToPoints(fullDataset) {
 class XYFrame extends React.Component {
   static defaultProps = {
     annotations: [],
-    foregroundGraphics: [],
+    foregroundGraphics: undefined,
     annotationSettings: {},
     size: [500, 500],
     className: "",
