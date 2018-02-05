@@ -465,8 +465,7 @@ const exampleAnnotations = [
     dx: -30,
     dy: 0,
     type: "react-annotation",
-    note: { title: "Note at 4,300" },
-    subject: { text: "A", radius: 12 }
+    note: { title: "Note at 4,300" }
   },
   {
     className: "annotation-class-2",
@@ -475,8 +474,7 @@ const exampleAnnotations = [
     dx: -30,
     dy: 0,
     type: "react-annotation",
-    note: { title: "Note at 5,1000" },
-    subject: { text: "B", radius: 12 }
+    note: { title: "Note at 5,1000" }
   },
   {
     px: 7,
@@ -484,8 +482,7 @@ const exampleAnnotations = [
     dx: 30,
     dy: -50,
     type: AnnotationCalloutElbow,
-    note: { title: "linedata-1 at 7" },
-    subject: { text: "C", radius: 12 }
+    note: { title: "linedata-1 at 7" }
   },
   {
     px: 10,
@@ -493,8 +490,7 @@ const exampleAnnotations = [
     dx: 30,
     dy: -50,
     type: AnnotationCalloutElbow,
-    note: { title: "linedata-2 at 10" },
-    subject: { text: "D", radius: 12 }
+    note: { title: "linedata-2 at 10" }
   },
   {
     px: 12,
@@ -502,8 +498,7 @@ const exampleAnnotations = [
     dx: 30,
     dy: -50,
     type: AnnotationCalloutElbow,
-    note: { title: "linedata-3 at 12" },
-    subject: { text: "E", radius: 12 }
+    note: { title: "linedata-3 at 12" }
   }
 ]
 
@@ -655,7 +650,7 @@ export default class XYFrameDocs extends React.Component {
       axes: "basic",
       renderMode: "none",
       defined: "active",
-      hoverAnnotation: "on",
+      hoverAnnotation: "off",
       canvasRender: "none",
       frame: "XYFrame",
       fixedExtent: "none",
@@ -1179,7 +1174,10 @@ export default class XYFrameDocs extends React.Component {
                   annotations:
                     this.state.annotations === "on"
                       ? finalAnnotations.map(d =>
-                          Object.assign({}, d, { type: AnnotationBadge })
+                          Object.assign({}, d, {
+                            type: AnnotationBadge,
+                            subject: { text: "A", radius: 12 }
+                          })
                         )
                       : undefined
                 }

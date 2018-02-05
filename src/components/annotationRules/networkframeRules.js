@@ -5,7 +5,13 @@ import { packEnclose } from "d3-hierarchy"
 import { circleEnclosure, rectangleEnclosure } from "./baseRules"
 
 export const htmlFrameHoverRule = ({ d, i, tooltipContent, size }) => {
-  let content = (
+  let content = d.edge ? (
+    <div className="tooltip-content">
+      <p key="html-annotation-content-1">
+        {d.edge.source.id} tp {d.edge.target.id}
+      </p>
+    </div>
+  ) : (
     <div className="tooltip-content">
       <p key="html-annotation-content-1">{d.id}</p>
       <p key="html-annotation-content-2">Degree: {d.degree}</p>
