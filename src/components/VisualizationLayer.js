@@ -206,11 +206,7 @@ class VisualizationLayer extends React.PureComponent {
 
     const renderedVisualizationLayer = (renderedAxes ||
       renderedAxesTickLines ||
-      renderedDataVisualization) && [
-      renderedAxesTickLines,
-      renderedDataVisualization,
-      matte
-    ]
+      renderedDataVisualization) && [renderedDataVisualization, matte]
 
     return renderedVisualizationLayer
   }

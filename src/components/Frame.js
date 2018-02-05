@@ -89,41 +89,39 @@ class Frame extends React.Component {
       }
     }
 
-    if (totalAnnotations || legendSettings) {
-      annotationLayer = (
-        <AnnotationLayer
-          legendSettings={legendSettings}
-          margin={margin}
-          axes={axes}
-          annotationHandling={annotationSettings.layout}
-          pointSizeFunction={annotationSettings.pointSizeFunction}
-          labelSizeFunction={annotationSettings.labelSizeFunction}
-          annotations={totalAnnotations}
-          svgAnnotationRule={(d, i, thisALayer) =>
-            defaultSVGRule({
-              d,
-              i,
-              annotationLayer: thisALayer,
-              ...renderPipeline
-            })
-          }
-          htmlAnnotationRule={(d, i, thisALayer) =>
-            defaultHTMLRule({
-              d,
-              i,
-              annotationLayer: thisALayer,
-              ...renderPipeline
-            })
-          }
-          useSpans={useSpans}
-          size={adjustedSize}
-          position={[
-            adjustedPosition[0] + margin.left,
-            adjustedPosition[1] + margin.top
-          ]}
-        />
-      )
-    }
+    const annotationLayer = (totalAnnotations || legendSettings) && (
+      <AnnotationLayer
+        legendSettings={legendSettings}
+        margin={margin}
+        axes={axes}
+        annotationHandling={annotationSettings.layout}
+        pointSizeFunction={annotationSettings.pointSizeFunction}
+        labelSizeFunction={annotationSettings.labelSizeFunction}
+        annotations={totalAnnotations}
+        svgAnnotationRule={(d, i, thisALayer) =>
+          defaultSVGRule({
+            d,
+            i,
+            annotationLayer: thisALayer,
+            ...renderPipeline
+          })
+        }
+        htmlAnnotationRule={(d, i, thisALayer) =>
+          defaultHTMLRule({
+            d,
+            i,
+            annotationLayer: thisALayer,
+            ...renderPipeline
+          })
+        }
+        useSpans={useSpans}
+        size={adjustedSize}
+        position={[
+          adjustedPosition[0] + margin.left,
+          adjustedPosition[1] + margin.top
+        ]}
+      />
+    )
 
     return (
       <SpanOrDiv
