@@ -83,6 +83,23 @@ import {
   svgRectEncloseRule
 } from "./annotationRules/networkframeRules"
 
+const basicMiddle = d => ({
+  edge: d,
+  x: (d.source.x + d.target.x) / 2,
+  y: (d.source.y + d.target.y) / 2
+})
+
+const edgePointHash = {
+  sankey: d => ({
+    edge: d,
+    x: (d.source.x1 + d.target.x0) / 2,
+    y: (d.source.y0 + d.target.y0) / 2
+  }),
+  force: basicMiddle,
+  tree: basicMiddle,
+  cluster: basicMiddle
+}
+
 const hierarchicalTypeHash = {
   dendrogram: tree,
   tree,
@@ -404,7 +421,12 @@ class NetworkFrame extends React.Component {
     } = currentProps
     //    const eventListenersGenerator = generatenetworkFrameEventListeners(customHoverBehavior, customClickBehavior)
 
-    let { edgeType, customNodeIcon, customEdgeIcon } = currentProps
+    let {
+      edgeType,
+      customNodeIcon,
+      customEdgeIcon,
+      hoverAnnotation
+    } = currentProps
 
     let networkSettings
 
@@ -1134,6 +1156,21 @@ class NetworkFrame extends React.Component {
       })
     }
 
+    let projectedXYPoints
+
+    if (hoverAnnotation === "edge" && edgePointHash[networkSettings.type]) {
+      projectedXYPoints = projectedEdges.map(
+        edgePointHash[networkSettings.type]
+      )
+    } else if (hoverAnnotation === true || hoverAnnotation === "node") {
+      projectedXYPoints = projectedNodes
+    } else if (hoverAnnotation === "all") {
+      projectedXYPoints = [
+        ...projectedEdges.map(edgePointHash[networkSettings.type]),
+        ...projectedNodes
+      ]
+    }
+
     this.setState({
       voronoiHover: null,
       adjustedPosition: adjustedPosition,
@@ -1146,6 +1183,7 @@ class NetworkFrame extends React.Component {
       edgeData: null,
       projectedNodes,
       projectedEdges,
+      projectedXYPoints,
       nodeIDAccessor,
       sourceAccessor,
       targetAccessor,
@@ -1264,6 +1302,8 @@ class NetworkFrame extends React.Component {
       backgroundGraphics,
       foregroundGraphics,
       projectedNodes,
+      projectedEdges,
+      projectedXYPoints,
       margin,
       legendSettings,
       adjustedPosition,
@@ -1328,7 +1368,7 @@ class NetworkFrame extends React.Component {
         projectedCoordinateNames={projectedCoordinateNames}
         defaultSVGRule={this.defaultNetworkSVGRule.bind(this)}
         defaultHTMLRule={this.defaultNetworkHTMLRule.bind(this)}
-        hoverAnnotation={hoverAnnotation}
+        hoverAnnotation={!!hoverAnnotation}
         annotations={[...annotations, ...nodeLabelAnnotations]}
         annotationSettings={annotationSettings}
         legendSettings={legendSettings}
@@ -1336,7 +1376,7 @@ class NetworkFrame extends React.Component {
         customClickBehavior={customClickBehavior}
         customHoverBehavior={customHoverBehavior}
         customDoubleClickBehavior={customDoubleClickBehavior}
-        points={projectedNodes}
+        points={projectedXYPoints}
         margin={margin}
         backgroundGraphics={backgroundGraphics}
         foregroundGraphics={foregroundGraphics}
@@ -1388,7 +1428,8 @@ NetworkFrame.propTypes = {
     PropTypes.object,
     PropTypes.array,
     PropTypes.func,
-    PropTypes.bool
+    PropTypes.bool,
+    PropTypes.string
   ]),
   canvasPostProcess: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
   backgroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),

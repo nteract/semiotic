@@ -201,7 +201,7 @@ const styles = theme => ({
 
 class Documentation extends React.Component {
   state = {
-    open: false
+    open: true
   }
 
   handleDrawerOpen = () => {

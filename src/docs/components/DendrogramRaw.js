@@ -26,7 +26,7 @@ export default ({
       opacity: 0.5
     }),
     nodeIDAccessor: "name",
-    hoverAnnotation: true,
+    hoverAnnotation: "edge",
     networkType: {
       type,
       projection: projection,
@@ -36,12 +36,19 @@ export default ({
       padding: type === "treemap" ? 3 : type === "circlepack" ? 2 : 0,
       hierarchySum: d => d.blockCalls
     },
-    tooltipContent: d => (
-      <div className="tooltip-content">
-        {d.parent ? <p>{d.parent.data.name}</p> : undefined}
-        <p>{d.data.name}</p>
-      </div>
-    ),
+    tooltipContent: d => {
+      return d.edge ? (
+        <div className="tooltip-content">
+          <p>{d.edge.source.name}</p>
+          <p>{d.edge.target.name}</p>
+        </div>
+      ) : (
+        <div className="tooltip-content">
+          {d.parent ? <p>{d.parent.data.name}</p> : undefined}
+          <p>{d.data.name}</p>
+        </div>
+      )
+    },
     annotations: [
       {
         type: annotation === "rectangle" ? "enclose-rect" : "enclose",
