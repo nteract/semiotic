@@ -167,7 +167,15 @@ class VisualizationLayer extends React.PureComponent {
 
   render() {
     const props = this.props
-    const { matte, matteClip, axes, axesTickLines, frameKey, position } = props
+    const {
+      matte,
+      matteClip,
+      axes,
+      axesTickLines,
+      frameKey,
+      position,
+      margin
+    } = props
     const { renderedElements } = this.state
 
     const renderedAxes = axes && (
@@ -188,6 +196,7 @@ class VisualizationLayer extends React.PureComponent {
           clipPath={
             matteClip && matte ? `url(#matte-clip${frameKey})` : undefined
           }
+          transform={`translate(${margin.left},${margin.top})`}
         >
           {renderedAxesTickLines}
           {renderedElements}

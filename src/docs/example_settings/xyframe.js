@@ -104,7 +104,7 @@ const borderCutLine = ({ d, i, xScale, yScale }) => {
         return { fill: "none", stroke: "gray", strokeOpacity: lineOpacity / 4 }
       }}
       searchIterations={20}
-      customAccessors={{ x: d => xScale(d._xyfX), y: d => yScale(d._xyfY) }}
+      customAccessors={{ x: d => xScale(d.x), y: d => yScale(d.y) }}
       forceUpdate={true}
       lineDataAccessor={d => d.data}
       interpolate={curveMonotoneX}
@@ -134,8 +134,8 @@ const lineAnnotater = ({ d, xScale, yScale }) => {
     return null
   }
   const lineRenderer = line()
-    .x(d => xScale(d._xyfX))
-    .y(d => yScale(d._xyfY))
+    .x(d => xScale(d.x))
+    .y(d => yScale(d.y))
     .curve(curveMonotoneX)
 
   return d.coincidentPoints.map((p, q) => {
@@ -200,15 +200,15 @@ export const regionatedLineChart = {
   yAccessor: d => d.delta,
   margin: { top: 35, right: 30, left: 60, bottom: 50 },
   customLineMark: borderCutLine,
-  customPointMark: d => <Mark markType="circle" r={0} />,
+  customPointMark: d => <Mark markType="circle" r={2} />,
   showLinePoints: true,
   //    pointStyle: (d,i) => ({ stroke: d.value < bounds.bounding[d.step].bottom ? blue : d.value > bounds.bounding[d.step].top ? red : "none", fill: "none", strokeWidth: "1px", strokeOpacity: 0.1 }),
   pointStyle: (d, i) => ({
     stroke:
       d.delta < d.bottomDelta ? blue : d.delta > d.topDelta ? red : "none",
-    fill: d.delta < d.bottomDelta ? blue : d.delta > d.topDelta ? red : "none",
-    strokeWidth: "1px",
-    strokeOpacity: 0.1
+    fill: "none",
+    strokeWidth: 1,
+    strokeOpacity: 0.5
   }),
   areaStyle: () => ({
     fillOpacity: 0.15,

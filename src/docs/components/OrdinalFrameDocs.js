@@ -544,7 +544,7 @@ export default class OrdinalFrameDocs extends React.Component {
     ]
 
     const axis = {
-      orient: "left",
+      orient: "top",
       tickFormat: d => d,
       label: {
         name: "axis label",

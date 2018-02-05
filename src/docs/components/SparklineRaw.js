@@ -72,6 +72,7 @@ export default (type = "stackedarea") => {
         charts like{" "}
         <SparkXYFrame
           {...negativeChart}
+          lineRenderMode="sketchy"
           lineType="line"
           lines={[generatedData[0]]}
           hoverAnnotation={true}
@@ -89,6 +90,8 @@ export default (type = "stackedarea") => {
             { source: "a", target: "i" },
             { source: "a", target: "j" }
           ]}
+          edgeRenderMode="sketchy"
+          nodeRenderMode="sketchy"
           edgeStyle={{ stroke: "black" }}
           nodeStyle={d => ({
             fill: d.id === "a" ? "#00a2ce" : "black",
@@ -123,6 +126,8 @@ export default (type = "stackedarea") => {
           size={[50, 100]}
           style={{ fill: "#b6a756" }}
           type="bar"
+          renderMode="sketchy"
+          summaryRenderMode="sketchy"
         />{" "}
         , and naturally that means it could be a
         <SparkOrdinalFrame
@@ -132,6 +137,8 @@ export default (type = "stackedarea") => {
           oAccessor="s"
           rAccessor="v"
           type="bar"
+          renderMode="sketchy"
+          summaryRenderMode="sketchy"
         />, too. And though they're pretty complex shapes for such small area, a
         <SparkOrdinalFrame
           data={summarySample}
@@ -139,6 +146,8 @@ export default (type = "stackedarea") => {
           oAccessor={d => (d.o === "a" ? "a" : "o")}
           rAccessor="v"
           oPadding={2}
+          renderMode="sketchy"
+          summaryRenderMode="sketchy"
           summaryStyle={{
             fill: "#b6a756",
             stroke: "#b6a756",
@@ -154,6 +163,8 @@ export default (type = "stackedarea") => {
           oAccessor="-"
           rAccessor="v"
           oPadding={3}
+          renderMode="sketchy"
+          summaryRenderMode="sketchy"
           summaryStyle={{
             fill: "#b6a756",
             stroke: "#b6a756",
@@ -168,6 +179,8 @@ export default (type = "stackedarea") => {
           oAccessor="-"
           rAccessor="v"
           oPadding={3}
+          renderMode="sketchy"
+          summaryRenderMode="sketchy"
           summaryStyle={{
             fill: "#b6a756",
             stroke: "#b6a756",
@@ -182,6 +195,8 @@ export default (type = "stackedarea") => {
           oAccessor="-"
           rAccessor="v"
           oPadding={3}
+          renderMode="sketchy"
+          summaryRenderMode="sketchy"
           summaryStyle={{
             fill: "#b6a756",
             stroke: "#b6a756",
@@ -207,6 +222,8 @@ export default (type = "stackedarea") => {
             { source: "g", target: "i", value: 2 },
             { source: "g", target: "j", value: 2 }
           ]}
+          edgeRenderMode="sketchy"
+          nodeRenderMode="sketchy"
           edgeStyle={{ fill: "#007190" }}
           networkType={{ type: "sankey" }}
           nodeStyle={d => ({
@@ -231,6 +248,8 @@ export default (type = "stackedarea") => {
           edgeStyle={{ stroke: "#007190" }}
           networkType={{ type: "dendrogram" }}
           margin={4}
+          edgeRenderMode="sketchy"
+          nodeRenderMode="sketchy"
           nodeStyle={d => ({
             fill: "#00a2ce",
             stroke: "black"
@@ -251,6 +270,8 @@ export default (type = "stackedarea") => {
             fill: stackedColors[d.source.id],
             opacity: 0.5
           })}
+          edgeRenderMode="sketchy"
+          nodeRenderMode="sketchy"
           networkType={{ type: "chord", padAngle: 0.3 }}
           nodeStyle={d => ({
             fill: stackedColors[d.id],

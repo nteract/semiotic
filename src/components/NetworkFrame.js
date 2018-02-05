@@ -489,14 +489,8 @@ class NetworkFrame extends React.Component {
           const layoutSize =
             networkSettings.projection === "horizontal" &&
             hierarchicalProjectable[networkSettings.type]
-              ? [
-                  size[1] - margin.top - margin.bottom,
-                  size[0] - margin.right - margin.left
-                ]
-              : [
-                  size[0] - margin.right - margin.left,
-                  size[1] - margin.top - margin.bottom
-                ]
+              ? [adjustedSize[1], adjustedSize[0]]
+              : adjustedSize
           if (!networkSettings.nodeSize) {
             hierarchicalLayout.size(layoutSize)
           }
@@ -603,14 +597,8 @@ class NetworkFrame extends React.Component {
         customNodeIcon = hierarchicalCustomNodeHash[networkSettings.type]
         customEdgeIcon = () => null
       }
-      const radialSize = [
-        size[0] - margin.left - margin.right,
-        size[1] - margin.top - margin.bottom
-      ]
-      const radialCenter = [
-        radialSize[0] / 2 + margin.left,
-        radialSize[1] / 2 + margin.top
-      ]
+      const radialSize = adjustedSize
+      const radialCenter = [radialSize[0] / 2, radialSize[1] / 2]
       if (
         (networkSettings.type === "partition" ||
           networkSettings.type === "treemap") &&
@@ -629,16 +617,16 @@ class NetworkFrame extends React.Component {
           networkSettings.projection === "horizontal"
         ) {
           const ox = node.x
-          node.x = node.y + margin.left
-          node.y = ox + margin.top
+          node.x = node.y
+          node.y = ox
 
           if (node.x0 !== undefined) {
             const ox0 = node.x0
             const ox1 = node.x1
-            node.x0 = node.y0 + margin.left
-            node.x1 = node.y1 + margin.left
-            node.y0 = ox0 + margin.top
-            node.y1 = ox1 + margin.top
+            node.x0 = node.y0
+            node.x1 = node.y1
+            node.y0 = ox0
+            node.y1 = ox1
           }
         } else if (
           radialProjectable[networkSettings.type] &&
@@ -652,13 +640,13 @@ class NetworkFrame extends React.Component {
           node.x = radialPoint[0]
           node.y = radialPoint[1]
         } else {
-          node.x = node.x + margin.left
-          node.y = node.y + margin.top
+          node.x = node.x
+          node.y = node.y
           if (node.x0 !== undefined) {
-            node.x0 = node.x0 + margin.left
-            node.x1 = node.x1 + margin.left
-            node.y0 = node.y0 + margin.top
-            node.y1 = node.y1 + margin.top
+            node.x0 = node.x0
+            node.x1 = node.x1
+            node.y0 = node.y0
+            node.y1 = node.y1
           }
         }
       })
@@ -729,10 +717,7 @@ class NetworkFrame extends React.Component {
         const actualSankey = customSankey || sankey
 
         const frameSankey = actualSankey()
-          .extent([
-            [margin.left, margin.top],
-            [size[0] - margin.right, size[1] - margin.top]
-          ])
+          .extent([[0, 0], adjustedSize])
           .links(projectedEdges)
           .nodes(projectedNodes)
           .nodeAlign(sankeyOrient)
@@ -836,12 +821,12 @@ class NetworkFrame extends React.Component {
         )
         const projectionScaleX = scaleLinear()
           .domain([xMin, xMax])
-          .range([margin.left, size[0] - margin.right])
+          .range([0, adjustedSize[0]])
         const projectionScaleY = scaleLinear()
           .domain([yMin, yMax])
-          .range([margin.top, size[1] - margin.bottom])
-        const xMod = (size[0] - margin.right) / xMax
-        const yMod = (size[1] - margin.bottom) / yMax
+          .range([0, adjustedSize[1]])
+        const xMod = adjustedSize[0] / xMax
+        const yMod = adjustedSize[1] / yMax
 
         const sizeMod = Math.min(xMod, yMod) * 1.2
         projectedNodes.forEach(node => {
@@ -1050,10 +1035,10 @@ class NetworkFrame extends React.Component {
 
       const projectionScaleX = scaleLinear()
         .domain([xMin, xMax])
-        .range([margin.left, size[0] - margin.right])
+        .range([0, adjustedSize[0]])
       const projectionScaleY = scaleLinear()
         .domain([yMin, yMax])
-        .range([margin.top, size[1] - margin.bottom])
+        .range([0, adjustedSize[1]])
       projectedNodes.forEach(node => {
         node.x = projectionScaleX(node.x)
         node.y = projectionScaleY(node.y)

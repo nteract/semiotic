@@ -16,7 +16,8 @@ const divStackedBarChart = {
   oLabel: (d, column, i) => (
     <g>
       <rect
-        width={620}
+        x={3}
+        width={570}
         height={50}
         y={-25}
         style={{
@@ -34,7 +35,8 @@ const divStackedBarChart = {
   axis: {
     orient: "top",
     tickValues: [-0.3, -0.15, 0, 0.2, 0.4, 0.6, 0.8, 1]
-  }
+  },
+  hoverAnnotation: true
 }
 
 export default (

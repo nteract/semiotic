@@ -6,7 +6,7 @@ const testData = [
   {
     id: "linedata-1",
     color: "#00a2ce",
-    data: [
+    coordinates: [
       { sales: 5, leads: 150, x: 1 },
       { sales: 7, leads: 100, x: 2 },
       { sales: 7, leads: 112, x: 3 },
@@ -20,14 +20,14 @@ const testData = [
 
 let displayData = testData.map(d => {
   let moreData = [
-    ...d.data,
-    ...d.data.map(p => ({
+    ...d.coordinates,
+    ...d.coordinates.map(p => ({
       sales: p.sales + Math.random() * 5,
       leads: p.leads + Math.random() * 100,
       x: p.x + 7
     }))
   ]
-  return Object.assign(d, { data: moreData })
+  return Object.assign(d, { coordinates: moreData })
 })
 
 const axes = [
@@ -67,7 +67,7 @@ export default (
       <OrdinalFrame
         {...sharedProps}
         className="bar-line-or"
-        data={displayData[0].data}
+        data={displayData[0].coordinates}
         type={"bar"}
         renderMode={"sketchy"}
         oAccessor={d => d.x}
@@ -82,11 +82,10 @@ export default (
         className="bar-line-xy"
         axes={axes}
         lines={displayData}
-        lineDataAccessor={d => d.data}
         lineRenderMode={"sketchy"}
-        xAccessor={d => d.x}
-        yAccessor={d => d.sales}
-        lineStyle={() => ({ stroke: "#00a2ce", strokeWidth: "3px" })}
+        xAccessor={"x"}
+        yAccessor={"sales"}
+        lineStyle={{ stroke: "#00a2ce", strokeWidth: "3px" }}
         lineType={{ type: "line", interpolator: curveBasis }}
       />
     </div>

@@ -130,10 +130,9 @@ class OrdinalFrame extends React.Component {
       customClickBehavior
     )
 
-    const barData = keyAndObjectifyBarData(currentProps)
-
     const oAccessor = stringToFn(currentProps.oAccessor, d => d.renderKey)
     const rAccessor = stringToFn(currentProps.rAccessor, d => d.value || 1)
+    const renderKeyFn = stringToFn(currentProps.renderKey, (d, i) => i)
 
     const connectorStyle = stringToFn(
       currentProps.connectorStyle,
@@ -147,7 +146,9 @@ class OrdinalFrame extends React.Component {
     const summaryPosition =
       currentProps.summaryPosition || (position => position)
 
-    let allData = [...barData]
+    const barData = keyAndObjectifyBarData(currentProps)
+
+    let allData = barData.map(d => d.data)
 
     //      const dataAccessor = currentProps.dataAccessor || function (d) {return d}
     const margin = calculateMargin(currentProps)
@@ -276,12 +277,12 @@ class OrdinalFrame extends React.Component {
       rExtent = [rExtent[1], rExtent[0]]
     }
 
-    let rDomain = [margin.left, adjustedSize[0] + margin.left]
-    let oDomain = [margin.top, adjustedSize[1] + margin.top]
+    let rDomain = [0, adjustedSize[0]]
+    let oDomain = [0, adjustedSize[1]]
 
     if (projection === "vertical") {
-      oDomain = [margin.left, adjustedSize[0] + margin.left]
-      rDomain = [margin.top, adjustedSize[1] + margin.top]
+      oDomain = [0, adjustedSize[0]]
+      rDomain = [0, adjustedSize[1]]
     }
 
     const oScaleType = currentProps.oScaleType || scaleBand
@@ -295,21 +296,21 @@ class OrdinalFrame extends React.Component {
       let columnValueCreator
       if (typeof currentProps.dynamicColumnWidth === "string") {
         columnValueCreator = d =>
-          sum(d.map(p => p[currentProps.dynamicColumnWidth]))
+          sum(d.map(p => p.data[currentProps.dynamicColumnWidth]))
       } else {
-        columnValueCreator = currentProps.dynamicColumnWidth
+        columnValueCreator = d =>
+          currentProps.dynamicColumnWidth(d.map(p => p.data))
       }
-      const thresholdDomain =
-        projection === "vertical" ? [margin.left] : [margin.top]
+      const thresholdDomain = [0]
       let maxColumnValues = 0
       const columnValues = []
 
       oExtent.forEach((d, i) => {
-        const oValue = columnValueCreator(
-          barData.filter((p, q) => oAccessor(p, q) === d)
-        )
-        columnValues.push(oValue)
-        maxColumnValues += oValue
+        const oValues = barData.filter((p, q) => oAccessor(p.data, q) === d)
+        const columnValue = columnValueCreator(oValues)
+
+        columnValues.push(columnValue)
+        maxColumnValues += columnValue
       })
 
       cwHash = { total: 0 }
@@ -355,15 +356,15 @@ class OrdinalFrame extends React.Component {
     let pieceData = [],
       mappedMiddles
 
-    let mappedMiddleSize = adjustedSize[1] + margin.top
+    let mappedMiddleSize = adjustedSize[1]
     if (projection === "vertical") {
-      mappedMiddleSize = adjustedSize[0] + margin.left
+      mappedMiddleSize = adjustedSize[0]
     }
     mappedMiddles = this.mappedMiddles(oScale, mappedMiddleSize, padding)
 
     const nestedPieces = {}
     nest()
-      .key(oAccessor)
+      .key((d, i) => oAccessor(d.data, i))
       .entries(barData)
       .forEach(d => {
         nestedPieces[d.key] = d.values
@@ -376,59 +377,55 @@ class OrdinalFrame extends React.Component {
     oExtent.forEach((o, i) => {
       projectedColumns[o] = { name: o, padding, pieceData: pieceData[i] }
       projectedColumns[o].x = oScale(o) + padding / 2
-      projectedColumns[o].y =
-        projection === "vertical" ? margin.top : margin.left
+      projectedColumns[o].y = 0
       projectedColumns[o].middle = mappedMiddles[o] + padding / 2
 
       let negativeOffset = zeroValue
       let positiveOffset = zeroValue
 
       projectedColumns[o].pieceData.forEach(piece => {
-        const pieceValue = rAccessor(piece)
         let valPosition
+        piece.value = rAccessor(piece.data)
 
         if (pieceType.type === "timeline") {
-          valPosition = rScale(pieceValue[0])
-          const endPosition = rScale(pieceValue[1])
-          piece._orFRVertical = rScaleVertical(pieceValue[0])
-          piece._orFR = valPosition
-          piece._orFREnd = endPosition
-          piece._orFRZ = rScaleVertical(0) - piece._orFRVertical
+          piece.scaledValue = rScale(piece.value[0])
+          piece.scaledEndValue = rScale(piece.value[1])
+          piece.scaledVerticalValue = rScaleVertical(piece.value[0])
+          piece.scaledZeroOffset = rScaleVertical(0) - piece.scaledVerticalValue
         } else if (
           pieceType.type !== "bar" &&
           pieceType.type !== "clusterbar"
         ) {
-          valPosition = rScale(pieceValue)
-          piece._orFR = valPosition
-          piece._orFRVertical = rScaleVertical(pieceValue)
-          piece._orFRZ = valPosition - zeroValue
+          piece.scaledValue = rScale(piece.value)
+          piece.scaledVerticalValue = rScaleVertical(piece.value)
+          piece.scaledZeroOffset = piece.scaledValue - zeroValue
         } else {
           valPosition =
             projection === "vertical"
-              ? rScaleReverse(rScale(pieceValue))
-              : rScale(pieceValue)
-          piece._orFR = Math.abs(zeroValue - valPosition)
-          piece._orFRZ = valPosition - zeroValue
+              ? rScaleReverse(rScale(piece.value))
+              : rScale(piece.value)
+          piece.scaledValue = Math.abs(zeroValue - valPosition)
+          piece.scaledZeroOffset = valPosition - zeroValue
         }
-        piece._orFV = pieceValue
-        piece._orFX = projectedColumns[o].x
-        if (pieceValue >= 0) {
-          piece._orFRBase = zeroValue
-          piece._orFRBottom = positiveOffset
-          piece._orFRMiddle = piece._orFR / 2 + positiveOffset
+
+        piece.x = projectedColumns[o].x
+        if (piece.value >= 0) {
+          piece.base = zeroValue
+          piece.bottom = positiveOffset
+          piece.middle = piece.scaledValue / 2 + positiveOffset
           positiveOffset =
             projection === "vertical"
-              ? positiveOffset - piece._orFR
-              : positiveOffset + piece._orFR
+              ? positiveOffset - piece.scaledValue
+              : positiveOffset + piece.scaledValue
           piece.negative = false
         } else {
-          piece._orFRBase = zeroValue
-          piece._orFRBottom = negativeOffset
-          piece._orFRMiddle = positiveOffset - piece._orFR / 2
+          piece.base = zeroValue
+          piece.bottom = negativeOffset
+          piece.middle = positiveOffset - piece.scaledValue / 2
           negativeOffset =
             projection === "vertical"
-              ? negativeOffset + piece._orFR
-              : negativeOffset - piece._orFR
+              ? negativeOffset + piece.scaledValue
+              : negativeOffset - piece.scaledValue
           piece.negative = true
         }
       })
@@ -488,10 +485,7 @@ class OrdinalFrame extends React.Component {
           startAngle: startAngle * twoPI,
           endAngle: endAngle * twoPI
         })
-        const translate = [
-          adjustedSize[0] / 2 + margin.left,
-          adjustedSize[1] / 2 + margin.top
-        ]
+        const translate = [adjustedSize[0] / 2, adjustedSize[1] / 2]
         const centroid = arcGenerator.centroid({
           startAngle: startAngle * twoPI,
           endAngle: endAngle * twoPI
@@ -538,9 +532,9 @@ class OrdinalFrame extends React.Component {
         if (projection === "horizontal") {
           yPosition = projectedColumns[d].middle
           if (labelSettings.orient === "right") {
-            xPosition = margin.left + adjustedSize[0] + 3
+            xPosition = adjustedSize[0] + 3
           } else {
-            xPosition = margin.left - 3
+            xPosition = -3
           }
         } else if (projection === "radial") {
           xPosition = pieArcs[i].centroid[0] + pieArcs[i].translate[0]
@@ -566,27 +560,33 @@ class OrdinalFrame extends React.Component {
       if (projection === "vertical") {
         let labelY
         if (labelSettings.orient === "top") {
-          labelY = margin.top - 15
+          labelY = -15
         } else {
           labelY = 15 + rScale.range()[1]
         }
         oLabels = (
           <g
             key="orframe-labels-container"
-            transform={`translate(0,${labelY})`}
+            transform={`translate(${margin.left},${labelY + margin.top})`}
           >
             {labelArray}
           </g>
         )
       } else if (projection === "horizontal") {
         oLabels = (
-          <g key="orframe-labels-container" transform={"translate(0,0)"}>
+          <g
+            key="orframe-labels-container"
+            transform={`translate(${margin.left},${margin.top})`}
+          >
             {labelArray}
           </g>
         )
       } else if (projection === "radial") {
         oLabels = (
-          <g key="orframe-labels-container" transform={"translate(0,0)"}>
+          <g
+            key="orframe-labels-container"
+            transform={`translate(${margin.left},${margin.top})`}
+          >
             {labelArray}
           </g>
         )
@@ -599,13 +599,13 @@ class OrdinalFrame extends React.Component {
       columnOverlays = oExtent.map((d, i) => {
         const barColumnWidth = projectedColumns[d].width
         let xPosition = projectedColumns[d].x
-        let yPosition = margin.top
+        let yPosition = 0
         let height = rScale.range()[1]
         let width = barColumnWidth + padding
         if (projection === "horizontal") {
           yPosition = projectedColumns[d].x
-          xPosition = margin.left
-          width = rScale.range()[1] - margin.left
+          xPosition = 0
+          width = rScale.range()[1]
           height = barColumnWidth
         }
 
@@ -674,7 +674,6 @@ class OrdinalFrame extends React.Component {
       size,
       rScale,
       rScaleType,
-      margin,
       pieceType,
       rExtent
     })
@@ -710,7 +709,6 @@ class OrdinalFrame extends React.Component {
       projection,
       classFn: pieceClass,
       adjustedSize,
-      margin,
       rScale
     })
 
@@ -739,7 +737,6 @@ class OrdinalFrame extends React.Component {
         projection,
         eventListenersGenerator,
         adjustedSize,
-        margin,
         baseMarkProps: currentProps.baseMarkProps || {}
       })
     }
@@ -781,8 +778,7 @@ class OrdinalFrame extends React.Component {
         canvasRender: connectorCanvasRender,
         behavior: orFrameConnectionRenderer,
         type: connectorType,
-        eventListenersGenerator,
-        margin
+        eventListenersGenerator
       },
       summaries: {
         data: calculatedSummaries.marks,
@@ -894,7 +890,6 @@ class OrdinalFrame extends React.Component {
     const { projectedColumns } = this.state
 
     const { adjustedPosition, adjustedSize } = adjustedPositionSize(this.props)
-    const margin = calculateMargin(this.props)
 
     const screenProject = p => {
       const oColumn = projectedColumns[oAccessor(p)]
@@ -906,9 +901,9 @@ class OrdinalFrame extends React.Component {
       }
       if (oColumn && projection === "radial") {
         return pointOnArcAtAngle(
-          [adjustedSize[0] / 2 + margin.left, adjustedSize[1] / 2 + margin.top],
+          [adjustedSize[0] / 2, adjustedSize[1] / 2],
           oColumn.pct_middle,
-          (rScale(rAccessor(p)) - margin.left) / 2
+          rScale(rAccessor(p)) / 2
         )
       }
       if (projection === "horizontal") {
@@ -976,7 +971,6 @@ class OrdinalFrame extends React.Component {
         screenCoordinates,
         rScale,
         rAccessor,
-        margin,
         projection,
         adjustedSize,
         adjustedPosition
@@ -987,8 +981,7 @@ class OrdinalFrame extends React.Component {
         d,
         i,
         categories: this.state.projectedColumns,
-        adjustedSize,
-        margin
+        adjustedSize
       })
     }
     return null
@@ -1000,7 +993,13 @@ class OrdinalFrame extends React.Component {
     const oScale = this.oScale
     const rScale = this.rScale
 
-    const { htmlAnnotationRules, tooltipContent, projection, size } = this.props
+    const {
+      htmlAnnotationRules,
+      tooltipContent,
+      projection,
+      size,
+      dynamicColumnWidth
+    } = this.props
 
     const { projectedColumns } = this.state
 
@@ -1014,8 +1013,6 @@ class OrdinalFrame extends React.Component {
         : { type: this.props.summaryType }
 
     const { adjustedPosition, adjustedSize } = adjustedPositionSize(this.props)
-
-    const margin = calculateMargin(this.props)
 
     //TODO: Process your rules first
     if (
@@ -1065,7 +1062,6 @@ class OrdinalFrame extends React.Component {
         type,
         adjustedPosition,
         adjustedSize,
-        margin,
         projection,
         tooltipContent
       })
@@ -1263,7 +1259,7 @@ OrdinalFrame.propTypes = {
   ]),
   summaryType: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
   connectorType: PropTypes.func,
-  tooltipContent: PropTypes.func,
+  tooltipContent: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
   className: PropTypes.string,
   additionalDefs: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
   interaction: PropTypes.object,

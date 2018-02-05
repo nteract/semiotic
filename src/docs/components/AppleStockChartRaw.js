@@ -20,7 +20,7 @@ const thresholdLine = ({ d, i, xScale, yScale }) => {
         }
         return { stroke: "rgb(77, 67, 12)", fill: "none" }
       }}
-      customAccessors={{ x: d => xScale(d._xyfX), y: d => yScale(d._xyfY) }}
+      customAccessors={{ x: d => xScale(d.x), y: d => yScale(d.y) }}
       lineDataAccessor={d => d.data}
     />
   )

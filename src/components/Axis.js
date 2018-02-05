@@ -36,7 +36,6 @@ class Axis extends React.Component {
       size,
       width = size[0] || 0,
       height = size[1] || 0,
-      margin = { left: 0, right: 0, top: 0, bottom: 0 },
       className,
       padding,
       tickValues,
@@ -63,7 +62,6 @@ class Axis extends React.Component {
         ticks,
         orient,
         size,
-        margin,
         footer,
         tickSize
       })
@@ -80,29 +78,29 @@ class Axis extends React.Component {
     let hoverWidth = 50
     let hoverHeight = height
     let hoverX = 0
-    let hoverY = margin.top
-    let baselineX = margin.left
-    let baselineY = margin.top
-    let baselineX2 = margin.left
-    let baselineY2 = margin.top + height
+    let hoverY = 0
+    let baselineX = 0
+    let baselineY = 0
+    let baselineX2 = 0
+    let baselineY2 = height
 
     let hoverFunction = e =>
-      this.setState({ hoverAnnotation: e.nativeEvent.offsetY - margin.top })
+      this.setState({ hoverAnnotation: e.nativeEvent.offsetY })
     let circleX = 25
     let textX = -25
     let textY = 18
     let lineWidth = width + 25
     let lineHeight = 0
     let circleY = this.state.hoverAnnotation
-    let annotationOffset = margin.left
+    let annotationOffset = 0
     let annotationType = "y"
 
     switch (orient) {
       case "right":
         position = [position[0], position[1]]
         hoverX = width
-        baselineX2 = baselineX = width + margin.left
-        annotationOffset = margin.top
+        baselineX2 = baselineX = width
+        annotationOffset = 0
         lineWidth = -width - 25
         textX = 5
         hoverFunction = e =>
@@ -115,8 +113,8 @@ class Axis extends React.Component {
         hoverWidth = width
         hoverHeight = 50
         annotationType = "x"
-        baselineX2 = baselineX + width
-        baselineY2 = margin.top
+        baselineX2 = width
+        baselineY2 = 0
         hoverFunction = e =>
           this.setState({
             hoverAnnotation: e.nativeEvent.offsetX - annotationOffset
@@ -129,13 +127,13 @@ class Axis extends React.Component {
         lineHeight = height + 25
         break
       case "bottom":
-        position = [position[0], position[1] - margin.top]
+        position = [position[0], position[1]]
         position = [position[0], 0]
         hoverWidth = width
         hoverHeight = 50
-        baselineY = baselineY2 = hoverY = height + margin.top
-        baselineX = hoverX = margin.left
-        baselineX2 = baselineX + width
+        baselineY = baselineY2 = hoverY = height
+        baselineX = hoverX = 0
+        baselineX2 = width
 
         hoverFunction = e =>
           this.setState({
@@ -150,8 +148,8 @@ class Axis extends React.Component {
         annotationType = "x"
         break
       default:
-        position = [position[0] - margin.left, position[1]]
-        annotationOffset = margin.top
+        position = [position[0], position[1]]
+        annotationOffset = 0
         hoverFunction = e =>
           this.setState({
             hoverAnnotation: e.nativeEvent.offsetY - annotationOffset
@@ -246,30 +244,30 @@ class Axis extends React.Component {
 
       const positionHash = {
         left: {
-          start: [margin.left, size[1] + margin.top],
-          middle: [margin.left, size[1] / 2 + margin.top],
-          end: [margin.left, margin.top],
+          start: [0, size[1]],
+          middle: [0, size[1] / 2],
+          end: [0, 0],
           inside: [distance || 15, 0],
           outside: [-(distance || 45), 0]
         },
         right: {
-          start: [size[0] + margin.left, size[1] + margin.top],
-          middle: [size[0] + margin.left, size[1] / 2 + margin.top],
-          end: [size[0] + margin.left, margin.top],
+          start: [size[0] + 0, size[1]],
+          middle: [size[0] + 0, size[1] / 2],
+          end: [size[0] + 0, 0],
           inside: [-(distance || 15), 0],
           outside: [distance || 45, 0]
         },
         top: {
-          start: [margin.left, margin.top],
-          middle: [margin.left + size[0] / 2, margin.top],
-          end: [margin.left + size[0], margin.top],
+          start: [0, 0],
+          middle: [0 + size[0] / 2, 0],
+          end: [0 + size[0], 0],
           inside: [0, distance || 15],
           outside: [0, -(distance || 40)]
         },
         bottom: {
-          start: [margin.left, size[1] + margin.top],
-          middle: [margin.left + size[0] / 2, size[1] + margin.top],
-          end: [margin.left + size[0], size[1] + margin.top],
+          start: [0, size[1]],
+          middle: [0 + size[0] / 2, size[1]],
+          end: [0 + size[0], size[1]],
           inside: [0, -(distance || 5)],
           outside: [0, distance || 50]
         }
@@ -335,7 +333,6 @@ Axis.propTypes = {
   size: PropTypes.array,
   rotate: PropTypes.number,
   scale: PropTypes.func,
-  margin: PropTypes.object,
   annotationFunction: PropTypes.func,
   format: PropTypes.string,
   tickFormat: PropTypes.func,

@@ -649,7 +649,7 @@ export default class XYFrameDocs extends React.Component {
 
     this.state = {
       lineType: "none",
-      annotations: "off",
+      annotations: "on",
       curve: "none",
       margin: "object",
       axes: "basic",
@@ -667,7 +667,7 @@ export default class XYFrameDocs extends React.Component {
       pointExtent: [[-1000, 1000], [1000, -1000]],
       areaExtent: [[-1000, 1000], [1000, -1000]],
       showPoints: "off",
-      annotationSettings: "empty",
+      annotationSettings: "plainMarginalia",
       axisAnnotatable: "off",
       axisAnnotation: {
         type: "y",
@@ -892,37 +892,50 @@ export default class XYFrameDocs extends React.Component {
     ${annotationSettingLabels(this.state.annotationSettings)}`
 
     const linesSource = removeEmptyLines`lines={displayData}
-      lineDataAccessor={${this.state.frame === "MinimapXYFrame"
-        ? "d => d.data.filter(p => p.px >= this.state.extent[0] && p.px <= this.state.extent[1])"
-        : '"data"'}}
+      lineDataAccessor={${
+        this.state.frame === "MinimapXYFrame"
+          ? "d => d.data.filter(p => p.px >= this.state.extent[0] && p.px <= this.state.extent[1])"
+          : '"data"'
+      }}
       lineStyle={d => ({ fill: d.color, fillOpacity: 0.5, stroke: d.color, strokeWidth: '3px' })}
-      ${this.state.lineType === "none"
-        ? ""
-        : `lineType={{ type: "${this.state.lineType}"${this.state.curve ===
-          "none"
-            ? ""
-            : `, interpolator: ${this.state.curve}`} }}`}
-      ${this.state.renderMode === "none"
-        ? ""
-        : `lineRenderMode={() => "${this.state.renderMode}"}`}
+      ${
+        this.state.lineType === "none"
+          ? ""
+          : `lineType={{ type: "${this.state.lineType}"${
+              this.state.curve === "none"
+                ? ""
+                : `, interpolator: ${this.state.curve}`
+            } }}`
+      }
+      ${
+        this.state.renderMode === "none"
+          ? ""
+          : `lineRenderMode={() => "${this.state.renderMode}"}`
+      }
       ${this.state.defined === "inactive" ? "" : "defined={d => d.py !== 0}"}
       ${this.state.showPoints === "on" ? "showLinePoints={true}" : ""}`
 
     const areasSource = removeEmptyLines`areas={areaData}
       areaStyle={() => ({ fill: 'purple', stroke: 'red', strokeWidth: '1px' })}
       ${this.state.showPoints === "on" ? "showLinePoints={true}" : ""}
-      ${this.state.renderMode === "none"
-        ? ""
-        : `areaRenderMode={() => "${this.state.renderMode}"}`}`
+      ${
+        this.state.renderMode === "none"
+          ? ""
+          : `areaRenderMode={() => "${this.state.renderMode}"}`
+      }`
 
     const pointsSource = removeEmptyLines`points={testData}
       pointStyle={d => ({ fill: d.cat, stroke: 'black', strokeWidth: 1 })}
-      ${this.state.customPoint !== "none"
-        ? `customPointMark={${customPointLabelHash[this.state.customPoint]}}`
-        : ""}
-      ${this.state.renderMode === "none"
-        ? ""
-        : `pointRenderMode={() => "${this.state.renderMode}"}`}`
+      ${
+        this.state.customPoint !== "none"
+          ? `customPointMark={${customPointLabelHash[this.state.customPoint]}}`
+          : ""
+      }
+      ${
+        this.state.renderMode === "none"
+          ? ""
+          : `pointRenderMode={() => "${this.state.renderMode}"}`
+      }`
 
     const dataTypeSource = {
       line: linesSource,
@@ -956,7 +969,8 @@ export default class XYFrameDocs extends React.Component {
           raised
           color="primary"
           onTouchTap={() =>
-            window.open(`https://github.com/emeeks/semiotic/wiki/xyframe`)}
+            window.open(`https://github.com/emeeks/semiotic/wiki/xyframe`)
+          }
         >
           XYFrame API
         </Button>
@@ -966,11 +980,9 @@ export default class XYFrameDocs extends React.Component {
           responsiveWidth={this.state.frame === "XYFrame" ? undefined : true}
           lines={this.state.dataType === "line" ? displayData : undefined}
           areas={
-            this.state.dataType === "area" ? (
-              areaDataHash[this.state.areaType]
-            ) : (
-              undefined
-            )
+            this.state.dataType === "area"
+              ? areaDataHash[this.state.areaType]
+              : undefined
           }
           areaStyle={areaStyleHash[this.state.areaType]}
           areaType={areaTypeHash[this.state.areaType]}
@@ -983,7 +995,8 @@ export default class XYFrameDocs extends React.Component {
                 this.state.frame !== "MinimapXYFrame" ||
                 (p.px >= this.state.lineExtent[0] &&
                   p.px <= this.state.lineExtent[1])
-            )}
+            )
+          }
           xAccessor={"px"}
           yAccessor={"py"}
           showLinePoints={this.state.showPoints === "on"}
@@ -994,25 +1007,21 @@ export default class XYFrameDocs extends React.Component {
           matte={this.state.matte === "on"}
           xExtent={
             this.state.frame === "MinimapXYFrame" &&
-            this.state.dataType !== "line" ? (
-              [
-                this.state[`${this.state.dataType}Extent`][0][0],
-                this.state[`${this.state.dataType}Extent`][1][0]
-              ]
-            ) : (
-              undefined
-            )
+            this.state.dataType !== "line"
+              ? [
+                  this.state[`${this.state.dataType}Extent`][0][0],
+                  this.state[`${this.state.dataType}Extent`][1][0]
+                ]
+              : undefined
           }
           yExtent={
             this.state.frame === "MinimapXYFrame" &&
-            this.state.dataType !== "line" ? (
-              [
-                this.state[`${this.state.dataType}Extent`][1][1],
-                this.state[`${this.state.dataType}Extent`][0][1]
-              ]
-            ) : (
-              fixedExtentHash[this.state.fixedExtent]
-            )
+            this.state.dataType !== "line"
+              ? [
+                  this.state[`${this.state.dataType}Extent`][1][1],
+                  this.state[`${this.state.dataType}Extent`][0][1]
+                ]
+              : fixedExtentHash[this.state.fixedExtent]
           }
           lineStyle={d => ({
             fill: d.color,
@@ -1021,41 +1030,34 @@ export default class XYFrameDocs extends React.Component {
             strokeWidth: "3px"
           })}
           lineType={
-            this.state.lineType === "none" ? (
-              undefined
-            ) : (
-              {
-                type: this.state.lineType,
-                interpolator: curveHash[this.state.curve],
-                sort: null
-              }
-            )
+            this.state.lineType === "none"
+              ? undefined
+              : {
+                  type: this.state.lineType,
+                  interpolator: curveHash[this.state.curve],
+                  sort: null
+                }
           }
-          margin={marginHash[this.state.margin]}
+          //          margin={marginHash[this.state.margin]}
+          margin={50}
           defined={
             this.state.defined === "inactive" ? undefined : d => d.py !== 0
           }
           axes={axesHash[this.state.axes]}
           lineRenderMode={
-            this.state.renderMode === "none" ? (
-              undefined
-            ) : (
-              () => this.state.renderMode
-            )
+            this.state.renderMode === "none"
+              ? undefined
+              : () => this.state.renderMode
           }
           areaRenderMode={
-            this.state.renderMode === "none" ? (
-              undefined
-            ) : (
-              () => this.state.renderMode
-            )
+            this.state.renderMode === "none"
+              ? undefined
+              : () => this.state.renderMode
           }
           pointRenderMode={
-            this.state.renderMode === "none" ? (
-              undefined
-            ) : (
-              () => this.state.renderMode
-            )
+            this.state.renderMode === "none"
+              ? undefined
+              : () => this.state.renderMode
           }
           //          hoverAnnotation={this.state.hoverAnnotation === "on"}
           hoverAnnotation={[
@@ -1075,30 +1077,26 @@ export default class XYFrameDocs extends React.Component {
             }
           ]}
           canvasLines={
-            this.state.canvasRender === "none" ? (
-              undefined
-            ) : (
-              canvasRenderHash[this.state.canvasRender]
-            )
+            this.state.canvasRender === "none"
+              ? undefined
+              : canvasRenderHash[this.state.canvasRender]
           }
           canvasPoints={
-            this.state.canvasRender === "none" ? (
-              undefined
-            ) : (
-              canvasRenderHash[this.state.canvasRender]
-            )
+            this.state.canvasRender === "none"
+              ? undefined
+              : canvasRenderHash[this.state.canvasRender]
           }
           canvasAreas={
-            this.state.canvasRender === "none" ? (
-              undefined
-            ) : (
-              canvasRenderHash[this.state.canvasRender]
-            )
+            this.state.canvasRender === "none"
+              ? undefined
+              : canvasRenderHash[this.state.canvasRender]
           }
+          lineIDAccessor={"id"}
           customClickBehavior={d =>
             this.setState({
               clickAnnotation: Object.assign({ type: "form" }, d)
-            })}
+            })
+          }
           htmlAnnotationRules={this.customHTMLRules}
           backgroundGraphics={
             this.state.backgroundGraphics === "off" ? null : (
@@ -1137,55 +1135,55 @@ export default class XYFrameDocs extends React.Component {
           downloadFields={downloadFieldOptions[this.state.dataType]}
           legend={this.state.dataType === "line" && this.state.legend === "on"}
           minimap={
-            this.state.frame === "MinimapXYFrame" ? (
-              {
-                margin: { top: 20, bottom: 35, left: 20, right: 20 },
-                lineStyle: d => ({
-                  fill: d.color,
-                  fillOpacity: 0.5,
-                  stroke: d.color
-                }),
-                lineType:
-                  this.state.lineType === "none"
-                    ? undefined
-                    : {
-                        type: this.state.lineType,
-                        interpolator: curveHash[this.state.curve],
-                        sort: null
-                      },
-                brushEnd: e =>
-                  this.updateDateRange(`${this.state.dataType}`, e),
-                yBrushable: this.state.dataType === "line" ? false : true,
-                xBrushExtent: this.state[`${this.state.dataType}Extent`],
-                lines: this.state.dataType === "line" ? displayData : undefined,
-                areas:
-                  this.state.dataType === "area"
-                    ? areaDataHash[this.state.areaType]
+            this.state.frame === "MinimapXYFrame"
+              ? {
+                  margin: { top: 20, bottom: 35, left: 20, right: 20 },
+                  lineStyle: d => ({
+                    fill: d.color,
+                    fillOpacity: 0.5,
+                    stroke: d.color
+                  }),
+                  lineType:
+                    this.state.lineType === "none"
+                      ? undefined
+                      : {
+                          type: this.state.lineType,
+                          interpolator: curveHash[this.state.curve],
+                          sort: null
+                        },
+                  brushEnd: e =>
+                    this.updateDateRange(`${this.state.dataType}`, e),
+                  yBrushable: this.state.dataType === "line" ? false : true,
+                  xBrushExtent: this.state[`${this.state.dataType}Extent`],
+                  lines:
+                    this.state.dataType === "line" ? displayData : undefined,
+                  areas:
+                    this.state.dataType === "area"
+                      ? areaDataHash[this.state.areaType]
+                      : undefined,
+                  points:
+                    this.state.dataType === "point" ? pointTestData : undefined,
+                  areaStyle: areaStyleHash[this.state.areaType],
+                  areaType: areaTypeHash[this.state.areaType],
+                  pointStyle: d => ({
+                    fill: d.cat,
+                    stroke: "black",
+                    strokeWidth: 1
+                  }),
+                  lineDataAccessor: d => d.data,
+                  size:
+                    this.state.dataType === "line" ? [700, 150] : [300, 300],
+                  axes: axesHash[this.state.axes]
+                    ? [axesHash[this.state.axes][1]]
                     : undefined,
-                points:
-                  this.state.dataType === "point" ? pointTestData : undefined,
-                areaStyle: areaStyleHash[this.state.areaType],
-                areaType: areaTypeHash[this.state.areaType],
-                pointStyle: d => ({
-                  fill: d.cat,
-                  stroke: "black",
-                  strokeWidth: 1
-                }),
-                lineDataAccessor: d => d.data,
-                size: this.state.dataType === "line" ? [700, 150] : [300, 300],
-                axes: axesHash[this.state.axes]
-                  ? [axesHash[this.state.axes][1]]
-                  : undefined,
-                annotations:
-                  this.state.annotations === "on"
-                    ? finalAnnotations.map(d =>
-                        Object.assign({}, d, { type: AnnotationBadge })
-                      )
-                    : undefined
-              }
-            ) : (
-              ""
-            )
+                  annotations:
+                    this.state.annotations === "on"
+                      ? finalAnnotations.map(d =>
+                          Object.assign({}, d, { type: AnnotationBadge })
+                        )
+                      : undefined
+                }
+              : ""
           }
         />
       </div>
@@ -1201,40 +1199,56 @@ export default class XYFrameDocs extends React.Component {
       <${this.state.frame}
       ${titleTypeLabelHash[this.state.title]}
       size={[ 700,500 ]}
-      ${this.state.frame === "ResponsiveXYFrame"
-        ? "responsiveWidth={true}"
-        : ""}
+      ${
+        this.state.frame === "ResponsiveXYFrame" ? "responsiveWidth={true}" : ""
+      }
       ${this.state.annotations === "on" ? annotationSource : ""}
       ${dataTypeSource[this.state.dataType]}
-      ${this.state.fixedExtent === "none"
-        ? ""
-        : `yExtent={${fixedExtentLabelHash[this.state.fixedExtent]}}`}
+      ${
+        this.state.fixedExtent === "none"
+          ? ""
+          : `yExtent={${fixedExtentLabelHash[this.state.fixedExtent]}}`
+      }
       ${this.state.matte === "off" ? "" : "matte={true}"}
-      xAccessor={"px"}
-      yAccessor={"py"}
-      ${this.state.margin === "none"
-        ? ""
-        : `margin={${JSON.stringify(marginHash[this.state.margin])}}`}
-      ${this.state.axes === "none"
-        ? ""
-        : `axes={${axesLabelHash[this.state.axes]}}`}
+      xAccessor="px"
+      yAccessor="py"
+      lineIDAccessor="id"
+      ${
+        this.state.margin === "none"
+          ? ""
+          : `margin={${JSON.stringify(marginHash[this.state.margin])}}`
+      }
+      ${
+        this.state.axes === "none"
+          ? ""
+          : `axes={${axesLabelHash[this.state.axes]}}`
+      }
       ${this.state.hoverAnnotation === "off" ? "" : "hoverAnnotation={true}"}
-      ${this.state.canvasRender === "none"
-        ? ""
-        : `${canvasRenderNameHash[
-            this.state.dataType
-          ]}={${canvasRenderLabelHash[this.state.canvasRender]}}`}
-      ${this.state.backgroundGraphics === "off"
-        ? ""
-        : 'backgroundGraphics={<text x={300} y={350} style={{ opacity: 0.25, fontWeight: 900, fontSize: "36px" }}>backgroundGraphics</text>}'}
-      ${this.state.foregroundGraphics === "off"
-        ? ""
-        : 'foregroundGraphics={<text x={300} y={400} style={{ fill: "white", stroke: "black", fontWeight: 900, fontSize: "36px" }}>foregroundGraphics</text>}'}
-      ${this.state.dataType === "line" && this.state.legend === "on"
-        ? "legend={true}"
-        : ""}
-      ${this.state.frame === "MinimapXYFrame"
-        ? removeEmptyLines`minimap={
+      ${
+        this.state.canvasRender === "none"
+          ? ""
+          : `${canvasRenderNameHash[this.state.dataType]}={${
+              canvasRenderLabelHash[this.state.canvasRender]
+            }}`
+      }
+      ${
+        this.state.backgroundGraphics === "off"
+          ? ""
+          : 'backgroundGraphics={<text x={300} y={350} style={{ opacity: 0.25, fontWeight: 900, fontSize: "36px" }}>backgroundGraphics</text>}'
+      }
+      ${
+        this.state.foregroundGraphics === "off"
+          ? ""
+          : 'foregroundGraphics={<text x={300} y={400} style={{ fill: "white", stroke: "black", fontWeight: 900, fontSize: "36px" }}>foregroundGraphics</text>}'
+      }
+      ${
+        this.state.dataType === "line" && this.state.legend === "on"
+          ? "legend={true}"
+          : ""
+      }
+      ${
+        this.state.frame === "MinimapXYFrame"
+          ? removeEmptyLines`minimap={
           { margin: { top: 20, bottom: 35, left: 20, right: 20 },
           ${dataTypeSource[this.state.dataType]}
           brushEnd: this.updateDateRange,
@@ -1244,11 +1258,14 @@ export default class XYFrameDocs extends React.Component {
           lineDataAccessor: d => d.data,
           size: [ 700, 150 ],
           axes: [ axes[1] ],
-          ${this.state.annotations === "on"
-            ? "annotations: badgeAnnotations"
-            : ""}
+          ${
+            this.state.annotations === "on"
+              ? "annotations: badgeAnnotations"
+              : ""
+          }
           }`
-        : ""}
+          : ""
+      }
       />`
     })
 
@@ -1260,7 +1277,8 @@ export default class XYFrameDocs extends React.Component {
           onChange={e =>
             this.setState({
               lineType: e.target.value
-            })}
+            })
+          }
         >
           {options}
         </Select>
@@ -1305,7 +1323,8 @@ export default class XYFrameDocs extends React.Component {
           onChange={e =>
             this.setState({
               customPoint: e.target.value
-            })}
+            })
+          }
         >
           {customPointOptions}
         </Select>
@@ -1320,7 +1339,8 @@ export default class XYFrameDocs extends React.Component {
           onChange={e =>
             this.setState({
               areaType: e.target.value
-            })}
+            })
+          }
         >
           {areaTypeOptions}
         </Select>

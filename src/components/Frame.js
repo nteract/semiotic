@@ -89,71 +89,41 @@ class Frame extends React.Component {
       }
     }
 
-    const annotationLayer = ((totalAnnotations &&
-      totalAnnotations.length > 0) ||
-      legendSettings) && (
-      <AnnotationLayer
-        legendSettings={legendSettings}
-        margin={margin}
-        axes={axes}
-        annotationHandling={annotationSettings.layout}
-        pointSizeFunction={annotationSettings.pointSizeFunction}
-        labelSizeFunction={annotationSettings.labelSizeFunction}
-        annotations={totalAnnotations}
-        svgAnnotationRule={(d, i, thisALayer) =>
-          defaultSVGRule({
-            d,
-            i,
-            annotationLayer: thisALayer,
-            ...renderPipeline
-          })
-        }
-        htmlAnnotationRule={(d, i, thisALayer) =>
-          defaultHTMLRule({
-            d,
-            i,
-            annotationLayer: thisALayer,
-            ...renderPipeline
-          })
-        }
-        useSpans={useSpans}
-        size={size}
-        position={[
-          adjustedPosition[0] + margin.left,
-          adjustedPosition[1] + margin.top
-        ]}
-      />
-    )
-    const interactionLayer = (hoverAnnotation || overlay) && (
-      <InteractionLayer
-        useSpans={useSpans}
-        hoverAnnotation={hoverAnnotation}
-        projectedX={projectedCoordinateNames.x}
-        projectedY={projectedCoordinateNames.y}
-        projectedYMiddle={projectedYMiddle}
-        interaction={interaction}
-        voronoiHover={d => this.setState({ voronoiHover: d })}
-        customClickBehavior={customClickBehavior}
-        customHoverBehavior={customHoverBehavior}
-        customDoubleClickBehavior={customDoubleClickBehavior}
-        points={points}
-        position={adjustedPosition}
-        margin={margin}
-        size={adjustedSize}
-        svgSize={size}
-        xScale={xScale}
-        yScale={yScale}
-        enabled={true}
-        overlay={overlay}
-        oColumns={columns}
-        rScale={rScale}
-        projection={projection}
-        interactionOverflow={interactionOverflow}
-      />
-    )
-
-    console.log("title", title)
-    console.log("foregroundGraphics", foregroundGraphics)
+    if (totalAnnotations || legendSettings) {
+      annotationLayer = (
+        <AnnotationLayer
+          legendSettings={legendSettings}
+          margin={margin}
+          axes={axes}
+          annotationHandling={annotationSettings.layout}
+          pointSizeFunction={annotationSettings.pointSizeFunction}
+          labelSizeFunction={annotationSettings.labelSizeFunction}
+          annotations={totalAnnotations}
+          svgAnnotationRule={(d, i, thisALayer) =>
+            defaultSVGRule({
+              d,
+              i,
+              annotationLayer: thisALayer,
+              ...renderPipeline
+            })
+          }
+          htmlAnnotationRule={(d, i, thisALayer) =>
+            defaultHTMLRule({
+              d,
+              i,
+              annotationLayer: thisALayer,
+              ...renderPipeline
+            })
+          }
+          useSpans={useSpans}
+          size={adjustedSize}
+          position={[
+            adjustedPosition[0] + margin.left,
+            adjustedPosition[1] + margin.top
+          ]}
+        />
+      )
+    }
 
     return (
       <SpanOrDiv
@@ -184,7 +154,11 @@ class Frame extends React.Component {
             <canvas
               className="frame-canvas"
               ref={canvasContext => (this.canvasContext = canvasContext)}
-              style={{ position: "absolute" }}
+              style={{
+                position: "absolute",
+                left: `${margin.left}px`,
+                top: `${margin.left}px`
+              }}
               width={size[0]}
               height={size[1]}
             />
@@ -224,7 +198,31 @@ class Frame extends React.Component {
               )}
             </svg>
           </SpanOrDiv>
-          {interactionLayer}
+          <InteractionLayer
+            useSpans={useSpans}
+            hoverAnnotation={hoverAnnotation}
+            projectedX={projectedCoordinateNames.x}
+            projectedY={projectedCoordinateNames.y}
+            projectedYMiddle={projectedYMiddle}
+            interaction={interaction}
+            voronoiHover={d => this.setState({ voronoiHover: d })}
+            customClickBehavior={customClickBehavior}
+            customHoverBehavior={customHoverBehavior}
+            customDoubleClickBehavior={customDoubleClickBehavior}
+            points={points}
+            position={adjustedPosition}
+            margin={margin}
+            size={adjustedSize}
+            svgSize={size}
+            xScale={xScale}
+            yScale={yScale}
+            enabled={true}
+            overlay={overlay}
+            oColumns={columns}
+            rScale={rScale}
+            projection={projection}
+            interactionOverflow={interactionOverflow}
+          />
           {annotationLayer}
         </SpanOrDiv>
         {(downloadButton || afterElements) && (

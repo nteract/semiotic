@@ -17,7 +17,8 @@ export const renderLaidOutPieces = ({
   canvasDrawing,
   styleFn,
   classFn,
-  baseMarkProps
+  baseMarkProps,
+  renderKeyFn
 }) => {
   if (!shouldRender) return null
   const renderedPieces = []
