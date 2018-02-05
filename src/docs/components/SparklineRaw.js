@@ -233,7 +233,7 @@ export default (type = "stackedarea") => {
         />
         but, surprisingly, not the{" "}
         <SparkNetworkFrame
-          size={[100]}
+          size={60}
           edges={{
             id: "root",
             children: [
@@ -261,10 +261,10 @@ export default (type = "stackedarea") => {
             { source: "b", target: "b", weight: 5 },
             { source: "a", target: "c", weight: 2 },
             { source: "a", target: "d", weight: 2 },
-            { source: "b", target: "d", weight: 5 },
+            { source: "d", target: "b", weight: 5 },
             { source: "c", target: "a", weight: 4 },
             { source: "d", target: "a", weight: 2 },
-            { source: "d", target: "b", weight: 4 }
+            { source: "b", target: "d", weight: 4 }
           ]}
           edgeStyle={d => ({
             fill: stackedColors[d.source.id],
@@ -272,7 +272,7 @@ export default (type = "stackedarea") => {
           })}
           edgeRenderMode="sketchy"
           nodeRenderMode="sketchy"
-          networkType={{ type: "chord" }}
+          networkType={{ type: "chord", padAngle: 0.3 }}
           nodeStyle={d => ({
             fill: stackedColors[d.id],
             stroke: "black"
