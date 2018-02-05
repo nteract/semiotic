@@ -568,6 +568,8 @@ class NetworkFrame extends React.Component {
     ) {
       networkSettings.customSankey = sankeyCircular
     }
+    networkSettings.width = size[0]
+    networkSettings.height = size[1]
 
     const networkSettingsKeys = Object.keys(networkSettings)
     let networkSettingsChanged = false

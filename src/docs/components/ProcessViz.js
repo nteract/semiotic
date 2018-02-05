@@ -257,7 +257,16 @@ export default class ProcessViz extends React.Component {
                         <PrismCode className="language-jsx">
                           {typeof frameSettings[k] === "function"
                             ? `${frameSettings[k]}`
-                            : JSON.stringify(frameSettings[k])}
+                            : JSON.stringify(
+                                frameSettings[k],
+                                (key, value) => {
+                                  if (typeof value === "function") {
+                                    return `${value}`
+                                  }
+                                  return value
+                                },
+                                " "
+                              )}
                         </PrismCode>
                       </pre>
                     </div>

@@ -125,8 +125,6 @@ const createSparkFrame = (Frame, defaults) =>
         typeof size === "number" ? size : size[0] ? size[0] : containerHeight
       actualSize[1] = containerHeight
 
-      console.log("actualSize", actualSize)
-
       return (
         <span
           style={Object.assign(
@@ -134,7 +132,8 @@ const createSparkFrame = (Frame, defaults) =>
               width: `${actualSize[0]}px`,
               height: `${actualSize[1]}px`,
               display: "inline-block",
-              marginLeft: "5px"
+              marginLeft: "5px",
+              marginRight: "5px"
             },
             style
           )}
