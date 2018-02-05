@@ -151,7 +151,7 @@ export default (type = "stackedarea") => {
           summaryStyle={{
             fill: "#b6a756",
             stroke: "#b6a756",
-            fillOpacity: 0.5
+            fillOpacity: 0.9
           }}
           summaryType="boxplot"
           projection="horizontal"
@@ -168,7 +168,7 @@ export default (type = "stackedarea") => {
           summaryStyle={{
             fill: "#b6a756",
             stroke: "#b6a756",
-            fillOpacity: 0.5
+            fillOpacity: 1
           }}
           summaryType={{ type: "violin", bins: 5 }}
           projection="horizontal"
@@ -195,8 +195,6 @@ export default (type = "stackedarea") => {
           oAccessor="-"
           rAccessor="v"
           oPadding={3}
-          renderMode="sketchy"
-          summaryRenderMode="sketchy"
           summaryStyle={{
             fill: "#b6a756",
             stroke: "#b6a756",
@@ -206,10 +204,10 @@ export default (type = "stackedarea") => {
           projection="horizontal"
         />
       </p>
-      <p style={{ lineHeight: "36px", fontSize: "20px" }}>
+      <p style={{ lineHeight: "26px", fontSize: "20px" }}>
         Sparkline charts in Semiotic have their height based on the line-height
-        property of the text they're dropped in. Some charts require more space
-        like the
+        property of the text they're dropped in. All the network charts are also
+        available like the
         <SparkNetworkFrame
           size={[100]}
           edges={[
@@ -222,8 +220,6 @@ export default (type = "stackedarea") => {
             { source: "g", target: "i", value: 2 },
             { source: "g", target: "j", value: 2 }
           ]}
-          edgeRenderMode="sketchy"
-          nodeRenderMode="sketchy"
           edgeStyle={{ fill: "#007190" }}
           networkType={{ type: "sankey" }}
           nodeStyle={d => ({
@@ -231,7 +227,7 @@ export default (type = "stackedarea") => {
             stroke: "black"
           })}
         />
-        but, surprisingly, not the{" "}
+        and the
         <SparkNetworkFrame
           size={60}
           edges={{
@@ -248,8 +244,6 @@ export default (type = "stackedarea") => {
           edgeStyle={{ stroke: "#007190" }}
           networkType={{ type: "dendrogram" }}
           margin={4}
-          edgeRenderMode="sketchy"
-          nodeRenderMode="sketchy"
           nodeStyle={d => ({
             fill: "#00a2ce",
             stroke: "black"
@@ -270,8 +264,6 @@ export default (type = "stackedarea") => {
             fill: stackedColors[d.source.id],
             opacity: 0.5
           })}
-          edgeRenderMode="sketchy"
-          nodeRenderMode="sketchy"
           networkType={{ type: "chord", padAngle: 0.3 }}
           nodeStyle={d => ({
             fill: stackedColors[d.id],

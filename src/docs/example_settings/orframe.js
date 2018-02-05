@@ -14,14 +14,7 @@ export const summaryChart = {
     stroke: "#b3331d",
     strokeOpacity: 0.75
   }),
-  style: () => ({
-    fill: "#d38779",
-    fillOpacity: 0.5,
-    stroke: "#b3331d",
-    strokeOpacity: 0.75
-  }),
   data: orframe_data,
-  projection: "vertical",
   summaryType: { type: "violin", bins: 40 },
   axis: {
     orient: "left",

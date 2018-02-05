@@ -108,6 +108,8 @@ export default class PieDonutDocs extends React.Component {
               }}
               margin={{ left: 20, top: 20, bottom: 20, right: 20 }}
               oPadding={${this.state.padding}}
+              tooltipContent="pie"
+              hoverAnnotation={true}
             />
 
       `

@@ -17,10 +17,6 @@ export default class DivergingStackedBar extends React.Component {
       source: `import React from "react";
 import { OrdinalFrame } from "../../components";
 import { AnnotationCalloutElbow } from "react-annotation";
-//import cow from "material-design-icons-svg/paths/cow";
-//import cat from "material-design-icons-svg/paths/cat";
-//import cake from "material-design-icons-svg/paths/cake";
-//import cannabis from "material-design-icons-svg/paths/cannabis";
 
 const vizzers = [
   { type: "journalist", writeviz: 1, number: 9 },

@@ -18,7 +18,9 @@ export default state => {
     type: { type: "bar", innerRadius: +state.innerRadius },
     oLabel: true,
     rAccessor: state.kind === "pie" ? () => 1 : d => d.value,
-    margin: { left: 20, top: 20, bottom: 20, right: 20 }
+    margin: { left: 20, top: 20, bottom: 20, right: 20 },
+    tooltipContent: "pie",
+    hoverAnnotation: true
   }
 
   if (state.padding !== "0") {
