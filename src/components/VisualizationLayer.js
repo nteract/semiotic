@@ -148,7 +148,7 @@ class VisualizationLayer extends React.PureComponent {
             ...pipe
           })
 
-          if (renderedPipe.length > 0) {
+          if (renderedPipe && renderedPipe.length > 0) {
             renderedElements.push(
               <g key={k} className={k}>
                 {renderedPipe}
@@ -189,7 +189,9 @@ class VisualizationLayer extends React.PureComponent {
             matteClip && matte ? `url(#matte-clip${frameKey})` : undefined
           }
         >
+          {renderedAxesTickLines}
           {renderedElements}
+          {renderedAxes}
         </g>
       )
 
