@@ -1,4 +1,6 @@
 import React from "react"
+import { rectangleEnclosure } from "../../components/annotationRules/baseRules"
+import { PrismCode } from "react-prism"
 
 const actualTypeof = thing => {
   if (Array.isArray(thing)) return "array"
@@ -197,6 +199,10 @@ function closedProcessPiece(position, label, height) {
   )
 }
 export default class ProcessViz extends React.Component {
+  state = {
+    content: undefined
+  }
+
   render() {
     const width = 1000
     const { frameSettings, frameType } = this.props
@@ -234,7 +240,38 @@ export default class ProcessViz extends React.Component {
         processPosition += 30
       } else {
         const renderedFrameKeys = activeFrameKeys.map((k, q) => (
-          <g key={"rendered-key" + q} transform={`translate(5,${54 + q * 24})`}>
+          <g
+            key={"rendered-key" + q}
+            transform={`translate(5,${54 + q * 24})`}
+            style={{ pointerEvents: "none" }}
+          >
+            <rect
+              onMouseEnter={() => {
+                this.setState({
+                  content: (
+                    <div>
+                      <h4 style={{ textTransform: "none" }}>
+                        <span style={{ color: "gray" }}>Settings for</span> {k}
+                      </h4>
+                      <pre>
+                        <PrismCode className="language-jsx">
+                          {typeof frameSettings[k] === "function"
+                            ? `${frameSettings[k]}`
+                            : JSON.stringify(frameSettings[k])}
+                        </PrismCode>
+                      </pre>
+                    </div>
+                  )
+                })
+              }}
+              onMouseLeave={() => {
+                this.setState({ position: 0, content: undefined })
+              }}
+              y={-20}
+              width={step - 10}
+              height={24}
+              style={{ fill: "rgba(0,0,0,0)", pointerEvents: "all" }}
+            />
             <circle
               cx={10}
               r={10}
@@ -295,10 +332,29 @@ export default class ProcessViz extends React.Component {
       return renderedPiece
     })
     return (
-      <div>
+      <div style={{ position: "relative" }}>
         <div style={{ fontSize: "40px", fontWeight: 100, margin: "10px 0" }}>
           {this.props.frameType}
         </div>
+        {this.state.content && (
+          <div
+            style={{
+              border: "1px solid black",
+              position: "absolute",
+              left: `150px`,
+              background: "white",
+              bottom: `${maxHeight + 20}px`,
+              maxWidth: "800px",
+              minWidth: "200px",
+              maxHeight: "400px",
+              minHeight: "200px",
+              overflow: "hidden",
+              padding: "10px"
+            }}
+          >
+            {this.state.content}
+          </div>
+        )}
         <svg
           style={{ overflow: "visible", background: "white" }}
           width={processPosition}
