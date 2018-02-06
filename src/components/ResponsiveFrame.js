@@ -21,8 +21,8 @@ const createResponsiveFrame = Frame =>
       super(props)
 
       this.state = {
-        containerHeight: props.size[1],
-        containerWidth: props.size[0]
+        containerHeight: undefined,
+        containerWidth: undefined
       }
     }
 
@@ -56,11 +56,15 @@ const createResponsiveFrame = Frame =>
 
       const actualSize = [...size]
 
+      let returnEmpty = false
+
       if (responsiveWidth) {
+        if (!containerWidth) returnEmpty = true
         actualSize[0] = containerWidth
       }
 
       if (responsiveHeight) {
+        if (!containerHeight) returnEmpty = true
         actualSize[1] = containerHeight
       }
 
@@ -72,11 +76,13 @@ const createResponsiveFrame = Frame =>
           style={Object.assign({ height: "100%", width: "100%" }, style)}
           ref={node => (this.node = node)}
         >
-          <Frame
-            {...this.props}
-            size={actualSize}
-            dataVersion={dataVersion ? dataVersionWithSize : undefined}
-          />
+          {!returnEmpty && (
+            <Frame
+              {...this.props}
+              size={actualSize}
+              dataVersion={dataVersion ? dataVersionWithSize : undefined}
+            />
+          )}
         </div>
       )
     }

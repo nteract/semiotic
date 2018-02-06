@@ -188,8 +188,10 @@ class VisualizationLayer extends React.PureComponent {
         {axesTickLines}
       </g>
     )
-    const renderedDataVisualization = renderedElements &&
-      renderedElements.length > 0 && (
+    const renderedDataVisualization =
+      ((renderedAxes ||
+        renderedAxesTickLines ||
+        (renderedElements && renderedElements.length > 0)) && (
         <g
           className="data-visualization"
           key="visualization-clip-path"
@@ -201,14 +203,12 @@ class VisualizationLayer extends React.PureComponent {
           {renderedAxesTickLines}
           {renderedElements}
           {renderedAxes}
+          {matte}
         </g>
-      )
+      )) ||
+      null
 
-    const renderedVisualizationLayer = (renderedAxes ||
-      renderedAxesTickLines ||
-      renderedDataVisualization) && [renderedDataVisualization, matte]
-
-    return renderedVisualizationLayer
+    return renderedDataVisualization
   }
 }
 
