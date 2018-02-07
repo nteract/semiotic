@@ -457,6 +457,17 @@ class AnnotationLayer extends React.Component {
           background: "none"
         }}
       >
+        <svg
+          className="annotation-layer-svg"
+          height={this.props.size[1]}
+          width={this.props.size[0]}
+          style={svgStyle}
+        >
+          <g>
+            {renderedLegend}
+            {svgAnnotations}
+          </g>
+        </svg>
         {useSpans ? null : (
           <div
             className="annotation-layer-html"
@@ -473,17 +484,6 @@ class AnnotationLayer extends React.Component {
             {htmlAnnotations}
           </div>
         )}
-        <svg
-          className="annotation-layer-svg"
-          height={this.props.size[1]}
-          width={this.props.size[0]}
-          style={svgStyle}
-        >
-          <g>
-            {renderedLegend}
-            {svgAnnotations}
-          </g>
-        </svg>
       </SpanOrDiv>
     )
   }
