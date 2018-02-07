@@ -159,30 +159,6 @@ const lineAnnotater = ({ d, xScale, yScale }) => {
   })
 }
 
-/*
-function pointsAtThisPoint({ d, lines, xScale, yScale }) {
-  if (d && d._xyfX) {
-    const thesePoints = lines.map(line => {
-      return line.data.find(p => p._xyfX === d._xyfX)
-    })
-
-    return thesePoints.map(p => {
-      const fill =
-        p.delta < p.bottomDelta ? blue : p.delta > p.topDelta ? red : "#E1E1E1"
-      return (
-        <circle
-          r={2}
-          style={{ fill }}
-          cx={xScale(p._xyfX)}
-          cy={yScale(p._xyfY)}
-        />
-      )
-    })
-  }
-  return null
-}
-*/
-
 export const regionatedLineChart = {
   title: "Monthly Temperature in New York Since 1869",
   size: [720, 500],
