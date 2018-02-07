@@ -23,7 +23,7 @@ export default class RegionatedLineChartDocs extends React.Component {
               return { fill: "none", stroke: "gray", strokeOpacity: lineOpacity / 4 }
           }}
           searchIterations={20}
-          customAccessors={{ x: d => xScale(d._xyfX), y: d => yScale(d._xyfY) }}
+          customAccessors={{ x: d => xScale(d.x), y: d => yScale(d.y) }}
           forceUpdate={true}
           lineDataAccessor={d => d.data}
           interpolate={curveMonotoneX}
@@ -38,7 +38,7 @@ export default class RegionatedLineChartDocs extends React.Component {
           if (!d.parentLine) {
               return null
           }
-          const lineRenderer = line().x(d => xScale(d._xyfX)).y(d => yScale(d._xyfY)).curve(curveMonotoneX)
+          const lineRenderer = line().x(d => xScale(d.x)).y(d => yScale(d.y)).curve(curveMonotoneX)
 
           return d.coincidentPoints.map((p,q) => {
               const lineD = lineRenderer(p.parentLine.data)

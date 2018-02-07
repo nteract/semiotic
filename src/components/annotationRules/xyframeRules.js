@@ -16,8 +16,9 @@ const pointsAlong = along => ({
   yScale,
   pointStyle
 }) => {
-  const alongScale = along === "_xyfX" ? xScale : yScale
-  along = along === "_xyfYTop" && d["_xyfYMiddle"] ? "_xyfYMiddle" : along
+  const alongScale = along === "x" ? xScale : yScale
+  along = along === "yTop" && d["yMiddle"] ? "yMiddle" : along
+  console.log("d", d, along)
   if (d && d[along]) {
     const { threshold = 1, r = () => 4, styleFn = pointStyle } = d
     const foundPoints = []
@@ -55,16 +56,16 @@ const pointsAlong = along => ({
         key={`found-circle-${i}`}
         r={r(p, i)}
         style={styleFn(p, i)}
-        cx={xScale(p._xyfX)}
-        cy={yScale(p._xyfYMiddle || p._xyfYTop)}
+        cx={xScale(p.x)}
+        cy={yScale(p.yMiddle || p.yTop)}
       />
     ))
   }
   return null
 }
 
-export const svgHorizontalPointsAnnotation = pointsAlong("_xyfYTop")
-export const svgVerticalPointsAnnotation = pointsAlong("_xyfX")
+export const svgHorizontalPointsAnnotation = pointsAlong("yTop")
+export const svgVerticalPointsAnnotation = pointsAlong("x")
 
 export const svgXYAnnotation = ({ screenCoordinates, i, d }) => {
   const laLine = (
