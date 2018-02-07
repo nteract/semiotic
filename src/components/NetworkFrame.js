@@ -93,7 +93,9 @@ const edgePointHash = {
   sankey: d => ({
     edge: d,
     x: (d.source.x1 + d.target.x0) / 2,
-    y: (d.source.y0 + d.target.y0) / 2
+    y: d.circularPathData
+      ? d.circularPathData.verticalFullExtent
+      : ((d.y0 + d.y1) / 2 + (d.y0 + d.y1) / 2) / 2
   }),
   force: basicMiddle,
   tree: basicMiddle,
