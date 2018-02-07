@@ -8,7 +8,7 @@ export const htmlFrameHoverRule = ({ d, i, tooltipContent, size }) => {
   let content = d.edge ? (
     <div className="tooltip-content">
       <p key="html-annotation-content-1">
-        {d.edge.source.id} tp {d.edge.target.id}
+        {d.edge.source.id} to {d.edge.target.id}
       </p>
     </div>
   ) : (
