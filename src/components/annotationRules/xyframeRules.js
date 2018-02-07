@@ -18,7 +18,6 @@ const pointsAlong = along => ({
 }) => {
   const alongScale = along === "x" ? xScale : yScale
   along = along === "yTop" && d["yMiddle"] ? "yMiddle" : along
-  console.log("d", d, along)
   if (d && d[along]) {
     const { threshold = 1, r = () => 4, styleFn = pointStyle } = d
     const foundPoints = []
