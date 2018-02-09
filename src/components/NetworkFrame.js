@@ -587,7 +587,8 @@ class NetworkFrame extends React.Component {
     }
 
     if (
-      networkSettings.type === "sankey" &&
+      (networkSettings.type === "sankey" ||
+        networkSettings.type === "flowchart") &&
       topologicalSort(projectedNodes, projectedEdges) === null
     ) {
       networkSettings.customSankey = sankeyCircular
@@ -609,8 +610,7 @@ class NetworkFrame extends React.Component {
 
     //Support bubble chart with circle pack and with force
     if (networkSettings.type === "sankey") {
-      edgeType = d =>
-        d.circular ? /*d.path*/ circularAreaLink(d) : areaLink(d)
+      edgeType = d => (d.circular ? circularAreaLink(d) : areaLink(d))
 
       customNodeIcon = customNodeIcon ? customNodeIcon : sankeyNodeGenerator
     } else if (networkSettings.type === "chord") {
@@ -730,20 +730,32 @@ class NetworkFrame extends React.Component {
           const chordEdge = this.edgeHash.get(`${nodeSourceID}|${nodeTargetID}`)
           chordEdge.d = chordD
         })
-      } else if (networkSettings.type === "sankey") {
+      } else if (
+        networkSettings.type === "sankey" ||
+        networkSettings.type === "flowchart"
+      ) {
         const {
           orient = "center",
           iterations = 100,
           nodePadding = 8,
-          nodeWidth = 24,
+          nodeWidth = networkSettings.type === "flowchart" ? 2 : 24,
           customSankey
         } = networkSettings
         const sankeyOrient = sankeyOrientHash[orient]
 
         const actualSankey = customSankey || sankey
 
+        let frameExtent = [[0, 0], adjustedSize]
+
+        if (
+          networkSettings.direction === "up" ||
+          networkSettings.direction === "down"
+        ) {
+          frameExtent = [[0, 0], [adjustedSize[1], adjustedSize[0]]]
+        }
+
         const frameSankey = actualSankey()
-          .extent([[0, 0], adjustedSize])
+          .extent(frameExtent)
           .links(projectedEdges)
           .nodes(projectedNodes)
           .nodeAlign(sankeyOrient)
@@ -1046,6 +1058,25 @@ class NetworkFrame extends React.Component {
       this.graphSettings.edges = currentProps.edges
     }
 
+    if (networkSettings.type === "flowchart") {
+      if (networkSettings.direction === "up") {
+        projectedNodes.forEach(node => {
+          let ox = node.x
+          node.x = node.y
+          node.y = adjustedSize[1] - ox
+        })
+      } else if (networkSettings.direction === "down") {
+        projectedNodes.forEach(node => {
+          let ox = node.x
+          node.x = node.y
+          node.y = ox
+        })
+      } else if (networkSettings.direction === "left") {
+        projectedNodes.forEach(node => {
+          node.x = adjustedSize[0] - node.x
+        })
+      }
+    }
     if (
       networkSettings.zoom !== false &&
       networkSettings.type !== "wordcloud" &&

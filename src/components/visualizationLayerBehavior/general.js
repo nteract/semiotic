@@ -133,7 +133,8 @@ export function createLines({
     interpolator,
     generator: lineGenerator,
     xScale,
-    yScale
+    yScale,
+    simpleLine: customLine.simpleLine
   })
 
   const mappedLines = []
@@ -226,7 +227,7 @@ export function createLines({
       generator: overLine,
       xScale,
       yScale,
-      singleLine: true
+      simpleLine: true
     })
 
     //      let baseStyle = props.lineStyle ? props.lineStyle(diffdata, 0) : {}
