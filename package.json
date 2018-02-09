@@ -112,7 +112,7 @@
     "lodash.uniq": "4.5.0",
     "prop-types": "15.6.0",
     "react-annotation": "1.1.0",
-    "semiotic-mark": "0.1.1",
+    "semiotic-mark": "0.1.2",
     "svg-path-bounding-box": "1.0.4"
   },
   "nyc": {

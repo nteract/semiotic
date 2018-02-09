@@ -73,8 +73,6 @@ export default class CreatingBarChart extends React.Component {
       return null
     }
 
-    console.log("d", d)
-
     return (
       <rect
         key={`annotation-${i}`}

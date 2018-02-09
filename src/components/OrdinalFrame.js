@@ -909,8 +909,6 @@ class OrdinalFrame extends React.Component {
         oColumn.pieceData.find(
           p => pieceIDAccessor(p.data) === pieceIDAccessor(d)
         )
-      console.log("idPiece", idPiece)
-      console.log("idPiece", idPiece)
 
       if (oColumn && projection === "radial") {
         return pointOnArcAtAngle(
@@ -975,7 +973,6 @@ class OrdinalFrame extends React.Component {
     } else if (d.type === "or") {
       return svgORRule({ d, i, screenCoordinates, projection })
     } else if (d.type === "react-annotation" || typeof d.type === "function") {
-      console.log("screencoordinates", screenCoordinates)
       return basicReactAnnotationRule({ d, i, screenCoordinates })
     } else if (d.type === "enclose") {
       return svgEncloseRule({ d, i, screenCoordinates })
