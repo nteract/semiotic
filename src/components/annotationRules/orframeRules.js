@@ -439,8 +439,12 @@ export const htmlFrameHoverRule = ({
     ]
   } else {
     contentFill = [
-      <p key="html-annotation-content-1">{oAccessor(d.data).toString()}</p>,
-      <p key="html-annotation-content-2">{rAccessor(d.data).toString()}</p>
+      oAccessor(d.data) && (
+        <p key="html-annotation-content-1">{oAccessor(d.data).toString()}</p>
+      ),
+      rAccessor(d.data) && (
+        <p key="html-annotation-content-2">{rAccessor(d.data).toString()}</p>
+      )
     ]
   }
   let content = <div className="tooltip-content">{contentFill}</div>
@@ -506,7 +510,9 @@ export const htmlColumnHoverRule = ({
   //To string because React gives a DOM error if it gets a date
   let content = (
     <div className="tooltip-content">
-      <p key="or-annotation-1">{oAccessor(d.pieces[0].data).toString()}</p>
+      {oAccessor(d.pieces[0].data) && (
+        <p key="or-annotation-1">{oAccessor(d.pieces[0].data).toString()}</p>
+      )}
       <p key="or-annotation-2">
         {sum(d.pieces.map(d => d.value).filter(p => p > 0))}
       </p>
@@ -517,7 +523,11 @@ export const htmlColumnHoverRule = ({
     if (tooltipContent === "pie") {
       content = (
         <div className="tooltip-content">
-          <p key="or-annotation-1">{oAccessor(d.pieces[0].data).toString()}</p>
+          {oAccessor(d.pieces[0].data) && (
+            <p key="or-annotation-1">
+              {oAccessor(d.pieces[0].data).toString()}
+            </p>
+          )}
           <p key="or-annotation-2">{`${(column.pct * 100).toFixed(0)}%`}</p>
         </div>
       )

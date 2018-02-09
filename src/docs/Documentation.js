@@ -58,6 +58,7 @@ import AppleStockChart from "./components/AppleStockChart"
 import CreatingBarChart from "./components/CreatingBarChart"
 import CreatingPieChart from "./components/CreatingPieChart"
 import CreatingLineChart from "./components/CreatingLineChart"
+import UsingPatternsTextures from "./components/UsingPatternsTextures"
 
 import RealtimeOrdinalFrame from "./components/RealtimeOrdinalFrame"
 import RealtimeXYFrame from "./components/RealtimeXYFrame"
@@ -77,6 +78,7 @@ const components = {
   creatinglinechart: { docs: CreatingLineChart },
   creatingbarchart: { docs: CreatingBarChart },
   creatingpiechart: { docs: CreatingPieChart },
+  usingpatterns: { docs: UsingPatternsTextures },
   sparkline: { docs: Sparkline },
   xyframe: { docs: XYFrameDocs },
   regionatedlinechart: { docs: RegionatedLineChartDocs, parent: "xyframe" },

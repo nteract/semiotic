@@ -21,18 +21,18 @@ const barChartData = [
 ]
 
 const inflatedBarChartData = [
-  { user: "Jason", type: "tweets", value: 10 },
-  { user: "Susie", type: "tweets", value: 5 },
-  { user: "Matt", type: "tweets", value: 20 },
-  { user: "Betty", type: "tweets", value: 30 },
-  { user: "Jason", type: "retweets", value: 5 },
-  { user: "Susie", type: "retweets", value: 100 },
-  { user: "Matt", type: "retweets", value: 25 },
-  { user: "Betty", type: "retweets", value: 20 },
-  { user: "Jason", type: "favorites", value: 15 },
-  { user: "Susie", type: "favorites", value: 100 },
-  { user: "Matt", type: "favorites", value: 50 },
-  { user: "Betty", type: "favorites", value: 10 }
+  { user: "Jason", action: "tweets", value: 10 },
+  { user: "Susie", action: "tweets", value: 5 },
+  { user: "Matt", action: "tweets", value: 20 },
+  { user: "Betty", action: "tweets", value: 30 },
+  { user: "Jason", action: "retweets", value: 5 },
+  { user: "Susie", action: "retweets", value: 100 },
+  { user: "Matt", action: "retweets", value: 25 },
+  { user: "Betty", action: "retweets", value: 20 },
+  { user: "Jason", action: "favorites", value: 15 },
+  { user: "Susie", action: "favorites", value: 100 },
+  { user: "Matt", action: "favorites", value: 50 },
+  { user: "Betty", action: "favorites", value: 10 }
 ]
 
 const colorHash = {
@@ -42,7 +42,7 @@ const colorHash = {
 }
 
 const barSize = [300, 500]
-const stackedBarStyle = d => ({ fill: colorHash[d.type], stroke: "white" })
+const stackedBarStyle = d => ({ fill: colorHash[d.action], stroke: "white" })
 const stackedBarLabel = d => (
   <text transform="translate(-15,0)rotate(45)">{d}</text>
 )
@@ -69,21 +69,24 @@ export default class CreatingBarChart extends React.Component {
   }
 
   barAnnotator({ d, i, categories }) {
-    if (!d.type === "hover") {
+    if (d.type !== "hover") {
       return null
     }
+
+    console.log("d", d)
 
     return (
       <rect
         key={`annotation-${i}`}
         x={categories[d.user].x}
         y={d.y}
-        height={d._orFR}
+        height={d.scaledValue}
         width={categories[d.user].width}
         style={{ fill: "none", stroke: "#00a2ce", strokeWidth: 5 }}
       />
     )
   }
+
   render() {
     const examples = []
     examples.push({
@@ -251,9 +254,19 @@ export default class CreatingBarChart extends React.Component {
             annotations={
               this.state.hoverPoint
                 ? [Object.assign({}, this.state.hoverPoint, { type: "hover" })]
-                : undefined
+                : [
+                    {
+                      type: "react-annotation",
+                      action: "retweets",
+                      user: "Matt",
+                      label: "Testing a relative value annotation",
+                      dx: 100,
+                      dy: -50
+                    }
+                  ]
             }
             svgAnnotationRules={this.barAnnotator}
+            pieceIDAccessor="action"
           />
         </div>
       ),
@@ -267,7 +280,7 @@ export default class CreatingBarChart extends React.Component {
             data={inflatedBarChartData}
             oAccessor={"user"}
             rAccessor={"value"}
-            style={d => ({ fill: colorHash[d.type], stroke: "white" })}
+            style={d => ({ fill: colorHash[d.action], stroke: "white" })}
             type={"bar"}
             oLabel={d => (
               <text transform="translate(-15,0)rotate(45)">{d}</text>

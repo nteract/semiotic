@@ -566,7 +566,7 @@ class OrdinalFrame extends React.Component {
         }
         oLabels = (
           <g
-            key="orframe-labels-container"
+            key="ordinalframe-labels-container"
             transform={`translate(${margin.left},${labelY + margin.top})`}
           >
             {labelArray}
@@ -575,7 +575,7 @@ class OrdinalFrame extends React.Component {
       } else if (projection === "horizontal") {
         oLabels = (
           <g
-            key="orframe-labels-container"
+            key="ordinalframe-labels-container"
             transform={`translate(${margin.left},${margin.top})`}
           >
             {labelArray}
@@ -584,7 +584,7 @@ class OrdinalFrame extends React.Component {
       } else if (projection === "radial") {
         oLabels = (
           <g
-            key="orframe-labels-container"
+            key="ordinalframe-labels-container"
             transform={`translate(${margin.left},${margin.top})`}
           >
             {labelArray}
@@ -805,7 +805,7 @@ class OrdinalFrame extends React.Component {
       foregroundGraphics: currentProps.foregroundGraphics,
       axisData: currentProps.axis,
       axes: (
-        <g key="orframe-axis" className="axis-labels">
+        <g key="ordinalframe-axis" className="axis-labels">
           {axis}
         </g>
       ),
@@ -889,6 +889,11 @@ class OrdinalFrame extends React.Component {
     const { projection } = this.props
     const { projectedColumns } = this.state
 
+    const pieceIDAccessor = stringToFn(
+      this.props.pieceIDAccessor,
+      d => d.semioticPieceID
+    )
+
     const { adjustedPosition, adjustedSize } = adjustedPositionSize(this.props)
 
     const screenProject = p => {
@@ -899,21 +904,41 @@ class OrdinalFrame extends React.Component {
       } else {
         o = 0
       }
+      const idPiece =
+        pieceIDAccessor(d) &&
+        oColumn.pieceData.find(
+          p => pieceIDAccessor(p.data) === pieceIDAccessor(d)
+        )
+      console.log("idPiece", idPiece)
+      console.log("idPiece", idPiece)
+
       if (oColumn && projection === "radial") {
         return pointOnArcAtAngle(
           [adjustedSize[0] / 2, adjustedSize[1] / 2],
           oColumn.pct_middle,
-          rScale(rAccessor(p)) / 2
+          idPiece
+            ? (idPiece.bottom + idPiece.scaledValue / 2) / 2
+            : rScale(rAccessor(p)) / 2
         )
       }
       if (projection === "horizontal") {
-        return [rScale(rAccessor(p)), o]
+        return [
+          idPiece
+            ? idPiece.bottom + idPiece.scaledValue / 2
+            : rScale(rAccessor(p)),
+          o
+        ]
       }
       const newScale = scaleLinear()
         .domain(rScale.domain())
         .range(rScale.range().reverse())
 
-      return [o, newScale(rAccessor(p))]
+      return [
+        o,
+        idPiece
+          ? idPiece.bottom - idPiece.scaledValue / 2
+          : newScale(rAccessor(p))
+      ]
     }
 
     let screenCoordinates = [0, 0]
@@ -928,7 +953,7 @@ class OrdinalFrame extends React.Component {
     }
 
     //TODO: Process your rules first
-    if (
+    const customAnnotation =
       this.props.svgAnnotationRules &&
       this.props.svgAnnotationRules({
         d,
@@ -938,27 +963,19 @@ class OrdinalFrame extends React.Component {
         oAccessor,
         rAccessor,
         orFrameProps: this.props,
-        orFrameState: this.state,
-        categories: this.state.projectedColumns
-      }) !== null
-    ) {
-      return this.props.svgAnnotationRules({
-        d,
-        i,
-        oScale,
-        rScale,
-        oAccessor,
-        rAccessor,
-        orFrameProps: this.props,
+        screenCoordinates,
         adjustedPosition,
         adjustedSize,
         annotationLayer,
         orFrameState: this.state,
         categories: this.state.projectedColumns
       })
+    if (this.props.svgAnnotationRules && customAnnotation !== null) {
+      return customAnnotation
     } else if (d.type === "or") {
       return svgORRule({ d, i, screenCoordinates, projection })
     } else if (d.type === "react-annotation" || typeof d.type === "function") {
+      console.log("screencoordinates", screenCoordinates)
       return basicReactAnnotationRule({ d, i, screenCoordinates })
     } else if (d.type === "enclose") {
       return svgEncloseRule({ d, i, screenCoordinates })
@@ -1181,7 +1198,7 @@ class OrdinalFrame extends React.Component {
 
     return (
       <Frame
-        name="orframe"
+        name="ordinalframe"
         renderPipeline={orFrameRender}
         adjustedPosition={adjustedPosition}
         adjustedSize={adjustedSize}
