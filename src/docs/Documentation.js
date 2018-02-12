@@ -35,6 +35,7 @@ import WordCloud from "./components/WordCloud"
 import SwarmBrush from "./components/SwarmBrush"
 import LineBrush from "./components/LineBrush"
 import Minimap from "./components/Minimap"
+import NetworkMinimap from "./components/NetworkMinimap"
 import Timeline from "./components/Timeline"
 import DivergingStackedBar from "./components/DivergingStackedBar"
 import DivergingStackedIsotype from "./components/DivergingStackedIsotype"
@@ -112,6 +113,7 @@ const components = {
   bullet: { docs: BulletChart, parent: "orframe" },
   realtimebar: { docs: RealtimeOrdinalFrame, parent: "orframe" },
   networkframe: { docs: NetworkFrameDocs },
+  networkminimap: { docs: NetworkMinimap, parent: "networkframe" },
   wordcloud: { docs: WordCloud, parent: "networkframe" },
   sankey: { docs: Sankey, parent: "networkframe" },
   chord: { docs: Chord, parent: "networkframe" },
