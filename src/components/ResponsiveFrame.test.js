@@ -16,35 +16,24 @@ describe("ResponsiveFrameComponents", () => {
   Object.keys(ResponsiveFrameComponents).forEach(componentName => {
     const ResponsiveFrameComponent = ResponsiveFrameComponents[componentName]
 
+    const mounted = mount(
+      <ResponsiveFrameComponent
+        dataVersion={"foo"}
+        disableContext={true}
+        responsiveHeight={true}
+        responsiveWidth={true}
+      />
+    )
+
     it("renders", () => {
-      mount(
-        <ResponsiveFrameComponent
-          dataVersion={"foo"}
-          disableContext={true}
-          responsiveHeight={true}
-          responsiveWidth={true}
-        />
-      )
+      mounted
     })
 
-    it("the frame should have text", () => {
-      const frame = shallow(<ResponsiveFrameComponent />)
-      expect(frame.contains(<div className="responsive-container" />)).toBe(
-        true
-      )
+    it("the frame have a responsive container classed div", () => {
+      //      const frame = shallow(<ResponsiveFrameComponent />)
+      //      expect(mounted.contains(<div />)).toBe(true)
+      expect(mounted.find("div.responsive-container").length).toEqual(1)
     })
-
-    it("renders a <ResizeDetector />", () => {
-      const wrapper = shallow(
-        <ResponsiveFrameComponent
-          dataVersion={"foo"}
-          disableContext={true}
-          responsiveHeight={true}
-          responsiveWidth={true}
-        />
-      )
-
-      expect(wrapper.find("ResizeDetector").length).toEqual(1)
-    })
+    //    expect(wrapper.find("ResizeDetector").length).toEqual(1)
   })
 })
