@@ -2,8 +2,6 @@ import React from "react"
 
 import { nest } from "d3-collection"
 
-import uniq from "lodash.uniq"
-
 import { scaleBand, scaleOrdinal, scaleLinear, scaleIdentity } from "d3-scale"
 
 import { sum, max, min, extent } from "d3-array"
@@ -157,8 +155,9 @@ class OrdinalFrame extends React.Component {
     )
     const title = generateFrameTitle(currentProps)
 
-    let oExtent =
-      currentProps.oExtent || uniq(allData.map((d, i) => oAccessor(d, i)))
+    let oExtent = currentProps.oExtent || [
+      ...new Set(allData.map((d, i) => oAccessor(d, i)))
+    ]
 
     if (pixelColumnWidth) {
       if (projection === "radial") {

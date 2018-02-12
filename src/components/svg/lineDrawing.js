@@ -1,9 +1,6 @@
 import { sum } from "d3-array"
 //import assert from 'assert';
 
-import flatten from "lodash.flatten"
-import uniq from "lodash.uniq"
-
 const datesForUnique = d => (d instanceof Date ? d.toString() : d)
 
 export const projectAreaData = ({
@@ -85,9 +82,13 @@ export const stackedArea = ({
       return p
     }, {})) */
 
-  const uniqXValues = uniq(
-    flatten(data.map(d => d.data.map(p => datesForUnique(p[xProp]))))
-  )
+  const uniqXValues = [
+    ...new Set(
+      data
+        .map(d => d.data.map(p => datesForUnique(p[xProp])))
+        .reduce((a, b) => a.concat(b), [])
+    )
+  ]
   let stackSort = (a, b) =>
     sum(b.data.map(p => p[yProp])) - sum(a.data.map(p => p[yProp]))
   if (type === "stackedpercent-invert" || type === "stackedarea-invert") {
@@ -103,9 +104,9 @@ export const stackedArea = ({
   uniqXValues.forEach(xValue => {
     let negativeOffset = 0
     let positiveOffset = 0
-    const stepValues = flatten(
-      data.map(d => d.data.filter(p => datesForUnique(p[xProp]) === xValue))
-    )
+    const stepValues = data
+      .map(d => d.data.filter(p => datesForUnique(p[xProp]) === xValue))
+      .reduce((a, b) => a.concat(b), [])
 
     const positiveStepTotal = sum(
       stepValues.map(d => (d[yProp] > 0 ? d[yProp] : 0))
@@ -172,9 +173,14 @@ export const bumpChart = ({
   yPropTop,
   yPropBottom
 }) => {
-  const uniqXValues = uniq(
-    flatten(data.map(d => d.data.map(p => datesForUnique(p[xProp]))))
-  )
+  const uniqXValues = [
+    ...new Set(
+      data
+        .map(d => d.data.map(p => datesForUnique(p[xProp])))
+        .reduce((a, b) => a.concat(b), [])
+    )
+  ]
+
   let bumpSort = (a, b) => {
     if (a[yProp] > b[yProp]) {
       return 1
@@ -200,9 +206,9 @@ export const bumpChart = ({
     let negativeOffset = 0
     let positiveOffset = 0
 
-    flatten(
-      data.map(d => d.data.filter(p => datesForUnique(p[xProp]) === xValue))
-    )
+    data
+      .map(d => d.data.filter(p => datesForUnique(p[xProp]) === xValue))
+      .reduce((a, b) => a.concat(b), [])
       .sort(bumpSort)
       .forEach((l, rank) => {
         //determine ranking and offset by the number of less than this one at each step
@@ -308,7 +314,7 @@ export function funnelize({ data, steps, key }) {
     data = [data]
   }
   if (!steps) {
-    steps = uniq(flatten(data.map(d => Object.keys(d))))
+    steps = data.map(d => Object.keys(d)).reduce((a, b) => a.concat(b), [])
   }
 
   data.forEach((datum, i) => {
