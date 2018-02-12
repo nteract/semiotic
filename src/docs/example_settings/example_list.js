@@ -16,6 +16,7 @@ import DivergingStackedBarRaw from "../components/DivergingStackedBarRaw"
 import ChordRaw from "../components/ChordRaw"
 import SankeyRaw from "../components/SankeyRaw"
 import MinimapRaw from "../components/MinimapRaw"
+import NetworkMinimapRaw from "../components/NetworkMinimapRaw"
 import AppleStockChartRaw from "../components/AppleStockChartRaw"
 import BaseballMapRaw from "../components/BaseballMapRaw"
 import BulletChartRaw from "../components/BulletChartRaw"
@@ -66,6 +67,11 @@ const exampos = [
     label: "Minimap Basics",
     viz: MinimapRaw(() => {}, [10, 30], [10, 30]),
     path: "minimap"
+  },
+  {
+    label: "Network Minimap Basics",
+    viz: NetworkMinimapRaw(() => {}, [10, 30], [10, 30]),
+    path: "networkminimap"
   },
   {
     label: "Background Graphics",

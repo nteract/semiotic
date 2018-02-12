@@ -4,6 +4,7 @@ import XYFrame from "./XYFrame"
 import OrdinalFrame from "./OrdinalFrame"
 import SmartFrame from "./SmartFrame"
 import MinimapXYFrame from "./MinimapXYFrame"
+import MinimapNetworkFrame from "./MinimapNetworkFrame"
 import MiniMap from "./MiniMap"
 import Axis from "./Axis"
 import Legend from "./Legend"
@@ -38,6 +39,7 @@ export default {
   DividedLine,
   XYFrame,
   MinimapXYFrame,
+  MinimapNetworkFrame,
   MiniMap,
   Brush,
   Axis,
@@ -71,6 +73,7 @@ export {
   DividedLine,
   XYFrame,
   MinimapXYFrame,
+  MinimapNetworkFrame,
   MiniMap,
   Brush,
   Axis,

@@ -10,13 +10,13 @@ export function lineGeneratorDecorator({
   xScale,
   yScale,
   interpolator,
-  singleLine
+  simpleLine
 }) {
   const { x, y, yTop, yBottom } = projectedCoordinateNames
 
   generator.x(d => xScale(d[x])).curve(interpolator)
 
-  if (singleLine) {
+  if (simpleLine) {
     generator.y(d => yScale(d[y]))
   } else {
     generator.y0(d => yScale(d[yBottom])).y1(d => yScale(d[yTop]))

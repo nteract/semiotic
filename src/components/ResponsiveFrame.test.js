@@ -27,6 +27,13 @@ describe("ResponsiveFrameComponents", () => {
       )
     })
 
+    it("the frame should have text", () => {
+      const frame = shallow(<ResponsiveFrameComponent />)
+      expect(frame.contains(<div className="responsive-container" />)).toBe(
+        true
+      )
+    })
+
     it("renders a <ResizeDetector />", () => {
       const wrapper = shallow(
         <ResponsiveFrameComponent
