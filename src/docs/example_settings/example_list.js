@@ -68,11 +68,11 @@ const exampos = [
     viz: MinimapRaw(() => {}, [10, 30], [10, 30]),
     path: "minimap"
   },
-  {
+  /*  {
     label: "Network Minimap Basics",
     viz: NetworkMinimapRaw(() => {}, [10, 30], [10, 30]),
     path: "networkminimap"
-  },
+  }, */
   {
     label: "Background Graphics",
     viz: DataSketchesPlotRaw,
