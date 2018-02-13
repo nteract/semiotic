@@ -65,6 +65,14 @@ export default (type = "stackedarea") => {
   }
   return (
     <div>
+      <iframe
+        width="560"
+        height="315"
+        src="https://www.youtube.com/embed/wCAhkIMT464"
+        frameborder="0"
+        allow="autoplay; encrypted-media"
+        allowfullscreen
+      />
       <ProcessViz frameSettings={negativeChart} frameType="SparkXYFrame" />
       <p style={{ fontSize: "20px", lineHeight: "28px" }}>
         When you insert small graphs into text those graphs are typically

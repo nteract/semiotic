@@ -51,8 +51,6 @@ import {
   networkEdgeDownloadMapping
 } from "./downloadDataMapping"
 
-import { sankey } from "d3-sankey"
-
 import {
   sankeyLeft,
   sankeyRight,
@@ -743,7 +741,7 @@ class NetworkFrame extends React.Component {
         } = networkSettings
         const sankeyOrient = sankeyOrientHash[orient]
 
-        const actualSankey = customSankey || sankey
+        const actualSankey = customSankey || sankeyCircular
 
         let frameExtent = [[0, 0], adjustedSize]
 
@@ -753,6 +751,41 @@ class NetworkFrame extends React.Component {
         ) {
           frameExtent = [[0, 0], [adjustedSize[1], adjustedSize[0]]]
         }
+
+        //Temporary fix for when sankey-circular sets the size incorrectly
+        const initialSettings = actualSankey()
+          .extent(frameExtent)
+          .links(projectedEdges)
+          .nodes(projectedNodes)
+          .nodeAlign(sankeyOrient)
+          .nodeId(nodeIDAccessor)
+          .nodePadding(nodePadding)
+          .nodeWidth(nodeWidth)
+          .iterations(1)
+
+        initialSettings()
+
+        const circularEdges = projectedEdges.filter(d => d.circular === true)
+
+        if (circularEdges.length === 0) {
+          frameExtent = [
+            [0, -frameExtent[1][1]],
+            [frameExtent[1][0], frameExtent[1][1]]
+          ]
+        } else if (!circularEdges.find(d => d.circularLinkType === "top")) {
+          const bottomEdges = circularEdges.filter(
+            d => d.circularLinkType === "bottom"
+          )
+
+          const offset = bottomEdges
+            .map(d => d.circularPathData.leftLargeArcRadius)
+            .reduce((p, c) => p + c)
+          frameExtent = [
+            [0, -frameExtent[1][1]],
+            [frameExtent[1][0], frameExtent[1][1] - offset]
+          ]
+        }
+        //End temporary
 
         const frameSankey = actualSankey()
           .extent(frameExtent)

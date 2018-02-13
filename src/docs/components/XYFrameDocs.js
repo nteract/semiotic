@@ -644,7 +644,7 @@ export default class XYFrameDocs extends React.Component {
 
     this.state = {
       lineType: "none",
-      annotations: "on",
+      annotations: "off",
       curve: "none",
       margin: "object",
       axes: "basic",
@@ -662,7 +662,7 @@ export default class XYFrameDocs extends React.Component {
       pointExtent: [[-1000, 1000], [1000, -1000]],
       areaExtent: [[-1000, 1000], [1000, -1000]],
       showPoints: "off",
-      annotationSettings: "plainMarginalia",
+      annotationSettings: "empty",
       axisAnnotatable: "off",
       axisAnnotation: {
         type: "y",
@@ -1033,8 +1033,7 @@ export default class XYFrameDocs extends React.Component {
                   sort: null
                 }
           }
-          //          margin={marginHash[this.state.margin]}
-          margin={50}
+          margin={marginHash[this.state.margin]}
           defined={
             this.state.defined === "inactive" ? undefined : d => d.py !== 0
           }
@@ -1054,8 +1053,8 @@ export default class XYFrameDocs extends React.Component {
               ? undefined
               : () => this.state.renderMode
           }
-          //          hoverAnnotation={this.state.hoverAnnotation === "on"}
-          hoverAnnotation={[
+          hoverAnnotation={this.state.hoverAnnotation === "on"}
+          /*          hoverAnnotation={[
             { type: "y", disable: ["connector", "note"] },
             { type: "x", disable: ["connector", "note"] },
             d => ({ type: "xy", label: d.cat }),
@@ -1070,7 +1069,7 @@ export default class XYFrameDocs extends React.Component {
               threshold: 5,
               r: (d, i) => i + 5
             }
-          ]}
+          ]} */
           canvasLines={
             this.state.canvasRender === "none"
               ? undefined
@@ -1544,6 +1543,14 @@ export default class XYFrameDocs extends React.Component {
           Or turn on annotations to see how semiotic automatically processes
           annotations.
         </p>
+        <iframe
+          width="560"
+          height="315"
+          src="https://www.youtube.com/embed/0HIj_7-ghaE"
+          frameborder="0"
+          allow="autoplay; encrypted-media"
+          allowfullscreen
+        />
       </DocumentComponent>
     )
   }

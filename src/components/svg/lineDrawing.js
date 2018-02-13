@@ -1,5 +1,4 @@
 import { sum } from "d3-array"
-//import assert from 'assert';
 
 const datesForUnique = d => (d instanceof Date ? d.toString() : d)
 
