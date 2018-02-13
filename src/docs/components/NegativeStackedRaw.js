@@ -42,6 +42,14 @@ export default (type = "stackedarea") => {
   }
   return (
     <div>
+      <iframe
+        width="560"
+        height="315"
+        src="https://www.youtube.com/embed/xiu3cuCio1w"
+        frameborder="0"
+        allow="autoplay; encrypted-media"
+        allowfullscreen
+      />
       <ProcessViz frameSettings={negativeChart} frameType="XYFrame" />
       <XYFrame {...negativeChart} />
     </div>

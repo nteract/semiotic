@@ -24,7 +24,6 @@ if (true) {
     target: "Gas reserves",
     value: 2500
   })
-
   cyclicalData.push({
     source: "Oil",
     target: "Oil reserves",

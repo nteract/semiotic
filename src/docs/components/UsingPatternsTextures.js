@@ -78,6 +78,14 @@ export default class UsingPatternsTextures extends React.Component {
       name: "Using Textures",
       demo: (
         <div>
+          <iframe
+            width="560"
+            height="315"
+            src="https://www.youtube.com/embed/8A5P3p74pcQ"
+            frameborder="0"
+            allow="autoplay; encrypted-media"
+            allowfullscreen
+          />
           <p>
             We'll get started with using textures for a visualization like this
             bar chart. You can use textures in a couple different ways:
@@ -153,6 +161,8 @@ export default class UsingPatternsTextures extends React.Component {
         </div>
       ),
       source: `
+      import { PatternWaves } from "@vx/pattern"
+
       const barChartSettings = {
         size: [ 220, 220 ],
         data: [5, 8, 2, 3, 10],
@@ -313,12 +323,24 @@ export default class UsingPatternsTextures extends React.Component {
       name: "Canvas Post-Processing",
       demo: (
         <div>
-          <p>Beep beep canvasPostProcess="chuckClose"</p>
+          <p>
+            Except for summary types and custom shape types, frames can render
+            their graphics in canvas. This can be useful to reduce the number of
+            nodes in the DOM, which can show performance gains. Canvas graphics
+            will not be animated.
+          </p>
           <ol>
-            <li>XYFrame: pointCanvasMode, areaCanvasMode, lineCanvasMode</li>
-            <li>OrdinalFrame: canvasMode, summaryCanvasMode</li>
-            <li>NetworkFrame: nodeCanvasMode, edgeCanvasMode</li>
+            <li>XYFrame: canvasPoints, canvasAreas, canvasLines</li>
+            <li>OrdinalFrame: canvasPieces</li>
+            <li>NetworkFrame: canvasNodes, canvasEdges</li>
           </ol>
+          <p>
+            Additionally the canvas itself can be used for post-processing
+            effects using the frames canvasPostProcess property, which will be
+            sent (canvas, context, size) is shown below using the demo
+            "chuckClose" restyling (which does a fun Chuck Close style filter)
+            and also a custom glow filter.
+          </p>
           <div>
             <div
               style={{
@@ -358,7 +380,43 @@ export default class UsingPatternsTextures extends React.Component {
           </div>
         </div>
       ),
-      source: ``
+      source: `
+  const glowyCanvas = (canvas, context, size) => {
+    const dataURL = canvas.toDataURL("image/png")
+    const baseImage = document.createElement("img")
+  
+    baseImage.src = dataURL
+    baseImage.onload = () => {
+      context.clearRect(0, 0, size[0] + 120, size[1] + 120)
+      context.filter = "blur(10px)"
+      context.drawImage(baseImage, 0, 0)
+      context.filter = "blur(5px)"
+      context.drawImage(baseImage, 0, 0)
+      context.filter = "none"
+      context.drawImage(baseImage, 0, 0)
+    }
+  }
+
+  <OrdinalFrame
+  {...barChartSettings}
+  size={[350, 350]}
+  title="painty"
+  style={{ fill: "#b6a756" }}
+  canvasPieces={true}
+  canvasPostProcess={glowyCanvas}
+  />
+
+  <OrdinalFrame
+  {...barChartSettings}
+  size={[350, 350]}
+  style={(d, i) => ({
+    fill: "#b6a756",
+    stroke: "#b6a756"
+  })}
+  oPadding={15}
+  canvasPieces={true}
+  canvasPostProcess={"chuckClose"}
+  />`
     })
 
     return (

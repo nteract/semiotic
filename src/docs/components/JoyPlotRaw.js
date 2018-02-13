@@ -62,6 +62,14 @@ const joyChartSettings = {
 
 export default (
   <div>
+    <iframe
+      width="560"
+      height="315"
+      src="https://www.youtube.com/embed/LoR7TfIWR2k"
+      frameborder="0"
+      allow="autoplay; encrypted-media"
+      allowfullscreen
+    />
     <ProcessViz frameSettings={joyChartSettings} frameType="OrdinalFrame" />
     <OrdinalFrame {...joyChartSettings} />
   </div>
