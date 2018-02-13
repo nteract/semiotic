@@ -27,9 +27,6 @@ class MinimapNetworkFrame extends NetworkFrame {
       brushEnd: () => {}
     }
 
-    console.log("this.props.nodes", this.props.nodes)
-    console.log("this.props.edges", this.props.edges)
-
     let combinedOptions = Object.assign(miniDefaults, this.props.minimap)
 
     combinedOptions.hoverAnnotation = false

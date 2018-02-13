@@ -100,14 +100,16 @@ export const calculateDataExtent = ({
     projectedLines.forEach(d => {
       fullDataset = [
         ...fullDataset,
-        ...d.data.filter(p => defined(p)).map(p => ({
-          parentLine: d,
-          [projectedY]: p[projectedY],
-          [projectedX]: p[projectedX],
-          [projectedYTop]: p[projectedYTop],
-          [projectedYBottom]: p[projectedYBottom],
-          data: p.data
-        }))
+        ...d.data
+          .filter((p, q) => defined(Object.assign({}, p.data, p), q))
+          .map(p => ({
+            parentLine: d,
+            [projectedY]: p[projectedY],
+            [projectedX]: p[projectedX],
+            [projectedYTop]: p[projectedYTop],
+            [projectedYBottom]: p[projectedYBottom],
+            data: p.data
+          }))
       ]
     })
   }

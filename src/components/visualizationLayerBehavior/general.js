@@ -23,7 +23,7 @@ export function lineGeneratorDecorator({
   }
 
   if (defined) {
-    generator.defined(p => p._xyFrameUndefined || defined(p))
+    generator.defined((p, q) => defined(p, q))
   } else {
     generator.defined(p => !p._xyFrameUndefined)
   }
@@ -152,7 +152,7 @@ export function createLines({
       const markProps = {
         ...baseMarkProps,
         markType: "path",
-        d: lineGenerator(d.data)
+        d: lineGenerator(d.data.map(p => Object.assign({}, p.data, p)))
       }
       if (canvasRender && canvasRender(d, i) === true) {
         const canvasLine = {
