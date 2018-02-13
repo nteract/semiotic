@@ -35,7 +35,14 @@ class VisualizationLayer extends React.PureComponent {
     ]
 
     const context = this.props.canvasContext.getContext("2d")
-    context.setTransform(1, 0, 0, 1, 0, 0)
+    context.setTransform(
+      1,
+      0,
+      0,
+      1,
+      this.props.margin.left,
+      this.props.margin.top
+    )
     context.clearRect(0, 0, size[0], size[1])
 
     this.canvasDrawing.forEach(piece => {
@@ -48,7 +55,14 @@ class VisualizationLayer extends React.PureComponent {
       stroke = !style.strokeOpacity
         ? stroke
         : `rgba(${[...hexToRgb(stroke), style.strokeOpacity]})`
-      context.setTransform(1, 0, 0, 1, 0, 0)
+      context.setTransform(
+        1,
+        0,
+        0,
+        1,
+        this.props.margin.left,
+        this.props.margin.top
+      )
       context.translate(...this.props.position)
       context.translate(piece.tx, piece.ty)
       context.fillStyle = fill

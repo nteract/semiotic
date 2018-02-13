@@ -154,11 +154,11 @@ class Frame extends React.Component {
               ref={canvasContext => (this.canvasContext = canvasContext)}
               style={{
                 position: "absolute",
-                left: `${margin.left}px`,
-                top: `${margin.top}px`
+                left: `0px`,
+                top: `0px`
               }}
-              width={size[0]}
-              height={size[1]}
+              width={size[0] + margin.left + margin.right}
+              height={size[1] + margin.top + margin.bottom}
             />
             <svg
               className="visualization-layer"
