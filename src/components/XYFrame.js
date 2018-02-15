@@ -764,6 +764,11 @@ class XYFrame extends React.Component {
         <div className="tooltip-content">
           <p key="html-annotation-content-1">{xString}</p>
           <p key="html-annotation-content-2">{yString}</p>
+          {d.percent ? (
+            <p key="html-annotation-content-3">
+              {parseInt(d.percent * 1000) / 10}%
+            </p>
+          ) : null}
         </div>
       )
 

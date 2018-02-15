@@ -116,13 +116,24 @@ export const stackedArea = ({
 
     stepValues.forEach(l => {
       if (l[yProp] < 0) {
-        if (type === "stackedpercent" || type === "stackedpercent-invert") {
-          const adjustment =
-            negativeStepTotal >= 0 ? 0 : l[yProp] / negativeStepTotal
-          l[yPropBottom] =
-            negativeStepTotal === 0 ? 0 : -(negativeOffset / negativeStepTotal)
-          l[yPropTop] = l[yPropBottom] - adjustment
-          l[yPropMiddle] = l[yPropBottom] - adjustment / 2
+        if (
+          type === "linepercent" ||
+          type === "stackedpercent" ||
+          type === "stackedpercent-invert"
+        ) {
+          const percent = l[yProp] / negativeStepTotal
+          l.percent = percent
+          if (type === "linepercent") {
+            l[yPropBottom] = l[yPropTop] = l[yPropMiddle] = percent
+          } else {
+            const adjustment = negativeStepTotal >= 0 ? 0 : percent
+            l[yPropBottom] =
+              negativeStepTotal === 0
+                ? 0
+                : -(negativeOffset / negativeStepTotal)
+            l[yPropTop] = l[yPropBottom] - adjustment
+            l[yPropMiddle] = l[yPropBottom] - adjustment / 2
+          }
         } else {
           l[yPropBottom] = negativeOffset
           l[yPropTop] = negativeOffset + l[yProp]
@@ -130,13 +141,23 @@ export const stackedArea = ({
         }
         negativeOffset += l[yProp]
       } else {
-        if (type === "stackedpercent" || type === "stackedpercent-invert") {
-          const adjustment =
-            positiveStepTotal <= 0 ? 0 : l[yProp] / positiveStepTotal
-          l[yPropBottom] =
-            positiveStepTotal === 0 ? 0 : positiveOffset / positiveStepTotal
-          l[yPropTop] = l[yPropBottom] + adjustment
-          l[yPropMiddle] = l[yPropBottom] + adjustment / 2
+        if (
+          type === "linepercent" ||
+          type === "stackedpercent" ||
+          type === "stackedpercent-invert"
+        ) {
+          const percent = l[yProp] / positiveStepTotal
+          l.percent = percent
+
+          if (type === "linepercent") {
+            l[yPropBottom] = l[yPropTop] = l[yPropMiddle] = percent
+          } else {
+            const adjustment = positiveStepTotal <= 0 ? 0 : percent
+            l[yPropBottom] =
+              positiveStepTotal === 0 ? 0 : positiveOffset / positiveStepTotal
+            l[yPropTop] = l[yPropBottom] + adjustment
+            l[yPropMiddle] = l[yPropBottom] + adjustment / 2
+          }
         } else {
           l[yPropBottom] = positiveOffset
           l[yPropTop] = positiveOffset + l[yProp]
