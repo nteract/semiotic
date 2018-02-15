@@ -20,6 +20,7 @@ const builtInTransformations = {
   "stackedarea-invert": stackedArea,
   stackedpercent: stackedArea,
   "stackedpercent-invert": stackedArea,
+  linepercent: stackedArea,
   difference: differenceLine,
   bumparea: bumpChart,
   bumpline: bumpChart,
@@ -102,14 +103,21 @@ export const calculateDataExtent = ({
         ...fullDataset,
         ...d.data
           .filter((p, q) => defined(Object.assign({}, p.data, p), q))
-          .map(p => ({
-            parentLine: d,
-            [projectedY]: p[projectedY],
-            [projectedX]: p[projectedX],
-            [projectedYTop]: p[projectedYTop],
-            [projectedYBottom]: p[projectedYBottom],
-            data: p.data
-          }))
+          .map(p => {
+            const mappedP = {
+              parentLine: d,
+              [projectedY]: p[projectedY],
+              [projectedX]: p[projectedX],
+              [projectedYTop]: p[projectedYTop],
+              [projectedYMiddle]: p[projectedYMiddle],
+              [projectedYBottom]: p[projectedYBottom],
+              data: p.data
+            }
+            if (p.percent) {
+              mappedP.percent = p.percent
+            }
+            return mappedP
+          })
       ]
     })
   }
