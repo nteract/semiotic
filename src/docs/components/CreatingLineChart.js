@@ -774,7 +774,7 @@ export default class CreatingLineChart extends React.Component {
             These also expose a percent value in the default tooltip.
           </p>
           <XYFrame
-            title={"stackedpercent"}
+            title={"linepercent"}
             size={[700, 400]}
             lines={movies}
             dataVersion="fixed"
