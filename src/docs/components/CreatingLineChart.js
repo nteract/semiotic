@@ -764,6 +764,123 @@ export default class CreatingLineChart extends React.Component {
     })
 
     examples.push({
+      name: "Percent Charts",
+      demo: (
+        <div>
+          <p>
+            For convenience there are "stackedpercent" and "linepercent" chart
+            types that lay out stacked area and line charts but calculate the
+            line position and value as a percent of the lines at that point.
+            These also expose a percent value in the default tooltip.
+          </p>
+          <XYFrame
+            title={"stackedpercent"}
+            size={[700, 400]}
+            lines={movies}
+            dataVersion="fixed"
+            xScaleType={scaleTime()}
+            xAccessor={d => new Date(d.date)}
+            yAccessor={"grossWeekly"}
+            lineType={{ type: "linepercent", interpolator: curveMonotoneX }}
+            lineStyle={d => ({
+              stroke: colorHash[d.title],
+              strokeWidth: 2
+            })}
+            margin={{ left: 50, bottom: 50, right: 10, top: 40 }}
+            axes={[
+              {
+                orient: "left",
+                tickFormat: d => parseInt(d * 100) + "%"
+              },
+              {
+                orient: "bottom",
+                tickFormat: d => d.getMonth() + "/" + d.getDate()
+              }
+            ]}
+            hoverAnnotation={true}
+          />
+          <XYFrame
+            title={"stackedpercent"}
+            size={[700, 400]}
+            lines={movies}
+            dataVersion="fixed"
+            xScaleType={scaleTime()}
+            xAccessor={d => new Date(d.date)}
+            yAccessor={"grossWeekly"}
+            lineType={{ type: "stackedpercent", interpolator: curveMonotoneX }}
+            lineStyle={d => ({
+              fill: colorHash[d.title]
+            })}
+            margin={{ left: 50, bottom: 50, right: 10, top: 40 }}
+            axes={[
+              {
+                orient: "left",
+                tickFormat: d => parseInt(d * 100) + "%"
+              },
+              {
+                orient: "bottom",
+                tickFormat: d => d.getMonth() + "/" + d.getDate()
+              }
+            ]}
+            hoverAnnotation={true}
+          />
+        </div>
+      ),
+      source: `import { curveMonotoneX } from "d3-shape";
+      <XYFrame
+      title={"stackedpercent"}
+      size={[700, 400]}
+      lines={movies}
+      dataVersion="fixed"
+      xScaleType={scaleTime()}
+      xAccessor={d => new Date(d.date)}
+      yAccessor={"grossWeekly"}
+      lineType={{ type: "linepercent", interpolator: curveMonotoneX }}
+      lineStyle={d => ({
+        stroke: colorHash[d.title], strokeWidth: 2
+      })}
+      margin={{ left: 50, bottom: 50, right: 10, top: 40 }}
+      axes={[
+        {
+          orient: "left",
+          tickFormat: d => parseInt(d * 100) + "%"
+        },
+        {
+          orient: "bottom",
+          tickFormat: d => d.getMonth() + "/" + d.getDate()
+        }
+      ]}
+      hoverAnnotation={true}
+    />
+
+      <XYFrame
+      title={"stackedpercent"}
+      size={[700, 400]}
+      lines={movies}
+      dataVersion="fixed"
+      xScaleType={scaleTime()}
+      xAccessor={d => new Date(d.date)}
+      yAccessor={"grossWeekly"}
+      lineType={{ type: "stackedpercent", interpolator: curveMonotoneX }}
+      lineStyle={d => ({
+        fill: colorHash[d.title]
+      })}
+      margin={{ left: 50, bottom: 50, right: 10, top: 40 }}
+      axes={[
+        {
+          orient: "left",
+          tickFormat: d => parseInt(d * 100) + "%"
+        },
+        {
+          orient: "bottom",
+          tickFormat: d => d.getMonth() + "/" + d.getDate()
+        }
+      ]}
+      hoverAnnotation={true}
+    />`
+    })
+
+    examples.push({
       name: "Bump Area Chart",
       demo: (
         <div>
