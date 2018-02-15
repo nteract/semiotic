@@ -1,6 +1,6 @@
 {
   "name": "semiotic",
-  "version": "1.7.8",
+  "version": "1.7.9",
   "description": "The semiotic JavaScript data visualization framework",
   "main": "lib/index.js",
   "unpkg": "dist/semiotic.js",
