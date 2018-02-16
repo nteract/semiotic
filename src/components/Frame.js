@@ -155,8 +155,7 @@ class Frame extends React.Component {
               style={{
                 position: "absolute",
                 left: `0px`,
-                top: `0px`,
-                background: "red"
+                top: `0px`
               }}
               width={size[0]}
               height={size[1]}

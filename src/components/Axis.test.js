@@ -4,9 +4,10 @@ import Axis from "./Axis"
 import { scaleLinear } from "d3-scale"
 
 const axisWidth = 100
+const axisHeight = 200
 
 const axisProps = {
-  size: [axisWidth, 100],
+  size: [axisWidth, axisHeight],
   scale: scaleLinear()
     .domain([0, 100])
     .range([10, 100])
@@ -32,22 +33,24 @@ describe("Axis", () => {
       console.log("e", e)
       clicked = true
     }
-    const shallowAxisBrush = shallow(
+    const shallowAxisBrushLeft = shallow(
       <Axis {...axisProps} annotationFunction={testFuncStub} orient={"left"} />
     )
 
-    expect(shallowAxisBrush.find("g.annotation-brush").length).toEqual(1)
+    expect(shallowAxisBrushLeft.find("g.annotation-brush").length).toEqual(1)
 
-    shallowAxisBrush.find("g.annotation-brush > rect").simulate("click")
+    shallowAxisBrushLeft.find("g.annotation-brush > rect").simulate("click")
     expect(clicked).toEqual(true)
 
-    console.log(
-      "shallowAxisBrush.find(g.annotation-brush)",
-      shallowAxisBrush.find("g.annotation-brush").props().transform
-    )
-
     expect(
-      shallowAxisBrush.find("g.annotation-brush").props().transform
+      shallowAxisBrushLeft.find("g.annotation-brush").props().transform
     ).toEqual(`translate(-50,0)`)
+
+    const shallowAxisBrushBottom = shallow(
+      <Axis {...axisProps} annotationFunction={testFuncStub} orient={"left"} />
+    )
+    expect(
+      shallowAxisBrushLeft.find("g.annotation-brush").props().transform
+    ).toEqual(`translate(0,${axisHeight})`)
   })
 })
