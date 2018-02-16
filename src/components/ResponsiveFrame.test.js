@@ -1,8 +1,6 @@
 import React from "react"
 import { mount, shallow } from "enzyme"
 import * as ResponsiveFrameComponents from "./ResponsiveFrame"
-import injectTapEventPlugin from "react-tap-event-plugin"
-injectTapEventPlugin()
 
 /* 
 export const ResponsiveXYFrame = createResponsiveFrame(XYFrame);
