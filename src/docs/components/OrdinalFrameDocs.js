@@ -48,7 +48,7 @@ const customBar = {
   type: "clusterbar",
   customMark: (d, i, xy) => [
     <rect
-      style={{ fill: "#00a2ce" }}
+      style={{ fill: d.funnelKey, stroke: "black" }}
       x={2}
       width={xy.width - 4}
       height={xy.height}

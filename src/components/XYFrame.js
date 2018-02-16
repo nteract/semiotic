@@ -883,7 +883,7 @@ class XYFrame extends React.Component {
 
     const finalFilterDefs = filterDefs({
       matte: matte,
-      key: xyframeKey,
+      key: matte && (this.props.frameKey || xyframeKey),
       additionalDefs: additionalDefs
     })
 
@@ -946,6 +946,7 @@ XYFrame.propTypes = {
   title: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
   margin: PropTypes.oneOfType([PropTypes.number, PropTypes.object]),
   dataVersion: PropTypes.string,
+  frameKey: PropTypes.string,
   axes: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
   matte: PropTypes.oneOfType([PropTypes.bool, PropTypes.object]),
   size: PropTypes.array,

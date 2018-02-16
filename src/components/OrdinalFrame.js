@@ -161,7 +161,7 @@ class OrdinalFrame extends React.Component {
         ? { extent: baseOExtent }
         : baseOExtent
 
-    let oExtent = oExtentSettings.oExtent || [
+    let oExtent = oExtentSettings.extent || [
       ...new Set(allData.map((d, i) => oAccessor(d, i)))
     ]
 

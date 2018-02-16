@@ -259,7 +259,7 @@ export function clusterBarLayout({
             translate ? translate : `translate(${xPosition},${yPosition})`
           }
         >
-          {type.customMark(piece, i, xy)}
+          {type.customMark({ ...piece.data, ...piece }, i, xy)}
         </g>
       ) : (
         {
@@ -420,7 +420,7 @@ export function barLayout({
           key={"piece-" + piece.renderKey}
           transform={`translate(${xPosition},${yPosition})`}
         >
-          {type.customMark(piece, i, xy)}
+          {type.customMark({ ...piece.data, ...piece }, i, xy)}
         </g>
       ) : (
         {
@@ -543,7 +543,7 @@ export function timelineLayout({
           key={"piece-" + piece.renderKey}
           transform={`translate(${xPosition},${yPosition + height})`}
         >
-          {type.customMark(piece, i, xy)}
+          {type.customMark({ ...piece.data, ...piece }, i, xy)}
         </g>
       ) : (
         {
@@ -623,7 +623,7 @@ export function pointLayout({
           key={"piece-" + piece.renderKey}
           transform={`translate(${xPosition},${yPosition})`}
         >
-          {type.customMark(piece, i)}
+          {type.customMark({ ...piece.data, ...piece }, i)}
         </g>
       ) : (
         {
@@ -735,7 +735,7 @@ export function swarmLayout({
           key={"piece-" + piece.renderKey}
           transform={`translate(${xPosition},${yPosition})`}
         >
-          {type.customMark(piece, i)}
+          {type.customMark({ ...piece.data, ...piece }, i)}
         </g>
       ) : (
         {
