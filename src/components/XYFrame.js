@@ -214,6 +214,8 @@ class XYFrame extends React.Component {
     let xExtent = xExtentSettings.extent
     let yExtent = yExtentSettings.extent
 
+    let calculatedXExtent, calculatedYExtent
+
     const xAccessor = stringToFn(currentProps.xAccessor)
     const yAccessor = stringToFn(currentProps.yAccessor)
     const lineIDAccessor = stringToFn(
@@ -238,7 +240,9 @@ class XYFrame extends React.Component {
           projectedLines,
           projectedPoints,
           projectedAreas,
-          fullDataset
+          fullDataset,
+          calculatedXExtent,
+          calculatedYExtent
         } = calculateDataExtent({ ...currentProps, xExtent, yExtent }))
       }
     } else {
@@ -248,7 +252,9 @@ class XYFrame extends React.Component {
         projectedLines,
         projectedPoints,
         projectedAreas,
-        fullDataset
+        fullDataset,
+        calculatedXExtent,
+        calculatedYExtent
       } = this.state)
     }
 
@@ -462,15 +468,17 @@ class XYFrame extends React.Component {
 
     if (
       xExtentSettings.onChange &&
-      (this.state.xExtent || []).join(",") !== (xExtent || []).join(",")
+      (this.state.calculatedXExtent || []).join(",") !==
+        (calculatedXExtent || []).join(",")
     ) {
-      xExtentSettings.onChange(xExtent)
+      xExtentSettings.onChange(calculatedXExtent)
     }
     if (
       yExtentSettings.onChange &&
-      (this.state.yExtent || []).join(",") !== (yExtent || []).join(",")
+      (this.state.calculatedYExtent || []).join(",") !==
+        (calculatedYExtent || []).join(",")
     ) {
-      yExtentSettings.onChange(yExtent)
+      yExtentSettings.onChange(calculatedYExtent)
     }
 
     this.setState({
@@ -497,6 +505,8 @@ class XYFrame extends React.Component {
       yScale,
       xExtent,
       yExtent,
+      calculatedXExtent,
+      calculatedYExtent,
       margin,
       legendSettings,
       matte: marginGraphic,

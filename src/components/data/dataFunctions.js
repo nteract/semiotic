@@ -13,7 +13,7 @@ import {
   lineChart
 } from "../svg/lineDrawing"
 import { contouring } from "../svg/areaDrawing"
-import { max, min } from "d3-array"
+import { max, min, extent } from "d3-array"
 
 const builtInTransformations = {
   stackedarea: stackedArea,
@@ -196,37 +196,36 @@ export const calculateDataExtent = ({
     return data => lineType({ ...options, data })
   }
 
+  const calculatedXExtent = extent(fullDataset.map(d => d[projectedX]))
+  const calculatedYExtent = [
+    min(
+      fullDataset.map(
+        d =>
+          d[projectedYBottom] === undefined
+            ? d[projectedY]
+            : Math.min(d[projectedYTop], d[projectedYBottom])
+      )
+    ),
+
+    max(
+      fullDataset.map(
+        d =>
+          d[projectedYTop] === undefined
+            ? d[projectedY]
+            : Math.max(d[projectedYBottom], d[projectedYTop])
+      )
+    )
+  ]
+
   let xMin =
-    xExtent && xExtent[0] !== undefined
-      ? xExtent[0]
-      : min(fullDataset.map(d => d[projectedX]))
+    xExtent && xExtent[0] !== undefined ? xExtent[0] : calculatedXExtent[0]
   let xMax =
-    xExtent && xExtent[1] !== undefined
-      ? xExtent[1]
-      : max(fullDataset.map(d => d[projectedX]))
+    xExtent && xExtent[1] !== undefined ? xExtent[1] : calculatedXExtent[1]
 
   let yMin =
-    yExtent && yExtent[0] !== undefined
-      ? yExtent[0]
-      : min(
-          fullDataset.map(
-            d =>
-              d[projectedYBottom] === undefined
-                ? d[projectedY]
-                : Math.min(d[projectedYTop], d[projectedYBottom])
-          )
-        )
+    yExtent && yExtent[0] !== undefined ? yExtent[0] : calculatedYExtent[0]
   let yMax =
-    yExtent && yExtent[1] !== undefined
-      ? yExtent[1]
-      : max(
-          fullDataset.map(
-            d =>
-              d[projectedYTop] === undefined
-                ? d[projectedY]
-                : Math.max(d[projectedYBottom], d[projectedYTop])
-          )
-        )
+    yExtent && yExtent[1] !== undefined ? yExtent[1] : calculatedYExtent[1]
 
   let finalYExtent = [yMin, yMax]
   let finalXExtent = [xMin, xMax]
@@ -272,6 +271,8 @@ export const calculateDataExtent = ({
     projectedLines,
     projectedPoints,
     projectedAreas,
-    fullDataset
+    fullDataset,
+    calculatedXExtent,
+    calculatedYExtent
   }
 }

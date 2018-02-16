@@ -161,9 +161,11 @@ class OrdinalFrame extends React.Component {
         ? { extent: baseOExtent }
         : baseOExtent
 
-    let oExtent = oExtentSettings.extent || [
+    const calculatedOExtent = [
       ...new Set(allData.map((d, i) => oAccessor(d, i)))
     ]
+
+    let oExtent = oExtentSettings.extent || calculatedOExtent
 
     if (pixelColumnWidth) {
       if (projection === "radial") {
@@ -196,9 +198,7 @@ class OrdinalFrame extends React.Component {
       pieceType.type = undefined
     }
 
-    if (rExtent && rExtent[0] !== undefined && rExtent[1] !== undefined) {
-      rExtent = currentProps.rExtent
-    } else if (pieceType.type === "timeline") {
+    if (pieceType.type === "timeline") {
       const rData = allData.map(rAccessor)
       const leftExtent = extent(rData.map(d => d[0]))
       const rightExtent = extent(rData.map(d => d[1]))
@@ -219,33 +219,19 @@ class OrdinalFrame extends React.Component {
         .rollup(leaves => sum(leaves.map(rAccessor)))
         .entries(negativeData)
 
-      let topR = baseRExtent && baseRExtent[1]
+      rExtent = [
+        0,
+        nestedPositiveData.length === 0
+          ? 0
+          : Math.max(max(nestedPositiveData, d => d.value), 0)
+      ]
 
-      rExtent =
-        baseRExtent && topR
-          ? [0, topR]
-          : [
-              0,
-              nestedPositiveData.length === 0
-                ? 0
-                : Math.max(max(nestedPositiveData, d => d.value), 0)
-            ]
-
-      let bottomR = baseRExtent && baseRExtent[0]
-
-      if (baseRExtent && topR && bottomR && baseRExtent[0] > baseRExtent[1]) {
-        //Assume a flipped rExtent
-        bottomR = baseRExtent && baseRExtent[1]
-        topR = baseRExtent && baseRExtent[0]
-      }
-      subZeroRExtent = bottomR
-        ? [0, bottomR]
-        : [
-            0,
-            nestedNegativeData.length === 0
-              ? 0
-              : Math.min(min(nestedNegativeData, d => d.value), 0)
-          ]
+      subZeroRExtent = [
+        0,
+        nestedNegativeData.length === 0
+          ? 0
+          : Math.min(min(nestedNegativeData, d => d.value), 0)
+      ]
       rExtent = [subZeroRExtent[1], rExtent[1]]
     }
 
@@ -253,20 +239,30 @@ class OrdinalFrame extends React.Component {
       rExtent[0] = 0
     }
 
-    if (
-      baseRExtent &&
-      baseRExtent[1] !== undefined &&
-      baseRExtent[0] === undefined
-    ) {
-      rExtent[1] = baseRExtent[1]
-    }
+    const calculatedRExtent = rExtent
 
     if (
-      baseRExtent &&
-      baseRExtent[0] !== undefined &&
-      baseRExtent[1] === undefined
+      rExtentSettings.extent &&
+      rExtentSettings.extent[0] !== undefined &&
+      rExtentSettings.extent[1] !== undefined
     ) {
-      rExtent[0] = baseRExtent[0]
+      rExtent = rExtentSettings.extent
+    } else {
+      if (
+        rExtentSettings.extent &&
+        rExtentSettings.extent[1] !== undefined &&
+        rExtentSettings.extent[0] === undefined
+      ) {
+        rExtent[1] = rExtentSettings.extent[1]
+      }
+
+      if (
+        rExtentSettings.extent &&
+        rExtentSettings.extent[0] !== undefined &&
+        rExtentSettings.extent[1] === undefined
+      ) {
+        rExtent[0] = rExtentSettings.extent[0]
+      }
     }
 
     if (currentProps.sortO) {
@@ -274,7 +270,8 @@ class OrdinalFrame extends React.Component {
     }
     if (
       currentProps.invertR ||
-      (baseRExtent && baseRExtent[0] > baseRExtent[1])
+      (rExtentSettings.extent &&
+        rExtentSettings.extent[0] > rExtentSettings.extent[1])
     ) {
       rExtent = [rExtent[1], rExtent[0]]
     }
@@ -801,15 +798,18 @@ class OrdinalFrame extends React.Component {
 
     if (
       rExtentSettings.onChange &&
-      (this.state.rExtent || []).join(",") !== (rExtent || []).join(",")
+      (this.state.calculatedRExtent || []).join(",") !==
+        (calculatedRExtent || []).join(",")
     ) {
-      rExtentSettings.onChange(rExtent)
+      rExtentSettings.onChange(calculatedRExtent)
     }
+
     if (
       oExtentSettings.onChange &&
-      (this.state.oExtent || []).join(",") !== (oExtent || []).join(",")
+      (this.state.calculatedOExtent || []).join(",") !==
+        (calculatedOExtent || []).join(",")
     ) {
-      oExtentSettings.onChange(oExtent)
+      oExtentSettings.onChange(calculatedOExtent)
     }
 
     this.setState({
@@ -835,6 +835,8 @@ class OrdinalFrame extends React.Component {
       rScaleType: currentProps.rScaleType,
       oExtent,
       rExtent,
+      calculatedOExtent,
+      calculatedRExtent,
       projectedColumns,
       margin,
       legendSettings: currentProps.legend,

@@ -216,8 +216,8 @@ class VisualizationLayer extends React.PureComponent {
         >
           {renderedAxesTickLines}
           {renderedElements}
-          {renderedAxes}
           {matte}
+          {renderedAxes}
         </g>
       )) ||
       null
