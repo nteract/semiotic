@@ -44,7 +44,8 @@ class Axis extends React.Component {
       footer,
       tickSize,
       tickLineGenerator,
-      baseline = true
+      baseline = true,
+      margin = { top: 0, bottom: 0, left: 0, right: 0 }
     } = this.props
 
     if (this.props.format) {
@@ -77,7 +78,7 @@ class Axis extends React.Component {
 
     let hoverWidth = 50
     let hoverHeight = height
-    let hoverX = 0
+    let hoverX = -50
     let hoverY = 0
     let baselineX = 0
     let baselineY = 0
@@ -100,7 +101,7 @@ class Axis extends React.Component {
         position = [position[0], position[1]]
         hoverX = width
         baselineX2 = baselineX = width
-        annotationOffset = 0
+        annotationOffset = margin.top
         lineWidth = -width - 25
         textX = 5
         hoverFunction = e =>
@@ -112,6 +113,9 @@ class Axis extends React.Component {
         position = [position[0], 0]
         hoverWidth = width
         hoverHeight = 50
+        hoverY = -50
+        hoverX = 0
+        annotationOffset = margin.left
         annotationType = "x"
         baselineX2 = width
         baselineY2 = 0
@@ -134,6 +138,7 @@ class Axis extends React.Component {
         baselineY = baselineY2 = hoverY = height
         baselineX = hoverX = 0
         baselineX2 = width
+        annotationOffset = margin.left
 
         hoverFunction = e =>
           this.setState({
@@ -149,7 +154,7 @@ class Axis extends React.Component {
         break
       default:
         position = [position[0], position[1]]
-        annotationOffset = 0
+        annotationOffset = margin.top
         hoverFunction = e =>
           this.setState({
             hoverAnnotation: e.nativeEvent.offsetY - annotationOffset
@@ -160,16 +165,14 @@ class Axis extends React.Component {
 
     if (this.props.annotationFunction) {
       const formattedValue = formatValue(
-        this.props.scale.invert(this.state.hoverAnnotation + annotationOffset),
+        this.props.scale.invert(this.state.hoverAnnotation),
         this.props
       )
       const hoverGlyph = this.props.glyphFunction ? (
         this.props.glyphFunction({
           lineHeight,
           lineWidth,
-          value: this.props.scale.invert(
-            this.state.hoverAnnotation + annotationOffset
-          )
+          value: this.props.scale.invert(this.state.hoverAnnotation)
         })
       ) : (
         <g>
@@ -193,11 +196,10 @@ class Axis extends React.Component {
         </g>
       ) : null
 
-      console.log("hvoerx,", `translate(${hoverX},${hoverY})`)
       annotationBrush = (
         <g
           className="annotation-brush"
-          transform={`translate(${-hoverWidth},${hoverY})`}
+          transform={`translate(${hoverX},${hoverY})`}
         >
           <rect
             style={{ fillOpacity: 0 }}
@@ -208,9 +210,7 @@ class Axis extends React.Component {
               this.props.annotationFunction({
                 className: "dynamic-axis-annotation",
                 type: annotationType,
-                value: this.props.scale.invert(
-                  this.state.hoverAnnotation + annotationOffset
-                )
+                value: this.props.scale.invert(this.state.hoverAnnotation)
               })
             }
             onMouseOut={() => this.setState({ hoverAnnotation: undefined })}

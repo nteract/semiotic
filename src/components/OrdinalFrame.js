@@ -155,7 +155,13 @@ class OrdinalFrame extends React.Component {
     )
     const title = generateFrameTitle(currentProps)
 
-    let oExtent = currentProps.oExtent || [
+    const baseOExtent = currentProps.oExtent
+    const oExtentSettings =
+      baseOExtent === undefined || Array.isArray(baseOExtent)
+        ? { extent: baseOExtent }
+        : baseOExtent
+
+    let oExtent = oExtentSettings.oExtent || [
       ...new Set(allData.map((d, i) => oAccessor(d, i)))
     ]
 
@@ -173,7 +179,13 @@ class OrdinalFrame extends React.Component {
       }
     }
 
-    let rExtent
+    const baseRExtent = currentProps.rExtent
+    const rExtentSettings =
+      baseRExtent === undefined || Array.isArray(baseRExtent)
+        ? { extent: baseRExtent }
+        : baseRExtent
+
+    let rExtent = rExtentSettings.extent
     let subZeroRExtent = [0, 0]
 
     if (
@@ -184,11 +196,7 @@ class OrdinalFrame extends React.Component {
       pieceType.type = undefined
     }
 
-    if (
-      currentProps.rExtent &&
-      currentProps.rExtent[0] !== undefined &&
-      currentProps.rExtent[1] !== undefined
-    ) {
+    if (rExtent && rExtent[0] !== undefined && rExtent[1] !== undefined) {
       rExtent = currentProps.rExtent
     } else if (pieceType.type === "timeline") {
       const rData = allData.map(rAccessor)
@@ -211,10 +219,10 @@ class OrdinalFrame extends React.Component {
         .rollup(leaves => sum(leaves.map(rAccessor)))
         .entries(negativeData)
 
-      let topR = currentProps.rExtent && currentProps.rExtent[1]
+      let topR = baseRExtent && baseRExtent[1]
 
       rExtent =
-        currentProps.rExtent && topR
+        baseRExtent && topR
           ? [0, topR]
           : [
               0,
@@ -223,17 +231,12 @@ class OrdinalFrame extends React.Component {
                 : Math.max(max(nestedPositiveData, d => d.value), 0)
             ]
 
-      let bottomR = currentProps.rExtent && currentProps.rExtent[0]
+      let bottomR = baseRExtent && baseRExtent[0]
 
-      if (
-        currentProps.rExtent &&
-        topR &&
-        bottomR &&
-        currentProps.rExtent[0] > currentProps.rExtent[1]
-      ) {
+      if (baseRExtent && topR && bottomR && baseRExtent[0] > baseRExtent[1]) {
         //Assume a flipped rExtent
-        bottomR = currentProps.rExtent && currentProps.rExtent[1]
-        topR = currentProps.rExtent && currentProps.rExtent[0]
+        bottomR = baseRExtent && baseRExtent[1]
+        topR = baseRExtent && baseRExtent[0]
       }
       subZeroRExtent = bottomR
         ? [0, bottomR]
@@ -244,25 +247,26 @@ class OrdinalFrame extends React.Component {
               : Math.min(min(nestedNegativeData, d => d.value), 0)
           ]
       rExtent = [subZeroRExtent[1], rExtent[1]]
-      if (pieceType.type === "clusterbar") {
-        rExtent[0] = 0
-      }
+    }
+
+    if (pieceType.type === "clusterbar") {
+      rExtent[0] = 0
     }
 
     if (
-      currentProps.rExtent &&
-      currentProps.rExtent[1] !== undefined &&
-      currentProps.rExtent[0] === undefined
+      baseRExtent &&
+      baseRExtent[1] !== undefined &&
+      baseRExtent[0] === undefined
     ) {
-      rExtent[1] = currentProps.rExtent[1]
+      rExtent[1] = baseRExtent[1]
     }
 
     if (
-      currentProps.rExtent &&
-      currentProps.rExtent[0] !== undefined &&
-      currentProps.rExtent[1] === undefined
+      baseRExtent &&
+      baseRExtent[0] !== undefined &&
+      baseRExtent[1] === undefined
     ) {
-      rExtent[0] = currentProps.rExtent[0]
+      rExtent[0] = baseRExtent[0]
     }
 
     if (currentProps.sortO) {
@@ -270,8 +274,7 @@ class OrdinalFrame extends React.Component {
     }
     if (
       currentProps.invertR ||
-      (currentProps.rExtent &&
-        currentProps.rExtent[0] > currentProps.rExtent[1])
+      (baseRExtent && baseRExtent[0] > baseRExtent[1])
     ) {
       rExtent = [rExtent[1], rExtent[0]]
     }
@@ -796,6 +799,19 @@ class OrdinalFrame extends React.Component {
       }
     }
 
+    if (
+      rExtentSettings.onChange &&
+      (this.state.rExtent || []).join(",") !== (rExtent || []).join(",")
+    ) {
+      rExtentSettings.onChange(rExtent)
+    }
+    if (
+      oExtentSettings.onChange &&
+      (this.state.oExtent || []).join(",") !== (oExtent || []).join(",")
+    ) {
+      oExtentSettings.onChange(oExtent)
+    }
+
     this.setState({
       pieceDataXY,
       adjustedPosition: adjustedPosition,
@@ -817,8 +833,8 @@ class OrdinalFrame extends React.Component {
       rAccessor: currentProps.rAccessor,
       oScaleType: currentProps.oScaleType,
       rScaleType: currentProps.rScaleType,
-      oExtent: currentProps.oExtent,
-      rExtent: currentProps.rExtent,
+      oExtent,
+      rExtent,
       projectedColumns,
       margin,
       legendSettings: currentProps.legend,
@@ -1252,8 +1268,8 @@ OrdinalFrame.propTypes = {
   position: PropTypes.array,
   oScaleType: PropTypes.func,
   rScaleType: PropTypes.func,
-  oExtent: PropTypes.array,
-  rExtent: PropTypes.array,
+  oExtent: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
+  rExtent: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
   invertO: PropTypes.bool,
   invertR: PropTypes.bool,
   oAccessor: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),

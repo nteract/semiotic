@@ -176,8 +176,8 @@ class XYFrame extends React.Component {
     let { adjustedPosition, adjustedSize } = adjustedPositionSize(currentProps)
 
     let {
-      xExtent,
-      yExtent,
+      xExtent: baseXExtent,
+      yExtent: baseYExtent,
       projectedLines,
       projectedPoints,
       projectedAreas,
@@ -201,6 +201,18 @@ class XYFrame extends React.Component {
       size,
       renderKey
     } = currentProps
+
+    const xExtentSettings =
+      baseXExtent === undefined || Array.isArray(baseXExtent)
+        ? { extent: baseXExtent }
+        : baseXExtent
+    const yExtentSettings =
+      baseYExtent === undefined || Array.isArray(baseYExtent)
+        ? { extent: baseYExtent }
+        : baseYExtent
+
+    let xExtent = xExtentSettings.extent
+    let yExtent = yExtentSettings.extent
 
     const xAccessor = stringToFn(currentProps.xAccessor)
     const yAccessor = stringToFn(currentProps.yAccessor)
@@ -227,7 +239,7 @@ class XYFrame extends React.Component {
           projectedPoints,
           projectedAreas,
           fullDataset
-        } = calculateDataExtent(currentProps))
+        } = calculateDataExtent({ ...currentProps, xExtent, yExtent }))
       }
     } else {
       ;({
@@ -261,8 +273,7 @@ class XYFrame extends React.Component {
     let axes = null
     let axesTickLines = null
 
-    let axisXBaseline = false,
-      axisYBaseline = false
+    let existingBaselines = {}
 
     if (currentProps.axes) {
       axesTickLines = []
@@ -270,18 +281,14 @@ class XYFrame extends React.Component {
         let axisClassname = d.className || ""
         axisClassname += " axis"
         let axisScale = yScale
+        if (existingBaselines[d.orient]) {
+          d.baseline = d.baseline || false
+        }
+        existingBaselines[d.orient] = true
         if (d.orient === "top" || d.orient === "bottom") {
-          if (axisXBaseline) {
-            d.baseline = d.baseline || false
-          }
-          axisXBaseline = true
           axisClassname += " x"
           axisScale = xScale
         } else {
-          if (axisYBaseline) {
-            d.baseline = d.baseline || false
-          }
-          axisYBaseline = true
           axisClassname += " y"
         }
         axisClassname += " " + d.orient
@@ -451,6 +458,19 @@ class XYFrame extends React.Component {
         renderKeyFn: stringToFn(renderKey, (d, i) => `point-${i}`, true),
         behavior: createPoints
       }
+    }
+
+    if (
+      xExtentSettings.onChange &&
+      (this.state.xExtent || []).join(",") !== (xExtent || []).join(",")
+    ) {
+      xExtentSettings.onChange(xExtent)
+    }
+    if (
+      yExtentSettings.onChange &&
+      (this.state.yExtent || []).join(",") !== (yExtent || []).join(",")
+    ) {
+      yExtentSettings.onChange(yExtent)
     }
 
     this.setState({
@@ -932,8 +952,8 @@ XYFrame.propTypes = {
   position: PropTypes.array,
   xScaleType: PropTypes.func,
   yScaleType: PropTypes.func,
-  xExtent: PropTypes.array,
-  yExtent: PropTypes.array,
+  xExtent: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
+  yExtent: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
   invertX: PropTypes.bool,
   invertY: PropTypes.bool,
   xAccessor: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
