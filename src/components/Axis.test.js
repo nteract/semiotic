@@ -47,10 +47,14 @@ describe("Axis", () => {
     ).toEqual(`translate(-50,0)`)
 
     const shallowAxisBrushBottom = shallow(
-      <Axis {...axisProps} annotationFunction={testFuncStub} orient={"left"} />
+      <Axis
+        {...axisProps}
+        annotationFunction={testFuncStub}
+        orient={"bottom"}
+      />
     )
     expect(
-      shallowAxisBrushLeft.find("g.annotation-brush").props().transform
+      shallowAxisBrushBottom.find("g.annotation-brush").props().transform
     ).toEqual(`translate(0,${axisHeight})`)
   })
 })
