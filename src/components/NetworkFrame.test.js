@@ -1,8 +1,6 @@
 import React from "react"
 import { mount, shallow } from "enzyme"
 import NetworkFrame from "./NetworkFrame"
-import injectTapEventPlugin from "react-tap-event-plugin"
-injectTapEventPlugin()
 
 const someEdgeData = [
   { source: "Heathcliff", target: "Garfield" },

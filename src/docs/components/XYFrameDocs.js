@@ -1033,7 +1033,7 @@ export default class XYFrameDocs extends React.Component {
                   sort: null
                 }
           }
-          margin={marginHash[this.state.margin]}
+          margin={100}
           defined={
             this.state.defined === "inactive" ? undefined : d => d.py !== 0
           }

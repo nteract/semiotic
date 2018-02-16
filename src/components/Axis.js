@@ -34,8 +34,8 @@ class Axis extends React.Component {
       orient = "left",
       tickFormat = d => d,
       size,
-      width = size[0] || 0,
-      height = size[1] || 0,
+      width = (size && size[0]) || 0,
+      height = (size && size[1]) || 0,
       className,
       padding,
       tickValues,
@@ -61,7 +61,7 @@ class Axis extends React.Component {
         scale,
         ticks,
         orient,
-        size,
+        size: [width, height],
         footer,
         tickSize
       })
@@ -192,10 +192,12 @@ class Axis extends React.Component {
           {hoverGlyph}
         </g>
       ) : null
+
+      console.log("hvoerx,", `translate(${hoverX},${hoverY})`)
       annotationBrush = (
         <g
           className="annotation-brush"
-          transform={`translate(${hoverX},${hoverY})`}
+          transform={`translate(${-hoverWidth},${hoverY})`}
         >
           <rect
             style={{ fillOpacity: 0 }}
@@ -330,9 +332,9 @@ Axis.propTypes = {
   className: PropTypes.string,
   orient: PropTypes.string,
   position: PropTypes.array,
-  size: PropTypes.array,
+  size: PropTypes.array.isRequired,
   rotate: PropTypes.number,
-  scale: PropTypes.func,
+  scale: PropTypes.func.isRequired,
   annotationFunction: PropTypes.func,
   format: PropTypes.string,
   tickFormat: PropTypes.func,

@@ -155,10 +155,11 @@ class Frame extends React.Component {
               style={{
                 position: "absolute",
                 left: `0px`,
-                top: `0px`
+                top: `0px`,
+                background: "red"
               }}
-              width={size[0] + margin.left + margin.right}
-              height={size[1] + margin.top + margin.bottom}
+              width={size[0]}
+              height={size[1]}
             />
             <svg
               className="visualization-layer"
