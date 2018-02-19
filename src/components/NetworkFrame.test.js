@@ -14,11 +14,19 @@ describe("NetworkFrame", () => {
   it("renders", () => {
     mount(<NetworkFrame edges={someEdgeData} disableContext={true} />)
   })
+  const wrapper = shallow(
+    <NetworkFrame edges={someEdgeData} disableContext={true} />
+  )
 
   it("renders a <Frame>", () => {
-    const wrapper = shallow(
+    expect(wrapper.find("Frame").length).toEqual(1)
+  })
+
+  it("renders some edges", () => {
+    const mountedFrame = mount(
       <NetworkFrame edges={someEdgeData} disableContext={true} />
     )
-    expect(wrapper.find("Frame").length).toEqual(1)
+
+    expect(mountedFrame.find("g.edge").length).toEqual(3)
   })
 })

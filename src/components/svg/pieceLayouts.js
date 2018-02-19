@@ -74,8 +74,8 @@ const iconBarCustomMark = ({
     const stepper = projection === "horizontal" ? spaceToStep : -spaceToStep
     const stepTest =
       projection === "horizontal"
-        ? (step, spaceToFill) => step < spaceToFill
-        : (step, spaceToFill, stepper) => step > 0 + stepper
+        ? (step, spaceToFillValue) => step < spaceToFillValue
+        : (step, spaceToFillValue, stepperValue) => step > 0 + stepperValue
 
     for (
       let step = stepStart;
@@ -173,11 +173,12 @@ export function clusterBarLayout({
           .innerRadius(0)
           .outerRadius(piece.scaledValue / 2)
 
-        let angle = (ordset.pct - ordset.pct_padding) / ordset.pieceData.length
-        let startAngle =
+        const angle =
+          (ordset.pct - ordset.pct_padding) / ordset.pieceData.length
+        const startAngle =
           ordset.pct_start +
           i / ordset.pieceData.length * (ordset.pct - ordset.pct_padding)
-        let endAngle = startAngle + angle
+        const endAngle = startAngle + angle
 
         markD = arcGenerator({
           startAngle: startAngle * twoPI,
@@ -254,7 +255,7 @@ export function clusterBarLayout({
 
       const renderElementObject = type.customMark ? (
         <g
-          key={"piece-" + piece.renderKey}
+          key={`piece-${piece.renderKey}`}
           transform={
             translate ? translate : `translate(${xPosition},${yPosition})`
           }
@@ -265,7 +266,7 @@ export function clusterBarLayout({
         {
           className: classFn(piece.data, i),
           renderMode: renderValue,
-          key: "piece-" + piece.renderKey,
+          key: `piece-${piece.renderKey}`,
           transform: translate,
           style: styleFn(piece.data, ordsetI),
           ...markProps,
@@ -351,9 +352,9 @@ export function barLayout({
           .outerRadius(outerSize)
         //          .padAngle(ordset.pct_padding * twoPI);
 
-        let angle = ordset.pct
-        let startAngle = ordset.pct === 1 ? 0 : ordset.pct_start
-        let endAngle =
+        const angle = ordset.pct
+        const startAngle = ordset.pct === 1 ? 0 : ordset.pct_start
+        const endAngle =
           ordset.pct === 1
             ? 1
             : Math.max(startAngle, startAngle + angle - ordset.pct_padding / 2)
@@ -417,7 +418,7 @@ export function barLayout({
 
       const renderElementObject = type.customMark ? (
         <g
-          key={"piece-" + piece.renderKey}
+          key={`piece-${piece.renderKey}`}
           transform={`translate(${xPosition},${yPosition})`}
         >
           {type.customMark({ ...piece.data, ...piece }, i, xy)}
@@ -426,7 +427,7 @@ export function barLayout({
         {
           className: classFn(piece.data, i),
           renderMode: renderValue,
-          key: "piece-" + piece.renderKey,
+          key: `piece-${piece.renderKey}`,
           style: styleFn(piece.data, ordsetI),
           ...eventListeners,
           ...markProps
@@ -506,9 +507,9 @@ export function timelineLayout({
           .outerRadius(outerSize)
         //          .padAngle(ordset.pct_padding * twoPI);
 
-        let angle = ordset.pct
-        let startAngle = ordset.pct === 1 ? 0 : ordset.pct_start
-        let endAngle =
+        const angle = ordset.pct
+        const startAngle = ordset.pct === 1 ? 0 : ordset.pct_start
+        const endAngle =
           ordset.pct === 1
             ? 1
             : Math.max(startAngle, startAngle + angle - ordset.pct_padding / 2)
@@ -540,7 +541,7 @@ export function timelineLayout({
 
       const renderElementObject = type.customMark ? (
         <g
-          key={"piece-" + piece.renderKey}
+          key={`piece-${piece.renderKey}`}
           transform={`translate(${xPosition},${yPosition + height})`}
         >
           {type.customMark({ ...piece.data, ...piece }, i, xy)}
@@ -549,7 +550,7 @@ export function timelineLayout({
         {
           className: classFn(piece.data, i),
           renderMode: renderValue,
-          key: "piece-" + piece.renderKey,
+          key: `piece-${piece.renderKey}`,
           style: styleFn(piece.data, ordsetI),
           ...markProps,
           ...eventListeners
@@ -620,7 +621,7 @@ export function pointLayout({
 
       const renderElementObject = type.customMark ? (
         <g
-          key={"piece-" + piece.renderKey}
+          key={`piece-${piece.renderKey}`}
           transform={`translate(${xPosition},${yPosition})`}
         >
           {type.customMark({ ...piece.data, ...piece }, i)}
@@ -630,7 +631,7 @@ export function pointLayout({
           className: classFn(piece.data, i),
           markType: "rect",
           renderMode: renderValue,
-          key: "piece-" + piece.renderKey,
+          key: `piece-${piece.renderKey}`,
           height: actualCircleRadius * 2,
           width: actualCircleRadius * 2,
           x: xPosition - actualCircleRadius,
@@ -677,7 +678,7 @@ export function swarmLayout({
 
   columnKeys.forEach((key, ordsetI) => {
     const oColumn = data[key]
-    let anglePiece = 1 / columnKeys.length
+    const anglePiece = 1 / columnKeys.length
     const oData = oColumn.pieceData
     const adjustedColumnWidth = oColumn.width
 
@@ -685,7 +686,7 @@ export function swarmLayout({
       type.r || Math.max(2, Math.min(5, 4 * adjustedColumnWidth / oData.length))
 
     const simulation = forceSimulation(oData)
-      .force("y", forceY((d, i) => d.scaledValue).strength(type.strength || 2))
+      .force("y", forceY(d => d.scaledValue).strength(type.strength || 2))
       .force("x", forceX(oColumn.middle))
       .force("collide", forceCollide(circleRadius))
       .stop()
@@ -693,7 +694,7 @@ export function swarmLayout({
     if (projection === "vertical") {
       simulation.force(
         "y",
-        forceY((d, i) => d.scaledVerticalValue).strength(type.strength || 2)
+        forceY(d => d.scaledVerticalValue).strength(type.strength || 2)
       )
     }
 
@@ -732,7 +733,7 @@ export function swarmLayout({
 
       const renderElementObject = type.customMark ? (
         <g
-          key={"piece-" + piece.renderKey}
+          key={`piece-${piece.renderKey}`}
           transform={`translate(${xPosition},${yPosition})`}
         >
           {type.customMark({ ...piece.data, ...piece }, i)}
@@ -742,7 +743,7 @@ export function swarmLayout({
           className: classFn(piece.data, i),
           markType: "rect",
           renderMode: renderValue,
-          key: "piece-" + piece.renderKey,
+          key: `piece-${piece.renderKey}`,
           height: actualCircleRadius * 2,
           width: actualCircleRadius * 2,
           x: xPosition - actualCircleRadius,

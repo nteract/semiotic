@@ -52,6 +52,9 @@ import { xyFrameChangeProps } from "./constants/frame_props"
 
 import PropTypes from "prop-types"
 
+const emptyObjectReturnFunction = () => ({})
+const emptyStringReturnFunction = () => ""
+
 let xyframeKey = ""
 const chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 for (let i = 32; i > 0; --i)
@@ -83,7 +86,6 @@ class XYFrame extends React.Component {
   static defaultProps = {
     annotations: [],
     foregroundGraphics: undefined,
-    annotationSettings: {},
     size: [500, 500],
     className: "",
     lineType: "line",
@@ -149,15 +151,15 @@ class XYFrame extends React.Component {
     }
   }
 
-  screenScales({ xExtent, yExtent, currentProps, margin, adjustedSize }) {
-    let xDomain = [0, adjustedSize[0]]
-    let yDomain = [adjustedSize[1], 0]
+  screenScales({ xExtent, yExtent, currentProps, adjustedSize }) {
+    const xDomain = [0, adjustedSize[0]]
+    const yDomain = [adjustedSize[1], 0]
 
-    let xScaleType = currentProps.xScaleType || scaleLinear()
-    let yScaleType = currentProps.yScaleType || scaleLinear()
+    const xScaleType = currentProps.xScaleType || scaleLinear()
+    const yScaleType = currentProps.yScaleType || scaleLinear()
 
-    let xScale = xScaleType
-    let yScale = yScaleType
+    const xScale = xScaleType
+    const yScale = yScaleType
 
     if (xScaleType.domain) {
       xScaleType.domain(xExtent)
@@ -172,23 +174,14 @@ class XYFrame extends React.Component {
   }
 
   calculateXYFrame(currentProps) {
-    let margin = calculateMargin(currentProps)
-    let { adjustedPosition, adjustedSize } = adjustedPositionSize(currentProps)
+    const margin = calculateMargin(currentProps)
+    const { adjustedPosition, adjustedSize } = adjustedPositionSize(
+      currentProps
+    )
 
-    let {
-      xExtent: baseXExtent,
-      yExtent: baseYExtent,
-      projectedLines,
-      projectedPoints,
-      projectedAreas,
-      fullDataset,
-      lineType,
-      customLineMark,
-      customPointMark,
-      areaStyle,
-      areaRenderMode,
-      lineStyle,
-      lineRenderMode,
+    const {
+      legend,
+      lines,
       lineClass,
       pointStyle,
       pointRenderMode,
@@ -199,7 +192,22 @@ class XYFrame extends React.Component {
       canvasAreas,
       defined,
       size,
-      renderKey
+      renderKey,
+      lineType,
+      customLineMark,
+      customPointMark,
+      areaStyle,
+      areaRenderMode,
+      lineStyle,
+      lineRenderMode,
+      xExtent: baseXExtent,
+      yExtent: baseYExtent
+    } = currentProps
+    let {
+      projectedLines,
+      projectedPoints,
+      projectedAreas,
+      fullDataset
     } = currentProps
 
     const xExtentSettings =
@@ -266,7 +274,7 @@ class XYFrame extends React.Component {
       adjustedSize
     })
 
-    let canvasDrawing = []
+    const canvasDrawing = []
 
     const title = generateFrameTitle(currentProps)
 
@@ -279,7 +287,7 @@ class XYFrame extends React.Component {
     let axes = null
     let axesTickLines = null
 
-    let existingBaselines = {}
+    const existingBaselines = {}
 
     if (currentProps.axes) {
       axesTickLines = []
@@ -297,7 +305,7 @@ class XYFrame extends React.Component {
         } else {
           axisClassname += " y"
         }
-        axisClassname += " " + d.orient
+        axisClassname += ` ${d.orient}`
 
         let tickValues
         if (d.tickValues && Array.isArray(d.tickValues)) {
@@ -306,7 +314,7 @@ class XYFrame extends React.Component {
           //otherwise assume a function
           tickValues = d.tickValues(fullDataset, currentProps.size, axisScale)
         }
-        let axisSize = [adjustedSize[0], adjustedSize[1]]
+        const axisSize = [adjustedSize[0], adjustedSize[1]]
 
         const axisParts = axisPieces({
           padding: d.padding,
@@ -373,10 +381,9 @@ class XYFrame extends React.Component {
 
     let legendSettings
 
-    if (currentProps.legend) {
-      legendSettings = currentProps.legend === true ? {} : currentProps.legend
-      if (currentProps.lines && !legendSettings.legendGroups) {
-        const lineType = currentProps.lineType || currentProps.customLineType
+    if (legend) {
+      legendSettings = legend === true ? {} : legend
+      if (lines && !legendSettings.legendGroups) {
         const typeString = lineType && lineType.type ? lineType.type : lineType
         const type =
           ["stackedarea", "stackedpercent", "bumparea"].indexOf(typeString) ===
@@ -434,8 +441,8 @@ class XYFrame extends React.Component {
     const xyFrameRender = {
       lines: {
         data: projectedLines,
-        styleFn: stringToFn(lineStyle, () => {}, true),
-        classFn: stringToFn(lineClass, () => "", true),
+        styleFn: stringToFn(lineStyle, emptyObjectReturnFunction, true),
+        classFn: stringToFn(lineClass, emptyStringReturnFunction, true),
         renderMode: stringToFn(lineRenderMode, undefined, true),
         canvasRender: stringToFn(canvasLines, undefined, true),
         customMark: customLineMark,
@@ -446,8 +453,8 @@ class XYFrame extends React.Component {
       },
       areas: {
         data: projectedAreas,
-        styleFn: stringToFn(areaStyle, () => {}, true),
-        classFn: stringToFn(areaClass, () => {}, true),
+        styleFn: stringToFn(areaStyle, emptyObjectReturnFunction, true),
+        classFn: stringToFn(areaClass, emptyStringReturnFunction, true),
         renderMode: stringToFn(areaRenderMode, undefined, true),
         canvasRender: stringToFn(canvasAreas, undefined, true),
         type: areaType,
@@ -456,8 +463,8 @@ class XYFrame extends React.Component {
       },
       points: {
         data: projectedPoints,
-        styleFn: stringToFn(pointStyle, () => {}, true),
-        classFn: stringToFn(pointClass, () => {}, true),
+        styleFn: stringToFn(pointStyle, emptyObjectReturnFunction, true),
+        classFn: stringToFn(pointClass, emptyStringReturnFunction, true),
         renderMode: stringToFn(pointRenderMode, undefined, true),
         canvasRender: stringToFn(canvasPoints, undefined, true),
         customMark: stringToFn(customPointMark, undefined, true),
@@ -517,11 +524,11 @@ class XYFrame extends React.Component {
   }
 
   defaultXYSVGRule({ d, i, annotationLayer, lines, areas, points }) {
-    let xAccessor = this.xAccessor
-    let yAccessor = this.yAccessor
+    const xAccessor = this.xAccessor
+    const yAccessor = this.yAccessor
 
-    let xScale = this.xScale
-    let yScale = this.yScale
+    const xScale = this.xScale
+    const yScale = this.yScale
 
     let screenCoordinates = []
     const idAccessor = stringToFn(
@@ -529,7 +536,7 @@ class XYFrame extends React.Component {
       l => l.semioticLineID
     )
 
-    let { adjustedPosition, adjustedSize } = adjustedPositionSize(this.props)
+    const { adjustedPosition, adjustedSize } = adjustedPositionSize(this.props)
 
     if (!d.coordinates) {
       const xCoord = d[projectedX] || xAccessor(d)
@@ -689,13 +696,11 @@ class XYFrame extends React.Component {
   }
 
   defaultXYHTMLRule({ d, i, lines, areas, points }) {
-    let xAccessor = this.xAccessor
-    let yAccessor = this.yAccessor
+    const xAccessor = this.xAccessor
+    const yAccessor = this.yAccessor
 
-    let xScale = this.xScale
-    let yScale = this.yScale
-    //y
-    //area
+    const xScale = this.xScale
+    const yScale = this.yScale
 
     let screenCoordinates = []
 
@@ -711,7 +716,7 @@ class XYFrame extends React.Component {
     const xString = xCoord && xCoord.toString ? xCoord.toString() : xCoord
     const yString = yCoord && yCoord.toString ? yCoord.toString() : yCoord
 
-    let { adjustedPosition /*, adjustedSize*/ } = adjustedPositionSize(
+    const { adjustedPosition /*, adjustedSize*/ } = adjustedPositionSize(
       this.props
     )
     if (!d.coordinates) {
@@ -796,7 +801,7 @@ class XYFrame extends React.Component {
           <p key="html-annotation-content-2">{yString}</p>
           {d.percent ? (
             <p key="html-annotation-content-3">
-              {parseInt(d.percent * 1000) / 10}%
+              {parseInt(d.percent * 1000, 10) / 10}%
             </p>
           ) : null}
         </div>

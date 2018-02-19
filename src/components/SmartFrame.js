@@ -3,42 +3,34 @@ import React from "react"
 import XYFrame from "./XYFrame"
 import OrdinalFrame from "./OrdinalFrame"
 
-// components
-
-// import PropTypes from 'prop-types'
-
-class SmartFrame extends React.Component {
-  render() {
-    if (this.props.frameType === "orFrame") {
-      return (
-        <OrdinalFrame
-          {...this.props}
-          oAccessor={this.props.xAccessor}
-          rAccessor={this.props.yAccessor}
-          data={this.props.pieceData}
-          groupData={this.props.aggData}
-          groupDataAccessor={this.props.aggDataAccessor}
-          dataAccessor={this.props.pieceDataAccessor}
-          groupType={this.props.customAggType}
-          groupStyle={this.props.aggStyle}
-          style={this.props.pieceStyle}
-          type={this.props.customPieceType}
-        />
-      )
-    }
+export default props => {
+  if (props.frameType === "orFrame") {
     return (
-      <XYFrame
-        {...this.props}
-        points={this.props.pieceData}
-        lines={this.props.aggData}
-        lineDataAccessor={this.props.aggDataAccessor}
-        pointDataAccessor={this.props.pieceDataAccessor}
-        lineType={this.props.customAggType}
-        lineStyle={this.props.aggStyle}
-        pointStyle={this.props.pieceStyle}
+      <OrdinalFrame
+        {...props}
+        oAccessor={props.xAccessor}
+        rAccessor={props.yAccessor}
+        data={props.pieceData}
+        groupData={props.aggData}
+        groupDataAccessor={props.aggDataAccessor}
+        dataAccessor={props.pieceDataAccessor}
+        groupType={props.customAggType}
+        groupStyle={props.aggStyle}
+        style={props.pieceStyle}
+        type={props.customPieceType}
       />
     )
   }
+  return (
+    <XYFrame
+      {...props}
+      points={props.pieceData}
+      lines={props.aggData}
+      lineDataAccessor={props.aggDataAccessor}
+      pointDataAccessor={props.pieceDataAccessor}
+      lineType={props.customAggType}
+      lineStyle={props.aggStyle}
+      pointStyle={props.pieceStyle}
+    />
+  )
 }
-
-export default SmartFrame

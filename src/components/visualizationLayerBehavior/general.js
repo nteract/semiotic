@@ -262,13 +262,11 @@ export function createAreas({
   yScale,
   canvasDrawing,
   data,
-  projectedCoordinateNames,
   canvasRender,
   styleFn,
   classFn,
   renderKeyFn,
   renderMode,
-  type,
   baseMarkProps
 }) {
   const areaClass = classFn || (() => "")

@@ -8,7 +8,7 @@ export const downloadCSV = (csvName, data) => {
     const blob = new Blob([csv], { type: "text/csv" })
 
     const dlink = document.createElement("a")
-    dlink.download = csvName ? csvName.replace(/ /g, "_") + ".csv" : "vis.csv"
+    dlink.download = csvName ? `${csvName.replace(/ /g, "_")}.csv` : "vis.csv"
     dlink.href = window.URL.createObjectURL(blob)
     dlink.onclick = () => {
       // revokeObjectURL needs a delay to work properly

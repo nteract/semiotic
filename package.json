@@ -4,10 +4,7 @@
   "description": "The semiotic JavaScript data visualization framework",
   "main": "lib/index.js",
   "unpkg": "dist/semiotic.js",
-  "files": [
-    "lib",
-    "dist"
-  ],
+  "files": ["lib", "dist"],
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
@@ -19,7 +16,8 @@
     "deploy-docs": "sh ./scripts/docs",
     "ci-deploy-docs": "sh ./scripts/docs-ci",
     "gh-pages": "REACT_APP_GH_PAGES_PATH='semiotic' npm run build",
-    "prepublish": "rollup -c && uglifyjs ./dist/semiotic.js -o ./dist/semiotic.min.js && rm ./dist/semiotic.js"
+    "prepublish":
+      "rollup -c && uglifyjs ./dist/semiotic.js -o ./dist/semiotic.min.js && rm ./dist/semiotic.js"
   },
   "repository": {
     "type": "git",
@@ -35,6 +33,7 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
+    "@vx/pattern": "0.0.143",
     "babel-cli": "6.4.5",
     "babel-eslint": "^7.2.3",
     "babel-preset-netflix-dea": "^3.0.1",
@@ -49,8 +48,11 @@
     "enzyme-adapter-react-16": "1.0.1",
     "eslint": "4.2.0",
     "eslint-config-netflix-dea": "3.0.0",
-    "eslint-plugin-react": "^7.3.0",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-jsx-a11y": "^6.0.3",
+    "eslint-plugin-react": "^7.6.1",
     "history": "4.2.0",
+    "in-publish": "2.0.0",
     "jsdom": "8.1.0",
     "less": "2.7.1",
     "material-design-icons-svg": "1.1.2",
@@ -77,8 +79,6 @@
     "tap-difflet": "0.4.0",
     "tap-notify": "1.0.0",
     "tape": "4.4.0",
-    "in-publish": "2.0.0",
-    "@vx/pattern": "0.0.143",
     "uglify-js": "^3.1.10"
   },
   "peerDependencies": {
@@ -113,9 +113,6 @@
     "svg-path-bounding-box": "1.0.4"
   },
   "nyc": {
-    "exclude": [
-      "tests/unit/lib/*.js",
-      "tests/unit/specs/**/*.js"
-    ]
+    "exclude": ["tests/unit/lib/*.js", "tests/unit/specs/**/*.js"]
   }
 }

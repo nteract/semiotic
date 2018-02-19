@@ -1,5 +1,5 @@
 // from Evan Wang's https://github.com/tinker10/D3-Labeler
-
+/*eslint-disable */
 export default function() {
   let lab = [],
     anc = [],
@@ -299,3 +299,4 @@ export default function() {
 
   return labeler
 }
+/*eslint-enable */

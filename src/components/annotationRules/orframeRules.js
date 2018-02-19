@@ -182,7 +182,7 @@ export const svgORRule = ({ d, i, screenCoordinates, projection }) => {
   return (
     <Mark
       markType="text"
-      key={d.label + "annotationtext" + i}
+      key={`${d.label}annotationtext${i}`}
       forceUpdate={true}
       x={screenCoordinates[0] + (projection === "horizontal" ? 10 : 0)}
       y={screenCoordinates[1] + (projection === "vertical" ? 10 : 0)}
@@ -322,10 +322,10 @@ export const svgCategoryRule = ({
   if (projection === "radial") {
     const arcPadding = padding / adjustedSize[1]
     const leftX = min(
-      cats.map(d => d.pct_start + d.pct_padding / 2 + arcPadding / 2)
+      cats.map(p => p.pct_start + p.pct_padding / 2 + arcPadding / 2)
     )
     const rightX = max(
-      cats.map(d => d.pct_start + d.pct - d.pct_padding / 2 - arcPadding / 2)
+      cats.map(p => p.pct_start + p.pct - p.pct_padding / 2 - arcPadding / 2)
     )
 
     const chartSize = Math.min(adjustedSize[0], adjustedSize[1]) / 2
@@ -362,8 +362,8 @@ export const svgCategoryRule = ({
       </g>
     )
   } else {
-    const leftX = min(cats.map(d => d.x))
-    const rightX = max(cats.map(d => d.x + d.width))
+    const leftX = min(cats.map(p => p.x))
+    const rightX = max(cats.map(p => p.x + p.width))
 
     if (projection === "vertical") {
       let yPosition = position === "top" ? 0 : adjustedSize[1]
@@ -410,7 +410,6 @@ export const htmlFrameHoverRule = ({
   i,
   rAccessor,
   oAccessor,
-  size,
   projection,
   tooltipContent
 }) => {
@@ -424,7 +423,7 @@ export const htmlFrameHoverRule = ({
           <p key="html-annotation-content-2">{rAccessor(d.pieces[0].data)}</p>
         )
       } else {
-        const pieceData = extent(d.pieces.map(d => d.data).map(rAccessor))
+        const pieceData = extent(d.pieces.map(p => p.data).map(rAccessor))
         summaryLabel = (
           <p key="html-annotation-content-2">
             From {pieceData[0]} to {pieceData[1]}
@@ -455,7 +454,7 @@ export const htmlFrameHoverRule = ({
 
   return (
     <div
-      key={"xylabel" + i}
+      key={`xylabel-${i}`}
       className={`annotation annotation-or-label tooltip ${projection} ${d.className ||
         ""}`}
       style={{
@@ -474,7 +473,6 @@ export const htmlColumnHoverRule = ({
   i,
   summaryType,
   oAccessor,
-  rAccessor,
   projectedColumns,
   type,
   adjustedPosition,
@@ -485,9 +483,9 @@ export const htmlColumnHoverRule = ({
   //we need to ignore negative pieces to make sure the hover behavior populates on top of the positive bar
   const positionValue =
     summaryType.type ||
-    ["swarm", "point", "clusterbar"].find(d => d === type.type)
-      ? max(d.pieces.map(d => d.scaledValue))
-      : sum(d.pieces.map(d => d.scaledValue).filter(p => p > 0))
+    ["swarm", "point", "clusterbar"].find(p => p === type.type)
+      ? max(d.pieces.map(p => p.scaledValue))
+      : sum(d.pieces.map(p => p.scaledValue).filter(p => p > 0))
 
   const column = projectedColumns[oAccessor(d.pieces[0].data)]
 
@@ -514,7 +512,7 @@ export const htmlColumnHoverRule = ({
         <p key="or-annotation-1">{oAccessor(d.pieces[0].data).toString()}</p>
       )}
       <p key="or-annotation-2">
-        {sum(d.pieces.map(d => d.value).filter(p => p > 0))}
+        {sum(d.pieces.map(p => p.value).filter(p => p > 0))}
       </p>
     </div>
   )
@@ -546,13 +544,13 @@ export const htmlColumnHoverRule = ({
 
   return (
     <div
-      key={"orlabel" + i}
+      key={`orlabel-${i}`}
       className={`annotation annotation-or-label tooltip ${projection} ${d.className ||
         ""}`}
       style={{
         position: "absolute",
-        top: yPosition + "px",
-        left: xPosition + "px"
+        top: `${yPosition}px`,
+        left: `${xPosition}px`
       }}
     >
       {content}

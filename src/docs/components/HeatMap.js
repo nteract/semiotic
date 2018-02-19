@@ -1,20 +1,18 @@
-import React from "react"
-import DocumentComponent from "../layout/DocumentComponent"
-import { scaleLinear } from "d3-scale"
-import HeatMapRaw from "./HeatMapRaw"
-import { OrdinalFrame } from "../../components"
+import React from 'react'
+import DocumentComponent from '../layout/DocumentComponent'
+import HeatMapRaw from './HeatMapRaw'
 
 const components = []
 
 components.push({
-  name: "HeatMap"
+  name: 'HeatMap'
 })
 
 export default class HeatMapDocs extends React.Component {
   render() {
     const examples = []
     examples.push({
-      name: "Basic",
+      name: 'Basic',
       demo: HeatMapRaw,
       source: `
 let startSeed = 0.5
@@ -72,4 +70,4 @@ const daysAxis = { orient: 'left',
   }
 }
 
-HeatMapDocs.title = "Heat Map"
+HeatMapDocs.title = 'Heat Map'

@@ -1,28 +1,28 @@
-import React from "react"
-import DocumentComponent from "../layout/DocumentComponent"
-import SparklineRaw from "./SparklineRaw"
-import { MenuItem } from "material-ui/Menu"
-import Input, { InputLabel } from "material-ui/Input"
-import { FormControl, FormHelperText } from "material-ui/Form"
-import Select from "material-ui/Select"
+import React from 'react'
+import DocumentComponent from '../layout/DocumentComponent'
+import SparklineRaw from './SparklineRaw'
+import { MenuItem } from 'material-ui/Menu'
+import { InputLabel } from 'material-ui/Input'
+import { FormControl } from 'material-ui/Form'
+import Select from 'material-ui/Select'
 
 const components = []
 
 components.push({
-  name: "Sparklines"
+  name: 'Sparklines'
 })
 
-const typeOptions = ["stackedarea", "line", "difference"].map(d => (
-  <MenuItem key={"type-option-" + d} label={d} value={d}>
+const typeOptions = ['stackedarea', 'line', 'difference'].map(d => 
+  (<MenuItem key={'type-option-' + d} label={d} value={d}>
     {d}
-  </MenuItem>
-))
+  </MenuItem>)
+)
 
 export default class Sparkline extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      type: "stackedarea"
+      type: 'stackedarea'
     }
   }
 
@@ -42,7 +42,7 @@ export default class Sparkline extends React.Component {
     ]
 
     examples.push({
-      name: "Basic",
+      name: 'Basic',
       demo: SparklineRaw(this.state.type),
       source: `const negativeChart = {
         size: [100, 20],
@@ -286,4 +286,4 @@ export default class Sparkline extends React.Component {
   }
 }
 
-Sparkline.title = "Sparklines"
+Sparkline.title = 'Sparklines'

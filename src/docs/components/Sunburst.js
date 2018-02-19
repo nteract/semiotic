@@ -1,16 +1,11 @@
-import React from "react"
-import DocumentComponent from "../layout/DocumentComponent"
-import { NetworkFrame } from "../../components"
-import SunburstRaw from "./SunburstRaw"
-import { MenuItem } from "material-ui/Menu"
-import Input, { InputLabel } from "material-ui/Input"
-import { FormControl, FormHelperText } from "material-ui/Form"
-import Select from "material-ui/Select"
+import React from 'react'
+import DocumentComponent from '../layout/DocumentComponent'
+import SunburstRaw from './SunburstRaw'
 
 const components = []
 
 components.push({
-  name: "Sunburst"
+  name: 'Sunburst'
 })
 
 export default class Sunburst extends React.Component {
@@ -18,19 +13,17 @@ export default class Sunburst extends React.Component {
     super(props)
 
     this.state = {
-      type: "partition",
-      projection: "radial"
+      type: 'partition',
+      projection: 'radial'
     }
   }
   render() {
     const buttons = []
 
-    const annotations = []
-
     const examples = []
 
     examples.push({
-      name: "Basic",
+      name: 'Basic',
       demo: SunburstRaw,
       source: `
       const data = {
@@ -95,4 +88,4 @@ export default class Sunburst extends React.Component {
   }
 }
 
-Sunburst.title = "Sunburst"
+Sunburst.title = 'Sunburst'
