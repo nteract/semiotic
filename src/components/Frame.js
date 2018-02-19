@@ -173,7 +173,9 @@ class Frame extends React.Component {
               height={size[1]}
             >
               {finalFilterDefs}
-              {backgroundGraphics && <g>{backgroundGraphics}</g>}
+              {backgroundGraphics && (
+                <g className="background-graphics">{backgroundGraphics}</g>
+              )}
               <VisualizationLayer
                 disableContext={this.props.disableContext}
                 renderPipeline={renderPipeline}
@@ -194,11 +196,9 @@ class Frame extends React.Component {
                 canvasPostProcess={canvasPostProcess}
                 baseMarkProps={baseMarkProps}
               />
-              {(title || foregroundGraphics) && (
-                <g>
-                  {title}
-                  {foregroundGraphics && <g>{foregroundGraphics}</g>}
-                </g>
+              {title && <g className="frame-title">{title}</g>}
+              {foregroundGraphics && (
+                <g className="foreground-graphics">{foregroundGraphics}</g>
               )}
             </svg>
           </SpanOrDiv>
