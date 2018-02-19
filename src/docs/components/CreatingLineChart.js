@@ -1,22 +1,15 @@
-import React from "react"
-import { XYFrame } from "../../components"
-import { scaleTime } from "d3-scale"
-import { curveMonotoneX, curveCardinal } from "d3-shape"
+import React from 'react'
+import { XYFrame } from '../../components'
+import { scaleTime } from 'd3-scale'
+import { curveMonotoneX, curveCardinal } from 'd3-shape'
 
-import DocumentComponent from "../layout/DocumentComponent"
-import ProcessViz from "./ProcessViz"
-/*
-  <div>
-    <ProcessViz frameSettings={regionatedLineChart} frameType="XYFrame" />
-    <XYFrame {...regionatedLineChart} />
-  </div>
-*/
+import DocumentComponent from '../layout/DocumentComponent'
 
 const components = []
-const curvedCardinalLine = { type: "line", interpolator: curveCardinal }
-const interactiveLineStyle = { stroke: "#00a2ce" }
+const curvedCardinalLine = { type: 'line', interpolator: curveCardinal }
+const interactiveLineStyle = { stroke: '#00a2ce' }
 const interactivePointStyle = () => ({
-  fill: "#00a2ce"
+  fill: '#00a2ce'
 })
 const interactiveXAccessor = d => d.week
 const interactiveYAccessor = d => d.grossWeekly
@@ -24,10 +17,10 @@ const interactiveYAccessor = d => d.grossWeekly
 const interactiveChartMargin = { left: 80, bottom: 50, right: 10, top: 40 }
 const interactiveChartAxes = [
   {
-    orient: "left"
+    orient: 'left'
   },
   {
-    orient: "bottom"
+    orient: 'bottom'
   }
 ]
 
@@ -35,9 +28,9 @@ const chartSize = [700, 400]
 
 const movies = [
   {
-    title: "Ex Machina",
-    studio: "A24",
-    firstWeek: "2015-15",
+    title: 'Ex Machina',
+    studio: 'A24',
+    firstWeek: '2015-15',
     maxRank: 6,
     maxGross: 25442958,
     coordinates: [
@@ -46,7 +39,7 @@ const movies = [
         grossWeekly: 327616,
         theaterCount: 4,
         theaterAvg: 81904,
-        date: "2015-04-10",
+        date: '2015-04-10',
         rank: 18
       },
       {
@@ -54,7 +47,7 @@ const movies = [
         grossWeekly: 1150814,
         theaterCount: 39,
         theaterAvg: 29508,
-        date: "2015-04-17",
+        date: '2015-04-17',
         rank: 15
       },
       {
@@ -62,7 +55,7 @@ const movies = [
         grossWeekly: 7156570,
         theaterCount: 1255,
         theaterAvg: 5702,
-        date: "2015-04-24",
+        date: '2015-04-24',
         rank: 6
       },
       {
@@ -70,7 +63,7 @@ const movies = [
         grossWeekly: 3615000,
         theaterCount: 1279,
         theaterAvg: 2826,
-        date: "2015-05-01",
+        date: '2015-05-01',
         rank: 6
       },
       {
@@ -78,7 +71,7 @@ const movies = [
         grossWeekly: 5212462,
         theaterCount: 2004,
         theaterAvg: 2601,
-        date: "2015-05-08",
+        date: '2015-05-08',
         rank: 6
       },
       {
@@ -86,7 +79,7 @@ const movies = [
         grossWeekly: 3108609,
         theaterCount: 1718,
         theaterAvg: 1809,
-        date: "2015-05-15",
+        date: '2015-05-15',
         rank: 9
       },
       {
@@ -94,7 +87,7 @@ const movies = [
         grossWeekly: 2248258,
         theaterCount: 896,
         theaterAvg: 2509,
-        date: "2015-05-22",
+        date: '2015-05-22',
         rank: 12
       },
       {
@@ -102,7 +95,7 @@ const movies = [
         grossWeekly: 1122034,
         theaterCount: 506,
         theaterAvg: 2217,
-        date: "2015-05-29",
+        date: '2015-05-29',
         rank: 13
       },
       {
@@ -110,7 +103,7 @@ const movies = [
         grossWeekly: 551552,
         theaterCount: 302,
         theaterAvg: 1826,
-        date: "2015-06-05",
+        date: '2015-06-05',
         rank: 19
       },
       {
@@ -118,7 +111,7 @@ const movies = [
         grossWeekly: 316877,
         theaterCount: 194,
         theaterAvg: 1633,
-        date: "2015-06-12",
+        date: '2015-06-12',
         rank: 20
       },
       {
@@ -126,7 +119,7 @@ const movies = [
         grossWeekly: 201345,
         theaterCount: 124,
         theaterAvg: 1624,
-        date: "2015-06-19",
+        date: '2015-06-19',
         rank: 29
       },
       {
@@ -134,7 +127,7 @@ const movies = [
         grossWeekly: 153162,
         theaterCount: 81,
         theaterAvg: 1891,
-        date: "2015-06-26",
+        date: '2015-06-26',
         rank: 34
       },
       {
@@ -142,7 +135,7 @@ const movies = [
         grossWeekly: 102114,
         theaterCount: 61,
         theaterAvg: 1674,
-        date: "2015-07-03",
+        date: '2015-07-03',
         rank: 36
       },
       {
@@ -150,7 +143,7 @@ const movies = [
         grossWeekly: 64350,
         theaterCount: 39,
         theaterAvg: 1650,
-        date: "2015-07-10",
+        date: '2015-07-10',
         rank: 42
       },
       {
@@ -158,7 +151,7 @@ const movies = [
         grossWeekly: 45344,
         theaterCount: 31,
         theaterAvg: 1463,
-        date: "2015-07-17",
+        date: '2015-07-17',
         rank: 47
       },
       {
@@ -166,7 +159,7 @@ const movies = [
         grossWeekly: 19380,
         theaterCount: 19,
         theaterAvg: 1020,
-        date: "2015-07-24",
+        date: '2015-07-24',
         rank: 56
       },
       {
@@ -174,7 +167,7 @@ const movies = [
         grossWeekly: 15952,
         theaterCount: 17,
         theaterAvg: 938,
-        date: "2015-07-31",
+        date: '2015-07-31',
         rank: 61
       },
       {
@@ -182,7 +175,7 @@ const movies = [
         grossWeekly: 11938,
         theaterCount: 10,
         theaterAvg: 1194,
-        date: "2015-08-07",
+        date: '2015-08-07',
         rank: 66
       },
       {
@@ -190,7 +183,7 @@ const movies = [
         grossWeekly: 7632,
         theaterCount: 5,
         theaterAvg: 1526,
-        date: "2015-08-14",
+        date: '2015-08-14',
         rank: 73
       },
       {
@@ -198,7 +191,7 @@ const movies = [
         grossWeekly: 6272,
         theaterCount: 4,
         theaterAvg: 1568,
-        date: "2015-08-21",
+        date: '2015-08-21',
         rank: 81
       },
       {
@@ -206,16 +199,16 @@ const movies = [
         grossWeekly: 5677,
         theaterCount: 5,
         theaterAvg: 1135,
-        date: "2015-08-28",
+        date: '2015-08-28',
         rank: 83
       }
     ],
-    type: "iceberg"
+    type: 'iceberg'
   },
   {
-    title: "Far from the Madding Crowd",
-    studio: "FoxS",
-    firstWeek: "2015-18",
+    title: 'Far from the Madding Crowd',
+    studio: 'FoxS',
+    firstWeek: '2015-18',
     maxRank: 7,
     maxGross: 12236500,
     coordinates: [
@@ -224,7 +217,7 @@ const movies = [
         grossWeekly: 240160,
         theaterCount: 10,
         theaterAvg: 24016,
-        date: "2015-05-01",
+        date: '2015-05-01',
         rank: 24
       },
       {
@@ -232,7 +225,7 @@ const movies = [
         grossWeekly: 1090487,
         theaterCount: 99,
         theaterAvg: 11015,
-        date: "2015-05-08",
+        date: '2015-05-08',
         rank: 15
       },
       {
@@ -240,7 +233,7 @@ const movies = [
         grossWeekly: 1831958,
         theaterCount: 289,
         theaterAvg: 6339,
-        date: "2015-05-15",
+        date: '2015-05-15',
         rank: 10
       },
       {
@@ -248,7 +241,7 @@ const movies = [
         grossWeekly: 3779833,
         theaterCount: 865,
         theaterAvg: 4370,
-        date: "2015-05-22",
+        date: '2015-05-22',
         rank: 7
       },
       {
@@ -256,7 +249,7 @@ const movies = [
         grossWeekly: 2246233,
         theaterCount: 902,
         theaterAvg: 2490,
-        date: "2015-05-29",
+        date: '2015-05-29',
         rank: 9
       },
       {
@@ -264,7 +257,7 @@ const movies = [
         grossWeekly: 1129007,
         theaterCount: 610,
         theaterAvg: 1851,
-        date: "2015-06-05",
+        date: '2015-06-05',
         rank: 14
       },
       {
@@ -272,7 +265,7 @@ const movies = [
         grossWeekly: 701207,
         theaterCount: 366,
         theaterAvg: 1916,
-        date: "2015-06-12",
+        date: '2015-06-12',
         rank: 17
       },
       {
@@ -280,7 +273,7 @@ const movies = [
         grossWeekly: 430870,
         theaterCount: 256,
         theaterAvg: 1683,
-        date: "2015-06-19",
+        date: '2015-06-19',
         rank: 20
       },
       {
@@ -288,7 +281,7 @@ const movies = [
         grossWeekly: 270977,
         theaterCount: 122,
         theaterAvg: 2221,
-        date: "2015-06-26",
+        date: '2015-06-26',
         rank: 24
       },
       {
@@ -296,7 +289,7 @@ const movies = [
         grossWeekly: 195483,
         theaterCount: 105,
         theaterAvg: 1862,
-        date: "2015-07-03",
+        date: '2015-07-03',
         rank: 28
       },
       {
@@ -304,7 +297,7 @@ const movies = [
         grossWeekly: 138071,
         theaterCount: 98,
         theaterAvg: 1409,
-        date: "2015-07-10",
+        date: '2015-07-10',
         rank: 30
       },
       {
@@ -312,7 +305,7 @@ const movies = [
         grossWeekly: 86393,
         theaterCount: 74,
         theaterAvg: 1167,
-        date: "2015-07-17",
+        date: '2015-07-17',
         rank: 39
       },
       {
@@ -320,7 +313,7 @@ const movies = [
         grossWeekly: 52821,
         theaterCount: 47,
         theaterAvg: 1124,
-        date: "2015-07-24",
+        date: '2015-07-24',
         rank: 42
       },
       {
@@ -328,7 +321,7 @@ const movies = [
         grossWeekly: 25708,
         theaterCount: 27,
         theaterAvg: 952,
-        date: "2015-07-31",
+        date: '2015-07-31',
         rank: 58
       },
       {
@@ -336,21 +329,21 @@ const movies = [
         grossWeekly: 17292,
         theaterCount: 18,
         theaterAvg: 961,
-        date: "2015-08-07",
+        date: '2015-08-07',
         rank: 60
       }
     ],
-    type: "iceberg"
+    type: 'iceberg'
   }
 ]
 
 const colorHash = {
-  "Ex Machina": "#4d430c",
-  "Far from the Madding Crowd": "#b6a756"
+  'Ex Machina': '#4d430c',
+  'Far from the Madding Crowd': '#b6a756'
 }
 
 components.push({
-  name: "Creating a Line Chart"
+  name: 'Creating a Line Chart'
 })
 
 export default class CreatingLineChart extends React.Component {
@@ -366,14 +359,12 @@ export default class CreatingLineChart extends React.Component {
   }
 
   lineAnnotater({ d, xScale, yScale }) {
-    if (!d.type === "hover") {
-      return null
-    }
+    if (!d.type === 'hover') return null
 
     return (
       <circle
         r={10}
-        style={{ fill: "none", stroke: "red", strokeWidth: 5 }}
+        style={{ fill: 'none', stroke: 'red', strokeWidth: 5 }}
         cx={xScale(d.week)}
         cy={yScale(d.grossWeekly)}
       />
@@ -383,8 +374,8 @@ export default class CreatingLineChart extends React.Component {
   render() {
     const examples = []
     examples.push({
-      name: "Data",
-      demo: (
+      name: 'Data',
+      demo: 
         <div>
           <p>
             XYFrame line data takes an array of objects. Each of those objects
@@ -395,8 +386,7 @@ export default class CreatingLineChart extends React.Component {
             theaters, the average gross per theater, the date of that week, and
             the rank of the movie overall.
           </p>
-        </div>
-      ),
+        </div>,      
       source: `const movies = [
   {
     title: "The Fate of the Furious",
@@ -445,8 +435,8 @@ export default class CreatingLineChart extends React.Component {
     })
 
     examples.push({
-      name: "Simple",
-      demo: (
+      name: 'Simple',
+      demo: 
         <div>
           <p>
             To get make a line chart from this data, you need to pass the array
@@ -462,25 +452,24 @@ export default class CreatingLineChart extends React.Component {
           </p>
           <p>Finally, line style is set with the lineStyle property.</p>
           <XYFrame
-            title={"Two Movies"}
+            title={'Two Movies'}
             size={[700, 400]}
             dataVersion="fixed"
             lines={movies}
-            xAccessor={"week"}
-            yAccessor={"grossWeekly"}
-            lineStyle={{ stroke: "#00a2ce" }}
+            xAccessor={'week'}
+            yAccessor={'grossWeekly'}
+            lineStyle={{ stroke: '#00a2ce' }}
             margin={{ left: 80, bottom: 50, right: 10, top: 40 }}
             axes={[
               {
-                orient: "left"
+                orient: 'left'
               },
               {
-                orient: "bottom"
+                orient: 'bottom'
               }
             ]}
           />
-        </div>
-      ),
+        </div>,      
       source: `<XYFrame
             title={"Two Movies"}
             size={[700, 400]}
@@ -501,8 +490,8 @@ export default class CreatingLineChart extends React.Component {
     })
 
     examples.push({
-      name: "Line Chart with Options",
-      demo: (
+      name: 'Line Chart with Options',
+      demo: 
         <div>
           <p>
             If you don't send any value to lineType (like we did above) it
@@ -528,30 +517,29 @@ export default class CreatingLineChart extends React.Component {
             the chart will highlight the nearest point).
           </p>
           <XYFrame
-            title={"Two Movies"}
+            title={'Two Movies'}
             size={[700, 400]}
             dataVersion="fixed"
             lines={movies}
-            xAccessor={"week"}
-            yAccessor={"grossWeekly"}
-            lineStyle={{ stroke: "#00a2ce" }}
-            lineType={{ type: "line", interpolator: curveCardinal }}
-            lineRenderMode={"sketchy"}
+            xAccessor={'week'}
+            yAccessor={'grossWeekly'}
+            lineStyle={{ stroke: '#00a2ce' }}
+            lineType={{ type: 'line', interpolator: curveCardinal }}
+            lineRenderMode={'sketchy'}
             showLinePoints={true}
-            pointStyle={{ fill: "#00a2ce" }}
+            pointStyle={{ fill: '#00a2ce' }}
             hoverAnnotation={true}
             margin={{ left: 80, bottom: 50, right: 10, top: 40 }}
             axes={[
               {
-                orient: "left"
+                orient: 'left'
               },
               {
-                orient: "bottom"
+                orient: 'bottom'
               }
             ]}
           />
-        </div>
-      ),
+        </div>,      
       source: `import { curveCardinal } from "d3-shape";
 
       <XYFrame
@@ -579,8 +567,8 @@ export default class CreatingLineChart extends React.Component {
     })
 
     examples.push({
-      name: "Line Chart with Interactivity",
-      demo: (
+      name: 'Line Chart with Interactivity',
+      demo: 
         <div>
           <p>
             If you want to add interactivity to highlight a point, you can do so
@@ -605,7 +593,7 @@ export default class CreatingLineChart extends React.Component {
           </p>
 
           <XYFrame
-            title={"Two Movies"}
+            title={'Two Movies'}
             size={chartSize}
             lines={movies}
             xAccessor={interactiveXAccessor}
@@ -621,13 +609,12 @@ export default class CreatingLineChart extends React.Component {
             lineRenderMode="sketchy"
             annotations={
               this.state.hoverPoint
-                ? [Object.assign({}, this.state.hoverPoint, { type: "hover" })]
+                ? [Object.assign({}, this.state.hoverPoint, { type: 'hover' })]
                 : undefined
             }
             svgAnnotationRules={this.lineAnnotater}
           />
-        </div>
-      ),
+        </div>,      
       source: `import { curveCardinal } from "d3-shape";
 
 export default class CreatingLineChart extends React.Component {
@@ -695,8 +682,8 @@ export default class CreatingLineChart extends React.Component {
     })
 
     examples.push({
-      name: "Stacked Area Chart",
-      demo: (
+      name: 'Stacked Area Chart',
+      demo: 
         <div>
           <p>
             Instead of plotting the week of the movie's release, we can plot its
@@ -712,31 +699,30 @@ export default class CreatingLineChart extends React.Component {
             on the title associated with the line.
           </p>
           <XYFrame
-            title={"Two Movies"}
+            title={'Two Movies'}
             size={[700, 400]}
             lines={movies}
             dataVersion="fixed"
             xScaleType={scaleTime()}
             xAccessor={d => new Date(d.date)}
-            yAccessor={"grossWeekly"}
-            lineType={"stackedarea"}
+            yAccessor={'grossWeekly'}
+            lineType={'stackedarea'}
             lineStyle={d => ({
               fill: colorHash[d.title]
             })}
             margin={{ left: 50, bottom: 50, right: 10, top: 40 }}
             axes={[
               {
-                orient: "left",
-                tickFormat: d => d / 1000000 + "m"
+                orient: 'left',
+                tickFormat: d => `${d / 1000000}m`
               },
               {
-                orient: "bottom",
-                tickFormat: d => d.getMonth() + "/" + d.getDate()
+                orient: 'bottom',
+                tickFormat: d => `${d.getMonth()}/${d.getDate()}`
               }
             ]}
           />
-        </div>
-      ),
+        </div>,      
       source: `import { scaleTime } from "d3-scale";
                 <XYFrame
             title={"Two Movies"}
@@ -764,8 +750,8 @@ export default class CreatingLineChart extends React.Component {
     })
 
     examples.push({
-      name: "Percent Charts",
-      demo: (
+      name: 'Percent Charts',
+      demo: 
         <div>
           <p>
             For convenience there are "stackedpercent" and "linepercent" chart
@@ -774,14 +760,14 @@ export default class CreatingLineChart extends React.Component {
             These also expose a percent value in the default tooltip.
           </p>
           <XYFrame
-            title={"linepercent"}
+            title={'linepercent'}
             size={[700, 400]}
             lines={movies}
             dataVersion="fixed"
             xScaleType={scaleTime()}
             xAccessor={d => new Date(d.date)}
-            yAccessor={"grossWeekly"}
-            lineType={{ type: "linepercent", interpolator: curveMonotoneX }}
+            yAccessor={'grossWeekly'}
+            lineType={{ type: 'linepercent', interpolator: curveMonotoneX }}
             lineStyle={d => ({
               stroke: colorHash[d.title],
               strokeWidth: 2
@@ -789,43 +775,42 @@ export default class CreatingLineChart extends React.Component {
             margin={{ left: 50, bottom: 50, right: 10, top: 40 }}
             axes={[
               {
-                orient: "left",
-                tickFormat: d => parseInt(d * 100) + "%"
+                orient: 'left',
+                tickFormat: d => `${parseInt(d * 100, 10)}%`
               },
               {
-                orient: "bottom",
-                tickFormat: d => d.getMonth() + "/" + d.getDate()
+                orient: 'bottom',
+                tickFormat: d => `${d.getMonth()}/${d.getDate()}`
               }
             ]}
             hoverAnnotation={true}
           />
           <XYFrame
-            title={"stackedpercent"}
+            title={'stackedpercent'}
             size={[700, 400]}
             lines={movies}
             dataVersion="fixed"
             xScaleType={scaleTime()}
             xAccessor={d => new Date(d.date)}
-            yAccessor={"grossWeekly"}
-            lineType={{ type: "stackedpercent", interpolator: curveMonotoneX }}
+            yAccessor={'grossWeekly'}
+            lineType={{ type: 'stackedpercent', interpolator: curveMonotoneX }}
             lineStyle={d => ({
               fill: colorHash[d.title]
             })}
             margin={{ left: 50, bottom: 50, right: 10, top: 40 }}
             axes={[
               {
-                orient: "left",
-                tickFormat: d => parseInt(d * 100) + "%"
+                orient: 'left',
+                tickFormat: d => `${parseInt(d * 100, 10)}%`
               },
               {
-                orient: "bottom",
-                tickFormat: d => d.getMonth() + "/" + d.getDate()
+                orient: 'bottom',
+                tickFormat: d => `${d.getMonth()}/${d.getDate()}`
               }
             ]}
             hoverAnnotation={true}
           />
-        </div>
-      ),
+        </div>,      
       source: `import { curveMonotoneX } from "d3-shape";
       <XYFrame
       title={"stackedpercent"}
@@ -881,8 +866,8 @@ export default class CreatingLineChart extends React.Component {
     })
 
     examples.push({
-      name: "Bump Area Chart",
-      demo: (
+      name: 'Bump Area Chart',
+      demo: 
         <div>
           <p>
             Here's the "bumparea" mode, which is liked "stackedarea" but changes
@@ -890,32 +875,31 @@ export default class CreatingLineChart extends React.Component {
             lines are anchored in the middle of the area of the line.
           </p>
           <XYFrame
-            title={"Two Movies"}
+            title={'Two Movies'}
             size={[700, 400]}
             lines={movies}
             dataVersion="fixed"
             xScaleType={scaleTime()}
             xAccessor={d => new Date(d.date)}
-            yAccessor={"grossWeekly"}
-            lineType={{ type: "bumparea", interpolator: curveMonotoneX }}
+            yAccessor={'grossWeekly'}
+            lineType={{ type: 'bumparea', interpolator: curveMonotoneX }}
             lineStyle={d => ({
               fill: colorHash[d.title]
             })}
             margin={{ left: 50, bottom: 50, right: 10, top: 40 }}
             axes={[
               {
-                orient: "left",
-                tickFormat: d => d / 1000000 + "m"
+                orient: 'left',
+                tickFormat: d => `${d / 1000000}m`
               },
               {
-                orient: "bottom",
-                tickFormat: d => d.getMonth() + "/" + d.getDate()
+                orient: 'bottom',
+                tickFormat: d => `${d.getMonth()}/${d.getDate()}`
               }
             ]}
             hoverAnnotation={true}
           />
-        </div>
-      ),
+        </div>,      
       source: `import { curveMonotoneX } from "d3-shape";
 <XYFrame
   title={"Two Movies"}
@@ -960,4 +944,4 @@ export default class CreatingLineChart extends React.Component {
   }
 }
 
-CreatingLineChart.title = "Creating a Line Chart"
+CreatingLineChart.title = 'Creating a Line Chart'

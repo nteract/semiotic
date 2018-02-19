@@ -16,16 +16,16 @@ import { contouring } from "../svg/areaDrawing"
 import { max, min, extent } from "d3-array"
 
 const builtInTransformations = {
-  stackedarea: stackedArea,
+  "stackedarea": stackedArea,
   "stackedarea-invert": stackedArea,
-  stackedpercent: stackedArea,
+  "stackedpercent": stackedArea,
   "stackedpercent-invert": stackedArea,
-  linepercent: stackedArea,
-  difference: differenceLine,
-  bumparea: bumpChart,
-  bumpline: bumpChart,
+  "linepercent": stackedArea,
+  "difference": differenceLine,
+  "bumparea": bumpChart,
+  "bumpline": bumpChart,
   "bumparea-invert": bumpChart,
-  line: lineChart
+  "line": lineChart
 }
 
 export const stringToFn = (accessor, defaultAccessor, raw) => {
@@ -167,35 +167,6 @@ export const calculateDataExtent = ({
     projectedPoints = fullDataset
   }
 
-  function lineTransformation(lineType = { type: "line" }, options) {
-    const differenceCatch = (olineType, data) =>
-      (lineType === "difference" ||
-        (lineType.type && lineType.type === "difference")) &&
-      data.length !== 2
-        ? "line"
-        : olineType
-    if (builtInTransformations[lineType]) {
-      return data =>
-        builtInTransformations[differenceCatch(lineType, data)]({
-          type: lineType,
-          ...options,
-          data
-        })
-    }
-
-    if (builtInTransformations[lineType.type]) {
-      return data =>
-        builtInTransformations[differenceCatch(lineType.type, data)]({
-          ...lineType,
-          ...options,
-          data
-        })
-    }
-
-    //otherwise assume a function
-    return data => lineType({ ...options, data })
-  }
-
   const calculatedXExtent = extent(fullDataset.map(d => d[projectedX]))
   const calculatedYExtent = [
     min(
@@ -217,14 +188,14 @@ export const calculateDataExtent = ({
     )
   ]
 
-  let xMin =
+  const xMin =
     xExtent && xExtent[0] !== undefined ? xExtent[0] : calculatedXExtent[0]
-  let xMax =
+  const xMax =
     xExtent && xExtent[1] !== undefined ? xExtent[1] : calculatedXExtent[1]
 
-  let yMin =
+  const yMin =
     yExtent && yExtent[0] !== undefined ? yExtent[0] : calculatedYExtent[0]
-  let yMax =
+  const yMax =
     yExtent && yExtent[1] !== undefined ? yExtent[1] : calculatedYExtent[1]
 
   let finalYExtent = [yMin, yMax]
@@ -275,4 +246,33 @@ export const calculateDataExtent = ({
     calculatedXExtent,
     calculatedYExtent
   }
+}
+
+function lineTransformation(lineType = { type: "line" }, options) {
+  const differenceCatch = (olineType, data) =>
+    (lineType === "difference" ||
+      (lineType.type && lineType.type === "difference")) &&
+    data.length !== 2
+      ? "line"
+      : olineType
+  if (builtInTransformations[lineType]) {
+    return data =>
+      builtInTransformations[differenceCatch(lineType, data)]({
+        type: lineType,
+        ...options,
+        data
+      })
+  }
+
+  if (builtInTransformations[lineType.type]) {
+    return data =>
+      builtInTransformations[differenceCatch(lineType.type, data)]({
+        ...lineType,
+        ...options,
+        data
+      })
+  }
+
+  //otherwise assume a function
+  return data => lineType({ ...options, data })
 }

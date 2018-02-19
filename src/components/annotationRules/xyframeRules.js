@@ -17,7 +17,7 @@ const pointsAlong = along => ({
   pointStyle
 }) => {
   const alongScale = along === "x" ? xScale : yScale
-  along = along === "yTop" && d["yMiddle"] ? "yMiddle" : along
+  along = along === "yTop" && d.yMiddle ? "yMiddle" : along
   if (d && d[along]) {
     const { threshold = 1, r = () => 4, styleFn = pointStyle } = d
     const foundPoints = []
@@ -25,8 +25,8 @@ const pointsAlong = along => ({
     const halfThreshold = threshold / 2
 
     if (lines && lines.length > 0) {
-      lines.forEach(line => {
-        const linePoints = line.data.filter(p => {
+      lines.forEach(linedata => {
+        const linePoints = linedata.data.filter(p => {
           const pAlong = alongScale(p[along])
           const dAlong = alongScale(d[along])
 
@@ -70,7 +70,7 @@ export const svgXYAnnotation = ({ screenCoordinates, i, d }) => {
   const laLine = (
     <Mark
       className={`annotation ${d.type} ${d.className || ""} `}
-      key={"annotationpoint" + i}
+      key={`annotationpoint${i}`}
       markType="circle"
       cx={screenCoordinates[0]}
       cy={screenCoordinates[1]}
@@ -83,7 +83,7 @@ export const svgXYAnnotation = ({ screenCoordinates, i, d }) => {
     laLabel = (
       <Mark
         markType="text"
-        key={d.label + "annotationtext" + i}
+        key={`${d.label}annotationtext${i}`}
         forceUpdate={true}
         x={screenCoordinates[0]}
         y={10 + screenCoordinates[1]}
@@ -118,13 +118,7 @@ export const basicReactAnnotation = ({ screenCoordinates, d, i }) => {
   return <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
 }
 
-export const svgXAnnotation = ({
-  screenCoordinates,
-  d,
-  i,
-  annotationLayer,
-  adjustedSize
-}) => {
+export const svgXAnnotation = ({ screenCoordinates, d, i, adjustedSize }) => {
   const noteData = Object.assign(
     {
       dx: 50,
@@ -151,7 +145,6 @@ export const svgYAnnotation = ({
   screenCoordinates,
   d,
   i,
-  annotationLayer,
   adjustedSize,
   adjustedPosition
 }) => {
@@ -180,11 +173,9 @@ export const svgYAnnotation = ({
 }
 
 export const svgBoundsAnnotation = ({
-  screenCoordinates,
   d,
   i,
   adjustedSize,
-  adjustedPosition,
   xAccessor,
   yAccessor,
   xScale,
@@ -228,7 +219,7 @@ export const svgLineAnnotation = ({ d, i, screenCoordinates }) => {
   const lineD = lineGenerator(screenCoordinates)
   const laLine = (
     <Mark
-      key={d.label + "annotationline" + i}
+      key={`${d.label}annotationline${i}`}
       markType="path"
       d={lineD}
       className={`annotation annotation-line ${d.className || ""} `}
@@ -238,7 +229,7 @@ export const svgLineAnnotation = ({ d, i, screenCoordinates }) => {
   const laLabel = (
     <Mark
       markType="text"
-      key={d.label + "annotationlinetext" + i}
+      key={`${d.label}annotationlinetext${i}`}
       x={(screenCoordinates[0][0] + screenCoordinates[1][0]) / 2}
       y={(screenCoordinates[0][1] + screenCoordinates[1][1]) / 2}
       className={`annotation annotation-line-label ${d.className || ""} `}
@@ -253,19 +244,15 @@ export const svgLineAnnotation = ({ d, i, screenCoordinates }) => {
 export const svgAreaAnnotation = ({
   d,
   i,
-  screenCoordinates,
   xScale,
   xAccessor,
   yScale,
   yAccessor,
   annotationLayer
 }) => {
-  const mappedCoordinates =
-    "M" +
-    d.coordinates
-      .map(p => [xScale(xAccessor(p)), yScale(yAccessor(p))])
-      .join("L") +
-    "Z"
+  const mappedCoordinates = `M${d.coordinates
+    .map(p => [xScale(xAccessor(p)), yScale(yAccessor(p))])
+    .join("L")}Z`
   const xBounds = extent(d.coordinates.map(p => xScale(xAccessor(p))))
   const yBounds = extent(d.coordinates.map(p => yScale(yAccessor(p))))
   const xCenter = (xBounds[0] + xBounds[1]) / 2
@@ -273,9 +260,9 @@ export const svgAreaAnnotation = ({
 
   const laLine = (
     <Mark
-      key={d.label + "annotationarea" + i}
+      key={`${d.label}-annotationarea-${i}`}
       markType="path"
-      transform={"translate(" + annotationLayer.position + ")"}
+      transform={`translate(${annotationLayer.position})`}
       d={mappedCoordinates}
       className={`annotation annotation-area ${d.className || ""} `}
     />
@@ -284,11 +271,11 @@ export const svgAreaAnnotation = ({
   const laLabel = (
     <Mark
       markType="text"
-      key={d.label + "annotationtext" + i}
+      key={`${d.label}-annotationtext-${i}`}
       forceUpdate={true}
       x={xCenter}
       y={yCenter}
-      transform={"translate(" + annotationLayer.position + ")"}
+      transform={`translate(${annotationLayer.position})`}
       className={`annotation annotation-area-label ${d.className || ""} `}
       style={{ textAnchor: "middle" }}
     >
@@ -299,23 +286,17 @@ export const svgAreaAnnotation = ({
   return [laLine, laLabel]
 }
 
-export const htmlTooltipAnnotation = ({
-  content,
-  screenCoordinates,
-  size,
-  i,
-  d
-}) => {
+export const htmlTooltipAnnotation = ({ content, screenCoordinates, i, d }) => {
   //To string because React gives a DOM error if it gets a date
 
   return (
     <div
-      key={"xylabel" + i}
+      key={`xylabel-${i}`}
       className={`annotation annotation-xy-label ${d.className || ""} `}
       style={{
         position: "absolute",
-        top: screenCoordinates[1] + "px",
-        left: screenCoordinates[0] + "px"
+        top: `${screenCoordinates[1]}px`,
+        left: `${screenCoordinates[0]}px`
       }}
     >
       {content}
@@ -336,7 +317,7 @@ export const svgRectEncloseRule = ({ d, i, screenCoordinates }) => {
   return rectangleEnclosure({ bboxNodes, d, i })
 }
 
-export const svgEncloseAnnotation = ({ screenCoordinates, d, i }) => {
+export const svgEncloseAnnotation = ({ screenCoordinates, d }) => {
   const circle = packEnclose(
     screenCoordinates.map(p => ({ x: p[0], y: p[1], r: 2 }))
   )

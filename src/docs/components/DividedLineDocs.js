@@ -1,14 +1,14 @@
-import React from "react"
-import DocumentComponent from "../layout/DocumentComponent"
-import { DividedLine } from "../../components"
-import { curveBasis } from "d3-shape"
+import React from 'react'
+import DocumentComponent from '../layout/DocumentComponent'
+import { DividedLine } from '../../components'
+import { curveBasis } from 'd3-shape'
 
 const components = []
 // Add your component proptype data here
 // multiple component proptype documentation supported
 
 components.push({
-  name: "DividedLine",
+  name: 'DividedLine',
   proptypes: `
     {
     parameters: PropTypes.func,
@@ -39,37 +39,30 @@ export default class DividedLineDocs extends React.Component {
       return pointDataSet
     }
 
-    const colors = [
-      "#00a2ce",
-      "#b3331d",
-      "rgb(77, 67, 12)",
-      "rgb(182, 167, 86)"
-    ]
-
     function parameters(point) {
-      if (point.x < 100) {
+      if (point.x < 100) 
         return {
-          fill: "none",
-          stroke: "#b3331d",
+          fill: 'none',
+          stroke: '#b3331d',
           strokeWidth: 6,
           strokeOpacity: 1
         }
-      }
-      if (point.x > 400) {
+      
+      if (point.x > 400) 
         return {
-          fill: "none",
-          stroke: "#b3331d",
+          fill: 'none',
+          stroke: '#b3331d',
           strokeWidth: 2,
-          strokeDasharray: "5 5"
+          strokeDasharray: '5 5'
         }
-      }
-      if (point.y < 150) {
-        return { fill: "none", strokeWidth: 2, stroke: "#00a2ce" }
-      }
-      if (point.y > 350) {
-        return { fill: "none", strokeWidth: 2, stroke: "#b6a756" }
-      }
-      return { fill: "none", stroke: "black", strokeWidth: 1 }
+      
+      if (point.y < 150) 
+        return { fill: 'none', strokeWidth: 2, stroke: '#00a2ce' }
+      
+      if (point.y > 350) 
+        return { fill: 'none', strokeWidth: 2, stroke: '#b6a756' }
+      
+      return { fill: 'none', stroke: 'black', strokeWidth: 1 }
     }
 
     const data = randomLineGenerator(500, 500, 100)
@@ -78,8 +71,8 @@ export default class DividedLineDocs extends React.Component {
 
     const examples = []
     examples.push({
-      name: "Basic",
-      demo: (
+      name: 'Basic',
+      demo: 
         <svg height="500" width="500">
           <DividedLine
             parameters={parameters}
@@ -89,8 +82,7 @@ export default class DividedLineDocs extends React.Component {
             interpolate={curveBasis}
             searchIterations={20}
           />
-        </svg>
-      ),
+        </svg>,      
       source: `
       import { DividedLine } from 'semiotic';
 
@@ -131,4 +123,4 @@ export default class DividedLineDocs extends React.Component {
   }
 }
 
-DividedLineDocs.title = "DividedLine"
+DividedLineDocs.title = 'DividedLine'

@@ -11,7 +11,15 @@ import PropTypes from "prop-types"
 import { chuckCloseCanvasTransform } from "./canvas/basicCanvasEffects"
 
 class VisualizationLayer extends React.PureComponent {
-  static defaultProps = { position: [0, 0] }
+  static defaultProps = {
+    position: [0, 0],
+    margin: { left: 0, top: 0, right: 0, bottom: 0 }
+  }
+
+  constructor(props) {
+    super(props)
+    this.updateVisualizationLayer = this.updateVisualizationLayer.bind(this)
+  }
 
   canvasDrawing = []
 
@@ -46,7 +54,9 @@ class VisualizationLayer extends React.PureComponent {
     context.clearRect(0, 0, size[0], size[1])
 
     this.canvasDrawing.forEach(piece => {
-      const style = piece.styleFn ? piece.styleFn(piece.d, piece.i) : "black"
+      const style = piece.styleFn
+        ? piece.styleFn(piece.d, piece.i)
+        : { fill: "black", stroke: "black" }
       let fill = style.fill ? style.fill : "black"
       let stroke = style.stroke ? style.stroke : "black"
       fill = !style.fillOpacity
@@ -116,6 +126,56 @@ class VisualizationLayer extends React.PureComponent {
     }
   }
 
+  updateVisualizationLayer(props) {
+    const {
+      xScale,
+      yScale,
+      dataVersion,
+      projectedCoordinateNames,
+      renderKeyFn,
+      renderPipeline = {},
+      baseMarkProps = {}
+    } = props
+    this.canvasDrawing = []
+    const canvasDrawing = this.canvasDrawing
+
+    const renderedElements = []
+    Object.keys(renderPipeline).forEach(k => {
+      const pipe = renderPipeline[k]
+      if (
+        (pipe.data &&
+          typeof pipe.data === "object" &&
+          !Array.isArray(pipe.data)) ||
+        (pipe.data && pipe.data.length > 0)
+      ) {
+        const renderedPipe = pipe.behavior({
+          xScale,
+          yScale,
+          canvasDrawing,
+          projectedCoordinateNames,
+          renderKeyFn,
+          baseMarkProps,
+          ...pipe
+        })
+
+        if (renderedPipe && renderedPipe.length > 0) {
+          renderedElements.push(
+            <g key={k} className={k}>
+              {renderedPipe}
+            </g>
+          )
+        }
+      }
+    })
+
+    this.setState({
+      renderedElements,
+      dataVersion
+    })
+  }
+  componentWillMount() {
+    this.updateVisualizationLayer(this.props)
+  }
   componentWillReceiveProps(np) {
     const lp = this.props
     const propKeys = Object.keys(np)
@@ -131,65 +191,14 @@ class VisualizationLayer extends React.PureComponent {
       update === true ||
       (np.dataVersion && np.dataVersion !== this.state.dataVersion)
     ) {
-      const {
-        xScale,
-        yScale,
-        dataVersion,
-        projectedCoordinateNames,
-        renderKeyFn,
-        renderPipeline,
-        baseMarkProps = {}
-      } = np
-      this.canvasDrawing = []
-      const canvasDrawing = this.canvasDrawing
-
-      const renderedElements = []
-      Object.keys(renderPipeline).forEach(k => {
-        const pipe = renderPipeline[k]
-        if (
-          (pipe.data &&
-            typeof pipe.data === "object" &&
-            !Array.isArray(pipe.data)) ||
-          (pipe.data && pipe.data.length > 0)
-        ) {
-          const renderedPipe = pipe.behavior({
-            xScale,
-            yScale,
-            canvasDrawing,
-            projectedCoordinateNames,
-            renderKeyFn,
-            baseMarkProps,
-            ...pipe
-          })
-
-          if (renderedPipe && renderedPipe.length > 0) {
-            renderedElements.push(
-              <g key={k} className={k}>
-                {renderedPipe}
-              </g>
-            )
-          }
-        }
-      })
-
-      this.setState({
-        renderedElements,
-        dataVersion
-      })
+      this.updateVisualizationLayer(np)
     }
   }
 
   render() {
     const props = this.props
-    const {
-      matte,
-      matteClip,
-      axes,
-      axesTickLines,
-      frameKey,
-      position,
-      margin
-    } = props
+    const { matte, matteClip, axes, axesTickLines, frameKey, margin } = props
+
     const { renderedElements } = this.state
 
     const renderedAxes = axes && (
@@ -206,20 +215,20 @@ class VisualizationLayer extends React.PureComponent {
       ((renderedAxes ||
         renderedAxesTickLines ||
         (renderedElements && renderedElements.length > 0)) && (
-        <g
-          className="data-visualization"
-          key="visualization-clip-path"
-          clipPath={
-            matteClip && matte ? `url(#matte-clip${frameKey})` : undefined
-          }
-          transform={`translate(${margin.left},${margin.top})`}
-        >
-          {renderedAxesTickLines}
-          {renderedElements}
-          {matte}
-          {renderedAxes}
-        </g>
-      )) ||
+          <g
+            className="data-visualization"
+            key="visualization-clip-path"
+            clipPath={
+              matteClip && matte ? `url(#matte-clip${frameKey})` : undefined
+            }
+            transform={`translate(${margin.left},${margin.top})`}
+          >
+            {renderedAxesTickLines}
+            {renderedElements}
+            {matte}
+            {renderedAxes}
+          </g>
+        )) ||
       null
 
     return renderedDataVisualization
@@ -236,7 +245,8 @@ VisualizationLayer.propTypes = {
   areaData: PropTypes.array,
   dataVersion: PropTypes.string,
   canvasContext: PropTypes.object,
-  size: PropTypes.array
+  size: PropTypes.array.isRequired,
+  margin: PropTypes.object
 }
 
 export default VisualizationLayer

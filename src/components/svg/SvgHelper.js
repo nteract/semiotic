@@ -32,7 +32,7 @@ export const wrap = (text, width) => {
       dy = parseFloat(textNode.attr("dy"))
 
     let word,
-      line = [],
+      wordline = [],
       lineNumber = 0,
       tspan = textNode
         .text(null)
@@ -43,12 +43,12 @@ export const wrap = (text, width) => {
 
     while (words.length > 0) {
       word = words.pop()
-      line.push(word)
-      tspan.text(line.join(" "))
+      wordline.push(word)
+      tspan.text(wordline.join(" "))
       if (tspan.node().getComputedTextLength() > width) {
-        line.pop()
-        tspan.text(line.join(" "))
-        line = [word]
+        wordline.pop()
+        tspan.text(wordline.join(" "))
+        wordline = [word]
 
         tspan = text
           .append("tspan")
@@ -71,10 +71,10 @@ export const hexToRgb = hex => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
   return result
     ? [
-        parseInt(result[1], 16),
-        parseInt(result[2], 16),
-        parseInt(result[3], 16)
-      ]
+      parseInt(result[1], 16),
+      parseInt(result[2], 16),
+      parseInt(result[3], 16)
+    ]
     : [0, 0, 0]
 }
 
@@ -85,9 +85,7 @@ export const groupBarMark = ({
   columnWidth,
   projection,
   adjustedSize,
-  chartSize,
   summaryI,
-  data,
   summary,
   renderValue,
   summaryStyle,
@@ -149,7 +147,7 @@ export const groupBarMark = ({
       mappedPoints.push({
         key: summary.name,
         value: d.value,
-        pieces: d.pieces.map(d => d.piece),
+        pieces: d.pieces.map(p => p.piece),
         label: "Heatmap",
         x: arcCenter[0] + arcAdjustX,
         y: arcCenter[1] + arcAdjustY
@@ -170,7 +168,7 @@ export const groupBarMark = ({
       mappedPoints.push({
         key: summary.name,
         value: d.value,
-        pieces: d.pieces.map(d => d.piece),
+        pieces: d.pieces.map(p => p.piece),
         label: "Heatmap",
         x: xProp + xOffset,
         y: yProp + yOffset
@@ -197,7 +195,7 @@ export const groupBarMark = ({
 
 // FROM d3-svg-ribbon
 export function linearRibbon() {
-  let _lineConstructor = line()
+  const _lineConstructor = line()
   let _xAccessor = function(d) {
     return d.x
   }
@@ -210,7 +208,7 @@ export function linearRibbon() {
   let _interpolator = curveLinearClosed
 
   function _ribbon(pathData) {
-    let bothPoints = buildRibbon(pathData)
+    const bothPoints = buildRibbon(pathData)
 
     return _lineConstructor
       .x(_xAccessor)
@@ -249,23 +247,23 @@ export function linearRibbon() {
   return _ribbon
 
   function offsetEdge(d) {
-    let diffX = _yAccessor(d.target) - _yAccessor(d.source)
-    let diffY = _xAccessor(d.target) - _xAccessor(d.source)
+    const diffX = _yAccessor(d.target) - _yAccessor(d.source)
+    const diffY = _xAccessor(d.target) - _xAccessor(d.source)
 
-    let angle0 = Math.atan2(diffY, diffX) + Math.PI / 2
-    let angle1 = angle0 + Math.PI * 0.5
-    let angle2 = angle0 + Math.PI * 0.5
+    const angle0 = Math.atan2(diffY, diffX) + Math.PI / 2
+    const angle1 = angle0 + Math.PI * 0.5
+    const angle2 = angle0 + Math.PI * 0.5
 
-    let x1 = _xAccessor(d.source) + _rAccessor(d.source) * Math.cos(angle1)
-    let y1 = _yAccessor(d.source) - _rAccessor(d.source) * Math.sin(angle1)
-    let x2 = _xAccessor(d.target) + _rAccessor(d.target) * Math.cos(angle2)
-    let y2 = _yAccessor(d.target) - _rAccessor(d.target) * Math.sin(angle2)
+    const x1 = _xAccessor(d.source) + _rAccessor(d.source) * Math.cos(angle1)
+    const y1 = _yAccessor(d.source) - _rAccessor(d.source) * Math.sin(angle1)
+    const x2 = _xAccessor(d.target) + _rAccessor(d.target) * Math.cos(angle2)
+    const y2 = _yAccessor(d.target) - _rAccessor(d.target) * Math.sin(angle2)
 
     return { x1: x1, y1: y1, x2: x2, y2: y2 }
   }
 
   function buildRibbon(points) {
-    let bothCode = []
+    const bothCode = []
     let x = 0
     let transformedPoints = {}
 
@@ -275,14 +273,14 @@ export function linearRibbon() {
           source: points[x],
           target: points[x + 1]
         })
-        let p1 = { x: transformedPoints.x1, y: transformedPoints.y1 }
-        let p2 = { x: transformedPoints.x2, y: transformedPoints.y2 }
+        const p1 = { x: transformedPoints.x1, y: transformedPoints.y1 }
+        const p2 = { x: transformedPoints.x2, y: transformedPoints.y2 }
         bothCode.push(p1, p2)
         if (bothCode.length > 3) {
-          let l = bothCode.length - 1
-          let lineA = { a: bothCode[l - 3], b: bothCode[l - 2] }
-          let lineB = { a: bothCode[l - 1], b: bothCode[l] }
-          let intersect = findIntersect(
+          const l = bothCode.length - 1
+          const lineA = { a: bothCode[l - 3], b: bothCode[l - 2] }
+          const lineB = { a: bothCode[l - 1], b: bothCode[l] }
+          const intersect = findIntersect(
             lineA.a.x,
             lineA.a.y,
             lineA.b.x,
@@ -311,14 +309,14 @@ export function linearRibbon() {
           source: points[x],
           target: points[x - 1]
         })
-        let p1 = { x: transformedPoints.x1, y: transformedPoints.y1 }
-        let p2 = { x: transformedPoints.x2, y: transformedPoints.y2 }
+        const p1 = { x: transformedPoints.x1, y: transformedPoints.y1 }
+        const p2 = { x: transformedPoints.x2, y: transformedPoints.y2 }
         bothCode.push(p1, p2)
         if (bothCode.length > 3) {
-          let l = bothCode.length - 1
-          let lineA = { a: bothCode[l - 3], b: bothCode[l - 2] }
-          let lineB = { a: bothCode[l - 1], b: bothCode[l] }
-          let intersect = findIntersect(
+          const l = bothCode.length - 1
+          const lineA = { a: bothCode[l - 3], b: bothCode[l - 2] }
+          const lineB = { a: bothCode[l - 1], b: bothCode[l] }
+          const intersect = findIntersect(
             lineA.a.x,
             lineA.a.y,
             lineA.b.x,
@@ -344,24 +342,22 @@ export function linearRibbon() {
   }
 
   function findIntersect(l1x1, l1y1, l1x2, l1y2, l2x1, l2y1, l2x2, l2y2) {
-    let d,
-      a,
-      b,
-      n1,
-      n2,
-      result = {
-        x: null,
-        y: null,
-        found: false
-      }
-    d = (l2y2 - l2y1) * (l1x2 - l1x1) - (l2x2 - l2x1) * (l1y2 - l1y1)
+    let a, b
+
+    const result = {
+      x: null,
+      y: null,
+      found: false
+    }
+
+    const d = (l2y2 - l2y1) * (l1x2 - l1x1) - (l2x2 - l2x1) * (l1y2 - l1y1)
     if (d === 0) {
       return result
     }
     a = l1y1 - l2y1
     b = l1x1 - l2x1
-    n1 = (l2x2 - l2x1) * a - (l2y2 - l2y1) * b
-    n2 = (l1x2 - l1x1) * a - (l1y2 - l1y1) * b
+    const n1 = (l2x2 - l2x1) * a - (l2y2 - l2y1) * b
+    const n2 = (l1x2 - l1x1) * a - (l1y2 - l1y1) * b
     a = n1 / d
     b = n2 / d
 

@@ -1,4 +1,19 @@
 {
   "root": true,
-  "extends": ["netflix-dea"]
+  "extends": "netflix-dea",
+  "env": {
+    "jest": true
+  },
+  "rules": {
+    "no-template-curly-in-string": 0,
+    "quotes": 0,
+    "react/jsx-no-bind": 0,
+    "no-extra-parens": 0,
+    "curly": 0,
+    "class-methods-use-this": 0,
+    "react/no-did-mount-set-state": 0,
+    "indent": 0,
+    "no-empty-function": 0,
+    "react/prefer-stateless-function": 0
+  }
 }

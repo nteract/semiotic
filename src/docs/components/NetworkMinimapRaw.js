@@ -1,22 +1,19 @@
-import React from "react"
-import { MinimapNetworkFrame } from "../../components"
-import ProcessViz from "./ProcessViz"
+import React from 'react'
+import { MinimapNetworkFrame } from '../../components'
+import ProcessViz from './ProcessViz'
 
-const dataSeeds = [20, 10, -10, -20]
-const colors = ["4d430c", "#d38779", "#b3331d", "#00a2ce", "#007190", "#b6a756"]
-
-const nodes = [{ id: "a" }, { id: "b" }, { id: "c" }]
+const nodes = [{ id: 'a' }, { id: 'b' }, { id: 'c' }]
 const edges = [
-  { source: "a", target: "b" },
-  { source: "b", target: "a" },
-  { source: "c", target: "b" }
+  { source: 'a', target: 'b' },
+  { source: 'b', target: 'a' },
+  { source: 'c', target: 'b' }
 ]
 
 const networkFrameSettings = {
   nodes: nodes,
   edges: edges,
-  nodeStyle: { fill: "red" },
-  edgeStyle: { stroke: "gold" }
+  nodeStyle: { fill: 'red' },
+  edgeStyle: { stroke: 'gold' }
 }
 
 export default (brushFunction, extent, selectedExtent) => {

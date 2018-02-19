@@ -32,9 +32,9 @@ export const projectLineData = ({
     data = [data]
   }
   return data.map((d, i) => {
-    let originalLineData = Object.assign({}, d)
+    const originalLineData = Object.assign({}, d)
     originalLineData.data = lineDataAccessor(d).map((p, q) => {
-      let originalCoords = {}
+      const originalCoords = {}
 
       originalCoords[xProp] = xAccessor(p, q)
       originalCoords[yProp] = yAccessor(p, q)
@@ -52,7 +52,7 @@ export const projectLineData = ({
 export const differenceLine = ({ data, yProp, yPropTop, yPropBottom }) => {
   data.forEach((l, i) => {
     l.data.forEach((point, q) => {
-      let otherLine = i === 0 ? 1 : 0
+      const otherLine = i === 0 ? 1 : 0
       if (point[yProp] > data[otherLine].data[q][yProp]) {
         point[yPropBottom] = data[otherLine].data[q][yProp]
         point[yPropTop] = point[yProp]
@@ -259,7 +259,7 @@ export const bumpChart = ({
 export const dividedLine = (parameters, points, searchIterations = 10) => {
   let currentParameters = parameters(points[0], 0)
   let currentPointsArray = []
-  let dividedLinesData = [
+  const dividedLinesData = [
     { key: currentParameters, points: currentPointsArray }
   ]
   points.forEach((point, pointI) => {

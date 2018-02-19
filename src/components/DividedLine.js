@@ -17,11 +17,11 @@ class DividedLine extends React.Component {
   }
 
   createLineSegments() {
-    let params = this.props.parameters
-    let className = this.props.className
-    let interpolate = this.props.interpolate || curveLinear
+    const params = this.props.parameters
+    const className = this.props.className
+    const interpolate = this.props.interpolate || curveLinear
 
-    let data = projectLineData({
+    const data = projectLineData({
       data: this.props.data,
       lineDataAccessor: this.props.lineDataAccessor,
       xProp: "_x",
@@ -35,9 +35,9 @@ class DividedLine extends React.Component {
       projectedD.data = projectedD.data.map(d => ({ ...d.data, ...d }))
     })
 
-    let lines = dividedLine(params, data[0].data, this.props.searchIterations)
+    const lines = dividedLine(params, data[0].data, this.props.searchIterations)
 
-    let lineRender = line()
+    const lineRender = line()
       .curve(interpolate)
       .x(d => d._x)
       .y(d => d._y)
@@ -47,7 +47,7 @@ class DividedLine extends React.Component {
         {...this.props}
         className={className}
         markType="path"
-        key={"DividedLine" + i}
+        key={`DividedLine-${i}`}
         style={d.key}
         d={lineRender(d.points)}
       />
@@ -55,7 +55,7 @@ class DividedLine extends React.Component {
   }
 
   render() {
-    let lines = this.createLineSegments()
+    const lines = this.createLineSegments()
 
     return <g>{lines}</g>
   }

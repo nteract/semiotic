@@ -67,7 +67,7 @@ export const xyDownloadMapping = ({
 
 export const orDownloadMapping = ({
   data,
-  columns,
+  //  columns,
   oAccessor,
   rAccessor,
   fields = []

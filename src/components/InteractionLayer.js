@@ -33,13 +33,12 @@ class InteractionLayer extends React.Component {
   changeVoronoi(d, customHoverTypes) {
     //Until semiotic 2
     const dataObject = d && d.data ? { ...d.data, ...d } : d
-    if (this.props.customHoverBehavior) {
+    if (this.props.customHoverBehavior)
       this.props.customHoverBehavior(dataObject)
-    }
-    if (!d) {
-      this.props.voronoiHover(null)
-    } else if (customHoverTypes === true) {
-      let vorD = Object.assign({}, dataObject)
+
+    if (!d) this.props.voronoiHover(null)
+    else if (customHoverTypes === true) {
+      const vorD = Object.assign({}, dataObject)
       vorD.type = vorD.type === "column-hover" ? "column-hover" : "frame-hover"
       this.props.voronoiHover(vorD)
     } else {
@@ -58,35 +57,27 @@ class InteractionLayer extends React.Component {
     //Until semiotic 2
     const dataObject = d.data ? { ...d.data, ...d } : d
 
-    if (this.props.customClickBehavior) {
+    if (this.props.customClickBehavior)
       this.props.customClickBehavior(dataObject)
-    }
   }
   doubleclickVoronoi(d) {
     //Until semiotic 2
     const dataObject = d.data ? { ...d.data, ...d } : d
 
-    if (this.props.customDoubleClickBehavior) {
+    if (this.props.customDoubleClickBehavior)
       this.props.customClickBehavior(dataObject)
-    }
   }
 
   brushStart(e, c) {
-    if (this.props.interaction.start) {
-      this.props.interaction.start(e, c)
-    }
+    if (this.props.interaction.start) this.props.interaction.start(e, c)
   }
 
   brush(e, c) {
-    if (this.props.interaction.during) {
-      this.props.interaction.during(e, c)
-    }
+    if (this.props.interaction.during) this.props.interaction.during(e, c)
   }
 
   brushEnd(e, c) {
-    if (this.props.interaction.end) {
-      this.props.interaction.end(e, c)
-    }
+    if (this.props.interaction.end) this.props.interaction.end(e, c)
   }
 
   createBrush() {
@@ -189,7 +180,7 @@ class InteractionLayer extends React.Component {
           isNaN(xValue) === false &&
           isNaN(yValue) === false
         ) {
-          const pointKey = xValue + "," + yValue
+          const pointKey = `${xValue},${yValue}`
           if (!voronoiUniqueHash[pointKey]) {
             const voronoiPoint = Object.assign({}, d, {
               coincidentPoints: [d],
@@ -198,9 +189,7 @@ class InteractionLayer extends React.Component {
             })
             voronoiDataset.push(voronoiPoint)
             voronoiUniqueHash[pointKey] = voronoiPoint
-          } else {
-            voronoiUniqueHash[pointKey].coincidentPoints.push(d)
-          }
+          } else voronoiUniqueHash[pointKey].coincidentPoints.push(d)
         }
       })
 
@@ -218,7 +207,7 @@ class InteractionLayer extends React.Component {
         ]
       ]
 
-      let voronoiDiagram = voronoi()
+      const voronoiDiagram = voronoi()
         .extent(voronoiExtent)
         .x(d => d.voronoiX)
         .y(d => d.voronoiY)
@@ -228,9 +217,8 @@ class InteractionLayer extends React.Component {
 
       //create neighbors
       voronoiLinks.forEach(v => {
-        if (!v.source.neighbors) {
-          v.source.neighbors = []
-        }
+        if (!v.source.neighbors) v.source.neighbors = []
+
         v.source.neighbors.push(v.target)
       })
 
@@ -249,8 +237,8 @@ class InteractionLayer extends React.Component {
             onMouseLeave={() => {
               this.changeVoronoi()
             }}
-            key={"interactionVoronoi" + i}
-            d={"M" + d.join("L") + "Z"}
+            key={`interactionVoronoi${i}`}
+            d={`M${d.join("L")}Z`}
             style={{ fillOpacity: 0 }}
           />
         )
@@ -258,9 +246,10 @@ class InteractionLayer extends React.Component {
 
       return voronoiPaths
     } else if (overlay) {
-      const renderedOverlay = overlay.map(overlayRegion => {
+      const renderedOverlay = overlay.map((overlayRegion, i) => {
         return (
           <Mark
+            key={`overlay-${i}`}
             forceUpdate={true}
             {...overlayRegion}
             onClick={() => {
@@ -298,7 +287,7 @@ class InteractionLayer extends React.Component {
     if (projection && projection === "horizontal") {
       type = "xBrush"
       mappingFn = d => (!d ? null : [rScale.invert(d[0]), rScale.invert(d[1])])
-    } else {
+    } else
       mappingFn = d =>
         !d
           ? null
@@ -306,7 +295,6 @@ class InteractionLayer extends React.Component {
               Math.abs(rScale.invert(d[1]) - max),
               Math.abs(rScale.invert(d[0]) - max)
             ]
-    }
 
     const rRange = rScale.range()
 
@@ -354,7 +342,7 @@ class InteractionLayer extends React.Component {
           <Brush
             type={type}
             position={brushPosition}
-            key={"orbrush" + c}
+            key={`orbrush${c}`}
             selectedExtent={selectedExtent}
             svgBrush={semioticBrush}
             size={size}
@@ -367,9 +355,9 @@ class InteractionLayer extends React.Component {
 
   render() {
     let semioticBrush = null
-    const { interaction, position, svgSize, margin } = this.props
+    const { interaction, svgSize, margin, useSpans } = this.props
     const { overlayRegions } = this.state
-    let { enabled, useSpans } = this.props
+    let { enabled } = this.props
 
     if (interaction && interaction.brush) {
       enabled = true

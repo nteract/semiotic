@@ -1,15 +1,11 @@
-import React from "react"
-import DocumentComponent from "../layout/DocumentComponent"
-import MinimapRaw from "./MinimapRaw"
-import { MenuItem } from "material-ui/Menu"
-import Input, { InputLabel } from "material-ui/Input"
-import { FormControl, FormHelperText } from "material-ui/Form"
-import Select from "material-ui/Select"
+import React from 'react'
+import DocumentComponent from '../layout/DocumentComponent'
+import MinimapRaw from './MinimapRaw'
 
 const components = []
 
 components.push({
-  name: "Minimap Basics"
+  name: 'Minimap Basics'
 })
 
 export default class MinimapBasics extends React.Component {
@@ -20,7 +16,7 @@ export default class MinimapBasics extends React.Component {
     this.changeExtent = this.changeExtent.bind(this)
   }
   randomizeExtent() {
-    const randomStart = parseInt(Math.random() * 25)
+    const randomStart = parseInt(Math.random() * 25, 10)
     this.setState({ resetExtent: [randomStart, randomStart + 15] })
   }
 
@@ -38,7 +34,7 @@ export default class MinimapBasics extends React.Component {
     ]
 
     examples.push({
-      name: "Basic",
+      name: 'Basic',
       demo: MinimapRaw(
         this.changeExtent,
         this.state.resetExtent,
@@ -154,4 +150,4 @@ const xyFrameSettings = {
   }
 }
 
-MinimapBasics.title = "Minimap Basics"
+MinimapBasics.title = 'Minimap Basics'

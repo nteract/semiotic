@@ -9,6 +9,12 @@ import PropTypes from "prop-types"
 const defaultZeroMargin = { top: 0, bottom: 0, left: 0, right: 0 }
 
 class Frame extends React.Component {
+  static defaultProps = {
+    annotationSettings: {},
+    adjustedPosition: [0, 0],
+    projectedCoordinateNames: { x: "x", y: "y" }
+  }
+
   constructor(props) {
     super(props)
 
@@ -28,19 +34,19 @@ class Frame extends React.Component {
 
   render() {
     const {
-      name,
-      renderPipeline,
-      /* position,*/ size,
-      extent,
-      projectedCoordinateNames,
-      xScale,
-      yScale,
       axes,
       axesTickLines,
-      title,
-      matte,
       className,
-      adjustedSize,
+      extent,
+      matte,
+      name,
+      projectedCoordinateNames,
+      renderPipeline,
+      size,
+      adjustedSize = size,
+      title,
+      xScale,
+      yScale,
       finalFilterDefs,
       frameKey,
       dataVersion,
@@ -77,7 +83,7 @@ class Frame extends React.Component {
 
     const areaAnnotations = []
 
-    let totalAnnotations = annotations
+    const totalAnnotations = annotations
       ? [...annotations, ...areaAnnotations]
       : areaAnnotations
 
@@ -126,7 +132,7 @@ class Frame extends React.Component {
     return (
       <SpanOrDiv
         span={useSpans}
-        className={className + " frame"}
+        className={`${className} frame`}
         style={{
           background: "none"
         }}
@@ -142,7 +148,7 @@ class Frame extends React.Component {
         <SpanOrDiv
           span={useSpans}
           className="frame-elements"
-          style={{ height: size[1] + "px" }}
+          style={{ height: `${size[1]}px` }}
         >
           <SpanOrDiv
             span={useSpans}
@@ -239,6 +245,7 @@ Frame.propTypes = {
   title: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
   margin: PropTypes.oneOfType([PropTypes.number, PropTypes.object]),
   size: PropTypes.array.isRequired,
+  annotationSettings: PropTypes.object,
   position: PropTypes.array,
   annotations: PropTypes.array,
   customHoverBehavior: PropTypes.func,

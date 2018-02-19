@@ -29,9 +29,7 @@ const customEdgeHashD = {
 export const circleNodeGenerator = ({
   d,
   i,
-  renderKeyFn,
   styleFn,
-  classFn,
   renderMode,
   key,
   className,
@@ -61,13 +59,10 @@ export const circleNodeGenerator = ({
 export const chordEdgeGenerator = size => ({
   d,
   i,
-  renderKeyFn,
   styleFn,
-  classFn,
   renderMode,
   key,
   className,
-  transform,
   baseMarkProps
 }) => (
   <Mark
@@ -86,14 +81,10 @@ export const chordEdgeGenerator = size => ({
 export const wordcloudNodeGenerator = ({
   d,
   i,
-  renderKeyFn,
   styleFn,
-  classFn,
-  renderMode,
   key,
   className,
-  transform,
-  baseMarkProps
+  transform
 }) => {
   const textStyle = styleFn(d, i)
   textStyle.fontSize = `${d.fontSize}px`
@@ -128,9 +119,7 @@ export const wordcloudNodeGenerator = ({
 export const sankeyNodeGenerator = ({
   d,
   i,
-  renderKeyFn,
   styleFn,
-  classFn,
   renderMode,
   key,
   className,
@@ -157,13 +146,10 @@ export const sankeyNodeGenerator = ({
 export const chordNodeGenerator = size => ({
   d,
   i,
-  renderKeyFn,
   styleFn,
-  classFn,
   renderMode,
   key,
   className,
-  transform,
   baseMarkProps
 }) => (
   <Mark
@@ -180,18 +166,7 @@ export const chordNodeGenerator = size => ({
 
 export const radialRectNodeGenerator = (size, center) => {
   const radialArc = arc()
-  return ({
-    d,
-    i,
-    renderKeyFn,
-    styleFn,
-    classFn,
-    renderMode,
-    key,
-    className,
-    transform,
-    baseMarkProps
-  }) => {
+  return ({ d, i, styleFn, renderMode, key, className, baseMarkProps }) => {
     radialArc.innerRadius(d.y0 / 2).outerRadius(d.y1 / 2)
 
     return (
@@ -215,13 +190,10 @@ export const radialRectNodeGenerator = (size, center) => {
 export const hierarchicalRectNodeGenerator = ({
   d,
   i,
-  renderKeyFn,
   styleFn,
-  classFn,
   renderMode,
   key,
   className,
-  transform,
   baseMarkProps
 }) => {
   //this is repetitious
@@ -393,7 +365,7 @@ export function topologicalSort(nodesArray, edgesArray) {
   })
 
   // Test if a node got any icoming edge
-  function hasIncomingEdge(list, node, arrayI) {
+  function hasIncomingEdge(list, node) {
     for (let i = 0, l = list.length; i < l; ++i) {
       if (list[i].links.indexOf(node._id) !== -1) {
         return true
@@ -403,9 +375,10 @@ export function topologicalSort(nodesArray, edgesArray) {
   }
 
   // Kahn Algorithm
-  let L = [],
-    S = nodes.filter((node, arrayI) => !hasIncomingEdge(nodes, node, arrayI)),
-    n = null
+  const L = [],
+    S = nodes.filter(node => !hasIncomingEdge(nodes, node))
+
+  let n = null
 
   while (S.length) {
     // Remove a node n from S
@@ -416,7 +389,7 @@ export function topologicalSort(nodesArray, edgesArray) {
     let i = n.links.length
     while (i--) {
       // Getting the node associated to the current stored id in links
-      let m = nodes[nodes.map(d => d._id).indexOf(n.links[i])]
+      const m = nodes[nodes.map(d => d._id).indexOf(n.links[i])]
 
       // Remove edge e from the graph
       n.links.pop()

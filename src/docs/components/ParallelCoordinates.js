@@ -1,22 +1,21 @@
-import React from "react"
-import DocumentComponent from "../layout/DocumentComponent"
-import { curveBasis } from "d3-shape"
-import { OrdinalFrame } from "../../components"
-import { orframe_data } from "../sampledata/nyc_temp"
-import { degreeDiffFormat } from "../example_settings/orframe"
-import { scaleLinear } from "d3-scale"
-import ProcessViz from "./ProcessViz"
+import React from 'react'
+import DocumentComponent from '../layout/DocumentComponent'
+import { OrdinalFrame } from '../../components'
+import { orframe_data } from '../sampledata/nyc_temp'
+import { degreeDiffFormat } from '../example_settings/orframe'
+import { scaleLinear } from 'd3-scale'
+import ProcessViz from './ProcessViz'
 
 const components = []
 // Add your component proptype data here
 // multiple component proptype documentation supported
 
 const yearScale = scaleLinear()
-  .range(["#f2f0f7", "#cbc9e2", "#9e9ac8", "#6a51a3"])
+  .range(['#f2f0f7', '#cbc9e2', '#9e9ac8', '#6a51a3'])
   .domain([1869, 1900, 1950, 2017])
 
 components.push({
-  name: "Parallel Coordinates"
+  name: 'Parallel Coordinates'
 })
 
 export default class ParallelCoordinatesDocs extends React.Component {
@@ -49,11 +48,11 @@ export default class ParallelCoordinatesDocs extends React.Component {
 
   render() {
     const axis = {
-      orient: "left",
+      orient: 'left',
       tickFormat: d => d,
       label: {
-        name: "axis label",
-        position: { anchor: "middle" },
+        name: 'axis label',
+        position: { anchor: 'middle' },
         locationDistance: 40
       }
     }
@@ -82,27 +81,27 @@ export default class ParallelCoordinatesDocs extends React.Component {
       axis: axis,
       rExtent: [0, 85],
       data: orframe_data,
-      rAccessor: "stepValue",
-      oAccessor: "stepName",
+      rAccessor: 'stepValue',
+      oAccessor: 'stepName',
       style: d => ({
         fill: hiddenHash.get(d.funnelKey)
-          ? "none"
-          : yearScale(parseInt(d.funnelKey)),
+          ? 'none'
+          : yearScale(parseInt(d.funnelKey, 10)),
         fillOpacity: 0.75
       }),
       connectorType: d => d.funnelKey,
       connectorStyle: d => ({
         stroke: hiddenHash.get(d.source.funnelKey)
-          ? "lightgray"
-          : yearScale(parseInt(d.source.funnelKey)),
+          ? 'lightgray'
+          : yearScale(parseInt(d.source.funnelKey, 10)),
         strokeWidth: 1,
         strokeOpacity: hiddenHash.get(d.source.funnelKey) ? 0.99 : 0.99
       }),
-      type: { type: "point", r: 1 },
+      type: { type: 'point', r: 1 },
       axis: {
-        orient: "left",
+        orient: 'left',
         tickFormat: degreeDiffFormat,
-        label: "Monthly temperature"
+        label: 'Monthly temperature'
       },
       oLabel: d => <text transform="rotate(45) translate(0,20)">{d}</text>,
       margin: { left: 60, top: 20, bottom: 50, right: 30 },
@@ -119,16 +118,15 @@ export default class ParallelCoordinatesDocs extends React.Component {
     }
 
     examples.push({
-      name: "Basic",
-      demo: (
+      name: 'Basic',
+      demo: 
         <div>
           <ProcessViz
             frameSettings={parralelCoordinatesChart}
             frameType="OrdinalFrame"
           />
           <OrdinalFrame {...parralelCoordinatesChart} />
-        </div>
-      ),
+        </div>,      
       source: `
     constructor(props) {
       super(props)
@@ -175,7 +173,7 @@ export default class ParallelCoordinatesDocs extends React.Component {
               oLabel={d => <text transform="rotate(45)">{d}</text>}
               margin={{ left: 50, top: 150, bottom: 50, right: 30 }}
               oPadding={20}
-              renderKey={d => d.source ? ${"`${d.source.stepName}-${d.source.funnelKey}`"} : ${"`${d.stepName}-${d.funnelKey}`"}}
+              renderKey={d => d.source ? ${'`${d.source.stepName}-${d.source.funnelKey}`'} : ${'`${d.stepName}-${d.funnelKey}`'}}
               interaction={{ columnsBrush: true, end: this.brushing, extent: this.state.columnExtent }}
             />
       `
@@ -206,4 +204,4 @@ export default class ParallelCoordinatesDocs extends React.Component {
   }
 }
 
-ParallelCoordinatesDocs.title = "Parallel Coordinates"
+ParallelCoordinatesDocs.title = 'Parallel Coordinates'

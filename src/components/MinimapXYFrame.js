@@ -14,7 +14,7 @@ class MinimapXYFrame extends XYFrame {
   }
 
   generateMinimap() {
-    let miniDefaults = {
+    const miniDefaults = {
       title: "",
       position: [0, 0],
       size: [this.props.size[0], this.props.size[1] * 0.25],
@@ -32,7 +32,7 @@ class MinimapXYFrame extends XYFrame {
       lineType: this.props.lineType
     }
 
-    let combinedOptions = Object.assign(miniDefaults, this.props.minimap)
+    const combinedOptions = Object.assign(miniDefaults, this.props.minimap)
 
     combinedOptions.hoverAnnotation = false
 
@@ -40,7 +40,7 @@ class MinimapXYFrame extends XYFrame {
   }
 
   render() {
-    let miniMap = this.generateMinimap()
+    const miniMap = this.generateMinimap()
     const options = {}
     if (this.props.renderBefore) {
       options.beforeElements = miniMap
