@@ -14,11 +14,13 @@ class VisualizationLayer extends React.PureComponent {
   static defaultProps = { position: [0, 0] }
 
   canvasDrawing = []
+  piecesGroup = null
 
   state = {
     canvasDrawing: [],
     dataVersion: "",
-    renderedElements: []
+    renderedElements: [],
+    focusedPieceIndex: null
   }
 
   componentDidUpdate() {
@@ -114,6 +116,16 @@ class VisualizationLayer extends React.PureComponent {
     } else if (typeof this.props.canvasPostProcess === "function") {
       this.props.canvasPostProcess(this.props.canvasContext, context, size)
     }
+
+    if (this.piecesGroup && this.state.focusedPieceIndex !== null) {
+      const focusElParent = this.piecesGroup[this.state.focusedPieceIndex]
+      const focusEl =
+        focusElParent &&
+        [...focusElParent.childNodes].find(child =>
+          child.getAttribute("aria-label")
+        )
+      focusEl && focusEl.focus()
+    }
   }
 
   componentWillReceiveProps(np) {
@@ -161,14 +173,31 @@ class VisualizationLayer extends React.PureComponent {
             baseMarkProps,
             ...pipe
           })
-
-          if (renderedPipe && renderedPipe.length > 0) {
-            renderedElements.push(
-              <g key={k} className={k}>
-                {renderedPipe}
-              </g>
-            )
+          let ariaLabel = ""
+          const piecesPipeline = k === "pieces"
+          if (piecesPipeline) {
+            const title = this.props.title
+              ? `titled ${this.props.title.children}`
+              : "with no title"
+            ariaLabel = `Visualization ${title}. Use arrow keys to navigate elements.`
           }
+          renderedElements.push(
+            <g
+              key={k}
+              className={k}
+              role={piecesPipeline ? "group" : "presentation"}
+              tabIndex={piecesPipeline ? 0 : -1}
+              aria-label={ariaLabel}
+              onKeyDown={e => piecesPipeline && this.handleKeyDown(e)}
+              ref={thisNode =>
+                piecesPipeline && thisNode
+                  ? (this.piecesGroup = thisNode.childNodes)
+                  : null
+              }
+            >
+              {renderedPipe}
+            </g>
+          )
         }
       })
 
@@ -177,6 +206,33 @@ class VisualizationLayer extends React.PureComponent {
         dataVersion
       })
     }
+  }
+
+  handleKeyDown(e) {
+    // If enter, focus on the first element
+    const pushed = e.keyCode
+    if (pushed !== 37 && pushed !== 39 && pushed !== 13) return
+
+    let newPieceIndex
+
+    // If a user pressed ener, highlight the first one
+    // Let a user move up and down in stacked bar by getting keys of bars?
+    if (this.state.focusedPieceIndex === null || pushed === 13) {
+      newPieceIndex = 0
+    } else if (pushed === 37) {
+      newPieceIndex = this.state.focusedPieceIndex - 1
+    } else if (pushed === 39) {
+      newPieceIndex = this.state.focusedPieceIndex + 1
+    }
+
+    newPieceIndex =
+      newPieceIndex < 0
+        ? this.piecesGroup.length + newPieceIndex
+        : newPieceIndex % this.piecesGroup.length
+
+    this.setState({
+      focusedPieceIndex: newPieceIndex
+    })
   }
 
   render() {
