@@ -25,8 +25,10 @@ class InteractionLayer extends React.Component {
     this.clickVoronoi = this.clickVoronoi.bind(this)
     this.calculateOverlay = this.calculateOverlay.bind(this)
 
+    const initialOverlay = this.calculateOverlay(props)
+
     this.state = {
-      overlayRegions: this.calculateOverlay(props)
+      overlayRegions: initialOverlay
     }
   }
 
@@ -243,7 +245,6 @@ class InteractionLayer extends React.Component {
           />
         )
       }, this)
-
       return voronoiPaths
     } else if (overlay) {
       const renderedOverlay = overlay.map((overlayRegion, i) => {
@@ -366,6 +367,10 @@ class InteractionLayer extends React.Component {
     if (interaction && interaction.columnsBrush) {
       enabled = true
       semioticBrush = this.createColumnsBrush()
+    }
+
+    if (!overlayRegions && !semioticBrush) {
+      return null
     }
 
     return (
