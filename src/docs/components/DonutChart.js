@@ -1,15 +1,15 @@
-import React from 'react'
-import DocumentComponent from '../layout/DocumentComponent'
-import DonutChartRaw from './DonutChartRaw'
-import Select from 'material-ui/Select'
-import { MenuItem } from 'material-ui/Menu'
-import { InputLabel } from 'material-ui/Input'
-import { FormControl } from 'material-ui/Form'
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import DonutChartRaw from "./DonutChartRaw"
+import Select from "material-ui/Select"
+import { MenuItem } from "material-ui/Menu"
+import { InputLabel } from "material-ui/Input"
+import { FormControl } from "material-ui/Form"
 
 const components = []
 
 components.push({
-  name: 'PieDonut'
+  name: "PieDonut"
 })
 
 export default class PieDonutDocs extends React.Component {
@@ -17,30 +17,30 @@ export default class PieDonutDocs extends React.Component {
     super(props)
 
     this.state = {
-      innerRadius: '25',
-      kind: 'pie',
-      padding: '0'
+      innerRadius: "25",
+      kind: "pie",
+      padding: "0"
     }
   }
 
   render() {
     const examples = []
 
-    const kindOptions = ['pie', 'nightingale'].map(d => 
-      (<MenuItem key={'kind-option' + d} label={d} value={d}>
+    const kindOptions = ["pie", "nightingale"].map(d => (
+      <MenuItem key={`kind-option${d}`} label={d} value={d}>
         {d}
-      </MenuItem>)
-    )
-    const innerOptions = ['25', '0', '5', '75', '150'].map(d => 
-      (<MenuItem key={'radius-option' + d} label={d} value={d}>
+      </MenuItem>
+    ))
+    const innerOptions = ["25", "0", "5", "75", "150"].map(d => (
+      <MenuItem key={`radius-option${d}`} label={d} value={d}>
         {d}
-      </MenuItem>)
-    )
-    const paddingOptions = ['0', '10', '20', '40'].map(d => 
-      (<MenuItem key={'padding-option' + d} label={d} value={d}>
+      </MenuItem>
+    ))
+    const paddingOptions = ["0", "10", "20", "40"].map(d => (
+      <MenuItem key={`padding-option${d}`} label={d} value={d}>
         {d}
-      </MenuItem>)
-    )
+      </MenuItem>
+    ))
 
     const buttons = [
       <div key="button-0">
@@ -79,7 +79,7 @@ export default class PieDonutDocs extends React.Component {
     ]
 
     examples.push({
-      name: 'Basic',
+      name: "Basic",
       demo: DonutChartRaw(this.state),
       source: `
           const colorMap = {
@@ -97,14 +97,8 @@ export default class PieDonutDocs extends React.Component {
               style={d => ({ fill: colorMap[d.value], stroke: "darkgray", strokeWidth: 1 })}
               type={{ type: "bar", innerRadius: ${this.state.innerRadius} }}
               oLabel={true}
-              ${
-  this.state.kind === 'pie'
-    ? 'dynamicColumnWidth={d => d.value}'
-    : ''
-}
-              rAccessor={${
-  this.state.kind === 'pie' ? '() => 1' : 'd => d.value'
-}}
+              ${this.state.kind === "pie" ? 'dynamicColumnWidth="value"' : ""}
+              rAccessor={${this.state.kind === "pie" ? "() => 1" : '"value"'}}
               margin={{ left: 20, top: 20, bottom: 20, right: 20 }}
               oPadding={${this.state.padding}}
               tooltipContent="pie"
@@ -132,4 +126,4 @@ export default class PieDonutDocs extends React.Component {
   }
 }
 
-PieDonutDocs.title = 'Pie/Donut'
+PieDonutDocs.title = "Pie/Donut"
