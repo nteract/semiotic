@@ -13,5 +13,4 @@ logs/*
 build
 
 examples/dist/bundle.js
-.prettierrc
 .vscode/settings.json
