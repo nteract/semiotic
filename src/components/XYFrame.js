@@ -196,6 +196,7 @@ class XYFrame extends React.Component {
       lineType,
       customLineMark,
       customPointMark,
+      customAreaMark,
       areaStyle,
       areaRenderMode,
       lineStyle,
@@ -457,6 +458,7 @@ class XYFrame extends React.Component {
         classFn: stringToFn(areaClass, emptyStringReturnFunction, true),
         renderMode: stringToFn(areaRenderMode, undefined, true),
         canvasRender: stringToFn(canvasAreas, undefined, true),
+        customMark: customAreaMark,
         type: areaType,
         renderKeyFn: stringToFn(renderKey, (d, i) => `area-${i}`, true),
         behavior: createAreas
@@ -1001,6 +1003,7 @@ XYFrame.propTypes = {
     PropTypes.bool
   ]),
   customLineMark: PropTypes.func,
+  customAreaMark: PropTypes.func,
   lineIDAccessor: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
   svgAnnotationRules: PropTypes.func,
   htmlAnnotationRules: PropTypes.func,

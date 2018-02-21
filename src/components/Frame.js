@@ -132,7 +132,7 @@ class Frame extends React.Component {
     return (
       <SpanOrDiv
         span={useSpans}
-        className={`${className} frame`}
+        className={`${className} frame ${name}`}
         style={{
           background: "none"
         }}
