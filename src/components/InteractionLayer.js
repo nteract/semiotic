@@ -178,6 +178,10 @@ class InteractionLayer extends React.Component {
           10
         )
         if (
+          xValue >= 0 &&
+          xValue <= size[0] &&
+          yValue >= 0 &&
+          yValue <= size[1] &&
           xValue !== undefined &&
           yValue !== undefined &&
           isNaN(xValue) === false &&
