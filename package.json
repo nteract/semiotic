@@ -3,7 +3,7 @@
   "version": "1.7.12",
   "description": "The semiotic JavaScript data visualization framework",
   "main": "lib/index.js",
-  "unpkg": "dist/semiotic.js",
+  "unpkg": "dist/semiotic.min.js",
   "files": ["lib", "dist"],
   "scripts": {
     "start": "react-scripts start",
