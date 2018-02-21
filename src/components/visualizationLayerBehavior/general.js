@@ -3,6 +3,8 @@ import React from "react"
 import { Mark } from "semiotic-mark"
 import { line, area, curveLinear } from "d3-shape"
 
+import { shapeBounds } from "../svg/areaDrawing"
+
 export function lineGeneratorDecorator({
   generator,
   projectedCoordinateNames,
@@ -267,7 +269,9 @@ export function createAreas({
   classFn,
   renderKeyFn,
   renderMode,
-  baseMarkProps
+  baseMarkProps,
+  customMark,
+  type
 }) {
   const areaClass = classFn || (() => "")
   const areaStyle = styleFn || (() => ({}))
@@ -294,6 +298,18 @@ export function createAreas({
             .join("L")}Z `
         })
       })
+    } else if (customMark) {
+      const projectedCoordinates = d._xyfCoordinates.map(d => [
+        xScale(d[0]),
+        yScale(d[1])
+      ])
+      drawD = customMark({
+        d,
+        projectedCoordinates,
+        xScale,
+        yScale,
+        bounds: shapeBounds(projectedCoordinates)
+      })
     } else {
       drawD = `M${d._xyfCoordinates
         .map(p => `${xScale(p[0])},${yScale(p[1])}`)
@@ -302,7 +318,9 @@ export function createAreas({
 
     const renderKey = renderKeyFn ? renderKeyFn(d, i) : `area-${i}`
 
-    if (canvasRender && canvasRender(d, i) === true) {
+    if (React.isValidElement(drawD)) {
+      renderedAreas.push(drawD)
+    } else if (canvasRender && canvasRender(d, i) === true) {
       const canvasArea = {
         type: "area",
         baseClass: "xyframe-area",

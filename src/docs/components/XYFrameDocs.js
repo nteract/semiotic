@@ -296,7 +296,8 @@ const areaStyleHash = {
 
 const areaTypeHash = {
   basic: undefined,
-  contours: { type: "contour" }
+  contours: { type: "contour" },
+  custom: undefined
 }
 
 const titleTypesHash = {
@@ -579,6 +580,7 @@ const contourAreaData = [{ id: "#00a2ce", coordinates: pointTestData }]
 
 const areaDataHash = {
   basic: areaTestData,
+  custom: areaTestData,
   contours: contourAreaData
 }
 
@@ -655,9 +657,9 @@ export default class XYFrameDocs extends React.Component {
       frame: "XYFrame",
       fixedExtent: "none",
       matte: "off",
-      dataType: "line",
+      dataType: "area",
       customPoint: "none",
-      areaType: "basic",
+      areaType: "custom",
       lineExtent: [1, 8],
       pointExtent: [[-1000, 1000], [1000, -1000]],
       areaExtent: [[-1000, 1000], [1000, -1000]],
@@ -983,6 +985,13 @@ export default class XYFrameDocs extends React.Component {
           areaType={areaTypeHash[this.state.areaType]}
           points={this.state.dataType === "point" ? pointTestData : undefined}
           pointStyle={d => ({ fill: d.cat, stroke: "black", strokeWidth: 0.5 })}
+          customAreaMark={({d,
+            projectedCoordinates,
+            xScale,
+            yScale, bounds}) => {return <g>
+              <path style={{ fill: "red" }} d={`M${projectedCoordinates.map(d => d.join(",")).join("L")}`} />
+              <text textAnchor="middle" transform={`translate(${bounds.center[0]},${bounds.center[1]})`}>{d.id}</text>
+              </g>}}
           customPointMark={customPointHash[this.state.customPoint]}
           lineDataAccessor={d =>
             d.data.filter(
@@ -995,10 +1004,14 @@ export default class XYFrameDocs extends React.Component {
           xAccessor={"px"}
           yAccessor={"py"}
           showLinePoints={this.state.showPoints === "on"}
-          annotations={finalAnnotations}
-          annotationSettings={
-            annotationSettingTypes[this.state.annotationSettings]
-          }
+          annotations={[          {
+            type: "react-annotation",
+            px: 5,
+            py: 200,
+            nx: 500,
+            ny: 0,
+            note: { label: "TestTEST" }
+          }]}
           matte={this.state.matte === "on"}
           xExtent={
             this.state.frame === "MinimapXYFrame" &&
