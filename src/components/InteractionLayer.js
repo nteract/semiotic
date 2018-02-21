@@ -141,6 +141,7 @@ class InteractionLayer extends React.Component {
         <Brush
           type={this.props.interaction.brush}
           selectedExtent={selectedExtent}
+          extent={this.props.interaction.extent}
           svgBrush={semioticBrush}
           size={this.props.size}
         />
