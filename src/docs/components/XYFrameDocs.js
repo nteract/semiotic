@@ -296,8 +296,7 @@ const areaStyleHash = {
 
 const areaTypeHash = {
   basic: undefined,
-  contours: { type: "contour" },
-  custom: undefined
+  contours: { type: "contour" }
 }
 
 const titleTypesHash = {
@@ -580,7 +579,6 @@ const contourAreaData = [{ id: "#00a2ce", coordinates: pointTestData }]
 
 const areaDataHash = {
   basic: areaTestData,
-  custom: areaTestData,
   contours: contourAreaData
 }
 
@@ -657,9 +655,9 @@ export default class XYFrameDocs extends React.Component {
       frame: "XYFrame",
       fixedExtent: "none",
       matte: "off",
-      dataType: "area",
+      dataType: "line",
       customPoint: "none",
-      areaType: "custom",
+      areaType: "basic",
       lineExtent: [1, 8],
       pointExtent: [[-1000, 1000], [1000, -1000]],
       areaExtent: [[-1000, 1000], [1000, -1000]],
@@ -985,13 +983,6 @@ export default class XYFrameDocs extends React.Component {
           areaType={areaTypeHash[this.state.areaType]}
           points={this.state.dataType === "point" ? pointTestData : undefined}
           pointStyle={d => ({ fill: d.cat, stroke: "black", strokeWidth: 0.5 })}
-          customAreaMark={({d,
-            projectedCoordinates,
-            xScale,
-            yScale, bounds}) => {return <g>
-              <path style={{ fill: "red" }} d={`M${projectedCoordinates.map(d => d.join(",")).join("L")}`} />
-              <text textAnchor="middle" transform={`translate(${bounds.center[0]},${bounds.center[1]})`}>{d.id}</text>
-              </g>}}
           customPointMark={customPointHash[this.state.customPoint]}
           lineDataAccessor={d =>
             d.data.filter(
@@ -1004,14 +995,10 @@ export default class XYFrameDocs extends React.Component {
           xAccessor={"px"}
           yAccessor={"py"}
           showLinePoints={this.state.showPoints === "on"}
-          annotations={[          {
-            type: "react-annotation",
-            px: 5,
-            py: 200,
-            nx: 500,
-            ny: 0,
-            note: { label: "TestTEST" }
-          }]}
+          annotations={finalAnnotations}
+          annotationSettings={
+            annotationSettingTypes[this.state.annotationSettings]
+          }
           matte={this.state.matte === "on"}
           xExtent={
             this.state.frame === "MinimapXYFrame" &&
@@ -1161,7 +1148,8 @@ export default class XYFrameDocs extends React.Component {
                   brushEnd: e =>
                     this.updateDateRange(`${this.state.dataType}`, e),
                   yBrushable: this.state.dataType === "line" ? false : true,
-                  xBrushExtent: this.state[`${this.state.dataType}Extent`],
+                  xBrushExtent: this.state.dataType === "line" ? this.state[`${this.state.dataType}Extent`] : this.state[`${this.state.dataType}Extent`][0],
+                  yBrushExtent: this.state[`${this.state.dataType}Extent`][1],
                   lines:
                     this.state.dataType === "line" ? displayData : undefined,
                   areas:
