@@ -5,6 +5,15 @@ import { select } from "d3-selection"
 
 import PropTypes from "prop-types"
 
+const flatten = list =>
+  list.reduce((a, b) => a.concat(Array.isArray(b) ? flatten(b) : b), [])
+
+function flatShortArray(array) {
+  if (!Array.isArray(array)) return "not-array"
+  const flat = flatten(array)
+  return flat.map(d => d.toFixed(2)).toString()
+}
+
 class Brush extends React.Component {
   constructor(props) {
     super(props)
@@ -16,8 +25,7 @@ class Brush extends React.Component {
     if (
       nextProps.extent &&
       this.props.extent &&
-      (nextProps.extent[0] !== this.props.extent[0] ||
-        nextProps.extent[1] !== this.props.extent[1])
+      flatShortArray(nextProps.extent) !== flatShortArray(this.props.extent)
     ) {
       this.createBrush()
     }
@@ -30,8 +38,8 @@ class Brush extends React.Component {
     if (
       (lastProps.selectedExtent &&
         this.props.selectedExtent &&
-        lastProps.selectedExtent.toString() !==
-          this.props.selectedExtent.toString()) ||
+        flatShortArray(lastProps.selectedExtent) !==
+          flatShortArray(this.props.selectedExtent)) ||
       (!lastProps.selectedExtent && this.props.selectedExtent) ||
       (lastProps.selectedExtent && !this.props.selectedExtent)
     ) {
