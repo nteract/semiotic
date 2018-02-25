@@ -85,43 +85,37 @@ class InteractionLayer extends React.Component {
   createBrush() {
     let semioticBrush, mappingFn, selectedExtent
 
-    if (this.props.interaction.brush === "xBrush") {
-      mappingFn = d =>
-        !d
-          ? null
-          : [this.props.xScale.invert(d[0]), this.props.xScale.invert(d[1])]
+    const { interaction, xScale, yScale, size } = this.props
+
+    const {
+      extent = interaction.brush === "xyBrush"
+        ? [
+            [xScale.invert(0), yScale.invert(0)],
+            [xScale.invert(size[0]), yScale.invert(size[1])]
+          ]
+        : interaction.brush === "xBrush"
+          ? [xScale.invert(0), xScale.invert(size[0])]
+          : [yScale.invert(0), yScale.invert(size[1])]
+    } = interaction
+
+    if (interaction.brush === "xBrush") {
+      mappingFn = d => (!d ? null : [xScale.invert(d[0]), xScale.invert(d[1])])
       semioticBrush = brushX()
-      selectedExtent = this.props.interaction.extent.map(d =>
-        this.props.xScale(d)
-      )
-    } else if (this.props.interaction.brush === "yBrush") {
-      mappingFn = d =>
-        !d
-          ? null
-          : [this.props.yScale.invert(d[0]), this.props.yScale.invert(d[1])]
+      selectedExtent = extent.map(d => xScale(d))
+    } else if (interaction.brush === "yBrush") {
+      mappingFn = d => (!d ? null : [yScale.invert(d[0]), yScale.invert(d[1])])
       semioticBrush = brushY()
-      selectedExtent = this.props.interaction.extent.map(d =>
-        this.props.yScale(d)
-      )
+      selectedExtent = extent.map(d => yScale(d))
     } else {
       semioticBrush = brush()
       mappingFn = d =>
         !d
           ? null
           : [
-              [
-                this.props.xScale.invert(d[0][0]),
-                this.props.yScale.invert(d[0][1])
-              ],
-              [
-                this.props.xScale.invert(d[1][0]),
-                this.props.yScale.invert(d[1][1])
-              ]
+              [xScale.invert(d[0][0]), yScale.invert(d[0][1])],
+              [xScale.invert(d[1][0]), yScale.invert(d[1][1])]
             ]
-      selectedExtent = this.props.interaction.extent.map(d => [
-        this.props.xScale(d[0]),
-        this.props.yScale(d[1])
-      ])
+      selectedExtent = extent.map(d => [xScale(d[0]), yScale(d[1])])
     }
 
     semioticBrush
@@ -139,11 +133,11 @@ class InteractionLayer extends React.Component {
     return (
       <g className="brush">
         <Brush
-          type={this.props.interaction.brush}
+          type={interaction.brush}
           selectedExtent={selectedExtent}
-          extent={this.props.interaction.extent}
+          extent={extent}
           svgBrush={semioticBrush}
-          size={this.props.size}
+          size={size}
         />
       </g>
     )

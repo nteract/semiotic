@@ -168,6 +168,7 @@ const axesHash = {
       orient: "bottom",
       tickLineGenerator: ({ xy }) => (
         <line
+          key={`line-${xy.y1}-${xy.x1}`}
           x1={xy.x1}
           x2={xy.x2}
           y1={xy.y1}
@@ -1002,7 +1003,8 @@ export default class XYFrameDocs extends React.Component {
           matte={this.state.matte === "on"}
           xExtent={
             this.state.frame === "MinimapXYFrame" &&
-            this.state.dataType !== "line"
+            this.state.dataType !== "line" && this.state[`${this.state.dataType}Extent`]
+            && this.state[`${this.state.dataType}Extent`][0]
               ? [
                   this.state[`${this.state.dataType}Extent`][0][0],
                   this.state[`${this.state.dataType}Extent`][1][0]
@@ -1011,7 +1013,8 @@ export default class XYFrameDocs extends React.Component {
           }
           yExtent={
             this.state.frame === "MinimapXYFrame" &&
-            this.state.dataType !== "line"
+            this.state.dataType !== "line" && this.state[`${this.state.dataType}Extent`]
+            && this.state[`${this.state.dataType}Extent`][0]
               ? [
                   this.state[`${this.state.dataType}Extent`][1][1],
                   this.state[`${this.state.dataType}Extent`][0][1]
@@ -1548,9 +1551,9 @@ export default class XYFrameDocs extends React.Component {
           width="560"
           height="315"
           src="https://www.youtube.com/embed/0HIj_7-ghaE"
-          frameborder="0"
+          frameBorder="0"
           allow="autoplay; encrypted-media"
-          allowfullscreen
+          allowFullScreen
         />
       </DocumentComponent>
     )
