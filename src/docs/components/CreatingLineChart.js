@@ -352,7 +352,7 @@ export default class CreatingLineChart extends React.Component {
     this.lineHoverBehavior = this.lineHoverBehavior.bind(this)
     this.state = {
       hoverPoint: undefined,
-      brushChart: "stackedarea"
+      brushChart: "stackedpercent"
     }
   }
   lineHoverBehavior(d) {
@@ -941,9 +941,9 @@ export default class CreatingLineChart extends React.Component {
       demo: (
         <div>
           <p>
-            Here's the "bumparea" mode, which is liked "stackedarea" but changes
-            the stack order based on rank. Notice that tooltips with the area
-            lines are anchored in the middle of the area of the line.
+            You can use the built-in "onChange" event in a chart's extent to set
+            the extent of another chart. Pairing this with the "interaction"
+            settings of an XYFrame lets you easily deploy a brushable chart.
           </p>
           <button
             onClick={() =>
@@ -954,6 +954,7 @@ export default class CreatingLineChart extends React.Component {
                     : "stackedpercent"
               })
             }
+            style={{ color: "black" }}
           >
             Switch to lines
           </button>
@@ -978,7 +979,7 @@ export default class CreatingLineChart extends React.Component {
                   extent: [this.state.yMax, 0]
                 }}
                 yExtent={[0, this.state.yMax]}
-                margin={{ left: 50, bottom: 50, right: 0, top: 40 }}
+                margin={{ left: 50, bottom: 50, right: 5, top: 40 }}
               />
             </div>
             <div style={{ display: "inline-block", width: "600px" }}>
@@ -1012,18 +1013,99 @@ export default class CreatingLineChart extends React.Component {
                   },
                   {
                     orient: "bottom",
-                    tickFormat: d => `${d.getMonth()}/${d.getDate()}`
+                    tickFormat: d => `${d.getMonth()}/${d.getDate()}`,
+                    ticks: 5
                   }
                 ]}
                 hoverAnnotation={true}
+                matte={true}
               />
             </div>
           </div>
         </div>
       ),
-      source: ``
+      source: `
+<button
+onClick={() =>
+  this.setState({
+    brushChart:
+      this.state.brushChart === "stackedpercent"
+        ? "line"
+        : "stackedpercent"
+  })
+}
+style={{ color: "black"}}
+>
+Switch to lines
+</button>
+
+<div>
+      <div style={{ display: "inline-block", width: "100px" }}>
+        <XYFrame
+          size={[100, 400]}
+          axes={[
+            {
+              orient: "left",
+              tickFormat:
+                this.state.brushChart === "stackedpercent"
+                  ? d => d
+                  : d => ${"`${d / 1000000}m`"}
+            }
+          ]}
+          interaction={{
+            end: e => {
+              this.setState({ extent: e.reverse() })
+            },
+            brush: "yBrush",
+            extent: [this.state.yMax, 0]
+          }}
+          yExtent={[0, this.state.yMax]}
+          margin={{ left: 50, bottom: 50, right: 5, top: 40 }}
+        />
+      </div>
+      <div style={{ display: "inline-block", width: "600px" }}>
+        <XYFrame
+          title={"Two Movies"}
+          size={[600, 400]}
+          lines={movies}
+          xScaleType={scaleTime()}
+          xAccessor={d => new Date(d.date)}
+          yAccessor={"grossWeekly"}
+          yExtent={{
+            extent: this.state.extent,
+            onChange: e => this.setState({ yMax: e[1] })
+          }}
+          lineType={{
+            type: this.state.brushChart,
+            interpolator: curveMonotoneX
+          }}
+          lineStyle={d => ({
+            fill: colorHash[d.title],
+            stroke: colorHash[d.title]
+          })}
+          margin={{ left: 50, bottom: 50, right: 10, top: 40 }}
+          axes={[
+            {
+              orient: "left",
+              tickFormat:
+                this.state.brushChart === "stackedpercent"
+                  ? d => d
+                  : d => ${"`${d / 1000000}m`"}
+            },
+            {
+              orient: "bottom",
+              tickFormat: d => ${"`${d.getMonth()}/${d.getDate()}`,"}
+              ticks: 5
+            }
+          ]}
+          hoverAnnotation={true}
+          matte={true}
+        />
+      </div>
+    </div>
+    `
     })
-    console.log("this.state.extent", this.state.extent)
+
     return (
       <DocumentComponent
         name="Creating a Line Chart"

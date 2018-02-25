@@ -98,15 +98,35 @@ class InteractionLayer extends React.Component {
           : [yScale.invert(0), yScale.invert(size[1])]
     } = interaction
 
+    if (extent.indexOf(undefined) !== -1) {
+      return <g />
+    }
+
     if (interaction.brush === "xBrush") {
+      if (extent.indexOf(undefined) !== -1) {
+        return <g />
+      }
+
       mappingFn = d => (!d ? null : [xScale.invert(d[0]), xScale.invert(d[1])])
       semioticBrush = brushX()
       selectedExtent = extent.map(d => xScale(d))
     } else if (interaction.brush === "yBrush") {
+      if (extent.indexOf(undefined) !== -1) {
+        return <g />
+      }
+
       mappingFn = d => (!d ? null : [yScale.invert(d[0]), yScale.invert(d[1])])
       semioticBrush = brushY()
       selectedExtent = extent.map(d => yScale(d))
     } else {
+      if (
+        extent.indexOf(undefined) !== -1 ||
+        extent[0].indexOf(undefined) !== -1 ||
+        extent[1].indexOf(undefined) !== -1
+      ) {
+        return <g />
+      }
+
       semioticBrush = brush()
       mappingFn = d =>
         !d
