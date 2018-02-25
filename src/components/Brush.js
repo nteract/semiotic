@@ -11,7 +11,7 @@ const flatten = list =>
 function flatShortArray(array) {
   if (!Array.isArray(array)) return "not-array"
   const flat = flatten(array)
-  return flat.map(d => d.toFixed(2)).toString()
+  return flat.map(d => (d && d.toFixed && d.toFixed(2)) || "empty").toString()
 }
 
 class Brush extends React.Component {
@@ -21,27 +21,21 @@ class Brush extends React.Component {
     this.createBrush = this.createBrush.bind(this)
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (
-      nextProps.extent &&
-      this.props.extent &&
-      flatShortArray(nextProps.extent) !== flatShortArray(this.props.extent)
-    ) {
-      this.createBrush()
-    }
-  }
-
   componentDidMount() {
     this.createBrush()
   }
   componentDidUpdate(lastProps) {
     if (
-      (lastProps.selectedExtent &&
+      (lastProps.extent &&
+        this.props.extent &&
+        flatShortArray(lastProps.extent) !==
+          flatShortArray(this.props.extent)) ||
+      ((lastProps.selectedExtent &&
         this.props.selectedExtent &&
         flatShortArray(lastProps.selectedExtent) !==
           flatShortArray(this.props.selectedExtent)) ||
-      (!lastProps.selectedExtent && this.props.selectedExtent) ||
-      (lastProps.selectedExtent && !this.props.selectedExtent)
+        (!lastProps.selectedExtent && this.props.selectedExtent) ||
+        (lastProps.selectedExtent && !this.props.selectedExtent))
     ) {
       this.createBrush()
     }
