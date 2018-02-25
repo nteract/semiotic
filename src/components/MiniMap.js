@@ -15,7 +15,10 @@ const MiniMap = props => {
 
   if (props.xBrushable && props.yBrushable) {
     interactivity.brush = "xyBrush"
-    interactivity.extent = [[], []]
+
+    if (props.xBrushExtent || props.yBrushExtent) {
+      interactivity.extent = [[0, 0], [...props.size]]
+    }
     if (props.xBrushExtent) {
       interactivity.extent[0] = props.xBrushExtent
     }
