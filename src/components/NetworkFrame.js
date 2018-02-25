@@ -1139,7 +1139,8 @@ class NetworkFrame extends React.Component {
         renderMode: nodeRenderModeFn,
         canvasRenderFn: nodeCanvasRenderFn,
         customMark: customNodeIcon,
-        behavior: drawNodes
+        behavior: drawNodes,
+        renderKeyFn: currentProps.nodeRenderKey
       }
     }
 
