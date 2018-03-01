@@ -517,3 +517,13 @@ circle.frame-hover {
   stroke-width: 1px;
   stroke-dasharray: 0;
 }
+
+.purple-gradient {
+  stroke: none;
+  fill: url(#purple-gradient);
+}
+
+.blue-gradient {
+  stroke: none;
+  fill: url(#blue-gradient);
+}

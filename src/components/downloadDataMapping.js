@@ -12,6 +12,7 @@ export const xyDownloadMapping = ({
   fields = []
 }) => {
   const csvData = []
+
   data.forEach(datum => {
     if (Array.isArray(datum)) {
       datum.forEach(a => {
@@ -41,13 +42,13 @@ export const xyDownloadMapping = ({
     } else {
       const row = {}
       if (xAccessor) {
-        row.x = cleanDates(xAccessor(datum))
+        row.x = cleanDates(xAccessor(datum.data))
       } else if (datum.x) {
         row.x = datum.x
       }
 
       if (yAccessor) {
-        row.y = cleanDates(yAccessor(datum))
+        row.y = cleanDates(yAccessor(datum.data))
       } else if (datum.y) {
         row.y = datum.y
       }
@@ -57,7 +58,7 @@ export const xyDownloadMapping = ({
       }
 
       fields.forEach(f => {
-        row[f] = datum[f]
+        row[f] = datum.data[f]
       })
       csvData.push(row)
     }

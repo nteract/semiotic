@@ -11,7 +11,15 @@ const flatten = list =>
 function flatShortArray(array) {
   if (!Array.isArray(array)) return "not-array"
   const flat = flatten(array)
-  return flat.map(d => (d && d.toFixed && d.toFixed(2)) || "empty").toString()
+  const stringifiedFlattened = flat
+    .map(
+      d =>
+        (d instanceof Date && d.toString()) ||
+        (d && d.toFixed && d.toFixed(2)) ||
+        "empty"
+    )
+    .toString()
+  return stringifiedFlattened
 }
 
 class Brush extends React.Component {

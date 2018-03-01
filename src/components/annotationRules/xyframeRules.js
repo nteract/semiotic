@@ -3,7 +3,7 @@ import { Mark } from "semiotic-mark"
 import Annotation from "../Annotation"
 import { AnnotationXYThreshold, AnnotationCalloutRect } from "react-annotation"
 
-import { line } from "d3-shape"
+import { line, area } from "d3-shape"
 import { packEnclose } from "d3-hierarchy"
 import { extent } from "d3-array"
 import { circleEnclosure, rectangleEnclosure } from "./baseRules"
@@ -65,6 +65,87 @@ const pointsAlong = along => ({
 
 export const svgHorizontalPointsAnnotation = pointsAlong("yTop")
 export const svgVerticalPointsAnnotation = pointsAlong("x")
+
+export const svgHighlight = ({
+  d,
+  i,
+  points = { data: [] },
+  lines = { data: [] },
+  areas = { data: [] },
+  idAccessor,
+  screenCoordinates,
+  xScale,
+  yScale
+}) => {
+  const dID =
+    idAccessor(d, i) ||
+    (d.parentLine && idAccessor(d.parentLine, i)) ||
+    (d.parentArea && idAccessor(d.parentArea, i))
+
+  const foundPoints = points.data
+    .filter((p, q) => idAccessor(p, q) === dID)
+    .map((p, q) => (
+      <circle
+        key={`highlight-point-${q}`}
+        cx={xScale(p.x)}
+        cy={yScale(p.y)}
+        r={5}
+        fill="none"
+        stroke="black"
+        strokeWidth={2}
+        style={typeof d.style === "function" ? d.style(p.data, q) : d.style}
+        className={`highlight-annotation ${(d.class &&
+          typeof d.class === "function" &&
+          d.class(p.data, q)) ||
+          (d.class && d.class) ||
+          ""}`}
+      />
+    ))
+
+  const lineGenerator = area()
+    .x(d => xScale(d.x))
+    .y0(d => yScale(d.yBottom))
+    .y1(d => yScale(d.yTop))
+    .curve(lines.type.interpolator)
+
+  const foundLines = lines.data
+    .filter((p, q) => idAccessor(p, q) === dID)
+    .map((p, q) => (
+      <path
+        className={`highlight-annotation ${(d.class &&
+          typeof d.class === "function" &&
+          d.class(p, q)) ||
+          (d.class && d.class) ||
+          ""}`}
+        key={`highlight-area-${q}`}
+        d={lineGenerator(p.data)}
+        fill="none"
+        stroke="black"
+        strokeWidth={1}
+        style={typeof d.style === "function" ? d.style(p, q) : d.style}
+      />
+    ))
+
+  const foundAreas = areas.data
+    .filter((p, q) => idAccessor(p, q) === dID)
+    .map((p, q) => (
+      <path
+        className={`highlight-annotation ${(d.class &&
+          typeof d.class === "function" &&
+          d.class(p, q)) ||
+          (d.class && d.class) ||
+          ""}`}
+        key={`highlight-area-${q}`}
+        d={`M${p.coordinates.join("L")}`}
+        fill="none"
+        stroke="black"
+        strokeWidth={1}
+        style={typeof d.style === "function" ? d.style(p, q) : d.style}
+      />
+    ))
+
+  return [...foundAreas, ...foundLines, ...foundPoints]
+}
 
 export const svgXYAnnotation = ({ screenCoordinates, i, d }) => {
   const laLine = (

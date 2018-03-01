@@ -59,6 +59,7 @@ import AppleStockChart from "./components/AppleStockChart"
 import CreatingBarChart from "./components/CreatingBarChart"
 import CreatingPieChart from "./components/CreatingPieChart"
 import CreatingLineChart from "./components/CreatingLineChart"
+import CreatingCrossHighlighting from "./components/CreatingCrossHighlighting"
 import UsingPatternsTextures from "./components/UsingPatternsTextures"
 
 import RealtimeOrdinalFrame from "./components/RealtimeOrdinalFrame"
@@ -79,6 +80,7 @@ const components = {
   creatinglinechart: { docs: CreatingLineChart },
   creatingbarchart: { docs: CreatingBarChart },
   creatingpiechart: { docs: CreatingPieChart },
+  creatingpcrosshighlight: { docs: CreatingCrossHighlighting },
   usingpatterns: { docs: UsingPatternsTextures },
   sparkline: { docs: Sparkline },
   xyframe: { docs: XYFrameDocs },

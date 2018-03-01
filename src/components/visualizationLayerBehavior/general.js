@@ -192,27 +192,27 @@ export function createLines({
 
     const diffdataA = data[0].data.map((basedata, baseI) => {
       const linePoint =
-        basedata._xyfYTop > data[1].data[baseI]._xyfYTop
-          ? basedata._xyfYTop
-          : basedata._xyfYBottom
+        basedata.yTop > data[1].data[baseI].yTop
+          ? basedata.yTop
+          : basedata.yBottom
       return {
-        _xyfX: basedata._xyfX,
-        _xyfY: linePoint,
-        _xyfYBottom: linePoint,
-        _xyfYTop: linePoint
+        x: basedata.x,
+        y: linePoint,
+        yBottom: linePoint,
+        yTop: linePoint
       }
     })
 
     const diffdataB = data[0].data.map((basedata, baseI) => {
       const linePoint =
-        data[1].data[baseI]._xyfYTop > basedata._xyfYTop
-          ? data[1].data[baseI]._xyfYTop
-          : data[1].data[baseI]._xyfYBottom
+        data[1].data[baseI].yTop > basedata.yTop
+          ? data[1].data[baseI].yTop
+          : data[1].data[baseI].yBottom
       return {
-        _xyfX: basedata._xyfX,
-        _xyfY: linePoint,
-        _xyfYBottom: linePoint,
-        _xyfYTop: linePoint
+        x: basedata.x,
+        y: linePoint,
+        yBottom: linePoint,
+        yTop: linePoint
       }
     })
 
