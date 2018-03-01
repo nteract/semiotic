@@ -162,9 +162,11 @@ export const calculateDataExtent = ({
     })
   }
 
-  //Handle 'expose points on lines' option now that sending points and lines simultaneously is no longer allowed
   if (showLinePoints) {
-    projectedPoints = fullDataset
+    projectedPoints = fullDataset.map(d => ({
+      ...d,
+      [projectedY]: d[projectedYTop] || d[projectedYBottom]
+    }))
   }
 
   const calculatedXExtent = extent(fullDataset.map(d => d[projectedX]))

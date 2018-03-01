@@ -178,6 +178,95 @@ function arcBracket({
   return { arcPath: d, textArcPath: textD }
 }
 
+export const svgHighlightRule = ({
+  d,
+  i,
+  screenCoordinates,
+  projection,
+  categories,
+  pieceIDAccessor,
+  orFrameRender,
+  oAccessor
+}) => {
+  const thisID = pieceIDAccessor(d)
+  const thisO = oAccessor(d)
+
+  const foundPieces =
+    (orFrameRender.pieces &&
+      orFrameRender.pieces.data
+        .filter(p => {
+          return (
+            (thisID === undefined ||
+              pieceIDAccessor(p.piece.data) === thisID) &&
+            (thisO === undefined || oAccessor(p.piece.data) === thisO)
+          )
+        })
+        .map((p, q) => {
+          if (React.isValidElement(p.renderElement)) {
+            console.error(
+              "OrdinalFrame highlighting currently only works with built-in pieces and not custom pieces"
+            )
+            return null
+          }
+          let styleObject = {
+            style: {}
+          }
+          if (d.style && typeof d.style === "function") {
+            styleObject = { style: d.style(p.piece.data) }
+          } else if (d.style) {
+            styleObject = { style: d.style }
+          }
+          const styledD = { ...p.renderElement, ...styleObject }
+          const className = `highlight-annotation ${(d.class &&
+            typeof d.class === "function" &&
+            d.class(p.piece.data, q)) ||
+            (d.class && d.class) ||
+            ""}`
+
+          return (
+            <Mark
+              fill="none"
+              stroke="black"
+              strokeWidth="2px"
+              key={`highlight-piece-${q}`}
+              {...styledD}
+              className={className}
+            />
+          )
+        })) ||
+    []
+  /*
+  const foundSummaries =
+    (orFrameRender.summaries &&
+      orFrameRender.summaries.data
+        .filter(p => {
+          return oAccessor(p.piece.data) === thisID
+        })
+        .map(p => {
+          if (React.isValidElement(p.renderElement)) {
+            console.error(
+              "OrdinalFrame highlighting currently only works with built-in pieces and not custom pieces"
+            )
+            return null
+          }
+          let styleObject = {
+            style: { fill: "none", stroke: "black", strokeWidth: "2px" }
+          }
+          if (d.style && typeof d.style === "function") {
+            styleObject = { style: d.style(p.piece.data) }
+          } else if (d.style) {
+            styleObject = { style: d.style }
+          }
+          const styledD = { ...p.renderElement, ...styleObject }
+
+          return <Mark {...styledD} />
+        })) ||
+    []
+  */
+
+  return [...foundPieces]
+}
+
 export const svgORRule = ({ d, i, screenCoordinates, projection }) => {
   return (
     <Mark

@@ -124,7 +124,9 @@ export const stackedArea = ({
           const percent = l[yProp] / negativeStepTotal
           l.percent = percent
           if (type === "linepercent") {
-            l[yPropBottom] = l[yPropTop] = l[yPropMiddle] = percent
+            l[yPropBottom] = l[yPropBottom] = l[yPropTop] = l[
+              yPropMiddle
+            ] = percent
           } else {
             const adjustment = negativeStepTotal >= 0 ? 0 : percent
             l[yPropBottom] =

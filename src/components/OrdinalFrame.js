@@ -12,6 +12,7 @@ import { filterDefs } from "./constants/jsx"
 import { orFrameChangeProps } from "./constants/frame_props"
 import {
   svgORRule,
+  svgHighlightRule,
   basicReactAnnotationRule,
   svgEncloseRule,
   svgRectEncloseRule,
@@ -51,6 +52,7 @@ import { drawSummaries, renderLaidOutSummaries } from "./svg/summaryLayouts"
 import { stringToFn } from "./data/dataFunctions"
 
 import PropTypes from "prop-types"
+import { project } from "d3-glyphedge"
 
 const xScale = scaleIdentity()
 const yScale = scaleIdentity()
@@ -58,7 +60,6 @@ const yScale = scaleIdentity()
 const midMod = d => (d.middle ? d.middle : 0)
 const zeroFunction = () => 0
 const twoPI = Math.PI * 2
-
 
 const projectedCoordinatesObject = { y: "y", x: "x" }
 
@@ -740,7 +741,8 @@ class OrdinalFrame extends React.Component {
     }
 
     if (
-      currentProps.pieceHoverAnnotation ||
+      (currentProps.pieceHoverAnnotation &&
+        ["bar", "clusterbar", "timeline"].indexOf(pieceType.type) === -1) ||
       currentProps.summaryHoverAnnotation
     ) {
       const yMod = projection === "horizontal" ? midMod : zeroFunction
@@ -764,6 +766,20 @@ class OrdinalFrame extends React.Component {
           })
         )
       }
+    }
+
+    if (
+      currentProps.pieceHoverAnnotation &&
+      ["bar", "clusterbar", "timeline"].indexOf(pieceType.type) !== -1
+    ) {
+      columnOverlays = calculatedPieceData.map((d, i) => ({
+        ...d.renderElement,
+        key: `hover-${i}`,
+        style: { opacity: 0, stroke: "black", fill: "pink" },
+        onClick: () => d.piece,
+        onMouseEnter: () => d.piece,
+        onMouseLeave: () => ({})
+      }))
     }
 
     const orFrameRender = {
@@ -903,7 +919,7 @@ class OrdinalFrame extends React.Component {
     const rScale = this.rScale
 
     const { projection } = this.props
-    const { projectedColumns } = this.state
+    const { projectedColumns, orFrameRender } = this.state
 
     const pieceIDAccessor = stringToFn(
       this.props.pieceIDAccessor,
@@ -922,6 +938,7 @@ class OrdinalFrame extends React.Component {
       }
       const idPiece =
         pieceIDAccessor(d) &&
+        oColumn &&
         oColumn.pieceData.find(
           r => pieceIDAccessor(r.data) === pieceIDAccessor(d)
         )
@@ -988,6 +1005,17 @@ class OrdinalFrame extends React.Component {
       return customAnnotation
     } else if (d.type === "or") {
       return svgORRule({ d, i, screenCoordinates, projection })
+    } else if (d.type === "highlight") {
+      return svgHighlightRule({
+        d,
+        i,
+        screenCoordinates,
+        projection,
+        categories: projectedColumns,
+        pieceIDAccessor,
+        orFrameRender,
+        oAccessor
+      })
     } else if (d.type === "react-annotation" || typeof d.type === "function") {
       return basicReactAnnotationRule({ d, i, screenCoordinates })
     } else if (d.type === "enclose") {
@@ -1023,12 +1051,7 @@ class OrdinalFrame extends React.Component {
     const oScale = this.oScale
     const rScale = this.rScale
 
-    const {
-      htmlAnnotationRules,
-      tooltipContent,
-      projection,
-      size
-    } = this.props
+    const { htmlAnnotationRules, tooltipContent, projection, size } = this.props
 
     const { projectedColumns } = this.state
 

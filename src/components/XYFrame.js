@@ -11,6 +11,7 @@ import DownloadButton from "./DownloadButton"
 import Frame from "./Frame"
 import {
   svgXYAnnotation,
+  svgHighlight,
   basicReactAnnotation,
   svgEncloseAnnotation,
   svgRectEncloseRule,
@@ -73,10 +74,10 @@ const projectedCoordinateNames = {
 function mapParentsToPoints(fullDataset) {
   return fullDataset.map(d => {
     if (d.parentLine) {
-      return Object.assign({}, d, d.parentLine)
+      return Object.assign({}, d.parentLine, d)
     }
     if (d.parentArea) {
-      return Object.assign({}, d, d.parentArea)
+      return Object.assign({}, d.parentArea, d)
     }
     return d
   })
@@ -623,7 +624,19 @@ class XYFrame extends React.Component {
         lines
       })
     } else if (d.type === "xy" || d.type === "frame-hover") {
-      return svgXYAnnotation({ d, screenCoordinates, i })
+      return svgXYAnnotation({ d, i, screenCoordinates })
+    } else if (d.type === "highlight" || typeof d.type === "function") {
+      return svgHighlight({
+        d,
+        screenCoordinates,
+        i,
+        idAccessor,
+        lines,
+        areas,
+        points,
+        xScale,
+        yScale
+      })
     } else if (d.type === "react-annotation" || typeof d.type === "function") {
       return basicReactAnnotation({ d, screenCoordinates, i })
     } else if (d.type === "enclose") {

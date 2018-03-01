@@ -995,7 +995,7 @@ export default class XYFrameDocs extends React.Component {
           }
           xAccessor={"px"}
           yAccessor={"py"}
-          showLinePoints={this.state.showPoints === "on"}
+          showLinePoints={false}
           annotations={finalAnnotations}
           annotationSettings={
             annotationSettingTypes[this.state.annotationSettings]
@@ -1124,12 +1124,12 @@ export default class XYFrameDocs extends React.Component {
             )
           }
           yScaleType={customScaleType[this.state.customScale]}
-          download={true}
+          download={"points"}
           //            legend={{ title: "test", position: "right", width: 200, legendGroups: [
           //              { label: "Red stuff", styleFn: (d,i) => ({ fill: "red", fillOpacity: i * .25 + .25 }), items: [{ label: "a" }, { label: "b" }, { label: "c" }] },
           //              { label: "Blue stuff", styleFn: (d,i) => ({ fill: "blue", fillOpacity: i * .25 + .25 }), items: [{ label: "d" }, { label: "e" }, { label: "f" }] }
           //            ] }}
-          downloadFields={downloadFieldOptions[this.state.dataType]}
+          downloadFields={["px"]}
           legend={this.state.dataType === "line" && this.state.legend === "on"}
           minimap={
             this.state.frame === "MinimapXYFrame"

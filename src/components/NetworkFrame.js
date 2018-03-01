@@ -215,7 +215,7 @@ const areaLink = d => {
     y2 = d.y1 + d.sankeyWidth / 2,
     y3 = d.y0 + d.sankeyWidth / 2
 
-  return `M${x0},${y0}C${x2},${y0} ${x3},${y1} ${x1},${y1}L${x1},${y2}C${x3},${y2} ${x2},${y2} ${x0},${y3}Z`
+  return `M${x0},${y0}C${x2},${y0} ${x3},${y1} ${x1},${y1}L${x1},${y2}C${x3},${y2} ${x2},${y3} ${x0},${y3}Z`
 }
 
 function circularAreaLink(link) {
