@@ -772,12 +772,24 @@ class OrdinalFrame extends React.Component {
       currentProps.pieceHoverAnnotation &&
       ["bar", "clusterbar", "timeline"].indexOf(pieceType.type) !== -1
     ) {
+      const yMod = projection === "horizontal" ? midMod : zeroFunction
+      const xMod = projection === "vertical" ? midMod : zeroFunction
+
       columnOverlays = calculatedPieceData.map((d, i) => ({
         ...d.renderElement,
         key: `hover-${i}`,
+        type: "frame-hover",
         style: { opacity: 0, stroke: "black", fill: "pink" },
-        onClick: () => d.piece,
-        onMouseEnter: () => d.piece,
+        onClick: () => ({
+          ...d.piece,
+          x: d.xy.x + xMod(d.xy),
+          y: d.xy.y + yMod(d.xy)
+        }),
+        onMouseEnter: () => ({
+          ...d.piece,
+          x: d.xy.x + xMod(d.xy),
+          y: d.xy.y + yMod(d.xy)
+        }),
         onMouseLeave: () => ({})
       }))
     }
