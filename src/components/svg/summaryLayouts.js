@@ -801,7 +801,7 @@ export function bucketizedRenderingFn({
       y: d.x0,
       y1: d.x1 - d.x0,
       pieces: d,
-      value: summaryValueAccessor(d.map(p => p.piece))
+      value: summaryValueAccessor(d.map(p => p.piece.data))
     }))
 
     if (type.type === "histogram" || type.type === "heatmap") {
