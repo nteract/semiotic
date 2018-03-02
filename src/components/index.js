@@ -2,7 +2,6 @@ import AnnotationLayer from "./AnnotationLayer"
 import DividedLine from "./DividedLine"
 import XYFrame from "./XYFrame"
 import OrdinalFrame from "./OrdinalFrame"
-import SmartFrame from "./SmartFrame"
 import MinimapXYFrame from "./MinimapXYFrame"
 import MinimapNetworkFrame from "./MinimapNetworkFrame"
 import MiniMap from "./MiniMap"
@@ -19,14 +18,12 @@ import {
   ResponsiveNetworkFrame,
   ResponsiveMinimapXYFrame,
   ResponsiveOrdinalFrame,
-  ResponsiveSmartFrame,
   ResponsiveXYFrame,
   ResponsiveORFrame
 } from "./ResponsiveFrame"
 import {
   SparkNetworkFrame,
   SparkOrdinalFrame,
-  SparkSmartFrame,
   SparkXYFrame
 } from "./SparkFrame"
 import { chuckCloseCanvasTransform } from "./canvas/basicCanvasEffects"
@@ -47,7 +44,6 @@ export default {
   OrdinalFrame,
   ORFrame,
   funnelize,
-  SmartFrame,
   calculateDataExtent,
   Annotation,
   NetworkFrame,
@@ -55,11 +51,9 @@ export default {
   ResponsiveOrdinalFrame,
   ResponsiveORFrame,
   ResponsiveNetworkFrame,
-  ResponsiveSmartFrame,
   ResponsiveXYFrame,
   SparkOrdinalFrame,
   SparkNetworkFrame,
-  SparkSmartFrame,
   SparkXYFrame,
   Legend,
   chuckCloseCanvasTransform,
@@ -80,7 +74,6 @@ export {
   OrdinalFrame,
   ORFrame,
   funnelize,
-  SmartFrame,
   calculateDataExtent,
   Annotation,
   NetworkFrame,
@@ -88,11 +81,9 @@ export {
   ResponsiveOrdinalFrame,
   ResponsiveORFrame,
   ResponsiveNetworkFrame,
-  ResponsiveSmartFrame,
   ResponsiveXYFrame,
   SparkOrdinalFrame,
   SparkNetworkFrame,
-  SparkSmartFrame,
   SparkXYFrame,
   Legend,
   chuckCloseCanvasTransform,
