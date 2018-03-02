@@ -483,7 +483,7 @@ circle.frame-hover {
   color: #212121;
   font-size: 13px;
   z-index: 2000;
-  left: 50%;
+  transform: translate(-50%, calc(-100% - 20px));
 }
 
 .matrixWrapper .annotation-xy-label:before {
@@ -492,12 +492,11 @@ circle.frame-hover {
   background: rgba(255, 255, 255, 1);
   content: "";
   padding: 5px;
-  transform: rotate(45deg);
+  transform: translate(-9px) rotate(45deg);
   width: 5px;
   height: 5px;
   position: absolute;
   bottom: -9px;
-  left: calc(50% - 20px);
   z-index: 2000;
 }
 
