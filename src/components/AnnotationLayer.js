@@ -93,7 +93,7 @@ class AnnotationLayer extends React.Component {
 
     let { margin = { top: 0, bottom: 0, left: 0, right: 0 } } = props
 
-    const { size, axes } = props
+    const { size, axes = [] } = props
 
     margin =
       typeof margin === "number"
@@ -118,7 +118,7 @@ class AnnotationLayer extends React.Component {
             ? annotationProcessor.orient
             : [annotationProcessor.orient]
       let marginOffsetFn = (orient, axisSettings) => {
-        if (axisSettings.find(d => d.props.orient === orient)) {
+        if (axisSettings && axisSettings.find(d => d.props.orient === orient)) {
           return 50
         }
         return 10
