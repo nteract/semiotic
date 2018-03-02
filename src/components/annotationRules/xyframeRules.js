@@ -106,7 +106,10 @@ export const svgHighlight = ({
     .x(d => xScale(d.x))
     .y0(d => yScale(d.yBottom))
     .y1(d => yScale(d.yTop))
-    .curve(lines.type.interpolator)
+
+  if (lines.type.interpolator) {
+    lineGenerator.curve(lines.type.interpolator)
+  }
 
   const foundLines = lines.data
     .filter((p, q) => idAccessor(p, q) === dID)
