@@ -625,7 +625,7 @@ class XYFrame extends React.Component {
       })
     } else if (d.type === "xy" || d.type === "frame-hover") {
       return svgXYAnnotation({ d, i, screenCoordinates })
-    } else if (d.type === "highlight" || typeof d.type === "function") {
+    } else if (d.type === "highlight") {
       return svgHighlight({
         d,
         screenCoordinates,
