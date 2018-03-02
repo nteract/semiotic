@@ -37,23 +37,42 @@ export default class LineBrush extends React.Component {
     })
   }
   brushStart(e) {
-    this.setState({
-      selectedDataCountStart: data.filter(d => d.date >= e[0] && d.date <= e[1])
-        .length
-    })
+    if (e === null) {
+      this.setState({
+        selectedDataCountStart: data.length
+      })
+    } else {
+      this.setState({
+        selectedDataCountStart: data.filter(
+          d => d.date >= e[0] && d.date <= e[1]
+        ).length
+      })
+    }
   }
   brushDuring(e) {
-    this.setState({
-      selectedDataCountDuring: data.filter(
-        d => d.date >= e[0] && d.date <= e[1]
-      ).length
-    })
+    if (e === null) {
+      this.setState({
+        selectedDataCountDuring: data.length
+      })
+    } else {
+      this.setState({
+        selectedDataCountDuring: data.filter(
+          d => d.date >= e[0] && d.date <= e[1]
+        ).length
+      })
+    }
   }
   brushEnd(e) {
-    this.setState({
-      selectedDataCountEnd: data.filter(d => d.date >= e[0] && d.date <= e[1])
-        .length
-    })
+    if (e === null) {
+      this.setState({
+        selectedDataCountEnd: data.length
+      })
+    } else {
+      this.setState({
+        selectedDataCountEnd: data.filter(d => d.date >= e[0] && d.date <= e[1])
+          .length
+      })
+    }
   }
 
   render() {
