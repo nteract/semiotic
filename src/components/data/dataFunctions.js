@@ -165,7 +165,7 @@ export const calculateDataExtent = ({
   if (showLinePoints) {
     projectedPoints = fullDataset.map(d => ({
       ...d,
-      [projectedY]: d[projectedYTop] || d[projectedYBottom]
+      [projectedY]: d[projectedYTop] || d[projectedYBottom] || d.y
     }))
   }
 

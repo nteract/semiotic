@@ -886,11 +886,11 @@ class XYFrame extends React.Component {
     } = this.state
 
     let downloadButton
-    if (download) {
+    if (download && (points || lines)) {
       const downloadData =
         download === "points"
           ? mapParentsToPoints(fullDataset)
-          : points || lines || areas
+          : points || lines
       downloadButton = (
         <DownloadButton
           csvName={`${name}-${new Date().toJSON()}`}

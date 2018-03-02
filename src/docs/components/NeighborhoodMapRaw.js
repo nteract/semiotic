@@ -39,7 +39,7 @@ csvParse(data).forEach((d, i) => {
         type: "react-annotation",
         dx: 0,
         dy: 0,
-        label: "Note " + (annotationData.length + 1),
+        label: `Note ${annotationData.length + 1}`,
         color: colors[+d.hood % 6]
       })
     )
@@ -60,12 +60,12 @@ const neighborhoodMapChart = {
   }),
   pointStyle: d => ({
     stroke: colors[d.hood % 6],
-    strokeOpacity: 0,
+    strokeOpacity: 1,
     fill: colors[d.hood % 6]
   }),
   annotationSettings: {
     layout: {
-      type: "bump",
+      type: "marginalia",
       orient: "nearest",
       characterWidth: 8,
       lineWidth: 20,
