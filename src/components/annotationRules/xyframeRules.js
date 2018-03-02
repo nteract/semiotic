@@ -77,13 +77,18 @@ export const svgHighlight = ({
   xScale,
   yScale
 }) => {
-  const dID =
-    idAccessor(d, i) ||
-    (d.parentLine && idAccessor(d.parentLine, i)) ||
-    (d.parentArea && idAccessor(d.parentArea, i))
+  let dID
+  const baseID = idAccessor({ ...d, ...d.data }, i)
+  if (baseID !== undefined) {
+    dID = baseID
+  } else if (d.parentLine && idAccessor(d.parentLine, i) !== undefined) {
+    dID = idAccessor(d.parentLine, i)
+  } else if (d.parentArea && idAccessor(d.parentArea, i) !== undefined) {
+    dID = idAccessor(d.parentArea, i)
+  }
 
   const foundPoints = points.data
-    .filter((p, q) => idAccessor(p, q) === dID)
+    .filter((p, q) => idAccessor({ ...p, ...p.data }, q) === dID)
     .map((p, q) => (
       <circle
         key={`highlight-point-${q}`}
