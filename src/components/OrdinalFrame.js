@@ -52,7 +52,6 @@ import { drawSummaries, renderLaidOutSummaries } from "./svg/summaryLayouts"
 import { stringToFn } from "./data/dataFunctions"
 
 import PropTypes from "prop-types"
-import { project } from "d3-glyphedge"
 
 const xScale = scaleIdentity()
 const yScale = scaleIdentity()
