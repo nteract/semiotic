@@ -631,7 +631,7 @@ export default class OrdinalFrameDocs extends React.Component {
             baseMarkProps={{ transitionDuration: 3000 }}
             //            canvasPieces={true}
             //            canvasPostProcess={glowyCanvas}
-            download={false}
+            download={true}
             downloadFields={["funnelKey"]}
           />
         </div>
