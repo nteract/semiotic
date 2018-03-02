@@ -558,11 +558,13 @@ class XYFrame extends React.Component {
           idAccessor
         })
       ]
+
       if (
-        screenCoordinates[0] === undefined ||
-        screenCoordinates[1] === undefined ||
-        screenCoordinates[0] === null ||
-        screenCoordinates[1] === null
+        d.type !== "highlight" &&
+        (screenCoordinates[0] === undefined ||
+          screenCoordinates[1] === undefined ||
+          screenCoordinates[0] === null ||
+          screenCoordinates[1] === null)
       ) {
         //NO ANNOTATION IF INVALID SCREEN COORDINATES
         return null

@@ -21,6 +21,13 @@ const inflatedBarChartData = [
   { user: "Betty", action: "favorites", value: 10 }
 ]
 
+const somePoints = [...new Array(50)].map((d, i) => ({
+  x: Math.random(),
+  y: Math.random(),
+  i: i,
+  category: i % 4
+}))
+
 const barColorHash = {
   tweets: "#4d430c",
   retweets: "#b3331d",
@@ -935,6 +942,62 @@ lineIDAccessor={d =>
             ]}
             pieceIDAccessor="action"
             margin={10}
+          />
+        </div>
+      ),
+      source: `<OrdinalFrame
+  size={[600, 400]}
+  data={inflatedBarChartData}
+  oAccessor={"user"}
+  rAccessor={"value"}
+  style={d => ({ fill: barColorHash[d.action] })}
+  type={"clusterbar"}
+  oPadding={5}
+  pieceHoverAnnotation={[
+    {
+      type: "highlight",
+      style: d => ({
+        fill: d.action === "tweets" ? "purple" : "blue"
+      })
+    }
+  ]}
+  annotations={[
+    {
+      type: "highlight",
+      user: "Betty",
+      style: { fill: "red", stroke: "none" }
+    },
+    {
+      type: "highlight",
+      action: "tweets",
+      style: { fill: "none", stroke: "purple", strokeWidth: 5 }
+    }
+  ]}
+  pieceIDAccessor="action"
+  margin={10}
+/>`
+    })
+
+    examples.push({
+      name: "Scatterplot Highlighting",
+      demo: (
+        <div>
+          <p>
+            You don't have to send annotations with valid oAccessor or
+            pieceIDAccessor traits. If you do, they will highlight all the
+            pieces that satisfy the one you do send. This example has two
+            annotations sent that highlight all the pieces in one column as well
+            as all pieces of a certain type across all four columns.
+          </p>
+          <XYFrame
+            size={[500, 500]}
+            points={somePoints}
+            xAccessor={"x"}
+            yAccessor={"y"}
+            pointStyle={{ fill: "red" }}
+            margin={10}
+            hoverAnnotation={[{ type: "highlight" }]}
+            lineIDAccessor={d => d.category}
           />
         </div>
       ),

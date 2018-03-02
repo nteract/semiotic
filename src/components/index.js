@@ -10,7 +10,6 @@ import Axis from "./Axis"
 import Legend from "./Legend"
 import Annotation from "./Annotation"
 import Brush from "./Brush"
-import DebugComponent from "./Debug"
 import InteractionLayer from "./InteractionLayer"
 import VisualizationLayer from "./VisualizationLayer"
 import NetworkFrame from "./NetworkFrame"
@@ -45,7 +44,6 @@ export default {
   Axis,
   InteractionLayer,
   VisualizationLayer,
-  DebugComponent,
   OrdinalFrame,
   ORFrame,
   funnelize,
@@ -79,7 +77,6 @@ export {
   Axis,
   InteractionLayer,
   VisualizationLayer,
-  DebugComponent,
   OrdinalFrame,
   ORFrame,
   funnelize,
