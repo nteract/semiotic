@@ -436,10 +436,7 @@ export default class CreatingLineChart extends React.Component {
             xScaleType={scaleTime()}
             xAccessor={d => new Date(d.date)}
             yAccessor={"grossWeekly"}
-            lineType={{
-              type: this.state.brushChart,
-              interpolator: curveMonotoneX
-            }}
+            lineType={"line"}
             lineStyle={d => ({
               fill: colorHash[d.title],
               stroke: colorHash[d.title]
