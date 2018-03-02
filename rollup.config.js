@@ -5,6 +5,7 @@ import builtins from "rollup-plugin-node-builtins"
 import replace from "rollup-plugin-replace"
 
 export default {
+  exports: "named",
   input: "src/components/index.js",
   output: {
     format: "umd",
@@ -13,7 +14,7 @@ export default {
   },
   interop: false,
   globals: {
-    react: "React",
+    "react": "React",
     "react-dom": "ReactDOM"
   },
   external: ["react", "react-dom"],
