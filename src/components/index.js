@@ -30,36 +30,6 @@ import { chuckCloseCanvasTransform } from "./canvas/basicCanvasEffects"
 import { Mark } from "semiotic-mark"
 const ORFrame = OrdinalFrame
 
-export default {
-  AnnotationLayer,
-  DividedLine,
-  XYFrame,
-  MinimapXYFrame,
-  MinimapNetworkFrame,
-  MiniMap,
-  Brush,
-  Axis,
-  InteractionLayer,
-  VisualizationLayer,
-  OrdinalFrame,
-  ORFrame,
-  funnelize,
-  calculateDataExtent,
-  Annotation,
-  NetworkFrame,
-  ResponsiveMinimapXYFrame,
-  ResponsiveOrdinalFrame,
-  ResponsiveORFrame,
-  ResponsiveNetworkFrame,
-  ResponsiveXYFrame,
-  SparkOrdinalFrame,
-  SparkNetworkFrame,
-  SparkXYFrame,
-  Legend,
-  chuckCloseCanvasTransform,
-  Mark
-}
-
 export {
   AnnotationLayer,
   DividedLine,
