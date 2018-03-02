@@ -3,7 +3,6 @@ import PropTypes from "prop-types"
 import XYFrame from "./XYFrame"
 import OrdinalFrame from "./OrdinalFrame"
 import NetworkFrame from "./NetworkFrame"
-import SmartFrame from "./SmartFrame"
 import MinimapXYFrame from "./MinimapXYFrame"
 import elementResizeEvent from "element-resize-event"
 
@@ -92,5 +91,4 @@ export const ResponsiveXYFrame = createResponsiveFrame(XYFrame)
 export const ResponsiveOrdinalFrame = createResponsiveFrame(OrdinalFrame)
 export const ResponsiveORFrame = createResponsiveFrame(OrdinalFrame)
 export const ResponsiveNetworkFrame = createResponsiveFrame(NetworkFrame)
-export const ResponsiveSmartFrame = createResponsiveFrame(SmartFrame)
 export const ResponsiveMinimapXYFrame = createResponsiveFrame(MinimapXYFrame)
