@@ -106,7 +106,7 @@
     "d3-selection": "1.1.0",
     "d3-shape": "1.0.4",
     "d3-voronoi": "1.0.2",
-    "element-resize-event": "2.0.7",
+    "element-resize-event": "github:emeeks/element-resize-event",
     "json2csv": "3.7.3",
     "labella": "1.1.4",
     "prop-types": "15.6.0",
