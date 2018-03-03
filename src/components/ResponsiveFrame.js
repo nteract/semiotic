@@ -72,7 +72,7 @@ const createResponsiveFrame = Frame =>
       return (
         <div
           className="responsive-container"
-          style={Object.assign({ height: "100%", width: "100%" }, style)}
+          style={{ height: "100%", width: "100%" }}
           ref={node => (this.node = node)}
         >
           {!returnEmpty && (
