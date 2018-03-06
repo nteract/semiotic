@@ -1,18 +1,20 @@
-import React from "react"
-import DocumentComponent from "../layout/DocumentComponent"
-import DotPlotRaw from "./DotPlotRaw"
+import React from 'react'
+import DocumentComponent from '../layout/DocumentComponent'
+import DotPlotRaw from './DotPlotRaw'
 
 const components = []
 
 components.push({
-  name: "DotPlot"
+  name: 'DotPlot'
 })
+
+const percentFormat = '`${d}%`'
 
 export default class DotPlotDocs extends React.Component {
   render() {
     const examples = []
     examples.push({
-      name: "Basic",
+      name: 'Basic',
       demo: DotPlotRaw,
       source: `
     const colors = {
@@ -71,7 +73,7 @@ export default class DotPlotDocs extends React.Component {
       style={(d,i) => ({ fill: colors[d.type], stroke: "white", strokeWidth: 1 })}
       type={{ type: "point", r: dotRadius }}
       projection={"horizontal"}
-      axis={{ orient: 'bottom', tickFormat: d => ${"`${d}%`"} }}
+      axis={{ orient: 'bottom', tickFormat: d => ${percentFormat} }}
       margin={{ left: 205, top: 50, bottom: 40, right: 10 }}
       oPadding={10}
       svgAnnotationRules={drawRange}
@@ -105,4 +107,4 @@ export default class DotPlotDocs extends React.Component {
   }
 }
 
-DotPlotDocs.title = "Dot Plot"
+DotPlotDocs.title = 'Dot Plot'

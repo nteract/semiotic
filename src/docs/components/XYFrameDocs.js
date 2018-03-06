@@ -168,6 +168,7 @@ const axesHash = {
       orient: "bottom",
       tickLineGenerator: ({ xy }) => (
         <line
+          key={`line-${xy.y1}-${xy.x1}`}
           x1={xy.x1}
           x2={xy.x2}
           y1={xy.y1}
@@ -994,7 +995,7 @@ export default class XYFrameDocs extends React.Component {
           }
           xAccessor={"px"}
           yAccessor={"py"}
-          showLinePoints={this.state.showPoints === "on"}
+          showLinePoints={false}
           annotations={finalAnnotations}
           annotationSettings={
             annotationSettingTypes[this.state.annotationSettings]
@@ -1002,7 +1003,8 @@ export default class XYFrameDocs extends React.Component {
           matte={this.state.matte === "on"}
           xExtent={
             this.state.frame === "MinimapXYFrame" &&
-            this.state.dataType !== "line"
+            this.state.dataType !== "line" && this.state[`${this.state.dataType}Extent`]
+            && this.state[`${this.state.dataType}Extent`][0]
               ? [
                   this.state[`${this.state.dataType}Extent`][0][0],
                   this.state[`${this.state.dataType}Extent`][1][0]
@@ -1011,7 +1013,8 @@ export default class XYFrameDocs extends React.Component {
           }
           yExtent={
             this.state.frame === "MinimapXYFrame" &&
-            this.state.dataType !== "line"
+            this.state.dataType !== "line" && this.state[`${this.state.dataType}Extent`]
+            && this.state[`${this.state.dataType}Extent`][0]
               ? [
                   this.state[`${this.state.dataType}Extent`][1][1],
                   this.state[`${this.state.dataType}Extent`][0][1]
@@ -1033,7 +1036,7 @@ export default class XYFrameDocs extends React.Component {
                   sort: null
                 }
           }
-          margin={marginHash[this.state.margin]}
+          margin={100}
           defined={
             this.state.defined === "inactive" ? undefined : d => d.py !== 0
           }
@@ -1121,12 +1124,12 @@ export default class XYFrameDocs extends React.Component {
             )
           }
           yScaleType={customScaleType[this.state.customScale]}
-          download={true}
+          download={"points"}
           //            legend={{ title: "test", position: "right", width: 200, legendGroups: [
           //              { label: "Red stuff", styleFn: (d,i) => ({ fill: "red", fillOpacity: i * .25 + .25 }), items: [{ label: "a" }, { label: "b" }, { label: "c" }] },
           //              { label: "Blue stuff", styleFn: (d,i) => ({ fill: "blue", fillOpacity: i * .25 + .25 }), items: [{ label: "d" }, { label: "e" }, { label: "f" }] }
           //            ] }}
-          downloadFields={downloadFieldOptions[this.state.dataType]}
+          downloadFields={["px"]}
           legend={this.state.dataType === "line" && this.state.legend === "on"}
           minimap={
             this.state.frame === "MinimapXYFrame"
@@ -1148,7 +1151,8 @@ export default class XYFrameDocs extends React.Component {
                   brushEnd: e =>
                     this.updateDateRange(`${this.state.dataType}`, e),
                   yBrushable: this.state.dataType === "line" ? false : true,
-                  xBrushExtent: this.state[`${this.state.dataType}Extent`],
+                  xBrushExtent: this.state.dataType === "line" ? this.state[`${this.state.dataType}Extent`] : this.state[`${this.state.dataType}Extent`][0],
+                  yBrushExtent: this.state[`${this.state.dataType}Extent`][1],
                   lines:
                     this.state.dataType === "line" ? displayData : undefined,
                   areas:
@@ -1547,9 +1551,9 @@ export default class XYFrameDocs extends React.Component {
           width="560"
           height="315"
           src="https://www.youtube.com/embed/0HIj_7-ghaE"
-          frameborder="0"
+          frameBorder="0"
           allow="autoplay; encrypted-media"
-          allowfullscreen
+          allowFullScreen
         />
       </DocumentComponent>
     )

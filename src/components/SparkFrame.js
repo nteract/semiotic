@@ -1,17 +1,16 @@
-import React from "react"
-import PropTypes from "prop-types"
-import XYFrame from "./XYFrame"
-import OrdinalFrame from "./OrdinalFrame"
-import NetworkFrame from "./NetworkFrame"
-import SmartFrame from "./SmartFrame"
+import React from 'react'
+import PropTypes from 'prop-types'
+import XYFrame from './XYFrame'
+import OrdinalFrame from './OrdinalFrame'
+import NetworkFrame from './NetworkFrame'
+import SmartFrame from './SmartFrame'
 
-function sparkNetworkSettings(originalSettings = "force") {
+function sparkNetworkSettings(originalSettings = 'force') {
   let finalSettings = {}
   if (originalSettings) {
     finalSettings = originalSettings
-    if (originalSettings === "force") {
-      finalSettings = { type: "force" }
-    }
+    if (originalSettings === 'force') finalSettings = { type: 'force' }
+
     return {
       edgeStrength: 2,
       edgeDistance: 5,
@@ -25,7 +24,7 @@ function sparkNetworkSettings(originalSettings = "force") {
 }
 
 const axisDefaults = {
-  tickFormat: () => "",
+  tickFormat: () => '',
   baseline: false
 }
 
@@ -35,12 +34,11 @@ const allFrameDefaults = {
 
 function simpleValueAccessor(props, d) {
   let value = d.y
-  if (props.yAccessor) {
+  if (props.yAccessor)
     value =
-      typeof props.yAccessor === "string"
+      typeof props.yAccessor === 'string'
         ? d[props.yAccessor]
         : props.yAccessor(d)
-  }
 
   return value.toString ? value.toString() : value
 }
@@ -51,15 +49,15 @@ const xyFrameDefaults = props => ({
   hoverAnnotation:
     props.hoverAnnotation === true
       ? [
-          d => {
-            return {
-              type: "react-annotation",
-              label: simpleValueAccessor(props, d),
-              dx: 50,
-              dy: -50
-            }
+        d => {
+          return {
+            type: 'react-annotation',
+            label: simpleValueAccessor(props, d),
+            dx: 50,
+            dy: -50
           }
-        ]
+        }
+      ]
       : props.hoverAnnotation,
   axes: props.axes
     ? props.axes.map(a => ({ ...axisDefaults, ...a }))
@@ -106,7 +104,7 @@ const createSparkFrame = (Frame, defaults) =>
     componentDidMount() {
       const element = this.node
       const lineHeight =
-        +window.getComputedStyle(element).lineHeight.split("px")[0] - 5
+        +window.getComputedStyle(element).lineHeight.split('px')[0] - 5
 
       this.setState({
         containerHeight: isNaN(lineHeight) ? element.offsetHeight : lineHeight,
@@ -115,14 +113,14 @@ const createSparkFrame = (Frame, defaults) =>
     }
 
     render() {
-      const { size, dataVersion, style = {} } = this.props
+      const { size, style = {} } = this.props
 
-      const { containerHeight = 30, containerWidth = 30 } = this.state
+      const { containerHeight = 30 } = this.state
 
       const actualSize = []
 
       actualSize[0] =
-        typeof size === "number" ? size : size[0] ? size[0] : containerHeight
+        typeof size === 'number' ? size : size[0] ? size[0] : containerHeight
       actualSize[1] = containerHeight
 
       return (
@@ -131,13 +129,13 @@ const createSparkFrame = (Frame, defaults) =>
             {
               width: `${actualSize[0]}px`,
               height: `${actualSize[1]}px`,
-              display: "inline-block",
-              marginLeft: "5px",
-              marginRight: "5px"
+              display: 'inline-block',
+              marginLeft: '5px',
+              marginRight: '5px'
             },
             style
           )}
-          ref={node => (this.node = node)}
+          ref={node => this.node = node}
         >
           <Frame {...defaults(this.props)} size={actualSize} useSpans={true} />
         </span>

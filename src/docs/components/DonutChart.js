@@ -1,11 +1,10 @@
 import React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
-import { OrdinalFrame } from "../../components"
 import DonutChartRaw from "./DonutChartRaw"
 import Select from "material-ui/Select"
 import { MenuItem } from "material-ui/Menu"
-import Input, { InputLabel } from "material-ui/Input"
-import { FormControl, FormHelperText } from "material-ui/Form"
+import { InputLabel } from "material-ui/Input"
+import { FormControl } from "material-ui/Form"
 
 const components = []
 
@@ -28,17 +27,17 @@ export default class PieDonutDocs extends React.Component {
     const examples = []
 
     const kindOptions = ["pie", "nightingale"].map(d => (
-      <MenuItem key={"kind-option" + d} label={d} value={d}>
+      <MenuItem key={`kind-option${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
     const innerOptions = ["25", "0", "5", "75", "150"].map(d => (
-      <MenuItem key={"radius-option" + d} label={d} value={d}>
+      <MenuItem key={`radius-option${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
     const paddingOptions = ["0", "10", "20", "40"].map(d => (
-      <MenuItem key={"padding-option" + d} label={d} value={d}>
+      <MenuItem key={`padding-option${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
@@ -98,8 +97,13 @@ export default class PieDonutDocs extends React.Component {
               style={d => ({ fill: colorMap[d.value], stroke: "darkgray", strokeWidth: 1 })}
               type={{ type: "bar", innerRadius: ${this.state.innerRadius} }}
               oLabel={true}
+<<<<<<< HEAD
               ${this.state.kind === "pie" ? "dynamicColumnWidth='value'" : ""}
               rAccessor={${this.state.kind === "pie" ? "() => 1" : "'value'"}}
+=======
+              ${this.state.kind === "pie" ? 'dynamicColumnWidth="value"' : ""}
+              rAccessor={${this.state.kind === "pie" ? "() => 1" : '"value"'}}
+>>>>>>> master
               margin={{ left: 20, top: 20, bottom: 20, right: 20 }}
               oPadding={${this.state.padding}}
               tooltipContent="pie"

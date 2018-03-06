@@ -12,6 +12,7 @@ export const xyDownloadMapping = ({
   fields = []
 }) => {
   const csvData = []
+
   data.forEach(datum => {
     if (Array.isArray(datum)) {
       datum.forEach(a => {
@@ -41,13 +42,13 @@ export const xyDownloadMapping = ({
     } else {
       const row = {}
       if (xAccessor) {
-        row.x = cleanDates(xAccessor(datum))
+        row.x = cleanDates(xAccessor(datum.data))
       } else if (datum.x) {
         row.x = datum.x
       }
 
       if (yAccessor) {
-        row.y = cleanDates(yAccessor(datum))
+        row.y = cleanDates(yAccessor(datum.data))
       } else if (datum.y) {
         row.y = datum.y
       }
@@ -56,9 +57,15 @@ export const xyDownloadMapping = ({
         row.id = datum.id
       }
 
-      fields.forEach(f => {
-        row[f] = datum[f]
-      })
+      if (xAccessor || yAccessor) {
+        fields.forEach(f => {
+          row[f] = datum.data[f]
+        })
+      } else {
+        fields.forEach(f => {
+          row[f] = datum[f]
+        })
+      }
       csvData.push(row)
     }
   })
@@ -67,7 +74,7 @@ export const xyDownloadMapping = ({
 
 export const orDownloadMapping = ({
   data,
-  columns,
+  //  columns,
   oAccessor,
   rAccessor,
   fields = []
@@ -79,13 +86,13 @@ export const orDownloadMapping = ({
     data[key].pieceData.forEach(piece => {
       const row = {}
       if (oAccessor) {
-        row.column = oAccessor(piece)
+        row.column = oAccessor(piece.data)
       } else if (piece.x) {
         row.column = piece.x
       }
 
       if (rAccessor) {
-        row.value = rAccessor(piece)
+        row.value = rAccessor(piece.data)
       } else if (piece.renderKey) {
         row.value = piece.renderKey
       }
@@ -93,7 +100,7 @@ export const orDownloadMapping = ({
       if (piece.id !== undefined) row.id = piece.id
 
       fields.forEach(f => {
-        row[f] = cleanDates(piece[f])
+        row[f] = cleanDates(piece.data[f])
       })
 
       csvData.push(row)

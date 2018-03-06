@@ -14,7 +14,7 @@ class MinimapNetworkFrame extends NetworkFrame {
   }
 
   generateMinimap() {
-    let miniDefaults = {
+    const miniDefaults = {
       title: "",
       position: [0, 0],
       size: [this.props.size[0] * 5, this.props.size[1] * 5],
@@ -27,7 +27,7 @@ class MinimapNetworkFrame extends NetworkFrame {
       brushEnd: () => {}
     }
 
-    let combinedOptions = Object.assign(miniDefaults, this.props.minimap)
+    const combinedOptions = Object.assign(miniDefaults, this.props.minimap)
 
     combinedOptions.hoverAnnotation = false
 
@@ -35,7 +35,7 @@ class MinimapNetworkFrame extends NetworkFrame {
   }
 
   render() {
-    let miniMap = this.generateMinimap()
+    const miniMap = this.generateMinimap()
     const options = {}
     if (this.props.renderBefore) {
       options.beforeElements = miniMap

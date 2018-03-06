@@ -3,6 +3,8 @@ import React from "react"
 import { Mark } from "semiotic-mark"
 import { line, area, curveLinear } from "d3-shape"
 
+import { shapeBounds } from "../svg/areaDrawing"
+
 export function lineGeneratorDecorator({
   generator,
   projectedCoordinateNames,
@@ -190,27 +192,27 @@ export function createLines({
 
     const diffdataA = data[0].data.map((basedata, baseI) => {
       const linePoint =
-        basedata._xyfYTop > data[1].data[baseI]._xyfYTop
-          ? basedata._xyfYTop
-          : basedata._xyfYBottom
+        basedata.yTop > data[1].data[baseI].yTop
+          ? basedata.yTop
+          : basedata.yBottom
       return {
-        _xyfX: basedata._xyfX,
-        _xyfY: linePoint,
-        _xyfYBottom: linePoint,
-        _xyfYTop: linePoint
+        x: basedata.x,
+        y: linePoint,
+        yBottom: linePoint,
+        yTop: linePoint
       }
     })
 
     const diffdataB = data[0].data.map((basedata, baseI) => {
       const linePoint =
-        data[1].data[baseI]._xyfYTop > basedata._xyfYTop
-          ? data[1].data[baseI]._xyfYTop
-          : data[1].data[baseI]._xyfYBottom
+        data[1].data[baseI].yTop > basedata.yTop
+          ? data[1].data[baseI].yTop
+          : data[1].data[baseI].yBottom
       return {
-        _xyfX: basedata._xyfX,
-        _xyfY: linePoint,
-        _xyfYBottom: linePoint,
-        _xyfYTop: linePoint
+        x: basedata.x,
+        y: linePoint,
+        yBottom: linePoint,
+        yTop: linePoint
       }
     })
 
@@ -262,14 +264,14 @@ export function createAreas({
   yScale,
   canvasDrawing,
   data,
-  projectedCoordinateNames,
   canvasRender,
   styleFn,
   classFn,
   renderKeyFn,
   renderMode,
-  type,
-  baseMarkProps
+  baseMarkProps,
+  customMark,
+  type
 }) {
   const areaClass = classFn || (() => "")
   const areaStyle = styleFn || (() => ({}))
@@ -296,6 +298,18 @@ export function createAreas({
             .join("L")}Z `
         })
       })
+    } else if (customMark) {
+      const projectedCoordinates = d._xyfCoordinates.map(d => [
+        xScale(d[0]),
+        yScale(d[1])
+      ])
+      drawD = customMark({
+        d,
+        projectedCoordinates,
+        xScale,
+        yScale,
+        bounds: shapeBounds(projectedCoordinates)
+      })
     } else {
       drawD = `M${d._xyfCoordinates
         .map(p => `${xScale(p[0])},${yScale(p[1])}`)
@@ -304,7 +318,9 @@ export function createAreas({
 
     const renderKey = renderKeyFn ? renderKeyFn(d, i) : `area-${i}`
 
-    if (canvasRender && canvasRender(d, i) === true) {
+    if (React.isValidElement(drawD)) {
+      renderedAreas.push(drawD)
+    } else if (canvasRender && canvasRender(d, i) === true) {
       const canvasArea = {
         type: "area",
         baseClass: "xyframe-area",

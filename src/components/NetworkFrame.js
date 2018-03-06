@@ -16,7 +16,6 @@ import { min, max } from "d3-array"
 
 import { filterDefs } from "./constants/jsx"
 
-import { packSiblings, stratify } from "d3-hierarchy"
 import { AnnotationLabel } from "react-annotation"
 
 import Frame from "./Frame"
@@ -67,7 +66,8 @@ import {
   pack,
   cluster,
   treemap,
-  partition
+  partition,
+  packSiblings
 } from "d3-hierarchy"
 
 import PropTypes from "prop-types"
@@ -215,41 +215,7 @@ const areaLink = d => {
     y2 = d.y1 + d.sankeyWidth / 2,
     y3 = d.y0 + d.sankeyWidth / 2
 
-  return (
-    "M" +
-    x0 +
-    "," +
-    y0 +
-    "C" +
-    x2 +
-    "," +
-    y0 +
-    " " +
-    x3 +
-    "," +
-    y1 +
-    " " +
-    x1 +
-    "," +
-    y1 +
-    "L" +
-    x1 +
-    "," +
-    y2 +
-    "C" +
-    x3 +
-    "," +
-    y2 +
-    " " +
-    x2 +
-    "," +
-    y3 +
-    " " +
-    x0 +
-    "," +
-    y3 +
-    "Z"
-  )
+  return `M${x0},${y0}C${x2},${y0} ${x3},${y1} ${x1},${y1}L${x1},${y2}C${x3},${y2} ${x2},${y3} ${x0},${y3}Z`
 }
 
 function circularAreaLink(link) {
@@ -289,13 +255,7 @@ function circularAreaLink(link) {
   return linkGenerator(xyForLink)
 }
 
-const matrixify = ({
-  edgeHash,
-  nodes,
-  edges,
-  edgeWidthAccessor,
-  nodeIDAccessor
-}) => {
+const matrixify = ({ edgeHash, nodes, edgeWidthAccessor, nodeIDAccessor }) => {
   const matrix = []
   nodes.forEach(nodeSource => {
     const nodeSourceID = nodeIDAccessor(nodeSource)
@@ -421,12 +381,9 @@ class NetworkFrame extends React.Component {
     } = currentProps
     //    const eventListenersGenerator = generatenetworkFrameEventListeners(customHoverBehavior, customClickBehavior)
 
-    let {
-      edgeType,
-      customNodeIcon,
-      customEdgeIcon,
-      hoverAnnotation
-    } = currentProps
+    let { edgeType, customNodeIcon, customEdgeIcon } = currentProps
+
+    const { hoverAnnotation } = currentProps
 
     let networkSettings
 
@@ -453,7 +410,7 @@ class NetworkFrame extends React.Component {
       currentProps.edgeWidthAccessor,
       d => d.weight || 1
     )
-    const nodeStyleFn = stringToFn(nodeStyle, () => {}, true)
+    const nodeStyleFn = stringToFn(nodeStyle, () => ({}), true)
     const nodeClassFn = stringToFn(nodeClass, () => "", true)
     const nodeRenderModeFn = stringToFn(nodeRenderMode, undefined, true)
     const nodeCanvasRenderFn = stringToFn(canvasNodes, undefined, true)
@@ -493,7 +450,7 @@ class NetworkFrame extends React.Component {
 
       if (!Array.isArray(edges)) {
         this.hierarchicalNetwork = true
-        let rootNode = hierarchy(edges, networkSettings.hierarchyChildren)
+        const rootNode = hierarchy(edges, networkSettings.hierarchyChildren)
 
         rootNode.sum(networkSettings.hierarchySum || (d => d.value))
 
@@ -716,14 +673,14 @@ class NetworkFrame extends React.Component {
           groupNode.y = groupCentroid[1] + size[1] / 2
         })
 
-        chords.forEach(chord => {
-          const chordD = ribbonGenerator(chord)
+        chords.forEach(generatedChord => {
+          const chordD = ribbonGenerator(generatedChord)
           //this is incorrect should use edgeHash
           const nodeSourceID = nodeIDAccessor(
-            projectedNodes[chord.source.index]
+            projectedNodes[generatedChord.source.index]
           )
           const nodeTargetID = nodeIDAccessor(
-            projectedNodes[chord.target.index]
+            projectedNodes[generatedChord.target.index]
           )
           const chordEdge = this.edgeHash.get(`${nodeSourceID}|${nodeTargetID}`)
           chordEdge.d = chordD
@@ -824,15 +781,16 @@ class NetworkFrame extends React.Component {
         const fontWidth = fontSize / 1.5 * fontWeightMod
 
         nodes.forEach((d, i) => {
-          const size = nodeSizeAccessor(d)
+          const calcualatedNodeSize = nodeSizeAccessor(d)
           d._NWFText = textAccessor(d)
-          const textWidth = fontWidth * d._NWFText.length * size * 1.4
-          const textHeight = fontSize * size
+          const textWidth =
+            fontWidth * d._NWFText.length * calcualatedNodeSize * 1.4
+          const textHeight = fontSize * calcualatedNodeSize
 
           d.textHeight = textHeight + 4
           d.textWidth = textWidth + 4
           d.rotate = rotate ? rotate(d, i) : 0
-          d.fontSize = fontSize * size
+          d.fontSize = fontSize * calcualatedNodeSize
           d.fontWeight = fontWeight
           d.radius = d.r = textWidth / 2
         })
@@ -1094,13 +1052,13 @@ class NetworkFrame extends React.Component {
     if (networkSettings.type === "flowchart") {
       if (networkSettings.direction === "up") {
         projectedNodes.forEach(node => {
-          let ox = node.x
+          const ox = node.x
           node.x = node.y
           node.y = adjustedSize[1] - ox
         })
       } else if (networkSettings.direction === "down") {
         projectedNodes.forEach(node => {
-          let ox = node.x
+          const ox = node.x
           node.x = node.y
           node.y = ox
         })
@@ -1163,8 +1121,8 @@ class NetworkFrame extends React.Component {
     const networkFrameRender = {
       edges: {
         data: projectedEdges,
-        styleFn: stringToFn(edgeStyle, () => {}, true),
-        classFn: stringToFn(edgeClass, () => {}, true),
+        styleFn: stringToFn(edgeStyle, () => ({}), true),
+        classFn: stringToFn(edgeClass, () => "", true),
         renderMode: stringToFn(edgeRenderMode, undefined, true),
         canvasRenderFn: stringToFn(canvasEdges, undefined, true),
         renderKeyFn: currentProps.edgeRenderKey
@@ -1181,11 +1139,12 @@ class NetworkFrame extends React.Component {
         renderMode: nodeRenderModeFn,
         canvasRenderFn: nodeCanvasRenderFn,
         customMark: customNodeIcon,
-        behavior: drawNodes
+        behavior: drawNodes,
+        renderKeyFn: currentProps.nodeRenderKey
       }
     }
 
-    let nodeLabelAnnotations = []
+    const nodeLabelAnnotations = []
     if (this.props.nodeLabels && projectedNodes) {
       projectedNodes.forEach((node, nodei) => {
         if (nodeLabels === true || (nodeLabels && nodeLabels(node, nodei))) {
@@ -1367,8 +1326,6 @@ class NetworkFrame extends React.Component {
     const {
       backgroundGraphics,
       foregroundGraphics,
-      projectedNodes,
-      projectedEdges,
       projectedXYPoints,
       margin,
       legendSettings,
@@ -1378,7 +1335,7 @@ class NetworkFrame extends React.Component {
       nodeLabelAnnotations
     } = this.state
 
-    let downloadButton = []
+    const downloadButton = []
 
     if (this.props.download && this.state.projectedNodes.length > 0) {
       downloadButton.push(

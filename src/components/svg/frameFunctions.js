@@ -16,7 +16,7 @@ function roundToTenth(number) {
 }
 
 const circlePath = (cx, cy, r) =>
-  [
+  `${[
     "M",
     roundToTenth(cx - r),
     roundToTenth(cy),
@@ -36,7 +36,7 @@ const circlePath = (cx, cy, r) =>
     0,
     -(r * 2),
     0
-  ].join(" ") + "Z"
+  ].join(" ")}Z`
 
 export const drawMarginPath = ({ margin, size, inset = 5 }) => {
   const iSize = [size[0] - inset, size[1] - inset]
@@ -133,16 +133,16 @@ export function generateOrdinalFrameEventListeners(
 export function keyAndObjectifyBarData({ data, renderKey = (d, i) => i }) {
   return data
     ? data.map((d, i) => {
-        const appliedKey = renderKey(d, i)
-        if (typeof d !== "object") {
-          return {
-            data: { value: d, renderKey: appliedKey },
-            value: d,
-            renderKey: appliedKey
-          }
+      const appliedKey = renderKey(d, i)
+      if (typeof d !== "object") {
+        return {
+          data: { value: d, renderKey: appliedKey },
+          value: d,
+          renderKey: appliedKey
         }
-        return { renderKey: appliedKey, data: d }
-      })
+      }
+      return { renderKey: appliedKey, data: d }
+    })
     : []
 }
 
@@ -156,7 +156,7 @@ export function adjustedPositionSize({
   oLabel,
   projection
 }) {
-  let finalMargin = calculateMargin({
+  const finalMargin = calculateMargin({
     margin,
     axis,
     axes,
@@ -165,10 +165,10 @@ export function adjustedPositionSize({
     projection
   })
 
-  let heightAdjust = finalMargin.top + finalMargin.bottom
-  let widthAdjust = finalMargin.left + finalMargin.right
+  const heightAdjust = finalMargin.top + finalMargin.bottom
+  const widthAdjust = finalMargin.left + finalMargin.right
 
-  let adjustedPosition = [position[0], position[1]]
+  const adjustedPosition = [position[0], position[1]]
   let adjustedSize = [size[0] - widthAdjust, size[1] - heightAdjust]
   if (projection === "radial") {
     const minSize = Math.min(adjustedSize[0], adjustedSize[1])
@@ -307,7 +307,7 @@ export function orFrameConnectionRenderer({
                   markType="path"
                   d={markD}
                   className={classFn ? classFn(piece.piece.data, pieceI) : ""}
-                  key={"connector" + piece.piece.renderKey}
+                  key={`connector${piece.piece.renderKey}`}
                   style={calculatedStyle}
                 />
               )
@@ -390,7 +390,7 @@ export const orFrameAxisGenerator = ({
   let generatedAxis, axesTickLines
   if (projection !== "radial" && axis) {
     axesTickLines = []
-    let axisPosition = [0, 0]
+    const axisPosition = [0, 0]
     const axes = Array.isArray(axis) ? axis : [axis]
     let axisBaseline = false
     generatedAxis = axes.map((d, i) => {
@@ -401,9 +401,9 @@ export const orFrameAxisGenerator = ({
 
       let axisClassname = d.className || ""
       let tickValues
-      let axisScale = rScaleType().domain(rScale.domain())
+      const axisScale = rScaleType().domain(rScale.domain())
 
-      let orient = trueAxis(d.orient, projection)
+      const orient = trueAxis(d.orient, projection)
 
       if (orient === "right") {
         axisScale.range([rScale.range()[1], rScale.range()[0]])

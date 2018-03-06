@@ -1,12 +1,15 @@
-import React from "react"
-import DocumentComponent from "../layout/DocumentComponent"
-import RegionatedLineChartRaw from "./RegionatedLineChartRaw"
+import React from 'react'
+import DocumentComponent from '../layout/DocumentComponent'
+import RegionatedLineChartRaw from './RegionatedLineChartRaw'
+
+const degreeFormatter = '`${d > 0 ? "+" : ""}${Math.ceil(d * 100)/ 100}°`'
+const pathKey = '`hover-line-${q}`'
 
 export default class RegionatedLineChartDocs extends React.Component {
   render() {
     const examples = []
     examples.push({
-      name: "Basic",
+      name: 'Basic',
       demo: RegionatedLineChartRaw,
       source: `
       const borderCutLine = ({ d, i, xScale, yScale }) => {
@@ -31,7 +34,7 @@ export default class RegionatedLineChartDocs extends React.Component {
 
       const monthNameHash = [ "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" ]
 
-      const degreeDiffFormat = d => ${"`${d > 0 ? '+' : ''}${Math.ceil(d * 100)/ 100}°`"}
+      const degreeDiffFormat = d => ${degreeFormatter}
       const monthNameFormat = d => monthNameHash[d] ? monthNameHash[d] : ""
 
       const lineAnnotater = ({ d, xScale, yScale }) => {
@@ -43,7 +46,7 @@ export default class RegionatedLineChartDocs extends React.Component {
           return d.coincidentPoints.map((p,q) => {
               const lineD = lineRenderer(p.parentLine.data)
               const opacity = opacityScale(p.parentLine.label)
-              return <path key={${"`hover-line-${q}`"}} d={lineD} style={{ fill: "none", stroke: "black", strokeWidth: 3, strokeOpacity: opacity }} />
+              return <path key={${pathKey}} d={lineD} style={{ fill: "none", stroke: "black", strokeWidth: 3, strokeOpacity: opacity }} />
           })
           
       }
@@ -123,4 +126,4 @@ export default class RegionatedLineChartDocs extends React.Component {
   }
 }
 
-RegionatedLineChartDocs.title = "RegionatedLineChart"
+RegionatedLineChartDocs.title = 'RegionatedLineChart'

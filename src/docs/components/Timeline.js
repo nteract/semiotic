@@ -1,19 +1,18 @@
-import React from "react"
-import DocumentComponent from "../layout/DocumentComponent"
-import TimelineRaw from "./TimelineRaw"
-import { answers } from "../sampledata/questions"
+import React from 'react'
+import DocumentComponent from '../layout/DocumentComponent'
+import TimelineRaw from './TimelineRaw'
 
 const components = []
 
 components.push({
-  name: "Timeline"
+  name: 'Timeline'
 })
 
 export default class Timeline extends React.Component {
   render() {
     const examples = []
     examples.push({
-      name: "Basic",
+      name: 'Basic',
       demo: TimelineRaw,
       source: `data = [
   {
@@ -83,4 +82,4 @@ export default class Timeline extends React.Component {
   }
 }
 
-Timeline.title = "Timeline"
+Timeline.title = 'Timeline'

@@ -39,36 +39,29 @@ export default class DividedLineDocs extends React.Component {
       return pointDataSet
     }
 
-    const colors = [
-      "#00a2ce",
-      "#b3331d",
-      "rgb(77, 67, 12)",
-      "rgb(182, 167, 86)"
-    ]
-
     function parameters(point) {
-      if (point.x < 100) {
+      if (point.x < 100)
         return {
           fill: "none",
           stroke: "#b3331d",
           strokeWidth: 6,
           strokeOpacity: 1
         }
-      }
-      if (point.x > 400) {
+
+      if (point.x > 400)
         return {
           fill: "none",
           stroke: "#b3331d",
           strokeWidth: 2,
           strokeDasharray: "5 5"
         }
-      }
-      if (point.y < 150) {
+
+      if (point.y < 150)
         return { fill: "none", strokeWidth: 2, stroke: "#00a2ce" }
-      }
-      if (point.y > 350) {
+
+      if (point.y > 350)
         return { fill: "none", strokeWidth: 2, stroke: "#b6a756" }
-      }
+
       return { fill: "none", stroke: "black", strokeWidth: 1 }
     }
 

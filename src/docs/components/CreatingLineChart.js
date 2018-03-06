@@ -4,13 +4,6 @@ import { scaleTime } from "d3-scale"
 import { curveMonotoneX, curveCardinal } from "d3-shape"
 
 import DocumentComponent from "../layout/DocumentComponent"
-import ProcessViz from "./ProcessViz"
-/*
-  <div>
-    <ProcessViz frameSettings={regionatedLineChart} frameType="XYFrame" />
-    <XYFrame {...regionatedLineChart} />
-  </div>
-*/
 
 const components = []
 const curvedCardinalLine = { type: "line", interpolator: curveCardinal }
@@ -358,7 +351,8 @@ export default class CreatingLineChart extends React.Component {
     super(props)
     this.lineHoverBehavior = this.lineHoverBehavior.bind(this)
     this.state = {
-      hoverPoint: undefined
+      hoverPoint: undefined,
+      brushChart: "stackedpercent"
     }
   }
   lineHoverBehavior(d) {
@@ -366,9 +360,7 @@ export default class CreatingLineChart extends React.Component {
   }
 
   lineAnnotater({ d, xScale, yScale }) {
-    if (!d.type === "hover") {
-      return null
-    }
+    if (!d.type === "hover") return null
 
     return (
       <circle
@@ -727,11 +719,11 @@ export default class CreatingLineChart extends React.Component {
             axes={[
               {
                 orient: "left",
-                tickFormat: d => d / 1000000 + "m"
+                tickFormat: d => `${d / 1000000}m`
               },
               {
                 orient: "bottom",
-                tickFormat: d => d.getMonth() + "/" + d.getDate()
+                tickFormat: d => `${d.getMonth()}/${d.getDate()}`
               }
             ]}
           />
@@ -774,7 +766,7 @@ export default class CreatingLineChart extends React.Component {
             These also expose a percent value in the default tooltip.
           </p>
           <XYFrame
-            title={"stackedpercent"}
+            title={"linepercent"}
             size={[700, 400]}
             lines={movies}
             dataVersion="fixed"
@@ -790,11 +782,11 @@ export default class CreatingLineChart extends React.Component {
             axes={[
               {
                 orient: "left",
-                tickFormat: d => parseInt(d * 100) + "%"
+                tickFormat: d => `${parseInt(d * 100, 10)}%`
               },
               {
                 orient: "bottom",
-                tickFormat: d => d.getMonth() + "/" + d.getDate()
+                tickFormat: d => `${d.getMonth()}/${d.getDate()}`
               }
             ]}
             hoverAnnotation={true}
@@ -815,11 +807,11 @@ export default class CreatingLineChart extends React.Component {
             axes={[
               {
                 orient: "left",
-                tickFormat: d => parseInt(d * 100) + "%"
+                tickFormat: d => `${parseInt(d * 100, 10)}%`
               },
               {
                 orient: "bottom",
-                tickFormat: d => d.getMonth() + "/" + d.getDate()
+                tickFormat: d => `${d.getMonth()}/${d.getDate()}`
               }
             ]}
             hoverAnnotation={true}
@@ -905,11 +897,11 @@ export default class CreatingLineChart extends React.Component {
             axes={[
               {
                 orient: "left",
-                tickFormat: d => d / 1000000 + "m"
+                tickFormat: d => `${d / 1000000}m`
               },
               {
                 orient: "bottom",
-                tickFormat: d => d.getMonth() + "/" + d.getDate()
+                tickFormat: d => `${d.getMonth()}/${d.getDate()}`
               }
             ]}
             hoverAnnotation={true}
@@ -942,6 +934,176 @@ export default class CreatingLineChart extends React.Component {
   ]}
   hoverAnnotation={true}
 />`
+    })
+
+    examples.push({
+      name: "Brush Y Chart",
+      demo: (
+        <div>
+          <p>
+            You can use the built-in "onChange" event in a chart's extent to set
+            the extent of another chart. Pairing this with the "interaction"
+            settings of an XYFrame lets you easily deploy a brushable chart.
+          </p>
+          <button
+            onClick={() =>
+              this.setState({
+                brushChart:
+                  this.state.brushChart === "stackedpercent"
+                    ? "line"
+                    : "stackedpercent"
+              })
+            }
+            style={{ color: "black" }}
+          >
+            Switch to lines
+          </button>
+          <div>
+            <div style={{ display: "inline-block", width: "100px" }}>
+              <XYFrame
+                size={[100, 400]}
+                axes={[
+                  {
+                    orient: "left",
+                    tickFormat:
+                      this.state.brushChart === "stackedpercent"
+                        ? d => d
+                        : d => `${d / 1000000}m`
+                  }
+                ]}
+                interaction={{
+                  end: e => {
+                    this.setState({ extent: e.reverse() })
+                  },
+                  brush: "yBrush",
+                  extent: [this.state.yMax, 0]
+                }}
+                yExtent={[0, this.state.yMax]}
+                margin={{ left: 50, bottom: 50, right: 5, top: 40 }}
+              />
+            </div>
+            <div style={{ display: "inline-block", width: "600px" }}>
+              <XYFrame
+                title={"Two Movies"}
+                size={[600, 400]}
+                lines={movies}
+                xScaleType={scaleTime()}
+                xAccessor={d => new Date(d.date)}
+                yAccessor={"grossWeekly"}
+                yExtent={{
+                  extent: this.state.extent,
+                  onChange: e => this.setState({ yMax: e[1] })
+                }}
+                lineType={{
+                  type: this.state.brushChart,
+                  interpolator: curveMonotoneX
+                }}
+                lineStyle={d => ({
+                  fill: colorHash[d.title],
+                  stroke: colorHash[d.title]
+                })}
+                margin={{ left: 50, bottom: 50, right: 10, top: 40 }}
+                axes={[
+                  {
+                    orient: "left",
+                    tickFormat:
+                      this.state.brushChart === "stackedpercent"
+                        ? d => d
+                        : d => `${d / 1000000}m`
+                  },
+                  {
+                    orient: "bottom",
+                    tickFormat: d => `${d.getMonth()}/${d.getDate()}`,
+                    ticks: 5
+                  }
+                ]}
+                hoverAnnotation={true}
+                matte={true}
+              />
+            </div>
+          </div>
+        </div>
+      ),
+      source: `
+<button
+onClick={() =>
+  this.setState({
+    brushChart:
+      this.state.brushChart === "stackedpercent"
+        ? "line"
+        : "stackedpercent"
+  })
+}
+style={{ color: "black"}}
+>
+Switch to lines
+</button>
+
+<div>
+      <div style={{ display: "inline-block", width: "100px" }}>
+        <XYFrame
+          size={[100, 400]}
+          axes={[
+            {
+              orient: "left",
+              tickFormat:
+                this.state.brushChart === "stackedpercent"
+                  ? d => d
+                  : d => ${"`${d / 1000000}m`"}
+            }
+          ]}
+          interaction={{
+            end: e => {
+              this.setState({ extent: e.reverse() })
+            },
+            brush: "yBrush",
+            extent: [this.state.yMax, 0]
+          }}
+          yExtent={[0, this.state.yMax]}
+          margin={{ left: 50, bottom: 50, right: 5, top: 40 }}
+        />
+      </div>
+      <div style={{ display: "inline-block", width: "600px" }}>
+        <XYFrame
+          title={"Two Movies"}
+          size={[600, 400]}
+          lines={movies}
+          xScaleType={scaleTime()}
+          xAccessor={d => new Date(d.date)}
+          yAccessor={"grossWeekly"}
+          yExtent={{
+            extent: this.state.extent,
+            onChange: e => this.setState({ yMax: e[1] })
+          }}
+          lineType={{
+            type: this.state.brushChart,
+            interpolator: curveMonotoneX
+          }}
+          lineStyle={d => ({
+            fill: colorHash[d.title],
+            stroke: colorHash[d.title]
+          })}
+          margin={{ left: 50, bottom: 50, right: 10, top: 40 }}
+          axes={[
+            {
+              orient: "left",
+              tickFormat:
+                this.state.brushChart === "stackedpercent"
+                  ? d => d
+                  : d => ${"`${d / 1000000}m`"}
+            },
+            {
+              orient: "bottom",
+              tickFormat: d => ${"`${d.getMonth()}/${d.getDate()}`,"}
+              ticks: 5
+            }
+          ]}
+          hoverAnnotation={true}
+          matte={true}
+        />
+      </div>
+    </div>
+    `
     })
 
     return (

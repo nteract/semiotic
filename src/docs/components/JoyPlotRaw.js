@@ -1,29 +1,14 @@
-import React from "react"
-import { OrdinalFrame } from "../../components"
-import probsRaw from "../sampledata/probly"
-import { csvParse } from "d3-dsv"
-import { sum, max } from "d3-array"
-import { curveMonotoneX, curveStep } from "d3-shape"
-import ProcessViz from "./ProcessViz"
+import React from 'react'
+import { OrdinalFrame } from '../../components'
+import probsRaw from '../sampledata/probly'
+import { csvParse } from 'd3-dsv'
+import { curveMonotoneX } from 'd3-shape'
+import ProcessViz from './ProcessViz'
 
 const probsData = csvParse(probsRaw)
 
-const colors = ["#4d430c", "#00a2ce", "#b6a756", "#b3331d"]
+const colors = ['#4d430c', '#00a2ce', '#b6a756', '#b3331d']
 
-const months = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "October",
-  "November",
-  "September",
-  "December"
-]
 const probsPoints = []
 probsData.forEach((d, i) => {
   Object.keys(d).forEach(key => {
@@ -34,9 +19,9 @@ probsData.forEach((d, i) => {
 const joyChartSettings = {
   size: [700, 500],
   data: probsPoints,
-  projection: "horizontal",
+  projection: 'horizontal',
   summaryType: {
-    type: "joy",
+    type: 'joy',
     bins: 10,
     amplitude: 50,
     curve: curveMonotoneX
@@ -44,33 +29,34 @@ const joyChartSettings = {
   },
   summaryStyle: (d, i) => ({
     fill: colors[i % 4],
-    stroke: "black",
+    stroke: 'black',
     strokeWidth: 2,
     fillOpacity: 0.5,
     strokeOpacity: 0.25
   }),
-  oAccessor: "term",
-  rAccessor: "value",
+  oAccessor: 'term',
+  rAccessor: 'value',
   margin: { left: 150, top: 50, bottom: 55, right: 15 },
-  axis: { orient: "bottom", label: "Percent" },
-  oLabel: d => (
-    <text style={{ textAnchor: "end", fill: "grey" }} x={-10} y={5}>
+  axis: { orient: 'bottom', label: 'Percent' },
+  oLabel: d => 
+    (<text style={{ textAnchor: 'end', fill: 'grey' }} x={-10} y={5}>
       {d}
-    </text>
-  )
+    </text>)
+  
 }
 
-export default (
-  <div>
-    <iframe
-      width="560"
-      height="315"
-      src="https://www.youtube.com/embed/LoR7TfIWR2k"
-      frameborder="0"
-      allow="autoplay; encrypted-media"
-      allowfullscreen
-    />
-    <ProcessViz frameSettings={joyChartSettings} frameType="OrdinalFrame" />
-    <OrdinalFrame {...joyChartSettings} />
-  </div>
-)
+export default 
+<div>
+  <iframe
+    title="joy-video"
+    width="560"
+    height="315"
+    src="https://www.youtube.com/embed/LoR7TfIWR2k"
+    frameborder="0"
+    allow="autoplay; encrypted-media"
+    allowfullscreen
+  />
+  <ProcessViz frameSettings={joyChartSettings} frameType="OrdinalFrame" />
+  <OrdinalFrame {...joyChartSettings} />
+</div>
+

@@ -42,7 +42,11 @@ export const renderLaidOutPieces = ({
         renderedPieces.push(
           <Mark
             {...baseMarkProps}
-            key={d.renderKey || `piece-render-${i}`}
+            key={
+              renderKeyFn
+                ? renderKeyFn(d.piece)
+                : d.renderKey || `piece-render-${i}`
+            }
             {...d.renderElement || d}
           />
         )

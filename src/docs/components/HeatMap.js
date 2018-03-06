@@ -1,8 +1,6 @@
 import React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
-import { scaleLinear } from "d3-scale"
 import HeatMapRaw from "./HeatMapRaw"
-import { OrdinalFrame } from "../../components"
 
 const components = []
 

@@ -4,7 +4,7 @@ import { AnnotationCalloutCircle } from "react-annotation"
 import { packEnclose } from "d3-hierarchy"
 import { circleEnclosure, rectangleEnclosure } from "./baseRules"
 
-export const htmlFrameHoverRule = ({ d, i, tooltipContent, size }) => {
+export const htmlFrameHoverRule = ({ d, i, tooltipContent }) => {
   let content = d.edge ? (
     <div className="tooltip-content">
       <p key="html-annotation-content-1">
@@ -24,12 +24,12 @@ export const htmlFrameHoverRule = ({ d, i, tooltipContent, size }) => {
 
   return (
     <div
-      key={"xylabel" + i}
+      key={`xylabel${i}`}
       className={`annotation annotation-network-label ${d.className || ""}`}
       style={{
         position: "absolute",
-        top: d.y + "px",
-        left: d.x + "px"
+        top: `${d.y}px`,
+        left: `${d.x}px`
       }}
     >
       {content}
@@ -97,7 +97,6 @@ export const svgReactAnnotationRule = ({
 
 export const svgEncloseRule = ({
   d,
-  i,
   projectedNodes,
   nodeIDAccessor,
   nodeSizeAccessor

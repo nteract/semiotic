@@ -48,7 +48,7 @@ const customBar = {
   type: "clusterbar",
   customMark: (d, i, xy) => [
     <rect
-      style={{ fill: "#00a2ce" }}
+      style={{ fill: d.funnelKey, stroke: "black" }}
       x={2}
       width={xy.width - 4}
       height={xy.height}
@@ -327,7 +327,9 @@ export default class OrdinalFrameDocs extends React.Component {
       oPadding: "20",
       dataType: "stacked",
       hoverBehavior: "general",
-      example: "basic"
+      example: "basic",
+      oExtent: [],
+      rExtent: []
     }
   }
 
@@ -570,6 +572,8 @@ export default class OrdinalFrameDocs extends React.Component {
           >
             OrdinalFrame API
           </Button>
+          <p>O Extent Values: {this.state.oExtent.join(", ")}</p>
+          <p>R Extent Values: {this.state.rExtent.join(", ")}</p>
           <OrdinalFrame
             size={[700, 700]}
             renderFn={reFn}
@@ -585,7 +589,16 @@ export default class OrdinalFrameDocs extends React.Component {
                 ? undefined
                 : this.state.summaryType
             }
-            rExtent={[0]}
+            rExtent={{
+              onChange: d => {
+                this.setState({ rExtent: d })
+              }
+            }}
+            oExtent={{
+              onChange: d => {
+                this.setState({ oExtent: d })
+              }
+            }}
             summaryStyle={dataTypeHash[this.state.dataType].summaryStyle}
             style={dataTypeHash[this.state.dataType].pieceStyle}
             oLabel={true}
@@ -618,7 +631,7 @@ export default class OrdinalFrameDocs extends React.Component {
             baseMarkProps={{ transitionDuration: 3000 }}
             //            canvasPieces={true}
             //            canvasPostProcess={glowyCanvas}
-            download={false}
+            download={true}
             downloadFields={["funnelKey"]}
           />
         </div>
@@ -650,6 +663,16 @@ export default class OrdinalFrameDocs extends React.Component {
             size={[ 700,700 ]}
             data={data}
             axis={axis}
+            rExtent={{
+              onChange: d => {
+                this.setState({ rExtent: d })
+              }
+            }}
+            oExtent={{
+              onChange: d => {
+                this.setState({ oExtent: d })
+              }
+            }}
             projection={'${this.state.projection}'}
             ${
               this.state.type !== "none"

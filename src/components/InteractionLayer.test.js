@@ -1,0 +1,55 @@
+import React from "react"
+import { mount, shallow } from "enzyme"
+import InteractionLayer from "./InteractionLayer"
+import { scaleLinear } from "d3-scale"
+
+const functionChecks = {
+  xy1: 0
+}
+
+const xyEndFunction = end => {
+  //  console.log("xyend")
+  //  console.log(end)
+}
+
+describe("InteractionLayer", () => {
+  it("renders without crashing", () => {
+    mount(<InteractionLayer />)
+  })
+  const mountedLayerWithOptions = mount(
+    <InteractionLayer
+      margin={{ left: 10, right: 10, top: 10, bottom: 10 }}
+      size={[400, 400]}
+      svgSize={[400, 400]}
+      enabled={true}
+      xScale={scaleLinear()
+        .domain([0, 1000])
+        .range([0, 400])}
+      yScale={scaleLinear()
+        .domain([0, 1200])
+        .range([400, 0])}
+      interaction={{
+        brush: "xyBrush",
+        end: xyEndFunction,
+        during: undefined,
+        start: undefined,
+        extent: [[550, 300], [600, 650]]
+      }}
+    />
+  )
+  it("draws an SVG", () => {
+    expect(mountedLayerWithOptions.find("svg").length).toEqual(1)
+    expect(mountedLayerWithOptions.find("g.brush").length).toEqual(1)
+    expect(mountedLayerWithOptions.find("g.xybrush").length).toEqual(1)
+  })
+  /*
+  looks like d3-selection no workie
+  it("a selection rectangle is drawn of the right shape", () => {
+    expect(mountedLayerWithOptions.find("rect.selection").length).toEqual(5)
+
+    expect(
+      mountedLayerWithOptions.find("rect.selection").props().height
+    ).toEqual(50)
+  })
+  */
+})

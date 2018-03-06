@@ -32,7 +32,7 @@ export const filterDefs = ({ matte, key, additionalDefs }) => (
         result="gooey"
       />
     </filter>
-    <clipPath id={"matte-clip" + key}>{matte}</clipPath>
+    <clipPath id={`matte-clip-${key}`}>{matte}</clipPath>
     {additionalDefs}
   </defs>
 )

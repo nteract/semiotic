@@ -54,12 +54,12 @@ export const rectangleEnclosure = ({ bboxNodes, d, i }) => {
   const { padding = 0 } = d
   const bbox = [
     [
-      Math.min(...bboxNodes.map(d => d.x0)) - padding,
-      Math.min(...bboxNodes.map(d => d.y0)) - padding
+      Math.min(...bboxNodes.map(p => p.x0)) - padding,
+      Math.min(...bboxNodes.map(p => p.y0)) - padding
     ],
     [
-      Math.max(...bboxNodes.map(d => d.x1)) + padding,
-      Math.max(...bboxNodes.map(d => d.y1)) + padding
+      Math.max(...bboxNodes.map(p => p.x1)) + padding,
+      Math.max(...bboxNodes.map(p => p.y1)) + padding
     ]
   ]
 
