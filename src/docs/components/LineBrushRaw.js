@@ -39,6 +39,19 @@ export default (data, startEvent, duringEvent, endEvent, extent) => {
     <div>
       <ProcessViz frameSettings={lineBrushChart} frameType="XYFrame" />
       <XYFrame {...lineBrushChart} />
+      <XYFrame
+        {...lineBrushChart}
+        size={[700, 100]}
+        lines={[
+          {
+            label: "somebrush",
+            coordinates: [
+              { date: new Date("1/1/1997"), close: 0 },
+              { date: new Date("12/31/2003"), close: 0 }
+            ]
+          }
+        ]}
+      />
     </div>
   )
 }

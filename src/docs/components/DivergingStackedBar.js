@@ -1,19 +1,18 @@
-import React from "react"
-import DocumentComponent from "../layout/DocumentComponent"
-import DivergingStackedBarRaw from "./DivergingStackedBarRaw"
-import { answers } from "../sampledata/questions"
+import React from 'react'
+import DocumentComponent from '../layout/DocumentComponent'
+import DivergingStackedBarRaw from './DivergingStackedBarRaw'
 
 const components = []
 
 components.push({
-  name: "Diverging Stacked Bar Chart"
+  name: 'Diverging Stacked Bar Chart'
 })
 
 export default class DivergingStackedBar extends React.Component {
   render() {
     const examples = []
     examples.push({
-      name: "Basic",
+      name: 'Basic',
       demo: DivergingStackedBarRaw,
       source: `const answers = const answers = [
   {"question":"Question 1", "type":"disagree", "color":"#d38779", "value":-294, "percent":-0.09},
@@ -74,4 +73,4 @@ export default <OrdinalFrame
   }
 }
 
-DivergingStackedBar.title = "Diverging Stacked Bar"
+DivergingStackedBar.title = 'Diverging Stacked Bar'

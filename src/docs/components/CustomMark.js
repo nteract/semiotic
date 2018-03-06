@@ -1,28 +1,30 @@
-import React from "react"
-import DocumentComponent from "../layout/DocumentComponent"
-import CustomMarkRaw from "./CustomMarkRaw"
-import { MenuItem } from "material-ui/Menu"
-import Input, { InputLabel } from "material-ui/Input"
-import { FormControl, FormHelperText } from "material-ui/Form"
-import Select from "material-ui/Select"
+import React from 'react'
+import DocumentComponent from '../layout/DocumentComponent'
+import CustomMarkRaw from './CustomMarkRaw'
+import { MenuItem } from 'material-ui/Menu'
+import { InputLabel } from 'material-ui/Input'
+import { FormControl } from 'material-ui/Form'
+import Select from 'material-ui/Select'
 
 const components = []
 
 components.push({
-  name: "Custom Mark"
+  name: 'Custom Mark'
 })
 
-const typeOptions = ["none", "marginalia"].map(d => (
-  <MenuItem key={"type-option-" + d} label={d} value={d}>
+const keyFormatter = '`piece-${key}`'
+
+const typeOptions = ['none', 'marginalia'].map(d => 
+  (<MenuItem key={'type-option-' + d} label={d} value={d}>
     {d}
-  </MenuItem>
-))
+  </MenuItem>)
+)
 
 export default class CustomMark extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      type: "marginalia"
+      type: 'marginalia'
     }
   }
 
@@ -42,7 +44,7 @@ export default class CustomMark extends React.Component {
     ]
 
     examples.push({
-      name: "Basic",
+      name: 'Basic',
       demo: CustomMarkRaw(this.state.type),
       source: `
       const data = [  { name: "Franklin Pierce", birth: 1804, start: 1853, end: 1857, death: 1869 },
@@ -71,7 +73,7 @@ function timeline({ data, rScale, adjustedSize, margin }) {
 
     //You can return an array of graphics or an array of objects with extra data (see the Waterfall chart demo)
     const markObject = (
-      <g key={${"`piece-${key}`"}}>
+      <g key={${keyFormatter}}>
         <rect
           fill="#00a2ce"
           width={preTermWidth}
@@ -162,4 +164,4 @@ function timeline({ data, rScale, adjustedSize, margin }) {
   }
 }
 
-CustomMark.title = "Custom Mark"
+CustomMark.title = 'Custom Mark'

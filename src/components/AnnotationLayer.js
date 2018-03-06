@@ -91,11 +91,9 @@ class AnnotationLayer extends React.Component {
       return adjustableAnnotations
     }
 
-    let {
-      margin = { top: 0, bottom: 0, left: 0, right: 0 },
-      size,
-      axes
-    } = props
+    let { margin = { top: 0, bottom: 0, left: 0, right: 0 } } = props
+
+    const { size, axes = [] } = props
 
     margin =
       typeof margin === "number"
@@ -112,15 +110,15 @@ class AnnotationLayer extends React.Component {
       )
       return adjustedAnnotations
     } else if (annotationProcessor.type === "marginalia") {
-      let { marginOffset } = annotationProcessor
+      const { marginOffset } = annotationProcessor
       const finalOrientation =
         !annotationProcessor.orient || annotationProcessor.orient === "nearest"
           ? ["left", "right", "top", "bottom"]
           : Array.isArray(annotationProcessor.orient)
             ? annotationProcessor.orient
             : [annotationProcessor.orient]
-      let marginOffsetFn = (orient, axes) => {
-        if (axes.find(d => d.props.orient === orient)) {
+      let marginOffsetFn = (orient, axisSettings) => {
+        if (axisSettings && axisSettings.find(d => d.props.orient === orient)) {
           return 50
         }
         return 10
@@ -274,7 +272,7 @@ class AnnotationLayer extends React.Component {
         )
       )
 
-      const nodeOffsetHeight = Math.max()
+      //      const nodeOffsetHeight = Math.max()
 
       const leftSortedNodes = leftForce.nodes()
       const rightSortedNodes = rightForce.nodes()
@@ -332,8 +330,9 @@ class AnnotationLayer extends React.Component {
     let renderedSVGAnnotations = this.state.svgAnnotations,
       renderedHTMLAnnotations = [],
       adjustedAnnotations = this.state.adjustedAnnotations,
-      adjustableAnnotationsKey = this.state.adjustedAnnotationsKey,
-      adjustedAnnotationsKey = this.state.adjustedAnnotationsKey,
+      adjustableAnnotationsKey = this.state.adjustedAnnotationsKey
+
+    const adjustedAnnotationsKey = this.state.adjustedAnnotationsKey,
       adjustedAnnotationsDataVersion = this.state.adjustedAnnotationsDataVersion
 
     const { annotations, annotationHandling = false } = props
@@ -423,7 +422,6 @@ class AnnotationLayer extends React.Component {
 
     let renderedLegend
     if (legendSettings) {
-      const { width = 100 } = legendSettings
       const positionHash = {
         left: [15, 15],
         right: [this.props.size[0] + 15, 15]
@@ -475,8 +473,8 @@ class AnnotationLayer extends React.Component {
               background: "none",
               pointerEvents: "none",
               position: "absolute",
-              height: this.props.size[1] + "px",
-              width: this.props.size[0] + "px",
+              height: `${this.props.size[1]}px`,
+              width: `${this.props.size[0]}px`,
               left: `${margin.left}px`,
               top: `${margin.top}px`
             }}

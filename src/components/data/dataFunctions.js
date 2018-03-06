@@ -13,19 +13,19 @@ import {
   lineChart
 } from "../svg/lineDrawing"
 import { contouring } from "../svg/areaDrawing"
-import { max, min } from "d3-array"
+import { max, min, extent } from "d3-array"
 
 const builtInTransformations = {
-  stackedarea: stackedArea,
+  "stackedarea": stackedArea,
   "stackedarea-invert": stackedArea,
-  stackedpercent: stackedArea,
+  "stackedpercent": stackedArea,
   "stackedpercent-invert": stackedArea,
-  linepercent: stackedArea,
-  difference: differenceLine,
-  bumparea: bumpChart,
-  bumpline: bumpChart,
+  "linepercent": stackedArea,
+  "difference": differenceLine,
+  "bumparea": bumpChart,
+  "bumpline": bumpChart,
   "bumparea-invert": bumpChart,
-  line: lineChart
+  "line": lineChart
 }
 
 export const stringToFn = (accessor, defaultAccessor, raw) => {
@@ -162,71 +162,43 @@ export const calculateDataExtent = ({
     })
   }
 
-  //Handle 'expose points on lines' option now that sending points and lines simultaneously is no longer allowed
   if (showLinePoints) {
-    projectedPoints = fullDataset
+    projectedPoints = fullDataset.map(d => ({
+      ...d,
+      [projectedY]: d[projectedYTop] || d[projectedYBottom] || d.y
+    }))
   }
 
-  function lineTransformation(lineType = { type: "line" }, options) {
-    const differenceCatch = (olineType, data) =>
-      (lineType === "difference" ||
-        (lineType.type && lineType.type === "difference")) &&
-      data.length !== 2
-        ? "line"
-        : olineType
-    if (builtInTransformations[lineType]) {
-      return data =>
-        builtInTransformations[differenceCatch(lineType, data)]({
-          type: lineType,
-          ...options,
-          data
-        })
-    }
+  const calculatedXExtent = extent(fullDataset.map(d => d[projectedX]))
+  const calculatedYExtent = [
+    min(
+      fullDataset.map(
+        d =>
+          d[projectedYBottom] === undefined
+            ? d[projectedY]
+            : Math.min(d[projectedYTop], d[projectedYBottom])
+      )
+    ),
 
-    if (builtInTransformations[lineType.type]) {
-      return data =>
-        builtInTransformations[differenceCatch(lineType.type, data)]({
-          ...lineType,
-          ...options,
-          data
-        })
-    }
+    max(
+      fullDataset.map(
+        d =>
+          d[projectedYTop] === undefined
+            ? d[projectedY]
+            : Math.max(d[projectedYBottom], d[projectedYTop])
+      )
+    )
+  ]
 
-    //otherwise assume a function
-    return data => lineType({ ...options, data })
-  }
+  const xMin =
+    xExtent && xExtent[0] !== undefined ? xExtent[0] : calculatedXExtent[0]
+  const xMax =
+    xExtent && xExtent[1] !== undefined ? xExtent[1] : calculatedXExtent[1]
 
-  let xMin =
-    xExtent && xExtent[0] !== undefined
-      ? xExtent[0]
-      : min(fullDataset.map(d => d[projectedX]))
-  let xMax =
-    xExtent && xExtent[1] !== undefined
-      ? xExtent[1]
-      : max(fullDataset.map(d => d[projectedX]))
-
-  let yMin =
-    yExtent && yExtent[0] !== undefined
-      ? yExtent[0]
-      : min(
-          fullDataset.map(
-            d =>
-              d[projectedYBottom] === undefined
-                ? d[projectedY]
-                : Math.min(d[projectedYTop], d[projectedYBottom])
-          )
-        )
-  let yMax =
-    yExtent && yExtent[1] !== undefined
-      ? yExtent[1]
-      : max(
-          fullDataset.map(
-            d =>
-              d[projectedYTop] === undefined
-                ? d[projectedY]
-                : Math.max(d[projectedYBottom], d[projectedYTop])
-          )
-        )
+  const yMin =
+    yExtent && yExtent[0] !== undefined ? yExtent[0] : calculatedYExtent[0]
+  const yMax =
+    yExtent && yExtent[1] !== undefined ? yExtent[1] : calculatedYExtent[1]
 
   let finalYExtent = [yMin, yMax]
   let finalXExtent = [xMin, xMax]
@@ -272,6 +244,37 @@ export const calculateDataExtent = ({
     projectedLines,
     projectedPoints,
     projectedAreas,
-    fullDataset
+    fullDataset,
+    calculatedXExtent,
+    calculatedYExtent
   }
+}
+
+function lineTransformation(lineType = { type: "line" }, options) {
+  const differenceCatch = (olineType, data) =>
+    (lineType === "difference" ||
+      (lineType.type && lineType.type === "difference")) &&
+    data.length !== 2
+      ? "line"
+      : olineType
+  if (builtInTransformations[lineType]) {
+    return data =>
+      builtInTransformations[differenceCatch(lineType, data)]({
+        type: lineType,
+        ...options,
+        data
+      })
+  }
+
+  if (builtInTransformations[lineType.type]) {
+    return data =>
+      builtInTransformations[differenceCatch(lineType.type, data)]({
+        ...lineType,
+        ...options,
+        data
+      })
+  }
+
+  //otherwise assume a function
+  return data => lineType({ ...options, data })
 }

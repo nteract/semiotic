@@ -61,7 +61,7 @@ export function contouring({ areaType, data, finalXExtent, finalYExtent }) {
   return projectedAreas
 }
 
-function shapeBounds(coordinates) {
+export function shapeBounds(coordinates) {
   let left = [Infinity, 0]
   let right = [-Infinity, 0]
   let top = [0, Infinity]

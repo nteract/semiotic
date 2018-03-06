@@ -27,7 +27,6 @@ export function boxplotRenderFn({
   positionFn = position => position,
   projection,
   adjustedSize,
-  chartSize,
   baseMarkProps
 }) {
   const summaryElementStylingFn = type.elementStyleFn || emptyObjectReturnFn
@@ -338,7 +337,7 @@ export function boxplotRenderFn({
 
       let startAngle = summary.pct_start + summary.pct_padding / 2
       let endAngle = summary.pct + summary.pct_start - summary.pct_padding / 2
-      let midAngle = summary.pct / 2 + summary.pct_start
+      const midAngle = summary.pct / 2 + summary.pct_start
       startAngle *= twoPI
       endAngle *= twoPI
 
@@ -637,9 +636,7 @@ export function contourRenderFn({
   eventListenersGenerator,
   styleFn,
   classFn,
-  projection,
   adjustedSize,
-  chartSize,
   baseMarkProps
 }) {
   const keys = Object.keys(data)
@@ -677,6 +674,7 @@ export function contourRenderFn({
             simpleInterpolate={true}
             key={`${i}-${ii}`}
             style={styleFn(ordset.pieceData[0].data, ordsetI)}
+            className={classFn(ordset.pieceData[0].data, ordsetI)}
             markType={"path"}
             d={`M${d.coordinates[0].map(p => p.join(",")).join("L")}Z`}
           />
@@ -726,7 +724,7 @@ export function bucketizedRenderingFn({
   const renderedSummaryMarks = []
   const summaryXYCoords = []
 
-  let buckets = type.bins || 25
+  const buckets = type.bins || 25
   const relativeBuckets = type.relative ? {} : false
   const summaryValueAccessor = type.binValue || (d => d.length)
   let axisCreator
@@ -763,10 +761,11 @@ export function bucketizedRenderingFn({
     const summaryPositionNest = thisSummaryData.sort(xySorting)
 
     const violinHist = histogram()
-    let binDomain = projection === "vertical" ? [0, chartSize] : [0, chartSize]
+    const binDomain =
+      projection === "vertical" ? [0, chartSize] : [0, chartSize]
 
     const binOffset = 0
-    let binBuckets = []
+    const binBuckets = []
 
     for (let x = 0; x < buckets; x++) {
       binBuckets.push(binDomain[0] + x / buckets * (chartSize - binOffset))
@@ -778,10 +777,10 @@ export function bucketizedRenderingFn({
         ? p => p.piece.scaledVerticalValue
         : p => p.piece.scaledValue
 
-    let calculatedBins
+    let keyBins
     if (type.useBins === false) {
       const calculatedValues = summaryPositionNest.map(value => xyValue(value))
-      calculatedBins = summaryPositionNest
+      keyBins = summaryPositionNest
         .map((value, i) => {
           const bucketArray = []
           bucketArray.x0 = calculatedValues[i] - 1
@@ -792,32 +791,32 @@ export function bucketizedRenderingFn({
         .sort((a, b) => a.x0 - b.x0)
       bucketSize = 2
     } else {
-      calculatedBins = violinHist
+      keyBins = violinHist
         .domain(binDomain)
         .thresholds(binBuckets)
         .value(xyValue)(summaryPositionNest)
     }
 
-    calculatedBins = calculatedBins.map(d => ({
+    keyBins = keyBins.map(d => ({
       y: d.x0,
       y1: d.x1 - d.x0,
       pieces: d,
-      value: summaryValueAccessor(d.map(p => p.piece))
+      value: summaryValueAccessor(d.map(p => p.piece.data))
     }))
 
     if (type.type === "histogram" || type.type === "heatmap") {
-      calculatedBins = calculatedBins.filter(d => d.value !== 0)
+      keyBins = keyBins.filter(d => d.value !== 0)
     }
 
     const relativeMax =
-      calculatedBins.length === 0 ? 0 : max(calculatedBins.map(d => d.value))
+      keyBins.length === 0 ? 0 : max(keyBins.map(d => d.value))
     if (relativeBuckets) {
       relativeBuckets[key] = relativeMax
     }
 
     binMax = Math.max(binMax, relativeMax)
 
-    return { bins: calculatedBins, summary, summaryI, thisSummaryData }
+    return { bins: keyBins, summary, summaryI, thisSummaryData }
   })
   calculatedBins.forEach(({ bins, summary, summaryI, thisSummaryData }) => {
     const eventListeners = eventListenersGenerator(summary, summaryI)
@@ -1047,7 +1046,7 @@ export function bucketizedRenderingFn({
         .x(d => d.x)
         .y(d => d.y)
 
-      let joyHeight = type.amplitude || 0
+      const joyHeight = type.amplitude || 0
 
       if (projection === "horizontal") {
         joyBins.forEach((summaryPoint, i) => {

@@ -113,7 +113,7 @@ export function axisPieces({
   })
 }
 
-export const axisLabels = ({ axisParts, orient, tickFormat, rotate = 0 }) => {
+export const axisLabels = ({ axisParts, tickFormat, rotate = 0 }) => {
   return axisParts.map((axisPart, i) => {
     let renderedValue = tickFormat(axisPart.value)
     if (typeof renderedValue !== "object" || renderedValue instanceof Date) {

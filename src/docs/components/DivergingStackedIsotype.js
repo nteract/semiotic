@@ -1,19 +1,18 @@
-import React from "react"
-import DocumentComponent from "../layout/DocumentComponent"
-import DivergingStackedIsotypeRaw from "./DivergingStackedIsotypeRaw"
-import { answers } from "../sampledata/questions"
+import React from 'react'
+import DocumentComponent from '../layout/DocumentComponent'
+import DivergingStackedIsotypeRaw from './DivergingStackedIsotypeRaw'
 
 const components = []
 
 components.push({
-  name: "ISOTYPE Chart"
+  name: 'ISOTYPE Chart'
 })
 
 export default class DivergingStackedBar extends React.Component {
   render() {
     const examples = []
     examples.push({
-      name: "Basic",
+      name: 'Basic',
       demo: DivergingStackedIsotypeRaw,
       source: `import React from "react";
 import { answers } from "../sampledata/questions";
@@ -66,4 +65,4 @@ export default (
   }
 }
 
-DivergingStackedBar.title = "ISOTYPE Chart"
+DivergingStackedBar.title = 'ISOTYPE Chart'

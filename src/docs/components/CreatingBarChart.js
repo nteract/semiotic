@@ -2,13 +2,6 @@ import React from "react"
 import { OrdinalFrame } from "../../components"
 
 import DocumentComponent from "../layout/DocumentComponent"
-import ProcessViz from "./ProcessViz"
-/*
-  <div>
-    <ProcessViz frameSettings={regionatedLineChart} frameType="XYFrame" />
-    <XYFrame {...regionatedLineChart} />
-  </div>
-*/
 
 const components = []
 // Add your component proptype data here
@@ -46,6 +39,7 @@ const stackedBarStyle = d => ({ fill: colorHash[d.action], stroke: "white" })
 const stackedBarLabel = d => (
   <text transform="translate(-15,0)rotate(45)">{d}</text>
 )
+
 const stackedBarAxis = {
   orient: "left",
   label: "Tweets + Favorites + Retweets"
@@ -69,9 +63,7 @@ export default class CreatingBarChart extends React.Component {
   }
 
   barAnnotator({ d, i, categories }) {
-    if (d.type !== "hover") {
-      return null
-    }
+    if (d.type !== "hover") return null
 
     return (
       <rect
@@ -292,6 +284,7 @@ export default class CreatingBarChart extends React.Component {
 
     return (
       <DocumentComponent
+        tabIndex={0}
         name="Creating a Bar Chart"
         components={components}
         examples={examples}

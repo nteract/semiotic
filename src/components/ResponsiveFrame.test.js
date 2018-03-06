@@ -1,8 +1,6 @@
 import React from "react"
-import { mount, shallow } from "enzyme"
+import { mount /*, shallow*/ } from "enzyme"
 import * as ResponsiveFrameComponents from "./ResponsiveFrame"
-import injectTapEventPlugin from "react-tap-event-plugin"
-injectTapEventPlugin()
 
 /* 
 export const ResponsiveXYFrame = createResponsiveFrame(XYFrame);
@@ -15,18 +13,16 @@ export const ResponsiveMinimapXYFrame = createResponsiveFrame(MinimapXYFrame);
 describe("ResponsiveFrameComponents", () => {
   Object.keys(ResponsiveFrameComponents).forEach(componentName => {
     const ResponsiveFrameComponent = ResponsiveFrameComponents[componentName]
-
-    const mounted = mount(
-      <ResponsiveFrameComponent
-        dataVersion={"foo"}
-        disableContext={true}
-        responsiveHeight={true}
-        responsiveWidth={true}
-      />
-    )
-
+    let mounted
     it("renders", () => {
-      mounted
+      mounted = mount(
+        <ResponsiveFrameComponent
+          dataVersion={"foo"}
+          disableContext={true}
+          responsiveHeight={true}
+          responsiveWidth={true}
+        />
+      )
     })
 
     it("the frame have a responsive container classed div", () => {

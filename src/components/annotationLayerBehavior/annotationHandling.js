@@ -1,5 +1,3 @@
-import { forceSimulation, forceX, forceY, forceCollide } from "d3-force"
-
 import labeler from "./d3labeler"
 
 const basicPointSizeFunction = () => {
@@ -22,7 +20,7 @@ const basicLabelSizeFunction = (
 }
 
 export function bumpAnnotations(adjustableNotes, props, processor) {
-  let {
+  const {
     size,
     pointSizeFunction: propsPointSizeFunction,
     labelSizeFunction: propsLabelSizeFunction
@@ -78,9 +76,7 @@ export function bumpAnnotations(adjustableNotes, props, processor) {
     originalNote: d
   }))
 
-  const labelsAndPoints = [...labels, ...points]
-
-  const newLabels = labeler()
+  labeler()
     .label(labels)
     .anchor(points)
     .width(size[0])
@@ -98,7 +94,7 @@ export function bumpAnnotations(adjustableNotes, props, processor) {
   return adjustableNotes
 }
 
-function adjustedXY(note, calculated, padding) {
+function adjustedXY(note, calculated /*, padding*/) {
   if (note.y > calculated.y) {
     //below
     return [

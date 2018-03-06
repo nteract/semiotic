@@ -5,6 +5,23 @@ import { select } from "d3-selection"
 
 import PropTypes from "prop-types"
 
+const flatten = list =>
+  list.reduce((a, b) => a.concat(Array.isArray(b) ? flatten(b) : b), [])
+
+function flatShortArray(array) {
+  if (!Array.isArray(array)) return "not-array"
+  const flat = flatten(array)
+  const stringifiedFlattened = flat
+    .map(
+      d =>
+        (d instanceof Date && d.toString()) ||
+        (d && d.toFixed && d.toFixed(2)) ||
+        "empty"
+    )
+    .toString()
+  return stringifiedFlattened
+}
+
 class Brush extends React.Component {
   constructor(props) {
     super(props)
@@ -17,20 +34,24 @@ class Brush extends React.Component {
   }
   componentDidUpdate(lastProps) {
     if (
-      (lastProps.selectedExtent &&
+      (lastProps.extent &&
+        this.props.extent &&
+        flatShortArray(lastProps.extent) !==
+          flatShortArray(this.props.extent)) ||
+      ((lastProps.selectedExtent &&
         this.props.selectedExtent &&
-        lastProps.selectedExtent.toString() !==
-          this.props.selectedExtent.toString()) ||
-      (!lastProps.selectedExtent && this.props.selectedExtent) ||
-      (lastProps.selectedExtent && !this.props.selectedExtent)
+        flatShortArray(lastProps.selectedExtent) !==
+          flatShortArray(this.props.selectedExtent)) ||
+        (!lastProps.selectedExtent && this.props.selectedExtent) ||
+        (lastProps.selectedExtent && !this.props.selectedExtent))
     ) {
       this.createBrush()
     }
   }
 
   createBrush() {
-    let node = this.node
-    let brush = this.props.svgBrush
+    const node = this.node
+    const brush = this.props.svgBrush
     select(node).call(brush)
     if (this.props.selectedExtent) {
       select(node).call(brush.move, this.props.selectedExtent)
@@ -41,7 +62,7 @@ class Brush extends React.Component {
     return (
       <g
         ref={node => (this.node = node)}
-        transform={"translate(" + (this.props.position || [0, 0]) + ")"}
+        transform={`translate(${this.props.position || [0, 0]})`}
         className="xybrush"
       />
     )

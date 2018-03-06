@@ -1,37 +1,15 @@
-import React from "react"
-import DocumentComponent from "../layout/DocumentComponent"
-import { NetworkFrame } from "../../components"
-import ChordRaw from "./ChordRaw"
-import Select from "material-ui/Select"
-import { MenuItem } from "material-ui/Menu"
-import Input, { InputLabel } from "material-ui/Input"
-import { FormControl, FormHelperText } from "material-ui/Form"
-
-const dematrixifiedEdges = [
-  { source: "a", target: "a", value: 11975 },
-  { source: "a", target: "b", value: 5871 },
-  { source: "a", target: "c", value: 8916 },
-  { source: "a", target: "d", value: 2868 },
-  { source: "b", target: "a", value: 1951 },
-  { source: "b", target: "b", value: 10048 },
-  { source: "b", target: "c", value: 2060 },
-  { source: "b", target: "d", value: 6171 },
-  { source: "c", target: "a", value: 8010 },
-  { source: "c", target: "b", value: 16145 },
-  { source: "c", target: "c", value: 8090 },
-  { source: "c", target: "d", value: 8045 },
-  { source: "d", target: "a", value: 1013 },
-  { source: "d", target: "b", value: 990 },
-  { source: "d", target: "c", value: 940 },
-  { source: "d", target: "d", value: 6907 }
-]
+import React from 'react'
+import DocumentComponent from '../layout/DocumentComponent'
+import ChordRaw from './ChordRaw'
+import Select from 'material-ui/Select'
+import { MenuItem } from 'material-ui/Menu'
+import { InputLabel } from 'material-ui/Input'
+import { FormControl } from 'material-ui/Form'
 
 const components = []
 
-const originalChordColors = ["#000000", "#FFDD89", "#957244", "#F26223"]
-
 components.push({
-  name: "Chord"
+  name: 'Chord'
 })
 
 export default class Chord extends React.Component {
@@ -39,16 +17,16 @@ export default class Chord extends React.Component {
     super(props)
 
     this.state = {
-      padAngle: "0.01"
+      padAngle: '0.01'
     }
   }
 
   render() {
-    const padAngleOptions = ["0.01", "0", "0.2", "0.4"].map(d => (
-      <MenuItem key={"pad-option-" + d} label={d} value={d}>
+    const padAngleOptions = ['0.01', '0', '0.2', '0.4'].map(d => 
+      (<MenuItem key={'pad-option-' + d} label={d} value={d}>
         {d}
-      </MenuItem>
-    ))
+      </MenuItem>)
+    )
 
     const buttons = [
       <FormControl key="button-1-0-0">
@@ -64,7 +42,7 @@ export default class Chord extends React.Component {
 
     const examples = []
     examples.push({
-      name: "Basic",
+      name: 'Basic',
       demo: ChordRaw({ padAngle: parseFloat(this.state.padAngle) }),
       source: `
 const dematrixifiedEdges = [
@@ -137,4 +115,4 @@ const colors = [
   }
 }
 
-Chord.title = "Chord"
+Chord.title = 'Chord'

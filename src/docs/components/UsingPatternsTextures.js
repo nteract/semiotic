@@ -1,9 +1,7 @@
 import React from "react"
 import { OrdinalFrame } from "../../components"
-import { sum } from "d3-array"
 
 import DocumentComponent from "../layout/DocumentComponent"
-import ProcessViz from "./ProcessViz"
 
 import { PatternWaves } from "@vx/pattern"
 
@@ -60,13 +58,6 @@ const waves = (
 
 const components = []
 
-const colorHash = {
-  a: "#00a2ce",
-  b: "#4d430c",
-  c: "#b3331d",
-  d: "#b6a756"
-}
-
 components.push({
   name: "Using Patterns and Textures"
 })
@@ -79,6 +70,7 @@ export default class UsingPatternsTextures extends React.Component {
       demo: (
         <div>
           <iframe
+          title="patterns-textures-video"
             width="560"
             height="315"
             src="https://www.youtube.com/embed/8A5P3p74pcQ"
