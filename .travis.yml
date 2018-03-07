@@ -1,0 +1,16 @@
+language: node_js
+
+node_js:
+  - "lts/*"
+  - "8"
+
+install:
+  - npm install
+
+script:
+  # - npm run lint  # disabled in current semiotic
+  - npm run test
+
+cache:
+  directories:
+    - "node_modules"
