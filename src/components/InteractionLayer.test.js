@@ -1,15 +1,11 @@
 import React from "react"
-import { mount, shallow } from "enzyme"
+import { mount } from "enzyme"
 import InteractionLayer from "./InteractionLayer"
 import { scaleLinear } from "d3-scale"
 
-const functionChecks = {
-  xy1: 0
-}
-
 const xyEndFunction = end => {
   //  console.log("xyend")
-  //  console.log(end)
+  console.log(end)
 }
 
 describe("InteractionLayer", () => {

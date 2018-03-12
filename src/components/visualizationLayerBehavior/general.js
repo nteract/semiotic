@@ -286,8 +286,7 @@ export function createAreas({
   renderKeyFn,
   renderMode,
   baseMarkProps,
-  customMark,
-  type
+  customMark
 }) {
   const areaClass = classFn || (() => "")
   const areaStyle = styleFn || (() => ({}))
@@ -315,9 +314,9 @@ export function createAreas({
         })
       })
     } else if (customMark) {
-      const projectedCoordinates = d._xyfCoordinates.map(d => [
-        xScale(d[0]),
-        yScale(d[1])
+      const projectedCoordinates = d._xyfCoordinates.map(p => [
+        xScale(p[0]),
+        yScale(p[1])
       ])
       drawD = customMark({
         d,

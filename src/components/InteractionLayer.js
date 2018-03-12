@@ -1,6 +1,6 @@
 import React from "react"
 import { brushX, brushY, brush } from "d3-brush"
-import { extent } from "d3-array"
+import { extent as d3Extent } from "d3-array"
 import { event } from "d3-selection"
 import { voronoi } from "d3-voronoi"
 import { Mark } from "semiotic-mark"
@@ -214,8 +214,8 @@ class InteractionLayer extends React.Component {
         }
       })
 
-      const voronoiXExtent = extent(voronoiDataset.map(d => d.voronoiX))
-      const voronoiYExtent = extent(voronoiDataset.map(d => d.voronoiY))
+      const voronoiXExtent = d3Extent(voronoiDataset.map(d => d.voronoiX))
+      const voronoiYExtent = d3Extent(voronoiDataset.map(d => d.voronoiY))
 
       const voronoiExtent = [
         [
