@@ -317,7 +317,7 @@ export default class OrdinalFrameDocs extends React.Component {
     super(props)
     this.state = {
       projection: "vertical",
-      type: "bar",
+      type: "point",
       summaryType: "none",
       dynamicColumnWidth: "fixed",
       rAccessor: "relative",

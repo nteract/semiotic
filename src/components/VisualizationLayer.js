@@ -19,14 +19,17 @@ class VisualizationLayer extends React.PureComponent {
   constructor(props) {
     super(props)
     this.updateVisualizationLayer = this.updateVisualizationLayer.bind(this)
+    this.handleKeyDown = this.handleKeyDown.bind(this)
   }
 
-  canvasDrawing = []
+  piecesGroup = {}
 
   state = {
     canvasDrawing: [],
     dataVersion: "",
-    renderedElements: []
+    renderedElements: [],
+    focusedPieceIndex: null,
+    focusedVisualizationGroup: null
   }
 
   componentDidUpdate() {
@@ -124,6 +127,24 @@ class VisualizationLayer extends React.PureComponent {
     } else if (typeof this.props.canvasPostProcess === "function") {
       this.props.canvasPostProcess(this.props.canvasContext, context, size)
     }
+
+    if (
+      this.piecesGroup[this.state.focusedVisualizationGroup] &&
+      this.state.focusedPieceIndex !== null
+    ) {
+      const focusElParent = this.piecesGroup[
+        this.state.focusedVisualizationGroup
+      ][this.state.focusedPieceIndex]
+
+      const focusEl =
+        (focusElParent &&
+          [...focusElParent.childNodes].find(child =>
+            child.getAttribute("aria-label")
+          )) ||
+        focusElParent
+
+      focusEl && focusEl.focus()
+    }
   }
 
   updateVisualizationLayer(props) {
@@ -154,13 +175,34 @@ class VisualizationLayer extends React.PureComponent {
           canvasDrawing,
           projectedCoordinateNames,
           renderKeyFn,
-          baseMarkProps,
+          baseMarkProps: Object.assign(baseMarkProps, {
+            "aria-label":
+              (pipe.ariaLabel && pipe.ariaLabel.items) || "dataviz-element",
+            "role": "img",
+            "tabindex": -1
+          }),
           ...pipe
         })
 
         if (renderedPipe && renderedPipe.length > 0) {
           renderedElements.push(
-            <g key={k} className={k}>
+            <g
+              key={k}
+              className={k}
+              role={"group"}
+              tabindex={0}
+              aria-label={
+                (pipe.ariaLabel &&
+                  `${renderedPipe.length} ${pipe.ariaLabel.items}s in a ${
+                    pipe.ariaLabel.chart
+                  }`) ||
+                k
+              }
+              onKeyDown={e => this.handleKeyDown(e, k)}
+              ref={thisNode =>
+                thisNode && (this.piecesGroup[k] = thisNode.childNodes)
+              }
+            >
               {renderedPipe}
             </g>
           )
@@ -176,6 +218,7 @@ class VisualizationLayer extends React.PureComponent {
   componentWillMount() {
     this.updateVisualizationLayer(this.props)
   }
+
   componentWillReceiveProps(np) {
     const lp = this.props
     const propKeys = Object.keys(np)
@@ -195,6 +238,36 @@ class VisualizationLayer extends React.PureComponent {
     }
   }
 
+  handleKeyDown(e, vizgroup) {
+    // If enter, focus on the first element
+    const pushed = e.keyCode
+    if (pushed !== 37 && pushed !== 39 && pushed !== 13) return
+
+    let newPieceIndex
+    const vizGroupSetting = {}
+
+    // If a user pressed enter, highlight the first one
+    // Let a user move up and down in stacked bar by getting keys of bars?
+    if (this.state.focusedPieceIndex === null || pushed === 13) {
+      newPieceIndex = 0
+      vizGroupSetting.focusedVisualizationGroup = vizgroup
+    } else if (pushed === 37) {
+      newPieceIndex = this.state.focusedPieceIndex - 1
+    } else if (pushed === 39) {
+      newPieceIndex = this.state.focusedPieceIndex + 1
+    }
+
+    newPieceIndex =
+      newPieceIndex < 0
+        ? this.piecesGroup[vizgroup].length + newPieceIndex
+        : newPieceIndex % this.piecesGroup[vizgroup].length
+
+    this.setState({
+      focusedPieceIndex: newPieceIndex,
+      ...vizGroupSetting
+    })
+  }
+
   render() {
     const props = this.props
     const { matte, matteClip, axes, axesTickLines, frameKey, margin } = props
@@ -211,24 +284,32 @@ class VisualizationLayer extends React.PureComponent {
         {axesTickLines}
       </g>
     )
+    let ariaLabel = ""
+    const title = this.props.title
+      ? `titled ${this.props.title.children}`
+      : "with no title"
+    ariaLabel = `Visualization ${title}. Use arrow keys to navigate elements.`
+
     const renderedDataVisualization =
       ((renderedAxes ||
         renderedAxesTickLines ||
         (renderedElements && renderedElements.length > 0)) && (
-          <g
-            className="data-visualization"
-            key="visualization-clip-path"
-            clipPath={
-              matteClip && matte ? `url(#matte-clip${frameKey})` : undefined
-            }
-            transform={`translate(${margin.left},${margin.top})`}
-          >
-            {renderedAxesTickLines}
-            {renderedElements}
-            {matte}
-            {renderedAxes}
-          </g>
-        )) ||
+        <g
+          className="data-visualization"
+          key="visualization-clip-path"
+          aria-label={ariaLabel}
+          role="group"
+          clipPath={
+            matteClip && matte ? `url(#matte-clip${frameKey})` : undefined
+          }
+          transform={`translate(${margin.left},${margin.top})`}
+        >
+          {renderedAxesTickLines}
+          {renderedElements}
+          {matte}
+          {renderedAxes}
+        </g>
+      )) ||
       null
 
     return renderedDataVisualization

@@ -1,52 +1,53 @@
-import React from 'react'
-import { OrdinalFrame } from '../../components'
+import React from "react"
+import { OrdinalFrame } from "../../components"
 
-import DocumentComponent from '../layout/DocumentComponent'
+import DocumentComponent from "../layout/DocumentComponent"
 
 const components = []
 // Add your component proptype data here
 // multiple component proptype documentation supported
 const barChartData = [
-  { user: 'Jason', tweets: 10, retweets: 5, favorites: 15 },
-  { user: 'Susie', tweets: 5, retweets: 100, favorites: 100 },
-  { user: 'Matt', tweets: 20, retweets: 25, favorites: 50 },
-  { user: 'Betty', tweets: 30, retweets: 20, favorites: 10 }
+  { user: "Jason", tweets: 10, retweets: 5, favorites: 15 },
+  { user: "Susie", tweets: 5, retweets: 100, favorites: 100 },
+  { user: "Matt", tweets: 20, retweets: 25, favorites: 50 },
+  { user: "Betty", tweets: 30, retweets: 20, favorites: 10 }
 ]
 
 const inflatedBarChartData = [
-  { user: 'Jason', action: 'tweets', value: 10 },
-  { user: 'Susie', action: 'tweets', value: 5 },
-  { user: 'Matt', action: 'tweets', value: 20 },
-  { user: 'Betty', action: 'tweets', value: 30 },
-  { user: 'Jason', action: 'retweets', value: 5 },
-  { user: 'Susie', action: 'retweets', value: 100 },
-  { user: 'Matt', action: 'retweets', value: 25 },
-  { user: 'Betty', action: 'retweets', value: 20 },
-  { user: 'Jason', action: 'favorites', value: 15 },
-  { user: 'Susie', action: 'favorites', value: 100 },
-  { user: 'Matt', action: 'favorites', value: 50 },
-  { user: 'Betty', action: 'favorites', value: 10 }
+  { user: "Jason", action: "tweets", value: 10 },
+  { user: "Susie", action: "tweets", value: 5 },
+  { user: "Matt", action: "tweets", value: 20 },
+  { user: "Betty", action: "tweets", value: 30 },
+  { user: "Jason", action: "retweets", value: 5 },
+  { user: "Susie", action: "retweets", value: 100 },
+  { user: "Matt", action: "retweets", value: 25 },
+  { user: "Betty", action: "retweets", value: 20 },
+  { user: "Jason", action: "favorites", value: 15 },
+  { user: "Susie", action: "favorites", value: 100 },
+  { user: "Matt", action: "favorites", value: 50 },
+  { user: "Betty", action: "favorites", value: 10 }
 ]
 
 const colorHash = {
-  tweets: '#4d430c',
-  retweets: '#b3331d',
-  favorites: '#b6a756'
+  tweets: "#4d430c",
+  retweets: "#b3331d",
+  favorites: "#b6a756"
 }
 
 const barSize = [300, 500]
-const stackedBarStyle = d => ({ fill: colorHash[d.action], stroke: 'white' })
-const stackedBarLabel = d => 
+const stackedBarStyle = d => ({ fill: colorHash[d.action], stroke: "white" })
+const stackedBarLabel = d => (
   <text transform="translate(-15,0)rotate(45)">{d}</text>
+)
 
 const stackedBarAxis = {
-  orient: 'left',
-  label: 'Tweets + Favorites + Retweets'
+  orient: "left",
+  label: "Tweets + Favorites + Retweets"
 }
 const stackedBarMargin = { left: 70, bottom: 50, right: 5, top: 5 }
 
 components.push({
-  name: 'Creating a Bar Chart'
+  name: "Creating a Bar Chart"
 })
 
 export default class CreatingBarChart extends React.Component {
@@ -62,9 +63,7 @@ export default class CreatingBarChart extends React.Component {
   }
 
   barAnnotator({ d, i, categories }) {
-    if (d.type !== 'hover') 
-      return null
-    
+    if (d.type !== "hover") return null
 
     return (
       <rect
@@ -73,7 +72,7 @@ export default class CreatingBarChart extends React.Component {
         y={d.y}
         height={d.scaledValue}
         width={categories[d.user].width}
-        style={{ fill: 'none', stroke: '#00a2ce', strokeWidth: 5 }}
+        style={{ fill: "none", stroke: "#00a2ce", strokeWidth: 5 }}
       />
     )
   }
@@ -81,8 +80,8 @@ export default class CreatingBarChart extends React.Component {
   render() {
     const examples = []
     examples.push({
-      name: 'Data',
-      demo: 
+      name: "Data",
+      demo: (
         <div>
           <p>
             OrdinalFrame operates on an array of data referred to in the API as
@@ -91,7 +90,8 @@ export default class CreatingBarChart extends React.Component {
             visualizations of the patterns of the data.
           </p>
           <p>This is the dataset we'll be using in our examples:</p>
-        </div>,      
+        </div>
+      ),
       source: `const barChartData = [
   { user: "Jason", tweets: 10, retweets: 5, favorites: 15 },
   { user: "Susie", tweets: 5, retweets: 100, favorites: 100 },
@@ -101,8 +101,8 @@ export default class CreatingBarChart extends React.Component {
     })
 
     examples.push({
-      name: 'Simple',
-      demo: 
+      name: "Simple",
+      demo: (
         <div>
           <p>
             To get a bar chart of that data, pass it to the data property of
@@ -116,13 +116,14 @@ export default class CreatingBarChart extends React.Component {
           <OrdinalFrame
             size={[300, 500]}
             data={barChartData}
-            oAccessor={'user'}
-            rAccessor={'tweets'}
-            style={{ fill: '#00a2ce', stroke: 'white' }}
-            type={'bar'}
+            oAccessor={"user"}
+            rAccessor={"tweets"}
+            style={{ fill: "#00a2ce", stroke: "white" }}
+            type={"bar"}
             oLabel={true}
           />
-        </div>,      
+        </div>
+      ),
       source: `<OrdinalFrame
             size={[300, 500]}
             data={barChartData}
@@ -135,8 +136,8 @@ export default class CreatingBarChart extends React.Component {
     })
 
     examples.push({
-      name: 'Complex',
-      demo: 
+      name: "Complex",
+      demo: (
         <div>
           <p>
             The rAccessor can be a simple string or it can be a function that
@@ -146,21 +147,22 @@ export default class CreatingBarChart extends React.Component {
             and add some padding (oPadding).
           </p>
           <OrdinalFrame
-            title={'A Bar Chart'}
+            title={"A Bar Chart"}
             size={[300, 500]}
             data={barChartData}
-            oAccessor={'user'}
+            oAccessor={"user"}
             rAccessor={d => d.retweets + d.favorites}
-            style={{ fill: '#00a2ce', stroke: 'white' }}
-            type={'bar'}
-            oLabel={d => 
+            style={{ fill: "#00a2ce", stroke: "white" }}
+            type={"bar"}
+            oLabel={d => (
               <text transform="translate(-15,0)rotate(45)">{d}</text>
-            }
-            axis={{ orient: 'left', label: 'Favorites + Retweets' }}
+            )}
+            axis={{ orient: "left", label: "Favorites + Retweets" }}
             margin={{ left: 70, bottom: 50, right: 5, top: 55 }}
             oPadding={5}
           />
-        </div>,      
+        </div>
+      ),
       source: `<OrdinalFrame
             title={"A Bar Chart"}
             size={[300, 500]}
@@ -179,8 +181,8 @@ export default class CreatingBarChart extends React.Component {
     })
 
     examples.push({
-      name: 'Stacked Data',
-      demo: 
+      name: "Stacked Data",
+      demo: (
         <div>
           <p>
             Because of the way OrdinalFrame models information, it can be useful
@@ -189,7 +191,8 @@ export default class CreatingBarChart extends React.Component {
             So, for instance, we could take the original dataset and make it a
             bit more verbose to make a stacked chart.
           </p>
-        </div>,      
+        </div>
+      ),
       source: `const inflatedBarChartData = [
   { user: "Jason", type: "tweets", value: 10 },
   { user: "Susie", type: "tweets", value: 5 },
@@ -207,8 +210,8 @@ export default class CreatingBarChart extends React.Component {
     })
 
     examples.push({
-      name: 'Stacked Bar Chart',
-      demo: 
+      name: "Stacked Bar Chart",
+      demo: (
         <div>
           <p>
             With that data, we just need to figure out a way to color each
@@ -228,10 +231,10 @@ export default class CreatingBarChart extends React.Component {
           <OrdinalFrame
             size={barSize}
             data={inflatedBarChartData}
-            oAccessor={'user'}
-            rAccessor={'value'}
+            oAccessor={"user"}
+            rAccessor={"value"}
             style={stackedBarStyle}
-            type={'bar'}
+            type={"bar"}
             oLabel={stackedBarLabel}
             axis={stackedBarAxis}
             margin={stackedBarMargin}
@@ -240,22 +243,23 @@ export default class CreatingBarChart extends React.Component {
             customHoverBehavior={this.lineHoverBehavior}
             annotations={
               this.state.hoverPoint
-                ? [Object.assign({}, this.state.hoverPoint, { type: 'hover' })]
+                ? [Object.assign({}, this.state.hoverPoint, { type: "hover" })]
                 : [
-                  {
-                    type: 'react-annotation',
-                    action: 'retweets',
-                    user: 'Matt',
-                    label: 'Testing a relative value annotation',
-                    dx: 100,
-                    dy: -50
-                  }
-                ]
+                    {
+                      type: "react-annotation",
+                      action: "retweets",
+                      user: "Matt",
+                      label: "Testing a relative value annotation",
+                      dx: 100,
+                      dy: -50
+                    }
+                  ]
             }
             svgAnnotationRules={this.barAnnotator}
             pieceIDAccessor="action"
           />
-        </div>,      
+        </div>
+      ),
       source: `const colorHash = {
   tweets: "#4d430c",
   retweets: "#b3331d",
@@ -294,4 +298,4 @@ export default class CreatingBarChart extends React.Component {
   }
 }
 
-CreatingBarChart.title = 'Creating a Bar Chart'
+CreatingBarChart.title = "Creating a Bar Chart"
