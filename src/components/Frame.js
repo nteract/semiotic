@@ -171,8 +171,6 @@ class Frame extends React.Component {
               style={{ position: "absolute" }}
               width={size[0]}
               height={size[1]}
-              tabIndex={1}
-              role="group"
             >
               {finalFilterDefs}
               {backgroundGraphics && (

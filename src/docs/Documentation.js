@@ -347,7 +347,6 @@ class Documentation extends React.Component {
             </div>
           </Drawer>
           <main
-            tabIndex={0}
             className={classNames(
               classes.content,
               this.state.open && classes.contentShift

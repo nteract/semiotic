@@ -89,9 +89,9 @@
     "react-dom": "^15.0.0 || ^16.0.0"
   },
   "dependencies": {
+    "@mapbox/polylabel": "1.0.2",
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-runtime": "6.26.0",
-    "@mapbox/polylabel": "1.0.2",
     "d3-array": "1.2.0",
     "d3-bboxCollide": "1.0.3",
     "d3-brush": "1.0.4",
@@ -111,7 +111,7 @@
     "json2csv": "3.7.3",
     "labella": "1.1.4",
     "prop-types": "15.6.0",
-    "react-annotation": "1.1.0",
+    "react-annotation": "1.1.1",
     "semiotic-mark": "0.1.2",
     "svg-path-bounding-box": "1.0.4"
   },

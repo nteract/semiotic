@@ -19,6 +19,7 @@ class VisualizationLayer extends React.PureComponent {
   constructor(props) {
     super(props)
     this.updateVisualizationLayer = this.updateVisualizationLayer.bind(this)
+    this.handleKeyDown = this.handleKeyDown.bind(this)
   }
 
   piecesGroup = {}
@@ -27,7 +28,8 @@ class VisualizationLayer extends React.PureComponent {
     canvasDrawing: [],
     dataVersion: "",
     renderedElements: [],
-    focusedPieceIndex: null
+    focusedPieceIndex: null,
+    focusedVisualizationGroup: null
   }
 
   componentDidUpdate() {
@@ -126,13 +128,21 @@ class VisualizationLayer extends React.PureComponent {
       this.props.canvasPostProcess(this.props.canvasContext, context, size)
     }
 
-    if (this.piecesGroup.piece && this.state.focusedPieceIndex !== null) {
-      const focusElParent = this.piecesGroup.piece[this.state.focusedPieceIndex]
+    if (
+      this.piecesGroup[this.state.focusedVisualizationGroup] &&
+      this.state.focusedPieceIndex !== null
+    ) {
+      const focusElParent = this.piecesGroup[
+        this.state.focusedVisualizationGroup
+      ][this.state.focusedPieceIndex]
+
       const focusEl =
-        focusElParent &&
-        [...focusElParent.childNodes].find(child =>
-          child.getAttribute("aria-label")
-        )
+        (focusElParent &&
+          [...focusElParent.childNodes].find(child =>
+            child.getAttribute("aria-label")
+          )) ||
+        focusElParent
+
       focusEl && focusEl.focus()
     }
   }
@@ -169,7 +179,7 @@ class VisualizationLayer extends React.PureComponent {
             "aria-label":
               (pipe.ariaLabel && pipe.ariaLabel.items) || "dataviz-element",
             "role": "img",
-            "tabIndex": 1
+            "tabindex": -1
           }),
           ...pipe
         })
@@ -180,7 +190,7 @@ class VisualizationLayer extends React.PureComponent {
               key={k}
               className={k}
               role={"group"}
-              tabIndex={0}
+              tabindex={0}
               aria-label={
                 (pipe.ariaLabel &&
                   `${renderedPipe.length} ${pipe.ariaLabel.items}s in a ${
@@ -188,7 +198,7 @@ class VisualizationLayer extends React.PureComponent {
                   }`) ||
                 k
               }
-              onKeyDown={this.handleKeyDown}
+              onKeyDown={e => this.handleKeyDown(e, k)}
               ref={thisNode =>
                 thisNode && (this.piecesGroup[k] = thisNode.childNodes)
               }
@@ -208,6 +218,7 @@ class VisualizationLayer extends React.PureComponent {
   componentWillMount() {
     this.updateVisualizationLayer(this.props)
   }
+
   componentWillReceiveProps(np) {
     const lp = this.props
     const propKeys = Object.keys(np)
@@ -227,17 +238,19 @@ class VisualizationLayer extends React.PureComponent {
     }
   }
 
-  handleKeyDown(e) {
+  handleKeyDown(e, vizgroup) {
     // If enter, focus on the first element
     const pushed = e.keyCode
     if (pushed !== 37 && pushed !== 39 && pushed !== 13) return
 
     let newPieceIndex
+    const vizGroupSetting = {}
 
-    // If a user pressed ener, highlight the first one
+    // If a user pressed enter, highlight the first one
     // Let a user move up and down in stacked bar by getting keys of bars?
     if (this.state.focusedPieceIndex === null || pushed === 13) {
       newPieceIndex = 0
+      vizGroupSetting.focusedVisualizationGroup = vizgroup
     } else if (pushed === 37) {
       newPieceIndex = this.state.focusedPieceIndex - 1
     } else if (pushed === 39) {
@@ -246,11 +259,12 @@ class VisualizationLayer extends React.PureComponent {
 
     newPieceIndex =
       newPieceIndex < 0
-        ? this.piecesGroup.length + newPieceIndex
-        : newPieceIndex % this.piecesGroup.length
+        ? this.piecesGroup[vizgroup].length + newPieceIndex
+        : newPieceIndex % this.piecesGroup[vizgroup].length
 
     this.setState({
-      focusedPieceIndex: newPieceIndex
+      focusedPieceIndex: newPieceIndex,
+      ...vizGroupSetting
     })
   }
 

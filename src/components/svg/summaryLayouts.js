@@ -423,6 +423,10 @@ export function boxplotRenderFn({
           className={calculatedSummaryClass}
           transform={translate}
           key={`summaryPiece-${summaryI}`}
+          role="img"
+          aria-label={`Boxplot showing ${summaryXYCoords.map(
+            d => `${d.label} ${d.value}`
+          )}`}
         >
           <Mark
             {...baseMarkProps}
@@ -519,6 +523,10 @@ export function boxplotRenderFn({
           className={calculatedSummaryClass}
           transform={translate}
           key={`summaryPiece-${summaryI}`}
+          role="img"
+          aria-label={`Boxplot showing ${summaryXYCoords
+            .map(d => `${d.label} ${d.value}`)
+            .join(", ")}`}
         >
           <Mark
             {...baseMarkProps}
@@ -683,7 +691,13 @@ export function contourRenderFn({
     })
 
     renderedSummaryMarks.push(
-      <g key={`contour-container-${ordsetI}`}>{contourMarks}</g>
+      <g
+        key={`contour-container-${ordsetI}`}
+        role="img"
+        aria-label={`Contour plot`}
+      >
+        {contourMarks}
+      </g>
     )
   })
   return { marks: renderedSummaryMarks, xyPoints: summaryXYCoords }
@@ -904,6 +918,8 @@ export function bucketizedRenderingFn({
           {...eventListeners}
           transform={`translate(${translate})`}
           key={`summaryPiece-${summaryI}`}
+          role="img"
+          aria-label={`${type.type}`}
         >
           {tiles}
         </g>
@@ -1028,6 +1044,8 @@ export function bucketizedRenderingFn({
           className={calculatedSummaryClass}
           style={calculatedSummaryStyle}
           d={violinArea(violinPoints)}
+          role="img"
+          aria-label={`${type.type}`}
         />
       )
     } else if (type.type === "joy") {
@@ -1131,6 +1149,8 @@ export function bucketizedRenderingFn({
           className={calculatedSummaryClass}
           style={calculatedSummaryStyle}
           d={joyArea(joyPoints)}
+          role="img"
+          aria-label={`${type.type}`}
         />
       )
     }
