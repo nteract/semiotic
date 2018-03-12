@@ -73,7 +73,6 @@ export const svgHighlight = ({
   lines = { data: [] },
   areas = { data: [] },
   idAccessor,
-  screenCoordinates,
   xScale,
   yScale
 }) => {
@@ -108,9 +107,9 @@ export const svgHighlight = ({
     ))
 
   const lineGenerator = area()
-    .x(d => xScale(d.x))
-    .y0(d => yScale(d.yBottom))
-    .y1(d => yScale(d.yTop))
+    .x(p => xScale(p.x))
+    .y0(p => yScale(p.yBottom))
+    .y1(p => yScale(p.yTop))
 
   if (lines.type.interpolator) {
     lineGenerator.curve(lines.type.interpolator)

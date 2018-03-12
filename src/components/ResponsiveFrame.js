@@ -47,8 +47,7 @@ const createResponsiveFrame = Frame =>
         responsiveWidth,
         responsiveHeight,
         size,
-        dataVersion,
-        style = {}
+        dataVersion
       } = this.props
 
       const { containerHeight, containerWidth } = this.state

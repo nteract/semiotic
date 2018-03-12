@@ -180,10 +180,6 @@ function arcBracket({
 
 export const svgHighlightRule = ({
   d,
-  i,
-  screenCoordinates,
-  projection,
-  categories,
   pieceIDAccessor,
   orFrameRender,
   oAccessor
