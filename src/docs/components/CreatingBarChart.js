@@ -284,7 +284,6 @@ export default class CreatingBarChart extends React.Component {
 
     return (
       <DocumentComponent
-        tabIndex={0}
         name="Creating a Bar Chart"
         components={components}
         examples={examples}
