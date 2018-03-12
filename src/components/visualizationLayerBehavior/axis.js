@@ -115,7 +115,7 @@ export function axisPieces({
 
 export const axisLabels = ({ axisParts, tickFormat, rotate = 0 }) => {
   return axisParts.map((axisPart, i) => {
-    let renderedValue = tickFormat(axisPart.value)
+    let renderedValue = tickFormat(axisPart.value, i)
     if (typeof renderedValue !== "object" || renderedValue instanceof Date) {
       renderedValue = (
         <text textAnchor={axisPart.defaultAnchor}>
