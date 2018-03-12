@@ -60,6 +60,14 @@ const midMod = d => (d.middle ? d.middle : 0)
 const zeroFunction = () => 0
 const twoPI = Math.PI * 2
 
+const naturalLanguageTypes = {
+  bar: { items: "bar", chart: "bar chart" },
+  clusterbar: { items: "bar", chart: "grouped bar chart" },
+  swarm: { items: "point", chart: "swarm plot" },
+  point: { items: "point", chart: "point plot" },
+  timeline: { items: "bar", chart: "timeline" }
+}
+
 const projectedCoordinatesObject = { y: "y", x: "x" }
 
 const defaultOverflow = { top: 0, bottom: 0, left: 0, right: 0 }
@@ -793,6 +801,13 @@ class OrdinalFrame extends React.Component {
       }))
     }
 
+    const typeAriaLabel = naturalLanguageTypes[pieceType.type] || {
+      items: "piece",
+      chart: "ordinal chart"
+    }
+
+    console.log("typeAriaLabel", typeAriaLabel)
+
     const orFrameRender = {
       connectors: {
         projection,
@@ -818,7 +833,8 @@ class OrdinalFrame extends React.Component {
         behavior: renderLaidOutPieces,
         canvasRender: pieceCanvasRender,
         styleFn: stringToFn(pieceStyle, () => ({}), true),
-        classFn: stringToFn(pieceClass, () => "", true)
+        classFn: stringToFn(pieceClass, () => "", true),
+        ariaLabel: typeAriaLabel
       }
     }
 

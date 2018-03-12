@@ -24,15 +24,7 @@ export const downloadCSV = (csvName, data) => {
 }
 
 class DownloadButton extends React.Component {
-  /*
-    renderBody({ csvName, data }) {
-        return <div className='download-div'>
-                <button alt='download' onClick={downloadCSV.bind(this, csvName, data)} className='download-data-button'>
-                    <a>Download</a>
-                </button>
-            </div>
-    }
-*/
+
   render() {
     const { csvName, data, width, label = "Download" } = this.props
     return (

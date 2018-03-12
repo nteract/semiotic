@@ -53,6 +53,13 @@ import { xyFrameChangeProps } from "./constants/frame_props"
 
 import PropTypes from "prop-types"
 
+const naturalLanguageLineType = {
+  line: { items: "line", chart: "line chart" },
+  stackedarea: { items: "stacked area", chart: "stacked area chart" },
+  bumparea: { items: "ranked area", chart: "ranked area chart" },
+  bumpline: { items: "ranked line", chart: "ranked line chart" }
+}
+
 const emptyObjectReturnFunction = () => ({})
 const emptyStringReturnFunction = () => ""
 
@@ -440,6 +447,11 @@ class XYFrame extends React.Component {
       })
     }
 
+    const lineAriaLabel = naturalLanguageLineType[lineType.type] || {
+      items: "line",
+      chart: "line chart"
+    }
+
     const xyFrameRender = {
       lines: {
         data: projectedLines,
@@ -451,6 +463,7 @@ class XYFrame extends React.Component {
         type: lineType,
         defined: defined,
         renderKeyFn: stringToFn(renderKey, (d, i) => `line-${i}`, true),
+        ariaLabel: lineAriaLabel,
         behavior: createLines
       },
       areas: {
@@ -920,6 +933,7 @@ class XYFrame extends React.Component {
     })
 
     // foreground and background graphics should handle either JSX or a function that passes size & margin and returns JSX
+
     return (
       <Frame
         name="xyframe"

@@ -50,11 +50,20 @@ export function createPoints({
   data.forEach((d, i) => {
     const dX = xScale(d[x])
     const dY = yScale(d[y])
+    const pointAriaLabel = `Point at x ${d.x} and y ${d.y}`
     const renderedCustomMark =
       customMark && customMark({ d: d.data, i, xScale, yScale })
     const markProps = customMark
-      ? Object.assign(baseMarkProps, renderedCustomMark.props)
-      : { ...baseMarkProps, key: `piece-${i}`, markType: "circle", r: 2 }
+      ? Object.assign(baseMarkProps, renderedCustomMark.props, {
+          "aria-label": pointAriaLabel
+        })
+      : {
+          ...baseMarkProps,
+          "key": `piece-${i}`,
+          "markType": "circle",
+          "r": 2,
+          "aria-label": pointAriaLabel
+        }
 
     if (
       renderedCustomMark &&
@@ -121,8 +130,10 @@ export function createLines({
   renderKeyFn,
   type,
   defined,
-  baseMarkProps
+  baseMarkProps,
+  ariaLabel
 }) {
+  console.log("ariaLabel", ariaLabel)
   const customLine = typeof type === "object" ? type : { type }
   const interpolator = customLine.interpolator
     ? customLine.interpolator
@@ -153,8 +164,13 @@ export function createLines({
     } else {
       const markProps = {
         ...baseMarkProps,
-        markType: "path",
-        d: lineGenerator(d.data.map(p => Object.assign({}, p.data, p)))
+        "markType": "path",
+        "d": lineGenerator(d.data.map(p => Object.assign({}, p.data, p))),
+        "aria-label": `${d.data.length} point ${
+          ariaLabel.items
+        } starting value ${d.data[0].y} at ${d.data[0].x} ending value ${
+          d.data[d.data.length - 1].y
+        } at ${d.data[d.data.length - 1].x}`
       }
       if (canvasRender && canvasRender(d, i) === true) {
         const canvasLine = {

@@ -61,16 +61,16 @@
     "material-ui": "v1.0.0-beta.13",
     "material-ui-icons": "1.0.0-beta.15",
     "nyc": "5.5.0",
-    "react": "15.6.1",
+    "react": "16.0.0",
     "react-dimensions": "github:AlesJiranek/react-dimensions",
-    "react-dom": "15.6.1",
+    "react-dom": "16.0.0",
     "react-element-to-jsx-string": "^12.0.0",
     "react-prism": "4.3.2",
     "react-router": "^4.0.0-beta.6",
     "react-router-dom": "4.2.2",
     "react-scripts": "1.1.1",
     "react-tap-event-plugin": "3.0.2",
-    "react-test-renderer": "15.6.1",
+    "react-test-renderer": "16.0.0",
     "reactstrap": "github:jameswomack/reactstrap#react-popper_react-dom-16",
     "rollup": "^0.51.8",
     "rollup-plugin-babel": "^3.0.2",
@@ -81,16 +81,17 @@
     "tap-difflet": "0.4.0",
     "tap-notify": "1.0.0",
     "tape": "4.4.0",
-    "uglify-js": "^3.1.10"
+    "uglify-js": "^3.1.10",
+    "webpack": "^3.11.0"
   },
   "peerDependencies": {
     "react": "^15.0.0 || ^16.0.0",
     "react-dom": "^15.0.0 || ^16.0.0"
   },
   "dependencies": {
+    "@mapbox/polylabel": "1.0.2",
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-runtime": "6.26.0",
-    "@mapbox/polylabel": "1.0.2",
     "d3-array": "1.2.0",
     "d3-bboxCollide": "1.0.3",
     "d3-brush": "1.0.4",
@@ -110,7 +111,7 @@
     "json2csv": "3.7.3",
     "labella": "1.1.4",
     "prop-types": "15.6.0",
-    "react-annotation": "1.1.0",
+    "react-annotation": "1.1.1",
     "semiotic-mark": "0.1.2",
     "svg-path-bounding-box": "1.0.4"
   },

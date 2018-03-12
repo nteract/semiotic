@@ -52,6 +52,8 @@ export const circleNodeGenerator = ({
       style={styleFn(d, i)}
       renderMode={renderMode ? renderMode(d, i) : undefined}
       className={className}
+      aria-label={`Node ${d.id}`}
+      tabindex={-1}
     />
   )
 }
@@ -75,6 +77,8 @@ export const chordEdgeGenerator = size => ({
     markType="path"
     d={d.d}
     style={styleFn(d, i)}
+    aria-label={`Connection from ${d.source.id} to ${d.target.id}`}
+    tabindex={-1}
   />
 )
 
@@ -109,6 +113,9 @@ export const wordcloudNodeGenerator = ({
         x={textX}
         transform={textTransform}
         className={`${className} wordcloud`}
+        aria-label={d._NWFText}
+        role="img"
+        tabindex={-1}
       >
         {d._NWFText}
       </text>
@@ -140,6 +147,8 @@ export const sankeyNodeGenerator = ({
     rx={0}
     ry={0}
     style={styleFn(d)}
+    aria-label={`Node ${d.id}`}
+    tabindex={-1}
   />
 )
 
@@ -161,6 +170,8 @@ export const chordNodeGenerator = size => ({
     markType="path"
     d={d.d}
     style={styleFn(d, i)}
+    aria-label={`Node ${d.id}`}
+    tabindex={-1}
   />
 )
 
@@ -182,6 +193,8 @@ export const radialRectNodeGenerator = (size, center) => {
         style={styleFn(d, i)}
         renderMode={renderMode ? renderMode(d, i) : undefined}
         className={className}
+        aria-label={`Node ${d.id}`}
+        tabindex={-1}
       />
     )
   }
@@ -212,6 +225,8 @@ export const hierarchicalRectNodeGenerator = ({
       style={styleFn(d, i)}
       renderMode={renderMode ? renderMode(d, i) : undefined}
       className={className}
+      aria-label={`Node ${d.id}`}
+      tabindex={-1}
     />
   )
 }
@@ -336,6 +351,9 @@ export const drawEdges = ({
             className={`${classFn(d)} edge`}
             d={dGenerator(d)}
             style={styleFn(d, i)}
+            tabindex={-1}
+            role="img"
+            aria-label={`connection from ${d.source.id} to ${d.target.id}`}
           />
         )
       }
