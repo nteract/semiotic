@@ -197,31 +197,31 @@ export default class NetworkFrameDocs extends React.Component {
       "comet",
       "taffy"
     ].map(d => (
-      <MenuItem key={"edgeType-option-" + d} label={d} value={d}>
+      <MenuItem key={`edgeType-option-${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
 
     const nodeSizeOptions = ["degree", "inDegree", "outDegree"].map(d => (
-      <MenuItem key={"nodeSize-option-" + d} label={d} value={d}>
+      <MenuItem key={`nodeSize-option-${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
 
     const annotationOptions = ["off", "on"].map(d => (
-      <MenuItem key={"annotation-option-" + d} label={d} value={d}>
+      <MenuItem key={`annotation-option-${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
 
     const networkTypeOptions = ["force", "motifs"].map(d => (
-      <MenuItem key={"networkType-option-" + d} label={d} value={d}>
+      <MenuItem key={`networkType-option-${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
 
     const customNodeOptions = ["off", "on"].map(d => (
-      <MenuItem key={"customNode-option-" + d} label={d} value={d}>
+      <MenuItem key={`customNode-option-${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
@@ -310,7 +310,7 @@ export default class NetworkFrameDocs extends React.Component {
       nodeLabels: true,
       hoverAnnotation: true,
       download: true,
-      canvasEdges: true,
+      canvasEdges: false,
       canvasPostProcess: glowyCanvas,
       annotationSettings: {
         pointSizeFunction: d => (d.subject && d.subject.radius) || 5,
