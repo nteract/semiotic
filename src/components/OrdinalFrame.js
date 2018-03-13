@@ -697,7 +697,7 @@ class OrdinalFrame extends React.Component {
     let pieceDataXY
     const pieceRenderMode = stringToFn(renderMode, undefined, true)
     const pieceCanvasRender = stringToFn(canvasPieces, undefined, true)
-    const summaryCanvasRender = stringToFn(canvasPieces, undefined, true)
+    const summaryCanvasRender = stringToFn(canvasSummaries, undefined, true)
     const connectorCanvasRender = stringToFn(canvasConnectors, undefined, true)
 
     const pieceTypeForXY =
@@ -745,6 +745,7 @@ class OrdinalFrame extends React.Component {
         adjustedSize,
         baseMarkProps: currentProps.baseMarkProps || {}
       })
+      calculatedSummaries.originalData = projectedColumns
     }
 
     if (
@@ -819,7 +820,7 @@ class OrdinalFrame extends React.Component {
         eventListenersGenerator
       },
       summaries: {
-        data: calculatedSummaries.marks,
+        data: calculatedSummaries,
         behavior: renderLaidOutSummaries,
         canvasRender: summaryCanvasRender,
         styleFn: stringToFn(summaryStyle, () => ({}), true),
