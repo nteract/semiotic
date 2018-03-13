@@ -1184,6 +1184,7 @@ export const drawSummaries = ({
   type = typeof type === "string" ? { type } : type
   const chartSize =
     projection === "vertical" ? adjustedSize[1] : adjustedSize[0]
+
   return orFrameSummaryRenderer({
     data,
     type,
@@ -1201,6 +1202,4 @@ export const drawSummaries = ({
   })
 }
 
-export const renderLaidOutSummaries = ({ data }) => {
-  return data
-}
+export const renderLaidOutSummaries = ({ data }) => data.marks
