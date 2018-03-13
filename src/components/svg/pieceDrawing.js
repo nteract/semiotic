@@ -21,7 +21,6 @@ export const renderLaidOutPieces = ({
   renderKeyFn,
   ariaLabel
 }) => {
-  console.log("ariaLabel.items", ariaLabel.items)
   if (!shouldRender) return null
   const renderedPieces = []
   data.forEach((d, i) => {
@@ -45,7 +44,6 @@ export const renderLaidOutPieces = ({
         const pieceAriaLabel = `${d.o} ${ariaLabel.items} value ${
           d.piece.value
         }`
-        console.log("pieceARiaLabel", pieceAriaLabel)
         renderedPieces.push(
           <Mark
             {...baseMarkProps}

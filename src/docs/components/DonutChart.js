@@ -97,13 +97,8 @@ export default class PieDonutDocs extends React.Component {
               style={d => ({ fill: colorMap[d.value], stroke: "darkgray", strokeWidth: 1 })}
               type={{ type: "bar", innerRadius: ${this.state.innerRadius} }}
               oLabel={true}
-<<<<<<< HEAD
-              ${this.state.kind === "pie" ? "dynamicColumnWidth='value'" : ""}
-              rAccessor={${this.state.kind === "pie" ? "() => 1" : "'value'"}}
-=======
               ${this.state.kind === "pie" ? 'dynamicColumnWidth="value"' : ""}
               rAccessor={${this.state.kind === "pie" ? "() => 1" : '"value"'}}
->>>>>>> master
               margin={{ left: 20, top: 20, bottom: 20, right: 20 }}
               oPadding={${this.state.padding}}
               tooltipContent="pie"

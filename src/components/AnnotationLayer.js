@@ -321,9 +321,6 @@ class AnnotationLayer extends React.Component {
       return adjustableAnnotations
     }
     return adjustableAnnotations
-    console.error(
-      "Unknown annotation handling function: Must be of a string 'bump' or 'marginalia' or a an object with type of those strings or a function that takes adjustable annotations and returns adjusted annotations"
-    )
   }
 
   createAnnotations(props) {
