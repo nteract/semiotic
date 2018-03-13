@@ -698,7 +698,7 @@ export function contourRenderFn({
         key={`contour-container-${ordsetI}`}
         role="img"
         tabindex={-1}
-        aria-label={`Contour plot`}
+        aria-label={`${key} Contour plot`}
       >
         {contourMarks}
       </g>
@@ -924,7 +924,7 @@ export function bucketizedRenderingFn({
           key={`summaryPiece-${summaryI}`}
           role="img"
           tabindex={-1}
-          aria-label={`${type.type}`}
+          aria-label={`${summary.name} ${type.type}`}
         >
           {tiles}
         </g>
@@ -1051,7 +1051,7 @@ export function bucketizedRenderingFn({
           d={violinArea(violinPoints)}
           role="img"
           tabindex={-1}
-          aria-label={`${type.type}`}
+          aria-label={`${summary.name} distribution`}
         />
       )
     } else if (type.type === "joy") {
@@ -1157,7 +1157,7 @@ export function bucketizedRenderingFn({
           d={joyArea(joyPoints)}
           role="img"
           tabindex={-1}
-          aria-label={`${type.type}`}
+          aria-label={`${summary.name} distribution`}
         />
       )
     }

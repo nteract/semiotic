@@ -806,8 +806,6 @@ class OrdinalFrame extends React.Component {
       chart: "ordinal chart"
     }
 
-    console.log("typeAriaLabel", typeAriaLabel)
-
     const orFrameRender = {
       connectors: {
         projection,

@@ -1,11 +1,11 @@
-import React from 'react'
-import DocumentComponent from '../layout/DocumentComponent'
-import MinimapRaw from './NetworkMinimapRaw'
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import MinimapRaw from "./NetworkMinimapRaw"
 
 const components = []
 
 components.push({
-  name: 'Network Minimap Basics'
+  name: "Network Minimap Basics"
 })
 
 export default class MinimapBasics extends React.Component {
@@ -34,13 +34,13 @@ export default class MinimapBasics extends React.Component {
     ]
 
     examples.push({
-      name: 'Basic',
+      name: "Basic",
       demo: MinimapRaw(
         this.changeExtent,
         this.state.resetExtent,
         this.state.selectedExtent
       ),
-      source: ''
+      source: ""
     })
 
     return (
@@ -56,4 +56,4 @@ export default class MinimapBasics extends React.Component {
   }
 }
 
-MinimapBasics.title = 'Network Minimap Basics'
+MinimapBasics.title = "Network Minimap Basics"

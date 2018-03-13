@@ -387,6 +387,8 @@ class NetworkFrame extends React.Component {
 
     let networkSettings
 
+    const nodeHierarchicalIDFill = {}
+
     if (typeof networkType === "string") {
       networkSettings = { type: networkType, iterations: 500 }
     } else {
@@ -512,10 +514,23 @@ class NetworkFrame extends React.Component {
                     degree: 0,
                     createdByFrame: true
                   }
+            const nodeIDValue = nodeObject.id || nodeIDAccessor(nodeObject)
+            nodeHierarchicalIDFill[nodeIDValue]
+              ? (nodeHierarchicalIDFill[nodeIDValue] += 1)
+              : (nodeHierarchicalIDFill[nodeIDValue] = 1)
+            if (!nodeObject.id) {
+              const nodeSuffix =
+                nodeHierarchicalIDFill[nodeIDValue] === 1
+                  ? ""
+                  : `-${nodeHierarchicalIDFill[nodeIDValue]}`
+              nodeObject.id = `${nodeIDValue}${nodeSuffix}`
+            }
+
             this.nodeHash.set(nodeDirection, nodeObject)
             projectedNodes.push(nodeObject)
           }
         })
+
         const edgeWeight = edge.weight || 1
         this.nodeHash.get(target).inDegree += edgeWeight
         this.nodeHash.get(source).outDegree += edgeWeight

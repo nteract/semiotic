@@ -133,7 +133,6 @@ export function createLines({
   baseMarkProps,
   ariaLabel
 }) {
-  console.log("ariaLabel", ariaLabel)
   const customLine = typeof type === "object" ? type : { type }
   const interpolator = customLine.interpolator
     ? customLine.interpolator
