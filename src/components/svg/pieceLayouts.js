@@ -421,7 +421,7 @@ export function barLayout({
           key={`piece-${piece.renderKey}`}
           transform={`translate(${xPosition},${yPosition})`}
           role="img"
-          tabindex="-1"
+          tabIndex="-1"
         >
           {type.customMark({ ...piece.data, ...piece }, i, xy)}
         </g>
