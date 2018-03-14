@@ -540,7 +540,7 @@ class OrdinalFrame extends React.Component {
           labelStyle.textAnchor = "end"
         }
 
-        labelingFn = (d, p, i, z) => {
+        labelingFn = (d, p, i) => {
           const additionalStyle = {}
           let transformRotate
 
