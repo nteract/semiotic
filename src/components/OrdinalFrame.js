@@ -474,11 +474,17 @@ class OrdinalFrame extends React.Component {
 
     const pieArcs = []
 
+    const labelSettings =
+      typeof currentProps.oLabel === "object"
+        ? Object.assign({ label: true, padding: 5 }, currentProps.oLabel)
+        : { orient: "default", label: currentProps.oLabel, padding: 5 }
+
     if (currentProps.oLabel || currentProps.hoverAnnotation) {
       oExtent.forEach((d, i) => {
         const arcGenerator = arc()
           .innerRadius(0)
           .outerRadius(rScale.range()[1] / 2)
+
         let angle = 1 / oExtent.length
         let startAngle = angle * i
         angle = projectedColumns[d].pct
@@ -496,37 +502,86 @@ class OrdinalFrame extends React.Component {
           startAngle: startAngle * twoPI,
           endAngle: endAngle * twoPI
         })
+
+        const addedPadding =
+          centroid[1] > 0 &&
+          (labelSettings.orient === "default" ||
+            labelSettings.orient === "edge")
+            ? 8
+            : 0
+
+        const outerPoint = pointOnArcAtAngle(
+          [0, 0],
+          projectedColumns[d].pct_middle,
+          rScale.range()[1] / 2 + labelSettings.padding + addedPadding
+        )
+
         pieArcs.push({
           startAngle,
           endAngle,
           midAngle,
           markD,
           translate,
-          centroid
+          centroid,
+          outerPoint
         })
       })
     }
 
-    const labelSettings =
-      typeof currentProps.oLabel === "object"
-        ? Object.assign({ label: true }, currentProps.oLabel)
-        : { orient: "default", label: currentProps.oLabel }
-
     if (currentProps.oLabel) {
       let labelingFn
       if (labelSettings.label === true) {
-        labelingFn = d => (
-          <text
-            style={{
-              textAnchor:
-                projection === "horizontal" && labelSettings.orient === "right"
-                  ? "start"
-                  : projection === "horizontal" ? "end" : "middle"
-            }}
-          >
-            {d}
-          </text>
-        )
+        const labelStyle = {
+          textAnchor: "middle"
+        }
+        if (projection === "horizontal" && labelSettings.orient === "right") {
+          labelStyle.textAnchor = "start"
+        } else if (projection === "horizontal") {
+          labelStyle.textAnchor = "end"
+        }
+
+        labelingFn = (d, p, i, z) => {
+          const additionalStyle = {}
+          let transformRotate
+
+          if (projection === "radial" && labelSettings.orient === "stem") {
+            transformRotate = `rotate(${
+              pieArcs[i].outerPoint[0] < 0
+                ? pieArcs[i].midAngle * 360 + 90
+                : pieArcs[i].midAngle * 360 - 90
+            })`
+          } else if (
+            projection === "radial" &&
+            labelSettings.orient !== "center"
+          ) {
+            transformRotate = `rotate(${
+              pieArcs[i].outerPoint[1] < 0
+                ? pieArcs[i].midAngle * 360
+                : pieArcs[i].midAngle * 360 + 180
+            })`
+          }
+          if (
+            projection === "radial" &&
+            labelSettings.orient === "stem" &&
+            ((pieArcs[i].outerPoint[0] > 0 && labelSettings.padding < 0) ||
+              (pieArcs[i].outerPoint[0] < 0 && labelSettings.padding >= 0))
+          ) {
+            additionalStyle.textAnchor = "end"
+          } else if (
+            projection === "radial" &&
+            labelSettings.orient === "stem"
+          ) {
+            additionalStyle.textAnchor = "start"
+          }
+          return (
+            <text
+              transform={transformRotate}
+              style={{ ...labelStyle, ...additionalStyle }}
+            >
+              {d}
+            </text>
+          )
+        }
       } else if (typeof labelSettings.label === "function") {
         labelingFn = labelSettings.label
       }
@@ -543,15 +598,21 @@ class OrdinalFrame extends React.Component {
             xPosition = -3
           }
         } else if (projection === "radial") {
-          xPosition = pieArcs[i].centroid[0] + pieArcs[i].translate[0]
-          yPosition = pieArcs[i].centroid[1] + pieArcs[i].translate[1]
+          if (labelSettings.orient === "center") {
+            xPosition = pieArcs[i].centroid[0] + pieArcs[i].translate[0]
+            yPosition = pieArcs[i].centroid[1] + pieArcs[i].translate[1]
+          } else {
+            xPosition = pieArcs[i].outerPoint[0] + pieArcs[i].translate[0]
+            yPosition = pieArcs[i].outerPoint[1] + pieArcs[i].translate[1]
+          }
         }
         const label = labelingFn(
           d,
           currentProps.data
             ? currentProps.data.filter((p, q) => oAccessor(p, q) === d)
             : undefined,
-          i
+          i,
+          { arc: pieArcs[i], data: projectedColumns[d] }
         )
         labelArray.push(
           <g

@@ -158,7 +158,8 @@ export default class CreatingPieChart extends React.Component {
             style={{ fill: "#00a2ce", stroke: "white" }}
             type={"bar"}
             projection={"radial"}
-            oLabel={true}
+            oLabel={{ label: true, orient: "stem", padding: -5 }}
+            margin={50}
           />
         </div>
       ),

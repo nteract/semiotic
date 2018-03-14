@@ -1,11 +1,11 @@
-import React from 'react'
-import DocumentComponent from '../layout/DocumentComponent'
-import { Legend } from '../../components'
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import { Legend } from "../../components"
 
 const components = []
 
 components.push({
-  name: 'Legend',
+  name: "Legend",
   proptypes: `
     {
     title: PropTypes.string,
@@ -23,49 +23,57 @@ export default class LegendDocs extends React.Component {
 
     const areaLegendGroups = [
       {
-        styleFn: d => ({ fill: d.color, stroke: 'black' }),
+        styleFn: d => ({ fill: d.color, stroke: "black" }),
         items: [
-          { label: 'Area 1', color: '#b3331d' },
-          { label: 'Area 2', color: '#007190' }
+          { label: "Area 1", color: "#b3331d" },
+          { label: "Area 2", color: "#007190" }
         ]
       }
     ]
 
     const lineLegendGroups = [
       {
-        type: 'line',
+        type: "line",
         styleFn: d => ({ stroke: d.color }),
         items: [
-          { label: 'Line 1', color: '#b3331d' },
-          { label: 'Line 2', color: '#007190' }
+          { label: "Line 1", color: "#b3331d" },
+          { label: "Line 2", color: "#007190" }
         ]
       }
     ]
 
     examples.push({
-      name: 'Basic',
-      demo: 
-        <svg style={{ height: '400px', width: '800px' }}>
-          <g transform={'translate(50,0)'}>
+      name: "Basic",
+      demo: (
+        <svg style={{ height: "400px", width: "800px" }}>
+          <g transform={"translate(50,0)"}>
             <Legend
-              title={'Test Area Legend'}
+              title={"Test Area Legend"}
               legendGroups={areaLegendGroups}
             />
           </g>
 
-          <g transform={'translate(200,0)'}>
+          <g transform={"translate(200,0)"}>
             <Legend
-              title={'Test Line Legend'}
+              title={"Test Line Legend"}
               legendGroups={lineLegendGroups}
             />
           </g>
-          <g transform={'translate(350,0)'}>
+          <g transform={"translate(350,0)"}>
             <Legend
-              title={'Both Legend'}
+              title={"Both Legend"}
               legendGroups={[...lineLegendGroups, ...areaLegendGroups]}
             />
           </g>
-        </svg>,      
+          <g transform={"translate(50,250)"}>
+            <Legend
+              title={"Horizontal Legend"}
+              legendGroups={[...lineLegendGroups, ...areaLegendGroups]}
+              orientation="horizontal"
+            />
+          </g>
+        </svg>
+      ),
       source: `
 const areaLegendGroups = [
   {
@@ -126,4 +134,4 @@ const lineLegendGroups = [
   }
 }
 
-LegendDocs.title = 'Legend'
+LegendDocs.title = "Legend"

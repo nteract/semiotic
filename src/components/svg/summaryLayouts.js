@@ -424,7 +424,7 @@ export function boxplotRenderFn({
           transform={translate}
           key={`summaryPiece-${summaryI}`}
           role="img"
-          tabindex={-1}
+          tabIndex={-1}
           aria-label={`${key} boxplot showing ${summaryXYCoords
             .filter(d => d.key === key)
             .map(d => `${d.label} ${d.value}`)}`}
@@ -525,7 +525,7 @@ export function boxplotRenderFn({
           transform={translate}
           key={`summaryPiece-${summaryI}`}
           role="img"
-          tabindex={-1}
+          tabIndex={-1}
           aria-label={`${key} boxplot showing ${summaryXYCoords
             .filter(d => d.key === key)
             .map(d => `${d.label} ${d.value}`)
@@ -697,7 +697,7 @@ export function contourRenderFn({
       <g
         key={`contour-container-${ordsetI}`}
         role="img"
-        tabindex={-1}
+        tabIndex={-1}
         aria-label={`${key} Contour plot`}
       >
         {contourMarks}
@@ -923,7 +923,7 @@ export function bucketizedRenderingFn({
           transform={`translate(${translate})`}
           key={`summaryPiece-${summaryI}`}
           role="img"
-          tabindex={-1}
+          tabIndex={-1}
           aria-label={`${summary.name} ${type.type}`}
         >
           {tiles}
@@ -1050,7 +1050,7 @@ export function bucketizedRenderingFn({
           style={calculatedSummaryStyle}
           d={violinArea(violinPoints)}
           role="img"
-          tabindex={-1}
+          tabIndex={-1}
           aria-label={`${summary.name} distribution`}
         />
       )
@@ -1156,7 +1156,7 @@ export function bucketizedRenderingFn({
           style={calculatedSummaryStyle}
           d={joyArea(joyPoints)}
           role="img"
-          tabindex={-1}
+          tabIndex={-1}
           aria-label={`${summary.name} distribution`}
         />
       )

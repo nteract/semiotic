@@ -179,7 +179,7 @@ class VisualizationLayer extends React.PureComponent {
             "aria-label":
               (pipe.ariaLabel && pipe.ariaLabel.items) || "dataviz-element",
             "role": "img",
-            "tabindex": -1
+            "tabIndex": -1
           }),
           ...pipe
         })
@@ -190,7 +190,7 @@ class VisualizationLayer extends React.PureComponent {
               key={k}
               className={k}
               role={"group"}
-              tabindex={0}
+              tabIndex={0}
               aria-label={
                 (pipe.ariaLabel &&
                   `${renderedPipe.length} ${pipe.ariaLabel.items}s in a ${
