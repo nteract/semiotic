@@ -634,6 +634,7 @@ class OrdinalFrame extends React.Component {
         oLabels = (
           <g
             key="ordinalframe-labels-container"
+            className="ordinal-labels"
             transform={`translate(${margin.left},${labelY + margin.top})`}
           >
             {labelArray}
@@ -643,6 +644,7 @@ class OrdinalFrame extends React.Component {
         oLabels = (
           <g
             key="ordinalframe-labels-container"
+            className="ordinal-labels"
             transform={`translate(${margin.left},${margin.top})`}
           >
             {labelArray}
@@ -652,6 +654,7 @@ class OrdinalFrame extends React.Component {
         oLabels = (
           <g
             key="ordinalframe-labels-container"
+            className="ordinal-labels"
             transform={`translate(${margin.left},${margin.top})`}
           >
             {labelArray}
