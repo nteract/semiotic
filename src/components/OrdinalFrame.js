@@ -505,7 +505,8 @@ class OrdinalFrame extends React.Component {
 
         const addedPadding =
           centroid[1] > 0 &&
-          (labelSettings.orient === "default" ||
+          (!labelSettings.orient ||
+            labelSettings.orient === "default" ||
             labelSettings.orient === "edge")
             ? 8
             : 0
