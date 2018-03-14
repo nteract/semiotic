@@ -60,7 +60,7 @@ class Legend extends React.Component {
     return { items: renderedItems, offset: itemOffset }
   }
 
-  renderGroup({ legendGroups, title, width, orientation }) {
+  renderGroup({ legendGroups, width }) {
     let offset = 30
 
     const renderedGroups = []
@@ -107,7 +107,7 @@ class Legend extends React.Component {
     return renderedGroups
   }
 
-  renderHorizontalGroup({ legendGroups, title, height, orientation }) {
+  renderHorizontalGroup({ legendGroups, title, height }) {
     let offset = 0
 
     const renderedGroups = []
