@@ -55,10 +55,17 @@ export const calculateDataExtent = ({
   areaType,
   defined = () => true
 }) => {
-  lineDataAccessor = stringToFn(lineDataAccessor, d => d.coordinates)
+  lineDataAccessor = stringToFn(
+    lineDataAccessor,
+    d => (Array.isArray(d) ? d : d.coordinates)
+  )
+
   xAccessor = stringToFn(xAccessor, d => d[0])
   yAccessor = stringToFn(yAccessor, d => d[1])
-  areaDataAccessor = stringToFn(areaDataAccessor, d => d.coordinates)
+  areaDataAccessor = stringToFn(
+    areaDataAccessor,
+    d => (Array.isArray(d) ? d : d.coordinates)
+  )
 
   let fullDataset = []
   let initialProjectedLines = []
