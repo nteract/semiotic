@@ -20,6 +20,17 @@ function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
   }
 }
 
+function pieContentGenerator({ pieces, column, oAccessor }) {
+  return (
+    <div className="tooltip-content">
+      {oAccessor(pieces[0]) && (
+        <p key="or-annotation-1">{oAccessor(pieces[0]).toString()}</p>
+      )}
+      <p key="or-annotation-2">{`${(column.pct * 100).toFixed(0)}%`}</p>
+    </div>
+  )
+}
+
 function arcBracket({
   x,
   y,
@@ -496,8 +507,18 @@ export const htmlFrameHoverRule = ({
   rAccessor,
   oAccessor,
   projection,
-  tooltipContent
+  tooltipContent,
+  projectedColumns
 }) => {
+  tooltipContent =
+    tooltipContent === "pie"
+      ? d =>
+          pieContentGenerator({
+            pieces: [d],
+            column: projectedColumns[oAccessor(d)],
+            oAccessor
+          })
+      : tooltipContent
   //To string because React gives a DOM error if it gets a date
   let contentFill
   if (d.isSummaryData) {
@@ -604,23 +625,15 @@ export const htmlColumnHoverRule = ({
 
   if (d.type === "column-hover" && tooltipContent) {
     if (tooltipContent === "pie") {
-      content = (
-        <div className="tooltip-content">
-          {oAccessor(d.pieces[0].data) && (
-            <p key="or-annotation-1">
-              {oAccessor(d.pieces[0].data).toString()}
-            </p>
-          )}
-          <p key="or-annotation-2">{`${(column.pct * 100).toFixed(0)}%`}</p>
-        </div>
-      )
-    } else {
-      content = tooltipContent({
-        ...d,
-        pieces: d.pieces.map(p => p.data),
-        column
-      })
+      tooltipContent = pieContentGenerator
     }
+
+    content = tooltipContent({
+      ...d,
+      pieces: d.pieces.map(p => p.data),
+      column,
+      oAccessor
+    })
   }
 
   if (d.type === "xy") {

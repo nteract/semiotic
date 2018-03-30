@@ -75,7 +75,6 @@ const neighborhoodMapChart = {
     }
   },
   customPointMark: () => <Mark markType="circle" r="1" />,
-  canvasPoints: true,
   hoverAnnotation: true,
   annotations: annotationData,
   tooltipContent: d => <div className="tooltip-content">{d.hood}</div>,

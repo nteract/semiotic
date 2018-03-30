@@ -131,8 +131,15 @@ export function createLines({
   type,
   defined,
   baseMarkProps,
-  ariaLabel
+  ariaLabel,
+  axesData
 }) {
+  const xAxis = axesData.find(d => d.orient === "bottom" || d.orient === "top")
+  const yAxis = axesData.find(d => d.orient === "left" || d.orient === "right")
+
+  const xAxisFormatter = (xAxis && xAxis.tickFormat) || (d => d)
+  const yAxisFormatter = (yAxis && yAxis.tickFormat) || (d => d)
+
   const customLine = typeof type === "object" ? type : { type }
   const interpolator = customLine.interpolator
     ? customLine.interpolator
@@ -165,11 +172,16 @@ export function createLines({
         ...baseMarkProps,
         "markType": "path",
         "d": lineGenerator(d.data.map(p => Object.assign({}, p.data, p))),
-        "aria-label": `${d.data.length} point ${
-          ariaLabel.items
-        } starting value ${d.data[0].y} at ${d.data[0].x} ending value ${
-          d.data[d.data.length - 1].y
-        } at ${d.data[d.data.length - 1].x}`
+        "aria-label":
+          d.data &&
+          d.data.length > 0 &&
+          `${d.data.length} point ${
+            ariaLabel.items
+          } starting value ${yAxisFormatter(d.data[0].y)} at ${xAxisFormatter(
+            d.data[0].x
+          )} ending value ${yAxisFormatter(
+            d.data[d.data.length - 1].y
+          )} at ${xAxisFormatter(d.data[d.data.length - 1].x)}`
       }
       if (canvasRender && canvasRender(d, i) === true) {
         const canvasLine = {

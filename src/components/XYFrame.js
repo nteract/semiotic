@@ -454,6 +454,10 @@ class XYFrame extends React.Component {
 
     const xyFrameRender = {
       lines: {
+        accessibleTransform: (data, i) => ({
+          ...data[i].data[data[i].data.length - 1],
+          type: "frame-hover"
+        }),
         data: projectedLines,
         styleFn: stringToFn(lineStyle, emptyObjectReturnFunction, true),
         classFn: stringToFn(lineClass, emptyStringReturnFunction, true),
@@ -464,9 +468,11 @@ class XYFrame extends React.Component {
         defined: defined,
         renderKeyFn: stringToFn(renderKey, (d, i) => `line-${i}`, true),
         ariaLabel: lineAriaLabel,
+        axesData: currentProps.axes,
         behavior: createLines
       },
       areas: {
+        accessibleTransform: (data, i) => ({ ...data[i], type: "frame-hover" }),
         data: projectedAreas,
         styleFn: stringToFn(areaStyle, emptyObjectReturnFunction, true),
         classFn: stringToFn(areaClass, emptyStringReturnFunction, true),
@@ -478,6 +484,10 @@ class XYFrame extends React.Component {
         behavior: createAreas
       },
       points: {
+        accessibleTransform: (data, i) => ({
+          type: "frame-hover",
+          ...(data[i].data || data[i])
+        }),
         data: projectedPoints,
         styleFn: stringToFn(pointStyle, emptyObjectReturnFunction, true),
         classFn: stringToFn(pointClass, emptyStringReturnFunction, true),

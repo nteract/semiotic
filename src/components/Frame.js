@@ -18,6 +18,8 @@ class Frame extends React.Component {
   constructor(props) {
     super(props)
 
+    this.setVoronoi = this.setVoronoi.bind(this)
+
     this.state = {
       canvasContext: null,
       voronoiHover: undefined
@@ -30,6 +32,10 @@ class Frame extends React.Component {
 
   getChildContext() {
     return { canvas: this.canvasContext }
+  }
+
+  setVoronoi(d) {
+    this.setState({ voronoiHover: d })
   }
 
   render() {
@@ -195,6 +201,7 @@ class Frame extends React.Component {
                 margin={margin}
                 canvasPostProcess={canvasPostProcess}
                 baseMarkProps={baseMarkProps}
+                voronoiHover={this.setVoronoi}
               />
               {title && <g className="frame-title">{title}</g>}
               {foregroundGraphics && (
@@ -209,7 +216,7 @@ class Frame extends React.Component {
             projectedY={projectedCoordinateNames.y}
             projectedYMiddle={projectedYMiddle}
             interaction={interaction}
-            voronoiHover={d => this.setState({ voronoiHover: d })}
+            voronoiHover={this.setVoronoi}
             customClickBehavior={customClickBehavior}
             customHoverBehavior={customHoverBehavior}
             customDoubleClickBehavior={customDoubleClickBehavior}
