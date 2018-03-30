@@ -512,10 +512,10 @@ export const htmlFrameHoverRule = ({
 }) => {
   tooltipContent =
     tooltipContent === "pie"
-      ? d =>
+      ? p =>
           pieContentGenerator({
-            pieces: [d],
-            column: projectedColumns[oAccessor(d)],
+            pieces: [p],
+            column: projectedColumns[oAccessor(p)],
             oAccessor
           })
       : tooltipContent
