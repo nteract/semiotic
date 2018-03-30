@@ -132,7 +132,7 @@ export function createLines({
   defined,
   baseMarkProps,
   ariaLabel,
-  axesData
+  axesData = []
 }) {
   const xAxis = axesData.find(d => d.orient === "bottom" || d.orient === "top")
   const yAxis = axesData.find(d => d.orient === "left" || d.orient === "right")
