@@ -240,7 +240,6 @@ export default class CreatingBarChart extends React.Component {
             margin={stackedBarMargin}
             oPadding={5}
             pieceHoverAnnotation={true}
-            customHoverBehavior={this.lineHoverBehavior}
             annotations={
               this.state.hoverPoint
                 ? [Object.assign({}, this.state.hoverPoint, { type: "hover" })]
