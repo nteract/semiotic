@@ -143,7 +143,7 @@ class VisualizationLayer extends React.PureComponent {
           )) ||
         focusElParent
 
-      focusEl && focusEl.focus()
+      focusEl && focusEl.focus && focusEl.focus()
     }
   }
 
@@ -261,6 +261,20 @@ class VisualizationLayer extends React.PureComponent {
       newPieceIndex < 0
         ? this.piecesGroup[vizgroup].length + newPieceIndex
         : newPieceIndex % this.piecesGroup[vizgroup].length
+
+    /*
+    const piece = this.props.renderPipeline[vizgroup].accessibleTransform(
+      this.props.renderPipeline[vizgroup].data[newPieceIndex]
+    )
+    */
+
+    const piece = this.props.renderPipeline[vizgroup].accessibleTransform(
+      this.props.renderPipeline[vizgroup].data,
+      newPieceIndex,
+      this.piecesGroup[vizgroup][newPieceIndex]
+    )
+
+    this.props.voronoiHover(piece)
 
     this.setState({
       focusedPieceIndex: newPieceIndex,

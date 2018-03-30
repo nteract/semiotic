@@ -874,6 +874,7 @@ class OrdinalFrame extends React.Component {
 
     const orFrameRender = {
       connectors: {
+        accessibleTransform: (data, i) => data[i],
         projection,
         data: keyedData,
         styleFn: stringToFn(connectorStyle, () => ({}), true),
@@ -885,6 +886,13 @@ class OrdinalFrame extends React.Component {
         eventListenersGenerator
       },
       summaries: {
+        accessibleTransform: (data, i, node) => {
+          const d =
+            data.originalData[
+              (node.dataset && node.dataset.o) || node.firstChild.dataset.o
+            ]
+          return { ...d, pieces: d.pieceData, type: "column-hover" }
+        },
         data: calculatedSummaries,
         behavior: renderLaidOutSummaries,
         canvasRender: summaryCanvasRender,
@@ -892,6 +900,10 @@ class OrdinalFrame extends React.Component {
         classFn: stringToFn(summaryClass, () => "", true)
       },
       pieces: {
+        accessibleTransform: (data, i) => ({
+          ...(data[i].piece ? { ...data[i].piece, ...data[i].xy } : data[i]),
+          type: "frame-hover"
+        }),
         shouldRender: pieceType.type && pieceType.type !== "none",
         data: calculatedPieceData,
         behavior: renderLaidOutPieces,
@@ -1192,7 +1204,8 @@ class OrdinalFrame extends React.Component {
         oAccessor,
         size,
         projection,
-        tooltipContent
+        tooltipContent,
+        projectedColumns
       })
     } else if (d.type === "column-hover") {
       return htmlColumnHoverRule({

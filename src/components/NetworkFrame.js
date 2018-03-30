@@ -1135,6 +1135,7 @@ class NetworkFrame extends React.Component {
 
     const networkFrameRender = {
       edges: {
+        accessibleTransform: (data, i) => ({ type: "frame-hover", ...data[i] }),
         data: projectedEdges,
         styleFn: stringToFn(edgeStyle, () => ({}), true),
         classFn: stringToFn(edgeClass, () => "", true),
@@ -1148,6 +1149,7 @@ class NetworkFrame extends React.Component {
         customMark: customEdgeIcon
       },
       nodes: {
+        accessibleTransform: (data, i) => ({ type: "frame-hover", ...data[i] }),
         data: projectedNodes,
         styleFn: nodeStyleFn,
         classFn: nodeClassFn,
