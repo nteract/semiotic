@@ -294,13 +294,21 @@ class VisualizationLayer extends React.PureComponent {
       </g>
     )
     const renderedAxesTickLines = axesTickLines && (
-      <g key="visualization-tick-lines" className="axis axis-tick-lines">
+      <g
+        key="visualization-tick-lines"
+        className="axis axis-tick-lines"
+        aria-hidden={true}
+      >
         {axesTickLines}
       </g>
     )
     let ariaLabel = ""
+
     const title = this.props.title
-      ? `titled ${this.props.title.children}`
+      ? this.props.title.props &&
+        typeof this.props.title.props.children === "string"
+        ? `titled ${this.props.title.props.children}`
+        : "with a complex title"
       : "with no title"
     ariaLabel = `Visualization ${title}. Use arrow keys to navigate elements.`
 

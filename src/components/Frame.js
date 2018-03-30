@@ -180,7 +180,9 @@ class Frame extends React.Component {
             >
               {finalFilterDefs}
               {backgroundGraphics && (
-                <g className="background-graphics">{backgroundGraphics}</g>
+                <g aria-hidden={true} className="background-graphics">
+                  {backgroundGraphics}
+                </g>
               )}
               <VisualizationLayer
                 disableContext={this.props.disableContext}
@@ -205,7 +207,9 @@ class Frame extends React.Component {
               />
               {title && <g className="frame-title">{title}</g>}
               {foregroundGraphics && (
-                <g className="foreground-graphics">{foregroundGraphics}</g>
+                <g aria-hidden={true} className="foreground-graphics">
+                  {foregroundGraphics}
+                </g>
               )}
             </svg>
           </SpanOrDiv>

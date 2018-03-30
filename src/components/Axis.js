@@ -304,8 +304,16 @@ class Axis extends React.Component {
       )
     }
 
+    const axisAriaLabel = `${orient} axis ${(axisParts &&
+      axisParts.length > 0 &&
+      `from ${tickFormat(axisParts[0].value, 0)} to ${tickFormat(
+        axisParts[axisParts.length - 1].value,
+        axisParts.length - 1
+      )}`) ||
+      "without ticks"}`
+
     return (
-      <g className={className}>
+      <g className={className} aria-label={axisAriaLabel}>
         {annotationBrush}
         {axisTickLabels}
         {axisTickLines}
