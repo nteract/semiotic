@@ -1392,10 +1392,6 @@ class NetworkFrame extends React.Component {
       additionalDefs: this.props.additionalDefs
     })
 
-    console.log("annotations", annotations)
-
-    console.log("nodeLabelAnnotations", nodeLabelAnnotations)
-
     return (
       <Frame
         name="networkframe"
