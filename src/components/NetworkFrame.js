@@ -1174,6 +1174,7 @@ class NetworkFrame extends React.Component {
 
           if (React.isValidElement(actualLabel)) {
             nodeLabel = {
+              key: `node-label-${nodei}`,
               type: "basic-node-label",
               x: node.x,
               y: node.y,
@@ -1181,6 +1182,7 @@ class NetworkFrame extends React.Component {
             }
           } else {
             nodeLabel = {
+              key: `node-label-${nodei}`,
               className: "node-label",
               dx: 0,
               dy: 0,
@@ -1389,6 +1391,10 @@ class NetworkFrame extends React.Component {
       key: "networkFrame",
       additionalDefs: this.props.additionalDefs
     })
+
+    console.log("annotations", annotations)
+
+    console.log("nodeLabelAnnotations", nodeLabelAnnotations)
 
     return (
       <Frame
