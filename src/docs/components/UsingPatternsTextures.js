@@ -70,13 +70,13 @@ export default class UsingPatternsTextures extends React.Component {
       demo: (
         <div>
           <iframe
-          title="patterns-textures-video"
+            title="patterns-textures-video"
             width="560"
             height="315"
             src="https://www.youtube.com/embed/8A5P3p74pcQ"
-            frameborder="0"
+            frameBorder="0"
             allow="autoplay; encrypted-media"
-            allowfullscreen
+            allowFullScreen
           />
           <p>
             We'll get started with using textures for a visualization like this
