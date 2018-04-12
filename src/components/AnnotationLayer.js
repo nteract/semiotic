@@ -286,8 +286,10 @@ class AnnotationLayer extends React.Component {
           leftSortedNodes[i].layerIndex * leftOffset -
           marginOffsetFn("left", axes)
         if (note.props.noteData.note) {
-          note.props.noteData.note.orientation = "leftRight"
-          note.props.noteData.note.align = "right"
+          note.props.noteData.note.orientation =
+            note.props.noteData.note.orientation || "leftRight"
+          note.props.noteData.note.align =
+            note.props.noteData.note.align || "right"
         }
       })
 
@@ -298,8 +300,10 @@ class AnnotationLayer extends React.Component {
           rightSortedNodes[i].layerIndex * rightOffset +
           marginOffsetFn("right", axes)
         if (note.props.noteData.note) {
-          note.props.noteData.note.orientation = "leftRight"
-          note.props.noteData.note.align = "left"
+          note.props.noteData.note.orientation =
+            note.props.noteData.note.orientation || "leftRight"
+          note.props.noteData.note.align =
+            note.props.noteData.note.align || "left"
         }
       })
 
