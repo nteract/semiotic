@@ -187,7 +187,6 @@ export function generateFrameTitle({ title: rawTitle = "", size }) {
   const { title = rawTitle, orient = "top" } = rawTitle
   let x = 0,
     y = 0,
-    textAnchor = "middle",
     transform
   switch (orient) {
     case "top":
@@ -217,7 +216,7 @@ export function generateFrameTitle({ title: rawTitle = "", size }) {
         <text
           className={"frame-title"}
           transform={transform}
-          style={{ textAnchor: textAnchor, pointerEvents: "none" }}
+          style={{ textAnchor: "middle", pointerEvents: "none" }}
         >
           {title}
         </text>

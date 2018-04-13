@@ -143,7 +143,7 @@ describe("XYFrame", () => {
   it("axes and title cause a default margin that offsets the data-visualization container", () => {
     expect(
       mountedFrameWithOptions.find("g.data-visualization").props().transform
-    ).toEqual(`translate(50,30)`)
+    ).toEqual(`translate(50,40)`)
   })
   it("renders two axis <g> elements, one for lines and one for labels", () => {
     expect(mountedFrameWithOptions.find("g.axis-tick-lines").length).toEqual(1)
