@@ -36,8 +36,7 @@ import { AnnotationCallout } from "react-annotation"
 import {
   calculateMargin,
   drawMarginPath,
-  adjustedPositionSize,
-  generateFrameTitle
+  adjustedPositionSize
 } from "./svg/frameFunctions"
 import { xyDownloadMapping } from "./downloadDataMapping"
 import {
@@ -210,7 +209,8 @@ class XYFrame extends React.Component {
       lineStyle,
       lineRenderMode,
       xExtent: baseXExtent,
-      yExtent: baseYExtent
+      yExtent: baseYExtent,
+      title
     } = currentProps
     let {
       projectedLines,
@@ -284,8 +284,6 @@ class XYFrame extends React.Component {
     })
 
     const canvasDrawing = []
-
-    const title = generateFrameTitle(currentProps)
 
     //TODO: blow this shit up
     this.xScale = xScale

@@ -35,7 +35,6 @@ import {
   keyAndObjectifyBarData,
   generateOrdinalFrameEventListeners,
   adjustedPositionSize,
-  generateFrameTitle,
   orFrameConnectionRenderer,
   orFrameAxisGenerator
 } from "./svg/frameFunctions"
@@ -131,7 +130,8 @@ class OrdinalFrame extends React.Component {
       customHoverBehavior,
       customClickBehavior,
       size,
-      pixelColumnWidth
+      pixelColumnWidth,
+      title
     } = currentProps
     const eventListenersGenerator = generateOrdinalFrameEventListeners(
       customHoverBehavior,
@@ -162,7 +162,6 @@ class OrdinalFrame extends React.Component {
     const { adjustedPosition, adjustedSize } = adjustedPositionSize(
       currentProps
     )
-    const title = generateFrameTitle(currentProps)
 
     const baseOExtent = currentProps.oExtent
     const oExtentSettings =

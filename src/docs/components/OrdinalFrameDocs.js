@@ -342,52 +342,52 @@ export default class OrdinalFrameDocs extends React.Component {
       "custom",
       "none"
     ].map(d => (
-      <MenuItem key={"type-option" + d} label={d} value={d}>
+      <MenuItem key={`type-option${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
     const projectionOptions = ["vertical", "horizontal", "radial"].map(d => (
-      <MenuItem key={"projection-option" + d} label={d} value={d}>
+      <MenuItem key={`projection-option${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
     const cwOptions = ["fixed", "relative"].map(d => (
-      <MenuItem key={"cw-option" + d} label={d} value={d}>
+      <MenuItem key={`cw-option${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
     const rAccessorOptions = ["relative", "fixed"].map(d => (
-      <MenuItem key={"rAccessor-option" + d} label={d} value={d}>
+      <MenuItem key={`rAccessor-option${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
     const renderFnOptions = ["none", "sketchy", "painty"].map(d => (
-      <MenuItem key={"renderfn-option" + d} label={d} value={d}>
+      <MenuItem key={`renderfn-option${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
     const connectorOptions = ["off", "on"].map(d => (
-      <MenuItem key={"connector-option" + d} label={d} value={d}>
+      <MenuItem key={`connector-option${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
     const annotationOptions = ["off", "on"].map(d => (
-      <MenuItem key={"annotation-option" + d} label={d} value={d}>
+      <MenuItem key={`annotation-option${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
     const oPaddingOptions = [50, 20, 5, 0].map(d => (
-      <MenuItem key={"opadding-option" + d} label={d} value={d}>
+      <MenuItem key={`opadding-option${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
     const dataTypeOptions = ["stacked", "group", "simple"].map(d => (
-      <MenuItem key={"dataType-option" + d} label={d} value={d}>
+      <MenuItem key={`dataType-option${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
     const hoverOptions = ["general", "piece", "none"].map(d => (
-      <MenuItem key={"hover-option" + d} label={d} value={d}>
+      <MenuItem key={`hover-option${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
@@ -400,12 +400,12 @@ export default class OrdinalFrameDocs extends React.Component {
       "contour",
       "joy"
     ].map(d => (
-      <MenuItem key={"summary-option" + d} label={d} value={d}>
+      <MenuItem key={`summary-option${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
     const exampleOptions = ["basic", "nyc_temp"].map(d => (
-      <MenuItem key={"example-option" + d} label={d} value={d}>
+      <MenuItem key={`example-option${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
@@ -622,7 +622,7 @@ export default class OrdinalFrameDocs extends React.Component {
                 ? undefined
                 : d => sum(d.map(dataTypeHash[this.state.dataType].rAccessor))
             }
-            margin={{ left: 55, top: 50, bottom: 90, right: 55 }}
+            //            margin={{ left: 55, top: 50, bottom: 90, right: 55 }}
             annotations={
               this.state.annotations === "on"
                 ? dataTypeHash[this.state.dataType].annotations

@@ -23,11 +23,7 @@ import Frame from "./Frame"
 import DownloadButton from "./DownloadButton"
 import { linearRibbon } from "./svg/SvgHelper"
 
-import {
-  calculateMargin,
-  adjustedPositionSize,
-  generateFrameTitle
-} from "./svg/frameFunctions"
+import { calculateMargin, adjustedPositionSize } from "./svg/frameFunctions"
 import { pointOnArcAtAngle } from "./svg/pieceDrawing"
 
 import {
@@ -376,7 +372,8 @@ class NetworkFrame extends React.Component {
       canvasEdges,
       nodeRenderMode,
       edgeRenderMode,
-      nodeLabels
+      nodeLabels,
+      title
       /*, customHoverBehavior, customClickBehavior, renderFn, nodeClass = (() => ''), edgeClass = (() => '')*/
     } = currentProps
     //    const eventListenersGenerator = generatenetworkFrameEventListeners(customHoverBehavior, customClickBehavior)
@@ -421,7 +418,6 @@ class NetworkFrame extends React.Component {
     const { adjustedPosition, adjustedSize } = adjustedPositionSize(
       currentProps
     )
-    const title = generateFrameTitle(currentProps)
 
     let { projectedNodes, projectedEdges } = this.state
 

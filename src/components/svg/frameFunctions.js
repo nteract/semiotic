@@ -82,18 +82,22 @@ export const calculateMargin = ({
     return Object.assign({ top: 0, bottom: 0, left: 0, right: 0 }, tempMargin)
   }
   const finalMargin = { top: 0, bottom: 0, left: 0, right: 0 }
-  if (title && title.length !== 0) {
-    finalMargin.top = 30
+  if (title && !(typeof title === "string" && title.length === 0)) {
+    const { orient = "top" } = title
+    finalMargin[orient] += 40
   }
   let orient = trueAxis(null, projection)
   if (axis && projection !== "radial") {
+    const additionalMargin = axis.label ? 60 : 50
     orient = trueAxis(axis.orient, projection)
-    finalMargin[orient] += 50
+    finalMargin[orient] += additionalMargin
   }
+
   if (axes) {
     axes.forEach(axisObj => {
+      const axisObjAdditionMargin = axisObj.label ? 60 : 50
       orient = axisObj.orient
-      finalMargin[orient] += 50
+      finalMargin[orient] += axisObjAdditionMargin
     })
   }
   if (oLabel && projection !== "radial") {
@@ -133,16 +137,16 @@ export function generateOrdinalFrameEventListeners(
 export function keyAndObjectifyBarData({ data, renderKey = (d, i) => i }) {
   return data
     ? data.map((d, i) => {
-      const appliedKey = renderKey(d, i)
-      if (typeof d !== "object") {
-        return {
-          data: { value: d, renderKey: appliedKey },
-          value: d,
-          renderKey: appliedKey
+        const appliedKey = renderKey(d, i)
+        if (typeof d !== "object") {
+          return {
+            data: { value: d, renderKey: appliedKey },
+            value: d,
+            renderKey: appliedKey
+          }
         }
-      }
-      return { renderKey: appliedKey, data: d }
-    })
+        return { renderKey: appliedKey, data: d }
+      })
     : []
 }
 
@@ -178,22 +182,50 @@ export function adjustedPositionSize({
   return { adjustedPosition, adjustedSize }
 }
 
-export function generateFrameTitle({ title, size }) {
+export function generateFrameTitle({ title: rawTitle = "", size }) {
   let finalTitle = null
+  const { title = rawTitle, orient = "top" } = rawTitle
+  let x = 0,
+    y = 0,
+    textAnchor = "middle",
+    transform
+  switch (orient) {
+    case "top":
+      x = size[0] / 2
+      y = 25
+      break
+    case "bottom":
+      x = size[0] / 2
+      y = size[1] - 25
+      break
+    case "left":
+      x = 25
+      y = size[1] / 2
+      transform = "rotate(-90)"
+      break
+    case "right":
+      x = size[0] - 25
+      y = size[1] / 2
+      transform = "rotate(90)"
+
+      break
+  }
+  const gTransform = `translate(${x},${y})`
   if (typeof title === "string" && title.length > 0) {
     finalTitle = (
-      <text
-        x={size[0] / 2}
-        y={25}
-        className={"frame-title"}
-        style={{ textAnchor: "middle", pointerEvents: "none" }}
-      >
-        {title}
-      </text>
+      <g transform={gTransform}>
+        <text
+          className={"frame-title"}
+          transform={transform}
+          style={{ textAnchor: textAnchor, pointerEvents: "none" }}
+        >
+          {title}
+        </text>
+      </g>
     )
   } else if (title) {
     //assume if defined then its an svg mark of some sort
-    finalTitle = title
+    finalTitle = <g transform={gTransform}>{title}</g>
   }
   return finalTitle
 }

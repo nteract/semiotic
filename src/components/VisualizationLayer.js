@@ -304,12 +304,13 @@ class VisualizationLayer extends React.PureComponent {
     )
     let ariaLabel = ""
 
-    const title = this.props.title
-      ? this.props.title.props &&
-        typeof this.props.title.props.children === "string"
-        ? `titled ${this.props.title.props.children}`
-        : "with a complex title"
-      : "with no title"
+    const title =
+      (this.props.title && this.props.ariaTitle) || this.props.title
+        ? this.props.title.props &&
+          typeof this.props.title.props.children === "string"
+          ? `titled ${this.props.title.props.children}`
+          : "with a complex title"
+        : "with no title"
     ariaLabel = `Visualization ${title}. Use arrow keys to navigate elements.`
 
     const renderedDataVisualization =
