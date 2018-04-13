@@ -3,6 +3,7 @@ import AnnotationLayer from "./AnnotationLayer"
 import InteractionLayer from "./InteractionLayer"
 import VisualizationLayer from "./VisualizationLayer"
 import SpanOrDiv from "./SpanOrDiv"
+import { generateFrameTitle } from "./svg/frameFunctions"
 
 import PropTypes from "prop-types"
 
@@ -134,6 +135,7 @@ class Frame extends React.Component {
         ]}
       />
     )
+    const generatedTitle = generateFrameTitle({ title, size: size })
 
     return (
       <SpanOrDiv
@@ -195,7 +197,7 @@ class Frame extends React.Component {
                 yScale={yScale}
                 axes={axes}
                 axesTickLines={axesTickLines}
-                title={title}
+                title={generatedTitle}
                 frameKey={frameKey}
                 canvasContext={this.state.canvasContext}
                 dataVersion={dataVersion}
@@ -205,7 +207,9 @@ class Frame extends React.Component {
                 baseMarkProps={baseMarkProps}
                 voronoiHover={this.setVoronoi}
               />
-              {title && <g className="frame-title">{title}</g>}
+              {generatedTitle && (
+                <g className="frame-title">{generatedTitle}</g>
+              )}
               {foregroundGraphics && (
                 <g aria-hidden={true} className="foreground-graphics">
                   {foregroundGraphics}

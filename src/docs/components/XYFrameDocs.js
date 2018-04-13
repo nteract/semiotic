@@ -304,7 +304,7 @@ const titleTypesHash = {
   none: undefined,
   simple: "A Simple Title",
   jsx: (
-    <g transform="translate(375,20)">
+    <g>
       <circle
         r={10}
         cx={-80}
@@ -1036,7 +1036,7 @@ export default class XYFrameDocs extends React.Component {
                   sort: null
                 }
           }
-          margin={100}
+          margin={marginHash[this.state.margin]}
           defined={
             this.state.defined === "inactive" ? undefined : d => d.py !== 0
           }
