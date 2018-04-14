@@ -4,7 +4,7 @@ import React from "react"
 //import MarkContext from './MarkContext'
 import { hexToRgb } from "./svg/SvgHelper"
 
-//import Rx from 'rxjs/Rx'
+import rough from "roughjs"
 
 import PropTypes from "prop-types"
 
@@ -44,7 +44,7 @@ class VisualizationLayer extends React.PureComponent {
       this.props.size[0] + this.props.margin.left + this.props.margin.right,
       this.props.size[1] + this.props.margin.top + this.props.margin.bottom
     ]
-
+    let rc
     const context = this.props.canvasContext.getContext("2d")
     context.setTransform(
       1,
@@ -58,8 +58,9 @@ class VisualizationLayer extends React.PureComponent {
 
     this.canvasDrawing.forEach(piece => {
       const style = piece.styleFn
-        ? piece.styleFn(piece.d, piece.i)
+        ? piece.styleFn({ ...piece.d, ...piece.d.data }, piece.i)
         : { fill: "black", stroke: "black" }
+
       let fill = style.fill ? style.fill : "black"
       let stroke = style.stroke ? style.stroke : "black"
       fill = !style.fillOpacity
@@ -80,7 +81,27 @@ class VisualizationLayer extends React.PureComponent {
       context.translate(piece.tx, piece.ty)
       context.fillStyle = fill
       context.strokeStyle = stroke
-      context.lineWidth = style.strokeWidth ? style.strokeWidth : "black"
+      context.lineWidth = style.strokeWidth ? style.strokeWidth : 0
+
+      let rcSettings = {}
+      const renderObject =
+        piece.markProps.renderMode ||
+        (piece.renderFn &&
+          piece.renderFn({ ...piece.d, ...piece.d.data }, piece.i))
+      const actualRenderMode =
+        (renderObject && renderObject.renderMode) || renderObject
+
+      if (actualRenderMode) {
+        rc = rc || rough.canvas(this.props.canvasContext)
+        const rcExtension =
+          (typeof renderObject === "object" && renderObject) || {}
+        rcSettings = {
+          fill,
+          stroke,
+          strokeWidth: context.lineWidth,
+          ...rcExtension
+        }
+      }
 
       if (
         piece.markProps.markType === "circle" ||
@@ -95,27 +116,45 @@ class VisualizationLayer extends React.PureComponent {
           vizY = piece.markProps.y + halfWidth
           r = halfWidth
         }
-        context.beginPath()
-        context.arc(vizX, vizY, r, 0, 2 * Math.PI)
-        context.fill()
-        context.stroke()
+        if (actualRenderMode === "sketchy") {
+          rc.circle(vizX, vizY, r, rcSettings)
+        } else {
+          context.beginPath()
+          context.arc(vizX, vizY, r, 0, 2 * Math.PI)
+          context.fill()
+          context.stroke()
+        }
       } else if (piece.markProps.markType === "rect") {
-        context.fillRect(
-          piece.markProps.x,
-          piece.markProps.y,
-          piece.markProps.width,
-          piece.markProps.height
-        )
-        context.strokeRect(
-          piece.markProps.x,
-          piece.markProps.y,
-          piece.markProps.width,
-          piece.markProps.height
-        )
+        if (actualRenderMode === "sketchy") {
+          rc.rectangle(
+            piece.markProps.x,
+            piece.markProps.y,
+            piece.markProps.width,
+            piece.markProps.height,
+            rcSettings
+          )
+        } else {
+          context.fillRect(
+            piece.markProps.x,
+            piece.markProps.y,
+            piece.markProps.width,
+            piece.markProps.height
+          )
+          context.strokeRect(
+            piece.markProps.x,
+            piece.markProps.y,
+            piece.markProps.width,
+            piece.markProps.height
+          )
+        }
       } else if (piece.markProps.markType === "path") {
-        const p = new Path2D(piece.markProps.d)
-        context.stroke(p)
-        context.fill(p)
+        if (actualRenderMode === "sketchy") {
+          rc.path(piece.markProps.d, rcSettings)
+        } else {
+          const p = new Path2D(piece.markProps.d)
+          context.stroke(p)
+          context.fill(p)
+        }
       } else {
         console.error("CURRENTLY UNSUPPORTED MARKTYPE FOR CANVAS RENDERING")
       }
