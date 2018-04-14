@@ -65,11 +65,16 @@ const mekkoChart = {
   dynamicColumnWidth: "value",
   style: (d, i) => ({
     fill: colors[d.segment],
-    stroke: "white",
+    stroke: "black",
     strokeWidth: 1
   }),
+  canvasPieces: true,
+  renderMode: d =>
+    d.market === "Birmingham, AL"
+      ? { renderMode: "sketchy", fillWeight: 3, bowing: 5 }
+      : { renderMode: "sketchy", fillWeight: 2 },
   type: "bar",
-  axis: { orient: "left", tickFormat: d => Math.floor(d * 100) + "%" },
+  axis: { orient: "left", tickFormat: d => `${Math.floor(d * 100)}%` },
   margin: { left: 55, top: 10, bottom: 80, right: 50 },
   oLabel: d => <text transform="rotate(45)">{d}</text>
 }

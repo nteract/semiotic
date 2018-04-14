@@ -33,9 +33,9 @@ const components = []
 // multiple component proptype documentation supported
 
 const nodeSizeHash = {
-  degree: d => d.degree + 2,
-  inDegree: d => d.inDegree + 2,
-  outDegree: d => d.outDegree + 2
+  degree: d => d.degree * 1.2 + 5,
+  inDegree: d => d.inDegree * 1.2 + 5,
+  outDegree: d => d.outDegree * 1.2 + 5
 }
 
 const squareNodeGenerator = ({ d, transform, key }) => (
@@ -58,8 +58,8 @@ const squareNodeGenerator = ({ d, transform, key }) => (
 const chartSize = [750, 500]
 
 const networkNodeStyle = d => ({
-  fill: d.createdByFrame ? "#1aa962" : "gold",
-  stroke: d.createdByFrame ? "#1aa962" : "gold"
+  fill: d.createdByFrame ? "#0066cc" : "#670066",
+  stroke: d.createdByFrame ? "#0066cc" : "#670066"
 })
 
 const networkTypeHash = {
@@ -307,10 +307,16 @@ export default class NetworkFrameDocs extends React.Component {
       edgeType: this.state.edge,
       nodeSizeAccessor: nodeSizeHash[this.state.nodeSize],
       zoomToFit: true,
-      nodeLabels: true,
+      nodeLabels: false,
       hoverAnnotation: true,
       download: true,
-      canvasEdges: false,
+      canvasEdges: true,
+      canvasNodes: true,
+      nodeRenderMode: d =>
+        d.createdByFrame
+          ? { renderMode: "sketchy", fillWeight: 3, roughness: 0.5 }
+          : { renderMode: "sketchy", fillWeight: 2, roughness: 3 },
+      edgeRenderMode: "sketchy",
       canvasPostProcess: glowyCanvas,
       annotationSettings: {
         pointSizeFunction: d => (d.subject && d.subject.radius) || 5,
