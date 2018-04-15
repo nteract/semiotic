@@ -112,8 +112,8 @@
     "labella": "1.1.4",
     "prop-types": "15.6.0",
     "react-annotation": "1.1.1",
-    "roughjs": "2.1.1",
-    "semiotic-mark": "0.2.0",
+    "roughjs": "github:emeeks/rough",
+    "semiotic-mark": "0.2.1",
     "svg-path-bounding-box": "1.0.4"
   },
   "nyc": {
