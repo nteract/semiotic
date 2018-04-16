@@ -310,8 +310,6 @@ export default class NetworkFrameDocs extends React.Component {
       nodeLabels: false,
       hoverAnnotation: true,
       download: true,
-      canvasEdges: true,
-      canvasNodes: true,
       nodeRenderMode: d =>
         d.createdByFrame
           ? { renderMode: "sketchy", fillWeight: 3, roughness: 0.5 }
