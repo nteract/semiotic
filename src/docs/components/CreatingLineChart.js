@@ -711,7 +711,8 @@ export default class CreatingLineChart extends React.Component {
             xScaleType={scaleTime()}
             xAccessor={d => new Date(d.date)}
             yAccessor={"grossWeekly"}
-            lineType={"stackedarea"}
+            lineType={"stackedpercent"}
+            lineRenderMode="sketchy"
             lineStyle={d => ({
               fill: colorHash[d.title]
             })}
