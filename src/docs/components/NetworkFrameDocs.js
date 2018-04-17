@@ -33,9 +33,9 @@ const components = []
 // multiple component proptype documentation supported
 
 const nodeSizeHash = {
-  degree: d => d.degree * 1.2 + 5,
-  inDegree: d => d.inDegree * 1.2 + 5,
-  outDegree: d => d.outDegree * 1.2 + 5
+  degree: d => Math.min(20, d.degree + 2),
+  inDegree: d => d.inDegree,
+  outDegree: d => d.outDegree
 }
 
 const squareNodeGenerator = ({ d, transform, key }) => (
@@ -58,8 +58,8 @@ const squareNodeGenerator = ({ d, transform, key }) => (
 const chartSize = [750, 500]
 
 const networkNodeStyle = d => ({
-  fill: d.createdByFrame ? "#0066cc" : "#670066",
-  stroke: d.createdByFrame ? "#0066cc" : "#670066"
+  fill: d.createdByFrame ? "#00a2ce" : "#b3331d",
+  stroke: d.createdByFrame ? "#00a2ce" : "#b3331d"
 })
 
 const networkTypeHash = {
@@ -312,8 +312,13 @@ export default class NetworkFrameDocs extends React.Component {
       download: true,
       nodeRenderMode: d =>
         d.createdByFrame
-          ? { renderMode: "sketchy", fillWeight: 3, roughness: 0.5 }
-          : { renderMode: "sketchy", fillWeight: 2, roughness: 3 },
+          ? {
+              renderMode: "sketchy",
+              fillWeight: 3,
+              hachureGap: 3.5,
+              roughness: 0.5
+            }
+          : { renderMode: "sketchy", fillWeight: 2, roughness: 2.4 },
       edgeRenderMode: "sketchy",
       canvasPostProcess: glowyCanvas,
       annotationSettings: {
