@@ -590,7 +590,7 @@ const annotationSettingTypes = {
     layout: "bump",
     pointSizeFunction: () => 15,
     labelSizeFunction: noteData => {
-      return (noteData.note.title || noteData.note.label).length * 6
+      return [(noteData.note.title || noteData.note.label).length * 6, 30]
     }
   },
   plainMarginalia: { layout: "marginalia" },
