@@ -189,6 +189,59 @@ class OrdinalFrame extends React.Component {
       }
     }
 
+    let cwHash
+    let oScale
+    const oScaleType = currentProps.oScaleType || scaleBand
+    let oDomain = projection === "vertical" && [0, adjustedSize[0]] || [0, adjustedSize[1]]
+    if (currentProps.sortO) {
+      oExtent = oExtent.sort(currentProps.sortO)
+    }
+
+    if (currentProps.dynamicColumnWidth) {
+      let columnValueCreator
+      if (typeof currentProps.dynamicColumnWidth === "string") {
+        columnValueCreator = d =>
+          sum(d.map(p => p.data[currentProps.dynamicColumnWidth]))
+      } else {
+        columnValueCreator = d =>
+          currentProps.dynamicColumnWidth(d.map(p => p.data))
+      }
+      const thresholdDomain = [0]
+      let maxColumnValues = 0
+      const columnValues = []
+
+      oExtent.forEach(d => {
+        const oValues = barData.filter((p, q) => oAccessor(p.data, q) === d)
+        const columnValue = columnValueCreator(oValues)
+
+        columnValues.push(columnValue)
+        maxColumnValues += columnValue
+      })
+
+      cwHash = { total: 0 }
+      oExtent.forEach((d, i) => {
+        const oValue = columnValues[i]
+        const stepValue = oValue / maxColumnValues * (oDomain[1] - oDomain[0])
+        cwHash[d] = stepValue
+        cwHash.total += stepValue
+        if (i !== oExtent.length - 1) {
+          thresholdDomain.push(stepValue + thresholdDomain[i])
+        }
+      })
+
+//      oExtent = oExtent.filter(d => cwHash[d] > padding)
+
+      console.log("cwHash", cwHash)
+
+      oScale = scaleOrdinal()
+        .domain(oExtent)
+        .range(thresholdDomain)
+    } else {
+      oScale = oScaleType()
+        .domain(oExtent)
+        .range(oDomain)
+    }
+
     const baseRExtent = currentProps.rExtent
     const rExtentSettings =
       baseRExtent === undefined || Array.isArray(baseRExtent)
@@ -273,9 +326,6 @@ class OrdinalFrame extends React.Component {
       }
     }
 
-    if (currentProps.sortO) {
-      oExtent = oExtent.sort(currentProps.sortO)
-    }
     if (
       currentProps.invertR ||
       (rExtentSettings.extent &&
@@ -284,61 +334,9 @@ class OrdinalFrame extends React.Component {
       rExtent = [rExtent[1], rExtent[0]]
     }
 
-    let rDomain = [0, adjustedSize[0]]
-    let oDomain = [0, adjustedSize[1]]
+    let rDomain = projection === "vertical" && [0, adjustedSize[1]] || [0, adjustedSize[0]]
 
-    if (projection === "vertical") {
-      oDomain = [0, adjustedSize[0]]
-      rDomain = [0, adjustedSize[1]]
-    }
-
-    const oScaleType = currentProps.oScaleType || scaleBand
     const rScaleType = currentProps.rScaleType || scaleLinear
-
-    let cwHash
-
-    let oScale
-
-    if (currentProps.dynamicColumnWidth) {
-      let columnValueCreator
-      if (typeof currentProps.dynamicColumnWidth === "string") {
-        columnValueCreator = d =>
-          sum(d.map(p => p.data[currentProps.dynamicColumnWidth]))
-      } else {
-        columnValueCreator = d =>
-          currentProps.dynamicColumnWidth(d.map(p => p.data))
-      }
-      const thresholdDomain = [0]
-      let maxColumnValues = 0
-      const columnValues = []
-
-      oExtent.forEach(d => {
-        const oValues = barData.filter((p, q) => oAccessor(p.data, q) === d)
-        const columnValue = columnValueCreator(oValues)
-
-        columnValues.push(columnValue)
-        maxColumnValues += columnValue
-      })
-
-      cwHash = { total: 0 }
-      oExtent.forEach((d, i) => {
-        const oValue = columnValues[i]
-        const stepValue = oValue / maxColumnValues * (oDomain[1] - oDomain[0])
-        cwHash[d] = stepValue
-        cwHash.total += stepValue
-        if (i !== oExtent.length - 1) {
-          thresholdDomain.push(stepValue + thresholdDomain[i])
-        }
-      })
-
-      oScale = scaleOrdinal()
-        .domain(oExtent)
-        .range(thresholdDomain)
-    } else {
-      oScale = oScaleType()
-        .domain(oExtent)
-        .range(oDomain)
-    }
 
     const rScale = rScaleType()
       .domain(rExtent)

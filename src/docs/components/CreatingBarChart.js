@@ -16,6 +16,7 @@ const barChartData = [
 const inflatedBarChartData = [
   { user: "Jason", action: "tweets", value: 10 },
   { user: "Susie", action: "tweets", value: 5 },
+  { user: "Susie", action: "tweets", value: 1 },
   { user: "Matt", action: "tweets", value: 20 },
   { user: "Betty", action: "tweets", value: 30 },
   { user: "Jason", action: "retweets", value: 5 },
@@ -151,7 +152,8 @@ export default class CreatingBarChart extends React.Component {
             size={[300, 500]}
             data={barChartData}
             oAccessor={"user"}
-            rAccessor={d => d.retweets + d.favorites}
+            rAccessor={d => d.favorites}
+            dynamicColumnWidth="retweets"
             style={{ fill: "#00a2ce", stroke: "white" }}
             type={"bar"}
             oLabel={d => (
@@ -159,7 +161,7 @@ export default class CreatingBarChart extends React.Component {
             )}
             axis={{ orient: "left", label: "Favorites + Retweets" }}
             margin={{ left: 70, bottom: 50, right: 5, top: 55 }}
-            oPadding={5}
+            oPadding={15}
           />
         </div>
       ),
