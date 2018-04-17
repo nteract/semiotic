@@ -229,10 +229,6 @@ class OrdinalFrame extends React.Component {
         }
       })
 
-//      oExtent = oExtent.filter(d => cwHash[d] > padding)
-
-      console.log("cwHash", cwHash)
-
       oScale = scaleOrdinal()
         .domain(oExtent)
         .range(thresholdDomain)
