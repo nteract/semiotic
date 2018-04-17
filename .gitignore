@@ -14,3 +14,4 @@ build
 
 examples/dist/bundle.js
 .vscode/settings.json
+dist/semiotic.js

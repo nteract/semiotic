@@ -3,6 +3,7 @@ import babel from "rollup-plugin-babel"
 import commonjs from "rollup-plugin-commonjs"
 import builtins from "rollup-plugin-node-builtins"
 import replace from "rollup-plugin-replace"
+import regenerator from "rollup-plugin-regenerator"
 
 export default {
   exports: "named",
@@ -20,6 +21,7 @@ export default {
   external: ["react", "react-dom"],
   plugins: [
     node({ jsnext: true, preferBuiltins: false }),
+    regenerator({ includeRuntime: true, sourceMap: false }),
     builtins(),
     commonjs({
       include: "node_modules/**",
@@ -38,6 +40,7 @@ export default {
     }),
     babel({
       babelrc: false,
+      runtimeHelpers: true,
       presets: [["es2015", { modules: false }], "react", "stage-0"],
       plugins: ["external-helpers"]
     })
