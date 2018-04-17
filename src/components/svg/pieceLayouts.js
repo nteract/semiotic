@@ -224,8 +224,8 @@ export function clusterBarLayout({
           markType: "rect",
           x: xPosition,
           y: yPosition,
-          width: finalWidth,
-          height: finalHeight,
+          width: Math.max(1, finalWidth),
+          height: Math.max(1, finalHeight),
           rx: 0,
           ry: 0
         }
@@ -386,8 +386,8 @@ export function barLayout({
           markType: "rect",
           x: xPosition,
           y: yPosition,
-          width: finalWidth,
-          height: finalHeight,
+          width: Math.max(1, finalWidth),
+          height: Math.max(1, finalHeight),
           rx: 0,
           ry: 0
         }

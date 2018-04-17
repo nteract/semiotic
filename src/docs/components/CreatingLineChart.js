@@ -1,7 +1,7 @@
 import React from "react"
 import { XYFrame } from "../../components"
 import { scaleTime } from "d3-scale"
-import { curveMonotoneX, curveCardinal } from "d3-shape"
+import { curveMonotoneX, curveCardinal, curveBasis, curveStep } from "d3-shape"
 
 import DocumentComponent from "../layout/DocumentComponent"
 
@@ -458,9 +458,19 @@ export default class CreatingLineChart extends React.Component {
             size={[700, 400]}
             dataVersion="fixed"
             lines={movies}
+            lineType={{
+              type: "line",
+              interpolator: {
+                dynamicInterpolator: (d, i) =>
+                  i === 0 ? curveStep : curveBasis
+              }
+            }}
             xAccessor={"week"}
             yAccessor={"grossWeekly"}
-            lineStyle={{ stroke: "#00a2ce" }}
+            lineStyle={(d, i) => ({
+              stroke: i === 0 ? "#00a2ce" : "red",
+              fill: "none"
+            })}
             margin={{ left: 80, bottom: 50, right: 10, top: 40 }}
             axes={[
               {
@@ -711,8 +721,13 @@ export default class CreatingLineChart extends React.Component {
             xScaleType={scaleTime()}
             xAccessor={d => new Date(d.date)}
             yAccessor={"grossWeekly"}
-            lineType={"stackedpercent"}
-            lineRenderMode="sketchy"
+            lineType={{
+              type: "stackedpercent",
+              interpolator: {
+                dynamicInterpolator: (d, i) =>
+                  i === 0 ? curveMonotoneX : curveBasis
+              }
+            }}
             lineStyle={d => ({
               fill: colorHash[d.title]
             })}

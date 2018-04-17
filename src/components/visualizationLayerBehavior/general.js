@@ -156,6 +156,24 @@ export function createLines({
     simpleLine: customLine.simpleLine
   })
 
+  const dynamicLineGenerator =
+    (interpolator.dynamicInterpolator &&
+      ((d, i) => {
+        const dynLineGenerator = area()
+
+        lineGeneratorDecorator({
+          projectedCoordinateNames,
+          defined,
+          interpolator: interpolator.dynamicInterpolator(d, i),
+          generator: dynLineGenerator,
+          xScale,
+          yScale,
+          simpleLine: customLine.simpleLine
+        })
+        return dynLineGenerator
+      })) ||
+    (() => lineGenerator)
+
   const mappedLines = []
   data.forEach((d, i) => {
     if (customMark && typeof customMark === "function") {
@@ -171,7 +189,9 @@ export function createLines({
       const markProps = {
         ...baseMarkProps,
         "markType": "path",
-        "d": lineGenerator(d.data.map(p => Object.assign({}, p.data, p))),
+        "d": dynamicLineGenerator(d, i)(
+          d.data.map(p => Object.assign({}, p.data, p))
+        ),
         "aria-label":
           d.data &&
           d.data.length > 0 &&
