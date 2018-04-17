@@ -192,7 +192,10 @@ class OrdinalFrame extends React.Component {
     let cwHash
     let oScale
     const oScaleType = currentProps.oScaleType || scaleBand
-    let oDomain = projection === "vertical" && [0, adjustedSize[0]] || [0, adjustedSize[1]]
+    const oDomain = (projection === "vertical" && [0, adjustedSize[0]]) || [
+      0,
+      adjustedSize[1]
+    ]
     if (currentProps.sortO) {
       oExtent = oExtent.sort(currentProps.sortO)
     }
@@ -330,7 +333,10 @@ class OrdinalFrame extends React.Component {
       rExtent = [rExtent[1], rExtent[0]]
     }
 
-    let rDomain = projection === "vertical" && [0, adjustedSize[1]] || [0, adjustedSize[0]]
+    const rDomain = (projection === "vertical" && [0, adjustedSize[1]]) || [
+      0,
+      adjustedSize[0]
+    ]
 
     const rScaleType = currentProps.rScaleType || scaleLinear
 
