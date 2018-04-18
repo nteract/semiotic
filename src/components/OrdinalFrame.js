@@ -338,17 +338,17 @@ class OrdinalFrame extends React.Component {
       adjustedSize[0]
     ]
 
-    const rScaleType = currentProps.rScaleType || scaleLinear
+    const rScaleType = currentProps.rScaleType() || scaleLinear()
 
-    const rScale = rScaleType()
+    const rScale = rScaleType
       .domain(rExtent)
       .range(rDomain)
 
-    const rScaleReverse = rScaleType()
+    const rScaleReverse = rScaleType
       .domain(rDomain)
       .range(rDomain.reverse())
 
-    const rScaleVertical = rScaleType()
+    const rScaleVertical = rScaleType
       .domain(rExtent)
       .range(rDomain)
 
