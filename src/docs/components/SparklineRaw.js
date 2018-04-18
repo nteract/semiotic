@@ -101,6 +101,8 @@ export default (type = "stackedarea") => {
           ]}
           edgeRenderMode="sketchy"
           nodeRenderMode="sketchy"
+          canvasNodes={true}
+          canvasEdges={true}
           edgeStyle={{ stroke: "black" }}
           nodeStyle={d => ({
             fill: d.id === "a" ? "#00a2ce" : "black",

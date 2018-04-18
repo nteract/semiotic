@@ -37,6 +37,7 @@ export const circleNodeGenerator = ({
   baseMarkProps
 }) => {
   //this is repetitious
+
   return (
     <Mark
       {...baseMarkProps}
