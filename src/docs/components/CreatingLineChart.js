@@ -359,11 +359,12 @@ export default class CreatingLineChart extends React.Component {
     this.setState({ hoverPoint: d })
   }
 
-  lineAnnotater({ d, xScale, yScale }) {
-    if (!d.type === "hover") return null
+  lineAnnotater({ d, i, xScale, yScale }) {
+    if (d.type !== "hover") return null
 
     return (
       <circle
+        key="hover-circle"
         r={10}
         style={{ fill: "none", stroke: "red", strokeWidth: 5 }}
         cx={xScale(d.week)}
@@ -538,10 +539,20 @@ export default class CreatingLineChart extends React.Component {
             yAccessor={"grossWeekly"}
             lineStyle={{ stroke: "#00a2ce" }}
             lineType={{ type: "line", interpolator: curveCardinal }}
-            lineRenderMode={"sketchy"}
             showLinePoints={true}
-            pointStyle={{ fill: "#00a2ce" }}
+            pointStyle={d => {
+              return { fill: "#00a2ce" }
+            }}
             hoverAnnotation={true}
+            tooltipContent={d => {
+              return (
+                <div className="tooltip-content">
+                  <p>{d.parentLine.title}</p>
+                  <p>Week {d.week}</p>
+                  <p>${d.grossWeekly}</p>
+                </div>
+              )
+            }}
             margin={{ left: 80, bottom: 50, right: 10, top: 40 }}
             axes={[
               {
@@ -623,7 +634,7 @@ export default class CreatingLineChart extends React.Component {
             lineRenderMode="sketchy"
             annotations={
               this.state.hoverPoint
-                ? [Object.assign({}, this.state.hoverPoint, { type: "hover" })]
+                ? [{ ...this.state.hoverPoint, type: "hover" }]
                 : undefined
             }
             svgAnnotationRules={this.lineAnnotater}

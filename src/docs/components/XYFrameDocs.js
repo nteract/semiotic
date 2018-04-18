@@ -983,7 +983,7 @@ export default class XYFrameDocs extends React.Component {
           areaStyle={areaStyleHash[this.state.areaType]}
           areaType={areaTypeHash[this.state.areaType]}
           points={this.state.dataType === "point" ? pointTestData : undefined}
-          pointStyle={d => ({ fill: d.cat, stroke: "black", strokeWidth: 0.5 })}
+          pointStyle={d => ({ fill: d.parentLine && d.parentLine.color || d.cat, stroke: "black", strokeWidth: 0.5, r: d.parentArea && 5 })}
           customPointMark={customPointHash[this.state.customPoint]}
           lineDataAccessor={d =>
             d.data.filter(
@@ -995,7 +995,7 @@ export default class XYFrameDocs extends React.Component {
           }
           xAccessor={"px"}
           yAccessor={"py"}
-          showLinePoints={false}
+          showLinePoints={true}
           annotations={finalAnnotations}
           annotationSettings={
             annotationSettingTypes[this.state.annotationSettings]

@@ -101,7 +101,7 @@ export function createPoints({
             baseClass: "frame-piece",
             tx: dX,
             ty: dY,
-            d: d.data || d,
+            d: (d.data && { ...d, ...d.data }) || d,
             i,
             markProps,
             styleFn,

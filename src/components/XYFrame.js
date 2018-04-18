@@ -615,7 +615,7 @@ class XYFrame extends React.Component {
     //area
 
     //TODO: Process your rules first
-    if (
+    const customSVG =
       this.props.svgAnnotationRules &&
       this.props.svgAnnotationRules({
         d,
@@ -630,22 +630,9 @@ class XYFrame extends React.Component {
         areas,
         points,
         lines
-      }) !== null
-    ) {
-      return this.props.svgAnnotationRules({
-        d,
-        i,
-        screenCoordinates,
-        xScale,
-        yScale,
-        xAccessor,
-        yAccessor,
-        xyFrameProps: this.props,
-        xyFrameState: this.state,
-        areas,
-        points,
-        lines
       })
+    if (this.props.svgAnnotationRules !== undefined && customSVG !== null) {
+      return customSVG
     } else if (d.type === "xy" || d.type === "frame-hover") {
       return svgXYAnnotation({ d, i, screenCoordinates })
     } else if (d.type === "highlight") {
