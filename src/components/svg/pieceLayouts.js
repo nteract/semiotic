@@ -394,6 +394,7 @@ export function barLayout({
       }
 
       const eventListeners = eventListenersGenerator(piece, i)
+
       const xy = {
         x: xPosition,
         y: yPosition,

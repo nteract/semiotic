@@ -481,6 +481,12 @@ export default class CreatingLineChart extends React.Component {
                 orient: "bottom"
               }
             ]}
+            hoverAnnotation={true}
+            customHoverBehavior={d => console.log("custom hover d", d)}
+            customClickBehavior={d => console.log("click on d", d)}
+            customDoubleClickBehavior={d =>
+              console.log("custom doubleclick d", d)
+            }
           />
         </div>
       ),

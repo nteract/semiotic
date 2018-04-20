@@ -267,24 +267,18 @@ class InteractionLayer extends React.Component {
       return voronoiPaths
     } else if (overlay) {
       const renderedOverlay = overlay.map((overlayRegion, i) => {
+        const { overlayData, ...rest } = overlayRegion
         return (
           <Mark
             key={`overlay-${i}`}
             forceUpdate={true}
-            {...overlayRegion}
-            onClick={() => {
-              this.clickVoronoi(overlayRegion.onClick())
-            }}
-            onDoubleClick={() => {
-              this.doubleclickVoronoi(overlayRegion.onDoubleClick())
-            }}
+            {...rest}
             onMouseEnter={() => {
-              this.changeVoronoi(
-                overlayRegion.onMouseEnter(),
-                props.hoverAnnotation
-              )
+              overlayRegion.onMouseEnter && overlayRegion.onMouseEnter()
+              this.changeVoronoi(overlayData, props.hoverAnnotation)
             }}
             onMouseLeave={() => {
+              overlayRegion.onMouseLeave && overlayRegion.onMouseLeave()
               this.changeVoronoi()
             }}
           />

@@ -432,7 +432,7 @@ export const orFrameAxisGenerator = ({
 
       let axisClassname = d.className || ""
       let tickValues
-      const axisScale = rScaleType.domain(rScale.domain())
+      const axisScale = rScaleType().domain(rScale.domain())
 
       const orient = trueAxis(d.orient, projection)
 

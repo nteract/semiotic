@@ -129,14 +129,18 @@ class OrdinalFrame extends React.Component {
       projection,
       customHoverBehavior,
       customClickBehavior,
+      customDoubleClickBehavior,
       size,
       pixelColumnWidth,
       title
     } = currentProps
-    const eventListenersGenerator = generateOrdinalFrameEventListeners(
+
+    /*    const eventListenersGenerator = generateOrdinalFrameEventListeners(
       customHoverBehavior,
-      customClickBehavior
-    )
+      customClickBehavior,
+      customDoubleClickBehavior
+    ) */
+    const eventListenersGenerator = () => ({})
 
     const oAccessor = stringToFn(currentProps.oAccessor, d => d.renderKey)
     const rAccessor = stringToFn(currentProps.rAccessor, d => d.value || 1)
@@ -683,7 +687,7 @@ class OrdinalFrame extends React.Component {
         }
 
         if (projection === "radial") {
-          const radialMouseFunction = () => ({
+          const radialMousePackage = {
             type: "column-hover",
             pieces: projectedColumns[d].pieceData,
             summary: projectedColumns[d].pieceData,
@@ -693,7 +697,7 @@ class OrdinalFrame extends React.Component {
               midAngle,
               length: rScale.range()[1] / 2
             }
-          })
+          }
           const { markD, centroid, translate, midAngle } = pieArcs[i]
           return {
             markType: "path",
@@ -701,18 +705,35 @@ class OrdinalFrame extends React.Component {
             d: markD,
             transform: `translate(${translate})`,
             style: { opacity: 0, fill: "pink" },
-            onDoubleClick: radialMouseFunction,
-            onClick: radialMouseFunction,
-            onMouseEnter: radialMouseFunction,
-            onMouseLeave: () => ({})
+            overlayData: radialMousePackage,
+            onDoubleClick:
+              customDoubleClickBehavior &&
+              (() => {
+                customDoubleClickBehavior(radialMousePackage)
+              }),
+            onClick:
+              customClickBehavior &&
+              (() => {
+                customClickBehavior(radialMousePackage)
+              }),
+            onMouseEnter:
+              customHoverBehavior &&
+              (() => {
+                customHoverBehavior(radialMousePackage)
+              }),
+            onMouseLeave:
+              customHoverBehavior &&
+              (() => {
+                customHoverBehavior()
+              })
           }
         }
 
-        const baseMouseFunction = () => ({
+        const baseMousePackage = {
           type: "column-hover",
           pieces: projectedColumns[d].pieceData,
           summary: projectedColumns[d].pieceData
-        })
+        }
         return {
           markType: "rect",
           key: `hover-${d}`,
@@ -721,10 +742,23 @@ class OrdinalFrame extends React.Component {
           height: height,
           width: width,
           style: { opacity: 0, stroke: "black", fill: "pink" },
-          onClick: baseMouseFunction,
-          onDoubleClick: baseMouseFunction,
-          onMouseEnter: baseMouseFunction,
-          onMouseLeave: () => ({})
+          onDoubleClick:
+            customDoubleClickBehavior &&
+            (() => {
+              customDoubleClickBehavior(baseMousePackage)
+            }),
+          onClick:
+            customClickBehavior &&
+            (() => {
+              customClickBehavior(baseMousePackage)
+            }),
+          onMouseEnter:
+            customHoverBehavior &&
+            (() => {
+              customHoverBehavior(baseMousePackage)
+            }),
+          onMouseLeave: () => ({}),
+          overlayData: baseMousePackage
         }
       })
     }
@@ -840,23 +874,40 @@ class OrdinalFrame extends React.Component {
       const yMod = projection === "horizontal" ? midMod : zeroFunction
       const xMod = projection === "vertical" ? midMod : zeroFunction
 
-      columnOverlays = calculatedPieceData.map((d, i) => ({
-        ...d.renderElement,
-        key: `hover-${i}`,
-        type: "frame-hover",
-        style: { opacity: 0, stroke: "black", fill: "pink" },
-        onClick: () => ({
+      columnOverlays = calculatedPieceData.map((d, i) => {
+        const mousePackage = {
           ...d.piece,
           x: d.xy.x + xMod(d.xy),
           y: d.xy.y + yMod(d.xy)
-        }),
-        onMouseEnter: () => ({
-          ...d.piece,
-          x: d.xy.x + xMod(d.xy),
-          y: d.xy.y + yMod(d.xy)
-        }),
-        onMouseLeave: () => ({})
-      }))
+        }
+        return {
+          ...d.renderElement,
+          key: `hover-${i}`,
+          type: "frame-hover",
+          style: { opacity: 0, stroke: "black", fill: "pink" },
+          overlayData: mousePackage,
+          onClick:
+            customClickBehavior &&
+            (() => {
+              customClickBehavior(mousePackage.data)
+            }),
+          onDoubleClick:
+            customDoubleClickBehavior &&
+            (() => {
+              customDoubleClickBehavior(mousePackage.data)
+            }),
+          onMouseEnter:
+            customHoverBehavior &&
+            (() => {
+              customHoverBehavior(mousePackage.data)
+            }),
+          onMouseLeave:
+            customHoverBehavior &&
+            (() => {
+              customHoverBehavior()
+            })
+        }
+      })
     }
 
     const typeAriaLabel = naturalLanguageTypes[pieceType.type] || {
@@ -950,7 +1001,6 @@ class OrdinalFrame extends React.Component {
       projectedColumns,
       margin,
       legendSettings: currentProps.legend,
-      eventListenersGenerator,
       orFrameRender
     })
   }
