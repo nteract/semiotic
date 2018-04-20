@@ -338,17 +338,20 @@ class OrdinalFrame extends React.Component {
       adjustedSize[0]
     ]
 
-    const rScaleType = currentProps.rScaleType() || scaleLinear()
+    /*    const rScaleType =
+      (currentProps.rScaleType && currentProps.rScaleType()) || scaleLinear() */
+    const rScaleType =
+      (currentProps.rScaleType && currentProps.rScaleType) || scaleLinear
 
-    const rScale = rScaleType
+    const rScale = rScaleType()
       .domain(rExtent)
       .range(rDomain)
 
-    const rScaleReverse = rScaleType
+    const rScaleReverse = rScaleType()
       .domain(rDomain)
       .range(rDomain.reverse())
 
-    const rScaleVertical = rScaleType
+    const rScaleVertical = rScaleType()
       .domain(rExtent)
       .range(rDomain)
 
@@ -680,6 +683,17 @@ class OrdinalFrame extends React.Component {
         }
 
         if (projection === "radial") {
+          const radialMouseFunction = () => ({
+            type: "column-hover",
+            pieces: projectedColumns[d].pieceData,
+            summary: projectedColumns[d].pieceData,
+            arcAngles: {
+              centroid,
+              translate,
+              midAngle,
+              length: rScale.range()[1] / 2
+            }
+          })
           const { markD, centroid, translate, midAngle } = pieArcs[i]
           return {
             markType: "path",
@@ -687,32 +701,18 @@ class OrdinalFrame extends React.Component {
             d: markD,
             transform: `translate(${translate})`,
             style: { opacity: 0, fill: "pink" },
-            onClick: () => ({
-              type: "column-hover",
-              pieces: projectedColumns[d].pieceData,
-              summary: projectedColumns[d].pieceData,
-              arcAngles: {
-                centroid,
-                translate,
-                midAngle,
-                length: rScale.range()[1] / 2
-              }
-            }),
-            onMouseEnter: () => ({
-              type: "column-hover",
-              pieces: projectedColumns[d].pieceData,
-              summary: projectedColumns[d].pieceData,
-              arcAngles: {
-                centroid,
-                translate,
-                midAngle,
-                length: rScale.range()[1] / 2
-              }
-            }),
+            onDoubleClick: radialMouseFunction,
+            onClick: radialMouseFunction,
+            onMouseEnter: radialMouseFunction,
             onMouseLeave: () => ({})
           }
         }
 
+        const baseMouseFunction = () => ({
+          type: "column-hover",
+          pieces: projectedColumns[d].pieceData,
+          summary: projectedColumns[d].pieceData
+        })
         return {
           markType: "rect",
           key: `hover-${d}`,
@@ -721,16 +721,9 @@ class OrdinalFrame extends React.Component {
           height: height,
           width: width,
           style: { opacity: 0, stroke: "black", fill: "pink" },
-          onClick: () => ({
-            type: "column-hover",
-            pieces: projectedColumns[d].pieceData,
-            summary: projectedColumns[d].pieceData
-          }),
-          onMouseEnter: () => ({
-            type: "column-hover",
-            pieces: projectedColumns[d].pieceData,
-            summary: projectedColumns[d].pieceData
-          }),
+          onClick: baseMouseFunction,
+          onDoubleClick: baseMouseFunction,
+          onMouseEnter: baseMouseFunction,
           onMouseLeave: () => ({})
         }
       })
@@ -1153,7 +1146,13 @@ class OrdinalFrame extends React.Component {
     const oScale = this.oScale
     const rScale = this.rScale
 
-    const { htmlAnnotationRules, tooltipContent, projection, size } = this.props
+    const {
+      htmlAnnotationRules,
+      tooltipContent,
+      projection,
+      size,
+      useSpans
+    } = this.props
 
     const { projectedColumns } = this.state
 
@@ -1180,7 +1179,8 @@ class OrdinalFrame extends React.Component {
         rAccessor,
         orFrameProps: this.props,
         orFrameState: this.state,
-        categories: this.state.projectedColumns
+        categories: this.state.projectedColumns,
+        useSpans
       }) !== null
     ) {
       return htmlAnnotationRules({
@@ -1191,7 +1191,8 @@ class OrdinalFrame extends React.Component {
         oAccessor,
         rAccessor,
         orFrameProps: this.props,
-        categories: this.state.projectedColumns
+        categories: this.state.projectedColumns,
+        useSpans
       })
     }
 
@@ -1204,7 +1205,8 @@ class OrdinalFrame extends React.Component {
         size,
         projection,
         tooltipContent,
-        projectedColumns
+        projectedColumns,
+        useSpans
       })
     } else if (d.type === "column-hover") {
       return htmlColumnHoverRule({
@@ -1218,7 +1220,8 @@ class OrdinalFrame extends React.Component {
         adjustedPosition,
         adjustedSize,
         projection,
-        tooltipContent
+        tooltipContent,
+        useSpans
       })
     }
     return null

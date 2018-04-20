@@ -467,22 +467,21 @@ class AnnotationLayer extends React.Component {
             {svgAnnotations}
           </g>
         </svg>
-        {useSpans ? null : (
-          <div
-            className="annotation-layer-html"
-            style={{
-              background: "none",
-              pointerEvents: "none",
-              position: "absolute",
-              height: `${this.props.size[1]}px`,
-              width: `${this.props.size[0]}px`,
-              left: `${margin.left}px`,
-              top: `${margin.top}px`
-            }}
-          >
-            {htmlAnnotations}
-          </div>
-        )}
+        <SpanOrDiv
+          span={useSpans}
+          className="annotation-layer-html"
+          style={{
+            background: "none",
+            pointerEvents: "none",
+            position: "absolute",
+            height: `${this.props.size[1]}px`,
+            width: `${this.props.size[0]}px`,
+            left: `${margin.left}px`,
+            top: `${margin.top}px`
+          }}
+        >
+          {htmlAnnotations}
+        </SpanOrDiv>
       </SpanOrDiv>
     )
   }

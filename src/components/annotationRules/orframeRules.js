@@ -10,6 +10,7 @@ import { packEnclose } from "d3-hierarchy"
 import { max, min, sum, extent } from "d3-array"
 import { pointOnArcAtAngle } from "../svg/pieceDrawing"
 import { circleEnclosure, rectangleEnclosure } from "./baseRules"
+import SpanOrDiv from "../SpanOrDiv"
 
 function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
   const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0
@@ -20,14 +21,14 @@ function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
   }
 }
 
-function pieContentGenerator({ pieces, column, oAccessor }) {
+function pieContentGenerator({ pieces, column, oAccessor, useSpans }) {
   return (
-    <div className="tooltip-content">
+    <SpanOrDiv span={useSpans} className="tooltip-content">
       {oAccessor(pieces[0]) && (
         <p key="or-annotation-1">{oAccessor(pieces[0]).toString()}</p>
       )}
       <p key="or-annotation-2">{`${(column.pct * 100).toFixed(0)}%`}</p>
-    </div>
+    </SpanOrDiv>
   )
 }
 
@@ -508,7 +509,8 @@ export const htmlFrameHoverRule = ({
   oAccessor,
   projection,
   tooltipContent,
-  projectedColumns
+  projectedColumns,
+  useSpans
 }) => {
   tooltipContent =
     tooltipContent === "pie"
@@ -516,7 +518,8 @@ export const htmlFrameHoverRule = ({
           pieContentGenerator({
             pieces: [p],
             column: projectedColumns[oAccessor(p)],
-            oAccessor
+            oAccessor,
+            useSpans
           })
       : tooltipContent
   //To string because React gives a DOM error if it gets a date
@@ -552,14 +555,19 @@ export const htmlFrameHoverRule = ({
       )
     ]
   }
-  let content = <div className="tooltip-content">{contentFill}</div>
+  let content = (
+    <SpanOrDiv span={useSpans} className="tooltip-content">
+      {contentFill}
+    </SpanOrDiv>
+  )
 
   if (d.type === "frame-hover" && tooltipContent) {
     content = tooltipContent(d)
   }
 
   return (
-    <div
+    <SpanOrDiv
+      span={useSpans}
       key={`xylabel-${i}`}
       className={`annotation annotation-or-label tooltip ${projection} ${d.className ||
         ""}`}
@@ -570,7 +578,7 @@ export const htmlFrameHoverRule = ({
       }}
     >
       {content}
-    </div>
+    </SpanOrDiv>
   )
 }
 
@@ -584,7 +592,8 @@ export const htmlColumnHoverRule = ({
   adjustedPosition,
   adjustedSize,
   projection,
-  tooltipContent
+  tooltipContent,
+  useSpans
 }) => {
   //we need to ignore negative pieces to make sure the hover behavior populates on top of the positive bar
   const positionValue =
@@ -613,14 +622,14 @@ export const htmlColumnHoverRule = ({
 
   //To string because React gives a DOM error if it gets a date
   let content = (
-    <div className="tooltip-content">
+    <SpanOrDiv span={useSpans} className="tooltip-content">
       {oAccessor(d.pieces[0].data) && (
         <p key="or-annotation-1">{oAccessor(d.pieces[0].data).toString()}</p>
       )}
       <p key="or-annotation-2">
         {sum(d.pieces.map(p => p.value).filter(p => p > 0))}
       </p>
-    </div>
+    </SpanOrDiv>
   )
 
   if (d.type === "column-hover" && tooltipContent) {
@@ -641,7 +650,8 @@ export const htmlColumnHoverRule = ({
   }
 
   return (
-    <div
+    <SpanOrDiv
+      span={useSpans}
       key={`orlabel-${i}`}
       className={`annotation annotation-or-label tooltip ${projection} ${d.className ||
         ""}`}
@@ -652,7 +662,7 @@ export const htmlColumnHoverRule = ({
       }}
     >
       {content}
-    </div>
+    </SpanOrDiv>
   )
 }
 

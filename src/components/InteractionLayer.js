@@ -67,7 +67,7 @@ class InteractionLayer extends React.Component {
     const dataObject = d.data ? { ...d.data, ...d } : d
 
     if (this.props.customDoubleClickBehavior)
-      this.props.customClickBehavior(dataObject)
+      this.props.customDoubleClickBehavior(dataObject)
   }
 
   brushStart(e, c) {

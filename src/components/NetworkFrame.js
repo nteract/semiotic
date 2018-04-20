@@ -1294,7 +1294,7 @@ class NetworkFrame extends React.Component {
   }
 
   defaultNetworkHTMLRule({ d, i }) {
-    const { tooltipContent, size } = this.props
+    const { tooltipContent, size, useSpans } = this.props
     if (this.props.htmlAnnotationRules) {
       const customAnnotation = this.props.htmlAnnotationRules({
         d,
@@ -1309,7 +1309,7 @@ class NetworkFrame extends React.Component {
       }
     }
     if (d.type === "frame-hover") {
-      return htmlFrameHoverRule({ d, i, tooltipContent, size })
+      return htmlFrameHoverRule({ d, i, tooltipContent, size, useSpans })
     }
     return null
   }

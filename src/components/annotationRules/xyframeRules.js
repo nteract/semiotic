@@ -7,6 +7,7 @@ import { line, area } from "d3-shape"
 import { packEnclose } from "d3-hierarchy"
 import { extent } from "d3-array"
 import { circleEnclosure, rectangleEnclosure } from "./baseRules"
+import SpanOrDiv from "../SpanOrDiv"
 
 const pointsAlong = along => ({
   d,
@@ -374,11 +375,18 @@ export const svgAreaAnnotation = ({
   return [laLine, laLabel]
 }
 
-export const htmlTooltipAnnotation = ({ content, screenCoordinates, i, d }) => {
+export const htmlTooltipAnnotation = ({
+  content,
+  screenCoordinates,
+  i,
+  d,
+  useSpans
+}) => {
   //To string because React gives a DOM error if it gets a date
 
   return (
-    <div
+    <SpanOrDiv
+      span={useSpans}
       key={`xylabel-${i}`}
       className={`annotation annotation-xy-label ${d.className || ""} `}
       style={{
@@ -388,7 +396,7 @@ export const htmlTooltipAnnotation = ({ content, screenCoordinates, i, d }) => {
       }}
     >
       {content}
-    </div>
+    </SpanOrDiv>
   )
 }
 

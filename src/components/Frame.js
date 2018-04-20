@@ -2,10 +2,10 @@ import React from "react"
 import AnnotationLayer from "./AnnotationLayer"
 import InteractionLayer from "./InteractionLayer"
 import VisualizationLayer from "./VisualizationLayer"
-import SpanOrDiv from "./SpanOrDiv"
 import { generateFrameTitle } from "./svg/frameFunctions"
-
 import PropTypes from "prop-types"
+
+import SpanOrDiv from "./SpanOrDiv"
 
 const defaultZeroMargin = { top: 0, bottom: 0, left: 0, right: 0 }
 
