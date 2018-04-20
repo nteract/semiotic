@@ -3,19 +3,20 @@ import Annotation from "../Annotation"
 import { AnnotationCalloutCircle } from "react-annotation"
 import { packEnclose } from "d3-hierarchy"
 import { circleEnclosure, rectangleEnclosure } from "./baseRules"
+import SpanOrDiv from "../SpanOrDiv"
 
-export const htmlFrameHoverRule = ({ d, i, tooltipContent }) => {
+export const htmlFrameHoverRule = ({ d, i, tooltipContent, useSpans }) => {
   let content = d.edge ? (
-    <div className="tooltip-content">
+    <SpanOrDiv span={useSpans} className="tooltip-content">
       <p key="html-annotation-content-1">
         {d.edge.source.id} to {d.edge.target.id}
       </p>
-    </div>
+    </SpanOrDiv>
   ) : (
-    <div className="tooltip-content">
+    <SpanOrDiv span={useSpans} className="tooltip-content">
       <p key="html-annotation-content-1">{d.id}</p>
       <p key="html-annotation-content-2">Degree: {d.degree}</p>
-    </div>
+    </SpanOrDiv>
   )
 
   if (d.type === "frame-hover" && tooltipContent) {
@@ -23,7 +24,8 @@ export const htmlFrameHoverRule = ({ d, i, tooltipContent }) => {
   }
 
   return (
-    <div
+    <SpanOrDiv
+      span={useSpans}
       key={`xylabel${i}`}
       className={`annotation annotation-network-label ${d.className || ""}`}
       style={{
@@ -33,7 +35,7 @@ export const htmlFrameHoverRule = ({ d, i, tooltipContent }) => {
       }}
     >
       {content}
-    </div>
+    </SpanOrDiv>
   )
 }
 

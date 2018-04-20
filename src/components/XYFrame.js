@@ -52,6 +52,8 @@ import { xyFrameChangeProps } from "./constants/frame_props"
 
 import PropTypes from "prop-types"
 
+import SpanOrDiv from "./SpanOrDiv"
+
 const naturalLanguageLineType = {
   line: { items: "line", chart: "line chart" },
   stackedarea: { items: "stacked area", chart: "stacked area chart" },
@@ -729,7 +731,7 @@ class XYFrame extends React.Component {
 
     let screenCoordinates = []
 
-    const { size } = this.props
+    const { size, useSpans } = this.props
 
     const idAccessor = stringToFn(
       this.props.lineIDAccessor,
@@ -821,7 +823,7 @@ class XYFrame extends React.Component {
     }
     if (d.type === "frame-hover") {
       let content = (
-        <div className="tooltip-content">
+        <SpanOrDiv span={useSpans} className="tooltip-content">
           <p key="html-annotation-content-1">{xString}</p>
           <p key="html-annotation-content-2">{yString}</p>
           {d.percent ? (
@@ -829,7 +831,7 @@ class XYFrame extends React.Component {
               {parseInt(d.percent * 1000, 10) / 10}%
             </p>
           ) : null}
-        </div>
+        </SpanOrDiv>
       )
 
       if (d.type === "frame-hover" && this.props.tooltipContent) {
@@ -840,7 +842,8 @@ class XYFrame extends React.Component {
         screenCoordinates,
         size,
         i,
-        d
+        d,
+        useSpans
       })
     }
     return null

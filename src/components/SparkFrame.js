@@ -32,33 +32,10 @@ const allFrameDefaults = {
   margin: 0
 }
 
-function simpleValueAccessor(props, d) {
-  let value = d.y
-  if (props.yAccessor)
-    value =
-      typeof props.yAccessor === "string"
-        ? d[props.yAccessor]
-        : props.yAccessor(d)
-
-  return value.toString ? value.toString() : value
-}
-
 const xyFrameDefaults = props => ({
   ...allFrameDefaults,
   ...props,
-  hoverAnnotation:
-    props.hoverAnnotation === true
-      ? [
-          d => {
-            return {
-              type: "react-annotation",
-              label: simpleValueAccessor(props, d),
-              dx: 50,
-              dy: -50
-            }
-          }
-        ]
-      : props.hoverAnnotation,
+  hoverAnnotation: props.hoverAnnotation,
   axes: props.axes
     ? props.axes.map(a => ({ ...axisDefaults, ...a }))
     : props.axes
@@ -67,7 +44,7 @@ const xyFrameDefaults = props => ({
 const ordinalFrameDefaults = props => ({
   ...allFrameDefaults,
   ...props,
-  //  hoverAnnotation: props.hoverAnnotation === true ? [{ type: "react-annotation"}] : props.hoverAnnotation,
+  hoverAnnotation: props.hoverAnnotation,
   axis: props.axis ? { axisDefaults, ...props.axis } : props.axis
 })
 
