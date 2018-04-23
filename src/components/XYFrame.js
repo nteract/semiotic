@@ -160,14 +160,7 @@ class XYFrame extends React.Component {
     }
   }
 
-  screenScales({
-    xExtent,
-    yExtent,
-    currentProps,
-    adjustedSize,
-    xScaleType,
-    yScaleType
-  }) {
+  screenScales({ xExtent, yExtent, adjustedSize, xScaleType, yScaleType }) {
     const xDomain = [0, adjustedSize[0]]
     const yDomain = [adjustedSize[1], 0]
 

@@ -2,7 +2,6 @@ import { contourDensity } from "d3-contour"
 import { scaleLinear } from "d3-scale"
 import polylabel from "@mapbox/polylabel"
 import { hexbin } from "d3-hexbin"
-import { circlePath } from "./frameFunctions"
 
 export function contouring({ areaType, data, finalXExtent, finalYExtent }) {
   let projectedAreas = []
@@ -78,7 +77,7 @@ export function hexbinning({
   }
 
   const {
-    binGraphic = "hex",
+    //    binGraphic = "hex",
     bins = 0.05,
     cellPx,
     binValue = d => d.length
@@ -106,8 +105,7 @@ export function hexbinning({
 
     const hexMax = Math.max(...hexes.map(d => binValue(d)))
 
-    //Option for blank hexes?
-    const hexastring = hexbinner.hexagon()
+    //Option for blank hexe
     const hexBase = [
       [0, -1],
       [0.866, -0.5],
@@ -125,7 +123,7 @@ export function hexbinning({
       d[1] * hexHeight
     ])
 
-    const hexbinProjectedAreas = hexes.map((d, i) => {
+    const hexbinProjectedAreas = hexes.map(d => {
       const hexValue = binValue(d)
       d.x = hexBinXScale.invert(d.x)
       d.y = hexBinYScale.invert(d.y)
@@ -150,9 +148,7 @@ export function heatmapping({
   data,
   finalXExtent,
   finalYExtent,
-  size,
-  xScale,
-  yScale
+  size
 }) {
   let projectedAreas = []
   if (!areaType.type) {
@@ -160,8 +156,7 @@ export function heatmapping({
   }
 
   const {
-    binGraphic = "square",
-    resolution = 0.05,
+    //    binGraphic = "square",
     binValue = d => d.length,
     xBins = areaType.yBins || 0.05,
     yBins = xBins,
