@@ -122,6 +122,11 @@ export default class CreatingBarChart extends React.Component {
             style={{ fill: "#00a2ce", stroke: "white" }}
             type={"bar"}
             oLabel={true}
+            hoverAnnotation={[]}
+            customHoverBehavior={d => console.log("hover", d)}
+            customClickBehavior={d => console.log("click", d)}
+            customDoubleClickBehavior={d => console.log("doub;leclick", d)}
+            renderMode="sketchy"
           />
         </div>
       ),

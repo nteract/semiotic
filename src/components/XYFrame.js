@@ -160,12 +160,16 @@ class XYFrame extends React.Component {
     }
   }
 
-  screenScales({ xExtent, yExtent, currentProps, adjustedSize }) {
+  screenScales({
+    xExtent,
+    yExtent,
+    currentProps,
+    adjustedSize,
+    xScaleType,
+    yScaleType
+  }) {
     const xDomain = [0, adjustedSize[0]]
     const yDomain = [adjustedSize[1], 0]
-
-    const xScaleType = currentProps.xScaleType || scaleLinear()
-    const yScaleType = currentProps.yScaleType || scaleLinear()
 
     const xScale = xScaleType
     const yScale = yScaleType
@@ -212,7 +216,9 @@ class XYFrame extends React.Component {
       lineRenderMode,
       xExtent: baseXExtent,
       yExtent: baseYExtent,
-      title
+      title,
+      xScaleType = scaleLinear(),
+      yScaleType = scaleLinear()
     } = currentProps
     let {
       projectedLines,
@@ -262,7 +268,14 @@ class XYFrame extends React.Component {
           fullDataset,
           calculatedXExtent,
           calculatedYExtent
-        } = calculateDataExtent({ ...currentProps, xExtent, yExtent }))
+        } = calculateDataExtent({
+          ...currentProps,
+          xExtent,
+          yExtent,
+          adjustedSize,
+          xScaleType,
+          yScaleType
+        }))
       }
     } else {
       ;({
@@ -282,7 +295,9 @@ class XYFrame extends React.Component {
       yExtent,
       currentProps,
       margin,
-      adjustedSize
+      adjustedSize,
+      xScaleType,
+      yScaleType
     })
 
     const canvasDrawing = []

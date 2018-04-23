@@ -12,7 +12,7 @@ import {
   bumpChart,
   lineChart
 } from "../svg/lineDrawing"
-import { contouring } from "../svg/areaDrawing"
+import { contouring, hexbinning, heatmapping } from "../svg/areaDrawing"
 import { max, min, extent } from "d3-array"
 
 const builtInTransformations = {
@@ -53,6 +53,9 @@ export const calculateDataExtent = ({
   areaDataAccessor,
   projection,
   areaType,
+  adjustedSize: size,
+  xScaleType,
+  yScaleType,
   defined = () => true
 }) => {
   lineDataAccessor = stringToFn(
@@ -229,6 +232,43 @@ export const calculateDataExtent = ({
       finalXExtent,
       finalYExtent
     })
+  } else if (
+    areaType &&
+    (areaType === "hexbin" || (areaType.type && areaType.type === "hexbin"))
+  ) {
+    projectedAreas = hexbinning({
+      areaType,
+      data: projectedAreas,
+      projectedX,
+      projectedY,
+      finalXExtent,
+      finalYExtent,
+      size,
+      xScaleType,
+      yScaleType
+    })
+    fullDataset = [
+      ...projectedAreas.map(d => d.data),
+      ...fullDataset.filter(d => !d.parentArea)
+    ]
+  } else if (
+    areaType &&
+    (areaType === "heatmap" || (areaType.type && areaType.type === "heatmap"))
+  ) {
+    projectedAreas = heatmapping({
+      areaType,
+      data: projectedAreas,
+      projectedX,
+      projectedY,
+      finalXExtent,
+      finalYExtent,
+      size
+    })
+    console.log("projectedAreas", projectedAreas)
+    fullDataset = [
+      ...projectedAreas.map(d => ({ ...d })),
+      ...fullDataset.filter(d => !d.parentArea)
+    ]
   } else if (
     typeof areaType === "function" ||
     (areaType && areaType.type && typeof areaType.type === "function")

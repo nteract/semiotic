@@ -355,14 +355,14 @@ class AnnotationLayer extends React.Component {
       const fixedAnnotations = initialSVGAnnotations.filter(
         d => !d.props || !d.props.noteData || d.props.noteData.fixedPosition
       )
-      adjustableAnnotationsKey =
-        adjustableAnnotations.map(adjustedAnnotationKeyMapper).join(",") +
-        objectStringKey(
-          Object.assign(annotationProcessor, {
-            point: props.pointSizeFunction,
-            label: props.labelSizeFunction
-          })
-        )
+      adjustableAnnotationsKey = `${adjustableAnnotations
+        .map(adjustedAnnotationKeyMapper)
+        .join(",")}${objectStringKey(
+        Object.assign(annotationProcessor, {
+          point: props.pointSizeFunction,
+          label: props.labelSizeFunction
+        })
+      )}${props.size}`
 
       if (annotationProcessor.type === false) {
         adjustedAnnotations = adjustableAnnotations
