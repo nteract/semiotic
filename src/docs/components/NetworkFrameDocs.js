@@ -352,18 +352,7 @@ export default class NetworkFrameDocs extends React.Component {
             NetworkFrame API
           </Button>
           <ProcessViz frameSettings={networkChart} frameType="NetworkFrame" />
-          <NetworkFrame
-            {...networkChart}
-            customHoverBehavior={d => {
-              console.log("hover", d)
-            }}
-            customClickBehavior={d => {
-              console.log("Click", d)
-            }}
-            customDoubleClickBehavior={d => {
-              console.log("DoubleClick", d)
-            }}
-          />
+          <NetworkFrame {...networkChart} />
         </div>
       ),
       source: `

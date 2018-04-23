@@ -15,7 +15,7 @@ function roundToTenth(number) {
   return Math.round(number * 10) / 10
 }
 
-const circlePath = (cx, cy, r) =>
+export const circlePath = (cx, cy, r) =>
   `${[
     "M",
     roundToTenth(cx - r),
