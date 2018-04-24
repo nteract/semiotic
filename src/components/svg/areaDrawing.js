@@ -148,7 +148,9 @@ export function heatmapping({
   data,
   finalXExtent,
   finalYExtent,
-  size
+  size,
+  xScaleType,
+  yScaleType
 }) {
   let projectedAreas = []
   if (!areaType.type) {
@@ -166,19 +168,12 @@ export function heatmapping({
   const xBinPercent = xBins < 1 ? xBins : 1 / xBins
   const yBinPercent = yBins < 1 ? yBins : 1 / yBins
 
-  const actualResolution = [
-    (xCellPx &&
-      Math.abs(finalXExtent[1] - finalXExtent[0]) * (xCellPx / size[0])) ||
-      Math.abs(finalXExtent[1] - finalXExtent[0]) * xBinPercent,
-    (yCellPx &&
-      Math.abs(finalYExtent[1] - finalYExtent[0]) * (yCellPx / size[1])) ||
-      Math.abs(finalYExtent[1] - finalYExtent[0]) * yBinPercent
-  ]
+  const heatmapBinXScale = xScaleType.domain(finalXExtent).range([0, size[0]])
+  const heatmapBinYScale = yScaleType.domain(finalYExtent).range([size[1], 0])
 
-  const gridSize = [(xCellPx && size[0]) || 1000, (yCellPx && size[1]) || 1000]
-  const stepSize = [
-    xCellPx || parseInt(xBinPercent * 1000),
-    yCellPx || parseInt(yBinPercent * 1000)
+  const actualResolution = [
+    ((xCellPx && xCellPx / size[0]) || xBinPercent) * size[0],
+    ((yCellPx && yCellPx / size[1]) || yBinPercent) * size[1]
   ]
 
   const halfResolution = [actualResolution[0] / 2, actualResolution[1] / 2]
@@ -189,42 +184,34 @@ export function heatmapping({
 
     let cell
     let gridColumn
-    let x = finalXExtent[0]
-    for (let i = 0; i < gridSize[0]; i += stepSize[0]) {
+
+    for (let i = 0; i < size[0]; i += actualResolution[0]) {
+      const x = heatmapBinXScale.invert(i)
+      const x1 = heatmapBinXScale.invert(i + actualResolution[0])
+
       gridColumn = []
       grid.push(gridColumn)
-      let y = finalYExtent[0]
-      for (let j = 0; j < gridSize[1]; j += stepSize[1]) {
+      for (let j = 0; j < size[1]; j += actualResolution[1]) {
+        const y = heatmapBinYScale.invert(j)
+        const y1 = heatmapBinYScale.invert(j + actualResolution[1])
         cell = {
-          x: x + halfResolution[0],
-          y: y + halfResolution[1],
+          x: (x + x1) / 2,
+          y: (y + y1) / 2,
           binItems: [],
           value: 0,
-          _xyfCoordinates: [
-            [x, y],
-            [x + actualResolution[0], y],
-            [x + actualResolution[0], y + actualResolution[1]],
-            [x, y + actualResolution[1]]
-          ],
+          _xyfCoordinates: [[x, y], [x1, y], [x1, y1], [x, y1]],
           parentArea: heatmapData
         }
         gridColumn.push(cell)
         flatGrid.push(cell)
-        y += actualResolution[1]
       }
       gridColumn.push(cell)
-      x += actualResolution[0]
     }
     grid.push(gridColumn)
 
     heatmapData._xyfCoordinates.forEach((d, di) => {
-      const xCoordinate = parseInt(
-        (d[0] - finalXExtent[0]) / actualResolution[0]
-      )
-      const yCoordinate = parseInt(
-        (d[1] - finalYExtent[0]) / actualResolution[1]
-      )
-
+      const xCoordinate = parseInt(heatmapBinXScale(d[0]) / actualResolution[0])
+      const yCoordinate = parseInt(heatmapBinYScale(d[1]) / actualResolution[1])
       grid[xCoordinate][yCoordinate].binItems.push(heatmapData.coordinates[di])
     })
 

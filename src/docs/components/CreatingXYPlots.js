@@ -125,6 +125,9 @@ export default class CreatingXYPlots extends React.Component {
             data visualization of the points in that grid, or anything else you
             want in the tooltip using tooltipContent.
           </p>
+          <p>
+            Heatmap will handle low or power scales, whereas hexbin will not.
+          </p>
           <XYFrame
             size={[500, 800]}
             areas={[{ coordinates: pointTestData }]}

@@ -6,17 +6,17 @@ export default class StoryBoarder {
   }
 
   startTimer() {
-    //        console.log('setTimeout?')
+    //        console.info('setTimeout?')
     return null
   }
 
   get chapters() {
-    //        console.log('get chapters')
+    //        console.info('get chapters')
     return null
   }
 
   set chapters(newChapters) {
-    //        console.log('set chapters', newChapters)
+    //        console.info('set chapters', newChapters)
     return newChapters
   }
 }

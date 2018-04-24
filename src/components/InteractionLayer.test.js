@@ -4,8 +4,7 @@ import InteractionLayer from "./InteractionLayer"
 import { scaleLinear } from "d3-scale"
 
 const xyEndFunction = end => {
-  //  console.log("xyend")
-  console.log(end)
+  console.info(end)
 }
 
 describe("InteractionLayer", () => {
