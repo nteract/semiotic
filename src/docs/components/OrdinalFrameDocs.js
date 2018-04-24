@@ -207,8 +207,8 @@ const exampleAnnotations = [
     type: "or",
     label: "OR at 550",
     eventListeners: {
-      onMouseEnter: () => console.log("Mouse Enter"),
-      onMouseLeave: () => console.log("Mouse Leave")
+      onMouseEnter: () => console.info("Mouse Enter"),
+      onMouseLeave: () => console.info("Mouse Leave")
     }
   },
   {
@@ -221,8 +221,8 @@ const exampleAnnotations = [
     ],
     label: "enclose of 450 and 500",
     eventListeners: {
-      onMouseEnter: () => console.log("Mouse Enter"),
-      onMouseLeave: () => console.log("Mouse Leave")
+      onMouseEnter: () => console.info("Mouse Enter"),
+      onMouseLeave: () => console.info("Mouse Leave")
     }
   },
   {
@@ -232,8 +232,8 @@ const exampleAnnotations = [
     type: "r",
     label: "r at 850",
     eventListeners: {
-      onMouseEnter: () => console.log("Mouse Enter"),
-      onMouseLeave: () => console.log("Mouse Leave")
+      onMouseEnter: () => console.info("Mouse Enter"),
+      onMouseLeave: () => console.info("Mouse Leave")
     }
   }
 ]

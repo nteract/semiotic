@@ -123,9 +123,9 @@ export default class CreatingBarChart extends React.Component {
             type={"bar"}
             oLabel={true}
             hoverAnnotation={[]}
-            customHoverBehavior={d => console.log("hover", d)}
-            customClickBehavior={d => console.log("click", d)}
-            customDoubleClickBehavior={d => console.log("doub;leclick", d)}
+            customHoverBehavior={d => console.info("hover", d)}
+            customClickBehavior={d => console.info("click", d)}
+            customDoubleClickBehavior={d => console.info("doub;leclick", d)}
             renderMode="sketchy"
           />
         </div>

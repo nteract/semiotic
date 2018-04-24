@@ -30,7 +30,7 @@ describe("Axis", () => {
   it("renders with annotation brush area properly", () => {
     let clicked = false
     const testFuncStub = e => {
-      console.log("e", e)
+      console.info("e", e)
       clicked = true
     }
     const shallowAxisBrushLeft = shallow(

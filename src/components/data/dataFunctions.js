@@ -262,9 +262,11 @@ export const calculateDataExtent = ({
       projectedY,
       finalXExtent,
       finalYExtent,
-      size
+      size,
+      xScaleType,
+      yScaleType
     })
-    console.log("projectedAreas", projectedAreas)
+
     fullDataset = [
       ...projectedAreas.map(d => ({ ...d })),
       ...fullDataset.filter(d => !d.parentArea)

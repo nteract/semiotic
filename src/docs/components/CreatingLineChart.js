@@ -482,10 +482,10 @@ export default class CreatingLineChart extends React.Component {
               }
             ]}
             hoverAnnotation={true}
-            customHoverBehavior={d => console.log("custom hover d", d)}
-            customClickBehavior={d => console.log("click on d", d)}
+            customHoverBehavior={d => console.info("custom hover d", d)}
+            customClickBehavior={d => console.info("click on d", d)}
             customDoubleClickBehavior={d =>
-              console.log("custom doubleclick d", d)
+              console.info("custom doubleclick d", d)
             }
           />
         </div>
@@ -507,10 +507,10 @@ export default class CreatingLineChart extends React.Component {
               }
             ]}
             hoverAnnotation={true}
-            customHoverBehavior={d => console.log("custom hover d", d)}
-            customClickBehavior={d => console.log("click on d", d)}
+            customHoverBehavior={d => console.info("custom hover d", d)}
+            customClickBehavior={d => console.info("click on d", d)}
             customDoubleClickBehavior={d =>
-              console.log("custom doubleclick d", d)
+              console.info("custom doubleclick d", d)
             }
           />`
     })
