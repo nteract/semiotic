@@ -1060,24 +1060,29 @@ class NetworkFrame extends React.Component {
       this.graphSettings.edges = currentProps.edges
     }
 
-    if (networkSettings.type === "flowchart") {
-      if (networkSettings.direction === "up") {
-        projectedNodes.forEach(node => {
-          const ox = node.x
-          node.x = node.y
-          node.y = adjustedSize[1] - ox
-        })
-      } else if (networkSettings.direction === "down") {
-        projectedNodes.forEach(node => {
-          const ox = node.x
-          node.x = node.y
-          node.y = ox
-        })
-      } else if (networkSettings.direction === "left") {
-        projectedNodes.forEach(node => {
-          node.x = adjustedSize[0] - node.x
-        })
-      }
+    if (networkSettings.direction === "flip") {
+      projectedNodes.forEach(node => {
+        const ox = node.x
+        const oy = node.y
+        node.x = adjustedSize[0] - node.x
+        node.y = adjustedSize[1] - node.y
+      })
+    } else if (networkSettings.direction === "up") {
+      projectedNodes.forEach(node => {
+        const ox = node.x
+        node.x = node.y
+        node.y = adjustedSize[1] - ox
+      })
+    } else if (networkSettings.direction === "down") {
+      projectedNodes.forEach(node => {
+        const ox = node.x
+        node.x = node.y
+        node.y = ox
+      })
+    } else if (networkSettings.direction === "left") {
+      projectedNodes.forEach(node => {
+        node.x = adjustedSize[0] - node.x
+      })
     }
     if (
       networkSettings.zoom !== false &&
