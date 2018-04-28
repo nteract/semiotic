@@ -1040,7 +1040,6 @@ export default class XYFrameDocs extends React.Component {
           defined={
             this.state.defined === "inactive" ? undefined : d => d.py !== 0
           }
-          axes={axesHash[this.state.axes]}
           lineRenderMode={
             this.state.renderMode === "none"
               ? undefined

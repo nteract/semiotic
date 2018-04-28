@@ -83,7 +83,8 @@ class Frame extends React.Component {
       interactionOverflow,
       canvasPostProcess,
       baseMarkProps,
-      useSpans
+      useSpans,
+      canvasRendering
     } = this.props
 
     const { voronoiHover } = this.state
@@ -102,7 +103,9 @@ class Frame extends React.Component {
       }
     }
 
-    const annotationLayer = (totalAnnotations || legendSettings) && (
+    const annotationLayer = ((totalAnnotations &&
+      totalAnnotations.length > 0) ||
+      legendSettings) && (
       <AnnotationLayer
         legendSettings={legendSettings}
         margin={margin}
@@ -163,17 +166,43 @@ class Frame extends React.Component {
             className="visualization-layer"
             style={{ position: "absolute" }}
           >
-            <canvas
-              className="frame-canvas"
-              ref={canvasContext => (this.canvasContext = canvasContext)}
-              style={{
-                position: "absolute",
-                left: `0px`,
-                top: `0px`
-              }}
-              width={size[0]}
-              height={size[1]}
-            />
+            {(axesTickLines || backgroundGraphics) && (
+              <svg
+                className="background-graphics"
+                style={{ position: "absolute" }}
+                width={size[0]}
+                height={size[1]}
+              >
+                {backgroundGraphics && (
+                  <g aria-hidden={true} className="background-graphics">
+                    {backgroundGraphics}
+                  </g>
+                )}
+                {axesTickLines && (
+                  <g
+                    transform={`translate(${margin.left},${margin.top})`}
+                    key="visualization-tick-lines"
+                    className="axis axis-tick-lines"
+                    aria-hidden={true}
+                  >
+                    {axesTickLines}
+                  </g>
+                )}
+              </svg>
+            )}
+            {canvasRendering && (
+              <canvas
+                className="frame-canvas"
+                ref={canvasContext => (this.canvasContext = canvasContext)}
+                style={{
+                  position: "absolute",
+                  left: `0px`,
+                  top: `0px`
+                }}
+                width={size[0]}
+                height={size[1]}
+              />
+            )}
             <svg
               className="visualization-layer"
               style={{ position: "absolute" }}
@@ -181,11 +210,7 @@ class Frame extends React.Component {
               height={size[1]}
             >
               {finalFilterDefs}
-              {backgroundGraphics && (
-                <g aria-hidden={true} className="background-graphics">
-                  {backgroundGraphics}
-                </g>
-              )}
+
               <VisualizationLayer
                 disableContext={this.props.disableContext}
                 renderPipeline={renderPipeline}
@@ -196,7 +221,6 @@ class Frame extends React.Component {
                 xScale={xScale}
                 yScale={yScale}
                 axes={axes}
-                axesTickLines={axesTickLines}
                 title={generatedTitle}
                 frameKey={frameKey}
                 canvasContext={this.state.canvasContext}
