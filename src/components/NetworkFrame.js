@@ -1341,7 +1341,9 @@ class NetworkFrame extends React.Component {
       disableContext,
       canvasPostProcess,
       baseMarkProps,
-      useSpans
+      useSpans,
+      canvasNodes,
+      canvasEdges
     } = this.props
     const {
       backgroundGraphics,
@@ -1430,6 +1432,7 @@ class NetworkFrame extends React.Component {
         canvasPostProcess={canvasPostProcess}
         baseMarkProps={baseMarkProps}
         useSpans={useSpans}
+        canvasRendering={canvasNodes || canvasEdges}
       />
     )
   }

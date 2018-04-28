@@ -1325,7 +1325,9 @@ class OrdinalFrame extends React.Component {
       hoverAnnotation,
       canvasPostProcess,
       baseMarkProps,
-      useSpans
+      useSpans,
+      canvasPieces,
+      canvasSummaries
     } = this.props
 
     const {
@@ -1433,6 +1435,7 @@ class OrdinalFrame extends React.Component {
         interactionOverflow={interactionOverflow}
         canvasPostProcess={canvasPostProcess}
         baseMarkProps={baseMarkProps}
+        canvasRendering={canvasPieces || canvasSummaries}
       />
     )
   }
