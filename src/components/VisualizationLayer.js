@@ -54,11 +54,16 @@ class VisualizationLayer extends React.PureComponent {
       this.props.margin.left,
       this.props.margin.top
     )
-    context.clearRect(0, 0, size[0], size[1])
+    context.clearRect(
+      -this.props.margin.left,
+      -this.props.margin.top,
+      size[0],
+      size[1]
+    )
 
     this.canvasDrawing.forEach(piece => {
       const style = piece.styleFn
-        ? piece.styleFn({ ...piece.d, ...piece.d.data }, piece.i)
+        ? piece.styleFn({ ...piece.d, ...piece.d.data }, piece.i) || {}
         : { fill: "black", stroke: "black" }
 
       let fill = style.fill ? style.fill : "black"

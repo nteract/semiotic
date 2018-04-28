@@ -31,6 +31,11 @@ class Frame extends React.Component {
     this.setState({ canvasContext: this.canvasContext })
   }
 
+  componentDidUpdate() {
+    if (this.canvasContext !== this.state.canvasContext)
+      this.setState({ canvasContext: this.canvasContext })
+  }
+
   getChildContext() {
     return { canvas: this.canvasContext }
   }
