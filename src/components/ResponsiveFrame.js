@@ -1,9 +1,5 @@
 import React from "react"
 import PropTypes from "prop-types"
-import XYFrame from "./XYFrame"
-import OrdinalFrame from "./OrdinalFrame"
-import NetworkFrame from "./NetworkFrame"
-import MinimapXYFrame from "./MinimapXYFrame"
 import elementResizeEvent from "element-resize-event"
 
 const createResponsiveFrame = Frame =>
