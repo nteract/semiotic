@@ -4,7 +4,7 @@ import React from "react"
 //import MarkContext from './MarkContext'
 import { hexToRgb } from "./svg/SvgHelper"
 
-import rough from "roughjs"
+import { RoughCanvas } from "roughjs/lib/canvas"
 
 import PropTypes from "prop-types"
 
@@ -97,7 +97,7 @@ class VisualizationLayer extends React.PureComponent {
         (renderObject && renderObject.renderMode) || renderObject
 
       if (actualRenderMode) {
-        rc = rc || rough.canvas(this.props.canvasContext)
+        rc = rc || new RoughCanvas(this.props.canvasContext)
         const rcExtension =
           (typeof renderObject === "object" && renderObject) || {}
         rcSettings = {

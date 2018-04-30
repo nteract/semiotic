@@ -59,25 +59,29 @@ export default ({
   annotations = [],
   type = "sankey",
   orient = "left",
-  cyclical = false
+  cyclical = false,
+  direction,
+  size = [700, 400]
 }) => {
   const sankeyChart = {
-    size: [700, 400],
+    size: size,
     nodes: or_data.map(d => Object.assign({}, d)),
     edges:
       type === "chord"
         ? mirroredNetworkData
-        : cyclical ? cyclicalData : network_data,
+        : cyclical
+          ? cyclicalData
+          : network_data,
     nodeStyle: d => ({
       fill: colors[d.category],
       stroke: "black"
     }),
     edgeStyle: d => ({
-      stroke: colors[d.source.category],
+      stroke: "black",
       fill: colors[d.source.category],
       strokeWidth: 0.5,
-      fillOpacity: 0.75,
-      strokeOpacity: 0.75
+      fillOpacity: 1,
+      strokeOpacity: 1
     }),
     nodeIDAccessor: "id",
     sourceAccessor: "source",
@@ -85,12 +89,9 @@ export default ({
     nodeSizeAccessor: 5,
     zoomToFit: type === "force",
     hoverAnnotation: true,
-    networkType: { type: type, orient: orient, iterations: 500 },
+    networkType: { type: type, orient: orient, iterations: 500, direction },
     legend: { legendGroups: areaLegendGroups },
-    nodeLabels: d => <text textAnchor="middle">{d.id}</text>,
-    margin: { right: 130 },
-    canvasEdges: (d, i) =>
-      d.source.category === "Oil" || d.source.category === "Coal"
+    margin: { right: 130 }
   }
 
   if (type === "chord") {
