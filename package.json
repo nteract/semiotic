@@ -1,10 +1,13 @@
 {
   "name": "semiotic",
-  "version": "1.10.1",
+  "version": "1.10.2",
   "description": "The semiotic JavaScript data visualization framework",
   "main": "lib/index.js",
   "unpkg": "dist/semiotic.min.js",
-  "files": ["lib", "dist"],
+  "files": [
+    "lib",
+    "dist"
+  ],
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
@@ -16,8 +19,7 @@
     "deploy-docs": "sh ./scripts/docs",
     "ci-deploy-docs": "sh ./scripts/docs-ci",
     "gh-pages": "REACT_APP_GH_PAGES_PATH='semiotic' npm run build",
-    "prepublish":
-      "rollup -c && uglifyjs ./dist/semiotic.js -o ./dist/semiotic.min.js && rm ./dist/semiotic.js"
+    "prepublish": "rollup -c && uglifyjs ./dist/semiotic.js -o ./dist/semiotic.min.js && rm ./dist/semiotic.js"
   },
   "repository": {
     "type": "git",
@@ -117,6 +119,9 @@
     "svg-path-bounding-box": "1.0.4"
   },
   "nyc": {
-    "exclude": ["tests/unit/lib/*.js", "tests/unit/specs/**/*.js"]
+    "exclude": [
+      "tests/unit/lib/*.js",
+      "tests/unit/specs/**/*.js"
+    ]
   }
 }
