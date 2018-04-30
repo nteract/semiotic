@@ -21,7 +21,6 @@ import { AnnotationLabel } from "react-annotation"
 import Frame from "./Frame"
 
 import DownloadButton from "./DownloadButton"
-import { linearRibbon } from "./svg/SvgHelper"
 
 import { calculateMargin, adjustedPositionSize } from "./svg/frameFunctions"
 import { pointOnArcAtAngle } from "./svg/pieceDrawing"
@@ -36,7 +35,10 @@ import {
   chordEdgeGenerator,
   sankeyNodeGenerator,
   wordcloudNodeGenerator,
-  circleNodeGenerator
+  circleNodeGenerator,
+  areaLink,
+  ribbonLink,
+  circularAreaLink
 } from "./svg/networkDrawing"
 
 import { stringToFn } from "./data/dataFunctions"
@@ -53,7 +55,7 @@ import {
   sankeyJustify,
   sankeyCircular
 } from "d3-sankey-circular"
-import { interpolateNumber } from "d3-interpolate"
+
 import { chord, ribbon } from "d3-chord"
 import { arc } from "d3-shape"
 import {
@@ -197,59 +199,6 @@ const sankeyOrientHash = {
 
 const xScale = scaleIdentity()
 const yScale = scaleIdentity()
-
-const curvature = 0.5
-
-const areaLink = d => {
-  const x0 = d.source.x1,
-    x1 = d.target.x0,
-    xi = interpolateNumber(x0, x1),
-    x2 = xi(curvature),
-    x3 = xi(1 - curvature),
-    y0 = d.y0 - d.sankeyWidth / 2,
-    y1 = d.y1 - d.sankeyWidth / 2,
-    y2 = d.y1 + d.sankeyWidth / 2,
-    y3 = d.y0 + d.sankeyWidth / 2
-
-  return `M${x0},${y0}C${x2},${y0} ${x3},${y1} ${x1},${y1}L${x1},${y2}C${x3},${y2} ${x2},${y3} ${x0},${y3}Z`
-}
-
-function circularAreaLink(link) {
-  const linkGenerator = linearRibbon()
-    .x(d => d.x)
-    .y(d => d.y)
-    //    .interpolate(curveBasisClosed)
-    .r(() => link.sankeyWidth / 2)
-
-  const xyForLink = [
-    {
-      x: link.circularPathData.sourceX,
-      y: link.circularPathData.sourceY
-    },
-    {
-      x: link.circularPathData.leftFullExtent,
-      y: link.circularPathData.sourceY
-    },
-    {
-      x: link.circularPathData.leftFullExtent,
-      y: link.circularPathData.verticalFullExtent
-    },
-    {
-      x: link.circularPathData.rightFullExtent,
-      y: link.circularPathData.verticalFullExtent
-    },
-    {
-      x: link.circularPathData.rightFullExtent,
-      y: link.circularPathData.targetY
-    },
-    {
-      x: link.circularPathData.targetX,
-      y: link.circularPathData.targetY
-    }
-  ]
-
-  return linkGenerator(xyForLink)
-}
 
 const matrixify = ({ edgeHash, nodes, edgeWidthAccessor, nodeIDAccessor }) => {
   const matrix = []
@@ -576,7 +525,12 @@ class NetworkFrame extends React.Component {
 
     //Support bubble chart with circle pack and with force
     if (networkSettings.type === "sankey") {
-      edgeType = d => (d.circular ? circularAreaLink(d) : areaLink(d))
+      edgeType = d =>
+        d.circular
+          ? circularAreaLink(d)
+          : edgeType === "angled"
+            ? ribbonLink(d)
+            : areaLink(d)
 
       customNodeIcon = customNodeIcon ? customNodeIcon : sankeyNodeGenerator
     } else if (networkSettings.type === "chord") {
@@ -705,7 +659,8 @@ class NetworkFrame extends React.Component {
           iterations = 100,
           nodePadding = 8,
           nodeWidth = networkSettings.type === "flowchart" ? 2 : 24,
-          customSankey
+          customSankey,
+          direction = "right"
         } = networkSettings
         const sankeyOrient = sankeyOrientHash[orient]
 
@@ -773,10 +728,12 @@ class NetworkFrame extends React.Component {
           d.x = d.x0 + d.width / 2
           d.y = d.y0 + d.height / 2
           d.radius = d.height / 2
+          d.direction = direction
         })
 
         projectedEdges.forEach(d => {
           d.sankeyWidth = d.width
+          d.direction = direction
           d.width = undefined
         })
       } else if (networkSettings.type === "wordcloud") {
@@ -1076,8 +1033,14 @@ class NetworkFrame extends React.Component {
     } else if (networkSettings.direction === "down") {
       projectedNodes.forEach(node => {
         const ox = node.x
+        const ox0 = node.x0
+        const ox1 = node.x1
         node.x = node.y
+        node.x0 = node.y0
+        node.x1 = node.y1
         node.y = ox
+        node.y0 = ox0
+        node.y1 = ox1
       })
     } else if (networkSettings.direction === "left") {
       projectedNodes.forEach(node => {
@@ -1147,7 +1110,9 @@ class NetworkFrame extends React.Component {
           : d => d._NWFEdgeKey || `${d.source.id}-${d.target.id}`,
         behavior: drawEdges,
         type: edgeType,
-        customMark: customEdgeIcon
+        customMark: customEdgeIcon,
+        networkType: networkSettings.type,
+        direction: networkSettings.direction
       },
       nodes: {
         accessibleTransform: (data, i) => ({ type: "frame-hover", ...data[i] }),

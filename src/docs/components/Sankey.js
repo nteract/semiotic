@@ -1,15 +1,15 @@
-import React from 'react'
-import DocumentComponent from '../layout/DocumentComponent'
-import SankeyRaw from './SankeyRaw'
-import Select from 'material-ui/Select'
-import { MenuItem } from 'material-ui/Menu'
-import { InputLabel } from 'material-ui/Input'
-import { FormControl } from 'material-ui/Form'
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import SankeyRaw from "./SankeyRaw"
+import Select from "material-ui/Select"
+import { MenuItem } from "material-ui/Menu"
+import { InputLabel } from "material-ui/Input"
+import { FormControl } from "material-ui/Form"
 
 const components = []
 
 components.push({
-  name: 'Sankey'
+  name: "Sankey"
 })
 
 export default class Sankey extends React.Component {
@@ -17,24 +17,24 @@ export default class Sankey extends React.Component {
     super(props)
 
     this.state = {
-      type: 'sankey',
-      orient: 'center',
-      cycle: 'no cycles'
+      type: "sankey",
+      orient: "center",
+      cycle: "no cycles"
     }
   }
 
   render() {
-    const typeOptions = ['sankey', 'force', 'chord'].map(d => 
-      (<MenuItem key={'type-option-' + d} label={d} value={d}>
+    const typeOptions = ["sankey", "force", "chord"].map(d => (
+      <MenuItem key={`type-option-${d}`} label={d} value={d}>
         {d}
-      </MenuItem>)
-    )
+      </MenuItem>
+    ))
 
-    const orientOptions = ['justify', 'left', 'right', 'center'].map(d => 
-      (<MenuItem key={'orient-option-' + d} label={d} value={d}>
+    const orientOptions = ["justify", "left", "right", "center"].map(d => (
+      <MenuItem key={`orient-option-${d}`} label={d} value={d}>
         {d}
-      </MenuItem>)
-    )
+      </MenuItem>
+    ))
 
     const buttons = [
       <FormControl key="button-1-0-0">
@@ -59,29 +59,29 @@ export default class Sankey extends React.Component {
 
     const annotations = [
       {
-        type: 'node',
-        id: 'International aviation',
-        label: 'Energy spent on international aviation',
+        type: "node",
+        id: "International aviation",
+        label: "Energy spent on international aviation",
         ny: 250,
         nx: 600
       },
-      { type: 'node', dy: -50, dx: -50, id: 'Oil', label: 'Big Oil' }
+      { type: "node", dy: -50, dx: -50, id: "Oil", label: "Big Oil" }
     ]
 
     const examples = []
     examples.push({
-      name: 'Without Cycles',
+      name: "Without Cycles",
       demo: SankeyRaw({
         annotations,
         type: this.state.type,
         orient: this.state.orient,
         cyclical: false
       }),
-      source: ''
+      source: ""
     })
 
     examples.push({
-      name: 'With Cycles',
+      name: "With Cycles",
       demo: SankeyRaw({
         annotations,
         type: this.state.type,
@@ -101,13 +101,13 @@ const network_data = [
 ...]
 
 ${
-  this.state.type === 'chord'
-    ? `const mirroredNetworkData = [
+        this.state.type === "chord"
+          ? `const mirroredNetworkData = [
     ...network_data.map(d => ({ source: d.source.id, target: d.target.id, value: d["2010"] })),
     ...network_data.map(d => ({ target: d.source.id, source: d.target.id, value: d["2050"] }))
     ]`
-    : ''
-}
+          : ""
+      }
 
 const colors = {
   Oil: "#b3331d",
@@ -132,8 +132,8 @@ const areaLegendGroups = [
   size={[ 700,400 ]}
   nodes={or_data}
   edges={${
-  this.state.type === 'chord' ? 'mirroredNetworkData' : 'network_data'
-}}
+    this.state.type === "chord" ? "mirroredNetworkData" : "network_data"
+  }}
   nodeStyle={d => ({
     fill: colors[d.category],
     stroke: "black"
@@ -148,16 +148,16 @@ const areaLegendGroups = [
   nodeIDAccessor="id"
   sourceAccessor="source"
   targetAccessor="target"
-  ${this.state.type === 'force' ? 'nodeSizeAccessor={5}' : ''}
-  ${this.state.type === 'force' ? 'edgeType={"arrowhead"}' : ''}
+  ${this.state.type === "force" ? "nodeSizeAccessor={5}" : ""}
+  ${this.state.type === "force" ? 'edgeType={"arrowhead"}' : ""}
   ${
-  this.state.type === 'force' ? 'zoomToFit={this.state.type === "force"}' : ''
-}
+    this.state.type === "force" ? 'zoomToFit={this.state.type === "force"}' : ""
+  }
   hoverAnnotation={true}
-  ${this.state.type === 'chord' ? 'edgeWidthAccessor={d => d.value}' : ''}
+  ${this.state.type === "chord" ? "edgeWidthAccessor={d => d.value}" : ""}
   networkType={{ type: ${this.state.type}, orient: ${
-  this.state.orient
-}, iterations: 500 }}
+        this.state.orient
+      }, iterations: 500 }}
   annotations={[ { type: 'node', dy: 0, dx: 100, id: 'International aviation', label: 'Energy spent on international aviation' }
   ,{ type: 'node', dy: 0, dx: 50, id: 'Oil', label: 'Big Oil' }
   ,{ type: 'enclose', dy: -100, dx: 50, ids: [ 'Wave', 'Geothermal', 'Hydro', 'Tidal' ], label: 'Energy made with wave, tidal, hydro and geothermal' }
@@ -167,7 +167,18 @@ const areaLegendGroups = [
 />
 `
     })
-
+    examples.push({
+      name: "downward",
+      demo: SankeyRaw({
+        annotations,
+        type: this.state.type,
+        orient: this.state.orient,
+        cyclical: true,
+        direction: "down",
+        size: [700, 800]
+      }),
+      source: ``
+    })
     return (
       <DocumentComponent
         name="Sankey"
@@ -185,4 +196,4 @@ const areaLegendGroups = [
   }
 }
 
-Sankey.title = 'Sankey'
+Sankey.title = "Sankey"

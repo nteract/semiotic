@@ -687,6 +687,7 @@ class OrdinalFrame extends React.Component {
         }
 
         if (projection === "radial") {
+          const { markD, centroid, translate, midAngle } = pieArcs[i]
           const radialMousePackage = {
             type: "column-hover",
             pieces: projectedColumns[d].pieceData,
@@ -698,7 +699,6 @@ class OrdinalFrame extends React.Component {
               length: rScale.range()[1] / 2
             }
           }
-          const { markD, centroid, translate, midAngle } = pieArcs[i]
           return {
             markType: "path",
             key: `hover${d}`,

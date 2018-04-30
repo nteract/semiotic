@@ -1,6 +1,6 @@
 {
   "name": "semiotic",
-  "version": "1.10.1",
+  "version": "1.10.2-rs.1",
   "description": "The semiotic JavaScript data visualization framework",
   "main": "lib/index.js",
   "unpkg": "dist/semiotic.min.js",
@@ -115,7 +115,7 @@
     "prop-types": "15.6.0",
     "react-annotation": "1.1.1",
     "roughjs": "github:emeeks/rough",
-    "semiotic-mark": "0.2.6",
+    "semiotic-mark": "0.2.7",
     "svg-path-bounding-box": "1.0.4"
   },
   "nyc": {
