@@ -63,7 +63,7 @@ const mekkoChart = {
   rAccessor: "pct",
   oAccessor: "market",
   dynamicColumnWidth: "value",
-  style: (d, i) => ({
+  style: d => ({
     fill: colors[d.segment],
     stroke: "black",
     strokeWidth: 1
