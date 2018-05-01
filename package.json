@@ -10,6 +10,7 @@
     "build": "node scripts/build.js",
     "test": "node scripts/test.js --env=jsdom",
     "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
     "prebuild": "babel src/components --out-dir lib --ignore test.js",
     "create-release-branch": "sh ./scripts/create-release-branch",
     "publish-release": "sh ./scripts/publish-release",
