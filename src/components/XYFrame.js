@@ -883,7 +883,10 @@ class XYFrame extends React.Component {
       customDoubleClickBehavior,
       canvasPostProcess,
       baseMarkProps,
-      useSpans
+      useSpans,
+      canvasAreas,
+      canvasPoints,
+      canvasLines
     } = this.props
 
     const {
@@ -985,6 +988,7 @@ class XYFrame extends React.Component {
         canvasPostProcess={canvasPostProcess}
         baseMarkProps={baseMarkProps}
         useSpans={useSpans}
+        canvasRendering={canvasAreas || canvasPoints || canvasLines}
       />
     )
   }

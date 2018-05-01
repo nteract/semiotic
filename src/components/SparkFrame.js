@@ -1,9 +1,9 @@
 import React from "react"
 import PropTypes from "prop-types"
-import XYFrame from "./XYFrame"
-import OrdinalFrame from "./OrdinalFrame"
-import NetworkFrame from "./NetworkFrame"
-import SmartFrame from "./SmartFrame"
+
+const allFrameDefaults = {
+  margin: 0
+}
 
 function sparkNetworkSettings(originalSettings = "force") {
   let finalSettings = {}
@@ -22,39 +22,6 @@ function sparkNetworkSettings(originalSettings = "force") {
   }
   return originalSettings
 }
-
-const axisDefaults = {
-  tickFormat: () => "",
-  baseline: false
-}
-
-const allFrameDefaults = {
-  margin: 0
-}
-
-const xyFrameDefaults = props => ({
-  ...allFrameDefaults,
-  ...props,
-  hoverAnnotation: props.hoverAnnotation,
-  axes: props.axes
-    ? props.axes.map(a => ({ ...axisDefaults, ...a }))
-    : props.axes
-})
-
-const ordinalFrameDefaults = props => ({
-  ...allFrameDefaults,
-  ...props,
-  hoverAnnotation: props.hoverAnnotation,
-  axis: props.axis ? { axisDefaults, ...props.axis } : props.axis
-})
-
-const networkFrameDefaults = props => ({
-  ...allFrameDefaults,
-  nodeSizeAccessor: 2,
-  ...props,
-  networkType: sparkNetworkSettings(props.networkType)
-  //  hoverAnnotation: props.hoverAnnotation === true ? [{ type: "react-annotation"}] : props.hoverAnnotation,
-})
 
 const createSparkFrame = (Frame, defaults) =>
   class SparkFrame extends React.Component {
@@ -120,13 +87,33 @@ const createSparkFrame = (Frame, defaults) =>
     }
   }
 
-export const SparkXYFrame = createSparkFrame(XYFrame, xyFrameDefaults)
-export const SparkOrdinalFrame = createSparkFrame(
-  OrdinalFrame,
-  ordinalFrameDefaults
-)
-export const SparkNetworkFrame = createSparkFrame(
-  NetworkFrame,
-  networkFrameDefaults
-)
-export const SparkSmartFrame = createSparkFrame(SmartFrame, {})
+export const axisDefaults = {
+  tickFormat: () => "",
+  baseline: false
+}
+
+export const xyFrameDefaults = props => ({
+  ...allFrameDefaults,
+  ...props,
+  hoverAnnotation: props.hoverAnnotation,
+  axes: props.axes
+    ? props.axes.map(a => ({ ...axisDefaults, ...a }))
+    : props.axes
+})
+
+export const ordinalFrameDefaults = props => ({
+  ...allFrameDefaults,
+  ...props,
+  hoverAnnotation: props.hoverAnnotation,
+  axis: props.axis ? { axisDefaults, ...props.axis } : props.axis
+})
+
+export const networkFrameDefaults = props => ({
+  ...allFrameDefaults,
+  nodeSizeAccessor: 2,
+  ...props,
+  networkType: sparkNetworkSettings(props.networkType)
+  //  hoverAnnotation: props.hoverAnnotation === true ? [{ type: "react-annotation"}] : props.hoverAnnotation,
+})
+
+export default createSparkFrame
