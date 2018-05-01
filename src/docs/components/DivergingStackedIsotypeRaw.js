@@ -26,7 +26,7 @@ const chartProps = {
   projection: "horizontal",
   oAccessor: "question",
   rAccessor: "percent",
-  style: (d, i) => ({
+  style: d => ({
     fill: d.color,
     stroke: "black",
     strokeWidth: 0.5
