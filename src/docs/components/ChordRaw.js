@@ -27,8 +27,8 @@ export default ({ padAngle = 0.01 }) => {
   const chordChart = {
     size: [700, 400],
     edges: dematrixifiedEdges,
-    nodeStyle: (d, i) => ({ fill: colors[d.index], stroke: "black" }),
-    edgeStyle: (d, i) => ({
+    nodeStyle: d => ({ fill: colors[d.index], stroke: "black" }),
+    edgeStyle: d => ({
       fill: colors[d.source.index],
       stroke: "black",
       opacity: 0.5
