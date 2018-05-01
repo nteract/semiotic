@@ -10,7 +10,7 @@ const probsData = csvParse(probsRaw)
 const colors = ["#4d430c", "#00a2ce", "#b6a756", "#b3331d"]
 
 const probsPoints = []
-probsData.forEach((d, i) => {
+probsData.forEach(d => {
   Object.keys(d).forEach(key => {
     probsPoints.push({ term: key, value: +d[key] })
   })
