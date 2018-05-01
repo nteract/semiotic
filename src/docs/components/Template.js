@@ -1,6 +1,7 @@
+/* global curveBasis data parameters */
 import React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
-import { OrdinalFrame } from "../../components"
+// import { OrdinalFrame } from "../../components"
 
 const components = []
 
@@ -28,7 +29,7 @@ export default class TemplateDocs extends React.Component {
       name: "Basic",
       demo: (
         <svg height="500" width="500">
-          <Template
+          <Template // eslint-disable-line react/jsx-no-undef
             parameters={parameters}
             data={[data]}
             lineDataAccessor={d => d}
