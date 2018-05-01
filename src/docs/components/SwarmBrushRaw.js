@@ -11,10 +11,10 @@ export default (data, event, resetExtent) => {
     data: data,
     rAccessor: d => d.value,
     oAccessor: () => "singleColumn",
-    style: d => ({ fill: "#007190", stroke: "white", strokeWidth: 1 }),
+    style: () => ({ fill: "#007190", stroke: "white", strokeWidth: 1 }),
     type: "swarm",
     summaryType: "violin",
-    summaryStyle: d => ({
+    summaryStyle: () => ({
       fill: "#007190",
       stroke: "white",
       strokeWidth: 1
