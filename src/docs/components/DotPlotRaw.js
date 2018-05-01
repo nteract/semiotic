@@ -74,7 +74,7 @@ const dotPlotChart = {
   data: data,
   rAccessor: d => d.value,
   oAccessor: d => d.region,
-  style: (d, i) => ({
+  style: d => ({
     fill: colors[d.type],
     stroke: "white",
     strokeWidth: 1
