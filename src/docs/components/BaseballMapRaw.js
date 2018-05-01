@@ -17,7 +17,7 @@ export default mode => {
     xAccessor: d => d.bx,
     yAccessor: d => d.by,
     yExtent: [-50],
-    customPointMark: d => <Mark markType="circle" r={5} />,
+    customPointMark: () => <Mark markType="circle" r={5} />,
     pointStyle: d => ({
       stroke: "black",
       fill: velocityScale(d.exit_velocity)
