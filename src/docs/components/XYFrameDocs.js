@@ -20,8 +20,8 @@ import Button from "material-ui/Button"
 import Select from "material-ui/Select"
 import { MenuItem } from "material-ui/Menu"
 import Icon from "material-ui-icons/Timeline"
-import Input, { InputLabel } from "material-ui/Input"
-import { FormControl, FormHelperText } from "material-ui/Form"
+import /* Input, */ { InputLabel } from "material-ui/Input"
+import { FormControl /* FormHelperText */ } from "material-ui/Form"
 
 class NameForm extends React.Component {
   constructor(props) {
@@ -272,7 +272,7 @@ const fixedExtentLabelHash = {
 const customPointHash = {
   none: undefined,
   basic: <Mark markType="rect" x={-4} y={-4} width={8} height={8} />,
-  variable: ({ d, i }) => {
+  variable: ({ d }) => {
     return d.step < 20 ? (
       <Mark markType="circle" r="5" />
     ) : (
@@ -602,11 +602,11 @@ const annotationSettingTypes = {
   }
 }
 
-const downloadFieldOptions = {
-  line: ["id", "color", "data"],
-  area: ["id", "coordinates"],
-  point: ["step", "cat"]
-}
+// const downloadFieldOptions = {
+//   line: ["id", "color", "data"],
+//   area: ["id", "coordinates"],
+//   point: ["step", "cat"]
+// }
 
 const annotationSettingLabels = setting => {
   const hash = {
