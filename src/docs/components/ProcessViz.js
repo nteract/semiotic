@@ -1,5 +1,5 @@
 import React from "react"
-import { rectangleEnclosure } from "../../components/annotationRules/baseRules"
+// import { rectangleEnclosure } from "../../components/annotationRules/baseRules"
 import { PrismCode } from "react-prism"
 
 const actualTypeof = thing => {
@@ -205,12 +205,12 @@ export default class ProcessViz extends React.Component {
 
   render() {
     const width = 1000
-    const { frameSettings, frameType } = this.props
+    const { frameSettings/*, frameType */ } = this.props
     const frameKeys = Object.keys(frameSettings).filter(
       d => this.props.frameSettings[d] !== undefined
     )
     let processPosition = 0
-    const mappedFrames = processNodes.map((process, i) =>
+    const mappedFrames = processNodes.map(process =>
       frameKeys.filter(k => process.keys[k])
     )
 
@@ -228,7 +228,7 @@ export default class ProcessViz extends React.Component {
 
     const renderedProcessNodes = processNodes.map((process, i) => {
       const activeFrameKeys = frameKeys.filter(k => process.keys[k])
-      const frameKeyHeight = Math.max(10, activeFrameKeys.length * 10)
+      // const frameKeyHeight = Math.max(10, activeFrameKeys.length * 10)
       const renderedFrameKeys = mappedFrames[i]
       let renderedPiece
       if (renderedFrameKeys.length === 0) {
