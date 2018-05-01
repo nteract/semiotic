@@ -16,7 +16,7 @@ const networkFrameSettings = {
   edgeStyle: { stroke: 'gold' }
 }
 
-export default (brushFunction, extent, selectedExtent) => {
+export default (brushFunction, extent/*, selectedExtent */) => {
   const minimapChart = {
     size: [700, 700],
     ...networkFrameSettings,
