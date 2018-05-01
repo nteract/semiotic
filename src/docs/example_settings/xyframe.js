@@ -82,7 +82,7 @@ const borderCutLine = ({ d, i, xScale, yScale }) => {
     <DividedLine
       key={`regionated-line-${i}`}
       data={[d]}
-      parameters={(p, q) => {
+      parameters={p => {
         //    if (p.value < p.bottom) {
         if (p.delta < p.bottomDelta) {
           return {
@@ -127,7 +127,7 @@ const monthNameHash = [
 ]
 
 const degreeDiffFormat = d => `${d > 0 ? "+" : ""}${Math.ceil(d * 100) / 100}°`
-const monthNameFormat = (d, i) => monthNameHash[d]
+const monthNameFormat = d => monthNameHash[d]
 
 const lineAnnotater = ({ d, xScale, yScale }) => {
   if (!d.parentLine) {
@@ -176,10 +176,10 @@ export const regionatedLineChart = {
   yAccessor: d => d.delta,
   margin: { top: 35, right: 30, left: 60, bottom: 50 },
   customLineMark: borderCutLine,
-  customPointMark: d => <Mark markType="circle" r={2} />,
+  customPointMark: () => <Mark markType="circle" r={2} />,
   showLinePoints: true,
   //    pointStyle: (d,i) => ({ stroke: d.value < bounds.bounding[d.step].bottom ? blue : d.value > bounds.bounding[d.step].top ? red : "none", fill: "none", strokeWidth: "1px", strokeOpacity: 0.1 }),
-  pointStyle: (d, i) => ({
+  pointStyle: d => ({
     stroke:
       d.delta < d.bottomDelta ? blue : d.delta > d.topDelta ? red : "none",
     fill: "none",
