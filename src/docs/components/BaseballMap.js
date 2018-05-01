@@ -23,14 +23,14 @@ const modes = {
     ]
   },
   sketchy: {
-    customPointMark: d => <Mark markType="circle" r={6} />,
+    customPointMark: () => <Mark markType="circle" r={6} />,
     pointRenderMode: 'sketchy',
     areas: undefined
   },
   contourplot: {
-    customPointMark: d => <Mark markType="circle" r={2} />,
+    customPointMark: () => <Mark markType="circle" r={2} />,
     pointStyle: { fill: 'black' },
-    areaStyle: d => ({
+    areaStyle: () => ({
       stroke: 'none',
       fill: '#b3331d',
       opacity: 0.25
@@ -58,7 +58,7 @@ const modes = {
     xScaleType: scaleTime(),
     xAccessor: d => new Date(d.game_date),
     yAccessor: d => d.distance,
-    customPointMark: d => <Mark markType="circle" r={4} />,
+    customPointMark: () => <Mark markType="circle" r={4} />,
     xExtent: undefined,
     yExtent: undefined,
     axes: [
