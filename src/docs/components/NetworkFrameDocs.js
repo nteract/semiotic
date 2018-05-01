@@ -9,7 +9,7 @@ import Select from "material-ui/Select"
 import { MenuItem } from "material-ui/Menu"
 import Icon from "material-ui-icons/Share"
 import /* Input, */ { InputLabel } from "material-ui/Input"
-import { FormControl/*, FormHelperText */} from "material-ui/Form"
+import { FormControl/*, FormHelperText */ } from "material-ui/Form"
 import ProcessViz from "./ProcessViz"
 
 const glowyCanvas = (canvas, context, size) => {
