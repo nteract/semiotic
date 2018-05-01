@@ -16,7 +16,7 @@ import { min, max } from "d3-array"
 
 import { filterDefs } from "./constants/jsx"
 
-import { AnnotationLabel } from "react-annotation"
+import AnnotationLabel from "react-annotation/lib/Types/AnnotationLabel"
 
 import Frame from "./Frame"
 
