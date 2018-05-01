@@ -111,7 +111,7 @@
     "json2csv": "3.11.5",
     "labella": "1.1.4",
     "prop-types": "15.6.0",
-    "react-annotation": "1.2.0",
+    "react-annotation": "1.2.1",
     "roughjs": "github:emeeks/rough",
     "semiotic-mark": "0.2.7",
     "svg-path-bounding-box": "1.0.4"
