@@ -550,15 +550,15 @@ export default class OrdinalFrameDocs extends React.Component {
       </div>
     ]
 
-    const axis = {
-      orient: "top",
-      tickFormat: d => d,
-      label: {
-        name: "axis label",
-        position: { anchor: "middle" },
-        locationDistance: 40
-      }
-    }
+    // const axis = {
+    //   orient: "top",
+    //   tickFormat: d => d,
+    //   label: {
+    //     name: "axis label",
+    //     position: { anchor: "middle" },
+    //     locationDistance: 40
+    //   }
+    // }
 
     const actualType =
       this.state.type === "custom" ? customBar : this.state.type
