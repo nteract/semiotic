@@ -583,7 +583,7 @@ export default class OrdinalFrameDocs extends React.Component {
             size={[700, 700]}
             renderFn={reFn}
             data={dataTypeHash[this.state.dataType].data}
-            axis={axis}
+            axis={{ orient: "left" }}
             projection={this.state.projection}
             type={actualType}
             renderMode={this.state.renderFn}
@@ -634,7 +634,7 @@ export default class OrdinalFrameDocs extends React.Component {
                 : undefined
             }
             baseMarkProps={{ transitionDuration: 3000 }}
-            //            canvasPieces={true}
+            canvasPieces={true}
             //            canvasPostProcess={glowyCanvas}
             download={true}
             downloadFields={["funnelKey"]}

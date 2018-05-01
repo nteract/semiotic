@@ -14,21 +14,19 @@ import VisualizationLayer from "./VisualizationLayer"
 import NetworkFrame from "./NetworkFrame"
 import { funnelize } from "./svg/lineDrawing"
 import { calculateDataExtent } from "./data/dataFunctions"
-import {
-  ResponsiveNetworkFrame,
-  ResponsiveMinimapXYFrame,
-  ResponsiveOrdinalFrame,
-  ResponsiveXYFrame,
-  ResponsiveORFrame
-} from "./ResponsiveFrame"
-import {
-  SparkNetworkFrame,
-  SparkOrdinalFrame,
-  SparkXYFrame
-} from "./SparkFrame"
+
+import ResponsiveNetworkFrame from "./ResponsiveNetworkFrame"
+import ResponsiveMinimapXYFrame from "./ResponsiveMinimapXYFrame"
+import ResponsiveXYFrame from "./ResponsiveXYFrame"
+import ResponsiveOrdinalFrame from "./ResponsiveOrdinalFrame"
+
+import SparkXYFrame from "./SparkXYFrame"
+import SparkOrdinalFrame from "./SparkOrdinalFrame"
+import SparkNetworkFrame from "./SparkNetworkFrame"
 import { chuckCloseCanvasTransform } from "./canvas/basicCanvasEffects"
 import { Mark } from "semiotic-mark"
 const ORFrame = OrdinalFrame
+const ResponsiveORFrame = ResponsiveOrdinalFrame
 
 export default {
   AnnotationLayer,

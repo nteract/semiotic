@@ -4,7 +4,7 @@ import React from "react"
 //import MarkContext from './MarkContext'
 import { hexToRgb } from "./svg/SvgHelper"
 
-import rough from "roughjs"
+import { RoughCanvas } from "roughjs/lib/canvas"
 
 import PropTypes from "prop-types"
 
@@ -54,11 +54,16 @@ class VisualizationLayer extends React.PureComponent {
       this.props.margin.left,
       this.props.margin.top
     )
-    context.clearRect(0, 0, size[0], size[1])
+    context.clearRect(
+      -this.props.margin.left,
+      -this.props.margin.top,
+      size[0],
+      size[1]
+    )
 
     this.canvasDrawing.forEach(piece => {
       const style = piece.styleFn
-        ? piece.styleFn({ ...piece.d, ...piece.d.data }, piece.i)
+        ? piece.styleFn({ ...piece.d, ...piece.d.data }, piece.i) || {}
         : { fill: "black", stroke: "black" }
 
       let fill = style.fill ? style.fill : "black"
@@ -92,7 +97,7 @@ class VisualizationLayer extends React.PureComponent {
         (renderObject && renderObject.renderMode) || renderObject
 
       if (actualRenderMode) {
-        rc = rc || rough.canvas(this.props.canvasContext)
+        rc = rc || new RoughCanvas(this.props.canvasContext)
         const rcExtension =
           (typeof renderObject === "object" && renderObject) || {}
         rcSettings = {
@@ -323,7 +328,7 @@ class VisualizationLayer extends React.PureComponent {
 
   render() {
     const props = this.props
-    const { matte, matteClip, axes, axesTickLines, frameKey, margin } = props
+    const { matte, matteClip, axes, frameKey, margin } = props
 
     const { renderedElements } = this.state
 
@@ -332,15 +337,7 @@ class VisualizationLayer extends React.PureComponent {
         {axes}
       </g>
     )
-    const renderedAxesTickLines = axesTickLines && (
-      <g
-        key="visualization-tick-lines"
-        className="axis axis-tick-lines"
-        aria-hidden={true}
-      >
-        {axesTickLines}
-      </g>
-    )
+
     let ariaLabel = ""
 
     const title =
@@ -353,9 +350,7 @@ class VisualizationLayer extends React.PureComponent {
     ariaLabel = `Visualization ${title}. Use arrow keys to navigate elements.`
 
     const renderedDataVisualization =
-      ((renderedAxes ||
-        renderedAxesTickLines ||
-        (renderedElements && renderedElements.length > 0)) && (
+      ((renderedAxes || (renderedElements && renderedElements.length > 0)) && (
         <g
           className="data-visualization"
           key="visualization-clip-path"
@@ -366,7 +361,6 @@ class VisualizationLayer extends React.PureComponent {
           }
           transform={`translate(${margin.left},${margin.top})`}
         >
-          {renderedAxesTickLines}
           {renderedElements}
           {matte}
           {renderedAxes}

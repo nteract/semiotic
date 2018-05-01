@@ -1,9 +1,9 @@
 import React from "react"
 import { answers } from "../sampledata/questions"
 import { OrdinalFrame } from "../../components"
-import cow from "material-design-icons-svg/paths/cow"
-import cat from "material-design-icons-svg/paths/cat"
-import cake from "material-design-icons-svg/paths/cake"
+import cow from "material-design-icons-svg/paths/cannabis"
+import cat from "material-design-icons-svg/paths/cannabis"
+import cake from "material-design-icons-svg/paths/cannabis"
 import cannabis from "material-design-icons-svg/paths/cannabis"
 import ProcessViz from "./ProcessViz"
 
