@@ -222,7 +222,7 @@ export default class SharedTooltipExample extends React.Component {
     })
 
     const toolTipOptions = ["Shared", "Individual"].map(d => (
-      <MenuItem key={"shared-tooltip-option-" + d} value={d}>
+      <MenuItem key={`shared-tooltip-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))

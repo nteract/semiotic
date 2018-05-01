@@ -68,7 +68,7 @@ function generateBulletChart({ data, rScale, adjustedSize }) {
   // Each chart is a separate OrdinalFrame with a single column called "fixed"
   const column = data.fixed
   column.pieceData.forEach((d, i) => {
-    let pieceShape = {
+    const pieceShape = {
       key: `bullet-piece-${i}`,
       style: {
         fill: colorHash[d.data.class][colorStepHash[d.data.class]],

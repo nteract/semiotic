@@ -25,13 +25,13 @@ export default class Sankey extends React.Component {
 
   render() {
     const typeOptions = ['sankey', 'force', 'chord'].map(d => 
-      (<MenuItem key={'type-option-' + d} label={d} value={d}>
+      (<MenuItem key={`type-option-${d}`} label={d} value={d}>
         {d}
       </MenuItem>)
     )
 
     const orientOptions = ['justify', 'left', 'right', 'center'].map(d => 
-      (<MenuItem key={'orient-option-' + d} label={d} value={d}>
+      (<MenuItem key={`orient-option-${d}`} label={d} value={d}>
         {d}
       </MenuItem>)
     )

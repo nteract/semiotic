@@ -451,7 +451,7 @@ components.push({
 })
 
 let displayData = testData.map(d => {
-  let moreData = [
+  const moreData = [
     ...d.data,
     ...d.data.map(p => ({ py: p.py + Math.random() * 1000, px: p.px + 7 }))
   ]
@@ -726,7 +726,7 @@ export default class XYFrameDocs extends React.Component {
 
   render() {
     const dataTypeOptions = ["line", "point", "area"].map(d => (
-      <MenuItem key={"data-type-option-" + d} value={d}>
+      <MenuItem key={`data-type-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
@@ -750,127 +750,127 @@ export default class XYFrameDocs extends React.Component {
       "bumpline",
       "bumparea"
     ].map(d => (
-      <MenuItem key={"line-option-" + d} value={d}>
+      <MenuItem key={`line-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
     const renderOptions = ["none", "sketchy", "painty"].map(d => (
-      <MenuItem key={"render-option-" + d} value={d}>
+      <MenuItem key={`render-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
     const definedOptions = ["active", "inactive"].map(d => (
-      <MenuItem key={"defined-option-" + d} value={d}>
+      <MenuItem key={`defined-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
     const hoverAnnotationOptions = ["off", "on"].map(d => (
-      <MenuItem key={"hover-annotation-option-" + d} value={d}>
+      <MenuItem key={`hover-annotation-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
     const matteOptions = ["off", "on"].map(d => (
-      <MenuItem key={"matte-option-" + d} value={d}>
+      <MenuItem key={`matte-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
     const annotationOptions = ["off", "on"].map(d => (
-      <MenuItem key={"annotation-option-" + d} value={d}>
+      <MenuItem key={`annotation-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
     const showPointOptions = ["off", "on"].map(d => (
-      <MenuItem key={"show-point-option-" + d} value={d}>
+      <MenuItem key={`show-point-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
     const axisAnnotationableOptions = ["off", "on"].map(d => (
-      <MenuItem key={"axis-annotatable-option-" + d} value={d}>
+      <MenuItem key={`axis-annotatable-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
     const foregroundGraphicsOptions = ["off", "on"].map(d => (
-      <MenuItem key={"foreground-option-" + d} value={d}>
+      <MenuItem key={`foreground-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
     const backgroundGraphicsOptions = ["off", "on"].map(d => (
-      <MenuItem key={"background-option-" + d} value={d}>
+      <MenuItem key={`background-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
     const legendOptions = ["off", "on"].map(d => (
-      <MenuItem key={"legend-option-" + d} value={d}>
+      <MenuItem key={`legend-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
     const customScaleOptions = ["none", "pow"].map(d => (
-      <MenuItem key={"customScale-option-" + d} value={d}>
+      <MenuItem key={`customScale-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
     const fixedExtentOptions = ["none", "partial", "full"].map(d => (
-      <MenuItem key={"fixed-extent-annotation-option-" + d} value={d}>
+      <MenuItem key={`fixed-extent-annotation-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
     const customPointOptions = ["none", "basic", "variable"].map(d => (
-      <MenuItem key={"custom-point-option-" + d} value={d}>
+      <MenuItem key={`custom-point-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
     const areaTypeOptions = ["basic", "contours"].map(d => (
-      <MenuItem key={"area-type-option-" + d} value={d}>
+      <MenuItem key={`area-type-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
     const titleOptions = Object.keys(titleTypesHash).map(d => (
-      <MenuItem key={"title-option-" + d} value={d}>
+      <MenuItem key={`title-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
     const canvasRenderOptions = Object.keys(canvasRenderHash).map(d => (
-      <MenuItem key={"canvas-render-annotation-option-" + d} value={d}>
+      <MenuItem key={`canvas-render-annotation-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
     const curveOptions = Object.keys(curveHash).map(d => (
-      <MenuItem key={"curve-option-" + d} value={d}>
+      <MenuItem key={`curve-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
     const marginOptions = Object.keys(marginHash).map(d => (
-      <MenuItem key={"margin-option-" + d} value={d}>
+      <MenuItem key={`margin-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
     const axesOptions = Object.keys(axesHash).map(d => (
-      <MenuItem key={"axes-option-" + d} value={d}>
+      <MenuItem key={`axes-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
     const frameOptions = Object.keys(frameHash).map(d => (
-      <MenuItem key={"frame-option-" + d} value={d}>
+      <MenuItem key={`frame-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
@@ -959,7 +959,7 @@ export default class XYFrameDocs extends React.Component {
       finalAnnotations = [...finalAnnotations, this.state.axisAnnotation]
     }
 
-    let displayFrame = (
+    const displayFrame = (
       <div>
         <Button
           raised

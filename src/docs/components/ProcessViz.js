@@ -241,7 +241,7 @@ export default class ProcessViz extends React.Component {
       } else {
         const renderedFrameKeys = activeFrameKeys.map((k, q) => (
           <g
-            key={"rendered-key" + q}
+            key={`rendered-key${q}`}
             transform={`translate(5,${54 + q * 24})`}
             style={{ pointerEvents: "none" }}
           >
