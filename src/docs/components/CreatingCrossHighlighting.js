@@ -1,7 +1,7 @@
 import React from "react"
 import { XYFrame, OrdinalFrame } from "../../components"
 import { scaleTime } from "d3-scale"
-import { curveMonotoneX, curveCardinal } from "d3-shape"
+import { curveMonotoneX/* , curveCardinal */ } from "d3-shape"
 
 import DocumentComponent from "../layout/DocumentComponent"
 // import { line, area } from "d3-shape"
