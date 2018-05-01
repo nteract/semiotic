@@ -172,7 +172,7 @@ const data = [
   { name: "Donald Trump", birth: 1946, start: 2017, end: 2018, death: 2018 }
 ]
 
-function timeline({ data, rScale, adjustedSize, margin }) {
+function timeline({ data, rScale/*, adjustedSize, margin */}) {
   const renderedPieces = []
 
   const keys = Object.keys(data)
