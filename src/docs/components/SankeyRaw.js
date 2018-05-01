@@ -56,7 +56,7 @@ const areaLegendGroups = [
 ]
 
 export default ({
-  annotations = [],
+  /* annotations = [], */
   type = "sankey",
   orient = "left",
   cyclical = false
@@ -89,7 +89,7 @@ export default ({
     legend: { legendGroups: areaLegendGroups },
     nodeLabels: d => <text textAnchor="middle">{d.id}</text>,
     margin: { right: 130 },
-    canvasEdges: (d, i) =>
+    canvasEdges: d =>
       d.source.category === "Oil" || d.source.category === "Coal"
   }
 
