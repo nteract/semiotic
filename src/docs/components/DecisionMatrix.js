@@ -158,7 +158,7 @@ export default class DecisionMatrixExample extends React.Component {
       "Number of Employees",
       "None"
     ].map(d => (
-      <MenuItem key={"size-by-option-" + d} value={d}>
+      <MenuItem key={`size-by-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
@@ -166,7 +166,7 @@ export default class DecisionMatrixExample extends React.Component {
     let legend = null
 
     if (this.state.sizeBy !== "None") {
-      let ext = extent(
+      const ext = extent(
         MATRIX_DATA.map(d => {
           return +d[this.state.sizeBy]
         })

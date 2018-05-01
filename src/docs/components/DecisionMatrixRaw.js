@@ -106,7 +106,7 @@ function processData(data, sizeBy) {
     )
     .stop()
 
-  for (var i = 0; i < 120; ++i) simulation.tick()
+  for (let i = 0; i < 120; ++i) simulation.tick()
 
   return data
 }
@@ -141,7 +141,7 @@ export default function DecisionMatrixRaw(sizeBy) {
       return <Mark markType="circle" r={d.radius} />
     },
     renderKey: d => {
-      return d["Index"]
+      return d.Index
     },
     axes: axes,
     xAccessor: d => d.x,

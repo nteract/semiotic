@@ -76,9 +76,9 @@ const processedEnergyNodeHash = {}
 const processedNodes = []
 const colors = {
   "Fossil Fuels": "#00a2ce",
-  Agriculture: "#4d430c",
-  Alternative: "#b3331d",
-  Other: "#b6a756"
+  "Agriculture": "#4d430c",
+  "Alternative": "#b3331d",
+  "Other": "#b6a756"
 }
 
 processedEnergy.forEach(edge => {

@@ -98,7 +98,7 @@ const cometChart = {
     },
     {
       orient: "bottom",
-      tickFormat: d => (d === 1000000 ? "1m" : d / 1000 + "k"),
+      tickFormat: d => (d === 1000000 ? "1m" : `${d / 1000}k`),
       tickValues: [1000, 10000, 100000, 1000000],
       label: "Number of Births"
     }

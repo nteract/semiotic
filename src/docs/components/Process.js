@@ -91,7 +91,7 @@ const networkPossibilities = [
   }
 ]
 
-const formatter = d => (d > 1000 ? parseInt(d / 1000) + "k" : d)
+const formatter = d => (d > 1000 ? `${parseInt(d / 1000)}k` : d)
 
 const productionSettings = {
   hoverAnnotation: true,

@@ -96,7 +96,7 @@ export default class BaseballMapDocs extends React.Component {
       'scatterplot',
       'overtime'
     ].map(d => 
-      (<MenuItem key={'mode-option-' + d} label={d} value={d}>
+      (<MenuItem key={`mode-option-${d}`} label={d} value={d}>
         {d}
       </MenuItem>)
     )

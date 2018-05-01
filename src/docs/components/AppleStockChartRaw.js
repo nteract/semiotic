@@ -14,7 +14,7 @@ const thresholdLine = ({ d, i, xScale, yScale }) => {
     <DividedLine
       key={`threshold-${i}`}
       data={[d]}
-      parameters={(p, q) => {
+      parameters={p => {
         if (p.close > 100) {
           return { stroke: "rgb(182, 167, 86)", fill: "none" }
         }
@@ -92,8 +92,7 @@ const annotations = [
 const customTooltip = d => (
   <div className="tooltip-content">
     <p>
-      Date:{" "}
-      {d.date.getMonth() + "-" + d.date.getDate() + "-" + d.date.getYear()}
+      Date: {`${d.date.getMonth()}-${d.date.getDate()}-${d.date.getYear()}`}
     </p>
     <p>Closing Price: ${d.close}</p>
   </div>
