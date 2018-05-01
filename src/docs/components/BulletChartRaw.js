@@ -41,7 +41,7 @@ const bulletData = [
 ]
 
 //type, data, renderMode, eventListenersGenerator, styleFn, projection, classFn, adjustedSize, margin, rScale
-function generateBulletChart({ data, rScale/*, adjustedSize */}) {
+function generateBulletChart({ data, rScale/*, adjustedSize */ }) {
   const rangeColors = ["eee", "ddd", "ccc"]
   const measureColors = ["rgb(0, 162, 206)", "rgb(0, 113, 144)"]
   const markerColors = ["black"]
