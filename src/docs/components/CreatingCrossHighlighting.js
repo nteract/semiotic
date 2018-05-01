@@ -4,7 +4,7 @@ import { scaleTime } from "d3-scale"
 import { curveMonotoneX, curveCardinal } from "d3-shape"
 
 import DocumentComponent from "../layout/DocumentComponent"
-import { line, area } from "d3-shape"
+// import { line, area } from "d3-shape"
 
 const inflatedBarChartData = [
   { user: "Jason", action: "tweets", value: 10 },
@@ -35,25 +35,25 @@ const barColorHash = {
 }
 
 const components = []
-const curvedCardinalLine = { type: "line", interpolator: curveCardinal }
-const interactiveLineStyle = { stroke: "#00a2ce" }
-const interactivePointStyle = () => ({
-  fill: "#00a2ce"
-})
-const interactiveXAccessor = d => d.week
-const interactiveYAccessor = d => d.grossWeekly
+// const curvedCardinalLine = { type: "line", interpolator: curveCardinal }
+// const interactiveLineStyle = { stroke: "#00a2ce" }
+// const interactivePointStyle = () => ({
+//   fill: "#00a2ce"
+// })
+// const interactiveXAccessor = d => d.week
+// const interactiveYAccessor = d => d.grossWeekly
 
-const interactiveChartMargin = { left: 80, bottom: 50, right: 10, top: 40 }
-const interactiveChartAxes = [
-  {
-    orient: "left"
-  },
-  {
-    orient: "bottom"
-  }
-]
+// const interactiveChartMargin = { left: 80, bottom: 50, right: 10, top: 40 }
+// const interactiveChartAxes = [
+//   {
+//     orient: "left"
+//   },
+//   {
+//     orient: "bottom"
+//   }
+// ]
 
-const chartSize = [700, 400]
+// const chartSize = [700, 400]
 
 const movies = [
   {
