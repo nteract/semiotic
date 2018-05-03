@@ -19,7 +19,7 @@ import { XYFrame } from "semiotic"
 import { csvParse } from "d3-dsv"
 import { scaleLog, scaleLinear } from "d3-scale"
 import { d as glyphD } from "d3-glyphedge"
-import { AnnotationCalloutCircle } from "react-annotation"
+import AnnotationCalloutCircle from "react-annotation/lib/Types/AnnotationCalloutCircle"
 import "../example_settings/comet.css"
       
       const data = ${"`"}state,birthweight,startvalue,endvalue,startweight,endweight

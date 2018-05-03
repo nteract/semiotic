@@ -4,7 +4,8 @@ import { csvParse } from "d3-dsv"
 import { scaleLog, scaleLinear } from "d3-scale"
 import data from "../sampledata/birthdata.js"
 import { d as glyphD } from "d3-glyphedge"
-import { AnnotationCalloutCircle } from "react-annotation"
+import AnnotationCalloutCircle from "react-annotation/lib/Types/AnnotationCalloutCircle"
+
 import "../example_settings/comet.css"
 import ProcessViz from "./ProcessViz"
 
@@ -98,7 +99,7 @@ const cometChart = {
     },
     {
       orient: "bottom",
-      tickFormat: d => (d === 1000000 ? "1m" : d / 1000 + "k"),
+      tickFormat: d => (d === 1000000 ? "1m" : `${d / 1000}k`),
       tickValues: [1000, 10000, 100000, 1000000],
       label: "Number of Births"
     }
