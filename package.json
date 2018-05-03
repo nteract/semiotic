@@ -4,10 +4,7 @@
   "description": "The semiotic JavaScript data visualization framework",
   "main": "lib/index.js",
   "unpkg": "dist/semiotic.min.js",
-  "files": [
-    "lib",
-    "dist"
-  ],
+  "files": ["lib", "dist"],
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
@@ -19,7 +16,8 @@
     "deploy-docs": "sh ./scripts/docs",
     "ci-deploy-docs": "sh ./scripts/docs-ci",
     "gh-pages": "REACT_APP_GH_PAGES_PATH='semiotic' npm run build",
-    "prepublish": "rollup -c && uglifyjs ./dist/semiotic.js -o ./dist/semiotic.min.js && rm ./dist/semiotic.js"
+    "prepublish":
+      "rollup -c && uglifyjs ./dist/semiotic.js -o ./dist/semiotic.min.js && rm ./dist/semiotic.js"
   },
   "repository": {
     "type": "git",
@@ -113,15 +111,12 @@
     "json2csv": "3.11.5",
     "labella": "1.1.4",
     "prop-types": "15.6.0",
-    "react-annotation": "1.1.1",
+    "react-annotation": "1.2.1",
     "roughjs": "git://github.com/emeeks/rough",
     "semiotic-mark": "0.2.7",
     "svg-path-bounding-box": "1.0.4"
   },
   "nyc": {
-    "exclude": [
-      "tests/unit/lib/*.js",
-      "tests/unit/specs/**/*.js"
-    ]
+    "exclude": ["tests/unit/lib/*.js", "tests/unit/specs/**/*.js"]
   }
 }

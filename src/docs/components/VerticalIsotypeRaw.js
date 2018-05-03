@@ -1,6 +1,7 @@
 import React from "react"
 import { OrdinalFrame } from "../../components"
-import { AnnotationCalloutElbow } from "react-annotation"
+import AnnotationCalloutElbow from "react-annotation/lib/Types/AnnotationCalloutElbow"
+
 import ProcessViz from "./ProcessViz"
 
 const vizzers = [

@@ -1,6 +1,7 @@
 import React from "react"
 import Annotation from "../Annotation"
-import { AnnotationCalloutCircle } from "react-annotation"
+import AnnotationCalloutCircle from "react-annotation/lib/Types/AnnotationCalloutCircle"
+
 import { packEnclose } from "d3-hierarchy"
 import { circleEnclosure, rectangleEnclosure } from "./baseRules"
 import SpanOrDiv from "../SpanOrDiv"
