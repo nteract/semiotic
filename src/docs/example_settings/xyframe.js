@@ -5,7 +5,8 @@ import { DividedLine } from "../../components"
 
 import { Mark } from "semiotic-mark"
 import { scaleLinear } from "d3-scale"
-import { AnnotationCalloutElbow } from "react-annotation"
+import AnnotationCalloutElbow from "react-annotation/lib/Types/AnnotationCalloutElbow"
+
 import { curveMonotoneX, line } from "d3-shape"
 
 const blue = "rgb(0, 162, 206)"

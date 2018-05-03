@@ -10,7 +10,8 @@ import { FormControl } from "material-ui/Form"
 import { extent, mean } from "d3-array"
 import { scaleLinear } from "d3-scale"
 import { format } from "d3-format"
-import { AnnotationCalloutCircle } from "react-annotation"
+import AnnotationCalloutCircle from "react-annotation/lib/Types/AnnotationCalloutCircle"
+
 import { MATRIX_DATA } from "../sampledata/matrixData"
 
 const components = []
@@ -158,7 +159,7 @@ export default class DecisionMatrixExample extends React.Component {
       "Number of Employees",
       "None"
     ].map(d => (
-      <MenuItem key={"size-by-option-" + d} value={d}>
+      <MenuItem key={`size-by-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
@@ -166,7 +167,7 @@ export default class DecisionMatrixExample extends React.Component {
     let legend = null
 
     if (this.state.sizeBy !== "None") {
-      let ext = extent(
+      const ext = extent(
         MATRIX_DATA.map(d => {
           return +d[this.state.sizeBy]
         })

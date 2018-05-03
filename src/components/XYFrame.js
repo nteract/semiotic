@@ -32,7 +32,8 @@ import {
 } from "./visualizationLayerBehavior/general"
 
 import { relativeY } from "./svg/lineDrawing"
-import { AnnotationCallout } from "react-annotation"
+import AnnotationCallout from "react-annotation/lib/Types/AnnotationCallout"
+
 import {
   calculateMargin,
   drawMarginPath,
