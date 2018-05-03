@@ -1,9 +1,7 @@
 import React from "react"
+import AnnotationCalloutCircle from "react-annotation/lib/Types/AnnotationCalloutCircle"
+import AnnotationCalloutRect from "react-annotation/lib/Types/AnnotationCalloutRect"
 
-import {
-  AnnotationCalloutCircle,
-  AnnotationCalloutRect
-} from "react-annotation"
 import Annotation from "../Annotation"
 export const circleEnclosure = ({ d, i, circle }) => {
   const noteData = Object.assign(
