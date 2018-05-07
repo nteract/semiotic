@@ -8,8 +8,8 @@ import { sum } from "d3-array"
 import Select from "material-ui/Select"
 import { MenuItem } from "material-ui/Menu"
 import Icon from "material-ui-icons/Sort"
-import /* Input, */ { InputLabel } from "material-ui/Input"
-import { FormControl/*, FormHelperText */ } from "material-ui/Form"
+import { /* Input, */ InputLabel } from "material-ui/Input"
+import { FormControl /*, FormHelperText */ } from "material-ui/Form"
 
 // const monthHash = {}
 
@@ -581,14 +581,17 @@ export default class OrdinalFrameDocs extends React.Component {
           <p>R Extent Values: {this.state.rExtent.join(", ")}</p>
           <OrdinalFrame
             size={[700, 700]}
-            renderFn={reFn}
             data={dataTypeHash[this.state.dataType].data}
             axis={{ orient: "left" }}
             projection={this.state.projection}
             type={actualType}
-            renderMode={this.state.renderFn}
-            summaryRenderMode={this.state.renderFn}
-            connectorRenderMode={this.state.renderFn}
+            renderMode={this.state.renderFn !== "none" && this.state.renderFn}
+            summaryRenderMode={
+              this.state.renderFn !== "none" && this.state.renderFn
+            }
+            connectorRenderMode={
+              this.state.renderFn !== "none" && this.state.renderFn
+            }
             summaryType={
               this.state.summaryType === "none"
                 ? undefined
@@ -634,7 +637,6 @@ export default class OrdinalFrameDocs extends React.Component {
                 : undefined
             }
             baseMarkProps={{ transitionDuration: 3000 }}
-            canvasPieces={true}
             //            canvasPostProcess={glowyCanvas}
             download={true}
             downloadFields={["funnelKey"]}
