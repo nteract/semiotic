@@ -14,7 +14,9 @@ import {
 } from "d3-shape"
 import { randomNormal } from "d3-random"
 import { scaleLinear, scalePow } from "d3-scale"
-import { AnnotationCalloutElbow, AnnotationBadge } from "react-annotation"
+import AnnotationCalloutElbow from "react-annotation/lib/Types/AnnotationCalloutElbow"
+import AnnotationBadge from "react-annotation/lib/Types/AnnotationBadge"
+
 import { testData } from "../example_settings/xyframe"
 import Button from "material-ui/Button"
 import Select from "material-ui/Select"

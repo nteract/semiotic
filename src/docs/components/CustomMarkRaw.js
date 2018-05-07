@@ -1,6 +1,7 @@
 import React from "react"
 import { OrdinalFrame } from "../../components"
-import { AnnotationCallout } from "react-annotation"
+import AnnotationCallout from "react-annotation/lib/Types/AnnotationCallout"
+
 import ProcessViz from "./ProcessViz"
 
 const data = [
