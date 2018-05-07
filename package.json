@@ -139,7 +139,7 @@
     "react-dev-utils": "^5.0.0",
     "react-annotation": "1.2.1",
     "roughjs": "git://github.com/emeeks/rough",
-    "semiotic-mark": "0.2.7",
+    "semiotic-mark": "0.2.8",
     "style-loader": "0.19.0",
     "svg-path-bounding-box": "1.0.4",
     "sw-precache-webpack-plugin": "0.11.4",
