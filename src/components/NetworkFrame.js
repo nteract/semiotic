@@ -227,8 +227,6 @@ class NetworkFrame extends React.Component {
     size: [500, 500],
     className: "",
     name: "networkframe",
-    edges: [],
-    nodes: [],
     networkType: { type: "force", iterations: 500 }
   }
 
@@ -308,9 +306,11 @@ class NetworkFrame extends React.Component {
   }
 
   calculateNetworkFrame(currentProps) {
+    console.log("currentProps", currentProps)
     const {
-      nodes,
-      edges,
+      graph,
+      nodes = (graph && graph.nodes) || [],
+      edges = (graph && graph.edges) || graph || [],
       networkType,
       size,
       nodeStyle,
@@ -325,6 +325,9 @@ class NetworkFrame extends React.Component {
       title
       /*, customHoverBehavior, customClickBehavior, renderFn, nodeClass = (() => ''), edgeClass = (() => '')*/
     } = currentProps
+    console.log("graph", graph)
+    console.log("nodes", nodes)
+    console.log("edges", edges)
     //    const eventListenersGenerator = generatenetworkFrameEventListeners(customHoverBehavior, customClickBehavior)
 
     let { edgeType, customNodeIcon, customEdgeIcon } = currentProps
@@ -687,9 +690,9 @@ class NetworkFrame extends React.Component {
           .nodeWidth(nodeWidth)
           .iterations(1)
 
-          if (nodePaddingRatio) {
-            initialSettings.nodePaddingRatio(nodePaddingRatio)
-          }
+        if (nodePaddingRatio) {
+          initialSettings.nodePaddingRatio(nodePaddingRatio)
+        }
 
         initialSettings()
 
@@ -724,9 +727,9 @@ class NetworkFrame extends React.Component {
           .nodePadding(nodePadding)
           .nodeWidth(nodeWidth)
           .iterations(iterations)
-          if (nodePaddingRatio) {
-            frameSankey.nodePaddingRatio(nodePaddingRatio)
-          }
+        if (nodePaddingRatio) {
+          frameSankey.nodePaddingRatio(nodePaddingRatio)
+        }
 
         frameSankey()
 

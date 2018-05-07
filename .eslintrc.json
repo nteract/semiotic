@@ -15,7 +15,6 @@
     "indent": "off",
     "no-empty-function": "off",
     "react/prefer-stateless-function": "off",
-    "no-shadow": "off",
-    "no-unused-vars": "off"
+    "no-shadow": "off"
   }
 }

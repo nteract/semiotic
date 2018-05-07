@@ -80,6 +80,7 @@ export const orFrameChangeProps = [
 
 export const networkFrameChangeProps = [
   "name",
+  "graph",
   "nodes",
   "edges",
   "title",

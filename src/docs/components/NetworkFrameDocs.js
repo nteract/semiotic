@@ -8,8 +8,8 @@ import Button from "material-ui/Button"
 import Select from "material-ui/Select"
 import { MenuItem } from "material-ui/Menu"
 import Icon from "material-ui-icons/Share"
-import /* Input, */ { InputLabel } from "material-ui/Input"
-import { FormControl/*, FormHelperText */ } from "material-ui/Form"
+import { /* Input, */ InputLabel } from "material-ui/Input"
+import { FormControl /*, FormHelperText */ } from "material-ui/Form"
 import ProcessViz from "./ProcessViz"
 
 const glowyCanvas = (canvas, context, size) => {
@@ -296,10 +296,12 @@ export default class NetworkFrameDocs extends React.Component {
       </div>
     ]
 
+    console.log("nodeData", nodeData)
+    console.log("edgeData", edgeData)
+
     const networkChart = {
       size: chartSize,
-      edges: edgeData,
-      nodes: nodeData,
+      graph: { nodes: nodeData, edges: edgeData },
       margin: { top: 50, bottom: 50, left: 50, right: 50 },
       edgeStyle: networkEdgeStyle,
       nodeStyle: networkNodeStyle,
@@ -334,6 +336,8 @@ export default class NetworkFrameDocs extends React.Component {
     if (this.state.customNodeIcon === "on") {
       networkChart.annotations = annotations
     }
+
+    console.log("networkChart", networkChart)
 
     const examples = []
     examples.push({
