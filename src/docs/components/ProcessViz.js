@@ -37,7 +37,8 @@ const processNodes = [
       lines: true,
       areas: true,
       nodes: true,
-      edges: true
+      edges: true,
+      graph: true
     }
   },
   {
@@ -205,7 +206,7 @@ export default class ProcessViz extends React.Component {
 
   render() {
     const width = 1000
-    const { frameSettings/*, frameType */ } = this.props
+    const { frameSettings /*, frameType */ } = this.props
     const frameKeys = Object.keys(frameSettings).filter(
       d => this.props.frameSettings[d] !== undefined
     )
