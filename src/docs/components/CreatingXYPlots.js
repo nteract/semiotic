@@ -209,12 +209,11 @@ export default class CreatingXYPlots extends React.Component {
               fill: thresholds(d.percent),
               stroke: "black"
             })}
-            areaRenderMode="sketchy"
             hoverAnnotation={true}
             tooltipContent={d => {
               return (
                 <div className="tooltip-content">
-                  <p>{d.binItems.length}</p>
+                  <p>{(d.binItems && d.binItems.length) || "empty"}</p>
                 </div>
               )
             }}

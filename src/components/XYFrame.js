@@ -49,7 +49,7 @@ import {
 } from "./constants/coordinateNames"
 import { calculateDataExtent, stringToFn } from "./data/dataFunctions"
 import { filterDefs } from "./constants/jsx"
-import { xyFrameChangeProps } from "./constants/frame_props"
+import { xyFrameChangeProps, xyFrameDataProps } from "./constants/frame_props"
 
 import PropTypes from "prop-types"
 
@@ -139,7 +139,7 @@ class XYFrame extends React.Component {
   }
 
   componentWillMount() {
-    this.calculateXYFrame(this.props)
+    this.calculateXYFrame(this.props, true)
   }
 
   componentWillReceiveProps(nextProps) {
@@ -148,16 +148,18 @@ class XYFrame extends React.Component {
         this.state.dataVersion !== nextProps.dataVersion) ||
       !this.state.fullDataset
     ) {
-      this.calculateXYFrame(nextProps)
+      this.calculateXYFrame(nextProps, true)
     } else if (
       this.state.size[0] !== nextProps.size[0] ||
       this.state.size[1] !== nextProps.size[1] ||
       (!this.state.dataVersion &&
-        xyFrameChangeProps.find(d => {
-          return this.props[d] !== nextProps[d]
-        }))
+        xyFrameChangeProps.find(d => this.props[d] !== nextProps[d]))
     ) {
-      this.calculateXYFrame(nextProps)
+      const dataChanged = xyFrameDataProps.find(
+        d => this.props[d] !== nextProps[d]
+      )
+
+      this.calculateXYFrame(nextProps, dataChanged)
     }
   }
 
@@ -180,7 +182,7 @@ class XYFrame extends React.Component {
     return { xScale, yScale }
   }
 
-  calculateXYFrame(currentProps) {
+  calculateXYFrame(currentProps, updateData) {
     const margin = calculateMargin(currentProps)
     const { adjustedPosition, adjustedSize } = adjustedPositionSize(
       currentProps
@@ -243,9 +245,10 @@ class XYFrame extends React.Component {
     )
 
     if (
-      !currentProps.dataVersion ||
-      (currentProps.dataVersion &&
-        currentProps.dataVersion !== this.state.dataVersion)
+      updateData ||
+      (!currentProps.dataVersion ||
+        (currentProps.dataVersion &&
+          currentProps.dataVersion !== this.state.dataVersion))
     ) {
       if (
         !xExtent ||

@@ -1,28 +1,33 @@
 //size is a special case and handled checking the actual values in the size array
 
-export const xyFrameChangeProps = [
-  "name",
+export const xyFrameDataProps = [
   "lines",
   "points",
   "areas",
+  "xScaleType",
+  "yScaleType",
+  "xAccessor",
+  "yAccessor",
+  "lineDataAccessor",
+  "areaDataAccessor",
+  "lineType",
+  "showLinePoints",
+  "defined"
+]
+
+export const xyFrameChangeProps = [
+  ...xyFrameDataProps,
+  "name",
   "title",
   "margin",
   "axes",
   "position",
-  "xScaleType",
-  "yScaleType",
   "xExtent",
   "yExtent",
   "invertX",
   "invertY",
-  "xAccessor",
-  "yAccessor",
   "hoverAnnotation",
-  "lineDataAccessor",
-  "areaDataAccessor",
   "additionalDefs",
-  "lineType",
-  "showLinePoints",
   "defined",
   "lineStyle",
   "pointStyle",
