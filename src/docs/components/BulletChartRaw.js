@@ -41,7 +41,7 @@ const bulletData = [
 ]
 
 //type, data, renderMode, eventListenersGenerator, styleFn, projection, classFn, adjustedSize, margin, rScale
-function generateBulletChart({ data, rScale, adjustedSize }) {
+function generateBulletChart({ data, rScale/*, adjustedSize */ }) {
   const rangeColors = ["eee", "ddd", "ccc"]
   const measureColors = ["rgb(0, 162, 206)", "rgb(0, 113, 144)"]
   const markerColors = ["black"]
@@ -68,7 +68,7 @@ function generateBulletChart({ data, rScale, adjustedSize }) {
   // Each chart is a separate OrdinalFrame with a single column called "fixed"
   const column = data.fixed
   column.pieceData.forEach((d, i) => {
-    let pieceShape = {
+    const pieceShape = {
       key: `bullet-piece-${i}`,
       style: {
         fill: colorHash[d.data.class][colorStepHash[d.data.class]],

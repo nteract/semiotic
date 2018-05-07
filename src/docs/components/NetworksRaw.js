@@ -8,7 +8,7 @@ import {
   forceCollide,
   forceManyBody
 } from "d3-force"
-import ProcessViz from "./ProcessViz"
+// import ProcessViz from "./ProcessViz"
 /*
   <div>
     <ProcessViz frameSettings={regionatedLineChart} frameType="XYFrame" />

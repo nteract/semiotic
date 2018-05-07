@@ -1019,8 +1019,8 @@ class NetworkFrame extends React.Component {
 
     if (networkSettings.direction === "flip") {
       projectedNodes.forEach(node => {
-        const ox = node.x
-        const oy = node.y
+        // const ox = node.x
+        // const oy = node.y
         node.x = adjustedSize[0] - node.x
         node.y = adjustedSize[1] - node.y
       })

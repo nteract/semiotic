@@ -13,7 +13,7 @@ components.push({
 })
 
 const typeOptions = ['stackedarea', 'stackedpercent', 'bumparea'].map(d => 
-  (<MenuItem key={'type-option-' + d} label={d} value={d}>
+  (<MenuItem key={`type-option-${d}`} label={d} value={d}>
     {d}
   </MenuItem>)
 )

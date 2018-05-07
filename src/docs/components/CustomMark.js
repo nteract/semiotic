@@ -15,7 +15,7 @@ components.push({
 const keyFormatter = '`piece-${key}`'
 
 const typeOptions = ['none', 'marginalia'].map(d => 
-  (<MenuItem key={'type-option-' + d} label={d} value={d}>
+  (<MenuItem key={`type-option-${d}`} label={d} value={d}>
     {d}
   </MenuItem>)
 )

@@ -344,7 +344,7 @@ export default class UsingPatternsTextures extends React.Component {
               <OrdinalFrame
                 {...barChartSettings}
                 size={[350, 350]}
-                style={(d, i) => ({
+                style={() => ({
                   fill: "#b6a756",
                   stroke: "#b6a756"
                 })}

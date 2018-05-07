@@ -6039,4 +6039,4 @@ export const data = [
     date: "1/2/1997",
     close: 21
   }
-];
+]

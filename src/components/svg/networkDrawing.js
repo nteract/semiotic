@@ -455,7 +455,7 @@ export const ribbonLink = d => {
     d.direction === "down"
       ? Math.abs(d.target.y - d.source.y)
       : Math.abs(d.source.x - d.target.x)
-  const halfWidth = d.width / 2
+  // const halfWidth = d.width / 2
   const testCoordinates =
     d.direction === "down"
       ? [
@@ -519,7 +519,7 @@ export const areaLink = d => {
 
     return `M${x0},${y0}C${x0},${y2} ${x1},${y3} ${x1},${y1}L${x2},${y1}C${x2},${y3} ${x3},${y2} ${x3},${y0}Z`
   }
-  ;(x0 = d.source.x1),
+  ;(x0 = d.source.x1), // eslint-disable-line no-sequences
     (x1 = d.target.x0),
     (xi = interpolateNumber(x0, x1)),
     (x2 = xi(curvature)),

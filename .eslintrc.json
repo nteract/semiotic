@@ -5,15 +5,17 @@
     "jest": true
   },
   "rules": {
-    "no-template-curly-in-string": 0,
-    "quotes": 0,
-    "react/jsx-no-bind": 0,
-    "no-extra-parens": 0,
-    "curly": 0,
-    "class-methods-use-this": 0,
-    "react/no-did-mount-set-state": 0,
-    "indent": 0,
-    "no-empty-function": 0,
-    "react/prefer-stateless-function": 0
+    "no-template-curly-in-string": "off",
+    "quotes": "off",
+    "react/jsx-no-bind": "off",
+    "no-extra-parens": "off",
+    "curly": "off",
+    "class-methods-use-this": "off",
+    "react/no-did-mount-set-state": "off",
+    "indent": "off",
+    "no-empty-function": "off",
+    "react/prefer-stateless-function": "off",
+    "no-shadow": "off",
+    "no-unused-vars": "off"
   }
 }

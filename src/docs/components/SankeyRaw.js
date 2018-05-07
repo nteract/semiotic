@@ -56,7 +56,7 @@ const areaLegendGroups = [
 ]
 
 export default ({
-  annotations = [],
+  /* annotations = [], */
   type = "sankey",
   orient = "left",
   cyclical = false,
