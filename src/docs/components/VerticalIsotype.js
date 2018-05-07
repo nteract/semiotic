@@ -16,7 +16,7 @@ export default class DivergingStackedBar extends React.Component {
       demo: DivergingStackedIsotypeRaw,
       source: `import React from "react";
 import { OrdinalFrame } from "../../components";
-import { AnnotationCalloutElbow } from "react-annotation";
+import AnnotationCalloutElbow from "react-annotation/lib/Types/AnnotationCalloutElbow"
 
 const vizzers = [
   { type: "journalist", writeviz: 1, number: 9 },

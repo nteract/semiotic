@@ -1,5 +1,5 @@
 import React from "react"
-import { AnnotationLabel } from "react-annotation"
+import AnnotationLabel from "react-annotation/lib/Types/AnnotationLabel"
 
 import PropTypes from "prop-types"
 

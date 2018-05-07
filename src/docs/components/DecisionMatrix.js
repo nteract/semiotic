@@ -10,7 +10,8 @@ import { FormControl } from "material-ui/Form"
 import { extent, mean } from "d3-array"
 import { scaleLinear } from "d3-scale"
 import { format } from "d3-format"
-import { AnnotationCalloutCircle } from "react-annotation"
+import AnnotationCalloutCircle from "react-annotation/lib/Types/AnnotationCalloutCircle"
+
 import { MATRIX_DATA } from "../sampledata/matrixData"
 
 const components = []
