@@ -73,7 +73,7 @@ const verticalISOTYPEChart = {
   oAccessor: "writeviz",
   sortO: (a, b) => parseFloat(a) - parseFloat(b),
   rAccessor: "number",
-  style: (d, i) => ({
+  style: d => ({
     fill: colorHash[d.type],
     stroke: colorHash[d.type],
     fillOpacity: 1,

@@ -19,7 +19,7 @@ const basename = process.env.REACT_APP_GH_PAGES_PATH
 
 const muiTheme = createMuiTheme(theme)
 
-const Docs = test => {
+const Docs = () => {
   return (
     <MuiThemeProvider theme={muiTheme}>
       <HashRouter basename={basename}>

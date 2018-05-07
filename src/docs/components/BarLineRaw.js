@@ -18,8 +18,8 @@ const testData = [
   }
 ]
 
-let displayData = testData.map(d => {
-  let moreData = [
+const displayData = testData.map(d => {
+  const moreData = [
     ...d.coordinates,
     ...d.coordinates.map(p => ({
       sales: p.sales + Math.random() * 5,
@@ -37,7 +37,7 @@ const axes = [
     className: "yscale",
     name: "CountAxis",
     tickValues: [3, 6, 9],
-    tickFormat: d => d + "%"
+    tickFormat: d => `${d}%`
   },
   {
     key: "xAxis",
@@ -45,7 +45,7 @@ const axes = [
     className: "xscale",
     name: "TimeAxis",
     tickValues: [2, 4, 6, 8, 10, 12],
-    tickFormat: d => "day " + d
+    tickFormat: d => `day ${d}`
   }
 ]
 const axis3 = {

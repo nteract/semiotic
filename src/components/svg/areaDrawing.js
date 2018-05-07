@@ -176,7 +176,7 @@ export function heatmapping({
     ((yCellPx && yCellPx / size[1]) || yBinPercent) * size[1]
   ]
 
-  const halfResolution = [actualResolution[0] / 2, actualResolution[1] / 2]
+  // const halfResolution = [actualResolution[0] / 2, actualResolution[1] / 2]
 
   data.forEach(heatmapData => {
     const grid = []

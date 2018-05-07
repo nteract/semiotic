@@ -1,14 +1,14 @@
 const ordinalColors = ["#9c7561", "#e15759", "#f0cd6b", "#fabfd2", "#8cd17d"]
-let lines = []
+const lines = []
 
 function generateDataArray(numPoints) {
-  let data = []
+  const data = []
   if (numPoints <= 0) {
     return data
   }
   let pointer = 0
   while (pointer < numPoints) {
-    let date = new Date()
+    const date = new Date()
     date.setDate(date.getDate() - pointer)
     data.push({
       x: date,

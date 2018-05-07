@@ -8,30 +8,30 @@ import { sum } from "d3-array"
 import Select from "material-ui/Select"
 import { MenuItem } from "material-ui/Menu"
 import Icon from "material-ui-icons/Sort"
-import Input, { InputLabel } from "material-ui/Input"
-import { FormControl, FormHelperText } from "material-ui/Form"
+import /* Input, */ { InputLabel } from "material-ui/Input"
+import { FormControl/*, FormHelperText */ } from "material-ui/Form"
 
-const monthHash = {}
+// const monthHash = {}
 
 const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"]
 
 const outsideHash = {}
 
-const glowyCanvas = (canvas, context, size) => {
-  const dataURL = canvas.toDataURL("image/png")
-  const baseImage = document.createElement("img")
+// const glowyCanvas = (canvas, context, size) => {
+//   const dataURL = canvas.toDataURL("image/png")
+//   const baseImage = document.createElement("img")
 
-  baseImage.src = dataURL
-  baseImage.onload = () => {
-    context.clearRect(0, 0, size[0] + 120, size[1] + 120)
-    context.filter = "blur(10px)"
-    context.drawImage(baseImage, 0, 0)
-    context.filter = "blur(5px)"
-    context.drawImage(baseImage, 0, 0)
-    context.filter = "none"
-    context.drawImage(baseImage, 0, 0)
-  }
-}
+//   baseImage.src = dataURL
+//   baseImage.onload = () => {
+//     context.clearRect(0, 0, size[0] + 120, size[1] + 120)
+//     context.filter = "blur(10px)"
+//     context.drawImage(baseImage, 0, 0)
+//     context.filter = "blur(5px)"
+//     context.drawImage(baseImage, 0, 0)
+//     context.filter = "none"
+//     context.drawImage(baseImage, 0, 0)
+//   }
+// }
 
 const groupData = []
 const nRando = randomNormal(50, 15)
@@ -52,10 +52,12 @@ const customBar = {
       x={2}
       width={xy.width - 4}
       height={xy.height}
+      key={`rect${i}`}
     />,
     <text
       style={{ fill: "white" }}
       transform={`translate(18,${xy.height}) rotate(-90)`}
+      key={`text${i}`}
     >
       {d.stepName}
     </text>,
@@ -63,16 +65,19 @@ const customBar = {
       style={{ stroke: "white", fill: "#b3331d" }}
       r={xy.width / 2}
       cx={xy.width / 2}
+      key={`circle-a-${i}`}
     />,
     <circle
       style={{ stroke: "white", fill: "#b3331d" }}
       r={xy.width / 2 - 2}
       cx={xy.width / 2}
+      key={`circle-b-${i}`}
     />,
     <circle
       style={{ stroke: "white", fill: "#b3331d" }}
       r={xy.width / 2 - 4}
       cx={xy.width / 2}
+      key={`circle-c-${i}`}
     />
   ]
 }
@@ -404,14 +409,14 @@ export default class OrdinalFrameDocs extends React.Component {
         {d}
       </MenuItem>
     ))
-    const exampleOptions = ["basic", "nyc_temp"].map(d => (
-      <MenuItem key={`example-option${d}`} label={d} value={d}>
-        {d}
-      </MenuItem>
-    ))
+    // const exampleOptions = ["basic", "nyc_temp"].map(d => (
+    //   <MenuItem key={`example-option${d}`} label={d} value={d}>
+    //     {d}
+    //   </MenuItem>
+    // ))
     //    const barNumberOptions = [1, 2, 3, 4, 5, 20].map(d => <MenuItem key={'example-option' + d} label={d} value={d}>{d}</MenuItem>)
-    const rAccessor =
-      this.state.rAccessor === "fixed" ? () => 1 : d => d.stepValue || d.value
+    // const rAccessor =
+    //   this.state.rAccessor === "fixed" ? () => 1 : d => d.stepValue || d.value
     const reFn =
       this.state.renderFn === "none" ? undefined : () => this.state.renderFn
 
@@ -545,15 +550,15 @@ export default class OrdinalFrameDocs extends React.Component {
       </div>
     ]
 
-    const axis = {
-      orient: "top",
-      tickFormat: d => d,
-      label: {
-        name: "axis label",
-        position: { anchor: "middle" },
-        locationDistance: 40
-      }
-    }
+    // const axis = {
+    //   orient: "top",
+    //   tickFormat: d => d,
+    //   label: {
+    //     name: "axis label",
+    //     position: { anchor: "middle" },
+    //     locationDistance: 40
+    //   }
+    // }
 
     const actualType =
       this.state.type === "custom" ? customBar : this.state.type

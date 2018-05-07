@@ -14,13 +14,13 @@ export default ({
     title: "D3v3 API",
     size: [700, 700],
     edges: data,
-    nodeStyle: (d, i) => ({
+    nodeStyle: d => ({
       fill: colors[d.depth],
       stroke: "black",
       strokeOpacity: 0.25,
       fillOpacity: 0.25
     }),
-    edgeStyle: (d, i) => ({
+    edgeStyle: d => ({
       fill: colors[d.source.depth],
       stroke: colors[d.source.depth],
       opacity: 0.5

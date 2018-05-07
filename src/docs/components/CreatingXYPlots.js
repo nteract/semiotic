@@ -46,10 +46,6 @@ for (let x = 1; x < 100; x++) {
 }
 
 export default class CreatingXYPlots extends React.Component {
-  constructor(props) {
-    super(props)
-  }
-
   render() {
     const examples = []
     examples.push({

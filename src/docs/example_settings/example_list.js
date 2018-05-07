@@ -16,7 +16,7 @@ import DivergingStackedBarRaw from "../components/DivergingStackedBarRaw"
 import ChordRaw from "../components/ChordRaw"
 import SankeyRaw from "../components/SankeyRaw"
 import MinimapRaw from "../components/MinimapRaw"
-import NetworkMinimapRaw from "../components/NetworkMinimapRaw"
+// import NetworkMinimapRaw from "../components/NetworkMinimapRaw"
 import AppleStockChartRaw from "../components/AppleStockChartRaw"
 import BaseballMapRaw from "../components/BaseballMapRaw"
 import BulletChartRaw from "../components/BulletChartRaw"
@@ -43,7 +43,7 @@ const exampos = [
     label: "Home Run Map",
     viz: BaseballMapRaw({
       pointStyle: { fill: "black" },
-      areaStyle: d => ({
+      areaStyle: () => ({
         stroke: "none",
         fill: "#b3331d",
         opacity: 0.25

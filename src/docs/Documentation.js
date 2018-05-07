@@ -12,7 +12,7 @@ import DividedLineDocs from "./components/DividedLineDocs"
 import { withStyles } from "material-ui/styles"
 import Divider from "material-ui/Divider"
 import ChevronLeftIcon from "material-ui-icons/ChevronLeft"
-import ChevronRightIcon from "material-ui-icons/ChevronRight"
+// import ChevronRightIcon from "material-ui-icons/ChevronRight"
 
 import classNames from "classnames"
 
@@ -35,7 +35,7 @@ import WordCloud from "./components/WordCloud"
 import SwarmBrush from "./components/SwarmBrush"
 import LineBrush from "./components/LineBrush"
 import Minimap from "./components/Minimap"
-import NetworkMinimap from "./components/NetworkMinimap"
+// import NetworkMinimap from "./components/NetworkMinimap"
 import Timeline from "./components/Timeline"
 import DivergingStackedBar from "./components/DivergingStackedBar"
 import DivergingStackedIsotype from "./components/DivergingStackedIsotype"
@@ -221,15 +221,15 @@ class Documentation extends React.Component {
   }
 
   render() {
-    const { match, history, classes = {}, theme = {} } = this.props
+    const { match, /* history, */ classes = {} /* theme = {} */ } = this.props
     const selected = match && match.params.component
     const selectedComponent = components[selected]
 
     let selectedDoc, Doc
-    const selectedStyles = {
-      borderTop: "5px double #ac9739",
-      borderBottom: "5px double #ac9739"
-    }
+    // const selectedStyles = {
+    //   borderTop: "5px double #ac9739",
+    //   borderBottom: "5px double #ac9739"
+    // }
 
     const allDocs = [
       <Link to={"/"} key="home-link">

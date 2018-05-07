@@ -26,7 +26,7 @@ const axes = [
       locationDistance: 70
     },
     tickValues: [0.5, 1.5, 2.5, 3.5, 4.5, 5.5],
-    tickFormat: d => {
+    tickFormat: () => {
       return ""
     }
   },
@@ -42,7 +42,7 @@ const axes = [
       locationDistance: 60
     },
     tickValues: [0.5, 1.5, 2.5, 3.5, 4.5, 5.5],
-    tickFormat: (d, i) => {
+    tickFormat: () => {
       return ""
     }
   },
@@ -78,7 +78,7 @@ function processData(data, sizeBy) {
     )
     .range([MIN_RADIUS, MAX_RADIUS])
 
-  data = data.map((d, i) => {
+  data = data.map(d => {
     d.radius = sizeBy === "None" ? 10 : scale(+d[sizeBy])
     return d
   })
@@ -106,7 +106,7 @@ function processData(data, sizeBy) {
     )
     .stop()
 
-  for (var i = 0; i < 120; ++i) simulation.tick()
+  for (let i = 0; i < 120; ++i) simulation.tick()
 
   return data
 }
@@ -134,14 +134,14 @@ export default function DecisionMatrixRaw(sizeBy) {
     name: "Decision Matrix",
     className: "decisionMatrix",
     points: processData(MATRIX_DATA, sizeBy),
-    pointStyle: d => {
+    pointStyle: () => {
       return { fill: "white", stroke: "black", strokeWidth: "3px" }
     },
     customPointMark: ({ d }) => {
       return <Mark markType="circle" r={d.radius} />
     },
     renderKey: d => {
-      return d["Index"]
+      return d.Index
     },
     axes: axes,
     xAccessor: d => d.x,

@@ -7,7 +7,7 @@ const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"]
 const sunburstSettings = {
   size: [700, 700],
   edges: data,
-  nodeStyle: (d, i) => ({
+  nodeStyle: d => ({
     fill: colors[d.depth],
     stroke: "black",
     opacity: 0.75

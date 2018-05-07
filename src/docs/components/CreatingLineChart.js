@@ -359,7 +359,7 @@ export default class CreatingLineChart extends React.Component {
     this.setState({ hoverPoint: d })
   }
 
-  lineAnnotater({ d, i, xScale, yScale }) {
+  lineAnnotater({ d, xScale, yScale }) {
     if (d.type !== "hover") return null
 
     return (
@@ -552,7 +552,7 @@ export default class CreatingLineChart extends React.Component {
             lineStyle={{ stroke: "#00a2ce" }}
             lineType={{ type: "line", interpolator: curveCardinal }}
             showLinePoints={true}
-            pointStyle={d => {
+            pointStyle={() => {
               return { fill: "#00a2ce" }
             }}
             hoverAnnotation={true}

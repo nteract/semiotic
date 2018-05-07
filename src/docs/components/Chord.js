@@ -23,7 +23,7 @@ export default class Chord extends React.Component {
 
   render() {
     const padAngleOptions = ['0.01', '0', '0.2', '0.4'].map(d => 
-      (<MenuItem key={'pad-option-' + d} label={d} value={d}>
+      (<MenuItem key={`pad-option-${d}`} label={d} value={d}>
         {d}
       </MenuItem>)
     )

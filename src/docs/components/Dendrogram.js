@@ -32,18 +32,18 @@ export default class Dendrogram extends React.Component {
       'treemap',
       'partition'
     ].map(d => 
-      (<MenuItem key={'type-option-' + d} label={d} value={d}>
+      (<MenuItem key={`type-option-${d}`} label={d} value={d}>
         {d}
       </MenuItem>)
     )
 
     const projectionOptions = ['vertical', 'horizontal', 'radial'].map(d => 
-      (<MenuItem key={'type-option-' + d} label={d} value={d}>
+      (<MenuItem key={`type-option-${d}`} label={d} value={d}>
         {d}
       </MenuItem>)
     )
     const annotationOptions = ['rectangle', 'circle'].map(d => 
-      (<MenuItem key={'type-option-' + d} label={d} value={d}>
+      (<MenuItem key={`type-option-${d}`} label={d} value={d}>
         {d}
       </MenuItem>)
     )

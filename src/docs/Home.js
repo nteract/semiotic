@@ -3,7 +3,7 @@ import { PrismCode } from "react-prism"
 import Button from "material-ui/Button"
 import { Link } from "react-router-dom"
 
-const Home = ({ match }) => {
+const Home = ({ match }) => { // eslint-disable-line no-unused-vars
   // const documentation = <Documentation
   //   selected={match && match.params.component}
   // />
