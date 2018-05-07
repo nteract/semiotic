@@ -657,7 +657,8 @@ class NetworkFrame extends React.Component {
         const {
           orient = "center",
           iterations = 100,
-          nodePadding = 8,
+          nodePadding,
+          nodePaddingRatio = nodePadding ? undefined : 0.5,
           nodeWidth = networkSettings.type === "flowchart" ? 2 : 24,
           customSankey,
           direction = "right"
@@ -685,6 +686,10 @@ class NetworkFrame extends React.Component {
           .nodePadding(nodePadding)
           .nodeWidth(nodeWidth)
           .iterations(1)
+
+          if (nodePaddingRatio) {
+            initialSettings.nodePaddingRatio(nodePaddingRatio)
+          }
 
         initialSettings()
 
@@ -719,6 +724,9 @@ class NetworkFrame extends React.Component {
           .nodePadding(nodePadding)
           .nodeWidth(nodeWidth)
           .iterations(iterations)
+          if (nodePaddingRatio) {
+            frameSankey.nodePaddingRatio(nodePaddingRatio)
+          }
 
         frameSankey()
 

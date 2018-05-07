@@ -418,6 +418,7 @@ export const orFrameAxisGenerator = ({
   rExtent,
   data
 }) => {
+  if (!axis) return { axis: null, axesTickLines: null }
   let generatedAxis, axesTickLines
   if (projection !== "radial" && axis) {
     axesTickLines = []

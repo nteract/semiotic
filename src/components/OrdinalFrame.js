@@ -980,7 +980,7 @@ class OrdinalFrame extends React.Component {
       backgroundGraphics: currentProps.backgroundGraphics,
       foregroundGraphics: currentProps.foregroundGraphics,
       axisData: currentProps.axis,
-      axes: (
+      axes: axis && (
         <g key="ordinalframe-axis" className="axis-labels">
           {axis}
         </g>
@@ -1398,7 +1398,7 @@ class OrdinalFrame extends React.Component {
         size={size}
         xScale={xScale}
         yScale={yScale}
-        axes={[axes]}
+        axes={axes && [axes]}
         useSpans={useSpans}
         axesTickLines={axesTickLines}
         title={title}
