@@ -37,6 +37,7 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@vx/pattern": "0.0.143",
+    "autoprefixer": "7.1.6",
     "babel-cli": "6.4.5",
     "babel-eslint": "^7.2.3",
     "babel-preset-netflix-dea": "^3.0.1",
@@ -91,7 +92,6 @@
   },
   "dependencies": {
     "@mapbox/polylabel": "1",
-    "autoprefixer": "7.1.6",
     "babel-core": "6.26.0",
     "babel-jest": "20.0.3",
     "babel-loader": "7.1.2",
