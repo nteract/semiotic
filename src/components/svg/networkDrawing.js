@@ -11,6 +11,8 @@ import { linearRibbon } from "./SvgHelper"
 import { interpolateNumber } from "d3-interpolate"
 
 function sankeyEdgeSort(a, b, direction) {
+  if (a.circular && !b.circular) return -1
+  if (b.circular && !a.circular) return 1
   const first = direction === "down" ? "y" : "x"
   const second = direction === "down" ? "x" : "y"
 
