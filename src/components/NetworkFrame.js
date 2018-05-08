@@ -306,7 +306,6 @@ class NetworkFrame extends React.Component {
   }
 
   calculateNetworkFrame(currentProps) {
-    console.log("currentProps", currentProps)
     const {
       graph,
       nodes = (graph && graph.nodes) || [],
@@ -325,9 +324,6 @@ class NetworkFrame extends React.Component {
       title
       /*, customHoverBehavior, customClickBehavior, renderFn, nodeClass = (() => ''), edgeClass = (() => '')*/
     } = currentProps
-    console.log("graph", graph)
-    console.log("nodes", nodes)
-    console.log("edges", edges)
     //    const eventListenersGenerator = generatenetworkFrameEventListeners(customHoverBehavior, customClickBehavior)
 
     let { edgeType, customNodeIcon, customEdgeIcon } = currentProps

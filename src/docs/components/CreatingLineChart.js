@@ -463,13 +463,13 @@ export default class CreatingLineChart extends React.Component {
               type: "line",
               interpolator: {
                 dynamicInterpolator: (d, i) =>
-                  i === 0 ? curveStep : curveBasis
+                  i === 0 ? curveStep : curveCardinal
               }
             }}
             xAccessor={"week"}
             yAccessor={"grossWeekly"}
-            lineStyle={(d, i) => ({
-              stroke: i === 0 ? "#00a2ce" : "red",
+            lineStyle={d => ({
+              stroke: d.title === "Ex Machina" ? "#00a2ce" : "red",
               fill: "none"
             })}
             margin={{ left: 80, bottom: 50, right: 10, top: 40 }}
@@ -481,7 +481,16 @@ export default class CreatingLineChart extends React.Component {
                 orient: "bottom"
               }
             ]}
-            hoverAnnotation={true}
+            hoverAnnotation={[
+              d => ({
+                type: "frame-hover",
+                color:
+                  (d.parentLine &&
+                    d.parentLine.title === "Ex Machina" &&
+                    "#00a2ce") ||
+                  "red"
+              })
+            ]}
             customHoverBehavior={d => console.info("custom hover d", d)}
             customClickBehavior={d => console.info("click on d", d)}
             customDoubleClickBehavior={d =>

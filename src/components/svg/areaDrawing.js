@@ -125,13 +125,30 @@ export function hexbinning({
 
     const hexbinProjectedAreas = hexes.map(d => {
       const hexValue = binValue(d)
+      const gx = d.x
+      const gy = d.y
       d.x = hexBinXScale.invert(d.x)
       d.y = hexBinYScale.invert(d.y)
       d.binItems = d
+      const percent = hexValue / hexMax
       return {
+        customMark: areaType.customMark && (
+          <g transform={`translate(${gx},${size[1] - gy})`}>
+            {areaType.customMark({
+              ...d,
+              percent,
+              value: hexValue,
+              radius: actualResolution,
+              hexCoordinates: hexBase.map(d => [
+                d[0] * actualResolution,
+                d[1] * actualResolution
+              ])
+            })}
+          </g>
+        ),
         _xyfCoordinates: hexacoordinates.map(p => [p[0] + d.x, p[1] + d.y]),
         value: hexValue,
-        percent: hexValue / hexMax,
+        percent,
         data: d,
         parentArea: hexbinData,
         centroid: true
@@ -195,6 +212,10 @@ export function heatmapping({
         const y = heatmapBinYScale.invert(j)
         const y1 = heatmapBinYScale.invert(j + actualResolution[1])
         cell = {
+          gx: i,
+          gy: j,
+          gw: actualResolution[0],
+          gh: actualResolution[1],
           x: (x + x1) / 2,
           y: (y + y1) / 2,
           binItems: [],
@@ -224,6 +245,9 @@ export function heatmapping({
 
     flatGrid.forEach(d => {
       d.percent = d.value / maxValue
+      d.customMark = areaType.customMark && (
+        <g transform={`translate(${d.gx},${d.gy})`}>{areaType.customMark(d)}</g>
+      )
     })
 
     projectedAreas = [...projectedAreas, ...flatGrid]
