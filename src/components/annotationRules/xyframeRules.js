@@ -157,6 +157,8 @@ export const svgHighlight = ({
 }
 
 export const svgXYAnnotation = ({ screenCoordinates, i, d }) => {
+  let inlineStyle
+  if (d.color) inlineStyle = { fill: d.color }
   const laLine = (
     <Mark
       className={`annotation ${d.type} ${d.className || ""} `}
@@ -165,6 +167,7 @@ export const svgXYAnnotation = ({ screenCoordinates, i, d }) => {
       cx={screenCoordinates[0]}
       cy={screenCoordinates[1]}
       forceUpdate={true}
+      style={inlineStyle}
       r={5}
     />
   )

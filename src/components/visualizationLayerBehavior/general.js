@@ -336,7 +336,9 @@ export function createAreas({
       className = `xyframe-area ${areaClass(d)}`
     }
     let drawD = ""
-    if (d.type === "MultiPolygon") {
+    if (d.customMark) {
+      drawD = d.customMark
+    } else if (d.type === "MultiPolygon") {
       d.coordinates.forEach(coord => {
         coord.forEach(c => {
           drawD += `M${c

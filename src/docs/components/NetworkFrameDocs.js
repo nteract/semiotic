@@ -296,9 +296,6 @@ export default class NetworkFrameDocs extends React.Component {
       </div>
     ]
 
-    console.log("nodeData", nodeData)
-    console.log("edgeData", edgeData)
-
     const networkChart = {
       size: chartSize,
       graph: { nodes: nodeData, edges: edgeData },
@@ -336,8 +333,6 @@ export default class NetworkFrameDocs extends React.Component {
     if (this.state.customNodeIcon === "on") {
       networkChart.annotations = annotations
     }
-
-    console.log("networkChart", networkChart)
 
     const examples = []
     examples.push({
