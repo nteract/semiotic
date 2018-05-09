@@ -153,49 +153,6 @@ export default class CreatingXYPlots extends React.Component {
               { orient: "bottom", footer: true }
             ]}
           />
-          <XYFrame
-            size={[500, 800]}
-            areas={[{ coordinates: pointTestData }]}
-            areaType={{
-              type: "heatmap",
-              yBins: 10,
-              xCellPx: 35,
-              customMark: d => (
-                <ellipse
-                  fill={thresholds(d.percent)}
-                  stroke="none"
-                  cx={d.gw / 2}
-                  cy={d.gh / 2}
-                  rx={d.gw / 2 * d.percent}
-                  ry={d.gh / 2 * d.percent}
-                />
-              )
-            }}
-            xAccessor="x"
-            yAccessor="y"
-            areaStyle={d => ({
-              fill: thresholds(d.percent),
-              stroke: "black"
-            })}
-            hoverAnnotation={true}
-            tooltipContent={d => {
-              return (
-                <div className="tooltip-content">
-                  <p>Points in cell: {d.binItems.length}</p>
-                </div>
-              )
-            }}
-            areaRenderMode={{
-              renderMode: "sketchy",
-              fillWeight: 3,
-              hachureGap: 4
-            }}
-            margin={{ left: 60, bottom: 60, top: 30, right: 30 }}
-            axes={[
-              { orient: "left", footer: true },
-              { orient: "bottom", footer: true }
-            ]}
-          />
         </div>
       ),
       source: `<XYFrame
@@ -275,8 +232,7 @@ export default class CreatingXYPlots extends React.Component {
             percent calculation for styling.
           </p>
           <XYFrame
-            //            areas={[{ coordinates: pointTestData }]}
-            points={pointTestData}
+           areas={[{ coordinates: pointTestData }]}
             areaType={{
               type: "hexbin",
               bins: 10
@@ -287,7 +243,6 @@ export default class CreatingXYPlots extends React.Component {
               fill: thresholds(d.percent),
               stroke: "black"
             })}
-            pointStyle={d => ({ fill: d.color, stroke: "black", r: 4 })}
             hoverAnnotation={true}
             tooltipContent={d => {
               return (
@@ -302,33 +257,7 @@ export default class CreatingXYPlots extends React.Component {
               { orient: "bottom", footer: true }
             ]}
           />
-          <XYFrame
-            areas={[{ coordinates: pointTestData }]}
-            areaType={{
-              type: "hexbin",
-              bins: 10,
-              customMark: d => makeHex(d)
-            }}
-            xAccessor="x"
-            yAccessor="y"
-            areaStyle={d => ({
-              fill: thresholds(d.percent),
-              stroke: "black"
-            })}
-            hoverAnnotation={true}
-            tooltipContent={d => {
-              return (
-                <div className="tooltip-content">
-                  <p>{(d.binItems && d.binItems.length) || "empty"}</p>
-                </div>
-              )
-            }}
-            margin={{ left: 60, bottom: 60, top: 30, right: 30 }}
-            axes={[
-              { orient: "left", footer: true },
-              { orient: "bottom", footer: true }
-            ]}
-          />
+          
         </div>
       ),
       source: `<XYFrame
@@ -425,6 +354,113 @@ export default class CreatingXYPlots extends React.Component {
     />`
     })
 
+    examples.push({
+      name: "Custom Glyphs",
+      demo: (
+        <div>
+          <p>
+             Hexbin and heatmap both accept a customMark property allowing you to draw a custom mark in the space of the cell or hex.
+          </p>
+          <XYFrame
+            size={[500, 800]}
+            areas={[{ coordinates: pointTestData }]}
+            areaType={{
+              type: "heatmap",
+              yBins: 10,
+              xCellPx: 35,
+              customMark: d => (
+                <ellipse
+                  fill={thresholds(d.percent)}
+                  stroke="none"
+                  cx={d.gw / 2}
+                  cy={d.gh / 2}
+                  rx={d.gw / 2 * d.percent}
+                  ry={d.gh / 2 * d.percent}
+                />
+              )
+            }}
+            xAccessor="x"
+            yAccessor="y"
+          />
+          <XYFrame
+            areas={[{ coordinates: pointTestData }]}
+            areaType={{
+              type: "hexbin",
+              bins: 10,
+              customMark: d => makeHex(d)
+            }}
+            xAccessor="x"
+            yAccessor="y"
+          />
+        </div>
+      ),
+      source: `//customMark for heatmap
+<XYFrame
+size={[500, 800]}
+areas={[{ coordinates: pointTestData }]}
+areaType={{
+  type: "heatmap",
+  yBins: 10,
+  xCellPx: 35,
+  customMark: d => (
+    <ellipse
+      fill={thresholds(d.percent)}
+      stroke="none"
+      cx={d.gw / 2}
+      cy={d.gh / 2}
+      rx={d.gw / 2 * d.percent}
+      ry={d.gh / 2 * d.percent}
+    />
+  )
+}}
+xAccessor="x"
+yAccessor="y"
+/>
+    
+//customMark for hexbin
+function makeHex(h) {
+  const hexBase = h.hexCoordinates.map(d => [
+    d[0] * h.percent,
+    d[1] * h.percent
+  ])
+
+  const sortedColors = h.binItems.map(d => d.color).sort((a, b) => a < b)
+  const step = sortedColors.length / 6
+
+  return (
+    <g>
+      {hexBase.map((d, i) => {
+        const n = hexBase[i + 1] || hexBase[0]
+        const hexStep = parseInt(step * i)
+        return (
+          <path
+            fill={sortedColors[hexStep]}
+            stroke={"white"}
+            strokeWidth={0.5}
+            key={${"`hex-slice-${i}`"}}
+            d={${"`M0,0L${d[0]},${d[1]}L${n[0]},${n[1]}Z`"}}
+          />
+        )
+      })}
+      <path
+        d={${"`M${h.hexCoordinates.map(d => d.join(',')).join('L')}Z`"}}
+        fill="none"
+        stroke="black"
+      />
+    </g>
+  )
+}
+<XYFrame
+areas={[{ coordinates: pointTestData }]}
+areaType={{
+  type: "hexbin",
+  bins: 10,
+  customMark: d => makeHex(d)
+}}
+xAccessor="x"
+yAccessor="y"
+    />`
+    })
     return (
       <DocumentComponent
         name="Creating XY Plots"
