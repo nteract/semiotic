@@ -1,0 +1,749 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"node",
+				"node"
+			],
+			[
+				"edg",
+				"edgeData"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "package.json",
+			"settings":
+			{
+				"buffer_size": 5937,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"contents": "Searching 360 files for \"promise\"\n\n/Users/m/workspace/semiotic/package-lock.json:\n 4170          \"object-assign\": \"4.1.1\",\n 4171          \"pify\": \"2.3.0\",\n 4172:         \"pinkie-promise\": \"2.0.1\",\n 4173          \"rimraf\": \"2.6.2\"\n 4174        }\n ....\n 4644        }\n 4645      },\n 4646:     \"es6-promise\": {\n 4647        \"version\": \"4.2.4\",\n 4648:       \"resolved\": \"https://registry.npmjs.org/es6-promise/-/es6-promise-4.2.4.tgz\",\n 4649        \"integrity\": \"sha512-/NdNZVJg+uZgtm9eS3O6lrOLYmQag2DjdEXuPaHlZ6RuVqgqaVZfgYCepEIKsLqwdQArOPtC3XzRLqGGfT8KQQ==\"\n 4650      },\n ....\n 5357          \"loose-envify\": \"1.3.1\",\n 5358          \"object-assign\": \"4.1.1\",\n 5359:         \"promise\": \"7.3.1\",\n 5360          \"setimmediate\": \"1.0.5\",\n 5361          \"ua-parser-js\": \"0.7.17\"\n ....\n 5367            \"integrity\": \"sha1-ZSKUwUZR2yj6k70tX/KYOk8IxjY=\"\n 5368          },\n 5369:         \"promise\": {\n 5370            \"version\": \"7.3.1\",\n 5371:           \"resolved\": \"https://registry.npmjs.org/promise/-/promise-7.3.1.tgz\",\n 5372            \"integrity\": \"sha512-nolQXZ/4L+bP/UGlkfaIujX9BKxGwmQ9OT4mOt5yvy8iK1h3wqTEJCijzGANTCCl9nWjY41juyAn2K3Q1hLLTg==\",\n 5373            \"requires\": {\n ....\n 5490        \"requires\": {\n 5491          \"path-exists\": \"2.1.0\",\n 5492:         \"pinkie-promise\": \"2.0.1\"\n 5493        },\n 5494        \"dependencies\": {\n ....\n 5498            \"integrity\": \"sha1-D+tsZPD8UY2adU3V77YscCJ2H0s=\",\n 5499            \"requires\": {\n 5500:             \"pinkie-promise\": \"2.0.1\"\n 5501            }\n 5502          }\n ....\n 6950          \"object-assign\": \"4.1.1\",\n 6951          \"pify\": \"2.3.0\",\n 6952:         \"pinkie-promise\": \"2.0.1\"\n 6953        },\n 6954        \"dependencies\": {\n ....\n 7891        \"integrity\": \"sha1-IHurkWOEmcB7Kt8kCkGochADRXU=\"\n 7892      },\n 7893:     \"is-promise\": {\n 7894        \"version\": \"2.1.0\",\n 7895:       \"resolved\": \"https://registry.npmjs.org/is-promise/-/is-promise-2.1.0.tgz\",\n 7896        \"integrity\": \"sha1-eaKp7OfwlugPNtKy87wWwf9L8/o=\"\n 7897      },\n ....\n 9170          \"mime\": \"1.6.0\",\n 9171          \"mkdirp\": \"0.5.1\",\n 9172:         \"promise\": \"7.3.1\",\n 9173          \"source-map\": \"0.5.7\"\n 9174        },\n 9175        \"dependencies\": {\n 9176:         \"promise\": {\n 9177            \"version\": \"7.3.1\",\n 9178:           \"resolved\": \"https://registry.npmjs.org/promise/-/promise-7.3.1.tgz\",\n 9179            \"integrity\": \"sha512-nolQXZ/4L+bP/UGlkfaIujX9BKxGwmQ9OT4mOt5yvy8iK1h3wqTEJCijzGANTCCl9nWjY41juyAn2K3Q1hLLTg==\",\n 9180            \"dev\": true,\n ....\n 9434          \"parse-json\": \"2.2.0\",\n 9435          \"pify\": \"2.3.0\",\n 9436:         \"pinkie-promise\": \"2.0.1\",\n 9437          \"strip-bom\": \"2.0.0\"\n 9438        }\n ....\n 11014          \"graceful-fs\": \"4.1.11\",\n 11015          \"pify\": \"2.3.0\",\n 11016:         \"pinkie-promise\": \"2.0.1\"\n 11017        }\n 11018      },\n .....\n 11045        \"integrity\": \"sha1-clVrgM+g1IqXToDnckjoDtT3+HA=\"\n 11046      },\n 11047:     \"pinkie-promise\": {\n 11048        \"version\": \"2.0.1\",\n 11049:       \"resolved\": \"https://registry.npmjs.org/pinkie-promise/-/pinkie-promise-2.0.1.tgz\",\n 11050        \"integrity\": \"sha1-ITXW36ejWMBprJsXh3YogihFD/o=\",\n 11051        \"requires\": {\n .....\n 12718        \"dev\": true\n 12719      },\n 12720:     \"promise\": {\n 12721        \"version\": \"8.0.1\",\n 12722:       \"resolved\": \"https://registry.npmjs.org/promise/-/promise-8.0.1.tgz\",\n 12723        \"integrity\": \"sha1-5F1osAoXZHttpxG/he1u1HII9FA=\",\n 12724        \"requires\": {\n .....\n 14081        \"integrity\": \"sha1-A3GrSuC91yDUFm19/aZP96RFpsA=\",\n 14082        \"requires\": {\n 14083:         \"is-promise\": \"2.1.0\"\n 14084        }\n 14085      },\n .....\n 15010        \"requires\": {\n 15011          \"dom-urls\": \"1.1.0\",\n 15012:         \"es6-promise\": \"4.2.4\",\n 15013          \"glob\": \"7.1.2\",\n 15014          \"lodash.defaults\": \"4.2.0\",\n .....\n 17040              \"object-assign\": \"4.1.1\",\n 17041              \"pify\": \"2.3.0\",\n 17042:             \"pinkie-promise\": \"2.0.1\"\n 17043            },\n 17044            \"dependencies\": {\n\n/Users/m/workspace/semiotic/package.json:\n  136      \"labella\": \"1.1.4\",\n  137      \"object-assign\": \"4.1.1\",\n  138:     \"promise\": \"8.0.1\",\n  139      \"prop-types\": \"15.6.0\",\n  140      \"raf\": \"3.4.0\",\n\n/Users/m/workspace/semiotic/yarn-error.log:\n  155        \"labella\": \"1.1.4\",\n  156        \"object-assign\": \"4.1.1\",\n  157:       \"promise\": \"8.0.1\",\n  158        \"prop-types\": \"15.6.0\",\n  159        \"raf\": \"3.4.0\",\n  ...\n 3034        object-assign \"^4.0.1\"\n 3035        pify \"^2.0.0\"\n 3036:       pinkie-promise \"^2.0.0\"\n 3037        rimraf \"^2.2.8\"\n 3038    \n ....\n 3423        event-emitter \"~0.3.5\"\n 3424    \n 3425:   es6-promise@^4.0.5:\n 3426      version \"4.2.4\"\n 3427:     resolved \"https://registry.yarnpkg.com/es6-promise/-/es6-promise-4.2.4.tgz#dc4221c2b16518760bd8c39a52d8f356fc00ed29\"\n 3428    \n 3429    es6-set@~0.1.5:\n ....\n 3900        loose-envify \"^1.0.0\"\n 3901        object-assign \"^4.1.0\"\n 3902:       promise \"^7.1.1\"\n 3903        setimmediate \"^1.0.5\"\n 3904        ua-parser-js \"^0.7.9\"\n ....\n 3991      dependencies:\n 3992        path-exists \"^2.0.0\"\n 3993:       pinkie-promise \"^2.0.0\"\n 3994    \n 3995    find-up@^2.0.0, find-up@^2.1.0:\n ....\n 4322        object-assign \"^4.0.1\"\n 4323        pify \"^2.0.0\"\n 4324:       pinkie-promise \"^2.0.0\"\n 4325    \n 4326    globby@^6.1.0:\n ....\n 4332        object-assign \"^4.0.1\"\n 4333        pify \"^2.0.0\"\n 4334:       pinkie-promise \"^2.0.0\"\n 4335    \n 4336    got@^6.7.1:\n ....\n 5041      resolved \"https://registry.yarnpkg.com/is-primitive/-/is-primitive-2.0.0.tgz#207bab91638499c07b2adf240a41a87210034575\"\n 5042    \n 5043:   is-promise@^2.1.0:\n 5044      version \"2.1.0\"\n 5045:     resolved \"https://registry.yarnpkg.com/is-promise/-/is-promise-2.1.0.tgz#79a2a9ece7f096e80f36d2b2f3bc16c1ff4bf3fa\"\n 5046    \n 5047    is-redirect@^1.0.0:\n ....\n 5755        mime \"^1.2.11\"\n 5756        mkdirp \"^0.5.0\"\n 5757:       promise \"^7.1.1\"\n 5758        source-map \"^0.5.3\"\n 5759    \n ....\n 5852        parse-json \"^2.2.0\"\n 5853        pify \"^2.0.0\"\n 5854:       pinkie-promise \"^2.0.0\"\n 5855        strip-bom \"^2.0.0\"\n 5856    \n ....\n 7045      resolved \"https://registry.yarnpkg.com/path-exists/-/path-exists-2.1.0.tgz#0feb6c64f0fc518d9a754dd5efb62c7022761f4b\"\n 7046      dependencies:\n 7047:       pinkie-promise \"^2.0.0\"\n 7048    \n 7049    path-exists@^3.0.0:\n ....\n 7083        graceful-fs \"^4.1.2\"\n 7084        pify \"^2.0.0\"\n 7085:       pinkie-promise \"^2.0.0\"\n 7086    \n 7087    path-type@^2.0.0:\n ....\n 7119      resolved \"https://registry.yarnpkg.com/pify/-/pify-3.0.0.tgz#e5a4acd2c101fdf3d9a4d07f0dbc4db49dd28176\"\n 7120    \n 7121:   pinkie-promise@^2.0.0:\n 7122      version \"2.0.1\"\n 7123:     resolved \"https://registry.yarnpkg.com/pinkie-promise/-/pinkie-promise-2.0.1.tgz#2135d6dfa7a358c069ac9b178776288228450ffa\"\n 7124      dependencies:\n 7125        pinkie \"^2.0.0\"\n ....\n 7519      resolved \"https://registry.yarnpkg.com/progress/-/progress-2.0.0.tgz#8a1be366bf8fc23db2bd23f10c6fe920b4389d1f\"\n 7520    \n 7521:   promise@8.0.1:\n 7522      version \"8.0.1\"\n 7523:     resolved \"https://registry.yarnpkg.com/promise/-/promise-8.0.1.tgz#e45d68b00a17647b6da711bf85ed6ed47208f450\"\n 7524      dependencies:\n 7525        asap \"~2.0.3\"\n 7526    \n 7527:   promise@^7.1.1:\n 7528      version \"7.3.1\"\n 7529:     resolved \"https://registry.yarnpkg.com/promise/-/promise-7.3.1.tgz#064b72602b18f90f29192b8b1bc418ffd1ebd3bf\"\n 7530      dependencies:\n 7531        asap \"~2.0.3\"\n ....\n 8392      resolved \"https://registry.yarnpkg.com/run-async/-/run-async-2.3.0.tgz#0371ab4ae0bdd720d4166d7dfda64ff7a445a6c0\"\n 8393      dependencies:\n 8394:       is-promise \"^2.1.0\"\n 8395    \n 8396    rw@1:\n ....\n 9045      dependencies:\n 9046        dom-urls \"^1.1.0\"\n 9047:       es6-promise \"^4.0.5\"\n 9048        glob \"^7.1.1\"\n 9049        lodash.defaults \"^4.2.0\"\n\n/Users/m/workspace/semiotic/config/polyfills.js:\n    1  'use strict';\n    2  \n    3: if (typeof Promise === 'undefined') {\n    4    // Rejection tracking prevents a common issue where React gets into an\n    5:   // inconsistent state due to an error, but it gets swallowed by a Promise,\n    6    // and the user has no idea what causes React's erratic future behavior.\n    7:   require('promise/lib/rejection-tracking').enable();\n    8:   window.Promise = require('promise/lib/es6-extensions.js');\n    9  }\n   10  \n\n/Users/m/workspace/semiotic/config/webpackDevServer.config.js:\n   21      // https://github.com/facebookincubator/create-react-app/issues/2233\n   22      // While we're investigating better solutions, for now we will take a\n   23:     // compromise. Since our WDS configuration only serves files in the `public`\n   24      // folder we won't consider accessing them a vulnerability. However, if you\n   25      // use the `proxy` feature, it gets more dangerous because it can expose\n\n/Users/m/workspace/semiotic/scripts/build.js:\n    6  \n    7  // Makes the script crash on unhandled rejections instead of silently\n    8: // ignoring them. In the future, promise rejections that are not handled will\n    9  // terminate the Node.js process with a non-zero exit code.\n   10  process.on(\"unhandledRejection\", err => {\n   ..\n  104  \n  105    const compiler = webpack(config)\n  106:   return new Promise((resolve, reject) => {\n  107      compiler.run((err, stats) => {\n  108        if (err) {\n\n/Users/m/workspace/semiotic/scripts/start.js:\n    6  \n    7  // Makes the script crash on unhandled rejections instead of silently\n    8: // ignoring them. In the future, promise rejections that are not handled will\n    9  // terminate the Node.js process with a non-zero exit code.\n   10  process.on(\"unhandledRejection\", err => {\n   ..\n   59  \n   60  // We attempt to use the default port but if it is busy, we offer the user to\n   61: // run on a different port. `choosePort()` Promise resolves to the next free port.\n   62  choosePort(HOST, DEFAULT_PORT)\n   63    .then(port => {\n\n/Users/m/workspace/semiotic/scripts/test.js:\n    7  \n    8  // Makes the script crash on unhandled rejections instead of silently\n    9: // ignoring them. In the future, promise rejections that are not handled will\n   10  // terminate the Node.js process with a non-zero exit code.\n   11  process.on('unhandledRejection', err => {\n\n68 matches across 8 files\n\n\nSearching 360 files for \"require('promise\"\n\n/Users/m/workspace/semiotic/config/polyfills.js:\n    5    // inconsistent state due to an error, but it gets swallowed by a Promise,\n    6    // and the user has no idea what causes React's erratic future behavior.\n    7:   require('promise/lib/rejection-tracking').enable();\n    8:   window.Promise = require('promise/lib/es6-extensions.js');\n    9  }\n   10  \n\n2 matches in 1 file\n",
+			"settings":
+			{
+				"buffer_size": 10681,
+				"line_ending": "Unix",
+				"name": "Find Results",
+				"scratch": true
+			}
+		}
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"console":
+	{
+		"height": 0.0,
+		"history":
+		[
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/Users/m/workspace/semiotic"
+	],
+	"file_history":
+	[
+		"/Users/m/workspace/semiotic/Find Results",
+		"/Users/m/workspace/semiotic/.eslintrc.json",
+		"/Users/m/workspace/semiotic/package.json",
+		"/Users/m/workspace/semiotic/.gitignore",
+		"/Users/m/workspace/semiotic/.prettierignore",
+		"/Users/m/Library/Application Support/Sublime Text 3/Packages/User/Package Control.sublime-settings",
+		"/Users/m/workspace/orkus/graph-storybook/data/graph.js",
+		"/Users/m/workspace/orkus/data-sandbox/aws-graph/tenant-id-graph-from-gremlin-server.json",
+		"/Users/m/workspace/orkus/api/tests/scripts/curl_inventory_get.sh",
+		"/Users/m/workspace/orkus/api/tests/scripts/account_stats_response.json",
+		"/Users/m/workspace/orkus/api/tests/scripts/curl_account_stats.sh",
+		"/Users/m/workspace/orkus/www-wt2/.eslintrc.json",
+		"/Users/m/workspace/orkus/www-wt2/package.json",
+		"/Users/m/workspace/orkus/www-wt1/README.md",
+		"/Users/m/workspace/orkus/www-wt1/travis.yml",
+		"/Users/m/workspace/orkus/www-wt1/.nvmrc",
+		"/Users/m/.ssh/config"
+	],
+	"find":
+	{
+		"height": 42.0
+	},
+	"find_in_files":
+	{
+		"height": 110.0,
+		"where_history":
+		[
+			"",
+			"src/",
+			"",
+			"src/",
+			"",
+			"src/",
+			"",
+			"src/",
+			"",
+			"src/",
+			""
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"require('promise",
+			"promise",
+			"history",
+			"tap-difflet",
+			"reactstrap",
+			"react-dom",
+			"promise",
+			"require('promise')",
+			"history",
+			"classnames",
+			"@vx/pattern",
+			"react",
+			"require('object-assign')",
+			"require('whatwg-fetch')",
+			"whatwg-fetch",
+			"url-loader",
+			"svg-path-bounding-box",
+			"semiotic-mark",
+			"roughjs",
+			"react-annotation",
+			"react-dev-utils",
+			"require('raf')",
+			"raf",
+			"prop-types",
+			"promise",
+			"object-assign",
+			"labella",
+			"json2csv",
+			"element-resize-event",
+			"jest",
+			"fs-extra",
+			"d3-voronoi",
+			"d3-shape",
+			"d3-selection",
+			"d3-scale",
+			"d3-sankey-circular",
+			"d3-interpolate",
+			"d3-hierarchy",
+			"d3-hexbin",
+			"d3-glyphedge",
+			"d3-force",
+			"d3-contour",
+			"d3-collection",
+			"d3-chord",
+			"d3-brush",
+			"d3-bboxCollide",
+			"d3-array",
+			"d3-random",
+			"d3-dsv",
+			"dotenv",
+			"d3-voronoi",
+			"d3-shape",
+			"d3-selection",
+			"d3-scale",
+			"d3-sankey-circular",
+			"d3-interpolate",
+			"d3-hierarchy",
+			"d3-hexbi",
+			"d3-glyphedge",
+			"d3-force",
+			"d3-contour",
+			"d3-collection",
+			"d3-chord",
+			"d3-brush",
+			"d3-bboxCollide",
+			"d3-array",
+			"eslint-plugin-flowtype",
+			"eslint-config-react-app",
+			"postcss-flexbugs-fixes",
+			"url-loader",
+			"loader",
+			"style-loader",
+			"postcss-loader",
+			"loader",
+			"file-loader",
+			"eslint-loader",
+			"css-loader",
+			"chalk",
+			"from 'chalk'",
+			"chalk",
+			"extract-text-webpack-plugin",
+			"html-webpack-plugin",
+			"sw-precache-webpack-plugin",
+			"webpack-manifest-plugin",
+			"webpack-dev-server",
+			"case-sensitive-paths-webpack-plugin",
+			"babel-runtime",
+			"babel-preset-react-app",
+			"babel-plugin-external-helpers",
+			"babel-loader",
+			"babel-jest",
+			"babel-core",
+			"autoprefixer",
+			"@mapbox/polylabel"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "package.json",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 5937,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2586,
+								2586
+							]
+						],
+						"settings":
+						{
+							"history_list_is_closing": true,
+							"syntax": "Packages/JavaScript/JSON.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 984.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				}
+			]
+		},
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "package.json",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 5937,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								4619,
+								4619
+							]
+						],
+						"settings":
+						{
+							"history_list_is_closing": true,
+							"syntax": "Packages/JavaScript/JSON.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 725.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				}
+			]
+		},
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 1,
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 10681,
+						"regions":
+						{
+							"match":
+							{
+								"flags": 112,
+								"regions":
+								[
+									[
+										178,
+										185
+									],
+									[
+										296,
+										303
+									],
+									[
+										398,
+										405
+									],
+									[
+										412,
+										419
+									],
+									[
+										673,
+										680
+									],
+									[
+										878,
+										885
+									],
+									[
+										984,
+										991
+									],
+									[
+										994,
+										1001
+									],
+									[
+										1269,
+										1276
+									],
+									[
+										1465,
+										1472
+									],
+									[
+										1621,
+										1628
+									],
+									[
+										1783,
+										1790
+									],
+									[
+										1884,
+										1891
+									],
+									[
+										1897,
+										1904
+									],
+									[
+										2081,
+										2088
+									],
+									[
+										2200,
+										2207
+									],
+									[
+										2306,
+										2313
+									],
+									[
+										2316,
+										2323
+									],
+									[
+										2594,
+										2601
+									],
+									[
+										2768,
+										2775
+									],
+									[
+										2922,
+										2929
+									],
+									[
+										3029,
+										3036
+									],
+									[
+										3046,
+										3053
+									],
+									[
+										3219,
+										3226
+									],
+									[
+										3319,
+										3326
+									],
+									[
+										3329,
+										3336
+									],
+									[
+										3560,
+										3567
+									],
+									[
+										3702,
+										3709
+									],
+									[
+										3916,
+										3923
+									],
+									[
+										4114,
+										4121
+									],
+									[
+										4326,
+										4333
+									],
+									[
+										4500,
+										4507
+									],
+									[
+										4621,
+										4628
+									],
+									[
+										4718,
+										4725
+									],
+									[
+										4732,
+										4739
+									],
+									[
+										4917,
+										4924
+									],
+									[
+										5089,
+										5096
+									],
+									[
+										5246,
+										5253
+									],
+									[
+										5386,
+										5393
+									],
+									[
+										5592,
+										5599
+									],
+									[
+										5688,
+										5695
+									],
+									[
+										5701,
+										5708
+									],
+									[
+										5876,
+										5883
+									],
+									[
+										6022,
+										6029
+									],
+									[
+										6260,
+										6267
+									],
+									[
+										6403,
+										6410
+									],
+									[
+										6603,
+										6610
+									],
+									[
+										6703,
+										6710
+									],
+									[
+										6720,
+										6727
+									],
+									[
+										6981,
+										6988
+									],
+									[
+										7073,
+										7080
+									],
+									[
+										7083,
+										7090
+									],
+									[
+										7214,
+										7221
+									],
+									[
+										7307,
+										7314
+									],
+									[
+										7317,
+										7324
+									],
+									[
+										7600,
+										7607
+									],
+									[
+										7721,
+										7728
+									],
+									[
+										7900,
+										7907
+									],
+									[
+										8082,
+										8089
+									],
+									[
+										8191,
+										8198
+									],
+									[
+										8250,
+										8257
+									],
+									[
+										8269,
+										8276
+									],
+									[
+										8561,
+										8568
+									],
+									[
+										8975,
+										8982
+									],
+									[
+										9212,
+										9219
+									],
+									[
+										9481,
+										9488
+									],
+									[
+										9791,
+										9798
+									],
+									[
+										10065,
+										10072
+									],
+									[
+										10523,
+										10539
+									],
+									[
+										10601,
+										10617
+									]
+								],
+								"scope": ""
+							}
+						},
+						"selection":
+						[
+							[
+								10680,
+								10254
+							]
+						],
+						"settings":
+						{
+							"detect_indentation": false,
+							"line_numbers": false,
+							"output_tag": 2,
+							"result_base_dir": "",
+							"result_file_regex": "^([^ \t].*):$",
+							"result_line_regex": "^ +([0-9]+):",
+							"scroll_past_end": true,
+							"syntax": "Packages/Default/Find Results.hidden-tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 6216.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 30.0
+	},
+	"input":
+	{
+		"height": 0.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			],
+			[
+				1,
+				0,
+				2,
+				1
+			],
+			[
+				2,
+				0,
+				3,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			0.24602963979,
+			0.503866740219,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "",
+	"project": "micah:220:dev-dependencies.sublime-project",
+	"replace":
+	{
+		"height": 56.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"pack",
+				"package.json"
+			],
+			[
+				"eslint",
+				".eslintrc.json"
+			],
+			[
+				"networkframe",
+				"src/components/NetworkFrame.js"
+			],
+			[
+				"storei",
+				"stories/index.stories.js"
+			],
+			[
+				"read",
+				"README.md"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 392.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 592.0
+	},
+	"selected_group": 2,
+	"settings":
+	{
+	},
+	"show_minimap": false,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 172.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}
