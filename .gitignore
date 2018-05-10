@@ -15,4 +15,6 @@ build
 
 examples/dist/bundle.js
 .vscode/settings.json
+*.sublime-project
+*.sublime-workspace
 dist/semiotic.js
