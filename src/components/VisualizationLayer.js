@@ -243,6 +243,7 @@ class VisualizationLayer extends React.PureComponent {
                 k
               }
               onKeyDown={e => this.handleKeyDown(e, k)}
+              onBlur={() => { this.props.voronoiHover(undefined) }}
               ref={thisNode =>
                 thisNode && (this.piecesGroup[k] = thisNode.childNodes)
               }

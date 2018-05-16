@@ -107,8 +107,6 @@ class XYFrame extends React.Component {
 
     this.calculateXYFrame = this.calculateXYFrame.bind(this)
 
-    this.renderBody = this.renderBody.bind(this)
-
     this.state = {
       lineData: null,
       pointData: null,
@@ -862,10 +860,6 @@ class XYFrame extends React.Component {
   }
 
   render() {
-    return this.renderBody({})
-  }
-
-  renderBody({ afterElements, beforeElements }) {
     const {
       downloadFields,
       xAccessor,
@@ -890,7 +884,9 @@ class XYFrame extends React.Component {
       useSpans,
       canvasAreas,
       canvasPoints,
-      canvasLines
+      canvasLines,
+      afterElements,
+      beforeElements
     } = this.props
 
     const {

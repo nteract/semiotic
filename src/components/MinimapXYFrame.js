@@ -6,7 +6,7 @@ import MiniMap from "./MiniMap"
 
 import PropTypes from "prop-types"
 
-class MinimapXYFrame extends XYFrame {
+class MinimapXYFrame extends React.Component {
   constructor(props) {
     super(props)
 
@@ -48,7 +48,10 @@ class MinimapXYFrame extends XYFrame {
       options.afterElements = miniMap
     }
 
-    return this.renderBody(options)
+    return (<XYFrame
+    {...this.props}
+      {...options}
+    />)
   }
 }
 

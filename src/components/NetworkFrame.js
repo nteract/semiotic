@@ -237,8 +237,6 @@ class NetworkFrame extends React.Component {
     this.defaultNetworkHTMLRule = this.defaultNetworkHTMLRule.bind(this)
     this.defaultNetworkSVGRule = this.defaultNetworkSVGRule.bind(this)
 
-    this.renderBody = this.renderBody.bind(this)
-
     this.graphSettings = {
       numberOfNodes: 0,
       numberOfEdges: 0,
@@ -1291,11 +1289,7 @@ class NetworkFrame extends React.Component {
     return null
   }
 
-  render() {
-    return this.renderBody({})
-  }
-
-  renderBody({ afterElements }) {
+  renderBody() {
     const {
       annotations,
       annotationSettings,
@@ -1308,6 +1302,7 @@ class NetworkFrame extends React.Component {
       renderKey,
       hoverAnnotation,
       beforeElements,
+      afterElements,
       interaction,
       title,
       disableContext,

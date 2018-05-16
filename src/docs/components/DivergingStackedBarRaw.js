@@ -43,5 +43,6 @@ export default (
   <div>
     <ProcessViz frameSettings={divStackedBarChart} frameType="OrdinalFrame" />
     <OrdinalFrame {...divStackedBarChart} />
+    <OrdinalFrame {...divStackedBarChart} projection="vertical" oLabel={d => <text transform="rotate(45)">{d}</text>}  margin={{ top: 30, bottom: 80, left: 80, right: 50 }} />
   </div>
 )
