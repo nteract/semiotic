@@ -96,8 +96,6 @@ class OrdinalFrame extends React.Component {
     this.defaultORHTMLRule = this.defaultORHTMLRule.bind(this)
     this.defaultORSVGRule = this.defaultORSVGRule.bind(this)
 
-    this.renderBody = this.renderBody.bind(this)
-
     this.state = {
       adjustedPosition: null,
       adjustedSize: null,
@@ -1294,10 +1292,6 @@ class OrdinalFrame extends React.Component {
   }
 
   render() {
-    return this.renderBody({ afterElements: this.props.afterElements })
-  }
-
-  renderBody({ afterElements }) {
     const {
       className,
       annotationSettings,
@@ -1317,6 +1311,7 @@ class OrdinalFrame extends React.Component {
       projection,
       backgroundGraphics,
       foregroundGraphics,
+      afterElements,
       beforeElements,
       disableContext,
       summaryType,
@@ -1461,7 +1456,7 @@ OrdinalFrame.propTypes = {
   customClickBehavior: PropTypes.func,
   svgAnnotationRules: PropTypes.func,
   oPadding: PropTypes.number,
-  projection: PropTypes.string,
+  projection: PropTypes.oneOf(["vertical", "horizontal", "radial"]), 
   htmlAnnotationRules: PropTypes.func,
   type: PropTypes.oneOfType([
     PropTypes.string,
