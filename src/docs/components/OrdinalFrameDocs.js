@@ -191,6 +191,7 @@ components.push({
     PropTypes.bool,
     PropTypes.func
   ]),
+  pixelColumnWidth: PropTypes.number,
   hoverAnnotation: PropTypes.bool,
   axis: PropTypes.object,
   backgroundGraphics:  PropTypes.oneOfType([
