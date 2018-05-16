@@ -110,7 +110,7 @@ export default class CreatingBarChart extends React.Component {
             OrdinalFrame and pass the attribute you want to split by into the
             oAccessor (the "ordinal" or categorical mapping) and the attribute
             you want to measure into the rAccessor (the "range" or quantitative
-            mappong). You also want to give the OrdinalFrame a "size" which is
+            mapping). You also want to give the OrdinalFrame a "size" which is
             an array of [height, width]. This example also turns on labels
             (oLabel), margins and a title.
           </p>
