@@ -417,7 +417,7 @@ components.push({
     ]),
     customHoverBehavior: PropTypes.func,
     customClickBehavior: PropTypes.func,
-    customDoubleclickBehavior: PropTypes.func,
+    customDoubleClickBehavior: PropTypes.func,
     lineType: PropTypes.oneOfType([
       PropTypes.string,
       PropTypes.object
@@ -1131,6 +1131,7 @@ export default class XYFrameDocs extends React.Component {
           //              { label: "Blue stuff", styleFn: (d,i) => ({ fill: "blue", fillOpacity: i * .25 + .25 }), items: [{ label: "d" }, { label: "e" }, { label: "f" }] }
           //            ] }}
           downloadFields={["px"]}
+          axes={axesHash[this.state.axes]}
           legend={this.state.dataType === "line" && this.state.legend === "on"}
           minimap={
             this.state.frame === "MinimapXYFrame"
@@ -1185,7 +1186,7 @@ export default class XYFrameDocs extends React.Component {
                         )
                       : undefined
                 }
-              : ""
+              : undefined
           }
         />
       </div>

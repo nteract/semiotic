@@ -582,7 +582,7 @@ export default class CreatingLineChart extends React.Component {
         <div>
           <p>
             Frames have custom interaction using customHoverBehavior,
-            customClickBehavior and customDoubleclickBehavior. You can use these
+            customClickBehavior and customDoubleClickBehavior. You can use these
             to take the value of the hovered or clicked item and pass a
             highlight annotation made from that data object to the annotations
             property of another frame to achieve cross-highlighting. These two

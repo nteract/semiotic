@@ -9,7 +9,7 @@ import { sum, max, min, extent } from "d3-array"
 import { arc } from "d3-shape"
 
 import { filterDefs } from "./constants/jsx"
-import { orFrameChangeProps } from "./constants/frame_props"
+import { orFrameChangeProps, xyframeproptypes, ordinalframeproptypes, networkframeproptypes } from "./constants/frame_props"
 import {
   svgORRule,
   svgHighlightRule,
@@ -49,8 +49,6 @@ import {
 
 import { drawSummaries, renderLaidOutSummaries } from "./svg/summaryLayouts"
 import { stringToFn } from "./data/dataFunctions"
-
-import PropTypes from "prop-types"
 
 const xScale = scaleIdentity()
 const yScale = scaleIdentity()
@@ -1004,6 +1002,19 @@ class OrdinalFrame extends React.Component {
   }
 
   componentWillMount() {
+    Object.keys(this.props).forEach(d => {
+      if (!ordinalframeproptypes[d]) {
+        if (xyframeproptypes[d]) {
+          console.error(`${d} is an XYFrame prop are you sure you're using the right frame?`)
+        }
+        else if (networkframeproptypes[d]) {
+          console.error(`${d} is a NetworkFrame prop are you sure you're using the right frame?`)
+        }
+        else {
+          console.error(`${d} is not a valid OrdinalFrame prop`)}
+        }
+    })
+
     this.calculateOrdinalFrame(this.props)
   }
 
@@ -1437,77 +1448,7 @@ class OrdinalFrame extends React.Component {
 }
 
 OrdinalFrame.propTypes = {
-  data: PropTypes.array,
-  name: PropTypes.string,
-  title: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-  margin: PropTypes.oneOfType([PropTypes.number, PropTypes.object]),
-  size: PropTypes.array,
-  position: PropTypes.array,
-  oScaleType: PropTypes.func,
-  rScaleType: PropTypes.func,
-  oExtent: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
-  rExtent: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
-  invertO: PropTypes.bool,
-  invertR: PropTypes.bool,
-  oAccessor: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
-  rAccessor: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
-  annotations: PropTypes.array,
-  customHoverBehavior: PropTypes.func,
-  customClickBehavior: PropTypes.func,
-  svgAnnotationRules: PropTypes.func,
-  oPadding: PropTypes.number,
-  projection: PropTypes.oneOf(["vertical", "horizontal", "radial"]), 
-  htmlAnnotationRules: PropTypes.func,
-  type: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.object,
-    PropTypes.func
-  ]),
-  summaryType: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-  connectorType: PropTypes.func,
-  tooltipContent: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
-  className: PropTypes.string,
-  additionalDefs: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
-  interaction: PropTypes.object,
-  baseMarkProps: PropTypes.object,
-  renderKey: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
-  dataAccessor: PropTypes.func,
-  rBaseline: PropTypes.number,
-  sortO: PropTypes.func,
-  pixelColumnWidth: PropTypes.number,
-  dynamicColumnWidth: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
-  renderFn: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
-  style: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
-  connectorStyle: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
-  summaryStyle: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
-  summaryPosition: PropTypes.func,
-  oLabel: PropTypes.oneOfType([
-    PropTypes.bool,
-    PropTypes.func,
-    PropTypes.object
-  ]),
-  hoverAnnotation: PropTypes.oneOfType([
-    PropTypes.object,
-    PropTypes.array,
-    PropTypes.func,
-    PropTypes.bool
-  ]),
-  pieceHoverAnnotation: PropTypes.oneOfType([
-    PropTypes.object,
-    PropTypes.array,
-    PropTypes.func,
-    PropTypes.bool
-  ]),
-  summaryHoverAnnotation: PropTypes.oneOfType([
-    PropTypes.object,
-    PropTypes.array,
-    PropTypes.func,
-    PropTypes.bool
-  ]),
-  axis: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-  canvasPostProcess: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
-  backgroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-  foregroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array])
+  ...ordinalframeproptypes
 }
 
 export default OrdinalFrame

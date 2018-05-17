@@ -42,14 +42,17 @@ class MinimapXYFrame extends React.Component {
   render() {
     const miniMap = this.generateMinimap()
     const options = {}
-    if (this.props.renderBefore) {
+    const { minimap, renderBefore, ...rest } = this.props
+
+    if (renderBefore) {
       options.beforeElements = miniMap
     } else {
       options.afterElements = miniMap
     }
 
+
     return (<XYFrame
-    {...this.props}
+    {...rest}
       {...options}
     />)
   }
