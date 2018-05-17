@@ -68,8 +68,7 @@ import {
   packSiblings
 } from "d3-hierarchy"
 
-import PropTypes from "prop-types"
-import { networkFrameChangeProps } from "./constants/frame_props"
+import { networkFrameChangeProps, xyframeproptypes, ordinalframeproptypes, networkframeproptypes } from "./constants/frame_props"
 
 import {
   htmlFrameHoverRule,
@@ -263,6 +262,18 @@ class NetworkFrame extends React.Component {
   }
 
   componentWillMount() {
+    Object.keys(this.props).forEach(d => {
+      if (!networkframeproptypes[d]) {
+        if (xyframeproptypes[d]) {
+          console.error(`${d} is an XYFrame prop are you sure you're using the right frame?`)
+        }
+        else if (ordinalframeproptypes[d]) {
+          console.error(`${d} is an OrdinalFrame prop are you sure you're using the right frame?`)
+        }
+        else {
+          console.error(`${d} is not a valid NetworkFrame prop`)}
+        }
+    })
     this.calculateNetworkFrame(this.props)
   }
 
@@ -1289,7 +1300,7 @@ class NetworkFrame extends React.Component {
     return null
   }
 
-  renderBody() {
+  render() {
     const {
       annotations,
       annotationSettings,
@@ -1406,49 +1417,7 @@ class NetworkFrame extends React.Component {
 }
 
 NetworkFrame.propTypes = {
-  name: PropTypes.string,
-  nodes: PropTypes.array,
-  edges: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
-  title: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-  margin: PropTypes.oneOfType([PropTypes.number, PropTypes.object]),
-  size: PropTypes.array,
-  position: PropTypes.array,
-  nodeIDAccessor: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
-  sourceAccessor: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
-  targetAccessor: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
-  nodeSizeAccessor: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.number,
-    PropTypes.func
-  ]),
-  nodeLabels: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
-  edgeWidthAccessor: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
-  annotations: PropTypes.array,
-  customHoverBehavior: PropTypes.func,
-  customClickBehavior: PropTypes.func,
-  customDoubleClickBehavior: PropTypes.func,
-  htmlAnnotationRules: PropTypes.func,
-  networkType: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-  tooltipContent: PropTypes.func,
-  className: PropTypes.string,
-  additionalDefs: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
-  interaction: PropTypes.object,
-  baseMarkProps: PropTypes.object,
-  renderFn: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
-  nodeStyle: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
-  edgeStyle: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
-  hoverAnnotation: PropTypes.oneOfType([
-    PropTypes.object,
-    PropTypes.array,
-    PropTypes.func,
-    PropTypes.bool,
-    PropTypes.string
-  ]),
-  canvasPostProcess: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
-  backgroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-  foregroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-  customNodeIcon: PropTypes.func,
-  edgeType: PropTypes.oneOfType([PropTypes.string, PropTypes.func])
+  ...networkframeproptypes
 }
 
 export default NetworkFrame

@@ -49,9 +49,7 @@ import {
 } from "./constants/coordinateNames"
 import { calculateDataExtent, stringToFn } from "./data/dataFunctions"
 import { filterDefs } from "./constants/jsx"
-import { xyFrameChangeProps, xyFrameDataProps } from "./constants/frame_props"
-
-import PropTypes from "prop-types"
+import { xyFrameChangeProps, xyFrameDataProps, xyframeproptypes, ordinalframeproptypes, networkframeproptypes } from "./constants/frame_props"
 
 import SpanOrDiv from "./SpanOrDiv"
 
@@ -137,6 +135,18 @@ class XYFrame extends React.Component {
   }
 
   componentWillMount() {
+    Object.keys(this.props).forEach(d => {
+      if (!xyframeproptypes[d]) {
+        if (ordinalframeproptypes[d]) {
+          console.error(`${d} is an OrdinalFrame prop are you sure you're using the right frame?`)
+        }
+        else if (networkframeproptypes[d]) {
+          console.error(`${d} is a NetworkFrame prop are you sure you're using the right frame?`)
+        }
+        else {
+          console.error(`${d} is not a valid XYFrame prop`)}
+        }
+    })
     this.calculateXYFrame(this.props, true)
   }
 
@@ -995,63 +1005,7 @@ class XYFrame extends React.Component {
 }
 
 XYFrame.propTypes = {
-  name: PropTypes.string,
-  lines: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
-  points: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
-  areas: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
-  title: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-  margin: PropTypes.oneOfType([PropTypes.number, PropTypes.object]),
-  dataVersion: PropTypes.string,
-  frameKey: PropTypes.string,
-  axes: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
-  matte: PropTypes.oneOfType([PropTypes.bool, PropTypes.object]),
-  size: PropTypes.array,
-  position: PropTypes.array,
-  xScaleType: PropTypes.func,
-  yScaleType: PropTypes.func,
-  xExtent: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
-  yExtent: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
-  invertX: PropTypes.bool,
-  invertY: PropTypes.bool,
-  xAccessor: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
-  yAccessor: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
-  lineDataAccessor: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
-  areaDataAccessor: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
-  backgroundGraphics: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
-  foregroundGraphics: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
-  canvasPostProcess: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
-  additionalDefs: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
-  customHoverBehavior: PropTypes.func,
-  customClickBehavior: PropTypes.func,
-  customDoubleclickBehavior: PropTypes.func,
-  lineType: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-  showLinePoints: PropTypes.bool,
-  defined: PropTypes.func,
-  lineStyle: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
-  pointStyle: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
-  areaStyle: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
-  lineClass: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
-  pointClass: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
-  areaClass: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
-  canvasPoints: PropTypes.oneOfType([PropTypes.func, PropTypes.bool]),
-  customPointMark: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
-  hoverAnnotation: PropTypes.oneOfType([
-    PropTypes.object,
-    PropTypes.array,
-    PropTypes.func,
-    PropTypes.bool
-  ]),
-  customLineMark: PropTypes.func,
-  customAreaMark: PropTypes.func,
-  lineIDAccessor: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
-  svgAnnotationRules: PropTypes.func,
-  htmlAnnotationRules: PropTypes.func,
-  tooltipContent: PropTypes.func,
-  annotations: PropTypes.array,
-  interaction: PropTypes.object,
-  baseMarkProps: PropTypes.object,
-  download: PropTypes.oneOfType([PropTypes.bool, PropTypes.string]), //add a download button for graphs data as csv
-  downloadFields: PropTypes.array //additional fields aside from x,y to add to the csv
+  ...xyframeproptypes
 }
 
 export default XYFrame

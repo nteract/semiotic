@@ -161,7 +161,7 @@ const processNodes = [
     keys: {
       customHoverBehavior: true,
       customClickBehavior: true,
-      customDoubleclickBehavior: true,
+      customDoubleClickBehavior: true,
       hoverAnnotation: true,
       pieceHoverAnnotation: true,
       summaryHoverAnnotation: true,

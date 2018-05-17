@@ -7,37 +7,38 @@ import XYFrame from "./XYFrame"
 import PropTypes from "prop-types"
 
 const MiniMap = props => {
+  const { brushStart, brush, brushEnd, xBrushable, yBrushable, yBrushExtent, xBrushExtent, ...rest } = props
   const interactivity = {
-    start: props.brushStart,
-    during: props.brush,
-    end: props.brushEnd
+    start: brushStart,
+    during: brush,
+    end: brushEnd
   }
 
-  if (props.xBrushable && props.yBrushable) {
+  if (xBrushable && yBrushable) {
     interactivity.brush = "xyBrush"
 
-    if (props.xBrushExtent || props.yBrushExtent) {
+    if (xBrushExtent || yBrushExtent) {
       interactivity.extent = [[0, 0], [...props.size]]
     }
-    if (props.xBrushExtent) {
-      interactivity.extent[0] = props.xBrushExtent
+    if (xBrushExtent) {
+      interactivity.extent[0] = xBrushExtent
     }
-    if (props.yBrushExtent) {
-      interactivity.extent[1] = props.yBrushExtent
+    if (yBrushExtent) {
+      interactivity.extent[1] = yBrushExtent
     }
-  } else if (props.xBrushable) {
+  } else if (xBrushable) {
     interactivity.brush = "xBrush"
-    if (props.xBrushExtent) {
-      interactivity.extent = props.xBrushExtent
+    if (xBrushExtent) {
+      interactivity.extent = xBrushExtent
     }
-  } else if (props.yBrushable) {
+  } else if (yBrushable) {
     interactivity.brush = "yBrush"
-    if (props.yBrushExtent) {
-      interactivity.extent = props.yBrushExtent
+    if (yBrushExtent) {
+      interactivity.extent = yBrushExtent
     }
   }
 
-  return <XYFrame {...props} interaction={interactivity} />
+  return <XYFrame {...rest} interaction={interactivity} />
 }
 
 MiniMap.propTypes = {

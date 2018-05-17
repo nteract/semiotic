@@ -586,12 +586,12 @@ export default class OrdinalFrameDocs extends React.Component {
             axis={{ orient: "left" }}
             projection={this.state.projection}
             type={actualType}
-            renderMode={this.state.renderFn !== "none" && this.state.renderFn}
+            renderMode={this.state.renderFn !== "none" && this.state.renderFn || undefined}
             summaryRenderMode={
-              this.state.renderFn !== "none" && this.state.renderFn
+              this.state.renderFn !== "none" && this.state.renderFn || undefined
             }
             connectorRenderMode={
-              this.state.renderFn !== "none" && this.state.renderFn
+              this.state.renderFn !== "none" && this.state.renderFn || undefined
             }
             summaryType={
               this.state.summaryType === "none"

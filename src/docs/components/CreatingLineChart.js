@@ -494,7 +494,7 @@ export default class CreatingLineChart extends React.Component {
             customHoverBehavior={d => console.info("custom hover d", d)}
             customClickBehavior={d => console.info("click on d", d)}
             customDoubleClickBehavior={d =>
-              console.info("custom doubleclick d", d)
+              console.info("customDoubleClickBehavior d", d)
             }
           />
         </div>
@@ -519,7 +519,7 @@ export default class CreatingLineChart extends React.Component {
             customHoverBehavior={d => console.info("custom hover d", d)}
             customClickBehavior={d => console.info("click on d", d)}
             customDoubleClickBehavior={d =>
-              console.info("custom doubleclick d", d)
+              console.info("customDoubleClickBehavior d", d)
             }
           />`
     })

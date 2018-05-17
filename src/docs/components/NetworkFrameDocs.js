@@ -330,7 +330,7 @@ export default class NetworkFrameDocs extends React.Component {
     if (this.state.customNodeIcon === "on") {
       networkChart.customNodeIcon = squareNodeGenerator
     }
-    if (this.state.customNodeIcon === "on") {
+    if (this.state.annotations === "on") {
       networkChart.annotations = annotations
     }
 
