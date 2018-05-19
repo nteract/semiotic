@@ -368,6 +368,8 @@ class AnnotationLayer extends React.Component {
         adjustedAnnotations = adjustableAnnotations
       }
 
+      console.log("adjustableAnnotationsKey", adjustableAnnotationsKey)
+
       if (
         adjustedAnnotations.length !== adjustableAnnotations.length ||
         adjustedAnnotationsKey !== adjustableAnnotationsKey ||

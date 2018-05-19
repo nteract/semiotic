@@ -160,6 +160,7 @@ export default class CreatingPieChart extends React.Component {
             projection={"radial"}
             oLabel={{ label: true, orient: "stem", padding: -5 }}
             margin={50}
+            ordinalAlign="center"
           />
         </div>
       ),
