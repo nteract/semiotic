@@ -443,11 +443,21 @@ class OrdinalFrame extends React.Component {
         projectedColumns[o].width = cwHash[o] - padding
 
         if (currentProps.ordinalAlign === "center") {
-          projectedColumns[o].x =
+          if (i === 0) {
+            projectedColumns[o].x =
             projectedColumns[o].x - projectedColumns[o].width / 2
-          projectedColumns[o].middle =
-            projectedColumns[o].middle - projectedColumns[o].width / 2
+            projectedColumns[o].middle =
+            projectedColumns[o].middle - projectedColumns[o].width / 2            
+          }
+          else {
+            projectedColumns[o].x =
+            projectedColumns[oExtent[i - 1]].x + projectedColumns[oExtent[i - 1]].width            
+            projectedColumns[o].middle =
+            projectedColumns[o].x + projectedColumns[o].width / 2
+          }
+
         }
+
         projectedColumns[o].pct = cwHash[o] / cwHash.total
         projectedColumns[o].pct_start =
           (projectedColumns[o].x - oDomain[0]) / cwHash.total
