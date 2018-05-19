@@ -87,6 +87,7 @@ class AnnotationLayer extends React.Component {
   }
 
   processAnnotations(adjustableAnnotations, annotationProcessor, props) {
+
     if (annotationProcessor.type === false) {
       return adjustableAnnotations
     }
@@ -139,10 +140,13 @@ class AnnotationLayer extends React.Component {
 
       adjustableAnnotations.forEach(aNote => {
         const noteData = aNote.props.noteData
-        const leftDist = leftOn ? noteData.x : Infinity
-        const rightDist = rightOn ? size[0] - noteData.x : Infinity
-        const topDist = topOn ? noteData.y : Infinity
-        const bottomDist = bottomOn ? size[1] - noteData.y : Infinity
+        const noteX = noteData.x[0] || noteData.x
+        const noteY = noteData.y[0] || noteData.y
+
+        const leftDist = leftOn ? noteX : Infinity
+        const rightDist = rightOn ? size[0] - noteX : Infinity
+        const topDist = topOn ? noteY : Infinity
+        const bottomDist = bottomOn ? size[1] - noteY : Infinity
 
         const minDist = Math.min(leftDist, rightDist, topDist, bottomDist)
 
@@ -166,14 +170,16 @@ class AnnotationLayer extends React.Component {
         .nodes(
           leftNodes.map(
             d =>
-              new labella.Node(
-                d.props.noteData.y,
+              {
+                const noteY = d.props.noteData.y[0] || d.props.noteData.y
+                return new labella.Node(
+                noteY,
                 noteDataHeight(
                   d.props.noteData,
                   annotationProcessor.characterWidth,
                   annotationProcessor.lineHeight
                 ) + padding
-              )
+              )}
           )
         )
         .compute()
@@ -185,14 +191,17 @@ class AnnotationLayer extends React.Component {
         .nodes(
           rightNodes.map(
             d =>
-              new labella.Node(
-                d.props.noteData.y,
+            {
+              const noteY = d.props.noteData.y[0] || d.props.noteData.y
+              return new labella.Node(
+                noteY,
                 noteDataHeight(
                   d.props.noteData,
                   annotationProcessor.characterWidth,
                   annotationProcessor.lineHeight
                 ) + padding
               )
+            }
           )
         )
         .compute()
@@ -204,13 +213,16 @@ class AnnotationLayer extends React.Component {
         .nodes(
           topNodes.map(
             d =>
-              new labella.Node(
-                d.props.noteData.x,
+            {
+              const noteX = d.props.noteData.x[0] || d.props.noteData.x
+              return new labella.Node(
+                noteX,
                 noteDataWidth(
                   d.props.noteData,
                   annotationProcessor.characterWidth
                 ) + padding
               )
+            }
           )
         )
         .compute()
@@ -222,13 +234,16 @@ class AnnotationLayer extends React.Component {
         .nodes(
           bottomNodes.map(
             d =>
-              new labella.Node(
-                d.props.noteData.x,
+            {
+              const noteX = d.props.noteData.x[0] || d.props.noteData.x
+              return new labella.Node(
+                noteX,
                 noteDataWidth(
                   d.props.noteData,
                   annotationProcessor.characterWidth
                 ) + padding
               )
+            }
           )
         )
         .compute()
@@ -367,8 +382,6 @@ class AnnotationLayer extends React.Component {
       if (annotationProcessor.type === false) {
         adjustedAnnotations = adjustableAnnotations
       }
-
-      console.log("adjustableAnnotationsKey", adjustableAnnotationsKey)
 
       if (
         adjustedAnnotations.length !== adjustableAnnotations.length ||
