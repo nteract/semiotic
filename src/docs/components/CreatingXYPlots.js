@@ -469,8 +469,7 @@ yAccessor="y"
         buttons={[]}
       >
         <p>
-          The very basics of how to create a bar chart or stacked bar chart with
-          labels and an axis in Semiotic.
+          The very basics of how to create XY Plots such as scatterplots, grids and hexbins with Semiotic.
         </p>
       </DocumentComponent>
     )

@@ -516,8 +516,7 @@ const colorHash = {
         buttons={[]}
       >
         <p>
-          The very basics of how to create a bar chart or stacked bar chart with
-          labels and an axis in Semiotic.
+          The very basics of how to create a pie chart in Semiotic.
         </p>
       </DocumentComponent>
     )
