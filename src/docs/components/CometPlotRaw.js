@@ -91,6 +91,7 @@ const cometChart = {
       subject: { radius: 6, radiusPadding: 2 }
     }
   ],
+annotationSettings: { layout: { type: "marginalia", orient: "right" } },
   axes: [
     {
       orient: "left",
