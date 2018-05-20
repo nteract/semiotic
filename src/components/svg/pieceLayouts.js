@@ -337,6 +337,9 @@ export function barLayout({
 
       if (projection === "radial") {
         let { innerRadius } = type
+        const  { offsetAngle = 0 } = type
+        const offsetPct = offsetAngle / 360
+
         let innerSize = piece.bottom / 2
         let outerSize = piece.scaledValue / 2 + piece.bottom / 2
         if (innerRadius) {
@@ -353,7 +356,7 @@ export function barLayout({
         //          .padAngle(ordset.pct_padding * twoPI);
 
         const angle = ordset.pct
-        const startAngle = ordset.pct === 1 ? 0 : ordset.pct_start
+        const startAngle = ordset.pct === 1 ? 0 : ordset.pct_start + offsetPct
         const endAngle =
           ordset.pct === 1
             ? 1

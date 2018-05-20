@@ -492,15 +492,16 @@ class OrdinalFrame extends React.Component {
         : { orient: "default", label: currentProps.oLabel, padding: 5 }
 
     if (currentProps.oLabel || currentProps.hoverAnnotation) {
-      oExtent.forEach((d, i) => {
+      console.log("type", pieceType)
+      const offsetPct = pieceType.offsetAngle && pieceType.offsetAngle / 360 || 0
+      console.log("offsetPct", offsetPct)
+      oExtent.forEach((d) => {
         const arcGenerator = arc()
           .innerRadius(0)
           .outerRadius(rScale.range()[1] / 2)
 
-        let angle = 1 / oExtent.length
-        let startAngle = angle * i
-        angle = projectedColumns[d].pct
-        startAngle = projectedColumns[d].pct_start
+        const angle = projectedColumns[d].pct
+        const startAngle = projectedColumns[d].pct_start + offsetPct
 
         const endAngle = startAngle + angle
         const midAngle = startAngle + angle / 2
@@ -525,7 +526,7 @@ class OrdinalFrame extends React.Component {
 
         const outerPoint = pointOnArcAtAngle(
           [0, 0],
-          projectedColumns[d].pct_middle,
+          midAngle,
           rScale.range()[1] / 2 + labelSettings.padding + addedPadding
         )
 
