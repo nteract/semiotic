@@ -3,8 +3,91 @@ import { forceSimulation, forceX, forceY, forceCollide } from "d3-force"
 import { /*area, curveCatmullRom,*/ arc } from "d3-shape"
 import pathBounds from "svg-path-bounding-box"
 import { Mark } from "semiotic-mark"
+import { scaleLinear } from "d3-scale"
 
 const twoPI = Math.PI * 2
+
+const radialBarFeatureGenerator = ({ type, ordset, adjustedSize, piece, i }) => {
+  let { innerRadius } = type
+  const  { offsetAngle = 0, angleRange = [0, 360] } = type
+  const offsetPct = offsetAngle / 360
+  const rangePct = angleRange.map(d => d / 360)
+  const rangeMod = rangePct[1] - rangePct[0]
+
+  const adjustedPct = rangeMod < 1 ? scaleLinear().domain([ 0, 1 ]).range(rangePct) : d => d
+
+  let innerSize = type.type === "clusterbar" ? 0 : type.type === "timeline" ? piece.scaledValue / 2 : piece.bottom / 2
+  let outerSize = type.type === "clusterbar" ? piece.scaledValue / 2 : type.type === "timeline" ? piece.scaledEndValue / 2 : piece.scaledValue / 2 + piece.bottom / 2
+
+  if (innerRadius) {
+    innerRadius = parseInt(innerRadius, 10)
+    const canvasRadius = adjustedSize[0] / 2
+    const donutMod = (canvasRadius - innerRadius) / canvasRadius
+    innerSize = innerSize * donutMod + innerRadius
+    outerSize = outerSize * donutMod + innerRadius
+  }
+
+  const arcGenerator = arc()
+    .innerRadius(innerSize)
+    .outerRadius(outerSize)
+
+    const angle = (type.type === "clusterbar" ? (ordset.pct - ordset.pct_padding) / ordset.pieceData.length : ordset.pct) * rangeMod
+
+    const startAngle = adjustedPct(type.type === "clusterbar" ? ordset.pct_start +
+    i / ordset.pieceData.length * (ordset.pct - ordset.pct_padding) : ordset.pct === 1 ? 0 : ordset.pct_start + offsetPct)
+
+    const endAngle =
+      ordset.pct === 1
+        ? rangePct[1]
+        : Math.max(startAngle, startAngle + angle - ordset.pct_padding / 2)
+
+    const startAngleFinal = startAngle * twoPI
+
+    const endAngleFinal = endAngle * twoPI       
+
+    const markD = arcGenerator({
+      startAngle: startAngleFinal,
+      endAngle: endAngleFinal
+    })
+
+    const centroid = arcGenerator.centroid({
+      startAngle: startAngleFinal,
+      endAngle: endAngleFinal
+    })
+
+    const xOffset = adjustedSize[0] / 2
+    const yOffset = adjustedSize[1] / 2
+    const xPosition = centroid[0] + xOffset
+    const yPosition = centroid[1] + yOffset
+    
+    const outerPoint = pointOnArcAtAngle(
+      [0, 0],
+      (startAngle + endAngle) / 2,
+      piece.scaledValue / 2
+    )
+
+    const xy = {
+      arcGenerator: arcGenerator,
+      startAngle: startAngleFinal,
+      endAngle: endAngleFinal,
+      dx: outerPoint[0],
+      dy: outerPoint[1]
+    }
+    const translate = `translate(${xOffset},${yOffset})`
+
+    return { 
+      xPosition,
+      yPosition,
+      xy,
+      translate,
+      markProps: {
+      markType: "path",
+      d: markD,
+      tx: xOffset,
+      ty: yOffset,
+      transform: translate
+    } }
+}
 
 const iconBarCustomMark = ({
   type,
@@ -148,7 +231,7 @@ export function clusterBarLayout({
       let yPosition = piece.base
       let finalWidth = clusterWidth
       let finalHeight = piece.scaledValue
-      const xy = {}
+      let xy = {}
       if (!piece.negative) {
         yPosition -= piece.scaledValue
       }
@@ -164,59 +247,11 @@ export function clusterBarLayout({
         }
       }
 
-      let markD,
-        translate,
+      let translate,
         markProps = {}
 
       if (projection === "radial") {
-        const arcGenerator = arc()
-          .innerRadius(0)
-          .outerRadius(piece.scaledValue / 2)
-
-        const angle =
-          (ordset.pct - ordset.pct_padding) / ordset.pieceData.length
-        const startAngle =
-          ordset.pct_start +
-          i / ordset.pieceData.length * (ordset.pct - ordset.pct_padding)
-        const endAngle = startAngle + angle
-
-        markD = arcGenerator({
-          startAngle: startAngle * twoPI,
-          endAngle: endAngle * twoPI
-        })
-        const xOffset = adjustedSize[0] / 2
-        const yOffset = adjustedSize[1] / 2
-        translate = `translate(${xOffset},${yOffset})`
-
-        const startAngleFinal = startAngle * twoPI
-        const endAngleFinal = endAngle * twoPI
-        const outerPoint = pointOnArcAtAngle(
-          [0, 0],
-          (startAngle + endAngle) / 2,
-          piece.scaledValue / 2
-        )
-
-        xy.arcGenerator = arcGenerator
-        xy.startAngle = startAngleFinal
-        xy.endAngle = endAngleFinal
-        xy.dx = outerPoint[0]
-        xy.dy = outerPoint[1]
-
-        const centroid = arcGenerator.centroid({
-          startAngle: startAngleFinal,
-          endAngle: endAngleFinal
-        })
-        finalHeight = undefined
-        finalWidth = undefined
-        xPosition = centroid[0] + xOffset
-        yPosition = centroid[1] + yOffset
-
-        markProps = {
-          markType: "path",
-          d: markD,
-          tx: xOffset,
-          ty: yOffset
-        }
+        ({ xPosition, yPosition, markProps, xy } = radialBarFeatureGenerator({ type, ordset, adjustedSize, piece, i, translate })) 
       } else {
         xPosition += currentX
         yPosition += currentY
@@ -333,57 +368,12 @@ export function barLayout({
         }
       }
 
-      let markD, markProps
+      let markProps
 
       if (projection === "radial") {
-        let { innerRadius } = type
-        const  { offsetAngle = 0 } = type
-        const offsetPct = offsetAngle / 360
-
-        let innerSize = piece.bottom / 2
-        let outerSize = piece.scaledValue / 2 + piece.bottom / 2
-        if (innerRadius) {
-          innerRadius = parseInt(innerRadius, 10)
-          const canvasRadius = adjustedSize[0] / 2
-          const donutMod = (canvasRadius - innerRadius) / canvasRadius
-          innerSize = innerSize * donutMod + innerRadius
-          outerSize = outerSize * donutMod + innerRadius
-        }
-
-        const arcGenerator = arc()
-          .innerRadius(innerSize)
-          .outerRadius(outerSize)
-        //          .padAngle(ordset.pct_padding * twoPI);
-
-        const angle = ordset.pct
-        const startAngle = ordset.pct === 1 ? 0 : ordset.pct_start + offsetPct
-        const endAngle =
-          ordset.pct === 1
-            ? 1
-            : Math.max(startAngle, startAngle + angle - ordset.pct_padding / 2)
-
-        markD = arcGenerator({
-          startAngle: startAngle * twoPI,
-          endAngle: endAngle * twoPI
-        })
-        const centroid = arcGenerator.centroid({
-          startAngle: startAngle * twoPI,
-          endAngle: endAngle * twoPI
-        })
+        ({ markProps, xPosition, yPosition } = radialBarFeatureGenerator({ type, ordset, adjustedSize, piece }))
         finalHeight = undefined
         finalWidth = undefined
-        const xOffset = adjustedSize[0] / 2
-        const yOffset = adjustedSize[1] / 2
-        xPosition = centroid[0] + xOffset
-        yPosition = centroid[1] + yOffset
-
-        markProps = {
-          markType: "path",
-          d: markD,
-          tx: xOffset,
-          ty: yOffset,
-          transform: `translate(${xOffset},${yOffset})`
-        }
       } else {
         markProps = {
           markType: "rect",
@@ -497,43 +487,7 @@ export function timelineLayout({
           y: yPosition
         }
       } else if (projection === "radial") {
-        let { innerRadius } = type
-        let innerSize = piece.scaledValue / 2
-        let outerSize = piece.scaledEndValue / 2
-        if (innerRadius) {
-          innerRadius = parseInt(innerRadius, 10)
-          const canvasRadius = adjustedSize[0] / 2
-          const donutMod = (canvasRadius - innerRadius) / canvasRadius
-          innerSize = innerSize * donutMod + innerRadius
-          outerSize = outerSize * donutMod + innerRadius
-        }
-
-        const arcGenerator = arc()
-          .innerRadius(innerSize)
-          .outerRadius(outerSize)
-        //          .padAngle(ordset.pct_padding * twoPI);
-
-        const angle = ordset.pct
-        const startAngle = ordset.pct === 1 ? 0 : ordset.pct_start
-        const endAngle =
-          ordset.pct === 1
-            ? 1
-            : Math.max(startAngle, startAngle + angle - ordset.pct_padding / 2)
-
-        const markD = arcGenerator({
-          startAngle: startAngle * twoPI,
-          endAngle: endAngle * twoPI
-        })
-
-        const xOffset = adjustedSize[0] / 2
-        const yOffset = adjustedSize[1] / 2
-        markProps = {
-          markType: "path",
-          d: markD,
-          transform: `translate(${xOffset},${yOffset})`,
-          tx: xOffset,
-          ty: yOffset
-        }
+        ({ markProps } = radialBarFeatureGenerator({ piece, type, ordset, adjustedSize }))
       }
 
       //Only return the actual piece if you're rendering points, otherwise you just needed to iterate and calculate the points for the contour summary type
