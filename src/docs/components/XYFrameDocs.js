@@ -961,6 +961,8 @@ export default class XYFrameDocs extends React.Component {
       finalAnnotations = [...finalAnnotations, this.state.axisAnnotation]
     }
 
+    const undefinedOptions = {}
+    if (this.state.frame === "ResponsiveXYFrame") undefinedOptions.responsiveWidth = true
     const displayFrame = (
       <div>
         <Button
@@ -973,9 +975,10 @@ export default class XYFrameDocs extends React.Component {
           XYFrame API
         </Button>
         <ReactFrame
+        {...undefinedOptions}
           title={titleTypesHash[this.state.title]}
           size={[700, 700]}
-          responsiveWidth={this.state.frame === "XYFrame" ? undefined : true}
+
           lines={this.state.dataType === "line" ? displayData : undefined}
           areas={
             this.state.dataType === "area"

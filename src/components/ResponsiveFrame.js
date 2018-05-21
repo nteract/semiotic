@@ -43,7 +43,8 @@ const createResponsiveFrame = Frame =>
         responsiveWidth,
         responsiveHeight,
         size,
-        dataVersion
+        dataVersion,
+        ...rest
       } = this.props
 
       const { containerHeight, containerWidth } = this.state
@@ -72,7 +73,7 @@ const createResponsiveFrame = Frame =>
         >
           {!returnEmpty && (
             <Frame
-              {...this.props}
+              {...rest}
               size={actualSize}
               dataVersion={dataVersion ? dataVersionWithSize : undefined}
             />
