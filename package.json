@@ -143,7 +143,7 @@
     "react-dom": "16.2.0",
     "react-annotation": "1.2.1",
     "roughjs": "git://github.com/emeeks/rough",
-    "semiotic-mark": "0.2.8",
+    "semiotic-mark": "0.2.9",
     "svg-path-bounding-box": "1.0.4",
     "whatwg-fetch": "2.0.3"
   },
