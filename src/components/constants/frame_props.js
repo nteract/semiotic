@@ -150,7 +150,6 @@ const networkFrameOtherProps = [
 
 const sharedframeproptypes = {
   useSpans: PropTypes.bool,
-  responsiveWidth: PropTypes.bool,
   title: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
   margin: PropTypes.oneOfType([PropTypes.number, PropTypes.object]),
   name: PropTypes.string,
