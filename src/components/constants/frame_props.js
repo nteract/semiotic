@@ -289,6 +289,8 @@ export const networkframeproptypes = {
     PropTypes.number,
     PropTypes.func
   ]),
+  nodeRenderKey: PropTypes.func,
+  edgeRenderKey: PropTypes.func,
   edgeRenderMode: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
   nodeRenderMode: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
   canvasEdges: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
