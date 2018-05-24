@@ -322,7 +322,7 @@ export function orFrameConnectionRenderer({
                 baseClass: "xyframe-line",
                 tx: 0,
                 ty: 0,
-                d: { source: piece.piece, target: matchingPiece.piece },
+                d: { source: piece.piece.data, target: matchingPiece.piece.data },
                 markProps: { d: markD, markType: "path" },
                 styleFn: styleFn,
                 renderFn: renderMode,

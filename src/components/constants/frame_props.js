@@ -262,6 +262,7 @@ export const ordinalframeproptypes = {
   connectorStyle: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
   summaryStyle: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
   canvasPieces: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
+  canvasConnectors: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
   canvasSummaries:  PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
   summaryPosition: PropTypes.func,
   oLabel: PropTypes.oneOfType([
@@ -289,6 +290,8 @@ export const networkframeproptypes = {
     PropTypes.number,
     PropTypes.func
   ]),
+  customNodeIcon: PropTypes.func,
+  customEdgeIcon: PropTypes.func,
   nodeRenderKey: PropTypes.func,
   edgeRenderKey: PropTypes.func,
   edgeRenderMode: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),

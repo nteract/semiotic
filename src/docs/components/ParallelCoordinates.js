@@ -3,16 +3,9 @@ import DocumentComponent from "../layout/DocumentComponent"
 import { OrdinalFrame } from "../../components"
 import { orframe_data } from "../sampledata/nyc_temp"
 import { degreeDiffFormat } from "../example_settings/orframe"
-import { scaleLinear } from "d3-scale"
 import ProcessViz from "./ProcessViz"
 
 const components = []
-// Add your component proptype data here
-// multiple component proptype documentation supported
-
-const yearScale = scaleLinear()
-  .range(["#f2f0f7", "#cbc9e2", "#9e9ac8", "#6a51a3"])
-  .domain([1869, 1900, 1950, 2017])
 
 components.push({
   name: "Parallel Coordinates"
@@ -85,18 +78,22 @@ export default class ParallelCoordinatesDocs extends React.Component {
       style: d => ({
         fill: hiddenHash.get(d.funnelKey)
           ? "none"
-          : yearScale(parseInt(d.funnelKey, 10)),
-        fillOpacity: 0.75
+          : "red",
+        fillOpacity: 0.75,
+        stroke: hiddenHash.get(d.funnelKey)
+          ? "black"
+          : "none",
+        strokeOpacity: 0.5
       }),
       connectorType: d => d.funnelKey,
       connectorStyle: d => ({
         stroke: hiddenHash.get(d.source.funnelKey)
-          ? "lightgray"
-          : yearScale(parseInt(d.source.funnelKey, 10)),
+          ? "gray"
+          : "red",
         strokeWidth: 1,
-        strokeOpacity: hiddenHash.get(d.source.funnelKey) ? 0.99 : 0.99
+        strokeOpacity: hiddenHash.get(d.source.funnelKey) ? 0.25 : 0.5
       }),
-      type: { type: "point", r: 1 },
+      type: { type: "point", r: 2 },
       axis: {
         ...axis,
         orient: "left",
@@ -112,9 +109,11 @@ export default class ParallelCoordinatesDocs extends React.Component {
           : `${d.stepName}-${d.funnelKey}`,
       interaction: {
         columnsBrush: true,
-        end: this.brushing,
+        during: this.brushing,
         extent: this.state.columnExtent
-      }
+      },
+      canvasConnectors: true,
+      canvasPieces: true
     }
 
     examples.push({

@@ -1,8 +1,4 @@
 import React from "react"
-//import ReactDOM from 'react-dom'
-
-//import MarkContext from './MarkContext'
-import { hexToRgb } from "./svg/SvgHelper"
 
 import { RoughCanvas } from "roughjs/lib/canvas"
 
@@ -62,18 +58,13 @@ class VisualizationLayer extends React.PureComponent {
     )
 
     this.canvasDrawing.forEach(piece => {
+
       const style = piece.styleFn
         ? piece.styleFn({ ...piece.d, ...piece.d.data }, piece.i) || {}
         : { fill: "black", stroke: "black" }
 
-      let fill = style.fill ? style.fill : "black"
-      let stroke = style.stroke ? style.stroke : "black"
-      fill = !style.fillOpacity
-        ? fill
-        : `rgba(${[...hexToRgb(fill), style.fillOpacity]})`
-      stroke = !style.strokeOpacity
-        ? stroke
-        : `rgba(${[...hexToRgb(stroke), style.strokeOpacity]})`
+      const fill = style.fill ? style.fill : "black"
+      const stroke = style.stroke ? style.stroke : "black"
       context.setTransform(
         1,
         0,
@@ -122,16 +113,19 @@ class VisualizationLayer extends React.PureComponent {
           r = halfWidth
         }
         if (actualRenderMode === "sketchy") {
-          rc.circle(vizX, vizY, r, rcSettings)
+          if (context.globalAlpha !== 0 ) rc.circle(vizX, vizY, r, rcSettings)
         } else {
           context.beginPath()
           context.arc(vizX, vizY, r, 0, 2 * Math.PI)
-          context.fill()
-          context.stroke()
+          context.globalAlpha = style.fillOpacity || style.opacity || 1
+          if (style.fill && style.fill !== "none" && context.globalAlpha !== 0 ) context.fill()
+          context.globalAlpha = style.strokeOpacity || style.opacity || 1
+          if (style.stroke && style.stroke !== "none" && context.globalAlpha !== 0 ) context.stroke()
         }
       } else if (piece.markProps.markType === "rect") {
         if (actualRenderMode === "sketchy") {
-          rc.rectangle(
+          context.globalAlpha = style.opacity || 1
+          if (context.globalAlpha !== 0) rc.rectangle(
             piece.markProps.x,
             piece.markProps.y,
             piece.markProps.width,
@@ -139,13 +133,15 @@ class VisualizationLayer extends React.PureComponent {
             rcSettings
           )
         } else {
-          context.fillRect(
+          context.globalAlpha = style.fillOpacity || style.opacity || 1
+          if (style.fill && style.fill !== "none" && context.globalAlpha !== 0 ) context.fillRect(
             piece.markProps.x,
             piece.markProps.y,
             piece.markProps.width,
             piece.markProps.height
           )
-          context.strokeRect(
+          context.globalAlpha = style.strokeOpacity || style.opacity || 1
+          if (style.stroke && style.stroke !== "none" && context.globalAlpha !== 0 ) context.strokeRect(
             piece.markProps.x,
             piece.markProps.y,
             piece.markProps.width,
@@ -154,17 +150,21 @@ class VisualizationLayer extends React.PureComponent {
         }
       } else if (piece.markProps.markType === "path") {
         if (actualRenderMode === "sketchy") {
+          context.globalAlpha = style.opacity || 1
           rc.path(piece.markProps.d, rcSettings)
         } else {
           const p = new Path2D(piece.markProps.d)
-          context.stroke(p)
-          context.fill(p)
+          context.globalAlpha = style.strokeOpacity || style.opacity || 1
+          if (style.stroke && style.stroke !== "none" && context.globalAlpha !== 0 ) context.stroke(p)
+          context.globalAlpha = style.fillOpacity || style.opacity || 1
+          if (style.fill && style.fill !== "none" && context.globalAlpha !== 0 ) context.fill(p)
         }
       } else {
         console.error("CURRENTLY UNSUPPORTED MARKTYPE FOR CANVAS RENDERING")
       }
     })
     context.setTransform(1, 0, 0, 1, 0, 0)
+    context.globalAlpha = 1
 
     if (this.props.canvasPostProcess === "chuckClose") {
       chuckCloseCanvasTransform(this.props.canvasContext, context, size)
