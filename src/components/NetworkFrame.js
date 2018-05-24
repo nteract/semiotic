@@ -1186,7 +1186,7 @@ class NetworkFrame extends React.Component {
 
     let projectedXYPoints
     const overlay = []
-    const areaBasedTypes = [ "sankey", "circlepack", "treemap", "partition" ]
+    const areaBasedTypes = [ "circlepack", "treemap", "partition" ]
     if ((hoverAnnotation && areaBasedTypes.find(d => d === networkType.type)) || hoverAnnotation === "area" ) {
       const renderedNodeOverlays = projectedNodes
         .map((d,i) => ({ 
