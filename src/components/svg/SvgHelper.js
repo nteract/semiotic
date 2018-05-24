@@ -62,7 +62,7 @@ export const wrap = (text, width) => {
 }
 
 export const hexToRgb = hex => {
-  if (hex.substr(0, 1).toLowerCase() === "r") {
+  if (hex.substr(0, 2).toLowerCase() === "rg") {
     return hex
       .split("(")[1]
       .split(")")[0]
