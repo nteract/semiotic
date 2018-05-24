@@ -1113,6 +1113,8 @@ class NetworkFrame extends React.Component {
       }
     }
 
+    customNodeIcon = customNodeIcon || circleNodeGenerator 
+
     const networkFrameRender = {
       edges: {
         accessibleTransform: (data, i) => ({ type: "frame-hover", ...data[i] }),
@@ -1183,8 +1185,18 @@ class NetworkFrame extends React.Component {
     }
 
     let projectedXYPoints
-
-    if (hoverAnnotation === "edge" && edgePointHash[networkSettings.type]) {
+    const overlay = []
+    const areaBasedTypes = [ "sankey", "circlepack", "treemap", "partition" ]
+    if ((hoverAnnotation && areaBasedTypes.find(d => d === networkType.type)) || hoverAnnotation === "area" ) {
+      const renderedNodeOverlays = projectedNodes
+        .map((d,i) => ({ 
+          overlayData: d,
+          ...customNodeIcon({ d, i, transform: `translate(${d.x},${d.y})`, styleFn: () => ({ fill: "pink", stroke: "pink", opacity: 0 }) }).props
+      }))
+      
+      overlay.push(...renderedNodeOverlays)
+    }
+    else if (hoverAnnotation === "edge" && edgePointHash[networkSettings.type]) {
       projectedXYPoints = projectedEdges.map(
         edgePointHash[networkSettings.type]
       )
@@ -1210,6 +1222,7 @@ class NetworkFrame extends React.Component {
       projectedNodes,
       projectedEdges,
       projectedXYPoints,
+      overlay,
       nodeIDAccessor,
       sourceAccessor,
       targetAccessor,
@@ -1332,7 +1345,8 @@ class NetworkFrame extends React.Component {
       adjustedPosition,
       adjustedSize,
       networkFrameRender,
-      nodeLabelAnnotations
+      nodeLabelAnnotations,
+      overlay
     } = this.state
 
     const downloadButton = []
@@ -1401,6 +1415,7 @@ class NetworkFrame extends React.Component {
         customDoubleClickBehavior={customDoubleClickBehavior}
         points={projectedXYPoints}
         margin={margin}
+        overlay={overlay}
         backgroundGraphics={backgroundGraphics}
         foregroundGraphics={foregroundGraphics}
         beforeElements={beforeElements}

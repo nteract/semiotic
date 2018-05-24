@@ -265,7 +265,7 @@ export const drawNodes = ({
   canvasRenderFn,
   baseMarkProps
 }) => {
-  const markGenerator = customMark || circleNodeGenerator
+  const markGenerator = customMark
   const renderedData = []
 
   if (customMark && canvasRenderFn) {
