@@ -74,6 +74,7 @@ export default ({
   }
   return (
     <div>
+      <ProcessViz frameSettings={hierarchicalChart} frameType="NetworkFrame" />
       <iframe
         title="dendrogram-video"
         width="560"
@@ -83,7 +84,6 @@ export default ({
         allow="autoplay; encrypted-media"
         allowFullScreen
       />
-      <ProcessViz frameSettings={hierarchicalChart} frameType="NetworkFrame" />
       <NetworkFrame {...hierarchicalChart} />
     </div>
   )
