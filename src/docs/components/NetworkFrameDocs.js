@@ -12,6 +12,8 @@ import { /* Input, */ InputLabel } from "material-ui/Input"
 import { FormControl /*, FormHelperText */ } from "material-ui/Form"
 import ProcessViz from "./ProcessViz"
 
+import { PrismCode } from "react-prism"
+
 const glowyCanvas = (canvas, context, size) => {
   const dataURL = canvas.toDataURL("image/png")
   const baseImage = document.createElement("img")
@@ -409,7 +411,28 @@ export default class NetworkFrameDocs extends React.Component {
           sankey diagrams and force-directed network diagrams.
         </p>
 
-        <p>Data are sent to the nodes and edges properties.</p>
+        <p>Data are sent to the nodes and edges properties. Nodes are not required (the corresponding nodes will be created based on edge data) and edges are not required (if you want to make bubble charts) but you do have to send one or the other.</p>
+        <p>Node data format:
+          <br />
+        <PrismCode>{`[
+  { id: "Bob" },
+  { id: "Xianlin" }
+]`}</PrismCode>
+</p>
+<p>Edge Data can be sent as an edge list:
+  <br />
+  <PrismCode>{`[
+  { source: "Bob", target: "Xianlin" },
+  { source: "Xianlin", target: "Baboo" }
+]`}</PrismCode>
+<br />
+Or as hierarchical JSON (which can be used for hierarchical charts or for sankey or force-directed networks):
+<br />
+<PrismCode>{`{
+  id: "root", children: [ { id: "A Child", children: [{ id: "A Grandchild" }] } ]
+}`}</PrismCode>
+
+  </p>
       </DocumentComponent>
     )
   }

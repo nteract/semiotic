@@ -372,12 +372,13 @@ export function relativeY({
     const thisPoint = thisLine.data.find(
       p => xScale(p[projectedX]) === xScale(xAccessor(point))
     )
+
     if (!thisPoint) {
       return null
     }
     point = thisPoint
   }
   return yScale(
-    point[projectedYMiddle] || point[projectedY] || yAccessor(point)
+    point[projectedYMiddle] || point[projectedY] || yAccessor(point) || 0
   )
 }
