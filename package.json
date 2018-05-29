@@ -14,6 +14,7 @@
     "test": "node scripts/test.js --env=jsdom",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
+    "flow": "flow",
     "prebuild": "babel src/components --out-dir lib --ignore test.js",
     "create-release-branch": "sh ./scripts/create-release-branch.sh",
     "publish-release": "sh ./scripts/publish-release.sh",
@@ -38,12 +39,13 @@
   "devDependencies": {
     "@vx/pattern": "0.0.143",
     "autoprefixer": "7.1.6",
-    "babel-cli": "6.4.5",
+    "babel-cli": "^6.26.0",
     "babel-core": "6.26.0",
     "babel-eslint": "^7.2.3",
     "babel-jest": "20.0.3",
     "babel-loader": "7.1.2",
     "babel-plugin-external-helpers": "^6.22.0",
+    "babel-preset-flow": "^6.23.0",
     "babel-preset-netflix-dea": "^3.0.1",
     "babel-preset-react-app": "^3.1.1",
     "babel-register": "^6.7.2",
@@ -70,6 +72,7 @@
     "eslint-plugin-react": "^7.6.1",
     "extract-text-webpack-plugin": "3.0.2",
     "file-loader": "1.1.5",
+    "flow-bin": "^0.73.0",
     "fs-extra": "3.0.1",
     "history": "4.2.0",
     "html-webpack-plugin": "2.29.0",
@@ -140,8 +143,8 @@
     "prop-types": "15.6.0",
     "raf": "3.4.0",
     "react": "16.2.0",
-    "react-dom": "16.2.0",
     "react-annotation": "1.2.1",
+    "react-dom": "16.2.0",
     "roughjs": "git://github.com/emeeks/rough",
     "semiotic-mark": "0.2.9",
     "svg-path-bounding-box": "1.0.4",
@@ -190,6 +193,7 @@
   },
   "babel": {
     "presets": [
+      "flow",
       "react-app"
     ]
   },
