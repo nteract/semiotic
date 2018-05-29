@@ -5,7 +5,7 @@ import AnnotationLabel from "react-annotation/lib/Types/AnnotationLabel"
 type Props = {
   noteData: {
     eventListeners: Object,
-    type: ?function,
+    type: *,
     screenCoordinates: Array<Array<number>>,
     // What is this type supposed to be? It gets used only in a boolean context
     // I mostly assume this is used to indicate the presence of `nx`, `ny`, `dx`, `dy`
