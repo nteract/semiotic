@@ -11,7 +11,10 @@
   "scripts": {
     "start": "node scripts/start.js",
     "build": "node scripts/build.js",
-    "test": "node scripts/test.js --env=jsdom",
+    "test": "BABEL_ENV=test NODE_ENV=test PUBLIC_URL='' jest --env=jsdom",
+    "test:watch": "npm run test -- --watch",
+    "test:coverage": "npm run test -- --coverage",
+    "test:old": "node scripts/test.js --env=jsdom",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "prebuild": "babel src/components --out-dir lib --ignore test.js",
