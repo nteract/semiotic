@@ -12,6 +12,7 @@ yarn-error.log
 logs/*
 *-compiled*
 build
+coverage
 
 examples/dist/bundle.js
 .vscode/settings.json
