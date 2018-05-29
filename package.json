@@ -58,6 +58,7 @@
     "classnames": "2.2.5",
     "conventional-changelog-cli": "1.1.1",
     "conventional-recommended-bump": "0.3.0",
+    "coveralls": "^3.0.1",
     "css-loader": "0.28.7",
     "d3-dsv": "1.0.5",
     "d3-random": "1.0.1",
@@ -160,8 +161,10 @@
     ]
   },
   "jest": {
+    "collectCoverage": true,
     "collectCoverageFrom": [
-      "src/**/*.{js,jsx,mjs}"
+      "src/**/*.{js,jsx,mjs}",
+      "!src/docs/**"
     ],
     "setupFiles": [
       "<rootDir>/config/polyfills.js"

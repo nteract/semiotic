@@ -9,7 +9,10 @@ install:
 
 script:
   # - npm run lint  # disabled in current semiotic
-  - npm run test
+  - npm run test --coverage
+
+after_success:
+  - 'cat ./coverage/lcov.info | ./node_modules/.bin/coveralls'
 
 cache:
   directories:
