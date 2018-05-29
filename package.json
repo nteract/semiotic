@@ -53,6 +53,7 @@
     "classnames": "2.2.5",
     "conventional-changelog-cli": "1.1.1",
     "conventional-recommended-bump": "0.3.0",
+    "coveralls": "^3.0.1",
     "css-loader": "0.28.7",
     "d3-dsv": "1.0.5",
     "d3-random": "1.0.1",
@@ -140,8 +141,8 @@
     "prop-types": "15.6.0",
     "raf": "3.4.0",
     "react": "16.2.0",
-    "react-dom": "16.2.0",
     "react-annotation": "1.2.1",
+    "react-dom": "16.2.0",
     "roughjs": "git://github.com/emeeks/rough",
     "semiotic-mark": "0.2.9",
     "svg-path-bounding-box": "1.0.4",
@@ -155,7 +156,8 @@
   },
   "jest": {
     "collectCoverageFrom": [
-      "src/**/*.{js,jsx,mjs}"
+      "src/**/*.{js,jsx,mjs}",
+      "!src/docs/**"
     ],
     "setupFiles": [
       "<rootDir>/config/polyfills.js"
