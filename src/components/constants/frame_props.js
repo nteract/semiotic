@@ -170,6 +170,7 @@ const sharedframeproptypes = {
     PropTypes.bool,
     PropTypes.string
   ]),
+  disableContext: PropTypes.bool,
   interaction: PropTypes.object,
   svgAnnotationRules: PropTypes.func,
   htmlAnnotationRules: PropTypes.func,
