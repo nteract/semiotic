@@ -1,14 +1,30 @@
-import React from "react"
+// @flow
+import * as React from "react"
 import AnnotationLabel from "react-annotation/lib/Types/AnnotationLabel"
 
-import PropTypes from "prop-types"
+type Props = {
+  noteData: {
+    eventListeners: Object,
+    type: ?function,
+    screenCoordinates: Array<Array<number>>,
+    // What is this type supposed to be? It gets used only in a boolean context
+    // I mostly assume this is used to indicate the presence of `nx`, `ny`, `dx`, `dy`
+    coordinates: boolean,
+    nx: number,
+    ny: number,
+    dx: number,
+    dy: number,
+    // TODO: What should this be typed as?
+    note: Object,
+  }
+}
 
-class SemioticAnnotation extends React.Component {
+class SemioticAnnotation extends React.Component<Props, null> {
   render() {
     const { noteData } = this.props
     const { screenCoordinates } = noteData
 
-    noteData.type =
+    const Label =
       typeof noteData.type === "function" ? noteData.type : AnnotationLabel
 
     const eventListeners = noteData.eventListeners || {}
@@ -26,18 +42,14 @@ class SemioticAnnotation extends React.Component {
           ny: setNY
         })
 
-        return <noteData.type key={`multi-annotation-${i}`} {...subjectNote} />
+        return <Label key={`multi-annotation-${i}`} {...subjectNote} />
       })
 
       return <g events={eventListeners}>{notes}</g>
     }
 
-    return <noteData.type events={eventListeners} {...noteData} />
+    return <Label events={eventListeners} {...noteData} />
   }
-}
-
-SemioticAnnotation.propTypes = {
-  noteData: PropTypes.object
 }
 
 export default SemioticAnnotation
