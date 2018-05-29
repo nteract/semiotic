@@ -5,6 +5,8 @@ import builtins from "rollup-plugin-node-builtins"
 import replace from "rollup-plugin-replace"
 import regenerator from "rollup-plugin-regenerator"
 
+import flow from 'rollup-plugin-flow';
+
 export default {
   exports: "named",
   input: "src/components/index.js",
@@ -20,6 +22,7 @@ export default {
   },
   external: ["react", "react-dom"],
   plugins: [
+    flow(),
     node({ jsnext: true, preferBuiltins: false }),
     regenerator({ includeRuntime: true, sourceMap: false }),
     builtins(),
@@ -41,7 +44,7 @@ export default {
     babel({
       babelrc: false,
       runtimeHelpers: true,
-      presets: [["es2015", { modules: false }], "react", "stage-0"],
+      presets: ["flow", ["es2015", { modules: false }], "react", "stage-0"],
       plugins: ["external-helpers"]
     })
   ]
