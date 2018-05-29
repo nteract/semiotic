@@ -128,54 +128,40 @@ export default class ParallelCoordinatesDocs extends React.Component {
         </div>
       ),
       source: `
-    constructor(props) {
-      super(props)
-      this.brushing = this.brushing.bind(this)
-      this.state = { columnExtent: { 'January': undefined, 'February': undefined, 'March': undefined, 'April': undefined, 'May': undefined, 'June': undefined, 'July': undefined, 'August': undefined, 'September': undefined, 'October': undefined, 'November': undefined, 'December': undefined } }
-    }
+constructor(props) {
+  super(props)
+  this.brushing = this.brushing.bind(this)
+  this.state = { columnExtent: { 'January': undefined, 'February': undefined, 'March': undefined, 'April': undefined, 'May': undefined, 'June': undefined, 'July': undefined, 'August': undefined, 'September': undefined, 'October': undefined, 'November': undefined, 'December': undefined } }
+}
 
-    brushing(e,c) {   
-      const columnExtent = this.state.columnExtent    
-      columnExtent[c] = e   
-      this.setState(columnExtent)   
-    }
+brushing(e,c) {   
+  const columnExtent = this.state.columnExtent    
+  columnExtent[c] = e   
+  this.setState(columnExtent)   
+}
 
-    const axis = { orient: 'left', tickFormat: d => d, label: {
-        name: "axis label",
-        position: { anchor: "middle" },
-        locationDistance: 40
-    } }
+const axis = { orient: 'left', tickFormat: d => d, label: {
+    name: "axis label",
+    position: { anchor: "middle" },
+    locationDistance: 40
+} }
 
-    const hiddenHash = new Map()
+const hiddenHash = new Map()
 
-    Object.keys(this.state.columnExtent).forEach(key => {
-      if (this.state.columnExtent[key]) {
-        const extent = this.state.columnExtent[key].sort((a,b) => a - b)
-        orframe_data
-          .filter(d => d.stepName === key && (d.stepValue < extent[0] || d.stepValue > extent[1]))
-          .forEach(p => {
-            hiddenHash.set(p.funnelKey, true)
-          })
-      }
-    })
-            <OrdinalFrame
-              size={[ 700,500 ]}
-              axis={axis}
-              rExtent={[ 0, 85 ]}
-              data={orframe_data.filter(d => !hiddenHash.get(d.funnelKey))}
-              rAccessor: "stepValue",
-              oAccessor: "stepName",
-              style={d => ({ fill: hiddenHash.get(d.funnelKey) ? "none" : yearScale(parseInt(d.funnelKey)), fillOpacity: 0.75 })}
-              connectorType={d => d.funnelKey}
-              connectorStyle={d => ({ stroke: hiddenHash.get(d.source.funnelKey) ? "lightgray" : yearScale(parseInt(d.source.funnelKey)), strokeWidth: 1, strokeOpacity: 0.75 })}
-              type={{ type: "point", r: 1 }}
-              axis={{ orient: 'left', tickFormat: degreeDiffFormat, label: "Monthly temperature" }}
-              oLabel={d => <text transform="rotate(45)">{d}</text>}
-              margin={{ left: 50, top: 150, bottom: 50, right: 30 }}
-              oPadding={20}
-              renderKey={d => d.source ? ${"`${d.source.stepName}-${d.source.funnelKey}`"} : ${"`${d.stepName}-${d.funnelKey}`"}}
-              interaction={{ columnsBrush: true, end: this.brushing, extent: this.state.columnExtent }}
-            />
+Object.keys(this.state.columnExtent).forEach(key => {
+  if (this.state.columnExtent[key]) {
+    const extent = this.state.columnExtent[key].sort((a,b) => a - b)
+    orframe_data
+      .filter(d => d.stepName === key && (d.stepValue < extent[0] || d.stepValue > extent[1]))
+      .forEach(p => {
+        hiddenHash.set(p.funnelKey, true)
+      })
+  }
+})
+const parallelCoordinatesChart = ${JSON.stringify({ ...parralelCoordinatesChart, data: [] }, null, 2)}
+<OrdinalFrame
+  {...parallelCoordinatesChart}
+/>
       `
     })
 
