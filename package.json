@@ -155,6 +155,7 @@
     ]
   },
   "jest": {
+    "collectCoverage": true,
     "collectCoverageFrom": [
       "src/**/*.{js,jsx,mjs}",
       "!src/docs/**"
