@@ -89,7 +89,7 @@ export default ({
     nodeSizeAccessor: 5,
     zoomToFit: type === "force",
     hoverAnnotation: true,
-    networkType: { type: type, orient: orient, iterations: 500, direction },
+    networkType: { type: type, orient: orient, iterations: 500, direction, nodePaddingRatio: 0.05 },
     legend: { legendGroups: areaLegendGroups },
     margin: { right: 130 }
   }
