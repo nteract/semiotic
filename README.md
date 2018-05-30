@@ -45,4 +45,4 @@ It may not be apparent in the commit logs but development of this library owes a
 * Shelby Sturgis
 * Tristan Reid
 
-[![BrowserStack](browserstack_logo.png "browserstack")](http://browserstack.com/) Using BrowserStack for browser compatibility testing
+[![BrowserStack](browserstack_logo.png =200 "browserstack")](http://browserstack.com/) Using BrowserStack for browser compatibility testing
