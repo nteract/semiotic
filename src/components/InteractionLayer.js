@@ -418,7 +418,7 @@ class InteractionLayer extends React.Component {
 InteractionLayer.propTypes = {
   name: PropTypes.string,
   interaction: PropTypes.object,
-  overlay: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
+  overlay: PropTypes.oneOfType([PropTypes.array, PropTypes.object, PropTypes.bool]),
   oColumns: PropTypes.object,
   xScale: PropTypes.func,
   yScale: PropTypes.func,
