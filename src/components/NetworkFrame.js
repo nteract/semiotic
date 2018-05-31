@@ -1376,7 +1376,7 @@ class NetworkFrame extends React.Component {
         customDoubleClickBehavior={customDoubleClickBehavior}
         points={projectedXYPoints}
         margin={margin}
-        overlay={overlay}
+        overlay={overlay && overlay.length > 0}
         backgroundGraphics={backgroundGraphics}
         foregroundGraphics={foregroundGraphics}
         beforeElements={beforeElements}
