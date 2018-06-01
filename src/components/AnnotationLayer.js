@@ -1,3 +1,4 @@
+// @flow
 // modules
 import React from "react"
 //import { load } from 'opentype.js'
@@ -7,6 +8,30 @@ import Legend from "./Legend"
 import Annotation from "./Annotation"
 import labella from "labella"
 import SpanOrDiv from "./SpanOrDiv"
+import { AnnotationHandling, AnnotationLayerProps } from "./types/annotationTypes"
+
+type AnnotationTypes = "marginalia" | "bump" | false
+
+type State = {
+  svgAnnotations: Array<Object>,
+  htmlAnnotations: Array<Object>,
+  adjustedAnnotationsKey?: string,
+  adjustedAnnotationsDataVersion?: string,
+  adjustedAnnotations: Array<Object>
+}
+
+type Props = AnnotationLayerProps
+
+function marginOffsetFn(orient, axisSettings, marginOffset) {
+  if (typeof marginOffset === "number") {
+    return marginOffset
+  }
+  if (axisSettings && axisSettings.find(d => d.props.orient === orient)) {
+    return 50
+  }
+  return 10
+}
+
 
 function adjustedAnnotationKeyMapper(d) {
   return d.props.noteData.id || `${d.props.noteData.x}-${d.props.noteData.y}`
@@ -30,27 +55,23 @@ function noteDataHeight(noteData, charWidth = 8, lineHeight = 20) {
 function objectStringKey(object) {
   let finalKey = ""
   Object.keys(object).forEach(key => {
-    finalKey +=
-      !object[key] || !object[key].toString
-        ? object[key]
-        : object[key].toString()
+    if (object[key]) {
+      const keyString = object[key].toString && object[key].toString() || object[key]
+    }
   })
 
   return finalKey
 }
 
-class AnnotationLayer extends React.Component {
-  constructor(props) {
+class AnnotationLayer extends React.Component<Props, State> {
+  constructor(props:Props) {
     super(props)
-
-    this.generateSVGAnnotations = this.generateSVGAnnotations.bind(this)
-    this.generateHTMLAnnotations = this.generateHTMLAnnotations.bind(this)
 
     this.state = {
       font: undefined,
       svgAnnotations: [],
       htmlAnnotations: [],
-      adjustedAnnotations: 0,
+      adjustedAnnotations: [],
       adjustedAnnotationsKey: "",
       adjustedAnnotationsDataVersion: ""
     }
@@ -70,7 +91,7 @@ class AnnotationLayer extends React.Component {
       }
     } */
 
-  generateSVGAnnotations(props, annotations) {
+  generateSVGAnnotations = (props:Props, annotations:Array<Object>):Array<Object> => {
     const renderedAnnotations = annotations
       .map((d, i) => props.svgAnnotationRule(d, i, props))
       .filter(d => d !== null && d !== undefined)
@@ -78,7 +99,7 @@ class AnnotationLayer extends React.Component {
     return renderedAnnotations
   }
 
-  generateHTMLAnnotations(props, annotations) {
+  generateHTMLAnnotations = (props:Props, annotations:Array<Object>):Array<Object> => {
     const renderedAnnotations = annotations
       .map((d, i) => props.htmlAnnotationRule(d, i, props))
       .filter(d => d !== null && d !== undefined)
@@ -86,9 +107,11 @@ class AnnotationLayer extends React.Component {
     return renderedAnnotations
   }
 
-  processAnnotations(adjustableAnnotations, annotationProcessor, props) {
+  processAnnotations = (adjustableAnnotations:Array<Object>, annotationProcessor:AnnotationHandling, props:Props) => {
 
-    if (annotationProcessor.type === false) {
+    const { layout } = annotationProcessor
+
+    if (layout.type === false) {
       return adjustableAnnotations
     }
 
@@ -101,32 +124,20 @@ class AnnotationLayer extends React.Component {
         ? { top: margin, left: margin, right: margin, bottom: margin }
         : margin
 
-    const { padding = 2 } = annotationProcessor
-
-    if (annotationProcessor.type === "bump") {
+    if (layout.type === "bump") {
       const adjustedAnnotations = bumpAnnotations(
         adjustableAnnotations,
         props,
-        annotationProcessor
+        layout
       )
       return adjustedAnnotations
-    } else if (annotationProcessor.type === "marginalia") {
-      const { marginOffset } = annotationProcessor
-      const finalOrientation =
-        !annotationProcessor.orient || annotationProcessor.orient === "nearest"
+    } else if (layout.type === "marginalia") {
+      const { marginOffset, orient = "nearest", characterWidth = 8, lineHeight = 20, padding = 2 } = layout
+      const finalOrientation = orient === "nearest"
           ? ["left", "right", "top", "bottom"]
-          : Array.isArray(annotationProcessor.orient)
-            ? annotationProcessor.orient
-            : [annotationProcessor.orient]
-      let marginOffsetFn = (orient, axisSettings) => {
-        if (axisSettings && axisSettings.find(d => d.props.orient === orient)) {
-          return 50
-        }
-        return 10
-      }
-      if (typeof marginOffset === "number") {
-        marginOffsetFn = () => marginOffset
-      }
+          : Array.isArray(orient)
+            ? orient
+            : [orient]
 
       const leftOn = finalOrientation.find(d => d === "left")
       const rightOn = finalOrientation.find(d => d === "right")
@@ -176,8 +187,8 @@ class AnnotationLayer extends React.Component {
                 noteY,
                 noteDataHeight(
                   d.props.noteData,
-                  annotationProcessor.characterWidth,
-                  annotationProcessor.lineHeight
+                  characterWidth,
+                  lineHeight
                 ) + padding
               )}
           )
@@ -197,8 +208,8 @@ class AnnotationLayer extends React.Component {
                 noteY,
                 noteDataHeight(
                   d.props.noteData,
-                  annotationProcessor.characterWidth,
-                  annotationProcessor.lineHeight
+                  characterWidth,
+                  lineHeight
                 ) + padding
               )
             }
@@ -219,7 +230,7 @@ class AnnotationLayer extends React.Component {
                 noteX,
                 noteDataWidth(
                   d.props.noteData,
-                  annotationProcessor.characterWidth
+                  characterWidth
                 ) + padding
               )
             }
@@ -240,7 +251,7 @@ class AnnotationLayer extends React.Component {
                 noteX,
                 noteDataWidth(
                   d.props.noteData,
-                  annotationProcessor.characterWidth
+                  characterWidth
                 ) + padding
               )
             }
@@ -253,8 +264,8 @@ class AnnotationLayer extends React.Component {
           d =>
             noteDataHeight(
               d.props.noteData,
-              annotationProcessor.characterWidth,
-              annotationProcessor.lineHeight
+              characterWidth,
+              lineHeight
             ) + padding
         )
       )
@@ -263,8 +274,8 @@ class AnnotationLayer extends React.Component {
           d =>
             noteDataHeight(
               d.props.noteData,
-              annotationProcessor.characterWidth,
-              annotationProcessor.lineHeight
+              characterWidth,
+              lineHeight
             ) + padding
         )
       )
@@ -273,7 +284,7 @@ class AnnotationLayer extends React.Component {
           d =>
             noteDataWidth(
               d.props.noteData,
-              annotationProcessor.characterWidth
+              characterWidth
             ) + padding
         )
       )
@@ -282,7 +293,7 @@ class AnnotationLayer extends React.Component {
           d =>
             noteDataWidth(
               d.props.noteData,
-              annotationProcessor.characterWidth
+              characterWidth
             ) + padding
         )
       )
@@ -299,7 +310,7 @@ class AnnotationLayer extends React.Component {
         note.props.noteData.nx =
           0 -
           leftSortedNodes[i].layerIndex * leftOffset -
-          marginOffsetFn("left", axes)
+          marginOffsetFn("left", axes, marginOffset)
         if (note.props.noteData.note) {
           note.props.noteData.note.orientation =
             note.props.noteData.note.orientation || "leftRight"
@@ -313,7 +324,7 @@ class AnnotationLayer extends React.Component {
         note.props.noteData.nx =
           size[0] +
           rightSortedNodes[i].layerIndex * rightOffset +
-          marginOffsetFn("right", axes)
+          marginOffsetFn("right", axes, marginOffset)
         if (note.props.noteData.note) {
           note.props.noteData.note.orientation =
             note.props.noteData.note.orientation || "leftRight"
@@ -327,7 +338,7 @@ class AnnotationLayer extends React.Component {
         note.props.noteData.ny =
           0 -
           topSortedNodes[i].layerIndex * topOffset -
-          marginOffsetFn("top", axes)
+          marginOffsetFn("top", axes, marginOffset)
       })
 
       bottomNodes.forEach((note, i) => {
@@ -335,14 +346,14 @@ class AnnotationLayer extends React.Component {
         note.props.noteData.ny =
           size[1] +
           bottomSortedNodes[i].layerIndex * bottomOffset +
-          marginOffsetFn("bottom", axes)
+          marginOffsetFn("bottom", axes, marginOffset)
       })
       return adjustableAnnotations
     }
     return adjustableAnnotations
   }
 
-  createAnnotations(props) {
+  createAnnotations = (props:Props) => {
     let renderedSVGAnnotations = this.state.svgAnnotations,
       renderedHTMLAnnotations = [],
       adjustedAnnotations = this.state.adjustedAnnotations,
@@ -351,15 +362,16 @@ class AnnotationLayer extends React.Component {
     const adjustedAnnotationsKey = this.state.adjustedAnnotationsKey,
       adjustedAnnotationsDataVersion = this.state.adjustedAnnotationsDataVersion
 
-    const { annotations, annotationHandling = false } = props
-    const annotationProcessor =
-      typeof annotationHandling !== "object"
-        ? { type: annotationHandling }
-        : annotationHandling
+    const { annotations, annotationHandling = false, pointSizeFunction,
+      labelSizeFunction, size, svgAnnotationRule, htmlAnnotationRule } = props
+
+    const annotationProcessor:AnnotationHandling =
+      typeof annotationHandling === "object" ? annotationHandling :
+ { layout: { type: annotationHandling }, dataVersion: "" }
 
     const { dataVersion = "" } = annotationProcessor
 
-    if (this.props.svgAnnotationRule) {
+    if (svgAnnotationRule) {
       const initialSVGAnnotations = this.generateSVGAnnotations(
         props,
         annotations
@@ -373,13 +385,12 @@ class AnnotationLayer extends React.Component {
       adjustableAnnotationsKey = `${adjustableAnnotations
         .map(adjustedAnnotationKeyMapper)
         .join(",")}${objectStringKey(
-        Object.assign(annotationProcessor, {
-          point: props.pointSizeFunction,
-          label: props.labelSizeFunction
-        })
-      )}${props.size}`
+        {...annotationProcessor, 
+          point: pointSizeFunction,
+          label: labelSizeFunction
+        })}${size.join(",")}`
 
-      if (annotationProcessor.type === false) {
+      if (annotationHandling === false) {
         adjustedAnnotations = adjustableAnnotations
       }
 
@@ -411,7 +422,7 @@ class AnnotationLayer extends React.Component {
       renderedSVGAnnotations = [...adjustedAnnotations, ...fixedAnnotations]
     }
 
-    if (this.props.htmlAnnotationRule) {
+    if (htmlAnnotationRule) {
       renderedHTMLAnnotations = this.generateHTMLAnnotations(props, annotations)
     }
 
@@ -428,24 +439,24 @@ class AnnotationLayer extends React.Component {
     this.createAnnotations(this.props)
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentWillReceiveProps(nextProps:Props) {
     this.createAnnotations(nextProps)
   }
 
   render() {
     const { svgAnnotations, htmlAnnotations } = this.state
-    const { useSpans, legendSettings, margin } = this.props
+    const { useSpans, legendSettings, margin, size } = this.props
 
     let renderedLegend
     if (legendSettings) {
       const positionHash = {
         left: [15, 15],
-        right: [this.props.size[0] + 15, 15]
+        right: [size[0] + 15, 15]
       }
       const { position = "right", title = "Legend" } = legendSettings
-      const legendPosition = positionHash[position] || position
+      const legendPosition = positionHash[position]
       renderedLegend = (
-        <g transform={`translate(${legendPosition})`}>
+        <g transform={`translate(${legendPosition.join(",")})`}>
           <Legend {...legendSettings} title={title} position={position} />
         </g>
       )
@@ -455,11 +466,9 @@ class AnnotationLayer extends React.Component {
       pointerEvents: "none",
       position: "absolute",
       left: `${margin.left}px`,
-      top: `${margin.top}px`
+      top: `${margin.top}px`,
+      overflow: "visible"
     }
-    //    if (useSpans) {
-    svgStyle.overflow = "visible"
-    //    }
 
     return (
       <SpanOrDiv
@@ -473,8 +482,8 @@ class AnnotationLayer extends React.Component {
       >
         <svg
           className="annotation-layer-svg"
-          height={this.props.size[1]}
-          width={this.props.size[0]}
+          height={size[1]}
+          width={size[0]}
           style={svgStyle}
         >
           <g>
@@ -489,8 +498,8 @@ class AnnotationLayer extends React.Component {
             background: "none",
             pointerEvents: "none",
             position: "absolute",
-            height: `${this.props.size[1]}px`,
-            width: `${this.props.size[0]}px`,
+            height: `${size[1]}px`,
+            width: `${size[0]}px`,
             left: `${margin.left}px`,
             top: `${margin.top}px`
           }}
@@ -503,13 +512,18 @@ class AnnotationLayer extends React.Component {
 }
 
 AnnotationLayer.propTypes = {
-  scale: PropTypes.func,
-  orient: PropTypes.string,
-  title: PropTypes.string,
-  format: PropTypes.string,
-  values: PropTypes.array,
-  properties: PropTypes.object,
-  position: PropTypes.array
+  useSpans: PropTypes.bool,
+  legendSettings: PropTypes.object,
+  margin: PropTypes.object,
+  size: PropTypes.array,
+  annotations: PropTypes.array,
+  annotationHandling: PropTypes.object,
+  pointSizeFunction: PropTypes.func,
+  labelSizeFunction: PropTypes.func,
+  svgAnnotationRule: PropTypes.func,
+  htmlAnnotationRule: PropTypes.func,
+  axes:  PropTypes.array
+
 }
 
 export default AnnotationLayer
