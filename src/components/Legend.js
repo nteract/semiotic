@@ -1,3 +1,5 @@
+//@flow
+
 import React from "react"
 import PropTypes from "prop-types"
 
@@ -6,20 +8,44 @@ const typeHash = {
   line: style => <line style={style} x1={0} y1={0} x2={20} y2={20} />
 }
 
-class Legend extends React.Component {
-  renderLegendGroup(legendGroup) {
+type SupportedLegendGlyps = "fill" | "line"
+
+type ItemType = SupportedLegendGlyps | function
+
+type LegendGroup = {
+  type?: ItemType,
+  styleFn: function,
+  items: Array<Object>,
+  label: string
+}
+
+type Props = {
+    legendGroups: Array<LegendGroup>,
+    title?: string,
+    width?: number,
+    height?: number,
+    orientation?: string
+}
+
+function renderType(item:Object, i:number, type:ItemType, styleFn:function) {
+  let renderedType
+  if (typeof type === "function") {
+    renderedType = type(item)
+  } else {
+    const Type = typeHash[type]
+    const style = styleFn(item, i)
+    renderedType = Type(style)
+  }
+  return renderedType
+}
+
+class Legend extends React.Component<Props, null> {
+  renderLegendGroup(legendGroup:LegendGroup) {
     const { type = "fill", styleFn, items } = legendGroup
     const renderedItems = []
     let itemOffset = 0
     items.forEach((item, i) => {
-      const Type = typeHash[type]
-      let renderedType
-      if (Type) {
-        const style = styleFn(item, i)
-        renderedType = Type(style)
-      } else {
-        renderedType = type(item)
-      }
+      const renderedType = renderType(item, i, type, styleFn)
       renderedItems.push(
         <g key={`legend-item-${i}`} transform={`translate(0,${itemOffset})`}>
           {renderedType}
@@ -33,19 +59,12 @@ class Legend extends React.Component {
     return renderedItems
   }
 
-  renderLegendGroupHorizontal(legendGroup) {
+  renderLegendGroupHorizontal(legendGroup:LegendGroup) {
     const { type = "fill", styleFn, items } = legendGroup
     const renderedItems = []
     let itemOffset = 0
     items.forEach((item, i) => {
-      const Type = typeHash[type]
-      let renderedType
-      if (Type) {
-        const style = styleFn(item, i)
-        renderedType = Type(style)
-      } else {
-        renderedType = type(item)
-      }
+      const renderedType = renderType(item, i, type, styleFn)
       renderedItems.push(
         <g key={`legend-item-${i}`} transform={`translate(${itemOffset},0)`}>
           {renderedType}
@@ -60,7 +79,7 @@ class Legend extends React.Component {
     return { items: renderedItems, offset: itemOffset }
   }
 
-  renderGroup({ legendGroups, width }) {
+  renderGroup({ legendGroups, width }:{ legendGroups: Array<LegendGroup>, width: number }) {
     let offset = 30
 
     const renderedGroups = []
@@ -107,7 +126,7 @@ class Legend extends React.Component {
     return renderedGroups
   }
 
-  renderHorizontalGroup({ legendGroups, title, height }) {
+  renderHorizontalGroup({ legendGroups, title, height }:{ legendGroups:Array<LegendGroup>, title: string, height: number }) {
     let offset = 0
 
     const renderedGroups = []
