@@ -1,10 +1,11 @@
 // @flow
 import React from "react"
+import type { Node } from "react"
 
 type Props = {
-  style: Object,
-  className: string,
-  children: Array<Object>,
+  style?: Object,
+  className?: string,
+  children: Node,
   span: boolean
 }
 

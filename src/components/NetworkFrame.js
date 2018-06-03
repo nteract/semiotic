@@ -1284,7 +1284,6 @@ class NetworkFrame extends React.Component {
       customHoverBehavior,
       size,
       matte,
-      renderKey,
       hoverAnnotation,
       beforeElements,
       afterElements,
@@ -1362,7 +1361,6 @@ class NetworkFrame extends React.Component {
         className={className}
         finalFilterDefs={finalFilterDefs}
         frameKey={"none"}
-        renderKeyFn={renderKey}
         projectedCoordinateNames={projectedCoordinateNames}
         defaultSVGRule={this.defaultNetworkSVGRule.bind(this)}
         defaultHTMLRule={this.defaultNetworkHTMLRule.bind(this)}

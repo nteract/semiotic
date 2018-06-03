@@ -8,9 +8,43 @@ import Legend from "./Legend"
 import Annotation from "./Annotation"
 import labella from "labella"
 import SpanOrDiv from "./SpanOrDiv"
-import { AnnotationHandling, AnnotationLayerProps } from "./types/annotationTypes"
+//import { AnnotationHandling, AnnotationLayerProps } from "./types/annotationTypes"
 
 type AnnotationTypes = "marginalia" | "bump" | false
+
+type AnnotationLayerProps = {
+  useSpans: boolean,
+  legendSettings?: {
+    position: "right" | "left",
+    title: string,
+    legendGroups: Array<Object>
+  },
+  margin: Object,
+  size: Array<number>,
+  axes?: Array<Object>,
+  annotationHandling?: AnnotationHandling | AnnotationTypes,
+  annotations: Array<Object>,
+  pointSizeFunction?: Function,
+  labelSizeFunction?: Function,
+  svgAnnotationRule: Function,
+  htmlAnnotationRule: Function
+}
+
+type AnnotationHandling = {
+  dataVersion?: string,
+  layout: {
+    type: AnnotationTypes,
+    orient?: "nearest" | "left" | "right" | "top" | "bottom" | Array<string>,
+    characterWidth?: number,
+    lineWidth?: number,
+    lineHeight?: number,
+    padding?: number,
+    iterations?: number,
+    pointSizeFunction?: Function,
+    labelSizeFunction?: Function,
+    marginOffset?: number
+  }
+}
 
 type State = {
   svgAnnotations: Array<Object>,
@@ -32,7 +66,6 @@ function marginOffsetFn(orient, axisSettings, marginOffset) {
   return 10
 }
 
-
 function adjustedAnnotationKeyMapper(d) {
   return d.props.noteData.id || `${d.props.noteData.x}-${d.props.noteData.y}`
 }
@@ -52,19 +85,8 @@ function noteDataHeight(noteData, charWidth = 8, lineHeight = 20) {
   )
 }
 
-function objectStringKey(object) {
-  let finalKey = ""
-  Object.keys(object).forEach(key => {
-    if (object[key]) {
-      const keyString = object[key].toString && object[key].toString() || object[key]
-    }
-  })
-
-  return finalKey
-}
-
 class AnnotationLayer extends React.Component<Props, State> {
-  constructor(props:Props) {
+  constructor(props: Props) {
     super(props)
 
     this.state = {
@@ -91,7 +113,10 @@ class AnnotationLayer extends React.Component<Props, State> {
       }
     } */
 
-  generateSVGAnnotations = (props:Props, annotations:Array<Object>):Array<Object> => {
+  generateSVGAnnotations = (
+    props: Props,
+    annotations: Array<Object>
+  ): Array<Object> => {
     const renderedAnnotations = annotations
       .map((d, i) => props.svgAnnotationRule(d, i, props))
       .filter(d => d !== null && d !== undefined)
@@ -99,7 +124,10 @@ class AnnotationLayer extends React.Component<Props, State> {
     return renderedAnnotations
   }
 
-  generateHTMLAnnotations = (props:Props, annotations:Array<Object>):Array<Object> => {
+  generateHTMLAnnotations = (
+    props: Props,
+    annotations: Array<Object>
+  ): Array<Object> => {
     const renderedAnnotations = annotations
       .map((d, i) => props.htmlAnnotationRule(d, i, props))
       .filter(d => d !== null && d !== undefined)
@@ -107,9 +135,12 @@ class AnnotationLayer extends React.Component<Props, State> {
     return renderedAnnotations
   }
 
-  processAnnotations = (adjustableAnnotations:Array<Object>, annotationProcessor:AnnotationHandling, props:Props) => {
-
-    const { layout } = annotationProcessor
+  processAnnotations = (
+    adjustableAnnotations: Array<Object>,
+    annotationProcessor: AnnotationHandling,
+    props: Props
+  ) => {
+    const { layout = { type: false } } = annotationProcessor
 
     if (layout.type === false) {
       return adjustableAnnotations
@@ -132,8 +163,15 @@ class AnnotationLayer extends React.Component<Props, State> {
       )
       return adjustedAnnotations
     } else if (layout.type === "marginalia") {
-      const { marginOffset, orient = "nearest", characterWidth = 8, lineHeight = 20, padding = 2 } = layout
-      const finalOrientation = orient === "nearest"
+      const {
+        marginOffset,
+        orient = "nearest",
+        characterWidth = 8,
+        lineHeight = 20,
+        padding = 2
+      } = layout
+      const finalOrientation =
+        orient === "nearest"
           ? ["left", "right", "top", "bottom"]
           : Array.isArray(orient)
             ? orient
@@ -179,19 +217,14 @@ class AnnotationLayer extends React.Component<Props, State> {
         maxPos: bottomOn ? size[1] : size[1] + margin.bottom
       })
         .nodes(
-          leftNodes.map(
-            d =>
-              {
-                const noteY = d.props.noteData.y[0] || d.props.noteData.y
-                return new labella.Node(
-                noteY,
-                noteDataHeight(
-                  d.props.noteData,
-                  characterWidth,
-                  lineHeight
-                ) + padding
-              )}
-          )
+          leftNodes.map(d => {
+            const noteY = d.props.noteData.y[0] || d.props.noteData.y
+            return new labella.Node(
+              noteY,
+              noteDataHeight(d.props.noteData, characterWidth, lineHeight) +
+                padding
+            )
+          })
         )
         .compute()
 
@@ -200,20 +233,14 @@ class AnnotationLayer extends React.Component<Props, State> {
         maxPos: size[1] + margin.bottom
       })
         .nodes(
-          rightNodes.map(
-            d =>
-            {
-              const noteY = d.props.noteData.y[0] || d.props.noteData.y
-              return new labella.Node(
-                noteY,
-                noteDataHeight(
-                  d.props.noteData,
-                  characterWidth,
-                  lineHeight
-                ) + padding
-              )
-            }
-          )
+          rightNodes.map(d => {
+            const noteY = d.props.noteData.y[0] || d.props.noteData.y
+            return new labella.Node(
+              noteY,
+              noteDataHeight(d.props.noteData, characterWidth, lineHeight) +
+                padding
+            )
+          })
         )
         .compute()
 
@@ -222,19 +249,13 @@ class AnnotationLayer extends React.Component<Props, State> {
         maxPos: size[0] + margin.right
       })
         .nodes(
-          topNodes.map(
-            d =>
-            {
-              const noteX = d.props.noteData.x[0] || d.props.noteData.x
-              return new labella.Node(
-                noteX,
-                noteDataWidth(
-                  d.props.noteData,
-                  characterWidth
-                ) + padding
-              )
-            }
-          )
+          topNodes.map(d => {
+            const noteX = d.props.noteData.x[0] || d.props.noteData.x
+            return new labella.Node(
+              noteX,
+              noteDataWidth(d.props.noteData, characterWidth) + padding
+            )
+          })
         )
         .compute()
 
@@ -243,58 +264,38 @@ class AnnotationLayer extends React.Component<Props, State> {
         maxPos: rightOn ? size[0] : size[0] + margin.right
       })
         .nodes(
-          bottomNodes.map(
-            d =>
-            {
-              const noteX = d.props.noteData.x[0] || d.props.noteData.x
-              return new labella.Node(
-                noteX,
-                noteDataWidth(
-                  d.props.noteData,
-                  characterWidth
-                ) + padding
-              )
-            }
-          )
+          bottomNodes.map(d => {
+            const noteX = d.props.noteData.x[0] || d.props.noteData.x
+            return new labella.Node(
+              noteX,
+              noteDataWidth(d.props.noteData, characterWidth) + padding
+            )
+          })
         )
         .compute()
 
       const bottomOffset = Math.max(
         ...bottomNodes.map(
           d =>
-            noteDataHeight(
-              d.props.noteData,
-              characterWidth,
-              lineHeight
-            ) + padding
+            noteDataHeight(d.props.noteData, characterWidth, lineHeight) +
+            padding
         )
       )
       const topOffset = Math.max(
         ...topNodes.map(
           d =>
-            noteDataHeight(
-              d.props.noteData,
-              characterWidth,
-              lineHeight
-            ) + padding
+            noteDataHeight(d.props.noteData, characterWidth, lineHeight) +
+            padding
         )
       )
       const leftOffset = Math.max(
         ...leftNodes.map(
-          d =>
-            noteDataWidth(
-              d.props.noteData,
-              characterWidth
-            ) + padding
+          d => noteDataWidth(d.props.noteData, characterWidth) + padding
         )
       )
       const rightOffset = Math.max(
         ...rightNodes.map(
-          d =>
-            noteDataWidth(
-              d.props.noteData,
-              characterWidth
-            ) + padding
+          d => noteDataWidth(d.props.noteData, characterWidth) + padding
         )
       )
 
@@ -353,7 +354,7 @@ class AnnotationLayer extends React.Component<Props, State> {
     return adjustableAnnotations
   }
 
-  createAnnotations = (props:Props) => {
+  createAnnotations = (props: Props) => {
     let renderedSVGAnnotations = this.state.svgAnnotations,
       renderedHTMLAnnotations = [],
       adjustedAnnotations = this.state.adjustedAnnotations,
@@ -362,12 +363,18 @@ class AnnotationLayer extends React.Component<Props, State> {
     const adjustedAnnotationsKey = this.state.adjustedAnnotationsKey,
       adjustedAnnotationsDataVersion = this.state.adjustedAnnotationsDataVersion
 
-    const { annotations, annotationHandling = false, pointSizeFunction,
-      labelSizeFunction, size, svgAnnotationRule, htmlAnnotationRule } = props
+    const {
+      annotations,
+      annotationHandling = false,
+      size,
+      svgAnnotationRule,
+      htmlAnnotationRule
+    } = props
 
-    const annotationProcessor:AnnotationHandling =
-      typeof annotationHandling === "object" ? annotationHandling :
- { layout: { type: annotationHandling }, dataVersion: "" }
+    const annotationProcessor: AnnotationHandling =
+      typeof annotationHandling === "object"
+        ? annotationHandling
+        : { layout: { type: annotationHandling }, dataVersion: "" }
 
     const { dataVersion = "" } = annotationProcessor
 
@@ -384,11 +391,7 @@ class AnnotationLayer extends React.Component<Props, State> {
       )
       adjustableAnnotationsKey = `${adjustableAnnotations
         .map(adjustedAnnotationKeyMapper)
-        .join(",")}${objectStringKey(
-        {...annotationProcessor, 
-          point: pointSizeFunction,
-          label: labelSizeFunction
-        })}${size.join(",")}`
+        .join(",")}${JSON.stringify(annotationProcessor)}${size.join(",")}`
 
       if (annotationHandling === false) {
         adjustedAnnotations = adjustableAnnotations
@@ -439,7 +442,7 @@ class AnnotationLayer extends React.Component<Props, State> {
     this.createAnnotations(this.props)
   }
 
-  componentWillReceiveProps(nextProps:Props) {
+  componentWillReceiveProps(nextProps: Props) {
     this.createAnnotations(nextProps)
   }
 
@@ -522,8 +525,7 @@ AnnotationLayer.propTypes = {
   labelSizeFunction: PropTypes.func,
   svgAnnotationRule: PropTypes.func,
   htmlAnnotationRule: PropTypes.func,
-  axes:  PropTypes.array
-
+  axes: PropTypes.array
 }
 
 export default AnnotationLayer
