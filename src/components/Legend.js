@@ -10,11 +10,11 @@ const typeHash = {
 
 type SupportedLegendGlyps = "fill" | "line"
 
-type ItemType = SupportedLegendGlyps | function
+type ItemType = SupportedLegendGlyps | Function
 
 type LegendGroup = {
   type?: ItemType,
-  styleFn: function,
+  styleFn: Function,
   items: Array<Object>,
   label: string
 }
@@ -27,7 +27,7 @@ type Props = {
     orientation?: string
 }
 
-function renderType(item:Object, i:number, type:ItemType, styleFn:function) {
+function renderType(item:Object, i:number, type:ItemType, styleFn:Function) {
   let renderedType
   if (typeof type === "function") {
     renderedType = type(item)

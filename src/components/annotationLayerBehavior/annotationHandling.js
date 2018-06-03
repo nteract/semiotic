@@ -1,7 +1,40 @@
 // @flow
 
 import labeler from "./d3labeler"
-import { AnnotationHandling, AnnotationLayerProps } from "../types/annotationTypes"
+// import { AnnotationHandling, AnnotationLayerProps } from "../types/annotationTypes"
+
+type AnnotationTypes = "marginalia" | "bump" | false
+
+type AnnotationLayerProps = {
+  useSpans: boolean,
+  legendSettings?: {
+    position: "right" | "left",
+    title: string,
+    legendGroups: Array<Object>
+  },
+  margin: Object,
+  size: Array<number>,
+  axes?: Array<Object>,
+  annotationHandling?: Object | AnnotationTypes,
+  annotations: Array<Object>,
+  pointSizeFunction?: Function,
+  labelSizeFunction?: Function,
+  svgAnnotationRule: Function,
+  htmlAnnotationRule: Function
+}
+
+type Layout = {
+  type: AnnotationTypes,
+  orient?: "nearest" | "left" | "right" | "top" | "bottom" | Array<string>,
+  characterWidth?: number,
+  lineWidth?: number,
+  lineHeight?: number,
+  padding?: number,
+  iterations?: number,
+  pointSizeFunction?: Function,
+  labelSizeFunction?: Function,
+  marginOffset?: number
+}
 
 const basicLabelSizeFunction = (
   noteData,
@@ -19,7 +52,11 @@ const basicLabelSizeFunction = (
   return [width, height]
 }
 
-export function bumpAnnotations(adjustableNotes:Array<Object>, props:AnnotationLayerProps, processor:AnnotationHandling) {
+export function bumpAnnotations(
+  adjustableNotes: Array<Object>,
+  props: AnnotationLayerProps,
+  processor: Layout
+) {
   const {
     size,
     pointSizeFunction: propsPointSizeFunction,
@@ -32,7 +69,7 @@ export function bumpAnnotations(adjustableNotes:Array<Object>, props:AnnotationL
     lineHeight = 20,
     iterations = 500,
     pointSizeFunction = propsPointSizeFunction,
-    labelSizeFunction = propsLabelSizeFunction
+    labelSizeFunction = propsLabelSizeFunction || basicLabelSizeFunction
   } = processor
 
   const labels = adjustableNotes.map((d, i) => {
@@ -71,7 +108,7 @@ export function bumpAnnotations(adjustableNotes:Array<Object>, props:AnnotationL
     y: d.props.noteData.y,
     fx: d.props.noteData.x,
     fy: d.props.noteData.y,
-    r: pointSizeFunction && pointSizeFunction(d.props.noteData) || 5,
+    r: (pointSizeFunction && pointSizeFunction(d.props.noteData)) || 5,
     type: "point",
     originalNote: d
   }))
