@@ -15,6 +15,8 @@
     "test:watch": "npm run test -- --watch",
     "test:coverage": "npm run test -- --coverage",
     "test:old": "node scripts/test.js --env=jsdom",
+    "pretest:dist": "npm run dist",
+    "test:dist": "echo 'var self = this; require(\"./dist/semiotic.js\");' | node -",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "flow": "flow",
@@ -24,7 +26,8 @@
     "deploy-docs": "sh ./scripts/docs.sh",
     "ci-deploy-docs": "sh ./scripts/docs-ci.sh",
     "gh-pages": "REACT_APP_GH_PAGES_PATH='semiotic' npm run build",
-    "prepublishOnly": "rollup -c && uglifyjs ./dist/semiotic.js -o ./dist/semiotic.min.js && rm ./dist/semiotic.js"
+    "dist": "rollup -c && uglifyjs ./dist/semiotic.js -o ./dist/semiotic.min.js",
+    "prepublishOnly": "npm run dist && rm ./dist/semiotic.js"
   },
   "repository": {
     "type": "git",
