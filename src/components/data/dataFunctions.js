@@ -17,6 +17,8 @@ import {
 import { contouring, hexbinning, heatmapping } from "../svg/areaDrawing"
 import { max, min, extent } from "d3-array"
 
+import type { ProjectedPoint } from "../types/generalTypes"
+
 const builtInTransformations = {
   "stackedarea": stackedArea,
   "stackedarea-invert": stackedArea,
@@ -43,30 +45,6 @@ export const stringToFn = (
   return typeof accessor !== "function" ? (d: Object) => d[accessor] : accessor
 }
 
-type LineTypes =
-  | "stackedarea"
-  | "stackedarea-invert"
-  | "stackedpercent"
-  | "stackedpercent-invert"
-  | "linepercent"
-  | "difference"
-  | "bumparea"
-  | "bumpline"
-  | "bumparea-invert"
-  | "line"
-// | Function
-
-type LineSettings = {
-  type: LineTypes
-}
-
-type AreaTypes = "contour" | "heatmap" | "hexbin"
-// | Function
-
-type AreaSettings = {
-  type: AreaTypes
-}
-
 type CalculateDataTypes = {
   lineDataAccessor: Function,
   xAccessor: Function,
@@ -74,29 +52,18 @@ type CalculateDataTypes = {
   areas?: Array<Object>,
   points?: Array<Object>,
   lines?: Array<Object>,
-  lineType: LineSettings,
+  lineType: Object,
   showLinePoints?: boolean,
   xExtent?: Array<number> | Object,
   yExtent?: Array<number> | Object,
   invertX?: boolean,
   invertY?: boolean,
   areaDataAccessor: Function,
-  areaType: AreaSettings,
+  areaType: Object,
   adjustedSize: Array<number>,
   xScaleType: Function,
   yScaleType: Function,
   defined?: Function
-}
-
-type ProjectedPoint = {
-  x: string,
-  y: string,
-  yTop?: string,
-  yMiddle?: string,
-  yBottom?: string,
-  parentArea?: Object,
-  parentLine?: Object,
-  percent?: number
 }
 
 export const calculateDataExtent = ({

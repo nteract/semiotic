@@ -1,3 +1,5 @@
+// @flow
+
 import React from "react"
 
 import { drawAreaConnector } from "../svg/SvgHelper"
@@ -11,11 +13,70 @@ import {
 } from "./summaryLayouts"
 import { axisPieces, axisLines } from "../visualizationLayerBehavior/axis"
 
-function roundToTenth(number) {
+import type { Node } from "react"
+
+import type { MarginType, ProjectionTypes } from "../types/generalTypes"
+
+type CalculateMarginTypes = {
+  margin?: number | Object,
+  axis?: Object,
+  axes?: Array<Object>,
+  title: Object,
+  oLabel?: boolean,
+  projection?: ProjectionTypes
+}
+
+type AdjustedPositionSizeTypes = {
+  size: Array<number>,
+  position?: Array<number>,
+  margin: MarginType,
+  projection?: ProjectionTypes
+}
+
+type ORFrameConnectionRendererTypes = {
+  type: Object,
+  data: Object,
+  renderMode: Function,
+  eventListenersGenerator: Function,
+  styleFn: Function,
+  classFn: Function,
+  projection: ProjectionTypes,
+  canvasRender: Function,
+  canvasDrawing: Array<Object>,
+  baseMarkProps: Object
+}
+
+type ORFrameSummaryRendererTypes = {
+  data: Array<Object>,
+  type: Object,
+  renderMode: Function,
+  eventListenersGenerator: Function,
+  styleFn: Function,
+  classFn: Function,
+  positionFn: Function,
+  projection: ProjectionTypes,
+  adjustedSize: Array<number>,
+  chartSize: number,
+  baseMarkProps: Object
+}
+
+type ORFrameAxisGeneratorTypes = {
+  projection: ProjectionTypes,
+  axis: Object,
+  adjustedSize: Array<number>,
+  size: Array<number>,
+  rScale: Function,
+  rScaleType: Function,
+  pieceType: Object,
+  rExtent: Array<number>,
+  data: Array<Object>
+}
+
+function roundToTenth(number: number) {
   return Math.round(number * 10) / 10
 }
 
-export const circlePath = (cx, cy, r) =>
+export const circlePath = (cx: number, cy: number, r: number) =>
   `${[
     "M",
     roundToTenth(cx - r),
@@ -38,7 +99,15 @@ export const circlePath = (cx, cy, r) =>
     0
   ].join(" ")}Z`
 
-export const drawMarginPath = ({ margin, size, inset = 5 }) => {
+export const drawMarginPath = ({
+  margin,
+  size,
+  inset = 5
+}: {
+  margin: Object,
+  size: Array<number>,
+  inset: number
+}) => {
   const iSize = [size[0] - inset, size[1] - inset]
   return `M0,0 h${size[0]} v${size[1]} h-${size[0]}Z M${margin.left -
     inset},${margin.top - inset} v${size[1] +
@@ -50,7 +119,10 @@ export const drawMarginPath = ({ margin, size, inset = 5 }) => {
     margin.right} v-${iSize[1] + inset * 3 - margin.top - margin.bottom}Z`
 }
 
-export const trueAxis = (orient, projection) => {
+export const trueAxis = (
+  orient: "right" | "left" | "top" | "bottom",
+  projection?: ProjectionTypes
+) => {
   if (projection === "horizontal" && ["top", "bottom"].indexOf(orient) === -1) {
     return "bottom"
   } else if (
@@ -73,33 +145,39 @@ export const calculateMargin = ({
   title,
   oLabel,
   projection
-}) => {
+}: CalculateMarginTypes): MarginType => {
   if (margin !== undefined) {
-    let tempMargin = margin
     if (typeof margin !== "object") {
-      tempMargin = { top: margin, bottom: margin, left: margin, right: margin }
+      return { top: margin, bottom: margin, left: margin, right: margin }
+    } else if (typeof margin === "object") {
+      return Object.assign({ top: 0, bottom: 0, left: 0, right: 0 }, margin)
     }
-    return Object.assign({ top: 0, bottom: 0, left: 0, right: 0 }, tempMargin)
   }
   const finalMargin = { top: 0, bottom: 0, left: 0, right: 0 }
-  if (title && !(typeof title === "string" && title.length === 0)) {
-    const { orient = "top" } = title
-    finalMargin[orient] += 40
-  }
-  let orient = trueAxis(null, projection)
+
+  let orient = trueAxis("left", projection)
   if (axis && projection !== "radial") {
     const additionalMargin = axis.label ? 60 : 50
     orient = trueAxis(axis.orient, projection)
-    finalMargin[orient] += additionalMargin
+    finalMargin[orient] = additionalMargin
   }
 
   if (axes) {
     axes.forEach(axisObj => {
       const axisObjAdditionMargin = axisObj.label ? 60 : 50
       orient = axisObj.orient
-      finalMargin[orient] += axisObjAdditionMargin
+      finalMargin[orient] = axisObjAdditionMargin
     })
   }
+
+  if (
+    title.title &&
+    !(typeof title.title === "string" && title.title.length === 0)
+  ) {
+    const { orient = "top" } = title
+    finalMargin[orient] += 40
+  }
+
   if (oLabel && projection !== "radial") {
     if (orient === "bottom" || orient === "top") {
       finalMargin.left += 50
@@ -110,33 +188,41 @@ export const calculateMargin = ({
   return finalMargin
 }
 
-export function objectifyType(type) {
-  return typeof type === "object" && type !== null ? type : { type: type }
+export function objectifyType(type: string | Object) {
+  return typeof type === "object" ? type : { type: type }
 }
 
 export function generateOrdinalFrameEventListeners(
-  customHoverBehavior,
-  customClickBehavior
+  customHoverBehavior: Function,
+  customClickBehavior: Function
 ) {
   let eventListenersGenerator = () => ({})
 
   if (customHoverBehavior || customClickBehavior) {
-    eventListenersGenerator = (d, i) => ({
+    eventListenersGenerator = (d: Object, i: number) => ({
       onMouseEnter: customHoverBehavior
-        ? () => customHoverBehavior(d, i)
+        ? () => customHoverBehavior((d: Object), (i: number))
         : undefined,
       onMouseLeave: customHoverBehavior
         ? () => customHoverBehavior(undefined)
         : undefined,
-      onClick: customClickBehavior ? () => customClickBehavior(d, i) : undefined
+      onClick: customClickBehavior
+        ? () => customClickBehavior((d: Object), (i: number))
+        : undefined
     })
   }
   return eventListenersGenerator
 }
 
-export function keyAndObjectifyBarData({ data, renderKey = (d, i) => i }) {
+export function keyAndObjectifyBarData({
+  data,
+  renderKey = (d?: Object, i: number) => i
+}: {
+  data: Array<Object>,
+  renderKey: Function
+}): Array<Object> {
   return data
-    ? data.map((d, i) => {
+    ? data.map((d: Object, i: number) => {
         const appliedKey = renderKey(d, i)
         if (typeof d !== "object") {
           return {
@@ -154,23 +240,10 @@ export function adjustedPositionSize({
   size = [500, 500],
   position = [0, 0],
   margin,
-  axis,
-  axes,
-  title,
-  oLabel,
   projection
-}) {
-  const finalMargin = calculateMargin({
-    margin,
-    axis,
-    axes,
-    title,
-    oLabel,
-    projection
-  })
-
-  const heightAdjust = finalMargin.top + finalMargin.bottom
-  const widthAdjust = finalMargin.left + finalMargin.right
+}: AdjustedPositionSizeTypes) {
+  const heightAdjust = margin.top + margin.bottom
+  const widthAdjust = margin.left + margin.right
 
   const adjustedPosition = [position[0], position[1]]
   let adjustedSize = [size[0] - widthAdjust, size[1] - heightAdjust]
@@ -182,9 +255,15 @@ export function adjustedPositionSize({
   return { adjustedPosition, adjustedSize }
 }
 
-export function generateFrameTitle({ title: rawTitle = "", size }) {
+export function generateFrameTitle({
+  title: rawTitle = { title: "", orient: "top" },
+  size
+}: {
+  title: Object,
+  size: Array<number>
+}) {
   let finalTitle = null
-  const { title = rawTitle, orient = "top" } = rawTitle
+  const { title, orient = "top" } = rawTitle
   let x = 0,
     y = 0,
     transform
@@ -240,7 +319,7 @@ export function orFrameConnectionRenderer({
   canvasRender,
   canvasDrawing,
   baseMarkProps
-}) {
+}: ORFrameConnectionRendererTypes) {
   if (!type.type) {
     return null
   }
@@ -322,7 +401,10 @@ export function orFrameConnectionRenderer({
                 baseClass: "xyframe-line",
                 tx: 0,
                 ty: 0,
-                d: { source: piece.piece.data, target: matchingPiece.piece.data },
+                d: {
+                  source: piece.piece.data,
+                  target: matchingPiece.piece.data
+                },
                 markProps: { d: markD, markType: "path" },
                 styleFn: styleFn,
                 renderFn: renderMode,
@@ -376,7 +458,7 @@ export function orFrameSummaryRenderer({
   adjustedSize,
   chartSize,
   baseMarkProps
-}) {
+}: ORFrameSummaryRendererTypes) {
   let summaryRenderFn
   if (typeof type.type === "function") {
     summaryRenderFn = type.type
@@ -388,7 +470,7 @@ export function orFrameSummaryRenderer({
         type.type
       } - Must be a function or one of the following strings: ${Object.keys(
         summaryRenderHash
-      )}`
+      ).join(", ")}`
     )
     return
   }
@@ -417,9 +499,9 @@ export const orFrameAxisGenerator = ({
   pieceType,
   rExtent,
   data
-}) => {
+}: ORFrameAxisGeneratorTypes) => {
   if (!axis) return { axis: null, axesTickLines: null }
-  let generatedAxis, axesTickLines
+  let generatedAxis: Node, axesTickLines: Array<Object>
   if (projection !== "radial" && axis) {
     axesTickLines = []
     const axisPosition = [0, 0]
@@ -516,7 +598,9 @@ export const orFrameAxisGenerator = ({
         let ref = ""
         if (label && i === tickValues.length - 1) {
           const labelSettings =
-            typeof label === "string" ? { name: label } : label
+            typeof label === "string"
+              ? { name: label, locationDistance: 15 }
+              : label
           const { locationDistance = 15 } = labelSettings
           ref = `${Math.random().toString()} `
           axisLabel = (

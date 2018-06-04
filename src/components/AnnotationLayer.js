@@ -8,9 +8,10 @@ import Legend from "./Legend"
 import Annotation from "./Annotation"
 import labella from "labella"
 import SpanOrDiv from "./SpanOrDiv"
-//import { AnnotationHandling, AnnotationLayerProps } from "./types/annotationTypes"
-
-type AnnotationTypes = "marginalia" | "bump" | false
+import type {
+  AnnotationHandling,
+  AnnotationTypes
+} from "./types/annotationTypes"
 
 type AnnotationLayerProps = {
   useSpans: boolean,
@@ -28,22 +29,6 @@ type AnnotationLayerProps = {
   labelSizeFunction?: Function,
   svgAnnotationRule: Function,
   htmlAnnotationRule: Function
-}
-
-type AnnotationHandling = {
-  dataVersion?: string,
-  layout: {
-    type: AnnotationTypes,
-    orient?: "nearest" | "left" | "right" | "top" | "bottom" | Array<string>,
-    characterWidth?: number,
-    lineWidth?: number,
-    lineHeight?: number,
-    padding?: number,
-    iterations?: number,
-    pointSizeFunction?: Function,
-    labelSizeFunction?: Function,
-    marginOffset?: number
-  }
 }
 
 type State = {

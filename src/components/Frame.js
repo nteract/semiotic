@@ -9,11 +9,12 @@ import PropTypes from "prop-types"
 
 import SpanOrDiv from "./SpanOrDiv"
 import type { Node } from "react"
+import type { MarginType } from "./types/generalTypes"
 
 type Props = {
   name?: string,
-  title?: string | Node,
-  margin: { left: number, right: number, top: number, bottom: number },
+  title: Object,
+  margin: MarginType,
   size: Array<number>,
   annotationSettings: Object,
   annotations?: Array<Object>,
@@ -201,7 +202,11 @@ class Frame extends React.Component<Props, State> {
         ]}
       />
     )
-    const generatedTitle = generateFrameTitle({ title, size: size })
+
+    const generatedTitle = generateFrameTitle({
+      title: title,
+      size: size
+    })
 
     return (
       <SpanOrDiv
