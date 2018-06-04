@@ -20,7 +20,7 @@ type Props = {
   size: Array<number>,
   margin: Object,
   canvasPostProcess?: string | Function,
-  title?: Object | string,
+  title?: ?Object | string,
   ariaTitle?: string,
   matte?: Node,
   matteClip?: boolean,
