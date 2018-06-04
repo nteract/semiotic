@@ -1,9 +1,10 @@
+// @flow
 import React from "react"
 import json2csv from "json2csv"
 
 import PropTypes from "prop-types"
 
-export const downloadCSV = (csvName, data) => {
+export const downloadCSV = (csvName: string, data: *) => {
   json2csv(Object.assign({}, { data: data }), (err, csv) => {
     const blob = new Blob([csv], { type: "text/csv" })
 
@@ -13,9 +14,9 @@ export const downloadCSV = (csvName, data) => {
     dlink.onclick = () => {
       // revokeObjectURL needs a delay to work properly
       const revokeFn = () => {
-        window.URL.revokeObjectURL(this.href)
+        window.URL.revokeObjectURL(dlink.href)
       }
-      setTimeout(revokeFn.bind(this), 1500)
+      setTimeout(revokeFn, 1500)
     }
 
     dlink.click()
@@ -23,7 +24,16 @@ export const downloadCSV = (csvName, data) => {
   })
 }
 
-class DownloadButton extends React.Component {
+type DownloadButtonProps = {
+  csvName: string,
+  width?: string,
+  label: string,
+  data: *,
+}
+
+class DownloadButton extends React.Component<DownloadButtonProps, null> {
+
+  onClick = () => downloadCSV(this.props.csvName, this.props.data)
 
   render() {
     const { csvName, data, width, label = "Download" } = this.props
@@ -31,8 +41,7 @@ class DownloadButton extends React.Component {
       <div className="download-div" style={{ width }}>
         <button
           alt="download"
-          onClick={downloadCSV.bind(this, csvName, data)}
-          className="download-data-button"
+          onClick={this.onClick}
         >
           <a>{label}</a>
         </button>
@@ -40,6 +49,7 @@ class DownloadButton extends React.Component {
     )
   }
 }
+
 
 DownloadButton.propTypes = {
   csvName: PropTypes.string,
