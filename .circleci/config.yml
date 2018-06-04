@@ -1,0 +1,34 @@
+# Javascript Node CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-javascript/ for more details
+#
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/node:8@sha256:23f55ec43b896824088c2dcd6b0f88b7c34c6f7e5fa761d98244a5ef434f93e1
+
+    working_directory: ~/semiotic
+
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "package.json" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
+      - run: npm install
+
+      - save_cache:
+          paths:
+            - ~/.npm
+            - ./node_modules
+            - ~/.jestcache
+          key: v1-dependencies-{{ checksum "package.json" }}
+
+      # run tests!
+      - run: npm run test -- --cacheDirectory=~/.jestcache
+      - run: npm run flow
