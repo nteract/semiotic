@@ -36,7 +36,7 @@ class DownloadButton extends React.Component<DownloadButtonProps, null> {
   onClick = () => downloadCSV(this.props.csvName, this.props.data)
 
   render() {
-    const { csvName, data, width, label = "Download" } = this.props
+    const { width, label = "Download" } = this.props
     return (
       <div className="download-div" style={{ width }}>
         <button
