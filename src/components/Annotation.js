@@ -1,5 +1,5 @@
 // @flow
-import * as React from "react"
+import React from "react"
 import AnnotationLabel from "react-annotation/lib/Types/AnnotationLabel"
 
 type Props = {
