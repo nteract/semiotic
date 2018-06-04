@@ -19,3 +19,5 @@ examples/dist/bundle.js
 *.sublime-project
 *.sublime-workspace
 dist/semiotic.js
+
+/dist
