@@ -198,12 +198,6 @@
       "node"
     ]
   },
-  "babel": {
-    "presets": [
-      "flow",
-      "react-app"
-    ]
-  },
   "eslintConfig": {
     "extends": "react-app"
   }
