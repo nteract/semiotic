@@ -1,3 +1,5 @@
+// @flow
+
 import React from "react"
 
 import { nest } from "d3-collection"
@@ -9,7 +11,12 @@ import { sum, max, min, extent } from "d3-array"
 import { arc } from "d3-shape"
 
 import { filterDefs } from "./constants/jsx"
-import { orFrameChangeProps, xyframeproptypes, ordinalframeproptypes, networkframeproptypes } from "./constants/frame_props"
+import {
+  orFrameChangeProps,
+  xyframeproptypes,
+  ordinalframeproptypes,
+  networkframeproptypes
+} from "./constants/frame_props"
 import {
   svgORRule,
   svgHighlightRule,
@@ -50,6 +57,15 @@ import {
 import { drawSummaries, renderLaidOutSummaries } from "./svg/summaryLayouts"
 import { stringToFn } from "./data/dataFunctions"
 
+import type { Node } from "react"
+
+import type {
+  AnnotationHandling,
+  CustomHoverType
+} from "./types/annotationTypes"
+
+import type { MarginType, CanvasPostProcessTypes } from "./types/generalTypes"
+
 const xScale = scaleIdentity()
 const yScale = scaleIdentity()
 
@@ -77,7 +93,68 @@ const layoutHash = {
   timeline: timelineLayout
 }
 
-class OrdinalFrame extends React.Component {
+type Props = {
+  className?: string,
+  annotationSettings?: AnnotationHandling,
+  size: Array<number>,
+  downloadFields: Array<string>,
+  rAccessor?: string | Function,
+  oAccessor?: string | Function,
+  name?: string,
+  download: boolean,
+  annotations: Array<Object>,
+  matte?: Node,
+  renderKey?: Function,
+  interaction?: Object,
+  customClickBehavior?: Function,
+  customHoverBehavior?: Function,
+  customDoubleClickBehavior?: Function,
+  projection: string,
+  backgroundGraphics?: Node,
+  foregroundGraphics?: Node,
+  afterElements?: Node,
+  beforeElements?: Node,
+  disableContext?: boolean,
+  summaryType?: string | Object,
+  summaryHoverAnnotation?: CustomHoverType,
+  pieceHoverAnnotation?: CustomHoverType,
+  hoverAnnotation?: CustomHoverType,
+  canvasPostProcess?: CanvasPostProcessTypes,
+  baseMarkProps?: Object,
+  useSpans?: boolean,
+  canvasPieces?: boolean | Function,
+  canvasSummaries?: boolean | Function,
+  margin: MarginType
+}
+
+type State = {
+  pieceDataXY: Array<Object>,
+  adjustedPosition: Array<Number>,
+  adjustedSize: Array<Number>,
+  backgroundGraphics: Node,
+  foregroundGraphics: Node,
+  axisData: Array<Object>,
+  axes: Node,
+  axesTickLines: Array<Object>,
+  oLabels: boolean | Function,
+  title: Node,
+  columnOverlays: Node,
+  renderNumber: number,
+  oAccessor: Function,
+  rAccessor: Function,
+  oScaleType: Function,
+  rScaleType: Function,
+  oExtent: Array<number>,
+  rExtent: Array<number>,
+  calculatedOExtent: Array<number>,
+  calculatedRExtent: Array<number>,
+  projectedColumns: Object,
+  margin: Object,
+  legendSettings: Object,
+  orFrameRender: Object
+}
+
+class OrdinalFrame extends React.Component<Props, State> {
   static defaultProps = {
     annotations: [],
     foregroundGraphics: [],
@@ -115,13 +192,12 @@ class OrdinalFrame extends React.Component {
     let oLabels
     const projectedColumns = {}
 
-    const padding = currentProps.oPadding ? currentProps.oPadding : 0
-
-    const summaryType = objectifyType(currentProps.summaryType)
-    const pieceType = objectifyType(currentProps.type)
-    const connectorType = objectifyType(currentProps.connectorType)
-
     const {
+      oPadding: padding = 0,
+      summaryType: baseSummaryType,
+      type: baseType,
+      connectorType: baseConnectorType,
+      oAccessor: baseOAccessor,
       projection,
       customHoverBehavior,
       customClickBehavior,
@@ -131,6 +207,10 @@ class OrdinalFrame extends React.Component {
       title
     } = currentProps
 
+    const summaryType = objectifyType(baseSummaryType)
+    const pieceType = objectifyType(baseType)
+    const connectorType = objectifyType(baseConnectorType)
+
     /*    const eventListenersGenerator = generateOrdinalFrameEventListeners(
       customHoverBehavior,
       customClickBehavior,
@@ -138,8 +218,8 @@ class OrdinalFrame extends React.Component {
     ) */
     const eventListenersGenerator = () => ({})
 
-    const oAccessor = stringToFn(currentProps.oAccessor, d => d.renderKey)
-    const rAccessor = stringToFn(currentProps.rAccessor, d => d.value || 1)
+    const oAccessor = stringToFn(baseOAccessor, d => d.renderKey)
+    const rAccessor = stringToFn(baseRAccessor, d => d.value || 1)
 
     const connectorStyle = stringToFn(
       currentProps.connectorStyle,
@@ -445,17 +525,16 @@ class OrdinalFrame extends React.Component {
         if (currentProps.ordinalAlign === "center") {
           if (i === 0) {
             projectedColumns[o].x =
-            projectedColumns[o].x - projectedColumns[o].width / 2
+              projectedColumns[o].x - projectedColumns[o].width / 2
             projectedColumns[o].middle =
-            projectedColumns[o].middle - projectedColumns[o].width / 2            
-          }
-          else {
+              projectedColumns[o].middle - projectedColumns[o].width / 2
+          } else {
             projectedColumns[o].x =
-            projectedColumns[oExtent[i - 1]].x + projectedColumns[oExtent[i - 1]].width            
+              projectedColumns[oExtent[i - 1]].x +
+              projectedColumns[oExtent[i - 1]].width
             projectedColumns[o].middle =
-            projectedColumns[o].x + projectedColumns[o].width / 2
+              projectedColumns[o].x + projectedColumns[o].width / 2
           }
-
         }
 
         projectedColumns[o].pct = cwHash[o] / cwHash.total
@@ -492,20 +571,29 @@ class OrdinalFrame extends React.Component {
         : { orient: "default", label: currentProps.oLabel, padding: 5 }
 
     if (currentProps.oLabel || currentProps.hoverAnnotation) {
-      const offsetPct = pieceType.offsetAngle && pieceType.offsetAngle / 360 || 0
+      const offsetPct =
+        (pieceType.offsetAngle && pieceType.offsetAngle / 360) || 0
 
-      const rangePct = pieceType.angleRange && pieceType.angleRange.map(d => d / 360) || [0,1]
+      const rangePct = (pieceType.angleRange &&
+        pieceType.angleRange.map(d => d / 360)) || [0, 1]
       const rangeMod = rangePct[1] - rangePct[0]
-      
-      const adjustedPct = rangeMod < 1 ? scaleLinear().domain([ 0, 1 ]).range(rangePct) : d => d
 
-      oExtent.forEach((d) => {
+      const adjustedPct =
+        rangeMod < 1
+          ? scaleLinear()
+              .domain([0, 1])
+              .range(rangePct)
+          : d => d
+
+      oExtent.forEach(d => {
         const arcGenerator = arc()
           .innerRadius(0)
           .outerRadius(rScale.range()[1] / 2)
 
         const angle = projectedColumns[d].pct * rangeMod
-        const startAngle = adjustedPct(projectedColumns[d].pct_start + offsetPct)
+        const startAngle = adjustedPct(
+          projectedColumns[d].pct_start + offsetPct
+        )
 
         const endAngle = startAngle + angle
         const midAngle = startAngle + angle / 2
@@ -1020,14 +1108,17 @@ class OrdinalFrame extends React.Component {
     Object.keys(this.props).forEach(d => {
       if (!ordinalframeproptypes[d]) {
         if (xyframeproptypes[d]) {
-          console.error(`${d} is an XYFrame prop are you sure you're using the right frame?`)
+          console.error(
+            `${d} is an XYFrame prop are you sure you're using the right frame?`
+          )
+        } else if (networkframeproptypes[d]) {
+          console.error(
+            `${d} is a NetworkFrame prop are you sure you're using the right frame?`
+          )
+        } else {
+          console.error(`${d} is not a valid OrdinalFrame prop`)
         }
-        else if (networkframeproptypes[d]) {
-          console.error(`${d} is a NetworkFrame prop are you sure you're using the right frame?`)
-        }
-        else {
-          console.error(`${d} is not a valid OrdinalFrame prop`)}
-        }
+      }
     })
 
     this.calculateOrdinalFrame(this.props)
