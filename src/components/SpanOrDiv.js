@@ -1,8 +1,17 @@
+// @flow
 import React from "react"
+import type { Node } from "react"
 
-export default props => {
-  const { style, className, children } = props
-  if (props.span)
+type Props = {
+  style?: Object,
+  className?: string,
+  children: Node,
+  span: boolean
+}
+
+export default (props:Props) => {
+  const { style, className, children, span } = props
+  if (span)
     return (
       <span className={className} style={{ display: "block", ...style }}>
         {children}
