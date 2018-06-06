@@ -124,7 +124,9 @@ type Props = {
   useSpans?: boolean,
   canvasPieces?: boolean | Function,
   canvasSummaries?: boolean | Function,
-  margin: MarginType
+  margin?:
+    | string
+    | { top?: number, left?: number, right?: number, bottom?: number }
 }
 
 type State = {
@@ -149,7 +151,7 @@ type State = {
   calculatedOExtent: Array<number>,
   calculatedRExtent: Array<number>,
   projectedColumns: Object,
-  margin: Object,
+  margin: MarginType,
   legendSettings: Object,
   orFrameRender: Object
 }
@@ -304,7 +306,7 @@ class OrdinalFrame extends React.Component<Props, State> {
       cwHash = { total: 0 }
       oExtent.forEach((d, i) => {
         const oValue = columnValues[i]
-        const stepValue = oValue / maxColumnValues * (oDomain[1] - oDomain[0])
+        const stepValue = (oValue / maxColumnValues) * (oDomain[1] - oDomain[0])
         cwHash[d] = stepValue
         cwHash.total += stepValue
         if (i !== oExtent.length - 1) {
