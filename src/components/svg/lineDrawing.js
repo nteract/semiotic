@@ -1,17 +1,74 @@
+// @flow
+
 import { sum } from "d3-array"
 
 const datesForUnique = d => (d instanceof Date ? d.toString() : d)
 
+type AreaProjectionTypes = {
+  data: Array<Object>,
+  areaDataAccessor: Function,
+  xAccessor: Function,
+  yAccessor: Function
+}
+
+type LineProjectionTypes = {
+  data: Array<Object>,
+  lineDataAccessor: Function,
+  xProp: string,
+  yProp: string,
+  yPropTop: string,
+  yPropBottom: string,
+  xAccessor: Function,
+  yAccessor: Function
+}
+
+type DifferenceLineProps = {
+  data: Array<Object>,
+  yProp: string,
+  yPropTop: string,
+  yPropBottom: string
+}
+
+type StackedAreaTypes = {
+  type: string,
+  data: Array<Object>,
+  xProp: string,
+  yProp: string,
+  yPropMiddle: string,
+  sort?: Function,
+  yPropTop: string,
+  yPropBottom: string
+}
+
+type LineChartTypes = {
+  data: Array<Object>,
+  y1?: Function,
+  yPropTop: string,
+  yPropMiddle: string,
+  yPropBottom: string
+}
+
+type RelativeYTypes = {
+  point: Object,
+  lines: Object,
+  projectedYMiddle: string,
+  projectedY: string,
+  projectedX: string,
+  xAccessor: Function,
+  yAccessor: Function,
+  yScale: Function,
+  xScale: Function,
+  idAccessor: Function
+}
+
 export const projectAreaData = ({
   data,
   areaDataAccessor,
-  projection,
   xAccessor,
   yAccessor
-}) => {
-  projection = projection
-    ? projection
-    : d => areaDataAccessor(d).map((p, q) => [xAccessor(p, q), yAccessor(p, q)])
+}: AreaProjectionTypes) => {
+  const projection = (d: Object) =>
+    areaDataAccessor(d).map((p, q) => [xAccessor(p, q), yAccessor(p, q)])
   data.forEach(d => {
     d._xyfCoordinates = projection(d)
   })
@@ -27,11 +84,11 @@ export const projectLineData = ({
   yPropBottom,
   xAccessor,
   yAccessor
-}) => {
+}: LineProjectionTypes) => {
   if (!Array.isArray(data)) {
     data = [data]
   }
-  return data.map((d, i) => {
+  const projectedLine: Array<Object> = data.map((d: Object, i: number) => {
     const originalLineData = Object.assign({}, d)
     originalLineData.data = lineDataAccessor(d).map((p, q) => {
       const originalCoords = {}
@@ -47,9 +104,15 @@ export const projectLineData = ({
     originalLineData.key = originalLineData.key || i
     return originalLineData
   })
+  return projectedLine
 }
 
-export const differenceLine = ({ data, yProp, yPropTop, yPropBottom }) => {
+export const differenceLine = ({
+  data,
+  yProp,
+  yPropTop,
+  yPropBottom
+}: DifferenceLineProps) => {
   data.forEach((l, i) => {
     l.data.forEach((point, q) => {
       const otherLine = i === 0 ? 1 : 0
@@ -75,7 +138,7 @@ export const stackedArea = ({
   sort,
   yPropTop,
   yPropBottom
-}) => {
+}: StackedAreaTypes) => {
   /* Object.keys(allData.map((d,i) => oAccessor(d,i)).reduce((p,c) => {
       p[c] = true
       return p
@@ -173,7 +236,13 @@ export const stackedArea = ({
   return data
 }
 
-export const lineChart = ({ data, y1, yPropTop, yPropMiddle, yPropBottom }) => {
+export const lineChart = ({
+  data,
+  y1,
+  yPropTop,
+  yPropMiddle,
+  yPropBottom
+}: LineChartTypes) => {
   if (y1) {
     data.forEach(d => {
       d.data.forEach(p => {
@@ -194,7 +263,7 @@ export const bumpChart = ({
   yPropMiddle,
   yPropTop,
   yPropBottom
-}) => {
+}: StackedAreaTypes) => {
   const uniqXValues = [
     ...new Set(
       data
@@ -258,7 +327,11 @@ export const bumpChart = ({
   return data
 }
 
-export const dividedLine = (parameters, points, searchIterations = 10) => {
+export const dividedLine = (
+  parameters: Function,
+  points: Array<Object>,
+  searchIterations: number = 10
+) => {
   let currentParameters = parameters(points[0], 0)
   let currentPointsArray = []
   const dividedLinesData = [
@@ -313,6 +386,12 @@ function simpleSearchFunction({
   currentParameters,
   parameters,
   keys
+}: {
+  pointA: Object,
+  pointB: Object,
+  currentParameters: Object,
+  parameters: Function,
+  keys: Array<string>
 }) {
   const betweenPoint = {}
   keys.forEach(key => {
@@ -330,7 +409,15 @@ function simpleSearchFunction({
   return [pointA, betweenPoint]
 }
 
-export function funnelize({ data, steps, key }) {
+export function funnelize({
+  data,
+  steps,
+  key
+}: {
+  data: Array<Object>,
+  steps: Array<string>,
+  key: string
+}) {
   const funnelData = []
   if (!Array.isArray(data)) {
     data = [data]
@@ -342,7 +429,7 @@ export function funnelize({ data, steps, key }) {
   data.forEach((datum, i) => {
     const datumKey = key ? datum[key] : i
     steps.forEach(step => {
-      const funnelDatum = { funnelKey: datumKey }
+      const funnelDatum = { funnelKey: datumKey, stepName: "", stepValue: 0 }
       funnelDatum.stepName = step
       funnelDatum.stepValue = datum[step] ? datum[step] : 0
       funnelData.push(funnelDatum)
@@ -363,7 +450,7 @@ export function relativeY({
   yScale,
   xScale,
   idAccessor
-}) {
+}: RelativeYTypes) {
   if (idAccessor(point)) {
     const thisLine = lines.data.find(l => idAccessor(l) === idAccessor(point))
     if (!thisLine) {

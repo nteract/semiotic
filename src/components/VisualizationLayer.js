@@ -1,3 +1,5 @@
+// @flow
+
 import React from "react"
 
 import { RoughCanvas } from "roughjs/lib/canvas"
@@ -6,19 +8,46 @@ import PropTypes from "prop-types"
 
 import { chuckCloseCanvasTransform } from "./canvas/basicCanvasEffects"
 
-class VisualizationLayer extends React.PureComponent {
+import type { Node } from "react"
+
+type Props = {
+  axes?: Array<Object> | Object,
+  frameKey?: string,
+  xScale: Function,
+  yScale: Function,
+  dataVersion?: string,
+  canvasContext?: Object | null,
+  size: Array<number>,
+  margin: Object,
+  canvasPostProcess?: string | Function,
+  title?: ?Object | string,
+  ariaTitle?: string,
+  matte?: Node,
+  matteClip?: boolean,
+  voronoiHover: Function,
+  renderPipeline: Object,
+  baseMarkProps?: Object,
+  projectedCoordinateNames: Object,
+  position: Array<number>,
+  disableContext?: boolean
+}
+
+type State = {
+  canvasDrawing: Array<Object>,
+  dataVersion?: string,
+  renderedElements: Array<Node>,
+  focusedPieceIndex: number | null,
+  focusedVisualizationGroup: string | null
+}
+
+class VisualizationLayer extends React.PureComponent<Props, State> {
   static defaultProps = {
     position: [0, 0],
     margin: { left: 0, top: 0, right: 0, bottom: 0 }
   }
 
-  constructor(props) {
-    super(props)
-    this.updateVisualizationLayer = this.updateVisualizationLayer.bind(this)
-    this.handleKeyDown = this.handleKeyDown.bind(this)
-  }
-
   piecesGroup = {}
+  canvasDrawing = []
 
   state = {
     canvasDrawing: [],
@@ -58,10 +87,16 @@ class VisualizationLayer extends React.PureComponent {
     )
 
     this.canvasDrawing.forEach(piece => {
-
       const style = piece.styleFn
         ? piece.styleFn({ ...piece.d, ...piece.d.data }, piece.i) || {}
-        : { fill: "black", stroke: "black" }
+        : {
+            fill: "black",
+            stroke: "black",
+            opacity: 1,
+            fillOpacity: 1,
+            strokeOpacity: 1,
+            strokeWidth: 1
+          }
 
       const fill = style.fill ? style.fill : "black"
       const stroke = style.stroke ? style.stroke : "black"
@@ -113,51 +148,71 @@ class VisualizationLayer extends React.PureComponent {
           r = halfWidth
         }
         if (actualRenderMode === "sketchy") {
-          if (context.globalAlpha !== 0 ) rc.circle(vizX, vizY, r, rcSettings)
+          if (context.globalAlpha !== 0) rc.circle(vizX, vizY, r, rcSettings)
         } else {
           context.beginPath()
           context.arc(vizX, vizY, r, 0, 2 * Math.PI)
           context.globalAlpha = style.fillOpacity || style.opacity || 1
-          if (style.fill && style.fill !== "none" && context.globalAlpha !== 0 ) context.fill()
+          if (style.fill && style.fill !== "none" && context.globalAlpha !== 0)
+            context.fill()
           context.globalAlpha = style.strokeOpacity || style.opacity || 1
-          if (style.stroke && style.stroke !== "none" && context.globalAlpha !== 0 ) context.stroke()
+          if (
+            style.stroke &&
+            style.stroke !== "none" &&
+            context.globalAlpha !== 0
+          )
+            context.stroke()
         }
       } else if (piece.markProps.markType === "rect") {
         if (actualRenderMode === "sketchy") {
           context.globalAlpha = style.opacity || 1
-          if (context.globalAlpha !== 0) rc.rectangle(
-            piece.markProps.x,
-            piece.markProps.y,
-            piece.markProps.width,
-            piece.markProps.height,
-            rcSettings
-          )
+          if (context.globalAlpha !== 0)
+            rc.rectangle(
+              piece.markProps.x,
+              piece.markProps.y,
+              piece.markProps.width,
+              piece.markProps.height,
+              rcSettings
+            )
         } else {
           context.globalAlpha = style.fillOpacity || style.opacity || 1
-          if (style.fill && style.fill !== "none" && context.globalAlpha !== 0 ) context.fillRect(
-            piece.markProps.x,
-            piece.markProps.y,
-            piece.markProps.width,
-            piece.markProps.height
-          )
+          if (style.fill && style.fill !== "none" && context.globalAlpha !== 0)
+            context.fillRect(
+              piece.markProps.x,
+              piece.markProps.y,
+              piece.markProps.width,
+              piece.markProps.height
+            )
           context.globalAlpha = style.strokeOpacity || style.opacity || 1
-          if (style.stroke && style.stroke !== "none" && context.globalAlpha !== 0 ) context.strokeRect(
-            piece.markProps.x,
-            piece.markProps.y,
-            piece.markProps.width,
-            piece.markProps.height
+          if (
+            style.stroke &&
+            style.stroke !== "none" &&
+            context.globalAlpha !== 0
           )
+            context.strokeRect(
+              piece.markProps.x,
+              piece.markProps.y,
+              piece.markProps.width,
+              piece.markProps.height
+            )
         }
       } else if (piece.markProps.markType === "path") {
         if (actualRenderMode === "sketchy") {
           context.globalAlpha = style.opacity || 1
           rc.path(piece.markProps.d, rcSettings)
         } else {
+          // $FlowFixMe
           const p = new Path2D(piece.markProps.d)
           context.globalAlpha = style.strokeOpacity || style.opacity || 1
-          if (style.stroke && style.stroke !== "none" && context.globalAlpha !== 0 ) context.stroke(p)
+          if (
+            style.stroke &&
+            style.stroke !== "none" &&
+            context.globalAlpha !== 0
+          )
+            context.stroke(p)
           context.globalAlpha = style.fillOpacity || style.opacity || 1
-          if (style.fill && style.fill !== "none" && context.globalAlpha !== 0 ) context.fill(p)
+          if (style.fill && style.fill !== "none" && context.globalAlpha !== 0)
+            context.fill(p)
         }
       } else {
         console.error("CURRENTLY UNSUPPORTED MARKTYPE FOR CANVAS RENDERING")
@@ -173,6 +228,7 @@ class VisualizationLayer extends React.PureComponent {
     }
 
     if (
+      this.state.focusedVisualizationGroup !== null &&
       this.piecesGroup[this.state.focusedVisualizationGroup] &&
       this.state.focusedPieceIndex !== null
     ) {
@@ -191,13 +247,12 @@ class VisualizationLayer extends React.PureComponent {
     }
   }
 
-  updateVisualizationLayer(props) {
+  updateVisualizationLayer = (props: Props) => {
     const {
       xScale,
       yScale,
       dataVersion,
       projectedCoordinateNames,
-      renderKeyFn,
       renderPipeline = {},
       baseMarkProps = {}
     } = props
@@ -218,7 +273,6 @@ class VisualizationLayer extends React.PureComponent {
           yScale,
           canvasDrawing,
           projectedCoordinateNames,
-          renderKeyFn,
           baseMarkProps: Object.assign(baseMarkProps, {
             "aria-label":
               (pipe.ariaLabel && pipe.ariaLabel.items) || "dataviz-element",
@@ -243,7 +297,9 @@ class VisualizationLayer extends React.PureComponent {
                 k
               }
               onKeyDown={e => this.handleKeyDown(e, k)}
-              onBlur={() => { this.props.voronoiHover(undefined) }}
+              onBlur={() => {
+                this.props.voronoiHover(undefined)
+              }}
               ref={thisNode =>
                 thisNode && (this.piecesGroup[k] = thisNode.childNodes)
               }
@@ -264,7 +320,7 @@ class VisualizationLayer extends React.PureComponent {
     this.updateVisualizationLayer(this.props)
   }
 
-  componentWillReceiveProps(np) {
+  componentWillReceiveProps(np: Props) {
     const lp = this.props
     const propKeys = Object.keys(np)
 
@@ -283,18 +339,17 @@ class VisualizationLayer extends React.PureComponent {
     }
   }
 
-  handleKeyDown(e, vizgroup) {
+  handleKeyDown = (e: Object, vizgroup: string) => {
     // If enter, focus on the first element
     const pushed = e.keyCode
     if (pushed !== 37 && pushed !== 39 && pushed !== 13) return
 
-    let newPieceIndex
+    let newPieceIndex = 0
     const vizGroupSetting = {}
 
     // If a user pressed enter, highlight the first one
     // Let a user move up and down in stacked bar by getting keys of bars?
     if (this.state.focusedPieceIndex === null || pushed === 13) {
-      newPieceIndex = 0
       vizGroupSetting.focusedVisualizationGroup = vizgroup
     } else if (pushed === 37) {
       newPieceIndex = this.state.focusedPieceIndex - 1
@@ -329,7 +384,7 @@ class VisualizationLayer extends React.PureComponent {
 
   render() {
     const props = this.props
-    const { matte, matteClip, axes, frameKey, margin } = props
+    const { matte, matteClip, axes, frameKey = "", margin } = props
 
     const { renderedElements } = this.state
 
@@ -378,9 +433,6 @@ VisualizationLayer.propTypes = {
   frameKey: PropTypes.string,
   xScale: PropTypes.func,
   yScale: PropTypes.func,
-  pointData: PropTypes.array,
-  lineData: PropTypes.array,
-  areaData: PropTypes.array,
   dataVersion: PropTypes.string,
   canvasContext: PropTypes.object,
   size: PropTypes.array.isRequired,

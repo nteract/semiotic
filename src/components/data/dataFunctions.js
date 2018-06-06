@@ -1,3 +1,5 @@
+// @flow
+
 import { projectLineData, projectAreaData } from "../svg/lineDrawing"
 import {
   projectedX,
@@ -15,6 +17,8 @@ import {
 import { contouring, hexbinning, heatmapping } from "../svg/areaDrawing"
 import { max, min, extent } from "d3-array"
 
+import type { ProjectedPoint } from "../types/generalTypes"
+
 const builtInTransformations = {
   "stackedarea": stackedArea,
   "stackedarea-invert": stackedArea,
@@ -28,13 +32,38 @@ const builtInTransformations = {
   "line": lineChart
 }
 
-export const stringToFn = (accessor, defaultAccessor, raw) => {
-  if (!accessor) {
+export const stringToFn = (
+  accessor?: Function | string | boolean | Object,
+  defaultAccessor?: Function,
+  raw?: boolean
+): Function => {
+  if (!accessor && defaultAccessor) {
     return defaultAccessor
-  } else if (typeof accessor !== "function" && raw) {
+  } else if (typeof accessor !== "function" && raw !== undefined) {
     return () => accessor
   }
-  return typeof accessor !== "function" ? d => d[accessor] : accessor
+  return typeof accessor !== "function" ? (d: Object) => d[accessor] : accessor
+}
+
+type CalculateDataTypes = {
+  lineDataAccessor: Function,
+  xAccessor: Function,
+  yAccessor: Function,
+  areas?: Array<Object>,
+  points?: Array<Object>,
+  lines?: Array<Object>,
+  lineType: Object,
+  showLinePoints?: boolean,
+  xExtent?: Array<number> | Object,
+  yExtent?: Array<number> | Object,
+  invertX?: boolean,
+  invertY?: boolean,
+  areaDataAccessor: Function,
+  areaType: Object,
+  adjustedSize: Array<number>,
+  xScaleType: Function,
+  yScaleType: Function,
+  defined?: Function
 }
 
 export const calculateDataExtent = ({
@@ -51,36 +80,23 @@ export const calculateDataExtent = ({
   invertX,
   invertY,
   areaDataAccessor,
-  projection,
   areaType,
   adjustedSize: size,
   xScaleType,
   yScaleType,
   defined = () => true
-}) => {
-  lineDataAccessor = stringToFn(
-    lineDataAccessor,
-    d => (Array.isArray(d) ? d : d.coordinates)
-  )
-
-  xAccessor = stringToFn(xAccessor, d => d[0])
-  yAccessor = stringToFn(yAccessor, d => d[1])
-  areaDataAccessor = stringToFn(
-    areaDataAccessor,
-    d => (Array.isArray(d) ? d : d.coordinates)
-  )
-
-  let fullDataset = []
+}: CalculateDataTypes) => {
+  let fullDataset: Array<ProjectedPoint> = []
   let initialProjectedLines = []
 
-  let projectedPoints = [],
-    projectedLines = [],
-    projectedAreas = []
+  let projectedPoints: Array<ProjectedPoint> = [],
+    projectedLines: Array<Object> = [],
+    projectedAreas: Array<Object> = []
   if (points) {
     projectedPoints = points.map((d, i) => {
       const x = xAccessor(d, i)
       const y = yAccessor(d, i)
-      return { [projectedX]: x, [projectedY]: y, data: d }
+      return { x, y, data: d }
     })
     fullDataset = projectedPoints
   }
@@ -92,8 +108,8 @@ export const calculateDataExtent = ({
       yProp: projectedY,
       yPropTop: projectedYTop,
       yPropBottom: projectedYBottom,
-      xAccessor: xAccessor,
-      yAccessor: yAccessor
+      xAccessor,
+      yAccessor
     })
 
     const optionsObject = {
@@ -114,13 +130,13 @@ export const calculateDataExtent = ({
         ...d.data
           .filter((p, q) => defined(Object.assign({}, p.data, p), q))
           .map(p => {
-            const mappedP = {
+            const mappedP: ProjectedPoint = {
               parentLine: d,
-              [projectedY]: p[projectedY],
-              [projectedX]: p[projectedX],
-              [projectedYTop]: p[projectedYTop],
-              [projectedYMiddle]: p[projectedYMiddle],
-              [projectedYBottom]: p[projectedYBottom],
+              y: p.y,
+              x: p.x,
+              yTop: p.yTop,
+              yMiddle: p.yMiddle,
+              yBottom: p.yBottom,
               data: p.data
             }
             if (p.percent) {
@@ -136,13 +152,12 @@ export const calculateDataExtent = ({
     projectedAreas = projectAreaData({
       data: areas,
       areaDataAccessor,
-      projection,
       xProp: projectedX,
       yProp: projectedY,
       yPropTop: projectedYTop,
       yPropBottom: projectedYBottom,
-      xAccessor: xAccessor,
-      yAccessor: yAccessor
+      xAccessor,
+      yAccessor
     })
     projectedAreas.forEach(d => {
       const baseData = areaDataAccessor(d)
@@ -220,10 +235,7 @@ export const calculateDataExtent = ({
     finalYExtent = [finalYExtent[1], finalYExtent[0]]
   }
 
-  if (
-    areaType &&
-    (areaType === "contour" || (areaType.type && areaType.type === "contour"))
-  ) {
+  if (areaType.type && areaType.type === "contour") {
     projectedAreas = contouring({
       areaType,
       data: projectedAreas,
@@ -232,10 +244,7 @@ export const calculateDataExtent = ({
       finalXExtent,
       finalYExtent
     })
-  } else if (
-    areaType &&
-    (areaType === "hexbin" || (areaType.type && areaType.type === "hexbin"))
-  ) {
+  } else if (areaType.type && areaType.type === "hexbin") {
     projectedAreas = hexbinning({
       areaType,
       data: projectedAreas,
@@ -251,10 +260,7 @@ export const calculateDataExtent = ({
       ...projectedAreas.map(d => d.data),
       ...fullDataset.filter(d => !d.parentArea)
     ]
-  } else if (
-    areaType &&
-    (areaType === "heatmap" || (areaType.type && areaType.type === "heatmap"))
-  ) {
+  } else if (areaType.type && areaType.type === "heatmap") {
     projectedAreas = heatmapping({
       areaType,
       data: projectedAreas,
@@ -271,7 +277,7 @@ export const calculateDataExtent = ({
       ...projectedAreas.map(d => ({ ...d })),
       ...fullDataset.filter(d => !d.parentArea)
     ]
-  } else if (
+  } /*else if (
     typeof areaType === "function" ||
     (areaType && areaType.type && typeof areaType.type === "function")
   ) {
@@ -285,7 +291,7 @@ export const calculateDataExtent = ({
       fullDataset,
       projectedAreas
     })
-  }
+  } */
 
   return {
     xExtent: finalXExtent,
@@ -299,31 +305,18 @@ export const calculateDataExtent = ({
   }
 }
 
-function lineTransformation(lineType = { type: "line" }, options) {
-  const differenceCatch = (olineType, data) =>
-    (lineType === "difference" ||
-      (lineType.type && lineType.type === "difference")) &&
-    data.length !== 2
-      ? "line"
-      : olineType
-  if (builtInTransformations[lineType]) {
-    return data =>
-      builtInTransformations[differenceCatch(lineType, data)]({
-        type: lineType,
-        ...options,
-        data
-      })
-  }
+const differenceCatch = (olineType, data) =>
+  olineType === "difference" && data.length !== 2 ? "line" : olineType
 
-  if (builtInTransformations[lineType.type]) {
-    return data =>
-      builtInTransformations[differenceCatch(lineType.type, data)]({
-        ...lineType,
-        ...options,
-        data
-      })
-  }
-
-  //otherwise assume a function
-  return data => lineType({ ...options, data })
+function lineTransformation(lineType, options) {
+  //  if (typeof lineType.type === "function") {
+  //    return data => lineType.type({ ...options, data })
+  //  } else {
+  return data =>
+    builtInTransformations[differenceCatch(lineType.type, data)]({
+      ...lineType,
+      ...options,
+      data
+    })
+  //  }
 }

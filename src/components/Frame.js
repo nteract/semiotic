@@ -1,3 +1,5 @@
+// @flow
+
 import React from "react"
 import AnnotationLayer from "./AnnotationLayer"
 import InteractionLayer from "./InteractionLayer"
@@ -6,26 +8,84 @@ import { generateFrameTitle } from "./svg/frameFunctions"
 import PropTypes from "prop-types"
 
 import SpanOrDiv from "./SpanOrDiv"
+import type { Node } from "react"
+import type { MarginType } from "./types/generalTypes"
+
+type Props = {
+  name?: string,
+  title: Object,
+  margin: MarginType,
+  size: Array<number>,
+  annotationSettings: Object,
+  annotations?: Array<Object>,
+  customHoverBehavior?: Function,
+  customClickBehavior?: Function,
+  customDoubleClickBehavior?: Function,
+  htmlAnnotationRules?: Function,
+  tooltipContent?: Function,
+  className?: string,
+  additionalDefs?: Node,
+  interaction?: Object,
+  renderFn?: string | Function,
+  hoverAnnotation?: boolean | Object | Array<Object | Function> | Function,
+  backgroundGraphics?: Node,
+  foregroundGraphics?: Node,
+  interactionOverflow?: Object,
+  disableContext?: boolean,
+  canvasRendering?: boolean,
+  useSpans: boolean,
+  baseMarkProps?: Object,
+  canvasPostProcess?: "chuckClose" | Function,
+  projection?: string,
+  rScale?: Function,
+  columns?: Object,
+  overlay?: Array<Object>,
+  legendSettings?: Object,
+  adjustedPosition: Array<number>,
+  defaultHTMLRule: Function,
+  defaultSVGRule: Function,
+  downloadButton: Node,
+  beforeElements?: Node,
+  afterElements?: Node,
+  points?: Array<Object>,
+  projectedYMiddle?: string,
+  dataVersion?: string,
+  frameKey?: string,
+  finalFilterDefs: Node,
+  xScale: Function,
+  yScale: Function,
+  adjustedSize?: Array<number>,
+  renderPipeline: Object,
+  projectedCoordinateNames: Object,
+  matte?: Node,
+  axes?: Array<Object>,
+  axesTickLines?: Node
+}
+
+type State = {
+  canvasContext: ?Object,
+  voronoiHover: ?Object
+}
 
 const defaultZeroMargin = { top: 0, bottom: 0, left: 0, right: 0 }
 
-class Frame extends React.Component {
+class Frame extends React.Component<Props, State> {
   static defaultProps = {
     annotationSettings: {},
     adjustedPosition: [0, 0],
     projectedCoordinateNames: { x: "x", y: "y" }
   }
 
-  constructor(props) {
+  constructor(props: Props) {
     super(props)
-
-    this.setVoronoi = this.setVoronoi.bind(this)
 
     this.state = {
       canvasContext: null,
       voronoiHover: undefined
     }
   }
+
+  canvasContext = null
 
   componentDidMount() {
     this.setState({ canvasContext: this.canvasContext })
@@ -40,7 +100,7 @@ class Frame extends React.Component {
     return { canvas: this.canvasContext }
   }
 
-  setVoronoi(d) {
+  setVoronoi = (d: Object) => {
     this.setState({ voronoiHover: d })
   }
 
@@ -48,10 +108,9 @@ class Frame extends React.Component {
     const {
       axes,
       axesTickLines,
-      className,
-      extent,
+      className = "",
       matte,
-      name,
+      name = "",
       projectedCoordinateNames,
       renderPipeline,
       size,
@@ -115,7 +174,7 @@ class Frame extends React.Component {
         legendSettings={legendSettings}
         margin={margin}
         axes={axes}
-        annotationHandling={annotationSettings.layout}
+        annotationHandling={annotationSettings}
         pointSizeFunction={annotationSettings.pointSizeFunction}
         labelSizeFunction={annotationSettings.labelSizeFunction}
         annotations={totalAnnotations}
@@ -143,7 +202,11 @@ class Frame extends React.Component {
         ]}
       />
     )
-    const generatedTitle = generateFrameTitle({ title, size: size })
+
+    const generatedTitle = generateFrameTitle({
+      title: title,
+      size: size
+    })
 
     return (
       <SpanOrDiv
@@ -221,7 +284,6 @@ class Frame extends React.Component {
                 renderPipeline={renderPipeline}
                 position={adjustedPosition}
                 size={adjustedSize}
-                extent={extent}
                 projectedCoordinateNames={projectedCoordinateNames}
                 xScale={xScale}
                 yScale={yScale}
@@ -287,10 +349,9 @@ class Frame extends React.Component {
 Frame.propTypes = {
   name: PropTypes.string,
   title: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-  margin: PropTypes.oneOfType([PropTypes.number, PropTypes.object]),
+  margin: PropTypes.object,
   size: PropTypes.array.isRequired,
   annotationSettings: PropTypes.object,
-  position: PropTypes.array,
   annotations: PropTypes.array,
   customHoverBehavior: PropTypes.func,
   customClickBehavior: PropTypes.func,
