@@ -21,3 +21,5 @@ export type ProjectedPoint = {
 }
 
 export type CanvasPostProcessTypes = Function | "chuckClose"
+
+export type ExtentSettingsType = { extent?: Array<number>, onChange?: function }

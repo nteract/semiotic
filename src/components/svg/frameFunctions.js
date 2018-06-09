@@ -13,16 +13,15 @@ import {
 } from "./summaryLayouts"
 import { axisPieces, axisLines } from "../visualizationLayerBehavior/axis"
 
-import type { Node } from "react"
-
 import type { MarginType, ProjectionTypes } from "../types/generalTypes"
+
+import type { AxisType } from "../types/annotationTypes"
 
 type CalculateMarginTypes = {
   margin?: number | Object,
-  axis?: Object,
   axes?: Array<Object>,
   title: Object,
-  oLabel?: boolean,
+  oLabel?: boolean | Function,
   projection?: ProjectionTypes
 }
 
@@ -62,7 +61,7 @@ type ORFrameSummaryRendererTypes = {
 
 type ORFrameAxisGeneratorTypes = {
   projection: ProjectionTypes,
-  axis: Object,
+  axis?: Array<Object>,
   adjustedSize: Array<number>,
   size: Array<number>,
   rScale: Function,
@@ -132,15 +131,12 @@ export const trueAxis = (
     return "left"
   } else if (!orient && projection === "horizontal") {
     return "bottom"
-  } else if (!orient) {
-    return "left"
   }
   return orient
 }
 
 export const calculateMargin = ({
   margin,
-  axis,
   axes,
   title,
   oLabel,
@@ -156,16 +152,11 @@ export const calculateMargin = ({
   const finalMargin = { top: 0, bottom: 0, left: 0, right: 0 }
 
   let orient = trueAxis("left", projection)
-  if (axis && projection !== "radial") {
-    const additionalMargin = axis.label ? 60 : 50
-    orient = trueAxis(axis.orient, projection)
-    finalMargin[orient] = additionalMargin
-  }
 
-  if (axes) {
+  if (axes && projection !== "radial") {
     axes.forEach(axisObj => {
       const axisObjAdditionMargin = axisObj.label ? 60 : 50
-      orient = axisObj.orient
+      orient = trueAxis(axisObj.orient, projection)
       finalMargin[orient] = axisObjAdditionMargin
     })
   }
@@ -188,7 +179,7 @@ export const calculateMargin = ({
   return finalMargin
 }
 
-export function objectifyType(type: string | Object) {
+export function objectifyType(type?: string | Object | Function) {
   return typeof type === "object" ? type : { type: type }
 }
 
@@ -216,13 +207,13 @@ export function generateOrdinalFrameEventListeners(
 
 export function keyAndObjectifyBarData({
   data,
-  renderKey = (d?: Object, i: number) => i
+  renderKey = (d?: Object | number, i: number) => i
 }: {
-  data: Array<Object>,
+  data: Array<Object | number>,
   renderKey: Function
 }): Array<Object> {
   return data
-    ? data.map((d: Object, i: number) => {
+    ? data.map((d: Object | number, i: number) => {
         const appliedKey = renderKey(d, i)
         if (typeof d !== "object") {
           return {
@@ -500,14 +491,13 @@ export const orFrameAxisGenerator = ({
   rExtent,
   data
 }: ORFrameAxisGeneratorTypes) => {
-  if (!axis) return { axis: null, axesTickLines: null }
-  let generatedAxis: Node, axesTickLines: Array<Object>
+  if (!axis) return { axis: undefined, axesTickLines: undefined }
+  let generatedAxis: Array<AxisType>, axesTickLines: Array<Object>
   if (projection !== "radial" && axis) {
     axesTickLines = []
     const axisPosition = [0, 0]
-    const axes = Array.isArray(axis) ? axis : [axis]
     let axisBaseline = false
-    generatedAxis = axes.map((d, i) => {
+    generatedAxis = axis.map((d, i) => {
       if (axisBaseline) {
         d.axis = d.axis || false
       }
@@ -580,75 +570,81 @@ export const orFrameAxisGenerator = ({
     })
   } else if (projection === "radial" && axis) {
     const { innerRadius = 0 } = pieceType
-    const {
-      tickValues = rScale.ticks(
-        Math.max(2, (adjustedSize[0] / 2 - innerRadius) / 50)
-      ),
-      label,
-      tickFormat = d => d
-    } = axis
 
-    const tickScale = rScaleType()
-      .domain(rExtent)
-      .range([innerRadius, adjustedSize[0] / 2])
-    const ticks = tickValues.map((t, i) => {
-      const tickSize = tickScale(t)
-      if (!(innerRadius === 0 && t === 0)) {
-        let axisLabel
-        let ref = ""
-        if (label && i === tickValues.length - 1) {
-          const labelSettings =
-            typeof label === "string"
-              ? { name: label, locationDistance: 15 }
-              : label
-          const { locationDistance = 15 } = labelSettings
-          ref = `${Math.random().toString()} `
-          axisLabel = (
+    const ticks = []
+    axis.forEach(axisObj => {
+      const {
+        tickValues = rScale.ticks(
+          Math.max(2, (adjustedSize[0] / 2 - innerRadius) / 50)
+        ),
+        label,
+        tickFormat = d => d
+      } = axisObj
+
+      const tickScale = rScaleType()
+        .domain(rExtent)
+        .range([innerRadius, adjustedSize[0] / 2])
+      tickValues.forEach((t, i) => {
+        const tickSize = tickScale(t)
+        if (!(innerRadius === 0 && t === 0)) {
+          let axisLabel
+          let ref = ""
+          if (label && i === tickValues.length - 1) {
+            const labelSettings =
+              typeof label === "string"
+                ? { name: label, locationDistance: 15 }
+                : label
+            const { locationDistance = 15 } = labelSettings
+            ref = `${Math.random().toString()} `
+            axisLabel = (
+              <g
+                className="axis-label radial"
+                transform={`translate(0,${locationDistance})`}
+              >
+                <text textAnchor="middle">
+                  <textPath
+                    startOffset={tickSize * Math.PI * 0.5}
+                    xlinkHref={`#${ref}`}
+                  >
+                    {label.name}
+                  </textPath>
+                </text>
+              </g>
+            )
+          }
+          ticks.push(
             <g
-              className="axis-label radial"
-              transform={`translate(0,${locationDistance})`}
+              key={`orframe-radial-axis-element-${t}`}
+              className="axis axis-label axis-tick radial"
+              transform={`translate(0,0)`}
             >
-              <text textAnchor="middle">
-                <textPath
-                  startOffset={tickSize * Math.PI * 0.5}
-                  xlinkHref={`#${ref}`}
-                >
-                  {label.name}
-                </textPath>
+              <path
+                id={ref}
+                d={circlePath(0, 0, tickSize)}
+                r={tickSize}
+                stroke="gray"
+                fill="none"
+              />
+              <text y={-tickSize + 5} textAnchor="middle">
+                {tickFormat(t)}
               </text>
+              {axisLabel}
             </g>
           )
         }
-        return (
-          <g
-            key={`orframe-radial-axis-element-${t}`}
-            className="axis axis-label axis-tick radial"
-            transform={`translate(0,0)`}
-          >
-            <path
-              id={ref}
-              d={circlePath(0, 0, tickSize)}
-              r={tickSize}
-              stroke="gray"
-              fill="none"
-            />
-            <text y={-tickSize + 5} textAnchor="middle">
-              {tickFormat(t)}
-            </text>
-            {axisLabel}
-          </g>
-        )
-      }
-      return null
+        return undefined
+      })
     })
-    generatedAxis = (
+
+    generatedAxis = [
       <g
-        key={axis.key || `orframe-radial-axis-container`}
+        key={axis[0].key || `orframe-radial-axis-container`}
+        className="axis-labels"
         transform={`translate(${adjustedSize[0] / 2},${adjustedSize[1] / 2})`}
       >
         {ticks}
       </g>
-    )
+    ]
   }
   return { axis: generatedAxis, axesTickLines }
 }

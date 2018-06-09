@@ -5,24 +5,6 @@ import labeler from "./d3labeler"
 
 type AnnotationTypes = "marginalia" | "bump" | false
 
-type AnnotationLayerProps = {
-  useSpans: boolean,
-  legendSettings?: {
-    position: "right" | "left",
-    title: string,
-    legendGroups: Array<Object>
-  },
-  margin: Object,
-  size: Array<number>,
-  axes?: Array<Object>,
-  annotationHandling?: Object | AnnotationTypes,
-  annotations: Array<Object>,
-  pointSizeFunction?: Function,
-  labelSizeFunction?: Function,
-  svgAnnotationRule: Function,
-  htmlAnnotationRule: Function
-}
-
 type Layout = {
   type: AnnotationTypes,
   orient?: "nearest" | "left" | "right" | "top" | "bottom" | Array<string>,
@@ -48,21 +30,17 @@ const basicLabelSizeFunction = (
   const wrap = noteData.note.wrap || 120
   const width = Math.min(wrap, textLength * characterWidth) + padding * 2
   const height =
-    Math.ceil(textLength * characterWidth / 120) * lineHeight + padding * 2
+    Math.ceil((textLength * characterWidth) / 120) * lineHeight + padding * 2
   return [width, height]
 }
 
 export function bumpAnnotations(
   adjustableNotes: Array<Object>,
-  props: AnnotationLayerProps,
-  processor: Layout
+  processor: Layout,
+  size: Array<number>,
+  propsPointSizeFunction?: Function,
+  propsLabelSizeFunction?: Function
 ) {
-  const {
-    size,
-    pointSizeFunction: propsPointSizeFunction,
-    labelSizeFunction: propsLabelSizeFunction
-  } = props
-
   const {
     padding = 1,
     characterWidth = 8,
@@ -77,12 +55,12 @@ export function bumpAnnotations(
       d.props.noteData.x +
       (d.props.noteData.dx !== undefined
         ? d.props.noteData.dx
-        : (i % 3 - 1) * -10)
+        : ((i % 3) - 1) * -10)
     const anchorY =
       d.props.noteData.y +
       (d.props.noteData.dy !== undefined
         ? d.props.noteData.dy
-        : (i % 3 - 1) * 10)
+        : ((i % 3) - 1) * 10)
 
     const [labelWidth, labelHeight] = labelSizeFunction(
       d.props.noteData,

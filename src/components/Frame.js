@@ -10,6 +10,7 @@ import PropTypes from "prop-types"
 import SpanOrDiv from "./SpanOrDiv"
 import type { Node } from "react"
 import type { MarginType } from "./types/generalTypes"
+import type { AxisType } from "./types/annotationTypes"
 
 type Props = {
   name?: string,
@@ -58,7 +59,7 @@ type Props = {
   renderPipeline: Object,
   projectedCoordinateNames: Object,
   matte?: Node,
-  axes?: Array<Object>,
+  axes?: Array<AxisType>,
   axesTickLines?: Node
 }
 
