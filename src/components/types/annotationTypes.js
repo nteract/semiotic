@@ -1,5 +1,9 @@
 // @flow
 
+import Axis from "../Axis"
+
+import type { Element } from "react"
+
 export type CustomHoverType =
   | boolean
   | Array<Object | Function>
@@ -23,3 +27,5 @@ export type AnnotationHandling = {
     marginOffset?: number
   }
 }
+
+export type AxisType = Element<typeof Axis> | Element<"g">

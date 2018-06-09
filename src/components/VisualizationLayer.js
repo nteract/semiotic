@@ -4,14 +4,14 @@ import React from "react"
 
 import { RoughCanvas } from "roughjs/lib/canvas"
 
-import PropTypes from "prop-types"
-
 import { chuckCloseCanvasTransform } from "./canvas/basicCanvasEffects"
 
 import type { Node } from "react"
 
+import type { AxisType } from "./types/annotationTypes"
+
 type Props = {
-  axes?: Array<Object> | Object,
+  axes?: Array<AxisType>,
   frameKey?: string,
   xScale: Function,
   yScale: Function,
@@ -426,17 +426,6 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
 
     return renderedDataVisualization
   }
-}
-
-VisualizationLayer.propTypes = {
-  axes: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
-  frameKey: PropTypes.string,
-  xScale: PropTypes.func,
-  yScale: PropTypes.func,
-  dataVersion: PropTypes.string,
-  canvasContext: PropTypes.object,
-  size: PropTypes.array.isRequired,
-  margin: PropTypes.object
 }
 
 export default VisualizationLayer

@@ -26,30 +26,29 @@ export const downloadCSV = (csvName: string, data: *) => {
 
 type DownloadButtonProps = {
   csvName: string,
-  width?: string,
-  label: string,
-  data: *,
+  width?: number,
+  label?: string,
+  data: *
 }
 
 class DownloadButton extends React.Component<DownloadButtonProps, null> {
-
   onClick = () => downloadCSV(this.props.csvName, this.props.data)
 
   render() {
     const { width, label = "Download" } = this.props
+    const style = {}
+    if (width) {
+      style.width = `${width}px`
+    }
     return (
-      <div className="download-div" style={{ width }}>
-        <button
-          alt="download"
-          onClick={this.onClick}
-        >
+      <div className="download-div" style={style}>
+        <button alt="download" onClick={this.onClick}>
           <a>{label}</a>
         </button>
       </div>
     )
   }
 }
-
 
 DownloadButton.propTypes = {
   csvName: PropTypes.string,

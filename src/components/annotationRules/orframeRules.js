@@ -13,7 +13,7 @@ import { circleEnclosure, rectangleEnclosure } from "./baseRules"
 import SpanOrDiv from "../SpanOrDiv"
 
 function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
-  const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0
+  const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0
 
   return {
     x: centerX + radius * Math.cos(angleInRadians),
@@ -198,6 +198,10 @@ export const svgHighlightRule = ({
 }) => {
   const thisID = pieceIDAccessor(d)
   const thisO = oAccessor(d)
+
+  console.log("d", d)
+  console.log("orFrameRender", orFrameRender)
+  console.log("pieceIDAccessor", pieceIDAccessor)
 
   const foundPieces =
     (orFrameRender.pieces &&
