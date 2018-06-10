@@ -207,8 +207,8 @@ export const radialRectNodeGenerator = (size, center) => {
         transform={`translate(${center})`}
         markType="path"
         d={radialArc({
-          startAngle: d.x0 / size[0] * Math.PI * 2,
-          endAngle: d.x1 / size[0] * Math.PI * 2
+          startAngle: (d.x0 / size[0]) * Math.PI * 2,
+          endAngle: (d.x1 / size[0]) * Math.PI * 2
         })}
         style={styleFn(d, i)}
         renderMode={renderMode ? renderMode(d, i) : undefined}
@@ -267,6 +267,7 @@ export const drawNodes = ({
 }) => {
   const markGenerator = customMark
   const renderedData = []
+  console.log("canvasRenderFn", canvasRenderFn)
 
   if (customMark && canvasRenderFn) {
     console.error(
