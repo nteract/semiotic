@@ -195,7 +195,12 @@ class InteractionLayer extends React.Component<Props, State> {
   }
 
   componentWillReceiveProps(nextProps: Props) {
-    this.setState({ overlayRegions: this.calculateOverlay(nextProps) })
+    if (
+      this.props.overlay !== nextProps.overlay ||
+      nextProps.points !== this.props.points
+    ) {
+      this.setState({ overlayRegions: this.calculateOverlay(nextProps) })
+    }
   }
 
   calculateOverlay = (props: Props) => {
@@ -307,12 +312,16 @@ class InteractionLayer extends React.Component<Props, State> {
               forceUpdate={true}
               {...rest}
               onMouseEnter={() => {
-                overlayRegion.onMouseEnter && overlayRegion.onMouseEnter()
                 this.changeVoronoi(overlayData, props.hoverAnnotation)
               }}
               onMouseLeave={() => {
-                overlayRegion.onMouseLeave && overlayRegion.onMouseLeave()
                 this.changeVoronoi()
+              }}
+              onClick={() => {
+                this.clickVoronoi(overlayData)
+              }}
+              onDoubleClick={() => {
+                this.doubleclickVoronoi(overlayData)
               }}
             />
           )

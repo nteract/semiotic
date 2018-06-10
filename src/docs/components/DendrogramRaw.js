@@ -70,7 +70,16 @@ export default ({
         nx: 660
       }
     ],
-    margin: 50
+    margin: 50,
+    customClickBehavior: d => {
+      console.info("clicked a node", d)
+    },
+    customHoverBehavior: d => {
+      console.info("hovered a node", d)
+    },
+    customDoubleClickBehavior: d => {
+      console.info("doubleclicked a node", d)
+    }
   }
   return (
     <div>
