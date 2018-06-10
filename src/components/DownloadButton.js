@@ -2,8 +2,6 @@
 import React from "react"
 import json2csv from "json2csv"
 
-import PropTypes from "prop-types"
-
 export const downloadCSV = (csvName: string, data: *) => {
   json2csv(Object.assign({}, { data: data }), (err, csv) => {
     const blob = new Blob([csv], { type: "text/csv" })
@@ -48,12 +46,6 @@ class DownloadButton extends React.Component<DownloadButtonProps, null> {
       </div>
     )
   }
-}
-
-DownloadButton.propTypes = {
-  csvName: PropTypes.string,
-  data: PropTypes.array,
-  width: PropTypes.number
 }
 
 export default DownloadButton
