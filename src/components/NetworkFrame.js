@@ -593,7 +593,7 @@ class NetworkFrame extends React.Component<Props, State> {
     const nodeStyleFn = stringToFn(nodeStyle, () => ({}), true)
     const nodeClassFn = stringToFn(nodeClass, () => "", true)
     const nodeRenderModeFn = stringToFn(nodeRenderMode, undefined, true)
-    const nodeCanvasRenderFn = stringToFn(canvasNodes, undefined, true)
+    const nodeCanvasRenderFn = canvasNodes && stringToFn(canvasNodes, undefined, true)
 
     const title =
       typeof baseTitle === "object" &&
@@ -620,16 +620,6 @@ class NetworkFrame extends React.Component<Props, State> {
       this.state.graphSettings.nodes !== nodes ||
       this.state.graphSettings.edges !== edges ||
       hierarchicalTypeHash[networkSettings.type]
-
-    console.log(
-      " this.state.graphSettings.nodes !== currentProps.nodes",
-      this.state.graphSettings.nodes !== currentProps.nodes
-    )
-
-    console.log(
-      "this.state.graphSettings.edges !== currentProps.edges",
-      this.state.graphSettings.edges !== currentProps.edges
-    )
 
     if (changedData) {
       edgeHash = new Map()
@@ -781,7 +771,6 @@ class NetworkFrame extends React.Component<Props, State> {
         key !== "graphSettings" &&
         networkSettings[key] !== this.state.graphSettings[key]
       ) {
-        console.log("a difference in", key)
         networkSettingsChanged = true
       }
     })
@@ -864,9 +853,6 @@ class NetworkFrame extends React.Component<Props, State> {
         }
       })
     }
-
-    console.log("changedData", changedData)
-    console.log("networkSettingsChanged", networkSettingsChanged)
 
     if (changedData || networkSettingsChanged) {
       let components = [
@@ -1079,7 +1065,6 @@ class NetworkFrame extends React.Component<Props, State> {
           //      node.textWidth = projectionScaleY(node.textWidth)
         })
       } else if (networkSettings.type === "force") {
-        console.log("in force")
         const {
           iterations = 500,
           edgeStrength = 0.1,
@@ -1348,7 +1333,7 @@ class NetworkFrame extends React.Component<Props, State> {
         styleFn: stringToFn(edgeStyle, () => ({}), true),
         classFn: stringToFn(edgeClass, () => "", true),
         renderMode: stringToFn(edgeRenderMode, undefined, true),
-        canvasRenderFn: stringToFn(canvasEdges, undefined, true),
+        canvasRenderFn: canvasEdges && stringToFn(canvasEdges, undefined, true),
         renderKeyFn: currentProps.edgeRenderKey
           ? currentProps.edgeRenderKey
           : d => d._NWFEdgeKey || `${d.source.id}-${d.target.id}`,
