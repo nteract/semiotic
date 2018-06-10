@@ -114,7 +114,8 @@ const baseNodeProps = {
 }
 
 const baseNetworkSettings = {
-  iterations: 500
+  iterations: 500,
+  hierarchicalNetwork: false
 }
 
 const baseGraphSettings = {
@@ -300,8 +301,6 @@ type NodeType = {
 type NetworkSettingsType = {
   type: string,
   hierarchyChildren?: Function,
-  edgeHash: Object,
-  nodeHash: Object,
   nodes?: Array<Object>,
   edges?: Array<Object>,
   iterations?: number,
@@ -324,7 +323,8 @@ type NetworkSettingsType = {
   distanceMax?: number,
   edgeDistance?: number,
   forceManyBody?: Function | number,
-  hierarchicalNetwork: boolean
+  hierarchicalNetwork: boolean,
+  graphSettings: Object
 }
 
 type State = {
@@ -544,7 +544,7 @@ class NetworkFrame extends React.Component<Props, State> {
     let networkSettings: NetworkSettingsType
 
     const nodeHierarchicalIDFill = {}
-    let customNodeIcon
+    let customNodeIcon = circleNodeGenerator
     let networkSettingsKeys = ["type"]
 
     if (typeof networkType === "string") {
@@ -554,7 +554,7 @@ class NetworkFrame extends React.Component<Props, State> {
         graphSettings: baseGraphSettings
       }
     } else {
-      networkSettingsKeys = Object.keys(networkType)
+      if (networkType) networkSettingsKeys = Object.keys(networkType)
 
       networkSettings = {
         type: "force",
@@ -563,9 +563,6 @@ class NetworkFrame extends React.Component<Props, State> {
         graphSettings: baseGraphSettings
       }
     }
-
-    console.log("nodes", nodes)
-    console.log("edges", edges)
 
     networkSettings.graphSettings.nodes = nodes
     networkSettings.graphSettings.edges = edges
@@ -736,9 +733,14 @@ class NetworkFrame extends React.Component<Props, State> {
         })
 
         const edgeWeight = edge.weight || 1
+
+        // $FlowFixMe
         nodeHash.get(target).inDegree += edgeWeight
+        // $FlowFixMe
         nodeHash.get(source).outDegree += edgeWeight
+        // $FlowFixMe
         nodeHash.get(target).degree += edgeWeight
+        // $FlowFixMe
         nodeHash.get(source).degree += edgeWeight
 
         const edgeKey = `${nodeIDAccessor(source) || source}|${nodeIDAccessor(
@@ -916,6 +918,7 @@ class NetworkFrame extends React.Component<Props, State> {
             projectedNodes[generatedChord.target.index]
           )
           const chordEdge = edgeHash.get(`${nodeSourceID}|${nodeTargetID}`)
+          // $FlowFixMe
           chordEdge.d = chordD
         })
       } else if (
