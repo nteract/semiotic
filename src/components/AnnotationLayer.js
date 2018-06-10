@@ -10,7 +10,8 @@ import labella from "labella"
 import SpanOrDiv from "./SpanOrDiv"
 import type {
   AnnotationHandling,
-  AnnotationTypes
+  AnnotationTypes,
+  AxisType
 } from "./types/annotationTypes"
 
 type AnnotationLayerProps = {
@@ -22,7 +23,7 @@ type AnnotationLayerProps = {
   },
   margin: Object,
   size: Array<number>,
-  axes?: Array<Object>,
+  axes?: Array<AxisType>,
   annotationHandling?: AnnotationHandling | AnnotationTypes,
   annotations: Array<Object>,
   pointSizeFunction?: Function,
@@ -65,7 +66,7 @@ function noteDataHeight(noteData, charWidth = 8, lineHeight = 20) {
   const wrap = (noteData.note && noteData.note.wrap) || 120
   const text = noteData.note.label || noteData.note.title || ""
   return (
-    Math.ceil(text.length * charWidth / wrap) * lineHeight +
+    Math.ceil((text.length * charWidth) / wrap) * lineHeight +
     (noteData.note.label && noteData.note.title ? lineHeight : 0)
   )
 }
@@ -143,8 +144,10 @@ class AnnotationLayer extends React.Component<Props, State> {
     if (layout.type === "bump") {
       const adjustedAnnotations = bumpAnnotations(
         adjustableAnnotations,
-        props,
-        layout
+        layout,
+        size,
+        props.pointSizeFunction,
+        props.labelSizeFunction
       )
       return adjustedAnnotations
     } else if (layout.type === "marginalia") {

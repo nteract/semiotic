@@ -1,15 +1,15 @@
-import React from 'react'
-import DocumentComponent from '../layout/DocumentComponent'
-import DendrogramRaw from './DendrogramRaw'
-import { MenuItem } from 'material-ui/Menu'
-import { InputLabel } from 'material-ui/Input'
-import { FormControl } from 'material-ui/Form'
-import Select from 'material-ui/Select'
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import DendrogramRaw from "./DendrogramRaw"
+import { MenuItem } from "material-ui/Menu"
+import { InputLabel } from "material-ui/Input"
+import { FormControl } from "material-ui/Form"
+import Select from "material-ui/Select"
 
 const components = []
 
 components.push({
-  name: 'Hierarchical Charts'
+  name: "Hierarchical Charts"
 })
 
 export default class Dendrogram extends React.Component {
@@ -17,36 +17,36 @@ export default class Dendrogram extends React.Component {
     super(props)
 
     this.state = {
-      type: 'treemap',
-      projection: 'vertical',
-      annotation: 'rectangle'
+      type: "dendrogram",
+      projection: "vertical",
+      annotation: "rectangle"
     }
   }
   render() {
     const typeOptions = [
-      'sankey',
-      'force',
-      'tree',
-      'cluster',
-      'circlepack',
-      'treemap',
-      'partition'
-    ].map(d => 
-      (<MenuItem key={`type-option-${d}`} label={d} value={d}>
+      "sankey",
+      "force",
+      "tree",
+      "cluster",
+      "circlepack",
+      "treemap",
+      "partition"
+    ].map(d => (
+      <MenuItem key={`type-option-${d}`} label={d} value={d}>
         {d}
-      </MenuItem>)
-    )
+      </MenuItem>
+    ))
 
-    const projectionOptions = ['vertical', 'horizontal', 'radial'].map(d => 
-      (<MenuItem key={`type-option-${d}`} label={d} value={d}>
+    const projectionOptions = ["vertical", "horizontal", "radial"].map(d => (
+      <MenuItem key={`type-option-${d}`} label={d} value={d}>
         {d}
-      </MenuItem>)
-    )
-    const annotationOptions = ['rectangle', 'circle'].map(d => 
-      (<MenuItem key={`type-option-${d}`} label={d} value={d}>
+      </MenuItem>
+    ))
+    const annotationOptions = ["rectangle", "circle"].map(d => (
+      <MenuItem key={`type-option-${d}`} label={d} value={d}>
         {d}
-      </MenuItem>)
-    )
+      </MenuItem>
+    ))
 
     const buttons = [
       <FormControl key="button-1-0-0">
@@ -81,7 +81,7 @@ export default class Dendrogram extends React.Component {
     const examples = []
 
     examples.push({
-      name: 'Basic',
+      name: "Basic",
       demo: DendrogramRaw({
         annotation: this.state.annotation,
         type: this.state.type,
@@ -90,8 +90,8 @@ export default class Dendrogram extends React.Component {
       source: `const annotations = [
         {
           type: "enclose${
-  this.state.annotation === 'rectangle' ? '-rect' : ''
-}",
+            this.state.annotation === "rectangle" ? "-rect" : ""
+          }",
           ids: [
             "identity",
             "linear",
@@ -187,4 +187,4 @@ export default class Dendrogram extends React.Component {
   }
 }
 
-Dendrogram.title = 'Hierarchical Charts'
+Dendrogram.title = "Hierarchical Charts"

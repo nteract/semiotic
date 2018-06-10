@@ -34,8 +34,12 @@ class DownloadButton extends React.Component<DownloadButtonProps, null> {
 
   render() {
     const { width, label = "Download" } = this.props
+    const style = {}
+    if (width) {
+      style.width = `${width}px`
+    }
     return (
-      <div className="download-div" style={{ width }}>
+      <div className="download-div" style={style}>
         <button alt="download" onClick={this.onClick}>
           <a>{label}</a>
         </button>

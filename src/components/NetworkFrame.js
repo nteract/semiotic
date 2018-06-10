@@ -1,3 +1,5 @@
+// @flow
+
 import React from "react"
 
 import {
@@ -68,7 +70,12 @@ import {
   packSiblings
 } from "d3-hierarchy"
 
-import { networkFrameChangeProps, xyframeproptypes, ordinalframeproptypes, networkframeproptypes } from "./constants/frame_props"
+import {
+  networkFrameChangeProps,
+  xyframeproptypes,
+  ordinalframeproptypes,
+  networkframeproptypes
+} from "./constants/frame_props"
 
 import {
   htmlFrameHoverRule,
@@ -77,6 +84,47 @@ import {
   svgEncloseRule,
   svgRectEncloseRule
 } from "./annotationRules/networkframeRules"
+
+import { genericFunction } from "./untyped_utilities/functions"
+
+const emptyArray = []
+
+const baseNodeProps = {
+  degree: 0,
+  inDegree: 0,
+  outDegree: 0,
+  x: 0,
+  y: 0,
+  x1: 0,
+  x0: 0,
+  y1: 0,
+  y0: 0,
+  height: 0,
+  width: 0,
+  radius: 0,
+  r: 0,
+  direction: undefined,
+  textHeight: 0,
+  textWidth: 0,
+  fontSize: 0,
+  scale: 1,
+  nodeSize: 0,
+  component: -99,
+  shapeNode: false
+}
+
+const baseNetworkSettings = {
+  iterations: 500,
+  hierarchicalNetwork: false
+}
+
+const baseGraphSettings = {
+  nodeHash: new Map(),
+  edgeHash: new Map(),
+  nodes: [],
+  edges: [],
+  hierarchicalNetwork: false
+}
 
 const basicMiddle = d => ({
   edge: d,
@@ -218,7 +266,152 @@ const matrixify = ({ edgeHash, nodes, edgeWidthAccessor, nodeIDAccessor }) => {
   return matrix
 }
 
-class NetworkFrame extends React.Component {
+import type { Node } from "react"
+
+import type { CanvasPostProcessTypes } from "./types/generalTypes"
+
+import type { AnnotationHandling } from "./types/annotationTypes"
+
+type NodeType = {
+  degree: number,
+  inDegree: number,
+  outDegree: number,
+  id?: string,
+  createdByFrame?: boolean,
+  x: number,
+  y: number,
+  x1: number,
+  x0: number,
+  y1: number,
+  y0: number,
+  height: number,
+  width: number,
+  radius: number,
+  direction: string,
+  textHeight: number,
+  textWidth: number,
+  fontSize: number,
+  scale: number,
+  r: number,
+  nodeSize: 0,
+  component: number,
+  shapeNode: boolean
+}
+
+type NetworkSettingsType = {
+  type: string,
+  hierarchyChildren?: Function,
+  nodes?: Array<Object>,
+  edges?: Array<Object>,
+  iterations?: number,
+  width?: number,
+  height?: number,
+  projection?: "horizontal" | "radial" | "vertical",
+  customSankey?: Function,
+  groupWidth?: number,
+  padAngle?: number,
+  orient?: string,
+  nodePadding?: number,
+  nodePaddingRatio?: number,
+  nodeWidth?: number,
+  direction?: string,
+  fontSize?: number,
+  rotate?: Function,
+  fontWeight?: number,
+  textAccessor?: Function,
+  edgeStrength?: number,
+  distanceMax?: number,
+  edgeDistance?: number,
+  forceManyBody?: Function | number,
+  hierarchicalNetwork: boolean,
+  graphSettings: Object
+}
+
+type State = {
+  dataVersion?: string,
+  adjustedPosition: Array<number>,
+  adjustedSize: Array<number>,
+  backgroundGraphics: Node,
+  foregroundGraphics: Node,
+  title: Object,
+  renderNumber: number,
+  nodeData: Array<Object>,
+  edgeData: Array<Object>,
+  projectedNodes: Array<Object>,
+  projectedEdges: Array<Object>,
+  projectedXYPoints: Array<Object>,
+  overlay: Array<Object>,
+  nodeIDAccessor: Function,
+  sourceAccessor: Function,
+  targetAccessor: Function,
+  nodeSizeAccessor: Function,
+  edgeWidthAccessor: Function,
+  margin: Object,
+  legendSettings: Object,
+  nodeLabelAnnotations: Array<Object>,
+  graphSettings: Object,
+  networkFrameRender: Object
+}
+
+type Props = {
+  dataVersion?: string,
+  name: string,
+  graph?: Object,
+  nodes?: Array<Object>,
+  edges?: Array<Object> | Object,
+  networkType?: string | Object,
+  size: Array<number>,
+  nodeStyle?: Object | Function,
+  nodeClass?: string | Function,
+  canvasNodes?: boolean | Function,
+  edgeStyle?: Object | Function,
+  edgeClass?: string | Function,
+  canvasEdges?: boolean | Function,
+  nodeRenderMode?: string | Function,
+  edgeRenderMode?: string | Function,
+  nodeLabels?: boolean | Function,
+  title?: Node,
+  legend?: Object,
+  edgeRenderKey?: Function,
+  nodeRenderKey?: Function,
+  foregroundGraphics?: Node,
+  backgroundGraphics?: Node,
+  additionalDefs?: Node,
+  svgAnnotationRules?: Function,
+  htmlAnnotationRules?: Function,
+  tooltipContent?: Function,
+  annotations: Array<Object>,
+  annotationSettings?: AnnotationHandling,
+  className?: string,
+  customClickBehavior?: Function,
+  customDoubleClickBehavior?: Function,
+  customHoverBehavior?: Function,
+  matte?: Object,
+  useSpans?: boolean,
+  beforeElements?: Node,
+  afterElements?: Node,
+  interaction?: Object,
+  hoverAnnotation?: boolean | string | Array<Object | Function>,
+  download?: boolean,
+  downloadFields?: Array<string>,
+  baseMarkProps?: Object,
+  canvasPostProcess?: CanvasPostProcessTypes,
+  disableContext?: boolean,
+  edgeWidthAccessor?: string | Function,
+  nodeSizeAccessor?: number | string | Function,
+  targetAccessor?: string | Function,
+  sourceAccessor?: string | Function,
+  nodeIDAccessor?: string | Function,
+  edgeType?: string | Function,
+  customNodeIcon?: Function,
+  customEdgeIcon?: Function,
+  margin?: number | Object,
+  onNodeOut?: Function,
+  onNodeClick?: Function,
+  onNodeEnter?: Function
+}
+
+class NetworkFrame extends React.Component<Props, State> {
   static defaultProps = {
     annotations: [],
     foregroundGraphics: [],
@@ -229,55 +422,63 @@ class NetworkFrame extends React.Component {
     networkType: { type: "force", iterations: 500 }
   }
 
-  constructor(props) {
+  constructor(props: Props) {
     super(props)
 
-    this.calculateNetworkFrame = this.calculateNetworkFrame.bind(this)
-    this.defaultNetworkHTMLRule = this.defaultNetworkHTMLRule.bind(this)
-    this.defaultNetworkSVGRule = this.defaultNetworkSVGRule.bind(this)
-
-    this.graphSettings = {
-      numberOfNodes: 0,
-      numberOfEdges: 0,
-      type: "empty-start"
-    }
     this.state = {
-      nodeData: null,
-      edgeData: null,
-      adjustedPosition: null,
-      adjustedSize: null,
+      dataVersion: undefined,
+      nodeData: [],
+      edgeData: [],
+      adjustedPosition: [],
+      adjustedSize: [],
       backgroundGraphics: null,
       foregroundGraphics: null,
-      projectedNodes: undefined,
-      projectedEdges: undefined,
+      projectedNodes: [],
+      projectedEdges: [],
       renderNumber: 0,
-      voronoiHover: null,
-      nodeLabelAnnotations: []
+      nodeLabelAnnotations: [],
+      graphSettings: {
+        type: "empty-start",
+        nodes: [],
+        edges: [],
+        nodeHash: new Map(),
+        edgeHash: new Map(),
+        hierarchicalNetwork: false
+      },
+      edgeWidthAccessor: stringToFn("weight"),
+      legendSettings: {},
+      margin: { top: 0, left: 0, right: 0, bottom: 0 },
+      networkFrameRender: {},
+      nodeIDAccessor: stringToFn("id"),
+      nodeSizeAccessor: genericFunction(5),
+      overlay: [],
+      projectedXYPoints: [],
+      sourceAccessor: stringToFn("source"),
+      targetAccessor: stringToFn("target"),
+      title: { title: undefined }
     }
-
-    this.oAccessor = null
-    this.rAccessor = null
-    this.oScale = null
-    this.rScale = null
   }
 
   componentWillMount() {
     Object.keys(this.props).forEach(d => {
       if (!networkframeproptypes[d]) {
         if (xyframeproptypes[d]) {
-          console.error(`${d} is an XYFrame prop are you sure you're using the right frame?`)
+          console.error(
+            `${d} is an XYFrame prop are you sure you're using the right frame?`
+          )
+        } else if (ordinalframeproptypes[d]) {
+          console.error(
+            `${d} is an OrdinalFrame prop are you sure you're using the right frame?`
+          )
+        } else {
+          console.error(`${d} is not a valid NetworkFrame prop`)
         }
-        else if (ordinalframeproptypes[d]) {
-          console.error(`${d} is an OrdinalFrame prop are you sure you're using the right frame?`)
-        }
-        else {
-          console.error(`${d} is not a valid NetworkFrame prop`)}
-        }
+      }
     })
     this.calculateNetworkFrame(this.props)
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentWillReceiveProps(nextProps: Props) {
     if (
       (this.state.dataVersion &&
         this.state.dataVersion !== nextProps.dataVersion) ||
@@ -296,29 +497,29 @@ class NetworkFrame extends React.Component {
     }
   }
 
-  onNodeClick(d, i) {
+  onNodeClick(d: Object, i: number) {
     if (this.props.onNodeClick) {
       this.props.onNodeClick(d, i)
     }
   }
 
-  onNodeEnter(d, i) {
+  onNodeEnter(d: Object, i: number) {
     if (this.props.onNodeEnter) {
       this.props.onNodeEnter(d, i)
     }
   }
 
-  onNodeOut(d, i) {
+  onNodeOut(d: Object, i: number) {
     if (this.props.onNodeOut) {
       this.props.onNodeOut(d, i)
     }
   }
 
-  calculateNetworkFrame(currentProps) {
+  calculateNetworkFrame(currentProps: Props) {
     const {
       graph,
-      nodes = (graph && graph.nodes) || [],
-      edges = (graph && graph.edges) || graph || [],
+      nodes = (graph && graph.nodes) || emptyArray,
+      edges = (graph && graph.edges) || graph || emptyArray,
       networkType,
       size,
       nodeStyle,
@@ -330,24 +531,46 @@ class NetworkFrame extends React.Component {
       nodeRenderMode,
       edgeRenderMode,
       nodeLabels,
-      title
+      title: baseTitle,
+      margin: baseMargin,
+      hoverAnnotation,
+      customNodeIcon: baseCustomNodeIcon
       /*, customHoverBehavior, customClickBehavior, renderFn, nodeClass = (() => ''), edgeClass = (() => '')*/
     } = currentProps
     //    const eventListenersGenerator = generatenetworkFrameEventListeners(customHoverBehavior, customClickBehavior)
 
-    let { edgeType, customNodeIcon, customEdgeIcon } = currentProps
+    let { edgeType, customEdgeIcon } = currentProps
 
-    const { hoverAnnotation } = currentProps
-
-    let networkSettings
+    let networkSettings: NetworkSettingsType
 
     const nodeHierarchicalIDFill = {}
+    let customNodeIcon = circleNodeGenerator
+    let networkSettingsKeys = ["type"]
 
     if (typeof networkType === "string") {
-      networkSettings = { type: networkType, iterations: 500 }
+      networkSettings = {
+        type: networkType,
+        ...baseNetworkSettings,
+        graphSettings: baseGraphSettings
+      }
     } else {
-      networkSettings = networkType
+      if (networkType) networkSettingsKeys = Object.keys(networkType)
+
+      networkSettings = {
+        type: "force",
+        ...networkType,
+        ...baseNetworkSettings,
+        graphSettings: baseGraphSettings
+      }
     }
+
+    networkSettings.graphSettings.nodes = nodes
+    networkSettings.graphSettings.edges = edges
+
+    let { edgeHash, nodeHash } = networkSettings.graphSettings
+
+    const createPointLayer =
+      ["treemap", "partition", "sankey"].indexOf(networkSettings.type) !== -1
 
     const nodeIDAccessor = stringToFn(currentProps.nodeIDAccessor, d => d.id)
     const sourceAccessor = stringToFn(
@@ -358,9 +581,10 @@ class NetworkFrame extends React.Component {
       currentProps.targetAccessor,
       d => d.target
     )
-    const nodeSizeAccessor =
+    // $FlowFixMe
+    const nodeSizeAccessor: Function =
       typeof currentProps.nodeSizeAccessor === "number"
-        ? () => currentProps.nodeSizeAccessor
+        ? genericFunction(currentProps.nodeSizeAccessor)
         : stringToFn(currentProps.nodeSizeAccessor, d => d.r || 5)
     const edgeWidthAccessor = stringToFn(
       currentProps.edgeWidthAccessor,
@@ -371,29 +595,53 @@ class NetworkFrame extends React.Component {
     const nodeRenderModeFn = stringToFn(nodeRenderMode, undefined, true)
     const nodeCanvasRenderFn = stringToFn(canvasNodes, undefined, true)
 
-    const margin = calculateMargin(currentProps)
-    const { adjustedPosition, adjustedSize } = adjustedPositionSize(
-      currentProps
-    )
+    const title =
+      typeof baseTitle === "object" &&
+      !React.isValidElement(baseTitle) &&
+      baseTitle !== null
+        ? baseTitle
+        : { title: baseTitle, orient: "top" }
+
+    const margin = calculateMargin({
+      margin: baseMargin,
+      title
+    })
+
+    const { adjustedPosition, adjustedSize } = adjustedPositionSize({
+      size,
+      margin
+    })
 
     let { projectedNodes, projectedEdges } = this.state
 
     const changedData =
       !this.state.projectedNodes ||
       !this.state.projectedEdges ||
-      this.graphSettings.nodes !== currentProps.nodes ||
-      this.graphSettings.edges !== currentProps.edges ||
+      this.state.graphSettings.nodes !== nodes ||
+      this.state.graphSettings.edges !== edges ||
       hierarchicalTypeHash[networkSettings.type]
 
+    console.log(
+      " this.state.graphSettings.nodes !== currentProps.nodes",
+      this.state.graphSettings.nodes !== currentProps.nodes
+    )
+
+    console.log(
+      "this.state.graphSettings.edges !== currentProps.edges",
+      this.state.graphSettings.edges !== currentProps.edges
+    )
+
     if (changedData) {
-      this.edgeHash = new Map()
-      this.nodeHash = new Map()
+      edgeHash = new Map()
+      nodeHash = new Map()
+      networkSettings.graphSettings.edgeHash = edgeHash
+      networkSettings.graphSettings.nodeHash = nodeHash
       projectedNodes = []
       projectedEdges = []
       nodes.forEach(node => {
         const id = nodeIDAccessor(node)
-        this.nodeHash.set(id, node)
-        this.nodeHash.set(node, node)
+        nodeHash.set(id, node)
+        nodeHash.set(node, node)
         projectedNodes.push(node)
         node.id = id
         node.inDegree = 0
@@ -404,7 +652,7 @@ class NetworkFrame extends React.Component {
       let operationalEdges = edges
 
       if (!Array.isArray(edges)) {
-        this.hierarchicalNetwork = true
+        networkSettings.hierarchicalNetwork = true
         const rootNode = hierarchy(edges, networkSettings.hierarchyChildren)
 
         rootNode.sum(networkSettings.hierarchySum || (d => d.value))
@@ -447,24 +695,24 @@ class NetworkFrame extends React.Component {
             )}`
           }))
       }
+
+      baseNodeProps.shapeNode = createPointLayer
+
       operationalEdges.forEach(edge => {
         const source = sourceAccessor(edge)
         const target = targetAccessor(edge)
         const sourceTarget = [source, target]
         sourceTarget.forEach(nodeDirection => {
-          if (!this.nodeHash.get(nodeDirection)) {
-            const nodeObject =
+          if (!nodeHash.get(nodeDirection)) {
+            const nodeObject: NodeType =
               typeof nodeDirection === "object"
-                ? Object.assign(nodeDirection, {
-                    degree: 0,
-                    inDegree: 0,
-                    outDegree: 0
-                  })
+                ? {
+                    ...baseNodeProps,
+                    ...nodeDirection
+                  }
                 : {
                     id: nodeDirection,
-                    inDegree: 0,
-                    outDegree: 0,
-                    degree: 0,
+                    ...baseNodeProps,
                     createdByFrame: true
                   }
             const nodeIDValue = nodeObject.id || nodeIDAccessor(nodeObject)
@@ -479,33 +727,39 @@ class NetworkFrame extends React.Component {
               nodeObject.id = `${nodeIDValue}${nodeSuffix}`
             }
 
-            this.nodeHash.set(nodeDirection, nodeObject)
+            nodeHash.set(nodeDirection, nodeObject)
             projectedNodes.push(nodeObject)
           }
         })
 
         const edgeWeight = edge.weight || 1
-        this.nodeHash.get(target).inDegree += edgeWeight
-        this.nodeHash.get(source).outDegree += edgeWeight
-        this.nodeHash.get(target).degree += edgeWeight
-        this.nodeHash.get(source).degree += edgeWeight
+
+        // $FlowFixMe
+        nodeHash.get(target).inDegree += edgeWeight
+        // $FlowFixMe
+        nodeHash.get(source).outDegree += edgeWeight
+        // $FlowFixMe
+        nodeHash.get(target).degree += edgeWeight
+        // $FlowFixMe
+        nodeHash.get(source).degree += edgeWeight
 
         const edgeKey = `${nodeIDAccessor(source) || source}|${nodeIDAccessor(
           target
         ) || target}`
         const newEdge = Object.assign({}, edge, {
-          source: this.nodeHash.get(source),
-          target: this.nodeHash.get(target)
+          source: nodeHash.get(source),
+          target: nodeHash.get(target)
         })
-        this.edgeHash.set(edgeKey, newEdge)
+        edgeHash.set(edgeKey, newEdge)
         projectedEdges.push(newEdge)
       })
     } else {
-      this.edgeHash = new Map()
+      edgeHash = new Map()
+      networkSettings.graphSettings.edgeHash = edgeHash
       projectedEdges.forEach(edge => {
         const edgeKey = `${nodeIDAccessor(edge.source) ||
           edge.source}|${nodeIDAccessor(edge.target) || edge.target}`
-        this.edgeHash.set(edgeKey, edge)
+        edgeHash.set(edgeKey, edge)
       })
     }
 
@@ -519,14 +773,15 @@ class NetworkFrame extends React.Component {
     networkSettings.width = size[0]
     networkSettings.height = size[1]
 
-    const networkSettingsKeys = Object.keys(networkSettings)
     let networkSettingsChanged = false
 
     networkSettingsKeys.forEach(key => {
       if (
         key !== "edgeType" &&
-        networkSettings[key] !== this.graphSettings[key]
+        key !== "graphSettings" &&
+        networkSettings[key] !== this.state.graphSettings[key]
       ) {
+        console.log("a difference in", key)
         networkSettingsChanged = true
       }
     })
@@ -540,12 +795,16 @@ class NetworkFrame extends React.Component {
             ? ribbonLink(d)
             : areaLink(d)
 
-      customNodeIcon = customNodeIcon ? customNodeIcon : sankeyNodeGenerator
+      customNodeIcon = baseCustomNodeIcon
+        ? baseCustomNodeIcon
+        : sankeyNodeGenerator
     } else if (networkSettings.type === "chord") {
       customNodeIcon = chordNodeGenerator(size)
       customEdgeIcon = chordEdgeGenerator(size)
     } else if (networkSettings.type === "wordcloud") {
-      customNodeIcon = customNodeIcon ? customNodeIcon : wordcloudNodeGenerator
+      customNodeIcon = baseCustomNodeIcon
+        ? baseCustomNodeIcon
+        : wordcloudNodeGenerator
     } else if (hierarchicalTypeHash[networkSettings.type]) {
       if (hierarchicalCustomNodeHash[networkSettings.type]) {
         customNodeIcon = hierarchicalCustomNodeHash[networkSettings.type]
@@ -562,7 +821,7 @@ class NetworkFrame extends React.Component {
       }
 
       projectedNodes.forEach(node => {
-        if (node.x0 !== undefined) {
+        if (createPointLayer) {
           node.x = (node.x0 + node.x1) / 2
           node.y = (node.y0 + node.y1) / 2
         }
@@ -574,7 +833,7 @@ class NetworkFrame extends React.Component {
           node.x = node.y
           node.y = ox
 
-          if (node.x0 !== undefined) {
+          if (createPointLayer) {
             const ox0 = node.x0
             const ox1 = node.x1
             node.x0 = node.y0
@@ -596,7 +855,7 @@ class NetworkFrame extends React.Component {
         } else {
           node.x = node.x
           node.y = node.y
-          if (node.x0 !== undefined) {
+          if (createPointLayer) {
             node.x0 = node.x0
             node.x1 = node.x1
             node.y0 = node.y0
@@ -605,6 +864,9 @@ class NetworkFrame extends React.Component {
         }
       })
     }
+
+    console.log("changedData", changedData)
+    console.log("networkSettingsChanged", networkSettingsChanged)
 
     if (changedData || networkSettingsChanged) {
       let components = [
@@ -624,7 +886,7 @@ class NetworkFrame extends React.Component {
         const ribbonGenerator = ribbon().radius(radius - groupWidth)
 
         const matrixifiedNetwork = matrixify({
-          edgeHash: this.edgeHash,
+          edgeHash: edgeHash,
           nodes: projectedNodes,
           edges: projectedEdges,
           edgeWidthAccessor,
@@ -655,7 +917,8 @@ class NetworkFrame extends React.Component {
           const nodeTargetID = nodeIDAccessor(
             projectedNodes[generatedChord.target.index]
           )
-          const chordEdge = this.edgeHash.get(`${nodeSourceID}|${nodeTargetID}`)
+          const chordEdge = edgeHash.get(`${nodeSourceID}|${nodeTargetID}`)
+          // $FlowFixMe
           chordEdge.d = chordD
         })
       } else if (
@@ -723,7 +986,7 @@ class NetworkFrame extends React.Component {
         } = networkSettings
 
         const fontWeightMod = (fontWeight / 300 - 1) / 5 + 1
-        const fontWidth = fontSize / 1.5 * fontWeightMod
+        const fontWidth = (fontSize / 1.5) * fontWeightMod
 
         nodes.forEach((d, i) => {
           const calcualatedNodeSize = nodeSizeAccessor(d)
@@ -809,13 +1072,14 @@ class NetworkFrame extends React.Component {
           node.fontSize = node.fontSize * sizeMod
           node.scale = 1
           node.radius = node.r = Math.max(
-            node.textHeight / 4 * yMod,
-            node.textWidth / 4 * xMod
+            (node.textHeight / 4) * yMod,
+            (node.textWidth / 4) * xMod
           )
           //      node.textHeight = projectionScaleY(node.textHeight)
           //      node.textWidth = projectionScaleY(node.textWidth)
         })
       } else if (networkSettings.type === "force") {
+        console.log("in force")
         const {
           iterations = 500,
           edgeStrength = 0.1,
@@ -874,14 +1138,17 @@ class NetworkFrame extends React.Component {
             if (!componentHash.get(node)) {
               componentHash.set(node, {
                 node,
-                component: null,
+                component: -99,
                 connectedNodes: [],
                 edges: []
               })
             }
           })
+          // $FlowFixMe
           componentHash.get(edge.source).connectedNodes.push(edge.target)
+          // $FlowFixMe
           componentHash.get(edge.target).connectedNodes.push(edge.source)
+          // $FlowFixMe
           componentHash.get(edge.source).edges.push(edge)
         })
 
@@ -895,7 +1162,6 @@ class NetworkFrame extends React.Component {
         const layoutSize = size[0] > size[1] ? size[1] : size[0]
         const layoutDirection = size[0] > size[1] ? "horizontal" : "vertical"
 
-        //        louvain.assign(graph)
         const {
           iterations = 500,
           edgeStrength = 0.1,
@@ -989,9 +1255,8 @@ class NetworkFrame extends React.Component {
         })
       }
 
-      this.graphSettings = networkSettings
-      this.graphSettings.nodes = currentProps.nodes
-      this.graphSettings.edges = currentProps.edges
+      this.state.graphSettings.nodes = currentProps.nodes
+      this.state.graphSettings.edges = currentProps.edges
     }
 
     if (networkSettings.direction === "flip") {
@@ -1060,7 +1325,7 @@ class NetworkFrame extends React.Component {
     let legendSettings
 
     if (currentProps.legend) {
-      legendSettings = currentProps.legend === true ? {} : currentProps.legend
+      legendSettings = currentProps.legend
       if (!legendSettings.legendGroups) {
         ///Something auto for networks
         const legendGroups = [
@@ -1074,7 +1339,7 @@ class NetworkFrame extends React.Component {
       }
     }
 
-    customNodeIcon = customNodeIcon || circleNodeGenerator 
+    customNodeIcon = customNodeIcon || circleNodeGenerator
 
     const networkFrameRender = {
       edges: {
@@ -1147,17 +1412,27 @@ class NetworkFrame extends React.Component {
 
     let projectedXYPoints
     const overlay = []
-    const areaBasedTypes = [ "circlepack", "treemap", "partition" ]
-    if ((hoverAnnotation && areaBasedTypes.find(d => d === networkType.type)) || hoverAnnotation === "area" ) {
-      const renderedNodeOverlays = projectedNodes
-        .map((d,i) => ({ 
-          overlayData: d,
-          ...customNodeIcon({ d, i, transform: `translate(${d.x},${d.y})`, styleFn: () => ({ fill: "pink", stroke: "pink", opacity: 0 }) }).props
+    const areaBasedTypes = ["circlepack", "treemap", "partition"]
+    if (
+      (hoverAnnotation &&
+        areaBasedTypes.find(d => d === networkSettings.type)) ||
+      hoverAnnotation === "area"
+    ) {
+      const renderedNodeOverlays = projectedNodes.map((d, i) => ({
+        overlayData: d,
+        ...customNodeIcon({
+          d,
+          i,
+          transform: `translate(${d.x},${d.y})`,
+          styleFn: () => ({ fill: "pink", stroke: "pink", opacity: 0 })
+        }).props
       }))
-      
+
       overlay.push(...renderedNodeOverlays)
-    }
-    else if (hoverAnnotation === "edge" && edgePointHash[networkSettings.type]) {
+    } else if (
+      hoverAnnotation === "edge" &&
+      edgePointHash[networkSettings.type]
+    ) {
       projectedXYPoints = projectedEdges.map(
         edgePointHash[networkSettings.type]
       )
@@ -1171,15 +1446,12 @@ class NetworkFrame extends React.Component {
     }
 
     this.setState({
-      voronoiHover: null,
       adjustedPosition: adjustedPosition,
       adjustedSize: adjustedSize,
       backgroundGraphics: currentProps.backgroundGraphics,
       foregroundGraphics: currentProps.foregroundGraphics,
       title,
       renderNumber: this.state.renderNumber + 1,
-      nodeData: null,
-      edgeData: null,
       projectedNodes,
       projectedEdges,
       projectedXYPoints,
@@ -1192,11 +1464,15 @@ class NetworkFrame extends React.Component {
       margin,
       legendSettings,
       networkFrameRender,
-      nodeLabelAnnotations
+      nodeLabelAnnotations,
+      graphSettings: {
+        ...networkSettings.graphSettings,
+        ...networkSettings
+      }
     })
   }
 
-  defaultNetworkSVGRule({ d, i }) {
+  defaultNetworkSVGRule = ({ d, i }: { d: Object, i: number }) => {
     const {
       projectedNodes /*, projectedEdges*/,
       nodeIDAccessor,
@@ -1253,7 +1529,7 @@ class NetworkFrame extends React.Component {
     return null
   }
 
-  defaultNetworkHTMLRule({ d, i }) {
+  defaultNetworkHTMLRule = ({ d, i }: { d: Object, i: number }) => {
     const { tooltipContent, size, useSpans } = this.props
     if (this.props.htmlAnnotationRules) {
       const customAnnotation = this.props.htmlAnnotationRules({
@@ -1288,13 +1564,16 @@ class NetworkFrame extends React.Component {
       beforeElements,
       afterElements,
       interaction,
-      title,
       disableContext,
       canvasPostProcess,
       baseMarkProps,
       useSpans,
       canvasNodes,
-      canvasEdges
+      canvasEdges,
+      name,
+      downloadFields,
+      download,
+      additionalDefs
     } = this.props
     const {
       backgroundGraphics,
@@ -1306,37 +1585,38 @@ class NetworkFrame extends React.Component {
       adjustedSize,
       networkFrameRender,
       nodeLabelAnnotations,
-      overlay
+      overlay,
+      projectedNodes,
+      projectedEdges,
+      title
     } = this.state
 
     const downloadButton = []
 
-    if (this.props.download && this.state.projectedNodes.length > 0) {
+    if (download && projectedNodes.length > 0) {
       downloadButton.push(
         <DownloadButton
           key="network-download-nodes"
-          csvName={`${this.props.name ||
-            "networkframe"}-${new Date().toJSON()}`}
-          width={this.props.size[0]}
+          csvName={`${name}-${new Date().toJSON()}`}
+          width={size[0]}
           label={"Download Node List"}
           data={networkNodeDownloadMapping({
-            data: this.state.projectedNodes,
-            fields: this.props.downloadFields
+            data: projectedNodes,
+            fields: downloadFields
           })}
         />
       )
     }
-    if (this.props.download && this.state.projectedEdges.length > 0) {
+    if (download && projectedEdges.length > 0) {
       downloadButton.push(
         <DownloadButton
           key="network-download-edges"
-          csvName={`${this.props.name ||
-            "networkframe"}-${new Date().toJSON()}`}
-          width={this.props.size[0]}
+          csvName={`${name}-${new Date().toJSON()}`}
+          width={size[0]}
           label={"Download Edge List"}
           data={networkEdgeDownloadMapping({
-            data: this.state.projectedEdges,
-            fields: this.props.downloadFields
+            data: projectedEdges,
+            fields: downloadFields
           })}
         />
       )
@@ -1344,8 +1624,14 @@ class NetworkFrame extends React.Component {
 
     const finalFilterDefs = filterDefs({
       key: "networkFrame",
-      additionalDefs: this.props.additionalDefs
+      additionalDefs: additionalDefs
     })
+
+    let formattedOverlay
+
+    if (overlay && overlay.length > 0) {
+      formattedOverlay = overlay
+    }
 
     return (
       <Frame
@@ -1362,8 +1648,8 @@ class NetworkFrame extends React.Component {
         finalFilterDefs={finalFilterDefs}
         frameKey={"none"}
         projectedCoordinateNames={projectedCoordinateNames}
-        defaultSVGRule={this.defaultNetworkSVGRule.bind(this)}
-        defaultHTMLRule={this.defaultNetworkHTMLRule.bind(this)}
+        defaultSVGRule={this.defaultNetworkSVGRule}
+        defaultHTMLRule={this.defaultNetworkHTMLRule}
         hoverAnnotation={!!hoverAnnotation}
         annotations={[...annotations, ...nodeLabelAnnotations]}
         annotationSettings={annotationSettings}
@@ -1374,7 +1660,7 @@ class NetworkFrame extends React.Component {
         customDoubleClickBehavior={customDoubleClickBehavior}
         points={projectedXYPoints}
         margin={margin}
-        overlay={overlay && overlay.length > 0 && overlay}
+        overlay={formattedOverlay}
         backgroundGraphics={backgroundGraphics}
         foregroundGraphics={foregroundGraphics}
         beforeElements={beforeElements}
@@ -1383,15 +1669,11 @@ class NetworkFrame extends React.Component {
         disableContext={disableContext}
         canvasPostProcess={canvasPostProcess}
         baseMarkProps={baseMarkProps}
-        useSpans={useSpans}
-        canvasRendering={canvasNodes || canvasEdges}
+        useSpans={!!useSpans}
+        canvasRendering={!!(canvasNodes || canvasEdges)}
       />
     )
   }
-}
-
-NetworkFrame.propTypes = {
-  ...networkframeproptypes
 }
 
 export default NetworkFrame
