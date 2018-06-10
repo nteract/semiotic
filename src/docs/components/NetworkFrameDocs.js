@@ -168,6 +168,8 @@ const nodeData = [
   { id: "l" }
 ]
 
+const networkGraph = { nodes: nodeData, edges: edgeData }
+
 const networkEdgeStyle = () => ({
   stroke: "#4d430c",
   fill: "#4d430c",
@@ -300,7 +302,8 @@ export default class NetworkFrameDocs extends React.Component {
 
     const networkChart = {
       size: chartSize,
-      graph: { nodes: nodeData, edges: edgeData },
+      graph: networkGraph,
+      //      nodes: nodeData, edges: edgeData,
       margin: { top: 50, bottom: 50, left: 50, right: 50 },
       edgeStyle: networkEdgeStyle,
       nodeStyle: networkNodeStyle,
@@ -311,7 +314,7 @@ export default class NetworkFrameDocs extends React.Component {
       nodeLabels: false,
       hoverAnnotation: true,
       download: true,
-      nodeRenderMode: d =>
+      /*      nodeRenderMode: d =>
         d.createdByFrame
           ? {
               renderMode: "sketchy",
@@ -320,7 +323,7 @@ export default class NetworkFrameDocs extends React.Component {
               roughness: 0.5
             }
           : { renderMode: "sketchy", fillWeight: 2, roughness: 2.4 },
-      edgeRenderMode: "sketchy",
+      edgeRenderMode: "sketchy", */
       canvasPostProcess: glowyCanvas,
       annotationSettings: {
         pointSizeFunction: d => (d.subject && d.subject.radius) || 5,
@@ -411,28 +414,35 @@ export default class NetworkFrameDocs extends React.Component {
           sankey diagrams and force-directed network diagrams.
         </p>
 
-        <p>Data are sent to the nodes and edges properties. Nodes are not required (the corresponding nodes will be created based on edge data) and edges are not required (if you want to make bubble charts) but you do have to send one or the other.</p>
-        <p>Node data format:
+        <p>
+          Data are sent to the nodes and edges properties. Nodes are not
+          required (the corresponding nodes will be created based on edge data)
+          and edges are not required (if you want to make bubble charts) but you
+          do have to send one or the other.
+        </p>
+        <p>
+          Node data format:
           <br />
-        <PrismCode>{`[
+          <PrismCode>{`[
   { id: "Bob" },
   { id: "Xianlin" }
 ]`}</PrismCode>
-</p>
-<p>Edge Data can be sent as an edge list:
-  <br />
-  <PrismCode>{`[
+        </p>
+        <p>
+          Edge Data can be sent as an edge list:
+          <br />
+          <PrismCode>{`[
   { source: "Bob", target: "Xianlin" },
   { source: "Xianlin", target: "Baboo" }
 ]`}</PrismCode>
-<br />
-Or as hierarchical JSON (which can be used for hierarchical charts or for sankey or force-directed networks):
-<br />
-<PrismCode>{`{
+          <br />
+          Or as hierarchical JSON (which can be used for hierarchical charts or
+          for sankey or force-directed networks):
+          <br />
+          <PrismCode>{`{
   id: "root", children: [ { id: "A Child", children: [{ id: "A Grandchild" }] } ]
 }`}</PrismCode>
-
-  </p>
+        </p>
       </DocumentComponent>
     )
   }

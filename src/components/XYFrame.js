@@ -75,6 +75,8 @@ import type {
   CustomHoverType
 } from "./types/annotationTypes"
 
+import type { AxisType } from "./types/annotationTypes"
+
 type Props = {
   useSpans: boolean,
   title?: ?string | Object,
@@ -152,7 +154,7 @@ type Props = {
 }
 
 type State = {
-  dataVersion: string,
+  dataVersion?: string,
   lineData?: Array<Object> | Object,
   pointData?: Array<Object> | Object,
   areaData?: Array<Object> | Object,
@@ -165,7 +167,7 @@ type State = {
   backgroundGraphics?: Node,
   foregroundGraphics?: Node,
   axesData?: Array<Object>,
-  axes?: Array<Object>,
+  axes?: Array<AxisType>,
   axesTickLines?: Array<Object>,
   renderNumber: number,
   margin: MarginType,
@@ -241,12 +243,12 @@ class XYFrame extends React.Component<Props, State> {
     className: "",
     lineType: "line",
     name: "xyframe",
-    dataVersion: ""
+    dataVersion: undefined
   }
 
   state = {
     size: [500, 500],
-    dataVersion: "",
+    dataVersion: undefined,
     lineData: undefined,
     pointData: undefined,
     areaData: undefined,
@@ -315,7 +317,6 @@ class XYFrame extends React.Component<Props, State> {
       const dataChanged = xyFrameDataProps.find(
         d => this.props[d] !== nextProps[d]
       )
-
       this.calculateXYFrame(nextProps, dataChanged)
     }
   }
@@ -433,23 +434,10 @@ class XYFrame extends React.Component<Props, State> {
       axes: currentProps.axes
     })
 
-    console.log("original margin", currentProps.margin)
-    console.log("margin", margin)
-
-    const xExtentSettings =
-      baseXExtent === undefined || Array.isArray(baseXExtent)
-        ? { extent: baseXExtent }
-        : baseXExtent
-    const yExtentSettings =
-      baseYExtent === undefined || Array.isArray(baseYExtent)
-        ? { extent: baseYExtent }
-        : baseYExtent
-
-    let xExtent = xExtentSettings.extent
-    let yExtent = yExtentSettings.extent
-
     let calculatedXExtent = [],
-      calculatedYExtent = []
+      calculatedYExtent = [],
+      yExtent,
+      xExtent
 
     if (
       updateData ||
@@ -504,6 +492,18 @@ class XYFrame extends React.Component<Props, State> {
         calculatedYExtent
       } = this.state)
     }
+
+    const xExtentSettings =
+      baseXExtent === undefined || Array.isArray(baseXExtent)
+        ? { extent: baseXExtent }
+        : baseXExtent
+    const yExtentSettings =
+      baseYExtent === undefined || Array.isArray(baseYExtent)
+        ? { extent: baseYExtent }
+        : baseYExtent
+
+    xExtent = xExtentSettings.extent || xExtent
+    yExtent = yExtentSettings.extent || yExtent
 
     const { xScale, yScale } = this.screenScales({
       xExtent,
@@ -670,6 +670,8 @@ class XYFrame extends React.Component<Props, State> {
     }
 
     const lineAriaLabel =
+      annotatedSettings.lineType.type !== undefined &&
+      typeof annotatedSettings.lineType.type !== "function" &&
       naturalLanguageLineType[annotatedSettings.lineType.type]
 
     const xyFrameRender = {
