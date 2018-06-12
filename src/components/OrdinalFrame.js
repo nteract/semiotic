@@ -374,7 +374,9 @@ class OrdinalFrame extends React.Component<Props, State> {
       ...new Set(
         allData.map((d, i) => {
           const baseOValue = oAccessor(d, i)
-          return baseOValue.toString ? baseOValue.toString() : baseOValue
+          return baseOValue && baseOValue.toString
+            ? baseOValue.toString()
+            : baseOValue
         })
       )
     ]
