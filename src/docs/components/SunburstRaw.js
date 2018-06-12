@@ -13,7 +13,12 @@ const sunburstSettings = {
     opacity: 0.75
   }),
   nodeIDAccessor: "name",
-  hoverAnnotation: true,
+  hoverAnnotation: [
+    {
+      type: "highlight",
+      style: { fill: "red", stroke: "orange", strokeWidth: 3 }
+    }
+  ],
   networkType: {
     type: "partition",
     projection: "radial",

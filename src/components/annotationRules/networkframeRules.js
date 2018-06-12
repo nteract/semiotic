@@ -141,3 +141,22 @@ export const svgRectEncloseRule = ({
   })
   return rectangleEnclosure({ bboxNodes, d, i })
 }
+
+export const svgHighlightRule = ({ d, networkFrameRender }) => {
+  const { nodes } = networkFrameRender
+  const { customMark } = nodes
+
+  let styleFn = () => ({})
+  if (d.style && typeof d.style === "function") {
+    styleFn = d.style
+  } else if (d.style) {
+    styleFn = () => d.style
+  }
+
+  const transform = `translate(${d.x},${d.y})`
+  const baseMarkProps = { forceUpdate: true }
+
+  const HighlightMark = customMark({ d, styleFn, transform, baseMarkProps })
+
+  return HighlightMark
+}

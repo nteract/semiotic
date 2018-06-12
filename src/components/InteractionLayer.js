@@ -308,9 +308,9 @@ class InteractionLayer extends React.Component<Props, State> {
           const { overlayData, ...rest } = overlayRegion
           return (
             <Mark
-              key={`overlay-${i}`}
               forceUpdate={true}
               {...rest}
+              key={`overlay-${i}`}
               onMouseEnter={() => {
                 this.changeVoronoi(overlayData, props.hoverAnnotation)
               }}
