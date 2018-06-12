@@ -267,7 +267,6 @@ export const drawNodes = ({
 }) => {
   const markGenerator = customMark
   const renderedData = []
-  console.log("canvasRenderFn", canvasRenderFn)
 
   if (customMark && canvasRenderFn) {
     console.error(

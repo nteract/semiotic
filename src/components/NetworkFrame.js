@@ -82,7 +82,8 @@ import {
   svgNodeRule,
   svgReactAnnotationRule,
   svgEncloseRule,
-  svgRectEncloseRule
+  svgRectEncloseRule,
+  svgHighlightRule
 } from "./annotationRules/networkframeRules"
 
 import { genericFunction } from "./untyped_utilities/functions"
@@ -535,9 +536,7 @@ class NetworkFrame extends React.Component<Props, State> {
       margin: baseMargin,
       hoverAnnotation,
       customNodeIcon: baseCustomNodeIcon
-      /*, customHoverBehavior, customClickBehavior, renderFn, nodeClass = (() => ''), edgeClass = (() => '')*/
     } = currentProps
-    //    const eventListenersGenerator = generatenetworkFrameEventListeners(customHoverBehavior, customClickBehavior)
 
     let { edgeType, customEdgeIcon } = currentProps
 
@@ -593,7 +592,8 @@ class NetworkFrame extends React.Component<Props, State> {
     const nodeStyleFn = stringToFn(nodeStyle, () => ({}), true)
     const nodeClassFn = stringToFn(nodeClass, () => "", true)
     const nodeRenderModeFn = stringToFn(nodeRenderMode, undefined, true)
-    const nodeCanvasRenderFn = canvasNodes && stringToFn(canvasNodes, undefined, true)
+    const nodeCanvasRenderFn =
+      canvasNodes && stringToFn(canvasNodes, undefined, true)
 
     const title =
       typeof baseTitle === "object" &&
@@ -1421,7 +1421,11 @@ class NetworkFrame extends React.Component<Props, State> {
       projectedXYPoints = projectedEdges.map(
         edgePointHash[networkSettings.type]
       )
-    } else if (hoverAnnotation === true || hoverAnnotation === "node") {
+    } else if (
+      Array.isArray(hoverAnnotation) ||
+      hoverAnnotation === true ||
+      hoverAnnotation === "node"
+    ) {
       projectedXYPoints = projectedNodes
     } else if (hoverAnnotation === "all") {
       projectedXYPoints = [
@@ -1461,7 +1465,8 @@ class NetworkFrame extends React.Component<Props, State> {
     const {
       projectedNodes /*, projectedEdges*/,
       nodeIDAccessor,
-      nodeSizeAccessor
+      nodeSizeAccessor,
+      networkFrameRender
     } = this.state
     const { svgAnnotationRules } = this.props
 
@@ -1509,6 +1514,13 @@ class NetworkFrame extends React.Component<Props, State> {
         projectedNodes,
         nodeIDAccessor,
         nodeSizeAccessor
+      })
+    } else if (d.type === "highlight") {
+      return svgHighlightRule({
+        d,
+        i,
+        nodeSizeAccessor,
+        networkFrameRender
       })
     }
     return null
@@ -1635,7 +1647,9 @@ class NetworkFrame extends React.Component<Props, State> {
         projectedCoordinateNames={projectedCoordinateNames}
         defaultSVGRule={this.defaultNetworkSVGRule}
         defaultHTMLRule={this.defaultNetworkHTMLRule}
-        hoverAnnotation={!!hoverAnnotation}
+        hoverAnnotation={
+          Array.isArray(hoverAnnotation) ? hoverAnnotation : !!hoverAnnotation
+        }
         annotations={[...annotations, ...nodeLabelAnnotations]}
         annotationSettings={annotationSettings}
         legendSettings={legendSettings}

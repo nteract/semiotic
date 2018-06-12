@@ -199,10 +199,6 @@ export const svgHighlightRule = ({
   const thisID = pieceIDAccessor(d)
   const thisO = oAccessor(d)
 
-  console.log("d", d)
-  console.log("orFrameRender", orFrameRender)
-  console.log("pieceIDAccessor", pieceIDAccessor)
-
   const foundPieces =
     (orFrameRender.pieces &&
       orFrameRender.pieces.data

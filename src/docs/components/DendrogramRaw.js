@@ -26,7 +26,7 @@ export default ({
       opacity: 0.5
     }),
     nodeIDAccessor: "name",
-    hoverAnnotation: "edge",
+    hoverAnnotation: true,
     networkType: {
       type,
       projection: projection,
