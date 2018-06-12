@@ -15,12 +15,24 @@ const someBarData = [
 
 describe("OrdinalFrame", () => {
   it("renders", () => {
-    mount(<OrdinalFrame data={someBarData} disableContext={true} />)
+    mount(
+      <OrdinalFrame
+        data={someBarData}
+        oAccessor="column"
+        rAccessor="cats"
+        disableContext={true}
+      />
+    )
   })
 
   it("renders a <Frame>", () => {
     const wrapper = shallow(
-      <OrdinalFrame data={someBarData} disableContext={true} />
+      <OrdinalFrame
+        data={someBarData}
+        oAccessor="column"
+        rAccessor="cats"
+        disableContext={true}
+      />
     )
     expect(wrapper.find("Frame").length).toEqual(1)
   })
