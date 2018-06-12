@@ -597,7 +597,7 @@ export const htmlColumnHoverRule = ({
 }) => {
   //we need to ignore negative pieces to make sure the hover behavior populates on top of the positive bar
   const positionValue =
-    summaryType.type ||
+    (summaryType.type && summaryType.type !== "none") ||
     ["swarm", "point", "clusterbar"].find(p => p === type.type)
       ? max(d.pieces.map(p => p.scaledValue))
       : sum(d.pieces.map(p => p.scaledValue).filter(p => p > 0))
