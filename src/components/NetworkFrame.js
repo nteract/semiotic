@@ -602,6 +602,13 @@ class NetworkFrame extends React.Component<Props, State> {
       }
     }
 
+    const title =
+      typeof baseTitle === "object" &&
+      !React.isValidElement(baseTitle) &&
+      baseTitle !== null
+        ? baseTitle
+        : { title: baseTitle, orient: "top" }
+
     const margin = calculateMargin({
       margin: baseMargin,
       title
@@ -654,13 +661,6 @@ class NetworkFrame extends React.Component<Props, State> {
     const nodeRenderModeFn = stringToFn(nodeRenderMode, undefined, true)
     const nodeCanvasRenderFn =
       canvasNodes && stringToFn(canvasNodes, undefined, true)
-
-    const title =
-      typeof baseTitle === "object" &&
-      !React.isValidElement(baseTitle) &&
-      baseTitle !== null
-        ? baseTitle
-        : { title: baseTitle, orient: "top" }
 
     let { projectedNodes, projectedEdges } = this.state
 
