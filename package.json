@@ -153,8 +153,8 @@
     "prop-types": "15.6.0",
     "raf": "3.4.0",
     "react-annotation": "1.2.1",
-    "roughjs-es5": "0.0.2",
-    "semiotic-mark": "0.2.11",
+    "roughjs-es5": "0.1.0",
+    "semiotic-mark": "0.2.12",
     "svg-path-bounding-box": "1.0.4",
     "whatwg-fetch": "2.0.3"
   },
