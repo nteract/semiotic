@@ -155,12 +155,6 @@ const hierarchicalTypeHash = {
   partition
 }
 
-const hierarchicalCustomNodeHash = {
-  partition: hierarchicalRectNodeGenerator,
-  treemap: hierarchicalRectNodeGenerator,
-  circlepack: circleNodeGenerator
-}
-
 const hierarchicalProjectable = {
   partition: true,
   cluster: true,
@@ -185,6 +179,62 @@ const customEdgeHashMutate = {
   particle: glyphMutate.particle
 }
 */
+
+function determineNodeIcon(baseCustomNodeIcon, networkSettings, size) {
+  if (baseCustomNodeIcon) return baseCustomNodeIcon
+
+  const center = [size[0] / 2, size[1] / 2]
+
+  switch (networkSettings.type) {
+    case "sankey":
+      return sankeyNodeGenerator
+      break
+    case "partition":
+      return networkSettings.projection === "radial"
+        ? radialRectNodeGenerator(size, center)
+        : hierarchicalRectNodeGenerator
+      break
+    case "treemap":
+      return networkSettings.projection === "radial"
+        ? radialRectNodeGenerator(size, center)
+        : hierarchicalRectNodeGenerator
+      break
+    case "circlepack":
+      return circleNodeGenerator
+      break
+    case "wordcloud":
+      return wordcloudNodeGenerator
+      break
+    case "chord":
+      return chordNodeGenerator(size)
+      break
+  }
+
+  return circleNodeGenerator
+}
+
+function determineEdgeIcon(baseCustomEdgeIcon, networkSettings, size) {
+  if (baseCustomEdgeIcon) return baseCustomEdgeIcon
+
+  switch (networkSettings.type) {
+    case "partition":
+      return () => null
+      break
+    case "treemap":
+      return () => null
+      break
+    case "circlepack":
+      return () => null
+      break
+    case "wordcloud":
+      return () => null
+      break
+    case "chord":
+      return chordEdgeGenerator(size)
+      break
+  }
+  return undefined
+}
 
 function breadthFirstCompontents(baseNodes, hash) {
   const componentHash = {
@@ -535,15 +585,15 @@ class NetworkFrame extends React.Component<Props, State> {
       title: baseTitle,
       margin: baseMargin,
       hoverAnnotation,
-      customNodeIcon: baseCustomNodeIcon
+      customNodeIcon: baseCustomNodeIcon,
+      customEdgeIcon: baseCustomEdgeIcon
     } = currentProps
 
-    let { edgeType, customEdgeIcon } = currentProps
+    let { edgeType } = currentProps
 
     let networkSettings: NetworkSettingsType
 
     const nodeHierarchicalIDFill = {}
-    let customNodeIcon = circleNodeGenerator
     let networkSettingsKeys = ["type"]
 
     if (typeof networkType === "string") {
@@ -557,11 +607,32 @@ class NetworkFrame extends React.Component<Props, State> {
 
       networkSettings = {
         type: "force",
-        ...networkType,
         ...baseNetworkSettings,
+        ...networkType,
         graphSettings: baseGraphSettings
       }
     }
+
+    const margin = calculateMargin({
+      margin: baseMargin,
+      title
+    })
+
+    const { adjustedPosition, adjustedSize } = adjustedPositionSize({
+      size,
+      margin
+    })
+
+    const customNodeIcon = determineNodeIcon(
+      baseCustomNodeIcon,
+      networkSettings,
+      adjustedSize
+    )
+    const customEdgeIcon = determineEdgeIcon(
+      baseCustomEdgeIcon,
+      networkSettings,
+      adjustedSize
+    )
 
     networkSettings.graphSettings.nodes = nodes
     networkSettings.graphSettings.edges = edges
@@ -601,16 +672,6 @@ class NetworkFrame extends React.Component<Props, State> {
       baseTitle !== null
         ? baseTitle
         : { title: baseTitle, orient: "top" }
-
-    const margin = calculateMargin({
-      margin: baseMargin,
-      title
-    })
-
-    const { adjustedPosition, adjustedSize } = adjustedPositionSize({
-      size,
-      margin
-    })
 
     let { projectedNodes, projectedEdges } = this.state
 
@@ -783,32 +844,7 @@ class NetworkFrame extends React.Component<Props, State> {
           : edgeType === "angled"
             ? ribbonLink(d)
             : areaLink(d)
-
-      customNodeIcon = baseCustomNodeIcon
-        ? baseCustomNodeIcon
-        : sankeyNodeGenerator
-    } else if (networkSettings.type === "chord") {
-      customNodeIcon = chordNodeGenerator(size)
-      customEdgeIcon = chordEdgeGenerator(size)
-    } else if (networkSettings.type === "wordcloud") {
-      customNodeIcon = baseCustomNodeIcon
-        ? baseCustomNodeIcon
-        : wordcloudNodeGenerator
     } else if (hierarchicalTypeHash[networkSettings.type]) {
-      if (hierarchicalCustomNodeHash[networkSettings.type]) {
-        customNodeIcon = hierarchicalCustomNodeHash[networkSettings.type]
-        customEdgeIcon = () => null
-      }
-      const radialSize = adjustedSize
-      const radialCenter = [radialSize[0] / 2, radialSize[1] / 2]
-      if (
-        (networkSettings.type === "partition" ||
-          networkSettings.type === "treemap") &&
-        networkSettings.projection === "radial"
-      ) {
-        customNodeIcon = radialRectNodeGenerator(radialSize, radialCenter)
-      }
-
       projectedNodes.forEach(node => {
         if (createPointLayer) {
           node.x = (node.x0 + node.x1) / 2
@@ -835,8 +871,8 @@ class NetworkFrame extends React.Component<Props, State> {
           networkSettings.projection === "radial"
         ) {
           const radialPoint = pointOnArcAtAngle(
-            radialCenter,
-            node.x / radialSize[0],
+            [adjustedSize[0] / 2, adjustedSize[1] / 2],
+            node.x / adjustedSize[0],
             node.y / 2
           )
           node.x = radialPoint[0]
@@ -854,7 +890,10 @@ class NetworkFrame extends React.Component<Props, State> {
       })
     }
 
-    if (changedData || networkSettingsChanged) {
+    if (
+      networkSettings.type !== "static" &&
+      (changedData || networkSettingsChanged)
+    ) {
       let components = [
         {
           componentNodes: projectedNodes,
@@ -1323,8 +1362,6 @@ class NetworkFrame extends React.Component<Props, State> {
         legendSettings.legendGroups = legendGroups
       }
     }
-
-    customNodeIcon = customNodeIcon || circleNodeGenerator
 
     const networkFrameRender = {
       edges: {
