@@ -145,7 +145,7 @@
     "d3-selection": "^1.1.0",
     "d3-shape": "^1.0.4",
     "d3-voronoi": "^1.0.2",
-    "element-resize-event": "git://github.com/emeeks/element-resize-event",
+    "element-resize-event-tabindex": "0.0.1",
     "json2csv": "3.11.5",
     "labella": "1.1.4",
     "object-assign": "4.1.1",
@@ -153,7 +153,7 @@
     "prop-types": "15.6.0",
     "raf": "3.4.0",
     "react-annotation": "1.2.1",
-    "roughjs": "git://github.com/emeeks/rough",
+    "roughjs-es5": "0.0.1",
     "semiotic-mark": "0.2.9",
     "svg-path-bounding-box": "1.0.4",
     "whatwg-fetch": "2.0.3"
