@@ -439,6 +439,15 @@ class XYFrame extends React.Component<Props, State> {
       yExtent,
       xExtent
 
+    const xExtentSettings =
+      baseXExtent === undefined || Array.isArray(baseXExtent)
+        ? { extent: baseXExtent }
+        : baseXExtent
+    const yExtentSettings =
+      baseYExtent === undefined || Array.isArray(baseYExtent)
+        ? { extent: baseYExtent }
+        : baseYExtent
+
     if (
       updateData ||
       (currentProps.dataVersion &&
@@ -470,8 +479,8 @@ class XYFrame extends React.Component<Props, State> {
           points,
           lines: annotatedSettings.lines,
           showLinePoints,
-          xExtent,
-          yExtent,
+          xExtent: baseXExtent,
+          yExtent: baseYExtent,
           invertX,
           invertY,
           adjustedSize: size,
@@ -493,18 +502,6 @@ class XYFrame extends React.Component<Props, State> {
       } = this.state)
     }
 
-    const xExtentSettings =
-      baseXExtent === undefined || Array.isArray(baseXExtent)
-        ? { extent: baseXExtent }
-        : baseXExtent
-    const yExtentSettings =
-      baseYExtent === undefined || Array.isArray(baseYExtent)
-        ? { extent: baseYExtent }
-        : baseYExtent
-
-    xExtent = xExtentSettings.extent || xExtent
-    yExtent = yExtentSettings.extent || yExtent
-
     const { xScale, yScale } = this.screenScales({
       xExtent,
       yExtent,
@@ -512,6 +509,9 @@ class XYFrame extends React.Component<Props, State> {
       xScaleType,
       yScaleType
     })
+
+    xExtent = xExtentSettings.extent || xExtent
+    yExtent = yExtentSettings.extent || yExtent
 
     const canvasDrawing = []
 
