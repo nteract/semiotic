@@ -43,6 +43,7 @@ import VerticalIsotype from "./components/VerticalIsotype"
 import Sankey from "./components/Sankey"
 import Chord from "./components/Chord"
 import Dendrogram from "./components/Dendrogram"
+import CustomNodes from "./components/CustomNodes"
 import Sunburst from "./components/Sunburst"
 import NegativeStacked from "./components/NegativeStacked"
 import CustomMark from "./components/CustomMark"
@@ -122,6 +123,7 @@ const components = {
   sankey: { docs: Sankey, parent: "networkframe" },
   chord: { docs: Chord, parent: "networkframe" },
   dendrogram: { docs: Dendrogram, parent: "networkframe" },
+  customnode: { docs: CustomNodes, parent: "networkframe" },
   sunburst: { docs: Sunburst, parent: "networkframe" },
   networks: { docs: Networks, parent: "networkframe" },
   axis: { docs: AxisDocs },
