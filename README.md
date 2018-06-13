@@ -1,5 +1,7 @@
 [![Semiotic](semiotic_logo_horizontal.png "semiotic")](https://github.com/emeeks/semiotic/wiki/)
 
+[![Circle CI Status Shield](https://circleci.com/gh/emeeks/semiotic/tree/master.svg?style=shield)](https://circleci.com/gh/emeeks/semiotic/tree/master)
+
 Semiotic is a data visualization framework combining React &amp; D3
 
 [Interactive Documentation](https://emeeks.github.io/semiotic/)
