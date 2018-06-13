@@ -188,26 +188,20 @@ function determineNodeIcon(baseCustomNodeIcon, networkSettings, size) {
   switch (networkSettings.type) {
     case "sankey":
       return sankeyNodeGenerator
-      break
     case "partition":
       return networkSettings.projection === "radial"
         ? radialRectNodeGenerator(size, center)
         : hierarchicalRectNodeGenerator
-      break
     case "treemap":
       return networkSettings.projection === "radial"
         ? radialRectNodeGenerator(size, center)
         : hierarchicalRectNodeGenerator
-      break
     case "circlepack":
       return circleNodeGenerator
-      break
     case "wordcloud":
       return wordcloudNodeGenerator
-      break
     case "chord":
       return chordNodeGenerator(size)
-      break
   }
 
   return circleNodeGenerator
@@ -219,19 +213,14 @@ function determineEdgeIcon(baseCustomEdgeIcon, networkSettings, size) {
   switch (networkSettings.type) {
     case "partition":
       return () => null
-      break
     case "treemap":
       return () => null
-      break
     case "circlepack":
       return () => null
-      break
     case "wordcloud":
       return () => null
-      break
     case "chord":
       return chordEdgeGenerator(size)
-      break
   }
   return undefined
 }
@@ -613,6 +602,13 @@ class NetworkFrame extends React.Component<Props, State> {
       }
     }
 
+    const title =
+      typeof baseTitle === "object" &&
+      !React.isValidElement(baseTitle) &&
+      baseTitle !== null
+        ? baseTitle
+        : { title: baseTitle, orient: "top" }
+
     const margin = calculateMargin({
       margin: baseMargin,
       title
@@ -665,13 +661,6 @@ class NetworkFrame extends React.Component<Props, State> {
     const nodeRenderModeFn = stringToFn(nodeRenderMode, undefined, true)
     const nodeCanvasRenderFn =
       canvasNodes && stringToFn(canvasNodes, undefined, true)
-
-    const title =
-      typeof baseTitle === "object" &&
-      !React.isValidElement(baseTitle) &&
-      baseTitle !== null
-        ? baseTitle
-        : { title: baseTitle, orient: "top" }
 
     let { projectedNodes, projectedEdges } = this.state
 
