@@ -1354,7 +1354,11 @@ class NetworkFrame extends React.Component<Props, State> {
 
     const networkFrameRender = {
       edges: {
-        accessibleTransform: (data, i) => ({ type: "frame-hover", ...data[i] }),
+        accessibleTransform: (data, i) => {
+          const edgeX = (data[i].source.x + data[i].target.x) / 2
+          const edgeY = (data[i].source.y + data[i].target.y) / 2
+          return { type: "frame-hover", ...data[i], x: edgeX, y: edgeY }
+        },
         data: projectedEdges,
         styleFn: stringToFn(edgeStyle, () => ({}), true),
         classFn: stringToFn(edgeClass, () => "", true),
@@ -1370,7 +1374,11 @@ class NetworkFrame extends React.Component<Props, State> {
         direction: networkSettings.direction
       },
       nodes: {
-        accessibleTransform: (data, i) => ({ type: "frame-hover", ...data[i] }),
+        accessibleTransform: (data, i) => ({
+          type: "frame-hover",
+          ...data[i],
+          ...(data[i].data || {})
+        }),
         data: projectedNodes,
         styleFn: nodeStyleFn,
         classFn: nodeClassFn,

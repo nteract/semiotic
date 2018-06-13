@@ -9,7 +9,7 @@ import Select from "material-ui/Select"
 const components = []
 
 components.push({
-  name: "Hierarchical Charts"
+  name: "Custom Node Icons"
 })
 
 export default class Dendrogram extends React.Component {
@@ -77,4 +77,4 @@ export default class Dendrogram extends React.Component {
   }
 }
 
-Dendrogram.title = "Hierarchical Charts"
+Dendrogram.title = "Custom Node Icons"

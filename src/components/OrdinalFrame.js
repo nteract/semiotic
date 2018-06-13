@@ -1150,12 +1150,17 @@ class OrdinalFrame extends React.Component<Props, State> {
         eventListenersGenerator
       },
       summaries: {
-        accessibleTransform: (data, i, node) => {
-          const d =
-            data.originalData[
-              (node.dataset && node.dataset.o) || node.firstChild.dataset.o
-            ]
-          return { ...d, pieces: d.pieceData, type: "column-hover" }
+        accessibleTransform: (data, i) => {
+          const columnName = oExtent[i]
+
+          const summaryPackage = {
+            type: "column-hover",
+            column: projectedColumns[columnName],
+            pieces: projectedColumns[columnName].pieceData,
+            summary: projectedColumns[columnName].pieceData,
+            oAccessor
+          }
+          return summaryPackage
         },
         data: calculatedSummaries,
         behavior: renderLaidOutSummaries,

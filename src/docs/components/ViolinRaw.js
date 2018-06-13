@@ -17,13 +17,15 @@ const violinChart = {
   size: [700, 600],
   axis: axis,
   ...summaryChart,
-  summaryRenderMode: {
-    renderMode: "sketchy",
-    hachureGap: 4,
-    fillWeight: 3,
-    roughness: 0.5
+  hoverAnnotation: true,
+  tooltipContent: d => {
+    return (
+      <div className="tooltip-content">
+        <p>{d.column.name}</p>
+        <p>{d.column.pct}</p>
+      </div>
+    )
   },
-  canvasSummaries: true,
   margin: { top: 75, bottom: 50, left: 60, right: 50 },
   dynamicColumnWidth: d => Math.max(...d.map(p => p.stepValue)),
   annotations: [
