@@ -1,6 +1,6 @@
 import React from "react"
 import PropTypes from "prop-types"
-import elementResizeEvent from "element-resize-event"
+import elementResizeEvent from "element-resize-event-tabindex"
 
 const createResponsiveFrame = Frame =>
   class ResponsiveFrame extends React.Component {
