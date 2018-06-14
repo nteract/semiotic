@@ -16,7 +16,7 @@
     "test:coverage": "npm run test -- --coverage",
     "test:old": "node scripts/test.js --env=jsdom",
     "pretest:dist": "npm run dist",
-    "test:dist": "echo 'var self = this; require(\"./dist/semiotic.js\");' | node -",
+    "test:dist": "echo 'write some integration tests with puppeteer please'",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "flow": "flow",
