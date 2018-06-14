@@ -2,7 +2,7 @@
 
 import React from "react"
 
-import { RoughCanvas } from "roughjs-es5/lib/canvas"
+import { RoughCanvas } from "roughjs/lib/canvas"
 
 import { chuckCloseCanvasTransform } from "./canvas/basicCanvasEffects"
 
