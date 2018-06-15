@@ -6,7 +6,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/node:8@sha256:23f55ec43b896824088c2dcd6b0f88b7c34c6f7e5fa761d98244a5ef434f93e1
+      - image: circleci/node:10-browsers
 
     working_directory: ~/semiotic
 
@@ -32,4 +32,11 @@ jobs:
       # run tests!
       - run: npm run test -- --cacheDirectory=~/.jestcache
       - run: npm run flow
+
+      # run the tests against the dist copy (for the web)
       - run: npm run test:dist
+
+      # store the screenshots for access on Circle CI
+      - store_artifacts:
+          path: screenshots
+          destination: screenshots
