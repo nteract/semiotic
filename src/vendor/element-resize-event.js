@@ -3,7 +3,7 @@
 
 /* eslint-disable */
 
-const exports = function exports(element, fn) {
+export default function elementResizeEvent(element, fn) {
   var window =
     typeof self !== "undefined"
       ? self
@@ -97,7 +97,7 @@ const exports = function exports(element, fn) {
   element.__resizeListeners__.push(fn)
 }
 
-exports.unbind = function(element, fn) {
+elementResizeEvent.unbind = function(element, fn) {
   const attachEvent = document.attachEvent
   element.__resizeListeners__.splice(element.__resizeListeners__.indexOf(fn), 1)
   if (!element.__resizeListeners__.length) {
@@ -114,5 +114,3 @@ exports.unbind = function(element, fn) {
     }
   }
 }
-
-module.exports = typeof window === "undefined" ? exports : exports.bind(window)
