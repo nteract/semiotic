@@ -852,11 +852,6 @@ class XYFrame extends React.Component<Props, State> {
       ])
     }
 
-    //point xy
-    //y
-    //area
-
-    //TODO: Process your rules first
     const customSVG =
       this.props.svgAnnotationRules &&
       this.props.svgAnnotationRules({
