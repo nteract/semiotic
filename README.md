@@ -12,6 +12,8 @@ Semiotic is a data visualization framework combining React &amp; D3
 
 Installation
 
+check this out
+
 ```
 npm i semiotic
 ```
