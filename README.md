@@ -46,7 +46,7 @@ It may not be apparent in the commit logs but development of this library owes a
 * Matt Herman
 * Shelby Sturgis
 * Tristan Reid
-* Wildebeests
+* Wild boars
 
 
 Using BrowserStack for browser compatibility testing
