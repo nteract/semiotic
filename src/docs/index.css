@@ -232,14 +232,6 @@ body {
   border-bottom: inherit;
 }
 
-.domain {
-  fill: none;
-}
-
-.tick path {
-  stroke: lightgray;
-}
-
 rect.extent {
   fill-opacity: 0.25;
   stroke: black;
@@ -525,4 +517,10 @@ circle.frame-hover {
 .blue-gradient {
   stroke: none;
   fill: url(#blue-gradient);
+}
+
+.tooltip-content {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px double #ddd;
+  padding: 10px 20px;
 }
