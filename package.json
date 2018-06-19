@@ -146,7 +146,6 @@
     "d3-selection": "^1.1.0",
     "d3-shape": "^1.0.4",
     "d3-voronoi": "^1.0.2",
-    "element-resize-event-tabindex": "0.0.2",
     "json2csv": "3.11.5",
     "labella": "1.1.4",
     "object-assign": "4.1.1",
