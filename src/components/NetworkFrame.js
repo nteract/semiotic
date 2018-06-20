@@ -601,6 +601,8 @@ class NetworkFrame extends React.Component<Props, State> {
         graphSettings: baseGraphSettings
       }
     }
+    
+    networkSettingsKeys.push("height", "width")
 
     const title =
       typeof baseTitle === "object" &&
@@ -892,6 +894,7 @@ class NetworkFrame extends React.Component<Props, State> {
 
       if (networkSettings.type === "chord") {
         const radius = size[1] / 2
+
         const { groupWidth = 20, padAngle = 0.01 } = networkSettings
         const arcGenerator = arc()
           .innerRadius(radius - groupWidth)
