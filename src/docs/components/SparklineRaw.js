@@ -135,10 +135,8 @@ export default (type = "stackedarea") => {
         <SparkOrdinalFrame
           data={[8, 4, 12, 3, 4, 5, 6, 7]}
           size={[50, 100]}
-          style={{ fill: "#b6a756" }}
+          style={{ fill: "#b6a756", stroke: "rgb(77, 67, 12)" }}
           type="bar"
-          renderMode="sketchy"
-          summaryRenderMode="sketchy"
         />{" "}
         , and naturally that means it could be a
         <SparkOrdinalFrame
@@ -157,8 +155,6 @@ export default (type = "stackedarea") => {
           oAccessor={d => (d.o === "a" ? "a" : "o")}
           rAccessor="v"
           oPadding={2}
-          renderMode="sketchy"
-          summaryRenderMode="sketchy"
           summaryStyle={{
             fill: "#b6a756",
             stroke: "#b6a756",
@@ -190,8 +186,6 @@ export default (type = "stackedarea") => {
           oAccessor="-"
           rAccessor="v"
           oPadding={3}
-          renderMode="sketchy"
-          summaryRenderMode="sketchy"
           summaryStyle={{
             fill: "#b6a756",
             stroke: "#b6a756",
