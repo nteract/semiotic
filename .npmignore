@@ -6,3 +6,4 @@ gulpfile.js
 /less/
 .eslintrc
 .prettierrc
+package-lock.json
