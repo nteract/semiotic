@@ -73,10 +73,14 @@ class InteractionLayer extends React.Component<Props, State> {
       const arrayWrappedHoverTypes = Array.isArray(customHoverTypes)
         ? customHoverTypes
         : [customHoverTypes]
-      const mappedHoverTypes = arrayWrappedHoverTypes.map(c => {
-        const finalC = typeof c === "function" ? c(dataObject) : c
-        return Object.assign({}, dataObject, finalC)
-      })
+      const mappedHoverTypes = arrayWrappedHoverTypes
+        .map(c => {
+          const finalC = typeof c === "function" ? c(dataObject) : c
+          if (!finalC) return undefined
+          return Object.assign({}, dataObject, finalC)
+        })
+        .filter(d => d)
+
       this.props.voronoiHover(mappedHoverTypes)
     }
   }
