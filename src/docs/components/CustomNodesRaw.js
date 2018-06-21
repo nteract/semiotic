@@ -3,6 +3,10 @@ import { NetworkFrame } from "../../components"
 import ProcessViz from "./ProcessViz"
 import { line, curveStepAfter } from "d3-shape"
 
+// Do a dataviz survey-based example
+// split by gender for custom nodes
+// hierarchy by age groups, time in industry buckets, design/data
+
 const nodes = [
   { x: 0, y: 0, depth: 0, idKey: "node-0" },
   { x: -490, y: 70, depth: 1, idKey: "node-1" },
