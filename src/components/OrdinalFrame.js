@@ -370,16 +370,15 @@ class OrdinalFrame extends React.Component<Props, State> {
         ? { extent: baseOExtent }
         : baseOExtent
 
-    const calculatedOExtent = [
-      ...new Set(
-        allData.map((d, i) => {
-          const baseOValue = oAccessor(d, i)
-          return baseOValue && baseOValue.toString
-            ? baseOValue.toString()
-            : baseOValue
-        })
-      )
-    ]
+    const calculatedOExtent = allData.reduce((p, c, i) => {
+      const baseOValue = oAccessor(c, i)
+      const oValue =
+        baseOValue && baseOValue.toString ? baseOValue.toString() : baseOValue
+      if (p.indexOf(oValue) === -1) {
+        p.push(oValue)
+      }
+      return p
+    }, [])
 
     let oExtent = oExtentSettings.extent || calculatedOExtent
 
