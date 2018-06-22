@@ -144,13 +144,16 @@ export const stackedArea = ({
       return p
     }, {})) */
 
-  const uniqXValues = [
-    ...new Set(
-      data
-        .map(d => d.data.map(p => datesForUnique(p[xProp])))
-        .reduce((a, b) => a.concat(b), [])
-    )
-  ]
+  const uniqXValues = data
+    .map(d => d.data.map(p => datesForUnique(p[xProp])))
+    .reduce((a, b) => a.concat(b), [])
+    .reduce((p, c) => {
+      if (p.indexOf(c) === -1) {
+        p.push(c)
+      }
+      return p
+    }, [])
+
   let stackSort = (a, b) =>
     sum(b.data.map(p => p[yProp])) - sum(a.data.map(p => p[yProp]))
   if (type === "stackedpercent-invert" || type === "stackedarea-invert") {
@@ -264,13 +267,15 @@ export const bumpChart = ({
   yPropTop,
   yPropBottom
 }: StackedAreaTypes) => {
-  const uniqXValues = [
-    ...new Set(
-      data
-        .map(d => d.data.map(p => datesForUnique(p[xProp])))
-        .reduce((a, b) => a.concat(b), [])
-    )
-  ]
+  const uniqXValues = data
+    .map(d => d.data.map(p => datesForUnique(p[xProp])))
+    .reduce((a, b) => a.concat(b), [])
+    .reduce((p, c) => {
+      if (p.indexOf(c) === -1) {
+        p.push(c)
+      }
+      return p
+    }, [])
 
   let bumpSort = (a, b) => {
     if (a[yProp] > b[yProp]) {
