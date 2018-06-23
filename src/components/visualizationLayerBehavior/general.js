@@ -203,6 +203,7 @@ export function createLines({
             d.data[d.data.length - 1].y
           )} at ${xAxisFormatter(d.data[d.data.length - 1].x)}`
       }
+
       if (canvasRender && canvasRender(d, i) === true) {
         const canvasLine = {
           type: "line",

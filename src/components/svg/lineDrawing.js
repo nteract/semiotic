@@ -139,11 +139,6 @@ export const stackedArea = ({
   yPropTop,
   yPropBottom
 }: StackedAreaTypes) => {
-  /* Object.keys(allData.map((d,i) => oAccessor(d,i)).reduce((p,c) => {
-      p[c] = true
-      return p
-    }, {})) */
-
   const uniqXValues = data
     .map(d => d.data.map(p => datesForUnique(p[xProp])))
     .reduce((a, b) => a.concat(b), [])
