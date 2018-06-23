@@ -9,7 +9,7 @@ const sharedProps = {
   size: [200, 200]
 }
 
-const dataSeeds = [50, 40, 30, 10]
+const dataSeeds = [50, 40, 30, 20]
 
 function generatePoints(start, number) {
   const arrayOfPoints = []
