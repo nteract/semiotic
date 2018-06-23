@@ -50,91 +50,73 @@ parsedAnswers.forEach((answer, i) => {
   answer.respondent = `person ${i}`
 })
 
-const inlineBlockStyle = {
-  style: { display: "inline-block", width: "200px", height: "200px" }
-}
-
 ReactDOM.render(
   React.createElement(
     "div",
-    inlineBlockStyle,
-    React.createElement(ResponsiveOrdinalFrame, {
-      title: "Joy Plot",
-      size: [700, 400],
-      projection: "horizontal",
-      data: atomicData,
-      oAccessor: "response",
-      rAccessor: "value",
-      summaryType: { type: "joy", amplitude: 100 },
-      style: { fill: "lightblue", stroke: "darkblue", opacity: 0.5 },
-      summaryStyle: function summaryStyle(d, i) {
-        return {
-          fill: colors[i % colors.length],
-          stroke: "grey",
-          fillOpacity: 0.75
-        }
-      },
-      axis: {
-        orient: "left",
-        tickValues: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
-        tickFormat: function tickFormat(d) {
-          return `${d}%`
-        }
-      },
-      oLabel: function oLabel(d) {
-        return React.createElement(
-          "text",
-          { fontSize: "8px", textAnchor: "end", y: 3, x: -3 },
-          d
-        )
-      },
-      margin: { left: 100, right: 50, bottom: 28, top: 40 },
-      oPadding: 5
-    })
-  ),
-  document.getElementById("main")
-)
-
-ReactDOM.render(
-  React.createElement(
-    "div",
-    inlineBlockStyle,
-    React.createElement(ResponsiveOrdinalFrame, {
-      title: "Simple Bars",
-      size: [200, 200],
-      projection: "horizontal",
-      data: [5, 7, 8, 20, 10],
-      type: "bar",
-      style: { fill: "lightblue", stroke: "darkblue", opacity: 0.5 },
-      axis: {
-        orient: "left"
-      },
-      margin: 20,
-      oPadding: 5
-    })
-  ),
-  document.getElementById("main")
-)
-
-ReactDOM.render(
-  React.createElement(
-    "div",
-    inlineBlockStyle,
-    React.createElement(ResponsiveOrdinalFrame, {
-      title: "Nightingale",
-      size: [200, 200],
-      projection: "horizontal",
-      data: [5, 7, 8, 20, 10],
-      type: "bar",
-      projection: "radial",
-      dynamicWidth: "value",
-      style: { fill: "darkred", stroke: "darkblue", opacity: 0.5 },
-      axis: {
-        orient: "left"
-      },
-      margin: 20,
-      oPadding: 5
-    })
-  ),
-  document.getElementById("main")
+    null,
+    [
+      React.createElement(ResponsiveOrdinalFrame, {
+        title: "Joy Plot",
+        size: [700, 400],
+        projection: "horizontal",
+        data: atomicData,
+        oAccessor: "response",
+        rAccessor: "value",
+        summaryType: { type: "joy", amplitude: 100 },
+        style: { fill: "lightblue", stroke: "darkblue", opacity: 0.5 },
+        summaryStyle: function summaryStyle(d, i) {
+          return {
+            fill: colors[i % colors.length],
+            stroke: "grey",
+            fillOpacity: 0.75
+          }
+        },
+        axis: {
+          orient: "left",
+          tickValues: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+          tickFormat: function tickFormat(d) {
+            return `${d}%`
+          }
+        },
+        oLabel: function oLabel(d) {
+          return React.createElement(
+            "text",
+            { fontSize: "8px", textAnchor: "end", y: 3, x: -3 },
+            d
+          )
+        },
+        margin: { left: 100, right: 50, bottom: 28, top: 40 },
+        oPadding: 5
+      }),
+      React.createElement(ResponsiveOrdinalFrame, {
+        title: "Nightingale",
+        size: [200, 200],
+        projection: "horizontal",
+        data: [5, 7, 8, 20, 10],
+        type: "bar",
+        projection: "radial",
+        dynamicWidth: "value",
+        style: { fill: "darkred", stroke: "darkblue", opacity: 0.5 },
+        axis: {
+          orient: "left"
+        },
+        margin: 20,
+        oPadding: 5
+      }),
+      React.createElement(ResponsiveOrdinalFrame, {
+        title: "Simple Bars",
+        size: [200, 200],
+        projection: "horizontal",
+        data: [5, 7, 8, 20, 10],
+        type: "bar",
+        style: { fill: "lightblue", stroke: "darkblue", opacity: 0.5 },
+        axis: {
+          orient: "left"
+        },
+        margin: 20,
+        oPadding: 5
+      })
+    ],
+    document.getElementById("main")
+  )
 )
