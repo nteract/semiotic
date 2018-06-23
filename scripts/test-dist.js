@@ -14,17 +14,17 @@ process.on("unhandledRejection", up => {
   const page = await browser.newPage()
 
   page.setViewport({
-    width: 1400,
-    height: 600
+    width: 800,
+    height: 1000
   })
 
-  page.on("pageerror", function(err) {
-    console.log("Page error: " + err.toString())
+  page.on("pageerror", err => {
+    console.log(`Page error: ${err.toString()}`)
     process.exit(1)
   })
 
-  page.on("error", function(err) {
-    console.log("Error during puppeteer instrumentation: " + err.toString())
+  page.on("error", err => {
+    console.log(`Error during puppeteer instrumentation: ${err.toString()}`)
     process.exit(2)
   })
 
