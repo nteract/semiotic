@@ -51,9 +51,7 @@ parsedAnswers.forEach((answer, i) => {
 })
 
 ReactDOM.render(
-  React.createElement(
-    "div",
-    null,
+  React.createElement("div", null, [
     React.createElement(ResponsiveOrdinalFrame, {
       title: "Joy Plot",
       size: [800, 400],
@@ -86,7 +84,35 @@ ReactDOM.render(
       },
       margin: { left: 100, right: 50, bottom: 28, top: 40 },
       oPadding: 5
+    }),
+    React.createElement(ResponsiveOrdinalFrame, {
+      title: "Nightingale",
+      size: [200, 200],
+      projection: "horizontal",
+      data: [5, 7, 8, 20, 10],
+      type: "bar",
+      projection: "radial",
+      dynamicWidth: "value",
+      style: { fill: "darkred", stroke: "darkblue", opacity: 0.5 },
+      axis: {
+        orient: "left"
+      },
+      margin: 20,
+      oPadding: 5
+    }),
+    React.createElement(ResponsiveOrdinalFrame, {
+      title: "Simple Bars",
+      size: [200, 200],
+      projection: "horizontal",
+      data: [5, 7, 8, 20, 10],
+      type: "bar",
+      style: { fill: "lightblue", stroke: "darkblue", opacity: 0.5 },
+      axis: {
+        orient: "left"
+      },
+      margin: 20,
+      oPadding: 5
     })
-  ),
+  ]),
   document.getElementById("main")
 )
