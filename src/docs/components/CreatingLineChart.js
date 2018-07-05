@@ -558,7 +558,7 @@ export default class CreatingLineChart extends React.Component {
             lines={movies}
             xAccessor={"week"}
             yAccessor={"grossWeekly"}
-            lineStyle={{ stroke: "#00a2ce" }}
+            lineStyle={{ stroke: "#00a2ce", fill: "none" }}
             lineType={{ type: "line", interpolator: curveCardinal }}
             showLinePoints={true}
             pointStyle={() => {

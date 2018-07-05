@@ -144,7 +144,7 @@ export function createLines({
   const interpolator = customLine.interpolator
     ? customLine.interpolator
     : curveLinear
-  const lineGenerator = area()
+  const lineGenerator = customLine.simpleLine ? line() : area()
 
   lineGeneratorDecorator({
     projectedCoordinateNames,
