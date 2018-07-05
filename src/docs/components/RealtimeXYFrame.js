@@ -129,11 +129,7 @@ export default class RealtimeXYFrame extends React.Component {
           yAccessor={"number"}
           lineType={{
             type:
-              eventData[0].coordinates.length < 10
-                ? "line"
-                : eventData[0].coordinates.length < 20
-                  ? "stackedarea"
-                  : "bumparea",
+              eventData[0].coordinates.length < 10 ? "stackedarea" : "bumparea",
             interpolator: curveCardinal
           }}
           lineIDAccessor="lineID"

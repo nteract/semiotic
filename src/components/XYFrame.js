@@ -423,6 +423,11 @@ class XYFrame extends React.Component<Props, State> {
           : { title, orient: "top" }
     }
 
+    annotatedSettings.lineType.simpleLine =
+      annotatedSettings.lineType.type === "line" &&
+      !annotatedSettings.lineType.y1 &&
+      annotatedSettings.lineType.simpleLine !== false
+
     const margin = calculateMargin({
       margin: currentProps.margin,
       axes: currentProps.axes,
@@ -756,8 +761,14 @@ class XYFrame extends React.Component<Props, State> {
       yScale,
       xAccessor: annotatedSettings.xAccessor,
       yAccessor: annotatedSettings.yAccessor,
-      xExtent: [xExtent[0] === undefined ? calculatedXExtent[0] : xExtent[0], xExtent[1] === undefined ? calculatedXExtent[1] : xExtent[1]],
-      yExtent: [yExtent[0] === undefined ? calculatedYExtent[0] : yExtent[0], yExtent[1] === undefined ? calculatedYExtent[1] : yExtent[1]],
+      xExtent: [
+        xExtent[0] === undefined ? calculatedXExtent[0] : xExtent[0],
+        xExtent[1] === undefined ? calculatedXExtent[1] : xExtent[1]
+      ],
+      yExtent: [
+        yExtent[0] === undefined ? calculatedYExtent[0] : yExtent[0],
+        yExtent[1] === undefined ? calculatedYExtent[1] : yExtent[1]
+      ],
       calculatedXExtent,
       calculatedYExtent,
       margin,

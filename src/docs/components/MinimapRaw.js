@@ -28,7 +28,7 @@ const xyFrameSettings = {
   lineType: { type: "line", interpolator: curveMonotoneX },
   xAccessor: "step",
   yAccessor: "value",
-  lineStyle: d => ({ fill: d.label, stroke: d.label, fillOpacity: 0.75 }),
+  lineStyle: d => ({ fill: "none", stroke: d.label, fillOpacity: 0.75 }),
   axes: [
     { orient: "left" },
     {
