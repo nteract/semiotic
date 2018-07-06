@@ -895,7 +895,7 @@ class NetworkFrame extends React.Component<Props, State> {
       if (networkSettings.type === "chord") {
         const radius = size[1] / 2
 
-        const { groupWidth = 20, padAngle = 0.01 } = networkSettings
+        const { groupWidth = 20, padAngle = 0.01, sortGroups } = networkSettings
         const arcGenerator = arc()
           .innerRadius(radius - groupWidth)
           .outerRadius(radius)
@@ -910,7 +910,12 @@ class NetworkFrame extends React.Component<Props, State> {
           nodeIDAccessor
         })
 
+
         const chordLayout = chord().padAngle(padAngle)
+
+        if (sortGroups) {
+          chordLayout.sortGroups(sortGroups)
+        }
 
         const chords = chordLayout(matrixifiedNetwork)
         const groups = chords.groups
