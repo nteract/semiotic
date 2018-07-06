@@ -39,11 +39,11 @@ const funnel = [
   {
     color: "#b3331d",
     visits: 200,
-    registration: 180,
-    mop: 170,
-    signups: 160,
-    streamed: 150,
-    paid: 140
+    registration: 160,
+    mop: 180,
+    signups: 170,
+    streamed: 80,
+    paid: 90
   },
   {
     color: "#b6a756",
