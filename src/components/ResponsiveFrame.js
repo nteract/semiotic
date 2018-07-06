@@ -2,6 +2,8 @@ import React from "react"
 import PropTypes from "prop-types"
 import elementResizeEvent from "./vendor/element-resize-event"
 
+let isResizing
+
 const createResponsiveFrame = Frame =>
   class ResponsiveFrame extends React.Component {
     static propTypes = {
@@ -9,7 +11,8 @@ const createResponsiveFrame = Frame =>
     }
 
     static defaultProps = {
-      size: [500, 500]
+      size: [500, 500],
+      debounce: 200
     }
 
     constructor(props) {
@@ -26,11 +29,17 @@ const createResponsiveFrame = Frame =>
     }
     componentDidMount() {
       const element = this.node
+
       elementResizeEvent(element, () => {
-        this.setState({
-          containerHeight: element.offsetHeight,
-          containerWidth: element.offsetWidth
-        })
+        window.clearTimeout(isResizing)
+        isResizing = setTimeout(() => {
+          isResizing = false
+
+          this.setState({
+            containerHeight: element.offsetHeight,
+            containerWidth: element.offsetWidth
+          })
+        }, this.props.debounce)
       })
       this.setState({
         containerHeight: element.offsetHeight,
@@ -44,6 +53,7 @@ const createResponsiveFrame = Frame =>
         responsiveHeight,
         size,
         dataVersion,
+        debounce,
         ...rest
       } = this.props
 
@@ -63,7 +73,7 @@ const createResponsiveFrame = Frame =>
         actualSize[1] = containerHeight
       }
 
-      const dataVersionWithSize = dataVersion + actualSize.toString()
+      const dataVersionWithSize = dataVersion + actualSize.toString() + debounce
 
       return (
         <div
