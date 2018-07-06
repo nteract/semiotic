@@ -396,10 +396,6 @@ class OrdinalFrame extends React.Component<Props, State> {
       }
     }
 
-    if (currentProps.sortO) {
-      oExtent = oExtent.sort(currentProps.sortO)
-    }
-
     const oDomain = (projection === "vertical" && [0, adjustedSize[0]]) || [
       0,
       adjustedSize[1]
@@ -544,6 +540,27 @@ class OrdinalFrame extends React.Component<Props, State> {
       rExtent = [rExtent[1], rExtent[0]]
     }
 
+    const nestedPieces = {}
+    nest()
+      .key((d, i) => oAccessor(d.data, i))
+      .entries(barData)
+      .forEach(d => {
+        nestedPieces[d.key] = d.values
+      })
+
+    if (currentProps.sortO) {
+      oExtent = oExtent.sort((a, b) =>
+        currentProps.sortO(
+          a,
+          b,
+          nestedPieces[a].map(d => d.data),
+          nestedPieces[b].map(d => d.data)
+        )
+      )
+
+      oScale.domain(oExtent)
+    }
+
     const rDomain = (projection === "vertical" && [0, adjustedSize[1]]) || [
       0,
       adjustedSize[0]
@@ -571,13 +588,6 @@ class OrdinalFrame extends React.Component<Props, State> {
     }
     const mappedMiddles = this.mappedMiddles(oScale, mappedMiddleSize, padding)
 
-    const nestedPieces = {}
-    nest()
-      .key((d, i) => oAccessor(d.data, i))
-      .entries(barData)
-      .forEach(d => {
-        nestedPieces[d.key] = d.values
-      })
     pieceData = oExtent.map(d => (nestedPieces[d] ? nestedPieces[d] : []))
 
     const zeroValue =
