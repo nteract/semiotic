@@ -601,7 +601,7 @@ class NetworkFrame extends React.Component<Props, State> {
         graphSettings: baseGraphSettings
       }
     }
-    
+
     networkSettingsKeys.push("height", "width")
 
     const title =
@@ -909,7 +909,6 @@ class NetworkFrame extends React.Component<Props, State> {
           edgeWidthAccessor,
           nodeIDAccessor
         })
-
 
         const chordLayout = chord().padAngle(padAngle)
 
@@ -1469,6 +1468,7 @@ class NetworkFrame extends React.Component<Props, State> {
       hoverAnnotation === "node"
     ) {
       projectedXYPoints = projectedNodes
+      if (changedData || networkSettingsChanged)  projectedXYPoints = [...projectedNodes]
     } else if (hoverAnnotation === "all") {
       projectedXYPoints = [
         ...projectedEdges.map(edgePointHash[networkSettings.type]),
