@@ -453,6 +453,8 @@ class XYFrame extends React.Component<Props, State> {
         ? { extent: baseYExtent }
         : baseYExtent
 
+    let xScale, yScale
+
     if (
       updateData ||
       (currentProps.dataVersion &&
@@ -494,6 +496,15 @@ class XYFrame extends React.Component<Props, State> {
           defined
         }))
       }
+
+      ({ xScale, yScale } = this.screenScales({
+        xExtent,
+        yExtent,
+        adjustedSize,
+        xScaleType,
+        yScaleType
+      }))
+  
     } else {
       ;({
         xExtent,
@@ -505,15 +516,20 @@ class XYFrame extends React.Component<Props, State> {
         calculatedXExtent,
         calculatedYExtent
       } = this.state)
+      if (adjustedSize[0] === this.state.adjustedSize[0] && adjustedSize[1] === this.state.adjustedSize[1]) {
+        xScale = this.state.xScale
+        yScale = this.state.yScale
+      }
+      else {
+        ({ xScale, yScale } = this.screenScales({
+          xExtent,
+          yExtent,
+          adjustedSize,
+          xScaleType,
+          yScaleType
+        }))
+      }
     }
-
-    const { xScale, yScale } = this.screenScales({
-      xExtent,
-      yExtent,
-      adjustedSize,
-      xScaleType,
-      yScaleType
-    })
 
     xExtent = xExtentSettings.extent || xExtent
     yExtent = yExtentSettings.extent || yExtent
