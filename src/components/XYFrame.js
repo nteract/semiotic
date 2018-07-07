@@ -50,7 +50,11 @@ import {
   projectedYMiddle,
   projectedYBottom
 } from "./constants/coordinateNames"
-import { calculateDataExtent, stringToFn } from "./data/dataFunctions"
+import {
+  calculateDataExtent,
+  stringToFn,
+  stringToArrayFn
+} from "./data/dataFunctions"
 import { filterDefs } from "./constants/jsx"
 import {
   xyFrameChangeProps,
@@ -400,13 +404,13 @@ class XYFrame extends React.Component<Props, State> {
     } = currentProps
 
     const annotatedSettings = {
-      xAccessor: stringToFn(xAccessor, (d: Array<number>) => d[0]),
-      yAccessor: stringToFn(yAccessor, (d: Array<number>) => d[1]),
-      areaDataAccessor: stringToFn(
+      xAccessor: stringToArrayFn(xAccessor, (d: Array<number>) => d[0]),
+      yAccessor: stringToArrayFn(yAccessor, (d: Array<number>) => d[1]),
+      areaDataAccessor: stringToArrayFn(
         areaDataAccessor,
         (d: Object | Array<number>) => (Array.isArray(d) ? d : d.coordinates)
       ),
-      lineDataAccessor: stringToFn(
+      lineDataAccessor: stringToArrayFn(
         lineDataAccessor,
         (d: Object | Array<number>) => (Array.isArray(d) ? d : d.coordinates)
       ),
@@ -497,14 +501,13 @@ class XYFrame extends React.Component<Props, State> {
         }))
       }
 
-      ({ xScale, yScale } = this.screenScales({
+      ;({ xScale, yScale } = this.screenScales({
         xExtent,
         yExtent,
         adjustedSize,
         xScaleType,
         yScaleType
       }))
-  
     } else {
       ;({
         xExtent,
@@ -516,12 +519,14 @@ class XYFrame extends React.Component<Props, State> {
         calculatedXExtent,
         calculatedYExtent
       } = this.state)
-      if (adjustedSize[0] === this.state.adjustedSize[0] && adjustedSize[1] === this.state.adjustedSize[1]) {
+      if (
+        adjustedSize[0] === this.state.adjustedSize[0] &&
+        adjustedSize[1] === this.state.adjustedSize[1]
+      ) {
         xScale = this.state.xScale
         yScale = this.state.yScale
-      }
-      else {
-        ({ xScale, yScale } = this.screenScales({
+      } else {
+        ;({ xScale, yScale } = this.screenScales({
           xExtent,
           yExtent,
           adjustedSize,
@@ -1202,11 +1207,11 @@ class XYFrame extends React.Component<Props, State> {
             data: downloadData,
             xAccessor:
               download === "points" || points
-                ? stringToFn(xAccessor)
+                ? stringToArrayFn(xAccessor)
                 : undefined,
             yAccessor:
               download === "points" || points
-                ? stringToFn(yAccessor)
+                ? stringToArrayFn(yAccessor)
                 : undefined,
             fields: downloadFields
           })}

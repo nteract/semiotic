@@ -88,22 +88,32 @@ export const projectLineData = ({
   if (!Array.isArray(data)) {
     data = [data]
   }
-  const projectedLine: Array<Object> = data.map((d: Object, i: number) => {
-    const originalLineData = Object.assign({}, d)
-    originalLineData.data = lineDataAccessor(d).map((p, q) => {
-      const originalCoords = {}
+  const projectedLine: Array<Object> = []
 
-      originalCoords[xProp] = xAccessor(p, q)
-      originalCoords[yProp] = yAccessor(p, q)
-      originalCoords[yPropTop] = originalCoords[yProp]
-      originalCoords[yPropBottom] = originalCoords[yProp]
-      originalCoords.data = p
+  lineDataAccessor.forEach(actualLineAccessor => {
+    xAccessor.forEach(actualXAccessor => {
+      yAccessor.forEach(actualYAccessor => {
+        data.forEach((d: Object) => {
+          const originalLineData = { ...d }
 
-      return originalCoords
+          originalLineData.data = actualLineAccessor(d).map((p, q) => {
+            const originalCoords = {}
+
+            originalCoords[xProp] = actualXAccessor(p, q)
+            originalCoords[yProp] = actualYAccessor(p, q)
+            originalCoords[yPropTop] = originalCoords[yProp]
+            originalCoords[yPropBottom] = originalCoords[yProp]
+            originalCoords.data = p
+
+            return originalCoords
+          })
+          originalLineData.key = originalLineData.key || projectedLine.length
+          projectedLine.push(originalLineData)
+        })
+      })
     })
-    originalLineData.key = originalLineData.key || i
-    return originalLineData
   })
+
   return projectedLine
 }
 
