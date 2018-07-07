@@ -805,6 +805,11 @@ class XYFrame extends React.Component<Props, State> {
     let screenCoordinates = []
     const idAccessor = this.state.annotatedSettings.lineIDAccessor
 
+    if (lines.data.length !== 0) {
+      const thisLine = lines.data.find(l => idAccessor(l) === idAccessor(d))
+      if (thisLine && !d.parentLine) d.parentLine = thisLine
+    }
+
     const margin = calculateMargin({
       margin: this.props.margin,
       axes: this.props.axes,
@@ -992,6 +997,12 @@ class XYFrame extends React.Component<Props, State> {
     const { size, useSpans } = this.props
 
     const idAccessor = this.state.annotatedSettings.lineIDAccessor
+
+    if (lines.data.length !== 0) {
+      const thisLine = lines.data.find(l => idAccessor(l) === idAccessor(d))
+      if (thisLine && !d.parentLine) d.parentLine = thisLine
+    }
+
     const xCoord = d[projectedX] || xAccessor(d)
     const yCoord = d[projectedY] || yAccessor(d)
 
