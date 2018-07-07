@@ -1450,7 +1450,7 @@ class NetworkFrame extends React.Component<Props, State> {
           d,
           i,
           transform: `translate(${d.x},${d.y})`,
-          styleFn: () => ({ fill: "pink", stroke: "pink", opacity: 0 })
+          styleFn: () => ({ fill: "pink", opacity: 0 })
         }).props
       }))
 
@@ -1468,7 +1468,8 @@ class NetworkFrame extends React.Component<Props, State> {
       hoverAnnotation === "node"
     ) {
       projectedXYPoints = projectedNodes
-      if (changedData || networkSettingsChanged)  projectedXYPoints = [...projectedNodes]
+      if (changedData || networkSettingsChanged)
+        projectedXYPoints = [...projectedNodes]
     } else if (hoverAnnotation === "all") {
       projectedXYPoints = [
         ...projectedEdges.map(edgePointHash[networkSettings.type]),

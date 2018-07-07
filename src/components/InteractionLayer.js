@@ -201,7 +201,9 @@ class InteractionLayer extends React.Component<Props, State> {
   componentWillReceiveProps(nextProps: Props) {
     if (
       this.props.overlay !== nextProps.overlay ||
-      nextProps.points !== this.props.points
+      nextProps.points !== this.props.points ||
+      this.props.xScale !== nextProps.xScale ||
+      this.props.yScale !== nextProps.yScale
     ) {
       this.setState({ overlayRegions: this.calculateOverlay(nextProps) })
     }
