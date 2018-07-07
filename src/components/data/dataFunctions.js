@@ -32,18 +32,34 @@ const builtInTransformations = {
   "line": lineChart
 }
 
-export const stringToFn = (
-  accessor?: Function | string | boolean | Object,
-  defaultAccessor?: Function,
-  raw?: boolean
-): Function => {
-  if (!accessor && defaultAccessor) {
-    return defaultAccessor
-  } else if (typeof accessor !== "function" && raw !== undefined) {
-    return () => accessor
+const stringToFnBase = arrayable => {
+  return (
+    accessor?: Function | string | boolean | Object,
+    defaultAccessor?: Function,
+    raw?: boolean
+  ): Function => {
+    if (!accessor && defaultAccessor) {
+      return arrayable ? [defaultAccessor] : defaultAccessor
+    } else if (typeof accessor !== "function" && raw !== undefined) {
+      return arrayable ? [() => accessor] : () => accessor
+    }
+
+    if (!arrayable) {
+      return typeof accessor !== "function"
+        ? (d: Object) => d[accessor]
+        : accessor
+    }
+
+    const arrayOfAccessors = Array.isArray(accessor) ? accessor : [accessor]
+
+    return arrayOfAccessors.map(
+      a => (typeof a !== "function" ? (d: Object) => d[a] : a)
+    )
   }
-  return typeof accessor !== "function" ? (d: Object) => d[accessor] : accessor
 }
+
+export const stringToFn = stringToFnBase(false)
+export const stringToArrayFn = stringToFnBase(true)
 
 type CalculateDataTypes = {
   lineDataAccessor: Function,
