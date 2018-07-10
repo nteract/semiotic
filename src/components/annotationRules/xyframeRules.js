@@ -9,6 +9,7 @@ import { packEnclose } from "d3-hierarchy"
 import { extent } from "d3-array"
 import { circleEnclosure, rectangleEnclosure } from "./baseRules"
 import SpanOrDiv from "../SpanOrDiv"
+import { findFirstAccessorValue } from "../data/dataFunctions"
 
 const pointsAlong = along => ({
   d,
@@ -274,10 +275,10 @@ export const svgBoundsAnnotation = ({
   xScale,
   yScale
 }) => {
-  const startXValue = xAccessor(d.bounds[0])
-  const startYValue = yAccessor(d.bounds[0])
-  const endXValue = xAccessor(d.bounds[1])
-  const endYValue = yAccessor(d.bounds[1])
+  const startXValue = findFirstAccessorValue(xAccessor, d.bounds[0])
+  const startYValue = findFirstAccessorValue(yAccessor, d.bounds[0])
+  const endXValue = findFirstAccessorValue(xAccessor, d.bounds[1])
+  const endYValue = findFirstAccessorValue(yAccessor, d.bounds[1])
 
   const x0Position = startXValue ? xScale(startXValue) : 0
   const y0Position = startYValue ? yScale(startYValue) : adjustedSize[1]
@@ -418,6 +419,7 @@ export const svgRectEncloseRule = ({ d, i, screenCoordinates }) => {
 }
 
 export const svgEncloseAnnotation = ({ screenCoordinates, d }) => {
+  console.log("screenCoordinates", screenCoordinates)
   const circle = packEnclose(
     screenCoordinates.map(p => ({ x: p[0], y: p[1], r: 2 }))
   )
