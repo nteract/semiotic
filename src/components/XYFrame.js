@@ -53,7 +53,8 @@ import {
 import {
   calculateDataExtent,
   stringToFn,
-  stringToArrayFn
+  stringToArrayFn,
+  findFirstAccessorValue
 } from "./data/dataFunctions"
 import { filterDefs } from "./constants/jsx"
 import {
@@ -402,6 +403,8 @@ class XYFrame extends React.Component<Props, State> {
       projectedAreas,
       fullDataset
     } = currentProps
+
+    console.log("lineDataAccessor in XYFRAME", lineDataAccessor)
 
     const annotatedSettings = {
       xAccessor: stringToArrayFn(xAccessor, (d: Array<number>) => d[0]),
@@ -844,7 +847,7 @@ class XYFrame extends React.Component<Props, State> {
     })
 
     if (!d.coordinates) {
-      const xCoord = d[projectedX] || xAccessor(d)
+      const xCoord = d[projectedX] || findFirstAccessorValue(xAccessor,d)
       screenCoordinates = [
         xScale(xCoord),
         relativeY({
@@ -872,8 +875,10 @@ class XYFrame extends React.Component<Props, State> {
         return null
       }
     } else if (!d.bounds) {
+      console.log("d.coordinates", d.coordinates)
+      console.log("xAccessor", xAccessor)
       screenCoordinates = d.coordinates.map(p => [
-        xScale(xAccessor(p)) + adjustedPosition[0],
+        xScale(findFirstAccessorValue(xAccessor, p)) + adjustedPosition[0],
         relativeY({
           point: p,
           lines,
@@ -1024,8 +1029,8 @@ class XYFrame extends React.Component<Props, State> {
       if (thisLine && !d.parentLine) d.parentLine = thisLine
     }
 
-    const xCoord = d[projectedX] || xAccessor(d)
-    const yCoord = d[projectedY] || yAccessor(d)
+    const xCoord = d[projectedX] || findFirstAccessorValue(xAccessor, d)
+    const yCoord = d[projectedY] || findFirstAccessorValue(yAccessor, d)
 
     const xString = xCoord && xCoord.toString ? xCoord.toString() : xCoord
     const yString = yCoord && yCoord.toString ? yCoord.toString() : yCoord

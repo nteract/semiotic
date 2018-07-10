@@ -21,12 +21,10 @@ function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
   }
 }
 
-function pieContentGenerator({ pieces, column, oAccessor, useSpans }) {
+function pieContentGenerator({ column, useSpans }) {
   return (
     <SpanOrDiv span={useSpans} className="tooltip-content">
-      {oAccessor(pieces[0]) && (
-        <p key="or-annotation-1">{oAccessor(pieces[0]).toString()}</p>
-      )}
+      <p key="or-annotation-1">{column.name}</p>
       <p key="or-annotation-2">{`${(column.pct * 100).toFixed(0)}%`}</p>
     </SpanOrDiv>
   )
@@ -509,16 +507,13 @@ export const htmlFrameHoverRule = ({
   oAccessor,
   projection,
   tooltipContent,
-  projectedColumns,
   useSpans
 }) => {
   tooltipContent =
     tooltipContent === "pie"
-      ? p =>
+      ? () =>
           pieContentGenerator({
-            pieces: [p],
-            column: projectedColumns[oAccessor(p)],
-            oAccessor,
+            column: d.column,
             useSpans
           })
       : tooltipContent
@@ -546,14 +541,25 @@ export const htmlFrameHoverRule = ({
       <p key="html-annotation-content-3">{d.value}</p>
     ]
   } else {
-    contentFill = [
-      oAccessor(d.data) && (
-        <p key="html-annotation-content-1">{oAccessor(d.data).toString()}</p>
-      ),
-      rAccessor(d.data) && (
-        <p key="html-annotation-content-2">{rAccessor(d.data).toString()}</p>
-      )
-    ]
+    contentFill = []
+
+    oAccessor.forEach((actualOAccessor, i) => {
+      if (actualOAccessor(d.data))
+        contentFill.push(
+          <p key={`html-annotation-content-o-${i}`}>
+            {actualOAccessor(d.data).toString()}
+          </p>
+        )
+    })
+
+    rAccessor.forEach((actualRAccessor, i) => {
+      if (actualRAccessor(d.data))
+        contentFill.push(
+          <p key={`html-annotation-content-r-${i}`}>
+            {actualRAccessor(d.data).toString()}
+          </p>
+        )
+    })
   }
   let content = (
     <SpanOrDiv span={useSpans} className="tooltip-content">
@@ -587,7 +593,6 @@ export const htmlColumnHoverRule = ({
   i,
   summaryType,
   oAccessor,
-  projectedColumns,
   type,
   adjustedPosition,
   adjustedSize,
@@ -596,20 +601,37 @@ export const htmlColumnHoverRule = ({
   useSpans
 }) => {
   //we need to ignore negative pieces to make sure the hover behavior populates on top of the positive bar
+
+  console.log(
+    "sum(d.pieces.map(p => p.scaledValue).filter(p => p > 0):,",
+    sum(d.pieces.map(p => p.scaledValue).filter(p => p > 0))
+  )
+  console.log(d.pieces)
+  console.log(d.pieces.map(p => p.scaledValue))
+  console.log(d.pieces.map(p => p.scaledValue).filter(p => p > 0))
   const positionValue =
     (summaryType.type && summaryType.type !== "none") ||
     ["swarm", "point", "clusterbar"].find(p => p === type.type)
       ? max(d.pieces.map(p => p.scaledValue))
-      : sum(d.pieces.map(p => p.scaledValue).filter(p => p > 0))
+      : projection === "horizontal"
+        ? max(d.pieces.map(p => p.scaledValue + p.bottom))
+        : min(d.pieces.map(p => p.bottom - p.scaledValue))
 
-  const column = projectedColumns[oAccessor(d.pieces[0].data)]
+  console.log("positionValue", positionValue)
+
+  const column = d.column
 
   let xPosition = column.middle + adjustedPosition[0]
-  let yPosition = adjustedSize[1] - positionValue
+  let yPosition =
+    projection === "horizontal"
+      ? adjustedSize[1] - positionValue
+      : positionValue
   yPosition += 10
 
+  console.log("yPosition", yPosition)
+
   if (projection === "horizontal") {
-    yPosition = projectedColumns[oAccessor(d.pieces[0].data)].middle
+    yPosition = column.middle
     xPosition = positionValue + adjustedPosition[0]
   } else if (projection === "radial") {
     ;[xPosition, yPosition] = pointOnArcAtAngle(
@@ -621,11 +643,19 @@ export const htmlColumnHoverRule = ({
   }
 
   //To string because React gives a DOM error if it gets a date
+  const oContent = []
+  oAccessor.forEach((actualOAccessor, i) => {
+    if (d.pieces[0].data)
+      oContent.push(
+        <p key={`or-annotation-o-${i}`}>
+          {actualOAccessor(d.pieces[0].data).toString()}
+        </p>
+      )
+  })
+
   let content = (
     <SpanOrDiv span={useSpans} className="tooltip-content">
-      {oAccessor(d.pieces[0].data) && (
-        <p key="or-annotation-1">{oAccessor(d.pieces[0].data).toString()}</p>
-      )}
+      {oContent}
       <p key="or-annotation-2">
         {sum(d.pieces.map(p => p.value).filter(p => p > 0))}
       </p>

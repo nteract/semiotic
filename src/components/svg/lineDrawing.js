@@ -2,6 +2,8 @@
 
 import { sum } from "d3-array"
 
+import { findFirstAccessorValue } from "../data/dataFunctions"
+
 const datesForUnique = d => (d instanceof Date ? d.toString() : d)
 
 type AreaProjectionTypes = {
@@ -67,12 +69,28 @@ export const projectAreaData = ({
   xAccessor,
   yAccessor
 }: AreaProjectionTypes) => {
-  const projection = (d: Object) =>
-    areaDataAccessor(d).map((p, q) => [xAccessor(p, q), yAccessor(p, q)])
-  data.forEach(d => {
-    d._xyfCoordinates = projection(d)
+  const projectedData = []
+  areaDataAccessor.forEach(actualAreaAccessor => {
+    xAccessor.forEach(actualXAccessor => {
+      yAccessor.forEach(actualYAccessor => {
+        const projection = (d: Object) =>
+          actualAreaAccessor(d).map((p, q) => [
+            actualXAccessor(p, q),
+            actualYAccessor(p, q)
+          ])
+
+        data.forEach(d => {
+          projectedData.push({
+            ...d,
+            _baseData: actualAreaAccessor(d),
+            _xyfCoordinates: projection(d)
+          })
+        })
+      })
+    })
   })
-  return data
+
+  return projectedData
 }
 
 export const projectLineData = ({
@@ -467,7 +485,9 @@ export function relativeY({
       return null
     }
     const thisPoint = thisLine.data.find(
-      p => xScale(p[projectedX]) === xScale(xAccessor(point))
+      p =>
+        xScale(p[projectedX]) ===
+        xScale(findFirstAccessorValue(xAccessor, point))
     )
 
     if (!thisPoint) {
@@ -476,6 +496,9 @@ export function relativeY({
     point = thisPoint
   }
   return yScale(
-    point[projectedYMiddle] || point[projectedY] || yAccessor(point) || 0
+    point[projectedYMiddle] ||
+      point[projectedY] ||
+      findFirstAccessorValue(yAccessor, point) ||
+      0
   )
 }

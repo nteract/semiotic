@@ -3,6 +3,8 @@ import { answers } from "../sampledata/questions"
 import { OrdinalFrame } from "../../components"
 import ProcessViz from "./ProcessViz"
 
+console.log("answerr", answers)
+
 const divStackedBarChart = {
   size: [700, 500],
   data: answers,
@@ -11,7 +13,7 @@ const divStackedBarChart = {
   oAccessor: "question",
   rAccessor: "percent",
   style: d => ({ fill: d.color }),
-  margin: { top: 30, bottom: 0, left: 80, right: 50 },
+  margin: { top: 30, bottom: 0, left: 80, right: 10 },
   oPadding: 20,
   oLabel: (d, column, i) => (
     <g>
@@ -43,6 +45,5 @@ export default (
   <div>
     <ProcessViz frameSettings={divStackedBarChart} frameType="OrdinalFrame" />
     <OrdinalFrame {...divStackedBarChart} />
-    <OrdinalFrame {...divStackedBarChart} projection="vertical" oLabel={d => <text transform="rotate(45)">{d}</text>}  margin={{ top: 30, bottom: 80, left: 80, right: 50 }} />
   </div>
 )
