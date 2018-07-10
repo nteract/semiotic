@@ -54,7 +54,11 @@ import {
 } from "./svg/pieceLayouts"
 
 import { drawSummaries, renderLaidOutSummaries } from "./svg/summaryLayouts"
-import { stringToFn } from "./data/dataFunctions"
+import {
+  stringToFn,
+  stringToArrayFn,
+  findFirstAccessorValue
+} from "./data/dataFunctions"
 import { genericFunction } from "./untyped_utilities/functions"
 
 import type { Node } from "react"
@@ -247,8 +251,8 @@ class OrdinalFrame extends React.Component<Props, State> {
       axis: undefined,
       renderNumber: 0,
       oLabels: [],
-      oAccessor: stringToFn("renderKey"),
-      rAccessor: stringToFn("value"),
+      oAccessor: stringToArrayFn("renderKey"),
+      rAccessor: stringToArrayFn("value"),
       oScale: xScale,
       rScale: xScale,
       axes: undefined,
@@ -318,8 +322,8 @@ class OrdinalFrame extends React.Component<Props, State> {
     const summaryType = objectifyType(baseSummaryType)
     const pieceType = objectifyType(baseType)
     const connectorType = objectifyType(baseConnectorType)
-    const oAccessor = stringToFn(baseOAccessor, d => d.renderKey)
-    const rAccessor = stringToFn(baseRAccessor, d => d.value || 1)
+    const oAccessor = stringToArrayFn(baseOAccessor, d => d.renderKey)
+    const rAccessor = stringToArrayFn(baseRAccessor, d => d.value || 1)
     const renderKey = stringToFn(baseRenderKey, (d, i) => i)
 
     /*    const eventListenersGenerator = generateOrdinalFrameEventListeners(
@@ -344,14 +348,13 @@ class OrdinalFrame extends React.Component<Props, State> {
 
     const pieceIDAccessor = stringToFn(basePieceIDAccessor, () => "")
 
-    const barData = keyAndObjectifyBarData({
+    const allData = keyAndObjectifyBarData({
       data,
-      renderKey
+      renderKey,
+      oAccessor,
+      rAccessor
     })
 
-    const allData = barData.map(d => d.data)
-
-    //      const dataAccessor = currentProps.dataAccessor || function (d) {return d}
     const arrayWrappedAxis =
       baseAxis && !Array.isArray(baseAxis) ? [baseAxis] : baseAxis
     const margin = calculateMargin({
@@ -372,10 +375,13 @@ class OrdinalFrame extends React.Component<Props, State> {
         ? { extent: baseOExtent }
         : baseOExtent
 
-    const calculatedOExtent = allData.reduce((p, c, i) => {
-      const baseOValue = oAccessor(c, i)
+    const calculatedOExtent = allData.reduce((p, c) => {
+      const baseOValue = c.column
       const oValue =
-        baseOValue && baseOValue.toString ? baseOValue.toString() : baseOValue
+        baseOValue !== undefined && baseOValue.toString
+          ? baseOValue.toString()
+          : baseOValue
+
       if (p.indexOf(oValue) === -1) {
         p.push(oValue)
       }
@@ -428,7 +434,7 @@ class OrdinalFrame extends React.Component<Props, State> {
       const columnValues = []
 
       oExtent.forEach(d => {
-        const oValues = barData.filter((p, q) => oAccessor(p.data, q) === d)
+        const oValues = allData.filter(p => p.column === d)
         const columnValue = columnValueCreator(oValues)
 
         columnValues.push(columnValue)
@@ -468,24 +474,24 @@ class OrdinalFrame extends React.Component<Props, State> {
     }
 
     if (pieceType.type === "timeline") {
-      const rData = allData.map(rAccessor)
+      const rData = allData.map(d => d.value)
       const leftExtent = extent(rData.map(d => d[0]))
       const rightExtent = extent(rData.map(d => d[1]))
       rExtent = extent([...leftExtent, ...rightExtent])
     } else if (pieceType.type !== "bar") {
-      rExtent = extent(allData, rAccessor)
+      rExtent = extent(allData, d => d.value)
     } else {
-      const positiveData = allData.filter(d => rAccessor(d) >= 0)
-      const negativeData = allData.filter(d => rAccessor(d) <= 0)
+      const positiveData = allData.filter(d => d.value >= 0)
+      const negativeData = allData.filter(d => d.value <= 0)
 
       const nestedPositiveData = nest()
-        .key(oAccessor)
-        .rollup(leaves => sum(leaves.map(rAccessor)))
+        .key(d => d.column)
+        .rollup(leaves => sum(leaves.map(d => d.value)))
         .entries(positiveData)
 
       const nestedNegativeData = nest()
-        .key(oAccessor)
-        .rollup(leaves => sum(leaves.map(rAccessor)))
+        .key(d => d.column)
+        .rollup(leaves => sum(leaves.map(d => d.value)))
         .entries(negativeData)
 
       rExtent = [
@@ -544,8 +550,8 @@ class OrdinalFrame extends React.Component<Props, State> {
 
     const nestedPieces = {}
     nest()
-      .key((d, i) => oAccessor(d.data, i))
-      .entries(barData)
+      .key(d => d.column)
+      .entries(allData)
       .forEach(d => {
         nestedPieces[d.key] = d.values
       })
@@ -606,27 +612,23 @@ class OrdinalFrame extends React.Component<Props, State> {
 
       projectedColumns[o].pieceData.forEach(piece => {
         let valPosition
-        piece.value = rAccessor(piece.data)
 
         if (pieceType.type === "timeline") {
           piece.scaledValue = rScale(piece.value[0])
           piece.scaledEndValue = rScale(piece.value[1])
           piece.scaledVerticalValue = rScaleVertical(piece.value[0])
-          piece.scaledZeroOffset = rScaleVertical(0) - piece.scaledVerticalValue
         } else if (
           pieceType.type !== "bar" &&
           pieceType.type !== "clusterbar"
         ) {
           piece.scaledValue = rScale(piece.value)
           piece.scaledVerticalValue = rScaleVertical(piece.value)
-          piece.scaledZeroOffset = piece.scaledValue - zeroValue
         } else {
           valPosition =
             projection === "vertical"
               ? rScaleReverse(rScale(piece.value))
               : rScale(piece.value)
           piece.scaledValue = Math.abs(zeroValue - valPosition)
-          piece.scaledZeroOffset = valPosition - zeroValue
         }
 
         piece.x = projectedColumns[o].x
@@ -844,9 +846,10 @@ class OrdinalFrame extends React.Component<Props, State> {
             yPosition = pieArcs[i].outerPoint[1] + pieArcs[i].translate[1]
           }
         }
+
         const label = labelingFn(
           d,
-          data.filter((p, q) => oAccessor(p, q) === d),
+          projectedColumns[d].pieceData.map(d => d.data),
           i
           //          ,{ arc: pieArcs[i], data: projectedColumns[d] }
         )
@@ -919,6 +922,7 @@ class OrdinalFrame extends React.Component<Props, State> {
           const { markD, centroid, translate, midAngle } = pieArcs[i]
           const radialMousePackage = {
             type: "column-hover",
+            column: projectedColumns[d],
             pieces: projectedColumns[d].pieceData,
             summary: projectedColumns[d].pieceData,
             arcAngles: {
@@ -960,6 +964,7 @@ class OrdinalFrame extends React.Component<Props, State> {
 
         const baseMousePackage = {
           type: "column-hover",
+          column: projectedColumns[d],
           pieces: projectedColumns[d].pieceData,
           summary: projectedColumns[d].pieceData
         }
@@ -994,7 +999,7 @@ class OrdinalFrame extends React.Component<Props, State> {
 
     const { axis, axesTickLines } = orFrameAxisGenerator({
       axis: arrayWrappedAxis,
-      data: barData,
+      data: allData,
       projection,
       adjustedSize,
       size,
@@ -1306,7 +1311,12 @@ class OrdinalFrame extends React.Component<Props, State> {
     } = this.state
 
     const screenProject = p => {
-      const oColumn = projectedColumns[oAccessor(p)]
+      const pO = p.column || findFirstAccessorValue(oAccessor, p)
+
+      const pValue = p.value || findFirstAccessorValue(rAccessor, p)
+
+      const oColumn = projectedColumns[pO]
+
       let o
       if (oColumn) {
         o = oColumn.middle
@@ -1324,18 +1334,11 @@ class OrdinalFrame extends React.Component<Props, State> {
         return pointOnArcAtAngle(
           [adjustedSize[0] / 2, adjustedSize[1] / 2],
           oColumn.pct_middle,
-          idPiece
-            ? (idPiece.bottom + idPiece.scaledValue / 2) / 2
-            : rScale(rAccessor(p)) / 2
+          idPiece ? (idPiece.bottom + idPiece.scaledValue / 2) / 2 : pValue / 2
         )
       }
       if (projection === "horizontal") {
-        return [
-          idPiece
-            ? idPiece.bottom + idPiece.scaledValue / 2
-            : rScale(rAccessor(p)),
-          o
-        ]
+        return [idPiece ? idPiece.bottom + idPiece.scaledValue / 2 : pValue, o]
       }
       const newScale = scaleLinear()
         .domain(rScale.domain())
@@ -1343,9 +1346,7 @@ class OrdinalFrame extends React.Component<Props, State> {
 
       return [
         o,
-        idPiece
-          ? idPiece.bottom - idPiece.scaledValue / 2
-          : newScale(rAccessor(p))
+        idPiece ? idPiece.bottom - idPiece.scaledValue / 2 : newScale(pValue)
       ]
     }
 

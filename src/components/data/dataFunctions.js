@@ -109,11 +109,16 @@ export const calculateDataExtent = ({
     projectedLines: Array<Object> = [],
     projectedAreas: Array<Object> = []
   if (points) {
-    projectedPoints = points.map((d, i) => {
-      const x = xAccessor(d, i)
-      const y = yAccessor(d, i)
-      return { x, y, data: d }
+    xAccessor.forEach(actualXAccessor => {
+      yAccessor.forEach(actualYAccessor => {
+        points.forEach((d, i) => {
+          const x = actualXAccessor(d, i)
+          const y = actualYAccessor(d, i)
+          projectedPoints.push({ x, y, data: d })
+        })
+      })
     })
+
     fullDataset = projectedPoints
   }
   if (lines) {
@@ -176,7 +181,7 @@ export const calculateDataExtent = ({
       yAccessor
     })
     projectedAreas.forEach(d => {
-      const baseData = areaDataAccessor(d)
+      const baseData = d._baseData
       if (d._xyfCoordinates[0][0][0]) {
         d._xyfCoordinates[0].forEach(multi => {
           fullDataset = [
@@ -328,6 +333,7 @@ function lineTransformation(lineType, options) {
   //  if (typeof lineType.type === "function") {
   //    return data => lineType.type({ ...options, data })
   //  } else {
+  console.log("data", lineType, differenceCatch)
   return data =>
     builtInTransformations[differenceCatch(lineType.type, data)]({
       ...lineType,
@@ -335,4 +341,13 @@ function lineTransformation(lineType, options) {
       data
     })
   //  }
+}
+
+export const findFirstAccessorValue = (accessorArray, data) => {
+  accessorArray.forEach(actualAccessor => {
+    const valueCheck = actualAccessor(data)
+    if (valueCheck !== undefined && !isNaN(valueCheck) && valueCheck !== null)
+      return valueCheck
+  })
+  return 0
 }
