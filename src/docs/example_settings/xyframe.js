@@ -131,13 +131,15 @@ const degreeDiffFormat = d => `${d > 0 ? "+" : ""}${Math.ceil(d * 100) / 100}°`
 const monthNameFormat = d => monthNameHash[d]
 
 const lineAnnotater = ({ d, xScale, yScale }) => {
-  if (!d.parentLine) {
+  if (!d.coincidentPoints) {
     return null
   }
   const lineRenderer = line()
     .x(d => xScale(d.x))
     .y(d => yScale(d.y))
     .curve(curveMonotoneX)
+
+  console.log("d", d)
 
   return d.coincidentPoints.map((p, q) => {
     if (!p.parentLine) {
