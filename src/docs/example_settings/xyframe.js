@@ -131,7 +131,7 @@ const degreeDiffFormat = d => `${d > 0 ? "+" : ""}${Math.ceil(d * 100) / 100}°`
 const monthNameFormat = d => monthNameHash[d]
 
 const lineAnnotater = ({ d, xScale, yScale }) => {
-  if (!d.parentLine) {
+  if (!d.coincidentPoints) {
     return null
   }
   const lineRenderer = line()
