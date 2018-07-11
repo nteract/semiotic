@@ -50,7 +50,10 @@ const annotations = [
     color: "rgb(0, 162, 206)",
     dy: -10,
     dx: 0,
-    connector: { end: "none" }
+    connector: { end: "none" },
+    events: {
+      onMouseEnter: (a, b, c) => console.log("a,b,c", a, b, c)
+    }
   },
   {
     type: "x",

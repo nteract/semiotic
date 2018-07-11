@@ -975,11 +975,13 @@ class NetworkFrame extends React.Component<Props, State> {
           .nodes(projectedNodes)
           .nodeAlign(sankeyOrient)
           .nodeId(nodeIDAccessor)
-          .nodePadding(nodePadding)
           .nodeWidth(nodeWidth)
           .iterations(iterations)
-        if (nodePaddingRatio) {
+
+        if (frameSankey.nodePaddingRatio && nodePaddingRatio) {
           frameSankey.nodePaddingRatio(nodePaddingRatio)
+        } else if (nodePadding) {
+          frameSankey.nodePadding(nodePadding)
         }
 
         frameSankey()
