@@ -550,9 +550,9 @@ class OrdinalFrame extends React.Component<Props, State> {
         nestedPieces[d.key] = d.values
       })
 
-    if (currentProps.sortO !== undefined) {
+    if (sortO !== undefined) {
       oExtent = oExtent.sort((a, b) =>
-        currentProps.sortO(
+        sortO(
           a,
           b,
           nestedPieces[a].map(d => d.data),
