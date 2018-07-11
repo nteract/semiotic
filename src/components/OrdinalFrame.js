@@ -159,7 +159,7 @@ type Props = {
   canvasConnectors?: boolean | Function,
   summaryStyle?: Object | Function,
   style?: Object | Function,
-  sortO?: Function,
+  sortO: Function,
   dynamicColumnWidth?: string | Function,
   pieceIDAccessor?: string | Function,
   ordinalAlign?: string,
@@ -231,7 +231,8 @@ class OrdinalFrame extends React.Component<Props, State> {
     rScaleType: scaleLinear,
     type: "none",
     summaryType: "none",
-    useSpans: false
+    useSpans: false,
+    sortO: () => 1
   }
 
   constructor(props: Props) {
@@ -284,6 +285,7 @@ class OrdinalFrame extends React.Component<Props, State> {
       rAccessor: baseRAccessor,
       connectorStyle: baseConnectorStyle,
       style: baseStyle,
+      sortO,
       pieceClass: basePieceClass,
       summaryStyle: baseSummaryStyle,
       summaryClass: baseSummaryClass,
@@ -548,7 +550,7 @@ class OrdinalFrame extends React.Component<Props, State> {
         nestedPieces[d.key] = d.values
       })
 
-    if (currentProps.sortO) {
+    if (currentProps.sortO !== undefined) {
       oExtent = oExtent.sort((a, b) =>
         currentProps.sortO(
           a,

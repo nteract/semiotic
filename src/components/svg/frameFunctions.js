@@ -180,7 +180,7 @@ export const calculateMargin = ({
 }
 
 export function objectifyType(type?: string | Object | Function) {
-  return typeof type === "object" ? type : { type: type }
+  return typeof type === "object" ? type : { type: type, simpleLine: false }
 }
 
 export function generateOrdinalFrameEventListeners(
