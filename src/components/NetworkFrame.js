@@ -364,7 +364,8 @@ type NetworkSettingsType = {
   edgeDistance?: number,
   forceManyBody?: Function | number,
   hierarchicalNetwork: boolean,
-  graphSettings: Object
+  graphSettings: Object,
+  sortGroups?: Function
 }
 
 type State = {
