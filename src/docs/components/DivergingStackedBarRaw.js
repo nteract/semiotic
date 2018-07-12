@@ -3,8 +3,6 @@ import { answers } from "../sampledata/questions"
 import { OrdinalFrame } from "../../components"
 import ProcessViz from "./ProcessViz"
 
-console.log("answerr", answers)
-
 const divStackedBarChart = {
   size: [700, 500],
   data: answers,

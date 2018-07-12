@@ -392,8 +392,6 @@ export function barLayout({
       let finalWidth = barColumnWidth
       let finalHeight = pieceSize
 
-      console.log("piece.bottom", piece.bottom)
-
       if (!piece.negative) {
         yPosition -= piece.scaledValue
       }
@@ -420,7 +418,6 @@ export function barLayout({
         finalHeight = undefined
         finalWidth = undefined
       } else {
-        console.log("yPosition", yPosition)
         markProps = {
           markType: "rect",
           x: xPosition,
@@ -486,8 +483,6 @@ export function barLayout({
     })
     allCalculatedPieces = [...allCalculatedPieces, ...calculatedPieces]
   })
-
-  console.log("allCalculatedPieces", allCalculatedPieces)
 
   return allCalculatedPieces
 }

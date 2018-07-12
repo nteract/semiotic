@@ -2,7 +2,7 @@
 
 import { sum } from "d3-array"
 
-import { findFirstAccessorValue } from "../data/dataFunctions"
+import { findFirstAccessorValue } from "../data/multiAccessorUtils"
 
 const datesForUnique = d => (d instanceof Date ? d.toString() : d)
 
@@ -495,10 +495,12 @@ export function relativeY({
     }
     point = thisPoint
   }
-  return yScale(
-    point[projectedYMiddle] ||
-      point[projectedY] ||
-      findFirstAccessorValue(yAccessor, point) ||
-      0
+
+  return (
+    yScale(
+      point[projectedYMiddle] ||
+        point[projectedY] ||
+        findFirstAccessorValue(yAccessor, point)
+    ) || 0
   )
 }
