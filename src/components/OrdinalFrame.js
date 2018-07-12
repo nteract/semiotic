@@ -232,7 +232,7 @@ class OrdinalFrame extends React.Component<Props, State> {
     type: "none",
     summaryType: "none",
     useSpans: false,
-    sortO: () => 1
+    sortO: () => 0
   }
 
   constructor(props: Props) {
