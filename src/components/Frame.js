@@ -209,8 +209,6 @@ class Frame extends React.Component<Props, State> {
       size: size
     })
 
-    console.log("VIZ LAYER SIZE", size)
-
     return (
       <SpanOrDiv
         span={useSpans}

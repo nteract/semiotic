@@ -139,8 +139,6 @@ const lineAnnotater = ({ d, xScale, yScale }) => {
     .y(d => yScale(d.y))
     .curve(curveMonotoneX)
 
-  console.log("d", d)
-
   return d.coincidentPoints.map((p, q) => {
     if (!p.parentLine) {
       return null

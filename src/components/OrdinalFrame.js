@@ -54,11 +54,9 @@ import {
 } from "./svg/pieceLayouts"
 
 import { drawSummaries, renderLaidOutSummaries } from "./svg/summaryLayouts"
-import {
-  stringToFn,
-  stringToArrayFn,
-  findFirstAccessorValue
-} from "./data/dataFunctions"
+import { stringToFn, stringToArrayFn } from "./data/dataFunctions"
+import { findFirstAccessorValue } from "./data/multiAccessorUtils"
+
 import { genericFunction } from "./untyped_utilities/functions"
 
 import type { Node } from "react"

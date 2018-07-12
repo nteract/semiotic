@@ -602,13 +602,6 @@ export const htmlColumnHoverRule = ({
 }) => {
   //we need to ignore negative pieces to make sure the hover behavior populates on top of the positive bar
 
-  console.log(
-    "sum(d.pieces.map(p => p.scaledValue).filter(p => p > 0):,",
-    sum(d.pieces.map(p => p.scaledValue).filter(p => p > 0))
-  )
-  console.log(d.pieces)
-  console.log(d.pieces.map(p => p.scaledValue))
-  console.log(d.pieces.map(p => p.scaledValue).filter(p => p > 0))
   const positionValue =
     (summaryType.type && summaryType.type !== "none") ||
     ["swarm", "point", "clusterbar"].find(p => p === type.type)
@@ -616,8 +609,6 @@ export const htmlColumnHoverRule = ({
       : projection === "horizontal"
         ? max(d.pieces.map(p => p.scaledValue + p.bottom))
         : min(d.pieces.map(p => p.bottom - p.scaledValue))
-
-  console.log("positionValue", positionValue)
 
   const column = d.column
 
@@ -627,8 +618,6 @@ export const htmlColumnHoverRule = ({
       ? adjustedSize[1] - positionValue
       : positionValue
   yPosition += 10
-
-  console.log("yPosition", yPosition)
 
   if (projection === "horizontal") {
     yPosition = column.middle

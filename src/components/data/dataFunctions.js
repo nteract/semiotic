@@ -14,6 +14,7 @@ import {
   bumpChart,
   lineChart
 } from "../svg/lineDrawing"
+
 import { contouring, hexbinning, heatmapping } from "../svg/areaDrawing"
 import { max, min, extent } from "d3-array"
 
@@ -330,24 +331,10 @@ const differenceCatch = (olineType, data) =>
   olineType === "difference" && data.length !== 2 ? "line" : olineType
 
 function lineTransformation(lineType, options) {
-  //  if (typeof lineType.type === "function") {
-  //    return data => lineType.type({ ...options, data })
-  //  } else {
-  console.log("data", lineType, differenceCatch)
   return data =>
     builtInTransformations[differenceCatch(lineType.type, data)]({
       ...lineType,
       ...options,
       data
     })
-  //  }
-}
-
-export const findFirstAccessorValue = (accessorArray, data) => {
-  accessorArray.forEach(actualAccessor => {
-    const valueCheck = actualAccessor(data)
-    if (valueCheck !== undefined && !isNaN(valueCheck) && valueCheck !== null)
-      return valueCheck
-  })
-  return 0
 }
