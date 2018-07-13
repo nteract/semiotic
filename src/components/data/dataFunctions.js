@@ -33,39 +33,43 @@ const builtInTransformations = {
   "line": lineChart
 }
 
-const stringToFnBase = arrayable => {
-  return (
-    accessor?: Function | string | boolean | Object,
-    defaultAccessor?: Function,
-    raw?: boolean
-  ): Function => {
-    if (!accessor && defaultAccessor) {
-      return arrayable ? [defaultAccessor] : defaultAccessor
-    } else if (typeof accessor !== "function" && raw !== undefined) {
-      return arrayable ? [() => accessor] : () => accessor
-    }
-
-    if (!arrayable) {
-      return typeof accessor !== "function"
-        ? (d: Object) => d[accessor]
-        : accessor
-    }
-
-    const arrayOfAccessors = Array.isArray(accessor) ? accessor : [accessor]
-
-    return arrayOfAccessors.map(
-      a => (typeof a !== "function" ? (d: Object) => d[a] : a)
-    )
+export const stringToFn = (
+  accessor?: Function | string | boolean | Object,
+  defaultAccessor?: Function,
+  raw?: boolean
+): Function => {
+  if (!accessor && defaultAccessor) {
+    return defaultAccessor
+  } else if (typeof accessor !== "function" && raw !== undefined) {
+    return () => accessor
   }
+
+  return typeof accessor !== "function" ? (d: Object) => d[accessor] : accessor
 }
 
-export const stringToFn = stringToFnBase(false)
-export const stringToArrayFn = stringToFnBase(true)
+export const stringToArrayFn = (
+  accessor?:
+    | Function
+    | string
+    | boolean
+    | Object
+    | Array<Function | string | boolean | Object>,
+  defaultAccessor?: Function,
+  raw?: boolean
+): Array<Function> => {
+  if (!accessor) {
+    return [stringToFn(accessor, defaultAccessor, raw)]
+  }
+  const arrayOfAccessors = Array.isArray(accessor) ? accessor : [accessor]
+
+  return arrayOfAccessors.map(a => stringToFn(a, defaultAccessor, raw))
+}
 
 type CalculateDataTypes = {
-  lineDataAccessor: Function,
-  xAccessor: Function,
-  yAccessor: Function,
+  lineDataAccessor: Array<Function>,
+  areaDataAccessor: Array<Function>,
+  xAccessor: Array<Function>,
+  yAccessor: Array<Function>,
   areas?: Array<Object>,
   points?: Array<Object>,
   lines?: Array<Object>,
@@ -75,7 +79,6 @@ type CalculateDataTypes = {
   yExtent?: Array<number> | Object,
   invertX?: boolean,
   invertY?: boolean,
-  areaDataAccessor: Function,
   areaType: Object,
   adjustedSize: Array<number>,
   xScaleType: Function,

@@ -90,6 +90,9 @@ export const orDownloadMapping = ({
   const dataKeys = Object.keys(data)
   const csvData = []
 
+  //// orDOWNLOADMAPPING FOREACH ON ACCESSORS
+  console.log("HEY FIX OR DOWNLOAD MAPPING YOU DOOF")
+
   dataKeys.forEach(key => {
     data[key].pieceData.forEach(piece => {
       const row = {}
