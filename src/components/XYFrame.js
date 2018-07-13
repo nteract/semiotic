@@ -55,6 +55,8 @@ import {
   stringToFn,
   stringToArrayFn
 } from "./data/dataFunctions"
+
+import { extentValue } from "./data/unflowedFunctions"
 import { findFirstAccessorValue } from "./data/multiAccessorUtils"
 
 import { filterDefs } from "./constants/jsx"
@@ -125,7 +127,7 @@ type Props = {
   matte?: Object,
   xScaleType?: Function,
   yScaleType?: Function,
-  xExtent?: Array<number> | Object,
+  xExtent?: Array<number> | { extent?: Array<number>, onChange?: Function },
   yExtent?: Array<number> | Object,
   invertX?: boolean,
   invertY?: boolean,
@@ -316,11 +318,22 @@ class XYFrame extends React.Component<Props, State> {
       dataVersion: oldDataVersion
     } = this.state
     const {
-      xExtent: newXExtent = [],
-      yExtent: newYExtent = [],
+      xExtent: baseNewXExtent,
+      yExtent: baseNewYExtent,
       size: newSize,
       dataVersion: newDataVersion
     } = nextProps
+
+    const newXExtent: Array<number> = extentValue(baseNewXExtent)
+
+    const newYExtent: Array<number> = extentValue(baseNewYExtent)
+
+    const extentChange =
+      oldXExtent[0] !== newXExtent[0] ||
+      oldYExtent[0] !== newYExtent[0] ||
+      oldXExtent[1] !== newXExtent[1] ||
+      oldYExtent[1] !== newYExtent[1]
+
     if (
       (oldDataVersion && oldDataVersion !== newDataVersion) ||
       !this.state.fullDataset
@@ -329,19 +342,15 @@ class XYFrame extends React.Component<Props, State> {
     } else if (
       oldSize[0] !== newSize[0] ||
       oldSize[1] !== newSize[1] ||
-      oldXExtent[0] !== newXExtent[0] ||
-      oldYExtent[0] !== newYExtent[0] ||
-      oldXExtent[1] !== newXExtent[1] ||
-      oldYExtent[1] !== newYExtent[1] ||
+      extentChange ||
       (!oldDataVersion &&
         xyFrameChangeProps.find(d => this.props[d] !== nextProps[d]))
     ) {
       const dataChanged =
-        oldXExtent[0] !== newXExtent[0] ||
-        oldYExtent[0] !== newYExtent[0] ||
-        oldXExtent[1] !== newXExtent[1] ||
-        oldYExtent[1] !== newYExtent[1] ||
+        extentChange ||
         xyFrameDataProps.find(d => this.props[d] !== nextProps[d])
+
+      console.log("dataChanges", dataChanged)
       this.calculateXYFrame(nextProps, dataChanged)
     }
   }
@@ -445,7 +454,9 @@ class XYFrame extends React.Component<Props, State> {
         !React.isValidElement(title) &&
         title !== null
           ? title
-          : { title, orient: "top" }
+          : { title, orient: "top" },
+      xExtent: (baseXExtent && baseXExtent.extent) || baseXExtent,
+      yExtent: (baseYExtent && baseYExtent.extent) || baseYExtent
     }
 
     annotatedSettings.lineType.simpleLine =
@@ -491,6 +502,7 @@ class XYFrame extends React.Component<Props, State> {
         !fullDataset ||
         (!projectedLines && !projectedPoints && !projectedAreas)
       ) {
+        console.log("update data dread")
         ;({
           xExtent,
           yExtent,
