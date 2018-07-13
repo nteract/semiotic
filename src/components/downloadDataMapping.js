@@ -90,31 +90,32 @@ export const orDownloadMapping = ({
   const dataKeys = Object.keys(data)
   const csvData = []
 
-  //// orDOWNLOADMAPPING FOREACH ON ACCESSORS
-  console.log("HEY FIX OR DOWNLOAD MAPPING YOU DOOF")
+  oAccessor.forEach(actualOAccessor => {
+    rAccessor.forEach(actualRAccessor => {
+      dataKeys.forEach(key => {
+        data[key].pieceData.forEach(piece => {
+          const row = {}
+          if (actualOAccessor) {
+            row.column = actualOAccessor(piece.data)
+          } else if (piece.x) {
+            row.column = piece.x
+          }
 
-  dataKeys.forEach(key => {
-    data[key].pieceData.forEach(piece => {
-      const row = {}
-      if (oAccessor) {
-        row.column = oAccessor(piece.data)
-      } else if (piece.x) {
-        row.column = piece.x
-      }
+          if (actualRAccessor) {
+            row.value = actualRAccessor(piece.data)
+          } else if (piece.renderKey) {
+            row.value = piece.renderKey
+          }
 
-      if (rAccessor) {
-        row.value = rAccessor(piece.data)
-      } else if (piece.renderKey) {
-        row.value = piece.renderKey
-      }
+          if (piece.id !== undefined) row.id = piece.id
 
-      if (piece.id !== undefined) row.id = piece.id
+          fields.forEach(f => {
+            row[f] = cleanDates(piece.data[f])
+          })
 
-      fields.forEach(f => {
-        row[f] = cleanDates(piece.data[f])
+          csvData.push(row)
+        })
       })
-
-      csvData.push(row)
     })
   })
 

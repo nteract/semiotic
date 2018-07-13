@@ -1310,14 +1310,9 @@ class OrdinalFrame extends React.Component<Props, State> {
     const screenProject = p => {
       const pO = p.column || findFirstAccessorValue(oAccessor, p)
 
-      const pValue = p.value || findFirstAccessorValue(rAccessor, p)
-
-      console.log("pO", pO)
-      console.log("p", p)
-      console.log("pieceIDAccessor", pieceIDAccessor)
+      const pValue = p.value || rScale(findFirstAccessorValue(rAccessor, p))
 
       const oColumn = projectedColumns[pO]
-      console.log("oColumn", oColumn)
 
       let o
       if (oColumn) {
@@ -1332,8 +1327,6 @@ class OrdinalFrame extends React.Component<Props, State> {
           r => pieceIDAccessor(r.data) === pieceIDAccessor(d)
         )
 
-      console.log("idPiece ?", idPiece)
-
       if (oColumn && projection === "radial") {
         return pointOnArcAtAngle(
           [adjustedSize[0] / 2, adjustedSize[1] / 2],
@@ -1347,14 +1340,6 @@ class OrdinalFrame extends React.Component<Props, State> {
       const newScale = scaleLinear()
         .domain(rScale.domain())
         .range(rScale.range().reverse())
-
-      console.log("o", o)
-      console.log(
-        "o",
-        idPiece,
-        idPiece.bottom - idPiece.scaledValue / 2,
-        newScale(pValue)
-      )
 
       return [
         o,
@@ -1674,10 +1659,6 @@ class OrdinalFrame extends React.Component<Props, State> {
       />
     )
   }
-}
-
-OrdinalFrame.propTypes = {
-  ...ordinalframeproptypes
 }
 
 export default OrdinalFrame

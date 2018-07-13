@@ -1,11 +1,11 @@
-import React from 'react'
-import DocumentComponent from '../layout/DocumentComponent'
-import MinimapRaw from './MinimapRaw'
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import MinimapRaw from "./MinimapRaw"
 
 const components = []
 
 components.push({
-  name: 'Minimap Basics'
+  name: "Minimap Basics"
 })
 
 export default class MinimapBasics extends React.Component {
@@ -21,6 +21,7 @@ export default class MinimapBasics extends React.Component {
   }
 
   changeExtent(e) {
+    console.log("e", e)
     this.setState({ selectedExtent: [Math.floor(e[0]), Math.ceil(e[1])] })
   }
 
@@ -34,7 +35,7 @@ export default class MinimapBasics extends React.Component {
     ]
 
     examples.push({
-      name: 'Basic',
+      name: "Basic",
       demo: MinimapRaw(
         this.changeExtent,
         this.state.resetExtent,
@@ -150,4 +151,4 @@ const xyFrameSettings = {
   }
 }
 
-MinimapBasics.title = 'Minimap Basics'
+MinimapBasics.title = "Minimap Basics"

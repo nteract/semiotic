@@ -308,19 +308,29 @@ class XYFrame extends React.Component<Props, State> {
   }
 
   componentWillReceiveProps(nextProps: Props) {
+    const { xExtent: oldXExtent = [], yExtent: oldYExtent = [], size: oldSize, dataVersion: oldDataVersion } = this.state
+    const { xExtent: newXExtent = [], yExtent: newYExtent = [], size: newSize, dataVersion: newDataVersion } = nextProps
     if (
-      (this.state.dataVersion &&
-        this.state.dataVersion !== nextProps.dataVersion) ||
+      (oldDataVersion &&
+        oldDataVersion !== newDataVersion) ||
       !this.state.fullDataset
     ) {
       this.calculateXYFrame(nextProps, true)
     } else if (
-      this.state.size[0] !== nextProps.size[0] ||
-      this.state.size[1] !== nextProps.size[1] ||
-      (!this.state.dataVersion &&
+      oldSize[0] !== newSize[0] ||
+      oldSize[1] !== newSize[1] ||
+      oldXExtent[0] !== newXExtent[0] ||
+      oldYExtent[0] !== newYExtent[0] ||
+      oldXExtent[1] !== newXExtent[1] ||
+      oldYExtent[1] !== newYExtent[1] ||
+
+      (!oldDataVersion &&
         xyFrameChangeProps.find(d => this.props[d] !== nextProps[d]))
     ) {
-      const dataChanged = xyFrameDataProps.find(
+      const dataChanged =       oldXExtent[0] !== newXExtent[0] ||
+      oldYExtent[0] !== newYExtent[0] ||
+      oldXExtent[1] !== newXExtent[1] ||
+      oldYExtent[1] !== newYExtent[1] || xyFrameDataProps.find(
         d => this.props[d] !== nextProps[d]
       )
       this.calculateXYFrame(nextProps, dataChanged)
@@ -461,6 +471,8 @@ class XYFrame extends React.Component<Props, State> {
 
     let xScale, yScale
 
+    console.log("updateData", updateData)
+
     if (
       updateData ||
       (currentProps.dataVersion &&
@@ -469,7 +481,7 @@ class XYFrame extends React.Component<Props, State> {
       if (
         !xExtent ||
         !yExtent ||
-        !fullDataset ||
+        !fullDataset
         (!projectedLines && !projectedPoints && !projectedAreas)
       ) {
         ;({
@@ -1277,10 +1289,6 @@ class XYFrame extends React.Component<Props, State> {
       />
     )
   }
-}
-
-XYFrame.propTypes = {
-  ...xyframeproptypes
 }
 
 export default XYFrame
