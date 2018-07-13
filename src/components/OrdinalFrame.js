@@ -125,8 +125,8 @@ type Props = {
   annotationSettings?: AnnotationHandling,
   size: Array<number>,
   downloadFields: Array<string>,
-  rAccessor?: string | Function,
-  oAccessor?: string | Function,
+  rAccessor?: Array<string | Function> | string | Function,
+  oAccessor?: Array<string | Function> | string | Function,
   oExtent?: ExtentSettingsType | Array<number>,
   rExtent?: ExtentSettingsType | Array<number>,
   name?: string,
@@ -161,7 +161,7 @@ type Props = {
   canvasConnectors?: boolean | Function,
   summaryStyle?: Object | Function,
   style?: Object | Function,
-  sortO: Function,
+  sortO?: Function,
   dynamicColumnWidth?: string | Function,
   pieceIDAccessor?: string | Function,
   ordinalAlign?: string,
@@ -201,8 +201,8 @@ type State = {
   title: Object,
   columnOverlays: Array<Object>,
   renderNumber: number,
-  oAccessor: Function,
-  rAccessor: Function,
+  oAccessor: Array<Function>,
+  rAccessor: Array<Function>,
   oScaleType: Function,
   rScaleType: Function,
   oExtent: Array<number>,
@@ -233,8 +233,7 @@ class OrdinalFrame extends React.Component<Props, State> {
     rScaleType: scaleLinear,
     type: "none",
     summaryType: "none",
-    useSpans: false,
-    sortO: () => 1
+    useSpans: false
   }
 
   constructor(props: Props) {
@@ -1313,6 +1312,10 @@ class OrdinalFrame extends React.Component<Props, State> {
 
       const pValue = p.value || findFirstAccessorValue(rAccessor, p)
 
+      console.log("pO", pO)
+      console.log("p", p)
+      console.log("pieceIDAccessor", pieceIDAccessor)
+
       const oColumn = projectedColumns[pO]
 
       let o
@@ -1327,6 +1330,8 @@ class OrdinalFrame extends React.Component<Props, State> {
         oColumn.pieceData.find(
           r => pieceIDAccessor(r.data) === pieceIDAccessor(d)
         )
+
+      console.log("idPiece ?", idPiece)
 
       if (oColumn && projection === "radial") {
         return pointOnArcAtAngle(
@@ -1575,8 +1580,8 @@ class OrdinalFrame extends React.Component<Props, State> {
           width={size[0]}
           data={orDownloadMapping({
             data: projectedColumns,
-            rAccessor: stringToFn(rAccessor),
-            oAccessor: stringToFn(oAccessor),
+            rAccessor: stringToArrayFn(rAccessor),
+            oAccessor: stringToArrayFn(oAccessor),
             fields: downloadFields
           })}
         />

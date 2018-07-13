@@ -212,7 +212,9 @@ export function keyAndObjectifyBarData({
   rAccessor
 }: {
   data: Array<Object | number>,
-  renderKey: Function
+  renderKey: Function,
+  oAccessor: Array<Function> | Function,
+  rAccessor: Array<Function> | Function
 }): Array<Object> {
   const decoratedData = []
   oAccessor.forEach(actualOAccessor => {

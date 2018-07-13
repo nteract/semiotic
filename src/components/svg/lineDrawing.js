@@ -8,20 +8,20 @@ const datesForUnique = d => (d instanceof Date ? d.toString() : d)
 
 type AreaProjectionTypes = {
   data: Array<Object>,
-  areaDataAccessor: Function,
-  xAccessor: Function,
-  yAccessor: Function
+  areaDataAccessor: Array<Function>,
+  xAccessor: Array<Function>,
+  yAccessor: Array<Function>
 }
 
 type LineProjectionTypes = {
   data: Array<Object>,
-  lineDataAccessor: Function,
+  lineDataAccessor: Array<Function>,
   xProp: string,
   yProp: string,
   yPropTop: string,
   yPropBottom: string,
-  xAccessor: Function,
-  yAccessor: Function
+  xAccessor: Array<Function>,
+  yAccessor: Array<Function>
 }
 
 type DifferenceLineProps = {
@@ -56,8 +56,8 @@ type RelativeYTypes = {
   projectedYMiddle: string,
   projectedY: string,
   projectedX: string,
-  xAccessor: Function,
-  yAccessor: Function,
+  xAccessor: Array<Function>,
+  yAccessor: Array<Function>,
   yScale: Function,
   xScale: Function,
   idAccessor: Function
