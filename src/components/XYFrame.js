@@ -350,7 +350,6 @@ class XYFrame extends React.Component<Props, State> {
         extentChange ||
         xyFrameDataProps.find(d => this.props[d] !== nextProps[d])
 
-      console.log("dataChanges", dataChanged)
       this.calculateXYFrame(nextProps, dataChanged)
     }
   }
@@ -502,7 +501,6 @@ class XYFrame extends React.Component<Props, State> {
         !fullDataset ||
         (!projectedLines && !projectedPoints && !projectedAreas)
       ) {
-        console.log("update data dread")
         ;({
           xExtent,
           yExtent,
