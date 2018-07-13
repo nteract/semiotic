@@ -18,7 +18,7 @@ import {
 import { contouring, hexbinning, heatmapping } from "../svg/areaDrawing"
 import { max, min, extent } from "d3-array"
 
-import type { ProjectedPoint } from "../types/generalTypes"
+import type { ProjectedPoint, accessorType } from "../types/generalTypes"
 
 const builtInTransformations = {
   "stackedarea": stackedArea,
@@ -48,12 +48,7 @@ export const stringToFn = (
 }
 
 export const stringToArrayFn = (
-  accessor?:
-    | Function
-    | string
-    | boolean
-    | Object
-    | Array<Function | string | boolean | Object>,
+  accessor?: Function | string | boolean | Object | accessorType,
   defaultAccessor?: Function,
   raw?: boolean
 ): Array<Function> => {

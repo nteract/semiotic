@@ -36,8 +36,6 @@ class MinimapXYFrame extends React.Component {
 
     combinedOptions.hoverAnnotation = false
 
-    console.log("combinedOptions", combinedOptions)
-
     return <MiniMap {...combinedOptions} />
   }
 
