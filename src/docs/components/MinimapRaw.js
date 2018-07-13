@@ -39,7 +39,6 @@ const xyFrameSettings = {
 }
 
 export default (brushFunction, extent, selectedExtent) => {
-  console.log("selectedExtent", selectedExtent)
   const minimapChart = {
     size: [700, 700],
     ...xyFrameSettings,

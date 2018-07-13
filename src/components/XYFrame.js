@@ -73,7 +73,8 @@ import type { Node } from "React"
 import type {
   ProjectedPoint,
   MarginType,
-  CanvasPostProcessTypes
+  CanvasPostProcessTypes,
+  accessorType
 } from "./types/generalTypes"
 
 import type {
@@ -128,10 +129,10 @@ type Props = {
   yExtent?: Array<number> | Object,
   invertX?: boolean,
   invertY?: boolean,
-  xAccessor?: Array<Function | string> | Function | string,
-  yAccessor?: Array<Function | string> | Function | string,
-  lineDataAccessor?: Array<Function | string> | Function | string,
-  areaDataAccessor?: Array<Function | string> | Function | string,
+  xAccessor?: accessorType,
+  yAccessor?: accessorType,
+  lineDataAccessor?: accessorType,
+  areaDataAccessor?: accessorType,
   lineType: string | Object,
   areaType: string | Object,
   lineRenderMode?: string | Object | Function,
@@ -308,11 +309,20 @@ class XYFrame extends React.Component<Props, State> {
   }
 
   componentWillReceiveProps(nextProps: Props) {
-    const { xExtent: oldXExtent = [], yExtent: oldYExtent = [], size: oldSize, dataVersion: oldDataVersion } = this.state
-    const { xExtent: newXExtent = [], yExtent: newYExtent = [], size: newSize, dataVersion: newDataVersion } = nextProps
+    const {
+      xExtent: oldXExtent = [],
+      yExtent: oldYExtent = [],
+      size: oldSize,
+      dataVersion: oldDataVersion
+    } = this.state
+    const {
+      xExtent: newXExtent = [],
+      yExtent: newYExtent = [],
+      size: newSize,
+      dataVersion: newDataVersion
+    } = nextProps
     if (
-      (oldDataVersion &&
-        oldDataVersion !== newDataVersion) ||
+      (oldDataVersion && oldDataVersion !== newDataVersion) ||
       !this.state.fullDataset
     ) {
       this.calculateXYFrame(nextProps, true)
@@ -323,16 +333,15 @@ class XYFrame extends React.Component<Props, State> {
       oldYExtent[0] !== newYExtent[0] ||
       oldXExtent[1] !== newXExtent[1] ||
       oldYExtent[1] !== newYExtent[1] ||
-
       (!oldDataVersion &&
         xyFrameChangeProps.find(d => this.props[d] !== nextProps[d]))
     ) {
-      const dataChanged =       oldXExtent[0] !== newXExtent[0] ||
-      oldYExtent[0] !== newYExtent[0] ||
-      oldXExtent[1] !== newXExtent[1] ||
-      oldYExtent[1] !== newYExtent[1] || xyFrameDataProps.find(
-        d => this.props[d] !== nextProps[d]
-      )
+      const dataChanged =
+        oldXExtent[0] !== newXExtent[0] ||
+        oldYExtent[0] !== newYExtent[0] ||
+        oldXExtent[1] !== newXExtent[1] ||
+        oldYExtent[1] !== newYExtent[1] ||
+        xyFrameDataProps.find(d => this.props[d] !== nextProps[d])
       this.calculateXYFrame(nextProps, dataChanged)
     }
   }
@@ -471,8 +480,6 @@ class XYFrame extends React.Component<Props, State> {
 
     let xScale, yScale
 
-    console.log("updateData", updateData)
-
     if (
       updateData ||
       (currentProps.dataVersion &&
@@ -481,7 +488,7 @@ class XYFrame extends React.Component<Props, State> {
       if (
         !xExtent ||
         !yExtent ||
-        !fullDataset
+        !fullDataset ||
         (!projectedLines && !projectedPoints && !projectedAreas)
       ) {
         ;({

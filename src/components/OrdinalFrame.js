@@ -70,7 +70,8 @@ import type {
   MarginType,
   CanvasPostProcessTypes,
   ExtentSettingsType,
-  ProjectionTypes
+  ProjectionTypes,
+  accessorType
 } from "./types/generalTypes"
 
 import type { AxisType } from "./types/annotationTypes"
@@ -125,8 +126,8 @@ type Props = {
   annotationSettings?: AnnotationHandling,
   size: Array<number>,
   downloadFields: Array<string>,
-  rAccessor?: Array<string | Function> | string | Function,
-  oAccessor?: Array<string | Function> | string | Function,
+  rAccessor?: accessorType,
+  oAccessor?: accessorType,
   oExtent?: ExtentSettingsType | Array<number>,
   rExtent?: ExtentSettingsType | Array<number>,
   name?: string,

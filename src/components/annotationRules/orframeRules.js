@@ -413,7 +413,6 @@ export const svgCategoryRule = ({
     ? d.categories
     : [d.categories]
 
-  console.log("categories", categories)
   const cats = actualCategories.map(c => categories[c])
 
   if (projection === "radial") {
@@ -461,9 +460,6 @@ export const svgCategoryRule = ({
   } else {
     const leftX = min(cats.map(p => p.x))
     const rightX = max(cats.map(p => p.x + p.width))
-
-    console.log("leftX", leftX)
-    console.log("rightX", rightX)
 
     if (projection === "vertical") {
       let yPosition = position === "top" ? 0 : adjustedSize[1]

@@ -21,7 +21,6 @@ export default class MinimapBasics extends React.Component {
   }
 
   changeExtent(e) {
-    console.log("e", e)
     this.setState({ selectedExtent: [Math.floor(e[0]), Math.ceil(e[1])] })
   }
 
