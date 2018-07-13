@@ -1317,6 +1317,7 @@ class OrdinalFrame extends React.Component<Props, State> {
       console.log("pieceIDAccessor", pieceIDAccessor)
 
       const oColumn = projectedColumns[pO]
+      console.log("oColumn", oColumn)
 
       let o
       if (oColumn) {
@@ -1346,6 +1347,14 @@ class OrdinalFrame extends React.Component<Props, State> {
       const newScale = scaleLinear()
         .domain(rScale.domain())
         .range(rScale.range().reverse())
+
+      console.log("o", o)
+      console.log(
+        "o",
+        idPiece,
+        idPiece.bottom - idPiece.scaledValue / 2,
+        newScale(pValue)
+      )
 
       return [
         o,
