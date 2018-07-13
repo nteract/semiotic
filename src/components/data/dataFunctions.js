@@ -18,6 +18,8 @@ import {
 import { contouring, hexbinning, heatmapping } from "../svg/areaDrawing"
 import { max, min, extent } from "d3-array"
 
+import { extentValue } from "./unflowedFunctions"
+
 import type { ProjectedPoint, accessorType } from "../types/generalTypes"
 
 const builtInTransformations = {
@@ -235,15 +237,26 @@ export const calculateDataExtent = ({
     )
   ]
 
+  const actualXExtent: ?(number[]) = extentValue(xExtent)
+  const actualYExtent: ?(number[]) = extentValue(yExtent)
+
   const xMin =
-    xExtent && xExtent[0] !== undefined ? xExtent[0] : calculatedXExtent[0]
+    actualXExtent && actualXExtent[0] !== undefined
+      ? actualXExtent[0]
+      : calculatedXExtent[0]
   const xMax =
-    xExtent && xExtent[1] !== undefined ? xExtent[1] : calculatedXExtent[1]
+    actualXExtent && actualXExtent[1] !== undefined
+      ? actualXExtent[1]
+      : calculatedXExtent[1]
 
   const yMin =
-    yExtent && yExtent[0] !== undefined ? yExtent[0] : calculatedYExtent[0]
+    actualYExtent && actualYExtent[0] !== undefined
+      ? actualYExtent[0]
+      : calculatedYExtent[0]
   const yMax =
-    yExtent && yExtent[1] !== undefined ? yExtent[1] : calculatedYExtent[1]
+    actualYExtent && actualYExtent[1] !== undefined
+      ? actualYExtent[1]
+      : calculatedYExtent[1]
 
   let finalYExtent = [yMin, yMax]
   let finalXExtent = [xMin, xMax]

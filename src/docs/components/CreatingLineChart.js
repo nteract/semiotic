@@ -451,13 +451,9 @@ export default class CreatingLineChart extends React.Component {
               type: "line",
               interpolator: curveCardinal
             }}
-            lineDataAccessor={[
-              "coordinates",
-              d =>
-                d.coordinates.map((p, i) => ({ ...p, theaterCount: i * 100 }))
-            ]}
-            xAccessor={["week", "rank"]}
-            yAccessor={["theaterCount", "theaterAvg", d => d.theaterCount * 20]}
+            lineDataAccessor={["coordinates"]}
+            xAccessor={["week"]}
+            yAccessor={["theaterCount"]}
             lineStyle={d => ({
               stroke: d.title === "Ex Machina" ? "#00a2ce" : "red",
               fill: "none"
@@ -1059,7 +1055,7 @@ export default class CreatingLineChart extends React.Component {
             }
             style={{ color: "black" }}
           >
-            Switch to lines
+            Switch lineType
           </button>
           <div>
             <div style={{ display: "inline-block", width: "100px" }}>
@@ -1102,8 +1098,11 @@ export default class CreatingLineChart extends React.Component {
                   interpolator: curveMonotoneX
                 }}
                 lineStyle={d => ({
-                  fill: colorHash[d.title],
-                  stroke: colorHash[d.title]
+                  stroke: colorHash[d.title],
+                  fill:
+                    this.state.brushChart === "line"
+                      ? undefined
+                      : colorHash[d.title]
                 })}
                 margin={{ left: 50, bottom: 50, right: 10, top: 40 }}
                 axes={[
