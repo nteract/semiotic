@@ -346,7 +346,7 @@ export const svgRRule = ({
           {
             type: AnnotationCalloutCircle,
             subject: {
-              radius: rScale(rAccessor(d)) / 2,
+              radius: rScale(findFirstAccessorValue(rAccessor, d)) / 2,
               radiusPadding: 0
             },
             x: adjustedSize[0] / 2,
@@ -523,21 +523,25 @@ export const htmlFrameHoverRule = ({
   //To string because React gives a DOM error if it gets a date
   let contentFill
   if (d.isSummaryData) {
-    let summaryLabel = <p key="html-annotation-content-2">{d.label}</p>
+    let summaryContent = d.label
+
     if (d.pieces && d.pieces.length !== 0) {
       if (d.pieces.length === 1) {
-        summaryLabel = (
-          <p key="html-annotation-content-2">{rAccessor(d.pieces[0].data)}</p>
-        )
+        summaryContent = []
+        rAccessor.forEach(actualRAccessor => {
+          summaryContent.push(actualRAccessor(d.pieces[0].data))
+        })
       } else {
-        const pieceData = extent(d.pieces.map(p => p.data).map(rAccessor))
-        summaryLabel = (
-          <p key="html-annotation-content-2">
-            From {pieceData[0]} to {pieceData[1]}
-          </p>
-        )
+        summaryContent = []
+        rAccessor.forEach(actualRAccessor => {
+          const pieceData = extent(
+            d.pieces.map(p => p.data).map(actualRAccessor)
+          )
+          summaryContent.push(`From ${pieceData[0]} to ${pieceData[1]}`)
+        })
       }
     }
+    const summaryLabel = <p key="html-annotation-content-2">{summaryContent}</p>
     contentFill = [
       <p key="html-annotation-content-1">{d.key}</p>,
       summaryLabel,

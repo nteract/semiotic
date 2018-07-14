@@ -345,10 +345,17 @@ export const svgAreaAnnotation = ({
   annotationLayer
 }) => {
   const mappedCoordinates = `M${d.coordinates
-    .map(p => [xScale(xAccessor(p)), yScale(yAccessor(p))])
+    .map(p => [
+      xScale(findFirstAccessorValue(xAccessor, p)),
+      yScale(findFirstAccessorValue(yAccessor, p))
+    ])
     .join("L")}Z`
-  const xBounds = extent(d.coordinates.map(p => xScale(xAccessor(p))))
-  const yBounds = extent(d.coordinates.map(p => yScale(yAccessor(p))))
+  const xBounds = extent(
+    d.coordinates.map(p => xScale(findFirstAccessorValue(xAccessor, p)))
+  )
+  const yBounds = extent(
+    d.coordinates.map(p => yScale(findFirstAccessorValue(yAccessor, p)))
+  )
   const xCenter = (xBounds[0] + xBounds[1]) / 2
   const yCenter = (yBounds[0] + yBounds[1]) / 2
 
