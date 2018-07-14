@@ -49,7 +49,7 @@ process.on("unhandledRejection", up => {
   ) {
     // We good, or so we hope
   } else {
-    throw new Error("Semioitic did not load from the dist copy")
+    throw new Error("Semiotic did not load from the dist copy")
   }
 
   await page.screenshot({ path: "screenshots/joyplot.png" })
