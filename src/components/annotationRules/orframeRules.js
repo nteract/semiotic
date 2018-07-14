@@ -11,6 +11,7 @@ import { max, min, sum, extent } from "d3-array"
 import { pointOnArcAtAngle } from "../svg/pieceDrawing"
 import { circleEnclosure, rectangleEnclosure } from "./baseRules"
 import SpanOrDiv from "../SpanOrDiv"
+import { findFirstAccessorValue } from "../data/multiAccessorUtils"
 
 function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
   const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0
@@ -195,7 +196,7 @@ export const svgHighlightRule = ({
   oAccessor
 }) => {
   const thisID = pieceIDAccessor(d)
-  const thisO = oAccessor(d)
+  const thisO = findFirstAccessorValue(oAccessor, d)
 
   const foundPieces =
     (orFrameRender.pieces &&
@@ -204,7 +205,8 @@ export const svgHighlightRule = ({
           return (
             (thisID === undefined ||
               pieceIDAccessor(p.piece.data) === thisID) &&
-            (thisO === undefined || oAccessor(p.piece.data) === thisO)
+            (thisO === undefined ||
+              findFirstAccessorValue(oAccessor, p.piece.data) === thisO)
           )
         })
         .map((p, q) => {
