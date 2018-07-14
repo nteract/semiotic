@@ -1311,7 +1311,7 @@ class OrdinalFrame extends React.Component<Props, State> {
     const screenProject = p => {
       const pO = p.column || findFirstAccessorValue(oAccessor, p)
 
-      const pValue = p.value || rScale(findFirstAccessorValue(rAccessor, p))
+      const pValue = p.value || findFirstAccessorValue(rAccessor, p)
 
       const oColumn = projectedColumns[pO]
 
@@ -1336,7 +1336,10 @@ class OrdinalFrame extends React.Component<Props, State> {
         )
       }
       if (projection === "horizontal") {
-        return [idPiece ? idPiece.bottom + idPiece.scaledValue / 2 : pValue, o]
+        return [
+          idPiece ? idPiece.bottom + idPiece.scaledValue / 2 : rScale(pValue),
+          o
+        ]
       }
       const newScale = scaleLinear()
         .domain(rScale.domain())
