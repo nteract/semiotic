@@ -638,7 +638,7 @@ export default class OrdinalFrameDocs extends React.Component {
             }
             //            margin={{ left: 55, top: 50, bottom: 90, right: 55 }}
             annotations={
-              true || this.state.annotations === "on"
+              this.state.annotations === "on"
                 ? dataTypeHash[this.state.dataType].annotations
                 : undefined
             }

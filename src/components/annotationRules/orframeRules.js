@@ -440,13 +440,14 @@ export const svgCategoryRule = ({
       outset: offset,
       curly: bracketType === "curly"
     })
+
     const textPathID = `text-path-${i}-${Math.random()}`
     return (
       <g
         className="category-annotation annotation"
         transform={`translate(${centerX},${centerY})`}
       >
-        <path d={arcPath} fill="none" />
+        <path d={arcPath} fill="none" stroke="black" />
         <path id={textPathID} d={textArcPath} style={{ display: "none" }} />
         <text font-size="12.5">
           <textPath

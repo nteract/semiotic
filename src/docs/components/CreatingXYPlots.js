@@ -386,10 +386,22 @@ export default class CreatingXYPlots extends React.Component {
       ),
       source: `<XYFrame
       areas={[{ coordinates: pointTestData }]}
-      areaType="contour"
+      areaDataAccessor={[
+        d => d.coordinates.filter(p => p.color === "#4d430c"),
+        d => d.coordinates.filter(p => p.color === "#00a2ce")
+      ]}
+      areaType={{ type: "contour", thresholds: 5 }}
       xAccessor="x"
       yAccessor="y"
-      areaStyle={{ fill: , fillOpacity: 0.2 }}
+      areaStyle={d => {
+        return {
+          stroke: d.parentArea._baseData[0].color,
+          fill: "none",
+          strokeOpacity: 0.5,
+          strokeWidth: 3,
+          strokeDasharray: "15 5"
+        }
+      }}
     />`
     })
 
