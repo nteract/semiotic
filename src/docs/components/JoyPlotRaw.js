@@ -38,6 +38,7 @@ const joyChartSettings = {
   rAccessor: "value",
   margin: { left: 150, top: 50, bottom: 55, right: 15 },
   axis: { orient: "bottom", label: "Percent" },
+  summaryHoverAnnotation: true,
   oLabel: d => (
     <text style={{ textAnchor: "end", fill: "grey" }} x={-10} y={5}>
       {d}

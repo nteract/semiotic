@@ -17,7 +17,6 @@ export default state => {
     }),
     type: { type: "bar", innerRadius: +state.innerRadius },
     oLabel: true,
-    rAccessor: state.kind === "pie" ? () => 1 : d => d.value,
     margin: { left: 20, top: 20, bottom: 20, right: 20 },
     tooltipContent: "pie",
     hoverAnnotation: true
@@ -34,6 +33,7 @@ export default state => {
       label: { name: "Radial Label", locationDistance: 15 }
     }
   } else {
+    donutSettings.rAccessor = () => 1
     donutSettings.dynamicColumnWidth = "value"
   }
 

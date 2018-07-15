@@ -14,10 +14,13 @@ import {
   bumpChart,
   lineChart
 } from "../svg/lineDrawing"
+
 import { contouring, hexbinning, heatmapping } from "../svg/areaDrawing"
 import { max, min, extent } from "d3-array"
 
-import type { ProjectedPoint } from "../types/generalTypes"
+import { extentValue } from "./unflowedFunctions"
+
+import type { ProjectedPoint, accessorType } from "../types/generalTypes"
 
 const builtInTransformations = {
   "stackedarea": stackedArea,
@@ -42,13 +45,28 @@ export const stringToFn = (
   } else if (typeof accessor !== "function" && raw !== undefined) {
     return () => accessor
   }
+
   return typeof accessor !== "function" ? (d: Object) => d[accessor] : accessor
 }
 
+export const stringToArrayFn = (
+  accessor?: Function | string | boolean | Object | accessorType,
+  defaultAccessor?: Function,
+  raw?: boolean
+): Array<Function> => {
+  if (!accessor) {
+    return [stringToFn(accessor, defaultAccessor, raw)]
+  }
+  const arrayOfAccessors = Array.isArray(accessor) ? accessor : [accessor]
+
+  return arrayOfAccessors.map(a => stringToFn(a, defaultAccessor, raw))
+}
+
 type CalculateDataTypes = {
-  lineDataAccessor: Function,
-  xAccessor: Function,
-  yAccessor: Function,
+  lineDataAccessor: Array<Function>,
+  areaDataAccessor: Array<Function>,
+  xAccessor: Array<Function>,
+  yAccessor: Array<Function>,
   areas?: Array<Object>,
   points?: Array<Object>,
   lines?: Array<Object>,
@@ -58,7 +76,6 @@ type CalculateDataTypes = {
   yExtent?: Array<number> | Object,
   invertX?: boolean,
   invertY?: boolean,
-  areaDataAccessor: Function,
   areaType: Object,
   adjustedSize: Array<number>,
   xScaleType: Function,
@@ -93,11 +110,16 @@ export const calculateDataExtent = ({
     projectedLines: Array<Object> = [],
     projectedAreas: Array<Object> = []
   if (points) {
-    projectedPoints = points.map((d, i) => {
-      const x = xAccessor(d, i)
-      const y = yAccessor(d, i)
-      return { x, y, data: d }
+    xAccessor.forEach(actualXAccessor => {
+      yAccessor.forEach(actualYAccessor => {
+        points.forEach((d, i) => {
+          const x = actualXAccessor(d, i)
+          const y = actualYAccessor(d, i)
+          projectedPoints.push({ x, y, data: d })
+        })
+      })
     })
+
     fullDataset = projectedPoints
   }
   if (lines) {
@@ -160,7 +182,7 @@ export const calculateDataExtent = ({
       yAccessor
     })
     projectedAreas.forEach(d => {
-      const baseData = areaDataAccessor(d)
+      const baseData = d._baseData
       if (d._xyfCoordinates[0][0][0]) {
         d._xyfCoordinates[0].forEach(multi => {
           fullDataset = [
@@ -215,15 +237,26 @@ export const calculateDataExtent = ({
     )
   ]
 
+  const actualXExtent: ?(number[]) = extentValue(xExtent)
+  const actualYExtent: ?(number[]) = extentValue(yExtent)
+
   const xMin =
-    xExtent && xExtent[0] !== undefined ? xExtent[0] : calculatedXExtent[0]
+    actualXExtent && actualXExtent[0] !== undefined
+      ? actualXExtent[0]
+      : calculatedXExtent[0]
   const xMax =
-    xExtent && xExtent[1] !== undefined ? xExtent[1] : calculatedXExtent[1]
+    actualXExtent && actualXExtent[1] !== undefined
+      ? actualXExtent[1]
+      : calculatedXExtent[1]
 
   const yMin =
-    yExtent && yExtent[0] !== undefined ? yExtent[0] : calculatedYExtent[0]
+    actualYExtent && actualYExtent[0] !== undefined
+      ? actualYExtent[0]
+      : calculatedYExtent[0]
   const yMax =
-    yExtent && yExtent[1] !== undefined ? yExtent[1] : calculatedYExtent[1]
+    actualYExtent && actualYExtent[1] !== undefined
+      ? actualYExtent[1]
+      : calculatedYExtent[1]
 
   let finalYExtent = [yMin, yMax]
   let finalXExtent = [xMin, xMax]
@@ -309,14 +342,10 @@ const differenceCatch = (olineType, data) =>
   olineType === "difference" && data.length !== 2 ? "line" : olineType
 
 function lineTransformation(lineType, options) {
-  //  if (typeof lineType.type === "function") {
-  //    return data => lineType.type({ ...options, data })
-  //  } else {
   return data =>
     builtInTransformations[differenceCatch(lineType.type, data)]({
       ...lineType,
       ...options,
       data
     })
-  //  }
 }

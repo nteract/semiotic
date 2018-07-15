@@ -15,58 +15,66 @@ export const xyDownloadMapping = ({
 
   data.forEach(datum => {
     if (Array.isArray(datum)) {
-      datum.forEach(a => {
-        const row = {}
-        if (xAccessor) {
-          row.x = cleanDates(xAccessor(a))
-        } else if (a.x) {
-          row.x = a.x
-        }
+      xAccessor.forEach(actualXAccessor => {
+        yAccessor.forEach(actualYAccessor => {
+          datum.forEach(a => {
+            const row = {}
+            if (actualXAccessor) {
+              row.x = cleanDates(actualXAccessor(a))
+            } else if (a.x) {
+              row.x = a.x
+            }
 
-        if (yAccessor) {
-          row.y = cleanDates(yAccessor(a))
-        } else if (a.y) {
-          row.y = a.y
-        }
+            if (actualYAccessor) {
+              row.y = cleanDates(actualYAccessor(a))
+            } else if (a.y) {
+              row.y = a.y
+            }
 
-        if (datum.id !== undefined) row.id = datum.id
+            if (datum.id !== undefined) row.id = datum.id
 
-        if (fields && Array.isArray(fields)) {
-          fields.forEach(f => {
-            row[f] = cleanDates(a[f])
+            if (fields && Array.isArray(fields)) {
+              fields.forEach(f => {
+                row[f] = cleanDates(a[f])
+              })
+            }
+
+            csvData.push(row)
           })
-        }
-
-        csvData.push(row)
+        })
       })
     } else {
-      const row = {}
-      if (xAccessor) {
-        row.x = cleanDates(xAccessor(datum.data))
-      } else if (datum.x) {
-        row.x = datum.x
-      }
+      xAccessor.forEach(actualXAccessor => {
+        yAccessor.forEach(actualYAccessor => {
+          const row = {}
+          if (actualXAccessor) {
+            row.x = cleanDates(actualXAccessor(datum.data))
+          } else if (datum.x) {
+            row.x = datum.x
+          }
 
-      if (yAccessor) {
-        row.y = cleanDates(yAccessor(datum.data))
-      } else if (datum.y) {
-        row.y = datum.y
-      }
+          if (actualYAccessor) {
+            row.y = cleanDates(actualYAccessor(datum.data))
+          } else if (datum.y) {
+            row.y = datum.y
+          }
 
-      if (datum.id !== undefined) {
-        row.id = datum.id
-      }
+          if (datum.id !== undefined) {
+            row.id = datum.id
+          }
 
-      if (xAccessor || yAccessor) {
-        fields.forEach(f => {
-          row[f] = datum.data[f]
+          if (actualXAccessor || actualYAccessor) {
+            fields.forEach(f => {
+              row[f] = datum.data[f]
+            })
+          } else {
+            fields.forEach(f => {
+              row[f] = datum[f]
+            })
+          }
+          csvData.push(row)
         })
-      } else {
-        fields.forEach(f => {
-          row[f] = datum[f]
-        })
-      }
-      csvData.push(row)
+      })
     }
   })
   return csvData
@@ -82,28 +90,32 @@ export const orDownloadMapping = ({
   const dataKeys = Object.keys(data)
   const csvData = []
 
-  dataKeys.forEach(key => {
-    data[key].pieceData.forEach(piece => {
-      const row = {}
-      if (oAccessor) {
-        row.column = oAccessor(piece.data)
-      } else if (piece.x) {
-        row.column = piece.x
-      }
+  oAccessor.forEach(actualOAccessor => {
+    rAccessor.forEach(actualRAccessor => {
+      dataKeys.forEach(key => {
+        data[key].pieceData.forEach(piece => {
+          const row = {}
+          if (actualOAccessor) {
+            row.column = actualOAccessor(piece.data)
+          } else if (piece.x) {
+            row.column = piece.x
+          }
 
-      if (rAccessor) {
-        row.value = rAccessor(piece.data)
-      } else if (piece.renderKey) {
-        row.value = piece.renderKey
-      }
+          if (actualRAccessor) {
+            row.value = actualRAccessor(piece.data)
+          } else if (piece.renderKey) {
+            row.value = piece.renderKey
+          }
 
-      if (piece.id !== undefined) row.id = piece.id
+          if (piece.id !== undefined) row.id = piece.id
 
-      fields.forEach(f => {
-        row[f] = cleanDates(piece.data[f])
+          fields.forEach(f => {
+            row[f] = cleanDates(piece.data[f])
+          })
+
+          csvData.push(row)
+        })
       })
-
-      csvData.push(row)
     })
   })
 
