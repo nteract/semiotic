@@ -87,7 +87,8 @@ const windRoseData = [
   { angle: "315-325", wind: 1.317 },
   { angle: "325-335", wind: 0.944 },
   { angle: "335-345", wind: 0.817 },
-  { angle: "345-355", wind: 0.569 }
+  { angle: "345-355", wind: 0.569 },
+  { angle: "355-005", wind: 0.569 }
 ]
 
 const colorHash = {
@@ -294,13 +295,13 @@ export default class CreatingPieChart extends React.Component {
             data={windRoseData}
             oAccessor={"angle"}
             rAccessor={"wind"}
-            style={{ fill: "#00a2ce" }}
+            style={{ fill: "#00a2ce", stroke: "white", strokeOpacity: 0.5 }}
             type={"bar"}
             projection={"radial"}
             axis={{
               label: { name: "Windiness", locationDistance: 15 }
             }}
-            oPadding={1}
+            oPadding={0}
             margin={{ bottom: 50, top: 70, left: 25, right: 25 }}
             hoverAnnotation={true}
             ordinalAlign="center"
@@ -516,9 +517,7 @@ const colorHash = {
         examples={examples}
         buttons={[]}
       >
-        <p>
-          The very basics of how to create a pie chart in Semiotic.
-        </p>
+        <p>The very basics of how to create a pie chart in Semiotic.</p>
       </DocumentComponent>
     )
   }
