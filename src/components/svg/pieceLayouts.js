@@ -7,17 +7,38 @@ import { scaleLinear } from "d3-scale"
 
 const twoPI = Math.PI * 2
 
-const radialBarFeatureGenerator = ({ type, ordset, adjustedSize, piece, i }) => {
+const radialBarFeatureGenerator = ({
+  type,
+  ordset,
+  adjustedSize,
+  piece,
+  i
+}) => {
   let { innerRadius } = type
-  const  { offsetAngle = 0, angleRange = [0, 360] } = type
+  const { offsetAngle = 0, angleRange = [0, 360] } = type
   const offsetPct = offsetAngle / 360
   const rangePct = angleRange.map(d => d / 360)
   const rangeMod = rangePct[1] - rangePct[0]
 
-  const adjustedPct = rangeMod < 1 ? scaleLinear().domain([ 0, 1 ]).range(rangePct) : d => d
+  const adjustedPct =
+    rangeMod < 1
+      ? scaleLinear()
+          .domain([0, 1])
+          .range(rangePct)
+      : d => d
 
-  let innerSize = type.type === "clusterbar" ? 0 : type.type === "timeline" ? piece.scaledValue / 2 : piece.bottom / 2
-  let outerSize = type.type === "clusterbar" ? piece.scaledValue / 2 : type.type === "timeline" ? piece.scaledEndValue / 2 : piece.scaledValue / 2 + piece.bottom / 2
+  let innerSize =
+    type.type === "clusterbar"
+      ? 0
+      : type.type === "timeline"
+        ? piece.scaledValue / 2
+        : piece.bottom / 2
+  let outerSize =
+    type.type === "clusterbar"
+      ? piece.scaledValue / 2
+      : type.type === "timeline"
+        ? piece.scaledEndValue / 2
+        : piece.scaledValue / 2 + piece.bottom / 2
 
   if (innerRadius) {
     innerRadius = parseInt(innerRadius, 10)
@@ -31,62 +52,72 @@ const radialBarFeatureGenerator = ({ type, ordset, adjustedSize, piece, i }) => 
     .innerRadius(innerSize)
     .outerRadius(outerSize)
 
-    const angle = (type.type === "clusterbar" ? (ordset.pct - ordset.pct_padding) / ordset.pieceData.length : ordset.pct) * rangeMod
+  const angle =
+    (type.type === "clusterbar"
+      ? (ordset.pct - ordset.pct_padding) / ordset.pieceData.length
+      : ordset.pct) * rangeMod
 
-    const startAngle = adjustedPct(type.type === "clusterbar" ? ordset.pct_start +
-    i / ordset.pieceData.length * (ordset.pct - ordset.pct_padding) : ordset.pct === 1 ? 0 : ordset.pct_start + offsetPct)
+  const startAngle = adjustedPct(
+    type.type === "clusterbar"
+      ? ordset.pct_start +
+        (i / ordset.pieceData.length) * (ordset.pct - ordset.pct_padding)
+      : ordset.pct === 1
+        ? 0
+        : ordset.pct_start + offsetPct
+  )
 
-    const endAngle =
-      ordset.pct === 1
-        ? rangePct[1]
-        : Math.max(startAngle, startAngle + angle - ordset.pct_padding / 2)
+  const endAngle =
+    ordset.pct === 1
+      ? rangePct[1]
+      : Math.max(startAngle, startAngle + angle - ordset.pct_padding / 2)
 
-    const startAngleFinal = startAngle * twoPI
+  const startAngleFinal = startAngle * twoPI
 
-    const endAngleFinal = endAngle * twoPI       
+  const endAngleFinal = endAngle * twoPI
 
-    const markD = arcGenerator({
-      startAngle: startAngleFinal,
-      endAngle: endAngleFinal
-    })
+  const markD = arcGenerator({
+    startAngle: startAngleFinal,
+    endAngle: endAngleFinal
+  })
 
-    const centroid = arcGenerator.centroid({
-      startAngle: startAngleFinal,
-      endAngle: endAngleFinal
-    })
+  const centroid = arcGenerator.centroid({
+    startAngle: startAngleFinal,
+    endAngle: endAngleFinal
+  })
 
-    const xOffset = adjustedSize[0] / 2
-    const yOffset = adjustedSize[1] / 2
-    const xPosition = centroid[0] + xOffset
-    const yPosition = centroid[1] + yOffset
-    
-    const outerPoint = pointOnArcAtAngle(
-      [0, 0],
-      (startAngle + endAngle) / 2,
-      piece.scaledValue / 2
-    )
+  const xOffset = adjustedSize[0] / 2
+  const yOffset = adjustedSize[1] / 2
+  const xPosition = centroid[0] + xOffset
+  const yPosition = centroid[1] + yOffset
 
-    const xy = {
-      arcGenerator: arcGenerator,
-      startAngle: startAngleFinal,
-      endAngle: endAngleFinal,
-      dx: outerPoint[0],
-      dy: outerPoint[1]
-    }
-    const translate = `translate(${xOffset},${yOffset})`
+  const outerPoint = pointOnArcAtAngle(
+    [0, 0],
+    (startAngle + endAngle) / 2,
+    piece.scaledValue / 2
+  )
 
-    return { 
-      xPosition,
-      yPosition,
-      xy,
-      translate,
-      markProps: {
+  const xy = {
+    arcGenerator: arcGenerator,
+    startAngle: startAngleFinal,
+    endAngle: endAngleFinal,
+    dx: outerPoint[0],
+    dy: outerPoint[1]
+  }
+  const translate = `translate(${xOffset},${yOffset})`
+
+  return {
+    xPosition,
+    yPosition,
+    xy,
+    translate,
+    markProps: {
       markType: "path",
       d: markD,
       tx: xOffset,
       ty: yOffset,
       transform: translate
-    } }
+    }
+  }
 }
 
 const iconBarCustomMark = ({
@@ -251,7 +282,14 @@ export function clusterBarLayout({
         markProps = {}
 
       if (projection === "radial") {
-        ({ xPosition, yPosition, markProps, xy } = radialBarFeatureGenerator({ type, ordset, adjustedSize, piece, i, translate })) 
+        ;({ xPosition, yPosition, markProps, xy } = radialBarFeatureGenerator({
+          type,
+          ordset,
+          adjustedSize,
+          piece,
+          i,
+          translate
+        }))
       } else {
         xPosition += currentX
         yPosition += currentY
@@ -371,7 +409,12 @@ export function barLayout({
       let markProps
 
       if (projection === "radial") {
-        ({ markProps, xPosition, yPosition } = radialBarFeatureGenerator({ type, ordset, adjustedSize, piece }))
+        ;({ markProps, xPosition, yPosition } = radialBarFeatureGenerator({
+          type,
+          ordset,
+          adjustedSize,
+          piece
+        }))
         finalHeight = undefined
         finalWidth = undefined
       } else {
@@ -487,7 +530,12 @@ export function timelineLayout({
           y: yPosition
         }
       } else if (projection === "radial") {
-        ({ markProps } = radialBarFeatureGenerator({ piece, type, ordset, adjustedSize }))
+        ;({ markProps } = radialBarFeatureGenerator({
+          piece,
+          type,
+          ordset,
+          adjustedSize
+        }))
       }
 
       //Only return the actual piece if you're rendering points, otherwise you just needed to iterate and calculate the points for the contour summary type
@@ -643,7 +691,8 @@ export function swarmLayout({
     const adjustedColumnWidth = oColumn.width
 
     const circleRadius =
-      type.r || Math.max(2, Math.min(5, 4 * adjustedColumnWidth / oData.length))
+      type.r ||
+      Math.max(2, Math.min(5, (4 * adjustedColumnWidth) / oData.length))
 
     const simulation = forceSimulation(oData)
       .force("y", forceY(d => d.scaledValue).strength(type.strength || 2))
@@ -672,7 +721,7 @@ export function swarmLayout({
       } else if (projection === "radial") {
         const angle = oColumn.pct_middle
         xPosition =
-          (piece.x - oColumn.middle) / adjustedColumnWidth * anglePiece
+          ((piece.x - oColumn.middle) / adjustedColumnWidth) * anglePiece
         const rPosition = piece.scaledValue / 2
         const xAngle = angle + xPosition
         const baseCentroid = pointOnArcAtAngle(

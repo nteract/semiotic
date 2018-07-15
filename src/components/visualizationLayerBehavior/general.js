@@ -186,7 +186,13 @@ export function createLines({
         customMark({ d: compatibleData, i, xScale, yScale, canvasDrawing })
       )
     } else {
+      const builtInDisplayProps = {}
+      if (customLine.simpleLine) {
+        builtInDisplayProps.fill = "none"
+        builtInDisplayProps.stroke = "black"
+      }
       const markProps = {
+        ...builtInDisplayProps,
         ...baseMarkProps,
         "markType": "path",
         "d": dynamicLineGenerator(d, i)(

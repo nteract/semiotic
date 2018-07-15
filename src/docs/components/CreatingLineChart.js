@@ -441,6 +441,57 @@ export default class CreatingLineChart extends React.Component {
       name: "Simple",
       demo: (
         <div>
+          <p>Multi-Accessor</p>
+          <XYFrame
+            title={"Two Movies"}
+            size={[700, 400]}
+            dataVersion="fixed"
+            lines={movies}
+            lineType={{
+              type: "line",
+              interpolator: curveCardinal
+            }}
+            lineDataAccessor={["coordinates"]}
+            xAccessor={["week"]}
+            yAccessor={["theaterCount"]}
+            lineStyle={d => ({
+              stroke: d.title === "Ex Machina" ? "#00a2ce" : "red",
+              fill: "none"
+            })}
+            margin={{ left: 80, bottom: 50, right: 10, top: 40 }}
+            axes={[
+              {
+                orient: "left"
+              },
+              {
+                orient: "bottom"
+              }
+            ]}
+            hoverAnnotation={[
+              d => ({
+                type: "frame-hover",
+                color:
+                  (d.parentLine &&
+                    d.parentLine.title === "Ex Machina" &&
+                    "#00a2ce") ||
+                  "red"
+              })
+            ]}
+            customHoverBehavior={d => console.info("custom hover d", d)}
+            customClickBehavior={d => console.info("click on d", d)}
+            customDoubleClickBehavior={d =>
+              console.info("customDoubleClickBehavior d", d)
+            }
+          />
+        </div>
+      ),
+      source: ``
+    })
+
+    examples.push({
+      name: "Simple",
+      demo: (
+        <div>
           <p>
             To get make a line chart from this data, you need to pass the array
             into the "lines" property and set up your xAccessor and yAccessor to
@@ -1004,7 +1055,7 @@ export default class CreatingLineChart extends React.Component {
             }
             style={{ color: "black" }}
           >
-            Switch to lines
+            Switch lineType
           </button>
           <div>
             <div style={{ display: "inline-block", width: "100px" }}>
@@ -1047,8 +1098,11 @@ export default class CreatingLineChart extends React.Component {
                   interpolator: curveMonotoneX
                 }}
                 lineStyle={d => ({
-                  fill: colorHash[d.title],
-                  stroke: colorHash[d.title]
+                  stroke: colorHash[d.title],
+                  fill:
+                    this.state.brushChart === "line"
+                      ? undefined
+                      : colorHash[d.title]
                 })}
                 margin={{ left: 50, bottom: 50, right: 10, top: 40 }}
                 axes={[

@@ -207,24 +207,44 @@ export function generateOrdinalFrameEventListeners(
 
 export function keyAndObjectifyBarData({
   data,
-  renderKey = (d?: Object | number, i: number) => i
+  renderKey = (d?: Object | number, i: number) => i,
+  oAccessor,
+  rAccessor
 }: {
   data: Array<Object | number>,
-  renderKey: Function
+  renderKey: Function,
+  oAccessor: Array<Function> | Function,
+  rAccessor: Array<Function> | Function
 }): Array<Object> {
-  return data
-    ? data.map((d: Object | number, i: number) => {
-        const appliedKey = renderKey(d, i)
+  const decoratedData = []
+  oAccessor.forEach(actualOAccessor => {
+    rAccessor.forEach(actualRAccessor => {
+      ;(data || []).forEach(d => {
+        const appliedKey = renderKey(d, decoratedData.length)
         if (typeof d !== "object") {
-          return {
-            data: { value: d, renderKey: appliedKey },
-            value: d,
+          const expandedData = { value: d, renderKey: appliedKey }
+          decoratedData.push({
+            data: expandedData,
+            value: actualRAccessor(expandedData),
+            column:
+              (appliedKey !== undefined &&
+                appliedKey.toString &&
+                appliedKey.toString()) ||
+              appliedKey,
             renderKey: appliedKey
-          }
+          })
+        } else {
+          decoratedData.push({
+            renderKey: appliedKey,
+            data: d,
+            value: actualRAccessor(d),
+            column: actualOAccessor(d)
+          })
         }
-        return { renderKey: appliedKey, data: d }
       })
-    : []
+    })
+  })
+  return decoratedData
 }
 
 export function adjustedPositionSize({

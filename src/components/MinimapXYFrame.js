@@ -50,11 +50,7 @@ class MinimapXYFrame extends React.Component {
       options.afterElements = miniMap
     }
 
-
-    return (<XYFrame
-    {...rest}
-      {...options}
-    />)
+    return <XYFrame {...rest} {...options} />
   }
 }
 

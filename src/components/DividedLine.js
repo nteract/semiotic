@@ -23,11 +23,11 @@ class DividedLine extends React.Component {
 
     const data = projectLineData({
       data: this.props.data,
-      lineDataAccessor: this.props.lineDataAccessor,
+      lineDataAccessor: [this.props.lineDataAccessor],
       xProp: "_x",
       yProp: "_y",
-      xAccessor: this.props.customAccessors.x,
-      yAccessor: this.props.customAccessors.y
+      xAccessor: [this.props.customAccessors.x],
+      yAccessor: [this.props.customAccessors.y]
     })
 
     //Compatibility before Semiotic 2

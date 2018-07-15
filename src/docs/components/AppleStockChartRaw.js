@@ -52,7 +52,8 @@ const annotations = [
     dx: 0,
     connector: { end: "none" },
     events: {
-      onMouseEnter: (a, b, c) => console.log("a,b,c", a, b, c)
+      onMouseEnter: (a, b, c) =>
+        console.info("custom event onMouseEnter", a, b, c)
     }
   },
   {
