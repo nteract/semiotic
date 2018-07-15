@@ -76,20 +76,14 @@ export default class ParallelCoordinatesDocs extends React.Component {
       rAccessor: "stepValue",
       oAccessor: "stepName",
       style: d => ({
-        fill: hiddenHash.get(d.funnelKey)
-          ? "none"
-          : "red",
+        fill: hiddenHash.get(d.funnelKey) ? "none" : "red",
         fillOpacity: 0.75,
-        stroke: hiddenHash.get(d.funnelKey)
-          ? "black"
-          : "none",
+        stroke: hiddenHash.get(d.funnelKey) ? "black" : "none",
         strokeOpacity: 0.5
       }),
       connectorType: d => d.funnelKey,
       connectorStyle: d => ({
-        stroke: hiddenHash.get(d.source.funnelKey)
-          ? "gray"
-          : "red",
+        stroke: hiddenHash.get(d.source.funnelKey) ? "gray" : "red",
         strokeWidth: 1,
         strokeOpacity: hiddenHash.get(d.source.funnelKey) ? 0.25 : 0.5
       }),
@@ -158,7 +152,11 @@ Object.keys(this.state.columnExtent).forEach(key => {
       })
   }
 })
-const parallelCoordinatesChart = ${JSON.stringify({ ...parralelCoordinatesChart, data: [] }, null, 2)}
+const parallelCoordinatesChart = ${JSON.stringify(
+        { ...parralelCoordinatesChart, data: [] },
+        null,
+        2
+      )}
 <OrdinalFrame
   {...parallelCoordinatesChart}
 />

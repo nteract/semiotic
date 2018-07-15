@@ -57,24 +57,30 @@ function drawRange({ d, rScale, orFrameState }) {
   }
   return null
 }
+const data = [
+  ...baseData.map(d => ({ region: d.region, type: "y1990", value: d.y1990 })),
+  ...baseData.map(d => ({ region: d.region, type: "y2013", value: d.y2013 }))
+]
+
+const colors = {
+  y1990: "#00a2ce",
+  y2013: "#4d430c"
+}
 
 const dotPlotChart = {
   title: "Neonatal Mortality Rate by Region",
   size: [700, 500],
-  data: baseData,
-  rAccessor: ["y1990", "y2013"],
+  data: data,
+  rAccessor: "value",
   oAccessor: "region",
-  style: {
-    fill: "blue",
-    stroke: "white",
-    strokeWidth: 1
-  },
+  style: d => ({ fill: colors[d.type], stroke: "white", strokeWidth: 1 }),
   type: { type: "point", r: dotRadius },
   projection: "horizontal",
   axis: { orient: "bottom", tickFormat: d => `${d}%` },
   margin: { left: 215, top: 50, bottom: 40, right: 70 },
   oPadding: 10,
   svgAnnotationRules: drawRange,
+  annotations: lineAnnotations,
   pieceHoverAnnotation: true,
   oLabel: d => (
     <text style={{ textAnchor: "end" }} transform="translate(-15,6)">
