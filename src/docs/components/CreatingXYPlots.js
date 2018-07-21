@@ -186,7 +186,11 @@ export default class CreatingXYPlots extends React.Component {
         d[1] * h.percent
       ])
 
-      const sortedColors = h.binItems.map(d => d.color).sort((a, b) => a < b)
+      const sortedColors = h.binItems.map(d => d.color).sort((a, b) => {
+        if (a < b) return -1
+        if (a > b) return 1
+        return -1
+      })
       const step = sortedColors.length / 6
 
       return (

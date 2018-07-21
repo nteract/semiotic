@@ -10,7 +10,7 @@ components.push({
   name: "AppleStockChart"
 })
 
-export default class BarLineDocs extends React.Component {
+export default class AppleStockChart extends React.Component {
   render() {
     const buttons = []
 
@@ -120,4 +120,4 @@ const customTooltip = d => <div className="tooltip-content">
   }
 }
 
-BarLineDocs.title = "Annotations"
+AppleStockChart.title = "Annotations"
