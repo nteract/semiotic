@@ -456,6 +456,9 @@ class InteractionLayer extends React.Component<Props, State> {
       }, this)
       return voronoiPaths
     } else if (overlay) {
+      // BEGIN CAPITAL MATCH MODIFICATION
+      // In accordance with the Apache license, section 4b, all modifications are hereby marked prominently.
+      const rectElementInstanceMap = {} // We are making use of the mutability of this object.
       const renderedOverlay: Array<Node> = overlay.map(
         (overlayRegion: Object, i: number) => {
           const { overlayData, ...rest } = overlayRegion
@@ -495,6 +498,37 @@ class InteractionLayer extends React.Component<Props, State> {
                 onDoubleClick={() => {
                   this.doubleclickVoronoi(overlayData)
                 }}
+                ref={(r) => {
+                  // This ref will contain the actual React element instance.
+                  if (r) {
+                    rectElementInstanceMap[i] = r.node.children[0]
+                  }
+                }}
+                onTouchStart={(e) => {
+                  if (e.touches.length === 1) {
+                    // Do not support multi-touch
+                    this.changeVoronoi(overlayData, props.hoverAnnotation)
+                  }
+                  e.stopPropagation()
+                }}
+                onTouchMove={(e) => {
+                  if (e.touches.length === 1) {
+                    // Do not support multi-touch
+                    const realTarget = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY)
+                    for (let j = 0; j < overlay.length; ++j) {
+                      if (realTarget === rectElementInstanceMap[j]) {
+                        this.changeVoronoi(overlay[j].overlayData, props.hoverAnnotation)
+                        break
+                      }
+                    }
+                  }
+                  e.stopPropagation()
+                }}
+                onTouchEnd={(e) => {
+                  this.changeVoronoi()
+                  e.preventDefault()
+                  e.stopPropagation()
+                }}
                 style={{ opacity: 0, ...pointerStyle }}
               />
             )
@@ -503,6 +537,7 @@ class InteractionLayer extends React.Component<Props, State> {
       )
 
       return renderedOverlay
+      // END CAPITAL MATCH MODIFICATION
     }
   }
 
