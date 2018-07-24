@@ -130,7 +130,7 @@ export default function generateSharedTooltipFrame(isShared) {
     yAccessor: "y",
     lines: lines,
     lineStyle: d => {
-      return { stroke: d.color, strokeWidth: "2px" }
+      return { stroke: d.color, strokeWidth: "2px", fill: "none" }
     },
     axes: chartAxes,
     margin: { top: 50, left: 40, right: 10, bottom: 40 },

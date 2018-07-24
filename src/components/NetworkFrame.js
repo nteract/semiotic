@@ -364,7 +364,8 @@ type NetworkSettingsType = {
   edgeDistance?: number,
   forceManyBody?: Function | number,
   hierarchicalNetwork: boolean,
-  graphSettings: Object
+  graphSettings: Object,
+  sortGroups?: Function
 }
 
 type State = {
@@ -601,7 +602,7 @@ class NetworkFrame extends React.Component<Props, State> {
         graphSettings: baseGraphSettings
       }
     }
-    
+
     networkSettingsKeys.push("height", "width")
 
     const title =
@@ -895,7 +896,7 @@ class NetworkFrame extends React.Component<Props, State> {
       if (networkSettings.type === "chord") {
         const radius = size[1] / 2
 
-        const { groupWidth = 20, padAngle = 0.01 } = networkSettings
+        const { groupWidth = 20, padAngle = 0.01, sortGroups } = networkSettings
         const arcGenerator = arc()
           .innerRadius(radius - groupWidth)
           .outerRadius(radius)
@@ -911,6 +912,10 @@ class NetworkFrame extends React.Component<Props, State> {
         })
 
         const chordLayout = chord().padAngle(padAngle)
+
+        if (sortGroups) {
+          chordLayout.sortGroups(sortGroups)
+        }
 
         const chords = chordLayout(matrixifiedNetwork)
         const groups = chords.groups
@@ -970,11 +975,13 @@ class NetworkFrame extends React.Component<Props, State> {
           .nodes(projectedNodes)
           .nodeAlign(sankeyOrient)
           .nodeId(nodeIDAccessor)
-          .nodePadding(nodePadding)
           .nodeWidth(nodeWidth)
           .iterations(iterations)
-        if (nodePaddingRatio) {
+
+        if (frameSankey.nodePaddingRatio && nodePaddingRatio) {
           frameSankey.nodePaddingRatio(nodePaddingRatio)
+        } else if (nodePadding) {
+          frameSankey.nodePadding(nodePadding)
         }
 
         frameSankey()
@@ -1446,7 +1453,7 @@ class NetworkFrame extends React.Component<Props, State> {
           d,
           i,
           transform: `translate(${d.x},${d.y})`,
-          styleFn: () => ({ fill: "pink", stroke: "pink", opacity: 0 })
+          styleFn: () => ({ fill: "pink", opacity: 0 })
         }).props
       }))
 
@@ -1464,6 +1471,8 @@ class NetworkFrame extends React.Component<Props, State> {
       hoverAnnotation === "node"
     ) {
       projectedXYPoints = projectedNodes
+      if (changedData || networkSettingsChanged)
+        projectedXYPoints = [...projectedNodes]
     } else if (hoverAnnotation === "all") {
       projectedXYPoints = [
         ...projectedEdges.map(edgePointHash[networkSettings.type]),

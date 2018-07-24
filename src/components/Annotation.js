@@ -5,6 +5,7 @@ import AnnotationLabel from "react-annotation/lib/Types/AnnotationLabel"
 type Props = {
   noteData: {
     eventListeners: Object,
+    events: Object,
     type: *,
     screenCoordinates: Array<Array<number>>,
     // What is this type supposed to be? It gets used only in a boolean context
@@ -15,7 +16,7 @@ type Props = {
     dx: number,
     dy: number,
     // TODO: What should this be typed as?
-    note: Object,
+    note: Object
   }
 }
 
@@ -27,7 +28,7 @@ class SemioticAnnotation extends React.Component<Props, null> {
     const Label =
       typeof noteData.type === "function" ? noteData.type : AnnotationLabel
 
-    const eventListeners = noteData.eventListeners || {}
+    const eventListeners = noteData.eventListeners || noteData.events || {}
 
     if (noteData.coordinates && screenCoordinates) {
       //Multisubject annotation
@@ -45,10 +46,25 @@ class SemioticAnnotation extends React.Component<Props, null> {
         return <Label key={`multi-annotation-${i}`} {...subjectNote} />
       })
 
-      return <g events={eventListeners}>{notes}</g>
+      const finalStyle = {}
+      if (noteData.events || noteData.eventListeners) {
+        finalStyle.pointerEvents = "all"
+      }
+
+      return (
+        <g {...eventListeners} style={finalStyle}>
+          {notes}
+        </g>
+      )
     }
 
-    return <Label events={eventListeners} {...noteData} />
+    const finalAnnotation = <Label events={eventListeners} {...noteData} />
+
+    if (noteData.events) {
+      return <g style={{ pointerEvents: "all" }}>{finalAnnotation}</g>
+    }
+
+    return finalAnnotation
   }
 }
 

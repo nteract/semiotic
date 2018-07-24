@@ -17,6 +17,45 @@ const verticalXYSorting = (a, b) => a.xy.y - b.xy.y
 const horizontalXYSorting = (a, b) => b.xy.x - a.xy.x
 const emptyObjectReturnFn = () => ({})
 
+function createSummaryAxis({
+  summary,
+  summaryI,
+  axisSettings,
+  axisCreator,
+  projection,
+  actualMax,
+  adjustedSize,
+  columnWidth
+}) {
+  let axisTranslate = `translate(${summary.x},0)`
+  let axisDomain = [0, actualMax]
+  if (projection === "horizontal") {
+    axisTranslate = `translate(${0},${summary.x})`
+    axisDomain = [actualMax, 0]
+  } else if (projection === "radial") {
+    axisTranslate = "translate(0, 0)"
+  }
+
+  const axisWidth = projection === "horizontal" ? adjustedSize[0] : columnWidth
+  const axisHeight = projection === "vertical" ? adjustedSize[1] : columnWidth
+  axisSettings.size = [axisWidth, axisHeight]
+  const axisScale = scaleLinear()
+    .domain(axisDomain)
+    .range([0, columnWidth])
+
+  const renderedSummaryAxis = axisCreator(axisSettings, summaryI, axisScale)
+
+  return (
+    <g
+      className="summary-axis"
+      key={`summaryPiece-axis-${summaryI}`}
+      transform={axisTranslate}
+    >
+      {renderedSummaryAxis}
+    </g>
+  )
+}
+
 export function boxplotRenderFn({
   data,
   type,
@@ -789,7 +828,7 @@ export function bucketizedRenderingFn({
     const binBuckets = []
 
     for (let x = 0; x < buckets; x++) {
-      binBuckets.push(binDomain[0] + x / buckets * (chartSize - binOffset))
+      binBuckets.push(binDomain[0] + (x / buckets) * (chartSize - binOffset))
     }
     //    binBuckets.push(binDomain[1]);
 
@@ -885,33 +924,17 @@ export function bucketizedRenderingFn({
       }
 
       if (type.axis && type.type === "histogram") {
-        let axisTranslate = `translate(${summary.x},0)`
-        let axisDomain = [0, actualMax]
-        if (projection === "horizontal") {
-          axisTranslate = `translate(${bucketSize},${summary.x})`
-          axisDomain = [actualMax, 0]
-        } else if (projection === "radial") {
-          axisTranslate = translate(0, 0)
-        }
-
-        const axisWidth =
-          projection === "horizontal" ? adjustedSize[0] : columnWidth
-        const axisHeight =
-          projection === "vertical" ? adjustedSize[1] : columnWidth
-        type.axis.size = [axisWidth, axisHeight]
-        const axisScale = scaleLinear()
-          .domain(axisDomain)
-          .range([0, columnWidth])
-        const renderedSummaryAxis = axisCreator(type.axis, summaryI, axisScale)
-
         renderedSummaryMarks.push(
-          <g
-            className="summary-axis"
-            key={`summaryPiece-axis-${summaryI}`}
-            transform={axisTranslate}
-          >
-            {renderedSummaryAxis}
-          </g>
+          createSummaryAxis({
+            summary,
+            summaryI,
+            axisSettings: type.axis,
+            axisCreator,
+            projection,
+            actualMax,
+            adjustedSize,
+            columnWidth
+          })
         )
       }
       mappedBars.points.forEach(d => {
@@ -943,7 +966,7 @@ export function bucketizedRenderingFn({
       if (projection === "horizontal") {
         bins.forEach(summaryPoint => {
           const xValue = summaryPoint.y - bucketSize / 2
-          const yValue = summaryPoint.value / actualMax * columnWidth / 2
+          const yValue = ((summaryPoint.value / actualMax) * columnWidth) / 2
 
           violinPoints.push({
             x: xValue,
@@ -971,7 +994,7 @@ export function bucketizedRenderingFn({
       } else if (projection === "vertical") {
         bins.forEach(summaryPoint => {
           const yValue = summaryPoint.y + bucketSize / 2
-          const xValue = summaryPoint.value / actualMax * columnWidth / 2
+          const xValue = ((summaryPoint.value / actualMax) * columnWidth) / 2
 
           violinPoints.push({
             y: yValue,
@@ -1007,12 +1030,12 @@ export function bucketizedRenderingFn({
           inbins.forEach(bin => {
             const outsidePoint = pointOnArcAtAngle(
               [0, 0],
-              midAngle + angle * bin.value / actualMax / 2,
+              midAngle + (angle * bin.value) / actualMax / 2,
               (bin.y + bin.y1 - bucketSize / 2) / 2
             )
             const insidePoint = pointOnArcAtAngle(
               [0, 0],
-              midAngle - angle * bin.value / actualMax / 2,
+              midAngle - (angle * bin.value) / actualMax / 2,
               (bin.y + bin.y1 - bucketSize / 2) / 2
             )
 
@@ -1081,7 +1104,7 @@ export function bucketizedRenderingFn({
         joyBins.forEach((summaryPoint, i) => {
           const xValue = summaryPoint.y - bucketSize / 2
           const yValue =
-            -summaryPoint.value / actualMax * (columnWidth + joyHeight) +
+            (-summaryPoint.value / actualMax) * (columnWidth + joyHeight) +
             columnWidth / 2
 
           joyPoints.push({
@@ -1104,7 +1127,7 @@ export function bucketizedRenderingFn({
         joyBins.forEach(summaryPoint => {
           const yValue = summaryPoint.y + bucketSize / 2
           const xValue =
-            -summaryPoint.value / actualMax * (columnWidth + joyHeight) +
+            (-summaryPoint.value / actualMax) * (columnWidth + joyHeight) +
             columnWidth / 2
 
           joyPoints.push({
@@ -1131,7 +1154,7 @@ export function bucketizedRenderingFn({
           inbins.forEach(bin => {
             const outsidePoint = pointOnArcAtAngle(
               [adjustedSize[0] / 2, adjustedSize[1] / 2],
-              midAngle + angle * bin.value / actualMax,
+              midAngle + (angle * bin.value) / actualMax,
               (bin.y + bin.y1 - bucketSize / 2) / 2
             )
             //Ugh a terrible side effect has appeared
@@ -1147,6 +1170,21 @@ export function bucketizedRenderingFn({
           })
           return `M${forward.map(d => d.join(",")).join("L")}Z`
         }
+      }
+
+      if (type.axis) {
+        renderedSummaryMarks.push(
+          createSummaryAxis({
+            summary,
+            summaryI,
+            axisSettings: type.axis,
+            axisCreator,
+            projection,
+            actualMax,
+            adjustedSize,
+            columnWidth
+          })
+        )
       }
 
       renderedSummaryMarks.push(

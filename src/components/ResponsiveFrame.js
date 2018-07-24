@@ -9,7 +9,8 @@ const createResponsiveFrame = Frame =>
     }
 
     static defaultProps = {
-      size: [500, 500]
+      size: [500, 500],
+      debounce: 200
     }
 
     constructor(props) {
@@ -21,16 +22,24 @@ const createResponsiveFrame = Frame =>
       }
     }
 
+    isResizing = false
+
     _onResize = (width, height) => {
       this.setState({ containerHeight: height, containerWidth: width })
     }
     componentDidMount() {
       const element = this.node
+
       elementResizeEvent(element, () => {
-        this.setState({
-          containerHeight: element.offsetHeight,
-          containerWidth: element.offsetWidth
-        })
+        window.clearTimeout(this.isResizing)
+        this.isResizing = setTimeout(() => {
+          this.isResizing = false
+
+          this.setState({
+            containerHeight: element.offsetHeight,
+            containerWidth: element.offsetWidth
+          })
+        }, this.props.debounce)
       })
       this.setState({
         containerHeight: element.offsetHeight,
@@ -44,6 +53,7 @@ const createResponsiveFrame = Frame =>
         responsiveHeight,
         size,
         dataVersion,
+        debounce,
         ...rest
       } = this.props
 
@@ -63,7 +73,7 @@ const createResponsiveFrame = Frame =>
         actualSize[1] = containerHeight
       }
 
-      const dataVersionWithSize = dataVersion + actualSize.toString()
+      const dataVersionWithSize = dataVersion + actualSize.toString() + debounce
 
       return (
         <div
