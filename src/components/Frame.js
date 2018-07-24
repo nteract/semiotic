@@ -228,7 +228,7 @@ class Frame extends React.Component<Props, State> {
         <SpanOrDiv
           span={useSpans}
           className="frame-elements"
-          style={{ height: `${size[1]}px` }}
+          style={{ height: `${size[1]}px`, width: `${size[0]}px` }}
         >
           <SpanOrDiv
             span={useSpans}
