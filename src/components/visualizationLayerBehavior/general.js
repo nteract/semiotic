@@ -191,13 +191,25 @@ export function createLines({
         builtInDisplayProps.fill = "none"
         builtInDisplayProps.stroke = "black"
       }
+
+      let pathString = dynamicLineGenerator(d, i)(
+        d.data.map(p => Object.assign({}, p.data, p))
+      )
+
+      if (!customLine.interpolator || interpolator === curveLinear) {
+        //FIX FOR CHROME STRAIGHT LINE BUG
+        const splitPath = pathString.split("L").map(d => d.split(","))
+        if (splitPath.length > 1) {
+          splitPath[0][1] = parseFloat(splitPath[0][1]).toFixed(2)
+        }
+        pathString = splitPath.map(d => d.join(",")).join("L")
+      }
+
       const markProps = {
         ...builtInDisplayProps,
         ...baseMarkProps,
         "markType": "path",
-        "d": dynamicLineGenerator(d, i)(
-          d.data.map(p => Object.assign({}, p.data, p))
-        ),
+        "d": pathString,
         "aria-label":
           d.data &&
           d.data.length > 0 &&
