@@ -1,7 +1,7 @@
 import React from "react"
 import { XYFrame, OrdinalFrame } from "../../components"
 import { scaleTime } from "d3-scale"
-import { curveMonotoneX/* , curveCardinal */ } from "d3-shape"
+import { curveMonotoneX /* , curveCardinal */ } from "d3-shape"
 
 import DocumentComponent from "../layout/DocumentComponent"
 // import { line, area } from "d3-shape"
@@ -602,7 +602,6 @@ export default class CreatingLineChart extends React.Component {
                   interpolator: curveMonotoneX
                 }}
                 lineStyle={d => ({
-                  fill: colorHash[d.title],
                   stroke: colorHash[d.title]
                 })}
                 margin={{ left: 50, bottom: 50, right: 10, top: 40 }}

@@ -159,7 +159,7 @@ export default class CreatingBarChart extends React.Component {
             oAccessor={"user"}
             rAccessor={d => d.favorites}
             dynamicColumnWidth="retweets"
-            style={{ fill: "#00a2ce", stroke: "white" }}
+            style={{ fill: "#00a2ce", stroke: "#00a2ce" }}
             type={"bar"}
             oLabel={d => (
               <text transform="translate(-15,0)rotate(45)">{d}</text>

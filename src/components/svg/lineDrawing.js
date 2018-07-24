@@ -2,24 +2,26 @@
 
 import { sum } from "d3-array"
 
+import { findFirstAccessorValue } from "../data/multiAccessorUtils"
+
 const datesForUnique = d => (d instanceof Date ? d.toString() : d)
 
 type AreaProjectionTypes = {
   data: Array<Object>,
-  areaDataAccessor: Function,
-  xAccessor: Function,
-  yAccessor: Function
+  areaDataAccessor: Array<Function>,
+  xAccessor: Array<Function>,
+  yAccessor: Array<Function>
 }
 
 type LineProjectionTypes = {
   data: Array<Object>,
-  lineDataAccessor: Function,
+  lineDataAccessor: Array<Function>,
   xProp: string,
   yProp: string,
   yPropTop: string,
   yPropBottom: string,
-  xAccessor: Function,
-  yAccessor: Function
+  xAccessor: Array<Function>,
+  yAccessor: Array<Function>
 }
 
 type DifferenceLineProps = {
@@ -54,8 +56,8 @@ type RelativeYTypes = {
   projectedYMiddle: string,
   projectedY: string,
   projectedX: string,
-  xAccessor: Function,
-  yAccessor: Function,
+  xAccessor: Array<Function>,
+  yAccessor: Array<Function>,
   yScale: Function,
   xScale: Function,
   idAccessor: Function
@@ -67,12 +69,28 @@ export const projectAreaData = ({
   xAccessor,
   yAccessor
 }: AreaProjectionTypes) => {
-  const projection = (d: Object) =>
-    areaDataAccessor(d).map((p, q) => [xAccessor(p, q), yAccessor(p, q)])
-  data.forEach(d => {
-    d._xyfCoordinates = projection(d)
+  const projectedData = []
+  areaDataAccessor.forEach(actualAreaAccessor => {
+    xAccessor.forEach(actualXAccessor => {
+      yAccessor.forEach(actualYAccessor => {
+        const projection = (d: Object) =>
+          actualAreaAccessor(d).map((p, q) => [
+            actualXAccessor(p, q),
+            actualYAccessor(p, q)
+          ])
+
+        data.forEach(d => {
+          projectedData.push({
+            ...d,
+            _baseData: actualAreaAccessor(d),
+            _xyfCoordinates: projection(d)
+          })
+        })
+      })
+    })
   })
-  return data
+
+  return projectedData
 }
 
 export const projectLineData = ({
@@ -88,22 +106,32 @@ export const projectLineData = ({
   if (!Array.isArray(data)) {
     data = [data]
   }
-  const projectedLine: Array<Object> = data.map((d: Object, i: number) => {
-    const originalLineData = Object.assign({}, d)
-    originalLineData.data = lineDataAccessor(d).map((p, q) => {
-      const originalCoords = {}
+  const projectedLine: Array<Object> = []
 
-      originalCoords[xProp] = xAccessor(p, q)
-      originalCoords[yProp] = yAccessor(p, q)
-      originalCoords[yPropTop] = originalCoords[yProp]
-      originalCoords[yPropBottom] = originalCoords[yProp]
-      originalCoords.data = p
+  lineDataAccessor.forEach(actualLineAccessor => {
+    xAccessor.forEach(actualXAccessor => {
+      yAccessor.forEach(actualYAccessor => {
+        data.forEach((d: Object) => {
+          const originalLineData = { ...d }
 
-      return originalCoords
+          originalLineData.data = actualLineAccessor(d).map((p, q) => {
+            const originalCoords = {}
+
+            originalCoords[xProp] = actualXAccessor(p, q)
+            originalCoords[yProp] = actualYAccessor(p, q)
+            originalCoords[yPropTop] = originalCoords[yProp]
+            originalCoords[yPropBottom] = originalCoords[yProp]
+            originalCoords.data = p
+
+            return originalCoords
+          })
+          originalLineData.key = originalLineData.key || projectedLine.length
+          projectedLine.push(originalLineData)
+        })
+      })
     })
-    originalLineData.key = originalLineData.key || i
-    return originalLineData
   })
+
   return projectedLine
 }
 
@@ -457,7 +485,9 @@ export function relativeY({
       return null
     }
     const thisPoint = thisLine.data.find(
-      p => xScale(p[projectedX]) === xScale(xAccessor(point))
+      p =>
+        xScale(p[projectedX]) ===
+        xScale(findFirstAccessorValue(xAccessor, point))
     )
 
     if (!thisPoint) {
@@ -465,7 +495,12 @@ export function relativeY({
     }
     point = thisPoint
   }
-  return yScale(
-    point[projectedYMiddle] || point[projectedY] || yAccessor(point) || 0
+
+  return (
+    yScale(
+      point[projectedYMiddle] ||
+        point[projectedY] ||
+        findFirstAccessorValue(yAccessor, point)
+    ) || 0
   )
 }

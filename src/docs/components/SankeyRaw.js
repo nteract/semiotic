@@ -2,6 +2,7 @@ import React from "react"
 import { NetworkFrame } from "../../components"
 import { network_data, or_data } from "../sampledata/energy_time"
 import ProcessViz from "./ProcessViz"
+import { sankey } from "d3-sankey"
 
 const mirroredNetworkData = [
   ...network_data.map(d => ({
@@ -89,7 +90,14 @@ export default ({
     nodeSizeAccessor: 5,
     zoomToFit: type === "force",
     hoverAnnotation: true,
-    networkType: { type: type, orient: orient, iterations: 500, direction, nodePaddingRatio: 0.05 },
+    networkType: {
+      type: type,
+      orient: orient,
+      iterations: 500,
+      direction,
+      nodePaddingRatio: 0.05,
+      customSankey: sankey
+    },
     legend: { legendGroups: areaLegendGroups },
     margin: { right: 130 }
   }

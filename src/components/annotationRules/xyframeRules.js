@@ -9,6 +9,7 @@ import { packEnclose } from "d3-hierarchy"
 import { extent } from "d3-array"
 import { circleEnclosure, rectangleEnclosure } from "./baseRules"
 import SpanOrDiv from "../SpanOrDiv"
+import { findFirstAccessorValue } from "../data/multiAccessorUtils"
 
 const pointsAlong = along => ({
   d,
@@ -168,6 +169,8 @@ export const svgXYAnnotation = ({ screenCoordinates, i, d }) => {
       cy={screenCoordinates[1]}
       forceUpdate={true}
       style={inlineStyle}
+      fill="none"
+      stroke="black"
       r={5}
     />
   )
@@ -274,10 +277,10 @@ export const svgBoundsAnnotation = ({
   xScale,
   yScale
 }) => {
-  const startXValue = xAccessor(d.bounds[0])
-  const startYValue = yAccessor(d.bounds[0])
-  const endXValue = xAccessor(d.bounds[1])
-  const endYValue = yAccessor(d.bounds[1])
+  const startXValue = findFirstAccessorValue(xAccessor, d.bounds[0])
+  const startYValue = findFirstAccessorValue(yAccessor, d.bounds[0])
+  const endXValue = findFirstAccessorValue(xAccessor, d.bounds[1])
+  const endYValue = findFirstAccessorValue(yAccessor, d.bounds[1])
 
   const x0Position = startXValue ? xScale(startXValue) : 0
   const y0Position = startYValue ? yScale(startYValue) : adjustedSize[1]
@@ -344,10 +347,17 @@ export const svgAreaAnnotation = ({
   annotationLayer
 }) => {
   const mappedCoordinates = `M${d.coordinates
-    .map(p => [xScale(xAccessor(p)), yScale(yAccessor(p))])
+    .map(p => [
+      xScale(findFirstAccessorValue(xAccessor, p)),
+      yScale(findFirstAccessorValue(yAccessor, p))
+    ])
     .join("L")}Z`
-  const xBounds = extent(d.coordinates.map(p => xScale(xAccessor(p))))
-  const yBounds = extent(d.coordinates.map(p => yScale(yAccessor(p))))
+  const xBounds = extent(
+    d.coordinates.map(p => xScale(findFirstAccessorValue(xAccessor, p)))
+  )
+  const yBounds = extent(
+    d.coordinates.map(p => yScale(findFirstAccessorValue(yAccessor, p)))
+  )
   const xCenter = (xBounds[0] + xBounds[1]) / 2
   const yCenter = (yBounds[0] + yBounds[1]) / 2
 

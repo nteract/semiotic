@@ -23,3 +23,5 @@ export type ProjectedPoint = {
 export type CanvasPostProcessTypes = Function | "chuckClose"
 
 export type ExtentSettingsType = { extent?: Array<number>, onChange?: Function }
+
+export type accessorType = $ReadOnlyArray<Function | string> | Function | string

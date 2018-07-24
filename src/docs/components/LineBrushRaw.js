@@ -5,7 +5,7 @@ import ProcessViz from "./ProcessViz"
 
 const chartScale = scaleTime()
 const lineStyle = {
-  fill: "#007190",
+  fill: "none",
   stroke: "#007190",
   strokeWidth: 1
 }

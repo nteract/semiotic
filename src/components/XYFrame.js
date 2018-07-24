@@ -50,7 +50,15 @@ import {
   projectedYMiddle,
   projectedYBottom
 } from "./constants/coordinateNames"
-import { calculateDataExtent, stringToFn } from "./data/dataFunctions"
+import {
+  calculateDataExtent,
+  stringToFn,
+  stringToArrayFn
+} from "./data/dataFunctions"
+
+import { extentValue } from "./data/unflowedFunctions"
+import { findFirstAccessorValue } from "./data/multiAccessorUtils"
+
 import { filterDefs } from "./constants/jsx"
 import {
   xyFrameChangeProps,
@@ -67,7 +75,8 @@ import type { Node } from "React"
 import type {
   ProjectedPoint,
   MarginType,
-  CanvasPostProcessTypes
+  CanvasPostProcessTypes,
+  accessorType
 } from "./types/generalTypes"
 
 import type {
@@ -118,14 +127,14 @@ type Props = {
   matte?: Object,
   xScaleType?: Function,
   yScaleType?: Function,
-  xExtent?: Array<number> | Object,
+  xExtent?: Array<number> | { extent?: Array<number>, onChange?: Function },
   yExtent?: Array<number> | Object,
   invertX?: boolean,
   invertY?: boolean,
-  xAccessor?: Function | string,
-  yAccessor?: Function | string,
-  lineDataAccessor?: Function | string,
-  areaDataAccessor?: Function | string,
+  xAccessor?: accessorType,
+  yAccessor?: accessorType,
+  lineDataAccessor?: accessorType,
+  areaDataAccessor?: accessorType,
   lineType: string | Object,
   areaType: string | Object,
   lineRenderMode?: string | Object | Function,
@@ -174,8 +183,8 @@ type State = {
   matte?: Object,
   calculatedXExtent: Array<number>,
   calculatedYExtent: Array<number>,
-  xAccessor: Function,
-  yAccessor: Function,
+  xAccessor: Array<Function>,
+  yAccessor: Array<Function>,
   xScale: Function,
   yScale: Function,
   xExtent: Array<number>,
@@ -267,8 +276,8 @@ class XYFrame extends React.Component<Props, State> {
     margin: { top: 0, bottom: 0, left: 0, right: 0 },
     calculatedXExtent: [0, 0],
     calculatedYExtent: [0, 0],
-    xAccessor: (d: Object) => d.x,
-    yAccessor: (d: Object) => d.y,
+    xAccessor: [(d: Object) => d.x],
+    yAccessor: [(d: Object) => d.y],
     xExtent: [0, 0],
     yExtent: [0, 0],
     areaAnnotations: [],
@@ -302,21 +311,45 @@ class XYFrame extends React.Component<Props, State> {
   }
 
   componentWillReceiveProps(nextProps: Props) {
+    const {
+      xExtent: oldXExtent = [],
+      yExtent: oldYExtent = [],
+      size: oldSize,
+      dataVersion: oldDataVersion
+    } = this.state
+    const {
+      xExtent: baseNewXExtent,
+      yExtent: baseNewYExtent,
+      size: newSize,
+      dataVersion: newDataVersion
+    } = nextProps
+
+    const newXExtent: Array<number> = extentValue(baseNewXExtent)
+
+    const newYExtent: Array<number> = extentValue(baseNewYExtent)
+
+    const extentChange =
+      oldXExtent[0] !== newXExtent[0] ||
+      oldYExtent[0] !== newYExtent[0] ||
+      oldXExtent[1] !== newXExtent[1] ||
+      oldYExtent[1] !== newYExtent[1]
+
     if (
-      (this.state.dataVersion &&
-        this.state.dataVersion !== nextProps.dataVersion) ||
+      (oldDataVersion && oldDataVersion !== newDataVersion) ||
       !this.state.fullDataset
     ) {
       this.calculateXYFrame(nextProps, true)
     } else if (
-      this.state.size[0] !== nextProps.size[0] ||
-      this.state.size[1] !== nextProps.size[1] ||
-      (!this.state.dataVersion &&
+      oldSize[0] !== newSize[0] ||
+      oldSize[1] !== newSize[1] ||
+      extentChange ||
+      (!oldDataVersion &&
         xyFrameChangeProps.find(d => this.props[d] !== nextProps[d]))
     ) {
-      const dataChanged = xyFrameDataProps.find(
-        d => this.props[d] !== nextProps[d]
-      )
+      const dataChanged =
+        extentChange ||
+        xyFrameDataProps.find(d => this.props[d] !== nextProps[d])
+
       this.calculateXYFrame(nextProps, dataChanged)
     }
   }
@@ -400,13 +433,13 @@ class XYFrame extends React.Component<Props, State> {
     } = currentProps
 
     const annotatedSettings = {
-      xAccessor: stringToFn(xAccessor, (d: Array<number>) => d[0]),
-      yAccessor: stringToFn(yAccessor, (d: Array<number>) => d[1]),
-      areaDataAccessor: stringToFn(
+      xAccessor: stringToArrayFn(xAccessor, (d: Array<number>) => d[0]),
+      yAccessor: stringToArrayFn(yAccessor, (d: Array<number>) => d[1]),
+      areaDataAccessor: stringToArrayFn(
         areaDataAccessor,
         (d: Object | Array<number>) => (Array.isArray(d) ? d : d.coordinates)
       ),
-      lineDataAccessor: stringToFn(
+      lineDataAccessor: stringToArrayFn(
         lineDataAccessor,
         (d: Object | Array<number>) => (Array.isArray(d) ? d : d.coordinates)
       ),
@@ -420,8 +453,15 @@ class XYFrame extends React.Component<Props, State> {
         !React.isValidElement(title) &&
         title !== null
           ? title
-          : { title, orient: "top" }
+          : { title, orient: "top" },
+      xExtent: (baseXExtent && baseXExtent.extent) || baseXExtent,
+      yExtent: (baseYExtent && baseYExtent.extent) || baseYExtent
     }
+
+    annotatedSettings.lineType.simpleLine =
+      annotatedSettings.lineType.type === "line" &&
+      !annotatedSettings.lineType.y1 &&
+      annotatedSettings.lineType.simpleLine !== false
 
     const margin = calculateMargin({
       margin: currentProps.margin,
@@ -447,6 +487,8 @@ class XYFrame extends React.Component<Props, State> {
       baseYExtent === undefined || Array.isArray(baseYExtent)
         ? { extent: baseYExtent }
         : baseYExtent
+
+    let xScale, yScale
 
     if (
       updateData ||
@@ -489,6 +531,14 @@ class XYFrame extends React.Component<Props, State> {
           defined
         }))
       }
+
+      ;({ xScale, yScale } = this.screenScales({
+        xExtent,
+        yExtent,
+        adjustedSize,
+        xScaleType,
+        yScaleType
+      }))
     } else {
       ;({
         xExtent,
@@ -500,15 +550,22 @@ class XYFrame extends React.Component<Props, State> {
         calculatedXExtent,
         calculatedYExtent
       } = this.state)
+      if (
+        adjustedSize[0] === this.state.adjustedSize[0] &&
+        adjustedSize[1] === this.state.adjustedSize[1]
+      ) {
+        xScale = this.state.xScale
+        yScale = this.state.yScale
+      } else {
+        ;({ xScale, yScale } = this.screenScales({
+          xExtent,
+          yExtent,
+          adjustedSize,
+          xScaleType,
+          yScaleType
+        }))
+      }
     }
-
-    const { xScale, yScale } = this.screenScales({
-      xExtent,
-      yExtent,
-      adjustedSize,
-      xScaleType,
-      yScaleType
-    })
 
     xExtent = xExtentSettings.extent || xExtent
     yExtent = yExtentSettings.extent || yExtent
@@ -756,8 +813,14 @@ class XYFrame extends React.Component<Props, State> {
       yScale,
       xAccessor: annotatedSettings.xAccessor,
       yAccessor: annotatedSettings.yAccessor,
-      xExtent: [xExtent[0] === undefined ? calculatedXExtent[0] : xExtent[0], xExtent[1] === undefined ? calculatedXExtent[1] : xExtent[1]],
-      yExtent: [yExtent[0] === undefined ? calculatedYExtent[0] : yExtent[0], yExtent[1] === undefined ? calculatedYExtent[1] : yExtent[1]],
+      xExtent: [
+        xExtent[0] === undefined ? calculatedXExtent[0] : xExtent[0],
+        xExtent[1] === undefined ? calculatedXExtent[1] : xExtent[1]
+      ],
+      yExtent: [
+        yExtent[0] === undefined ? calculatedYExtent[0] : yExtent[0],
+        yExtent[1] === undefined ? calculatedYExtent[1] : yExtent[1]
+      ],
       calculatedXExtent,
       calculatedYExtent,
       margin,
@@ -794,6 +857,11 @@ class XYFrame extends React.Component<Props, State> {
     let screenCoordinates = []
     const idAccessor = this.state.annotatedSettings.lineIDAccessor
 
+    if (lines.data.length !== 0) {
+      const thisLine = lines.data.find(l => idAccessor(l) === idAccessor(d))
+      if (thisLine && !d.parentLine) d.parentLine = thisLine
+    }
+
     const margin = calculateMargin({
       margin: this.props.margin,
       axes: this.props.axes,
@@ -807,7 +875,7 @@ class XYFrame extends React.Component<Props, State> {
     })
 
     if (!d.coordinates) {
-      const xCoord = d[projectedX] || xAccessor(d)
+      const xCoord = d[projectedX] || findFirstAccessorValue(xAccessor, d)
       screenCoordinates = [
         xScale(xCoord),
         relativeY({
@@ -836,7 +904,7 @@ class XYFrame extends React.Component<Props, State> {
       }
     } else if (!d.bounds) {
       screenCoordinates = d.coordinates.map(p => [
-        xScale(xAccessor(p)) + adjustedPosition[0],
+        xScale(findFirstAccessorValue(xAccessor, p)) + adjustedPosition[0],
         relativeY({
           point: p,
           lines,
@@ -981,8 +1049,14 @@ class XYFrame extends React.Component<Props, State> {
     const { size, useSpans } = this.props
 
     const idAccessor = this.state.annotatedSettings.lineIDAccessor
-    const xCoord = d[projectedX] || xAccessor(d)
-    const yCoord = d[projectedY] || yAccessor(d)
+
+    if (lines.data.length !== 0) {
+      const thisLine = lines.data.find(l => idAccessor(l) === idAccessor(d))
+      if (thisLine && !d.parentLine) d.parentLine = thisLine
+    }
+
+    const xCoord = d[projectedX] || findFirstAccessorValue(xAccessor, d)
+    const yCoord = d[projectedY] || findFirstAccessorValue(yAccessor, d)
 
     const xString = xCoord && xCoord.toString ? xCoord.toString() : xCoord
     const yString = yCoord && yCoord.toString ? yCoord.toString() : yCoord
@@ -1025,7 +1099,7 @@ class XYFrame extends React.Component<Props, State> {
       }
     } else {
       screenCoordinates = d.coordinates.map(p => [
-        xScale(xAccessor(p)) + adjustedPosition[0],
+        xScale(findFirstAccessorValue(xAccessor, d)) + adjustedPosition[0],
         relativeY({
           point: p,
           lines,
@@ -1164,11 +1238,11 @@ class XYFrame extends React.Component<Props, State> {
             data: downloadData,
             xAccessor:
               download === "points" || points
-                ? stringToFn(xAccessor)
+                ? stringToArrayFn(xAccessor)
                 : undefined,
             yAccessor:
               download === "points" || points
-                ? stringToFn(yAccessor)
+                ? stringToArrayFn(yAccessor)
                 : undefined,
             fields: downloadFields
           })}
@@ -1232,10 +1306,6 @@ class XYFrame extends React.Component<Props, State> {
       />
     )
   }
-}
-
-XYFrame.propTypes = {
-  ...xyframeproptypes
 }
 
 export default XYFrame

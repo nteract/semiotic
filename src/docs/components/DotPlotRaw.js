@@ -2,11 +2,6 @@ import React from "react"
 import { OrdinalFrame } from "../../components"
 import ProcessViz from "./ProcessViz"
 
-const colors = {
-  y1990: "#00a2ce",
-  y2013: "#4d430c"
-}
-
 const dotRadius = 8
 
 const baseData = [
@@ -24,11 +19,6 @@ const baseData = [
   { region: "Western Asia", y1990: 27.5, y2013: 13.7 },
   { region: "Oceania", y1990: 26.3, y2013: 21.3 },
   { region: "World", y1990: 33.3, y2013: 20 }
-]
-
-const data = [
-  ...baseData.map(d => ({ region: d.region, type: "y1990", value: d.y1990 })),
-  ...baseData.map(d => ({ region: d.region, type: "y2013", value: d.y2013 }))
 ]
 
 const lineAnnotations = baseData.map(d => Object.assign({ type: "range" }, d))
@@ -67,18 +57,23 @@ function drawRange({ d, rScale, orFrameState }) {
   }
   return null
 }
+const data = [
+  ...baseData.map(d => ({ region: d.region, type: "y1990", value: d.y1990 })),
+  ...baseData.map(d => ({ region: d.region, type: "y2013", value: d.y2013 }))
+]
+
+const colors = {
+  y1990: "#00a2ce",
+  y2013: "#4d430c"
+}
 
 const dotPlotChart = {
   title: "Neonatal Mortality Rate by Region",
   size: [700, 500],
   data: data,
-  rAccessor: d => d.value,
-  oAccessor: d => d.region,
-  style: d => ({
-    fill: colors[d.type],
-    stroke: "white",
-    strokeWidth: 1
-  }),
+  rAccessor: "value",
+  oAccessor: "region",
+  style: d => ({ fill: colors[d.type], stroke: "white", strokeWidth: 1 }),
   type: { type: "point", r: dotRadius },
   projection: "horizontal",
   axis: { orient: "bottom", tickFormat: d => `${d}%` },

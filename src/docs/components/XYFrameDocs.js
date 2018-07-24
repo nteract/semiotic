@@ -22,7 +22,7 @@ import Button from "material-ui/Button"
 import Select from "material-ui/Select"
 import { MenuItem } from "material-ui/Menu"
 import Icon from "material-ui-icons/Timeline"
-import /* Input, */ { InputLabel } from "material-ui/Input"
+import { /* Input, */ InputLabel } from "material-ui/Input"
 import { FormControl /* FormHelperText */ } from "material-ui/Form"
 
 class NameForm extends React.Component {
@@ -962,7 +962,8 @@ export default class XYFrameDocs extends React.Component {
     }
 
     const undefinedOptions = {}
-    if (this.state.frame === "ResponsiveXYFrame") undefinedOptions.responsiveWidth = true
+    if (this.state.frame === "ResponsiveXYFrame")
+      undefinedOptions.responsiveWidth = true
     const displayFrame = (
       <div>
         <Button
@@ -975,10 +976,9 @@ export default class XYFrameDocs extends React.Component {
           XYFrame API
         </Button>
         <ReactFrame
-        {...undefinedOptions}
+          {...undefinedOptions}
           title={titleTypesHash[this.state.title]}
           size={[700, 700]}
-
           lines={this.state.dataType === "line" ? displayData : undefined}
           areas={
             this.state.dataType === "area"
@@ -988,7 +988,12 @@ export default class XYFrameDocs extends React.Component {
           areaStyle={areaStyleHash[this.state.areaType]}
           areaType={areaTypeHash[this.state.areaType]}
           points={this.state.dataType === "point" ? pointTestData : undefined}
-          pointStyle={d => ({ fill: d.parentLine && d.parentLine.color || d.cat, stroke: "black", strokeWidth: 0.5, r: d.parentArea && 5 })}
+          pointStyle={d => ({
+            fill: (d.parentLine && d.parentLine.color) || d.cat,
+            stroke: "black",
+            strokeWidth: 0.5,
+            r: d.parentArea && 5
+          })}
           customPointMark={customPointHash[this.state.customPoint]}
           lineDataAccessor={d =>
             d.data.filter(
@@ -1008,8 +1013,9 @@ export default class XYFrameDocs extends React.Component {
           matte={this.state.matte === "on"}
           xExtent={
             this.state.frame === "MinimapXYFrame" &&
-            this.state.dataType !== "line" && this.state[`${this.state.dataType}Extent`]
-            && this.state[`${this.state.dataType}Extent`][0]
+            this.state.dataType !== "line" &&
+            this.state[`${this.state.dataType}Extent`] &&
+            this.state[`${this.state.dataType}Extent`][0]
               ? [
                   this.state[`${this.state.dataType}Extent`][0][0],
                   this.state[`${this.state.dataType}Extent`][1][0]
@@ -1018,8 +1024,9 @@ export default class XYFrameDocs extends React.Component {
           }
           yExtent={
             this.state.frame === "MinimapXYFrame" &&
-            this.state.dataType !== "line" && this.state[`${this.state.dataType}Extent`]
-            && this.state[`${this.state.dataType}Extent`][0]
+            this.state.dataType !== "line" &&
+            this.state[`${this.state.dataType}Extent`] &&
+            this.state[`${this.state.dataType}Extent`][0]
               ? [
                   this.state[`${this.state.dataType}Extent`][1][1],
                   this.state[`${this.state.dataType}Extent`][0][1]
@@ -1027,7 +1034,10 @@ export default class XYFrameDocs extends React.Component {
               : fixedExtentHash[this.state.fixedExtent]
           }
           lineStyle={d => ({
-            fill: d.color,
+            fill:
+              this.state.lineType === "line" || this.state.lineType === "none"
+                ? "none"
+                : d.color,
             fillOpacity: 0.5,
             stroke: d.color,
             strokeWidth: "3px"
@@ -1156,7 +1166,10 @@ export default class XYFrameDocs extends React.Component {
                   brushEnd: e =>
                     this.updateDateRange(`${this.state.dataType}`, e),
                   yBrushable: this.state.dataType === "line" ? false : true,
-                  xBrushExtent: this.state.dataType === "line" ? this.state[`${this.state.dataType}Extent`] : this.state[`${this.state.dataType}Extent`][0],
+                  xBrushExtent:
+                    this.state.dataType === "line"
+                      ? this.state[`${this.state.dataType}Extent`]
+                      : this.state[`${this.state.dataType}Extent`][0],
                   yBrushExtent: this.state[`${this.state.dataType}Extent`][1],
                   lines:
                     this.state.dataType === "line" ? displayData : undefined,
