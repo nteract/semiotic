@@ -10,7 +10,10 @@ process.on("unhandledRejection", up => {
 // NOTE: Since the prettier config is using no-semicolons and this is an IIFE,
 //       we are forced to have a semicolon to start this block.
 ;(async () => {
-  const browser = await puppeteer.launch()
+  const browser = await puppeteer.launch({
+      headless: false,
+      devtools: true
+    })
   const page = await browser.newPage()
 
   page.setViewport({
@@ -49,7 +52,7 @@ process.on("unhandledRejection", up => {
   ) {
     // We good, or so we hope
   } else {
-    throw new Error("Semioitic did not load from the dist copy")
+    throw new Error("Semiotic did not load from the dist copy")
   }
 
   await page.screenshot({ path: "screenshots/joyplot.png" })
