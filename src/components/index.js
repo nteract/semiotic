@@ -15,6 +15,8 @@ import NetworkFrame from "./NetworkFrame"
 import { funnelize } from "./svg/lineDrawing"
 import { calculateDataExtent } from "./data/dataFunctions"
 
+import FacetFrame from "./FacetFrame"
+
 import ResponsiveNetworkFrame from "./ResponsiveNetworkFrame"
 import ResponsiveMinimapXYFrame from "./ResponsiveMinimapXYFrame"
 import ResponsiveXYFrame from "./ResponsiveXYFrame"
@@ -55,7 +57,8 @@ export default {
   SparkXYFrame,
   Legend,
   chuckCloseCanvasTransform,
-  Mark
+  Mark,
+  FacetFrame
 }
 
 export {
@@ -85,5 +88,6 @@ export {
   SparkXYFrame,
   Legend,
   chuckCloseCanvasTransform,
-  Mark
+  Mark,
+  FacetFrame
 }
