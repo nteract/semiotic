@@ -5,7 +5,7 @@ import JoyPlotRaw from "./JoyPlotRaw"
 const components = []
 
 components.push({
-  name: "Joy Plot"
+  name: "Ridgeline Plot"
 })
 
 export default class JoyPlotDocs extends React.Component {
@@ -24,7 +24,7 @@ export default class JoyPlotDocs extends React.Component {
     data={individualData}
     projection={"horizontal"}
     type={"none"}
-    summaryType={{ type: "joy", amplitude: 40, curve: curveMonotoneX, binValue: d => sum(d.map( p => p.value)) }}
+    summaryType={{ type: "ridgeline", amplitude: 40, curve: curveMonotoneX, binValue: d => sum(d.map( p => p.value)) }}
     summaryStyle={d => ({ fill: "black", stroke: "white", strokeWidth: 1, opacity: 1 })}
     oAccessor={d => d.year}
     rAccessor={d => d.month}
@@ -37,21 +37,21 @@ export default class JoyPlotDocs extends React.Component {
 
     return (
       <DocumentComponent
-        name="Joy Plot"
+        name="Ridgeline Plot"
         components={components}
         examples={examples}
         buttons={buttons}
       >
         <p>
-          Joy Plots show variation across values and allow overflowing of the
-          plot into adjoining columns by adjusting the amplitude property of the
-          summaryType. This example also uses dynamicColumnWidth to set column
-          width to be based on the maximum value of each column, normalizing the
-          variation.
+          Ridgeline Plots show variation across values and allow overflowing of
+          the plot into adjoining columns by adjusting the amplitude property of
+          the summaryType. This example also uses dynamicColumnWidth to set
+          column width to be based on the maximum value of each column,
+          normalizing the variation.
         </p>
       </DocumentComponent>
     )
   }
 }
 
-JoyPlotDocs.title = "Joy Plot"
+JoyPlotDocs.title = "Ridgeline Plot"

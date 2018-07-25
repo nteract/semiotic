@@ -168,11 +168,11 @@ const words = [
     text: "histogram"
   },
   {
-    token_text: "joy",
+    token_text: "ridgeline",
     topic_id: "20170726:0",
     score: 4,
     color: "rgb(0, 162, 206)",
-    text: "joy"
+    text: "ridgeline"
   }
 ]
 

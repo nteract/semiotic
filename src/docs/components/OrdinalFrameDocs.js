@@ -404,7 +404,7 @@ export default class OrdinalFrameDocs extends React.Component {
       "boxplot",
       "histogram",
       "contour",
-      "joy"
+      "ridgeline"
     ].map(d => (
       <MenuItem key={`summary-option${d}`} label={d} value={d}>
         {d}

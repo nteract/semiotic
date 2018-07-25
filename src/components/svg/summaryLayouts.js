@@ -1082,10 +1082,10 @@ export function bucketizedRenderingFn({
           aria-label={`${summary.name} distribution`}
         />
       )
-    } else if (type.type === "joy") {
+    } else if (type.type === "joy" || type.type === "ridgeline") {
       const zeroedStart = Object.assign({}, bins[0], { value: 0 })
       const zeroedEnd = Object.assign({}, bins[bins.length - 1], { value: 0 })
-      //Joy plots need to visually signify the zero baseline with their start and end position
+      //Ridgeline plots need to visually signify the zero baseline with their start and end position
 
       zeroedStart.y = zeroedStart.y - bucketSize / 2
       zeroedEnd.y = zeroedEnd.y + bucketSize / 2

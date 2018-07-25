@@ -109,6 +109,7 @@ type SummaryTypes =
   | "heatmap"
   | "violin"
   | "joy"
+  | "ridgeline"
   | "boxplot"
   | "contour"
 

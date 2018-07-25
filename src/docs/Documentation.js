@@ -108,7 +108,7 @@ const components = {
   marimekko: { docs: Marimekko, parent: "orframe" },
   dotplot: { docs: DotPlot, parent: "orframe" },
   donutchart: { docs: DonutChart, parent: "orframe" },
-  joyplot: { docs: JoyPlot, parent: "orframe" },
+  ridgeline: { docs: JoyPlot, parent: "orframe" },
   swarmbrush: { docs: SwarmBrush, parent: "orframe" },
   divergingstackedbar: { docs: DivergingStackedBar, parent: "orframe" },
   custommark: { docs: CustomMark, parent: "orframe" },
