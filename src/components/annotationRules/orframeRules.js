@@ -12,6 +12,7 @@ import { pointOnArcAtAngle } from "../svg/pieceDrawing"
 import { circleEnclosure, rectangleEnclosure } from "./baseRules"
 import SpanOrDiv from "../SpanOrDiv"
 import { findFirstAccessorValue } from "../data/multiAccessorUtils"
+import { scaleLinear } from "d3-scale"
 
 function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
   const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0
@@ -275,6 +276,57 @@ export const svgHighlightRule = ({
   return [...foundPieces]
 }
 
+export const screenProject = ({
+  d,
+  p,
+  projectedColumns,
+  adjustedSize,
+  rScale,
+  oAccessor,
+  rAccessor,
+  pieceIDAccessor,
+  projection
+}) => {
+  const pO = findFirstAccessorValue(oAccessor, p) || p.column
+
+  const pValue = findFirstAccessorValue(rAccessor, p) || p.value
+
+  const oColumn = projectedColumns[pO]
+
+  let o
+  if (oColumn) {
+    o = oColumn.middle
+  } else {
+    o = 0
+  }
+  const idPiece =
+    pieceIDAccessor(d) &&
+    oColumn &&
+    oColumn.pieceData.find(r => pieceIDAccessor(r.data) === pieceIDAccessor(d))
+
+  if (oColumn && projection === "radial") {
+    return pointOnArcAtAngle(
+      [adjustedSize[0] / 2, adjustedSize[1] / 2],
+      oColumn.pct_middle,
+      idPiece ? (idPiece.bottom + idPiece.scaledValue / 2) / 2 : pValue / 2
+    )
+  }
+  if (projection === "horizontal") {
+    return [
+      idPiece ? idPiece.bottom + idPiece.scaledValue / 2 : rScale(pValue),
+      o
+    ]
+  }
+  const newScale = scaleLinear()
+    .domain(rScale.domain())
+    .range(rScale.range().reverse())
+
+  return [
+    o,
+    idPiece ? idPiece.bottom - idPiece.scaledValue / 2 : newScale(pValue)
+  ]
+}
+
 export const svgORRule = ({ d, i, screenCoordinates, projection }) => {
   return (
     <Mark
@@ -511,7 +563,11 @@ export const htmlFrameHoverRule = ({
   oAccessor,
   projection,
   tooltipContent,
-  useSpans
+  useSpans,
+  pieceIDAccessor,
+  projectedColumns,
+  adjustedSize,
+  rScale
 }) => {
   tooltipContent =
     tooltipContent === "pie"
@@ -523,6 +579,19 @@ export const htmlFrameHoverRule = ({
       : tooltipContent
   //To string because React gives a DOM error if it gets a date
   let contentFill
+
+  const screenCoordinates = screenProject({
+    d,
+    p: d,
+    projectedColumns,
+    adjustedSize,
+    rScale,
+    oAccessor,
+    rAccessor,
+    pieceIDAccessor,
+    projection
+  })
+
   if (d.isSummaryData) {
     let summaryContent = d.label
 
@@ -587,8 +656,8 @@ export const htmlFrameHoverRule = ({
         ""}`}
       style={{
         position: "absolute",
-        top: `${d.y}px`,
-        left: `${d.x}px`
+        top: `${screenCoordinates[1]}px`,
+        left: `${screenCoordinates[0]}px`
       }}
     >
       {content}
@@ -623,8 +692,11 @@ export const htmlColumnHoverRule = ({
   let xPosition = column.middle + adjustedPosition[0]
   let yPosition =
     projection === "horizontal"
-      ? adjustedSize[1] - positionValue
-      : positionValue
+      ? adjustedSize[0] - positionValue
+      : (summaryType.type && summaryType.type !== "none") ||
+        ["swarm", "point", "clusterbar"].find(p => p === type.type)
+        ? adjustedSize[1] - positionValue
+        : positionValue
   yPosition += 10
 
   if (projection === "horizontal") {

@@ -26,7 +26,8 @@ import {
   svgRRule,
   svgCategoryRule,
   htmlFrameHoverRule,
-  htmlColumnHoverRule
+  htmlColumnHoverRule,
+  screenProject
 } from "./annotationRules/orframeRules"
 
 import Frame from "./Frame"
@@ -55,7 +56,6 @@ import {
 
 import { drawSummaries, renderLaidOutSummaries } from "./svg/summaryLayouts"
 import { stringToFn, stringToArrayFn } from "./data/dataFunctions"
-import { findFirstAccessorValue } from "./data/multiAccessorUtils"
 
 import { genericFunction } from "./untyped_utilities/functions"
 
@@ -1308,58 +1308,35 @@ class OrdinalFrame extends React.Component<Props, State> {
       pieceIDAccessor
     } = this.state
 
-    const screenProject = p => {
-      const pO = p.column || findFirstAccessorValue(oAccessor, p)
-
-      const pValue = p.value || findFirstAccessorValue(rAccessor, p)
-
-      const oColumn = projectedColumns[pO]
-
-      let o
-      if (oColumn) {
-        o = oColumn.middle
-      } else {
-        o = 0
-      }
-      const idPiece =
-        pieceIDAccessor(d) &&
-        oColumn &&
-        oColumn.pieceData.find(
-          r => pieceIDAccessor(r.data) === pieceIDAccessor(d)
-        )
-
-      if (oColumn && projection === "radial") {
-        return pointOnArcAtAngle(
-          [adjustedSize[0] / 2, adjustedSize[1] / 2],
-          oColumn.pct_middle,
-          idPiece ? (idPiece.bottom + idPiece.scaledValue / 2) / 2 : pValue / 2
-        )
-      }
-      if (projection === "horizontal") {
-        return [
-          idPiece ? idPiece.bottom + idPiece.scaledValue / 2 : rScale(pValue),
-          o
-        ]
-      }
-      const newScale = scaleLinear()
-        .domain(rScale.domain())
-        .range(rScale.range().reverse())
-
-      return [
-        o,
-        idPiece ? idPiece.bottom - idPiece.scaledValue / 2 : newScale(pValue)
-      ]
-    }
-
     let screenCoordinates = [0, 0]
 
     //TODO: Support radial??
     if (d.coordinates || (d.type === "enclose" && d.neighbors)) {
       screenCoordinates = (d.coordinates || d.neighbors).map(p =>
-        screenProject(p)
+        screenProject({
+          d,
+          p,
+          projectedColumns,
+          adjustedSize,
+          rScale,
+          oAccessor,
+          rAccessor,
+          pieceIDAccessor,
+          projection
+        })
       )
     } else {
-      screenCoordinates = screenProject(d)
+      screenCoordinates = screenProject({
+        d,
+        p: d,
+        projectedColumns,
+        adjustedSize,
+        rScale,
+        oAccessor,
+        rAccessor,
+        pieceIDAccessor,
+        projection
+      })
     }
 
     //TODO: Process your rules first
@@ -1434,7 +1411,8 @@ class OrdinalFrame extends React.Component<Props, State> {
       rScale,
       projectedColumns,
       summaryType,
-      type
+      type,
+      pieceIDAccessor
     } = this.state
     const {
       htmlAnnotationRules,
@@ -1483,7 +1461,11 @@ class OrdinalFrame extends React.Component<Props, State> {
         projection,
         tooltipContent,
         projectedColumns,
-        useSpans
+        useSpans,
+        pieceIDAccessor,
+        projectedColumns,
+        adjustedSize,
+        rScale
       })
     } else if (d.type === "column-hover") {
       return htmlColumnHoverRule({
