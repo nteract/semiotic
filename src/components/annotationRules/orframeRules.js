@@ -580,17 +580,19 @@ export const htmlFrameHoverRule = ({
   //To string because React gives a DOM error if it gets a date
   let contentFill
 
-  const screenCoordinates = screenProject({
-    d,
-    p: d,
-    projectedColumns,
-    adjustedSize,
-    rScale,
-    oAccessor,
-    rAccessor,
-    pieceIDAccessor,
-    projection
-  })
+  const screenCoordinates = d.isSummaryData
+    ? [d.x, d.y]
+    : screenProject({
+        d,
+        p: d,
+        projectedColumns,
+        adjustedSize,
+        rScale,
+        oAccessor,
+        rAccessor,
+        pieceIDAccessor,
+        projection
+      })
 
   if (d.isSummaryData) {
     let summaryContent = d.label
