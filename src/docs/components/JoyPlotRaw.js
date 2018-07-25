@@ -21,7 +21,7 @@ const joyChartSettings = {
   data: probsPoints,
   projection: "horizontal",
   summaryType: {
-    type: "joy",
+    type: "ridgeline",
     bins: 10,
     amplitude: 50,
     curve: curveMonotoneX
@@ -49,7 +49,7 @@ const joyChartSettings = {
 export default (
   <div>
     <iframe
-      title="joy-video"
+      title="ridgeline-video"
       width="560"
       height="315"
       src="https://www.youtube.com/embed/LoR7TfIWR2k"

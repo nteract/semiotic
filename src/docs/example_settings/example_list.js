@@ -101,7 +101,7 @@ const exampos = [
     path: "sunburst"
   },
   { label: "Heat Map", viz: HeatMapRaw, path: "heatmap" },
-  { label: "Joy Plot", viz: JoyPlotRaw, path: "joyplot" },
+  { label: "Ridgeline Plot", viz: JoyPlotRaw, path: "ridgeline" },
   { label: "Marimekko Chart", viz: MarimekkoRaw, path: "marimekko" },
   { label: "Violin Plot", viz: ViolinRaw, path: "violin" },
   { label: "Waterfall Chart", viz: WaterfallChartRaw, path: "waterfall" },

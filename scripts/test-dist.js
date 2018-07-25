@@ -11,9 +11,9 @@ process.on("unhandledRejection", up => {
 //       we are forced to have a semicolon to start this block.
 ;(async () => {
   const browser = await puppeteer.launch({
-      headless: false,
-      devtools: true
-    })
+    headless: false,
+    devtools: true
+  })
   const page = await browser.newPage()
 
   page.setViewport({
@@ -36,7 +36,7 @@ process.on("unhandledRejection", up => {
       __dirname,
       "..",
       "integration-tests",
-      "joyplot",
+      "viz-examples",
       "index.html"
     )}`,
     { waitUntil: "domcontentloaded" }
@@ -55,7 +55,7 @@ process.on("unhandledRejection", up => {
     throw new Error("Semiotic did not load from the dist copy")
   }
 
-  await page.screenshot({ path: "screenshots/joyplot.png" })
+  await page.screenshot({ path: "screenshots/viz-examples.png" })
 
   await browser.close()
 })()

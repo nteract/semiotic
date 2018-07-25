@@ -593,13 +593,13 @@ ReactDOM.render(
     },
     [
       React.createElement(OrdinalFrame, {
-        title: "Joy Plot",
+        title: "Ridgeline Plot",
         size: [800, 200],
         projection: "horizontal",
         data: atomicData,
         oAccessor: "response",
         rAccessor: "value",
-        summaryType: { type: "joy", amplitude: 100 },
+        summaryType: { type: "ridgeline", amplitude: 100 },
         summaryStyle: function summaryStyle(d, i) {
           return {
             fill: colors[i % colors.length],

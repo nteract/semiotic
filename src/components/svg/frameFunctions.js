@@ -454,6 +454,7 @@ const summaryRenderHash = {
   violin: bucketizedRenderingFn,
   heatmap: bucketizedRenderingFn,
   joy: bucketizedRenderingFn,
+  ridgeline: bucketizedRenderingFn,
   histogram: bucketizedRenderingFn
 }
 
