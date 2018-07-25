@@ -53,6 +53,8 @@ import CometPlot from "./components/CometPlot"
 import Networks from "./components/Networks"
 import Sparkline from "./components/Sparkline"
 
+import FacetFrame from "./components/FacetFrame"
+
 //import Process from "./components/Process";
 import BarToParallel from "./components/BarToParallel"
 import AppleStockChart from "./components/AppleStockChart"
@@ -126,6 +128,7 @@ const components = {
   customnode: { docs: CustomNodes, parent: "networkframe" },
   sunburst: { docs: Sunburst, parent: "networkframe" },
   networks: { docs: Networks, parent: "networkframe" },
+  facetframe: { docs: FacetFrame },
   axis: { docs: AxisDocs },
   legend: { docs: LegendDocs },
   dividedline: { docs: DividedLineDocs }
