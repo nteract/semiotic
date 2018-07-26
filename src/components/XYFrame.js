@@ -446,8 +446,8 @@ class XYFrame extends React.Component<Props, State> {
       lineType: objectifyType(lineType),
       areaType: objectifyType(areaType),
       lineIDAccessor: stringToFn(lineIDAccessor, l => l.semioticLineID),
-      areas: !areas || Array.isArray(areas) ? areas : [areas],
-      lines: !lines || Array.isArray(lines) ? lines : [lines],
+      areas: !areas ? undefined : !Array.isArray(areas) ? [areas] : !areaDataAccessor && !areas[0].coordinates ? [{ coordinates: areas }] : areas,
+      lines: !lines ? undefined : !Array.isArray(lines) ? [lines] : !lineDataAccessor && !lines[0].coordinates ? [{ coordinates: lines }] : lines,
       title:
         typeof title === "object" &&
         !React.isValidElement(title) &&

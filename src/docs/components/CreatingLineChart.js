@@ -440,8 +440,8 @@ export default class CreatingLineChart extends React.Component {
     const flatData = [
       { day: "2018-06-26", things: 1 },
       { day: "2018-06-27", things: 2 },
-      { day: "2018-06-28", things: 3 },
-      { day: "2018-06-29", things: 4 },
+      { day: "2018-06-28", things: 1 },
+      { day: "2018-06-29", things: 3 },
       { day: "2018-06-30", things: 5 }
     ]
 
