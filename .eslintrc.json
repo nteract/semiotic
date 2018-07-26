@@ -1,6 +1,12 @@
 {
   "root": true,
-  "extends": "netflix-dea",
+  "plugins": [            
+      "flowtype"        
+  ],
+  "extends": [
+    "netflix-dea",
+    "plugin:flowtype/recommended"
+],
   "env": {
     "jest": true
   },
@@ -15,6 +21,7 @@
     "indent": "off",
     "no-empty-function": "off",
     "react/prefer-stateless-function": "off",
-    "no-shadow": "off"
+    "no-shadow": "off",
+    "flowtype/space-after-type-colon": "off"
   }
 }
