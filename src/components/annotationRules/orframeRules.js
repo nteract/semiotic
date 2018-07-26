@@ -276,22 +276,21 @@ export const svgHighlightRule = ({
   return [...foundPieces]
 }
 
+export const findIDPiece = (pieceIDAccessor, oColumn, d) =>
+  pieceIDAccessor(d) &&
+  oColumn &&
+  oColumn.pieceData.find(r => pieceIDAccessor(r.data) === pieceIDAccessor(d))
+
 export const screenProject = ({
-  d,
   p,
-  projectedColumns,
   adjustedSize,
   rScale,
-  oAccessor,
+  oColumn,
   rAccessor,
-  pieceIDAccessor,
+  idPiece,
   projection
 }) => {
-  const pO = findFirstAccessorValue(oAccessor, p) || p.column
-
   const pValue = findFirstAccessorValue(rAccessor, p) || p.value
-
-  const oColumn = projectedColumns[pO]
 
   let o
   if (oColumn) {
@@ -299,10 +298,6 @@ export const screenProject = ({
   } else {
     o = 0
   }
-  const idPiece =
-    pieceIDAccessor(d) &&
-    oColumn &&
-    oColumn.pieceData.find(r => pieceIDAccessor(r.data) === pieceIDAccessor(d))
 
   if (oColumn && projection === "radial") {
     return pointOnArcAtAngle(
@@ -579,16 +574,23 @@ export const htmlFrameHoverRule = ({
       : tooltipContent
   //To string because React gives a DOM error if it gets a date
   let contentFill
+  const pO = findFirstAccessorValue(oAccessor, d) || d.column
+  const oColumn = projectedColumns[pO]
+
+  const idPiece = findIDPiece(pieceIDAccessor, oColumn, d)
+
+  if (!idPiece) {
+    return null
+  }
 
   const screenCoordinates = screenProject({
-    d,
     p: d,
-    projectedColumns,
     adjustedSize,
     rScale,
+    oColumn,
     oAccessor,
     rAccessor,
-    pieceIDAccessor,
+    idPiece,
     projection
   })
 
@@ -621,19 +623,19 @@ export const htmlFrameHoverRule = ({
     contentFill = []
 
     oAccessor.forEach((actualOAccessor, i) => {
-      if (actualOAccessor(d.data))
+      if (actualOAccessor(idPiece.data))
         contentFill.push(
           <p key={`html-annotation-content-o-${i}`}>
-            {actualOAccessor(d.data).toString()}
+            {actualOAccessor(idPiece.data).toString()}
           </p>
         )
     })
 
     rAccessor.forEach((actualRAccessor, i) => {
-      if (actualRAccessor(d.data))
+      if (actualRAccessor(idPiece.data))
         contentFill.push(
           <p key={`html-annotation-content-r-${i}`}>
-            {actualRAccessor(d.data).toString()}
+            {actualRAccessor(idPiece.data).toString()}
           </p>
         )
     })
@@ -645,7 +647,7 @@ export const htmlFrameHoverRule = ({
   )
 
   if (d.type === "frame-hover" && tooltipContent) {
-    content = tooltipContent(d)
+    content = tooltipContent(idPiece)
   }
 
   return (
@@ -675,19 +677,22 @@ export const htmlColumnHoverRule = ({
   adjustedSize,
   projection,
   tooltipContent,
-  useSpans
+  useSpans,
+  projectedColumns
 }) => {
   //we need to ignore negative pieces to make sure the hover behavior populates on top of the positive bar
+
+  const column = d.column || projectedColumns[d.facetColumn]
+
+  const pieces = column.pieceData
 
   const positionValue =
     (summaryType.type && summaryType.type !== "none") ||
     ["swarm", "point", "clusterbar"].find(p => p === type.type)
-      ? max(d.pieces.map(p => p.scaledValue))
+      ? max(pieces.map(p => p.scaledValue))
       : projection === "horizontal"
-        ? max(d.pieces.map(p => p.scaledValue + p.bottom))
-        : min(d.pieces.map(p => p.bottom - p.scaledValue))
-
-  const column = d.column
+        ? max(pieces.map(p => p.scaledValue + p.bottom))
+        : min(pieces.map(p => p.bottom - p.scaledValue))
 
   let xPosition = column.middle + adjustedPosition[0]
   let yPosition =
@@ -714,10 +719,10 @@ export const htmlColumnHoverRule = ({
   //To string because React gives a DOM error if it gets a date
   const oContent = []
   oAccessor.forEach((actualOAccessor, i) => {
-    if (d.pieces[0].data)
+    if (pieces[0].data)
       oContent.push(
         <p key={`or-annotation-o-${i}`}>
-          {actualOAccessor(d.pieces[0].data).toString()}
+          {actualOAccessor(pieces[0].data).toString()}
         </p>
       )
   })
@@ -726,7 +731,7 @@ export const htmlColumnHoverRule = ({
     <SpanOrDiv span={useSpans} className="tooltip-content">
       {oContent}
       <p key="or-annotation-2">
-        {sum(d.pieces.map(p => p.value).filter(p => p > 0))}
+        {sum(pieces.map(p => p.value).filter(p => p > 0))}
       </p>
     </SpanOrDiv>
   )
@@ -738,7 +743,7 @@ export const htmlColumnHoverRule = ({
 
     content = tooltipContent({
       ...d,
-      pieces: d.pieces.map(p => p.data),
+      pieces: pieces.map(p => p.data),
       column,
       oAccessor
     })
