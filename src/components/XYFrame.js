@@ -329,10 +329,10 @@ class XYFrame extends React.Component<Props, State> {
     const newYExtent: Array<number> = extentValue(baseNewYExtent)
 
     const extentChange =
-      oldXExtent[0] !== newXExtent[0] ||
-      oldYExtent[0] !== newYExtent[0] ||
-      oldXExtent[1] !== newXExtent[1] ||
-      oldYExtent[1] !== newYExtent[1]
+      (oldXExtent[0] !== newXExtent[0] && newXExtent[0] !== undefined) ||
+      (oldYExtent[0] !== newYExtent[0] && newYExtent[0] !== undefined) ||
+      (oldXExtent[1] !== newXExtent[1] && newXExtent[1] !== undefined) ||
+      (oldYExtent[1] !== newYExtent[1] && newYExtent[1] !== undefined)
 
     if (
       (oldDataVersion && oldDataVersion !== newDataVersion) ||
