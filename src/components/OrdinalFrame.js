@@ -1312,7 +1312,7 @@ class OrdinalFrame extends React.Component<Props, State> {
     let screenCoordinates = [0, 0]
 
     //TODO: Support radial??
-    if (d.coordinates || (d.type === "enclose" && d.neighbors)) {
+    if (d.coordinates || d.type === "enclose") {
       screenCoordinates = (d.coordinates || d.neighbors).map(p =>
         screenProject({
           d,

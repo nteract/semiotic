@@ -277,7 +277,6 @@ export const svgHighlightRule = ({
 }
 
 export const screenProject = ({
-  d,
   p,
   projectedColumns,
   adjustedSize,
@@ -300,10 +299,10 @@ export const screenProject = ({
     o = 0
   }
 
-  const pieceID = pieceIDAccessor(d)
+  const pieceID = pieceIDAccessor(p)
   const idPiece =
     pieceID === ""
-      ? d
+      ? p
       : pieceID &&
         oColumn &&
         oColumn.pieceData.find(r => pieceIDAccessor(r.data) === pieceID)
@@ -312,14 +311,14 @@ export const screenProject = ({
     return pointOnArcAtAngle(
       [adjustedSize[0] / 2, adjustedSize[1] / 2],
       oColumn.pct_middle,
-      idPiece
+      idPiece && (idPiece.x || idPiece.scaledValue)
         ? idPiece.x / 2 || (idPiece.bottom + idPiece.scaledValue / 2) / 2
         : pValue / 2
     )
   }
   if (projection === "horizontal") {
     return [
-      idPiece
+      idPiece && (idPiece.x || idPiece.scaledValue)
         ? idPiece.x || idPiece.bottom + idPiece.scaledValue / 2
         : rScale(pValue),
       o
@@ -331,7 +330,7 @@ export const screenProject = ({
 
   return [
     o,
-    idPiece
+    idPiece && (idPiece.x || idPiece.scaledValue)
       ? idPiece.y || idPiece.bottom - idPiece.scaledValue / 2
       : newScale(pValue)
   ]
