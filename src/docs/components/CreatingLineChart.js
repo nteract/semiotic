@@ -449,7 +449,7 @@ export default class CreatingLineChart extends React.Component {
             lines={movies}
             lineType={{
               type: "line",
-              interpolator: curveCardinal
+              interpolator: "cardinal"
             }}
             lineDataAccessor={["coordinates"]}
             xAccessor={["week"]}

@@ -10,6 +10,7 @@ import { extent } from "d3-array"
 import { circleEnclosure, rectangleEnclosure } from "./baseRules"
 import SpanOrDiv from "../SpanOrDiv"
 import { findFirstAccessorValue } from "../data/multiAccessorUtils"
+import { curveHash } from "../visualizationLayerBehavior/general"
 
 const pointsAlong = along => ({
   d,
@@ -114,8 +115,13 @@ export const svgHighlight = ({
     .y0(p => yScale(p.yBottom))
     .y1(p => yScale(p.yTop))
 
-  if (lines.type.interpolator) {
-    lineGenerator.curve(lines.type.interpolator)
+  const actualInterpolator =
+    typeof lines.type.interpolator === "string"
+      ? curveHash[lines.type.interpolator]
+      : lines.type.interpolator
+
+  if (actualInterpolator) {
+    lineGenerator.curve(actualInterpolator)
   }
 
   const foundLines = lines.data

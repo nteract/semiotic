@@ -1,9 +1,36 @@
 import React from "react"
 
 import { Mark } from "semiotic-mark"
-import { line, area, curveLinear } from "d3-shape"
+import {
+  line,
+  area,
+  curveStep,
+  curveStepBefore,
+  curveStepAfter,
+  curveCardinal,
+  curveBasis,
+  curveLinear,
+  curveCatmullRom,
+  curveMonotoneX,
+  curveMonotoneY,
+  curveNatural
+} from "d3-shape"
 
 import { shapeBounds } from "../svg/areaDrawing"
+
+export const curveHash = {
+  step: curveStep,
+  stepbefore: curveStepBefore,
+  stepafter: curveStepAfter,
+  cardinal: curveCardinal,
+  basis: curveBasis,
+  linear: curveLinear,
+  catmullrom: curveCatmullRom,
+  monotone: curveMonotoneY,
+  monotonex: curveMonotoneX,
+  monotoney: curveMonotoneY,
+  natural: curveNatural
+}
 
 export function lineGeneratorDecorator({
   generator,
@@ -141,9 +168,12 @@ export function createLines({
   const yAxisFormatter = (yAxis && yAxis.tickFormat) || (d => d)
 
   const customLine = typeof type === "object" ? type : { type }
-  const interpolator = customLine.interpolator
-    ? customLine.interpolator
-    : curveLinear
+
+  const interpolator =
+    typeof customLine.interpolator === "string"
+      ? curveHash[customLine.interpolator]
+      : customLine.interpolator || curveLinear
+
   const lineGenerator = customLine.simpleLine ? line() : area()
 
   lineGeneratorDecorator({
