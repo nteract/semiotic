@@ -170,8 +170,8 @@ export default class FacetControllerDemo extends React.Component {
               rAccessor="value"
               type="bar"
               style={d => ({ fill: d.color })}
-              pieceHoverAnnotation={true}
               pieceIDAccessor="color"
+              pieceHoverAnnotation={true}
               sharedRExtent={true}
               axis={{ orient: "left" }}
             >
@@ -192,10 +192,39 @@ export default class FacetControllerDemo extends React.Component {
               axes={[{ orient: "left" }, { orient: "bottom" }]}
               sharedXExtent={true}
               sharedYExtent={true}
+              title="LINE"
             >
               <XYFrame lines={{ coordinates: orData }} />
               <XYFrame lines={{ coordinates: orData2 }} />
               <XYFrame lines={{ coordinates: orData3 }} />
+            </FacetController>
+          </div>
+          <div style={{ display: "flex" }}>
+            <FacetController
+              size={[300, 300]}
+              margin={{ top: 10, left: 55, bottom: 40, right: 10 }}
+              xAccessor="step"
+              yAccessor="value"
+              lineStyle={{ stroke: "darkred" }}
+              hoverAnnotation={true}
+              lineIDAccessor={() => true}
+              axes={[{ orient: "left" }, { orient: "bottom" }]}
+              sharedXExtent={true}
+              sharedYExtent={true}
+              oPadding={5}
+              oAccessor="column"
+              rAccessor="value"
+              type="bar"
+              style={d => ({ fill: d.color })}
+              pieceHoverAnnotation={true}
+              pieceIDAccessor="color"
+              sharedRExtent={true}
+              axis={{ orient: "left" }}
+            >
+              <OrdinalFrame data={orData} />
+              <XYFrame title={"LC1"} lines={{ coordinates: orData }} />
+              <XYFrame title={"LC2"} lines={{ coordinates: orData2 }} />
+              <XYFrame title={"LC3"} lines={{ coordinates: orData3 }} />
             </FacetController>
           </div>
         </div>
