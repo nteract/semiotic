@@ -111,7 +111,9 @@ export const projectLineData = ({
   lineDataAccessor.forEach(actualLineAccessor => {
     xAccessor.forEach(actualXAccessor => {
       yAccessor.forEach(actualYAccessor => {
-        data.forEach((d: Object) => {
+        // if no line data returns from lineDataAccessor of first value in data assume data is being passed as a simple array
+        const actualData = !actualLineAccessor(data[0]) ? [data] : data
+        actualData.forEach((d: Object) => {
           const originalLineData = { ...d }
 
           originalLineData.data = actualLineAccessor(d).map((p, q) => {
