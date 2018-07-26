@@ -469,18 +469,31 @@ export function funnelize({
 
 export function relativeY({
   point,
-  lines,
   projectedYMiddle,
   projectedY,
-  projectedX,
-  xAccessor,
   yAccessor,
-  yScale,
-  xScale,
-  idAccessor
+  yScale
 }: RelativeYTypes) {
-  if (idAccessor(point)) {
-    const thisLine = lines.data.find(l => idAccessor(l) === idAccessor(point))
+  return (
+    yScale(
+      point[projectedYMiddle] ||
+        point[projectedY] ||
+        findFirstAccessorValue(yAccessor, point)
+    ) || 0
+  )
+}
+
+export function findPointByID({
+  point,
+  idAccessor,
+  lines,
+  xScale,
+  projectedX,
+  xAccessor
+}) {
+  const pointID = idAccessor(point)
+  if (pointID) {
+    const thisLine = lines.data.find(l => idAccessor(l) === pointID)
     if (!thisLine) {
       return null
     }
@@ -493,14 +506,7 @@ export function relativeY({
     if (!thisPoint) {
       return null
     }
-    point = thisPoint
+    point = { ...thisPoint, ...thisPoint.data, type: point.type }
   }
-
-  return (
-    yScale(
-      point[projectedYMiddle] ||
-        point[projectedY] ||
-        findFirstAccessorValue(yAccessor, point)
-    ) || 0
-  )
+  return point
 }
