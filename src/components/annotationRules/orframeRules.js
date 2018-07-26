@@ -299,21 +299,29 @@ export const screenProject = ({
   } else {
     o = 0
   }
+
+  const pieceID = pieceIDAccessor(d)
   const idPiece =
-    pieceIDAccessor(d) &&
-    oColumn &&
-    oColumn.pieceData.find(r => pieceIDAccessor(r.data) === pieceIDAccessor(d))
+    pieceID === ""
+      ? d
+      : pieceID &&
+        oColumn &&
+        oColumn.pieceData.find(r => pieceIDAccessor(r.data) === pieceID)
 
   if (oColumn && projection === "radial") {
     return pointOnArcAtAngle(
       [adjustedSize[0] / 2, adjustedSize[1] / 2],
       oColumn.pct_middle,
-      idPiece ? (idPiece.bottom + idPiece.scaledValue / 2) / 2 : pValue / 2
+      idPiece
+        ? idPiece.x / 2 || (idPiece.bottom + idPiece.scaledValue / 2) / 2
+        : pValue / 2
     )
   }
   if (projection === "horizontal") {
     return [
-      idPiece ? idPiece.bottom + idPiece.scaledValue / 2 : rScale(pValue),
+      idPiece
+        ? idPiece.x || idPiece.bottom + idPiece.scaledValue / 2
+        : rScale(pValue),
       o
     ]
   }
@@ -323,7 +331,9 @@ export const screenProject = ({
 
   return [
     o,
-    idPiece ? idPiece.bottom - idPiece.scaledValue / 2 : newScale(pValue)
+    idPiece
+      ? idPiece.y || idPiece.bottom - idPiece.scaledValue / 2
+      : newScale(pValue)
   ]
 }
 

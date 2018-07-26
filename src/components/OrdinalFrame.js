@@ -633,7 +633,7 @@ class OrdinalFrame extends React.Component<Props, State> {
         piece.x = projectedColumns[o].x
         if (piece.value >= 0) {
           piece.base = zeroValue
-          piece.bottom = positiveOffset
+          piece.bottom = pieceType.type === "bar" ? positiveOffset : 0
           piece.middle = piece.scaledValue / 2 + positiveOffset
           positiveOffset =
             projection === "vertical"
@@ -642,8 +642,8 @@ class OrdinalFrame extends React.Component<Props, State> {
           piece.negative = false
         } else {
           piece.base = zeroValue
-          piece.bottom = negativeOffset
-          piece.middle = positiveOffset - piece.scaledValue / 2
+          piece.bottom = pieceType.type === "bar" ? negativeOffset : 0
+          piece.middle = negativeOffset - piece.scaledValue / 2
           negativeOffset =
             projection === "vertical"
               ? negativeOffset + piece.scaledValue
