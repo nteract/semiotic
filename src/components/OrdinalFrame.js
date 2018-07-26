@@ -27,8 +27,11 @@ import {
   svgCategoryRule,
   htmlFrameHoverRule,
   htmlColumnHoverRule,
-  screenProject
+  screenProject,
+  findIDPiece
 } from "./annotationRules/orframeRules"
+
+import { findFirstAccessorValue } from "./data/multiAccessorUtils"
 
 import Frame from "./Frame"
 
@@ -237,6 +240,8 @@ class OrdinalFrame extends React.Component<Props, State> {
     summaryType: "none",
     useSpans: false
   }
+
+  static displayName = "OrdinalFrame"
 
   constructor(props: Props) {
     super(props)
@@ -1312,30 +1317,36 @@ class OrdinalFrame extends React.Component<Props, State> {
     let screenCoordinates = [0, 0]
 
     //TODO: Support radial??
-    if (d.coordinates || d.type === "enclose") {
-      screenCoordinates = (d.coordinates || d.neighbors).map(p =>
-        screenProject({
-          d,
+    if (d.coordinates || (d.type === "enclose" && d.neighbors)) {
+      screenCoordinates = (d.coordinates || d.neighbors).map(p => {
+        const pO = findFirstAccessorValue(oAccessor, p) || p.column
+        const oColumn = projectedColumns[pO]
+        const idPiece = findIDPiece(pieceIDAccessor, oColumn, p)
+
+        return screenProject({
           p,
           projectedColumns,
           adjustedSize,
           rScale,
           oAccessor,
           rAccessor,
-          pieceIDAccessor,
+          idPiece,
           projection
         })
-      )
+      })
     } else {
+      const pO = findFirstAccessorValue(oAccessor, d) || d.column
+      const oColumn = projectedColumns[pO]
+      const idPiece = findIDPiece(pieceIDAccessor, oColumn, d)
+
       screenCoordinates = screenProject({
-        d,
         p: d,
         projectedColumns,
         adjustedSize,
         rScale,
         oAccessor,
         rAccessor,
-        pieceIDAccessor,
+        idPiece,
         projection
       })
     }

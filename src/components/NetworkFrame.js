@@ -463,6 +463,8 @@ class NetworkFrame extends React.Component<Props, State> {
     networkType: { type: "force", iterations: 500 }
   }
 
+  static displayName = "NetworkFrame"
+
   constructor(props: Props) {
     super(props)
 
