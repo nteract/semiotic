@@ -31,7 +31,7 @@ import SharedTooltipExampleRaw from "../components/SharedTooltipExampleRaw"
 import DecisionMatrixRaw from "../components/DecisionMatrixRaw"
 import CometPlotRaw from "../components/CometPlotRaw"
 import SparklineRaw from "../components/SparklineRaw"
-import FacetFrame from "../components/FacetFrame"
+import FacetControllerDocs from "../components/FacetControllerDocs"
 
 import {
   genericBarChart,
@@ -55,7 +55,7 @@ const exampos = [
     path: "homerunmap"
   },
   { label: "Bullet Chart", viz: BulletChartRaw, path: "bullet" },
-  { label: "FacetFrame", viz: FacetFrame, path: "bullet" },
+  { label: "FacetController", viz: FacetControllerDocs, path: "facet" },
   { label: "Timeline", viz: TimelineRaw, path: "timeline" },
   { label: "Dendrogram", viz: DendrogramRaw({}), path: "dendrogram" },
   { label: "ISOTYPE 2", viz: VerticalIsotypeRaw, path: "verticalisotype" },

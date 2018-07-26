@@ -33,7 +33,7 @@ import {
   createAreas
 } from "./visualizationLayerBehavior/general"
 
-import { relativeY } from "./svg/lineDrawing"
+import { relativeY, findPointByID } from "./svg/lineDrawing"
 import AnnotationCallout from "react-annotation/lib/Types/AnnotationCallout"
 
 import {
@@ -254,6 +254,8 @@ class XYFrame extends React.Component<Props, State> {
     name: "xyframe",
     dataVersion: undefined
   }
+
+  static displayName = "XYFrame"
 
   state = {
     size: [500, 500],
@@ -834,7 +836,7 @@ class XYFrame extends React.Component<Props, State> {
   }
 
   defaultXYSVGRule = ({
-    d,
+    d: baseD,
     i,
     annotationLayer,
     lines,
@@ -856,8 +858,18 @@ class XYFrame extends React.Component<Props, State> {
 
     let screenCoordinates = []
     const idAccessor = this.state.annotatedSettings.lineIDAccessor
+    const d = findPointByID({
+      point: baseD,
+      idAccessor,
+      lines,
+      xScale,
+      projectedX,
+      xAccessor
+    })
 
-    if (lines.data.length !== 0) {
+    if (!d) return null
+
+    if (!d.parentLine && lines.data.length !== 0) {
       const thisLine = lines.data.find(l => idAccessor(l) === idAccessor(d))
       if (thisLine && !d.parentLine) d.parentLine = thisLine
     }
@@ -1026,7 +1038,7 @@ class XYFrame extends React.Component<Props, State> {
   }
 
   defaultXYHTMLRule = ({
-    d,
+    d: baseD,
     i,
     lines,
     areas,
@@ -1049,6 +1061,18 @@ class XYFrame extends React.Component<Props, State> {
     const { size, useSpans } = this.props
 
     const idAccessor = this.state.annotatedSettings.lineIDAccessor
+    const d = findPointByID({
+      point: baseD,
+      idAccessor,
+      lines,
+      xScale,
+      projectedX,
+      xAccessor
+    })
+
+    if (!d) {
+      return null
+    }
 
     if (lines.data.length !== 0) {
       const thisLine = lines.data.find(l => idAccessor(l) === idAccessor(d))
@@ -1098,21 +1122,31 @@ class XYFrame extends React.Component<Props, State> {
         return null
       }
     } else {
-      screenCoordinates = d.coordinates.map(p => [
-        xScale(findFirstAccessorValue(xAccessor, d)) + adjustedPosition[0],
-        relativeY({
+      screenCoordinates = d.coordinates.map(p => {
+        const foundP = findPointByID({
           point: p,
+          idAccessor,
           lines,
-          projectedYMiddle,
-          projectedY,
-          projectedX,
-          xAccessor,
-          yAccessor,
-          yScale,
           xScale,
-          idAccessor
-        }) + adjustedPosition[1]
-      ])
+          projectedX,
+          xAccessor
+        })
+        return [
+          xScale(findFirstAccessorValue(xAccessor, d)) + adjustedPosition[0],
+          relativeY({
+            point: foundP,
+            lines,
+            projectedYMiddle,
+            projectedY,
+            projectedX,
+            xAccessor,
+            yAccessor,
+            yScale,
+            xScale,
+            idAccessor
+          }) + adjustedPosition[1]
+        ]
+      })
     }
 
     if (
