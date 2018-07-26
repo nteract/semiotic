@@ -276,10 +276,15 @@ export const svgHighlightRule = ({
   return [...foundPieces]
 }
 
-export const findIDPiece = (pieceIDAccessor, oColumn, d) =>
-  pieceIDAccessor(d) &&
-  oColumn &&
-  oColumn.pieceData.find(r => pieceIDAccessor(r.data) === pieceIDAccessor(d))
+export const findIDPiece = (pieceIDAccessor, oColumn, d) => {
+  const pieceID = pieceIDAccessor(d)
+  if (pieceID === "") return d
+  return (
+    pieceIDAccessor(d) &&
+    oColumn &&
+    oColumn.pieceData.find(r => pieceIDAccessor(r.data) === pieceIDAccessor(d))
+  )
+}
 
 export const screenProject = ({
   p,
