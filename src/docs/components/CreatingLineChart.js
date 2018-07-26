@@ -1,5 +1,5 @@
 import React from "react"
-import { XYFrame } from "../../components"
+import { XYFrame, ResponsiveXYFrame } from "../../components"
 import { scaleTime } from "d3-scale"
 import { curveMonotoneX, curveCardinal, curveBasis, curveStep } from "d3-shape"
 
@@ -437,11 +437,18 @@ export default class CreatingLineChart extends React.Component {
 ];`
     })
 
+    const flatData = [
+      { day: "2018-06-26", things: 1 },
+      { day: "2018-06-27", things: 2 },
+      { day: "2018-06-28", things: 3 },
+      { day: "2018-06-29", things: 4 },
+      { day: "2018-06-30", things: 5 }
+    ]
+
     examples.push({
       name: "Simple",
       demo: (
         <div>
-          <p>Multi-Accessor</p>
           <XYFrame
             title={"Two Movies"}
             size={[700, 400]}
@@ -482,6 +489,37 @@ export default class CreatingLineChart extends React.Component {
             customDoubleClickBehavior={d =>
               console.info("customDoubleClickBehavior d", d)
             }
+          />
+          <h3>Flat Data</h3>
+          <ResponsiveXYFrame
+            size={[500, 150]}
+            responsiveWidth={true}
+            lines={flatData}
+            xScaleType={scaleTime()}
+            xAccessor={d => new Date(d.day)}
+            yAccessor={d => d.things}
+            lineStyle={{ stroke: "blue", strokeWidth: 3 }}
+            lineType={{
+              type: "line",
+              interpolator: curveCardinal.tension(0.75)
+            }}
+            hoverAnnotation={true}
+            tooltipContent={d => (
+              <div className="tooltip-content">
+                <div variant="caption">{d.day}</div>
+                {d.things} active things
+              </div>
+            )}
+            margin={{ left: 30, bottom: 40, right: 10, top: 13 }}
+            axes={[
+              {
+                orient: "left"
+              },
+              {
+                orient: "bottom",
+                tickFormat: d => `${d.getMonth()}/${d.getDate()}`
+              }
+            ]}
           />
         </div>
       ),
