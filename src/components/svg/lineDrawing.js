@@ -51,7 +51,7 @@ type LineChartTypes = {
 }
 
 type RelativeYTypes = {
-  point: Object,
+  point: ?Object,
   lines: Object,
   projectedYMiddle: string,
   projectedY: string,
@@ -475,11 +475,13 @@ export function relativeY({
   yScale
 }: RelativeYTypes) {
   return (
-    yScale(
+    point &&
+    (yScale(
       point[projectedYMiddle] ||
         point[projectedY] ||
         findFirstAccessorValue(yAccessor, point)
-    ) || 0
+    ) ||
+      0)
   )
 }
 
@@ -490,6 +492,13 @@ export function findPointByID({
   xScale,
   projectedX,
   xAccessor
+}: {
+  point: Object,
+  idAccessor: Function,
+  lines: Object,
+  xScale: Function,
+  projectedX: string,
+  xAccessor: Array<Function>
 }) {
   const pointID = idAccessor(point)
   if (pointID) {

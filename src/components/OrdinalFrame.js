@@ -1331,7 +1331,8 @@ class OrdinalFrame extends React.Component<Props, State> {
           oAccessor,
           rAccessor,
           idPiece,
-          projection
+          projection,
+          oColumn
         })
       })
     } else {
@@ -1347,7 +1348,8 @@ class OrdinalFrame extends React.Component<Props, State> {
         oAccessor,
         rAccessor,
         idPiece,
-        projection
+        projection,
+        oColumn
       })
     }
 
