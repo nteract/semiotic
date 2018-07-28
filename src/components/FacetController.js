@@ -1,4 +1,5 @@
 import React from "react"
+import memoize from "memoize-one"
 
 import {
   xyframeproptypes,
@@ -24,201 +25,112 @@ function validFrameProps(originalProps, frameType) {
 }
 
 class FacetController extends React.Component {
-  constructor(props) {
-    super(props)
+  constructor() {
+    super()
 
     this.state = {
-      something: "good",
-      mappedChildren: [],
-      baseChildAnnotations: [],
-      facetHover: undefined,
-      facetRExtent: undefined,
-      facetXExtent: undefined,
-      facetYExtent: undefined
+      extents: {},
+      facetHover: undefined
     }
-  }
-  componentWillMount() {
-    this.processFacetController(this.props)
-  }
-  componentWillReceiveProps(nextProps) {
-    this.processFacetController(nextProps)
   }
 
-  processFacetController = facetProps => {
-    let rExtentPromises
-    let xExtentPromises
-    let yExtentPromises
-    if (facetProps.sharedRExtent) {
-      rExtentPromises = []
-    }
-    if (facetProps.sharedXExtent) {
-      xExtentPromises = []
-    }
-    if (facetProps.sharedYExtent) {
-      yExtentPromises = []
-    }
+  /**
+   * Helper for creating extent if we have a  min/max value
+   * use that else use the onChange version so we can in return
+   * normalize all of the facets to have the same extents
+   */
+  createExtent = (extentType, state) => {
+    return state.extents && state.extents[extentType]
+      ? state.extents[extentType]
+      : { onChange: this.extentHandler(extentType) }
+  }
 
-    const mappedChildren = facetProps.children.map(d =>
+  /**
+   * Whenever the extent changes, create the min/max values for each extentType
+   * so this could be rExtent for OrdinalFrame or x/yExtent for the XYFrame
+   */
+  extentHandler = extentType => {
+    return d => {
+      this.setState(prevState => {
+        const extentMinMaxValues = (prevState.extents[extentType] || []).concat(
+          d
+        )
+
+        return {
+          extents: {
+            ...prevState.extents,
+            [extentType]: [
+              Math.min(...extentMinMaxValues),
+              Math.max(...extentMinMaxValues)
+            ]
+          }
+        }
+      })
+
+      return d
+    }
+  }
+
+  /**
+   * Memoize the mapping to prevent unecessary updates and not have
+   * to use the lifecycle methods.
+   */
+  processFacetController = memoize((props, state) => {
+    return React.Children.map(props.children, child =>
       this.mapChildrenWithAppropriateProps({
-        child: d,
-        facetProps,
-        rExtentPromises,
-        xExtentPromises,
-        yExtentPromises
+        child,
+        props,
+        state
       })
     )
+  })
 
-    this.setState({
-      mappedChildren: mappedChildren,
-      baseChildAnnotations: facetProps.children.map(d => d.props.annotations)
-    })
-
-    if (rExtentPromises) {
-      Promise.all(rExtentPromises).then(values => {
-        const calculatedRExtent = [
-          Math.min(...values.map(d => d[0])),
-          Math.max(...values.map(d => d[1]))
-        ]
-        this.setState({
-          mappedChildren: mappedChildren.map(child =>
-            React.cloneElement(child, { rExtent: calculatedRExtent })
-          )
-        })
-      })
-    }
-    if (xExtentPromises || yExtentPromises) {
-      Promise.all([
-        Promise.all(xExtentPromises || []),
-        Promise.all(yExtentPromises || [])
-      ]).then(values => {
-        const xExtentValues = values[0]
-        const yExtentValues = values[1]
-        let calculatedXExtent, calculatedYExtent
-        if (xExtentValues.length > 0) {
-          calculatedXExtent = [
-            Math.min(...xExtentValues.map(d => d[0])),
-            Math.max(...xExtentValues.map(d => d[1]))
-          ]
-        }
-        if (yExtentValues.length > 0) {
-          calculatedYExtent = [
-            Math.min(...yExtentValues.map(d => d[0])),
-            Math.max(...yExtentValues.map(d => d[1]))
-          ]
-        }
-        this.setState({
-          mappedChildren: mappedChildren.map(child => {
-            const additionalSettings = {}
-            if (calculatedXExtent) {
-              additionalSettings.xExtent = calculatedXExtent
-            }
-            if (calculatedYExtent) {
-              additionalSettings.yExtent = calculatedYExtent
-            }
-
-            return React.cloneElement(child, additionalSettings)
-          })
-        })
-      })
-    }
-  }
-
-  mapChildrenWithAppropriateProps = ({
-    child,
-    facetProps,
-    rExtentPromises,
-    xExtentPromises,
-    yExtentPromises
-  }) => {
-    const rest = { ...facetProps }
+  mapChildrenWithAppropriateProps = ({ child, props, state }) => {
     const frameType = child.type.displayName
+    const annotations = this.mapChildrenWithHoverAnnotations({ child, state })
+    const customProps = { ...props, annotations }
 
-    if (
-      facetProps.hoverAnnotation === true ||
-      facetProps.pieceHoverAnnotation === true
-    ) {
-      rest.customHoverBehavior = d => this.setState({ facetHover: d })
+    // pieceHoverAnnotation could be an object, so we need to be explicit in checking for true
+    if (props.hoverAnnotation === true || props.pieceHoverAnnotation === true) {
+      customProps.customHoverBehavior = d => this.setState({ facetHover: d })
     }
 
-    if (rExtentPromises && frameType === "OrdinalFrame") {
-      let extentCallback
-      const extentPromise = new Promise((res, rej) => {
-        extentCallback = d => {
-          if (d) {
-            res(d)
-          } else {
-            rej("rExtent calculation failed")
-          }
-        }
-      })
-
-      rExtentPromises.push(extentPromise)
-      rest.rExtent = { onChange: extentCallback }
+    if (frameType === "OrdinalFrame") {
+      customProps.rExtent = this.createExtent("rExtent", state)
+    } else if (frameType === "XYFrame") {
+      customProps.xExtent = this.createExtent("xExtent", state)
+      customProps.yExtent = this.createExtent("yExtent", state)
     }
 
-    if (xExtentPromises && frameType === "XYFrame") {
-      let extentCallback
-      const extentPromise = new Promise((res, rej) => {
-        extentCallback = d => {
-          if (d) {
-            res(d)
-          } else {
-            rej("xExtent calculation failed")
-          }
-        }
-      })
-
-      xExtentPromises.push(extentPromise)
-      rest.xExtent = { onChange: extentCallback }
-    }
-
-    if (yExtentPromises && frameType === "XYFrame") {
-      let extentCallback
-      const extentPromise = new Promise((res, rej) => {
-        extentCallback = d => {
-          if (d) {
-            res(d)
-          } else {
-            rej("yExtent calculation failed")
-          }
-        }
-      })
-
-      yExtentPromises.push(extentPromise)
-      rest.yExtent = { onChange: extentCallback }
-    }
-
-    return React.cloneElement(child, validFrameProps(rest, frameType))
+    return React.cloneElement(child, validFrameProps(customProps, frameType))
   }
 
-  mapChildrenWithHover = (child, childI) => {
-    const annotations = [...this.state.baseChildAnnotations[childI]] || []
+  mapChildrenWithHoverAnnotations = ({ child, state }) => {
+    const annotations = child.annotations || []
 
-    if (this.state.facetHover) {
-      const facetHoverAnnotation = { ...this.state.facetHover }
-      if (this.state.facetHover.type === "column-hover") {
-        delete facetHoverAnnotation.column
-        facetHoverAnnotation.facetColumn = this.state.facetHover.column.name
+    if (state.facetHover) {
+      const facetHoverAnnotation = { ...state.facetHover }
+      if (facetHoverAnnotation.type === "column-hover") {
+        facetHoverAnnotation.facetColumn = facetHoverAnnotation.column.name
+        facetHoverAnnotation.column = undefined
       } else {
         facetHoverAnnotation.type = "frame-hover"
-        delete facetHoverAnnotation.y
-        delete facetHoverAnnotation.yBottom
-        delete facetHoverAnnotation.yMiddle
-        delete facetHoverAnnotation.yTop
+        facetHoverAnnotation.y = undefined
+        facetHoverAnnotation.yBottom = undefined
+        facetHoverAnnotation.yMiddle = undefined
+        facetHoverAnnotation.yTop = undefined
       }
 
       annotations.push(facetHoverAnnotation)
     }
 
-    return React.cloneElement(child, { ...child.props, annotations })
+    return annotations
   }
 
   render() {
-    //SHARED EXTENT
-
     return (
       <React.Fragment>
-        {this.state.mappedChildren.map(this.mapChildrenWithHover)}
+        {this.processFacetController(this.props, this.state)}
       </React.Fragment>
     )
   }
