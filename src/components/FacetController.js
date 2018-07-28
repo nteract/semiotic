@@ -1,3 +1,5 @@
+// @flow
+
 import React from "react"
 import memoize from "memoize-one"
 
@@ -6,6 +8,10 @@ import {
   ordinalframeproptypes,
   networkframeproptypes
 } from "./constants/frame_props"
+
+import type { Node, Element } from "react"
+import type { OrdinalFrameProps } from "./OrdinalFrame"
+import type { XYFrameProps } from "./XYFrame"
 
 const framePropHash = {
   NetworkFrame: networkframeproptypes,
@@ -24,7 +30,18 @@ function validFrameProps(originalProps, frameType) {
   return newProps
 }
 
-class FacetController extends React.Component {
+type FacetControllerProps = {
+  children: Node
+}
+
+type Props = FacetControllerProps & OrdinalFrameProps & XYFrameProps
+
+type State = {
+  extents: Object,
+  facetHover: ?Object
+}
+
+class FacetController extends React.Component<Props, State> {
   constructor() {
     super()
 
@@ -39,7 +56,7 @@ class FacetController extends React.Component {
    * use that else use the onChange version so we can in return
    * normalize all of the facets to have the same extents
    */
-  createExtent = (extentType, state) => {
+  createExtent = (extentType: string, state: State) => {
     return state.extents && state.extents[extentType]
       ? state.extents[extentType]
       : { onChange: this.extentHandler(extentType) }
@@ -49,11 +66,11 @@ class FacetController extends React.Component {
    * Whenever the extent changes, create the min/max values for each extentType
    * so this could be rExtent for OrdinalFrame or x/yExtent for the XYFrame
    */
-  extentHandler = extentType => {
-    return d => {
+  extentHandler = (extentType: string) => {
+    return (extentValue: Array<number>) => {
       this.setState(prevState => {
         const extentMinMaxValues = (prevState.extents[extentType] || []).concat(
-          d
+          extentValue
         )
 
         return {
@@ -67,46 +84,21 @@ class FacetController extends React.Component {
         }
       })
 
-      return d
+      return extentValue
     }
   }
 
   /**
-   * Memoize the mapping to prevent unecessary updates and not have
-   * to use the lifecycle methods.
+   * Remove and add required annotation props for specific annotation types.
    */
-  processFacetController = memoize((props, state) => {
-    return React.Children.map(props.children, child =>
-      this.mapChildrenWithAppropriateProps({
-        child,
-        props,
-        state
-      })
-    )
-  })
-
-  mapChildrenWithAppropriateProps = ({ child, props, state }) => {
-    const frameType = child.type.displayName
-    const annotations = this.mapChildrenWithHoverAnnotations({ child, state })
-    const customProps = { ...props, annotations }
-
-    // pieceHoverAnnotation could be an object, so we need to be explicit in checking for true
-    if (props.hoverAnnotation === true || props.pieceHoverAnnotation === true) {
-      customProps.customHoverBehavior = d => this.setState({ facetHover: d })
-    }
-
-    if (frameType === "OrdinalFrame") {
-      customProps.rExtent = this.createExtent("rExtent", state)
-    } else if (frameType === "XYFrame") {
-      customProps.xExtent = this.createExtent("xExtent", state)
-      customProps.yExtent = this.createExtent("yExtent", state)
-    }
-
-    return React.cloneElement(child, validFrameProps(customProps, frameType))
-  }
-
-  mapChildrenWithHoverAnnotations = ({ child, state }) => {
-    const annotations = child.annotations || []
+  mapChildrenWithHoverAnnotations = ({
+    child,
+    state
+  }: {
+    child: Element<*>,
+    state: State
+  }) => {
+    const annotations = child.props.annotations || []
 
     if (state.facetHover) {
       const facetHoverAnnotation = { ...state.facetHover }
@@ -126,6 +118,54 @@ class FacetController extends React.Component {
 
     return annotations
   }
+
+  /**
+   * Map hover annotations and extent to child. Initially the extent is an object with
+   * an onChange handler however once each of those resolve we then create an
+   * extent that matches between all of them. This logic can be found in createExtent and also
+   * extentHandler
+   */
+  mapChildrenWithAppropriateProps = ({
+    child,
+    props,
+    state
+  }: {
+    child: Element<*>,
+    props: Props,
+    state: State
+  }) => {
+    const frameType = child.type.displayName
+    const annotations = this.mapChildrenWithHoverAnnotations({ child, state })
+    const customProps = { ...props, annotations }
+
+    // pieceHoverAnnotation could be an object, so we need to be explicit in checking for true
+    if (props.hoverAnnotation === true || props.pieceHoverAnnotation === true) {
+      customProps.customHoverBehavior = d => this.setState({ facetHover: d })
+    }
+
+    if (frameType === "OrdinalFrame") {
+      customProps.rExtent = this.createExtent("rExtent", state)
+    } else if (frameType === "XYFrame") {
+      customProps.xExtent = this.createExtent("xExtent", state)
+      customProps.yExtent = this.createExtent("yExtent", state)
+    }
+
+    return React.cloneElement(child, validFrameProps(customProps, frameType))
+  }
+
+  /**
+   * Memoize the mapping to prevent unecessary updates and not have
+   * to use the lifecycle methods.
+   */
+  processFacetController = memoize((props: Props, state: State) => {
+    return React.Children.map(props.children, child =>
+      this.mapChildrenWithAppropriateProps({
+        child,
+        props,
+        state
+      })
+    )
+  })
 
   render() {
     return (
