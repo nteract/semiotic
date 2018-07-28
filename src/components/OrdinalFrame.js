@@ -122,7 +122,7 @@ type PieceTypes = "none" | "bar" | "clusterbar" | "point" | "swarm" | "timeline"
 
 type PieceTypeSettings = { type: PieceTypes }
 
-type Props = {
+export type OrdinalFrameProps = {
   type: PieceTypeSettings,
   summaryType: SummaryTypeSettings,
   connectorType?: Function,
@@ -225,7 +225,7 @@ type State = {
   summaryType: Object
 }
 
-class OrdinalFrame extends React.Component<Props, State> {
+class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
   static defaultProps = {
     annotations: [],
     foregroundGraphics: [],
@@ -243,7 +243,7 @@ class OrdinalFrame extends React.Component<Props, State> {
 
   static displayName = "OrdinalFrame"
 
-  constructor(props: Props) {
+  constructor(props: OrdinalFrameProps) {
     super(props)
 
     this.state = {
@@ -280,7 +280,7 @@ class OrdinalFrame extends React.Component<Props, State> {
     }
   }
 
-  calculateOrdinalFrame = (currentProps: Props) => {
+  calculateOrdinalFrame = (currentProps: OrdinalFrameProps) => {
     let oLabels
     const projectedColumns = {}
 
@@ -1272,7 +1272,7 @@ class OrdinalFrame extends React.Component<Props, State> {
     this.calculateOrdinalFrame(this.props)
   }
 
-  componentWillReceiveProps(nextProps: Props) {
+  componentWillReceiveProps(nextProps: OrdinalFrameProps) {
     if (
       (this.state.dataVersion &&
         this.state.dataVersion !== nextProps.dataVersion) ||
