@@ -149,6 +149,7 @@
     "d3-voronoi": "^1.0.2",
     "json2csv": "3.11.5",
     "labella": "1.1.4",
+    "memoize-one": "4.0.0",
     "object-assign": "4.1.1",
     "promise": "8.0.1",
     "prop-types": "15.6.0",

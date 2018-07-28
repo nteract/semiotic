@@ -86,7 +86,7 @@ import type {
 
 import type { AxisType } from "./types/annotationTypes"
 
-type Props = {
+export type XYFrameProps = {
   useSpans: boolean,
   title?: ?string | Object,
   margin?:
@@ -244,7 +244,7 @@ function mapParentsToPoints(fullDataset: Array<Object>) {
   })
 }
 
-class XYFrame extends React.Component<Props, State> {
+class XYFrame extends React.Component<XYFrameProps, State> {
   static defaultProps = {
     annotations: [],
     foregroundGraphics: undefined,
@@ -312,7 +312,7 @@ class XYFrame extends React.Component<Props, State> {
     this.calculateXYFrame(this.props, true)
   }
 
-  componentWillReceiveProps(nextProps: Props) {
+  componentWillReceiveProps(nextProps: XYFrameProps) {
     const {
       xExtent: oldXExtent = [],
       yExtent: oldYExtent = [],
@@ -387,7 +387,7 @@ class XYFrame extends React.Component<Props, State> {
     return { xScale, yScale }
   }
 
-  calculateXYFrame = (currentProps: Props, updateData: boolean) => {
+  calculateXYFrame = (currentProps: XYFrameProps, updateData: boolean) => {
     const {
       legend,
       lines,
