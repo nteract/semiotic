@@ -279,11 +279,28 @@ export const svgHighlightRule = ({
 export const findIDPiece = (pieceIDAccessor, oColumn, d) => {
   const pieceID = pieceIDAccessor(d)
   if (pieceID === "") return d
-  return (
+  const basePiece =
     pieceIDAccessor(d) &&
     oColumn &&
     oColumn.pieceData.find(r => pieceIDAccessor(r.data) === pieceIDAccessor(d))
-  )
+
+  const reactAnnotationProps = [
+    "type",
+    "label",
+    "note",
+    "connector",
+    "disabled",
+    "color",
+    "subject"
+  ]
+
+  if (basePiece) {
+    reactAnnotationProps.forEach(prop => {
+      if (d[prop]) basePiece[prop] = d[prop]
+    })
+  }
+
+  return basePiece
 }
 
 export const screenProject = ({
