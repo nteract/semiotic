@@ -27,8 +27,11 @@ import {
   svgCategoryRule,
   htmlFrameHoverRule,
   htmlColumnHoverRule,
-  screenProject
+  screenProject,
+  findIDPiece
 } from "./annotationRules/orframeRules"
+
+import { findFirstAccessorValue } from "./data/multiAccessorUtils"
 
 import Frame from "./Frame"
 
@@ -119,7 +122,7 @@ type PieceTypes = "none" | "bar" | "clusterbar" | "point" | "swarm" | "timeline"
 
 type PieceTypeSettings = { type: PieceTypes }
 
-type Props = {
+export type OrdinalFrameProps = {
   type: PieceTypeSettings,
   summaryType: SummaryTypeSettings,
   connectorType?: Function,
@@ -222,7 +225,7 @@ type State = {
   summaryType: Object
 }
 
-class OrdinalFrame extends React.Component<Props, State> {
+class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
   static defaultProps = {
     annotations: [],
     foregroundGraphics: [],
@@ -238,7 +241,9 @@ class OrdinalFrame extends React.Component<Props, State> {
     useSpans: false
   }
 
-  constructor(props: Props) {
+  static displayName = "OrdinalFrame"
+
+  constructor(props: OrdinalFrameProps) {
     super(props)
 
     this.state = {
@@ -275,7 +280,7 @@ class OrdinalFrame extends React.Component<Props, State> {
     }
   }
 
-  calculateOrdinalFrame = (currentProps: Props) => {
+  calculateOrdinalFrame = (currentProps: OrdinalFrameProps) => {
     let oLabels
     const projectedColumns = {}
 
@@ -1267,7 +1272,7 @@ class OrdinalFrame extends React.Component<Props, State> {
     this.calculateOrdinalFrame(this.props)
   }
 
-  componentWillReceiveProps(nextProps: Props) {
+  componentWillReceiveProps(nextProps: OrdinalFrameProps) {
     if (
       (this.state.dataVersion &&
         this.state.dataVersion !== nextProps.dataVersion) ||
@@ -1312,31 +1317,39 @@ class OrdinalFrame extends React.Component<Props, State> {
     let screenCoordinates = [0, 0]
 
     //TODO: Support radial??
-    if (d.coordinates || d.type === "enclose") {
-      screenCoordinates = (d.coordinates || d.neighbors).map(p =>
-        screenProject({
-          d,
+    if (d.coordinates || (d.type === "enclose" && d.neighbors)) {
+      screenCoordinates = (d.coordinates || d.neighbors).map(p => {
+        const pO = findFirstAccessorValue(oAccessor, p) || p.column
+        const oColumn = projectedColumns[pO]
+        const idPiece = findIDPiece(pieceIDAccessor, oColumn, p)
+
+        return screenProject({
           p,
           projectedColumns,
           adjustedSize,
           rScale,
           oAccessor,
           rAccessor,
-          pieceIDAccessor,
-          projection
+          idPiece,
+          projection,
+          oColumn
         })
-      )
+      })
     } else {
+      const pO = findFirstAccessorValue(oAccessor, d) || d.column
+      const oColumn = projectedColumns[pO]
+      const idPiece = findIDPiece(pieceIDAccessor, oColumn, d)
+
       screenCoordinates = screenProject({
-        d,
         p: d,
         projectedColumns,
         adjustedSize,
         rScale,
         oAccessor,
         rAccessor,
-        pieceIDAccessor,
-        projection
+        idPiece,
+        projection,
+        oColumn
       })
     }
 

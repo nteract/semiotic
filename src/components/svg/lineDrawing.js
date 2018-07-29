@@ -51,7 +51,7 @@ type LineChartTypes = {
 }
 
 type RelativeYTypes = {
-  point: Object,
+  point: ?Object,
   lines: Object,
   projectedYMiddle: string,
   projectedY: string,
@@ -469,18 +469,41 @@ export function funnelize({
 
 export function relativeY({
   point,
-  lines,
   projectedYMiddle,
   projectedY,
-  projectedX,
-  xAccessor,
   yAccessor,
-  yScale,
-  xScale,
-  idAccessor
+  yScale
 }: RelativeYTypes) {
-  if (idAccessor(point)) {
-    const thisLine = lines.data.find(l => idAccessor(l) === idAccessor(point))
+  return (
+    point &&
+    (yScale(
+      point[projectedYMiddle] ||
+        point[projectedY] ||
+        findFirstAccessorValue(yAccessor, point)
+    ) ||
+      0)
+  )
+}
+
+export function findPointByID({
+  point,
+  idAccessor,
+  lines,
+  xScale,
+  projectedX,
+  xAccessor
+}: {
+  point: Object,
+  idAccessor: Function,
+  lines: Object,
+  xScale: Function,
+  projectedX: string,
+  xAccessor: Array<Function>
+}) {
+  const pointID = idAccessor(point)
+  if (pointID) {
+    const thisLine = lines.data.find(l => idAccessor(l) === pointID)
+
     if (!thisLine) {
       return null
     }
@@ -493,14 +516,25 @@ export function relativeY({
     if (!thisPoint) {
       return null
     }
-    point = thisPoint
-  }
 
-  return (
-    yScale(
-      point[projectedYMiddle] ||
-        point[projectedY] ||
-        findFirstAccessorValue(yAccessor, point)
-    ) || 0
-  )
+    const newPoint = {
+      ...thisPoint,
+      ...thisPoint.data
+    }
+    const reactAnnotationProps = [
+      "type",
+      "label",
+      "note",
+      "connector",
+      "disabled",
+      "color",
+      "subject"
+    ]
+
+    reactAnnotationProps.forEach(prop => {
+      if (point[prop]) newPoint[prop] = point[prop]
+    })
+    return newPoint
+  }
+  return point
 }
