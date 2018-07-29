@@ -91,11 +91,11 @@ class FacetController extends React.Component<Props, State> {
   /**
    * Remove and add required annotation props for specific annotation types.
    */
-  mapChildrenWithHoverAnnotations = ({
+  generateChildAnnotations = ({
     originalAnnotations,
     state
   }: {
-    child: Element<*>,
+    originalAnnotations: Array<Object>,
     state: State
   }) => {
     const annotations = [...originalAnnotations]
@@ -133,11 +133,11 @@ class FacetController extends React.Component<Props, State> {
   }: {
     child: Element<*>,
     props: Props,
-    state: State
+    state: State,
+    originalAnnotations: Array<Object>
   }) => {
     const frameType = child.type.displayName
-    const annotations = this.mapChildrenWithHoverAnnotations({
-      child,
+    const annotations = this.generateChildAnnotations({
       state,
       originalAnnotations
     })
@@ -163,14 +163,14 @@ class FacetController extends React.Component<Props, State> {
    * to use the lifecycle methods.
    */
   processFacetController = memoize((props: Props, state: State) => {
-    return React.Children.map(props.children, (child, i) =>
-      this.mapChildrenWithAppropriateProps({
+    return React.Children.map(props.children, child => {
+      return this.mapChildrenWithAppropriateProps({
         child,
-        originalAnnotations: props.children[i].props.annotations || [],
+        originalAnnotations: child.props.annotations || [],
         props,
         state
       })
-    )
+    })
   })
 
   render() {

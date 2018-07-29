@@ -536,6 +536,5 @@ export function findPointByID({
     })
     return newPoint
   }
-  console.log("returning point", point)
   return point
 }
