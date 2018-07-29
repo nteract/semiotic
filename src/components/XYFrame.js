@@ -858,7 +858,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
 
     let screenCoordinates = []
     const idAccessor = this.state.annotatedSettings.lineIDAccessor
-    const d = findPointByID({
+    const d = baseD.coordinates ? baseD : findPointByID({
       point: baseD,
       idAccessor,
       lines,

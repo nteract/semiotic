@@ -503,6 +503,7 @@ export function findPointByID({
   const pointID = idAccessor(point)
   if (pointID) {
     const thisLine = lines.data.find(l => idAccessor(l) === pointID)
+
     if (!thisLine) {
       return null
     }
@@ -515,7 +516,26 @@ export function findPointByID({
     if (!thisPoint) {
       return null
     }
-    point = { ...thisPoint, ...thisPoint.data, type: point.type }
+
+    const newPoint = {
+      ...thisPoint,
+      ...thisPoint.data
+    }
+    const reactAnnotationProps = [
+      "type",
+      "label",
+      "note",
+      "connector",
+      "disabled",
+      "color",
+      "subject"
+    ]
+
+    reactAnnotationProps.forEach(prop => {
+      if (point[prop]) newPoint[prop] = point[prop]
+    })
+    return newPoint
   }
+  console.log("returning point", point)
   return point
 }
