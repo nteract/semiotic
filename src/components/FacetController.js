@@ -92,13 +92,13 @@ class FacetController extends React.Component<Props, State> {
    * Remove and add required annotation props for specific annotation types.
    */
   mapChildrenWithHoverAnnotations = ({
-    child,
+    originalAnnotations,
     state
   }: {
     child: Element<*>,
     state: State
   }) => {
-    const annotations = child.props.annotations || []
+    const annotations = [...originalAnnotations]
 
     if (state.facetHover) {
       const facetHoverAnnotation = { ...state.facetHover }
@@ -127,6 +127,7 @@ class FacetController extends React.Component<Props, State> {
    */
   mapChildrenWithAppropriateProps = ({
     child,
+    originalAnnotations,
     props,
     state
   }: {
@@ -135,7 +136,11 @@ class FacetController extends React.Component<Props, State> {
     state: State
   }) => {
     const frameType = child.type.displayName
-    const annotations = this.mapChildrenWithHoverAnnotations({ child, state })
+    const annotations = this.mapChildrenWithHoverAnnotations({
+      child,
+      state,
+      originalAnnotations
+    })
     const customProps = { ...props, annotations }
 
     // pieceHoverAnnotation could be an object, so we need to be explicit in checking for true
@@ -158,9 +163,10 @@ class FacetController extends React.Component<Props, State> {
    * to use the lifecycle methods.
    */
   processFacetController = memoize((props: Props, state: State) => {
-    return React.Children.map(props.children, child =>
+    return React.Children.map(props.children, (child, i) =>
       this.mapChildrenWithAppropriateProps({
         child,
+        originalAnnotations: props.children[i].props.annotations || [],
         props,
         state
       })
