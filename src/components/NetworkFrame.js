@@ -1112,8 +1112,8 @@ class NetworkFrame extends React.Component<Props, State> {
           edgeDistance
         } = networkSettings
 
-        const linkForce = forceLink().strength(
-          d => (d.weight ? d.weight * edgeStrength : edgeStrength)
+        const linkForce = forceLink().strength(d =>
+          Math.min(2.5, d.weight ? d.weight * edgeStrength : edgeStrength)
         )
 
         if (edgeDistance) {
@@ -1197,8 +1197,8 @@ class NetworkFrame extends React.Component<Props, State> {
         let currentY = 0
 
         components.forEach(({ componentNodes, componentEdges }) => {
-          const linkForce = forceLink().strength(
-            d => (d.weight ? d.weight * edgeStrength : edgeStrength)
+          const linkForce = forceLink().strength(d =>
+            Math.min(2.5, d.weight ? d.weight * edgeStrength : edgeStrength)
           )
 
           if (edgeDistance) {
@@ -1511,7 +1511,8 @@ class NetworkFrame extends React.Component<Props, State> {
 
   defaultNetworkSVGRule = ({ d, i }: { d: Object, i: number }) => {
     const {
-      projectedNodes, projectedEdges,
+      projectedNodes,
+      projectedEdges,
       nodeIDAccessor,
       nodeSizeAccessor,
       networkFrameRender
@@ -1591,7 +1592,15 @@ class NetworkFrame extends React.Component<Props, State> {
       }
     }
     if (d.type === "frame-hover") {
-      return htmlFrameHoverRule({ d, i, tooltipContent, size, useSpans, nodes: projectedNodes, nodeIDAccessor })
+      return htmlFrameHoverRule({
+        d,
+        i,
+        tooltipContent,
+        size,
+        useSpans,
+        nodes: projectedNodes,
+        nodeIDAccessor
+      })
     }
     return null
   }
