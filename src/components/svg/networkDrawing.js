@@ -331,20 +331,24 @@ export const drawEdges = ({
   const renderedData = []
   if (customMark) {
     data.forEach((d, i) => {
-      renderedData.push(
-        customMark({
-          d,
-          i,
-          renderKeyFn,
-          styleFn,
-          classFn,
-          renderMode,
-          key: renderKeyFn ? renderKeyFn(d, i) : `edge-${i}`,
-          className: `${classFn(d, i)} edge`,
-          transform: `translate(${d.x},${d.y})`,
-          baseMarkProps
-        })
-      )
+      const renderedCustomMark = customMark({
+        d,
+        i,
+        renderKeyFn,
+        styleFn,
+        classFn,
+        renderMode,
+        key: renderKeyFn ? renderKeyFn(d, i) : `edge-${i}`,
+        className: `${classFn(d, i)} edge`,
+        transform: `translate(${d.x},${d.y})`,
+        baseMarkProps
+      })
+      if (
+        renderedCustomMark.props.markType !== "path" ||
+        renderedCustomMark.props.d
+      ) {
+        renderedData.push(renderedCustomMark)
+      }
     })
   } else {
     if (type) {
@@ -355,20 +359,22 @@ export const drawEdges = ({
       }
     }
     data.forEach((d, i) => {
-      if (canvasRenderFn && canvasRenderFn(d, i) === true) {
+      const renderedD = dGenerator(d)
+
+      if (renderedD && canvasRenderFn && canvasRenderFn(d, i) === true) {
         const canvasNode = {
           baseClass: "frame-piece",
           tx: d.x,
           ty: d.y,
           d,
           i,
-          markProps: { markType: "path", d: dGenerator(d) },
+          markProps: { markType: "path", d: renderedD },
           styleFn,
           renderFn: renderMode,
           classFn
         }
         canvasDrawing.push(canvasNode)
-      } else {
+      } else if (renderedD) {
         renderedData.push(
           <Mark
             {...baseMarkProps}
@@ -376,7 +382,7 @@ export const drawEdges = ({
             markType="path"
             renderMode={renderMode ? renderMode(d, i) : undefined}
             className={`${classFn(d)} edge`}
-            d={dGenerator(d)}
+            d={renderedD}
             style={styleFn(d, i)}
             tabIndex={-1}
             role="img"
