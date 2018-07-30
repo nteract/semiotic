@@ -38,7 +38,8 @@ export default ({ padAngle = 0.01 }) => {
     targetAccessor: "target",
     hoverAnnotation: true,
     edgeWidthAccessor: "value",
-    networkType: { type: "chord", padAngle }
+    networkType: { type: "chord", padAngle },
+    edgeRenderMode: "painty"
   }
   return (
     <div>
