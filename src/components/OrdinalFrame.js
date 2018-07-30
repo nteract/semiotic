@@ -606,7 +606,12 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       projection === "vertical" ? rScaleReverse(rScale(0)) : rScale(0)
 
     oExtent.forEach((o, i) => {
-      projectedColumns[o] = { name: o, padding, pieceData: pieceData[i] }
+      projectedColumns[o] = {
+        name: o,
+        padding,
+        pieceData: pieceData[i],
+        pieces: pieceData[i]
+      }
       projectedColumns[o].x = oScale(o) + padding / 2
       projectedColumns[o].y = 0
       projectedColumns[o].middle = mappedMiddles[o] + padding / 2

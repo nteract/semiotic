@@ -6,7 +6,19 @@ import { packEnclose } from "d3-hierarchy"
 import { circleEnclosure, rectangleEnclosure } from "./baseRules"
 import SpanOrDiv from "../SpanOrDiv"
 
-export const htmlFrameHoverRule = ({ d, i, tooltipContent, useSpans }) => {
+export const htmlFrameHoverRule = ({
+  d: baseD,
+  i,
+  tooltipContent,
+  useSpans,
+  nodes,
+  nodeIDAccessor
+}) => {
+  const d =
+    baseD.x && baseD.y ? baseD : nodes.find(p => nodeIDAccessor(p) === baseD.id)
+
+  if (!d) return null
+
   let content = d.edge ? (
     <SpanOrDiv span={useSpans} className="tooltip-content">
       <p key="html-annotation-content-1">

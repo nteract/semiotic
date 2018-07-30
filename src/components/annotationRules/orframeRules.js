@@ -649,7 +649,7 @@ export const htmlFrameHoverRule = ({
       summaryLabel,
       <p key="html-annotation-content-3">{d.value}</p>
     ]
-  } else {
+  } else if (d.data) {
     contentFill = []
 
     oAccessor.forEach((actualOAccessor, i) => {
@@ -669,6 +669,8 @@ export const htmlFrameHoverRule = ({
           </p>
         )
     })
+  } else if (d.label) {
+    contentFill = d.label
   }
   let content = (
     <SpanOrDiv span={useSpans} className="tooltip-content">
@@ -712,9 +714,12 @@ export const htmlColumnHoverRule = ({
 }) => {
   //we need to ignore negative pieces to make sure the hover behavior populates on top of the positive bar
 
-  const column = d.column || projectedColumns[d.facetColumn]
+  const column =
+    d.column ||
+    projectedColumns[d.facetColumn] ||
+    projectedColumns[findFirstAccessorValue(oAccessor, d)]
 
-  const pieces = column.pieceData
+  const pieces = column.pieceData || column.pieces
 
   const positionValue =
     (summaryType.type && summaryType.type !== "none") ||
@@ -777,10 +782,12 @@ export const htmlColumnHoverRule = ({
       column,
       oAccessor
     })
-  }
-
-  if (d.type === "xy") {
-    content = d.label
+  } else if (d.label) {
+    content = (
+      <SpanOrDiv span={useSpans} className="tooltip-content">
+        {d.label}
+      </SpanOrDiv>
+    )
   }
 
   return (

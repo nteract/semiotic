@@ -1,19 +1,79 @@
 <style>
-.lightgreyaxis path {
-  stroke: lightgrey;
-}
+  .lightgreyaxis path {
+    stroke: lightgrey;
+  }
 
-.axis text {
-  fill: grey;
-}
+  .axis text {
+    fill: grey;
+  }
 
-.axis path {
-  stroke: lightgrey;
-}
+  .axis path {
+    stroke: lightgrey;
+  }
 
-.axis .baseline {
-  stroke: lightgrey;
-}
+  .axis .baseline {
+    stroke: lightgrey;
+  }
+
+
+  .annotation-xy-label .tooltip-content,
+  .annotation-network-label .tooltip-content {
+    position: relative;
+    transform: translate(calc(-50% + 7px), calc(-100% - 20px));
+  }
+
+  .annotation-xy-label .tooltip-content:before,
+  .annotation-network-label .tooltip-content:before {
+    border-right: inherit;
+    border-bottom: inherit;
+    bottom: -8px;
+    left: calc(50% - 15px);
+  }
+
+  .tooltip-content {
+    background: white;
+    border: 1px solid black;
+    color: black;
+    padding: 10px;
+    z-index: 999999;
+    min-width: 120px;
+  }
+
+  .tooltip-content:before {
+    background: inherit;
+    content: "";
+    padding: 0px;
+    transform: rotate(45deg);
+    width: 15px;
+    height: 15px;
+    position: absolute;
+    z-index: 99;
+  }
+
+  .annotation-or-label.horizontal .tooltip-content {
+    transform: translate(0, -50%);
+    position: relative;
+    left: 20px;
+  }
+
+  .annotation-or-label.horizontal .tooltip-content:before {
+    top: calc(50% - 9px);
+    left: -9px;
+    border-left: inherit;
+    border-bottom: inherit;
+  }
+
+  .annotation-or-label.vertical .tooltip-content {
+    position: relative;
+    transform: translate(-50%, calc(-100% - 20px));
+  }
+
+  .annotation-or-label.vertical .tooltip-content:before {
+    bottom: -10px;
+    left: calc(50% - 9px);
+    border-right: inherit;
+    border-bottom: inherit;
+  }
 </style>
 
 <!-- Dependencies -->
