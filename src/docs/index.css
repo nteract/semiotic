@@ -168,11 +168,6 @@ body {
   padding-top: 10px;
 }
 
-.Abacus-Filter-Menu-Title {
-  text-transform: uppercase;
-  font-size: 0.8em;
-}
-
 .annotation-xy-label .tooltip-content,
 .annotation-network-label .tooltip-content {
   position: relative;

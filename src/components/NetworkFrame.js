@@ -1511,7 +1511,7 @@ class NetworkFrame extends React.Component<Props, State> {
 
   defaultNetworkSVGRule = ({ d, i }: { d: Object, i: number }) => {
     const {
-      projectedNodes /*, projectedEdges*/,
+      projectedNodes, projectedEdges,
       nodeIDAccessor,
       nodeSizeAccessor,
       networkFrameRender
@@ -1524,8 +1524,8 @@ class NetworkFrame extends React.Component<Props, State> {
         i,
         networkFrameProps: this.props,
         networkFrameState: this.state,
-        nodes: this.state.projectedNodes,
-        edges: this.state.projectedEdges
+        nodes: projectedNodes,
+        edges: projectedEdges
       })
       if (customAnnotation !== null) {
         return customAnnotation
@@ -1576,21 +1576,22 @@ class NetworkFrame extends React.Component<Props, State> {
 
   defaultNetworkHTMLRule = ({ d, i }: { d: Object, i: number }) => {
     const { tooltipContent, size, useSpans } = this.props
+    const { projectedNodes, projectedEdges, nodeIDAccessor } = this.state
     if (this.props.htmlAnnotationRules) {
       const customAnnotation = this.props.htmlAnnotationRules({
         d,
         i,
         networkFrameProps: this.props,
         networkFrameState: this.state,
-        nodes: this.state.projectedNodes,
-        edges: this.state.projectedEdges
+        nodes: projectedNodes,
+        edges: projectedEdges
       })
       if (customAnnotation !== null) {
         return customAnnotation
       }
     }
     if (d.type === "frame-hover") {
-      return htmlFrameHoverRule({ d, i, tooltipContent, size, useSpans })
+      return htmlFrameHoverRule({ d, i, tooltipContent, size, useSpans, nodes: projectedNodes, nodeIDAccessor })
     }
     return null
   }

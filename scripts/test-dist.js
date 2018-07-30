@@ -17,8 +17,8 @@ process.on("unhandledRejection", up => {
   const page = await browser.newPage()
 
   page.setViewport({
-    width: 800,
-    height: 1000
+    width: 900,
+    height: 800
   })
 
   page.on("pageerror", err => {
