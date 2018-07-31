@@ -1,13 +1,14 @@
 {
-  'presets': [
-    'es2015',
-    'react',
-    'stage-0'
+  "presets": [
+    "flow",
+    "es2015",
+    "react",
+    "stage-0"
   ],
-  'plugins': [
-    'transform-decorators-legacy',
-    'add-module-exports',
-    'transform-object-assign',
-    'react-require'
+  "plugins": [
+    "transform-decorators-legacy",
+    "add-module-exports",
+    "transform-object-assign",
+    "react-require"
   ]
 }
