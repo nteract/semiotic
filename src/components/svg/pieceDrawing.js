@@ -19,8 +19,10 @@ export const renderLaidOutPieces = ({
   classFn,
   baseMarkProps,
   renderKeyFn,
-  ariaLabel
+  ariaLabel,
+  axis
 }) => {
+  const valueFormat = axis && axis[0] && axis[0].tickFormat
   if (!shouldRender) return null
   const renderedPieces = []
   data.forEach((d, i) => {
@@ -41,9 +43,9 @@ export const renderLaidOutPieces = ({
         renderedPieces.push(d.renderElement || d)
       } else {
         /*ariaLabel.items*/
-        const pieceAriaLabel = `${d.o} ${ariaLabel.items} value ${
-          d.piece.value
-        }`
+        const pieceAriaLabel = `${d.o} ${
+          ariaLabel.items
+        } value ${(valueFormat && valueFormat(d.piece.value)) || d.piece.value}`
         renderedPieces.push(
           <Mark
             {...baseMarkProps}

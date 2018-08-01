@@ -60,7 +60,15 @@ type Props = {
   projectedCoordinateNames: Object,
   matte?: Node,
   axes?: Array<AxisType>,
-  axesTickLines?: Node
+  axesTickLines?: Node,
+  renderOrder: $ReadOnlyArray<| "pieces"
+    | "summaries"
+    | "connectors"
+    | "edges"
+    | "nodes"
+    | "areas"
+    | "lines"
+    | "points">
 }
 
 type State = {
@@ -74,7 +82,8 @@ class Frame extends React.Component<Props, State> {
   static defaultProps = {
     annotationSettings: {},
     adjustedPosition: [0, 0],
-    projectedCoordinateNames: { x: "x", y: "y" }
+    projectedCoordinateNames: { x: "x", y: "y" },
+    renderOrder: []
   }
 
   constructor(props: Props) {
@@ -149,7 +158,8 @@ class Frame extends React.Component<Props, State> {
       canvasPostProcess,
       baseMarkProps,
       useSpans,
-      canvasRendering
+      canvasRendering,
+      renderOrder
     } = this.props
 
     const { voronoiHover } = this.state
@@ -298,6 +308,7 @@ class Frame extends React.Component<Props, State> {
                 canvasPostProcess={canvasPostProcess}
                 baseMarkProps={baseMarkProps}
                 voronoiHover={this.setVoronoi}
+                renderOrder={renderOrder}
               />
               {generatedTitle && (
                 <g className="frame-title">{generatedTitle}</g>

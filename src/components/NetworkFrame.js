@@ -449,7 +449,8 @@ type Props = {
   margin?: number | Object,
   onNodeOut?: Function,
   onNodeClick?: Function,
-  onNodeEnter?: Function
+  onNodeEnter?: Function,
+  renderOrder?: $ReadOnlyArray<"edges" | "nodes">
 }
 
 class NetworkFrame extends React.Component<Props, State> {
@@ -1628,7 +1629,8 @@ class NetworkFrame extends React.Component<Props, State> {
       name,
       downloadFields,
       download,
-      additionalDefs
+      additionalDefs,
+      renderOrder
     } = this.props
     const {
       backgroundGraphics,
@@ -1728,6 +1730,7 @@ class NetworkFrame extends React.Component<Props, State> {
         baseMarkProps={baseMarkProps}
         useSpans={!!useSpans}
         canvasRendering={!!(canvasNodes || canvasEdges)}
+        renderOrder={renderOrder}
       />
     )
   }
