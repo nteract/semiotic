@@ -58,7 +58,10 @@ class FacetController extends React.Component<Props, State> {
    */
   createExtent = (extentType: string, state: State) => {
     return state.extents && state.extents[extentType]
-      ? state.extents[extentType]
+      ? {
+          onChange: this.extentHandler(extentType),
+          extent: state.extents[extentType]
+        }
       : { onChange: this.extentHandler(extentType) }
   }
 
