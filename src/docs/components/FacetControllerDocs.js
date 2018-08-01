@@ -143,6 +143,10 @@ components.push({
   name: "Faceting"
 })
 
+const xyFrameData1 = { coordinates: orData }
+const xyFrameData2 = { coordinates: orData2 }
+const xyFrameData3 = { coordinates: orData3 }
+
 export default class FacetControllerDemo extends React.Component {
   constructor(props) {
     super(props)
@@ -242,7 +246,7 @@ export default class FacetControllerDemo extends React.Component {
               <OrdinalFrame data={orData} />
               <XYFrame
                 title={"LC1"}
-                lines={{ dimension: "one", coordinates: orData }}
+                lines={xyFrameData1}
                 annotations={[
                   {
                     column: "b",
@@ -253,14 +257,8 @@ export default class FacetControllerDemo extends React.Component {
                   }
                 ]}
               />
-              <XYFrame
-                title={"LC2"}
-                lines={{ dimension: "one", coordinates: orData2 }}
-              />
-              <XYFrame
-                title={"LC3"}
-                lines={{ dimension: "one", coordinates: orData3 }}
-              />
+              <XYFrame title={"LC2"} lines={xyFrameData2} />
+              <XYFrame title={"LC3"} lines={xyFrameData3} />
             </FacetController>
           </div>
         </div>
@@ -329,7 +327,7 @@ export default class FacetControllerDemo extends React.Component {
     <OrdinalFrame data={orData} />
     <XYFrame
       title={"LC1"}
-      lines={{ dimension: "one", coordinates: orData }}
+      lines={{ coordinates: orData }}
       annotations={[
         {
           column: "b",
@@ -342,11 +340,11 @@ export default class FacetControllerDemo extends React.Component {
     />
     <XYFrame
       title={"LC2"}
-      lines={{ dimension: "one", coordinates: orData2 }}
+      lines={{ coordinates: orData2 }}
     />
     <XYFrame
       title={"LC3"}
-      lines={{ dimension: "one", coordinates: orData3 }}
+      lines={{ coordinates: orData3 }}
     />
   </FacetController>
 </div>
