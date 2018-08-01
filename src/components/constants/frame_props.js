@@ -3,8 +3,6 @@ import PropTypes from "prop-types"
 
 export const xyFrameDataProps = [
   "lines",
-  "points",
-  "areas",
   "xScaleType",
   "yScaleType",
   "xAccessor",
