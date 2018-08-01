@@ -263,7 +263,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
       projectedCoordinateNames,
       renderPipeline = {},
       baseMarkProps = {},
-      renderOrder
+      renderOrder = []
     } = props
     this.canvasDrawing = []
     const canvasDrawing = this.canvasDrawing
