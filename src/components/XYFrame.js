@@ -159,7 +159,8 @@ export type XYFrameProps = {
   fullDataset?: Array<ProjectedPoint>,
   projectedLines?: Array<Object>,
   projectedAreas?: Array<Object>,
-  projectedPoints?: Array<Object>
+  projectedPoints?: Array<Object>,
+  renderOrder?: $ReadOnlyArray<"lines" | "points" | "areas">
 }
 
 type State = {
@@ -1268,7 +1269,8 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       canvasPoints,
       canvasLines,
       afterElements,
-      beforeElements
+      beforeElements,
+      renderOrder
     } = this.props
 
     const {
@@ -1369,6 +1371,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         baseMarkProps={baseMarkProps}
         useSpans={useSpans}
         canvasRendering={!!(canvasAreas || canvasPoints || canvasLines)}
+        renderOrder={renderOrder}
       />
     )
   }

@@ -189,7 +189,8 @@ export type OrdinalFrameProps = {
   axis?: Object | Array<Object>,
   summaryPosition?: Function,
   additionalDefs?: Node,
-  tooltipContent?: Function
+  tooltipContent?: Function,
+  renderOrder?: $ReadOnlyArray<"pieces" | "summaries" | "connectors">
 }
 
 type State = {
@@ -1204,6 +1205,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         canvasRender: pieceCanvasRender,
         styleFn: stringToFn(pieceStyle, () => ({}), true),
         classFn: stringToFn(pieceClass, () => "", true),
+        axis: arrayWrappedAxis,
         ariaLabel: typeAriaLabel
       }
     }
@@ -1552,7 +1554,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       baseMarkProps,
       useSpans,
       canvasPieces,
-      canvasSummaries
+      canvasSummaries,
+      renderOrder
     } = this.props
 
     const {
@@ -1661,6 +1664,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         canvasPostProcess={canvasPostProcess}
         baseMarkProps={baseMarkProps}
         canvasRendering={!!(canvasPieces || canvasSummaries)}
+        renderOrder={renderOrder}
       />
     )
   }

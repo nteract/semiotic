@@ -29,7 +29,15 @@ type Props = {
   baseMarkProps?: Object,
   projectedCoordinateNames: Object,
   position: Array<number>,
-  disableContext?: boolean
+  disableContext?: boolean,
+  renderOrder: $ReadOnlyArray<| "pieces"
+    | "summaries"
+    | "connectors"
+    | "edges"
+    | "nodes"
+    | "areas"
+    | "lines"
+    | "points">
 }
 
 type State = {
@@ -254,19 +262,25 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
       dataVersion,
       projectedCoordinateNames,
       renderPipeline = {},
-      baseMarkProps = {}
+      baseMarkProps = {},
+      renderOrder
     } = props
     this.canvasDrawing = []
     const canvasDrawing = this.canvasDrawing
 
     const renderedElements = []
-    Object.keys(renderPipeline).forEach(k => {
+    const renderKeys = renderOrder.concat(
+      Object.keys(renderPipeline).filter(d => renderOrder.indexOf(d) === -1)
+    )
+
+    renderKeys.forEach(k => {
       const pipe = renderPipeline[k]
       if (
-        (pipe.data &&
+        pipe &&
+        ((pipe.data &&
           typeof pipe.data === "object" &&
           !Array.isArray(pipe.data)) ||
-        (pipe.data && pipe.data.length > 0)
+          (pipe.data && pipe.data.length > 0))
       ) {
         const renderedPipe = pipe.behavior({
           xScale,
