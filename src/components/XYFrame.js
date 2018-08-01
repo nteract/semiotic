@@ -341,17 +341,17 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       (oldXExtent[1] !== newXExtent[1] && newXExtent[1] !== undefined) ||
       (oldYExtent[1] !== newYExtent[1] && newYExtent[1] !== undefined)
 
-    const lineChange = 
+    const lineChange =
       (Array.isArray(lineData) &&
         Array.isArray(newLines) &&
         !!lineData.find(p => newLines.indexOf(p) === -1)) ||
-        lineData !== newLines
+      lineData !== newLines
 
     const areaChange =
       (Array.isArray(areaData) &&
         Array.isArray(newAreas) &&
         !!areaData.find(p => newAreas.indexOf(p) === -1)) ||
-        areaData !== newAreas
+      areaData !== newAreas
 
     if (
       (oldDataVersion && oldDataVersion !== newDataVersion) ||
@@ -359,7 +359,8 @@ class XYFrame extends React.Component<XYFrameProps, State> {
     ) {
       this.calculateXYFrame(nextProps, true)
     } else if (
-      lineChange || areaChange ||
+      lineChange ||
+      areaChange ||
       oldSize[0] !== newSize[0] ||
       oldSize[1] !== newSize[1] ||
       extentChange ||
@@ -367,7 +368,8 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         xyFrameChangeProps.find(d => this.props[d] !== nextProps[d]))
     ) {
       const dataChanged =
-        lineChange || areaChange ||
+        lineChange ||
+        areaChange ||
         extentChange ||
         !!xyFrameDataProps.find(d => this.props[d] !== nextProps[d])
 
@@ -467,20 +469,22 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       lineType: objectifyType(lineType),
       areaType: objectifyType(areaType),
       lineIDAccessor: stringToFn(lineIDAccessor, l => l.semioticLineID),
-      areas: !areas
-        ? undefined
-        : !Array.isArray(areas)
-          ? [areas]
-          : !areaDataAccessor && (!areas[0] || !areas[0].coordinates)
-            ? [{ coordinates: areas }]
-            : areas,
-      lines: !lines
-        ? undefined
-        : !Array.isArray(lines)
-          ? [lines]
-          : !lineDataAccessor && (!lines[0] || !lines[0].coordinates)
-            ? [{ coordinates: lines }]
-            : lines,
+      areas:
+        !areas || (Array.isArray(areas) && !areas[0])
+          ? undefined
+          : !Array.isArray(areas)
+            ? [areas]
+            : !areaDataAccessor && !areas[0].coordinates
+              ? [{ coordinates: areas }]
+              : areas,
+      lines:
+        !lines || (Array.isArray(lines) && !lines[0])
+          ? undefined
+          : !Array.isArray(lines)
+            ? [lines]
+            : !lineDataAccessor && !lines[0].coordinates
+              ? [{ coordinates: lines }]
+              : lines,
       title:
         typeof title === "object" &&
         !React.isValidElement(title) &&
