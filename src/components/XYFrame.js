@@ -342,14 +342,14 @@ class XYFrame extends React.Component<XYFrameProps, State> {
 
     const lineChange = 
       (Array.isArray(lineData) &&
-        !Array.isArray(newLines) &&
-        lineData.find(p => newLines.indexOf(p) === -1)) ||
+        Array.isArray(newLines) &&
+        !!lineData.find(p => newLines.indexOf(p) === -1)) ||
         lineData !== newLines
 
     const areaChange =
       (Array.isArray(areaData) &&
-        !Array.isArray(newAreas) &&
-        areaData.find(p => newAreas.indexOf(p) === -1)) ||
+        Array.isArray(newAreas) &&
+        !!areaData.find(p => newAreas.indexOf(p) === -1)) ||
         areaData !== newAreas
 
     if (
@@ -368,7 +368,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       const dataChanged =
         lineChange || areaChange ||
         extentChange ||
-        xyFrameDataProps.find(d => this.props[d] !== nextProps[d])
+        !!xyFrameDataProps.find(d => this.props[d] !== nextProps[d])
 
       this.calculateXYFrame(nextProps, dataChanged)
     }
