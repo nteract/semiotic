@@ -153,7 +153,8 @@ export default class FacetControllerDemo extends React.Component {
 
     this.state = {
       type: "partition",
-      projection: "radial"
+      projection: "radial",
+      xyframe: xyFrameData3
     }
   }
   render() {
@@ -165,6 +166,23 @@ export default class FacetControllerDemo extends React.Component {
       name: "Basic",
       demo: (
         <div>
+          <button
+            style={{ color: "black" }}
+            onClick={() =>
+              this.setState({
+                xyframe: {
+                  coordinates: orData3.map((d, i) => ({
+                    column: "d",
+                    color: "darkred",
+                    step: i,
+                    value: i * 10
+                  }))
+                }
+              })
+            }
+          >
+            Change
+          </button>
           <div style={{ display: "flex" }}>
             <FacetController
               size={[300, 300]}
@@ -200,7 +218,7 @@ export default class FacetControllerDemo extends React.Component {
             >
               <XYFrame lines={[xyFrameData1]} />
               <XYFrame lines={[xyFrameData2]} />
-              <XYFrame lines={[xyFrameData3]} />
+              <XYFrame lines={[this.state.xyframe]} />
             </FacetController>
           </div>
           <div style={{ display: "flex" }}>
