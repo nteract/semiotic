@@ -471,14 +471,14 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         ? undefined
         : !Array.isArray(areas)
           ? [areas]
-          : !areaDataAccessor && !areas[0].coordinates
+          : !areaDataAccessor && (!areas[0] || !areas[0].coordinates)
             ? [{ coordinates: areas }]
             : areas,
       lines: !lines
         ? undefined
         : !Array.isArray(lines)
           ? [lines]
-          : !lineDataAccessor && !lines[0].coordinates
+          : !lineDataAccessor && (!lines[0] || !lines[0].coordinates)
             ? [{ coordinates: lines }]
             : lines,
       title:
