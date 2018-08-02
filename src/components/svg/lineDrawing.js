@@ -519,6 +519,7 @@ export function findPointByID({
     }
 
     const newPoint = {
+      ...point,
       ...thisPoint,
       ...thisPoint.data,
       parentLine: thisLine
