@@ -167,7 +167,7 @@ export default class FacetControllerDemo extends React.Component {
     this.state = {
       type: "partition",
       projection: "radial",
-      xyframe: xyFrameData3
+      xyframe: { ...xyFrameData3 }
     }
   }
   render() {
@@ -184,9 +184,8 @@ export default class FacetControllerDemo extends React.Component {
             onClick={() =>
               this.setState({
                 xyframe: {
+                  color: "darkred",
                   coordinates: orData3.map((d, i) => ({
-                    column: "d",
-                    color: "darkred",
                     step: i,
                     value: i * 10
                   }))
