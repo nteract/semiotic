@@ -585,7 +585,7 @@ export default class OrdinalFrameDocs extends React.Component {
             data={dataTypeHash[this.state.dataType].data}
             axis={{ orient: "left" }}
             projection={this.state.projection}
-            type={actualType}
+            type={"clusterbar" || actualType}
             renderMode={
               (this.state.renderFn !== "none" && this.state.renderFn) ||
               undefined
@@ -630,7 +630,7 @@ export default class OrdinalFrameDocs extends React.Component {
             }
             connectorStyle={dataTypeHash[this.state.dataType].connectorStyle}
             hoverAnnotation={this.state.hoverBehavior === "general"}
-            pieceHoverAnnotation={this.state.hoverBehavior === "piece"}
+            pieceHoverAnnotation={true}
             dynamicColumnWidth={
               this.state.dynamicColumnWidth === "fixed"
                 ? undefined

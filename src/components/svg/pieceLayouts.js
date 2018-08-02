@@ -273,8 +273,10 @@ export function clusterBarLayout({
         xPosition = piece.base
         finalHeight = clusterWidth
         finalWidth = piece.scaledValue
+        xy.x = piece.scaledValue
         if (piece.negative) {
           xPosition -= piece.scaledValue
+          xy.x = xPosition
         }
       }
 
@@ -290,6 +292,7 @@ export function clusterBarLayout({
           i,
           translate
         }))
+        xy.x = xPosition
       } else {
         xPosition += currentX
         yPosition += currentY
@@ -302,11 +305,13 @@ export function clusterBarLayout({
           rx: 0,
           ry: 0
         }
+        if (projection === "vertical") {
+          xy.x = xPosition
+        }
       }
 
       const eventListeners = eventListenersGenerator(piece, i)
 
-      xy.x = xPosition
       xy.y = yPosition
       xy.middle = clusterWidth / 2
       xy.height = finalHeight
