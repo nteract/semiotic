@@ -143,9 +143,22 @@ components.push({
   name: "Faceting"
 })
 
-const xyFrameData1 = { coordinates: orData }
-const xyFrameData2 = { coordinates: orData2 }
-const xyFrameData3 = { coordinates: orData3 }
+const xyFrameData1 = {
+  color: "darkred",
+  coordinates: orData.map(d => ({ ...d }))
+}
+const xyFrameData2 = {
+  color: "darkred",
+  coordinates: orData2.map(d => ({ ...d }))
+}
+const xyFrameData3 = {
+  color: "darkred",
+  coordinates: orData3.map(d => ({ ...d }))
+}
+const xyFrameDataBase = {
+  color: "gray",
+  coordinates: orData3.map(d => ({ ...d }))
+}
 
 export default class FacetControllerDemo extends React.Component {
   constructor(props) {
@@ -208,17 +221,28 @@ export default class FacetControllerDemo extends React.Component {
               margin={{ top: 10, left: 55, bottom: 40, right: 10 }}
               xAccessor="step"
               yAccessor="value"
-              lineStyle={{ stroke: "darkred" }}
+              lineStyle={d => ({ stroke: d.color })}
               hoverAnnotation={true}
-              lineIDAccessor={() => true}
+              lineIDAccessor={d => d.color}
               axes={[{ orient: "left" }, { orient: "bottom" }]}
               sharedXExtent={true}
               sharedYExtent={true}
               title="LINE"
+              tooltipContent={d => {
+                return (
+                  <div
+                    className="tooltip-content"
+                    style={{ background: d.parentLine.color }}
+                  >
+                    TOOLTIP:
+                    {d.parentLine.color}
+                  </div>
+                )
+              }}
             >
-              <XYFrame lines={[xyFrameData1]} />
-              <XYFrame lines={[xyFrameData2]} />
-              <XYFrame lines={[this.state.xyframe]} />
+              <XYFrame lines={[xyFrameData1, xyFrameDataBase]} />
+              <XYFrame lines={[xyFrameData2, xyFrameDataBase]} />
+              <XYFrame lines={[this.state.xyframe, xyFrameDataBase]} />
             </FacetController>
           </div>
           <div style={{ display: "flex" }}>

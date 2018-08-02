@@ -1486,7 +1486,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         pieceIDAccessor,
         projectedColumns,
         adjustedSize,
-        rScale
+        rScale,
+        type
       })
     } else if (d.type === "column-hover") {
       return htmlColumnHoverRule({

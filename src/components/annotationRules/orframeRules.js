@@ -590,7 +590,8 @@ export const htmlFrameHoverRule = ({
   pieceIDAccessor,
   projectedColumns,
   adjustedSize,
-  rScale
+  rScale,
+  type
 }) => {
   tooltipContent =
     tooltipContent === "pie"
@@ -611,18 +612,19 @@ export const htmlFrameHoverRule = ({
     return null
   }
 
-  const screenCoordinates = d.isSummaryData
-    ? [d.x, d.y]
-    : screenProject({
-        p: d,
-        adjustedSize,
-        rScale,
-        oColumn,
-        oAccessor,
-        rAccessor,
-        idPiece,
-        projection
-      })
+  const screenCoordinates =
+    type.type === "clusterbar" || d.isSummaryData
+      ? [d.x, d.y]
+      : screenProject({
+          p: d,
+          adjustedSize,
+          rScale,
+          oColumn,
+          oAccessor,
+          rAccessor,
+          idPiece,
+          projection
+        })
 
   if (d.isSummaryData) {
     let summaryContent = d.label

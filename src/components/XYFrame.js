@@ -906,11 +906,6 @@ class XYFrame extends React.Component<XYFrameProps, State> {
 
     if (!d) return null
 
-    if (!d.parentLine && lines.data.length !== 0) {
-      const thisLine = lines.data.find(l => idAccessor(l) === idAccessor(d))
-      if (thisLine && !d.parentLine) d.parentLine = thisLine
-    }
-
     const margin = calculateMargin({
       margin: this.props.margin,
       axes: this.props.axes,
@@ -1109,11 +1104,6 @@ class XYFrame extends React.Component<XYFrameProps, State> {
 
     if (!d) {
       return null
-    }
-
-    if (lines.data.length !== 0) {
-      const thisLine = lines.data.find(l => idAccessor(l) === idAccessor(d))
-      if (thisLine && !d.parentLine) d.parentLine = thisLine
     }
 
     const xCoord = d[projectedX] || findFirstAccessorValue(xAccessor, d)

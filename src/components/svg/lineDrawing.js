@@ -500,7 +500,8 @@ export function findPointByID({
   projectedX: string,
   xAccessor: Array<Function>
 }) {
-  const pointID = idAccessor(point)
+  const pointID = idAccessor(point.parentLine || point)
+
   if (pointID) {
     const thisLine = lines.data.find(l => idAccessor(l) === pointID)
 
@@ -519,7 +520,8 @@ export function findPointByID({
 
     const newPoint = {
       ...thisPoint,
-      ...thisPoint.data
+      ...thisPoint.data,
+      parentLine: thisLine
     }
     const reactAnnotationProps = [
       "type",
