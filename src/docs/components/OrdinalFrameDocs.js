@@ -342,6 +342,7 @@ export default class OrdinalFrameDocs extends React.Component {
   render() {
     const typeOptions = [
       "bar",
+      "barpercent",
       "clusterbar",
       "point",
       "swarm",
@@ -585,7 +586,7 @@ export default class OrdinalFrameDocs extends React.Component {
             data={dataTypeHash[this.state.dataType].data}
             axis={{ orient: "left" }}
             projection={this.state.projection}
-            type={"clusterbar" || actualType}
+            type={actualType}
             renderMode={
               (this.state.renderFn !== "none" && this.state.renderFn) ||
               undefined
