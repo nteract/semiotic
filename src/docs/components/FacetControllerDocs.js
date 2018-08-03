@@ -1,6 +1,11 @@
 import React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
-import { FacetController, OrdinalFrame, XYFrame } from "../../components"
+import {
+  FacetController,
+  OrdinalFrame,
+  XYFrame,
+  ResponsiveXYFrame
+} from "../../components"
 
 const orData = [
   {
@@ -285,6 +290,36 @@ export default class FacetControllerDemo extends React.Component {
               />
               <XYFrame title={"LC2"} lines={xyFrameData2} />
               <XYFrame title={"LC3"} lines={xyFrameData3} />
+            </FacetController>
+          </div>
+          <div style={{ width: "100%" }}>
+            <FacetController
+              size={[300, 300]}
+              responsiveWidth={true}
+              margin={{ top: 10, left: 55, bottom: 40, right: 10 }}
+              xAccessor="step"
+              yAccessor="value"
+              lineStyle={{ stroke: "darkred" }}
+              hoverAnnotation={true}
+              lineIDAccessor={() => true}
+              axes={[{ orient: "left" }, { orient: "bottom" }]}
+              sharedXExtent={true}
+              sharedYExtent={true}
+              oPadding={5}
+              oAccessor="column"
+              rAccessor="value"
+              type="bar"
+              style={d => ({ fill: d.color })}
+              pieceHoverAnnotation={true}
+              pieceIDAccessor="color"
+              sharedRExtent={true}
+              axis={{ orient: "left" }}
+            >
+              <ResponsiveXYFrame title={"LC1"} lines={xyFrameData1} />
+              <div>JUST A DIV</div>
+              <ResponsiveXYFrame title={"LC2"} lines={xyFrameData2} />
+              <div>JUST A ANOTHER DIV</div>
+              <ResponsiveXYFrame title={"LC3"} lines={xyFrameData3} />
             </FacetController>
           </div>
         </div>

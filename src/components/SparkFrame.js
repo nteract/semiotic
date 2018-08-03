@@ -25,14 +25,6 @@ function sparkNetworkSettings(originalSettings = "force") {
 
 const createSparkFrame = (Frame, defaults) =>
   class SparkFrame extends React.Component {
-    static propTypes = {
-      size: PropTypes.oneOfType([PropTypes.array, PropTypes.number])
-    }
-
-    static defaultProps = {
-      size: []
-    }
-
     constructor(props) {
       super(props)
 
@@ -40,6 +32,16 @@ const createSparkFrame = (Frame, defaults) =>
         containerHeight: props.size[1],
         containerWidth: props.size[0]
       }
+    }
+
+    static displayName = Frame.displayName
+
+    static propTypes = {
+      size: PropTypes.oneOfType([PropTypes.array, PropTypes.number])
+    }
+
+    static defaultProps = {
+      size: []
     }
 
     _onResize = (width, height) => {

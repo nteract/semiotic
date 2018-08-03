@@ -6,7 +6,8 @@ import memoize from "memoize-one"
 import {
   xyframeproptypes,
   ordinalframeproptypes,
-  networkframeproptypes
+  networkframeproptypes,
+  responsiveprops
 } from "./constants/frame_props"
 
 import type { Node, Element } from "react"
@@ -16,7 +17,10 @@ import type { XYFrameProps } from "./XYFrame"
 const framePropHash = {
   NetworkFrame: networkframeproptypes,
   XYFrame: xyframeproptypes,
-  OrdinalFrame: ordinalframeproptypes
+  OrdinalFrame: ordinalframeproptypes,
+  ResponsiveNetworkFrame: { ...networkframeproptypes, ...responsiveprops },
+  ResponsiveXYFrame: { ...xyframeproptypes, ...responsiveprops },
+  ResponsiveOrdinalFrame: { ...ordinalframeproptypes, ...responsiveprops }
 }
 
 function validFrameProps(originalProps, frameType) {
@@ -141,6 +145,9 @@ class FacetController extends React.Component<Props, State> {
     originalAnnotations: Array<Object>
   }) => {
     const frameType = child.type.displayName
+    if (!frameType) {
+      return child
+    }
     const annotations = this.generateChildAnnotations({
       state,
       originalAnnotations
@@ -152,9 +159,12 @@ class FacetController extends React.Component<Props, State> {
       customProps.customHoverBehavior = d => this.setState({ facetHover: d })
     }
 
-    if (frameType === "OrdinalFrame") {
+    if (
+      frameType === "OrdinalFrame" ||
+      frameType === "ResponsiveOrdinalFrame"
+    ) {
       customProps.rExtent = this.createExtent("rExtent", state)
-    } else if (frameType === "XYFrame") {
+    } else if (frameType === "XYFrame" || frameType === "ResponsiveXYFrame") {
       customProps.xExtent = this.createExtent("xExtent", state)
       customProps.yExtent = this.createExtent("yExtent", state)
     }
