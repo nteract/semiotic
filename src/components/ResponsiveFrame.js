@@ -4,6 +4,15 @@ import elementResizeEvent from "./vendor/element-resize-event"
 
 const createResponsiveFrame = Frame =>
   class ResponsiveFrame extends React.Component {
+    constructor(props) {
+      super(props)
+
+      this.state = {
+        containerHeight: undefined,
+        containerWidth: undefined
+      }
+    }
+
     static propTypes = {
       size: PropTypes.array
     }
@@ -13,14 +22,7 @@ const createResponsiveFrame = Frame =>
       debounce: 200
     }
 
-    constructor(props) {
-      super(props)
-
-      this.state = {
-        containerHeight: undefined,
-        containerWidth: undefined
-      }
-    }
+    static displayName = `Responsive${Frame.displayName}`
 
     isResizing = false
 

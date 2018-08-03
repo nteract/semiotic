@@ -206,9 +206,21 @@ export const xyframeproptypes = {
   areaDataAccessor: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
   lineType: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
   areaType: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-  lineRenderMode: PropTypes.oneOfType([PropTypes.string, PropTypes.object, PropTypes.func]),
-  pointRenderMode: PropTypes.oneOfType([PropTypes.string, PropTypes.object, PropTypes.func]),
-  areaRenderMode: PropTypes.oneOfType([PropTypes.string, PropTypes.object, PropTypes.func]),
+  lineRenderMode: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.object,
+    PropTypes.func
+  ]),
+  pointRenderMode: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.object,
+    PropTypes.func
+  ]),
+  areaRenderMode: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.object,
+    PropTypes.func
+  ]),
   showLinePoints: PropTypes.bool,
   defined: PropTypes.func,
   lineStyle: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
@@ -239,7 +251,7 @@ export const ordinalframeproptypes = {
   oAccessor: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
   rAccessor: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
   oPadding: PropTypes.number,
-  projection: PropTypes.oneOf(["vertical", "horizontal", "radial"]), 
+  projection: PropTypes.oneOf(["vertical", "horizontal", "radial"]),
   type: PropTypes.oneOfType([
     PropTypes.string,
     PropTypes.object,
@@ -254,15 +266,27 @@ export const ordinalframeproptypes = {
   sortO: PropTypes.func,
   pixelColumnWidth: PropTypes.number,
   dynamicColumnWidth: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
-  renderMode: PropTypes.oneOfType([PropTypes.string, PropTypes.func, PropTypes.object]),
-  summaryRenderMode: PropTypes.oneOfType([PropTypes.string, PropTypes.func, PropTypes.object]),
-  connectorRenderMode: PropTypes.oneOfType([PropTypes.string, PropTypes.func, PropTypes.object]),
+  renderMode: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.func,
+    PropTypes.object
+  ]),
+  summaryRenderMode: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.func,
+    PropTypes.object
+  ]),
+  connectorRenderMode: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.func,
+    PropTypes.object
+  ]),
   style: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
   connectorStyle: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
   summaryStyle: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
   canvasPieces: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
   canvasConnectors: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
-  canvasSummaries:  PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
+  canvasSummaries: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
   summaryPosition: PropTypes.func,
   oLabel: PropTypes.oneOfType([
     PropTypes.bool,
@@ -306,4 +330,10 @@ export const networkframeproptypes = {
   customNodeIcon: PropTypes.func,
   zoomToFit: PropTypes.bool,
   edgeType: PropTypes.oneOfType([PropTypes.string, PropTypes.func])
+}
+
+export const responsiveprops = {
+  responsiveWidth: PropTypes.bool,
+  responsiveHeight: PropTypes.bool,
+  debounce: PropTypes.number
 }
