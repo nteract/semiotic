@@ -395,6 +395,24 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
 
     let oExtent = oExtentSettings.extent || calculatedOExtent
 
+    if (pieceType.type === "barpercent") {
+      const oExtentSums = oExtent
+        .map(d =>
+          allData.filter(p => p.column === d).reduce((p, c) => p + c.value, 0)
+        )
+        .reduce((p, c, i) => {
+          p[oExtent[i]] = c
+          return p
+        }, {})
+
+      allData.forEach(d => {
+        d.value =
+          (oExtentSums[d.column] && d.value / oExtentSums[d.column]) || 0
+      })
+
+      pieceType.type = "bar"
+    }
+
     if (pixelColumnWidth) {
       if (projection === "radial") {
         console.error("pixelColumnWidth is not honored in radial mode")
