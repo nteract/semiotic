@@ -94,6 +94,7 @@ export function createPoints({
 
     if (
       renderedCustomMark &&
+      renderedCustomMark.props &&
       !renderedCustomMark.props.markType &&
       (!canvasRender || canvasRender(d.data, i) !== true)
     ) {

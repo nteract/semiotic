@@ -345,6 +345,7 @@ export const drawEdges = ({
       })
       if (
         renderedCustomMark &&
+        renderedCustomMark.props &&
         (renderedCustomMark.props.markType !== "path" ||
           renderedCustomMark.props.d)
       ) {

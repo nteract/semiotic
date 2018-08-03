@@ -1542,7 +1542,11 @@ class NetworkFrame extends React.Component<Props, State> {
         nodeSizeAccessor
       })
     } else if (d.type === "basic-node-label") {
-      return <g transform={`translate(${d.x},${d.y})`}>{d.element}</g>
+      return (
+        <g key={d.key} transform={`translate(${d.x},${d.y})`}>
+          {d.element}
+        </g>
+      )
     } else if (d.type === "react-annotation" || typeof d.type === "function") {
       return svgReactAnnotationRule({
         d,
