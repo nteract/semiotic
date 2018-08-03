@@ -265,6 +265,9 @@ export default class FacetControllerDemo extends React.Component {
               pieceIDAccessor="color"
               sharedRExtent={true}
               axis={{ orient: "left" }}
+              react15Wrapper={
+                <div style={{ display: "flex", border: "2px solid gold" }} />
+              }
             >
               <OrdinalFrame data={orData} />
               <XYFrame

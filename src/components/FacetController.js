@@ -31,7 +31,8 @@ function validFrameProps(originalProps, frameType) {
 }
 
 type FacetControllerProps = {
-  children: Node
+  children: Node,
+  react15Wrapper: Element<*>
 }
 
 type Props = FacetControllerProps & OrdinalFrameProps & XYFrameProps
@@ -177,6 +178,16 @@ class FacetController extends React.Component<Props, State> {
   })
 
   render() {
+    const Wrapper = this.props.react15Wrapper
+
+    if (Wrapper) {
+      return React.cloneElement(
+        Wrapper,
+        undefined,
+        this.processFacetController(this.props, this.state)
+      )
+    }
+
     return (
       <React.Fragment>
         {this.processFacetController(this.props, this.state)}
