@@ -36,7 +36,10 @@ function validFrameProps(originalProps, frameType) {
 
 type FacetControllerProps = {
   children: Node,
-  react15Wrapper: Element<*>
+  react15Wrapper: Element<*>,
+  sharedRExtent: boolean,
+  sharedXExtent: boolean,
+  sharedYExtent: boolean
 }
 
 type Props = FacetControllerProps & OrdinalFrameProps & XYFrameProps
