@@ -191,8 +191,8 @@ export default class FacetControllerDemo extends React.Component {
                 xyframe: {
                   color: "darkred",
                   coordinates: orData3.map((d, i) => ({
-                    step: i,
-                    value: i * 10
+                    step: i + 3,
+                    value: i * 15
                   }))
                 }
               })
@@ -229,8 +229,6 @@ export default class FacetControllerDemo extends React.Component {
               hoverAnnotation={true}
               lineIDAccessor={d => d.color}
               axes={[{ orient: "left" }, { orient: "bottom" }]}
-              sharedXExtent={true}
-              sharedYExtent={true}
               title="LINE"
               tooltipContent={d => {
                 return (
@@ -246,7 +244,11 @@ export default class FacetControllerDemo extends React.Component {
             >
               <XYFrame lines={[xyFrameData1, xyFrameDataBase]} />
               <XYFrame lines={[xyFrameData2, xyFrameDataBase]} />
-              <XYFrame lines={[this.state.xyframe, xyFrameDataBase]} />
+              <XYFrame
+                lines={[this.state.xyframe, xyFrameDataBase]}
+                xExtent={[2]}
+                invertX={true}
+              />
             </FacetController>
           </div>
           <div style={{ display: "flex" }}>
@@ -303,7 +305,6 @@ export default class FacetControllerDemo extends React.Component {
               hoverAnnotation={true}
               lineIDAccessor={() => true}
               axes={[{ orient: "left" }, { orient: "bottom" }]}
-              sharedXExtent={true}
               sharedYExtent={true}
               oPadding={5}
               oAccessor="column"
@@ -315,7 +316,11 @@ export default class FacetControllerDemo extends React.Component {
               sharedRExtent={true}
               axis={{ orient: "left" }}
             >
-              <ResponsiveXYFrame title={"LC1"} lines={xyFrameData1} />
+              <ResponsiveXYFrame
+                title={"LC1"}
+                lines={xyFrameData1}
+                invertX={true}
+              />
               <div>JUST A DIV</div>
               <ResponsiveXYFrame title={"LC2"} lines={xyFrameData2} />
               <div>JUST A ANOTHER DIV</div>

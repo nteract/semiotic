@@ -160,12 +160,24 @@ class FacetController extends React.Component<Props, State> {
     }
 
     if (
-      frameType === "OrdinalFrame" ||
-      frameType === "ResponsiveOrdinalFrame"
+      (frameType === "OrdinalFrame" ||
+        frameType === "ResponsiveOrdinalFrame") &&
+      props.sharedRExtent === true
     ) {
       customProps.rExtent = this.createExtent("rExtent", state)
-    } else if (frameType === "XYFrame" || frameType === "ResponsiveXYFrame") {
+    }
+
+    if (
+      (frameType === "XYFrame" || frameType === "ResponsiveXYFrame") &&
+      props.sharedXExtent === true
+    ) {
       customProps.xExtent = this.createExtent("xExtent", state)
+    }
+
+    if (
+      (frameType === "XYFrame" || frameType === "ResponsiveXYFrame") &&
+      props.sharedYExtent === true
+    ) {
       customProps.yExtent = this.createExtent("yExtent", state)
     }
 
