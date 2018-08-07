@@ -261,10 +261,10 @@ export const calculateDataExtent = ({
   let finalYExtent = [yMin, yMax]
   let finalXExtent = [xMin, xMax]
 
-  if (invertX) {
+  if (invertX && !(actualXExtent && actualXExtent.length === 2)) {
     finalXExtent = [finalXExtent[1], finalXExtent[0]]
   }
-  if (invertY) {
+  if (invertY && !(actualYExtent && actualYExtent.length === 2)) {
     finalYExtent = [finalYExtent[1], finalYExtent[0]]
   }
 
