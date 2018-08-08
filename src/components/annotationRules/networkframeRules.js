@@ -143,14 +143,23 @@ export const svgRectEncloseRule = ({
   }
 
   const bboxNodes = selectedNodes.map(p => {
+    if (p.shapeNode) {
+      return {
+        x0: p.x0,
+        x1: p.x1,
+        y0: p.y0,
+        y1: p.y1
+      }
+    }
     const nodeSize = nodeSizeAccessor(p)
     return {
-      x0: p.x0 === p.shapeNode ? p.x0 : p.x - nodeSize,
-      x1: p.x1 === p.shapeNode ? p.x1 : p.x + nodeSize,
-      y0: p.y0 === p.shapeNode ? p.y0 : p.y - nodeSize,
-      y1: p.y1 === p.shapeNode ? p.y1 : p.y + nodeSize
+      x0: p.x - nodeSize,
+      x1: p.x + nodeSize,
+      y0: p.y - nodeSize,
+      y1: p.y + nodeSize
     }
   })
+
   return rectangleEnclosure({ bboxNodes, d, i })
 }
 

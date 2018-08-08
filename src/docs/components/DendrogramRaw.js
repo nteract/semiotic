@@ -8,8 +8,12 @@ const colors = ["#00a2ce", "#b6a756", "#4d430c", "#b3331d"]
 export default ({
   annotation = "rectangle",
   type = "dendrogram",
-  projection
+  projection,
+  filter
 }) => {
+  const nodeFilter =
+    filter === "none" ? undefined : d => d.parent && d.parent.name === filter
+
   const hierarchicalChart = {
     title: "D3v3 API",
     size: [700, 700],
@@ -49,6 +53,7 @@ export default ({
         </div>
       )
     },
+    filterRenderedNodes: nodeFilter,
     annotations: [
       {
         type: annotation === "rectangle" ? "enclose-rect" : "enclose",

@@ -10,6 +10,8 @@ import { arc } from "d3-shape"
 import { linearRibbon } from "./SvgHelper"
 import { interpolateNumber } from "d3-interpolate"
 
+import { scaleLinear } from "d3-scale"
+
 function sankeyEdgeSort(a, b, direction) {
   if (a.circular && !b.circular) return -1
   if (b.circular && !a.circular) return 1
@@ -195,8 +197,19 @@ export const chordNodeGenerator = size => ({
   />
 )
 
-export const radialRectNodeGenerator = (size, center) => {
+export const radialRectNodeGenerator = (size, center, type) => {
   const radialArc = arc()
+  const { angleRange = [0, 360] } = type
+  const rangePct = angleRange.map(d => d / 360)
+  const rangeMod = rangePct[1] - rangePct[0]
+
+  const adjustedPct =
+    rangeMod < 1
+      ? scaleLinear()
+          .domain([0, 1])
+          .range(rangePct)
+      : d => d
+
   return ({ d, i, styleFn, renderMode, key, className, baseMarkProps }) => {
     radialArc.innerRadius(d.y0 / 2).outerRadius(d.y1 / 2)
 
@@ -207,8 +220,8 @@ export const radialRectNodeGenerator = (size, center) => {
         transform={`translate(${center})`}
         markType="path"
         d={radialArc({
-          startAngle: (d.x0 / size[0]) * Math.PI * 2,
-          endAngle: (d.x1 / size[0]) * Math.PI * 2
+          startAngle: adjustedPct(d.x0 / size[0]) * Math.PI * 2,
+          endAngle: adjustedPct(d.x1 / size[0]) * Math.PI * 2
         })}
         style={styleFn(d, i)}
         renderMode={renderMode ? renderMode(d, i) : undefined}
@@ -218,6 +231,24 @@ export const radialRectNodeGenerator = (size, center) => {
       />
     )
   }
+}
+
+export const radialLabelGenerator = (node, nodei, nodeIDAccessor, size) => {
+  const anglePct = (node.x1 + node.x0) / 2 / size[0]
+  const nodeLabel = nodeIDAccessor(node, nodei)
+  const labelRotate = anglePct > 0.5 ? anglePct * 360 + 90 : anglePct * 360 - 90
+
+  return (
+    <g transform={`rotate(${labelRotate})`}>
+      {typeof nodeLabel === "string" ? (
+        <text textAnchor="middle" y={5}>
+          {nodeLabel}
+        </text>
+      ) : (
+        nodeLabel
+      )}
+    </g>
+  )
 }
 
 export const hierarchicalRectNodeGenerator = ({
