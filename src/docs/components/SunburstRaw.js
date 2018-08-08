@@ -31,7 +31,18 @@ const sunburstSettings = {
       <p>{d.data.name}</p>
     </div>
   ),
-  margin: 10
+  nodeLabels: d => {
+    return d.x1 - d.x0 < 8 ? null : (
+      <g transform="translate(0,5)">
+        <text textAnchor="middle" strokeWidth={2} stroke="white" fill="white">
+          {d.id}
+        </text>
+        <text textAnchor="middle">{d.id}</text>
+      </g>
+    )
+  },
+  margin: 10,
+  filterRenderedNodes: d => d.depth !== 0
 }
 export default (
   <div>

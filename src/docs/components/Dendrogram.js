@@ -17,9 +17,10 @@ export default class Dendrogram extends React.Component {
     super(props)
 
     this.state = {
-      type: "circlepack",
+      type: "treemap",
       projection: "vertical",
-      annotation: "rectangle"
+      annotation: "rectangle",
+      filter: "none"
     }
   }
   render() {
@@ -43,6 +44,12 @@ export default class Dendrogram extends React.Component {
       </MenuItem>
     ))
     const annotationOptions = ["rectangle", "circle"].map(d => (
+      <MenuItem key={`type-option-${d}`} label={d} value={d}>
+        {d}
+      </MenuItem>
+    ))
+
+    const filterOptions = ["none", "time", "layout", "geo"].map(d => (
       <MenuItem key={`type-option-${d}`} label={d} value={d}>
         {d}
       </MenuItem>
@@ -75,6 +82,15 @@ export default class Dendrogram extends React.Component {
         >
           {annotationOptions}
         </Select>
+      </FormControl>,
+      <FormControl key="button-4-0-0">
+        <InputLabel htmlFor="chart-projection-input">Filter</InputLabel>
+        <Select
+          value={this.state.filter}
+          onChange={e => this.setState({ filter: e.target.value })}
+        >
+          {filterOptions}
+        </Select>
       </FormControl>
     ]
 
@@ -85,7 +101,8 @@ export default class Dendrogram extends React.Component {
       demo: DendrogramRaw({
         annotation: this.state.annotation,
         type: this.state.type,
-        projection: this.state.projection
+        projection: this.state.projection,
+        filter: this.state.filter
       }),
       source: `const annotations = [
         {

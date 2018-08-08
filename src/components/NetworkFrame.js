@@ -40,7 +40,8 @@ import {
   circleNodeGenerator,
   areaLink,
   ribbonLink,
-  circularAreaLink
+  circularAreaLink,
+  radialLabelGenerator
 } from "./svg/networkDrawing"
 
 import { stringToFn } from "./data/dataFunctions"
@@ -190,11 +191,11 @@ function determineNodeIcon(baseCustomNodeIcon, networkSettings, size) {
       return sankeyNodeGenerator
     case "partition":
       return networkSettings.projection === "radial"
-        ? radialRectNodeGenerator(size, center)
+        ? radialRectNodeGenerator(size, center, networkSettings)
         : hierarchicalRectNodeGenerator
     case "treemap":
       return networkSettings.projection === "radial"
-        ? radialRectNodeGenerator(size, center)
+        ? radialRectNodeGenerator(size, center, networkSettings)
         : hierarchicalRectNodeGenerator
     case "circlepack":
       return circleNodeGenerator
@@ -450,7 +451,8 @@ type Props = {
   onNodeOut?: Function,
   onNodeClick?: Function,
   onNodeEnter?: Function,
-  renderOrder?: $ReadOnlyArray<"edges" | "nodes">
+  renderOrder?: $ReadOnlyArray<"edges" | "nodes">,
+  filterRenderedNodes: Function
 }
 
 class NetworkFrame extends React.Component<Props, State> {
@@ -461,7 +463,8 @@ class NetworkFrame extends React.Component<Props, State> {
     size: [500, 500],
     className: "",
     name: "networkframe",
-    networkType: { type: "force", iterations: 500 }
+    networkType: { type: "force", iterations: 500 },
+    filterRenderedNodes: () => true
   }
 
   static displayName = "NetworkFrame"
@@ -579,7 +582,8 @@ class NetworkFrame extends React.Component<Props, State> {
       margin: baseMargin,
       hoverAnnotation,
       customNodeIcon: baseCustomNodeIcon,
-      customEdgeIcon: baseCustomEdgeIcon
+      customEdgeIcon: baseCustomEdgeIcon,
+      filterRenderedNodes
     } = currentProps
 
     let { edgeType } = currentProps
@@ -865,11 +869,14 @@ class NetworkFrame extends React.Component<Props, State> {
           radialProjectable[networkSettings.type] &&
           networkSettings.projection === "radial"
         ) {
-          const radialPoint = pointOnArcAtAngle(
-            [adjustedSize[0] / 2, adjustedSize[1] / 2],
-            node.x / adjustedSize[0],
-            node.y / 2
-          )
+          const radialPoint =
+            node.depth === 0
+              ? [adjustedSize[0] / 2, adjustedSize[1] / 2]
+              : pointOnArcAtAngle(
+                  [adjustedSize[0] / 2, adjustedSize[1] / 2],
+                  node.x / adjustedSize[0],
+                  node.y / 2
+                )
           node.x = radialPoint[0]
           node.y = radialPoint[1]
         } else {
@@ -1285,6 +1292,14 @@ class NetworkFrame extends React.Component<Props, State> {
       this.state.graphSettings.edges = currentProps.edges
     }
 
+    //filter out user-defined nodes
+    projectedNodes = projectedNodes.filter(filterRenderedNodes)
+    projectedEdges = projectedEdges.filter(
+      d =>
+        projectedNodes.indexOf(d.target) !== -1 &&
+        projectedNodes.indexOf(d.source) !== -1
+    )
+
     if (networkSettings.direction === "flip") {
       projectedNodes.forEach(node => {
         // const ox = node.x
@@ -1320,8 +1335,9 @@ class NetworkFrame extends React.Component<Props, State> {
       networkSettings.type !== "wordcloud" &&
       networkSettings.type !== "chord" &&
       networkSettings.type !== "sankey" &&
-      (hierarchicalTypeHash[networkSettings.type] === undefined ||
-        networkSettings.nodeSize)
+      networkSettings.type !== "partition" &&
+      networkSettings.type !== "treemap" &&
+      networkSettings.type !== "circlepack"
     ) {
       const xMin = min(projectedNodes.map(p => p.x - nodeSizeAccessor(p)))
       const xMax = max(projectedNodes.map(p => p.x + nodeSizeAccessor(p)))
@@ -1330,13 +1346,38 @@ class NetworkFrame extends React.Component<Props, State> {
 
       const projectionScaleX = scaleLinear()
         .domain([xMin, xMax])
-        .range([0, adjustedSize[0]])
+        .range([margin.left, adjustedSize[0] - margin.right])
       const projectionScaleY = scaleLinear()
         .domain([yMin, yMax])
-        .range([0, adjustedSize[1]])
+        .range([margin.top, adjustedSize[1] - margin.bottom])
       projectedNodes.forEach(node => {
         node.x = projectionScaleX(node.x)
         node.y = projectionScaleY(node.y)
+      })
+    } else if (
+      networkSettings.zoom !== false &&
+      networkSettings.projection !== "radial" &&
+      (networkSettings.type === "partition" ||
+        networkSettings.type === "treemap")
+    ) {
+      const xMin = min(projectedNodes.map(p => p.x0))
+      const xMax = max(projectedNodes.map(p => p.x1))
+      const yMin = min(projectedNodes.map(p => p.y0))
+      const yMax = max(projectedNodes.map(p => p.y1))
+
+      const projectionScaleX = scaleLinear()
+        .domain([xMin, xMax])
+        .range([margin.left, adjustedSize[0] - margin.right])
+      const projectionScaleY = scaleLinear()
+        .domain([yMin, yMax])
+        .range([margin.top, adjustedSize[1] - margin.bottom])
+      projectedNodes.forEach(node => {
+        node.x = projectionScaleX(node.x)
+        node.y = projectionScaleY(node.y)
+        node.x0 = projectionScaleX(node.x0)
+        node.y0 = projectionScaleY(node.y0)
+        node.x1 = projectionScaleX(node.x1)
+        node.y1 = projectionScaleY(node.y1)
       })
     }
 
@@ -1408,9 +1449,17 @@ class NetworkFrame extends React.Component<Props, State> {
       projectedNodes.forEach((node, nodei) => {
         if (nodeLabels === true || (nodeLabels && nodeLabels(node, nodei))) {
           const actualLabel =
-            nodeLabels === true
-              ? nodeIDAccessor(node, nodei)
-              : nodeLabels(node, nodei)
+            networkSettings.projection === "radial" && node.depth !== 0
+              ? radialLabelGenerator(
+                  node,
+                  nodei,
+                  nodeLabels === true ? nodeIDAccessor : nodeLabels,
+                  adjustedSize,
+                  networkSettings
+                )
+              : nodeLabels === true
+                ? nodeIDAccessor(node, nodei)
+                : nodeLabels(node, nodei)
 
           let nodeLabel
 
