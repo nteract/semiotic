@@ -1,11 +1,10 @@
-import React from 'react'
-import DocumentComponent from '../layout/DocumentComponent'
-import SunburstRaw from './SunburstRaw'
-
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import SunburstRaw from "./SunburstRaw"
 const components = []
 
 components.push({
-  name: 'Sunburst'
+  name: "Sunburst"
 })
 
 export default class Sunburst extends React.Component {
@@ -13,18 +12,25 @@ export default class Sunburst extends React.Component {
     super(props)
 
     this.state = {
-      type: 'partition',
-      projection: 'radial'
+      type: "partition",
+      projection: "radial"
     }
   }
   render() {
-    const buttons = []
+    const buttons = [
+      <button
+        key="button"
+        onClick={() => this.setState({ zoom: !this.state.zoom })}
+      >
+        Zoom
+      </button>
+    ]
 
     const examples = []
 
     examples.push({
-      name: 'Basic',
-      demo: SunburstRaw,
+      name: "Basic",
+      demo: SunburstRaw(this.state.zoom),
       source: `
       const data = {
         name: "flare",
@@ -88,4 +94,4 @@ export default class Sunburst extends React.Component {
   }
 }
 
-Sunburst.title = 'Sunburst'
+Sunburst.title = "Sunburst"

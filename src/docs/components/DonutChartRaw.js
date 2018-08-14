@@ -4,11 +4,12 @@ import ProcessViz from "./ProcessViz"
 
 const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"]
 const data = [5, 8, 10, 15]
+const data2 = [15, 8, 5, 10]
 
 export default state => {
   const donutSettings = {
     size: [400, 400],
-    data: data,
+    data: state.changeData ? data2 : data,
     projection: "radial",
     style: (d, i) => ({
       fill: colors[i],

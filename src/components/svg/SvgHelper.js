@@ -3,8 +3,38 @@ import React from "react"
 import { select } from "d3-selection"
 import { arc, line, curveLinearClosed } from "d3-shape"
 import { Mark } from "semiotic-mark"
+import { interpolateNumber } from "d3-interpolate"
 
 const twoPI = Math.PI * 2
+
+export const arcTweener = (oldProps, newProps) => {
+  const innerRadiusInterpolator = interpolateNumber(
+    oldProps.innerRadius,
+    newProps.innerRadius
+  )
+  const outerRadiusInterpolator = interpolateNumber(
+    oldProps.outerRadius,
+    newProps.outerRadius
+  )
+  const startAngleInterpolator = interpolateNumber(
+    oldProps.startAngle,
+    newProps.startAngle
+  )
+  const endAngleInterpolator = interpolateNumber(
+    oldProps.endAngle,
+    newProps.endAngle
+  )
+
+  return t => {
+    const sliceGenerator = arc()
+      .innerRadius(innerRadiusInterpolator(t))
+      .outerRadius(outerRadiusInterpolator(t))
+    return sliceGenerator({
+      startAngle: startAngleInterpolator(t),
+      endAngle: endAngleInterpolator(t)
+    })
+  }
+}
 
 export const drawAreaConnector = ({
   x1,
@@ -71,10 +101,10 @@ export const hexToRgb = hex => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
   return result
     ? [
-      parseInt(result[1], 16),
-      parseInt(result[2], 16),
-      parseInt(result[3], 16)
-    ]
+        parseInt(result[1], 16),
+        parseInt(result[2], 16),
+        parseInt(result[3], 16)
+      ]
     : [0, 0, 0]
 }
 

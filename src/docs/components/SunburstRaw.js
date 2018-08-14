@@ -44,9 +44,12 @@ const sunburstSettings = {
   margin: 10,
   filterRenderedNodes: d => d.depth !== 0
 }
-export default (
+export default zoom => (
   <div>
     <ProcessViz frameSettings={sunburstSettings} frameType="NetworkFrame" />
-    <NetworkFrame {...sunburstSettings} />
+    <NetworkFrame
+      {...sunburstSettings}
+      edges={zoom ? { name: "flare", children: [data.children[9]] } : data}
+    />
   </div>
 )

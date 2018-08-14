@@ -4,6 +4,7 @@ import { /*area, curveCatmullRom,*/ arc } from "d3-shape"
 import pathBounds from "svg-path-bounding-box"
 import { Mark } from "semiotic-mark"
 import { scaleLinear } from "d3-scale"
+import { arcTweener } from "./SvgHelper"
 
 const twoPI = Math.PI * 2
 
@@ -72,7 +73,6 @@ const radialBarFeatureGenerator = ({
       : Math.max(startAngle, startAngle + angle - ordset.pct_padding / 2)
 
   const startAngleFinal = startAngle * twoPI
-
   const endAngleFinal = endAngle * twoPI
 
   const markD = arcGenerator({
@@ -115,7 +115,16 @@ const radialBarFeatureGenerator = ({
       d: markD,
       tx: xOffset,
       ty: yOffset,
-      transform: translate
+      transform: translate,
+      customTween: {
+        fn: arcTweener,
+        props: {
+          startAngle: startAngleFinal,
+          endAngle: endAngleFinal,
+          innerRadius: innerSize,
+          outerRadius: outerSize
+        }
+      }
     }
   }
 }
