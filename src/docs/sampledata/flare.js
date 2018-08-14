@@ -266,7 +266,7 @@ export default {
           ]
         },
         {
-          name: "data",
+          name: "vis-data",
           children: [
             { name: "Data", size: 20544 },
             { name: "DataList", size: 19788 },

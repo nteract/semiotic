@@ -75,6 +75,13 @@ export default class PieDonutDocs extends React.Component {
             {paddingOptions}
           </Select>
         </FormControl>
+      </div>,
+      <div key="button-3">
+        <button
+          onClick={() => this.setState({ changeData: !this.state.changeData })}
+        >
+          Change Data
+        </button>
       </div>
     ]
 

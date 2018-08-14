@@ -1445,7 +1445,7 @@ class NetworkFrame extends React.Component<Props, State> {
     }
 
     const nodeLabelAnnotations = []
-    if (this.props.nodeLabels && projectedNodes) {
+    if (currentProps.nodeLabels && projectedNodes) {
       projectedNodes.forEach((node, nodei) => {
         if (nodeLabels === true || (nodeLabels && nodeLabels(node, nodei))) {
           const actualLabel =
