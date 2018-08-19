@@ -13,6 +13,17 @@ const barChartData = [
   { user: "Betty", tweets: 30, retweets: 20, favorites: 10 }
 ]
 
+const longBarChartData = [
+  ...barChartData,
+  { user: "Jason1", tweets: 10, retweets: 5, favorites: 15 },
+  { user: "Susie1", tweets: 5, retweets: 100, favorites: 100 },
+  { user: "Matt1", tweets: 20, retweets: 25, favorites: 50 },
+  { user: "Betty1", tweets: 30, retweets: 20, favorites: 10 },
+  { user: "Jason2", tweets: 10, retweets: 5, favorites: 15 },
+  { user: "Susie2", tweets: 5, retweets: 100, favorites: 100 },
+  { user: "Matt2", tweets: 20, retweets: 25, favorites: 50 },
+  { user: "Betty2", tweets: 30, retweets: 20, favorites: 10 }
+]
 const inflatedBarChartData = [
   { user: "Jason", action: "tweets", value: 10 },
   { user: "Susie", action: "tweets", value: 5 },
@@ -115,7 +126,7 @@ export default class CreatingBarChart extends React.Component {
             (oLabel), margins and a title.
           </p>
           <OrdinalFrame
-            size={[300, 500]}
+            size={[500, 300]}
             data={barChartData}
             oAccessor={"user"}
             rAccessor={"tweets"}
@@ -125,8 +136,7 @@ export default class CreatingBarChart extends React.Component {
             hoverAnnotation={[]}
             customHoverBehavior={d => console.info("hover", d)}
             customClickBehavior={d => console.info("click", d)}
-            customDoubleClickBehavior={d => console.info("doub;leclick", d)}
-            renderMode="sketchy"
+            customDoubleClickBehavior={d => console.info("doubleclick", d)}
           />
         </div>
       ),
@@ -286,6 +296,90 @@ export default class CreatingBarChart extends React.Component {
             oPadding={5}
           />
 `
+    })
+
+    examples.push({
+      name: "Simple",
+      demo: (
+        <div>
+          <p>
+            To get a bar chart of that data, pass it to the data property of
+            OrdinalFrame and pass the attribute you want to split by into the
+            oAccessor (the "ordinal" or categorical mapping) and the attribute
+            you want to measure into the rAccessor (the "range" or quantitative
+            mapping). You also want to give the OrdinalFrame a "size" which is
+            an array of [height, width]. This example also turns on labels
+            (oLabel), margins and a title.
+          </p>
+          <OrdinalFrame
+            size={[600, 300]}
+            data={longBarChartData}
+            oAccessor={"user"}
+            rAccessor={"tweets"}
+            oPadding={10}
+            projection="vertical"
+            style={{ fill: "#00a2ce", stroke: "white" }}
+            type={"bar"}
+            oLabel={true}
+            //            hoverAnnotation={[]}
+            customHoverBehavior={d => console.info("hover", d)}
+            customClickBehavior={d => console.info("click", d)}
+            customDoubleClickBehavior={d => console.info("doubleclick", d)}
+            renderMode="sketchy"
+            interaction={{
+              extent: ["Matt1", "Susie2"],
+              end: e => {
+                console.info("e", e)
+              },
+              during: e => {
+                console.info("during e", e)
+              }
+            }}
+          />
+          <OrdinalFrame
+            size={[300, 600]}
+            data={longBarChartData}
+            oAccessor={"user"}
+            rAccessor={"tweets"}
+            oPadding={10}
+            projection="horizontal"
+            style={{ fill: "#00a2ce", stroke: "white" }}
+            type={"bar"}
+            oLabel={true}
+            renderMode="sketchy"
+            interaction={{
+              extent: ["Jason", "Betty"],
+              end: e => {
+                console.info("e", e)
+              },
+              during: e => {
+                console.info("during e", e)
+              }
+            }}
+          />
+        </div>
+      ),
+      source: `<OrdinalFrame
+  size={[300, 600]}
+  data={longBarChartData}
+  oAccessor={"user"}
+  rAccessor={"tweets"}
+  oPadding={10}
+  projection="horizontal"
+  style={{ fill: "#00a2ce", stroke: "white" }}
+  type={"bar"}
+  oLabel={true}
+  renderMode="sketchy"
+  interaction={{
+    extent: ["Jason", "Betty"],
+    end: e => {
+      console.info("e", e)
+    },
+    during: e => {
+      console.info("during e", e)
+    }
+  }}
+/>`
     })
 
     return (

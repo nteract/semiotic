@@ -1663,7 +1663,14 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         annotations={annotations}
         annotationSettings={annotationSettings}
         legendSettings={legendSettings}
-        interaction={interaction}
+        interaction={
+          interaction && {
+            ...interaction,
+            brush: "oBrush",
+            projection,
+            projectedColumns
+          }
+        }
         customClickBehavior={customClickBehavior}
         customHoverBehavior={customHoverBehavior}
         customDoubleClickBehavior={customDoubleClickBehavior}

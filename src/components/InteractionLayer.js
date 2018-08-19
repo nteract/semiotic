@@ -3,7 +3,7 @@
 import React from "react"
 import { brushX, brushY, brush } from "d3-brush"
 import { extent as d3Extent } from "d3-array"
-import { event } from "d3-selection"
+import { select, event } from "d3-selection"
 import { voronoi } from "d3-voronoi"
 import { Mark } from "semiotic-mark"
 
@@ -116,17 +116,26 @@ class InteractionLayer extends React.Component<Props, State> {
   }
 
   createBrush = (interaction: Object) => {
-    let semioticBrush, mappingFn, selectedExtent
+    let semioticBrush, mappingFn, selectedExtent, endMappingFn
 
     const { xScale, yScale, size } = this.props
 
+    const { projection, projectedColumns } = interaction
+
+    const actualBrush =
+      interaction.brush === "oBrush"
+        ? projection === "horizontal"
+          ? "yBrush"
+          : "xBrush"
+        : interaction.brush
+
     const {
-      extent = interaction.brush === "xyBrush"
+      extent = actualBrush === "xyBrush"
         ? [
             [xScale.invert(0), yScale.invert(0)],
             [xScale.invert(size[0]), yScale.invert(size[1])]
           ]
-        : interaction.brush === "xBrush"
+        : actualBrush === "xBrush"
           ? [xScale.invert(0), xScale.invert(size[0])]
           : [yScale.invert(0), yScale.invert(size[1])]
     } = interaction
@@ -135,24 +144,18 @@ class InteractionLayer extends React.Component<Props, State> {
       return <g />
     }
 
-    if (interaction.brush === "xBrush") {
-      if (extent.indexOf(undefined) !== -1) {
-        return <g />
-      }
-
+    if (actualBrush === "xBrush") {
       mappingFn = (d): null | Array<number> =>
         !d ? null : [xScale.invert(d[0]), xScale.invert(d[1])]
       semioticBrush = brushX()
       selectedExtent = extent.map(d => xScale(d))
-    } else if (interaction.brush === "yBrush") {
-      if (extent.indexOf(undefined) !== -1) {
-        return <g />
-      }
-
+      endMappingFn = mappingFn
+    } else if (actualBrush === "yBrush") {
       mappingFn = (d): null | Array<number> =>
         !d ? null : [yScale.invert(d[0]), yScale.invert(d[1])]
       semioticBrush = brushY()
       selectedExtent = extent.map(d => yScale(d))
+      endMappingFn = mappingFn
     } else {
       if (
         extent.indexOf(undefined) !== -1 ||
@@ -171,6 +174,62 @@ class InteractionLayer extends React.Component<Props, State> {
               [xScale.invert(d[1][0]), yScale.invert(d[1][1])]
             ]
       selectedExtent = extent.map(d => [xScale(d[0]), yScale(d[1])])
+      endMappingFn = mappingFn
+    }
+
+    if (interaction.brush === "oBrush") {
+      selectedExtent = interaction.extent
+        ? [
+            projectedColumns[interaction.extent[0]].x,
+            projectedColumns[interaction.extent[1]].x +
+              projectedColumns[interaction.extent[1]].width
+          ]
+        : null
+
+      function oMappingFn(d): null | Array<number> {
+        if (d) {
+          const foundColumns = Object.values(projectedColumns).filter(
+            c => d[1] >= c.x && d[0] <= c.x + c.width
+          )
+          return foundColumns
+        }
+        return null
+      }
+      function oEndMappingFn(d): null | Array<number> {
+        if (
+          d &&
+          event.sourceEvent &&
+          event.sourceEvent.path &&
+          event.sourceEvent.path[1] &&
+          event.sourceEvent.path[1].classList.contains("xybrush") &&
+          event.target.move
+        ) {
+          const foundColumns = Object.values(projectedColumns).filter(
+            c => d[1] >= c.x && d[0] <= c.x + c.width
+          )
+
+          const firstColumn = foundColumns[0] || { x: 0 }
+          const lastColumn = foundColumns[foundColumns.length - 1] || {
+            x: 0,
+            width: 0
+          }
+
+          const columnPosition = [
+            firstColumn.x + Math.min(5, firstColumn.width / 10),
+            lastColumn.x + lastColumn.width - Math.min(5, lastColumn.width / 10)
+          ]
+
+          select(event.sourceEvent.path[1])
+            .transition(750)
+            .call(event.target.move, columnPosition)
+
+          return foundColumns
+        }
+        return null
+      }
+
+      mappingFn = oMappingFn
+      endMappingFn = oEndMappingFn
     }
 
     semioticBrush
@@ -182,7 +241,7 @@ class InteractionLayer extends React.Component<Props, State> {
         this.brush(mappingFn(event.selection))
       })
       .on("end", () => {
-        this.brushEnd(mappingFn(event.selection))
+        this.brushEnd(endMappingFn(event.selection))
       })
 
     return (
