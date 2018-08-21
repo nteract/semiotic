@@ -186,16 +186,20 @@ class InteractionLayer extends React.Component<Props, State> {
           ]
         : null
 
-      function oMappingFn(d): null | Array<number> {
+      function oMappingFn(d): null | any {
         if (d) {
-          const foundColumns = Object.values(projectedColumns).filter(
-            c => d[1] >= c.x && d[0] <= c.x + c.width
-          )
+          // $FlowFixMe
+          const columnValues = Object.values(projectedColumns)
+
+          const foundColumns = columnValues.filter(c => {
+            // $FlowFixMe
+            return d[1] >= c.x && d[0] <= c.x + c.width
+          })
           return foundColumns
         }
         return null
       }
-      function oEndMappingFn(d): null | Array<number> {
+      function oEndMappingFn(d): null | Array<any> {
         if (
           d &&
           event.sourceEvent &&
@@ -205,11 +209,18 @@ class InteractionLayer extends React.Component<Props, State> {
           event.target.move
         ) {
           const foundColumns = Object.values(projectedColumns).filter(
+            // $FlowFixMe
             c => d[1] >= c.x && d[0] <= c.x + c.width
           )
 
-          const firstColumn = foundColumns[0] || { x: 0 }
-          const lastColumn = foundColumns[foundColumns.length - 1] || {
+          // $FlowFixMe
+          const firstColumn: { x: number, width: number } = foundColumns[0] || {
+            x: 0
+          }
+          // $FlowFixMe
+          const lastColumn: { x: number, width: number } = foundColumns[
+            foundColumns.length - 1
+          ] || {
             x: 0,
             width: 0
           }

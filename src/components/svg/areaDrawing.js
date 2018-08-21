@@ -87,7 +87,7 @@ export function hexbinning({
   const hexBinYScale = yScaleType.domain(finalYExtent).range([0, size[1]])
 
   const actualResolution =
-    (cellPx && cellPx / 2) || (bins > 1 ? 1 / bins : bins) * size[0] / 2
+    (cellPx && cellPx / 2) || ((bins > 1 ? 1 / bins : bins) * size[0]) / 2
 
   const hexbinner = hexbin()
     .x(d => hexBinXScale(d._xyfPoint[0]))
@@ -189,11 +189,11 @@ export function heatmapping({
   const heatmapBinYScale = yScaleType.domain(finalYExtent).range([size[1], 0])
 
   const actualResolution = [
-    ((xCellPx && xCellPx / size[0]) || xBinPercent) * size[0],
-    ((yCellPx && yCellPx / size[1]) || yBinPercent) * size[1]
+    Math.ceil(((xCellPx && xCellPx / size[0]) || xBinPercent) * size[0] * 10) /
+      10,
+    Math.ceil(((yCellPx && yCellPx / size[1]) || yBinPercent) * size[1] * 10) /
+      10
   ]
-
-  // const halfResolution = [actualResolution[0] / 2, actualResolution[1] / 2]
 
   data.forEach(heatmapData => {
     const grid = []
