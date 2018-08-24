@@ -4,7 +4,7 @@ import { sum } from "d3-array"
 
 import { findFirstAccessorValue } from "../data/multiAccessorUtils"
 
-const datesForUnique = d => (d instanceof Date ? d.toString() : d)
+const datesForUnique = d => (d instanceof Date ? d.getTime() : d)
 
 type AreaProjectionTypes = {
   data: Array<Object>,
