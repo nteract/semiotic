@@ -181,30 +181,25 @@ export const calculateDataExtent = ({
       xAccessor,
       yAccessor
     })
+
     projectedAreas.forEach(d => {
       const baseData = d._baseData
       if (d._xyfCoordinates[0][0][0]) {
         d._xyfCoordinates[0].forEach(multi => {
-          fullDataset = [
-            ...fullDataset,
-            ...multi.map((p, q) =>
-              Object.assign({ parentArea: d }, baseData[q], {
-                [projectedX]: p[0],
-                [projectedY]: p[1]
-              })
-            )
-          ]
-        })
-      } else {
-        fullDataset = [
-          ...fullDataset,
-          ...d._xyfCoordinates.map((p, q) =>
+          multi.map((p, q) =>
             Object.assign({ parentArea: d }, baseData[q], {
               [projectedX]: p[0],
               [projectedY]: p[1]
             })
-          )
-        ]
+          ).forEach(e => fullDataset.push(e))
+        })
+      } else {
+        d._xyfCoordinates.map((p, q) =>
+          Object.assign({ parentArea: d }, baseData[q], {
+            [projectedX]: p[0],
+            [projectedY]: p[1]
+          })
+        ).forEach(e => fullDataset.push(e))
       }
     })
   }
