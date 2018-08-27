@@ -389,8 +389,10 @@ export function createAreas({
       className = `xyframe-area ${areaClass(d)}`
     }
     let drawD = ""
+    let shouldBeValid = false
     if (d.customMark) {
       drawD = d.customMark
+      shouldBeValid = true
     } else if (d.type === "MultiPolygon") {
       d.coordinates.forEach(coord => {
         coord.forEach(c => {
@@ -411,6 +413,7 @@ export function createAreas({
         yScale,
         bounds: shapeBounds(projectedCoordinates)
       })
+      shouldBeValid = true
     } else {
       drawD = `M${d._xyfCoordinates
         .map(p => `${xScale(p[0])},${yScale(p[1])}`)
@@ -419,7 +422,7 @@ export function createAreas({
 
     const renderKey = renderKeyFn ? renderKeyFn(d, i) : `area-${i}`
 
-    if (React.isValidElement(drawD)) {
+    if (shouldBeValid && React.isValidElement(drawD)) {
       renderedAreas.push(drawD)
     } else if (canvasRender && canvasRender(d, i) === true) {
       const canvasArea = {
