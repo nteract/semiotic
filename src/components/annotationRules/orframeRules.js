@@ -688,7 +688,7 @@ export const htmlFrameHoverRule = ({
     <SpanOrDiv
       span={useSpans}
       key={`xylabel-${i}`}
-      className={`annotation annotation-or-label tooltip ${projection} ${d.className ||
+      className={`annotation annotation-or-label ${projection} ${d.className ||
         ""}`}
       style={{
         position: "absolute",
@@ -796,7 +796,7 @@ export const htmlColumnHoverRule = ({
     <SpanOrDiv
       span={useSpans}
       key={`orlabel-${i}`}
-      className={`annotation annotation-or-label tooltip ${projection} ${d.className ||
+      className={`annotation annotation-or-label ${projection} ${d.className ||
         ""}`}
       style={{
         position: "absolute",
