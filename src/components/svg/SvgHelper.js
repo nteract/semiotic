@@ -7,6 +7,18 @@ import { interpolateNumber } from "d3-interpolate"
 
 const twoPI = Math.PI * 2
 
+const dedupeRibbonPoints = (weight = 1) => (p, c) => {
+  const l = p[p.length - 1]
+  if (
+    !l ||
+    Math.round(l.x / weight) !== Math.round(c.x / weight) ||
+    Math.round(l.y / weight) !== Math.round(c.y / weight)
+  ) {
+    p.push(c)
+  }
+  return p
+}
+
 export const arcTweener = (oldProps, newProps) => {
   const innerRadiusInterpolator = interpolateNumber(
     oldProps.innerRadius,
@@ -238,7 +250,59 @@ export function linearRibbon() {
   let _interpolator = curveLinearClosed
 
   function _ribbon(pathData) {
-    const bothPoints = buildRibbon(pathData)
+    if (pathData.multiple) {
+      const original_r = _rAccessor
+      const parallelTotal = pathData.multiple.reduce((p, c) => p + c.weight, 0)
+
+      _rAccessor = () => parallelTotal
+
+      const totalPoints = buildRibbon(pathData.points)
+
+      let currentPoints = totalPoints
+        .filter(d => d.direction === "forward")
+        .reduce(dedupeRibbonPoints(), [])
+
+      const allRibbons = []
+
+      pathData.multiple.forEach((siblingPath, siblingI) => {
+        _rAccessor = () => siblingPath.weight
+        const currentRibbon = buildRibbon(currentPoints)
+        allRibbons.push(currentRibbon)
+        const nextSibling = pathData.multiple[siblingI + 1]
+
+        if (nextSibling) {
+          const currentLeftSide = currentRibbon
+            .reverse()
+            .filter(d => d.direction === "back")
+            .reduce(dedupeRibbonPoints(), [])
+
+          if (pathData.multiple[0].color === "red") {
+            console.log("currentLeftSide", currentLeftSide)
+          }
+
+          _rAccessor = () => nextSibling.weight
+
+          const leftHandInflatedRibbon = buildRibbon(currentLeftSide)
+          currentPoints = leftHandInflatedRibbon
+            .reverse()
+            .filter(d => d.direction === "back")
+            .reduce(dedupeRibbonPoints(), [])
+
+          if (pathData.multiple[0].color === "red") {
+            console.log("currentPoints", currentPoints)
+          }
+        }
+      })
+
+      _rAccessor = original_r
+      return allRibbons.map(d =>
+        _lineConstructor
+          .x(_xAccessor)
+          .y(_yAccessor)
+          .curve(_interpolator)(d)
+      )
+    }
+    const bothPoints = buildRibbon(pathData).reduce(dedupeRibbonPoints(), [])
 
     return _lineConstructor
       .x(_xAccessor)
@@ -303,8 +367,16 @@ export function linearRibbon() {
           source: points[x],
           target: points[x + 1]
         })
-        const p1 = { x: transformedPoints.x1, y: transformedPoints.y1 }
-        const p2 = { x: transformedPoints.x2, y: transformedPoints.y2 }
+        const p1 = {
+          x: transformedPoints.x1,
+          y: transformedPoints.y1,
+          direction: "forward"
+        }
+        const p2 = {
+          x: transformedPoints.x2,
+          y: transformedPoints.y2,
+          direction: "forward"
+        }
         bothCode.push(p1, p2)
         if (bothCode.length > 3) {
           const l = bothCode.length - 1
@@ -339,8 +411,16 @@ export function linearRibbon() {
           source: points[x],
           target: points[x - 1]
         })
-        const p1 = { x: transformedPoints.x1, y: transformedPoints.y1 }
-        const p2 = { x: transformedPoints.x2, y: transformedPoints.y2 }
+        const p1 = {
+          x: transformedPoints.x1,
+          y: transformedPoints.y1,
+          direction: "back"
+        }
+        const p2 = {
+          x: transformedPoints.x2,
+          y: transformedPoints.y2,
+          direction: "back"
+        }
         bothCode.push(p1, p2)
         if (bothCode.length > 3) {
           const l = bothCode.length - 1

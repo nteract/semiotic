@@ -41,7 +41,8 @@ import {
   areaLink,
   ribbonLink,
   circularAreaLink,
-  radialLabelGenerator
+  radialLabelGenerator,
+  dagreEdgeGenerator
 } from "./svg/networkDrawing"
 
 import { stringToFn } from "./data/dataFunctions"
@@ -203,6 +204,8 @@ function determineNodeIcon(baseCustomNodeIcon, networkSettings, size) {
       return wordcloudNodeGenerator
     case "chord":
       return chordNodeGenerator(size)
+    case "dagre":
+      return hierarchicalRectNodeGenerator
   }
 
   return circleNodeGenerator
@@ -210,7 +213,6 @@ function determineNodeIcon(baseCustomNodeIcon, networkSettings, size) {
 
 function determineEdgeIcon(baseCustomEdgeIcon, networkSettings, size) {
   if (baseCustomEdgeIcon) return baseCustomEdgeIcon
-
   switch (networkSettings.type) {
     case "partition":
       return () => null
@@ -222,6 +224,8 @@ function determineEdgeIcon(baseCustomEdgeIcon, networkSettings, size) {
       return () => null
     case "chord":
       return chordEdgeGenerator(size)
+    case "dagre":
+      return dagreEdgeGenerator(networkSettings.dagreGraph.graph().rankdir)
   }
   return undefined
 }
@@ -681,7 +685,30 @@ class NetworkFrame extends React.Component<Props, State> {
       this.state.graphSettings.edges !== edges ||
       hierarchicalTypeHash[networkSettings.type]
 
-    if (changedData) {
+    if (networkSettings.type === "dagre") {
+      const dagreGraph = graph
+      projectedNodes = dagreGraph.nodes().map(n => {
+        const baseNode = dagreGraph.node(n)
+        return {
+          ...baseNode,
+          x0: baseNode.x - baseNode.width / 2,
+          x1: baseNode.x + baseNode.width / 2,
+          y0: baseNode.y - baseNode.height / 2,
+          y1: baseNode.y + baseNode.height / 2,
+          id: n
+        }
+      })
+      projectedEdges = dagreGraph.edges().map(e => {
+        const baseEdge = dagreGraph.edge(e)
+
+        baseEdge.source = projectedNodes.find(p => p.id === e.v)
+        baseEdge.target = projectedNodes.find(p => p.id === e.w)
+        baseEdge.points.unshift({ x: baseEdge.source.x, y: baseEdge.source.y })
+        baseEdge.points.push({ x: baseEdge.target.x, y: baseEdge.target.y })
+        return baseEdge
+      })
+
+    } else if (changedData) {
       edgeHash = new Map()
       nodeHash = new Map()
       networkSettings.graphSettings.edgeHash = edgeHash
@@ -1337,7 +1364,8 @@ class NetworkFrame extends React.Component<Props, State> {
       networkSettings.type !== "sankey" &&
       networkSettings.type !== "partition" &&
       networkSettings.type !== "treemap" &&
-      networkSettings.type !== "circlepack"
+      networkSettings.type !== "circlepack" &&
+      networkSettings.type !== "dagre"
     ) {
       const xMin = min(projectedNodes.map(p => p.x - nodeSizeAccessor(p)))
       const xMax = max(projectedNodes.map(p => p.x + nodeSizeAccessor(p)))
@@ -1358,7 +1386,8 @@ class NetworkFrame extends React.Component<Props, State> {
       networkSettings.zoom !== false &&
       networkSettings.projection !== "radial" &&
       (networkSettings.type === "partition" ||
-        networkSettings.type === "treemap")
+        networkSettings.type === "treemap" ||
+        networkSettings.type === "dagre")
     ) {
       const xMin = min(projectedNodes.map(p => p.x0))
       const xMax = max(projectedNodes.map(p => p.x1))
@@ -1378,6 +1407,15 @@ class NetworkFrame extends React.Component<Props, State> {
         node.y0 = projectionScaleY(node.y0)
         node.x1 = projectionScaleX(node.x1)
         node.y1 = projectionScaleY(node.y1)
+      })
+
+      projectedEdges.forEach(edge => {
+        if (edge.points) {
+          edge.points.forEach(p => {
+            p.x = projectionScaleX(p.x)
+            p.y = projectionScaleY(p.y)
+          })
+        }
       })
     }
 
@@ -1405,7 +1443,8 @@ class NetworkFrame extends React.Component<Props, State> {
         legendSettings.legendGroups = legendGroups
       }
     }
-
+    console.log("customEdgeIcon", customEdgeIcon)
+    console.log("projectedEdges", projectedEdges)
     const networkFrameRender = {
       edges: {
         accessibleTransform: (data, i) => {

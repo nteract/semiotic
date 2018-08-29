@@ -339,7 +339,17 @@ const movies = [
 
 const colorHash = {
   "Ex Machina": "#4d430c",
-  "Far from the Madding Crowd": "#b6a756"
+  "Far from the Madding Crowd": "#b6a756",
+  "Ex Machina-0": "red",
+  "Far from the Madding Crowd-0": "blue",
+  "Ex Machina-1": "purple",
+  "Far from the Madding Crowd-1": "brown",
+  "Ex Machina-2": "green",
+  "Far from the Madding Crowd-2": "gold",
+  "Ex Machina-3": "black",
+  "Far from the Madding Crowd-3": "gray",
+  "Ex Machina-4": "puce",
+  "Far from the Madding Crowd-4": "red"
 }
 
 components.push({
@@ -1244,6 +1254,101 @@ Switch to lines
       </div>
     </div>
     `
+    })
+    console.log("movies", movies)
+    const manyMovies = [
+      ...movies,
+      ...movies.map(m => ({
+        ...m,
+        title: `${m.title}-0`,
+        coordinates: m.coordinates.map(d => ({
+          ...d,
+          grossWeekly: d.grossWeekly + 50000
+        }))
+      })),
+      ...movies.map(m => ({
+        ...m,
+        title: `${m.title}-1`,
+        coordinates: m.coordinates.map(d => ({
+          ...d,
+          grossWeekly: d.grossWeekly + 30000
+        }))
+      })),
+      ...movies.map(m => ({
+        ...m,
+        title: `${m.title}-2`,
+        coordinates: m.coordinates.map(d => ({
+          ...d,
+          grossWeekly: d.grossWeekly + 70000
+        }))
+      })),
+      ...movies.map(m => ({
+        ...m,
+        title: `${m.title}-3`,
+        coordinates: m.coordinates.map(d => ({
+          ...d,
+          grossWeekly: d.grossWeekly + 20000
+        }))
+      })),
+      ...movies.map(m => ({
+        ...m,
+        title: `${m.title}-4`,
+        coordinates: m.coordinates.map(d => ({
+          ...d,
+          grossWeekly: d.grossWeekly + 90000
+        }))
+      }))
+    ]
+    examples.push({
+      name: "Marginalia Line Labeling",
+      demo: (
+        <div>
+          <p>Using marginalia annotation handling to label lines</p>
+          <XYFrame
+            title={"linepercent"}
+            size={[700, 400]}
+            lines={manyMovies}
+            lineDataAccessor={d => d.coordinates.filter(p => p.week <= 10)}
+            dataVersion="fixed"
+            xAccessor={"week"}
+            yAccessor={"grossWeekly"}
+            lineType={{ type: "linepercent", interpolator: curveMonotoneX }}
+            lineStyle={d => ({
+              stroke: colorHash[d.title],
+              strokeWidth: 2
+            })}
+            margin={{ left: 50, bottom: 50, right: 100, top: 40 }}
+            axes={[
+              {
+                orient: "left",
+                tickFormat: d => `${parseInt(d * 100, 10)}%`
+              },
+              {
+                orient: "bottom"
+              }
+            ]}
+            annotations={manyMovies.map(movie => ({
+              week: 10,
+              label: movie.title,
+              title: movie.title,
+              type: "react-annotation",
+              color: colorHash[movie.title]
+            }))}
+            annotationSettings={{
+              layout: {
+                type: "marginalia",
+                orient: "right",
+                characterWidth: 8,
+                lineWidth: 20,
+                padding: 2
+              }
+            }}
+            lineIDAccessor={"title"}
+            hoverAnnotation={true}
+          />
+        </div>
+      ),
+      source: ``
     })
 
     return (
