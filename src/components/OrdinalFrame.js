@@ -382,10 +382,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
 
     const calculatedOExtent = allData.reduce((p, c) => {
       const baseOValue = c.column
-      const oValue =
-        baseOValue !== undefined && baseOValue.toString
-          ? baseOValue.toString()
-          : baseOValue
+      const oValue = baseOValue !== undefined ? String(baseOValue) : baseOValue
 
       if (p.indexOf(oValue) === -1) {
         p.push(oValue)
@@ -398,7 +395,9 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
     if (pieceType.type === "barpercent") {
       const oExtentSums = oExtent
         .map(d =>
-          allData.filter(p => p.column === d).reduce((p, c) => p + c.value, 0)
+          allData
+            .filter(p => String(p.column) === d)
+            .reduce((p, c) => p + c.value, 0)
         )
         .reduce((p, c, i) => {
           p[oExtent[i]] = c
