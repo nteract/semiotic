@@ -25,16 +25,15 @@ export default ({
       fillOpacity: 0.25
     }),
     edgeStyle: d => ({
-      fill: "none" || colors[d.source.depth],
+      fill: colors[d.source.depth],
       stroke: colors[d.source.depth],
       opacity: 0.5
     }),
     nodeIDAccessor: "name",
     hoverAnnotation: true,
-    edgeType: "curve",
     networkType: {
-      type: "dendrogram" || type,
-      projection: "radial" || projection,
+      type,
+      projection: projection,
       nodePadding: 1,
       forceManyBody: -15,
       edgeStrength: 1.5,
