@@ -6,7 +6,15 @@ import {
   d as glyphD /*, project as glyphProject, mutate as glyphMutate*/
 } from "d3-glyphedge"
 
-import { arc, curveMonotoneX, curveMonotoneY, line } from "d3-shape"
+import {
+  arc,
+  curveMonotoneX,
+  curveMonotoneY,
+  line,
+  linkHorizontal,
+  linkVertical,
+  linkRadial
+} from "d3-shape"
 import { linearRibbon } from "./SvgHelper"
 import { interpolateNumber } from "d3-interpolate"
 
@@ -37,7 +45,18 @@ function sankeyEdgeSort(a, b, direction) {
     : a.source[first] - b.source[first]
 }
 
+const sigmoidLinks = {
+  horizontal: linkHorizontal()
+    .x(d => d.x)
+    .y(d => d.y),
+  vertical: linkVertical()
+    .x(d => d.x)
+    .y(d => d.y),
+  radial: glyphD.lineArc
+}
+
 const customEdgeHashD = {
+  curve: (d, projection = "vertical") => sigmoidLinks[projection](d),
   linearc: d => glyphD.lineArc(d),
   ribbon: d => glyphD.ribbon(d, d.width),
   arrowhead: d =>
@@ -53,6 +72,27 @@ const customEdgeHashD = {
       d.target.nodeSize / 2,
       (d.source.nodeSize + d.target.nodeSize) / 4
     )
+}
+
+export const radialCurveGenerator = size => {
+  const radialCurve = linkRadial()
+    .angle(d => (d.x / size[0]) * Math.PI * 2)
+    .radius(d => d.y)
+
+  return ({ d, i, styleFn, renderMode, key, className, baseMarkProps }) => (
+    <Mark
+      {...baseMarkProps}
+      key={key}
+      transform={`translate(${50},${size[1] / 2 - 50})`}
+      markType="path"
+      d={radialCurve(d)}
+      style={styleFn(d, i)}
+      renderMode={renderMode ? renderMode(d, i) : undefined}
+      className={className}
+      aria-label={`Node ${d.id}`}
+      tabIndex={-1}
+    />
+  )
 }
 
 export const circleNodeGenerator = ({
@@ -444,7 +484,8 @@ export const drawEdges = ({
   type,
   baseMarkProps,
   networkType,
-  direction
+  direction,
+  projection
 }) => {
   const data =
     networkType === "sankey"
@@ -481,7 +522,7 @@ export const drawEdges = ({
       if (typeof type === "function") {
         dGenerator = type
       } else if (customEdgeHashD[type]) {
-        dGenerator = d => customEdgeHashD[type](d)
+        dGenerator = d => customEdgeHashD[type](d, projection)
       }
     }
     data.forEach((d, i) => {
