@@ -303,13 +303,8 @@ export default class CreatingBarChart extends React.Component {
       demo: (
         <div>
           <p>
-            To get a bar chart of that data, pass it to the data property of
-            OrdinalFrame and pass the attribute you want to split by into the
-            oAccessor (the "ordinal" or categorical mapping) and the attribute
-            you want to measure into the rAccessor (the "range" or quantitative
-            mapping). You also want to give the OrdinalFrame a "size" which is
-            an array of [height, width]. This example also turns on labels
-            (oLabel), margins and a title.
+            You can enable brushing on a whole OrdinalFrame and it will snap to
+            columns/rows.
           </p>
           <OrdinalFrame
             size={[600, 300]}
