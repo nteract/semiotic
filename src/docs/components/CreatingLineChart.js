@@ -1255,7 +1255,7 @@ Switch to lines
     </div>
     `
     })
-    console.log("movies", movies)
+
     const manyMovies = [
       ...movies,
       ...movies.map(m => ({

@@ -276,10 +276,6 @@ export function linearRibbon() {
             .filter(d => d.direction === "back")
             .reduce(dedupeRibbonPoints(), [])
 
-          if (pathData.multiple[0].color === "red") {
-            console.log("currentLeftSide", currentLeftSide)
-          }
-
           _rAccessor = () => nextSibling.weight
 
           const leftHandInflatedRibbon = buildRibbon(currentLeftSide)
@@ -287,10 +283,6 @@ export function linearRibbon() {
             .reverse()
             .filter(d => d.direction === "back")
             .reduce(dedupeRibbonPoints(), [])
-
-          if (pathData.multiple[0].color === "red") {
-            console.log("currentPoints", currentPoints)
-          }
         }
       })
 

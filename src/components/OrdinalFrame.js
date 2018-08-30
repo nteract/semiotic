@@ -116,6 +116,10 @@ type SummaryTypes =
   | "boxplot"
   | "contour"
 
+type OExtentObject = { extent?: Array<string>, onChange?: Function }
+
+type OExtentSettingsType = Array<string> | OExtentObject
+
 type SummaryTypeSettings = { type: SummaryTypes, amplitude?: number }
 
 type PieceTypes = "none" | "bar" | "clusterbar" | "point" | "swarm" | "timeline"
@@ -132,7 +136,7 @@ export type OrdinalFrameProps = {
   downloadFields: Array<string>,
   rAccessor?: accessorType,
   oAccessor?: accessorType,
-  oExtent?: ExtentSettingsType | Array<number>,
+  oExtent?: OExtentSettingsType,
   rExtent?: ExtentSettingsType | Array<number>,
   name?: string,
   download: boolean,
@@ -211,11 +215,11 @@ type State = {
   rAccessor: Array<Function>,
   oScaleType: Function,
   rScaleType: Function,
-  oExtent: Array<number>,
+  oExtent: Array<string>,
   rExtent: Array<number>,
   oScale: Function,
   rScale: Function,
-  calculatedOExtent: Array<number>,
+  calculatedOExtent: Array<string>,
   calculatedRExtent: Array<number>,
   projectedColumns: Object,
   margin: MarginType,
@@ -261,7 +265,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       oScale: xScale,
       rScale: xScale,
       axes: undefined,
-      calculatedOExtent: [0, 1],
+      calculatedOExtent: [],
       calculatedRExtent: [0, 1],
       columnOverlays: [],
       dataVersion: undefined,
@@ -375,7 +379,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       projection
     })
 
-    const oExtentSettings: ExtentSettingsType =
+    const oExtentSettings: OExtentObject =
       baseOExtent === undefined || Array.isArray(baseOExtent)
         ? { extent: baseOExtent }
         : baseOExtent
@@ -1665,7 +1669,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         interaction={
           interaction && {
             ...interaction,
-            brush: "oBrush",
+            brush: interaction.columnsBrush !== true && "oBrush",
             projection,
             projectedColumns
           }

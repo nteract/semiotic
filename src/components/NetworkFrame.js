@@ -211,7 +211,7 @@ function determineNodeIcon(baseCustomNodeIcon, networkSettings, size) {
   return circleNodeGenerator
 }
 
-function determineEdgeIcon(baseCustomEdgeIcon, networkSettings, size) {
+function determineEdgeIcon(baseCustomEdgeIcon, networkSettings, size, graph) {
   if (baseCustomEdgeIcon) return baseCustomEdgeIcon
   switch (networkSettings.type) {
     case "partition":
@@ -225,7 +225,7 @@ function determineEdgeIcon(baseCustomEdgeIcon, networkSettings, size) {
     case "chord":
       return chordEdgeGenerator(size)
     case "dagre":
-      return dagreEdgeGenerator(networkSettings.dagreGraph.graph().rankdir)
+      if (graph) return dagreEdgeGenerator(graph.graph().rankdir)
   }
   return undefined
 }
@@ -641,7 +641,8 @@ class NetworkFrame extends React.Component<Props, State> {
     const customEdgeIcon = determineEdgeIcon(
       baseCustomEdgeIcon,
       networkSettings,
-      adjustedSize
+      adjustedSize,
+      graph
     )
 
     networkSettings.graphSettings.nodes = nodes
@@ -685,7 +686,7 @@ class NetworkFrame extends React.Component<Props, State> {
       this.state.graphSettings.edges !== edges ||
       hierarchicalTypeHash[networkSettings.type]
 
-    if (networkSettings.type === "dagre") {
+    if (networkSettings.type === "dagre" && graph) {
       const dagreGraph = graph
       projectedNodes = dagreGraph.nodes().map(n => {
         const baseNode = dagreGraph.node(n)
@@ -707,7 +708,6 @@ class NetworkFrame extends React.Component<Props, State> {
         baseEdge.points.push({ x: baseEdge.target.x, y: baseEdge.target.y })
         return baseEdge
       })
-
     } else if (changedData) {
       edgeHash = new Map()
       nodeHash = new Map()
@@ -1443,8 +1443,7 @@ class NetworkFrame extends React.Component<Props, State> {
         legendSettings.legendGroups = legendGroups
       }
     }
-    console.log("customEdgeIcon", customEdgeIcon)
-    console.log("projectedEdges", projectedEdges)
+
     const networkFrameRender = {
       edges: {
         accessibleTransform: (data, i) => {
@@ -1461,6 +1460,7 @@ class NetworkFrame extends React.Component<Props, State> {
           ? currentProps.edgeRenderKey
           : d => d._NWFEdgeKey || `${d.source.id}-${d.target.id}`,
         behavior: drawEdges,
+        projection: networkSettings.projection,
         type: edgeType,
         customMark: customEdgeIcon,
         networkType: networkSettings.type,

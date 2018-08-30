@@ -140,7 +140,7 @@ class InteractionLayer extends React.Component<Props, State> {
           : [yScale.invert(0), yScale.invert(size[1])]
     } = interaction
 
-    if (extent.indexOf(undefined) !== -1) {
+    if (extent.indexOf && extent.indexOf(undefined) !== -1) {
       return <g />
     }
 
