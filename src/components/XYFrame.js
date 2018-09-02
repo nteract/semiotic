@@ -449,7 +449,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       areaDataAccessor,
       yAccessor,
       xAccessor,
-      useAreasAsInteractionLayer,
+      useAreasAsInteractionLayer
     } = currentProps
     let {
       projectedLines,
@@ -835,7 +835,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
     if (useAreasAsInteractionLayer && projectedAreas) {
       overlay = createAreas({ xScale, yScale, data: projectedAreas }).map((m, i) => ({
         ...m.props,
-        style: {fillOpacity: 0},
+        style: { fillOpacity: 0 },
         overlayData: projectedAreas[i] // luckily createAreas is a map fn
       }))
     }
@@ -879,7 +879,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       xyFrameRender,
       size,
       annotatedSettings,
-      overlay,
+      overlay
     })
   }
 
@@ -1297,7 +1297,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       legendSettings,
       xyFrameRender,
       annotatedSettings,
-      overlay,
+      overlay
     } = this.state
 
     let downloadButton
