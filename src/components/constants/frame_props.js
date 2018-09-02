@@ -237,7 +237,7 @@ export const xyframeproptypes = {
   customAreaMark: PropTypes.func,
   lineIDAccessor: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
   minimap: PropTypes.object,
-  useAreasAsInteractionLayer: PropTypes.bool,
+  useAreasAsInteractionLayer: PropTypes.bool
 }
 
 export const ordinalframeproptypes = {
