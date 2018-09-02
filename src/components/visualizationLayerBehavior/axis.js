@@ -2,7 +2,7 @@ import React from "react"
 
 import { Mark } from "semiotic-mark"
 
-const defaultTickLineGenerator = ({ xy, orient, i }) => (
+const defaultTickLineGenerator = ({ xy, orient, i, baseMarkProps }) => (
   <Mark
     key={i}
     markType="path"
@@ -12,6 +12,7 @@ const defaultTickLineGenerator = ({ xy, orient, i }) => (
     simpleInterpolate={true}
     d={`M${xy.x1},${xy.y1}L${xy.x2},${xy.y2}`}
     className={`tick-line tick ${orient}`}
+    {...baseMarkProps}
   />
 )
 
@@ -139,9 +140,10 @@ export const axisLabels = ({ axisParts, tickFormat, rotate = 0 }) => {
 export const axisLines = ({
   axisParts,
   orient,
-  tickLineGenerator = defaultTickLineGenerator
+  tickLineGenerator = defaultTickLineGenerator,
+  baseMarkProps
 }) => {
   return axisParts.map((axisPart, i) =>
-    tickLineGenerator({ xy: axisPart, orient, i })
+    tickLineGenerator({ xy: axisPart, orient, i, baseMarkProps })
   )
 }

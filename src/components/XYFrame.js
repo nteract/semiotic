@@ -449,7 +449,8 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       areaDataAccessor,
       yAccessor,
       xAccessor,
-      useAreasAsInteractionLayer
+      useAreasAsInteractionLayer,
+      baseMarkProps
     } = currentProps
     let {
       projectedLines,
@@ -660,7 +661,8 @@ class XYFrame extends React.Component<XYFrameProps, State> {
             {axisLines({
               axisParts,
               orient: d.orient,
-              tickLineGenerator: d.tickLineGenerator
+              tickLineGenerator: d.tickLineGenerator,
+              baseMarkProps
             })}
           </g>
         )
