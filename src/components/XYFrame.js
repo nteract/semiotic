@@ -160,7 +160,8 @@ export type XYFrameProps = {
   projectedLines?: Array<Object>,
   projectedAreas?: Array<Object>,
   projectedPoints?: Array<Object>,
-  renderOrder?: $ReadOnlyArray<"lines" | "points" | "areas">
+  renderOrder?: $ReadOnlyArray<"lines" | "points" | "areas">,
+  useAreasAsInteractionLayer?: boolean,
 }
 
 type State = {
@@ -195,7 +196,8 @@ type State = {
   xyFrameRender: Object,
   canvasDrawing: Array<Object>,
   size: Array<number>,
-  annotatedSettings: Object
+  annotatedSettings: Object,
+  overlay: Array<Object>,
 }
 
 const naturalLanguageLineType = {
@@ -446,7 +448,8 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       lineDataAccessor,
       areaDataAccessor,
       yAccessor,
-      xAccessor
+      xAccessor,
+      useAreasAsInteractionLayer,
     } = currentProps
     let {
       projectedLines,
@@ -828,6 +831,15 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       yExtentSettings.onChange(calculatedYExtent)
     }
 
+    let overlay = undefined
+    if (useAreasAsInteractionLayer && projectedAreas) {
+      overlay = createAreas({ xScale, yScale, data: projectedAreas }).map((m, i) => ({
+        ...m.props,
+        style: {fillOpacity: 0},
+        overlayData: projectedAreas[i] // luckily createAreas is a map fn
+      }))
+    }
+
     this.setState({
       lineData: currentProps.lines,
       pointData: currentProps.points,
@@ -866,7 +878,8 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       areaAnnotations,
       xyFrameRender,
       size,
-      annotatedSettings
+      annotatedSettings,
+      overlay,
     })
   }
 
@@ -1283,7 +1296,8 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       areaAnnotations,
       legendSettings,
       xyFrameRender,
-      annotatedSettings
+      annotatedSettings,
+      overlay,
     } = this.state
 
     let downloadButton
@@ -1366,6 +1380,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         useSpans={useSpans}
         canvasRendering={!!(canvasAreas || canvasPoints || canvasLines)}
         renderOrder={renderOrder}
+        overlay={overlay}
       />
     )
   }
