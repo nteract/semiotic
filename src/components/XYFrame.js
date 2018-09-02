@@ -197,7 +197,7 @@ type State = {
   canvasDrawing: Array<Object>,
   size: Array<number>,
   annotatedSettings: Object,
-  overlay: Array<Object>,
+  overlay?: Array<Object>,
 }
 
 const naturalLanguageLineType = {
@@ -293,7 +293,8 @@ class XYFrame extends React.Component<XYFrameProps, State> {
     legendSettings: undefined,
     xyFrameRender: {},
     canvasDrawing: [],
-    annotatedSettings: {}
+    annotatedSettings: {},
+    overlay: undefined
   }
 
   componentWillMount() {
@@ -838,7 +839,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       overlay = createAreas({ xScale, yScale, data: projectedAreas }).map((m, i) => ({
         ...m.props,
         style: { fillOpacity: 0 },
-        overlayData: projectedAreas[i] // luckily createAreas is a map fn
+        overlayData: projectedAreas && projectedAreas[i] // luckily createAreas is a map fn
       }))
     }
 
