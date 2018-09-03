@@ -160,7 +160,8 @@ export type XYFrameProps = {
   projectedLines?: Array<Object>,
   projectedAreas?: Array<Object>,
   projectedPoints?: Array<Object>,
-  renderOrder?: $ReadOnlyArray<"lines" | "points" | "areas">
+  renderOrder?: $ReadOnlyArray<"lines" | "points" | "areas">,
+  useAreasAsInteractionLayer?: boolean,
 }
 
 type State = {
@@ -195,7 +196,8 @@ type State = {
   xyFrameRender: Object,
   canvasDrawing: Array<Object>,
   size: Array<number>,
-  annotatedSettings: Object
+  annotatedSettings: Object,
+  overlay?: Array<Object>,
 }
 
 const naturalLanguageLineType = {
@@ -291,7 +293,8 @@ class XYFrame extends React.Component<XYFrameProps, State> {
     legendSettings: undefined,
     xyFrameRender: {},
     canvasDrawing: [],
-    annotatedSettings: {}
+    annotatedSettings: {},
+    overlay: undefined
   }
 
   componentWillMount() {
@@ -342,16 +345,16 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       (oldYExtent[1] !== newYExtent[1] && newYExtent[1] !== undefined)
 
     const lineChange =
+      lineData !== newLines ||
       (Array.isArray(lineData) &&
         Array.isArray(newLines) &&
-        !!lineData.find(p => newLines.indexOf(p) === -1)) ||
-      lineData !== newLines
+        !!lineData.find(p => newLines.indexOf(p) === -1))
 
     const areaChange =
+      areaData !== newAreas ||
       (Array.isArray(areaData) &&
         Array.isArray(newAreas) &&
-        !!areaData.find(p => newAreas.indexOf(p) === -1)) ||
-      areaData !== newAreas
+        !!areaData.find(p => newAreas.indexOf(p) === -1))
 
     if (
       (oldDataVersion && oldDataVersion !== newDataVersion) ||
@@ -446,7 +449,9 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       lineDataAccessor,
       areaDataAccessor,
       yAccessor,
-      xAccessor
+      xAccessor,
+      useAreasAsInteractionLayer,
+      baseMarkProps
     } = currentProps
     let {
       projectedLines,
@@ -657,7 +662,8 @@ class XYFrame extends React.Component<XYFrameProps, State> {
             {axisLines({
               axisParts,
               orient: d.orient,
-              tickLineGenerator: d.tickLineGenerator
+              tickLineGenerator: d.tickLineGenerator,
+              baseMarkProps
             })}
           </g>
         )
@@ -828,6 +834,15 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       yExtentSettings.onChange(calculatedYExtent)
     }
 
+    let overlay = undefined
+    if (useAreasAsInteractionLayer && projectedAreas) {
+      overlay = createAreas({ xScale, yScale, data: projectedAreas }).map((m, i) => ({
+        ...m.props,
+        style: { fillOpacity: 0 },
+        overlayData: projectedAreas && projectedAreas[i] // luckily createAreas is a map fn
+      }))
+    }
+
     this.setState({
       lineData: currentProps.lines,
       pointData: currentProps.points,
@@ -866,7 +881,8 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       areaAnnotations,
       xyFrameRender,
       size,
-      annotatedSettings
+      annotatedSettings,
+      overlay
     })
   }
 
@@ -1283,7 +1299,8 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       areaAnnotations,
       legendSettings,
       xyFrameRender,
-      annotatedSettings
+      annotatedSettings,
+      overlay
     } = this.state
 
     let downloadButton
@@ -1366,6 +1383,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         useSpans={useSpans}
         canvasRendering={!!(canvasAreas || canvasPoints || canvasLines)}
         renderOrder={renderOrder}
+        overlay={overlay}
       />
     )
   }
