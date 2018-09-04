@@ -5,7 +5,8 @@ import AnnotationLayer from "./AnnotationLayer"
 import InteractionLayer from "./InteractionLayer"
 import VisualizationLayer from "./VisualizationLayer"
 import { generateFrameTitle } from "./svg/frameFunctions"
-import PropTypes from "prop-types"
+import { drawMarginPath } from "./svg/frameFunctions"
+import { filterDefs } from "./constants/jsx"
 
 import SpanOrDiv from "./SpanOrDiv"
 import type { Node } from "react"
@@ -52,7 +53,7 @@ type Props = {
   projectedYMiddle?: string,
   dataVersion?: string,
   frameKey?: string,
-  finalFilterDefs: Node,
+  additionalDefs?: Node,
   xScale: Function,
   yScale: Function,
   adjustedSize?: Array<number>,
@@ -106,10 +107,6 @@ class Frame extends React.Component<Props, State> {
       this.setState({ canvasContext: this.canvasContext })
   }
 
-  getChildContext() {
-    return { canvas: this.canvasContext }
-  }
-
   setVoronoi = (d: Object) => {
     this.setState({ voronoiHover: d })
   }
@@ -121,6 +118,7 @@ class Frame extends React.Component<Props, State> {
       className = "",
       matte,
       name = "",
+      frameKey,
       projectedCoordinateNames,
       renderPipeline,
       size,
@@ -128,8 +126,6 @@ class Frame extends React.Component<Props, State> {
       title,
       xScale,
       yScale,
-      finalFilterDefs,
-      frameKey,
       dataVersion,
       annotations,
       hoverAnnotation,
@@ -159,7 +155,8 @@ class Frame extends React.Component<Props, State> {
       baseMarkProps,
       useSpans,
       canvasRendering,
-      renderOrder
+      renderOrder,
+      additionalDefs
     } = this.props
 
     const { voronoiHover } = this.state
@@ -218,6 +215,33 @@ class Frame extends React.Component<Props, State> {
       title: title,
       size: size
     })
+
+    let marginGraphic
+
+    const finalFilterDefs = filterDefs({
+      matte: matte,
+      key: matte && (frameKey || name),
+      additionalDefs: additionalDefs
+    })
+
+    if (typeof matte === "function") {
+      marginGraphic = matte({ size, margin })
+    } else if (React.isValidElement(matte)) {
+      marginGraphic = matte
+    } else if (matte) {
+      marginGraphic = (
+        <path
+          fill="white"
+          transform={`translate(${-margin.left},${-margin.top})`}
+          d={drawMarginPath({
+            margin,
+            size: size,
+            inset: matte.inset
+          })}
+          className="xyframe-matte"
+        />
+      )
+    }
 
     return (
       <SpanOrDiv
@@ -303,7 +327,7 @@ class Frame extends React.Component<Props, State> {
                 frameKey={frameKey}
                 canvasContext={this.state.canvasContext}
                 dataVersion={dataVersion}
-                matte={matte}
+                matte={marginGraphic}
                 margin={margin}
                 canvasPostProcess={canvasPostProcess}
                 baseMarkProps={baseMarkProps}
@@ -356,37 +380,6 @@ class Frame extends React.Component<Props, State> {
       </SpanOrDiv>
     )
   }
-}
-
-Frame.propTypes = {
-  name: PropTypes.string,
-  title: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-  margin: PropTypes.object,
-  size: PropTypes.array.isRequired,
-  annotationSettings: PropTypes.object,
-  annotations: PropTypes.array,
-  customHoverBehavior: PropTypes.func,
-  customClickBehavior: PropTypes.func,
-  customDoubleClickBehavior: PropTypes.func,
-  htmlAnnotationRules: PropTypes.func,
-  tooltipContent: PropTypes.func,
-  className: PropTypes.string,
-  additionalDefs: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
-  interaction: PropTypes.object,
-  renderFn: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
-  hoverAnnotation: PropTypes.oneOfType([
-    PropTypes.object,
-    PropTypes.array,
-    PropTypes.func,
-    PropTypes.bool
-  ]),
-  backgroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-  foregroundGraphics: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-  interactionOverflow: PropTypes.object
-}
-
-Frame.childContextTypes = {
-  canvas: PropTypes.object
 }
 
 export default Frame

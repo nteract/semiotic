@@ -26,6 +26,44 @@ class Axis extends React.Component {
     this.state = { hoverAnnotation: 0 }
   }
 
+  calculateLabelPosition = () => {
+    this.setState({ calculatedLabelPosition: this.boundingBoxMax() })
+  }
+
+  boundingBoxMax = () => {
+    if (!this.axisRef) return 30
+    const { orient = "left" } = this.props
+
+    const positionType =
+      orient === "left" || orient === "right" ? "width" : "height"
+
+    const axisLabelMax =
+      Math.max(
+        ...[...this.axisRef.querySelectorAll(".axis-label")]
+          .map(l => l.getBBox())
+          .map(d => d[positionType])
+      ) + 25
+    return axisLabelMax
+  }
+
+  componentDidUpdate() {
+    const { label = {} } = this.props
+    if (!label.position) {
+      const newBBMax = this.boundingBoxMax()
+      if (newBBMax !== this.state.calculatedLabelPosition) {
+        this.setState({ calculatedLabelPosition: newBBMax })
+      }
+    }
+  }
+
+  componentDidMount() {
+    const { label = {} } = this.props
+    if (!label.position) {
+      const newBBMax = this.boundingBoxMax()
+      this.setState({ calculatedLabelPosition: newBBMax })
+    }
+  }
+
   render() {
     let position = this.props.position || [0, 0]
     const {
@@ -233,7 +271,8 @@ class Axis extends React.Component {
       const labelPosition = label.position || {}
       const locationMod = labelPosition.location || "outside"
       let anchorMod = labelPosition.anchor || "middle"
-      const distance = label.locationDistance
+      const distance =
+        label.locationDistance || this.state.calculatedLabelPosition
 
       const rotateHash = {
         left: -90,
@@ -313,7 +352,11 @@ class Axis extends React.Component {
       "without ticks"}`
 
     return (
-      <g className={className} aria-label={axisAriaLabel}>
+      <g
+        className={className}
+        aria-label={axisAriaLabel}
+        ref={node => (this.axisRef = node)}
+      >
         {annotationBrush}
         {axisTickLabels}
         {axisTickLines}

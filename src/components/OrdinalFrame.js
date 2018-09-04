@@ -10,7 +10,6 @@ import { sum, max, min, extent } from "d3-array"
 
 import { arc } from "d3-shape"
 
-import { filterDefs } from "./constants/jsx"
 import {
   orFrameChangeProps,
   xyframeproptypes,
@@ -1577,7 +1576,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       useSpans,
       canvasPieces,
       canvasSummaries,
-      renderOrder
+      renderOrder,
+      additionalDefs
     } = this.props
 
     const {
@@ -1611,11 +1611,6 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         />
       )
     }
-
-    const finalFilterDefs = filterDefs({
-      key: "orframe",
-      additionalDefs: this.props.additionalDefs
-    })
 
     let interactionOverflow
 
@@ -1653,8 +1648,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         axesTickLines={axesTickLines}
         title={title}
         matte={matte}
+        additionalDefs={additionalDefs}
         className={className}
-        finalFilterDefs={finalFilterDefs}
         frameKey={"none"}
         renderKeyFn={renderKey}
         projectedCoordinateNames={projectedCoordinatesObject}

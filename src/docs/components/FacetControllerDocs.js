@@ -7,6 +7,17 @@ import {
   ResponsiveXYFrame
 } from "../../components"
 
+const SimpleDivPropsDisplay = props => (
+  <div style={{ padding: "20px" }}>
+    <h3 style={{ fontSize: "14px", fontWeight: 900 }}>
+      Component showing inherited facetProps
+    </h3>
+    {Object.keys(props.facetProps)
+      .map(k => k)
+      .join(",")}
+  </div>
+)
+
 const orData = [
   {
     column: "a",
@@ -295,6 +306,7 @@ export default class FacetControllerDemo extends React.Component {
             </FacetController>
           </div>
           <div style={{ width: "100%" }}>
+            <h3>With non-frame children</h3>
             <FacetController
               size={[300, 300]}
               responsiveWidth={true}
@@ -322,6 +334,7 @@ export default class FacetControllerDemo extends React.Component {
                 invertX={true}
               />
               <div>JUST A DIV</div>
+              <SimpleDivPropsDisplay />
               <ResponsiveXYFrame title={"LC2"} lines={xyFrameData2} />
               <div>JUST A ANOTHER DIV</div>
               <ResponsiveXYFrame title={"LC3"} lines={xyFrameData3} />
@@ -329,7 +342,18 @@ export default class FacetControllerDemo extends React.Component {
           </div>
         </div>
       ),
-      source: `<div>
+      source: `const SimpleDivPropsDisplay = props => (
+  <div style={{ padding: "20px" }}>
+    <h3 style={{ fontSize: "14px", fontWeight: 900 }}>
+      Component showing inherited facetProps
+    </h3>
+    {Object.keys(props.facetProps)
+      .map(k => k)
+      .join(",")}
+  </div>
+)
+
+<div>
 <div style={{ display: "flex" }}>
   <FacetController
     size={[300, 300]}
@@ -414,6 +438,43 @@ export default class FacetControllerDemo extends React.Component {
     />
   </FacetController>
 </div>
+
+<div style={{ width: "100%" }}>
+  <h3>With non-frame children</h3>
+  <FacetController
+    size={[300, 300]}
+    responsiveWidth={true}
+    margin={{ top: 10, left: 55, bottom: 40, right: 10 }}
+    xAccessor="step"
+    yAccessor="value"
+    lineStyle={{ stroke: "darkred" }}
+    hoverAnnotation={true}
+    lineIDAccessor={() => true}
+    axes={[{ orient: "left" }, { orient: "bottom" }]}
+    sharedYExtent={true}
+    oPadding={5}
+    oAccessor="column"
+    rAccessor="value"
+    type="bar"
+    style={d => ({ fill: d.color })}
+    pieceHoverAnnotation={true}
+    pieceIDAccessor="color"
+    sharedRExtent={true}
+    axis={{ orient: "left" }}
+  >
+    <ResponsiveXYFrame
+      title={"LC1"}
+      lines={xyFrameData1}
+      invertX={true}
+    />
+    <div>JUST A DIV</div>
+    <SimpleDivPropsDisplay />
+    <ResponsiveXYFrame title={"LC2"} lines={xyFrameData2} />
+    <div>JUST A ANOTHER DIV</div>
+    <ResponsiveXYFrame title={"LC3"} lines={xyFrameData3} />
+  </FacetController>
+</div>
+
 </div>`
     })
 
