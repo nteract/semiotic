@@ -59,7 +59,7 @@ type Props = {
   adjustedSize?: Array<number>,
   renderPipeline: Object,
   projectedCoordinateNames: Object,
-  matte?: Node,
+  matte?: boolean | Object | Node | Function,
   axes?: Array<AxisType>,
   axesTickLines?: Node,
   renderOrder: $ReadOnlyArray<| "pieces"
@@ -228,7 +228,7 @@ class Frame extends React.Component<Props, State> {
       marginGraphic = matte({ size, margin })
     } else if (React.isValidElement(matte)) {
       marginGraphic = matte
-    } else if (matte) {
+    } else if (matte === true) {
       marginGraphic = (
         <path
           fill="white"
@@ -236,9 +236,9 @@ class Frame extends React.Component<Props, State> {
           d={drawMarginPath({
             margin,
             size: size,
-            inset: matte.inset
+            inset: 0
           })}
-          className="xyframe-matte"
+          className={`${name}-matte`}
         />
       )
     }
