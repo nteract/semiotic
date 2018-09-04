@@ -148,15 +148,15 @@ class FacetController extends React.Component<Props, State> {
     originalAnnotations: Array<Object>
   }) => {
     const frameType = child.type.displayName
+    const annotations = this.generateChildAnnotations({
+      state,
+      originalAnnotations
+    })
     const customProps = { ...props, annotations }
 
     if (!frameType) {
       return React.cloneElement(child, { facetProps: customProps })
     }
-    const annotations = this.generateChildAnnotations({
-      state,
-      originalAnnotations
-    })
 
     // pieceHoverAnnotation could be an object, so we need to be explicit in checking for true
     if (props.hoverAnnotation === true || props.pieceHoverAnnotation === true) {
