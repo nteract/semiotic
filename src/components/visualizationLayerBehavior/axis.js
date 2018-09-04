@@ -16,18 +16,31 @@ const defaultTickLineGenerator = ({ xy, orient, i, baseMarkProps }) => (
   />
 )
 
+export function generateTickValues(tickValues, ticks, scale) {
+  const axisSize = Math.abs(scale.range()[1] - scale.range()[0])
+
+  if (!tickValues) {
+    if (!ticks) {
+      ticks = Math.max(1, parseInt(axisSize / 40, 10))
+    }
+    tickValues = scale.ticks(ticks)
+  }
+  return tickValues
+}
 export function axisPieces({
   renderMode = () => undefined,
   padding = 5,
-  tickValues,
   scale,
   ticks,
+  tickValues = generateTickValues(undefined, ticks, scale),
   orient = "left",
   size,
   footer = false,
   tickSize = footer
     ? -10
-    : ["top", "bottom"].find(d => d === orient) ? size[1] : size[0]
+    : ["top", "bottom"].find(d => d === orient)
+      ? size[1]
+      : size[0]
 }) {
   //returns x1 (start of line), x2 (end of line) associated with the value of the tick
   let axisDomain = [],
@@ -89,15 +102,6 @@ export function axisPieces({
       break
   }
 
-  const axisSize = Math.abs(scale.range()[1] - scale.range()[0])
-
-  if (!tickValues) {
-    if (!ticks) {
-      ticks = Math.max(1, parseInt(axisSize / 40, 10))
-    }
-    tickValues = scale.ticks(ticks)
-  }
-
   return tickValues.map((tick, i) => {
     const tickPosition = scale(tick)
     return {
@@ -119,7 +123,7 @@ export const axisLabels = ({ axisParts, tickFormat, rotate = 0 }) => {
     let renderedValue = tickFormat(axisPart.value, i)
     if (typeof renderedValue !== "object" || renderedValue instanceof Date) {
       renderedValue = (
-        <text textAnchor={axisPart.defaultAnchor}>
+        <text textAnchor={axisPart.defaultAnchor} className="axis-label">
           {renderedValue.toString ? renderedValue.toString() : renderedValue}
         </text>
       )

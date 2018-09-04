@@ -38,7 +38,6 @@ import AnnotationCallout from "react-annotation/lib/Types/AnnotationCallout"
 
 import {
   calculateMargin,
-  drawMarginPath,
   adjustedPositionSize,
   objectifyType
 } from "./svg/frameFunctions"
@@ -59,7 +58,6 @@ import {
 import { extentValue } from "./data/unflowedFunctions"
 import { findFirstAccessorValue } from "./data/multiAccessorUtils"
 
-import { filterDefs } from "./constants/jsx"
 import {
   xyFrameChangeProps,
   xyFrameDataProps,
@@ -161,7 +159,7 @@ export type XYFrameProps = {
   projectedAreas?: Array<Object>,
   projectedPoints?: Array<Object>,
   renderOrder?: $ReadOnlyArray<"lines" | "points" | "areas">,
-  useAreasAsInteractionLayer?: boolean,
+  useAreasAsInteractionLayer?: boolean
 }
 
 type State = {
@@ -197,7 +195,7 @@ type State = {
   canvasDrawing: Array<Object>,
   size: Array<number>,
   annotatedSettings: Object,
-  overlay?: Array<Object>,
+  overlay?: Array<Object>
 }
 
 const naturalLanguageLineType = {
@@ -289,7 +287,6 @@ class XYFrame extends React.Component<XYFrameProps, State> {
     xScale: (d: number) => d,
     yScale: (d: number) => d,
     title: null,
-    matte: undefined,
     legendSettings: undefined,
     xyFrameRender: {},
     canvasDrawing: [],
@@ -693,23 +690,6 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         )
       })
     }
-
-    let marginGraphic
-    if (currentProps.matte) {
-      marginGraphic = (
-        <path
-          fill="white"
-          transform={`translate(${-margin.left},${-margin.top})`}
-          d={drawMarginPath({
-            margin,
-            size: size,
-            inset: currentProps.matte.inset
-          })}
-          className="xyframe-matte"
-        />
-      )
-    }
-
     let legendSettings
 
     if (legend) {
@@ -836,11 +816,13 @@ class XYFrame extends React.Component<XYFrameProps, State> {
 
     let overlay = undefined
     if (useAreasAsInteractionLayer && projectedAreas) {
-      overlay = createAreas({ xScale, yScale, data: projectedAreas }).map((m, i) => ({
-        ...m.props,
-        style: { fillOpacity: 0 },
-        overlayData: projectedAreas && projectedAreas[i] // luckily createAreas is a map fn
-      }))
+      overlay = createAreas({ xScale, yScale, data: projectedAreas }).map(
+        (m, i) => ({
+          ...m.props,
+          style: { fillOpacity: 0 },
+          overlayData: projectedAreas && projectedAreas[i] // luckily createAreas is a map fn
+        })
+      )
     }
 
     this.setState({
@@ -877,7 +859,6 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       calculatedYExtent,
       margin,
       legendSettings,
-      matte: marginGraphic,
       areaAnnotations,
       xyFrameRender,
       size,
@@ -1280,7 +1261,9 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       canvasLines,
       afterElements,
       beforeElements,
-      renderOrder
+      renderOrder,
+      matte,
+      frameKey
     } = this.props
 
     const {
@@ -1289,7 +1272,6 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       adjustedPosition,
       adjustedSize,
       margin,
-      matte,
       axes,
       axesTickLines,
       xScale,
@@ -1329,14 +1311,6 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       )
     }
 
-    const finalFilterDefs = filterDefs({
-      matte: matte,
-      key: matte && (this.props.frameKey || xyframeKey),
-      additionalDefs: additionalDefs
-    })
-
-    // foreground and background graphics should handle either JSX or a function that passes size & margin and returns JSX
-
     return (
       <Frame
         name="xyframe"
@@ -1353,8 +1327,8 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         matte={matte}
         className={className}
         adjustedSize={adjustedSize}
-        finalFilterDefs={finalFilterDefs}
-        frameKey={xyframeKey}
+        frameKey={frameKey || xyframeKey}
+        additionalDefs={additionalDefs}
         hoverAnnotation={hoverAnnotation}
         defaultSVGRule={this.defaultXYSVGRule}
         defaultHTMLRule={this.defaultXYHTMLRule}

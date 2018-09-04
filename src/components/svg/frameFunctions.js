@@ -101,7 +101,7 @@ export const circlePath = (cx: number, cy: number, r: number) =>
 export const drawMarginPath = ({
   margin,
   size,
-  inset = 5
+  inset = 0
 }: {
   margin: Object,
   size: Array<number>,

@@ -16,8 +16,6 @@ import { scaleLinear, scaleIdentity } from "d3-scale"
 
 import { min, max } from "d3-array"
 
-import { filterDefs } from "./constants/jsx"
-
 import AnnotationLabel from "react-annotation/lib/Types/AnnotationLabel"
 
 import Frame from "./Frame"
@@ -1771,11 +1769,6 @@ class NetworkFrame extends React.Component<Props, State> {
       )
     }
 
-    const finalFilterDefs = filterDefs({
-      key: "networkFrame",
-      additionalDefs: additionalDefs
-    })
-
     let formattedOverlay
 
     if (overlay && overlay.length > 0) {
@@ -1794,7 +1787,7 @@ class NetworkFrame extends React.Component<Props, State> {
         title={title}
         matte={matte}
         className={className}
-        finalFilterDefs={finalFilterDefs}
+        additionalDefs={additionalDefs}
         frameKey={"none"}
         projectedCoordinateNames={projectedCoordinateNames}
         defaultSVGRule={this.defaultNetworkSVGRule}

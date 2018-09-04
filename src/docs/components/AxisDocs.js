@@ -45,6 +45,13 @@ components.push({
 })
 
 export default class AxisDocs extends React.Component {
+  constructor() {
+    super()
+    this.state = {
+      fixedTicks: undefined,
+      fixedDomain: [1000, 100000]
+    }
+  }
   render() {
     const buttons = []
 
@@ -52,58 +59,87 @@ export default class AxisDocs extends React.Component {
     examples.push({
       name: "Basic",
       demo: (
-        <svg style={{ height: "600px", width: "700px" }}>
-          <g transform={"translate(100,20)"}>
-            <Axis
-              size={[200, 200]}
-              scale={scaleLinear()
-                .domain([10, 1000])
-                .range([200, 0])}
-              orient={"left"}
-              label={"Just an Axis (left)"}
-            />
-          </g>
-          <g transform={"translate(400,20)"}>
-            <Axis
-              size={[200, 200]}
-              scale={scaleTime()
-                .domain([new Date(2017, 1, 1), new Date(2017, 10, 17)])
-                .range([0, 200])}
-              orient={"bottom"}
-              tickFormat={d => `${d.getMonth()}-${d.getDate()}`}
-              label={"Format Your Dates"}
-            />
-          </g>
-          <g transform={"translate(100,320)"}>
-            <Axis
-              size={[200, 200]}
-              scale={scaleLinear()
-                .domain([10, 1000])
-                .range([200, 0])}
-              orient={"left"}
-              label={"Custom tickLineGenerator"}
-              tickLineGenerator={({ xy }) => (
-                <path
-                  style={{ fill: "lightgrey", stroke: "grey" }}
-                  d={`M${xy.x1},${xy.y1 - 5}L${xy.x2},${xy.y1 -
-                    5}L${xy.x2},${xy.y1 + 5}L${xy.x1},${xy.y1 + 5}Z`}
-                />
-              )}
-            />
-          </g>
-          <g transform={"translate(400,320)"}>
-            <Axis
-              size={[200, 200]}
-              scale={scaleTime()
-                .domain([new Date(2017, 1, 1), new Date(2017, 10, 17)])
-                .range([0, 200])}
-              orient={"bottom"}
-              tickFormat={d => `${d.getMonth()}-${d.getDate()}`}
-              label={"Footer Bottom"}
-              footer={true}
-            />
-          </g>
-        </svg>
+        <div>
+          <button
+            onClick={() => {
+              this.setState({
+                fixedTicks: this.state.fixedTicks
+                  ? undefined
+                  : [10000, 50000, 90000]
+              })
+            }}
+            style={{ color: "black" }}
+          >
+            Change Ticks
+          </button>
+          <button
+            style={{ color: "black" }}
+            onClick={() => {
+              this.setState({
+                fixedDomain:
+                  this.state.fixedDomain[1] === 100000
+                    ? [1000, 1000000]
+                    : [1000, 100000]
+              })
+            }}
+          >
+            Change Domain
+          </button>
+          <svg style={{ height: "600px", width: "700px" }}>
+            <g transform={"translate(100,20)"}>
+              <Axis
+                size={[200, 200]}
+                scale={scaleLinear()
+                  .domain(this.state.fixedDomain)
+                  .range([200, 0])}
+                orient={"left"}
+                label={{ name: "Just an Axis (left)" }}
+                tickValues={this.state.fixedTicks}
+              />
+            </g>
+            <g transform={"translate(400,20)"}>
+              <Axis
+                size={[200, 200]}
+                scale={scaleTime()
+                  .domain([new Date(2017, 1, 1), new Date(2017, 10, 17)])
+                  .range([0, 200])}
+                orient={"bottom"}
+                tickFormat={d => `${d.getMonth()}-${d.getDate()}`}
+                label={"Format Your Dates"}
+              />
+            </g>
+            <g transform={"translate(100,320)"}>
+              <Axis
+                size={[200, 200]}
+                scale={scaleLinear()
+                  .domain([10, 1000])
+                  .range([200, 0])}
+                orient={"left"}
+                label={"Custom tickLineGenerator"}
+                tickLineGenerator={({ xy }) => (
+                  <path
+                    style={{ fill: "lightgrey", stroke: "grey" }}
+                    d={`M${xy.x1},${xy.y1 - 5}L${xy.x2},${xy.y1 - 5}L${
+                      xy.x2
+                    },${xy.y1 + 5}L${xy.x1},${xy.y1 + 5}Z`}
+                  />
+                )}
+              />
+            </g>
+            <g transform={"translate(400,320)"}>
+              <Axis
+                size={[200, 200]}
+                scale={scaleTime()
+                  .domain([new Date(2017, 1, 1), new Date(2017, 10, 17)])
+                  .range([0, 200])}
+                orient={"bottom"}
+                tickFormat={d => `${d.getMonth()}-${d.getDate()}`}
+                label={"Footer Bottom"}
+                footer={true}
+              />
+            </g>
+          </svg>
+        </div>
       ),
       source: `
       import { Axis } from 'semiotic';

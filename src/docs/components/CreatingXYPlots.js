@@ -128,6 +128,7 @@ export default class CreatingXYPlots extends React.Component {
             size={[500, 800]}
             areas={[{ coordinates: pointTestData }]}
             areaType={{ type: "heatmap", yBins: 10, xCellPx: 35 }}
+            useAreasAsInteractionLayer={true}
             xAccessor="x"
             yAccessor="y"
             areaStyle={d => ({
