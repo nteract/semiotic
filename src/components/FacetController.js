@@ -155,7 +155,7 @@ class FacetController extends React.Component<Props, State> {
     const customProps = { ...props, annotations }
 
     if (!frameType) {
-      return React.cloneElement(child, { facetProps: customProps })
+      return React.cloneElement(child, { facetprops: customProps })
     }
 
     // pieceHoverAnnotation could be an object, so we need to be explicit in checking for true
