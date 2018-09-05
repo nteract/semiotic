@@ -56,6 +56,7 @@ const createResponsiveFrame = Frame =>
         size,
         dataVersion,
         debounce,
+        gridDisplay,
         ...rest
       } = this.props
 
@@ -80,7 +81,11 @@ const createResponsiveFrame = Frame =>
       return (
         <div
           className="responsive-container"
-          style={{ height: "100%", width: "100%" }}
+          style={
+            gridDisplay
+              ? { minWidth: "0px", minHeight: "0px" }
+              : { height: "100%", width: "100%" }
+          }
           ref={node => (this.node = node)}
         >
           {!returnEmpty && (
