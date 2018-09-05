@@ -199,7 +199,6 @@ export default ({ direction, ranker, parallelEdges }) => {
         margin={10}
         hoverAnnotation={true}
         tooltipContent={d => {
-          console.log("d", d)
           return <div className="tooltip-content">{d.id}</div>
         }}
       />
