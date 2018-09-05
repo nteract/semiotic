@@ -10,9 +10,9 @@ import {
 const SimpleDivPropsDisplay = props => (
   <div style={{ padding: "20px" }}>
     <h3 style={{ fontSize: "14px", fontWeight: 900 }}>
-      Component showing inherited facetProps
+      Component showing inherited facetprops
     </h3>
-    {Object.keys(props.facetProps)
+    {Object.keys(props.facetprops)
       .map(k => k)
       .join(",")}
   </div>
@@ -345,9 +345,9 @@ export default class FacetControllerDemo extends React.Component {
       source: `const SimpleDivPropsDisplay = props => (
   <div style={{ padding: "20px" }}>
     <h3 style={{ fontSize: "14px", fontWeight: 900 }}>
-      Component showing inherited facetProps
+      Component showing inherited facetprops
     </h3>
-    {Object.keys(props.facetProps)
+    {Object.keys(props.facetprops)
       .map(k => k)
       .join(",")}
   </div>

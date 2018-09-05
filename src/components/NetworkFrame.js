@@ -686,16 +686,20 @@ class NetworkFrame extends React.Component<Props, State> {
 
     if (networkSettings.type === "dagre" && graph) {
       const dagreGraph = graph
+      const dagreNodeHash = {}
       projectedNodes = dagreGraph.nodes().map(n => {
         const baseNode = dagreGraph.node(n)
-        return {
+        dagreNodeHash[n] = {
           ...baseNode,
           x0: baseNode.x - baseNode.width / 2,
           x1: baseNode.x + baseNode.width / 2,
           y0: baseNode.y - baseNode.height / 2,
           y1: baseNode.y + baseNode.height / 2,
-          id: n
+          id: n,
+          sourceLinks: [],
+          targetLinks: []
         }
+        return dagreNodeHash[n] 
       })
       projectedEdges = dagreGraph.edges().map(e => {
         const baseEdge = dagreGraph.edge(e)
@@ -704,6 +708,8 @@ class NetworkFrame extends React.Component<Props, State> {
         baseEdge.target = projectedNodes.find(p => p.id === e.w)
         baseEdge.points.unshift({ x: baseEdge.source.x, y: baseEdge.source.y })
         baseEdge.points.push({ x: baseEdge.target.x, y: baseEdge.target.y })
+        dagreNodeHash[e.v].targetLinks.push(baseEdge)
+        dagreNodeHash[e.w].sourceLinks.push(baseEdge)
         return baseEdge
       })
     } else if (changedData) {
