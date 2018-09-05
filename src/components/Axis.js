@@ -40,7 +40,7 @@ class Axis extends React.Component {
     const axisLabelMax =
       Math.max(
         ...[...this.axisRef.querySelectorAll(".axis-label")]
-          .map(l => l.getBBox())
+          .map(l => (l.getBBox && l.getBBox()) || { height: 30, width: 30 })
           .map(d => d[positionType])
       ) + 25
     return axisLabelMax
