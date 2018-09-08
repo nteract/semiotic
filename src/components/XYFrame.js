@@ -16,7 +16,8 @@ import {
   svgHighlight,
   basicReactAnnotation,
   svgEncloseAnnotation,
-  svgRectEncloseRule,
+  svgRectEncloseAnnotation,
+  svgHullEncloseAnnotation,
   svgXAnnotation,
   svgYAnnotation,
   svgBoundsAnnotation,
@@ -998,7 +999,9 @@ class XYFrame extends React.Component<XYFrameProps, State> {
     } else if (d.type === "enclose") {
       return svgEncloseAnnotation({ d, screenCoordinates, i })
     } else if (d.type === "enclose-rect") {
-      return svgRectEncloseRule({ d, screenCoordinates, i })
+      return svgRectEncloseAnnotation({ d, screenCoordinates, i })
+    } else if (d.type === "enclose-hull") {
+      return svgHullEncloseAnnotation({ d, screenCoordinates, i })
     } else if (d.type === "x") {
       return svgXAnnotation({
         d,

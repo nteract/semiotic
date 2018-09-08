@@ -16,14 +16,15 @@ const colors = [
   "rgb(182, 167, 86)"
 ]
 
+const parsedPoints = []
 const annotationData = []
-
 csvParse(data).forEach((d, i) => {
   const point = {
     posx: +d.x,
     posy: +d.y,
     hood: +d.hood
   }
+  parsedPoints.push(point)
   if (!groupHash[d.hood]) {
     groupHash[d.hood] = {
       key: d.hood,
@@ -44,6 +45,12 @@ csvParse(data).forEach((d, i) => {
       })
     )
   }
+})
+
+annotationData.push({
+  type: "enclose-hull",
+  coordinates: parsedPoints.filter(d => d.hood === 98),
+  label: "Hull Annotation"
 })
 
 const neighborhoodMapChart = {

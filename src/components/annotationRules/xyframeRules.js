@@ -7,7 +7,7 @@ import AnnotationXYThreshold from "react-annotation/lib/Types/AnnotationXYThresh
 import { line, area } from "d3-shape"
 import { packEnclose } from "d3-hierarchy"
 import { extent } from "d3-array"
-import { circleEnclosure, rectangleEnclosure } from "./baseRules"
+import { circleEnclosure, rectangleEnclosure, hullEnclosure } from "./baseRules"
 import SpanOrDiv from "../SpanOrDiv"
 import { findFirstAccessorValue } from "../data/multiAccessorUtils"
 import { curveHash } from "../visualizationLayerBehavior/general"
@@ -421,7 +421,7 @@ export const htmlTooltipAnnotation = ({
   )
 }
 
-export const svgRectEncloseRule = ({ d, i, screenCoordinates }) => {
+export const svgRectEncloseAnnotation = ({ d, i, screenCoordinates }) => {
   const bboxNodes = screenCoordinates.map(p => {
     return {
       x0: (p.x0 = p[0]),
@@ -440,4 +440,8 @@ export const svgEncloseAnnotation = ({ screenCoordinates, d }) => {
   )
 
   return circleEnclosure({ d, circle })
+}
+
+export const svgHullEncloseAnnotation = ({ screenCoordinates, d, i }) => {
+  return hullEnclosure({ points: screenCoordinates, d, i })
 }

@@ -3,7 +3,7 @@ import Annotation from "../Annotation"
 import AnnotationCalloutCircle from "react-annotation/lib/Types/AnnotationCalloutCircle"
 
 import { packEnclose } from "d3-hierarchy"
-import { circleEnclosure, rectangleEnclosure } from "./baseRules"
+import { circleEnclosure, rectangleEnclosure, hullEnclosure } from "./baseRules"
 import SpanOrDiv from "../SpanOrDiv"
 
 export const htmlFrameHoverRule = ({
@@ -161,6 +161,40 @@ export const svgRectEncloseRule = ({
   })
 
   return rectangleEnclosure({ bboxNodes, d, i })
+}
+
+export const svgHullEncloseRule = ({
+  d,
+  i,
+  projectedNodes,
+  nodeIDAccessor,
+  nodeSizeAccessor
+}) => {
+  const selectedNodes = projectedNodes.filter(
+    p => d.ids.indexOf(nodeIDAccessor(p)) !== -1
+  )
+  if (selectedNodes.length === 0) {
+    return null
+  }
+
+  const projectedPoints = []
+
+  selectedNodes.forEach(p => {
+    if (p.shapeNode) {
+      projectedPoints.push({ x: p.x0, y: p.y0 })
+      projectedPoints.push({ x: p.x0, y: p.y1 })
+      projectedPoints.push({ x: p.x1, y: p.y0 })
+      projectedPoints.push({ x: p.x1, y: p.y1 })
+    } else {
+      const nodeSize = nodeSizeAccessor(p)
+      projectedPoints.push({ x: p.x - nodeSize, y: p.y - nodeSize })
+      projectedPoints.push({ x: p.x + nodeSize, y: p.y - nodeSize })
+      projectedPoints.push({ x: p.x - nodeSize, y: p.y + nodeSize })
+      projectedPoints.push({ x: p.x + nodeSize, y: p.y + nodeSize })
+    }
+  })
+
+  return hullEnclosure({ points: projectedPoints.map(d => [d.x, d.y]), d, i })
 }
 
 export const svgHighlightRule = ({ d, networkFrameRender }) => {

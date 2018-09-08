@@ -19,7 +19,7 @@ export default class Dendrogram extends React.Component {
     this.state = {
       type: "treemap",
       projection: "vertical",
-      annotation: "rectangle",
+      annotation: "enclose-rect",
       filter: "none"
     }
   }
@@ -43,11 +43,13 @@ export default class Dendrogram extends React.Component {
         {d}
       </MenuItem>
     ))
-    const annotationOptions = ["rectangle", "circle"].map(d => (
-      <MenuItem key={`type-option-${d}`} label={d} value={d}>
-        {d}
-      </MenuItem>
-    ))
+    const annotationOptions = ["enclose-rect", "enclose", "enclose-hull"].map(
+      d => (
+        <MenuItem key={`type-option-${d}`} label={d} value={d}>
+          {d}
+        </MenuItem>
+      )
+    )
 
     const filterOptions = ["none", "time", "layout", "geo"].map(d => (
       <MenuItem key={`type-option-${d}`} label={d} value={d}>
@@ -106,9 +108,7 @@ export default class Dendrogram extends React.Component {
       }),
       source: `const annotations = [
         {
-          type: "enclose${
-            this.state.annotation === "rectangle" ? "-rect" : ""
-          }",
+          type: "${this.state.annotation}",
           ids: [
             "identity",
             "linear",
