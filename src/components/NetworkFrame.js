@@ -83,6 +83,7 @@ import {
   svgReactAnnotationRule,
   svgEncloseRule,
   svgRectEncloseRule,
+  svgHullEncloseRule,
   svgHighlightRule
 } from "./annotationRules/networkframeRules"
 
@@ -696,6 +697,7 @@ class NetworkFrame extends React.Component<Props, State> {
           y0: baseNode.y - baseNode.height / 2,
           y1: baseNode.y + baseNode.height / 2,
           id: n,
+          shapeNode: true,
           sourceLinks: [],
           targetLinks: []
         }
@@ -1655,6 +1657,14 @@ class NetworkFrame extends React.Component<Props, State> {
       })
     } else if (d.type === "enclose-rect") {
       return svgRectEncloseRule({
+        d,
+        i,
+        projectedNodes,
+        nodeIDAccessor,
+        nodeSizeAccessor
+      })
+    } else if (d.type === "enclose-hull") {
+      return svgHullEncloseRule({
         d,
         i,
         projectedNodes,

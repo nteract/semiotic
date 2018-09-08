@@ -56,7 +56,7 @@ export default ({
     filterRenderedNodes: nodeFilter,
     annotations: [
       {
-        type: annotation === "rectangle" ? "enclose-rect" : "enclose",
+        type: annotation,
         ids: [
           "identity",
           "linear",

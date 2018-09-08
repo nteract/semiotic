@@ -201,6 +201,21 @@ export default ({ direction, ranker, parallelEdges }) => {
         tooltipContent={d => {
           return <div className="tooltip-content">{d.id}</div>
         }}
+        annotations={[
+          {
+            type: "enclose-hull",
+            ids: ["lwilson", "f"],
+            color: "red",
+            label: "Hull 3"
+          },
+          {
+            type: "enclose-hull",
+            ids: ["fff", "ff"],
+            color: "blue",
+            label: "Hull 2",
+            buffer: 20
+          }
+        ]}
       />
     </div>
   )
