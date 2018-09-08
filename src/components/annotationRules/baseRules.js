@@ -126,7 +126,6 @@ export const hullEnclosure = ({ points, d, i }) => {
           <path
             key="hull-drawing"
             d={hullD}
-            dataCap="butt"
             strokeWidth={strokeWidth}
             strokeMiterlimit="10"
             strokeLinejoin="miter"
