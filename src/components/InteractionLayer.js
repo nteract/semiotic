@@ -4,7 +4,7 @@ import React from "react"
 import { brushX, brushY, brush } from "d3-brush"
 import { extent as d3Extent } from "d3-array"
 import { select, event } from "d3-selection"
-import { voronoi } from "d3-voronoi"
+import { Delaunay } from "d3-delaunay"
 import { Mark } from "semiotic-mark"
 
 // components
@@ -341,20 +341,13 @@ class InteractionLayer extends React.Component<Props, State> {
         ]
       ]
 
-      const voronoiDiagram = voronoi()
-        .extent(voronoiExtent)
-        .x((d: Object) => d.voronoiX)
-        .y((d: Object) => d.voronoiY)
-
-      const voronoiData = voronoiDiagram.polygons(voronoiDataset)
-      const voronoiLinks = voronoiDiagram.links(voronoiDataset)
-
-      //create neighbors
-      voronoiLinks.forEach((v: Object) => {
-        if (!v.source.neighbors) v.source.neighbors = []
-
-        v.source.neighbors.push(v.target)
-      })
+      const delaunayPoints = voronoiDataset.map(d => [d.voronoiX, d.voronoiY])
+      const delaunay = Delaunay.from(delaunayPoints)
+      const voronoi = delaunay.voronoi([
+        ...voronoiExtent[0],
+        ...voronoiExtent[1]
+      ])
+      const voronoiData = [...voronoi.cellPolygons()]
 
       voronoiPaths = voronoiData.map((d: Array<number>, i: number) => {
         return (
