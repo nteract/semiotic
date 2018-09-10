@@ -3,7 +3,6 @@ import babel from "rollup-plugin-babel"
 import commonjs from "rollup-plugin-commonjs"
 import builtins from "rollup-plugin-node-builtins"
 import replace from "rollup-plugin-replace"
-import regenerator from "rollup-plugin-regenerator"
 import nodent from "rollup-plugin-nodent"
 
 import flow from "rollup-plugin-flow"
