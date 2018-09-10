@@ -1085,7 +1085,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
     Object.keys(projectedColumns).forEach(d => {
       projectedColumns[d].xyData = keyedData[d] || []
     })
-    let calculatedSummaries = {}
+    let calculatedSummaries = { originalData: [] }
 
     if (summaryType.type && summaryType.type !== "none") {
       calculatedSummaries = drawSummaries({
@@ -1101,8 +1101,6 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         adjustedSize,
         baseMarkProps: currentProps.baseMarkProps || {}
       })
-
-      calculatedSummaries.originalData = projectedColumns
     }
 
     if (
@@ -1113,7 +1111,12 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       const yMod = projection === "horizontal" ? midMod : zeroFunction
       const xMod = projection === "vertical" ? midMod : zeroFunction
 
-      if (summaryHoverAnnotation && calculatedSummaries.xyPoints) {
+      if (
+        summaryHoverAnnotation &&
+        calculatedSummaries &&
+        calculatedSummaries.xyPoints
+      ) {
+        calculatedSummaries.originalData = projectedColumns
         pieceDataXY = calculatedSummaries.xyPoints.map(d =>
           Object.assign({}, d, {
             type: "frame-hover",

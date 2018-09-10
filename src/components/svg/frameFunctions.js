@@ -46,7 +46,7 @@ type ORFrameConnectionRendererTypes = {
 }
 
 type ORFrameSummaryRendererTypes = {
-  data: Array<Object>,
+  data: Object,
   type: Object,
   renderMode: Function,
   eventListenersGenerator: Function,
@@ -69,6 +69,20 @@ type ORFrameAxisGeneratorTypes = {
   pieceType: Object,
   rExtent: Array<number>,
   data: Array<Object>
+}
+
+type DrawSummariesTypes = {
+  data: Object,
+  type: Object,
+  renderMode: Function,
+  eventListenersGenerator: Function,
+  styleFn: Function,
+  classFn: Function,
+  positionFn: Function,
+  projection: ProjectionTypes,
+  adjustedSize: Array<number>,
+  canvasRender: Function,
+  baseMarkProps: Object
 }
 
 function roundToTenth(number: number) {
@@ -681,9 +695,9 @@ export function drawSummaries({
   projection,
   adjustedSize,
   canvasRender,
-  canvasDrawing,
+  //  canvasDrawing,
   baseMarkProps
-}) {
+}: DrawSummariesTypes) {
   if (!type || !type.type) return
   type = typeof type === "string" ? { type } : type
   const chartSize =
@@ -701,7 +715,7 @@ export function drawSummaries({
     adjustedSize,
     chartSize,
     canvasRender,
-    canvasDrawing,
+    //    canvasDrawing,
     baseMarkProps
   })
 }
