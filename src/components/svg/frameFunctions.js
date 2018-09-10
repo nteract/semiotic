@@ -669,3 +669,39 @@ export const orFrameAxisGenerator = ({
   }
   return { axis: generatedAxis, axesTickLines }
 }
+
+export function drawSummaries({
+  data,
+  type,
+  renderMode,
+  eventListenersGenerator,
+  styleFn,
+  classFn,
+  positionFn,
+  projection,
+  adjustedSize,
+  canvasRender,
+  canvasDrawing,
+  baseMarkProps
+}) {
+  if (!type || !type.type) return
+  type = typeof type === "string" ? { type } : type
+  const chartSize =
+    projection === "vertical" ? adjustedSize[1] : adjustedSize[0]
+
+  return orFrameSummaryRenderer({
+    data,
+    type,
+    renderMode,
+    eventListenersGenerator,
+    styleFn,
+    classFn,
+    positionFn,
+    projection,
+    adjustedSize,
+    chartSize,
+    canvasRender,
+    canvasDrawing,
+    baseMarkProps
+  })
+}

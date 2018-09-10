@@ -4,8 +4,9 @@ import commonjs from "rollup-plugin-commonjs"
 import builtins from "rollup-plugin-node-builtins"
 import replace from "rollup-plugin-replace"
 import regenerator from "rollup-plugin-regenerator"
+import nodent from "rollup-plugin-nodent"
 
-import flow from 'rollup-plugin-flow';
+import flow from "rollup-plugin-flow"
 
 export default {
   exports: "named",
@@ -24,7 +25,7 @@ export default {
   plugins: [
     flow(),
     node({ jsnext: true, preferBuiltins: false }),
-    regenerator({ includeRuntime: true, sourceMap: false }),
+    //    regenerator({ includeRuntime: true, sourceMap: false }),
     builtins(),
     commonjs({
       include: "node_modules/**",
@@ -42,10 +43,14 @@ export default {
       "process.env.NODE_ENV": '"production"'
     }),
     babel({
-      babelrc: false,
+      babelrc: true,
       runtimeHelpers: true,
-      presets: ["flow", ["es2015", { modules: false }], "react", "stage-0"],
-      plugins: ["external-helpers"]
-    })
+      presets: [
+        "@babel/preset-flow",
+        "@babel/preset-env",
+        "@babel/preset-react"
+      ]
+    }),
+    nodent()
   ]
 }

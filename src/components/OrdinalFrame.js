@@ -45,7 +45,8 @@ import {
   //  generateOrdinalFrameEventListeners,
   adjustedPositionSize,
   orFrameConnectionRenderer,
-  orFrameAxisGenerator
+  orFrameAxisGenerator,
+  drawSummaries
 } from "./svg/frameFunctions"
 import { pointOnArcAtAngle, renderLaidOutPieces } from "./svg/pieceDrawing"
 import {
@@ -56,7 +57,7 @@ import {
   timelineLayout
 } from "./svg/pieceLayouts"
 
-import { drawSummaries, renderLaidOutSummaries } from "./svg/summaryLayouts"
+import { renderLaidOutSummaries } from "./svg/summaryLayouts"
 import { stringToFn, stringToArrayFn } from "./data/dataFunctions"
 
 import { genericFunction } from "./untyped_utilities/functions"

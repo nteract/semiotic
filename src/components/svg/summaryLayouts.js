@@ -8,7 +8,6 @@ import { histogram, max } from "d3-array"
 import { groupBarMark } from "../svg/SvgHelper"
 import { area, line, curveCatmullRom, arc } from "d3-shape"
 import { pointOnArcAtAngle } from "./pieceDrawing"
-import { orFrameSummaryRenderer } from "./frameFunctions"
 import { scaleLinear } from "d3-scale"
 
 const contourMap = d => [d.xy.x, d.xy.y]
@@ -1208,42 +1207,6 @@ export function bucketizedRenderingFn({
   })
 
   return { marks: renderedSummaryMarks, xyPoints: summaryXYCoords }
-}
-
-export const drawSummaries = ({
-  data,
-  type,
-  renderMode,
-  eventListenersGenerator,
-  styleFn,
-  classFn,
-  positionFn,
-  projection,
-  adjustedSize,
-  canvasRender,
-  canvasDrawing,
-  baseMarkProps
-}) => {
-  if (!type || !type.type) return
-  type = typeof type === "string" ? { type } : type
-  const chartSize =
-    projection === "vertical" ? adjustedSize[1] : adjustedSize[0]
-
-  return orFrameSummaryRenderer({
-    data,
-    type,
-    renderMode,
-    eventListenersGenerator,
-    styleFn,
-    classFn,
-    positionFn,
-    projection,
-    adjustedSize,
-    chartSize,
-    canvasRender,
-    canvasDrawing,
-    baseMarkProps
-  })
 }
 
 export const renderLaidOutSummaries = ({ data }) => data.marks
