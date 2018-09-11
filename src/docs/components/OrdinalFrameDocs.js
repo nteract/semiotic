@@ -631,7 +631,7 @@ export default class OrdinalFrameDocs extends React.Component {
             }
             connectorStyle={dataTypeHash[this.state.dataType].connectorStyle}
             hoverAnnotation={this.state.hoverBehavior === "general"}
-            pieceHoverAnnotation={true}
+            pieceHoverAnnotation={this.state.hoverBehavior === "piece"}
             dynamicColumnWidth={
               this.state.dynamicColumnWidth === "fixed"
                 ? undefined

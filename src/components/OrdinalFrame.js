@@ -1145,6 +1145,12 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
           x: d.xy.x + xMod(d.xy),
           y: d.xy.y + yMod(d.xy)
         }
+        if (React.isValidElement(d.renderElement)) {
+          return {
+            renderElement: d.renderElement,
+            overlayData: mousePackage
+          }
+        }
         return {
           ...d.renderElement,
           key: `hover-${i}`,

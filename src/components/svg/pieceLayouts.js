@@ -339,7 +339,6 @@ export function clusterBarLayout({
       } else if (type.icon && projection === "radial") {
         console.error("Icons are currently unsupported on radial charts")
       }
-
       const renderElementObject = type.customMark ? (
         <g
           key={`piece-${piece.renderKey}`}
