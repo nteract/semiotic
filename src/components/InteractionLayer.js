@@ -374,25 +374,44 @@ class InteractionLayer extends React.Component<Props, State> {
       const renderedOverlay: Array<Node> = overlay.map(
         (overlayRegion: Object, i: number) => {
           const { overlayData, ...rest } = overlayRegion
-          return (
-            <Mark
-              forceUpdate={true}
-              {...rest}
-              key={`overlay-${i}`}
-              onMouseEnter={() => {
+          if (React.isValidElement(overlayRegion.renderElement)) {
+            return React.cloneElement(overlayRegion.renderElement, {
+              key: `overlay-${i}`,
+              onMouseEnter: () => {
                 this.changeVoronoi(overlayData, props.hoverAnnotation)
-              }}
-              onMouseLeave={() => {
+              },
+              onMouseLeave: () => {
                 this.changeVoronoi()
-              }}
-              onClick={() => {
+              },
+              onClick: () => {
                 this.clickVoronoi(overlayData)
-              }}
-              onDoubleClick={() => {
+              },
+              onDoubleClick: () => {
                 this.doubleclickVoronoi(overlayData)
-              }}
-            />
-          )
+              },
+              style: { opacity: 0 }
+            })
+          } else {
+            return (
+              <Mark
+                forceUpdate={true}
+                {...rest}
+                key={`overlay-${i}`}
+                onMouseEnter={() => {
+                  this.changeVoronoi(overlayData, props.hoverAnnotation)
+                }}
+                onMouseLeave={() => {
+                  this.changeVoronoi()
+                }}
+                onClick={() => {
+                  this.clickVoronoi(overlayData)
+                }}
+                onDoubleClick={() => {
+                  this.doubleclickVoronoi(overlayData)
+                }}
+              />
+            )
+          }
         }
       )
 
