@@ -1,2 +1,1 @@
-# semiotic-examples
-Examples for using Semiotic
+# Semiotic Examples

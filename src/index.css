@@ -1,0 +1,96 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Poppins", sans-serif;
+}
+
+:root {
+  --bg-color: #f1eef0;
+  --light-color: #aca1a9;
+  --dark-color: #886a7e;
+}
+
+header {
+  width: calc(100% - 90px);
+  /* height: 100px; */
+  display: flex;
+  padding: 30px 30px 30px 60px;
+}
+
+header .logo,
+.sidebar {
+  width: 240px;
+  padding-right: 30px;
+}
+
+header h1 {
+  margin: 0px;
+  font-weight: 300;
+  font-size: 20px;
+}
+
+.flex {
+  display: flex;
+}
+
+.align-bottom {
+  align-items: flex-end;
+}
+
+.sidebar,
+.container {
+  height: calc(100vh - 140px);
+}
+
+.sidebar {
+  padding: 0px 30px 30px 60px;
+  overflow-y: auto;
+}
+
+.container {
+  background: var(--bg-color);
+  width: calc(100% - 300px);
+  padding: 20px;
+}
+
+.bold {
+  font-weight: 900;
+}
+
+.light-color,
+.light-color a {
+  color: var(--light-color);
+}
+
+.dark-color,
+a {
+  color: var(--dark-color);
+}
+
+.sidebar p {
+  font-size: 12px;
+}
+
+.sub-header {
+  color: var(--light-color);
+  font-weight: bold;
+  margin-bottom: 0.2rem;
+}
+
+.sidebar .child:not(.sub-header) {
+  margin: 0.2rem 0px;
+}
+
+.black,
+.black a {
+  color: black;
+}
+
+.sidebar a {
+  text-decoration: none;
+}
+
+.pointer,
+a {
+  cursor: pointer;
+}
