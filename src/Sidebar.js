@@ -36,7 +36,7 @@ class Sidebar extends Component {
       if (p.children) {
         p.children.forEach(c => {
           const url = c.url && `/${(p.url && p.url + "/") || ""}${c.url}`
-          console.log(url)
+
           pages.push(
             <p
               className={
