@@ -1,8 +1,7 @@
 import React, { Component } from "react"
 import Sidebar from "./Sidebar"
 
-const ROOT =
-  window.location.host === "susielu.github.io" ? "/semitoic-examples/" : "/"
+const ROOT = process.env.PUBLIC_URL
 
 class App extends Component {
   render() {
