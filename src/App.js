@@ -1,13 +1,16 @@
 import React, { Component } from "react"
 import Sidebar from "./Sidebar"
 
+const ROOT =
+  window.location.host === "susielu.github.io" ? "/semitoic-examples/" : "/"
+
 class App extends Component {
   render() {
     return (
       <div className="App">
         <header className="flex algin-bottom">
           <div className="logo">
-            <img src="/semiotic.png" alt="Semiotic" />
+            <img src={ROOT + "semiotic.png"} alt="Semiotic" />
           </div>
           <div>
             <h1>Page Title</h1>
