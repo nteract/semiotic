@@ -72,14 +72,14 @@ export function createPoints({
   renderMode,
   baseMarkProps
 }) {
-  const { y, x } = projectedCoordinateNames
+  const { y, x, yMiddle } = projectedCoordinateNames
   const mappedPoints = []
   data.forEach((d, i) => {
     const dX = xScale(d[x])
-    const dY = yScale(d[y])
+    const dY = yScale(d[yMiddle] || d[y])
     const pointAriaLabel = `Point at x ${d.x} and y ${d.y}`
     const renderedCustomMark =
-      customMark && customMark({ d: d.data, i, xScale, yScale })
+      customMark && customMark({ d: d.data, xy: d, i, xScale, yScale })
     const markProps = customMark
       ? Object.assign(baseMarkProps, renderedCustomMark.props, {
           "aria-label": pointAriaLabel

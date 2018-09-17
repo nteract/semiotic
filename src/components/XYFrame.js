@@ -201,6 +201,8 @@ type State = {
 
 const naturalLanguageLineType = {
   "line": { items: "line", chart: "line chart" },
+  "cumulative": { items: "line", chart: "cumulative chart" },
+  "cumulative-reverse": { items: "line", chart: "cumulative chart" },
   "linepercent": { items: "line", chart: "line chart" },
   "stackedarea": { items: "stacked area", chart: "stacked area chart" },
   "stackedarea-invert": { items: "stacked area", chart: "stacked area chart" },

@@ -537,7 +537,7 @@ export default class CreatingLineChart extends React.Component {
     })
 
     examples.push({
-      name: "Simple",
+      name: "dynamicInterpolator",
       demo: (
         <div>
           <p>
@@ -1016,6 +1016,141 @@ export default class CreatingLineChart extends React.Component {
         }
       ]}
       hoverAnnotation={true}
+    />`
+    })
+
+    examples.push({
+      name: "Cumulative Charts",
+      demo: (
+        <div>
+          <p>
+            For convenience there are "cumulative" and "cumulative-reverse" to
+            conveniently make cumulative charts.
+          </p>
+          <XYFrame
+            title={"cumulative"}
+            size={[700, 400]}
+            dataVersion="fixed"
+            lines={movies}
+            lineType={{
+              type: "cumulative",
+              interpolator: "linear"
+            }}
+            lineDataAccessor={["coordinates"]}
+            xAccessor={["week"]}
+            yAccessor={["theaterCount"]}
+            lineStyle={d => ({
+              stroke: d.title === "Ex Machina" ? "#00a2ce" : "red",
+              fill: "none"
+            })}
+            margin={{ left: 80, bottom: 50, right: 10, top: 40 }}
+            axes={[
+              {
+                orient: "left"
+              },
+              {
+                orient: "bottom"
+              }
+            ]}
+            hoverAnnotation={[
+              d => ({
+                type: "frame-hover",
+                color:
+                  (d.parentLine &&
+                    d.parentLine.title === "Ex Machina" &&
+                    "#00a2ce") ||
+                  "red"
+              })
+            ]}
+            customHoverBehavior={d => console.info("custom hover d", d)}
+            customClickBehavior={d => console.info("click on d", d)}
+            customDoubleClickBehavior={d =>
+              console.info("customDoubleClickBehavior d", d)
+            }
+          />
+          <XYFrame
+            title={"cumulative-reverse"}
+            size={[700, 400]}
+            dataVersion="fixed"
+            lines={movies}
+            lineType={{
+              type: "cumulative-reverse",
+              interpolator: "linear"
+            }}
+            lineDataAccessor={["coordinates"]}
+            xAccessor={["week"]}
+            yAccessor={["theaterCount"]}
+            lineStyle={d => ({
+              stroke: d.title === "Ex Machina" ? "#00a2ce" : "red",
+              fill: "none"
+            })}
+            margin={{ left: 80, bottom: 50, right: 10, top: 40 }}
+            axes={[
+              {
+                orient: "left"
+              },
+              {
+                orient: "bottom"
+              }
+            ]}
+            hoverAnnotation={[
+              d => ({
+                type: "frame-hover",
+                color:
+                  (d.parentLine &&
+                    d.parentLine.title === "Ex Machina" &&
+                    "#00a2ce") ||
+                  "red"
+              })
+            ]}
+            customHoverBehavior={d => console.info("custom hover d", d)}
+            customClickBehavior={d => console.info("click on d", d)}
+            customDoubleClickBehavior={d =>
+              console.info("customDoubleClickBehavior d", d)
+            }
+          />
+        </div>
+      ),
+      source: `<XYFrame
+      title={"Two Movies"}
+      size={[700, 400]}
+      dataVersion="fixed"
+      lines={movies}
+      lineType={{
+        type: "cumulative-reverse",
+        interpolator: "cardinal"
+      }}
+      lineDataAccessor={["coordinates"]}
+      xAccessor={["week"]}
+      yAccessor={["theaterCount"]}
+      lineStyle={d => ({
+        stroke: d.title === "Ex Machina" ? "#00a2ce" : "red",
+        fill: "none"
+      })}
+      margin={{ left: 80, bottom: 50, right: 10, top: 40 }}
+      axes={[
+        {
+          orient: "left"
+        },
+        {
+          orient: "bottom"
+        }
+      ]}
+      hoverAnnotation={[
+        d => ({
+          type: "frame-hover",
+          color:
+            (d.parentLine &&
+              d.parentLine.title === "Ex Machina" &&
+              "#00a2ce") ||
+            "red"
+        })
+      ]}
+      customHoverBehavior={d => console.info("custom hover d", d)}
+      customClickBehavior={d => console.info("click on d", d)}
+      customDoubleClickBehavior={d =>
+        console.info("customDoubleClickBehavior d", d)
+      }
     />`
     })
 

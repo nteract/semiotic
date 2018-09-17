@@ -12,7 +12,8 @@ import {
   differenceLine,
   stackedArea,
   bumpChart,
-  lineChart
+  lineChart,
+  cumulativeLine
 } from "../svg/lineDrawing"
 
 import { contouring, hexbinning, heatmapping } from "../svg/areaDrawing"
@@ -32,7 +33,9 @@ const builtInTransformations = {
   "bumparea": bumpChart,
   "bumpline": bumpChart,
   "bumparea-invert": bumpChart,
-  "line": lineChart
+  "line": lineChart,
+  "cumulative": cumulativeLine,
+  "cumulative-reverse": cumulativeLine
 }
 
 export const stringToFn = (
@@ -115,7 +118,16 @@ export const calculateDataExtent = ({
         points.forEach((d, i) => {
           const x = actualXAccessor(d, i)
           const y = actualYAccessor(d, i)
-          projectedPoints.push({ x, y, data: d })
+          const projectedPoint = { x, y, data: d }
+          if (Array.isArray(y)) {
+            projectedPoint[projectedYBottom] = Math.min(...y)
+            projectedPoint[projectedYTop] = Math.max(...y)
+            projectedPoint[projectedYMiddle] =
+              (projectedPoint[projectedYBottom] +
+                projectedPoint[projectedYTop]) /
+              2
+          }
+          projectedPoints.push(projectedPoint)
         })
       })
     })
@@ -186,20 +198,24 @@ export const calculateDataExtent = ({
       const baseData = d._baseData
       if (d._xyfCoordinates[0][0][0]) {
         d._xyfCoordinates[0].forEach(multi => {
-          multi.map((p, q) =>
+          multi
+            .map((p, q) =>
+              Object.assign({ parentArea: d }, baseData[q], {
+                [projectedX]: p[0],
+                [projectedY]: p[1]
+              })
+            )
+            .forEach(e => fullDataset.push(e))
+        })
+      } else {
+        d._xyfCoordinates
+          .map((p, q) =>
             Object.assign({ parentArea: d }, baseData[q], {
               [projectedX]: p[0],
               [projectedY]: p[1]
             })
-          ).forEach(e => fullDataset.push(e))
-        })
-      } else {
-        d._xyfCoordinates.map((p, q) =>
-          Object.assign({ parentArea: d }, baseData[q], {
-            [projectedX]: p[0],
-            [projectedY]: p[1]
-          })
-        ).forEach(e => fullDataset.push(e))
+          )
+          .forEach(e => fullDataset.push(e))
       }
     })
   }
