@@ -1062,11 +1062,17 @@ export default class CreatingLineChart extends React.Component {
                   "red"
               })
             ]}
-            customHoverBehavior={d => console.info("custom hover d", d)}
-            customClickBehavior={d => console.info("click on d", d)}
-            customDoubleClickBehavior={d =>
-              console.info("customDoubleClickBehavior d", d)
-            }
+            tooltipContent={d => {
+              return (
+                <div className="tooltip-content">
+                  <p>{d.parentLine.title}</p>
+                  <p>Week: {d.week}</p>
+                  <p>
+                    Theaters: {d.theaterCount} ({d.yMiddle} Cumulative)
+                  </p>
+                </div>
+              )
+            }}
           />
           <XYFrame
             title={"cumulative-reverse"}
@@ -1146,11 +1152,17 @@ export default class CreatingLineChart extends React.Component {
             "red"
         })
       ]}
-      customHoverBehavior={d => console.info("custom hover d", d)}
-      customClickBehavior={d => console.info("click on d", d)}
-      customDoubleClickBehavior={d =>
-        console.info("customDoubleClickBehavior d", d)
-      }
+      tooltipContent={d => {
+        return (
+          <div className="tooltip-content">
+            <p>{d.parentLine.title}</p>
+            <p>Week: {d.week}</p>
+            <p>
+              Theaters: {d.theaterCount} ({d.yMiddle} Cumulative)
+            </p>
+          </div>
+        )
+      }}
     />`
     })
 

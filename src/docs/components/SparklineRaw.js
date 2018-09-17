@@ -85,8 +85,9 @@ export default (type = "stackedarea") => {
           lineType="line"
           lines={[generatedData[0]]}
           hoverAnnotation={true}
-        />. But let's say you're writing an essay and you want to discuss how
-        two people have different friend networks. You could describe one as a
+        />
+        . But let's say you're writing an essay and you want to discuss how two
+        people have different friend networks. You could describe one as a
         "broker" and one as a "hub" or you could drop a network in your text
         like this for your hub friend{" "}
         <SparkNetworkFrame
@@ -99,10 +100,6 @@ export default (type = "stackedarea") => {
             { source: "a", target: "i" },
             { source: "a", target: "j" }
           ]}
-          edgeRenderMode="sketchy"
-          nodeRenderMode="sketchy"
-          canvasNodes={true}
-          canvasEdges={true}
           edgeStyle={{ stroke: "black" }}
           nodeStyle={d => ({
             fill: d.id === "a" ? "#00a2ce" : "black",
@@ -129,8 +126,7 @@ export default (type = "stackedarea") => {
       </p>
       <p style={{ fontSize: "20px", lineHeight: "28px" }}>
         Line charts may be typical, but that doesn't keep a sparkline from being
-        a
-        <SparkXYFrame {...negativeChart} renderKey={d => d.label} /> or maybe
+        a<SparkXYFrame {...negativeChart} renderKey={d => d.label} /> or maybe
         even a
         <SparkOrdinalFrame
           data={[8, 4, 12, 3, 4, 5, 6, 7]}
@@ -148,7 +144,8 @@ export default (type = "stackedarea") => {
           type="bar"
           renderMode="sketchy"
           summaryRenderMode="sketchy"
-        />, too. And though they're pretty complex shapes for such small area, a
+        />
+        , too. And though they're pretty complex shapes for such small area, a
         <SparkOrdinalFrame
           data={summarySample}
           size={[50, 100]}
@@ -179,7 +176,8 @@ export default (type = "stackedarea") => {
           }}
           summaryType={{ type: "violin", bins: 5 }}
           projection="horizontal"
-        />, or a
+        />
+        , or a
         <SparkOrdinalFrame
           data={summarySample}
           size={[50, 100]}
@@ -193,7 +191,8 @@ export default (type = "stackedarea") => {
           }}
           summaryType={{ type: "heatmap", bins: 5 }}
           projection="horizontal"
-        />, or maybe a{" "}
+        />
+        , or maybe a{" "}
         <SparkOrdinalFrame
           data={summarySample}
           size={[50, 100]}
@@ -274,7 +273,8 @@ export default (type = "stackedarea") => {
             fill: stackedColors[d.id],
             stroke: "black"
           })}
-        />.
+        />
+        .
       </p>
     </div>
   )

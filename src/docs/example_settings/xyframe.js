@@ -175,7 +175,7 @@ export const regionatedLineChart = {
   ],
   //    yAccessor: d => d.value,
   yAccessor: d => d.delta,
-  margin: { top: 35, right: 30, left: 60, bottom: 50 },
+  margin: { top: 35, right: 30, left: 70, bottom: 50 },
   customLineMark: borderCutLine,
   customPointMark: () => <Mark markType="circle" r={2} />,
   showLinePoints: true,

@@ -124,20 +124,26 @@ export function createPoints({
         }
         canvasDrawing.push(canvasPoint)
       } else {
-        mappedPoints.push(
-          clonedAppliedElement({
-            baseClass: "frame-piece",
-            tx: dX,
-            ty: dY,
-            d: (d.data && { ...d, ...d.data }) || d,
-            i,
-            markProps,
-            styleFn,
-            renderFn: renderMode,
-            renderKeyFn,
-            classFn
-          })
-        )
+        const yCoordinates = Array.isArray(d[y])
+          ? d[y].map(p => yScale(p))
+          : [dY]
+        yCoordinates.forEach((yc, yi) => {
+          mappedPoints.push(
+            clonedAppliedElement({
+              baseClass: "frame-piece",
+              tx: dX,
+              ty: yc,
+              d: (d.data && { ...d, ...d.data }) || d,
+              i: yi === 0 ? i : `${i}-${yi}`,
+              markProps,
+              styleFn,
+              renderFn: renderMode,
+              renderKeyFn,
+              classFn,
+              yi
+            })
+          )
+        })
       }
     }
   })
@@ -466,14 +472,15 @@ export function clonedAppliedElement({
   renderFn,
   classFn,
   renderKeyFn,
-  baseClass
+  baseClass,
+  yi
 }) {
-  markProps.style = styleFn ? styleFn(d, i) : {}
+  markProps.style = styleFn ? styleFn(d, i, yi) : {}
 
   markProps.className = baseClass
 
   markProps.key = renderKeyFn
-    ? renderKeyFn(d, i)
+    ? renderKeyFn(d, i, yi)
     : `${baseClass}-${d.key === undefined ? i : d.key}`
 
   if (tx || ty) {
@@ -481,14 +488,14 @@ export function clonedAppliedElement({
   }
 
   if (classFn) {
-    markProps.className = `${baseClass} ${classFn(d, i)}`
+    markProps.className = `${baseClass} ${classFn(d, i, yi)}`
   }
 
   if (!markProps.markType) {
     return <markProps />
   }
 
-  markProps.renderMode = renderFn ? renderFn(d, i) : undefined
+  markProps.renderMode = renderFn ? renderFn(d, i, yi) : undefined
 
   return <Mark {...markProps} />
 }
