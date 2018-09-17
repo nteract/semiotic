@@ -281,6 +281,25 @@ export const lineChart = ({
   return data
 }
 
+export const cumulativeLine = ({
+  data,
+  yPropTop,
+  yPropMiddle,
+  yPropBottom,
+  type = "cumulative"
+}: CumulativeLineTypes) => {
+  data.forEach(d => {
+    let cumulativeValue = 0
+    const dataArray = type === "cumulative-reverse" ? d.data.reverse() : d.data
+    dataArray.forEach(p => {
+      cumulativeValue += p[yPropTop]
+      p[yPropBottom] = p[yPropTop] = p[yPropMiddle] = cumulativeValue
+    })
+  })
+
+  return data
+}
+
 export const bumpChart = ({
   type = "bumpline",
   data,

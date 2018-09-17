@@ -290,8 +290,15 @@ class InteractionLayer extends React.Component<Props, State> {
       projectedYMiddle,
       size,
       overlay,
-      interactionOverflow = { top: 0, bottom: 0, left: 0, right: 0 }
+      interactionOverflow = { top: 0, bottom: 0, left: 0, right: 0 },
+      customClickBehavior,
+      customDoubleClickBehavior
     } = props
+
+    const pointerStyle =
+      customClickBehavior || customDoubleClickBehavior
+        ? { cursor: "pointer" }
+        : {}
 
     if (points && props.hoverAnnotation && !overlay) {
       const voronoiDataset = []
@@ -365,7 +372,7 @@ class InteractionLayer extends React.Component<Props, State> {
             }}
             key={`interactionVoronoi${i}`}
             d={`M${d.join("L")}Z`}
-            style={{ fillOpacity: 0 }}
+            style={{ fillOpacity: 0, ...pointerStyle }}
           />
         )
       }, this)
@@ -389,7 +396,7 @@ class InteractionLayer extends React.Component<Props, State> {
               onDoubleClick: () => {
                 this.doubleclickVoronoi(overlayData)
               },
-              style: { opacity: 0 }
+              style: { opacity: 0, ...pointerStyle }
             })
           } else {
             return (
@@ -409,6 +416,7 @@ class InteractionLayer extends React.Component<Props, State> {
                 onDoubleClick={() => {
                   this.doubleclickVoronoi(overlayData)
                 }}
+                style={{ opacity: 0, ...pointerStyle }}
               />
             )
           }
