@@ -502,9 +502,10 @@ export function relativeY({
   yScale
 }: RelativeYTypes) {
   const baseData =
-    (point && point[projectedYMiddle]) ||
-    point[projectedY] ||
-    findFirstAccessorValue(yAccessor, point)
+    point &&
+    (point[projectedYMiddle] ||
+      point[projectedY] ||
+      findFirstAccessorValue(yAccessor, point))
 
   if (Array.isArray(baseData)) {
     return baseData.map(d => yScale(d))
