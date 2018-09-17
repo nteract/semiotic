@@ -42,6 +42,14 @@ type StackedAreaTypes = {
   yPropBottom: string
 }
 
+type CumulativeLineTypes = {
+  type: string,
+  data: Array<Object>,
+  yPropMiddle: string,
+  yPropTop: string,
+  yPropBottom: string
+}
+
 type LineChartTypes = {
   data: Array<Object>,
   y1?: Function,
@@ -493,15 +501,15 @@ export function relativeY({
   yAccessor,
   yScale
 }: RelativeYTypes) {
-  return (
-    point &&
-    (yScale(
-      point[projectedYMiddle] ||
-        point[projectedY] ||
-        findFirstAccessorValue(yAccessor, point)
-    ) ||
-      0)
-  )
+  const baseData =
+    (point && point[projectedYMiddle]) ||
+    point[projectedY] ||
+    findFirstAccessorValue(yAccessor, point)
+
+  if (Array.isArray(baseData)) {
+    return baseData.map(d => yScale(d))
+  }
+  return (baseData && yScale(baseData)) || 0
 }
 
 export function findPointByID({

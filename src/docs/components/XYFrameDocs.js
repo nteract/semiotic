@@ -191,8 +191,7 @@ const axesHash = {
       tickFormat: d => d,
       label: {
         name: "right label",
-        position: { anchor: "middle" },
-        locationDistance: 20
+        position: { anchor: "middle" }
       }
     },
     {
@@ -200,8 +199,7 @@ const axesHash = {
       tickFormat: d => d,
       label: {
         name: "top label",
-        position: { anchor: "middle" },
-        locationDistance: 20
+        position: { anchor: "middle" }
       }
     },
     {
@@ -209,8 +207,7 @@ const axesHash = {
       tickFormat: d => d,
       label: {
         name: "left label",
-        position: { anchor: "middle" },
-        locationDistance: 20
+        position: { anchor: "middle" }
       }
     },
     {
@@ -218,8 +215,7 @@ const axesHash = {
       tickFormat: d => d,
       label: {
         name: "bottom label",
-        position: { anchor: "middle" },
-        locationDistance: 20
+        position: { anchor: "middle" }
       }
     }
   ],

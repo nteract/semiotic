@@ -918,7 +918,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       title: this.props.title
     })
 
-    if (!d.coordinates) {
+    if (!d.coordinates && !d.bounds) {
       const xCoord = d[projectedX] || findFirstAccessorValue(xAccessor, d)
       screenCoordinates = [
         xScale(xCoord),
@@ -947,9 +947,9 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         return null
       }
     } else if (!d.bounds) {
-      screenCoordinates = d.coordinates.map(p => [
-        xScale(findFirstAccessorValue(xAccessor, p)) + adjustedPosition[0],
-        relativeY({
+      screenCoordinates = d.coordinates.reduce((coords, p) => {
+        const xCoordinate = xScale(findFirstAccessorValue(xAccessor, p)) + adjustedPosition[0]
+        const yCoordinate = relativeY({
           point: p,
           lines,
           projectedYMiddle,
@@ -960,8 +960,13 @@ class XYFrame extends React.Component<XYFrameProps, State> {
           yScale,
           xScale,
           idAccessor
-        }) + adjustedPosition[1]
-      ])
+        })
+        if (Array.isArray(yCoordinate)) {
+          return [...coords, [xCoordinate, Math.min(...yCoordinate)], [xCoordinate, Math.max(...yCoordinate)]]
+        }
+        else {
+          return [...coords, [xCoordinate, yCoordinate]]
+        }}, [])
     }
 
     const customSVG =
@@ -1025,7 +1030,6 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       })
     } else if (d.type === "bounds") {
       return svgBoundsAnnotation({
-        screenCoordinates,
         d,
         i,
         adjustedSize,

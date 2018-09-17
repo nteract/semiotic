@@ -9,6 +9,8 @@ import AnnotationCalloutCircle from "react-annotation/lib/Types/AnnotationCallou
 import "../example_settings/comet.css"
 import ProcessViz from "./ProcessViz"
 
+const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"]
+
 const processedData = csvParse(data)
 let diff = 0
 processedData.forEach(d => {
@@ -190,6 +192,27 @@ export default (
       size={[700, 400]}
       dataVersion="fixed"
       points={nflx}
+      pointStyle={(d, i, yi) => ({ fill: colors[yi] })}
+      hoverAnnotation={true}
+      xScaleType={scaleTime()}
+      xAccessor={d => new Date(d.date)}
+      yAccessor={d => [d.open, d.high, d.low, d.close]}
+      margin={{ left: 80, bottom: 50, right: 10, top: 40 }}
+      axes={[
+        {
+          orient: "left"
+        },
+        {
+          orient: "bottom",
+          tickFormat: d => `${d.getMonth()}/${d.getDate()}`
+        }
+      ]}
+    />
+    <XYFrame
+      title={"Candlestick Chart"}
+      size={[700, 400]}
+      dataVersion="fixed"
+      points={nflx}
       customPointMark={({ d, xy, yScale }) => {
         const middle = yScale(xy.yMiddle)
 
@@ -210,6 +233,15 @@ export default (
           </g>
         )
       }}
+      annotations={[
+        {
+          type: "enclose-hull",
+          coordinates: nflx.filter((d, i) => i > 8 && i < 14),
+          label: "False Optimism",
+          dx: 50,
+          dy: -50
+        }
+      ]}
       hoverAnnotation={true}
       xScaleType={scaleTime()}
       xAccessor={d => new Date(d.date)}
