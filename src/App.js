@@ -2,6 +2,7 @@ import React from "react"
 import Sidebar from "./Sidebar"
 
 import MarkdownPage from "./MarkdownPage"
+import VideoGames from "./examples/VideoGames"
 
 const ROOT = process.env.PUBLIC_URL
 
@@ -25,8 +26,9 @@ const PAGES = [
         className: "sub-header"
       },
       {
-        name: "Bar Chart",
-        url: "bar-chart"
+        name: "Video Games",
+        url: "video-games",
+        component: VideoGames
       }
     ]
   }

@@ -15,6 +15,7 @@ header {
   /* height: 100px; */
   display: flex;
   padding: 30px 30px 30px 60px;
+  border-bottom: 1px solid var(--bg-color);
 }
 
 header .logo,
@@ -43,12 +44,14 @@ header h1 {
 }
 
 .sidebar {
-  padding: 0px 30px 30px 60px;
+  padding: 30px 30px 30px 60px;
   overflow-y: auto;
+  /* background: var(--bg-color); */
+  border-right: 1px solid var(--bg-color);
 }
 
 .container {
-  background: var(--bg-color);
+  /* background: var(--bg-color); */
   width: calc(100% - 300px);
   padding: 20px;
 }
