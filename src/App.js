@@ -2,6 +2,7 @@ import React from "react"
 import Sidebar from "./Sidebar"
 
 import MarkdownPage from "./MarkdownPage"
+import APIXYFrame from "./api/XYFrame"
 import VideoGames from "./examples/VideoGames"
 
 const ROOT = process.env.PUBLIC_URL
@@ -15,6 +16,29 @@ const PAGES = [
     props: {
       filename: "home"
     }
+  },
+  {
+    url: "guides",
+    name: "Guides",
+    className: "bold pointer black",
+    children: [
+      {
+        name: "XYFrame",
+        className: "sub-header"
+      },
+      {
+        name: "OrdinalFrame",
+        className: "sub-header"
+      },
+      {
+        name: "NetworkFrame",
+        className: "sub-header"
+      },
+      {
+        name: "All Frames",
+        className: "sub-header"
+      }
+    ]
   },
   {
     url: "examples",
@@ -31,6 +55,89 @@ const PAGES = [
         component: VideoGames
       }
     ]
+  },
+  {
+    url: "api",
+    name: "API",
+    className: "bold pointer black",
+    children: [
+      {
+        name: "Main Components",
+        className: "sub-header"
+      },
+      {
+        name: "XYFrame",
+        url: "xyframe",
+        component: APIXYFrame
+      },
+      {
+        name: "ResponsiveXYFrame",
+        url: "responsivexyframe"
+      },
+      {
+        name: "SparkXYFrame",
+        url: "sparkxyframe"
+      },
+      {
+        name: "MinimapXYFrame",
+        url: "sparkxyframe"
+      },
+      { name: "separator" },
+      {
+        name: "OrdinalFrame",
+        url: "ordinalframe"
+        // component: APIXYFrame
+      },
+      {
+        name: "ResponsiveOrdinalFrame",
+        url: "responsiveordinalframe"
+      },
+      {
+        name: "SparkOrdinalFrame",
+        url: "sparkordinalframe"
+      },
+      { name: "separator" },
+
+      {
+        name: "NetworkFrame",
+        url: "networkframe"
+        // component: APIXYFrame
+      },
+      {
+        name: "ResponsiveNetworkFrame",
+        url: "responsivenetworkframe"
+      },
+      {
+        name: "SparkNetworkFrame",
+        url: "sparkordinalframe"
+      },
+      { name: "separator" },
+
+      {
+        name: "FacetController",
+        url: "facetcontroller"
+      },
+      {
+        name: "Advanced Sub-Components",
+        className: "sub-header"
+      },
+      {
+        name: "Mark",
+        url: "mark"
+      },
+      {
+        name: "DividedLine",
+        url: "dividedline"
+      },
+      {
+        name: "Axis",
+        url: "axis"
+      },
+      {
+        name: "Legend",
+        url: "legend"
+      }
+    ]
   }
 ]
 
@@ -38,12 +145,15 @@ export default function({ hash }) {
   const view = hash.split(/#|\//g).filter(d => d)
 
   let View,
-    viewProps = {}
+    viewProps = {},
+    page,
+    subpage
 
+  //router logic
   if (view[0]) {
-    const page = PAGES.find(d => d.url === view[0])
+    page = PAGES.find(d => d.url === view[0])
     if (page && view[1]) {
-      const subpage = page.children.find(d => d.url === view[1])
+      subpage = page.children.find(d => d.url === view[1])
       if (subpage) {
         View = subpage.component
         if (subpage.props) viewProps = subpage.props
@@ -56,8 +166,10 @@ export default function({ hash }) {
       if (page.props) viewProps = page.props
     }
   } else {
-    View = PAGES[0].component
-    viewProps = PAGES[0].props
+    page = PAGES[0]
+
+    View = page.component
+    viewProps = page.props
   }
 
   return (
@@ -67,12 +179,13 @@ export default function({ hash }) {
           <img src={ROOT + "/img/semiotic.png"} alt="Semiotic" />
         </div>
         <div>
-          <h1 className="capitalize">
-            {view.map(d => d.replace(/-/g, " ")).join(" > ") || "Home"}
+          <h1>
+            {page && page.name}
+            {subpage && ` > ${subpage.name}`}
           </h1>
         </div>
       </header>
-      <div className="flex">
+      <div className="flex body">
         <div className="sidebar">
           <Sidebar pages={PAGES} selected={view[view.length - 1]} />
         </div>

@@ -23,6 +23,11 @@ export default class MarkdownPage extends React.Component {
   render() {
     const { markdown } = this.state
 
-    return <div dangerouslySetInnerHTML={{ __html: markdown }} />
+    return (
+      <div
+        className="markdown"
+        dangerouslySetInnerHTML={{ __html: markdown }}
+      />
+    )
   }
 }

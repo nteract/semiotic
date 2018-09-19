@@ -15,6 +15,8 @@ header {
   /* height: 100px; */
   display: flex;
   padding: 30px 30px 30px 60px;
+  background: white;
+  position: fixed;
   border-bottom: 1px solid var(--bg-color);
 }
 
@@ -28,6 +30,10 @@ header h1 {
   margin: 0px;
   font-weight: 300;
   font-size: 20px;
+}
+
+.body {
+  padding-top: 101px;
 }
 
 .flex {
@@ -46,7 +52,7 @@ header h1 {
 .sidebar {
   padding: 30px 30px 30px 60px;
   overflow-y: auto;
-  /* background: var(--bg-color); */
+  position: fixed;
   border-right: 1px solid var(--bg-color);
 }
 
@@ -54,6 +60,7 @@ header h1 {
   /* background: var(--bg-color); */
   width: calc(100% - 300px);
   padding: 20px;
+  margin-left: 330px;
 }
 
 .bold {
@@ -106,4 +113,8 @@ a {
   /* font-weight: bold; */
   color: var(--dark-color);
   background: var(--bg-color);
+}
+
+h3 {
+  font-size: 1em;
 }
