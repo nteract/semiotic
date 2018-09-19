@@ -4,5 +4,12 @@ import "./index.css"
 import App from "./App"
 import registerServiceWorker from "./registerServiceWorker"
 
-ReactDOM.render(<App />, document.getElementById("root"))
+const render = () => {
+  const hash = window.location && window.location.hash
+  ReactDOM.render(<App hash={hash} />, document.getElementById("root"))
+}
+
+render()
+window.onpopstate = render
+
 registerServiceWorker()

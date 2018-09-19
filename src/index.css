@@ -94,3 +94,13 @@ a {
 a {
   cursor: pointer;
 }
+
+.capitalize {
+  text-transform: capitalize;
+}
+
+.selected.black a {
+  /* font-weight: bold; */
+  color: var(--dark-color);
+  background: var(--bg-color);
+}

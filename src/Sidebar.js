@@ -1,57 +1,40 @@
-import React, { Component } from "react"
+import React from "react"
 
-const PAGES = [
-  {
-    url: "",
-    name: "Home",
-    className: "bold pointer black"
-  },
-  {
-    url: "examples",
-    name: "Examples",
-    className: "bold pointer black",
-    children: [
-      {
-        name: "XYFrame",
-        className: "sub-header"
-      },
-      {
-        name: "Bar Chart",
-        url: "bar-chart"
-      }
-    ]
-  }
-]
+export default ({ pages, selected }) => {
+  let nav = []
 
-class Sidebar extends Component {
-  render() {
-    let pages = []
+  pages.forEach(p => {
+    const label =
+      p.url !== undefined ? <a href={"#" + p.url}>{p.name}</a> : p.name
 
-    PAGES.forEach(p => {
-      const label =
-        p.url !== undefined ? <a href={"/" + p.url}>{p.name}</a> : p.name
+    nav.push(
+      <p
+        key={label + "-" + nav.length}
+        className={p.className + (selected === p.url ? " selected" : "")}
+      >
+        {label}
+      </p>
+    )
+    if (p.children) {
+      p.children.forEach(c => {
+        const url = c.url && `#${(p.url && p.url + "/") || ""}${c.url}`
 
-      pages.push(<p className={p.className}>{label}</p>)
+        nav.push(
+          <p
+            key={c.name + "-" + nav.length}
+            className={
+              (c.className || "") +
+              ((url && "black") || "") +
+              " child" +
+              (selected === c.url ? " selected" : "")
+            }
+          >
+            {url ? <a href={url}>{c.name}</a> : c.name}
+          </p>
+        )
+      })
+    }
+  })
 
-      if (p.children) {
-        p.children.forEach(c => {
-          const url = c.url && `/${(p.url && p.url + "/") || ""}${c.url}`
-
-          pages.push(
-            <p
-              className={
-                (c.className || "") + ((url && "black") || "") + " child"
-              }
-            >
-              {url ? <a href={url}>{c.name}</a> : c.name}
-            </p>
-          )
-        })
-      }
-    })
-
-    return pages
-  }
+  return nav
 }
-
-export default Sidebar
