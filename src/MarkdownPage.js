@@ -7,7 +7,18 @@ export default class MarkdownPage extends React.Component {
   state = {}
 
   componentWillMount() {
-    const readmePath = `${ROOT}/markdown/${this.props.filename}.md`
+    this.getFile(this.props)
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.filename !== this.props.filename) {
+      this.setState({ markdown: null })
+      this.getFile(nextProps)
+    }
+  }
+
+  getFile({ filename }) {
+    const readmePath = `${ROOT}/markdown/${filename}.md`
 
     fetch(readmePath)
       .then(response => {
@@ -17,6 +28,7 @@ export default class MarkdownPage extends React.Component {
         this.setState({
           markdown: marked(text)
         })
+        window.Prism.highlightAll()
       })
   }
 

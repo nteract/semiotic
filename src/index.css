@@ -16,6 +16,7 @@ header {
   display: flex;
   padding: 30px 30px 30px 60px;
   background: white;
+  z-index: 300;
   position: fixed;
   border-bottom: 1px solid var(--bg-color);
 }
@@ -58,7 +59,7 @@ header h1 {
 
 .container {
   /* background: var(--bg-color); */
-  width: calc(100% - 300px);
+  width: calc(100% - 370px);
   padding: 20px;
   margin-left: 330px;
 }

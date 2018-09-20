@@ -70,46 +70,45 @@ const PAGES = [
         url: "xyframe",
         component: APIXYFrame
       },
-      {
-        name: "ResponsiveXYFrame",
-        url: "responsivexyframe"
-      },
-      {
-        name: "SparkXYFrame",
-        url: "sparkxyframe"
-      },
-      {
-        name: "MinimapXYFrame",
-        url: "sparkxyframe"
-      },
-      { name: "separator" },
+      // {
+      //   name: "MinimapXYFrame",
+      //   url: "minimapxyframe"
+      // },
       {
         name: "OrdinalFrame",
-        url: "ordinalframe"
+        url: "ordinalframe",
+        component: MarkdownPage,
+        props: {
+          filename: "ordinalframe"
+        }
         // component: APIXYFrame
       },
-      {
-        name: "ResponsiveOrdinalFrame",
-        url: "responsiveordinalframe"
-      },
-      {
-        name: "SparkOrdinalFrame",
-        url: "sparkordinalframe"
-      },
-      { name: "separator" },
 
       {
         name: "NetworkFrame",
-        url: "networkframe"
+        url: "networkframe",
+        component: MarkdownPage,
+        props: {
+          filename: "networkframe"
+        }
         // component: APIXYFrame
       },
+      { name: "separator" },
       {
-        name: "ResponsiveNetworkFrame",
-        url: "responsivenetworkframe"
+        name: "ResponsiveFrames",
+        url: "responsiveframes",
+        component: MarkdownPage,
+        props: {
+          filename: "responsiveframes"
+        }
       },
       {
-        name: "SparkNetworkFrame",
-        url: "sparkordinalframe"
+        name: "SparkFrames",
+        url: "sparkFrames",
+        component: MarkdownPage,
+        props: {
+          filename: "sparkframes"
+        }
       },
       { name: "separator" },
 
