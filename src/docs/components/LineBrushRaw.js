@@ -10,6 +10,16 @@ const lineStyle = {
   strokeWidth: 1
 }
 
+const margin = { left: 40, top: 0, bottom: 50, right: 20 }
+const axes = [
+  { orient: "left" },
+  {
+    orient: "bottom",
+    ticks: 6,
+    tickFormat: d => d.getFullYear()
+  }
+]
+
 export default (data, startEvent, duringEvent, endEvent, extent) => {
   const lineBrushChart = {
     size: [700, 200],
@@ -18,15 +28,8 @@ export default (data, startEvent, duringEvent, endEvent, extent) => {
     yAccessor: "close",
     xScaleType: chartScale,
     lineStyle: lineStyle,
-    axes: [
-      { orient: "left" },
-      {
-        orient: "bottom",
-        ticks: 6,
-        tickFormat: d => d.getFullYear()
-      }
-    ],
-    margin: { left: 40, top: 0, bottom: 50, right: 20 },
+    axes,
+    margin,
     interaction: {
       start: startEvent,
       during: duringEvent,

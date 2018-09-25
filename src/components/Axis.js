@@ -43,6 +43,7 @@ class Axis extends React.Component {
           .map(l => (l.getBBox && l.getBBox()) || { height: 30, width: 30 })
           .map(d => d[positionType])
       ) + 25
+
     return axisLabelMax
   }
 
@@ -169,7 +170,6 @@ class Axis extends React.Component {
         lineHeight = height + 25
         break
       case "bottom":
-        position = [position[0], position[1]]
         position = [position[0], 0]
         hoverWidth = width
         hoverHeight = 50

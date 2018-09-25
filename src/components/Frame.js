@@ -99,12 +99,16 @@ class Frame extends React.Component<Props, State> {
   canvasContext = null
 
   componentDidMount() {
-    this.setState({ canvasContext: this.canvasContext })
+    this.setState({
+      canvasContext: this.canvasContext
+    })
   }
 
   componentDidUpdate() {
     if (this.canvasContext !== this.state.canvasContext)
-      this.setState({ canvasContext: this.canvasContext })
+      this.setState({
+        canvasContext: this.canvasContext
+      })
   }
 
   setVoronoi = (d: Object) => {
@@ -344,6 +348,7 @@ class Frame extends React.Component<Props, State> {
               )}
             </svg>
           </SpanOrDiv>
+
           <InteractionLayer
             useSpans={useSpans}
             hoverAnnotation={hoverAnnotation}
@@ -356,6 +361,7 @@ class Frame extends React.Component<Props, State> {
             customHoverBehavior={customHoverBehavior}
             customDoubleClickBehavior={customDoubleClickBehavior}
             points={points}
+            canvasRendering={canvasRendering}
             position={adjustedPosition}
             margin={margin}
             size={adjustedSize}

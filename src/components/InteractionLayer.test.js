@@ -23,6 +23,7 @@ describe("InteractionLayer", () => {
       yScale={scaleLinear()
         .domain([0, 1200])
         .range([400, 0])}
+      disableCanvas={true}
       interaction={{
         brush: "xyBrush",
         end: xyEndFunction,

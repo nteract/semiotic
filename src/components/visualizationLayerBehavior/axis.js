@@ -134,6 +134,7 @@ export const axisLabels = ({ axisParts, tickFormat, rotate = 0 }) => {
         key={i}
         pointerEvents="none"
         transform={`translate(${axisPart.tx},${axisPart.ty})rotate(${rotate})`}
+        className="axis-label"
       >
         {renderedValue}
       </g>

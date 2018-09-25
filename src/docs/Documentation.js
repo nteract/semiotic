@@ -30,6 +30,7 @@ import JoyPlot from "./components/JoyPlot"
 import WaterfallChart from "./components/WaterfallChart"
 import BulletChart from "./components/BulletChart"
 import NeighborhoodMap from "./components/NeighborhoodMap"
+import CanvasInteraction from "./components/CanvasInteraction"
 import BaseballMap from "./components/BaseballMap"
 import WordCloud from "./components/WordCloud"
 import SwarmBrush from "./components/SwarmBrush"
@@ -94,6 +95,7 @@ const components = {
   annotations: { docs: AppleStockChart, parent: "xyframe" },
   homerunmap: { docs: BaseballMap, parent: "xyframe" },
   neighborhoodmap: { docs: NeighborhoodMap, parent: "xyframe" },
+  canvasinteraction: { docs: CanvasInteraction, parent: "xyframe" },
   realtimeline: { docs: RealtimeXYFrame, parent: "xyframe" },
   minimap: { docs: Minimap, parent: "xyframe" },
   linebrush: { docs: LineBrush, parent: "xyframe" },
@@ -347,7 +349,8 @@ class Documentation extends React.Component {
               <div className={"drawer-title"}>
                 <IconButton onClick={this.handleDrawerClose}>
                   <ChevronLeftIcon />
-                </IconButton>Semiotic
+                </IconButton>
+                Semiotic
               </div>
               <Divider />
               <List className={classes.list}>{allDocs}</List>
