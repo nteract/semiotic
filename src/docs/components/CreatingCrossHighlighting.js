@@ -620,6 +620,7 @@ export default class CreatingLineChart extends React.Component {
                 customHoverBehavior={this.hoverBehavior}
                 hoverAnnotation={true}
                 lineIDAccessor={d => d.title}
+                canvasLines={true}
               />
             </div>
             <div style={{ display: "inline-block", width: "350px" }}>
@@ -656,6 +657,7 @@ export default class CreatingLineChart extends React.Component {
                 customHoverBehavior={this.hoverBehavior}
                 hoverAnnotation={true}
                 lineIDAccessor={d => d.title}
+                canvasLines={true}
               />
             </div>
           </div>

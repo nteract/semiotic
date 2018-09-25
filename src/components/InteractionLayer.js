@@ -42,21 +42,98 @@ type Props = {
   customDoubleClickBehavior?: Function,
   customClickBehavior?: Function,
   customHoverBehavior?: Function,
-  voronoiHover: Function
+  voronoiHover: Function,
+  canvasRendering?: boolean
 }
 
 type State = {
-  overlayRegions: Node
+  overlayRegions: Array<Node>,
+  interactionCanvas: Node
 }
 
 class InteractionLayer extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props)
 
+    // $FlowFixMe
     this.state = {
-      overlayRegions: this.calculateOverlay(props)
+      overlayRegions: this.calculateOverlay(props),
+      interactionCanvas: (
+        <canvas
+          className="frame-canvas-interaction"
+          ref={canvasContext => {
+            if (canvasContext) {
+              canvasContext.onmousemove = e => {
+                const interactionContext = canvasContext.getContext("2d")
+                const hoverPoint = interactionContext.getImageData(
+                  e.offsetX,
+                  e.offsetY,
+                  1,
+                  1
+                )
+
+                const mostCommonRGB = `rgba(${hoverPoint.data[0]},${
+                  hoverPoint.data[1]
+                },${hoverPoint.data[2]},255)`
+
+                // $FlowFixMe
+                let overlay = this.state.overlayRegions[
+                  this.canvasMap.get(mostCommonRGB)
+                ]
+                if (!overlay) {
+                  const hoverArea = interactionContext.getImageData(
+                    e.offsetX - 2,
+                    e.offsetY - 2,
+                    5,
+                    5
+                  )
+                  let x = 0
+
+                  while (!overlay && x < 100) {
+                    // $FlowFixMe
+                    overlay = this.state.overlayRegions[
+                      this.canvasMap.get(
+                        `rgba(${hoverArea.data[x]},${hoverArea.data[x + 1]},${
+                          hoverArea.data[x + 2]
+                        },255)`
+                      )
+                    ]
+                    x += 4
+                  }
+                }
+
+                // $FlowFixMe
+                if (overlay && overlay.props) {
+                  overlay.props.onMouseEnter()
+                } else {
+                  this.changeVoronoi()
+                }
+              }
+            }
+            this.interactionContext = canvasContext
+          }}
+          style={{
+            position: "absolute",
+            left: `0px`,
+            top: `0px`,
+            imageRendering: "pixelated",
+            pointerEvents: "all",
+            opacity: 0
+          }}
+          width={props.svgSize[0]}
+          height={props.svgSize[1]}
+        />
+      )
     }
   }
+
+  static defaultProps = {
+    svgSize: [500, 500]
+  }
+
+  interactionContext = null
+
+  canvasMap: Map<string, number> = new Map()
 
   changeVoronoi = (d?: Object, customHoverTypes?: CustomHoverType) => {
     //Until semiotic 2
@@ -427,6 +504,55 @@ class InteractionLayer extends React.Component<Props, State> {
     }
   }
 
+  componentDidMount() {
+    this.canvasRendering()
+  }
+
+  componentDidUpdate(prevProps: Props, prevState: State) {
+    if (this.state.overlayRegions !== prevState.overlayRegions) {
+      this.canvasRendering()
+    }
+  }
+
+  canvasRendering = () => {
+    if (this.interactionContext === null || !this.state.overlayRegions) return
+
+    const { svgSize, margin } = this.props
+    const { overlayRegions } = this.state
+
+    this.canvasMap.clear()
+
+    // $FlowFixMe
+    const interactionContext = this.interactionContext.getContext("2d")
+
+    interactionContext.imageSmoothingEnabled = false
+    interactionContext.setTransform(1, 0, 0, 1, margin.left, margin.top)
+    interactionContext.clearRect(
+      -margin.left,
+      -margin.top,
+      svgSize[0],
+      svgSize[1]
+    )
+
+    interactionContext.lineWidth = 1
+
+    overlayRegions.forEach((overlay, oi) => {
+      const interactionRGBA = `rgba(${parseInt(Math.random() * 255)},${parseInt(
+        Math.random() * 255
+      )},${parseInt(Math.random() * 255)},255)`
+
+      this.canvasMap.set(interactionRGBA, oi)
+
+      interactionContext.fillStyle = interactionRGBA
+      interactionContext.strokeStyle = interactionRGBA
+
+      // $FlowFixMe
+      const p = new Path2D(overlay.props.d)
+      interactionContext.stroke(p)
+      interactionContext.fill(p)
+    })
+  }
+
   createColumnsBrush = (interaction: Object) => {
     const { projection, rScale, size, oColumns } = this.props
 
@@ -510,7 +636,13 @@ class InteractionLayer extends React.Component<Props, State> {
 
   render() {
     let semioticBrush = null
-    const { interaction, svgSize, margin, useSpans = false } = this.props
+    const {
+      interaction,
+      svgSize,
+      margin,
+      useSpans = false,
+      canvasRendering
+    } = this.props
     const { overlayRegions } = this.state
     let { enabled } = this.props
 
@@ -527,6 +659,11 @@ class InteractionLayer extends React.Component<Props, State> {
       return null
     }
 
+    const interactionCanvas =
+      canvasRendering &&
+      this.state.overlayRegions &&
+      this.state.interactionCanvas
+
     return (
       <SpanOrDiv
         span={useSpans}
@@ -537,20 +674,22 @@ class InteractionLayer extends React.Component<Props, State> {
           pointerEvents: "none"
         }}
       >
-        <svg
-          height={svgSize[1]}
-          width={svgSize[0]}
-          style={{ background: "none", pointerEvents: "none" }}
-        >
-          <g
-            className="interaction-overlay"
-            transform={`translate(${margin.left},${margin.top})`}
-            style={{ pointerEvents: enabled ? "all" : "none" }}
+        {interactionCanvas || (
+          <svg
+            height={svgSize[1]}
+            width={svgSize[0]}
+            style={{ background: "none", pointerEvents: "none" }}
           >
-            <g className="interaction-regions">{overlayRegions}</g>
-            {semioticBrush}
-          </g>
-        </svg>
+            <g
+              className="interaction-overlay"
+              transform={`translate(${margin.left},${margin.top})`}
+              style={{ pointerEvents: enabled ? "all" : "none" }}
+            >
+              <g className="interaction-regions">{overlayRegions}</g>
+              {semioticBrush}
+            </g>
+          </svg>
+        )}
       </SpanOrDiv>
     )
   }

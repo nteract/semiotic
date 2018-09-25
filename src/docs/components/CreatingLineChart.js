@@ -484,16 +484,6 @@ export default class CreatingLineChart extends React.Component {
                 orient: "bottom"
               }
             ]}
-            hoverAnnotation={[
-              d => ({
-                type: "frame-hover",
-                color:
-                  (d.parentLine &&
-                    d.parentLine.title === "Ex Machina" &&
-                    "#00a2ce") ||
-                  "red"
-              })
-            ]}
             customHoverBehavior={d => console.info("custom hover d", d)}
             customClickBehavior={d => console.info("click on d", d)}
             customDoubleClickBehavior={d =>
