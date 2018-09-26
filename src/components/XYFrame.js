@@ -34,7 +34,7 @@ import {
   createAreas
 } from "./visualizationLayerBehavior/general"
 
-import { relativeY, findPointByID } from "./svg/lineDrawing"
+import { relativeY, relativeX, findPointByID } from "./svg/lineDrawing"
 import AnnotationCallout from "react-annotation/lib/Types/AnnotationCallout"
 
 import {
@@ -48,7 +48,10 @@ import {
   projectedY,
   projectedYTop,
   projectedYMiddle,
-  projectedYBottom
+  projectedYBottom,
+  projectedXMiddle,
+  projectedXTop,
+  projectedXBottom
 } from "./constants/coordinateNames"
 import {
   calculateDataExtent,
@@ -233,7 +236,10 @@ const projectedCoordinateNames = {
   x: projectedX,
   yMiddle: projectedYMiddle,
   yTop: projectedYTop,
-  yBottom: projectedYBottom
+  yBottom: projectedYBottom,
+  xMiddle: projectedXMiddle,
+  xTop: projectedXTop,
+  xBottom: projectedXBottom
 }
 
 function mapParentsToPoints(fullDataset: Array<Object>) {
@@ -619,6 +625,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
 
     const existingBaselines = {}
 
+
     if (currentProps.axes) {
       axesTickLines = []
       axes = currentProps.axes.map((d, i) => {
@@ -919,20 +926,20 @@ class XYFrame extends React.Component<XYFrameProps, State> {
     })
 
     if (!d.coordinates && !d.bounds) {
-      const xCoord = d[projectedX] || findFirstAccessorValue(xAccessor, d)
       screenCoordinates = [
-        xScale(xCoord),
-        relativeY({
+        relativeX({
           point: d,
-          lines,
-          projectedYMiddle,
-          projectedY,
+          projectedXMiddle,
           projectedX,
           xAccessor,
+          xScale
+        }),
+        relativeY({
+          point: d,
+          projectedYMiddle,
+          projectedY,
           yAccessor,
-          yScale,
-          xScale,
-          idAccessor
+          yScale
         })
       ]
 
@@ -948,7 +955,14 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       }
     } else if (!d.bounds) {
       screenCoordinates = d.coordinates.reduce((coords, p) => {
-        const xCoordinate = xScale(findFirstAccessorValue(xAccessor, p)) + adjustedPosition[0]
+        const xCoordinate = relativeX({
+          point: p,
+          projectedXMiddle,
+          projectedX,
+          xAccessor,
+          xScale
+        })
+
         const yCoordinate = relativeY({
           point: p,
           lines,
@@ -963,6 +977,9 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         })
         if (Array.isArray(yCoordinate)) {
           return [...coords, [xCoordinate, Math.min(...yCoordinate)], [xCoordinate, Math.max(...yCoordinate)]]
+        }
+        else if (Array.isArray(xCoordinate)) {
+          return [...coords, [Math.min(...xCoordinate), yCoordinate], [Math.max(...xCoordinate), yCoordinate]]
         }
         else {
           return [...coords, [xCoordinate, yCoordinate]]
@@ -1112,8 +1129,8 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       return null
     }
 
-    const xCoord = d[projectedX] || findFirstAccessorValue(xAccessor, d)
-    const yCoord = d[projectedY] || findFirstAccessorValue(yAccessor, d)
+    const xCoord =  d[projectedXMiddle] || d[projectedX] || findFirstAccessorValue(xAccessor, d)
+    const yCoord =  d[projectedYMiddle] || d[projectedY] || findFirstAccessorValue(yAccessor, d)
 
     const xString = xCoord && xCoord.toString ? xCoord.toString() : xCoord
     const yString = yCoord && yCoord.toString ? yCoord.toString() : yCoord

@@ -1695,6 +1695,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         baseMarkProps={baseMarkProps}
         canvasRendering={!!(canvasPieces || canvasSummaries)}
         renderOrder={renderOrder}
+        disableCanvasInteraction={true}
       />
     )
   }

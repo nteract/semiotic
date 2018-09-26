@@ -59,7 +59,7 @@ const pointsAlong = along => ({
         key={`found-circle-${i}`}
         r={r(p, i)}
         style={styleFn(p, i)}
-        cx={xScale(p.x)}
+        cx={xScale(p.xMiddle || p.x)}
         cy={yScale(p.yMiddle || p.yTop)}
       />
     ))
