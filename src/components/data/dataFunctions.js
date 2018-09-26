@@ -6,7 +6,10 @@ import {
   projectedY,
   projectedYTop,
   projectedYMiddle,
-  projectedYBottom
+  projectedYBottom,
+  projectedXBottom,
+  projectedXMiddle,
+  projectedXTop
 } from "../constants/coordinateNames"
 import {
   differenceLine,
@@ -17,7 +20,7 @@ import {
 } from "../svg/lineDrawing"
 
 import { contouring, hexbinning, heatmapping } from "../svg/areaDrawing"
-import { max, min, extent } from "d3-array"
+import { max, min } from "d3-array"
 
 import { extentValue } from "./unflowedFunctions"
 
@@ -127,6 +130,14 @@ export const calculateDataExtent = ({
                 projectedPoint[projectedYTop]) /
               2
           }
+          if (Array.isArray(x)) {
+            projectedPoint[projectedXBottom] = Math.min(...x)
+            projectedPoint[projectedXTop] = Math.max(...x)
+            projectedPoint[projectedXMiddle] =
+              (projectedPoint[projectedXBottom] +
+                projectedPoint[projectedXTop]) /
+              2
+          }
           projectedPoints.push(projectedPoint)
         })
       })
@@ -151,7 +162,10 @@ export const calculateDataExtent = ({
       yProp: projectedY,
       yPropMiddle: projectedYMiddle,
       yPropTop: projectedYTop,
-      yPropBottom: projectedYBottom
+      yPropBottom: projectedYBottom,
+      xPropMiddle: projectedXMiddle,
+      xPropTop: projectedXTop,
+      xPropBottom: projectedXBottom
     }
 
     projectedLines = lineTransformation(lineType, optionsObject)(
@@ -227,7 +241,26 @@ export const calculateDataExtent = ({
     }))
   }
 
-  const calculatedXExtent = extent(fullDataset.map(d => d[projectedX]))
+  const calculatedXExtent = [
+    min(
+      fullDataset.map(
+        d =>
+          d[projectedXBottom] === undefined
+            ? d[projectedX]
+            : Math.min(d[projectedXTop], d[projectedXBottom])
+      )
+    ),
+
+    max(
+      fullDataset.map(
+        d =>
+          d[projectedXTop] === undefined
+            ? d[projectedX]
+            : Math.max(d[projectedXBottom], d[projectedXTop])
+      )
+    )
+  ]
+
   const calculatedYExtent = [
     min(
       fullDataset.map(
@@ -321,21 +354,7 @@ export const calculateDataExtent = ({
       ...projectedAreas.map(d => ({ ...d })),
       ...fullDataset.filter(d => !d.parentArea)
     ]
-  } /*else if (
-    typeof areaType === "function" ||
-    (areaType && areaType.type && typeof areaType.type === "function")
-  ) {
-    const areaFunction = areaType.type || areaType
-
-    projectedAreas = areaFunction({
-      xExtent: finalXExtent,
-      yExtent: finalYExtent,
-      projectedX,
-      projectedY,
-      fullDataset,
-      projectedAreas
-    })
-  } */
+  }
 
   return {
     xExtent: finalXExtent,
