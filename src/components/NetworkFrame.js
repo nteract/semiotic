@@ -1832,6 +1832,7 @@ class NetworkFrame extends React.Component<Props, State> {
         useSpans={!!useSpans}
         canvasRendering={!!(canvasNodes || canvasEdges)}
         renderOrder={renderOrder}
+        disableCanvasInteraction={true}
       />
     )
   }

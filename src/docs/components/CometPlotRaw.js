@@ -257,5 +257,55 @@ export default (
         }
       ]}
     />
+    <XYFrame
+      title={"Horizontal Candlestick Chart"}
+      size={[700, 700]}
+      dataVersion="fixed"
+      points={nflx}
+      customPointMark={({ d, xy, xScale }) => {
+        const middle = xScale(xy.xMiddle)
+
+        const openY = xScale(d.open) - middle
+        const closeY = xScale(d.close) - middle
+        const minY = xScale(d.low) - middle
+        const maxY = xScale(d.high) - middle
+
+        return (
+          <g>
+            <line width={2} x1={minY} x2={maxY} stroke="black" />
+            <rect
+              height={4}
+              y={-2}
+              width={Math.abs(openY - closeY)}
+              x={Math.min(openY, closeY)}
+              fill={d.open > d.close ? "rgb(179, 51, 29)" : "rgb(77, 67, 12)"}
+            />
+          </g>
+        )
+      }}
+      annotations={[
+        {
+          type: "enclose-hull",
+          coordinates: nflx.filter((d, i) => i > 8 && i < 14),
+          label: "False Optimism",
+          dx: 50,
+          dy: -50
+        }
+      ]}
+      hoverAnnotation={true}
+      yScaleType={scaleTime()}
+      yAccessor={d => new Date(d.date)}
+      xAccessor={d => [d.open, d.high, d.low, d.close]}
+      margin={{ left: 80, bottom: 50, right: 10, top: 40 }}
+      axes={[
+        {
+          orient: "left",
+          tickFormat: d => `${d.getMonth()}/${d.getDate()}`
+        },
+        {
+          orient: "bottom"
+        }
+      ]}
+    />
   </div>
 )

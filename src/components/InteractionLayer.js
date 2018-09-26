@@ -43,7 +43,8 @@ type Props = {
   customClickBehavior?: Function,
   customHoverBehavior?: Function,
   voronoiHover: Function,
-  canvasRendering?: boolean
+  canvasRendering?: boolean,
+  disableCanvasInteraction: boolean
 }
 
 type State = {
@@ -641,7 +642,8 @@ class InteractionLayer extends React.Component<Props, State> {
       svgSize,
       margin,
       useSpans = false,
-      canvasRendering
+      canvasRendering,
+      disableCanvasInteraction
     } = this.props
     const { overlayRegions } = this.state
     let { enabled } = this.props
@@ -660,6 +662,7 @@ class InteractionLayer extends React.Component<Props, State> {
     }
 
     const interactionCanvas =
+      !disableCanvasInteraction &&
       canvasRendering &&
       this.state.overlayRegions &&
       this.state.interactionCanvas
