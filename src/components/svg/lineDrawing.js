@@ -60,15 +60,18 @@ type LineChartTypes = {
 
 type RelativeYTypes = {
   point: ?Object,
-  lines: Object,
   projectedYMiddle: string,
   projectedY: string,
+  yAccessor: Array<Function>,
+  yScale: Function
+}
+
+type RelativeXTypes = {
+  point: ?Object,
+  projectedXMiddle: string,
   projectedX: string,
   xAccessor: Array<Function>,
-  yAccessor: Array<Function>,
-  yScale: Function,
-  xScale: Function,
-  idAccessor: Function
+  xScale: Function
 }
 
 export const projectAreaData = ({
@@ -511,6 +514,25 @@ export function relativeY({
     return baseData.map(d => yScale(d))
   }
   return (baseData && yScale(baseData)) || 0
+}
+
+export function relativeX({
+  point,
+  projectedXMiddle,
+  projectedX,
+  xAccessor,
+  xScale
+}: RelativeXTypes) {
+  const baseData =
+    point &&
+    (point[projectedXMiddle] ||
+      point[projectedX] ||
+      findFirstAccessorValue(xAccessor, point))
+
+  if (Array.isArray(baseData)) {
+    return baseData.map(d => xScale(d))
+  }
+  return (baseData && xScale(baseData)) || 0
 }
 
 export function findPointByID({

@@ -62,6 +62,7 @@ type Props = {
   matte?: boolean | Object | Node | Function,
   axes?: Array<AxisType>,
   axesTickLines?: Node,
+  disableCanvasInteraction?: boolean,
   renderOrder: $ReadOnlyArray<| "pieces"
     | "summaries"
     | "connectors"
@@ -160,7 +161,8 @@ class Frame extends React.Component<Props, State> {
       useSpans,
       canvasRendering,
       renderOrder,
-      additionalDefs
+      additionalDefs,
+      disableCanvasInteraction = false
     } = this.props
 
     const { voronoiHover } = this.state
@@ -374,6 +376,7 @@ class Frame extends React.Component<Props, State> {
             rScale={rScale}
             projection={projection}
             interactionOverflow={interactionOverflow}
+            disableCanvasInteraction={disableCanvasInteraction}
           />
           {annotationLayer}
         </SpanOrDiv>

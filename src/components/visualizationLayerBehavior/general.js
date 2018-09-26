@@ -72,10 +72,10 @@ export function createPoints({
   renderMode,
   baseMarkProps
 }) {
-  const { y, x, yMiddle } = projectedCoordinateNames
+  const { y, x, yMiddle, xMiddle } = projectedCoordinateNames
   const mappedPoints = []
   data.forEach((d, i) => {
-    const dX = xScale(d[x])
+    const dX = xScale(d[xMiddle] || d[x])
     const dY = yScale(d[yMiddle] || d[y])
     const pointAriaLabel = `Point at x ${d.x} and y ${d.y}`
     const renderedCustomMark =
@@ -128,21 +128,26 @@ export function createPoints({
           ? d[y].map(p => yScale(p))
           : [dY]
         yCoordinates.forEach((yc, yi) => {
-          mappedPoints.push(
-            clonedAppliedElement({
-              baseClass: "frame-piece",
-              tx: dX,
-              ty: yc,
-              d: (d.data && { ...d, ...d.data }) || d,
-              i: yi === 0 ? i : `${i}-${yi}`,
-              markProps,
-              styleFn,
-              renderFn: renderMode,
-              renderKeyFn,
-              classFn,
-              yi
-            })
-          )
+          const xCoordinates = Array.isArray(d[x])
+            ? d[x].map(p => xScale(p))
+            : [dX]
+          xCoordinates.forEach((xc, xi) => {
+            mappedPoints.push(
+              clonedAppliedElement({
+                baseClass: "frame-piece",
+                tx: xc,
+                ty: yc,
+                d: (d.data && { ...d, ...d.data }) || d,
+                i: yi === 0 && xi === 0 ? i : `${i}-${yi}-${xi}`,
+                markProps,
+                styleFn,
+                renderFn: renderMode,
+                renderKeyFn,
+                classFn,
+                yi
+              })
+            )
+          })
         })
       }
     }
