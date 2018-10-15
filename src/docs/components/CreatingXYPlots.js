@@ -127,7 +127,12 @@ export default class CreatingXYPlots extends React.Component {
           <XYFrame
             size={[500, 800]}
             areas={[{ coordinates: pointTestData }]}
-            areaType={{ type: "heatmap", yBins: 10, xCellPx: 35 }}
+            areaType={{
+              type: "heatmap",
+              yBins: 10,
+              xCellPx: 35,
+              binMax: binMax => console.info("bin max", binMax)
+            }}
             useAreasAsInteractionLayer={true}
             xAccessor="x"
             yAccessor="y"
