@@ -105,6 +105,10 @@ export function hexbinning({
 
     const hexMax = Math.max(...hexes.map(d => binValue(d)))
 
+    if (areaType.binMax) {
+      areaType.binMax(hexMax)
+    }
+
     //Option for blank hexe
     const hexBase = [
       [0, -1],
@@ -242,6 +246,10 @@ export function heatmapping({
       d.value = binValue(d.binItems)
       maxValue = Math.max(maxValue, d.value)
     })
+
+    if (areaType.binMax) {
+      areaType.binMax(maxValue)
+    }
 
     flatGrid.forEach(d => {
       d.percent = d.value / maxValue

@@ -506,14 +506,16 @@ export function relativeY({
 }: RelativeYTypes) {
   const baseData =
     point &&
-    (point[projectedYMiddle] ||
-      point[projectedY] ||
-      findFirstAccessorValue(yAccessor, point))
+    (point[projectedYMiddle] !== undefined
+      ? point[projectedYMiddle]
+      : point[projectedY] !== undefined
+        ? point[projectedY]
+        : findFirstAccessorValue(yAccessor, point))
 
   if (Array.isArray(baseData)) {
     return baseData.map(d => yScale(d))
   }
-  return (baseData && yScale(baseData)) || 0
+  return baseData !== undefined ? yScale(baseData) : 0
 }
 
 export function relativeX({
@@ -525,14 +527,16 @@ export function relativeX({
 }: RelativeXTypes) {
   const baseData =
     point &&
-    (point[projectedXMiddle] ||
-      point[projectedX] ||
-      findFirstAccessorValue(xAccessor, point))
+    (point[projectedXMiddle] !== undefined
+      ? point[projectedXMiddle]
+      : point[projectedX] !== undefined
+        ? point[projectedX]
+        : findFirstAccessorValue(xAccessor, point))
 
   if (Array.isArray(baseData)) {
     return baseData.map(d => xScale(d))
   }
-  return (baseData && xScale(baseData)) || 0
+  return baseData !== undefined ? xScale(baseData) : 0
 }
 
 export function findPointByID({
