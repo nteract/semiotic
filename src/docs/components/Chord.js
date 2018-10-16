@@ -1,15 +1,15 @@
-import React from 'react'
-import DocumentComponent from '../layout/DocumentComponent'
-import ChordRaw from './ChordRaw'
-import Select from 'material-ui/Select'
-import { MenuItem } from 'material-ui/Menu'
-import { InputLabel } from 'material-ui/Input'
-import { FormControl } from 'material-ui/Form'
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import ChordRaw from "./ChordRaw"
+import Select from "material-ui/Select"
+import { MenuItem } from "material-ui/Menu"
+import { InputLabel } from "material-ui/Input"
+import { FormControl } from "material-ui/Form"
 
 const components = []
 
 components.push({
-  name: 'Chord'
+  name: "Chord"
 })
 
 export default class Chord extends React.Component {
@@ -17,16 +17,16 @@ export default class Chord extends React.Component {
     super(props)
 
     this.state = {
-      padAngle: '0.01'
+      padAngle: "0.01"
     }
   }
 
   render() {
-    const padAngleOptions = ['0.01', '0', '0.2', '0.4'].map(d => 
-      (<MenuItem key={`pad-option-${d}`} label={d} value={d}>
+    const padAngleOptions = ["0.01", "0", "0.2", "0.4"].map(d => (
+      <MenuItem key={`pad-option-${d}`} label={d} value={d}>
         {d}
-      </MenuItem>)
-    )
+      </MenuItem>
+    ))
 
     const buttons = [
       <FormControl key="button-1-0-0">
@@ -42,8 +42,54 @@ export default class Chord extends React.Component {
 
     const examples = []
     examples.push({
-      name: 'Basic',
-      demo: ChordRaw({ padAngle: parseFloat(this.state.padAngle) }),
+      name: "Basic",
+      demo: (
+        <div>
+          {ChordRaw({
+            padAngle: parseFloat(this.state.padAngle),
+            annotations: this.state.hoveredOn && [
+              {
+                type: "highlight",
+                ...this.state.hoveredOn,
+                style: { fill: "red", stroke: "purple", strokeWidth: 5 }
+              },
+              { type: "frame-hover", ...this.state.hoveredOn }
+            ]
+          })}
+          <div>
+            <button
+              style={{ color: "black" }}
+              onClick={() => this.setState({ hoveredOn: { id: "a" } })}
+            >
+              Click on A
+            </button>
+            <p>
+              <button
+                style={{ color: "black" }}
+                onClick={() => this.setState({ hoveredOn: { id: "b" } })}
+              >
+                Click on B
+              </button>
+            </p>
+            <p>
+              <button
+                style={{ color: "black" }}
+                onClick={() =>
+                  this.setState({
+                    hoveredOn: {
+                      edge: true,
+                      source: { id: "a" },
+                      target: { id: "b" }
+                    }
+                  })
+                }
+              >
+                Edge Highlight
+              </button>
+            </p>
+          </div>
+        </div>
+      ),
       source: `
 const dematrixifiedEdges = [
   { source: "a", target: "a", value: 11975},
@@ -115,4 +161,4 @@ const colors = [
   }
 }
 
-Chord.title = 'Chord'
+Chord.title = "Chord"

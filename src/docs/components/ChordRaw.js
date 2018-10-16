@@ -23,11 +23,27 @@ const dematrixifiedEdges = [
 
 const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"]
 
-export default ({ padAngle = 0.01 }) => {
+const nodes = [
+  {
+    id: "a",
+    color: "orange"
+  },
+  {
+    id: "b",
+    color: "purple"
+  },
+  {
+    id: "c",
+    color: "red"
+  }
+]
+
+export default ({ padAngle = 0.01, annotations }) => {
   const chordChart = {
     size: [700, 400],
     edges: dematrixifiedEdges,
-    nodeStyle: d => ({ fill: colors[d.index], stroke: "black" }),
+    nodes: nodes,
+    nodeStyle: d => ({ fill: d.color || colors[d.index], stroke: "black" }),
     edgeStyle: d => ({
       fill: colors[d.source.index],
       stroke: "black",
@@ -36,10 +52,13 @@ export default ({ padAngle = 0.01 }) => {
     nodeSizeAccessor: 5,
     sourceAccessor: "source",
     targetAccessor: "target",
-    hoverAnnotation: true,
+    hoverAnnotation: [
+      { type: "highlight", style: { fill: "orange" } },
+      { type: "frame-hover" }
+    ],
+    annotations: annotations,
     edgeWidthAccessor: "value",
-    networkType: { type: "chord", padAngle },
-    edgeRenderMode: "painty"
+    networkType: { type: "chord", padAngle }
   }
   return (
     <div>

@@ -88,6 +88,7 @@ import {
 } from "./annotationRules/networkframeRules"
 
 import { genericFunction } from "./untyped_utilities/functions"
+import pathBounds from "svg-path-bounding-box"
 
 const emptyArray = []
 
@@ -701,7 +702,7 @@ class NetworkFrame extends React.Component<Props, State> {
           sourceLinks: [],
           targetLinks: []
         }
-        return dagreNodeHash[n] 
+        return dagreNodeHash[n]
       })
       projectedEdges = dagreGraph.edges().map(e => {
         const baseEdge = dagreGraph.edge(e)
@@ -975,6 +976,7 @@ class NetworkFrame extends React.Component<Props, State> {
 
         chords.forEach(generatedChord => {
           const chordD = ribbonGenerator(generatedChord)
+
           //this is incorrect should use edgeHash
           const nodeSourceID = nodeIDAccessor(
             projectedNodes[generatedChord.source.index]
@@ -985,6 +987,9 @@ class NetworkFrame extends React.Component<Props, State> {
           const chordEdge = edgeHash.get(`${nodeSourceID}|${nodeTargetID}`)
           // $FlowFixMe
           chordEdge.d = chordD
+          const chordBounds = pathBounds(chordD)
+          chordEdge.x = size[0] / 2 + (chordBounds.x1 + chordBounds.x2) / 2
+          chordEdge.y = size[1] / 2 + (chordBounds.y1 + chordBounds.y2) / 2
         })
       } else if (
         networkSettings.type === "sankey" ||
@@ -1538,23 +1543,46 @@ class NetworkFrame extends React.Component<Props, State> {
 
     let projectedXYPoints
     const overlay = []
-    const areaBasedTypes = ["circlepack", "treemap", "partition"]
+    const areaBasedTypes = ["circlepack", "treemap", "partition", "chord"]
     if (
       (hoverAnnotation &&
         areaBasedTypes.find(d => d === networkSettings.type)) ||
       hoverAnnotation === "area"
     ) {
-      const renderedNodeOverlays = projectedNodes.map((d, i) => ({
-        overlayData: d,
-        ...customNodeIcon({
-          d,
-          i,
-          transform: `translate(${d.x},${d.y})`,
-          styleFn: () => ({ fill: "pink", opacity: 0 })
-        }).props
-      }))
+      if (hoverAnnotation !== "edge") {
+        const renderedNodeOverlays = projectedNodes.map((d, i) => ({
+          overlayData: d,
+          ...customNodeIcon({
+            d,
+            i,
+            transform: `translate(${d.x},${d.y})`,
+            styleFn: () => ({ fill: "pink", opacity: 0 })
+          }).props
+        }))
 
-      overlay.push(...renderedNodeOverlays)
+        overlay.push(...renderedNodeOverlays)
+      }
+      if (hoverAnnotation !== "node") {
+        projectedEdges.forEach((d, i) => {
+          const generatedIcon = customEdgeIcon({
+            d,
+            i,
+            transform: `translate(${d.x},${d.y})`,
+            styleFn: () => ({ fill: "pink", opacity: 0 })
+          })
+          if (generatedIcon) {
+            overlay.push({
+              overlayData: {
+                ...d,
+                x: d.x || (d.source.x + d.target.x) / 2,
+                y: d.y || (d.source.y + d.target.y) / 2,
+                edge: true
+              },
+              ...generatedIcon.props
+            })
+          }
+        })
+      }
     } else if (
       hoverAnnotation === "edge" &&
       edgePointHash[networkSettings.type]
@@ -1604,7 +1632,7 @@ class NetworkFrame extends React.Component<Props, State> {
     })
   }
 
-  defaultNetworkSVGRule = ({ d, i }: { d: Object, i: number }) => {
+  defaultNetworkSVGRule = ({ d: baseD, i }: { d: Object, i: number }) => {
     const {
       projectedNodes,
       projectedEdges,
@@ -1613,6 +1641,22 @@ class NetworkFrame extends React.Component<Props, State> {
       networkFrameRender
     } = this.state
     const { svgAnnotationRules } = this.props
+
+    const d = baseD.ids
+      ? baseD
+      : baseD.edge
+        ? {
+            ...(projectedEdges.find(
+              p =>
+                nodeIDAccessor(p.source) === nodeIDAccessor(baseD.source) &&
+                nodeIDAccessor(p.target) === nodeIDAccessor(baseD.target)
+            ) || {}),
+            ...baseD
+          }
+        : {
+            ...(projectedNodes.find(p => nodeIDAccessor(p) === baseD.id) || {}),
+            ...baseD
+          }
 
     if (svgAnnotationRules) {
       const customAnnotation = svgAnnotationRules({
@@ -1706,6 +1750,7 @@ class NetworkFrame extends React.Component<Props, State> {
         size,
         useSpans,
         nodes: projectedNodes,
+        edges: projectedEdges,
         nodeIDAccessor
       })
     }
