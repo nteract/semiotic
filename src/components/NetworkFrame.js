@@ -988,7 +988,9 @@ class NetworkFrame extends React.Component<Props, State> {
           // $FlowFixMe
           chordEdge.d = chordD
           const chordBounds = pathBounds(chordD)
+          // $FlowFixMe
           chordEdge.x = size[0] / 2 + (chordBounds.x1 + chordBounds.x2) / 2
+          // $FlowFixMe
           chordEdge.y = size[1] / 2 + (chordBounds.y1 + chordBounds.y2) / 2
         })
       } else if (
@@ -1564,6 +1566,7 @@ class NetworkFrame extends React.Component<Props, State> {
       }
       if (hoverAnnotation !== "node") {
         projectedEdges.forEach((d, i) => {
+          // $FlowFixMe
           const generatedIcon = customEdgeIcon({
             d,
             i,
