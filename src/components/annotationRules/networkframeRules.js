@@ -12,17 +12,29 @@ export const htmlFrameHoverRule = ({
   tooltipContent,
   useSpans,
   nodes,
+  edges,
   nodeIDAccessor
 }) => {
   const d =
-    baseD.x && baseD.y ? baseD : nodes.find(p => nodeIDAccessor(p) === baseD.id)
+    baseD.x && baseD.y
+      ? baseD
+      : baseD.edge
+        ? {
+            ...(edges.find(
+              p =>
+                nodeIDAccessor(p.source) === nodeIDAccessor(baseD.source) &&
+                nodeIDAccessor(p.target) === nodeIDAccessor(baseD.target)
+            ) || {}),
+            ...baseD
+          }
+        : nodes.find(p => nodeIDAccessor(p) === baseD.id)
 
   if (!d) return null
 
   let content = d.edge ? (
     <SpanOrDiv span={useSpans} className="tooltip-content">
       <p key="html-annotation-content-1">
-        {d.edge.source.id} to {d.edge.target.id}
+        {(d.source || d.edge.source).id} to {(d.source || d.edge.source).id}
       </p>
     </SpanOrDiv>
   ) : (
@@ -52,24 +64,16 @@ export const htmlFrameHoverRule = ({
   )
 }
 
-export const svgNodeRule = ({
-  d,
-  i,
-  projectedNodes,
-  nodeIDAccessor,
-  nodeSizeAccessor
-}) => {
-  const selectedNode =
-    d.x && d.y ? d : projectedNodes.find(p => nodeIDAccessor(p) === d.id)
-  if (!selectedNode) {
+export const svgNodeRule = ({ d, i, nodeSizeAccessor }) => {
+  if (!d) {
     return null
   }
   const noteData = Object.assign(
     {
       dx: d.dx || -25,
       dy: d.dy || -25,
-      x: selectedNode.x,
-      y: selectedNode.y,
+      x: d.x,
+      y: d.y,
       note: { label: d.label },
       connector: { end: "arrow" }
     },
@@ -77,7 +81,7 @@ export const svgNodeRule = ({
     {
       type: AnnotationCalloutCircle,
       subject: {
-        radius: d.radius || selectedNode.radius || nodeSizeAccessor(d)
+        radius: d.radius || d.radius || nodeSizeAccessor(d)
       }
     }
   )

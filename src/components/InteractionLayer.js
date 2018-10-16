@@ -459,6 +459,7 @@ class InteractionLayer extends React.Component<Props, State> {
       const renderedOverlay: Array<Node> = overlay.map(
         (overlayRegion: Object, i: number) => {
           const { overlayData, ...rest } = overlayRegion
+
           if (React.isValidElement(overlayRegion.renderElement)) {
             return React.cloneElement(overlayRegion.renderElement, {
               key: `overlay-${i}`,
