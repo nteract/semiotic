@@ -34,7 +34,7 @@ export const htmlFrameHoverRule = ({
   let content = d.edge ? (
     <SpanOrDiv span={useSpans} className="tooltip-content">
       <p key="html-annotation-content-1">
-        {(d.source || d.edge.source).id} to {(d.source || d.edge.source).id}
+        {(d.source || d.edge.source).id} to {(d.target || d.edge.target).id}
       </p>
     </SpanOrDiv>
   ) : (
