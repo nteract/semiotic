@@ -5,7 +5,7 @@ import builtins from "rollup-plugin-node-builtins"
 import replace from "rollup-plugin-replace"
 import regenerator from "rollup-plugin-regenerator"
 
-import flow from 'rollup-plugin-flow';
+import flow from "rollup-plugin-flow"
 
 export default {
   exports: "named",
@@ -17,7 +17,7 @@ export default {
   },
   interop: false,
   globals: {
-    "react": "React",
+    react: "React",
     "react-dom": "ReactDOM"
   },
   external: ["react", "react-dom"],

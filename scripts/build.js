@@ -57,14 +57,14 @@ measureFileSizesBeforeBuild(paths.appBuild)
         console.info(chalk.yellow("Compiled with warnings.\n"))
         console.info(warnings.join("\n\n"))
         console.info(
-          `\nSearch for the ${ 
-            chalk.underline(chalk.yellow("keywords")) 
-            } to learn more about each warning.`
+          `\nSearch for the ${chalk.underline(
+            chalk.yellow("keywords")
+          )} to learn more about each warning.`
         )
         console.info(
-          `To ignore, add ${ 
-            chalk.cyan("// eslint-disable-next-line") 
-            } to the line before.\n`
+          `To ignore, add ${chalk.cyan(
+            "// eslint-disable-next-line"
+          )} to the line before.\n`
         )
       } else {
         console.info(chalk.green("Compiled successfully.\n"))

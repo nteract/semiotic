@@ -30,14 +30,16 @@ type Props = {
   projectedCoordinateNames: Object,
   position: Array<number>,
   disableContext?: boolean,
-  renderOrder: $ReadOnlyArray<| "pieces"
+  renderOrder: $ReadOnlyArray<
+    | "pieces"
     | "summaries"
     | "connectors"
     | "edges"
     | "nodes"
     | "areas"
     | "lines"
-    | "points">
+    | "points"
+  >
 }
 
 type State = {
@@ -290,8 +292,8 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
           baseMarkProps: Object.assign(baseMarkProps, {
             "aria-label":
               (pipe.ariaLabel && pipe.ariaLabel.items) || "dataviz-element",
-            "role": "img",
-            "tabIndex": -1
+            role: "img",
+            tabIndex: -1
           }),
           ...pipe
         })

@@ -203,21 +203,21 @@ type State = {
 }
 
 const naturalLanguageLineType = {
-  "line": { items: "line", chart: "line chart" },
-  "cumulative": { items: "line", chart: "cumulative chart" },
+  line: { items: "line", chart: "line chart" },
+  cumulative: { items: "line", chart: "cumulative chart" },
   "cumulative-reverse": { items: "line", chart: "cumulative chart" },
-  "linepercent": { items: "line", chart: "line chart" },
-  "stackedarea": { items: "stacked area", chart: "stacked area chart" },
+  linepercent: { items: "line", chart: "line chart" },
+  stackedarea: { items: "stacked area", chart: "stacked area chart" },
   "stackedarea-invert": { items: "stacked area", chart: "stacked area chart" },
-  "stackedpercent": { items: "stacked area", chart: "stacked area chart" },
+  stackedpercent: { items: "stacked area", chart: "stacked area chart" },
   "stackedpercent-invert": {
     items: "stacked area",
     chart: "stacked area chart"
   },
-  "bumparea": { items: "ranked area", chart: "ranked area chart" },
+  bumparea: { items: "ranked area", chart: "ranked area chart" },
   "bumparea-invert": { items: "ranked area", chart: "ranked area chart" },
-  "bumpline": { items: "ranked line", chart: "ranked line chart" },
-  "difference": {
+  bumpline: { items: "ranked line", chart: "ranked line chart" },
+  difference: {
     items: "line",
     chart: "difference chart"
   }
@@ -625,7 +625,6 @@ class XYFrame extends React.Component<XYFrameProps, State> {
 
     const existingBaselines = {}
 
-
     if (currentProps.axes) {
       axesTickLines = []
       axes = currentProps.axes.map((d, i) => {
@@ -976,14 +975,21 @@ class XYFrame extends React.Component<XYFrameProps, State> {
           idAccessor
         })
         if (Array.isArray(yCoordinate)) {
-          return [...coords, [xCoordinate, Math.min(...yCoordinate)], [xCoordinate, Math.max(...yCoordinate)]]
-        }
-        else if (Array.isArray(xCoordinate)) {
-          return [...coords, [Math.min(...xCoordinate), yCoordinate], [Math.max(...xCoordinate), yCoordinate]]
-        }
-        else {
+          return [
+            ...coords,
+            [xCoordinate, Math.min(...yCoordinate)],
+            [xCoordinate, Math.max(...yCoordinate)]
+          ]
+        } else if (Array.isArray(xCoordinate)) {
+          return [
+            ...coords,
+            [Math.min(...xCoordinate), yCoordinate],
+            [Math.max(...xCoordinate), yCoordinate]
+          ]
+        } else {
           return [...coords, [xCoordinate, yCoordinate]]
-        }}, [])
+        }
+      }, [])
     }
 
     const customSVG =
@@ -1129,8 +1135,14 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       return null
     }
 
-    const xCoord =  d[projectedXMiddle] || d[projectedX] || findFirstAccessorValue(xAccessor, d)
-    const yCoord =  d[projectedYMiddle] || d[projectedY] || findFirstAccessorValue(yAccessor, d)
+    const xCoord =
+      d[projectedXMiddle] ||
+      d[projectedX] ||
+      findFirstAccessorValue(xAccessor, d)
+    const yCoord =
+      d[projectedYMiddle] ||
+      d[projectedY] ||
+      findFirstAccessorValue(yAccessor, d)
 
     const xString = xCoord && xCoord.toString ? xCoord.toString() : xCoord
     const yString = yCoord && yCoord.toString ? yCoord.toString() : yCoord
