@@ -13,7 +13,7 @@ export default class CanvasInteractionDocs extends React.Component {
     const examples = []
     examples.push({
       name: "Basic",
-      demo: CanvasInteractionRaw,
+      demo: <CanvasInteractionRaw />,
       source: `
       <XYFrame
       points={parsedDiamonds}
