@@ -6,10 +6,10 @@ import ResponsiveXYFrame from "./ResponsiveXYFrame"
 import ResponsiveOrdinalFrame from "./ResponsiveOrdinalFrame"
 
 const ResponsiveFrameComponents = {
-  "ResponsiveXYFrame": ResponsiveXYFrame,
-  "ResponsiveMinimapXYFrame": ResponsiveMinimapXYFrame,
-  "ResponsiveNetworkFrame": ResponsiveNetworkFrame,
-  "ResponsiveOrdinalFrame": ResponsiveOrdinalFrame
+  ResponsiveXYFrame: ResponsiveXYFrame,
+  ResponsiveMinimapXYFrame: ResponsiveMinimapXYFrame,
+  ResponsiveNetworkFrame: ResponsiveNetworkFrame,
+  ResponsiveOrdinalFrame: ResponsiveOrdinalFrame
 }
 
 describe("ResponsiveFrameComponents", () => {

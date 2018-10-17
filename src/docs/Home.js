@@ -3,7 +3,8 @@ import { PrismCode } from "react-prism"
 import Button from "material-ui/Button"
 import { Link } from "react-router-dom"
 
-const Home = ({ match }) => { // eslint-disable-line no-unused-vars
+const Home = ({ match }) => {
+  // eslint-disable-line no-unused-vars
   // const documentation = <Documentation
   //   selected={match && match.params.component}
   // />
@@ -62,8 +63,8 @@ const Home = ({ match }) => { // eslint-disable-line no-unused-vars
             <span style={{ fontWeight: 900 }}>
               Semiotic is a data visualization framework for React.
             </span>{" "}
-            It provides three types of frames (<Link to="xyframe">XYFrame</Link>,{" "}
-            <Link to="orframe">OrdinalFrame</Link>,{" "}
+            It provides three types of frames (<Link to="xyframe">XYFrame</Link>
+            , <Link to="orframe">OrdinalFrame</Link>,{" "}
             <Link to="networkframe">NetworkFrame</Link>) which allow you to
             deploy a wide variety of charts that share the same rules for how to
             display information. By adjusting the settings of a frame, you can
