@@ -13,6 +13,7 @@ logs/*
 *-compiled*
 build
 coverage
+stats.json
 
 examples/dist/bundle.js
 .vscode/settings.json
