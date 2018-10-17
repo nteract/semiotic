@@ -1,15 +1,15 @@
-import React from 'react'
-import { wrappedExamples } from './example_settings/example_list'
-import { Link } from 'react-router-dom'
+import React from "react"
+import { wrappedExamples } from "./example_settings/example_list"
+import { Link } from "react-router-dom"
 
 const onlyThreeWrappedExamples = wrappedExamples
   .sort(() => Math.random() - Math.random())
   .filter((d, i) => i < 3)
 
-const intro = 
-  (<div>
+const intro = (
+  <div>
     {onlyThreeWrappedExamples}
-    <div style={{ textAlign: 'center' }}>
+    <div style={{ textAlign: "center" }}>
       <Link to="examples">More Examples</Link>
     </div>
     <h2>Introduction</h2>
@@ -30,9 +30,9 @@ const intro =
       able to dig deeper into visualizations to uncover non-obvious insights.
       Semiotic was designed to enable designers and stakeholders to test a
       variety of visualizations, while still providing control over
-      interactivity and presentation of the data.{' '}
+      interactivity and presentation of the data.{" "}
     </p>
-    <div style={{ textAlign: 'center' }}>
+    <div style={{ textAlign: "center" }}>
       <img
         alt="Data visualization is created in the DOM using a series of layers."
         width="400px"
@@ -47,7 +47,7 @@ const intro =
       using the same mental model for interaction elements, labels or other
       related but distinct components.
     </p>
-  </div>)
-
+  </div>
+)
 
 export default intro
