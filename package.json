@@ -27,6 +27,7 @@
     "ci-deploy-docs": "sh ./scripts/docs-ci.sh",
     "gh-pages": "REACT_APP_GH_PAGES_PATH='semiotic' npm run build",
     "dist": "rollup -c && uglifyjs ./dist/semiotic.js -o ./dist/semiotic.min.js",
+    "docs-bundle-stats": "GENERATE_SOURCEMAP='true' NODE_ENV='production' webpack --config ./config/webpack.config.prod.js --profile --json > stats.json && webpack-bundle-analyzer stats.json",
     "prepublishOnly": "npm run dist && rm ./dist/semiotic.js"
   },
   "repository": {
@@ -123,6 +124,7 @@
     "uglify-js": "^3.1.10",
     "url-loader": "0.6.2",
     "webpack": "^3.11.0",
+    "webpack-bundle-analyzer": "3.0.3",
     "webpack-dev-server": "2.9.4",
     "webpack-manifest-plugin": "1.3.2"
   },
