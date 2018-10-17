@@ -63,14 +63,16 @@ type Props = {
   axes?: Array<AxisType>,
   axesTickLines?: Node,
   disableCanvasInteraction?: boolean,
-  renderOrder: $ReadOnlyArray<| "pieces"
+  renderOrder: $ReadOnlyArray<
+    | "pieces"
     | "summaries"
     | "connectors"
     | "edges"
     | "nodes"
     | "areas"
     | "lines"
-    | "points">
+    | "points"
+  >
 }
 
 type State = {

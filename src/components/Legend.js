@@ -20,14 +20,19 @@ type LegendGroup = {
 }
 
 type Props = {
-    legendGroups: Array<LegendGroup>,
-    title?: string,
-    width?: number,
-    height?: number,
-    orientation?: string
+  legendGroups: Array<LegendGroup>,
+  title?: string,
+  width?: number,
+  height?: number,
+  orientation?: string
 }
 
-function renderType(item:Object, i:number, type:ItemType, styleFn:Function) {
+function renderType(
+  item: Object,
+  i: number,
+  type: ItemType,
+  styleFn: Function
+) {
   let renderedType
   if (typeof type === "function") {
     renderedType = type(item)
@@ -40,7 +45,7 @@ function renderType(item:Object, i:number, type:ItemType, styleFn:Function) {
 }
 
 class Legend extends React.Component<Props, null> {
-  renderLegendGroup(legendGroup:LegendGroup) {
+  renderLegendGroup(legendGroup: LegendGroup) {
     const { type = "fill", styleFn, items } = legendGroup
     const renderedItems = []
     let itemOffset = 0
@@ -59,7 +64,7 @@ class Legend extends React.Component<Props, null> {
     return renderedItems
   }
 
-  renderLegendGroupHorizontal(legendGroup:LegendGroup) {
+  renderLegendGroupHorizontal(legendGroup: LegendGroup) {
     const { type = "fill", styleFn, items } = legendGroup
     const renderedItems = []
     let itemOffset = 0
@@ -79,7 +84,13 @@ class Legend extends React.Component<Props, null> {
     return { items: renderedItems, offset: itemOffset }
   }
 
-  renderGroup({ legendGroups, width }:{ legendGroups: Array<LegendGroup>, width: number }) {
+  renderGroup({
+    legendGroups,
+    width
+  }: {
+    legendGroups: Array<LegendGroup>,
+    width: number
+  }) {
     let offset = 30
 
     const renderedGroups = []
@@ -126,7 +137,15 @@ class Legend extends React.Component<Props, null> {
     return renderedGroups
   }
 
-  renderHorizontalGroup({ legendGroups, title, height }:{ legendGroups:Array<LegendGroup>, title: string, height: number }) {
+  renderHorizontalGroup({
+    legendGroups,
+    title,
+    height
+  }: {
+    legendGroups: Array<LegendGroup>,
+    title: string,
+    height: number
+  }) {
     let offset = 0
 
     const renderedGroups = []

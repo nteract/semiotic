@@ -9,7 +9,7 @@ type Props = {
   span: boolean
 }
 
-export default (props:Props) => {
+export default (props: Props) => {
   const { style, className, children, span } = props
   if (span)
     return (
