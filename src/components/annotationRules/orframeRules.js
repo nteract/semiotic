@@ -371,7 +371,7 @@ export const basicReactAnnotationRule = ({ d, i, screenCoordinates }) => {
     {
       dx: 0,
       dy: 0,
-      note: { label: d.label },
+      note: { label: d.label, orientation: d.orientation, align: d.align },
       connector: { end: "arrow" }
     },
     d,

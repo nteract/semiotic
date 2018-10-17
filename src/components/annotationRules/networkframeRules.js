@@ -74,7 +74,7 @@ export const svgNodeRule = ({ d, i, nodeSizeAccessor }) => {
       dy: d.dy || -25,
       x: d.x,
       y: d.y,
-      note: { label: d.label },
+      note: { label: d.label, orientation: d.orientation, align: d.align },
       connector: { end: "arrow" }
     },
     d,
