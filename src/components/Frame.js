@@ -30,8 +30,8 @@ type Props = {
   interaction?: Object,
   renderFn?: string | Function,
   hoverAnnotation?: boolean | Object | Array<Object | Function> | Function,
-  backgroundGraphics?: Node,
-  foregroundGraphics?: Node,
+  backgroundGraphics?: Node | Function,
+  foregroundGraphics?: Node | Function,
   interactionOverflow?: Object,
   disableContext?: boolean,
   canvasRendering?: boolean,
@@ -63,16 +63,14 @@ type Props = {
   axes?: Array<AxisType>,
   axesTickLines?: Node,
   disableCanvasInteraction?: boolean,
-  renderOrder: $ReadOnlyArray<
-    | "pieces"
+  renderOrder: $ReadOnlyArray<| "pieces"
     | "summaries"
     | "connectors"
     | "edges"
     | "nodes"
     | "areas"
     | "lines"
-    | "points"
-  >
+    | "points">
 }
 
 type State = {
@@ -232,6 +230,16 @@ class Frame extends React.Component<Props, State> {
       additionalDefs: additionalDefs
     })
 
+    const finalBackgroundGraphics =
+      typeof backgroundGraphics === "function"
+        ? backgroundGraphics({ size, margin })
+        : backgroundGraphics
+
+    const finalForegroundGraphics =
+      typeof foregroundGraphics === "function"
+        ? foregroundGraphics({ size, margin })
+        : foregroundGraphics
+
     if (typeof matte === "function") {
       marginGraphic = matte({ size, margin })
     } else if (React.isValidElement(matte)) {
@@ -286,7 +294,7 @@ class Frame extends React.Component<Props, State> {
               >
                 {backgroundGraphics && (
                   <g aria-hidden={true} className="background-graphics">
-                    {backgroundGraphics}
+                    {finalBackgroundGraphics}
                   </g>
                 )}
                 {axesTickLines && (
@@ -347,7 +355,7 @@ class Frame extends React.Component<Props, State> {
               )}
               {foregroundGraphics && (
                 <g aria-hidden={true} className="foreground-graphics">
-                  {foregroundGraphics}
+                  {finalForegroundGraphics}
                 </g>
               )}
             </svg>
