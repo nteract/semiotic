@@ -1,0 +1,14 @@
+.frame {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 0.8em;
+}
+
+.axis-baseline {
+  stroke: #ddd;
+}
+
+/*difference between this and 
+.tickline?*/
+.tick {
+  stroke: #ddd;
+}

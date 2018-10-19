@@ -3,7 +3,7 @@ import Sidebar from "./Sidebar"
 
 import MarkdownPage from "./MarkdownPage"
 import APIXYFrame from "./api/XYFrame"
-import VideoGames from "./examples/VideoGames"
+import WaterfallChart from "./examples/WaterfallChart"
 
 const ROOT = process.env.PUBLIC_URL
 
@@ -50,9 +50,9 @@ const PAGES = [
         className: "sub-header"
       },
       {
-        name: "Video Games",
-        url: "video-games",
-        component: VideoGames
+        name: "Waterfall Chart",
+        url: "waterfall-chart",
+        component: WaterfallChart
       }
     ]
   },

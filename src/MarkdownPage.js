@@ -18,18 +18,20 @@ export default class MarkdownPage extends React.Component {
   }
 
   getFile({ filename }) {
-    const readmePath = `${ROOT}/markdown/${filename}.md`
+    if (filename) {
+      const readmePath = `${ROOT}/markdown/${filename}.md`
 
-    fetch(readmePath)
-      .then(response => {
-        return response.text()
-      })
-      .then(text => {
-        this.setState({
-          markdown: marked(text)
+      fetch(readmePath)
+        .then(response => {
+          return response.text()
         })
-        window.Prism.highlightAll()
-      })
+        .then(text => {
+          this.setState({
+            markdown: marked(text)
+          })
+          window.Prism.highlightAll()
+        })
+    }
   }
 
   render() {

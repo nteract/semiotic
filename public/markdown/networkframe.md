@@ -2,7 +2,7 @@ A `<Frame>` that displays topological data, which differs from other forms of da
 
 Nodes are automatically generated from edge references to source or target that do not exist, these nodes have `createdByFrame: true` if you want to treat them differently. Nodes are also decorated with a `degree` attribute, which is simple degree centrality (number of connections) if you want to use that.
 
-```js
+```jsx
 import { NetworkFrame } from 'semiotic'
 
 <NetworkFrame
@@ -65,7 +65,7 @@ If _size_ is specified, sets the width and height of the frame from the array of
 
 Note: _Margin_ will not be added to the frame size. It's more like CSS _padding_.
 
-```html
+```jsx
 <NetworkFrame size={[500,500]} ... />
 ```
 
@@ -77,7 +77,7 @@ Another advanced setting for a hierarchical networkType is `hierarchyChildren`, 
 
 _This will also support a "per-tick" function once the specifications can be figured out._
 
-```html
+```jsx
 <!-- String option -->
 <NetworkFrame networkType={"motifs"} ... />
 
@@ -89,7 +89,7 @@ _This will also support a "per-tick" function once the specifications can be fig
 
 If _title_ is specified, sets the text for the chart title, which appears centered at the top of the chart. The title can be either a string or JSX object.
 
-```html
+```jsx
 <!-- String option -->
 <NetworkFrame title={"Chart Title"} ... />
 
@@ -101,7 +101,7 @@ If _title_ is specified, sets the text for the chart title, which appears center
 
 If _margin_ is specified, sets the margin(s) on the frame. The margin can be set to one number, which is applied equally to all sides, or as an object.
 
-```html
+```jsx
 <!-- Single number option -->
 <NetworkFrame margin={10} ... />
 
@@ -113,7 +113,7 @@ If _margin_ is specified, sets the margin(s) on the frame. The margin can be set
 
 If _zoomToFit_ is set to `true` then the layout will be dynamically resized to fit within the available space. This could cause distortion but also prevents the disappearance of disconnected nodes and components.
 
-```html
+```jsx
 <NetworkFrame zoomToFit={true} ... />
 ```
 
@@ -125,7 +125,7 @@ If _zoomToFit_ is set to `true` then the layout will be dynamically resized to f
 
 If nodeIDAccessor is specified, determines how _id_ values are accessed from the nodes array. In the case the data consists of an array of objects, a string can be used to assess the _id_ value(s). A function can also be used to access the _id_ value(s).
 
-```html
+```jsx
 <!-- String option -->
 <!-- e.g. data=[{employee: "Red"}, {employee: "Andy"}, ... ] -->
 <NetworkFrame nodeIDAccessor={"employee"} ... />
@@ -139,7 +139,7 @@ If nodeIDAccessor is specified, determines how _id_ values are accessed from the
 
 If nodeStyle is specified, determines the style of each rendered node. This can be a React style object or a function that takes the node datapoint and returns a React style object.
 
-```html
+```jsx
 <!-- Object option -->
 <NetworkFrame nodeStyle={{ stroke: "white", fill: "blue" }} ... />
 
@@ -175,7 +175,7 @@ If nodeRenderMode is specified, determines the renderMode of the underlying Mark
 
 If _nodeLabels_ is set to `true` then each node will have a text label with the id of the node. Will also accept a function that takes the node and returns SVG JSX to be placed in the label position.
 
-```html
+```jsx
 <!-- Boolean option -->
 <NetworkFrame nodeLabels={true} ... />
 
@@ -187,7 +187,7 @@ If _nodeLabels_ is set to `true` then each node will have a text label with the 
 
 By default nodes are represented as SVG `<circle>` elements with `r=5`. Use _nodeSizeAccessor_ to set a fixed size (with a number) or a dynamic size (with a function).
 
-```html
+```jsx
 <!-- Number option -->
 <NetworkFrame nodeSizeAccessor={10} ... />
 
@@ -199,7 +199,7 @@ By default nodes are represented as SVG `<circle>` elements with `r=5`. Use _nod
 
 A function taking the node datapoint and returning SVG JSX representation of the node.
 
-```html
+```jsx
 <NetworkFrame customNodeIcon={d => <rect
     width={d.degree}
     height={d.degree}
@@ -217,7 +217,7 @@ A function taking the node datapoint and returning SVG JSX representation of the
 
 If sourceAccessor is specified, determines how _source_ values are accessed from the edges data array. In the case the data consists of an array of objects, a string can be used to assess the _source_ value(s). A function can also be used to access the _source_ value(s).
 
-```html
+```jsx
 <!-- String option -->
 <!-- e.g. data=[{manager: "Red", report: "Andy"}, {manager: "Warden", report: "Red"}, ... ] -->
 <NetworkFrame sourceAccessor={"manager"} ... />
@@ -231,7 +231,7 @@ If sourceAccessor is specified, determines how _source_ values are accessed from
 
 If targetAccessor is specified, determines how _target_ values are accessed from the edges data array. In the case the data consists of an array of objects, a string can be used to assess the _target_ value(s). A function can also be used to access the _target_ value(s).
 
-```html
+```jsx
 <!-- String option -->
 <!-- e.g. data=[{manager: "Red", report: "Andy"}, {manager: "Warden", report: "Red"}, ... ] -->
 <NetworkFrame targetAccessor={"report"} ... />
@@ -245,7 +245,7 @@ If targetAccessor is specified, determines how _target_ values are accessed from
 
 If edgeStyle is specified, determines the style of each rendered edge. This can be a React style object or a function that takes the edge datapoint and returns a React style object.
 
-```html
+```jsx
 <!-- Object option -->
 <NetworkFrame edgeStyle={{ stroke: "red", fill: "darkred" }} ... />
 
@@ -281,7 +281,7 @@ If edgeRenderMode is specified, determines the renderMode of the underlying Mark
 
 A string (One of `'none','linearc','ribbon','arrowhead','halfarrow','nail','comet','taffy'`) or an object with `{ type }` equal to one of these strings (with additional options depending on which edge type is selected) or a function that takes an edge datapoint and returns SVG JSX representation of the connection between two edges.
 
-```html
+```jsx
 <!-- String option -->
 <NetworkFrame edgeType="halfarrow" ... />
 
