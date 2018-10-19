@@ -29,7 +29,6 @@ export default class DecisionMatrixExample extends React.Component {
     fetch(`${ROOT}/sampledata/diamonds.csv`)
       .then(response => response.text())
       .then(data => {
-        // console.log(data)
         const parsedDiamonds = []
         csvParse(data).forEach(d => {
           parsedDiamonds.push({

@@ -1640,6 +1640,11 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       }
     }
 
+    const renderedForegroundGraphics =
+      typeof foregroundGraphics === "function"
+        ? foregroundGraphics({ size, margin })
+        : foregroundGraphics
+
     return (
       <Frame
         name="ordinalframe"
@@ -1682,7 +1687,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         margin={margin}
         columns={projectedColumns}
         backgroundGraphics={backgroundGraphics}
-        foregroundGraphics={[foregroundGraphics, oLabels]}
+        foregroundGraphics={[renderedForegroundGraphics, oLabels]}
         beforeElements={beforeElements}
         afterElements={afterElements}
         downloadButton={downloadButton}

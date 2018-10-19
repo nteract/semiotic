@@ -177,6 +177,33 @@ export default class CreatingBarChart extends React.Component {
             axis={{ orient: "left", label: "Favorites + Retweets" }}
             margin={{ left: 70, bottom: 50, right: 5, top: 55 }}
             oPadding={15}
+            backgroundGraphics={({ size, margin }) => (
+              <g>
+                <rect
+                  fill="#fffceb"
+                  stroke="#f8ffeb"
+                  width={size[0] - margin.right - margin.left}
+                  height={size[1] - margin.top - margin.bottom}
+                  x={margin.left}
+                  y={margin.top}
+                  strokeWidth={1}
+                />
+                <text>{JSON.stringify(margin)}</text>
+              </g>
+            )}
+            foregroundGraphics={({ size, margin }) => (
+              <g>
+                <line
+                  strokeWidth={3}
+                  stroke={"#fcebff"}
+                  x1={margin.left}
+                  x2={size[0] - margin.right}
+                  y1={size[1] - margin.bottom}
+                  y2={size[1] - margin.bottom}
+                />
+              </g>
+            )}
+          />
           />
         </div>
       ),

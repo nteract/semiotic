@@ -489,6 +489,31 @@ export default class CreatingLineChart extends React.Component {
             customDoubleClickBehavior={d =>
               console.info("customDoubleClickBehavior d", d)
             }
+            backgroundGraphics={({ size, margin }) => (
+              <g>
+                <rect
+                  fill="#fffceb"
+                  stroke="#f8ffeb"
+                  width={size[0] - margin.right}
+                  height={size[1] - margin.top - margin.bottom}
+                  x={margin.left}
+                  y={margin.top}
+                />
+                <text>{JSON.stringify(margin)}</text>
+              </g>
+            )}
+            foregroundGraphics={({ size, margin }) => (
+              <g>
+                <line
+                  strokeWidth={3}
+                  stroke={"#fcebff"}
+                  x1={margin.left}
+                  x2={size[0] - margin.right}
+                  y1={size[1] - margin.bottom}
+                  y2={size[1] - margin.bottom}
+                />
+              </g>
+            )}
           />
           <h3>Flat Data</h3>
           <ResponsiveXYFrame
