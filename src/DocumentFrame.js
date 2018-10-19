@@ -1,7 +1,6 @@
 import React from "react"
 import { OrdinalFrame } from "semiotic"
 import { processNodes } from "./process"
-import reactElementToJSXString from "react-element-to-jsx-string"
 
 const objectToString = obj => {
   let newObj = "{ "
@@ -98,14 +97,15 @@ class DocumentOrdinalFrame extends React.Component {
 
     Object.keys(functions).forEach(d => {
       functionsString += functions[d]
-      console.log(functions[d])
       functionsString += "\n"
     })
+
+    const frameName = Frame.name
 
     const markdown = (
       <pre className="language-jxs">
         <code className="language-jsx">
-          {`import { OrdinalFrame } from "semiotic"\n\n`}
+          {`import { ${frameName} } from "semiotic/lib/${frameName}"\n\n`}
 
           {functionsString && functionsString + "\n"}
 
@@ -113,9 +113,9 @@ class DocumentOrdinalFrame extends React.Component {
           {"\n\n"}
           {`export default () => {
 
-      return <OrdinalFrame {...frameProps} />
+  return <${frameName} {...frameProps} />
 
-    }`}
+}`}
         </code>
       </pre>
     )

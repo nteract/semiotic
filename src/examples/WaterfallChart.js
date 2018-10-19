@@ -1,5 +1,5 @@
 import React from "react"
-import DocumentOrdinalFrame from "../DocumentOrdinalFrame"
+import DocumentFrame from "../DocumentFrame"
 import { OrdinalFrame } from "semiotic"
 
 const frameProps = {
@@ -131,7 +131,7 @@ const WaterfallChart = () => {
     <div>
       <h2>Waterfall Chart</h2>
 
-      <DocumentOrdinalFrame
+      <DocumentFrame
         frameProps={frameProps}
         overrideProps={{
           oLabel: `d => <text transform="rotate(45)">{d}</text>`

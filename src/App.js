@@ -3,6 +3,7 @@ import Sidebar from "./Sidebar"
 
 import MarkdownPage from "./MarkdownPage"
 import APIXYFrame from "./api/XYFrame"
+import LineChart from "./examples/LineChart"
 import WaterfallChart from "./examples/WaterfallChart"
 
 const ROOT = process.env.PUBLIC_URL
@@ -47,6 +48,15 @@ const PAGES = [
     children: [
       {
         name: "XYFrame",
+        className: "sub-header"
+      },
+      {
+        name: "Line Chart",
+        url: "line-chart",
+        component: LineChart
+      },
+      {
+        name: "OrdinalFrame",
         className: "sub-header"
       },
       {
