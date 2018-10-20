@@ -16,11 +16,6 @@ const frameProps = {
       orient: "bottom"
     }
   ],
-  style: d => ({
-    fill: d.value > 0 ? "green" : "red",
-    stroke: "darkgray",
-    strokeWidth: 1
-  }),
   lineStyle: d => ({
     stroke: d.title === "Ex Machina" ? "#00a2ce" : "red",
     fill: "none"
@@ -338,12 +333,32 @@ const frameProps = {
   ]
 }
 
+const withHoverFrameProps = {
+  ...frameProps,
+  hoverAnnotation: true
+}
+
 const WaterfallChart = () => {
   return (
     <div>
-      <h2>Line Chart</h2>
-
-      <DocumentFrame frameProps={frameProps} type={XYFrame} />
+      <div className="row">
+        <div className="col-md-6 col-xs-12">
+          <h2>Line Chart</h2>
+          <p>
+            The very basics of how to create a line chart, stacked area and bump
+            area chart using XYFrame along with hover behavior and styling.
+          </p>
+        </div>
+        <div className="col-md-6 col-xs-12">
+          <DocumentFrame frameProps={frameProps} type={XYFrame} />
+        </div>
+      </div>
+      <h2>Line Chart with Hover</h2>
+      <p>
+        The very basics of how to create a line chart, stacked area and bump
+        area chart using XYFrame along with hover behavior and styling.
+      </p>
+      <DocumentFrame frameProps={withHoverFrameProps} type={XYFrame} />
     </div>
   )
 }

@@ -5,9 +5,13 @@ import { processNodes } from "./process"
 const objectToString = obj => {
   let newObj = "{ "
 
-  Object.keys(obj).forEach(k => {
+  const keys = Object.keys(obj),
+    len = keys.length - 1
+
+  keys.forEach((k, i) => {
     newObj += "\n    "
     newObj += k + ": " + propertyToString(obj[k])
+    if (i !== len) newObj += ", "
   })
 
   newObj += "\n  }"
@@ -28,14 +32,51 @@ const propertyToString = value => {
     string = JSON.stringify(value)
       .replace(/,{/g, ",\n    {")
       .replace(/:/g, ": ")
+      .replace(/\"coordinates\"/g, '\n   "coordinates"')
   }
 
   return string
 }
 
+const styles = {
+  hidden: {
+    display: "none"
+  },
+  expanded: {},
+  collapsed: {
+    maxHeight: 350
+  }
+}
+
+const hiddenStyle = { opacity: 0, height: 0 }
+
 class DocumentOrdinalFrame extends React.Component {
+  constructor(props) {
+    super(props)
+
+    this.onClick = this.onClick.bind(this)
+    this.onCopy = this.onCopy.bind(this)
+  }
+
+  //copy button
+  //expand button
+
+  state = {
+    codeBlock: "collapsed" //can be collapsed, expanded, hidden
+  }
+
   onComponentDidMount() {
     window.Prism.highlightAll()
+  }
+
+  onClick(e) {
+    console.log(e.target.value)
+    this.setState({ codeBlock: e.target.value })
+  }
+
+  onCopy() {
+    window.copy(this.copy.textContent)
+    // this.setState({ codeBlock: e.target.value })
   }
 
   render() {
@@ -76,7 +117,7 @@ class DocumentOrdinalFrame extends React.Component {
       if (i !== 0) framePropsString += "\n"
 
       if (category !== d.label) {
-        framePropsString += "\n// " + d.label + "\n"
+        framePropsString += "\n/* --- " + d.label + " --- */\n"
         category = d.label
       }
 
@@ -103,7 +144,11 @@ class DocumentOrdinalFrame extends React.Component {
     const frameName = Frame.name
 
     const markdown = (
-      <pre className="language-jxs">
+      <pre
+        className="language-jxs"
+        ref={el => (this.copy = el)}
+        style={styles[this.state.codeBlock]}
+      >
         <code className="language-jsx">
           {`import { ${frameName} } from "semiotic/lib/${frameName}"\n\n`}
 
@@ -120,22 +165,42 @@ class DocumentOrdinalFrame extends React.Component {
       </pre>
     )
 
-    // const markdown = (
-    //   <pre className="language-jxs">
-    //     <code className="language-jsx">
-    //       {reactElementToJSXString(<Frame {...frameProps} />, )}
-    //     </code>
-    //   </pre>
-    // )
-    // console.log(markdown)
+    const trimmedMarkedown = (
+      <pre className="language-jxs" style={styles[this.state.codeBlock]}>
+        <code className="language-jsx">
+          {`import { ${frameName} } from "semiotic/lib/${frameName}"\n\n`}
 
-    // console.log(reactElementToJSXString(<div a="1" b="2">Hello, world!</div>));
+          {functionsString && functionsString + "\n"}
+
+          {framePropsString}
+          {"\n\n"}
+          {`export default () => {
+
+  return <${frameName} {...frameProps} />
+
+}`}
+        </code>
+      </pre>
+    )
 
     return (
       <div>
         <Frame {...frameProps} />
 
-        <div>{markdown}</div>
+        <div className="toolbar">
+          <button value="collapsed" onClick={this.onClick}>
+            Show Code
+          </button>
+          <button value="hidden" onClick={this.onClick}>
+            Hide Code
+          </button>
+
+          <button value="copy" onClick={this.onCopy}>
+            Copy Code
+          </button>
+        </div>
+        <div style={hiddenStyle}>{markdown}</div>
+        <div>{trimmedMarkedown}</div>
       </div>
     )
   }
