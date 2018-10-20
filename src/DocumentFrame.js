@@ -75,7 +75,19 @@ class DocumentOrdinalFrame extends React.Component {
   }
 
   onCopy() {
-    window.copy(this.copy.textContent)
+    // this.copy.select()
+    const text = this.copy.textContent
+    const callback = e => {
+      e.clipboardData.clearData()
+      e.clipboardData.setData("text/plain", text)
+      e.preventDefault()
+      document.removeEventListener("copy", callback)
+    }
+    document.addEventListener("copy", callback)
+
+    document.execCommand("copy")
+
+    // window.copy(this.copy.textContent)
     // this.setState({ codeBlock: e.target.value })
   }
 
