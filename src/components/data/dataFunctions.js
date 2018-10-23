@@ -325,6 +325,8 @@ export const calculateDataExtent = ({
     projectedAreas = hexbinning({
       areaType,
       data: projectedAreas,
+      processedData: !!areas[0].processedData,
+      preprocess: false,
       projectedX,
       projectedY,
       finalXExtent,
@@ -341,6 +343,8 @@ export const calculateDataExtent = ({
     projectedAreas = heatmapping({
       areaType,
       data: projectedAreas,
+      processedData: !!areas[0].processedData,
+      preprocess: false,
       projectedX,
       projectedY,
       finalXExtent,

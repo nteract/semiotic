@@ -4,6 +4,7 @@ import { XYFrame } from "../../components"
 import DocumentComponent from "../layout/DocumentComponent"
 import { randomNormal } from "d3-random"
 import { scaleThreshold } from "d3-scale"
+import { hexbinning, heatmapping } from "../../components/svg/areaDrawing"
 
 const components = []
 const pointTestData = []
@@ -44,6 +45,12 @@ for (let x = 1; x < 100; x++) {
     color: "#b6a756"
   })
 }
+
+const preprocessedHexbinData = hexbinning({
+  areaType: { type: "hexbin" },
+  data: { coordinates: pointTestData },
+  size: [500, 500]
+})
 
 export default class CreatingXYPlots extends React.Component {
   render() {
@@ -413,6 +420,41 @@ export default class CreatingXYPlots extends React.Component {
         }
       }}
     />`
+    })
+
+    examples.push({
+      name: "Preprocessed Data",
+      demo: (
+        <div>
+          <p>
+            Hexbin and heatmap both accept a customMark property allowing you to
+            draw a custom mark in the space of the cell or hex.
+          </p>
+          <XYFrame
+            title={`Max Bin: ${preprocessedHexbinData.binMax} (Gold)`}
+            size={[500, 500]}
+            areas={preprocessedHexbinData}
+            areaType={{
+              type: "hexbin"
+            }}
+            xAccessor="x"
+            yAccessor="y"
+            areaStyle={d => ({
+              fill:
+                d.value === preprocessedHexbinData.binMax
+                  ? "gold"
+                  : thresholds(d.percent),
+              stroke: "black"
+            })}
+          />
+        </div>
+      ),
+      source: `const preprocessedHexbinData = hexbinning({
+  areaType: { type: "hexbin" },
+  data: { coordinates: pointTestData },
+  size: [500, 500]
+})
+      `
     })
 
     examples.push({

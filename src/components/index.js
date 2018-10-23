@@ -27,6 +27,9 @@ import SparkOrdinalFrame from "./SparkOrdinalFrame"
 import SparkNetworkFrame from "./SparkNetworkFrame"
 import { chuckCloseCanvasTransform } from "./canvas/basicCanvasEffects"
 import { Mark } from "semiotic-mark"
+
+import { hexbinning, heatmapping } from "./svg/areaDrawing"
+
 const ORFrame = OrdinalFrame
 const ResponsiveORFrame = ResponsiveOrdinalFrame
 
@@ -43,8 +46,6 @@ export default {
   VisualizationLayer,
   OrdinalFrame,
   ORFrame,
-  funnelize,
-  calculateDataExtent,
   Annotation,
   NetworkFrame,
   ResponsiveMinimapXYFrame,
@@ -56,9 +57,13 @@ export default {
   SparkNetworkFrame,
   SparkXYFrame,
   Legend,
-  chuckCloseCanvasTransform,
   Mark,
-  FacetController
+  FacetController,
+  funnelize,
+  calculateDataExtent,
+  chuckCloseCanvasTransform,
+  hexbinning,
+  heatmapping
 }
 
 export {
@@ -74,8 +79,6 @@ export {
   VisualizationLayer,
   OrdinalFrame,
   ORFrame,
-  funnelize,
-  calculateDataExtent,
   Annotation,
   NetworkFrame,
   ResponsiveMinimapXYFrame,
@@ -87,7 +90,11 @@ export {
   SparkNetworkFrame,
   SparkXYFrame,
   Legend,
-  chuckCloseCanvasTransform,
   Mark,
-  FacetController
+  chuckCloseCanvasTransform,
+  funnelize,
+  calculateDataExtent,
+  FacetController,
+  hexbinning,
+  heatmapping
 }
