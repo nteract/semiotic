@@ -2,8 +2,14 @@ import React from "react"
 import { NetworkFrame } from "../../components"
 import { data } from "../sampledata/d3_api"
 import ProcessViz from "./ProcessViz"
+import { scaleLinear } from "d3-scale"
 
 const colors = ["#00a2ce", "#b6a756", "#4d430c", "#b3331d"]
+
+const blockScale = scaleLinear()
+  .domain([1, 1000])
+  .range([0.5, 8])
+  .clamp(true)
 
 //separation
 
@@ -33,7 +39,7 @@ export default ({
     }),
     nodeIDAccessor: "name",
     hoverAnnotation: true,
-    nodeSizeAccessor: type === "tree" && (d => d.blockCalls / 100),
+    nodeSizeAccessor: type === "tree" && (d => blockScale(d.blockCalls || 1)),
     networkType: {
       zoom: false,
       type,
@@ -42,13 +48,7 @@ export default ({
       forceManyBody: -15,
       edgeStrength: 1.5,
       padding: type === "treemap" ? 3 : type === "circlepack" ? 2 : 0,
-      hierarchySum: d => d.blockCalls,
-      separation:
-        type === "tree" &&
-        ((a, b) => {
-          const basic = a.value / 100 + b.value / 100
-          return basic
-        })
+      hierarchySum: d => d.blockCalls
     },
     tooltipContent: d => {
       return d.edge ? (

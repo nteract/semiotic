@@ -746,6 +746,14 @@ class NetworkFrame extends React.Component<Props, State> {
             networkSettings.layout || hierarchicalTypeHash[networkSettings.type]
           const hierarchicalLayout = layout()
           const networkSettingKeys = Object.keys(networkSettings)
+          if (
+            ["dendrogram", "tree", "cluster"].indexOf(networkSettings.type) !==
+            -1
+          ) {
+            hierarchicalLayout.separation((a, b) =>               
+              (nodeSizeAccessor(a.data) || 1) + (networkSettings.nodePadding || 0) + (nodeSizeAccessor(b.data) || 1)
+            )
+          }
 
           networkSettingKeys.forEach(key => {
             if (hierarchicalLayout[key]) {

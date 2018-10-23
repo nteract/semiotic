@@ -52,6 +52,12 @@ const preprocessedHexbinData = hexbinning({
   size: [500, 500]
 })
 
+const preprocessedHeatmapData = heatmapping({
+  areaType: { type: "heatmap" },
+  data: { coordinates: pointTestData },
+  size: [500, 500]
+})
+
 export default class CreatingXYPlots extends React.Component {
   render() {
     const examples = []
@@ -442,6 +448,23 @@ export default class CreatingXYPlots extends React.Component {
             areaStyle={d => ({
               fill:
                 d.value === preprocessedHexbinData.binMax
+                  ? "gold"
+                  : thresholds(d.percent),
+              stroke: "black"
+            })}
+          />
+          <XYFrame
+            title={`Max Bin: ${preprocessedHeatmapData.binMax} (Gold)`}
+            size={[500, 500]}
+            areas={preprocessedHeatmapData}
+            areaType={{
+              type: "heatmap"
+            }}
+            xAccessor="x"
+            yAccessor="y"
+            areaStyle={d => ({
+              fill:
+                d.value === preprocessedHeatmapData.binMax
                   ? "gold"
                   : thresholds(d.percent),
               stroke: "black"

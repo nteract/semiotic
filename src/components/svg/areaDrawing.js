@@ -198,15 +198,34 @@ export function hexbinning({
   return projectedAreas
 }
 // ADD PRECALC AND EXPOSE PRECALC FUNCTION
+
 export function heatmapping({
+  preprocess = true,
+  processedData = false,
   areaType,
-  data,
-  finalXExtent,
-  finalYExtent,
+  data: baseData,
+  finalXExtent = [
+    Math.min(...baseData.coordinates.map(d => d.x)),
+    Math.max(...baseData.coordinates.map(d => d.x))
+  ],
+  finalYExtent = [
+    Math.min(...baseData.coordinates.map(d => d.y)),
+    Math.max(...baseData.coordinates.map(d => d.y))
+  ],
   size,
-  xScaleType,
-  yScaleType
+  xScaleType = scaleLinear(),
+  yScaleType = scaleLinear()
 }) {
+  if (processedData) {
+    return baseData[0].coordinates
+  }
+
+  if (baseData.coordinates && !baseData._xyfCoordinates) {
+    baseData._xyfCoordinates = baseData.coordinates.map(d => [d.x, d.y])
+  }
+
+  const data = Array.isArray(baseData) ? baseData : [baseData]
+
   let projectedAreas = []
   if (!areaType.type) {
     areaType = { type: areaType }
@@ -232,6 +251,7 @@ export function heatmapping({
     Math.ceil(((yCellPx && yCellPx / size[1]) || yBinPercent) * size[1] * 10) /
       10
   ]
+  let maxValue = -Infinity
 
   data.forEach(heatmapData => {
     const grid = []
@@ -274,16 +294,10 @@ export function heatmapping({
       grid[xCoordinate][yCoordinate].binItems.push(heatmapData.coordinates[di])
     })
 
-    let maxValue = -Infinity
-
     flatGrid.forEach(d => {
       d.value = binValue(d.binItems)
       maxValue = Math.max(maxValue, d.value)
     })
-
-    if (areaType.binMax) {
-      areaType.binMax(maxValue)
-    }
 
     flatGrid.forEach(d => {
       d.percent = d.value / maxValue
@@ -294,6 +308,17 @@ export function heatmapping({
 
     projectedAreas = [...projectedAreas, ...flatGrid]
   })
+  if (areaType.binMax) {
+    areaType.binMax(maxValue)
+  }
+  if (preprocess) {
+    return {
+      type: "heatmap",
+      processedData: true,
+      coordinates: projectedAreas,
+      binMax: maxValue
+    }
+  }
 
   return projectedAreas
 }
