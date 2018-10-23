@@ -5,6 +5,8 @@ import ProcessViz from "./ProcessViz"
 
 const colors = ["#00a2ce", "#b6a756", "#4d430c", "#b3331d"]
 
+//separation
+
 export default ({
   annotation = "rectangle",
   type = "dendrogram",
@@ -31,14 +33,22 @@ export default ({
     }),
     nodeIDAccessor: "name",
     hoverAnnotation: true,
+    nodeSizeAccessor: type === "tree" && (d => d.blockCalls / 100),
     networkType: {
+      zoom: false,
       type,
       projection: projection,
       nodePadding: 1,
       forceManyBody: -15,
       edgeStrength: 1.5,
       padding: type === "treemap" ? 3 : type === "circlepack" ? 2 : 0,
-      hierarchySum: d => d.blockCalls
+      hierarchySum: d => d.blockCalls,
+      separation:
+        type === "tree" &&
+        ((a, b) => {
+          const basic = a.value / 100 + b.value / 100
+          return basic
+        })
     },
     tooltipContent: d => {
       return d.edge ? (

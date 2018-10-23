@@ -63,14 +63,26 @@ export function contouring({ areaType, data, finalXExtent, finalYExtent }) {
 }
 
 export function hexbinning({
+  preprocess = true,
+  processedData = false,
   areaType,
-  data,
-  finalXExtent,
-  finalYExtent,
+  data: baseData,
+  finalXExtent = [
+    Math.min(...baseData.coordinates.map(d => d.x)),
+    Math.max(...baseData.coordinates.map(d => d.x))
+  ],
+  finalYExtent = [
+    Math.min(...baseData.coordinates.map(d => d.y)),
+    Math.max(...baseData.coordinates.map(d => d.y))
+  ],
   size,
-  xScaleType,
-  yScaleType
+  xScaleType = scaleLinear(),
+  yScaleType = scaleLinear()
 }) {
+  if (processedData) {
+    return baseData[0].coordinates
+  }
+
   let projectedAreas = []
   if (!areaType.type) {
     areaType = { type: areaType }
@@ -82,6 +94,12 @@ export function hexbinning({
     cellPx,
     binValue = d => d.length
   } = areaType
+
+  if (baseData.coordinates && !baseData._xyfCoordinates) {
+    baseData._xyfCoordinates = baseData.coordinates.map(d => [d.x, d.y])
+  }
+
+  const data = Array.isArray(baseData) ? baseData : [baseData]
 
   const hexBinXScale = xScaleType.domain(finalXExtent).range([0, size[0]])
   const hexBinYScale = yScaleType.domain(finalYExtent).range([0, size[1]])
@@ -95,7 +113,10 @@ export function hexbinning({
     .radius(actualResolution)
     .size(size)
 
+  let hexMax
+
   data.forEach(hexbinData => {
+    hexMax = 0
     const hexes = hexbinner(
       hexbinData._xyfCoordinates.map((d, i) => ({
         _xyfPoint: d,
@@ -103,7 +124,7 @@ export function hexbinning({
       }))
     )
 
-    const hexMax = Math.max(...hexes.map(d => binValue(d)))
+    hexMax = Math.max(...hexes.map(d => binValue(d)))
 
     if (areaType.binMax) {
       areaType.binMax(hexMax)
@@ -161,9 +182,22 @@ export function hexbinning({
     projectedAreas = [...projectedAreas, ...hexbinProjectedAreas]
   })
 
+  if (preprocess) {
+    projectedAreas.forEach(d => {
+      d.x = d.data.x
+      d.y = d.data.y
+    })
+    return {
+      type: "hexbin",
+      processedData: true,
+      coordinates: projectedAreas,
+      binMax: hexMax
+    }
+  }
+
   return projectedAreas
 }
-
+// ADD PRECALC AND EXPOSE PRECALC FUNCTION
 export function heatmapping({
   areaType,
   data,
