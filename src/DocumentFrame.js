@@ -70,7 +70,6 @@ class DocumentOrdinalFrame extends React.Component {
   }
 
   onClick(e) {
-    console.log(e.target.value)
     this.setState({ codeBlock: e.target.value })
   }
 
