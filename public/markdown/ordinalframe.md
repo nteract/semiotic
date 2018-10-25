@@ -4,7 +4,7 @@ A `<Frame>` that displays continuous data along the _ordinal_ and _range_ axes. 
 import { OrdinalFrame } from 'semiotic'
 
 <OrdinalFrame
-   data={[{department: "art", students: 50}, {department: "science", students: 8}, ...]}
+   data={[{department: "art", students: 50}, {department: "science", students: 8}]}
    style={{ fill: "blue" }}
    rAccessor={"students"}
    oAccessor={"department"}
@@ -70,7 +70,7 @@ If _size_ is specified, sets the width and height of the frame from the array of
 Note: _Margin_ will not be added to the frame size. It's more like CSS _padding_.
 
 ```jsx
-<OrdinalFrame size={[500,500]} ... />
+<OrdinalFrame size={[500, 500]} />
 ```
 
 ### rAccessor: { _string_ | _function_ }
@@ -80,11 +80,11 @@ If _rAccessor_ is specified, determines how _range_ values are accessed from the
 ```jsx
 /*String option
 e.g. data=[{value: 1, column: 1}, {value: 4, column: 2}, ... ]*/
-<OrdinalFrame rAccessor={"value"} ... />
+<OrdinalFrame rAccessor={"value"} />
 
 /*Function option
 e.g. data=[[1, "art"], [2, "science"], ... ]*/
-<OrdinalFrame rAccessor={d => d[0]} ... />
+<OrdinalFrame rAccessor={d => d[0]} />
 ```
 
 ### oAccessor: { _string_ | _function_ }
@@ -94,11 +94,11 @@ If _oAccessor_ is specified, determines how _ordinal_ values are accessed from t
 ```jsx
 /*String option
 e.g. data=[{value: 1, column: 1}, {value: 4, column: 2}, ... ]*/
-<OrdinalFrame oAccessor={"column"} ... />
+<OrdinalFrame oAccessor={"column"} />
 
 /*Function option
 e.g. data=[[1, "art"], [2, "science"], ... ]*/
-<OrdinalFrame oAccessor={d => d[1]} ... />
+<OrdinalFrame oAccessor={d => d[1]} />
 ```
 
 ### sortO: { _function_ }
@@ -107,7 +107,7 @@ If _sortO_ is specified, sets the sorting function of the columns. By default, t
 
 ```jsx
 //sorts by alphabetical order
-<OrdinalFrame sortO={(a,b) => a < b} ... />
+<OrdinalFrame sortO={(a, b) => a < b} />
 ```
 
 ### projection: { _string_ }
@@ -115,7 +115,7 @@ If _sortO_ is specified, sets the sorting function of the columns. By default, t
 If _projection_ is specified, sets the orientation of the chart. The three possible options are "horizontal", "vertical" or "radial". Defaults to "vertical".
 
 ```jsx
-<OrdinalFrame projection={"horizontal"} ... />
+<OrdinalFrame projection={"horizontal"} />
 ```
 
 ### title: { _string_ | _JSX_ }
@@ -124,10 +124,10 @@ If _title_ is specified, sets the text for the chart title, which appears center
 
 ```jsx
 /*String option*/
-<OrdinalFrame title={"Chart Title"} ... />
+<OrdinalFrame title={"Chart Title"} />
 
 /*JSX option*/
-<OrdinalFrame title={<g><circle r={5} /><text>Chart Title</text></g>} ... />
+<OrdinalFrame title={<g><circle r={5} /><text>Chart Title</text></g>} />
 ```
 
 ### margin: { _number_ | _object_ }
@@ -136,10 +136,10 @@ If _margin_ is specified, sets the margin(s) on the frame. The margin can be set
 
 ```jsx
 /*Single number option*/
-<OrdinalFrame margin={10} ... />
+<OrdinalFrame margin={10} />
 
 /*Object option*/
-<OrdinalFrame margin={{ top: 5, bottom: 10, left: 15, right: 20 }} ... />
+<OrdinalFrame margin={{ top: 5, bottom: 10, left: 15, right: 20 }} />
 ```
 
 ### rScaleType: { _d3-scale_ }
@@ -147,7 +147,7 @@ If _margin_ is specified, sets the margin(s) on the frame. The margin can be set
 Custom [D3 scale](https://github.com/d3/d3-scale#d3-scale) for the range. Defaults to [scaleLinear()](https://github.com/d3/d3-scale#scaleLinear).
 
 ```jsx
-<OrdinalFrame rScaleType={d3.scaleTime()} ... />
+<OrdinalFrame rScaleType={d3.scaleTime()} />
 ```
 
 ### oScaleType: { _d3-scale_ }
@@ -155,7 +155,7 @@ Custom [D3 scale](https://github.com/d3/d3-scale#d3-scale) for the range. Defaul
 Custom [D3 scale](https://github.com/d3/d3-scale#d3-scale) for the ordinal values. Changing this can have strange effects.
 
 ```jsx
-<OrdinalFrame oScaleType={d3.scaleThreshold()} ... />
+<OrdinalFrame oScaleType={d3.scaleThreshold()} />
 ```
 
 ### rExtent: { [_min_, _max_] | _object_ }
@@ -164,18 +164,17 @@ If _rExtent_ is specified, sets the _min_ and/or _max_ value(s) for the _range_.
 
 ```jsx
 /*min and max values set*/
-<OrdinalFrame rExtent={[20,250]} ... />
+<OrdinalFrame rExtent={[20,250]} />
 
 /*only min value set*/
-<OrdinalFrame rExtent={[20, undefined]} ... />
+<OrdinalFrame rExtent={[20, undefined]} />
 
 /*log calculated extent*/
-<OrdinalFrame rExtent={{ onChange: d => console.log("calculated extent: ", d) }} ... />
+<OrdinalFrame rExtent={{ onChange: d => console.log("calculated extent: ", d) }} />
 
 /*log calculated extent and set extent*/
 <OrdinalFrame
-   rExtent={{ extent: [20, undefined], onChange: d => console.log("calculated extent: ", d) }}
-... />
+   rExtent={{ extent: [20, undefined], onChange: d => console.log("calculated extent: ", d) }} />
 ```
 
 ### invertR: { _bool_ }
@@ -187,9 +186,7 @@ Flip range so that the min is on the left or top.
 An array of objects or numerical values used to render both summary and piece visualizations in OrdinalFrame. The column of the data is based on its oAccessor value, while its position or height is determined by its rAccessor value.
 
 ```jsx
-<OrdinalFrame
-   data={[ { column: "a", value: 5 }, { column: "b", value: 3 } ...]}
-/>
+<OrdinalFrame data={[{ column: "a", value: 5 }, { column: "b", value: 3 }]} />
 ```
 
 ### oPadding: { _number_ }
@@ -206,10 +203,10 @@ If _dynamicColumnWidth_ is specified, sets the column width of the frame based o
 
 ```jsx
 /*String option*/
-<OrdinalFrame dynamicColumnWidth={"value"} ... />
+<OrdinalFrame dynamicColumnWidth={"value"} />
 
 /*Function option*/
-<OrdinalFrame dynamicColumnWidth={pieces => max(pieces.map(p => p.value))} ... />
+<OrdinalFrame dynamicColumnWidth={pieces => max(pieces.map(p => p.value))} />
 ```
 
 ### pixelColumnWidth: { _number_ }
@@ -217,7 +214,7 @@ If _dynamicColumnWidth_ is specified, sets the column width of the frame based o
 If _pixelColumnWidth_ is specified, the row (in the case of horizontal) or column (in the case of vertical) size will be fixed to the number specified. The corresponding size setting will be ignored as the height or width of the chart will be based on the number of columns times the set value.
 
 ```jsx
-<OrdinalFrame pixelColumnWidth={40} ... />
+<OrdinalFrame pixelColumnWidth={40} />
 ```
 
 ## Piece Rendering
@@ -230,10 +227,10 @@ A string (`"bar"`, `"timeline"`, `"clusterbar"`, `"swarm"`, `"point"`, `"none"`)
 
 ```jsx
 // basic
-<OrdinalFrame type="bar" ... />
+<OrdinalFrame type="bar" />
 
 // with options
-<OrdinalFrame type={{ type: "swarm", r: 20, customMark: d => <circle r={20} fill: "red" />}} ... />
+<OrdinalFrame type={{ type: "swarm", r: 20, customMark: d => <circle r={20} fill: "red" />}} />
 ```
 
 ### style: { _object_ | _function_ }
@@ -242,10 +239,10 @@ A React style object or a function taking a single datapoint and returning a Rea
 
 ```jsx
 // object
-<OrdinalFrame style={{ fill: "red" }} ... />
+<OrdinalFrame style={{ fill: "red" }} />
 
 // function
-<OrdinalFrame style={d => ({ fill: d.color })} ... />
+<OrdinalFrame style={d => ({ fill: d.color })} />
 ```
 
 ### pieceClass: { _string_ | _function_ }
@@ -254,10 +251,10 @@ A string or function that takes a piece and returns a string that is assigned to
 
 ```jsx
 // object
-<OrdinalFrame pieceClass="cool-piece" ... />
+<OrdinalFrame pieceClass="cool-piece" />
 
 // function
-<OrdinalFrame pieceClass={d => d.classSettings} ... />
+<OrdinalFrame pieceClass={d => d.classSettings} />
 ```
 
 ## Summary Rendering
@@ -270,10 +267,10 @@ A string (`"heatmap"`, `"boxplot"`, `"histogram"`, `"joy"`, `"contour"`, `"violi
 
 ```jsx
 // string
-<OrdinalFrame summaryType="violin" ... />
+<OrdinalFrame summaryType="violin" />
 
 // object
-<OrdinalFrame summaryType={{ type: "joy", amplitude: 30 }} ... />
+<OrdinalFrame summaryType={{ type: "joy", amplitude: 30 }} />
 ```
 
 ### summaryStyle: { _object_ | _function_ }
@@ -282,10 +279,10 @@ A React style object or a function taking a single datapoint and returning a Rea
 
 ```jsx
 // object
-<OrdinalFrame summaryStyle={{ fill: "red" }} ... />
+<OrdinalFrame summaryStyle={{ fill: "red" }} />
 
 // function
-<OrdinalFrame summaryStyle={d => ({ fill: d.color })} ... />
+<OrdinalFrame summaryStyle={d => ({ fill: d.color })} />
 ```
 
 ### summaryClass: { _string_ | _function_ }
@@ -294,10 +291,10 @@ A string or function that takes a piece and returns a string that is assigned to
 
 ```jsx
 // string
-<OrdinalFrame summaryClass="cool-class" ... />
+<OrdinalFrame summaryClass="cool-class" />
 
 // function
-<OrdinalFrame summaryClass={d => d.customClass} ... />
+<OrdinalFrame summaryClass={d => d.customClass} />
 ```
 
 ### summaryPosition: { _function_ }
@@ -338,15 +335,14 @@ An object that defines the legend to be displayed on the frame. It uses the form
   legend={{
     legendGroups: [
       {
-        styleFn: d => ({ fill: d.color, stroke: 'black' }),
+        styleFn: d => ({ fill: d.color, stroke: "black" }),
         items: [
-          { label: 'Area 1', color: 'red' },
-          { label: 'Area 2', color: 'blue' },
-        ],
-      },
-    ],
+          { label: "Area 1", color: "red" },
+          { label: "Area 2", color: "blue" }
+        ]
+      }
+    ]
   }}
-  ...
 />
 ```
 
@@ -356,17 +352,17 @@ Whether to show a labels for each column (simple boolean `true`) or a function t
 
 ```jsx
 // boolean
-<OrdinalFrame oLabel={true} ... />
+<OrdinalFrame oLabel={true} />
 
 // function
-<OrdinalFrame oLabel={d => <text fontSize={36}>{d}</text> } ... />
+<OrdinalFrame oLabel={d => <text fontSize={36}>{d}</text> } />
 
 // object
 <OrdinalFrame oLabel={
    { label: true,
      orient: "stem",
      padding: -5  }
-} ... />
+} />
 ```
 
 ### annotations: { _array_ }

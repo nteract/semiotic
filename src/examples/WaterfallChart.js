@@ -13,7 +13,6 @@ const frameProps = {
     stroke: "darkgray",
     strokeWidth: 1
   }),
-  type: "bar",
   type: waterfall,
   oLabel: d => <text transform="rotate(45)">{d}</text>,
   margin: { left: 60, top: 20, bottom: 100, right: 20 },

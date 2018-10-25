@@ -6,7 +6,7 @@ Nodes are automatically generated from edge references to source or target that 
 import { NetworkFrame } from 'semiotic'
 
 <NetworkFrame
-   nodes={[{name: "Susie"}, {name: "Shirley"} ...]}
+   nodes={[{name: "Susie"}, {name: "Shirley"}]}
    edges={[{source: "Susie", target: "Xianlin"},{source: "Shirley", target: "Susie"}]}
    nodeStyle={{ fill: "blue" }}
    edgeStyle={{ stroke: "red" }}
@@ -66,7 +66,7 @@ If _size_ is specified, sets the width and height of the frame from the array of
 Note: _Margin_ will not be added to the frame size. It's more like CSS _padding_.
 
 ```jsx
-<NetworkFrame size={[500,500]} ... />
+<NetworkFrame size={[500, 500]} />
 ```
 
 ### networkType: {_string_ | _object_ | _function_ }
@@ -79,10 +79,10 @@ _This will also support a "per-tick" function once the specifications can be fig
 
 ```jsx
 <!-- String option -->
-<NetworkFrame networkType={"motifs"} ... />
+<NetworkFrame networkType={"motifs"} />
 
 <!-- Object option -->
-<NetworkFrame networkType={{ type: "wordcloud" , rotate: d => d.topic_score < 1, fontSize: 36, fontWeight: 900 }} ... />
+<NetworkFrame networkType={{ type: "wordcloud" , rotate: d => d.topic_score < 1, fontSize: 36, fontWeight: 900 }} />
 ```
 
 ### title: {_string_ | _JSX_}
@@ -91,10 +91,10 @@ If _title_ is specified, sets the text for the chart title, which appears center
 
 ```jsx
 <!-- String option -->
-<NetworkFrame title={"Chart Title"} ... />
+<NetworkFrame title={"Chart Title"} />
 
 <!-- JSX option -->
-<NetworkFrame title={<g><circle r={5} /><text>Chart Title</text></g>} ... />
+<NetworkFrame title={<g><circle r={5} /><text>Chart Title</text></g>} />
 ```
 
 ### margin: {_number_ | _object_}
@@ -103,10 +103,10 @@ If _margin_ is specified, sets the margin(s) on the frame. The margin can be set
 
 ```jsx
 <!-- Single number option -->
-<NetworkFrame margin={10} ... />
+<NetworkFrame margin={10} />
 
 <!-- Object option -->
-<NetworkFrame margin={{ top: 5, bottom: 10, left: 15, right: 20 }} ... />
+<NetworkFrame margin={{ top: 5, bottom: 10, left: 15, right: 20 }} />
 ```
 
 ### zoomToFit: { _boolean_ }
@@ -114,7 +114,7 @@ If _margin_ is specified, sets the margin(s) on the frame. The margin can be set
 If _zoomToFit_ is set to `true` then the layout will be dynamically resized to fit within the available space. This could cause distortion but also prevents the disappearance of disconnected nodes and components.
 
 ```jsx
-<NetworkFrame zoomToFit={true} ... />
+<NetworkFrame zoomToFit={true} />
 ```
 
 ## Node Rendering
@@ -127,12 +127,12 @@ If nodeIDAccessor is specified, determines how _id_ values are accessed from the
 
 ```jsx
 <!-- String option -->
-<!-- e.g. data=[{employee: "Red"}, {employee: "Andy"}, ... ] -->
-<NetworkFrame nodeIDAccessor={"employee"} ... />
+<!-- e.g. data=[{employee: "Red"}, {employee: "Andy"} ] -->
+<NetworkFrame nodeIDAccessor={"employee"} />
 
 <!-- Function option -->
-<!-- e.g. data=[{employee: "Red"}, {employee: "Andy"}, ... ] -->
-<NetworkFrame nodeIDAccessor={d => d.employee} ... />
+<!-- e.g. data=[{employee: "Red"}, {employee: "Andy"} ] -->
+<NetworkFrame nodeIDAccessor={d => d.employee} />
 ```
 
 ### nodeStyle: {_object_ | _function_}
@@ -141,10 +141,10 @@ If nodeStyle is specified, determines the style of each rendered node. This can 
 
 ```jsx
 <!-- Object option -->
-<NetworkFrame nodeStyle={{ stroke: "white", fill: "blue" }} ... />
+<NetworkFrame nodeStyle={{ stroke: "white", fill: "blue" }} />
 
 <!-- Function option -->
-<NetworkFrame nodeStyle={d => ({ stroke: "white", fill: d.color })} ... />
+<NetworkFrame nodeStyle={d => ({ stroke: "white", fill: d.color })} />
 ```
 
 ### nodeClass: {_string_ | _function_}
@@ -153,10 +153,10 @@ If nodeClass is specified, determines the CSS class of each rendered node. This 
 
 ```jsx
 // Object option
-<NetworkFrame nodeClass="friend" ... />
+<NetworkFrame nodeClass="friend" />
 
 // Function option
-<NetworkFrame nodeClass={d => d.friendType} ... />
+<NetworkFrame nodeClass={d => d.friendType} />
 ```
 
 ### nodeRenderMode: {_string_ | _function_}
@@ -165,10 +165,10 @@ If nodeRenderMode is specified, determines the renderMode of the underlying Mark
 
 ```jsx
 // Object option
-<NetworkFrame nodeRenderMode="sketchy" ... />
+<NetworkFrame nodeRenderMode="sketchy" />
 
 // Function option
-<NetworkFrame nodeRenderMode={d => d.friendshipLevel === "no so great" ? "sketchy" : undefined} ... />
+<NetworkFrame nodeRenderMode={d => d.friendshipLevel === "no so great" ? "sketchy" : undefined} />
 ```
 
 ### nodeLabels: { _boolean_ | _function_ }
@@ -177,10 +177,10 @@ If _nodeLabels_ is set to `true` then each node will have a text label with the 
 
 ```jsx
 <!-- Boolean option -->
-<NetworkFrame nodeLabels={true} ... />
+<NetworkFrame nodeLabels={true} />
 
 <!-- Function option -->
-<NetworkFrame nodeLabels={d => d.degree > 5 ? <text>{d.id}</text> : null} ... />
+<NetworkFrame nodeLabels={d => d.degree > 5 ? <text>{d.id}</text> : null} />
 ```
 
 ### nodeSizeAccessor: { _number_ | _function_ }
@@ -189,10 +189,10 @@ By default nodes are represented as SVG `<circle>` elements with `r=5`. Use _nod
 
 ```jsx
 <!-- Number option -->
-<NetworkFrame nodeSizeAccessor={10} ... />
+<NetworkFrame nodeSizeAccessor={10} />
 
 <!-- Function option -->
-<NetworkFrame nodeSizeAccessor={d => d.degree * 5} ... />
+<NetworkFrame nodeSizeAccessor={d => d.degree * 5} />
 ```
 
 ### customNodeIcon { _function_ }
@@ -200,13 +200,19 @@ By default nodes are represented as SVG `<circle>` elements with `r=5`. Use _nod
 A function taking the node datapoint and returning SVG JSX representation of the node.
 
 ```jsx
-<NetworkFrame customNodeIcon={d => <rect
-    width={d.degree}
-    height={d.degree}
-    x={-d.degree / 2}
-    y={-d.degree / 2}
-    style={{ fill: d.createdByFrame ? "rgb(0, 162, 206)" : "rgb(179, 51, 29)" }}
-/>} ... />
+<NetworkFrame
+  customNodeIcon={d => (
+    <rect
+      width={d.degree}
+      height={d.degree}
+      x={-d.degree / 2}
+      y={-d.degree / 2}
+      style={{
+        fill: d.createdByFrame ? "rgb(0, 162, 206)" : "rgb(179, 51, 29)"
+      }}
+    />
+  )}
+/>
 ```
 
 ## Edge Rendering
@@ -220,11 +226,11 @@ If sourceAccessor is specified, determines how _source_ values are accessed from
 ```jsx
 <!-- String option -->
 <!-- e.g. data=[{manager: "Red", report: "Andy"}, {manager: "Warden", report: "Red"}, ... ] -->
-<NetworkFrame sourceAccessor={"manager"} ... />
+<NetworkFrame sourceAccessor={"manager"} />
 
 <!-- Function option -->
 <!-- e.g. data=[["Red", "Andy"], ["Warden", "Red"], ... ] -->
-<NetworkFrame sourceAccessor={d => d[0]} ... />
+<NetworkFrame sourceAccessor={d => d[0]} />
 ```
 
 ### targetAccessor: {_string_ | _function_}
@@ -234,11 +240,11 @@ If targetAccessor is specified, determines how _target_ values are accessed from
 ```jsx
 <!-- String option -->
 <!-- e.g. data=[{manager: "Red", report: "Andy"}, {manager: "Warden", report: "Red"}, ... ] -->
-<NetworkFrame targetAccessor={"report"} ... />
+<NetworkFrame targetAccessor={"report"} />
 
 <!-- Function option -->
 <!-- e.g. data=[["Red", "Andy"], ["Warden", "Red"], ... ] -->
-<NetworkFrame sourceAccessor={d => d[1]} ... />
+<NetworkFrame sourceAccessor={d => d[1]} />
 ```
 
 ### edgeStyle: {_object_ | _function_}
@@ -247,10 +253,10 @@ If edgeStyle is specified, determines the style of each rendered edge. This can 
 
 ```jsx
 <!-- Object option -->
-<NetworkFrame edgeStyle={{ stroke: "red", fill: "darkred" }} ... />
+<NetworkFrame edgeStyle={{ stroke: "red", fill: "darkred" }} />
 
 <!-- Function option -->
-<NetworkFrame edgeStyle={d => ({ stroke: "white", fill: d.source.color })} ... />
+<NetworkFrame edgeStyle={d => ({ stroke: "white", fill: d.source.color })} />
 ```
 
 ### edgeClass: {_string_ | _function_}
@@ -259,10 +265,10 @@ If edgeClass is specified, determines the CSS class of each rendered edge. This 
 
 ```jsx
 // Object option
-<NetworkFrame edgeClass="friend" ... />
+<NetworkFrame edgeClass="friend" />
 
 // Function option
-<NetworkFrame edgeClass={d => d.friendType} ... />
+<NetworkFrame edgeClass={d => d.friendType} />
 ```
 
 ### edgeRenderMode: {_string_ | _function_}
@@ -271,10 +277,10 @@ If edgeRenderMode is specified, determines the renderMode of the underlying Mark
 
 ```jsx
 // Object option
-<NetworkFrame edgeRenderMode="sketchy" ... />
+<NetworkFrame edgeRenderMode="sketchy" />
 
 // Function option
-<NetworkFrame edgeRenderMode={d => d.friendshipLevel === "no so great" ? "sketchy" : undefined} ... />
+<NetworkFrame edgeRenderMode={d => d.friendshipLevel === "no so great" ? "sketchy" : undefined} />
 ```
 
 ### edgeType { _string_ | _object_ | _function_ }
@@ -283,10 +289,10 @@ A string (One of `'none','linearc','ribbon','arrowhead','halfarrow','nail','come
 
 ```jsx
 <!-- String option -->
-<NetworkFrame edgeType="halfarrow" ... />
+<NetworkFrame edgeType="halfarrow" />
 
 <!-- Object option -->
-<NetworkFrame edgeType={{ type: "taffy", centerWidth: 1 }} ... />
+<NetworkFrame edgeType={{ type: "taffy", centerWidth: 1 }} />
 
 <!-- Function option -->
 <NetworkFrame edgeType={d => <line
@@ -317,17 +323,20 @@ An array of objects to be processed using the frame's built-in annotation rules 
 An object that defines the legend to be displayed on the frame. It uses the format seen in [<Legend>](legend)
 
 ```jsx
-<NetworkFrame legend={{
-        legendGroups: [
-          {
-            styleFn: d => ({ fill: d.color, stroke: "black" }),
-            items: [
-              { label: "Area 1", color: "red" },
-              { label: "Area 2", color: "blue" }
-            ]
-          }
+const legend = {
+    legendGroups: [ {
+        styleFn: d => ({ fill: d.color, stroke: "black" }),
+        items: [
+          { label: "Area 1", color: "red" },
+          { label: "Area 2", color: "blue" }
         ]
-      }} ... />
+      }]
+  }
+
+
+<NetworkFrame
+  legend={legend}
+/>
 ```
 
 ### svgAnnotationRules: { _function_ }
