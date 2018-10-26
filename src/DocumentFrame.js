@@ -158,7 +158,7 @@ class DocumentOrdinalFrame extends React.Component {
       <pre
         className="language-jxs"
         ref={el => (this.copy = el)}
-        style={styles[this.state.codeBlock]}
+        style={hiddenStyle}
       >
         <code className="language-jsx">
           {`import { ${frameName} } from "semiotic/lib/${frameName}"\n\n`}
@@ -176,7 +176,7 @@ class DocumentOrdinalFrame extends React.Component {
       </pre>
     )
 
-    const trimmedMarkedown = (
+    const trimmedMarkdown = (
       <pre className="language-jxs" style={styles[this.state.codeBlock]}>
         <code className="language-jsx">
           {`import { ${frameName} } from "semiotic/lib/${frameName}"\n\n`}
@@ -210,8 +210,8 @@ class DocumentOrdinalFrame extends React.Component {
             Copy Code
           </button>
         </div>
-        <div style={hiddenStyle}>{markdown}</div>
-        <div>{trimmedMarkedown}</div>
+        <div>{markdown}</div>
+        <div>{trimmedMarkdown}</div>
       </div>
     )
   }
