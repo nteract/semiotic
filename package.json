@@ -5,7 +5,6 @@
   "homepage": "https://susielu.github.io/semiotic-examples",
   "dependencies": {
     "babel-eslint": "^10.0.1",
-    "eslint": "4.19.0",
     "eslint-plugin-babel": "^5.2.1",
     "eslint-plugin-react": "7.3.0",
     "gh-pages": "^1.2.0",
@@ -24,6 +23,7 @@
     "deploy": "gh-pages -d build"
   },
   "devDependencies": {
+    "eslint": "4.19.0",
     "react-element-to-jsx-string": "14.0.2"
   }
 }

@@ -185,7 +185,7 @@ export default function({ hash }) {
     <div className="App">
       <header className="flex algin-bottom">
         <div className="logo">
-          <img src={ROOT + "/img/semiotic.png"} alt="Semiotic" />
+          <img src={ROOT + "/assets/img/semiotic.png"} alt="Semiotic" />
         </div>
         <div>
           <h1>

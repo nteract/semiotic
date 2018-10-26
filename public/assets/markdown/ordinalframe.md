@@ -230,7 +230,7 @@ A string (`"bar"`, `"timeline"`, `"clusterbar"`, `"swarm"`, `"point"`, `"none"`)
 <OrdinalFrame type="bar" />
 
 // with options
-<OrdinalFrame type={{ type: "swarm", r: 20, customMark: d => <circle r={20} fill: "red" />}} />
+<OrdinalFrame type={{ type: "swarm", r: 20, customMark: d => <circle r={20} fill: "red" /> }} />
 ```
 
 ### style: { _object_ | _function_ }
