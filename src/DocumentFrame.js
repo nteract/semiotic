@@ -32,7 +32,7 @@ const propertyToString = value => {
     string = JSON.stringify(value)
       .replace(/,{/g, ",\n    {")
       .replace(/:/g, ": ")
-      .replace(/\"coordinates\"/g, '\n   "coordinates"')
+      .replace(/"coordinates"/g, '\n   "coordinates"')
   }
 
   return string
@@ -50,7 +50,7 @@ const styles = {
 
 const hiddenStyle = { opacity: 0, height: 0 }
 
-class DocumentOrdinalFrame extends React.Component {
+class DocumentFrame extends React.Component {
   constructor(props) {
     super(props)
 
@@ -58,14 +58,10 @@ class DocumentOrdinalFrame extends React.Component {
     this.onCopy = this.onCopy.bind(this)
   }
 
-  //copy button
-  //expand button
-
   state = {
     codeBlock: "collapsed" //can be collapsed, expanded, hidden
   }
-
-  onComponentDidMount() {
+  componentDidMount() {
     window.Prism.highlightAll()
   }
 
@@ -92,7 +88,7 @@ class DocumentOrdinalFrame extends React.Component {
 
   render() {
     const {
-      props,
+      // props,
       frameProps,
       type = OrdinalFrame,
       overrideProps = {},
@@ -216,4 +212,4 @@ class DocumentOrdinalFrame extends React.Component {
     )
   }
 }
-export default DocumentOrdinalFrame
+export default DocumentFrame
