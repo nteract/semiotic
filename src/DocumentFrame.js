@@ -191,7 +191,7 @@ class DocumentFrame extends React.Component {
     )
     const functionsString = getFunctionString(functions)
 
-    const frameName = Frame.name
+    const frameName = Frame.displayName
 
     const markdown = (
       <pre
