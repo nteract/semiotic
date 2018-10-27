@@ -42,7 +42,7 @@ const propertyToString = (value, indent, trimmed) => {
     string =
       "[" +
       arr.map(d => propertyToString(d, indent + 1, trimmed)) +
-      `${value.length > 2 ? `,\n${spaces}  ...\n${spaces}` : ""}]`
+      `${value.length > 2 && trimmed ? `,\n${spaces}  ...\n${spaces}` : ""}]`
   } else {
     string = JSON.stringify(value)
   }
@@ -136,7 +136,7 @@ const styles = {
   }
 }
 
-const hiddenStyle = { opacity: 0, height: 0 }
+const hiddenStyle = { opacity: 0, height: 0, margin: 0, padding: 0 }
 
 class DocumentFrame extends React.Component {
   constructor(props) {

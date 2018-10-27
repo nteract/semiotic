@@ -237,6 +237,10 @@ a {
   text-decoration: none;
 }
 
+.margin-bottom {
+  margin-bottom: 40px;
+}
+
 .pointer,
 a {
   cursor: pointer;

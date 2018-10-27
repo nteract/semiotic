@@ -198,7 +198,9 @@ export default function({ hash }) {
         <div className="sidebar">
           <Sidebar pages={PAGES} selected={view[view.length - 1]} />
         </div>
-        <div className="container">{View && <View {...viewProps} />}</div>
+        <div className="container">
+          <div className="margin-bottom">{View && <View {...viewProps} />}</div>
+        </div>
       </div>
     </div>
   )
