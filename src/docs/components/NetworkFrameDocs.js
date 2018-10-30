@@ -314,6 +314,25 @@ export default class NetworkFrameDocs extends React.Component {
       nodeLabels: false,
       hoverAnnotation: true,
       download: true,
+      htmlAnnotationRules: ({ d }) => {
+        if (d.type === "frame-hover" || !d.id) {
+          return null
+        }
+        return (
+          <div
+            style={{
+              position: "absolute",
+              left: `${d.x}px`,
+              top: `${d.y + nodeSizeHash[this.state.nodeSize](d)}px`,
+              background: "white",
+              border: "1px solid darkred",
+              textAlign: "center"
+            }}
+          >
+            HTML Annotation for {d.id}
+          </div>
+        )
+      },
       /*      nodeRenderMode: d =>
         d.createdByFrame
           ? {

@@ -750,8 +750,11 @@ class NetworkFrame extends React.Component<Props, State> {
             ["dendrogram", "tree", "cluster"].indexOf(networkSettings.type) !==
             -1
           ) {
-            hierarchicalLayout.separation((a, b) =>               
-              (nodeSizeAccessor(a.data) || 1) + (networkSettings.nodePadding || 0) + (nodeSizeAccessor(b.data) || 1)
+            hierarchicalLayout.separation(
+              (a, b) =>
+                (nodeSizeAccessor({ ...a, ...a.data }) || 1) +
+                (networkSettings.nodePadding || 0) +
+                (nodeSizeAccessor({ ...b, ...b.data }) || 1)
             )
           }
 
@@ -1737,9 +1740,26 @@ class NetworkFrame extends React.Component<Props, State> {
     return null
   }
 
-  defaultNetworkHTMLRule = ({ d, i }: { d: Object, i: number }) => {
+  defaultNetworkHTMLRule = ({ d: baseD, i }: { d: Object, i: number }) => {
     const { tooltipContent, size, useSpans } = this.props
     const { projectedNodes, projectedEdges, nodeIDAccessor } = this.state
+
+    const d = baseD.ids
+      ? baseD
+      : baseD.edge
+        ? {
+            ...(projectedEdges.find(
+              p =>
+                nodeIDAccessor(p.source) === nodeIDAccessor(baseD.source) &&
+                nodeIDAccessor(p.target) === nodeIDAccessor(baseD.target)
+            ) || {}),
+            ...baseD
+          }
+        : {
+            ...(projectedNodes.find(p => nodeIDAccessor(p) === baseD.id) || {}),
+            ...baseD
+          }
+
     if (this.props.htmlAnnotationRules) {
       const customAnnotation = this.props.htmlAnnotationRules({
         d,
