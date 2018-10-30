@@ -335,6 +335,7 @@ export function orFrameConnectionRenderer({
     return null
   }
   const renderedConnectorMarks = []
+
   if (typeof type.type === "function") {
     const connectionRule = type.type
     const keys = Object.keys(data)
@@ -397,14 +398,18 @@ export function orFrameConnectionRenderer({
               })
             }
             const renderValue = renderMode && renderMode(piece.piece, pieceI)
-
+            const source = { ...piece.piece.data, ...piece.piece.data }
+            const target = {
+              ...matchingPiece.piece,
+              ...matchingPiece.piece.data
+            }
             const calculatedStyle = styleFn({
-              source: piece.piece.data,
-              target: matchingPiece.piece
+              source,
+              target
             })
 
             const eventListeners = eventListenersGenerator(
-              { source: piece.piece.data, target: matchingPiece.piece.data },
+              { source, target },
               pieceI
             )
             if (canvasRender && canvasRender(piece.piece) === true) {
@@ -413,8 +418,8 @@ export function orFrameConnectionRenderer({
                 tx: 0,
                 ty: 0,
                 d: {
-                  source: piece.piece.data,
-                  target: matchingPiece.piece.data
+                  source,
+                  target
                 },
                 markProps: { d: markD, markType: "path" },
                 styleFn: styleFn,
