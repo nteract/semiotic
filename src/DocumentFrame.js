@@ -50,11 +50,12 @@ const propertyToString = (value, indent, trimmed) => {
   return string
 }
 
-const getFunctionString = functions => {
+const getFunctionString = (functions, overrideProps) => {
   let functionsString = ""
 
   Object.keys(functions).forEach(d => {
-    functionsString += functions[d]
+    console.log("IN HERE", functions, d)
+    functionsString += overrideProps[d] || functions[d]
     functionsString += "\n"
   })
 
@@ -119,7 +120,7 @@ const getCodeBlock = (frameName, functionsString, framePropsString) => {
       {"\n\n"}
       {`export default () => {
 
-return <${frameName} {...frameProps} />
+  return <${frameName} {...frameProps} />
 
 }`}
     </code>
@@ -189,7 +190,7 @@ class DocumentFrame extends React.Component {
       overrideProps,
       true
     )
-    const functionsString = getFunctionString(functions)
+    const functionsString = getFunctionString(functions, overrideProps)
 
     const frameName = Frame.displayName
 

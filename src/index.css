@@ -8,6 +8,16 @@ body {
   --bg-color: #f1eef0;
   --light-color: #aca1a9;
   --dark-color: #886a7e;
+  --scale-1: #5c4aff;
+  --scale-2: #ff4966;
+  --scale-3: #9900ff;
+  --scale-4: #9fd0cb;
+  --scale-5: #e6de3d;
+  --scale-6: #3f4482;
+  --scale-7: #7a255d;
+  --scale-8: #533f82;
+  --scale-9: #365350;
+  --scale-10: #a19a11;
 }
 
 header {
@@ -254,6 +264,11 @@ a {
   /* font-weight: bold; */
   color: var(--dark-color);
   background: var(--bg-color);
+}
+
+.frame-title {
+  font-weight: bold;
+  font-size: 1.1em;
 }
 
 h3 {
