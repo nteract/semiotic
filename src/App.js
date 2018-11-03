@@ -3,6 +3,7 @@ import Sidebar from "./Sidebar"
 
 import MarkdownPage from "./MarkdownPage"
 import APIXYFrame from "./api/XYFrame"
+import CreateABarChart from "./guides/CreateABarChart"
 import LineChart from "./examples/LineChart"
 import WaterfallChart from "./examples/WaterfallChart"
 
@@ -26,6 +27,11 @@ const PAGES = [
       {
         name: "XYFrame",
         className: "sub-header"
+      },
+      {
+        name: "Creating a Bar Chart",
+        url: "guides-bar-chart",
+        component: CreateABarChart
       },
       {
         name: "OrdinalFrame",
