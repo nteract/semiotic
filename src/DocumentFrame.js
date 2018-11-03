@@ -3,6 +3,7 @@ import { OrdinalFrame } from "semiotic"
 import { processNodes } from "./process"
 
 const objectToString = (obj, indent, trimmed) => {
+  if (!obj) return ""
   let newObj = "{ "
   const keys = Object.keys(obj),
     len = keys.length - 1
@@ -13,14 +14,13 @@ const objectToString = (obj, indent, trimmed) => {
     spaces += "  "
   }
   keys.forEach((k, i) => {
-    newObj += "\n    "
-    newObj += spaces
+    // newObj += "\n    "
+    // newObj += spaces
     newObj += k + ": " + propertyToString(obj[k], indent + 1, trimmed)
     if (i !== len) newObj += ", "
   })
 
-  newObj += `\n ${spaces} }`
-
+  newObj += ` }`
   return newObj
 }
 
@@ -39,14 +39,14 @@ const propertyToString = (value, indent, trimmed) => {
     string = objectToString(value, indent, trimmed)
   } else if (isArray) {
     const arr = trimmed ? value.slice(0, 2) : value
-    string =
-      "[" +
+    string = (
+      `[` +
       arr.map(d => propertyToString(d, indent + 1, trimmed)) +
-      `${value.length > 2 && trimmed ? `,\n${spaces}  ...\n${spaces}` : ""}]`
+      `${value.length > 2 && trimmed ? `, ... ` : ""}]`
+    ).replace(/},{/g, `},\n${spaces}    {`)
   } else {
     string = JSON.stringify(value)
   }
-
   return string
 }
 
@@ -54,7 +54,6 @@ const getFunctionString = (functions, overrideProps) => {
   let functionsString = ""
 
   Object.keys(functions).forEach(d => {
-    console.log("IN HERE", functions, d)
     functionsString += overrideProps[d] || functions[d]
     functionsString += "\n"
   })

@@ -1,6 +1,7 @@
 import React from "react"
 import { OrdinalFrame } from "semiotic"
 import DocumentFrame from "../DocumentFrame"
+import theme from "../theme"
 
 // Add your component proptype data here
 // multiple component proptype documentation supported
@@ -39,12 +40,11 @@ const inflatedBarChartData = [
 ]
 
 const colorHash = {
-  tweets: "#4d430c",
-  retweets: "#b3331d",
-  favorites: "#b6a756"
+  tweets: theme[0],
+  retweets: theme[1],
+  favorites: theme[2]
 }
 
-const barSize = [200, 300]
 const stackedBarStyle = d => ({ fill: colorHash[d.action], stroke: "white" })
 const stackedBarLabel = d => (
   <text transform="translate(-15,0)rotate(45)">{d}</text>
@@ -57,13 +57,31 @@ const stackedBarAxis = {
 const stackedBarMargin = { left: 70, bottom: 50, right: 5, top: 5 }
 
 const frameProps = {
-  size: barSize,
+  size: [200, 200],
   data: barChartData,
   oAccessor: "user",
   rAccessor: "tweets",
-  style: { fill: "#00a2ce", stroke: "white" },
+  style: { fill: theme[0], stroke: "white" },
   type: "bar",
   oLabel: true
+}
+
+const stackedFrameProps = {
+  ...frameProps,
+  size: [280, 300],
+  data: inflatedBarChartData,
+  rAccessor: "value",
+  axis: {
+    orient: "left",
+    label: (
+      <text textAnchor="middle">
+        <tspan fill={colorHash.tweets}>Tweets</tspan> +{" "}
+        <tspan fill={colorHash.favorites}>Favorites</tspan> +{" "}
+        <tspan fill={colorHash.retweets}>Retweets</tspan>
+      </text>
+    )
+  },
+  style: d => ({ fill: colorHash[d.action], stroke: "white" })
 }
 
 export default class CreatingBarChart extends React.Component {
@@ -103,24 +121,31 @@ export default class CreatingBarChart extends React.Component {
           an axis in Semiotic.
         </p>
 
-        <p>
-          OrdinalFrame operates on an array of data referred to in the API as
-          "pieces". These pieces can be shown individually or stacked in a bar
-          chart, or as points on a dot plot or you can show summary
-          visualizations of the patterns of the data.
-        </p>
-
-        <p>
-          To get a bar chart of that data, pass it to the data property of
-          OrdinalFrame and pass the attribute you want to split by into the
-          oAccessor (the "ordinal" or categorical mapping) and the attribute you
-          want to measure into the rAccessor (the "range" or quantitative
-          mapping). You also want to give the OrdinalFrame a "size" which is an
-          array of [height, width]. This example also turns on labels (oLabel),
-          margins and a title.
-        </p>
+        <h3>Bar Chart</h3>
 
         <DocumentFrame frameProps={frameProps} type={OrdinalFrame} />
+
+        <h3>Bar Chart with Bar Padding</h3>
+        <p>
+          Adding the property <code>oPadding</code> gives spacing between bars.
+        </p>
+        <DocumentFrame
+          frameProps={{ ...frameProps, oPadding: 5 }}
+          type={OrdinalFrame}
+        />
+
+        <h3>Bar Chart with Bar Padding</h3>
+        <p>
+          Adding the property <code>oPadding</code> gives spacing between bars.
+        </p>
+        <DocumentFrame
+          frameProps={{ ...frameProps, oPadding: 5, title: "Twitter Chart" }}
+          type={OrdinalFrame}
+        />
+
+        <h3>Stacked Bar Chart</h3>
+
+        <DocumentFrame frameProps={stackedFrameProps} type={OrdinalFrame} />
       </div>
     )
   }

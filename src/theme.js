@@ -1,7 +1,9 @@
 export default [
-  "#5c4aff",
-  "#ff4966",
   "#9900ff",
+
+  "#ff4966",
+  "#5c4aff",
+
   "#9fd0cb",
   "#e6de3d",
   "#3f4482",

@@ -28,14 +28,15 @@ const PAGES = [
         name: "XYFrame",
         className: "sub-header"
       },
+
+      {
+        name: "OrdinalFrame",
+        className: "sub-header"
+      },
       {
         name: "Creating a Bar Chart",
         url: "guides-bar-chart",
         component: CreateABarChart
-      },
-      {
-        name: "OrdinalFrame",
-        className: "sub-header"
       },
       {
         name: "NetworkFrame",
