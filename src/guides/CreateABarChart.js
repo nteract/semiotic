@@ -2,6 +2,7 @@ import React from "react"
 import { OrdinalFrame } from "semiotic"
 import DocumentFrame from "../DocumentFrame"
 import theme from "../theme"
+import MarkdownText from "../MarkdownText"
 
 // Add your component proptype data here
 // multiple component proptype documentation supported
@@ -41,20 +42,9 @@ const inflatedBarChartData = [
 
 const colorHash = {
   tweets: theme[0],
-  retweets: theme[1],
-  favorites: theme[2]
+  retweets: theme[2],
+  favorites: theme[1]
 }
-
-const stackedBarStyle = d => ({ fill: colorHash[d.action], stroke: "white" })
-const stackedBarLabel = d => (
-  <text transform="translate(-15,0)rotate(45)">{d}</text>
-)
-
-const stackedBarAxis = {
-  orient: "left",
-  label: "Tweets + Favorites + Retweets"
-}
-const stackedBarMargin = { left: 70, bottom: 50, right: 5, top: 5 }
 
 const frameProps = {
   size: [200, 200],
@@ -63,12 +53,39 @@ const frameProps = {
   rAccessor: "tweets",
   style: { fill: theme[0], stroke: "white" },
   type: "bar",
-  oLabel: true
+  oLabel: true,
+  title: "Tweets"
+}
+
+const titleAndSpacing = {
+  oPadding: 5,
+  rAccessor: d => d.tweets + d.retweets,
+  title: "Tweets & Retweets"
 }
 
 const stackedFrameProps = {
   ...frameProps,
   size: [280, 300],
+  rAccessor: ["tweets", "retweets", "favorites"],
+  axis: {
+    orient: "left",
+    label: (
+      <text textAnchor="middle">
+        <tspan fill={colorHash.tweets}>Tweets</tspan> +{" "}
+        <tspan fill={colorHash.retweets}>Retweets</tspan> +{" "}
+        <tspan fill={colorHash.favorites}>Favorites</tspan>
+      </text>
+    )
+  },
+  style: (d, i, t) => {
+    // console.log(d, i, t)
+
+    return { fill: colorHash[d.action], stroke: "white" }
+  }
+}
+
+const stackedFramePropsFlattened = {
+  ...stackedFrameProps,
   data: inflatedBarChartData,
   rAccessor: "value",
   axis: {
@@ -76,8 +93,8 @@ const stackedFrameProps = {
     label: (
       <text textAnchor="middle">
         <tspan fill={colorHash.tweets}>Tweets</tspan> +{" "}
-        <tspan fill={colorHash.favorites}>Favorites</tspan> +{" "}
-        <tspan fill={colorHash.retweets}>Retweets</tspan>
+        <tspan fill={colorHash.retweets}>Retweets</tspan> +{" "}
+        <tspan fill={colorHash.favorites}>Favorites</tspan>
       </text>
     )
   },
@@ -114,38 +131,98 @@ export default class CreatingBarChart extends React.Component {
   render() {
     return (
       <div>
-        <h2>Creating a Bar Chart</h2>
+        <MarkdownText
+          text={`
+      
+## Creating a Bar Chart
 
-        <p>
-          Creating a bar chart and stacked bar chart with tooltips, labels, and
-          an axis in Semiotic.
-        </p>
-
-        <h3>Bar Chart</h3>
+Creating a bar chart and stacked bar chart with tooltips, labels, and
+an axis in Semiotic.
+  
+      `}
+        />
 
         <DocumentFrame frameProps={frameProps} type={OrdinalFrame} />
+        <MarkdownText
+          text={`
+      
+### Bar Chart with Custom Function, Bar Padding, and Title
 
-        <h3>Bar Chart with Bar Padding</h3>
-        <p>
-          Adding the property <code>oPadding</code> gives spacing between bars.
-        </p>
+By using a function as the \`rAccessor\` the bar height now represents the sum of tweets and
+retweets \`rAcessor= {d => d.tweets + d.retweets}\` <br/>
+Adding the property \`oPadding = {5}\` gives spacing between
+bars.<br/>
+You can pass a \`title\` as either a string or a JSX element.<br/>
+  
+      `}
+        />
+        <h3> </h3>
+
         <DocumentFrame
-          frameProps={{ ...frameProps, oPadding: 5 }}
+          frameProps={{ ...frameProps, ...titleAndSpacing }}
           type={OrdinalFrame}
+          startHidden
         />
 
-        <h3>Bar Chart with Bar Padding</h3>
-        <p>
-          Adding the property <code>oPadding</code> gives spacing between bars.
-        </p>
-        <DocumentFrame
-          frameProps={{ ...frameProps, oPadding: 5, title: "Twitter Chart" }}
-          type={OrdinalFrame}
+        <MarkdownText
+          text={`
+        
+### Stacked Bar Chart using the Same Data Model 
+
+Instead of adding the tweets and retweets you can easily use that same
+dataset and create a stacked bar. Change the rAccessor into an array of data properties: \`rAcessor:{["tweets", "retweets", "favorites"]}\` 
+    
+        `}
         />
 
-        <h3>Stacked Bar Chart</h3>
+        <DocumentFrame
+          frameProps={stackedFrameProps}
+          type={OrdinalFrame}
+          startHidden
+        />
+        <MarkdownText
+          text={`
+### Stacked Bar Chart using a flattened Data Model
 
-        <DocumentFrame frameProps={stackedFrameProps} type={OrdinalFrame} />
+Another approach is flattening your data so that you have a property called action with the activity type, i.e. tweet, retweet, or favorite. And a property called value. In this case your rAccessor changes to \`rAccessor="value"\` 
+      `}
+        />
+
+        <DocumentFrame
+          frameProps={stackedFramePropsFlattened}
+          type={OrdinalFrame}
+        />
+        <MarkdownText
+          text={`
+### Adding Tooltips to the Columns
+
+Adding the property \`hoverAnnotation\` gives tooltips to each of the columns. This represents the value for all of the stacked pieces combined.
+    `}
+        />
+
+        <h3 />
+        <p />
+        <DocumentFrame
+          frameProps={{ ...stackedFramePropsFlattened, hoverAnnotation: true }}
+          type={OrdinalFrame}
+          startHidden
+        />
+        <MarkdownText
+          text={`
+### Adding Tooltips to the Pieces
+
+Adding the property \`pieceHoverAnnotation\` gives tooltips to each of the individual pieces within a column.
+    `}
+        />
+
+        <DocumentFrame
+          frameProps={{
+            ...stackedFramePropsFlattened,
+            pieceHoverAnnotation: true
+          }}
+          type={OrdinalFrame}
+          startHidden
+        />
       </div>
     )
   }

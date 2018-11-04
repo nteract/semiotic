@@ -8,14 +8,7 @@ const objectToString = (obj, indent, trimmed) => {
   const keys = Object.keys(obj),
     len = keys.length - 1
 
-  let spaces = ""
-  let x = 0
-  for (x; x <= indent - 2; x++) {
-    spaces += "  "
-  }
   keys.forEach((k, i) => {
-    // newObj += "\n    "
-    // newObj += spaces
     newObj += k + ": " + propertyToString(obj[k], indent + 1, trimmed)
     if (i !== len) newObj += ", "
   })
@@ -144,11 +137,12 @@ class DocumentFrame extends React.Component {
 
     this.onClick = this.onClick.bind(this)
     this.onCopy = this.onCopy.bind(this)
+
+    this.state = {
+      codeBlock: props.startHidden ? "hidden" : "collapsed"
+    }
   }
 
-  state = {
-    codeBlock: "collapsed" //can be collapsed, expanded, hidden
-  }
   componentDidMount() {
     window.Prism.highlightAll()
   }
