@@ -139,7 +139,11 @@ class DocumentFrame extends React.Component {
     this.onCopy = this.onCopy.bind(this)
 
     this.state = {
-      codeBlock: props.startHidden ? "hidden" : "collapsed"
+      codeBlock: props.startHidden
+        ? "hidden"
+        : props.useExpanded
+          ? "expanded"
+          : "collapsed"
     }
   }
 
@@ -168,7 +172,8 @@ class DocumentFrame extends React.Component {
       frameProps,
       type = OrdinalFrame,
       overrideProps = {},
-      functions = {}
+      functions = {},
+      useExpanded
     } = this.props
     const Frame = type
 
@@ -208,7 +213,10 @@ class DocumentFrame extends React.Component {
         <Frame {...frameProps} />
 
         <div className="toolbar">
-          <button value="collapsed" onClick={this.onClick}>
+          <button
+            value={useExpanded ? "expanded" : "collapsed"}
+            onClick={this.onClick}
+          >
             Show Code
           </button>
           <button value="hidden" onClick={this.onClick}>

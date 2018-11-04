@@ -1,7 +1,8 @@
 import React from "react"
 import DocumentFrame from "../DocumentFrame"
 import { OrdinalFrame } from "semiotic"
-import { green, red } from "../theme"
+import { green, red, purple } from "../theme"
+import MarkdownText from "../MarkdownText"
 
 const frameProps = {
   size: [700, 400],
@@ -42,7 +43,8 @@ function waterfall({ data, rScale, adjustedSize }) {
     return label
   }
 
-  const fillRule = d => (d.value > 0 ? green : red)
+  const fillRule = d =>
+    d.column === "Total" ? purple : d.value > 0 ? green : red
 
   const keys = Object.keys(data)
 
@@ -142,7 +144,8 @@ function waterfall({ data, rScale, adjustedSize }) {
     return label
   }
 
-  const fillRule = d => (d.value > 0 ? green : red)
+  const fillRule = d =>
+    d.column === "Total" ? purple : d.value > 0 ? green : red
 
   const keys = Object.keys(data)
 
@@ -225,8 +228,16 @@ function waterfall({ data, rScale, adjustedSize }) {
 const WaterfallChart = () => {
   return (
     <div>
-      <h2>Waterfall Chart</h2>
+      <MarkdownText
+        text={`
+## Waterfall Chart
 
+This demonstrates a custom type to render the pieces for an unsupported layout.
+
+The custom type story still isn't so good. You have to do things that are typically done out of sight, like accounting for margins and calculating the zero baseline and accounting for drawing bars. Also, the extent has to be manually set since it doesn't know how to calculate an extent based on the Waterfall Chart's strange way of doing things. Future versions of semiotic should have a better story than this.
+
+`}
+      />
       <DocumentFrame
         frameProps={frameProps}
         overrideProps={overrideProps}
@@ -234,6 +245,7 @@ const WaterfallChart = () => {
           waterfall
         }}
         type={OrdinalFrame}
+        useExpanded
       />
     </div>
   )

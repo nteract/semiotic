@@ -3,8 +3,8 @@ import Sidebar from "./Sidebar"
 
 import MarkdownPage from "./MarkdownPage"
 import APIXYFrame from "./api/XYFrame"
+import CreateALineChart from "./guides/CreateALineChart"
 import CreateABarChart from "./guides/CreateABarChart"
-import LineChart from "./examples/LineChart"
 import WaterfallChart from "./examples/WaterfallChart"
 
 const ROOT = process.env.PUBLIC_URL
@@ -28,7 +28,11 @@ const PAGES = [
         name: "XYFrame",
         className: "sub-header"
       },
-
+      {
+        name: "Creating a Line Chart",
+        url: "guides-line-chart",
+        component: CreateALineChart
+      },
       {
         name: "OrdinalFrame",
         className: "sub-header"
@@ -57,11 +61,7 @@ const PAGES = [
         name: "XYFrame",
         className: "sub-header"
       },
-      {
-        name: "Line Chart",
-        url: "line-chart",
-        component: LineChart
-      },
+
       {
         name: "OrdinalFrame",
         className: "sub-header"
