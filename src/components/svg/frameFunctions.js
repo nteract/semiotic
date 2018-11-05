@@ -217,8 +217,8 @@ export function keyAndObjectifyBarData({
   rAccessor: Array<Function> | Function
 }): Array<Object> {
   const decoratedData = []
-  oAccessor.forEach(actualOAccessor => {
-    rAccessor.forEach(actualRAccessor => {
+  oAccessor.forEach((actualOAccessor, oIndex) => {
+    rAccessor.forEach((actualRAccessor, rIndex) => {
       ;(data || []).forEach(d => {
         const appliedKey = renderKey(d, decoratedData.length)
         if (typeof d !== "object") {
@@ -226,6 +226,8 @@ export function keyAndObjectifyBarData({
           decoratedData.push({
             data: expandedData,
             value: actualRAccessor(expandedData),
+            rIndex,
+            oIndex,
             column:
               (appliedKey !== undefined &&
                 appliedKey.toString &&
@@ -237,6 +239,8 @@ export function keyAndObjectifyBarData({
           decoratedData.push({
             renderKey: appliedKey,
             data: d,
+            rIndex,
+            oIndex,
             value: actualRAccessor(d),
             column: actualOAccessor(d)
           })
