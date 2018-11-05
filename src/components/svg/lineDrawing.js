@@ -119,11 +119,11 @@ export const projectLineData = ({
   }
   const projectedLine: Array<Object> = []
 
-  lineDataAccessor.forEach(actualLineAccessor => {
-    xAccessor.forEach(actualXAccessor => {
-      yAccessor.forEach(actualYAccessor => {
+  lineDataAccessor.forEach((actualLineAccessor, lineIndex) => {
+    xAccessor.forEach((actualXAccessor, xIndex) => {
+      yAccessor.forEach((actualYAccessor, yIndex) => {
         data.forEach((d: Object) => {
-          const originalLineData = { ...d }
+          const originalLineData = { ...d, xIndex, yIndex, lineIndex }
 
           originalLineData.data = actualLineAccessor(d).map((p, q) => {
             const originalCoords = {}

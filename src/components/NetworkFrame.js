@@ -30,9 +30,12 @@ import {
   drawEdges,
   topologicalSort,
   hierarchicalRectNodeGenerator,
+  matrixNodeGenerator,
   radialRectNodeGenerator,
   chordNodeGenerator,
   chordEdgeGenerator,
+  matrixEdgeGenerator,
+  arcEdgeGenerator,
   sankeyNodeGenerator,
   wordcloudNodeGenerator,
   circleNodeGenerator,
@@ -182,7 +185,7 @@ const customEdgeHashMutate = {
 }
 */
 
-function determineNodeIcon(baseCustomNodeIcon, networkSettings, size) {
+function determineNodeIcon(baseCustomNodeIcon, networkSettings, size, nodes) {
   if (baseCustomNodeIcon) return baseCustomNodeIcon
 
   const center = [size[0] / 2, size[1] / 2]
@@ -206,12 +209,14 @@ function determineNodeIcon(baseCustomNodeIcon, networkSettings, size) {
       return chordNodeGenerator(size)
     case "dagre":
       return hierarchicalRectNodeGenerator
+      case "matrix":
+      return matrixNodeGenerator(size, nodes, networkSettings)
   }
 
   return circleNodeGenerator
 }
 
-function determineEdgeIcon(baseCustomEdgeIcon, networkSettings, size, graph) {
+function determineEdgeIcon({ baseCustomEdgeIcon, networkSettings, size, graph, nodes }) {
   if (baseCustomEdgeIcon) return baseCustomEdgeIcon
   switch (networkSettings.type) {
     case "partition":
@@ -224,6 +229,10 @@ function determineEdgeIcon(baseCustomEdgeIcon, networkSettings, size, graph) {
       return () => null
     case "chord":
       return chordEdgeGenerator(size)
+    case "matrix":
+      return matrixEdgeGenerator(size, nodes)
+    case "arc":
+      return arcEdgeGenerator(size)
     case "dagre":
       if (graph) return dagreEdgeGenerator(graph.graph().rankdir)
   }
@@ -633,18 +642,6 @@ class NetworkFrame extends React.Component<Props, State> {
       margin
     })
 
-    const customNodeIcon = determineNodeIcon(
-      baseCustomNodeIcon,
-      networkSettings,
-      adjustedSize
-    )
-    const customEdgeIcon = determineEdgeIcon(
-      baseCustomEdgeIcon,
-      networkSettings,
-      adjustedSize,
-      graph
-    )
-
     networkSettings.graphSettings.nodes = nodes
     networkSettings.graphSettings.edges = edges
 
@@ -857,6 +854,22 @@ class NetworkFrame extends React.Component<Props, State> {
         edgeHash.set(edgeKey, edge)
       })
     }
+
+    const customNodeIcon = determineNodeIcon(
+      baseCustomNodeIcon,
+      networkSettings,
+      adjustedSize,
+      projectedNodes
+    )
+
+    const customEdgeIcon = determineEdgeIcon(
+      { baseCustomEdgeIcon,
+      networkSettings,
+      size: adjustedSize,
+      nodes: projectedNodes,
+      graph }
+    )
+
 
     if (
       (networkSettings.type === "sankey" ||
@@ -1327,6 +1340,34 @@ class NetworkFrame extends React.Component<Props, State> {
             node.y = resetY(node.y)
           })
         })
+      } else if (networkSettings.type === "matrix") {
+
+        if (networkSettings.sort) {
+          projectedNodes = projectedNodes.sort(networkSettings.sort)
+        }
+
+        const gridSize = Math.min(...adjustedSize)
+
+        const stepSize = gridSize / (projectedNodes.length + 1)
+
+        projectedNodes.forEach((node, index) => {
+          node.x = 0
+          node.y = (index + 1)  * stepSize
+        })
+
+      }  else if (networkSettings.type === "arc") {
+
+        if (networkSettings.sort) {
+          projectedNodes = projectedNodes.sort(networkSettings.sort)
+        }
+
+        const stepSize = adjustedSize[0] / (projectedNodes.length + 2)
+
+        projectedNodes.forEach((node, index) => {
+          node.x = (index + 1) * stepSize
+          node.y = adjustedSize[1] / 2
+        })
+
       } else if (typeof networkSettings.type === "function") {
         networkSettings.type({
           nodes: projectedNodes,
@@ -1341,7 +1382,7 @@ class NetworkFrame extends React.Component<Props, State> {
 
       this.state.graphSettings.nodes = currentProps.nodes
       this.state.graphSettings.edges = currentProps.edges
-    }
+    } 
 
     //filter out user-defined nodes
     projectedNodes = projectedNodes.filter(filterRenderedNodes)
@@ -1383,6 +1424,7 @@ class NetworkFrame extends React.Component<Props, State> {
     }
     if (
       networkSettings.zoom !== false &&
+      networkSettings.type !== "matrix" &&
       networkSettings.type !== "wordcloud" &&
       networkSettings.type !== "chord" &&
       networkSettings.type !== "sankey" &&
@@ -1812,7 +1854,7 @@ class NetworkFrame extends React.Component<Props, State> {
       downloadFields,
       download,
       additionalDefs,
-      renderOrder
+      renderOrder = this.state.graphSettings && this.state.graphSettings.type === "matrix" ? [ "nodes", "edges" ] : ["edges", "nodes"]
     } = this.props
     const {
       backgroundGraphics,

@@ -10,6 +10,7 @@ import {
   arc,
   curveMonotoneX,
   curveMonotoneY,
+  curveBasis,
   line,
   linkHorizontal,
   linkVertical,
@@ -126,6 +127,83 @@ export const circleNodeGenerator = ({
       tabIndex={-1}
     />
   )
+}
+
+export const matrixEdgeGenerator = (size, nodes) => ({
+  d,
+  i,
+  styleFn,
+  renderMode,
+  key,
+  className,
+  baseMarkProps
+}) => {
+  const gridSize = Math.min(...size) / nodes.length
+
+  return (
+    <g key={key}>
+      <Mark
+        {...baseMarkProps}
+        renderMode={renderMode ? renderMode(d, i) : undefined}
+        key={key}
+        className={className}
+        simpleInterpolate={true}
+        transform={`translate(${d.source.y},${d.target.y})`}
+        markType="rect"
+        x={-gridSize / 2}
+        y={-gridSize / 2}
+        width={gridSize}
+        height={gridSize}
+        style={styleFn(d, i)}
+        aria-label={`Connection from ${d.source.id} to ${d.target.id}`}
+        tabIndex={-1}
+      />
+      <Mark
+        {...baseMarkProps}
+        renderMode={renderMode ? renderMode(d, i) : undefined}
+        key={`${key}-mirror`}
+        className={className}
+        simpleInterpolate={true}
+        transform={`translate(${d.target.y},${d.source.y})`}
+        markType="rect"
+        x={-gridSize / 2}
+        y={-gridSize / 2}
+        width={gridSize}
+        height={gridSize}
+        style={styleFn(d, i)}
+        aria-label={`Connection from ${d.source.id} to ${d.target.id}`}
+        tabIndex={-1}
+      />
+    </g>
+  )
+}
+
+export const arcEdgeGenerator = size => {
+  const yAdjust = size[1] / size[0]
+  function arcDiagramArc(d) {
+    const draw = line().curve(curveBasis)
+    const midX = (d.source.x + d.target.x) / 2
+    const midY = d.source.x - d.target.x
+    return draw([[d.source.x, 0], [midX, midY * yAdjust], [d.target.x, 0]])
+  }
+
+  return ({ d, i, styleFn, renderMode, key, className, baseMarkProps }) => {
+    return (
+      <Mark
+        {...baseMarkProps}
+        renderMode={renderMode ? renderMode(d, i) : undefined}
+        key={key}
+        className={className}
+        simpleInterpolate={true}
+        markType="path"
+        transform={`translate(0,${size[1] / 2})`}
+        d={arcDiagramArc(d)}
+        style={styleFn(d, i)}
+        aria-label={`Connection from ${d.source.id} to ${d.target.id}`}
+        tabIndex={-1}
+      />
+    )
+  }
 }
 
 export const chordEdgeGenerator = size => ({
@@ -320,6 +398,128 @@ export const chordNodeGenerator = size => ({
     tabIndex={-1}
   />
 )
+
+export const matrixNodeGenerator = (size, nodes) => {
+  const gridSize = Math.min(...size)
+  const stepSize = gridSize / (nodes.length + 1)
+
+  return ({ d, i, styleFn, renderMode, key, className, baseMarkProps }) => {
+    const showText = stepSize > 6
+    const showLine = stepSize > 3
+    const showRect = stepSize > 0.5
+
+    const textProps = {
+      textAnchor: "end",
+      fontSize: `${stepSize / 2}px`
+    }
+    const style = styleFn(d, i)
+    const renderModeValue = renderMode ? renderMode(d, i) : undefined
+
+    return (
+      <g key={key} className={className}>
+        {showRect && (
+          <Mark
+            markType="rect"
+            x={stepSize / 2}
+            y={d.y - stepSize / 2}
+            width={gridSize - stepSize}
+            height={stepSize}
+            style={{ ...style, stroke: "none" }}
+            renderMode={renderModeValue}
+            forceUpdate={true}
+            baseMarkProps={baseMarkProps}
+          />
+        )}
+        {showRect && (
+          <Mark
+            markType="rect"
+            y={stepSize / 2}
+            x={d.y - stepSize / 2}
+            height={gridSize - stepSize}
+            width={stepSize}
+            style={{ ...style, stroke: "none" }}
+            renderMode={renderModeValue}
+            forceUpdate={true}
+            baseMarkProps={baseMarkProps}
+          />
+        )}
+        {showLine && (
+          <Mark
+            markType="line"
+            stroke="black"
+            x1={0}
+            x2={gridSize - stepSize / 2}
+            y1={d.y - stepSize / 2}
+            y2={d.y - stepSize / 2}
+            style={style}
+            renderMode={renderModeValue}
+            forceUpdate={true}
+            baseMarkProps={baseMarkProps}
+          />
+        )}
+        {showLine && (
+          <Mark
+            markType="line"
+            stroke="black"
+            y1={0}
+            y2={gridSize - stepSize / 2}
+            x1={d.y - stepSize / 2}
+            x2={d.y - stepSize / 2}
+            style={style}
+            renderMode={renderModeValue}
+            forceUpdate={true}
+            baseMarkProps={baseMarkProps}
+          />
+        )}
+        {showLine &&
+          i === nodes.length - 1 && (
+            <Mark
+              markType="line"
+              stroke="black"
+              x1={0}
+              x2={gridSize - stepSize / 2}
+              y1={d.y + stepSize / 2}
+              y2={d.y + stepSize / 2}
+              style={style}
+              renderMode={renderModeValue}
+              forceUpdate={true}
+              baseMarkProps={baseMarkProps}
+            />
+          )}
+        {showLine &&
+          i === nodes.length - 1 && (
+            <Mark
+              markType="line"
+              stroke="black"
+              y1={0}
+              y2={gridSize - stepSize / 2}
+              x1={d.y + stepSize / 2}
+              x2={d.y + stepSize / 2}
+              style={style}
+              renderMode={renderModeValue}
+              forceUpdate={true}
+              baseMarkProps={baseMarkProps}
+            />
+          )}
+        {showText && (
+          <text x={0} y={d.y + stepSize / 5} {...textProps}>
+            {d.id}
+          </text>
+        )}
+        {showText && (
+          <text
+            transform={`translate(${d.y}) rotate(90) translate(0,${stepSize /
+              5})`}
+            {...textProps}
+            y={0}
+          >
+            {d.id}
+          </text>
+        )}
+      </g>
+    )
+  }
+}
 
 export const radialRectNodeGenerator = (size, center, type) => {
   const radialArc = arc()

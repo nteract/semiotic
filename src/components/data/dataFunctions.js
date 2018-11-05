@@ -116,12 +116,12 @@ export const calculateDataExtent = ({
     projectedLines: Array<Object> = [],
     projectedAreas: Array<Object> = []
   if (points) {
-    xAccessor.forEach(actualXAccessor => {
-      yAccessor.forEach(actualYAccessor => {
+    xAccessor.forEach((actualXAccessor, xIndex) => {
+      yAccessor.forEach((actualYAccessor, yIndex) => {
         points.forEach((d, i) => {
           const x = actualXAccessor(d, i)
           const y = actualYAccessor(d, i)
-          const projectedPoint = { x, y, data: d }
+          const projectedPoint = { x, y, data: d, xIndex, yIndex }
           if (Array.isArray(y)) {
             projectedPoint[projectedYBottom] = Math.min(...y)
             projectedPoint[projectedYTop] = Math.max(...y)

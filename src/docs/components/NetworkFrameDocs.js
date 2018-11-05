@@ -312,8 +312,11 @@ export default class NetworkFrameDocs extends React.Component {
       nodeSizeAccessor: nodeSizeHash[this.state.nodeSize],
       zoomToFit: true,
       nodeLabels: false,
-      hoverAnnotation: true,
       download: true,
+      hoverAnnotation: [
+        { type: "frame-hover" },
+        { type: "highlight", style: { fill: "red", opacity: 0.5 } }
+      ],
       htmlAnnotationRules: ({ d }) => {
         if (d.type === "frame-hover" || !d.id) {
           return null
