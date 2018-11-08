@@ -92,9 +92,12 @@ const getFramePropsString = (frameProps, functions, overrideProps, trimmed) => {
       overrideProps[d.key] ||
       propertyToString(d.value, 0, trimmed)
 
-    framePropsString += `  ${d.key}: ${string}${(i !== frameString.length - 1 &&
-      ",") ||
-      ""}`
+    if (string !== "") {
+      framePropsString += `  ${d.key}: ${string}${(i !==
+        frameString.length - 1 &&
+        ",") ||
+        ""}`
+    }
   })
 
   framePropsString += "\n}"

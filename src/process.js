@@ -95,7 +95,8 @@ export const processNodes = [
       "axes",
       "axis",
       "matte",
-      "minimap"
+      "minimap",
+      "sortO"
     ]
   },
   {

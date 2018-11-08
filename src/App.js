@@ -5,6 +5,7 @@ import MarkdownPage from "./MarkdownPage"
 import APIXYFrame from "./api/XYFrame"
 import CreateALineChart from "./guides/CreateALineChart"
 import CreateABarChart from "./guides/CreateABarChart"
+import CreateAPieChart from "./guides/CreateAPieChart"
 import WaterfallChart from "./examples/WaterfallChart"
 
 const ROOT = process.env.PUBLIC_URL
@@ -41,6 +42,11 @@ const PAGES = [
         name: "Creating a Bar Chart",
         url: "guides-bar-chart",
         component: CreateABarChart
+      },
+      {
+        name: "Creating a Pie Chart",
+        url: "guides-pie-chart",
+        component: CreateAPieChart
       },
       {
         name: "NetworkFrame",

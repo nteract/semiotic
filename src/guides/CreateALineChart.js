@@ -2,6 +2,8 @@ import React from "react"
 import DocumentFrame from "../DocumentFrame"
 import { XYFrame } from "semiotic"
 import theme from "../theme"
+import MarkdownText from "../MarkdownText"
+import { curveCatmullRom } from "d3-shape"
 
 const lines = [
   {
@@ -130,57 +132,57 @@ const lines = [
         theaterAvg: 1463,
         date: "2015-07-17",
         rank: 47
-      },
-      {
-        week: 16,
-        grossWeekly: 19380,
-        theaterCount: 19,
-        theaterAvg: 1020,
-        date: "2015-07-24",
-        rank: 56
-      },
-      {
-        week: 17,
-        grossWeekly: 15952,
-        theaterCount: 17,
-        theaterAvg: 938,
-        date: "2015-07-31",
-        rank: 61
-      },
-      {
-        week: 18,
-        grossWeekly: 11938,
-        theaterCount: 10,
-        theaterAvg: 1194,
-        date: "2015-08-07",
-        rank: 66
-      },
-      {
-        week: 19,
-        grossWeekly: 7632,
-        theaterCount: 5,
-        theaterAvg: 1526,
-        date: "2015-08-14",
-        rank: 73
-      },
-      {
-        week: 20,
-        grossWeekly: 6272,
-        theaterCount: 4,
-        theaterAvg: 1568,
-        date: "2015-08-21",
-        rank: 81
-      },
-      {
-        week: 21,
-        grossWeekly: 5677,
-        theaterCount: 5,
-        theaterAvg: 1135,
-        date: "2015-08-28",
-        rank: 83
       }
-    ],
-    type: "iceberg"
+      //TODO: difference chart handle different number of data points
+      // {
+      //   week: 16,
+      //   grossWeekly: 19380,
+      //   theaterCount: 19,
+      //   theaterAvg: 1020,
+      //   date: "2015-07-24",
+      //   rank: 56
+      // },
+      // {
+      //   week: 17,
+      //   grossWeekly: 15952,
+      //   theaterCount: 17,
+      //   theaterAvg: 938,
+      //   date: "2015-07-31",
+      //   rank: 61
+      // },
+      // {
+      //   week: 18,
+      //   grossWeekly: 11938,
+      //   theaterCount: 10,
+      //   theaterAvg: 1194,
+      //   date: "2015-08-07",
+      //   rank: 66
+      // },
+      // {
+      //   week: 19,
+      //   grossWeekly: 7632,
+      //   theaterCount: 5,
+      //   theaterAvg: 1526,
+      //   date: "2015-08-14",
+      //   rank: 73
+      // },
+      // {
+      //   week: 20,
+      //   grossWeekly: 6272,
+      //   theaterCount: 4,
+      //   theaterAvg: 1568,
+      //   date: "2015-08-21",
+      //   rank: 81
+      // },
+      // {
+      //   week: 21,
+      //   grossWeekly: 5677,
+      //   theaterCount: 5,
+      //   theaterAvg: 1135,
+      //   date: "2015-08-28",
+      //   rank: 83
+      // }
+    ]
   },
   {
     title: "Far from the Madding Crowd",
@@ -309,31 +311,155 @@ const lines = [
         date: "2015-08-07",
         rank: 60
       }
-    ],
-    type: "iceberg"
+    ]
   }
 ]
+
+const threeTitles = lines.concat([
+  {
+    title: "The Longest Ride",
+    studio: "Fox",
+    firstWeek: "2015-15",
+    maxRank: 3,
+    maxGross: 37446117,
+    coordinates: [
+      {
+        week: 1,
+        grossWeekly: 16660516,
+        theaterCount: 3366,
+        theaterAvg: 4950,
+        date: "2015-04-10",
+        rank: 3
+      },
+      {
+        week: 2,
+        grossWeekly: 9372323,
+        theaterCount: 3371,
+        theaterAvg: 2780,
+        date: "2015-04-17",
+        rank: 5
+      },
+      {
+        week: 3,
+        grossWeekly: 5507604,
+        theaterCount: 3140,
+        theaterAvg: 1754,
+        date: "2015-04-24",
+        rank: 7
+      },
+      {
+        week: 4,
+        grossWeekly: 2369655,
+        theaterCount: 2115,
+        theaterAvg: 1120,
+        date: "2015-05-01",
+        rank: 10
+      },
+      {
+        week: 5,
+        grossWeekly: 1823683,
+        theaterCount: 1464,
+        theaterAvg: 1246,
+        date: "2015-05-08",
+        rank: 11
+      },
+      {
+        week: 6,
+        grossWeekly: 780244,
+        theaterCount: 803,
+        theaterAvg: 972,
+        date: "2015-05-15",
+        rank: 14
+      },
+      {
+        week: 7,
+        grossWeekly: 419930,
+        theaterCount: 329,
+        theaterAvg: 1276,
+        date: "2015-05-22",
+        rank: 17
+      },
+      {
+        week: 8,
+        grossWeekly: 226064,
+        theaterCount: 230,
+        theaterAvg: 983,
+        date: "2015-05-29",
+        rank: 21
+      },
+      {
+        week: 9,
+        grossWeekly: 126320,
+        theaterCount: 155,
+        theaterAvg: 815,
+        date: "2015-06-05",
+        rank: 28
+      },
+      {
+        week: 10,
+        grossWeekly: 101719,
+        theaterCount: 116,
+        theaterAvg: 877,
+        date: "2015-06-12",
+        rank: 31
+      },
+      {
+        week: 11,
+        grossWeekly: 33808,
+        theaterCount: 45,
+        theaterAvg: 751,
+        date: "2015-06-19",
+        rank: 40
+      },
+      {
+        week: 12,
+        grossWeekly: 17379,
+        theaterCount: 24,
+        theaterAvg: 724,
+        date: "2015-06-26",
+        rank: 56
+      },
+      {
+        week: 13,
+        grossWeekly: 6872,
+        theaterCount: 9,
+        theaterAvg: 764,
+        date: "2015-07-03",
+        rank: 67
+      }
+    ]
+  }
+])
 
 const frameProps = {
   size: [700, 400],
   xAccessor: "week",
   yAccessor: "theaterCount",
   lineDataAccessor: "coordinates",
-  title: "Two Movies",
+  yExtent: [0],
+  title: (
+    <text textAnchor="middle">
+      Theaters showing <tspan fill={theme[0]}>Ex Machina</tspan> vs{" "}
+      <tspan fill={theme[1]}>Far from the Madding Crowd</tspan>
+    </text>
+  ),
   axes: [
     {
-      orient: "left"
+      orient: "left",
+      label: "Number of Theaters",
+      tickFormat: d => d / 1000 + "k"
     },
     {
-      orient: "bottom"
+      orient: "bottom",
+      label: { name: "Weeks from Opening Day", locationDistance: 55 }
     }
   ],
   lineStyle: (d, i) => ({
     stroke: theme[i],
     strokeWidth: 2,
-    fill: "none"
+    fill: theme[i]
   }),
-  margin: { left: 80, bottom: 50, right: 10, top: 40 },
+  margin: { left: 80, bottom: 90, right: 10, top: 40 },
   lines
 }
 
@@ -341,46 +467,155 @@ const overrideProps = {
   lineStyle: `(d, i) => ({
     stroke: theme[i],
     strokeWidth: 2,
-    fill: "none"
-  })`
+    fill: theme[i]
+  })`,
+  title: `(
+    <text textAnchor="middle">
+      Theaters showing <tspan fill={theme[0]}>Ex Machina</tspan> vs{" "}
+      <tspan fill={theme[1]}>Far from the Madding Crowd</tspan>
+    </text>
+  )`
+}
+
+const areaChart = {
+  ...frameProps,
+  lineStyle: (d, i) => ({
+    stroke: theme[i],
+    strokeWidth: 2,
+    fill: theme[i],
+    fillOpacity: 0.6
+  }),
+  lineType: {
+    type: "line",
+    // interpolator: curveCatmullRom,
+    y1: () => 0
+  }
+}
+
+const linePercent = {
+  ...frameProps,
+  lines: threeTitles,
+  lineType: "linepercent",
+  axes: [
+    {
+      orient: "left",
+      label: "Number of Theaters",
+      tickFormat: d => d * 100 + "%"
+    },
+    {
+      orient: "bottom",
+      label: { name: "Weeks from Opening Day", locationDistance: 55 }
+    }
+  ]
 }
 
 const withHoverFrameProps = {
   ...frameProps,
-  hoverAnnotation: true
+  lineType: "stackedarea"
+  // hoverAnnotation: true
 }
 
-const WaterfallChart = () => {
+const stackedpercent = {
+  ...frameProps,
+  lineType: "stackedpercent",
+  axes: linePercent.axes
+}
+
+export default function CreateALineChart() {
   return (
     <div>
-      <div className="row">
-        <div className="col-md-6 col-xs-12">
-          <h2>Line Chart</h2>
-          <p>
-            The very basics of how to create a line chart, stacked area and bump
-            area chart using XYFrame along with hover behavior and styling.
-          </p>
-        </div>
-        <div className="col-md-6 col-xs-12">
-          <DocumentFrame
-            frameProps={frameProps}
-            type={XYFrame}
-            overrideProps={overrideProps}
-          />
-        </div>
-      </div>
-      <h2>Line Chart with Hover</h2>
-      <p>
-        The very basics of how to create a line chart, stacked area and bump
-        area chart using XYFrame along with hover behavior and styling.
-      </p>
+      <MarkdownText
+        text={`
+## Line Chart
+
+Creating a line chart, stacked area and bump area chart using
+XYFrame along with hover behavior and styling in Semiotic.
+
+`}
+      />
+      <DocumentFrame
+        frameProps={frameProps}
+        type={XYFrame}
+        overrideProps={overrideProps}
+        useExpanded
+      />
+      <MarkdownText
+        text={`
+## Difference Line Chart
+
+Creating a line chart, stacked area and bump area chart using
+XYFrame along with hover behavior and styling in Semiotic.
+
+`}
+      />
+      <DocumentFrame
+        frameProps={{ ...frameProps, lineType: "difference" }}
+        type={XYFrame}
+        overrideProps={overrideProps}
+        startHidden
+      />
+      <MarkdownText
+        text={`
+## Line Percent Chart
+
+Creating a line chart, stacked area and bump area chart using
+XYFrame along with hover behavior and styling in Semiotic.
+
+`}
+      />
+      <DocumentFrame
+        frameProps={linePercent}
+        type={XYFrame}
+        overrideProps={overrideProps}
+        startHidden
+      />
+      <MarkdownText
+        text={`
+## Area Chart
+
+The default setting for XYFrame when you send it lines is to show them as a line chart. You can change this by adding in the prop \`lineType: "area"\` to turn your chart in to a stacked area.
+
+`}
+      />
+
+      <DocumentFrame
+        frameProps={areaChart}
+        type={XYFrame}
+        overrideProps={overrideProps}
+        startHidden
+      />
+
+      <MarkdownText
+        text={`
+## Stacked Area Chart
+
+The default setting for XYFrame when you send it lines is to show them as a line chart. You can change this by adding in the prop \`lineType: "stackedarea"\` to turn your chart in to a stacked area.
+
+`}
+      />
+
       <DocumentFrame
         frameProps={withHoverFrameProps}
         type={XYFrame}
         overrideProps={overrideProps}
+        startHidden
+      />
+
+      <MarkdownText
+        text={`
+## Stacked Area Percent Chart
+
+The default setting for XYFrame when you send it lines is to show them as a line chart. You can change this by adding in the prop \`lineType: "stackedarea"\` to turn your chart in to a stacked area.
+
+`}
+      />
+
+      <DocumentFrame
+        frameProps={stackedpercent}
+        type={XYFrame}
+        overrideProps={overrideProps}
+        startHidden
       />
     </div>
   )
 }
-
-export default WaterfallChart

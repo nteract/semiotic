@@ -9,6 +9,8 @@
 
 /*difference between this and 
 .tickline?*/
-.tick {
+/* difference between using a radial tick paath vs a tick paghs in xyframe is this necesary? or can you add the tick class to the radial ticks as well*/
+.tick,
+.axis-tick path {
   stroke: #ddd;
 }

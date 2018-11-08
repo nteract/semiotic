@@ -1,10 +1,10 @@
 export default [
-  "#9900ff",
+  "#ac58e5",
+  "#9fd0cb",
+  "#7566ff",
 
   "#ff4966",
-  "#5c4aff",
 
-  "#9fd0cb",
   "#e6de3d",
   "#3f4482",
   "#7a255d",

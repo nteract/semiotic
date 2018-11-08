@@ -63,10 +63,11 @@ const titleAndSpacing = {
   title: "Tweets & Retweets"
 }
 
+const rAccessor = ["tweets", "retweets", "favorites"]
 const stackedFrameProps = {
   ...frameProps,
   size: [280, 300],
-  rAccessor: ["tweets", "retweets", "favorites"],
+  rAccessor,
   axis: {
     orient: "left",
     label: (
@@ -78,9 +79,7 @@ const stackedFrameProps = {
     )
   },
   style: (d, i, t) => {
-    // console.log(d, i, t)
-
-    return { fill: colorHash[d.action], stroke: "white" }
+    return { fill: colorHash[rAccessor[d.rIndex]], stroke: "white" }
   }
 }
 
@@ -101,38 +100,11 @@ const stackedFramePropsFlattened = {
   style: d => ({ fill: colorHash[d.action], stroke: "white" })
 }
 
-export default class CreatingBarChart extends React.Component {
-  constructor(props) {
-    super(props)
-    this.columnHoverBehavior = this.columnHoverBehavior.bind(this)
-    this.state = {
-      hoverPoint: undefined
-    }
-  }
-  columnHoverBehavior(d) {
-    this.setState({ hoverPoint: d })
-  }
-
-  barAnnotator({ d, i, categories }) {
-    if (d.type !== "hover") return null
-
-    return (
-      <rect
-        key={`annotation-${i}`}
-        x={categories[d.user].x}
-        y={d.y}
-        height={d.scaledValue}
-        width={categories[d.user].width}
-        style={{ fill: "none", stroke: "#00a2ce", strokeWidth: 5 }}
-      />
-    )
-  }
-
-  render() {
-    return (
-      <div>
-        <MarkdownText
-          text={`
+export default function CreateABarChart() {
+  return (
+    <div>
+      <MarkdownText
+        text={`
       
 ## Creating a Bar Chart
 
@@ -140,11 +112,11 @@ Creating a bar chart and stacked bar chart with tooltips, labels, and
 an axis in Semiotic.
   
       `}
-        />
+      />
 
-        <DocumentFrame frameProps={frameProps} type={OrdinalFrame} />
-        <MarkdownText
-          text={`
+      <DocumentFrame frameProps={frameProps} type={OrdinalFrame} useExpanded />
+      <MarkdownText
+        text={`
       
 ### Bar Chart with Custom Function, Bar Padding, and Title
 
@@ -155,17 +127,17 @@ bars.<br/>
 You can pass a \`title\` as either a string or a JSX element.<br/>
   
       `}
-        />
-        <h3> </h3>
+      />
+      <h3> </h3>
 
-        <DocumentFrame
-          frameProps={{ ...frameProps, ...titleAndSpacing }}
-          type={OrdinalFrame}
-          startHidden
-        />
+      <DocumentFrame
+        frameProps={{ ...frameProps, ...titleAndSpacing }}
+        type={OrdinalFrame}
+        startHidden
+      />
 
-        <MarkdownText
-          text={`
+      <MarkdownText
+        text={`
         
 ### Stacked Bar Chart using the Same Data Model 
 
@@ -173,57 +145,56 @@ Instead of adding the tweets and retweets you can easily use that same
 dataset and create a stacked bar. Change the rAccessor into an array of data properties: \`rAcessor:{["tweets", "retweets", "favorites"]}\` 
     
         `}
-        />
+      />
 
-        <DocumentFrame
-          frameProps={stackedFrameProps}
-          type={OrdinalFrame}
-          startHidden
-        />
-        <MarkdownText
-          text={`
+      <DocumentFrame
+        frameProps={stackedFrameProps}
+        type={OrdinalFrame}
+        startHidden
+      />
+      <MarkdownText
+        text={`
 ### Stacked Bar Chart using a flattened Data Model
 
 Another approach is flattening your data so that you have a property called action with the activity type, i.e. tweet, retweet, or favorite. And a property called value. In this case your rAccessor changes to \`rAccessor="value"\` 
       `}
-        />
+      />
 
-        <DocumentFrame
-          frameProps={stackedFramePropsFlattened}
-          type={OrdinalFrame}
-        />
-        <MarkdownText
-          text={`
+      <DocumentFrame
+        frameProps={stackedFramePropsFlattened}
+        type={OrdinalFrame}
+      />
+      <MarkdownText
+        text={`
 ### Adding Tooltips to the Columns
 
 Adding the property \`hoverAnnotation\` gives tooltips to each of the columns. This represents the value for all of the stacked pieces combined.
     `}
-        />
+      />
 
-        <h3 />
-        <p />
-        <DocumentFrame
-          frameProps={{ ...stackedFramePropsFlattened, hoverAnnotation: true }}
-          type={OrdinalFrame}
-          startHidden
-        />
-        <MarkdownText
-          text={`
+      <h3 />
+      <p />
+      <DocumentFrame
+        frameProps={{ ...stackedFramePropsFlattened, hoverAnnotation: true }}
+        type={OrdinalFrame}
+        startHidden
+      />
+      <MarkdownText
+        text={`
 ### Adding Tooltips to the Pieces
 
 Adding the property \`pieceHoverAnnotation\` gives tooltips to each of the individual pieces within a column.
     `}
-        />
+      />
 
-        <DocumentFrame
-          frameProps={{
-            ...stackedFramePropsFlattened,
-            pieceHoverAnnotation: true
-          }}
-          type={OrdinalFrame}
-          startHidden
-        />
-      </div>
-    )
-  }
+      <DocumentFrame
+        frameProps={{
+          ...stackedFramePropsFlattened,
+          pieceHoverAnnotation: true
+        }}
+        type={OrdinalFrame}
+        startHidden
+      />
+    </div>
+  )
 }
