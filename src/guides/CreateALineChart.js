@@ -9,10 +9,6 @@ import { curveCatmullRom } from "d3-shape"
 const lines = [
   {
     title: "Ex Machina",
-    studio: "A24",
-    firstWeek: "2015-15",
-    maxRank: 6,
-    maxGross: 25442958,
     coordinates: [
       {
         week: 1,
@@ -187,10 +183,6 @@ const lines = [
   },
   {
     title: "Far from the Madding Crowd",
-    studio: "FoxS",
-    firstWeek: "2015-18",
-    maxRank: 7,
-    maxGross: 12236500,
     coordinates: [
       {
         week: 1,
@@ -319,10 +311,7 @@ const lines = [
 const threeTitles = lines.concat([
   {
     title: "The Longest Ride",
-    studio: "Fox",
-    firstWeek: "2015-15",
-    maxRank: 3,
-    maxGross: 37446117,
+
     coordinates: [
       {
         week: 1,
@@ -481,12 +470,8 @@ const overrideProps = {
   }`
 }
 
-//Add in curve example
 //Add in multi-line accessor example
-//Dual-axes example
 //Add in bump chart examples
-
-//Add in cumulative charts
 //Add in marginalia labelling example?
 
 const dateChart = {
@@ -523,6 +508,13 @@ const linePercent = {
       label: { name: "Weeks from Opening Day", locationDistance: 55 }
     }
   ]
+}
+
+const cumulativeLine = {
+  ...frameProps,
+  lines: threeTitles,
+  lineType: "cumulative",
+  yAccessor: "grossWeekly"
 }
 
 const withHoverFrameProps = {
@@ -610,7 +602,7 @@ XYFrame along with hover behavior and styling in Semiotic.
         text={`
 ## Difference Line Chart
 
-Only works if you have two lines in your XYFrame. Change your \`lineType={{type: "difference"}}\` and changing your \`lineStyle\` to return a fill color, creates a cutout region between two lines.
+Only works if you have two lines in your XYFrame. Change your \`lineType="difference"\` and changing your \`lineStyle\` to return a fill color, creates a cutout region between two lines.
 
 `}
       />
@@ -632,12 +624,26 @@ Only works if you have two lines in your XYFrame. Change your \`lineType={{type:
         text={`
 ## Line Percent Chart
 
-Automatically sums up each of the \`yAccessor\` by line and represents each data point as a % of the total on that day instead of the raw value. Create this by settings \`lineType={{type: "linepercent"}}\`.
+Automatically sums up each of the \`yAccessor\` by line and represents each data point as a % of the total on that day instead of the raw value. Create this by settings \`lineType="linepercent"\`.
 
 `}
       />
       <DocumentFrame
         frameProps={linePercent}
+        type={XYFrame}
+        overrideProps={overrideProps}
+        startHidden
+      />
+      <MarkdownText
+        text={`
+## Cumulative Line Chart
+
+Automatically sums up each of the \`yAccessor\` by line and represents each data point as a % of the total on that day instead of the raw value. Create this by settings \`lineType"linepercent"\`.
+
+`}
+      />
+      <DocumentFrame
+        frameProps={cumulativeLine}
         type={XYFrame}
         overrideProps={overrideProps}
         startHidden
