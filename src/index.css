@@ -234,7 +234,7 @@ a {
   margin-bottom: 0.2rem;
 }
 
-.sidebar .child:not(.sub-header) {
+.sidebar .sub-page:not(.sub-header) {
   margin: 0.2rem 0px;
 }
 

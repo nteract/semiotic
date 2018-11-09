@@ -7,7 +7,7 @@ export default ({ pages, selected }) => {
     const label =
       p.url !== undefined ? <a href={"#" + p.url}>{p.name}</a> : p.name
     if (p.name === "separator") {
-      nav.push(<br key={i + "br1" + p.name} />)
+      nav.push(<div className="separator" key={i + "br1" + p.name} />)
     } else {
       nav.push(
         <p
@@ -23,7 +23,7 @@ export default ({ pages, selected }) => {
         const url = c.url && `#${(p.url && p.url + "/") || ""}${c.url}`
 
         if (c.name === "separator") {
-          nav.push(<br key={i + "br2" + p.name + j} />)
+          nav.push(<div className="separator" key={i + "br2" + p.name + j} />)
         } else {
           nav.push(
             <p
@@ -31,7 +31,7 @@ export default ({ pages, selected }) => {
               className={
                 (c.className || "") +
                 ((url && "black") || "") +
-                " child" +
+                " sub-page" +
                 ((!c.url && c.className !== "sub-header" && " dim") || "") +
                 (selected === c.url ? " selected" : "")
               }
@@ -43,6 +43,7 @@ export default ({ pages, selected }) => {
       })
     }
   })
+  nav.push(<br key="final-break" />)
 
   return nav
 }

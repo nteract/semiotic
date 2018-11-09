@@ -96,6 +96,9 @@ const PAGES = [
         name: "Creating Small Multiples"
       },
       {
+        name: "Canvas Rendering"
+      },
+      {
         name: "Creating Sparklines"
       },
       {
@@ -119,10 +122,16 @@ const PAGES = [
         className: "sub-header"
       },
       {
+        name: "Candlestick Chart"
+      },
+      {
         name: "Dual-Axes Chart"
       },
       {
         name: "Homerun Map"
+      },
+      {
+        name: "Canvas Interaction"
       },
       {
         name: "OrdinalFrame",
@@ -189,19 +198,19 @@ const PAGES = [
       },
       { name: "separator" },
       {
-        name: "ResponsiveFrames",
-        url: "responsiveframes",
+        name: "ResponsiveFrame",
+        url: "responsiveframe",
         component: MarkdownPage,
         props: {
-          filename: "responsiveframes"
+          filename: "responsiveframe"
         }
       },
       {
-        name: "SparkFrames",
-        url: "sparkFrames",
+        name: "SparkFrame",
+        url: "sparkFrame",
         component: MarkdownPage,
         props: {
-          filename: "sparkframes"
+          filename: "sparkframe"
         }
       },
       { name: "separator" },
