@@ -4,7 +4,6 @@ import { XYFrame } from "semiotic"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
 import { scaleTime } from "d3-scale"
-import { curveCatmullRom } from "d3-shape"
 
 const lines = [
   {
@@ -458,7 +457,7 @@ const frameProps = {
   lineStyle: (d, i) => ({
     stroke: theme[i],
     strokeWidth: 2,
-    fill: "none"
+    fill: theme[i]
   }),
   margin: { left: 80, bottom: 90, right: 10, top: 40 },
   lines
@@ -475,37 +474,22 @@ const overrideProps = {
       Theaters showing <tspan fill={theme[0]}>Ex Machina</tspan> vs{" "}
       <tspan fill={theme[1]}>Far from the Madding Crowd</tspan>
     </text>
-  )`,
-  pointStyle: `d => {
-    return { fill: theme[d.parentLine.key], r: 4 }
-  }`
+  )`
 }
 
-//Add in curve example
-//Add in multi-line accessor example
-//Dual-axes example
-//Add in bump chart examples
-
-//Add in cumulative charts
-//Add in marginalia labelling example?
-
-const dateChart = {
+const areaChart = {
   ...frameProps,
-  xScaleType: scaleTime(),
-  xAccessor: d => new Date(d.date),
-  axes: [
-    {
-      orient: "left",
-      label: "Number of Theaters",
-      tickFormat: d => d / 1000 + "k"
-    },
-    {
-      orient: "bottom",
-      tickFormat: d => d.getMonth() + 1 + "/" + d.getDate(),
-
-      label: { name: "Weeks from Opening Day", locationDistance: 55 }
-    }
-  ]
+  lineStyle: (d, i) => ({
+    stroke: theme[i],
+    strokeWidth: 2,
+    fill: theme[i],
+    fillOpacity: 0.6
+  }),
+  lineType: {
+    type: "line",
+    // interpolator: curveCatmullRom,
+    y1: () => 0
+  }
 }
 
 const linePercent = {
@@ -527,80 +511,33 @@ const linePercent = {
 
 const withHoverFrameProps = {
   ...frameProps,
-  // lineType: "stackedarea"
-  hoverAnnotation: true
+  lineType: "stackedarea"
+  // hoverAnnotation: true
 }
+
+const stackedpercent = {
+  ...frameProps,
+  lineType: "stackedpercent",
+  axes: linePercent.axes
+}
+
+//add in curve example
+//and in bump area example
 
 export default function CreateALineChart() {
   return (
     <div>
       <MarkdownText
         text={`
-## Line Chart
+## Area Chart
 
-Creating a line chart, stacked area and bump area chart using
-XYFrame along with hover behavior and styling in Semiotic.
-
-`}
-      />
-      <DocumentFrame
-        frameProps={frameProps}
-        type={XYFrame}
-        overrideProps={overrideProps}
-        useExpanded
-      />
-      <MarkdownText
-        text={`
-## Line Chart with Points
-
-Set the \`showLinePoints={true}\` to automatically display the underlying points in each line.
+The default setting for XYFrame when you send it lines is to show them as a line chart. You can change this by adding in the prop \`lineType: "area"\` to turn your chart in to a stacked area.
 
 `}
       />
+
       <DocumentFrame
-        frameProps={{
-          ...frameProps,
-          showLinePoints: true,
-          pointStyle: d => {
-            return { fill: theme[d.parentLine.key], r: 4 }
-          }
-        }}
-        type={XYFrame}
-        overrideProps={overrideProps}
-        startHidden
-      />
-      <MarkdownText
-        text={`
-## Curvy Line Chart
-
-Creating a line chart, stacked area and bump area chart using
-XYFrame along with hover behavior and styling in Semiotic.
-
-`}
-      />
-      <DocumentFrame
-        frameProps={{
-          ...frameProps,
-          lineType: { type: "line", interpolator: curveCatmullRom }
-        }}
-        type={XYFrame}
-        overrideProps={{
-          ...overrideProps,
-          lineType: `{ type: "line", interpolator: curveCatmullRom } // import {curveCatmullRom} from "d3-shape"`
-        }}
-        startHidden
-      />
-      <MarkdownText
-        text={`
-## Line Chart by Date
-
-Creating a line chart, stacked area and bump area chart using
-XYFrame along with hover behavior and styling in Semiotic.
-
-`}
-      />
-      <DocumentFrame
-        frameProps={dateChart}
+        frameProps={areaChart}
         type={XYFrame}
         overrideProps={overrideProps}
         startHidden
@@ -608,62 +545,34 @@ XYFrame along with hover behavior and styling in Semiotic.
 
       <MarkdownText
         text={`
-## Difference Line Chart
+## Stacked Area Chart
 
-Only works if you have two lines in your XYFrame. Change your \`lineType={{type: "difference"}}\` and changing your \`lineStyle\` to return a fill color, creates a cutout region between two lines.
-
-`}
-      />
-      <DocumentFrame
-        frameProps={{
-          ...frameProps,
-          lineType: "difference",
-          lineStyle: (d, i) => ({
-            stroke: theme[i],
-            strokeWidth: 2,
-            fill: theme[i]
-          })
-        }}
-        type={XYFrame}
-        overrideProps={overrideProps}
-        startHidden
-      />
-      <MarkdownText
-        text={`
-## Line Percent Chart
-
-Automatically sums up each of the \`yAccessor\` by line and represents each data point as a % of the total on that day instead of the raw value. Create this by settings \`lineType={{type: "linepercent"}}\`.
+The default setting for XYFrame when you send it lines is to show them as a line chart. You can change this by adding in the prop \`lineType: "stackedarea"\` to turn your chart in to a stacked area.
 
 `}
       />
-      <DocumentFrame
-        frameProps={linePercent}
-        type={XYFrame}
-        overrideProps={overrideProps}
-        startHidden
-      />
-      <MarkdownText
-        text={`
-## Line Chart with Hover
 
-Creating a line chart, stacked area and bump area chart using
-XYFrame along with hover behavior and styling in Semiotic.
-
-`}
-      />
       <DocumentFrame
         frameProps={withHoverFrameProps}
         type={XYFrame}
         overrideProps={overrideProps}
         startHidden
       />
+
       <MarkdownText
         text={`
-## What's next?
+## Stacked Area Percent Chart
 
-For technical specifications on all of XYFrame's features, reference the [XYFrame API](#api/xyframe) docs.
+The default setting for XYFrame when you send it lines is to show them as a line chart. You can change this by adding in the prop \`lineType: "stackedarea"\` to turn your chart in to a stacked area.
 
 `}
+      />
+
+      <DocumentFrame
+        frameProps={stackedpercent}
+        type={XYFrame}
+        overrideProps={overrideProps}
+        startHidden
       />
     </div>
   )

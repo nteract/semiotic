@@ -260,6 +260,11 @@ a {
   text-transform: capitalize;
 }
 
+.dim {
+  opacity: 0.5;
+  cursor: disabled;
+}
+
 .selected.black a {
   /* font-weight: bold; */
   color: var(--dark-color);

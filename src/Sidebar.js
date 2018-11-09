@@ -32,6 +32,7 @@ export default ({ pages, selected }) => {
                 (c.className || "") +
                 ((url && "black") || "") +
                 " child" +
+                ((!c.url && c.className !== "sub-header" && " dim") || "") +
                 (selected === c.url ? " selected" : "")
               }
             >
