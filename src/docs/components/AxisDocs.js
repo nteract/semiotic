@@ -93,8 +93,9 @@ export default class AxisDocs extends React.Component {
                   .domain(this.state.fixedDomain)
                   .range([200, 0])}
                 orient={"left"}
-                label={{ name: "Just an Axis (left)" }}
+                label={{ name: "dynamicLabelPosition={true}" }}
                 tickValues={this.state.fixedTicks}
+                dynamicLabelPosition
               />
             </g>
             <g transform={"translate(400,20)"}>
@@ -152,7 +153,8 @@ export default class AxisDocs extends React.Component {
                 .domain([10, 1000])
                 .range([200, 0])}
               orient={"left"}
-              label={"Just an Axis (left)"}
+              label={"dynamicLabelPosition={true}"}
+              dynamicLabelPosition
             />
           </g>
           <g transform={"translate(400,20)"}>

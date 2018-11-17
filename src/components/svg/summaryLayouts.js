@@ -849,7 +849,7 @@ export function bucketizedRenderingFn({
           return bucketArray
         })
         .sort((a, b) => a.x0 - b.x0)
-      bucketSize = 2
+      bucketSize = chartSize / keyBins.length
     } else {
       keyBins = violinHist
         .domain(binDomain)

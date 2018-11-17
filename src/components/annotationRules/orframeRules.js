@@ -12,7 +12,6 @@ import { pointOnArcAtAngle } from "../svg/pieceDrawing"
 import { circleEnclosure, rectangleEnclosure } from "./baseRules"
 import SpanOrDiv from "../SpanOrDiv"
 import { findFirstAccessorValue } from "../data/multiAccessorUtils"
-import { scaleLinear } from "d3-scale"
 
 function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
   const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0
@@ -310,7 +309,8 @@ export const screenProject = ({
   oColumn,
   rAccessor,
   idPiece,
-  projection
+  projection,
+  rScaleType
 }) => {
   const pValue = findFirstAccessorValue(rAccessor, p) || p.value
 
@@ -338,7 +338,8 @@ export const screenProject = ({
       o
     ]
   }
-  const newScale = scaleLinear()
+  const newScale = rScaleType
+    .copy()
     .domain(rScale.domain())
     .range(rScale.range().reverse())
 
@@ -591,7 +592,8 @@ export const htmlFrameHoverRule = ({
   projectedColumns,
   adjustedSize,
   rScale,
-  type
+  type,
+  rScaleType
 }) => {
   tooltipContent =
     tooltipContent === "pie"
@@ -623,7 +625,8 @@ export const htmlFrameHoverRule = ({
           oAccessor,
           rAccessor,
           idPiece,
-          projection
+          projection,
+          rScaleType
         })
 
   if (d.isSummaryData) {

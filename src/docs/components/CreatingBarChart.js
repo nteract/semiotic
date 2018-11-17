@@ -1,5 +1,6 @@
 import React from "react"
 import { OrdinalFrame } from "../../components"
+import { scaleSqrt } from "d3-scale"
 
 import DocumentComponent from "../layout/DocumentComponent"
 
@@ -284,6 +285,7 @@ export default class CreatingBarChart extends React.Component {
             margin={stackedBarMargin}
             oPadding={5}
             pieceHoverAnnotation={true}
+            rScaleType={scaleSqrt}
             annotations={
               this.state.hoverPoint
                 ? [Object.assign({}, this.state.hoverPoint, { type: "hover" })]

@@ -535,7 +535,7 @@ export const orFrameAxisGenerator = ({
 
       let axisClassname = d.className || ""
       let tickValues
-      const axisScale = rScaleType().domain(rScale.domain())
+      const axisScale = rScaleType.domain(rScale.domain())
 
       const orient = trueAxis(d.orient, projection)
 
@@ -595,6 +595,7 @@ export const orFrameAxisGenerator = ({
           className={axisClassname}
           name={d.name}
           baseline={d.baseline}
+          dynamicLabelPosition={d.dynamicLabelPosition}
         />
       )
     })
@@ -611,7 +612,7 @@ export const orFrameAxisGenerator = ({
         tickFormat = d => d
       } = axisObj
 
-      const tickScale = rScaleType()
+      const tickScale = rScaleType
         .domain(rExtent)
         .range([innerRadius, adjustedSize[0] / 2])
       tickValues.forEach((t, i) => {

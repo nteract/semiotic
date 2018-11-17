@@ -37,6 +37,7 @@ const builtInTransformations = {
   "bumpline": bumpChart,
   "bumparea-invert": bumpChart,
   "line": lineChart,
+  "area": lineChart,
   "cumulative": cumulativeLine,
   "cumulative-reverse": cumulativeLine
 }

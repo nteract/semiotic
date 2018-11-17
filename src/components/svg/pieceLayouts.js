@@ -218,9 +218,9 @@ const iconBarCustomMark = ({
             transform={`translate(${paddedX},${paddedY}) scale(${iconScale})`}
             vectorEffect={"non-scaling-stroke"}
             d={iconD}
-            style={styleFn(piece.data, i)}
+            style={styleFn({ ...piece, ...piece.data }, i)}
             renderMode={renderValue}
-            className={classFn(piece.data, i)}
+            className={classFn({ ...piece, ...piece.data }, i)}
           />
         )
       }
@@ -350,11 +350,11 @@ export function clusterBarLayout({
         </g>
       ) : (
         {
-          className: classFn(piece.data, i),
+          className: classFn({ ...piece, ...piece.data }, i),
           renderMode: renderValue,
           key: `piece-${piece.renderKey}`,
           transform: translate,
-          style: styleFn(piece.data, ordsetI),
+          style: styleFn({ ...piece, ...piece.data }, ordsetI),
           ...markProps,
           ...eventListeners
         }
@@ -477,10 +477,10 @@ export function barLayout({
         </g>
       ) : (
         {
-          className: classFn(piece.data, i),
+          className: classFn({ ...piece, ...piece.data }, i),
           renderMode: renderValue,
           key: `piece-${piece.renderKey}`,
-          style: styleFn(piece.data, ordsetI),
+          style: styleFn({ ...piece, ...piece.data }, ordsetI),
           ...eventListeners,
           ...markProps
         }
@@ -569,10 +569,10 @@ export function timelineLayout({
         </g>
       ) : (
         {
-          className: classFn(piece.data, i),
+          className: classFn({ ...piece, ...piece.data }, i),
           renderMode: renderValue,
           key: `piece-${piece.renderKey}`,
-          style: styleFn(piece.data, ordsetI),
+          style: styleFn({ ...piece, ...piece.data }, ordsetI),
           ...markProps,
           ...eventListeners
         }
@@ -649,7 +649,7 @@ export function pointLayout({
         </g>
       ) : (
         {
-          className: classFn(piece.data, i),
+          className: classFn({ ...piece, ...piece.data }, i),
           markType: "rect",
           renderMode: renderValue,
           key: `piece-${piece.renderKey}`,
@@ -659,7 +659,7 @@ export function pointLayout({
           y: yPosition - actualCircleRadius,
           rx: actualCircleRadius,
           ry: actualCircleRadius,
-          style: styleFn(piece.data, ordsetI),
+          style: styleFn({ ...piece, ...piece.data }, ordsetI),
           ...eventListeners
         }
       )
@@ -762,7 +762,7 @@ export function swarmLayout({
         </g>
       ) : (
         {
-          className: classFn(piece.data, i),
+          className: classFn({ ...piece, ...piece.data }, i),
           markType: "rect",
           renderMode: renderValue,
           key: `piece-${piece.renderKey}`,
@@ -772,7 +772,7 @@ export function swarmLayout({
           y: yPosition - actualCircleRadius,
           rx: actualCircleRadius,
           ry: actualCircleRadius,
-          style: styleFn(piece.data, ordsetI),
+          style: styleFn({ ...piece, ...piece.data }, ordsetI),
           ...eventListeners
         }
       )
