@@ -204,6 +204,7 @@ type State = {
 
 const naturalLanguageLineType = {
   "line": { items: "line", chart: "line chart" },
+  "area": { items: "area", chart: "area chart" },
   "cumulative": { items: "line", chart: "cumulative chart" },
   "cumulative-reverse": { items: "line", chart: "cumulative chart" },
   "linepercent": { items: "line", chart: "line chart" },
@@ -329,7 +330,8 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       size: oldSize,
       dataVersion: oldDataVersion,
       lineData,
-      areaData
+      areaData,
+      pointData
     } = this.state
     const {
       xExtent: baseNewXExtent,
@@ -337,7 +339,8 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       size: newSize,
       dataVersion: newDataVersion,
       lines: newLines,
-      areas: newAreas
+      areas: newAreas,
+      points: newPoints
     } = nextProps
 
     const newXExtent: Array<number> = extentValue(baseNewXExtent)
@@ -362,7 +365,15 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         Array.isArray(newAreas) &&
         !!areaData.find(p => newAreas.indexOf(p) === -1))
 
-    if (
+          console.log("newPoints", newPoints)
+          console.log("pointData", pointData)
+        const pointChange =
+        pointData !== newPoints ||
+        (Array.isArray(pointData) &&
+          Array.isArray(newPoints) &&
+          !!pointData.find(p => newPoints.indexOf(p) === -1))
+  
+        if (
       (oldDataVersion && oldDataVersion !== newDataVersion) ||
       !this.state.fullDataset
     ) {
@@ -370,6 +381,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
     } else if (
       lineChange ||
       areaChange ||
+      pointChange ||
       oldSize[0] !== newSize[0] ||
       oldSize[1] !== newSize[1] ||
       extentChange ||
@@ -379,6 +391,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       const dataChanged =
         lineChange ||
         areaChange ||
+        pointChange ||
         extentChange ||
         !!xyFrameDataProps.find(d => this.props[d] !== nextProps[d])
 
@@ -695,6 +708,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
             annotationFunction={d.axisAnnotationFunction}
             glyphFunction={d.glyphFunction}
             baseline={d.baseline}
+            dynamicLabelPosition={d.dynamicLabelPosition}
           />
         )
       })

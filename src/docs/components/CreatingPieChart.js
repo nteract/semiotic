@@ -1,6 +1,7 @@
 import React from "react"
 import { OrdinalFrame } from "../../components"
 import { sum } from "d3-array"
+import { scaleSqrt } from "d3-shape"
 
 import DocumentComponent from "../layout/DocumentComponent"
 
@@ -414,6 +415,7 @@ export default class CreatingPieChart extends React.Component {
             axis={{
               label: { name: "Casualties", locationDistance: 15 }
             }}
+            rScaleType={scaleSqrt}
             margin={{ bottom: 50, top: 60, left: 40, right: 40 }}
             hoverAnnotation={true}
             oLabel={true}

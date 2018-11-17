@@ -26,11 +26,8 @@ class Axis extends React.Component {
     this.state = { hoverAnnotation: 0 }
   }
 
-  calculateLabelPosition = () => {
-    this.setState({ calculatedLabelPosition: this.boundingBoxMax() })
-  }
-
   boundingBoxMax = () => {
+    // && this.props.dynamicLabel ???
     if (!this.axisRef) return 30
     const { orient = "left" } = this.props
 
@@ -49,7 +46,7 @@ class Axis extends React.Component {
 
   componentDidUpdate() {
     const { label = {} } = this.props
-    if (!label.position) {
+    if (!label.position && this.props.dynamicLabelPosition) {
       const newBBMax = this.boundingBoxMax()
       if (newBBMax !== this.state.calculatedLabelPosition) {
         this.setState({ calculatedLabelPosition: newBBMax })
@@ -59,7 +56,7 @@ class Axis extends React.Component {
 
   componentDidMount() {
     const { label = {} } = this.props
-    if (!label.position) {
+    if (!label.position && this.props.dynamicLabelPosition) {
       const newBBMax = this.boundingBoxMax()
       this.setState({ calculatedLabelPosition: newBBMax })
     }

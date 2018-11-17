@@ -277,7 +277,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       pieceIDAccessor: stringToFn("semioticPieceID"),
       projectedColumns: {},
       rExtent: [],
-      rScaleType: scaleLinear,
+      rScaleType: scaleLinear(),
       summaryType: { type: "none" },
       title: {},
       type: { type: "none" }
@@ -599,15 +599,20 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       adjustedSize[0]
     ]
 
-    const rScale = rScaleType()
+    const instantiatedRScaleType = rScaleType.domain ? rScaleType : rScaleType()
+
+    const rScale = instantiatedRScaleType
+      .copy()
       .domain(rExtent)
       .range(rDomain)
 
-    const rScaleReverse = rScaleType()
+    const rScaleReverse = instantiatedRScaleType
+      .copy()
       .domain(rDomain)
       .range(rDomain.reverse())
 
-    const rScaleVertical = rScaleType()
+    const rScaleVertical = instantiatedRScaleType
+      .copy()
       .domain(rExtent)
       .range(rDomain)
 
@@ -640,6 +645,9 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       let negativeOffset = zeroValue
       let positiveOffset = zeroValue
 
+      let negativeBaseValue = 0
+      let positiveBaseValue = 0
+
       projectedColumns[o].pieceData.forEach(piece => {
         let valPosition
 
@@ -653,7 +661,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         ) {
           piece.scaledValue = rScale(piece.value)
           piece.scaledVerticalValue = rScaleVertical(piece.value)
-        } else {
+        } else if (pieceType.type === "clusterbar") {
           valPosition =
             projection === "vertical"
               ? rScaleReverse(rScale(piece.value))
@@ -663,6 +671,16 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
 
         piece.x = projectedColumns[o].x
         if (piece.value >= 0) {
+          if (pieceType.type === "bar") {
+
+            piece.scaledValue =
+              projection === "vertical"
+                ? positiveOffset -
+                  rScaleReverse(rScale(positiveBaseValue + piece.value))
+                : rScale(positiveBaseValue + piece.value) - positiveOffset
+
+            positiveBaseValue += piece.value
+          }
           piece.base = zeroValue
           piece.bottom = pieceType.type === "bar" ? positiveOffset : 0
           piece.middle = piece.scaledValue / 2 + positiveOffset
@@ -672,6 +690,11 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
               : positiveOffset + piece.scaledValue
           piece.negative = false
         } else {
+          if (pieceType.type === "bar") {
+            piece.scaledValue =
+              rScale(negativeBaseValue - piece.value) - negativeOffset
+            negativeBaseValue -= piece.value
+          }
           piece.base = zeroValue
           piece.bottom = pieceType.type === "bar" ? negativeOffset : 0
           piece.middle = negativeOffset - piece.scaledValue / 2
@@ -1034,7 +1057,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       adjustedSize,
       size,
       rScale,
-      rScaleType,
+      rScaleType: instantiatedRScaleType.copy(),
       pieceType,
       rExtent
     })
@@ -1268,7 +1291,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       oAccessor,
       rAccessor,
       oScaleType,
-      rScaleType,
+      rScaleType: instantiatedRScaleType,
       oExtent,
       rExtent,
       oScale,
@@ -1344,7 +1367,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       rScale,
       projectedColumns,
       orFrameRender,
-      pieceIDAccessor
+      pieceIDAccessor,
+      rScaleType
     } = this.state
 
     let screenCoordinates = [0, 0]
@@ -1365,7 +1389,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
           rAccessor,
           idPiece,
           projection,
-          oColumn
+          oColumn,
+          rScaleType
         })
       })
     } else {
@@ -1382,7 +1407,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         rAccessor,
         idPiece,
         projection,
-        oColumn
+        oColumn,
+        rScaleType
       })
     }
 
@@ -1459,7 +1485,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       projectedColumns,
       summaryType,
       type,
-      pieceIDAccessor
+      pieceIDAccessor,
+      rScaleType
     } = this.state
     const {
       htmlAnnotationRules,
@@ -1513,7 +1540,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         projectedColumns,
         adjustedSize,
         rScale,
-        type
+        type,
+        rScaleType
       })
     } else if (d.type === "column-hover") {
       return htmlColumnHoverRule({

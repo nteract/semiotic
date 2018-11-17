@@ -274,8 +274,9 @@ export const stackedArea = ({
 }
 
 export const lineChart = ({
+  type = "line",
   data,
-  y1,
+  y1 = type === "area" && (() => 0),
   yPropTop,
   yPropMiddle,
   yPropBottom
