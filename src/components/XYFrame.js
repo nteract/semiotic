@@ -522,8 +522,8 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       !annotatedSettings.lineType.y1 &&
       annotatedSettings.lineType.simpleLine !== false
     
-      console.log("annotatedSettings.lineType", annotatedSettings.lineType)
       if (annotatedSettings.lineType.type === "area") {
+        // $FlowFixMe
         annotatedSettings.lineType.y1 = () => 0
       }
 
