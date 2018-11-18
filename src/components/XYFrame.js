@@ -365,8 +365,6 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         Array.isArray(newAreas) &&
         !!areaData.find(p => newAreas.indexOf(p) === -1))
 
-          console.log("newPoints", newPoints)
-          console.log("pointData", pointData)
         const pointChange =
         pointData !== newPoints ||
         (Array.isArray(pointData) &&

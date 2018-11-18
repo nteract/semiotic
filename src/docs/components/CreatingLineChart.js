@@ -5,38 +5,6 @@ import { curveMonotoneX, curveCardinal, curveBasis, curveStep } from "d3-shape"
 
 import DocumentComponent from "../layout/DocumentComponent"
 
-class ScatterPlot extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      data: []
-    }
-  }
-
-  componentDidMount() {
-    this.setState({
-      data: [{ x: 150, y: 110 }, { x: 120, y: 120 }]
-    })
-  }
-
-  render() {
-    const { data } = this.state
-    // const data = [{x:100,y:130},{x:120,y:140}]
-    console.log(data)
-    const frameProps = {
-      title: "Scatter Plot",
-      size: [1000, 500],
-      points: data,
-      xAccessor: "x",
-      yAccessor: "y",
-      pointStyle: { fill: "red", stroke: "blue", strokeWidth: 5 },
-      margin: { top: 50, left: 50, bottom: 50, right: 50 },
-      axes: [{ orient: "left" }, { orient: "bottom" }]
-    }
-    return <XYFrame {...frameProps} />
-  }
-}
-
 const components = []
 const curvedCardinalLine = { type: "line", interpolator: curveCardinal }
 const interactiveLineStyle = { stroke: "#00a2ce" }
@@ -423,7 +391,6 @@ export default class CreatingLineChart extends React.Component {
       name: "Data",
       demo: (
         <div>
-          <ScatterPlot />
           <p>
             XYFrame line data takes an array of objects. Each of those objects
             has the coordinates of the line in whatever data space you set up

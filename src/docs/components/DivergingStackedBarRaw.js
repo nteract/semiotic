@@ -17,7 +17,7 @@ const divStackedBarChart = {
     <g>
       <rect
         x={3}
-        width={570}
+        width={610}
         height={50}
         y={-25}
         style={{
@@ -34,7 +34,7 @@ const divStackedBarChart = {
   pixelColumnWidth: 50,
   axis: {
     orient: "top",
-    tickValues: [-0.3, -0.15, 0, 0.2, 0.4, 0.6, 0.8, 1]
+    tickValues: [-0.6, -0.3, 0, 0.2, 0.4, 0.6, 0.8, 1]
   },
   hoverAnnotation: true
 }

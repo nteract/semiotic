@@ -2,7 +2,7 @@ import { csvParse } from "d3-dsv"
 
 const question_data = `question,1,2,3,4,5,n
 Question 1,24,294,594,1927,376,3215
-Question 2,2,2,0,7,0,11
+Question 2,3,5,0,7,0,11
 Question 3,2,0,2,4,2,10
 Question 4,0,2,1,7,6,16
 Question 5,0,1,3,16,4,24

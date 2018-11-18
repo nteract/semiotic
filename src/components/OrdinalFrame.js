@@ -507,7 +507,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       rExtent = extent(allData, d => d.value)
     } else {
       const positiveData = allData.filter(d => d.value >= 0)
-      const negativeData = allData.filter(d => d.value <= 0)
+      const negativeData = allData.filter(d => d.value < 0)
 
       const nestedPositiveData = nest()
         .key(d => d.column)
@@ -672,7 +672,6 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         piece.x = projectedColumns[o].x
         if (piece.value >= 0) {
           if (pieceType.type === "bar") {
-
             piece.scaledValue =
               projection === "vertical"
                 ? positiveOffset -
@@ -691,9 +690,13 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
           piece.negative = false
         } else {
           if (pieceType.type === "bar") {
-            piece.scaledValue =
-              rScale(negativeBaseValue - piece.value) - negativeOffset
-            negativeBaseValue -= piece.value
+            piece.scaledValue  =
+              projection === "vertical"
+                ? negativeOffset -
+                  rScaleReverse(rScale(negativeBaseValue - piece.value))
+                : rScale(negativeBaseValue - piece.value) - negativeOffset
+
+            negativeBaseValue += piece.value
           }
           piece.base = zeroValue
           piece.bottom = pieceType.type === "bar" ? negativeOffset : 0
