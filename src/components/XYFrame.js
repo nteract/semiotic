@@ -521,6 +521,11 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       annotatedSettings.lineType.type === "line" &&
       !annotatedSettings.lineType.y1 &&
       annotatedSettings.lineType.simpleLine !== false
+    
+      console.log("annotatedSettings.lineType", annotatedSettings.lineType)
+      if (annotatedSettings.lineType.type === "area") {
+        annotatedSettings.lineType.y1 = () => 0
+      }
 
     const margin = calculateMargin({
       margin: currentProps.margin,
