@@ -6,7 +6,7 @@ import MarkdownText from "../MarkdownText"
 import { scaleTime } from "d3-scale"
 import { curveCatmullRom } from "d3-shape"
 
-const lines = [
+export const lines = [
   {
     title: "Ex Machina",
     coordinates: [
@@ -308,7 +308,7 @@ const lines = [
   }
 ]
 
-const threeTitles = lines.concat([
+export const threeTitles = lines.concat([
   {
     title: "The Longest Ride",
 
@@ -425,7 +425,6 @@ const frameProps = {
   size: [700, 400],
   xAccessor: "week",
   yAccessor: "theaterCount",
-  lineDataAccessor: "coordinates",
   yExtent: [0],
   title: (
     <text textAnchor="middle">
@@ -461,8 +460,8 @@ const overrideProps = {
   })`,
   title: `(
     <text textAnchor="middle">
-      Theaters showing <tspan fill={theme[0]}>Ex Machina</tspan> vs{" "}
-      <tspan fill={theme[1]}>Far from the Madding Crowd</tspan>
+      Theaters showing <tspan fill={"${theme[0]}"}>Ex Machina</tspan> vs{" "}
+      <tspan fill={"${theme[1]}"}>Far from the Madding Crowd</tspan>
     </text>
   )`,
   pointStyle: `d => {
@@ -471,8 +470,10 @@ const overrideProps = {
 }
 
 //Add in multi-line accessor example
-//Add in bump chart examples
 //Add in marginalia labelling example?
+//Explain xAccesor and yAccessor
+//Add percent value into the tooltip example
+//Add in cumulative-revers?
 
 const dateChart = {
   ...frameProps,
@@ -510,6 +511,25 @@ const linePercent = {
   ]
 }
 
+const bumpLine = {
+  ...frameProps,
+  lines: threeTitles,
+  lineType: "bumpline",
+  size: [700, 200],
+  axes: [
+    {
+      orient: "left",
+      label: "Rank",
+      tickFormat: d => d,
+      tickValues: [2, 1, 0]
+    },
+    {
+      orient: "bottom",
+      label: { name: "Weeks from Opening Day", locationDistance: 55 }
+    }
+  ]
+}
+
 const cumulativeLine = {
   ...frameProps,
   lines: threeTitles,
@@ -528,10 +548,17 @@ export default function CreateALineChart() {
     <div>
       <MarkdownText
         text={`
+Creating a line chart, timeseries, difference line, and line percents using XYFrame along with hover behavior and styling.
+
 ## Line Chart
 
-Creating a line chart, stacked area and bump area chart using
-XYFrame along with hover behavior and styling in Semiotic.
+The XYFrame takes \`lines\` as an object or an array of objects. Each object represents a line. 
+
+Every object needs a \`coordinates\` property with the array of points for that line. The points will be rendered in the order of that array.
+
+You can use a different key by chaging the \`lineDataAccessor\`
+
+In this example, we also pass a \`yExtent={[0]}\` to set the lower bound of the yAxis to zero, otherwise it would create an exent based on the minimum and maximum values on your \`yAccessor\`.
 
 `}
       />
@@ -565,8 +592,7 @@ Set the \`showLinePoints={true}\` to automatically display the underlying points
         text={`
 ## Curvy Line Chart
 
-Creating a line chart, stacked area and bump area chart using
-XYFrame along with hover behavior and styling in Semiotic.
+By default the line uses a linear interpolation between the points, but you can change the \`lineType\` to an object and pass a custom interpolator to override the default behavior, \`lineType: { type: "line", interpolator: curveCatmullRom }\`.
 
 `}
       />
@@ -586,8 +612,10 @@ XYFrame along with hover behavior and styling in Semiotic.
         text={`
 ## Line Chart by Date
 
-Creating a line chart, stacked area and bump area chart using
-XYFrame along with hover behavior and styling in Semiotic.
+You can also change the xScaleType to be a \`scaleTime()\` from \`d3-scale\` if you want to show time series data. Below we've changed:
+- \`xScaleType={scaleTime()}\`
+- \`xAccessor: d => new Date(d.date)\`
+- \`tickFormat: d => d.getMonth() + 1 + "/" + d.getDate()\` 
 
 `}
       />
@@ -602,7 +630,11 @@ XYFrame along with hover behavior and styling in Semiotic.
         text={`
 ## Difference Line Chart
 
-Only works if you have two lines in your XYFrame. Change your \`lineType="difference"\` and changing your \`lineStyle\` to return a fill color, creates a cutout region between two lines.
+This only works if you have two lines in your XYFrame. Change your 
+- \`lineType="difference"\` 
+- \`lineStyle\` to return a fill color
+
+and XYFrame will automatically create cutout regions between the two lines colored by the line that is on top.
 
 `}
       />
@@ -624,7 +656,7 @@ Only works if you have two lines in your XYFrame. Change your \`lineType="differ
         text={`
 ## Line Percent Chart
 
-Automatically sums up each of the \`yAccessor\` by line and represents each data point as a % of the total on that day instead of the raw value. Create this by settings \`lineType="linepercent"\`.
+Changing the \`lineType="linepercent"\` and XYFrame will automatically sum each data point as a % of the total for each \`xAccessor\` value as the y data position instead of using the raw values.
 
 `}
       />
@@ -638,12 +670,26 @@ Automatically sums up each of the \`yAccessor\` by line and represents each data
         text={`
 ## Cumulative Line Chart
 
-Automatically sums up each of the \`yAccessor\` by line and represents each data point as a % of the total on that day instead of the raw value. Create this by settings \`lineType"linepercent"\`.
+Automatically adds each following day to the sum of the previous days. Create this by setting \`lineType"cumulative"\`.
 
 `}
       />
       <DocumentFrame
         frameProps={cumulativeLine}
+        type={XYFrame}
+        overrideProps={overrideProps}
+        startHidden
+      />
+      <MarkdownText
+        text={`
+## Bump Line Chart
+
+Automatically adds each following day to the sum of the previous days. Create this by setting \`lineType"cumulative"\`.
+
+`}
+      />
+      <DocumentFrame
+        frameProps={bumpLine}
         type={XYFrame}
         overrideProps={overrideProps}
         startHidden
@@ -665,7 +711,7 @@ XYFrame along with hover behavior and styling in Semiotic.
       />
       <MarkdownText
         text={`
-## What's next?
+## What next?
 
 For technical specifications on all of XYFrame's features, reference the [XYFrame API](#api/xyframe) docs.
 

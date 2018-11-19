@@ -8,6 +8,7 @@ import CreateAnAreaChart from "./guides/CreateAnAreaChart"
 import CreateABarChart from "./guides/CreateABarChart"
 import CreateAPieChart from "./guides/CreateAPieChart"
 import WaterfallChart from "./examples/WaterfallChart"
+import MarimekkoChart from "./examples/MarimekkoChart"
 
 const ROOT = process.env.PUBLIC_URL
 
@@ -143,7 +144,9 @@ const PAGES = [
         component: WaterfallChart
       },
       {
-        name: "Marimekko Chart"
+        name: "Marimekko Chart",
+        url: "marimekko-chart",
+        component: MarimekkoChart
       },
       {
         name: "Swarm Plot"
@@ -292,6 +295,7 @@ export default function({ hash }) {
           <Sidebar pages={PAGES} selected={view[view.length - 1]} />
         </div>
         <div className="container">
+          <h1>{(subpage && subpage.name) || (page && page.name)}</h1>
           <div className="margin-bottom">{View && <View {...viewProps} />}</div>
         </div>
       </div>

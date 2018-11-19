@@ -104,11 +104,11 @@ const getFramePropsString = (frameProps, functions, overrideProps, trimmed) => {
   return framePropsString
 }
 
-const getCodeBlock = (frameName, functionsString, framePropsString) => {
+const getCodeBlock = (frameName, pre, functionsString, framePropsString) => {
   return (
     <code className="language-jsx">
       {`import { ${frameName} } from "semiotic/lib/${frameName}"\n\n`}
-
+      {pre}
       {functionsString}
 
       {framePropsString}
@@ -145,13 +145,13 @@ class DocumentFrame extends React.Component {
       codeBlock: props.startHidden
         ? "hidden"
         : props.useExpanded
-          ? "expanded"
-          : "collapsed"
+        ? "expanded"
+        : "collapsed"
     }
   }
 
   componentDidMount() {
-    window.Prism.highlightAll()
+    if (this.state.codeBlock !== "hidden") window.Prism.highlightAll()
   }
 
   onClick(e) {
@@ -176,6 +176,7 @@ class DocumentFrame extends React.Component {
       type = OrdinalFrame,
       overrideProps = {},
       functions = {},
+      pre,
       useExpanded
     } = this.props
     const Frame = type
@@ -201,13 +202,13 @@ class DocumentFrame extends React.Component {
         ref={el => (this.copy = el)}
         style={hiddenStyle}
       >
-        {getCodeBlock(frameName, functionsString, framePropsString)}
+        {getCodeBlock(frameName, pre, functionsString, framePropsString)}
       </pre>
     )
 
     const trimmedMarkdown = (
       <pre className="language-jxs" style={styles[this.state.codeBlock]}>
-        {getCodeBlock(frameName, functionsString, trimmedFramePropsString)}
+        {getCodeBlock(frameName, pre, functionsString, trimmedFramePropsString)}
       </pre>
     )
 
