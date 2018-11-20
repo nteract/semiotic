@@ -2,7 +2,6 @@ import React from "react"
 import { OrdinalFrame } from "../../components"
 import probsRaw from "../sampledata/probly"
 import { csvParse } from "d3-dsv"
-import { curveMonotoneX } from "d3-shape"
 import ProcessViz from "./ProcessViz"
 
 const probsData = csvParse(probsRaw)
@@ -24,8 +23,7 @@ const joyChartSettings = {
     type: "ridgeline",
     bins: 10,
     amplitude: 50,
-    curve: curveMonotoneX
-    //        binValue: d => sum(d.map(p => p.value))
+    curve: "monotonex"
   },
   summaryStyle: (d, i) => ({
     fill: colors[i % 4],

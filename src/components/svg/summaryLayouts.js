@@ -10,6 +10,7 @@ import { area, line, curveCatmullRom, arc } from "d3-shape"
 import { pointOnArcAtAngle } from "./pieceDrawing"
 import { orFrameSummaryRenderer } from "./frameFunctions"
 import { scaleLinear } from "d3-scale"
+import { curveHash } from "../visualizationLayerBehavior/general"
 
 const contourMap = d => [d.xy.x, d.xy.y]
 
@@ -1093,12 +1094,46 @@ export function bucketizedRenderingFn({
       const joyBins = [zeroedStart, ...bins, zeroedEnd]
       let joyPoints = []
 
+      const interpolatorSetting = type.curve || type.interpolator
+
+      const actualInterpolator =
+        typeof interpolatorSetting === "string"
+          ? curveHash[interpolatorSetting]
+          : interpolatorSetting
+
       let joyArea = line()
-        .curve(type.curve || curveCatmullRom)
+        .curve(actualInterpolator || curveCatmullRom)
         .x(d => d.x)
         .y(d => d.y)
 
       const joyHeight = type.amplitude || 0
+
+      console.log("actrualMax", actualMax)
+      console.log(
+        summary,
+        summaryI,
+        type.axis,
+        axisCreator,
+        projection,
+        actualMax,
+        adjustedSize,
+        columnWidth
+      )
+
+      if (type.axis && type.type === "histogram") {
+        renderedSummaryMarks.push(
+          createSummaryAxis({
+            summary,
+            summaryI,
+            axisSettings: { baseline: false, ...type.axis },
+            axisCreator,
+            projection,
+            actualMax,
+            adjustedSize,
+            columnWidth
+          })
+        )
+      }
 
       if (projection === "horizontal") {
         joyBins.forEach((summaryPoint, i) => {
