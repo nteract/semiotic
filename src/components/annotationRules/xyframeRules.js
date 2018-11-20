@@ -115,10 +115,12 @@ export const svgHighlight = ({
     .y0(p => yScale(p.yBottom))
     .y1(p => yScale(p.yTop))
 
+  const interpolatorSetting = lines.type.interpolator || lines.type.curve
+
   const actualInterpolator =
-    typeof lines.type.interpolator === "string"
-      ? curveHash[lines.type.interpolator]
-      : lines.type.interpolator
+    typeof interpolatorSetting === "string"
+      ? curveHash[interpolatorSetting]
+      : interpolatorSetting
 
   if (actualInterpolator) {
     lineGenerator.curve(actualInterpolator)
