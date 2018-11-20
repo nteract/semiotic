@@ -161,9 +161,7 @@ h6,
 .domain {
   fill: none;
 }
-.tick path {
-  stroke: lightgray;
-}
+
 rect.extent {
   fill-opacity: 0.25;
   stroke: black;
@@ -185,3 +183,137 @@ g.resize > rect {
 .difference-overlay-b {
   stroke: red;
 }
+
+.tick path {
+  stroke: lightgray;
+}
+
+.style-example-plain .tick path {
+  stroke: lightgray;
+}
+
+.style-example-plain .axis.y .tick path {
+  stroke: lightgray;
+  stroke-dasharray: 1 1;
+}
+
+.style-example-plain .data-visualization {
+  stroke: steelblue;
+  fill: lightblue;
+}
+
+.style-example-plain .axis-labels, .style-example-plain .ordinal-labels {
+  stroke: none;
+  fill: #666;
+}
+
+.style-example-plain .frame-title {
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.style-example-plain .axis-baseline {
+  stroke: none;
+}
+
+.style-example-plain path.connector, .style-example-plain path.connector-end, .style-example-plain path.note-line {
+  stroke: black;
+}
+
+.style-example-plain .annotation-note-label, .style-example-plain .annotation-note-label, .style-example-plain .connector-arrow {
+  fill: black;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+
+.style-example-minimal .tick path {
+  stroke: lightgray;
+  opacity: 0.5;
+}
+
+
+.style-example-minimal .data-visualization {
+  fill: fuchsia;
+  opacity: 0.5;
+}
+
+.style-example-minimal .data-visualization .edges, .style-example-minimal .data-visualization .lines {
+  stroke: #ff3a00;
+  stroke-opacity: 0.75;
+}
+
+.style-example-minimal .axis-labels, .style-example-minimal .ordinal-labels {
+  stroke: none;
+  fill: #999;
+}
+
+.style-example-minimal .frame-title {
+  text-transform: capitalize;
+  font-weight: 100;
+  font-size: 20px;
+}
+
+.style-example-minimal .axis-baseline {
+  stroke: none;
+}
+
+.style-example-minimal path.connector, .style-example-minimal path.connector-end {
+  stroke-dasharray: 5 4;
+  font-weight: 100;
+}
+.style-example-minimal path.note-line {
+  stroke: none;
+}
+
+.style-example-minimal .annotation-note-label {
+  font-weight: 100;
+  font-size: 16px;
+}
+
+.style-example-dark {
+  background: black;
+}
+
+.style-example-dark .tick path {
+  stroke: #e7e7d8;
+}
+
+
+.style-example-dark .data-visualization {
+  fill: #b1a300;
+}
+
+.style-example-dark .data-visualization .edges, .style-example-dark .data-visualization .lines {
+  stroke: #ff3a00;
+}
+
+.style-example-dark .axis-labels, .style-example-dark .ordinal-labels {
+  stroke: none;
+  fill: #e7e7d8;
+}
+
+.style-example-dark .frame-title {
+  text-transform: capitalize;
+  font-weight: 300;
+  font-size: 20px;
+  fill: #F3F3CC;
+}
+
+.style-example-dark .axis-baseline {
+  stroke: none;
+}
+
+.style-example-dark path.connector, .style-example-dark path.connector-end, .style-example-dark path.note-line  {
+  stroke: white;
+  opacity: 0.75;
+}
+
+.style-example-dark .connector-arrow {
+  fill: white;
+}
+
+.style-example-dark .annotation-note-label {
+  fill: white;
+}
+

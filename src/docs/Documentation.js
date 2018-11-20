@@ -60,6 +60,7 @@ import FacetControllerDocs from "./components/FacetControllerDocs"
 import BarToParallel from "./components/BarToParallel"
 import AppleStockChart from "./components/AppleStockChart"
 
+import CreatingStyle from "./components/CreatingStyle"
 import CreatingBarChart from "./components/CreatingBarChart"
 import CreatingPieChart from "./components/CreatingPieChart"
 import CreatingLineChart from "./components/CreatingLineChart"
@@ -82,6 +83,7 @@ import IconButton from "material-ui/IconButton"
 
 const components = {
   informationmodel: { docs: BarToParallel },
+  creatingstyle: { docs: CreatingStyle },
   creatinglinechart: { docs: CreatingLineChart },
   creatingbarchart: { docs: CreatingBarChart },
   creatingpiechart: { docs: CreatingPieChart },
