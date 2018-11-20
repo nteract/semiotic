@@ -467,8 +467,8 @@ export default class CreatingLineChart extends React.Component {
             dataVersion="fixed"
             lines={movies}
             lineType={{
-              type: "line",
-              interpolator: "cardinal"
+              type: "bumpline",
+              interpolator: "linear"
             }}
             lineDataAccessor={["coordinates"]}
             xAccessor={["week"]}
@@ -480,10 +480,12 @@ export default class CreatingLineChart extends React.Component {
             margin={{ left: 80, bottom: 50, right: 10, top: 40 }}
             axes={[
               {
-                orient: "left"
+                orient: "left",
+                baseline: false
               },
               {
-                orient: "bottom"
+                orient: "bottom",
+                baseline: false
               }
             ]}
             customHoverBehavior={d => console.info("custom hover d", d)}
@@ -504,7 +506,7 @@ export default class CreatingLineChart extends React.Component {
                 <text>{JSON.stringify(margin)}</text>
               </g>
             )}
-            foregroundGraphics={({ size, margin }) => (
+            /*            foregroundGraphics={({ size, margin }) => (
               <g>
                 <line
                   strokeWidth={3}
@@ -515,7 +517,7 @@ export default class CreatingLineChart extends React.Component {
                   y2={size[1] - margin.bottom}
                 />
               </g>
-            )}
+            )} */
           />
           <h3>Flat Data</h3>
           <ResponsiveXYFrame
