@@ -10,6 +10,7 @@ import CreateAPieChart from "./guides/CreateAPieChart"
 import WaterfallChart from "./examples/WaterfallChart"
 import MarimekkoChart from "./examples/MarimekkoChart"
 import DotPlot from "./examples/DotPlot"
+import Timeline from "./examples/Timeline"
 
 const ROOT = process.env.PUBLIC_URL
 
@@ -161,7 +162,9 @@ const PAGES = [
         component: DotPlot
       },
       {
-        name: "Timeline"
+        name: "Timeline",
+        url: "timeline",
+        component: Timeline
       }
     ]
   },
