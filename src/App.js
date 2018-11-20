@@ -9,6 +9,7 @@ import CreateABarChart from "./guides/CreateABarChart"
 import CreateAPieChart from "./guides/CreateAPieChart"
 import WaterfallChart from "./examples/WaterfallChart"
 import MarimekkoChart from "./examples/MarimekkoChart"
+import DotPlot from "./examples/DotPlot"
 
 const ROOT = process.env.PUBLIC_URL
 
@@ -155,7 +156,9 @@ const PAGES = [
         name: "Ridgeline Plot"
       },
       {
-        name: "Dot Plot"
+        name: "Dot Plot",
+        url: "dot-plot",
+        component: DotPlot
       },
       {
         name: "Timeline"

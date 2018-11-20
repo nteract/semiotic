@@ -69,7 +69,7 @@ const frameProps = {
   oLabel: d => <text transform="rotate(45)">{d}</text>,
   margin: { left: 45, top: 10, bottom: 80, right: 50 },
   data,
-  style: (d, i) => {
+  style: d => {
     console.log(d.segment, colors[d.segment])
     return {
       fill: colors[d.segment],
