@@ -361,7 +361,7 @@ export const bumpChart = ({
       .sort(bumpSort)
       .forEach((l, rank) => {
         //determine ranking and offset by the number of less than this one at each step
-        l._XYFrameRank = rank
+        l._XYFrameRank = rank + 1
         if (type === "bumparea" || type === "bumparea-invert") {
           if (l[yProp] < 0) {
             l[yPropTop] = negativeOffset + l[yProp]
@@ -375,9 +375,9 @@ export const bumpChart = ({
             positiveOffset += l[yProp]
           }
         } else {
-          l[yProp] = rank
-          l[yPropTop] = rank
-          l[yPropBottom] = rank
+          l[yProp] = rank + 1
+          l[yPropTop] = rank + 1
+          l[yPropBottom] = rank + 1
         }
       })
   })

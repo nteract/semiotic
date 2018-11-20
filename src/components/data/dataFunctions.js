@@ -309,7 +309,11 @@ export const calculateDataExtent = ({
   if (invertX && !(actualXExtent && actualXExtent.length === 2)) {
     finalXExtent = [finalXExtent[1], finalXExtent[0]]
   }
-  if (invertY && !(actualYExtent && actualYExtent.length === 2)) {
+
+  if (
+    (lineType.type === "bumpline" || invertY) &&
+    !(actualYExtent && actualYExtent.length === 2)
+  ) {
     finalYExtent = [finalYExtent[1], finalYExtent[0]]
   }
 
