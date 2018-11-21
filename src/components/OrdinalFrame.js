@@ -1358,7 +1358,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
   }: {
     d: Object,
     i: number,
-    annotationLayer: Node
+    annotationLayer: Object
   }) => {
     const { projection } = this.props
 
