@@ -19,6 +19,7 @@ import {
 import {
   svgORRule,
   svgHighlightRule,
+  svgOrdinalLine,
   basicReactAnnotationRule,
   svgEncloseRule,
   svgRectEncloseRule,
@@ -690,7 +691,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
           piece.negative = false
         } else {
           if (pieceType.type === "bar") {
-            piece.scaledValue  =
+            piece.scaledValue =
               projection === "vertical"
                 ? negativeOffset -
                   rScaleReverse(rScale(negativeBaseValue - piece.value))
@@ -1415,6 +1416,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       })
     }
 
+    const { voronoiHover } = annotationLayer
+
     //TODO: Process your rules first
     const customAnnotation =
       this.props.svgAnnotationRules &&
@@ -1431,10 +1434,13 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         adjustedSize,
         annotationLayer,
         orFrameState: this.state,
-        categories: this.state.projectedColumns
+        categories: this.state.projectedColumns,
+        voronoiHover
       })
     if (this.props.svgAnnotationRules && customAnnotation !== null) {
       return customAnnotation
+    } else if (d.type === "ordinal-line") {
+      return svgOrdinalLine({ d, i, screenCoordinates, voronoiHover })
     } else if (d.type === "or") {
       return svgORRule({ d, i, screenCoordinates, projection })
     } else if (d.type === "highlight") {

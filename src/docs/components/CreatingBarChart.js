@@ -25,6 +25,18 @@ const longBarChartData = [
   { user: "Matt2", tweets: 20, retweets: 25, favorites: 50 },
   { user: "Betty2", tweets: 30, retweets: 20, favorites: 10 }
 ]
+
+const longBarChartAnnotationData = [
+  ...barChartData,
+  { user: "Jason1", tweets: 20 },
+  { user: "Susie1", tweets: 10 },
+  { user: "Matt1", tweets: 10 },
+  { user: "Betty1", tweets: 15 },
+  { user: "Jason2", tweets: 20 },
+  { user: "Susie2", tweets: 10 },
+  { user: "Matt2", tweets: 10 },
+  { user: "Betty2", tweets: 10 }
+]
 const inflatedBarChartData = [
   { user: "Jason", action: "tweets", value: 10 },
   { user: "Susie", action: "tweets", value: 5 },
@@ -404,6 +416,69 @@ export default class CreatingBarChart extends React.Component {
     }
   }}
 />`
+    })
+
+    examples.push({
+      name: "Simple",
+      demo: (
+        <div>
+          <p>
+            You can enable brushing on a whole OrdinalFrame and it will snap to
+            columns/rows.
+          </p>
+          <OrdinalFrame
+            size={[600, 300]}
+            data={longBarChartData}
+            oAccessor={"user"}
+            rAccessor={"tweets"}
+            oPadding={10}
+            projection="vertical"
+            style={{ fill: "#00a2ce", stroke: "white" }}
+            type={"bar"}
+            oLabel={true}
+            annotations={[
+              {
+                type: "ordinal-line",
+                curve: "monotonex",
+                points: true,
+                hoverRadius: 20,
+                coordinates: longBarChartAnnotationData,
+                interactive: true
+              }
+            ]}
+            hoverAnnotation={true}
+          />
+          <OrdinalFrame
+            size={[300, 600]}
+            data={longBarChartData}
+            oAccessor={"user"}
+            rAccessor={"tweets"}
+            oPadding={10}
+            projection="horizontal"
+            style={{ fill: "#00a2ce", stroke: "white" }}
+            type={"bar"}
+            oLabel={true}
+            pieceHoverAnnotation={true}
+            annotations={[
+              {
+                type: "ordinal-line",
+                curve: "monotoney",
+                points: true,
+                interactive: true,
+                radius: 3,
+                lineStyle: { stroke: "darkblue" },
+                pointStyle: d =>
+                  d.user === "Betty"
+                    ? { fill: "white", stroke: "brown", strokeWidth: 4 }
+                    : { fill: "white", stroke: "darkblue", strokeWidth: 4 },
+                coordinates: longBarChartAnnotationData,
+                interactive: true
+              }
+            ]}
+          />
+        </div>
+      ),
+      source: ``
     })
 
     return (

@@ -1108,18 +1108,6 @@ export function bucketizedRenderingFn({
 
       const joyHeight = type.amplitude || 0
 
-      console.log("actrualMax", actualMax)
-      console.log(
-        summary,
-        summaryI,
-        type.axis,
-        axisCreator,
-        projection,
-        actualMax,
-        adjustedSize,
-        columnWidth
-      )
-
       if (type.axis && type.type === "histogram") {
         renderedSummaryMarks.push(
           createSummaryAxis({
