@@ -1688,7 +1688,7 @@ class NetworkFrame extends React.Component<Props, State> {
     })
   }
 
-  defaultNetworkSVGRule = ({ d: baseD, i }: { d: Object, i: number }) => {
+  defaultNetworkSVGRule = ({ d: baseD, i, annotationLayer }: { d: Object, i: number, annotationLayer: Object }) => {
     const {
       projectedNodes,
       projectedEdges,
@@ -1714,6 +1714,10 @@ class NetworkFrame extends React.Component<Props, State> {
             ...baseD
           }
 
+
+    const { voronoiHover } = annotationLayer
+
+
     if (svgAnnotationRules) {
       const customAnnotation = svgAnnotationRules({
         d,
@@ -1721,7 +1725,8 @@ class NetworkFrame extends React.Component<Props, State> {
         networkFrameProps: this.props,
         networkFrameState: this.state,
         nodes: projectedNodes,
-        edges: projectedEdges
+        edges: projectedEdges,
+        voronoiHover
       })
       if (customAnnotation !== null) {
         return customAnnotation

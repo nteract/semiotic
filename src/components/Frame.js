@@ -188,6 +188,7 @@ class Frame extends React.Component<Props, State> {
         legendSettings={legendSettings}
         margin={margin}
         axes={axes}
+        voronoiHover={this.setVoronoi}
         annotationHandling={annotationSettings}
         pointSizeFunction={annotationSettings.pointSizeFunction}
         labelSizeFunction={annotationSettings.labelSizeFunction}

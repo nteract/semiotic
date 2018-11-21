@@ -1018,6 +1018,8 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       }, [])
     }
 
+    const { voronoiHover } = annotationLayer
+
     const customSVG =
       this.props.svgAnnotationRules &&
       this.props.svgAnnotationRules({
@@ -1032,7 +1034,8 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         xyFrameState: this.state,
         areas,
         points,
-        lines
+        lines,
+        voronoiHover        
       })
     if (this.props.svgAnnotationRules !== undefined && customSVG !== null) {
       return customSVG

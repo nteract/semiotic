@@ -12,6 +12,8 @@ import { pointOnArcAtAngle } from "../svg/pieceDrawing"
 import { circleEnclosure, rectangleEnclosure } from "./baseRules"
 import SpanOrDiv from "../SpanOrDiv"
 import { findFirstAccessorValue } from "../data/multiAccessorUtils"
+import { line } from "d3-shape"
+import { curveHash } from "../visualizationLayerBehavior/general"
 
 function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
   const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0
@@ -823,4 +825,63 @@ export const svgRectEncloseRule = ({ d, i, screenCoordinates }) => {
   })
 
   return rectangleEnclosure({ bboxNodes, d, i })
+}
+
+export const svgOrdinalLine = ({ screenCoordinates, d, voronoiHover }) => {
+  const lineGenerator = line()
+    .x(d => d[0])
+    .y(d => d[1])
+  if (d.curve) {
+    const interpolator = curveHash[d.curve] || d.curve
+    lineGenerator.curve(interpolator)
+  }
+
+  const lineStyle =
+    typeof d.lineStyle === "function" ? d.lineStyle(d) : d.lineStyle || {}
+
+  return (
+    <g>
+      <path
+        stroke="black"
+        fill="none"
+        style={lineStyle}
+        d={lineGenerator(screenCoordinates)}
+      />
+      {(d.points || d.interactive) &&
+        screenCoordinates.map((p, q) => {
+          const pointStyle =
+            typeof d.pointStyle === "function"
+              ? d.pointStyle(d.coordinates[q], q)
+              : d.pointStyle || {}
+
+          return (
+            <g
+              transform={`translate(${p[0]},${p[1]})`}
+              key={`ordinal-line-point-${q}`}
+            >
+              {d.points && (
+                <circle style={pointStyle} r={d.radius || 5} fill="black" />
+              )}
+              {d.interactive && (
+                <circle
+                  style={{ pointerEvents: "all" }}
+                  r={d.hoverRadius || 15}
+                  fill="pink"
+                  opacity={0}
+                  onMouseEnter={() =>
+                    voronoiHover({
+                      type: "frame-hover",
+                      ...d.coordinates[q],
+                      data: d.coordinates[q]
+                    })
+                  }
+                  onMouseOut={() => voronoiHover()}
+                />
+              )}
+              }
+            </g>
+          )
+        })}
+    </g>
+  )
 }
