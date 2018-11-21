@@ -340,7 +340,7 @@ export default class CreatingBarChart extends React.Component {
     })
 
     examples.push({
-      name: "Simple",
+      name: "Brushing",
       demo: (
         <div>
           <p>
@@ -419,12 +419,18 @@ export default class CreatingBarChart extends React.Component {
     })
 
     examples.push({
-      name: "Simple",
+      name: "Bar/Line Charts",
       demo: (
         <div>
           <p>
-            You can enable brushing on a whole OrdinalFrame and it will snap to
-            columns/rows.
+            OrdinalFrame supports an "ordinal-line" annotation that lets you
+            draw a simple line from data (using all the built-in annotation
+            functionality) so you can compose line + bar charts. Notice the
+            settings for "ordinal-line": You need to pass coordinates and can
+            enable interactivity, set a curve/interpolator, show line points,
+            set the point radius, define the radius for interactivity (the px
+            size around a point that is interactive), pass pointStyle and
+            lineStyle objects or functions that return style objects.
           </p>
           <OrdinalFrame
             size={[600, 300]}
@@ -478,7 +484,56 @@ export default class CreatingBarChart extends React.Component {
           />
         </div>
       ),
-      source: ``
+      source: `<OrdinalFrame
+      size={[600, 300]}
+      data={longBarChartData}
+      oAccessor={"user"}
+      rAccessor={"tweets"}
+      oPadding={10}
+      projection="vertical"
+      style={{ fill: "#00a2ce", stroke: "white" }}
+      type={"bar"}
+      oLabel={true}
+      annotations={[
+        {
+          type: "ordinal-line",
+          curve: "monotonex",
+          points: true,
+          hoverRadius: 20,
+          coordinates: longBarChartAnnotationData,
+          interactive: true
+        }
+      ]}
+      hoverAnnotation={true}
+    />
+    <OrdinalFrame
+      size={[300, 600]}
+      data={longBarChartData}
+      oAccessor={"user"}
+      rAccessor={"tweets"}
+      oPadding={10}
+      projection="horizontal"
+      style={{ fill: "#00a2ce", stroke: "white" }}
+      type={"bar"}
+      oLabel={true}
+      pieceHoverAnnotation={true}
+      annotations={[
+        {
+          type: "ordinal-line",
+          curve: "monotoney",
+          points: true,
+          interactive: true,
+          radius: 3,
+          lineStyle: { stroke: "darkblue" },
+          pointStyle: d =>
+            d.user === "Betty"
+              ? { fill: "white", stroke: "brown", strokeWidth: 4 }
+              : { fill: "white", stroke: "darkblue", strokeWidth: 4 },
+          coordinates: longBarChartAnnotationData,
+          interactive: true
+        }
+      ]}
+    />`
     })
 
     return (
