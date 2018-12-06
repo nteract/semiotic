@@ -70,7 +70,6 @@ const frameProps = {
   margin: { left: 45, top: 10, bottom: 80, right: 50 },
   data,
   style: d => {
-    console.log(d.segment, colors[d.segment])
     return {
       fill: colors[d.segment],
       stroke: "white",

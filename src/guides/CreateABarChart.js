@@ -13,17 +13,6 @@ const barChartData = [
   { user: "Betty", tweets: 30, retweets: 20, favorites: 10 }
 ]
 
-const longBarChartData = [
-  ...barChartData,
-  { user: "Jason1", tweets: 10, retweets: 5, favorites: 15 },
-  { user: "Susie1", tweets: 5, retweets: 100, favorites: 100 },
-  { user: "Matt1", tweets: 20, retweets: 25, favorites: 50 },
-  { user: "Betty1", tweets: 30, retweets: 20, favorites: 10 },
-  { user: "Jason2", tweets: 10, retweets: 5, favorites: 15 },
-  { user: "Susie2", tweets: 5, retweets: 100, favorites: 100 },
-  { user: "Matt2", tweets: 20, retweets: 25, favorites: 50 },
-  { user: "Betty2", tweets: 30, retweets: 20, favorites: 10 }
-]
 const inflatedBarChartData = [
   { user: "Jason", action: "tweets", value: 10 },
   { user: "Susie", action: "tweets", value: 5 },

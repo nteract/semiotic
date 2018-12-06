@@ -130,55 +130,6 @@ export const lines = [
         date: "2015-07-17",
         rank: 47
       }
-      //TODO: difference chart handle different number of data points
-      // {
-      //   week: 16,
-      //   grossWeekly: 19380,
-      //   theaterCount: 19,
-      //   theaterAvg: 1020,
-      //   date: "2015-07-24",
-      //   rank: 56
-      // },
-      // {
-      //   week: 17,
-      //   grossWeekly: 15952,
-      //   theaterCount: 17,
-      //   theaterAvg: 938,
-      //   date: "2015-07-31",
-      //   rank: 61
-      // },
-      // {
-      //   week: 18,
-      //   grossWeekly: 11938,
-      //   theaterCount: 10,
-      //   theaterAvg: 1194,
-      //   date: "2015-08-07",
-      //   rank: 66
-      // },
-      // {
-      //   week: 19,
-      //   grossWeekly: 7632,
-      //   theaterCount: 5,
-      //   theaterAvg: 1526,
-      //   date: "2015-08-14",
-      //   rank: 73
-      // },
-      // {
-      //   week: 20,
-      //   grossWeekly: 6272,
-      //   theaterCount: 4,
-      //   theaterAvg: 1568,
-      //   date: "2015-08-21",
-      //   rank: 81
-      // },
-      // {
-      //   week: 21,
-      //   grossWeekly: 5677,
-      //   theaterCount: 5,
-      //   theaterAvg: 1135,
-      //   date: "2015-08-28",
-      //   rank: 83
-      // }
     ]
   },
   {

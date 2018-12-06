@@ -5,8 +5,11 @@ import MarkdownPage from "./MarkdownPage"
 import APIXYFrame from "./api/XYFrame"
 import CreateALineChart from "./guides/CreateALineChart"
 import CreateAnAreaChart from "./guides/CreateAnAreaChart"
+import CreateAScatterplot from "./guides/CreateAScatterplot"
+import CreateXYSummaries from "./guides/CreateXYSummaries"
 import CreateABarChart from "./guides/CreateABarChart"
 import CreateAPieChart from "./guides/CreateAPieChart"
+import CreateSparklines from "./guides/CreateSparklines"
 import WaterfallChart from "./examples/WaterfallChart"
 import MarimekkoChart from "./examples/MarimekkoChart"
 import DotPlot from "./examples/DotPlot"
@@ -45,10 +48,14 @@ const PAGES = [
         component: CreateAnAreaChart
       },
       {
-        name: "Creating Scatterplots"
+        name: "Creating Scatterplots",
+        url: "guides-scatterplot",
+        component: CreateAScatterplot
       },
       {
-        name: "Creating XY Summaries"
+        name: "Creating XY Summaries",
+        url: "guides-xy-summaries",
+        component: CreateXYSummaries
       },
 
       {
@@ -102,7 +109,9 @@ const PAGES = [
         name: "Canvas Rendering"
       },
       {
-        name: "Creating Sparklines"
+        name: "Creating Sparklines",
+        url: "guides-sparklines",
+        component: CreateSparklines
       },
       {
         name: "Using Sketchy/Painty/Patterns"
@@ -301,7 +310,10 @@ export default function({ hash }) {
           <Sidebar pages={PAGES} selected={view[view.length - 1]} />
         </div>
         <div className="container">
-          <h1>{(subpage && subpage.name) || (page && page.name)}</h1>
+          <h1>
+            {(subpage && subpage.name) ||
+              (page && page.name && page.name !== "Home" && page.name)}
+          </h1>
           <div className="margin-bottom">{View && <View {...viewProps} />}</div>
         </div>
       </div>
