@@ -10,7 +10,9 @@ import CreateXYSummaries from "./guides/CreateXYSummaries"
 import CreateABarChart from "./guides/CreateABarChart"
 import CreateAPieChart from "./guides/CreateAPieChart"
 import CreateSparklines from "./guides/CreateSparklines"
+
 import WaterfallChart from "./examples/WaterfallChart"
+import HomerunMap from "./examples/HomerunMap"
 import MarimekkoChart from "./examples/MarimekkoChart"
 import DotPlot from "./examples/DotPlot"
 import Timeline from "./examples/Timeline"
@@ -140,7 +142,9 @@ const PAGES = [
         name: "Dual-Axes Chart"
       },
       {
-        name: "Homerun Map"
+        name: "Homerun Map",
+        url: "homerun-map",
+        component: HomerunMap
       },
       {
         name: "Canvas Interaction"

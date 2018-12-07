@@ -107,8 +107,9 @@ const getFramePropsString = (frameProps, functions, overrideProps, trimmed) => {
 const getCodeBlock = (frameName, pre, functionsString, framePropsString) => {
   return (
     <code className="language-jsx">
-      {`import { ${frameName} } from "semiotic/lib/${frameName}"\n\n`}
+      {`import { ${frameName} } from "semiotic/lib/${frameName}"\n`}
       {pre}
+      {pre && "\n"}
       {functionsString}
 
       {framePropsString}

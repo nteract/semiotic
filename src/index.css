@@ -284,3 +284,45 @@ a {
 h3 {
   font-size: 1em;
 }
+
+.st0 {
+  fill: #5b5b5b;
+}
+.st1 {
+  fill: #7f7f7f;
+}
+.st2 {
+  fill: #ffffff;
+}
+.st3 {
+  fill: #6fa288;
+}
+.st4 {
+  fill: #c7e0b0;
+}
+.st5 {
+  fill: #e2b884;
+}
+/* .st6 {
+  font-family: "ArialMT";
+}
+.st7 {
+  font-size: 11px;
+} */
+.st8 {
+  fill: #e2b884;
+}
+.st9 {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+.st10 {
+  fill: #ffffff;
+  stroke: #ffffff;
+}
+.st11 {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 1.5;
+}
