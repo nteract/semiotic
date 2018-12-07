@@ -1,7 +1,16 @@
 export const processNodes = [
   {
     label: "Data",
-    keys: ["data", "points", "lines", "areas", "nodes", "edges", "graph"]
+    keys: [
+      "data",
+      "points",
+      "lines",
+      "areas",
+      "nodes",
+      "edges",
+      "graph",
+      "summaries"
+    ]
   },
   {
     label: "Size",
