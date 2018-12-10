@@ -247,7 +247,9 @@ export const dagreEdgeGenerator = direction => {
           (a, b) => b.weight - a.weight
         )
         return (
-          <g>
+          <g
+          key={`${key}`}
+          >
             {ribbonGenerator({
               points: d.points,
               multiple: d.parallelEdges
