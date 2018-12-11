@@ -702,8 +702,8 @@ class NetworkFrame extends React.Component<Props, State> {
         return dagreNodeHash[n]
       })
       projectedEdges = dagreGraph.edges().map(e => {
-        const baseEdge = dagreGraph.edge(e)
-
+        const dagreEdge = dagreGraph.edge(e)
+        const baseEdge = { ...dagreEdge, points: dagreEdge.points.map(d => ({ ...d })) }
         baseEdge.source = projectedNodes.find(p => p.id === e.v)
         baseEdge.target = projectedNodes.find(p => p.id === e.w)
         baseEdge.points.unshift({ x: baseEdge.source.x, y: baseEdge.source.y })
