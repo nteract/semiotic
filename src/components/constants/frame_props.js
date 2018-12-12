@@ -11,6 +11,7 @@ export const xyFrameDataProps = [
   "areaDataAccessor",
   "lineType",
   "showLinePoints",
+  "showSummaryPoints",
   "defined"
 ]
 
@@ -230,6 +231,7 @@ export const xyframeproptypes = {
     PropTypes.func
   ]),
   showLinePoints: PropTypes.bool,
+  showSummaryPoints: PropTypes.bool,
   defined: PropTypes.func,
   lineStyle: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
   pointStyle: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
