@@ -144,7 +144,7 @@ export const calculateDataExtent = ({
       })
     })
 
-    fullDataset = projectedPoints
+    fullDataset = [...projectedPoints]
   }
   if (lines) {
     initialProjectedLines = projectLineData({
@@ -244,40 +244,36 @@ export const calculateDataExtent = ({
 
   const calculatedXExtent = [
     min(
-      fullDataset.map(
-        d =>
-          d[projectedXBottom] === undefined
-            ? d[projectedX]
-            : Math.min(d[projectedXTop], d[projectedXBottom])
+      fullDataset.map(d =>
+        d[projectedXBottom] === undefined
+          ? d[projectedX]
+          : Math.min(d[projectedXTop], d[projectedXBottom])
       )
     ),
 
     max(
-      fullDataset.map(
-        d =>
-          d[projectedXTop] === undefined
-            ? d[projectedX]
-            : Math.max(d[projectedXBottom], d[projectedXTop])
+      fullDataset.map(d =>
+        d[projectedXTop] === undefined
+          ? d[projectedX]
+          : Math.max(d[projectedXBottom], d[projectedXTop])
       )
     )
   ]
 
   const calculatedYExtent = [
     min(
-      fullDataset.map(
-        d =>
-          d[projectedYBottom] === undefined
-            ? d[projectedY]
-            : Math.min(d[projectedYTop], d[projectedYBottom])
+      fullDataset.map(d =>
+        d[projectedYBottom] === undefined
+          ? d[projectedY]
+          : Math.min(d[projectedYTop], d[projectedYBottom])
       )
     ),
 
     max(
-      fullDataset.map(
-        d =>
-          d[projectedYTop] === undefined
-            ? d[projectedY]
-            : Math.max(d[projectedYBottom], d[projectedYTop])
+      fullDataset.map(d =>
+        d[projectedYTop] === undefined
+          ? d[projectedY]
+          : Math.max(d[projectedYBottom], d[projectedYTop])
       )
     )
   ]
