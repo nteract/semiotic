@@ -3,18 +3,15 @@ import DocumentFrame from "../DocumentFrame"
 import { XYFrame } from "semiotic"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
-import { scaleSqrt, scaleThreshold } from "d3-scale"
+import { scaleSqrt, scaleLinear } from "d3-scale"
 import { points } from "./CreateAScatterplot"
 
-const rScale = scaleSqrt()
-  .domain([0, points[0].grossWeekly])
-  .range([0, 25])
-
-const steps = ["none", "#FBEEEC", "#f3c8c2", "#e39787", "#ce6751", "#b3331d"]
-const thresholds = scaleThreshold()
-  .domain([0.01, 0.25, 0.5, 0.75, 1])
+const steps = ["white", theme[3]]
+const thresholds = scaleLinear()
+  // .domain([0.01, 0.25, 0.5, 0.75, 1])
   .range(steps)
 
+console.log(points.length)
 const frameProps = {
   size: [700, 400],
   summaries: [{ coordinates: points }],
@@ -23,11 +20,12 @@ const frameProps = {
   yAccessor: "rank",
   yExtent: [0],
   xExtent: [0],
+  showSummaryPoints: true,
   title: (
     <text textAnchor="middle">
       Theaters showing <tspan fill={theme[0]}>Ex Machina</tspan> vs{" "}
       <tspan fill={theme[1]}>Far from the Madding Crowd</tspan> vs{" "}
-      <tspan fill={theme[2]}>The Longest Ride</tspan>
+      <tspan fill={theme[4]}>The Longest Ride</tspan>
     </text>
   ),
   axes: [
@@ -42,22 +40,25 @@ const frameProps = {
   ],
   summaryStyle: d => ({
     fill: thresholds(d.percent),
-    stroke: "black"
+    stroke: "#ccc",
+    strokeWidth: 0.5
   }),
   pointStyle: d => {
+    // console.log(d)
     return {
-      r: 5,
+      r: 2,
       fill:
-        d.title === "Ex Machina"
+        d && d.title === "Ex Machina"
           ? theme[0]
-          : d.title === "Far from the Madding Crowd"
+          : d && d.title === "Far from the Madding Crowd"
           ? theme[1]
-          : theme[2]
+          : theme[4]
     }
   },
 
   margin: { left: 60, bottom: 90, right: 10, top: 40 },
-  points
+  // points: []
+  showLinePoints: true
 }
 
 const overrideProps = {
@@ -77,23 +78,16 @@ const overrideProps = {
   }`
 }
 
-const customPointProps = {
+const hexbinProps = {
   ...frameProps,
-  customPointMark: ({ d }) => {
-    return (
-      <g>
-        <circle r={rScale(d.grossWeekly)} stroke="white" />
-        <text>{d.week}</text>
-      </g>
-    )
-  }
+  summaryType: "hexbin"
 }
 
-//Add in multi-line accessor example
-//Add in marginalia labelling example?
-//Explain xAccesor and yAccessor
-//Add percent value into the tooltip example
-//Add in cumulative-revers?
+const contourProps = {
+  ...frameProps,
+  summaryStyle: { fill: theme[3], fillOpacity: 0.2, stroke: "white" },
+  summaryType: "contour"
+}
 
 const withHoverFrameProps = {
   ...frameProps,
@@ -124,17 +118,41 @@ In this example, we pass a \`xExtent={[0]}\` and \`yExtent={[0]}\` to set the lo
       />
       <MarkdownText
         text={`
-## Scatterplot with Custom Points
+Creating a scatterplot, and scatterplot using a custom point with XYFrame and hover behavior and styling.
 
-XYFrame takes a \`customPointMark\` which allows you to render the points with a custom function. 
+## Scatterplot
+
+The XYFrame takes \`points\` as an array of objects. Each object represents a point. 
+
+In this example, we pass a \`xExtent={[0]}\` and \`yExtent={[0]}\` to set the lower bound of the xAxis and yAxis to zero, otherwise it would create an exent based on the minimum and maximum values on your  \`xAccessor\` and \`yAccessor\`.
+
 `}
       />
       <DocumentFrame
-        frameProps={customPointProps}
+        frameProps={hexbinProps}
         type={XYFrame}
         overrideProps={overrideProps}
-        startHidden
+        useExpanded
       />
+      <MarkdownText
+        text={`
+Creating a scatterplot, and scatterplot using a custom point with XYFrame and hover behavior and styling.
+
+## Scatterplot
+
+The XYFrame takes \`points\` as an array of objects. Each object represents a point. 
+
+In this example, we pass a \`xExtent={[0]}\` and \`yExtent={[0]}\` to set the lower bound of the xAxis and yAxis to zero, otherwise it would create an exent based on the minimum and maximum values on your  \`xAccessor\` and \`yAccessor\`.
+
+`}
+      />
+      <DocumentFrame
+        frameProps={contourProps}
+        type={XYFrame}
+        overrideProps={overrideProps}
+        useExpanded
+      />
+
       <MarkdownText
         text={`
 ## Scatterplot with Hover

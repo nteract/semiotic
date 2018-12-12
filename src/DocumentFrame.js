@@ -61,15 +61,16 @@ const getFramePropsString = (frameProps, functions, overrideProps, trimmed) => {
     .map(d => {
       const order = processNodes.findIndex(p => p.keys.indexOf(d) !== -1)
 
-      const { label } = processNodes[order]
+      const match = processNodes[order]
+
+      if (!match) console.log(`ERROR: no label found for ${d}`)
 
       return {
         key: d,
         value: frameProps[d],
-        label,
+        label: match && match.label,
         order:
-          order +
-          processNodes[order].keys.indexOf(d) / processNodes[order].keys.length
+          order + ((match && match.keys.indexOf(d) / match.keys.length) || 0)
       }
     })
     .sort((a, b) => {
