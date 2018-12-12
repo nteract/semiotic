@@ -15,6 +15,7 @@ import WaterfallChart from "./examples/WaterfallChart"
 import HomerunMap from "./examples/HomerunMap"
 import MarimekkoChart from "./examples/MarimekkoChart"
 import DotPlot from "./examples/DotPlot"
+import RidgelinePlot from "./examples/RidgelinePlot"
 import Timeline from "./examples/Timeline"
 
 const ROOT = process.env.PUBLIC_URL
@@ -167,7 +168,9 @@ const PAGES = [
         name: "Swarm Plot"
       },
       {
-        name: "Ridgeline Plot"
+        name: "Ridgeline Plot",
+        url: "ridgeline-plot",
+        component: RidgelinePlot
       },
       {
         name: "Dot Plot",
