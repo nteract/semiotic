@@ -192,6 +192,7 @@ export const xyframeproptypes = {
   lines: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
   points: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
   areas: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
+  summaries: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
   axes: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
   matte: PropTypes.oneOfType([PropTypes.bool, PropTypes.object]),
   xScaleType: PropTypes.func,
@@ -204,8 +205,10 @@ export const xyframeproptypes = {
   yAccessor: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
   lineDataAccessor: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
   areaDataAccessor: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
+  summaryDataAccessor: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
   lineType: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
   areaType: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+  summaryType: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
   lineRenderMode: PropTypes.oneOfType([
     PropTypes.string,
     PropTypes.object,
@@ -221,23 +224,33 @@ export const xyframeproptypes = {
     PropTypes.object,
     PropTypes.func
   ]),
+  summaryRenderMode: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.object,
+    PropTypes.func
+  ]),
   showLinePoints: PropTypes.bool,
   defined: PropTypes.func,
   lineStyle: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
   pointStyle: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
   areaStyle: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
+  summaryStyle: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
   lineClass: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
   pointClass: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
   areaClass: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
+  summaryClass: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
   canvasPoints: PropTypes.oneOfType([PropTypes.func, PropTypes.bool]),
   canvasLines: PropTypes.oneOfType([PropTypes.func, PropTypes.bool]),
   canvasAreas: PropTypes.oneOfType([PropTypes.func, PropTypes.bool]),
+  canvasSummaries: PropTypes.oneOfType([PropTypes.func, PropTypes.bool]),
   customPointMark: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
   customLineMark: PropTypes.func,
   customAreaMark: PropTypes.func,
+  customSummaryMark: PropTypes.func,
   lineIDAccessor: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
   minimap: PropTypes.object,
-  useAreasAsInteractionLayer: PropTypes.bool
+  useAreasAsInteractionLayer: PropTypes.bool,
+  useSummariesAsInteractionLayer: PropTypes.bool
 }
 
 export const ordinalframeproptypes = {
