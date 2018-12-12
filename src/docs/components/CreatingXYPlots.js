@@ -153,6 +153,7 @@ export default class CreatingXYPlots extends React.Component {
               fill: thresholds(d.percent),
               stroke: "black"
             })}
+            showSummaryPoints={true}
             hoverAnnotation={true}
             tooltipContent={d => {
               return (
@@ -205,11 +206,13 @@ export default class CreatingXYPlots extends React.Component {
         d[1] * h.percent
       ])
 
-      const sortedColors = h.binItems.map(d => d.color).sort((a, b) => {
-        if (a < b) return -1
-        if (a > b) return 1
-        return -1
-      })
+      const sortedColors = h.binItems
+        .map(d => d.color)
+        .sort((a, b) => {
+          if (a < b) return -1
+          if (a > b) return 1
+          return -1
+        })
       const step = sortedColors.length / 6
 
       return (

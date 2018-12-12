@@ -79,6 +79,7 @@ type CalculateDataTypes = {
   lines?: Array<Object>,
   lineType: Object,
   showLinePoints?: boolean,
+  showSummaryPoints?: boolean,
   xExtent?: Array<number> | Object,
   yExtent?: Array<number> | Object,
   invertX?: boolean,
@@ -99,6 +100,7 @@ export const calculateDataExtent = ({
   lines,
   lineType,
   showLinePoints,
+  showSummaryPoints,
   xExtent,
   yExtent,
   invertX,
@@ -144,7 +146,12 @@ export const calculateDataExtent = ({
       })
     })
 
-    fullDataset = [...projectedPoints]
+    fullDataset = [
+      ...projectedPoints.map(d => ({
+        ...d,
+        [projectedY]: d[projectedYTop] || d[projectedYBottom] || d.y
+      }))
+    ]
   }
   if (lines) {
     initialProjectedLines = projectLineData({
@@ -195,6 +202,12 @@ export const calculateDataExtent = ({
           })
       ]
     })
+    if (showLinePoints) {
+      projectedPoints = fullDataset.map(d => ({
+        ...d,
+        [projectedY]: d[projectedYTop] || d[projectedYBottom] || d.y
+      }))
+    }
   }
 
   if (areas) {
@@ -220,7 +233,15 @@ export const calculateDataExtent = ({
                 [projectedY]: p[1]
               })
             )
-            .forEach(e => fullDataset.push(e))
+            .forEach(e => {
+              if (showSummaryPoints) {
+                projectedPoints.push({
+                  ...e,
+                  [projectedY]: e[projectedYTop] || e[projectedYBottom] || e.y
+                })
+              }
+              fullDataset.push(e)
+            })
         })
       } else {
         d._xyfCoordinates
@@ -230,16 +251,17 @@ export const calculateDataExtent = ({
               [projectedY]: p[1]
             })
           )
-          .forEach(e => fullDataset.push(e))
+          .forEach(e => {
+            if (showSummaryPoints) {
+              projectedPoints.push({
+                ...e,
+                [projectedY]: e[projectedYTop] || e[projectedYBottom] || e.y
+              })
+            }
+            fullDataset.push(e)
+          })
       }
     })
-  }
-
-  if (showLinePoints) {
-    projectedPoints = fullDataset.map(d => ({
-      ...d,
-      [projectedY]: d[projectedYTop] || d[projectedYBottom] || d.y
-    }))
   }
 
   const calculatedXExtent = [
