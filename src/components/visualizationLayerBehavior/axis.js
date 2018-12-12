@@ -39,8 +39,8 @@ export function axisPieces({
   tickSize = footer
     ? -10
     : ["top", "bottom"].find(d => d === orient)
-      ? size[1]
-      : size[0]
+    ? size[1]
+    : size[0]
 }) {
   //returns x1 (start of line), x2 (end of line) associated with the value of the tick
   let axisDomain = [],
@@ -118,7 +118,13 @@ export function axisPieces({
   })
 }
 
-export const axisLabels = ({ axisParts, tickFormat, rotate = 0 }) => {
+export const axisLabels = ({
+  axisParts,
+  tickFormat,
+  rotate = 0,
+  center = false,
+  orient
+}) => {
   return axisParts.map((axisPart, i) => {
     let renderedValue = tickFormat(axisPart.value, i)
     if (typeof renderedValue !== "object" || renderedValue instanceof Date) {
@@ -129,11 +135,30 @@ export const axisLabels = ({ axisParts, tickFormat, rotate = 0 }) => {
       )
     }
 
+    let textX = axisPart.tx
+    let textY = axisPart.ty
+    if (center) {
+      switch (orient) {
+        case "right":
+          textX -= (axisPart.x2 - axisPart.x1) / 2
+          break
+        case "left":
+          textX += (axisPart.x2 - axisPart.x1) / 2
+          break
+        case "top":
+          textY += (axisPart.y2 - axisPart.y1) / 2
+          break
+        case "bottom":
+          textY -= (axisPart.y2 - axisPart.y1) / 2
+          break
+      }
+    }
+
     return (
       <g
         key={i}
         pointerEvents="none"
-        transform={`translate(${axisPart.tx},${axisPart.ty})rotate(${rotate})`}
+        transform={`translate(${textX},${textY})rotate(${rotate})`}
         className="axis-label"
       >
         {renderedValue}

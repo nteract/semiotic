@@ -230,21 +230,21 @@ const datasketchesChart = {
         y={50}
         height={650}
       />
-      <line x1={375} x2={375} y1={100} y2={650} style={{ stroke: "black" }} />
-      <line y1={375} y2={375} x1={100} x2={650} style={{ stroke: "black" }} />
     </g>
   ),
   axes: [
     {
       orient: "left",
+      center: true,
       label: "← Accessible - Showing Off →",
-      tickFormat: () => "",
+      tickFormat: d => d,
       tickValues: [-1, -0.5, 0.5, 1]
     },
     {
       orient: "bottom",
+      center: true,
       label: "← Meaningful - Frivolous →",
-      tickFormat: () => "",
+      tickFormat: d => d,
       tickValues: [-1, -0.5, 0.5, 1]
     }
   ]
