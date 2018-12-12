@@ -81,7 +81,8 @@ class Axis extends React.Component {
       tickSize,
       tickLineGenerator,
       baseline = true,
-      margin = { top: 0, bottom: 0, left: 0, right: 0 }
+      margin = { top: 0, bottom: 0, left: 0, right: 0 },
+      center = false
     } = this.props
 
     if (this.props.format) {
@@ -144,6 +145,9 @@ class Axis extends React.Component {
           this.setState({
             hoverAnnotation: e.nativeEvent.offsetY - annotationOffset
           })
+        if (center === true) {
+          baselineX2 = baselineX = width / 2
+        }
         break
       case "top":
         position = [position[0], 0]
@@ -155,6 +159,9 @@ class Axis extends React.Component {
         annotationType = "x"
         baselineX2 = width
         baselineY2 = 0
+        if (center === true) {
+          baselineY2 = baselineY = height / 2
+        }
         hoverFunction = e =>
           this.setState({
             hoverAnnotation: e.nativeEvent.offsetX - annotationOffset
@@ -186,10 +193,16 @@ class Axis extends React.Component {
         lineWidth = 0
         lineHeight = -height - 25
         annotationType = "x"
+        if (center === true) {
+          baselineY2 = baselineY = height / 2
+        }
         break
       default:
         position = [position[0], position[1]]
         annotationOffset = margin.top
+        if (center === true) {
+          baselineX2 = baselineX = width / 2
+        }
         hoverFunction = e =>
           this.setState({
             hoverAnnotation: e.nativeEvent.offsetY - annotationOffset
@@ -261,7 +274,8 @@ class Axis extends React.Component {
       tickFormat,
       axisParts,
       orient,
-      rotate
+      rotate,
+      center
     })
     if (label) {
       const labelName = label.name || label

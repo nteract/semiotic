@@ -731,6 +731,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
             glyphFunction={d.glyphFunction}
             baseline={d.baseline}
             dynamicLabelPosition={d.dynamicLabelPosition}
+            center={d.center}
           />
         )
       })
