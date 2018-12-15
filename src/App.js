@@ -11,6 +11,7 @@ import CreateABarChart from "./guides/CreateABarChart"
 import CreateAPieChart from "./guides/CreateAPieChart"
 import CreateSparklines from "./guides/CreateSparklines"
 
+import CandlestickChart from "./examples/CandlestickChart"
 import WaterfallChart from "./examples/WaterfallChart"
 import HomerunMap from "./examples/HomerunMap"
 import MarimekkoChart from "./examples/MarimekkoChart"
@@ -145,7 +146,9 @@ const PAGES = [
         className: "sub-header"
       },
       {
-        name: "Candlestick Chart"
+        name: "Candlestick Chart",
+        url: "candlestick-chart",
+        component: CandlestickChart
       },
       {
         name: "Dual-Axes Chart"
