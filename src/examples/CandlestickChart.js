@@ -199,7 +199,7 @@ This chart takes advantage of the multiAccessor functionality in Semiotic, in th
         frameProps={frameProps}
         overrideProps={overrideProps}
         type={XYFrame}
-        useExpanded
+        startHidden
       />
     </div>
   )

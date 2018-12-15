@@ -108,7 +108,7 @@ const getFramePropsString = (frameProps, functions, overrideProps, trimmed) => {
 const getCodeBlock = (frameName, pre, functionsString, framePropsString) => {
   return (
     <code className="language-jsx">
-      {`import { ${frameName} } from "semiotic/lib/${frameName}"\n`}
+      {`import ${frameName} from "semiotic/lib/${frameName}"\n`}
       {pre}
       {pre && "\n"}
       {functionsString}
@@ -230,7 +230,7 @@ class DocumentFrame extends React.Component {
           </button>
 
           <button value="copy" onClick={this.onCopy}>
-            Copy Code
+            Copy Full Code
           </button>
         </div>
         <div>{markdown}</div>
