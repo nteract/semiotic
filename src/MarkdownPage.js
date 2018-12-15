@@ -19,7 +19,7 @@ export default class MarkdownPage extends React.Component {
 
   getFile({ filename }) {
     if (filename) {
-      const readmePath = `${ROOT}/assets/markdown/${filename}.md`
+      const readmePath = `${ROOT}/assets/markdown/${filename}.md?nocache=${new Date()}`
 
       fetch(readmePath)
         .then(response => {

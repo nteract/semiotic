@@ -102,6 +102,9 @@ const PAGES = [
         className: "sub-header"
       },
       {
+        name: "Tooltips"
+      },
+      {
         name: "Cross-Highlighting"
       },
 
@@ -123,7 +126,12 @@ const PAGES = [
         name: "Using Foreground/Background Graphics"
       },
       {
-        name: "Accessibility"
+        name: "Accessibility",
+        url: "accessibility",
+        component: MarkdownPage,
+        props: {
+          filename: "accessibility"
+        }
       }
     ]
   },
