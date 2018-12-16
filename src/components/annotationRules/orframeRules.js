@@ -335,7 +335,9 @@ export const screenProject = ({
   if (projection === "horizontal") {
     return [
       idPiece && (idPiece.x || idPiece.scaledValue)
-        ? idPiece.x || idPiece.bottom + idPiece.scaledValue / 2
+        ? idPiece.x === undefined
+          ? idPiece.bottom + idPiece.scaledValue / 2
+          : idPiece.x
         : rScale(pValue),
       o
     ]
@@ -348,7 +350,9 @@ export const screenProject = ({
   return [
     o,
     idPiece && (idPiece.x || idPiece.scaledValue)
-      ? idPiece.y || idPiece.bottom - idPiece.scaledValue / 2
+      ? idPiece.y === undefined
+        ? idPiece.bottom - idPiece.scaledValue / 2
+        : idPiece.y
       : newScale(pValue)
   ]
 }
@@ -733,8 +737,8 @@ export const htmlColumnHoverRule = ({
     ["swarm", "point", "clusterbar"].find(p => p === type.type)
       ? max(pieces.map(p => p.scaledValue))
       : projection === "horizontal"
-        ? max(pieces.map(p => p.scaledValue + p.bottom))
-        : min(pieces.map(p => p.bottom - p.scaledValue))
+      ? max(pieces.map(p => p.scaledValue + p.bottom))
+      : min(pieces.map(p => p.bottom - p.scaledValue))
 
   let xPosition = column.middle + adjustedPosition[0]
   let yPosition =
@@ -742,8 +746,8 @@ export const htmlColumnHoverRule = ({
       ? adjustedSize[0] - positionValue
       : (summaryType.type && summaryType.type !== "none") ||
         ["swarm", "point", "clusterbar"].find(p => p === type.type)
-        ? adjustedSize[1] - positionValue
-        : positionValue
+      ? adjustedSize[1] - positionValue
+      : positionValue
   yPosition += 10
 
   if (projection === "horizontal") {

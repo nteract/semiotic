@@ -328,6 +328,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       summaryPosition: baseSummaryPosition
     } = currentProps
 
+    const multiAxis = true
+
     const summaryType = objectifyType(baseSummaryType)
     const pieceType = objectifyType(baseType)
     const connectorType = objectifyType(baseConnectorType)
@@ -357,15 +359,23 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
 
     const pieceIDAccessor = stringToFn(basePieceIDAccessor, () => "")
 
-    const allData = keyAndObjectifyBarData({
+    const { allData, multiExtents } = keyAndObjectifyBarData({
       data,
       renderKey,
       oAccessor,
-      rAccessor
+      rAccessor,
+      multiAxis
     })
 
     const arrayWrappedAxis =
       baseAxis && !Array.isArray(baseAxis) ? [baseAxis] : baseAxis
+
+    if (multiExtents) {
+      arrayWrappedAxis.forEach((d, i) => {
+        d.extentOverride = multiExtents[i]
+      })
+    }
+
     const margin = calculateMargin({
       margin: baseMargin,
       axes: arrayWrappedAxis,
@@ -536,7 +546,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       rExtent = [subZeroRExtent[1], rExtent[1]]
     }
 
-    if (pieceType.type === "clusterbar") {
+    if (pieceType.type === "clusterbar" || multiAxis) {
       rExtent[0] = 0
     }
 

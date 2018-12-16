@@ -1,92 +1,87 @@
 import React from "react"
-import { XYFrame, OrdinalFrame } from "../../components"
-import { curveBasis } from "d3-shape"
+import { OrdinalFrame } from "../../components"
 
 const testData = [
-  {
-    id: "linedata-1",
-    color: "#00a2ce",
-    coordinates: [
-      { sales: 5, leads: 150, x: 1 },
-      { sales: 7, leads: 100, x: 2 },
-      { sales: 7, leads: 112, x: 3 },
-      { sales: 4, leads: 40, x: 4 },
-      { sales: 2, leads: 200, x: 5 },
-      { sales: 3, leads: 180, x: 6 },
-      { sales: 5, leads: 165, x: 7 }
-    ]
-  }
+  { sales: 5, leads: 150, month: "Jan" },
+  { sales: 7, leads: 100, month: "Feb" },
+  { sales: 7, leads: 75, month: "Mar" },
+  { sales: 4, leads: 50, month: "Apr" },
+  { sales: 2, leads: 200, month: "May" },
+  { sales: 3, leads: 175, month: "Jun" },
+  { sales: 5, leads: 125, month: "Jul" }
 ]
 
-const displayData = testData.map(d => {
-  const moreData = [
-    ...d.coordinates,
-    ...d.coordinates.map(p => ({
-      sales: p.sales + Math.random() * 5,
-      leads: p.leads + Math.random() * 100,
-      x: p.x + 7
-    }))
-  ]
-  return Object.assign(d, { coordinates: moreData })
-})
-
-const axes = [
+const barLineAxes = [
   {
-    key: "yAxis",
-    orient: "left",
-    className: "yscale",
+    key: "leads-axis",
+    orient: "right",
+    className: "leads",
     name: "CountAxis",
-    tickValues: [3, 6, 9],
-    tickFormat: d => `${d}%`
+    ticks: 3,
+    tickValues: [0, 25, 50, 75, 100, 125, 150, 175, 200],
+    tickFormat: d => d,
+    label: "Leads"
   },
   {
-    key: "xAxis",
-    orient: "bottom",
-    className: "xscale",
-    name: "TimeAxis",
-    tickValues: [2, 4, 6, 8, 10, 12],
-    tickFormat: d => `day ${d}`
+    key: "sales-axis",
+    orient: "left",
+    className: "sales",
+    name: "CountAxis",
+    tickValues: [0, 1, 2, 3, 4, 5, 6, 7],
+    tickFormat: d => d,
+    label: "Sales"
   }
 ]
-const axis3 = {
-  key: "yAxis",
-  orient: "right",
-  className: "yscale",
-  name: "CountAxis",
-  ticks: 3,
-  tickFormat: d => d
-}
-const sharedProps = {
-  size: [500, 300],
-  margin: { top: 5, bottom: 25, left: 55, right: 55 }
-}
 
 export default (
   <div style={{ height: "300px" }}>
     <div style={{ position: "absolute" }}>
       <OrdinalFrame
-        {...sharedProps}
+        size={[500, 300]}
         className="bar-line-or"
-        data={displayData[0].coordinates}
-        type={"bar"}
-        renderMode={"sketchy"}
-        oAccessor={d => d.x}
-        rAccessor={d => d.leads}
+        data={testData}
+        type={{
+          type: "point",
+          //In order to draw some marks as bars use customMark that returns rect or circle
+          customMark: d => {
+            if (d.rIndex === 1) {
+              return <circle r={6} fill={"rgba(0, 162, 206)"} />
+            }
+            return (
+              <rect
+                height={d.scaledValue}
+                width={20}
+                x={-10}
+                fill="rgba(179, 51, 29)"
+              />
+            )
+          }
+        }}
+        connectorStyle={{ stroke: "rgba(0, 162, 206)", strokeWidth: 3 }}
+        oAccessor={"month"}
+        //rAccessor order should match the axes order
+        rAccessor={["leads", "sales"]}
         style={() => ({ fill: "#b3331d", opacity: 1, stroke: "white" })}
-        axis={axis3}
-      />
-    </div>
-    <div style={{ position: "absolute" }}>
-      <XYFrame
-        {...sharedProps}
-        className="bar-line-xy"
-        axes={axes}
-        lines={displayData}
-        lineRenderMode={"sketchy"}
-        xAccessor={"x"}
-        yAccessor={"sales"}
-        lineStyle={{ stroke: "#00a2ce", strokeWidth: "3px" }}
-        lineType={{ type: "line", interpolator: curveBasis }}
+        axis={barLineAxes}
+        //only draw connectors for the data represented as circles in the customMark
+        connectorType={d => {
+          return d.rIndex !== 0 && d.rIndex
+        }}
+        pieceHoverAnnotation={true}
+        tooltipContent={d => {
+          //Return to related tooltip value
+          const content =
+            d.rIndex === 0 ? (
+              <div>Leads: {d.leads}</div>
+            ) : (
+              <div>Sales: {d.sales}</div>
+            )
+          return <div className="tooltip-content">{content}</div>
+        }}
+        //Render the pieces under the connectors to make the lines look right
+        renderOrder={["pieces", "connectors"]}
+        oLabel={true}
+        margin={{ top: 10, bottom: 50, left: 60, right: 60 }}
       />
     </div>
   </div>

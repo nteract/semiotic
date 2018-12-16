@@ -302,7 +302,7 @@ class Frame extends React.Component<Props, State> {
                   <g
                     transform={`translate(${margin.left},${margin.top})`}
                     key="visualization-tick-lines"
-                    className="axis axis-tick-lines"
+                    className={"axis axis-tick-lines"}
                     aria-hidden={true}
                   >
                     {axesTickLines}

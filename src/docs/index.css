@@ -339,20 +339,36 @@ circle.frame-hover {
   font-size: 16px;
 }
 
-.bar-line-xy .axis-tick-lines .yscale .tick > path {
+.axis-baseline.leads {
   stroke: rgba(179, 51, 29, 0.5);
 }
 
-.bar-line-xy .axis-labels .yscale {
-  fill: rgba(179, 51, 29, 0.5);
+.tick-line.leads {
+  stroke: rgba(179, 51, 29, 0.5);
 }
 
-.bar-line-or .axis-tick-lines .tick > path {
+.tick-line.sales {
   stroke: rgba(0, 162, 206, 0.5);
 }
 
-.bar-line-or .axis-labels {
-  fill: rgba(0, 162, 206, 0.5);
+.axis-baseline.sales {
+  stroke: rgba(0, 162, 206, 0.5);
+}
+
+.axis-title.sales text {
+  fill: rgba(0, 162, 206);
+}
+
+.axis > .sales .axis-label {
+  fill: rgba(0, 162, 206);
+}
+
+.axis > .leads .axis-label {
+  fill: rgba(179, 51, 29);
+}
+
+.axis-title.leads text {
+  fill: rgba(179, 51, 29);
 }
 
 .st0 {

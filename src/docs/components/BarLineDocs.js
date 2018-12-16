@@ -19,51 +19,85 @@ export default class BarLineDocs extends React.Component {
       name: "Basic",
       demo: BarLineRaw,
       source: `
-      import { XYFrame, OrdinalFrame } from 'semiotic'
-      import { curveBasis } from 'd3-shape'
       
-      const axes = [
-            { key: 'yAxis', orient: 'left', className: 'yscale', name: 'CountAxis', tickValues: [ 2, 6, 10 ], tickFormat: (d) => d + '%' },
-            { key: 'xAxis', orient: 'bottom', className: 'xscale', name: 'TimeAxis', tickValues: [ 2, 4, 6, 8, 10, 12 ], tickFormat: d => 'day ' + d  }
-      ]
+const testData = [
+  { sales: 5, leads: 150, month: "Jan" },
+  { sales: 7, leads: 100, month: "Feb" },
+  { sales: 7, leads: 75, month: "Mar" },
+  { sales: 4, leads: 50, month: "Apr" },
+  { sales: 2, leads: 200, month: "May" },
+  { sales: 3, leads: 175, month: "Jun" },
+  { sales: 5, leads: 125, month: "Jul" }
+]
 
-      const axis3 = { key: 'yAxis', orient: 'right', className: 'yscale', name: 'CountAxis', ticks: 3, tickFormat: (d) => d }
-
-      const sharedProps = {
-            size: [ 500,300 ],
-            margin: { top: 5, bottom: 25, left: 55, right: 55 }
-      }
-
-        <div style={{ height: '300px' }}>
-            <div style={{ position: 'absolute' }}>
-            <OrdinalFrame
-                { ...sharedProps }
-                className='divided-line-or'
-                data={displayData[0].data}
-                type={'bar'}
-                renderMode={"sketchy"}
-                oAccessor={d => d.x}
-                rAccessor={d => d.leads}
-                style={() => ({ fill: '#b3331d', opacity: 1, stroke: 'white' })}
-                axis={axis3}
+//for labels and tick options to make sense, the axes order should match the rAccessor order
+const barLineAxes = [
+  {
+    key: "leads-axis",
+    orient: "right",
+    className: "leads",
+    name: "CountAxis",
+    ticks: 3,
+    tickValues: [0, 25, 50, 75, 100, 125, 150, 175, 200],
+    tickFormat: d => d,
+    label: "Leads"
+  },
+  {
+    key: "sales-axis",
+    orient: "left",
+    className: "sales",
+    name: "CountAxis",
+    tickValues: [0, 1, 2, 3, 4, 5, 6, 7],
+    tickFormat: d => d,
+    label: "Sales"
+  }
+]
+      <OrdinalFrame
+      size={[500, 300]}
+      data={testData}
+      type={{
+        type: "point",
+        //In order to draw some marks as bars use customMark that returns rect or circle
+        customMark: d => {
+          if (d.rIndex === 1) {
+            return <circle r={6} fill={"rgba(0, 162, 206)"} />
+          }
+          return (
+            <rect
+              height={d.scaledValue}
+              width={20}
+              x={-10}
+              fill="rgba(179, 51, 29)"
             />
-            </div>
-            <div style={{ position: 'absolute' }}>
-            <XYFrame
-                { ...sharedProps }
-                className='divided-line-xy'
-                axes={axes}
-                lines={displayData}
-                lineDataAccessor={d => d.data}
-                lineRenderMode={"sketchy"}
-                xAccessor={d => d.x}
-                yAccessor={d => d.sales}
-                lineStyle={() => ({ stroke: '#00a2ce', strokeWidth: '2px' })}
-                lineType={{ type: 'line', interpolator: curveBasis }}
-            />
-            </div>
-            </div>
-      `
+          )
+        }
+      }}
+      connectorStyle={{ stroke: "rgba(0, 162, 206)", strokeWidth: 3 }}
+      oAccessor={"month"}
+      //rAccessor order should match the axes order
+      rAccessor={["leads", "sales"]}
+      style={() => ({ fill: "#b3331d", opacity: 1, stroke: "white" })}
+      axis={barLineAxes}
+      //only draw connectors for the data represented as circles in the customMark
+      connectorType={d => {
+        return d.rIndex !== 0 && d.rIndex
+      }}
+      pieceHoverAnnotation={true}
+      tooltipContent={d => {
+        //Return to related tooltip value
+        const content =
+          d.rIndex === 0 ? (
+            <div>Leads: {d.leads}</div>
+          ) : (
+            <div>Sales: {d.sales}</div>
+          )
+        return <div className="tooltip-content">{content}</div>
+      }}
+      //Render the pieces under the connectors to make the lines look right
+      renderOrder={["pieces", "connectors"]}
+      oLabel={true}
+      margin={{ top: 10, bottom: 50, left: 60, right: 60 }}
+    />`
     })
 
     return (

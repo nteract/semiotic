@@ -339,7 +339,7 @@ class Axis extends React.Component {
 
       axisTitle = (
         <g
-          className="axis-title"
+          className={`axis-title ${className}`}
           transform={`translate(${[
             translation[0] + position[0],
             translation[1] + position[1]
@@ -374,7 +374,7 @@ class Axis extends React.Component {
         {baseline ? (
           <line
             key="baseline"
-            className="axis-baseline"
+            className={`axis-baseline ${className}`}
             stroke="black"
             strokeLinecap="square"
             x1={baselineX}

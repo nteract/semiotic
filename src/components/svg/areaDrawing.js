@@ -92,7 +92,9 @@ export function hexbinning({
     //    binGraphic = "hex",
     bins = 0.05,
     cellPx,
-    binValue = d => d.length
+    binValue = d => d.length,
+    binMax,
+    customMark
   } = areaType
 
   if (baseData.coordinates && !baseData._xyfCoordinates) {
@@ -114,6 +116,7 @@ export function hexbinning({
     .size(size)
 
   let hexMax
+  const allHexes = hexbinner.centers()
 
   data.forEach(hexbinData => {
     hexMax = 0
@@ -124,10 +127,25 @@ export function hexbinning({
       }))
     )
 
+    const centerHash = {}
+
+    hexes.forEach(d => {
+      centerHash[`${parseInt(d.x)}-${parseInt(d.y)}`] = true
+    })
+
+    allHexes.forEach(hexCenter => {
+      if (!centerHash[`${parseInt(hexCenter[0])}-${parseInt(hexCenter[1])}`]) {
+        const newHex = []
+        newHex.x = hexCenter[0]
+        newHex.y = hexCenter[1]
+        hexes.push(newHex)
+      }
+    })
+
     hexMax = Math.max(...hexes.map(d => binValue(d)))
 
-    if (areaType.binMax) {
-      areaType.binMax(hexMax)
+    if (binMax) {
+      binMax(hexMax)
     }
 
     //Option for blank hexe
@@ -157,9 +175,9 @@ export function hexbinning({
       d.binItems = d
       const percent = hexValue / hexMax
       return {
-        customMark: areaType.customMark && (
+        customMark: customMark && (
           <g transform={`translate(${gx},${size[1] - gy})`}>
-            {areaType.customMark({
+            {customMark({
               ...d,
               percent,
               value: hexValue,
@@ -237,7 +255,9 @@ export function heatmapping({
     xBins = areaType.yBins || 0.05,
     yBins = xBins,
     xCellPx = !areaType.xBins && areaType.yCellPx,
-    yCellPx = !areaType.yBins && xCellPx
+    yCellPx = !areaType.yBins && xCellPx,
+    customMark,
+    binMax
   } = areaType
   const xBinPercent = xBins < 1 ? xBins : 1 / xBins
   const yBinPercent = yBins < 1 ? yBins : 1 / yBins
@@ -301,15 +321,15 @@ export function heatmapping({
 
     flatGrid.forEach(d => {
       d.percent = d.value / maxValue
-      d.customMark = areaType.customMark && (
-        <g transform={`translate(${d.gx},${d.gy})`}>{areaType.customMark(d)}</g>
+      d.customMark = customMark && (
+        <g transform={`translate(${d.gx},${d.gy})`}>{customMark(d)}</g>
       )
     })
 
     projectedAreas = [...projectedAreas, ...flatGrid]
   })
-  if (areaType.binMax) {
-    areaType.binMax(maxValue)
+  if (binMax) {
+    binMax(maxValue)
   }
   if (preprocess) {
     return {
