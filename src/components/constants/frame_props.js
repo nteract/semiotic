@@ -185,6 +185,7 @@ const sharedframeproptypes = {
   downloadFields: PropTypes.array, //additional fields aside from x,y to add to the csv
   annotationSettings: PropTypes.object,
   renderKey: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
+  renderOrder: PropTypes.array,
   legend: PropTypes.oneOfType([PropTypes.object, PropTypes.bool])
 }
 

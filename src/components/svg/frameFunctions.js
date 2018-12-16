@@ -17,6 +17,17 @@ import type { MarginType, ProjectionTypes } from "../types/generalTypes"
 
 import type { AxisType } from "../types/annotationTypes"
 
+import { scaleLinear } from "d3-scale"
+
+const extent = inputArray =>
+  inputArray.reduce(
+    (p, c) => {
+      //      return [Math.min(c, p[0]), Math.max(c, p[1])]
+      return [0, Math.max(c, p[1])]
+    },
+    [Infinity, -Infinity]
+  )
+
 type CalculateMarginTypes = {
   margin?: number | Object,
   axes?: Array<Object>,
@@ -209,13 +220,30 @@ export function keyAndObjectifyBarData({
   data,
   renderKey = (d?: Object | number, i: number) => i,
   oAccessor,
-  rAccessor
+  rAccessor: baseRAccessor,
+  multiAxis = false
 }: {
   data: Array<Object | number>,
   renderKey: Function,
   oAccessor: Array<Function> | Function,
-  rAccessor: Array<Function> | Function
+  rAccessor: Array<Function> | Function,
+  multiAxis: boolean
 }): Array<Object> {
+  let rAccessor
+  let multiExtents
+  if (multiAxis && baseRAccessor.length > 1) {
+    multiExtents = baseRAccessor.map(accessor => extent(data.map(accessor)))
+    const rScales = multiExtents.map(ext =>
+      scaleLinear()
+        .domain(ext)
+        .range([0, 1])
+    )
+    rAccessor = rScales.map((scale, i) => d => {
+      return scale(baseRAccessor[i](d))
+    })
+  } else {
+    rAccessor = baseRAccessor
+  }
   const decoratedData = []
   oAccessor.forEach((actualOAccessor, oIndex) => {
     rAccessor.forEach((actualRAccessor, rIndex) => {
@@ -248,7 +276,7 @@ export function keyAndObjectifyBarData({
       })
     })
   })
-  return decoratedData
+  return { allData: decoratedData, multiExtents }
 }
 
 export function adjustedPositionSize({
@@ -349,16 +377,26 @@ export function orFrameConnectionRenderer({
       const nextColumn = data[keys[pieceArrayI + 1]]
       if (nextColumn) {
         const matchArray = nextColumn.map((d, i) =>
-          connectionRule(d.piece.data, i)
+          connectionRule({ ...d.piece, ...d.piece.data }, i)
         )
         pieceArray.forEach((piece, pieceI) => {
-          const thisConnectionPiece = connectionRule(piece.piece.data, pieceI)
-          const matchingPieceIndex = matchArray.indexOf(
-            connectionRule(piece.piece.data, pieceI)
+          const thisConnectionPiece = connectionRule(
+            { ...piece.piece, ...piece.piece.data },
+            pieceI
           )
+          const targetMatch = connectionRule(
+            { ...piece.piece, ...piece.piece.data },
+            pieceI
+          )
+
+          const matchingPieceIndex =
+            targetMatch !== undefined &&
+            targetMatch !== false &&
+            matchArray.indexOf(targetMatch)
           if (
             thisConnectionPiece !== undefined &&
             thisConnectionPiece !== null &&
+            matchingPieceIndex !== false &&
             matchingPieceIndex !== -1
           ) {
             const matchingPiece = nextColumn[matchingPieceIndex]
@@ -535,22 +573,24 @@ export const orFrameAxisGenerator = ({
 
       let axisClassname = d.className || ""
       let tickValues
-      const axisScale = rScaleType.domain(rScale.domain())
+      const axisDomain = d.extentOverride ? d.extentOverride : rScale.domain()
+      const axisScale = rScaleType.domain(axisDomain)
 
       const orient = trueAxis(d.orient, projection)
+      const axisRange = rScale.range()
 
       if (orient === "right") {
-        axisScale.range([rScale.range()[1], rScale.range()[0]])
+        axisScale.range(axisRange.reverse())
         axisClassname += " right y"
       } else if (orient === "left") {
         axisClassname += " left y"
-        axisScale.range([rScale.range()[1], rScale.range()[0]])
+        axisScale.range(axisRange.reverse())
       } else if (orient === "top") {
         axisClassname += " top x"
-        axisScale.range(rScale.range())
+        axisScale.range(axisRange)
       } else if (orient === "bottom") {
         axisClassname += " bottom x"
-        axisScale.range(rScale.range())
+        axisScale.range(axisRange)
       }
 
       if (d.tickValues && Array.isArray(d.tickValues)) {
@@ -571,6 +611,7 @@ export const orFrameAxisGenerator = ({
         tickSize: d.tickSize
       })
       const axisTickLines = axisLines({
+        className: d.className,
         axisParts,
         orient,
         tickLineGenerator: d.tickLineGenerator
