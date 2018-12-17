@@ -124,6 +124,7 @@ describe("XYFrame", () => {
       yAccessor="value"
       disableContext={true}
       showLinePoints={true}
+      showSummaryPoints={true}
       hoverAnnotation={true}
       axes={[{ orient: "left" }, { orient: "bottom" }]}
     />
