@@ -31,6 +31,8 @@ import {
   findIDPiece
 } from "./annotationRules/orframeRules"
 
+import { desaturationLayer } from "./annotationRules/baseRules"
+
 import { findFirstAccessorValue } from "./data/multiAccessorUtils"
 
 import Frame from "./Frame"
@@ -325,10 +327,9 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       oExtent: baseOExtent,
       axis: baseAxis,
       pieceIDAccessor: basePieceIDAccessor,
-      summaryPosition: baseSummaryPosition
+      summaryPosition: baseSummaryPosition,
+      multiAxis
     } = currentProps
-
-    const multiAxis = true
 
     const summaryType = objectifyType(baseSummaryType)
     const pieceType = objectifyType(baseType)
@@ -1449,6 +1450,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       })
     if (this.props.svgAnnotationRules && customAnnotation !== null) {
       return customAnnotation
+    } else if (d.type === "desaturation-layer") {
+      return desaturationLayer({ style: d.style, size: adjustedSize, i, key: d.key })
     } else if (d.type === "ordinal-line") {
       return svgOrdinalLine({ d, i, screenCoordinates, voronoiHover })
     } else if (d.type === "or") {

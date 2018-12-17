@@ -212,12 +212,6 @@ export const svgHighlightRule = ({
           )
         })
         .map((p, q) => {
-          if (React.isValidElement(p.renderElement)) {
-            console.error(
-              "OrdinalFrame highlighting currently only works with built-in pieces and not custom pieces"
-            )
-            return null
-          }
           let styleObject = {
             style: {}
           }
@@ -232,6 +226,13 @@ export const svgHighlightRule = ({
             d.class(p.piece.data, q)) ||
             (d.class && d.class) ||
             ""}`
+
+          if (React.isValidElement(p.renderElement)) {
+            return React.cloneElement(p.renderElement, {
+              ...styleObject,
+              className
+            })
+          }
 
           return (
             <Mark

@@ -28,6 +28,8 @@ import {
   htmlTooltipAnnotation
 } from "./annotationRules/xyframeRules"
 
+import { desaturationLayer } from "./annotationRules/baseRules"
+
 import {
   createPoints,
   createLines,
@@ -1053,7 +1055,9 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       })
     if (this.props.svgAnnotationRules !== undefined && customSVG !== null) {
       return customSVG
-    } else if (d.type === "xy" || d.type === "frame-hover") {
+    } else if (d.type === "desaturation-layer") {
+      return desaturationLayer({ style: d.style, size: adjustedSize, i, key: d.key })
+     } else if (d.type === "xy" || d.type === "frame-hover") {
       return svgXYAnnotation({ d, i, screenCoordinates })
     } else if (d.type === "highlight") {
       return svgHighlight({

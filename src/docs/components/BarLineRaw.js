@@ -38,7 +38,6 @@ export default (
     <div style={{ position: "absolute" }}>
       <OrdinalFrame
         size={[500, 300]}
-        className="bar-line-or"
         data={testData}
         type={{
           type: "point",
@@ -61,22 +60,41 @@ export default (
         oAccessor={"month"}
         //rAccessor order should match the axes order
         rAccessor={["leads", "sales"]}
+        multiAxis={true}
         style={() => ({ fill: "#b3331d", opacity: 1, stroke: "white" })}
         axis={barLineAxes}
         //only draw connectors for the data represented as circles in the customMark
         connectorType={d => {
           return d.rIndex !== 0 && d.rIndex
         }}
-        pieceHoverAnnotation={true}
+        pieceHoverAnnotation={[
+          {
+            type: "highlight",
+            style: {
+              stroke: "red",
+              fill: "none",
+              strokeWidth: 4,
+              strokeOpacity: 0.5
+            }
+          },
+          { type: "frame-hover" }
+        ]}
         tooltipContent={d => {
           //Return to related tooltip value
-          const content =
-            d.rIndex === 0 ? (
-              <div>Leads: {d.leads}</div>
-            ) : (
-              <div>Sales: {d.sales}</div>
-            )
-          return <div className="tooltip-content">{content}</div>
+          const bothValues = [
+            <div style={{ color: "rgba(179, 51, 29)" }} key={"1"}>
+              Leads: {d.leads}
+            </div>,
+            <div style={{ color: "rgba(0, 162, 206)" }} key="2">
+              Sales: {d.sales}
+            </div>
+          ]
+          const content = d.rIndex === 0 ? bothValues : bothValues.reverse()
+          return (
+            <div style={{ fontWeight: 900 }} className="tooltip-content">
+              {content}
+            </div>
+          )
         }}
         //Render the pieces under the connectors to make the lines look right
         renderOrder={["pieces", "connectors"]}
