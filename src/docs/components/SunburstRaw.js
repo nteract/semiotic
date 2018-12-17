@@ -14,10 +14,12 @@ const sunburstSettings = {
   }),
   nodeIDAccessor: "name",
   hoverAnnotation: [
+    { type: "desaturation-layer", style: { fill: "white", fillOpacity: 0.25 } },
     {
       type: "highlight",
       style: { fill: "red", stroke: "orange", strokeWidth: 3 }
-    }
+    },
+    { type: "frame-hover" }
   ],
   networkType: {
     type: "partition",

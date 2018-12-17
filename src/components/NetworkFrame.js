@@ -90,6 +90,8 @@ import {
   svgHighlightRule
 } from "./annotationRules/networkframeRules"
 
+import { desaturationLayer } from "./annotationRules/baseRules"
+
 import { genericFunction } from "./untyped_utilities/functions"
 import pathBounds from "svg-path-bounding-box"
 
@@ -1694,7 +1696,8 @@ class NetworkFrame extends React.Component<Props, State> {
       projectedEdges,
       nodeIDAccessor,
       nodeSizeAccessor,
-      networkFrameRender
+      networkFrameRender,
+      adjustedSize
     } = this.state
     const { svgAnnotationRules } = this.props
 
@@ -1740,6 +1743,8 @@ class NetworkFrame extends React.Component<Props, State> {
         nodeIDAccessor,
         nodeSizeAccessor
       })
+    } else if (d.type === "desaturation-layer") {
+     return desaturationLayer({ style: d.style, size: adjustedSize, i, key: d.key })
     } else if (d.type === "basic-node-label") {
       return (
         <g key={d.key} transform={`translate(${d.x},${d.y})`}>
