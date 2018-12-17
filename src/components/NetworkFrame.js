@@ -256,7 +256,7 @@ function breadthFirstCompontents(baseNodes, hash) {
       const hashNode = hash.get(node)
       if (!hashNode) {
         componentHash["0"].componentNodes.push(node)
-      } else if (hashNode.component === null) {
+      } else if (hashNode.component === -99) {
         if (top === true) {
           componentID++
           componentHash[componentID] = {
