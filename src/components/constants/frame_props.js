@@ -314,7 +314,8 @@ export const ordinalframeproptypes = {
   pieceHoverAnnotation: sharedframeproptypes.hoverAnnotation,
   summaryHoverAnnotation: sharedframeproptypes.hoverAnnotation,
   axis: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-  ordinalAlign: PropTypes.string
+  ordinalAlign: PropTypes.string,
+  multiAxis: PropTypes.bool
 }
 
 export const networkframeproptypes = {

@@ -109,6 +109,17 @@ export const hullEnclosure = ({ points, d, i }) => {
 
   const hullD = `M${bufferedHull.map(d => d.join(",")).join("L")}Z`
 
+  const firstCoord = bufferedHull[0]
+
+  const { nx = firstCoord[0] + dx, ny = firstCoord[1] + dy } = d
+
+  const closestCoordinates = bufferedHull.reduce((p, c) => {
+    if (Math.hypot(nx - p[0], ny - p[1]) > Math.hypot(nx - c[0], ny - c[1])) {
+      p = c
+    }
+    return p
+  }, firstCoord)
+
   const noteData = Object.assign(
     {
       dx: dx,
@@ -119,8 +130,8 @@ export const hullEnclosure = ({ points, d, i }) => {
     d,
     {
       type: AnnotationCalloutCustom,
-      x: bufferedHull[0][0],
-      y: bufferedHull[0][1],
+      x: closestCoordinates[0],
+      y: closestCoordinates[1],
       subject: {
         custom: [
           <path
@@ -132,7 +143,7 @@ export const hullEnclosure = ({ points, d, i }) => {
             strokeLinecap="butt"
             fill="none"
             stroke={color}
-            transform={`translate(${-bufferedHull[0][0]},${-bufferedHull[0][1]})`}
+            transform={`translate(${-closestCoordinates[0]},${-closestCoordinates[1]})`}
           />
         ],
         customID: "hull-annotation"

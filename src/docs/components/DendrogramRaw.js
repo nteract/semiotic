@@ -81,8 +81,16 @@ export default ({
         ],
         label: "Scales",
         padding: 5,
-        dy: -150,
-        nx: 660
+        dy: 150,
+        dx: 30
+      },
+      {
+        type: annotation,
+        ids: ["html", "json"],
+        label: "xhr stuff",
+        padding: 5,
+        dy: -100,
+        dx: 0
       }
     ],
     margin: 50,
