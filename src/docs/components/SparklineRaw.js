@@ -247,7 +247,7 @@ export default (type = "stackedarea") => {
           }}
           edgeStyle={{ stroke: "#007190" }}
           networkType={{ type: "dendrogram" }}
-          margin={4}
+          margin={1}
           nodeStyle={() => ({
             fill: "#00a2ce",
             stroke: "black"
