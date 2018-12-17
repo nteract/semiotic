@@ -19,7 +19,7 @@ export default class Dendrogram extends React.Component {
     this.state = {
       type: "tree",
       projection: "vertical",
-      annotation: "enclose-rect",
+      annotation: "enclose-hull",
       filter: "none"
     }
   }
