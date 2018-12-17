@@ -89,8 +89,8 @@ export default ({
         ids: ["html", "json"],
         label: "xhr stuff",
         padding: 5,
-        dy: 20,
-        dx: 50
+        dy: -100,
+        dx: 0
       }
     ],
     margin: 50,
