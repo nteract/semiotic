@@ -226,9 +226,9 @@ export function keyAndObjectifyBarData({
   data: Array<Object | number>,
   renderKey: Function,
   oAccessor: Array<Function> | Function,
-  rAccessor: Array<Function> | Function,
-  multiAxis: boolean
-}): Array<Object> {
+  rAccessor: Array<Function>,
+  multiAxis?: boolean
+}): { allData: Array<Object>, multiExtents?: Array<Array<number>> } {
   let rAccessor
   let multiExtents
   if (multiAxis && baseRAccessor.length > 1) {

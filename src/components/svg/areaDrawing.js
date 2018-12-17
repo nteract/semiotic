@@ -37,9 +37,12 @@ export function contouring({ areaType, data, finalXExtent, finalYExtent }) {
       contourProjectedAreas = [contourProjectedAreas[0]]
     }
 
+    const max = Math.max(...contourProjectedAreas.map(d => d.value))
+
     contourProjectedAreas.forEach(area => {
       area.parentArea = contourData
       area.bounds = []
+      area.percent = area.value / max
       area.coordinates.forEach(poly => {
         poly.forEach((subpoly, i) => {
           poly[i] = subpoly.map(coordpair => {

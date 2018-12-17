@@ -196,7 +196,8 @@ export type OrdinalFrameProps = {
   summaryPosition?: Function,
   additionalDefs?: Node,
   tooltipContent?: Function,
-  renderOrder?: $ReadOnlyArray<"pieces" | "summaries" | "connectors">
+  renderOrder?: $ReadOnlyArray<"pieces" | "summaries" | "connectors">,
+  multiAxis?: boolean
 }
 
 type State = {
@@ -371,7 +372,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
     const arrayWrappedAxis =
       baseAxis && !Array.isArray(baseAxis) ? [baseAxis] : baseAxis
 
-    if (multiExtents) {
+    if (multiExtents && arrayWrappedAxis) {
       arrayWrappedAxis.forEach((d, i) => {
         d.extentOverride = multiExtents[i]
       })

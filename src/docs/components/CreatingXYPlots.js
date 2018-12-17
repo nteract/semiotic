@@ -18,7 +18,7 @@ const thresholds = scaleThreshold()
 
 for (let x = 1; x < 100; x++) {
   pointTestData.push({
-    x: nRando() * 2 - 2000,
+    x: nRando() * 2 - 3000,
     y: 2000 + nRando(),
     color: "#00a2ce"
   })
@@ -330,7 +330,7 @@ export default class CreatingXYPlots extends React.Component {
             areaType="contour"
             xAccessor="x"
             yAccessor="y"
-            areaStyle={{ fill: "#b3331d", fillOpacity: 0.2 }}
+            areaStyle={d => ({ fill: thresholds(d.percent), stroke: "black" })}
           />
         </div>
       ),
@@ -350,18 +350,18 @@ export default class CreatingXYPlots extends React.Component {
           <p>
             If you want to layer the area visualization with points for your
             readers, you can add the points separately (like the scatterplot) or
-            use the showLinePoints property (it was named that because it
+            use the showSummaryPoints property (it was named that because it
             started out for line charts, but the same principle applies to area
             charts) that when set to true will draw the points. You can pair
             this with hoverAnnotation for interactivity.
           </p>
           <XYFrame
             areas={[{ coordinates: pointTestData }]}
-            showLinePoints={true}
-            areaType="contour"
+            showSummaryPoints={true}
+            areaType={{ type: "contour", thresholds: 5 }}
             xAccessor="x"
             yAccessor="y"
-            areaStyle={{ fill: "#b3331d", fillOpacity: 0.2 }}
+            areaStyle={d => ({ fill: thresholds(d.percent), stroke: "black" })}
             pointStyle={{ fill: "none", stroke: "black", strokeOpacity: 0.5 }}
             hoverAnnotation={true}
           />
@@ -369,7 +369,7 @@ export default class CreatingXYPlots extends React.Component {
       ),
       source: `<XYFrame
       areas={[{ coordinates: pointTestData }]}
-      showLinePoints={true}
+      showSummaryPoints={true}
       areaType="contour"
       xAccessor="x"
       yAccessor="y"
