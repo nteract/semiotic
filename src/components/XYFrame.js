@@ -378,13 +378,13 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         Array.isArray(newAreas) &&
         !!areaData.find(p => newAreas.indexOf(p) === -1))
 
-        const pointChange =
-        pointData !== newPoints ||
-        (Array.isArray(pointData) &&
-          Array.isArray(newPoints) &&
-          !!pointData.find(p => newPoints.indexOf(p) === -1))
-  
-        if (
+    const pointChange =
+      pointData !== newPoints ||
+      (Array.isArray(pointData) &&
+        Array.isArray(newPoints) &&
+        !!pointData.find(p => newPoints.indexOf(p) === -1))
+
+    if (
       (oldDataVersion && oldDataVersion !== newDataVersion) ||
       !this.state.fullDataset
     ) {
@@ -405,7 +405,6 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         pointChange ||
         extentChange ||
         !!xyFrameDataProps.find(d => this.props[d] !== nextProps[d])
-
       this.calculateXYFrame(nextProps, dataChanged)
     }
   }
@@ -518,18 +517,18 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         !areas || (Array.isArray(areas) && areas.length === 0)
           ? undefined
           : !Array.isArray(areas)
-            ? [areas]
-            : !areaDataAccessor && !areas[0].coordinates
-              ? [{ coordinates: areas }]
-              : areas,
+          ? [areas]
+          : !areaDataAccessor && !areas[0].coordinates
+          ? [{ coordinates: areas }]
+          : areas,
       lines:
         !lines || (Array.isArray(lines) && lines.length === 0)
           ? undefined
           : !Array.isArray(lines)
-            ? [lines]
-            : !lineDataAccessor && !lines[0].coordinates
-              ? [{ coordinates: lines }]
-              : lines,
+          ? [lines]
+          : !lineDataAccessor && !lines[0].coordinates
+          ? [{ coordinates: lines }]
+          : lines,
       title:
         typeof title === "object" &&
         !React.isValidElement(title) &&
@@ -544,11 +543,11 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       annotatedSettings.lineType.type === "line" &&
       !annotatedSettings.lineType.y1 &&
       annotatedSettings.lineType.simpleLine !== false
-    
-      if (annotatedSettings.lineType.type === "area") {
-        // $FlowFixMe
-        annotatedSettings.lineType.y1 = () => 0
-      }
+
+    if (annotatedSettings.lineType.type === "area") {
+      // $FlowFixMe
+      annotatedSettings.lineType.y1 = () => 0
+    }
 
     const margin = calculateMargin({
       margin: currentProps.margin,
@@ -582,6 +581,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       (currentProps.dataVersion &&
         currentProps.dataVersion !== this.state.dataVersion)
     ) {
+      //This will always fire at this point because xExtent/yExtent are just defined up there so revisit this logic
       if (
         !xExtent ||
         !yExtent ||
@@ -655,8 +655,14 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       }
     }
 
-    xExtent = xExtentSettings.extent || xExtent
-    yExtent = yExtentSettings.extent || yExtent
+    xExtent =
+      xExtentSettings.extent && xExtentSettings.extent.length === 2
+        ? xExtentSettings.extent
+        : xExtent
+    yExtent =
+      yExtentSettings.extent && yExtentSettings.extent.length === 2
+        ? yExtentSettings.extent
+        : yExtent
 
     const canvasDrawing = []
 
@@ -1051,13 +1057,18 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         areas,
         points,
         lines,
-        voronoiHover        
+        voronoiHover
       })
     if (this.props.svgAnnotationRules !== undefined && customSVG !== null) {
       return customSVG
     } else if (d.type === "desaturation-layer") {
-      return desaturationLayer({ style: d.style, size: adjustedSize, i, key: d.key })
-     } else if (d.type === "xy" || d.type === "frame-hover") {
+      return desaturationLayer({
+        style: d.style,
+        size: adjustedSize,
+        i,
+        key: d.key
+      })
+    } else if (d.type === "xy" || d.type === "frame-hover") {
       return svgXYAnnotation({ d, i, screenCoordinates })
     } else if (d.type === "highlight") {
       return svgHighlight({
