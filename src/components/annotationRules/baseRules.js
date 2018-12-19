@@ -8,7 +8,7 @@ import { polygonHull } from "d3-polygon"
 import Offset from "polygon-offset"
 
 export const circleEnclosure = ({ d, i, circle }) => {
-  const { radiusPadding = 2, label } = d
+  const { padding = 2, radiusPadding = padding, label } = d
 
   const noteData = Object.assign(
     {
@@ -95,7 +95,8 @@ export const hullEnclosure = ({ points, d, i }) => {
     dx = -25,
     dy = -25,
     label,
-    buffer = 10,
+    padding = 10,
+    buffer = padding,
     strokeWidth = 10
   } = d
 
