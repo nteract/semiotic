@@ -323,11 +323,6 @@ g.resize > rect {
   margin-left: 5px;
 }
 
-.handle {
-  fill: rgba(0, 0, 0, 0.5);
-  stroke: rgba(255, 255, 255, 0.5);
-}
-
 circle.frame-hover {
   fill: none;
   stroke: gray;

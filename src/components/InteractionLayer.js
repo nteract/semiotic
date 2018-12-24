@@ -214,8 +214,8 @@ class InteractionLayer extends React.Component<Props, State> {
             [xScale.invert(size[0]), yScale.invert(size[1])]
           ]
         : actualBrush === "xBrush"
-          ? [xScale.invert(0), xScale.invert(size[0])]
-          : [yScale.invert(0), yScale.invert(size[1])]
+        ? [xScale.invert(0), xScale.invert(size[0])]
+        : [yScale.invert(0), yScale.invert(size[1])]
     } = interaction
 
     if (extent.indexOf && extent.indexOf(undefined) !== -1) {
@@ -351,7 +351,8 @@ class InteractionLayer extends React.Component<Props, State> {
       this.props.overlay !== nextProps.overlay ||
       nextProps.points !== this.props.points ||
       this.props.xScale !== nextProps.xScale ||
-      this.props.yScale !== nextProps.yScale
+      this.props.yScale !== nextProps.yScale ||
+      this.props.hoverAnnotation !== nextProps.hoverAnnotation
     ) {
       this.setState({ overlayRegions: this.calculateOverlay(nextProps) })
     }
@@ -370,7 +371,8 @@ class InteractionLayer extends React.Component<Props, State> {
       overlay,
       interactionOverflow = { top: 0, bottom: 0, left: 0, right: 0 },
       customClickBehavior,
-      customDoubleClickBehavior
+      customDoubleClickBehavior,
+      hoverAnnotation
     } = props
 
     const pointerStyle =
@@ -378,7 +380,7 @@ class InteractionLayer extends React.Component<Props, State> {
         ? { cursor: "pointer" }
         : {}
 
-    if (points && props.hoverAnnotation && !overlay) {
+    if (points && hoverAnnotation && !overlay) {
       const voronoiDataset = []
       const voronoiUniqueHash = {}
 

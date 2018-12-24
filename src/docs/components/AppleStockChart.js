@@ -11,13 +11,21 @@ components.push({
 })
 
 export default class AppleStockChart extends React.Component {
+  constructor(props) {
+    super(props)
+
+    this.state = {
+      editMode: true,
+      overridePosition: {}
+    }
+  }
   render() {
     const buttons = []
 
     const examples = []
     examples.push({
       name: "Basic",
-      demo: AppleStockChartRaw,
+      demo: AppleStockChartRaw(this.state.editMode),
       source: `
 import { XYFrame, DividedLine } from "../../components"
 import { data } from '../sampledata/apple_stock'
@@ -91,6 +99,92 @@ const customTooltip = d => <div className="tooltip-content">
       `
     })
 
+    examples.push({
+      name: "Editable Annotations",
+      demo: (
+        <div>
+          <p>
+            react-annotation already has built in functionality for adjusting
+            the annotations it creates. You can activate the note editing
+            control points by setting `editMode: true` on any of your
+            annotations. With that in place, you can also set the drag,
+            dragStart or dragEnd properties of the annotation to pass the new
+            annotation position data to whatever you're using to manage state.
+            In this simple example, I just override the dx/dy based on the new
+            values but you could pass this back to a central annotation store or
+            other method of saving changes.
+          </p>
+          <button
+            style={{ color: "black" }}
+            onClick={() => this.setState({ editMode: !this.state.editMode })}
+          >
+            {this.state.editMode ? "Turn off editMode" : "Turn on editMode"}
+          </button>
+          {AppleStockChartRaw(
+            this.state.editMode,
+            this.state.overridePosition,
+            d => {
+              this.setState({
+                overridePosition: {
+                  ...this.state.overridePosition,
+                  [d.noteIndex]: {
+                    dx: d.updatedSettings.dx,
+                    dy: d.updatedSettings.dy
+                  }
+                }
+              })
+            }
+          )}
+        </div>
+      ),
+      source: `
+constructor(props) {
+  super(props)
+
+  this.state = {
+    editMode: true,
+    overridePosition: {}
+  }
+}
+
+render() {
+  const annotations = [{
+    type: "x",
+    date: "7/9/1997",
+    note: { label: "Steve Jobs Returns", align: "middle" },
+    color: "rgb(0, 162, 206)",
+    dy: -10,
+    dx: 0,
+    connector: { end: "none" },
+    editMode,
+    onDragEnd: annotationInfo => {
+      annotationInfo => {
+        this.setState({
+          overridePosition: {
+            ...this.state.overridePosition,
+            [annotationInfo.noteIndex]: {
+              dx: annotationInfo.updatedSettings.dx,
+              dy: annotationInfo.updatedSettings.dy
+            }
+          }
+        })
+      }
+
+    }  
+  }]
+
+  annotations.forEach((d, i) => {
+    if (this.state.overridePosition[i]) {
+      d.dx = overridePosition[i].dx
+      d.dy = overridePosition[i].dy
+    }
+  })
+
+  return <XYFrame
+  {...as above example}
+/>
+}`
+    })
     return (
       <DocumentComponent
         name="Stock Chart with Annotations and Divided Line"
@@ -108,12 +202,17 @@ const customTooltip = d => <div className="tooltip-content">
             rel="noopener noreferrer"
           >
             Susie Lu's Apple stock chart
-          </a>.
+          </a>
+          .
         </p>
         <p>
           It also uses a custom x scale using xScaleType to pass a scale built
           with D3's scaleTime, as well as tooltip processing rules using
           tooltipContent.
+        </p>
+        <p>
+          (If you want to see how to allow your users to edit annotations, check
+          out the second example below)
         </p>
       </DocumentComponent>
     )

@@ -6,6 +6,9 @@ type Props = {
   noteData: {
     eventListeners: Object,
     events: Object,
+    onDragEnd?: Function,
+    onDragStart?: Function,
+    onDrag?: Function,
     type: *,
     screenCoordinates: Array<Array<number>>,
     // What is this type supposed to be? It gets used only in a boolean context
@@ -20,15 +23,37 @@ type Props = {
   }
 }
 
+const interactivityFns = ["onDragEnd", "onDragStart", "onDrag"]
+
 class SemioticAnnotation extends React.Component<Props, null> {
   render() {
-    const { noteData } = this.props
-    const { screenCoordinates } = noteData
+    const { noteData: baseNoteData } = this.props
+    const { screenCoordinates } = baseNoteData
+
+    const noteData = { ...baseNoteData }
+
+    interactivityFns.forEach(d => {
+      if (baseNoteData[d]) {
+        delete noteData[d]
+        const originalFn = baseNoteData[d]
+        noteData[d] = updatedSettingsFromRA => {
+          originalFn({
+            originalSettings: baseNoteData,
+            updatedSettings: updatedSettingsFromRA,
+            noteIndex: baseNoteData.i
+          })
+        }
+      }
+    })
 
     const Label =
       typeof noteData.type === "function" ? noteData.type : AnnotationLabel
 
     const eventListeners = noteData.eventListeners || noteData.events || {}
+    const finalStyle = {}
+    if (noteData.events || noteData.eventListeners || noteData.editMode) {
+      finalStyle.pointerEvents = "all"
+    }
 
     if (noteData.coordinates && screenCoordinates) {
       //Multisubject annotation
@@ -42,14 +67,8 @@ class SemioticAnnotation extends React.Component<Props, null> {
           nx: setNX,
           ny: setNY
         })
-
         return <Label key={`multi-annotation-${i}`} {...subjectNote} />
       })
-
-      const finalStyle = {}
-      if (noteData.events || noteData.eventListeners) {
-        finalStyle.pointerEvents = "all"
-      }
 
       return (
         <g {...eventListeners} style={finalStyle}>
@@ -60,8 +79,8 @@ class SemioticAnnotation extends React.Component<Props, null> {
 
     const finalAnnotation = <Label events={eventListeners} {...noteData} />
 
-    if (noteData.events) {
-      return <g style={{ pointerEvents: "all" }}>{finalAnnotation}</g>
+    if (finalStyle.pointerEvents) {
+      return <g style={finalStyle}>{finalAnnotation}</g>
     }
 
     return finalAnnotation

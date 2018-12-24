@@ -26,7 +26,8 @@ export const circleEnclosure = ({ d, i, circle }) => {
       subject: {
         radius: circle.r,
         radiusPadding
-      }
+      },
+      i
     }
   )
 
