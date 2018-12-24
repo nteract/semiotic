@@ -181,7 +181,7 @@ export default class NetworkFrameDocs extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      annotations: "off",
+      annotations: "on",
       networkType: "force",
       edge: "none",
       nodeSize: "degree",
@@ -233,11 +233,11 @@ export default class NetworkFrameDocs extends React.Component {
     const annotations = [
       { type: "node", dy: 25, id: "Miles", label: "Smart guy" },
       {
-        type: "enclose",
+        type: "enclose-hull",
         dy: -70,
         dx: 75,
         ids: ["Tony", "Fil", "Adam"],
-        label: "Gang"
+        label: "Annotations are easy!"
       }
     ]
     const buttons = [

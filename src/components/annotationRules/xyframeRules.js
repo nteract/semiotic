@@ -213,7 +213,8 @@ export const basicReactAnnotation = ({ screenCoordinates, d, i }) => {
     d,
     {
       type: d.type,
-      screenCoordinates
+      screenCoordinates,
+      i
     }
   )
 
@@ -240,7 +241,8 @@ export const svgXAnnotation = ({ screenCoordinates, d, i, adjustedSize }) => {
         x: screenCoordinates[0],
         y1: 0,
         y2: adjustedSize[1]
-      }
+      },
+      i
     }
   )
   return <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
@@ -271,7 +273,8 @@ export const svgYAnnotation = ({
         y: screenCoordinates[1],
         x1: 0,
         x2: adjustedSize[0] + adjustedPosition[0]
-      }
+      },
+      i
     }
   )
   return <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
@@ -311,7 +314,8 @@ export const svgBoundsAnnotation = ({
       subject: {
         width: Math.abs(x1Position - x0Position),
         height: Math.abs(y0Position - y1Position)
-      }
+      },
+      i
     }
   )
   return <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
@@ -436,12 +440,12 @@ export const svgRectEncloseAnnotation = ({ d, i, screenCoordinates }) => {
   return rectangleEnclosure({ bboxNodes, d, i })
 }
 
-export const svgEncloseAnnotation = ({ screenCoordinates, d }) => {
+export const svgEncloseAnnotation = ({ screenCoordinates, d, i }) => {
   const circle = packEnclose(
     screenCoordinates.map(p => ({ x: p[0], y: p[1], r: 2 }))
   )
 
-  return circleEnclosure({ d, circle })
+  return circleEnclosure({ d, circle, i })
 }
 
 export const svgHullEncloseAnnotation = ({ screenCoordinates, d, i }) => {

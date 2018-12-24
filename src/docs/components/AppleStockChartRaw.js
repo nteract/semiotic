@@ -2,7 +2,6 @@ import React from "react"
 import { XYFrame, DividedLine } from "../../components"
 import { data } from "../sampledata/apple_stock"
 import { scaleTime } from "d3-scale"
-import ProcessViz from "./ProcessViz"
 
 const chartAxes = [
   { orient: "left", tickFormat: d => `$${d}` },
@@ -26,73 +25,6 @@ const thresholdLine = ({ d, i, xScale, yScale }) => {
   )
 }
 
-const annotations = [
-  {
-    className: "dot-com-bubble",
-    type: "bounds",
-    bounds: [{ date: new Date("1/2/1997") }, { date: new Date("1/2/2001") }],
-    label: "The dot-com bubble",
-    dx: 350
-  },
-  {
-    type: "x",
-    date: "7/9/1997",
-    note: { label: "Steve Jobs Returns", align: "middle" },
-    color: "rgb(0, 162, 206)",
-    dy: -10,
-    dx: 0,
-    connector: { end: "none" }
-  },
-  {
-    type: "x",
-    date: "8/15/1998",
-    note: { label: "iMac Release", align: "middle" },
-    color: "rgb(0, 162, 206)",
-    dy: -10,
-    dx: 0,
-    connector: { end: "none" },
-    events: {
-      onMouseEnter: (a, b, c) =>
-        console.info("custom event onMouseEnter", a, b, c)
-    }
-  },
-  {
-    type: "x",
-    date: "10/23/2001",
-    note: { label: "iPod Release", align: "middle" },
-    color: "rgb(0, 162, 206)",
-    dy: -10,
-    dx: 0,
-    connector: { end: "none" }
-  },
-  {
-    type: "y",
-    close: 100,
-    label: "Over $100",
-    color: "rgb(182, 167, 86)",
-    x: 350,
-    dx: -15
-  },
-  {
-    type: "enclose",
-    label: "Stock Split",
-    dy: 0,
-    dx: 50,
-    color: "rgba(179, 51, 29, 0.75)",
-    connector: { end: "none" },
-    coordinates: [
-      {
-        date: "6/21/2000",
-        close: 55.62
-      },
-      {
-        date: "6/20/2000",
-        close: 101.25
-      }
-    ]
-  }
-]
-
 const customTooltip = d => (
   <div className="tooltip-content">
     <p>
@@ -110,9 +42,7 @@ const appleChart = {
   lines: [{ label: "Apple Stock", coordinates: data }],
   customLineMark: thresholdLine,
   axes: chartAxes,
-  annotations: annotations,
   margin: { top: 50, left: 40, right: 10, bottom: 40 },
-  hoverAnnotation: true,
   tooltipContent: customTooltip,
   additionalDefs: (
     <linearGradient id="bubbleGradient">
@@ -122,9 +52,104 @@ const appleChart = {
   )
 }
 
-export default (
-  <div>
-    <ProcessViz frameSettings={appleChart} frameType="XYFrame" />
-    <XYFrame {...appleChart} />
-  </div>
-)
+export default (editMode, overridePosition, setNewPosition) => {
+  const onDragEnd = d => {
+    setNewPosition(d)
+  }
+
+  const annotations = [
+    {
+      className: "dot-com-bubble",
+      type: "bounds",
+      bounds: [{ date: new Date("1/2/1997") }, { date: new Date("1/2/2001") }],
+      label: "The dot-com bubble",
+      dx: 350
+    },
+    {
+      type: "x",
+      date: "7/9/1997",
+      note: { label: "Steve Jobs Returns", align: "middle" },
+      color: "rgb(0, 162, 206)",
+      dy: -10,
+      dx: 0,
+      connector: { end: "none" },
+      editMode,
+      onDragEnd
+    },
+    {
+      type: "x",
+      date: "8/15/1998",
+      note: { label: "iMac Release", align: "middle" },
+      color: "rgb(0, 162, 206)",
+      dy: -10,
+      dx: 0,
+      connector: { end: "none" },
+      /*      events: {
+        onMouseEnter: (a, b, c) =>
+          console.info("custom event onMouseEnter", a, b, c)
+      },*/
+      editMode,
+      onDragEnd
+    },
+    {
+      type: "x",
+      date: "10/23/2001",
+      note: { label: "iPod Release", align: "middle" },
+      color: "rgb(0, 162, 206)",
+      dy: -10,
+      dx: 0,
+      connector: { end: "none" },
+      editMode,
+      onDragEnd
+    },
+    {
+      type: "y",
+      close: 100,
+      label: "Over $100",
+      color: "rgb(182, 167, 86)",
+      x: 350,
+      dx: -15,
+      editMode,
+      onDragEnd
+    },
+    {
+      type: "enclose",
+      label: "Stock Split",
+      dy: 0,
+      dx: 50,
+      color: "rgba(179, 51, 29, 0.75)",
+      connector: { end: "none" },
+      coordinates: [
+        {
+          date: "6/21/2000",
+          close: 55.62
+        },
+        {
+          date: "6/20/2000",
+          close: 101.25
+        }
+      ],
+      editMode,
+      onDragEnd
+    }
+  ]
+
+  if (overridePosition) {
+    annotations.forEach((d, i) => {
+      if (overridePosition[i]) {
+        d.dx = overridePosition[i].dx
+        d.dy = overridePosition[i].dy
+      }
+    })
+  }
+
+  return (
+    <div>
+      <XYFrame
+        {...appleChart}
+        annotations={annotations}
+        hoverAnnotation={!editMode}
+      />
+    </div>
+  )
+}

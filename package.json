@@ -158,7 +158,7 @@
     "polygon-offset": "0.3.1",
     "promise": "8.0.1",
     "prop-types": "15.6.0",
-    "react-annotation": "2.0.0",
+    "react-annotation": "2.1.5",
     "roughjs-es5": "0.1.0",
     "semiotic-mark": "0.3.1",
     "svg-path-bounding-box": "1.0.4"
