@@ -19,7 +19,8 @@ type Props = {
     dx: number,
     dy: number,
     // TODO: What should this be typed as?
-    note: Object
+    note: Object,
+    i: number
   }
 }
 
