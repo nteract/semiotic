@@ -1,25 +1,25 @@
-import React from "react"
-import Sidebar from "./Sidebar"
+import React from "react";
+import Sidebar from "./Sidebar";
 
-import MarkdownPage from "./MarkdownPage"
-import APIXYFrame from "./api/XYFrame"
-import CreateALineChart from "./guides/CreateALineChart"
-import CreateAnAreaChart from "./guides/CreateAnAreaChart"
-import CreateAScatterplot from "./guides/CreateAScatterplot"
-import CreateXYSummaries from "./guides/CreateXYSummaries"
-import CreateABarChart from "./guides/CreateABarChart"
-import CreateAPieChart from "./guides/CreateAPieChart"
-import CreateSparklines from "./guides/CreateSparklines"
+import MarkdownPage from "./MarkdownPage";
+import APIXYFrame from "./api/XYFrame";
+import CreateALineChart from "./guides/CreateALineChart";
+import CreateAnAreaChart from "./guides/CreateAnAreaChart";
+import CreateAScatterplot from "./guides/CreateAScatterplot";
+import CreateXYSummaries from "./guides/CreateXYSummaries";
+import CreateABarChart from "./guides/CreateABarChart";
+import CreateAPieChart from "./guides/CreateAPieChart";
+import CreateSparklines from "./guides/CreateSparklines";
 
-import CandlestickChart from "./examples/CandlestickChart"
-import WaterfallChart from "./examples/WaterfallChart"
-import HomerunMap from "./examples/HomerunMap"
-import MarimekkoChart from "./examples/MarimekkoChart"
-import DotPlot from "./examples/DotPlot"
-import RidgelinePlot from "./examples/RidgelinePlot"
-import Timeline from "./examples/Timeline"
+import CandlestickChart from "./examples/CandlestickChart";
+import WaterfallChart from "./examples/WaterfallChart";
+import HomerunMap from "./examples/HomerunMap";
+import MarimekkoChart from "./examples/MarimekkoChart";
+import DotPlot from "./examples/DotPlot";
+import RidgelinePlot from "./examples/RidgelinePlot";
+import Timeline from "./examples/Timeline";
 
-const ROOT = process.env.PUBLIC_URL
+const ROOT = process.env.PUBLIC_URL;
 
 const PAGES = [
   {
@@ -99,11 +99,18 @@ const PAGES = [
         name: "Creating Dendrograms"
       },
       {
+        name: "Creating Sunbursts"
+      },
+      {
         name: "All Frames",
         className: "sub-header"
       },
+
       {
         name: "Tooltips"
+      },
+      {
+        name: "Annotations"
       },
       {
         name: "Cross-Highlighting"
@@ -256,7 +263,7 @@ const PAGES = [
         url: "facetcontroller"
       },
       {
-        name: "Advanced Sub-Components",
+        name: "Sub-Components",
         className: "sub-header"
       },
       {
@@ -277,37 +284,37 @@ const PAGES = [
       }
     ]
   }
-]
+];
 
 export default function({ hash }) {
-  const view = hash.split(/#|\//g).filter(d => d)
+  const view = hash.split(/#|\//g).filter(d => d);
 
   let View,
     viewProps = {},
     page,
-    subpage
+    subpage;
 
   //router logic
   if (view[0]) {
-    page = PAGES.find(d => d.url === view[0])
+    page = PAGES.find(d => d.url === view[0]);
     if (page && view[1]) {
-      subpage = page.children.find(d => d.url === view[1])
+      subpage = page.children.find(d => d.url === view[1]);
       if (subpage) {
-        View = subpage.component
-        if (subpage.props) viewProps = subpage.props
+        View = subpage.component;
+        if (subpage.props) viewProps = subpage.props;
       } else {
-        View = page.component
-        if (page.props) viewProps = page.props
+        View = page.component;
+        if (page.props) viewProps = page.props;
       }
     } else if (page) {
-      View = page.component
-      if (page.props) viewProps = page.props
+      View = page.component;
+      if (page.props) viewProps = page.props;
     }
   } else {
-    page = PAGES[0]
+    page = PAGES[0];
 
-    View = page.component
-    viewProps = page.props
+    View = page.component;
+    viewProps = page.props;
   }
 
   return (
@@ -336,5 +343,5 @@ export default function({ hash }) {
         </div>
       </div>
     </div>
-  )
+  );
 }

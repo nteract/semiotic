@@ -3,6 +3,7 @@ body {
   padding: 0;
   font-family: "Poppins", sans-serif;
   font-size: 15px;
+  overflow-y: hidden;
 }
 
 :root {
@@ -19,6 +20,8 @@ body {
   --scale-8: #533f82;
   --scale-9: #365350;
   --scale-10: #a19a11;
+
+  --sidebar: 240px;
 }
 
 p code {
@@ -27,18 +30,18 @@ p code {
 
 header {
   width: calc(100% - 90px);
-  /* height: 100px; */
   display: flex;
   padding: 30px 30px 30px 60px;
   background: white;
   z-index: 300;
-  position: fixed;
   border-bottom: 1px solid var(--bg-color);
 }
 
 header .logo,
 .sidebar {
-  width: 240px;
+  max-width: 240px;
+  min-width: 15%;
+
   padding-right: 30px;
 }
 
@@ -184,10 +187,6 @@ button:focus:after {
   cursor: pointer;
 }
 
-.body {
-  padding-top: 101px;
-}
-
 .flex {
   display: flex;
 }
@@ -199,20 +198,21 @@ button:focus:after {
 .sidebar,
 .container {
   height: calc(100vh - 140px);
+  overflow-y: scroll;
 }
 
 .sidebar {
   padding: 30px 30px 30px 60px;
   overflow-y: auto;
-  position: fixed;
+  z-index: 1000;
+  background: white;
   border-right: 1px solid var(--bg-color);
 }
 
 .container {
-  /* background: var(--bg-color); */
-  width: calc(100% - 370px);
   padding: 20px;
-  margin-left: 330px;
+  position: relative;
+  padding-left: 50px;
 }
 
 .bold {
