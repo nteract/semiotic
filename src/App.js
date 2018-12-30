@@ -10,6 +10,8 @@ import CreateXYSummaries from "./guides/CreateXYSummaries";
 import CreateABarChart from "./guides/CreateABarChart";
 import CreateAPieChart from "./guides/CreateAPieChart";
 import CreateSparklines from "./guides/CreateSparklines";
+import Tooltips from "./guides/Tooltips";
+import Annotations from "./guides/Annotations";
 
 import CandlestickChart from "./examples/CandlestickChart";
 import WaterfallChart from "./examples/WaterfallChart";
@@ -112,10 +114,14 @@ const PAGES = [
       },
 
       {
-        name: "Tooltips"
+        name: "Tooltips",
+        url: "tooltips",
+        component: Tooltips
       },
       {
-        name: "Annotations"
+        name: "Annotations",
+        url: "annotations",
+        component: Annotations
       },
       {
         name: "Cross-Highlighting"
@@ -250,7 +256,7 @@ const PAGES = [
         url: "responsiveframe",
         component: MarkdownPage,
         props: {
-          filename: "responsiveframe"
+          filename: "responsiveframes"
         }
       },
       {
@@ -258,7 +264,7 @@ const PAGES = [
         url: "sparkFrame",
         component: MarkdownPage,
         props: {
-          filename: "sparkframe"
+          filename: "sparkframes"
         }
       },
       { name: "separator" },

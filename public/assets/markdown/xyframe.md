@@ -231,10 +231,12 @@ If _baseMarkProps_ is specified, the object sent will be spread to all marks tha
 An _array_ of arrays or objects representing individual points on a chart. If you want to show points on a line or area chart, use the [`showLinePoints`](#showlinepoints-boolean) property.
 
 ```jsx
-var points = [[1, 2], [3, 4], [5, 8], [7, 16], [9, 32], [11, 64], [13, 128]]
+var points = [[1, 2], [3, 4], [5, 8], [7, 16], [9, 32], [11, 64], [13, 128]];
 
 function MyScatterPlot() {
-  return <XYFrame xAccessor={d => d[0]} yAccessor={d => d[1]} points={points} />
+  return (
+    <XYFrame xAccessor={d => d[0]} yAccessor={d => d[1]} points={points} />
+  );
 }
 ```
 
@@ -298,10 +300,10 @@ If _customPointMark_ is specified, renders a _JSX_ [`<Mark>`](https://github.com
 An _array_ of arrays or objects representing individual points along a line. If you want to show points along the line, use the [`showLinePoints`](#showlinepoints-boolean) property.
 
 ```jsx
-var lines = [[[1, 2], [3, 4], [5, 8], [7, 16], [9, 32], [11, 64], [13, 128]]]
+var lines = [[[1, 2], [3, 4], [5, 8], [7, 16], [9, 32], [11, 64], [13, 128]]];
 
 function MyLineChart() {
-  return <XYFrame xAccessor={d => d[0]} yAccessor={d => d[1]} lines={lines} />
+  return <XYFrame xAccessor={d => d[0]} yAccessor={d => d[1]} lines={lines} />;
 }
 ```
 
@@ -328,6 +330,37 @@ If _lineType_ is specified, renders one of the supported [line types](https://gi
 /*Object option */
 <XYFrame lineType={ { type: "stackedarea", sort: (a,b) => a.level - b.level } } ... />
 ```
+
+As with other data visualization types in the various frames, [[XYFrame]] will let you send the following strings to lineType: `"line"`, `"linepercent"`, `"difference"`, `"stackedarea"`, `"stackedpercent"`, `"bumpline"`, `"bumparea"`. If you want more control over the line data visualization being rendered, each of these types have additional settings you can adjust based on your use case and which typically expose settings associated with the data transformation method associated with the line type. To do this, you need to send an object instead of a string, and that object should have a `type` attribute set to the string, so this uses `stackedarea` with the default method:
+
+```html
+<XYFrame lineType={"stackedarea"} />
+```
+
+...while this sends custom settings to render a stacked area chart with a curve preserving monotonicity:
+
+```html
+import { curveMonotoneX } from 'd3-shape' <XYFrame areaType={{ type:
+"stackedarea", interpolator: curveMonotoneX }} />
+```
+
+## Custom Settings by Type
+
+### Shared
+
+- `interpolator`: Takes a d3 style curve, like those found in `d3-shape`.
+
+### line Settings
+
+- `y1`: Allows you to set the `y1` accessor to create "area lines" such as filled areas that grow from the zero baseline or ribbons.
+
+### stackedarea Settings
+
+- `sort`: the sorting function by which to order the shapes vertically. Defaults to largest shapes on the bottom and you can send `null` to prevent sorting.
+
+### stackedpercent Settings
+
+- `sort`: the sorting function by which to order the shapes vertically. Defaults to largest shapes on the bottom and you can send `null` to prevent sorting.
 
 ### lineStyle: { _object_ | _function_ }
 
@@ -403,10 +436,10 @@ If _defined_ is specified, sets the accessor function that controls where the li
 An array of arrays or objects representing individual points on a chart. If you want to show points on an area chart, use the [`showLinePoints`](#showlinepoints-boolean) property.
 
 ```js
-var points = [[1, 2], [3, 4], [5, 8], [7, 16], [9, 32], [11, 64], [13, 128]]
+var points = [[1, 2], [3, 4], [5, 8], [7, 16], [9, 32], [11, 64], [13, 128]];
 
 function MyAreaChart() {
-  return <XYFrame xAccessor={d => d[0]} yAccessor={d => d[1]} areas={points} />
+  return <XYFrame xAccessor={d => d[0]} yAccessor={d => d[1]} areas={points} />;
 }
 ```
 
@@ -415,11 +448,8 @@ function MyAreaChart() {
 If _areaDataAccessor_ is specified, determines how area coordinates are accessed from the data array passed to the areas attribute. Defaults to `coordinates`.
 
 ```html
-/*String option */
-<XYFrame areaDataAccessor={ "areaValues" } ... />
-
-/*Function option */
-<XYFrame areaDataAccessor={ d => d.areaValues } ... />
+/*String option */ <XYFrame areaDataAccessor={ "areaValues" } ... /> /*Function
+option */ <XYFrame areaDataAccessor={ d => d.areaValues } ... />
 ```
 
 ### areaStyle: { _function_ | _object_ }
@@ -427,14 +457,9 @@ If _areaDataAccessor_ is specified, determines how area coordinates are accessed
 If _areaStyle_ is specified, sets the inline css style of each area element.
 
 ```html
-/*Object option */
-<XYFrame areaStyle={ { fill: "#e3e3e3", stroke: "#e3e3e3" } } ... />
-
-/*Function option */
-<XYFrame
-  ...
-  areaStyle={ d => ({ fill: d.fill, stroke: d.stroke }) }
-/>
+/*Object option */ <XYFrame areaStyle={ { fill: "#e3e3e3", stroke: "#e3e3e3" } }
+... /> /*Function option */ <XYFrame ... areaStyle={ d => ({ fill: d.fill,
+stroke: d.stroke }) } />
 ```
 
 ### areaClass: { _string_ | _function_ }
@@ -442,10 +467,7 @@ If _areaStyle_ is specified, sets the inline css style of each area element.
 If _areaClass_ is specified, sets the css class of each area element.
 
 ```html
-/*String option */
-<XYFrame areaClass={ "area" } ... />
-
-/*Function option */
+/*String option */ <XYFrame areaClass={ "area" } ... /> /*Function option */
 <XYFrame areaClass={ d => d.className } ... />
 ```
 
@@ -455,10 +477,9 @@ If _canvasAreas_ is specified, renders area elements in Canvas. The _canvasAreas
 
 ```html
 /*Boolean option */
-<XYFrame canvasAreas={ true } ... />
+<XYFrame canvasAreas="{" true } ... />
 
-/*Function option */
-<XYFrame canvasAreas={ (d, i) => } ... />
+/*Function option */ <XYFrame canvasAreas={ (d, i) => } ... />
 ```
 
 ## Annotation and Decoration
@@ -542,11 +563,11 @@ A function that takes an annotation object and returns a JSX HTML element. The f
         >
           {d.customLabelOrSomething}
         </div>
-      )
+      );
     }
 
     // Always return null if you want the default rules to be processed for types not defined in your custom rules
-    return null
+    return null;
   }}
 />
 ```
@@ -654,7 +675,7 @@ A function to fire on hover that passes the data being hovered over.
 ```jsx
 <XYFrame
   customHoverBehavior={d => {
-    this.setState({ hoveredOn: d })
+    this.setState({ hoveredOn: d });
   }}
 />
 ```
@@ -666,7 +687,7 @@ A function to fire on click that passes the data being hovered over.
 ```jsx
 <XYFrame
   customClickBehavior={d => {
-    this.setState({ clickedOn: d })
+    this.setState({ clickedOn: d });
   }}
 />
 ```
@@ -678,7 +699,7 @@ A function to fire on doubleclick that passes the data being hovered over.
 ```jsx
 <XYFrame
   customDoubleClickBehavior={d => {
-    this.setState({ doubleclicked: d })
+    this.setState({ doubleclicked: d });
   }}
 />
 ```
@@ -731,3 +752,32 @@ Enable a download button to download the data as a CSV
 ### downloadFields: { _array_ }
 
 The field keys to download from each datapoint. By default, the CSV download only shows the x and y values.
+
+As with other data visualization types in the various frames, [[XYFrame]] will let you send the following strings to areaType: `"alpha"`, `"contour"`. If you want more control over the area data visualization being rendered, each of these types have additional settings you can adjust based on your use case and which typically expose settings associated with the data transformation method associated with the summary type. To do this, you need to send an object instead of a string, and that object should have a `type` attribute set to the string, so this uses contouring with the default method:
+
+```html
+<XYFrame areaType={"contour"} />
+```
+
+...while this sends custom settings to adjust the number of contouring thresholds:
+
+```html
+<XYFrame areaType={{ type: "contour", thresholds: 5 }} />
+```
+
+## Custom Settings by Type
+
+### Shared
+
+### Contour Settings
+
+Under the hood this implements `d3-contour` and passes these settings through.
+
+- `thresholds`: the number of thresholds for the contouring (defaults to `8`).
+- `bandwidth`: the size of the contour bandwidth (defaults to `12`).
+- `resolution`: the pixel resolution of the contouring (defaults to `1000`).
+- `neighborhood`: boolean which will force the returned shape to only have the bottommost region of the calculated contours.
+
+### Alpha Shape Settings
+
+- `alpha`: The alpha parameter sent to the `alpha-complex`. Review the documentation for alpha-complex. Defaults to `0.001`

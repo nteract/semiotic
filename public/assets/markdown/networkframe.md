@@ -3,15 +3,18 @@ A `<Frame>` that displays topological data, which differs from other forms of da
 Nodes are automatically generated from edge references to source or target that do not exist, these nodes have `createdByFrame: true` if you want to treat them differently. Nodes are also decorated with a `degree` attribute, which is simple degree centrality (number of connections) if you want to use that.
 
 ```jsx
-import { NetworkFrame } from 'semiotic'
+import { NetworkFrame } from "semiotic";
 
 <NetworkFrame
-   nodes={[{name: "Susie"}, {name: "Shirley"}]}
-   edges={[{source: "Susie", target: "Xianlin"},{source: "Shirley", target: "Susie"}]}
-   nodeStyle={{ fill: "blue" }}
-   edgeStyle={{ stroke: "red" }}
-   nodeIDAccessor={"name"}
-/>
+  nodes={[{ name: "Susie" }, { name: "Shirley" }]}
+  edges={[
+    { source: "Susie", target: "Xianlin" },
+    { source: "Shirley", target: "Susie" }
+  ]}
+  nodeStyle={{ fill: "blue" }}
+  edgeStyle={{ stroke: "red" }}
+  nodeIDAccessor={"name"}
+/>;
 ```
 
 # &lt;API Reference>
@@ -84,6 +87,47 @@ _This will also support a "per-tick" function once the specifications can be fig
 <!-- Object option -->
 <NetworkFrame networkType={{ type: "wordcloud" , rotate: d => d.topic_score < 1, fontSize: 36, fontWeight: 900 }} />
 ```
+
+- Custom Settings for NetworkFrame Network Types
+
+As with other data visualization types in the various frames, [[NetworkFrame]] will let you send the following strings to networkType: `"wordcloud"`, `"force"`, `"motifs"`. If you want more control over the summary data visualization being rendered, each of these types have additional settings you can adjust based on your use case and which typically expose settings associated with the data transformation method associated with the summary type. To do this, you need to send an object instead of a string, and that object should have a “type” attribute set to the string, so this uses contouring with the default method:
+
+```html
+<NetworkFrame networkType={"motifs"} />
+```
+
+...while this sends custom settings to adjust the number of iterations for the `d3-force` `forceSimulation` function:
+
+```html
+<NetworkFrame networkType={{ type: "motifs", iterations: 1000 }} />
+```
+
+## Custom Settings by Type
+
+### Shared
+
+- `iterations`: The number of _ticks_ that the simulation will run.
+
+### Force-Directed
+
+- `edgeStrength`: The modifier applied the the value from the edgeWeightAccessor value of the edge. Defaults to `0.1`.
+
+### Motifs
+
+- `edgeStrength`: The modifier applied the the value from the edgeWeightAccessor value of the edge. Defaults to `0.1`.
+- `multi`: Whether this is a multi-graph (multiple edges from the same source to the same target). This is important because component detection relies on whether the graph is a multigraph and I can't automatically detect that so you need to declare it when it is.
+
+### Word Cloud
+
+- `fontSize`: The base font-size of the words. Defaults to `18`.
+- `fontWeight`: The font-weight of the words. Defaults to `300`.
+- `rotate`: A function that takes a node and returns a boolean that determines whether or not the word is shown vertically (rotated 90 degrees). By default all words are shown horizontally.
+
+### Sankey
+
+- `orient`: One of `["center", "left", "right", "justify"]` determining the base sankey layout. Defaults to `"center"`
+- `nodePadding`: Pixel padding between nodes. Defaults to `8`.
+- `nodeWidth`: Pixel width of nodes. Defaults to `24`.
 
 ### title: {_string_ | _JSX_}
 

@@ -1,14 +1,17 @@
 A `<Frame>` that displays continuous data along the _ordinal_ and _range_ axes. Examples include bar charts, pie charts (which map the ordinal axis radially), violin plots, timelines and funnel diagrams. `<OrdinalFrame>` charts render [pieces](#piece-rendering) and [summaries](#summary-rendering). Rendering and styling is based on each element's corresponding properties. OrdinalFrame data elements are accessible by tabbing to the data group (pieces or summaries) and hitting enter to arrow-key navigate through the data elements.
 
 ```jsx
-import { OrdinalFrame } from 'semiotic'
+import { OrdinalFrame } from "semiotic";
 
 <OrdinalFrame
-   data={[{department: "art", students: 50}, {department: "science", students: 8}]}
-   style={{ fill: "blue" }}
-   rAccessor={"students"}
-   oAccessor={"department"}
-/>
+  data={[
+    { department: "art", students: 50 },
+    { department: "science", students: 8 }
+  ]}
+  style={{ fill: "blue" }}
+  rAccessor={"students"}
+  oAccessor={"department"}
+/>;
 ```
 
 # &lt;API Reference>
@@ -265,6 +268,52 @@ A string or function that takes a piece and returns a string that is assigned to
 
 A string (`"heatmap"`, `"boxplot"`, `"histogram"`, `"joy"`, `"contour"`, `"violin"`) or object with `type` equal to one of those strings (with further method-specific settings such as `{ type: "contour", bandwidth: 15 }` or `{ type: "joy", amplitude: 30 }`, or a function that takes data and the OrdinalFrame calculated settings and creates JSX elements. See [[summaryType Advanced Settings]] for more details on how to use the extended settings.
 
+- Custom Settings for ORFrame Summary Types
+
+As with other data visualization types in the various frames, [[ORFrame]] will let you send the following strings to summaryType: `"boxplot"`, `"histogram"`, `"heatmap"`, `"violin"`, `"contour"`, `"joy"`. If you want more control over the summary data visualization being rendered, each of these types have additional settings you can adjust based on your use case and which typically expose settings associated with the data transformation method associated with the summary type. To do this, you need to send an object instead of a string, and that object should have a “type” attribute set to the string, so this uses contouring with the default method:
+
+```jsx
+<OrdinalFrame summaryType={"contour"} />
+```
+
+...while this sends custom settings to adjust the number of contouring thresholds:
+
+```jsx
+<OrdinalFrame summaryType={{ type: "contour", thresholds: 5 }} />
+```
+
+_For those of you new to React, the reason for double curly brackets is that the first curly brackets are just so we can send JavaScript to JSX and the second curly brackets are because we are instantiating an object._
+
+## Custom Settings by Type
+
+### Shared
+
+All bucketized summaries (violin, joy, histogram, heatmap) share the following:
+
+- `bins`: the number of bins that entries are bucketed into (defaults to 25)
+- `binValue`: the value of the bin--the height of the histogram, the width of the violin, the darkness of the heatmap. Defaults to the length of the array of pieces that fall within the bin: `d => d.length` so if you want to total the values use `d => sumFunction(d))`.
+
+### Violin Plot Settings
+
+- `curve`: The `d3-shape` style curve interpolator used for the shape (defaults to `curveCatmullRom`). Not honored in radial projection because the diagonals play have with them.
+
+### Joy Plot Settings
+
+- `curve`: The `d3-shape` style curve interpolator used for the shape (defaults to `curveCatmullRom`). Not honored in radial projection.
+- `amplitude`: An amount of pixels to overflow the height into the adjoining column (defaults to `0` which is more like a Joyless Plot if you ask me).
+
+### Contour Settings
+
+Under the hood this implements `d3-contour` and passes these settings through.
+
+- `thresholds`: the number of thresholds for the contouring (defaults to `8`).
+- `bandwidth`: the size of the contour bandwidth (defaults to `12`).
+- `resolution`: the pixel resolution of the contouring (defaults to `1000`).
+
+### Boxplot Settings
+
+Currently no available custom settings. The boxplot samples the data sent to each column, so you can send a preprocessed array of `[ min, firstQuartile, median, thirdQuartile, max ]` values and generate your own boxplot.
+
 ```jsx
 // string
 <OrdinalFrame summaryType="violin" />
@@ -444,3 +493,14 @@ Enable a download button to download the data as a CSV
 ### downloadFields: { _array_ }
 
 The field keys to download from each datapoint. By default, the CSV download only shows the o and r values.
+
+Connectors in [[OrdinalFrame]] allow you to draw connections between elements in adjacent columns. The current, limited implementation is a simple test that if it returns true draws a link. This function is run on every piece, and it only tests for links to the next column (left to right in vertical, top to bottom in horizonal and clockwise in radial). For "bar" it draws a filled area, for "point" and "swarm" it draws a line.
+
+You can use this functionality to create slopegraphs or funnel diagrams.
+
+The following code will draw a connection between elements in adjoining columns that has the same `type` value. It will only draw a link to the first matching item in the next column so this cannot be used to draw branching paths or other multi-link connections from one piece to many pieces.
+
+```html
+<OrdinalFrame connectorType={d => d.type} connectorStyle={d => ({ fill:
+d.source.color })} />
+```
