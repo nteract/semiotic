@@ -19,6 +19,11 @@ import DotPlot from "./examples/DotPlot";
 import RidgelinePlot from "./examples/RidgelinePlot";
 import Timeline from "./examples/Timeline";
 
+import Mark from "./sub-components/Mark";
+import Axis from "./sub-components/Axis";
+import DividedLine from "./sub-components/DividedLine";
+import Legend from "./sub-components/Legend";
+
 const ROOT = process.env.PUBLIC_URL;
 
 const PAGES = [
@@ -268,19 +273,23 @@ const PAGES = [
       },
       {
         name: "Mark",
-        url: "mark"
+        url: "mark",
+        component: Mark
       },
       {
         name: "DividedLine",
-        url: "dividedline"
+        url: "dividedline",
+        component: DividedLine
       },
       {
         name: "Axis",
-        url: "axis"
+        url: "axis",
+        component: Axis
       },
       {
         name: "Legend",
-        url: "legend"
+        url: "legend",
+        component: Legend
       }
     ]
   }

@@ -3,19 +3,23 @@ import DocumentFrame from "../DocumentFrame";
 import { XYFrame } from "semiotic";
 import theme from "../theme";
 import MarkdownText from "../MarkdownText";
-import { scaleSqrt, scaleLinear } from "d3-scale";
+import { scaleLinear } from "d3-scale";
 import { points } from "./CreateAScatterplot";
 
 const steps = ["white", theme[3]];
-const thresholds = scaleLinear()
-  // .domain([0.01, 0.25, 0.5, 0.75, 1])
-  .range(steps);
+
+const thresholds = scaleLinear().range(steps);
+
+const colors = {
+  "Ex Machina": theme[0],
+  "Far from the Madding Crowd": theme[1],
+  "The Longest Ride": theme[2]
+};
 
 const frameProps = {
   size: [700, 400],
   summaries: [{ coordinates: points }],
   summaryType: "heatmap",
-  // summaryType: { type: "heatmap" /*, yBins: 10, xCellPx: 50*/ },
   xAccessor: "theaterCount",
   yAccessor: "rank",
   yExtent: [0],
@@ -44,20 +48,13 @@ const frameProps = {
     strokeWidth: 0.5
   }),
   pointStyle: d => {
-    // console.log(d)
     return {
       r: 2,
-      fill:
-        d && d.title === "Ex Machina"
-          ? theme[0]
-          : d && d.title === "Far from the Madding Crowd"
-          ? theme[1]
-          : theme[4]
+      fill: d && colors[d.title]
     };
   },
 
   margin: { left: 60, bottom: 90, right: 10, top: 40 },
-  // points: []
   showLinePoints: true
 };
 
@@ -85,7 +82,29 @@ const hexbinProps = {
 
 const contourProps = {
   ...frameProps,
-  summaryType: "contour"
+  summaryStyle: d => {
+    return {
+      fill: "none",
+      stroke: colors[d.parentArea.title],
+      strokeWidth: 0.5
+    };
+  },
+  summaries: [
+    {
+      coordinates: points.filter(d => d.title === "Ex Machina"),
+      title: "Ex Machina"
+    },
+    {
+      coordinates: points.filter(d => d.title === "Far from the Madding Crowd"),
+      title: "Far from the Madding Crowd"
+    },
+    {
+      coordinates: points.filter(d => d.title === "The Longest Ride"),
+      title: "The Longest Ride"
+    }
+  ],
+
+  summaryType: { type: "contour", threshold: 1, bandwidth: 15 }
 };
 
 export default function CreateALineChart() {

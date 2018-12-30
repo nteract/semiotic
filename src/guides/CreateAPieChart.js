@@ -1,9 +1,9 @@
-import React from "react"
-import { OrdinalFrame } from "semiotic"
-import DocumentFrame from "../DocumentFrame"
-import theme from "../theme"
-import MarkdownText from "../MarkdownText"
-import { scaleSqrt } from "d3-scale"
+import React from "react";
+import { OrdinalFrame } from "semiotic";
+import DocumentFrame from "../DocumentFrame";
+import theme from "../theme";
+import MarkdownText from "../MarkdownText";
+import { scaleSqrt } from "d3-scale";
 
 // Add your component proptype data here
 // multiple component proptype documentation supported
@@ -12,7 +12,7 @@ const pieChartData = [
   { user: "Susie", tweets: 5, retweets: 25, favorites: 100 },
   { user: "Matt", tweets: 20, retweets: 25, favorites: 50 },
   { user: "Betty", tweets: 30, retweets: 20, favorites: 10 }
-]
+];
 
 const longPieChartData = [
   ...pieChartData,
@@ -24,13 +24,13 @@ const longPieChartData = [
   { user: "Jim", tweets: 20, retweets: 25, favorites: 50 },
   { user: "Zan", tweets: 5, retweets: 32, favorites: 100 },
   { user: "Shelby", tweets: 30, retweets: 20, favorites: 10 }
-]
+];
 
 const colorHash = {
   Susie: theme[0],
   retweets: theme[2],
   favorites: theme[1]
-}
+};
 
 const frameProps = {
   size: [300, 300],
@@ -43,7 +43,7 @@ const frameProps = {
   oLabel: true,
   title: "Tweets",
   margin: 70
-}
+};
 //oLabel options
 //oSort option
 
@@ -52,12 +52,12 @@ const frameProps = {
 const titleAndSpacing = {
   dynamicColumnWidth: d => d.tweets + d.retweets,
   title: "Tweets & Retweets"
-}
+};
 
 const donut = {
   ...frameProps,
   type: { type: "bar", innerRadius: 50 }
-}
+};
 
 const windRose = {
   ...frameProps,
@@ -66,7 +66,7 @@ const windRose = {
   data: longPieChartData,
   axis: true,
   rScaleType: scaleSqrt
-}
+};
 
 const deaths1855 = [
   { month: "Jan", type: "Wounds & injuries", casualties: 83 },
@@ -105,7 +105,7 @@ const deaths1855 = [
   { month: "Oct", type: "Zymotic diseases", casualties: 128 },
   { month: "Nov", type: "Zymotic diseases", casualties: 178 },
   { month: "Dec", type: "Zymotic diseases", casualties: 91 }
-]
+];
 
 //but with changing the rScaleType to scale Sqrt and haivng the extent match the data properly
 // const rAccessor = ["tweets", "retweets", "favorites"]
@@ -121,13 +121,13 @@ const nightingale = {
   style: d => {
     return {
       fill: theme[d.rIndex],
-      stroke: "black"
-    }
+      stroke: "white"
+    };
   },
   rScaleType: scaleSqrt,
 
   axis: true
-}
+};
 
 //better story for this type of sorting
 const sortednightingale = {
@@ -140,9 +140,9 @@ const sortednightingale = {
       d[0].tweets -
       d[0].retweets -
       d[0].favorites
-    )
+    );
   }
-}
+};
 
 const stackedFrameProps = {
   ...frameProps,
@@ -159,9 +159,9 @@ const stackedFrameProps = {
     )
   },
   style: d => {
-    return { fill: colorHash[d.action], stroke: "white" }
+    return { fill: colorHash[d.action], stroke: "white" };
   }
-}
+};
 
 const overrideProps = {
   rScaleType: "scaleSqrt(), // import {scaleSqrt} from d3-scale",
@@ -171,7 +171,7 @@ const overrideProps = {
       stroke: "white"
     }
   }`
-}
+};
 
 // const stackedFramePropsFlattened = {
 //   ...stackedFrameProps,
@@ -311,5 +311,5 @@ Adding the property \`pieceHoverAnnotation\` gives tooltips to each of the indiv
         overrideProps={overrideProps}
       />
     </div>
-  )
+  );
 }
