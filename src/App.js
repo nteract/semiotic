@@ -10,6 +10,7 @@ import CreateXYSummaries from "./guides/CreateXYSummaries";
 import CreateXYBrushes from "./guides/CreateXYBrushes";
 import CreateABarChart from "./guides/CreateABarChart";
 import CreateAPieChart from "./guides/CreateAPieChart";
+import CreateOrdinalBrushes from "./guides/CreateOrdinalBrushes";
 import CreateSparklines from "./guides/CreateSparklines";
 import CreateAForceLayout from "./guides/CreateAForceLayout";
 import CreateAPathDiagram from "./guides/CreateAPathDiagram";
@@ -98,7 +99,9 @@ const PAGES = [
         name: "Creating Ordinal Summaries"
       },
       {
-        name: "Creating Ordinal Brushes"
+        name: "Creating Ordinal Brushes",
+        url: "ordinal-brushes",
+        component: CreateOrdinalBrushes
       },
       {
         name: "NetworkFrame",
