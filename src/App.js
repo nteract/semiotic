@@ -7,9 +7,15 @@ import CreateALineChart from "./guides/CreateALineChart";
 import CreateAnAreaChart from "./guides/CreateAnAreaChart";
 import CreateAScatterplot from "./guides/CreateAScatterplot";
 import CreateXYSummaries from "./guides/CreateXYSummaries";
+import CreateXYBrushes from "./guides/CreateXYBrushes";
 import CreateABarChart from "./guides/CreateABarChart";
 import CreateAPieChart from "./guides/CreateAPieChart";
 import CreateSparklines from "./guides/CreateSparklines";
+import CreateAForceLayout from "./guides/CreateAForceLayout";
+import CreateAPathDiagram from "./guides/CreateAPathDiagram";
+import CreateAHierarchicalDiagram from "./guides/CreateAHierarchicalDiagram";
+import CreateSmallMultiples from "./guides/CreateSmallMultiples";
+import CreateCrossHighlighting from "./guides/CreateCrossHighlighting";
 import Tooltips from "./guides/Tooltips";
 import Annotations from "./guides/Annotations";
 
@@ -49,28 +55,30 @@ const PAGES = [
       },
       {
         name: "Creating Line Charts",
-        url: "guides-line-chart",
+        url: "line-chart",
         component: CreateALineChart
       },
       { name: "Creating Divided Line Charts" },
       {
         name: "Creating Area Charts",
-        url: "guides-area-chart",
+        url: "area-chart",
         component: CreateAnAreaChart
       },
       {
         name: "Creating Scatterplots",
-        url: "guides-scatterplot",
+        url: "scatterplot",
         component: CreateAScatterplot
       },
       {
         name: "Creating XY Summaries",
-        url: "guides-xy-summaries",
+        url: "xy-summaries",
         component: CreateXYSummaries
       },
 
       {
-        name: "Creating XY Brushes"
+        name: "Creating XY Brushes",
+        url: "xy-brushes",
+        component: CreateXYBrushes
       },
       {
         name: "OrdinalFrame",
@@ -78,12 +86,12 @@ const PAGES = [
       },
       {
         name: "Creating Bar Charts",
-        url: "guides-bar-chart",
+        url: "bar-chart",
         component: CreateABarChart
       },
       {
         name: "Creating Pie Charts",
-        url: "guides-pie-chart",
+        url: "pie-chart",
         component: CreateAPieChart
       },
       {
@@ -97,16 +105,19 @@ const PAGES = [
         className: "sub-header"
       },
       {
-        name: "Creating Force Diagrams"
+        name: "Creating Force Layouts",
+        url: "node-edge",
+        component: CreateAForceLayout
       },
       {
-        name: "Creating Sankey Diagrams"
+        name: "Creating Path Diagrams",
+        url: "node-edge",
+        component: CreateAPathDiagram
       },
       {
-        name: "Creating Dendrograms"
-      },
-      {
-        name: "Creating Sunbursts"
+        name: "Creating Hierarchical Diagrams",
+        url: "hierarchical",
+        component: CreateAHierarchicalDiagram
       },
       {
         name: "All Frames",
@@ -124,18 +135,23 @@ const PAGES = [
         component: Annotations
       },
       {
-        name: "Cross-Highlighting"
+        name: "Cross-Highlighting",
+        url: "cross-highlighting",
+        component: CreateCrossHighlighting
       },
 
       {
-        name: "Creating Small Multiples"
+        name: "Creating Small Multiples",
+        url: "small-multiples",
+
+        component: CreateSmallMultiples
       },
       {
         name: "Canvas Rendering"
       },
       {
         name: "Creating Sparklines",
-        url: "guides-sparklines",
+        url: "sparklines",
         component: CreateSparklines
       },
       {
@@ -211,6 +227,13 @@ const PAGES = [
         url: "timeline",
         component: Timeline
       }
+      // {
+      //   name: "NetworkFrame",
+      //   className: "sub-header"
+      // },
+      // {
+      //   name: "Dagre Graph"
+      // }
     ]
   },
   {
