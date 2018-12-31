@@ -19,6 +19,7 @@ import CreateSmallMultiples from "./guides/CreateSmallMultiples";
 import CreateCrossHighlighting from "./guides/CreateCrossHighlighting";
 import Tooltips from "./guides/Tooltips";
 import Annotations from "./guides/Annotations";
+import UsingSketchyPaintyPatterns from "./guides/UsingSketchyPaintyPatterns";
 
 import CandlestickChart from "./examples/CandlestickChart";
 import WaterfallChart from "./examples/WaterfallChart";
@@ -158,7 +159,9 @@ const PAGES = [
         component: CreateSparklines
       },
       {
-        name: "Using Sketchy/Painty/Patterns"
+        name: "Using Sketchy/Painty/Patterns",
+        url: "sketchy-painty-patterns",
+        component: UsingSketchyPaintyPatterns
       },
       {
         name: "Using Foreground/Background Graphics"
