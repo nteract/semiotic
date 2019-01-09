@@ -10,6 +10,7 @@ import CreateXYSummaries from "./guides/CreateXYSummaries";
 import CreateXYBrushes from "./guides/CreateXYBrushes";
 import CreateABarChart from "./guides/CreateABarChart";
 import CreateAPieChart from "./guides/CreateAPieChart";
+import CreateOrdinalSummaries from "./guides/CreateOrdinalSummaries";
 import CreateOrdinalBrushes from "./guides/CreateOrdinalBrushes";
 import CreateSparklines from "./guides/CreateSparklines";
 import CreateAForceLayout from "./guides/CreateAForceLayout";
@@ -97,7 +98,9 @@ const PAGES = [
         component: CreateAPieChart
       },
       {
-        name: "Creating Ordinal Summaries"
+        name: "Creating Ordinal Summaries",
+        url: "ordinal-summaries",
+        component: CreateOrdinalSummaries
       },
       {
         name: "Creating Ordinal Brushes",
@@ -110,12 +113,12 @@ const PAGES = [
       },
       {
         name: "Creating Force Layouts",
-        url: "node-edge",
+        url: "force-layouts",
         component: CreateAForceLayout
       },
       {
         name: "Creating Path Diagrams",
-        url: "node-edge",
+        url: "path-diagrams",
         component: CreateAPathDiagram
       },
       {

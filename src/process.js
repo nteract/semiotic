@@ -122,6 +122,7 @@ export const processNodes = [
       "customPointMark",
       "customLineMark",
       "showLinePoints",
+      "showSummaryPoints",
       "nodeSizeAccessor",
       "edgeWidthAccessor",
       "customNodeIcon",
