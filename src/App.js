@@ -21,12 +21,14 @@ import CreateCrossHighlighting from "./guides/CreateCrossHighlighting";
 import Tooltips from "./guides/Tooltips";
 import Annotations from "./guides/Annotations";
 import UsingSketchyPaintyPatterns from "./guides/UsingSketchyPaintyPatterns";
+import ForegroundBackgroundSVG from "./guides/ForegroundBackgroundSVG";
 
 import CandlestickChart from "./examples/CandlestickChart";
 import WaterfallChart from "./examples/WaterfallChart";
 import HomerunMap from "./examples/HomerunMap";
 import MarimekkoChart from "./examples/MarimekkoChart";
 import DotPlot from "./examples/DotPlot";
+import SwarmPlot from "./examples/SwarmPlot";
 import RidgelinePlot from "./examples/RidgelinePlot";
 import Timeline from "./examples/Timeline";
 
@@ -167,7 +169,9 @@ const PAGES = [
         component: UsingSketchyPaintyPatterns
       },
       {
-        name: "Using Foreground/Background Graphics"
+        name: "Using Foreground/Background SVG",
+        url: "foreground-background-svg",
+        component: ForegroundBackgroundSVG
       },
       {
         name: "Accessibility",
@@ -219,7 +223,9 @@ const PAGES = [
         component: MarimekkoChart
       },
       {
-        name: "Swarm Plot"
+        name: "Swarm Plot",
+        url: "swarm-plot",
+        component: SwarmPlot
       },
       {
         name: "Ridgeline Plot",
