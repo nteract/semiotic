@@ -272,7 +272,7 @@ const overrideProps = {
   )`
 }
 
-const DotPlot = () => {
+const Timeline = () => {
   return (
     <div>
       <MarkdownText
@@ -294,4 +294,4 @@ Because annotations are drawn on top of the visualization layer, we need to acco
   )
 }
 
-export default DotPlot
+export default Timeline

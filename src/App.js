@@ -27,6 +27,7 @@ import CandlestickChart from "./examples/CandlestickChart";
 import WaterfallChart from "./examples/WaterfallChart";
 import HomerunMap from "./examples/HomerunMap";
 import MarimekkoChart from "./examples/MarimekkoChart";
+import BarLineChart from "./examples/BarLineChart";
 import DotPlot from "./examples/DotPlot";
 import SwarmPlot from "./examples/SwarmPlot";
 import RidgelinePlot from "./examples/RidgelinePlot";
@@ -197,9 +198,7 @@ const PAGES = [
         url: "candlestick-chart",
         component: CandlestickChart
       },
-      {
-        name: "Dual-Axes Chart"
-      },
+
       {
         name: "Homerun Map",
         url: "homerun-map",
@@ -213,10 +212,16 @@ const PAGES = [
         className: "sub-header"
       },
       {
+        name: "Bar & Line Chart",
+        url: "bar-line-chart",
+        component: BarLineChart
+      },
+      {
         name: "Waterfall Chart",
         url: "waterfall-chart",
         component: WaterfallChart
       },
+      { name: "Slope Chart" },
       {
         name: "Marimekko Chart",
         url: "marimekko-chart",
@@ -241,14 +246,10 @@ const PAGES = [
         name: "Timeline",
         url: "timeline",
         component: Timeline
+      },
+      {
+        name: "Isotype Chart"
       }
-      // {
-      //   name: "NetworkFrame",
-      //   className: "sub-header"
-      // },
-      // {
-      //   name: "Dagre Graph"
-      // }
     ]
   },
   {

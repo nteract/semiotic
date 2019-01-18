@@ -198,7 +198,7 @@ button:focus:after {
 .sidebar,
 .container {
   height: calc(100vh - 140px);
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 
 .sidebar {

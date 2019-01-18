@@ -105,7 +105,8 @@ export const processNodes = [
       "axis",
       "matte",
       "minimap",
-      "sortO"
+      "sortO",
+      "filterRenderedNodes"
     ]
   },
   {
@@ -154,4 +155,4 @@ export const processNodes = [
       "nodeLabels"
     ]
   }
-]
+];
