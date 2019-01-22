@@ -49,6 +49,29 @@ const sunburst = {
   filterRenderedNodes: d => d.depth !== 0
 };
 
+const overrideProps = {
+  tooltipContent: `d => (
+    <div className="tooltip-content">
+      {d.parent ? <p>{d.parent.data.name}</p> : undefined}
+      <p>{d.data.name}</p>
+    </div>`,
+  nodeLabels: `d => {
+    return d.x1 - d.x0 < 8 ? null : (
+      <g transform="translate(0,5)">
+        <text textAnchor="middle" strokeWidth={2} stroke="white" fill="white">
+          {d.id}
+        </text>
+        <text textAnchor="middle">{d.id}</text>
+      </g>
+    );
+  }`,
+  nodeStyle: `d => ({
+    fill: theme[d.depth],
+    stroke: theme[d.depth],
+    fillOpacity: 0.6
+  })`
+};
+
 const partition = {
   ...sunburst,
   networkType: {
@@ -68,6 +91,20 @@ const partition = {
       </g>
     );
   }
+};
+
+const partitionOverrideProps = {
+  ...overrideProps,
+  nodeLabels: `d => {
+    return d.x1 - d.x0 < 20 ? null : (
+      <g transform="translate(0,5)">
+        <text textAnchor="middle" strokeWidth={2} stroke="white" fill="white">
+          {d.id}
+        </text>
+        <text textAnchor="middle">{d.id}</text>
+      </g>
+    );
+  }`
 };
 
 const tree = {
@@ -121,7 +158,7 @@ export default class HierarchicalDiagrams extends React.Component {
 
   render() {
     if (!this.state) return null;
-    console.log(this.state);
+
     return (
       <div>
         <MarkdownText
@@ -133,7 +170,7 @@ export default class HierarchicalDiagrams extends React.Component {
         />
         <DocumentFrame
           frameProps={{ ...tree, edges: this.state.data }}
-          // overrideProps={overrideProps}
+          overrideProps={overrideProps}
           type={NetworkFrame}
           pre={`
 const theme = ${JSON.stringify(theme)}          
@@ -149,7 +186,7 @@ const theme = ${JSON.stringify(theme)}
         />
         <DocumentFrame
           frameProps={{ ...circlepack, edges: this.state.data }}
-          // overrideProps={overrideProps}
+          overrideProps={overrideProps}
           type={NetworkFrame}
           pre={`
 const theme = ${JSON.stringify(theme)}          
@@ -166,7 +203,7 @@ const theme = ${JSON.stringify(theme)}
 
         <DocumentFrame
           frameProps={{ ...treemap, edges: this.state.data }}
-          // overrideProps={overrideProps}
+          overrideProps={overrideProps}
           type={NetworkFrame}
           pre={`
 const theme = ${JSON.stringify(theme)}          
@@ -184,7 +221,7 @@ const theme = ${JSON.stringify(theme)}
 
         <DocumentFrame
           frameProps={{ ...partition, edges: this.state.data }}
-          // overrideProps={overrideProps}
+          overrideProps={partitionOverrideProps}
           type={NetworkFrame}
           pre={`
 const theme = ${JSON.stringify(theme)}          
@@ -200,7 +237,7 @@ const theme = ${JSON.stringify(theme)}
 
         <DocumentFrame
           frameProps={{ ...sunburst, edges: this.state.data }}
-          // overrideProps={overrideProps}
+          overrideProps={overrideProps}
           type={NetworkFrame}
           pre={`
 const theme = ${JSON.stringify(theme)}          

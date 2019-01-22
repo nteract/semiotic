@@ -1,9 +1,5 @@
 Annotations provide enormous value to charts and they're less of a challenge now that solutions like [react-annotation](http://react-annotation.susielu.com/) are available. All frames have some shared annotation handling capabilities that let you deploy annotations easily and dynamically and even do some rudimentary label adjustment in crowded charts.
 
-# Further Reading
-
-[Making Annotations First-Class Citizens in Data Visualization](https://medium.com/@Elijah_Meeks/making-annotations-first-class-citizens-in-data-visualization-21db6383d3fe)
-
 # Built-in SVG Annotation Processing
 
 Each frame can take an array of objects with a `type` and other values passed to `annotations`.
@@ -12,12 +8,27 @@ Each kind of frame has a few built-in supported annotation types and also each f
 
 ## All Frames
 
+- `frame-hover`: Creates a tooltip, which is a div centered on the datapoint populated with whatever is defined in tooltipContent or a sparse default.
+- `highlight`: redraws the mark but with the passed style function or object
+- `desaturation-layer`: Creates a rect the size of the viz layer that has fill: black and fillOpacity: 0.5 or whatever style prop is passed
+- `react-annotation` (or any react-annotation annotation type): Creates a new react-annotation type annotation (defaults to AnnotationLabel)
+  enclose, enclose-rect, enclose-hull: Takes an object with “coordinates” (an array of data objects) and encloses them with a circle, rectangle or convex hull labeled with the passed label. For network frame this is not “coordinates” but rather an array named “ids” that has id values corresponding to the nodeIDAccessor setting.
+
 - `react-annotation`: Expects a data object that matches the structure of the data you've sent to the frame that is also structured according to the react-annotation spec. The x and y values will be overwritten with x & y values for the data values of the object e.g. if all of the data you send depends on a `date` property to determine the x position, the annotation's object should also have a `date` property if you want it scaled with the rest of the data.
 - _function_: Any function you send as a `type` of the annotation will be expected to be one of the react-annotation types.
 
 TODO: add in eventListener functionality
 
 ## XYFrame
+
+- `xy`: creates a circle with passed style with a simple SVG text label with passed label prop
+- `x`: creates a react-annotation threshold annotation along the x axis at the point specified by the value with a label as passed
+- `y`: creates a react-annotation threshold annotation along the y axis at the point specified by the value with a label as passed
+- `bounds`: takes a bounding box in the “bounds” property that is an array with two datapoints indicating the top-left and bottom-right corners. If any values are missing (x or y) in either of the bounds then it defaults to the full size of the viz along that measure.
+- `line`: takes a “coordinates” array of datapoints and draws a line from it with a label if the annotation passes a “label” prop.
+- `area`: takes a “coordinates” array of datapoints and draws a polygon from them (in the order passed) with a label (if a “label” prop is passed) at the center of the poly.
+- `horizontal-points`: Takes a datapoint and renders an SVG circle for every datapoint in the dataset that falls along the same horizontal axis. The annotation can also have a “threshold” passed (defaults to 1) to determine the pixel tolerance for identifying other datapoints, an “r” prop that is a function that takes the point and returns a radius (default is () => 4) and a “styleFn” that passes the discovered datapoint and returns a JSX style object.
+- `vertical-points`: Takes a datapoint and renders an SVG circle for every datapoint in the dataset that falls along the same vertical axis. The annotation can also have a “threshold” passed (defaults to 1) to determine the pixel tolerance for identifying other datapoints, an “r” prop that is a function that takes the point and returns a radius (default is () => 4) and a “styleFn” that passes the discovered datapoint and returns a JSX style object.
 
 - `xy`: Has the data values corresponding to the x and y accessors of the frame, and will put a labeled circle with the label determined by the `label` value of the object.
 - `x`: Has a data value corresponding to the x accessor of the frame, and will put a labeled line with the label determined by the `label` value of the object.
@@ -48,10 +59,28 @@ const variousAnnotations = [
 
 ## ORFrame
 
-TODO
+- `column-hover`: Like frame-hover but the entire column/row is passed to the function.
+- `or`: Presents a simple circle annotation with a passed “label” (like “xy” for XYFrame)
+- `r`: Creates a threshold annotation at the r value
+  category: Creates an AnnotationBracket with the passed “title” and/or “label” based on the passed “categories” array (you pass an array of strings that correspond to the oAccessor category names and the bracket is drawn to surround them, which means it will encompass other columns if they are spread apart). Honors the following props:
+
+  - `bracketType` = "curly" (draw a straight or curly bracket)
+  - `position` = projection === "vertical" ? "top" : "left" (whether to show the bracket on top, left, right or bottom)
+  - `depth` = 30 (how deep the bracket goes into the viz)
+  - `offset` = 0 (how far back from the viz the bracket is)
+  - `padding` = 0 (the amount of pixels added to the edge of the bracket)
+
+- `ordinal-line`: takes an array of “coordinates” and renders a line. Honors the following props:
+  - `points`: (bool defaults to false) show points
+    interactive: (bool defaults to false) Points have an invisible 15px radius of interactivity as per standard hover annotation settings -`lineStyle`: a JSX style object for the line
+  - `pointStyle`: a JSX style object or a function that takes a point and returns a JSX style object
+  - `curve`: a d3-shape interpolator
+  - `radius`: The radius of displayed points
 
 ## NetworkFrame
 
+- `node`: Creates an AnnotationCalloutCircle centered on the node with an id corresponding to the “id” prop in the annotation
+- `basic-node-label`: Places the “label” prop at the center of the node (label can be SVG JSX)
 - `node`: Has an `id` value that corresponds to the idAccessor value of a node, and will draw a circle around that node with the label determined by the `label` value of the annotation object.
 - `enclose`: Has an `ids` array with strings corresponding to values returned by the idAccessor value of nodes in this graph and will draw a minimum bounding circle around the nodes found with a label specified in the `label` value of the annotation object.
 
@@ -135,3 +164,7 @@ TODO: add example using frame-hover-column-hover
 
 ```jsx
 ```
+
+# Further Reading
+
+[Making Annotations First-Class Citizens in Data Visualization](https://medium.com/@Elijah_Meeks/making-annotations-first-class-citizens-in-data-visualization-21db6383d3fe)
