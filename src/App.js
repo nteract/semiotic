@@ -22,6 +22,7 @@ import Tooltips from "./guides/Tooltips";
 import Annotations from "./guides/Annotations";
 import UsingSketchyPaintyPatterns from "./guides/UsingSketchyPaintyPatterns";
 import ForegroundBackgroundSVG from "./guides/ForegroundBackgroundSVG";
+import CanvasRendering from "./guides/CanvasRendering";
 
 import CandlestickChart from "./examples/CandlestickChart";
 import WaterfallChart from "./examples/WaterfallChart";
@@ -64,7 +65,7 @@ const PAGES = [
         url: "line-chart",
         component: CreateALineChart
       },
-      { name: "Creating Divided Line Charts" },
+      // { name: "Creating Divided Line Charts" },
       {
         name: "Creating Area Charts",
         url: "area-chart",
@@ -157,7 +158,9 @@ const PAGES = [
         component: CreateSmallMultiples
       },
       {
-        name: "Canvas Rendering"
+        name: "Canvas Rendering",
+        url: "canvas-rendering",
+        component: CanvasRendering
       },
       {
         name: "Creating Sparklines",

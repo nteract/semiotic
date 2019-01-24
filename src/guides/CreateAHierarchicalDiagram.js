@@ -140,7 +140,7 @@ const treemap = {
   ...circlepack,
   networkType: {
     type: "treemap",
-    nodePadding: 5,
+    padding: 3,
     hierarchySum: d => d.value
   }
 };

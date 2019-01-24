@@ -113,8 +113,9 @@ summaryType={ type: "violin",
     binValue: d => d.length, //Function that determines the summarized value (by default it’s the number of items in a bin),
     useBins: true //Boolean, If set to false, bins will have a one-to-one correspondence with the points passed to the column, allowing you to create your own samples without trying to wrangle bin numbers,
     curve: curveCatmullRom //d3-shape-like curve function,
-    // axis: Object, Uses the same axis settings from everywhere else but makes an axis for each column.
-    // relative: Boolean, Whether or not the scale of each individual plot is relative to the maximum of all plots or only to its own plot (you can combine a relative={true} with 
+    relative: false //Boolean, Whether or not the scale of each individual plot is relative to the maximum of all plots or only to its own plot (you can combine a relative={true} with,
+    // axis: Object, Uses the same axis settings from everywhere else but makes an axis for each column
+
 }\`\`\`
 `}
       />
@@ -142,8 +143,8 @@ summaryType={ type: "heatmap",
     bins: 25 // Number, Bins ito bin the values into,
     binValue: d => d.length, //Function that determines the summarized value (by default it’s the number of items in a bin),
     useBins: true //Boolean, If set to false, bins will have a one-to-one correspondence with the points passed to the column, allowing you to create your own samples without trying to wrangle bin numbers,
-    // axis: Object, Uses the same axis settings from everywhere else but makes an axis for each column.
-    // relative: Boolean, Whether or not the scale of each individual plot is relative to the maximum of all plots or only to its own plot (you can combine a relative={true} with      
+    relative: false //Boolean, Whether or not the scale of each individual plot is relative to the maximum of all plots or only to its own plot (you can combine a relative={true} with,
+    // axis: Object, Uses the same axis settings from everywhere else but makes an axis for each column   
 }\`\`\`
 
 `}
@@ -208,8 +209,8 @@ summaryType={ type: "histogram",
     bins: 25 // Number, Bins ito bin the values into,
     binValue: d => d.length, //Function that determines the summarized value (by default it’s the number of items in a bin),
     useBins: true //Boolean, If set to false, bins will have a one-to-one correspondence with the points passed to the column, allowing you to create your own samples without trying to wrangle bin numbers,
-    // axis: Object, Uses the same axis settings from everywhere else but makes an axis for each column.
-    // relative: Boolean, Whether or not the scale of each individual plot is relative to the maximum of all plots or only to its own plot (you can combine a relative={true} with 
+    relative: false //Boolean, Whether or not the scale of each individual plot is relative to the maximum of all plots or only to its own plot (you can combine a relative={true} with,
+    // axis: Object, Uses the same axis settings from everywhere else but makes an axis for each column
   }\`\`\`
 
 `}
@@ -271,8 +272,8 @@ summaryType={ type: "ridgeline",
     useBins: true //Boolean, If set to false, bins will have a one-to-one correspondence with the points passed to the column, allowing you to create your own samples without trying to wrangle bin numbers,
     curve: curveCatmullRom //d3-shape-like curve function,
     amplitude: 0 //Number, pixels the plot is allowed to overflow into the above (or left) column.
-    // axis: Object, Uses the same axis settings from everywhere else but makes an axis for each column.
-    // relative: Boolean, Whether or not the scale of each individual plot is relative to the maximum of all plots or only to its own plot (you can combine a relative={true} with 
+    relative: false //Boolean, Whether or not the scale of each individual plot is relative to the maximum of all plots or only to its own plot (you can combine a relative={true} with,
+    // axis: Object, Uses the same axis settings from everywhere else but makes an axis for each column
   }\`\`\`
 
 `}
