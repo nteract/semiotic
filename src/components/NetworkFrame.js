@@ -481,7 +481,7 @@ class NetworkFrame extends React.Component<Props, State> {
     className: "",
     name: "networkframe",
     networkType: { type: "force", iterations: 500 },
-    filterRenderedNodes: d => d.id !== "root-generated"
+    filterRenderedNodes: (d:Object) => d.id !== "root-generated"
   }
 
   static displayName = "NetworkFrame"
