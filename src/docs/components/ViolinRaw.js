@@ -80,6 +80,18 @@ const violinChart = {
       offset: 45,
       depth: 10,
       padding: 0
+    },
+    {
+      type: "check-html",
+      stepValue: 70,
+      stepName: "January",
+      label: "come on this is 70"
+    },
+    {
+      type: "check-html",
+      stepValue: 30,
+      stepName: "August",
+      label: "30 here is 30"
     }
   ]
 }
@@ -87,6 +99,24 @@ const violinChart = {
 export default (
   <div>
     <ProcessViz frameSettings={violinChart} frameType="OrdinalFrame" />
-    <OrdinalFrame {...violinChart} />
+    <OrdinalFrame
+      {...violinChart}
+      htmlAnnotationRules={({ d, oScale, rScale }) => {
+        if (d.type === "check-html") {
+          return (
+            <div
+              style={{
+                left: `${oScale(d.stepName)}px`,
+                top: `${rScale(d.stepValue)}px`,
+                position: "absolute"
+              }}
+            >
+              Hello der - {d.label}
+            </div>
+          )
+        }
+        return null
+      }}
+    />
   </div>
 )

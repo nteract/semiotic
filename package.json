@@ -151,7 +151,7 @@
     "d3-scale": "^1.0.3",
     "d3-selection": "^1.1.0",
     "d3-shape": "^1.2.0",
-    "json2csv": "3.11.5",
+    "json2csv": "^4.3.3",
     "labella": "1.1.4",
     "memoize-one": "4.0.0",
     "object-assign": "4.1.1",

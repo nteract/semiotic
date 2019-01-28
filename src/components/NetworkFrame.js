@@ -1748,7 +1748,7 @@ class NetworkFrame extends React.Component<Props, State> {
     } else if (d.type === "basic-node-label") {
       return (
         <g key={d.key} transform={`translate(${d.x},${d.y})`}>
-          {d.element}
+          {baseD.label}
         </g>
       )
     } else if (d.type === "react-annotation" || typeof d.type === "function") {

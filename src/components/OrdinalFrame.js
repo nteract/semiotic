@@ -1452,7 +1452,12 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
     if (this.props.svgAnnotationRules && customAnnotation !== null) {
       return customAnnotation
     } else if (d.type === "desaturation-layer") {
-      return desaturationLayer({ style: d.style, size: adjustedSize, i, key: d.key })
+      return desaturationLayer({
+        style: d.style,
+        size: adjustedSize,
+        i,
+        key: d.key
+      })
     } else if (d.type === "ordinal-line") {
       return svgOrdinalLine({ d, i, screenCoordinates, voronoiHover })
     } else if (d.type === "or") {
@@ -1518,6 +1523,45 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       size,
       useSpans
     } = this.props
+    let screenCoordinates = [0, 0]
+
+    if (d.coordinates || (d.type === "enclose" && d.neighbors)) {
+      screenCoordinates = (d.coordinates || d.neighbors).map(p => {
+        const pO = findFirstAccessorValue(oAccessor, p) || p.column
+        const oColumn = projectedColumns[pO]
+        const idPiece = findIDPiece(pieceIDAccessor, oColumn, p)
+
+        return screenProject({
+          p,
+          projectedColumns,
+          adjustedSize,
+          rScale,
+          oAccessor,
+          rAccessor,
+          idPiece,
+          projection,
+          oColumn,
+          rScaleType
+        })
+      })
+    } else {
+      const pO = findFirstAccessorValue(oAccessor, d) || d.column
+      const oColumn = projectedColumns[pO]
+      const idPiece = findIDPiece(pieceIDAccessor, oColumn, d)
+
+      screenCoordinates = screenProject({
+        p: d,
+        projectedColumns,
+        adjustedSize,
+        rScale,
+        oAccessor,
+        rAccessor,
+        idPiece,
+        projection,
+        oColumn,
+        rScaleType
+      })
+    }
 
     //TODO: Process your rules first
     if (
@@ -1532,19 +1576,25 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         orFrameProps: this.props,
         orFrameState: this.state,
         categories: this.state.projectedColumns,
-        useSpans
+        useSpans,
+        screenCoordinates
       }) !== null
     ) {
+      const flippedRScale =
+        projection === "vertical"
+          ? rScaleType.domain(rScale.domain()).range(rScale.range().reverse())
+          : rScale
       return htmlAnnotationRules({
         d,
         i,
         oScale,
-        rScale,
+        rScale: flippedRScale,
         oAccessor,
         rAccessor,
         orFrameProps: this.props,
         categories: this.state.projectedColumns,
-        useSpans
+        useSpans,
+        screenCoordinates
       })
     }
 
