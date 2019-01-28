@@ -25,8 +25,6 @@ import DownloadButton from "./DownloadButton"
 import { calculateMargin, adjustedPositionSize } from "./svg/frameFunctions"
 import { pointOnArcAtAngle } from "./svg/pieceDrawing"
 
-import { softStack } from "./svg/networkDrawing"
-
 import {
   drawNodes,
   drawEdges,
@@ -45,7 +43,8 @@ import {
   ribbonLink,
   circularAreaLink,
   radialLabelGenerator,
-  dagreEdgeGenerator
+  dagreEdgeGenerator,
+  softStack
 } from "./svg/networkDrawing"
 
 import { stringToFn } from "./data/dataFunctions"
