@@ -5,6 +5,8 @@ import { arc, line, curveLinearClosed } from "d3-shape"
 import { Mark } from "semiotic-mark"
 import { interpolateNumber } from "d3-interpolate"
 
+const emptyObjectReturnFn = () => ({})
+
 const twoPI = Math.PI * 2
 
 const dedupeRibbonPoints = (weight = 1) => (p, c) => {
@@ -140,16 +142,23 @@ export const groupBarMark = ({
   const mappedPoints = []
   const actualMax = (relativeBuckets && relativeBuckets[summary.name]) || binMax
 
+  const summaryElementStylingFn = type.elementStyleFn || emptyObjectReturnFn
+  const barPadding = type.padding || 0
+
   bins.forEach((d, i) => {
     const opacity = d.value / actualMax
+    const additionalStyle = summaryElementStylingFn(d.value, opacity, d.pieces)
     const finalStyle =
       type.type === "heatmap"
-        ? { opacity: opacity, fill: summaryStyle.fill }
-        : summaryStyle
+        ? { opacity: opacity, fill: summaryStyle.fill, ...additionalStyle }
+        : { ...summaryStyle, ...additionalStyle }
+
+    const thickness = Math.max(1, d.y1 - barPadding * 2)
+
     const finalColumnWidth =
       type.type === "heatmap" ? columnWidth : columnWidth * opacity
-    let yProp = d.y
-    let height = d.y1
+    let yProp = d.y + barPadding
+    let height = thickness
     let width = finalColumnWidth
     let xOffset =
       type.type === "heatmap" ? finalColumnWidth / 2 : finalColumnWidth
@@ -160,9 +169,9 @@ export const groupBarMark = ({
         type.type === "heatmap"
           ? -columnWidth / 2
           : columnWidth / 2 - finalColumnWidth
-      xProp = d.y - d.y1
+      xProp = d.y - d.y1 + barPadding
       height = finalColumnWidth
-      width = d.y1
+      width = thickness
       yOffset =
         type.type === "heatmap" ? finalColumnWidth / 2 : finalColumnWidth
       xOffset = d.y1 / 2

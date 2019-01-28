@@ -25,6 +25,8 @@ import DownloadButton from "./DownloadButton"
 import { calculateMargin, adjustedPositionSize } from "./svg/frameFunctions"
 import { pointOnArcAtAngle } from "./svg/pieceDrawing"
 
+import { softStack } from "./svg/networkDrawing"
+
 import {
   drawNodes,
   drawEdges,
@@ -479,7 +481,7 @@ class NetworkFrame extends React.Component<Props, State> {
     className: "",
     name: "networkframe",
     networkType: { type: "force", iterations: 500 },
-    filterRenderedNodes: () => true
+    filterRenderedNodes: d => d.id !== "root-generated"
   }
 
   static displayName = "NetworkFrame"
@@ -733,10 +735,24 @@ class NetworkFrame extends React.Component<Props, State> {
       })
 
       let operationalEdges = edges
+      let baseEdges = edges
 
-      if (!Array.isArray(edges)) {
+      if (hierarchicalTypeHash[networkSettings.type] && Array.isArray(edges)) {
+        const createdHierarchicalData = softStack(edges, nodes, sourceAccessor, targetAccessor, nodeIDAccessor)
+
+        if (createdHierarchicalData.isHierarchical) {
+          baseEdges = createdHierarchicalData.hierarchy
+          projectedNodes = []
+        }
+        else {
+          console.error("You've sent an edge list that is not strictly hierarchical (there are nodes with multiple parents) defaulting to force-directed network layout")
+          networkSettings.type = "force"
+        }
+      }
+
+      if (!Array.isArray(baseEdges)) {
         networkSettings.hierarchicalNetwork = true
-        const rootNode = hierarchy(edges, networkSettings.hierarchyChildren)
+        const rootNode = hierarchy(baseEdges, networkSettings.hierarchyChildren)
 
         rootNode.sum(networkSettings.hierarchySum || (d => d.value))
 

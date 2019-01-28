@@ -66,7 +66,7 @@ const networkNodeStyle = d => ({
 
 const networkTypeHash = {
   force: {
-    type: "force",
+    type: "tree",
     iterations: 500,
     edgeStrength: 0.1
   },
