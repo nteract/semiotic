@@ -731,7 +731,7 @@ export const drawEdges = ({
       const renderedD = dGenerator(d)
 
       if (renderedD && canvasRenderFn && canvasRenderFn(d, i) === true) {
-        const canvasNode = {
+        const canvasEdge = {
           baseClass: "frame-piece",
           tx: d.x,
           ty: d.y,
@@ -742,7 +742,7 @@ export const drawEdges = ({
           renderFn: renderMode,
           classFn
         }
-        canvasDrawing.push(canvasNode)
+        canvasDrawing.push(canvasEdge)
       } else if (renderedD) {
         renderedData.push(
           <Mark

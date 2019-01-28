@@ -13,26 +13,39 @@ class MinimapXYFrame extends React.Component {
     this.generateMinimap = this.generateMinimap.bind(this)
   }
 
+  static displayName = "OrdinalFrame"
+
   generateMinimap() {
+    const {
+      xAccessor,
+      yAccessor,
+      points,
+      lines,
+      areas,
+      size,
+      lineDataAccessor,
+      lineType,
+      minimap
+    } = this.props
     const miniDefaults = {
       title: "",
       position: [0, 0],
-      size: [this.props.size[0], this.props.size[1] * 0.25],
-      xAccessor: this.props.xAccessor,
-      yAccessor: this.props.yAccessor,
-      points: this.props.points,
-      lines: this.props.lines,
-      areas: this.props.areas,
-      lineDataAccessor: this.props.lineDataAccessor,
+      size: [size[0], size[1] * 0.25],
+      xAccessor: xAccessor,
+      yAccessor: yAccessor,
+      points: points,
+      lines: lines,
+      areas: areas,
+      lineDataAccessor: lineDataAccessor,
       xBrushable: true,
       yBrushable: true,
       brushStart: () => {},
       brush: () => {},
       brushEnd: () => {},
-      lineType: this.props.lineType
+      lineType: lineType
     }
 
-    const combinedOptions = Object.assign(miniDefaults, this.props.minimap)
+    const combinedOptions = { ...miniDefaults, ...minimap }
 
     combinedOptions.hoverAnnotation = false
 
