@@ -348,6 +348,21 @@ A string (One of `'none','linearc','ribbon','arrowhead','halfarrow','nail','come
 />} />
 ```
 
+### customEdgeIcon { _function_ }
+
+A function taking the edge datapoint and returning SVG JSX representation of the edge.
+
+- d: The data element of the edge, which has props like source and target that give you x/y coordinates to draw your own edge
+- i: the index position of the edge in the data array
+- renderKeyFn: a function for determining the unique key for the rendered element (passed through from your renderKey function in the Frame)
+- styleFn: a function for determining the style object given `d` (passed through from the Frame from your edgeStyle)
+- classFn: a function for determining the className given `d` (passed through from the Frame from your edgeClass)
+- renderMode: a function for determining the renderMode given `d` (passed through from the Frame from your edgeRenderMode)
+  key - a string that is generated from the renderKeyFn or `edge-${index value of this edge}`
+- className: The results of the class function + “ edge”
+- transform: Some edges, like chord edges, need to be translated (centered, typically) and the `translate(${d.x},${d.y})` is sent in this form
+- baseMarkProps: an object from the Frame’s baseMarkProps property that is meant to be spread to all generated marks, like this edge
+
 ## Annotation and Decoration
 
 ### tooltipContent: { _function_ }

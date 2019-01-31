@@ -1,7 +1,7 @@
 import React from "react";
 import MarkdownText from "../MarkdownText";
 import theme from "../theme";
-import DocumentFrame from "../DocumentFrame";
+import DocumentFrame, { propertyToString } from "../DocumentFrame";
 import { network_data, or_data } from "./pathData";
 import { NetworkFrame } from "semiotic";
 import dagre from "dagre";
@@ -16,8 +16,6 @@ const colors = {
 
 const frameprops = {
   size: [700, 500],
-  nodes: or_data.map(d => Object.assign({}, d)),
-
   nodeStyle: d => ({
     stroke: colors[d.category],
     fill: colors[d.category]
@@ -25,9 +23,7 @@ const frameprops = {
   edgeStyle: d => ({
     stroke: colors[d.target.category],
     fill: colors[d.source.category],
-    strokeWidth: 1,
-    fillOpacity: 0.2,
-    strokeOpacity: 1
+    fillOpacity: 0.2
   }),
   nodeIDAccessor: "id",
   sourceAccessor: "source",
@@ -49,18 +45,28 @@ const frameprops = {
 
 const chord = {
   ...frameprops,
-  networkType: {
-    type: "chord"
-  }
+  networkType: "chord"
+};
+
+const arc = {
+  ...frameprops,
+  networkType: "arc",
+  edgeStyle: d => ({
+    stroke: colors[d.target.category],
+    fill: "none"
+  }),
+  size: [800, 300]
+  // nodeSize
 };
 
 const overrideProps = {
   graph: "g",
-  nodeLabels: `d => <text>{d.id}</text>`
+  nodeLabels: `d => <text>{d.id}</text>`,
+  nodes: propertyToString(or_data, 0, true)
 };
 
 const pre = `
-const theme = ${JSON.stringify(theme)}          
+const theme = ${JSON.stringify(theme)}       
 
 const size = scaleLinear()
 .domain([0, 1020])
@@ -80,17 +86,17 @@ ranksep: 15
 g.setDefaultEdgeLabel(() => ({}));
 
 frameprops.nodes.forEach(n => {
-g.setNode(n.id, {
-  ...n,
-  height: size(Math.max(n.input, n.output)),
-  width: 10
-});
+  g.setNode(n.id, {
+    ...n,
+    height: size(Math.max(n.input, n.output)),
+    width: 10
+  });
 });
 
 frameprops.edges.forEach(e => {
-g.setEdge(e.source, e.target, {
-  weight: edgeSize(e.value)
-});
+  g.setEdge(e.source, e.target, {
+    weight: edgeSize(e.value)
+  });
 });
 
 dagre.layout(g);
@@ -137,19 +143,59 @@ export default () => {
 ## Sankey
 
 
-## Chord
-
-
-## Dagre
-
     `}
       />
 
       <DocumentFrame
+        frameProps={frameprops}
+        type={NetworkFrame}
+        pre={`
+const theme = ${JSON.stringify(theme)}          
+`}
+        overrideProps={overrideProps}
+      />
+
+      <MarkdownText
+        text={`
+## Arc
+
+
+  `}
+      />
+      <DocumentFrame
+        frameProps={arc}
+        type={NetworkFrame}
+        pre={`
+const theme = ${JSON.stringify(theme)}          
+`}
+        startHidden
+        overrideProps={overrideProps}
+      />
+      <MarkdownText
+        text={`
+## Chord
+    `}
+      />
+      <DocumentFrame
+        frameProps={chord}
+        type={NetworkFrame}
+        pre={`
+const theme = ${JSON.stringify(theme)}          
+`}
+        startHidden
+        overrideProps={overrideProps}
+      />
+      <MarkdownText
+        text={`
+## Dagre
+
+    `}
+      />
+      <DocumentFrame
         frameProps={{
           size: frameprops.size,
           graph: g,
-          networkType: { type: "dagre", zoom: true },
+          networkType: "dagre",
           nodeStyle: frameprops.nodeStyle,
           edgeStyle: d => ({
             fill: "none",
@@ -161,23 +207,13 @@ export default () => {
         overrideProps={overrideProps}
         pre={pre}
       />
+      <MarkdownText
+        text={`
+## What next?
 
-      <DocumentFrame
-        frameProps={chord}
-        type={NetworkFrame}
-        pre={`
-const theme = ${JSON.stringify(theme)}          
-`}
-        overrideProps={overrideProps}
-      />
+For technical specifications on all of NetworkFrames's features, reference the [NetworkFrame API](#api/networkframe) docs.
 
-      <DocumentFrame
-        frameProps={frameprops}
-        type={NetworkFrame}
-        pre={`
-const theme = ${JSON.stringify(theme)}          
 `}
-        overrideProps={overrideProps}
       />
     </div>
   );
