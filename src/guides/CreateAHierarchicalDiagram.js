@@ -201,7 +201,6 @@ networkType={
     type: "tree", 
     padding={0} // pixel value to separate individual nodes from each other
     projection="vertical"// accepts (vertical|horizontal|radial) whether to display the chart with steps laid out on the y axis (vertical) or the x axis (horizontal)
-    layout="treemap"// the layout algorithm, defaults to d3-hierarchy’s treemap layout
     hierarchyChildren={d => d.children} // function describing how children are defined in the hierarchical dataset, which will be passed as the second value to d3-hierarchy’s hierarchy function,
 }\`\`\`
 `}
@@ -240,8 +239,6 @@ networkType={
     type: "circlepack", 
     zoom: true, //zoom the laid out nodes in or out so that they fit exactly in the specified size
     padding={0} // pixel value to separate individual nodes from each other
-    projection="vertical"// accepts (vertical|horizontal|radial) whether to display the chart with steps laid out on the y axis (vertical) or the x axis (horizontal)
-    layout="treemap"// the layout algorithm, defaults to d3-hierarchy’s treemap layout
     hierarchyChildren={d => d.children} // function describing how children are defined in the hierarchical dataset, which will be passed as the second value to d3-hierarchy’s hierarchy function,
 }\`\`\`
 `}
@@ -281,7 +278,6 @@ networkType={{
     zoom: true, //zoom the laid out nodes in or out so that they fit exactly in the specified size
     padding={0} // pixel value to separate individual nodes from each other
     projection="vertical"// accepts (vertical|horizontal) whether to display the chart with steps laid out on the y axis (vertical) or the x axis (horizontal)
-    layout="treemap"// the layout algorithm, defaults to d3-hierarchy’s treemap layout
     hierarchyChildren={d => d.children} // function describing how children are defined in the hierarchical dataset, which will be passed as the second value to d3-hierarchy’s hierarchy function,
     }}
 \`\`\`
@@ -321,7 +317,6 @@ networkType={{
   zoom: true, //zoom the laid out nodes in or out so that they fit exactly in the specified size 
   padding={0} // pixel value to separate individual nodes from each other
   projection="vertical"// accepts (vertical|horizontal|radial) whether to display the chart with steps laid out on the y axis (vertical) or the x axis (horizontal)
-  layout="treemap"// the layout algorithm, defaults to d3-hierarchy’s treemap layout
   hierarchyChildren={d => d.children} // function describing how children are defined in the hierarchical dataset, which will be passed as the second value to d3-hierarchy’s hierarchy function,
   }}
 \`\`\`

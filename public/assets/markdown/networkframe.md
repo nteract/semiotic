@@ -243,6 +243,17 @@ By default nodes are represented as SVG `<circle>` elements with `r=5`. Use _nod
 
 A function taking the node datapoint and returning SVG JSX representation of the node.
 
+- d : the data for the node, which includes its x/y data
+- i : the array position of the node data in the nodes array
+- renderKeyFn : same as customEdgeType
+- styleFn : same as customEdgeType
+- classFn : same as customEdgeType
+- renderMode : same as customEdgeType
+- key : same as customEdgeType but “node-\${i}”
+- className : same as customEdgeType but with “node”
+- transform : same as customEdgeType
+- baseMarkProps : same as customEdgeType
+
 ```jsx
 <NetworkFrame
   customNodeIcon={d => (
@@ -329,7 +340,7 @@ If edgeRenderMode is specified, determines the renderMode of the underlying Mark
 
 ### edgeType { _string_ | _object_ | _function_ }
 
-A string (One of `'none','linearc','ribbon','arrowhead','halfarrow','nail','comet','taffy'`) or an object with `{ type }` equal to one of these strings (with additional options depending on which edge type is selected) or a function that takes an edge datapoint and returns SVG JSX representation of the connection between two edges.
+A string (One of `'none', 'curve', 'linearc','ribbon','arrowhead','halfarrow','nail','comet','taffy'`) or an object with `{ type }` equal to one of these strings (with additional options depending on which edge type is selected) or a function that takes an edge datapoint and returns SVG JSX representation of the connection between two edges.
 
 ```jsx
 <!-- String option -->
