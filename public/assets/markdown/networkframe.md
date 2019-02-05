@@ -346,9 +346,6 @@ A string (One of `'none', 'curve', 'linearc','ribbon','arrowhead','halfarrow','n
 <!-- String option -->
 <NetworkFrame edgeType="halfarrow" />
 
-<!-- Object option -->
-<NetworkFrame edgeType={{ type: "taffy", centerWidth: 1 }} />
-
 <!-- Function option -->
 <NetworkFrame edgeType={d => <line
     x1={d.source.x}

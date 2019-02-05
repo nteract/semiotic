@@ -14,8 +14,8 @@ const frameProps = {
   },
   nodeSizeAccessor: 2,
   edgeStyle: { stroke: theme[2], fill: "none" },
-  nodeIDAccessor: "name"
-  // filterRenderedNodes: d => d.depth !== 0
+  nodeIDAccessor: "name",
+  filterRenderedNodes: d => d.depth !== 0
 };
 
 const combinedFociNodes = [...Array(100)].map((d, i) => ({

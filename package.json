@@ -1,8 +1,8 @@
 {
-  "name": "semiotic-examples",
+  "name": "semiotic-docs",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://susielu.github.io/semiotic-examples",
+  "homepage": "https://semiotic.nteract.io",
   "dependencies": {
     "babel-eslint": "^10.0.1",
     "d3-dsv": "1.0.10",
@@ -13,7 +13,7 @@
     "marked": "0.5.0",
     "react": "^16.5.1",
     "react-dom": "^16.5.1",
-    "react-scripts": "1.1.5",
+    "react-scripts": "2.1.1",
     "semiotic": "1.16.3"
   },
   "scripts": {
@@ -22,7 +22,8 @@
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -t -d build"
+    "deploy": "gh-pages -t -d build",
+    "now-build": "npm run build && mv build dist"
   },
   "devDependencies": {
     "eslint": "4.19.0",
