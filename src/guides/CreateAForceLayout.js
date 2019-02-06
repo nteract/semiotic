@@ -14,8 +14,8 @@ const frameProps = {
   },
   nodeSizeAccessor: 2,
   edgeStyle: { stroke: theme[2], fill: "none" },
-  nodeIDAccessor: "name",
-  filterRenderedNodes: d => d.depth !== 0
+  nodeIDAccessor: "name"
+  // filterRenderedNodes: d => d.depth !== 0
 };
 
 const combinedFociNodes = [...Array(100)].map((d, i) => ({
@@ -89,7 +89,7 @@ export default class ForceLayouts extends React.Component {
 
 Edges can either be an array of objects with a \`source\` and a \`target\` property, or a hierarchical object with an array of \`children\` containing objects with \`children\` all the way down the hierarchy. The assumption is that each child's \`id\` property is unique, you can use the \`nodeIdAccessor\` to specify a different key for the id if needed. These types of hierarchies can be created easily from a parent/child  list with d3's [stratify](https://github.com/d3/d3-hierarchy#stratify) functionality.  
 
-The built in force types are \`force\`, and \`motif\`.
+The built in force types are \`force\`, and \`motifs\`.
 
     `}
         />
@@ -130,7 +130,9 @@ const theme = ${JSON.stringify(theme)}
 
 \`\`\`jsx
 networkType={ 
-  type: "force" // Can also be "motif" which would lay out several 
+  type: "force" // Can also be "motifs" 
+     //motifs lays out separated networks side by side
+     //without applying a force between them
   zoom: true, //zoom the laid out nodes in or out so that they fit exactly in the specified size
   iterations: 500, // How many times to run forceSimulation
   edgeStrength: 0.1, // What modifier to use for the strength of connection between nodes with edges

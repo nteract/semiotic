@@ -32,8 +32,6 @@ const frameprops = {
   hoverAnnotation: true,
   networkType: {
     type: "sankey",
-    orient: "right",
-
     nodePaddingRatio: 0.1
   },
 
@@ -140,6 +138,14 @@ export default () => {
     <div>
       <MarkdownText
         text={`
+## Path Diagrams
+
+\`NetworkFrame\` allows you to render several data visualizations with calculated positions for nodes based on the complexity of the edges/paths that connect them. For these examples you can pass a \`nodes\` and an \`edges\` list, or just an \`edges\` list and nodes with be inferred.
+
+Edges can either be an array of objects with a \`source\` and a \`target\` property, or a hierarchical object with an array of \`children\` containing objects with \`children\` all the way down the hierarchy. The assumption is that each child's \`id\` property is unique, you can use the \`nodeIdAccessor\` to specify a different key for the id if needed. These types of hierarchies can be created easily from a parent/child  list with d3's [stratify](https://github.com/d3/d3-hierarchy#stratify) functionality.
+
+The built in path types are \`sankey\`, \`arc\`, \`chord\`, and \`dagre\`.
+
 ## Sankey
 
 
@@ -157,9 +163,30 @@ const theme = ${JSON.stringify(theme)}
 
       <MarkdownText
         text={`
+### Sankey Settings
+In addition to just sending \`networkType\` as a string, you could pass an object with additional layout options.
+
+By default the sankey type uses [d3-sankey layout](https://github.com/d3/d3-sankey) to layout nodes and edges. The \`orient\` property is a pass through to the [alignment](https://github.com/d3/d3-sankey#alignments) options.
+
+\`\`\`jsx
+networkType={{ 
+  type: "sankey"
+  zoom: true, // zoom the laid out nodes in or out so that they fit exactly in the specified size
+  direction: "left", // accepts (right|left|up|down) direction of flow in the diagram
+  orient: "center", // accepts (left|right|justify|center) sankey node alignment strategy
+  iterations: 100, // how many times to run the layout algorithm
+  nodeWidth: 24, // thickness of node along the axis of flow
+  nodePaddingRatio: .5 // the ratio of nodes to available space, only if nodePadding is not set
+  // nodePadding: number of pixels between nodes
+}}\`\`\`
+
+  `}
+      />
+      <MarkdownText
+        text={`
 ## Arc
 
-
+This example is the same as the sankey except we are passing \`networkType="arc"\`.
   `}
       />
       <DocumentFrame
@@ -173,7 +200,23 @@ const theme = ${JSON.stringify(theme)}
       />
       <MarkdownText
         text={`
+### Ard Settings
+In addition to just sending \`networkType\` as a string, you could pass an object with additional layout options.
+
+\`\`\`jsx
+networkType={{ 
+  type: "arc"
+  zoom: true // zoom the laid out nodes in or out so that they fit 
+  // sort: function
+}}\`\`\`
+
+  `}
+      />
+      <MarkdownText
+        text={`
 ## Chord
+
+This example is the same as the sankey except we are passing \`networkType="chord"\`.
     `}
       />
       <DocumentFrame
@@ -187,7 +230,31 @@ const theme = ${JSON.stringify(theme)}
       />
       <MarkdownText
         text={`
+### Chord Settings
+In addition to just sending \`networkType\` as a string, you could pass an object with additional layout options.
+
+You can also pass any parameters for the [d3-sankey layout](https://github.com/d3/d3-sankey)
+
+\`\`\`jsx
+networkType={{ 
+  type: "chord"
+  zoom: true, // zoom the laid out nodes in or out so that they fit exactly in the specified size
+  groupWidth: 20, //  width in pixels of the outer rings
+  padAngle: 0.1, // space between groups in degrees
+  // sortGroups: function
+  
+  ,
+}}\`\`\`
+
+  `}
+      />
+      <MarkdownText
+        text={`
 ## Dagre
+
+This layout uses the [dagrejs](https://github.com/dagrejs/dagre) library for laying out the nodes and edges. To set up this layout, you pass a \`dagre.grahlib.Graph\` as a graph paramter within \`networkType\`.
+
+When you are setting up with dagre graph you must iterate over the nodes and edges prior to sending them to \`NetworkFrame\`, see code block below for details. At this time you can also specify [layout settings](https://github.com/dagrejs/dagre/wiki#configuring-the-layout).
 
     `}
       />

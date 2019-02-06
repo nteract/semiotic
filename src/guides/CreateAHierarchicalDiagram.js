@@ -196,13 +196,13 @@ In addition to just sending \`networkType\` as a string, you could pass an objec
 You can also pass any parameters for [d3-hierarchy's tree layout](https://github.com/d3/d3-hierarchy#tree)
 
 \`\`\`jsx
-networkType={ 
-    zoom: true, //zoom the laid out nodes in or out so that they fit exactly in the specified size
-    type: "tree", 
-    padding={0} // pixel value to separate individual nodes from each other
-    projection="vertical"// accepts (vertical|horizontal|radial) whether to display the chart with steps laid out on the y axis (vertical) or the x axis (horizontal)
-    hierarchyChildren={d => d.children} // function describing how children are defined in the hierarchical dataset, which will be passed as the second value to d3-hierarchy’s hierarchy function,
-}\`\`\`
+networkType={{ 
+  type: "tree", 
+  zoom: true, //zoom the laid out nodes in or out so that they fit exactly in the specified size
+  padding: 0, // pixel value to separate individual nodes from each other
+  projection: "vertical", // accepts (vertical|horizontal|radial) whether to display the chart with steps laid out on the y axis (vertical) or the x axis (horizontal)
+  hierarchyChildre: d => d.children // function describing how children are defined in the hierarchical dataset, which will be passed as the second value to d3-hierarchy’s hierarchy function,
+}}\`\`\`
 `}
         />
 
@@ -235,12 +235,12 @@ In addition to just sending \`networkType\` as a string, you could pass an objec
 You can also pass any parameters for [d3-hierarchy's pack layout](https://github.com/d3/d3-hierarchy#pack)
 
 \`\`\`jsx
-networkType={ 
-    type: "circlepack", 
-    zoom: true, //zoom the laid out nodes in or out so that they fit exactly in the specified size
-    padding={0} // pixel value to separate individual nodes from each other
-    hierarchyChildren={d => d.children} // function describing how children are defined in the hierarchical dataset, which will be passed as the second value to d3-hierarchy’s hierarchy function,
-}\`\`\`
+networkType={{ 
+  type: "circlepack", 
+  zoom: true, //zoom the laid out nodes in or out so that they fit exactly in the specified size
+  padding: 0, // pixel value to separate individual nodes from each other
+  hierarchyChildren: d => d.children // function describing how children are defined in the hierarchical dataset, which will be passed as the second value to d3-hierarchy’s hierarchy function,
+}}\`\`\`
 `}
         />
 
@@ -274,12 +274,12 @@ You can also pass any parameters for [d3-hierarchy's treemap layout](https://git
 
 \`\`\`jsx
 networkType={{
-    type: "treemap", 
-    zoom: true, //zoom the laid out nodes in or out so that they fit exactly in the specified size
-    padding={0} // pixel value to separate individual nodes from each other
-    projection="vertical"// accepts (vertical|horizontal) whether to display the chart with steps laid out on the y axis (vertical) or the x axis (horizontal)
-    hierarchyChildren={d => d.children} // function describing how children are defined in the hierarchical dataset, which will be passed as the second value to d3-hierarchy’s hierarchy function,
-    }}
+  type: "treemap", 
+  zoom: true, //zoom the laid out nodes in or out so that they fit exactly in the specified size
+  padding: 0, // pixel value to separate individual nodes from each other
+  projection: "vertical", // accepts (vertical|horizontal) whether to display the chart with steps laid out on the y axis (vertical) or the x axis (horizontal)
+  hierarchyChildren: d => d.children // function describing how children are defined in the hierarchical dataset, which will be passed as the second value to d3-hierarchy’s hierarchy function,
+}}
 \`\`\`
 `}
         />
@@ -315,10 +315,10 @@ You can also pass any parameters for [d3-hierarchy's partition layout](https://g
 networkType={{
   type: "partition",
   zoom: true, //zoom the laid out nodes in or out so that they fit exactly in the specified size 
-  padding={0} // pixel value to separate individual nodes from each other
-  projection="vertical"// accepts (vertical|horizontal|radial) whether to display the chart with steps laid out on the y axis (vertical) or the x axis (horizontal)
-  hierarchyChildren={d => d.children} // function describing how children are defined in the hierarchical dataset, which will be passed as the second value to d3-hierarchy’s hierarchy function,
-  }}
+  padding: 0, // pixel value to separate individual nodes from each other
+  projection: "vertical", // accepts (vertical|horizontal|radial) whether to display the chart with steps laid out on the y axis (vertical) or the x axis (horizontal)
+  hierarchyChildren: d => d.children // function describing how children are defined in the hierarchical dataset, which will be passed as the second value to d3-hierarchy’s hierarchy function,
+}}
 \`\`\`
       
   `}

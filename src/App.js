@@ -252,7 +252,13 @@ const PAGES = [
       },
       {
         name: "Isotype Chart"
-      }
+      },
+      {
+        name: "NetworkFrame",
+        className: "sub-header"
+      },
+      { name: "Circular Sankey?" },
+      { name: "Matrix" }
     ]
   },
   {
