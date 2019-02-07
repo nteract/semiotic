@@ -1,13 +1,13 @@
-import React from "react"
+import React from "react";
 
 export default ({ pages, selected }) => {
-  let nav = []
+  let nav = [];
 
   pages.forEach((p, i) => {
     const label =
-      p.url !== undefined ? <a href={"#" + p.url}>{p.name}</a> : p.name
+      p.url !== undefined ? <a href={"/" + p.url}>{p.name}</a> : p.name;
     if (p.name === "separator") {
-      nav.push(<div className="separator" key={i + "br1" + p.name} />)
+      nav.push(<div className="separator" key={i + "br1" + p.name} />);
     } else {
       nav.push(
         <p
@@ -16,14 +16,14 @@ export default ({ pages, selected }) => {
         >
           {label}
         </p>
-      )
+      );
     }
     if (p.children) {
       p.children.forEach((c, j) => {
-        const url = c.url && `#${(p.url && p.url + "/") || ""}${c.url}`
+        const url = c.url && `/${(p.url && p.url + "/") || ""}${c.url}`;
 
         if (c.name === "separator") {
-          nav.push(<div className="separator" key={i + "br2" + p.name + j} />)
+          nav.push(<div className="separator" key={i + "br2" + p.name + j} />);
         } else {
           nav.push(
             <p
@@ -38,12 +38,12 @@ export default ({ pages, selected }) => {
             >
               {url ? <a href={url}>{c.name}</a> : c.name}
             </p>
-          )
+          );
         }
-      })
+      });
     }
-  })
-  nav.push(<br key="final-break" />)
+  });
+  nav.push(<br key="final-break" />);
 
-  return nav
-}
+  return nav;
+};

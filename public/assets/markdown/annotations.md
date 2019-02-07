@@ -1,26 +1,49 @@
-Annotations provide enormous value to charts and they're less of a challenge now that solutions like [react-annotation](http://react-annotation.susielu.com/) are available. All frames have some shared annotation handling capabilities that let you deploy annotations easily and dynamically and even do some rudimentary label adjustment in crowded charts.
+Annotations provide enormous value to charts. All frames have some shared annotation handling capabilities that let you easily deploy [react-annotations](https://react-annotation.susielu.com/) and even handles automatic label adjustment.
 
-# Built-in SVG Annotation Processing
+All frames takes a prop `annotations` which is an array of annotation objects:
 
-Each frame can take an array of objects with a `type` and other values passed to `annotations`.
+```jsx
+<XYFrame annotations={[{ type: "react-annotation", label: "a note" }]} />
+```
 
-Each kind of frame has a few built-in supported annotation types and also each frame will process a generic `react-annotation` type or a function passed as a type, which is assumed to be a particular type of react-annotation (such as `AnnotationCallout` or `AnnotationBadge`).
+This array of annotations is sent to **both** an:
 
-## All Frames
+- `svgAnnotationRules` function which renders in an SVG layer
+- `htmlAnnotationRules` function which renders in an HTML layer
 
-- `frame-hover`: Creates a tooltip, which is a div centered on the datapoint populated with whatever is defined in tooltipContent or a sparse default.
-- `highlight`: redraws the mark but with the passed style function or object
-- `desaturation-layer`: Creates a rect the size of the viz layer that has fill: black and fillOpacity: 0.5 or whatever style prop is passed
-- `react-annotation` (or any react-annotation annotation type): Creates a new react-annotation type annotation (defaults to AnnotationLabel)
-  enclose, enclose-rect, enclose-hull: Takes an object with “coordinates” (an array of data objects) and encloses them with a circle, rectangle or convex hull labeled with the passed label. For network frame this is not “coordinates” but rather an array named “ids” that has id values corresponding to the nodeIDAccessor setting.
+This allows for the creation of graphical elements in both SVG & HTML for the same annotation type.
+
+There are also many built-in annotation types that are handled in the default `htmlAnnotationRules` and `svgAnnotationRules` functions on all frames that let you simply pass an array of settings to the `annotations` prop without having to write custom rendering functions. Otherwise, you can pass your own `htmlAnnotationRules` and `svgAnnotationRules` to create completely [custom rendering logic](#custom-annotation-rules) based on the annotation type.
+
+## Built-in Annotation Types
+
+### All Frames
+
+- `react-annotation` (or any [react-annotation](https://react-annotation.susielu.com/)) annotation type): Creates a new react-annotation type annotation (defaults to AnnotationLabel)Expects a data object that matches the structure of the data you've sent to the frame that is also structured according to the react-annotation spec. The x and y values will be overwritten with x & y values for the data values of the object e.g. if all of the data you send depends on a `date` property to determine the x position, the annotation's object should also have a `date` property if you want it scaled with the rest of the data.
+
+```jsx
+ import { AnnotationCalloutCircle } from "react-annotation";
+ <XYFrame annotations={[
+     { type: "react-annotation", label: "a note" },
+     { type: AnnotationCalloutCircle,
+       note: { label: "callout", title: "important"}
+       subject: {radius: 30}
+     }
+ ]} />
+```
+
+- _function_: Any function you send as a `type` of the annotation will be expected to be one of the react-annotation types. See example above.
+
 - `enclose`, `enclose-rect`, `enclose-hull`: Takes an object with “coordinates” (an array of data objects) and encloses them with a circle, rectangle or convex hull labeled with the passed label. For network frame this is not “coordinates” but rather an array named “ids” that has id values corresponding to the nodeIDAccessor setting. The annotation will also honor a “padding” prop that determines the space in pixels to pad the enclosure. Enclose-hull accepts a strokeWidth prop that determines the thickness of the hull stroking.
 
-- `react-annotation`: Expects a data object that matches the structure of the data you've sent to the frame that is also structured according to the react-annotation spec. The x and y values will be overwritten with x & y values for the data values of the object e.g. if all of the data you send depends on a `date` property to determine the x position, the annotation's object should also have a `date` property if you want it scaled with the rest of the data.
-- _function_: Any function you send as a `type` of the annotation will be expected to be one of the react-annotation types.
+* `highlight`: redraws the mark but with the passed style function or object
+* `desaturation-layer`: Creates a rect the size of the viz layer that has fill: black and fillOpacity: 0.5 or whatever style prop is passed
+
+- `frame-hover`: Creates a tooltip, which is a div centered on the datapoint populated with the values derived for that data point, you can use a separate prop `tooltipContent` to customize the value, see the [tooltips](#guides/tooltips) page for details.
 
 TODO: add in eventListener functionality
 
-## XYFrame
+### XYFrame
 
 - `xy`: creates a circle with passed style with a simple SVG text label with passed label prop
 - `x`: creates a react-annotation threshold annotation along the x axis at the point specified by the value with a label as passed
@@ -45,20 +68,20 @@ Example:
 import { AnnotationCalloutElbow } from 'react-annotation'
 
 const variousAnnotations = [
-    { type: 'react-annotation', x: 4, y: 300, dx: -30, dy: 0, note: { title: 'Note at 4,300' }, subject: { text: 'A', radius: 12 } },
-    { type: AnnotationCalloutElbow, x: 7, id: 'linedata-1', dx: 30, dy: -50, note: { title: 'linedata-1 at 7' }, subject: { text: 'C', radius: 12 } },
-    { type: 'xy', x: 2, y: 2, label: 'Simply XY Annotation' },
-    { type: 'x', x: 2, label: 'Simply X Threshold' },
-    { type: 'y', y: 2, label: 'Simply Y Threshold' },
-    { type: 'enclose', coordinates: [ {x: 3, y: 4}, {x: 5, y: 3} ], label: 'An enclosure' }
+{ type: 'react-annotation', x: 4, y: 300, dx: -30, dy: 0, note: { title: 'Note at 4,300' }, subject: { text: 'A', radius: 12 } },
+{ type: AnnotationCalloutElbow, x: 7, id: 'linedata-1', dx: 30, dy: -50, note: { title: 'linedata-1 at 7' }, subject: { text: 'C', radius: 12 } },
+{ type: 'xy', x: 2, y: 2, label: 'Simply XY Annotation' },
+{ type: 'x', x: 2, label: 'Simply X Threshold' },
+{ type: 'y', y: 2, label: 'Simply Y Threshold' },
+{ type: 'enclose', coordinates: [ {x: 3, y: 4}, {x: 5, y: 3} ], label: 'An enclosure' }
 ]
 
 <XYFrame
-   annotations={variousAnnotations}
+annotations={variousAnnotations}
 />
 ```
 
-## ORFrame
+### ORFrame
 
 - `column-hover`: Like frame-hover but the entire column/row is passed to the function.
 - `or`: Presents a simple circle annotation with a passed “label” (like “xy” for XYFrame)
@@ -78,7 +101,7 @@ const variousAnnotations = [
   - `curve`: a d3-shape interpolator
   - `radius`: The radius of displayed points
 
-## NetworkFrame
+### NetworkFrame
 
 - `node`: Creates an AnnotationCalloutCircle centered on the node with an id corresponding to the “id” prop in the annotation
 - `basic-node-label`: Places the “label” prop at the center of the node (label can be SVG JSX)

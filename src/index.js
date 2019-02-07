@@ -5,8 +5,8 @@ import App from "./App";
 // import registerServiceWorker from "./registerServiceWorker"
 
 const render = () => {
-  const hash = window.location && window.location.hash;
-  ReactDOM.render(<App hash={hash} />, document.getElementById("root"));
+  const pathname = window.location && window.location.pathname.slice(1);
+  ReactDOM.render(<App pathname={pathname} />, document.getElementById("root"));
 };
 
 render();

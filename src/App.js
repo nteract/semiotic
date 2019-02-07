@@ -349,8 +349,8 @@ const PAGES = [
   }
 ];
 
-export default function({ hash }) {
-  const view = hash.split(/#|\//g).filter(d => d);
+export default function({ pathname }) {
+  const view = pathname.split(/#|\//g).filter(d => d);
 
   let View,
     viewProps = {},
