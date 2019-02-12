@@ -3,13 +3,12 @@ import ReactDOM from "react-dom";
 import "./index.css";
 import App from "./App";
 // import registerServiceWorker from "./registerServiceWorker"
+import { BrowserRouter } from "react-router-dom";
 
-const render = () => {
-  const pathname = window.location && window.location.pathname.slice(1);
-  ReactDOM.render(<App pathname={pathname} />, document.getElementById("root"));
-};
-
-render();
-window.onpopstate = render;
-
+ReactDOM.render(
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>,
+  document.getElementById("root")
+);
 // registerServiceWorker()

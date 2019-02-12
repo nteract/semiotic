@@ -1,11 +1,12 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 export default ({ pages, selected }) => {
   let nav = [];
 
   pages.forEach((p, i) => {
     const label =
-      p.url !== undefined ? <a href={"/" + p.url}>{p.name}</a> : p.name;
+      p.url !== undefined ? <Link to={"/" + p.url}>{p.name}</Link> : p.name;
     if (p.name === "separator") {
       nav.push(<div className="separator" key={i + "br1" + p.name} />);
     } else {
@@ -36,7 +37,7 @@ export default ({ pages, selected }) => {
                 (selected === c.url ? " selected" : "")
               }
             >
-              {url ? <a href={url}>{c.name}</a> : c.name}
+              {url ? <Link to={url}>{c.name}</Link> : c.name}
             </p>
           );
         }

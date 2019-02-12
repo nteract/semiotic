@@ -10,6 +10,7 @@ body {
   --bg-color: #f1eef0;
   --light-color: #aca1a9;
   --dark-color: #886a7e;
+  --link-color: #9a3287;
   --scale-1: #5c4aff;
   --scale-2: #ff4966;
   --scale-3: #9900ff;
@@ -24,6 +25,7 @@ body {
   --sidebar: 240px;
 }
 
+ul code,
 p code {
   font-weight: bold;
 }
@@ -224,13 +226,21 @@ button:focus:after {
   color: var(--light-color);
 }
 
-.dark-color,
-a {
+.dark-color {
   color: var(--dark-color);
+}
+
+a {
+  color: var(--link-color);
+  font-weight: bold;
 }
 
 .sidebar p {
   font-size: 12px;
+}
+
+.sidebar a {
+  font-weight: 200;
 }
 
 .sub-header {
@@ -272,7 +282,8 @@ a {
 
 .selected.black a {
   /* font-weight: bold; */
-  color: var(--dark-color);
+  color: var(--link-color);
+  font-weight: bold;
   background: var(--bg-color);
 }
 
@@ -325,4 +336,30 @@ h3 {
   fill: none;
   stroke: #ffffff;
   stroke-width: 1.5;
+}
+
+.tooltip-content {
+  background: white;
+  border: 1px solid black;
+  color: black;
+  padding: 10px;
+  z-index: 99;
+  min-width: 120px;
+}
+
+.tooltip-content:before {
+  background: white;
+  content: "";
+  padding: 0px;
+  transform: rotate(45deg);
+  width: 15px;
+  height: 15px;
+  position: absolute;
+  z-index: 99;
+}
+
+circle.frame-hover {
+  fill: none;
+  stroke: black;
+  r: 10;
 }

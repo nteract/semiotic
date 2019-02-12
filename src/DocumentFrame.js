@@ -57,7 +57,6 @@ const getFunctionString = (functions, overrideProps) => {
 };
 
 const getFramePropsString = (frameProps, functions, overrideProps, trimmed) => {
-  console.log("trimmed", trimmed);
   const frameString = Object.keys(frameProps)
     .map(d => {
       const order = processNodes.findIndex(p => p.keys.indexOf(d) !== -1);

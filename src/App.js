@@ -1,5 +1,6 @@
 import React from "react";
 import Sidebar from "./Sidebar";
+import ScrollToTop from "./ScrollToTop";
 
 import MarkdownPage from "./MarkdownPage";
 import APIXYFrame from "./api/XYFrame";
@@ -134,20 +135,20 @@ const PAGES = [
         name: "All Frames",
         className: "sub-header"
       },
-
-      {
-        name: "Tooltips",
-        url: "tooltips",
-        component: Tooltips
-      },
       {
         name: "Annotations",
         url: "annotations",
         component: Annotations
       },
       {
-        name: "Cross-Highlighting",
-        url: "cross-highlighting",
+        name: "Annotations - Tooltips",
+        url: "tooltips",
+        component: Tooltips
+      },
+
+      {
+        name: "Annotations - Highlighting",
+        url: "highlighting",
         component: CreateCrossHighlighting
       },
 
@@ -349,8 +350,8 @@ const PAGES = [
   }
 ];
 
-export default function({ pathname }) {
-  const view = pathname.split(/#|\//g).filter(d => d);
+export default function() {
+  const view = window.location.pathname.split(/#|\//g).filter(d => d);
 
   let View,
     viewProps = {},
@@ -382,6 +383,7 @@ export default function({ pathname }) {
 
   return (
     <div className="App">
+      <ScrollToTop location={window.location} />
       <header className="flex algin-bottom">
         <div className="logo">
           <img src={ROOT + "/assets/img/semiotic.png"} alt="Semiotic" />

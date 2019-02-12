@@ -1,10 +1,10 @@
-import React from "react"
-import DocumentFrame from "../DocumentFrame"
-import { XYFrame } from "semiotic"
-import theme from "../theme"
-import MarkdownText from "../MarkdownText"
-import { scaleTime } from "d3-scale"
-import { curveCatmullRom } from "d3-shape"
+import React from "react";
+import DocumentFrame from "../DocumentFrame";
+import { XYFrame } from "semiotic";
+import theme from "../theme";
+import MarkdownText from "../MarkdownText";
+import { scaleTime } from "d3-scale";
+import { curveCatmullRom } from "d3-shape";
 
 export const lines = [
   {
@@ -257,7 +257,7 @@ export const lines = [
       }
     ]
   }
-]
+];
 
 export const threeTitles = lines.concat([
   {
@@ -370,9 +370,9 @@ export const threeTitles = lines.concat([
       }
     ]
   }
-])
+]);
 
-const frameProps = {
+export const frameProps = {
   size: [700, 400],
   xAccessor: "week",
   yAccessor: "theaterCount",
@@ -401,9 +401,9 @@ const frameProps = {
   }),
   margin: { left: 80, bottom: 90, right: 10, top: 40 },
   lines
-}
+};
 
-const overrideProps = {
+export const overrideProps = {
   lineStyle: `(d, i) => ({
     stroke: theme[i],
     strokeWidth: 2,
@@ -418,7 +418,7 @@ const overrideProps = {
   pointStyle: `d => {
     return { fill: theme[d.parentLine.key], r: 4 }
   }`
-}
+};
 
 //Add in multi-line accessor example
 //Add in marginalia labelling example?
@@ -443,7 +443,7 @@ const dateChart = {
       label: { name: "Weeks from Opening Day", locationDistance: 55 }
     }
   ]
-}
+};
 
 const linePercent = {
   ...frameProps,
@@ -460,7 +460,7 @@ const linePercent = {
       label: { name: "Weeks from Opening Day", locationDistance: 55 }
     }
   ]
-}
+};
 
 const bumpLine = {
   ...frameProps,
@@ -479,20 +479,20 @@ const bumpLine = {
       label: { name: "Weeks from Opening Day", locationDistance: 55 }
     }
   ]
-}
+};
 
 const cumulativeLine = {
   ...frameProps,
   lines: threeTitles,
   lineType: "cumulative",
   yAccessor: "grossWeekly"
-}
+};
 
 const withHoverFrameProps = {
   ...frameProps,
   // lineType: "stackedarea"
   hoverAnnotation: true
-}
+};
 
 export default function CreateALineChart() {
   return (
@@ -532,7 +532,7 @@ Set the \`showLinePoints={true}\` to automatically display the underlying points
           ...frameProps,
           showLinePoints: true,
           pointStyle: d => {
-            return { fill: theme[d.parentLine.key], r: 4 }
+            return { fill: theme[d.parentLine.key], r: 4 };
           }
         }}
         type={XYFrame}
@@ -669,5 +669,5 @@ For technical specifications on all of XYFrame's features, reference the [XYFram
 `}
       />
     </div>
-  )
+  );
 }

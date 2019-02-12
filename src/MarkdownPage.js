@@ -26,9 +26,18 @@ export default class MarkdownPage extends React.Component {
           return response.text();
         })
         .then(text => {
-          this.setState({
-            markdown: marked(text, { headerIds: true })
-          });
+          this.setState(
+            {
+              markdown: marked(text, { headerIds: true })
+            },
+            () => {
+              if (window.location.hash) {
+                const element = document.querySelector(window.location.hash);
+                console.log("scrolling here");
+                element && element.scrollIntoView();
+              }
+            }
+          );
           window.Prism.highlightAll();
         });
     }

@@ -1,7 +1,7 @@
-To turn on tooltips for any frame:
+Tooltips are a type of [annnotation](/guides/annotations), called `frame-hover`. You could manually send that annotation type to the `annotations` prop and hamange hover state to handle tooltips, or you can use the following built-in conveniences to turn on tooltips for any frame:
 
 - Set the `hoverAnnotation` property to `true`
-- Add this CSS to your app:
+- Base CSS for tooltips to get you started:
 
 ```css
 .tooltip-content {
@@ -31,11 +31,16 @@ circle.frame-hover {
 }
 ```
 
-Semiotic automatically creates a voronoi of hoverable regions on your chart. For ORFrame, it defaults to hovering for the entire column, if you'd prefer to have hover enabled for individual pieces, you can set `pieceHoverAnnotation` to `true`.
+Semiotic automatically creates a voronoi of hover regions on your chart. For ORFrame, it defaults to hovering for the entire column, if you'd prefer to have hover enabled for individual pieces, you can set `pieceHoverAnnotation` to `true`.
 
 ```jsx
 // Point hovering for XYFrame or NetworkFrame and column hovering for ORFrame
 <XYFrame
+   hoverAnnotation={true}
+/>
+
+// Point hovering for ORFrame
+<ORFrame
    hoverAnnotation={true}
 />
 
@@ -79,4 +84,4 @@ If you're ambitious, you could even drop another frame in the tooltip to show da
 />
 ```
 
-Tooltips are processed along with any other annotation, so you can override them by writing [[custom annotation rules|Using Annotations#htmlannotationrules--function-]] to handle the `frame-hover` or `column-hover` event.
+Tooltips are processed along with any other annotation, so you can override them by writing [custom annotation rules](/guides/annotations#custom-annotation-rules) to handle the `frame-hover` or `column-hover` event.
