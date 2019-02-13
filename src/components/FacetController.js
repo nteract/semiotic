@@ -59,6 +59,13 @@ class FacetController extends React.Component<Props, State> {
     }
   }
 
+  componentWillReceiveProps() {
+    /**
+     * Clear extent to ensure that you're not keeping old minima/maxima based on old data
+     */
+    this.setState({ extents: {} })
+  }
+
   /**
    * Helper for creating extent if we have a  min/max value
    * use that else use the onChange version so we can in return
