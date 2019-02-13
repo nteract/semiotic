@@ -622,7 +622,12 @@ export const htmlFrameHoverRule = ({
   }
 
   const screenCoordinates =
-    type.type === "clusterbar" || d.isSummaryData
+    ((type.type === "clusterbar" ||
+      type.type === "point" ||
+      type.type === "swarm") &&
+      d.x !== undefined &&
+      d.y !== undefined) ||
+    d.isSummaryData
       ? [d.x, d.y]
       : screenProject({
           p: d,
