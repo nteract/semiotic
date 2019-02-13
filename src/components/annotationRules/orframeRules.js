@@ -206,7 +206,7 @@ export const svgHighlightRule = ({
         .filter(p => {
           return (
             (thisID === undefined ||
-              pieceIDAccessor(p.piece.data) === thisID) &&
+              pieceIDAccessor({ ...p.piece, ...p.piece.data }) === thisID) &&
             (thisO === undefined ||
               findFirstAccessorValue(oAccessor, p.piece.data) === thisO)
           )
@@ -216,7 +216,7 @@ export const svgHighlightRule = ({
             style: {}
           }
           if (d.style && typeof d.style === "function") {
-            styleObject = { style: d.style(p.piece.data) }
+            styleObject = { style: d.style({ ...p.piece, ...p.piece.data }) }
           } else if (d.style) {
             styleObject = { style: d.style }
           }
