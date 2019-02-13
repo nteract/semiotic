@@ -361,12 +361,14 @@ export function orFrameConnectionRenderer({
   projection,
   canvasRender,
   canvasDrawing,
-  baseMarkProps
+  baseMarkProps,
+  pieceType
 }: ORFrameConnectionRendererTypes) {
   if (!type.type) {
     return null
   }
   const renderedConnectorMarks = []
+  const radarHash = new Map()
 
   if (typeof type.type === "function") {
     const connectionRule = type.type
@@ -401,92 +403,143 @@ export function orFrameConnectionRenderer({
           ) {
             const matchingPiece = nextColumn[matchingPieceIndex]
             let markD
-            const { xy } = piece
-            const { xy: mxy } = matchingPiece
-            const { x, y, height = 1, width = 1 } = xy
-            const { x: mx, y: my, height: mheight = 1, width: mwidth = 1 } = mxy
-            if (projection === "vertical") {
-              markD = drawAreaConnector({
-                x1: x + width,
-                x2: mx,
-                y1: y,
-                y2: my,
-                sizeX1: 0,
-                sizeX2: 0,
-                sizeY1: height,
-                sizeY2: mheight
-              })
-            } else if (projection === "horizontal") {
-              markD = drawAreaConnector({
-                x1: x,
-                x2: mx,
-                y1: y + height,
-                y2: my,
-                sizeX1: width,
-                sizeX2: mwidth,
-                sizeY1: 0,
-                sizeY2: 0
-              })
-            } else if (projection === "radial") {
-              markD = drawAreaConnector({
-                x1: x,
-                x2: mx,
-                y1: y + height,
-                y2: my,
-                sizeX1: width,
-                sizeX2: mwidth,
-                sizeY1: 0,
-                sizeY2: 0
-              })
-            }
-            const renderValue = renderMode && renderMode(piece.piece, pieceI)
-            const source = { ...piece.piece.data, ...piece.piece.data }
-            const target = {
-              ...matchingPiece.piece,
-              ...matchingPiece.piece.data
-            }
-            const calculatedStyle = styleFn({
-              source,
-              target
-            })
-
-            const eventListeners = eventListenersGenerator(
-              { source, target },
-              pieceI
-            )
-            if (canvasRender && canvasRender(piece.piece) === true) {
-              const canvasConnector = {
-                baseClass: "xyframe-line",
-                tx: 0,
-                ty: 0,
-                d: {
-                  source,
-                  target
-                },
-                markProps: { d: markD, markType: "path" },
-                styleFn: styleFn,
-                renderFn: renderMode,
-                classFn
+            if (projection === "radial" && pieceType.type === "point") {
+              if (!radarHash.get(piece)) {
+                radarHash.set(piece, [piece])
               }
-              canvasDrawing.push(canvasConnector)
+              const thisRadar = radarHash.get(piece)
+              thisRadar.push(matchingPiece)
+              radarHash.set(matchingPiece, thisRadar)
+              radarHash.delete(piece)
             } else {
-              renderedConnectorMarks.push(
-                <Mark
-                  {...baseMarkProps}
-                  {...eventListeners}
-                  renderMode={renderValue}
-                  markType="path"
-                  d={markD}
-                  className={classFn ? classFn(piece.piece.data, pieceI) : ""}
-                  key={`connector${piece.piece.renderKey}`}
-                  style={calculatedStyle}
-                />
+              const { xy } = piece
+              const { xy: mxy } = matchingPiece
+              const { x, y, height = 1, width = 1 } = xy
+              const {
+                x: mx,
+                y: my,
+                height: mheight = 1,
+                width: mwidth = 1
+              } = mxy
+              if (projection === "vertical") {
+                markD = drawAreaConnector({
+                  x1: x + width,
+                  x2: mx,
+                  y1: y,
+                  y2: my,
+                  sizeX1: 0,
+                  sizeX2: 0,
+                  sizeY1: height,
+                  sizeY2: mheight
+                })
+              } else if (projection === "horizontal") {
+                markD = drawAreaConnector({
+                  x1: x,
+                  x2: mx,
+                  y1: y + height,
+                  y2: my,
+                  sizeX1: width,
+                  sizeX2: mwidth,
+                  sizeY1: 0,
+                  sizeY2: 0
+                })
+              } else if (projection === "radial") {
+                markD = drawAreaConnector({
+                  x1: x,
+                  x2: mx,
+                  y1: y + height,
+                  y2: my,
+                  sizeX1: width,
+                  sizeX2: mwidth,
+                  sizeY1: 0,
+                  sizeY2: 0
+                })
+              }
+              const renderValue = renderMode && renderMode(piece.piece, pieceI)
+              const source = { ...piece.piece.data, ...piece.piece.data }
+              const target = {
+                ...matchingPiece.piece,
+                ...matchingPiece.piece.data
+              }
+              const calculatedStyle = styleFn({
+                source,
+                target
+              })
+
+              const eventListeners = eventListenersGenerator(
+                { source, target },
+                pieceI
               )
+              if (canvasRender && canvasRender(piece.piece) === true) {
+                const canvasConnector = {
+                  baseClass: "xyframe-line",
+                  tx: 0,
+                  ty: 0,
+                  d: {
+                    source,
+                    target
+                  },
+                  markProps: { d: markD, markType: "path" },
+                  styleFn: styleFn,
+                  renderFn: renderMode,
+                  classFn
+                }
+                canvasDrawing.push(canvasConnector)
+              } else {
+                renderedConnectorMarks.push(
+                  <Mark
+                    {...baseMarkProps}
+                    {...eventListeners}
+                    renderMode={renderValue}
+                    markType="path"
+                    d={markD}
+                    className={classFn ? classFn(piece.piece.data, pieceI) : ""}
+                    key={`connector${piece.piece.renderKey}`}
+                    style={calculatedStyle}
+                  />
+                )
+              }
             }
           }
         })
       }
     })
+
+    if (radarHash.size > 0) {
+      for (const ring of radarHash.values()) {
+        const ringPiece = { ...ring[0].piece, ...ring[0].piece.data }
+        const markD = `M${ring.map(d => `${d.xy.x},${d.xy.y}`).join("L")}Z`
+        if (canvasRender && canvasRender(ringPiece)) {
+          const canvasRadar = {
+            baseClass: "ordinal-radar",
+            tx: 0,
+            ty: 0,
+            d: {
+              source: ringPiece
+            },
+            markProps: { d: markD, markType: "path" },
+            styleFn: styleFn,
+            renderFn: renderMode,
+            classFn
+          }
+          canvasDrawing.push(canvasRadar)
+        } else {
+          renderedConnectorMarks.push(
+            <Mark
+              {...baseMarkProps}
+              renderMode={renderMode && renderMode(ringPiece)}
+              markType="path"
+              d={markD}
+              className={classFn ? classFn(ringPiece) : ""}
+              key={`ordinal-ring-${ringPiece.renderKey}`}
+              style={styleFn({
+                source: ringPiece
+              })}
+            />
+          )
+        }
+      }
+    }
   } else if (type.type) {
     console.error(
       `Invalid connectorType - Must be a function that takes a data point and determines if it is connected to a data point in the next column`
