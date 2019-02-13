@@ -7,18 +7,25 @@ import DocumentComponent from "../layout/DocumentComponent"
 // import { line, area } from "d3-shape"
 
 const inflatedBarChartData = [
-  { user: "Jason", action: "tweets", value: 10 },
-  { user: "Susie", action: "tweets", value: 5 },
-  { user: "Matt", action: "tweets", value: 20 },
-  { user: "Betty", action: "tweets", value: 30 },
-  { user: "Jason", action: "retweets", value: 5 },
-  { user: "Susie", action: "retweets", value: 100 },
-  { user: "Matt", action: "retweets", value: 25 },
-  { user: "Betty", action: "retweets", value: 20 },
-  { user: "Jason", action: "favorites", value: 15 },
-  { user: "Susie", action: "favorites", value: 100 },
-  { user: "Matt", action: "favorites", value: 50 },
-  { user: "Betty", action: "favorites", value: 10 }
+  { user: "Jason", user2: "Jaammm", action: "tweets", value: 10 },
+  { user: "Susie", user2: "Suammm", action: "tweets", value: 5 },
+  { user: "Matt", user2: "Mammm", action: "tweets", value: 20 },
+  { user: "Betty", user2: "Beammm", action: "tweets", value: 30 },
+  { user: "Jason", user2: "Jaammm", action: "retweets", value: 5 },
+  { user: "Susie", user2: "Suammm", action: "retweets", value: 100 },
+  { user: "Matt", user2: "Mammm", action: "retweets", value: 25 },
+  { user: "Betty", user2: "Beammm", action: "retweets", value: 20 },
+  { user: "Jason", user2: "Jaammm", action: "favorites", value: 15 },
+  { user: "Susie", user2: "Suammm", action: "favorites", value: 100 },
+  { user: "Matt", user2: "Mammm", action: "favorites", value: 50 },
+  { user: "Betty", user2: "Beammm", action: "favorites", value: 10 }
+]
+
+const barChartData = [
+  { user: "Jason", tweets: 10, retweets: 5, favorites: 15 },
+  { user: "Susie", tweets: 5, retweets: 100, favorites: 100 },
+  { user: "Matt", tweets: 20, retweets: 25, favorites: 50 },
+  { user: "Betty", tweets: 30, retweets: 20, favorites: 10 }
 ]
 
 const somePoints = [...new Array(50)].map((d, i) => ({
@@ -915,17 +922,19 @@ lineIDAccessor={d =>
           </p>
           <OrdinalFrame
             size={[600, 400]}
-            data={inflatedBarChartData}
+            data={barChartData}
             oAccessor={"user"}
-            rAccessor={"value"}
-            style={d => ({ fill: barColorHash[d.action] })}
+            rAccessor={["tweets", "favorites", "retweets"]}
+            style={d => ({
+              fill: barColorHash[["tweets", "favorites", "retweets"][d.rIndex]]
+            })}
             type={"clusterbar"}
             oPadding={5}
             pieceHoverAnnotation={[
               {
                 type: "highlight",
                 style: d => ({
-                  fill: d.action === "tweets" ? "purple" : "blue"
+                  fill: d.rIndex === 1 ? "purple" : "blue"
                 })
               }
             ]}
@@ -937,11 +946,11 @@ lineIDAccessor={d =>
               },
               {
                 type: "highlight",
-                action: "tweets",
+                rIndex: 1,
                 style: { fill: "none", stroke: "violet", strokeWidth: 5 }
               }
             ]}
-            pieceIDAccessor="action"
+            pieceIDAccessor="rIndex"
             margin={10}
           />
         </div>
