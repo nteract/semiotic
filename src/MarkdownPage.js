@@ -29,6 +29,11 @@ export default class MarkdownPage extends React.Component {
           this.setState(
             {
               markdown: marked(text, { headerIds: true })
+                .replace(
+                  /<h(\d) id="(.*?)"/g,
+                  `<a class="heading-link" href="#$2">$&`
+                )
+                .replace(/<\/h[0-9]>/g, "$&</a>")
             },
             () => {
               if (window.location.hash) {

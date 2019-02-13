@@ -13,7 +13,7 @@ const barChartData = [
   { user: "Betty", tweets: 30, retweets: 20, favorites: 10 }
 ];
 
-const inflatedBarChartData = [
+export const inflatedBarChartData = [
   { user: "Jason", action: "tweets", value: 10 },
   { user: "Susie", action: "tweets", value: 5 },
   { user: "Susie", action: "tweets", value: 1 },
@@ -64,7 +64,7 @@ const diffBar = {
 };
 
 const rAccessor = ["tweets", "retweets", "favorites"];
-const stackedFrameProps = {
+export const stackedFrameProps = {
   ...frameProps,
   size: [280, 300],
   rAccessor,
@@ -83,7 +83,7 @@ const stackedFrameProps = {
   }
 };
 
-const stackedFramePropsFlattened = {
+export const stackedFramePropsFlattened = {
   ...stackedFrameProps,
   data: inflatedBarChartData,
   rAccessor: "value",

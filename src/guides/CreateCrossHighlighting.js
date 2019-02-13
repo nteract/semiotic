@@ -1,15 +1,48 @@
 import React from "react";
 import MarkdownText from "../MarkdownText";
-import DocumentFrame from "../DocumentFrame";
-import { XYFrame } from "semiotic";
+import { XYFrame, OrdinalFrame } from "semiotic";
+import theme from "../theme";
 
-import { frameProps, overrideProps } from "./CreateALineChart";
+import { frameProps, linePercent, cumulativeLine } from "./CreateALineChart";
+import {
+  stackedFrameProps,
+  stackedFramePropsFlattened
+} from "./CreateABarChart";
 
-export default () => {
-  return (
-    <div>
-      <MarkdownText
-        text={`
+export default class CreateCrossHighlighting extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.state = { annotations: [] };
+  }
+
+  componentDidMount() {
+    window.Prism.highlightAll();
+  }
+
+  hoverBehavior = d => {
+    if (d) {
+      this.setState({
+        annotations: [
+          {
+            type: "highlight",
+            ...d,
+            style: { stroke: "black", strokeWidth: 5 }
+          }
+        ]
+      });
+    } else {
+      this.setState({
+        annotations: []
+      });
+    }
+  };
+
+  render() {
+    return (
+      <div>
+        <MarkdownText
+          text={`
 Highlighting is a type of [annnotation](/guides/annotations), \`{type:"highlight"}\` that duplicates a mark to the annotation layer for styling. 
 
 A common use case is for highlighting something while dimming out other elements, or for cross-highlighting.
@@ -26,93 +59,103 @@ In XYFrame it uses the function in \`lineIDAccessor\` to evaluate what objects t
 Move your mouse over the chart to see the line highlighted.
 
       `}
-      />
-      <DocumentFrame
-        frameProps={{
-          ...frameProps,
-          hoverAnnotation: [
+        />
+        <XYFrame
+          {...frameProps}
+          hoverAnnotation={[
             {
               type: "highlight",
               style: { strokeWidth: 10 }
             }
-          ],
-          lineIDAccessor: "title"
-        }}
-        type={XYFrame}
-        overrideProps={overrideProps}
-        startHidden
-      />
-      <MarkdownText
-        text={`
+          ]}
+          lineIDAccessor="title"
+        />
+        <MarkdownText
+          text={`
+\`\`\`jsx
+<XYFrame
+  {...frameProps}
+  hoverAnnotation={[
+    {
+      type: "highlight",
+      style: { strokeWidth: 10 }
+    }
+  ]}
+  lineIDAccessor="title"
+/>
+\`\`\`
 
 For highlighting regardless of interactions, send an annotation to the annotations prop and specific the matching \`lineIDAccessor\` in your annotation \`annotations=[{ type: "highlight", style: {strokeWidth: 10}, title: "Ex Machina"}]\`
 
       `}
-      />
-      <DocumentFrame
-        frameProps={{
-          ...frameProps,
-          annotations: [
+        />
+
+        <XYFrame
+          {...frameProps}
+          annotations={[
             {
               type: "highlight",
               title: "Ex Machina",
               style: { strokeWidth: 10, fill: "blue" }
             }
-          ],
-          lineIDAccessor: "title"
-        }}
-        type={XYFrame}
-        overrideProps={overrideProps}
-        startHidden
-      />
+          ]}
+          lineIDAccessor="title"
+        />
 
-      <MarkdownText
-        text={`
+        <MarkdownText
+          text={`
+## Dynamic Styles / Maintaining the tooltip
 
 Style can be a React style object or function returning a React style object and class can be a string or function returning a string. 
 
-All highlight annotations created in the annotation layer will always have "highlight-annotation" class in addition to any passed classes.
+All highlight annotations created in the annotation layer will always have \`"highlight-annotation"\` class in addition to any passed classes.
 
-    
+You can also maintain the default \`hoverAnnotation\` tooltip behavior by also passing a \`type="frame-hover"\` annotation 
 
-## Dynamic Styles
-
-The annotation honors a style prop that can be a React style object or a function that returns a React style object and evaluates the annotation. Because dynamically produced hover annotations are generated with the hover item's data, this lets you create custom styles. This also passes a frame-hover to the hoverAnnotation settings, showing off the ability to pass multiple annotation types to hoverAnnotation. Nothing else is changed from the previous example.
 
 
     `}
-      />
-
-      <DocumentFrame
-        frameProps={{
-          ...frameProps,
-          hoverAnnotation: [
+        />
+        <XYFrame
+          {...frameProps}
+          hoverAnnotation={[
             {
               type: "highlight",
               style: d => {
                 return { ...frameProps.lineStyle(d, d.key), strokeWidth: 5 };
               }
-            }
-          ],
-          lineIDAccessor: "title"
-        }}
-        type={XYFrame}
-        overrideProps={overrideProps}
-        startHidden
-      />
+            },
+            { type: "frame-hover" }
+          ]}
+          lineIDAccessor="title"
+        />
 
-      <MarkdownText
-        text={`
+        <MarkdownText
+          text={`
+\`\`\`jsx
+<XYFrame
+  {...frameProps}
+  hoverAnnotation={[
+      type: "highlight",
+      style: d => {
+        return { stroke: theme[d.key], strokeWidth: 5, fill: "none" };
+      }
+    },
+    { type: "frame-hover" }]}
+  lineIDAccessor="title"
+/>
+\`\`\`
+
 ## Desaturation Layer
 
-Using the \`highlight\`annotation in tandem with the \`deaturation-layer\` annotation allows you to create the effect of dimming the background when hovering.
-  `}
-      />
+Using the \`highlight\` annotation in tandem with the \`deaturation-layer\` annotation allows you to create the effect of dimming the background when hovering.
 
-      <DocumentFrame
-        frameProps={{
-          ...frameProps,
-          hoverAnnotation: [
+  `}
+        />
+
+        <XYFrame
+          {...frameProps}
+          hoverAnnotation={[
             {
               type: "desaturation-layer",
               style: { fill: "white", opacity: 0.6 }
@@ -123,35 +166,220 @@ Using the \`highlight\`annotation in tandem with the \`deaturation-layer\` annot
                 return { ...frameProps.lineStyle(d, d.key), strokeWidth: 5 };
               }
             }
-          ],
-          lineIDAccessor: "title"
-        }}
-        type={XYFrame}
-        overrideProps={overrideProps}
-        startHidden
-      />
+          ]}
+          lineIDAccessor="title"
+        />
 
-      <MarkdownText
-        text={`
+        <MarkdownText
+          text={`
+
+\`\`\`jsx
+<XYFrame
+  {...frameProps}
+  hoverAnnotation={[
+      type: "highlight",
+      style: d => {
+        return { stroke: theme[d.key], strokeWidth: 5, fill: "none" };
+      }
+    },
+    {
+      type: "desaturation-layer",
+      style: { fill: "white", opacity: 0.6 }
+    }]}
+  lineIDAccessor="title"
+/>
+\`\`\`
 
 ## Cross Highlighting
-Frames have custom interaction using customHoverBehavior, customClickBehavior and customDoubleClickBehavior. You can use these to take the value of the hovered or clicked item and pass a highlight annotation made from that data object to the annotations property of another frame to achieve cross-highlighting. These two frames have different sizes and different lineTypes but otherwise the only change is in the
+Frames have custom interaction using \`customHoverBehavior\`, \`customClickBehavior\` and \`customDoubleClickBehavior\`. You can use these to take the value of the hovered or clicked item and pass a highlight annotation made from that data object to the annotations property of another frame to achieve cross-highlighting. 
 
+    `}
+        />
+        <div className="flex">
+          <XYFrame
+            customHoverBehavior={this.hoverBehavior}
+            {...linePercent}
+            hoverAnnotation={true}
+            annotations={this.state.annotations}
+            size={[400, 300]}
+            lineIDAccessor="title"
+          />
+          <XYFrame
+            {...cumulativeLine}
+            size={[400, 300]}
+            hoverAnnotation={true}
+            annotations={this.state.annotations}
+            customHoverBehavior={this.hoverBehavior}
+            lineIDAccessor="title"
+          />
+        </div>
+        <MarkdownText
+          text={`
+\`\`\`jsx
+import React from "react"
+import { frameProps, linePercent, cumulativeLine } from "./CreateALineChart";
+
+export default class CreateCrossHighlighting extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { annotations: [] };
+  }
+
+  hoverBehavior = d => {
+    if (d) {
+      this.setState({
+        annotations: [
+          {
+            type: "highlight",
+            ...d,
+            style: { stroke: "black", strokeWidth: 5 }
+          }
+        ]
+      });
+    } else {
+      this.setState({
+        annotations: []
+      });
+    }
+  };
+
+  render () {
+   return <div>
+    <XYFrame
+    {...linePercent}
+      size={[400, 300]}
+      hoverAnnotation={true}
+      customHoverBehavior={this.hoverBehavior}
+      annotations={this.state.annotations}
+      lineIDAccessor="title"
+    />
+    <XYFrame
+      {...cumulativeLine}
+      size={[400, 300]}
+      hoverAnnotation={true}
+      customHoverBehavior={this.hoverBehavior}
+      annotations={this.state.annotations}
+      lineIDAccessor="title"
+    />
+   </div>
+   }
+  }
+\`\`\`
 
 ## Point and Area Highlighting
 Highlight annotations will return all points, lines and areas that match the id value of the passed highlight. This can be used to highlight multiple shapes if your lineIDAccessor is sophisticated (or simple) enough. Here I check in lineIDAccessor not only for title but if the object has a parentLine (indicating a point generated by showLinePoints) to match against the parentLine title value.
 
+    `}
+        />
+        <XYFrame
+          {...frameProps}
+          hoverAnnotation={[
+            {
+              type: "highlight",
+              style: d => {
+                return {
+                  strokeWidth: 3,
+                  stroke: theme[d.key],
+                  fill: theme[d.key]
+                };
+              }
+            }
+          ]}
+          showLinePoints={true}
+          pointStyle={{ fill: "none", r: 10 }}
+          lineIDAccessor={d => (d.parentLine && d.parentLine.title) || d.title}
+        />
+        <MarkdownText
+          text={`
+\`\`\`jsx
+<XYFrame
+  {...frameProps}
+  hoverAnnotation={[
+      type: "highlight",
+      style: d => {
+        return { stroke: theme[d.key], strokeWidth: 5, fill: theme[d.key] };
+      }
+    },
+    {
+      type: "desaturation-layer",
+      style: { fill: "white", opacity: 0.6 }
+    }]}
+  showLinePoints={true}
+  pointStyle={{ fill: "none", r: 10 }}
+  lineIDAccessor={d => (d.parentLine && d.parentLine.title) || d.title}
+/>
+\`\`\`
+
 ## OrinalFrame Highlighting
-OrdinalFrames get highlighting, too. The second example uses classes with a defined gradient in CSS. Unlike in XYFrame, there's already one built-in id accessor in OrdinalFrame: oAccessor, additionally if you define a pieceIDAccessor you can use that to highlight individual pieces (this is the same property used to annotate specific pieces with other OrdinalFrame annotatinos). Without a pieceIDAccessor defined, all items in a column/row will be highlighted.
+OrdinalFrames get highlighting, too. Unlike in XYFrame, there's already one built-in id accessor in OrdinalFrame: \`oAccessor\`, additionally if you define a \`pieceIDAccessor\` you can use that to highlight individual pieces (this is the same property used to annotate specific pieces with other OrdinalFrame annotatinos). Without a \`pieceIDAccessor\` defined, all items in a column/row will be highlighted. To enable highlighting on hover for a piece use \`pieceHoverAnnotation\`, for the entire column/row use \`hoverAnnotation\`
 
 Highlighting is not available for custom graphics or summary graphics.
 
-## Highlighting Across Categories 
-You don't have to send annotations with valid oAccessor or pieceIDAccessor traits. If you do, they will highlight all the pieces that satisfy the one you do send. This example has two annotations sent that highlight all the pieces in one column as well as all pieces of a certain type across all four columns.
+You don't have to send annotations with valid oAccessor or pieceIDAccessor traits. If you do, they will highlight all the pieces that satisfy the one you do send, for example: 
 
-## Scatterplot Highlighting 
     `}
-      />
-    </div>
-  );
-};
+        />
+
+        <OrdinalFrame
+          {...stackedFrameProps}
+          pieceHoverAnnotation={[
+            {
+              type: "highlight",
+              style: d => ({
+                fill: d.action === "tweets" ? theme[5] : theme[5],
+                stroke: "white"
+              })
+            }
+          ]}
+          annotations={[
+            {
+              type: "highlight",
+              user: "Betty",
+              style: { fill: theme[4], stroke: "none" }
+            },
+            {
+              type: "highlight",
+              action: "tweets",
+              style: { fill: "none", stroke: theme[5], strokeWidth: 5 }
+            }
+          ]}
+          pieceIDAccessor="action"
+        />
+        <MarkdownText
+          text={`
+
+\`\`\`jsx
+
+<OrdinalFrame
+  {...frameProps}
+  pieceHoverAnnotation={[
+    {
+      type: "highlight",
+      style: d => ({
+        fill: d.action === "tweets" ? theme[5] : theme[5]
+      })
+    }
+  ]}
+  annotations={[
+    {
+      type: "highlight",
+      user: "Betty",
+      style: { fill: theme[4], stroke: "none" }
+    },
+    {
+      type: "highlight",
+      action: "tweets",
+      style: { fill: "none", stroke: theme[5], strokeWidth: 5 }
+    }
+  ]}
+  pieceIDAccessor="action"
+/>
+
+\`\`\`
+
+    `}
+        />
+      </div>
+    );
+  }
+}

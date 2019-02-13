@@ -10,7 +10,7 @@ body {
   --bg-color: #f1eef0;
   --light-color: #aca1a9;
   --dark-color: #886a7e;
-  --link-color: #9a3287;
+  --link-color: #945388;
   --scale-1: #5c4aff;
   --scale-2: #ff4966;
   --scale-3: #9900ff;
@@ -273,6 +273,20 @@ a {
 
 .capitalize {
   text-transform: capitalize;
+}
+
+a.heading-link {
+  text-decoration: none;
+  color: inherit;
+  background-image: url(/assets/img/link.png);
+  background-repeat: no-repeat;
+  background-size: 1em;
+  background-position-y: center;
+  /* background-position-x: -2px; */
+  overflow: visible;
+  margin-left: -20px;
+  padding-left: 20px; /* width of the image plus a little extra padding */
+  display: block;
 }
 
 .dim {

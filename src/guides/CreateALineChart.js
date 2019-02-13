@@ -445,7 +445,7 @@ const dateChart = {
   ]
 };
 
-const linePercent = {
+export const linePercent = {
   ...frameProps,
   lines: threeTitles,
   lineType: "linepercent",
@@ -481,7 +481,7 @@ const bumpLine = {
   ]
 };
 
-const cumulativeLine = {
+export const cumulativeLine = {
   ...frameProps,
   lines: threeTitles,
   lineType: "cumulative",
@@ -635,7 +635,7 @@ Automatically adds each following day to the sum of the previous days. Create th
         text={`
 ## Bump Line Chart
 
-Automatically adds each following day to the sum of the previous days. Create this by setting \`lineType"cumulative"\`.
+Automatically adds each following day to the sum of the previous days. Create this by setting \`lineType"bumpline"\`.
 
 `}
       />
