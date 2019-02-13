@@ -96,6 +96,8 @@ import { desaturationLayer } from "./annotationRules/baseRules"
 import { genericFunction } from "./untyped_utilities/functions"
 import pathBounds from "svg-path-bounding-box"
 
+import { nodesEdgesFromHierarchy } from "./processing/network"
+
 const emptyArray = []
 
 const baseNodeProps = {
@@ -212,14 +214,20 @@ function determineNodeIcon(baseCustomNodeIcon, networkSettings, size, nodes) {
       return chordNodeGenerator(size)
     case "dagre":
       return hierarchicalRectNodeGenerator
-      case "matrix":
+    case "matrix":
       return matrixNodeGenerator(size, nodes, networkSettings)
   }
 
   return circleNodeGenerator
 }
 
-function determineEdgeIcon({ baseCustomEdgeIcon, networkSettings, size, graph, nodes }) {
+function determineEdgeIcon({
+  baseCustomEdgeIcon,
+  networkSettings,
+  size,
+  graph,
+  nodes
+}) {
   if (baseCustomEdgeIcon) return baseCustomEdgeIcon
   switch (networkSettings.type) {
     case "partition":
@@ -282,17 +290,6 @@ function breadthFirstCompontents(baseNodes, hash) {
 }
 
 const projectedCoordinateNames = { y: "y", x: "x" }
-
-function recursiveIDAccessor(idAccessor, node, accessorString) {
-  if (node.parent) {
-    accessorString = `${accessorString}-${recursiveIDAccessor(
-      idAccessor,
-      node.parent,
-      accessorString
-    )}`
-  }
-  return `${accessorString}-${idAccessor(node.data)}`
-}
 
 const sankeyOrientHash = {
   left: sankeyLeft,
@@ -480,7 +477,7 @@ class NetworkFrame extends React.Component<Props, State> {
     className: "",
     name: "networkframe",
     networkType: { type: "force", iterations: 500 },
-    filterRenderedNodes: (d:Object) => d.id !== "root-generated"
+    filterRenderedNodes: (d: Object) => d.id !== "root-generated"
   }
 
   static displayName = "NetworkFrame"
@@ -706,7 +703,10 @@ class NetworkFrame extends React.Component<Props, State> {
       })
       projectedEdges = dagreGraph.edges().map(e => {
         const dagreEdge = dagreGraph.edge(e)
-        const baseEdge = { ...dagreEdge, points: dagreEdge.points.map(d => ({ ...d })) }
+        const baseEdge = {
+          ...dagreEdge,
+          points: dagreEdge.points.map(d => ({ ...d }))
+        }
         baseEdge.source = projectedNodes.find(p => p.id === e.v)
         baseEdge.target = projectedNodes.find(p => p.id === e.w)
         baseEdge.points.unshift({ x: baseEdge.source.x, y: baseEdge.source.y })
@@ -737,14 +737,21 @@ class NetworkFrame extends React.Component<Props, State> {
       let baseEdges = edges
 
       if (hierarchicalTypeHash[networkSettings.type] && Array.isArray(edges)) {
-        const createdHierarchicalData = softStack(edges, nodes, sourceAccessor, targetAccessor, nodeIDAccessor)
+        const createdHierarchicalData = softStack(
+          edges,
+          nodes,
+          sourceAccessor,
+          targetAccessor,
+          nodeIDAccessor
+        )
 
         if (createdHierarchicalData.isHierarchical) {
           baseEdges = createdHierarchicalData.hierarchy
           projectedNodes = []
-        }
-        else {
-          console.error("You've sent an edge list that is not strictly hierarchical (there are nodes with multiple parents) defaulting to force-directed network layout")
+        } else {
+          console.error(
+            "You've sent an edge list that is not strictly hierarchical (there are nodes with multiple parents) defaulting to force-directed network layout"
+          )
           networkSettings.type = "force"
         }
       }
@@ -788,21 +795,8 @@ class NetworkFrame extends React.Component<Props, State> {
           hierarchicalLayout(rootNode)
         }
 
-        operationalEdges = rootNode
-          .descendants()
-          .filter(d => d.parent !== null)
-          .map(d => ({
-            source: Object.assign(d.parent, d.parent.data),
-            target: Object.assign(d, d.data),
-            depth: d.depth,
-            weight: 1,
-            value: 1,
-            _NWFEdgeKey: `${nodeIDAccessor(d.data)}-${recursiveIDAccessor(
-              nodeIDAccessor,
-              d.parent,
-              ""
-            )}`
-          }))
+        operationalEdges = nodesEdgesFromHierarchy(rootNode, nodeIDAccessor)
+          .edges
       }
 
       baseNodeProps.shapeNode = createPointLayer
@@ -879,14 +873,13 @@ class NetworkFrame extends React.Component<Props, State> {
       projectedNodes
     )
 
-    const customEdgeIcon = determineEdgeIcon(
-      { baseCustomEdgeIcon,
+    const customEdgeIcon = determineEdgeIcon({
+      baseCustomEdgeIcon,
       networkSettings,
       size: adjustedSize,
       nodes: projectedNodes,
-      graph }
-    )
-
+      graph
+    })
 
     if (
       (networkSettings.type === "sankey" ||
@@ -916,8 +909,8 @@ class NetworkFrame extends React.Component<Props, State> {
         d.circular
           ? circularAreaLink(d)
           : edgeType === "angled"
-            ? ribbonLink(d)
-            : areaLink(d)
+          ? ribbonLink(d)
+          : areaLink(d)
     } else if (hierarchicalTypeHash[networkSettings.type]) {
       projectedNodes.forEach(node => {
         if (createPointLayer) {
@@ -1358,7 +1351,6 @@ class NetworkFrame extends React.Component<Props, State> {
           })
         })
       } else if (networkSettings.type === "matrix") {
-
         if (networkSettings.sort) {
           projectedNodes = projectedNodes.sort(networkSettings.sort)
         }
@@ -1369,11 +1361,9 @@ class NetworkFrame extends React.Component<Props, State> {
 
         projectedNodes.forEach((node, index) => {
           node.x = 0
-          node.y = (index + 1)  * stepSize
+          node.y = (index + 1) * stepSize
         })
-
-      }  else if (networkSettings.type === "arc") {
-
+      } else if (networkSettings.type === "arc") {
         if (networkSettings.sort) {
           projectedNodes = projectedNodes.sort(networkSettings.sort)
         }
@@ -1384,7 +1374,6 @@ class NetworkFrame extends React.Component<Props, State> {
           node.x = (index + 1) * stepSize
           node.y = adjustedSize[1] / 2
         })
-
       } else if (typeof networkSettings.type === "function") {
         networkSettings.type({
           nodes: projectedNodes,
@@ -1399,7 +1388,7 @@ class NetworkFrame extends React.Component<Props, State> {
 
       this.state.graphSettings.nodes = currentProps.nodes
       this.state.graphSettings.edges = currentProps.edges
-    } 
+    }
 
     //filter out user-defined nodes
     projectedNodes = projectedNodes.filter(filterRenderedNodes)
@@ -1580,8 +1569,8 @@ class NetworkFrame extends React.Component<Props, State> {
                   networkSettings
                 )
               : nodeLabels === true
-                ? nodeIDAccessor(node, nodei)
-                : nodeLabels(node, nodei)
+              ? nodeIDAccessor(node, nodei)
+              : nodeLabels(node, nodei)
 
           let nodeLabel
 
@@ -1705,7 +1694,15 @@ class NetworkFrame extends React.Component<Props, State> {
     })
   }
 
-  defaultNetworkSVGRule = ({ d: baseD, i, annotationLayer }: { d: Object, i: number, annotationLayer: Object }) => {
+  defaultNetworkSVGRule = ({
+    d: baseD,
+    i,
+    annotationLayer
+  }: {
+    d: Object,
+    i: number,
+    annotationLayer: Object
+  }) => {
     const {
       projectedNodes,
       projectedEdges,
@@ -1719,22 +1716,20 @@ class NetworkFrame extends React.Component<Props, State> {
     const d = baseD.ids
       ? baseD
       : baseD.edge
-        ? {
-            ...(projectedEdges.find(
-              p =>
-                nodeIDAccessor(p.source) === nodeIDAccessor(baseD.source) &&
-                nodeIDAccessor(p.target) === nodeIDAccessor(baseD.target)
-            ) || {}),
-            ...baseD
-          }
-        : {
-            ...(projectedNodes.find(p => nodeIDAccessor(p) === baseD.id) || {}),
-            ...baseD
-          }
-
+      ? {
+          ...(projectedEdges.find(
+            p =>
+              nodeIDAccessor(p.source) === nodeIDAccessor(baseD.source) &&
+              nodeIDAccessor(p.target) === nodeIDAccessor(baseD.target)
+          ) || {}),
+          ...baseD
+        }
+      : {
+          ...(projectedNodes.find(p => nodeIDAccessor(p) === baseD.id) || {}),
+          ...baseD
+        }
 
     const { voronoiHover } = annotationLayer
-
 
     if (svgAnnotationRules) {
       const customAnnotation = svgAnnotationRules({
@@ -1759,7 +1754,12 @@ class NetworkFrame extends React.Component<Props, State> {
         nodeSizeAccessor
       })
     } else if (d.type === "desaturation-layer") {
-     return desaturationLayer({ style: d.style, size: adjustedSize, i, key: d.key })
+      return desaturationLayer({
+        style: d.style,
+        size: adjustedSize,
+        i,
+        key: d.key
+      })
     } else if (d.type === "basic-node-label") {
       return (
         <g key={d.key} transform={`translate(${d.x},${d.y})`}>
@@ -1814,18 +1814,18 @@ class NetworkFrame extends React.Component<Props, State> {
     const d = baseD.ids
       ? baseD
       : baseD.edge
-        ? {
-            ...(projectedEdges.find(
-              p =>
-                nodeIDAccessor(p.source) === nodeIDAccessor(baseD.source) &&
-                nodeIDAccessor(p.target) === nodeIDAccessor(baseD.target)
-            ) || {}),
-            ...baseD
-          }
-        : {
-            ...(projectedNodes.find(p => nodeIDAccessor(p) === baseD.id) || {}),
-            ...baseD
-          }
+      ? {
+          ...(projectedEdges.find(
+            p =>
+              nodeIDAccessor(p.source) === nodeIDAccessor(baseD.source) &&
+              nodeIDAccessor(p.target) === nodeIDAccessor(baseD.target)
+          ) || {}),
+          ...baseD
+        }
+      : {
+          ...(projectedNodes.find(p => nodeIDAccessor(p) === baseD.id) || {}),
+          ...baseD
+        }
 
     if (this.props.htmlAnnotationRules) {
       const customAnnotation = this.props.htmlAnnotationRules({
@@ -1879,7 +1879,10 @@ class NetworkFrame extends React.Component<Props, State> {
       downloadFields,
       download,
       additionalDefs,
-      renderOrder = this.state.graphSettings && this.state.graphSettings.type === "matrix" ? [ "nodes", "edges" ] : ["edges", "nodes"]
+      renderOrder = this.state.graphSettings &&
+      this.state.graphSettings.type === "matrix"
+        ? ["nodes", "edges"]
+        : ["edges", "nodes"]
     } = this.props
     const {
       backgroundGraphics,

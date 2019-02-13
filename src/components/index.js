@@ -30,6 +30,8 @@ import { Mark } from "semiotic-mark"
 
 import { hexbinning, heatmapping } from "./svg/areaDrawing"
 
+import { nodesEdgesFromHierarchy } from "./processing/network"
+
 const ORFrame = OrdinalFrame
 const ResponsiveORFrame = ResponsiveOrdinalFrame
 
@@ -63,7 +65,8 @@ export default {
   calculateDataExtent,
   chuckCloseCanvasTransform,
   hexbinning,
-  heatmapping
+  heatmapping,
+  nodesEdgesFromHierarchy
 }
 
 export {
@@ -96,5 +99,6 @@ export {
   calculateDataExtent,
   FacetController,
   hexbinning,
-  heatmapping
+  heatmapping,
+  nodesEdgesFromHierarchy
 }
