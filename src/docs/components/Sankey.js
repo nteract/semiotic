@@ -19,13 +19,20 @@ export default class Sankey extends React.Component {
     this.state = {
       type: "sankey",
       orient: "center",
-      cycle: "no cycles"
+      cycle: "no cycles",
+      projection: "horizontal"
     }
   }
 
   render() {
     const typeOptions = ["sankey", "force", "chord"].map(d => (
       <MenuItem key={`type-option-${d}`} label={d} value={d}>
+        {d}
+      </MenuItem>
+    ))
+
+    const projectionOptions = ["horizontal", "vertical"].map(d => (
+      <MenuItem key={`projection-option-${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
@@ -54,6 +61,15 @@ export default class Sankey extends React.Component {
         >
           {orientOptions}
         </Select>
+      </FormControl>,
+      <FormControl key="button-3-0-0">
+        <InputLabel htmlFor="orient-input">projection</InputLabel>
+        <Select
+          value={this.state.projection}
+          onChange={e => this.setState({ projection: e.target.value })}
+        >
+          {projectionOptions}
+        </Select>
       </FormControl>
     ]
 
@@ -75,7 +91,8 @@ export default class Sankey extends React.Component {
         annotations,
         type: this.state.type,
         orient: this.state.orient,
-        cyclical: false
+        cyclical: false,
+        projection: this.state.projection
       }),
       source: ""
     })
@@ -86,7 +103,8 @@ export default class Sankey extends React.Component {
         annotations,
         type: this.state.type,
         orient: this.state.orient,
-        cyclical: true
+        cyclical: true,
+        projection: this.state.projection
       }),
       source: `
 const or_data = [{"id":"Agricultural 'waste'","input":0,"output":262.6972158,"years":[9.282517755,14.61107771,30.99950457,31.97585802,32.98811297,34.0375862,35.12564273,36.2536977,37.42321811],"category":"Agriculture","color":"#4d430c"},
@@ -101,13 +119,13 @@ const network_data = [
 ...]
 
 ${
-        this.state.type === "chord"
-          ? `const mirroredNetworkData = [
+  this.state.type === "chord"
+    ? `const mirroredNetworkData = [
     ...network_data.map(d => ({ source: d.source.id, target: d.target.id, value: d["2010"] })),
     ...network_data.map(d => ({ target: d.source.id, source: d.target.id, value: d["2050"] }))
     ]`
-          : ""
-      }
+    : ""
+}
 
 const colors = {
   Oil: "#b3331d",
@@ -174,7 +192,7 @@ const areaLegendGroups = [
         type: this.state.type,
         orient: this.state.orient,
         cyclical: true,
-        direction: "down",
+        projection: "down",
         size: [700, 800]
       }),
       source: ``

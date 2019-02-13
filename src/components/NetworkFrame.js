@@ -623,6 +623,13 @@ class NetworkFrame extends React.Component<Props, State> {
       }
     }
 
+    if (
+      networkSettings.projection === "vertical" &&
+      networkSettings.type === "sankey"
+    ) {
+      networkSettings.direction = "down"
+    }
+
     networkSettingsKeys.push("height", "width")
 
     const title =
@@ -1405,20 +1412,21 @@ class NetworkFrame extends React.Component<Props, State> {
         node.x = adjustedSize[0] - node.x
         node.y = adjustedSize[1] - node.y
       })
-    } else if (networkSettings.direction === "up") {
-      projectedNodes.forEach(node => {
-        const ox = node.x
-        node.x = node.y
-        node.y = adjustedSize[1] - ox
-      })
-    } else if (networkSettings.direction === "down") {
+    } else if (
+      networkSettings.direction === "up" ||
+      networkSettings.direction === "down"
+    ) {
+      const mod =
+        networkSettings.direction === "up"
+          ? value => adjustedSize[1] - value
+          : value => value
       projectedNodes.forEach(node => {
         const ox = node.x
         const ox0 = node.x0
         const ox1 = node.x1
-        node.x = node.y
-        node.x0 = node.y0
-        node.x1 = node.y1
+        node.x = mod(node.y)
+        node.x0 = mod(node.y0)
+        node.x1 = mod(node.y1)
         node.y = ox
         node.y0 = ox0
         node.y1 = ox1
@@ -1426,6 +1434,8 @@ class NetworkFrame extends React.Component<Props, State> {
     } else if (networkSettings.direction === "left") {
       projectedNodes.forEach(node => {
         node.x = adjustedSize[0] - node.x
+        node.x0 = adjustedSize[0] - node.x0
+        node.x1 = adjustedSize[0] - node.x1
       })
     }
     if (

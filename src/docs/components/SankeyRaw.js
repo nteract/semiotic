@@ -61,7 +61,7 @@ export default ({
   type = "sankey",
   orient = "left",
   cyclical = false,
-  direction,
+  projection,
   size = [700, 400]
 }) => {
   const sankeyChart = {
@@ -71,8 +71,8 @@ export default ({
       type === "chord"
         ? mirroredNetworkData
         : cyclical
-          ? cyclicalData
-          : network_data,
+        ? cyclicalData
+        : network_data,
     nodeStyle: d => ({
       fill: colors[d.category],
       stroke: "black"
@@ -94,7 +94,7 @@ export default ({
       type: type,
       orient: orient,
       iterations: 500,
-      direction,
+      projection,
       nodePaddingRatio: 0.05,
       customSankey: sankey
     },
