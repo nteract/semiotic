@@ -509,8 +509,8 @@ export function relativeY({
     (point[projectedYMiddle] !== undefined
       ? point[projectedYMiddle]
       : point[projectedY] !== undefined
-        ? point[projectedY]
-        : findFirstAccessorValue(yAccessor, point))
+      ? point[projectedY]
+      : findFirstAccessorValue(yAccessor, point))
 
   if (Array.isArray(baseData)) {
     return baseData.map(d => yScale(d))
@@ -530,8 +530,8 @@ export function relativeX({
     (point[projectedXMiddle] !== undefined
       ? point[projectedXMiddle]
       : point[projectedX] !== undefined
-        ? point[projectedX]
-        : findFirstAccessorValue(xAccessor, point))
+      ? point[projectedX]
+      : findFirstAccessorValue(xAccessor, point))
 
   if (Array.isArray(baseData)) {
     return baseData.map(d => xScale(d))
