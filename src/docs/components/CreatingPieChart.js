@@ -52,6 +52,7 @@ const deaths1855 = [
   { month: "Nov", type: "Zymotic diseases", casualties: 178 },
   { month: "Dec", type: "Zymotic diseases", casualties: 91 }
 ]
+/*
 
 const windRoseData = [
   { angle: "005-015", wind: 1.37, color: "steelblue" },
@@ -89,43 +90,56 @@ const windRoseData = [
   { angle: "325-335", wind: 0.5944, color: "steelblue" },
   { angle: "335-345", wind: 0.5817, color: "steelblue" },
   { angle: "345-355", wind: 0.5569, color: "steelblue" },
-  { angle: "355-005", wind: 1.0569, color: "steelblue" },
-  { angle: "005-015", wind: 0.537, color: "darkred" },
-  { angle: "015-025", wind: 0.8344, color: "darkred" },
-  { angle: "025-035", wind: 0.5257, color: "darkred" },
-  { angle: "035-045", wind: 0.5231, color: "darkred" },
-  { angle: "045-055", wind: 0.5182, color: "darkred" },
-  { angle: "055-065", wind: 0.5193, color: "darkred" },
-  { angle: "065-075", wind: 0.8372, color: "darkred" },
-  { angle: "075-085", wind: 0.5647, color: "darkred" },
-  { angle: "085-095", wind: 1.0598, color: "darkred" },
-  { angle: "095-105", wind: 0.5453, color: "darkred" },
-  { angle: "105-115", wind: 0.5491, color: "darkred" },
-  { angle: "115-125", wind: 0.5491, color: "darkred" },
-  { angle: "125-135", wind: 0.8323, color: "darkred" },
-  { angle: "135-145", wind: 0.8352, color: "darkred" },
-  { angle: "145-155", wind: 0.5436, color: "darkred" },
-  { angle: "155-165", wind: 0.8338, color: "darkred" },
-  { angle: "165-175", wind: 0.5471, color: "darkred" },
-  { angle: "175-185", wind: 0.5653, color: "darkred" },
-  { angle: "185-195", wind: 0.5653, color: "darkred" },
-  { angle: "195-205", wind: 0.5647, color: "darkred" },
-  { angle: "205-215", wind: 1.0577, color: "darkred" },
-  { angle: "215-225", wind: 1.0557, color: "darkred" },
-  { angle: "225-235", wind: 1.0586, color: "darkred" },
-  { angle: "235-245", wind: 0.5661, color: "darkred" },
-  { angle: "245-255", wind: 0.578, color: "darkred" },
-  { angle: "255-265", wind: 1.3103, color: "darkred" },
-  { angle: "265-275", wind: 1.3753, color: "darkred" },
-  { angle: "275-285", wind: 2.3382, color: "darkred" },
-  { angle: "285-295", wind: 1.3914, color: "darkred" },
-  { angle: "295-305", wind: 2.3391, color: "darkred" },
-  { angle: "305-315", wind: 1.3966, color: "darkred" },
-  { angle: "315-325", wind: 1.3317, color: "darkred" },
-  { angle: "325-335", wind: 0.3944, color: "darkred" },
-  { angle: "335-345", wind: 0.3817, color: "darkred" },
-  { angle: "345-355", wind: 0.3569, color: "darkred" },
-  { angle: "355-005", wind: 0.3569, color: "darkred" }
+  { angle: "355-005", wind: 1.0569, color: "steelblue" }
+]
+*/
+
+const pokemons = [
+  { name: "Pikachu", color: "#00a2ce", attribute: "attack", value: 5 },
+  { name: "Cactaur", color: "#4d430c", attribute: "attack", value: 2 },
+  { name: "Pizza Elemental", color: "#b3331d", attribute: "attack", value: 10 },
+  { name: "Baron Munchausen", color: "#b6a756", attribute: "attack", value: 4 },
+  { name: "Pikachu", color: "#00a2ce", attribute: "defense", value: 4 },
+  { name: "Cactaur", color: "#4d430c", attribute: "defense", value: 1 },
+  { name: "Pizza Elemental", color: "#b3331d", attribute: "defense", value: 8 },
+  {
+    name: "Baron Munchausen",
+    color: "#b6a756",
+    attribute: "defense",
+    value: 4
+  },
+  { name: "Pikachu", color: "#00a2ce", attribute: "special attack", value: 8 },
+  { name: "Cactaur", color: "#4d430c", attribute: "special attack", value: 10 },
+  {
+    name: "Pizza Elemental",
+    color: "#b3331d",
+    attribute: "special attack",
+    value: 2
+  },
+  {
+    name: "Baron Munchausen",
+    color: "#b6a756",
+    attribute: "special attack",
+    value: 6
+  },
+  { name: "Pikachu", color: "#00a2ce", attribute: "special defense", value: 2 },
+  { name: "Cactaur", color: "#4d430c", attribute: "special defense", value: 1 },
+  {
+    name: "Pizza Elemental",
+    color: "#b3331d",
+    attribute: "special defense",
+    value: 4
+  },
+  {
+    name: "Baron Munchausen",
+    color: "#b6a756",
+    attribute: "special defense",
+    value: 8
+  },
+  { name: "Pikachu", color: "#00a2ce", attribute: "rarity", value: 1 },
+  { name: "Cactaur", color: "#4d430c", attribute: "rarity", value: 10 },
+  { name: "Pizza Elemental", color: "#b3331d", attribute: "rarity", value: 10 },
+  { name: "Baron Munchausen", color: "#b6a756", attribute: "rarity", value: 5 }
 ]
 
 const colorHash = {
@@ -322,16 +336,16 @@ export default class CreatingPieChart extends React.Component {
     })
 
     examples.push({
-      name: "Wind Rose",
+      name: "Radar Plot",
       demo: (
         <div>
           <p>For charts like these, you can also turn on a radial axis.</p>
           <OrdinalFrame
-            title={"Wind Rose"}
+            title={"Radar Plot"}
             size={[500, 500]}
-            data={windRoseData}
-            oAccessor={"angle"}
-            rAccessor={"wind"}
+            data={pokemons}
+            oAccessor={"attribute"}
+            rAccessor={"value"}
             style={d => ({
               fill: d.color,
               stroke: "white",
@@ -339,7 +353,7 @@ export default class CreatingPieChart extends React.Component {
             })}
             type={"point"}
             rExtent={[0]}
-            connectorType={d => d.color}
+            connectorType={d => d.name}
             connectorStyle={d => {
               return {
                 fill: d.source.color,
@@ -348,36 +362,121 @@ export default class CreatingPieChart extends React.Component {
                 fillOpacity: 0.5
               }
             }}
-            canvasConnectors={true}
-            //            canvasPieces={true}
-            connectorRenderMode="sketchy"
+            //canvasConnectors={true}
+            //canvasPieces={true}
+            //connectorRenderMode="sketchy"
             projection={"radial"}
             axis={{
               label: { name: "Windiness", locationDistance: 15 }
             }}
             oPadding={0}
             margin={{ bottom: 50, top: 70, left: 25, right: 25 }}
-            hoverAnnotation={true}
+            pieceHoverAnnotation={true}
             ordinalAlign="center"
+            oLabel={true}
+            tooltipContent={d => (
+              <div className="tooltip-content" style={{ color: d.color }}>
+                <p>{d.name}</p>
+                <p>
+                  {d.attribute}: {d.value}
+                </p>
+              </div>
+            )}
           />
         </div>
       ),
-      source: `<OrdinalFrame
-    title={"Wind Rose"}
-    size={[500, 500]}
-    data={windRoseData}
-    oAccessor={"angle"}
-    rAccessor={"wind"}
-    style={{ fill: "#00a2ce", stroke: "white" }}
-    type={"bar"}
-    projection={"radial"}
-    axis={{
+      source: `
+      const pokemons = [
+        { name: "Pikachu", color: "#00a2ce", attribute: "attack", value: 5 },
+        { name: "Cactaur", color: "#4d430c", attribute: "attack", value: 2 },
+        { name: "Pizza Elemental", color: "#b3331d", attribute: "attack", value: 10 },
+        { name: "Baron Munchausen", color: "#b6a756", attribute: "attack", value: 4 },
+        { name: "Pikachu", color: "#00a2ce", attribute: "defense", value: 4 },
+        { name: "Cactaur", color: "#4d430c", attribute: "defense", value: 1 },
+        { name: "Pizza Elemental", color: "#b3331d", attribute: "defense", value: 8 },
+        {
+          name: "Baron Munchausen",
+          color: "#b6a756",
+          attribute: "defense",
+          value: 4
+        },
+        { name: "Pikachu", color: "#00a2ce", attribute: "special attack", value: 8 },
+        { name: "Cactaur", color: "#4d430c", attribute: "special attack", value: 10 },
+        {
+          name: "Pizza Elemental",
+          color: "#b3331d",
+          attribute: "special attack",
+          value: 2
+        },
+        {
+          name: "Baron Munchausen",
+          color: "#b6a756",
+          attribute: "special attack",
+          value: 6
+        },
+        { name: "Pikachu", color: "#00a2ce", attribute: "special defense", value: 2 },
+        { name: "Cactaur", color: "#4d430c", attribute: "special defense", value: 1 },
+        {
+          name: "Pizza Elemental",
+          color: "#b3331d",
+          attribute: "special defense",
+          value: 4
+        },
+        {
+          name: "Baron Munchausen",
+          color: "#b6a756",
+          attribute: "special defense",
+          value: 8
+        },
+        { name: "Pikachu", color: "#00a2ce", attribute: "rarity", value: 1 },
+        { name: "Cactaur", color: "#4d430c", attribute: "rarity", value: 10 },
+        { name: "Pizza Elemental", color: "#b3331d", attribute: "rarity", value: 10 },
+        { name: "Baron Munchausen", color: "#b6a756", attribute: "rarity", value: 5 }
+      ]
+      
+      <OrdinalFrame
+      title={"Radar Plot"}
+      size={[500, 500]}
+      data={pokemons}
+      oAccessor={"attribute"}
+      rAccessor={"value"}
+      style={d => ({
+        fill: d.color,
+        stroke: "white",
+        strokeOpacity: 0.5
+      })}
+      type={"point"}
+      rExtent={[0]}
+      connectorType={d => d.name}
+      connectorStyle={d => {
+        return {
+          fill: d.source.color,
+          stroke: d.source.color,
+          strokeOpacity: 0.5,
+          fillOpacity: 0.5
+        }
+      }}
+      //canvasConnectors={true}
+      //canvasPieces={true}
+      //connectorRenderMode="sketchy"
+      projection={"radial"}
+      axis={{
         label: { name: "Windiness", locationDistance: 15 }
-    }}
-    oPadding={1}
-    margin={{ bottom: 50, top: 70, left: 25, right: 25 }}
-    hoverAnnotation={true}
-/>`
+      }}
+      oPadding={0}
+      margin={{ bottom: 50, top: 70, left: 25, right: 25 }}
+      pieceHoverAnnotation={true}
+      ordinalAlign="center"
+      oLabel={true}
+      tooltipContent={d => (
+        <div className="tooltip-content" style={{ color: d.color }}>
+          <p>{d.name}</p>
+          <p>
+            {d.attribute}: {d.value}
+          </p>
+        </div>
+      )}
+    />`
     })
 
     // These are also seen in wind roses. In both cases the diagram requires a uniform distribution of values that is naturally cyclical (months of the year or directions).
