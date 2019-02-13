@@ -947,6 +947,21 @@ class XYFrame extends React.Component<XYFrameProps, State> {
 
     let screenCoordinates = []
     const idAccessor = this.state.annotatedSettings.lineIDAccessor
+
+    if (baseD.type === "highlight") {
+      return svgHighlight({
+        d: baseD,
+        screenCoordinates,
+        i,
+        idAccessor,
+        lines,
+        areas,
+        points,
+        xScale,
+        yScale
+      })
+    }
+
     const d = baseD.coordinates
       ? baseD
       : findPointByID({
@@ -1070,18 +1085,6 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       })
     } else if (d.type === "xy" || d.type === "frame-hover") {
       return svgXYAnnotation({ d, i, screenCoordinates })
-    } else if (d.type === "highlight") {
-      return svgHighlight({
-        d,
-        screenCoordinates,
-        i,
-        idAccessor,
-        lines,
-        areas,
-        points,
-        xScale,
-        yScale
-      })
     } else if (d.type === "react-annotation" || typeof d.type === "function") {
       return basicReactAnnotation({ d, screenCoordinates, i })
     } else if (d.type === "enclose") {
