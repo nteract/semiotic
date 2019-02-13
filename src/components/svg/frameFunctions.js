@@ -53,7 +53,8 @@ type ORFrameConnectionRendererTypes = {
   projection: ProjectionTypes,
   canvasRender: Function,
   canvasDrawing: Array<Object>,
-  baseMarkProps: Object
+  baseMarkProps: Object,
+  pieceType: Object
 }
 
 type ORFrameSummaryRendererTypes = {
@@ -408,9 +409,11 @@ export function orFrameConnectionRenderer({
                 radarHash.set(piece, [piece])
               }
               const thisRadar = radarHash.get(piece)
-              thisRadar.push(matchingPiece)
-              radarHash.set(matchingPiece, thisRadar)
-              radarHash.delete(piece)
+              if (thisRadar) {
+                thisRadar.push(matchingPiece)
+                radarHash.set(matchingPiece, thisRadar)
+                radarHash.delete(piece)
+              }
             } else {
               const { xy } = piece
               const { xy: mxy } = matchingPiece
