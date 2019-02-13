@@ -1238,7 +1238,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         canvasRender: connectorCanvasRender,
         behavior: orFrameConnectionRenderer,
         type: connectorType,
-        eventListenersGenerator
+        eventListenersGenerator,
+        pieceType
       },
       summaries: {
         accessibleTransform: (data, i) => {
@@ -1683,6 +1684,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       useSpans,
       canvasPieces,
       canvasSummaries,
+      canvasConnectors,
       renderOrder,
       additionalDefs
     } = this.props
@@ -1799,7 +1801,9 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         interactionOverflow={interactionOverflow}
         canvasPostProcess={canvasPostProcess}
         baseMarkProps={baseMarkProps}
-        canvasRendering={!!(canvasPieces || canvasSummaries)}
+        canvasRendering={
+          !!(canvasPieces || canvasSummaries || canvasConnectors)
+        }
         renderOrder={renderOrder}
         disableCanvasInteraction={true}
       />

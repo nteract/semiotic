@@ -54,42 +54,78 @@ const deaths1855 = [
 ]
 
 const windRoseData = [
-  { angle: "005-015", wind: 0.37 },
-  { angle: "015-025", wind: 0.344 },
-  { angle: "025-035", wind: 0.257 },
-  { angle: "035-045", wind: 0.231 },
-  { angle: "045-055", wind: 0.182 },
-  { angle: "055-065", wind: 0.193 },
-  { angle: "065-075", wind: 0.372 },
-  { angle: "075-085", wind: 0.647 },
-  { angle: "085-095", wind: 0.598 },
-  { angle: "095-105", wind: 0.453 },
-  { angle: "105-115", wind: 0.491 },
-  { angle: "115-125", wind: 0.491 },
-  { angle: "125-135", wind: 0.323 },
-  { angle: "135-145", wind: 0.352 },
-  { angle: "145-155", wind: 0.436 },
-  { angle: "155-165", wind: 0.338 },
-  { angle: "165-175", wind: 0.471 },
-  { angle: "175-185", wind: 0.653 },
-  { angle: "185-195", wind: 0.653 },
-  { angle: "195-205", wind: 0.647 },
-  { angle: "205-215", wind: 0.577 },
-  { angle: "215-225", wind: 0.557 },
-  { angle: "225-235", wind: 0.586 },
-  { angle: "235-245", wind: 0.661 },
-  { angle: "245-255", wind: 0.78 },
-  { angle: "255-265", wind: 1.103 },
-  { angle: "265-275", wind: 1.753 },
-  { angle: "275-285", wind: 2.382 },
-  { angle: "285-295", wind: 1.914 },
-  { angle: "295-305", wind: 2.391 },
-  { angle: "305-315", wind: 1.966 },
-  { angle: "315-325", wind: 1.317 },
-  { angle: "325-335", wind: 0.944 },
-  { angle: "335-345", wind: 0.817 },
-  { angle: "345-355", wind: 0.569 },
-  { angle: "355-005", wind: 0.569 }
+  { angle: "005-015", wind: 1.37, color: "steelblue" },
+  { angle: "015-025", wind: 1.344, color: "steelblue" },
+  { angle: "025-035", wind: 1.257, color: "steelblue" },
+  { angle: "035-045", wind: 1.231, color: "steelblue" },
+  { angle: "045-055", wind: 1.182, color: "steelblue" },
+  { angle: "055-065", wind: 1.193, color: "steelblue" },
+  { angle: "065-075", wind: 1.372, color: "steelblue" },
+  { angle: "075-085", wind: 1.647, color: "steelblue" },
+  { angle: "085-095", wind: 1.598, color: "steelblue" },
+  { angle: "095-105", wind: 1.453, color: "steelblue" },
+  { angle: "105-115", wind: 1.491, color: "steelblue" },
+  { angle: "115-125", wind: 1.491, color: "steelblue" },
+  { angle: "125-135", wind: 1.323, color: "steelblue" },
+  { angle: "135-145", wind: 1.352, color: "steelblue" },
+  { angle: "145-155", wind: 1.436, color: "steelblue" },
+  { angle: "155-165", wind: 1.338, color: "steelblue" },
+  { angle: "165-175", wind: 1.471, color: "steelblue" },
+  { angle: "175-185", wind: 1.653, color: "steelblue" },
+  { angle: "185-195", wind: 1.653, color: "steelblue" },
+  { angle: "195-205", wind: 1.647, color: "steelblue" },
+  { angle: "205-215", wind: 1.577, color: "steelblue" },
+  { angle: "215-225", wind: 1.557, color: "steelblue" },
+  { angle: "225-235", wind: 1.586, color: "steelblue" },
+  { angle: "235-245", wind: 1.661, color: "steelblue" },
+  { angle: "245-255", wind: 1.78, color: "steelblue" },
+  { angle: "255-265", wind: 0.103, color: "steelblue" },
+  { angle: "265-275", wind: 0.753, color: "steelblue" },
+  { angle: "275-285", wind: 0.382, color: "steelblue" },
+  { angle: "285-295", wind: 0.914, color: "steelblue" },
+  { angle: "295-305", wind: 0.391, color: "steelblue" },
+  { angle: "305-315", wind: 0.5966, color: "steelblue" },
+  { angle: "315-325", wind: 0.5317, color: "steelblue" },
+  { angle: "325-335", wind: 0.5944, color: "steelblue" },
+  { angle: "335-345", wind: 0.5817, color: "steelblue" },
+  { angle: "345-355", wind: 0.5569, color: "steelblue" },
+  { angle: "355-005", wind: 1.0569, color: "steelblue" },
+  { angle: "005-015", wind: 0.537, color: "darkred" },
+  { angle: "015-025", wind: 0.8344, color: "darkred" },
+  { angle: "025-035", wind: 0.5257, color: "darkred" },
+  { angle: "035-045", wind: 0.5231, color: "darkred" },
+  { angle: "045-055", wind: 0.5182, color: "darkred" },
+  { angle: "055-065", wind: 0.5193, color: "darkred" },
+  { angle: "065-075", wind: 0.8372, color: "darkred" },
+  { angle: "075-085", wind: 0.5647, color: "darkred" },
+  { angle: "085-095", wind: 1.0598, color: "darkred" },
+  { angle: "095-105", wind: 0.5453, color: "darkred" },
+  { angle: "105-115", wind: 0.5491, color: "darkred" },
+  { angle: "115-125", wind: 0.5491, color: "darkred" },
+  { angle: "125-135", wind: 0.8323, color: "darkred" },
+  { angle: "135-145", wind: 0.8352, color: "darkred" },
+  { angle: "145-155", wind: 0.5436, color: "darkred" },
+  { angle: "155-165", wind: 0.8338, color: "darkred" },
+  { angle: "165-175", wind: 0.5471, color: "darkred" },
+  { angle: "175-185", wind: 0.5653, color: "darkred" },
+  { angle: "185-195", wind: 0.5653, color: "darkred" },
+  { angle: "195-205", wind: 0.5647, color: "darkred" },
+  { angle: "205-215", wind: 1.0577, color: "darkred" },
+  { angle: "215-225", wind: 1.0557, color: "darkred" },
+  { angle: "225-235", wind: 1.0586, color: "darkred" },
+  { angle: "235-245", wind: 0.5661, color: "darkred" },
+  { angle: "245-255", wind: 0.578, color: "darkred" },
+  { angle: "255-265", wind: 1.3103, color: "darkred" },
+  { angle: "265-275", wind: 1.3753, color: "darkred" },
+  { angle: "275-285", wind: 2.3382, color: "darkred" },
+  { angle: "285-295", wind: 1.3914, color: "darkred" },
+  { angle: "295-305", wind: 2.3391, color: "darkred" },
+  { angle: "305-315", wind: 1.3966, color: "darkred" },
+  { angle: "315-325", wind: 1.3317, color: "darkred" },
+  { angle: "325-335", wind: 0.3944, color: "darkred" },
+  { angle: "335-345", wind: 0.3817, color: "darkred" },
+  { angle: "345-355", wind: 0.3569, color: "darkred" },
+  { angle: "355-005", wind: 0.3569, color: "darkred" }
 ]
 
 const colorHash = {
@@ -268,7 +304,7 @@ export default class CreatingPieChart extends React.Component {
   { angle: "185-195", wind: 0.653 },
   { angle: "195-205", wind: 0.647 },
   { angle: "205-215", wind: 0.577 },
-  { angle: "215-225", wind: 0.557 },
+  { angle: "215-225", wind: 1.057 },
   { angle: "225-235", wind: 0.586 },
   { angle: "235-245", wind: 0.661 },
   { angle: "245-255", wind: 0.78 },
@@ -296,8 +332,25 @@ export default class CreatingPieChart extends React.Component {
             data={windRoseData}
             oAccessor={"angle"}
             rAccessor={"wind"}
-            style={{ fill: "#00a2ce", stroke: "white", strokeOpacity: 0.5 }}
-            type={"bar"}
+            style={d => ({
+              fill: d.color,
+              stroke: "white",
+              strokeOpacity: 0.5
+            })}
+            type={"point"}
+            rExtent={[0]}
+            connectorType={d => d.color}
+            connectorStyle={d => {
+              return {
+                fill: d.source.color,
+                stroke: d.source.color,
+                strokeOpacity: 0.5,
+                fillOpacity: 0.5
+              }
+            }}
+            canvasConnectors={true}
+            //            canvasPieces={true}
+            connectorRenderMode="sketchy"
             projection={"radial"}
             axis={{
               label: { name: "Windiness", locationDistance: 15 }
