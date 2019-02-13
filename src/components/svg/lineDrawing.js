@@ -562,11 +562,8 @@ export function findPointByID({
     if (!thisLine) {
       return null
     }
-    const thisPoint = thisLine.data.find(
-      p =>
-        xScale(p[projectedX]) ===
-        xScale(findFirstAccessorValue(xAccessor, point))
-    )
+    const pointX = xScale(findFirstAccessorValue(xAccessor, point))
+    const thisPoint = thisLine.data.find(p => xScale(p[projectedX]) === pointX)
 
     if (!thisPoint) {
       return null
