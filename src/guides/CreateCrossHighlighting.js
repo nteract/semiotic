@@ -4,10 +4,7 @@ import { XYFrame, OrdinalFrame } from "semiotic";
 import theme from "../theme";
 
 import { frameProps, linePercent, cumulativeLine } from "./CreateALineChart";
-import {
-  stackedFrameProps,
-  stackedFramePropsFlattened
-} from "./CreateABarChart";
+import { stackedFrameProps } from "./CreateABarChart";
 
 export default class CreateCrossHighlighting extends React.Component {
   constructor(props) {
@@ -277,6 +274,7 @@ Highlight annotations will return all points, lines and areas that match the id 
             {
               type: "highlight",
               style: d => {
+                console.log(d);
                 return {
                   strokeWidth: 3,
                   stroke: theme[d.key],
@@ -326,7 +324,7 @@ You don't have to send annotations with valid oAccessor or pieceIDAccessor trait
             {
               type: "highlight",
               style: d => ({
-                fill: d.action === "tweets" ? theme[5] : theme[5],
+                fill: d.action === "tweets" ? theme[5] : theme[4],
                 stroke: "white"
               })
             }
@@ -339,11 +337,13 @@ You don't have to send annotations with valid oAccessor or pieceIDAccessor trait
             },
             {
               type: "highlight",
-              action: "tweets",
-              style: { fill: "none", stroke: theme[5], strokeWidth: 5 }
+              rIndex: 0,
+              style: d => {
+                return { fill: "none", stroke: theme[5], strokeWidth: 5 };
+              }
             }
           ]}
-          pieceIDAccessor="action"
+          pieceIDAccessor="rIndex"
         />
         <MarkdownText
           text={`

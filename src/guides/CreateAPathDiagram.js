@@ -172,7 +172,7 @@ By default the sankey type uses [d3-sankey layout](https://github.com/d3/d3-sank
 networkType={{ 
   type: "sankey"
   zoom: true, // zoom the laid out nodes in or out so that they fit exactly in the specified size
-  direction: "left", // accepts (right|left|up|down) direction of flow in the diagram
+  projection: "horizontal", // accepts (horizontal|vertical) direction of flow in the diagram
   orient: "center", // accepts (left|right|justify|center) sankey node alignment strategy
   iterations: 100, // how many times to run the layout algorithm
   nodeWidth: 24, // thickness of node along the axis of flow

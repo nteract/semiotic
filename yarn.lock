@@ -5176,10 +5176,10 @@ json-stringify-safe@~5.0.1:
   resolved "https://artifacts.netflix.com/api/npm/npm-netflix/json-stringify-safe/-/json-stringify-safe-5.0.1.tgz#1296a2d58fd45f19a0f6ce01d65701e2c735b6eb"
   integrity sha1-Epai1Y/UXxmg9s4B1lcB4sc1tus=
 
-json2csv@3.11.5:
+json2csv@^3.11.0:
   version "3.11.5"
-  resolved "https://registry.yarnpkg.com/json2csv/-/json2csv-3.11.5.tgz#088006c3b5c06425a48cb7326ca712a6f8661417"
-  integrity sha512-ORsw84BuRKMLxfI+HFZuvxRDnsJps53D5fIGr6tLn4ZY+ymcG8XU00E+JJ2wfAiHx5w2QRNmOLE8xHiGAeSfuQ==
+  resolved "https://artifacts.netflix.com/api/npm/npm-netflix/json2csv/-/json2csv-3.11.5.tgz#088006c3b5c06425a48cb7326ca712a6f8661417"
+  integrity sha1-CIAGw7XAZCWkjLcybKcSpvhmFBc=
   dependencies:
     cli-table "^0.3.1"
     commander "^2.8.1"
@@ -7596,10 +7596,10 @@ semiotic-mark@0.3.1:
     prop-types "^15.6.0"
     roughjs-es5 "0.1.0"
 
-semiotic@1.16.3:
-  version "1.16.3"
-  resolved "https://registry.yarnpkg.com/semiotic/-/semiotic-1.16.3.tgz#c879229190a8c8e4993efc45f964183e51d113dd"
-  integrity sha512-fbdqLypSL56hP94XohvEqtRkVh2szmWx5rSoS8ugjxJPpDNWqVzneBew7qGquBQZTUn8rMrPQ2pPPZy4v7l4TQ==
+semiotic@1.16.5:
+  version "1.16.5"
+  resolved "https://artifacts.netflix.com/api/npm/npm-netflix/semiotic/-/semiotic-1.16.5.tgz#e7d3c43f0dfd282e64290f41a928d6cd7ba8b33c"
+  integrity sha1-59PEPw39KC5kKQ9BqSjWzXuoszw=
   dependencies:
     "@mapbox/polylabel" "1"
     d3-array "^1.2.0"
@@ -7619,7 +7619,7 @@ semiotic@1.16.3:
     d3-selection "^1.1.0"
     d3-shape "^1.2.0"
     d3-voronoi "^1.0.2"
-    json2csv "3.11.5"
+    json2csv "^3.11.0"
     labella "1.1.4"
     memoize-one "4.0.0"
     object-assign "4.1.1"

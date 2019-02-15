@@ -3,7 +3,6 @@ import Sidebar from "./Sidebar";
 import ScrollToTop from "./ScrollToTop";
 
 import MarkdownPage from "./MarkdownPage";
-import APIXYFrame from "./api/XYFrame";
 import CreateALineChart from "./guides/CreateALineChart";
 import CreateAnAreaChart from "./guides/CreateAnAreaChart";
 import CreateAScatterplot from "./guides/CreateAScatterplot";
@@ -27,6 +26,8 @@ import CanvasRendering from "./guides/CanvasRendering";
 
 import CandlestickChart from "./examples/CandlestickChart";
 import WaterfallChart from "./examples/WaterfallChart";
+import CanvasInteraction from "./examples/CanvasInteraction";
+
 import HomerunMap from "./examples/HomerunMap";
 import MarimekkoChart from "./examples/MarimekkoChart";
 import BarLineChart from "./examples/BarLineChart";
@@ -209,7 +210,9 @@ const PAGES = [
         component: HomerunMap
       },
       {
-        name: "Canvas Interaction"
+        name: "Canvas Interaction",
+        url: "canvas-interaction",
+        component: CanvasInteraction
       },
       {
         name: "OrdinalFrame",
@@ -274,7 +277,10 @@ const PAGES = [
       {
         name: "XYFrame",
         url: "xyframe",
-        component: APIXYFrame
+        component: MarkdownPage,
+        props: {
+          filename: "xyframe"
+        }
       },
       // {
       //   name: "MinimapXYFrame",

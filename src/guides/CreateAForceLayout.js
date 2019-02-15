@@ -1,16 +1,18 @@
 import React from "react";
 import MarkdownText from "../MarkdownText";
 import DocumentFrame from "../DocumentFrame";
-import { NetworkFrame } from "semiotic";
+import { NetworkFrame, nodesEdgesFromHierarchy } from "semiotic";
 import theme from "../theme";
+import { hierarchy } from "d3-hierarchy";
 import { forceSimulation, forceY, forceCollide } from "d3-force";
 
 const frameProps = {
   networkType: {
-    type: "force",
+    type: "motifs",
     forceManyBody: -250,
     distanceMax: 500,
-    edgeStrength: 2
+    edgeStrength: 2,
+    zoom: false
   },
   nodeSizeAccessor: 2,
   edgeStyle: { stroke: theme[2], fill: "none" },
@@ -72,13 +74,13 @@ export default class ForceLayouts extends React.Component {
     fetch(`${ROOT}/data/flare.json`)
       .then(response => response.json())
       .then(data => {
-        this.setState({ data });
+        this.setState({ data: nodesEdgesFromHierarchy(hierarchy(data)) });
       });
   }
 
   render() {
     if (!this.state.data) return "Loading...";
-
+    console.log(this.state);
     return (
       <div>
         <MarkdownText
@@ -95,7 +97,13 @@ The built in force types are \`force\`, and \`motifs\`.
         />
 
         <DocumentFrame
-          frameProps={{ ...frameProps, edges: this.state.data }}
+          frameProps={{
+            ...frameProps,
+            nodes: this.state.data.nodes.filter(d => d.depth !== 0),
+            edges: this.state.data.edges.filter(
+              d => d.source.depth !== 0 && d.target.depth !== 0
+            )
+          }}
           // overrideProps={overrideProps}
           type={NetworkFrame}
           pre={`

@@ -101,7 +101,7 @@ yAccessor="attendance"
 
 - `category`: A [react-annotation](https://react-annotation.susielu.com/) AnnotationBracket with the passed “title” and/or “label” based on the passed “categories” array (you pass an array of strings that correspond to the oAccessor category names and the bracket is drawn to surround them, which means it will encompass other columns if they are spread apart). Honors the following props:
 
-  - `bracketType` = "curly" (draw a straight or curly bracket)
+  - `bracketType` = "curly" (draw a square or curly bracket)
   - `position` = projection === "vertical" ? "top" : "left" (whether to show the bracket on top, left, right or bottom)
   - `depth` = 30 (how deep the bracket goes into the viz)
   - `offset` = 0 (how far back from the viz the bracket is)

@@ -148,7 +148,30 @@ const circlepackOverrideProps = {
 
 const treemap = {
   ...circlepack,
-  networkType: "treemap"
+  nodeLabels: d => {
+    return d.depth > 1 ? null : (
+      <g transform="translate(0,5)">
+        <text
+          fontSize="18"
+          textAnchor="middle"
+          strokeWidth={2}
+          stroke="white"
+          fill="white"
+        >
+          {d.id}
+        </text>
+        <text fontSize="18" textAnchor="middle" fill={theme[d.depth]}>
+          {d.id}
+        </text>
+      </g>
+    );
+  },
+  nodeStyle: d => ({
+    fill: d.height === 0 ? theme[d.depth] : "none",
+    fillOpacity: 1,
+    stroke: theme[d.depth]
+  }),
+  networkType: { type: "treemap", padding: 2 }
 };
 
 export default class HierarchicalDiagrams extends React.Component {
