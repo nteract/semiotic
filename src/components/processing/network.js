@@ -11,7 +11,7 @@ function recursiveIDAccessor(idAccessor, node, accessorString) {
 
 export const nodesEdgesFromHierarchy = (
   rootNode,
-  idAccessor = () => "no-id-accessor-passed"
+  idAccessor = (d, i) => d.id || d.name || i || "no-id"
 ) => {
   const edges = []
   const nodes = []
