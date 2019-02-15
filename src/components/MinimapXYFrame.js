@@ -13,7 +13,7 @@ class MinimapXYFrame extends React.Component {
     this.generateMinimap = this.generateMinimap.bind(this)
   }
 
-  static displayName = "OrdinalFrame"
+  static displayName = "MinimapXYFrame"
 
   generateMinimap() {
     const {

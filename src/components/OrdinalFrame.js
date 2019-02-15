@@ -1503,7 +1503,15 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
     return null
   }
 
-  defaultORHTMLRule = ({ d, i }: { d: Object, i: number }) => {
+  defaultORHTMLRule = ({
+    d,
+    i,
+    annotationLayer
+  }: {
+    d: Object,
+    i: number,
+    annotationLayer: Object
+  }) => {
     const {
       adjustedPosition,
       adjustedSize,
@@ -1525,6 +1533,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       useSpans
     } = this.props
     let screenCoordinates = [0, 0]
+
+    const { voronoiHover } = annotationLayer
 
     if (d.coordinates || (d.type === "enclose" && d.neighbors)) {
       screenCoordinates = (d.coordinates || d.neighbors).map(p => {
@@ -1563,29 +1573,14 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         rScaleType
       })
     }
-
+          const flippedRScale =
+            projection === "vertical"
+              ? rScaleType.domain(rScale.domain()).range(rScale.range().reverse())
+              : rScale
     //TODO: Process your rules first
-    if (
+    const customAnnotation =
       htmlAnnotationRules &&
       htmlAnnotationRules({
-        d,
-        i,
-        oScale,
-        rScale,
-        oAccessor,
-        rAccessor,
-        orFrameProps: this.props,
-        orFrameState: this.state,
-        categories: this.state.projectedColumns,
-        useSpans,
-        screenCoordinates
-      }) !== null
-    ) {
-      const flippedRScale =
-        projection === "vertical"
-          ? rScaleType.domain(rScale.domain()).range(rScale.range().reverse())
-          : rScale
-      return htmlAnnotationRules({
         d,
         i,
         oScale,
@@ -1593,10 +1588,17 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         oAccessor,
         rAccessor,
         orFrameProps: this.props,
+        screenCoordinates,
+        adjustedPosition,
+        adjustedSize,
+        annotationLayer,
+        orFrameState: this.state,
         categories: this.state.projectedColumns,
-        useSpans,
-        screenCoordinates
+        voronoiHover
       })
+
+    if (htmlAnnotationRules && customAnnotation !== null) {
+      return customAnnotation
     }
 
     if (d.type === "frame-hover") {

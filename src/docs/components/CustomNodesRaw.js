@@ -196,6 +196,7 @@ export default ({ direction, ranker, parallelEdges }) => {
           fillOpacity: 0.5,
           strokeWidth: parallelEdges ? 0.5 : d.weight
         })}
+        nodeLabels={true}
         margin={10}
         hoverAnnotation={true}
         tooltipContent={d => {

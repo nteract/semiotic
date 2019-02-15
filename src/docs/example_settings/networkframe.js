@@ -8,7 +8,6 @@ export const edgeData = [
   { source: "Kai", target: "Susie", weight: 5 },
   { source: "Kai", target: "Shirley", weight: 5 },
   { source: "Kai", target: "Shelby", weight: 5 },
-  { source: "Erik", target: "Zan", weight: 5 },
   { source: "Tony", target: "Zan", weight: 5 },
   { source: "Tony", target: "Fil", weight: 5 },
   { source: "Tony", target: "Ian", weight: 5 },

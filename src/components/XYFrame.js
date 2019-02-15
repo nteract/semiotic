@@ -1072,7 +1072,10 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         areas,
         points,
         lines,
-        voronoiHover
+        voronoiHover,
+        adjustedPosition,
+        adjustedSize,
+        annotationLayer
       })
     if (this.props.svgAnnotationRules !== undefined && customSVG !== null) {
       return customSVG
@@ -1164,19 +1167,23 @@ class XYFrame extends React.Component<XYFrameProps, State> {
     i,
     lines,
     areas,
-    points
+    points,
+    annotationLayer
   }: {
     d: Object,
     i: number,
     lines: Object,
     areas: Object,
-    points: Object
+    points: Object,
+    annotationLayer: Object
   }) => {
     const xAccessor = this.state.xAccessor
     const yAccessor = this.state.yAccessor
 
     const xScale = this.state.xScale
     const yScale = this.state.yScale
+
+    const { voronoiHover } = annotationLayer
 
     let screenCoordinates = []
 
@@ -1213,7 +1220,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       axes: this.props.axes,
       title: this.state.annotatedSettings.title
     })
-    const { adjustedPosition } = adjustedPositionSize({
+    const { adjustedPosition, adjustedSize } = adjustedPositionSize({
       size: this.props.size,
       margin,
       axes: this.props.axes,
@@ -1272,7 +1279,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       })
     }
 
-    if (
+    const customAnnotation =
       this.props.htmlAnnotationRules &&
       this.props.htmlAnnotationRules({
         d,
@@ -1286,23 +1293,15 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         xyFrameState: this.state,
         areas,
         points,
-        lines
-      }) !== null
-    ) {
-      return this.props.htmlAnnotationRules({
-        d,
-        i,
-        screenCoordinates,
-        xScale,
-        yScale,
-        xAccessor,
-        yAccessor,
-        xyFrameProps: this.props,
-        xyFrameState: this.state,
-        areas,
-        points,
-        lines
+        lines,
+        voronoiHover,
+        adjustedPosition,
+        adjustedSize,
+        annotationLayer
       })
+
+    if (this.props.htmlAnnotationRules && customAnnotation !== null) {
+      return customAnnotation
     }
     if (d.type === "frame-hover") {
       let content = (

@@ -32,14 +32,14 @@ const radialBarFeatureGenerator = ({
     type.type === "clusterbar"
       ? 0
       : type.type === "timeline"
-        ? piece.scaledValue / 2
-        : piece.bottom / 2
+      ? piece.scaledValue / 2
+      : piece.bottom / 2
   let outerSize =
     type.type === "clusterbar"
       ? piece.scaledValue / 2
       : type.type === "timeline"
-        ? piece.scaledEndValue / 2
-        : piece.scaledValue / 2 + piece.bottom / 2
+      ? piece.scaledEndValue / 2
+      : piece.scaledValue / 2 + piece.bottom / 2
 
   if (innerRadius) {
     innerRadius = parseInt(innerRadius, 10)
@@ -61,10 +61,10 @@ const radialBarFeatureGenerator = ({
   const startAngle = adjustedPct(
     type.type === "clusterbar"
       ? ordset.pct_start +
-        (i / ordset.pieceData.length) * (ordset.pct - ordset.pct_padding)
+          (i / ordset.pieceData.length) * (ordset.pct - ordset.pct_padding)
       : ordset.pct === 1
-        ? 0
-        : ordset.pct_start + offsetPct
+      ? 0
+      : ordset.pct_start + offsetPct
   )
 
   const endAngle =
@@ -346,7 +346,11 @@ export function clusterBarLayout({
             translate ? translate : `translate(${xPosition},${yPosition})`
           }
         >
-          {type.customMark({ ...piece.data, ...piece }, i, xy)}
+          {type.customMark(
+            { ...piece.data, ...piece, x: xPosition, y: yPosition },
+            i,
+            xy
+          )}
         </g>
       ) : (
         {
@@ -473,7 +477,11 @@ export function barLayout({
           role="img"
           tabIndex="-1"
         >
-          {type.customMark({ ...piece.data, ...piece }, i, xy)}
+          {type.customMark(
+            { ...piece.data, ...piece, x: xPosition, y: yPosition },
+            i,
+            xy
+          )}
         </g>
       ) : (
         {
@@ -565,7 +573,11 @@ export function timelineLayout({
           key={`piece-${piece.renderKey}`}
           transform={`translate(${xPosition},${yPosition + height})`}
         >
-          {type.customMark({ ...piece.data, ...piece }, i, xy)}
+          {type.customMark(
+            { ...piece.data, ...piece, x: xPosition, y: yPosition },
+            i,
+            xy
+          )}
         </g>
       ) : (
         {
@@ -645,7 +657,10 @@ export function pointLayout({
           key={`piece-${piece.renderKey}`}
           transform={`translate(${xPosition},${yPosition})`}
         >
-          {type.customMark({ ...piece.data, ...piece }, i)}
+          {type.customMark(
+            { ...piece.data, ...piece, x: xPosition, y: yPosition },
+            i
+          )}
         </g>
       ) : (
         {
@@ -758,7 +773,10 @@ export function swarmLayout({
           key={`piece-${piece.renderKey}`}
           transform={`translate(${xPosition},${yPosition})`}
         >
-          {type.customMark({ ...piece.data, ...piece }, i)}
+          {type.customMark(
+            { ...piece.data, ...piece, x: xPosition, y: yPosition },
+            i
+          )}
         </g>
       ) : (
         {

@@ -1225,11 +1225,13 @@ class NetworkFrame extends React.Component<Props, State> {
 
         simulation.nodes(projectedNodes)
 
+        const forceMod = adjustedSize[1] / adjustedSize[0]
+
         if (!simulation.force("x")) {
-          simulation.force("x", forceX(size[0] / 2))
+          simulation.force("x", forceX(size[0] / 2).strength(forceMod * 0.5))
         }
         if (!simulation.force("y")) {
-          simulation.force("y", forceY(size[1] / 2))
+          simulation.force("y", forceY(size[1] / 2).strength(0.5))
         }
 
         if (projectedEdges.length !== 0 && !simulation.force("link")) {
@@ -1449,17 +1451,49 @@ class NetworkFrame extends React.Component<Props, State> {
       networkSettings.type !== "circlepack" &&
       networkSettings.type !== "dagre"
     ) {
+      // ZOOM SHOULD MAINTAIN ASPECT RATIO, ADD "stretch" to fill whole area
       const xMin = min(projectedNodes.map(p => p.x - nodeSizeAccessor(p)))
       const xMax = max(projectedNodes.map(p => p.x + nodeSizeAccessor(p)))
       const yMin = min(projectedNodes.map(p => p.y - nodeSizeAccessor(p)))
       const yMax = max(projectedNodes.map(p => p.y + nodeSizeAccessor(p)))
 
+      const xSize = Math.abs(xMax - xMin)
+      const ySize = Math.abs(yMax - yMin)
+
+      const networkAspectRatio = xSize / ySize
+      const baseAspectRatio = adjustedSize[0] / adjustedSize[1]
+
+      let yMod, xMod
+
+      if (networkSettings.zoom === "stretch") {
+        yMod = 0
+        xMod = 0
+      }
+      else if (xSize > ySize) {
+        if (networkAspectRatio > baseAspectRatio) {
+          xMod = 0
+          yMod = (adjustedSize[1] - ((adjustedSize[0] / xSize) * ySize)) / 2
+        } else {
+          yMod = 0
+          xMod = (adjustedSize[0] - ((adjustedSize[1] / ySize) * xSize)) / 2
+        }
+      } else {
+        if (networkAspectRatio > baseAspectRatio) {
+          xMod = 0
+          yMod = (adjustedSize[1] - ((adjustedSize[0] / xSize) * ySize)) / 2  
+        } else {
+          yMod = 0
+          xMod = (adjustedSize[0] - ((adjustedSize[1] / ySize) * xSize)) / 2
+
+        }
+      }
+
       const projectionScaleX = scaleLinear()
         .domain([xMin, xMax])
-        .range([margin.left, adjustedSize[0] - margin.right])
+        .range([xMod, adjustedSize[0] - xMod])
       const projectionScaleY = scaleLinear()
         .domain([yMin, yMax])
-        .range([margin.top, adjustedSize[1] - margin.bottom])
+        .range([yMod, adjustedSize[1] - yMod])
       projectedNodes.forEach(node => {
         node.x = projectionScaleX(node.x)
         node.y = projectionScaleY(node.y)
@@ -1568,7 +1602,8 @@ class NetworkFrame extends React.Component<Props, State> {
     const nodeLabelAnnotations = []
     if (currentProps.nodeLabels && projectedNodes) {
       projectedNodes.forEach((node, nodei) => {
-        if (nodeLabels === true || (nodeLabels && nodeLabels(node, nodei))) {
+        const feasibleLabel = nodeLabels && nodeLabels !== true && nodeLabels(node, nodei)
+        if (nodeLabels === true || feasibleLabel) {
           const actualLabel =
             networkSettings.projection === "radial" && node.depth !== 0
               ? radialLabelGenerator(
@@ -1580,7 +1615,7 @@ class NetworkFrame extends React.Component<Props, State> {
                 )
               : nodeLabels === true
               ? nodeIDAccessor(node, nodei)
-              : nodeLabels(node, nodei)
+              : feasibleLabel
 
           let nodeLabel
 
@@ -1606,7 +1641,6 @@ class NetworkFrame extends React.Component<Props, State> {
               subject: { radius: nodeSizeAccessor(node) + 2 }
             }
           }
-
           nodeLabelAnnotations.push(nodeLabel)
         }
       })
@@ -1719,7 +1753,8 @@ class NetworkFrame extends React.Component<Props, State> {
       nodeIDAccessor,
       nodeSizeAccessor,
       networkFrameRender,
-      adjustedSize
+      adjustedSize,
+      adjustedPosition
     } = this.state
     const { svgAnnotationRules } = this.props
 
@@ -1749,6 +1784,11 @@ class NetworkFrame extends React.Component<Props, State> {
         networkFrameState: this.state,
         nodes: projectedNodes,
         edges: projectedEdges,
+        voronoiHover,
+        screenCoordinates: [d.x, d.y],
+        adjustedPosition,
+        adjustedSize,
+        annotationLayer,
         voronoiHover
       })
       if (customAnnotation !== null) {
@@ -1773,7 +1813,7 @@ class NetworkFrame extends React.Component<Props, State> {
     } else if (d.type === "basic-node-label") {
       return (
         <g key={d.key} transform={`translate(${d.x},${d.y})`}>
-          {baseD.label}
+          {baseD.element || baseD.label}
         </g>
       )
     } else if (d.type === "react-annotation" || typeof d.type === "function") {
@@ -1817,9 +1857,25 @@ class NetworkFrame extends React.Component<Props, State> {
     return null
   }
 
-  defaultNetworkHTMLRule = ({ d: baseD, i }: { d: Object, i: number }) => {
+  defaultNetworkHTMLRule = ({
+    d: baseD,
+    i,
+    annotationLayer
+  }: {
+    d: Object,
+    i: number,
+    annotationLayer: Object
+  }) => {
     const { tooltipContent, size, useSpans } = this.props
-    const { projectedNodes, projectedEdges, nodeIDAccessor } = this.state
+    const {
+      projectedNodes,
+      projectedEdges,
+      nodeIDAccessor,
+      adjustedSize,
+      adjustedPosition
+    } = this.state
+
+    const { voronoiHover } = annotationLayer
 
     const d = baseD.ids
       ? baseD
@@ -1844,7 +1900,13 @@ class NetworkFrame extends React.Component<Props, State> {
         networkFrameProps: this.props,
         networkFrameState: this.state,
         nodes: projectedNodes,
-        edges: projectedEdges
+        edges: projectedEdges,
+        voronoiHover,
+        screenCoordinates: [d.x, d.y],
+        adjustedPosition,
+        adjustedSize,
+        annotationLayer,
+        voronoiHover
       })
       if (customAnnotation !== null) {
         return customAnnotation

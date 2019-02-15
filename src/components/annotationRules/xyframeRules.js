@@ -101,10 +101,14 @@ export const svgHighlight = ({
         fill="none"
         stroke="black"
         strokeWidth={2}
-        style={typeof d.style === "function" ? d.style(p.data, q) : d.style}
+        style={
+          typeof d.style === "function"
+            ? d.style({ ...p, ...p.data }, q)
+            : d.style
+        }
         className={`highlight-annotation ${(d.class &&
           typeof d.class === "function" &&
-          d.class(p.data, q)) ||
+          d.class({ ...p, ...p.data }, q)) ||
           (d.class && d.class) ||
           ""}`}
       />

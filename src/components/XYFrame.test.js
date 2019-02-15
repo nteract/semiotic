@@ -18,6 +18,18 @@ const someOtherPointData = [
   { day: 4, date: "2017-06-20", value: 50 }
 ]
 
+const htmlAnnotation = {
+  day: 3,
+  value: 100,
+  type: "frame-hover"
+}
+
+const svgAnnotation = {
+  day: 3,
+  value: 100,
+  type: "xy"
+}
+
 //Enzyme doesn't do well with context so disable it for now
 
 describe("XYFrame", () => {
@@ -152,5 +164,47 @@ describe("XYFrame", () => {
   })
   it("renders a title <g>", () => {
     expect(mountedFrameWithOptions.find("g.frame-title").length).toEqual(1)
+  })
+
+  const mountedFrameWithAnnotation = mount(
+    <XYFrame
+      title={"test title"}
+      points={somePointData}
+      lines={[
+        { label: "points", coordinates: somePointData },
+        { label: "otherpoints", coordinates: someOtherPointData }
+      ]}
+      xAccessor="day"
+      yAccessor="value"
+      disableContext={true}
+      annotations={[htmlAnnotation, svgAnnotation]}
+    />
+  )
+  it("renders an svg annotation", () => {
+    expect(mountedFrameWithAnnotation.find("g.annotation.xy").length).toEqual(1)
+  })
+  it("renders an html annotation", () => {
+    expect(
+      mountedFrameWithAnnotation.find("div.annotation.annotation-xy-label")
+        .length
+    ).toEqual(1)
+  })
+
+  const svgAnnotationXY = mountedFrameWithAnnotation.find(
+    "g.annotation.xy > circle"
+  )
+
+  const htmlAnnotationStyle = mountedFrameWithAnnotation
+    .find("div.annotation.annotation-xy-label")
+    .getDOMNode().style
+
+  const x = 333.3333333333333
+  const y = 295.7142857142857
+
+  it("html and svg annotations have the same x & y positions for each", () => {
+    expect(svgAnnotationXY.props().cx).toEqual(x)
+    expect(svgAnnotationXY.props().cy).toEqual(y)
+    expect(htmlAnnotationStyle.left).toEqual(`${x}px`)
+    expect(htmlAnnotationStyle.top).toEqual(`${y}px`)
   })
 })

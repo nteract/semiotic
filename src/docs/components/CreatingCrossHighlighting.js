@@ -744,8 +744,11 @@ export default class CreatingLineChart extends React.Component {
             hoverAnnotation={{
               type: "highlight",
               style: d => ({
-                fill: d.title === "Ex Machina" ? "blue" : "purple",
-                stroke: "orange",
+                fill:
+                  d.parentLine && d.parentLine.title === "Ex Machina"
+                    ? "blue"
+                    : "purple",
+                stroke: d.parentLine ? "darkred" : "orange",
                 strokeWidth: 3
               })
             }}
