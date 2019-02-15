@@ -57,7 +57,7 @@ const squareNodeGenerator = ({ d, transform, key }) => (
   />
 )
 
-const chartSize = [750, 500]
+const chartSize = [600, 1000]
 
 const networkNodeStyle = d => ({
   fill: d.createdByFrame ? "#00a2ce" : "#b3331d",
@@ -68,12 +68,14 @@ const networkTypeHash = {
   force: {
     type: "tree",
     iterations: 500,
-    edgeStrength: 0.1
+    edgeStrength: 0.1,
+    zoom: true
   },
   motifs: {
     type: "motifs",
     iterations: 500,
-    edgeStrength: 0.1
+    edgeStrength: 0.1,
+    zoom: true
   }
 }
 
@@ -310,7 +312,6 @@ export default class NetworkFrameDocs extends React.Component {
       networkType: networkType,
       edgeType: this.state.edge,
       nodeSizeAccessor: nodeSizeHash[this.state.nodeSize],
-      zoomToFit: true,
       nodeLabels: false,
       download: true,
       hoverAnnotation: [

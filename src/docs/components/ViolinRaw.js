@@ -85,13 +85,13 @@ const violinChart = {
       type: "check-html",
       stepValue: 70,
       stepName: "January",
-      label: "come on this is 70"
+      label: "HTML Note at 70"
     },
     {
       type: "check-html",
       stepValue: 30,
       stepName: "August",
-      label: "30 here is 30"
+      label: "HTML Note at 30"
     }
   ]
 }
@@ -111,7 +111,7 @@ export default (
                 position: "absolute"
               }}
             >
-              Hello der - {d.label}
+              {d.label}
             </div>
           )
         }

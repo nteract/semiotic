@@ -98,16 +98,9 @@ const pokemons = [
   { name: "Pikachu", color: "#00a2ce", attribute: "attack", value: 5 },
   { name: "Cactaur", color: "#4d430c", attribute: "attack", value: 2 },
   { name: "Pizza Elemental", color: "#b3331d", attribute: "attack", value: 10 },
-  { name: "Baron Munchausen", color: "#b6a756", attribute: "attack", value: 4 },
   { name: "Pikachu", color: "#00a2ce", attribute: "defense", value: 4 },
   { name: "Cactaur", color: "#4d430c", attribute: "defense", value: 1 },
   { name: "Pizza Elemental", color: "#b3331d", attribute: "defense", value: 8 },
-  {
-    name: "Baron Munchausen",
-    color: "#b6a756",
-    attribute: "defense",
-    value: 4
-  },
   { name: "Pikachu", color: "#00a2ce", attribute: "special attack", value: 8 },
   { name: "Cactaur", color: "#4d430c", attribute: "special attack", value: 10 },
   {
@@ -115,12 +108,6 @@ const pokemons = [
     color: "#b3331d",
     attribute: "special attack",
     value: 2
-  },
-  {
-    name: "Baron Munchausen",
-    color: "#b6a756",
-    attribute: "special attack",
-    value: 6
   },
   { name: "Pikachu", color: "#00a2ce", attribute: "special defense", value: 2 },
   { name: "Cactaur", color: "#4d430c", attribute: "special defense", value: 1 },
@@ -130,16 +117,9 @@ const pokemons = [
     attribute: "special defense",
     value: 4
   },
-  {
-    name: "Baron Munchausen",
-    color: "#b6a756",
-    attribute: "special defense",
-    value: 8
-  },
   { name: "Pikachu", color: "#00a2ce", attribute: "rarity", value: 1 },
   { name: "Cactaur", color: "#4d430c", attribute: "rarity", value: 10 },
-  { name: "Pizza Elemental", color: "#b3331d", attribute: "rarity", value: 10 },
-  { name: "Baron Munchausen", color: "#b6a756", attribute: "rarity", value: 5 }
+  { name: "Pizza Elemental", color: "#b3331d", attribute: "rarity", value: 10 }
 ]
 
 const colorHash = {
