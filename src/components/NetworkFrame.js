@@ -770,13 +770,12 @@ class NetworkFrame extends React.Component<Props, State> {
         rootNode.sum(networkSettings.hierarchySum || (d => d.value))
 
         if (hierarchicalTypeHash[networkSettings.type]) {
-          const layout =
-            networkSettings.layout || hierarchicalTypeHash[networkSettings.type]
+          const layout = networkSettings.layout || hierarchicalTypeHash[networkSettings.type]
           const hierarchicalLayout = layout()
           const networkSettingKeys = Object.keys(networkSettings)
           if (
             ["dendrogram", "tree", "cluster"].indexOf(networkSettings.type) !==
-            -1
+            -1 && hierarchicalLayout.separation
           ) {
             hierarchicalLayout.separation(
               (a, b) =>
@@ -796,9 +795,10 @@ class NetworkFrame extends React.Component<Props, State> {
             hierarchicalProjectable[networkSettings.type]
               ? [adjustedSize[1], adjustedSize[0]]
               : adjustedSize
-          if (!networkSettings.nodeSize) {
+          if (!networkSettings.nodeSize && hierarchicalLayout.size) {
             hierarchicalLayout.size(layoutSize)
           }
+
           hierarchicalLayout(rootNode)
         }
 
@@ -1441,6 +1441,9 @@ class NetworkFrame extends React.Component<Props, State> {
       })
     }
     if (
+      typeof networkSettings.zoom === "function"
+    ) { networkSettings.zoom(projectedNodes, adjustedSize) }
+    else if (
       networkSettings.zoom !== false &&
       networkSettings.type !== "matrix" &&
       networkSettings.type !== "wordcloud" &&
