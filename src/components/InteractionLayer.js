@@ -51,7 +51,8 @@ type Props = {
   customHoverBehavior?: Function,
   voronoiHover: Function,
   canvasRendering?: boolean,
-  disableCanvasInteraction: boolean
+  disableCanvasInteraction: boolean,
+  showLinePoints?: string
 }
 
 type State = {
@@ -399,7 +400,7 @@ class InteractionLayer extends React.Component<Props, State> {
         const xValue = parseInt(xScale(d[projectedX]), 10)
         const yValue = parseInt(
           yScale(
-            d[whichPoints[showLinePoints]] !== undefined
+            showLinePoints && d[whichPoints[showLinePoints]] !== undefined
               ? d[whichPoints[showLinePoints]]
               : d[projectedYMiddle] !== undefined
               ? d[projectedYMiddle]

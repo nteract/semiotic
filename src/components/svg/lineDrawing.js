@@ -63,7 +63,8 @@ type RelativeYTypes = {
   projectedYMiddle: string,
   projectedY: string,
   yAccessor: Array<Function>,
-  yScale: Function
+  yScale: Function,
+  showLinePoints?: boolean | string
 }
 
 type RelativeXTypes = {
@@ -511,7 +512,9 @@ export function relativeY({
 }: RelativeYTypes) {
   const baseData =
     point &&
-    (point[whichPoint[showLinePoints]] !== undefined
+    (showLinePoints &&
+    showLinePoints !== true &&
+    point[whichPoint[showLinePoints]] !== undefined
       ? point[whichPoint[showLinePoints]]
       : point.yMiddle !== undefined
       ? point.yMiddle
