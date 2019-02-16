@@ -83,7 +83,7 @@ type CalculateDataTypes = {
   points?: Array<Object>,
   lines?: Array<Object>,
   lineType: Object,
-  showLinePoints?: boolean,
+  showLinePoints?: boolean | string,
   showSummaryPoints?: boolean,
   xExtent?: Array<number> | Object,
   yExtent?: Array<number> | Object,
@@ -208,7 +208,10 @@ export const calculateDataExtent = ({
       ]
     })
     if (showLinePoints) {
-      const whichPoints = whichPointsHash[showLinePoints] || projectedYMiddle
+      const whichPoints =
+        showLinePoints === true
+          ? projectedYMiddle
+          : whichPointsHash[showLinePoints]
       projectedPoints = fullDataset.map(d => {
         return {
           ...d,

@@ -148,7 +148,7 @@ export type XYFrameProps = {
   pointRenderMode?: string | Object | Function,
   areaRenderMode?: string | Object | Function,
   summaryRenderMode?: string | Object | Function,
-  showLinePoints?: boolean,
+  showLinePoints?: boolean | string,
   showSummaryPoints?: boolean,
   defined?: Function,
   lineStyle?: Function | Object,
@@ -1448,7 +1448,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         customHoverBehavior={customHoverBehavior}
         customDoubleClickBehavior={customDoubleClickBehavior}
         points={fullDataset}
-        showLinePoints={showLinePoints}
+        showLinePoints={typeof showLinePoints === "string" ? showLinePoints : undefined}
         margin={margin}
         backgroundGraphics={backgroundGraphics}
         foregroundGraphics={foregroundGraphics}
