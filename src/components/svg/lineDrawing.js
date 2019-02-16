@@ -497,17 +497,24 @@ export function funnelize({
   return funnelData
 }
 
+const whichPoint = {
+  bottom: "yBottom",
+  top: "yTop"
+}
+
 export function relativeY({
   point,
-  projectedYMiddle,
   projectedY,
   yAccessor,
-  yScale
+  yScale,
+  showLinePoints
 }: RelativeYTypes) {
   const baseData =
     point &&
-    (point[projectedYMiddle] !== undefined
-      ? point[projectedYMiddle]
+    (point[whichPoint[showLinePoints]] !== undefined
+      ? point[whichPoint[showLinePoints]]
+      : point.yMiddle !== undefined
+      ? point.yMiddle
       : point[projectedY] !== undefined
       ? point[projectedY]
       : findFirstAccessorValue(yAccessor, point))
