@@ -40,7 +40,6 @@ export default (type = "stackedarea") => {
         ticks: 6
       }
     ],
-    lineRenderMode: "sketchy",
     margin: { left: 50, top: 10, bottom: 50, right: 20 }
   }
   return (

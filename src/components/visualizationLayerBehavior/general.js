@@ -70,13 +70,29 @@ export function createPoints({
   classFn,
   renderKeyFn,
   renderMode,
-  baseMarkProps
+  baseMarkProps,
+  showLinePoints: baseShowLinePoints
 }) {
-  const { y, x, xMiddle } = projectedCoordinateNames
+  const { y, x, xMiddle, yMiddle, yTop, yBottom } = projectedCoordinateNames
+
+  const showLinePoints =
+    baseShowLinePoints === true ? undefined : baseShowLinePoints
+
+  const whichPoints = {
+    top: yTop,
+    bottom: yBottom
+  }
   const mappedPoints = []
   data.forEach((d, i) => {
     const dX = xScale(d[xMiddle] !== undefined ? d[xMiddle] : d[x])
-    const dY = yScale(d[y])
+    const dY = yScale(
+      d[[whichPoints[showLinePoints]]] !== undefined
+        ? d[[whichPoints[showLinePoints]]]
+        : d[yMiddle] !== undefined
+        ? d[yMiddle]
+        : d[y]
+    )
+
     const pointAriaLabel = `Point at x ${d.x} and y ${d.y}`
 
     const renderedCustomMark = !customMark
@@ -238,21 +254,9 @@ export function createLines({
         builtInDisplayProps.stroke = "black"
       }
 
-      let pathString = dynamicLineGenerator(d, i)(
+      const pathString = dynamicLineGenerator(d, i)(
         d.data.map(p => Object.assign({}, p.data, p))
       )
-
-      if (
-        pathString &&
-        (!customLine.interpolator || interpolator === curveLinear)
-      ) {
-        //FIX FOR CHROME STRAIGHT LINE BUG
-        const splitPath = pathString.split("L").map(d => d.split(","))
-        if (splitPath.length > 1) {
-          splitPath[0][1] = parseFloat(splitPath[0][1]).toFixed(2)
-        }
-        pathString = splitPath.map(d => d.join(",")).join("L")
-      }
 
       const markProps = {
         ...builtInDisplayProps,
