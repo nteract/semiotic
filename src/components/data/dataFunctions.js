@@ -26,6 +26,11 @@ import { extentValue } from "./unflowedFunctions"
 
 import type { ProjectedPoint, accessorType } from "../types/generalTypes"
 
+const whichPointsHash = {
+  top: projectedYTop,
+  bottom: projectedYBottom
+}
+
 const builtInTransformations = {
   "stackedarea": stackedArea,
   "stackedarea-invert": stackedArea,
@@ -203,10 +208,20 @@ export const calculateDataExtent = ({
       ]
     })
     if (showLinePoints) {
-      projectedPoints = fullDataset.map(d => ({
-        ...d,
-        [projectedY]: d[projectedYTop] || d[projectedYBottom] || d.y
-      }))
+      const whichPoints = whichPointsHash[showLinePoints] || projectedYMiddle
+      projectedPoints = fullDataset.map(d => {
+        return {
+          ...d,
+          [projectedY]:
+            d[whichPoints] !== undefined
+              ? d[whichPoints]
+              : d[projectedYMiddle] !== undefined
+              ? d[projectedYMiddle]
+              : d[projectedYBottom] !== undefined
+              ? d[projectedYBottom]
+              : d.y
+        }
+      })
     }
   }
 

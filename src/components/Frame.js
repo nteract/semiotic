@@ -162,6 +162,7 @@ class Frame extends React.Component<Props, State> {
       canvasRendering,
       renderOrder,
       additionalDefs,
+      showLinePoints,
       disableCanvasInteraction = false
     } = this.props
 
@@ -374,6 +375,7 @@ class Frame extends React.Component<Props, State> {
             customHoverBehavior={customHoverBehavior}
             customDoubleClickBehavior={customDoubleClickBehavior}
             points={points}
+            showLinePoints={showLinePoints}
             canvasRendering={canvasRendering}
             position={adjustedPosition}
             margin={margin}

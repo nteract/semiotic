@@ -941,6 +941,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
   }) => {
     const xAccessor = this.state.xAccessor
     const yAccessor = this.state.yAccessor
+    const showLinePoints = this.props.showLinePoints
 
     const xScale = this.state.xScale
     const yScale = this.state.yScale
@@ -1001,7 +1002,8 @@ class XYFrame extends React.Component<XYFrameProps, State> {
           projectedYMiddle,
           projectedY,
           yAccessor,
-          yScale
+          yScale,
+          showLinePoints
         })
       ]
 
@@ -1179,6 +1181,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
   }) => {
     const xAccessor = this.state.xAccessor
     const yAccessor = this.state.yAccessor
+    const showLinePoints = this.props.showLinePoints
 
     const xScale = this.state.xScale
     const yScale = this.state.yScale
@@ -1235,6 +1238,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
           projectedYMiddle,
           projectedY,
           projectedX,
+          showLinePoints,
           xAccessor,
           yAccessor,
           yScale,
@@ -1361,7 +1365,8 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       beforeElements,
       renderOrder,
       matte,
-      frameKey
+      frameKey,
+      showLinePoints
     } = this.props
 
     const {
@@ -1443,6 +1448,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         customHoverBehavior={customHoverBehavior}
         customDoubleClickBehavior={customDoubleClickBehavior}
         points={fullDataset}
+        showLinePoints={showLinePoints}
         margin={margin}
         backgroundGraphics={backgroundGraphics}
         foregroundGraphics={foregroundGraphics}

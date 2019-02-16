@@ -15,6 +15,13 @@ import SpanOrDiv from "./SpanOrDiv"
 
 import type { Node } from "react"
 
+import {
+  projectedY,
+  projectedYTop,
+  projectedYMiddle,
+  projectedYBottom
+} from "./constants/coordinateNames"
+
 //import type { CustomHoverType } from "./types/annotationTypes"
 
 type CustomHoverType = boolean | Object | Array<Object | Function> | Function
@@ -365,8 +372,7 @@ class InteractionLayer extends React.Component<Props, State> {
       yScale,
       points,
       projectedX,
-      projectedY,
-      projectedYMiddle,
+      showLinePoints,
       size,
       overlay,
       interactionOverflow = { top: 0, bottom: 0, left: 0, right: 0 },
@@ -374,6 +380,11 @@ class InteractionLayer extends React.Component<Props, State> {
       customDoubleClickBehavior,
       hoverAnnotation
     } = props
+
+    const whichPoints = {
+      top: projectedYTop,
+      bottom: projectedYBottom
+    }
 
     const pointerStyle =
       customClickBehavior || customDoubleClickBehavior
@@ -387,7 +398,13 @@ class InteractionLayer extends React.Component<Props, State> {
       points.forEach((d: Object) => {
         const xValue = parseInt(xScale(d[projectedX]), 10)
         const yValue = parseInt(
-          yScale(d[projectedYMiddle] || d[projectedY]),
+          yScale(
+            d[whichPoints[showLinePoints]] !== undefined
+              ? d[whichPoints[showLinePoints]]
+              : d[projectedYMiddle] !== undefined
+              ? d[projectedYMiddle]
+              : d[projectedY]
+          ),
           10
         )
         if (
@@ -452,7 +469,10 @@ class InteractionLayer extends React.Component<Props, State> {
             }}
             key={`interactionVoronoi${i}`}
             d={`M${d.join("L")}Z`}
-            style={{ fillOpacity: 0, ...pointerStyle }}
+            style={{
+              fillOpacity: 0,
+              ...pointerStyle
+            }}
           />
         )
       }, this)

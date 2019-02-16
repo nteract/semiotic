@@ -72,18 +72,18 @@ export function createPoints({
   renderMode,
   baseMarkProps
 }) {
-  const { y, x, yMiddle, xMiddle } = projectedCoordinateNames
+  const { y, x, xMiddle } = projectedCoordinateNames
   const mappedPoints = []
   data.forEach((d, i) => {
-    const dX = xScale(d[xMiddle] || d[x])
-    const dY = yScale(d[yMiddle] || d[y])
+    const dX = xScale(d[xMiddle] !== undefined ? d[xMiddle] : d[x])
+    const dY = yScale(d[y])
     const pointAriaLabel = `Point at x ${d.x} and y ${d.y}`
 
     const renderedCustomMark = !customMark
       ? undefined
       : React.isValidElement(customMark)
-        ? customMark
-        : customMark({ d: d.data, xy: d, i, xScale, yScale })
+      ? customMark
+      : customMark({ d: d.data, xy: d, i, xScale, yScale })
     const markProps = customMark
       ? Object.assign(baseMarkProps, renderedCustomMark.props, {
           "aria-label": pointAriaLabel

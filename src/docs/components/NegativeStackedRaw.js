@@ -30,6 +30,8 @@ export default (type = "stackedarea") => {
     lineType: { type, interpolator: curveMonotoneX },
     xAccessor: "step",
     yAccessor: "value",
+    showLinePoints: "top",
+    hoverAnnotation: true,
     lineStyle: d => ({ fill: d.label, stroke: d.label, fillOpacity: 0.75 }),
     axes: [
       { orient: "left" },
