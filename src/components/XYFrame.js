@@ -854,6 +854,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         canvasRender: stringToFn(canvasPoints, undefined, true),
         customMark: customPointMark,
         renderKeyFn: stringToFn(renderKey, (d, i) => `point-${i}`, true),
+        showLinePoints,
         behavior: createPoints
       }
     }

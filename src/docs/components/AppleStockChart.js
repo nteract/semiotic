@@ -25,7 +25,7 @@ export default class AppleStockChart extends React.Component {
     const examples = []
     examples.push({
       name: "Basic",
-      demo: AppleStockChartRaw(this.state.editMode),
+      demo: AppleStockChartRaw(this.state.editMode, {}, () => {}),
       source: `
 import { XYFrame, DividedLine } from "../../components"
 import { data } from '../sampledata/apple_stock'
