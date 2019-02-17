@@ -165,7 +165,7 @@ class AnnotationLayer extends React.Component<Props, State> {
           : Array.isArray(orient)
             ? orient
             : [orient]
-      const finalAxisMarginOverride = Object.assign(
+      const finalAxisMarginOverride = Object.assign({},
         { top:null, right:null, bottom:null, left:null },
         axisMarginOverride
       )
