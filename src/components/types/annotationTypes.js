@@ -24,7 +24,13 @@ export type AnnotationHandling = {
     iterations?: number,
     pointSizeFunction?: Function,
     labelSizeFunction?: Function,
-    marginOffset?: number
+    marginOffset?: number,
+    axisMarginOverride?: {
+      top?:number,
+      right?:number,
+      bottom?:number,
+      left?:number
+    }
   }
 }
 
