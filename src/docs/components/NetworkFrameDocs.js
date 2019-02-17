@@ -235,11 +235,18 @@ export default class NetworkFrameDocs extends React.Component {
     const annotations = [
       { type: "node", dy: 25, id: "Miles", label: "Smart guy" },
       {
-        type: "enclose-hull",
+        type: "enclose-rect",
         dy: -70,
         dx: 75,
         ids: ["Tony", "Fil", "Adam"],
         label: "Annotations are easy!"
+      },
+      {
+        type: "enclose-rect",
+        dy: -70,
+        dx: 75,
+        ids: ["Tony", "Fil"],
+        label: "Annotations are easy 2!"
       }
     ]
     const buttons = [
@@ -324,6 +331,7 @@ export default class NetworkFrameDocs extends React.Component {
         }
         return (
           <div
+            key="specially-rendered"
             style={{
               position: "absolute",
               left: `${d.x}px`,

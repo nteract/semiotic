@@ -163,7 +163,7 @@ export const desaturationLayer = ({
   key
 }) => (
   <rect
-    key={key || `annotation-${i}`}
+    key={key || `desaturation-${i}`}
     x={-5}
     y={-5}
     width={size[0] + 10}
