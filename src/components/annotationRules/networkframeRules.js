@@ -19,15 +19,15 @@ export const htmlFrameHoverRule = ({
     baseD.x && baseD.y
       ? baseD
       : baseD.edge
-        ? {
-            ...(edges.find(
-              p =>
-                nodeIDAccessor(p.source) === nodeIDAccessor(baseD.source) &&
-                nodeIDAccessor(p.target) === nodeIDAccessor(baseD.target)
-            ) || {}),
-            ...baseD
-          }
-        : nodes.find(p => nodeIDAccessor(p) === baseD.id)
+      ? {
+          ...(edges.find(
+            p =>
+              nodeIDAccessor(p.source) === nodeIDAccessor(baseD.source) &&
+              nodeIDAccessor(p.target) === nodeIDAccessor(baseD.target)
+          ) || {}),
+          ...baseD
+        }
+      : nodes.find(p => nodeIDAccessor(p) === baseD.id)
 
   if (!d) return null
 
@@ -48,10 +48,15 @@ export const htmlFrameHoverRule = ({
     content = tooltipContent(d)
   }
 
+  console.log(
+    "`network-annotation-label-${i}`",
+    `network-annotation-label-${i}`
+  )
+
   return (
     <SpanOrDiv
       span={useSpans}
-      key={`xylabel${i}`}
+      key={`network-annotation-label-${i}`}
       className={`annotation annotation-network-label ${d.className || ""}`}
       style={{
         position: "absolute",
@@ -116,6 +121,7 @@ export const svgReactAnnotationRule = ({
 
 export const svgEncloseRule = ({
   d,
+  i,
   projectedNodes,
   nodeIDAccessor,
   nodeSizeAccessor
@@ -129,7 +135,7 @@ export const svgEncloseRule = ({
   const circle = packEnclose(
     selectedNodes.map(p => ({ x: p.x, y: p.y, r: nodeSizeAccessor(p) }))
   )
-  return circleEnclosure({ circle, d })
+  return circleEnclosure({ circle, d, i })
 }
 
 export const svgRectEncloseRule = ({

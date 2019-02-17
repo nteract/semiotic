@@ -1815,13 +1815,14 @@ class NetworkFrame extends React.Component<Props, State> {
       })
     } else if (d.type === "basic-node-label") {
       return (
-        <g key={d.key} transform={`translate(${d.x},${d.y})`}>
+        <g key={d.key || `basic-${i}`} transform={`translate(${d.x},${d.y})`}>
           {baseD.element || baseD.label}
         </g>
       )
     } else if (d.type === "react-annotation" || typeof d.type === "function") {
       return svgReactAnnotationRule({
         d,
+        i,
         projectedNodes,
         nodeIDAccessor
       })
