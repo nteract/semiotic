@@ -7603,10 +7603,10 @@ semiotic-mark@0.3.1:
     prop-types "^15.6.0"
     roughjs-es5 "0.1.0"
 
-semiotic@1.16.6:
-  version "1.16.6"
-  resolved "https://artifacts.netflix.com/api/npm/npm-netflix/semiotic/-/semiotic-1.16.6.tgz#d94478e0b8d4e0b2d7313cfb3dbd5bf1ddec4517"
-  integrity sha1-2UR44LjU4LLXMTz7Pb1b8d3sRRc=
+semiotic@1.16.7:
+  version "1.16.7"
+  resolved "https://artifacts.netflix.com/api/npm/npm-netflix/semiotic/-/semiotic-1.16.7.tgz#007ba5b71c175718a92d71f3c991e20cf852d580"
+  integrity sha1-AHultxwXVxipLXHzyZHiDPhS1YA=
   dependencies:
     "@mapbox/polylabel" "1"
     d3-array "^1.2.0"
