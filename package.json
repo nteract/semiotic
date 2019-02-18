@@ -6,6 +6,7 @@
   "dependencies": {
     "babel-eslint": "^10.0.1",
     "d3-dsv": "1.0.10",
+    "d3-flextree": "^2.1.1",
     "dagre": "^0.8.4",
     "eslint-plugin-babel": "^5.2.1",
     "eslint-plugin-react": "7.3.0",
@@ -15,7 +16,7 @@
     "react-dom": "^16.5.1",
     "react-router-dom": "^4.3.1",
     "react-scripts": "1.1.5",
-    "semiotic": "1.16.5"
+    "semiotic": "1.16.6"
   },
   "scripts": {
     "start": "react-scripts start",

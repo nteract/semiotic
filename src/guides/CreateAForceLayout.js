@@ -1,24 +1,22 @@
-import React from "react";
-import MarkdownText from "../MarkdownText";
-import DocumentFrame from "../DocumentFrame";
-import { NetworkFrame, nodesEdgesFromHierarchy } from "semiotic";
-import theme from "../theme";
-import { hierarchy } from "d3-hierarchy";
-import { forceSimulation, forceY, forceCollide } from "d3-force";
+import React from "react"
+import MarkdownText from "../MarkdownText"
+import DocumentFrame, { propertyToString } from "../DocumentFrame"
+import { NetworkFrame, nodesEdgesFromHierarchy } from "semiotic"
+import theme from "../theme"
+import { hierarchy } from "d3-hierarchy"
+import { forceSimulation, forceY, forceCollide } from "d3-force"
 
 const frameProps = {
   networkType: {
-    type: "motifs",
+    type: "force",
     forceManyBody: -250,
     distanceMax: 500,
-    edgeStrength: 2,
-    zoom: false
+    edgeStrength: 2
   },
   nodeSizeAccessor: 2,
   edgeStyle: { stroke: theme[2], fill: "none" },
   nodeIDAccessor: "name"
-  // filterRenderedNodes: d => d.depth !== 0
-};
+}
 
 const combinedFociNodes = [...Array(100)].map((d, i) => ({
   name: `Node ${i}`,
@@ -27,14 +25,15 @@ const combinedFociNodes = [...Array(100)].map((d, i) => ({
   fociY: Math.floor((i % 4) / 2) * 200,
   combinedY: (i % 4) * 75 + 150,
   color: theme[i % 4]
-}));
+}))
 
 const combinedFociSimulation = forceSimulation()
   .force("collide", forceCollide().radius(d => d.r))
-  .force("y", forceY(d => d.combinedY));
+  .force("y", forceY(d => d.combinedY))
 
 const bubbleProps = {
   nodes: combinedFociNodes,
+  nodeIDAccessor: "name",
   networkType: {
     type: "force",
     iterations: 200,
@@ -42,7 +41,7 @@ const bubbleProps = {
     zoom: false
   },
   nodeStyle: d => ({ fill: d.color })
-};
+}
 
 const pre = `
 import { forceSimulation, forceY, forceCollide } from "d3-force";
@@ -50,7 +49,7 @@ import { forceSimulation, forceY, forceCollide } from "d3-force";
 const combinedFociSimulation = forceSimulation()
   .force("collide", forceCollide().radius(d => d.r))
   .force("y", forceY(d => d.combinedY));
-`;
+`
 
 const bubbleOverrideProps = {
   networkType: `
@@ -60,27 +59,28 @@ const bubbleOverrideProps = {
     simulation: combinedFociSimulation,
     zoom: false
   }
-  `
-};
+  `,
+  nodes: propertyToString(combinedFociNodes, 0, true)
+}
 
-const ROOT = process.env.PUBLIC_URL;
+const ROOT = process.env.PUBLIC_URL
 
 export default class ForceLayouts extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
 
-    this.state = {};
+    this.state = {}
 
     fetch(`${ROOT}/data/flare.json`)
       .then(response => response.json())
       .then(data => {
-        this.setState({ data: nodesEdgesFromHierarchy(hierarchy(data)) });
-      });
+        this.setState({ data: nodesEdgesFromHierarchy(hierarchy(data)) })
+      })
   }
 
   render() {
-    if (!this.state.data) return "Loading...";
-    console.log(this.state);
+    if (!this.state.data) return "Loading..."
+
     return (
       <div>
         <MarkdownText
@@ -99,10 +99,8 @@ The built in force types are \`force\`, and \`motifs\`.
         <DocumentFrame
           frameProps={{
             ...frameProps,
-            nodes: this.state.data.nodes.filter(d => d.depth !== 0),
-            edges: this.state.data.edges.filter(
-              d => d.source.depth !== 0 && d.target.depth !== 0
-            )
+            nodes: this.state.data.nodes,
+            edges: this.state.data.edges
           }}
           // overrideProps={overrideProps}
           type={NetworkFrame}
@@ -121,8 +119,36 @@ This example is the same as the example above with the additional prop \`edgeTyp
         <DocumentFrame
           frameProps={{
             ...frameProps,
-            edges: this.state.data,
+            edges: this.state.data.edges,
             edgeType: "linearc"
+          }}
+          // overrideProps={overrideProps}
+          type={NetworkFrame}
+          pre={`
+const theme = ${JSON.stringify(theme)}          
+`}
+          startHidden
+        />
+        <MarkdownText
+          text={`
+## Force Layout with Motifs
+
+This example is the same as the original force example except the top-level nodes and edges are filtered out, and the \`networkType\` is \`motifs\`
+`}
+        />
+
+        <DocumentFrame
+          frameProps={{
+            ...frameProps,
+            size: [800, 400],
+            nodes: this.state.data.nodes.filter(d => d.depth !== 0),
+            edges: this.state.data.edges.filter(
+              d => d.source.depth !== 0 && d.target.depth !== 0
+            ),
+            networkType: {
+              ...frameProps.networkType,
+              type: "motifs"
+            }
           }}
           // overrideProps={overrideProps}
           type={NetworkFrame}
@@ -222,6 +248,6 @@ For technical specifications on all of NetworkFrames's features, reference the [
 `}
         />
       </div>
-    );
+    )
   }
 }

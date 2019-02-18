@@ -1,69 +1,69 @@
-import React from "react";
-import { OrdinalFrame } from "semiotic";
-import { processNodes } from "./process";
+import React from "react"
+import { OrdinalFrame } from "semiotic"
+import { processNodes } from "./process"
 
 const objectToString = (obj, indent, trimmed) => {
-  if (!obj) return "";
-  let newObj = "{ ";
+  if (!obj) return ""
+  let newObj = "{ "
   const keys = Object.keys(obj),
-    len = keys.length - 1;
+    len = keys.length - 1
 
   keys.forEach((k, i) => {
-    newObj += k + ": " + propertyToString(obj[k], indent + 1, trimmed);
-    if (i !== len) newObj += ", ";
-  });
+    newObj += k + ": " + propertyToString(obj[k], indent + 1, trimmed)
+    if (i !== len) newObj += ", "
+  })
 
-  newObj += ` }`;
-  return newObj;
-};
+  newObj += ` }`
+  return newObj
+}
 
 export const propertyToString = (value, indent, trimmed) => {
-  let string;
-  const type = typeof value;
-  const isArray = Array.isArray(value);
-  let spaces = "";
-  let x = 0;
+  let string
+  const type = typeof value
+  const isArray = Array.isArray(value)
+  let spaces = ""
+  let x = 0
   for (x; x <= indent - 1; x++) {
-    spaces += "  ";
+    spaces += "  "
   }
   if (type === "function") {
-    string = value.toString();
+    string = value.toString()
   } else if (type === "object" && !isArray) {
-    string = objectToString(value, indent, trimmed);
+    string = objectToString(value, indent, trimmed)
   } else if (isArray) {
-    const arr = trimmed ? value.slice(0, 2) : value;
+    const arr = trimmed ? value.slice(0, 2) : value
     string = (
       `[` +
       arr.map(d => propertyToString(d, indent + 1, trimmed)) +
       `${value.length > 2 && trimmed ? `, ... ` : ""}]`
-    ).replace(/},{/g, `},\n${spaces}    {`);
+    ).replace(/},{/g, `},\n${spaces}    {`)
   } else {
-    string = JSON.stringify(value);
+    string = JSON.stringify(value)
   }
-  return string;
-};
+  return string
+}
 
 const getFunctionString = (functions, overrideProps) => {
-  let functionsString = "";
+  let functionsString = ""
 
   Object.keys(functions).forEach(d => {
-    functionsString += overrideProps[d] || functions[d];
-    functionsString += "\n";
-  });
+    functionsString += overrideProps[d] || functions[d]
+    functionsString += "\n"
+  })
 
-  if (functionsString) functionsString += "\n";
+  if (functionsString) functionsString += "\n"
 
-  return functionsString;
-};
+  return functionsString
+}
 
 const getFramePropsString = (frameProps, functions, overrideProps, trimmed) => {
   const frameString = Object.keys(frameProps)
     .map(d => {
-      const order = processNodes.findIndex(p => p.keys.indexOf(d) !== -1);
+      const order = processNodes.findIndex(p => p.keys.indexOf(d) !== -1)
 
-      const match = processNodes[order];
+      const match = processNodes[order]
 
-      if (!match) console.log(`ERROR: no label found for ${d}`);
+      if (!match) console.log(`ERROR: no label found for ${d}`)
 
       return {
         key: d,
@@ -71,58 +71,48 @@ const getFramePropsString = (frameProps, functions, overrideProps, trimmed) => {
         label: match && match.label,
         order:
           order + ((match && match.keys.indexOf(d) / match.keys.length) || 0)
-      };
+      }
     })
     .sort((a, b) => {
-      return a.order - b.order;
-    });
+      return a.order - b.order
+    })
 
   let framePropsString = "const frameProps = { ",
-    category;
+    category
 
   frameString.forEach((d, i) => {
-    if (i !== 0) framePropsString += "\n";
+    if (i !== 0) framePropsString += "\n"
 
-    if (category !== d.label) {
-      framePropsString += "\n/* --- " + d.label + " --- */\n";
-      category = d.label;
+    if (category !== d.label && trimmed) {
+      framePropsString += "\n/* --- " + d.label + " --- */\n"
+      category = d.label
     }
 
     let string =
       (functions[d.key] && (functions[d.key].name || d.key)) ||
       overrideProps[d.key] ||
-      propertyToString(d.value, 0, trimmed);
+      propertyToString(d.value, 0, trimmed)
 
     if (string !== "") {
       framePropsString += `  ${d.key}: ${string}${(i !==
         frameString.length - 1 &&
         ",") ||
-        ""}`;
+        ""}`
     }
-  });
+  })
 
-  framePropsString += "\n}";
-  return framePropsString;
-};
+  framePropsString += "\n}"
+  return framePropsString
+}
 
 const getCodeBlock = (frameName, pre, functionsString, framePropsString) => {
-  return (
-    <code className="language-jsx">
-      {`import ${frameName} from "semiotic/lib/${frameName}"\n`}
-      {pre}
-      {pre && "\n"}
-      {functionsString}
+  return `import ${frameName} from "semiotic/lib/${frameName}"
+${pre || ""}${(pre && "\n") || ""}${functionsString}${framePropsString}
 
-      {framePropsString}
-      {"\n\n"}
-      {`export default () => {
-
+export default () => {
   return <${frameName} {...frameProps} />
-
-}`}
-    </code>
-  );
-};
+}`
+}
 
 const styles = {
   hidden: {
@@ -132,14 +122,14 @@ const styles = {
   collapsed: {
     maxHeight: 350
   }
-};
+}
 
 class DocumentFrame extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
 
-    this.onClick = this.onClick.bind(this);
-    this.onCopy = this.onCopy.bind(this);
+    this.onClick = this.onClick.bind(this)
+    this.onCopy = this.onCopy.bind(this)
 
     this.state = {
       codeBlock: props.startHidden
@@ -147,15 +137,15 @@ class DocumentFrame extends React.Component {
         : props.useExpanded
         ? "expanded"
         : "collapsed"
-    };
+    }
   }
 
   componentDidMount() {
-    if (this.state.codeBlock !== "hidden") window.Prism.highlightAll();
+    if (this.state.codeBlock !== "hidden") window.Prism.highlightAll()
   }
 
   onClick(e) {
-    this.setState({ codeBlock: e.target.value });
+    this.setState({ codeBlock: e.target.value })
   }
 
   onCopy() {
@@ -165,35 +155,30 @@ class DocumentFrame extends React.Component {
       overrideProps = {},
       functions = {},
       pre
-    } = this.props;
+    } = this.props
 
-    const Frame = type;
+    const Frame = type
 
     const framePropsString = getFramePropsString(
       frameProps,
       functions,
       overrideProps
-    );
+    )
 
-    const functionsString = getFunctionString(functions, overrideProps);
+    const functionsString = getFunctionString(functions, overrideProps)
 
-    const frameName = Frame.displayName;
+    const frameName = Frame.displayName
 
-    const text = getCodeBlock(
-      frameName,
-      pre,
-      functionsString,
-      framePropsString
-    );
+    const text = getCodeBlock(frameName, pre, functionsString, framePropsString)
 
     const callback = e => {
-      e.clipboardData.clearData();
-      e.clipboardData.setData("text/plain", text);
-      e.preventDefault();
-      document.removeEventListener("copy", callback);
-    };
-    document.addEventListener("copy", callback);
-    document.execCommand("copy");
+      e.clipboardData.clearData()
+      e.clipboardData.setData("text/plain", text)
+      e.preventDefault()
+      document.removeEventListener("copy", callback)
+    }
+    document.addEventListener("copy", callback)
+    document.execCommand("copy")
   }
 
   render() {
@@ -204,24 +189,31 @@ class DocumentFrame extends React.Component {
       functions = {},
       pre,
       useExpanded
-    } = this.props;
-    const Frame = type;
+    } = this.props
+    const Frame = type
 
     const trimmedFramePropsString = getFramePropsString(
       frameProps,
       functions,
       overrideProps,
       true
-    );
-    const functionsString = getFunctionString(functions, overrideProps);
+    )
+    const functionsString = getFunctionString(functions, overrideProps)
 
-    const frameName = Frame.displayName;
+    const frameName = Frame.displayName
 
     const trimmedMarkdown = (
       <pre className="language-jxs" style={styles[this.state.codeBlock]}>
-        {getCodeBlock(frameName, pre, functionsString, trimmedFramePropsString)}
+        <code className="language-jsx">
+          {getCodeBlock(
+            frameName,
+            pre,
+            functionsString,
+            trimmedFramePropsString
+          )}{" "}
+        </code>
       </pre>
-    );
+    )
 
     return (
       <div>
@@ -244,7 +236,7 @@ class DocumentFrame extends React.Component {
         </div>
         <div>{trimmedMarkdown}</div>
       </div>
-    );
+    )
   }
 }
-export default DocumentFrame;
+export default DocumentFrame

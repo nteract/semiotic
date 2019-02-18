@@ -13,6 +13,5 @@ export default [
 ]
 
 export const green = "#9fd0cb"
-// export const red = "#ff4966"
 export const red = "#E0488B"
 export const purple = "#9900ff"

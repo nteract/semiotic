@@ -1,18 +1,18 @@
-import React from "react";
-import MarkdownText from "../MarkdownText";
-import theme from "../theme";
-import DocumentFrame, { propertyToString } from "../DocumentFrame";
-import { network_data, or_data } from "./pathData";
-import { NetworkFrame } from "semiotic";
-import dagre from "dagre";
-import { scaleLinear } from "d3-scale";
+import React from "react"
+import MarkdownText from "../MarkdownText"
+import theme from "../theme"
+import DocumentFrame, { propertyToString } from "../DocumentFrame"
+import { network_data, or_data } from "./pathData"
+import { NetworkFrame } from "semiotic"
+import dagre from "dagre"
+import { scaleLinear } from "d3-scale"
 
 const colors = {
   "Base Import": theme[0],
   Usage: theme[1],
   Intermediary: theme[2],
   Other: theme[3]
-};
+}
 
 const frameprops = {
   size: [700, 500],
@@ -39,12 +39,15 @@ const frameprops = {
   margin: { right: 130 },
   edges: network_data,
   nodes: or_data.map(d => Object.assign({}, d))
-};
+}
 
 const chord = {
   ...frameprops,
-  networkType: "chord"
-};
+  networkType: "chord",
+  nodeLabels: d => {
+    return <text>{d.id}</text>
+  }
+}
 
 const arc = {
   ...frameprops,
@@ -54,14 +57,13 @@ const arc = {
     fill: "none"
   }),
   size: [800, 300]
-  // nodeSize
-};
+}
 
 const overrideProps = {
   graph: "g",
   nodeLabels: `d => <text>{d.id}</text>`,
   nodes: propertyToString(or_data, 0, true)
-};
+}
 
 const pre = `
 const theme = ${JSON.stringify(theme)}       
@@ -98,41 +100,41 @@ frameprops.edges.forEach(e => {
 });
 
 dagre.layout(g);
-`;
+`
 
 export default () => {
   const size = scaleLinear()
     .domain([0, 1020])
-    .range([1, 100]);
+    .range([1, 100])
 
   const edgeSize = scaleLinear()
     .domain([0, 1020])
-    .range([1, 20]);
+    .range([1, 20])
 
-  const g = new dagre.graphlib.Graph();
+  const g = new dagre.graphlib.Graph()
   g.setGraph({
     rankdir: "LR",
     ranker: "tight-tree",
     nodesep: 1,
     ranksep: 15
-  });
-  g.setDefaultEdgeLabel(() => ({}));
+  })
+  g.setDefaultEdgeLabel(() => ({}))
 
   frameprops.nodes.forEach(n => {
     g.setNode(n.id, {
       ...n,
       height: size(Math.max(n.input, n.output)),
       width: 10
-    });
-  });
+    })
+  })
 
   frameprops.edges.forEach(e => {
     g.setEdge(e.source, e.target, {
       weight: edgeSize(e.value)
-    });
-  });
+    })
+  })
 
-  dagre.layout(g);
+  dagre.layout(g)
 
   return (
     <div>
@@ -268,7 +270,12 @@ When you are setting up with dagre graph you must iterate over the nodes and edg
             fill: "none",
             stroke: colors[d.source.category],
             strokeWidth: d.weight
-          })
+          }),
+          nodeLabels: d => (
+            <text y=".3em" x={-20}>
+              {d.id}
+            </text>
+          )
         }}
         type={NetworkFrame}
         overrideProps={overrideProps}
@@ -283,5 +290,5 @@ For technical specifications on all of NetworkFrames's features, reference the [
 `}
       />
     </div>
-  );
-};
+  )
+}

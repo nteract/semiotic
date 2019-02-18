@@ -1,15 +1,15 @@
-import React from "react";
-import MarkdownText from "../MarkdownText";
-import DocumentFrame from "../DocumentFrame";
-import { NetworkFrame } from "semiotic";
-import theme from "../theme";
+import React from "react"
+import MarkdownText from "../MarkdownText"
+import DocumentFrame from "../DocumentFrame"
+import { NetworkFrame } from "semiotic"
+import theme from "../theme"
 
-const ROOT = process.env.PUBLIC_URL;
+const ROOT = process.env.PUBLIC_URL
 const nodeStyle = d => ({
   fill: theme[d.depth],
   stroke: theme[d.depth],
   fillOpacity: 0.6
-});
+})
 const sunburst = {
   size: [700, 700],
   nodeStyle,
@@ -40,11 +40,11 @@ const sunburst = {
         </text>
         <text textAnchor="middle">{d.id}</text>
       </g>
-    );
+    )
   },
   margin: 10,
   filterRenderedNodes: d => d.depth !== 0
-};
+}
 
 const overrideProps = {
   tooltipContent: `d => (
@@ -85,7 +85,7 @@ const overrideProps = {
     stroke: theme[d.source.depth],
     opacity: 0.5
   })`
-};
+}
 
 const partition = {
   ...sunburst,
@@ -99,9 +99,9 @@ const partition = {
         </text>
         <text textAnchor="middle">{d.id}</text>
       </g>
-    );
+    )
   }
-};
+}
 
 const partitionOverrideProps = {
   ...overrideProps,
@@ -115,7 +115,7 @@ const partitionOverrideProps = {
       </g>
     );
   }`
-};
+}
 
 const tree = {
   ...sunburst,
@@ -125,8 +125,26 @@ const tree = {
     stroke: theme[d.source.depth],
     opacity: 0.5
   }),
+  nodeLabels: d => {
+    return d.depth > 1 ? null : (
+      <g transform="translate(0,-15)">
+        <text
+          fontSize="12"
+          textAnchor="middle"
+          strokeWidth={2}
+          stroke="white"
+          fill="white"
+        >
+          {d.id}
+        </text>
+        <text fontSize="12" textAnchor="middle" fill={theme[d.depth]}>
+          {d.id}
+        </text>
+      </g>
+    )
+  },
   size: [700, 400]
-};
+}
 
 const circlepack = {
   ...sunburst,
@@ -135,8 +153,26 @@ const circlepack = {
     fill: "none",
     stroke: theme[d.depth]
   }),
+  nodeLabels: d => {
+    return d.depth > 1 ? null : (
+      <g transform="translate(0,5)">
+        <text
+          fontSize="12"
+          textAnchor="middle"
+          strokeWidth={2}
+          stroke="white"
+          fill="white"
+        >
+          {d.id}
+        </text>
+        <text fontSize="12" textAnchor="middle" fill={theme[d.depth]}>
+          {d.id}
+        </text>
+      </g>
+    )
+  },
   size: [700, 400]
-};
+}
 
 const circlepackOverrideProps = {
   ...overrideProps,
@@ -144,7 +180,7 @@ const circlepackOverrideProps = {
     fill: "none",
     stroke: theme[d.depth]
   })`
-};
+}
 
 const treemap = {
   ...circlepack,
@@ -164,7 +200,7 @@ const treemap = {
           {d.id}
         </text>
       </g>
-    );
+    )
   },
   nodeStyle: d => ({
     fill: d.height === 0 ? theme[d.depth] : "none",
@@ -172,21 +208,21 @@ const treemap = {
     stroke: theme[d.depth]
   }),
   networkType: { type: "treemap", padding: 2 }
-};
+}
 
 export default class HierarchicalDiagrams extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
 
     fetch(`${ROOT}/data/flare.json`)
       .then(response => response.json())
       .then(data => {
-        this.setState({ data });
-      });
+        this.setState({ data })
+      })
   }
 
   render() {
-    if (!this.state) return "Loading...";
+    if (!this.state) return "Loading..."
 
     return (
       <div>
@@ -374,6 +410,6 @@ For technical specifications on all of NetworkFrames's features, reference the [
 `}
         />
       </div>
-    );
+    )
   }
 }

@@ -9,7 +9,7 @@ const ROOT = process.env.PUBLIC_URL;
 
 const cutHash = {
   Ideal: theme[0],
-  Premium: theme[1],
+  // Premium: theme[1],
   Good: theme[2],
   "Very Good": theme[3],
   Fair: theme[4],
@@ -89,10 +89,6 @@ export default class CanvasInteraction extends React.Component {
         this.setState({ ...frameProps, points: parsedDiamonds });
       })
       .catch(err => console.log(err));
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    console.log("update", prevState === this.state);
   }
 
   render() {

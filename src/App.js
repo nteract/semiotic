@@ -1,47 +1,52 @@
-import React from "react";
-import Sidebar from "./Sidebar";
-import ScrollToTop from "./ScrollToTop";
+import React from "react"
+import Sidebar from "./Sidebar"
+import ScrollToTop from "./ScrollToTop"
 
-import MarkdownPage from "./MarkdownPage";
-import CreateALineChart from "./guides/CreateALineChart";
-import CreateAnAreaChart from "./guides/CreateAnAreaChart";
-import CreateAScatterplot from "./guides/CreateAScatterplot";
-import CreateXYSummaries from "./guides/CreateXYSummaries";
-import CreateXYBrushes from "./guides/CreateXYBrushes";
-import CreateABarChart from "./guides/CreateABarChart";
-import CreateAPieChart from "./guides/CreateAPieChart";
-import CreateOrdinalSummaries from "./guides/CreateOrdinalSummaries";
-import CreateOrdinalBrushes from "./guides/CreateOrdinalBrushes";
-import CreateSparklines from "./guides/CreateSparklines";
-import CreateAForceLayout from "./guides/CreateAForceLayout";
-import CreateAPathDiagram from "./guides/CreateAPathDiagram";
-import CreateAHierarchicalDiagram from "./guides/CreateAHierarchicalDiagram";
-import CreateSmallMultiples from "./guides/CreateSmallMultiples";
-import CreateCrossHighlighting from "./guides/CreateCrossHighlighting";
-import Tooltips from "./guides/Tooltips";
-import Annotations from "./guides/Annotations";
-import UsingSketchyPaintyPatterns from "./guides/UsingSketchyPaintyPatterns";
-import ForegroundBackgroundSVG from "./guides/ForegroundBackgroundSVG";
-import CanvasRendering from "./guides/CanvasRendering";
+import MarkdownPage from "./MarkdownPage"
+import CreateALineChart from "./guides/CreateALineChart"
+import CreateAnAreaChart from "./guides/CreateAnAreaChart"
+import CreateAScatterplot from "./guides/CreateAScatterplot"
+import CreateXYSummaries from "./guides/CreateXYSummaries"
+import CreateXYBrushes from "./guides/CreateXYBrushes"
+import CreateABarChart from "./guides/CreateABarChart"
+import CreateAPieChart from "./guides/CreateAPieChart"
+import CreateOrdinalSummaries from "./guides/CreateOrdinalSummaries"
+import CreateOrdinalBrushes from "./guides/CreateOrdinalBrushes"
+import CreateSparklines from "./guides/CreateSparklines"
+import CreateAForceLayout from "./guides/CreateAForceLayout"
+import CreateAPathDiagram from "./guides/CreateAPathDiagram"
+import CreateAHierarchicalDiagram from "./guides/CreateAHierarchicalDiagram"
+import CreateSmallMultiples from "./guides/CreateSmallMultiples"
+import CreateCrossHighlighting from "./guides/CreateCrossHighlighting"
+import Tooltips from "./guides/Tooltips"
+import Annotations from "./guides/Annotations"
+import UsingSketchyPaintyPatterns from "./guides/UsingSketchyPaintyPatterns"
+import ForegroundBackgroundSVG from "./guides/ForegroundBackgroundSVG"
+import CanvasRendering from "./guides/CanvasRendering"
 
-import CandlestickChart from "./examples/CandlestickChart";
-import WaterfallChart from "./examples/WaterfallChart";
-import CanvasInteraction from "./examples/CanvasInteraction";
+import CandlestickChart from "./examples/CandlestickChart"
+import WaterfallChart from "./examples/WaterfallChart"
+import CanvasInteraction from "./examples/CanvasInteraction"
 
-import HomerunMap from "./examples/HomerunMap";
-import MarimekkoChart from "./examples/MarimekkoChart";
-import BarLineChart from "./examples/BarLineChart";
-import DotPlot from "./examples/DotPlot";
-import SwarmPlot from "./examples/SwarmPlot";
-import RidgelinePlot from "./examples/RidgelinePlot";
-import Timeline from "./examples/Timeline";
+import HomerunMap from "./examples/HomerunMap"
+import MarimekkoChart from "./examples/MarimekkoChart"
+import BarLineChart from "./examples/BarLineChart"
+import DotPlot from "./examples/DotPlot"
+import SwarmPlot from "./examples/SwarmPlot"
+import RidgelinePlot from "./examples/RidgelinePlot"
+import Timeline from "./examples/Timeline"
+import SlopeChart from "./examples/SlopeChart"
+import RadarPlot from "./examples/RadarPlot"
+import Matrix from "./examples/Matrix"
+import CustomLayout from "./examples/CustomLayout"
+import IsotypeChart from "./examples/IsotypeChart"
 
-import Mark from "./sub-components/Mark";
-import Axis from "./sub-components/Axis";
-import DividedLine from "./sub-components/DividedLine";
-import Legend from "./sub-components/Legend";
+import Mark from "./sub-components/Mark"
+import Axis from "./sub-components/Axis"
+import DividedLine from "./sub-components/DividedLine"
+import Legend from "./sub-components/Legend"
 
-const ROOT = process.env.PUBLIC_URL;
+const ROOT = process.env.PUBLIC_URL
 
 const PAGES = [
   {
@@ -228,7 +233,7 @@ const PAGES = [
         url: "waterfall-chart",
         component: WaterfallChart
       },
-      { name: "Slope Chart" },
+      { name: "Slope Chart", url: "slope-chart", component: SlopeChart },
       {
         name: "Marimekko Chart",
         url: "marimekko-chart",
@@ -255,14 +260,21 @@ const PAGES = [
         component: Timeline
       },
       {
-        name: "Isotype Chart"
+        name: "Radar Plot",
+        url: "radar-plot",
+        component: RadarPlot
+      },
+      {
+        name: "Isotype Chart",
+        url: "isotype-chart",
+        component: IsotypeChart
       },
       {
         name: "NetworkFrame",
         className: "sub-header"
       },
-      { name: "Circular Sankey?" },
-      { name: "Matrix" }
+      { name: "Adjacency Matrix", url: "matrix", component: Matrix },
+      { name: "Custom Layout", url: "custom-layout", component: CustomLayout }
     ]
   },
   {
@@ -354,37 +366,37 @@ const PAGES = [
       }
     ]
   }
-];
+]
 
 export default function() {
-  const view = window.location.pathname.split(/#|\//g).filter(d => d);
+  const view = window.location.pathname.split(/#|\//g).filter(d => d)
 
   let View,
     viewProps = {},
     page,
-    subpage;
+    subpage
 
   //router logic
   if (view[0]) {
-    page = PAGES.find(d => d.url === view[0]);
+    page = PAGES.find(d => d.url === view[0])
     if (page && view[1]) {
-      subpage = page.children.find(d => d.url === view[1]);
+      subpage = page.children.find(d => d.url === view[1])
       if (subpage) {
-        View = subpage.component;
-        if (subpage.props) viewProps = subpage.props;
+        View = subpage.component
+        if (subpage.props) viewProps = subpage.props
       } else {
-        View = page.component;
-        if (page.props) viewProps = page.props;
+        View = page.component
+        if (page.props) viewProps = page.props
       }
     } else if (page) {
-      View = page.component;
-      if (page.props) viewProps = page.props;
+      View = page.component
+      if (page.props) viewProps = page.props
     }
   } else {
-    page = PAGES[0];
+    page = PAGES[0]
 
-    View = page.component;
-    viewProps = page.props;
+    View = page.component
+    viewProps = page.props
   }
 
   return (
@@ -414,5 +426,5 @@ export default function() {
         </div>
       </div>
     </div>
-  );
+  )
 }
