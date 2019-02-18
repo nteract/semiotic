@@ -10,18 +10,8 @@ Tooltips are a type of [annnotation](/guides/annotations), called `frame-hover`.
   color: black;
   padding: 10px;
   z-index: 99;
+  transform: translateX(-50%) translateY(5px);
   min-width: 120px;
-}
-
-.tooltip-content:before {
-  background: white;
-  content: "";
-  padding: 0px;
-  transform: rotate(45deg);
-  width: 15px;
-  height: 15px;
-  position: absolute;
-  z-index: 99;
 }
 
 circle.frame-hover {

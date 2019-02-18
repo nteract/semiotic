@@ -88,11 +88,16 @@ const xyFrameData3 = [
   }
 ]
 
-export default () => {
-  return (
-    <div>
-      <MarkdownText
-        text={`
+export default class CreateSmallMultiples extends React.Component {
+  componentDidMount() {
+    window.Prism.highlightAll()
+  }
+
+  render() {
+    return (
+      <div>
+        <MarkdownText
+          text={`
       
 Faceting is accomplshed using the \`FacetController\`, which is a wrapper that uses composition to decorate any child frames (whether \`ORFrame\`, \`NetworkFrame\` or \`XYFrame\` in any mix) with the valid attributes from \`FacetController\` while implementing two features to help with faceting:
 
@@ -101,36 +106,36 @@ Faceting is accomplshed using the \`FacetController\`, which is a wrapper that u
 \`sharedXExtent\`, \`sharedYExtent\` and \`sharedRExtent\` will set the respective extents of child frames to match the min/max of the smallest and largest values of any siblings. Currently this only supports true but will also be updated to support the existing extent model in frames where you can send partial extents.      
       
       `}
-      />
-      <FacetController
-        size={[300, 300]}
-        margin={{ top: 40, left: 55, bottom: 40, right: 10 }}
-        xAccessor="step"
-        yAccessor="value"
-        lineStyle={d => ({ stroke: d.color })}
-        hoverAnnotation={true}
-        lineIDAccessor={"color"}
-        axes={[{ orient: "left" }, { orient: "bottom", ticks: 4 }]}
-        sharedXExtent={true}
-        sharedYExtent={true}
-        oPadding={5}
-        oAccessor="column"
-        rAccessor="value"
-        type="bar"
-        style={d => ({ fill: d.color })}
-        pieceHoverAnnotation={true}
-        pieceIDAccessor="color"
-        sharedRExtent={true}
-        axis={{ orient: "left" }}
-        react15Wrapper={<div style={{ display: "flex" }} />}
-      >
-        <OrdinalFrame data={ordinalData} title="OrdinalFrame" />
-        <XYFrame title={"XYFrame"} lines={xyFrameData2} />
-        <XYFrame title={"XYFrame"} lines={xyFrameData3} />
-      </FacetController>
+        />
+        <FacetController
+          size={[300, 300]}
+          margin={{ top: 40, left: 55, bottom: 40, right: 10 }}
+          xAccessor="step"
+          yAccessor="value"
+          lineStyle={d => ({ stroke: d.color })}
+          hoverAnnotation={true}
+          lineIDAccessor={"color"}
+          axes={[{ orient: "left" }, { orient: "bottom", ticks: 4 }]}
+          sharedXExtent={true}
+          sharedYExtent={true}
+          oPadding={5}
+          oAccessor="column"
+          rAccessor="value"
+          type="bar"
+          style={d => ({ fill: d.color })}
+          pieceHoverAnnotation={true}
+          pieceIDAccessor="color"
+          sharedRExtent={true}
+          axis={{ orient: "left" }}
+          react15Wrapper={<div style={{ display: "flex" }} />}
+        >
+          <OrdinalFrame data={ordinalData} title="OrdinalFrame" />
+          <XYFrame title={"XYFrame"} lines={xyFrameData2} />
+          <XYFrame title={"XYFrame"} lines={xyFrameData3} />
+        </FacetController>
 
-      <MarkdownText
-        text={`
+        <MarkdownText
+          text={`
 \`\`\`jsx
 import { FacetController, OrdinalFrame, XYFrame } from "semiotic"
 
@@ -162,7 +167,8 @@ import { FacetController, OrdinalFrame, XYFrame } from "semiotic"
 </FacetController>
 \`\`\`
 `}
-      />
-    </div>
-  )
+        />
+      </div>
+    )
+  }
 }
