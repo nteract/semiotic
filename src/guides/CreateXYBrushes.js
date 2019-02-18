@@ -87,8 +87,6 @@ export default class CreateXYBrushes extends React.Component {
         size: [700, 50]
       }
     }
-
-    // console.log(this.state)
     return (
       <div>
         <MarkdownText

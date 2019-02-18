@@ -12,7 +12,7 @@ const velocityExtent = extent(data.map(d => d.exit_velocity))
 const velocityScale = scaleLinear()
   .domain(velocityExtent)
   .range([theme[2], theme[1]])
-// console.log(data, fieldGraphic)
+
 const frameProps = {
   points: data,
   annotations: [

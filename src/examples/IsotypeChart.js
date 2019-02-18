@@ -59,12 +59,12 @@ const iconHash = {
   none: "M0,0"
 }
 const colorHash = {
-  journalist: "#1db333",
-  viz: "#b3331d"
+  journalist: theme[2],
+  viz: theme[1]
 }
 
 const frameProps = {
-  size: [700, 438],
+  size: [700, 368],
   data: vizzers,
   type: {
     type: "bar",
@@ -82,7 +82,7 @@ const frameProps = {
     fillOpacity: 1,
     strokeWidth: 1.5
   }),
-  margin: { top: 60, bottom: 140, left: 10, right: 80 },
+  margin: { top: 60, bottom: 70, left: 10, right: 80 },
   oPadding: 2,
   annotations: [
     {
@@ -90,7 +90,7 @@ const frameProps = {
       number: 2,
       dx: -0.01,
       dy: -50,
-      color: "#b3331d",
+      color: theme[1],
       type: AnnotationCalloutElbow,
       note: { title: "Data viz peep who discovered her love for writing" }
     }
@@ -100,7 +100,7 @@ const frameProps = {
   foregroundGraphics: (
     <g>
       <g transform="translate(20,165)">
-        <rect fill="#b3331d" x={-10} y={-10} width={93} height={55} />
+        <rect fill={theme[1]} x={-10} y={-10} width={93} height={55} />
         <text fontWeight="700" fill="white" x={5} y={15}>
           DATA VIZ
         </text>
@@ -109,7 +109,7 @@ const frameProps = {
         </text>
       </g>
       <g transform="translate(505,10)">
-        <rect fill="#1db333" x={-10} y={-10} width={123} height={40} />
+        <rect fill={theme[2]} x={-10} y={-10} width={123} height={40} />
         <text fontWeight="700" fill="white" x={5} y={15}>
           JOURNALISTS
         </text>

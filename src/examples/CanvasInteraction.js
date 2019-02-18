@@ -1,11 +1,11 @@
-import React from "react";
-import DocumentFrame from "../DocumentFrame";
-import { XYFrame } from "semiotic";
-import { csvParse } from "d3-dsv";
+import React from "react"
+import DocumentFrame from "../DocumentFrame"
+import { XYFrame } from "semiotic"
+import { csvParse } from "d3-dsv"
 
-import theme from "../theme";
-import MarkdownText from "../MarkdownText";
-const ROOT = process.env.PUBLIC_URL;
+import theme from "../theme"
+import MarkdownText from "../MarkdownText"
+const ROOT = process.env.PUBLIC_URL
 
 const cutHash = {
   Ideal: theme[0],
@@ -14,7 +14,7 @@ const cutHash = {
   "Very Good": theme[3],
   Fair: theme[4],
   Premium: theme[5]
-};
+}
 
 const frameProps = {
   size: [700, 500],
@@ -46,9 +46,9 @@ const frameProps = {
               ""} here`}
         </p>
       </div>
-    );
+    )
   }
-};
+}
 
 const overrideProps = {
   tooltipContent: `d => {
@@ -67,16 +67,16 @@ const overrideProps = {
     );
   }
   `
-};
+}
 
 export default class CanvasInteraction extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
 
     fetch(`${ROOT}/data/diamonds.csv`)
       .then(response => response.text())
       .then(data => {
-        const parsedDiamonds = [];
+        const parsedDiamonds = []
         csvParse(data).forEach(d => {
           parsedDiamonds.push({
             y: +d.price,
@@ -84,11 +84,11 @@ export default class CanvasInteraction extends React.Component {
             size: +d.table,
             color: cutHash[d.cut],
             clarity: d.clarity
-          });
-        });
-        this.setState({ ...frameProps, points: parsedDiamonds });
+          })
+        })
+        this.setState({ ...frameProps, points: parsedDiamonds })
       })
-      .catch(err => console.log(err));
+      .catch(err => console.log(err))
   }
 
   render() {
@@ -112,6 +112,6 @@ Ridgeline Plots show variation across values and allow overflowing of the plot i
           />
         )}
       </div>
-    );
+    )
   }
 }

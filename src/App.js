@@ -161,7 +161,8 @@ export const PAGES = [
       {
         name: "Annotations - Tooltips",
         url: "tooltips",
-        component: Tooltips
+        component: Tooltips,
+        img: "tooltips"
       },
 
       {

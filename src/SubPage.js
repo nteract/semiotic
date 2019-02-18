@@ -8,7 +8,6 @@ export default function SubPage({ page }) {
   if (!match) return null
 
   const pages = match.children
-  // console.log(pages, match)
 
   return (
     <div className="subpages">

@@ -1,10 +1,8 @@
-import React from "react";
-import DocumentFrame from "../DocumentFrame";
-import { NetworkFrame } from "semiotic";
-import theme from "../theme";
-import MarkdownText from "../MarkdownText";
-
-// const ROOT = process.env.PUBLIC_URL;
+import React from "react"
+import DocumentFrame from "../DocumentFrame"
+import { NetworkFrame } from "semiotic"
+import theme from "../theme"
+import MarkdownText from "../MarkdownText"
 
 const nodes = [
   { name: "Myriel", group: 1 },
@@ -84,7 +82,7 @@ const nodes = [
   { name: "Child2", group: 10 },
   { name: "Brujon", group: 4 },
   { name: "Mme.Hucheloup", group: 8 }
-];
+]
 
 const edges = [
   { source: 1, target: 0, value: 1 },
@@ -341,34 +339,14 @@ const edges = [
   { source: 76, target: 62, value: 1 },
   { source: 76, target: 48, value: 1 },
   { source: 76, target: 58, value: 1 }
-];
+]
 
 edges.forEach(link => {
-  link.source = nodes[link.source];
-  link.target = nodes[link.target];
-});
+  link.source = nodes[link.source]
+  link.target = nodes[link.target]
+})
 
-const colors = [
-  "darkred",
-  "darkgreen",
-  "orange",
-  "pink",
-  "gold",
-  "steelblue",
-  "purple",
-  "brown",
-  "teal",
-  "darkred",
-  "darkgreen",
-  "orange",
-  "pink",
-  "gold",
-  "steelblue",
-  "purple",
-  "brown",
-  "teal"
-];
-
+const colors = theme
 const frameProps = {
   size: [1400, 1400],
   // projection: "horizontal",
@@ -391,7 +369,7 @@ const frameProps = {
       style: { fill: "orange", fillOpacity: 0.25, stroke: "red" }
     }
   ]
-};
+}
 
 const overrideProps = {
   title: `(
@@ -427,7 +405,7 @@ const overrideProps = {
       </text>
     </g>
   ]`
-};
+}
 
 export default function SwarmPlot() {
   return (
@@ -449,5 +427,5 @@ const theme = ${JSON.stringify(theme)}
         useExpanded
       />
     </div>
-  );
+  )
 }

@@ -274,7 +274,6 @@ Highlight annotations will return all points, lines and areas that match the id 
             {
               type: "highlight",
               style: d => {
-                console.log(d)
                 return {
                   strokeWidth: 3,
                   stroke: theme[d.key],
