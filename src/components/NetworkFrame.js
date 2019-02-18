@@ -979,7 +979,7 @@ class NetworkFrame extends React.Component<Props, State> {
       ]
 
       if (networkSettings.type === "chord") {
-        const radius = size[1] / 2
+        const radius = adjustedSize[1] / 2
 
         const { groupWidth = 20, padAngle = 0.01, sortGroups } = networkSettings
         const arcGenerator = arc()
@@ -1011,8 +1011,8 @@ class NetworkFrame extends React.Component<Props, State> {
           const groupNode = projectedNodes[group.index]
           groupNode.d = groupD
           groupNode.index = group.index
-          groupNode.x = groupCentroid[0] + size[0] / 2
-          groupNode.y = groupCentroid[1] + size[1] / 2
+          groupNode.x = groupCentroid[0] + adjustedSize[0] / 2
+          groupNode.y = groupCentroid[1] + adjustedSize[1] / 2
         })
 
         chords.forEach(generatedChord => {
@@ -1030,9 +1030,9 @@ class NetworkFrame extends React.Component<Props, State> {
           chordEdge.d = chordD
           const chordBounds = pathBounds(chordD)
           // $FlowFixMe
-          chordEdge.x = size[0] / 2 + (chordBounds.x1 + chordBounds.x2) / 2
+          chordEdge.x = adjustedSize[0] / 2 + (chordBounds.x1 + chordBounds.x2) / 2
           // $FlowFixMe
-          chordEdge.y = size[1] / 2 + (chordBounds.y1 + chordBounds.y2) / 2
+          chordEdge.y = adjustedSize[1] / 2 + (chordBounds.y1 + chordBounds.y2) / 2
         })
       } else if (
         networkSettings.type === "sankey" ||
@@ -1644,6 +1644,7 @@ class NetworkFrame extends React.Component<Props, State> {
               subject: { radius: nodeSizeAccessor(node) + 2 }
             }
           }
+
           nodeLabelAnnotations.push(nodeLabel)
         }
       })
