@@ -1,8 +1,10 @@
 import React from "react"
 import Sidebar from "./Sidebar"
 import ScrollToTop from "./ScrollToTop"
-
 import MarkdownPage from "./MarkdownPage"
+import SubPage from "./SubPage"
+import Home from "./Home"
+
 import CreateALineChart from "./guides/CreateALineChart"
 import CreateAnAreaChart from "./guides/CreateAnAreaChart"
 import CreateAScatterplot from "./guides/CreateAScatterplot"
@@ -48,19 +50,17 @@ import Legend from "./sub-components/Legend"
 
 const ROOT = process.env.PUBLIC_URL
 
-const PAGES = [
+export const PAGES = [
   {
     url: "",
     name: "Home",
     className: "bold pointer black",
-    component: MarkdownPage,
-    props: {
-      filename: "home"
-    }
+    component: Home
   },
   {
     url: "guides",
     name: "Guides",
+    component: SubPage,
     className: "bold pointer black",
     children: [
       {
@@ -70,29 +70,34 @@ const PAGES = [
       {
         name: "Creating Line Charts",
         url: "line-chart",
-        component: CreateALineChart
+        component: CreateALineChart,
+        img: "line-chart"
       },
       // { name: "Creating Divided Line Charts" },
       {
         name: "Creating Area Charts",
         url: "area-chart",
-        component: CreateAnAreaChart
+        component: CreateAnAreaChart,
+        img: "area-chart"
       },
       {
         name: "Creating Scatterplots",
         url: "scatterplot",
-        component: CreateAScatterplot
+        component: CreateAScatterplot,
+        img: "scatterplot"
       },
       {
         name: "Creating XY Summaries",
         url: "xy-summaries",
-        component: CreateXYSummaries
+        component: CreateXYSummaries,
+        img: "xy-summary"
       },
 
       {
         name: "Creating XY Brushes",
         url: "xy-brushes",
-        component: CreateXYBrushes
+        component: CreateXYBrushes,
+        img: "xy-brush"
       },
       {
         name: "OrdinalFrame",
@@ -101,22 +106,26 @@ const PAGES = [
       {
         name: "Creating Bar Charts",
         url: "bar-chart",
-        component: CreateABarChart
+        component: CreateABarChart,
+        img: "bar-chart"
       },
       {
         name: "Creating Pie Charts",
         url: "pie-chart",
-        component: CreateAPieChart
+        component: CreateAPieChart,
+        img: "pie-chart"
       },
       {
         name: "Creating Ordinal Summaries",
         url: "ordinal-summaries",
-        component: CreateOrdinalSummaries
+        component: CreateOrdinalSummaries,
+        img: "or-summary"
       },
       {
         name: "Creating Ordinal Brushes",
         url: "ordinal-brushes",
-        component: CreateOrdinalBrushes
+        component: CreateOrdinalBrushes,
+        img: "or-brush"
       },
       {
         name: "NetworkFrame",
@@ -125,17 +134,20 @@ const PAGES = [
       {
         name: "Creating Force Layouts",
         url: "force-layouts",
-        component: CreateAForceLayout
+        component: CreateAForceLayout,
+        img: "force"
       },
       {
         name: "Creating Path Diagrams",
         url: "path-diagrams",
-        component: CreateAPathDiagram
+        component: CreateAPathDiagram,
+        img: "path"
       },
       {
         name: "Creating Hierarchical Diagrams",
         url: "hierarchical",
-        component: CreateAHierarchicalDiagram
+        component: CreateAHierarchicalDiagram,
+        img: "hierarchy"
       },
       {
         name: "All Frames",
@@ -155,32 +167,36 @@ const PAGES = [
       {
         name: "Annotations - Highlighting",
         url: "highlighting",
-        component: CreateCrossHighlighting
+        component: CreateCrossHighlighting,
+        img: "highlight"
       },
 
       {
         name: "Creating Small Multiples",
         url: "small-multiples",
-
-        component: CreateSmallMultiples
+        component: CreateSmallMultiples,
+        img: "facet"
       },
       {
         name: "Canvas Rendering",
         url: "canvas-rendering",
         component: CanvasRendering
+        // img: ""
       },
       {
         name: "Creating Sparklines",
         url: "sparklines",
-        component: CreateSparklines
+        component: CreateSparklines,
+        img: "sparkline"
       },
       {
-        name: "Using Sketchy/Painty/Patterns",
+        name: "Using Sketchy / Painty / Patterns",
         url: "sketchy-painty-patterns",
-        component: UsingSketchyPaintyPatterns
+        component: UsingSketchyPaintyPatterns,
+        img: "pattern"
       },
       {
-        name: "Using Foreground/Background SVG",
+        name: "Using Foreground / Background SVG",
         url: "foreground-background-svg",
         component: ForegroundBackgroundSVG
       },
@@ -197,6 +213,7 @@ const PAGES = [
   {
     url: "examples",
     name: "Examples",
+    component: SubPage,
     className: "bold pointer black",
     children: [
       {
@@ -206,18 +223,21 @@ const PAGES = [
       {
         name: "Candlestick Chart",
         url: "candlestick-chart",
-        component: CandlestickChart
+        component: CandlestickChart,
+        img: "candlestick"
       },
 
       {
         name: "Homerun Map",
         url: "homerun-map",
-        component: HomerunMap
+        component: HomerunMap,
+        img: "baseball"
       },
       {
         name: "Canvas Interaction",
         url: "canvas-interaction",
-        component: CanvasInteraction
+        component: CanvasInteraction,
+        img: "canvas-interaction"
       },
       {
         name: "OrdinalFrame",
@@ -226,60 +246,85 @@ const PAGES = [
       {
         name: "Bar & Line Chart",
         url: "bar-line-chart",
-        component: BarLineChart
+        component: BarLineChart,
+        img: "bar-line"
       },
       {
         name: "Waterfall Chart",
         url: "waterfall-chart",
-        component: WaterfallChart
+        component: WaterfallChart,
+        img: "waterfall"
       },
-      { name: "Slope Chart", url: "slope-chart", component: SlopeChart },
+      {
+        name: "Slope Chart",
+        url: "slope-chart",
+        component: SlopeChart,
+        img: "slope"
+      },
       {
         name: "Marimekko Chart",
         url: "marimekko-chart",
-        component: MarimekkoChart
+        component: MarimekkoChart,
+        img: "marimekko"
       },
       {
         name: "Swarm Plot",
         url: "swarm-plot",
-        component: SwarmPlot
+        component: SwarmPlot,
+        img: "swarm"
       },
       {
         name: "Ridgeline Plot",
         url: "ridgeline-plot",
-        component: RidgelinePlot
+        component: RidgelinePlot,
+        img: "ridgeline"
       },
       {
         name: "Dot Plot",
         url: "dot-plot",
-        component: DotPlot
+        component: DotPlot,
+        img: "dot"
       },
       {
         name: "Timeline",
         url: "timeline",
-        component: Timeline
+        component: Timeline,
+        img: "timeline"
       },
       {
         name: "Radar Plot",
         url: "radar-plot",
-        component: RadarPlot
+        component: RadarPlot,
+        img: "radar"
       },
       {
         name: "Isotype Chart",
         url: "isotype-chart",
-        component: IsotypeChart
+        component: IsotypeChart,
+        img: "isotype"
       },
       {
         name: "NetworkFrame",
         className: "sub-header"
       },
-      { name: "Adjacency Matrix", url: "matrix", component: Matrix },
-      { name: "Custom Layout", url: "custom-layout", component: CustomLayout }
+      {
+        name: "Adjacency Matrix",
+        url: "matrix",
+        component: Matrix,
+        img: "matrix"
+      },
+      {
+        name: "Custom Layout",
+        url: "custom-layout",
+        component: CustomLayout,
+        img: "custom-layout"
+      }
     ]
   },
   {
     url: "api",
     name: "API",
+    component: SubPage,
     className: "bold pointer black",
     children: [
       {
@@ -290,34 +335,30 @@ const PAGES = [
         name: "XYFrame",
         url: "xyframe",
         component: MarkdownPage,
+        img: "scatterplot",
         props: {
           filename: "xyframe"
         }
       },
-      // {
-      //   name: "MinimapXYFrame",
-      //   url: "minimapxyframe"
-      // },
       {
         name: "OrdinalFrame",
         url: "ordinalframe",
         component: MarkdownPage,
+        img: "bar-chart",
         props: {
           filename: "ordinalframe"
         }
-        // component: APIXYFrame
       },
 
       {
         name: "NetworkFrame",
         url: "networkframe",
+        img: "force",
         component: MarkdownPage,
         props: {
           filename: "networkframe"
         }
-        // component: APIXYFrame
       },
-      { name: "separator" },
       {
         name: "ResponsiveFrame",
         url: "responsiveframe",
@@ -329,16 +370,17 @@ const PAGES = [
       {
         name: "SparkFrame",
         url: "sparkFrame",
+        img: "sparkline",
         component: MarkdownPage,
         props: {
           filename: "sparkframes"
         }
       },
-      { name: "separator" },
 
       {
         name: "FacetController",
-        url: "facetcontroller"
+        url: "facetcontroller",
+        img: "facet"
       },
       {
         name: "Sub-Components",
@@ -352,7 +394,8 @@ const PAGES = [
       {
         name: "DividedLine",
         url: "dividedline",
-        component: DividedLine
+        component: DividedLine,
+        img: "divided-line"
       },
       {
         name: "Axis",
@@ -415,7 +458,7 @@ export default function() {
           <div className="flex github-links">
             <p className="no-margin">
               <a
-                noreferrer
+                noreferrer="true"
                 target="_blank"
                 href="https://github.com/nteract/semiotic"
               >
@@ -423,9 +466,8 @@ export default function() {
               </a>
             </p>
             <p className="no-margin">
-              {" "}
               <a
-                noreferrer
+                noreferrer="true"
                 target="_blank"
                 href="https://github.com/nteract/semiotic-docs"
               >
@@ -437,14 +479,18 @@ export default function() {
       </header>
       <div className="flex body">
         <div className="sidebar">
-          <Sidebar pages={PAGES} selected={view[view.length - 1]} />
+          <div>
+            <Sidebar pages={PAGES} selected={view[view.length - 1]} />
+          </div>
         </div>
         <div className="container">
           <h1>
             {(subpage && subpage.name) ||
               (page && page.name && page.name !== "Home" && page.name)}
           </h1>
-          <div className="margin-bottom">{View && <View {...viewProps} />}</div>
+          <div className="margin-bottom">
+            {View && <View {...viewProps} page={page && page.name} />}
+          </div>
         </div>
       </div>
     </div>

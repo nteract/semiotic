@@ -10,7 +10,7 @@ body {
   --bg-color: #f1eef0;
   --light-color: #aca1a9;
   --dark-color: #886a7e;
-  --link-color: #b72f6e;
+  --link-color: #cc9acd;
   --scale-1: #5c4aff;
   --scale-2: #ff4966;
   --scale-3: #9900ff;
@@ -28,6 +28,7 @@ body {
 ul code,
 p code {
   font-weight: bold;
+  font-size: 1.1em;
 }
 
 header {
@@ -45,7 +46,7 @@ header {
 header .logo,
 .sidebar {
   max-width: 240px;
-  min-width: 15%;
+  min-width: 19%;
 
   padding-right: 30px;
 }
@@ -225,16 +226,22 @@ button:focus:after {
 }
 
 .sidebar {
-  padding: 30px 30px 30px 60px;
   z-index: 1000;
+  margin-bottom: -60px;
+  padding-bottom: 60px;
   background: white;
   border-right: 1px solid var(--bg-color);
+}
+
+.sidebar > div {
+  padding: 30px 30px 0px 60px;
 }
 
 .container {
   padding: 20px;
   position: relative;
   padding-left: 50px;
+  flex-grow: 1;
 }
 
 .bold {
@@ -314,6 +321,36 @@ a.heading-link {
   display: block;
 }
 
+div.subpages > div:not(.sub-header) {
+  display: inline-block;
+  margin: 0px 20px 20px 0px;
+  width: 150px;
+}
+
+div.subpages .sub-header {
+  font-size: 18px;
+  color: black;
+}
+
+div.subpages a {
+  font-size: 14px;
+  text-decoration: none;
+  font-weight: 300;
+}
+
+div.page-image {
+  overflow: hidden;
+  width: 150px;
+  height: 100px;
+  border: 1px solid #ddd;
+  display: flex;
+  justify-content: center;
+}
+
+div.page-image img {
+  height: 100%;
+}
+
 .dim {
   opacity: 0.5;
   cursor: disabled;
@@ -375,20 +412,4 @@ h3 {
   fill: none;
   stroke: #ffffff;
   stroke-width: 1.5;
-}
-
-.tooltip-content {
-  background: white;
-  border: 1px solid #ddd;
-  color: black;
-  padding: 10px;
-  z-index: 99;
-  transform: translateX(-50%) translateY(5px);
-  min-width: 120px;
-}
-
-circle.frame-hover {
-  /* fill: none; */
-  stroke: #aaa;
-  r: 4;
 }

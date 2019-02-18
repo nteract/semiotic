@@ -2,7 +2,11 @@
 
 **Semiotic is a data visualization framework for React.**
 
-It provides three types of frames XYFrame, OrdinalFrame, NetworkFrame, which allow you to deploy a wide variety of charts that share the same rules for how to display information.
+It provides three types of frames XYFrame, OrdinalFrame, NetworkFrame, to deploy a wide variety of charts.
+
+- `XYFrame`: XY data i.e. line charts and scatterplots
+- `OrdinalFrame`: categorical data i.e. bar charts, violin plots, parallel coordinates
+- `NetworkFrame`: topological and network data i.e. flow diagrams, network visualization, and hierarchical views
 
 This library is created and maintained by [Elijah Meeks](https://twitter.com/Elijah_Meeks).
 
@@ -10,7 +14,7 @@ These docs were created in collaboration with [Susie Lu](https://twitter.com/Dat
 
 ## Getting Started
 
-Install and save the component to your project with yarn or npm.
+Install and save `semiotic` to your project with `yarn` or `npm`.
 
 ```js
 yarn add -E semiotic
@@ -36,8 +40,4 @@ with the following import syntax:
 const { NetworkFrame } = Semiotic
 ```
 
-These examples use some CSS to make things look nice.
-
-Semiotic Layers
-
-## Examples
+These examples use [some CSS](https://github.com/nteract/semiotic-docs/blob/master/public/semiotic.css) to make things look nice.

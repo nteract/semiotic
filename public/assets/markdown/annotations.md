@@ -31,8 +31,8 @@ Each of the following options is a type of annotation that can be passed to the 
 - `"react-annotation"` or _**function**_ ([react-annotation](https://react-annotation.susielu.com/) annotation type): Creates an AnnotationLabel that can be passed any additional props that are exposed in react-annotation. Automatically transforms any properties on the annotation that match with your accessor functions.
 
 ```jsx
-import { AnnotationCalloutCircle } from "react-annotation";
-<XYFrame
+import { AnnotationCalloutCircle } from "react-annotation"
+;<XYFrame
   annotations={[
     { type: "react-annotation", label: "a note", y: 100 },
     {
@@ -50,7 +50,7 @@ import { AnnotationCalloutCircle } from "react-annotation";
   xAccessor={"week"}
   yAccessor={"score"}
   points={[{ week: 10, score: 20 }]}
-/>;
+/>
 ```
 
 - `enclose`, `enclose-rect`, `enclose-hull`: Takes an object with a `“coordinates”` property containing an array of data objects and encloses them with a circle, rectangle, or convex hull labeled with the passed label. For network frame this is not `“coordinates”` but rather an array named `“ids”` that has id values corresponding to the nodeIDAccessor setting. The annotation will also honor a `“padding”` prop that determines the space in pixels to pad the enclosure. Enclose-hull accepts a strokeWidth prop that determines the thickness of the hull stroking.
@@ -163,10 +163,10 @@ This function is run on every item in the annotation array, in addition to any h
           <line x2={-d.adjustedSize[0]} stroke={"pink"} />
           <text y={-5}>{d.d.note.title}</text>
         </g>
-      );
+      )
     }
 
-    return null;
+    return null
   }}
 />
 ```
@@ -179,6 +179,6 @@ This function is run on every item in the annotation array, in addition to any h
 - `null` if you want it to process all default types in addition to your custom rules
 - return `false` if you only want to process your custom rules
 
-# Further Reading
+## What's next?
 
 [Making Annotations First-Class Citizens in Data Visualization](https://medium.com/@Elijah_Meeks/making-annotations-first-class-citizens-in-data-visualization-21db6383d3fe)

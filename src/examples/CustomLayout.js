@@ -70,7 +70,7 @@ const tree = {
   ]
 }
 
-const colors = ["#00a2ce", "#b6a756", "#4d430c", "#b3331d"]
+const colors = theme
 
 const flexLayoutSize = [700, 700]
 //Because flextree returns nodes spaced in a way unlike the standard d3-hierarchy layouts, we need to pass a custom function to the networkType zoom prop. That function is passed (nodes, size) and you can adjust the position of the nodes accordingly
@@ -112,8 +112,7 @@ const frameProps = {
         y={d.y - 10}
         height={d.data.height - 10}
         width={d.data.width}
-        fill="orange"
-        stroke="gold"
+        fill={theme[2]}
       />
     )
   },

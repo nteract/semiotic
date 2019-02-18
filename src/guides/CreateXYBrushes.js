@@ -1,7 +1,7 @@
 import React from "react"
 import MarkdownText from "../MarkdownText"
 import DocumentFrame from "../DocumentFrame"
-import { MinimapXYFrame } from "semiotic"
+import { MinimapXYFrame, XYFrame } from "semiotic"
 import { curveMonotoneX } from "d3-shape"
 import theme from "../theme"
 
@@ -26,34 +26,6 @@ const generatedData = dataSeeds.map((s, i) => {
   }
 })
 
-// const lineStyle = {
-//   fill: "#007190",
-//   stroke: "#007190",
-//   strokeWidth: 1
-// };
-
-// const xyFrameSettings = {
-
-// };
-//In your Component where you're creating the MinimapXYFrame
-
-//
-// <MinimapXYFrame
-//     size={[700, 700]}
-//     {...xyFrameSettings}
-//     xExtent={selectedExtent}
-//     matte={true}
-//     margin={}
-//     minimap={{
-//       margin: { top: 20, bottom: 35, left: 20, right: 20 },
-//       ...xyFrameSettings,
-//       brushEnd: brushFunction,
-//       yBrushable: false,
-//       xBrushExtent: extent,
-//       size: [700, 150]
-//     }}
-//   />
-
 const xyFrameSettings = {
   lines: generatedData,
   lineType: { type: "line", interpolator: curveMonotoneX },
@@ -69,10 +41,30 @@ const xyFrameSettings = {
   ]
 }
 
+const xyInteraction = {
+  ...xyFrameSettings,
+  margin: { left: 50, top: 10, bottom: 50, right: 20 },
+  size: [700, 200]
+}
+
+const pre = `import { curveMonotoneX } from "d3-shape"
+import theme from "../theme"`
+
+const interactionOverride = {
+  interaction: `{
+    end: e => {
+      this.setState({ extent: e })
+    },
+    brush: "xBrush",
+    extent: this.state.extent
+  }`,
+  lineType: `{ type: "line", interpolator: curveMonotoneX }`
+}
+
 export default class CreateXYBrushes extends React.Component {
   constructor(props) {
     super(props)
-    this.state = { extent: [0, 40], selectedExtent: [0, 40] }
+    this.state = { extent: [20, 30], selectedExtent: [0, 40] }
     // this.randomizeExtent = this.randomizeExtent.bind(this);
     this.changeExtent = this.changeExtent.bind(this)
   }
@@ -92,14 +84,47 @@ export default class CreateXYBrushes extends React.Component {
         brushEnd: this.changeExtent,
         yBrushable: false,
         xBrushExtent: this.state.extent,
-        size: [700, 100]
+        size: [700, 50]
       }
     }
+
+    // console.log(this.state)
     return (
       <div>
         <MarkdownText
           text={`
-MinimapXYFrame allows you to conveniently instantiate a brushable region, typically referred to as a minimap, to let users brush to zoom in to a particular extent. Here's it's used to allow users to zoom to a particular part of a line chart. The minimap property in MinimapXYFrame takes an object with settings almost identical to XYFrame except it also includes properties for brush behavior and extent like brushEnd, yBrushable, xBrushable, xBrushExtent and the functions for brush, brushstart and brushEnd.
+You can turn any \`XYFrame\` into an interactive region with a brush by using the \`interaction\` prop. Interaction settings:
+
+- \`start\`: The function to run on the start of a brush
+- \`during\`: The function to run at the during a brush
+- \`end\`: The function to run at the end of a brush
+- \`brush\`: A string \`"xBrush"\`, \`"yBrush"\`, or \`"xyBrush"\`
+- \`extent\`: The base value for the brush, so you can set an extent if you want to initialize the brush with
+
+`}
+        />
+        <DocumentFrame
+          frameProps={{
+            ...xyInteraction,
+            interaction: {
+              end: e => {
+                this.setState({ extent: e })
+              },
+              brush: "xBrush",
+              extent: this.state.extent
+            }
+          }}
+          type={XYFrame}
+          overrideProps={interactionOverride}
+          pre={pre}
+          useExpanded
+        />
+
+        <MarkdownText
+          text={`
+
+## MinimapXYFrame
+\`MinimapXYFrame\` creates two frames and automatically handles the brushing state management. Here it's used to allow users to zoom to a particular part of a line chart. The minimap property in \`MinimapXYFrame\` takes an object with settings almost identical to \`XYFrame\` except it also includes properties for brush behavior and extent like \`brushEnd\`, \`brushStart\`, \`brush\`, \`yBrushable\`, \`xBrushable\`, \`xBrushExtent\`, and \`yBrushExtent\`.
 
 You can programmatically change brush extent by sending a new xBrushExtent.
 
@@ -108,7 +133,7 @@ You can programmatically change brush extent by sending a new xBrushExtent.
         <DocumentFrame
           frameProps={frameProps}
           type={MinimapXYFrame}
-          // overrideProps={overrideProps}
+          overrideProps={interactionOverride}
           useExpanded
         />
       </div>

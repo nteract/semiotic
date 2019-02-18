@@ -1,11 +1,11 @@
-import React from "react";
-import MarkdownPage from "../MarkdownPage";
-import DocumentFrame from "../DocumentFrame";
-import { XYFrame } from "semiotic";
-import lines from "./sharedTooltipData";
-import { scaleTime } from "d3-scale";
-import { timeFormat } from "d3-time-format";
-import MarkdownText from "../MarkdownText";
+import React from "react"
+import MarkdownPage from "../MarkdownPage"
+import DocumentFrame from "../DocumentFrame"
+import { XYFrame } from "semiotic"
+import lines from "./sharedTooltipData"
+import { scaleTime } from "d3-scale"
+import { timeFormat } from "d3-time-format"
+import MarkdownText from "../MarkdownText"
 
 const tooltipStyles = {
   header: {
@@ -22,7 +22,7 @@ const tooltipStyles = {
     minWidth: "max-content",
     whiteSpace: "nowrap"
   }
-};
+}
 
 const sharedTooltipChart = {
   size: [700, 300],
@@ -33,13 +33,13 @@ const sharedTooltipChart = {
   yAccessor: "y",
   lines: lines,
   lineStyle: d => {
-    return { stroke: d.color, strokeWidth: "2px", fill: "none" };
+    return { stroke: d.color, strokeWidth: "2px", fill: "none" }
   },
   axes: [
     { orient: "left" },
     { orient: "bottom", ticks: 6, tickFormat: d => timeFormat("%m/%d")(d) }
   ],
-  margin: { top: 50, left: 40, right: 10, bottom: 40 },
+  margin: { top: 10, left: 40, right: 10, bottom: 60 },
   pointStyle: {
     fill: "none",
     stroke: "black",
@@ -59,21 +59,21 @@ const sharedTooltipChart = {
           data: point.data.find(i => {
             // Search the lines for a similar x value for vertical shared tooltip
             // Can implement a 'close enough' conditional here too (fuzzy equality)
-            return new Date(i.x).getTime() === new Date(d.x).getTime();
+            return new Date(i.x).getTime() === new Date(d.x).getTime()
           })
-        };
+        }
       })
-      .sort((a, b) => b.data.y - a.data.y);
+      .sort((a, b) => b.data.y - a.data.y)
 
     const returnArray = [
       <div key={"header_multi"} style={tooltipStyles.header}>
         {`Records for: ${timeFormat("%m/%d/%Y")(new Date(d.x))}`}
       </div>
-    ];
+    ]
 
     points.forEach((point, i) => {
-      const title = point.id;
-      const valString = `${point.data.y} units`;
+      const title = point.id
+      const valString = `${point.data.y} units`
 
       returnArray.push([
         <div key={`tooltip_line_${i}`} style={tooltipStyles.lineItem}>
@@ -98,16 +98,16 @@ const sharedTooltipChart = {
             {valString}
           </p>
         </div>
-      ]);
-    });
+      ])
+    })
 
     return (
       <div className="tooltip-content" style={tooltipStyles.wrapper}>
         {returnArray}
       </div>
-    );
+    )
   }
-};
+}
 
 const overrideProps = {
   axes: `[
@@ -172,7 +172,7 @@ const overrideProps = {
     );
   }
 }`
-};
+}
 
 export default () => {
   return (
@@ -188,8 +188,7 @@ export default () => {
         frameProps={sharedTooltipChart}
         type={XYFrame}
         overrideProps={overrideProps}
-        // startHidden
       />
     </div>
-  );
-};
+  )
+}

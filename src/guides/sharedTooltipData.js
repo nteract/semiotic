@@ -1,15 +1,16 @@
-const ordinalColors = ["#9c7561", "#e15759", "#f0cd6b", "#fabfd2", "#8cd17d"];
-const lines = [];
+import theme from "../theme"
+const ordinalColors = theme
+const lines = []
 
 function generateDataArray(numPoints) {
-  const data = [];
+  const data = []
   if (numPoints <= 0) {
-    return data;
+    return data
   }
-  let pointer = 0;
+  let pointer = 0
   while (pointer < numPoints) {
-    const date = new Date();
-    date.setDate(date.getDate() - pointer);
+    const date = new Date()
+    date.setDate(date.getDate() - pointer)
     data.push({
       x: date.toString(),
       y:
@@ -18,13 +19,13 @@ function generateDataArray(numPoints) {
           : data[pointer - 1].y +
             Math.floor(Math.random() * (10 - 1) + 1) *
               (Math.floor(Math.random() * 2) === 1 ? 1 : -1)
-    });
-    pointer++;
+    })
+    pointer++
   }
-  return data;
+  return data
 }
 
-[
+;[
   "BoJack Horseman",
   "Todd Chavez",
   "Mr. Peanutbutter",
@@ -35,7 +36,7 @@ function generateDataArray(numPoints) {
     id: d,
     color: ordinalColors[i],
     data: generateDataArray(20)
-  });
-});
+  })
+})
 
-export default lines;
+export default lines
