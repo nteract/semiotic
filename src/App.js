@@ -402,15 +402,37 @@ export default function() {
   return (
     <div className="App">
       <ScrollToTop location={window.location} />
-      <header className="flex algin-bottom">
+      <header className="flex">
         <div className="logo">
           <img src={ROOT + "/assets/img/semiotic.png"} alt="Semiotic" />
         </div>
-        <div>
+        <div className="flex space-between">
           <h1>
             {page && page.name}
             {subpage && ` > ${subpage.name}`}
           </h1>
+
+          <div className="flex github-links">
+            <p className="no-margin">
+              <a
+                noreferrer
+                target="_blank"
+                href="https://github.com/nteract/semiotic"
+              >
+                Semiotic Github
+              </a>
+            </p>
+            <p className="no-margin">
+              {" "}
+              <a
+                noreferrer
+                target="_blank"
+                href="https://github.com/nteract/semiotic-docs"
+              >
+                Docs Github
+              </a>
+            </p>
+          </div>
         </div>
       </header>
       <div className="flex body">

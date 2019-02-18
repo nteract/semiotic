@@ -32,8 +32,11 @@ p code {
 
 header {
   width: calc(100% - 90px);
-  display: flex;
+  /* display: flex; */
+  /* width: 100%; */
+  /* display: inline-block; */
   padding: 30px 30px 30px 60px;
+  /* margin: 30px 60px; */
   background: white;
   z-index: 300;
   border-bottom: 1px solid var(--bg-color);
@@ -51,6 +54,24 @@ header h1 {
   margin: 0px;
   font-weight: 300;
   font-size: 20px;
+}
+
+header .space-between {
+  justify-content: space-between;
+  flex-grow: 1;
+  align-items: baseline;
+}
+
+header .github-links p {
+  align-self: center;
+  margin: 0px;
+  margin-right: 10px;
+}
+
+header .github-links a {
+  color: black;
+  text-decoration: none;
+  font-size: 12px;
 }
 
 button {
@@ -193,9 +214,9 @@ button:focus:after {
   display: flex;
 }
 
-.align-bottom {
+/* .align-bottom {
   align-items: flex-end;
-}
+} */
 
 .sidebar,
 .container {
@@ -205,7 +226,6 @@ button:focus:after {
 
 .sidebar {
   padding: 30px 30px 30px 60px;
-  overflow-y: auto;
   z-index: 1000;
   background: white;
   border-right: 1px solid var(--bg-color);

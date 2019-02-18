@@ -1,30 +1,30 @@
-import React from "react";
-import MarkdownText from "../MarkdownText";
-import DocumentFrame from "../DocumentFrame";
-import { MinimapXYFrame } from "semiotic";
-import { curveMonotoneX } from "d3-shape";
-import theme from "../theme";
+import React from "react"
+import MarkdownText from "../MarkdownText"
+import DocumentFrame from "../DocumentFrame"
+import { MinimapXYFrame } from "semiotic"
+import { curveMonotoneX } from "d3-shape"
+import theme from "../theme"
 
-const colors = theme;
+const colors = theme
 
-const dataSeeds = [20, 10, -10, -20];
+const dataSeeds = [20, 10, -10, -20]
 
 function generatePoints(start, number) {
-  const arrayOfPoints = [];
-  let currentValue = start;
+  const arrayOfPoints = []
+  let currentValue = start
   for (let x = 0; x <= number; x++) {
-    arrayOfPoints.push({ step: x, value: currentValue });
-    currentValue += Math.random() * 10 - 5;
+    arrayOfPoints.push({ step: x, value: currentValue })
+    currentValue += Math.random() * 10 - 5
   }
-  return arrayOfPoints;
+  return arrayOfPoints
 }
 
 const generatedData = dataSeeds.map((s, i) => {
   return {
     label: colors[i],
     coordinates: generatePoints(s, 40)
-  };
-});
+  }
+})
 
 // const lineStyle = {
 //   fill: "#007190",
@@ -67,18 +67,18 @@ const xyFrameSettings = {
       ticks: 6
     }
   ]
-};
+}
 
 export default class CreateXYBrushes extends React.Component {
   constructor(props) {
-    super(props);
-    this.state = { extent: [0, 40], selectedExtent: [0, 40] };
+    super(props)
+    this.state = { extent: [0, 40], selectedExtent: [0, 40] }
     // this.randomizeExtent = this.randomizeExtent.bind(this);
-    this.changeExtent = this.changeExtent.bind(this);
+    this.changeExtent = this.changeExtent.bind(this)
   }
 
   changeExtent(e) {
-    this.setState({ selectedExtent: [Math.floor(e[0]), Math.ceil(e[1])] });
+    this.setState({ selectedExtent: [Math.floor(e[0]), Math.ceil(e[1])] })
   }
   render() {
     const frameProps = {
@@ -88,14 +88,13 @@ export default class CreateXYBrushes extends React.Component {
       margin: { left: 50, top: 10, bottom: 50, right: 20 },
       matte: true,
       minimap: {
-        // margin: { top: 20, bottom: 35, left: 20, right: 20 },
         ...xyFrameSettings,
         brushEnd: this.changeExtent,
         yBrushable: false,
         xBrushExtent: this.state.extent,
         size: [700, 100]
       }
-    };
+    }
     return (
       <div>
         <MarkdownText
@@ -113,6 +112,6 @@ You can programmatically change brush extent by sending a new xBrushExtent.
           useExpanded
         />
       </div>
-    );
+    )
   }
 }
