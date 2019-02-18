@@ -1,20 +1,20 @@
-import React from "react";
-import DocumentFrame from "../DocumentFrame";
-import { XYFrame } from "semiotic";
-import theme from "../theme";
-import MarkdownText from "../MarkdownText";
-import { scaleLinear } from "d3-scale";
-import { points } from "./CreateAScatterplot";
+import React from "react"
+import DocumentFrame from "../DocumentFrame"
+import { XYFrame } from "semiotic"
+import theme from "../theme"
+import MarkdownText from "../MarkdownText"
+import { scaleLinear } from "d3-scale"
+import { points } from "./CreateAScatterplot"
 
-const steps = ["white", theme[3]];
+const steps = ["white", theme[3]]
 
-const thresholds = scaleLinear().range(steps);
+const thresholds = scaleLinear().range(steps)
 
 const colors = {
   "Ex Machina": theme[0],
   "Far from the Madding Crowd": theme[1],
   "The Longest Ride": theme[2]
-};
+}
 
 const frameProps = {
   size: [700, 400],
@@ -29,7 +29,7 @@ const frameProps = {
     <text textAnchor="middle">
       Theaters showing <tspan fill={theme[0]}>Ex Machina</tspan> vs{" "}
       <tspan fill={theme[1]}>Far from the Madding Crowd</tspan> vs{" "}
-      <tspan fill={theme[4]}>The Longest Ride</tspan>
+      <tspan fill={theme[2]}>The Longest Ride</tspan>
     </text>
   ),
   axes: [
@@ -51,12 +51,12 @@ const frameProps = {
     return {
       r: 2,
       fill: d && colors[d.title]
-    };
+    }
   },
 
   margin: { left: 60, bottom: 90, right: 10, top: 40 },
   showLinePoints: true
-};
+}
 
 const overrideProps = {
   lineStyle: `(d, i) => ({
@@ -73,12 +73,12 @@ const overrideProps = {
   pointStyle: `d => {
     return { fill: theme[d.parentLine.key], r: 4 }
   }`
-};
+}
 
 const hexbinProps = {
   ...frameProps,
   summaryType: "hexbin"
-};
+}
 
 const contourProps = {
   ...frameProps,
@@ -87,7 +87,7 @@ const contourProps = {
       fill: "none",
       stroke: colors[d.parentArea.title],
       strokeWidth: 0.5
-    };
+    }
   },
   summaries: [
     {
@@ -105,7 +105,7 @@ const contourProps = {
   ],
 
   summaryType: { type: "contour", threshold: 1, bandwidth: 15 }
-};
+}
 
 export default function CreateALineChart() {
   return (
@@ -221,5 +221,5 @@ For technical specifications on all of XYFrame's features, reference the [XYFram
 `}
       />
     </div>
-  );
+  )
 }

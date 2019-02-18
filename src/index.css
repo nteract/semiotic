@@ -243,6 +243,11 @@ a {
   font-weight: 200;
 }
 
+.sidebar p:not(.sub-page) a {
+  font-size: 14px;
+  font-weight: bold;
+}
+
 .sub-header {
   color: var(--light-color);
   font-weight: bold;

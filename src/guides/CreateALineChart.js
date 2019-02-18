@@ -1,10 +1,10 @@
-import React from "react";
-import DocumentFrame from "../DocumentFrame";
-import { XYFrame } from "semiotic";
-import theme from "../theme";
-import MarkdownText from "../MarkdownText";
-import { scaleTime } from "d3-scale";
-import { curveCatmullRom } from "d3-shape";
+import React from "react"
+import DocumentFrame from "../DocumentFrame"
+import { XYFrame } from "semiotic"
+import theme from "../theme"
+import MarkdownText from "../MarkdownText"
+import { scaleTime } from "d3-scale"
+import { curveCatmullRom } from "d3-shape"
 
 export const lines = [
   {
@@ -257,7 +257,7 @@ export const lines = [
       }
     ]
   }
-];
+]
 
 export const threeTitles = lines.concat([
   {
@@ -370,7 +370,7 @@ export const threeTitles = lines.concat([
       }
     ]
   }
-]);
+])
 
 export const frameProps = {
   size: [700, 400],
@@ -401,7 +401,7 @@ export const frameProps = {
   }),
   margin: { left: 80, bottom: 90, right: 10, top: 40 },
   lines
-};
+}
 
 export const overrideProps = {
   lineStyle: `(d, i) => ({
@@ -418,7 +418,7 @@ export const overrideProps = {
   pointStyle: `d => {
     return { fill: theme[d.parentLine.key], r: 4 }
   }`
-};
+}
 
 //Add in multi-line accessor example
 //Add in marginalia labelling example?
@@ -443,12 +443,19 @@ const dateChart = {
       label: { name: "Weeks from Opening Day", locationDistance: 55 }
     }
   ]
-};
+}
 
 export const linePercent = {
   ...frameProps,
   lines: threeTitles,
   lineType: "linepercent",
+  title: (
+    <text textAnchor="middle">
+      Theaters showing <tspan fill={theme[0]}>Ex Machina</tspan> vs{" "}
+      <tspan fill={theme[1]}>Far from the Madding Crowd</tspan> vs{" "}
+      <tspan fill={theme[2]}>The Longest Ride</tspan>
+    </text>
+  ),
   axes: [
     {
       orient: "left",
@@ -460,11 +467,10 @@ export const linePercent = {
       label: { name: "Weeks from Opening Day", locationDistance: 55 }
     }
   ]
-};
+}
 
 const bumpLine = {
-  ...frameProps,
-  lines: threeTitles,
+  ...linePercent,
   lineType: "bumpline",
   size: [700, 200],
   axes: [
@@ -479,20 +485,21 @@ const bumpLine = {
       label: { name: "Weeks from Opening Day", locationDistance: 55 }
     }
   ]
-};
+}
 
 export const cumulativeLine = {
   ...frameProps,
   lines: threeTitles,
+  title: linePercent.title,
   lineType: "cumulative",
   yAccessor: "grossWeekly"
-};
+}
 
 const withHoverFrameProps = {
   ...frameProps,
   // lineType: "stackedarea"
   hoverAnnotation: true
-};
+}
 
 export default function CreateALineChart() {
   return (
@@ -532,7 +539,7 @@ Set the \`showLinePoints={true}\` to automatically display the underlying points
           ...frameProps,
           showLinePoints: true,
           pointStyle: d => {
-            return { fill: theme[d.parentLine.key], r: 4 };
+            return { fill: theme[d.parentLine.key], r: 4 }
           }
         }}
         type={XYFrame}
@@ -669,5 +676,5 @@ For technical specifications on all of XYFrame's features, reference the [XYFram
 `}
       />
     </div>
-  );
+  )
 }

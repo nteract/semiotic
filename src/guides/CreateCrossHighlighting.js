@@ -1,20 +1,20 @@
-import React from "react";
-import MarkdownText from "../MarkdownText";
-import { XYFrame, OrdinalFrame } from "semiotic";
-import theme from "../theme";
+import React from "react"
+import MarkdownText from "../MarkdownText"
+import { XYFrame, OrdinalFrame } from "semiotic"
+import theme from "../theme"
 
-import { frameProps, linePercent, cumulativeLine } from "./CreateALineChart";
-import { stackedFrameProps } from "./CreateABarChart";
+import { frameProps, linePercent, cumulativeLine } from "./CreateALineChart"
+import { stackedFrameProps } from "./CreateABarChart"
 
 export default class CreateCrossHighlighting extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
 
-    this.state = { annotations: [] };
+    this.state = { annotations: [] }
   }
 
   componentDidMount() {
-    window.Prism.highlightAll();
+    window.Prism.highlightAll()
   }
 
   hoverBehavior = d => {
@@ -27,13 +27,13 @@ export default class CreateCrossHighlighting extends React.Component {
             style: { stroke: "black", strokeWidth: 5 }
           }
         ]
-      });
+      })
     } else {
       this.setState({
         annotations: []
-      });
+      })
     }
-  };
+  }
 
   render() {
     return (
@@ -119,7 +119,7 @@ You can also maintain the default \`hoverAnnotation\` tooltip behavior by also p
             {
               type: "highlight",
               style: d => {
-                return { ...frameProps.lineStyle(d, d.key), strokeWidth: 5 };
+                return { ...frameProps.lineStyle(d, d.key), strokeWidth: 5 }
               }
             },
             { type: "frame-hover" }
@@ -160,7 +160,7 @@ Using the \`highlight\` annotation in tandem with the \`deaturation-layer\` anno
             {
               type: "highlight",
               style: d => {
-                return { ...frameProps.lineStyle(d, d.key), strokeWidth: 5 };
+                return { ...frameProps.lineStyle(d, d.key), strokeWidth: 5 }
               }
             }
           ]}
@@ -274,12 +274,12 @@ Highlight annotations will return all points, lines and areas that match the id 
             {
               type: "highlight",
               style: d => {
-                console.log(d);
+                console.log(d)
                 return {
                   strokeWidth: 3,
                   stroke: theme[d.key],
                   fill: theme[d.key]
-                };
+                }
               }
             }
           ]}
@@ -339,7 +339,7 @@ You don't have to send annotations with valid oAccessor or pieceIDAccessor trait
               type: "highlight",
               rIndex: 0,
               style: d => {
-                return { fill: "none", stroke: theme[5], strokeWidth: 5 };
+                return { fill: "none", stroke: theme[5], strokeWidth: 5 }
               }
             }
           ]}
@@ -380,6 +380,6 @@ You don't have to send annotations with valid oAccessor or pieceIDAccessor trait
     `}
         />
       </div>
-    );
+    )
   }
 }
