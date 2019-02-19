@@ -1,22 +1,32 @@
+import { hierarchy } from "d3-hierarchy"
+
 function recursiveIDAccessor(idAccessor, node, accessorString) {
   if (node.parent) {
     accessorString = `${accessorString}-${recursiveIDAccessor(
       idAccessor,
-      node.parent,
+      { ...node.parent, ...node.parent.data },
       accessorString
     )}`
   }
-  return `${accessorString}-${idAccessor(node.data)}`
+  return `${accessorString}-${idAccessor({ ...node, ...node.data })}`
 }
 
 export const nodesEdgesFromHierarchy = (
-  rootNode,
-  idAccessor = (d, i) => d.id || d.name || i || "no-id"
+  baseRootNode,
+  idAccessor = d => d.id || d.descendantIndex
 ) => {
   const edges = []
   const nodes = []
 
+  const rootNode = baseRootNode.descendants
+    ? baseRootNode
+    : hierarchy(baseRootNode)
+
   const descendants = rootNode.descendants()
+
+  descendants.forEach((d, i) => {
+    d.descendantIndex = i
+  })
 
   descendants.forEach((node, i) => {
     const dataD = Object.assign(node, node.data || {})
@@ -29,9 +39,12 @@ export const nodesEdgesFromHierarchy = (
         depth: node.depth,
         weight: 1,
         value: 1,
-        _NWFEdgeKey: `${idAccessor(node.data, i)}-${recursiveIDAccessor(
+        _NWFEdgeKey: `${idAccessor(
+          { ...node, ...node.data },
+          i
+        )}-${recursiveIDAccessor(
           idAccessor,
-          node.parent,
+          { ...node.parent, ...node.parent.data },
           ""
         )}`
       })

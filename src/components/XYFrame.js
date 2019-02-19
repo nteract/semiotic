@@ -997,7 +997,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
           projectedX,
           xAccessor,
           xScale
-        }),
+        }) || 0,
         relativeY({
           point: d,
           projectedYMiddle,
@@ -1005,19 +1005,8 @@ class XYFrame extends React.Component<XYFrameProps, State> {
           yAccessor,
           yScale,
           showLinePoints
-        })
+        }) || 0
       ]
-
-      if (
-        d.type !== "highlight" &&
-        (screenCoordinates[0] === undefined ||
-          screenCoordinates[1] === undefined ||
-          screenCoordinates[0] === null ||
-          screenCoordinates[1] === null)
-      ) {
-        //NO ANNOTATION IF INVALID SCREEN COORDINATES
-        return null
-      }
     } else if (!d.bounds) {
       screenCoordinates = d.coordinates.reduce((coords, p) => {
         const xCoordinate = relativeX({
@@ -1232,7 +1221,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
     })
     if (!d.coordinates) {
       screenCoordinates = [
-        xScale(xCoord),
+        xScale(xCoord) || 0,
         relativeY({
           point: d,
           lines,
@@ -1245,17 +1234,8 @@ class XYFrame extends React.Component<XYFrameProps, State> {
           yScale,
           xScale,
           idAccessor
-        })
+        }) || 0
       ]
-      if (
-        screenCoordinates[0] === undefined ||
-        screenCoordinates[1] === undefined ||
-        screenCoordinates[0] === null ||
-        screenCoordinates[1] === null
-      ) {
-        //NO ANNOTATION IF INVALID SCREEN COORDINATES
-        return null
-      }
     } else {
       screenCoordinates = d.coordinates.map(p => {
         const foundP = findPointByID({
@@ -1267,8 +1247,8 @@ class XYFrame extends React.Component<XYFrameProps, State> {
           xAccessor
         })
         return [
-          xScale(findFirstAccessorValue(xAccessor, d)) + adjustedPosition[0],
-          relativeY({
+          (xScale(findFirstAccessorValue(xAccessor, d)) || 0) + adjustedPosition[0],
+          (relativeY({
             point: foundP,
             lines,
             projectedYMiddle,
@@ -1279,7 +1259,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
             yScale,
             xScale,
             idAccessor
-          }) + adjustedPosition[1]
+          }) || 0) + adjustedPosition[1]
         ]
       })
     }
