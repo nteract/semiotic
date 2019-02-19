@@ -47,7 +47,7 @@ class SemioticAnnotation extends React.Component<Props, null> {
       }
     })
 
-    const Label =
+    const AnnotationType =
       typeof noteData.type === "function" ? noteData.type : AnnotationLabel
 
     const eventListeners = noteData.eventListeners || noteData.events || {}
@@ -68,7 +68,7 @@ class SemioticAnnotation extends React.Component<Props, null> {
           nx: setNX,
           ny: setNY
         })
-        return <Label key={`multi-annotation-${i}`} {...subjectNote} />
+        return <AnnotationType key={`multi-annotation-${i}`} {...subjectNote} />
       })
 
       return (
@@ -78,7 +78,9 @@ class SemioticAnnotation extends React.Component<Props, null> {
       )
     }
 
-    const finalAnnotation = <Label events={eventListeners} {...noteData} />
+    const finalAnnotation = (
+      <AnnotationType events={eventListeners} {...noteData} />
+    )
 
     if (finalStyle.pointerEvents) {
       return <g style={finalStyle}>{finalAnnotation}</g>

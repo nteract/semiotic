@@ -770,12 +770,14 @@ class NetworkFrame extends React.Component<Props, State> {
         rootNode.sum(networkSettings.hierarchySum || (d => d.value))
 
         if (hierarchicalTypeHash[networkSettings.type]) {
-          const layout = networkSettings.layout || hierarchicalTypeHash[networkSettings.type]
+          const layout =
+            networkSettings.layout || hierarchicalTypeHash[networkSettings.type]
           const hierarchicalLayout = layout()
           const networkSettingKeys = Object.keys(networkSettings)
           if (
             ["dendrogram", "tree", "cluster"].indexOf(networkSettings.type) !==
-            -1 && hierarchicalLayout.separation
+              -1 &&
+            hierarchicalLayout.separation
           ) {
             hierarchicalLayout.separation(
               (a, b) =>
@@ -1030,9 +1032,11 @@ class NetworkFrame extends React.Component<Props, State> {
           chordEdge.d = chordD
           const chordBounds = pathBounds(chordD)
           // $FlowFixMe
-          chordEdge.x = adjustedSize[0] / 2 + (chordBounds.x1 + chordBounds.x2) / 2
+          chordEdge.x =
+            adjustedSize[0] / 2 + (chordBounds.x1 + chordBounds.x2) / 2
           // $FlowFixMe
-          chordEdge.y = adjustedSize[1] / 2 + (chordBounds.y1 + chordBounds.y2) / 2
+          chordEdge.y =
+            adjustedSize[1] / 2 + (chordBounds.y1 + chordBounds.y2) / 2
         })
       } else if (
         networkSettings.type === "sankey" ||
@@ -1228,10 +1232,13 @@ class NetworkFrame extends React.Component<Props, State> {
         const forceMod = adjustedSize[1] / adjustedSize[0]
 
         if (!simulation.force("x")) {
-          simulation.force("x", forceX(size[0] / 2).strength(forceMod * 0.5))
+          simulation.force(
+            "x",
+            forceX(adjustedSize[0] / 2).strength(forceMod * 0.1)
+          )
         }
         if (!simulation.force("y")) {
-          simulation.force("y", forceY(size[1] / 2).strength(0.5))
+          simulation.force("y", forceY(adjustedSize[1] / 2).strength(0.1))
         }
 
         if (projectedEdges.length !== 0 && !simulation.force("link")) {
@@ -1440,10 +1447,9 @@ class NetworkFrame extends React.Component<Props, State> {
         node.x1 = adjustedSize[0] - node.x1
       })
     }
-    if (
-      typeof networkSettings.zoom === "function"
-    ) { networkSettings.zoom(projectedNodes, adjustedSize) }
-    else if (
+    if (typeof networkSettings.zoom === "function") {
+      networkSettings.zoom(projectedNodes, adjustedSize)
+    } else if (
       networkSettings.zoom !== false &&
       networkSettings.type !== "matrix" &&
       networkSettings.type !== "wordcloud" &&
@@ -1471,23 +1477,21 @@ class NetworkFrame extends React.Component<Props, State> {
       if (networkSettings.zoom === "stretch") {
         yMod = 0
         xMod = 0
-      }
-      else if (xSize > ySize) {
+      } else if (xSize > ySize) {
         if (networkAspectRatio > baseAspectRatio) {
           xMod = 0
-          yMod = (adjustedSize[1] - ((adjustedSize[0] / xSize) * ySize)) / 2
+          yMod = (adjustedSize[1] - (adjustedSize[0] / xSize) * ySize) / 2
         } else {
           yMod = 0
-          xMod = (adjustedSize[0] - ((adjustedSize[1] / ySize) * xSize)) / 2
+          xMod = (adjustedSize[0] - (adjustedSize[1] / ySize) * xSize) / 2
         }
       } else {
         if (networkAspectRatio > baseAspectRatio) {
           xMod = 0
-          yMod = (adjustedSize[1] - ((adjustedSize[0] / xSize) * ySize)) / 2  
+          yMod = (adjustedSize[1] - (adjustedSize[0] / xSize) * ySize) / 2
         } else {
           yMod = 0
-          xMod = (adjustedSize[0] - ((adjustedSize[1] / ySize) * xSize)) / 2
-
+          xMod = (adjustedSize[0] - (adjustedSize[1] / ySize) * xSize) / 2
         }
       }
 
@@ -1605,7 +1609,8 @@ class NetworkFrame extends React.Component<Props, State> {
     const nodeLabelAnnotations = []
     if (currentProps.nodeLabels && projectedNodes) {
       projectedNodes.forEach((node, nodei) => {
-        const feasibleLabel = nodeLabels && nodeLabels !== true && nodeLabels(node, nodei)
+        const feasibleLabel =
+          nodeLabels && nodeLabels !== true && nodeLabels(node, nodei)
         if (nodeLabels === true || feasibleLabel) {
           const actualLabel =
             networkSettings.projection === "radial" && node.depth !== 0

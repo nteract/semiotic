@@ -48,11 +48,6 @@ export const htmlFrameHoverRule = ({
     content = tooltipContent(d)
   }
 
-  console.log(
-    "`network-annotation-label-${i}`",
-    `network-annotation-label-${i}`
-  )
-
   return (
     <SpanOrDiv
       span={useSpans}
