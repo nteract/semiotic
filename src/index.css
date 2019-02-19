@@ -28,7 +28,10 @@ body {
 ul code,
 p code {
   font-weight: bold;
-  font-size: 1.1em;
+  /* font-size: 1.1em; */
+}
+.relative {
+  position: relative;
 }
 
 header {
@@ -89,6 +92,7 @@ button {
   /* width: 270px; */
   /* font-weight: bold; */
   padding: 10px 14px;
+  z-index: 0;
   /* border: none; */
   border: 1px solid white;
   border-radius: 14px;
@@ -412,4 +416,10 @@ h3 {
   fill: none;
   stroke: #ffffff;
   stroke-width: 1.5;
+}
+
+.dot-com-bubble .annotation-subject path {
+  fill: var(--scale-1);
+  fill-opacity: 0.05;
+  stroke: none;
 }

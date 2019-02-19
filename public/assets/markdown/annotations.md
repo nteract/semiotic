@@ -1,31 +1,3 @@
-All frames have annotation capabilities that let you easily deploy [react-annotations](https://react-annotation.susielu.com/). There is also built-in support for automatic label adjustment using [labella.js](http://twitter.github.io/labella.js/).
-
-All frames takes a prop `annotations` which is an array of annotation objects:
-
-```jsx
-<XYFrame annotations={[{ type: "react-annotation", label: "a note" }]} />
-```
-
-This array of annotations is sent to **both** an:
-
-- `svgAnnotationRules` function which renders in an SVG layer
-- `htmlAnnotationRules` function which renders in an HTML layer
-
-This allows for the creation of graphical elements in both SVG & HTML for the same annotation type.
-
-There are built-in annotation types handled in the default `htmlAnnotationRules` and `svgAnnotationRules` functions on all frames that let you simply pass an array of settings to the `annotations` prop without having to write custom rendering functions.
-
-Otherwise, you can pass your own `htmlAnnotationRules` and `svgAnnotationRules` to create completely [custom rendering logic](#custom-annotation-rules) based on the annotation type.
-
-## Built-in Annotation Types
-
-Each of the following options is a type of annotation that can be passed to the `annotations` prop:
-
-```jsx
-<XYFrame annotations={[{ type: "react-annotation", label: "a note" }, {type: "highlight"}}]]} />
-
-```
-
 ### All Frames
 
 - `"react-annotation"` or _**function**_ ([react-annotation](https://react-annotation.susielu.com/) annotation type): Creates an AnnotationLabel that can be passed any additional props that are exposed in react-annotation. Automatically transforms any properties on the annotation that match with your accessor functions.
@@ -59,8 +31,6 @@ import { AnnotationCalloutCircle } from "react-annotation"
 * `desaturation-layer`: Creates a rect the size of the viz layer that has fill: black and fillOpacity: 0.5, you can pass a style prop to overwrite the default styling
 
 - `frame-hover`: Creates a tooltip, which is a div centered on the datapoint populated with the values derived for that data point, you can use a separate prop `tooltipContent` to customize the value, see the [tooltips](/guides/tooltips) page for details.
-
-TODO: add in eventListener functionality
 
 ### XYFrame
 

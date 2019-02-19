@@ -216,7 +216,7 @@ class DocumentFrame extends React.Component {
     )
 
     return (
-      <div>
+      <div className="relative">
         <Frame {...frameProps} />
 
         <div className="toolbar">
