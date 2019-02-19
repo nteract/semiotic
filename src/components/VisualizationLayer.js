@@ -65,7 +65,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     focusedVisualizationGroup: null
   }
 
-  componentDidUpdate(lp) {
+  componentDidUpdate(lp: Object) {
     const np = this.props
     const propKeys = Object.keys(np)
 
