@@ -65,8 +65,19 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     focusedVisualizationGroup: null
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(lp) {
+    const np = this.props
+    const propKeys = Object.keys(np)
+
+    let update = false
+    propKeys.forEach(key => {
+      if (key !== "title" && lp[key] !== np[key]) {
+        update = true
+      }
+    })
+
     if (
+      update === false ||
       this.props.disableContext ||
       !this.props.canvasContext ||
       !this.canvasDrawing
@@ -340,7 +351,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
 
     let update = false
     propKeys.forEach(key => {
-      if (lp[key] !== np[key]) {
+      if (key !== "title" && lp[key] !== np[key]) {
         update = true
       }
     })

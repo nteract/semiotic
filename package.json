@@ -67,6 +67,7 @@
     "d3-dsv": "1.0.5",
     "d3-random": "1.0.1",
     "d3-sankey": "0.7.1",
+    "d3-flextree-v4": "^1.0.1",
     "dagre": "^0.8.2",
     "dentist": "1.0.3",
     "dotenv": "4.0.0",

@@ -49,6 +49,7 @@ export default class DecisionMatrixExample extends React.Component {
     return (
       <div>
         <XYFrame
+          title="canvas interaction"
           points={parsedDiamonds}
           size={[700, 700]}
           xAccessor="x"
