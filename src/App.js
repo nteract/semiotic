@@ -170,7 +170,14 @@ export const PAGES = [
         component: CreateCrossHighlighting,
         img: "highlight"
       },
-
+      {
+        name: "Accessibility",
+        url: "accessibility",
+        component: MarkdownPage,
+        props: {
+          filename: "accessibility"
+        }
+      },
       {
         name: "Creating Small Multiples",
         url: "small-multiples",
@@ -200,14 +207,6 @@ export const PAGES = [
         url: "foreground-background-svg",
         component: ForegroundBackgroundSVG,
         img: "layers"
-      },
-      {
-        name: "Accessibility",
-        url: "accessibility",
-        component: MarkdownPage,
-        props: {
-          filename: "accessibility"
-        }
       }
     ]
   },
