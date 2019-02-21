@@ -13,10 +13,6 @@ export default class CreateCrossHighlighting extends React.Component {
     this.state = { annotations: [] }
   }
 
-  componentDidMount() {
-    window.Prism.highlightAll()
-  }
-
   hoverBehavior = d => {
     if (d) {
       this.setState({

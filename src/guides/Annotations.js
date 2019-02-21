@@ -37,8 +37,10 @@ const annotations = [
     type: "bounds",
     bounds: [{ date: new Date("1/2/1997") }, { date: new Date("1/2/2001") }],
     label: "The dot-com bubble",
-    dx: 100,
-    x: 500
+    dx: 250,
+    color: theme[5]
+    // x: 500,
+    // date: "10/1/1999"
   },
   {
     type: "x",
@@ -74,11 +76,17 @@ const annotations = [
   },
   {
     type: AnnotationXYThreshold,
-    note: { label: "Above $100", lineType: null },
+    note: {
+      label: "Above $100",
+      lineType: null,
+      orientation: "topBottom",
+      align: "middle"
+    },
     color: theme[0],
+    date: "7/1/1999",
     close: 100,
     subject: {
-      x1: 200,
+      x1: 250,
       x2: 400
     },
     dx: 0,
@@ -126,7 +134,7 @@ const frameProps = {
   customLineMark: thresholdLine,
   axes: chartAxes,
   annotations: annotations,
-  margin: { top: 50, left: 40, right: 10, bottom: 40 },
+  margin: { top: 50, left: 40, right: 20, bottom: 40 },
   hoverAnnotation: true,
   tooltipContent: customTooltip
 }

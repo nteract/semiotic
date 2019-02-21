@@ -45,7 +45,10 @@ const chord = {
   ...frameprops,
   networkType: "chord",
   nodeLabels: d => {
-    return <text>{d.id}</text>
+    return (
+      d.value > 100 &&
+      d.sourceLinks.length > 0 && <text textAnchor="middle">{d.id}</text>
+    )
   }
 }
 
@@ -56,6 +59,7 @@ const arc = {
     stroke: colors[d.target.category],
     fill: "none"
   }),
+  nodeLabels: false,
   size: [800, 300]
 }
 
@@ -244,8 +248,6 @@ networkType={{
   groupWidth: 20, //  width in pixels of the outer rings
   padAngle: 0.1, // space between groups in degrees
   // sortGroups: function
-  
-  ,
 }}\`\`\`
 
   `}

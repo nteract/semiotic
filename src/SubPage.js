@@ -26,7 +26,9 @@ export default function SubPage({ page }) {
               <div className="">
                 <p>{p.name}</p>
                 <div className="page-image">
-                  {p.img && <img src={`/assets/img/${p.img}.png`} />}
+                  {p.img && (
+                    <img alt={p.img} src={`/assets/img/${p.img}.png`} />
+                  )}
                 </div>
               </div>
             </Link>

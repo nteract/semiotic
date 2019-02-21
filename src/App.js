@@ -44,9 +44,7 @@ import CustomLayout from "./examples/CustomLayout"
 import IsotypeChart from "./examples/IsotypeChart"
 
 import Mark from "./sub-components/Mark"
-import Axis from "./sub-components/Axis"
 import DividedLine from "./sub-components/DividedLine"
-import Legend from "./sub-components/Legend"
 
 const ROOT = process.env.PUBLIC_URL
 
@@ -156,7 +154,8 @@ export const PAGES = [
       {
         name: "Annotations",
         url: "annotations",
-        component: Annotations
+        component: Annotations,
+        img: "annotations"
       },
       {
         name: "Annotations - Tooltips",
@@ -181,8 +180,8 @@ export const PAGES = [
       {
         name: "Canvas Rendering",
         url: "canvas-rendering",
-        component: CanvasRendering
-        // img: ""
+        component: CanvasRendering,
+        img: "canvas-interaction"
       },
       {
         name: "Creating Sparklines",
@@ -199,7 +198,8 @@ export const PAGES = [
       {
         name: "Using Foreground / Background SVG",
         url: "foreground-background-svg",
-        component: ForegroundBackgroundSVG
+        component: ForegroundBackgroundSVG,
+        img: "layers"
       },
       {
         name: "Accessibility",
@@ -397,20 +397,15 @@ export const PAGES = [
         url: "dividedline",
         component: DividedLine,
         img: "divided-line"
-      },
-      {
-        name: "Axis",
-        url: "axis",
-        component: Axis
-      },
-      {
-        name: "Legend",
-        url: "legend",
-        component: Legend
       }
     ]
   }
 ]
+
+const FallbackPage = props => {
+  window.history.replaceState(null, null, "/")
+  return <Home {...props} />
+}
 
 export default function() {
   const view = window.location.pathname.split(/#|\//g).filter(d => d)
@@ -459,7 +454,7 @@ export default function() {
           <div className="flex github-links">
             <p className="no-margin">
               <a
-                noreferrer="true"
+                rel="noopener noreferrer"
                 target="_blank"
                 href="https://github.com/nteract/semiotic"
               >
@@ -468,7 +463,7 @@ export default function() {
             </p>
             <p className="no-margin">
               <a
-                noreferrer="true"
+                rel="noopener noreferrer"
                 target="_blank"
                 href="https://github.com/nteract/semiotic-docs"
               >
@@ -490,7 +485,9 @@ export default function() {
               (page && page.name && page.name !== "Home" && page.name)}
           </h1>
           <div className="margin-bottom">
-            {View && <View {...viewProps} page={page && page.name} />}
+            {(View && <View {...viewProps} page={page && page.name} />) || (
+              <FallbackPage {...viewProps} page="Home" />
+            )}
           </div>
         </div>
       </div>

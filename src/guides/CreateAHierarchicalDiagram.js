@@ -51,7 +51,7 @@ const overrideProps = {
     <div className="tooltip-content">
       {d.parent ? <p>{d.parent.data.name}</p> : undefined}
       <p>{d.data.name}</p>
-    </div>`,
+    </div>)`,
   filterRenderedNodes: `d => d.depth !== 0`,
   hoverAnnotation: `[
     { type: "desaturation-layer", style: { fill: "white", fillOpacity: 0.25 } },
@@ -260,7 +260,8 @@ networkType={{
   zoom: true, //zoom the laid out nodes in or out so that they fit exactly in the specified size
   padding: 0, // pixel value to separate individual nodes from each other
   projection: "vertical", // accepts (vertical|horizontal|radial) whether to display the chart with steps laid out on the y axis (vertical) or the x axis (horizontal)
-  hierarchyChildre: d => d.children // function describing how children are defined in the hierarchical dataset, which will be passed as the second value to d3-hierarchy’s hierarchy function,
+  hierarhcySum: d => d.value // function for summing up children values into parent totals
+  hierarchyChildren: d => d.children // function describing how children are defined in the hierarchical dataset, which will be passed as the second value to d3-hierarchy’s hierarchy function,
 }}\`\`\`
 `}
         />
@@ -298,6 +299,7 @@ networkType={{
   type: "circlepack", 
   zoom: true, //zoom the laid out nodes in or out so that they fit exactly in the specified size
   padding: 0, // pixel value to separate individual nodes from each other
+  hierarhcySum: d => d.value // function for summing up children values into parent totals
   hierarchyChildren: d => d.children // function describing how children are defined in the hierarchical dataset, which will be passed as the second value to d3-hierarchy’s hierarchy function,
 }}\`\`\`
 `}
@@ -337,6 +339,7 @@ networkType={{
   zoom: true, //zoom the laid out nodes in or out so that they fit exactly in the specified size
   padding: 0, // pixel value to separate individual nodes from each other
   projection: "vertical", // accepts (vertical|horizontal) whether to display the chart with steps laid out on the y axis (vertical) or the x axis (horizontal)
+  hierarhcySum: d => d.value // function for summing up children values into parent totals
   hierarchyChildren: d => d.children // function describing how children are defined in the hierarchical dataset, which will be passed as the second value to d3-hierarchy’s hierarchy function,
 }}
 \`\`\`
@@ -376,6 +379,7 @@ networkType={{
   zoom: true, //zoom the laid out nodes in or out so that they fit exactly in the specified size 
   padding: 0, // pixel value to separate individual nodes from each other
   projection: "vertical", // accepts (vertical|horizontal|radial) whether to display the chart with steps laid out on the y axis (vertical) or the x axis (horizontal)
+  hierarhcySum: d => d.value // function for summing up children values into parent totals
   hierarchyChildren: d => d.children // function describing how children are defined in the hierarchical dataset, which will be passed as the second value to d3-hierarchy’s hierarchy function,
 }}
 \`\`\`

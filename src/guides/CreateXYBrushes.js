@@ -80,7 +80,6 @@ export default class CreateXYBrushes extends React.Component {
       margin: { left: 50, top: 10, bottom: 50, right: 20 },
       matte: true,
       minimap: {
-        ...xyFrameSettings,
         brushEnd: this.changeExtent,
         yBrushable: false,
         xBrushExtent: this.state.extent,
@@ -106,9 +105,10 @@ You can turn any \`XYFrame\` into an interactive region with a brush by using th
             ...xyInteraction,
             interaction: {
               end: e => {
+                console.log(e)
                 this.setState({ extent: e })
               },
-              brush: "xBrush",
+              brush: "yBrush",
               extent: this.state.extent
             }
           }}
@@ -122,7 +122,21 @@ You can turn any \`XYFrame\` into an interactive region with a brush by using th
           text={`
 
 ## MinimapXYFrame
-\`MinimapXYFrame\` creates two frames and automatically handles the brushing state management. Here it's used to allow users to zoom to a particular part of a line chart. The minimap property in \`MinimapXYFrame\` takes an object with settings almost identical to \`XYFrame\` except it also includes properties for brush behavior and extent like \`brushEnd\`, \`brushStart\`, \`brush\`, \`yBrushable\`, \`xBrushable\`, \`xBrushExtent\`, and \`yBrushExtent\`.
+\`MinimapXYFrame\` creates two frames and automatically handles the brushing state management. Here it's used to allow users to zoom to a particular part of a line chart. The minimap property in \`MinimapXYFrame\` takes an object with settings almost identical to \`XYFrame\` except it also includes properties for brush behavior and extent:
+\`\`\`jsx
+minimap={{
+  xBrushable: false, // boolean (enable horizontal brushing)
+  yBrushable: false, // boolean (enable vertical brushing)
+  xBrushExtent: array (initial selected extent, defaults to all),
+  yBrushExtent: array (initial selected extent, defaults to all),
+  brushStart: () => {},//interactivity.start fn
+  brush: () => {}, //interactivity.during fn
+  brushEnd: () => {}, // interactivity.end fn
+  //any additional props can be sent to override the 
+  //xyframe props used to render the minimap
+}}
+
+\`\`\`
 
 You can programmatically change brush extent by sending a new xBrushExtent.
 

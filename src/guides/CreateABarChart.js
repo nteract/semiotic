@@ -1,8 +1,8 @@
-import React from "react";
-import { OrdinalFrame } from "semiotic";
-import DocumentFrame from "../DocumentFrame";
-import theme from "../theme";
-import MarkdownText from "../MarkdownText";
+import React from "react"
+import { OrdinalFrame } from "semiotic"
+import DocumentFrame from "../DocumentFrame"
+import theme from "../theme"
+import MarkdownText from "../MarkdownText"
 
 // Add your component proptype data here
 // multiple component proptype documentation supported
@@ -11,7 +11,7 @@ const barChartData = [
   { user: "Susie", tweets: 5, retweets: 100, favorites: 100 },
   { user: "Matt", tweets: 20, retweets: 25, favorites: 50 },
   { user: "Betty", tweets: 30, retweets: 20, favorites: 10 }
-];
+]
 
 export const inflatedBarChartData = [
   { user: "Jason", action: "tweets", value: 10 },
@@ -27,13 +27,13 @@ export const inflatedBarChartData = [
   { user: "Susie", action: "favorites", value: 100 },
   { user: "Matt", action: "favorites", value: 50 },
   { user: "Betty", action: "favorites", value: 10 }
-];
+]
 
 const colorHash = {
   tweets: theme[0],
   retweets: theme[2],
   favorites: theme[1]
-};
+}
 
 const frameProps = {
   size: [200, 200],
@@ -44,14 +44,14 @@ const frameProps = {
   type: "bar",
   oLabel: true,
   title: "Tweets"
-};
+}
 
 const titleAndSpacing = {
   oPadding: 5,
   rAccessor: d => d.tweets + d.retweets,
   title: "Tweets & Retweets",
   axis: true
-};
+}
 
 const diffBar = {
   ...titleAndSpacing,
@@ -61,9 +61,9 @@ const diffBar = {
     tickFormat: d => Math.abs(d),
     label: "<- Retweets vs. Tweets -> "
   }
-};
+}
 
-const rAccessor = ["tweets", "retweets", "favorites"];
+const rAccessor = ["tweets", "retweets", "favorites"]
 export const stackedFrameProps = {
   ...frameProps,
   size: [280, 300],
@@ -79,9 +79,9 @@ export const stackedFrameProps = {
     )
   },
   style: (d, i) => {
-    return { fill: colorHash[rAccessor[d.rIndex]], stroke: "white" };
+    return { fill: colorHash[rAccessor[d.rIndex]], stroke: "white" }
   }
-};
+}
 
 export const stackedFramePropsFlattened = {
   ...stackedFrameProps,
@@ -98,7 +98,7 @@ export const stackedFramePropsFlattened = {
     )
   },
   style: d => ({ fill: colorHash[d.action], stroke: "white" })
-};
+}
 
 export default function CreateABarChart() {
   return (
@@ -188,7 +188,6 @@ Adding the property \`hoverAnnotation\` gives tooltips to each of the columns. T
     `}
       />
 
-      <h3 />
       <p />
       <DocumentFrame
         frameProps={{ ...stackedFramePropsFlattened, hoverAnnotation: true }}
@@ -212,5 +211,5 @@ Adding the property \`pieceHoverAnnotation\` gives tooltips to each of the indiv
         startHidden
       />
     </div>
-  );
+  )
 }

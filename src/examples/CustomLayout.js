@@ -3,7 +3,7 @@ import DocumentFrame from "../DocumentFrame"
 import { NetworkFrame } from "semiotic"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
-import { flextree } from "d3-flextree"
+import flextree from "d3-flextree-v4"
 
 const tree = {
   name: "root",
@@ -77,8 +77,8 @@ const flexLayoutSize = [700, 700]
 const flextreeZoom = (nodes, size) => {
   const minX = Math.min(...nodes.map(node => node.x - node.width / 2))
   const maxX = Math.max(...nodes.map(node => node.x + node.width / 2))
-  const minY = Math.min(...nodes.map(node => node.y - node.height / 2))
-  const maxY = Math.max(...nodes.map(node => node.y + node.height / 2))
+  const minY = Math.min(...nodes.map(node => node.y))
+  const maxY = Math.max(...nodes.map(node => node.y + node.height))
 
   const xScalingFactor = size[0] / (maxX - minX)
   const yScalingFactor = size[1] / (maxY - minY)
@@ -121,7 +121,7 @@ const frameProps = {
     type: "tree",
     layout: flextree,
     nodeSize: d => [d.data.width, d.data.height],
-    spacing: 10
+    spacing: () => 10
   },
   margin: 50
 }

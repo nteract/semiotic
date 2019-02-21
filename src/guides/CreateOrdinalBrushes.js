@@ -5,7 +5,7 @@ import { OrdinalFrame } from "semiotic"
 import theme from "../theme"
 
 const data = Array.from(Array(200), () => ({
-  value: parseInt(Math.random() * 100)
+  value: parseInt(Math.random() * 100, 10)
 }))
 const orFrameSettings = {
   size: [700, 200],

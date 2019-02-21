@@ -75,7 +75,7 @@ export default class ForceLayouts extends React.Component {
       .then(response => response.json())
       .then(data => {
         this.setState({
-          data: nodesEdgesFromHierarchy(hierarchy(data), d => d.name)
+          data: nodesEdgesFromHierarchy(hierarchy(data))
         })
       })
   }
