@@ -66,33 +66,33 @@ export const PAGES = [
         className: "sub-header"
       },
       {
-        name: "Creating Line Charts",
+        name: "Line Charts",
         url: "line-chart",
         component: CreateALineChart,
         img: "line-chart"
       },
-      // { name: "Creating Divided Line Charts" },
+      // { name: "Divided Line Charts" },
       {
-        name: "Creating Area Charts",
+        name: "Area Charts",
         url: "area-chart",
         component: CreateAnAreaChart,
         img: "area-chart"
       },
       {
-        name: "Creating Scatterplots",
+        name: "Scatterplots",
         url: "scatterplot",
         component: CreateAScatterplot,
         img: "scatterplot"
       },
       {
-        name: "Creating XY Summaries",
+        name: "XY Summaries",
         url: "xy-summaries",
         component: CreateXYSummaries,
         img: "xy-summary"
       },
 
       {
-        name: "Creating XY Brushes",
+        name: "XY Brushes",
         url: "xy-brushes",
         component: CreateXYBrushes,
         img: "xy-brush"
@@ -102,25 +102,25 @@ export const PAGES = [
         className: "sub-header"
       },
       {
-        name: "Creating Bar Charts",
+        name: "Bar Charts",
         url: "bar-chart",
         component: CreateABarChart,
         img: "bar-chart"
       },
       {
-        name: "Creating Pie Charts",
+        name: "Pie Charts",
         url: "pie-chart",
         component: CreateAPieChart,
         img: "pie-chart"
       },
       {
-        name: "Creating Ordinal Summaries",
+        name: "Ordinal Summaries",
         url: "ordinal-summaries",
         component: CreateOrdinalSummaries,
         img: "or-summary"
       },
       {
-        name: "Creating Ordinal Brushes",
+        name: "Ordinal Brushes",
         url: "ordinal-brushes",
         component: CreateOrdinalBrushes,
         img: "or-brush"
@@ -130,19 +130,19 @@ export const PAGES = [
         className: "sub-header"
       },
       {
-        name: "Creating Force Layouts",
+        name: "Force Layouts",
         url: "force-layouts",
         component: CreateAForceLayout,
         img: "force"
       },
       {
-        name: "Creating Path Diagrams",
+        name: "Path Diagrams",
         url: "path-diagrams",
         component: CreateAPathDiagram,
         img: "path"
       },
       {
-        name: "Creating Hierarchical Diagrams",
+        name: "Hierarchical Diagrams",
         url: "hierarchical",
         component: CreateAHierarchicalDiagram,
         img: "hierarchy"
@@ -179,7 +179,7 @@ export const PAGES = [
         }
       },
       {
-        name: "Creating Small Multiples",
+        name: "Small Multiples",
         url: "small-multiples",
         component: CreateSmallMultiples,
         img: "facet"
@@ -191,7 +191,7 @@ export const PAGES = [
         img: "canvas-interaction"
       },
       {
-        name: "Creating Sparklines",
+        name: "Sparklines",
         url: "sparklines",
         component: CreateSparklines,
         img: "sparkline"
