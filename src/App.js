@@ -5,21 +5,21 @@ import MarkdownPage from "./MarkdownPage"
 import SubPage from "./SubPage"
 import Home from "./Home"
 
-import CreateALineChart from "./guides/CreateALineChart"
-import CreateAnAreaChart from "./guides/CreateAnAreaChart"
-import CreateAScatterplot from "./guides/CreateAScatterplot"
-import CreateXYSummaries from "./guides/CreateXYSummaries"
-import CreateXYBrushes from "./guides/CreateXYBrushes"
-import CreateABarChart from "./guides/CreateABarChart"
-import CreateAPieChart from "./guides/CreateAPieChart"
-import CreateOrdinalSummaries from "./guides/CreateOrdinalSummaries"
-import CreateOrdinalBrushes from "./guides/CreateOrdinalBrushes"
-import CreateSparklines from "./guides/CreateSparklines"
-import CreateAForceLayout from "./guides/CreateAForceLayout"
-import CreateAPathDiagram from "./guides/CreateAPathDiagram"
-import CreateAHierarchicalDiagram from "./guides/CreateAHierarchicalDiagram"
-import CreateSmallMultiples from "./guides/CreateSmallMultiples"
-import CreateCrossHighlighting from "./guides/CreateCrossHighlighting"
+import LineChart from "./guides/LineChart"
+import AreaChart from "./guides/AreaChart"
+import Scatterplot from "./guides/Scatterplot"
+import XYSummaries from "./guides/XYSummaries"
+import XYBrushes from "./guides/XYBrushes"
+import BarChart from "./guides/BarChart"
+import PieChart from "./guides/PieChart"
+import OrdinalSummaries from "./guides/OrdinalSummaries"
+import OrdinalBrushes from "./guides/OrdinalBrushes"
+import Sparklines from "./guides/Sparklines"
+import ForceLayout from "./guides/ForceLayout"
+import PathDiagram from "./guides/PathDiagram"
+import HierarchicalDiagram from "./guides/HierarchicalDiagram"
+import SmallMultiples from "./guides/SmallMultiples"
+import CrossHighlighting from "./guides/CrossHighlighting"
 import Tooltips from "./guides/Tooltips"
 import Annotations from "./guides/Annotations"
 import UsingSketchyPaintyPatterns from "./guides/UsingSketchyPaintyPatterns"
@@ -68,33 +68,33 @@ export const PAGES = [
       {
         name: "Line Charts",
         url: "line-chart",
-        component: CreateALineChart,
+        component: LineChart,
         img: "line-chart"
       },
       // { name: "Divided Line Charts" },
       {
         name: "Area Charts",
         url: "area-chart",
-        component: CreateAnAreaChart,
+        component: AreaChart,
         img: "area-chart"
       },
       {
         name: "Scatterplots",
         url: "scatterplot",
-        component: CreateAScatterplot,
+        component: Scatterplot,
         img: "scatterplot"
       },
       {
         name: "XY Summaries",
         url: "xy-summaries",
-        component: CreateXYSummaries,
+        component: XYSummaries,
         img: "xy-summary"
       },
 
       {
         name: "XY Brushes",
         url: "xy-brushes",
-        component: CreateXYBrushes,
+        component: XYBrushes,
         img: "xy-brush"
       },
       {
@@ -104,25 +104,25 @@ export const PAGES = [
       {
         name: "Bar Charts",
         url: "bar-chart",
-        component: CreateABarChart,
+        component: BarChart,
         img: "bar-chart"
       },
       {
         name: "Pie Charts",
         url: "pie-chart",
-        component: CreateAPieChart,
+        component: PieChart,
         img: "pie-chart"
       },
       {
         name: "Ordinal Summaries",
         url: "ordinal-summaries",
-        component: CreateOrdinalSummaries,
+        component: OrdinalSummaries,
         img: "or-summary"
       },
       {
         name: "Ordinal Brushes",
         url: "ordinal-brushes",
-        component: CreateOrdinalBrushes,
+        component: OrdinalBrushes,
         img: "or-brush"
       },
       {
@@ -132,19 +132,19 @@ export const PAGES = [
       {
         name: "Force Layouts",
         url: "force-layouts",
-        component: CreateAForceLayout,
+        component: ForceLayout,
         img: "force"
       },
       {
         name: "Path Diagrams",
         url: "path-diagrams",
-        component: CreateAPathDiagram,
+        component: PathDiagram,
         img: "path"
       },
       {
         name: "Hierarchical Diagrams",
         url: "hierarchical",
-        component: CreateAHierarchicalDiagram,
+        component: HierarchicalDiagram,
         img: "hierarchy"
       },
       {
@@ -167,7 +167,7 @@ export const PAGES = [
       {
         name: "Annotations - Highlighting",
         url: "highlighting",
-        component: CreateCrossHighlighting,
+        component: CrossHighlighting,
         img: "highlight"
       },
       {
@@ -181,7 +181,7 @@ export const PAGES = [
       {
         name: "Small Multiples",
         url: "small-multiples",
-        component: CreateSmallMultiples,
+        component: SmallMultiples,
         img: "facet"
       },
       {
@@ -193,7 +193,7 @@ export const PAGES = [
       {
         name: "Sparklines",
         url: "sparklines",
-        component: CreateSparklines,
+        component: Sparklines,
         img: "sparkline"
       },
       {
