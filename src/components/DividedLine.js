@@ -17,17 +17,24 @@ class DividedLine extends React.Component {
   }
 
   createLineSegments() {
-    const params = this.props.parameters
-    const className = this.props.className
-    const interpolate = this.props.interpolate || curveLinear
+    const {
+      parameters,
+      className,
+      interpolate = curveLinear,
+      customAccessors,
+      lineDataAccessor,
+      data,
+      searchIterations,
+      ...rest
+    } = this.props
 
     const data = projectLineData({
-      data: this.props.data,
-      lineDataAccessor: [this.props.lineDataAccessor],
+      data: data,
+      lineDataAccessor: [lineDataAccessor],
       xProp: "_x",
       yProp: "_y",
-      xAccessor: [this.props.customAccessors.x],
-      yAccessor: [this.props.customAccessors.y]
+      xAccessor: [customAccessors.x],
+      yAccessor: [customAccessors.y]
     })
 
     //Compatibility before Semiotic 2
@@ -35,7 +42,7 @@ class DividedLine extends React.Component {
       projectedD.data = projectedD.data.map(d => ({ ...d.data, ...d }))
     })
 
-    const lines = dividedLine(params, data[0].data, this.props.searchIterations)
+    const lines = dividedLine(parameters, data[0].data, searchIterations)
 
     const lineRender = line()
       .curve(interpolate)
@@ -44,7 +51,7 @@ class DividedLine extends React.Component {
 
     return lines.map((d, i) => (
       <Mark
-        {...this.props}
+        {...rest}
         className={className}
         markType="path"
         key={`DividedLine-${i}`}
