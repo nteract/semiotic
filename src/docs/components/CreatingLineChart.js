@@ -1284,7 +1284,7 @@ export default class CreatingLineChart extends React.Component {
                 ]}
                 interaction={{
                   end: e => {
-                    this.setState({ extent: e.reverse() })
+                    this.setState({ extent: e })
                   },
                   brush: "yBrush",
                   extent: [this.state.yMax, 0]

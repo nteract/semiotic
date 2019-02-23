@@ -238,7 +238,9 @@ class InteractionLayer extends React.Component<Props, State> {
       endMappingFn = mappingFn
     } else if (actualBrush === "yBrush") {
       mappingFn = (d): null | Array<number> =>
-        !d ? null : [yScale.invert(d[0]), yScale.invert(d[1])]
+        !d
+          ? null
+          : [yScale.invert(d[0]), yScale.invert(d[1])].sort((a, b) => a - b)
       semioticBrush = brushY()
       selectedExtent = extent.map(d => yScale(d))
       endMappingFn = mappingFn
@@ -259,6 +261,7 @@ class InteractionLayer extends React.Component<Props, State> {
               [xScale.invert(d[0][0]), yScale.invert(d[0][1])],
               [xScale.invert(d[1][0]), yScale.invert(d[1][1])]
             ]
+
       selectedExtent = extent.map(d => [xScale(d[0]), yScale(d[1])])
       endMappingFn = mappingFn
     }

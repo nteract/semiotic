@@ -137,7 +137,7 @@
     "@mapbox/polylabel": "1",
     "d3-array": "^1.2.0",
     "d3-bboxCollide": "^1.0.3",
-    "d3-brush": "^1.0.4",
+    "d3-brush": "^1.0.6",
     "d3-chord": "^1.0.4",
     "d3-collection": "^1.0.1",
     "d3-contour": "^1.1.1",
