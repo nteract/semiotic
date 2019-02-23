@@ -254,15 +254,24 @@ class InteractionLayer extends React.Component<Props, State> {
       }
 
       semioticBrush = brush()
-      mappingFn = (d): null | Array<Array<number>> =>
-        !d
-          ? null
-          : [
-              [xScale.invert(d[0][0]), yScale.invert(d[0][1])],
-              [xScale.invert(d[1][0]), yScale.invert(d[1][1])]
-            ]
+      mappingFn = (d): null | Array<Array<number>> => {
+        if (!d) return null
+        const yValues = [yScale.invert(d[0][1]), yScale.invert(d[1][1])].sort(
+          (a, b) => a - b
+        )
 
-      selectedExtent = extent.map(d => [xScale(d[0]), yScale(d[1])])
+        return [
+          [xScale.invert(d[0][0]), yValues[0]],
+          [xScale.invert(d[1][0]), yValues[1]]
+        ]
+      }
+
+      const yValues = [yScale(extent[0][1]), yScale(extent[1][1])].sort(
+        (a, b) => a - b
+      )
+
+      selectedExtent = extent.map((d, i) => [xScale(d[0]), yValues[i]])
+
       endMappingFn = mappingFn
     }
 
