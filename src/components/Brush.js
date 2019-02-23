@@ -6,11 +6,18 @@ import { select } from "d3-selection"
 import PropTypes from "prop-types"
 
 const flatten = list =>
-  list.reduce((a, b) => a.concat(Array.isArray(b) ? flatten(b) : b), [])
+  list.reduce(
+    (a, b) => a.concat(Array.isArray(b) ? flatten(b.sort((a, b) => a - b)) : b),
+    []
+  )
 
 function flatShortArray(array) {
   if (!Array.isArray(array)) return "not-array"
+  if (!Array.isArray(array[0])) {
+    array = array.sort((a, b) => a - b)
+  }
   const flat = flatten(array)
+
   const stringifiedFlattened = flat
     .map(
       d =>
