@@ -61,6 +61,17 @@ class Brush extends React.Component {
     const brush = this.props.svgBrush
     select(node).call(brush)
     if (this.props.selectedExtent) {
+      let selectedExtent = this.props.selectedExtent
+      if (Array.isArray(this.props.selectedExtent[0])) {
+        const sortedY = [selectedExtent[0][1], selectedExtent[1][1]].sort(
+          (a, b) => a - b
+        )
+        selectedExtent = [
+          [selectedExtent[0][0], sortedY[0]],
+          [selectedExtent[1][0], sortedY[1]]
+        ]
+      }
+
       select(node).call(brush.move, this.props.selectedExtent)
     }
   }
