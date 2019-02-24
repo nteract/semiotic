@@ -51,9 +51,18 @@ const overrideProps = {
   })`,
 
   style: `d => {
-    return { fill: theme[d.parentLine.key], r: 4 }
+    return {
+      r: 2,
+      fill: d && colors[d.title]
+    }
   }`
 }
+
+const pre = `const colors = {
+  "Ex Machina": theme[0],
+  "Far from the Madding Crowd": theme[1],
+  "The Longest Ride": theme[2]
+}`
 
 const heatmapProps = {
   ...frameProps,
@@ -88,6 +97,8 @@ export default function CreateALineChart() {
         text={`
 Summaries allow you to pass individual data points and visualize them in an aggregated form. The built in types are \`violin\`, \`heatmap\`, \`boxplot\`, \`histogram\`, \`contour\`, and \`ridgeline\`
 
+This page uses box office data from [Box Office Mojo](https://www.boxofficemojo.com/).
+
 ## Violin
 
 OrdinalFrame takes \`points\` as an array of objects. 
@@ -100,6 +111,7 @@ In this example, we pass those points and set \`summaryType: "violin" \`.
         frameProps={frameProps}
         type={OrdinalFrame}
         overrideProps={overrideProps}
+        pre={pre}
       />
 
       <MarkdownText
@@ -132,6 +144,7 @@ This example is the same as the heatmap except we are passing \`"heatmap"\` as t
         type={OrdinalFrame}
         overrideProps={overrideProps}
         startHidden
+        pre={pre}
       />
       <MarkdownText
         text={`
@@ -163,6 +176,7 @@ This example is the same as the heatmap except we are passing \`"boxplot"\` as t
         type={OrdinalFrame}
         overrideProps={overrideProps}
         startHidden
+        pre={pre}
       />
 
       <MarkdownText
@@ -197,6 +211,7 @@ This example is the same as the heatmap except we are passing \`"histogram"\` as
         type={OrdinalFrame}
         overrideProps={overrideProps}
         startHidden
+        pre={pre}
       />
 
       <MarkdownText
@@ -228,6 +243,7 @@ This example is the same as the heatmap except we are passing \`"contour"\` as t
         type={OrdinalFrame}
         overrideProps={overrideProps}
         startHidden
+        pre={pre}
       />
 
       <MarkdownText
@@ -258,6 +274,7 @@ This example is the same as the heatmap except we are passing \`"ridgeline"\` as
         type={OrdinalFrame}
         overrideProps={overrideProps}
         startHidden
+        pre={pre}
       />
 
       <MarkdownText

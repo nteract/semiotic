@@ -509,6 +509,8 @@ export default function CreateALineChart() {
         text={`
 A guide for creating a line chart, timeseries, difference line, and line percents using \`XYFrame\` along with hover behavior and styling.
 
+This page uses box office data from [Box Office Mojo](https://www.boxofficemojo.com/).
+
 ## Line Chart
 
 \`XYFrame\` takes \`lines\` as an object or an array of objects. Each object represents a line. 

@@ -230,6 +230,7 @@ export default class HierarchicalDiagrams extends React.Component {
           text={`
 \`NetworkFrame\` allows you to render several hierarchical data visualizations. For these examples you just pass an \`edges\` list and no \`nodes\`. Edges should be an object with an array of \`children\` containing objects with \`children\` all the way down the hierarchy. The assumption is that each child's \`id\` property is unique. These types of hierarchies can be created easily from a parent/child  list with d3's [stratify](https://github.com/d3/d3-hierarchy#stratify) functionality.  The built in hierarchical types are \`tree\`, \`cluster\`, \`circlepack\`, \`treemap\`, and \`partition\`
 
+The data on this page use the [Flare visualization toolkit](https://github.com/prefuse/Flare) package hierarchy, and the [d3-hierarchy](https://github.com/d3/d3-hierarchy) examples by Mike Bostock.
 
 ## Dendrogram
 

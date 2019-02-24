@@ -4,11 +4,8 @@ import { OrdinalFrame } from "semiotic"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
 
-// const ROOT = process.env.PUBLIC_URL;
-
 const frameProps = {
   size: [500, 450],
-  // projection: "horizontal",
   oAccessor: "year",
   rAccessor: "value",
   rExtent: [0],

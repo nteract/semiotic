@@ -73,20 +73,29 @@ export default class ForceLayouts extends React.Component {
 
     fetch(`${ROOT}/data/flare.json`)
       .then(response => response.json())
-      .then(data => {
+      .then(res => {
+        const data = nodesEdgesFromHierarchy(hierarchy(res))
+
         this.setState({
-          data: nodesEdgesFromHierarchy(hierarchy(data))
+          data,
+          hierarchy: res,
+
+          hierarchyOverrideProps: {
+            edges: propertyToString(res, 0, true)
+          }
         })
       })
   }
 
   render() {
     if (!this.state.data) return "Loading..."
-
     return (
       <div>
         <MarkdownText
           text={`
+
+The data on this page use the [Flare visualization toolkit](https://github.com/prefuse/Flare) package hierarchy used in [d3-hierarchy](https://github.com/d3/d3-hierarchy) examples by Mike Bostock.
+
 ## Force Layout
 
 \`NetworkFrame\` allows you to render several data visualizations using a force layout created with [d3-force](https://github.com/d3/d3-force). For these examples you can pass a \`nodes\` and an \`edges\` list, or just an \`edges\` list and nodes with be inferred.
@@ -101,10 +110,9 @@ The built in force types are \`force\`, and \`motifs\`.
         <DocumentFrame
           frameProps={{
             ...frameProps,
-            nodes: this.state.data.nodes,
-            edges: this.state.data.edges
+            edges: this.state.hierarchy
           }}
-          // overrideProps={overrideProps}
+          overrideProps={this.state.hierarchyOverrideProps}
           type={NetworkFrame}
         />
         <MarkdownText
@@ -118,10 +126,10 @@ This example is the same as the example above with the additional prop \`edgeTyp
         <DocumentFrame
           frameProps={{
             ...frameProps,
-            edges: this.state.data.edges,
+            edges: this.state.hierarchy,
             edgeType: "linearc"
           }}
-          // overrideProps={overrideProps}
+          overrideProps={this.state.hierarchyOverrideProps}
           type={NetworkFrame}
           startHidden
         />

@@ -195,31 +195,6 @@ const colors = {
   Whig: 3
 }
 
-// size={[700, 500]}
-// data={data}
-// rAccessor={d => [d.start, d.end]}
-// oAccessor="name"
-// type="timeline"
-// projection="horizontal"
-// oPadding={2}
-// annotations={[
-//   {
-//     type: "category",
-//     categories: ["George Washington", "Abraham Lincoln"],
-//     label: "Antebellum",
-//     position: "left",
-//     offset: 80
-//   }
-// ]}
-// style={{ fill: "lightblue", stroke: "blue" }}
-// axis={{ orient: "left" }}
-// margin={{ left: 200, top: 20, right: 20, bottom: 50 }}
-// oLabel={d => (
-//   <text y={2} textAnchor="end" fontSize={8}>
-//     {d}
-//   </text>
-// )}
-
 const frameProps = {
   size: [900, 800],
   rAccessor: d => [d.start, d.end],
@@ -269,7 +244,17 @@ const overrideProps = {
     <text textAnchor="end" fontSize="11">
       {d}
     </text>
-  )`
+  )`,
+  foregroundGraphics: `Object.keys(colors)
+  .concat(["Other"])
+  .map((d, i) => (
+    <text key={d} x={700} y={i * 20 + 60}>
+      <tspan fontSize="20" fill={theme[colors[d] || 0]}>
+        ●
+      </tspan>{" "}
+      {d}
+    </text>
+  ))`
 }
 
 const Timeline = () => {
@@ -282,12 +267,20 @@ The Dot Plot compares changes between two values across categories. The initial 
 
 Because annotations are drawn on top of the visualization layer, we need to account for the size of each dot in where we draw the lines so they don't overlap. We also adjust the labels a bit so they line up with the dots.
 
+This data is from the [List of Presidents of the United States](https://en.wikipedia.org/wiki/List_of_Presidents_of_the_United_States) Wikipedia page.
+
 `}
       />
       <DocumentFrame
         frameProps={frameProps}
         overrideProps={overrideProps}
         type={OrdinalFrame}
+        pre={`const colors = {
+          Democratic: 4,
+          Republican: 1,
+          "Democratic-Republican": 2,
+          Whig: 3
+        }`}
         useExpanded
       />
     </div>

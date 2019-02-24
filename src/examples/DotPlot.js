@@ -73,14 +73,19 @@ const frameProps = {
 }
 
 const overrideProps = {
-  style: `d => {
+  style: `(d, i) => {
     return {
-      fill: d.rIndex === 0 ? ${theme[0]} : ${theme[5]},
-      stroke: "white",
-      strokeWidth: 1,
-      r: 8
+      fill: (i > 1 && (d.rIndex === 0 ? theme[0] : theme[5])) || "white",
+      stroke: (i <= 1 && (d.rIndex === 0 ? theme[0] : theme[5])) || "white",
+      strokeWidth: i <= 1 ? 3 : 1
     }
   }`,
+  title: `(
+    <text textAnchor="middle">
+      Neonatal Mortality Rate by Region from <tspan fill={theme[0]}>1990</tspan>{" "}
+      to <tspan fill={theme[5]}>2013</tspan>
+    </text>
+  )`,
   svgAnnotationRules: `function drawRange({ d, rScale, orFrameState }) {
     if (d.type === "range") {
       const start = rScale(d.y1990) - dotRadius

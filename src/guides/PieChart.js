@@ -85,27 +85,8 @@ const sortednightingale = {
   }
 }
 
-// const stackedFrameProps = {
-//   ...frameProps,
-//   size: [280, 300],
-//   rAccessor: ["tweets", "retweets", "favorites"],
-//   axis: {
-//     orient: "left",
-//     label: (
-//       <text textAnchor="middle">
-//         <tspan fill={colorHash.tweets}>Tweets</tspan> +{" "}
-//         <tspan fill={colorHash.retweets}>Retweets</tspan> +{" "}
-//         <tspan fill={colorHash.favorites}>Favorites</tspan>
-//       </text>
-//     )
-//   },
-//   style: d => {
-//     return { fill: colorHash[d.action], stroke: "white" }
-//   }
-// }
-
 const overrideProps = {
-  rScaleType: "scaleSqrt(), // import {scaleSqrt} from d3-scale",
+  rScaleType: "scaleSqrt()",
   style: `d => {
     return {
       fill: theme[0],
@@ -113,23 +94,6 @@ const overrideProps = {
     }
   }`
 }
-
-// const stackedFramePropsFlattened = {
-//   ...stackedFrameProps,
-//   data: inflatedBarChartData,
-//   rAccessor: "value",
-//   axis: {
-//     orient: "left",
-//     label: (
-//       <text textAnchor="middle">
-//         <tspan fill={colorHash.tweets}>Tweets</tspan> +{" "}
-//         <tspan fill={colorHash.retweets}>Retweets</tspan> +{" "}
-//         <tspan fill={colorHash.favorites}>Favorites</tspan>
-//       </text>
-//     )
-//   },
-//   style: d => ({ fill: colorHash[d.action], stroke: "white" })
-// }
 
 export default function CreateABarChart() {
   return (
@@ -183,6 +147,7 @@ Change your \`type: "bar"\` to an object \`type: {"type": "bar", innerRadius: 50
         frameProps={nightingale}
         type={OrdinalFrame}
         startHidden
+        pre={`import { scaleSqrt} from "d3-scale"`}
         overrideProps={overrideProps}
       />
 

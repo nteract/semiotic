@@ -98,6 +98,10 @@ export default function CreateALineChart() {
     <div>
       <MarkdownText
         text={`
+A guide for creating an area, stacked area, bump area, and stacked percent chart using \`XYFrame\`.
+
+This page uses box office data from [Box Office Mojo](https://www.boxofficemojo.com/).
+
 ## Area Chart
 
 The default setting for XYFrame when you send it lines is to show them as a line chart. You can change this by adding in the prop \`lineType: "area"\` to turn your chart in to areas.

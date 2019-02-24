@@ -69,10 +69,7 @@ const overrideProps = {
   nodes: propertyToString(or_data, 0, true)
 }
 
-const pre = `
-const theme = ${JSON.stringify(theme)}       
-
-const size = scaleLinear()
+const pre = `const size = scaleLinear()
 .domain([0, 1020])
 .range([1, 100]);
 
@@ -144,6 +141,9 @@ export default () => {
     <div>
       <MarkdownText
         text={`
+
+The data on this page use the [UK Department of Energy & Climate Change](https://www.gov.uk/guidance/2050-pathways-analysis) and the [d3-sankey](https://beta.observablehq.com/@mbostock/d3-sankey-diagram) example by Mike Bostock.
+
 ## Path Diagrams
 
 \`NetworkFrame\` allows you to render several data visualizations with calculated positions for nodes based on the complexity of the edges/paths that connect them. For these examples you can pass a \`nodes\` and an \`edges\` list, or just an \`edges\` list and nodes with be inferred.

@@ -41,32 +41,18 @@ const frameProps = {
 }
 
 const overrideProps = {
-  style: `d => {
-    return {
-      fill: d.rIndex === 0 ? ${theme[0]} : ${theme[5]},
-      stroke: "white",
-      strokeWidth: 1,
-      r: 8
-    }
-  }`,
-  svgAnnotationRules: `function drawRange({ d, rScale, orFrameState }) {
-    if (d.type === "range") {
-      const start = rScale(d.y1990) - dotRadius
-      const end = rScale(d.y2013) + dotRadius
-      const y = orFrameState.projectedColumns[d.region].middle
-      return (
-        <line
-          x1={start}
-          x2={end}
-          y1={y}
-          y2={y}
-          style={{ stroke: "black", strokeWidth: 2 }}
-        />
-      )
-    }
-    return null
-  }
-  `
+  summaryStyle: `(d, i) => ({
+    fill: theme[i % theme.length],
+    stroke: "black",
+    strokeWidth: 2,
+    fillOpacity: 0.5,
+    strokeOpacity: 0.25
+  })`,
+  oLabel: `d => (
+    <text style={{ textAnchor: "end", fill: "grey" }} x={-10} y={5}>
+      {d}
+    </text>
+  )`
 }
 
 export default class RidgelinePlot extends React.Component {
@@ -81,12 +67,15 @@ export default class RidgelinePlot extends React.Component {
   }
 
   render() {
+    if (!this.state) return null
     return (
       <div>
         <MarkdownText
           text={`
 
 Ridgeline Plots show variation across values and allow overflowing of the plot into adjoining columns by adjusting the amplitude property of the summaryType. This example also uses dynamicColumnWidth to set column width to be based on the maximum value of each column, normalizing the variation.
+
+The example is a remake of the [Perceptions of Probability and Numbers](https://github.com/zonination/perceptions) by zonination.
 
 `}
         />

@@ -120,7 +120,7 @@ export default () => {
 
   if (codeblock.indexOf("theme") !== -1) {
     codeblock = codeblock.replace(/theme\[(.*?)]/g, (s, m) => {
-      const tryParse = parseInt(m)
+      const tryParse = parseInt(m, 10)
       if (isNaN(tryParse)) {
         addImport = true
         return s
@@ -154,12 +154,15 @@ class DocumentFrame extends React.Component {
     this.onClick = this.onClick.bind(this)
     this.onCopy = this.onCopy.bind(this)
 
+    // this.state = {
+    //   codeBlock: props.startHidden
+    //     ? "hidden"
+    //     : props.useExpanded
+    //     ? "expanded"
+    //     : "collapsed"
+    // }
     this.state = {
-      codeBlock: props.startHidden
-        ? "hidden"
-        : props.useExpanded
-        ? "expanded"
-        : "collapsed"
+      codeBlock: "expanded"
     }
   }
 

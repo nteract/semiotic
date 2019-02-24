@@ -51,6 +51,8 @@ In XYFrame it uses the function in \`lineIDAccessor\` to evaluate what objects t
 
 Move your mouse over the chart to see the line highlighted.
 
+This page uses box office data from [Box Office Mojo](https://www.boxofficemojo.com/).
+
       `}
         />
         <XYFrame

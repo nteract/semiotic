@@ -233,6 +233,14 @@ const overrideProps = {
   )`,
   pointStyle: `d => {
     return { fill: theme[d.parentLine.key], r: 4 }
+  }`,
+  customPointMark: `({ d }) => {
+    return (
+      <g>
+        <circle r={rScale(d.grossWeekly)} stroke="white" />
+        <text>{d.week}</text>
+      </g>
+    )
   }`
 }
 
@@ -266,6 +274,8 @@ export default function CreateALineChart() {
       <MarkdownText
         text={`
 Creating a scatterplot, and scatterplot using a custom point with XYFrame and hover behavior and styling.
+
+This page uses box office data from [Box Office Mojo](https://www.boxofficemojo.com/).
 
 ## Scatterplot
 

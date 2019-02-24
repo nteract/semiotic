@@ -1,38 +1,24 @@
-import React from "react";
-import MarkdownText from "../MarkdownText";
-import DocumentFrame from "../DocumentFrame";
-import { OrdinalFrame } from "semiotic";
-import theme from "../theme";
-
-const gradient = (
-  <linearGradient x1="0" x2="0" y1="0" y2="1" id="gradient">
-    <stop stopColor={theme[0]} offset="0%" />
-    <stop stopColor={theme[4]} offset="100%" />
-  </linearGradient>
-);
-
-const trianglePattern = (
-  <pattern id="triangle" width="10" height="10" patternUnits="userSpaceOnUse">
-    <rect fill={theme[2]} width="10" height="10" />
-    <circle fill={theme[4]} r="5" cx="3" cy="3" />
-  </pattern>
-);
+import React from "react"
+import MarkdownText from "../MarkdownText"
+import DocumentFrame from "../DocumentFrame"
+import { OrdinalFrame } from "semiotic"
+import theme from "../theme"
 
 const glowyCanvas = (canvas, context, size) => {
-  const dataURL = canvas.toDataURL("image/png");
-  const baseImage = document.createElement("img");
+  const dataURL = canvas.toDataURL("image/png")
+  const baseImage = document.createElement("img")
 
-  baseImage.src = dataURL;
+  baseImage.src = dataURL
   baseImage.onload = () => {
-    context.clearRect(0, 0, size[0] + 120, size[1] + 120);
-    context.filter = "blur(10px)";
-    context.drawImage(baseImage, 0, 0);
-    context.filter = "blur(5px)";
-    context.drawImage(baseImage, 0, 0);
-    context.filter = "none";
-    context.drawImage(baseImage, 0, 0);
-  };
-};
+    context.clearRect(0, 0, size[0] + 120, size[1] + 120)
+    context.filter = "blur(10px)"
+    context.drawImage(baseImage, 0, 0)
+    context.filter = "blur(5px)"
+    context.drawImage(baseImage, 0, 0)
+    context.filter = "none"
+    context.drawImage(baseImage, 0, 0)
+  }
+}
 
 const frameProps = {
   size: [400, 200],
@@ -40,27 +26,54 @@ const frameProps = {
   data: [5, 8, 2, 3, 10, 5, 8, 2, 3, 10],
   type: "bar",
   style: (d, i) => ({ fill: i < 5 ? "url(#gradient)" : "url(#triangle)" }),
-  additionalDefs: [trianglePattern, gradient],
+  additionalDefs: [
+    <pattern
+      key="triangle"
+      id="triangle"
+      width="10"
+      height="10"
+      patternUnits="userSpaceOnUse"
+    >
+      <rect fill={theme[2]} width="10" height="10" />
+      <circle fill={theme[4]} r="5" cx="3" cy="3" />
+    </pattern>,
+    <linearGradient key="gradient" x1="0" x2="0" y1="0" y2="1" id="gradient">
+      <stop stopColor={theme[0]} offset="0%" />
+      <stop stopColor={theme[4]} offset="100%" />
+    </linearGradient>
+  ],
   oPadding: 2,
   margin: 20
-};
+}
 
-// {...barChartSettings}
-// size={[350, 350]}
-// title="Sketchy + Gradient"
-// style={{ fill: "url(#paleWoodGradient)" }}
-// additionalDefs={gradient}
-// renderMode="sketchy"
+const overrideProps = {
+  additionalDefs: `[
+    <pattern
+      key="triangle"
+      id="triangle"
+      width="10"
+      height="10"
+      patternUnits="userSpaceOnUse"
+    >
+      <rect fill={theme[2]} width="10" height="10" />
+      <circle fill={theme[4]} r="5" cx="3" cy="3" />
+    </pattern>,
+    <linearGradient key="gradient" x1="0" x2="0" y1="0" y2="1" id="gradient">
+      <stop stopColor={theme[0]} offset="0%" />
+      <stop stopColor={theme[4]} offset="100%" />
+    </linearGradient>
+  ]`
+}
 
 const sketchyFrameProps = {
   ...frameProps,
   renderMode: "sketchy"
-};
+}
 
 const paintyFrameProps = {
   ...frameProps,
   renderMode: "painty"
-};
+}
 
 export default () => {
   return (
@@ -78,7 +91,12 @@ This example uses both. Notice that textures are added to the defs of an SVG by 
       
       `}
       />
-      <DocumentFrame frameProps={frameProps} type={OrdinalFrame} useExpanded />
+      <DocumentFrame
+        frameProps={frameProps}
+        type={OrdinalFrame}
+        useExpanded
+        overrideProps={overrideProps}
+      />
 
       <MarkdownText
         text={`
@@ -95,11 +113,13 @@ Under the hood, Semiotic uses the semiotic-mark library, which allows you to dec
         frameProps={sketchyFrameProps}
         type={OrdinalFrame}
         startHidden
+        overrideProps={overrideProps}
       />
       <DocumentFrame
         frameProps={paintyFrameProps}
         type={OrdinalFrame}
         startHidden
+        overrideProps={overrideProps}
       />
 
       <MarkdownText
@@ -116,10 +136,10 @@ Additionally the canvas itself can be used for post-processing effects using the
 
       <OrdinalFrame
         {...frameProps}
-        style={() => ({
+        style={{
           fill: theme[0],
           stroke: theme[0]
-        })}
+        }}
         canvasPieces={true}
         canvasPostProcess={"chuckClose"}
       />
@@ -130,5 +150,5 @@ Additionally the canvas itself can be used for post-processing effects using the
         canvasPostProcess={glowyCanvas}
       />
     </div>
-  );
-};
+  )
+}

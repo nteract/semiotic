@@ -39,8 +39,6 @@ const annotations = [
     label: "The dot-com bubble",
     dx: 250,
     color: theme[5]
-    // x: 500,
-    // date: "10/1/1999"
   },
   {
     type: "x",
@@ -118,13 +116,6 @@ const annotations = [
   }
 ]
 
-const customTooltip = d => (
-  <div className="tooltip-content">
-    <p>Date: {`${d.date}`}</p>
-    <p>Closing Price: ${d.close}</p>
-  </div>
-)
-
 const frameProps = {
   size: [700, 300],
   xScaleType: scaleTime(),
@@ -136,10 +127,39 @@ const frameProps = {
   annotations: annotations,
   margin: { top: 50, left: 40, right: 20, bottom: 40 },
   hoverAnnotation: true,
-  tooltipContent: customTooltip
+  tooltipContent: d => (
+    <div className="tooltip-content">
+      <p>Date: {d.date}</p>
+      <p>Closing Price: ${d.close}</p>
+    </div>
+  )
 }
 
-// const overrideProps
+const overrideProps = {
+  xScaleType: "scaleTime()",
+  customLineMark: `({ d, i, xScale, yScale }) => {
+    return (
+      <DividedLine
+        key={\`threshold-\${i}\`}
+        data={[d]}
+        parameters={p => {
+          if (p.close > 100) {
+            return { stroke: theme[0], fill: "none" }
+          }
+          return { stroke: theme[2], fill: "none" }
+        }}
+        customAccessors={{ x: d => xScale(d.x), y: d => yScale(d.y) }}
+        lineDataAccessor={d => d.data}
+      />
+    )
+  }`,
+  tooltipContent: `d => (
+    <div className="tooltip-content">
+      <p>Date: {d.date}</p>
+      <p>Closing Price: \${d.close}</p>
+    </div>
+  )`
+}
 
 export default class Annotations extends React.Component {
   constructor(props) {
@@ -189,15 +209,16 @@ Each of the following options is a type of annotation that can be passed to the 
 
 \`\`\`       
 
-A detailed example of a single chart with annotations and rich information display. It leverages the DividedLine component and built-in annotation handling to reproduce Susie Lu's Apple stock chart.
+A detailed example of a single chart with annotations and rich information display. It leverages the DividedLine component and built-in annotation handling to reproduce [Susie Lu's Apple stock chart](https://bl.ocks.org/susielu/23dc3082669ee026c552b85081d90976).
 
 It also uses a custom x scale using xScaleType to pass a scale built with D3's scaleTime, as well as tooltip processing rules using tooltipContent.
     `}
         />
         <DocumentFrame
           frameProps={this.state || {}}
-          // overrideProps={overrideProps}
+          overrideProps={overrideProps}
           type={XYFrame}
+          pre={`import { scaleTime } from "d3-scale"`}
           useExpanded
         />
         <MarkdownPage filename="annotations" />

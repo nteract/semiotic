@@ -96,8 +96,7 @@ export default class CanvasInteraction extends React.Component {
       <div>
         <MarkdownText
           text={`
-
-Ridgeline Plots show variation across values and allow overflowing of the plot into adjoining columns by adjusting the amplitude property of the summaryType. This example also uses dynamicColumnWidth to set column width to be based on the maximum value of each column, normalizing the variation.
+This page uses the classic diamond dataset of nearly 54,000 diamonds source from the [ggplot2](https://github.com/tidyverse/ggplot2/blob/master/data-raw/diamonds.csv) project.
 
 `}
         />

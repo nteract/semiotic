@@ -78,6 +78,10 @@ const frameProps = {
   }
 }
 
+const overrideProps = {
+  oLabel: `d => <text transform="rotate(45)">{d}</text>`
+}
+
 const MarimekkoChart = () => {
   return (
     <div>
@@ -90,8 +94,7 @@ The Marimekko chart shows aggregate value of segments along with percent breakdo
       />
       <DocumentFrame
         frameProps={frameProps}
-        // overrideProps={overrideProps}
-
+        overrideProps={overrideProps}
         type={OrdinalFrame}
         useExpanded
       />

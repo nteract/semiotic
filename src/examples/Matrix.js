@@ -383,8 +383,9 @@ export default function SwarmPlot() {
       <MarkdownText
         text={`
 
-A way to show change between two points in time. 
+A way to show relationships between nodes and edges as a table.
 
+This is a remake of [an example](https://bost.ocks.org/mike/miserables/) by Mike Bostock using character co-occurances from Les Miserables compiled by [Donald Knuth](https://www-cs-faculty.stanford.edu/~knuth/sgb.html).
 `}
       />
       <DocumentFrame
