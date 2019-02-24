@@ -1,5 +1,4 @@
 import React from "react"
-
 import marked from "marked"
 
 export default class MarkdownText extends React.Component {
@@ -28,16 +27,13 @@ export default class MarkdownText extends React.Component {
     }
 
     if (this.props.text.indexOf("```") !== -1) {
-      window.Prism.highlightAll()
+      window.Prism && window.Prism.highlightAll()
     }
   }
 
   render() {
     const { text } = this.props
     if (!text) return null
-    // const markdown = marked(text, { headerIds: true })
-    //   .replace(/<h(\d) id="(.*?)"/g, `<a class="heading-link" href="#$2">$&`)
-    //   .replace(/<\/h[0-9]>/g, "$&</a>")
 
     return (
       <div

@@ -1,8 +1,8 @@
-import React from "react";
-import DocumentFrame from "../DocumentFrame";
-import { OrdinalFrame } from "semiotic";
-import theme from "../theme";
-import MarkdownText from "../MarkdownText";
+import React from "react"
+import DocumentFrame from "../DocumentFrame"
+import { OrdinalFrame } from "semiotic"
+import theme from "../theme"
+import MarkdownText from "../MarkdownText"
 
 const data = [
   {
@@ -50,7 +50,7 @@ const data = [
   },
   { name: "Charmander", color: theme[1], attribute: "speed", value: 65 },
   { name: "Charmander", color: theme[1], attribute: "hp", value: 39 }
-];
+]
 
 const frameProps = {
   size: [500, 450],
@@ -77,7 +77,7 @@ const frameProps = {
       stroke: d.source.color,
       strokeOpacity: 0.5,
       fillOpacity: 0.5
-    };
+    }
   },
   oLabel: true,
   type: "point",
@@ -100,7 +100,7 @@ const frameProps = {
       </text>
     </g>
   ]
-};
+}
 
 const overrideProps = {
   title: `(
@@ -136,7 +136,7 @@ const overrideProps = {
       </text>
     </g>
   ]`
-};
+}
 
 export default function SwarmPlot() {
   return (
@@ -151,11 +151,8 @@ A comparison of attributes across multiple attributes. This data is taken from [
         frameProps={frameProps}
         overrideProps={overrideProps}
         type={OrdinalFrame}
-        pre={`
-const theme = ${JSON.stringify(theme)}          
-          `}
         useExpanded
       />
     </div>
-  );
+  )
 }

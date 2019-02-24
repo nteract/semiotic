@@ -1,8 +1,8 @@
-import React from "react";
-import DocumentFrame from "../DocumentFrame";
-import { OrdinalFrame } from "semiotic";
-import theme from "../theme";
-import MarkdownText from "../MarkdownText";
+import React from "react"
+import DocumentFrame from "../DocumentFrame"
+import { OrdinalFrame } from "semiotic"
+import theme from "../theme"
+import MarkdownText from "../MarkdownText"
 
 // const ROOT = process.env.PUBLIC_URL;
 
@@ -45,7 +45,7 @@ const frameProps = {
       stroke: d.source.color,
       strokeOpacity: 0.5,
       fillOpacity: 0.5
-    };
+    }
   },
   oLabel: true,
   type: { type: "point", r: () => 5 },
@@ -69,7 +69,7 @@ const frameProps = {
       </text>
     </g>
   ]
-};
+}
 
 const overrideProps = {
   title: `(
@@ -105,7 +105,7 @@ const overrideProps = {
       </text>
     </g>
   ]`
-};
+}
 
 export default function SwarmPlot() {
   return (
@@ -121,11 +121,8 @@ A way to show change between two points in time.
         frameProps={frameProps}
         overrideProps={overrideProps}
         type={OrdinalFrame}
-        pre={`
-const theme = ${JSON.stringify(theme)}          
-          `}
         useExpanded
       />
     </div>
-  );
+  )
 }

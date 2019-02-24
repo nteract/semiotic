@@ -242,9 +242,6 @@ In this example, we pass a hierarchical edge object and set \`networkType: "tree
           frameProps={{ ...tree, edges: this.state.data }}
           overrideProps={overrideProps}
           type={NetworkFrame}
-          pre={`
-const theme = ${JSON.stringify(theme)}          
-    `}
         />
         <MarkdownText
           text={`
@@ -280,9 +277,6 @@ This example is the same as the dendrogram except we are passing \`networkType="
           overrideProps={circlepackOverrideProps}
           type={NetworkFrame}
           startHidden
-          pre={`
-const theme = ${JSON.stringify(theme)}          
-  `}
         />
 
         <MarkdownText
@@ -319,9 +313,6 @@ This example is the same as the dendrogram except we are passing \`networkType="
           overrideProps={overrideProps}
           type={NetworkFrame}
           startHidden
-          pre={`
-const theme = ${JSON.stringify(theme)}          
-`}
         />
 
         <MarkdownText
@@ -360,9 +351,6 @@ This example is the same as the dendrogram except we are passing \`networkType="
           overrideProps={partitionOverrideProps}
           type={NetworkFrame}
           startHidden
-          pre={`
-const theme = ${JSON.stringify(theme)}          
-        `}
         />
         <MarkdownText
           text={`
@@ -401,9 +389,6 @@ This uses the same settings as the parition above but instead of just sending \`
           overrideProps={overrideProps}
           type={NetworkFrame}
           startHidden
-          pre={`
-const theme = ${JSON.stringify(theme)}          
-        `}
         />
         <MarkdownText
           text={`

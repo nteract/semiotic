@@ -399,6 +399,7 @@ export const frameProps = {
     strokeWidth: 2,
     fill: "none"
   }),
+  // hoverAnnotation: true,
   margin: { left: 80, bottom: 90, right: 10, top: 40 },
   lines
 }
@@ -506,17 +507,17 @@ export default function CreateALineChart() {
     <div>
       <MarkdownText
         text={`
-Creating a line chart, timeseries, difference line, and line percents using XYFrame along with hover behavior and styling.
+A guide for creating a line chart, timeseries, difference line, and line percents using \`XYFrame\` along with hover behavior and styling.
 
 ## Line Chart
 
-The XYFrame takes \`lines\` as an object or an array of objects. Each object represents a line. 
+\`XYFrame\` takes \`lines\` as an object or an array of objects. Each object represents a line. 
 
 Every object needs a \`coordinates\` property with the array of points for that line. The points will be rendered in the order of that array.
 
-You can use a different key by chaging the \`lineDataAccessor\`
+You can use a key other than \`coordinates\` by chaging the \`lineDataAccessor\` props.
 
-In this example, we also pass a \`yExtent={[0]}\` to set the lower bound of the yAxis to zero, otherwise it would create an exent based on the minimum and maximum values on your \`yAccessor\`.
+In this example, we also pass \`yExtent={[0]}\` to set the lower bound of the yAxis to zero, otherwise it would create an exent based on the minimum and maximum values derived from your \`yAccessor\`.
 
 `}
       />

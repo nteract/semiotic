@@ -346,18 +346,16 @@ edges.forEach(link => {
   link.target = nodes[link.target]
 })
 
-const colors = theme
 const frameProps = {
   size: [1400, 1400],
-  // projection: "horizontal",
   nodes,
   edges,
   nodeIDAccessor: "name",
   margin: { left: 60, top: 60, bottom: 10, right: 10 },
   nodeLabels: true,
   edgeStyle: d => ({
-    fill: colors[d.source.group + 1],
-    stroke: colors[d.source.group + 1],
+    fill: theme[d.source.group + 1],
+    stroke: theme[d.source.group + 1],
     fillOpacity: 0.75
   }),
   nodeStyle: { fill: "none", stroke: "#DDD" },
@@ -366,45 +364,17 @@ const frameProps = {
     { type: "frame-hover" },
     {
       type: "highlight",
-      style: { fill: "orange", fillOpacity: 0.25, stroke: "red" }
+      style: { fill: theme[0], fillOpacity: 0.25, stroke: theme[1] }
     }
   ]
 }
 
 const overrideProps = {
-  title: `(
-    <text textAnchor="middle">
-      Weekly(1-52) Box Office Totals from <tspan fill={
-        theme[0]}
-      >2016</tspan> -
-      mid <tspan fill={theme[2]}>2017</tspan>
-    </text>
-  )`,
-  tooltipContent: `d => (
-    <div>
-      {d.date} - {Math.round(d.total / 1000000)}m
-    </div>
-  )
-  `,
-  foregroundGraphics: ` [
-    <g transform="translate(440, 73)" key="legend">
-      <text key={1} fill={theme[0]}>
-        New York
-      </text>
-      <text key={1} y={20} fill={theme[1]}>
-        Las Vegas
-      </text>
-      <text key={1} y={40} fill={theme[2]}>
-        San Diego
-      </text>
-      <text key={1} y={60} fill={theme[3]}>
-        Denver
-      </text>
-      <text key={1} y={80} fill={theme[4]}>
-        Oakland
-      </text>
-    </g>
-  ]`
+  edgeStyle: `d => ({
+  fill: theme[d.source.group + 1],
+  stroke: theme[d.source.group + 1],
+  fillOpacity: 0.75
+})`
 }
 
 export default function SwarmPlot() {
@@ -421,9 +391,6 @@ A way to show change between two points in time.
         frameProps={frameProps}
         overrideProps={overrideProps}
         type={NetworkFrame}
-        pre={`
-const theme = ${JSON.stringify(theme)}          
-          `}
         useExpanded
       />
     </div>

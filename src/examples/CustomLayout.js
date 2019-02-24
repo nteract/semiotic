@@ -70,8 +70,6 @@ const tree = {
   ]
 }
 
-const colors = theme
-
 const flexLayoutSize = [700, 700]
 //Because flextree returns nodes spaced in a way unlike the standard d3-hierarchy layouts, we need to pass a custom function to the networkType zoom prop. That function is passed (nodes, size) and you can adjust the position of the nodes accordingly
 const flextreeZoom = (nodes, size) => {
@@ -98,8 +96,8 @@ const frameProps = {
   size: flexLayoutSize,
   edges: tree,
   edgeStyle: d => ({
-    fill: colors[d.source.depth],
-    stroke: colors[d.source.depth],
+    fill: theme[d.source.depth],
+    stroke: theme[d.source.depth],
     strokeWidth: 5,
     opacity: 0.5
   }),
@@ -127,14 +125,12 @@ const frameProps = {
 }
 
 const overrideProps = {
-  title: `(
-    <text textAnchor="middle">
-      Weekly(1-52) Box Office Totals from <tspan fill={
-        theme[0]}
-      >2016</tspan> -
-      mid <tspan fill={theme[2]}>2017</tspan>
-    </text>
-  )`,
+  edgeStyle: `d => ({
+    fill: theme[d.source.depth],
+    stroke: theme[d.source.depth],
+    strokeWidth: 5,
+    opacity: 0.5
+  })`,
   customNodeIcon: `({ d }) => {
     return (
       <rect
@@ -170,9 +166,6 @@ A way to show change between two points in time.
         frameProps={frameProps}
         overrideProps={overrideProps}
         type={NetworkFrame}
-        pre={`
-const theme = ${JSON.stringify(theme)}          
-          `}
         useExpanded
       />
     </div>

@@ -21,6 +21,7 @@ import HierarchicalDiagram from "./guides/HierarchicalDiagram"
 import SmallMultiples from "./guides/SmallMultiples"
 import CrossHighlighting from "./guides/CrossHighlighting"
 import Tooltips from "./guides/Tooltips"
+import Test from "./Test"
 import Annotations from "./guides/Annotations"
 import UsingSketchyPaintyPatterns from "./guides/UsingSketchyPaintyPatterns"
 import ForegroundBackgroundSVG from "./guides/ForegroundBackgroundSVG"
@@ -403,6 +404,10 @@ export const PAGES = [
 
 const FallbackPage = props => {
   window.history.replaceState(null, null, "/")
+  if (window.location.pathname === "/test") {
+    return <Test {...props} />
+  }
+
   return <Home {...props} />
 }
 

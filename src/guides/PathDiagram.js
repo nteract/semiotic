@@ -161,9 +161,6 @@ The built in path types are \`sankey\`, \`arc\`, \`chord\`, and \`dagre\`.
       <DocumentFrame
         frameProps={frameprops}
         type={NetworkFrame}
-        pre={`
-const theme = ${JSON.stringify(theme)}          
-`}
         overrideProps={overrideProps}
       />
 
@@ -198,9 +195,6 @@ This example is the same as the sankey except we are passing \`networkType="arc"
       <DocumentFrame
         frameProps={arc}
         type={NetworkFrame}
-        pre={`
-const theme = ${JSON.stringify(theme)}          
-`}
         startHidden
         overrideProps={overrideProps}
       />
@@ -228,9 +222,6 @@ This example is the same as the sankey except we are passing \`networkType="chor
       <DocumentFrame
         frameProps={chord}
         type={NetworkFrame}
-        pre={`
-const theme = ${JSON.stringify(theme)}          
-`}
         startHidden
         overrideProps={overrideProps}
       />

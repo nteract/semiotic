@@ -1,6 +1,7 @@
 import React from "react"
 import { OrdinalFrame } from "semiotic"
 import { processNodes } from "./process"
+import theme from "./theme"
 
 const objectToString = (obj, indent, trimmed) => {
   if (!obj) return ""
@@ -106,12 +107,34 @@ const getFramePropsString = (frameProps, functions, overrideProps, trimmed) => {
 }
 
 const getCodeBlock = (frameName, pre, functionsString, framePropsString) => {
-  return `import ${frameName} from "semiotic/lib/${frameName}"
+  const importTheme = `const theme = ${JSON.stringify(theme)}`
+
+  let codeblock = `import ${frameName} from "semiotic/lib/${frameName}"
+${importTheme}
 ${pre || ""}${(pre && "\n") || ""}${functionsString}${framePropsString}
 
 export default () => {
   return <${frameName} {...frameProps} />
 }`
+  let addImport = false
+
+  if (codeblock.indexOf("theme") !== -1) {
+    codeblock = codeblock.replace(/theme\[(.*?)]/g, (s, m) => {
+      const tryParse = parseInt(m)
+      if (isNaN(tryParse)) {
+        addImport = true
+        return s
+      }
+
+      return `"${theme[m]}"`
+    })
+  }
+
+  if (!addImport) {
+    codeblock = codeblock.replace(importTheme + "\n", "")
+  }
+
+  return codeblock
 }
 
 const styles = {

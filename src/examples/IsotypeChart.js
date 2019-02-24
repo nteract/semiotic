@@ -138,38 +138,54 @@ const frameProps = {
 }
 
 const overrideProps = {
-  title: `(
-    <text textAnchor="middle">
-      Weekly(1-52) Box Office Totals from <tspan fill={
-        theme[0]}
-      >2016</tspan> -
-      mid <tspan fill={theme[2]}>2017</tspan>
-    </text>
-  )`,
-  tooltipContent: `d => (
-    <div>
-      {d.date} - {Math.round(d.total / 1000000)}m
-    </div>
-  )
-  `,
-  foregroundGraphics: ` [
-    <g transform="translate(440, 73)" key="legend">
-      <text key={1} fill={theme[0]}>
-        New York
-      </text>
-      <text key={1} y={20} fill={theme[1]}>
-        Las Vegas
-      </text>
-      <text key={1} y={40} fill={theme[2]}>
-        San Diego
-      </text>
-      <text key={1} y={60} fill={theme[3]}>
-        Denver
-      </text>
-      <text key={1} y={80} fill={theme[4]}>
-        Oakland
-      </text>
+  foregroundGraphics: `(
+    <g>
+      <g transform="translate(20,165)">
+        <rect fill={theme[1]} x={-10} y={-10} width={93} height={55} />
+        <text fontWeight="700" fill="white" x={5} y={15}>
+          DATA VIZ
+        </text>
+        <text fontWeight="700" fill="white" x={5} y={30}>
+          EXPERTS
+        </text>
+      </g>
+      <g transform="translate(505,10)">
+        <rect fill={theme[2]} x={-10} y={-10} width={123} height={40} />
+        <text fontWeight="700" fill="white" x={5} y={15}>
+          JOURNALISTS
+        </text>
+      </g>
+      <g transform="translate(0,300)">
+        <line strokeWidth={2} stroke={"darkgray"} x1={10} x2={620} />
+      </g>
+      <g fill="darkgray" transform="translate(5,305)">
+        <text fontWeight="700" x={5} y={15}>
+          CREATE MORE
+        </text>
+        <text fontWeight="700" x={5} y={30}>
+          DATA VIZ EACH DAY
+        </text>
+      </g>
+      <g fill="darkgray" textAnchor="end" transform="translate(615,305)">
+        <text fontWeight="700" x={5} y={15}>
+          WRITE MORE
+        </text>
+        <text fontWeight="700" x={5} y={30}>
+          EACH DAY
+        </text>
+      </g>
     </g>
+  )`,
+  annotations: `[
+    {
+      writeviz: 0.25,
+      number: 2,
+      dx: -0.01,
+      dy: -50,
+      color: theme[1],
+      type: AnnotationCalloutElbow,
+      note: { title: "Data viz peep who discovered her love for writing" }
+    }
   ]`
 }
 
@@ -188,9 +204,6 @@ Based on a [beautiful icon chart by Lisa Charlotte Rost](https://lisacharlottero
         frameProps={frameProps}
         overrideProps={overrideProps}
         type={OrdinalFrame}
-        pre={`
-const theme = ${JSON.stringify(theme)}          
-          `}
         useExpanded
       />
     </div>

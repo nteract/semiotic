@@ -106,9 +106,6 @@ The built in force types are \`force\`, and \`motifs\`.
           }}
           // overrideProps={overrideProps}
           type={NetworkFrame}
-          pre={`
-const theme = ${JSON.stringify(theme)}          
-  `}
         />
         <MarkdownText
           text={`
@@ -126,9 +123,6 @@ This example is the same as the example above with the additional prop \`edgeTyp
           }}
           // overrideProps={overrideProps}
           type={NetworkFrame}
-          pre={`
-const theme = ${JSON.stringify(theme)}          
-`}
           startHidden
         />
         <MarkdownText
@@ -152,11 +146,7 @@ This example is the same as the original force example except the top-level node
               type: "motifs"
             }
           }}
-          // overrideProps={overrideProps}
           type={NetworkFrame}
-          pre={`
-const theme = ${JSON.stringify(theme)}          
-`}
           startHidden
         />
 

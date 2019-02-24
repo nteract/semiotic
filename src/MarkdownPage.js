@@ -42,7 +42,7 @@ export default class MarkdownPage extends React.Component {
               }
             }
           )
-          window.Prism.highlightAll()
+          window.Prism && window.Prism.highlightAll()
         })
     }
   }

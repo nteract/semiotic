@@ -1,10 +1,10 @@
-import React from "react";
-import DocumentFrame from "../DocumentFrame";
-import { OrdinalFrame } from "semiotic";
-import theme from "../theme";
-import MarkdownText from "../MarkdownText";
+import React from "react"
+import DocumentFrame from "../DocumentFrame"
+import { OrdinalFrame } from "semiotic"
+import theme from "../theme"
+import MarkdownText from "../MarkdownText"
 
-const ROOT = process.env.PUBLIC_URL;
+const ROOT = process.env.PUBLIC_URL
 
 const frameProps = {
   size: [700, 450],
@@ -29,7 +29,7 @@ const frameProps = {
     type: "swarm",
     r: 14,
     customMark: d => {
-      const [year, week] = d.date.split("-");
+      const [year, week] = d.date.split("-")
       return (
         <g>
           <circle
@@ -46,7 +46,7 @@ const frameProps = {
             {week}
           </text>
         </g>
-      );
+      )
     }
   },
   tooltipContent: d => (
@@ -55,7 +55,7 @@ const frameProps = {
     </div>
   ),
   pieceHoverAnnotation: true
-};
+}
 
 const overrideProps = {
   title: `(
@@ -97,21 +97,21 @@ const overrideProps = {
     }
   }
   `
-};
+}
 
 export default class SwarmPlot extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
 
     fetch(`${ROOT}/data/boxofficetotals.json`)
       .then(response => response.json())
       .then(data => {
-        this.setState({ ...frameProps, data });
-      });
+        this.setState({ ...frameProps, data })
+      })
   }
 
   render() {
-    if (!this.state) return null;
+    if (!this.state) return null
 
     return (
       <div>
@@ -126,12 +126,9 @@ Swarm plots allow you have position your data based on an numerical value but ap
           frameProps={this.state || {}}
           overrideProps={overrideProps}
           type={OrdinalFrame}
-          pre={`
-const theme = ${JSON.stringify(theme)}          
-          `}
           useExpanded
         />
       </div>
-    );
+    )
   }
 }

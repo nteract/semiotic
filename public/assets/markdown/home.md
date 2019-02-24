@@ -40,4 +40,4 @@ with the following import syntax:
 const { NetworkFrame } = Semiotic
 ```
 
-These examples use [some CSS](https://github.com/nteract/semiotic-docs/blob/master/public/semiotic.css) to make things look nice.
+In addition to the React components, these examples also rely on some basic [CSS](https://github.com/nteract/semiotic-docs/blob/master/public/semiotic.css) for styling.
