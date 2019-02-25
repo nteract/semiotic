@@ -65,6 +65,9 @@ const red = [
 ]
 
 const ordinalData = blue.concat(red)
+const ordinalData2 = blue
+  .concat(red)
+  .map(d => ({ ...d, value: d.value * Math.random() * 4 }))
 
 const xyFrameData2 = [
   {
@@ -93,7 +96,8 @@ export default function() {
     <div>
       <MarkdownText
         text={`
-      
+# Test Reload
+        
 Faceting is accomplshed using the \`FacetController\`, which is a wrapper that uses composition to decorate any child frames (whether \`ORFrame\`, \`NetworkFrame\` or \`XYFrame\` in any mix) with the valid attributes from \`FacetController\` while implementing two features to help with faceting:
 
 \`pieceHoverAnnotation\` or \`hoverAnnotation\` set to true will create tooltips across the frames. You still need to set \`lineIDAccessor\` and/or \`pieceIDAccessor\` to appropriate values for this to work relatively. If your pieces in \`ORFrame\` have matching data structures with points in \`XYFrame\` then you will also see tooltips across frames. Currently the hover annotation settings in \`FacetController\` only accept true but in the future will respect the model in the rest of Semiotic where you can send an array of annotation types or functions returning annotation types which will be propagated across frames.
@@ -125,6 +129,7 @@ Faceting is accomplshed using the \`FacetController\`, which is a wrapper that u
         react15Wrapper={<div style={{ display: "flex" }} />}
       >
         <OrdinalFrame data={ordinalData} title="OrdinalFrame" />
+        <OrdinalFrame data={ordinalData2} title="OrdinalFrame" />
         <XYFrame title={"XYFrame"} lines={xyFrameData2} />
         <XYFrame title={"XYFrame"} lines={xyFrameData3} />
       </FacetController>
