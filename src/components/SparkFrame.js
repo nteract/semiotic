@@ -23,7 +23,7 @@ function sparkNetworkSettings(originalSettings = "force") {
   return originalSettings
 }
 
-const createSparkFrame = (Frame, defaults) =>
+const createSparkFrame = (Frame, defaults, frameName) =>
   class SparkFrame extends React.Component {
     constructor(props) {
       super(props)
@@ -34,7 +34,7 @@ const createSparkFrame = (Frame, defaults) =>
       }
     }
 
-    static displayName = Frame.displayName
+    static displayName = frameName
 
     static propTypes = {
       size: PropTypes.oneOfType([PropTypes.array, PropTypes.number])

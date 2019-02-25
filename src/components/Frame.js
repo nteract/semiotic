@@ -391,6 +391,7 @@ class Frame extends React.Component<Props, State> {
             projection={projection}
             interactionOverflow={interactionOverflow}
             disableCanvasInteraction={disableCanvasInteraction}
+            renderPipeline={renderPipeline}
           />
           {annotationLayer}
         </SpanOrDiv>

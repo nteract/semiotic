@@ -186,25 +186,45 @@ class InteractionLayer extends React.Component<Props, State> {
       this.props.customDoubleClickBehavior(dataObject)
   }
 
-  brushStart = (e: ?Array<number> | Array<Array<number>>, column?: string) => {
+  brushStart = (
+    e: ?Array<number> | Array<Array<number>>,
+    column?: string,
+    data: Array<Object>
+  ) => {
     if (this.props.interaction && this.props.interaction.start)
-      this.props.interaction.start(e, column)
+      this.props.interaction.start(e, column, data)
   }
 
-  brush = (e: ?Array<number> | Array<Array<number>>, column?: string) => {
+  brush = (
+    e: ?Array<number> | Array<Array<number>>,
+    column?: string,
+    data: Array<Object>
+  ) => {
     if (this.props.interaction && this.props.interaction.during)
-      this.props.interaction.during(e, column)
+      this.props.interaction.during(e, column, data)
   }
 
-  brushEnd = (e: ?Array<number> | Array<Array<number>>, column?: string) => {
+  brushEnd = (
+    e: ?Array<number> | Array<Array<number>>,
+    column?: string,
+    data: Array<Object>
+  ) => {
     if (this.props.interaction && this.props.interaction.end)
-      this.props.interaction.end(e, column)
+      this.props.interaction.end(e, column, data)
   }
 
   createBrush = (interaction: Object) => {
     let semioticBrush, mappingFn, selectedExtent, endMappingFn
 
-    const { xScale, yScale, size } = this.props
+    const { xScale, yScale, size, renderPipeline } = this.props
+
+    const brushData = {}
+
+    Object.entries(renderPipeline).forEach(([key, value]) => {
+      if (value.data && value.data.length > 0) {
+        brushData[key] = value.data
+      }
+    })
 
     const { projection, projectedColumns } = interaction
 
@@ -344,13 +364,13 @@ class InteractionLayer extends React.Component<Props, State> {
     semioticBrush
       .extent([[0, 0], [this.props.size[0], this.props.size[1]]])
       .on("start", () => {
-        this.brushStart(mappingFn(event.selection))
+        this.brushStart(mappingFn(event.selection), undefined, brushData)
       })
       .on("brush", () => {
-        this.brush(mappingFn(event.selection))
+        this.brush(mappingFn(event.selection), undefined, brushData)
       })
       .on("end", () => {
-        this.brushEnd(endMappingFn(event.selection))
+        this.brushEnd(endMappingFn(event.selection), undefined, brushData)
       })
 
     return (
@@ -591,9 +611,17 @@ class InteractionLayer extends React.Component<Props, State> {
   }
 
   createColumnsBrush = (interaction: Object) => {
-    const { projection, rScale, size, oColumns } = this.props
+    const { projection, rScale, size, oColumns, renderPipeline } = this.props
 
     if (!projection || !rScale || !oColumns) return
+
+    const brushData = {}
+
+    Object.entries(renderPipeline).forEach(([key, value]) => {
+      if (value.data && value.data.length > 0) {
+        brushData[key] = value.data
+      }
+    })
 
     let semioticBrush, mappingFn
 
@@ -628,13 +656,13 @@ class InteractionLayer extends React.Component<Props, State> {
         semioticBrush
           .extent([[rRange[0], 0], [rRange[1], columnHash[c].width]])
           .on("start", () => {
-            this.brushStart(mappingFn(event.selection), c)
+            this.brushStart(mappingFn(event.selection), c, brushData)
           })
           .on("brush", () => {
-            this.brush(mappingFn(event.selection), c)
+            this.brush(mappingFn(event.selection), c, brushData)
           })
           .on("end", () => {
-            this.brushEnd(mappingFn(event.selection), c)
+            this.brushEnd(mappingFn(event.selection), c, brushData)
           })
       } else {
         selectedExtent = interaction.extent[c]
@@ -645,13 +673,13 @@ class InteractionLayer extends React.Component<Props, State> {
         semioticBrush
           .extent([[0, rRange[0]], [columnHash[c].width, rRange[1]]])
           .on("start", () => {
-            this.brushStart(mappingFn(event.selection), c)
+            this.brushStart(mappingFn(event.selection), c, brushData)
           })
           .on("brush", () => {
-            this.brush(mappingFn(event.selection), c)
+            this.brush(mappingFn(event.selection), c, brushData)
           })
           .on("end", () => {
-            this.brushEnd(mappingFn(event.selection), c)
+            this.brushEnd(mappingFn(event.selection), c, brushData)
           })
       }
 
