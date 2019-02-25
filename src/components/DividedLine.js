@@ -28,7 +28,7 @@ class DividedLine extends React.Component {
       ...rest
     } = this.props
 
-    const data = projectLineData({
+    const lineData = projectLineData({
       data: data,
       lineDataAccessor: [lineDataAccessor],
       xProp: "_x",
@@ -38,11 +38,11 @@ class DividedLine extends React.Component {
     })
 
     //Compatibility before Semiotic 2
-    data.forEach(projectedD => {
+    lineData.forEach(projectedD => {
       projectedD.data = projectedD.data.map(d => ({ ...d.data, ...d }))
     })
 
-    const lines = dividedLine(parameters, data[0].data, searchIterations)
+    const lines = dividedLine(parameters, lineData[0].data, searchIterations)
 
     const lineRender = line()
       .curve(interpolate)
