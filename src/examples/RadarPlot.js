@@ -61,11 +61,7 @@ const frameProps = {
   title: "Pokemon Base Stats",
   axis: true,
   data,
-  // axis: [
-  //   {
-  //     label: { name: "Windiness", locationDistance: 15 }
-  //   }
-  // ],
+
   style: d => ({
     fill: d.color,
     stroke: "white",
@@ -103,14 +99,6 @@ const frameProps = {
 }
 
 const overrideProps = {
-  title: `(
-    <text textAnchor="middle">
-      Weekly(1-52) Box Office Totals from <tspan fill={
-        theme[0]}
-      >2016</tspan> -
-      mid <tspan fill={theme[2]}>2017</tspan>
-    </text>
-  )`,
   tooltipContent: `d => (
     <div>
       {d.date} - {Math.round(d.total / 1000000)}m

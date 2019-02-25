@@ -276,11 +276,11 @@ This data is from the [List of Presidents of the United States](https://en.wikip
         overrideProps={overrideProps}
         type={OrdinalFrame}
         pre={`const colors = {
-          Democratic: 4,
-          Republican: 1,
-          "Democratic-Republican": 2,
-          Whig: 3
-        }`}
+  Democratic: 4,
+  Republican: 1,
+  "Democratic-Republican": 2,
+  Whig: 3
+}`}
         useExpanded
       />
     </div>

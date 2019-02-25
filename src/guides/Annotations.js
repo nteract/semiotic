@@ -158,7 +158,91 @@ const overrideProps = {
       <p>Date: {d.date}</p>
       <p>Closing Price: \${d.close}</p>
     </div>
-  )`
+  )`,
+  annotations: `[
+    {
+      className: "dot-com-bubble",
+      type: "bounds",
+      bounds: [{ date: new Date("1/2/1997") }, { date: new Date("1/2/2001") }],
+      label: "The dot-com bubble",
+      dx: 250,
+      color: theme[5]
+    },
+    {
+      type: "x",
+      date: "7/9/1997",
+      note: {
+        label: "Steve Jobs Returns",
+        align: "middle",
+        lineType: null,
+        wrap: 100
+      },
+      color: theme[9],
+      dy: -10,
+      dx: 0,
+      connector: { end: "none" }
+    },
+    {
+      type: "x",
+      date: "8/15/1998",
+      note: { label: "iMac Release", align: "middle", lineType: null, wrap: 50 },
+      color: theme[9],
+      dy: -10,
+      dx: 0,
+      connector: { end: "none" }
+    },
+    {
+      type: "x",
+      date: "10/23/2001",
+      note: { label: "iPod Release", align: "middle", lineType: null, wrap: 50 },
+      color: theme[9],
+      dy: -10,
+      dx: 0,
+      connector: { end: "none" }
+    },
+    {
+      type: AnnotationXYThreshold,
+      note: {
+        label: "Above $100",
+        lineType: null,
+        orientation: "topBottom",
+        align: "middle"
+      },
+      color: theme[0],
+      date: "7/1/1999",
+      close: 100,
+      subject: {
+        x1: 250,
+        x2: 400
+      },
+      dx: 0,
+      dy: -20
+    },
+    {
+      type: "enclose",
+      note: {
+        label: "Stock Split 2:1",
+        orientation: "leftRight",
+        align: "middle",
+        lineType: null,
+        wrap: 50
+      },
+      dy: 0,
+      dx: 80,
+      color: theme[1],
+      connector: { end: "none" },
+      coordinates: [
+        {
+          date: "6/21/2000",
+          close: 55.62
+        },
+        {
+          date: "6/20/2000",
+          close: 101.25
+        }
+      ]
+    }
+  ]`
 }
 
 export default class Annotations extends React.Component {
@@ -218,7 +302,10 @@ It also uses a custom x scale using xScaleType to pass a scale built with D3's s
           frameProps={this.state || {}}
           overrideProps={overrideProps}
           type={XYFrame}
-          pre={`import { scaleTime } from "d3-scale"`}
+          pre={`import { scaleTime } from "d3-scale"
+import DividedLine from "semiotic/lib/DividedLine"
+import { AnnotationXYThreshold } from "react-annotation"
+`}
           useExpanded
         />
         <MarkdownPage filename="annotations" />

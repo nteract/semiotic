@@ -1,6 +1,6 @@
 import React from "react"
 import MarkdownPage from "../MarkdownPage"
-import DocumentFrame from "../DocumentFrame"
+import DocumentFrame, { propertyToString } from "../DocumentFrame"
 import { XYFrame } from "semiotic"
 import lines from "./sharedTooltipData"
 import { scaleTime } from "d3-scale"
@@ -114,6 +114,8 @@ const overrideProps = {
   { orient: "left" },
   { orient: "bottom", ticks: 6, tickFormat: d => timeFormat("%m/%d")(d) }
 ]`,
+  lines: "lines",
+  xScaleType: "scaleTime()",
   tooltipContent: `d => {
     const points = lines
       .map(point => {
@@ -170,7 +172,6 @@ const overrideProps = {
         {returnArray}
       </div>
     );
-  }
 }`
 }
 
@@ -188,6 +189,28 @@ export default () => {
         frameProps={sharedTooltipChart}
         type={XYFrame}
         overrideProps={overrideProps}
+        pre={`import { scaleTime } from "d3-scale"
+import { timeFormat } from "d3-time-format"
+
+const tooltipStyles = {
+  header: {
+    fontWeight: "bold",
+    borderBottom: "thin solid black",
+    marginBottom: "10px",
+    textAlign: "center"
+  },
+  lineItem: { position: "relative", display: "block", textAlign: "left" },
+  title: { display: "inline-block", margin: "0 5px 0 15px" },
+  value: { display: "inline-block", fontWeight: "bold", margin: "0" },
+  wrapper: {
+    background: "rgba(255,255,255,0.8)",
+    minWidth: "max-content",
+    whiteSpace: "nowrap"
+  }
+}
+
+const lines = ${propertyToString(lines, 0, false)}
+        `}
       />
     </div>
   )

@@ -9,6 +9,7 @@ import { extent } from "d3-array"
 import { scaleLinear } from "d3-scale"
 
 const velocityExtent = extent(data.map(d => d.exit_velocity))
+
 const velocityScale = scaleLinear()
   .domain(velocityExtent)
   .range([theme[2], theme[1]])
@@ -125,7 +126,22 @@ const overrideProps = {
       <p>Distance: {d.distance}</p>
       <p>Velocity: {d.exit_velocity}</p>
     </div>
-  )`
+  )`,
+  annotations: `[
+    {
+      type: "enclose",
+      dy: -120,
+      dx: -1,
+      note: {
+        padding: 10,
+        align: "middle",
+        lineType: null,
+        label: "Shortest distance home runs."
+      },
+      connector: { end: "dot" },
+      coordinates: [{ bx: 235, by: 250 }, { bx: 235, by: 275 }]
+    }
+  ]`
 }
 
 const HomerunMap = () => {
@@ -144,11 +160,9 @@ Giancarlo Stanton's home runs shown with his park outline based on [Daren Willma
         overrideProps={overrideProps}
         pre={`
 import { scaleLinear } from 'd3-scale'
-import { extent } from 'd3-array'     
 
-const velocityExtent = extent(data.map(d => d.exit_velocity))
 const velocityScale = scaleLinear()
-    .domain(velocityExtent)
+    .domain([95.1, 118.2])
     .range([theme[2], theme[1]])
         `}
         useExpanded

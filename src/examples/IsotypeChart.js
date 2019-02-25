@@ -138,6 +138,12 @@ const frameProps = {
 }
 
 const overrideProps = {
+  type: `{
+    type: "bar",
+    icon: d => iconHash[d.type],
+    iconPadding: 2,
+    resize: "fixed"
+  }`,
   foregroundGraphics: `(
     <g>
       <g transform="translate(20,165)">
@@ -203,6 +209,12 @@ Based on a [beautiful icon chart by Lisa Charlotte Rost](https://lisacharlottero
       <DocumentFrame
         frameProps={frameProps}
         overrideProps={overrideProps}
+        pre={`import AnnotationCalloutElbow from "react-annotation/lib/Types/AnnotationCalloutElbow"
+const colorHash = {
+  journalist: theme[2],
+  viz: theme[1]
+}
+const iconHash = ${JSON.stringify(iconHash)}`}
         type={OrdinalFrame}
         useExpanded
       />

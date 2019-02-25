@@ -86,10 +86,10 @@ const overrideProps = {
       to <tspan fill={theme[5]}>2013</tspan>
     </text>
   )`,
-  svgAnnotationRules: `function drawRange({ d, rScale, orFrameState }) {
+  svgAnnotationRules: `({ d, rScale, orFrameState }) => {
     if (d.type === "range") {
-      const start = rScale(d.y1990) - dotRadius
-      const end = rScale(d.y2013) + dotRadius
+      const start = rScale(d.y1990) + dotRadius
+      const end = rScale(d.y2013) - dotRadius
       const y = orFrameState.projectedColumns[d.region].middle
       return (
         <line
@@ -122,6 +122,7 @@ Because annotations are drawn on top of the visualization layer, we need to acco
         frameProps={frameProps}
         overrideProps={overrideProps}
         type={OrdinalFrame}
+        pre={`const dotRadius = 8`}
         useExpanded
       />
     </div>

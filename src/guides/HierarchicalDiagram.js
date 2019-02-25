@@ -146,6 +146,28 @@ const tree = {
   size: [700, 400]
 }
 
+const treeOverride = {
+  ...overrideProps,
+  nodeLabels: `d => {
+    return d.depth > 1 ? null : (
+      <g transform="translate(0,-15)">
+        <text
+          fontSize="12"
+          textAnchor="middle"
+          strokeWidth={2}
+          stroke="white"
+          fill="white"
+        >
+          {d.id}
+        </text>
+        <text fontSize="12" textAnchor="middle" fill={theme[d.depth]}>
+          {d.id}
+        </text>
+      </g>
+    )
+  }`
+}
+
 const circlepack = {
   ...sunburst,
   networkType: "circlepack",
@@ -179,7 +201,25 @@ const circlepackOverrideProps = {
   nodeStyle: `d => ({
     fill: "none",
     stroke: theme[d.depth]
-  })`
+  })`,
+  nodeLabels: `d => {
+    return d.depth > 1 ? null : (
+      <g transform="translate(0,5)">
+        <text
+          fontSize="12"
+          textAnchor="middle"
+          strokeWidth={2}
+          stroke="white"
+          fill="white"
+        >
+          {d.id}
+        </text>
+        <text fontSize="12" textAnchor="middle" fill={theme[d.depth]}>
+          {d.id}
+        </text>
+      </g>
+    )
+  },`
 }
 
 const treemap = {
@@ -208,6 +248,33 @@ const treemap = {
     stroke: theme[d.depth]
   }),
   networkType: { type: "treemap", padding: 2 }
+}
+
+const treemapOverrideProps = {
+  ...overrideProps,
+  nodeLabels: `d => {
+    return d.depth > 1 ? null : (
+      <g transform="translate(0,5)">
+        <text
+          fontSize="18"
+          textAnchor="middle"
+          strokeWidth={2}
+          stroke="white"
+          fill="white"
+        >
+          {d.id}
+        </text>
+        <text fontSize="18" textAnchor="middle" fill={theme[d.depth]}>
+          {d.id}
+        </text>
+      </g>
+    )
+  }`,
+  nodeStyle: `d => ({
+    fill: d.height === 0 ? theme[d.depth] : "none",
+    fillOpacity: 1,
+    stroke: theme[d.depth]
+  })`
 }
 
 export default class HierarchicalDiagrams extends React.Component {
@@ -241,7 +308,7 @@ In this example, we pass a hierarchical edge object and set \`networkType: "tree
         />
         <DocumentFrame
           frameProps={{ ...tree, edges: this.state.data }}
-          overrideProps={overrideProps}
+          overrideProps={treeOverride}
           type={NetworkFrame}
         />
         <MarkdownText
@@ -311,7 +378,7 @@ This example is the same as the dendrogram except we are passing \`networkType="
 
         <DocumentFrame
           frameProps={{ ...treemap, edges: this.state.data }}
-          overrideProps={overrideProps}
+          overrideProps={treemapOverrideProps}
           type={NetworkFrame}
           startHidden
         />

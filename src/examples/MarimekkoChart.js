@@ -96,6 +96,12 @@ The Marimekko chart shows aggregate value of segments along with percent breakdo
         frameProps={frameProps}
         overrideProps={overrideProps}
         type={OrdinalFrame}
+        pre={`const colors = {
+  "Almond lovers": theme[0],
+  "Berry buyers": theme[1],
+  "Carrots-n-more": theme[2],
+  "Delicious-n-new": theme[3]
+}`}
         useExpanded
       />
     </div>

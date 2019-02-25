@@ -242,6 +242,9 @@ The custom type story still isn't so good. You have to do things that are typica
         functions={{
           waterfall
         }}
+        pre={`const purple = "${purple}"
+const green = "${green}"
+const red = "${red}"`}
         type={OrdinalFrame}
         useExpanded
       />

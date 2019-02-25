@@ -1,9 +1,9 @@
 import React from "react"
 import MarkdownText from "../MarkdownText"
-import DocumentFrame, { propertyToString } from "../DocumentFrame"
-import { NetworkFrame, nodesEdgesFromHierarchy } from "semiotic"
+import DocumentFrame from "../DocumentFrame"
+import { NetworkFrame } from "semiotic"
 import theme from "../theme"
-import { hierarchy } from "d3-hierarchy"
+// import { hierarchy } from "d3-hierarchy"
 import { forceSimulation, forceY, forceCollide } from "d3-force"
 
 const frameProps = {
@@ -60,7 +60,14 @@ const bubbleOverrideProps = {
     zoom: false
   }
   `,
-  nodes: propertyToString(combinedFociNodes, 0, true)
+  nodes: combinedFociNodes.map(d => ({
+    name: d.name,
+    r: d.r,
+    fociX: d.fociX,
+    fociY: d.fociY,
+    combinedY: d.combinedY,
+    color: d.color
+  }))
 }
 
 const ROOT = process.env.PUBLIC_URL
@@ -74,21 +81,14 @@ export default class ForceLayouts extends React.Component {
     fetch(`${ROOT}/data/flare.json`)
       .then(response => response.json())
       .then(res => {
-        const data = nodesEdgesFromHierarchy(hierarchy(res))
-
         this.setState({
-          data,
-          hierarchy: res,
-
-          hierarchyOverrideProps: {
-            edges: propertyToString(res, 0, true)
-          }
+          hierarchy: res
         })
       })
   }
 
   render() {
-    if (!this.state.data) return "Loading..."
+    if (!this.state.hierarchy) return "Loading..."
     return (
       <div>
         <MarkdownText
@@ -112,7 +112,7 @@ The built in force types are \`force\`, and \`motifs\`.
             ...frameProps,
             edges: this.state.hierarchy
           }}
-          overrideProps={this.state.hierarchyOverrideProps}
+          // overrideProps={this.state.hierarchyOverrideProps}
           type={NetworkFrame}
         />
         <MarkdownText
@@ -129,31 +129,7 @@ This example is the same as the example above with the additional prop \`edgeTyp
             edges: this.state.hierarchy,
             edgeType: "linearc"
           }}
-          overrideProps={this.state.hierarchyOverrideProps}
-          type={NetworkFrame}
-          startHidden
-        />
-        <MarkdownText
-          text={`
-## Force Layout with Motifs
-
-This example is the same as the original force example except the top-level nodes and edges are filtered out, and the \`networkType\` is \`motifs\`
-`}
-        />
-
-        <DocumentFrame
-          frameProps={{
-            ...frameProps,
-            size: [800, 400],
-            nodes: this.state.data.nodes.filter(d => d.depth !== 0),
-            edges: this.state.data.edges.filter(
-              d => d.source.depth !== 0 && d.target.depth !== 0
-            ),
-            networkType: {
-              ...frameProps.networkType,
-              type: "motifs"
-            }
-          }}
+          // overrideProps={this.state.hierarchyOverrideProps}
           type={NetworkFrame}
           startHidden
         />
@@ -226,8 +202,6 @@ const customSimulation = forceSimulation().force(
 
 
 ## Bubble Chart
-
-
 
   `}
         />

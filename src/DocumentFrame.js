@@ -57,8 +57,15 @@ const getFunctionString = (functions, overrideProps) => {
   return functionsString
 }
 
-const getFramePropsString = (frameProps, functions, overrideProps, trimmed) => {
+const getFramePropsString = (
+  frameProps,
+  functions,
+  overrideProps,
+  trimmed,
+  hiddenProps
+) => {
   const frameString = Object.keys(frameProps)
+    .filter(d => !hiddenProps[d])
     .map(d => {
       const order = processNodes.findIndex(p => p.keys.indexOf(d) !== -1)
 
@@ -91,7 +98,9 @@ const getFramePropsString = (frameProps, functions, overrideProps, trimmed) => {
 
     let string =
       (functions[d.key] && (functions[d.key].name || d.key)) ||
-      overrideProps[d.key] ||
+      (overrideProps[d.key] && typeof overrideProps[d.key] === "string"
+        ? overrideProps[d.key]
+        : propertyToString(overrideProps[d.key], 0, trimmed)) ||
       propertyToString(d.value, 0, trimmed)
 
     if (string !== "") {
@@ -106,16 +115,26 @@ const getFramePropsString = (frameProps, functions, overrideProps, trimmed) => {
   return framePropsString
 }
 
-const getCodeBlock = (frameName, pre, functionsString, framePropsString) => {
+const getCodeBlock = (
+  frameName,
+  pre,
+  functionsString,
+  framePropsString,
+  overrideRender
+) => {
   const importTheme = `const theme = ${JSON.stringify(theme)}`
 
-  let codeblock = `import ${frameName} from "semiotic/lib/${frameName}"
-${importTheme}
-${pre || ""}${(pre && "\n") || ""}${functionsString}${framePropsString}
-
-export default () => {
+  let render =
+    overrideRender ||
+    `export default () => {
   return <${frameName} {...frameProps} />
 }`
+
+  let codeblock = `import ${frameName} from "semiotic/lib/${frameName}"
+${pre || ""}${(pre && "\n") || ""}${importTheme}
+${functionsString}${framePropsString}
+
+${render}`
   let addImport = false
 
   if (codeblock.indexOf("theme") !== -1) {
@@ -154,15 +173,12 @@ class DocumentFrame extends React.Component {
     this.onClick = this.onClick.bind(this)
     this.onCopy = this.onCopy.bind(this)
 
-    // this.state = {
-    //   codeBlock: props.startHidden
-    //     ? "hidden"
-    //     : props.useExpanded
-    //     ? "expanded"
-    //     : "collapsed"
-    // }
     this.state = {
-      codeBlock: "expanded"
+      codeBlock: props.startHidden
+        ? "hidden"
+        : props.useExpanded
+        ? "expanded"
+        : "collapsed"
     }
   }
 
@@ -180,7 +196,9 @@ class DocumentFrame extends React.Component {
       type = OrdinalFrame,
       overrideProps = {},
       functions = {},
-      pre
+      pre,
+      overrideRender,
+      hiddenProps = {}
     } = this.props
 
     const Frame = type
@@ -188,14 +206,22 @@ class DocumentFrame extends React.Component {
     const framePropsString = getFramePropsString(
       frameProps,
       functions,
-      overrideProps
+      overrideProps,
+      false,
+      hiddenProps
     )
 
     const functionsString = getFunctionString(functions, overrideProps)
 
     const frameName = Frame.displayName
 
-    const text = getCodeBlock(frameName, pre, functionsString, framePropsString)
+    const text = getCodeBlock(
+      frameName,
+      pre,
+      functionsString,
+      framePropsString,
+      overrideRender
+    )
 
     const callback = e => {
       e.clipboardData.clearData()
@@ -214,7 +240,9 @@ class DocumentFrame extends React.Component {
       overrideProps = {},
       functions = {},
       pre,
-      useExpanded
+      useExpanded,
+      overrideRender,
+      hiddenProps = {}
     } = this.props
     const Frame = type
 
@@ -222,7 +250,8 @@ class DocumentFrame extends React.Component {
       frameProps,
       functions,
       overrideProps,
-      true
+      true,
+      hiddenProps
     )
     const functionsString = getFunctionString(functions, overrideProps)
 
@@ -235,7 +264,8 @@ class DocumentFrame extends React.Component {
             frameName,
             pre,
             functionsString,
-            trimmedFramePropsString
+            trimmedFramePropsString,
+            overrideRender
           )}{" "}
         </code>
       </pre>

@@ -47,8 +47,7 @@ const xyInteraction = {
   size: [700, 200]
 }
 
-const pre = `import { curveMonotoneX } from "d3-shape"
-import theme from "../theme"`
+const pre = `import { curveMonotoneX } from "d3-shape"`
 
 const interactionOverride = {
   interaction: `{
@@ -64,8 +63,7 @@ const interactionOverride = {
 export default class CreateXYBrushes extends React.Component {
   constructor(props) {
     super(props)
-    this.state = { extent: [20, 30], selectedExtent: [0, 40] }
-    // this.randomizeExtent = this.randomizeExtent.bind(this);
+    this.state = { extent: [20, 30], selectedExtent: [20, 30] }
     this.changeExtent = this.changeExtent.bind(this)
   }
 
@@ -82,7 +80,7 @@ export default class CreateXYBrushes extends React.Component {
       minimap: {
         brushEnd: this.changeExtent,
         yBrushable: false,
-        xBrushExtent: this.state.extent,
+        xBrushExtent: this.state.selectedExtent,
         size: [700, 50]
       }
     }
@@ -105,16 +103,34 @@ You can turn any \`XYFrame\` into an interactive region with a brush by using th
             ...xyInteraction,
             interaction: {
               end: e => {
-                console.log(e)
                 this.setState({ extent: e })
               },
-              brush: "yBrush",
+              brush: "xBrush",
               extent: this.state.extent
             }
           }}
           type={XYFrame}
           overrideProps={interactionOverride}
           pre={pre}
+          hiddenProps={{ interaction: true }}
+          overrideRender={`
+export default class CreateXYBrushes extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = { extent: [20, 30]}
+  }
+
+  render() {          
+    return <XYFrame {...frameProps} interaction={{
+      end: e => {
+        this.setState({ extent: e })
+      },
+      brush: "xBrush",
+      extent: this.state.extent
+    }}/>         
+  }
+}  
+          `}
           useExpanded
         />
 
@@ -147,6 +163,31 @@ You can programmatically change brush extent by sending a new xBrushExtent.
           type={MinimapXYFrame}
           overrideProps={interactionOverride}
           useExpanded
+          pre={pre}
+          hiddenProps={{ minimap: true }}
+          overrideRender={`
+export default class CreateXYBrushes extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = { selectedExtent: [20, 30]}
+    this.changeExtent = this.changeExtent.bind(this)
+
+  }
+
+  changeExtent(e) {
+    this.setState({ selectedExtent: [Math.floor(e[0]), Math.ceil(e[1])] })
+  }
+
+  render() {          
+    return <MinimapXYFrame {...frameProps} minimap={{
+      brushEnd: this.changeExtent,
+      yBrushable: false,
+      xBrushExtent: this.state.extent,
+      size: [700, 50]
+    }}/>         
+  }
+}  
+          `}
         />
       </div>
     )

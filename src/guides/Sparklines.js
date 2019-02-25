@@ -60,6 +60,10 @@ const negativeChart = {
   axes: [{ orient: "left" }]
 }
 
+const overrideProps = {
+  lineType: `{ type: "stackedarea", interpolator: curveMonotoneX }`
+}
+
 export default function CreateALineChart() {
   return (
     <div>
@@ -271,13 +275,12 @@ Sparklines are made with the \`SparkXYFrame\`, \`SparkOrdinalFrame\` and \`Spark
       <DocumentFrame
         frameProps={{
           ...negativeChart,
-          // lineRenderMode: "sketchy",
-          // lineType: "line",
           size: undefined,
           lines: generatedData[0]
-          // hoverAnnotation: true
         }}
         type={SparkXYFrame}
+        overrideProps={overrideProps}
+        pre={`import { curveMonotoneX } from "d3-shape"`}
         showExpanded
       />
       <MarkdownText
@@ -290,13 +293,11 @@ Sometimes the default size isn't the aspect ratio you need, you can still pass a
       <DocumentFrame
         frameProps={{
           ...negativeChart,
-          // lineRenderMode: "sketchy",
-          // lineType: "line",
-          // size: undefined,
           lines: generatedData[0]
-          // hoverAnnotation: true
         }}
         type={SparkXYFrame}
+        overrideProps={overrideProps}
+        pre={`import { curveMonotoneX } from "d3-shape"`}
         startHidden
       />
       <MarkdownText

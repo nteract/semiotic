@@ -408,7 +408,7 @@ export const overrideProps = {
   lineStyle: `(d, i) => ({
     stroke: theme[i],
     strokeWidth: 2,
-    fill: theme[i]
+    fill: "none"
   })`,
   title: `(
     <text textAnchor="middle">
@@ -418,7 +418,8 @@ export const overrideProps = {
   )`,
   pointStyle: `d => {
     return { fill: theme[d.parentLine.key], r: 4 }
-  }`
+  }`,
+  xScaleType: `scaleTime()`
 }
 
 //Add in multi-line accessor example
@@ -565,8 +566,9 @@ By default the line uses a linear interpolation between the points, but you can 
         type={XYFrame}
         overrideProps={{
           ...overrideProps,
-          lineType: `{ type: "line", interpolator: curveCatmullRom } // import {curveCatmullRom} from "d3-shape"`
+          lineType: `{ type: "line", interpolator: curveCatmullRom }`
         }}
+        pre={`import {curveCatmullRom} from "d3-shape"`}
         startHidden
       />
       <MarkdownText
@@ -584,6 +586,7 @@ You can also change the xScaleType to be a \`scaleTime()\` from \`d3-scale\` if 
         frameProps={dateChart}
         type={XYFrame}
         overrideProps={overrideProps}
+        pre={`import { scaleTime } from "d3-scale"`}
         startHidden
       />
 
@@ -610,7 +613,14 @@ and XYFrame will automatically create cutout regions between the two lines color
           })
         }}
         type={XYFrame}
-        overrideProps={overrideProps}
+        overrideProps={{
+          ...overrideProps,
+          lineStyle: `(d, i) => ({
+          stroke: theme[i],
+          strokeWidth: 2,
+          fill: theme[i]
+        })`
+        }}
         startHidden
       />
       <MarkdownText

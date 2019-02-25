@@ -78,9 +78,25 @@ export const stackedFrameProps = {
       </text>
     )
   },
-  style: (d, i) => {
+  style: d => {
     return { fill: colorHash[rAccessor[d.rIndex]], stroke: "white" }
   }
+}
+
+const overrideProps = {
+  axis: `{
+    orient: "left",
+    label: (
+      <text textAnchor="middle">
+        <tspan fill={colorHash.tweets}>Tweets</tspan> +{" "}
+        <tspan fill={colorHash.retweets}>Retweets</tspan> +{" "}
+        <tspan fill={colorHash.favorites}>Favorites</tspan>
+      </text>
+    )
+  }`,
+  style: `d => {
+    return { fill: colorHash[rAccessor[d.rIndex]], stroke: "white" }
+  }`
 }
 
 export const stackedFramePropsFlattened = {
@@ -98,6 +114,11 @@ export const stackedFramePropsFlattened = {
     )
   },
   style: d => ({ fill: colorHash[d.action], stroke: "white" })
+}
+
+const flattenedOverrideProps = {
+  ...overrideProps,
+  style: `d => ({ fill: colorHash[d.action], stroke: "white" })`
 }
 
 export default function CreateABarChart() {
@@ -167,6 +188,15 @@ dataset and create a stacked bar. Change the rAccessor into an array of data pro
         frameProps={stackedFrameProps}
         type={OrdinalFrame}
         startHidden
+        pre={`const colorHash = {
+  tweets: theme[0],
+  retweets: theme[2],
+  favorites: theme[1]
+}
+const rAccessor = ["tweets", "retweets", "favorites"]
+
+`}
+        overrideProps={overrideProps}
       />
       <MarkdownText
         text={`
@@ -179,6 +209,13 @@ Another approach is flattening your data so that you have a property called acti
       <DocumentFrame
         frameProps={stackedFramePropsFlattened}
         type={OrdinalFrame}
+        overrideProps={flattenedOverrideProps}
+        pre={`const colorHash = {
+  tweets: theme[0],
+  retweets: theme[2],
+  favorites: theme[1]
+}
+`}
       />
       <MarkdownText
         text={`
@@ -192,6 +229,13 @@ Adding the property \`hoverAnnotation\` gives tooltips to each of the columns. T
       <DocumentFrame
         frameProps={{ ...stackedFramePropsFlattened, hoverAnnotation: true }}
         type={OrdinalFrame}
+        overrideProps={flattenedOverrideProps}
+        pre={`const colorHash = {
+  tweets: theme[0],
+  retweets: theme[2],
+  favorites: theme[1]
+}
+`}
         startHidden
       />
       <MarkdownText
@@ -207,6 +251,13 @@ Adding the property \`pieceHoverAnnotation\` gives tooltips to each of the indiv
           ...stackedFramePropsFlattened,
           pieceHoverAnnotation: true
         }}
+        overrideProps={flattenedOverrideProps}
+        pre={`const colorHash = {
+  tweets: theme[0],
+  retweets: theme[2],
+  favorites: theme[1]
+}
+`}
         type={OrdinalFrame}
         startHidden
       />

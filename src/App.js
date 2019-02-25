@@ -403,12 +403,12 @@ export const PAGES = [
 ]
 
 const FallbackPage = props => {
-  window.history.replaceState(null, null, "/")
   if (window.location.pathname === "/test") {
     return <Test {...props} />
+  } else {
+    window.history.replaceState(null, null, "/")
+    return <Home {...props} />
   }
-
-  return <Home {...props} />
 }
 
 export default function() {

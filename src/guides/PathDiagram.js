@@ -14,6 +14,13 @@ const colors = {
   Other: theme[3]
 }
 
+const colorPre = `const colors = {
+  "Base Import": theme[0],
+  Usage: theme[1],
+  Intermediary: theme[2],
+  Other: theme[3]
+}`
+
 const frameprops = {
   size: [700, 500],
   nodeStyle: d => ({
@@ -41,15 +48,25 @@ const frameprops = {
   nodes: or_data.map(d => Object.assign({}, d))
 }
 
+const overrideProps = {
+  graph: "g",
+  nodeLabels: `d => <text>{d.id}</text>`,
+  nodes: or_data.map(d => Object.assign({}, d))
+}
+
 const chord = {
   ...frameprops,
   networkType: "chord",
   nodeLabels: d => {
-    return (
-      d.value > 100 &&
-      d.sourceLinks.length > 0 && <text textAnchor="middle">{d.id}</text>
-    )
+    return d.output && <text textAnchor="middle">{d.id}</text>
   }
+}
+
+const chordOverrideProps = {
+  ...overrideProps,
+  nodeLabels: `d => {
+    return d.output && <text textAnchor="middle">{d.id}</text>
+  }`
 }
 
 const arc = {
@@ -63,13 +80,12 @@ const arc = {
   size: [800, 300]
 }
 
-const overrideProps = {
-  graph: "g",
-  nodeLabels: `d => <text>{d.id}</text>`,
-  nodes: propertyToString(or_data, 0, true)
-}
+const pre = `import { scaleLinear } from "d3-scale"
+import dagre from "dagre"
 
-const pre = `const size = scaleLinear()
+${colorPre}
+
+const size = scaleLinear()
 .domain([0, 1020])
 .range([1, 100]);
 
@@ -86,7 +102,7 @@ ranksep: 15
 });
 g.setDefaultEdgeLabel(() => ({}));
 
-frameprops.nodes.forEach(n => {
+${propertyToString(frameprops.nodes, 0, false)}.forEach(n => {
   g.setNode(n.id, {
     ...n,
     height: size(Math.max(n.input, n.output)),
@@ -94,7 +110,7 @@ frameprops.nodes.forEach(n => {
   });
 });
 
-frameprops.edges.forEach(e => {
+${propertyToString(frameprops.edges, 0, false)}.forEach(e => {
   g.setEdge(e.source, e.target, {
     weight: edgeSize(e.value)
   });
@@ -162,6 +178,7 @@ The built in path types are \`sankey\`, \`arc\`, \`chord\`, and \`dagre\`.
         frameProps={frameprops}
         type={NetworkFrame}
         overrideProps={overrideProps}
+        pre={colorPre}
       />
 
       <MarkdownText
@@ -197,6 +214,8 @@ This example is the same as the sankey except we are passing \`networkType="arc"
         type={NetworkFrame}
         startHidden
         overrideProps={overrideProps}
+        pre={colorPre}
+        hiddenProps={{ nodeLabels: true }}
       />
       <MarkdownText
         text={`
@@ -223,7 +242,8 @@ This example is the same as the sankey except we are passing \`networkType="chor
         frameProps={chord}
         type={NetworkFrame}
         startHidden
-        overrideProps={overrideProps}
+        pre={colorPre}
+        overrideProps={chordOverrideProps}
       />
       <MarkdownText
         text={`

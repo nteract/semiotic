@@ -27,12 +27,11 @@ const orFrameSettings = {
   data
 }
 
-export default class CreateXYBrushes extends React.Component {
+export default class CreateOrdinalBrush extends React.Component {
   constructor(props) {
     super(props)
 
     this.state = { selectedDataCount: 200, extent: [20, 70] }
-
     this.changeExtent = this.changeExtent.bind(this)
   }
 
@@ -74,6 +73,30 @@ You can turn any \`OrdinalFrame\` into an interactive region with a brush by usi
           frameProps={frameProps}
           type={OrdinalFrame}
           useExpanded
+          hiddenProps={{ interaction: true }}
+          overrideRender={`export default class CreateOrdinalBrush extends React.Component {
+  constructor(props) {
+    super(props)
+
+    this.state = { selectedDataCount: 200, extent: [20, 70] }
+    this.changeExtent = this.changeExtent.bind(this)
+    }
+
+    changeExtent(e) {
+    this.setState({
+      selectedDataCount: frameProps.data.filter(d => d.value >= e[0] && d.value <= e[1])
+        .length
+    })
+    }
+    render() {
+      return (
+        <OrdinalFrame {...frameProps} interaction={{
+          columnsBrush: true,
+          extent: { singleColumn: this.state.extent },
+          end: this.changeExtent
+        }}/>
+      )}
+}`}
         />
       </div>
     )

@@ -102,6 +102,7 @@ const frameProps = {
 }
 
 const overrideProps = {
+  xScaleType: `scaleTime()`,
   title: `<text textAnchor="middle">
       Netflix Stock Price: <tspan fill={theme[2]}>High</tspan>,{" "}
       <tspan fill={theme[1]}>Low</tspan>, <tspan fill={theme[7]}>Open</tspan>{" "}
@@ -185,6 +186,10 @@ Standard candlestick charts have two colors
         overrideProps={customMarkOverride}
         type={XYFrame}
         useExpanded
+        pre={`import { scaleTime } from "d3-scale"
+
+const colors = [theme[7], theme[2], theme[1], theme[6]]
+        `}
       />
 
       <MarkdownText
@@ -200,6 +205,10 @@ This chart takes advantage of the multiAccessor functionality in Semiotic, in th
         overrideProps={overrideProps}
         type={XYFrame}
         startHidden
+        pre={`import { scaleTime } from "d3-scale"
+        
+const colors = [theme[7], theme[2], theme[1], theme[6]]
+        `}
       />
     </div>
   )

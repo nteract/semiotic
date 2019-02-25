@@ -174,10 +174,10 @@ export const points = [
   { theaterCount: 45, rank: 40, grossWeekly: 33808, title: "The Longest Ride" },
   { theaterCount: 24, rank: 56, grossWeekly: 17379, title: "The Longest Ride" },
   { theaterCount: 9, rank: 67, grossWeekly: 6872, title: "The Longest Ride" }
-].sort((a, b) => b.grossWeekly - a.grossWeekly)
+]
 
 const rScale = scaleSqrt()
-  .domain([0, points[0].grossWeekly])
+  .domain([0, 16660516])
   .range([0, 25])
 
 const frameProps = {
@@ -232,7 +232,15 @@ const overrideProps = {
     </text>
   )`,
   pointStyle: `d => {
-    return { fill: theme[d.parentLine.key], r: 4 }
+    return {
+      r: 5,
+      fill:
+        d.title === "Ex Machina"
+          ? theme[0]
+          : d.title === "Far from the Madding Crowd"
+          ? theme[1]
+          : theme[2]
+    }
   }`,
   customPointMark: `({ d }) => {
     return (
@@ -303,6 +311,11 @@ XYFrame takes a \`customPointMark\` which allows you to render the points with a
         type={XYFrame}
         overrideProps={overrideProps}
         startHidden
+        pre={`import { scaleSqrt } from "d3-scale"
+        
+const rScale = scaleSqrt()
+  .domain([0, 16660516])
+  .range([0, 25])`}
       />
       <MarkdownText
         text={`

@@ -71,7 +71,10 @@ const overrideProps = {
     </text>
   )`,
   pointStyle: `d => {
-    return { fill: theme[d.parentLine.key], r: 4 }
+    return {
+      r: 2,
+      fill: d && colors[d.title]
+    }
   }`
 }
 
@@ -128,6 +131,15 @@ In this example, we pass a single summary object, and set to \`summaryType: "hea
         frameProps={frameProps}
         type={XYFrame}
         overrideProps={overrideProps}
+        pre={`import { scaleLinear } from "d3-scale"
+const steps = ["white", "${theme[3]}"]
+const thresholds = scaleLinear().range(steps)
+
+const colors = {
+  "Ex Machina": theme[0],
+  "Far from the Madding Crowd": theme[1],
+  "The Longest Ride": theme[2]
+}`}
       />
 
       <MarkdownText
@@ -161,6 +173,15 @@ This example is the same as the heatmap except we are passing \`"hexbin"\` as th
         type={XYFrame}
         overrideProps={overrideProps}
         startHidden
+        pre={`import { scaleLinear } from "d3-scale"
+const steps = ["white", "${theme[3]}"]
+const thresholds = scaleLinear().range(steps)
+
+const colors = {
+  "Ex Machina": theme[0],
+  "Far from the Madding Crowd": theme[1],
+  "The Longest Ride": theme[2]
+}`}
       />
       <MarkdownText
         text={`
@@ -192,6 +213,11 @@ This example is the same as the heatmap except we are passing \`"contour"\` as t
         type={XYFrame}
         overrideProps={overrideProps}
         startHidden
+        pre={`const colors = {
+  "Ex Machina": theme[0],
+  "Far from the Madding Crowd": theme[1],
+  "The Longest Ride": theme[2]
+}`}
       />
 
       <MarkdownText

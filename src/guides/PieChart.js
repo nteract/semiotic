@@ -87,13 +87,20 @@ const sortednightingale = {
 
 const overrideProps = {
   rScaleType: "scaleSqrt()",
+  style: `{ fill: theme[0], stroke: "white" }`
+}
+
+const nightingaleOverrideProps = {
+  ...overrideProps,
   style: `d => {
     return {
-      fill: theme[0],
+      fill: theme[d.rIndex],
       stroke: "white"
     }
   }`
 }
+
+const pre = `import { scaleSqrt} from "d3-scale"`
 
 export default function CreateABarChart() {
   return (
@@ -132,6 +139,7 @@ Instead of using your pie slice with for your data you can also map the r-size y
         frameProps={windRose}
         type={OrdinalFrame}
         startHidden
+        pre={pre}
         overrideProps={overrideProps}
       />
       <MarkdownText
@@ -147,8 +155,8 @@ Change your \`type: "bar"\` to an object \`type: {"type": "bar", innerRadius: 50
         frameProps={nightingale}
         type={OrdinalFrame}
         startHidden
-        pre={`import { scaleSqrt} from "d3-scale"`}
-        overrideProps={overrideProps}
+        pre={pre}
+        overrideProps={nightingaleOverrideProps}
       />
 
       <MarkdownText
@@ -164,7 +172,8 @@ Change your \`type: "bar"\` to an object \`type: {"type": "bar", innerRadius: 50
         frameProps={nightingale}
         type={OrdinalFrame}
         startHidden
-        overrideProps={overrideProps}
+        pre={`import { scaleSqrt} from "d3-scale"`}
+        overrideProps={nightingaleOverrideProps}
       />
 
       <MarkdownText
@@ -180,7 +189,8 @@ Change your \`type: "bar"\` to an object \`type: {"type": "bar", innerRadius: 50
         frameProps={sortednightingale}
         type={OrdinalFrame}
         startHidden
-        overrideProps={overrideProps}
+        pre={pre}
+        overrideProps={nightingaleOverrideProps}
       />
 
       <MarkdownText
@@ -212,8 +222,9 @@ Adding the property \`pieceHoverAnnotation\` gives tooltips to each of the indiv
           pieceHoverAnnotation: true
         }}
         type={OrdinalFrame}
+        pre={pre}
         startHidden
-        overrideProps={overrideProps}
+        overrideProps={nightingaleOverrideProps}
       />
     </div>
   )
