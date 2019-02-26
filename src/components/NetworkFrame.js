@@ -379,7 +379,8 @@ type NetworkSettingsType = {
   forceManyBody?: Function | number,
   hierarchicalNetwork: boolean,
   graphSettings: Object,
-  sortGroups?: Function
+  sortGroups?: Function,
+  onUnmount?: Function
 }
 
 type State = {
@@ -516,6 +517,12 @@ class NetworkFrame extends React.Component<Props, State> {
       sourceAccessor: stringToFn("source"),
       targetAccessor: stringToFn("target"),
       title: { title: undefined }
+    }
+  }
+  
+  componentWillUnmount() {
+    if (this.props.onUnmount) {
+      this.props.onUnmount(this.props, this.state)
     }
   }
 

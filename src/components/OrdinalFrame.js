@@ -197,7 +197,8 @@ export type OrdinalFrameProps = {
   additionalDefs?: Node,
   tooltipContent?: Function,
   renderOrder?: $ReadOnlyArray<"pieces" | "summaries" | "connectors">,
-  multiAxis?: boolean
+  multiAxis?: boolean,
+  onUnmount?: Function
 }
 
 type State = {
@@ -285,6 +286,12 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       summaryType: { type: "none" },
       title: {},
       type: { type: "none" }
+    }
+  }
+
+  componentWillUnmount() {
+    if (this.props.onUnmount) {
+      this.props.onUnmount(this.props, this.state)
     }
   }
 
@@ -1579,10 +1586,10 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         rScaleType
       })
     }
-          const flippedRScale =
-            projection === "vertical"
-              ? rScaleType.domain(rScale.domain()).range(rScale.range().reverse())
-              : rScale
+    const flippedRScale =
+      projection === "vertical"
+        ? rScaleType.domain(rScale.domain()).range(rScale.range().reverse())
+        : rScale
     //TODO: Process your rules first
     const customAnnotation =
       htmlAnnotationRules &&
