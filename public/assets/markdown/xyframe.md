@@ -1,4 +1,8 @@
-A [`<Frame>`](https://github.com/emeeks/semiotic/wiki/API-Reference#frames) that displays continuous data along the _x_ and _y_ axis. Examples include time series charts, scatterplots, line, and area charts. `<XYFrame>` charts render [points](#point-rendering), [lines](#line-rendering), and/or [area](#area-rendering) elements. Rendering and styling is based on each element's corresponding properties. XYFrame data elements are accessible by tabbing to the data group (points, lines or areas) and hitting enter to arrow-key navigate through the data elements.
+A frame that displays continuous data along the _x_ and _y_ axis. Examples include [line charts](/guides/line-chart), [scatterplots](/guides/scatterplot), and [area charts](/guides/area-chart).
+
+`<XYFrame>` charts render [points](#point-rendering), [lines](#line-rendering), and [area](#area-rendering) elements. Rendering and styling is based on each element's corresponding properties.
+
+`XYFrame` data elements are accessible by tabbing to the data group (points, lines or areas) and hitting enter to arrow-key navigate through the data elements.
 
 ```jsx
 import { XYFrame } from 'semiotic'
@@ -82,15 +86,13 @@ import { XYFrame } from 'semiotic'
 
 If _size_ is specified, sets the width and height of the frame from the array of values. The array must contain two numbers which represents the width and height, respectively. Size defaults to `[500,500]`.
 
-**Note**: _Margin_ will not be added to the frame size. It's more like CSS _padding_.
-
 ```jsx
 <XYFrame size={ [500,500] } ... />
 ```
 
 ### xAccessor: { _string_ | _function_ }
 
-If _xAccessor_ is specified, determines how _x_ values are accessed from the data array. In the case the data consists of an array of objects, a string can be used to access the _x_ value(s). A function can also be used to access the _x_ value(s).
+Determines how _x_ values are accessed from the data array.
 
 ```jsx
 /* String option
@@ -104,7 +106,7 @@ e.g. data=[[1, 2], [2, 4], ... ] */
 
 ### yAccessor: { _string_ | _function_ }
 
-If _yAccessor_ is specified, determines how _y_ values are accessed from the data array. In the case the data consists of an array of objects, a string can be used to assess the _y_ value(s). A function can also be used to access the _y_ value(s).
+Determines how _y_ values are accessed from the data array
 
 ```jsx
 /*String option
@@ -118,7 +120,7 @@ e.g. data=[[1, 2], [2, 4], ... ] */
 
 ### title: { _string_ | _JSX_ }
 
-If _title_ is specified, sets the text for the chart title, which appears centered at the top of the chart. The title can be either a string or JSX object.
+Centers this title at the top of the chart.
 
 ```jsx
 /*String option */
@@ -130,7 +132,7 @@ If _title_ is specified, sets the text for the chart title, which appears center
 
 ### margin: { _number_ | _object_ }
 
-If _margin_ is specified, sets the margin(s) on the frame. The margin can be set to one number, which is applied equally to all sides, or as an object.
+The margin can be set to one number, which is applied equally to all sides, or as an object.
 
 ```jsx
 /*Single number option */
@@ -142,7 +144,7 @@ If _margin_ is specified, sets the margin(s) on the frame. The margin can be set
 
 ### xScaleType: { _d3-scale_ }
 
-Custom [D3 scale](https://github.com/d3/d3-scale#d3-scale) for the _x_ axis. Defaults to [`scaleLinear()`](https://github.com/d3/d3-scale#scaleLinear).
+Custom [d3-scale](https://github.com/d3/d3-scale#d3-scale) for the _x_ axis. Defaults to [`scaleLinear()`](https://github.com/d3/d3-scale#scaleLinear).
 
 ```jsx
 <XYFrame xScaleType={ d3.scaleTime() } ... />
@@ -150,7 +152,7 @@ Custom [D3 scale](https://github.com/d3/d3-scale#d3-scale) for the _x_ axis. Def
 
 ### yScaleType: { _d3-scale_ }
 
-Custom [D3 scale](https://github.com/d3/d3-scale#d3-scale) for the _y_ axis. Defaults to [`scaleLinear()`](https://github.com/d3/d3-scale#scaleLinear).
+Custom [d3-scale](https://github.com/d3/d3-scale#d3-scale) for the _y_ axis. Defaults to [`scaleLinear()`](https://github.com/d3/d3-scale#scaleLinear).
 
 ```jsx
 <XYFrame yScaleType={ d3.scaleLinear() } ... />
@@ -158,7 +160,9 @@ Custom [D3 scale](https://github.com/d3/d3-scale#d3-scale) for the _y_ axis. Def
 
 ### xExtent: { [_min_, _max_] }
 
-If _xExtent_ is specified, sets the _min_ and/or _max_ value(s) for the _x_ axis. The array may contain two numbers, or it can contain a number and an `undefined` value, if you only want to set the min or max extent. The extent exposes an `onChange` callback function that updates with the calculated extent value.
+If _xExtent_ is specified, sets the _min_ and _max_ value(s) for the _x_ axis. The array may contain two numbers, or it can contain a number and an `undefined` value, if you only want to set the min or max extent.
+
+The extent exposes an `onChange` callback function that updates with the calculated extent value.
 
 ```jsx
 /*min and max values set */
@@ -177,6 +181,8 @@ If _xExtent_ is specified, sets the _min_ and/or _max_ value(s) for the _x_ axis
 ### yExtent: { [_min_, _max_] }
 
 If _yExtent_ is specified, sets the _min_ and/or _max_ value(s) for the _y_ axis. The array may contain two numbers, or it can contain a number and an `undefined` value, if you only want to set the min or max extent.
+
+The extent exposes an `onChange` callback function that updates with the calculated extent value.
 
 ```jsx
 /*min and max values set */
@@ -210,7 +216,15 @@ If _invertY_ is specified, inverts the _y_ axis such that the _min_ and _max_ va
 
 ### showLinePoints: { _boolean_ }
 
-If _showLinePoints_ is specified, displays the points that make up the line and/or area elements. These points will be styled just like points that are added to the `points` array using `pointStyle` or `pointClass` with the only difference being that points will have a `parentLine` or `parentArea` property that will point to the line or area that this point is a part of.
+If _showLinePoints_ is specified, displays the points that make up the line elements. These points will be styled just like points that are added to the `points` array using `pointStyle` or `pointClass` with the only difference being that points will have a `parentLine` or `parentArea` property that will point to the line or area that this point is a part of.
+
+```jsx
+<XYFrame showLinePoints={ true } ... />
+```
+
+### showAreaPoints: { _boolean_ }
+
+If _showAreaPoints_ is specified, displays the points that make up the area elements. These points will be styled just like points that are added to the `points` array using `pointStyle` or `pointClass` with the only difference being that points will have a `parentLine` or `parentArea` property that will point to the line or area that this point is a part of.
 
 ```jsx
 <XYFrame showLinePoints={ true } ... />
@@ -218,7 +232,7 @@ If _showLinePoints_ is specified, displays the points that make up the line and/
 
 ### baseMarkProps: { _object_ }
 
-If _baseMarkProps_ is specified, the object sent will be spread to all marks that are generated in the frame. This is useful for any props that might be shared by all pieces, and especially useful to set the animation duration for the marks if you want to adjust from the default 1s duration.
+This object will be spread to all marks that are generated in the frame. This is useful for any props that might be shared by all pieces, and especially useful to set the animation duration for the marks if you want to adjust from the default 1s duration.
 
 ```jsx
 <XYFrame baseMarkProps={{ transitionDuration: { default: 500, fill: 2500 } }} />
@@ -231,12 +245,20 @@ If _baseMarkProps_ is specified, the object sent will be spread to all marks tha
 An _array_ of arrays or objects representing individual points on a chart. If you want to show points on a line or area chart, use the [`showLinePoints`](#showlinepoints-boolean) property.
 
 ```jsx
-var points = [[1, 2], [3, 4], [5, 8], [7, 16], [9, 32], [11, 64], [13, 128]];
+var points = [[1, 2], [3, 4], [5, 8], [7, 16], [9, 32], [11, 64], [13, 128]]
 
 function MyScatterPlot() {
-  return (
-    <XYFrame xAccessor={d => d[0]} yAccessor={d => d[1]} points={points} />
-  );
+  return <XYFrame xAccessor={d => d[0]} yAccessor={d => d[1]} points={points} />
+}
+
+var points = [
+  { value: 3, week: 1 },
+  { value: 5, week: 2 },
+  { value: 2, week: 3 }
+]
+
+function MyScatterPlot() {
+  return <XYFrame xAccessor={"week"} yAccessor={"value"} points={points} />
 }
 ```
 
@@ -281,7 +303,7 @@ If _canvasPoints_ is specified, determines whether or not to render points to [C
 
 ### customPointMark: { _JSX_ | _function_ }
 
-If _customPointMark_ is specified, renders a _JSX_ [`<Mark>`](https://github.com/emeeks/semiotic/wiki/API-Reference#marks) for each point, otherwise points use `<Mark markType="circle" />`. The _customPointMark_ attribute accepts a _JSX_ object or _function_ that returns a _JSX_ object as the marker for each point.
+The _customPointMark_ attribute accepts a _JSX_ object or _function_ that returns a _JSX_ object as the marker for each point. You can leverage the semiotic-mark library to create [`<Mark>`](/api/mark) elements for each point.
 
 **Note**: The value(s) of the [`pointStyle`](#pointstyle--object--function-) attribute is then applied to the custom mark, but only at the top level. So if you want to make multipart graphical objects, have the customPointMark declare the style.
 
@@ -300,16 +322,25 @@ If _customPointMark_ is specified, renders a _JSX_ [`<Mark>`](https://github.com
 An _array_ of arrays or objects representing individual points along a line. If you want to show points along the line, use the [`showLinePoints`](#showlinepoints-boolean) property.
 
 ```jsx
-var lines = [[[1, 2], [3, 4], [5, 8], [7, 16], [9, 32], [11, 64], [13, 128]]];
+var lines = [[[1, 2], [3, 4], [5, 8], [7, 16], [9, 32], [11, 64], [13, 128]]]
 
 function MyLineChart() {
-  return <XYFrame xAccessor={d => d[0]} yAccessor={d => d[1]} lines={lines} />;
+  return <XYFrame xAccessor={d => d[0]} yAccessor={d => d[1]} lines={lines} />
 }
+
+var lines = [{ coordinates:[
+  { value: 3, week: 1 },
+  { value: 5, week: 2 },
+  { value: 2, week: 3 }
+]]
+
+function MyLineChart() {
+  return <XYFrame xAccessor={"week"} yAccessor={"value"} lines={lines} />
 ```
 
 ### lineDataAccessor: { _string_ | _function_ }
 
-If _lineDataAccessor_ is specified, determines how line _coordinates_ are accessed from the data array passed to the [`lines`](#lines--data-) attribute. Defaults to `coordinates`.
+If _lineDataAccessor_ is specified, determines how line _coordinates_ are accessed from the data array passed to the [`lines`](#lines--data-) attribute. Defaults to `d => d.coordinates`.
 
 ```jsx
 /*String option */
@@ -436,10 +467,10 @@ If _defined_ is specified, sets the accessor function that controls where the li
 An array of arrays or objects representing individual points on a chart. If you want to show points on an area chart, use the [`showLinePoints`](#showlinepoints-boolean) property.
 
 ```js
-var points = [[1, 2], [3, 4], [5, 8], [7, 16], [9, 32], [11, 64], [13, 128]];
+var points = [[1, 2], [3, 4], [5, 8], [7, 16], [9, 32], [11, 64], [13, 128]]
 
 function MyAreaChart() {
-  return <XYFrame xAccessor={d => d[0]} yAccessor={d => d[1]} areas={points} />;
+  return <XYFrame xAccessor={d => d[0]} yAccessor={d => d[1]} areas={points} />
 }
 ```
 
@@ -563,11 +594,11 @@ A function that takes an annotation object and returns a JSX HTML element. The f
         >
           {d.customLabelOrSomething}
         </div>
-      );
+      )
     }
 
     // Always return null if you want the default rules to be processed for types not defined in your custom rules
-    return null;
+    return null
   }}
 />
 ```
@@ -675,7 +706,7 @@ A function to fire on hover that passes the data being hovered over.
 ```jsx
 <XYFrame
   customHoverBehavior={d => {
-    this.setState({ hoveredOn: d });
+    this.setState({ hoveredOn: d })
   }}
 />
 ```
@@ -687,7 +718,7 @@ A function to fire on click that passes the data being hovered over.
 ```jsx
 <XYFrame
   customClickBehavior={d => {
-    this.setState({ clickedOn: d });
+    this.setState({ clickedOn: d })
   }}
 />
 ```
@@ -699,7 +730,7 @@ A function to fire on doubleclick that passes the data being hovered over.
 ```jsx
 <XYFrame
   customDoubleClickBehavior={d => {
-    this.setState({ doubleclicked: d });
+    this.setState({ doubleclicked: d })
   }}
 />
 ```

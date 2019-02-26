@@ -11,9 +11,10 @@ export default function CreateALineChart() {
   return (
     <div>
       <p>
-        In each Frame, there is a svg behind the data viusalization and one in
-        front. You can pass any svg elements you want to those layers to be
-        rendered.
+        In each Frame, there is a svg behind the data visualization,{" "}
+        <code>backgroundGraphics</code>, and one in front,{" "}
+        <code>foregroundGraphics</code>. You can pass any svg elements you want
+        to those layers to be rendered.
       </p>
       <img
         alt="layers in semiotic"
@@ -21,10 +22,6 @@ export default function CreateALineChart() {
         src="/assets/img/layers.png"
       />
 
-      <p>
-        The properties are <code>foregroundGraphics</code> and{" "}
-        <code>backgroundGraphics</code> and they accept arrays of svg elements.
-      </p>
       <p>
         See the <Link to="/examples/homerun-map">Homerun Map</Link> example for
         liberal use of <code>backgroundGraphics</code>, and the{" "}

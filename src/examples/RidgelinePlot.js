@@ -73,7 +73,7 @@ export default class RidgelinePlot extends React.Component {
         <MarkdownText
           text={`
 
-Ridgeline Plots show variation across values and allow overflowing of the plot into adjoining columns by adjusting the amplitude property of the summaryType. This example also uses dynamicColumnWidth to set column width to be based on the maximum value of each column, normalizing the variation.
+Ridgeline plots show variation across values and allow overflowing of the plot into adjoining columns by adjusting the amplitude property of the \`summaryType\`. 
 
 The example is a remake of the [Perceptions of Probability and Numbers](https://github.com/zonination/perceptions) by zonination.
 

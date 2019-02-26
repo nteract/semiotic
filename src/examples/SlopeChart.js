@@ -96,7 +96,7 @@ export default function SwarmPlot() {
       <MarkdownText
         text={`
 
-A way to show change between two points in time. This data is from [Big Cities Health Coalition](https://bchi.bigcitieshealth.org/indicators/1827/searches/22971).
+A slope chart is a common way to show change between two points in time. This data is from [Big Cities Health Coalition](https://bchi.bigcitieshealth.org/indicators/1827/searches/22971).
 
 `}
       />

@@ -88,7 +88,7 @@ const MarimekkoChart = () => {
       <MarkdownText
         text={`
 
-The Marimekko chart shows aggregate value of segments along with percent breakdown in each segment. It takes advantage of using the dynamicColumnWidth setting to encode one value (raw value of sales in a region) while the rAccessor uses a separate value (percent of sales in a region by brand).
+The Marimekko chart allows you to encode data along both the x and y axis. It uses the \`dynamicColumnWidth\` setting to encode one value, raw value of sales in a region, and the \`rAccessor\` for a separate value, percent of sales in a region by brand.
 
 This data is randomly generated.
 

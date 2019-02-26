@@ -1,8 +1,8 @@
-import React from "react";
-import DocumentFrame from "../DocumentFrame";
-import { OrdinalFrame } from "semiotic";
-import theme from "../theme";
-import MarkdownText from "../MarkdownText";
+import React from "react"
+import DocumentFrame from "../DocumentFrame"
+import { OrdinalFrame } from "semiotic"
+import theme from "../theme"
+import MarkdownText from "../MarkdownText"
 
 const frameProps = {
   size: [700, 500],
@@ -13,9 +13,9 @@ const frameProps = {
     type: "point",
     customMark: d => {
       if (d.rIndex === 1) {
-        return <circle r={6} fill={theme[1]} />;
+        return <circle r={6} fill={theme[1]} />
       }
-      return <rect height={d.scaledValue} width={20} x={-10} fill={theme[0]} />;
+      return <rect height={d.scaledValue} width={20} x={-10} fill={theme[0]} />
     }
   },
   rExtent: [0],
@@ -55,7 +55,7 @@ const frameProps = {
     }
   ],
   connectorType: d => {
-    return d.rIndex !== 0 && d.rIndex;
+    return d.rIndex !== 0 && d.rIndex
   },
   connectorStyle: { stroke: theme[1], strokeWidth: 3 },
   multiAxis: true,
@@ -87,15 +87,15 @@ const frameProps = {
       <div style={{ color: theme[1] }} key="2">
         Sales: {d.sales}
       </div>
-    ];
-    const content = d.rIndex === 0 ? bothValues : bothValues.reverse();
+    ]
+    const content = d.rIndex === 0 ? bothValues : bothValues.reverse()
     return (
       <div style={{ fontWeight: 900 }} className="tooltip-content">
         {content}
       </div>
-    );
+    )
   }
-};
+}
 
 const overrideProps = {
   type: `{
@@ -157,7 +157,7 @@ const overrideProps = {
     );
   }
   `
-};
+}
 
 const BarLineChart = () => {
   return (
@@ -165,7 +165,7 @@ const BarLineChart = () => {
       <MarkdownText
         text={`
 
-OrdinalFrame has a multiAxis prop that, if set to true, will calculate separate extents for each of the rAccessor props (meaning you need to pass more than one to see any effect) as well as decorating sent axes in an order matching the sent rAccessor props so that it renders axes with the data extent. You can use the rIndex props of the data to then adjust the display and tooltips to show the proper data and render it, for instance here using customMark, as a bar/line chart.
+OrdinalFrame has a \`multiAxis\` prop that, if set to \`true\`, will calculate separate extents for each of the \`rAccessor\` props (meaning you need to pass more than one to see any effect) as well as decorating sent axes in an order matching the sent \`rAccessor\` props so that it renders axes with the data extent. You can use the \`rIndex\` props of the data to then adjust the display and tooltips to show the proper data and render it, for instance here using \`customMark\`, as a bar/line chart.
 
 `}
       />
@@ -176,7 +176,7 @@ OrdinalFrame has a multiAxis prop that, if set to true, will calculate separate 
         useExpanded
       />
     </div>
-  );
-};
+  )
+}
 
-export default BarLineChart;
+export default BarLineChart

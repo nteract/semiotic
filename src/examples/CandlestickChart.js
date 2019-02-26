@@ -194,7 +194,7 @@ const colors = [theme[7], theme[2], theme[1], theme[6]]
 
       <MarkdownText
         text={`
-## How does this work?
+## Customization
 
 This chart takes advantage of the multiAccessor functionality in Semiotic, in this case each individual data point has all four attributes for a day, so you can specify the \`yAccessor: d => [d.open, d.high, d.low, d.close]\`. Using this with the \`customPointMark\` property in \`XYFrame\` allows you to create the candlestick shape, without it the chart above would be rendered with each value represented as a circle:
 

@@ -200,10 +200,9 @@ export default function SwarmPlot() {
     <div>
       <MarkdownText
         text={`
-
-Vertical ISOTYPE chart. Currently, there's no sizing mechanism that maintains whole shapes, which improves ISOTYPE charts, so the designer is forced to tweak the size and margins to ensure whole shapes like this one. As demonstrated here, renderMode is honored by icon shapes.
-
 Based on a [beautiful icon chart by Lisa Charlotte Rost](https://lisacharlotterost.github.io/2017/10/24/Frustrating-Data-Vis/). I called her little icons Rostos in her honor.
+
+This example also shows how \`renderMode\` is honored by icon shapes.
 `}
       />
       <DocumentFrame

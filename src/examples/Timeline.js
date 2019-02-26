@@ -262,11 +262,6 @@ const Timeline = () => {
     <div>
       <MarkdownText
         text={`
-
-The Dot Plot compares changes between two values across categories. The initial data array needs to be turned into an array of points at the start and end, which can then be connected with a custom annotation rule.
-
-Because annotations are drawn on top of the visualization layer, we need to account for the size of each dot in where we draw the lines so they don't overlap. We also adjust the labels a bit so they line up with the dots.
-
 This data is from the [List of Presidents of the United States](https://en.wikipedia.org/wiki/List_of_Presidents_of_the_United_States) Wikipedia page.
 
 `}

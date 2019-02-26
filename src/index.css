@@ -26,6 +26,7 @@ body {
 }
 
 ul code,
+ol code,
 p code {
   font-weight: bold;
   /* font-size: 1.1em; */

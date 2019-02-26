@@ -230,9 +230,11 @@ const WaterfallChart = () => {
     <div>
       <MarkdownText
         text={`
-This demonstrates a custom type to render the pieces for an unsupported layout.
+This demonstrates how to use a custom \`type\` to render \`data\` for an unsupported layout.
 
-The custom type story still isn't so good. You have to do things that are typically done out of sight, like accounting for margins and calculating the zero baseline and accounting for drawing bars. Also, the extent has to be manually set since it doesn't know how to calculate an extent based on the Waterfall Chart's strange way of doing things. Future versions of semiotic should have a better story than this.
+To accomodate this new chart type, you also need to manually calculate the extent.
+
+The data in this chart is ficticious.
 
 `}
       />

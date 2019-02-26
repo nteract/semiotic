@@ -132,7 +132,7 @@ export default function SwarmPlot() {
       <MarkdownText
         text={`
 
-A comparison of attributes across multiple attributes. This data is taken from [Pokemon Database](https://pokemondb.net/pokedex/all)
+A comparison of attributes across multiple attributes. This data is from [Pokemon Database](https://pokemondb.net/pokedex/all)
 `}
       />
       <DocumentFrame

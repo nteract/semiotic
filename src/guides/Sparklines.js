@@ -74,8 +74,8 @@ Sparklines are made with the \`SparkXYFrame\`, \`SparkOrdinalFrame\` and \`Spark
 `}
       />
       <p>
-        When you insert small graphs into text, referred to as <b>sparklines</b>
-        , they're typically small line charts like{" "}
+        When you insert small graphs into text, <b>sparklines</b>, they're
+        typically small line charts like{" "}
         <SparkXYFrame
           {...negativeChart}
           lineRenderMode="sketchy"
@@ -83,10 +83,9 @@ Sparklines are made with the \`SparkXYFrame\`, \`SparkOrdinalFrame\` and \`Spark
           lines={[generatedData[0]]}
           hoverAnnotation={true}
         />
-        . But let's say you're writing an essay and you want to discuss how two
-        people have different friend networks. You could describe one as a
-        "broker" and one as a "hub" or you could drop a network in your text
-        like this for your hub friend{" "}
+        . But let's say there's an essay discussing how two people have
+        different friend networks one as a "broker" and one as a "hub", it could
+        use a network like this for the hub friend{" "}
         <SparkNetworkFrame
           edges={[
             { source: "a", target: "b" },
@@ -103,7 +102,7 @@ Sparklines are made with the \`SparkXYFrame\`, \`SparkOrdinalFrame\` and \`Spark
             stroke: d.id === "a" ? theme[1] : "none"
           })}
         />{" "}
-        and for your broker friend:
+        and for the broker friend:
         <SparkNetworkFrame
           edges={[
             { source: "a", target: "b" },
@@ -130,7 +129,7 @@ Sparklines are made with the \`SparkXYFrame\`, \`SparkOrdinalFrame\` and \`Spark
           style={{ fill: theme[2], stroke: "rgb(77, 67, 12)" }}
           type="bar"
         />{" "}
-        , and naturally that means it could be a
+        , and how about a
         <SparkOrdinalFrame
           data={summarySample}
           style={d => ({ fill: stackedColors[d.o] })}
@@ -140,7 +139,7 @@ Sparklines are made with the \`SparkXYFrame\`, \`SparkOrdinalFrame\` and \`Spark
           renderMode="sketchy"
           summaryRenderMode="sketchy"
         />
-        , too. And though they're pretty complex shapes for such small area, a
+        , a
         <SparkOrdinalFrame
           data={summarySample}
           oAccessor={d => (d.o === "a" ? "a" : "o")}

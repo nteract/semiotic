@@ -149,7 +149,7 @@ const HomerunMap = () => {
     <div>
       <MarkdownText
         text={`
-Giancarlo Stanton's home runs shown with his park outline based on [Daren Willman](https://github.com/darenwillman/baseball)'s data and sports visualization work.
+Giancarlo Stanton's home runs shown with a baseball park outline based on [Daren Willman](https://github.com/darenwillman/baseball)'s data and sports visualization work.
 
 `}
       />

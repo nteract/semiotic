@@ -158,8 +158,7 @@ export default function CustomLayout() {
       <MarkdownText
         text={`
 
-A way to show change between two points in time. 
-
+This example shows how you can use \`NetworkFrame\` with a custom \`layout\` function to position \`nodes\` and \`edges\`.
 `}
       />
       <DocumentFrame

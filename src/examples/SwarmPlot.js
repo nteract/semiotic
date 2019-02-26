@@ -118,7 +118,7 @@ export default class SwarmPlot extends React.Component {
         <MarkdownText
           text={`
 
-Swarm plots allow you have position your data based on an numerical value but apply a force to prevent overlapping. 
+Swarm plots allow you to position your data based on a numerical value but apply a collision force to prevent overlapping. 
 
 This page uses box office data from [Box Office Mojo](https://www.boxofficemojo.com/).
 `}

@@ -81,13 +81,14 @@ export default () => {
       <MarkdownText
         text={`
       
-Semiotic does a few things to make it easier for you to use textures, render viz in a sketchy way, or otherwise modify the appearance of your data visualization. Below you'll find examples for how to use textures, gradients and Semiotic's built-in sketchy rendering, painty rendering and canvas post-processing.
+Semiotic has built-in props to render viz in a sketchy way, or otherwise modify the appearance of your data visualization. Below you'll find examples for how to use textures, gradients, sketchy rendering, painty rendering, and canvas post-processing.
 
-We'll get started with using textures for a visualization like this bar chart. You can use textures in a couple different ways:
+## Using additionalDefs for patterns
 
 Make your own textures by hand
-Use a texture generating library like textures.js (or the react equivalent: vx/patterns)
-This example uses both. Notice that textures are added to the defs of an SVG by adding them to the additionalDefs property of the frame and then referenced as the fill property of the items in the frame  
+Use a texture generating library like [textures.js](https://riccardoscalco.it/textures/) or the react equivalent: [vx/patterns](https://github.com/hshoff/vx)
+
+Textures are added to the \`additionalDefs\` property of the frame and then referenced as the \`fill\` of the items in the frame.
       
       `}
       />
@@ -101,11 +102,11 @@ This example uses both. Notice that textures are added to the defs of an SVG by 
       <MarkdownText
         text={`
       
-Under the hood, Semiotic uses the semiotic-mark library, which allows you to declare different render modes that can produce what's called non-photorealistic rendering, better known as "sketchy" rendering, as well as "painty" rendering. To enable this, you send the corresponding renderMode of the item you want rendered in a different fashion either "sketchy" or "painty" or a function that takes the item and returns "sketchy" or "painty". Sketchy fill density reflects the fillOpacity sent to the object, with higher opacity giving more fill lines.
+Under the hood, Semiotic uses the [semiotic-mark](https://github.com/emeeks/semiotic-mark) library, which allows you to set \`renderMode\` for \`"sketchy"\` and \`"painty"\` rendering. You can also send a function that takes the item and returns "sketchy" or "painty". Sketchy fill density reflects the fillOpacity sent to the object, with higher opacity giving more fill lines.
 
-1. XYFrame: pointRenderMode, areaRenderMode, lineRenderMode
-1. OrdinalFrame: renderMode, summaryRenderMode
-1. NetworkFrame: nodeRenderMode, edgeRenderMode
+- \`XYFrame\`: pointRenderMode, areaRenderMode, lineRenderMode
+- \`OrdinalFrame\`: renderMode, summaryRenderMode
+- \`NetworkFrame\`: nodeRenderMode, edgeRenderMode
       
       `}
       />
@@ -127,10 +128,11 @@ Under the hood, Semiotic uses the semiotic-mark library, which allows you to dec
       
 Except for summary types and custom shape types, frames can render their graphics in canvas. This can be useful to reduce the number of nodes in the DOM, which can show performance gains. Canvas graphics will not be animated.
 
-XYFrame: canvasPoints, canvasAreas, canvasLines
-OrdinalFrame: canvasPieces
-NetworkFrame: canvasNodes, canvasEdges
-Additionally the canvas itself can be used for post-processing effects using the frames canvasPostProcess property, which will be sent (canvas, context, size) is shown below using the demo "chuckClose" restyling (which does a fun Chuck Close style filter) and also a custom glow filter.
+- \`XYFrame\`: canvasPoints, canvasAreas, canvasLines
+- \`OrdinalFrame\`: canvasPieces
+- \`NetworkFrame\`: canvasNodes, canvasEdges
+
+Additionally the canvas itself can be used for post-processing effects using the frames \`canvasPostProcess\` property, which will be sent (canvas, context, size) is shown below using the demo "chuckClose" restyling (which does a fun Chuck Close style filter) and also a custom glow filter.
       `}
       />
 
