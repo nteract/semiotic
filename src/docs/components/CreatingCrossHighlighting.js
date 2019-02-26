@@ -471,7 +471,7 @@ export default class CreatingLineChart extends React.Component {
             hoverAnnotation={[
               {
                 type: "highlight",
-                style: { fill: "red", stroke: "orange", strokeWidth: 3 }
+                style: { fill: "red", strokeWidth: 3 }
               }
             ]}
             lineIDAccessor={d => d.title}

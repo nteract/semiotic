@@ -6,6 +6,8 @@ import { Mark } from "semiotic-mark"
 import { scaleLinear } from "d3-scale"
 import { arcTweener } from "./SvgHelper"
 
+// RENAME XY to drawingProps
+
 const twoPI = Math.PI * 2
 
 const radialBarFeatureGenerator = ({
@@ -251,7 +253,10 @@ export function clusterBarLayout({
   styleFn,
   projection,
   classFn,
-  adjustedSize
+  adjustedSize,
+  chartSize,
+  margin,
+  baseMarkProps
 }) {
   let allCalculatedPieces = []
   const keys = Object.keys(data)
@@ -349,7 +354,16 @@ export function clusterBarLayout({
           {type.customMark(
             { ...piece.data, ...piece, x: xPosition, y: yPosition },
             i,
-            xy
+            {
+              ...xy,
+              baseMarkProps,
+              renderMode,
+              styleFn,
+              classFn,
+              adjustedSize,
+              chartSize,
+              margin
+            }
           )}
         </g>
       ) : (
@@ -392,7 +406,10 @@ export function barLayout({
   styleFn,
   projection,
   classFn,
-  adjustedSize
+  adjustedSize,
+  chartSize,
+  margin,
+  baseMarkProps
 }) {
   const keys = Object.keys(data)
   let allCalculatedPieces = []
@@ -480,7 +497,16 @@ export function barLayout({
           {type.customMark(
             { ...piece.data, ...piece, x: xPosition, y: yPosition },
             i,
-            xy
+            {
+              ...xy,
+              baseMarkProps,
+              renderMode,
+              styleFn,
+              classFn,
+              adjustedSize,
+              chartSize,
+              margin
+            }
           )}
         </g>
       ) : (
@@ -516,7 +542,10 @@ export function timelineLayout({
   styleFn,
   projection,
   classFn,
-  adjustedSize
+  adjustedSize,
+  chartSize,
+  margin,
+  baseMarkProps
 }) {
   let allCalculatedPieces = []
   const keys = Object.keys(data)
@@ -576,7 +605,16 @@ export function timelineLayout({
           {type.customMark(
             { ...piece.data, ...piece, x: xPosition, y: yPosition },
             i,
-            xy
+            {
+              ...xy,
+              baseMarkProps,
+              renderMode,
+              styleFn,
+              classFn,
+              adjustedSize,
+              chartSize,
+              margin
+            }
           )}
         </g>
       ) : (
@@ -613,7 +651,10 @@ export function pointLayout({
   styleFn,
   projection,
   classFn,
-  adjustedSize
+  adjustedSize,
+  chartSize,
+  margin,
+  baseMarkProps
 }) {
   const circleRadius = type.r || 3
   let allCalculatedPieces = []
@@ -659,7 +700,19 @@ export function pointLayout({
         >
           {type.customMark(
             { ...piece.data, ...piece, x: xPosition, y: yPosition },
-            i
+            i,
+            {
+              r: circleRadius,
+              x: xPosition,
+              y: yPosition,
+              baseMarkProps,
+              renderMode,
+              styleFn,
+              classFn,
+              adjustedSize,
+              chartSize,
+              margin
+            }
           )}
         </g>
       ) : (
@@ -705,7 +758,10 @@ export function swarmLayout({
   styleFn,
   projection,
   classFn,
-  adjustedSize
+  adjustedSize,
+  chartSize,
+  margin,
+  baseMarkProps
 }) {
   let allCalculatedPieces = []
   const iterations = type.iterations || 120
@@ -775,7 +831,19 @@ export function swarmLayout({
         >
           {type.customMark(
             { ...piece.data, ...piece, x: xPosition, y: yPosition },
-            i
+            i,
+            {
+              x: xPosition,
+              y: yPosition,
+              r: circleRadius,
+              baseMarkProps,
+              renderMode,
+              styleFn,
+              classFn,
+              adjustedSize,
+              chartSize,
+              margin
+            }
           )}
         </g>
       ) : (

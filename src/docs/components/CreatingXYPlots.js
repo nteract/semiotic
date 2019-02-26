@@ -498,7 +498,7 @@ export default class CreatingXYPlots extends React.Component {
               type: "heatmap",
               yBins: 10,
               xCellPx: 35,
-              customMark: d => (
+              customMark: ({ d }) => (
                 <ellipse
                   fill={thresholds(d.percent)}
                   stroke="none"
@@ -517,10 +517,11 @@ export default class CreatingXYPlots extends React.Component {
             areaType={{
               type: "hexbin",
               bins: 10,
-              customMark: d => makeHex(d)
+              customMark: ({ d }) => makeHex(d)
             }}
             xAccessor="x"
             yAccessor="y"
+            baseMarkProps={{ forceUpdate: true }}
           />
         </div>
       ),

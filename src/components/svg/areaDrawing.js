@@ -80,7 +80,13 @@ export function hexbinning({
   ],
   size,
   xScaleType = scaleLinear(),
-  yScaleType = scaleLinear()
+  yScaleType = scaleLinear(),
+  margin,
+  baseMarkProps,
+  styleFn,
+  classFn,
+  renderFn,
+  chartSize
 }) {
   if (processedData) {
     return baseData[0].coordinates
@@ -181,14 +187,24 @@ export function hexbinning({
         customMark: customMark && (
           <g transform={`translate(${gx},${size[1] - gy})`}>
             {customMark({
-              ...d,
-              percent,
-              value: hexValue,
-              radius: actualResolution,
-              hexCoordinates: hexBase.map(d => [
-                d[0] * actualResolution,
-                d[1] * actualResolution
-              ])
+              d: {
+                ...d,
+                percent,
+                value: hexValue,
+                radius: actualResolution,
+                hexCoordinates: hexBase.map(d => [
+                  d[0] * actualResolution,
+                  d[1] * actualResolution
+                ])
+              },
+              baseMarkProps,
+              margin,
+              baseMarkProps,
+              styleFn,
+              classFn,
+              renderFn,
+              chartSize,
+              adjustedSize: size
             })}
           </g>
         ),
@@ -235,7 +251,13 @@ export function heatmapping({
   ],
   size,
   xScaleType = scaleLinear(),
-  yScaleType = scaleLinear()
+  yScaleType = scaleLinear(),
+  margin,
+  baseMarkProps,
+  styleFn,
+  classFn,
+  renderFn,
+  chartSize
 }) {
   if (processedData) {
     return baseData[0].coordinates
@@ -325,7 +347,19 @@ export function heatmapping({
     flatGrid.forEach(d => {
       d.percent = d.value / maxValue
       d.customMark = customMark && (
-        <g transform={`translate(${d.gx},${d.gy})`}>{customMark(d)}</g>
+        <g transform={`translate(${d.gx},${d.gy})`}>
+          {customMark({
+            d,
+            baseMarkProps,
+            margin,
+            baseMarkProps,
+            styleFn,
+            classFn,
+            renderFn,
+            chartSize,
+            adjustedSize: size
+          })}
+        </g>
       )
     })
 
