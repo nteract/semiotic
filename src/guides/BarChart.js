@@ -130,6 +130,9 @@ Creating a bar chart and stacked bar chart with tooltips, labels, and
 an axis in Semiotic.
 
 ## Basic Bar Chart
+
+\`OrdinalFrame\` takes \`data\` as an array of objects. The \`oAccessor\` prop defines which property on the object to use as categorical data, and the \`rAccessor\` defines which property to use for numerical data.  
+
       `}
       />
 

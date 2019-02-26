@@ -4,31 +4,38 @@
 
 ```jsx
 import { AnnotationCalloutCircle } from "react-annotation"
-;<XYFrame
-  annotations={[
-    { type: "react-annotation", label: "a note", y: 100 },
-    {
-      //Example of a react-annotation function
-      //type you can send
-      type: AnnotationCalloutCircle,
-      note: { label: "callout", title: "important" },
+import XYFrame from "semiotic/lib/XYFrame"
 
-      //Will automatically map this to the
-      //scaled Y value
-      score: 10,
-      subject: { radius: 30 }
-    }
-  ]}
-  xAccessor={"week"}
-  yAccessor={"score"}
-  points={[{ week: 10, score: 20 }]}
-/>
+export default function() {
+  return (
+    <XYFrame
+      annotations={[
+        { type: "react-annotation", label: "a note", y: 100 },
+        {
+          //Example of a react-annotation function
+          //type you can send
+          type: AnnotationCalloutCircle,
+          note: { label: "callout", title: "important" },
+
+          //Will automatically map this to the
+          //scaled Y value
+          score: 10,
+          subject: { radius: 30 }
+        }
+      ]}
+      xAccessor={"week"}
+      yAccessor={"score"}
+      points={[{ week: 10, score: 20 }]}
+    />
+  )
+}
 ```
 
-- `enclose`, `enclose-rect`, `enclose-hull`: Takes an object with a `“coordinates”` property containing an array of data objects and encloses them with a circle, rectangle, or convex hull labeled with the passed label. For network frame this is not `“coordinates”` but rather an array named `“ids”` that has id values corresponding to the nodeIDAccessor setting. The annotation will also honor a `“padding”` prop that determines the space in pixels to pad the enclosure. Enclose-hull accepts a strokeWidth prop that determines the thickness of the hull stroking.
+- `enclose`, `enclose-rect`, `enclose-hull`: Takes an object with a `coordinates` property containing an array of data objects and encloses them with a circle, rectangle, or convex hull labeled with the passed label. For `NetworkFrame` this is not `coordinates` but rather an array named `ids` that has id values corresponding to the `nodeIDAccessor` setting. The annotation will also honor a `padding` prop that determines the space in pixels to pad the enclosure. Enclose-hull accepts a `strokeWidth` prop that determines the thickness of the hull stroking.
 
 * `highlight`: redraws the mark but with the passed style function or object, this with the desaturation-layer below allow for easy highlight and cross-highlight behavior. See the [highlighting](/guides/highlighting) page for details.
-* `desaturation-layer`: Creates a rect the size of the viz layer that has fill: black and fillOpacity: 0.5, you can pass a style prop to overwrite the default styling
+
+* `desaturation-layer`: Creates a rect the size of the viz layer that has `fill: black` and `fillOpacity: 0.5`, you can pass a `style` prop to overwrite the default styling
 
 - `frame-hover`: Creates a tooltip, which is a div centered on the datapoint populated with the values derived for that data point, you can use a separate prop `tooltipContent` to customize the value, see the [tooltips](/guides/tooltips) page for details.
 
@@ -77,9 +84,10 @@ yAccessor="attendance"
   - `offset` = 0 (how far back from the viz the bracket is)
   - `padding` = 0 (the amount of pixels added to the edge of the bracket)
 
-- `ordinal-line`: takes an array of “coordinates” and renders a line. Honors the following props:
+- `ordinal-line`: takes an array of `coordinates` and renders a line. Honors the following props:
   - `points`: (bool defaults to false) show points
-    interactive: (bool defaults to false) Points have an invisible 15px radius of interactivity as per standard hover annotation settings -`lineStyle`: a JSX style object for the line
+  - `interactive`: (bool defaults to false) Points have an invisible 15px radius of interactivity as per standard hover annotation settings
+  - `lineStyle`: a JSX style object for the line
   - `pointStyle`: a JSX style object or a function that takes a point and returns a JSX style object
   - `curve`: a d3-shape interpolator
   - `radius`: The radius of displayed points
@@ -92,21 +100,37 @@ yAccessor="attendance"
 - `node`: Has an `id` value that corresponds to the idAccessor value of a node, and will draw a circle around that node with the label determined by the `label` value of the annotation object.
 - `enclose`: Has an `ids` array with strings corresponding to values returned by the idAccessor value of nodes in this graph and will draw a minimum bounding circle around the nodes found with a label specified in the `label` value of the annotation object.
 
+# Annotation Settings
+
+In addition to creating annotations by passing them through the `annotations` prop, you can also use the `annotationSettings` prop to manage placement rules for automatic positioning.
+
+- `type`: “bump” or “marginalia”
+  - `“bump”` will use simple force collision rules to try to move annotations away from each other.
+  - `“marginalia”` will put them into the margins
+- `orient`: "nearest" | "left" | "right" | "top" | "bottom" | Array<of-those-strings> Used in “marginalia” mode, determines whether the margin used to place the annotation should be nearest or, barring that, which margins are available (one or an array)
+- `characterWidth`: defaults to 8, a way to express the font size since we’re not using bounding boxes (so the size of the note is 8 \* the number of characters in pixels)
+- `lineHeight`: defaults to 20 to determine the bounding box of the note
+- `padding`: defaults to 1 in “bump” mode and creates additional space around an annotation
+- `iterations`: defaults to 500 and determines the number of iterations of the force simulation (used only in bump)
+- `pointSizeFunction`: defaults to () => 5 and determines the space around a datapoint that a bumped annotation avoids
+- `labelSizeFunction`: defaults to a built-in function that tries to determine the bounding box of a label using the note’s wrap property along with the above lineHeight and characterWidth
+- `marginOffset`: used in “marginalia” and determines the additional padding away from the viz. Defaults to taking into account whether an axis is drawn on that side + 10 pixels (but you can only send a number)
+
 # Custom Annotation Rules
 
 You can send objects with any `type` value to the `annotations` array but if they don't correspond to any built-in types, they **won't** display.
 
 You can write custom rules to handle new types or override the default behavior for built-in types.
 
-Use `svgAnnotationRules` or `htmlAnnotationRules` depending on the type of JSX elements you want to create. Each of these functions is called on every item in the `annotations` array sent to the Frame. If `hoverAnnotations` is `true` semiotic will append hover annotations such as `frame-hover` or `column-hover` to the array of `annotations` each function is run against.
+Use `svgAnnotationRules` or `htmlAnnotationRules` depending on the type of JSX elements you want to create. Each of these functions is called on every item in the `annotations` array sent to the Frame. If `hoverAnnotation` is `true` Semiotic will append annotations on hover such as `frame-hover` or `column-hover` to the array of `annotations` each function is run against.
 
 ## Passed values
 
 The custom rules expose the datapoint hovered, scales, and other properties of the frame.
 
-- NetworkFrame: `d, i, networkFrameProps, networkFrameState, nodes, edges`
-- XYFrame: `d, i, screenCoordinates, xScale, yScale, xAccessor, yAccessor, xyFrameProps, xyFrameState, areas, points, lines`
-- ORFrame: `d, i, oScale, rScale, oAccessor, rAccessor, orFrameProps, orFrameState`
+- NetworkFrame: `d, i, networkFrameProps, networkFrameState, nodes, edges, voronoiHover, screenCoordinates, adjustedPosition, adjustedSize, annotationLayer`
+- XYFrame: `d, i, xyFrameProps, xyFrameState, xScale, yScale, xAccessor, yAccessor, areas, points, lines, voronoiHover, screenCoordinates, adjustedPosition, adjustedSize, annotationLayer`
+- ORFrame: `d, i, orFrameProps, orFrameState, oScale, rScale, oAccessor, rAccessor, categories, voronoiHover, screenCoordinates, adjustedPosition, adjustedSize, annotationLayer`
 
 ## svgAnnotationRules { _function_ }
 
@@ -119,6 +143,7 @@ This function is run on every item in the annotation array, in addition to any h
 ```jsx
 <XYFrame
   svgAnnotationRules={d => {
+    // Catch annotation with type="r"
     if (d.d.type === "r") {
       return (
         <g
@@ -136,6 +161,7 @@ This function is run on every item in the annotation array, in addition to any h
       )
     }
 
+    // Continue to process all other annotations
     return null
   }}
 />
@@ -149,6 +175,6 @@ This function is run on every item in the annotation array, in addition to any h
 - `null` if you want it to process all default types in addition to your custom rules
 - return `false` if you only want to process your custom rules
 
-## What's next?
+## Additional reading
 
 [Making Annotations First-Class Citizens in Data Visualization](https://medium.com/@Elijah_Meeks/making-annotations-first-class-citizens-in-data-visualization-21db6383d3fe)

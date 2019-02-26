@@ -43,7 +43,7 @@ const frameprops = {
   },
 
   nodeLabels: d => <text>{d.id}</text>,
-  margin: { right: 130 },
+  margin: { right: 130, bottom: 20 },
   edges: network_data,
   nodes: or_data.map(d => Object.assign({}, d))
 }
@@ -158,15 +158,13 @@ export default () => {
       <MarkdownText
         text={`
 
-The data on this page use the [UK Department of Energy & Climate Change](https://www.gov.uk/guidance/2050-pathways-analysis) and the [d3-sankey](https://beta.observablehq.com/@mbostock/d3-sankey-diagram) example by Mike Bostock.
-
-## Path Diagrams
-
 \`NetworkFrame\` allows you to render several data visualizations with calculated positions for nodes based on the complexity of the edges/paths that connect them. For these examples you can pass a \`nodes\` and an \`edges\` list, or just an \`edges\` list and nodes with be inferred.
 
 Edges can either be an array of objects with a \`source\` and a \`target\` property, or a hierarchical object with an array of \`children\` containing objects with \`children\` all the way down the hierarchy. The assumption is that each child's \`id\` property is unique, you can use the \`nodeIdAccessor\` to specify a different key for the id if needed. These types of hierarchies can be created easily from a parent/child  list with d3's [stratify](https://github.com/d3/d3-hierarchy#stratify) functionality.
 
 The built in path types are \`sankey\`, \`arc\`, \`chord\`, and \`dagre\`.
+
+The data on this page use the [UK Department of Energy & Climate Change](https://www.gov.uk/guidance/2050-pathways-analysis) from the [d3-sankey](https://beta.observablehq.com/@mbostock/d3-sankey-diagram) example by Mike Bostock.
 
 ## Sankey
 
@@ -184,20 +182,20 @@ The built in path types are \`sankey\`, \`arc\`, \`chord\`, and \`dagre\`.
       <MarkdownText
         text={`
 ### Sankey Settings
-In addition to just sending \`networkType\` as a string, you could pass an object with additional layout options.
+Instead of sending \`networkType\` as a string, you can pass an object with additional layout options.
 
 By default the sankey type uses [d3-sankey layout](https://github.com/d3/d3-sankey) to layout nodes and edges. The \`orient\` property is a pass through to the [alignment](https://github.com/d3/d3-sankey#alignments) options.
 
 \`\`\`jsx
 networkType={{ 
   type: "sankey"
-  zoom: true, // zoom the laid out nodes in or out so that they fit exactly in the specified size
-  projection: "horizontal", // accepts (horizontal|vertical) direction of flow in the diagram
-  orient: "center", // accepts (left|right|justify|center) sankey node alignment strategy
-  iterations: 100, // how many times to run the layout algorithm
-  nodeWidth: 24, // thickness of node along the axis of flow
-  nodePaddingRatio: .5 // the ratio of nodes to available space, only if nodePadding is not set
-  // nodePadding: number of pixels between nodes
+  zoom: true, // Zoom the laid out nodes in or out so that they fit the specified size
+  projection: "horizontal", // Accepts (horizontal|vertical) direction of flow in the diagram
+  orient: "center", // Accepts (left|right|justify|center) sankey node alignment strategy
+  iterations: 100, // How many times to run the layout algorithm
+  nodeWidth: 24, // Thickness of node along the axis of flow
+  nodePaddingRatio: .5 // The ratio of nodes to available space, only if nodePadding is not set
+  // nodePadding: Number of pixels between nodes
 }}\`\`\`
 
   `}
@@ -220,13 +218,13 @@ This example is the same as the sankey except we are passing \`networkType="arc"
       <MarkdownText
         text={`
 ### Ard Settings
-In addition to just sending \`networkType\` as a string, you could pass an object with additional layout options.
+Instead of sending \`networkType\` as a string, you can pass an object with additional layout options.
 
 \`\`\`jsx
 networkType={{ 
   type: "arc"
-  zoom: true // zoom the laid out nodes in or out so that they fit 
-  // sort: function
+  zoom: true, // Zoom the laid out nodes in or out so that they fit the specified size
+  // sort: Function
 }}\`\`\`
 
   `}
@@ -248,17 +246,17 @@ This example is the same as the sankey except we are passing \`networkType="chor
       <MarkdownText
         text={`
 ### Chord Settings
-In addition to just sending \`networkType\` as a string, you could pass an object with additional layout options.
+Instead of sending \`networkType\` as a string, you can pass an object with additional layout options.
 
 You can also pass any parameters for the [d3-sankey layout](https://github.com/d3/d3-sankey)
 
 \`\`\`jsx
 networkType={{ 
   type: "chord"
-  zoom: true, // zoom the laid out nodes in or out so that they fit exactly in the specified size
-  groupWidth: 20, //  width in pixels of the outer rings
-  padAngle: 0.1, // space between groups in degrees
-  // sortGroups: function
+  zoom: true, // Zoom the laid out nodes in or out so that they fit the specified size
+  groupWidth: 20, //  Width in pixels of the outer rings
+  padAngle: 0.1, // Space between groups in degrees
+  // sortGroups: Function
 }}\`\`\`
 
   `}
@@ -267,9 +265,9 @@ networkType={{
         text={`
 ## Dagre
 
-This layout uses the [dagrejs](https://github.com/dagrejs/dagre) library for laying out the nodes and edges. To set up this layout, you pass a \`dagre.grahlib.Graph\` as a graph paramter within \`networkType\`.
+This layout uses the [dagrejs](https://github.com/dagrejs/dagre) library for positioning the nodes and edges. To set up this layout, you pass a \`dagre.grahlib.Graph\` as a \`graph\` prop and set \`networkType="dagre"\`.
 
-When you are setting up with dagre graph you must iterate over the nodes and edges prior to sending them to \`NetworkFrame\`, see code block below for details. At this time you can also specify [layout settings](https://github.com/dagrejs/dagre/wiki#configuring-the-layout).
+When you are setting up a dagre graph you must iterate over the nodes and edges prior to sending them to \`NetworkFrame\`, see code block below for details. During setup you can also specify [layout settings](https://github.com/dagrejs/dagre/wiki#configuring-the-layout).
 
     `}
       />
@@ -293,14 +291,6 @@ When you are setting up with dagre graph you must iterate over the nodes and edg
         type={NetworkFrame}
         overrideProps={overrideProps}
         pre={pre}
-      />
-      <MarkdownText
-        text={`
-## What next?
-
-For technical specifications on all of NetworkFrames's features, reference the [NetworkFrame API](#api/networkframe) docs.
-
-`}
       />
     </div>
   )

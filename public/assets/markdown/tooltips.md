@@ -1,4 +1,4 @@
-Tooltips are a type of [annnotation](/guides/annotations), called `frame-hover`. You could manually send that annotation type to the `annotations` prop and hamange hover state to handle tooltips, or you can use the following built-in conveniences to turn on tooltips for any frame:
+Tooltips are a type of [annnotation](/guides/annotations), called `frame-hover`. You could manually send that annotation type to the `annotations` prop and manage hover state to handle tooltips, or you can use the following built-in conveniences to turn on tooltips for any frame:
 
 - Set the `hoverAnnotation` property to `true`
 - Base CSS for tooltips to get you started:
@@ -6,22 +6,22 @@ Tooltips are a type of [annnotation](/guides/annotations), called `frame-hover`.
 ```css
 .tooltip-content {
   background: white;
-  border: 1px solid black;
+  position: relative;
+  border: 1px solid #ddd;
   color: black;
   padding: 10px;
-  z-index: 99;
+  z-index: 100;
   transform: translateX(-50%) translateY(5px);
   min-width: 120px;
 }
 
 circle.frame-hover {
-  fill: none;
-  stroke: black;
-  r: 10;
+  stroke: #aaa;
+  r: 4;
 }
 ```
 
-Semiotic automatically creates a voronoi of hover regions on your chart. For ORFrame, it defaults to hovering for the entire column, if you'd prefer to have hover enabled for individual pieces, you can set `pieceHoverAnnotation` to `true`.
+Semiotic automatically creates a voronoi of hover regions on your chart. For \`ORFrame\`, it defaults to hovering for the entire column, if you'd prefer to have hover enabled for individual pieces, you can set `pieceHoverAnnotation` to `true`.
 
 ```jsx
 // Point hovering for XYFrame or NetworkFrame and column hovering for ORFrame
@@ -29,7 +29,7 @@ Semiotic automatically creates a voronoi of hover regions on your chart. For ORF
    hoverAnnotation={true}
 />
 
-// Point hovering for ORFrame
+// Column hovering for ORFrame
 <ORFrame
    hoverAnnotation={true}
 />

@@ -120,15 +120,14 @@ In this example, we pass those points and set \`summaryType: "violin" \`.
 
 Instead of sending just a string \`summaryType="violin"\` you can send an object with additional options to specify the bin sizes and behavior.
 \`\`\`jsx
-summaryType={ type: "violin", 
-    bins: 25 // Number, Bins ito bin the values into,
+summaryType={{ type: "violin", 
+    bins: 25, // Number, Bins ito bin the values into,
     binValue: d => d.length, //Function that determines the summarized value (by default it’s the number of items in a bin),
-    useBins: true //Boolean, If set to false, bins will have a one-to-one correspondence with the points passed to the column, allowing you to create your own samples without trying to wrangle bin numbers,
-    curve: curveCatmullRom //d3-shape-like curve function,
-    relative: false //Boolean, Whether or not the scale of each individual plot is relative to the maximum of all plots or only to its own plot (you can combine a relative={true} with,
+    useBins: true, //Boolean, if set to false, bins will have a one-to-one correspondence with the points passed to the column, allowing you to create your own samples without trying to wrangle bin numbers,
+    curve: curveCatmullRom, //d3-shape-like curve function,
+    relative: false // Boolean, Whether or not the scale of each individual plot is relative to the maximum of all plots or only to its own plot (you can combine a relative={true} with,
     // axis: Object, Uses the same axis settings from everywhere else but makes an axis for each column
-
-}\`\`\`
+}}\`\`\`
 `}
       />
       <MarkdownText
@@ -152,13 +151,13 @@ This example is the same as the heatmap except we are passing \`"heatmap"\` as t
 
 Instead of sending just a string \`summaryType="heatmap"\` you can send an object with additional options to specify the bin sizes and behavior.
 \`\`\`jsx
-summaryType={ type: "heatmap", 
-    bins: 25 // Number, Bins ito bin the values into,
+summaryType={{ type: "heatmap", 
+    bins: 25, // Number, Bins ito bin the values into,
     binValue: d => d.length, //Function that determines the summarized value (by default it’s the number of items in a bin),
-    useBins: true //Boolean, If set to false, bins will have a one-to-one correspondence with the points passed to the column, allowing you to create your own samples without trying to wrangle bin numbers,
-    relative: false //Boolean, Whether or not the scale of each individual plot is relative to the maximum of all plots or only to its own plot (you can combine a relative={true} with,
+    useBins: true, //Boolean, If set to false, bins will have a one-to-one correspondence with the points passed to the column, allowing you to create your own samples without trying to wrangle bin numbers,
+    relative: false, //Boolean, Whether or not the scale of each individual plot is relative to the maximum of all plots or only to its own plot (you can combine a relative={true} with,
     // axis: Object, Uses the same axis settings from everywhere else but makes an axis for each column   
-}\`\`\`
+}}\`\`\`
 
 `}
       />
@@ -185,7 +184,7 @@ This example is the same as the heatmap except we are passing \`"boxplot"\` as t
 
 Instead of sending just a string \`summaryType="boxplot"\` you can send an object with additional options to specify the bin sizes and behavior.
 \`\`\`jsx
-summaryType={ type: "boxplot", 
+summaryType={{ type: "boxplot", 
     // elementStyleFn: Function, takes a string and returns an object that determines the style of the corresponding boxplot elements:
         //“whisker” - The line running from the minimum to the maximum value
         //“max” - The line (perpendicular to the whisker) indicating the maximum value
@@ -194,8 +193,7 @@ summaryType={ type: "boxplot",
         //“iqrarea” - The rectangle (or angle in radial projection) indicating the interquartile range
         //“q3area” - The rectangle (or angle in radial projection) indicating the 3rd Quartile range
         //“q1area” - The rectangle (or angle in radial projection) indicating the 1st Quartile range
-  }\`\`\`
-
+}}\`\`\`
 `}
       />
       <MarkdownText
@@ -220,13 +218,13 @@ This example is the same as the heatmap except we are passing \`"histogram"\` as
 
 Instead of sending just a string \`summaryType="histogram"\` you can send an object with additional options to specify the bin sizes and behavior.
 \`\`\`jsx
-summaryType={ type: "histogram", 
-    bins: 25 // Number, Bins ito bin the values into,
+summaryType={{ type: "histogram", 
+    bins: 25, // Number, bins ito bin the values into,
     binValue: d => d.length, //Function that determines the summarized value (by default it’s the number of items in a bin),
-    useBins: true //Boolean, If set to false, bins will have a one-to-one correspondence with the points passed to the column, allowing you to create your own samples without trying to wrangle bin numbers,
-    relative: false //Boolean, Whether or not the scale of each individual plot is relative to the maximum of all plots or only to its own plot (you can combine a relative={true} with,
+    useBins: true, // Boolean, if set to false, bins will have a one-to-one correspondence with the points passed to the column, allowing you to create your own samples without trying to wrangle bin numbers,
+    relative: false, // Boolean, whether or not the scale of each individual plot is relative to the maximum of all plots or only to its own plot,
     // axis: Object, Uses the same axis settings from everywhere else but makes an axis for each column
-  }\`\`\`
+}}\`\`\`
 
 `}
       />
@@ -252,13 +250,11 @@ This example is the same as the heatmap except we are passing \`"contour"\` as t
 
 Instead of sending just a string \`summaryType="contour"\` you can send an object with additional options to specify the bin sizes and behavior.
 \`\`\`jsx
-summaryType={ type: "contour", 
-    resolution: 100 // Integer, the “pixel resolution” of the contour. Higher values will make the resulting rings more granular
+summaryType={{ type: "contour", 
+    resolution: 100, // Integer, the “pixel resolution” of the contour. Higher values will make the resulting rings more granular
     thresholds: 8, // Integer, more of a hint than a setting but it tries to give you this number of “steps” to your contour
     bandwidth: 12, // Integer, width in pixels (in the native resolution, so 4% if your resolution is set to the default of 500) that determines the size of each threshold
-
-  }\`\`\`
-
+}}\`\`\`
 `}
       />
       <MarkdownText
@@ -283,25 +279,15 @@ This example is the same as the heatmap except we are passing \`"ridgeline"\` as
 
 Instead of sending just a string \`summaryType="ridgeline"\` you can send an object with additional options to specify the bin sizes and behavior.
 \`\`\`jsx
-summaryType={ type: "ridgeline", 
-    bins: 25 // Number, Bins ito bin the values into,
+summaryType={{ type: "ridgeline", 
+    bins: 25, // Number, bins ito bin the values into,
     binValue: d => d.length, //Function that determines the summarized value (by default it’s the number of items in a bin),
-    useBins: true //Boolean, If set to false, bins will have a one-to-one correspondence with the points passed to the column, allowing you to create your own samples without trying to wrangle bin numbers,
-    curve: curveCatmullRom //d3-shape-like curve function,
-    amplitude: 0 //Number, pixels the plot is allowed to overflow into the above (or left) column.
-    relative: false //Boolean, Whether or not the scale of each individual plot is relative to the maximum of all plots or only to its own plot (you can combine a relative={true} with,
+    useBins: true, //Boolean, if set to false, bins will have a one-to-one correspondence with the points passed to the column, allowing you to create your own samples without trying to wrangle bin numbers,
+    curve: curveCatmullRom, //d3-shape-like curve function,
+    amplitude: 0, //Number, pixels the plot is allowed to overflow into the above (or left) column.
+    relative: false, //Boolean, Whether or not the scale of each individual plot is relative to the maximum of all plots or only to its own plot (you can combine a relative={true} with,
     // axis: Object, Uses the same axis settings from everywhere else but makes an axis for each column
-  }\`\`\`
-
-`}
-      />
-
-      <MarkdownText
-        text={`
-## What next?
-
-For technical specifications on all of OrdinalFrame's features, reference the [OrdinalFrame API](#api/OrdinalFrame) docs.
-
+}}\`\`\`
 `}
       />
     </div>

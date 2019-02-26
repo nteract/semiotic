@@ -281,15 +281,15 @@ export default function CreateALineChart() {
     <div>
       <MarkdownText
         text={`
-Creating a scatterplot, and scatterplot using a custom point with XYFrame and hover behavior and styling.
+Creating a scatterplot, and scatterplot using a custom point with \`XYFrame\` and hover behavior and styling.
 
 This page uses box office data from [Box Office Mojo](https://www.boxofficemojo.com/).
 
 ## Scatterplot
 
-The XYFrame takes \`points\` as an array of objects. Each object represents a point. 
+The \`XYFrame\` takes \`points\` as an array of objects. Each object represents a point. 
 
-In this example, we pass a \`xExtent={[0]}\` and \`yExtent={[0]}\` to set the lower bound of the xAxis and yAxis to zero, otherwise it would create an exent based on the minimum and maximum values on your  \`xAccessor\` and \`yAccessor\`.
+In this example, we pass a \`xExtent={[0]}\` and \`yExtent={[0]}\` to set the lower bound of the xAxis and yAxis to zero, otherwise it would create an exent based on the minimum and maximum values on your  \`xAccessor\` and \`yAccessor\`. Your accessors can be a string key to access the property or a function.
 
 `}
       />
@@ -303,7 +303,16 @@ In this example, we pass a \`xExtent={[0]}\` and \`yExtent={[0]}\` to set the lo
         text={`
 ## Scatterplot with Custom Points
 
-XYFrame takes a \`customPointMark\` which allows you to render the points with a custom function. 
+XYFrame takes a \`customPointMark\` which allows you to render the points with custom logic. 
+
+\`customPointMark={({ d }) => {
+  return (
+    <g>
+      <circle r={rScale(d.grossWeekly)} stroke="white" />
+      <text>{d.week}</text>
+    </g>
+  )
+}}\`
 `}
       />
       <DocumentFrame
@@ -321,8 +330,7 @@ const rScale = scaleSqrt()
         text={`
 ## Scatterplot with Hover
 
-Enabeling the \`hoverAnnotation\` prop to true gives you default tooltips based on the \`xAccessor\` and \`yAccessor\` values. You can override this default by passing a \`tooltipContent\` function 
-
+Enabeling the \`hoverAnnotation={true}\` prop  gives you default tooltips based on the \`xAccessor\` and \`yAccessor\` values. You can override this default by passing a \`tooltipContent\` function, to learn more, see the [tooltips](/guides/tooltips) guide.
 `}
       />
       <DocumentFrame
@@ -330,14 +338,6 @@ Enabeling the \`hoverAnnotation\` prop to true gives you default tooltips based 
         type={XYFrame}
         overrideProps={overrideProps}
         startHidden
-      />
-      <MarkdownText
-        text={`
-## What next?
-
-For technical specifications on all of XYFrame's features, reference the [XYFrame API](#api/xyframe) docs.
-
-`}
       />
     </div>
   )

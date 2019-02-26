@@ -300,16 +300,6 @@ Sometimes the default size isn't the aspect ratio you need, you can still pass a
         pre={`import { curveMonotoneX } from "d3-shape"`}
         startHidden
       />
-      <MarkdownText
-        text={`
-## What next?
-
-For technical specifications on all of \`XYFrame\`'s features, reference the [XYFrame API](#api/xyframe) docs.
-For technical specifications on all of \`OrdinalFrames\`'s features, reference the [OrdinalFrame API](#api/ordinalframe) docs.
-For technical specifications on all of \`NetworkFrame\`'s features, reference the [NetworkFrame API](#api/networkframe) docs.
-
-`}
-      />
     </div>
   )
 }

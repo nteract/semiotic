@@ -522,6 +522,8 @@ You can use a key other than \`coordinates\` by chaging the \`lineDataAccessor\`
 
 In this example, we also pass \`yExtent={[0]}\` to set the lower bound of the yAxis to zero, otherwise it would create an exent based on the minimum and maximum values derived from your \`yAccessor\`.
 
+Your accessors can be a string key to access the property or a function.
+
 `}
       />
       <DocumentFrame
@@ -655,7 +657,7 @@ Automatically adds each following day to the sum of the previous days. Create th
         text={`
 ## Bump Line Chart
 
-Automatically adds each following day to the sum of the previous days. Create this by setting \`lineType"bumpline"\`.
+Instead of using the raw values from the \`yAccessor\` this chart type is based on rank, \`lineType"bumpline"\`.
 
 `}
       />
@@ -669,8 +671,7 @@ Automatically adds each following day to the sum of the previous days. Create th
         text={`
 ## Line Chart with Hover
 
-Creating a line chart, stacked area and bump area chart using
-XYFrame along with hover behavior and styling in Semiotic.
+To add tooltips, you simply set \`hoverAnnotation={true}\`. By default the tooltips show the x and y values, but you can customize this with the \`tooltipContent\` prop. To learn more, see the [tooltips](/guides/tooltips) guide.
 
 `}
       />
@@ -679,14 +680,6 @@ XYFrame along with hover behavior and styling in Semiotic.
         type={XYFrame}
         overrideProps={overrideProps}
         startHidden
-      />
-      <MarkdownText
-        text={`
-## What next?
-
-For technical specifications on all of XYFrame's features, reference the [XYFrame API](#api/xyframe) docs.
-
-`}
       />
     </div>
   )

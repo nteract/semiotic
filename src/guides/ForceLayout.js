@@ -3,7 +3,7 @@ import MarkdownText from "../MarkdownText"
 import DocumentFrame from "../DocumentFrame"
 import { NetworkFrame } from "semiotic"
 import theme from "../theme"
-// import { hierarchy } from "d3-hierarchy"
+
 import { forceSimulation, forceY, forceCollide } from "d3-force"
 
 const frameProps = {
@@ -94,16 +94,15 @@ export default class ForceLayouts extends React.Component {
         <MarkdownText
           text={`
 
-The data on this page use the [Flare visualization toolkit](https://github.com/prefuse/Flare) package hierarchy used in [d3-hierarchy](https://github.com/d3/d3-hierarchy) examples by Mike Bostock.
-
-## Force Layout
-
 \`NetworkFrame\` allows you to render several data visualizations using a force layout created with [d3-force](https://github.com/d3/d3-force). For these examples you can pass a \`nodes\` and an \`edges\` list, or just an \`edges\` list and nodes with be inferred.
 
-Edges can either be an array of objects with a \`source\` and a \`target\` property, or a hierarchical object with an array of \`children\` containing objects with \`children\` all the way down the hierarchy. The assumption is that each child's \`id\` property is unique, you can use the \`nodeIdAccessor\` to specify a different key for the id if needed. These types of hierarchies can be created easily from a parent/child  list with d3's [stratify](https://github.com/d3/d3-hierarchy#stratify) functionality.  
+Edges can either be an array of objects with a \`source\` and a \`target\` property, or a hierarchical object with an array of \`children\` containing objects with \`children\` all the way down the hierarchy. The assumption is that each child's \`id\` property is unique, you can use the \`nodeIdAccessor\` to specify a different key for the id if needed. These types of hierarchies can be created easily from a parent/child  list with d3's [stratify](https://github.com/d3/d3-hierarchy#stratify) functionality.
 
-The built in force types are \`force\`, and \`motifs\`.
+The built-in force types are \`force\`, and \`motifs\`.
 
+The data on this page use the [Flare visualization toolkit](https://github.com/prefuse/Flare) package hierarchy.
+
+## Force Layout
     `}
         />
 
@@ -138,28 +137,30 @@ This example is the same as the example above with the additional prop \`edgeTyp
           text={`
 ### Force Layout Settings 
 
+A detailed list of force layout settings:
+
 \`\`\`jsx
 networkType={ 
   type: "force" // Can also be "motifs" 
      //motifs lays out separated networks side by side
      //without applying a force between them
-  zoom: true, //zoom the laid out nodes in or out so that they fit exactly in the specified size
+  zoom: true, // Zoom the laid out nodes in or out so that they fit the specified size
   iterations: 500, // How many times to run forceSimulation
   edgeStrength: 0.1, // What modifier to use for the strength of connection between nodes with edges
-  distanceMax: Infinity, //How far out, in pixels, to exert simulation effects
-  edgeDistance: Infinity, //Optimal pixel distance of nodes that are connected
-  forceManyBody:  d => -25 * nodeSizeAccessor(d)// Strength of the built in charge
+  distanceMax: Infinity, // How far out, in pixels, to exert simulation effects
+  edgeDistance: Infinity, // Optimal pixel distance of nodes that are connected
+  forceManyBody:  d => -25 * nodeSizeAccessor(d) // Strength of the built in charge
 }
 edgeType={undefined} //Can take one of the following
   "angled"
-  "linearc" //single curved edges 
-  "curve" //double curved edges
-  "ribbon" //filled area with a width equal to the width property of the edge (which you define via the networkFrame’s edgeWidthAccessor)
-  "arrowhead" //a triangular arrowhead
-  "halfarrow" //a half-triangle arrowhead
-  "nail" //a fat end on the source and the sharp end on the target
-  "comet" //a fat end on the target and the sharp end on the source
-  "taffy" //the width of the edge width tapers in the center based on the distance between nodes (to highlight the distance that nodes have from each other in spite of being strongly connected)
+  "linearc" // Single curved edges 
+  "curve" // Double curved edges
+  "ribbon" // Filled area with a width equal to the width property of the edge (which you define via the networkFrame’s edgeWidthAccessor)
+  "arrowhead" // A triangular arrowhead
+  "halfarrow" // A half-triangle arrowhead
+  "nail" // A fat end on the source and the sharp end on the target
+  "comet" // A fat end on the target and the sharp end on the source
+  "taffy" // The width of the edge width tapers in the center based on the distance between nodes (to highlight the distance that nodes have from each other in spite of being strongly connected)
 
 
 \`\`\`
@@ -170,7 +171,7 @@ edgeType={undefined} //Can take one of the following
           text={`
 ## Network Graph Custom Simulation
 
-In addition to being able to specify parameters for the built in force simulation, you can also create one and pass it as the \`simulation\` parameter
+In addition to being able to specify parameters for the built-in force simulation, you can also create one and pass it as the \`simulation\` parameter
 
 \`\`\`jsx
 const customSimulation = forceSimulation().force(
@@ -203,6 +204,7 @@ const customSimulation = forceSimulation().force(
 
 ## Bubble Chart
 
+The following example uses a custom simulation, and it shows and example with the \`force\` layout that doesn't use any edges.
   `}
         />
 
@@ -211,15 +213,6 @@ const customSimulation = forceSimulation().force(
           overrideProps={bubbleOverrideProps}
           type={NetworkFrame}
           pre={pre}
-        />
-
-        <MarkdownText
-          text={`
-## What next?
-
-For technical specifications on all of NetworkFrames's features, reference the [NetworkFrame API](#api/networkframe) docs.
-
-`}
         />
       </div>
     )

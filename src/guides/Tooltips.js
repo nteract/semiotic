@@ -181,7 +181,7 @@ export default () => {
       <MarkdownPage filename="tooltips" />
       <MarkdownText
         text={`
-## Shared Tooltips
+## Shared Tooltip Example
 
 `}
       />

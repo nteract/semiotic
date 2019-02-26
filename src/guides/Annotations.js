@@ -265,7 +265,7 @@ export default class Annotations extends React.Component {
       <div>
         <MarkdownText
           text={`
-All frames have annotation capabilities that let you easily deploy [react-annotations](https://react-annotation.susielu.com/). There is also built-in support for automatic label adjustment using [labella.js](http://twitter.github.io/labella.js/).
+All frames have annotation capabilities that let you easily deploy [react-annotation](https://react-annotation.susielu.com/). There is also built-in support for automatic label adjustment using [labella.js](http://twitter.github.io/labella.js/).
 
 All frames takes a prop \`annotations\` which is an array of annotation objects:
 
@@ -293,9 +293,8 @@ Each of the following options is a type of annotation that can be passed to the 
 
 \`\`\`       
 
-A detailed example of a single chart with annotations and rich information display. It leverages the DividedLine component and built-in annotation handling to reproduce [Susie Lu's Apple stock chart](https://bl.ocks.org/susielu/23dc3082669ee026c552b85081d90976).
+A detailed example of a single chart with annotations and rich information display. It leverages the \`DividedLine\` component and built-in annotation handling to reproduce [Susie Lu's Apple stock chart](https://bl.ocks.org/susielu/23dc3082669ee026c552b85081d90976).
 
-It also uses a custom x scale using xScaleType to pass a scale built with D3's scaleTime, as well as tooltip processing rules using tooltipContent.
     `}
         />
         <DocumentFrame
@@ -306,7 +305,6 @@ It also uses a custom x scale using xScaleType to pass a scale built with D3's s
 import DividedLine from "semiotic/lib/DividedLine"
 import { AnnotationXYThreshold } from "react-annotation"
 `}
-          useExpanded
         />
         <MarkdownPage filename="annotations" />
       </div>

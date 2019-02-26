@@ -104,7 +104,17 @@ This page uses box office data from [Box Office Mojo](https://www.boxofficemojo.
 
 ## Area Chart
 
-The default setting for XYFrame when you send it lines is to show them as a line chart. You can change this by adding in the prop \`lineType: "area"\` to turn your chart in to areas.
+\`XYFrame\` takes \`lines\` as an object or an array of objects. Each object represents a line. 
+
+Every object needs a \`coordinates\` property with the array of points for that line. The points will be rendered in the order of that array.
+
+You can use a key other than \`coordinates\` by chaging the \`lineDataAccessor\` props.
+
+The default setting for XYFrame when you send it lines is to show them as a line chart. You can override this by adding in the prop \`lineType="area"\` to turn your chart in to areas.
+
+In this example, we also pass \`yExtent={[0]}\` to set the lower bound of the yAxis to zero, otherwise it would create an exent based on the minimum and maximum values derived from your \`yAccessor\`.
+
+Your accessors can be a string key to access the property or a function.
 
 `}
       />
@@ -117,7 +127,7 @@ The default setting for XYFrame when you send it lines is to show them as a line
         text={`
 ## Stacked Area Chart
 
-Similarly, you can change \`lineType: "stackedarea"\` to turn your chart into a stacked area.
+Similarly, you can change \`lineType="stackedarea"\` to turn your chart into a stacked area.
 
 `}
       />
@@ -131,7 +141,7 @@ Similarly, you can change \`lineType: "stackedarea"\` to turn your chart into a 
         text={`
 ## Bump Area Percent Chart
 
-The default setting for XYFrame when you send it lines is to show them as a line chart. You can change this by adding in the prop \`lineType: "stackedarea"\` to turn your chart in to a stacked area.
+If you want to emphasize change in rank with your area chart you can use the \`lineType="bumparea"\` to re-rank the areas when they change.
 
 `}
       />
@@ -145,7 +155,7 @@ The default setting for XYFrame when you send it lines is to show them as a line
         text={`
 ## Stacked Area Percent Chart
 
-The default setting for XYFrame when you send it lines is to show them as a line chart. You can change this by adding in the prop \`lineType: "stackedarea"\` to turn your chart in to a stacked area.
+Changing the \`lineType="stackedpercent"\` and XYFrame will automatically sum each data point as a % of the total for each \`xAccessor\` value as the y data position instead of using the raw values.
 
 `}
       />
@@ -154,7 +164,21 @@ The default setting for XYFrame when you send it lines is to show them as a line
         type={XYFrame}
         overrideProps={overrideProps}
         startHidden
-      />{" "}
+      />
+      <MarkdownText
+        text={`
+## Area Chart with Hover
+
+To add tooltips, you simply set \`hoverAnnotation={true}\`. By default the tooltips show the x and y values, but you can customize this with the \`tooltipContent\` prop. To learn more, see the [tooltips](/guides/tooltips) guide.
+
+`}
+      />
+      <DocumentFrame
+        frameProps={{ ...frameProps, hoverAnnotation: true }}
+        type={XYFrame}
+        overrideProps={overrideProps}
+        startHidden
+      />
     </div>
   )
 }

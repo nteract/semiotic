@@ -107,10 +107,12 @@ export default function CreateABarChart() {
     <div>
       <MarkdownText
         text={`
-      
-## Creating a Pie Chart
+Creating a pie chart, donut chart, nightingale chart, tooltips, and labels using OridinalFrame in Semiotic.  
 
-Creating a pie chart, donut chart, nightingale chart, tooltips, and labels using OridinalFrame in Semiotic.
+## Basic Pie Chart
+
+\`OrdinalFrame\` takes \`data\` as an array of objects. The \`oAccessor\` prop defines which property on the object to use as categorical data, the \`dynamicColumnWidth\` defines which property to use for numerical data, and for pie charts you must also set your \`projection="radial"\`.  
+
       `}
       />
 
@@ -121,7 +123,7 @@ Creating a pie chart, donut chart, nightingale chart, tooltips, and labels using
     
 ### Donut Chart
 
-Change your \`type: "bar"\` to an object \`type: {"type": "bar", innerRadius: 50 }\` to OrdinalFrame to make a donut chart. 
+Change your \`type="bar"\` to an object \`type={{"type": "bar", innerRadius: 50 }}\` to OrdinalFrame to make a donut chart. 
 
     `}
       />
@@ -131,7 +133,7 @@ Change your \`type: "bar"\` to an object \`type: {"type": "bar", innerRadius: 50
   
 ### Wind Rose
 
-Instead of using your pie slice with for your data you can also map the r-size your \`type: "bar"\` to an object \`type: {"type": "bar", innerRadius: 50 }\` to OrdinalFrame to make a donut chart. 
+Instead of using your pie slice angle for your numerical data you could instead set \`rAcccessor="tweets"\` and your \`rScaleType={scaleSqrt()}\` to use create a wind rose. 
 
   `}
       />
@@ -147,7 +149,7 @@ Instead of using your pie slice with for your data you can also map the r-size y
     
 ### Nightingale Chart using the Same Data Model
 
-Change your \`type: "bar"\` to an object \`type: {"type": "bar", innerRadius: 50 }\` to OrdinalFrame to make a donut chart. 
+Instead of just showing tweet count, you can change your wind rose into a nightingale. Change the rAccessor into an array of data properties: \`rAcessor:{["tweets", "retweets", "favorites"]}\` 
 
     `}
       />
@@ -164,7 +166,7 @@ Change your \`type: "bar"\` to an object \`type: {"type": "bar", innerRadius: 50
     
 ### Nightingale Chart with Flattened Data Model
 
-Change your \`type: "bar"\` to an object \`type: {"type": "bar", innerRadius: 50 }\` to OrdinalFrame to make a donut chart. 
+Another approach is flattening your data so that you have a property called action with the activity type, i.e. tweet, retweet, or favorite. And a property called value. In this case your rAccessor changes to \`rAccessor="value"\` 
 
     `}
       />
@@ -181,8 +183,18 @@ Change your \`type: "bar"\` to an object \`type: {"type": "bar", innerRadius: 50
     
 ### Sorted Nightingale
 
-Change your \`type: "bar"\` to an object \`type: {"type": "bar", innerRadius: 50 }\` to OrdinalFrame to make a donut chart. 
+You can also pass a \`sortO\` property to change the order for your ordinal data.
 
+\`sortO={(a, b, c, d) => {
+  return (
+    c[0].tweets +
+    c[0].retweets +
+    c[0].favorites -
+    d[0].tweets -
+    d[0].retweets -
+    d[0].favorites
+  )
+}}\`
     `}
       />
       <DocumentFrame
