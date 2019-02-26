@@ -176,7 +176,8 @@ export type XYFrameProps = {
   projectedPoints?: Array<Object>,
   renderOrder?: $ReadOnlyArray<"lines" | "points" | "areas">,
   useAreasAsInteractionLayer?: boolean,
-  useSummariesAsInteractionLayer?: boolean
+  useSummariesAsInteractionLayer?: boolean,
+  onUnmount?: Function
 }
 
 type State = {
@@ -315,6 +316,12 @@ class XYFrame extends React.Component<XYFrameProps, State> {
     canvasDrawing: [],
     annotatedSettings: {},
     overlay: undefined
+  }
+
+  componentWillUnmount() {
+    if (this.props.onUnmount) {
+      this.props.onUnmount(this.props, this.state)
+    }
   }
 
   componentWillMount() {

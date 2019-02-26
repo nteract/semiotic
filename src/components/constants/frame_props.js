@@ -186,7 +186,8 @@ const sharedframeproptypes = {
   annotationSettings: PropTypes.object,
   renderKey: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
   renderOrder: PropTypes.array,
-  legend: PropTypes.oneOfType([PropTypes.object, PropTypes.bool])
+  legend: PropTypes.oneOfType([PropTypes.object, PropTypes.bool]),
+  onUnmount: PropTypes.func
 }
 
 export const xyframeproptypes = {

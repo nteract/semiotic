@@ -74,7 +74,7 @@ const orData2 = [
     column: "a",
     color: "darkred",
     step: 2,
-    value: 10
+    value: 50
   },
   {
     column: "b",
@@ -183,7 +183,8 @@ export default class FacetControllerDemo extends React.Component {
     this.state = {
       type: "partition",
       projection: "radial",
-      xyframe: { ...xyFrameData3 }
+      xyframe: { ...xyFrameData3 },
+      removeFrame: false
     }
   }
   render() {
@@ -211,6 +212,17 @@ export default class FacetControllerDemo extends React.Component {
           >
             Change
           </button>
+
+          <button
+            style={{ color: "black" }}
+            onClick={() =>
+              this.setState({
+                removeFrame: true
+              })
+            }
+          >
+            Remove Frame
+          </button>
           <div style={{ display: "flex" }}>
             <FacetController
               size={[300, 300]}
@@ -221,7 +233,14 @@ export default class FacetControllerDemo extends React.Component {
               type="bar"
               style={d => ({ fill: d.color })}
               pieceIDAccessor="color"
-              pieceHoverAnnotation={true}
+              pieceHoverAnnotation={[
+                { type: "desaturation-layer" },
+                { type: "frame-hover" },
+                {
+                  type: "highlight",
+                  style: { fill: "orange", fillOpacity: 0.5 }
+                }
+              ]}
               sharedRExtent={true}
               axis={{ orient: "left" }}
             >
@@ -241,6 +260,7 @@ export default class FacetControllerDemo extends React.Component {
               lineIDAccessor={d => d.color}
               axes={[{ orient: "left" }, { orient: "bottom" }]}
               title="LINE"
+              sharedYExtent={true}
               tooltipContent={d => {
                 return (
                   <div
@@ -254,7 +274,9 @@ export default class FacetControllerDemo extends React.Component {
               }}
             >
               <XYFrame lines={[xyFrameData1, xyFrameDataBase]} />
-              <XYFrame lines={[xyFrameData2, xyFrameDataBase]} />
+              {!this.state.removeFrame && (
+                <XYFrame lines={[xyFrameData2, xyFrameDataBase]} />
+              )}
               <XYFrame
                 lines={[this.state.xyframe, xyFrameDataBase]}
                 xExtent={[2]}
@@ -279,7 +301,10 @@ export default class FacetControllerDemo extends React.Component {
               rAccessor="value"
               type="bar"
               style={d => ({ fill: d.color })}
-              pieceHoverAnnotation={true}
+              pieceHoverAnnotation={[
+                { type: "frame-hover" },
+                { type: "highlight", style: { fill: "orange" } }
+              ]}
               pieceIDAccessor="color"
               sharedRExtent={true}
               axis={{ orient: "left" }}

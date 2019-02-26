@@ -20,7 +20,30 @@ const framePropHash = {
   OrdinalFrame: ordinalframeproptypes,
   ResponsiveNetworkFrame: { ...networkframeproptypes, ...responsiveprops },
   ResponsiveXYFrame: { ...xyframeproptypes, ...responsiveprops },
-  ResponsiveOrdinalFrame: { ...ordinalframeproptypes, ...responsiveprops }
+  ResponsiveOrdinalFrame: { ...ordinalframeproptypes, ...responsiveprops },
+  SparkNetworkFrame: { ...networkframeproptypes },
+  SparkXYFrame: { ...xyframeproptypes },
+  SparkOrdinalFrame: { ...ordinalframeproptypes }
+}
+
+const buildNewState = (prevState, extentValue, extentType, extentPosition) => {
+  const oldExtents = prevState.rawExtents[extentType] || {}
+  oldExtents[extentPosition] = extentValue
+  const extentMinMaxValues = Object.values(oldExtents).flat()
+
+  return {
+    extents: {
+      ...prevState.extents,
+      [extentType]:
+        extentMinMaxValues.length === 0
+          ? undefined
+          : [Math.min(...extentMinMaxValues), Math.max(...extentMinMaxValues)]
+    },
+    rawExtents: {
+      ...prevState.rawExtents,
+      [extentType]: oldExtents
+    }
+  }
 }
 
 function validFrameProps(originalProps, frameType) {
@@ -46,6 +69,7 @@ type Props = FacetControllerProps & OrdinalFrameProps & XYFrameProps
 
 type State = {
   extents: Object,
+  rawExtents: Object,
   facetHover: ?Object
 }
 
@@ -55,15 +79,9 @@ class FacetController extends React.Component<Props, State> {
 
     this.state = {
       extents: {},
+      rawExtents: {},
       facetHover: undefined
     }
-  }
-
-  componentWillReceiveProps() {
-    /**
-     * Clear extent to ensure that you're not keeping old minima/maxima based on old data
-     */
-    this.setState({ extents: {} })
   }
 
   /**
@@ -71,35 +89,23 @@ class FacetController extends React.Component<Props, State> {
    * use that else use the onChange version so we can in return
    * normalize all of the facets to have the same extents
    */
-  createExtent = (extentType: string, state: State) => {
+  createExtent = (extentType: string, state: State, index: number) => {
     return state.extents && state.extents[extentType]
       ? {
-          onChange: this.extentHandler(extentType),
+          onChange: this.extentHandler(extentType, index),
           extent: state.extents[extentType]
         }
-      : { onChange: this.extentHandler(extentType) }
+      : { onChange: this.extentHandler(extentType, index) }
   }
 
   /**
    * Whenever the extent changes, create the min/max values for each extentType
    * so this could be rExtent for OrdinalFrame or x/yExtent for the XYFrame
    */
-  extentHandler = (extentType: string) => {
+  extentHandler = (extentType: string, extentPosition: number) => {
     return (extentValue: Array<number>) => {
       this.setState(prevState => {
-        const extentMinMaxValues = (prevState.extents[extentType] || []).concat(
-          extentValue
-        )
-
-        return {
-          extents: {
-            ...prevState.extents,
-            [extentType]: [
-              Math.min(...extentMinMaxValues),
-              Math.max(...extentMinMaxValues)
-            ]
-          }
-        }
+        return buildNewState(prevState, extentValue, extentType, extentPosition)
       })
 
       return extentValue
@@ -116,25 +122,42 @@ class FacetController extends React.Component<Props, State> {
     originalAnnotations: Array<Object>,
     state: State
   }) => {
-    const annotations = [...originalAnnotations]
-
     if (state.facetHover) {
-      const facetHoverAnnotation = { ...state.facetHover }
-      if (facetHoverAnnotation.type === "column-hover") {
-        facetHoverAnnotation.facetColumn = facetHoverAnnotation.column.name
-        facetHoverAnnotation.column = undefined
-      } else {
-        facetHoverAnnotation.type = "frame-hover"
-        facetHoverAnnotation.y = undefined
-        facetHoverAnnotation.yBottom = undefined
-        facetHoverAnnotation.yMiddle = undefined
-        facetHoverAnnotation.yTop = undefined
-      }
+      const annotations = [...originalAnnotations]
 
-      annotations.push(facetHoverAnnotation)
+      let annotationBase = state.facetHoverAnnotations
+
+      if (annotationBase === true) {
+        annotationBase = [{ ...state.facetHover }]
+      } else {
+        annotationBase = (
+          this.props.hoverAnnotation || this.props.pieceHoverAnnotation
+        ).map(d => {
+          const decoratedAnnotation = { ...state.facetHover, ...d }
+
+          return decoratedAnnotation
+        })
+      }
+      annotationBase.forEach(annotation => {
+        if (annotation.type === "column-hover") {
+          annotation.facetColumn = annotation.column.name
+          annotation.column = undefined
+        } else {
+          if (!annotation.type) {
+            annotation.type = "frame-hover"
+          }
+          annotation.y = undefined
+          annotation.yBottom = undefined
+          annotation.yMiddle = undefined
+          annotation.yTop = undefined
+        }
+      })
+
+      annotations.push(...annotationBase)
+      return annotations
     }
 
-    return annotations
+    return originalAnnotations
   }
 
   /**
@@ -145,12 +168,14 @@ class FacetController extends React.Component<Props, State> {
    */
   mapChildrenWithAppropriateProps = ({
     child,
+    index,
     originalAnnotations,
     props,
     state
   }: {
     child: Element<*>,
     props: Props,
+    index: number,
     state: State,
     originalAnnotations: Array<Object>
   }) => {
@@ -161,35 +186,65 @@ class FacetController extends React.Component<Props, State> {
     })
     const customProps = { ...props, annotations }
 
-    if (!frameType) {
+    if (!framePropHash[frameType]) {
       return React.cloneElement(child, { facetprops: customProps })
     }
 
     // pieceHoverAnnotation could be an object, so we need to be explicit in checking for true
-    if (props.hoverAnnotation === true || props.pieceHoverAnnotation === true) {
-      customProps.customHoverBehavior = d => this.setState({ facetHover: d })
+    if (props.hoverAnnotation || props.pieceHoverAnnotation) {
+      customProps.customHoverBehavior = d =>
+        this.setState({
+          facetHover: d,
+          facetHoverAnnotations:
+            props.hoverAnnotation || props.pieceHoverAnnotation
+        })
     }
 
     if (
       (frameType === "OrdinalFrame" ||
-        frameType === "ResponsiveOrdinalFrame") &&
+        frameType === "ResponsiveOrdinalFrame" ||
+        frameType === "SparkOrdinalFrame") &&
       props.sharedRExtent === true
     ) {
-      customProps.rExtent = this.createExtent("rExtent", state)
+      customProps.rExtent = this.createExtent("rExtent", state, index)
+      customProps.onUnmount = () => {
+        this.setState(prevState => {
+          return buildNewState(prevState, [], "rExtent", index)
+        })
+      }
     }
 
     if (
-      (frameType === "XYFrame" || frameType === "ResponsiveXYFrame") &&
+      (frameType === "XYFrame" ||
+        frameType === "ResponsiveXYFrame" ||
+        frameType === "SparkXYFrame") &&
       props.sharedXExtent === true
     ) {
-      customProps.xExtent = this.createExtent("xExtent", state)
+      customProps.xExtent = this.createExtent("xExtent", state, index)
+      customProps.onUnmount = () => {
+        this.setState(prevState => {
+          return buildNewState(prevState, [], "xExtent", index)
+        })
+      }
     }
 
     if (
-      (frameType === "XYFrame" || frameType === "ResponsiveXYFrame") &&
+      (frameType === "XYFrame" ||
+        frameType === "ResponsiveXYFrame" ||
+        frameType === "SparkXYFrame") &&
       props.sharedYExtent === true
     ) {
-      customProps.yExtent = this.createExtent("yExtent", state)
+      customProps.yExtent = this.createExtent("yExtent", state, index)
+      customProps.onUnmount = () => {
+        this.setState(prevState => {
+          return buildNewState(prevState, [], "yExtent", index)
+        })
+      }
+    }
+    if (customProps.pieceHoverAnnotation) {
+      customProps.pieceHoverAnnotation = []
+    } else if (customProps.hoverAnnotation) {
+      customProps.hoverAnnotation = []
     }
 
     return React.cloneElement(child, validFrameProps(customProps, frameType))
@@ -200,9 +255,11 @@ class FacetController extends React.Component<Props, State> {
    * to use the lifecycle methods.
    */
   processFacetController = memoize((props: Props, state: State) => {
-    return React.Children.map(props.children, child => {
+    return React.Children.map(props.children, (child, index) => {
+      if (!child) return null
       return this.mapChildrenWithAppropriateProps({
         child,
+        index,
         originalAnnotations: child.props.annotations || [],
         props,
         state

@@ -91,8 +91,6 @@ export const svgHighlight = ({
     dID = idAccessor(d.parentArea, i)
   }
 
-  console.log("xyFrameRender", xyFrameRender)
-
   const foundPoints = points.data
     .filter((p, q) => idAccessor({ ...p, ...p.data }, q) === dID)
     .map((p, q) => {
