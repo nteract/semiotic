@@ -54,6 +54,10 @@ header .logo,
   padding-right: 30px;
 }
 
+.logo img {
+  width: 200px;
+}
+
 header h1 {
   margin: 0px;
   font-weight: 300;

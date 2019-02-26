@@ -116,6 +116,8 @@ The Dot Plot compares changes between two values across categories. The initial 
 
 Because annotations are drawn on top of the visualization layer, we need to account for the size of each dot in where we draw the lines so they don't overlap. We also adjust the labels a bit so they line up with the dots.
 
+This data is from [Unicef](https://data.unicef.org/topic/child-survival/neonatal-mortality/).
+
 `}
       />
       <DocumentFrame
