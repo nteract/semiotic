@@ -1765,6 +1765,7 @@ class NetworkFrame extends React.Component<Props, State> {
       adjustedSize,
       adjustedPosition
     } = this.state
+    //TODO PASS FRAME STYLE FNs TO HIGHLIGHT
     const { svgAnnotationRules } = this.props
 
     const d = baseD.ids
@@ -1797,8 +1798,7 @@ class NetworkFrame extends React.Component<Props, State> {
         screenCoordinates: [d.x, d.y],
         adjustedPosition,
         adjustedSize,
-        annotationLayer,
-        voronoiHover
+        annotationLayer
       })
       if (customAnnotation !== null) {
         return customAnnotation
@@ -1915,8 +1915,7 @@ class NetworkFrame extends React.Component<Props, State> {
         screenCoordinates: [d.x, d.y],
         adjustedPosition,
         adjustedSize,
-        annotationLayer,
-        voronoiHover
+        annotationLayer
       })
       if (customAnnotation !== null) {
         return customAnnotation

@@ -204,13 +204,13 @@ export const svgHullEncloseRule = ({
 
 export const svgHighlightRule = ({ d, networkFrameRender }) => {
   const { nodes } = networkFrameRender
-  const { customMark } = nodes
+  const { customMark, styleFn: baseStyle } = nodes
 
-  let styleFn = () => ({})
+  let styleFn = baseStyle
   if (d.style && typeof d.style === "function") {
-    styleFn = d.style
+    styleFn = d => ({ ...baseStyle(d), ...d.style(d) })
   } else if (d.style) {
-    styleFn = () => d.style
+    styleFn = d => ({ ...baseStyle(d), ...d.style })
   }
 
   const transform = `translate(${d.x},${d.y})`

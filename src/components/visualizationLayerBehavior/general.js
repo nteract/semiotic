@@ -95,6 +95,7 @@ export function createPoints({
 
     const pointAriaLabel = `Point at x ${d.x} and y ${d.y}`
 
+    // CUSTOM MARK IMPLEMENTATION
     const renderedCustomMark = !customMark
       ? undefined
       : React.isValidElement(customMark)
@@ -425,8 +426,13 @@ export function createAreas({
         xScale(p[0]),
         yScale(p[1])
       ])
+      // CUSTOM MARK IMPLEMENTATION
       drawD = customMark({
         d,
+        i,
+        classFn: areaClass,
+        styleFn: areaStyle,
+        renderFn,
         projectedCoordinates,
         xScale,
         yScale,

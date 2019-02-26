@@ -329,7 +329,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       axis: baseAxis,
       pieceIDAccessor: basePieceIDAccessor,
       summaryPosition: baseSummaryPosition,
-      multiAxis
+      multiAxis,
+      baseMarkProps = {}
     } = currentProps
 
     const summaryType = objectifyType(baseSummaryType)
@@ -1109,7 +1110,10 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       projection,
       classFn: pieceClass,
       adjustedSize,
-      rScale
+      rScale,
+      chartSize: size,
+      margin,
+      baseMarkProps
     })
 
     const keyedData = calculatedPieceData.reduce((p, c) => {
@@ -1137,7 +1141,9 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         projection,
         eventListenersGenerator,
         adjustedSize,
-        baseMarkProps: currentProps.baseMarkProps || {}
+        baseMarkProps,
+        chartSize: size,
+        margin
       })
 
       calculatedSummaries.originalData = projectedColumns
@@ -1442,11 +1448,11 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         oAccessor,
         rAccessor,
         orFrameProps: this.props,
+        orFrameState: this.state,
         screenCoordinates,
         adjustedPosition,
         adjustedSize,
         annotationLayer,
-        orFrameState: this.state,
         categories: this.state.projectedColumns,
         voronoiHover
       })

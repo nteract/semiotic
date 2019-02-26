@@ -572,7 +572,8 @@ export function orFrameSummaryRenderer({
   projection,
   adjustedSize,
   chartSize,
-  baseMarkProps
+  baseMarkProps,
+  margin
 }: ORFrameSummaryRendererTypes) {
   let summaryRenderFn
   if (typeof type.type === "function") {
@@ -600,7 +601,8 @@ export function orFrameSummaryRenderer({
     projection,
     adjustedSize,
     chartSize,
-    baseMarkProps
+    baseMarkProps,
+    margin
   })
 }
 

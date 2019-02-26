@@ -510,6 +510,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         lineDataAccessor,
         (d: Object | Array<number>) => (Array.isArray(d) ? d : d.coordinates)
       ),
+      renderKeyFn: stringToFn(renderKey, (d, i) => `line-${i}`, true),
       lineType: objectifyType(lineType),
       areaType: objectifyType(areaType),
       lineIDAccessor: stringToFn(lineIDAccessor, l => l.semioticLineID),
@@ -548,6 +549,11 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       // $FlowFixMe
       annotatedSettings.lineType.y1 = () => 0
     }
+    
+   const areaStyleFn = stringToFn(areaStyle, emptyObjectReturnFunction, true)
+   const areaClassFn = stringToFn(areaClass, emptyStringReturnFunction, true)
+   const areaRenderModeFn = stringToFn(areaRenderMode, undefined, true)
+
 
     const margin = calculateMargin({
       margin: currentProps.margin,
@@ -613,7 +619,13 @@ class XYFrame extends React.Component<XYFrameProps, State> {
           yExtent: baseYExtent,
           invertX,
           invertY,
-          adjustedSize: size,
+          adjustedSize,
+          margin,
+          baseMarkProps,
+          areaStyleFn,
+          areaClassFn,
+          areaRenderModeFn,
+          chartSize: size,
           xScaleType,
           yScaleType,
           defined
@@ -825,7 +837,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         customMark: customLineMark,
         type: annotatedSettings.lineType,
         defined: defined,
-        renderKeyFn: stringToFn(renderKey, (d, i) => `line-${i}`, true),
+        renderKeyFn: annotatedSettings.renderKeyFn,
         ariaLabel: lineAriaLabel,
         axesData: currentProps.axes,
         behavior: createLines
@@ -833,13 +845,13 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       areas: {
         accessibleTransform: (data, i) => ({ ...data[i], type: "frame-hover" }),
         data: projectedAreas,
-        styleFn: stringToFn(areaStyle, emptyObjectReturnFunction, true),
-        classFn: stringToFn(areaClass, emptyStringReturnFunction, true),
-        renderMode: stringToFn(areaRenderMode, undefined, true),
+        styleFn: areaStyleFn,
+        classFn: areaClassFn,
+        renderMode: areaRenderModeFn,
         canvasRender: stringToFn(canvasAreas, undefined, true),
         customMark: customAreaMark,
         type: annotatedSettings.areaType,
-        renderKeyFn: stringToFn(renderKey, (d, i) => `area-${i}`, true),
+        renderKeyFn: annotatedSettings.renderKeyFn,
         behavior: createAreas
       },
       points: {
@@ -853,7 +865,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         renderMode: stringToFn(pointRenderMode, undefined, true),
         canvasRender: stringToFn(canvasPoints, undefined, true),
         customMark: customPointMark,
-        renderKeyFn: stringToFn(renderKey, (d, i) => `point-${i}`, true),
+        renderKeyFn: annotatedSettings.renderKeyFn,
         showLinePoints,
         behavior: createPoints
       }
@@ -940,12 +952,9 @@ class XYFrame extends React.Component<XYFrameProps, State> {
     areas: Object,
     points: Object
   }) => {
-    const xAccessor = this.state.xAccessor
-    const yAccessor = this.state.yAccessor
     const showLinePoints = this.props.showLinePoints
 
-    const xScale = this.state.xScale
-    const yScale = this.state.yScale
+    const { xyFrameRender, xScale, yScale, xAccessor, yAccessor } = this.state
 
     let screenCoordinates = []
     const idAccessor = this.state.annotatedSettings.lineIDAccessor
@@ -960,7 +969,8 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         areas,
         points,
         xScale,
-        yScale
+        yScale,
+        xyFrameRender
       })
     }
 

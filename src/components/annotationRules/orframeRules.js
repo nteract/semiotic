@@ -200,9 +200,12 @@ export const svgHighlightRule = ({
   const thisID = pieceIDAccessor(d)
   const thisO = findFirstAccessorValue(oAccessor, d)
 
+  const { pieces } = orFrameRender
+  const { styleFn } = pieces
+
   const foundPieces =
-    (orFrameRender.pieces &&
-      orFrameRender.pieces.data
+    (pieces &&
+      pieces.data
         .filter(p => {
           return (
             (thisID === undefined ||
@@ -213,12 +216,17 @@ export const svgHighlightRule = ({
         })
         .map((p, q) => {
           let styleObject = {
-            style: {}
+            style: styleFn({ ...p.piece, ...p.piece.data })
           }
           if (d.style && typeof d.style === "function") {
-            styleObject = { style: d.style({ ...p.piece, ...p.piece.data }) }
+            styleObject = {
+              style: {
+                ...styleObject,
+                ...d.style({ ...p.piece, ...p.piece.data })
+              }
+            }
           } else if (d.style) {
-            styleObject = { style: d.style }
+            styleObject = { style: { ...styleObject, ...d.style } }
           }
           const styledD = { ...p.renderElement, ...styleObject }
           const className = `highlight-annotation ${(d.class &&

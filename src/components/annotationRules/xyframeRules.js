@@ -78,7 +78,8 @@ export const svgHighlight = ({
   areas = { data: [] },
   idAccessor,
   xScale,
-  yScale
+  yScale,
+  xyFrameRender
 }) => {
   let dID
   const baseID = idAccessor({ ...d, ...d.data }, i)
@@ -90,29 +91,36 @@ export const svgHighlight = ({
     dID = idAccessor(d.parentArea, i)
   }
 
+  console.log("xyFrameRender", xyFrameRender)
+
   const foundPoints = points.data
     .filter((p, q) => idAccessor({ ...p, ...p.data }, q) === dID)
-    .map((p, q) => (
-      <circle
-        key={`highlight-point-${q}`}
-        cx={xScale(p.x)}
-        cy={yScale(p.y)}
-        r={5}
-        fill="none"
-        stroke="black"
-        strokeWidth={2}
-        style={
-          typeof d.style === "function"
-            ? d.style({ ...p, ...p.data }, q)
-            : d.style
-        }
-        className={`highlight-annotation ${(d.class &&
-          typeof d.class === "function" &&
-          d.class({ ...p, ...p.data }, q)) ||
-          (d.class && d.class) ||
-          ""}`}
-      />
-    ))
+    .map((p, q) => {
+      const baseStyle = xyFrameRender.points.styleFn({ ...p, ...p.data })
+
+      const highlightStyle =
+        typeof d.style === "function"
+          ? d.style({ ...p, ...p.data }, q)
+          : d.style || {}
+
+      return (
+        <circle
+          key={`highlight-point-${q}`}
+          cx={xScale(p.x)}
+          cy={yScale(p.y)}
+          r={5}
+          fill="none"
+          stroke="black"
+          strokeWidth={2}
+          style={{ ...baseStyle, ...highlightStyle }}
+          className={`highlight-annotation ${(d.class &&
+            typeof d.class === "function" &&
+            d.class({ ...p, ...p.data }, q)) ||
+            (d.class && d.class) ||
+            ""}`}
+        />
+      )
+    })
 
   const lineGenerator = area()
     .x(p => xScale(p.x))
@@ -132,39 +140,53 @@ export const svgHighlight = ({
 
   const foundLines = lines.data
     .filter((p, q) => idAccessor(p, q) === dID)
-    .map((p, q) => (
-      <path
-        className={`highlight-annotation ${(d.class &&
-          typeof d.class === "function" &&
-          d.class(p, q)) ||
-          (d.class && d.class) ||
-          ""}`}
-        key={`highlight-area-${q}`}
-        d={lineGenerator(p.data)}
-        fill="none"
-        stroke="black"
-        strokeWidth={1}
-        style={typeof d.style === "function" ? d.style(p, q) : d.style}
-      />
-    ))
+    .map((p, q) => {
+      const baseStyle = xyFrameRender.lines.styleFn(p, q)
+
+      const highlightStyle =
+        typeof d.style === "function" ? d.style(p, q) : d.style || {}
+
+      return (
+        <path
+          className={`highlight-annotation ${(d.class &&
+            typeof d.class === "function" &&
+            d.class(p, q)) ||
+            (d.class && d.class) ||
+            ""}`}
+          key={`highlight-area-${q}`}
+          d={lineGenerator(p.data)}
+          fill="none"
+          stroke="black"
+          strokeWidth={1}
+          style={{ ...baseStyle, ...highlightStyle }}
+        />
+      )
+    })
 
   const foundAreas = areas.data
     .filter((p, q) => idAccessor(p, q) === dID)
-    .map((p, q) => (
-      <path
-        className={`highlight-annotation ${(d.class &&
-          typeof d.class === "function" &&
-          d.class(p, q)) ||
-          (d.class && d.class) ||
-          ""}`}
-        key={`highlight-area-${q}`}
-        d={`M${p.coordinates.join("L")}`}
-        fill="none"
-        stroke="black"
-        strokeWidth={1}
-        style={typeof d.style === "function" ? d.style(p, q) : d.style}
-      />
-    ))
+    .map((p, q) => {
+      const baseStyle = xyFrameRender.areas.styleFn(p, q)
+
+      const highlightStyle =
+        typeof d.style === "function" ? d.style(p, q) : d.style || {}
+
+      return (
+        <path
+          className={`highlight-annotation ${(d.class &&
+            typeof d.class === "function" &&
+            d.class(p, q)) ||
+            (d.class && d.class) ||
+            ""}`}
+          key={`highlight-area-${q}`}
+          d={`M${p.coordinates.join("L")}`}
+          fill="none"
+          stroke="black"
+          strokeWidth={1}
+          style={{ ...baseStyle, ...highlightStyle }}
+        />
+      )
+    })
 
   return [...foundAreas, ...foundLines, ...foundPoints]
 }

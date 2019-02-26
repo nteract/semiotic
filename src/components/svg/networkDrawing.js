@@ -651,6 +651,7 @@ export const drawNodes = ({
       }
       canvasDrawing.push(canvasNode)
     } else {
+      // CUSTOM MARK IMPLEMENTATION
       renderedData.push(
         markGenerator({
           d,
@@ -693,6 +694,7 @@ export const drawEdges = ({
   let dGenerator = genericLineGenerator
   const renderedData = []
   if (customMark) {
+    // CUSTOM MARK IMPLEMENTATION
     data.forEach((d, i) => {
       const renderedCustomMark = customMark({
         d,

@@ -115,6 +115,12 @@ export const calculateDataExtent = ({
   adjustedSize: size,
   xScaleType,
   yScaleType,
+  margin,
+  baseMarkProps,
+  areaStyleFn,
+  areaClassFn,
+  areaRenderModeFn,
+  chartSize,
   defined = () => true
 }: CalculateDataTypes) => {
   let fullDataset: Array<ProjectedPoint> = []
@@ -374,7 +380,13 @@ export const calculateDataExtent = ({
       finalYExtent,
       size,
       xScaleType,
-      yScaleType
+      yScaleType,
+      margin,
+      baseMarkProps,
+      styleFn: areaStyleFn,
+      classFn: areaClassFn,
+      renderFn: areaRenderModeFn,
+      chartSize
     })
     fullDataset = [
       ...projectedAreas.map(d => d.data),
@@ -392,7 +404,13 @@ export const calculateDataExtent = ({
       finalYExtent,
       size,
       xScaleType,
-      yScaleType
+      yScaleType,
+      margin,
+      baseMarkProps,
+      styleFn: areaStyleFn,
+      classFn: areaClassFn,
+      renderFn: areaRenderModeFn,
+      chartSize
     })
 
     fullDataset = [
