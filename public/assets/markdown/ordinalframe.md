@@ -1,76 +1,80 @@
-A `<Frame>` that displays continuous data along the _ordinal_ and _range_ axes. Examples include bar charts, pie charts (which map the ordinal axis radially), violin plots, timelines and funnel diagrams. `<OrdinalFrame>` charts render [pieces](#piece-rendering) and [summaries](#summary-rendering). Rendering and styling is based on each element's corresponding properties. OrdinalFrame data elements are accessible by tabbing to the data group (pieces or summaries) and hitting enter to arrow-key navigate through the data elements.
+A frame that displays continuous data along the _ordinal_(categorical) and _range_(numerical) axes. Examples include [bar charts](/guides/bar-chart), [pie charts](/guides/pie-chart), [violin plots](/guides/ordinal-summaries), and [timelines](/guides/examples/timeline)
+
+`<OrdinalFrame>` charts render [pieces](#piece-rendering) and [summaries](#summary-rendering).
+
+`OrdinalFrame` data elements are accessible by tabbing to the data group (pieces or summaries) and hitting enter to arrow-key navigate through the data elements.
 
 ```jsx
-import { OrdinalFrame } from "semiotic";
+import OrdinalFrame from "semiotic/lib/OrdinalFrame"
 
-<OrdinalFrame
-  data={[
-    { department: "art", students: 50 },
-    { department: "science", students: 8 }
-  ]}
-  style={{ fill: "blue" }}
-  rAccessor={"students"}
-  oAccessor={"department"}
-/>;
+export default () => (
+  <OrdinalFrame
+    data={[
+      { department: "art", students: 50 },
+      { department: "science", students: 8 }
+    ]}
+    style={{ fill: "blue" }}
+    rAccessor={"students"}
+    oAccessor={"department"}
+  />
+)
 ```
 
-# &lt;API Reference>
+**Table of Contents**
 
 - [General Properties](#general-properties)
-  - [size: {[_width_, _height_]}](#size--width---height-)
-  - [rAccessor: {_string_ | _function_}](#raccessor--string---function-)
-  - [oAccessor: {_string_ | _function_}](#oaccessor--string---function-)
-  - [sortO: {_function_}](#sorto--function-)
-  - [projection: {_string_}](#projection--string-)
-  - [title: {_string_ | _JSX_}](#title--string---jsx-)
-  - [margin: {_number_ | _object_}](#margin--number---object-)
-  - [rScaleType: {_d3-scale_}](#rscaletype--d3-scale-)
-  - [oScaleType: {_d3-scale_}](#oscaletype--d3-scale-)
-  - [rExtent: {[_min_, _max_]}](#rextent--min---max-)
-  - [invertR: bool](#invertr-bool)
+  - [size: {[_width_, _height_]}](#size-width--height-)
+  - [rAccessor: {_string_ | _function_}](#raccessor-string--function-)
+  - [oAccessor: {_string_ | _function_}](#oaccessor-string--function-)
+  - [oSort: {_function_}](#osort-function-)
+  - [projection: {_string_}](#projection-string-)
+  - [title: {_string_ | _JSX_}](#title-string--jsx-)
+  - [margin: {_number_ | _object_}](#margin-number--object-)
+  - [rScaleType: {_d3-scale_}](#rscaletype-d3-scale-)
+  - [oScaleType: {_d3-scale_}](#oscaletype-d3-scale-)
+  - [rExtent: {[_min_, _max_]}](#rextent-min--max-)
+  - [invertR: bool](#invert-bool)
   - [data: {[ { column: "a", value: 5 }, { column: "b", value: 3 } ...]}](#data-column-a-value-5-column-b-value-3)
-  - [oPadding: { _number_ }](#opadding--number-)
-  - [dynamicColumnWidth: { _string_ | \_func}](#dynamicColumnWidth--string---func-)
+  - [oPadding: { _number_ }](#opadding-number-)
+  - [dynamicColumnWidth: { _string_ | \_func}](#dynamicColumnWidth-string--func-)
 - [Piece Rendering](#piece-rendering)
-  - [type { _string_ | _object_ | _func_ }](#type--string--object--func-)
-  - [style: { _object_ | _function_ }](#style--object---function-)
-  - [pieceClass: { _string_ | _function_ }](#piececlass--string---function-)
+  - [type { _string_ | _object_ | _func_ }](#type-string-object-func-)
+  - [style: { _object_ | _function_ }](#style-object--function-)
+  - [pieceClass: { _string_ | _function_ }](#piececlass-string--function-)
 - [Summary Rendering](#summary-rendering)
-  - [summaryType { _string_ | _object_ | _func_ }](#summarytype-_string---object---func-)
-  - [summaryStyle: { _object_ | _function_ }](#summarystyle--object---function-)
-  - [summaryClass: { _string_ | _function_ }](#summaryclass--string---function-)
-  - [summaryPosition: { _function_ }](#summaryposition--function-)
+  - [summaryType { _string_ | _object_ | _func_ }](#summarytype-_string--object--func-)
+  - [summaryStyle: { _object_ | _function_ }](#summarystyle-object--function-)
+  - [summaryClass: { _string_ | _function_ }](#summaryclass-string--function-)
+  - [summaryPosition: { _function_ }](#summaryposition-function-)
 - [Annotation and Decoration](#annotation-and-decoration)
-  - [tooltipContent: { _function_ }](#tooltipcontent--function-)
-  - [axis: { _object_ }](#axis--object-)
-  - [legend: { _object_ }](#legend--object-)
-  - [oLabel: { _bool_ | _function_ }](#olabel--bool---function-)
-  - [annotations: { _array_ }](#annotations--array-)
-  - [svgAnnotationRules: { _function_ }](#svgannotationrules--function-)
-  - [htmlAnnotationRules: { _function_ }](#htmlannotationrules--function-)
-  - [backgroundGraphics: { _array_ | _JSX_ }](#backgroundgraphics--array---jsx-)
-  - [foregroundGraphics: { _array_ | _JSX_ }](#foregroundgraphics--array---jsx-)
+  - [tooltipContent: { _function_ }](#tooltipcontent-function-)
+  - [axis: { _object_ }](#axis-object-)
+  - [legend: { _object_ }](#legend-object-)
+  - [oLabel: { _bool_ | _function_ }](#olabel-bool--function-)
+  - [annotations: { _array_ }](#annotations-array-)
+  - [svgAnnotationRules: { _function_ }](#svgannotationrules-function-)
+  - [htmlAnnotationRules: { _function_ }](#htmlannotationrules-function-)
+  - [backgroundGraphics: { _array_ | _JSX_ }](#backgroundgraphics-array--jsx-)
+  - [foregroundGraphics: { _array_ | _JSX_ }](#foregroundgraphics-array--jsx-)
 - [Interaction](#interaction)
-  - [hoverAnnotation: { _bool_ }](#hoverannotation--bool-)
-  - [pieceHoverAnnotation: { _bool_ | _object_ }](#piecehoverannotation--bool---object-)
-  - [customHoverBehavior: { _function_ }](#customhoverbehavior--function-)
-  - [customClickBehavior: { _function_ }](#customclickbehavior--function-)
-  - [customDoubleClickBehavior: { _function_ }](#customdoubleclickbehavior--function-)
-  - [interaction: { _object_ }](#interaction--object-)
+  - [hoverAnnotation: { _bool_ }](#hoverannotation-bool-)
+  - [pieceHoverAnnotation: { _bool_ | _object_ }](#piecehoverannotation-bool--object-)
+  - [customHoverBehavior: { _function_ }](#customhoverbehavior-function-)
+  - [customClickBehavior: { _function_ }](#customclickbehavior-function-)
+  - [customDoubleClickBehavior: { _function_ }](#customdoubleclickbehavior-function-)
+  - [interaction: { _object_ }](#interaction-object-)
 - [Miscellaneous](#miscellaneous)
-  - [name: { _string_ }](#name--string-)
-  - [position: { _array_ }](#position--array-)
-  - [additionalDefs: { _JSX_ }](#additionaldefs--jsx-)
-  - [download: { _bool_ }](#download--bool-)
-  - [downloadFields: { _array_ }](#downloadfields--array-)
+  - [name: { _string_ }](#name-string-)
+  - [position: { _array_ }](#position-array-)
+  - [additionalDefs: { _JSX_ }](#additionaldefs-jsx-)
+  - [download: { _bool_ }](#download-bool-)
+  - [downloadFields: { _array_ }](#downloadfields-array-)
 
 ## General Properties
 
 ### size: {[_width_, _height_]}
 
-If _size_ is specified, sets the width and height of the frame from the array of values. The array must contain two numbers which represents the width and height, respectively.
-
-Note: _Margin_ will not be added to the frame size. It's more like CSS _padding_.
+If _size_ is specified, sets the width and height of the frame from the array of values. The array must contain two numbers which represents the width and height, respectively. Size defaults to `[500,500]`.
 
 ```jsx
 <OrdinalFrame size={[500, 500]} />
@@ -78,7 +82,7 @@ Note: _Margin_ will not be added to the frame size. It's more like CSS _padding_
 
 ### rAccessor: { _string_ | _function_ }
 
-If _rAccessor_ is specified, determines how _range_ values are accessed from the data array. In the case the data consists of an array of objects, a string can be used to assess the _range_ value(s). A function can also be used to access the _range_ value(s).
+Determines how _range_ values are accessed from the data array.
 
 ```jsx
 /*String option
@@ -92,7 +96,7 @@ e.g. data=[[1, "art"], [2, "science"], ... ]*/
 
 ### oAccessor: { _string_ | _function_ }
 
-If _oAccessor_ is specified, determines how _ordinal_ values are accessed from the data array. In the case the data consists of an array of objects, a string can be used to assess the _ordinal_ value(s). A function can also be used to access the _ordinal_ value(s).
+Determines how _ordinal_ values are accessed from the data array.
 
 ```jsx
 /*String option
@@ -104,13 +108,13 @@ e.g. data=[[1, "art"], [2, "science"], ... ]*/
 <OrdinalFrame oAccessor={d => d[1]} />
 ```
 
-### sortO: { _function_ }
+### oSort: { _function_ }
 
-If _sortO_ is specified, sets the sorting function of the columns. By default, the columns are sorted based on data order (the first item of a particular ordinal value will be the first column). The function sent to _sortO_ is a simple array sorting function that takes the string name of ordinal values.
+If _oSort_ is specified, sets the sorting function of the columns. By default, the columns are sorted based on data order (the first item of a particular ordinal value will be the first column). The function sent to _sortO_ is a simple array sorting function that takes the string name of ordinal values.
 
 ```jsx
 //sorts by alphabetical order
-<OrdinalFrame sortO={(a, b) => a < b} />
+<OrdinalFrame oSort={(a, b) => a < b} />
 ```
 
 ### projection: { _string_ }
@@ -123,7 +127,7 @@ If _projection_ is specified, sets the orientation of the chart. The three possi
 
 ### title: { _string_ | _JSX_ }
 
-If _title_ is specified, sets the text for the chart title, which appears centered at the top of the chart. The title can be either a string or JSX object.
+Centers this title at the top of the chart.
 
 ```jsx
 /*String option*/
@@ -135,7 +139,7 @@ If _title_ is specified, sets the text for the chart title, which appears center
 
 ### margin: { _number_ | _object_ }
 
-If _margin_ is specified, sets the margin(s) on the frame. The margin can be set to one number, which is applied equally to all sides, or as an object. So it's more like CSS _padding_.
+The margin can be set to one number, which is applied equally to all sides, or as an object.
 
 ```jsx
 /*Single number option*/
@@ -147,7 +151,7 @@ If _margin_ is specified, sets the margin(s) on the frame. The margin can be set
 
 ### rScaleType: { _d3-scale_ }
 
-Custom [D3 scale](https://github.com/d3/d3-scale#d3-scale) for the range. Defaults to [scaleLinear()](https://github.com/d3/d3-scale#scaleLinear).
+Custom [d3-scale](https://github.com/d3/d3-scale#d3-scale) for the range. Defaults to [scaleLinear()](https://github.com/d3/d3-scale#scaleLinear).
 
 ```jsx
 <OrdinalFrame rScaleType={d3.scaleTime()} />
@@ -155,7 +159,7 @@ Custom [D3 scale](https://github.com/d3/d3-scale#d3-scale) for the range. Defaul
 
 ### oScaleType: { _d3-scale_ }
 
-Custom [D3 scale](https://github.com/d3/d3-scale#d3-scale) for the ordinal values. Changing this can have strange effects.
+Custom [D3 scale](https://github.com/d3/d3-scale#d3-scale) for the ordinal values.
 
 ```jsx
 <OrdinalFrame oScaleType={d3.scaleThreshold()} />
@@ -163,7 +167,9 @@ Custom [D3 scale](https://github.com/d3/d3-scale#d3-scale) for the ordinal value
 
 ### rExtent: { [_min_, _max_] | _object_ }
 
-If _rExtent_ is specified, sets the _min_ and/or _max_ value(s) for the _range_. The array may contain two numbers, or it can contain a number and an `undefined` value, if you only want to set the min or max extent. If you send an object you can register a function to fire when the extent is recalculated that returns the calculated extent.
+If _rExtent_ is specified, sets the _min_ and/or _max_ value(s) for the _range_. The array may contain two numbers, or it can contain a number and an `undefined` value, if you only want to set the min or max extent.
+
+The extent exposes an `onChange` callback function that updates with the calculated extent value.
 
 ```jsx
 /*min and max values set*/
@@ -182,11 +188,11 @@ If _rExtent_ is specified, sets the _min_ and/or _max_ value(s) for the _range_.
 
 ### invertR: { _bool_ }
 
-Flip range so that the min is on the left or top.
+Inverts the _range_ axis such that the _min_ and _max_ values are transposed.
 
 ### data: { _array_ }
 
-An array of objects or numerical values used to render both summary and piece visualizations in OrdinalFrame. The column of the data is based on its oAccessor value, while its position or height is determined by its rAccessor value.
+An array of objects or numerical values used to render both summary and piece visualizations in `OrdinalFrame`. The column of the data is based on its oAccessor value, while its position or height is determined by its rAccessor value.
 
 ```jsx
 <OrdinalFrame data={[{ column: "a", value: 5 }, { column: "b", value: 3 }]} />
@@ -202,7 +208,7 @@ The distance in pixels between each column.
 
 ### dynamicColumnWidth: { _string_ | _func_ }
 
-If _dynamicColumnWidth_ is specified, sets the column width of the frame based on the data. If a string, then columnWidth is proportionate to the total value of the string property for each column, for instance used in the Marimekko Chart example where bar width is based on the total value for that bar. If set to a function, the function is passed an array of pieces in that column which you can measure in any way you want, for instance in the Joy Plot example this is used to calculate the max value of a column and sets the column width proportional to that value.
+If _dynamicColumnWidth_ is specified, sets the column width of the frame based on the data. If a string, then columnWidth is proportionate to the total value of the string property for each column, for instance used in the [Marimekko Chart](/examples/marimekko-chart) example where bar width is based on the total value for that bar. If set to a function, the function is passed an array of pieces in that column which you can measure in any way you want.
 
 ```jsx
 /*String option*/
@@ -214,7 +220,7 @@ If _dynamicColumnWidth_ is specified, sets the column width of the frame based o
 
 ### pixelColumnWidth: { _number_ }
 
-If _pixelColumnWidth_ is specified, the row (in the case of horizontal) or column (in the case of vertical) size will be fixed to the number specified. The corresponding size setting will be ignored as the height or width of the chart will be based on the number of columns times the set value.
+If _pixelColumnWidth_ is specified, the row (in the case of horizontal) or column (in the case of vertical) size will be fixed to the number specified. The corresponding `size` setting will be ignored as the height or width of the chart will be based on the number of columns times the set value.
 
 ```jsx
 <OrdinalFrame pixelColumnWidth={40} />

@@ -3,9 +3,9 @@ A `<Frame>` that displays topological data, which differs from other forms of da
 Nodes are automatically generated from edge references to source or target that do not exist, these nodes have `createdByFrame: true` if you want to treat them differently. Nodes are also decorated with a `degree` attribute, which is simple degree centrality (number of connections) if you want to use that.
 
 ```jsx
-import { NetworkFrame } from "semiotic";
+import { NetworkFrame } from "semiotic"
 
-<NetworkFrame
+;<NetworkFrame
   nodes={[{ name: "Susie" }, { name: "Shirley" }]}
   edges={[
     { source: "Susie", target: "Xianlin" },
@@ -14,51 +14,51 @@ import { NetworkFrame } from "semiotic";
   nodeStyle={{ fill: "blue" }}
   edgeStyle={{ stroke: "red" }}
   nodeIDAccessor={"name"}
-/>;
+/>
 ```
 
 # &lt;API Reference>
 
 - [General Properties](#general-properties)
-  - [size: {[_width_, _height_]}](#size--width---height)
-  - [networkType: {_string_ | _object_ | _function_ }](#networktype-string--object--function-)
-  - [title: {_string_ | _JSX_}](#title--string---jsx)
-  - [margin: {_number_ | _object_}](#margin--number---object)
-  - [zoomToFit: { _boolean_ }](#zoomtofit--boolean-)
+  - [size: {[_width_, _height_]}](#size-width--height)
+  - [networkType: {_string_ | _object_ | _function_ }](#networktype-string-object-function-)
+  - [title: {_string_ | _JSX_}](#title-string--jsx)
+  - [margin: {_number_ | _object_}](#margin-number--object)
+  - [zoomToFit: { _boolean_ }](#zoomtofit-boolean-)
 - [Node Rendering](#node-rendering)
-  - [nodeIDAccessor: {_string_ | _function_}](#nodeidaccessor--string---function)
-  - [nodeStyle: {_object_ | _function_}](#nodestyle--object---function)
-  - [nodeLabels: { _boolean_ | _function_ }](#nodelabels--boolean---function)
-  - [nodeSizeAccessor: { _number_ | _function_ }](#nodesizeaccessor--number---function)
-  - [customNodeIcon { _function_ }](#customnodeicon--function)
+  - [nodeIDAccessor: {_string_ | _function_}](#nodeidaccessor-string--function)
+  - [nodeStyle: {_object_ | _function_}](#nodestyle-object--function)
+  - [nodeLabels: { _boolean_ | _function_ }](#nodelabels-boolean--function)
+  - [nodeSizeAccessor: { _number_ | _function_ }](#nodesizeaccessor-number--function)
+  - [customNodeIcon { _function_ }](#customnodeicon-function)
 - [Edge Rendering](#edge-rendering)
-  - [sourceAccessor: {_string_ | _function_}](#sourceaccessor--string---function)
-  - [targetAccessor: {_string_ | _function_}](#targetaccessor--string---function)
-  - [edgeStyle: {_object_ | _function_}](#edgestyle--object---function)
-  - [customEdgeType { _string_ | _object_ | _function_ }](#customedgetype-_string---object---function)
+  - [sourceAccessor: {_string_ | _function_}](#sourceaccessor-string--function)
+  - [targetAccessor: {_string_ | _function_}](#targetaccessor-string--function)
+  - [edgeStyle: {_object_ | _function_}](#edgestyle-object--function)
+  - [customEdgeType { _string_ | _object_ | _function_ }](#customedgetype-_string--object--function)
 - [Annotation and Decoration](#annotation-and-decoration)
-  - [tooltipContent: { _function_ }](#tooltipcontent--function)
-  - [axis: { _object_ }](#axis--object)
-  - [oLabel: { _bool_ | _function_ }](#olabel--bool---function)
-  - [annotations: { _array_ }](#annotations--array)
-  - [legend: { _object_ }](#legend--object)
-  - [svgAnnotationRules: { _function_ }](#svgannotationrules--function)
-  - [htmlAnnotationRules: { _function_ }](#htmlannotationrules--function)
-  - [annotationSettings: { _object_ }](#annotationsettings--object)
-  - [backgroundGraphics: { _array_ | _JSX_ }](#backgroundgraphics--array---jsx)
-  - [foregroundGraphics: { _array_ | _JSX_ }](#foregroundgraphics--array---jsx)
+  - [tooltipContent: { _function_ }](#tooltipcontent-function)
+  - [axis: { _object_ }](#axis-object)
+  - [oLabel: { _bool_ | _function_ }](#olabel-bool--function)
+  - [annotations: { _array_ }](#annotations-array)
+  - [legend: { _object_ }](#legend-object)
+  - [svgAnnotationRules: { _function_ }](#svgannotationrules-function)
+  - [htmlAnnotationRules: { _function_ }](#htmlannotationrules-function)
+  - [annotationSettings: { _object_ }](#annotationsettings-object)
+  - [backgroundGraphics: { _array_ | _JSX_ }](#backgroundgraphics-array--jsx)
+  - [foregroundGraphics: { _array_ | _JSX_ }](#foregroundgraphics-array--jsx)
 - [Interaction](#interaction)
-  - [hoverAnnotation: { _bool_ }](#hoverannotation--bool)
-  - [customHoverBehavior: { _function_ }](#customhoverbehavior--function)
-  - [customClickBehavior: { _function_ }](#customclickbehavior--function)
-  - [customDoubleClickBehavior: { _function_ }](#customdoubleclickbehavior--function)
-  - [interaction: { _object_ }](#interaction--object)
+  - [hoverAnnotation: { _bool_ }](#hoverannotation-bool)
+  - [customHoverBehavior: { _function_ }](#customhoverbehavior-function)
+  - [customClickBehavior: { _function_ }](#customclickbehavior-function)
+  - [customDoubleClickBehavior: { _function_ }](#customdoubleclickbehavior-function)
+  - [interaction: { _object_ }](#interaction-object)
 - [Miscellaneous](#miscellaneous)
-  - [name: { _string_ }](#name--string)
-  - [position: { _array_ }](#position--array)
-  - [additionalDefs: { _JSX_ }](#additionaldefs--jsx)
-  - [download: { _bool_ }](#download--bool)
-  - [downloadFields: { _array_ }](#downloadfields--array)
+  - [name: { _string_ }](#name-string)
+  - [position: { _array_ }](#position-array)
+  - [additionalDefs: { _JSX_ }](#additionaldefs-jsx)
+  - [download: { _bool_ }](#download-bool)
+  - [downloadFields: { _array_ }](#downloadfields-array)
 
 ## General Properties
 

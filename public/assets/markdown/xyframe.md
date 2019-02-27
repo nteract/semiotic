@@ -5,9 +5,9 @@ A frame that displays continuous data along the _x_ and _y_ axis. Examples inclu
 `XYFrame` data elements are accessible by tabbing to the data group (points, lines or areas) and hitting enter to arrow-key navigate through the data elements.
 
 ```jsx
-import { XYFrame } from 'semiotic'
+import XYFrame from 'semiotic/lib/XYFrame'
 
-<XYFrame
+export default () => <XYFrame
    points={[{price: 1.25, size: 15}, {price: 2.25, size: 12}, ...]}
    pointStyle={{ fill: "blue" }}
    xAccessor={"price"}
@@ -18,67 +18,68 @@ import { XYFrame } from 'semiotic'
 **Table of Contents**
 
 - [General Properties](#general-properties)
-  - [size: { [_width_, _height_] }](#size--width-height-)
-  - [xAccessor: { _string_ | _function_ }](#xaccessor--string--function-)
-  - [yAccessor: { _string_ | _function_ }](#yaccessor--string--function-)
-  - [title: { _string_ | _JSX_ }](#title--string--jsx-)
-  - [margin: { _number_ | _object_ }](#margin--number--object-)
-  - [xScaleType: { _d3-scale_ }](#xscaletype--d3-scale-)
-  - [yScaleType: { _d3-scale_ }](#yscaletype--d3-scale-)
-  - [xExtent: { [_min_, _max_] }](#xextent--min--max-)
-  - [yExtent: { [_min_, _max_] }](#yextent--min--max-)
-  - [invertX: { _boolean_ }](#invertx--boolean-)
-  - [invertY: { _boolean_ }](#inverty--boolean-)
-  - [showLinePoints: { _boolean_ }](#showlinepoints--boolean-)
-  - [baseMarkProps: { _object_ }](#baseMarkProps--object-)
+  - [size: { [_width_, _height_] }](#size-width-height-)
+  - [xAccessor: { _string_ | _function_ }](#xaccessor-string-function-)
+  - [yAccessor: { _string_ | _function_ }](#yaccessor-string-function-)
+  - [title: { _string_ | _JSX_ }](#title-string-jsx-)
+  - [margin: { _number_ | _object_ }](#margin-number-object-)
+  - [xScaleType: { _d3-scale_ }](#xscaletype-d3-scale-)
+  - [yScaleType: { _d3-scale_ }](#yscaletype-d3-scale-)
+  - [xExtent: { [_min_, _max_] }](#xextent-min-max-)
+  - [yExtent: { [_min_, _max_] }](#yextent-min-max-)
+  - [invertX: { _boolean_ }](#invertx-boolean-)
+  - [invertY: { _boolean_ }](#inverty-boolean-)
+  - [showLinePoints: { _boolean_ }](#showlinepoints-boolean-)
+  - [showSummaryPoints: { _boolean_ }](#showSummaryPoints-boolean-)
+  - [baseMarkProps: { _object_ }](#baseMarkProps-object-)
 - [Point Rendering](#point-rendering)
-  - [points: { [_data_] }](#points--data-)
-  - [pointStyle: { _object_ | _function_ }](#pointstyle--object--function-)
-  - [pointClass: { _string_ | _function_ }](#pointclass--string--function-)
-  - [canvasPoints: { _boolean_ | _function_ }](#canvaspoints--boolean--function-)
-  - [customPointMark: { _JSX_ | _function_ }](#custompointmark--jsx--function-)
+  - [points: { [_data_] }](#points-data-)
+  - [pointStyle: { _object_ | _function_ }](#pointstyle-object-function-)
+  - [pointClass: { _string_ | _function_ }](#pointclass-string-function-)
+  - [canvasPoints: { _boolean_ | _function_ }](#canvaspoints-boolean-function-)
+  - [customPointMark: { _JSX_ | _function_ }](#custompointmark-jsx-function-)
 - [Line Rendering](#line-rendering)
-  - [lines: { [_data_] }](#lines--data-)
-  - [lineDataAccessor: { _string_ | _function_ }](#linedataaccessor--string--function-)
-  - [lineType: { _string_ | _object_ }](#linetype--string--object-)
-  - [lineStyle: { _object_ | _function_ }](#linestyle--object--function-)
-  - [lineClass: { _string_ | _function_ }](#lineclass--string--function-)
-  - [lineIDAccessor: { _string_ | _function_ }](#lineidaccessor--string--function-)
-  - [customLineMark: { _function_ }](#customlinemark--function-)
-  - [canvasLines: { _boolean_ | _function_ }](#canvaslines--boolean--function-)
-  - [defined: { _function_ }](#defined--function-)
+  - [lines: { [_data_] }](#lines-data-)
+  - [lineDataAccessor: { _string_ | _function_ }](#linedataaccessor-string-function-)
+  - [lineType: { _string_ | _object_ }](#linetype-string-object-)
+  - [lineStyle: { _object_ | _function_ }](#linestyle-object-function-)
+  - [lineClass: { _string_ | _function_ }](#lineclass-string-function-)
+  - [lineIDAccessor: { _string_ | _function_ }](#lineidaccessor-string-function-)
+  - [customLineMark: { _function_ }](#customlinemark-function-)
+  - [canvasLines: { _boolean_ | _function_ }](#canvaslines-boolean-function-)
+  - [defined: { _function_ }](#defined-function-)
 - [Area Rendering](#area-rendering)
-  - [areas: { [_data_] }](#areas--data-)
-  - [areaDataAccessor: { _string_ | _function_ }](#areadataaccessor--string--function-)
-  - [areaStyle: { _function_ | _object_ }](#areastyle--function--object-)
-  - [areaClass: { _string_ | _function_ }](#areaclass--string--function-)
-  - [canvasAreas: { _boolean_ | _function_ }](#canvasareas--boolean--function-)
+  - [areas: { [_data_] }](#areas-data-)
+  - [areaDataAccessor: { _string_ | _function_ }](#areadataaccessor-string-function-)
+  - [areaStyle: { _function_ | _object_ }](#areastyle-function-object-)
+  - [areaClass: { _string_ | _function_ }](#areaclass-string-function-)
+  - [canvasAreas: { _boolean_ | _function_ }](#canvasareas-boolean-function-)
 - [Annotation and Decoration](#annotation-and-decoration)
 
-  - [tooltipContent: { _function_ }](#tooltipcontent--function-)
-  - [axes: { _array_ }](#axes--array-)
+  - [tooltipContent: { _function_ }](#tooltipcontent-function-)
+  - [axes: { _array_ }](#axes-array-)
   - [legend: bool or object](#legend-bool-or-object)
-  - [annotations: { _array_ }](#annotations--array-)
-  - [svgAnnotationRules: { _function_ }](#svgannotationrules--function-)
-  - [htmlAnnotationRules: { _function_ }](#htmlannotationrules--function-)
-  - [annotationSettings: { _object_ }](#annotationsettings--object-)
-  - [matte: { _boolean_ }](#matte--boolean-)
-  - [backgroundGraphics: { _array_ | _JSX_ }](#backgroundgraphics--array--jsx-)
-  - [foregroundGraphics: { _array_ | _JSX_ }](#foregroundgraphics--array--jsx-)
-  - [canvasPostProcess: { _"chuckClose"_ | _function_ }](#foregroundgraphics--chuckClose--function-)
+  - [annotations: { _array_ }](#annotations-array-)
+  - [svgAnnotationRules: { _function_ }](#svgannotationrules-function-)
+  - [htmlAnnotationRules: { _function_ }](#htmlannotationrules-function-)
+  - [annotationSettings: { _object_ }](#annotationsettings-object-)
+  - [matte: { _boolean_ }](#matte-boolean-)
+  - [backgroundGraphics: { _array_ | _JSX_ }](#backgroundgraphics-array-jsx-)
+  - [foregroundGraphics: { _array_ | _JSX_ }](#foregroundgraphics-array-jsx-)
+  - [canvasPostProcess: { _"chuckClose"_ | _function_ }](#foregroundgraphics-chuckClose-function-)
 
 - [Interaction](#interaction)
-  - [hoverAnnotation: { _bool_ | _array_ }](#hoverannotation--bool--array-)
-  - [customHoverBehavior: { _function_ }](#customhoverbehavior--function-)
-  - [customClickBehavior: { _function_ }](#customclickbehavior--function-)
-  - [customDoubleClickBehavior: { _function_ }](#customdoubleclickbehavior--function-)
-  - [interaction: { _object_ }](#interaction--object-)
+  - [hoverAnnotation: { _bool_ | _array_ }](#hoverannotation-bool-array-)
+  - [customHoverBehavior: { _function_ }](#customhoverbehavior-function-)
+  - [customClickBehavior: { _function_ }](#customclickbehavior-function-)
+  - [customDoubleClickBehavior: { _function_ }](#customdoubleclickbehavior-function-)
+  - [interaction: { _object_ }](#interaction-object-)
 - [Miscellaneous](#miscellaneous)
-  - [dataVersion: { _string_ }](#dataversion--string-)
-  - [name: { _string_ }](#name--string-)
-  - [additionalDefs: { _JSX_ }](#additionaldefs--jsx-)
-  - [download: { _bool_ }](#download--bool-)
-  - [downloadFields: { _array_ }](#downloadfields--array-)
+  - [dataVersion: { _string_ }](#dataversion-string-)
+  - [name: { _string_ }](#name-string-)
+  - [additionalDefs: { _JSX_ }](#additionaldefs-jsx-)
+  - [download: { _bool_ }](#download-bool-)
+  - [downloadFields: { _array_ }](#downloadfields-array-)
 
 ## General Properties
 
@@ -200,7 +201,7 @@ The extent exposes an `onChange` callback function that updates with the calcula
 
 ### invertX: { _boolean_ }
 
-If _invertX_ is specified, inverts the _x_ axis such that the _min_ and _max_ values are transposed.
+Inverts the _x_ axis such that the _min_ and _max_ values are transposed.
 
 ```jsx
 <XYFrame invertX={ true } ... />
@@ -208,7 +209,7 @@ If _invertX_ is specified, inverts the _x_ axis such that the _min_ and _max_ va
 
 ### invertY: { _boolean_ }
 
-If _invertY_ is specified, inverts the _y_ axis such that the _min_ and _max_ values are transposed.
+Inverts the _y_ axis such that the _min_ and _max_ values are transposed.
 
 ```jsx
 <XYFrame invertY={ true } ... />
@@ -222,12 +223,12 @@ If _showLinePoints_ is specified, displays the points that make up the line elem
 <XYFrame showLinePoints={ true } ... />
 ```
 
-### showAreaPoints: { _boolean_ }
+### showSummaryPoints: { _boolean_ }
 
-If _showAreaPoints_ is specified, displays the points that make up the area elements. These points will be styled just like points that are added to the `points` array using `pointStyle` or `pointClass` with the only difference being that points will have a `parentLine` or `parentArea` property that will point to the line or area that this point is a part of.
+If _showSummaryPoints_ is specified, displays the points that make up the areas for summary elements. These points will be styled just like points that are added to the `points` array using `pointStyle` or `pointClass`.
 
 ```jsx
-<XYFrame showLinePoints={ true } ... />
+<XYFrame showSummaryPoints={ true } ... />
 ```
 
 ### baseMarkProps: { _object_ }
@@ -352,7 +353,10 @@ If _lineDataAccessor_ is specified, determines how line _coordinates_ are access
 
 ### lineType: { _string_ | _object_ }
 
-If _lineType_ is specified, renders one of the supported [line types](https://github.com/emeeks/semiotic/wiki/lineType-Advanced-Settings). The attribute accepts a _string_ corresponding to one of the supported line types or an _object_ with a `type` key and _string_ value corresponding to one of the supported line types. An optional `options` key on the _object_ that determines how the lines are generated is also supported.
+If _lineType_ is specified, renders one of the supported line types:
+`"line"`, `"linepercent"`, `"difference"`, `"stackedarea"`, `"stackedpercent"`, `"bumpline"`, `"bumparea"`, `"cumulative"`, otherwise it defaults ot `"line"`. See the [line chart](/guides/line-chart) and [area chart](/guides/area-chart) guides for examples.
+
+The attribute accepts a _string_ corresponding to one of the supported line types or an _object_ with a `type` key and _string_ value corresponding to one of the supported line types. An optional `options` key on the _object_ that determines how the lines are generated is also supported.
 
 ```jsx
 /*String option */
@@ -362,36 +366,14 @@ If _lineType_ is specified, renders one of the supported [line types](https://gi
 <XYFrame lineType={ { type: "stackedarea", sort: (a,b) => a.level - b.level } } ... />
 ```
 
-As with other data visualization types in the various frames, [[XYFrame]] will let you send the following strings to lineType: `"line"`, `"linepercent"`, `"difference"`, `"stackedarea"`, `"stackedpercent"`, `"bumpline"`, `"bumparea"`. If you want more control over the line data visualization being rendered, each of these types have additional settings you can adjust based on your use case and which typically expose settings associated with the data transformation method associated with the line type. To do this, you need to send an object instead of a string, and that object should have a `type` attribute set to the string, so this uses `stackedarea` with the default method:
-
-```html
-<XYFrame lineType={"stackedarea"} />
-```
-
-...while this sends custom settings to render a stacked area chart with a curve preserving monotonicity:
-
-```html
-import { curveMonotoneX } from 'd3-shape' <XYFrame areaType={{ type:
-"stackedarea", interpolator: curveMonotoneX }} />
-```
-
-## Custom Settings by Type
-
-### Shared
-
-- `interpolator`: Takes a d3 style curve, like those found in `d3-shape`.
-
-### line Settings
-
-- `y1`: Allows you to set the `y1` accessor to create "area lines" such as filled areas that grow from the zero baseline or ribbons.
-
-### stackedarea Settings
-
-- `sort`: the sorting function by which to order the shapes vertically. Defaults to largest shapes on the bottom and you can send `null` to prevent sorting.
-
-### stackedpercent Settings
-
-- `sort`: the sorting function by which to order the shapes vertically. Defaults to largest shapes on the bottom and you can send `null` to prevent sorting.
+- Shared settings
+  - `interpolator`: Takes a d3 style curve, like those found in `d3-shape`.
+- `"line"` settings
+  - `y1`: Allows you to set the `y1` accessor to create "area lines" such as filled areas that grow from the zero baseline or ribbons.
+- `stackedarea` settings
+  - `sort`: the sorting function by which to order the shapes vertically. Defaults to largest shapes on the bottom and you can send `null` to prevent sorting.
+- `stackdpercent` settings
+  - `sort`: the sorting function by which to order the shapes vertically. Defaults to largest shapes on the bottom and you can send `null` to prevent sorting.
 
 ### lineStyle: { _object_ | _function_ }
 
@@ -434,7 +416,7 @@ If _lineIDAccessor_ is specified, sets the id of the corresponding line. The _li
 
 ### customLineMark: { _function_ }
 
-Is _customLineMark_ is specified, renders a custom _JSX_ element for each line. For example, `<DividedLine>` can be used in place of normal lines or other line generators taking advantage of the `<Frame>`'s settings. The _customLineMark_ attribute accepts a function that returns a _JSX_ object
+If _customLineMark_ is specified, renders a custom _JSX_ element for each line. For example, `<DividedLine>` can be used in place of normal lines or other line generators taking advantage of the `<Frame>`'s settings. The _customLineMark_ attribute accepts a function that returns a _JSX_ object
 
 ```jsx
 <XYFrame customLineMark={ d => (<DividedLines ... />) } ... />
@@ -442,7 +424,7 @@ Is _customLineMark_ is specified, renders a custom _JSX_ element for each line. 
 
 ### canvasLines: { _boolean_ | _function_ }
 
-If _canvasLines_ is specified, renders line elements in [`Canvas`](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API). The _canvasLines_ attribute accepts a boolean or a function that evaluates a line and returns a boolean that determines whether or not to render the line to `Canvas` instead of [`SVG`](https://developer.mozilla.org/en-US/docs/Web/SVG).
+If _canvasLines_ is specified, renders line elements in [`Canvas`](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API). The _canvasLines_ attribute accepts a boolean or a function that evaluates a line and returns a boolean that determines whether or not to render the line to Canvas instead of [`SVG`](https://developer.mozilla.org/en-US/docs/Web/SVG).
 
 ```jsx
 /*Boolean option */
@@ -517,11 +499,11 @@ If _canvasAreas_ is specified, renders area elements in Canvas. The _canvasAreas
 
 ### tooltipContent: { _function_ }
 
-A function returning JSX HTML to display in the tooltip (only active if `hoverAnnotation` is set to `true`). The tooltip is passed the data point (which if part of a line or area will be decorated with a corresponding `parentLine` or `parentArea` pointer to that object). The content is placed on and directly above the hovered point, so take that into account when using CSS to style the position and any additional elements. You can drop any HTML into this floating div, including another frame, if you want to have data visualization in your data visualization so you can visualize while you visualize.
+A function returning JSX HTML to display in the tooltip (only active if `hoverAnnotation` is set to `true`). The tooltip is passed the data point (which if part of a line or area will be decorated with a corresponding `parentLine` or `parentArea` pointer to that object). The content is placed on and directly above the hovered point, so take that into account when using CSS to style the position and any additional elements. You can drop any HTML into this floating div, including another frame.
 
 ### axes: { _array_ }
 
-An array of objects that defines axes. These objects roughly correspond to the options in D3 array, with extended options such as `label`.
+An array of objects that defines axes. These objects roughly correspond to the options in [d3-axis](https://github.com/d3/d3-axis), with extended options such as `label`.
 
 ### legend: bool or object
 
@@ -546,7 +528,7 @@ A boolean or object determining whether to turn on a legend. Currently only work
 
 ### annotations: { _array_ }
 
-An array of objects to be processed using the frame's built-in annotation rules or the custom defined rules. Annotations need to have the same data properties that your data has, so if your data has `xAccessor="day"` then your annotations will need a corresponding `day` value.
+An array of objects to be processed using the frame's [built-in annotation](/guides/annotations#built-in-annotation-types) rules or the [custom defined rules](http://localhost:3001/guides/annotations#custom-annotation-rules). Annotations that have the same data properties that your data has will be automatically placed in the transformed x/y space.
 
 ```jsx
 /*boolean option */
@@ -561,7 +543,7 @@ An array of objects to be processed using the frame's built-in annotation rules 
 
 ### svgAnnotationRules: { _function_ }
 
-A function that takes an annotation object and returns a JSX SVG element. The function is sent `{ d, i, screenCoordinates, xScale, yScale, xAccessor, yAccessor, xyFrameProps, xyFrameState, areas, points, lines }`
+A function that takes an annotation object and returns a JSX SVG element. The function is sent `{ d, i, screenCoordinates, xScale, yScale, xAccessor, yAccessor, xyFrameProps, xyFrameState, areas, points, lines, adjustedPosition, adjustedSize, annotationLayer, voronoiHover }`
 
 ```jsx
 <XYFrame svgAnnotationRules={({ d, screenCoordinates }) => {
@@ -579,7 +561,7 @@ A function that takes an annotation object and returns a JSX SVG element. The fu
 
 ### htmlAnnotationRules: { _function_ }
 
-A function that takes an annotation object and returns a JSX HTML element. The function is sent `{ d, i, screenCoordinates, xScale, yScale, xAccessor, yAccessor, xyFrameProps, xyFrameState, areas, points, lines }`. Elements can be placed using CSS `left` and `top` and will overlay on the chart. Internally, the default annotation for tooltips uses this method.
+A function that takes an annotation object and returns a JSX HTML element. The function is sent `{ d, i, screenCoordinates, xScale, yScale, xAccessor, yAccessor, xyFrameProps, xyFrameState, areas, points, lines, adjustedPosition, adjustedSize, annotationLayer, voronoiHover }`. Elements can be placed using CSS `left` and `top` and will overlay on the chart. Internally, the default annotation for tooltips uses this method.
 
 ```jsx
 <XYFrame
@@ -681,7 +663,7 @@ Any HTML5 canvas processing that you might want to do to your canvas rendered el
 
 ### hoverAnnotation: { _bool_ | _array_ }
 
-Turn on automatic tooltips with a voronoi overlay to improve interaction. If you pass true, it will generate a simple SVG circle and a tooltip with content customized via the `tooltipContent` prop. If you pass an array you can pass any number of annotation objects that will have the properties filled with the props of the hovered item, which is good for creating complex highlighting behavior.
+Turn on automatic [tooltips](/guides/tooltips) with a voronoi overlay to improve interaction. If you pass true, it will generate a simple SVG circle and a tooltip with content customized via the `tooltipContent` prop. If you pass an array you can pass any number of annotation objects that will have the properties filled with the props of the hovered item, which is good for creating complex highlighting behavior.
 
 ```jsx
 // boolean
@@ -763,7 +745,7 @@ Used internally to identify frames, which comes in handy when you need to link f
 
 ### additionalDefs: { _JSX_ }
 
-A JSX or array of JSX to be injected into the visualization layer's SVG `defs`. This is useful for defining patterns that you want to use as fills, or markers or gradients or other SVG material typically defined in defs.
+A JSX or array of JSX to be injected into the visualization layer's SVG `defs`. This is useful for [defining patterns](/guides/sketchy-painty-patterns) that you want to use as fills, or markers or gradients or other SVG material typically defined in defs.
 
 ```jsx
 <XYFrame
@@ -783,32 +765,3 @@ Enable a download button to download the data as a CSV
 ### downloadFields: { _array_ }
 
 The field keys to download from each datapoint. By default, the CSV download only shows the x and y values.
-
-As with other data visualization types in the various frames, [[XYFrame]] will let you send the following strings to areaType: `"alpha"`, `"contour"`. If you want more control over the area data visualization being rendered, each of these types have additional settings you can adjust based on your use case and which typically expose settings associated with the data transformation method associated with the summary type. To do this, you need to send an object instead of a string, and that object should have a `type` attribute set to the string, so this uses contouring with the default method:
-
-```html
-<XYFrame areaType={"contour"} />
-```
-
-...while this sends custom settings to adjust the number of contouring thresholds:
-
-```html
-<XYFrame areaType={{ type: "contour", thresholds: 5 }} />
-```
-
-## Custom Settings by Type
-
-### Shared
-
-### Contour Settings
-
-Under the hood this implements `d3-contour` and passes these settings through.
-
-- `thresholds`: the number of thresholds for the contouring (defaults to `8`).
-- `bandwidth`: the size of the contour bandwidth (defaults to `12`).
-- `resolution`: the pixel resolution of the contouring (defaults to `1000`).
-- `neighborhood`: boolean which will force the returned shape to only have the bottommost region of the calculated contours.
-
-### Alpha Shape Settings
-
-- `alpha`: The alpha parameter sent to the `alpha-complex`. Review the documentation for alpha-complex. Defaults to `0.001`
