@@ -75,7 +75,7 @@ export const svgHighlight = ({
   i,
   points = { data: [] },
   lines = { data: [] },
-  areas = { data: [] },
+  summaries = { data: [] },
   idAccessor,
   xScale,
   yScale,
@@ -87,8 +87,8 @@ export const svgHighlight = ({
     dID = baseID
   } else if (d.parentLine && idAccessor(d.parentLine, i) !== undefined) {
     dID = idAccessor(d.parentLine, i)
-  } else if (d.parentArea && idAccessor(d.parentArea, i) !== undefined) {
-    dID = idAccessor(d.parentArea, i)
+  } else if (d.parentSummary && idAccessor(d.parentSummary, i) !== undefined) {
+    dID = idAccessor(d.parentSummary, i)
   }
 
   const foundPoints = points.data
@@ -151,7 +151,7 @@ export const svgHighlight = ({
             d.class(p, q)) ||
             (d.class && d.class) ||
             ""}`}
-          key={`highlight-area-${q}`}
+          key={`highlight-summary-${q}`}
           d={lineGenerator(p.data)}
           fill="none"
           stroke="black"
@@ -161,10 +161,10 @@ export const svgHighlight = ({
       )
     })
 
-  const foundAreas = areas.data
+  const foundSummaries = summaries.data
     .filter((p, q) => idAccessor(p, q) === dID)
     .map((p, q) => {
-      const baseStyle = xyFrameRender.areas.styleFn(p, q)
+      const baseStyle = xyFrameRender.summaries.styleFn(p, q)
 
       const highlightStyle =
         typeof d.style === "function" ? d.style(p, q) : d.style || {}
@@ -176,7 +176,7 @@ export const svgHighlight = ({
             d.class(p, q)) ||
             (d.class && d.class) ||
             ""}`}
-          key={`highlight-area-${q}`}
+          key={`highlight-summary-${q}`}
           d={`M${p.coordinates.join("L")}`}
           fill="none"
           stroke="black"
@@ -186,7 +186,7 @@ export const svgHighlight = ({
       )
     })
 
-  return [...foundAreas, ...foundLines, ...foundPoints]
+  return [...foundSummaries, ...foundLines, ...foundPoints]
 }
 
 export const svgXYAnnotation = ({ screenCoordinates, i, d }) => {
@@ -400,7 +400,7 @@ export const svgAreaAnnotation = ({
 
   const laLine = (
     <Mark
-      key={`${d.label}-annotationarea-${i}`}
+      key={`${d.label}-annotation-area-${i}`}
       markType="path"
       transform={`translate(${annotationLayer.position})`}
       d={mappedCoordinates}

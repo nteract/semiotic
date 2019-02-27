@@ -379,7 +379,7 @@ export function createLines({
   return mappedLines
 }
 
-export function createAreas({
+export function createSummaries({
   xScale,
   yScale,
   canvasDrawing,
@@ -392,8 +392,8 @@ export function createAreas({
   baseMarkProps,
   customMark
 }) {
-  const areaClass = classFn || (() => "")
-  const areaStyle = styleFn || (() => ({}))
+  const summaryClass = classFn || (() => "")
+  const summaryStyle = styleFn || (() => ({}))
 
   const renderFn = renderMode
 
@@ -401,12 +401,12 @@ export function createAreas({
     data = [data]
   }
 
-  const renderedAreas = []
+  const renderedSummaries = []
 
   data.forEach((d, i) => {
-    let className = "xyframe-area"
-    if (areaClass) {
-      className = `xyframe-area ${areaClass(d)}`
+    let className = "xyframe-summary"
+    if (summaryClass) {
+      className = `xyframe-summary ${summaryClass(d)}`
     }
     let drawD = ""
     let shouldBeValid = false
@@ -430,8 +430,8 @@ export function createAreas({
       drawD = customMark({
         d,
         i,
-        classFn: areaClass,
-        styleFn: areaStyle,
+        classFn: summaryClass,
+        styleFn: summaryStyle,
         renderFn,
         projectedCoordinates,
         xScale,
@@ -445,26 +445,26 @@ export function createAreas({
         .join("L")}Z`
     }
 
-    const renderKey = renderKeyFn ? renderKeyFn(d, i) : `area-${i}`
+    const renderKey = renderKeyFn ? renderKeyFn(d, i) : `summary-${i}`
 
     if (shouldBeValid && React.isValidElement(drawD)) {
-      renderedAreas.push(drawD)
+      renderedSummaries.push(drawD)
     } else if (canvasRender && canvasRender(d, i) === true) {
-      const canvasArea = {
-        type: "area",
-        baseClass: "xyframe-area",
+      const canvasSummary = {
+        type: "summary",
+        baseClass: "xyframe-summary",
         tx: 0,
         ty: 0,
         d,
         i,
         markProps: { markType: "path", d: drawD },
-        styleFn: areaStyle,
+        styleFn: summaryStyle,
         renderFn,
         classFn: () => className
       }
-      canvasDrawing.push(canvasArea)
+      canvasDrawing.push(canvasSummary)
     } else {
-      renderedAreas.push(
+      renderedSummaries.push(
         <Mark
           {...baseMarkProps}
           key={renderKey}
@@ -473,12 +473,12 @@ export function createAreas({
           className={className}
           markType="path"
           d={drawD}
-          style={areaStyle(d, i)}
+          style={summaryStyle(d, i)}
         />
       )
     }
   })
-  return renderedAreas
+  return renderedSummaries
 }
 
 export function clonedAppliedElement({

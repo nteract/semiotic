@@ -6,9 +6,9 @@ import { findFirstAccessorValue } from "../data/multiAccessorUtils"
 
 const datesForUnique = d => (d instanceof Date ? d.getTime() : d)
 
-type AreaProjectionTypes = {
+type SummaryProjectionTypes = {
   data: Array<Object>,
-  areaDataAccessor: Array<Function>,
+  summaryDataAccessor: Array<Function>,
   xAccessor: Array<Function>,
   yAccessor: Array<Function>
 }
@@ -75,18 +75,18 @@ type RelativeXTypes = {
   xScale: Function
 }
 
-export const projectAreaData = ({
+export const projectSummaryData = ({
   data,
-  areaDataAccessor,
+  summaryDataAccessor,
   xAccessor,
   yAccessor
-}: AreaProjectionTypes) => {
+}: SummaryProjectionTypes) => {
   const projectedData = []
-  areaDataAccessor.forEach(actualAreaAccessor => {
+  summaryDataAccessor.forEach(actualSummaryAccessor => {
     xAccessor.forEach(actualXAccessor => {
       yAccessor.forEach(actualYAccessor => {
         const projection = (d: Object) =>
-          actualAreaAccessor(d).map((p, q) => [
+          actualSummaryAccessor(d).map((p, q) => [
             actualXAccessor(p, q),
             actualYAccessor(p, q)
           ])
@@ -94,7 +94,7 @@ export const projectAreaData = ({
         data.forEach(d => {
           projectedData.push({
             ...d,
-            _baseData: actualAreaAccessor(d),
+            _baseData: actualSummaryAccessor(d),
             _xyfCoordinates: projection(d)
           })
         })

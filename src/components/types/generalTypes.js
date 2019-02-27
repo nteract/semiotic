@@ -15,7 +15,7 @@ export type ProjectedPoint = {
   yTop?: string,
   yMiddle?: string,
   yBottom?: string,
-  parentArea?: Object,
+  parentSummary?: Object,
   parentLine?: Object,
   percent?: number
 }

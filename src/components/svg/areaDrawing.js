@@ -3,10 +3,10 @@ import { scaleLinear } from "d3-scale"
 import polylabel from "@mapbox/polylabel"
 import { hexbin } from "d3-hexbin"
 
-export function contouring({ areaType, data, finalXExtent, finalYExtent }) {
-  let projectedAreas = []
-  if (!areaType.type) {
-    areaType = { type: areaType }
+export function contouring({ summaryType, data, finalXExtent, finalYExtent }) {
+  let projectedSummaries = []
+  if (!summaryType.type) {
+    summaryType = { type: summaryType }
   }
 
   const {
@@ -14,7 +14,7 @@ export function contouring({ areaType, data, finalXExtent, finalYExtent }) {
     thresholds = 10,
     bandwidth = 20,
     neighborhood
-  } = areaType
+  } = summaryType
 
   const xScale = scaleLinear()
     .domain(finalXExtent)
@@ -26,7 +26,7 @@ export function contouring({ areaType, data, finalXExtent, finalYExtent }) {
     .nice()
 
   data.forEach(contourData => {
-    let contourProjectedAreas = contourDensity()
+    let contourProjectedSummaries = contourDensity()
       .size([resolution, resolution])
       .x(d => xScale(d[0]))
       .y(d => yScale(d[1]))
@@ -34,16 +34,16 @@ export function contouring({ areaType, data, finalXExtent, finalYExtent }) {
       .bandwidth(bandwidth)(contourData._xyfCoordinates)
 
     if (neighborhood) {
-      contourProjectedAreas = [contourProjectedAreas[0]]
+      contourProjectedSummaries = [contourProjectedSummaries[0]]
     }
 
-    const max = Math.max(...contourProjectedAreas.map(d => d.value))
+    const max = Math.max(...contourProjectedSummaries.map(d => d.value))
 
-    contourProjectedAreas.forEach(area => {
-      area.parentArea = contourData
-      area.bounds = []
-      area.percent = area.value / max
-      area.coordinates.forEach(poly => {
+    contourProjectedSummaries.forEach(summary => {
+      summary.parentSummary = contourData
+      summary.bounds = []
+      summary.percent = summary.value / max
+      summary.coordinates.forEach(poly => {
         poly.forEach((subpoly, i) => {
           poly[i] = subpoly.map(coordpair => {
             coordpair = [
@@ -54,21 +54,21 @@ export function contouring({ areaType, data, finalXExtent, finalYExtent }) {
           })
           //Only push bounds for the main poly, not its interior rings, otherwise you end up labeling interior cutouts
           if (i === 0) {
-            area.bounds.push(shapeBounds(poly[i]))
+            summary.bounds.push(shapeBounds(poly[i]))
           }
         })
       })
     })
-    projectedAreas = [...projectedAreas, ...contourProjectedAreas]
+    projectedSummaries = [...projectedSummaries, ...contourProjectedSummaries]
   })
 
-  return projectedAreas
+  return projectedSummaries
 }
 
 export function hexbinning({
   preprocess = true,
   processedData = false,
-  areaType,
+  summaryType,
   data: baseData,
   finalXExtent = [
     Math.min(...baseData.coordinates.map(d => d.x)),
@@ -92,9 +92,9 @@ export function hexbinning({
     return baseData[0].coordinates
   }
 
-  let projectedAreas = []
-  if (!areaType.type) {
-    areaType = { type: areaType }
+  let projectedSummaries = []
+  if (!summaryType.type) {
+    summaryType = { type: summaryType }
   }
 
   const {
@@ -104,7 +104,7 @@ export function hexbinning({
     binValue = d => d.length,
     binMax,
     customMark
-  } = areaType
+  } = summaryType
 
   if (baseData.coordinates && !baseData._xyfCoordinates) {
     baseData._xyfCoordinates = baseData.coordinates.map(d => [d.x, d.y])
@@ -175,7 +175,7 @@ export function hexbinning({
       d[1] * hexHeight
     ])
 
-    const hexbinProjectedAreas = hexes.map(d => {
+    const hexbinProjectedSummaries = hexes.map(d => {
       const hexValue = binValue(d)
       const gx = d.x
       const gy = d.y
@@ -212,34 +212,34 @@ export function hexbinning({
         value: hexValue,
         percent,
         data: d,
-        parentArea: hexbinData,
+        parentSummary: hexbinData,
         centroid: true
       }
     })
-    projectedAreas = [...projectedAreas, ...hexbinProjectedAreas]
+    projectedSummaries = [...projectedSummaries, ...hexbinProjectedSummaries]
   })
 
   if (preprocess) {
-    projectedAreas.forEach(d => {
+    projectedSummaries.forEach(d => {
       d.x = d.data.x
       d.y = d.data.y
     })
     return {
       type: "hexbin",
       processedData: true,
-      coordinates: projectedAreas,
+      coordinates: projectedSummaries,
       binMax: hexMax
     }
   }
 
-  return projectedAreas
+  return projectedSummaries
 }
 // ADD PRECALC AND EXPOSE PRECALC FUNCTION
 
 export function heatmapping({
   preprocess = true,
   processedData = false,
-  areaType,
+  summaryType,
   data: baseData,
   finalXExtent = [
     Math.min(...baseData.coordinates.map(d => d.x)),
@@ -269,21 +269,21 @@ export function heatmapping({
 
   const data = Array.isArray(baseData) ? baseData : [baseData]
 
-  let projectedAreas = []
-  if (!areaType.type) {
-    areaType = { type: areaType }
+  let projectedSummaries = []
+  if (!summaryType.type) {
+    summaryType = { type: summaryType }
   }
 
   const {
     //    binGraphic = "square",
     binValue = d => d.length,
-    xBins = areaType.yBins || 0.05,
+    xBins = summaryType.yBins || 0.05,
     yBins = xBins,
-    xCellPx = !areaType.xBins && areaType.yCellPx,
-    yCellPx = !areaType.yBins && xCellPx,
+    xCellPx = !summaryType.xBins && summaryType.yCellPx,
+    yCellPx = !summaryType.yBins && xCellPx,
     customMark,
     binMax
-  } = areaType
+  } = summaryType
   const xBinPercent = xBins < 1 ? xBins : 1 / xBins
   const yBinPercent = yBins < 1 ? yBins : 1 / yBins
 
@@ -324,7 +324,7 @@ export function heatmapping({
           binItems: [],
           value: 0,
           _xyfCoordinates: [[x, y], [x1, y], [x1, y1], [x, y1]],
-          parentArea: heatmapData
+          parentSummary: heatmapData
         }
         gridColumn.push(cell)
         flatGrid.push(cell)
@@ -363,7 +363,7 @@ export function heatmapping({
       )
     })
 
-    projectedAreas = [...projectedAreas, ...flatGrid]
+    projectedSummaries = [...projectedSummaries, ...flatGrid]
   })
   if (binMax) {
     binMax(maxValue)
@@ -372,12 +372,12 @@ export function heatmapping({
     return {
       type: "heatmap",
       processedData: true,
-      coordinates: projectedAreas,
+      coordinates: projectedSummaries,
       binMax: maxValue
     }
   }
 
-  return projectedAreas
+  return projectedSummaries
 }
 
 export function shapeBounds(coordinates) {

@@ -989,7 +989,7 @@ export default class XYFrameDocs extends React.Component {
             fill: (d.parentLine && d.parentLine.color) || d.cat,
             stroke: "black",
             strokeWidth: 0.5,
-            r: d.parentArea && 5
+            r: d.parentSummary && 5
           })}
           customPointMark={customPointHash[this.state.customPoint]}
           lineDataAccessor={d =>

@@ -33,7 +33,7 @@ import { desaturationLayer } from "./annotationRules/baseRules"
 import {
   createPoints,
   createLines,
-  createAreas
+  createSummaries
 } from "./visualizationLayerBehavior/general"
 
 import { relativeY, relativeX, findPointByID } from "./svg/lineDrawing"
@@ -174,7 +174,7 @@ export type XYFrameProps = {
   projectedAreas?: Array<Object>,
   projectedSummaries?: Array<Object>,
   projectedPoints?: Array<Object>,
-  renderOrder?: $ReadOnlyArray<"lines" | "points" | "areas">,
+  renderOrder?: $ReadOnlyArray<"lines" | "points" | "summaries">,
   useAreasAsInteractionLayer?: boolean,
   useSummariesAsInteractionLayer?: boolean,
   onUnmount?: Function
@@ -184,10 +184,10 @@ type State = {
   dataVersion?: string,
   lineData?: Array<Object> | Object,
   pointData?: Array<Object> | Object,
-  areaData?: Array<Object> | Object,
+  summaryData?: Array<Object> | Object,
   projectedLines?: Array<Object>,
   projectedPoints?: Array<ProjectedPoint>,
-  projectedAreas?: Array<Object>,
+  projectedSummaries?: Array<Object>,
   fullDataset: Array<Object>,
   adjustedPosition: Array<number>,
   adjustedSize: Array<number>,
@@ -218,7 +218,8 @@ type State = {
 
 const naturalLanguageLineType = {
   "line": { items: "line", chart: "line chart" },
-  "area": { items: "area", chart: "area chart" },
+  "area": { items: "summary", chart: "summary chart" },
+  "summary": { items: "summary", chart: "summary chart" },
   "cumulative": { items: "line", chart: "cumulative chart" },
   "cumulative-reverse": { items: "line", chart: "cumulative chart" },
   "linepercent": { items: "line", chart: "line chart" },
@@ -262,8 +263,8 @@ function mapParentsToPoints(fullDataset: Array<Object>) {
     if (d.parentLine) {
       return Object.assign({}, d.parentLine, d)
     }
-    if (d.parentArea) {
-      return Object.assign({}, d.parentArea, d)
+    if (d.parentSummary) {
+      return Object.assign({}, d.parentSummary, d)
     }
     return d
   })
@@ -287,10 +288,10 @@ class XYFrame extends React.Component<XYFrameProps, State> {
     dataVersion: undefined,
     lineData: undefined,
     pointData: undefined,
-    areaData: undefined,
+    summaryData: undefined,
     projectedLines: undefined,
     projectedPoints: undefined,
-    projectedAreas: undefined,
+    projectedSummaries: undefined,
     fullDataset: [],
     adjustedPosition: [0, 0],
     adjustedSize: [500, 500],
@@ -350,7 +351,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       size: oldSize,
       dataVersion: oldDataVersion,
       lineData,
-      areaData,
+      summaryData,
       pointData
     } = this.state
     const {
@@ -359,7 +360,8 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       size: newSize,
       dataVersion: newDataVersion,
       lines: newLines,
-      areas: newAreas,
+      areas,
+      summaries: newSummaries = areas,
       points: newPoints
     } = nextProps
 
@@ -379,11 +381,11 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         Array.isArray(newLines) &&
         !!lineData.find(p => newLines.indexOf(p) === -1))
 
-    const areaChange =
-      areaData !== newAreas ||
-      (Array.isArray(areaData) &&
-        Array.isArray(newAreas) &&
-        !!areaData.find(p => newAreas.indexOf(p) === -1))
+    const summaryChange =
+      summaryData !== newSummaries ||
+      (Array.isArray(summaryData) &&
+        Array.isArray(newSummaries) &&
+        !!summaryData.find(p => newSummaries.indexOf(p) === -1))
 
     const pointChange =
       pointData !== newPoints ||
@@ -398,7 +400,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       this.calculateXYFrame(nextProps, true)
     } else if (
       lineChange ||
-      areaChange ||
+      summaryChange ||
       pointChange ||
       oldSize[0] !== newSize[0] ||
       oldSize[1] !== newSize[1] ||
@@ -408,7 +410,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
     ) {
       const dataChanged =
         lineChange ||
-        areaChange ||
+        summaryChange ||
         pointChange ||
         extentChange ||
         !!xyFrameDataProps.find(d => this.props[d] !== nextProps[d])
@@ -455,26 +457,26 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       pointStyle,
       pointRenderMode,
       pointClass,
-      summaryClass,
-      areaClass = summaryClass,
+      areaClass,
+      summaryClass = areaClass,
       canvasLines,
       canvasPoints,
-      canvasSummaries,
-      canvasAreas = canvasSummaries,
+      canvasAreas,
+      canvasSummaries = canvasAreas,
       defined,
       size,
       renderKey,
       lineType = { type: "line" },
-      summaryType,
-      areaType = summaryType || { type: "basic" },
+      areaType,
+      summaryType = areaType || { type: "basic" },
       customLineMark,
       customPointMark,
-      customSummaryMark,
-      customAreaMark = customSummaryMark,
-      summaryStyle,
-      areaStyle = summaryStyle,
-      summaryRenderMode,
-      areaRenderMode = summaryRenderMode,
+      customAreaMark,
+      customSummaryMark = customAreaMark,
+      areaStyle,
+      summaryStyle= areaStyle,
+      areaRenderMode,
+      summaryRenderMode = areaRenderMode,
       lineStyle,
       lineRenderMode,
       xExtent: baseXExtent,
@@ -488,11 +490,11 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       showLinePoints,
       showSummaryPoints,
       points,
-      summaries,
-      areas = summaries,
+      areas,
+      summaries = areas,
       lineDataAccessor,
-      summaryDataAccessor,
-      areaDataAccessor = summaryDataAccessor,
+      areaDataAccessor,
+      summaryDataAccessor = areaDataAccessor,
       yAccessor,
       xAccessor,
       useSummariesAsInteractionLayer,
@@ -502,15 +504,15 @@ class XYFrame extends React.Component<XYFrameProps, State> {
     let {
       projectedLines,
       projectedPoints,
-      projectedAreas = currentProps.projectedSummaries,
+      projectedSummaries = currentProps.projectedAreas,
       fullDataset
     } = currentProps
 
     const annotatedSettings = {
       xAccessor: stringToArrayFn(xAccessor, (d: Array<number>) => d[0]),
       yAccessor: stringToArrayFn(yAccessor, (d: Array<number>) => d[1]),
-      areaDataAccessor: stringToArrayFn(
-        areaDataAccessor,
+      summaryDataAccessor: stringToArrayFn(
+        summaryDataAccessor,
         (d: Object | Array<number>) => (Array.isArray(d) ? d : d.coordinates)
       ),
       lineDataAccessor: stringToArrayFn(
@@ -519,16 +521,16 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       ),
       renderKeyFn: stringToFn(renderKey, (d, i) => `line-${i}`, true),
       lineType: objectifyType(lineType),
-      areaType: objectifyType(areaType),
+      summaryType: objectifyType(summaryType),
       lineIDAccessor: stringToFn(lineIDAccessor, l => l.semioticLineID),
-      areas:
-        !areas || (Array.isArray(areas) && areas.length === 0)
+      summaries:
+        !summaries || (Array.isArray(summaries) && summaries.length === 0)
           ? undefined
-          : !Array.isArray(areas)
-          ? [areas]
-          : !areaDataAccessor && !areas[0].coordinates
-          ? [{ coordinates: areas }]
-          : areas,
+          : !Array.isArray(summaries)
+          ? [summaries]
+          : !summaryDataAccessor && !summaries[0].coordinates
+          ? [{ coordinates: summaries }]
+          : summaries,
       lines:
         !lines || (Array.isArray(lines) && lines.length === 0)
           ? undefined
@@ -557,9 +559,9 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       annotatedSettings.lineType.y1 = () => 0
     }
     
-   const areaStyleFn = stringToFn(areaStyle, emptyObjectReturnFunction, true)
-   const areaClassFn = stringToFn(areaClass, emptyStringReturnFunction, true)
-   const areaRenderModeFn = stringToFn(areaRenderMode, undefined, true)
+   const summaryStyleFn = stringToFn(summaryStyle, emptyObjectReturnFunction, true)
+   const summaryClassFn = stringToFn(summaryClass, emptyStringReturnFunction, true)
+   const summaryRenderModeFn = stringToFn(summaryRenderMode, undefined, true)
 
 
     const margin = calculateMargin({
@@ -599,25 +601,25 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         !xExtent ||
         !yExtent ||
         !fullDataset ||
-        (!projectedLines && !projectedPoints && !projectedAreas)
+        (!projectedLines && !projectedPoints && !projectedSummaries)
       ) {
         ;({
           xExtent,
           yExtent,
           projectedLines,
           projectedPoints,
-          projectedAreas,
+          projectedSummaries,
           fullDataset,
           calculatedXExtent,
           calculatedYExtent
         } = calculateDataExtent({
           lineDataAccessor: annotatedSettings.lineDataAccessor,
-          areaDataAccessor: annotatedSettings.areaDataAccessor,
+          summaryDataAccessor: annotatedSettings.summaryDataAccessor,
           xAccessor: annotatedSettings.xAccessor,
           yAccessor: annotatedSettings.yAccessor,
           lineType: annotatedSettings.lineType,
-          areaType: annotatedSettings.areaType,
-          areas: annotatedSettings.areas,
+          summaryType: annotatedSettings.summaryType,
+          summaries: annotatedSettings.summaries,
           points,
           lines: annotatedSettings.lines,
           showLinePoints,
@@ -629,9 +631,9 @@ class XYFrame extends React.Component<XYFrameProps, State> {
           adjustedSize,
           margin,
           baseMarkProps,
-          areaStyleFn,
-          areaClassFn,
-          areaRenderModeFn,
+          summaryStyleFn,
+          summaryClassFn,
+          summaryRenderModeFn,
           chartSize: size,
           xScaleType,
           yScaleType,
@@ -652,7 +654,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         yExtent,
         projectedLines,
         projectedPoints,
-        projectedAreas,
+        projectedSummaries,
         fullDataset,
         calculatedXExtent,
         calculatedYExtent
@@ -791,15 +793,15 @@ class XYFrame extends React.Component<XYFrameProps, State> {
     }
     const areaAnnotations = []
 
-    if (annotatedSettings.areaType.label && projectedAreas) {
-      projectedAreas.forEach((d, i) => {
+    if (annotatedSettings.summaryType.label && projectedSummaries) {
+      projectedSummaries.forEach((d, i) => {
         if (d.bounds) {
           const bounds = Array.isArray(d.bounds) ? d.bounds : [d.bounds]
           bounds.forEach(labelBounds => {
             const label =
-              typeof annotatedSettings.areaType.label === "function"
-                ? annotatedSettings.areaType.label(d)
-                : annotatedSettings.areaType.label
+              typeof annotatedSettings.summaryType.label === "function"
+                ? annotatedSettings.summaryType.label(d)
+                : annotatedSettings.summaryType.label
             if (label && label !== null) {
               const labelPosition = label.position || "center"
               const labelCenter = [
@@ -849,17 +851,17 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         axesData: currentProps.axes,
         behavior: createLines
       },
-      areas: {
+      summaries: {
         accessibleTransform: (data, i) => ({ ...data[i], type: "frame-hover" }),
-        data: projectedAreas,
-        styleFn: areaStyleFn,
-        classFn: areaClassFn,
-        renderMode: areaRenderModeFn,
-        canvasRender: stringToFn(canvasAreas, undefined, true),
-        customMark: customAreaMark,
-        type: annotatedSettings.areaType,
+        data: projectedSummaries,
+        styleFn: summaryStyleFn,
+        classFn: summaryClassFn,
+        renderMode: summaryRenderModeFn,
+        canvasRender: stringToFn(canvasSummaries, undefined, true),
+        customMark: customSummaryMark,
+        type: annotatedSettings.summaryType,
         renderKeyFn: annotatedSettings.renderKeyFn,
-        behavior: createAreas
+        behavior: createSummaries
       },
       points: {
         accessibleTransform: (data, i) => ({
@@ -892,12 +894,12 @@ class XYFrame extends React.Component<XYFrameProps, State> {
     }
 
     let overlay = undefined
-    if (useAreasAsInteractionLayer && projectedAreas) {
-      overlay = createAreas({ xScale, yScale, data: projectedAreas }).map(
+    if (useAreasAsInteractionLayer && projectedSummaries) {
+      overlay = createSummaries({ xScale, yScale, data: projectedSummaries }).map(
         (m, i) => ({
           ...m.props,
           style: { fillOpacity: 0 },
-          overlayData: projectedAreas && projectedAreas[i] // luckily createAreas is a map fn
+          overlayData: projectedSummaries && projectedSummaries[i] // luckily createSummaries is a map fn
         })
       )
     }
@@ -905,11 +907,11 @@ class XYFrame extends React.Component<XYFrameProps, State> {
     this.setState({
       lineData: currentProps.lines,
       pointData: currentProps.points,
-      areaData: currentProps.areas,
+      summaryData: currentProps.summaries || currentProps.areas,
       dataVersion: currentProps.dataVersion,
       projectedLines,
       projectedPoints,
-      projectedAreas,
+      projectedSummaries,
       canvasDrawing,
       fullDataset,
       adjustedPosition,
@@ -949,14 +951,14 @@ class XYFrame extends React.Component<XYFrameProps, State> {
     i,
     annotationLayer,
     lines,
-    areas,
+    summaries,
     points
   }: {
     d: Object,
     i: number,
     annotationLayer: Object,
     lines: Object,
-    areas: Object,
+    summaries: Object,
     points: Object
   }) => {
     const showLinePoints = this.props.showLinePoints
@@ -973,7 +975,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         i,
         idAccessor,
         lines,
-        areas,
+        summaries,
         points,
         xScale,
         yScale,
@@ -1078,7 +1080,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         yAccessor,
         xyFrameProps: this.props,
         xyFrameState: this.state,
-        areas,
+        summaries,
         points,
         lines,
         voronoiHover,
@@ -1175,14 +1177,14 @@ class XYFrame extends React.Component<XYFrameProps, State> {
     d: baseD,
     i,
     lines,
-    areas,
+    summaries,
     points,
     annotationLayer
   }: {
     d: Object,
     i: number,
     lines: Object,
-    areas: Object,
+    summaries: Object,
     points: Object,
     annotationLayer: Object
   }) => {
@@ -1293,7 +1295,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         yAccessor,
         xyFrameProps: this.props,
         xyFrameState: this.state,
-        areas,
+        summaries,
         points,
         lines,
         voronoiHover,
@@ -1341,6 +1343,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       lines,
       points,
       areas,
+      summaries = areas,
       name,
       download,
       size,
@@ -1357,6 +1360,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       baseMarkProps,
       useSpans,
       canvasAreas,
+      canvasSummaries = canvasAreas,
       canvasPoints,
       canvasLines,
       afterElements,
@@ -1391,7 +1395,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       const downloadData =
         download === "points"
           ? mapParentsToPoints(fullDataset)
-          : points || lines || areas
+          : points || lines || summaries || areas
       downloadButton = (
         <DownloadButton
           csvName={`${name}-${new Date().toJSON()}`}
@@ -1457,7 +1461,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         canvasPostProcess={canvasPostProcess}
         baseMarkProps={baseMarkProps}
         useSpans={useSpans}
-        canvasRendering={!!(canvasAreas || canvasPoints || canvasLines)}
+        canvasRendering={!!(canvasSummaries || canvasPoints || canvasLines)}
         renderOrder={renderOrder}
         overlay={overlay}
       />
