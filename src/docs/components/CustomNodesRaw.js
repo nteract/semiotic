@@ -8,13 +8,13 @@ export default ({ direction, ranker, parallelEdges }) => {
   g.setGraph({ rankdir: direction, ranker })
   g.setDefaultEdgeLabel(() => ({}))
 
-  g.setNode("spongebob", { label: "Mr. Squarepants", width: 44, height: 35 })
-  g.setNode("swilliams", { label: "Saul Williams", width: 60, height: 35 })
-  g.setNode("bpitt", { label: "Brad Pitt", width: 108, height: 35 })
+  g.setNode("spongebob", { label: "Mr. Squarepants", width: 44, height: 85 })
+  g.setNode("swilliams", { label: "Saul Williams", width: 60, height: 25 })
+  g.setNode("bpitt", { label: "Brad Pitt", width: 108, height: 15 })
   g.setNode("hford", { label: "Harrison Ford", width: 68, height: 35 })
-  g.setNode("lwilson", { label: "Luke Wilson", width: 44, height: 35 })
+  g.setNode("lwilson", { label: "Luke Wilson", width: 44, height: 50 })
   g.setNode("kbacon", { label: "Kevin Bacon", width: 101, height: 35 })
-  g.setNode("f", { label: "Kevin Bacon", width: 210, height: 40 })
+  g.setNode("f", { label: "Kevin Bacon", width: 210, height: 200 })
   g.setNode("ff", { label: "Kevin Bacon", width: 110, height: 40 })
   g.setNode("fff", { label: "Kevin Bacon", width: 121, height: 35 })
   g.setNode("ffff", { label: "Kevin Bacon", width: 151, height: 45 })
@@ -196,8 +196,15 @@ export default ({ direction, ranker, parallelEdges }) => {
           fillOpacity: 0.5,
           strokeWidth: parallelEdges ? 0.5 : d.weight
         })}
-        nodeLabels={true}
-        margin={10}
+        nodeLabels={d => {
+          console.log("d", d)
+          return (
+            <text x={-d.zoomedWidth / 2} y={-d.zoomedHeight / 2}>
+              {d.id}
+            </text>
+          )
+        }}
+        margin={50}
         hoverAnnotation={true}
         tooltipContent={d => {
           return <div className="tooltip-content">{d.id}</div>

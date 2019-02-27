@@ -1538,6 +1538,8 @@ class NetworkFrame extends React.Component<Props, State> {
         node.y0 = projectionScaleY(node.y0)
         node.x1 = projectionScaleX(node.x1)
         node.y1 = projectionScaleY(node.y1)
+        node.zoomedHeight = node.y1 - node.y0
+        node.zoomedWidth = node.x1 - node.x0
       })
 
       projectedEdges.forEach(edge => {
