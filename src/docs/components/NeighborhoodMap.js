@@ -21,7 +21,7 @@ export default class NeighborhoodMapDocs extends React.Component {
                 showLinePoints={true}
                 xAccessor={"x"}
                 yAccessor={"y"}
-                areaStyle={d => ({ stroke: 'none', fill: d.parentArea.color, opacity: 0.25 })}
+                areaStyle={d => ({ stroke: 'none', fill: d.parentSummary.color, opacity: 0.25 })}
                 pointStyle={d => ({ stroke: colors[d.vertical_id%39], strokeOpacity: 0, fill: colors[d.vertical_id%39] })}
                 customPointMark={() => <Mark markType='circle' r='1' />}
                 canvasPoints={true}

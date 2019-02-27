@@ -708,7 +708,7 @@ export function contourRenderFn({
     ]
 
     const oContours = contouring({
-      areaType: type,
+      summaryType: type,
       data: projectedOrd,
       projectedX: "x",
       projectedY: "y",

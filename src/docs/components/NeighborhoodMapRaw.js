@@ -62,7 +62,7 @@ const neighborhoodMapChart = {
   yAccessor: "posy",
   areaStyle: d => ({
     stroke: "none",
-    fill: d.parentArea.color,
+    fill: d.parentSummary.color,
     opacity: 0.25
   }),
   pointStyle: d => ({

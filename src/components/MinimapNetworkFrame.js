@@ -48,16 +48,7 @@ class MinimapNetworkFrame extends NetworkFrame {
 }
 
 MinimapNetworkFrame.propTypes = {
-  size: PropTypes.array,
-  xAccessor: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
-  yAccessor: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
-  points: PropTypes.array,
-  lines: PropTypes.array,
-  areas: PropTypes.array,
-  lineDataAccessor: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
-  lineType: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-  minimap: PropTypes.object,
-  renderBefore: PropTypes.oneOfType([PropTypes.array, PropTypes.object])
+  minimap: PropTypes.object
 }
 
 export default MinimapNetworkFrame

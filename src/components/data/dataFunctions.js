@@ -1,6 +1,6 @@
 // @flow
 
-import { projectLineData, projectAreaData } from "../svg/lineDrawing"
+import { projectLineData, projectSummaryData } from "../svg/lineDrawing"
 import {
   projectedX,
   projectedY,
@@ -76,10 +76,10 @@ export const stringToArrayFn = (
 
 type CalculateDataTypes = {
   lineDataAccessor: Array<Function>,
-  areaDataAccessor: Array<Function>,
+  summaryDataAccessor: Array<Function>,
   xAccessor: Array<Function>,
   yAccessor: Array<Function>,
-  areas?: Array<Object>,
+  summaries?: Array<Object>,
   points?: Array<Object>,
   lines?: Array<Object>,
   lineType: Object,
@@ -89,7 +89,7 @@ type CalculateDataTypes = {
   yExtent?: Array<number> | Object,
   invertX?: boolean,
   invertY?: boolean,
-  areaType: Object,
+  summaryType: Object,
   adjustedSize: Array<number>,
   xScaleType: Function,
   yScaleType: Function,
@@ -100,7 +100,7 @@ export const calculateDataExtent = ({
   lineDataAccessor,
   xAccessor,
   yAccessor,
-  areas,
+  summaries,
   points,
   lines,
   lineType,
@@ -110,16 +110,16 @@ export const calculateDataExtent = ({
   yExtent,
   invertX,
   invertY,
-  areaDataAccessor,
-  areaType,
+  summaryDataAccessor,
+  summaryType,
   adjustedSize: size,
   xScaleType,
   yScaleType,
   margin,
   baseMarkProps,
-  areaStyleFn,
-  areaClassFn,
-  areaRenderModeFn,
+  summaryStyleFn,
+  summaryClassFn,
+  summaryRenderModeFn,
   chartSize,
   defined = () => true
 }: CalculateDataTypes) => {
@@ -128,7 +128,7 @@ export const calculateDataExtent = ({
 
   let projectedPoints: Array<ProjectedPoint> = [],
     projectedLines: Array<Object> = [],
-    projectedAreas: Array<Object> = []
+    projectedSummaries: Array<Object> = []
   if (points) {
     xAccessor.forEach((actualXAccessor, xIndex) => {
       yAccessor.forEach((actualYAccessor, yIndex) => {
@@ -234,10 +234,10 @@ export const calculateDataExtent = ({
     }
   }
 
-  if (areas) {
-    projectedAreas = projectAreaData({
-      data: areas,
-      areaDataAccessor,
+  if (summaries) {
+    projectedSummaries = projectSummaryData({
+      data: summaries,
+      summaryDataAccessor,
       xProp: projectedX,
       yProp: projectedY,
       yPropTop: projectedYTop,
@@ -246,13 +246,13 @@ export const calculateDataExtent = ({
       yAccessor
     })
 
-    projectedAreas.forEach(d => {
+    projectedSummaries.forEach(d => {
       const baseData = d._baseData
       if (d._xyfCoordinates[0][0][0]) {
         d._xyfCoordinates[0].forEach(multi => {
           multi
             .map((p, q) =>
-              Object.assign({ parentArea: d }, baseData[q], {
+              Object.assign({ parentSummary: d }, baseData[q], {
                 [projectedX]: p[0],
                 [projectedY]: p[1]
               })
@@ -270,7 +270,7 @@ export const calculateDataExtent = ({
       } else {
         d._xyfCoordinates
           .map((p, q) =>
-            Object.assign({ parentArea: d }, baseData[q], {
+            Object.assign({ parentSummary: d }, baseData[q], {
               [projectedX]: p[0],
               [projectedY]: p[1]
             })
@@ -359,20 +359,20 @@ export const calculateDataExtent = ({
     finalYExtent = [finalYExtent[1], finalYExtent[0]]
   }
 
-  if (areaType.type && areaType.type === "contour") {
-    projectedAreas = contouring({
-      areaType,
-      data: projectedAreas,
+  if (summaryType.type && summaryType.type === "contour") {
+    projectedSummaries = contouring({
+      summaryType,
+      data: projectedSummaries,
       projectedX,
       projectedY,
       finalXExtent,
       finalYExtent
     })
-  } else if (areaType.type && areaType.type === "hexbin") {
-    projectedAreas = hexbinning({
-      areaType,
-      data: projectedAreas,
-      processedData: areas && !!areas[0].processedData,
+  } else if (summaryType.type && summaryType.type === "hexbin") {
+    projectedSummaries = hexbinning({
+      summaryType,
+      data: projectedSummaries,
+      processedData: summaries && !!summaries[0].processedData,
       preprocess: false,
       projectedX,
       projectedY,
@@ -383,20 +383,20 @@ export const calculateDataExtent = ({
       yScaleType,
       margin,
       baseMarkProps,
-      styleFn: areaStyleFn,
-      classFn: areaClassFn,
-      renderFn: areaRenderModeFn,
+      styleFn: summaryStyleFn,
+      classFn: summaryClassFn,
+      renderFn: summaryRenderModeFn,
       chartSize
     })
     fullDataset = [
-      ...projectedAreas.map(d => d.data),
-      ...fullDataset.filter(d => !d.parentArea)
+      ...projectedSummaries.map(d => d.data),
+      ...fullDataset.filter(d => !d.parentSummary)
     ]
-  } else if (areaType.type && areaType.type === "heatmap") {
-    projectedAreas = heatmapping({
-      areaType,
-      data: projectedAreas,
-      processedData: areas && !!areas[0].processedData,
+  } else if (summaryType.type && summaryType.type === "heatmap") {
+    projectedSummaries = heatmapping({
+      summaryType,
+      data: projectedSummaries,
+      processedData: summaries && !!summaries[0].processedData,
       preprocess: false,
       projectedX,
       projectedY,
@@ -407,15 +407,15 @@ export const calculateDataExtent = ({
       yScaleType,
       margin,
       baseMarkProps,
-      styleFn: areaStyleFn,
-      classFn: areaClassFn,
-      renderFn: areaRenderModeFn,
+      styleFn: summaryStyleFn,
+      classFn: summaryClassFn,
+      renderFn: summaryRenderModeFn,
       chartSize
     })
 
     fullDataset = [
-      ...projectedAreas.map(d => ({ ...d })),
-      ...fullDataset.filter(d => !d.parentArea)
+      ...projectedSummaries.map(d => ({ ...d })),
+      ...fullDataset.filter(d => !d.parentSummary)
     ]
   }
 
@@ -424,7 +424,7 @@ export const calculateDataExtent = ({
     yExtent: finalYExtent,
     projectedLines,
     projectedPoints,
-    projectedAreas,
+    projectedSummaries,
     fullDataset,
     calculatedXExtent,
     calculatedYExtent
