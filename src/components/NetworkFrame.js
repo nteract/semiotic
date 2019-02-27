@@ -737,14 +737,15 @@ class NetworkFrame extends React.Component<Props, State> {
       projectedNodes = []
       projectedEdges = []
       nodes.forEach(node => {
-        const id = nodeIDAccessor(node)
-        nodeHash.set(id, node)
-        nodeHash.set(node, node)
-        projectedNodes.push(node)
-        node.id = id
-        node.inDegree = 0
-        node.outDegree = 0
-        node.degree = 0
+        const projectedNode = { ...node }
+        const id = nodeIDAccessor(projectedNode)
+        nodeHash.set(id, projectedNode)
+        nodeHash.set(projectedNode, projectedNode)
+        projectedNodes.push(projectedNode)
+        projectedNode.id = id
+        projectedNode.inDegree = 0
+        projectedNode.outDegree = 0
+        projectedNode.degree = 0
       })
 
       let operationalEdges = edges
@@ -753,7 +754,7 @@ class NetworkFrame extends React.Component<Props, State> {
       if (hierarchicalTypeHash[networkSettings.type] && Array.isArray(edges)) {
         const createdHierarchicalData = softStack(
           edges,
-          nodes,
+          projectedNodes,
           sourceAccessor,
           targetAccessor,
           nodeIDAccessor
@@ -1114,7 +1115,7 @@ class NetworkFrame extends React.Component<Props, State> {
         const fontWeightMod = (fontWeight / 300 - 1) / 5 + 1
         const fontWidth = (fontSize / 1.5) * fontWeightMod
 
-        nodes.forEach((d, i) => {
+        projectedNodes.forEach((d, i) => {
           const calcualatedNodeSize = nodeSizeAccessor(d)
           d._NWFText = textAccessor(d)
           const textWidth =
@@ -1129,10 +1130,10 @@ class NetworkFrame extends React.Component<Props, State> {
           d.radius = d.r = textWidth / 2
         })
 
-        nodes.sort((a, b) => b.textWidth - a.textWidth)
+        projectedNodes.sort((a, b) => b.textWidth - a.textWidth)
 
         //bubblepack for initial position
-        packSiblings(nodes)
+        packSiblings(projectedNodes)
 
         //        if (rotate) {
         const collide = bboxCollide(d => {
@@ -1151,7 +1152,7 @@ class NetworkFrame extends React.Component<Props, State> {
         const xCenter = size[0] / 2
         const yCenter = size[1] / 2
 
-        const simulation = forceSimulation(nodes)
+        const simulation = forceSimulation(projectedNodes)
           .velocityDecay(0.6)
           .force("x", forceX(xCenter).strength(1.2))
           .force("y", forceY(yCenter).strength(1.2))
