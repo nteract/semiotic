@@ -315,7 +315,15 @@ export const ordinalframeproptypes = {
   summaryHoverAnnotation: sharedframeproptypes.hoverAnnotation,
   axis: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
   ordinalAlign: PropTypes.string,
-  multiAxis: PropTypes.bool
+  multiAxis: PropTypes.bool,
+  pieceClass: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.func
+  ]),
+  summaryClass: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.func
+  ])
 }
 
 export const networkframeproptypes = {
