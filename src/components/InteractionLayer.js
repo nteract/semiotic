@@ -147,7 +147,8 @@ class InteractionLayer extends React.Component<Props, State> {
 
   constructDataObject = (d?: Object) => {
     const { points } = this.props
-    return d && d.data ? { points, ...d.data, ...d } : { points, ...d }
+    return d && d.data ? { points, ...d.data, ...d }
+      : (d ? { points, ...d } : d)
   }
 
   changeVoronoi = (d?: Object, customHoverTypes?: CustomHoverType) => {
