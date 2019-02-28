@@ -129,7 +129,7 @@ Use `svgAnnotationRules` or `htmlAnnotationRules` depending on the type of JSX e
 The custom rules expose the datapoint hovered, scales, and other properties of the frame.
 
 - NetworkFrame: `d, i, networkFrameProps, networkFrameState, nodes, edges, voronoiHover, screenCoordinates, adjustedPosition, adjustedSize, annotationLayer`
-- XYFrame: `d, i, xyFrameProps, xyFrameState, xScale, yScale, xAccessor, yAccessor, areas, points, lines, voronoiHover, screenCoordinates, adjustedPosition, adjustedSize, annotationLayer`
+- XYFrame: `d, i, xyFrameProps, xyFrameState, xScale, yScale, xAccessor, yAccessor, summaries, points, lines, voronoiHover, screenCoordinates, adjustedPosition, adjustedSize, annotationLayer`
 - ORFrame: `d, i, orFrameProps, orFrameState, oScale, rScale, oAccessor, rAccessor, categories, voronoiHover, screenCoordinates, adjustedPosition, adjustedSize, annotationLayer`
 
 ## svgAnnotationRules { _function_ }

@@ -49,7 +49,6 @@ export default () => (
 - [Annotation and Decoration](#annotation-and-decoration)
   - [tooltipContent: { _function_ }](#tooltipcontent-function-)
   - [axis: { _object_ }](#axis-object-)
-  - [legend: { _object_ }](#legend-object-)
   - [oLabel: { _bool_ | _function_ }](#olabel-bool--function-)
   - [annotations: { _array_ }](#annotations-array-)
   - [svgAnnotationRules: { _function_ }](#svgannotationrules-function-)
@@ -379,26 +378,6 @@ An object that define the range axis. These objects roughly correspond to the op
 
 ```jsx
 <OrdinalFrame axis={{ orient: "left" }} />
-```
-
-### legend: { _object_ }
-
-An object that defines the legend to be displayed on the frame. It uses the format seen in [<Legend>](legend)
-
-```jsx
-<OrdinalFrame
-  legend={{
-    legendGroups: [
-      {
-        styleFn: d => ({ fill: d.color, stroke: "black" }),
-        items: [
-          { label: "Area 1", color: "red" },
-          { label: "Area 2", color: "blue" }
-        ]
-      }
-    ]
-  }}
-/>
 ```
 
 ### oLabel: { _bool_ | _function_ | _object_ }

@@ -381,7 +381,12 @@ export const PAGES = [
       {
         name: "FacetController",
         url: "facetcontroller",
-        img: "facet"
+        img: "facet",
+        component: MarkdownPage,
+
+        props: {
+          filename: "facetcontroller"
+        }
       },
       {
         name: "Sub-Components",

@@ -1,8 +1,8 @@
 A frame that displays continuous data along the _x_ and _y_ axis. Examples include [line charts](/guides/line-chart), [scatterplots](/guides/scatterplot), and [area charts](/guides/area-chart).
 
-`<XYFrame>` charts render [points](#point-rendering), [lines](#line-rendering), and [area](#area-rendering) elements. Rendering and styling is based on each element's corresponding properties.
+`<XYFrame>` charts render [points](#point-rendering), [lines](#line-rendering), and [summary](#summary-rendering) elements. Rendering and styling is based on each element's corresponding properties.
 
-`XYFrame` data elements are accessible by tabbing to the data group (points, lines or areas) and hitting enter to arrow-key navigate through the data elements.
+`XYFrame` data elements are accessible by tabbing to the data group (points, lines, or summaries) and hitting enter to arrow-key navigate through the data elements.
 
 ```jsx
 import XYFrame from 'semiotic/lib/XYFrame'
@@ -48,17 +48,17 @@ export default () => <XYFrame
   - [customLineMark: { _function_ }](#customlinemark-function-)
   - [canvasLines: { _boolean_ | _function_ }](#canvaslines-boolean-function-)
   - [defined: { _function_ }](#defined-function-)
-- [Area Rendering](#area-rendering)
-  - [areas: { [_data_] }](#areas-data-)
-  - [areaDataAccessor: { _string_ | _function_ }](#areadataaccessor-string-function-)
-  - [areaStyle: { _function_ | _object_ }](#areastyle-function-object-)
-  - [areaClass: { _string_ | _function_ }](#areaclass-string-function-)
-  - [canvasAreas: { _boolean_ | _function_ }](#canvasareas-boolean-function-)
+- [Summary Rendering](#summary-rendering)
+  - [summary: { [_data_] }](#summaries-data-)
+  - [summaryDataAccessor: { _string_ | _function_ }](#summarydataaccessor-string-function-)
+  - [summaryStyle: { _function_ | _object_ }](#summarystyle-function-object-)
+  - [summaryClass: { _string_ | _function_ }](#summaryclass-string-function-)
+    - [customSummaryMark: { _function_ }](#customsummarymark-function-)
+  - [canvasSummaries: { _boolean_ | _function_ }](#canvassummaries-boolean-function-)
 - [Annotation and Decoration](#annotation-and-decoration)
 
   - [tooltipContent: { _function_ }](#tooltipcontent-function-)
   - [axes: { _array_ }](#axes-array-)
-  - [legend: bool or object](#legend-bool-or-object)
   - [annotations: { _array_ }](#annotations-array-)
   - [svgAnnotationRules: { _function_ }](#svgannotationrules-function-)
   - [htmlAnnotationRules: { _function_ }](#htmlannotationrules-function-)
@@ -442,9 +442,9 @@ If _defined_ is specified, sets the accessor function that controls where the li
 <XYFrame defined={ d => !isNaN(d[1]) } ... />
 ```
 
-## Area Rendering
+## Summary Rendering
 
-### areas: { [_data_] }
+### summaries: { [_data_] }
 
 An array of arrays or objects representing individual points on a chart. If you want to show points on an area chart, use the [`showLinePoints`](#showlinepoints-boolean) property.
 
@@ -456,7 +456,7 @@ function MyAreaChart() {
 }
 ```
 
-### areaDataAccessor: { _string_ | _function_ }
+### summaryDataAccessor: { _string_ | _function_ }
 
 If _areaDataAccessor_ is specified, determines how area coordinates are accessed from the data array passed to the areas attribute. Defaults to `coordinates`.
 
@@ -465,7 +465,7 @@ If _areaDataAccessor_ is specified, determines how area coordinates are accessed
 option */ <XYFrame areaDataAccessor={ d => d.areaValues } ... />
 ```
 
-### areaStyle: { _function_ | _object_ }
+### summaryStyle: { _function_ | _object_ }
 
 If _areaStyle_ is specified, sets the inline css style of each area element.
 
@@ -475,7 +475,7 @@ If _areaStyle_ is specified, sets the inline css style of each area element.
 stroke: d.stroke }) } />
 ```
 
-### areaClass: { _string_ | _function_ }
+### summaryClass: { _string_ | _function_ }
 
 If _areaClass_ is specified, sets the css class of each area element.
 
@@ -484,7 +484,23 @@ If _areaClass_ is specified, sets the css class of each area element.
 <XYFrame areaClass={ d => d.className } ... />
 ```
 
-### canvasAreas: { _boolean_ | _function_ }
+### summaryType: { _string_ | _object_ }
+
+### customSummaryMark: { _JSX_ | _function_ }
+
+The _customSummaryMark_ attribute accepts a _JSX_ object or _function_ that returns a _JSX_ object as the marker for each point. You can leverage the semiotic-mark library to create [`<Mark>`](/api/mark) elements for each point.
+
+**Note**: The value(s) of the [`pointStyle`](#pointstyle--object--function-) attribute is then applied to the custom mark, but only at the top level. So if you want to make multipart graphical objects, have the customPointMark declare the style.
+
+```jsx
+/*JSX option */
+<XYFrame customSummaryMark={ <Mark markType="rect" /> } ... />
+
+/*Function option */
+<XYFrame customSummaryMark={ d => (<Mark markType="rect" />) } ... />
+```
+
+### canvasSummaries: { _boolean_ | _function_ }
 
 If _canvasAreas_ is specified, renders area elements in Canvas. The _canvasAreas_ attribute accepts a _boolean_ or a _function_ that evaluates an area and returns a boolean that determines whether or not to render the area to [`Canvas`](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API) instead of [`SVG`](https://developer.mozilla.org/en-US/docs/Web/SVG).
 
@@ -499,32 +515,11 @@ If _canvasAreas_ is specified, renders area elements in Canvas. The _canvasAreas
 
 ### tooltipContent: { _function_ }
 
-A function returning JSX HTML to display in the tooltip (only active if `hoverAnnotation` is set to `true`). The tooltip is passed the data point (which if part of a line or area will be decorated with a corresponding `parentLine` or `parentArea` pointer to that object). The content is placed on and directly above the hovered point, so take that into account when using CSS to style the position and any additional elements. You can drop any HTML into this floating div, including another frame.
+A function returning JSX HTML to display in the tooltip (only active if `hoverAnnotation` is set to `true`). The tooltip is passed the data point (which if part of a line or summary will be decorated with a corresponding `parentLine` or `parentArea` pointer to that object). The content is placed on and directly above the hovered point, so take that into account when using CSS to style the position and any additional elements. You can drop any HTML into this floating div, including another frame.
 
 ### axes: { _array_ }
 
 An array of objects that defines axes. These objects roughly correspond to the options in [d3-axis](https://github.com/d3/d3-axis), with extended options such as `label`.
-
-### legend: bool or object
-
-A boolean or object determining whether to turn on a legend. Currently only works with line data. If set to `true`, will place a legend on the upper right corner of the chart area. Legends are 100px wide, so you can account for this in your right-hand margin. Can also take an object with `{ position }` that can be set to `"right"` to get the default behavior or `"left"` to place it on the top left corner or an array of exact XY position for the legend. The legend will automatically have items for each line, labeled with the string value that corresponds to the lineIDAccessor of the line.
-
-```jsx
-/*boolean option */
-<XYFrame legend={true} />
-/*object option */
-<XYFrame legend={{
-        legendGroups: [
-          {
-            styleFn: d => ({ fill: d.color, stroke: "black" }),
-            items: [
-              { label: "Area 1", color: "red" },
-              { label: "Area 2", color: "blue" }
-            ]
-          }
-        ]
-      }} ... />
-```
 
 ### annotations: { _array_ }
 
@@ -561,7 +556,7 @@ A function that takes an annotation object and returns a JSX SVG element. The fu
 
 ### htmlAnnotationRules: { _function_ }
 
-A function that takes an annotation object and returns a JSX HTML element. The function is sent `{ d, i, screenCoordinates, xScale, yScale, xAccessor, yAccessor, xyFrameProps, xyFrameState, areas, points, lines, adjustedPosition, adjustedSize, annotationLayer, voronoiHover }`. Elements can be placed using CSS `left` and `top` and will overlay on the chart. Internally, the default annotation for tooltips uses this method.
+A function that takes an annotation object and returns a JSX HTML element. The function is sent `{ d, i, screenCoordinates, xScale, yScale, xAccessor, yAccessor, xyFrameProps, xyFrameState, summaries, points, lines, adjustedPosition, adjustedSize, annotationLayer, voronoiHover }`. Elements can be placed using CSS `left` and `top` and will overlay on the chart. Internally, the default annotation for tooltips uses this method.
 
 ```jsx
 <XYFrame
