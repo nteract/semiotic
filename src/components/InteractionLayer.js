@@ -145,17 +145,26 @@ class InteractionLayer extends React.Component<Props, State> {
 
   canvasMap: Map<string, number> = new Map()
 
-  changeVoronoi = (d?: Object, customHoverTypes?: CustomHoverType) => {
-    //Until semiotic 2
-    const dataObject = d && d.data ? { ...d.data, ...d } : d
-    if (this.props.customHoverBehavior)
-      this.props.customHoverBehavior(dataObject)
+  constructDataObject = (d?: Object) => {
+    const { points } = this.props
+    return d && d.data ? { points, ...d.data, ...d } : { points, ...d }
+  }
 
-    if (!d) this.props.voronoiHover(null)
+  changeVoronoi = (d?: Object, customHoverTypes?: CustomHoverType) => {
+    const {
+      customHoverBehavior,
+      voronoiHover
+    } = this.props
+    //Until semiotic 2
+    const dataObject = this.constructDataObject(d)
+    if (customHoverBehavior)
+      customHoverBehavior(dataObject)
+
+    if (!d) voronoiHover(null)
     else if (customHoverTypes === true) {
       const vorD = Object.assign({}, dataObject)
       vorD.type = vorD.type === "column-hover" ? "column-hover" : "frame-hover"
-      this.props.voronoiHover(vorD)
+      voronoiHover(vorD)
     } else if (customHoverTypes) {
       const arrayWrappedHoverTypes = Array.isArray(customHoverTypes)
         ? customHoverTypes
@@ -168,20 +177,20 @@ class InteractionLayer extends React.Component<Props, State> {
         })
         .filter(d => d)
 
-      this.props.voronoiHover(mappedHoverTypes)
+      voronoiHover(mappedHoverTypes)
     }
   }
 
   clickVoronoi = (d: Object) => {
     //Until semiotic 2
-    const dataObject = d.data ? { ...d.data, ...d } : d
+    const dataObject = this.constructDataObject(d)
 
     if (this.props.customClickBehavior)
       this.props.customClickBehavior(dataObject)
   }
   doubleclickVoronoi = (d: Object) => {
     //Until semiotic 2
-    const dataObject = d.data ? { ...d.data, ...d } : d
+    const dataObject = this.constructDataObject(d)
 
     if (this.props.customDoubleClickBehavior)
       this.props.customDoubleClickBehavior(dataObject)
@@ -415,7 +424,6 @@ class InteractionLayer extends React.Component<Props, State> {
       customDoubleClickBehavior,
       hoverAnnotation
     } = props
-
     const whichPoints = {
       top: projectedYTop,
       bottom: projectedYBottom
@@ -516,7 +524,6 @@ class InteractionLayer extends React.Component<Props, State> {
       const renderedOverlay: Array<Node> = overlay.map(
         (overlayRegion: Object, i: number) => {
           const { overlayData, ...rest } = overlayRegion
-
           if (React.isValidElement(overlayRegion.renderElement)) {
             return React.cloneElement(overlayRegion.renderElement, {
               key: `overlay-${i}`,
@@ -711,6 +718,7 @@ class InteractionLayer extends React.Component<Props, State> {
       canvasRendering,
       disableCanvasInteraction
     } = this.props
+
     const { overlayRegions } = this.state
     let { enabled } = this.props
 
