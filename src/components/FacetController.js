@@ -14,6 +14,8 @@ import type { Node, Element } from "react"
 import type { OrdinalFrameProps } from "./OrdinalFrame"
 import type { XYFrameProps } from "./XYFrame"
 
+import type { CustomHoverType } from "./types/annotationTypes"
+
 const framePropHash = {
   NetworkFrame: networkframeproptypes,
   XYFrame: xyframeproptypes,
@@ -29,6 +31,7 @@ const framePropHash = {
 const buildNewState = (prevState, extentValue, extentType, extentPosition) => {
   const oldExtents = prevState.rawExtents[extentType] || {}
   oldExtents[extentPosition] = extentValue
+  // $FlowFixMe
   const extentMinMaxValues = Object.values(oldExtents).flat()
 
   return {
@@ -70,7 +73,8 @@ type Props = FacetControllerProps & OrdinalFrameProps & XYFrameProps
 type State = {
   extents: Object,
   rawExtents: Object,
-  facetHover: ?Object
+  facetHover: ?Object,
+  facetHoverAnnotations?: CustomHoverType
 }
 
 class FacetController extends React.Component<Props, State> {
@@ -122,18 +126,24 @@ class FacetController extends React.Component<Props, State> {
     originalAnnotations: Array<Object>,
     state: State
   }) => {
+    let annotationBase = state.facetHoverAnnotations
+    const annotationSettings =
+      this.props.hoverAnnotation || this.props.pieceHoverAnnotation
+
+    if (!annotationSettings || !annotationBase || annotationBase === false) {
+      return []
+    }
     if (state.facetHover) {
       const annotations = [...originalAnnotations]
 
-      let annotationBase = state.facetHoverAnnotations
-
-      if (annotationBase === true) {
+      if (annotationSettings === true) {
         annotationBase = [{ ...state.facetHover }]
       } else {
-        annotationBase = (
-          this.props.hoverAnnotation || this.props.pieceHoverAnnotation
-        ).map(d => {
-          const decoratedAnnotation = { ...state.facetHover, ...d }
+        annotationBase = annotationSettings.map(annotation => {
+          const decoratedAnnotation =
+            typeof annotation === "function"
+              ? annotation(state.facetHover)
+              : { ...state.facetHover, ...annotation }
 
           return decoratedAnnotation
         })

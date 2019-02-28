@@ -139,7 +139,7 @@ export default class CreatingXYPlots extends React.Component {
           </p>
           <XYFrame
             size={[500, 800]}
-            areas={[{ coordinates: pointTestData }]}
+            summaries={[{ coordinates: pointTestData }]}
             summaryType={{
               type: "heatmap",
               yBins: 10,

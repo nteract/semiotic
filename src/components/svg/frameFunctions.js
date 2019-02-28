@@ -68,7 +68,8 @@ type ORFrameSummaryRendererTypes = {
   projection: ProjectionTypes,
   adjustedSize: Array<number>,
   chartSize: number,
-  baseMarkProps: Object
+  baseMarkProps: Object,
+  margin: Object
 }
 
 type ORFrameAxisGeneratorTypes = {

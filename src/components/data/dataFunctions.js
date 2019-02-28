@@ -77,6 +77,9 @@ export const stringToArrayFn = (
 type CalculateDataTypes = {
   lineDataAccessor: Array<Function>,
   summaryDataAccessor: Array<Function>,
+  summaryStyleFn: Function,
+  summaryClassFn: Function,
+  summaryRenderModeFn: Function,
   xAccessor: Array<Function>,
   yAccessor: Array<Function>,
   summaries?: Array<Object>,
@@ -91,8 +94,11 @@ type CalculateDataTypes = {
   invertY?: boolean,
   summaryType: Object,
   adjustedSize: Array<number>,
+  chartSize: Array<number>,
   xScaleType: Function,
   yScaleType: Function,
+  baseMarkProps?: Object,
+  margin: Object,
   defined?: Function
 }
 

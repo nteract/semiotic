@@ -101,9 +101,9 @@ describe("XYFrame", () => {
     expect(mountedFrame.find("g.lines").length).toEqual(1)
     expect(mountedFrame.find("g.xyframe-line").length).toEqual(2)
   })
-  it("renders areas in their own <g>", () => {
-    expect(mountedFrame.find("g.areas").length).toEqual(1)
-    expect(mountedFrame.find("g.xyframe-area").length).toEqual(1)
+  it("renders summaries in their own <g>", () => {
+    expect(mountedFrame.find("g.summaries").length).toEqual(1)
+    expect(mountedFrame.find("g.xyframe-summary").length).toEqual(1)
   })
   it("doesn't render an interaction layer", () => {
     expect(mountedFrame.find("div.interaction-layer").length).toEqual(0)
@@ -126,7 +126,7 @@ describe("XYFrame", () => {
         { label: "points", coordinates: somePointData },
         { label: "otherpoints", coordinates: someOtherPointData }
       ]}
-      areas={[{ label: "areas", coordinates: somePointData }]}
+      summaries={[{ label: "summaries", coordinates: somePointData }]}
       xExtent={{
         onChange: d => {
           returnedExtent = d
