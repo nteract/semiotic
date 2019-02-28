@@ -145,12 +145,17 @@ class InteractionLayer extends React.Component<Props, State> {
   canvasMap: Map<string, number> = new Map()
 
   changeVoronoi = (d?: Object, customHoverTypes?: CustomHoverType) => {
+    const {
+      customHoverBehavior,
+      voronoiHover,
+      points
+    } = this.props
     //Until semiotic 2
-    const dataObject = d && d.data ? { ...d.data, ...d } : d
-    if (this.props.customHoverBehavior)
-      this.props.customHoverBehavior(dataObject)
+    const dataObject = d && d.data ? { ...d.data, ...d, points } : { ...d, points }
+    if (customHoverBehavior)
+      customHoverBehavior(dataObject)
 
-    if (!d) this.props.voronoiHover(null)
+    if (!d) voronoiHover(null)
     else if (customHoverTypes === true) {
       const vorD = Object.assign({}, dataObject)
       vorD.type = vorD.type === "column-hover" ? "column-hover" : "frame-hover"
@@ -167,7 +172,7 @@ class InteractionLayer extends React.Component<Props, State> {
         })
         .filter(d => d)
 
-      this.props.voronoiHover(mappedHoverTypes)
+      voronoiHover(mappedHoverTypes)
     }
   }
 
@@ -381,7 +386,6 @@ class InteractionLayer extends React.Component<Props, State> {
       customDoubleClickBehavior,
       hoverAnnotation
     } = props
-
     const whichPoints = {
       top: projectedYTop,
       bottom: projectedYBottom
@@ -482,7 +486,6 @@ class InteractionLayer extends React.Component<Props, State> {
       const renderedOverlay: Array<Node> = overlay.map(
         (overlayRegion: Object, i: number) => {
           const { overlayData, ...rest } = overlayRegion
-
           if (React.isValidElement(overlayRegion.renderElement)) {
             return React.cloneElement(overlayRegion.renderElement, {
               key: `overlay-${i}`,
