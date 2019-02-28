@@ -26,6 +26,21 @@ class MinimapXYFrame extends React.Component {
       size,
       lineDataAccessor,
       lineType,
+      lineStyle,
+      pointStyle,
+      summaryStyle,
+      lineStyle,
+      summaryStyle,
+      pointStyle,
+      lineClass,
+      summaryClass,
+      pointClass,
+      lineRenderMode,
+      pointRenderMode,
+      summaryRenderMode,
+      canvasLines,
+      canvasPoints,
+      canvasSummaries,
       minimap
     } = this.props
     const miniDefaults = {
@@ -43,7 +58,19 @@ class MinimapXYFrame extends React.Component {
       brushStart: () => {},
       brush: () => {},
       brushEnd: () => {},
-      lineType: lineType
+      lineType: lineType,
+      lineStyle,
+      summaryStyle,
+      pointStyle,
+      lineClass,
+      summaryClass,
+      pointClass,
+      lineRenderMode,
+      pointRenderMode,
+      summaryRenderMode,
+      canvasLines,
+      canvasPoints,
+      canvasSummaries
     }
 
     const combinedOptions = { ...miniDefaults, ...minimap }
