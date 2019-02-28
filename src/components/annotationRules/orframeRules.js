@@ -191,6 +191,55 @@ function arcBracket({
   return { arcPath: d, textArcPath: textD }
 }
 
+export const getColumnScreenCoordinates = ({
+  d,
+  projectedColumns,
+  oAccessor,
+  summaryType,
+  type,
+  projection,
+  adjustedPosition,
+  adjustedSize
+}) => {
+  const column =
+    d.column ||
+    projectedColumns[d.facetColumn] ||
+    projectedColumns[findFirstAccessorValue(oAccessor, d)]
+
+  const pieces = column.pieceData || column.pieces
+
+  const positionValue =
+    (summaryType.type && summaryType.type !== "none") ||
+    ["swarm", "point", "clusterbar"].find(p => p === type.type)
+      ? max(pieces.map(p => p.scaledValue))
+      : projection === "horizontal"
+      ? max(pieces.map(p => p.scaledValue + p.bottom))
+      : min(pieces.map(p => p.bottom - p.scaledValue))
+
+  let xPosition = column.middle + adjustedPosition[0]
+  let yPosition =
+    projection === "horizontal"
+      ? adjustedSize[0] - positionValue
+      : (summaryType.type && summaryType.type !== "none") ||
+        ["swarm", "point", "clusterbar"].find(p => p === type.type)
+      ? adjustedSize[1] - positionValue
+      : positionValue
+  yPosition += 10
+
+  if (projection === "horizontal") {
+    yPosition = column.middle
+    xPosition = positionValue + adjustedPosition[0]
+  } else if (projection === "radial") {
+    ;[xPosition, yPosition] = pointOnArcAtAngle(
+      [d.arcAngles.translate[0], d.arcAngles.translate[1]],
+      d.arcAngles.midAngle,
+      d.arcAngles.length
+    )
+    yPosition += 10
+  }
+  return { coordinates: [xPosition, yPosition], pieces, column }
+}
+
 export const svgHighlightRule = ({
   d,
   pieceIDAccessor,
@@ -739,43 +788,20 @@ export const htmlColumnHoverRule = ({
 }) => {
   //we need to ignore negative pieces to make sure the hover behavior populates on top of the positive bar
 
-  const column =
-    d.column ||
-    projectedColumns[d.facetColumn] ||
-    projectedColumns[findFirstAccessorValue(oAccessor, d)]
-
-  const pieces = column.pieceData || column.pieces
-
-  const positionValue =
-    (summaryType.type && summaryType.type !== "none") ||
-    ["swarm", "point", "clusterbar"].find(p => p === type.type)
-      ? max(pieces.map(p => p.scaledValue))
-      : projection === "horizontal"
-      ? max(pieces.map(p => p.scaledValue + p.bottom))
-      : min(pieces.map(p => p.bottom - p.scaledValue))
-
-  let xPosition = column.middle + adjustedPosition[0]
-  let yPosition =
-    projection === "horizontal"
-      ? adjustedSize[0] - positionValue
-      : (summaryType.type && summaryType.type !== "none") ||
-        ["swarm", "point", "clusterbar"].find(p => p === type.type)
-      ? adjustedSize[1] - positionValue
-      : positionValue
-  yPosition += 10
-
-  if (projection === "horizontal") {
-    yPosition = column.middle
-    xPosition = positionValue + adjustedPosition[0]
-  } else if (projection === "radial") {
-    ;[xPosition, yPosition] = pointOnArcAtAngle(
-      [d.arcAngles.translate[0], d.arcAngles.translate[1]],
-      d.arcAngles.midAngle,
-      d.arcAngles.length
-    )
-    yPosition += 10
-  }
-
+  const {
+    coordinates: [xPosition, yPosition],
+    pieces,
+    column
+  } = getColumnScreenCoordinates({
+    d,
+    projectedColumns,
+    oAccessor,
+    summaryType,
+    type,
+    projection,
+    adjustedPosition,
+    adjustedSize
+  })
   //To string because React gives a DOM error if it gets a date
   const oContent = []
   oAccessor.forEach((actualOAccessor, i) => {

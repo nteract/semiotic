@@ -28,7 +28,8 @@ import {
   htmlFrameHoverRule,
   htmlColumnHoverRule,
   screenProject,
-  findIDPiece
+  findIDPiece,
+  getColumnScreenCoordinates
 } from "./annotationRules/orframeRules"
 
 import { desaturationLayer } from "./annotationRules/baseRules"
@@ -1571,6 +1572,20 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
           rScaleType
         })
       })
+    } else if (d.type === "column-hover") {
+      const {
+        coordinates: [xPosition, yPosition]
+      } = getColumnScreenCoordinates({
+        d,
+        projectedColumns,
+        oAccessor,
+        summaryType,
+        type,
+        projection,
+        adjustedPosition,
+        adjustedSize
+      })
+      screenCoordinates = [xPosition, yPosition]
     } else {
       const pO = findFirstAccessorValue(oAccessor, d) || d.column
       const oColumn = projectedColumns[pO]
@@ -1589,6 +1604,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         rScaleType
       })
     }
+
     const flippedRScale =
       projection === "vertical"
         ? rScaleType.domain(rScale.domain()).range(rScale.range().reverse())
