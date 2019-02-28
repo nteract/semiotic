@@ -197,7 +197,6 @@ export default ({ direction, ranker, parallelEdges }) => {
           strokeWidth: parallelEdges ? 0.5 : d.weight
         })}
         nodeLabels={d => {
-          console.log("d", d)
           return (
             <text x={-d.zoomedWidth / 2} y={-d.zoomedHeight / 2}>
               {d.id}

@@ -29,7 +29,19 @@ export const nodesEdgesFromHierarchy = (
   })
 
   descendants.forEach((node, i) => {
-    const dataD = Object.assign(node, node.data || {})
+    const generatedID = `${idAccessor(
+      { ...node, ...node.data },
+      i
+    )}-${(node.parent &&
+      recursiveIDAccessor(
+        idAccessor,
+        { ...node.parent, ...node.parent.data },
+        ""
+      )) ||
+      "root"}`
+    const dataD = Object.assign(node, node.data || {}, {
+      hierarchicalID: generatedID
+    })
     nodes.push(dataD)
     if (node.parent !== null) {
       const dataParent = Object.assign(node.parent, node.parent.data || {})
@@ -39,14 +51,7 @@ export const nodesEdgesFromHierarchy = (
         depth: node.depth,
         weight: 1,
         value: 1,
-        _NWFEdgeKey: `${idAccessor(
-          { ...node, ...node.data },
-          i
-        )}-${recursiveIDAccessor(
-          idAccessor,
-          { ...node.parent, ...node.parent.data },
-          ""
-        )}`
+        _NWFEdgeKey: generatedID
       })
     }
   })
