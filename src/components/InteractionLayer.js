@@ -144,14 +144,18 @@ class InteractionLayer extends React.Component<Props, State> {
 
   canvasMap: Map<string, number> = new Map()
 
+  constructDataObject = (d?: Object) => {
+    const { points } = this.props
+    return d && d.data ? { points, ...d.data, ...d } : { points, ...d }
+  }
+
   changeVoronoi = (d?: Object, customHoverTypes?: CustomHoverType) => {
     const {
       customHoverBehavior,
-      voronoiHover,
-      points
+      voronoiHover
     } = this.props
     //Until semiotic 2
-    const dataObject = d && d.data ? { ...d.data, ...d, points } : { ...d, points }
+    const dataObject = this.constructDataObject(d)
     if (customHoverBehavior)
       customHoverBehavior(dataObject)
 
@@ -178,14 +182,14 @@ class InteractionLayer extends React.Component<Props, State> {
 
   clickVoronoi = (d: Object) => {
     //Until semiotic 2
-    const dataObject = d.data ? { ...d.data, ...d } : d
+    const dataObject = this.constructDataObject(d)
 
     if (this.props.customClickBehavior)
       this.props.customClickBehavior(dataObject)
   }
   doubleclickVoronoi = (d: Object) => {
     //Until semiotic 2
-    const dataObject = d.data ? { ...d.data, ...d } : d
+    const dataObject = this.constructDataObject(d)
 
     if (this.props.customDoubleClickBehavior)
       this.props.customDoubleClickBehavior(dataObject)
@@ -672,6 +676,7 @@ class InteractionLayer extends React.Component<Props, State> {
       canvasRendering,
       disableCanvasInteraction
     } = this.props
+
     const { overlayRegions } = this.state
     let { enabled } = this.props
 
