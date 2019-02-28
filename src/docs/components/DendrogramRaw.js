@@ -4,6 +4,8 @@ import { data } from "../sampledata/d3_api"
 import ProcessViz from "./ProcessViz"
 import { scaleLinear } from "d3-scale"
 
+import { nodesEdgesFromHierarchy } from "../../components/processing/network"
+
 const colors = ["#00a2ce", "#b6a756", "#4d430c", "#b3331d"]
 
 const blockScale = scaleLinear()
@@ -12,6 +14,8 @@ const blockScale = scaleLinear()
   .clamp(true)
 
 //separation
+
+const { edges, nodes } = nodesEdgesFromHierarchy(data)
 
 export default ({
   annotation = "rectangle",
@@ -25,7 +29,8 @@ export default ({
   const hierarchicalChart = {
     title: "D3v3 API",
     size: [700, 700],
-    edges: data,
+    edges: edges,
+    nodes: nodes,
     nodeStyle: d => ({
       fill: colors[d.depth],
       stroke: "black",
@@ -37,12 +42,12 @@ export default ({
       stroke: colors[d.source.depth],
       opacity: 0.5
     }),
-    nodeIDAccessor: "name",
+    nodeIDAccessor: "hierarchicalID",
     hoverAnnotation: true,
     nodeSizeAccessor: type === "tree" && (d => blockScale(d.blockCalls || 1)),
     networkType: {
       zoom: false,
-      type,
+      type: "force" || type,
       projection: projection,
       nodePadding: 1,
       forceManyBody: -15,

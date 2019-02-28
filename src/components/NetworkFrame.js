@@ -740,7 +740,7 @@ class NetworkFrame extends React.Component<Props, State> {
         const projectedNode = { ...node }
         const id = nodeIDAccessor(projectedNode)
         nodeHash.set(id, projectedNode)
-        nodeHash.set(projectedNode, projectedNode)
+        nodeHash.set(node, projectedNode)
         projectedNodes.push(projectedNode)
         projectedNode.id = id
         projectedNode.inDegree = 0
