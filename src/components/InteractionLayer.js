@@ -159,7 +159,7 @@ class InteractionLayer extends React.Component<Props, State> {
     else if (customHoverTypes === true) {
       const vorD = Object.assign({}, dataObject)
       vorD.type = vorD.type === "column-hover" ? "column-hover" : "frame-hover"
-      this.props.voronoiHover(vorD)
+      voronoiHover(vorD)
     } else if (customHoverTypes) {
       const arrayWrappedHoverTypes = Array.isArray(customHoverTypes)
         ? customHoverTypes
