@@ -47,7 +47,6 @@ export default (brushFunction, extent, selectedExtent) => {
     margin: { left: 50, top: 10, bottom: 50, right: 20 },
     minimap: {
       margin: { top: 20, bottom: 35, left: 20, right: 20 },
-      ...xyFrameSettings,
       brushEnd: brushFunction,
       yBrushable: false,
       xBrushExtent: extent,
