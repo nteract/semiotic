@@ -174,6 +174,7 @@ export type OrdinalFrameProps = {
   summaryStyle?: Object | Function,
   style?: Object | Function,
   sortO?: Function,
+  oSort?: Function,
   dynamicColumnWidth?: string | Function,
   pieceIDAccessor?: string | Function,
   ordinalAlign?: string,

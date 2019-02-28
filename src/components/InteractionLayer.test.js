@@ -31,6 +31,7 @@ describe("InteractionLayer", () => {
         start: undefined,
         extent: [[550, 300], [600, 650]]
       }}
+      renderPipeline={{}}
     />
   )
   it("draws an SVG", () => {

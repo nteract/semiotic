@@ -52,7 +52,8 @@ type Props = {
   voronoiHover: Function,
   canvasRendering?: boolean,
   disableCanvasInteraction: boolean,
-  showLinePoints?: string
+  showLinePoints?: string,
+  renderPipeline: Object
 }
 
 type State = {
@@ -189,7 +190,7 @@ class InteractionLayer extends React.Component<Props, State> {
   brushStart = (
     e: ?Array<number> | Array<Array<number>>,
     column?: string,
-    data: Array<Object>
+    data: Object
   ) => {
     if (this.props.interaction && this.props.interaction.start)
       this.props.interaction.start(e, column, data)
@@ -198,7 +199,7 @@ class InteractionLayer extends React.Component<Props, State> {
   brush = (
     e: ?Array<number> | Array<Array<number>>,
     column?: string,
-    data: Array<Object>
+    data: Object
   ) => {
     if (this.props.interaction && this.props.interaction.during)
       this.props.interaction.during(e, column, data)
@@ -207,7 +208,7 @@ class InteractionLayer extends React.Component<Props, State> {
   brushEnd = (
     e: ?Array<number> | Array<Array<number>>,
     column?: string,
-    data: Array<Object>
+    data: Object
   ) => {
     if (this.props.interaction && this.props.interaction.end)
       this.props.interaction.end(e, column, data)
@@ -221,6 +222,7 @@ class InteractionLayer extends React.Component<Props, State> {
     const brushData = {}
 
     Object.entries(renderPipeline).forEach(([key, value]) => {
+      // $FlowFixMe
       if (value.data && value.data.length > 0) {
         brushData[key] = value.data
       }
@@ -616,8 +618,8 @@ class InteractionLayer extends React.Component<Props, State> {
     if (!projection || !rScale || !oColumns) return
 
     const brushData = {}
-
     Object.entries(renderPipeline).forEach(([key, value]) => {
+      // $FlowFixMe
       if (value.data && value.data.length > 0) {
         brushData[key] = value.data
       }

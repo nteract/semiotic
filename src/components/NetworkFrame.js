@@ -345,7 +345,11 @@ type NodeType = {
   textHeight: number,
   textWidth: number,
   fontSize: number,
+  fontWeight?: number,
+  rotate?: number,
   scale: number,
+  _NWFText?: string,
+  text?: string,
   r: number,
   nodeSize: 0,
   component: number,
@@ -379,8 +383,7 @@ type NetworkSettingsType = {
   forceManyBody?: Function | number,
   hierarchicalNetwork: boolean,
   graphSettings: Object,
-  sortGroups?: Function,
-  onUnmount?: Function
+  sortGroups?: Function
 }
 
 type State = {
@@ -466,7 +469,8 @@ type Props = {
   onNodeClick?: Function,
   onNodeEnter?: Function,
   renderOrder?: $ReadOnlyArray<"edges" | "nodes">,
-  filterRenderedNodes: Function
+  filterRenderedNodes: Function,
+  onUnmount?: Function
 }
 
 class NetworkFrame extends React.Component<Props, State> {
@@ -519,7 +523,7 @@ class NetworkFrame extends React.Component<Props, State> {
       title: { title: undefined }
     }
   }
-  
+
   componentWillUnmount() {
     if (this.props.onUnmount) {
       this.props.onUnmount(this.props, this.state)
@@ -1117,7 +1121,7 @@ class NetworkFrame extends React.Component<Props, State> {
 
         projectedNodes.forEach((d, i) => {
           const calcualatedNodeSize = nodeSizeAccessor(d)
-          d._NWFText = textAccessor(d)
+          d._NWFText = textAccessor(d) || ""
           const textWidth =
             fontWidth * d._NWFText.length * calcualatedNodeSize * 1.4
           const textHeight = fontSize * calcualatedNodeSize
