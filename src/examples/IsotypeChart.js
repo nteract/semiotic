@@ -74,7 +74,7 @@ const frameProps = {
   },
   projection: "vertical",
   oAccessor: "writeviz",
-  sortO: (a, b) => parseFloat(a) - parseFloat(b),
+  oSort: (a, b) => parseFloat(a) - parseFloat(b),
   rAccessor: "number",
   style: d => ({
     fill: colorHash[d.type],

@@ -2235,10 +2235,10 @@ d3-bboxCollide@^1.0.3:
   dependencies:
     d3-quadtree "1.0.1"
 
-d3-brush@^1.0.4:
+d3-brush@^1.0.6:
   version "1.0.6"
-  resolved "https://registry.yarnpkg.com/d3-brush/-/d3-brush-1.0.6.tgz#33691f2032d9db6c5d8cb684ff255a9883629e21"
-  integrity sha512-lGSiF5SoSqO5/mYGD5FAeGKKS62JdA1EV7HPrU2b5rTX4qEJJtpjaGLJngjnkewQy7UnGstnFd3168wpf5z76w==
+  resolved "https://artifacts.netflix.com/api/npm/npm-netflix/d3-brush/-/d3-brush-1.0.6.tgz#33691f2032d9db6c5d8cb684ff255a9883629e21"
+  integrity sha1-M2kfIDLZ22xdjLaE/yVamINiniE=
   dependencies:
     d3-dispatch "1"
     d3-drag "1"
@@ -7603,15 +7603,15 @@ semiotic-mark@0.3.1:
     prop-types "^15.6.0"
     roughjs-es5 "0.1.0"
 
-semiotic@1.16.8:
-  version "1.16.8"
-  resolved "https://artifacts.netflix.com/api/npm/npm-netflix/semiotic/-/semiotic-1.16.8.tgz#9764290eab8161a0b722688f85a6d64a2617f98c"
-  integrity sha1-l2QpDquBYaC3ImiPhabWSiYX+Yw=
+semiotic@1.17.0:
+  version "1.17.0"
+  resolved "https://artifacts.netflix.com/api/npm/npm-netflix/semiotic/-/semiotic-1.17.0.tgz#bcd9b6b47691ca9fc33a1d19c7c1bc576cae448b"
+  integrity sha1-vNm2tHaRyp/DOh0Zx8G8V2yuRIs=
   dependencies:
     "@mapbox/polylabel" "1"
     d3-array "^1.2.0"
     d3-bboxCollide "^1.0.3"
-    d3-brush "^1.0.4"
+    d3-brush "^1.0.6"
     d3-chord "^1.0.4"
     d3-collection "^1.0.1"
     d3-contour "^1.1.1"

@@ -73,7 +73,7 @@ const nightingale = {
 //better story for this type of sorting
 const sortednightingale = {
   ...nightingale,
-  sortO: (a, b, c, d) => {
+  oSort: (a, b, c, d) => {
     return (
       c[0].tweets +
       c[0].retweets +
@@ -185,7 +185,7 @@ Another approach is flattening your data so that you have a property called acti
 
 You can also pass a \`sortO\` property to change the order for your ordinal data.
 
-\`sortO={(a, b, c, d) => {
+\`oSort={(a, b, c, d) => {
   return (
     c[0].tweets +
     c[0].retweets +

@@ -88,6 +88,7 @@ export const processNodes = [
       "pointClass",
       "lineClass",
       "areaClass",
+      "summaryClass",
       "nodeClass",
       "edgeClass",
       "additionalDefs",
@@ -106,6 +107,7 @@ export const processNodes = [
       "matte",
       "minimap",
       "sortO",
+      "oSort",
       "filterRenderedNodes"
     ]
   },
@@ -155,4 +157,4 @@ export const processNodes = [
       "nodeLabels"
     ]
   }
-];
+]
