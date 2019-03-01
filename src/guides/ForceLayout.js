@@ -1,7 +1,7 @@
 import React from "react"
 import MarkdownText from "../MarkdownText"
 import DocumentFrame from "../DocumentFrame"
-import { NetworkFrame } from "semiotic"
+import { NetworkFrame, nodesEdgesFromHierarchy } from "semiotic"
 import theme from "../theme"
 
 import { forceSimulation, forceY, forceCollide } from "d3-force"
@@ -82,7 +82,7 @@ export default class ForceLayouts extends React.Component {
       .then(response => response.json())
       .then(res => {
         this.setState({
-          hierarchy: res
+          hierarchy: nodesEdgesFromHierarchy(res)
         })
       })
   }
@@ -109,7 +109,8 @@ The data on this page use the [Flare visualization toolkit](https://github.com/p
         <DocumentFrame
           frameProps={{
             ...frameProps,
-            edges: this.state.hierarchy
+            nodes: this.state.hierarchy.nodes,
+            edges: this.state.hierarchy.edges
           }}
           // overrideProps={this.state.hierarchyOverrideProps}
           type={NetworkFrame}
