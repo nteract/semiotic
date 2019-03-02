@@ -491,7 +491,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       showSummaryPoints,
       points,
       areas,
-      summaries = areas,
+      summaries = areas || summaryType && points ? [{ coordinates: points }] : undefined,
       lineDataAccessor,
       areaDataAccessor,
       summaryDataAccessor = areaDataAccessor,
