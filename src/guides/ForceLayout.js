@@ -15,7 +15,7 @@ const frameProps = {
   },
   nodeSizeAccessor: 2,
   edgeStyle: { stroke: theme[2], fill: "none" },
-  nodeIDAccessor: "name"
+  nodeIDAccessor: d => d.hierarchicalID || d.name
 }
 
 const combinedFociNodes = [...Array(100)].map((d, i) => ({
@@ -82,7 +82,8 @@ export default class ForceLayouts extends React.Component {
       .then(response => response.json())
       .then(res => {
         this.setState({
-          hierarchy: nodesEdgesFromHierarchy(res)
+          hierarchy: nodesEdgesFromHierarchy(res),
+          actualHierarchy: res
         })
       })
   }
@@ -126,7 +127,7 @@ This example is the same as the example above with the additional prop \`edgeTyp
         <DocumentFrame
           frameProps={{
             ...frameProps,
-            edges: this.state.hierarchy,
+            edges: this.state.actualHierarchy,
             edgeType: "linearc"
           }}
           // overrideProps={this.state.hierarchyOverrideProps}
