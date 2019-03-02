@@ -241,6 +241,22 @@ A string (`"bar"`, `"timeline"`, `"clusterbar"`, `"swarm"`, `"point"`, `"none"`)
 <OrdinalFrame type={{ type: "swarm", r: 20, customMark: d => <circle r={20} fill: "red" /> }} />
 ```
 
+- Shared settings
+  - `customMark`: Takes a function that is passed `(d,i,{ ...drawingProps, baseMarkProps, renderMode, styleFn, classFn, adjustedSize, chartSize, margin })` and should return JSX SVG. The drawing props vary depending on whether it's a circle (like swarm plots) or a rectangle (like bar charts).
+- `"timeline"`, `"bar"`, `"clusterbar"` shared features
+  - `innerRadius`: Only honored in `"radial"` projection. Determines the pixel radius of the inside cutout (for donut-style charts).
+  - `offsetAngle`: Only honored in `"radial"` projection. The rotation, in degrees, of the rendered pie chart (so you could make the initial slice face down by setting it to `180`).
+  - `angleRange`: Only honored in `"radial"` projection. The start and end angle of the chart, so you could set it to `[30, 330]` if you wanted a small gap in your pie chart. Defaults to `[0, 360]`
+- `"bar"`, `"clusterbar"` shared features
+  - `icon`: Only honored in `"vertical"` and `"horizontal"` projection. Is the `d` attribute of a path or a function that takes the datapoint and returns the `d` attribute of an SVG path and uses it to render an ISOTYPE style bar chart.
+  - `iconPadding`: Only honored in an icon bar chart. The amount of space between icons in pixels. Defaults to 1.
+  - `resize`: Only honored in an icon bar chart. If set to `"auto"`, an icon is stretched to fit the width (for vertical) or height (for horizontal) of a bar or, if set to `"fixed"`, fills the bar with icons at its native size. Defaults to `"auto"`.
+- `"point"`, `"swarm"` shared features
+  - `r`: A number or a function that takes the data for a piece and returns a number that is the size of the piece. Defaults to 3 in `point` mode and a dynamic size based on the density of points in a column in `swarm` mode.
+- `"swarm"`
+  - `iterations`: Beeswarm uses a force simulation under the hood, this determines how long it runs. Default is 120.
+  - `strength`: Strength of the anchoring force, defaults to 2, if set higher, points will cluster more along the axis indicating their value, but spread out farther, if set lower, points will drift away from their true value more, but present a more compact beeswarm.
+
 ### style: { _object_ | _function_ }
 
 A React style object or a function taking a single datapoint and returning a React style object. This is applied to each piece.
