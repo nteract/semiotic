@@ -49,7 +49,7 @@ export default () => <XYFrame
   - [canvasLines: { _boolean_ | _function_ }](#canvaslines-boolean-function-)
   - [defined: { _function_ }](#defined-function-)
 - [Summary Rendering](#summary-rendering)
-  - [summary: { [_data_] }](#summaries-data-)
+  - [summaries: { [_data_] }](#summaries-data-)
   - [summaryDataAccessor: { _string_ | _function_ }](#summarydataaccessor-string-function-)
   - [summaryStyle: { _function_ | _object_ }](#summarystyle-function-object-)
   - [summaryClass: { _string_ | _function_ }](#summaryclass-string-function-)
@@ -354,7 +354,7 @@ If _lineDataAccessor_ is specified, determines how line _coordinates_ are access
 ### lineType: { _string_ | _object_ }
 
 If _lineType_ is specified, renders one of the supported line types:
-`"line"`, `"linepercent"`, `"difference"`, `"stackedarea"`, `"stackedpercent"`, `"bumpline"`, `"bumparea"`, `"cumulative"`, otherwise it defaults ot `"line"`. See the [line chart](/guides/line-chart) and [area chart](/guides/area-chart) guides for examples.
+`"line"`, `"linepercent"`, `"difference"`, `"stackedarea"`, `"stackedpercent"`, `"bumpline"`, `"bumparea"`, `"cumulative"`, otherwise it defaults to `"line"`. See the [line chart](/guides/line-chart) and [area chart](/guides/area-chart) guides for examples.
 
 The attribute accepts a _string_ corresponding to one of the supported line types or an _object_ with a `type` key and _string_ value corresponding to one of the supported line types. An optional `options` key on the _object_ that determines how the lines are generated is also supported.
 
@@ -485,6 +485,40 @@ If _areaClass_ is specified, sets the css class of each area element.
 ```
 
 ### summaryType: { _string_ | _object_ }
+
+If _summaryType_ is specified, renders one of the following supported summary types: `"contour"`, `"heatmap"`, `"hexbin"`, `"basic"`, otherwise it defaults to `"basic"`. Each of these takes a set of points passed either to the `points` prop or as `coordinates` of an object (or objects) sent to the `summaries` and either creates summary graphics (all options except `basic`) or draws areas assuming the points sent are coordinates in order for a shape (`basic`). See the [XY summaries](/guides/xy-summaries) guide for examples.
+
+The attribute accepts a _string_ corresponding to one of the supported line types or an _object_ with a `type` key and _string_ value corresponding to one of the supported line types. Other optional keys are shown below in shared settings and for particular summary types:
+
+```jsx
+/*String option */
+<XYFrame summaryType={ "hexbin" } ... />
+
+/*Object option */
+<XYFrame summaryType={ { type: "hexbin", bins: 0.1 } } ... />
+```
+
+- Shared settings
+  - `interpolator`: Takes a d3 style curve, like those found in `d3-shape`.
+- `"hexbin"` settings
+  - `bins`: The number of hexes per row (based on the `size[0]` sent to the frame) either in actual number of bins (if greater than 1) or percent (if less than 1).
+  - `cellPx`: Overrides `bins` if set, the size of hexes in pixels
+  - `binValue`: How the value of a hex is calculated from the points that fall into the hex. Defaults to `d => d.length`
+  - `binMax`: A function that fires after the value for the maximum bin is calculated, so you could pass that value to a custom legend, for instance.
+  - `customMark`: A custom graphic generator for each hex. A function that is sent `({ d, baseMarkProps, margin, baseMarkProps, styleFn, classFn, renderFn, chartSize, adjustedSize })` and which should return JSX SVG.
+- `"heatmap"` settings
+  - `xBins`: The number of cells per row (if greater than 1) or the percent (if less than 1). Defaults to 0.5,
+  - `yBins`: The number of cells per column (if greater than 1) or the percent (if less than 1). Defaults to the value of `xBins`,
+  - `xCellPx`: Overrides any setting in xBins and sets the width of a cell in pixels.
+  - `yCellPx`: Overrides any setting in yBins and sets the height of a cell in pixels.
+  - `binValue`: How the value of a hex is calculated from the points that fall into the hex. Defaults to `d => d.length`
+  - `binMax`: A function that fires after the value for the maximum bin is calculated, so you could pass that value to a custom legend, for instance.
+  - `customMark`: A custom graphic generator for each hex. A function that is sent `({ d, baseMarkProps, margin, baseMarkProps, styleFn, classFn, renderFn, chartSize, adjustedSize })` and which should return JSX SVG.
+- `"contour"` settings
+  - `resolution`: The base resolution in pixels, increasing this will make contours more granular, decreasing will make them less granular. Defaults to 500.
+  - `thresholds`: The optimal number of thresholds (it's a hint, not a firm setting). Defaults to 10.
+  - `bandwidth`: The bandwidth in pixels (in other words changing the resolution will necessitate changes in bandwidth to keep up). Increasing bandwidth will make wider bands in contours, decreasing will result in smaller bands. Defaults to 20.
+  - `neighborhood`: If set to true, then only the largest contour will be rendered.
 
 ### customSummaryMark: { _JSX_ | _function_ }
 
