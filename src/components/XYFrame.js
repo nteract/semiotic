@@ -468,7 +468,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       renderKey,
       lineType = { type: "line" },
       areaType,
-      summaryType = areaType || { type: "basic" },
+      summaryType = areaType,
       customLineMark,
       customPointMark,
       customAreaMark,
@@ -491,7 +491,6 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       showSummaryPoints,
       points,
       areas,
-      summaries = areas || summaryType && points ? [{ coordinates: points }] : undefined,
       lineDataAccessor,
       areaDataAccessor,
       summaryDataAccessor = areaDataAccessor,
@@ -505,8 +504,13 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       projectedLines,
       projectedPoints,
       projectedSummaries = currentProps.projectedAreas,
+      summaries = areas,
       fullDataset
     } = currentProps
+
+    if (summaryType && points && !summaries) {
+      summaries = [{ coordinates: points }]
+    }
 
     const annotatedSettings = {
       xAccessor: stringToArrayFn(xAccessor, (d: Array<number>) => d[0]),
@@ -521,7 +525,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       ),
       renderKeyFn: stringToFn(renderKey, (d, i) => `line-${i}`, true),
       lineType: objectifyType(lineType),
-      summaryType: objectifyType(summaryType),
+      summaryType: objectifyType(summaryType || "basic"),
       lineIDAccessor: stringToFn(lineIDAccessor, l => l.semioticLineID),
       summaries:
         !summaries || (Array.isArray(summaries) && summaries.length === 0)

@@ -151,14 +151,10 @@ class InteractionLayer extends React.Component<Props, State> {
   }
 
   changeVoronoi = (d?: Object, customHoverTypes?: CustomHoverType) => {
-    const {
-      customHoverBehavior,
-      voronoiHover
-    } = this.props
+    const { customHoverBehavior, voronoiHover } = this.props
     //Until semiotic 2
     const dataObject = this.constructDataObject(d)
-    if (customHoverBehavior)
-      customHoverBehavior(dataObject)
+    if (customHoverBehavior) customHoverBehavior(dataObject)
 
     if (!d) voronoiHover(null)
     else if (customHoverTypes === true) {
@@ -273,7 +269,7 @@ class InteractionLayer extends React.Component<Props, State> {
           ? null
           : [yScale.invert(d[0]), yScale.invert(d[1])].sort((a, b) => a - b)
       semioticBrush = brushY()
-      selectedExtent = extent.map(d => yScale(d))
+      selectedExtent = extent.map(d => yScale(d)).sort((a, b) => a - b)
       endMappingFn = mappingFn
     } else {
       if (
