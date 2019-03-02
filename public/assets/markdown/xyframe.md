@@ -354,7 +354,7 @@ If _lineDataAccessor_ is specified, determines how line _coordinates_ are access
 ### lineType: { _string_ | _object_ }
 
 If _lineType_ is specified, renders one of the supported line types:
-`"line"`, `"linepercent"`, `"difference"`, `"stackedarea"`, `"stackedpercent"`, `"bumpline"`, `"bumparea"`, `"cumulative"`, otherwise it defaults to `"line"`. See the [line chart](/guides/line-chart) and [area chart](/guides/area-chart) guides for examples.
+`"line"`, `"linepercent"`, `"difference"`, `"stackedarea"`, `"stackedpercent"`, `"bumpline"`, `"bumparea"`, `"cumulative"`, `"cumulative-reverse"`, otherwise it defaults to `"line"`. See the [line chart](/guides/line-chart) and [area chart](/guides/area-chart) guides for examples.
 
 The attribute accepts a _string_ corresponding to one of the supported line types or an _object_ with a `type` key and _string_ value corresponding to one of the supported line types. An optional `options` key on the _object_ that determines how the lines are generated is also supported.
 
