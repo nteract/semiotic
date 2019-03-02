@@ -498,8 +498,6 @@ The attribute accepts a _string_ corresponding to one of the supported line type
 <XYFrame summaryType={ { type: "hexbin", bins: 0.1 } } ... />
 ```
 
-- Shared settings
-  - `interpolator`: Takes a d3 style curve, like those found in `d3-shape`.
 - `"hexbin"` settings
   - `bins`: The number of hexes per row (based on the `size[0]` sent to the frame) either in actual number of bins (if greater than 1) or percent (if less than 1).
   - `cellPx`: Overrides `bins` if set, the size of hexes in pixels
