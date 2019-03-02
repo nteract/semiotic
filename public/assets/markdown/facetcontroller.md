@@ -1,6 +1,19 @@
 `<FacetController />` is a wrapper that synchronizes any child frames based on the settings you pass to `FacetController`. It automatically passes down its props to children and modifies children if you change any of the shared extent props below. The FacetController propagates any `hoverAnnotation` or `pieceHoverAnnotation` to its child elements so that by default you will have cross-highlighting.
 
+## Sample usage:
+
 **Table of Contents**
+
+```jsx
+<FacetController
+  sharedXExtent={ true }
+  sharedYExtent={ true }
+  ...otherPropsPassedToChildren >
+  <XYFrame ...someSpecificPropsForThisFrame />
+  <XYFrame ...someSpecificPropsForThisFrame />
+  <XYFrame ...someSpecificPropsForThisFrame />
+</FacetController>
+```
 
 - [General Properties](#general-properties)
   - [sharedXExtent: { _boolean_ }](#sharedXExtent-boolean-)
