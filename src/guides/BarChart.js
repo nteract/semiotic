@@ -50,17 +50,19 @@ const titleAndSpacing = {
   oPadding: 5,
   rAccessor: d => d.tweets + d.retweets,
   title: "Tweets & Retweets",
-  axis: true
+  axes: true
 }
 
 const diffBar = {
   ...titleAndSpacing,
   rAccessor: ["tweets", d => -d.retweets],
   title: "Tweets vs. Retweets",
-  axis: {
-    tickFormat: d => Math.abs(d),
-    label: "<- Retweets vs. Tweets -> "
-  }
+  axes: [
+    {
+      tickFormat: d => Math.abs(d),
+      label: "<- Retweets vs. Tweets -> "
+    }
+  ]
 }
 
 const rAccessor = ["tweets", "retweets", "favorites"]
@@ -68,23 +70,25 @@ export const stackedFrameProps = {
   ...frameProps,
   size: [280, 300],
   rAccessor,
-  axis: {
-    orient: "left",
-    label: (
-      <text textAnchor="middle">
-        <tspan fill={colorHash.tweets}>Tweets</tspan> +{" "}
-        <tspan fill={colorHash.retweets}>Retweets</tspan> +{" "}
-        <tspan fill={colorHash.favorites}>Favorites</tspan>
-      </text>
-    )
-  },
+  axes: [
+    {
+      orient: "left",
+      label: (
+        <text textAnchor="middle">
+          <tspan fill={colorHash.tweets}>Tweets</tspan> +{" "}
+          <tspan fill={colorHash.retweets}>Retweets</tspan> +{" "}
+          <tspan fill={colorHash.favorites}>Favorites</tspan>
+        </text>
+      )
+    }
+  ],
   style: d => {
     return { fill: colorHash[rAccessor[d.rIndex]], stroke: "white" }
   }
 }
 
 const overrideProps = {
-  axis: `{
+  axes: `[{
     orient: "left",
     label: (
       <text textAnchor="middle">
@@ -93,7 +97,7 @@ const overrideProps = {
         <tspan fill={colorHash.favorites}>Favorites</tspan>
       </text>
     )
-  }`,
+  }]`,
   style: `d => {
     return { fill: colorHash[rAccessor[d.rIndex]], stroke: "white" }
   }`
@@ -103,16 +107,18 @@ export const stackedFramePropsFlattened = {
   ...stackedFrameProps,
   data: inflatedBarChartData,
   rAccessor: "value",
-  axis: {
-    orient: "left",
-    label: (
-      <text textAnchor="middle">
-        <tspan fill={colorHash.tweets}>Tweets</tspan> +{" "}
-        <tspan fill={colorHash.retweets}>Retweets</tspan> +{" "}
-        <tspan fill={colorHash.favorites}>Favorites</tspan>
-      </text>
-    )
-  },
+  axes: [
+    {
+      orient: "left",
+      label: (
+        <text textAnchor="middle">
+          <tspan fill={colorHash.tweets}>Tweets</tspan> +{" "}
+          <tspan fill={colorHash.retweets}>Retweets</tspan> +{" "}
+          <tspan fill={colorHash.favorites}>Favorites</tspan>
+        </text>
+      )
+    }
+  ],
   style: d => ({ fill: colorHash[d.action], stroke: "white" })
 }
 
@@ -147,7 +153,7 @@ retweets \`rAcessor= {d => d.tweets + d.retweets}\` <br/>
 Adding the property \`oPadding = {5}\` gives spacing between
 bars.<br/>
 You can pass a \`title\` as either a string or a JSX element.
-You can also send an \`axis=true\`
+You can also send an \`axes=true\`
   
       `}
       />
@@ -162,7 +168,7 @@ You can also send an \`axis=true\`
       
 ## Diverging Bar
 
-The bar type also handles negative values. In this example the \`rAccessor={["tweets", d => -d.retweets ]}\`. It also sends down an axis with settings \`axis={{
+The bar type also handles negative values. In this example the \`rAccessor={["tweets", d => -d.retweets ]}\`. It also sends down an axis with settings \`axes={{
 tickFormat: d => Math.abs(d),
 label: "<- Retweets vs. Tweets -> " }}\`
 

@@ -59,7 +59,7 @@ const frameProps = {
   rExtent: [0],
   margin: { left: 40, top: 50, bottom: 75, right: 120 },
   title: "Pokemon Base Stats",
-  axis: true,
+  axes: true,
   data,
 
   style: d => ({

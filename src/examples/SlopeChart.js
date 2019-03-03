@@ -23,7 +23,7 @@ const frameProps = {
     { name: "Denver", color: theme[3], year: 2015, value: 26.6 },
     { name: "Oakland", color: theme[4], year: 2015, value: 37.2 }
   ],
-  axis: [
+  axes: [
     {
       tickFormat: d => `${d}%`,
       baseline: false,

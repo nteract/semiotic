@@ -1,4 +1,4 @@
-A frame that displays continuous data along the _ordinal_(categorical) and _range_(numerical) axes. Examples include [bar charts](/guides/bar-chart), [pie charts](/guides/pie-chart), [violin plots](/guides/ordinal-summaries), and [timelines](/guides/examples/timeline)
+A frame that displays categorical data along the _ordinal_(categorical) axis and continuous data along the _range_(numerical) axis. Examples include [bar charts](/guides/bar-chart), [pie charts](/guides/pie-chart), [violin plots](/guides/ordinal-summaries), and [timelines](/guides/examples/timeline)
 
 `<OrdinalFrame>` charts render [pieces](#piece-rendering) and [summaries](#summary-rendering).
 
@@ -23,41 +23,48 @@ export default () => (
 **Table of Contents**
 
 - [General Properties](#general-properties)
-  - [size: {[_width_, _height_]}](#size-width--height-)
-  - [rAccessor: {_string_ | _function_}](#raccessor-string--function-)
-  - [oAccessor: {_string_ | _function_}](#oaccessor-string--function-)
+  - [size: {[_width_, _height_]}](#size-width-height-)
+  - [rAccessor: {_string_ | _function_}](#raccessor-string-function-)
+  - [oAccessor: {_string_ | _function_}](#oaccessor-string-function-)
   - [oSort: {_function_}](#osort-function-)
   - [projection: {_string_}](#projection-string-)
-  - [title: {_string_ | _JSX_}](#title-string--jsx-)
-  - [margin: {_number_ | _object_}](#margin-number--object-)
+  - [title: {_string_ | _JSX_}](#title-string-jsx-)
+  - [margin: {_number_ | _object_}](#margin-number-object-)
   - [rScaleType: {_d3-scale_}](#rscaletype-d3-scale-)
   - [oScaleType: {_d3-scale_}](#oscaletype-d3-scale-)
-  - [rExtent: {[_min_, _max_]}](#rextent-min--max-)
-  - [invertR: bool](#invert-bool)
-  - [data: {[ { column: "a", value: 5 }, { column: "b", value: 3 } ...]}](#data-column-a-value-5-column-b-value-3)
+  - [rExtent: {[_min_, _max_]}](#rextent-min-max-)
+  - [invertR: bool](#invertr-bool)
   - [oPadding: { _number_ }](#opadding-number-)
-  - [dynamicColumnWidth: { _string_ | \_func}](#dynamicColumnWidth-string--func-)
+  - [dynamicColumnWidth: { _string_ | \_func}](#dynamiccolumnwidth-string-func-)
+  - [baseMarkProps: { _object_ }](#basemarkprops-object-)
 - [Piece Rendering](#piece-rendering)
+
   - [type { _string_ | _object_ | _func_ }](#type-string-object-func-)
-  - [style: { _object_ | _function_ }](#style-object--function-)
-  - [pieceClass: { _string_ | _function_ }](#piececlass-string--function-)
+  - [data: { _array_ }](#data-array-)
+  - [style: { _object_ | _function_ }](#style-object-function-)
+  - [pieceClass: { _string_ | _function_ }](#piececlass-string-function-)
+  - [connectorType: { _string_ | _function_ }](#connectorclass-string-function-)
+  - [connectorStyle: { _object_ | _function_ }](#connectorclass-object-function-)
+
 - [Summary Rendering](#summary-rendering)
-  - [summaryType { _string_ | _object_ | _func_ }](#summarytype-_string--object--func-)
-  - [summaryStyle: { _object_ | _function_ }](#summarystyle-object--function-)
-  - [summaryClass: { _string_ | _function_ }](#summaryclass-string--function-)
+  - [summaryType { _string_ | _object_ | _func_ }](#summarytype-_string-object-func-)
+  - [summaryStyle: { _object_ | _function_ }](#summarystyle-object-function-)
+  - [summaryClass: { _string_ | _function_ }](#summaryclass-string-function-)
   - [summaryPosition: { _function_ }](#summaryposition-function-)
 - [Annotation and Decoration](#annotation-and-decoration)
   - [tooltipContent: { _function_ }](#tooltipcontent-function-)
-  - [axis: { _object_ }](#axis-object-)
-  - [oLabel: { _bool_ | _function_ }](#olabel-bool--function-)
+  - [axes: { _array_ }](#axes-array-)
+  - [oLabel: { _bool_ | _function_ }](#olabel-bool-function-)
   - [annotations: { _array_ }](#annotations-array-)
   - [svgAnnotationRules: { _function_ }](#svgannotationrules-function-)
   - [htmlAnnotationRules: { _function_ }](#htmlannotationrules-function-)
-  - [backgroundGraphics: { _array_ | _JSX_ }](#backgroundgraphics-array--jsx-)
-  - [foregroundGraphics: { _array_ | _JSX_ }](#foregroundgraphics-array--jsx-)
+  - [annotationSettings: { _object_ }](#annotationsettings-object-)
+  - [matte: { _boolean_ }](#matte-boolean-)
+  - [backgroundGraphics: { _array_ | _JSX_ }](#backgroundgraphics-array-jsx-)
+  - [foregroundGraphics: { _array_ | _JSX_ }](#foregroundgraphics-array-jsx-)
 - [Interaction](#interaction)
   - [hoverAnnotation: { _bool_ }](#hoverannotation-bool-)
-  - [pieceHoverAnnotation: { _bool_ | _object_ }](#piecehoverannotation-bool--object-)
+  - [pieceHoverAnnotation: { _bool_ | _object_ }](#piecehoverannotation-bool-object-)
   - [customHoverBehavior: { _function_ }](#customhoverbehavior-function-)
   - [customClickBehavior: { _function_ }](#customclickbehavior-function-)
   - [customDoubleClickBehavior: { _function_ }](#customdoubleclickbehavior-function-)
@@ -189,14 +196,6 @@ The extent exposes an `onChange` callback function that updates with the calcula
 
 Inverts the _range_ axis such that the _min_ and _max_ values are transposed.
 
-### data: { _array_ }
-
-An array of objects or numerical values used to render both summary and piece visualizations in `OrdinalFrame`. The column of the data is based on its oAccessor value, while its position or height is determined by its rAccessor value.
-
-```jsx
-<OrdinalFrame data={[{ column: "a", value: 5 }, { column: "b", value: 3 }]} />
-```
-
 ### oPadding: { _number_ }
 
 The distance in pixels between each column.
@@ -207,7 +206,7 @@ The distance in pixels between each column.
 
 ### dynamicColumnWidth: { _string_ | _func_ }
 
-If _dynamicColumnWidth_ is specified, sets the column width of the frame based on the data. If a string, then columnWidth is proportionate to the total value of the string property for each column, for instance used in the [Marimekko Chart](/examples/marimekko-chart) example where bar width is based on the total value for that bar. If set to a function, the function is passed an array of pieces in that column which you can measure in any way you want.
+If _dynamicColumnWidth_ is specified, sets the column width of the frame based on that data property. If a string, then columnWidth is proportionate to the total value of the string property for each column, for instance used in the [Marimekko Chart](/examples/marimekko-chart) example where bar width is based on the total value for that bar. If set to a function, the function is passed an array of pieces in that column which you can measure in any way you want.
 
 ```jsx
 /*String option*/
@@ -225,13 +224,21 @@ If _pixelColumnWidth_ is specified, the row (in the case of horizontal) or colum
 <OrdinalFrame pixelColumnWidth={40} />
 ```
 
+### baseMarkProps: { _object_ }
+
+This object will be spread to all marks that are generated in the frame. This is useful for any props that might be shared by all pieces, and especially useful to set the animation duration for the marks if you want to adjust from the default 1s duration.
+
+```jsx
+<XYFrame baseMarkProps={{ transitionDuration: { default: 500, fill: 2500 } }} />
+```
+
 ## Piece Rendering
 
 "Piece" refers to the individual components of data visualization forms like bar charts and swarm plots. A "piece" of a bar chart is a segment in a stacked bar chart or the entire bar of a simple bar chart, or one of the circles in a swarm plot.
 
 ### type { _string_ | _object_ | _func_ }
 
-A string (`"bar"`, `"timeline"`, `"clusterbar"`, `"swarm"`, `"point"`, `"none"`) or object with `type` equal to one of those strings to use method-specific options such as `{ type: "swarm", r: 8 }`, or a function that takes data and the OrdinalFrame calculated settings and creates JSX elements. See the Waterfall Chart in the interactive examples to see how to use custom type functions.
+A string (`"bar"`, `"timeline"`, `"clusterbar"`, `"swarm"`, `"point"`, `"none"`) or object with `type` equal to one of those strings to use method-specific options such as `{ type: "swarm", r: 8 }`, or a function that takes data and the `OrdinalFrame` calculated settings and creates JSX elements. See the [Waterfall Chart](/examples/waterfall-chart) in the examples to see how to use custom type functions.
 
 ```jsx
 // basic
@@ -240,6 +247,8 @@ A string (`"bar"`, `"timeline"`, `"clusterbar"`, `"swarm"`, `"point"`, `"none"`)
 // with options
 <OrdinalFrame type={{ type: "swarm", r: 20, customMark: d => <circle r={20} fill: "red" /> }} />
 ```
+
+**Type Settings**
 
 - Shared settings
   - `customMark`: Takes a function that is passed `(d,i,{ ...drawingProps, baseMarkProps, renderMode, styleFn, classFn, adjustedSize, chartSize, margin })` and should return JSX SVG. The drawing props vary depending on whether it's a circle (like swarm plots) or a rectangle (like bar charts).
@@ -257,9 +266,17 @@ A string (`"bar"`, `"timeline"`, `"clusterbar"`, `"swarm"`, `"point"`, `"none"`)
   - `iterations`: Beeswarm uses a force simulation under the hood, this determines how long it runs. Default is 120.
   - `strength`: Strength of the anchoring force, defaults to 2, if set higher, points will cluster more along the axis indicating their value, but spread out farther, if set lower, points will drift away from their true value more, but present a more compact beeswarm.
 
+### data: { _array_ }
+
+An _array_ of objects or numerical values used to render both summary and piece visualizations in `OrdinalFrame`. The column of the data is based on its `oAccessor` value, while its position or height is determined by its `rAccessor` value.
+
+```jsx
+<OrdinalFrame data={[{ column: "a", value: 5 }, { column: "b", value: 3 }]} />
+```
+
 ### style: { _object_ | _function_ }
 
-A React style object or a function taking a single datapoint and returning a React style object. This is applied to each piece.
+Sets the inline css `style` of each piece element. This can be a JSX style object or a function that is passed the piece data and returns a JSX style object.
 
 ```jsx
 // object
@@ -271,7 +288,7 @@ A React style object or a function taking a single datapoint and returning a Rea
 
 ### pieceClass: { _string_ | _function_ }
 
-A string or function that takes a piece and returns a string that is assigned to that piece's class.
+Sets the css `class` of each piece element. This can be a string class name or a function that takes the point data and returns a string.
 
 ```jsx
 // object
@@ -281,35 +298,63 @@ A string or function that takes a piece and returns a string that is assigned to
 <OrdinalFrame pieceClass={d => d.classSettings} />
 ```
 
+### connectorType: { _string_ | _function_ }
+
+Connectors in `OrdinalFrame` allow you to draw connections between elements in adjacent columns. The current, limited implementation is a simple test that if it returns true draws a link. This function is run on every piece, and it only tests for links to the next column (left to right in vertical, top to bottom in horizonal and clockwise in radial). For "bar" it draws a filled area, for "point" and "swarm" it draws a line.
+
+You can use this functionality to create [slope chart](/examples/slope-chart) or funnel diagrams.
+
+The following code will draw a connection between elements in adjoining columns that has the same `category` value. It will only draw a link to the first matching item in the next column so this cannot be used to draw branching paths or other multi-link connections from one piece to many pieces.
+
+```jsx
+<OrdinalFrame connectorType={d => d.category} />
+```
+
+### connectorStyle: { _object_ | _function_ }
+
+Sets the inline css `style` of each connector element. This can be a JSX style object or a function that is passed the point data and returns a JSX style object.
+
+Since this is connecting two pieces you have access to both the `source` piece and the `target` piece for styling.
+
+```jsx
+<OrdinalFrame
+  connectorType={d => d.type}
+  connectorStyle={d => {
+    return {
+      fill: d.source.color,
+      stroke: d.source.color,
+      strokeOpacity: 0.5,
+      fillOpacity: 0.5
+    }
+  }}
+/>
+```
+
 ## Summary Rendering
 
-"Summary" refers to a complex visual element that summarizes all of the datapoints that fall within a particular column. These can be single shapes, like a violin plot, or multiple pieces, like a histogram or heat map.
+"Summary" refers to a visual element that summarizes all of the datapoints that fall within a particular column. These can be a single shape, like a violin plot, or multiple shapes, like a histogram.
 
 ### summaryType { _string_ | _object_ | _func_ }
 
-A string (`"heatmap"`, `"boxplot"`, `"histogram"`, `"joy"`, `"contour"`, `"violin"`) or object with `type` equal to one of those strings (with further method-specific settings such as `{ type: "contour", bandwidth: 15 }` or `{ type: "joy", amplitude: 30 }`, or a function that takes data and the OrdinalFrame calculated settings and creates JSX elements. See [[summaryType Advanced Settings]] for more details on how to use the extended settings.
+A string (`"heatmap"`, `"boxplot"`, `"histogram"`, `"ridgeline"`, `"contour"`, `"violin"`) or object with `type` equal to one of those strings (with further method-specific settings such as `{ type: "contour", bandwidth: 15 }` or `{ type: "ridgeline", amplitude: 30 }`, or a function that takes data and the OrdinalFrame calculated settings and creates JSX elements.
 
-- Custom Settings for ORFrame Summary Types
-
-As with other data visualization types in the various frames, [[ORFrame]] will let you send the following strings to summaryType: `"boxplot"`, `"histogram"`, `"heatmap"`, `"violin"`, `"contour"`, `"joy"`. If you want more control over the summary data visualization being rendered, each of these types have additional settings you can adjust based on your use case and which typically expose settings associated with the data transformation method associated with the summary type. To do this, you need to send an object instead of a string, and that object should have a “type” attribute set to the string, so this uses contouring with the default method:
+See [ordinal summaries](/guides/ordinal-summaries) for more details on how to use the extended settings.
 
 ```jsx
 <OrdinalFrame summaryType={"contour"} />
 ```
 
-...while this sends custom settings to adjust the number of contouring thresholds:
+Or send custom settings to adjust the number of contouring thresholds:
 
 ```jsx
 <OrdinalFrame summaryType={{ type: "contour", thresholds: 5 }} />
 ```
 
-_For those of you new to React, the reason for double curly brackets is that the first curly brackets are just so we can send JavaScript to JSX and the second curly brackets are because we are instantiating an object._
-
 ## Custom Settings by Type
 
 ### Shared
 
-All bucketized summaries (violin, joy, histogram, heatmap) share the following:
+All bucketized summaries (violin, ridgeline, histogram, heatmap) share the following:
 
 - `bins`: the number of bins that entries are bucketed into (defaults to 25)
 - `binValue`: the value of the bin--the height of the histogram, the width of the violin, the darkness of the heatmap. Defaults to the length of the array of pieces that fall within the bin: `d => d.length` so if you want to total the values use `d => sumFunction(d))`.
@@ -318,10 +363,10 @@ All bucketized summaries (violin, joy, histogram, heatmap) share the following:
 
 - `curve`: The `d3-shape` style curve interpolator used for the shape (defaults to `curveCatmullRom`). Not honored in radial projection because the diagonals play have with them.
 
-### Joy Plot Settings
+### Ridgeline Plot Settings
 
 - `curve`: The `d3-shape` style curve interpolator used for the shape (defaults to `curveCatmullRom`). Not honored in radial projection.
-- `amplitude`: An amount of pixels to overflow the height into the adjoining column (defaults to `0` which is more like a Joyless Plot if you ask me).
+- `amplitude`: An amount of pixels to overflow the height into the adjoining column (defaults to `0` which is more like a Ridgeline Plot if you ask me).
 
 ### Contour Settings
 
@@ -340,7 +385,7 @@ Currently no available custom settings. The boxplot samples the data sent to eac
 <OrdinalFrame summaryType="violin" />
 
 // object
-<OrdinalFrame summaryType={{ type: "joy", amplitude: 30 }} />
+<OrdinalFrame summaryType={{ type: "ridgeline", amplitude: 30 }} />
 ```
 
 ### summaryStyle: { _object_ | _function_ }
@@ -375,10 +420,11 @@ A function that takes a the `middle` of a `summary`, the `key`, and the index of
 
 ### tooltipContent: { _function_ }
 
-A function returning JSX HTML to display in the tooltip (only active if `hoverAnnotation` or `pieceHoverAnnotation` is set to `true`). The tooltip is passed the array of pieces associated with the column being hovered. The content is placed on and directly above the hovered point, so take that into account when using CSS to style the position and any additional elements. You can drop any HTML into this floating div, including another frame, if you want to have data visualization in your data visualization so you can visualize while you visualize.
+A function returning JSX HTML to display in the [tooltip](/guides/tooltips) (only active if `hoverAnnotation` or `pieceHoverAnnotation` is set to `true`). The tooltip is passed the array of pieces associated with the column being hovered. The content is placed on and directly above the hovered point, so take that into account when using CSS to style the position and any additional elements. You can drop any HTML into this floating div, including another frame, if you want to have data visualization in your data visualization so you can visualize while you visualize.
 
 ```jsx
 <OrdinalFrame
+  pieceHoverAnnotation={true}
   tooltipContent={d => (
     <div className="tooltip-content">
       <p>{d.name}</p>
@@ -388,12 +434,12 @@ A function returning JSX HTML to display in the tooltip (only active if `hoverAn
 />
 ```
 
-### axis: { _object_ }
+### axes: { _array_ }
 
-An object that define the range axis. These objects roughly correspond to the options in `d3-axis`, with extended options such as `label`. Use oLabel to set labels for the columns.
+An array of objects that defines axes. These objects roughly correspond to the options in [d3-axis](https://github.com/d3/d3-axis), with extended options such as `label`. Use `oLabel` to set labels for the columns.
 
 ```jsx
-<OrdinalFrame axis={{ orient: "left" }} />
+<OrdinalFrame axes={{ orient: "left" }} />
 ```
 
 ### oLabel: { _bool_ | _function_ | _object_ }
@@ -417,7 +463,7 @@ Whether to show a labels for each column (simple boolean `true`) or a function t
 
 ### annotations: { _array_ }
 
-An array of objects to be processed using the frame's built-in annotation rules or the custom defined rules. See [[Using Annotations]] for more details.
+An array of objects to be processed using the frame's [built-in annotation](/guides/annotations#built-in-annotation-types) rules or the [custom defined rules](/guides/annotations#custom-annotation-rules). Annotations that have the same data properties that your data has will be automatically placed in the transformed o/r space.
 
 ```jsx
 <OrdinalFrame
@@ -429,15 +475,39 @@ An array of objects to be processed using the frame's built-in annotation rules 
 
 ### svgAnnotationRules: { _function_ }
 
-A function that takes an annotation object and returns a JSX SVG element. The function is sent `{ d, i, oScale, rScale, oAccessor, rAccessor, ordinalFrameProps, adjustedPosition, adjustedSize, annotationLayer, ordinalFrameState }`
+A function that takes an annotation object and returns a JSX SVG element. The function is sent `{ d, i, screenCoordinates, oScale, rScale, oAccessor, rAccessor, ordinalFrameProps, ordinalFrameState, adjustedPosition, adjustedSize, annotationLayer, voronoiHover, categories }`
 
 ### htmlAnnotationRules: { _function_ }
 
-A function that takes an annotation object and returns a JSX HTML element. The function is sent `{ d, i, oScale, rScale, oAccessor, rAccessor, ordinalFrameProps, adjustedPosition, adjustedSize, annotationLayer, ordinalFrameState }`. Elements can be placed using CSS `left` and `top` and will overlay on the chart. Internally, the default annotation for tooltips uses this method.
+A function that takes an annotation object and returns a JSX HTML element. The function is sent `{ d, i, screenCoordinates, oScale, rScale, oAccessor, rAccessor, ordinalFrameProps, ordinalFrameState, adjustedPosition, adjustedSize, annotationLayer, voronoiHover, categories }`. Elements can be placed using CSS `left` and `top` and will overlay on the chart. Internally, the default annotation for tooltips uses this method.
 
 ### annotationSettings: { _object_ }
 
 An object with `{ layout, pointSizeFunction, labelSizeFunction }` containing custom annotation settings to enable annotations bumping out of each others' way or placing them in the margins.
+
+```jsx
+<OrdinalFrame
+  annotationSettings={{
+    layout: {
+      type: "marginalia",
+      orient: "nearest",
+      characterWidth: 8,
+      lineWidth: 20,
+      padding: 2,
+      iterations: 1000,
+      pointSizeFunction: () => 2
+    }
+  }}
+/>
+```
+
+### matte: { _boolean_ }
+
+Whether to turn on a matte (a border that covers the margin area to hide overflow) or a JSX custom matte.
+
+```jsx
+<OrdinalFrame matte={true} />
+```
 
 ### backgroundGraphics: { _array_ | _JSX_ }
 
@@ -451,27 +521,67 @@ A JSX or array of JSX to display in front of the chart.
 
 ### hoverAnnotation: { _bool_ }
 
-Turn on automatic tooltips for each column with a column overlay to improve interaction. Content of the tooltips defaults to the o and r value and can be customized with `tooltipContent`. Tooltip is shown at the max or sum value of the column.
+Turn on automatic [tooltips](/guides/tooltips) for each column with a column overlay to improve interaction. Content of the tooltips defaults to the o and r value and can be customized with `tooltipContent`. Tooltip is shown at the max or sum value of the column.
 
 ### pieceHoverAnnotation: { _bool_ | _object_ }
 
-Turn on automatic tooltips for individual pieces with a voronoi overlay to improve interaction. Content of the tooltips defaults to the o and r value and can be customized with `tooltipContent`. If you are displaying both pieces and summaries, you can send an object with { onlyPieces: true } to force the overlay to generate based on pieces, otherwise it will default to generating the overlay based on summaries.
+Turn on automatic [tooltips](/guides/tooltips) for individual pieces with a voronoi overlay to improve interaction. Content of the tooltips defaults to the o and r value and can be customized with `tooltipContent`. If you are displaying both pieces and summaries, you can send an object with { onlyPieces: true } to force the overlay to generate based on pieces, otherwise it will default to generating the overlay based on summaries.
 
 ### customHoverBehavior: { _function_ }
 
 A function to fire on hover that passes the column or piece being hovered over.
 
+```jsx
+<OrdinalFrame
+  customHoverBehavior={d => {
+    this.setState({ hoveredOn: d })
+  }}
+/>
+```
+
 ### customClickBehavior: { _function_ }
 
 A function to fire on click that passes the column or piece being hovered over.
+
+```jsx
+<OrdinalFrame
+  customClickBehavior={d => {
+    this.setState({ clickedOn: d })
+  }}
+/>
+```
 
 ### customDoubleClickBehavior: { _function_ }
 
 A function to fire on doubleclick that passes the column or piece being hovered over.
 
+```jsx
+<OrdinalFrame
+  customDoubleClickBehavior={d => {
+    this.setState({ doubleclicked: d })
+  }}
+/>
+```
+
 ### interaction: { _object_ }
 
-An object passed to the interaction layer that is currently only used to determine whether to activate the column brushes, their settings, and the actions to fire on its start, brush and end events. See the Parallel Coordinates and Brushable Swarm Plot in the interactive examples.
+An object passed to the interaction layer that is currently only used to determine whether to activate the column brushes, their settings, and the actions to fire on its start, brush and end events. See the [Ordinal Brushes](/guides/ordinal-brushes) example.
+
+- `start`: The function with parameteres (e,column) to run on the start of a brush where e is the array of the range of the brush and column is the column name of the brush
+- `during`: The function with parameteres (e,column) to run at the during a brush
+- `end`: The function with parameteres (e,column) to run at the end of a brush
+- `columnsBrush`: turns on a brush for each column (parallel coordinates style) can be true or false. Otherwise you get a brush for selecting columns
+- `extent`: The base value for the brush, so you can set an extent if you want to initialize the brush with
+
+```jsx
+<OrdinalFrame
+  interaction={{
+    columnsBrush: true,
+    extent: { singleColumn: this.state.extent },
+    end: this.changeExtent
+  }}
+/>
+```
 
 ## Miscellaneous
 
@@ -485,7 +595,18 @@ Just an offset and hardly ever useful
 
 ### additionalDefs: { _JSX_ }
 
-JSX to be injected into the visualization layer's SVG `defs`.
+A JSX or array of JSX to be injected into the visualization layer's SVG `defs`. This is useful for [defining patterns](/guides/sketchy-painty-patterns) that you want to use as fills, or markers or gradients or other SVG material typically defined in defs.
+
+```jsx
+<XYFrame
+  additionalDefs={
+    <linearGradient y2="1" id="paleWoodGradient">
+      <stop stopColor="#8E0E00" offset="0%" />
+      <stop stopColor="#1F1C18" offset="100%" />
+    </linearGradient>
+  }
+/>
+```
 
 ### download: { _bool_ }
 
@@ -494,14 +615,3 @@ Enable a download button to download the data as a CSV
 ### downloadFields: { _array_ }
 
 The field keys to download from each datapoint. By default, the CSV download only shows the o and r values.
-
-Connectors in [[OrdinalFrame]] allow you to draw connections between elements in adjacent columns. The current, limited implementation is a simple test that if it returns true draws a link. This function is run on every piece, and it only tests for links to the next column (left to right in vertical, top to bottom in horizonal and clockwise in radial). For "bar" it draws a filled area, for "point" and "swarm" it draws a line.
-
-You can use this functionality to create slopegraphs or funnel diagrams.
-
-The following code will draw a connection between elements in adjoining columns that has the same `type` value. It will only draw a link to the first matching item in the next column so this cannot be used to draw branching paths or other multi-link connections from one piece to many pieces.
-
-```html
-<OrdinalFrame connectorType={d => d.type} connectorStyle={d => ({ fill:
-d.source.color })} />
-```

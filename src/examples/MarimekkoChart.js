@@ -64,7 +64,7 @@ const frameProps = {
   rAccessor: "pct",
   oAccessor: "market",
   dynamicColumnWidth: "value",
-  axis: { orient: "left", tickFormat: d => Math.floor(d * 100) + "%" },
+  axes: [{ orient: "left", tickFormat: d => Math.floor(d * 100) + "%" }],
   type: "bar",
   oLabel: d => <text transform="rotate(45)">{d}</text>,
   margin: { left: 45, top: 10, bottom: 80, right: 50 },

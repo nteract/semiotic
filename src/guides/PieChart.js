@@ -49,7 +49,7 @@ const windRose = {
   dynamicColumnWidth: null,
   rAccessor: "tweets",
   data: longPieChartData,
-  axis: true,
+  axes: true,
   rScaleType: scaleSqrt
 }
 
@@ -67,7 +67,7 @@ const nightingale = {
   },
   rScaleType: scaleSqrt,
 
-  axis: true
+  axes: true
 }
 
 //better story for this type of sorting
@@ -183,7 +183,7 @@ Another approach is flattening your data so that you have a property called acti
     
 ### Sorted Nightingale
 
-You can also pass a \`sortO\` property to change the order for your ordinal data.
+You can also pass a \`oSort\` property to change the order for your ordinal data.
 
 \`oSort={(a, b, c, d) => {
   return (

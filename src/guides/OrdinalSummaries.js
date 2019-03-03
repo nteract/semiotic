@@ -22,10 +22,12 @@ const frameProps = {
   oLabel: true,
   rExtent: [0],
   title: "Box Office Movies by Rank",
-  axis: {
-    orient: "bottom",
-    label: "Rank"
-  },
+  axes: [
+    {
+      orient: "bottom",
+      label: "Rank"
+    }
+  ],
   summaryStyle: d => ({
     fill: d && colors[d.title],
     fillOpacity: 0.2,

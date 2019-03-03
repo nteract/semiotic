@@ -31,7 +31,7 @@ const frameProps = {
     { sales: 3, leads: 175, month: "Jun" },
     { sales: 5, leads: 125, month: "Jul" }
   ],
-  axis: [
+  axes: [
     {
       key: "leads-axis",
       orient: "right",
@@ -107,7 +107,7 @@ const overrideProps = {
       return <rect height={d.scaledValue} width={20} x={-10} fill={theme[0]} />;
     }
   }`,
-  axis: `
+  axes: `
   [
     {
       key: "leads-axis",

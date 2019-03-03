@@ -30,8 +30,8 @@ export default () => <XYFrame
   - [invertX: { _boolean_ }](#invertx-boolean-)
   - [invertY: { _boolean_ }](#inverty-boolean-)
   - [showLinePoints: { _boolean_ }](#showlinepoints-boolean-)
-  - [showSummaryPoints: { _boolean_ }](#showSummaryPoints-boolean-)
-  - [baseMarkProps: { _object_ }](#baseMarkProps-object-)
+  - [showSummaryPoints: { _boolean_ }](#showsummarypoints-boolean-)
+  - [baseMarkProps: { _object_ }](#basemarkprops-object-)
 - [Point Rendering](#point-rendering)
   - [points: { [_data_] }](#points-data-)
   - [pointStyle: { _object_ | _function_ }](#pointstyle-object-function-)
@@ -66,7 +66,7 @@ export default () => <XYFrame
   - [matte: { _boolean_ }](#matte-boolean-)
   - [backgroundGraphics: { _array_ | _JSX_ }](#backgroundgraphics-array-jsx-)
   - [foregroundGraphics: { _array_ | _JSX_ }](#foregroundgraphics-array-jsx-)
-  - [canvasPostProcess: { _"chuckClose"_ | _function_ }](#foregroundgraphics-chuckClose-function-)
+  - [canvasPostProcess: { _"chuckClose"_ | _function_ }](#foregroundgraphics-chuckclose-function-)
 
 - [Interaction](#interaction)
   - [hoverAnnotation: { _bool_ | _array_ }](#hoverannotation-bool-array-)
@@ -265,7 +265,7 @@ function MyScatterPlot() {
 
 ### pointStyle: { _object_ | _function_ }
 
-If _pointStyle_ is specified, sets the inline css `style` of each point element. This can be a JSX style object or a function that is passed the point data and returns a JSX style object.
+Sets the inline css `style` of each point element. This can be a JSX style object or a function that is passed the point data and returns a JSX style object.
 
 ```jsx
 /*Object option */
@@ -280,7 +280,7 @@ If _pointStyle_ is specified, sets the inline css `style` of each point element.
 
 ### pointClass: { _string_ | _function_ }
 
-If _pointClass_ is specified, sets the css `class` of each point element. This can be a string class name or a function that takes the point data and returns a string.
+Sets the css `class` of each point element. This can be a string class name or a function that takes the point data and returns a string.
 
 ```jsx
 /*String option */
@@ -547,7 +547,19 @@ If _canvasAreas_ is specified, renders area elements in Canvas. The _canvasAreas
 
 ### tooltipContent: { _function_ }
 
-A function returning JSX HTML to display in the tooltip (only active if `hoverAnnotation` is set to `true`). The tooltip is passed the data point (which if part of a line or summary will be decorated with a corresponding `parentLine` or `parentArea` pointer to that object). The content is placed on and directly above the hovered point, so take that into account when using CSS to style the position and any additional elements. You can drop any HTML into this floating div, including another frame.
+A function returning JSX HTML to display in the [tooltip](/guides/tooltips) (only active if `hoverAnnotation` is set to `true`). The tooltip is passed the data point (which if part of a line or summary will be decorated with a corresponding `parentLine` or `parentArea` pointer to that object). The content is placed on and directly above the hovered point, so take that into account when using CSS to style the position and any additional elements. You can drop any HTML into this floating div, including another frame.
+
+```jsx
+<XYFrame
+  hoverAnnotation={true}
+  tooltipContent={d => (
+    <div className="tooltip-content">
+      <p>{d.name}</p>
+      <p>{d.value}</p>
+    </div>
+  )}
+/>
+```
 
 ### axes: { _array_ }
 
@@ -555,7 +567,7 @@ An array of objects that defines axes. These objects roughly correspond to the o
 
 ### annotations: { _array_ }
 
-An array of objects to be processed using the frame's [built-in annotation](/guides/annotations#built-in-annotation-types) rules or the [custom defined rules](http://localhost:3001/guides/annotations#custom-annotation-rules). Annotations that have the same data properties that your data has will be automatically placed in the transformed x/y space.
+An array of objects to be processed using the frame's [built-in annotation](/guides/annotations#built-in-annotation-types) rules or the [custom defined rules](/guides/annotations#custom-annotation-rules). Annotations that have the same data properties that your data has will be automatically placed in the transformed x/y space.
 
 ```jsx
 /*boolean option */
@@ -746,7 +758,13 @@ A function to fire on doubleclick that passes the data being hovered over.
 
 ### interaction: { _object_ }
 
-An object passed to the interaction layer that is currently only used to determine whether to activate the XY brush, its settings, and the actions to fire on its start, brush and end events. Used under the hood in `MinimapXYFrame` to enable the functionality in the minimap.
+An object passed to the interaction layer that is currently only used to determine whether to activate the XY brush, its settings, and the actions to fire on its start, brush and end events. Used under the hood in `MinimapXYFrame` to enable the functionality in the minimap. See the [XY Brushes](/guides/xy-brushes) example.
+
+- `start`: The function to run on the start of a brush
+- `during`: The function to run at the during a brush
+- `end`: The function to run at the end of a brush
+- `brush`: A string `"xBrush"`, `"yBrush"`, or `"xyBrush"`
+- `extent`: The base value for the brush, so you can set an extent if you want to initialize the brush with
 
 ```jsx
 <XYFrame

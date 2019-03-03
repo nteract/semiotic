@@ -47,7 +47,7 @@ const frameProps = {
   rAccessor: ["y1990", "y2013"],
   oAccessor: "region",
   projection: "horizontal",
-  axis: { orient: "bottom", tickFormat: d => `${d}%` },
+  axes: [{ orient: "bottom", tickFormat: d => `${d}%` }],
   type: { type: "point", r: dotRadius },
   rExtent: [0],
   invertR: true,

@@ -9,7 +9,7 @@ const frameProps = {
   rExtent: [0, 65000],
   rAccessor: "value",
   oAccessor: "name",
-  axis: { tickFormat: d => `$${d / 1000}k` },
+  axes: [{ tickFormat: d => `$${d / 1000}k` }],
   type: waterfall,
   oLabel: d => <text transform="rotate(45)">{d}</text>,
   margin: { left: 60, top: 20, bottom: 100, right: 20 },

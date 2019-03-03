@@ -27,11 +27,13 @@ const frameProps = {
   rAccessor: "v",
   margin: { left: 150, top: 50, bottom: 75, right: 15 },
   title: " What [probability] would you assign to the [phrase]?",
-  axis: {
-    orient: "bottom",
-    label: "Count of Probability by Phrase",
-    tickFormat: d => d + "%"
-  },
+  axes: [
+    {
+      orient: "bottom",
+      label: "Count of Probability by Phrase",
+      tickFormat: d => d + "%"
+    }
+  ],
   summaryHoverAnnotation: true,
   oLabel: d => (
     <text style={{ textAnchor: "end", fill: "grey" }} x={-10} y={5}>

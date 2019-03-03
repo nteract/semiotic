@@ -175,6 +175,7 @@ export const PAGES = [
         name: "Accessibility",
         url: "accessibility",
         component: MarkdownPage,
+        img: "accessibility",
         props: {
           filename: "accessibility"
         }
@@ -366,7 +367,8 @@ export const PAGES = [
         component: MarkdownPage,
         props: {
           filename: "responsiveframes"
-        }
+        },
+        img: "responsive"
       },
       {
         name: "SparkFrame",
@@ -395,7 +397,8 @@ export const PAGES = [
       {
         name: "Mark",
         url: "mark",
-        component: Mark
+        component: Mark,
+        img: "mark"
       },
       {
         name: "DividedLine",

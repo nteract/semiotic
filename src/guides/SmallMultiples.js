@@ -124,7 +124,6 @@ Small multiples is accomplshed using the \`FacetController\`, which is a wrapper
         pieceHoverAnnotation={true}
         pieceIDAccessor="color"
         sharedRExtent={true}
-        axis={{ orient: "left" }}
         react15Wrapper={<div style={{ display: "flex" }} />}
       >
         <OrdinalFrame data={ordinalData} title="OrdinalFrame" />
@@ -157,7 +156,6 @@ import { FacetController, OrdinalFrame, XYFrame } from "semiotic"
   pieceHoverAnnotation={true}
   pieceIDAccessor="color"
   sharedRExtent={true}
-  axis={{ orient: "left" }}
   react15Wrapper={<div style={{ display: "flex" }} />}
 >
   <OrdinalFrame data={${propertyToString(ordinalData)}} title="OrdinalFrame" />

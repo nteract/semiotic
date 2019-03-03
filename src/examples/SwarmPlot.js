@@ -19,12 +19,14 @@ const frameProps = {
       mid <tspan fill={theme[2]}>2017</tspan>
     </text>
   ),
-  axis: {
-    orient: "bottom",
-    label: "Box office total",
-    ticks: 8,
-    tickFormat: d => d / 1000000 + "m"
-  },
+  axes: [
+    {
+      orient: "bottom",
+      label: "Box office total",
+      ticks: 8,
+      tickFormat: d => d / 1000000 + "m"
+    }
+  ],
   type: {
     type: "swarm",
     r: 14,

@@ -104,7 +104,7 @@ You can turn any \`XYFrame\` into an interactive region with a brush by using th
             interaction: {
               end: e => {
                 console.log(e)
-                //                this.setState({ extent: e })
+                this.setState({ extent: e })
               },
               brush: "yBrush",
               extent: this.state.extent
