@@ -189,7 +189,7 @@ By default the sankey type uses [d3-sankey layout](https://github.com/d3/d3-sank
 \`\`\`jsx
 networkType={{ 
   type: "sankey"
-  zoom: true, // Zoom the laid out nodes in or out so that they fit the specified size
+  zoomToFit: true, // Zoom the laid out nodes in or out so that they fit the specified size
   projection: "horizontal", // Accepts (horizontal|vertical) direction of flow in the diagram
   orient: "center", // Accepts (left|right|justify|center) sankey node alignment strategy
   iterations: 100, // How many times to run the layout algorithm
@@ -223,7 +223,7 @@ Instead of sending \`networkType\` as a string, you can pass an object with addi
 \`\`\`jsx
 networkType={{ 
   type: "arc"
-  zoom: true, // Zoom the laid out nodes in or out so that they fit the specified size
+  zoomToFit: true, // Zoom the laid out nodes in or out so that they fit the specified size
   // sort: Function
 }}\`\`\`
 
@@ -253,7 +253,7 @@ You can also pass any parameters for the [d3-sankey layout](https://github.com/d
 \`\`\`jsx
 networkType={{ 
   type: "chord"
-  zoom: true, // Zoom the laid out nodes in or out so that they fit the specified size
+  zoomToFit: true, // Zoom the laid out nodes in or out so that they fit the specified size
   groupWidth: 20, //  Width in pixels of the outer rings
   padAngle: 0.1, // Space between groups in degrees
   // sortGroups: Function

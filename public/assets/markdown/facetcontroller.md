@@ -1,4 +1,4 @@
-`<FacetController />` is a wrapper that synchronizes any child frames based on the settings you pass to `FacetController`. It automatically passes down its props to children and modifies children if you change any of the shared extent props below. The FacetController propagates any `hoverAnnotation` or `pieceHoverAnnotation` to its child elements so that by default you will have cross-highlighting.
+`<FacetController />` is a wrapper for [small multiples](/guides/small-multiples) that synchronizes any child frames based on the settings you pass to `FacetController`. It automatically passes down its props to children and modifies children if you change any of the shared extent props below. The FacetController propagates any `hoverAnnotation` or `pieceHoverAnnotation` to its child elements so that by default you will have cross-highlighting.
 
 ## Sample usage:
 
@@ -47,4 +47,4 @@ If _sharedRExtent_ is specified, the child frames will have the same r extent ca
 
 ### react15Wrapper: { _Element_ }
 
-By default, children of a FacetController will be wrapped in a `React.Fragment`. If you're using React 15, though, you will need to pass an element to serve as the container. This can be as simple as a `<div />`.
+By default, children of a `FacetController` will be wrapped in a `React.Fragment`. If you're using React 15, though, you will need to pass an element to serve as the container. This can be as simple as a `<div />`.
