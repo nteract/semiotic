@@ -146,6 +146,7 @@ class InteractionLayer extends React.Component<Props, State> {
   canvasMap: Map<string, number> = new Map()
 
   constructDataObject = (d?: Object) => {
+    if (d === undefined) return d
     const { points } = this.props
     return d && d.data ? { points, ...d.data, ...d } : { points, ...d }
   }
