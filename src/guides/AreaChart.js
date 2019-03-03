@@ -1,6 +1,6 @@
 import React from "react"
 import DocumentFrame from "../DocumentFrame"
-import { XYFrame } from "semiotic"
+import { XYFrame, ResponsiveXYFrame } from "semiotic"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
 import { lines, threeTitles } from "./LineChart"
@@ -176,6 +176,23 @@ To add tooltips, you simply set \`hoverAnnotation={true}\`. By default the toolt
       <DocumentFrame
         frameProps={{ ...frameProps, hoverAnnotation: true }}
         type={XYFrame}
+        overrideProps={overrideProps}
+        startHidden
+      />
+      <MarkdownText
+        text={`
+## Area Chart with Responsive Width
+
+To make your chart responsive, instead of using \`XYFrame\` use \`ResponsiveXYFrame\` and set the \`responsiveWidth={true}\`.
+`}
+      />
+      <DocumentFrame
+        frameProps={{
+          ...frameProps,
+          hoverAnnotation: true,
+          responsiveWidth: true
+        }}
+        type={ResponsiveXYFrame}
         overrideProps={overrideProps}
         startHidden
       />

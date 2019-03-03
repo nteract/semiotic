@@ -1,5 +1,5 @@
 import React from "react"
-import { OrdinalFrame } from "semiotic"
+import { OrdinalFrame, ResponsiveOrdinalFrame } from "semiotic"
 import DocumentFrame from "../DocumentFrame"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
@@ -268,6 +268,30 @@ Adding the property \`pieceHoverAnnotation\` gives tooltips to each of the indiv
 }
 `}
         type={OrdinalFrame}
+        startHidden
+      />
+      <MarkdownText
+        text={`
+## Stacked bar chart with Responsive Width
+
+To make your chart responsive, instead of using \`OrdinalFrame\` use \`ResponsiveOrdinalFrame\` and set the \`responsiveWidth={true}\`.
+  `}
+      />
+
+      <DocumentFrame
+        frameProps={{
+          ...stackedFramePropsFlattened,
+          pieceHoverAnnotation: true,
+          responsiveWidth: true
+        }}
+        overrideProps={flattenedOverrideProps}
+        pre={`const colorHash = {
+tweets: theme[0],
+retweets: theme[2],
+favorites: theme[1]
+}
+`}
+        type={ResponsiveOrdinalFrame}
         startHidden
       />
     </div>

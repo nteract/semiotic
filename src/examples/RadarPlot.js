@@ -99,12 +99,6 @@ const frameProps = {
 }
 
 const overrideProps = {
-  tooltipContent: `d => (
-    <div>
-      {d.date} - {Math.round(d.total / 1000000)}m
-    </div>
-  )
-  `,
   foregroundGraphics: ` [
     <g transform="translate(440, 73)" key="legend">
       <text key={1} fill={theme[0]}>

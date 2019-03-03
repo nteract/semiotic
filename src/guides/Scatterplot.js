@@ -1,6 +1,6 @@
 import React from "react"
 import DocumentFrame from "../DocumentFrame"
-import { XYFrame } from "semiotic"
+import { XYFrame, ResponsiveXYFrame } from "semiotic"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
 import { scaleSqrt } from "d3-scale"
@@ -336,6 +336,20 @@ Enabeling the \`hoverAnnotation={true}\` prop  gives you default tooltips based 
       <DocumentFrame
         frameProps={withHoverFrameProps}
         type={XYFrame}
+        overrideProps={overrideProps}
+        startHidden
+      />
+
+      <MarkdownText
+        text={`
+## Scatterplot with ResponsiveWidth
+
+To make your chart responsive, instead of using \`XYFrame\` use \`ResponsiveXYFrame\` and set the \`responsiveWidth={true}\`.
+`}
+      />
+      <DocumentFrame
+        frameProps={{ ...withHoverFrameProps, responsiveWidth: true }}
+        type={ResponsiveXYFrame}
         overrideProps={overrideProps}
         startHidden
       />

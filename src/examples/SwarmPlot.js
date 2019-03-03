@@ -52,7 +52,7 @@ const frameProps = {
     }
   },
   tooltipContent: d => (
-    <div>
+    <div className="tooltip-content">
       {d.date} - {Math.round(d.total / 1000000)}m
     </div>
   ),
@@ -69,7 +69,7 @@ const overrideProps = {
     </text>
   )`,
   tooltipContent: `d => (
-    <div>
+    <div className="tooltip-content">
       {d.date} - {Math.round(d.total / 1000000)}m
     </div>
   )

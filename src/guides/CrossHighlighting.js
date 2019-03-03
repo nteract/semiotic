@@ -111,7 +111,10 @@ You can also maintain the default \`hoverAnnotation\` tooltip behavior by also p
             {
               type: "highlight",
               style: d => {
-                return { ...frameProps.lineStyle(d, d.key), strokeWidth: 5 }
+                return {
+                  stroke: theme[d.key + 5],
+                  strokeWidth: 5
+                }
               }
             },
             { type: "frame-hover" }
@@ -127,7 +130,7 @@ You can also maintain the default \`hoverAnnotation\` tooltip behavior by also p
   hoverAnnotation={[
       type: "highlight",
       style: d => {
-        return { stroke: theme[d.key], strokeWidth: 5, fill: "none" };
+        return { stroke: theme[d.key + 5], strokeWidth: 5 };
       }
     },
     { type: "frame-hover" }]}
@@ -268,8 +271,8 @@ Highlight annotations will return all points, lines and areas that match the id 
               style: d => {
                 return {
                   strokeWidth: 3,
-                  stroke: theme[d.key],
-                  fill: theme[d.key]
+                  stroke: d.parentLine ? theme[d.parentLine.key] : theme[d.key],
+                  fill: d.parentLine ? "none" : theme[d.key]
                 }
               }
             }

@@ -48,7 +48,7 @@ export default () => {
       <MarkdownText
         text={`
 
-The \`DividedLine\` lets you create a line that is split based on a parameters function, which .
+The \`DividedLine\` lets you create a line that is split based on a parameters function. See the [annotations page](/guides/annotations#built-in-annotation-types) for an example.
 
 
 - \`parameters\`: Function, //checks each point and applies a different style object to line segments that fall into the declared parameters

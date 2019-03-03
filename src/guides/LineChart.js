@@ -394,8 +394,8 @@ export const frameProps = {
       label: { name: "Weeks from Opening Day", locationDistance: 55 }
     }
   ],
-  lineStyle: (d, i) => ({
-    stroke: theme[i],
+  lineStyle: d => ({
+    stroke: theme[d.key],
     strokeWidth: 2,
     fill: "none"
   }),
@@ -508,7 +508,7 @@ export default function CreateALineChart() {
     <div>
       <MarkdownText
         text={`
-A guide for creating a line chart, timeseries, difference line, and line percents using \`XYFrame\` along with hover behavior and styling.
+A guide for creating a line chart, timeseries, difference line, and line percents using \`XYFrame\` along with hover behavior, responsive dimensions, and styling.
 
 This page uses box office data from [Box Office Mojo](https://www.boxofficemojo.com/).
 
