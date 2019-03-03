@@ -81,7 +81,8 @@ export const orFrameChangeProps = [
   "summaryStyle",
   "summaryPosition",
   "oLabel",
-  "axis"
+  "axis",
+  "axes"
 ]
 
 export const networkFrameChangeProps = [
@@ -321,16 +322,11 @@ export const ordinalframeproptypes = {
   pieceHoverAnnotation: sharedframeproptypes.hoverAnnotation,
   summaryHoverAnnotation: sharedframeproptypes.hoverAnnotation,
   axis: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
+  axes: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
   ordinalAlign: PropTypes.string,
   multiAxis: PropTypes.bool,
-  pieceClass: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.func
-  ]),
-  summaryClass: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.func
-  ])
+  pieceClass: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
+  summaryClass: PropTypes.oneOfType([PropTypes.string, PropTypes.func])
 }
 
 export const networkframeproptypes = {
