@@ -304,9 +304,23 @@ If _canvasPoints_ is specified, determines whether or not to render points to [C
 
 ### customPointMark: { _JSX_ | _function_ }
 
-The _customPointMark_ attribute accepts a _JSX_ object or _function_ that returns a _JSX_ object as the marker for each point. You can leverage the semiotic-mark library to create [`<Mark>`](/api/mark) elements for each point.
+A function taking the point data and returning SVG JSX representation of the point.
 
-**Note**: The value(s) of the [`pointStyle`](#pointstyle--object--function-) attribute is then applied to the custom mark, but only at the top level. So if you want to make multipart graphical objects, have the customPointMark declare the style.
+**Exposed as an object in the first paramter**
+
+- d: The data element
+- i: the index position in the data array
+- xy: position
+- xScale
+- yScale
+- styleFn: a function for determining the style object given `d` (passed through from the Frame from your pointStyle)
+- classFn: a function for determining the className given `d` (passed through from the Frame from your pointClass)
+- renderMode: a function for determining the renderMode given `d` (passed through from the Frame from your pointRenderMode)
+- key: a string that is generated from the renderKeyFn
+- baseMarkProps: an object from the Frame’s baseMarkProps property that is meant to be spread to all generated marks, like this edge
+- adjustedSize
+- chartSize
+- margin
 
 ```jsx
 /*JSX option */
@@ -416,7 +430,24 @@ If _lineIDAccessor_ is specified, sets the id of the corresponding line. The _li
 
 ### customLineMark: { _function_ }
 
-If _customLineMark_ is specified, renders a custom _JSX_ element for each line. For example, `<DividedLine>` can be used in place of normal lines or other line generators taking advantage of the `<Frame>`'s settings. The _customLineMark_ attribute accepts a function that returns a _JSX_ object
+A function taking the line datapoint and returning SVG JSX representation of the line.
+
+For example, `<DividedLine>` can be used in place of normal lines or other line generators taking advantage of the `<Frame>`'s settings.
+
+**Exposed as an object in the first paramter**
+
+- d: The data element
+- i: the index position in the data array
+- xScale
+- yScale
+- styleFn: a function for determining the style object given `d` (passed through from the Frame from your lineStyle)
+- classFn: a function for determining the className given `d` (passed through from the Frame from your lineClass)
+- renderMode: a function for determining the renderMode given `d` (passed through from the Frame from your lineRenderMode)
+- key: a string that is generated from the renderKeyFn
+- baseMarkProps: an object from the Frame’s baseMarkProps property that is meant to be spread to all generated marks, like this edge
+- adjustedSize
+- chartSize
+- margin
 
 ```jsx
 <XYFrame customLineMark={ d => (<DividedLines ... />) } ... />
@@ -486,7 +517,9 @@ If _areaClass_ is specified, sets the css class of each area element.
 
 ### summaryType: { _string_ | _object_ }
 
-If _summaryType_ is specified, renders one of the following supported summary types: `"contour"`, `"heatmap"`, `"hexbin"`, `"basic"`, otherwise it defaults to `"basic"`. Each of these takes a set of points passed either to the `points` prop or as `coordinates` of an object (or objects) sent to the `summaries` and either creates summary graphics (all options except `basic`) or draws areas assuming the points sent are coordinates in order for a shape (`basic`). See the [XY summaries](/guides/xy-summaries) guide for examples.
+If _summaryType_ is specified, renders one of the following supported summary types: `"contour"`, `"heatmap"`, `"hexbin"`, `"basic"`, otherwise it defaults to `"basic"`. Each of these takes a set of points passed either to the `points` prop or as `coordinates` of an object (or objects) sent to the `summaries` and either creates summary graphics (all options except `basic`) or draws areas assuming the points sent are coordinates in order for a shape (`basic`).
+
+See the [XY summaries](/guides/xy-summaries) guide for detailed settings.
 
 The attribute accepts a _string_ corresponding to one of the supported line types or an _object_ with a `type` key and _string_ value corresponding to one of the supported line types. Other optional keys are shown below in shared settings and for particular summary types:
 
@@ -498,31 +531,24 @@ The attribute accepts a _string_ corresponding to one of the supported line type
 <XYFrame summaryType={ { type: "hexbin", bins: 0.1 } } ... />
 ```
 
-- `"hexbin"` settings
-  - `bins`: The number of hexes per row (based on the `size[0]` sent to the frame) either in actual number of bins (if greater than 1) or percent (if less than 1).
-  - `cellPx`: Overrides `bins` if set, the size of hexes in pixels
-  - `binValue`: How the value of a hex is calculated from the points that fall into the hex. Defaults to `d => d.length`
-  - `binMax`: A function that fires after the value for the maximum bin is calculated, so you could pass that value to a custom legend, for instance.
-  - `customMark`: A custom graphic generator for each hex. A function that is sent `({ d, baseMarkProps, margin, baseMarkProps, styleFn, classFn, renderFn, chartSize, adjustedSize })` and which should return JSX SVG.
-- `"heatmap"` settings
-  - `xBins`: The number of cells per row (if greater than 1) or the percent (if less than 1). Defaults to 0.5,
-  - `yBins`: The number of cells per column (if greater than 1) or the percent (if less than 1). Defaults to the value of `xBins`,
-  - `xCellPx`: Overrides any setting in xBins and sets the width of a cell in pixels.
-  - `yCellPx`: Overrides any setting in yBins and sets the height of a cell in pixels.
-  - `binValue`: How the value of a hex is calculated from the points that fall into the hex. Defaults to `d => d.length`
-  - `binMax`: A function that fires after the value for the maximum bin is calculated, so you could pass that value to a custom legend, for instance.
-  - `customMark`: A custom graphic generator for each hex. A function that is sent `({ d, baseMarkProps, margin, baseMarkProps, styleFn, classFn, renderFn, chartSize, adjustedSize })` and which should return JSX SVG.
-- `"contour"` settings
-  - `resolution`: The base resolution in pixels, increasing this will make contours more granular, decreasing will make them less granular. Defaults to 500.
-  - `thresholds`: The optimal number of thresholds (it's a hint, not a firm setting). Defaults to 10.
-  - `bandwidth`: The bandwidth in pixels (in other words changing the resolution will necessitate changes in bandwidth to keep up). Increasing bandwidth will make wider bands in contours, decreasing will result in smaller bands. Defaults to 20.
-  - `neighborhood`: If set to true, then only the largest contour will be rendered.
-
 ### customSummaryMark: { _JSX_ | _function_ }
 
-The _customSummaryMark_ attribute accepts a _JSX_ object or _function_ that returns a _JSX_ object as the marker for each point. You can leverage the semiotic-mark library to create [`<Mark>`](/api/mark) elements for each point.
+A function taking the summary datapoint and returning SVG JSX representation of the summary.
 
-**Note**: The value(s) of the [`pointStyle`](#pointstyle--object--function-) attribute is then applied to the custom mark, but only at the top level. So if you want to make multipart graphical objects, have the customPointMark declare the style.
+**Exposed as an object in the first paramter**
+
+- d: The data element
+- i: the index position in the data array
+- xScale
+- yScale
+- styleFn: a function for determining the style object given `d` (passed through from the Frame from your summaryStyle)
+- classFn: a function for determining the className given `d` (passed through from the Frame from your summaryClass)
+- renderMode: a function for determining the renderMode given `d` (passed through from the Frame from your summaryRenderMode)
+- key: a string that is generated from the renderKeyFn
+- baseMarkProps: an object from the Frame’s baseMarkProps property that is meant to be spread to all generated marks, like this edge
+- adjustedSize
+- chartSize
+- margin
 
 ```jsx
 /*JSX option */
@@ -626,7 +652,7 @@ A function that takes an annotation object and returns a JSX HTML element. The f
 
 ### annotationSettings: { _object_ }
 
-An object with `{ layout, pointSizeFunction, labelSizeFunction }` containing custom annotation settings to enable annotations bumping out of each others' way or placing them in the margins.
+An object with `{ layout, pointSizeFunction, labelSizeFunction }` containing [annotation settings](/guides/annotations#annotation-settings) to enable annotations bumping out of each others' way or placing them in the margins.
 
 ```jsx
 <XYFrame

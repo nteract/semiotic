@@ -420,7 +420,7 @@ A function that takes a the `middle` of a `summary`, the `key`, and the index of
 
 ### tooltipContent: { _function_ }
 
-A function returning JSX HTML to display in the [tooltip](/guides/tooltips) (only active if `hoverAnnotation` or `pieceHoverAnnotation` is set to `true`). The tooltip is passed the array of pieces associated with the column being hovered. The content is placed on and directly above the hovered point, so take that into account when using CSS to style the position and any additional elements. You can drop any HTML into this floating div, including another frame, if you want to have data visualization in your data visualization so you can visualize while you visualize.
+A function returning JSX HTML to display in the [tooltip](/guides/tooltips) (only active if `hoverAnnotation` or `pieceHoverAnnotation` is set to `true`). The tooltip is passed the array of pieces associated with the column being hovered. The content is placed on and directly above the hovered point, so take that into account when using CSS to style the position and any additional elements. You can drop any HTML into this floating div, including another frame.
 
 ```jsx
 <OrdinalFrame
@@ -483,7 +483,7 @@ A function that takes an annotation object and returns a JSX HTML element. The f
 
 ### annotationSettings: { _object_ }
 
-An object with `{ layout, pointSizeFunction, labelSizeFunction }` containing custom annotation settings to enable annotations bumping out of each others' way or placing them in the margins.
+An object with `{ layout, pointSizeFunction, labelSizeFunction }` containing [annotation settings](/guides/annotations#annotation-settings) to enable annotations bumping out of each others' way or placing them in the margins.
 
 ```jsx
 <OrdinalFrame

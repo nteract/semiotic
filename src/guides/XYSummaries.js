@@ -88,7 +88,7 @@ const contourProps = {
   summaryStyle: d => {
     return {
       fill: "none",
-      stroke: colors[d.parentArea.title],
+      stroke: colors[d.parentSummary.title],
       strokeWidth: 0.5
     }
   },
@@ -156,7 +156,7 @@ summaryType={{ type: "heatmap",
   // xCellPx: integer (default undefined) Pixel width of cells,
   // yCellPx: same as xCellPx for y space,
   // binMax: function (default undefined) the max value for a binned hex to allow for clamping,
-  // customMark: function (default undefined) which if set will be passed the attributes of a hex { binItems, percent, value, gx, gy, gw, gh, x, y, parentArea, _xyfCoordinates }  
+  // customMark: function (default undefined) which if set will be passed the attributes of a hex { binItems, percent, value, gx, gy, gw, gh, x, y, parentSummary, _xyfCoordinates }  
 }}\`\`\`
 `}
       />
