@@ -420,7 +420,6 @@ export default class NetworkFrameDocs extends React.Component {
             ${
               this.state.annotations === "on" ? "annotations={annotations}" : ""
             }
-            zoomToFit={true}
             nodeLabels={true}
             hoverAnnotation={true}
             annotationSettings={{

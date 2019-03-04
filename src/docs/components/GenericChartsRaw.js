@@ -64,6 +64,5 @@ export const genericNetworkChart = (
     })}
     edgeType={edgeType}
     nodeSizeAccessor={d => d.degree + 2}
-    zoomToFit={true}
   />
 )

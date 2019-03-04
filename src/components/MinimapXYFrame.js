@@ -38,10 +38,11 @@ class MinimapXYFrame extends React.Component {
       canvasLines,
       canvasPoints,
       canvasSummaries,
-      minimap
+      minimap,
+      axes,
+      margin
     } = this.props
     const miniDefaults = {
-      title: "",
       position: [0, 0],
       size: [size[0], size[1] * 0.25],
       xAccessor: xAccessor,
@@ -67,7 +68,9 @@ class MinimapXYFrame extends React.Component {
       summaryRenderMode,
       canvasLines,
       canvasPoints,
-      canvasSummaries
+      canvasSummaries,
+      axes,
+      margin
     }
 
     const combinedOptions = { ...miniDefaults, ...minimap }
