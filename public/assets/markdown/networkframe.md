@@ -29,6 +29,7 @@ import { NetworkFrame } from "semiotic"
   - [title: {_string_ | _JSX_}](#title-string-jsx)
   - [margin: {_number_ | _object_}](#margin-number-object)
   - [baseMarkProps: { _object_ }](#basemarkprops-object-)
+  - [renderKey: { _string_ | _function_ }](#renderkey-string-function-)
 
 - [Node Rendering](#node-rendering)
   - [nodeIDAccessor: {_string_ | _function_}](#nodeidaccessor-string-function)
@@ -133,7 +134,23 @@ The margin can be set to one number, which is applied equally to all sides, or a
 This object will be spread to all marks that are generated in the frame. This is useful for any props that might be shared by all pieces, and especially useful to set the animation duration for the marks if you want to adjust from the default 1s duration.
 
 ```jsx
-<XYFrame baseMarkProps={{ transitionDuration: { default: 500, fill: 2500 } }} />
+<NetworkFrame
+  baseMarkProps={{ transitionDuration: { default: 500, fill: 2500 } }}
+/>
+```
+
+### renderKey: { _string_ | _function_ }
+
+By default, generated marks will be rendered with a key based on their array position. If you want to ensure that your marks perform animated transitions in a way that maintains consistency, you can designate a key as a string, in which case it will look for that prop as the key or a function that takes `(datapoint,index)` and returns a string to be used.
+
+```jsx
+/* string option */
+<NetworkFrame renderKey="somePropToBeUsedAsAKey" />
+```
+
+```jsx
+/* function option defaulting to array position if no key on datapoint.renderKeyID exists */
+<NetworkFrame renderKey={(datapoint, index) => datapoint.renderKeyID || i} />
 ```
 
 ## Node Rendering

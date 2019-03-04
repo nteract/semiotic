@@ -32,6 +32,7 @@ export default () => <XYFrame
   - [showLinePoints: { _boolean_ }](#showlinepoints-boolean-)
   - [showSummaryPoints: { _boolean_ }](#showsummarypoints-boolean-)
   - [baseMarkProps: { _object_ }](#basemarkprops-object-)
+  - [renderKey: { _string_ | _function_ }](#renderkey-string-function-)
 - [Point Rendering](#point-rendering)
   - [points: { [_data_] }](#points-data-)
   - [pointStyle: { _object_ | _function_ }](#pointstyle-object-function-)
@@ -240,6 +241,20 @@ This object will be spread to all marks that are generated in the frame. This is
 
 ```jsx
 <XYFrame baseMarkProps={{ transitionDuration: { default: 500, fill: 2500 } }} />
+```
+
+### renderKey: { _string_ | _function_ }
+
+By default, generated marks will be rendered with a key based on their array position. If you want to ensure that your marks perform animated transitions in a way that maintains consistency, you can designate a key as a string, in which case it will look for that prop as the key or a function that takes `(datapoint,index)` and returns a string to be used.
+
+```jsx
+/* string option */
+<XYFrame renderKey="somePropToBeUsedAsAKey" />
+```
+
+```jsx
+/* function option defaulting to array position if no key on datapoint.renderKeyID exists */
+<XYFrame renderKey={(datapoint, index) => datapoint.renderKeyID || i} />
 ```
 
 ## Point Rendering

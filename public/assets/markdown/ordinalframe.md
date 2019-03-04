@@ -37,6 +37,7 @@ export default () => (
   - [oPadding: { _number_ }](#opadding-number-)
   - [dynamicColumnWidth: { _string_ | \_func}](#dynamiccolumnwidth-string-func-)
   - [baseMarkProps: { _object_ }](#basemarkprops-object-)
+  - [renderKey: { _string_ | _function_ }](#renderkey-string-function-)
 - [Piece Rendering](#piece-rendering)
 
   - [type { _string_ | _object_ | _func_ }](#type-string-object-func-)
@@ -234,7 +235,23 @@ If _pixelColumnWidth_ is specified, the row (in the case of horizontal) or colum
 This object will be spread to all marks that are generated in the frame. This is useful for any props that might be shared by all pieces, and especially useful to set the animation duration for the marks if you want to adjust from the default 1s duration.
 
 ```jsx
-<XYFrame baseMarkProps={{ transitionDuration: { default: 500, fill: 2500 } }} />
+<OrdinalFrame
+  baseMarkProps={{ transitionDuration: { default: 500, fill: 2500 } }}
+/>
+```
+
+### renderKey: { _string_ | _function_ }
+
+By default, generated marks will be rendered with a key based on their array position. If you want to ensure that your marks perform animated transitions in a way that maintains consistency, you can designate a key as a string, in which case it will look for that prop as the key or a function that takes `(datapoint,index)` and returns a string to be used.
+
+```jsx
+/* string option */
+<OrdinalFrame renderKey="somePropToBeUsedAsAKey" />
+```
+
+```jsx
+/* function option defaulting to array position if no key on datapoint.renderKeyID exists */
+<OrdinalFrame renderKey={(datapoint, index) => datapoint.renderKeyID || i} />
 ```
 
 ## Piece Rendering
@@ -697,7 +714,7 @@ Just an offset and hardly ever useful
 A JSX or array of JSX to be injected into the visualization layer's SVG `defs`. This is useful for [defining patterns](/guides/sketchy-painty-patterns) that you want to use as fills, or markers or gradients or other SVG material typically defined in defs.
 
 ```jsx
-<XYFrame
+<OrdinalFrame
   additionalDefs={
     <linearGradient y2="1" id="paleWoodGradient">
       <stop stopColor="#8E0E00" offset="0%" />
