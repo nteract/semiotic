@@ -81,7 +81,8 @@ type ORFrameAxisGeneratorTypes = {
   rScaleType: Function,
   pieceType: Object,
   rExtent: Array<number>,
-  data: Array<Object>
+  data: Array<Object>,
+  maxColumnValues?: number
 }
 
 function roundToTenth(number: number) {

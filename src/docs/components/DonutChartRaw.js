@@ -8,7 +8,7 @@ const data2 = [15, 8, 5, 10]
 
 export default state => {
   const donutSettings = {
-    size: [400, 400],
+    size: [600, 400],
     data: state.changeData ? data2 : data,
     projection: "radial",
     style: (d, i) => ({

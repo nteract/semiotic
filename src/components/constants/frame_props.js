@@ -357,7 +357,6 @@ export const networkframeproptypes = {
   nodeStyle: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
   edgeStyle: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
   customNodeIcon: PropTypes.func,
-  zoomToFit: PropTypes.bool,
   edgeType: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
   filterRenderedNodes: PropTypes.func
 }

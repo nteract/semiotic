@@ -88,7 +88,6 @@ export default ({
     sourceAccessor: "source",
     targetAccessor: "target",
     nodeSizeAccessor: 5,
-    zoomToFit: type === "force",
     hoverAnnotation: true,
     networkType: {
       type: type,
