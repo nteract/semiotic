@@ -156,7 +156,16 @@ summaryType={{ type: "heatmap",
   // xCellPx: integer (default undefined) Pixel width of cells,
   // yCellPx: same as xCellPx for y space,
   // binMax: function (default undefined) the max value for a binned hex to allow for clamping,
-  // customMark: function (default undefined) which if set will be passed the attributes of a hex { binItems, percent, value, gx, gy, gw, gh, x, y, parentSummary, _xyfCoordinates }  
+  // customMark: function (default undefined) passed the following 
+  //   exposed as an object in the first parameter
+  //     d has the following parameters: { binItems, percent, value, gx, gy, gw, gh, x, y, parentSummary, _xyfCoordinates } 
+  //     baseMarkProps: an object from the Frame’s baseMarkProps property that is meant to be spread to all generated marks, like this edge
+  //     margin, 
+  //     styleFn: a function for determining the style object given \`d\` (passed through from the Frame from your summaryStyle)
+  //     classFn: a function for determining the className given \`d\` (passed through from the Frame from your summaryClass)
+  //     chartSize: size of the chart without margins
+  //     adjustedSize: size of the overall frame, helpful for ResponsiveFrames
+
 }}\`\`\`
 `}
       />
@@ -195,7 +204,15 @@ summaryType={{ type: "hexbin",
   binValue: d => d.length, //Function that determines the summarized value (by default it’s the number of items in a rectangle),
   // cellPx: integer (default undefined) Pixel width of hexes, 
   // binMax: function (default undefined) the max value for a binned hex to allow for clamping,
-  // customMark: function (default undefined) which if defined is sent: { x, y, binItems (an array of items in the hex), percent, value, radius, hexCoordinates } 
+  // customMark: function (default undefined) passed the following 
+  //   exposed as an object in the first parameter
+  //     d has the following parameters: { x, y, binItems (an array of items in the hex), percent, value, radius, hexCoordinates } 
+  //     baseMarkProps: an object from the Frame’s baseMarkProps property that is meant to be spread to all generated marks, like this edge
+  //     margin, 
+  //     styleFn: a function for determining the style object given \`d\` (passed through from the Frame from your summaryStyle)
+  //     classFn: a function for determining the className given \`d\` (passed through from the Frame from your summaryClass)
+  //     chartSize: size of the chart without margins
+  //     adjustedSize: size of the overall frame, helpful for ResponsiveFrames
 }}\`\`\`
 `}
       />

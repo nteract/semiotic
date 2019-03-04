@@ -75,11 +75,13 @@ export default class CreateXYBrushes extends React.Component {
       size: [700, 300],
       ...xyFrameSettings,
       xExtent: this.state.selectedExtent,
-      margin: { left: 50, top: 10, bottom: 50, right: 20 },
+      margin: { left: 50, top: 10, bottom: 40, right: 20 },
       matte: true,
       minimap: {
         brushEnd: this.changeExtent,
         yBrushable: false,
+        margin: { left: 50, top: 0, bottom: 10, right: 20 },
+        axes: [{ orient: "left", ticks: 2 }],
         xBrushExtent: this.state.selectedExtent,
         size: [700, 50]
       }
@@ -184,7 +186,9 @@ export default class CreateXYBrushes extends React.Component {
       brushEnd: this.changeExtent,
       yBrushable: false,
       xBrushExtent: this.state.extent,
-      size: [700, 50]
+      size: [700, 50],
+      margin: { left: 50, top: 0, bottom: 10, right: 20 },
+      axes: [{ orient: "left", ticks: 2 }]
     }}/>         
   }
 }  

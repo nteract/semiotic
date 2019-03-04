@@ -31,7 +31,6 @@ export default () => (
   - [networkType: {_string_ | _object_ | _function_ }](#networktype-string-object-function-)
   - [title: {_string_ | _JSX_}](#title-string-jsx)
   - [margin: {_number_ | _object_}](#margin-number-object)
-  - [zoomToFit: { _boolean_ }](#zoomtofit-boolean-)
   - [baseMarkProps: { _object_ }](#basemarkprops-object-)
 
 - [Node Rendering](#node-rendering)
@@ -50,13 +49,17 @@ export default () => (
   - [edgeRenderMode: {_string_ | _function_}](#edgerendermode-string-function)
   - [customEdgeIcon { _string_ | _object_ | _function_ }](#customedgeicon-_string-object-function)
 - [Annotation and Decoration](#annotation-and-decoration)
+
   - [tooltipContent: { _function_ }](#tooltipcontent-function)
   - [annotations: { _array_ }](#annotations-array)
   - [svgAnnotationRules: { _function_ }](#svgannotationrules-function)
   - [htmlAnnotationRules: { _function_ }](#htmlannotationrules-function)
   - [annotationSettings: { _object_ }](#annotationsettings-object)
+  - [matte: { _boolean_ }](#matte-boolean-)
+
   - [backgroundGraphics: { _array_ | _JSX_ }](#backgroundgraphics-array-jsx)
   - [foregroundGraphics: { _array_ | _JSX_ }](#foregroundgraphics-array-jsx)
+
 - [Interaction](#interaction)
   - [hoverAnnotation: { _bool_ }](#hoverannotation-bool)
   - [customHoverBehavior: { _function_ }](#customhoverbehavior-function)
@@ -123,14 +126,6 @@ The margin can be set to one number, which is applied equally to all sides, or a
 
 <!-- Object option -->
 <NetworkFrame margin={{ top: 5, bottom: 10, left: 15, right: 20 }} />
-```
-
-### zoomToFit: { _boolean_ }
-
-If _zoomToFit_ is set to `true` then the layout will be dynamically resized to fit within the available space. This could cause distortion but also prevents the disappearance of disconnected nodes and components.
-
-```jsx
-<NetworkFrame zoomToFit={true} />
 ```
 
 ### baseMarkProps: { _object_ }
@@ -407,6 +402,14 @@ An object with `{ layout, pointSizeFunction, labelSizeFunction }` containing [an
     }
   }}
 />
+```
+
+### matte: { _boolean_ }
+
+Whether to turn on a matte (a border that covers the margin area to hide overflow) or a JSX custom matte.
+
+```jsx
+<NetworkFrame matte={true} />
 ```
 
 ### backgroundGraphics: { _array_ | _JSX_ }

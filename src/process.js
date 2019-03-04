@@ -43,7 +43,7 @@ export const processNodes = [
       "oPadding",
       "dynamicColumnWidth",
       "pixelColumnWidth",
-      "zoomToFit"
+      "zoom"
     ]
   },
   {

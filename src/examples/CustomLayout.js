@@ -115,7 +115,7 @@ const frameProps = {
     )
   },
   networkType: {
-    zoomToFit: flextreeZoom,
+    zoom: flextreeZoom,
     type: "tree",
     layout: flextree,
     nodeSize: d => [d.data.width, d.data.height],
@@ -144,7 +144,7 @@ const overrideProps = {
     )
   }`,
   networkType: `{
-    zoomToFit: flextreeZoom,
+    zoom: flextreeZoom,
     type: "tree",
     layout: flextree,
     nodeSize: d => [d.data.width, d.data.height],

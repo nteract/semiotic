@@ -53,7 +53,7 @@ export default () => <XYFrame
   - [summaryDataAccessor: { _string_ | _function_ }](#summarydataaccessor-string-function-)
   - [summaryStyle: { _function_ | _object_ }](#summarystyle-function-object-)
   - [summaryClass: { _string_ | _function_ }](#summaryclass-string-function-)
-    - [customSummaryMark: { _function_ }](#customsummarymark-function-)
+  - [customSummaryMark: { _function_ }](#customsummarymark-function-)
   - [canvasSummaries: { _boolean_ | _function_ }](#canvassummaries-boolean-function-)
 - [Annotation and Decoration](#annotation-and-decoration)
 
@@ -318,8 +318,8 @@ A function taking the point data and returning SVG JSX representation of the poi
 - renderMode: a function for determining the renderMode given `d` (passed through from the Frame from your pointRenderMode)
 - key: a string that is generated from the renderKeyFn
 - baseMarkProps: an object from the Frame’s baseMarkProps property that is meant to be spread to all generated marks, like this edge
-- adjustedSize
-- chartSize
+- adjustedSize: size of the overall frame, helpful for ResponsiveFrames
+- chartSize: size of the chart without margins
 - margin
 
 ```jsx
@@ -445,8 +445,8 @@ For example, `<DividedLine>` can be used in place of normal lines or other line 
 - renderMode: a function for determining the renderMode given `d` (passed through from the Frame from your lineRenderMode)
 - key: a string that is generated from the renderKeyFn
 - baseMarkProps: an object from the Frame’s baseMarkProps property that is meant to be spread to all generated marks, like this edge
-- adjustedSize
-- chartSize
+- adjustedSize: size of the overall frame, helpful for ResponsiveFrames
+- chartSize: size of the chart without margins
 - margin
 
 ```jsx
@@ -546,8 +546,8 @@ A function taking the summary datapoint and returning SVG JSX representation of 
 - renderMode: a function for determining the renderMode given `d` (passed through from the Frame from your summaryRenderMode)
 - key: a string that is generated from the renderKeyFn
 - baseMarkProps: an object from the Frame’s baseMarkProps property that is meant to be spread to all generated marks, like this edge
-- adjustedSize
-- chartSize
+- adjustedSize: size of the overall frame, helpful for ResponsiveFrames
+- chartSize: size of the chart without margins
 - margin
 
 ```jsx
