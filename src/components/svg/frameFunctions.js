@@ -131,23 +131,6 @@ export const drawMarginPath = ({
     margin.right} v-${iSize[1] + inset * 3 - margin.top - margin.bottom}Z`
 }
 
-export const trueAxis = (
-  orient: "right" | "left" | "top" | "bottom",
-  projection?: ProjectionTypes
-) => {
-  if (projection === "horizontal" && ["top", "bottom"].indexOf(orient) === -1) {
-    return "bottom"
-  } else if (
-    (!projection || projection === "vertical") &&
-    ["left", "right"].indexOf(orient) === -1
-  ) {
-    return "left"
-  } else if (!orient && projection === "horizontal") {
-    return "bottom"
-  }
-  return orient
-}
-
 export const calculateMargin = ({
   margin,
   axes,
@@ -164,12 +147,12 @@ export const calculateMargin = ({
   }
   const finalMargin = { top: 0, bottom: 0, left: 0, right: 0 }
 
-  let orient = trueAxis("left", projection)
+  let orient = "left"
 
   if (axes && projection !== "radial") {
     axes.forEach(axisObj => {
       const axisObjAdditionMargin = axisObj.label ? 60 : 50
-      orient = trueAxis(axisObj.orient, projection)
+      orient = axisObj.orient
       finalMargin[orient] = axisObjAdditionMargin
     })
   }
@@ -616,7 +599,8 @@ export const orFrameAxisGenerator = ({
   rScaleType,
   pieceType,
   rExtent,
-  data
+  data,
+  maxColumnValues = 1
 }: ORFrameAxisGeneratorTypes) => {
   if (!axis) return { axis: undefined, axesTickLines: undefined }
   let generatedAxis: Array<AxisType>, axesTickLines: Array<Object>
@@ -633,10 +617,21 @@ export const orFrameAxisGenerator = ({
       let axisClassname = d.className || ""
       let tickValues
       const axisDomain = d.extentOverride ? d.extentOverride : rScale.domain()
-      const axisScale = rScaleType.domain(axisDomain)
 
-      const orient = trueAxis(d.orient, projection)
-      const axisRange = rScale.range()
+      const leftRight = ["left", "right"]
+
+      const axisScale =
+        (leftRight.indexOf(d.orient) === -1 && projection !== "vertical") ||
+        (leftRight.indexOf(d.orient) !== -1 && projection !== "horizontal")
+          ? rScaleType.domain(axisDomain)
+          : rScaleType.domain([0, maxColumnValues])
+
+      const orient = d.orient
+      const axisRange =
+        (leftRight.indexOf(d.orient) === -1 && projection !== "vertical") ||
+        (leftRight.indexOf(d.orient) !== -1 && projection !== "horizontal")
+          ? rScale.range()
+          : [0, projection === "vertical" ? adjustedSize[0] : adjustedSize[1]]
 
       if (orient === "right") {
         axisScale.range(axisRange.reverse())

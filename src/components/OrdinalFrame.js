@@ -473,6 +473,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
 
     oScale.domain(oExtent)
 
+    let maxColumnValues
+
     if (dynamicColumnWidth) {
       let columnValueCreator
       if (typeof dynamicColumnWidth === "string") {
@@ -481,7 +483,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         columnValueCreator = d => dynamicColumnWidth(d.map(p => p.data))
       }
       const thresholdDomain = [0]
-      let maxColumnValues = 0
+      maxColumnValues = 0
       const columnValues = []
 
       oExtent.forEach(d => {
@@ -1088,7 +1090,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       rScale,
       rScaleType: instantiatedRScaleType.copy(),
       pieceType,
-      rExtent
+      rExtent,
+      maxColumnValues
     })
 
     const {
