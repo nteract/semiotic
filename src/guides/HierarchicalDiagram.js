@@ -324,7 +324,7 @@ You can also pass any parameters for [d3-hierarchy's tree layout](https://github
 \`\`\`jsx
 networkType={{ 
   type: "tree", // Could also be "cluster"
-  zoom: true, // Zoom the laid out nodes in or out so that they fit the specified size
+  zoom: true, // Zoom the laid out nodes in or out so that they fit the specified size, can also be "stretch" if you want zoom not to maintain aspect ratio
   padding: 0, // Pixel value to separate individual nodes from each other
   projection: "vertical", // Accepts (vertical|horizontal|radial) whether to display the chart with steps laid out on the y axis (vertical) or the x axis (horizontal)
   hierarhcySum: d => d.value, // Function for summing up children values into parent totals
@@ -361,7 +361,7 @@ You can also pass any parameters for [d3-hierarchy's pack layout](https://github
 \`\`\`jsx
 networkType={{ 
   type: "circlepack", 
-  zoom: true, // Zoom the laid out nodes in or out so that they fit the specified size
+  zoom: true, // Zoom the laid out nodes in or out so that they fit the specified size, can also be "stretch" if you want zoom not to maintain aspect ratio
   padding: 0, // Pixel value to separate individual nodes from each other
   hierarhcySum: d => d.value, // Function for summing up children values into parent totals
   hierarchyChildren: d => d.children // Function describing how children are defined in the hierarchical dataset, which will be passed as the second value to d3-hierarchy’s hierarchy function,
@@ -397,7 +397,7 @@ You can also pass any parameters for [d3-hierarchy's treemap layout](https://git
 \`\`\`jsx
 networkType={{
   type: "treemap", 
-  zoom: true, // Zoom the laid out nodes in or out so that they fit the specified size
+  zoom: true, // Zoom the laid out nodes in or out so that they fit the specified size, can also be "stretch" if you want zoom not to maintain aspect ratio
   padding: 0, // Pixel value to separate individual nodes from each other
   projection: "vertical", // Accepts (vertical|horizontal) whether to display the chart with steps laid out on the y axis (vertical) or the x axis (horizontal)
   hierarhcySum: d => d.value, // Function for summing up children values into parent totals
@@ -434,7 +434,7 @@ You can also pass any parameters for [d3-hierarchy's partition layout](https://g
 \`\`\`jsx
 networkType={{
   type: "partition",
-  zoom: true, // Zoom the laid out nodes in or out so that they fit the specified size
+  zoom: true, // Zoom the laid out nodes in or out so that they fit the specified size, can also be "stretch" if you want zoom not to maintain aspect ratio
   padding: 0, // Pixel value to separate individual nodes from each other
   projection: "vertical", // Accepts (vertical|horizontal|radial) whether to display the chart with steps laid out on the y axis (vertical) or the x axis (horizontal)
   hierarhcySum: d => d.value, // Function for summing up children values into parent totals

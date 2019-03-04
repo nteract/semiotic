@@ -146,7 +146,7 @@ networkType={
   type: "force" // Can also be "motifs" 
      //motifs lays out separated networks side by side
      //without applying a force between them
-  zoom: true, // Zoom the laid out nodes in or out so that they fit the specified size
+  zoom: true, // Zoom the laid out nodes in or out so that they fit the specified size, can also be "stretch" if you want zoom not to maintain aspect ratio
   iterations: 500, // How many times to run forceSimulation
   edgeStrength: 0.1, // What modifier to use for the strength of connection between nodes with edges
   distanceMax: Infinity, // How far out, in pixels, to exert simulation effects
