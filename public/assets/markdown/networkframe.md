@@ -7,20 +7,17 @@ Supported visualization types include [path diagrams](/guides/path-diagrams), [f
 Nodes are automatically generated from edge references to source or target that do not exist. Nodes are also decorated with a `degree` attribute, which is simple degree centrality (number of connections).
 
 ```jsx
-import NetworkFrame from "semiotic/lib/NetworkFrame"
-
-export default () => (
-  <NetworkFrame
-    nodes={[{ name: "Susie" }, { name: "Shirley" }]}
-    edges={[
-      { source: "Susie", target: "Xianlin" },
-      { source: "Shirley", target: "Susie" }
-    ]}
-    nodeStyle={{ fill: "blue" }}
-    edgeStyle={{ stroke: "red" }}
-    nodeIDAccessor={"name"}
-  />
-)
+import { NetworkFrame } from "semiotic"
+;<NetworkFrame
+  nodes={[{ name: "Susie" }, { name: "Shirley" }]}
+  edges={[
+    { source: "Susie", target: "Xianlin" },
+    { source: "Shirley", target: "Susie" }
+  ]}
+  nodeStyle={{ fill: "blue" }}
+  edgeStyle={{ stroke: "red" }}
+  nodeIDAccessor={"name"}
+/>
 ```
 
 # &lt;API Reference>
@@ -41,6 +38,8 @@ export default () => (
   - [nodeLabels: { _boolean_ | _function_ }](#nodelabels-boolean-function)
   - [nodeSizeAccessor: { _number_ | _function_ }](#nodesizeaccessor-number-function)
   - [customNodeIcon { _function_ }](#customnodeicon-function)
+  - [canvasNodes { _boolean_ | _function_ }](#canvasnodes-boolean--function)
+  - [nodeRenderMode { _string_ | _function_ | _object_ }](#noderendermode-string--function--object)
 - [Edge Rendering](#edge-rendering)
   - [sourceAccessor: {_string_ | _function_}](#sourceaccessor-string-function)
   - [targetAccessor: {_string_ | _function_}](#targetaccessor-string-function)
@@ -48,6 +47,7 @@ export default () => (
   - [edgeClass: {_string_ | _function_}](#edgeclass-string-function)
   - [edgeRenderMode: {_string_ | _function_}](#edgerendermode-string-function)
   - [customEdgeIcon { _string_ | _object_ | _function_ }](#customedgeicon-_string-object-function)
+  - [canvasEdges { _boolean_ | _function_ }](#canvasedges-boolean--function)
 - [Annotation and Decoration](#annotation-and-decoration)
 
   - [tooltipContent: { _function_ }](#tooltipcontent-function)
@@ -178,16 +178,36 @@ If nodeClass is specified, determines the CSS class of each rendered node. This 
 <NetworkFrame nodeClass={d => d.friendType} />
 ```
 
-### nodeRenderMode: {_string_ | _function_}
+### nodeRenderMode: { _string_ | _function_ | _object_ }
 
 If nodeRenderMode is specified, determines the renderMode of the underlying Mark (such as "sketchy").
 
 ```jsx
-// Object option
+// String option
 <NetworkFrame nodeRenderMode="sketchy" />
+
+// Object option
+<NetworkFrame nodeRenderMode={ {
+  renderMode: "sketchy",
+  fillWeight: 3,
+  hachureGap: 3.5,
+  roughness: 0.5
+} } />
 
 // Function option
 <NetworkFrame nodeRenderMode={d => d.friendshipLevel === "no so great" ? "sketchy" : undefined} />
+```
+
+### canvasNodes: { _boolean_ | _function_ }
+
+If _canvasNodes_ is specified, renders nodes elements in Canvas. The _canvasNodes_ attribute accepts a _boolean_ or a _function_ that evaluates a connector and returns a boolean that determines whether or not to render the area to [`Canvas`](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API) instead of [`SVG`](https://developer.mozilla.org/en-US/docs/Web/SVG).
+
+```jsx
+/*Boolean option */
+<NetworkFrame canvasNodes={ true } ... />
+
+/*Function option */
+<NetworkFrame canvasNodes={ (d, i) => } ... />
 ```
 
 ### nodeLabels: { _boolean_ | _function_ }
@@ -312,8 +332,28 @@ If edgeRenderMode is specified, determines the renderMode of the underlying Mark
 // Object option
 <NetworkFrame edgeRenderMode="sketchy" />
 
+// Object option
+<NetworkFrame edgeRenderMode={ {
+  renderMode: "sketchy",
+  fillWeight: 3,
+  hachureGap: 3.5,
+  roughness: 0.5
+} } />
+
 // Function option
 <NetworkFrame edgeRenderMode={d => d.friendshipLevel === "no so great" ? "sketchy" : undefined} />
+```
+
+### canvasEdges: { _boolean_ | _function_ }
+
+If _canvasEdges_ is specified, renders edge elements in Canvas. The _canvasEdges_ attribute accepts a _boolean_ or a _function_ that evaluates a connector and returns a boolean that determines whether or not to render the area to [`Canvas`](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API) instead of [`SVG`](https://developer.mozilla.org/en-US/docs/Web/SVG).
+
+```jsx
+/*Boolean option */
+<NetworkFrame canvasEdges={ true } ... />
+
+/*Function option */
+<NetworkFrame canvasEdges={ (d, i) => } ... />
 ```
 
 ### edgeType { _string_ | _object_ | _function_ }

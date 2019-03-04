@@ -40,17 +40,22 @@ export default () => (
 - [Piece Rendering](#piece-rendering)
 
   - [type { _string_ | _object_ | _func_ }](#type-string-object-func-)
-  - [data: { _array_ }](#data-array-)
-  - [style: { _object_ | _function_ }](#style-object-function-)
-  - [pieceClass: { _string_ | _function_ }](#piececlass-string-function-)
+  - [style: { _object_ | _function_ }](#style-object--function-)
+  - [pieceClass: { _string_ | _function_ }](#piececlass-string--function-)
+  - [canvasPieces { _boolean_ | _function_ }](#canvaspieces-boolean--function)
+  - [pieceRenderMode { _string_ | _function_ | _object_ }](#piecerendermode-string--function--object)
   - [connectorType: { _string_ | _function_ }](#connectorclass-string-function-)
   - [connectorStyle: { _object_ | _function_ }](#connectorclass-object-function-)
+  - [canvasConnectors { _boolean_ | _function_ }](#canvasconnectors-boolean--function)
+  - [connectorRenderMode { _string_ | _function_ | _object_ }](#connectorrendermode-string--function--object)
 
 - [Summary Rendering](#summary-rendering)
   - [summaryType { _string_ | _object_ | _func_ }](#summarytype-_string-object-func-)
   - [summaryStyle: { _object_ | _function_ }](#summarystyle-object-function-)
   - [summaryClass: { _string_ | _function_ }](#summaryclass-string-function-)
   - [summaryPosition: { _function_ }](#summaryposition-function-)
+  - [canvasSummaries { _boolean_ | _function_ }](#canvassummaries-boolean--function)
+  - [summaryRenderMode { _string_ | _function_ | _object_ }](#summaryrendermode-string--function--object)
 - [Annotation and Decoration](#annotation-and-decoration)
   - [tooltipContent: { _function_ }](#tooltipcontent-function-)
   - [axes: { _array_ }](#axes-array-)
@@ -298,6 +303,36 @@ Sets the css `class` of each piece element. This can be a string class name or a
 <OrdinalFrame pieceClass={d => d.classSettings} />
 ```
 
+### canvasPieces: { _boolean_ | _function_ }
+
+If _canvasPieces_ is specified, renders area elements in Canvas. The _canvasPieces_ attribute accepts a _boolean_ or a _function_ that evaluates a piece and returns a boolean that determines whether or not to render the area to [`Canvas`](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API) instead of [`SVG`](https://developer.mozilla.org/en-US/docs/Web/SVG).
+
+```jsx
+/*Boolean option */
+<OrdinalFrame canvasPieces="{" true } ... />
+
+/*Function option */ <OrdinalFrame canvasPieces={ (d, i) => } ... />
+```
+
+### renderMode: { _string_ | _function_ | _object_ }
+
+If _renderMode_ is specified, pieces are rendered in a non-photorealistic manner. This can be basic sketchy rendering using `"sketchy"` or primitive paint-style using `"painty"` or an object with `renderMode: "sketchy"` and properties matching those found in [roughjs](https://roughjs.com/) or a function that takes a line data object and returns a string or object such as that. Sketchy (but not painty) render mode is honored in canvas rendering.
+
+````jsx
+/*Boolean option */
+<OrdinalFrame renderMode={ "sketchy" } ... />
+
+/* Object option */
+<OrdinalFrame renderMode={ {
+  renderMode: "sketchy",
+  fillWeight: 3,
+  hachureGap: 3.5,
+  roughness: 0.5
+} } ... />
+
+/*Function option */
+<OrdinalFrame renderMode={ d => d.uncertain === true && "sketchy" } ... />
+
 ### connectorType: { _string_ | _function_ }
 
 Connectors in `OrdinalFrame` allow you to draw connections between elements in adjacent columns. The current, limited implementation is a simple test that if it returns true draws a link. This function is run on every piece, and it only tests for links to the next column (left to right in vertical, top to bottom in horizonal and clockwise in radial). For "bar" it draws a filled area, for "point" and "swarm" it draws a line.
@@ -308,7 +343,7 @@ The following code will draw a connection between elements in adjoining columns 
 
 ```jsx
 <OrdinalFrame connectorType={d => d.category} />
-```
+````
 
 ### connectorStyle: { _object_ | _function_ }
 
@@ -328,6 +363,38 @@ Since this is connecting two pieces you have access to both the `source` piece a
     }
   }}
 />
+```
+
+### canvasConnectors: { _boolean_ | _function_ }
+
+If _canvasConnectors_ is specified, renders area elements in Canvas. The _canvasConnectors_ attribute accepts a _boolean_ or a _function_ that evaluates a connector and returns a boolean that determines whether or not to render the area to [`Canvas`](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API) instead of [`SVG`](https://developer.mozilla.org/en-US/docs/Web/SVG).
+
+```jsx
+/*Boolean option */
+<OrdinalFrame canvasConnectors={ true } ... />
+
+/*Function option */ <OrdinalFrame canvasConnectors={ (d, i) => } ... />
+```
+
+### connectorRenderMode: { _string_ | _function_ | _object_ }
+
+If _connectorRenderMode_ is specified, pieces are rendered in a non-photorealistic manner. This can be basic sketchy rendering using `"sketchy"` or primitive paint-style using `"painty"` or an object with `renderMode: "sketchy"` and properties matching those found in [roughjs](https://roughjs.com/) or a function that takes a line data object and returns a string or object such as that. Sketchy (but not painty) render mode is honored in canvas rendering.
+
+```jsx
+/*Boolean option */
+<OrdinalFrame connectorRenderMode={ "sketchy" } ... />
+
+/* Object option */
+<OrdinalFrame connectorRenderMode={ {
+  renderMode: "sketchy",
+  fillWeight: 3,
+  hachureGap: 3.5,
+  roughness: 0.5
+} } ... />
+
+/*Function option */
+<OrdinalFrame connectorRenderMode={ d => d.uncertain === true && "sketchy" } ... />
+
 ```
 
 ## Summary Rendering
@@ -415,6 +482,38 @@ A string or function that takes a piece and returns a string that is assigned to
 ### summaryPosition: { _function_ }
 
 A function that takes a the `middle` of a `summary`, the `key`, and the index of the summary and returns a value that will be applied across the axis of the projection with `translate` (x for vertical projections, y for horizontal projections).
+
+### canvasSummaries: { _boolean_ | _function_ }
+
+If _canvasSummaries_ is specified, renders area elements in Canvas. The _canvasSummaries_ attribute accepts a _boolean_ or a _function_ that evaluates a summary and returns a boolean that determines whether or not to render the area to [`Canvas`](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API) instead of [`SVG`](https://developer.mozilla.org/en-US/docs/Web/SVG).
+
+```jsx
+/*Boolean option */
+<OrdinalFrame canvasSummaries={ true } ... />
+
+/*Function option */ <OrdinalFrame canvasSummaries={ (d, i) => } ... />
+```
+
+### summaryRenderMode: { _string_ | _function_ | _object_ }
+
+If _summaryRenderMode_ is specified, summaries are rendered in a non-photorealistic manner. This can be basic sketchy rendering using `"sketchy"` or primitive paint-style using `"painty"` or an object with `renderMode: "sketchy"` and properties matching those found in [roughjs](https://roughjs.com/) or a function that takes a line data object and returns a string or object such as that. Sketchy (but not painty) render mode is honored in canvas rendering.
+
+```jsx
+/*Boolean option */
+<OrdinalFrame summaryRenderMode={ "sketchy" } ... />
+
+/* Object option */
+<OrdinalFrame summaryRenderMode={ {
+  renderMode: "sketchy",
+  fillWeight: 3,
+  hachureGap: 3.5,
+  roughness: 0.5
+} } ... />
+
+/*Function option */
+<OrdinalFrame summaryRenderMode={ d => d.uncertain === true && "sketchy" } ... />
+
+```
 
 ## Annotation and Decoration
 

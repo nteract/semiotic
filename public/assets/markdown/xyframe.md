@@ -38,6 +38,7 @@ export default () => <XYFrame
   - [pointClass: { _string_ | _function_ }](#pointclass-string-function-)
   - [canvasPoints: { _boolean_ | _function_ }](#canvaspoints-boolean-function-)
   - [customPointMark: { _JSX_ | _function_ }](#custompointmark-jsx-function-)
+  - [pointRenderMode { _string_ | _function_ | _object_ }](#pointrendermode-string--function--object)
 - [Line Rendering](#line-rendering)
   - [lines: { [_data_] }](#lines-data-)
   - [lineDataAccessor: { _string_ | _function_ }](#linedataaccessor-string-function-)
@@ -48,6 +49,7 @@ export default () => <XYFrame
   - [customLineMark: { _function_ }](#customlinemark-function-)
   - [canvasLines: { _boolean_ | _function_ }](#canvaslines-boolean-function-)
   - [defined: { _function_ }](#defined-function-)
+  - [lineRenderMode { _string_ | _function_ | _object_ }](#linerendermode-string--function--object)
 - [Summary Rendering](#summary-rendering)
   - [summaries: { [_data_] }](#summaries-data-)
   - [summaryDataAccessor: { _string_ | _function_ }](#summarydataaccessor-string-function-)
@@ -55,6 +57,7 @@ export default () => <XYFrame
   - [summaryClass: { _string_ | _function_ }](#summaryclass-string-function-)
   - [customSummaryMark: { _function_ }](#customsummarymark-function-)
   - [canvasSummaries: { _boolean_ | _function_ }](#canvassummaries-boolean-function-)
+  - [summaryRenderMode { _string_ | _function_ | _object_ }](#summaryrendermode-string--function--object)
 - [Annotation and Decoration](#annotation-and-decoration)
 
   - [tooltipContent: { _function_ }](#tooltipcontent-function-)
@@ -330,6 +333,27 @@ A function taking the point data and returning SVG JSX representation of the poi
 <XYFrame customPointMark={ d => (<Mark markType="rect" />) } ... />
 ```
 
+### pointRenderMode: { _string_ | _function_ | _object_ }
+
+If _pointRenderMode_ is specified, points are rendered in a non-photorealistic manner. This can be basic sketchy rendering using `"sketchy"` or primitive paint-style using `"painty"` or an object with `renderMode: "sketchy"` and properties matching those found in [roughjs](https://roughjs.com/) or a function that takes a line data object and returns a string or object such as that. Sketchy (but not painty) render mode is honored in canvas rendering.
+
+```jsx
+/*Boolean option */
+<XYFrame pointRenderMode={ "sketchy" } ... />
+
+/* Object option */
+<XYFrame pointRenderMode={ {
+  renderMode: "sketchy",
+  fillWeight: 3,
+  hachureGap: 3.5,
+  roughness: 0.5
+} } ... />
+
+/*Function option */
+<XYFrame pointRenderMode={ d => d.uncertain === true && "sketchy" } ... />
+
+```
+
 ## Line Rendering
 
 ### lines: { [_data_] }
@@ -465,6 +489,27 @@ If _canvasLines_ is specified, renders line elements in [`Canvas`](https://devel
 <XYFrame canvasLines={ (d, i) => i%2 === 0 } ... />
 ```
 
+### lineRenderMode: { _string_ | _function_ | _object_ }
+
+If _lineRenderMode_ is specified, lines are rendered in a non-photorealistic manner. This can be basic sketchy rendering using `"sketchy"` or primitive paint-style using `"painty"` or an object with `renderMode: "sketchy"` and properties matching those found in [roughjs](https://roughjs.com/) or a function that takes a line data object and returns a string or object such as that. Sketchy (but not painty) render mode is honored in canvas rendering.
+
+```jsx
+/*Boolean option */
+<XYFrame lineRenderMode={ "sketchy" } ... />
+
+/* Object option */
+<XYFrame lineRenderMode={ {
+  renderMode: "sketchy",
+  fillWeight: 3,
+  hachureGap: 3.5,
+  roughness: 0.5
+} } ... />
+
+/*Function option */
+<XYFrame lineRenderMode={ d => d.uncertain === true && "sketchy" } ... />
+
+```
+
 ### defined: { _function_ }
 
 If _defined_ is specified, sets the accessor function that controls where the line is defined. Similar to [D3's `line.defined` API](https://github.com/d3/d3-shape/blob/master/README.md#line_defined). Lines will be rendered with gaps where there is no defined data.
@@ -562,11 +607,32 @@ A function taking the summary datapoint and returning SVG JSX representation of 
 
 If _canvasAreas_ is specified, renders area elements in Canvas. The _canvasAreas_ attribute accepts a _boolean_ or a _function_ that evaluates an area and returns a boolean that determines whether or not to render the area to [`Canvas`](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API) instead of [`SVG`](https://developer.mozilla.org/en-US/docs/Web/SVG).
 
-```html
+```jsx
 /*Boolean option */
 <XYFrame canvasAreas="{" true } ... />
 
 /*Function option */ <XYFrame canvasAreas={ (d, i) => } ... />
+```
+
+### summaryRenderMode: { _string_ | _function_ | _object_ }
+
+If _summaryRenderMode_ is specified, summaries are rendered in a non-photorealistic manner. This can be basic sketchy rendering using `"sketchy"` or primitive paint-style using `"painty"` or an object with `renderMode: "sketchy"` and properties matching those found in [roughjs](https://roughjs.com/) or a function that takes a line data object and returns a string or object such as that. Sketchy (but not painty) render mode is honored in canvas rendering.
+
+```jsx
+/*Boolean option */
+<XYFrame summaryRenderMode={ "sketchy" } ... />
+
+/* Object option */
+<XYFrame summaryRenderMode={ {
+  renderMode: "sketchy",
+  fillWeight: 3,
+  hachureGap: 3.5,
+  roughness: 0.5
+} } ... />
+
+/*Function option */
+<XYFrame summaryRenderMode={ d => d.uncertain === true && "sketchy" } ... />
+
 ```
 
 ## Annotation and Decoration
