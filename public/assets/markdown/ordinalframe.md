@@ -36,6 +36,7 @@ export default () => (
   - [invertR: bool](#invertr-bool)
   - [oPadding: { _number_ }](#opadding-number-)
   - [dynamicColumnWidth: { _string_ | \_func}](#dynamiccolumnwidth-string-func-)
+  - [pixelColumnWidth: { _number_ }](#pixelcolumnwidth-number-)
   - [baseMarkProps: { _object_ }](#basemarkprops-object-)
   - [renderKey: { _string_ | _function_ }](#renderkey-string-function-)
 - [Piece Rendering](#piece-rendering)

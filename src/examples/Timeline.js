@@ -200,7 +200,7 @@ const frameProps = {
   rAccessor: d => [d.start, d.end],
   oAccessor: "name",
   projection: "horizontal",
-  axes: [{ orient: "left", ticks: 10 }],
+  axes: [{ orient: "bottom", ticks: 10 }],
   type: "timeline",
   oLabel: (d, i) => {
     return (
