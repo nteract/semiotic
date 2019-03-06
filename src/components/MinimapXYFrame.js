@@ -49,7 +49,8 @@ class MinimapXYFrame extends React.Component {
       yAccessor: yAccessor,
       points: points,
       lines: lines,
-      summaries: summaries,
+      areas: areas,
+      summaries: "areas" in minimap ? minimap.areas : summaries, // for backwards compatibility
       lineDataAccessor: lineDataAccessor,
       xBrushable: true,
       yBrushable: true,
@@ -101,6 +102,7 @@ MinimapXYFrame.propTypes = {
   yAccessor: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
   points: PropTypes.array,
   lines: PropTypes.array,
+  areas: PropTypes.array,
   summaries: PropTypes.array,
   lineDataAccessor: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
   lineType: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
