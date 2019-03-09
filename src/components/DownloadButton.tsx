@@ -1,8 +1,7 @@
-// @flow
-import React from "react"
-import json2csv from "json2csv"
+import * as React from "react"
+import * as json2csv from "json2csv"
 
-export const downloadCSV = (csvName: string, data: *) => {
+export const downloadCSV = (csvName: string, data: any) => {
   json2csv(Object.assign({}, { data: data }), (err, csv) => {
     const blob = new Blob([csv], { type: "text/csv" })
 
@@ -26,7 +25,7 @@ type DownloadButtonProps = {
   csvName: string,
   width?: number,
   label?: string,
-  data: *
+  data: any
 }
 
 class DownloadButton extends React.Component<DownloadButtonProps, null> {
@@ -34,13 +33,13 @@ class DownloadButton extends React.Component<DownloadButtonProps, null> {
 
   render() {
     const { width, label = "Download" } = this.props
-    const style = {}
+    const style: { width?: string } = {}
     if (width) {
       style.width = `${width}px`
     }
     return (
       <div className="download-div" style={style}>
-        <button alt="download" onClick={this.onClick}>
+        <button onClick={this.onClick}>
           <a>{label}</a>
         </button>
       </div>

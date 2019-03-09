@@ -1,21 +1,23 @@
-// @flow
-
 import labeler from "./d3labeler"
-// import { AnnotationHandling, AnnotationLayerProps } from "../types/annotationTypes"
+import { AnnotationProps } from "../types/annotationTypes"
+
+type NoteType = {
+  props: AnnotationProps
+}
 
 type AnnotationTypes = "marginalia" | "bump" | false
 
-type Layout = {
-  type: AnnotationTypes,
-  orient?: "nearest" | "left" | "right" | "top" | "bottom" | Array<string>,
-  characterWidth?: number,
-  lineWidth?: number,
-  lineHeight?: number,
-  padding?: number,
-  iterations?: number,
-  pointSizeFunction?: Function,
-  labelSizeFunction?: Function,
-  marginOffset?: number
+interface Layout {
+  type: AnnotationTypes;
+  orient?: "nearest" | "left" | "right" | "top" | "bottom" | string[];
+  characterWidth?: number;
+  lineWidth?: number;
+  lineHeight?: number;
+  padding?: number;
+  iterations?: number;
+  pointSizeFunction?: Function;
+  labelSizeFunction?: Function;
+  marginOffset?: number;
 }
 
 const basicLabelSizeFunction = (
@@ -35,9 +37,9 @@ const basicLabelSizeFunction = (
 }
 
 export function bumpAnnotations(
-  adjustableNotes: Array<Object>,
+  adjustableNotes: NoteType[],
   processor: Layout,
-  size: Array<number>,
+  size: number[],
   propsPointSizeFunction?: Function,
   propsLabelSizeFunction?: Function
 ) {
@@ -52,12 +54,12 @@ export function bumpAnnotations(
 
   const labels = adjustableNotes.map((d, i) => {
     const anchorX =
-      d.props.noteData.x +
+      (d.props.noteData.x[0] || d.props.noteData.x) +
       (d.props.noteData.dx !== undefined
         ? d.props.noteData.dx
         : ((i % 3) - 1) * -10)
     const anchorY =
-      d.props.noteData.y +
+      (d.props.noteData.y[0] || d.props.noteData.y) +
       (d.props.noteData.dy !== undefined
         ? d.props.noteData.dy
         : ((i % 3) - 1) * 10)

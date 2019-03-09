@@ -1,46 +1,49 @@
-// @flow
 // modules
-import React from "react"
+import * as React from "react"
 //import { load } from 'opentype.js'
 import { bumpAnnotations } from "./annotationLayerBehavior/annotationHandling"
-import PropTypes from "prop-types"
+
 import Legend from "./Legend"
 import Annotation from "./Annotation"
 import labella from "labella"
 import SpanOrDiv from "./SpanOrDiv"
-import type {
+import {
   AnnotationHandling,
   AnnotationTypes,
-  AxisType
+  AxisType,
+  AnnotationProps
 } from "./types/annotationTypes"
 
-type AnnotationLayerProps = {
-  useSpans: boolean,
+interface NoteType {
+  key: string;
+  props: AnnotationProps;
+}
+
+interface AnnotationLayerProps {
+  useSpans: boolean;
   legendSettings?: {
     position: "right" | "left",
     title: string,
-    legendGroups: Array<Object>
-  },
-  margin: Object,
-  size: Array<number>,
-  axes?: Array<AxisType>,
-  annotationHandling?: AnnotationHandling | AnnotationTypes,
-  annotations: Array<Object>,
-  pointSizeFunction?: Function,
-  labelSizeFunction?: Function,
-  svgAnnotationRule: Function,
-  htmlAnnotationRule: Function
+    legendGroups: Object[]
+  };
+  margin: { top?: number, left?: number, right?: number, bottom?: number };
+  size: number[];
+  axes?: AxisType[];
+  annotationHandling?: AnnotationHandling | AnnotationTypes;
+  annotations: Object[];
+  pointSizeFunction?: Function;
+  labelSizeFunction?: Function;
+  svgAnnotationRule: Function;
+  htmlAnnotationRule: Function;
 }
 
-type State = {
-  svgAnnotations: Array<Object>,
-  htmlAnnotations: Array<Object>,
-  adjustedAnnotationsKey?: string,
-  adjustedAnnotationsDataVersion?: string,
-  adjustedAnnotations: Array<Object>
+interface AnnotationLayerState {
+  svgAnnotations: Object[];
+  htmlAnnotations: Object[];
+  adjustedAnnotationsKey?: string;
+  adjustedAnnotationsDataVersion?: string;
+  adjustedAnnotations: Object[];
 }
-
-type Props = AnnotationLayerProps
 
 function marginOffsetFn(orient, axisSettings, marginOffset) {
   if (typeof marginOffset === "number") {
@@ -71,12 +74,14 @@ function noteDataHeight(noteData, charWidth = 8, lineHeight = 20) {
   )
 }
 
-class AnnotationLayer extends React.Component<Props, State> {
-  constructor(props: Props) {
+class AnnotationLayer extends React.Component<
+  AnnotationLayerProps,
+  AnnotationLayerState
+> {
+  constructor(props: AnnotationLayerProps) {
     super(props)
 
     this.state = {
-      font: undefined,
       svgAnnotations: [],
       htmlAnnotations: [],
       adjustedAnnotations: [],
@@ -100,9 +105,9 @@ class AnnotationLayer extends React.Component<Props, State> {
     } */
 
   generateSVGAnnotations = (
-    props: Props,
-    annotations: Array<Object>
-  ): Array<Object> => {
+    props: AnnotationLayerProps,
+    annotations: Object[]
+  ): NoteType[] => {
     const renderedAnnotations = annotations
       .map((d, i) => props.svgAnnotationRule(d, i, props))
       .filter(d => d !== null && d !== undefined)
@@ -111,9 +116,9 @@ class AnnotationLayer extends React.Component<Props, State> {
   }
 
   generateHTMLAnnotations = (
-    props: Props,
-    annotations: Array<Object>
-  ): Array<Object> => {
+    props: AnnotationLayerProps,
+    annotations: Object[]
+  ): Object[] => {
     const renderedAnnotations = annotations
       .map((d, i) => props.htmlAnnotationRule(d, i, props))
       .filter(d => d !== null && d !== undefined)
@@ -122,9 +127,9 @@ class AnnotationLayer extends React.Component<Props, State> {
   }
 
   processAnnotations = (
-    adjustableAnnotations: Array<Object>,
+    adjustableAnnotations: NoteType[],
     annotationProcessor: AnnotationHandling,
-    props: Props
+    props: AnnotationLayerProps
   ) => {
     const { layout = { type: false } } = annotationProcessor
 
@@ -163,12 +168,15 @@ class AnnotationLayer extends React.Component<Props, State> {
         orient === "nearest"
           ? ["left", "right", "top", "bottom"]
           : Array.isArray(orient)
-            ? orient
-            : [orient]
-      const finalAxisMarginOverride = Object.assign({},
-        { top:null, right:null, bottom:null, left:null },
-        axisMarginOverride
-      )
+          ? orient
+          : [orient]
+      const finalAxisMarginOverride = {
+        top: null,
+        right: null,
+        bottom: null,
+        left: null,
+        ...axisMarginOverride
+      }
 
       const leftOn = finalOrientation.find(d => d === "left")
       const rightOn = finalOrientation.find(d => d === "right")
@@ -180,7 +188,7 @@ class AnnotationLayer extends React.Component<Props, State> {
       const topNodes = []
       const bottomNodes = []
 
-      adjustableAnnotations.forEach(aNote => {
+      adjustableAnnotations.forEach((aNote: NoteType) => {
         const noteData = aNote.props.noteData
         const noteX = noteData.x[0] || noteData.x
         const noteY = noteData.y[0] || noteData.y
@@ -206,9 +214,14 @@ class AnnotationLayer extends React.Component<Props, State> {
       //Adjust the margins based on which regions are active
 
       const leftForce = new labella.Force({
-        minPos: finalAxisMarginOverride.top? 0 + finalAxisMarginOverride.top: 0 - margin.top,
-        maxPos: finalAxisMarginOverride.bottom? size[1] - finalAxisMarginOverride.bottom
-          : bottomOn ? size[1]: size[1] + margin.bottom
+        minPos: finalAxisMarginOverride.top
+          ? 0 + finalAxisMarginOverride.top
+          : 0 - margin.top,
+        maxPos: finalAxisMarginOverride.bottom
+          ? size[1] - finalAxisMarginOverride.bottom
+          : bottomOn
+          ? size[1]
+          : size[1] + margin.bottom
       })
         .nodes(
           leftNodes.map(d => {
@@ -223,9 +236,13 @@ class AnnotationLayer extends React.Component<Props, State> {
         .compute()
 
       const rightForce = new labella.Force({
-        minPos: finalAxisMarginOverride.top? 0 + finalAxisMarginOverride.top
-          : topOn ? 0 : 0 - margin.top,
-        maxPos:  finalAxisMarginOverride.bottom? size[1] - finalAxisMarginOverride.bottom
+        minPos: finalAxisMarginOverride.top
+          ? 0 + finalAxisMarginOverride.top
+          : topOn
+          ? 0
+          : 0 - margin.top,
+        maxPos: finalAxisMarginOverride.bottom
+          ? size[1] - finalAxisMarginOverride.bottom
           : size[1] + margin.bottom
       })
         .nodes(
@@ -241,9 +258,13 @@ class AnnotationLayer extends React.Component<Props, State> {
         .compute()
 
       const topForce = new labella.Force({
-        minPos: finalAxisMarginOverride.left? 0 + finalAxisMarginOverride.left
-          : leftOn ? 0 : 0 - margin.left,
-        maxPos: finalAxisMarginOverride.right? size[0] - finalAxisMarginOverride.right
+        minPos: finalAxisMarginOverride.left
+          ? 0 + finalAxisMarginOverride.left
+          : leftOn
+          ? 0
+          : 0 - margin.left,
+        maxPos: finalAxisMarginOverride.right
+          ? size[0] - finalAxisMarginOverride.right
           : size[0] + margin.right
       })
         .nodes(
@@ -258,10 +279,14 @@ class AnnotationLayer extends React.Component<Props, State> {
         .compute()
 
       const bottomForce = new labella.Force({
-        minPos: finalAxisMarginOverride.left? 0 + finalAxisMarginOverride.left
+        minPos: finalAxisMarginOverride.left
+          ? 0 + finalAxisMarginOverride.left
           : 0 - margin.left,
-        maxPos: finalAxisMarginOverride.right? size[0] - finalAxisMarginOverride.right
-          : rightOn ? size[0] : size[0] + margin.right
+        maxPos: finalAxisMarginOverride.right
+          ? size[0] - finalAxisMarginOverride.right
+          : rightOn
+          ? size[0]
+          : size[0] + margin.right
       })
         .nodes(
           bottomNodes.map(d => {
@@ -354,7 +379,7 @@ class AnnotationLayer extends React.Component<Props, State> {
     return adjustableAnnotations
   }
 
-  createAnnotations = (props: Props) => {
+  createAnnotations = (props: AnnotationLayerProps) => {
     let renderedSVGAnnotations = this.state.svgAnnotations,
       renderedHTMLAnnotations = [],
       adjustedAnnotations = this.state.adjustedAnnotations,
@@ -379,7 +404,7 @@ class AnnotationLayer extends React.Component<Props, State> {
     const { dataVersion = "" } = annotationProcessor
 
     if (svgAnnotationRule) {
-      const initialSVGAnnotations = this.generateSVGAnnotations(
+      const initialSVGAnnotations: NoteType[] = this.generateSVGAnnotations(
         props,
         annotations
       )
@@ -409,7 +434,7 @@ class AnnotationLayer extends React.Component<Props, State> {
         )
       } else {
         //Handle when style or other attributes change
-        adjustedAnnotations = adjustedAnnotations.map((d, i) => {
+        adjustedAnnotations = adjustedAnnotations.map((d: NoteType, i) => {
           const newNoteData = Object.assign(
             adjustableAnnotations[i].props.noteData,
             {
@@ -442,7 +467,7 @@ class AnnotationLayer extends React.Component<Props, State> {
     this.createAnnotations(this.props)
   }
 
-  componentWillReceiveProps(nextProps: Props) {
+  componentWillReceiveProps(nextProps: AnnotationLayerProps) {
     this.createAnnotations(nextProps)
   }
 
@@ -464,14 +489,6 @@ class AnnotationLayer extends React.Component<Props, State> {
         </g>
       )
     }
-    const svgStyle = {
-      background: "none",
-      pointerEvents: "none",
-      position: "absolute",
-      left: `${margin.left}px`,
-      top: `${margin.top}px`,
-      overflow: "visible"
-    }
 
     return (
       <SpanOrDiv
@@ -487,7 +504,14 @@ class AnnotationLayer extends React.Component<Props, State> {
           className="annotation-layer-svg"
           height={size[1]}
           width={size[0]}
-          style={svgStyle}
+          style={{
+            background: "none",
+            pointerEvents: "none",
+            position: "absolute",
+            left: `${margin.left}px`,
+            top: `${margin.top}px`,
+            overflow: "visible"
+          }}
         >
           <g>
             {renderedLegend}
@@ -512,20 +536,6 @@ class AnnotationLayer extends React.Component<Props, State> {
       </SpanOrDiv>
     )
   }
-}
-
-AnnotationLayer.propTypes = {
-  useSpans: PropTypes.bool,
-  legendSettings: PropTypes.object,
-  margin: PropTypes.object,
-  size: PropTypes.array,
-  annotations: PropTypes.array,
-  annotationHandling: PropTypes.object,
-  pointSizeFunction: PropTypes.func,
-  labelSizeFunction: PropTypes.func,
-  svgAnnotationRule: PropTypes.func,
-  htmlAnnotationRule: PropTypes.func,
-  axes: PropTypes.array
 }
 
 export default AnnotationLayer

@@ -1,6 +1,4 @@
-// @flow
-
-import React from "react"
+import * as React from "react"
 
 import {
   /*forceCenter,*/ forceSimulation,
@@ -101,6 +99,7 @@ import { nodesEdgesFromHierarchy } from "./processing/network"
 const emptyArray = []
 
 const baseNodeProps = {
+  id: "id",
   degree: 0,
   inDegree: 0,
   outDegree: 0,
@@ -134,7 +133,8 @@ const baseGraphSettings = {
   edgeHash: new Map(),
   nodes: [],
   edges: [],
-  hierarchicalNetwork: false
+  hierarchicalNetwork: false,
+  type: "force"
 }
 
 const basicMiddle = d => ({
@@ -279,7 +279,7 @@ function breadthFirstCompontents(baseNodes, hash) {
         componentHash[componentID].componentNodes.push(node)
         componentHash[componentID].componentEdges.push(...hashNode.edges)
         const traversibleNodes = [...hashNode.connectedNodes]
-        traverseNodesBF(traversibleNodes)
+        traverseNodesBF(traversibleNodes, hash)
       }
     })
   }
@@ -320,160 +320,19 @@ const matrixify = ({ edgeHash, nodes, edgeWidthAccessor, nodeIDAccessor }) => {
   return matrix
 }
 
-import type { Node } from "react"
+import { GenericObject } from "./types/generalTypes"
 
-import type { CanvasPostProcessTypes } from "./types/generalTypes"
+import {
+  NodeType,
+  NetworkFrameProps,
+  NetworkFrameState,
+  NetworkSettingsType
+} from "./types/networkTypes"
 
-import type { AnnotationHandling } from "./types/annotationTypes"
-
-type NodeType = {
-  degree: number,
-  inDegree: number,
-  outDegree: number,
-  id?: string,
-  createdByFrame?: boolean,
-  x: number,
-  y: number,
-  x1: number,
-  x0: number,
-  y1: number,
-  y0: number,
-  height: number,
-  width: number,
-  radius: number,
-  direction: string,
-  textHeight: number,
-  textWidth: number,
-  fontSize: number,
-  fontWeight?: number,
-  rotate?: number,
-  scale: number,
-  _NWFText?: string,
-  text?: string,
-  r: number,
-  nodeSize: 0,
-  component: number,
-  shapeNode: boolean
-}
-
-type NetworkSettingsType = {
-  type: string,
-  hierarchyChildren?: Function,
-  nodes?: Array<Object>,
-  edges?: Array<Object>,
-  iterations?: number,
-  width?: number,
-  height?: number,
-  projection?: "horizontal" | "radial" | "vertical",
-  customSankey?: Function,
-  groupWidth?: number,
-  padAngle?: number,
-  orient?: string,
-  nodePadding?: number,
-  nodePaddingRatio?: number,
-  nodeWidth?: number,
-  direction?: string,
-  fontSize?: number,
-  rotate?: Function,
-  fontWeight?: number,
-  textAccessor?: Function,
-  edgeStrength?: number,
-  distanceMax?: number,
-  edgeDistance?: number,
-  forceManyBody?: Function | number,
-  hierarchicalNetwork: boolean,
-  graphSettings: Object,
-  sortGroups?: Function
-}
-
-type State = {
-  dataVersion?: string,
-  adjustedPosition: Array<number>,
-  adjustedSize: Array<number>,
-  backgroundGraphics?: Node | Function,
-  foregroundGraphics?: Node | Function,
-  title: Object,
-  renderNumber: number,
-  nodeData: Array<Object>,
-  edgeData: Array<Object>,
-  projectedNodes: Array<Object>,
-  projectedEdges: Array<Object>,
-  projectedXYPoints: Array<Object>,
-  overlay: Array<Object>,
-  nodeIDAccessor: Function,
-  sourceAccessor: Function,
-  targetAccessor: Function,
-  nodeSizeAccessor: Function,
-  edgeWidthAccessor: Function,
-  margin: Object,
-  legendSettings: Object,
-  nodeLabelAnnotations: Array<Object>,
-  graphSettings: Object,
-  networkFrameRender: Object
-}
-
-type Props = {
-  dataVersion?: string,
-  name: string,
-  graph?: Object,
-  nodes?: Array<Object>,
-  edges?: Array<Object> | Object,
-  networkType?: string | Object,
-  size: Array<number>,
-  nodeStyle?: Object | Function,
-  nodeClass?: string | Function,
-  canvasNodes?: boolean | Function,
-  edgeStyle?: Object | Function,
-  edgeClass?: string | Function,
-  canvasEdges?: boolean | Function,
-  nodeRenderMode?: string | Function,
-  edgeRenderMode?: string | Function,
-  nodeLabels?: boolean | Function,
-  title?: Node,
-  legend?: Object,
-  edgeRenderKey?: Function,
-  nodeRenderKey?: Function,
-  foregroundGraphics?: Node,
-  backgroundGraphics?: Node,
-  additionalDefs?: Node,
-  svgAnnotationRules?: Function,
-  htmlAnnotationRules?: Function,
-  tooltipContent?: Function,
-  annotations: Array<Object>,
-  annotationSettings?: AnnotationHandling,
-  className?: string,
-  customClickBehavior?: Function,
-  customDoubleClickBehavior?: Function,
-  customHoverBehavior?: Function,
-  matte?: Object,
-  useSpans?: boolean,
-  beforeElements?: Node,
-  afterElements?: Node,
-  interaction?: Object,
-  hoverAnnotation?: boolean | string | Array<Object | Function>,
-  download?: boolean,
-  downloadFields?: Array<string>,
-  baseMarkProps?: Object,
-  canvasPostProcess?: CanvasPostProcessTypes,
-  disableContext?: boolean,
-  edgeWidthAccessor?: string | Function,
-  nodeSizeAccessor?: number | string | Function,
-  targetAccessor?: string | Function,
-  sourceAccessor?: string | Function,
-  nodeIDAccessor?: string | Function,
-  edgeType?: string | Function,
-  customNodeIcon?: Function,
-  customEdgeIcon?: Function,
-  margin?: number | Object,
-  onNodeOut?: Function,
-  onNodeClick?: Function,
-  onNodeEnter?: Function,
-  renderOrder?: $ReadOnlyArray<"edges" | "nodes">,
-  filterRenderedNodes: Function,
-  onUnmount?: Function
-}
-
-class NetworkFrame extends React.Component<Props, State> {
+class NetworkFrame extends React.Component<
+  NetworkFrameProps,
+  NetworkFrameState
+> {
   static defaultProps = {
     annotations: [],
     foregroundGraphics: [],
@@ -482,12 +341,12 @@ class NetworkFrame extends React.Component<Props, State> {
     className: "",
     name: "networkframe",
     networkType: { type: "force", iterations: 500 },
-    filterRenderedNodes: (d: Object) => d.id !== "root-generated"
+    filterRenderedNodes: (d: NodeType) => d.id !== "root-generated"
   }
 
   static displayName = "NetworkFrame"
 
-  constructor(props: Props) {
+  constructor(props: NetworkFrameProps) {
     super(props)
 
     this.state = {
@@ -510,16 +369,16 @@ class NetworkFrame extends React.Component<Props, State> {
         edgeHash: new Map(),
         hierarchicalNetwork: false
       },
-      edgeWidthAccessor: stringToFn("weight"),
+      edgeWidthAccessor: stringToFn<number>("weight"),
       legendSettings: {},
       margin: { top: 0, left: 0, right: 0, bottom: 0 },
       networkFrameRender: {},
-      nodeIDAccessor: stringToFn("id"),
+      nodeIDAccessor: stringToFn<string>("id"),
       nodeSizeAccessor: genericFunction(5),
       overlay: [],
       projectedXYPoints: [],
-      sourceAccessor: stringToFn("source"),
-      targetAccessor: stringToFn("target"),
+      sourceAccessor: stringToFn<string | GenericObject>("source"),
+      targetAccessor: stringToFn<string | GenericObject>("target"),
       title: { title: undefined }
     }
   }
@@ -549,7 +408,7 @@ class NetworkFrame extends React.Component<Props, State> {
     this.calculateNetworkFrame(this.props)
   }
 
-  componentWillReceiveProps(nextProps: Props) {
+  componentWillReceiveProps(nextProps: NetworkFrameProps) {
     if (
       (this.state.dataVersion &&
         this.state.dataVersion !== nextProps.dataVersion) ||
@@ -586,11 +445,17 @@ class NetworkFrame extends React.Component<Props, State> {
     }
   }
 
-  calculateNetworkFrame(currentProps: Props) {
+  calculateNetworkFrame(currentProps: NetworkFrameProps) {
     const {
       graph,
-      nodes = (graph && graph.nodes) || emptyArray,
-      edges = (graph && graph.edges) || graph || emptyArray,
+      nodes = Array.isArray(graph) || typeof graph === "function"
+        ? emptyArray
+        : graph.nodes || emptyArray,
+      edges = typeof graph === "function"
+        ? emptyArray
+        : Array.isArray(graph)
+        ? graph
+        : graph.edges || emptyArray,
       networkType,
       size,
       nodeStyle,
@@ -668,12 +533,15 @@ class NetworkFrame extends React.Component<Props, State> {
     const createPointLayer =
       ["treemap", "partition", "sankey"].indexOf(networkSettings.type) !== -1
 
-    const nodeIDAccessor = stringToFn(currentProps.nodeIDAccessor, d => d.id)
-    const sourceAccessor = stringToFn(
+    const nodeIDAccessor = stringToFn<string>(
+      currentProps.nodeIDAccessor,
+      d => d.id
+    )
+    const sourceAccessor = stringToFn<string | GenericObject>(
       currentProps.sourceAccessor,
       d => d.source
     )
-    const targetAccessor = stringToFn(
+    const targetAccessor = stringToFn<string | GenericObject>(
       currentProps.targetAccessor,
       d => d.target
     )
@@ -681,16 +549,20 @@ class NetworkFrame extends React.Component<Props, State> {
     const nodeSizeAccessor: Function =
       typeof currentProps.nodeSizeAccessor === "number"
         ? genericFunction(currentProps.nodeSizeAccessor)
-        : stringToFn(currentProps.nodeSizeAccessor, d => d.r || 5)
-    const edgeWidthAccessor = stringToFn(
+        : stringToFn<number>(currentProps.nodeSizeAccessor, d => d.r || 5)
+    const edgeWidthAccessor = stringToFn<number>(
       currentProps.edgeWidthAccessor,
       d => d.weight || 1
     )
-    const nodeStyleFn = stringToFn(nodeStyle, () => ({}), true)
-    const nodeClassFn = stringToFn(nodeClass, () => "", true)
-    const nodeRenderModeFn = stringToFn(nodeRenderMode, undefined, true)
+    const nodeStyleFn = stringToFn<GenericObject>(nodeStyle, () => ({}), true)
+    const nodeClassFn = stringToFn<string>(nodeClass, () => "", true)
+    const nodeRenderModeFn = stringToFn<string | GenericObject>(
+      nodeRenderMode,
+      undefined,
+      true
+    )
     const nodeCanvasRenderFn =
-      canvasNodes && stringToFn(canvasNodes, undefined, true)
+      canvasNodes && stringToFn<boolean>(canvasNodes, undefined, true)
 
     let { projectedNodes, projectedEdges } = this.state
 
@@ -701,7 +573,11 @@ class NetworkFrame extends React.Component<Props, State> {
       this.state.graphSettings.edges !== edges ||
       hierarchicalTypeHash[networkSettings.type]
 
-    if (networkSettings.type === "dagre" && graph) {
+    if (
+      networkSettings.type === "dagre" &&
+      graph &&
+      typeof graph === "function"
+    ) {
       const dagreGraph = graph
       const dagreNodeHash = {}
       projectedNodes = dagreGraph.nodes().map(n => {
@@ -822,61 +698,59 @@ class NetworkFrame extends React.Component<Props, State> {
 
       baseNodeProps.shapeNode = createPointLayer
 
-      operationalEdges.forEach(edge => {
-        const source = sourceAccessor(edge)
-        const target = targetAccessor(edge)
-        const sourceTarget = [source, target]
-        sourceTarget.forEach(nodeDirection => {
-          if (!nodeHash.get(nodeDirection)) {
-            const nodeObject: NodeType =
-              typeof nodeDirection === "object"
-                ? {
-                    ...baseNodeProps,
-                    ...nodeDirection
-                  }
-                : {
-                    id: nodeDirection,
-                    ...baseNodeProps,
-                    createdByFrame: true
-                  }
-            const nodeIDValue = nodeObject.id || nodeIDAccessor(nodeObject)
-            nodeHierarchicalIDFill[nodeIDValue]
-              ? (nodeHierarchicalIDFill[nodeIDValue] += 1)
-              : (nodeHierarchicalIDFill[nodeIDValue] = 1)
-            if (!nodeObject.id) {
-              const nodeSuffix =
-                nodeHierarchicalIDFill[nodeIDValue] === 1
-                  ? ""
-                  : `-${nodeHierarchicalIDFill[nodeIDValue]}`
-              nodeObject.id = `${nodeIDValue}${nodeSuffix}`
+      if (Array.isArray(operationalEdges)) {
+        operationalEdges.forEach(edge => {
+          const source = sourceAccessor(edge)
+          const target = targetAccessor(edge)
+          const sourceTarget = [source, target]
+          sourceTarget.forEach(nodeDirection => {
+            if (!nodeHash.get(nodeDirection)) {
+              const nodeObject: NodeType =
+                typeof nodeDirection === "object"
+                  ? {
+                      ...baseNodeProps,
+                      ...nodeDirection
+                    }
+                  : {
+                      id: nodeDirection,
+                      ...baseNodeProps,
+                      createdByFrame: true
+                    }
+              const nodeIDValue = nodeObject.id || nodeIDAccessor(nodeObject)
+              nodeHierarchicalIDFill[nodeIDValue]
+                ? (nodeHierarchicalIDFill[nodeIDValue] += 1)
+                : (nodeHierarchicalIDFill[nodeIDValue] = 1)
+              if (!nodeObject.id) {
+                const nodeSuffix =
+                  nodeHierarchicalIDFill[nodeIDValue] === 1
+                    ? ""
+                    : `-${nodeHierarchicalIDFill[nodeIDValue]}`
+                nodeObject.id = `${nodeIDValue}${nodeSuffix}`
+              }
+
+              nodeHash.set(nodeDirection, nodeObject)
+              projectedNodes.push(nodeObject)
             }
+          })
 
-            nodeHash.set(nodeDirection, nodeObject)
-            projectedNodes.push(nodeObject)
-          }
+          const edgeWeight = edge.weight || 1
+
+          nodeHash.get(target).inDegree += edgeWeight
+          nodeHash.get(source).outDegree += edgeWeight
+          nodeHash.get(target).degree += edgeWeight
+          nodeHash.get(source).degree += edgeWeight
+
+          const edgeKey = `${nodeIDAccessor(source) || source}|${nodeIDAccessor(
+            target
+          ) || target}`
+          const newEdge = Object.assign({}, edge, {
+            source: nodeHash.get(source),
+            target: nodeHash.get(target)
+          })
+          edgeHash.set(edgeKey, newEdge)
+          projectedEdges.push(newEdge)
         })
-
-        const edgeWeight = edge.weight || 1
-
-        // $FlowFixMe
-        nodeHash.get(target).inDegree += edgeWeight
-        // $FlowFixMe
-        nodeHash.get(source).outDegree += edgeWeight
-        // $FlowFixMe
-        nodeHash.get(target).degree += edgeWeight
-        // $FlowFixMe
-        nodeHash.get(source).degree += edgeWeight
-
-        const edgeKey = `${nodeIDAccessor(source) || source}|${nodeIDAccessor(
-          target
-        ) || target}`
-        const newEdge = Object.assign({}, edge, {
-          source: nodeHash.get(source),
-          target: nodeHash.get(target)
-        })
-        edgeHash.set(edgeKey, newEdge)
-        projectedEdges.push(newEdge)
-      })
+      }
     } else {
       edgeHash = new Map()
       networkSettings.graphSettings.edgeHash = edgeHash
@@ -1589,10 +1463,15 @@ class NetworkFrame extends React.Component<Props, State> {
           return { type: "frame-hover", ...data[i], x: edgeX, y: edgeY }
         },
         data: projectedEdges,
-        styleFn: stringToFn(edgeStyle, () => ({}), true),
-        classFn: stringToFn(edgeClass, () => "", true),
-        renderMode: stringToFn(edgeRenderMode, undefined, true),
-        canvasRenderFn: canvasEdges && stringToFn(canvasEdges, undefined, true),
+        styleFn: stringToFn<GenericObject>(edgeStyle, () => ({}), true),
+        classFn: stringToFn<string>(edgeClass, () => "", true),
+        renderMode: stringToFn<string | GenericObject>(
+          edgeRenderMode,
+          undefined,
+          true
+        ),
+        canvasRenderFn:
+          canvasEdges && stringToFn<boolean>(canvasEdges, undefined, true),
         renderKeyFn: currentProps.edgeRenderKey
           ? currentProps.edgeRenderKey
           : d => d._NWFEdgeKey || `${d.source.id}-${d.target.id}`,
@@ -1766,8 +1645,8 @@ class NetworkFrame extends React.Component<Props, State> {
     i,
     annotationLayer
   }: {
-    d: Object,
-    i: number,
+    d: Object
+    i: number
     annotationLayer: Object
   }) => {
     const {
@@ -1886,8 +1765,8 @@ class NetworkFrame extends React.Component<Props, State> {
     i,
     annotationLayer
   }: {
-    d: Object,
-    i: number,
+    d: Object
+    i: number
     annotationLayer: Object
   }) => {
     const { tooltipContent, size, useSpans } = this.props

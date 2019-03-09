@@ -8,11 +8,11 @@ export const chuckCloseCanvasTransform = (
 
   const height =
     baseHeight +
-    (baseHeight % pixelSize === 0 ? 0 : pixelSize - baseHeight % pixelSize)
+    (baseHeight % pixelSize === 0 ? 0 : pixelSize - (baseHeight % pixelSize))
 
   const width =
     baseWidth +
-    (baseWidth % pixelSize === 0 ? 0 : pixelSize - baseWidth % pixelSize)
+    (baseWidth % pixelSize === 0 ? 0 : pixelSize - (baseWidth % pixelSize))
 
   const rgbStep = 4 * pixelSize
 
@@ -50,7 +50,9 @@ export const chuckCloseCanvasTransform = (
         }
       }
       pixelPoint = {
-        rgbEntries: Object.entries(rgbHash).sort((a, b) => b[1] - a[1]),
+        rgbEntries: Object.values(rgbHash).sort(
+          (a: number, b: number) => b - a
+        ),
         totalEntries: totalHash,
         x: (i / 4) % width,
         y: Math.floor(i / 4 / width),

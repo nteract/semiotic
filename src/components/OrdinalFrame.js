@@ -267,8 +267,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       axis: undefined,
       renderNumber: 0,
       oLabels: [],
-      oAccessor: stringToArrayFn("renderKey"),
-      rAccessor: stringToArrayFn("value"),
+      oAccessor: stringToArrayFn<string>("renderKey"),
+      rAccessor: stringToArrayFn<number>("value"),
       oScale: xScale,
       rScale: xScale,
       axes: undefined,
@@ -282,7 +282,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       oScaleType: scaleBand,
       orFrameRender: {},
       pieceDataXY: [],
-      pieceIDAccessor: stringToFn("semioticPieceID"),
+      pieceIDAccessor: stringToFn<string>("semioticPieceID"),
       projectedColumns: {},
       rExtent: [],
       rScaleType: scaleLinear(),
@@ -348,9 +348,9 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
     const summaryType = objectifyType(baseSummaryType)
     const pieceType = objectifyType(baseType)
     const connectorType = objectifyType(baseConnectorType)
-    const oAccessor = stringToArrayFn(baseOAccessor, d => d.renderKey)
-    const rAccessor = stringToArrayFn(baseRAccessor, d => d.value || 1)
-    const renderKey = stringToFn(baseRenderKey, (d, i) => i)
+    const oAccessor = stringToArrayFn<string>(baseOAccessor, d => d.renderKey)
+    const rAccessor = stringToArrayFn<number>(baseRAccessor, d => d.value || 1)
+    const renderKey = stringToFn<string>(baseRenderKey, (d, i) => i)
 
     /*    const eventListenersGenerator = generateOrdinalFrameEventListeners(
       customHoverBehavior,
@@ -359,11 +359,11 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
     ) */
     const eventListenersGenerator = () => ({})
 
-    const connectorStyle = stringToFn(baseConnectorStyle, () => ({}), true)
-    const summaryStyle = stringToFn(baseSummaryStyle, () => ({}), true)
-    const pieceStyle = stringToFn(baseStyle, () => ({}), true)
-    const pieceClass = stringToFn(basePieceClass, () => "", true)
-    const summaryClass = stringToFn(baseSummaryClass, () => "", true)
+    const connectorStyle = stringToFn<GenericObject>(baseConnectorStyle, () => ({}), true)
+    const summaryStyle = stringToFn<GenericObject>(baseSummaryStyle, () => ({}), true)
+    const pieceStyle = stringToFn<GenericObject>(baseStyle, () => ({}), true)
+    const pieceClass = stringToFn<string>(basePieceClass, () => "", true)
+    const summaryClass = stringToFn<string>(baseSummaryClass, () => "", true)
     const summaryPosition = baseSummaryPosition || (position => position)
     const title =
       typeof baseTitle === "object" &&
@@ -372,7 +372,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         ? baseTitle
         : { title: baseTitle, orient: "top" }
 
-    const pieceIDAccessor = stringToFn(basePieceIDAccessor, () => "")
+    const pieceIDAccessor = stringToFn<string>(basePieceIDAccessor, () => "")
 
     const { allData, multiExtents } = keyAndObjectifyBarData({
       data,
@@ -1105,10 +1105,10 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
     } = currentProps
 
     let pieceDataXY
-    const pieceRenderMode = stringToFn(renderMode, undefined, true)
-    const pieceCanvasRender = stringToFn(canvasPieces, undefined, true)
-    const summaryCanvasRender = stringToFn(canvasSummaries, undefined, true)
-    const connectorCanvasRender = stringToFn(canvasConnectors, undefined, true)
+    const pieceRenderMode = stringToFn<GenericObject | string>(renderMode, undefined, true)
+    const pieceCanvasRender = stringToFn<boolean>(canvasPieces, undefined, true)
+    const summaryCanvasRender = stringToFn<boolean>(canvasSummaries, undefined, true)
+    const connectorCanvasRender = stringToFn<boolean>(canvasConnectors, undefined, true)
 
     const pieceTypeForXY =
       pieceType.type && pieceType.type !== "none" ? pieceType.type : "point"
@@ -1148,10 +1148,10 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       calculatedSummaries = drawSummaries({
         data: projectedColumns,
         type: summaryType,
-        renderMode: stringToFn(summaryRenderMode, undefined, true),
-        styleFn: stringToFn(summaryStyle, () => ({}), true),
-        classFn: stringToFn(summaryClass, () => "", true),
-        canvasRender: stringToFn(canvasSummaries, undefined, true),
+        renderMode: stringToFn<GenericObject | string>(summaryRenderMode, undefined, true),
+        styleFn: stringToFn<GenericObject>(summaryStyle, () => ({}), true),
+        classFn: stringToFn<string>(summaryClass, () => "", true),
+        canvasRender: stringToFn<boolean>(canvasSummaries, undefined, true),
         positionFn: summaryPosition,
         projection,
         eventListenersGenerator,
@@ -1253,9 +1253,9 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         accessibleTransform: (data, i) => data[i],
         projection,
         data: keyedData,
-        styleFn: stringToFn(connectorStyle, () => ({}), true),
-        classFn: stringToFn(connectorClass, () => "", true),
-        renderMode: stringToFn(connectorRenderMode, undefined, true),
+        styleFn: stringToFn<GenericObject>(connectorStyle, () => ({}), true),
+        classFn: stringToFn<string>(connectorClass, () => "", true),
+        renderMode: stringToFn<GenericObject | string>(connectorRenderMode, undefined, true),
         canvasRender: connectorCanvasRender,
         behavior: orFrameConnectionRenderer,
         type: connectorType,
@@ -1278,8 +1278,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         data: calculatedSummaries,
         behavior: renderLaidOutSummaries,
         canvasRender: summaryCanvasRender,
-        styleFn: stringToFn(summaryStyle, () => ({}), true),
-        classFn: stringToFn(summaryClass, () => "", true)
+        styleFn: stringToFn<GenericObject>(summaryStyle, () => ({}), true),
+        classFn: stringToFn<string>(summaryClass, () => "", true)
       },
       pieces: {
         accessibleTransform: (data, i) => ({
@@ -1290,8 +1290,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         data: calculatedPieceData,
         behavior: renderLaidOutPieces,
         canvasRender: pieceCanvasRender,
-        styleFn: stringToFn(pieceStyle, () => ({}), true),
-        classFn: stringToFn(pieceClass, () => "", true),
+        styleFn: stringToFn<GenericObject>(pieceStyle, () => ({}), true),
+        classFn: stringToFn<string>(pieceClass, () => "", true),
         axis: arrayWrappedAxis,
         ariaLabel: typeAriaLabel
       }

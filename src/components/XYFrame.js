@@ -513,20 +513,20 @@ class XYFrame extends React.Component<XYFrameProps, State> {
     }
 
     const annotatedSettings = {
-      xAccessor: stringToArrayFn(xAccessor, (d: Array<number>) => d[0]),
-      yAccessor: stringToArrayFn(yAccessor, (d: Array<number>) => d[1]),
-      summaryDataAccessor: stringToArrayFn(
+      xAccessor: stringToArrayFn<number>(xAccessor, (d: Array<number>) => d[0]),
+      yAccessor: stringToArrayFn<number>(yAccessor, (d: Array<number>) => d[1]),
+      summaryDataAccessor: stringToArrayFn<number>(
         summaryDataAccessor,
         (d: Object | Array<number>) => (Array.isArray(d) ? d : d.coordinates)
       ),
-      lineDataAccessor: stringToArrayFn(
+      lineDataAccessor: stringToArrayFn<Array>(
         lineDataAccessor,
         (d: Object | Array<number>) => (Array.isArray(d) ? d : d.coordinates)
       ),
-      renderKeyFn: stringToFn(renderKey, (d, i) => `line-${i}`, true),
+      renderKeyFn: stringToFn<string>(renderKey, (d, i) => `line-${i}`, true),
       lineType: objectifyType(lineType),
       summaryType: objectifyType(summaryType || "basic"),
-      lineIDAccessor: stringToFn(lineIDAccessor, l => l.semioticLineID),
+      lineIDAccessor: stringToFn<string>(lineIDAccessor, l => l.semioticLineID),
       summaries:
         !summaries || (Array.isArray(summaries) && summaries.length === 0)
           ? undefined
@@ -563,9 +563,9 @@ class XYFrame extends React.Component<XYFrameProps, State> {
       annotatedSettings.lineType.y1 = () => 0
     }
     
-   const summaryStyleFn = stringToFn(summaryStyle, emptyObjectReturnFunction, true)
-   const summaryClassFn = stringToFn(summaryClass, emptyStringReturnFunction, true)
-   const summaryRenderModeFn = stringToFn(summaryRenderMode, undefined, true)
+   const summaryStyleFn = stringToFn<GenericObject>(summaryStyle, emptyObjectReturnFunction, true)
+   const summaryClassFn = stringToFn<string>(summaryClass, emptyStringReturnFunction, true)
+   const summaryRenderModeFn = stringToFn<GenericObject | string>(summaryRenderMode, undefined, true)
 
 
     const margin = calculateMargin({
@@ -843,10 +843,10 @@ class XYFrame extends React.Component<XYFrameProps, State> {
           type: "frame-hover"
         }),
         data: projectedLines,
-        styleFn: stringToFn(lineStyle, emptyObjectReturnFunction, true),
-        classFn: stringToFn(lineClass, emptyStringReturnFunction, true),
-        renderMode: stringToFn(lineRenderMode, undefined, true),
-        canvasRender: stringToFn(canvasLines, undefined, true),
+        styleFn: stringToFn<GenericObject>(lineStyle, emptyObjectReturnFunction, true),
+        classFn: stringToFn<string>(lineClass, emptyStringReturnFunction, true),
+        renderMode: stringToFn<GenericObject | string>(lineRenderMode, undefined, true),
+        canvasRender: stringToFn<boolean>(canvasLines, undefined, true),
         customMark: customLineMark,
         type: annotatedSettings.lineType,
         defined: defined,
@@ -861,7 +861,7 @@ class XYFrame extends React.Component<XYFrameProps, State> {
         styleFn: summaryStyleFn,
         classFn: summaryClassFn,
         renderMode: summaryRenderModeFn,
-        canvasRender: stringToFn(canvasSummaries, undefined, true),
+        canvasRender: stringToFn<boolean>(canvasSummaries, undefined, true),
         customMark: customSummaryMark,
         type: annotatedSettings.summaryType,
         renderKeyFn: annotatedSettings.renderKeyFn,
@@ -873,10 +873,10 @@ class XYFrame extends React.Component<XYFrameProps, State> {
           ...(data[i].data || data[i])
         }),
         data: projectedPoints,
-        styleFn: stringToFn(pointStyle, emptyObjectReturnFunction, true),
-        classFn: stringToFn(pointClass, emptyStringReturnFunction, true),
-        renderMode: stringToFn(pointRenderMode, undefined, true),
-        canvasRender: stringToFn(canvasPoints, undefined, true),
+        styleFn: stringToFn<GenericObject>(pointStyle, emptyObjectReturnFunction, true),
+        classFn: stringToFn<string>(pointClass, emptyStringReturnFunction, true),
+        renderMode: stringToFn<GenericObject | string>(pointRenderMode, undefined, true),
+        canvasRender: stringToFn<boolean>(canvasPoints, undefined, true),
         customMark: customPointMark,
         renderKeyFn: annotatedSettings.renderKeyFn,
         showLinePoints,
@@ -1408,11 +1408,11 @@ class XYFrame extends React.Component<XYFrameProps, State> {
             data: downloadData,
             xAccessor:
               download === "points" || points
-                ? stringToArrayFn(xAccessor)
+                ? stringToArrayFn<number>(xAccessor)
                 : undefined,
             yAccessor:
               download === "points" || points
-                ? stringToArrayFn(yAccessor)
+                ? stringToArrayFn<number>(yAccessor)
                 : undefined,
             fields: downloadFields
           })}

@@ -1,5 +1,3 @@
-// @flow
-
 import { projectLineData, projectSummaryData } from "../svg/lineDrawing"
 import {
   projectedX,
@@ -24,7 +22,19 @@ import { max, min } from "d3-array"
 
 import { extentValue } from "./unflowedFunctions"
 
-import type { ProjectedPoint, accessorType } from "../types/generalTypes"
+import {
+  ProjectedPoint,
+  ProjectedLine,
+  ProjectedSummary,
+  ProjectedBin,
+  RawSummary,
+  RawPoint,
+  RawLine,
+  LineTypeSettings,
+  SummaryTypeSettings,
+  AccessorFnType,
+  GenericObject
+} from "../types/generalTypes"
 
 const whichPointsHash = {
   top: projectedYTop,
@@ -32,73 +42,90 @@ const whichPointsHash = {
 }
 
 const builtInTransformations = {
-  "stackedarea": stackedArea,
+  stackedarea: stackedArea,
   "stackedarea-invert": stackedArea,
-  "stackedpercent": stackedArea,
+  stackedpercent: stackedArea,
   "stackedpercent-invert": stackedArea,
-  "linepercent": stackedArea,
-  "difference": differenceLine,
-  "bumparea": bumpChart,
-  "bumpline": bumpChart,
+  linepercent: stackedArea,
+  difference: differenceLine,
+  bumparea: bumpChart,
+  bumpline: bumpChart,
   "bumparea-invert": bumpChart,
-  "line": lineChart,
-  "area": lineChart,
-  "cumulative": cumulativeLine,
+  line: lineChart,
+  area: lineChart,
+  cumulative: cumulativeLine,
   "cumulative-reverse": cumulativeLine
 }
 
-export const stringToFn = (
-  accessor?: Function | string | boolean | Object,
-  defaultAccessor?: Function,
+type validStrFnTypes = string | GenericObject | number | Array<GenericObject>
+
+export function stringToFn<StrFnType extends validStrFnTypes>(
+  accessor?: ((args: GenericObject) => StrFnType) | string | StrFnType,
+  defaultAccessor?: (arg?: GenericObject) => StrFnType,
   raw?: boolean
-): Function => {
+) {
   if (!accessor && defaultAccessor) {
     return defaultAccessor
-  } else if (typeof accessor !== "function" && raw !== undefined) {
+  } else if (typeof accessor === "function") {
+    return accessor
+  } else if (raw === true) {
     return () => accessor
+  } else if (typeof accessor === "string") {
+    return (d: GenericObject) => d[accessor]
   }
 
-  return typeof accessor !== "function" ? (d: Object) => d[accessor] : accessor
+  return () => 0
 }
 
-export const stringToArrayFn = (
-  accessor?: Function | string | boolean | Object | accessorType,
-  defaultAccessor?: Function,
+export function stringToArrayFn<StrFnType extends validStrFnTypes>(
+  accessor?:
+    | ((arg?: GenericObject) => StrFnType)
+    | string
+    | StrFnType
+    | Array<((arg?: GenericObject) => StrFnType) | string | StrFnType>,
+  defaultAccessor?: (arg?: GenericObject) => StrFnType,
   raw?: boolean
-): Array<Function> => {
-  if (!accessor) {
-    return [stringToFn(accessor, defaultAccessor, raw)]
+): Array<(arg?: GenericObject) => StrFnType> {
+  if (accessor === undefined) {
+    return [stringToFn<StrFnType>(undefined, defaultAccessor, raw)]
   }
-  const arrayOfAccessors = Array.isArray(accessor) ? accessor : [accessor]
+  let arrayOfAccessors = []
+  if (Array.isArray(accessor)) {
+    arrayOfAccessors = accessor
+  } else {
+    arrayOfAccessors = [accessor]
+  }
 
-  return arrayOfAccessors.map(a => stringToFn(a, defaultAccessor, raw))
+  return arrayOfAccessors.map(a =>
+    stringToFn<StrFnType>(a, defaultAccessor, raw)
+  )
 }
 
 type CalculateDataTypes = {
-  lineDataAccessor: Array<Function>,
-  summaryDataAccessor: Array<Function>,
-  summaryStyleFn: Function,
-  summaryClassFn: Function,
-  summaryRenderModeFn: Function,
-  xAccessor: Array<Function>,
-  yAccessor: Array<Function>,
-  summaries?: Array<Object>,
-  points?: Array<Object>,
-  lines?: Array<Object>,
-  lineType: Object,
-  showLinePoints?: boolean | string,
-  showSummaryPoints?: boolean,
-  xExtent?: Array<number> | Object,
-  yExtent?: Array<number> | Object,
-  invertX?: boolean,
-  invertY?: boolean,
-  summaryType: Object,
-  adjustedSize: Array<number>,
-  chartSize: Array<number>,
-  xScaleType: Function,
-  yScaleType: Function,
-  baseMarkProps?: Object,
-  margin: Object,
+  lineDataAccessor: Array<Function>
+  summaryDataAccessor: Array<Function>
+  summaryStyleFn: Function
+  summaryClassFn: Function
+  summaryRenderModeFn: Function
+  xAccessor: Array<Function>
+  yAccessor: Array<Function>
+  summaries?: Array<RawSummary>
+  points?: Array<RawPoint>
+  lines?: Array<RawLine>
+  lineType: LineTypeSettings
+  showLinePoints?: boolean | string
+  showSummaryPoints?: boolean
+  xExtent?: Array<number> | object
+  yExtent?: Array<number> | object
+  invertX?: boolean
+  invertY?: boolean
+  summaryType: SummaryTypeSettings
+  adjustedSize: Array<number>
+  chartSize: Array<number>
+  xScaleType: Function
+  yScaleType: Function
+  baseMarkProps?: object
+  margin: object
   defined?: Function
 }
 
@@ -129,12 +156,12 @@ export const calculateDataExtent = ({
   chartSize,
   defined = () => true
 }: CalculateDataTypes) => {
-  let fullDataset: Array<ProjectedPoint> = []
+  let fullDataset: Array<ProjectedPoint | ProjectedBin | ProjectedSummary> = []
   let initialProjectedLines = []
 
   let projectedPoints: Array<ProjectedPoint> = [],
-    projectedLines: Array<Object> = [],
-    projectedSummaries: Array<Object> = []
+    projectedLines: Array<ProjectedLine> = [],
+    projectedSummaries: Array<ProjectedSummary> = []
   if (points) {
     xAccessor.forEach((actualXAccessor, xIndex) => {
       yAccessor.forEach((actualYAccessor, yIndex) => {
@@ -197,7 +224,7 @@ export const calculateDataExtent = ({
       initialProjectedLines
     )
 
-    projectedLines.forEach(d => {
+    projectedLines.forEach((d: ProjectedLine) => {
       fullDataset = [
         ...fullDataset,
         ...d.data
@@ -330,8 +357,8 @@ export const calculateDataExtent = ({
     )
   ]
 
-  const actualXExtent: ?(number[]) = extentValue(xExtent)
-  const actualYExtent: ?(number[]) = extentValue(yExtent)
+  const actualXExtent: number[] = extentValue(xExtent)
+  const actualYExtent: number[] = extentValue(yExtent)
 
   const xMin =
     actualXExtent && actualXExtent[0] !== undefined
@@ -395,7 +422,7 @@ export const calculateDataExtent = ({
       chartSize
     })
     fullDataset = [
-      ...projectedSummaries.map(d => d.data),
+      ...projectedSummaries.map(d => ({ ...d })),
       ...fullDataset.filter(d => !d.parentSummary)
     ]
   } else if (summaryType.type && summaryType.type === "heatmap") {

@@ -1,32 +1,12 @@
-// @flow
-import React from "react"
+import * as React from "react"
 import AnnotationLabel from "react-annotation/lib/Types/AnnotationLabel"
 
-type Props = {
-  noteData: {
-    eventListeners: Object,
-    events: Object,
-    onDragEnd?: Function,
-    onDragStart?: Function,
-    onDrag?: Function,
-    type: *,
-    screenCoordinates: Array<Array<number>>,
-    // What is this type supposed to be? It gets used only in a boolean context
-    // I mostly assume this is used to indicate the presence of `nx`, `ny`, `dx`, `dy`
-    coordinates: boolean,
-    nx: number,
-    ny: number,
-    dx: number,
-    dy: number,
-    // TODO: What should this be typed as?
-    note: Object,
-    i: number
-  }
-}
+import { AnnotationProps } from "./types/annotationTypes"
+import { GenericObject } from "./types/generalTypes"
 
 const interactivityFns = ["onDragEnd", "onDragStart", "onDrag"]
 
-class SemioticAnnotation extends React.Component<Props, null> {
+class SemioticAnnotation extends React.Component<AnnotationProps, null> {
   render() {
     const { noteData: baseNoteData } = this.props
     const { screenCoordinates } = baseNoteData
@@ -51,7 +31,7 @@ class SemioticAnnotation extends React.Component<Props, null> {
       typeof noteData.type === "function" ? noteData.type : AnnotationLabel
 
     const eventListeners = noteData.eventListeners || noteData.events || {}
-    const finalStyle = {}
+    const finalStyle: GenericObject = {}
     if (noteData.events || noteData.eventListeners || noteData.editMode) {
       finalStyle.pointerEvents = "all"
     }

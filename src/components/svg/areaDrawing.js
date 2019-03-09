@@ -199,7 +199,6 @@ export function hexbinning({
               },
               baseMarkProps,
               margin,
-              baseMarkProps,
               styleFn,
               classFn,
               renderFn,

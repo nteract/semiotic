@@ -2,15 +2,12 @@ import React from "react"
 import { HashRouter, Route } from "react-router-dom"
 import Home from "./Home"
 import Documentation from "./Documentation"
-import injectTapEventPlugin from "react-tap-event-plugin"
 import LayoutFooter from "./layout/Footer"
 import { MuiThemeProvider, createMuiTheme } from "material-ui/styles"
 import theme from "./theme.js"
 import "./flexboxgrid.css"
 import "./prism.css"
 import "./index.css"
-
-injectTapEventPlugin()
 
 const gh = "emeeks/semiotic"
 const basename = process.env.REACT_APP_GH_PAGES_PATH
