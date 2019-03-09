@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 
 import { line, curveLinear } from "d3-shape"
 
@@ -8,9 +8,17 @@ import { dividedLine, projectLineData } from "./svg/lineDrawing"
 
 import { Mark } from "semiotic-mark"
 
-import PropTypes from "prop-types"
+interface DividedLineProps {
+  parameters: { [key: string]: Function };
+  className: string;
+  interpolate: Function;
+  customAccessors: { x: string, y: string };
+  lineDataAccessor: Function;
+  data: object[];
+  searchIterations: number;
+}
 
-class DividedLine extends React.Component {
+class DividedLine extends React.Component<DividedLineProps, null> {
   constructor(props) {
     super(props)
     this.createLineSegments = this.createLineSegments.bind(this)
@@ -66,16 +74,6 @@ class DividedLine extends React.Component {
 
     return <g>{lines}</g>
   }
-}
-
-DividedLine.propTypes = {
-  parameters: PropTypes.func,
-  className: PropTypes.string,
-  interpolate: PropTypes.func,
-  data: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
-  lineDataAccessor: PropTypes.func,
-  customAccessors: PropTypes.object,
-  searchIterations: PropTypes.number
 }
 
 export default DividedLine

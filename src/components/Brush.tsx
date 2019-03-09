@@ -1,9 +1,5 @@
-import React from "react"
+import * as React from "react"
 import { select } from "d3-selection"
-
-// components
-
-import PropTypes from "prop-types"
 
 const flatten = list =>
   list.reduce(
@@ -29,12 +25,21 @@ function flatShortArray(array) {
   return stringifiedFlattened
 }
 
-class Brush extends React.Component {
+interface BrushProps {
+  extent?: number[] | number[][];
+  selectedExtent?: number[] | number[][];
+  svgBrush: { (): any, move: Function };
+  position: number[];
+}
+
+class Brush extends React.Component<BrushProps, null> {
   constructor(props) {
     super(props)
 
     this.createBrush = this.createBrush.bind(this)
   }
+
+  node: Element = null
 
   componentDidMount() {
     this.createBrush()
@@ -85,13 +90,6 @@ class Brush extends React.Component {
       />
     )
   }
-}
-
-Brush.propTypes = {
-  size: PropTypes.array,
-  position: PropTypes.array,
-  selectedExtent: PropTypes.array,
-  svgBrush: PropTypes.func
 }
 
 export default Brush

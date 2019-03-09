@@ -1,12 +1,27 @@
-import React from "react"
+import * as React from "react"
 
 import XYFrame from "./XYFrame"
 
-// components
+interface MinimapProps {
+  brushStart: Function;
+  brush: Function;
+  brushEnd: Function;
+  xBrushable: boolean;
+  yBrushable: boolean;
+  yBrushExtent: number[];
+  xBrushExtent: number[];
+  size: number[];
+}
 
-import PropTypes from "prop-types"
+interface Interactivity {
+  start: Function;
+  during: Function;
+  end: Function;
+  brush?: string;
+  extent?: Array<number[]> | number[];
+}
 
-const MiniMap = props => {
+const MiniMap = (props: MinimapProps) => {
   const {
     brushStart,
     brush,
@@ -17,7 +32,7 @@ const MiniMap = props => {
     xBrushExtent,
     ...rest
   } = props
-  const interactivity = {
+  const interactivity: Interactivity = {
     start: brushStart,
     during: brush,
     end: brushEnd
@@ -48,16 +63,6 @@ const MiniMap = props => {
   }
 
   return <XYFrame {...rest} interaction={interactivity} />
-}
-
-MiniMap.propTypes = {
-  brushStart: PropTypes.func,
-  brush: PropTypes.func,
-  brushEnd: PropTypes.func,
-  xBrushExtent: PropTypes.array,
-  yBrushExtent: PropTypes.array,
-  xBrushable: PropTypes.bool,
-  yBrushable: PropTypes.bool
 }
 
 export default MiniMap

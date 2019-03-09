@@ -4,7 +4,7 @@ import { data } from "../sampledata/d3_api"
 import ProcessViz from "./ProcessViz"
 import { scaleLinear } from "d3-scale"
 
-import { nodesEdgesFromHierarchy } from "../../components/processing/network"
+import { nodesEdgesFromHierarchy } from "../../components/processing/network.ts"
 
 const colors = ["#00a2ce", "#b6a756", "#4d430c", "#b3331d"]
 

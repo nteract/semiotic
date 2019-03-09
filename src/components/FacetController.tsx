@@ -1,6 +1,4 @@
-// @flow
-
-import React from "react"
+import * as React from "react"
 import memoize from "memoize-one"
 
 import {
@@ -10,11 +8,10 @@ import {
   responsiveprops
 } from "./constants/frame_props"
 
-import type { Node, Element } from "react"
-import type { OrdinalFrameProps } from "./OrdinalFrame"
-import type { XYFrameProps } from "./XYFrame"
+import { OrdinalFrameProps } from "./OrdinalFrame"
+import { XYFrameProps } from "./XYFrame"
 
-import type { CustomHoverType } from "./types/annotationTypes"
+import { CustomHoverType } from "./types/annotationTypes"
 
 const framePropHash = {
   NetworkFrame: networkframeproptypes,
@@ -29,9 +26,9 @@ const framePropHash = {
 }
 
 const buildNewState = (prevState, extentValue, extentType, extentPosition) => {
-  const oldExtents = prevState.rawExtents[extentType] || {}
+  const oldExtents: object = prevState.rawExtents[extentType] || {}
   oldExtents[extentPosition] = extentValue
-  // $FlowFixMe
+
   const extentMinMaxValues = Object.values(oldExtents).flat()
 
   return {
@@ -60,34 +57,29 @@ function validFrameProps(originalProps, frameType) {
   return newProps
 }
 
-type FacetControllerProps = {
-  children: Node,
-  react15Wrapper: Element<*>,
-  sharedRExtent: boolean,
-  sharedXExtent: boolean,
-  sharedYExtent: boolean
+interface FacetControllerProps {
+  children: Element;
+  react15Wrapper: Element;
+  sharedRExtent: boolean;
+  sharedXExtent: boolean;
+  sharedYExtent: boolean;
 }
 
 type Props = FacetControllerProps & OrdinalFrameProps & XYFrameProps
 
-type State = {
-  extents: Object,
-  rawExtents: Object,
-  facetHover: ?Object,
-  facetHoverAnnotations?: CustomHoverType
+interface State {
+  extents: object;
+  rawExtents: object;
+  facetHover?: object;
+  facetHoverAnnotations?: CustomHoverType;
 }
 
 class FacetController extends React.Component<Props, State> {
-  constructor() {
-    super()
-
-    this.state = {
-      extents: {},
-      rawExtents: {},
-      facetHover: undefined
-    }
+  state = {
+    extents: {},
+    rawExtents: {},
+    facetHover: undefined
   }
-
   /**
    * Helper for creating extent if we have a  min/max value
    * use that else use the onChange version so we can in return
@@ -130,9 +122,10 @@ class FacetController extends React.Component<Props, State> {
     const annotationSettings =
       this.props.hoverAnnotation || this.props.pieceHoverAnnotation
 
-    if (!annotationSettings || !annotationBase || annotationBase === false) {
+    if (!annotationSettings || !annotationBase) {
       return []
     }
+
     if (state.facetHover) {
       const annotations = [...originalAnnotations]
 
@@ -148,6 +141,7 @@ class FacetController extends React.Component<Props, State> {
           return decoratedAnnotation
         })
       }
+
       annotationBase.forEach(annotation => {
         if (annotation.type === "column-hover") {
           annotation.facetColumn = annotation.column.name
@@ -183,7 +177,7 @@ class FacetController extends React.Component<Props, State> {
     props,
     state
   }: {
-    child: Element<*>,
+    child: React.ReactElement,
     props: Props,
     index: number,
     state: State,

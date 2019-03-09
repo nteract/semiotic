@@ -1,8 +1,6 @@
 import React from "react"
 import { mount, shallow } from "enzyme"
 import OrdinalFrame from "./OrdinalFrame"
-import injectTapEventPlugin from "react-tap-event-plugin"
-injectTapEventPlugin()
 
 const someBarData = [
   { column: "a", cats: 15 },

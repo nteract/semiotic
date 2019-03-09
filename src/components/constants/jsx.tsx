@@ -1,6 +1,12 @@
-import React from "react"
+import * as React from "react"
 
-export const filterDefs = ({ matte, key, additionalDefs }) => (
+type FilterDefTypes = {
+  matte?: JSX.Element,
+  key: string,
+  additionalDefs?: JSX.Element
+}
+
+export const filterDefs = ({ matte, key, additionalDefs }: FilterDefTypes) => (
   <defs>
     <filter id="paintyFilterHeavy">
       <feGaussianBlur

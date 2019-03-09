@@ -1,10 +1,8 @@
-import React from "react"
+import * as React from "react"
 
 // components
 import NetworkFrame from "./NetworkFrame"
 import MiniMap from "./MiniMap"
-
-import PropTypes from "prop-types"
 
 class MinimapNetworkFrame extends NetworkFrame {
   constructor(props) {
@@ -43,12 +41,8 @@ class MinimapNetworkFrame extends NetworkFrame {
       options.afterElements = miniMap
     }
 
-    return this.renderBody(options)
+    return <div>Build out NetworkFrameMinimap Soon</div>
   }
-}
-
-MinimapNetworkFrame.propTypes = {
-  minimap: PropTypes.object
 }
 
 export default MinimapNetworkFrame

@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 
 import {
   axisLabels,
@@ -6,9 +6,9 @@ import {
   axisLines
 } from "./visualizationLayerBehavior/axis"
 
-// components
+import { MarginType, D3ScaleType } from "./types/generalTypes"
 
-import PropTypes from "prop-types"
+// components
 
 function formatValue(value, props) {
   if (props.tickFormat) {
@@ -20,11 +20,53 @@ function formatValue(value, props) {
   return value
 }
 
-class Axis extends React.Component {
+type GlyphProps = {
+  lineHeight: number,
+  lineWidth: number,
+  value: number
+}
+
+type AxisPart = {
+  value: number
+}
+
+interface AxisProps {
+  orient: "left" | "right" | "top" | "bottom";
+  label: { position?: { anchor?: string, location?: string, rotation?: string }, name: string, locationDistance: number };
+  dynamicLabelPosition: boolean;
+  position?: number[];
+  rotate?: number;
+  tickFormat?: Function;
+  size?: number[];
+  width?: number;
+  height?: number;
+  className?: string;
+  padding?: number;
+  tickValues?: number[];
+  scale?: D3ScaleType;
+  ticks?: number;
+  footer: boolean;
+  tickSize: number;
+  tickLineGenerator: Function;
+  baseline: boolean;
+  margin: MarginType;
+  center: boolean;
+  axisParts: AxisPart[];
+  annotationFunction: (args) => void
+  glyphFunction: (args:GlyphProps) => SVGElement
+}
+
+interface AxisState {
+  hoverAnnotation: number;
+  calculatedLabelPosition?: number;
+}
+
+class Axis extends React.Component<AxisProps, AxisState> {
   constructor(props) {
     super(props)
     this.state = { hoverAnnotation: 0 }
   }
+  axisRef: Element = null
 
   boundingBoxMax = () => {
     // && this.props.dynamicLabel ???
@@ -37,7 +79,10 @@ class Axis extends React.Component {
     const axisLabelMax =
       Math.max(
         ...[...this.axisRef.querySelectorAll(".axis-label")]
-          .map(l => (l.getBBox && l.getBBox()) || { height: 30, width: 30 })
+          .map(
+            (l: SVGGraphicsElement) =>
+              (l.getBBox && l.getBBox()) || { height: 30, width: 30 }
+          )
           .map(d => d[positionType])
       ) + 25
 
@@ -45,7 +90,7 @@ class Axis extends React.Component {
   }
 
   componentDidUpdate() {
-    const { label = {} } = this.props
+    const { label = { position: false} } = this.props
     if (!label.position && this.props.dynamicLabelPosition) {
       const newBBMax = this.boundingBoxMax()
       if (newBBMax !== this.state.calculatedLabelPosition) {
@@ -55,7 +100,7 @@ class Axis extends React.Component {
   }
 
   componentDidMount() {
-    const { label = {} } = this.props
+    const { label = { position: false} } = this.props
     if (!label.position && this.props.dynamicLabelPosition) {
       const newBBMax = this.boundingBoxMax()
       this.setState({ calculatedLabelPosition: newBBMax })
@@ -84,10 +129,6 @@ class Axis extends React.Component {
       margin = { top: 0, bottom: 0, left: 0, right: 0 },
       center = false
     } = this.props
-
-    if (this.props.format) {
-      console.error("axis `format` has been deprecated use `tickFormat`")
-    }
 
     let axisTickLines
     let axisParts = this.props.axisParts
@@ -387,28 +428,6 @@ class Axis extends React.Component {
       </g>
     )
   }
-}
-
-Axis.propTypes = {
-  name: PropTypes.string,
-  className: PropTypes.string,
-  orient: PropTypes.string,
-  position: PropTypes.array,
-  size: PropTypes.array.isRequired,
-  rotate: PropTypes.number,
-  scale: PropTypes.func.isRequired,
-  annotationFunction: PropTypes.func,
-  format: PropTypes.string,
-  tickFormat: PropTypes.func,
-  tickValues: PropTypes.array,
-  padding: PropTypes.number,
-  baseline: PropTypes.bool,
-  ticks: PropTypes.oneOfType([PropTypes.array, PropTypes.number]),
-  label: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.number,
-    PropTypes.object
-  ])
 }
 
 export default Axis

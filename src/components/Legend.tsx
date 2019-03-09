@@ -1,30 +1,19 @@
-//@flow
+import * as React from "react"
 
-import React from "react"
-import PropTypes from "prop-types"
+import { LegendGroup, ItemType } from "./types/legendTypes"
 
 const typeHash = {
-  fill: style => <rect style={style} width={20} height={20} />,
-  line: style => <line style={style} x1={0} y1={0} x2={20} y2={20} />
+  fill: (style: Object) => <rect style={style} width={20} height={20} />,
+  line: (style: Object) => <line style={style} x1={0} y1={0} x2={20} y2={20} />
 }
 
-type SupportedLegendGlyps = "fill" | "line"
-
-type ItemType = SupportedLegendGlyps | Function
-
-type LegendGroup = {
-  type?: ItemType,
-  styleFn: Function,
-  items: Array<Object>,
-  label: string
-}
-
-type Props = {
-  legendGroups: Array<LegendGroup>,
-  title?: string,
-  width?: number,
-  height?: number,
-  orientation?: string
+interface LegendProps {
+  legendGroups: LegendGroup[];
+  title?: string;
+  width?: number;
+  height?: number;
+  orientation?: string;
+  position?: "left" | "right";
 }
 
 function renderType(
@@ -44,7 +33,7 @@ function renderType(
   return renderedType
 }
 
-class Legend extends React.Component<Props, null> {
+class Legend extends React.Component<LegendProps, null> {
   renderLegendGroup(legendGroup: LegendGroup) {
     const { type = "fill", styleFn, items } = legendGroup
     const renderedItems = []
@@ -88,7 +77,7 @@ class Legend extends React.Component<Props, null> {
     legendGroups,
     width
   }: {
-    legendGroups: Array<LegendGroup>,
+    legendGroups: LegendGroup[],
     width: number
   }) {
     let offset = 30
@@ -142,8 +131,8 @@ class Legend extends React.Component<Props, null> {
     title,
     height
   }: {
-    legendGroups: Array<LegendGroup>,
-    title: string,
+    legendGroups: LegendGroup[],
+    title: string | boolean,
     height: number
   }) {
     let offset = 0
@@ -224,21 +213,17 @@ class Legend extends React.Component<Props, null> {
       orientation === "vertical"
         ? this.renderGroup({
             legendGroups,
-            title,
-            width,
-            orientation
+            width
           })
         : this.renderHorizontalGroup({
             legendGroups,
             title,
-            height,
-            orientation,
-            title
+            height
           })
 
     return (
       <g>
-        {title !== false && (
+        {title !== undefined && (
           <text
             className="legend-title"
             y={20}
@@ -252,12 +237,6 @@ class Legend extends React.Component<Props, null> {
       </g>
     )
   }
-}
-
-Legend.propTypes = {
-  title: PropTypes.string,
-  width: PropTypes.number,
-  legendGroups: PropTypes.array
 }
 
 export default Legend
