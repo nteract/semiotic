@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 
 import { select } from "d3-selection"
 import { arc, line, curveLinearClosed } from "d3-shape"
@@ -360,7 +360,7 @@ export function linearRibbon() {
   function buildRibbon(points) {
     const bothCode = []
     let x = 0
-    let transformedPoints = {}
+    let transformedPoints = { x1: 0, y1: 0, x2: 0, y2: 0 }
 
     while (x < points.length) {
       if (x !== points.length - 1) {

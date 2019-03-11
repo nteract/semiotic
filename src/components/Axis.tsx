@@ -6,7 +6,9 @@ import {
   axisLines
 } from "./visualizationLayerBehavior/axis"
 
-import { MarginType, D3ScaleType } from "./types/generalTypes"
+import { MarginType } from "./types/generalTypes"
+
+import { ScaleLinear } from "d3-scale"
 
 // components
 
@@ -21,8 +23,8 @@ function formatValue(value, props) {
 }
 
 type GlyphProps = {
-  lineHeight: number,
-  lineWidth: number,
+  lineHeight: number
+  lineWidth: number
   value: number
 }
 
@@ -31,34 +33,38 @@ type AxisPart = {
 }
 
 interface AxisProps {
-  orient: "left" | "right" | "top" | "bottom";
-  label: { position?: { anchor?: string, location?: string, rotation?: string }, name: string, locationDistance: number };
-  dynamicLabelPosition: boolean;
-  position?: number[];
-  rotate?: number;
-  tickFormat?: Function;
-  size?: number[];
-  width?: number;
-  height?: number;
-  className?: string;
-  padding?: number;
-  tickValues?: number[];
-  scale?: D3ScaleType;
-  ticks?: number;
-  footer: boolean;
-  tickSize: number;
-  tickLineGenerator: Function;
-  baseline: boolean;
-  margin: MarginType;
-  center: boolean;
-  axisParts: AxisPart[];
-  annotationFunction: (args) => void
-  glyphFunction: (args:GlyphProps) => SVGElement
+  orient: "left" | "right" | "top" | "bottom"
+  label: {
+    position?: { anchor?: string; location?: string; rotation?: string }
+    name: string
+    locationDistance: number
+  }
+  dynamicLabelPosition?: boolean
+  position?: number[]
+  rotate?: number
+  tickFormat?: Function
+  size?: number[]
+  width?: number
+  height?: number
+  className?: string
+  padding?: number
+  tickValues?: number[]
+  scale?: ScaleLinear<number, number>
+  ticks?: number
+  footer?: boolean
+  tickSize: number
+  tickLineGenerator?: Function
+  baseline?: boolean
+  margin?: MarginType
+  center?: boolean
+  axisParts?: AxisPart[]
+  annotationFunction?: (args) => void
+  glyphFunction?: (args: GlyphProps) => SVGElement
 }
 
 interface AxisState {
-  hoverAnnotation: number;
-  calculatedLabelPosition?: number;
+  hoverAnnotation: number
+  calculatedLabelPosition?: number
 }
 
 class Axis extends React.Component<AxisProps, AxisState> {
@@ -90,7 +96,7 @@ class Axis extends React.Component<AxisProps, AxisState> {
   }
 
   componentDidUpdate() {
-    const { label = { position: false} } = this.props
+    const { label = { position: false } } = this.props
     if (!label.position && this.props.dynamicLabelPosition) {
       const newBBMax = this.boundingBoxMax()
       if (newBBMax !== this.state.calculatedLabelPosition) {
@@ -100,7 +106,7 @@ class Axis extends React.Component<AxisProps, AxisState> {
   }
 
   componentDidMount() {
-    const { label = { position: false} } = this.props
+    const { label = { position: false } } = this.props
     if (!label.position && this.props.dynamicLabelPosition) {
       const newBBMax = this.boundingBoxMax()
       this.setState({ calculatedLabelPosition: newBBMax })

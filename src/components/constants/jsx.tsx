@@ -1,9 +1,9 @@
 import * as React from "react"
 
 type FilterDefTypes = {
-  matte?: JSX.Element,
-  key: string,
-  additionalDefs?: JSX.Element
+  matte?: Element
+  key: string
+  additionalDefs?: Element
 }
 
 export const filterDefs = ({ matte, key, additionalDefs }: FilterDefTypes) => (

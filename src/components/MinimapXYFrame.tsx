@@ -1,12 +1,12 @@
-import React from "react"
+import * as React from "react"
 
 // components
 import XYFrame from "./XYFrame"
 import MiniMap from "./MiniMap"
 
-import PropTypes from "prop-types"
+import { XYFrameProps } from "./XYFrame"
 
-class MinimapXYFrame extends React.Component {
+class MinimapXYFrame extends React.Component<XYFrameProps> {
   constructor(props) {
     super(props)
 
@@ -82,7 +82,10 @@ class MinimapXYFrame extends React.Component {
 
   render() {
     const miniMap = this.generateMinimap()
-    const options = {}
+    const options: {
+      beforeElements?: React.ReactNode
+      afterElements?: React.ReactNode
+    } = {}
     const { minimap, renderBefore, ...rest } = this.props
 
     if (renderBefore) {
@@ -93,19 +96,6 @@ class MinimapXYFrame extends React.Component {
 
     return <XYFrame {...rest} {...options} />
   }
-}
-
-MinimapXYFrame.propTypes = {
-  size: PropTypes.array,
-  xAccessor: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
-  yAccessor: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
-  points: PropTypes.array,
-  lines: PropTypes.array,
-  summaries: PropTypes.array,
-  lineDataAccessor: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
-  lineType: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-  minimap: PropTypes.object,
-  renderBefore: PropTypes.oneOfType([PropTypes.array, PropTypes.object])
 }
 
 export default MinimapXYFrame

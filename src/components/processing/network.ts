@@ -30,8 +30,7 @@ export const nodesEdgesFromHierarchy = (
 
   descendants.forEach((node, i) => {
     const generatedID = `${idAccessor(
-      { ...node, ...node.data },
-      i
+      { ...node, ...node.data }
     )}-${(node.parent &&
       recursiveIDAccessor(
         idAccessor,

@@ -1,19 +1,10 @@
 import * as React from "react"
 
-import { LegendGroup, ItemType } from "./types/legendTypes"
+import { LegendGroup, ItemType, LegendProps } from "./types/legendTypes"
 
 const typeHash = {
   fill: (style: Object) => <rect style={style} width={20} height={20} />,
   line: (style: Object) => <line style={style} x1={0} y1={0} x2={20} y2={20} />
-}
-
-interface LegendProps {
-  legendGroups: LegendGroup[];
-  title?: string;
-  width?: number;
-  height?: number;
-  orientation?: string;
-  position?: "left" | "right";
 }
 
 function renderType(
@@ -77,7 +68,7 @@ class Legend extends React.Component<LegendProps, null> {
     legendGroups,
     width
   }: {
-    legendGroups: LegendGroup[],
+    legendGroups: LegendGroup[]
     width: number
   }) {
     let offset = 30
@@ -131,8 +122,8 @@ class Legend extends React.Component<LegendProps, null> {
     title,
     height
   }: {
-    legendGroups: LegendGroup[],
-    title: string | boolean,
+    legendGroups: LegendGroup[]
+    title: string | boolean
     height: number
   }) {
     let offset = 0

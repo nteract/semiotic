@@ -29,30 +29,46 @@ export interface NodeType {
   nodeSize: number
   component: number
   shapeNode: boolean
+  depth?: number
+  d?: string
+  index?: number
+  zoomedHeight?: number
+  zoomedWidth?: number
 }
 
 export interface EdgeType {
-  source?: string | NodeType
-  target?: string | NodeType
+  source?: NodeType
+  target?: NodeType
+  d?: string
+  x?: number
+  y?: number
+  sankeyWidth?: number
+  direction?: string
+  width?: number
+  points?: Array<{ x: number; y: number }>
 }
 
 export interface GraphSettingsType {
-  type: string
-  nodes: NodeType[]
-  edges: EdgeType[] | object
+  type:
+    | string
+    | (({ edges, nodes }: { edges: EdgeType[]; nodes: NodeType[] }) => void)
+  nodes: object[]
+  edges: object[] | object
   nodeHash: Map<any, NodeType>
   edgeHash: Map<any, EdgeType>
   hierarchicalNetwork: boolean
 }
 
 export interface NetworkSettingsType {
-  type: string
+  type:
+    | string
+    | (({ edges, nodes }: { edges: EdgeType[]; nodes: NodeType[] }) => void)
   hierarchyChildren?: Function
   hierarchySum?: Function
   layout?: Function
   nodeSize?: Function
-  nodes?: object[]
-  edges?: object[]
+  nodes?: NodeType[]
+  edges?: EdgeType[]
   iterations?: number
   width?: number
   height?: number
@@ -76,6 +92,9 @@ export interface NetworkSettingsType {
   hierarchicalNetwork: boolean
   graphSettings: GraphSettingsType
   sortGroups?: Function
+  simulation?: Function
+  sort?: (a: GenericObject, b: GenericObject) => number
+  zoom?: boolean | "stretch" | ((nodes: NodeType[], size: number[]) => void)
 }
 
 export interface NetworkFrameState {
@@ -170,6 +189,10 @@ export interface NetworkFrameProps {
   onNodeClick?: Function
   onNodeEnter?: Function
   renderOrder?: ReadonlyArray<"edges" | "nodes">
-  filterRenderedNodes: Function
+  filterRenderedNodes: (
+    value?: NodeType,
+    index?: number,
+    array?: NodeType[]
+  ) => any
   onUnmount?: Function
 }

@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 
 import { Mark } from "semiotic-mark"
 import {
@@ -17,6 +17,8 @@ import {
 } from "d3-shape"
 
 import { shapeBounds } from "../svg/areaDrawing"
+import { GenericObject, ProjectedSummary } from "../types/generalTypes"
+import { ScaleLinear } from "d3-scale"
 
 export const curveHash = {
   step: curveStep,
@@ -75,19 +77,23 @@ export function createPoints({
 }) {
   const { y, x, xMiddle, yMiddle, yTop, yBottom } = projectedCoordinateNames
 
-  const showLinePoints =
+  const showLinePoints: string =
     baseShowLinePoints === true ? undefined : baseShowLinePoints
 
-  const whichPoints = {
+  const whichPoints: {
+    top: string
+    bottom: string
+  } = {
     top: yTop,
     bottom: yBottom
   }
+  const whichWay = whichPoints[showLinePoints]
   const mappedPoints = []
   data.forEach((d, i) => {
     const dX = xScale(d[xMiddle] !== undefined ? d[xMiddle] : d[x])
     const dY = yScale(
-      d[[whichPoints[showLinePoints]]] !== undefined
-        ? d[[whichPoints[showLinePoints]]]
+      d[whichWay] !== undefined
+        ? d[whichWay]
         : d[yMiddle] !== undefined
         ? d[yMiddle]
         : d[y]
@@ -107,9 +113,9 @@ export function createPoints({
         })
       : {
           ...baseMarkProps,
-          "key": `piece-${i}`,
-          "markType": "circle",
-          "r": 2,
+          key: `piece-${i}`,
+          markType: "circle",
+          r: 2,
           "aria-label": pointAriaLabel
         }
 
@@ -249,7 +255,7 @@ export function createLines({
         customMark({ d: compatibleData, i, xScale, yScale, canvasDrawing })
       )
     } else {
-      const builtInDisplayProps = {}
+      const builtInDisplayProps: { fill?: string; stroke?: string } = {}
       if (customLine.simpleLine) {
         builtInDisplayProps.fill = "none"
         builtInDisplayProps.stroke = "black"
@@ -262,8 +268,8 @@ export function createLines({
       const markProps = {
         ...builtInDisplayProps,
         ...baseMarkProps,
-        "markType": "path",
-        "d": pathString,
+        markType: "path",
+        d: pathString,
         "aria-label":
           d.data &&
           d.data.length > 0 &&
@@ -391,6 +397,18 @@ export function createSummaries({
   renderMode,
   baseMarkProps,
   customMark
+}: {
+  xScale: ScaleLinear<number, number>
+  yScale: ScaleLinear<number, number>
+  canvasDrawing?: Function
+  data: ProjectedSummary[]
+  canvasRender?: Function
+  styleFn?: Function
+  classFn?: Function
+  renderKeyFn?: Function
+  renderMode?: Function
+  baseMarkProps?: GenericObject
+  customMark?: Function
 }) {
   const summaryClass = classFn || (() => "")
   const summaryStyle = styleFn || (() => ({}))
@@ -493,6 +511,18 @@ export function clonedAppliedElement({
   renderKeyFn,
   baseClass,
   yi
+}: {
+  tx?: number
+  ty?: number
+  d: GenericObject
+  i: number
+  markProps: GenericObject
+  styleFn: Function
+  renderFn: Function
+  classFn: Function
+  renderKeyFn: Function
+  baseClass: string
+  yi?: number
 }) {
   markProps.style = styleFn ? styleFn(d, i, yi) : {}
 

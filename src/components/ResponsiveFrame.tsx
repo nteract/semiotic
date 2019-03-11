@@ -1,9 +1,25 @@
-import React from "react"
-import PropTypes from "prop-types"
+import * as React from "react"
 import elementResizeEvent from "./vendor/element-resize-event"
 
+type ResponsiveFrameProps = {
+  debounce: number
+  responsiveWidth?: boolean
+  responsiveHeight?: boolean
+  size?: number[]
+  dataVersion?: string
+  gridDisplay?: boolean
+}
+
+type ResponsiveFrameState = {
+  containerHeight?: number
+  containerWidth?: number
+}
+
 const createResponsiveFrame = Frame =>
-  class ResponsiveFrame extends React.Component {
+  class ResponsiveFrame extends React.Component<
+    ResponsiveFrameProps,
+    ResponsiveFrameState
+  > {
     constructor(props) {
       super(props)
 
@@ -13,9 +29,7 @@ const createResponsiveFrame = Frame =>
       }
     }
 
-    static propTypes = {
-      size: PropTypes.array
-    }
+    node = null
 
     static defaultProps = {
       size: [500, 500],
@@ -24,7 +38,7 @@ const createResponsiveFrame = Frame =>
 
     static displayName = `Responsive${Frame.displayName}`
 
-    isResizing = false
+    isResizing = undefined
 
     _onResize = (width, height) => {
       this.setState({ containerHeight: height, containerWidth: width })

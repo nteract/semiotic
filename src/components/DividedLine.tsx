@@ -7,15 +7,16 @@ import { dividedLine, projectLineData } from "./svg/lineDrawing"
 // components
 
 import { Mark } from "semiotic-mark"
+import { ProjectedLine } from "./types/generalTypes"
 
 interface DividedLineProps {
-  parameters: { [key: string]: Function };
-  className: string;
-  interpolate: Function;
-  customAccessors: { x: string, y: string };
-  lineDataAccessor: Function;
-  data: object[];
-  searchIterations: number;
+  parameters: Function
+  className: string
+  interpolate: Function
+  customAccessors: { x: string; y: string }
+  lineDataAccessor: Function
+  data: ProjectedLine[]
+  searchIterations: number
 }
 
 class DividedLine extends React.Component<DividedLineProps, null> {
@@ -36,13 +37,16 @@ class DividedLine extends React.Component<DividedLineProps, null> {
       ...rest
     } = this.props
 
+    const xAccessor = d => d[customAccessors.x]
+    const yAccessor = d => d[customAccessors.y]
+
     const lineData = projectLineData({
       data: data,
       lineDataAccessor: [lineDataAccessor],
       xProp: "_x",
       yProp: "_y",
-      xAccessor: [customAccessors.x],
-      yAccessor: [customAccessors.y]
+      xAccessor: [xAccessor],
+      yAccessor: [yAccessor]
     })
 
     //Compatibility before Semiotic 2

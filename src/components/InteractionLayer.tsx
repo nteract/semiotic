@@ -1,6 +1,4 @@
-// @flow
-
-import React from "react"
+import * as React from "react"
 import { brushX, brushY, brush } from "d3-brush"
 import { extent as d3Extent } from "d3-array"
 import { select, event } from "d3-selection"
@@ -10,10 +8,9 @@ import { Mark } from "semiotic-mark"
 // components
 import Brush from "./Brush"
 
-import PropTypes from "prop-types"
 import SpanOrDiv from "./SpanOrDiv"
 
-import type { Node } from "react"
+import { ReactNode } from "react"
 
 import {
   projectedY,
@@ -21,44 +18,62 @@ import {
   projectedYMiddle,
   projectedYBottom
 } from "./constants/coordinateNames"
+import { Interactivity } from "./types/interactionTypes"
 
-//import type { CustomHoverType } from "./types/annotationTypes"
+import { CustomHoverType } from "./types/annotationTypes"
+import { MarginType } from "./types/generalTypes"
 
-type CustomHoverType = boolean | Object | Array<Object | Function> | Function
+import { ScaleLinear } from "d3-scale"
+
+type BaseColumnType = { x: number; width: number }
+
+type VoronoiEntryType = {
+  voronoiX: number
+  voronoiY: number
+  coincidentPoints: object[]
+  type?: string
+  data?: object[]
+}
 
 type Props = {
-  name?: string,
-  interaction?: Object,
-  overlay?: Array<Object>,
-  oColumns?: Object,
-  xScale: Function,
-  yScale: Function,
-  rScale?: Function,
-  svgSize: Array<number>,
-  hoverAnnotation?: CustomHoverType,
-  interactionOverflow?: Object,
-  size: Array<number>,
-  projectedYMiddle?: string,
-  projectedX: string,
-  projectedY: string,
-  points?: Array<Object>,
-  enabled?: boolean,
-  useSpans?: boolean,
-  margin: Object,
-  projection?: string,
-  customDoubleClickBehavior?: Function,
-  customClickBehavior?: Function,
-  customHoverBehavior?: Function,
-  voronoiHover: Function,
-  canvasRendering?: boolean,
-  disableCanvasInteraction: boolean,
-  showLinePoints?: string,
-  renderPipeline: Object
+  name?: string
+  interaction?: Interactivity
+  overlay?: Array<object>
+  oColumns?: object
+  xScale: ScaleLinear<number, number>
+  yScale: ScaleLinear<number, number>
+  rScale?: ScaleLinear<number, number>
+  svgSize: Array<number>
+  hoverAnnotation?: CustomHoverType
+  interactionOverflow?: {
+    top?: number
+    bottom?: number
+    left?: number
+    right?: number
+  }
+  size: Array<number>
+  projectedYMiddle?: string
+  projectedX: string
+  projectedY: string
+  points?: Array<object>
+  position?: number[]
+  enabled?: boolean
+  useSpans?: boolean
+  margin: MarginType
+  projection?: string
+  customDoubleClickBehavior?: Function
+  customClickBehavior?: Function
+  customHoverBehavior?: Function
+  voronoiHover: Function
+  canvasRendering?: boolean
+  disableCanvasInteraction: boolean
+  showLinePoints?: string
+  renderPipeline: object
 }
 
 type State = {
-  overlayRegions: Array<Node>,
-  interactionCanvas: Node
+  overlayRegions: Array<React.ReactElement>
+  interactionCanvas: ReactNode
 }
 
 class InteractionLayer extends React.Component<Props, State> {
@@ -71,7 +86,7 @@ class InteractionLayer extends React.Component<Props, State> {
       interactionCanvas: (
         <canvas
           className="frame-canvas-interaction"
-          ref={canvasContext => {
+          ref={(canvasContext: any) => {
             if (canvasContext) {
               canvasContext.onmousemove = e => {
                 const interactionContext = canvasContext.getContext("2d")
@@ -86,8 +101,7 @@ class InteractionLayer extends React.Component<Props, State> {
                   hoverPoint.data[1]
                 },${hoverPoint.data[2]},255)`
 
-                // $FlowFixMe
-                let overlay = this.state.overlayRegions[
+                let overlay: React.ReactElement = this.state.overlayRegions[
                   this.canvasMap.get(mostCommonRGB)
                 ]
                 if (!overlay) {
@@ -100,7 +114,6 @@ class InteractionLayer extends React.Component<Props, State> {
                   let x = 0
 
                   while (!overlay && x < 100) {
-                    // $FlowFixMe
                     overlay = this.state.overlayRegions[
                       this.canvasMap.get(
                         `rgba(${hoverArea.data[x]},${hoverArea.data[x + 1]},${
@@ -112,7 +125,6 @@ class InteractionLayer extends React.Component<Props, State> {
                   }
                 }
 
-                // $FlowFixMe
                 if (overlay && overlay.props) {
                   overlay.props.onMouseEnter()
                 } else {
@@ -145,13 +157,16 @@ class InteractionLayer extends React.Component<Props, State> {
 
   canvasMap: Map<string, number> = new Map()
 
-  constructDataObject = (d?: Object) => {
+  constructDataObject = (d?: { data?: object[]; type?: string }) => {
     if (d === undefined) return d
     const { points } = this.props
     return d && d.data ? { points, ...d.data, ...d } : { points, ...d }
   }
 
-  changeVoronoi = (d?: Object, customHoverTypes?: CustomHoverType) => {
+  changeVoronoi = (
+    d?: { type?: string; data?: object[] },
+    customHoverTypes?: CustomHoverType
+  ) => {
     const { customHoverBehavior, voronoiHover } = this.props
     //Until semiotic 2
     const dataObject = this.constructDataObject(d)
@@ -193,34 +208,22 @@ class InteractionLayer extends React.Component<Props, State> {
       this.props.customDoubleClickBehavior(dataObject)
   }
 
-  brushStart = (
-    e: ?Array<number> | Array<Array<number>>,
-    column?: string,
-    data: Object
-  ) => {
+  brushStart = (e?: number[] | number[][], column?: string, data?: object) => {
     if (this.props.interaction && this.props.interaction.start)
       this.props.interaction.start(e, column, data)
   }
 
-  brush = (
-    e: ?Array<number> | Array<Array<number>>,
-    column?: string,
-    data: Object
-  ) => {
+  brush = (e?: number[] | number[][], column?: string, data?: object) => {
     if (this.props.interaction && this.props.interaction.during)
       this.props.interaction.during(e, column, data)
   }
 
-  brushEnd = (
-    e: ?Array<number> | Array<Array<number>>,
-    column?: string,
-    data: Object
-  ) => {
+  brushEnd = (e?: number[] | number[][], column?: string, data?: object) => {
     if (this.props.interaction && this.props.interaction.end)
       this.props.interaction.end(e, column, data)
   }
 
-  createBrush = (interaction: Object) => {
+  createBrush = (interaction: Interactivity) => {
     let semioticBrush, mappingFn, selectedExtent, endMappingFn
 
     const { xScale, yScale, size, renderPipeline } = this.props
@@ -304,23 +307,29 @@ class InteractionLayer extends React.Component<Props, State> {
     }
 
     if (interaction.brush === "oBrush") {
-      selectedExtent = interaction.extent
-        ? [
-            projectedColumns[interaction.extent[0]].x,
-            projectedColumns[interaction.extent[1]].x +
-              projectedColumns[interaction.extent[1]].width
+      selectedExtent = null
+      if (interaction.extent) {
+        const [leftExtent, rightExtent] = interaction.extent
+        if (
+          (typeof leftExtent === "string" || typeof leftExtent === "number") &&
+          (typeof rightExtent === "string" || typeof rightExtent === "number")
+        ) {
+          selectedExtent = [
+            projectedColumns[leftExtent].x,
+            projectedColumns[rightExtent].x +
+              projectedColumns[rightExtent].width
           ]
-        : null
-
+        }
+      }
       function oMappingFn(d): null | any {
         if (d) {
-          // $FlowFixMe
           const columnValues = Object.values(projectedColumns)
 
-          const foundColumns = columnValues.filter(c => {
-            // $FlowFixMe
-            return d[1] >= c.x && d[0] <= c.x + c.width
-          })
+          const foundColumns = columnValues.filter(
+            (c: { x: number; width: number }) => {
+              return d[1] >= c.x && d[0] <= c.x + c.width
+            }
+          )
           return foundColumns
         }
         return null
@@ -334,17 +343,17 @@ class InteractionLayer extends React.Component<Props, State> {
           event.sourceEvent.path[1].classList.contains("xybrush") &&
           event.target.move
         ) {
-          const foundColumns = Object.values(projectedColumns).filter(
-            // $FlowFixMe
-            c => d[1] >= c.x && d[0] <= c.x + c.width
+          const columnValues: BaseColumnType[] = Object.values(projectedColumns)
+          const foundColumns: BaseColumnType[] = columnValues.filter(
+            (c: BaseColumnType) => d[1] >= c.x && d[0] <= c.x + c.width
           )
 
-          // $FlowFixMe
-          const firstColumn: { x: number, width: number } = foundColumns[0] || {
-            x: 0
+          const firstColumn: { x: number; width: number } = foundColumns[0] || {
+            x: 0,
+            width: 0
           }
-          // $FlowFixMe
-          const lastColumn: { x: number, width: number } = foundColumns[
+
+          const lastColumn: { x: number; width: number } = foundColumns[
             foundColumns.length - 1
           ] || {
             x: 0,
@@ -384,11 +393,9 @@ class InteractionLayer extends React.Component<Props, State> {
     return (
       <g className="brush">
         <Brush
-          type={interaction.brush}
           selectedExtent={selectedExtent}
           extent={extent}
           svgBrush={semioticBrush}
-          size={size}
         />
       </g>
     )
@@ -432,20 +439,19 @@ class InteractionLayer extends React.Component<Props, State> {
         : {}
 
     if (points && hoverAnnotation && !overlay) {
-      const voronoiDataset = []
+      const voronoiDataset: VoronoiEntryType[] = []
       const voronoiUniqueHash = {}
 
-      points.forEach((d: Object) => {
-        const xValue = parseInt(xScale(d[projectedX]), 10)
-        const yValue = parseInt(
+      points.forEach((d: object) => {
+        const xValue = Math.floor(xScale(d[projectedX]))
+        const yValue = Math.floor(
           yScale(
             showLinePoints && d[whichPoints[showLinePoints]] !== undefined
               ? d[whichPoints[showLinePoints]]
               : d[projectedYMiddle] !== undefined
               ? d[projectedYMiddle]
               : d[projectedY]
-          ),
-          10
+          )
         )
         if (
           xValue >= 0 &&
@@ -487,8 +493,8 @@ class InteractionLayer extends React.Component<Props, State> {
 
       const voronoiDiagram = voronoi()
         .extent(voronoiExtent)
-        .x((d: Object) => d.voronoiX)
-        .y((d: Object) => d.voronoiY)
+        .x((d: VoronoiEntryType) => d.voronoiX)
+        .y((d: VoronoiEntryType) => d.voronoiY)
 
       const voronoiData = voronoiDiagram.polygons(voronoiDataset)
 
@@ -518,8 +524,14 @@ class InteractionLayer extends React.Component<Props, State> {
       }, this)
       return voronoiPaths
     } else if (overlay) {
-      const renderedOverlay: Array<Node> = overlay.map(
-        (overlayRegion: Object, i: number) => {
+      const renderedOverlay: Array<React.ReactNode> = overlay.map(
+        (
+          overlayRegion: {
+            overlayData: object
+            renderElement: React.ReactNode
+          },
+          i: number
+        ) => {
           const { overlayData, ...rest } = overlayRegion
           if (React.isValidElement(overlayRegion.renderElement)) {
             return React.cloneElement(overlayRegion.renderElement, {
@@ -585,7 +597,6 @@ class InteractionLayer extends React.Component<Props, State> {
 
     this.canvasMap.clear()
 
-    // $FlowFixMe
     const interactionContext = this.interactionContext.getContext("2d")
 
     interactionContext.imageSmoothingEnabled = false
@@ -600,23 +611,24 @@ class InteractionLayer extends React.Component<Props, State> {
     interactionContext.lineWidth = 1
 
     overlayRegions.forEach((overlay, oi) => {
-      const interactionRGBA = `rgba(${parseInt(Math.random() * 255)},${parseInt(
+      const interactionRGBA = `rgba(${Math.floor(
         Math.random() * 255
-      )},${parseInt(Math.random() * 255)},255)`
+      )},${Math.floor(Math.random() * 255)},${Math.floor(
+        Math.random() * 255
+      )},255)`
 
       this.canvasMap.set(interactionRGBA, oi)
 
       interactionContext.fillStyle = interactionRGBA
       interactionContext.strokeStyle = interactionRGBA
 
-      // $FlowFixMe
       const p = new Path2D(overlay.props.d)
       interactionContext.stroke(p)
       interactionContext.fill(p)
     })
   }
 
-  createColumnsBrush = (interaction: Object) => {
+  createColumnsBrush = (interaction: Interactivity) => {
     const { projection, rScale, size, oColumns, renderPipeline } = this.props
 
     if (!projection || !rScale || !oColumns) return
@@ -652,7 +664,7 @@ class InteractionLayer extends React.Component<Props, State> {
 
     const columnHash = oColumns
     let brushPosition, selectedExtent
-    const brushes: Array<Node> = Object.keys(columnHash).map(c => {
+    const brushes: Array<React.ReactNode> = Object.keys(columnHash).map(c => {
       if (projection && projection === "horizontal") {
         selectedExtent = interaction.extent[c]
           ? interaction.extent[c].map(d => rScale(d))
@@ -692,12 +704,9 @@ class InteractionLayer extends React.Component<Props, State> {
       return (
         <g key={`column-brush-${c}`} className="brush">
           <Brush
-            type={type}
-            position={brushPosition}
             key={`orbrush${c}`}
             selectedExtent={selectedExtent}
             svgBrush={semioticBrush}
-            size={size}
           />
         </g>
       )
@@ -767,21 +776,6 @@ class InteractionLayer extends React.Component<Props, State> {
       </SpanOrDiv>
     )
   }
-}
-
-InteractionLayer.propTypes = {
-  name: PropTypes.string,
-  interaction: PropTypes.object,
-  overlay: PropTypes.oneOfType([
-    PropTypes.array,
-    PropTypes.object,
-    PropTypes.bool
-  ]),
-  oColumns: PropTypes.object,
-  xScale: PropTypes.func,
-  yScale: PropTypes.func,
-  rScale: PropTypes.func,
-  svgSize: PropTypes.array
 }
 
 export default InteractionLayer

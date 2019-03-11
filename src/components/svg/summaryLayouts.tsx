@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 
 import Axis from "../Axis"
 import { Mark } from "semiotic-mark"
@@ -11,6 +11,27 @@ import { pointOnArcAtAngle } from "./pieceDrawing"
 import { orFrameSummaryRenderer } from "./frameFunctions"
 import { scaleLinear } from "d3-scale"
 import { curveHash } from "../visualizationLayerBehavior/general"
+import { GenericObject } from "../types/generalTypes"
+
+type BoxplotFnType = {
+  data: GenericObject[]
+  type: GenericObject
+  renderMode: Function
+  eventListenersGenerator: Function
+  styleFn: Function
+  classFn: Function
+  positionFn: Function
+  projection: "horizontal" | "vertical" | "radial"
+  adjustedSize: number[]
+  baseMarkProps: GenericObject
+}
+
+interface BuckeyArrayType {
+  [position: number]: GenericObject
+  x0?: number
+  x1?: number
+  push(item: GenericObject): number
+}
 
 const contourMap = d => [d.xy.x, d.xy.y]
 
@@ -68,7 +89,7 @@ export function boxplotRenderFn({
   projection,
   adjustedSize,
   baseMarkProps
-}) {
+}: BoxplotFnType) {
   const summaryElementStylingFn = type.elementStyleFn || emptyObjectReturnFn
 
   const keys = Object.keys(data)
@@ -710,8 +731,6 @@ export function contourRenderFn({
     const oContours = contouring({
       summaryType: type,
       data: projectedOrd,
-      projectedX: "x",
-      projectedY: "y",
       finalXExtent: [0, adjustedSize[0]],
       finalYExtent: [0, adjustedSize[1]]
     })
@@ -761,11 +780,9 @@ function axisGenerator(axisProps, i, axisScale) {
       tickSize={axisProps.tickSize}
       tickFormat={axisProps.tickFormat}
       tickValues={axisProps.tickValues}
-      format={axisProps.format}
       rotate={axisProps.rotate}
       scale={axisScale}
       className={axisProps.className}
-      name={axisProps.name}
     />
   )
 }
@@ -843,7 +860,7 @@ export function bucketizedRenderingFn({
       const calculatedValues = summaryPositionNest.map(value => xyValue(value))
       keyBins = summaryPositionNest
         .map((value, i) => {
-          const bucketArray = []
+          const bucketArray: BuckeyArrayType = []
           bucketArray.x0 = calculatedValues[i] - 1
           bucketArray.x1 = calculatedValues[i] + 1
           bucketArray.push(value)
@@ -907,12 +924,9 @@ export function bucketizedRenderingFn({
         binMax,
         relativeBuckets,
         columnWidth,
-        bucketSize,
         projection,
         adjustedSize,
-        chartSize,
         summaryI,
-        data,
         summary,
         renderValue,
         summaryStyle: calculatedSummaryStyle,
@@ -1243,8 +1257,9 @@ export const drawSummaries = ({
   positionFn,
   projection,
   adjustedSize,
-  canvasRender,
-  canvasDrawing,
+  margin,
+  //  canvasRender,
+  //  canvasDrawing,
   baseMarkProps
 }) => {
   if (!type || !type.type) return
@@ -1263,8 +1278,9 @@ export const drawSummaries = ({
     projection,
     adjustedSize,
     chartSize,
-    canvasRender,
-    canvasDrawing,
+    margin,
+    //    canvasRender,
+    //    canvasDrawing,
     baseMarkProps
   })
 }
