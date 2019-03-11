@@ -96,6 +96,12 @@ import pathBounds from "svg-path-bounding-box"
 
 import { nodesEdgesFromHierarchy } from "./processing/network"
 
+import {
+  AnnotationHandling,
+  CustomHoverType,
+  AnnotationType
+} from "./types/annotationTypes"
+
 const emptyArray = []
 
 const baseNodeProps = {
@@ -215,7 +221,7 @@ function determineNodeIcon(baseCustomNodeIcon, networkSettings, size, nodes) {
     case "dagre":
       return hierarchicalRectNodeGenerator
     case "matrix":
-      return matrixNodeGenerator(size, nodes, networkSettings)
+      return matrixNodeGenerator(size, nodes)
   }
 
   return circleNodeGenerator
@@ -328,6 +334,7 @@ import {
   NetworkFrameState,
   NetworkSettingsType
 } from "./types/networkTypes"
+import { AnnotationLayerProps } from "./AnnotationLayer"
 
 class NetworkFrame extends React.Component<
   NetworkFrameProps,
@@ -531,7 +538,9 @@ class NetworkFrame extends React.Component<
     let { edgeHash, nodeHash } = networkSettings.graphSettings
 
     const createPointLayer =
-      ["treemap", "partition", "sankey"].indexOf(networkSettings.type) !== -1
+      networkSettings.type === "treemap" ||
+      networkSettings.type === "partition" ||
+      networkSettings.type === "sankey"
 
     const nodeIDAccessor = stringToFn<string>(
       currentProps.nodeIDAccessor,
@@ -545,8 +554,8 @@ class NetworkFrame extends React.Component<
       currentProps.targetAccessor,
       d => d.target
     )
-    // $FlowFixMe
-    const nodeSizeAccessor: Function =
+
+    const nodeSizeAccessor: (args?: GenericObject) => number =
       typeof currentProps.nodeSizeAccessor === "number"
         ? genericFunction(currentProps.nodeSizeAccessor)
         : stringToFn<number>(currentProps.nodeSizeAccessor, d => d.r || 5)
@@ -566,12 +575,16 @@ class NetworkFrame extends React.Component<
 
     let { projectedNodes, projectedEdges } = this.state
 
+    const isHierarchical =
+      typeof networkSettings.type === "string" &&
+      hierarchicalTypeHash[networkSettings.type]
+
     const changedData =
       !this.state.projectedNodes ||
       !this.state.projectedEdges ||
       this.state.graphSettings.nodes !== nodes ||
       this.state.graphSettings.edges !== edges ||
-      hierarchicalTypeHash[networkSettings.type]
+      isHierarchical
 
     if (
       networkSettings.type === "dagre" &&
@@ -631,7 +644,7 @@ class NetworkFrame extends React.Component<
       let operationalEdges = edges
       let baseEdges = edges
 
-      if (hierarchicalTypeHash[networkSettings.type] && Array.isArray(edges)) {
+      if (isHierarchical && Array.isArray(edges)) {
         const createdHierarchicalData = softStack(
           edges,
           projectedNodes,
@@ -657,14 +670,14 @@ class NetworkFrame extends React.Component<
 
         rootNode.sum(networkSettings.hierarchySum || (d => d.value))
 
-        if (hierarchicalTypeHash[networkSettings.type]) {
-          const layout =
-            networkSettings.layout || hierarchicalTypeHash[networkSettings.type]
+        if (isHierarchical) {
+          const layout = networkSettings.layout || isHierarchical
           const hierarchicalLayout = layout()
           const networkSettingKeys = Object.keys(networkSettings)
           if (
-            ["dendrogram", "tree", "cluster"].indexOf(networkSettings.type) !==
-              -1 &&
+            (networkSettings.type === "dendrogram" ||
+              networkSettings.type === "tree" ||
+              networkSettings.type === "cluster") &&
             hierarchicalLayout.separation
           ) {
             hierarchicalLayout.separation(
@@ -681,8 +694,7 @@ class NetworkFrame extends React.Component<
             }
           })
           const layoutSize =
-            networkSettings.projection === "horizontal" &&
-            hierarchicalProjectable[networkSettings.type]
+            networkSettings.projection === "horizontal" && isHierarchical
               ? [adjustedSize[1], adjustedSize[0]]
               : adjustedSize
           if (!networkSettings.nodeSize && hierarchicalLayout.size) {
@@ -735,14 +747,16 @@ class NetworkFrame extends React.Component<
 
           const edgeWeight = edge.weight || 1
 
-          nodeHash.get(target).inDegree += edgeWeight
-          nodeHash.get(source).outDegree += edgeWeight
-          nodeHash.get(target).degree += edgeWeight
-          nodeHash.get(source).degree += edgeWeight
+          const sourceNode = nodeHash.get(source)
+          const targetNode = nodeHash.get(target)
 
-          const edgeKey = `${nodeIDAccessor(source) || source}|${nodeIDAccessor(
-            target
-          ) || target}`
+          targetNode.inDegree += edgeWeight
+          sourceNode.outDegree += edgeWeight
+          targetNode.degree += edgeWeight
+          sourceNode.degree += edgeWeight
+
+          const edgeKey = `${nodeIDAccessor(sourceNode) ||
+            source}|${nodeIDAccessor(targetNode) || target}`
           const newEdge = Object.assign({}, edge, {
             source: nodeHash.get(source),
             target: nodeHash.get(target)
@@ -755,8 +769,16 @@ class NetworkFrame extends React.Component<
       edgeHash = new Map()
       networkSettings.graphSettings.edgeHash = edgeHash
       projectedEdges.forEach(edge => {
-        const edgeKey = `${nodeIDAccessor(edge.source) ||
-          edge.source}|${nodeIDAccessor(edge.target) || edge.target}`
+        const edgeSource =
+          typeof edge.source === "string"
+            ? edge.source
+            : nodeIDAccessor(edge.source)
+        const edgeTarget =
+          typeof edge.target === "string"
+            ? edge.target
+            : nodeIDAccessor(edge.target)
+
+        const edgeKey = `${edgeSource}|${edgeTarget}`
         edgeHash.set(edgeKey, edge)
       })
     }
@@ -806,13 +828,14 @@ class NetworkFrame extends React.Component<
           : edgeType === "angled"
           ? ribbonLink(d)
           : areaLink(d)
-    } else if (hierarchicalTypeHash[networkSettings.type]) {
+    } else if (isHierarchical) {
       projectedNodes.forEach(node => {
         if (createPointLayer) {
           node.x = (node.x0 + node.x1) / 2
           node.y = (node.y0 + node.y1) / 2
         }
         if (
+          typeof networkSettings.type === "string" &&
           hierarchicalProjectable[networkSettings.type] &&
           networkSettings.projection === "horizontal"
         ) {
@@ -829,6 +852,7 @@ class NetworkFrame extends React.Component<
             node.y1 = ox1
           }
         } else if (
+          typeof networkSettings.type === "string" &&
           radialProjectable[networkSettings.type] &&
           networkSettings.projection === "radial"
         ) {
@@ -879,7 +903,6 @@ class NetworkFrame extends React.Component<
         const matrixifiedNetwork = matrixify({
           edgeHash: edgeHash,
           nodes: projectedNodes,
-          edges: projectedEdges,
           edgeWidthAccessor,
           nodeIDAccessor
         })
@@ -1503,7 +1526,7 @@ class NetworkFrame extends React.Component<
     if (currentProps.nodeLabels && projectedNodes) {
       projectedNodes.forEach((node, nodei) => {
         const feasibleLabel =
-          nodeLabels && nodeLabels !== true && nodeLabels(node, nodei)
+          nodeLabels && nodeLabels !== true && nodeLabels(node)
         if (nodeLabels === true || feasibleLabel) {
           const actualLabel =
             networkSettings.projection === "radial" && node.depth !== 0
@@ -1511,8 +1534,7 @@ class NetworkFrame extends React.Component<
                   node,
                   nodei,
                   nodeLabels === true ? nodeIDAccessor : nodeLabels,
-                  adjustedSize,
-                  networkSettings
+                  adjustedSize
                 )
               : nodeLabels === true
               ? nodeIDAccessor(node, nodei)
@@ -1593,6 +1615,7 @@ class NetworkFrame extends React.Component<
       }
     } else if (
       hoverAnnotation === "edge" &&
+      typeof networkSettings.type === "string" &&
       edgePointHash[networkSettings.type]
     ) {
       projectedXYPoints = projectedEdges.map(
@@ -1606,7 +1629,10 @@ class NetworkFrame extends React.Component<
       projectedXYPoints = projectedNodes
       if (changedData || networkSettingsChanged)
         projectedXYPoints = [...projectedNodes]
-    } else if (hoverAnnotation === "all") {
+    } else if (
+      hoverAnnotation === "all" &&
+      typeof networkSettings.type === "string"
+    ) {
       projectedXYPoints = [
         ...projectedEdges.map(edgePointHash[networkSettings.type]),
         ...projectedNodes
@@ -1645,9 +1671,9 @@ class NetworkFrame extends React.Component<
     i,
     annotationLayer
   }: {
-    d: Object
+    d: AnnotationType
     i: number
-    annotationLayer: Object
+    annotationLayer: AnnotationLayerProps
   }) => {
     const {
       projectedNodes,
@@ -1701,13 +1727,11 @@ class NetworkFrame extends React.Component<
       return svgNodeRule({
         d,
         i,
-        projectedNodes,
-        nodeIDAccessor,
         nodeSizeAccessor
       })
     } else if (d.type === "desaturation-layer") {
       return desaturationLayer({
-        style: d.style,
+        style: d.style instanceof Function ? d.style(d, i) : d.style,
         size: adjustedSize,
         i,
         key: d.key
@@ -1752,8 +1776,6 @@ class NetworkFrame extends React.Component<
     } else if (d.type === "highlight") {
       return svgHighlightRule({
         d,
-        i,
-        nodeSizeAccessor,
         networkFrameRender
       })
     }
@@ -1765,9 +1787,9 @@ class NetworkFrame extends React.Component<
     i,
     annotationLayer
   }: {
-    d: Object
+    d: AnnotationType
     i: number
-    annotationLayer: Object
+    annotationLayer: AnnotationLayerProps
   }) => {
     const { tooltipContent, size, useSpans } = this.props
     const {
@@ -1819,7 +1841,6 @@ class NetworkFrame extends React.Component<
         d,
         i,
         tooltipContent,
-        size,
         useSpans,
         nodes: projectedNodes,
         edges: projectedEdges,

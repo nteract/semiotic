@@ -1,77 +1,83 @@
-// @flow
-
 import { sum } from "d3-array"
 
 import { findFirstAccessorValue } from "../data/multiAccessorUtils"
 
+import {
+  ProjectedLine,
+  ProjectedPoint,
+  RawLine,
+  RawSummary
+} from "../types/generalTypes"
+import { AnnotationType } from "../types/annotationTypes"
+
 const datesForUnique = d => (d instanceof Date ? d.getTime() : d)
 
 type SummaryProjectionTypes = {
-  data: Array<Object>,
-  summaryDataAccessor: Array<Function>,
-  xAccessor: Array<Function>,
+  data: Array<RawSummary>
+  summaryDataAccessor: Array<Function>
+  xAccessor: Array<Function>
   yAccessor: Array<Function>
 }
 
 type LineProjectionTypes = {
-  data: Array<Object>,
-  lineDataAccessor: Array<Function>,
-  xProp: string,
-  yProp: string,
-  yPropTop: string,
-  yPropBottom: string,
-  xAccessor: Array<Function>,
+  data: Array<RawLine>
+  lineDataAccessor: Array<Function>
+  xProp: string
+  yProp: string
+  yPropTop?: string
+  yPropBottom?: string
+  xAccessor: Array<Function>
   yAccessor: Array<Function>
 }
 
 type DifferenceLineProps = {
-  data: Array<Object>,
-  yProp: string,
-  yPropTop: string,
+  data: Array<ProjectedLine>
+  yProp: string
+  yPropTop: string
   yPropBottom: string
 }
 
 type StackedAreaTypes = {
-  type: string,
-  data: Array<Object>,
-  xProp: string,
-  yProp: string,
-  yPropMiddle: string,
-  sort?: Function,
-  yPropTop: string,
+  type: string
+  data: Array<ProjectedLine>
+  xProp: string
+  yProp: string
+  yPropMiddle: string
+  sort?: (a: ProjectedLine, b: ProjectedLine) => number
+  yPropTop: string
   yPropBottom: string
 }
 
 type CumulativeLineTypes = {
-  type: string,
-  data: Array<Object>,
-  yPropMiddle: string,
-  yPropTop: string,
+  type: string
+  data: Array<ProjectedLine>
+  yPropMiddle: string
+  yPropTop: string
   yPropBottom: string
 }
 
 type LineChartTypes = {
-  data: Array<Object>,
-  y1?: Function,
-  yPropTop: string,
-  yPropMiddle: string,
+  data: Array<ProjectedLine>
+  y1?: Function
+  yPropTop: string
+  yPropMiddle: string
   yPropBottom: string
 }
 
 type RelativeYTypes = {
-  point: ?Object,
-  projectedYMiddle: string,
-  projectedY: string,
-  yAccessor: Array<Function>,
-  yScale: Function,
+  point?: ProjectedPoint | AnnotationType
+  projectedYMiddle: string
+  projectedY: string
+  yAccessor: Array<Function>
+  yScale: Function
   showLinePoints?: boolean | string
 }
 
 type RelativeXTypes = {
-  point: ?Object,
-  projectedXMiddle: string,
-  projectedX: string,
-  xAccessor: Array<Function>,
+  point?: ProjectedPoint | AnnotationType
+  projectedXMiddle: string
+  projectedX: string
+  xAccessor: Array<Function>
   xScale: Function
 }
 
@@ -118,22 +124,21 @@ export const projectLineData = ({
   if (!Array.isArray(data)) {
     data = [data]
   }
-  const projectedLine: Array<Object> = []
+  const projectedLine: Array<ProjectedLine> = []
 
   lineDataAccessor.forEach((actualLineAccessor, lineIndex) => {
     xAccessor.forEach((actualXAccessor, xIndex) => {
       yAccessor.forEach((actualYAccessor, yIndex) => {
-        data.forEach((d: Object) => {
+        data.forEach((d: ProjectedLine) => {
           const originalLineData = { ...d, xIndex, yIndex, lineIndex }
 
           originalLineData.data = actualLineAccessor(d).map((p, q) => {
-            const originalCoords = {}
+            const originalCoords = { data: p }
 
             originalCoords[xProp] = actualXAccessor(p, q)
             originalCoords[yProp] = actualYAccessor(p, q)
             originalCoords[yPropTop] = originalCoords[yProp]
             originalCoords[yPropBottom] = originalCoords[yProp]
-            originalCoords.data = p
 
             return originalCoords
           })
@@ -446,10 +451,10 @@ function simpleSearchFunction({
   parameters,
   keys
 }: {
-  pointA: Object,
-  pointB: Object,
-  currentParameters: Object,
-  parameters: Function,
+  pointA: Object
+  pointB: Object
+  currentParameters: Object
+  parameters: Function
   keys: Array<string>
 }) {
   const betweenPoint = {}
@@ -473,8 +478,8 @@ export function funnelize({
   steps,
   key
 }: {
-  data: Array<Object>,
-  steps: Array<string>,
+  data: Array<Object>
+  steps: Array<string>
   key: string
 }) {
   const funnelData = []
@@ -557,11 +562,11 @@ export function findPointByID({
   projectedX,
   xAccessor
 }: {
-  point: Object,
-  idAccessor: Function,
-  lines: Object,
-  xScale: Function,
-  projectedX: string,
+  point: ProjectedPoint
+  idAccessor: Function
+  lines: { data: ProjectedLine[] }
+  xScale: Function
+  projectedX: string
   xAccessor: Array<Function>
 }) {
   const pointID = idAccessor(point.parentLine || point)

@@ -57,35 +57,51 @@ const builtInTransformations = {
   "cumulative-reverse": cumulativeLine
 }
 
-type validStrFnTypes = string | GenericObject | number | Array<GenericObject>
+type validStrFnTypes =
+  | boolean
+  | string
+  | number
+  | GenericObject
+  | GenericObject[]
+  | RawPoint
+  | RawPoint[]
 
 export function stringToFn<StrFnType extends validStrFnTypes>(
-  accessor?: ((args: GenericObject) => StrFnType) | string | StrFnType,
-  defaultAccessor?: (arg?: GenericObject) => StrFnType,
+  accessor?:
+    | ((args?: GenericObject, index?: number) => StrFnType)
+    | string
+    | StrFnType,
+  defaultAccessor?: (arg?: GenericObject, i?: number) => StrFnType,
   raw?: boolean
-) {
+): (d?: GenericObject, i?: number) => StrFnType {
   if (!accessor && defaultAccessor) {
     return defaultAccessor
-  } else if (typeof accessor === "function") {
-    return accessor
-  } else if (raw === true) {
+  } else if (typeof accessor === "object") {
     return () => accessor
+  } else if (accessor instanceof Function) {
+    return accessor
   } else if (typeof accessor === "string") {
     return (d: GenericObject) => d[accessor]
+  } else if (raw === true) {
+    return () => accessor
   }
 
-  return () => 0
+  return () => undefined
 }
 
 export function stringToArrayFn<StrFnType extends validStrFnTypes>(
   accessor?:
-    | ((arg?: GenericObject) => StrFnType)
+    | ((arg?: GenericObject, index?: number) => StrFnType)
     | string
     | StrFnType
-    | Array<((arg?: GenericObject) => StrFnType) | string | StrFnType>,
-  defaultAccessor?: (arg?: GenericObject) => StrFnType,
+    | Array<
+        | ((arg?: GenericObject, index?: number) => StrFnType)
+        | string
+        | StrFnType
+      >,
+  defaultAccessor?: (arg?: GenericObject, index?: number) => StrFnType,
   raw?: boolean
-): Array<(arg?: GenericObject) => StrFnType> {
+): Array<(arg?: GenericObject, index?: number) => StrFnType> {
   if (accessor === undefined) {
     return [stringToFn<StrFnType>(undefined, defaultAccessor, raw)]
   }
@@ -271,10 +287,6 @@ export const calculateDataExtent = ({
     projectedSummaries = projectSummaryData({
       data: summaries,
       summaryDataAccessor,
-      xProp: projectedX,
-      yProp: projectedY,
-      yPropTop: projectedYTop,
-      yPropBottom: projectedYBottom,
       xAccessor,
       yAccessor
     })

@@ -1,6 +1,4 @@
-// @flow
-
-import React from "react"
+import * as React from "react"
 
 import { drawAreaConnector } from "../svg/SvgHelper"
 import { Mark } from "semiotic-mark"
@@ -13,11 +11,16 @@ import {
 } from "./summaryLayouts"
 import { axisPieces, axisLines } from "../visualizationLayerBehavior/axis"
 
-import type { MarginType, ProjectionTypes } from "../types/generalTypes"
+import {
+  MarginType,
+  ProjectionTypes,
+  GenericObject,
+  accessorType
+} from "../types/generalTypes"
 
-import type { AxisType } from "../types/annotationTypes"
+import { AxisType } from "../types/annotationTypes"
 
-import { scaleLinear } from "d3-scale"
+import { scaleLinear, ScaleLinear } from "d3-scale"
 
 const extent = inputArray =>
   inputArray.reduce(
@@ -28,60 +31,66 @@ const extent = inputArray =>
     [Infinity, -Infinity]
   )
 
+type TitleType = { title?: string | Element; orient?: string }
+
+type PieceType = { type: string; innerRadius?: number }
+
+type SummaryType = { type: string }
+
 type CalculateMarginTypes = {
-  margin?: number | Object,
-  axes?: Array<Object>,
-  title: Object,
-  oLabel?: boolean | Function,
+  margin?: number | object
+  axes?: Array<AxisType>
+  title: TitleType
+  oLabel?: boolean | accessorType<string | Element>
   projection?: ProjectionTypes
 }
 
 type AdjustedPositionSizeTypes = {
-  size: Array<number>,
-  position?: Array<number>,
-  margin: MarginType,
+  size: Array<number>
+  position?: Array<number>
+  margin: MarginType
   projection?: ProjectionTypes
 }
 
 type ORFrameConnectionRendererTypes = {
-  type: Object,
-  data: Object,
-  renderMode: Function,
-  eventListenersGenerator: Function,
-  styleFn: Function,
-  classFn: Function,
-  projection: ProjectionTypes,
-  canvasRender: Function,
-  canvasDrawing: Array<Object>,
-  baseMarkProps: Object,
-  pieceType: Object
+  type: { type: Function }
+  data: object
+  renderMode: Function
+  eventListenersGenerator: Function
+  styleFn: Function
+  classFn: Function
+  projection: ProjectionTypes
+  canvasRender: Function
+  canvasDrawing: Array<object>
+  baseMarkProps: object
+  pieceType: PieceType
 }
 
 type ORFrameSummaryRendererTypes = {
-  data: Array<Object>,
-  type: Object,
-  renderMode: Function,
-  eventListenersGenerator: Function,
-  styleFn: Function,
-  classFn: Function,
-  positionFn: Function,
-  projection: ProjectionTypes,
-  adjustedSize: Array<number>,
-  chartSize: number,
-  baseMarkProps: Object,
-  margin: Object
+  data: Array<object>
+  type: SummaryType
+  renderMode: Function
+  eventListenersGenerator: Function
+  styleFn: Function
+  classFn: Function
+  positionFn: Function
+  projection: ProjectionTypes
+  adjustedSize: Array<number>
+  chartSize: number
+  baseMarkProps: object
+  margin: object
 }
 
 type ORFrameAxisGeneratorTypes = {
-  projection: ProjectionTypes,
-  axis?: Array<Object>,
-  adjustedSize: Array<number>,
-  size: Array<number>,
-  rScale: Function,
-  rScaleType: Function,
-  pieceType: Object,
-  rExtent: Array<number>,
-  data: Array<Object>,
+  projection: ProjectionTypes
+  axis?: Array<AxisType>
+  adjustedSize: Array<number>
+  size: Array<number>
+  rScale: ScaleLinear<number, number>
+  rScaleType: ScaleLinear<number, number>
+  pieceType: PieceType
+  rExtent: Array<number>
+  data: Array<object>
   maxColumnValues?: number
 }
 
@@ -117,8 +126,8 @@ export const drawMarginPath = ({
   size,
   inset = 0
 }: {
-  margin: Object,
-  size: Array<number>,
+  margin: MarginType
+  size: Array<number>
   inset: number
 }) => {
   const iSize = [size[0] - inset, size[1] - inset]
@@ -176,26 +185,39 @@ export const calculateMargin = ({
   return finalMargin
 }
 
-export function objectifyType(type?: string | Object | Function) {
-  return typeof type === "object" ? type : { type: type, simpleLine: false }
+export function objectifyType<ObjectifyType>(
+  type?: string | ObjectifyType
+): ObjectifyType {
+  if (typeof type === "object") {
+    return type
+  }
+  const decoratedType: ObjectifyType = {}
+  return decoratedType
 }
 
 export function generateOrdinalFrameEventListeners(
   customHoverBehavior: Function,
   customClickBehavior: Function
 ) {
-  let eventListenersGenerator = () => ({})
+  let eventListenersGenerator: (
+    d?: object,
+    i?: number
+  ) => {
+    onMouseEnter?: () => void
+    onMouseLeave?: () => void
+    onClick?: () => void
+  } = () => ({})
 
   if (customHoverBehavior || customClickBehavior) {
-    eventListenersGenerator = (d: Object, i: number) => ({
+    eventListenersGenerator = (d: object, i: number) => ({
       onMouseEnter: customHoverBehavior
-        ? () => customHoverBehavior((d: Object), (i: number))
+        ? (): void => customHoverBehavior(d, i)
         : undefined,
       onMouseLeave: customHoverBehavior
-        ? () => customHoverBehavior(undefined)
+        ? (): void => customHoverBehavior(undefined)
         : undefined,
       onClick: customClickBehavior
-        ? () => customClickBehavior((d: Object), (i: number))
+        ? (): void => customClickBehavior(d, i)
         : undefined
     })
   }
@@ -204,17 +226,17 @@ export function generateOrdinalFrameEventListeners(
 
 export function keyAndObjectifyBarData({
   data,
-  renderKey = (d?: Object | number, i: number) => i,
+  renderKey = (d?: object | number, i?: number) => i,
   oAccessor,
   rAccessor: baseRAccessor,
   multiAxis = false
 }: {
-  data: Array<Object | number>,
-  renderKey: Function,
-  oAccessor: Array<Function> | Function,
-  rAccessor: Array<Function>,
+  data: Array<object | number>
+  renderKey: Function
+  oAccessor: Array<Function>
+  rAccessor: Array<(d: number | object, i?: number) => number>
   multiAxis?: boolean
-}): { allData: Array<Object>, multiExtents?: Array<Array<number>> } {
+}): { allData: Array<object>; multiExtents?: Array<Array<number>> } {
   let rAccessor
   let multiExtents
   if (multiAxis && baseRAccessor.length > 1) {
@@ -288,7 +310,7 @@ export function generateFrameTitle({
   title: rawTitle = { title: "", orient: "top" },
   size
 }: {
-  title: Object,
+  title: TitleType
   size: Array<number>
 }) {
   let finalTitle = null
@@ -685,11 +707,9 @@ export const orFrameAxisGenerator = ({
           tickSize={d.tickSize}
           tickFormat={d.tickFormat}
           tickValues={tickValues}
-          format={d.format}
           rotate={d.rotate}
           scale={axisScale}
           className={axisClassname}
-          name={d.name}
           baseline={d.baseline}
           dynamicLabelPosition={d.dynamicLabelPosition}
         />

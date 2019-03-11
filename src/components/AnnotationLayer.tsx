@@ -14,35 +14,35 @@ import {
   AnnotationProps
 } from "./types/annotationTypes"
 
+import { LegendProps } from "./types/legendTypes"
+
 interface NoteType {
-  key: string;
-  props: AnnotationProps;
+  key: string
+  props: AnnotationProps
 }
 
-interface AnnotationLayerProps {
-  useSpans: boolean;
-  legendSettings?: {
-    position: "right" | "left",
-    title: string,
-    legendGroups: Object[]
-  };
-  margin: { top?: number, left?: number, right?: number, bottom?: number };
-  size: number[];
-  axes?: AxisType[];
-  annotationHandling?: AnnotationHandling | AnnotationTypes;
-  annotations: Object[];
-  pointSizeFunction?: Function;
-  labelSizeFunction?: Function;
-  svgAnnotationRule: Function;
-  htmlAnnotationRule: Function;
+export interface AnnotationLayerProps {
+  useSpans: boolean
+  legendSettings?: LegendProps
+  margin: { top?: number; left?: number; right?: number; bottom?: number }
+  size: number[]
+  axes?: AxisType[]
+  annotationHandling?: AnnotationHandling | AnnotationTypes
+  annotations: Object[]
+  pointSizeFunction?: Function
+  labelSizeFunction?: Function
+  svgAnnotationRule: Function
+  htmlAnnotationRule: Function
+  voronoiHover: Function
+  position?: number[]
 }
 
 interface AnnotationLayerState {
-  svgAnnotations: Object[];
-  htmlAnnotations: Object[];
-  adjustedAnnotationsKey?: string;
-  adjustedAnnotationsDataVersion?: string;
-  adjustedAnnotations: Object[];
+  svgAnnotations: Object[]
+  htmlAnnotations: Object[]
+  adjustedAnnotationsKey?: string
+  adjustedAnnotationsDataVersion?: string
+  adjustedAnnotations: Object[]
 }
 
 function marginOffsetFn(orient, axisSettings, marginOffset) {

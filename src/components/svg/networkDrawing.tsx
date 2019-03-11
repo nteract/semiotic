@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 
 import { Mark } from "semiotic-mark"
 
@@ -238,9 +238,10 @@ export const dagreEdgeGenerator = direction => {
   return ({ d, i, styleFn, renderMode, key, className, baseMarkProps }) => {
     if (d.ribbon || d.parallelEdges) {
       const ribbonGenerator = linearRibbon()
-        .x(p => p.x)
-        .y(p => p.y)
-        .r(() => d.weight || 1)
+
+      ribbonGenerator.x(p => p.x)
+      ribbonGenerator.y(p => p.y)
+      ribbonGenerator.r(() => d.weight || 1)
 
       if (d.parallelEdges) {
         const sortedParallelEdges = d.parallelEdges.sort(
@@ -871,9 +872,10 @@ export const ribbonLink = d => {
         ]
 
   const linkGenerator = linearRibbon()
-    .x(d => d.x)
-    .y(d => d.y)
-    .r(() => d.sankeyWidth / 2)
+
+  linkGenerator.x(d => d.x)
+  linkGenerator.y(d => d.y)
+  linkGenerator.r(() => d.sankeyWidth / 2)
 
   return linkGenerator(testCoordinates)
 }
@@ -909,9 +911,10 @@ export const areaLink = d => {
 
 export function circularAreaLink(link) {
   const linkGenerator = linearRibbon()
-    .x(d => d.x)
-    .y(d => d.y)
-    .r(() => link.sankeyWidth / 2)
+
+  linkGenerator.x(d => d.x)
+  linkGenerator.y(d => d.y)
+  linkGenerator.r(() => link.sankeyWidth / 2)
 
   const xyForLink =
     link.direction === "down"
@@ -1027,9 +1030,9 @@ export const softStack = (
     }
   }
   if (isHierarchical) {
-    const hashEntries = Object.entries(discoveredHierarchyHash)
+    const hashEntries: string[] = Object.values(discoveredHierarchyHash)
     hashEntries.forEach(entry => {
-      const target = entry[1]
+      const target = entry
       if (!discoveredHierarchyHash[target]) {
         discoveredHierarchyHash[target] = "root-generated"
         const idNode = nodes.find(node => nodeIDAccessor(node) === target) || {}

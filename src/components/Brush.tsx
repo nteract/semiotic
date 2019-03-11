@@ -26,10 +26,9 @@ function flatShortArray(array) {
 }
 
 interface BrushProps {
-  extent?: number[] | number[][];
-  selectedExtent?: number[] | number[][];
-  svgBrush: { (): any, move: Function };
-  position: number[];
+  extent?: number[] | number[][]
+  selectedExtent?: number[] | number[][]
+  svgBrush: { (): any; move: Function }
 }
 
 class Brush extends React.Component<BrushProps, null> {
@@ -82,13 +81,7 @@ class Brush extends React.Component<BrushProps, null> {
   }
 
   render() {
-    return (
-      <g
-        ref={node => (this.node = node)}
-        transform={`translate(${this.props.position || [0, 0]})`}
-        className="xybrush"
-      />
-    )
+    return <g ref={node => (this.node = node)} className="xybrush" />
   }
 }
 

@@ -58,20 +58,20 @@ function validFrameProps(originalProps, frameType) {
 }
 
 interface FacetControllerProps {
-  children: Element;
-  react15Wrapper: Element;
-  sharedRExtent: boolean;
-  sharedXExtent: boolean;
-  sharedYExtent: boolean;
+  children: Element
+  react15Wrapper: Element
+  sharedRExtent: boolean
+  sharedXExtent: boolean
+  sharedYExtent: boolean
 }
 
 type Props = FacetControllerProps & OrdinalFrameProps & XYFrameProps
 
 interface State {
-  extents: object;
-  rawExtents: object;
-  facetHover?: object;
-  facetHoverAnnotations?: CustomHoverType;
+  extents: object
+  rawExtents: object
+  facetHover?: object
+  facetHoverAnnotations?: CustomHoverType
 }
 
 class FacetController extends React.Component<Props, State> {
@@ -115,7 +115,7 @@ class FacetController extends React.Component<Props, State> {
     originalAnnotations,
     state
   }: {
-    originalAnnotations: Array<Object>,
+    originalAnnotations: Array<Object>
     state: State
   }) => {
     let annotationBase = state.facetHoverAnnotations
@@ -142,22 +142,27 @@ class FacetController extends React.Component<Props, State> {
         })
       }
 
-      annotationBase.forEach(annotation => {
-        if (annotation.type === "column-hover") {
-          annotation.facetColumn = annotation.column.name
-          annotation.column = undefined
-        } else {
-          if (!annotation.type) {
-            annotation.type = "frame-hover"
+      if (Array.isArray(annotationBase)) {
+        annotationBase.forEach(annotation => {
+          let generatedAnnotation = annotation
+          if (typeof annotation !== "function") {
+            if (annotation.type === "column-hover") {
+              annotation.facetColumn = annotation.column.name
+              annotation.column = undefined
+            } else {
+              if (!annotation.type) {
+                annotation.type = "frame-hover"
+              }
+              annotation.y = undefined
+              annotation.yBottom = undefined
+              annotation.yMiddle = undefined
+              annotation.yTop = undefined
+            }
           }
-          annotation.y = undefined
-          annotation.yBottom = undefined
-          annotation.yMiddle = undefined
-          annotation.yTop = undefined
-        }
-      })
+        })
 
-      annotations.push(...annotationBase)
+        annotations.push(...annotationBase)
+      }
       return annotations
     }
 
@@ -177,10 +182,10 @@ class FacetController extends React.Component<Props, State> {
     props,
     state
   }: {
-    child: React.ReactElement,
-    props: Props,
-    index: number,
-    state: State,
+    child: React.ReactElement
+    props: Props
+    index: number
+    state: State
     originalAnnotations: Array<Object>
   }) => {
     const frameType = child.type.displayName

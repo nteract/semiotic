@@ -1,6 +1,4 @@
-// @flow
-
-import React from "react"
+import * as React from "react"
 import AnnotationLayer from "./AnnotationLayer"
 import InteractionLayer from "./InteractionLayer"
 import VisualizationLayer from "./VisualizationLayer"
@@ -9,74 +7,80 @@ import { drawMarginPath } from "./svg/frameFunctions"
 import { filterDefs } from "./constants/jsx"
 
 import SpanOrDiv from "./SpanOrDiv"
-import type { Node } from "react"
-import type { MarginType } from "./types/generalTypes"
-import type { AxisType } from "./types/annotationTypes"
+import { MarginType } from "./types/generalTypes"
+import {
+  AxisType,
+  AnnotationHandling,
+  AnnotationTypes,
+  AnnotationProps
+} from "./types/annotationTypes"
+import { LegendProps } from "./types/legendTypes"
 
 type Props = {
-  name?: string,
-  title: Object,
-  margin: MarginType,
-  size: Array<number>,
-  annotationSettings: Object,
-  annotations?: Array<Object>,
-  customHoverBehavior?: Function,
-  customClickBehavior?: Function,
-  customDoubleClickBehavior?: Function,
-  htmlAnnotationRules?: Function,
-  tooltipContent?: Function,
-  className?: string,
-  additionalDefs?: Node,
-  interaction?: Object,
-  renderFn?: string | Function,
-  hoverAnnotation?: boolean | Object | Array<Object | Function> | Function,
-  backgroundGraphics?: Node | Function,
-  foregroundGraphics?: Node | Function,
-  interactionOverflow?: Object,
-  disableContext?: boolean,
-  canvasRendering?: boolean,
-  useSpans: boolean,
-  baseMarkProps?: Object,
-  canvasPostProcess?: "chuckClose" | Function,
-  projection?: string,
-  rScale?: Function,
-  columns?: Object,
-  overlay?: Array<Object>,
-  legendSettings?: Object,
-  adjustedPosition: Array<number>,
-  defaultHTMLRule: Function,
-  defaultSVGRule: Function,
-  downloadButton: Node,
-  beforeElements?: Node,
-  afterElements?: Node,
-  points?: Array<Object>,
-  projectedYMiddle?: string,
-  dataVersion?: string,
-  frameKey?: string,
-  additionalDefs?: Node,
-  xScale: Function,
-  yScale: Function,
-  adjustedSize?: Array<number>,
-  renderPipeline: Object,
-  projectedCoordinateNames: Object,
-  matte?: boolean | Object | Node | Function,
-  axes?: Array<AxisType>,
-  axesTickLines?: Node,
-  disableCanvasInteraction?: boolean,
-  showLinePoints?: string,
-  renderOrder: $ReadOnlyArray<| "pieces"
+  name?: string
+  title: object
+  margin: MarginType
+  size: Array<number>
+  annotationSettings: AnnotationHandling
+  annotations?: Array<object>
+  customHoverBehavior?: Function
+  customClickBehavior?: Function
+  customDoubleClickBehavior?: Function
+  htmlAnnotationRules?: Function
+  tooltipContent?: Function
+  className?: string
+  interaction?: object
+  renderFn?: string | Function
+  hoverAnnotation?: boolean | object | Array<object | Function> | Function
+  backgroundGraphics?: Element | Function
+  foregroundGraphics?: Element | Function
+  interactionOverflow?: object
+  disableContext?: boolean
+  canvasRendering?: boolean
+  useSpans: boolean
+  baseMarkProps?: object
+  canvasPostProcess?: "chuckClose" | Function
+  projection?: string
+  rScale?: Function
+  columns?: object
+  overlay?: Array<object>
+  legendSettings?: LegendProps
+  adjustedPosition: Array<number>
+  defaultHTMLRule: Function
+  defaultSVGRule: Function
+  downloadButton: Element
+  beforeElements?: Element
+  afterElements?: Element
+  points?: Array<object>
+  projectedYMiddle?: string
+  dataVersion?: string
+  frameKey?: string
+  additionalDefs?: Element
+  xScale: Function
+  yScale: Function
+  adjustedSize?: Array<number>
+  renderPipeline: object
+  projectedCoordinateNames: { x: string; y: string }
+  matte?: boolean | object | Element | Function
+  axes?: Array<AxisType>
+  axesTickLines?: Element
+  disableCanvasInteraction?: boolean
+  showLinePoints?: string
+  renderOrder: ReadonlyArray<
+    | "pieces"
     | "summaries"
     | "connectors"
     | "edges"
     | "nodes"
     | "areas"
     | "lines"
-    | "points">
+    | "points"
+  >
 }
 
 type State = {
-  canvasContext: ?Object,
-  voronoiHover: ?Object
+  canvasContext?: object
+  voronoiHover?: object
 }
 
 const defaultZeroMargin = { top: 0, bottom: 0, left: 0, right: 0 }
@@ -192,8 +196,8 @@ class Frame extends React.Component<Props, State> {
         axes={axes}
         voronoiHover={this.setVoronoi}
         annotationHandling={annotationSettings}
-        pointSizeFunction={annotationSettings.pointSizeFunction}
-        labelSizeFunction={annotationSettings.labelSizeFunction}
+        pointSizeFunction={annotationSettings.layout.pointSizeFunction}
+        labelSizeFunction={annotationSettings.layout.labelSizeFunction}
         annotations={totalAnnotations}
         svgAnnotationRule={(d, i, thisALayer) =>
           defaultSVGRule({
@@ -227,12 +231,6 @@ class Frame extends React.Component<Props, State> {
 
     let marginGraphic
 
-    const finalFilterDefs = filterDefs({
-      matte: matte,
-      key: matte && (frameKey || name),
-      additionalDefs: additionalDefs
-    })
-
     const finalBackgroundGraphics =
       typeof backgroundGraphics === "function"
         ? backgroundGraphics({ size, margin })
@@ -261,6 +259,12 @@ class Frame extends React.Component<Props, State> {
         />
       )
     }
+
+    const finalFilterDefs = filterDefs({
+      matte: marginGraphic,
+      key: matte && (frameKey || name),
+      additionalDefs: additionalDefs
+    })
 
     return (
       <SpanOrDiv

@@ -1,10 +1,16 @@
-// @flow
-
-import React from "react"
+import * as React from "react"
 
 import { nest } from "d3-collection"
 
-import { scaleBand, scaleOrdinal, scaleLinear, scaleIdentity } from "d3-scale"
+import {
+  scaleBand,
+  scaleOrdinal,
+  scaleLinear,
+  scaleIdentity,
+  ScaleLinear,
+  ScaleThreshold,
+  ScaleBand
+} from "d3-scale"
 
 import { sum, max, min, extent } from "d3-array"
 
@@ -65,22 +71,25 @@ import { stringToFn, stringToArrayFn } from "./data/dataFunctions"
 
 import { genericFunction } from "./untyped_utilities/functions"
 
-import type { Node } from "react"
-
-import type {
+import {
   AnnotationHandling,
-  CustomHoverType
+  CustomHoverType,
+  AnnotationType
 } from "./types/annotationTypes"
 
-import type {
+import {
   MarginType,
   CanvasPostProcessTypes,
   ExtentSettingsType,
   ProjectionTypes,
-  accessorType
+  accessorType,
+  GenericObject,
+  GenericAccessor
 } from "./types/generalTypes"
 
-import type { AxisType } from "./types/annotationTypes"
+import { AxisType } from "./types/annotationTypes"
+import { AnnotationLayerProps } from "./AnnotationLayer"
+import { Interactivity } from "./types/interactionTypes"
 
 const xScale = scaleIdentity()
 const yScale = scaleIdentity()
@@ -119,122 +128,138 @@ type SummaryTypes =
   | "boxplot"
   | "contour"
 
-type OExtentObject = { extent?: Array<string>, onChange?: Function }
+type OExtentObject = { extent?: Array<string>; onChange?: Function }
 
 type OExtentSettingsType = Array<string> | OExtentObject
 
-type SummaryTypeSettings = { type: SummaryTypes, amplitude?: number }
+type SummaryTypeSettings = { type: SummaryTypes; amplitude?: number }
 
-type PieceTypes = "none" | "bar" | "clusterbar" | "point" | "swarm" | "timeline"
+type PieceTypes =
+  | "none"
+  | "bar"
+  | "clusterbar"
+  | "point"
+  | "swarm"
+  | "timeline"
+  | "barpercent"
 
-type PieceTypeSettings = { type: PieceTypes }
+type PieceTypeSettings = {
+  type: PieceTypes
+  offsetAngle?: number
+  angleRange?: number[]
+}
+
+type ProjectedOrdinalSummary = {
+  originalData?: { x?: number; y?: number }
+  xyPoints?: object[]
+}
 
 export type OrdinalFrameProps = {
-  type: PieceTypeSettings,
-  summaryType: SummaryTypeSettings,
-  connectorType?: Function,
-  className?: string,
-  annotationSettings?: AnnotationHandling,
-  size: Array<number>,
-  downloadFields: Array<string>,
-  rAccessor?: accessorType,
-  oAccessor?: accessorType,
-  oExtent?: OExtentSettingsType,
-  rExtent?: ExtentSettingsType | Array<number>,
-  name?: string,
-  download: boolean,
-  annotations: Array<Object>,
-  matte?: Node,
-  renderKey?: Function,
-  interaction?: Object,
-  customClickBehavior?: Function,
-  customHoverBehavior?: Function,
-  customDoubleClickBehavior?: Function,
-  invertR: boolean,
-  projection: ProjectionTypes,
-  backgroundGraphics?: Node | Function,
-  foregroundGraphics?: Node | Function,
-  afterElements?: Node,
-  beforeElements?: Node,
-  disableContext?: boolean,
-  summaryHoverAnnotation?: CustomHoverType,
-  pieceHoverAnnotation?: CustomHoverType,
-  hoverAnnotation?: CustomHoverType,
-  canvasPostProcess?: CanvasPostProcessTypes,
-  baseMarkProps?: Object,
-  useSpans: boolean,
-  canvasPieces?: boolean | Function,
-  canvasSummaries?: boolean | Function,
-  connectorClass?: string | Function,
-  pieceClass?: string | Function,
-  summaryClass?: string | Function,
-  connectorRenderMode?: string | Function,
-  connectorStyle?: Object | Function,
-  canvasConnectors?: boolean | Function,
-  summaryStyle?: Object | Function,
-  style?: Object | Function,
-  sortO?: Function,
-  oSort?: Function,
-  dynamicColumnWidth?: string | Function,
-  pieceIDAccessor?: string | Function,
-  ordinalAlign?: string,
-  oLabel?: boolean | Function,
+  type: PieceTypeSettings
+  summaryType: SummaryTypeSettings
+  connectorType?: Function
+  className?: string
+  annotationSettings?: AnnotationHandling
+  size: Array<number>
+  downloadFields: Array<string>
+  rAccessor?: accessorType<number>
+  oAccessor?: accessorType<string | number>
+  oExtent?: OExtentSettingsType
+  rExtent?: ExtentSettingsType | Array<number>
+  name?: string
+  download: boolean
+  annotations: Array<object>
+  matte?: React.ReactNode
+  renderKey?: accessorType<string | number>
+  interaction?: Interactivity
+  customClickBehavior?: Function
+  customHoverBehavior?: Function
+  customDoubleClickBehavior?: Function
+  invertR: boolean
+  projection: ProjectionTypes
+  backgroundGraphics?: React.ReactNode | Function
+  foregroundGraphics?: React.ReactNode | Function
+  afterElements?: React.ReactNode
+  beforeElements?: React.ReactNode
+  disableContext?: boolean
+  summaryHoverAnnotation?: CustomHoverType
+  pieceHoverAnnotation?: CustomHoverType
+  hoverAnnotation?: CustomHoverType
+  canvasPostProcess?: CanvasPostProcessTypes
+  baseMarkProps?: object
+  useSpans: boolean
+  canvasPieces?: boolean | accessorType<boolean>
+  canvasSummaries?: boolean | accessorType<boolean>
+  connectorClass?: string | accessorType<string>
+  pieceClass?: string | accessorType<string>
+  summaryClass?: string | accessorType<string>
+  connectorRenderMode?: string | accessorType<string | GenericObject>
+  connectorStyle?: object | accessorType<GenericObject>
+  canvasConnectors?: boolean | accessorType<boolean>
+  summaryStyle?: object | accessorType<object>
+  style?: object | accessorType<object>
+  sortO?: (a: any, b: any, c: object[], d: object[]) => number
+  oSort?: (a: any, b: any, c: object[], d: object[]) => number
+  dynamicColumnWidth?: string | accessorType<number>
+  pieceIDAccessor?: string | accessorType<string>
+  ordinalAlign?: string
+  oLabel?: boolean | accessorType<string | Element>
   margin?:
     | number
-    | { top?: number, left?: number, right?: number, bottom?: number },
-  renderMode?: boolean | Function,
-  summaryRenderMode?: boolean | Function,
-  dataVersion?: string,
-  svgAnnotationRules?: Function,
-  htmlAnnotationRules?: Function,
-  pixelColumnWidth?: number,
-  title?: Node,
-  oScaleType: Function,
-  rScaleType: Function,
-  legend?: Object,
-  data: Array<Object | number>,
-  oPadding?: number,
-  axis?: Object | Array<Object>,
-  axes?: Object | Array<Object>,
-  summaryPosition?: Function,
-  additionalDefs?: Node,
-  tooltipContent?: Function,
-  renderOrder?: $ReadOnlyArray<"pieces" | "summaries" | "connectors">,
-  multiAxis?: boolean,
+    | { top?: number; left?: number; right?: number; bottom?: number }
+  renderMode?: boolean | accessorType<string | object>
+  summaryRenderMode?: boolean | accessorType<string | object>
+  dataVersion?: string
+  svgAnnotationRules?: Function
+  htmlAnnotationRules?: Function
+  pixelColumnWidth?: number
+  title?: React.ReactNode
+  oScaleType: ScaleBand<string>
+  rScaleType: ScaleLinear<number, number>
+  legend?: object
+  data: Array<object | number>
+  oPadding?: number
+  axis?: object | Array<object>
+  axes?: object | Array<object>
+  summaryPosition?: Function
+  additionalDefs?: React.ReactNode
+  tooltipContent?: Function
+  renderOrder?: ReadonlyArray<"pieces" | "summaries" | "connectors">
+  multiAxis?: boolean
   onUnmount?: Function
 }
 
 type State = {
-  dataVersion?: string,
-  pieceDataXY: Array<Object>,
-  adjustedPosition: Array<number>,
-  adjustedSize: Array<number>,
-  backgroundGraphics: Node,
-  foregroundGraphics: Node,
-  axisData?: Array<Object>,
-  axes?: Array<AxisType>,
-  axesTickLines?: ?Array<Object>,
-  oLabels: Node,
-  title: Object,
-  columnOverlays: Array<Object>,
-  renderNumber: number,
-  oAccessor: Array<Function>,
-  rAccessor: Array<Function>,
-  oScaleType: Function,
-  rScaleType: Function,
-  oExtent: Array<string>,
-  rExtent: Array<number>,
-  oScale: Function,
-  rScale: Function,
-  calculatedOExtent: Array<string>,
-  calculatedRExtent: Array<number>,
-  projectedColumns: Object,
-  margin: MarginType,
-  legendSettings: Object,
-  orFrameRender: Object,
-  pieceIDAccessor: Function,
-  type: Object,
-  summaryType: Object
+  dataVersion?: string
+  pieceDataXY: Array<object>
+  adjustedPosition: Array<number>
+  adjustedSize: Array<number>
+  backgroundGraphics: React.ReactNode
+  foregroundGraphics: React.ReactNode
+  axisData?: Array<object>
+  axes?: Array<AxisType>
+  axesTickLines?: Array<object>
+  oLabels: React.ReactNode
+  title: object
+  columnOverlays: Array<object>
+  renderNumber: number
+  oAccessor: Array<Function>
+  rAccessor: Array<Function>
+  oScaleType: ScaleBand<string>
+  rScaleType: ScaleLinear<number, number>
+  oExtent: Array<string>
+  rExtent: Array<number>
+  oScale: ScaleBand<string>
+  rScale: ScaleLinear<number, number>
+  calculatedOExtent: Array<string>
+  calculatedRExtent: Array<number>
+  projectedColumns: object
+  margin: MarginType
+  legendSettings: object
+  orFrameRender: object
+  pieceIDAccessor: GenericAccessor<string>
+  type: object
+  summaryType: object
 }
 
 class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
@@ -264,7 +289,6 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       backgroundGraphics: undefined,
       foregroundGraphics: undefined,
       axisData: undefined,
-      axis: undefined,
       renderNumber: 0,
       oLabels: [],
       oAccessor: stringToArrayFn<string>("renderKey"),
@@ -279,7 +303,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       legendSettings: {},
       margin: { top: 0, bottom: 0, left: 0, right: 0 },
       oExtent: [],
-      oScaleType: scaleBand,
+      oScaleType: scaleBand(),
       orFrameRender: {},
       pieceDataXY: [],
       pieceIDAccessor: stringToFn<string>("semioticPieceID"),
@@ -348,9 +372,12 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
     const summaryType = objectifyType(baseSummaryType)
     const pieceType = objectifyType(baseType)
     const connectorType = objectifyType(baseConnectorType)
-    const oAccessor = stringToArrayFn<string>(baseOAccessor, d => d.renderKey)
+    const oAccessor = stringToArrayFn<string | number>(
+      baseOAccessor,
+      d => d.renderKey
+    )
     const rAccessor = stringToArrayFn<number>(baseRAccessor, d => d.value || 1)
-    const renderKey = stringToFn<string>(baseRenderKey, (d, i) => i)
+    const renderKey = stringToFn<string | number>(baseRenderKey, (d, i) => i)
 
     /*    const eventListenersGenerator = generateOrdinalFrameEventListeners(
       customHoverBehavior,
@@ -359,8 +386,16 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
     ) */
     const eventListenersGenerator = () => ({})
 
-    const connectorStyle = stringToFn<GenericObject>(baseConnectorStyle, () => ({}), true)
-    const summaryStyle = stringToFn<GenericObject>(baseSummaryStyle, () => ({}), true)
+    const connectorStyle = stringToFn<GenericObject>(
+      baseConnectorStyle,
+      () => ({}),
+      true
+    )
+    const summaryStyle = stringToFn<GenericObject>(
+      baseSummaryStyle,
+      () => ({}),
+      true
+    )
     const pieceStyle = stringToFn<GenericObject>(baseStyle, () => ({}), true)
     const pieceClass = stringToFn<string>(basePieceClass, () => "", true)
     const summaryClass = stringToFn<string>(baseSummaryClass, () => "", true)
@@ -382,10 +417,11 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       multiAxis
     })
 
-    const arrayWrappedAxis =
-      baseAxis && !Array.isArray(baseAxis) ? [baseAxis] : baseAxis
+    const arrayWrappedAxis: AxisType[] = Array.isArray(baseAxis)
+      ? baseAxis
+      : [baseAxis]
 
-    if (multiExtents && arrayWrappedAxis) {
+    if (multiExtents && baseAxis) {
       arrayWrappedAxis.forEach((d, i) => {
         d.extentOverride = multiExtents[i]
       })
@@ -409,31 +445,35 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         ? { extent: baseOExtent }
         : baseOExtent
 
-    const calculatedOExtent = allData.reduce((p, c) => {
-      const baseOValue = c.column
-      const oValue = baseOValue !== undefined ? String(baseOValue) : baseOValue
+    const calculatedOExtent = allData.reduce(
+      (p: Array<string | number>, c: { column: string | number }) => {
+        const baseOValue = c.column
+        const oValue =
+          baseOValue !== undefined ? String(baseOValue) : baseOValue
 
-      if (p.indexOf(oValue) === -1) {
-        p.push(oValue)
-      }
-      return p
-    }, [])
+        if (p.indexOf(oValue) === -1) {
+          p.push(oValue)
+        }
+        return p
+      },
+      []
+    )
 
-    let oExtent = oExtentSettings.extent || calculatedOExtent
+    let oExtent: string[] = oExtentSettings.extent || calculatedOExtent
 
     if (pieceType.type === "barpercent") {
       const oExtentSums = oExtent
         .map(d =>
           allData
-            .filter(p => String(p.column) === d)
-            .reduce((p, c) => p + c.value, 0)
+            .filter((p: { column: string }) => String(p.column) === d)
+            .reduce((p, c: { value: number }) => p + c.value, 0)
         )
         .reduce((p, c, i) => {
           p[oExtent[i]] = c
           return p
         }, {})
 
-      allData.forEach(d => {
+      allData.forEach((d: { value?: number; column: string }) => {
         d.value =
           (oExtentSums[d.column] && d.value / oExtentSums[d.column]) || 0
       })
@@ -487,7 +527,9 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       const columnValues = []
 
       oExtent.forEach(d => {
-        const oValues = allData.filter(p => p.column === d)
+        const oValues = allData.filter(
+          (p: { column: string }) => p.column === d
+        )
         const columnValue = columnValueCreator(oValues)
 
         columnValues.push(columnValue)
@@ -527,15 +569,17 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
     }
 
     if (pieceType.type === "timeline") {
-      const rData = allData.map(d => d.value)
+      const rData = allData.map((d: { value: number }) => d.value)
       const leftExtent = extent(rData.map(d => d[0]))
       const rightExtent = extent(rData.map(d => d[1]))
       rExtent = extent([...leftExtent, ...rightExtent])
     } else if (pieceType.type !== "bar") {
       rExtent = extent(allData, d => d.value)
     } else {
-      const positiveData = allData.filter(d => d.value >= 0)
-      const negativeData = allData.filter(d => d.value < 0)
+      const positiveData = allData.filter(
+        (d: { value: number }) => d.value >= 0
+      )
+      const negativeData = allData.filter((d: { value: number }) => d.value < 0)
 
       const nestedPositiveData = nest()
         .key(d => d.column)
@@ -865,7 +909,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         }
 
         labelingFn = (d, p, i) => {
-          const additionalStyle = {}
+          const additionalStyle: { textAnchor?: TextAnchorProperty } = {}
           let transformRotate
 
           if (projection === "radial" && labelSettings.orient === "stem") {
@@ -1105,10 +1149,22 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
     } = currentProps
 
     let pieceDataXY
-    const pieceRenderMode = stringToFn<GenericObject | string>(renderMode, undefined, true)
+    const pieceRenderMode = stringToFn<GenericObject | string>(
+      renderMode,
+      undefined,
+      true
+    )
     const pieceCanvasRender = stringToFn<boolean>(canvasPieces, undefined, true)
-    const summaryCanvasRender = stringToFn<boolean>(canvasSummaries, undefined, true)
-    const connectorCanvasRender = stringToFn<boolean>(canvasConnectors, undefined, true)
+    const summaryCanvasRender = stringToFn<boolean>(
+      canvasSummaries,
+      undefined,
+      true
+    )
+    const connectorCanvasRender = stringToFn<boolean>(
+      canvasConnectors,
+      undefined,
+      true
+    )
 
     const pieceTypeForXY =
       pieceType.type && pieceType.type !== "none" ? pieceType.type : "point"
@@ -1125,7 +1181,6 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       projection,
       classFn: pieceClass,
       adjustedSize,
-      rScale,
       chartSize: size,
       margin,
       baseMarkProps
@@ -1142,22 +1197,26 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
     Object.keys(projectedColumns).forEach(d => {
       projectedColumns[d].xyData = keyedData[d] || []
     })
-    let calculatedSummaries = {}
+    let calculatedSummaries: ProjectedOrdinalSummary = {}
 
     if (summaryType.type && summaryType.type !== "none") {
       calculatedSummaries = drawSummaries({
         data: projectedColumns,
         type: summaryType,
-        renderMode: stringToFn<GenericObject | string>(summaryRenderMode, undefined, true),
+        renderMode: stringToFn<GenericObject | string>(
+          summaryRenderMode,
+          undefined,
+          true
+        ),
         styleFn: stringToFn<GenericObject>(summaryStyle, () => ({}), true),
         classFn: stringToFn<string>(summaryClass, () => "", true),
-        canvasRender: stringToFn<boolean>(canvasSummaries, undefined, true),
+        //        canvasRender: stringToFn<boolean>(canvasSummaries, undefined, true),
         positionFn: summaryPosition,
         projection,
         eventListenersGenerator,
         adjustedSize,
         baseMarkProps,
-        chartSize: size,
+        //        chartSize: size,
         margin
       })
 
@@ -1255,7 +1314,11 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         data: keyedData,
         styleFn: stringToFn<GenericObject>(connectorStyle, () => ({}), true),
         classFn: stringToFn<string>(connectorClass, () => "", true),
-        renderMode: stringToFn<GenericObject | string>(connectorRenderMode, undefined, true),
+        renderMode: stringToFn<GenericObject | string>(
+          connectorRenderMode,
+          undefined,
+          true
+        ),
         canvasRender: connectorCanvasRender,
         behavior: orFrameConnectionRenderer,
         type: connectorType,
@@ -1390,9 +1453,9 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
     i,
     annotationLayer
   }: {
-    d: Object,
-    i: number,
-    annotationLayer: Object
+    d: AnnotationType
+    i: number
+    annotationLayer: AnnotationLayerProps
   }) => {
     const { projection } = this.props
 
@@ -1413,24 +1476,24 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
 
     //TODO: Support radial??
     if (d.coordinates || (d.type === "enclose" && d.neighbors)) {
-      screenCoordinates = (d.coordinates || d.neighbors).map(p => {
-        const pO = findFirstAccessorValue(oAccessor, p) || p.column
-        const oColumn = projectedColumns[pO]
-        const idPiece = findIDPiece(pieceIDAccessor, oColumn, p)
+      screenCoordinates = (d.coordinates || d.neighbors).map(
+        (p: { column?: string }) => {
+          const pO = findFirstAccessorValue(oAccessor, p) || p.column
+          const oColumn = projectedColumns[pO]
+          const idPiece = findIDPiece(pieceIDAccessor, oColumn, p)
 
-        return screenProject({
-          p,
-          projectedColumns,
-          adjustedSize,
-          rScale,
-          oAccessor,
-          rAccessor,
-          idPiece,
-          projection,
-          oColumn,
-          rScaleType
-        })
-      })
+          return screenProject({
+            p,
+            adjustedSize,
+            rScale,
+            rAccessor,
+            idPiece,
+            projection,
+            oColumn,
+            rScaleType
+          })
+        }
+      )
     } else {
       const pO = findFirstAccessorValue(oAccessor, d) || d.column
       const oColumn = projectedColumns[pO]
@@ -1438,10 +1501,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
 
       screenCoordinates = screenProject({
         p: d,
-        projectedColumns,
         adjustedSize,
         rScale,
-        oAccessor,
         rAccessor,
         idPiece,
         projection,
@@ -1475,7 +1536,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       return customAnnotation
     } else if (d.type === "desaturation-layer") {
       return desaturationLayer({
-        style: d.style,
+        style: d.style instanceof Function ? d.style(d, i) : d.style,
         size: adjustedSize,
         i,
         key: d.key
@@ -1487,10 +1548,6 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
     } else if (d.type === "highlight") {
       return svgHighlightRule({
         d,
-        i,
-        screenCoordinates,
-        projection,
-        categories: projectedColumns,
         pieceIDAccessor,
         orFrameRender,
         oAccessor
@@ -1529,9 +1586,9 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
     i,
     annotationLayer
   }: {
-    d: Object,
-    i: number,
-    annotationLayer: Object
+    d: AnnotationType
+    i: number
+    annotationLayer: AnnotationLayerProps
   }) => {
     const {
       adjustedPosition,
@@ -1558,24 +1615,24 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
     const { voronoiHover } = annotationLayer
 
     if (d.coordinates || (d.type === "enclose" && d.neighbors)) {
-      screenCoordinates = (d.coordinates || d.neighbors).map(p => {
-        const pO = findFirstAccessorValue(oAccessor, p) || p.column
-        const oColumn = projectedColumns[pO]
-        const idPiece = findIDPiece(pieceIDAccessor, oColumn, p)
+      screenCoordinates = (d.coordinates || d.neighbors).map(
+        (p: { column?: string }) => {
+          const pO = findFirstAccessorValue(oAccessor, p) || p.column
+          const oColumn = projectedColumns[pO]
+          const idPiece = findIDPiece(pieceIDAccessor, oColumn, p)
 
-        return screenProject({
-          p,
-          projectedColumns,
-          adjustedSize,
-          rScale,
-          oAccessor,
-          rAccessor,
-          idPiece,
-          projection,
-          oColumn,
-          rScaleType
-        })
-      })
+          return screenProject({
+            p,
+            adjustedSize,
+            rScale,
+            rAccessor,
+            idPiece,
+            projection,
+            oColumn,
+            rScaleType
+          })
+        }
+      )
     } else if (d.type === "column-hover") {
       const {
         coordinates: [xPosition, yPosition]
@@ -1597,10 +1654,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
 
       screenCoordinates = screenProject({
         p: d,
-        projectedColumns,
         adjustedSize,
         rScale,
-        oAccessor,
         rAccessor,
         idPiece,
         projection,
@@ -1643,13 +1698,11 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         i,
         rAccessor,
         oAccessor,
-        size,
         projection,
         tooltipContent,
         projectedColumns,
         useSpans,
         pieceIDAccessor,
-        projectedColumns,
         adjustedSize,
         rScale,
         type,
@@ -1661,7 +1714,6 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         i,
         summaryType,
         oAccessor,
-        rAccessor,
         projectedColumns,
         type,
         adjustedPosition,
@@ -1674,7 +1726,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
     return null
   }
 
-  mappedMiddles(oScale: Function, middleMax: number, padding: number) {
+  mappedMiddles(oScale: ScaleBand<string>, middleMax: number, padding: number) {
     const oScaleDomainValues = oScale.domain()
 
     const mappedMiddles = {}

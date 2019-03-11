@@ -1,51 +1,51 @@
-// @flow
-
-import React from "react"
+import * as React from "react"
 
 import { RoughCanvas } from "roughjs-es5/lib/canvas"
 
 import { chuckCloseCanvasTransform } from "./canvas/basicCanvasEffects"
 
-import type { Node } from "react"
+import { AxisType } from "./types/annotationTypes"
+import { MarginType } from "./types/generalTypes"
 
-import type { AxisType } from "./types/annotationTypes"
+type VizLayerTypes =
+  | "pieces"
+  | "summaries"
+  | "connectors"
+  | "edges"
+  | "nodes"
+  | "areas"
+  | "lines"
+  | "points"
 
 type Props = {
-  axes?: Array<AxisType>,
-  frameKey?: string,
-  xScale: Function,
-  yScale: Function,
-  dataVersion?: string,
-  canvasContext?: Object | null,
-  size: Array<number>,
-  margin: Object,
-  canvasPostProcess?: string | Function,
-  title?: ?Object | string,
-  ariaTitle?: string,
-  matte?: Node,
-  matteClip?: boolean,
-  voronoiHover: Function,
-  renderPipeline: Object,
-  baseMarkProps?: Object,
-  projectedCoordinateNames: Object,
-  position: Array<number>,
-  disableContext?: boolean,
-  renderOrder: $ReadOnlyArray<| "pieces"
-    | "summaries"
-    | "connectors"
-    | "edges"
-    | "nodes"
-    | "areas"
-    | "lines"
-    | "points">
+  axes?: Array<AxisType>
+  frameKey?: string
+  xScale: Function
+  yScale: Function
+  dataVersion?: string
+  canvasContext?: HTMLCanvasElement | null
+  size: Array<number>
+  margin: MarginType
+  canvasPostProcess?: string | Function
+  title?: object | string
+  ariaTitle?: string
+  matte?: React.ReactNode
+  matteClip?: boolean
+  voronoiHover: Function
+  renderPipeline: { [key in VizLayerTypes]: object }
+  baseMarkProps?: object
+  projectedCoordinateNames: object
+  position: Array<number>
+  disableContext?: boolean
+  renderOrder: ReadonlyArray<VizLayerTypes>
 }
 
 type State = {
-  canvasDrawing: Array<Object>,
-  dataVersion?: string,
-  renderedElements: Array<Node>,
-  focusedPieceIndex: number | null,
-  focusedVisualizationGroup: string | null
+  canvasDrawing: Array<object>
+  dataVersion?: string
+  renderedElements: Array<React.ReactNode>
+  focusedPieceIndex: number | null
+  focusedVisualizationGroup?: any
 }
 
 class VisualizationLayer extends React.PureComponent<Props, State> {
@@ -65,7 +65,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     focusedVisualizationGroup: null
   }
 
-  componentDidUpdate(lp: Object) {
+  componentDidUpdate(lp: object) {
     const np = this.props
     const propKeys = Object.keys(np)
 
@@ -280,8 +280,9 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     const canvasDrawing = this.canvasDrawing
 
     const renderedElements = []
+    const renderVizKeys: Array<VizLayerTypes> = Object.keys(renderPipeline)
     const renderKeys = renderOrder.concat(
-      Object.keys(renderPipeline).filter(d => renderOrder.indexOf(d) === -1)
+      renderVizKeys.filter(d => renderOrder.indexOf(d) === -1)
     )
 
     renderKeys.forEach(k => {
@@ -301,8 +302,8 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
           baseMarkProps: Object.assign(baseMarkProps, {
             "aria-label":
               (pipe.ariaLabel && pipe.ariaLabel.items) || "dataviz-element",
-            "role": "img",
-            "tabIndex": -1
+            role: "img",
+            tabIndex: -1
           }),
           ...pipe
         })
@@ -364,13 +365,13 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     }
   }
 
-  handleKeyDown = (e: Object, vizgroup: string) => {
+  handleKeyDown = (e: { keyCode }, vizgroup: string) => {
     // If enter, focus on the first element
     const pushed = e.keyCode
     if (pushed !== 37 && pushed !== 39 && pushed !== 13) return
 
     let newPieceIndex = 0
-    const vizGroupSetting = {}
+    const vizGroupSetting: { focusedVisualizationGroup?: any } = {}
 
     // If a user pressed enter, highlight the first one
     // Let a user move up and down in stacked bar by getting keys of bars?

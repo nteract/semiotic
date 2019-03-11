@@ -2,23 +2,17 @@ import * as React from "react"
 
 import XYFrame from "./XYFrame"
 
-interface MinimapProps {
-  brushStart: Function;
-  brush: Function;
-  brushEnd: Function;
-  xBrushable: boolean;
-  yBrushable: boolean;
-  yBrushExtent: number[];
-  xBrushExtent: number[];
-  size: number[];
-}
+import { Interactivity } from "./types/interactionTypes"
 
-interface Interactivity {
-  start: Function;
-  during: Function;
-  end: Function;
-  brush?: string;
-  extent?: Array<number[]> | number[];
+interface MinimapProps {
+  brushStart: Function
+  brush: Function
+  brushEnd: Function
+  xBrushable: boolean
+  yBrushable: boolean
+  yBrushExtent: number[]
+  xBrushExtent: number[]
+  size: number[]
 }
 
 const MiniMap = (props: MinimapProps) => {

@@ -1,11 +1,9 @@
-// @flow
-import React from "react"
-import type { Node } from "react"
+import * as React from "react"
 
 type Props = {
-  style?: Object,
-  className?: string,
-  children: Node,
+  style?: object
+  className?: string
+  children: React.ReactNode | React.ReactNode[]
   span: boolean
 }
 

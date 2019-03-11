@@ -1,5 +1,4 @@
-import React from "react"
-import PropTypes from "prop-types"
+import * as React from "react"
 
 const allFrameDefaults = {
   margin: 0
@@ -23,8 +22,18 @@ function sparkNetworkSettings(originalSettings = "force") {
   return originalSettings
 }
 
+type SparkFrameProps = {
+  size?: number[]
+  style: object
+}
+
+type SparkFrameState = {
+  containerHeight: number
+  containerWidth: number
+}
+
 const createSparkFrame = (Frame, defaults, frameName) =>
-  class SparkFrame extends React.Component {
+  class SparkFrame extends React.Component<SparkFrameProps, SparkFrameState> {
     constructor(props) {
       super(props)
 
@@ -36,13 +45,11 @@ const createSparkFrame = (Frame, defaults, frameName) =>
 
     static displayName = frameName
 
-    static propTypes = {
-      size: PropTypes.oneOfType([PropTypes.array, PropTypes.number])
-    }
-
     static defaultProps = {
       size: []
     }
+
+    node = null
 
     _onResize = (width, height) => {
       this.setState({ containerHeight: height, containerWidth: width })

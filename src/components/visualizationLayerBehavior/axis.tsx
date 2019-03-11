@@ -1,6 +1,22 @@
-import React from "react"
+import * as React from "react"
 
 import { Mark } from "semiotic-mark"
+import { GenericObject } from "../types/generalTypes"
+import { ScaleLinear } from "d3-scale"
+
+type RenderModeFnType = (d: number, i: number) => string | GenericObject
+
+type AxisPiecesFnType = {
+  renderMode?: RenderModeFnType
+  padding: number
+  scale: ScaleLinear<number, number>
+  ticks: number
+  tickValues: number[]
+  orient: "left" | "right" | "top" | "bottom"
+  size: number[]
+  footer: boolean
+  tickSize: number
+}
 
 const defaultTickLineGenerator = ({
   xy,
@@ -27,7 +43,7 @@ export function generateTickValues(tickValues, ticks, scale) {
 
   if (!tickValues) {
     if (!ticks) {
-      ticks = Math.max(1, parseInt(axisSize / 40, 10))
+      ticks = Math.max(1, Math.floor(axisSize / 40))
     }
     tickValues = scale.ticks(ticks)
   }
@@ -47,7 +63,7 @@ export function axisPieces({
     : ["top", "bottom"].find(d => d === orient)
     ? size[1]
     : size[0]
-}) {
+}: AxisPiecesFnType) {
   //returns x1 (start of line), x2 (end of line) associated with the value of the tick
   let axisDomain = [],
     position1,

@@ -1,7 +1,16 @@
+import * as React from "react"
 import { contourDensity } from "d3-contour"
 import { scaleLinear } from "d3-scale"
 import polylabel from "@mapbox/polylabel"
 import { hexbin } from "d3-hexbin"
+
+import { ProjectedPoint, GenericObject } from "../types/generalTypes"
+
+interface BinArray {
+  [position: number]: number
+  x?: number
+  y?: number
+}
 
 export function contouring({ summaryType, data, finalXExtent, finalYExtent }) {
   let projectedSummaries = []
@@ -125,7 +134,7 @@ export function hexbinning({
     .size(size)
 
   let hexMax
-  const allHexes = hexbinner.centers()
+  const allHexes: ProjectedPoint[] = hexbinner.centers()
 
   data.forEach(hexbinData => {
     hexMax = 0
@@ -144,7 +153,7 @@ export function hexbinning({
 
     allHexes.forEach(hexCenter => {
       if (!centerHash[`${parseInt(hexCenter[0])}-${parseInt(hexCenter[1])}`]) {
-        const newHex = []
+        const newHex: BinArray = []
         newHex.x = hexCenter[0]
         newHex.y = hexCenter[1]
         hexes.push(newHex)
@@ -175,7 +184,7 @@ export function hexbinning({
       d[1] * hexHeight
     ])
 
-    const hexbinProjectedSummaries = hexes.map(d => {
+    const hexbinProjectedSummaries = hexes.map((d: GenericObject) => {
       const hexValue = binValue(d)
       const gx = d.x
       const gy = d.y
@@ -332,7 +341,7 @@ export function heatmapping({
     }
     grid.push(gridColumn)
 
-    heatmapData._xyfCoordinates.forEach((d, di) => {
+    heatmapData._xyfCoordinates.forEach((d: number[], di: number) => {
       const xCoordinate = parseInt(heatmapBinXScale(d[0]) / actualResolution[0])
       const yCoordinate = parseInt(heatmapBinYScale(d[1]) / actualResolution[1])
       grid[xCoordinate][yCoordinate].binItems.push(heatmapData.coordinates[di])
@@ -351,7 +360,6 @@ export function heatmapping({
             d,
             baseMarkProps,
             margin,
-            baseMarkProps,
             styleFn,
             classFn,
             renderFn,

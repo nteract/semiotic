@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { forceSimulation, forceX, forceY, forceCollide } from "d3-force"
 import { /*area, curveCatmullRom,*/ arc } from "d3-shape"
 import pathBounds from "svg-path-bounding-box"
@@ -7,6 +7,16 @@ import { scaleLinear } from "d3-scale"
 import { arcTweener } from "./SvgHelper"
 
 // RENAME XY to drawingProps
+
+type PieceXYProp = {
+  x?: number
+  y?: number
+  middle?: number
+  height?: number
+  width?: number
+  dx?: number
+  dy?: number
+}
 
 const twoPI = Math.PI * 2
 
@@ -276,7 +286,7 @@ export function clusterBarLayout({
       let yPosition = piece.base
       let finalWidth = clusterWidth
       let finalHeight = piece.scaledValue
-      let xy = {}
+      let xy: PieceXYProp = { x: 0, y: 0 }
       if (!piece.negative) {
         yPosition -= piece.scaledValue
       }
@@ -303,8 +313,7 @@ export function clusterBarLayout({
           ordset,
           adjustedSize,
           piece,
-          i,
-          translate
+          i
         }))
         xy.x = xPosition
       } else {
@@ -447,7 +456,8 @@ export function barLayout({
           type,
           ordset,
           adjustedSize,
-          piece
+          piece,
+          i
         }))
         finalHeight = undefined
         finalWidth = undefined
@@ -492,7 +502,7 @@ export function barLayout({
           key={`piece-${piece.renderKey}`}
           transform={`translate(${xPosition},${yPosition})`}
           role="img"
-          tabIndex="-1"
+          tabIndex={-1}
         >
           {type.customMark(
             { ...piece.data, ...piece, x: xPosition, y: yPosition },
@@ -559,7 +569,24 @@ export function timelineLayout({
       let height = piece.scaledEndValue - piece.scaledValue
       let yPosition = piece.scaledVerticalValue - height
       let width = ordset.width
-      let markProps = {
+      let markProps: {
+        markType: string
+        height?: number
+        width?: number
+        x?: number
+        y?: number
+        d?: string
+        transform?: string
+        customTween?: {
+          fn: (oldProps: any, newProps: any) => (t: any) => any
+          props: {
+            startAngle: number
+            endAngle: number
+            innerRadius: number
+            outerRadius: number
+          }
+        }
+      } = {
         markType: "rect",
         height: height < 0 ? -height : height,
         width,
@@ -584,7 +611,8 @@ export function timelineLayout({
           piece,
           type,
           ordset,
-          adjustedSize
+          adjustedSize,
+          i
         }))
       }
 

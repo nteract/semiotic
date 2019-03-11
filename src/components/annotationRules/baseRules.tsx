@@ -161,6 +161,11 @@ export const desaturationLayer = ({
   size,
   i,
   key
+}: {
+  style: { fill?: string; fillOpacity?: number }
+  size: number[]
+  i?: number
+  key?: string
 }) => (
   <rect
     key={key || `desaturation-${i}`}
