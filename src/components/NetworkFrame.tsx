@@ -940,13 +940,10 @@ class NetworkFrame extends React.Component<
             projectedNodes[generatedChord.target.index]
           )
           const chordEdge = edgeHash.get(`${nodeSourceID}|${nodeTargetID}`)
-          // $FlowFixMe
           chordEdge.d = chordD
           const chordBounds = pathBounds(chordD)
-          // $FlowFixMe
           chordEdge.x =
             adjustedSize[0] / 2 + (chordBounds.x1 + chordBounds.x2) / 2
-          // $FlowFixMe
           chordEdge.y =
             adjustedSize[1] / 2 + (chordBounds.y1 + chordBounds.y2) / 2
         })
@@ -1179,11 +1176,9 @@ class NetworkFrame extends React.Component<
               })
             }
           })
-          // $FlowFixMe
+
           componentHash.get(edge.source).connectedNodes.push(edge.target)
-          // $FlowFixMe
           componentHash.get(edge.target).connectedNodes.push(edge.source)
-          // $FlowFixMe
           componentHash.get(edge.source).edges.push(edge)
         })
 
@@ -1596,7 +1591,6 @@ class NetworkFrame extends React.Component<
       }
       if (hoverAnnotation !== "node") {
         projectedEdges.forEach((d, i) => {
-          // $FlowFixMe
           const generatedIcon = customEdgeIcon({
             d,
             i,
