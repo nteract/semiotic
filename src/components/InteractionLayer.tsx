@@ -538,7 +538,7 @@ class InteractionLayer extends React.Component<Props, State> {
         ) => {
           const { overlayData, ...rest } = overlayRegion
           if (React.isValidElement(overlayRegion.renderElement)) {
-            return React.cloneElement(overlayRegion.renderElement, {
+            const overlayProps = {
               key: `overlay-${i}`,
               onMouseEnter: () => {
                 this.changeVoronoi(overlayData, props.hoverAnnotation)
@@ -553,7 +553,8 @@ class InteractionLayer extends React.Component<Props, State> {
                 this.doubleclickVoronoi(overlayData)
               },
               style: { opacity: 0, ...pointerStyle }
-            })
+            }
+            return React.cloneElement(overlayRegion.renderElement, overlayProps)
           } else {
             return (
               <Mark

@@ -518,7 +518,9 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       { total: 0 }
     )
 
-    const oScale = dynamicColumnWidth ? scaleOrdinal() : oScaleType()
+    const castOScaleType = (oScaleType as unknown) as Function
+
+    const oScale = dynamicColumnWidth ? scaleOrdinal() : castOScaleType()
 
     oScale.domain(oExtent)
 
@@ -679,7 +681,11 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       adjustedSize[0]
     ]
 
-    const instantiatedRScaleType = rScaleType.domain ? rScaleType : rScaleType()
+    const castRScaleType = (rScaleType as unknown) as Function
+
+    const instantiatedRScaleType = rScaleType.domain
+      ? rScaleType
+      : castRScaleType()
 
     const rScale = instantiatedRScaleType
       .copy()
@@ -917,7 +923,9 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         }
 
         labelingFn = (d, p, i) => {
-          const additionalStyle: { textAnchor?: TextAnchorProperty } = {}
+          const additionalStyle: {
+            textAnchor?: string | null
+          } = {} as React.CSSProperties
           let transformRotate
 
           if (projection === "radial" && labelSettings.orient === "stem") {

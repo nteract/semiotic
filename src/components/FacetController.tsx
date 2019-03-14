@@ -145,7 +145,6 @@ class FacetController extends React.Component<Props, State> {
 
       if (Array.isArray(annotationBase)) {
         annotationBase.forEach(annotation => {
-          let generatedAnnotation = annotation
           if (typeof annotation !== "function") {
             if (annotation.type === "column-hover") {
               annotation.facetColumn = annotation.column.name
@@ -183,13 +182,14 @@ class FacetController extends React.Component<Props, State> {
     props,
     state
   }: {
-    child: Element
+    child: React.ReactElement
     props: Props
     index: number
     state: State
     originalAnnotations: Array<Object>
   }) => {
-    const frameType = child.type.displayName
+    const childType = (child.type as unknown) as { displayName?: string }
+    const frameType = childType.displayName
     const annotations = this.generateChildAnnotations({
       state,
       originalAnnotations
@@ -265,16 +265,19 @@ class FacetController extends React.Component<Props, State> {
    * to use the lifecycle methods.
    */
   processFacetController = memoize((props: Props, state: State) => {
-    return React.Children.map(props.children, (child, index) => {
-      if (!child) return null
-      return this.mapChildrenWithAppropriateProps({
-        child,
-        index,
-        originalAnnotations: child.props.annotations || [],
-        props,
-        state
-      })
-    })
+    return React.Children.map(
+      (props.children as unknown) as React.ReactElement[],
+      (child: React.ReactElement, index) => {
+        if (!child) return null
+        return this.mapChildrenWithAppropriateProps({
+          child,
+          index,
+          originalAnnotations: child.props.annotations || [],
+          props,
+          state
+        })
+      }
+    )
   })
 
   render() {
