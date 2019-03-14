@@ -925,7 +925,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         labelingFn = (d, p, i) => {
           const additionalStyle: {
             textAnchor?: string | null
-          } = {} as React.CSSProperties
+          } = {}
           let transformRotate
 
           if (projection === "radial" && labelSettings.orient === "stem") {
@@ -959,8 +959,9 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
           }
           return (
             <text
+              {...labelStyle}
+              {...additionalStyle}
               transform={transformRotate}
-              style={{ ...labelStyle, ...additionalStyle }}
             >
               {d}
             </text>
