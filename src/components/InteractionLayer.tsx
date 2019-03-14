@@ -80,7 +80,6 @@ class InteractionLayer extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props)
 
-    // $FlowFixMe
     this.state = {
       overlayRegions: this.calculateOverlay(props),
       interactionCanvas: (
@@ -231,7 +230,6 @@ class InteractionLayer extends React.Component<Props, State> {
     const brushData = {}
 
     Object.entries(renderPipeline).forEach(([key, value]) => {
-      // $FlowFixMe
       if (value.data && value.data.length > 0) {
         brushData[key] = value.data
       }
@@ -640,7 +638,6 @@ class InteractionLayer extends React.Component<Props, State> {
 
     const brushData = {}
     Object.entries(renderPipeline).forEach(([key, value]) => {
-      // $FlowFixMe
       if (value.data && value.data.length > 0) {
         brushData[key] = value.data
       }
