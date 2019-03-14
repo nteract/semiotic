@@ -11,6 +11,8 @@ import { circleEnclosure, rectangleEnclosure, hullEnclosure } from "./baseRules"
 import SpanOrDiv from "../SpanOrDiv"
 import { findFirstAccessorValue } from "../data/multiAccessorUtils"
 import { curveHash } from "../visualizationLayerBehavior/general"
+import { ScaleLinear } from "d3-scale"
+import { ProjectedPoint } from "../types/generalTypes"
 
 const pointsAlong = along => ({
   d,
@@ -74,12 +76,25 @@ export const svgHighlight = ({
   d,
   i,
   points = { data: [] },
-  lines = { data: [] },
+  lines = { data: [], type: {} },
   summaries = { data: [] },
   idAccessor,
   xScale,
   yScale,
   xyFrameRender
+}: {
+  d: ProjectedPoint
+  i?: number
+  points: { data: [] }
+  lines: {
+    data: []
+    type?: { interpolator?: string | Function; curve?: string | Function }
+  }
+  summaries: { data: [] }
+  idAccessor: Function
+  xScale: ScaleLinear<number, number>
+  yScale: ScaleLinear<number, number>
+  xyFrameRender: any
 }) => {
   let dID
   const baseID = idAccessor({ ...d, ...d.data }, i)
@@ -92,8 +107,10 @@ export const svgHighlight = ({
   }
 
   const foundPoints = points.data
-    .filter((p, q) => idAccessor({ ...p, ...p.data }, q) === dID)
-    .map((p, q) => {
+    .filter(
+      (p: ProjectedPoint, q) => idAccessor({ ...p, ...p.data }, q) === dID
+    )
+    .map((p: ProjectedPoint, q) => {
       const baseStyle = xyFrameRender.points.styleFn({ ...p, ...p.data })
 
       const highlightStyle =
@@ -138,7 +155,7 @@ export const svgHighlight = ({
 
   const foundLines = lines.data
     .filter((p, q) => idAccessor(p, q) === dID)
-    .map((p, q) => {
+    .map((p: ProjectedPoint, q) => {
       const baseStyle = xyFrameRender.lines.styleFn(p, q)
 
       const highlightStyle =
@@ -163,7 +180,7 @@ export const svgHighlight = ({
 
   const foundSummaries = summaries.data
     .filter((p, q) => idAccessor(p, q) === dID)
-    .map((p, q) => {
+    .map((p: ProjectedPoint, q) => {
       const baseStyle = xyFrameRender.summaries.styleFn(p, q)
 
       const highlightStyle =
@@ -454,10 +471,10 @@ export const htmlTooltipAnnotation = ({
 export const svgRectEncloseAnnotation = ({ d, i, screenCoordinates }) => {
   const bboxNodes = screenCoordinates.map(p => {
     return {
-      x0: (p.x0 = p[0]),
-      x1: (p.x1 = p[0]),
-      y0: (p.y0 = p[1]),
-      y1: (p.y1 = p[1])
+      x0: p.x0 = p[0],
+      x1: p.x1 = p[0],
+      y0: p.y0 = p[1],
+      y1: p.y1 = p[1]
     }
   })
 

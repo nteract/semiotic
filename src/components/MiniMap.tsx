@@ -1,17 +1,17 @@
 import * as React from "react"
 
-import XYFrame from "./XYFrame"
+import XYFrame, { XYFrameProps } from "./XYFrame"
 
 import { Interactivity } from "./types/interactionTypes"
 
-interface MinimapProps {
+interface MinimapProps extends XYFrameProps {
   brushStart: Function
   brush: Function
   brushEnd: Function
   xBrushable: boolean
   yBrushable: boolean
-  yBrushExtent: number[]
-  xBrushExtent: number[]
+  yBrushExtent?: number[]
+  xBrushExtent?: number[]
   size: number[]
 }
 

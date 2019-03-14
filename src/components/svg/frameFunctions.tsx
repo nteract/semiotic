@@ -3,6 +3,7 @@ import * as React from "react"
 import { drawAreaConnector } from "../svg/SvgHelper"
 import { Mark } from "semiotic-mark"
 import Axis from "../Axis"
+import { AxisProps } from "../types/annotationTypes"
 
 import {
   boxplotRenderFn,
@@ -18,8 +19,6 @@ import {
   accessorType
 } from "../types/generalTypes"
 
-import { AxisType } from "../types/annotationTypes"
-
 import { scaleLinear, ScaleLinear } from "d3-scale"
 
 const extent = inputArray =>
@@ -31,7 +30,7 @@ const extent = inputArray =>
     [Infinity, -Infinity]
   )
 
-type TitleType = { title?: string | Element; orient?: string }
+export type TitleType = { title?: string | Element; orient?: string }
 
 type PieceType = { type: string; innerRadius?: number }
 
@@ -39,7 +38,7 @@ type SummaryType = { type: string }
 
 type CalculateMarginTypes = {
   margin?: number | object
-  axes?: Array<AxisType>
+  axes?: Array<AxisProps>
   title: TitleType
   oLabel?: boolean | accessorType<string | Element>
   projection?: ProjectionTypes
@@ -83,7 +82,7 @@ type ORFrameSummaryRendererTypes = {
 
 type ORFrameAxisGeneratorTypes = {
   projection: ProjectionTypes
-  axis?: Array<AxisType>
+  axis?: Array<AxisProps>
   adjustedSize: Array<number>
   size: Array<number>
   rScale: ScaleLinear<number, number>
@@ -185,14 +184,17 @@ export const calculateMargin = ({
   return finalMargin
 }
 
-export function objectifyType<ObjectifyType>(
-  type?: string | ObjectifyType
+type ObjectifyType = {
+  type?: string | Function
+}
+
+export function objectifyType(
+  type?: string | Function | ObjectifyType
 ): ObjectifyType {
-  if (typeof type === "object") {
-    return type
+  if (type instanceof Function || typeof type === "string") {
+    return { type: type }
   }
-  const decoratedType: ObjectifyType = {}
-  return decoratedType
+  return type
 }
 
 export function generateOrdinalFrameEventListeners(
@@ -626,7 +628,7 @@ export const orFrameAxisGenerator = ({
   maxColumnValues = 1
 }: ORFrameAxisGeneratorTypes) => {
   if (!axis) return { axis: undefined, axesTickLines: undefined }
-  let generatedAxis: Array<AxisType>, axesTickLines: Array<Object>
+  let generatedAxis: Array<JSX.Element>, axesTickLines: Array<Object>
   if (projection !== "radial" && axis) {
     axesTickLines = []
     const axisPosition = [0, 0]
@@ -672,7 +674,7 @@ export const orFrameAxisGenerator = ({
 
       if (d.tickValues && Array.isArray(d.tickValues)) {
         tickValues = d.tickValues
-      } else if (d.tickValues) {
+      } else if (d.tickValues instanceof Function) {
         //otherwise assume a function
         tickValues = d.tickValues(data, size, rScale)
       }
@@ -691,6 +693,7 @@ export const orFrameAxisGenerator = ({
         className: d.className,
         axisParts,
         orient,
+        baseMarkProps: {},
         tickLineGenerator: d.tickLineGenerator
       })
       axesTickLines.push(axisTickLines)
@@ -721,7 +724,7 @@ export const orFrameAxisGenerator = ({
     const ticks = []
     axis.forEach(axisObj => {
       const {
-        tickValues = rScale.ticks(
+        tickValues: baseTickValues = rScale.ticks(
           Math.max(2, (adjustedSize[0] / 2 - innerRadius) / 50)
         ),
         label,
@@ -731,6 +734,13 @@ export const orFrameAxisGenerator = ({
       const tickScale = rScaleType
         .domain(rExtent)
         .range([innerRadius, adjustedSize[0] / 2])
+
+      const tickValues =
+        baseTickValues instanceof Function
+          ? baseTickValues({
+              orient: axisObj.orient
+            })
+          : baseTickValues
       tickValues.forEach((t, i) => {
         const tickSize = tickScale(t)
         if (!(innerRadius === 0 && t === 0)) {

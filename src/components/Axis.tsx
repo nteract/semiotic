@@ -6,9 +6,7 @@ import {
   axisLines
 } from "./visualizationLayerBehavior/axis"
 
-import { MarginType } from "./types/generalTypes"
-
-import { ScaleLinear } from "d3-scale"
+import { AxisProps } from "./types/annotationTypes"
 
 // components
 
@@ -22,46 +20,6 @@ function formatValue(value, props) {
   return value
 }
 
-type GlyphProps = {
-  lineHeight: number
-  lineWidth: number
-  value: number
-}
-
-type AxisPart = {
-  value: number
-}
-
-interface AxisProps {
-  orient: "left" | "right" | "top" | "bottom"
-  label: {
-    position?: { anchor?: string; location?: string; rotation?: string }
-    name: string
-    locationDistance: number
-  }
-  dynamicLabelPosition?: boolean
-  position?: number[]
-  rotate?: number
-  tickFormat?: Function
-  size?: number[]
-  width?: number
-  height?: number
-  className?: string
-  padding?: number
-  tickValues?: number[]
-  scale?: ScaleLinear<number, number>
-  ticks?: number
-  footer?: boolean
-  tickSize: number
-  tickLineGenerator?: Function
-  baseline?: boolean
-  margin?: MarginType
-  center?: boolean
-  axisParts?: AxisPart[]
-  annotationFunction?: (args) => void
-  glyphFunction?: (args: GlyphProps) => SVGElement
-}
-
 interface AxisState {
   hoverAnnotation: number
   calculatedLabelPosition?: number
@@ -72,7 +30,7 @@ class Axis extends React.Component<AxisProps, AxisState> {
     super(props)
     this.state = { hoverAnnotation: 0 }
   }
-  axisRef: Element = null
+  axisRef?: { querySelectorAll: Function } = null
 
   boundingBoxMax = () => {
     // && this.props.dynamicLabel ???
@@ -86,7 +44,7 @@ class Axis extends React.Component<AxisProps, AxisState> {
       Math.max(
         ...[...this.axisRef.querySelectorAll(".axis-label")]
           .map(
-            (l: SVGGraphicsElement) =>
+            (l: { getBBox: Function }) =>
               (l.getBBox && l.getBBox()) || { height: 30, width: 30 }
           )
           .map(d => d[positionType])
@@ -152,7 +110,7 @@ class Axis extends React.Component<AxisProps, AxisState> {
       })
       axisTickLines = (
         <g className={`axis ${className}`}>
-          {axisLines({ axisParts, orient, tickLineGenerator })}
+          {axisLines({ axisParts, orient, tickLineGenerator, className })}
         </g>
       )
     }

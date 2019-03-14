@@ -6,7 +6,8 @@
       "target": "es6",
       "lib": [
         "esnext",
-        "dom"
+        "dom",
+        "dom.iterable"
       ],
       "jsx": "react"
   },

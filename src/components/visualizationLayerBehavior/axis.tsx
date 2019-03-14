@@ -11,7 +11,7 @@ type AxisPiecesFnType = {
   padding: number
   scale: ScaleLinear<number, number>
   ticks: number
-  tickValues: number[]
+  tickValues: number[] | Function
   orient: "left" | "right" | "top" | "bottom"
   size: number[]
   footer: boolean
@@ -123,8 +123,9 @@ export function axisPieces({
       defaultAnchor = "end"
       break
   }
-
-  return tickValues.map((tick, i) => {
+  const generatedTicks =
+    tickValues instanceof Function ? tickValues({ orient }) : tickValues
+  return generatedTicks.map((tick, i) => {
     const tickPosition = scale(tick)
     return {
       [position1]: tickPosition,
@@ -195,8 +196,14 @@ export const axisLines = ({
   tickLineGenerator = defaultTickLineGenerator,
   baseMarkProps,
   className
+}: {
+  axisParts: object[]
+  orient: string
+  tickLineGenerator: Function
+  baseMarkProps?: GenericObject
+  className: string
 }) => {
   return axisParts.map((axisPart, i) =>
     tickLineGenerator({ xy: axisPart, orient, i, baseMarkProps, className })
-  )
+  ) as React.ReactNode
 }

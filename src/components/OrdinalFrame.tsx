@@ -84,15 +84,16 @@ import {
   ProjectionTypes,
   accessorType,
   GenericObject,
-  GenericAccessor
+  GenericAccessor,
+  RenderPipelineType
 } from "./types/generalTypes"
 
-import { AxisType } from "./types/annotationTypes"
+import { AxisProps } from "./types/annotationTypes"
 import { AnnotationLayerProps } from "./AnnotationLayer"
 import { Interactivity } from "./types/interactionTypes"
 
-const xScale = scaleIdentity()
-const yScale = scaleIdentity()
+const xScale = scaleLinear()
+const yScale = scaleLinear()
 
 const midMod = d => (d.middle ? d.middle : 0)
 const zeroFunction = genericFunction(0)
@@ -132,6 +133,11 @@ type OExtentObject = { extent?: Array<string>; onChange?: Function }
 
 type OExtentSettingsType = Array<string> | OExtentObject
 
+interface RExtentObject {
+  extent?: Array<number>
+  onChange?: Function
+}
+
 type SummaryTypeSettings = { type: SummaryTypes; amplitude?: number }
 
 type PieceTypes =
@@ -152,6 +158,7 @@ type PieceTypeSettings = {
 type ProjectedOrdinalSummary = {
   originalData?: { x?: number; y?: number }
   xyPoints?: object[]
+  marks?: object[]
 }
 
 export type OrdinalFrameProps = {
@@ -165,11 +172,11 @@ export type OrdinalFrameProps = {
   rAccessor?: accessorType<number>
   oAccessor?: accessorType<string | number>
   oExtent?: OExtentSettingsType
-  rExtent?: ExtentSettingsType | Array<number>
+  rExtent?: RExtentObject | number[]
   name?: string
   download: boolean
   annotations: Array<object>
-  matte?: React.ReactNode
+  matte?: boolean | object | Element | Function
   renderKey?: accessorType<string | number>
   interaction?: Interactivity
   customClickBehavior?: Function
@@ -207,8 +214,8 @@ export type OrdinalFrameProps = {
   margin?:
     | number
     | { top?: number; left?: number; right?: number; bottom?: number }
-  renderMode?: boolean | accessorType<string | object>
-  summaryRenderMode?: boolean | accessorType<string | object>
+  renderMode?: object | string | accessorType<string | object>
+  summaryRenderMode?: object | string | accessorType<string | object>
   dataVersion?: string
   svgAnnotationRules?: Function
   htmlAnnotationRules?: Function
@@ -219,8 +226,8 @@ export type OrdinalFrameProps = {
   legend?: object
   data: Array<object | number>
   oPadding?: number
-  axis?: object | Array<object>
-  axes?: object | Array<object>
+  axis?: AxisProps | Array<AxisProps>
+  axes?: AxisProps | Array<AxisProps>
   summaryPosition?: Function
   additionalDefs?: React.ReactNode
   tooltipContent?: Function
@@ -236,9 +243,9 @@ type State = {
   adjustedSize: Array<number>
   backgroundGraphics: React.ReactNode
   foregroundGraphics: React.ReactNode
-  axisData?: Array<object>
-  axes?: Array<AxisType>
-  axesTickLines?: Array<object>
+  axisData?: AxisProps[]
+  axes?: JSX.Element[]
+  axesTickLines?: React.ReactNode
   oLabels: React.ReactNode
   title: object
   columnOverlays: Array<object>
@@ -256,7 +263,7 @@ type State = {
   projectedColumns: object
   margin: MarginType
   legendSettings: object
-  orFrameRender: object
+  orFrameRender: RenderPipelineType
   pieceIDAccessor: GenericAccessor<string>
   type: object
   summaryType: object
@@ -293,8 +300,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       oLabels: [],
       oAccessor: stringToArrayFn<string>("renderKey"),
       rAccessor: stringToArrayFn<number>("value"),
-      oScale: xScale,
-      rScale: xScale,
+      oScale: scaleBand(),
+      rScale: scaleLinear(),
       axes: undefined,
       calculatedOExtent: [],
       calculatedRExtent: [0, 1],
@@ -335,6 +342,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       rAccessor: baseRAccessor,
       connectorStyle: baseConnectorStyle,
       style: baseStyle,
+      rExtent: baseRExtent,
       oSort,
       sortO = oSort,
       pieceClass: basePieceClass,
@@ -370,7 +378,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
     } = currentProps
 
     const summaryType = objectifyType(baseSummaryType)
-    const pieceType = objectifyType(baseType)
+    const pieceType = objectifyType(baseType) as PieceTypeSettings
     const connectorType = objectifyType(baseConnectorType)
     const oAccessor = stringToArrayFn<string | number>(
       baseOAccessor,
@@ -417,7 +425,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       multiAxis
     })
 
-    const arrayWrappedAxis: AxisType[] = Array.isArray(baseAxis)
+    const arrayWrappedAxis: AxisProps[] = Array.isArray(baseAxis)
       ? baseAxis
       : [baseAxis]
 
@@ -442,7 +450,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
 
     const oExtentSettings: OExtentObject =
       baseOExtent === undefined || Array.isArray(baseOExtent)
-        ? { extent: baseOExtent }
+        ? { extent: baseOExtent as string[] }
         : baseOExtent
 
     const calculatedOExtent = allData.reduce(
@@ -457,9 +465,10 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         return p
       },
       []
-    )
+    ) as string[]
 
-    let oExtent: string[] = oExtentSettings.extent || calculatedOExtent
+    let oExtent: string[] =
+      (oExtentSettings.extent as string[]) || (calculatedOExtent as string[])
 
     if (pieceType.type === "barpercent") {
       const oExtentSums = oExtent
@@ -551,13 +560,12 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       oScale.range(oDomain)
     }
 
-    const baseRExtent = currentProps.rExtent
     const rExtentSettings =
       baseRExtent === undefined || Array.isArray(baseRExtent)
-        ? { extent: baseRExtent }
+        ? { extent: baseRExtent, onChange: undefined }
         : baseRExtent
 
-    let rExtent = rExtentSettings.extent
+    let rExtent = rExtentSettings.extent as number[]
     let subZeroRExtent = [0, 0]
 
     if (
@@ -618,7 +626,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       rExtentSettings.extent[0] !== undefined &&
       rExtentSettings.extent[1] !== undefined
     ) {
-      rExtent = rExtentSettings.extent
+      rExtent = rExtentSettings.extent as number[]
     } else {
       if (
         rExtentSettings.extent &&
@@ -1232,13 +1240,14 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       const xMod = projection === "vertical" ? midMod : zeroFunction
 
       if (summaryHoverAnnotation && calculatedSummaries.xyPoints) {
-        pieceDataXY = calculatedSummaries.xyPoints.map(d =>
-          Object.assign({}, d, {
-            type: "frame-hover",
-            isSummaryData: true,
-            x: d.x,
-            y: d.y
-          })
+        pieceDataXY = calculatedSummaries.xyPoints.map(
+          (d: { x: number; y: number }) =>
+            Object.assign({}, d, {
+              type: "frame-hover",
+              isSummaryData: true,
+              x: d.x,
+              y: d.y
+            })
         )
       } else if (pieceHoverAnnotation && calculatedPieceData) {
         pieceDataXY = calculatedPieceData.map(d =>
@@ -1338,7 +1347,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
           }
           return summaryPackage
         },
-        data: calculatedSummaries,
+        data: calculatedSummaries.marks,
         behavior: renderLaidOutSummaries,
         canvasRender: summaryCanvasRender,
         styleFn: stringToFn<GenericObject>(summaryStyle, () => ({}), true),
@@ -1472,7 +1481,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       rScaleType
     } = this.state
 
-    let screenCoordinates = [0, 0]
+    let screenCoordinates: number[] | number[][] = [0, 0]
 
     //TODO: Support radial??
     if (d.coordinates || (d.type === "enclose" && d.neighbors)) {
@@ -1542,7 +1551,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         key: d.key
       })
     } else if (d.type === "ordinal-line") {
-      return svgOrdinalLine({ d, i, screenCoordinates, voronoiHover })
+      return svgOrdinalLine({ d, screenCoordinates, voronoiHover })
     } else if (d.type === "or") {
       return svgORRule({ d, i, screenCoordinates, projection })
     } else if (d.type === "highlight") {
@@ -1610,7 +1619,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       size,
       useSpans
     } = this.props
-    let screenCoordinates = [0, 0]
+    let screenCoordinates: number[] | number[][] = [0, 0]
 
     const { voronoiHover } = annotationLayer
 
@@ -1787,7 +1796,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       legendSettings,
       columnOverlays,
       axesTickLines,
-      axes,
+      axisData,
       margin,
       pieceDataXY,
       oLabels,
@@ -1847,7 +1856,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         size={size}
         xScale={xScale}
         yScale={yScale}
-        axes={axes}
+        axes={axisData}
         useSpans={useSpans}
         axesTickLines={axesTickLines}
         title={title}
@@ -1855,7 +1864,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         additionalDefs={additionalDefs}
         className={className}
         frameKey={"none"}
-        renderKeyFn={renderKey}
+        renderFn={renderKey}
         projectedCoordinateNames={projectedCoordinatesObject}
         defaultSVGRule={this.defaultORSVGRule.bind(this)}
         defaultHTMLRule={this.defaultORHTMLRule.bind(this)}

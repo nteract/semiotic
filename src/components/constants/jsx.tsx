@@ -3,7 +3,7 @@ import * as React from "react"
 type FilterDefTypes = {
   matte?: Element
   key: string
-  additionalDefs?: Element
+  additionalDefs?: React.ReactNode
 }
 
 export const filterDefs = ({ matte, key, additionalDefs }: FilterDefTypes) => (

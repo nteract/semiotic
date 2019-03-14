@@ -342,8 +342,12 @@ export function heatmapping({
     grid.push(gridColumn)
 
     heatmapData._xyfCoordinates.forEach((d: number[], di: number) => {
-      const xCoordinate = parseInt(heatmapBinXScale(d[0]) / actualResolution[0])
-      const yCoordinate = parseInt(heatmapBinYScale(d[1]) / actualResolution[1])
+      const xCoordinate = Math.floor(
+        heatmapBinXScale(d[0]) / actualResolution[0]
+      )
+      const yCoordinate = Math.floor(
+        heatmapBinYScale(d[1]) / actualResolution[1]
+      )
       grid[xCoordinate][yCoordinate].binItems.push(heatmapData.coordinates[di])
     })
 
