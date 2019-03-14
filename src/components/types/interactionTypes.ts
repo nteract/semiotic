@@ -4,5 +4,7 @@ export interface Interactivity {
   end?: Function
   brush?: string
   extent?: Array<number[]> | number[]
-  columnsBrush?: object
+  columnsBrush?: boolean
+  projection?: string
+  projectedColumns?: object
 }

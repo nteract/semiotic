@@ -262,24 +262,28 @@ class InteractionLayer extends React.Component<Props, State> {
     }
 
     if (actualBrush === "xBrush") {
+      const castExtent = extent as number[]
       mappingFn = (d): null | Array<number> =>
         !d ? null : [xScale.invert(d[0]), xScale.invert(d[1])]
       semioticBrush = brushX()
-      selectedExtent = extent.map(d => xScale(d))
+      selectedExtent = castExtent.map(d => xScale(d)) as number[]
       endMappingFn = mappingFn
     } else if (actualBrush === "yBrush") {
+      const castExtent = extent as number[]
+
       mappingFn = (d): null | Array<number> =>
         !d
           ? null
           : [yScale.invert(d[0]), yScale.invert(d[1])].sort((a, b) => a - b)
       semioticBrush = brushY()
-      selectedExtent = extent.map(d => yScale(d)).sort((a, b) => a - b)
+      selectedExtent = castExtent.map(d => yScale(d)).sort((a, b) => a - b)
       endMappingFn = mappingFn
     } else {
+      const castExtent = extent as number[][]
       if (
-        extent.indexOf(undefined) !== -1 ||
-        extent[0].indexOf(undefined) !== -1 ||
-        extent[1].indexOf(undefined) !== -1
+        castExtent.indexOf(undefined) !== -1 ||
+        castExtent[0].indexOf(undefined) !== -1 ||
+        castExtent[1].indexOf(undefined) !== -1
       ) {
         return <g />
       }
@@ -301,7 +305,7 @@ class InteractionLayer extends React.Component<Props, State> {
         (a, b) => a - b
       )
 
-      selectedExtent = extent.map((d, i) => [xScale(d[0]), yValues[i]])
+      selectedExtent = castExtent.map((d, i) => [xScale(d[0]), yValues[i]])
 
       endMappingFn = mappingFn
     }

@@ -6,7 +6,11 @@ import MiniMap from "./MiniMap"
 
 import { XYFrameProps } from "./XYFrame"
 
-class MinimapXYFrame extends React.Component<XYFrameProps> {
+interface MinimapXYFrameProps extends XYFrameProps {
+  renderBefore?: boolean
+}
+
+class MinimapXYFrame extends React.Component<MinimapXYFrameProps> {
   constructor(props) {
     super(props)
 
@@ -40,7 +44,12 @@ class MinimapXYFrame extends React.Component<XYFrameProps> {
       canvasSummaries,
       minimap,
       axes,
-      margin
+      margin,
+      useSpans,
+      name,
+      annotations,
+      areaType,
+      summaryType
     } = this.props
     const miniDefaults = {
       position: [0, 0],
@@ -70,12 +79,19 @@ class MinimapXYFrame extends React.Component<XYFrameProps> {
       canvasPoints,
       canvasSummaries,
       axes,
-      margin
+      margin,
+      useSpans,
+      name,
+      annotations,
+      areaType,
+      summaryType
     }
 
-    const combinedOptions = { ...miniDefaults, ...minimap }
-
-    combinedOptions.hoverAnnotation = false
+    const combinedOptions = {
+      ...miniDefaults,
+      ...minimap,
+      hoverAnnotation: false
+    }
 
     return <MiniMap {...combinedOptions} />
   }

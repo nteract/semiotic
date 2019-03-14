@@ -14,7 +14,7 @@ export interface LegendGroup {
 }
 
 export interface LegendProps {
-  legendGroups: LegendGroup[]
+  legendGroups?: LegendGroup[]
   title?: string
   width?: number
   height?: number

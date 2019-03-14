@@ -8,13 +8,19 @@ import { filterDefs } from "./constants/jsx"
 
 import SpanOrDiv from "./SpanOrDiv"
 import { MarginType } from "./types/generalTypes"
-import {
-  AxisType,
-  AnnotationHandling,
-  AnnotationTypes,
-  AnnotationProps
-} from "./types/annotationTypes"
+import { AxisProps, AnnotationHandling } from "./types/annotationTypes"
 import { LegendProps } from "./types/legendTypes"
+import { ScaleLinear } from "d3-scale"
+
+type VizDataLayerKeys =
+  | "pieces"
+  | "summaries"
+  | "connectors"
+  | "edges"
+  | "nodes"
+  | "areas"
+  | "lines"
+  | "points"
 
 type Props = {
   name?: string
@@ -32,8 +38,8 @@ type Props = {
   interaction?: object
   renderFn?: string | Function
   hoverAnnotation?: boolean | object | Array<object | Function> | Function
-  backgroundGraphics?: Element | Function
-  foregroundGraphics?: Element | Function
+  backgroundGraphics?: React.ReactNode | Function
+  foregroundGraphics?: React.ReactNode | Function
   interactionOverflow?: object
   disableContext?: boolean
   canvasRendering?: boolean
@@ -41,45 +47,36 @@ type Props = {
   baseMarkProps?: object
   canvasPostProcess?: "chuckClose" | Function
   projection?: string
-  rScale?: Function
+  rScale?: ScaleLinear<number, number>
   columns?: object
   overlay?: Array<object>
   legendSettings?: LegendProps
   adjustedPosition: Array<number>
   defaultHTMLRule: Function
   defaultSVGRule: Function
-  downloadButton: Element
-  beforeElements?: Element
-  afterElements?: Element
+  downloadButton: React.ReactNode
+  beforeElements?: React.ReactNode
+  afterElements?: React.ReactNode
   points?: Array<object>
   projectedYMiddle?: string
   dataVersion?: string
   frameKey?: string
-  additionalDefs?: Element
-  xScale: Function
-  yScale: Function
+  additionalDefs?: React.ReactNode
+  xScale: ScaleLinear<number, number>
+  yScale: ScaleLinear<number, number>
   adjustedSize?: Array<number>
-  renderPipeline: object
+  renderPipeline: { [key in VizDataLayerKeys]?: object }
   projectedCoordinateNames: { x: string; y: string }
   matte?: boolean | object | Element | Function
-  axes?: Array<AxisType>
-  axesTickLines?: Element
+  axes?: Array<AxisProps>
+  axesTickLines?: React.ReactNode
   disableCanvasInteraction?: boolean
   showLinePoints?: string
-  renderOrder: ReadonlyArray<
-    | "pieces"
-    | "summaries"
-    | "connectors"
-    | "edges"
-    | "nodes"
-    | "areas"
-    | "lines"
-    | "points"
-  >
+  renderOrder: ReadonlyArray<VizDataLayerKeys>
 }
 
 type State = {
-  canvasContext?: object
+  canvasContext?: { getContext: Function }
   voronoiHover?: object
 }
 

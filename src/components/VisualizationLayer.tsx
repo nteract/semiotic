@@ -4,35 +4,29 @@ import { RoughCanvas } from "roughjs-es5/lib/canvas"
 
 import { chuckCloseCanvasTransform } from "./canvas/basicCanvasEffects"
 
-import { AxisType } from "./types/annotationTypes"
-import { MarginType } from "./types/generalTypes"
-
-type VizLayerTypes =
-  | "pieces"
-  | "summaries"
-  | "connectors"
-  | "edges"
-  | "nodes"
-  | "areas"
-  | "lines"
-  | "points"
+import { AxisProps } from "./types/annotationTypes"
+import {
+  MarginType,
+  RenderPipelineType,
+  VizLayerTypes
+} from "./types/generalTypes"
 
 type Props = {
-  axes?: Array<AxisType>
+  axes?: Array<AxisProps>
   frameKey?: string
   xScale: Function
   yScale: Function
   dataVersion?: string
-  canvasContext?: HTMLCanvasElement | null
+  canvasContext?: { getContext: Function } | null
   size: Array<number>
   margin: MarginType
   canvasPostProcess?: string | Function
-  title?: object | string
+  title?: { props?: any } | string
   ariaTitle?: string
   matte?: React.ReactNode
   matteClip?: boolean
   voronoiHover: Function
-  renderPipeline: { [key in VizLayerTypes]: object }
+  renderPipeline: RenderPipelineType
   baseMarkProps?: object
   projectedCoordinateNames: object
   position: Array<number>
@@ -220,7 +214,6 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
           context.globalAlpha = style.opacity || 1
           rc.path(piece.markProps.d, rcSettings)
         } else {
-          // $FlowFixMe
           const p = new Path2D(piece.markProps.d)
           context.globalAlpha = style.strokeOpacity || style.opacity || 1
           if (
@@ -280,7 +273,9 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     const canvasDrawing = this.canvasDrawing
 
     const renderedElements = []
-    const renderVizKeys: Array<VizLayerTypes> = Object.keys(renderPipeline)
+    const renderVizKeys: Array<VizLayerTypes> = Object.keys(
+      renderPipeline
+    ) as VizLayerTypes[]
     const renderKeys = renderOrder.concat(
       renderVizKeys.filter(d => renderOrder.indexOf(d) === -1)
     )
@@ -358,7 +353,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     })
 
     if (
-      update === true ||
+      update ||
       (np.dataVersion && np.dataVersion !== this.state.dataVersion)
     ) {
       this.updateVisualizationLayer(np)
@@ -424,7 +419,8 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
 
     const title =
       (this.props.title && this.props.ariaTitle) || this.props.title
-        ? this.props.title.props &&
+        ? typeof this.props.title !== "string" &&
+          this.props.title.props &&
           typeof this.props.title.props.children === "string"
           ? `titled ${this.props.title.props.children}`
           : "with a complex title"

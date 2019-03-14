@@ -59,7 +59,7 @@ function validFrameProps(originalProps, frameType) {
 
 interface FacetControllerProps {
   children: Element
-  react15Wrapper: Element
+  react15Wrapper: React.ReactElement
   sharedRExtent: boolean
   sharedXExtent: boolean
   sharedYExtent: boolean
@@ -132,7 +132,8 @@ class FacetController extends React.Component<Props, State> {
       if (annotationSettings === true) {
         annotationBase = [{ ...state.facetHover }]
       } else {
-        annotationBase = annotationSettings.map(annotation => {
+        const annotationMap = annotationSettings as object[]
+        annotationBase = annotationMap.map(annotation => {
           const decoratedAnnotation =
             typeof annotation === "function"
               ? annotation(state.facetHover)
@@ -182,7 +183,7 @@ class FacetController extends React.Component<Props, State> {
     props,
     state
   }: {
-    child: React.ReactElement
+    child: Element
     props: Props
     index: number
     state: State

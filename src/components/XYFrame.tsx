@@ -87,16 +87,17 @@ import {
   RawLine,
   RawSummary,
   RawPoint,
-  GenericAccessor
+  GenericAccessor,
+  RenderPipelineType
 } from "./types/generalTypes"
 
 import {
   AnnotationHandling,
   CustomHoverType,
-  AnnotationType
+  AnnotationType,
+  AxisProps
 } from "./types/annotationTypes"
 
-import { AxisType } from "./types/annotationTypes"
 import { Interactivity } from "./types/interactionTypes"
 
 import { AnnotationLayerProps } from "./AnnotationLayer"
@@ -143,7 +144,7 @@ export type XYFrameProps = {
   points?: RawPoint[]
   areas?: RawSummary[] | RawSummary
   summaries?: RawSummary[] | RawSummary
-  axes?: AxisType[]
+  axes?: AxisProps[]
   matte?: object
   xScaleType?: ScaleLinear<number, number>
   yScaleType?: ScaleLinear<number, number>
@@ -222,14 +223,14 @@ export type XYFrameState = {
   fullDataset: ProjectedPoint[]
   adjustedPosition: number[]
   adjustedSize: number[]
-  backgroundGraphics?: React.ReactNode
-  foregroundGraphics?: React.ReactNode
+  backgroundGraphics?: React.ReactNode | Function
+  foregroundGraphics?: React.ReactNode | Function
   axesData?: object[]
-  axes?: AxisType[]
-  axesTickLines?: object[]
+  axes?: AxisProps[]
+  axesTickLines?: React.ReactNode
   renderNumber: number
   margin: MarginType
-  matte?: object
+  matte?: boolean | object | Element | Function
   calculatedXExtent: number[]
   calculatedYExtent: number[]
   xAccessor: GenericAccessor<number>[]
@@ -240,7 +241,7 @@ export type XYFrameState = {
   yExtent: number[]
   areaAnnotations: object[]
   legendSettings?: object
-  xyFrameRender: object
+  xyFrameRender: RenderPipelineType
   canvasDrawing: object[]
   size: number[]
   annotatedSettings: AnnotatedSettingsProps
@@ -573,8 +574,8 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
         (d: GenericObject, i: number) => `line-${i}`,
         true
       ),
-      lineType: objectifyType<LineTypeSettings>(lineType),
-      summaryType: objectifyType<SummaryTypeSettings>(summaryType),
+      lineType: objectifyType(lineType) as LineTypeSettings,
+      summaryType: objectifyType(summaryType) as SummaryTypeSettings,
       lineIDAccessor: stringToFn<string>(lineIDAccessor, l => l.semioticLineID),
       summaries:
         !summaries || (Array.isArray(summaries) && summaries.length === 0)
@@ -782,7 +783,7 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
         let tickValues
         if (d.tickValues && Array.isArray(d.tickValues)) {
           tickValues = d.tickValues
-        } else if (d.tickValues) {
+        } else if (d.tickValues instanceof Function) {
           //otherwise assume a function
           tickValues = d.tickValues(fullDataset, currentProps.size, axisScale)
         }
@@ -1047,10 +1048,10 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
     d: AnnotationType
     i: number
     annotationLayer: AnnotationLayerProps
-    lines: { data: ProjectedLine[] }
-    summaries: { data: ProjectedSummary[] }
+    lines: { data: [] }
+    summaries: { data: [] }
     points: {
-      data: ProjectedPoint[]
+      data: []
       styleFn: (args?: GenericObject, index?: number) => GenericObject
     }
   }) => {
@@ -1063,7 +1064,7 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
 
     if (baseD.type === "highlight") {
       return svgHighlight({
-        d: baseD,
+        d: { x: 0, y: 0, ...baseD },
         i,
         idAccessor,
         lines,
@@ -1151,7 +1152,7 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
           }
         },
         [] as number[]
-      )
+      ) as number[]
     }
 
     const { voronoiHover } = annotationLayer

@@ -1,5 +1,11 @@
 import { AnnotationHandling } from "./annotationTypes"
-import { CanvasPostProcessTypes, GenericObject } from "./generalTypes"
+import {
+  CanvasPostProcessTypes,
+  GenericObject,
+  MarginType,
+  RenderPipelineType
+} from "./generalTypes"
+import { LegendProps } from "./legendTypes"
 
 export interface NodeType {
   degree: number
@@ -101,8 +107,8 @@ export interface NetworkFrameState {
   dataVersion?: string
   adjustedPosition: number[]
   adjustedSize: number[]
-  backgroundGraphics?: Element | Function
-  foregroundGraphics?: Element | Function
+  backgroundGraphics?: React.ReactNode | Function
+  foregroundGraphics?: React.ReactNode | Function
   title: object
   renderNumber: number
   nodeData: object[]
@@ -116,11 +122,11 @@ export interface NetworkFrameState {
   targetAccessor: (args: GenericObject) => GenericObject | string
   nodeSizeAccessor: (args: GenericObject) => number
   edgeWidthAccessor: (args: GenericObject) => number
-  margin: object
-  legendSettings: object
+  margin: MarginType
+  legendSettings: LegendProps
   nodeLabelAnnotations: object[]
   graphSettings: GraphSettingsType
-  networkFrameRender: object
+  networkFrameRender: RenderPipelineType
 }
 
 export interface NetworkFrameProps {
@@ -153,8 +159,8 @@ export interface NetworkFrameProps {
   legend?: object
   edgeRenderKey?: (args: GenericObject) => string
   nodeRenderKey?: (args: GenericObject) => string
-  foregroundGraphics?: Element
-  backgroundGraphics?: Element
+  backgroundGraphics?: React.ReactNode | Function
+  foregroundGraphics?: React.ReactNode | Function
   additionalDefs?: Element
   svgAnnotationRules?: Function
   htmlAnnotationRules?: Function
@@ -165,7 +171,7 @@ export interface NetworkFrameProps {
   customClickBehavior?: Function
   customDoubleClickBehavior?: Function
   customHoverBehavior?: Function
-  matte?: object
+  matte?: boolean | object | Element | Function
   useSpans?: boolean
   beforeElements?: Element
   afterElements?: Element

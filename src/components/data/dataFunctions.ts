@@ -295,40 +295,51 @@ export const calculateDataExtent = ({
       const baseData = d._baseData
       if (d._xyfCoordinates[0][0][0]) {
         d._xyfCoordinates[0].forEach(multi => {
-          multi
-            .map((p, q) =>
-              Object.assign({ parentSummary: d }, baseData[q], {
-                [projectedX]: p[0],
-                [projectedY]: p[1]
+          if (Array.isArray(multi)) {
+            multi
+              .map((p, q) =>
+                Object.assign({ parentSummary: d }, baseData[q], {
+                  [projectedX]: p[0],
+                  [projectedY]: p[1]
+                })
+              )
+              .forEach(e => {
+                if (showSummaryPoints) {
+                  projectedPoints.push({
+                    x: 0,
+                    y: 0,
+                    ...e,
+                    [projectedY]:
+                      e[projectedYTop] || e[projectedYBottom] || e[projectedY]
+                  })
+                }
+                fullDataset.push({ x: 0, y: 0, ...e })
               })
-            )
+          }
+        })
+      } else {
+        if (Array.isArray(d._xyfCoordinates)) {
+          const coordArray: number[][] = d._xyfCoordinates as number[][]
+          coordArray
+            .map((p, q) => ({
+              parentSummary: d,
+              ...baseData[q],
+              [projectedX]: p[0],
+              [projectedY]: p[1]
+            }))
             .forEach(e => {
               if (showSummaryPoints) {
                 projectedPoints.push({
+                  x: 0,
+                  y: 0,
                   ...e,
-                  [projectedY]: e[projectedYTop] || e[projectedYBottom] || e.y
+                  [projectedY]:
+                    e[projectedYTop] || e[projectedYBottom] || e[projectedY]
                 })
               }
-              fullDataset.push(e)
+              fullDataset.push({ x: 0, y: 0, ...e })
             })
-        })
-      } else {
-        d._xyfCoordinates
-          .map((p, q) =>
-            Object.assign({ parentSummary: d }, baseData[q], {
-              [projectedX]: p[0],
-              [projectedY]: p[1]
-            })
-          )
-          .forEach(e => {
-            if (showSummaryPoints) {
-              projectedPoints.push({
-                ...e,
-                [projectedY]: e[projectedYTop] || e[projectedYBottom] || e.y
-              })
-            }
-            fullDataset.push(e)
-          })
+        }
       }
     })
   }
@@ -408,8 +419,6 @@ export const calculateDataExtent = ({
     projectedSummaries = contouring({
       summaryType,
       data: projectedSummaries,
-      projectedX,
-      projectedY,
       finalXExtent,
       finalYExtent
     })
@@ -419,13 +428,9 @@ export const calculateDataExtent = ({
       data: projectedSummaries,
       processedData: summaries && !!summaries[0].processedData,
       preprocess: false,
-      projectedX,
-      projectedY,
       finalXExtent,
       finalYExtent,
       size,
-      xScaleType,
-      yScaleType,
       margin,
       baseMarkProps,
       styleFn: summaryStyleFn,
@@ -443,13 +448,9 @@ export const calculateDataExtent = ({
       data: projectedSummaries,
       processedData: summaries && !!summaries[0].processedData,
       preprocess: false,
-      projectedX,
-      projectedY,
       finalXExtent,
       finalYExtent,
       size,
-      xScaleType,
-      yScaleType,
       margin,
       baseMarkProps,
       styleFn: summaryStyleFn,

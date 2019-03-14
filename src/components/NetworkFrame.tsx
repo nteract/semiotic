@@ -10,7 +10,7 @@ import {
 
 import { bboxCollide } from "d3-bboxCollide"
 
-import { scaleLinear, scaleIdentity } from "d3-scale"
+import { scaleLinear } from "d3-scale"
 
 import { min, max } from "d3-array"
 
@@ -20,7 +20,11 @@ import Frame from "./Frame"
 
 import DownloadButton from "./DownloadButton"
 
-import { calculateMargin, adjustedPositionSize } from "./svg/frameFunctions"
+import {
+  calculateMargin,
+  adjustedPositionSize,
+  TitleType
+} from "./svg/frameFunctions"
 import { pointOnArcAtAngle } from "./svg/pieceDrawing"
 
 import {
@@ -96,13 +100,12 @@ import pathBounds from "svg-path-bounding-box"
 
 import { nodesEdgesFromHierarchy } from "./processing/network"
 
-import {
-  AnnotationHandling,
-  CustomHoverType,
-  AnnotationType
-} from "./types/annotationTypes"
+import { AnnotationType } from "./types/annotationTypes"
 
 const emptyArray = []
+
+const matrixRenderOrder: ReadonlyArray<"nodes" | "edges"> = ["nodes", "edges"]
+const generalRenderOrder: ReadonlyArray<"nodes" | "edges"> = ["nodes", "edges"]
 
 const baseNodeProps = {
   id: "id",
@@ -304,8 +307,8 @@ const sankeyOrientHash = {
   justify: sankeyJustify
 }
 
-const xScale = scaleIdentity()
-const yScale = scaleIdentity()
+const xScale = scaleLinear()
+const yScale = scaleLinear()
 
 const matrixify = ({ edgeHash, nodes, edgeWidthAccessor, nodeIDAccessor }) => {
   const matrix = []
@@ -519,8 +522,8 @@ class NetworkFrame extends React.Component<
       typeof baseTitle === "object" &&
       !React.isValidElement(baseTitle) &&
       baseTitle !== null
-        ? baseTitle
-        : { title: baseTitle, orient: "top" }
+        ? (baseTitle as TitleType)
+        : ({ title: baseTitle, orient: "top" } as TitleType)
 
     const margin = calculateMargin({
       margin: baseMargin,
@@ -1876,8 +1879,8 @@ class NetworkFrame extends React.Component<
       additionalDefs,
       renderOrder = this.state.graphSettings &&
       this.state.graphSettings.type === "matrix"
-        ? ["nodes", "edges"]
-        : ["edges", "nodes"]
+        ? matrixRenderOrder
+        : generalRenderOrder
     } = this.props
     const {
       backgroundGraphics,

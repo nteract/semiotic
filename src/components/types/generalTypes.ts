@@ -20,6 +20,9 @@ export interface ProjectedPoint {
   percent?: number
   data?: object
   _XYFrameRank?: number
+  style?: Function | object
+  class?: Function | string
+  coordinates?: object[]
 }
 
 export interface ProjectedLine {
@@ -30,7 +33,7 @@ export interface ProjectedLine {
 
 export interface ProjectedSummary {
   _baseData: object[]
-  _xyfCoordinates: object[][][] | object[][]
+  _xyfCoordinates: object[][][] | object[][] | number[][]
   coordinates: object[]
   data: object[]
   y: number
@@ -38,6 +41,7 @@ export interface ProjectedSummary {
   parentSummary?: GenericObject
   bounds: object[] | number[]
   customMark: Function
+  type?: string
 }
 
 export type CanvasPostProcessTypes = Function | "chuckClose"
@@ -120,3 +124,21 @@ export type GenericAccessor<GenericValue> = (
   args?: GenericObject,
   index?: number
 ) => GenericValue
+
+export type VizLayerTypes =
+  | "pieces"
+  | "summaries"
+  | "connectors"
+  | "edges"
+  | "nodes"
+  | "areas"
+  | "lines"
+  | "points"
+
+export type RenderPipelineType = {
+  [key in VizLayerTypes]?: {
+    data?: object[]
+    ariaLabel?: { chart?: string; items?: string }
+    behavior?: Function
+  }
+}

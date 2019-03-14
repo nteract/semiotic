@@ -400,7 +400,7 @@ export function createSummaries({
 }: {
   xScale: ScaleLinear<number, number>
   yScale: ScaleLinear<number, number>
-  canvasDrawing?: Function
+  canvasDrawing?: object[]
   data: ProjectedSummary[]
   canvasRender?: Function
   styleFn?: Function
@@ -428,11 +428,12 @@ export function createSummaries({
     }
     let drawD = ""
     let shouldBeValid = false
-    if (d.customMark) {
+    if (typeof d.customMark === "string") {
       drawD = d.customMark
       shouldBeValid = true
     } else if (d.type === "MultiPolygon") {
-      d.coordinates.forEach(coord => {
+      const polycoords = d.coordinates
+      polycoords.forEach((coord: number[][]) => {
         coord.forEach(c => {
           drawD += `M${c
             .map(p => `${xScale(p[0])},${yScale(p[1])}`)
@@ -440,7 +441,8 @@ export function createSummaries({
         })
       })
     } else if (customMark) {
-      const projectedCoordinates = d._xyfCoordinates.map(p => [
+      const xyfCoords = d._xyfCoordinates as number[][]
+      const projectedCoordinates = xyfCoords.map(p => [
         xScale(p[0]),
         yScale(p[1])
       ])
@@ -458,7 +460,8 @@ export function createSummaries({
       })
       shouldBeValid = true
     } else {
-      drawD = `M${d._xyfCoordinates
+      const xyfCoords = d._xyfCoordinates as number[][]
+      drawD = `M${xyfCoords
         .map(p => `${xScale(p[0])},${yScale(p[1])}`)
         .join("L")}Z`
     }
@@ -541,7 +544,8 @@ export function clonedAppliedElement({
   }
 
   if (!markProps.markType) {
-    return <markProps />
+    const RenderableMark = markProps as React.ComponentClass
+    return React.createElement(RenderableMark)
   }
 
   markProps.renderMode = renderFn ? renderFn(d, i, yi) : undefined

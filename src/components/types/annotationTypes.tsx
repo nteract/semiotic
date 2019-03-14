@@ -1,7 +1,8 @@
 import Axis from "../Axis"
-import { RawPoint, GenericObject } from "./generalTypes"
+import { RawPoint, GenericObject, MarginType } from "./generalTypes"
 import { NodeType } from "./networkTypes"
 import { element } from "prop-types"
+import { ScaleLinear } from "d3-scale"
 
 //import { object } from "./generalTypes"
 
@@ -27,8 +28,8 @@ export type AnnotationType = {
   target?: NodeType
   id?: string
   element?: Element
-  label: string | Element
-  neighbors: object[]
+  label?: string | Element
+  neighbors?: object[]
 }
 
 export type CustomHoverType =
@@ -63,28 +64,82 @@ export interface AnnotationHandling {
 
 export interface AnnotationProps {
   noteData: {
-    eventListeners: object
-    events: object
+    eventListeners?: object
+    events?: object
     onDragEnd?: Function
     onDragStart?: Function
     onDrag?: Function
     type: any
     editMode?: boolean
-    screenCoordinates: Array<Array<number>>
+    screenCoordinates?: Array<Array<number>>
     // What is this type supposed to be? It gets used only in a boolean context
     // I mostly assume this is used to indicate the presence of `nx`, `ny`, `dx`, `dy`
-    coordinates: boolean
+    coordinates?: boolean
     x: number | number[]
     y: number | number[]
-    nx: number
-    ny: number
-    dx: number
-    dy: number
+    nx?: number
+    ny?: number
+    dx?: number
+    dy?: number
     // TODO: What should this be typed as?
     note: object
-    i: number
+    i?: number
     fixedPosition?: boolean
   }
 }
 
-export type AxisType = JSX.element<typeof Axis> | JSX.element<"g">
+type GlyphProps = {
+  lineHeight: number
+  lineWidth: number
+  value: number
+}
+
+type AxisPart = {
+  value: number
+}
+
+export interface AxisProps {
+  orient: "left" | "right" | "top" | "bottom"
+  label: {
+    position?: { anchor?: string; location?: string; rotation?: string }
+    name: string
+    locationDistance: number
+  }
+  dynamicLabelPosition?: boolean
+  position?: number[]
+  rotate?: number
+  tickFormat?: Function
+  size?: number[]
+  width?: number
+  height?: number
+  className?: string
+  padding?: number
+  tickValues?: number[] | Function
+  scale?: ScaleLinear<number, number>
+  ticks?: number
+  footer?: boolean
+  tickSize: number
+  tickLineGenerator?: ({
+    xy,
+    orient,
+    i,
+    baseMarkProps,
+    className
+  }: {
+    xy?: any
+    orient?: any
+    i?: any
+    baseMarkProps?: any
+    className?: string
+  }) => SVGElement
+  baseline?: boolean
+  margin?: MarginType
+  center?: boolean
+  axisParts?: AxisPart[]
+  annotationFunction?: (args) => void
+  glyphFunction?: (args: GlyphProps) => SVGElement
+  axis?: any
+  extentOverride?: number[]
+  key?: string | number
+  axisAnnotationFunction?: (args: any) => void
+}

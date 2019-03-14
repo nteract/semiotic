@@ -1285,4 +1285,4 @@ export const drawSummaries = ({
   })
 }
 
-export const renderLaidOutSummaries = ({ data }) => data.marks
+export const renderLaidOutSummaries = data => data
