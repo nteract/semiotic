@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { scaleLinear } from "d3-scale"
 import { OrdinalFrame } from "../../components"
 import ProcessViz from "./ProcessViz"

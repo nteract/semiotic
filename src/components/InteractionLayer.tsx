@@ -76,6 +76,60 @@ type State = {
   interactionCanvas: ReactNode
 }
 
+const generateOMappingFn = projectedColumns => (d): null | any => {
+  if (d) {
+    const columnValues = Object.values(projectedColumns)
+
+    const foundColumns = columnValues.filter(
+      (c: { x: number; width: number }) => {
+        return d[1] >= c.x && d[0] <= c.x + c.width
+      }
+    )
+    return foundColumns
+  }
+  return null
+}
+
+const generateOEndMappingFn = projectedColumns => (d): null | Array<any> => {
+  if (
+    d &&
+    event.sourceEvent &&
+    event.sourceEvent.path &&
+    event.sourceEvent.path[1] &&
+    event.sourceEvent.path[1].classList.contains("xybrush") &&
+    event.target.move
+  ) {
+    const columnValues: BaseColumnType[] = Object.values(projectedColumns)
+    const foundColumns: BaseColumnType[] = columnValues.filter(
+      (c: BaseColumnType) => d[1] >= c.x && d[0] <= c.x + c.width
+    )
+
+    const firstColumn: { x: number; width: number } = foundColumns[0] || {
+      x: 0,
+      width: 0
+    }
+
+    const lastColumn: { x: number; width: number } = foundColumns[
+      foundColumns.length - 1
+    ] || {
+      x: 0,
+      width: 0
+    }
+
+    const columnPosition = [
+      firstColumn.x + Math.min(5, firstColumn.width / 10),
+      lastColumn.x + lastColumn.width - Math.min(5, lastColumn.width / 10)
+    ]
+
+    select(event.sourceEvent.path[1])
+      .transition(750)
+      .call(event.target.move, columnPosition)
+
+    return foundColumns
+  }
+  return null
+}
+
 class InteractionLayer extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props)
@@ -323,61 +377,9 @@ class InteractionLayer extends React.Component<Props, State> {
           ]
         }
       }
-      function oMappingFn(d): null | any {
-        if (d) {
-          const columnValues = Object.values(projectedColumns)
 
-          const foundColumns = columnValues.filter(
-            (c: { x: number; width: number }) => {
-              return d[1] >= c.x && d[0] <= c.x + c.width
-            }
-          )
-          return foundColumns
-        }
-        return null
-      }
-      function oEndMappingFn(d): null | Array<any> {
-        if (
-          d &&
-          event.sourceEvent &&
-          event.sourceEvent.path &&
-          event.sourceEvent.path[1] &&
-          event.sourceEvent.path[1].classList.contains("xybrush") &&
-          event.target.move
-        ) {
-          const columnValues: BaseColumnType[] = Object.values(projectedColumns)
-          const foundColumns: BaseColumnType[] = columnValues.filter(
-            (c: BaseColumnType) => d[1] >= c.x && d[0] <= c.x + c.width
-          )
-
-          const firstColumn: { x: number; width: number } = foundColumns[0] || {
-            x: 0,
-            width: 0
-          }
-
-          const lastColumn: { x: number; width: number } = foundColumns[
-            foundColumns.length - 1
-          ] || {
-            x: 0,
-            width: 0
-          }
-
-          const columnPosition = [
-            firstColumn.x + Math.min(5, firstColumn.width / 10),
-            lastColumn.x + lastColumn.width - Math.min(5, lastColumn.width / 10)
-          ]
-
-          select(event.sourceEvent.path[1])
-            .transition(750)
-            .call(event.target.move, columnPosition)
-
-          return foundColumns
-        }
-        return null
-      }
-
-      mappingFn = oMappingFn
-      endMappingFn = oEndMappingFn
+      mappingFn = generateOMappingFn(projectedColumns)
+      endMappingFn = generateOEndMappingFn(projectedColumns)
     }
 
     semioticBrush

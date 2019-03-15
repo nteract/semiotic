@@ -1,16 +1,21 @@
 // from Evan Wang's https://github.com/tinker10/D3-Labeler
-/*eslint-disable */
 export default function() {
   let lab = [],
     anc = [],
     w = 1, // box width
     h = 1, // box width
-    labeler = {}
+    labeler = {
+      start: x => {},
+      width: x => {},
+      height: x => {},
+      label: x => {},
+      anchor: x => {},
+      alt_energy: x => {},
+      alt_schedule: x => {}
+    }
 
   let max_move = 5.0,
-    max_angle = 0.5,
-    acc = 0,
-    rej = 0
+    max_angle = 0.5
 
   // weights
   let w_len = 0.2, // leader line length
@@ -137,13 +142,10 @@ export default function() {
     // delta E
     let delta_energy = new_energy - old_energy
 
-    if (Math.random() < Math.exp(-delta_energy / currT)) {
-      acc += 1
-    } else {
+    if (!(Math.random() < Math.exp(-delta_energy / currT))) {
       // move back to old coordinates
       lab[i].x = x_old
       lab[i].y = y_old
-      rej += 1
     }
   }
 
@@ -200,13 +202,10 @@ export default function() {
     // delta E
     let delta_energy = new_energy - old_energy
 
-    if (Math.random() < Math.exp(-delta_energy / currT)) {
-      acc += 1
-    } else {
+    if (!(Math.random() < Math.exp(-delta_energy / currT))) {
       // move back to old coordinates
       lab[i].x = x_old
       lab[i].y = y_old
-      rej += 1
     }
   }
 

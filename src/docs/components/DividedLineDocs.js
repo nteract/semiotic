@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 import { DividedLine } from "../../components"
 import { curveBasis } from "d3-shape"

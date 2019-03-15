@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { HashRouter, Route } from "react-router-dom"
 import Home from "./Home"
 import Documentation from "./Documentation"

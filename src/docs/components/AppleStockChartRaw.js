@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { XYFrame, DividedLine } from "../../components"
 import { data } from "../sampledata/apple_stock"
 import { scaleTime } from "d3-scale"

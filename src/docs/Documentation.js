@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import Introduction from "./Introduction"
 import Examples from "./Examples"
 

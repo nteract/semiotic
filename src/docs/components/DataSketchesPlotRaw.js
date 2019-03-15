@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { XYFrame } from "../../components"
 import { Mark } from "semiotic-mark"
 import ProcessViz from "./ProcessViz"
