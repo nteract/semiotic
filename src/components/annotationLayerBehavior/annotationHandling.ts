@@ -8,16 +8,16 @@ type NoteType = {
 type AnnotationTypes = "marginalia" | "bump" | false
 
 interface Layout {
-  type: AnnotationTypes;
-  orient?: "nearest" | "left" | "right" | "top" | "bottom" | string[];
-  characterWidth?: number;
-  lineWidth?: number;
-  lineHeight?: number;
-  padding?: number;
-  iterations?: number;
-  pointSizeFunction?: Function;
-  labelSizeFunction?: Function;
-  marginOffset?: number;
+  type: AnnotationTypes
+  orient?: "nearest" | "left" | "right" | "top" | "bottom" | string[]
+  characterWidth?: number
+  lineWidth?: number
+  lineHeight?: number
+  padding?: number
+  iterations?: number
+  pointSizeFunction?: Function
+  labelSizeFunction?: Function
+  marginOffset?: number
 }
 
 const basicLabelSizeFunction = (
@@ -93,12 +93,13 @@ export function bumpAnnotations(
     originalNote: d
   }))
 
-  labeler()
-    .label(labels)
-    .anchor(points)
-    .width(size[0])
-    .height(size[1])
-    .start(iterations)
+  const instantiatedLabeler = labeler()
+
+  instantiatedLabeler.label(labels)
+  instantiatedLabeler.anchor(points)
+  instantiatedLabeler.width(size[0])
+  instantiatedLabeler.height(size[1])
+  instantiatedLabeler.start(iterations)
 
   labels.forEach(d => {
     if (d.type === "label") {
