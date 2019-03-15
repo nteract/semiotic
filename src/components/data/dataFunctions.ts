@@ -80,10 +80,11 @@ export function stringToFn<StrFnType extends validStrFnTypes>(
     return () => accessor
   } else if (accessor instanceof Function) {
     return accessor
+  } else if (raw === true) {
+    const castAccessor = (accessor as unknown) as StrFnType
+    return () => castAccessor
   } else if (typeof accessor === "string") {
     return (d: GenericObject) => d[accessor]
-  } else if (raw === true) {
-    return () => accessor
   }
 
   return () => undefined
@@ -162,8 +163,6 @@ export const calculateDataExtent = ({
   summaryDataAccessor,
   summaryType,
   adjustedSize: size,
-  xScaleType,
-  yScaleType,
   margin,
   baseMarkProps,
   summaryStyleFn,

@@ -29,6 +29,7 @@ interface BrushProps {
   extent?: number[] | number[][]
   selectedExtent?: number[] | number[][]
   svgBrush: { (): any; move: Function }
+  position?: number[]
 }
 
 class Brush extends React.Component<BrushProps, null> {
@@ -81,7 +82,14 @@ class Brush extends React.Component<BrushProps, null> {
   }
 
   render() {
-    return <g ref={node => (this.node = node)} className="xybrush" />
+    const { position = [0, 0] } = this.props
+    return (
+      <g
+        transform={`translate(${position})`}
+        ref={node => (this.node = node)}
+        className="xybrush"
+      />
+    )
   }
 }
 

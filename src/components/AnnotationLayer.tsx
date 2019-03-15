@@ -10,7 +10,6 @@ import SpanOrDiv from "./SpanOrDiv"
 import {
   AnnotationHandling,
   AnnotationTypes,
-  AxisProps,
   AnnotationProps
 } from "./types/annotationTypes"
 
@@ -26,7 +25,7 @@ export interface AnnotationLayerProps {
   legendSettings?: LegendProps
   margin: { top?: number; left?: number; right?: number; bottom?: number }
   size: number[]
-  axes?: AxisProps[]
+  axes?: React.ReactNode[]
   annotationHandling?: AnnotationHandling | AnnotationTypes
   annotations: Object[]
   pointSizeFunction?: Function

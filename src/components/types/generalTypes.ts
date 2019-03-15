@@ -10,8 +10,8 @@ export interface MarginType {
 export type ProjectionTypes = "vertical" | "horizontal" | "radial"
 
 export interface ProjectedPoint {
-  x: number
-  y: number
+  x?: number
+  y?: number
   yTop?: number
   yMiddle?: number
   yBottom?: number
@@ -24,6 +24,21 @@ export interface ProjectedPoint {
   class?: Function | string
   coordinates?: object[]
 }
+
+export type PieceLayoutType = (args: {
+  type: any
+  data: any
+  renderMode: any
+  eventListenersGenerator: any
+  styleFn: any
+  projection
+  classFn: any
+  adjustedSize: any
+  chartSize: any
+  margin: any
+  rScale?: any
+  baseMarkProps: any
+}) => GenericObject[]
 
 export interface ProjectedLine {
   data: ProjectedPoint[]

@@ -1285,4 +1285,6 @@ export const drawSummaries = ({
   })
 }
 
-export const renderLaidOutSummaries = data => data
+export const renderLaidOutSummaries = ({ data }) => {
+  return data
+}

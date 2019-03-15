@@ -68,7 +68,7 @@ type Props = {
   renderPipeline: { [key in VizDataLayerKeys]?: object }
   projectedCoordinateNames: { x: string; y: string }
   matte?: boolean | object | Element | Function
-  axes?: Array<AxisProps>
+  axes?: Array<React.ReactNode>
   axesTickLines?: React.ReactNode
   disableCanvasInteraction?: boolean
   showLinePoints?: string
@@ -193,8 +193,14 @@ class Frame extends React.Component<Props, State> {
         axes={axes}
         voronoiHover={this.setVoronoi}
         annotationHandling={annotationSettings}
-        pointSizeFunction={annotationSettings.layout.pointSizeFunction}
-        labelSizeFunction={annotationSettings.layout.labelSizeFunction}
+        pointSizeFunction={
+          annotationSettings.layout &&
+          annotationSettings.layout.pointSizeFunction
+        }
+        labelSizeFunction={
+          annotationSettings.layout &&
+          annotationSettings.layout.labelSizeFunction
+        }
         annotations={totalAnnotations}
         svgAnnotationRule={(d, i, thisALayer) =>
           defaultSVGRule({
