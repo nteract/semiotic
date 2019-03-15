@@ -306,7 +306,6 @@ export const calculateDataExtent = ({
                 if (showSummaryPoints) {
                   projectedPoints.push({
                     x: 0,
-                    y: 0,
                     ...e,
                     [projectedY]:
                       e[projectedYTop] || e[projectedYBottom] || e[projectedY]
@@ -330,7 +329,6 @@ export const calculateDataExtent = ({
               if (showSummaryPoints) {
                 projectedPoints.push({
                   x: 0,
-                  y: 0,
                   ...e,
                   [projectedY]:
                     e[projectedYTop] || e[projectedYBottom] || e[projectedY]
