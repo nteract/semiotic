@@ -3,9 +3,7 @@ import babel from "rollup-plugin-babel"
 import commonjs from "rollup-plugin-commonjs"
 import builtins from "rollup-plugin-node-builtins"
 import replace from "rollup-plugin-replace"
-import nodent from 'rollup-plugin-nodent';
-
-import flow from "rollup-plugin-flow"
+import nodent from "rollup-plugin-nodent"
 
 export default {
   exports: "named",
@@ -22,7 +20,6 @@ export default {
   },
   external: ["react", "react-dom"],
   plugins: [
-    flow(),
     node({ jsnext: true, preferBuiltins: false }),
     nodent({ includeruntime: true, sourcemap: false }),
     builtins(),
@@ -44,7 +41,7 @@ export default {
     babel({
       babelrc: false,
       runtimeHelpers: true,
-      presets: ["flow", ["es2015", { modules: false }], "react", "stage-0"],
+      presets: [["es2015", { modules: false }], "react", "stage-0"],
       plugins: ["external-helpers"]
     })
   ]

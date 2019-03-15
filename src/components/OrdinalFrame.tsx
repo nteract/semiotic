@@ -81,6 +81,7 @@ import {
   MarginType,
   CanvasPostProcessTypes,
   ExtentSettingsType,
+  PieceLayoutType,
   ProjectionTypes,
   accessorType,
   GenericObject,
@@ -244,7 +245,7 @@ type State = {
   backgroundGraphics: React.ReactNode
   foregroundGraphics: React.ReactNode
   axisData?: AxisProps[]
-  axes?: JSX.Element[]
+  axes?: React.ReactNode[]
   axesTickLines?: React.ReactNode
   oLabels: React.ReactNode
   title: object
@@ -387,11 +388,6 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
     const rAccessor = stringToArrayFn<number>(baseRAccessor, d => d.value || 1)
     const renderKey = stringToFn<string | number>(baseRenderKey, (d, i) => i)
 
-    /*    const eventListenersGenerator = generateOrdinalFrameEventListeners(
-      customHoverBehavior,
-      customClickBehavior,
-      customDoubleClickBehavior
-    ) */
     const eventListenersGenerator = () => ({})
 
     const connectorStyle = stringToFn<GenericObject>(
@@ -425,9 +421,13 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       multiAxis
     })
 
-    const arrayWrappedAxis: AxisProps[] = Array.isArray(baseAxis)
-      ? baseAxis
-      : [baseAxis]
+    let arrayWrappedAxis: AxisProps[] | undefined
+
+    if (Array.isArray(baseAxis)) {
+      arrayWrappedAxis = baseAxis
+    } else if (baseAxis) {
+      arrayWrappedAxis = [baseAxis]
+    }
 
     if (multiExtents && baseAxis) {
       arrayWrappedAxis.forEach((d, i) => {
@@ -1185,10 +1185,11 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
 
     const pieceTypeForXY =
       pieceType.type && pieceType.type !== "none" ? pieceType.type : "point"
-    const pieceTypeLayout =
+    const pieceTypeLayout: PieceLayoutType =
       typeof pieceTypeForXY === "function"
         ? pieceTypeForXY
         : layoutHash[pieceTypeForXY]
+
     const calculatedPieceData = pieceTypeLayout({
       type: pieceType,
       data: projectedColumns,
@@ -1200,8 +1201,9 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       adjustedSize,
       chartSize: size,
       margin,
+      rScale,
       baseMarkProps
-    })
+    }) as any[]
 
     const keyedData = calculatedPieceData.reduce((p, c) => {
       if (!p[c.o]) {
@@ -1805,6 +1807,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       legendSettings,
       columnOverlays,
       axesTickLines,
+      axes,
       axisData,
       margin,
       pieceDataXY,
@@ -1865,7 +1868,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         size={size}
         xScale={xScale}
         yScale={yScale}
-        axes={axisData}
+        axes={axes}
         useSpans={useSpans}
         axesTickLines={axesTickLines}
         title={title}

@@ -647,10 +647,7 @@ class InteractionLayer extends React.Component<Props, State> {
 
     const max = rScale.domain()[1]
 
-    let type = "yBrush"
-
     if (projection && projection === "horizontal") {
-      type = "xBrush"
       mappingFn = (d): null | Array<number> =>
         !d ? null : [rScale.invert(d[0]), rScale.invert(d[1])]
     } else
@@ -709,6 +706,7 @@ class InteractionLayer extends React.Component<Props, State> {
             key={`orbrush${c}`}
             selectedExtent={selectedExtent}
             svgBrush={semioticBrush}
+            position={brushPosition}
           />
         </g>
       )
@@ -734,6 +732,7 @@ class InteractionLayer extends React.Component<Props, State> {
       enabled = true
       semioticBrush = this.createBrush(interaction)
     }
+
     if (interaction && interaction.columnsBrush) {
       enabled = true
       semioticBrush = this.createColumnsBrush(interaction)

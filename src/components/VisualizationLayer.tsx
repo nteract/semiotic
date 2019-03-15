@@ -4,7 +4,6 @@ import { RoughCanvas } from "roughjs-es5/lib/canvas"
 
 import { chuckCloseCanvasTransform } from "./canvas/basicCanvasEffects"
 
-import { AxisProps } from "./types/annotationTypes"
 import {
   MarginType,
   RenderPipelineType,
@@ -12,7 +11,7 @@ import {
 } from "./types/generalTypes"
 
 type Props = {
-  axes?: Array<AxisProps>
+  axes?: Array<React.ReactNode>
   frameKey?: string
   xScale: Function
   yScale: Function

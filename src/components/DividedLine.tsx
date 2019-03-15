@@ -13,7 +13,7 @@ interface DividedLineProps {
   parameters: Function
   className: string
   interpolate: Function
-  customAccessors: { x: string; y: string }
+  customAccessors: { x: Function; y: Function }
   lineDataAccessor: Function
   data: ProjectedLine[]
   searchIterations: number
@@ -37,16 +37,15 @@ class DividedLine extends React.Component<DividedLineProps, null> {
       ...rest
     } = this.props
 
-    const xAccessor = d => d[customAccessors.x]
-    const yAccessor = d => d[customAccessors.y]
+    const { x, y } = customAccessors
 
     const lineData = projectLineData({
       data: data,
       lineDataAccessor: [lineDataAccessor],
-      xProp: "_x",
-      yProp: "_y",
-      xAccessor: [xAccessor],
-      yAccessor: [yAccessor]
+      xProp: "x",
+      yProp: "y",
+      xAccessor: [x],
+      yAccessor: [y]
     })
 
     //Compatibility before Semiotic 2
@@ -58,8 +57,8 @@ class DividedLine extends React.Component<DividedLineProps, null> {
 
     const lineRender = line()
       .curve(interpolate)
-      .x(d => d._x)
-      .y(d => d._y)
+      .x(d => d.x)
+      .y(d => d.y)
 
     return lines.map((d, i) => (
       <Mark

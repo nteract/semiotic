@@ -19,7 +19,6 @@
     "test:dist": "node scripts/test-dist.js",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
-    "flow": "flow",
     "prebuild": "babel src/components --out-dir lib --ignore test.js",
     "create-release-branch": "sh ./scripts/create-release-branch.sh",
     "publish-release": "sh ./scripts/publish-release.sh",
@@ -51,7 +50,6 @@
     "@babel/plugin-proposal-decorators": "^7.3.0",
     "@babel/plugin-transform-object-assign": "^7.2.0",
     "@babel/preset-env": "^7.3.4",
-    "@babel/preset-flow": "^7.0.0",
     "@babel/preset-react": "^7.0.0",
     "@babel/preset-typescript": "^7.3.3",
     "@babel/register": "^7.0.0",
@@ -59,6 +57,7 @@
     "@types/d3-scale": "^2.1.1",
     "@types/react": "^16.8.7",
     "@types/react-dom": "^16.8.2",
+    "@typescript-eslint/eslint-plugin": "^1.4.2",
     "@vx/pattern": "0.0.143",
     "autoprefixer": "7.1.6",
     "babel-eslint": "^7.2.3",
@@ -87,13 +86,12 @@
     "eslint": "4.2.0",
     "eslint-config-netflix-dea": "3.0.0",
     "eslint-loader": "1.9.0",
-    "eslint-plugin-flowtype": "^2.39.1",
     "eslint-plugin-import": "^2.8.0",
     "eslint-plugin-jsx-a11y": "^6.0.3",
     "eslint-plugin-react": "7.6.1",
+    "eslint-plugin-typescript": "^0.14.0",
     "extract-text-webpack-plugin": "3.0.2",
     "file-loader": "1.1.5",
-    "flow-bin": "^0.73.0",
     "fs-extra": "3.0.1",
     "history": "4.2.0",
     "html-webpack-plugin": "2.29.0",
@@ -122,7 +120,6 @@
     "rollup": "^0.51.8",
     "rollup-plugin-babel": "^4",
     "rollup-plugin-commonjs": "^8.2.5",
-    "rollup-plugin-flow": "^1.1.1",
     "rollup-plugin-node-builtins": "^2.1.2",
     "rollup-plugin-node-resolve": "^3.0.0",
     "rollup-plugin-nodent": "^0.2.2",
@@ -132,7 +129,9 @@
     "tap-difflet": "0.4.0",
     "tap-notify": "1.0.0",
     "tape": "4.4.0",
+    "ts-jest": "^24.0.0",
     "typescript": "^3.3.3333",
+    "typescript-eslint-parser": "^22.0.0",
     "uglify-js": "^3.1.10",
     "url-loader": "0.6.2",
     "webpack": "^3.11.0",
@@ -190,7 +189,7 @@
     "setupFiles": [
       "<rootDir>/config/polyfills.js"
     ],
-    "setupTestFrameworkScriptFile": "<rootDir>/src/setupTests.js",
+    "setupFilesAfterEnv": ["<rootDir>/src/setupTests.js"],
     "testMatch": [
       "<rootDir>/src/**/__tests__/**/*.{js,jsx,mjs}",
       "<rootDir>/src/**/?(*.)(spec|test).{js,jsx,mjs}"
@@ -198,6 +197,7 @@
     "testEnvironment": "node",
     "testURL": "http://localhost",
     "transform": {
+      "\\.(ts|tsx)$": "ts-jest",
       "^.+\\.(js|jsx|mjs)$": "<rootDir>/node_modules/babel-jest",
       "^.+\\.css$": "<rootDir>/config/jest/cssTransform.js",
       "^(?!.*\\.(js|jsx|mjs|css|json)$)": "<rootDir>/config/jest/fileTransform.js"
@@ -212,9 +212,11 @@
       "web.js",
       "mjs",
       "js",
+      "ts",
       "json",
       "web.jsx",
       "jsx",
+      "tsx",
       "node"
     ]
   },

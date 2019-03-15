@@ -452,7 +452,7 @@ export default class CreatingLineChart extends React.Component {
             yAccessor={"grossWeekly"}
             lineType={"line"}
             lineStyle={d => ({
-              fill: colorHash[d.title],
+              fill: "none",
               stroke: colorHash[d.title]
             })}
             margin={{ left: 50, bottom: 50, right: 10, top: 40 }}

@@ -105,10 +105,10 @@ import { AnnotationType } from "./types/annotationTypes"
 const emptyArray = []
 
 const matrixRenderOrder: ReadonlyArray<"nodes" | "edges"> = ["nodes", "edges"]
-const generalRenderOrder: ReadonlyArray<"nodes" | "edges"> = ["nodes", "edges"]
+const generalRenderOrder: ReadonlyArray<"nodes" | "edges"> = ["edges", "nodes"]
 
 const baseNodeProps = {
-  id: "id",
+  id: undefined,
   degree: 0,
   inDegree: 0,
   outDegree: 0,
@@ -460,12 +460,12 @@ class NetworkFrame extends React.Component<
       graph,
       nodes = Array.isArray(graph) || typeof graph === "function"
         ? emptyArray
-        : graph.nodes || emptyArray,
+        : (graph && graph.nodes) || emptyArray,
       edges = typeof graph === "function"
         ? emptyArray
         : Array.isArray(graph)
         ? graph
-        : graph.edges || emptyArray,
+        : (graph && graph.edges) || emptyArray,
       networkType,
       size,
       nodeStyle,
@@ -589,12 +589,13 @@ class NetworkFrame extends React.Component<
       this.state.graphSettings.edges !== edges ||
       isHierarchical
 
-    if (
-      networkSettings.type === "dagre" &&
-      graph &&
-      typeof graph === "function"
-    ) {
-      const dagreGraph = graph
+    if (networkSettings.type === "dagre") {
+      const dagreGraph = graph as {
+        nodes: Function
+        edges: Function
+        node: Function
+        edge: Function
+      }
       const dagreNodeHash = {}
       projectedNodes = dagreGraph.nodes().map(n => {
         const baseNode = dagreGraph.node(n)
@@ -735,6 +736,7 @@ class NetworkFrame extends React.Component<
               nodeHierarchicalIDFill[nodeIDValue]
                 ? (nodeHierarchicalIDFill[nodeIDValue] += 1)
                 : (nodeHierarchicalIDFill[nodeIDValue] = 1)
+
               if (!nodeObject.id) {
                 const nodeSuffix =
                   nodeHierarchicalIDFill[nodeIDValue] === 1

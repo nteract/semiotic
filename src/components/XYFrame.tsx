@@ -226,7 +226,7 @@ export type XYFrameState = {
   backgroundGraphics?: React.ReactNode | Function
   foregroundGraphics?: React.ReactNode | Function
   axesData?: object[]
-  axes?: AxisProps[]
+  axes?: React.ReactNode[]
   axesTickLines?: React.ReactNode
   renderNumber: number
   margin: MarginType
@@ -599,8 +599,16 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
         title !== null
           ? title
           : { title, orient: "top" },
-      xExtent: Array.isArray(baseXExtent) ? baseXExtent : baseXExtent.extent,
-      yExtent: Array.isArray(baseYExtent) ? baseYExtent : baseYExtent.extent
+      xExtent: Array.isArray(baseXExtent)
+        ? baseXExtent
+        : !baseXExtent
+        ? undefined
+        : baseXExtent.extent,
+      yExtent: Array.isArray(baseYExtent)
+        ? baseYExtent
+        : !baseYExtent
+        ? undefined
+        : baseYExtent.extent
     }
 
     annotatedSettings.lineType.simpleLine =
@@ -651,7 +659,7 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       xExtentSettings = { extent: baseXExtent }
     }
 
-    if (typeof baseXExtent === "object") {
+    if (typeof baseYExtent === "object") {
       yExtentSettings = baseYExtent
     } else {
       yExtentSettings = { extent: baseYExtent }
@@ -1064,7 +1072,7 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
 
     if (baseD.type === "highlight") {
       return svgHighlight({
-        d: { x: 0, y: 0, ...baseD },
+        d: baseD,
         i,
         idAccessor,
         lines,
@@ -1079,7 +1087,7 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
     const d: AnnotationType = baseD.coordinates
       ? baseD
       : findPointByID({
-          point: { x: 0, y: 0, ...baseD },
+          point: baseD,
           idAccessor,
           lines,
           xScale,
