@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { NetworkFrame, XYFrame, OrdinalFrame } from "../../components"
 import { network_data, or_data } from "../sampledata/energy_time"
 import { scaleLinear } from "d3-scale"

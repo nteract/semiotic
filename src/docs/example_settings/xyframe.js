@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { xyframe_data } from "../sampledata/nyc_temp"
 import { quantile } from "d3-array"
 import { DividedLine } from "../../components"

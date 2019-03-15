@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { summaryChart } from "../example_settings/orframe"
 import { OrdinalFrame } from "../../components"
 import ProcessViz from "./ProcessViz"

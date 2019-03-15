@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { NetworkFrame } from "../../components"
 import { network_data, or_data } from "../sampledata/energy_time"
 import ProcessViz from "./ProcessViz"

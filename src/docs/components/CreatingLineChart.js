@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { XYFrame, ResponsiveXYFrame } from "../../components"
 import { scaleTime } from "d3-scale"
 import { curveMonotoneX, curveCardinal, curveBasis, curveStep } from "d3-shape"

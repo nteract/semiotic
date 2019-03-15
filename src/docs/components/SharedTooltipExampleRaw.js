@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { XYFrame } from "../../components"
 import lines from "../sampledata/sharedTooltipData"
 import { scaleTime } from "d3-scale"

@@ -31,7 +31,6 @@ jobs:
 
       # run tests!
       - run: npm run test -- --cacheDirectory=~/.jestcache
-      - run: npm run flow
 
       # run the tests against the dist copy (for the web)
       - run: npm run test:dist

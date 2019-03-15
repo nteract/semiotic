@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { OrdinalFrame } from "../../components"
 import Button from "material-ui/Button"
 
@@ -594,7 +594,7 @@ export default class InformationModel extends React.Component {
             <Button
               raised
               color="primary"
-              onTouchTap={() => {
+              onClick={() => {
                 this.setState({ step: this.state.step - 1 })
               }}
             >
@@ -605,7 +605,7 @@ export default class InformationModel extends React.Component {
             <Button
               raised
               color="primary"
-              onTouchTap={() => {
+              onClick={() => {
                 this.setState({ step: this.state.step + 1 })
               }}
             >

@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { OrdinalFrame } from "../../components"
 import { sum } from "d3-array"
 import { scaleSqrt } from "d3-shape"
