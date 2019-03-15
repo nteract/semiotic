@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { NetworkFrame } from "../../components"
 import data from "../sampledata/flare.json"
 import {

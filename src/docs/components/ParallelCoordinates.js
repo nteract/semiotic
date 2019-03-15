@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 import { OrdinalFrame } from "../../components"
 import { orframe_data } from "../sampledata/nyc_temp"

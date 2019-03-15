@@ -1,5 +1,5 @@
 /* global curveBasis data parameters */
-import React from "react"
+import * as React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 // import { OrdinalFrame } from "../../components"
 

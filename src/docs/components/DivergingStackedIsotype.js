@@ -14,7 +14,7 @@ export default class DivergingStackedBar extends React.Component {
     examples.push({
       name: 'Basic',
       demo: DivergingStackedIsotypeRaw,
-      source: `import React from "react";
+      source: `import * as React from "react";
 import { answers } from "../sampledata/questions";
 import { OrdinalFrame } from "../../components";
 import cow from "material-design-icons-svg/paths/cow";
