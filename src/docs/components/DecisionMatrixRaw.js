@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { scaleLinear } from "d3-scale"
 import { extent } from "d3-array"
 import { forceSimulation, forceX, forceY, forceCollide } from "d3-force"

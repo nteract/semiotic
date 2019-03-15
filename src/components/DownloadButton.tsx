@@ -1,5 +1,6 @@
 import * as React from "react"
-import * as json2csv from "json2csv"
+import * as json2csv_ from "json2csv"
+const json2csv = json2csv_
 
 export const downloadCSV = (csvName: string, data: any) => {
   json2csv(Object.assign({}, { data: data }), (err, csv) => {
@@ -22,9 +23,9 @@ export const downloadCSV = (csvName: string, data: any) => {
 }
 
 type DownloadButtonProps = {
-  csvName: string,
-  width?: number,
-  label?: string,
+  csvName: string
+  width?: number
+  label?: string
   data: any
 }
 

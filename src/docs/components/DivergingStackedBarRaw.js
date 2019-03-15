@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { answers } from "../sampledata/questions"
 import { OrdinalFrame } from "../../components"
 import ProcessViz from "./ProcessViz"

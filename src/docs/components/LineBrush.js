@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 import LineBrushRaw from "./LineBrushRaw"
 import { data } from "../sampledata/apple_stock"
@@ -104,7 +104,7 @@ export default class LineBrush extends React.Component {
           <h2>{this.state.selectedDataCountEnd} Selected Points (End Event)</h2>
         </div>
       ),
-      source: `import React from "react";
+      source: `import * as React from "react";
 import { XYFrame } from "../../components";
 import { scaleTime } from "d3-scale";
 

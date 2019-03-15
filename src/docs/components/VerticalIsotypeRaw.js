@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { OrdinalFrame } from "../../components"
 import AnnotationCalloutElbow from "react-annotation/lib/Types/AnnotationCalloutElbow"
 

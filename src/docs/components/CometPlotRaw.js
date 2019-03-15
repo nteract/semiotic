@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { XYFrame } from "../../components"
 import { csvParse } from "d3-dsv"
 import { scaleLog, scaleLinear, scaleTime } from "d3-scale"

@@ -117,19 +117,21 @@
     "react-router-dom": "4.2.2",
     "react-test-renderer": "^16",
     "reactstrap": "git://github.com/jameswomack/reactstrap#react-popper_react-dom-16",
-    "rollup": "^0.51.8",
+    "rollup": "^1.6.0",
     "rollup-plugin-babel": "^4",
     "rollup-plugin-commonjs": "^8.2.5",
     "rollup-plugin-node-builtins": "^2.1.2",
     "rollup-plugin-node-resolve": "^3.0.0",
     "rollup-plugin-nodent": "^0.2.2",
     "rollup-plugin-replace": "^2.0.0",
+    "rollup-plugin-typescript": "^1.0.0",
     "style-loader": "^0.21.0",
     "sw-precache-webpack-plugin": "0.11.4",
     "tap-difflet": "0.4.0",
     "tap-notify": "1.0.0",
     "tape": "4.4.0",
     "ts-jest": "^24.0.0",
+    "tslib": "^1.9.3",
     "typescript": "^3.3.3333",
     "typescript-eslint-parser": "^22.0.0",
     "uglify-js": "^3.1.10",
@@ -189,7 +191,9 @@
     "setupFiles": [
       "<rootDir>/config/polyfills.js"
     ],
-    "setupFilesAfterEnv": ["<rootDir>/src/setupTests.js"],
+    "setupFilesAfterEnv": [
+      "<rootDir>/src/setupTests.js"
+    ],
     "testMatch": [
       "<rootDir>/src/**/__tests__/**/*.{js,jsx,mjs}",
       "<rootDir>/src/**/?(*.)(spec|test).{js,jsx,mjs}"

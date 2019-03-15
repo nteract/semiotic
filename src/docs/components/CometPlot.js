@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 import CometPlotRaw from "./CometPlotRaw"
 
@@ -14,7 +14,7 @@ export default class CometPlotDocs extends React.Component {
     examples.push({
       name: "Basic",
       demo: CometPlotRaw,
-      source: `import React from "react"
+      source: `import * as React from "react"
 import { XYFrame } from "semiotic"
 import { csvParse } from "d3-dsv"
 import { scaleLog, scaleLinear } from "d3-scale"

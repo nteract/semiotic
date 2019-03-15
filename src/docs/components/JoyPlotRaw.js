@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { OrdinalFrame } from "../../components"
 import probsRaw from "../sampledata/probly"
 import { csvParse } from "d3-dsv"

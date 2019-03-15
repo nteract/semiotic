@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 import DivergingStackedIsotypeRaw from "./VerticalIsotypeRaw"
 
@@ -14,7 +14,7 @@ export default class DivergingStackedBar extends React.Component {
     examples.push({
       name: "Basic",
       demo: DivergingStackedIsotypeRaw,
-      source: `import React from "react";
+      source: `import * as React from "react";
 import { OrdinalFrame } from "../../components";
 import AnnotationCalloutElbow from "react-annotation/lib/Types/AnnotationCalloutElbow"
 

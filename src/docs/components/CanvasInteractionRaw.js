@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { csvParse } from "d3-dsv"
 import { XYFrame } from "../../components"
 const ROOT = process.env.PUBLIC_URL

@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { OrdinalFrame, XYFrame, NetworkFrame } from "../../components"
 import { testData } from "../example_settings/xyframe"
 import { funnelData } from "../example_settings/orframe"
