@@ -17,9 +17,9 @@ jobs:
       # Download and cache dependencies
       - restore_cache:
           keys:
-          - v2-dependencies-{{ checksum "package.json" }}
-          # fallback to using the latest cache if no exact match is found
-          - v2-dependencies-
+            - v2-dependencies-{{ checksum "package.json" }}
+            # fallback to using the latest cache if no exact match is found
+            - v2-dependencies-
 
       - run:
           name: install dependencies
@@ -32,7 +32,7 @@ jobs:
             npm run test -- --cacheDirectory=~/.jestcache
 
       - run:
-          name: tests against the dist copy (for the web)
+          name: tests against the dist copy (for the web) [TODO check]
           command: |
             npm run test:dist
 
