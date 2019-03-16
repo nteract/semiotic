@@ -3,6 +3,7 @@
 # Check https://circleci.com/docs/2.0/language-javascript/ for more details
 #
 version: 2
+
 jobs:
   build:
     docker:
@@ -16,24 +17,31 @@ jobs:
       # Download and cache dependencies
       - restore_cache:
           keys:
-          - v1-dependencies-{{ checksum "package.json" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
+            - v2-dependencies-{{ checksum "package.json" }}
+            # fallback to using the latest cache if no exact match is found
+            - v2-dependencies-
 
-      - run: npm install
+      - run:
+          name: install dependencies
+          command: |
+            npm install
+
+      - run:
+          name: tests
+          command: |
+            npm run test -- --cacheDirectory=~/.jestcache
+
+      - run:
+          name: tests against the dist copy (for the web) [TODO check]
+          command: |
+            npm run test:dist
 
       - save_cache:
           paths:
             - ~/.npm
             - ./node_modules
             - ~/.jestcache
-          key: v1-dependencies-{{ checksum "package.json" }}
-
-      # run tests!
-      - run: npm run test -- --cacheDirectory=~/.jestcache
-
-      # run the tests against the dist copy (for the web)
-      - run: npm run test:dist
+          key: v2-dependencies-{{ checksum "package.json" }}
 
       # store the screenshots for access on Circle CI
       - store_artifacts:
