@@ -1,6 +1,6 @@
 [![Semiotic](semiotic_logo_horizontal.png "semiotic")](https://semiotic.nteract.io)
 
-[![Circle CI Status Shield](https://circleci.com/gh/emeeks/semiotic/tree/master.svg?style=shield)](https://circleci.com/gh/nteract/semiotic/tree/master)
+[![CircleCI](https://circleci.com/gh/nteract/semiotic.svg?style=svg)](https://circleci.com/gh/nteract/semiotic)
 
 Semiotic is a data visualization framework combining React &amp; D3
 
