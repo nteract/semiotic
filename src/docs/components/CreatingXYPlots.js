@@ -92,6 +92,38 @@ export default class CreatingXYPlots extends React.Component {
             xAccessor={["x", d => d.x + 1000]}
             yAccessor="y"
             pointStyle={d => ({ fill: d.color })}
+            yExtent={[-8500, 8500]}
+            axes={[
+              {
+                orient: "bottom",
+                marginalSummaryType: {
+                  type: "boxplot",
+                  showPoints: true,
+                  summaryStyle: {
+                    fill: "orange",
+                    stroke: "brown",
+                    fillOpacity: 0.25
+                  },
+                  pointStyle: {
+                    fill: "red",
+                    r: 4,
+                    fillOpacity: 0.05
+                  }
+                }
+              },
+              {
+                orient: "left",
+                marginalSummaryType: { type: "boxplot", showPoints: true }
+              },
+              {
+                orient: "right",
+                marginalSummaryType: { type: "boxplot", showPoints: true }
+              },
+              {
+                orient: "top",
+                marginalSummaryType: { type: "boxplot", showPoints: true }
+              }
+            ]}
           />
         </div>
       ),

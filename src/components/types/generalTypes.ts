@@ -157,3 +157,28 @@ export type RenderPipelineType = {
     behavior?: Function
   }
 }
+
+export type OrdinalSummaryTypes =
+  | "none"
+  | "histogram"
+  | "heatmap"
+  | "violin"
+  | "joy"
+  | "ridgeline"
+  | "boxplot"
+  | "contour"
+
+export type OrdinalSummaryTypeSettings = {
+  type: OrdinalSummaryTypes
+  amplitude?: number
+  eventListenersGenerator?: Function
+}
+
+export interface AxisSummaryTypeSettings extends OrdinalSummaryTypeSettings {
+  summaryStyle?: object
+  pointStyle?: object
+  renderMode?: object | string
+  summaryClass?: string
+  r?: number
+  showPoints?: boolean
+}

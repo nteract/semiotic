@@ -78,13 +78,13 @@ import {
 import {
   MarginType,
   CanvasPostProcessTypes,
-  ExtentSettingsType,
   PieceLayoutType,
   ProjectionTypes,
   accessorType,
   GenericObject,
   GenericAccessor,
-  RenderPipelineType
+  RenderPipelineType,
+  OrdinalSummaryTypeSettings
 } from "./types/generalTypes"
 
 import { AxisProps } from "./types/annotationTypes"
@@ -118,16 +118,6 @@ const layoutHash = {
   timeline: timelineLayout
 }
 
-type SummaryTypes =
-  | "none"
-  | "histogram"
-  | "heatmap"
-  | "violin"
-  | "joy"
-  | "ridgeline"
-  | "boxplot"
-  | "contour"
-
 type OExtentObject = { extent?: Array<string>; onChange?: Function }
 
 type OExtentSettingsType = Array<string> | OExtentObject
@@ -136,8 +126,6 @@ interface RExtentObject {
   extent?: Array<number>
   onChange?: Function
 }
-
-type SummaryTypeSettings = { type: SummaryTypes; amplitude?: number }
 
 type PieceTypes =
   | "none"
@@ -162,7 +150,7 @@ type ProjectedOrdinalSummary = {
 
 export type OrdinalFrameProps = {
   type: PieceTypeSettings
-  summaryType: SummaryTypeSettings
+  summaryType: OrdinalSummaryTypeSettings
   connectorType?: Function
   className?: string
   annotationSettings?: AnnotationHandling
