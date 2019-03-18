@@ -470,7 +470,7 @@ export default function() {
                 target="_blank"
                 href="https://github.com/nteract/semiotic"
               >
-                Semiotic Github
+                Semiotic GitHub
               </a>
             </p>
             <p className="no-margin">
@@ -479,7 +479,7 @@ export default function() {
                 target="_blank"
                 href="https://github.com/nteract/semiotic-docs"
               >
-                Docs Github
+                Docs GitHub
               </a>
             </p>
           </div>
