@@ -8,7 +8,16 @@ import {
 
 import { AxisProps } from "./types/annotationTypes"
 
+import { drawSummaries } from "./svg/summaryLayouts"
+import { AxisSummaryTypeSettings } from "./types/generalTypes"
+
 // components
+
+const marginalPointMapper = (orient, width, data) => {
+  const xMod = orient === "left" || orient === "right" ? width / 2 : 0
+  const yMod = orient === "bottom" || orient === "top" ? width / 2 : 0
+  return data.map(p => [p.xy.x + xMod, p.xy.y + yMod])
+}
 
 function formatValue(value, props) {
   if (props.tickFormat) {
@@ -72,12 +81,12 @@ class Axis extends React.Component<AxisProps, AxisState> {
   }
 
   render() {
-    let position = this.props.position || [0, 0]
     const {
       rotate,
       label,
       orient = "left",
-      tickFormat = d => d,
+      marginalSummaryType,
+      tickFormat = marginalSummaryType ? () => "" : d => d,
       size,
       width = (size && size[0]) || 0,
       height = (size && size[1]) || 0,
@@ -94,8 +103,9 @@ class Axis extends React.Component<AxisProps, AxisState> {
       center = false
     } = this.props
 
+    let { axisParts, position = [0, 0] } = this.props
+
     let axisTickLines
-    let axisParts = this.props.axisParts
 
     if (!axisParts) {
       axisParts = axisPieces({
@@ -273,6 +283,121 @@ class Axis extends React.Component<AxisProps, AxisState> {
       )
     }
 
+    let summaryGraphic
+
+    if (marginalSummaryType && this.props.xyPoints) {
+      const summaryWidth = Math.max(margin[orient] - 6, 5)
+      const decoratedSummaryType: AxisSummaryTypeSettings =
+        typeof marginalSummaryType === "string"
+          ? { type: marginalSummaryType }
+          : marginalSummaryType
+
+      const summaryStyle = decoratedSummaryType.summaryStyle
+        ? () => decoratedSummaryType.summaryStyle
+        : () => ({
+            fill: "black",
+            fillOpacity: 0.5,
+            stroke: "black",
+            strokeDasharray: "0"
+          })
+
+      const summaryRenderMode = decoratedSummaryType.renderMode
+        ? () => decoratedSummaryType.renderMode
+        : () => undefined
+
+      const summaryClass = decoratedSummaryType.summaryClass
+        ? () => decoratedSummaryType.summaryClass
+        : () => ""
+
+      const forSummaryData = this.props.xyPoints.map(
+        (d: { x: number; y: number }) => ({
+          ...d,
+          xy: {
+            x: orient === "top" || orient === "bottom" ? scale(d.x) : 0,
+            y: orient === "left" || orient === "right" ? scale(d.y) : 0
+          },
+          piece: {
+            scaledVerticalValue: scale(d.y),
+            scaledValue: scale(d.x)
+          },
+          value:
+            orient === "top" || orient === "bottom" ? scale(d.y) : scale(d.x),
+          scaledValue: scale(d.x),
+          scaledVerticalValue: scale(d.y)
+        })
+      )
+
+      const renderedSummary = drawSummaries({
+        data: {
+          column: {
+            middle: summaryWidth / 2,
+            pieceData: forSummaryData,
+            width: summaryWidth,
+            xyData: forSummaryData
+          }
+        },
+        type: decoratedSummaryType,
+        renderMode: summaryRenderMode,
+        eventListenersGenerator:
+          decoratedSummaryType.eventListenersGenerator || (() => ({})),
+        styleFn: summaryStyle,
+        classFn: summaryClass,
+        positionFn: () => [0, 0],
+        projection:
+          orient === "top" || orient === "bottom" ? "horizontal" : "vertical",
+        adjustedSize: size,
+        margin: { top: 0, bottom: 0, left: 0, right: 0 },
+        baseMarkProps: {}
+      })
+
+      let points
+
+      if (decoratedSummaryType.showPoints === true) {
+        points = marginalPointMapper(orient, summaryWidth, forSummaryData).map(
+          d => (
+            <circle
+              cx={d[0]}
+              cy={d[1]}
+              r={decoratedSummaryType.r || 3}
+              style={
+                decoratedSummaryType.pointStyle || {
+                  fill: "black",
+                  fillOpacity: 0.1
+                }
+              }
+            />
+          )
+        )
+      }
+
+      summaryGraphic = (
+        <g
+          transform={`translate(${hoverX +
+            (orient === "right" ? hoverWidth - summaryWidth - 2 : 2)},${hoverY +
+            (orient === "bottom" ? hoverHeight - summaryWidth - 2 : 2)})`}
+        >
+          <g
+            transform={`translate(${
+              (decoratedSummaryType.type === "contour" ||
+                decoratedSummaryType.type === "boxplot") &&
+              (orient === "left" || orient === "right")
+                ? summaryWidth / 2
+                : 0
+            },${
+              (decoratedSummaryType.type === "contour" ||
+                decoratedSummaryType.type === "boxplot") &&
+              (orient === "top" || orient === "bottom")
+                ? summaryWidth / 2
+                : 0
+            })`}
+          >
+            {renderedSummary.marks}
+          </g>
+          {points}
+        </g>
+      )
+    }
+
     let axisTitle
 
     const axisTickLabels = axisLabels({
@@ -389,6 +514,7 @@ class Axis extends React.Component<AxisProps, AxisState> {
           />
         ) : null}
         {axisTitle}
+        {summaryGraphic}
       </g>
     )
   }

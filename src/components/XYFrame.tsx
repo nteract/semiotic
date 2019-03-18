@@ -840,6 +840,8 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
             baseline={d.baseline}
             dynamicLabelPosition={d.dynamicLabelPosition}
             center={d.center}
+            xyPoints={fullDataset}
+            marginalSummaryType={d.marginalSummaryType}
           />
         )
       })
