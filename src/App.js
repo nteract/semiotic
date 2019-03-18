@@ -30,6 +30,7 @@ import CanvasRendering from "./guides/CanvasRendering"
 import CandlestickChart from "./examples/CandlestickChart"
 import WaterfallChart from "./examples/WaterfallChart"
 import CanvasInteraction from "./examples/CanvasInteraction"
+import UncertaintyVisualization from "./examples/UncertaintyVisualization"
 
 import HomerunMap from "./examples/HomerunMap"
 import MarimekkoChart from "./examples/MarimekkoChart"
@@ -240,6 +241,12 @@ export const PAGES = [
         url: "canvas-interaction",
         component: CanvasInteraction,
         img: "canvas-interaction"
+      },
+      {
+        name: "Uncertainty Visualization",
+        url: "uncertainty-visualization",
+        component: UncertaintyVisualization,
+        img: "uncertainty-visualization"
       },
       {
         name: "OrdinalFrame",
