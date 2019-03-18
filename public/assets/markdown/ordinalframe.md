@@ -684,9 +684,9 @@ A function to fire on doubleclick that passes the column or piece being hovered 
 
 An object passed to the interaction layer that is currently only used to determine whether to activate the column brushes, their settings, and the actions to fire on its start, brush and end events. See the [Ordinal Brushes](/guides/ordinal-brushes) example.
 
-- `start`: The function with parameteres (e,column) to run on the start of a brush where e is the array of the range of the brush and column is the column name of the brush
-- `during`: The function with parameteres (e,column) to run at the during a brush
-- `end`: The function with parameteres (e,column) to run at the end of a brush
+- `start`: The function with parameters (e,column) to run on the start of a brush where e is the array of the range of the brush and column is the column name of the brush
+- `during`: The function with parameters (e,column) to run at the during a brush
+- `end`: The function with parameters (e,column) to run at the end of a brush
 - `columnsBrush`: turns on a brush for each column (parallel coordinates style) can be true or false. Otherwise you get a brush for selecting columns
 - `extent`: The base value for the brush, so you can set an extent if you want to initialize the brush with
 
