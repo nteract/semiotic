@@ -6,9 +6,7 @@ import {
   scaleBand,
   scaleOrdinal,
   scaleLinear,
-  scaleIdentity,
   ScaleLinear,
-  ScaleThreshold,
   ScaleBand
 } from "d3-scale"
 

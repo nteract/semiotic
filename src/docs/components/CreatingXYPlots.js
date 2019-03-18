@@ -498,16 +498,18 @@ export default class CreatingXYPlots extends React.Component {
               type: "heatmap",
               yBins: 10,
               xCellPx: 35,
-              customMark: ({ d }) => (
-                <ellipse
-                  fill={thresholds(d.percent)}
-                  stroke="none"
-                  cx={d.gw / 2}
-                  cy={d.gh / 2}
-                  rx={(d.gw / 2) * d.percent}
-                  ry={(d.gh / 2) * d.percent}
-                />
-              )
+              customMark: ({ d }) => {
+                return (
+                  <ellipse
+                    fill={thresholds(d.percent)}
+                    stroke="none"
+                    cx={d.gw / 2}
+                    cy={d.gh / 2}
+                    rx={(d.gw / 2) * d.percent}
+                    ry={(d.gh / 2) * d.percent}
+                  />
+                )
+              }
             }}
             xAccessor="x"
             yAccessor="y"

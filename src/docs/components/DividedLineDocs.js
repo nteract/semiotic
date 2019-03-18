@@ -10,18 +10,6 @@ const components = []
 components.push({
   name: "DividedLine",
   proptypes: `
-    {
-    parameters: PropTypes.func,
-    className: PropTypes.string,
-    interpolate: PropTypes.func, 
-    data: PropTypes.oneOfType([
-      PropTypes.array,
-      PropTypes.object
-    ]),
-    lineDataAccessor: PropTypes.func,
-    customAccessors: PropTypes.object,
-    searchIterations: PropTypes.number
-    }
   `
 })
 
@@ -34,7 +22,7 @@ export default class DividedLineDocs extends React.Component {
         curY += Math.random() * 0.3 - 0.15
         curY = Math.max(curY, 0.05)
         curY = Math.min(curY, 0.95)
-        pointDataSet.push({ x: x / points * width, y: curY * height })
+        pointDataSet.push({ x: (x / points) * width, y: curY * height })
       }
       return pointDataSet
     }

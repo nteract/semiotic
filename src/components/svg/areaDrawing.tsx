@@ -190,7 +190,6 @@ export function hexbinning({
       const gy = d.y
       d.x = hexBinXScale.invert(d.x)
       d.y = hexBinYScale.invert(d.y)
-      d.binItems = d
       const percent = hexValue / hexMax
       return {
         customMark: customMark && (
@@ -198,6 +197,7 @@ export function hexbinning({
             {customMark({
               d: {
                 ...d,
+                binItems: d,
                 percent,
                 value: hexValue,
                 radius: actualResolution,

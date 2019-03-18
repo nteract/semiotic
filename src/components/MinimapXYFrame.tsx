@@ -8,6 +8,7 @@ import { XYFrameProps } from "./XYFrame"
 
 interface MinimapXYFrameProps extends XYFrameProps {
   renderBefore?: boolean
+  minimap: { areas: object[] }
 }
 
 class MinimapXYFrame extends React.Component<MinimapXYFrameProps> {
@@ -25,8 +26,9 @@ class MinimapXYFrame extends React.Component<MinimapXYFrameProps> {
       yAccessor,
       points,
       lines,
+      minimap,
       areas,
-      summaries = areas,
+      summaries = "areas" in minimap ? minimap.areas : areas,
       size,
       lineDataAccessor,
       lineType,
@@ -42,7 +44,6 @@ class MinimapXYFrame extends React.Component<MinimapXYFrameProps> {
       canvasLines,
       canvasPoints,
       canvasSummaries,
-      minimap,
       axes,
       margin,
       useSpans,
