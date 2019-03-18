@@ -426,9 +426,12 @@ export function createSummaries({
     if (summaryClass) {
       className = `xyframe-summary ${summaryClass(d)}`
     }
-    let drawD = ""
+    let drawD: string | React.ReactNode = ""
     let shouldBeValid = false
-    if (typeof d.customMark === "string") {
+    if (
+      typeof d.customMark === "string" ||
+      React.isValidElement(d.customMark)
+    ) {
       drawD = d.customMark
       shouldBeValid = true
     } else if (d.type === "MultiPolygon") {

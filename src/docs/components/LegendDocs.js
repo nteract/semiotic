@@ -7,11 +7,6 @@ const components = []
 components.push({
   name: "Legend",
   proptypes: `
-    {
-    title: PropTypes.string,
-    width: PropTypes.number,
-    legendGroups: PropTypes.array
-    }
   `
 })
 

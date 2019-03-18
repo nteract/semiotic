@@ -713,7 +713,6 @@ class NetworkFrame extends React.Component<
       }
 
       baseNodeProps.shapeNode = createPointLayer
-
       if (Array.isArray(operationalEdges)) {
         operationalEdges.forEach(edge => {
           const source = sourceAccessor(edge)
@@ -728,10 +727,11 @@ class NetworkFrame extends React.Component<
                       ...nodeDirection
                     }
                   : {
-                      id: nodeDirection,
                       ...baseNodeProps,
+                      id: nodeDirection,
                       createdByFrame: true
                     }
+
               const nodeIDValue = nodeObject.id || nodeIDAccessor(nodeObject)
               nodeHierarchicalIDFill[nodeIDValue]
                 ? (nodeHierarchicalIDFill[nodeIDValue] += 1)
@@ -1527,6 +1527,7 @@ class NetworkFrame extends React.Component<
       projectedNodes.forEach((node, nodei) => {
         const feasibleLabel =
           nodeLabels && nodeLabels !== true && nodeLabels(node)
+
         if (nodeLabels === true || feasibleLabel) {
           const actualLabel =
             networkSettings.projection === "radial" && node.depth !== 0
