@@ -57,6 +57,7 @@ export interface ProjectedSummary {
   bounds: object[] | number[]
   customMark: Function
   type?: string
+  curve?: Function
 }
 
 export type CanvasPostProcessTypes = Function | "chuckClose"
