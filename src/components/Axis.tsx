@@ -309,8 +309,9 @@ class Axis extends React.Component<AxisProps, AxisState> {
         ? () => decoratedSummaryType.summaryClass
         : () => ""
 
-      const forSummaryData = this.props.xyPoints.map(
-        (d: { x: number; y: number }) => ({
+      const forSummaryData = this.props.xyPoints
+        .filter((p: { x?: number; y?: number }) => p.x && p.y)
+        .map((d: { x: number; y: number }) => ({
           ...d,
           xy: {
             x: orient === "top" || orient === "bottom" ? scale(d.x) : 0,
@@ -324,8 +325,7 @@ class Axis extends React.Component<AxisProps, AxisState> {
             orient === "top" || orient === "bottom" ? scale(d.y) : scale(d.x),
           scaledValue: scale(d.x),
           scaledVerticalValue: scale(d.y)
-        })
-      )
+        }))
 
       const renderedSummary = drawSummaries({
         data: {
@@ -353,21 +353,26 @@ class Axis extends React.Component<AxisProps, AxisState> {
       let points
 
       if (decoratedSummaryType.showPoints === true) {
-        points = marginalPointMapper(orient, summaryWidth, forSummaryData).map(
-          d => (
-            <circle
-              cx={d[0]}
-              cy={d[1]}
-              r={decoratedSummaryType.r || 3}
-              style={
-                decoratedSummaryType.pointStyle || {
-                  fill: "black",
-                  fillOpacity: 0.1
-                }
-              }
-            />
-          )
+        const mappedPoints = marginalPointMapper(
+          orient,
+          summaryWidth,
+          forSummaryData
         )
+
+        points = mappedPoints.map((d, i) => (
+          <circle
+            key={`axis-summary-point-${i}`}
+            cx={d[0]}
+            cy={d[1]}
+            r={decoratedSummaryType.r || 3}
+            style={
+              decoratedSummaryType.pointStyle || {
+                fill: "black",
+                fillOpacity: 0.1
+              }
+            }
+          />
+        ))
       }
 
       summaryGraphic = (
