@@ -57,6 +57,7 @@ export interface ProjectedSummary {
   bounds: object[] | number[]
   customMark: Function
   type?: string
+  curve?: Function
 }
 
 export type CanvasPostProcessTypes = Function | "chuckClose"
@@ -172,6 +173,7 @@ export type OrdinalSummaryTypeSettings = {
   type: OrdinalSummaryTypes
   amplitude?: number
   eventListenersGenerator?: Function
+  flip?: boolean
 }
 
 export interface AxisSummaryTypeSettings extends OrdinalSummaryTypeSettings {

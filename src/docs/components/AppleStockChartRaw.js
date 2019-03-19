@@ -5,7 +5,13 @@ import { scaleTime } from "d3-scale"
 
 const chartAxes = [
   { orient: "left", tickFormat: d => `$${d}` },
-  { orient: "bottom", ticks: 6, tickFormat: d => d.getFullYear() }
+  { orient: "bottom", ticks: 6, tickFormat: d => d.getFullYear() },
+  {
+    orient: "right",
+    marginalSummaryType: {
+      type: "boxplot"
+    }
+  }
 ]
 
 const thresholdLine = ({ d, i, xScale, yScale }) => {
@@ -38,11 +44,12 @@ const appleChart = {
   size: [700, 300],
   xScaleType: scaleTime(),
   xAccessor: d => new Date(d.date),
+  yExtent: [0],
   yAccessor: "close",
   lines: [{ label: "Apple Stock", coordinates: data }],
   customLineMark: thresholdLine,
   axes: chartAxes,
-  margin: { top: 50, left: 40, right: 10, bottom: 40 },
+  margin: { top: 50, left: 40, right: 50, bottom: 40 },
   tooltipContent: customTooltip,
   additionalDefs: (
     <linearGradient id="bubbleGradient">
@@ -149,6 +156,18 @@ export default (editMode, overridePosition, setNewPosition) => {
         {...appleChart}
         annotations={annotations}
         hoverAnnotation={!editMode}
+        areaType={{
+          type: "trendline",
+          regressionType: "polynomial",
+          order: 8
+        }}
+        areas={{ label: "Apple Stock", coordinates: data }}
+        areaStyle={{
+          fill: "none",
+          stroke: "darkred",
+          strokeWidth: 3,
+          strokeOpacity: 0.5
+        }}
       />
     </div>
   )
