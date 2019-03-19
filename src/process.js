@@ -104,11 +104,16 @@ export const processNodes = [
       "backgroundGraphics",
       "axes",
       "axis",
+      "multiAxis",
       "matte",
       "minimap",
       "sortO",
       "oSort",
-      "filterRenderedNodes"
+      "filterRenderedNodes",
+      "renderMode",
+      "summaryRenderMode",
+      "nodeRenderMode",
+      "edgeRenderMode"
     ]
   },
   {
@@ -129,7 +134,8 @@ export const processNodes = [
       "nodeSizeAccessor",
       "edgeWidthAccessor",
       "customNodeIcon",
-      "edgeType"
+      "edgeType",
+      "renderOrder"
     ]
   },
   {
