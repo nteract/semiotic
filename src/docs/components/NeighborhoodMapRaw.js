@@ -83,7 +83,7 @@ const neighborhoodMapChart = {
   },
   customPointMark: () => <Mark markType="circle" r="1" />,
   hoverAnnotation: true,
-  annotations: annotationData,
+  annotations: [] || annotationData,
   tooltipContent: d => <div className="tooltip-content">{d.hood}</div>,
   areaType: {
     type: "contour",
@@ -91,7 +91,13 @@ const neighborhoodMapChart = {
     bandwidth: 5,
     neighborhood: true
   },
-  margin: 100
+  margin: 150,
+  axes: [
+    { orient: "bottom", marginalSummaryType: "violin" },
+    { orient: "left", marginalSummaryType: "ridgeline" },
+    { orient: "right", marginalSummaryType: "boxplot" },
+    { orient: "top", marginalSummaryType: "histogram" }
+  ]
 }
 
 export default (

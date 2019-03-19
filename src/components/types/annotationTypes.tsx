@@ -1,7 +1,11 @@
-import Axis from "../Axis"
-import { RawPoint, GenericObject, MarginType } from "./generalTypes"
+import {
+  RawPoint,
+  GenericObject,
+  MarginType,
+  AxisSummaryTypeSettings,
+  OrdinalSummaryTypes
+} from "./generalTypes"
 import { NodeType } from "./networkTypes"
-import { element } from "prop-types"
 import { ScaleLinear } from "d3-scale"
 
 //import { object } from "./generalTypes"
@@ -142,4 +146,6 @@ export interface AxisProps {
   extentOverride?: number[]
   key?: string | number
   axisAnnotationFunction?: (args: any) => void
+  xyPoints?: object[]
+  marginalSummaryType?: AxisSummaryTypeSettings | OrdinalSummaryTypes
 }
