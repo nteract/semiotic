@@ -93,6 +93,8 @@ export default class CreatingXYPlots extends React.Component {
             yAccessor="y"
             pointStyle={d => ({ fill: d.color })}
             yExtent={[-8500, 8500]}
+            areaType={{ type: "trendline", regressionType: "logarithmic" }}
+            areaStyle={{ stroke: "darkred" }}
             axes={[
               {
                 orient: "bottom",
