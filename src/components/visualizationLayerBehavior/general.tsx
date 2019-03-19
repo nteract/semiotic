@@ -464,9 +464,17 @@ export function createSummaries({
       shouldBeValid = true
     } else {
       const xyfCoords = d._xyfCoordinates as number[][]
-      drawD = `M${xyfCoords
-        .map(p => `${xScale(p[0])},${yScale(p[1])}`)
-        .join("L")}Z`
+      if (d.curve) {
+        const lineDrawing = line()
+          .x(d => xScale(d[0]))
+          .y(d => yScale(d[1]))
+          .curve(d.curve)
+        drawD = lineDrawing(xyfCoords)
+      } else {
+        drawD = `M${xyfCoords
+          .map(p => `${xScale(p[0])},${yScale(p[1])}`)
+          .join("L")}Z`
+      }
     }
 
     const renderKey = renderKeyFn ? renderKeyFn(d, i) : `summary-${i}`

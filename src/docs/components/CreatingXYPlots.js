@@ -93,11 +93,13 @@ export default class CreatingXYPlots extends React.Component {
             yAccessor="y"
             pointStyle={d => ({ fill: d.color })}
             yExtent={[-8500, 8500]}
+            areaType={{ type: "trendline", regressionType: "logarithmic" }}
+            areaStyle={{ stroke: "darkred" }}
             axes={[
               {
                 orient: "bottom",
                 marginalSummaryType: {
-                  type: "boxplot",
+                  type: "ridgeline",
                   showPoints: true,
                   summaryStyle: {
                     fill: "orange",
@@ -113,15 +115,22 @@ export default class CreatingXYPlots extends React.Component {
               },
               {
                 orient: "left",
-                marginalSummaryType: { type: "boxplot", showPoints: true }
+                marginalSummaryType: {
+                  type: "ridgeline",
+                  bins: 4,
+                  showPoints: true
+                }
               },
               {
                 orient: "right",
-                marginalSummaryType: { type: "boxplot", showPoints: true }
+                marginalSummaryType: {
+                  type: "ridgeline",
+                  showPoints: true
+                }
               },
               {
                 orient: "top",
-                marginalSummaryType: { type: "boxplot", showPoints: true }
+                marginalSummaryType: { type: "ridgeline", showPoints: true }
               }
             ]}
           />
