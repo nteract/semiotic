@@ -457,10 +457,16 @@ export function trendlining({
 
   projectedSummaries = []
   data.forEach(bdata => {
-    const regressionLine = regression[regressionType](bdata._xyfCoordinates, {
-      order,
-      precision
-    })
+    const regressionLine = regression[regressionType](
+      bdata._xyfCoordinates.map(d => [
+        d[0].getTime ? d[0].getTime() : d[0],
+        d[1].getTime ? d[1].getTime() : d[1]
+      ]),
+      {
+        order,
+        precision
+      }
+    )
     const controlStep = 1 / controlPoints
 
     const controlPointArray = []
