@@ -136,8 +136,6 @@ export const groupBarMark = ({
   type,
   baseMarkProps
 }) => {
-  let xProp = -columnWidth / 2
-
   const mappedBins = []
   const mappedPoints = []
   const actualMax = (relativeBuckets && relativeBuckets[summary.name]) || binMax
@@ -158,6 +156,10 @@ export const groupBarMark = ({
     const finalColumnWidth =
       type.type === "heatmap" ? columnWidth : columnWidth * opacity
     let yProp = d.y + barPadding
+    let xProp =
+      type.type === "heatmap" || type.flip
+        ? -columnWidth / 2
+        : columnWidth / 2 - finalColumnWidth
     let height = thickness
     let width = finalColumnWidth
     let xOffset =
@@ -167,6 +169,8 @@ export const groupBarMark = ({
     if (projection === "horizontal") {
       yProp =
         type.type === "heatmap"
+          ? -columnWidth / 2
+          : type.flip
           ? -columnWidth / 2
           : columnWidth / 2 - finalColumnWidth
       xProp = d.y - d.y1 + barPadding

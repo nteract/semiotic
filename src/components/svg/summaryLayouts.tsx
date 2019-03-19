@@ -1140,9 +1140,12 @@ export function bucketizedRenderingFn({
       if (projection === "horizontal") {
         joyBins.forEach((summaryPoint, i) => {
           const xValue = summaryPoint.y - bucketSize / 2
-          const yValue =
-            (-summaryPoint.value / actualMax) * (columnWidth + joyHeight) +
-            columnWidth / 2
+
+          const yValue = type.flip
+            ? (summaryPoint.value / actualMax) * (columnWidth + joyHeight) -
+              columnWidth / 2
+            : (-summaryPoint.value / actualMax) * (columnWidth + joyHeight) +
+              columnWidth / 2
 
           joyPoints.push({
             y: yValue,
@@ -1164,8 +1167,11 @@ export function bucketizedRenderingFn({
         joyBins.forEach(summaryPoint => {
           const yValue = summaryPoint.y + bucketSize / 2
           const xValue =
-            (-summaryPoint.value / actualMax) * (columnWidth + joyHeight) +
-            columnWidth / 2
+            type.flip === true
+              ? (summaryPoint.value / actualMax) * (columnWidth + joyHeight) -
+                columnWidth / 2
+              : (-summaryPoint.value / actualMax) * (columnWidth + joyHeight) +
+                columnWidth / 2
 
           joyPoints.push({
             y: yValue,

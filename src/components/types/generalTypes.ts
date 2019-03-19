@@ -172,6 +172,7 @@ export type OrdinalSummaryTypeSettings = {
   type: OrdinalSummaryTypes
   amplitude?: number
   eventListenersGenerator?: Function
+  flip?: boolean
 }
 
 export interface AxisSummaryTypeSettings extends OrdinalSummaryTypeSettings {

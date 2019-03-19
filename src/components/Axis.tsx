@@ -292,6 +292,13 @@ class Axis extends React.Component<AxisProps, AxisState> {
           ? { type: marginalSummaryType }
           : marginalSummaryType
 
+      if (
+        decoratedSummaryType.flip === undefined &&
+        (orient === "bottom" || orient === "right")
+      ) {
+        decoratedSummaryType.flip = true
+      }
+
       const summaryStyle = decoratedSummaryType.summaryStyle
         ? () => decoratedSummaryType.summaryStyle
         : () => ({
