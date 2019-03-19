@@ -17,7 +17,12 @@ import {
   cumulativeLine
 } from "../svg/lineDrawing"
 
-import { contouring, hexbinning, heatmapping } from "../svg/areaDrawing"
+import {
+  contouring,
+  hexbinning,
+  heatmapping,
+  trendlining
+} from "../svg/areaDrawing"
 import { max, min } from "d3-array"
 
 import { extentValue } from "./unflowedFunctions"
@@ -441,6 +446,27 @@ export const calculateDataExtent = ({
     ]
   } else if (summaryType.type && summaryType.type === "heatmap") {
     projectedSummaries = heatmapping({
+      summaryType,
+      data: projectedSummaries,
+      processedData: summaries && !!summaries[0].processedData,
+      preprocess: false,
+      finalXExtent,
+      finalYExtent,
+      size,
+      margin,
+      baseMarkProps,
+      styleFn: summaryStyleFn,
+      classFn: summaryClassFn,
+      renderFn: summaryRenderModeFn,
+      chartSize
+    })
+
+    fullDataset = [
+      ...projectedSummaries.map(d => ({ ...d })),
+      ...fullDataset.filter(d => !d.parentSummary)
+    ]
+  } else if (summaryType.type && summaryType.type === "trendline") {
+    projectedSummaries = trendlining({
       summaryType,
       data: projectedSummaries,
       processedData: summaries && !!summaries[0].processedData,
