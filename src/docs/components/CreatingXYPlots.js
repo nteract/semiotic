@@ -99,7 +99,7 @@ export default class CreatingXYPlots extends React.Component {
               {
                 orient: "bottom",
                 marginalSummaryType: {
-                  type: "boxplot",
+                  type: "ridgeline",
                   showPoints: true,
                   summaryStyle: {
                     fill: "orange",
@@ -115,15 +115,22 @@ export default class CreatingXYPlots extends React.Component {
               },
               {
                 orient: "left",
-                marginalSummaryType: { type: "boxplot", showPoints: true }
+                marginalSummaryType: {
+                  type: "ridgeline",
+                  bins: 4,
+                  showPoints: true
+                }
               },
               {
                 orient: "right",
-                marginalSummaryType: { type: "boxplot", showPoints: true }
+                marginalSummaryType: {
+                  type: "ridgeline",
+                  showPoints: true
+                }
               },
               {
                 orient: "top",
-                marginalSummaryType: { type: "boxplot", showPoints: true }
+                marginalSummaryType: { type: "ridgeline", showPoints: true }
               }
             ]}
           />

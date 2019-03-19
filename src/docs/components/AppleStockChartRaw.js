@@ -158,7 +158,7 @@ export default (editMode, overridePosition, setNewPosition) => {
         hoverAnnotation={!editMode}
         areaType={{
           type: "trendline",
-          regressionType: "exponential",
+          regressionType: "polynomial",
           order: 8
         }}
         areas={{ label: "Apple Stock", coordinates: data }}
