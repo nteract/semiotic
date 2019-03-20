@@ -1294,11 +1294,11 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
 
     let screenCoordinates = []
 
-    const { size, useSpans } = this.props
+    const { useSpans } = this.props
 
     const idAccessor = this.state.annotatedSettings.lineIDAccessor
     const d: AnnotationType = findPointByID({
-      point: { x: 0, y: 0, ...baseD },
+      point: baseD,
       idAccessor,
       lines,
       xScale,
