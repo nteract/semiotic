@@ -15,7 +15,9 @@ export const xyFrameDataProps = [
   "lineType",
   "showLinePoints",
   "showSummaryPoints",
-  "defined"
+  "defined",
+  "summaryType",
+  "areaType"
 ]
 
 export const xyFrameChangeProps = [
