@@ -287,6 +287,7 @@ class Axis extends React.Component<AxisProps, AxisState> {
 
     if (marginalSummaryType && this.props.xyPoints) {
       const summaryWidth = Math.max(margin[orient] - 6, 5)
+
       const decoratedSummaryType: AxisSummaryTypeSettings =
         typeof marginalSummaryType === "string"
           ? { type: marginalSummaryType }
@@ -382,12 +383,15 @@ class Axis extends React.Component<AxisProps, AxisState> {
         ))
       }
 
+      const translation = {
+        left: [-margin.left + 2, 0],
+        right: [size[0] + 2, 0],
+        top: [0, -margin.top + 2],
+        bottom: [0, size[1] + 2]
+      }
+
       summaryGraphic = (
-        <g
-          transform={`translate(${hoverX +
-            (orient === "right" ? hoverWidth - summaryWidth - 2 : 2)},${hoverY +
-            (orient === "bottom" ? hoverHeight - summaryWidth - 2 : 2)})`}
-        >
+        <g transform={`translate(${translation[orient]})`}>
           <g
             transform={`translate(${
               (decoratedSummaryType.type === "contour" ||

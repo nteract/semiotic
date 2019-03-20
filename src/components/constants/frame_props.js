@@ -263,6 +263,7 @@ export const ordinalframeproptypes = {
   dataAccessor: true,
   rBaseline: true,
   sortO: true,
+  oSort: true,
   pixelColumnWidth: true,
   dynamicColumnWidth: true,
   renderMode: true,
