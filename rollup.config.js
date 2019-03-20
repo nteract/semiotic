@@ -25,25 +25,10 @@ export default {
     typescript(),
     node({ jsnext: true, preferBuiltins: false }),
     babel({
-      babelrc: true,
+      babelrc: false,
       runtimeHelpers: true,
       presets: ["@babel/react"],
-      plugins: [
-        "@babel/external-helpers",
-        [
-          "@babel/env",
-          {
-            targets: {
-              edge: "17",
-              firefox: "60",
-              chrome: "67",
-              safari: "11.1",
-              ie: "11"
-            },
-            modules: false
-          }
-        ]
-      ]
+      plugins: ["@babel/external-helpers"]
     }),
     nodent({ includeruntime: true, sourcemap: false }),
     builtins(),
