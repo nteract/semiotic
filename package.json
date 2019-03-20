@@ -185,6 +185,8 @@
     ]
   },
   "jest": {
+    "verbose": true,
+    "preset": "ts-jest",
     "collectCoverage": true,
     "collectCoverageFrom": [
       "src/**/*.{js,jsx,mjs}",
@@ -203,7 +205,7 @@
     "testEnvironment": "node",
     "testURL": "http://localhost",
     "transform": {
-      "\\.(ts|tsx)$": "ts-jest",
+      "\\.(ts|tsx)$": "<rootDir>/node_modules/ts-jest/preprocessor.js",
       "^.+\\.(js|jsx|mjs)$": "<rootDir>/node_modules/babel-jest",
       "^.+\\.css$": "<rootDir>/config/jest/cssTransform.js",
       "^(?!.*\\.(js|jsx|mjs|css|json)$)": "<rootDir>/config/jest/fileTransform.js"

@@ -1,7 +1,7 @@
 /* eslint-disable */
-import * as React from "react"
-import PropTypes from "prop-types"
-import { configure } from "enzyme"
-import Adapter from "enzyme-adapter-react-16"
+var React = require("react")
+var PropTypes = require("prop-types")
+var configure = require("enzyme").configure
+var Adapter = require("enzyme-adapter-react-16")
 
 configure({ adapter: new Adapter() })
