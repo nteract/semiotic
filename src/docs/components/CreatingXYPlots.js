@@ -89,7 +89,6 @@ export default class CreatingXYPlots extends React.Component {
             Making a scatterplot from this kind of data is simple, just send the
             array to the points attribute of an XYFrame.
           </p>
-          <XYFrame {...roxySettings} />
           <XYFrame
             points={pointTestData}
             xAccessor={["x", d => d.x + 1000]}
