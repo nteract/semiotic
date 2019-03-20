@@ -603,7 +603,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       rExtent = [subZeroRExtent[1], rExtent[1]]
     }
 
-    if (pieceType.type === "clusterbar" || multiAxis) {
+    if ((pieceType.type === "clusterbar" || multiAxis) && rExtent[0] > 0) {
       rExtent[0] = 0
     }
 
