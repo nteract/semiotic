@@ -178,7 +178,6 @@ const sharedframeproptypes = {
   htmlAnnotationRules: true,
   tooltipContent: true,
   annotations: true,
-  interaction: true,
   baseMarkProps: true,
   backgroundGraphics: true,
   foregroundGraphics: true,
@@ -313,7 +312,6 @@ export const networkframeproptypes = {
   renderFn: true,
   nodeStyle: true,
   edgeStyle: true,
-  customNodeIcon: true,
   edgeType: true,
   filterRenderedNodes: true
 }

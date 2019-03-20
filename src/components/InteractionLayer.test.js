@@ -1,17 +1,17 @@
-// import * as React from "react"
-// import { mount } from "enzyme"
-// import InteractionLayer from "./InteractionLayer"
-// import { scaleLinear } from "d3-scale"
+import React from "react"
+import { mount } from "enzyme"
+import InteractionLayer from "./InteractionLayer"
+import { scaleLinear } from "d3-scale"
 
-// const xyEndFunction = end => {
-//   console.info(end)
-// }
+const xyEndFunction = end => {
+  console.info(end)
+}
 
 describe("InteractionLayer", () => {
   it("renders without crashing", () => {
-    //    mount(<InteractionLayer />)
+    mount(<InteractionLayer />)
   })
-  /*
+
   const mountedLayerWithOptions = mount(
     <InteractionLayer
       margin={{ left: 10, right: 10, top: 10, bottom: 10 }}
@@ -40,6 +40,7 @@ describe("InteractionLayer", () => {
     expect(mountedLayerWithOptions.find("g.brush").length).toEqual(1)
     expect(mountedLayerWithOptions.find("g.xybrush").length).toEqual(1)
   })
+
   /*
   looks like d3-selection no workie
   it("a selection rectangle is drawn of the right shape", () => {

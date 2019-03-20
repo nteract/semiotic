@@ -60,6 +60,32 @@ const preprocessedHeatmapData = heatmapping({
   size: [500, 500]
 })
 
+const somePointData = [
+  { day: 1, date: "2017-01-01", value: 180 },
+  { day: 2, date: "2017-02-01", value: 80 },
+  { day: 3, date: "2017-03-14", value: 0 },
+  { day: 4, date: "2017-06-20", value: 20 }
+]
+
+const someOtherPointData = [
+  { day: 1, date: "2017-01-01", value: 280 },
+  { day: 2, date: "2017-02-01", value: 0 },
+  { day: 3, date: "2017-03-14", value: 50 },
+  { day: 4, date: "2017-06-20", value: 50 }
+]
+
+const htmlAnnotation = {
+  day: 3,
+  value: 100,
+  type: "frame-hover"
+}
+
+const svgAnnotation = {
+  day: 3,
+  value: 100,
+  type: "xy"
+}
+
 export default class CreatingXYPlots extends React.Component {
   render() {
     const examples = []
@@ -89,6 +115,19 @@ export default class CreatingXYPlots extends React.Component {
             Making a scatterplot from this kind of data is simple, just send the
             array to the points attribute of an XYFrame.
           </p>
+          <XYFrame
+            title={"test title"}
+            points={somePointData}
+            lines={[
+              { label: "points", coordinates: somePointData },
+              { label: "otherpoints", coordinates: someOtherPointData }
+            ]}
+            xAccessor="day"
+            yAccessor="value"
+            disableContext={true}
+            annotations={[htmlAnnotation, svgAnnotation]}
+            axes={[{ orient: "left" }, { orient: "bottom" }]}
+          />
           <XYFrame
             points={pointTestData}
             xAccessor={["x", d => d.x + 1000]}

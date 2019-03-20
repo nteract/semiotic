@@ -1,13 +1,22 @@
 {
   "env": {
     "test": {
-      "plugins": ["dynamic-import-node"]
+      "plugins": ["@babel/plugin-transform-modules-commonjs","dynamic-import-node"]
     }
   },
   "presets": [
-    "@babel/react", "@babel/typescript", ["@babel/env", { "modules": false }]
+    "@babel/react", "@babel/typescript", ["@babel/env", { 
+      "targets": {
+        "edge": "17",
+        "firefox": "60",
+        "chrome": "67",
+        "safari": "11.1",
+        "ie": "11"
+      }, 
+      "modules": false }]
   ],
   "plugins": [
+    "@babel/plugin-transform-modules-commonjs",
     ["@babel/plugin-proposal-decorators", { "legacy": true }],
     "add-module-exports",
     "@babel/plugin-transform-object-assign",

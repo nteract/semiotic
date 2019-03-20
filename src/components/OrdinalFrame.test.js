@@ -1,29 +1,29 @@
-// import * as React from "react"
-// import { mount, shallow } from "enzyme"
-// import OrdinalFrame from "./OrdinalFrame"
+import React from "react"
+import { mount, shallow } from "enzyme"
+import OrdinalFrame from "./OrdinalFrame"
 
-// const someBarData = [
-//   { column: "a", cats: 15 },
-//   { column: "a", cats: 20 },
-//   { column: "b", cats: 30 },
-//   { column: "c", cats: 100 }
-// ]
+const someBarData = [
+  { column: "a", cats: 15 },
+  { column: "a", cats: 20 },
+  { column: "b", cats: 30 },
+  { column: "c", cats: 100 }
+]
 
-// const htmlAnnotation = {
-//   column: "b",
-//   value: 30,
-//   type: "frame-hover"
-// }
+const htmlAnnotation = {
+  column: "b",
+  value: 30,
+  type: "frame-hover"
+}
 
-// const svgAnnotation = {
-//   column: "b",
-//   value: 30,
-//   type: "or"
-// }
+const svgAnnotation = {
+  column: "b",
+  value: 30,
+  type: "or"
+}
 
 describe("OrdinalFrame", () => {
   it("renders", () => {
-    /*    mount(
+    mount(
       <OrdinalFrame
         data={someBarData}
         oAccessor="column"
@@ -31,9 +31,8 @@ describe("OrdinalFrame", () => {
         disableContext={true}
       />
     )
-    */
   })
-  /*
+
   it("renders a <Frame>", () => {
     const wrapper = shallow(
       <OrdinalFrame
@@ -96,5 +95,4 @@ describe("OrdinalFrame", () => {
       expect(htmlAnnotationStyle.top).toEqual(`${y}px`)
     })
   })
-  */
 })
