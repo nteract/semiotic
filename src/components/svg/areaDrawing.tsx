@@ -428,7 +428,7 @@ export function trendlining({
   const {
     regressionType: baseRegressionType = "linear",
     order = 2,
-    precision = 2,
+    precision = 4,
     controlPoints = 20,
     curve = curveCardinal
   } = summaryType
@@ -469,11 +469,20 @@ export function trendlining({
     )
     const controlStep = 1 / controlPoints
 
+    let steps = [0, 1]
+
+    if (regressionType !== "linear") {
+      steps = []
+      for (let step = 0; step < 1 + controlStep; step += controlStep) {
+        steps.push(step)
+      }
+    }
+
     const controlPointArray = []
 
-    for (let step = 0; step < 1 + controlStep; step += controlStep) {
-      controlPointArray.push(regressionLine.predict(xScale(step)))
-    }
+    steps.forEach(controlPoint => {
+      controlPointArray.push(regressionLine.predict(xScale(controlPoint)))
+    })
 
     projectedSummaries.push({
       centroid: false,

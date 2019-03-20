@@ -148,18 +148,9 @@ module.exports = {
               name: "static/media/[name].[hash:8].[ext]"
             }
           },
-          // Process Typescript files.
+          // Process JS & TS with Babel.
           {
-            test: /\.(ts|tsx)$/,
-            include: paths.appSrc,
-            loader: require.resolve("babel-loader"),
-            options: {
-              cacheDirectory: true
-            }
-          },
-          // Process JS with Babel.
-          {
-            test: /\.(js|jsx|mjs)$/,
+            test: /\.(ts|tsx|js|jsx|mjs)$/,
             include: paths.appSrc,
             loader: require.resolve("babel-loader"),
             options: {

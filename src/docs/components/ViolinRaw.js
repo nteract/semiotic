@@ -28,6 +28,7 @@ const violinChart = {
   },
   margin: { top: 75, bottom: 50, left: 60, right: 50 },
   dynamicColumnWidth: d => Math.max(...d.map(p => p.stepValue)),
+  summaryType: "violin",
   annotations: [
     {
       type: "category",
