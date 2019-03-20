@@ -181,7 +181,7 @@ export const axisLabels = ({
       <g
         key={i}
         pointerEvents="none"
-        transform={`translate(${textX},${textY})rotate(${rotate})`}
+        transform={`translate(${textX},${textY}) rotate(${rotate})`}
         className="axis-label"
       >
         {renderedValue}
