@@ -2,16 +2,15 @@
 // Copyright (c) 2013 Marc J. Schmidt, Copyright (c) 2015 Kyle Mathews
 
 /* eslint-disable */
-
 export default function elementResizeEvent(element, fn) {
   var window =
     typeof self !== "undefined"
       ? self
       : typeof window !== "undefined"
-        ? window
-        : typeof this !== "undefined"
-          ? this
-          : { document: {} }
+      ? window
+      : typeof this !== "undefined"
+      ? this
+      : { document: {} }
   const document = window.document
   let isIE
   let requestFrame
@@ -98,19 +97,17 @@ export default function elementResizeEvent(element, fn) {
 }
 
 elementResizeEvent.unbind = function(element, fn) {
-  const attachEvent = document.attachEvent
+  //  const attachEvent = document.attachEvent
   element.__resizeListeners__.splice(element.__resizeListeners__.indexOf(fn), 1)
   if (!element.__resizeListeners__.length) {
-    if (attachEvent) {
+    /*  if (attachEvent) {
       element.detachEvent("onresize", resizeListener)
-    } else {
-      element.__resizeTrigger__.contentDocument.defaultView.removeEventListener(
+    } else { */
+    /*element.__resizeTrigger__.contentDocument.defaultView.removeEventListener(
         "resize",
         resizeListener
-      )
-      element.__resizeTrigger__ = !element.removeChild(
-        element.__resizeTrigger__
-      )
-    }
+      ) */
+    element.__resizeTrigger__ = !element.removeChild(element.__resizeTrigger__)
+    //    }
   }
 }

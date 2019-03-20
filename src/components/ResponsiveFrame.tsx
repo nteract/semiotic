@@ -1,5 +1,5 @@
 import * as React from "react"
-import * as elementResizeEvent from "./vendor/element-resize-event"
+import elementResizeEvent from "./vendor/element-resize-event"
 
 type ResponsiveFrameProps = {
   debounce: number

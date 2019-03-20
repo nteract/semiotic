@@ -19,7 +19,7 @@
     "test:dist": "node scripts/test-dist.js",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
-    "prebuild": "babel src/components --extensions '.ts,.tsx' --out-dir lib --ignore test.js",
+    "prebuild": "babel src/components --extensions '.js,.jsx,.ts,.tsx' --out-dir lib --ignore test.js",
     "create-release-branch": "sh ./scripts/create-release-branch.sh",
     "publish-release": "sh ./scripts/publish-release.sh",
     "deploy-docs": "sh ./scripts/docs.sh",
@@ -190,7 +190,7 @@
     "preset": "ts-jest",
     "collectCoverage": true,
     "collectCoverageFrom": [
-      "src/**/*.{js,jsx,mjs}",
+      "src/**/*.{ts,js,jsx,mjs}",
       "!src/docs/**"
     ],
     "setupFiles": [
@@ -201,7 +201,7 @@
     ],
     "testMatch": [
       "<rootDir>/src/**/__tests__/**/*.{js,jsx,mjs}",
-      "<rootDir>/src/**/?(*.)(spec|test).{js,jsx,mjs}"
+      "<rootDir>/src/**/?(*.)(spec|test).{ts,js,jsx,mjs}"
     ],
     "testEnvironment": "node",
     "testURL": "http://localhost",

@@ -1,23 +1,23 @@
-// import * as React from "react"
-// import { mount, shallow } from "enzyme"
-// import Axis from "./Axis"
-// import { scaleLinear } from "d3-scale"
+import * as React from "react"
+import { mount, shallow } from "enzyme"
+import Axis from "./Axis"
+import { scaleLinear } from "d3-scale"
 
-// const axisWidth = 100
-// const axisHeight = 200
+const axisWidth = 100
+const axisHeight = 200
 
-// const axisProps = {
-//   size: [axisWidth, axisHeight],
-//   scale: scaleLinear()
-//     .domain([0, 100])
-//     .range([10, 100])
-// }
+const axisProps = {
+  size: [axisWidth, axisHeight],
+  scale: scaleLinear()
+    .domain([0, 100])
+    .range([10, 100])
+}
 
 describe("Axis", () => {
   it("renders without crashing", () => {
-    //    mount(<Axis {...axisProps} />)
+    mount(<Axis {...axisProps} />)
   })
-  /*  const shallowAxis = shallow(<Axis {...axisProps} className="test-class" />)
+  const shallowAxis = shallow(<Axis {...axisProps} className="test-class" />)
 
   it("renders with a className", () => {
     expect(shallowAxis.find("g.test-class").length).toEqual(2)
@@ -56,5 +56,5 @@ describe("Axis", () => {
     expect(
       shallowAxisBrushBottom.find("g.annotation-brush").props().transform
     ).toEqual(`translate(0,${axisHeight})`)
-  }) */
+  })
 })
