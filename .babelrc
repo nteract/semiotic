@@ -1,4 +1,9 @@
 {
+  "env": {
+    "test": {
+      "plugins": ["dynamic-import-node"]
+    }
+  },
   "presets": [
     "@babel/react", "@babel/typescript", ["@babel/env", { "modules": false }]
   ],

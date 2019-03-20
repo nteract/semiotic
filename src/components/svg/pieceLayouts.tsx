@@ -266,7 +266,8 @@ export function clusterBarLayout({
   adjustedSize,
   chartSize,
   margin,
-  baseMarkProps
+  baseMarkProps,
+  rScale
 }) {
   let allCalculatedPieces = []
   const keys = Object.keys(data)
@@ -371,7 +372,8 @@ export function clusterBarLayout({
               classFn,
               adjustedSize,
               chartSize,
-              margin
+              margin,
+              rScale
             }
           )}
         </g>
@@ -418,7 +420,8 @@ export function barLayout({
   adjustedSize,
   chartSize,
   margin,
-  baseMarkProps
+  baseMarkProps,
+  rScale
 }) {
   const keys = Object.keys(data)
   let allCalculatedPieces = []
@@ -515,7 +518,8 @@ export function barLayout({
               classFn,
               adjustedSize,
               chartSize,
-              margin
+              margin,
+              rScale
             }
           )}
         </g>
@@ -555,7 +559,8 @@ export function timelineLayout({
   adjustedSize,
   chartSize,
   margin,
-  baseMarkProps
+  baseMarkProps,
+  rScale
 }) {
   let allCalculatedPieces = []
   const keys = Object.keys(data)
@@ -641,7 +646,8 @@ export function timelineLayout({
               classFn,
               adjustedSize,
               chartSize,
-              margin
+              margin,
+              rScale
             }
           )}
         </g>
@@ -682,7 +688,8 @@ export function pointLayout({
   adjustedSize,
   chartSize,
   margin,
-  baseMarkProps
+  baseMarkProps,
+  rScale
 }) {
   const circleRadius = type.r || 3
   let allCalculatedPieces = []
@@ -739,7 +746,8 @@ export function pointLayout({
               classFn,
               adjustedSize,
               chartSize,
-              margin
+              margin,
+              rScale
             }
           )}
         </g>
@@ -789,7 +797,8 @@ export function swarmLayout({
   adjustedSize,
   chartSize,
   margin,
-  baseMarkProps
+  baseMarkProps,
+  rScale
 }) {
   let allCalculatedPieces = []
   const iterations = type.iterations || 120
@@ -870,7 +879,8 @@ export function swarmLayout({
               classFn,
               adjustedSize,
               chartSize,
-              margin
+              margin,
+              rScale
             }
           )}
         </g>
