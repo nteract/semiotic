@@ -31,8 +31,9 @@ import CandlestickChart from "./examples/CandlestickChart"
 import WaterfallChart from "./examples/WaterfallChart"
 import CanvasInteraction from "./examples/CanvasInteraction"
 import UncertaintyVisualization from "./examples/UncertaintyVisualization"
-
 import HomerunMap from "./examples/HomerunMap"
+import MarginalGraphics from "./examples/MarginalGraphics"
+
 import MarimekkoChart from "./examples/MarimekkoChart"
 import BarLineChart from "./examples/BarLineChart"
 import DotPlot from "./examples/DotPlot"
@@ -247,6 +248,12 @@ export const PAGES = [
         url: "uncertainty-visualization",
         component: UncertaintyVisualization,
         img: "uncertainty-visualization"
+      },
+      {
+        name: "Marginal Graphics",
+        url: "marginal-graphics",
+        component: MarginalGraphics,
+        img: "baseball"
       },
       {
         name: "OrdinalFrame",

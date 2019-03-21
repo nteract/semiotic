@@ -7328,6 +7328,11 @@ regjsparser@^0.1.4:
   dependencies:
     jsesc "~0.5.0"
 
+regression@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/regression/-/regression-2.0.1.tgz#8d29c3e8224a10850c35e337e85a8b2fac3b0c87"
+  integrity sha1-jSnD6CJKEIUMNeM36FqLL6w7DIc=
+
 relateurl@0.2.x:
   version "0.2.7"
   resolved "https://registry.npmjs.org/relateurl/-/relateurl-0.2.7.tgz#54dbf377e51440aca90a4cd274600d3ff2d888a9"
@@ -7615,10 +7620,10 @@ semiotic-mark@0.3.1:
     prop-types "^15.6.0"
     roughjs-es5 "0.1.0"
 
-semiotic@1.18.0:
-  version "1.18.0"
-  resolved "https://registry.npmjs.org/semiotic/-/semiotic-1.18.0.tgz#b6a7a8dff32f9d6aa2ebea12e67575342cf6de99"
-  integrity sha512-TE8MOlzvpMsMa7mpP7tt8ozfrLs9gtJR6VmZFbCXFn6LEQFTCc7qZ1DrjEj3eWsBR9EZFyi/bZ94KZNt1OKoNw==
+semiotic@1.19.1:
+  version "1.19.1"
+  resolved "https://registry.yarnpkg.com/semiotic/-/semiotic-1.19.1.tgz#1d1c93b737cfb5aa51f4cce96c13779f0b5aaefb"
+  integrity sha512-xDTMLXCtbqDRWvG2vwQsgdVuXeR98IJ6rncMitmLpcJ31tj4JFCb47WsyYeUNUHHsYlu7yQNWxCxBGVvSuSGeA==
   dependencies:
     "@mapbox/polylabel" "1"
     d3-array "^1.2.0"
@@ -7646,6 +7651,7 @@ semiotic@1.18.0:
     promise "8.0.1"
     prop-types "15.6.0"
     react-annotation "2.1.5"
+    regression "^2.0.1"
     roughjs-es5 "0.1.0"
     semiotic-mark "0.3.1"
     svg-path-bounding-box "1.0.4"

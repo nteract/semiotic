@@ -110,6 +110,25 @@ const contourProps = {
   summaryType: { type: "contour", threshold: 1, bandwidth: 15 }
 }
 
+const trendlineProps = {
+  ...frameProps,
+  summaryStyle: d => {
+    return {
+      fill: "none",
+      stroke: theme[1],
+      strokeWidth: 2
+    }
+  },
+  summaries: [
+    {
+      coordinates: points.filter(d => d.title === "Ex Machina"),
+      title: "Ex Machina"
+    }
+  ],
+
+  summaryType: { type: "trendline" }
+}
+
 export default function CreateALineChart() {
   return (
     <div>
@@ -248,6 +267,42 @@ summaryType={{ type: "contour",
   thresholds: 10, // Integer, more of a hint than a setting but it tries to give you this number of “steps” to your contour
   bandwidth:  20, // Integer, width in pixels (in the native resolution, so 4% if your resolution is set to the default of 500) that determines the size of each threshold
   neighborhood: false // Boolean as a convenience this only renders the bottom threshold to allow you to show simple regionality without relying on using 1 threshold (which, remember, is a hint and hard to tune)
+}}\`\`\`
+`}
+      />
+
+      <MarkdownText
+        text={`
+## Trend Lines
+
+You can draw a trend line using the \`trendline\` summary type.
+
+`}
+      />
+      <DocumentFrame
+        frameProps={trendlineProps}
+        type={XYFrame}
+        overrideProps={overrideProps}
+        startHidden
+        pre={`const colors = {
+  "Ex Machina": theme[0],
+  "Far from the Madding Crowd": theme[1],
+  "The Longest Ride": theme[2]
+}`}
+      />
+
+      <MarkdownText
+        text={`
+### Trend Line Settings
+
+Instead of sending just a string \`summaryType="trendline"\` you can send an object with additional options to specify the type of trend line and its settings.
+\`\`\`jsx
+summaryType={{ type: "contour", 
+  regressionType: "linear" // String, accepts one of the following options: "linear", "polynomial", "exponential", "logarithmic", "power"
+  order: 2 // Integer, How many degrees to solve for
+  precision: 4 // Integer, the decimal precision used to calculate the trend, if your data is particularly small you'll need to increase this to match
+  controlPoints: 20 // Integer, for non-linear projections the line itself is drawn based on control points, you can increase this value if you feel your resulting trend line is too low-resolution in appearance
+  curve: curveCardinal // d3-shape curve, used for drawing the line based on the calculated control points
 }}\`\`\`
 `}
       />
