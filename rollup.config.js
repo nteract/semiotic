@@ -24,13 +24,6 @@ export default {
   plugins: [
     typescript(),
     node({ jsnext: true, preferBuiltins: false }),
-    babel({
-      babelrc: false,
-      runtimeHelpers: true,
-      presets: ["@babel/react"],
-      plugins: ["@babel/external-helpers"]
-    }),
-    nodent({ includeruntime: true, sourcemap: false }),
     builtins(),
     commonjs({
       include: "node_modules/**",
@@ -44,6 +37,27 @@ export default {
         ]
       }
     }),
+    babel({
+      babelrc: false,
+      runtimeHelpers: true,
+      presets: [
+        "@babel/react",
+        [
+          "@babel/preset-env",
+          {
+            modules: false
+          }
+        ]
+      ],
+      plugins: [
+        ["@babel/plugin-proposal-class-properties"],
+        "@babel/external-helpers",
+        ["@babel/plugin-proposal-decorators", { legacy: true }],
+        "@babel/plugin-transform-object-assign",
+        "react-require"
+      ]
+    }),
+    nodent({ includeruntime: true, sourcemap: false }),
     replace({
       "process.env.NODE_ENV": '"production"'
     })
