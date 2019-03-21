@@ -1,6 +1,6 @@
 import * as React from "react"
 
-import { RoughCanvas } from "roughjs-es5/lib/canvas"
+import * as Rough from "roughjs-es5/lib/canvas"
 
 import { chuckCloseCanvasTransform } from "./canvas/basicCanvasEffects"
 
@@ -9,6 +9,8 @@ import {
   RenderPipelineType,
   VizLayerTypes
 } from "./types/generalTypes"
+
+const RoughCanvas = Rough.RoughCanvas
 
 type Props = {
   axes?: Array<React.ReactNode>
