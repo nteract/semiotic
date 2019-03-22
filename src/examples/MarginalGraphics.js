@@ -15,6 +15,7 @@ const frameProps = {
     fill: theme[1],
     r: 4
   },
+  hoverAnnotation: true,
   margin: { left: 55, right: 15, top: 50, bottom: 75 },
   axes: [
     {
@@ -48,7 +49,7 @@ const HomerunMap = () => {
     <div>
       <MarkdownText
         text={`
-Marginal Graphics are useful for visualizing the density of datapoints along an axis. You can enable them by passing a \`marginalSummaryGraphics\` property to your axis with a string corresponding to any of the existing summary types as seen on the [Ordinal Summary Type Guide](/guides/ordinal-summaries). Like Ordinal Summaries, you can also send an object with a \`type\` equal to one of those strings and settings seen in the guide. In additional, the \`marginalSummaryGraphics\` object will also accept: \`showPoints\` if you want a circle shown for each point and a style object for \`summaryStyle\` and/or \`pointStyle\`. This chart shows the distance and exit velocity of hits by Giancarlo Stanton.
+Marginal Graphics (enabled in v1.19.1) are useful for visualizing the density of datapoints along an axis. You can enable them by passing a \`marginalSummaryGraphics\` property to your axis with a string corresponding to any of the existing summary types as seen on the [Ordinal Summary Type Guide](/guides/ordinal-summaries). Like Ordinal Summaries, you can also send an object with a \`type\` equal to one of those strings and settings seen in the guide. In additional, the \`marginalSummaryGraphics\` object will also accept: \`showPoints\` if you want a circle shown for each point and a style object for \`summaryStyle\` and/or \`pointStyle\`. This chart shows the distance and exit velocity of hits by Giancarlo Stanton.
 `}
       />
 
@@ -56,13 +57,6 @@ Marginal Graphics are useful for visualizing the density of datapoints along an 
         frameProps={frameProps}
         type={XYFrame}
         overrideProps={overrideProps}
-        pre={`
-import { scaleLinear } from 'd3-scale'
-
-const velocityScale = scaleLinear()
-    .domain([95.1, 118.2])
-    .range([theme[2], theme[1]])
-        `}
         useExpanded
       />
     </div>

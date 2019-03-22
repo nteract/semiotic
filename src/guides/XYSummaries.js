@@ -112,13 +112,12 @@ const contourProps = {
 
 const trendlineProps = {
   ...frameProps,
-  summaryStyle: d => {
-    return {
-      fill: "none",
-      stroke: theme[1],
-      strokeWidth: 2
-    }
+  summaryStyle: {
+    fill: "none",
+    stroke: theme[0],
+    strokeWidth: 2
   },
+  title: "Theaters showing Ex Machina by Rank",
   summaries: [
     {
       coordinates: points.filter(d => d.title === "Ex Machina"),
@@ -282,7 +281,7 @@ You can draw a trend line using the \`trendline\` summary type.
       <DocumentFrame
         frameProps={trendlineProps}
         type={XYFrame}
-        overrideProps={overrideProps}
+        overrideProps={{ ...overrideProps, title: null }}
         startHidden
         pre={`const colors = {
   "Ex Machina": theme[0],

@@ -253,7 +253,7 @@ export const PAGES = [
         name: "Marginal Graphics",
         url: "marginal-graphics",
         component: MarginalGraphics,
-        img: "baseball"
+        img: "marginal-graphics"
       },
       {
         name: "OrdinalFrame",
