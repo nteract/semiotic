@@ -206,6 +206,10 @@ export const getColumnScreenCoordinates = ({
     projectedColumns[d.facetColumn] ||
     projectedColumns[findFirstAccessorValue(oAccessor, d)]
 
+  if (!column) {
+    return { coordinates: [0, 0], pieces: undefined, column: undefined }
+  }
+
   const pieces = column.pieceData || column.pieces
 
   const positionValue =
@@ -801,6 +805,10 @@ export const htmlColumnHoverRule = ({
     adjustedPosition,
     adjustedSize
   })
+
+  if (column === undefined) {
+    return null
+  }
   //To string because React gives a DOM error if it gets a date
   const oContent = []
   oAccessor.forEach((actualOAccessor, i) => {
