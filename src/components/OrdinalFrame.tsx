@@ -482,11 +482,11 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       } else if (projection === "vertical") {
         const sizeOffset = size[0] - adjustedSize[0]
         adjustedSize[0] = oExtent.length * pixelColumnWidth
-        size[0] = adjustedSize[0] + sizeOffset
+        adjustedSize[0] = adjustedSize[0] + sizeOffset
       } else {
         const sizeOffset = size[1] - adjustedSize[1]
         adjustedSize[1] = oExtent.length * pixelColumnWidth
-        size[1] = adjustedSize[1] + sizeOffset
+        adjustedSize[1] = adjustedSize[1] + sizeOffset
       }
     }
 
