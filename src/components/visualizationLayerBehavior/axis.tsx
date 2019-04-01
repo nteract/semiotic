@@ -16,6 +16,57 @@ type AxisPiecesFnType = {
   size: number[]
   footer: boolean
   tickSize: number
+  baseline?: boolean | "torn"
+}
+
+const horizontalTornTickGenerator = (width, ticks, y, orient) => {
+  const step = width / ticks
+  let currentStep = 0
+  let tickPath = `M0,${y}`
+  const mod = orient === "right" ? -1 : 1
+  while (currentStep <= width) {
+    tickPath += `L${currentStep},${y}`
+    if (currentStep < width) {
+      tickPath += `L${currentStep + step / 2},${y + 10 * mod}`
+    }
+    currentStep += step
+  }
+  return tickPath
+}
+
+const verticalTornTickGenerator = (height, ticks, x, orient) => {
+  const step = height / ticks
+  let currentStep = 0
+  let tickPath = `M${x},0`
+  const mod = orient === "bottom" ? -1 : 1
+  while (currentStep <= height) {
+    tickPath += `L${x},${currentStep}`
+    if (currentStep < height) {
+      tickPath += `L${x + 10 * mod},${currentStep + step / 2}`
+    }
+    currentStep += step
+  }
+  return tickPath
+}
+
+const generateTornBaseline = (orient, baselineSettings) => {
+  let tornD = ""
+  const { x1, x2, y1, y2 } = baselineSettings
+  if (orient === "left" || orient === "right") {
+    const calcWidth = Math.abs(x2 - x1)
+    const ticks = Math.ceil(calcWidth / 40)
+    tornD = horizontalTornTickGenerator(
+      calcWidth,
+      ticks,
+      orient === "right" ? 0 : y1,
+      orient
+    )
+  } else {
+    const calcHeight = Math.abs(y2 - y1)
+    const ticks = Math.ceil(calcHeight / 40)
+    tornD = verticalTornTickGenerator(calcHeight, ticks, x1, orient)
+  }
+  return tornD
 }
 
 const defaultTickLineGenerator = ({
@@ -23,20 +74,28 @@ const defaultTickLineGenerator = ({
   orient,
   i,
   baseMarkProps,
-  className = ""
-}) => (
-  <Mark
-    key={i}
-    markType="path"
-    renderMode={xy.renderMode}
-    stroke="black"
-    strokeWidth="1px"
-    simpleInterpolate={true}
-    d={`M${xy.x1},${xy.y1}L${xy.x2},${xy.y2}`}
-    className={`tick-line tick ${orient} ${className}`}
-    {...baseMarkProps}
-  />
-)
+  className = "",
+  baseline
+}) => {
+  let genD = `M${xy.x1},${xy.y1}L${xy.x2},${xy.y2}`
+  if (baseline === "torn" && i === 0) {
+    genD = generateTornBaseline(orient, xy)
+  }
+  return (
+    <Mark
+      key={i}
+      markType="path"
+      renderMode={xy.renderMode}
+      fill="none"
+      stroke="black"
+      strokeWidth="1px"
+      simpleInterpolate={true}
+      d={genD}
+      className={`tick-line tick ${orient} ${className}`}
+      {...baseMarkProps}
+    />
+  )
+}
 
 export function generateTickValues(tickValues, ticks, scale) {
   const axisSize = Math.abs(scale.range()[1] - scale.range()[0])
@@ -49,6 +108,7 @@ export function generateTickValues(tickValues, ticks, scale) {
   }
   return tickValues
 }
+
 export function axisPieces({
   renderMode = () => undefined,
   padding = 5,
@@ -62,7 +122,8 @@ export function axisPieces({
     ? -10
     : ["top", "bottom"].find(d => d === orient)
     ? size[1]
-    : size[0]
+    : size[0],
+  baseline
 }: AxisPiecesFnType) {
   //returns x1 (start of line), x2 (end of line) associated with the value of the tick
   let axisDomain = [],
@@ -123,8 +184,16 @@ export function axisPieces({
       defaultAnchor = "end"
       break
   }
-  const generatedTicks =
+  let generatedTicks =
     tickValues instanceof Function ? tickValues({ orient }) : tickValues
+
+  if (
+    baseline === "torn" &&
+    generatedTicks.find(t => t === scale.domain()[0]) === undefined
+  ) {
+    generatedTicks = [scale.domain()[0], ...generatedTicks]
+  }
+
   return generatedTicks.map((tick, i) => {
     const tickPosition = scale(tick)
     return {
@@ -195,15 +264,24 @@ export const axisLines = ({
   orient,
   tickLineGenerator = defaultTickLineGenerator,
   baseMarkProps,
-  className
+  className,
+  baseline
 }: {
   axisParts: object[]
   orient: string
   tickLineGenerator: Function
   baseMarkProps?: GenericObject
   className: string
+  baseline?: boolean | "torn"
 }) => {
   return axisParts.map((axisPart, i) =>
-    tickLineGenerator({ xy: axisPart, orient, i, baseMarkProps, className })
+    tickLineGenerator({
+      xy: axisPart,
+      orient,
+      i,
+      baseMarkProps,
+      className,
+      baseline
+    })
   ) as React.ReactNode
 }

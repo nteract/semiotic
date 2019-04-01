@@ -295,13 +295,17 @@ export function adjustedPositionSize({
   size = [500, 500],
   position = [0, 0],
   margin,
-  projection
+  projection,
+  inset = 0
 }: AdjustedPositionSizeTypes) {
   const heightAdjust = margin.top + margin.bottom
   const widthAdjust = margin.left + margin.right
 
-  const adjustedPosition = [position[0], position[1]]
-  let adjustedSize = [size[0] - widthAdjust, size[1] - heightAdjust]
+  const adjustedPosition = [position[0] + inset, position[1] + inset]
+  let adjustedSize = [
+    size[0] - widthAdjust - inset * 2,
+    size[1] - heightAdjust - inset * 2
+  ]
   if (projection === "radial") {
     const minSize = Math.min(adjustedSize[0], adjustedSize[1])
     adjustedSize = [minSize, minSize]

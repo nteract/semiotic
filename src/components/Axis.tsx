@@ -517,7 +517,7 @@ class Axis extends React.Component<AxisProps, AxisState> {
         {annotationBrush}
         {axisTickLabels}
         {axisTickLines}
-        {baseline ? (
+        {baseline === true ? (
           <line
             key="baseline"
             className={`axis-baseline ${className}`}
