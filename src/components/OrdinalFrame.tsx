@@ -428,6 +428,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       oLabel,
       projection
     })
+
     const { adjustedPosition, adjustedSize } = adjustedPositionSize({
       size,
       margin,

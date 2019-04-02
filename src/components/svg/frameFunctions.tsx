@@ -295,17 +295,13 @@ export function adjustedPositionSize({
   size = [500, 500],
   position = [0, 0],
   margin,
-  projection,
-  inset = 0
+  projection
 }: AdjustedPositionSizeTypes) {
   const heightAdjust = margin.top + margin.bottom
   const widthAdjust = margin.left + margin.right
 
-  const adjustedPosition = [position[0] + inset, position[1] + inset]
-  let adjustedSize = [
-    size[0] - widthAdjust - inset * 2,
-    size[1] - heightAdjust - inset * 2
-  ]
+  const adjustedPosition = [position[0], position[1]]
+  let adjustedSize = [size[0] - widthAdjust, size[1] - heightAdjust]
   if (projection === "radial") {
     const minSize = Math.min(adjustedSize[0], adjustedSize[1])
     adjustedSize = [minSize, minSize]
@@ -693,34 +689,30 @@ export const orFrameAxisGenerator = ({
         orient,
         size: adjustedSize,
         footer: d.footer,
-        tickSize: d.tickSize
+        tickSize: d.tickSize,
+        jaggedBase: d.jaggedBase
       })
       const axisTickLines = axisLines({
         className: d.className,
         axisParts,
         orient,
         baseMarkProps: {},
-        tickLineGenerator: d.tickLineGenerator
+        tickLineGenerator: d.tickLineGenerator,
+        jaggedBase: d.jaggedBase
       })
       axesTickLines.push(axisTickLines)
 
       return (
         <Axis
-          label={d.label}
-          axisParts={axisParts}
+          {...d}
           key={d.key || `orframe-axis-${i}`}
+          axisParts={axisParts}
           orient={orient}
           size={adjustedSize}
           position={axisPosition}
-          ticks={d.ticks}
-          tickSize={d.tickSize}
-          tickFormat={d.tickFormat}
           tickValues={tickValues}
-          rotate={d.rotate}
           scale={axisScale}
           className={axisClassname}
-          baseline={d.baseline}
-          dynamicLabelPosition={d.dynamicLabelPosition}
         />
       )
     })

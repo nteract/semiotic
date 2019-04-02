@@ -8,7 +8,7 @@ const components = []
 // Add your component proptype data here
 // multiple component proptype documentation supported
 const barChartData = [
-  { user: "Jason", tweets: 10, retweets: 5, favorites: 15 },
+  { user: "Jason", tweets: 10, retweets: 10, favorites: 15 },
   { user: "Susie", tweets: 5, retweets: 100, favorites: 100 },
   { user: "Matt", tweets: 20, retweets: 25, favorites: 50 },
   { user: "Betty", tweets: 30, retweets: 20, favorites: 10 }
@@ -187,7 +187,11 @@ export default class CreatingBarChart extends React.Component {
             oLabel={d => (
               <text transform="translate(-15,0)rotate(45)">{d}</text>
             )}
-            axis={{ orient: "left", label: "Favorites + Retweets" }}
+            axis={{
+              orient: "left",
+              label: "Favorites +  Retweets",
+              jaggedBase: true
+            }}
             margin={{ left: 70, bottom: 50, right: 5, top: 55 }}
             oPadding={15}
             backgroundGraphics={({ size, margin }) => (

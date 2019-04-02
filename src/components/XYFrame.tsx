@@ -528,8 +528,8 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       xExtent: baseXExtent,
       yExtent: baseYExtent,
       title,
-      xScaleType = scaleLinear(),
-      yScaleType = scaleLinear(),
+      xScaleType: baseXScaleType = scaleLinear(),
+      yScaleType: baseYScaleType = scaleLinear(),
       lineIDAccessor,
       invertX,
       invertY,
@@ -557,6 +557,14 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
     if (summaryType && points && !summaries) {
       summaries = [{ coordinates: points }]
     }
+
+    const castXScaleType = (baseXScaleType as unknown) as Function
+
+    const xScaleType = baseXScaleType.domain ? baseXScaleType : castXScaleType()
+
+    const castYScaleType = (baseYScaleType as unknown) as Function
+
+    const yScaleType = baseYScaleType.domain ? baseYScaleType : castYScaleType()
 
     const annotatedSettings = {
       xAccessor: stringToArrayFn<number>(xAccessor, (d: number[]) => d[0]),
@@ -721,8 +729,8 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
         xExtent,
         yExtent,
         adjustedSize,
-        xScaleType,
-        yScaleType
+        xScaleType: xScaleType.copy(),
+        yScaleType: yScaleType.copy()
       }))
     } else {
       ;({
@@ -805,7 +813,8 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
           orient: d.orient,
           size: axisSize,
           footer: d.footer,
-          tickSize: d.tickSize
+          tickSize: d.tickSize,
+          jaggedBase: d.jaggedBase
         })
         const axisTickLines = (
           <g key={`axes-tick-lines-${i}`} className={`axis ${axisClassname}`}>
@@ -814,34 +823,24 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
               orient: d.orient,
               tickLineGenerator: d.tickLineGenerator,
               baseMarkProps,
-              className: axisClassname
+              className: axisClassname,
+              jaggedBase: d.jaggedBase
             })}
           </g>
         )
         axesTickLines.push(axisTickLines)
         return (
           <Axis
-            label={d.label}
-            axisParts={axisParts}
+            {...d}
             key={d.key || `axis-${i}`}
-            orient={d.orient}
+            annotationFunction={d.axisAnnotationFunction}
+            axisParts={axisParts}
             size={axisSize}
             margin={margin}
-            ticks={d.ticks}
-            tickSize={d.tickSize}
-            tickFormat={d.tickFormat}
             tickValues={tickValues}
             scale={axisScale}
             className={axisClassname}
-            padding={d.padding}
-            rotate={d.rotate}
-            annotationFunction={d.axisAnnotationFunction}
-            glyphFunction={d.glyphFunction}
-            baseline={d.baseline}
-            dynamicLabelPosition={d.dynamicLabelPosition}
-            center={d.center}
             xyPoints={fullDataset}
-            marginalSummaryType={d.marginalSummaryType}
           />
         )
       })

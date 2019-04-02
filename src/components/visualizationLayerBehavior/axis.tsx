@@ -16,7 +16,8 @@ type AxisPiecesFnType = {
   size: number[]
   footer: boolean
   tickSize: number
-  baseline?: boolean | "torn"
+  baseline?: boolean
+  jaggedBase?: boolean
 }
 
 const horizontalTornTickGenerator = (width, ticks, y, orient) => {
@@ -75,10 +76,10 @@ const defaultTickLineGenerator = ({
   i,
   baseMarkProps,
   className = "",
-  baseline
+  jaggedBase
 }) => {
   let genD = `M${xy.x1},${xy.y1}L${xy.x2},${xy.y2}`
-  if (baseline === "torn" && i === 0) {
+  if (jaggedBase && i === 0) {
     genD = generateTornBaseline(orient, xy)
   }
   return (
@@ -123,7 +124,7 @@ export function axisPieces({
     : ["top", "bottom"].find(d => d === orient)
     ? size[1]
     : size[0],
-  baseline
+  jaggedBase
 }: AxisPiecesFnType) {
   //returns x1 (start of line), x2 (end of line) associated with the value of the tick
   let axisDomain = [],
@@ -188,7 +189,7 @@ export function axisPieces({
     tickValues instanceof Function ? tickValues({ orient }) : tickValues
 
   if (
-    baseline === "torn" &&
+    jaggedBase &&
     generatedTicks.find(t => t === scale.domain()[0]) === undefined
   ) {
     generatedTicks = [scale.domain()[0], ...generatedTicks]
@@ -265,14 +266,15 @@ export const axisLines = ({
   tickLineGenerator = defaultTickLineGenerator,
   baseMarkProps,
   className,
-  baseline
+  jaggedBase
 }: {
   axisParts: object[]
   orient: string
   tickLineGenerator: Function
   baseMarkProps?: GenericObject
   className: string
-  baseline?: boolean | "torn"
+  baseline?: boolean
+  jaggedBase?: boolean
 }) => {
   return axisParts.map((axisPart, i) =>
     tickLineGenerator({
@@ -281,7 +283,7 @@ export const axisLines = ({
       i,
       baseMarkProps,
       className,
-      baseline
+      jaggedBase
     })
   ) as React.ReactNode
 }

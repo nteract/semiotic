@@ -274,7 +274,7 @@ export function clusterBarLayout({
   keys.forEach((key, ordsetI) => {
     const ordset = data[key]
 
-    const barColumnWidth = ordset.width
+    const barColumnWidth = Math.max(ordset.width, 1)
     const clusterWidth = barColumnWidth / ordset.pieceData.length
 
     let currentX = 0
@@ -427,7 +427,7 @@ export function barLayout({
   let allCalculatedPieces = []
   keys.forEach((key, ordsetI) => {
     const ordset = data[key]
-    const barColumnWidth = ordset.width
+    const barColumnWidth = Math.max(ordset.width, 1)
 
     const calculatedPieces = ordset.pieceData.map((piece, i) => {
       const pieceSize = piece.scaledValue
