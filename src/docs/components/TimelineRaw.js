@@ -174,7 +174,7 @@ const timelineChart = {
     }
   ],
   style: { fill: "lightblue", stroke: "blue" },
-  axis: { orient: "left" },
+  axis: { orient: "bottom" },
   margin: { left: 200, top: 20, right: 20, bottom: 50 },
   oLabel: d => (
     <text y={2} textAnchor="end" fontSize={8}>
