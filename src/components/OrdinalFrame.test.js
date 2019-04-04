@@ -52,6 +52,26 @@ describe("OrdinalFrame", () => {
   const yMods = [10, 0, 0]
   const xMods = [0, 10, 0]
 
+  const mountedPixelColumnWidth = mount(
+    <OrdinalFrame
+      size={[500, 0]}
+      pixelColumnWidth={30}
+      data={someBarData}
+      oAccessor="column"
+      rAccessor="cats"
+      disableContext={true}
+      projection={"horizontal"}
+    />
+  )
+
+  const svgHeight = mountedPixelColumnWidth
+    .find("svg.visualization-layer")
+    .props().height
+
+  it("renders a zero height frame with mountedPixelColumnWidth", () => {
+    expect(svgHeight).toEqual(90)
+  })
+
   projections.forEach((projection, index) => {
     const mountedFrameWithAnnotation = mount(
       <OrdinalFrame
@@ -81,9 +101,6 @@ describe("OrdinalFrame", () => {
     const htmlAnnotationStyle = mountedFrameWithAnnotation
       .find("div.annotation.annotation-or-label")
       .getDOMNode().style
-
-    console.info("svgAnnotationOR", projection, svgAnnotationOR)
-    console.info("htmlAnnotationStyle", projection, htmlAnnotationStyle)
 
     const x = xValues[index]
     const y = yValues[index]
