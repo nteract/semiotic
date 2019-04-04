@@ -32,7 +32,7 @@ jobs:
             npm run test -- --cacheDirectory=~/.jestcache
 
       - run:
-          name: tests against the dist copy (for the web) [TODO check]
+          name: tests against the dist copy (for the web)
           command: |
             npm run test:dist
 
