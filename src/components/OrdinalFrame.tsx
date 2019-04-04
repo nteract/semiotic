@@ -1753,7 +1753,6 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
     const {
       className,
       annotationSettings,
-      size,
       downloadFields,
       rAccessor,
       oAccessor,
@@ -1795,7 +1794,6 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       columnOverlays,
       axesTickLines,
       axes,
-      axisData,
       margin,
       pieceDataXY,
       oLabels,
@@ -1803,6 +1801,11 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
     } = this.state
 
     let downloadButton
+
+    const size = [
+      adjustedSize[0] + margin.left + margin.right,
+      adjustedSize[1] + margin.top + margin.bottom
+    ]
 
     if (download) {
       downloadButton = (
