@@ -619,13 +619,9 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
         : baseYExtent.extent
     }
 
-    annotatedSettings.lineType.simpleLine =
-      annotatedSettings.lineType.type === "line" &&
-      !annotatedSettings.lineType.y1 &&
-      annotatedSettings.lineType.simpleLine !== false
-
     if (annotatedSettings.lineType.type === "area") {
       annotatedSettings.lineType.y1 = () => 0
+      annotatedSettings.lineType.simpleLine = false
     }
 
     const summaryStyleFn = stringToFn<GenericObject>(
