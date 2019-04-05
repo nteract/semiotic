@@ -69,7 +69,7 @@ const colors = {
 
 const dotPlotChart = {
   title: "Neonatal Mortality Rate by Region",
-  size: [700, 500],
+  size: [700, 200],
   data: data,
   rAccessor: "value",
   oAccessor: "region",
@@ -79,6 +79,7 @@ const dotPlotChart = {
   axis: { orient: "bottom", tickFormat: d => `${d}%` },
   margin: { left: 215, top: 50, bottom: 40, right: 70 },
   oPadding: 10,
+  pixelColumnWidth: 30,
   svgAnnotationRules: drawRange,
   annotations: lineAnnotations,
   pieceHoverAnnotation: true,

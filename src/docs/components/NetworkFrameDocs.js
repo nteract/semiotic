@@ -160,9 +160,9 @@ export default class NetworkFrameDocs extends React.Component {
     const annotations = [
       { type: "node", dy: 25, id: "Miles", label: "Smart guy" },
       {
-        type: "enclose-rect",
-        dy: -70,
-        dx: 75,
+        type: "enclose-hull",
+        nx: 75,
+        ny: 75,
         ids: ["Tony", "Fil", "Adam"],
         label: "Annotations are easy!"
       },

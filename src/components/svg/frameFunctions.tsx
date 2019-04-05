@@ -233,6 +233,8 @@ export function keyAndObjectifyBarData({
   renderKey = (d?: object | number, i?: number) => i,
   oAccessor,
   rAccessor: baseRAccessor,
+  originalRAccessor,
+  originalOAccessor,
   multiAxis = false
 }: {
   data: Array<object | number>
@@ -240,6 +242,8 @@ export function keyAndObjectifyBarData({
   oAccessor: Array<Function>
   rAccessor: Array<(d: number | object, i?: number) => number>
   multiAxis?: boolean
+  originalOAccessor: Array<string | Function>
+  originalRAccessor: Array<string | Function>
 }): { allData: Array<object>; multiExtents?: Array<Array<number>> } {
   let rAccessor
   let multiExtents
@@ -261,13 +265,23 @@ export function keyAndObjectifyBarData({
     rAccessor.forEach((actualRAccessor, rIndex) => {
       ;(data || []).forEach(d => {
         const appliedKey = renderKey(d, decoratedData.length)
+        const originalR = originalRAccessor[rIndex]
+        const originalO = originalOAccessor[oIndex]
+        const rName =
+          typeof originalR === "string" ? originalR : `function-${rIndex}`
+        const oName =
+          typeof originalO === "string" ? originalO : `function-${oIndex}`
+
         if (typeof d !== "object") {
           const expandedData = { value: d, renderKey: appliedKey }
+          const value = actualRAccessor(expandedData)
           decoratedData.push({
             data: expandedData,
-            value: actualRAccessor(expandedData),
+            value,
             rIndex,
+            rName,
             oIndex,
+            oName,
             column:
               (appliedKey !== undefined &&
                 appliedKey.toString &&
@@ -276,12 +290,15 @@ export function keyAndObjectifyBarData({
             renderKey: appliedKey
           })
         } else {
+          const value = actualRAccessor(d)
           decoratedData.push({
             renderKey: appliedKey,
             data: d,
             rIndex,
+            rName,
             oIndex,
-            value: actualRAccessor(d),
+            oName,
+            value,
             column: actualOAccessor(d)
           })
         }
