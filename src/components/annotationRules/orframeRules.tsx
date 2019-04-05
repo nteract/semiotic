@@ -316,13 +316,16 @@ export const findIDPiece = (pieceIDAccessor, oColumn, d) => {
 
   const pieceID = foundIDValue === "" && d.rName ? d.rName : foundIDValue
 
-  if (pieceID === "") return d
-
-  const basePiece =
+  const basePieces =
     oColumn &&
-    oColumn.pieceData.find(
+    oColumn.pieceData.filter(
       r => r.rName === pieceID || pieceIDAccessor(r.data) === pieceID
     )
+
+  if (pieceID === "" || basePieces === false || basePieces.length !== 1)
+    return d
+
+  const basePiece = basePieces[0]
 
   const reactAnnotationProps = [
     "type",

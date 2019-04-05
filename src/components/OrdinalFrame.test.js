@@ -3,10 +3,21 @@ import { mount, shallow } from "enzyme"
 import OrdinalFrame from "./OrdinalFrame"
 
 const someBarData = [
-  { column: "a", cats: 15 },
-  { column: "a", cats: 20 },
-  { column: "b", cats: 30 },
-  { column: "c", cats: 100 }
+  { column: "a", cats: 15, dogs: 20 },
+  { column: "a", cats: 20, dogs: 30 },
+  { column: "b", cats: 30, dogs: 10 },
+  { column: "c", cats: 100, dogs: 50 }
+]
+
+const stackedBarData = [
+  { column: "a", species: "cat", value: 30 },
+  { column: "a", species: "cat", value: 50 },
+  { column: "b", species: "cat", value: 10 },
+  { column: "c", species: "cat", value: 50 },
+  { column: "a", species: "dog", value: 15 },
+  { column: "a", species: "dog", value: 20 },
+  { column: "b", species: "dog", value: 30 },
+  { column: "c", species: "dog", value: 100 }
 ]
 
 const htmlAnnotation = {
@@ -19,6 +30,19 @@ const svgAnnotation = {
   column: "b",
   value: 30,
   type: "or"
+}
+
+const stackedGeneratedHTMLAnnotation = {
+  column: "b",
+  value: 30,
+  type: "frame-hover",
+  rName: "dog"
+}
+
+const stackedHTMLAnnotation = {
+  column: "c",
+  type: "frame-hover",
+  species: "dog"
 }
 
 describe("OrdinalFrame", () => {
@@ -51,6 +75,49 @@ describe("OrdinalFrame", () => {
   const yValues = [411.7647058823529, 250, 265]
   const yMods = [10, 0, 0]
   const xMods = [0, 10, 0]
+
+  const mountedStacked = mount(
+    <OrdinalFrame
+      size={[500, 500]}
+      data={stackedBarData}
+      oAccessor="column"
+      rAccessor="value"
+      pieceIDAccessor="species"
+      disableContext={true}
+      projection="horizontal"
+      annotations={[stackedHTMLAnnotation]}
+    />
+  )
+
+  const stackedAnnotationPosition = mountedStacked
+    .find("div.annotation.annotation-or-label")
+    .getDOMNode().style
+
+  it("properly positions a piece ID accessor annotation", () => {
+    expect(stackedAnnotationPosition.left).toEqual("250px")
+    expect(parseInt(stackedAnnotationPosition.top)).toEqual(416)
+  })
+
+  const mountedStackedGenerated = mount(
+    <OrdinalFrame
+      size={[500, 500]}
+      data={someBarData}
+      oAccessor="column"
+      rAccessor={["cats", "dogs"]}
+      disableContext={true}
+      projection="horizontal"
+      annotations={[stackedGeneratedHTMLAnnotation]}
+    />
+  )
+
+  const stackedGeneratedAnnotationPosition = mountedStackedGenerated
+    .find("div.annotation.annotation-or-label")
+    .getDOMNode().style
+
+  it("properly positions a piece ID accessor annotation", () => {
+    expect(stackedGeneratedAnnotationPosition.top).toEqual("250px")
+    expect(parseInt(stackedGeneratedAnnotationPosition.left)).toEqual(111)
+  })
 
   const mountedPixelColumnWidth = mount(
     <OrdinalFrame
