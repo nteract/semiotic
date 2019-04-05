@@ -307,45 +307,22 @@ export const svgHighlightRule = ({
           )
         })) ||
     []
-  /*
-  const foundSummaries =
-    (orFrameRender.summaries &&
-      orFrameRender.summaries.data
-        .filter(p => {
-          return oAccessor(p.piece.data) === thisID
-        })
-        .map(p => {
-          if (React.isValidElement(p.renderElement)) {
-            console.error(
-              "OrdinalFrame highlighting currently only works with built-in pieces and not custom pieces"
-            )
-            return null
-          }
-          let styleObject = {
-            style: { fill: "none", stroke: "black", strokeWidth: "2px" }
-          }
-          if (d.style && typeof d.style === "function") {
-            styleObject = { style: d.style(p.piece.data) }
-          } else if (d.style) {
-            styleObject = { style: d.style }
-          }
-          const styledD = { ...p.renderElement, ...styleObject }
-
-          return <Mark {...styledD} />
-        })) ||
-    []
-  */
 
   return [...foundPieces]
 }
 
 export const findIDPiece = (pieceIDAccessor, oColumn, d) => {
-  const pieceID = pieceIDAccessor(d)
+  const foundIDValue = pieceIDAccessor(d)
+
+  const pieceID = foundIDValue === "" && d.rName ? d.rName : foundIDValue
+
   if (pieceID === "") return d
+
   const basePiece =
-    pieceIDAccessor(d) &&
     oColumn &&
-    oColumn.pieceData.find(r => pieceIDAccessor(r.data) === pieceIDAccessor(d))
+    oColumn.pieceData.find(
+      r => r.rName === pieceID || pieceIDAccessor(r.data) === pieceID
+    )
 
   const reactAnnotationProps = [
     "type",
@@ -397,9 +374,9 @@ export const screenProject = ({
   if (projection === "horizontal") {
     return [
       idPiece && (idPiece.x || idPiece.scaledValue)
-        ? idPiece.x === undefined
-          ? idPiece.bottom + idPiece.scaledValue / 2
-          : idPiece.x
+        ? idPiece.scaledValue === undefined
+          ? idPiece.x
+          : idPiece.bottom + idPiece.scaledValue / 2
         : rScale(pValue),
       o
     ]

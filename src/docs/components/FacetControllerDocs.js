@@ -23,43 +23,43 @@ const orData = [
     column: "a",
     color: "lightblue",
     step: 1,
-    value: 15
+    ovalue: 15
   },
   {
     column: "a",
     color: "darkred",
     step: 2,
-    value: 15
+    ovalue: 15
   },
   {
     column: "b",
     color: "lightblue",
     step: 3,
-    value: 25
+    ovalue: 25
   },
   {
     column: "b",
     color: "darkred",
     step: 4,
-    value: 15
+    ovalue: 15
   },
   {
     column: "c",
     color: "lightblue",
     step: 5,
-    value: 5
+    ovalue: 5
   },
   {
     column: "c",
     color: "darkred",
     step: 6,
-    value: 15
+    ovalue: 15
   },
   {
     column: "d",
     color: "lightblue",
     step: 7,
-    value: 8
+    ovalue: 8
   }
 ]
 
@@ -68,37 +68,37 @@ const orData2 = [
     column: "a",
     color: "lightblue",
     step: 1,
-    value: 30
+    ovalue: 30
   },
   {
     column: "a",
     color: "darkred",
     step: 2,
-    value: 50
+    ovalue: 50
   },
   {
     column: "b",
     color: "lightblue",
     step: 3,
-    value: 5
+    ovalue: 5
   },
   {
     column: "b",
     color: "darkred",
     step: 4,
-    value: 10
+    ovalue: 10
   },
   {
     column: "c",
     color: "lightblue",
     step: 5,
-    value: 25
+    ovalue: 25
   },
   {
     column: "d",
     color: "lightblue",
     step: 6,
-    value: 20
+    ovalue: 20
   }
 ]
 
@@ -107,49 +107,49 @@ const orData3 = [
     column: "a",
     color: "lightblue",
     step: 1,
-    value: 40
+    ovalue: 40
   },
   {
     column: "a",
     color: "darkred",
     step: 2,
-    value: 20
+    ovalue: 20
   },
   {
     column: "b",
     color: "lightblue",
     step: 3,
-    value: 2
+    ovalue: 2
   },
   {
     column: "b",
     color: "darkred",
     step: 4,
-    value: 20
+    ovalue: 20
   },
   {
     column: "c",
     color: "lightblue",
     step: 5,
-    value: 10
+    ovalue: 10
   },
   {
     column: "c",
     color: "darkred",
     step: 6,
-    value: 20
+    ovalue: 20
   },
   {
     column: "d",
     color: "lightblue",
     step: 7,
-    value: 5
+    ovalue: 5
   },
   {
     column: "d",
     color: "darkred",
     step: 8,
-    value: 20
+    ovalue: 20
   }
 ]
 
@@ -204,7 +204,7 @@ export default class FacetControllerDemo extends React.Component {
                   color: "darkred",
                   coordinates: orData3.map((d, i) => ({
                     step: i + 3,
-                    value: i * 15
+                    ovalue: i * 15
                   }))
                 }
               })
@@ -229,7 +229,8 @@ export default class FacetControllerDemo extends React.Component {
               margin={{ top: 10, left: 55, bottom: 10, right: 10 }}
               oPadding={5}
               oAccessor="column"
-              rAccessor="value"
+              rAccessor="ovalue"
+              projection="horizontal"
               type="bar"
               style={d => ({ fill: d.color })}
               pieceIDAccessor="color"
@@ -254,7 +255,7 @@ export default class FacetControllerDemo extends React.Component {
               size={[300, 300]}
               margin={{ top: 10, left: 55, bottom: 40, right: 10 }}
               xAccessor="step"
-              yAccessor="value"
+              yAccessor="ovalue"
               lineStyle={d => ({ stroke: d.color })}
               hoverAnnotation={true}
               lineIDAccessor={d => d.color}
@@ -289,7 +290,7 @@ export default class FacetControllerDemo extends React.Component {
               size={[300, 300]}
               margin={{ top: 10, left: 55, bottom: 40, right: 10 }}
               xAccessor="step"
-              yAccessor="value"
+              yAccessor="ovalue"
               lineStyle={{ stroke: "darkred" }}
               hoverAnnotation={true}
               lineIDAccessor={() => true}
@@ -298,7 +299,7 @@ export default class FacetControllerDemo extends React.Component {
               sharedYExtent={true}
               oPadding={5}
               oAccessor="column"
-              rAccessor="value"
+              rAccessor="ovalue"
               type="bar"
               style={d => ({ fill: d.color })}
               pieceHoverAnnotation={[
@@ -337,7 +338,7 @@ export default class FacetControllerDemo extends React.Component {
               responsiveWidth={true}
               margin={{ top: 10, left: 55, bottom: 40, right: 10 }}
               xAccessor="step"
-              yAccessor="value"
+              yAccessor="ovalue"
               lineStyle={{ stroke: "darkred" }}
               hoverAnnotation={true}
               lineIDAccessor={() => true}
@@ -345,7 +346,7 @@ export default class FacetControllerDemo extends React.Component {
               sharedYExtent={true}
               oPadding={5}
               oAccessor="column"
-              rAccessor="value"
+              rAccessor="ovalue"
               type="bar"
               style={d => ({ fill: d.color })}
               pieceHoverAnnotation={true}
@@ -385,7 +386,7 @@ export default class FacetControllerDemo extends React.Component {
     margin={{ top: 10, left: 55, bottom: 10, right: 10 }}
     oPadding={5}
     oAccessor="column"
-    rAccessor="value"
+    rAccessor="ovalue"
     type="bar"
     style={d => ({ fill: d.color })}
     pieceIDAccessor="color"
@@ -403,7 +404,7 @@ export default class FacetControllerDemo extends React.Component {
     size={[300, 300]}
     margin={{ top: 10, left: 55, bottom: 40, right: 10 }}
     xAccessor="step"
-    yAccessor="value"
+    yAccessor="ovalue"
     lineStyle={{ stroke: "darkred" }}
     hoverAnnotation={true}
     lineIDAccessor={() => true}
@@ -422,7 +423,7 @@ export default class FacetControllerDemo extends React.Component {
     size={[300, 300]}
     margin={{ top: 10, left: 55, bottom: 40, right: 10 }}
     xAccessor="step"
-    yAccessor="value"
+    yAccessor="ovalue"
     lineStyle={{ stroke: "darkred" }}
     hoverAnnotation={true}
     lineIDAccessor={() => true}
@@ -431,7 +432,7 @@ export default class FacetControllerDemo extends React.Component {
     sharedYExtent={true}
     oPadding={5}
     oAccessor="column"
-    rAccessor="value"
+    rAccessor="ovalue"
     type="bar"
     style={d => ({ fill: d.color })}
     pieceHoverAnnotation={true}
@@ -471,7 +472,7 @@ export default class FacetControllerDemo extends React.Component {
     responsiveWidth={true}
     margin={{ top: 10, left: 55, bottom: 40, right: 10 }}
     xAccessor="step"
-    yAccessor="value"
+    yAccessor="ovalue"
     lineStyle={{ stroke: "darkred" }}
     hoverAnnotation={true}
     lineIDAccessor={() => true}
@@ -479,7 +480,7 @@ export default class FacetControllerDemo extends React.Component {
     sharedYExtent={true}
     oPadding={5}
     oAccessor="column"
-    rAccessor="value"
+    rAccessor="ovalue"
     type="bar"
     style={d => ({ fill: d.color })}
     pieceHoverAnnotation={true}
@@ -520,7 +521,7 @@ export default class FacetControllerDemo extends React.Component {
         <p>
           pieceHoverAnnotation or hoverAnnotation set to true will create
           tooltips across the frames. You still need to set lineIDAccessor
-          and/or pieceIDAccessor to appropriate values for this to work
+          and/or pieceIDAccessor to appropriate ovalues for this to work
           relatively. If your pieces in ORFrame have matching data structures
           with points in XYFrame then you will also see tooltips across frames.
           Currently the hover annotation settings in FacetController only accept
@@ -532,7 +533,7 @@ export default class FacetControllerDemo extends React.Component {
         <p>
           sharedXExtent, sharedYExtent and sharedRExtent will set the respective
           extents of child frames to match the min/max of the smallest and
-          largest values of any siblings. Currently this only supports true but
+          largest ovalues of any siblings. Currently this only supports true but
           will also be updated to support the existing extent model in frames
           where you can send partial extents.
         </p>

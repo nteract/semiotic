@@ -37,21 +37,6 @@ const longBarChartAnnotationData = [
   { user: "Matt2", tweets: 10 },
   { user: "Betty2", tweets: 10 }
 ]
-const inflatedBarChartData = [
-  { user: "Jason", action: "tweets", value: 10 },
-  { user: "Susie", action: "tweets", value: 5 },
-  { user: "Susie", action: "tweets", value: 1 },
-  { user: "Matt", action: "tweets", value: 20 },
-  { user: "Betty", action: "tweets", value: 30 },
-  { user: "Jason", action: "retweets", value: 5 },
-  { user: "Susie", action: "retweets", value: 100 },
-  { user: "Matt", action: "retweets", value: 25 },
-  { user: "Betty", action: "retweets", value: 20 },
-  { user: "Jason", action: "favorites", value: 15 },
-  { user: "Susie", action: "favorites", value: 100 },
-  { user: "Matt", action: "favorites", value: 50 },
-  { user: "Betty", action: "favorites", value: 10 }
-]
 
 const colorHash = {
   tweets: "#4d430c",
@@ -60,7 +45,7 @@ const colorHash = {
 }
 
 const barSize = [300, 500]
-const stackedBarStyle = d => ({ fill: colorHash[d.action], stroke: "white" })
+const stackedBarStyle = d => ({ fill: colorHash[d.rName], stroke: "white" })
 const stackedBarLabel = d => (
   <text transform="translate(-15,0)rotate(45)">{d}</text>
 )
@@ -291,9 +276,10 @@ export default class CreatingBarChart extends React.Component {
           </p>
           <OrdinalFrame
             size={barSize}
-            data={inflatedBarChartData}
+            data={barChartData}
             oAccessor={"user"}
-            rAccessor={"value"}
+            rAccessor={["tweets", "favorites", "retweets"]}
+            projection={"horizontal"}
             style={stackedBarStyle}
             type={"bar"}
             oLabel={stackedBarLabel}
@@ -308,7 +294,7 @@ export default class CreatingBarChart extends React.Component {
                 : [
                     {
                       type: "react-annotation",
-                      action: "retweets",
+                      rName: "retweets",
                       user: "Matt",
                       label: "Testing a relative value annotation",
                       dx: 100,
@@ -317,7 +303,6 @@ export default class CreatingBarChart extends React.Component {
                   ]
             }
             svgAnnotationRules={this.barAnnotator}
-            pieceIDAccessor="action"
           />
         </div>
       ),

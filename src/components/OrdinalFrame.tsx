@@ -399,11 +399,21 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
 
     const pieceIDAccessor = stringToFn<string>(basePieceIDAccessor, () => "")
 
+    const originalRAccessor = Array.isArray(baseRAccessor)
+      ? baseRAccessor
+      : [baseRAccessor]
+
+    const originalOAccessor = Array.isArray(baseOAccessor)
+      ? baseOAccessor
+      : [baseOAccessor]
+
     const { allData, multiExtents } = keyAndObjectifyBarData({
       data,
       renderKey,
       oAccessor,
       rAccessor,
+      originalRAccessor,
+      originalOAccessor,
       multiAxis
     })
 
