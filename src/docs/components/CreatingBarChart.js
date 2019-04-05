@@ -278,7 +278,7 @@ export default class CreatingBarChart extends React.Component {
             size={barSize}
             data={barChartData}
             oAccessor={"user"}
-            rAccessor={["tweets", "favorites", "retweets"]}
+            rAccessor={[d => d.tweets, "favorites", "retweets"]}
             projection={"horizontal"}
             style={stackedBarStyle}
             type={"bar"}
