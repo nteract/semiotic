@@ -94,5 +94,6 @@ export default (
   <div>
     <ProcessViz frameSettings={dotPlotChart} frameType="OrdinalFrame" />
     <OrdinalFrame {...dotPlotChart} />
+    <OrdinalFrame {...dotPlotChart} margin={200} />
   </div>
 )
