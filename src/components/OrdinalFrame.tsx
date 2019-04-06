@@ -491,13 +491,9 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       if (projection === "radial") {
         console.error("pixelColumnWidth is not honored in radial mode")
       } else if (projection === "vertical") {
-        const sizeOffset = size[0] - adjustedSize[0]
         adjustedSize[0] = oExtent.length * pixelColumnWidth
-        adjustedSize[0] = adjustedSize[0] + sizeOffset
       } else {
-        const sizeOffset = size[1] - adjustedSize[1]
         adjustedSize[1] = oExtent.length * pixelColumnWidth
-        adjustedSize[1] = adjustedSize[1] + sizeOffset
       }
     }
 

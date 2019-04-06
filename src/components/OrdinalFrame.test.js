@@ -107,6 +107,7 @@ describe("OrdinalFrame", () => {
       disableContext={true}
       projection="horizontal"
       annotations={[stackedGeneratedHTMLAnnotation]}
+      type="bar"
     />
   )
 
@@ -116,7 +117,7 @@ describe("OrdinalFrame", () => {
 
   it("properly positions a piece ID accessor annotation", () => {
     expect(stackedGeneratedAnnotationPosition.top).toEqual("250px")
-    expect(parseInt(stackedGeneratedAnnotationPosition.left)).toEqual(111)
+    expect(parseInt(stackedGeneratedAnnotationPosition.left)).toEqual(100)
   })
 
   const mountedPixelColumnWidth = mount(
@@ -128,6 +129,8 @@ describe("OrdinalFrame", () => {
       rAccessor="cats"
       disableContext={true}
       projection={"horizontal"}
+      oPadding={5}
+      type="bar"
     />
   )
 
@@ -137,6 +140,39 @@ describe("OrdinalFrame", () => {
 
   it("renders a zero height frame with mountedPixelColumnWidth", () => {
     expect(svgHeight).toEqual(90)
+  })
+
+  const mountedPixelColumnWidthWithMargin = mount(
+    <OrdinalFrame
+      size={[500, 0]}
+      pixelColumnWidth={30}
+      oPadding={5}
+      data={someBarData}
+      oAccessor="column"
+      rAccessor="cats"
+      disableContext={true}
+      projection={"horizontal"}
+      margin={30}
+      type="bar"
+    />
+  )
+
+  const firstColumnBar = mountedPixelColumnWidth
+    .find("rect")
+    .first()
+    .props()
+
+  const secondColumnBar = mountedPixelColumnWidthWithMargin
+    .find("rect")
+    .first()
+    .props()
+
+  it("renders an svg annotation", () => {
+    expect(firstColumnBar.height).toEqual(25)
+  })
+
+  it("renders an svg annotation", () => {
+    expect(secondColumnBar.height).toEqual(firstColumnBar.height)
   })
 
   projections.forEach((projection, index) => {
