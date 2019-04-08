@@ -1870,7 +1870,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         title={title}
         matte={matte}
         additionalDefs={additionalDefs}
-        className={className}
+        className={`${className} ${projection}`}
         frameKey={"none"}
         renderFn={renderKey}
         projectedCoordinateNames={projectedCoordinatesObject}
