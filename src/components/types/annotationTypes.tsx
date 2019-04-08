@@ -136,7 +136,7 @@ export interface AxisProps {
     baseMarkProps?: any
     className?: string
   }) => SVGElement
-  baseline?: boolean
+  baseline?: boolean | "under"
   jaggedBase?: boolean
   margin?: MarginType
   center?: boolean

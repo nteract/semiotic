@@ -165,7 +165,7 @@ const xyFrameData1 = {
 }
 const xyFrameData2 = {
   color: "darkred",
-  coordinates: orData2.map(d => ({ ...d }))
+  coordinates: []
 }
 const xyFrameData3 = {
   color: "darkred",

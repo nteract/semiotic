@@ -29,7 +29,9 @@ const buildNewState = (prevState, extentValue, extentType, extentPosition) => {
   const oldExtents: object = prevState.rawExtents[extentType] || {}
   oldExtents[extentPosition] = extentValue
 
-  const extentMinMaxValues = Object.values(oldExtents).flat()
+  const extentMinMaxValues = Object.values(oldExtents)
+    .flat()
+    .filter(d => d !== undefined && d !== null && !isNaN(d))
 
   return {
     extents: {

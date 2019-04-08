@@ -2,7 +2,11 @@ import * as React from "react"
 
 import { scaleLinear } from "d3-scale"
 
-import { axisPieces, axisLines } from "./visualizationLayerBehavior/axis"
+import {
+  axisPieces,
+  axisLines,
+  baselineGenerator
+} from "./visualizationLayerBehavior/axis"
 
 // components
 
@@ -822,6 +826,8 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
               className: axisClassname,
               jaggedBase: d.jaggedBase
             })}
+            {d.baseline === "under" &&
+              baselineGenerator(d.orient, adjustedSize, d.className)}
           </g>
         )
         axesTickLines.push(axisTickLines)

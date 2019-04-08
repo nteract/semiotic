@@ -16,7 +16,7 @@ type AxisPiecesFnType = {
   size: number[]
   footer: boolean
   tickSize: number
-  baseline?: boolean
+  baseline?: boolean | "under"
   jaggedBase?: boolean
 }
 
@@ -260,6 +260,30 @@ export const axisLabels = ({
   })
 }
 
+export const baselineGenerator = (orient, size, className) => {
+  const offsets = {
+    left: { x: 0, y: 0, width: 0, height: size[1] },
+    right: { x: size[0], y: 0, width: 0, height: size[1] },
+    top: { x: 0, y: 0, width: size[0], height: 0 },
+    bottom: { x: 0, y: size[1], width: size[0], height: 0 }
+  }
+
+  const orientOffset = offsets[orient]
+
+  return (
+    <line
+      key="baseline"
+      className={`axis-baseline ${className}`}
+      stroke="black"
+      strokeLinecap="square"
+      x1={orientOffset.x}
+      x2={orientOffset.x + orientOffset.width}
+      y1={orientOffset.y}
+      y2={orientOffset.y + orientOffset.height}
+    />
+  )
+}
+
 export const axisLines = ({
   axisParts,
   orient,
@@ -273,7 +297,6 @@ export const axisLines = ({
   tickLineGenerator: Function
   baseMarkProps?: GenericObject
   className: string
-  baseline?: boolean
   jaggedBase?: boolean
 }) => {
   return axisParts.map((axisPart, i) =>
