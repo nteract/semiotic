@@ -10,7 +10,11 @@ import {
   contourRenderFn,
   bucketizedRenderingFn
 } from "./summaryLayouts"
-import { axisPieces, axisLines } from "../visualizationLayerBehavior/axis"
+import {
+  axisPieces,
+  axisLines,
+  baselineGenerator
+} from "../visualizationLayerBehavior/axis"
 
 import {
   MarginType,
@@ -651,13 +655,8 @@ export const orFrameAxisGenerator = ({
   if (projection !== "radial" && axis) {
     axesTickLines = []
     const axisPosition = [0, 0]
-    let axisBaseline = false
-    generatedAxis = axis.map((d, i) => {
-      if (axisBaseline) {
-        d.axis = d.axis || false
-      }
-      axisBaseline = true
 
+    generatedAxis = axis.map((d, i) => {
       let axisClassname = d.className || ""
       let tickValues
       const axisDomain = d.extentOverride ? d.extentOverride : rScale.domain()
@@ -717,7 +716,13 @@ export const orFrameAxisGenerator = ({
         tickLineGenerator: d.tickLineGenerator,
         jaggedBase: d.jaggedBase
       })
+
       axesTickLines.push(axisTickLines)
+      if (d.baseline === "under") {
+        axesTickLines.push(
+          baselineGenerator(d.orient, adjustedSize, d.className)
+        )
+      }
 
       return (
         <Axis
@@ -818,5 +823,6 @@ export const orFrameAxisGenerator = ({
       </g>
     ]
   }
+
   return { axis: generatedAxis, axesTickLines }
 }

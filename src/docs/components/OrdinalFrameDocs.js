@@ -477,7 +477,7 @@ export default class OrdinalFrameDocs extends React.Component {
           <OrdinalFrame
             size={[700, 700]}
             data={dataTypeHash[this.state.dataType].data}
-            axis={{ orient: "left" }}
+            axis={{ orient: "left", baseline: "under" }}
             projection={this.state.projection}
             type={actualType}
             renderMode={
