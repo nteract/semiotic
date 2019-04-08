@@ -46,6 +46,10 @@ const frameProps = {
   title: "Tweets"
 }
 
+const horizontalBar = {
+  projection: "horizontal"
+}
+
 const titleAndSpacing = {
   oPadding: 5,
   rAccessor: d => d.tweets + d.retweets,
@@ -143,6 +147,20 @@ an axis in Semiotic.
       />
 
       <DocumentFrame frameProps={frameProps} type={OrdinalFrame} useExpanded />
+      <MarkdownText
+        text={`
+      
+## Horizontal Bar Chart
+
+Change the bar chart orientation to horizontal by specifying \`projection={"horizontal"}\`. The three possible options are \`"horizontal"`\, \`"vertical"\` or \`"radial"\`. Defaults to "vertical".
+      `}
+      />
+
+      <DocumentFrame
+        frameProps={{ ...frameProps, ...horizontalBar }}
+        type={OrdinalFrame}
+        startHidden
+      />
       <MarkdownText
         text={`
       
