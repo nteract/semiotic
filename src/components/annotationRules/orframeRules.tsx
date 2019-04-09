@@ -322,7 +322,12 @@ export const findIDPiece = (pieceIDAccessor, oColumn, d) => {
       r => r.rName === pieceID || pieceIDAccessor(r.data) === pieceID
     )
 
-  if (pieceID === "" || basePieces === false || basePieces.length !== 1)
+  if (
+    pieceID === "" ||
+    basePieces === undefined ||
+    basePieces === false ||
+    basePieces.length !== 1
+  )
     return d
 
   const basePiece = basePieces[0]
