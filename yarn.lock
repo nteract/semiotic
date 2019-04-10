@@ -7002,10 +7002,10 @@ rc@^1.0.1, rc@^1.1.6, rc@^1.2.7:
     minimist "^1.2.0"
     strip-json-comments "~2.0.1"
 
-react-annotation@2.1.5:
-  version "2.1.5"
-  resolved "https://registry.npmjs.org/react-annotation/-/react-annotation-2.1.5.tgz#a063b77aaf0e0f0e6d2b273fe83375043a61b60f"
-  integrity sha512-OUel7AlqzcbCZqSS8gxsdb8EHxec/vTqwH7/cnhnCprcVeQprgUb923g/OcoPH6nzOPEms+AkqmMSo4KyLtGlw==
+react-annotation@^2.1.6:
+  version "2.1.6"
+  resolved "https://artifacts.netflix.com/api/npm/npm-netflix/react-annotation/-/react-annotation-2.1.6.tgz#7fa380014ab2bec49513dc66945fd821bc2b31eb"
+  integrity sha1-f6OAAUqyvsSVE9xmlF/YIbwrMes=
   dependencies:
     prop-types "15.6.2"
     viz-annotation "0.0.3"
@@ -7620,10 +7620,10 @@ semiotic-mark@0.3.1:
     prop-types "^15.6.0"
     roughjs-es5 "0.1.0"
 
-semiotic@1.19.1:
-  version "1.19.1"
-  resolved "https://registry.yarnpkg.com/semiotic/-/semiotic-1.19.1.tgz#1d1c93b737cfb5aa51f4cce96c13779f0b5aaefb"
-  integrity sha512-xDTMLXCtbqDRWvG2vwQsgdVuXeR98IJ6rncMitmLpcJ31tj4JFCb47WsyYeUNUHHsYlu7yQNWxCxBGVvSuSGeA==
+semiotic@1.19.6:
+  version "1.19.6"
+  resolved "https://artifacts.netflix.com/api/npm/npm-netflix/semiotic/-/semiotic-1.19.6.tgz#ac4d6a3b7ce31177803702b040b62930132572bf"
+  integrity sha1-rE1qO3zjEXeANwKwQLYpMBMlcr8=
   dependencies:
     "@mapbox/polylabel" "1"
     d3-array "^1.2.0"
@@ -7650,7 +7650,7 @@ semiotic@1.19.1:
     polygon-offset "0.3.1"
     promise "8.0.1"
     prop-types "15.6.0"
-    react-annotation "2.1.5"
+    react-annotation "^2.1.6"
     regression "^2.0.1"
     roughjs-es5 "0.1.0"
     semiotic-mark "0.3.1"

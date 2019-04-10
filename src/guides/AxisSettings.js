@@ -143,7 +143,7 @@ If you set the \`axisAnnotationFunction\` it will turn on a region on the axis t
           axes: [
             {
               orient: "left",
-              label: "Hover your mouse on me",
+              label: "Hover your mouse on the tick labels",
               axisAnnotationFunction: d => {
                 console.log("Here's the axis that you clicked on:", d)
               }
