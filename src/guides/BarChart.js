@@ -209,6 +209,44 @@ const rAccessor = ["tweets", "retweets", "favorites"]
       />
       <MarkdownText
         text={`
+        
+## Cluster (or Grouped) Bar Chart using the Same Data Model with rName
+
+If you would prefer to have a Cluster Bar Chart, which groups bars into a column rather than stacking them, you can set the type to \`"clusterbar"\`. This example also uses the \`rName\` prop of the item rather than the index-based approach above to get the name of the accessors in your array.
+
+_This only works if you send accessors that are simple strings, if you send a function then its name will simple be \`function-{index}\`._
+    
+        `}
+      />
+
+      <DocumentFrame
+        frameProps={{
+          ...stackedFrameProps,
+          type: "clusterbar",
+          oPadding: 5,
+          style: d => {
+            console.log("damn d", d)
+            return { fill: colorHash[d.rName], stroke: "white" }
+          }
+        }}
+        type={OrdinalFrame}
+        startHidden
+        pre={`const colorHash = {
+  tweets: theme[0],
+  retweets: theme[2],
+  favorites: theme[1]
+}
+
+`}
+        overrideProps={{
+          ...overrideProps,
+          style: `d => {
+          return { fill: colorHash[d.rName], stroke: "white" }
+        }`
+        }}
+      />
+      <MarkdownText
+        text={`
 ## Stacked Bar Chart using a flattened Data Model
 
 Another approach is flattening your data so that you have a property called action with the activity type, i.e. tweet, retweet, or favorite. And a property called value. In this case your rAccessor changes to \`rAccessor="value"\` 

@@ -26,11 +26,13 @@ import Annotations from "./guides/Annotations"
 import UsingSketchyPaintyPatterns from "./guides/UsingSketchyPaintyPatterns"
 import ForegroundBackgroundSVG from "./guides/ForegroundBackgroundSVG"
 import CanvasRendering from "./guides/CanvasRendering"
+import AxisSettings from "./guides/AxisSettings"
 
 import CandlestickChart from "./examples/CandlestickChart"
-import WaterfallChart from "./examples/WaterfallChart"
 import CanvasInteraction from "./examples/CanvasInteraction"
 import UncertaintyVisualization from "./examples/UncertaintyVisualization"
+
+import WaterfallChart from "./examples/WaterfallChart"
 import HomerunMap from "./examples/HomerunMap"
 import MarginalGraphics from "./examples/MarginalGraphics"
 
@@ -183,6 +185,12 @@ export const PAGES = [
         }
       },
       {
+        name: "Axis Settings",
+        url: "axis-settings",
+        component: AxisSettings,
+        img: "axis-settings"
+      },
+      {
         name: "Small Multiples",
         url: "small-multiples",
         component: SmallMultiples,
@@ -237,6 +245,7 @@ export const PAGES = [
         component: HomerunMap,
         img: "baseball"
       },
+
       {
         name: "Canvas Interaction",
         url: "canvas-interaction",

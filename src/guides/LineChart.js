@@ -696,6 +696,34 @@ To make your chart responsive, instead of using \`XYFrame\` use \`ResponsiveXYFr
         overrideProps={overrideProps}
         startHidden
       />
+      <MarkdownText
+        text={`
+## Line Chart with Simple Lines
+
+By default the line rendered by \`linetype: "line"\` is actually two-sided so that it can easily transition in an animated way from a line into a filled area (like those found in stacked area charts). This can cause some issues with styling, especially when using \`stroke-dasharray\` so you can pass a \`simpleLine: true\` prop to \`lineType\` to force it to render as a normal line if you see any styling issues.
+`}
+      />
+      <DocumentFrame
+        frameProps={{
+          ...withHoverFrameProps,
+          lineType: { type: "line", simpleLine: true },
+          lineStyle: (d, i) => ({
+            stroke: theme[d.key],
+            strokeWidth: 2,
+            strokeDasharray: i === 0 ? "10 10" : "5 5"
+          })
+        }}
+        type={XYFrame}
+        overrideProps={{
+          ...overrideProps,
+          lineType: `(d, i) => ({
+          stroke: theme[d.key],
+          strokeWidth: 2,
+          strokeDasharray: i === 0 ? "10 10" : "5 5"
+        })`
+        }}
+        startHidden
+      />
     </div>
   )
 }
