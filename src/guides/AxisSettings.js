@@ -49,8 +49,8 @@ export default function AxisSettings() {
 - \`tickLineGenerator\`: Allows you to overwrite how the tick lines are displayed, it gives you a parameter ({ x1, x2, y1, y2}) and the function should return a JSX element
 - \`label\`: (which can be a string or an object with more settings) to label the axis 
 - \`baseline\`: defaults to \`true\` can be overwritten with \`false\`. By default it is drawn over the visualization layer but can be drawn underneath the visualization by setting it to \`"under"\`.
-- \`jaggedBase\`  (enabled in v1.19.6): defaults to \`false\`, \`true\` renders the tick at the minimum point in your dataset with a "torn" appearance
-- \`marginalSummaryGraphics\` (enabled in v1.19.6): Lets you add an ordinal summary to your chart in the axis, see the [marginal graphics](/examples/marginal-graphics) page for an details
+- \`jaggedBase\`  (v1.19.6+): defaults to \`false\`, \`true\` renders the tick at the minimum point in your dataset with a "torn" appearance
+- \`marginalSummaryGraphics\` (v1.19.6+): Lets you add an ordinal summary to your chart in the axis, see the [marginal graphics](/examples/marginal-graphics) page for an details
 - \`axisAnnotationFunction\`: defaults to \`undefined\`, if a function is supplied, it creates a hover region on the axis, turns on the default hover display, when you click this function is run with ({ className, type, value }) 
 - \`glyphFunction\`: Allows you create a custom hover display on the axis, it passed ({ lineWidth, lineHeight, value }) and expects you to return a JSX element`}
       />
