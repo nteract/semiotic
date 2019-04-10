@@ -225,7 +225,6 @@ _This only works if you send accessors that are simple strings, if you send a fu
           type: "clusterbar",
           oPadding: 5,
           style: d => {
-            console.log("damn d", d)
             return { fill: colorHash[d.rName], stroke: "white" }
           }
         }}

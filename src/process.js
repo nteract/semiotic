@@ -26,7 +26,9 @@ export const processNodes = [
       "ResponsiveNetworkFrame",
       "ResponsiveOrdinalFrame",
       "ResponsiveXYFrame",
-      "MinimapXYFrame"
+      "MinimapXYFrame",
+      "responsiveWidth",
+      "responsiveHeight"
     ]
   },
   {

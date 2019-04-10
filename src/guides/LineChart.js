@@ -681,21 +681,6 @@ To add tooltips, you simply set \`hoverAnnotation={true}\`. By default the toolt
         overrideProps={overrideProps}
         startHidden
       />
-
-      <MarkdownText
-        text={`
-## Line Chart with Responsive Width
-
-To make your chart responsive, instead of using \`XYFrame\` use \`ResponsiveXYFrame\` and set the \`responsiveWidth={true}\`.
-
-`}
-      />
-      <DocumentFrame
-        frameProps={{ ...withHoverFrameProps, responsiveWidth: true }}
-        type={ResponsiveXYFrame}
-        overrideProps={overrideProps}
-        startHidden
-      />
       <MarkdownText
         text={`
 ## Line Chart with Simple Lines
@@ -717,13 +702,29 @@ By default the line rendered by \`linetype: "line"\` is actually two-sided so th
         overrideProps={{
           ...overrideProps,
           lineType: `(d, i) => ({
-          stroke: theme[d.key],
-          strokeWidth: 2,
-          strokeDasharray: i === 0 ? "10 10" : "5 5"
-        })`
+        stroke: theme[d.key],
+        strokeWidth: 2,
+        strokeDasharray: i === 0 ? "10 10" : "5 5"
+      })`
         }}
         startHidden
       />
+
+      <MarkdownText
+        text={`
+## Line Chart with Responsive Width
+
+To make your chart responsive, instead of using \`XYFrame\` use \`ResponsiveXYFrame\` and set the \`responsiveWidth={true}\`.
+
+`}
+      />
+      <DocumentFrame
+        frameProps={{ ...withHoverFrameProps, responsiveWidth: true }}
+        type={ResponsiveXYFrame}
+        overrideProps={overrideProps}
+        startHidden
+      />
+
     </div>
   )
 }

@@ -6,12 +6,6 @@ import { XYFrame } from "semiotic"
 
 const dataSeeds = [40, 40]
 
-const stackedColors = {
-  a: theme[1],
-  b: theme[2],
-  c: theme[3],
-  d: theme[4]
-}
 
 function generatePoints(start, number) {
   const arrayOfPoints = []
@@ -47,7 +41,17 @@ export default function AxisSettings() {
   return (
     <div>
       <MarkdownText
-        text={`OrdinalFrame and XYFrame can both take an \`axes\` prop that takes an array of objects with props that determine how your axes are displayed. The one prop the object needs is \`orient\` to determine where to place the axis (\`left\`, \`right\`, \`top\`, \`bottom\`). You can also pass an array of explicit tick values to \`tickValues\`, a prefered number of ticks to \`ticks\`, \`tickFormat\` to determine how to render the value displayed by the ticks and \`label\` (which can be a string or an object with more settings) to label the axis. Each axis is drawn with a neat baseline that can be disabled by settings \`baseline: false\` and which by default is drawn over the visualization layer but can be drawn underneath the visualization by setting it to \`baseline: "under"\`.`}
+        text={`\`OrdinalFrame\` and \`XYFrame\`  both take an \`axes\` prop that takes an array of objects that determine how your axes are displayed:
+- \`orient\`: the only required prop, determines where to place the axis (\`left\`, \`right\`, \`top\`, \`bottom\`). 
+- \`tickValues\`: an array of explicit tick values to use
+- \`ticks\`: guidance for a prefered number of ticks to display
+- \`tickFormat\`: determines how to render the value displayed by the ticks  
+- \`label\`: (which can be a string or an object with more settings) to label the axis 
+- \`baseline\`: defaults to \`true\` can be overwritten with \`false\`. By default it is drawn over the visualization layer but can be drawn underneath the visualization by setting it to \`"under"\`.
+- \`jaggedBase\`: defaults to \`false\`, \`true\` renders the tick at the minimum point in your dataset with a "torn" appearance
+- \`tickLineGenerator\`: Allows you to overwrite how the tick lines are displayed, it gives you a parameter ({ x1, x2, y1, y2}) and the function should return a JSX element
+- \`axisAnnotationFunction\`: defaults to \`undefined\`, if a function is supplied, it creates a hover region on the axis, turns on the default hover display, when you click this function is run with ({ className, type, value }) 
+- \`glyphFunction\`: Allows you create a custom hover display on the axis, it passed ({ lineWidth, lineHeight, value }) and expects you to return a JSX element`}
       />
       <XYFrame
         {...chartSettings}
@@ -56,9 +60,9 @@ export default function AxisSettings() {
       />
       <MarkdownText
         text={`
-### Additional Settings
+### Jagged Base Example
 
-Semiotic axes have a few more fancy features. If you set \`jaggedBase\` to true, a tick at the minimum point in your dataset will be added and rendered with a "torn" appearance. This was considered a best practice historically for non-zero baselines in data visualization. Keep in mind that the \`baseline\` refers to the perpendicular neatline on the axis whereas \`jaggedBase\` refers to an actual tick.
+If you set \`jaggedBase\` to true, a tick at the minimum point in your dataset will be added and rendered with a "torn" appearance. This was considered a best practice historically for non-zero baselines in data visualization. Keep in mind that the \`baseline\` refers to the perpendicular neatline on the axis whereas \`jaggedBase\` refers to an actual tick.
 `}
       />{" "}
       <DocumentFrame
@@ -70,7 +74,6 @@ Semiotic axes have a few more fancy features. If you set \`jaggedBase\` to true,
         }}
         type={XYFrame}
         overrideProps={overrideProps}
-        showExpanded
       />
       <MarkdownText
         text={`
@@ -96,7 +99,7 @@ Axes can take a \`tickLineGenerator\` prop which you can use to draw whatever ki
                   }}
                   d={`M${xy.x1},${xy.y1 - 5}L${xy.x2},${xy.y1 - 5}L${
                     xy.x2
-                  },${xy.y1 + 5}L${xy.x1},${xy.y1 + 5}Z`}
+                    },${xy.y1 + 5}L${xy.x1},${xy.y1 + 5}Z`}
                 />
               )
             }
@@ -106,20 +109,22 @@ Axes can take a \`tickLineGenerator\` prop which you can use to draw whatever ki
         overrideProps={{
           ...overrideProps,
           axes: `[
-          {
-            orient: "left",
-            baseline: "under",
-            tickLineGenerator: ({ xy }) => (
-              <path
-                style={{
-                  fill: "lightgrey",
-                  stroke: "grey",
-                  strokeDasharray: "5 2"
-                }}
-                d={\`${"M${xy.x1},${xy.y1 - 5}L${xy.x2},${xy.y1 - 5}L${xy.x2},${xy.y1 + 5}L${xy.x1},${xy.y1 + 5}Z"}\`}
-              />
-            )
-          }
+            {
+              orient: "left",
+              baseline: "under",
+              tickLineGenerator: ({ xy }) => (
+                <path
+                  style={{
+                    fill: "lightgrey",
+                    stroke: "grey",
+                    strokeDasharray: "5 2"
+                  }}
+                  d={\`M\${xy.x1},\${xy.y1 - 5}L\${xy.x2},\${xy.y1 - 5}L\${
+                    xy.x2
+                    },\${xy.y1 + 5}L\${xy.x1},\${xy.y1 + 5}Z\`}
+                />
+              )
+            }
         ]`
         }}
         startHidden
@@ -137,7 +142,7 @@ If you set the \`axisAnnotationFunction\` it will turn on a region on the axis t
           axes: [
             {
               orient: "left",
-              label: "HOVER YOUR MOUSE ON ME",
+              label: "Hover your mouse on me",
               axisAnnotationFunction: d => {
                 console.log("Here's the axis that you clicked on:", d)
               }
