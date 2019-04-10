@@ -224,8 +224,8 @@ _This only works if you send accessors that are simple strings, if you send a fu
           ...stackedFrameProps,
           type: "clusterbar",
           oPadding: 5,
-          style: d => {
-            return { fill: colorHash[d.rName], stroke: "white" }
+          style: (d) => {
+            return { fill: colorHash[rAccessor[d.rIndex]], stroke: "white" }
           }
         }}
         type={OrdinalFrame}
@@ -236,11 +236,16 @@ _This only works if you send accessors that are simple strings, if you send a fu
   favorites: theme[1]
 }
 
+const rAccessor = ["tweets", "retweets", "favorites"]
 `}
         overrideProps={{
           ...overrideProps,
+          rAccessor: 'rAccessor',
           style: `d => {
-          return { fill: colorHash[d.rName], stroke: "white" }
+
+          // in v1.19.6+ a d.rName is exposed so instead
+          // you can call return { fill: colorHash[d.rName], stroke: "white" }
+          return { fill: colorHash[rAccessor[d.rIndex]], stroke: "white" }
         }`
         }}
       />

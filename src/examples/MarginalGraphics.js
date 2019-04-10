@@ -49,7 +49,7 @@ const HomerunMap = () => {
     <div>
       <MarkdownText
         text={`
-Marginal Graphics (enabled in v1.19.1) are useful for visualizing the density of datapoints along an axis. You can enable them by passing a \`marginalSummaryGraphics\` property to your axis with a string corresponding to any of the existing summary types as seen on the [Ordinal Summary Type Guide](/guides/ordinal-summaries). Like Ordinal Summaries, you can also send an object with a \`type\` equal to one of those strings and settings seen in the guide. In additional, the \`marginalSummaryGraphics\` object will also accept: \`showPoints\` if you want a circle shown for each point and a style object for \`summaryStyle\` and/or \`pointStyle\`. This chart shows the distance and exit velocity of hits by Giancarlo Stanton.
+Marginal Graphics (enabled in v1.19.6) are useful for visualizing the density of datapoints along an axis. You can enable them by passing a \`marginalSummaryGraphics\` property to your axis with a string corresponding to any of the existing summary types as seen on the [Ordinal Summary Type Guide](/guides/ordinal-summaries). Like Ordinal Summaries, you can also send an object with a \`type\` equal to one of those strings and settings seen in the guide. In additional, the \`marginalSummaryGraphics\` object will also accept: \`showPoints\` if you want a circle shown for each point and a style object for \`summaryStyle\` and/or \`pointStyle\`. This chart shows the distance and exit velocity of hits by Giancarlo Stanton.
 `}
       />
 

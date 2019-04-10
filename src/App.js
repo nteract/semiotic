@@ -76,7 +76,6 @@ export const PAGES = [
         component: LineChart,
         img: "line-chart"
       },
-      // { name: "Divided Line Charts" },
       {
         name: "Area Charts",
         url: "area-chart",
@@ -157,6 +156,12 @@ export const PAGES = [
         className: "sub-header"
       },
       {
+        name: "Axis",
+        url: "axis",
+        component: AxisSettings,
+        img: "axis"
+      },
+      {
         name: "Annotations",
         url: "annotations",
         component: Annotations,
@@ -183,12 +188,6 @@ export const PAGES = [
         props: {
           filename: "accessibility"
         }
-      },
-      {
-        name: "Axis Settings",
-        url: "axis-settings",
-        component: AxisSettings,
-        img: "axis-settings"
       },
       {
         name: "Small Multiples",
@@ -442,7 +441,7 @@ const FallbackPage = props => {
   }
 }
 
-export default function() {
+export default function () {
   const view = window.location.pathname.split(/#|\//g).filter(d => d)
 
   let View,
