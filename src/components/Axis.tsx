@@ -322,7 +322,7 @@ class Axis extends React.Component<AxisProps, AxisState> {
       const forSummaryData = this.props.xyPoints
         .filter(
           (p: { x?: number; y?: number; data?: object }) =>
-            p.x && p.y && dataFilter(p.data)
+            p.x !== undefined && p.y !== undefined && dataFilter(p.data)
         )
         .map((d: { x: number; y: number }) => ({
           ...d,

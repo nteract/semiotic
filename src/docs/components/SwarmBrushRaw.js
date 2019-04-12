@@ -6,7 +6,7 @@ import ProcessViz from "./ProcessViz"
 */
 
 const settings = {
-  size: [700, 200],
+  size: [200, 700],
   rAccessor: d => d.value,
   oAccessor: () => "singleColumn",
   style: () => ({ fill: "#007190", stroke: "white", strokeWidth: 1 }),
@@ -17,10 +17,13 @@ const settings = {
     stroke: "white",
     strokeWidth: 1
   }),
-  projection: "horizontal",
-  axis: { orient: "left" },
+  projection: "vertical",
+  axes: [
+    { orient: "left" },
+    { orient: "right", marginalSummaryType: "violin", showPoints: true }
+  ],
   rExtent: [0, 100],
-  margin: { left: 20, top: 0, bottom: 50, right: 20 },
+  margin: { left: 20, top: 0, bottom: 100, right: 50 },
   oPadding: 0
 }
 

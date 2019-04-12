@@ -76,7 +76,11 @@ const dotPlotChart = {
   style: d => ({ fill: colors[d.type], stroke: "white", strokeWidth: 1 }),
   type: { type: "point", r: dotRadius },
   projection: "horizontal",
-  axis: { orient: "bottom", tickFormat: d => `${d}%` },
+  axis: {
+    orient: "bottom",
+    tickFormat: d => `${d}%`,
+    marginalSummaryType: "ridgeline"
+  },
   margin: { left: 215, top: 50, bottom: 40, right: 70 },
   oPadding: 10,
   pixelColumnWidth: 30,

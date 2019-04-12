@@ -96,6 +96,8 @@ type ORFrameAxisGeneratorTypes = {
   rExtent: Array<number>
   data: Array<object>
   maxColumnValues?: number
+  xyData: Array<{ value: number; data: object }>
+  margin: MarginType
 }
 
 function roundToTenth(number: number) {
@@ -653,7 +655,9 @@ export const orFrameAxisGenerator = ({
   pieceType,
   rExtent,
   data,
-  maxColumnValues = 1
+  maxColumnValues = 1,
+  xyData,
+  margin
 }: ORFrameAxisGeneratorTypes) => {
   if (!axis) return { axis: undefined, axesTickLines: undefined }
   let generatedAxis: Array<JSX.Element>, axesTickLines: Array<Object>
@@ -729,6 +733,11 @@ export const orFrameAxisGenerator = ({
         )
       }
 
+      const marginalSummaryType =
+        typeof d.marginalSummaryType === "string"
+          ? { type: d.marginalSummaryType }
+          : d.marginalSummaryType
+
       return (
         <Axis
           {...d}
@@ -740,6 +749,13 @@ export const orFrameAxisGenerator = ({
           tickValues={tickValues}
           scale={axisScale}
           className={axisClassname}
+          marginalSummaryType={marginalSummaryType}
+          margin={margin}
+          xyPoints={xyData.map(d => ({
+            x: projection === "vertical" ? 0 : d.value,
+            y: projection === "vertical" ? d.value : 0,
+            data: d.data
+          }))}
         />
       )
     })
