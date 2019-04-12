@@ -97,19 +97,21 @@ export default class CreatingXYPlots extends React.Component {
             yExtent={[-8500, 8500]}
             //            areaType={{ type: "trendline", regressionType: "logarithmic" }}
             areaStyle={{ stroke: "darkred" }}
+            margin={d => d.size[0] / 20}
             axes={[
               {
-                orient: "bottom",
+                orient: "top",
                 marginalSummaryType: {
+                  filter: d => d.color === "#00a2ce",
                   type: "ridgeline",
                   showPoints: true,
                   summaryStyle: {
-                    fill: "orange",
-                    stroke: "brown",
+                    fill: "#00a2ce",
+                    stroke: "#00a2ce",
                     fillOpacity: 0.25
                   },
                   pointStyle: {
-                    fill: "red",
+                    fill: "#00a2ce",
                     r: 4,
                     fillOpacity: 0.05
                   }
@@ -119,21 +121,52 @@ export default class CreatingXYPlots extends React.Component {
                 orient: "left",
                 baseline: "under",
                 marginalSummaryType: {
+                  filter: d => d.color === "#4d430c",
                   type: "ridgeline",
-                  bins: 4,
-                  showPoints: true
+                  bins: 6,
+                  summaryStyle: {
+                    fill: "#4d430c",
+                    stroke: "#4d430c",
+                    fillOpacity: 0.25
+                  }
                 }
               },
               {
                 orient: "right",
                 marginalSummaryType: {
+                  filter: d => d.color === "#b3331d",
                   type: "ridgeline",
-                  showPoints: true
+                  showPoints: true,
+                  summaryStyle: {
+                    fill: "#b3331d",
+                    stroke: "#b3331d",
+                    fillOpacity: 0.25
+                  }
                 }
               },
               {
                 orient: "top",
-                marginalSummaryType: { type: "ridgeline", showPoints: true }
+                marginalSummaryType: {
+                  type: "ridgeline",
+                  filter: d => d.color === "#b6a756",
+                  summaryStyle: {
+                    fill: "#b6a756",
+                    stroke: "#b6a756",
+                    fillOpacity: 0.25
+                  },
+                  showPoints: true,
+                  pointStyle: {
+                    fill: "#b6a756",
+                    r: 4,
+                    fillOpacity: 0.05
+                  }
+                }
+              },
+              d => {
+                return {
+                  orient: "bottom",
+                  ticks: Math.ceil(d.size[0] / 150)
+                }
               }
             ]}
           />

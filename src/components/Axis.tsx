@@ -317,8 +317,13 @@ class Axis extends React.Component<AxisProps, AxisState> {
         ? () => decoratedSummaryType.summaryClass
         : () => ""
 
+      const dataFilter = decoratedSummaryType.filter || (() => true)
+
       const forSummaryData = this.props.xyPoints
-        .filter((p: { x?: number; y?: number }) => p.x && p.y)
+        .filter(
+          (p: { x?: number; y?: number; data?: object }) =>
+            p.x && p.y && dataFilter(p.data)
+        )
         .map((d: { x: number; y: number }) => ({
           ...d,
           xy: {

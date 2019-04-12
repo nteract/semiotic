@@ -99,7 +99,8 @@ import {
   AnnotationHandling,
   CustomHoverType,
   AnnotationType,
-  AxisProps
+  AxisProps,
+  AxisGeneratingFunction
 } from "./types/annotationTypes"
 
 import { Interactivity } from "./types/interactionTypes"
@@ -117,6 +118,12 @@ export type XYFrameProps = {
   margin?:
     | number
     | { top?: number; bottom?: number; left?: number; right?: number }
+    | ((
+        args: object
+      ) =>
+        | number
+        | { top?: number; left?: number; right?: number; bottom?: number }
+      )
   name: string
   dataVersion?: string
   frameKey?: string
@@ -148,7 +155,7 @@ export type XYFrameProps = {
   points?: RawPoint[]
   areas?: RawSummary[] | RawSummary
   summaries?: RawSummary[] | RawSummary
-  axes?: AxisProps[]
+  axes?: Array<AxisProps | AxisGeneratingFunction>
   matte?: object
   xScaleType?: ScaleLinear<number, number>
   yScaleType?: ScaleLinear<number, number>
@@ -644,10 +651,19 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       true
     )
 
+    const generatedAxes =
+      currentProps.axes &&
+      currentProps.axes.map(axisFnOrObject =>
+        typeof axisFnOrObject === "function"
+          ? axisFnOrObject({ size: currentProps.size })
+          : axisFnOrObject
+      )
+
     const margin = calculateMargin({
       margin: currentProps.margin,
-      axes: currentProps.axes,
-      title: annotatedSettings.title
+      axes: generatedAxes,
+      title: annotatedSettings.title,
+      size: currentProps.size
     })
     const { adjustedPosition, adjustedSize } = adjustedPositionSize({
       size: currentProps.size,
@@ -778,9 +794,9 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
 
     const existingBaselines = {}
 
-    if (currentProps.axes) {
+    if (generatedAxes) {
       axesTickLines = []
-      axes = currentProps.axes.map((d, i) => {
+      axes = generatedAxes.map((d, i) => {
         let axisClassname = d.className || ""
         axisClassname += " axis"
         let axisScale = yScale
@@ -936,7 +952,7 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
         defined: defined,
         renderKeyFn: annotatedSettings.renderKeyFn,
         ariaLabel: lineAriaLabel,
-        axesData: currentProps.axes,
+        axesData: generatedAxes,
         behavior: createLines
       },
       summaries: {
@@ -1020,7 +1036,7 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       adjustedSize,
       backgroundGraphics: currentProps.backgroundGraphics,
       foregroundGraphics: currentProps.foregroundGraphics,
-      axesData: currentProps.axes,
+      axesData: generatedAxes,
       axes,
       axesTickLines,
       renderNumber: this.state.renderNumber + 1,
