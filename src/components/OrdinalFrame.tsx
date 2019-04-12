@@ -1153,19 +1153,6 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       })
     }
 
-    const { axis, axesTickLines } = orFrameAxisGenerator({
-      axis: arrayWrappedAxis,
-      data: allData,
-      projection,
-      adjustedSize,
-      size,
-      rScale,
-      rScaleType: instantiatedRScaleType.copy(),
-      pieceType,
-      rExtent,
-      maxColumnValues
-    })
-
     const {
       renderMode,
       canvasSummaries,
@@ -1253,14 +1240,22 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       calculatedSummaries.originalData = projectedColumns
     }
 
+    const yMod = projection === "horizontal" ? midMod : zeroFunction
+    const xMod = projection === "vertical" ? midMod : zeroFunction
+
+    const basePieceData = calculatedPieceData.map(d =>
+      Object.assign({}, d.piece, {
+        type: "frame-hover",
+        x: d.xy.x + xMod(d.xy),
+        y: d.xy.y + yMod(d.xy)
+      })
+    )
+
     if (
       (pieceHoverAnnotation &&
         ["bar", "clusterbar", "timeline"].indexOf(pieceType.type) === -1) ||
       summaryHoverAnnotation
     ) {
-      const yMod = projection === "horizontal" ? midMod : zeroFunction
-      const xMod = projection === "vertical" ? midMod : zeroFunction
-
       if (summaryHoverAnnotation && calculatedSummaries.xyPoints) {
         pieceDataXY = calculatedSummaries.xyPoints.map(
           (d: { x: number; y: number }) =>
@@ -1272,15 +1267,24 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
             })
         )
       } else if (pieceHoverAnnotation && calculatedPieceData) {
-        pieceDataXY = calculatedPieceData.map(d =>
-          Object.assign({}, d.piece, {
-            type: "frame-hover",
-            x: d.xy.x + xMod(d.xy),
-            y: d.xy.y + yMod(d.xy)
-          })
-        )
+        pieceDataXY = basePieceData
       }
     }
+
+    const { axis, axesTickLines } = orFrameAxisGenerator({
+      axis: arrayWrappedAxis,
+      data: allData,
+      projection,
+      adjustedSize,
+      size,
+      rScale,
+      rScaleType: instantiatedRScaleType.copy(),
+      pieceType,
+      rExtent,
+      maxColumnValues,
+      xyData: basePieceData,
+      margin
+    })
 
     if (
       pieceHoverAnnotation &&

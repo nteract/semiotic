@@ -382,7 +382,7 @@ export const screenProject = ({
   if (projection === "horizontal") {
     return [
       idPiece && (idPiece.x || idPiece.scaledValue)
-        ? idPiece.scaledValue === undefined
+        ? idPiece.x === undefined
           ? idPiece.x
           : idPiece.bottom + idPiece.scaledValue / 2
         : rScale(pValue),
@@ -740,8 +740,8 @@ export const htmlFrameHoverRule = ({
     </SpanOrDiv>
   )
 
-  if (d.type === "frame-hover" && tooltipContent) {
-    content = tooltipContent(idPiece)
+  if (d.type === "frame-hover" && tooltipContent && idPiece) {
+    content = tooltipContent({ ...idPiece, ...idPiece.data })
   }
 
   return (
