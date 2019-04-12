@@ -87,7 +87,7 @@ import {
   OrdinalSummaryTypeSettings
 } from "./types/generalTypes"
 
-import { AxisProps } from "./types/annotationTypes"
+import { AxisProps, AxisGeneratingFunction } from "./types/annotationTypes"
 import { AnnotationLayerProps } from "./AnnotationLayer"
 import { Interactivity } from "./types/interactionTypes"
 
@@ -201,6 +201,12 @@ export type OrdinalFrameProps = {
   margin?:
     | number
     | { top?: number; left?: number; right?: number; bottom?: number }
+    | ((
+        args: object
+      ) =>
+        | number
+        | { top?: number; left?: number; right?: number; bottom?: number }
+      )
   renderMode?: object | string | accessorType<string | object>
   summaryRenderMode?: object | string | accessorType<string | object>
   dataVersion?: string
@@ -214,7 +220,10 @@ export type OrdinalFrameProps = {
   data: Array<object | number>
   oPadding?: number
   axis?: AxisProps | Array<AxisProps>
-  axes?: AxisProps | Array<AxisProps>
+  axes?:
+    | AxisGeneratingFunction
+    | AxisProps
+    | Array<AxisProps | AxisGeneratingFunction>
   summaryPosition?: Function
   additionalDefs?: React.ReactNode
   tooltipContent?: Function
@@ -420,9 +429,17 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
     let arrayWrappedAxis: AxisProps[] | undefined
 
     if (Array.isArray(baseAxis)) {
-      arrayWrappedAxis = baseAxis
+      arrayWrappedAxis = baseAxis.map(axisFnOrObject =>
+        typeof axisFnOrObject === "function"
+          ? axisFnOrObject({ size: currentProps.size })
+          : axisFnOrObject
+      )
     } else if (baseAxis) {
-      arrayWrappedAxis = [baseAxis]
+      arrayWrappedAxis = [baseAxis].map(axisFnOrObject =>
+        typeof axisFnOrObject === "function"
+          ? axisFnOrObject({ size: currentProps.size })
+          : axisFnOrObject
+      )
     }
 
     if (multiExtents && baseAxis) {
@@ -436,7 +453,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       axes: arrayWrappedAxis,
       title,
       oLabel,
-      projection
+      projection,
+      size
     })
 
     const { adjustedPosition, adjustedSize } = adjustedPositionSize({

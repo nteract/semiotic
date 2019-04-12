@@ -46,6 +46,7 @@ type CalculateMarginTypes = {
   title: TitleType
   oLabel?: boolean | accessorType<string | Element>
   projection?: ProjectionTypes
+  size?: number[]
 }
 
 type AdjustedPositionSizeTypes = {
@@ -149,9 +150,13 @@ export const calculateMargin = ({
   axes,
   title,
   oLabel,
-  projection
+  projection,
+  size
 }: CalculateMarginTypes): MarginType => {
   if (margin !== undefined) {
+    if (typeof margin === "function") {
+      margin = margin({ size })
+    }
     if (typeof margin !== "object") {
       return { top: margin, bottom: margin, left: margin, right: margin }
     } else if (typeof margin === "object") {

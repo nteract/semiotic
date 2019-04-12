@@ -183,4 +183,5 @@ export interface AxisSummaryTypeSettings extends OrdinalSummaryTypeSettings {
   summaryClass?: string
   r?: number
   showPoints?: boolean
+  filter?: Function
 }

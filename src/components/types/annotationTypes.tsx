@@ -150,3 +150,5 @@ export interface AxisProps {
   xyPoints?: object[]
   marginalSummaryType?: AxisSummaryTypeSettings | OrdinalSummaryTypes
 }
+
+export type AxisGeneratingFunction = (args: object) => AxisProps
