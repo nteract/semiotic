@@ -398,7 +398,7 @@ export const screenProject = ({
     o,
     idPiece && (idPiece.x || idPiece.scaledValue)
       ? idPiece.y === undefined
-        ? idPiece.bottom - idPiece.scaledValue / 2
+        ? idPiece.bottom - idPiece.scaledValue
         : idPiece.y
       : newScale(pValue)
   ]
