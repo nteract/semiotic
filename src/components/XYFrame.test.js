@@ -1,8 +1,6 @@
-import React from "react"
+import * as React from "react"
 import { mount, shallow } from "enzyme"
 import XYFrame from "./XYFrame"
-import injectTapEventPlugin from "react-tap-event-plugin"
-injectTapEventPlugin()
 
 const somePointData = [
   { day: 1, date: "2017-01-01", value: 180 },

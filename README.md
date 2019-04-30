@@ -1,14 +1,14 @@
-[![Semiotic](semiotic_logo_horizontal.png "semiotic")](https://github.com/emeeks/semiotic/wiki/)
+[![Semiotic](semiotic_logo_horizontal.png "semiotic")](https://semiotic.nteract.io)
 
-[![Circle CI Status Shield](https://circleci.com/gh/emeeks/semiotic/tree/master.svg?style=shield)](https://circleci.com/gh/emeeks/semiotic/tree/master)
+[![Circle CI status](https://circleci.com/gh/nteract/semiotic/tree/master.svg?style=shield)](https://circleci.com/gh/nteract/semiotic/tree/master)
 
 Semiotic is a data visualization framework combining React &amp; D3
 
-[Interactive Documentation](https://emeeks.github.io/semiotic/)
+[Interactive Documentation](https://semiotic.nteract.io)
 
-[API Docs on the wiki](https://github.com/emeeks/semiotic/wiki)
+[API Docs on the wiki](https://semiotic.nteract.io/api)
 
-[Examples](https://github.com/emeeks/semiotic-examples)
+[Examples](https://semiotic.nteract.io/examples)
 
 Installation
 

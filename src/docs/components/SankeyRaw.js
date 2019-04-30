@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { NetworkFrame } from "../../components"
 import { network_data, or_data } from "../sampledata/energy_time"
 import ProcessViz from "./ProcessViz"
@@ -88,7 +88,6 @@ export default ({
     sourceAccessor: "source",
     targetAccessor: "target",
     nodeSizeAccessor: 5,
-    zoomToFit: type === "force",
     hoverAnnotation: true,
     networkType: {
       type: type,

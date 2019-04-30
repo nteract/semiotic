@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 import SankeyRaw from "./SankeyRaw"
 import Select from "material-ui/Select"
@@ -168,9 +168,6 @@ const areaLegendGroups = [
   targetAccessor="target"
   ${this.state.type === "force" ? "nodeSizeAccessor={5}" : ""}
   ${this.state.type === "force" ? 'edgeType={"arrowhead"}' : ""}
-  ${
-    this.state.type === "force" ? 'zoomToFit={this.state.type === "force"}' : ""
-  }
   hoverAnnotation={true}
   ${this.state.type === "chord" ? "edgeWidthAccessor={d => d.value}" : ""}
   networkType={{ type: ${this.state.type}, orient: ${

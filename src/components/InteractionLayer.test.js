@@ -11,6 +11,7 @@ describe("InteractionLayer", () => {
   it("renders without crashing", () => {
     mount(<InteractionLayer />)
   })
+
   const mountedLayerWithOptions = mount(
     <InteractionLayer
       margin={{ left: 10, right: 10, top: 10, bottom: 10 }}
@@ -39,6 +40,7 @@ describe("InteractionLayer", () => {
     expect(mountedLayerWithOptions.find("g.brush").length).toEqual(1)
     expect(mountedLayerWithOptions.find("g.xybrush").length).toEqual(1)
   })
+
   /*
   looks like d3-selection no workie
   it("a selection rectangle is drawn of the right shape", () => {

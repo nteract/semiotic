@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { OrdinalFrame } from "../../components"
 import ProcessViz from "./ProcessViz"
 
@@ -69,16 +69,21 @@ const colors = {
 
 const dotPlotChart = {
   title: "Neonatal Mortality Rate by Region",
-  size: [700, 500],
+  size: [700, 200],
   data: data,
   rAccessor: "value",
   oAccessor: "region",
   style: d => ({ fill: colors[d.type], stroke: "white", strokeWidth: 1 }),
   type: { type: "point", r: dotRadius },
   projection: "horizontal",
-  axis: { orient: "bottom", tickFormat: d => `${d}%` },
+  axis: {
+    orient: "bottom",
+    tickFormat: d => `${d}%`,
+    marginalSummaryType: "ridgeline"
+  },
   margin: { left: 215, top: 50, bottom: 40, right: 70 },
   oPadding: 10,
+  pixelColumnWidth: 30,
   svgAnnotationRules: drawRange,
   annotations: lineAnnotations,
   pieceHoverAnnotation: true,
@@ -93,5 +98,6 @@ export default (
   <div>
     <ProcessViz frameSettings={dotPlotChart} frameType="OrdinalFrame" />
     <OrdinalFrame {...dotPlotChart} />
+    <OrdinalFrame {...dotPlotChart} margin={200} />
   </div>
 )

@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { XYFrame, ResponsiveXYFrame } from "../../components"
 import { scaleTime } from "d3-scale"
 import { curveMonotoneX, curveCardinal, curveBasis, curveStep } from "d3-shape"
@@ -480,10 +480,14 @@ export default class CreatingLineChart extends React.Component {
             margin={{ left: 80, bottom: 50, right: 10, top: 40 }}
             axes={[
               {
-                orient: "left"
+                orient: "left",
+                jaggedBase: true,
+                baseline: false
               },
               {
-                orient: "bottom"
+                orient: "bottom",
+                jaggedBase: true,
+                baseline: false
               }
             ]}
             customHoverBehavior={d => console.info("custom hover d", d)}

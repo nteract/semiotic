@@ -1,14 +1,26 @@
 {
+  "env": {
+    "test": {
+      "plugins": ["@babel/plugin-transform-modules-commonjs","dynamic-import-node"]
+    }
+  },
   "presets": [
-    "flow",
-    "es2015",
-    "react",
-    "stage-0"
+    "@babel/react", "@babel/typescript", ["@babel/env", { 
+      "targets": {
+        "edge": "17",
+        "firefox": "60",
+        "chrome": "67",
+        "safari": "11.1",
+        "ie": "11"
+      }, 
+      "modules": false }]
   ],
   "plugins": [
-    "transform-decorators-legacy",
+    "@babel/plugin-transform-modules-commonjs",
+    ["@babel/plugin-proposal-decorators", { "legacy": true }],
     "add-module-exports",
-    "transform-object-assign",
+    "@babel/plugin-transform-object-assign",
+    "@babel/plugin-proposal-class-properties",
     "react-require"
   ]
 }

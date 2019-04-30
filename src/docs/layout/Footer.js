@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 
 const Footer = ({ gh }) => {
   const [user, repo] = gh.split("/")

@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 import { NetworkFrame } from "../../components"
 import { Mark } from "semiotic-mark"
@@ -82,81 +82,6 @@ const networkTypeHash = {
 components.push({
   name: "NetworkFrame",
   proptypes: `
-    {
-  name: PropTypes.string,
-  title: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.object
-  ]),
-  margin: PropTypes.oneOfType([
-    PropTypes.number,
-    PropTypes.object
-  ]),
-  size: PropTypes.array.isRequired,
-  position: PropTypes.array,
-  nodeIDAccessor: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.func
-  ]),
-  sourceAccessor: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.func
-  ]),
-  targetAccessor: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.func
-  ]),
-  nodeSizeAccessor: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.number,
-    PropTypes.func
-  ]),
-  nodeLabels: PropTypes.oneOfType([
-    PropTypes.bool,
-    PropTypes.func
-  ]),
-  edgeWidthAccessor: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.func
-  ]),
-  annotations: PropTypes.array,
-  customHoverBehavior: PropTypes.func,
-  customClickBehavior: PropTypes.func,
-  customDoubleClickBehavior: PropTypes.func,
-  htmlAnnotationRules: PropTypes.func,
-  networkType: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.object
-  ]),
-  tooltipContent: PropTypes.func,
-  className: PropTypes.string,
-  additionalDefs: PropTypes.oneOfType([
-    PropTypes.array,
-    PropTypes.object
-  ]),
-  interaction: PropTypes.object,
-  renderFn: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.func
-  ]),
-  nodeStyle:  PropTypes.oneOfType([
-    PropTypes.object,
-    PropTypes.func
-  ]),
-  edgeStyle:  PropTypes.oneOfType([
-    PropTypes.object,
-    PropTypes.func
-  ]),
-  hoverAnnotation: PropTypes.bool,
-  backgroundGraphics:  PropTypes.oneOfType([
-    PropTypes.object,
-    PropTypes.array
-  ]),
-  foregroundGraphics:  PropTypes.oneOfType([
-    PropTypes.object,
-    PropTypes.array
-  ])
-    }
   `
 })
 
@@ -235,9 +160,9 @@ export default class NetworkFrameDocs extends React.Component {
     const annotations = [
       { type: "node", dy: 25, id: "Miles", label: "Smart guy" },
       {
-        type: "enclose-rect",
-        dy: -70,
-        dx: 75,
+        type: "enclose-hull",
+        nx: 75,
+        ny: 75,
         ids: ["Tony", "Fil", "Adam"],
         label: "Annotations are easy!"
       },
@@ -420,7 +345,6 @@ export default class NetworkFrameDocs extends React.Component {
             ${
               this.state.annotations === "on" ? "annotations={annotations}" : ""
             }
-            zoomToFit={true}
             nodeLabels={true}
             hoverAnnotation={true}
             annotationSettings={{
