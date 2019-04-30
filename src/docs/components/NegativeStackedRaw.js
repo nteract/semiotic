@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { XYFrame } from "../../components"
 import { curveMonotoneX } from "d3-shape"
 import ProcessViz from "./ProcessViz"

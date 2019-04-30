@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 
 import { wrappedExamples } from "./example_settings/example_list"
 import { Link } from "react-router-dom"

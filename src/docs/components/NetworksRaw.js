@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { NetworkFrame } from "../../components"
 import data from "../sampledata/flare.json"
 import {
@@ -60,7 +60,7 @@ const multiFociSimulationForCombined = forceSimulation()
 
 const multiFociNodes = [...Array(500)].map((d, i) => ({
   name: `Node ${i}`,
-  r: Math.random() * 5 + 5 - i % 4,
+  r: Math.random() * 5 + 5 - (i % 4),
   fociX: (i % 2) * 200 + 200,
   fociY: Math.floor((i % 4) / 2) * 200 + 200,
   color: colors[i % 4]
@@ -100,11 +100,12 @@ export const withCustomSimulation = (
 export const bubbleChart = (
   <NetworkFrame
     nodes={bunchaNodes}
+    size={[400, 900]}
     networkType={{
       type: "force",
       iterations: 400,
       simulation: bubbleSimulation,
-      zoom: false
+      zoom: true
     }}
     nodeSizeAccessor={d => d.r}
     nodeStyle={{ stroke: "darkred" }}

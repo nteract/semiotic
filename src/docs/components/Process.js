@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { NetworkFrame, XYFrame, OrdinalFrame } from "../../components"
 import { network_data, or_data } from "../sampledata/energy_time"
 import { scaleLinear } from "d3-scale"
@@ -83,13 +83,7 @@ const networkPossibilities = [
     networkType: { type: "wordcloud", textAccessor: d => d.id },
     nodeSizeAccessor: d => nodeScale(d.input + d.output),
     edges: undefined
-  },
-  {
-    networkType: "force",
-    zoomToFit: true,
-    nodeSizeAccessor: d => nodeScale(d.input + d.output)
-  }
-]
+  }]
 
 const formatter = d => (d > 1000 ? `${parseInt(d / 1000)}k` : d)
 

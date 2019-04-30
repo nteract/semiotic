@@ -645,20 +645,7 @@ ReactDOM.render(
           orient: "left"
         },
         margin: 30,
-        oPadding: 5,
-        annotations: [
-          {
-            type: "frame-hover",
-            amount: "15",
-            position: "b",
-            label: "Amount 15, position B"
-          },
-          {
-            type: "column-hover",
-            position: "e",
-            label: "Column E"
-          }
-        ]
+        oPadding: 5
       }),
       React.createElement(OrdinalFrame, {
         title: "Pie Chart",
@@ -700,23 +687,6 @@ ReactDOM.render(
               (d.column && `Column hover: ${d.column.name}`) ||
               `Frame hover: ${d.position}`
           }),
-        annotations: [
-          {
-            type: "frame-hover",
-            amount: "15",
-            position: "b",
-            label: "Amount 15, position B"
-          },
-          {
-            type: "column-hover",
-            position: "e"
-          },
-          {
-            type: "r",
-            label: "threshold",
-            amount: 5
-          }
-        ],
         margin: 30,
         oPadding: 5
       }),
@@ -730,13 +700,6 @@ ReactDOM.render(
           strokeOpacity: 0.25,
           fillOpacity: 0.25
         }),
-        annotations: [
-          {
-            type: "frame-hover",
-            id: "d3-scale",
-            label: "d3-scale"
-          }
-        ],
         nodeIDAccessor: "name"
       }),
       React.createElement(NetworkFrame, {
@@ -750,13 +713,6 @@ ReactDOM.render(
           strokeOpacity: 0.25,
           fillOpacity: 0.25
         }),
-        annotations: [
-          {
-            type: "frame-hover",
-            id: "linear",
-            label: "d3-scale-linear"
-          }
-        ],
         edgeStyle: { stroke: "black" },
         nodeIDAccessor: "name"
       }),

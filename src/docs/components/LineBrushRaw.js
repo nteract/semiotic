@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { XYFrame } from "../../components"
 import { scaleTime } from "d3-scale"
 import ProcessViz from "./ProcessViz"

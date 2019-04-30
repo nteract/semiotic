@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 // import { rectangleEnclosure } from "../../components/annotationRules/baseRules"
 import { PrismCode } from "react-prism"
 
@@ -71,8 +71,7 @@ const processNodes = [
       projection: true,
       oPadding: true,
       dynamicColumnWidth: true,
-      pixelColumnWidth: true,
-      zoomToFit: true
+      pixelColumnWidth: true
     }
   },
   {
@@ -259,20 +258,20 @@ export default class ProcessViz extends React.Component {
                           {k === "nodes" || k === "edges"
                             ? "these data tend to be circular"
                             : typeof frameSettings[k] === "function"
-                              ? `${frameSettings[k]}`
-                              : JSON.stringify(
-                                  frameSettings[k],
-                                  (key, value) => {
-                                    if (typeof value === "function") {
-                                      return `${value}`
-                                    }
+                            ? `${frameSettings[k]}`
+                            : JSON.stringify(
+                                frameSettings[k],
+                                (key, value) => {
+                                  if (typeof value === "function") {
+                                    return `${value}`
+                                  }
 
-                                    return key === "nodes" || key === "edges"
-                                      ? ""
-                                      : value
-                                  },
-                                  " "
-                                )}
+                                  return key === "nodes" || key === "edges"
+                                    ? ""
+                                    : value
+                                },
+                                " "
+                              )}
                         </PrismCode>
                       </pre>
                     </div>

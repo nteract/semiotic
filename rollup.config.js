@@ -3,28 +3,27 @@ import babel from "rollup-plugin-babel"
 import commonjs from "rollup-plugin-commonjs"
 import builtins from "rollup-plugin-node-builtins"
 import replace from "rollup-plugin-replace"
-import regenerator from "rollup-plugin-regenerator"
-
-import flow from "rollup-plugin-flow"
+import nodent from "rollup-plugin-nodent"
+import typescript from "rollup-plugin-typescript"
 
 export default {
-  exports: "named",
   input: "src/components/index.js",
   output: {
     format: "umd",
     file: "dist/semiotic.js",
-    name: "Semiotic"
+    name: "Semiotic",
+    globals: {
+      "react": "React",
+      "react-dom": "ReactDOM"
+    }
   },
+  /*  exports: "named",
   interop: false,
-  globals: {
-    react: "React",
-    "react-dom": "ReactDOM"
-  },
+  , */
   external: ["react", "react-dom"],
   plugins: [
-    flow(),
+    typescript(),
     node({ jsnext: true, preferBuiltins: false }),
-    regenerator({ includeRuntime: true, sourceMap: false }),
     builtins(),
     commonjs({
       include: "node_modules/**",
@@ -38,14 +37,29 @@ export default {
         ]
       }
     }),
-    replace({
-      "process.env.NODE_ENV": '"production"'
-    }),
     babel({
       babelrc: false,
       runtimeHelpers: true,
-      presets: ["flow", ["es2015", { modules: false }], "react", "stage-0"],
-      plugins: ["external-helpers"]
+      presets: [
+        "@babel/react",
+        [
+          "@babel/preset-env",
+          {
+            modules: false
+          }
+        ]
+      ],
+      plugins: [
+        ["@babel/plugin-proposal-class-properties"],
+        "@babel/external-helpers",
+        ["@babel/plugin-proposal-decorators", { legacy: true }],
+        "@babel/plugin-transform-object-assign",
+        "react-require"
+      ]
+    }),
+    nodent({ includeruntime: true, sourcemap: false }),
+    replace({
+      "process.env.NODE_ENV": '"production"'
     })
   ]
 }

@@ -1,10 +1,12 @@
-import React from "react"
+import * as React from "react"
 import { XYFrame } from "../../components"
 
 import DocumentComponent from "../layout/DocumentComponent"
 import { randomNormal } from "d3-random"
 import { scaleThreshold } from "d3-scale"
 import { hexbinning, heatmapping } from "../../components/svg/areaDrawing"
+
+// eslint-disable-next-line
 
 const components = []
 const pointTestData = []
@@ -92,6 +94,81 @@ export default class CreatingXYPlots extends React.Component {
             xAccessor={["x", d => d.x + 1000]}
             yAccessor="y"
             pointStyle={d => ({ fill: d.color })}
+            yExtent={[-8500, 8500]}
+            //            areaType={{ type: "trendline", regressionType: "logarithmic" }}
+            areaStyle={{ stroke: "darkred" }}
+            margin={d => d.size[0] / 20}
+            axes={[
+              {
+                orient: "top",
+                marginalSummaryType: {
+                  filter: d => d.color === "#00a2ce",
+                  type: "ridgeline",
+                  showPoints: true,
+                  summaryStyle: {
+                    fill: "#00a2ce",
+                    stroke: "#00a2ce",
+                    fillOpacity: 0.25
+                  },
+                  pointStyle: {
+                    fill: "#00a2ce",
+                    r: 4,
+                    fillOpacity: 0.05
+                  }
+                }
+              },
+              {
+                orient: "left",
+                baseline: "under",
+                marginalSummaryType: {
+                  filter: d => d.color === "#4d430c",
+                  type: "ridgeline",
+                  bins: 6,
+                  summaryStyle: {
+                    fill: "#4d430c",
+                    stroke: "#4d430c",
+                    fillOpacity: 0.25
+                  }
+                }
+              },
+              {
+                orient: "right",
+                marginalSummaryType: {
+                  filter: d => d.color === "#b3331d",
+                  type: "ridgeline",
+                  showPoints: true,
+                  summaryStyle: {
+                    fill: "#b3331d",
+                    stroke: "#b3331d",
+                    fillOpacity: 0.25
+                  }
+                }
+              },
+              {
+                orient: "top",
+                marginalSummaryType: {
+                  type: "ridgeline",
+                  filter: d => d.color === "#b6a756",
+                  summaryStyle: {
+                    fill: "#b6a756",
+                    stroke: "#b6a756",
+                    fillOpacity: 0.25
+                  },
+                  showPoints: true,
+                  pointStyle: {
+                    fill: "#b6a756",
+                    r: 4,
+                    fillOpacity: 0.05
+                  }
+                }
+              },
+              d => {
+                return {
+                  orient: "bottom",
+                  ticks: Math.ceil(d.size[0] / 150)
+                }
+              }
+            ]}
           />
         </div>
       ),
@@ -498,16 +575,18 @@ export default class CreatingXYPlots extends React.Component {
               type: "heatmap",
               yBins: 10,
               xCellPx: 35,
-              customMark: ({ d }) => (
-                <ellipse
-                  fill={thresholds(d.percent)}
-                  stroke="none"
-                  cx={d.gw / 2}
-                  cy={d.gh / 2}
-                  rx={(d.gw / 2) * d.percent}
-                  ry={(d.gh / 2) * d.percent}
-                />
-              )
+              customMark: ({ d }) => {
+                return (
+                  <ellipse
+                    fill={thresholds(d.percent)}
+                    stroke="none"
+                    cx={d.gw / 2}
+                    cy={d.gh / 2}
+                    rx={(d.gw / 2) * d.percent}
+                    ry={(d.gh / 2) * d.percent}
+                  />
+                )
+              }
             }}
             xAccessor="x"
             yAccessor="y"

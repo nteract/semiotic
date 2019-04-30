@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 import { Mark } from "semiotic-mark"
 
@@ -343,108 +343,6 @@ const titleTypeLabelHash = {
 components.push({
   name: "XYFrame",
   proptypes: `
-    {
-    name: PropTypes.string,
-    lines: PropTypes.oneOfType([
-      PropTypes.array,
-      PropTypes.object
-    ]),
-    points: PropTypes.oneOfType([
-      PropTypes.array,
-      PropTypes.object
-    ]),
-    areas: PropTypes.oneOfType([
-      PropTypes.array,
-      PropTypes.object
-    ]),
-    title: PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.object
-    ]),
-    margin: PropTypes.oneOfType([
-      PropTypes.number,
-      PropTypes.object
-    ]),
-    dataVersion: PropTypes.string,
-    axes: PropTypes.oneOfType([
-      PropTypes.array,
-      PropTypes.object
-    ]),
-    matte: PropTypes.oneOfType([
-      PropTypes.bool,
-      PropTypes.object
-    ]),
-    size: PropTypes.array.isRequired,
-    position: PropTypes.array,
-    xScaleType: PropTypes.func,
-    yScaleType: PropTypes.func,
-    xExtent: PropTypes.array,
-    yExtent: PropTypes.array,
-    invertX: PropTypes.bool,
-    invertY: PropTypes.bool,
-    xAccessor: PropTypes.oneOfType([
-      PropTypes.func,
-      PropTypes.string
-    ]),
-    yAccessor: PropTypes.oneOfType([
-      PropTypes.func,
-      PropTypes.string
-    ]),
-    hoverAnnotation: PropTypes.bool,
-    lineDataAccessor: PropTypes.oneOfType([
-      PropTypes.func,
-      PropTypes.string
-    ]), //are you missing a point data accessor? 
-    areaDataAccessor: PropTypes.oneOfType([
-      PropTypes.func,
-      PropTypes.string
-    ]),
-    backgroundGraphics: PropTypes.oneOfType([
-      PropTypes.array,
-      PropTypes.object
-    ]),
-    foregroundGraphics: PropTypes.oneOfType([
-      PropTypes.array,
-      PropTypes.object
-    ]),
-    additionalDefs: PropTypes.oneOfType([
-      PropTypes.array,
-      PropTypes.object
-    ]),
-    customHoverBehavior: PropTypes.func,
-    customClickBehavior: PropTypes.func,
-    customDoubleClickBehavior: PropTypes.func,
-    lineType: PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.object
-    ]),
-    showLinePoints: PropTypes.bool,
-    defined: PropTypes.func,
-    lineStyle: PropTypes.func,
-    pointStyle: PropTypes.func,
-    areaStyle: PropTypes.func,
-    lineClass: PropTypes.func,
-    pointClass: PropTypes.func,
-    areaClass: PropTypes.func,
-    canvasPoints: PropTypes.func,
-    customPointMark: PropTypes.func,
-    customLineMark: PropTypes.func,
-    lineIDAccessor: PropTypes.func,
-    svgAnnotationRules: PropTypes.func,
-    htmlAnnotationRules: PropTypes.func,
-    tooltipContent: PropTypes.func,
-    annotations: PropTypes.array,
-    annotationSettings: PropTypes.object,
-      // layout : One of "bump" or "marginalia"
-      // if layout is bump you can include, assumes circlular collision
-      //   labelSizeFunction: PropTypes.func, defaults to 5 for circle radius
-      //   pointSizeFunction: PropTypes.func, defaults to 5 for circle radius
-      // if layout is marginalia:     
-      //   orient: One of "left", "right", "nearest"
-    interaction: PropTypes.object,
-    download: PropTypes.bool, //add a download button for graphs data as csv
-    downloadFields: PropTypes.array //additional fields aside from x,y to add to the csv
-    }
   `
 })
 

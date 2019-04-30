@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { data, fieldGraphic } from "../sampledata/stanton"
 import { XYFrame } from "../../components"
 import { scaleLinear } from "d3-scale"

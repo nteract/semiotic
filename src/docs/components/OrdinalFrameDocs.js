@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 import { OrdinalFrame } from "../../components"
 import { randomNormal } from "d3-random"
@@ -96,113 +96,6 @@ const components = []
 components.push({
   name: "OrdinalFrame",
   proptypes: `
-    {
-  name: PropTypes.string,
-  orient: PropTypes.string,
-  title: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.object
-  ]),
-  margin: PropTypes.oneOfType([
-    PropTypes.number,
-    PropTypes.object
-  ]),
-  format: PropTypes.string,
-  properties: PropTypes.object,
-  size: PropTypes.array.isRequired,
-  position: PropTypes.array,
-  oScaleType: PropTypes.func,
-  rScaleType: PropTypes.func,
-  oExtent: PropTypes.array,
-  rExtent: PropTypes.array,
-  invertO: PropTypes.bool,
-  invertR: PropTypes.bool,
-  oAccessor: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.func
-  ]),
-  rAccessor: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.func
-  ]),
-  annotations: PropTypes.array,
-  annotationSettings: PropTypes.object,
-  // layout : One of "bump" or "marginalia"
-  // if layout is bump you can include, assumes circlular collision
-  //   labelSizeFunction: PropTypes.func, defaults to 5 for circle radius
-  //   pointSizeFunction: PropTypes.func, defaults to 5 for circle radius
-  // if layout is marginalia:     
-  //   orient: One of "left", "right", "nearest"
-  //   textHeight: pixel height of label annotation text, defaults to 30
-  //   textPadding: pixel padding between labels, defaults to 5
-  //   margin: distance to right/left between chart and label, defaults to 0
-  customHoverBehavior: PropTypes.func,
-  customClickBehavior: PropTypes.func,
-  optimizeRendering: PropTypes.bool,
-  svgAnnotationRules: PropTypes.func,
-  oPadding: PropTypes.number,
-  projection: PropTypes.string,
-  htmlAnnotationRules: PropTypes.func,
-  type: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.object,
-    PropTypes.func
-  ]),
-  summaryType: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.object
-  ]),
-  connectorType: PropTypes.func,
-  tooltipContent: PropTypes.func,
-  className: PropTypes.string,
-  additionalDefs: PropTypes.oneOfType([
-    PropTypes.array,
-    PropTypes.object
-  ]),
-  interaction: PropTypes.object,
-  renderKey: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.func
-  ]),
-  dataAccessor: PropTypes.func,
-  rBaseline: PropTypes.number,
-  sortO: PropTypes.func,
-  dynamicColumnWidth: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.func
-  ]),
-  renderFn: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.func
-  ]),
-  style: PropTypes.oneOfType([
-    PropTypes.object,
-    PropTypes.func
-  ]),
-  connectorStyle:  PropTypes.oneOfType([
-    PropTypes.object,
-    PropTypes.func
-  ]),
-  summaryStyle:  PropTypes.oneOfType([
-    PropTypes.object,
-    PropTypes.func
-  ]),
-  oLabel: PropTypes.oneOfType([
-    PropTypes.bool,
-    PropTypes.func
-  ]),
-  pixelColumnWidth: PropTypes.number,
-  hoverAnnotation: PropTypes.bool,
-  axis: PropTypes.object,
-  backgroundGraphics:  PropTypes.oneOfType([
-    PropTypes.object,
-    PropTypes.array
-  ]),
-  foregroundGraphics:  PropTypes.oneOfType([
-    PropTypes.object,
-    PropTypes.array
-  ])
-    }
   `
 })
 
@@ -584,7 +477,7 @@ export default class OrdinalFrameDocs extends React.Component {
           <OrdinalFrame
             size={[700, 700]}
             data={dataTypeHash[this.state.dataType].data}
-            axis={{ orient: "left" }}
+            axis={{ orient: "left", baseline: "under" }}
             projection={this.state.projection}
             type={actualType}
             renderMode={
@@ -764,8 +657,8 @@ export default class OrdinalFrameDocs extends React.Component {
               this.state.hoverBehavior === "none"
                 ? ""
                 : this.state.hoverBehavior === "piece"
-                  ? "pieceHoverAnnotation={true}"
-                  : "hoverAnnotation={true}"
+                ? "pieceHoverAnnotation={true}"
+                : "hoverAnnotation={true}"
             }
             ${
               this.state.dynamicColumnWidth === "fixed"

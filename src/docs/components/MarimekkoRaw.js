@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import { OrdinalFrame } from "../../components"
 import ProcessViz from "./ProcessViz"
 
@@ -60,8 +60,9 @@ const data = [
 const mekkoChart = {
   size: [700, 400],
   data: data,
-  rAccessor: "pct",
+  rAccessor: "value",
   oAccessor: "market",
+  projection: "vertical",
   dynamicColumnWidth: "value",
   style: d => ({
     fill: colors[d.segment],
@@ -73,10 +74,16 @@ const mekkoChart = {
     d.market === "Birmingham, AL"
       ? { renderMode: "sketchy", fillWeight: 3, bowing: 5 }
       : { renderMode: "sketchy", fillWeight: 2 },
-  type: "barpercent",
-  axis: { orient: "left", tickFormat: d => `${Math.floor(d * 100)}%` },
-  margin: { left: 55, top: 10, bottom: 80, right: 50 },
-  oLabel: d => <text transform="rotate(45)">{d}</text>
+  type: "bar",
+  axes: [
+    { orient: "left", tickFormat: d => d },
+    { orient: "bottom", tickFormat: d => `${d / 1000}k` }
+  ],
+  margin: { left: 55, top: 50, bottom: 80, right: 50 },
+  oLabel: {
+    orient: "top",
+    label: d => <text transform="rotate(-45)">{d}</text>
+  }
 }
 
 export default (

@@ -1,5 +1,5 @@
 /* global curveBasis data parameters */
-import React from "react"
+import * as React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 // import { OrdinalFrame } from "../../components"
 
@@ -8,17 +8,6 @@ const components = []
 components.push({
   name: "Template",
   proptypes: `
-    {
-      name: PropTypes.string.isRequired,
-      options: PropTypes.array, 
-        //Array of objects with value, label, category(optional) properties
-      className: PropTypes.string,
-      label: PropTypes.string,
-      categories: PropTypes.bool,
-      onChange: PropTypes.func   
-        //Calls onChange with func(this.props.name, newValue, option)
-
-    }
   `
 })
 

@@ -1,4 +1,4 @@
-import React from "react"
+import * as React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 import { Legend } from "../../components"
 
@@ -7,11 +7,6 @@ const components = []
 components.push({
   name: "Legend",
   proptypes: `
-    {
-    title: PropTypes.string,
-    width: PropTypes.number,
-    legendGroups: PropTypes.array
-    }
   `
 })
 
