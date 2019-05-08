@@ -120,7 +120,13 @@ class Axis extends React.Component<AxisProps, AxisState> {
       })
       axisTickLines = (
         <g className={`axis ${className}`}>
-          {axisLines({ axisParts, orient, tickLineGenerator, className })}
+          {axisLines({
+            axisParts,
+            orient,
+            tickLineGenerator,
+            className,
+            scale
+          })}
         </g>
       )
     }
