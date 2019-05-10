@@ -290,7 +290,8 @@ export const axisLines = ({
   tickLineGenerator = defaultTickLineGenerator,
   baseMarkProps,
   className,
-  jaggedBase
+  jaggedBase,
+  scale
 }: {
   axisParts: object[]
   orient: string
@@ -298,6 +299,7 @@ export const axisLines = ({
   baseMarkProps?: GenericObject
   className: string
   jaggedBase?: boolean
+  scale: ScaleLinear<number, number>
 }) => {
   return axisParts.map((axisPart, i) =>
     tickLineGenerator({
@@ -306,7 +308,8 @@ export const axisLines = ({
       i,
       baseMarkProps,
       className,
-      jaggedBase
+      jaggedBase,
+      scale
     })
   ) as React.ReactNode
 }
