@@ -840,7 +840,8 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
               tickLineGenerator: d.tickLineGenerator,
               baseMarkProps,
               className: axisClassname,
-              jaggedBase: d.jaggedBase
+              jaggedBase: d.jaggedBase,
+              scale: axisScale
             })}
             {d.baseline === "under" &&
               baselineGenerator(d.orient, adjustedSize, d.className)}
