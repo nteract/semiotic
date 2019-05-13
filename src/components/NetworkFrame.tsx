@@ -95,7 +95,7 @@ import {
 
 import { desaturationLayer } from "./annotationRules/baseRules"
 
-import { genericFunction } from "./untyped_utilities/functions"
+import { genericFunction } from "./generic_utilities/functions"
 import pathBounds from "svg-path-bounding-box"
 
 import { nodesEdgesFromHierarchy } from "./processing/network"
