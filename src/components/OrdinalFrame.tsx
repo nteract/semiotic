@@ -67,7 +67,7 @@ import {
 import { drawSummaries, renderLaidOutSummaries } from "./svg/summaryLayouts"
 import { stringToFn, stringToArrayFn } from "./data/dataFunctions"
 
-import { genericFunction } from "./untyped_utilities/functions"
+import { genericFunction } from "./generic_utilities/functions"
 
 import {
   AnnotationHandling,
