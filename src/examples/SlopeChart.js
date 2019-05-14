@@ -25,6 +25,7 @@ const frameProps = {
   ],
   axes: [
     {
+      orient: "left",
       tickFormat: d => `${d}%`,
       baseline: false,
       label: { name: "Adults Who Binge Drink" }
