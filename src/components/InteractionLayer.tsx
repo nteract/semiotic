@@ -24,6 +24,7 @@ import { CustomHoverType } from "./types/annotationTypes"
 import { MarginType } from "./types/generalTypes"
 
 import { ScaleLinear } from "d3-scale"
+import { canvasEvent } from "./svg/frameFunctions"
 
 type BaseColumnType = { x: number; width: number }
 
@@ -140,48 +141,33 @@ class InteractionLayer extends React.Component<Props, State> {
         <canvas
           className="frame-canvas-interaction"
           ref={(canvasContext: any) => {
+            const { overlayRegions } = this.state
+            const canvasMap = this.canvasMap
+            const boundCanvasEvent = canvasEvent.bind(
+              null,
+              canvasContext,
+              overlayRegions,
+              canvasMap
+            )
             if (canvasContext) {
               canvasContext.onmousemove = e => {
-                const interactionContext = canvasContext.getContext("2d")
-                const hoverPoint = interactionContext.getImageData(
-                  e.offsetX,
-                  e.offsetY,
-                  1,
-                  1
-                )
-
-                const mostCommonRGB = `rgba(${hoverPoint.data[0]},${
-                  hoverPoint.data[1]
-                },${hoverPoint.data[2]},255)`
-
-                let overlay: React.ReactElement = this.state.overlayRegions[
-                  this.canvasMap.get(mostCommonRGB)
-                ]
-                if (!overlay) {
-                  const hoverArea = interactionContext.getImageData(
-                    e.offsetX - 2,
-                    e.offsetY - 2,
-                    5,
-                    5
-                  )
-                  let x = 0
-
-                  while (!overlay && x < 100) {
-                    overlay = this.state.overlayRegions[
-                      this.canvasMap.get(
-                        `rgba(${hoverArea.data[x]},${hoverArea.data[x + 1]},${
-                          hoverArea.data[x + 2]
-                        },255)`
-                      )
-                    ]
-                    x += 4
-                  }
-                }
-
+                const overlay = boundCanvasEvent(e)
                 if (overlay && overlay.props) {
                   overlay.props.onMouseEnter()
                 } else {
                   this.changeVoronoi()
+                }
+              }
+              canvasContext.onclick = e => {
+                const overlay = boundCanvasEvent(e)
+                if (overlay && overlay.props) {
+                  overlay.props.onClick()
+                }
+              }
+              canvasContext.ondblclick = e => {
+                const overlay = boundCanvasEvent(e)
+                if (overlay && overlay.props) {
+                  overlay.props.onDoubleClick()
                 }
               }
             }

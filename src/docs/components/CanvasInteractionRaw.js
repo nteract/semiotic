@@ -13,12 +13,11 @@ const colors = [
 ]
 
 const cutHash = {
-  "Ideal": colors[0],
-  "Premium": colors[1],
-  "Good": colors[2],
+  Ideal: colors[0],
+  Premium: colors[1],
+  Good: colors[2],
   "Very Good": colors[3],
-  "Fair": colors[4],
-  "Premium": colors[5]
+  Fair: colors[4]
 }
 
 export default class DecisionMatrixExample extends React.Component {
@@ -66,6 +65,12 @@ export default class DecisionMatrixExample extends React.Component {
           ]}
           margin={{ left: 75, bottom: 100, top: 10, right: 10 }}
           hoverAnnotation={true}
+          customClickBehavior={d => {
+            console.info("clicked", d)
+          }}
+          customDoubleClickBehavior={d => {
+            console.info("double-clicked", d)
+          }}
           tooltipContent={d => (
             <div className="tooltip-content">
               <p>Price: ${d.y}</p>
