@@ -154,7 +154,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
       ) {
         let vizX = 0,
           vizY = 0,
-          r = piece.markProps.r
+          r = style.r || piece.markProps.r
         if (piece.markProps.width) {
           const halfWidth = piece.markProps.width / 2
           vizX = piece.markProps.x + halfWidth

@@ -554,6 +554,10 @@ export function clonedAppliedElement({
     markProps.className = `${baseClass} ${classFn(d, i, yi)}`
   }
 
+  if (markProps.style.r) {
+    markProps.r = markProps.style.r
+  }
+
   if (!markProps.markType) {
     const RenderableMark = markProps as React.ComponentClass
     return React.createElement(RenderableMark)

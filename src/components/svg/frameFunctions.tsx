@@ -723,7 +723,8 @@ export const orFrameAxisGenerator = ({
         orient,
         baseMarkProps: {},
         tickLineGenerator: d.tickLineGenerator,
-        jaggedBase: d.jaggedBase
+        jaggedBase: d.jaggedBase,
+        scale: axisScale
       })
 
       axesTickLines.push(axisTickLines)
