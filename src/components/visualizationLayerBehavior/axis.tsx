@@ -105,8 +105,9 @@ export function generateTickValues(tickValues, ticks, scale) {
     if (!ticks) {
       ticks = Math.max(1, Math.floor(axisSize / 40))
     }
-    tickValues = scale.ticks(ticks)
+    tickValues = (scale.ticks && scale.ticks(ticks)) || scale.domain()
   }
+
   return tickValues
 }
 
@@ -197,6 +198,7 @@ export function axisPieces({
 
   return generatedTicks.map((tick, i) => {
     const tickPosition = scale(tick)
+
     return {
       [position1]: tickPosition,
       [position2]: tickPosition,

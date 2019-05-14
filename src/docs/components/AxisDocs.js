@@ -1,7 +1,7 @@
 import * as React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 import { Axis } from "../../components"
-import { scaleLinear, scaleTime } from "d3-scale"
+import { scaleLinear, scaleTime, scaleThreshold } from "d3-scale"
 
 const components = []
 // Add your component proptype data here
@@ -86,9 +86,18 @@ export default class AxisDocs extends React.Component {
             Change Domain
           </button>
           <svg style={{ height: "600px", width: "700px" }}>
-            <g transform={"translate(100,20)"}>
+            <g transform={"translate(200,20)"}>
               <Axis
                 size={[200, 200]}
+                scale={scaleThreshold()
+                  .domain([1, 2, 3])
+                  .range([0, 50, 100, 200])}
+                orient="left"
+              />
+            </g>
+            <g transform={"translate(100,20)"}>
+              <Axis
+                size={[50, 200]}
                 scale={scaleLinear()
                   .domain(this.state.fixedDomain)
                   .range([200, 0])}
