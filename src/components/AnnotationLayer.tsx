@@ -161,7 +161,7 @@ class AnnotationLayer extends React.Component<
         characterWidth = 8,
         lineHeight = 20,
         padding = 2,
-        axisMarginOverride = null
+        axisMarginOverride = {}
       } = layout
       const finalOrientation =
         orient === "nearest"
@@ -169,13 +169,6 @@ class AnnotationLayer extends React.Component<
           : Array.isArray(orient)
           ? orient
           : [orient]
-      const finalAxisMarginOverride = {
-        top: null,
-        right: null,
-        bottom: null,
-        left: null,
-        ...axisMarginOverride
-      }
 
       const leftOn = finalOrientation.find(d => d === "left")
       const rightOn = finalOrientation.find(d => d === "right")
@@ -213,11 +206,11 @@ class AnnotationLayer extends React.Component<
       //Adjust the margins based on which regions are active
 
       const leftForce = new labella.Force({
-        minPos: finalAxisMarginOverride.top
-          ? 0 + finalAxisMarginOverride.top
+        minPos: axisMarginOverride.top !== undefined
+          ? 0 + axisMarginOverride.top
           : 0 - margin.top,
-        maxPos: finalAxisMarginOverride.bottom
-          ? size[1] - finalAxisMarginOverride.bottom
+        maxPos: axisMarginOverride.bottom !== undefined
+          ? size[1] - axisMarginOverride.bottom
           : bottomOn
           ? size[1]
           : size[1] + margin.bottom
@@ -235,13 +228,13 @@ class AnnotationLayer extends React.Component<
         .compute()
 
       const rightForce = new labella.Force({
-        minPos: finalAxisMarginOverride.top
-          ? 0 + finalAxisMarginOverride.top
+        minPos: axisMarginOverride.top !== undefined
+          ? 0 + axisMarginOverride.top
           : topOn
           ? 0
           : 0 - margin.top,
-        maxPos: finalAxisMarginOverride.bottom
-          ? size[1] - finalAxisMarginOverride.bottom
+        maxPos: axisMarginOverride.bottom !== undefined
+          ? size[1] - axisMarginOverride.bottom
           : size[1] + margin.bottom
       })
         .nodes(
@@ -257,13 +250,13 @@ class AnnotationLayer extends React.Component<
         .compute()
 
       const topForce = new labella.Force({
-        minPos: finalAxisMarginOverride.left
-          ? 0 + finalAxisMarginOverride.left
+        minPos: axisMarginOverride.left !== undefined
+          ? 0 + axisMarginOverride.left
           : leftOn
           ? 0
           : 0 - margin.left,
-        maxPos: finalAxisMarginOverride.right
-          ? size[0] - finalAxisMarginOverride.right
+        maxPos: axisMarginOverride.right !== undefined
+          ? size[0] - axisMarginOverride.right
           : size[0] + margin.right
       })
         .nodes(
@@ -278,11 +271,11 @@ class AnnotationLayer extends React.Component<
         .compute()
 
       const bottomForce = new labella.Force({
-        minPos: finalAxisMarginOverride.left
-          ? 0 + finalAxisMarginOverride.left
+        minPos: axisMarginOverride.left !== undefined
+          ? 0 + axisMarginOverride.left
           : 0 - margin.left,
-        maxPos: finalAxisMarginOverride.right
-          ? size[0] - finalAxisMarginOverride.right
+        maxPos: axisMarginOverride.right !== undefined
+          ? size[0] - axisMarginOverride.right
           : rightOn
           ? size[0]
           : size[0] + margin.right
