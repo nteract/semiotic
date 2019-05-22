@@ -789,9 +789,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
           if (pieceType.type === "bar") {
             piece.scaledValue =
               projection === "vertical"
-                ? negativeOffset -
-                  rScaleReverse(rScale(negativeBaseValue - piece.value))
-                : rScale(negativeBaseValue - piece.value) - negativeOffset
+                ? Math.abs(rScale(piece.value) - rScale(0))
+                : Math.abs(rScale(piece.value) - zeroValue)
 
             negativeBaseValue += piece.value
           }

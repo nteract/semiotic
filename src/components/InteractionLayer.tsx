@@ -137,59 +137,63 @@ class InteractionLayer extends React.Component<Props, State> {
 
     this.state = {
       overlayRegions: this.calculateOverlay(props),
-      interactionCanvas: (
-        <canvas
-          className="frame-canvas-interaction"
-          ref={(canvasContext: any) => {
-            const { overlayRegions } = this.state
-            const canvasMap = this.canvasMap
-            const boundCanvasEvent = canvasEvent.bind(
-              null,
-              canvasContext,
-              overlayRegions,
-              canvasMap
-            )
-            if (canvasContext) {
-              canvasContext.onmousemove = e => {
-                const overlay = boundCanvasEvent(e)
-                if (overlay && overlay.props) {
-                  overlay.props.onMouseEnter()
-                } else {
-                  this.changeVoronoi()
-                }
-              }
-              canvasContext.onclick = e => {
-                const overlay = boundCanvasEvent(e)
-                if (overlay && overlay.props) {
-                  overlay.props.onClick()
-                }
-              }
-              canvasContext.ondblclick = e => {
-                const overlay = boundCanvasEvent(e)
-                if (overlay && overlay.props) {
-                  overlay.props.onDoubleClick()
-                }
-              }
-            }
-            this.interactionContext = canvasContext
-          }}
-          style={{
-            position: "absolute",
-            left: `0px`,
-            top: `0px`,
-            imageRendering: "pixelated",
-            pointerEvents: "all",
-            opacity: 0
-          }}
-          width={props.svgSize[0]}
-          height={props.svgSize[1]}
-        />
-      )
+      interactionCanvas: this.generateInteractionCanvas(props)
     }
   }
 
   static defaultProps = {
     svgSize: [500, 500]
+  }
+
+  generateInteractionCanvas = props => {
+    return (
+      <canvas
+        className="frame-canvas-interaction"
+        ref={(canvasContext: any) => {
+          const { overlayRegions } = this.state
+          const canvasMap = this.canvasMap
+          const boundCanvasEvent = canvasEvent.bind(
+            null,
+            canvasContext,
+            overlayRegions,
+            canvasMap
+          )
+          if (canvasContext) {
+            canvasContext.onmousemove = e => {
+              const overlay = boundCanvasEvent(e)
+              if (overlay && overlay.props) {
+                overlay.props.onMouseEnter()
+              } else {
+                this.changeVoronoi()
+              }
+            }
+            canvasContext.onclick = e => {
+              const overlay = boundCanvasEvent(e)
+              if (overlay && overlay.props) {
+                overlay.props.onClick()
+              }
+            }
+            canvasContext.ondblclick = e => {
+              const overlay = boundCanvasEvent(e)
+              if (overlay && overlay.props) {
+                overlay.props.onDoubleClick()
+              }
+            }
+          }
+          this.interactionContext = canvasContext
+        }}
+        style={{
+          position: "absolute",
+          left: `0px`,
+          top: `0px`,
+          imageRendering: "pixelated",
+          pointerEvents: "all",
+          opacity: 0
+        }}
+        width={props.svgSize[0]}
+        height={props.svgSize[1]}
+      />
+    )
   }
 
   interactionContext = null
@@ -399,7 +403,10 @@ class InteractionLayer extends React.Component<Props, State> {
       this.props.yScale !== nextProps.yScale ||
       this.props.hoverAnnotation !== nextProps.hoverAnnotation
     ) {
-      this.setState({ overlayRegions: this.calculateOverlay(nextProps) })
+      this.setState({
+        overlayRegions: this.calculateOverlay(nextProps),
+        interactionCanvas: this.generateInteractionCanvas(nextProps)
+      })
     }
   }
 
