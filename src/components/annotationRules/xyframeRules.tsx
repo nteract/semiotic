@@ -81,7 +81,8 @@ export const svgHighlight = ({
   idAccessor,
   xScale,
   yScale,
-  xyFrameRender
+  xyFrameRender,
+  defined
 }: {
   d: ProjectedPoint
   i?: number
@@ -95,6 +96,7 @@ export const svgHighlight = ({
   xScale: ScaleLinear<number, number>
   yScale: ScaleLinear<number, number>
   xyFrameRender: any
+  defined: Function
 }) => {
   let dID
   const baseID = idAccessor({ ...d, ...d.data }, i)
@@ -151,6 +153,12 @@ export const svgHighlight = ({
 
   if (actualInterpolator) {
     lineGenerator.curve(actualInterpolator)
+  }
+
+  console.log("lines", lines)
+
+  if (defined) {
+    lineGenerator.defined((p, q) => defined(p.data, q))
   }
 
   const foundLines = lines.data

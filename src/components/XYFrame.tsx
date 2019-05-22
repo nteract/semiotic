@@ -1083,7 +1083,7 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       styleFn: (args?: GenericObject, index?: number) => GenericObject
     }
   }) => {
-    const showLinePoints = this.props.showLinePoints
+    const { showLinePoints, defined } = this.props
 
     const { xyFrameRender, xScale, yScale, xAccessor, yAccessor } = this.state
 
@@ -1100,7 +1100,8 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
         points,
         xScale,
         yScale,
-        xyFrameRender
+        xyFrameRender,
+        defined
       })
     }
 
