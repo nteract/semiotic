@@ -155,8 +155,6 @@ export const svgHighlight = ({
     lineGenerator.curve(actualInterpolator)
   }
 
-  console.log("lines", lines)
-
   if (defined) {
     lineGenerator.defined((p, q) => defined(p.data, q))
   }
