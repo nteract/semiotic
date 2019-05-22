@@ -21,7 +21,7 @@ const cutHash = {
 }
 
 export default class DecisionMatrixExample extends React.Component {
-  state = { parsedDiamonds: [] }
+  state = { parsedDiamonds: [], size: [700, 700] }
   constructor(props) {
     super(props)
 
@@ -43,14 +43,22 @@ export default class DecisionMatrixExample extends React.Component {
   }
 
   render() {
-    const { parsedDiamonds } = this.state
+    const { parsedDiamonds, size } = this.state
     if (parsedDiamonds.length === 0) return <div>Loading...</div>
     return (
       <div>
+        <button
+          onClick={() => {
+            this.setState({ size: [500, 500] })
+          }}
+          style={{ color: "black" }}
+        >
+          Change Size
+        </button>
         <XYFrame
           title="canvas interaction"
           points={parsedDiamonds}
-          size={[700, 700]}
+          size={size}
           xAccessor="x"
           yAccessor="y"
           pointStyle={d => ({ fill: d.color, fillOpacity: 0.9 })}
