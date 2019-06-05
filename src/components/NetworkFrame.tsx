@@ -1197,11 +1197,12 @@ class NetworkFrame extends React.Component<
         const {
           iterations = 500,
           edgeStrength = 0.1,
-          edgeDistance
+          edgeDistance,
+          padding = 0
         } = networkSettings
 
-        let currentX = 0
-        let currentY = 0
+        let currentX = padding
+        let currentY = padding
 
         components.forEach(({ componentNodes, componentEdges }) => {
           const linkForce = forceLink().strength(d =>
@@ -1220,17 +1221,17 @@ class NetworkFrame extends React.Component<
 
           if (layoutDirection === "horizontal") {
             if (yBound > size[1]) {
-              currentX = componentLayoutSize + currentX
-              currentY = componentLayoutSize
+              currentX = componentLayoutSize + currentX + padding
+              currentY = componentLayoutSize + padding
             } else {
-              currentY = componentLayoutSize + currentY
+              currentY = componentLayoutSize + currentY + padding
             }
           } else {
             if (xBound > size[0]) {
-              currentY = componentLayoutSize + currentY
-              currentX = componentLayoutSize
+              currentY = componentLayoutSize + currentY + padding
+              currentX = componentLayoutSize + padding
             } else {
-              currentX = componentLayoutSize + currentX
+              currentX = componentLayoutSize + currentX + padding
             }
           }
 
