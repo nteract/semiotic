@@ -43,7 +43,8 @@ import {
 
 const whichPointsHash = {
   top: projectedYTop,
-  bottom: projectedYBottom
+  bottom: projectedYBottom,
+  orphan: projectedY
 }
 
 const builtInTransformations = {
@@ -271,18 +272,48 @@ export const calculateDataExtent = ({
         showLinePoints === true
           ? projectedYMiddle
           : whichPointsHash[showLinePoints]
-      projectedPoints = fullDataset.map(d => {
-        return {
-          ...d,
-          [projectedY]:
-            d[whichPoints] !== undefined
-              ? d[whichPoints]
-              : d[projectedYMiddle] !== undefined
-              ? d[projectedYMiddle]
-              : d[projectedYBottom] !== undefined
-              ? d[projectedYBottom]
-              : d.y
-        }
+      projectedPoints = []
+
+      projectedLines.forEach((d: ProjectedLine) => {
+        d.data
+          .filter((p, q) => {
+            const isDefined = defined(Object.assign({}, p.data, p))
+            if (isDefined) {
+              if (showLinePoints === "orphan") {
+                const prePoint = d.data[q - 1]
+                const postPoint = d.data[q + 1]
+
+                if (
+                  (!prePoint ||
+                    !defined(Object.assign({}, prePoint.data, prePoint))) &&
+                  (!postPoint ||
+                    !defined(Object.assign({}, postPoint.data, postPoint)))
+                ) {
+                  return true
+                } else {
+                  return false
+                }
+              } else {
+                return true
+              }
+            } else {
+              return false
+            }
+          })
+          .forEach(p => {
+            projectedPoints.push({
+              ...p,
+              parentLine: d,
+              [projectedY]:
+                p[whichPoints] !== undefined
+                  ? p[whichPoints]
+                  : p[projectedYMiddle] !== undefined
+                  ? p[projectedYMiddle]
+                  : p[projectedYBottom] !== undefined
+                  ? p[projectedYBottom]
+                  : p.y
+            })
+          })
       })
     }
   }

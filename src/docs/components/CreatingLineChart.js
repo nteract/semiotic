@@ -63,7 +63,7 @@ const movies = [
       {
         week: 4,
         grossWeekly: 3615000,
-        theaterCount: 1279,
+        theaterCount: 1500,
         theaterAvg: 2826,
         date: "2015-05-01",
         rank: 6
@@ -79,7 +79,7 @@ const movies = [
       {
         week: 6,
         grossWeekly: 3108609,
-        theaterCount: 1718,
+        theaterCount: 1200,
         theaterAvg: 1809,
         date: "2015-05-15",
         rank: 9
@@ -95,7 +95,7 @@ const movies = [
       {
         week: 8,
         grossWeekly: 1122034,
-        theaterCount: 506,
+        theaterCount: null,
         theaterAvg: 2217,
         date: "2015-05-29",
         rank: 13
@@ -111,7 +111,7 @@ const movies = [
       {
         week: 10,
         grossWeekly: 316877,
-        theaterCount: 194,
+        theaterCount: null,
         theaterAvg: 1633,
         date: "2015-06-12",
         rank: 20
@@ -477,6 +477,9 @@ export default class CreatingLineChart extends React.Component {
               stroke: d.title === "Ex Machina" ? "#00a2ce" : "red",
               fill: "none"
             })}
+            pointStyle={d => ({
+              fill: d.parentLine.title === "Ex Machina" ? "#00a2ce" : "red"
+            })}
             margin={{ left: 80, bottom: 50, right: 10, top: 40 }}
             axes={[
               {
@@ -520,6 +523,8 @@ export default class CreatingLineChart extends React.Component {
                 />
               </g>
             )}
+            defined={d => d.theaterCount !== null}
+            showLinePoints={"orphan"}
           />
           <h3>Flat Data</h3>
           <ResponsiveXYFrame
