@@ -6,19 +6,19 @@ const cleanDates = value => {
 }
 
 interface XYRowType {
-  x?: number;
-  y?: number;
-  id?: string;
+  x?: number
+  y?: number
+  id?: string
 }
 interface OrdinalRowType {
-  column?: string;
-  value?: number;
-  id?: string;
+  column?: string
+  value?: number
+  id?: string
 }
 interface NetworkRowType {
-  source?: string;
-  target?: string;
-  id?: string;
+  source?: string
+  target?: string
+  id?: string
 }
 
 export const xyDownloadMapping = ({
@@ -29,8 +29,12 @@ export const xyDownloadMapping = ({
 }) => {
   const csvData = []
 
+  if (!xAccessor) {
+    return data
+  }
+
   data.forEach(
-    (datum: { id?: string, data: object, x?: number, y?: number }) => {
+    (datum: { id?: string; data: object; x?: number; y?: number }) => {
       if (Array.isArray(datum)) {
         xAccessor.forEach(actualXAccessor => {
           yAccessor.forEach(actualYAccessor => {
