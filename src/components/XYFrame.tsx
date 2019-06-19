@@ -205,6 +205,9 @@ export type XYFrameProps = {
   useAreasAsInteractionLayer?: boolean
   useSummariesAsInteractionLayer?: boolean
   onUnmount?: Function
+  filterRenderedLines?: Function
+  filterRenderedPoints?: Function
+  filterRenderedSummaries?: Function
 }
 
 type AnnotatedSettingsProps = {
@@ -555,7 +558,10 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       xAccessor,
       useSummariesAsInteractionLayer,
       useAreasAsInteractionLayer = useSummariesAsInteractionLayer,
-      baseMarkProps
+      baseMarkProps,
+      filterRenderedLines,
+      filterRenderedSummaries,
+      filterRenderedPoints
     } = currentProps
     let {
       projectedLines,
@@ -737,7 +743,10 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
           chartSize: size,
           xScaleType,
           yScaleType,
-          defined
+          defined,
+          filterRenderedLines,
+          filterRenderedSummaries,
+          filterRenderedPoints
         }))
       }
 

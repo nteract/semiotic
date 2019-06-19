@@ -150,6 +150,9 @@ type CalculateDataTypes = {
   baseMarkProps?: object
   margin: object
   defined?: Function
+  filterRenderedLines: Function
+  filterRenderedSummaries: Function
+  filterRenderedPoints: Function
 }
 
 export const calculateDataExtent = ({
@@ -175,6 +178,9 @@ export const calculateDataExtent = ({
   summaryClassFn,
   summaryRenderModeFn,
   chartSize,
+  filterRenderedLines,
+  filterRenderedSummaries,
+  filterRenderedPoints,
   defined = () => true
 }: CalculateDataTypes) => {
   let fullDataset: Array<ProjectedPoint | ProjectedBin | ProjectedSummary> = []
@@ -517,6 +523,25 @@ export const calculateDataExtent = ({
       ...projectedSummaries.map(d => ({ ...d })),
       ...fullDataset.filter(d => !d.parentSummary)
     ]
+  }
+
+  if (filterRenderedLines) {
+    projectedLines = projectedLines.filter(filterRenderedLines)
+    fullDataset = fullDataset.filter((d, i) =>
+      filterRenderedLines(!d.parentLine || filterRenderedLines(d.parentLine))
+    )
+  }
+  if (filterRenderedPoints) {
+    projectedLines = projectedPoints.filter(filterRenderedPoints)
+    fullDataset = fullDataset.filter(filterRenderedPoints)
+  }
+  if (filterRenderedSummaries) {
+    projectedLines = projectedSummaries.filter(filterRenderedSummaries)
+    fullDataset = fullDataset.filter((d, i) =>
+      filterRenderedLines(
+        !d.parentSummary || filterRenderedLines(d.parentSummary)
+      )
+    )
   }
 
   return {

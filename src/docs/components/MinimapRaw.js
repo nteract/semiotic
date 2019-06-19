@@ -45,6 +45,7 @@ export default (brushFunction, extent, selectedExtent) => {
     xExtent: selectedExtent,
     matte: true,
     margin: { left: 50, top: 10, bottom: 50, right: 20 },
+    filterRenderedLines: (d, i) => d.label !== "4d430c" && i < 10,
     minimap: {
       margin: { top: 20, bottom: 35, left: 20, right: 20 },
       brushEnd: brushFunction,

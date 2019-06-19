@@ -23,7 +23,7 @@ import { Interactivity } from "./types/interactionTypes"
 import { CustomHoverType } from "./types/annotationTypes"
 import { MarginType } from "./types/generalTypes"
 
-import { ScaleLinear } from "d3-scale"
+import { ScaleLinear, scaleLinear } from "d3-scale"
 import { canvasEvent } from "./svg/frameFunctions"
 
 type BaseColumnType = { x: number; width: number }
@@ -627,7 +627,7 @@ class InteractionLayer extends React.Component<Props, State> {
   }
 
   createColumnsBrush = (interaction: Interactivity) => {
-    const { projection, rScale, size, oColumns, renderPipeline } = this.props
+    const { projection, rScale, oColumns, renderPipeline } = this.props
 
     if (!projection || !rScale || !oColumns) return
 
@@ -640,19 +640,23 @@ class InteractionLayer extends React.Component<Props, State> {
 
     let semioticBrush, mappingFn
 
-    const max = rScale.domain()[1]
+    const rScaleReverse = rScale
+      .copy()
+      .domain(rScale.domain())
+      .range(rScale.domain().reverse())
 
     if (projection && projection === "horizontal") {
       mappingFn = (d): null | Array<number> =>
         !d ? null : [rScale.invert(d[0]), rScale.invert(d[1])]
     } else
-      mappingFn = (d): null | Array<number> =>
-        !d
+      mappingFn = (d): null | Array<number> => {
+        return !d
           ? null
           : [
-              Math.abs(rScale.invert(d[1]) - max),
-              Math.abs(rScale.invert(d[0]) - max)
+              rScaleReverse(rScale.invert(d[1])),
+              rScaleReverse(rScale.invert(d[0]))
             ]
+      }
 
     const rRange = rScale.range()
 
