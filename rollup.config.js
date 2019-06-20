@@ -2,6 +2,7 @@ import node from "rollup-plugin-node-resolve"
 import babel from "rollup-plugin-babel"
 import commonjs from "rollup-plugin-commonjs"
 import builtins from "rollup-plugin-node-builtins"
+import globals from "rollup-plugin-node-globals"
 import replace from "rollup-plugin-replace"
 import nodent from "rollup-plugin-nodent"
 import typescript from "rollup-plugin-typescript"
@@ -24,6 +25,7 @@ export default {
   plugins: [
     typescript(),
     node({ jsnext: true, preferBuiltins: false }),
+    globals(),
     builtins(),
     commonjs({
       include: "node_modules/**",
@@ -34,9 +36,7 @@ export default {
           "sankeyCenter",
           "sankeyRight",
           "sankeyJustify"
-        ],
-        "node_modules/process/index.js": ["nextTick"],
-        "node_modules/events/events.js": ["EventEmitter"]
+        ]
       }
     }),
     babel({
