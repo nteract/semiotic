@@ -13,7 +13,7 @@ export default {
     file: "dist/semiotic.js",
     name: "Semiotic",
     globals: {
-      "react": "React",
+      react: "React",
       "react-dom": "ReactDOM"
     }
   },
@@ -34,7 +34,9 @@ export default {
           "sankeyCenter",
           "sankeyRight",
           "sankeyJustify"
-        ]
+        ],
+        "node_modules/process/index.js": ["nextTick"],
+        "node_modules/events/events.js": ["EventEmitter"]
       }
     }),
     babel({
