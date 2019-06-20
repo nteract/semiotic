@@ -84,6 +84,7 @@ import {
   CanvasPostProcessTypes,
   accessorType,
   ProjectedSummary,
+  ProjectedBin,
   ProjectedLine,
   GenericObject,
   LineTypeSettings,
@@ -196,7 +197,7 @@ export type XYFrameProps = {
   customSummaryMark?: Function
   lineIDAccessor?: GenericAccessor<string> | string
   minimap?: object
-  fullDataset?: ProjectedPoint[]
+  fullDataset?: Array<ProjectedPoint | ProjectedBin | ProjectedSummary>
   projectedLines?: ProjectedLine[]
   projectedAreas?: Array<ProjectedSummary>
   projectedSummaries?: Array<ProjectedSummary>
@@ -205,9 +206,21 @@ export type XYFrameProps = {
   useAreasAsInteractionLayer?: boolean
   useSummariesAsInteractionLayer?: boolean
   onUnmount?: Function
-  filterRenderedLines?: Function
-  filterRenderedPoints?: Function
-  filterRenderedSummaries?: Function
+  filterRenderedLines?: (
+    value: ProjectedLine,
+    index: number,
+    array: ProjectedLine[]
+  ) => any
+  filterRenderedSummaries?: (
+    value: ProjectedSummary,
+    index: number,
+    array: ProjectedSummary[]
+  ) => any
+  filterRenderedPoints?: (
+    value: ProjectedPoint | ProjectedBin | ProjectedSummary,
+    index: number,
+    array: (ProjectedPoint | ProjectedBin | ProjectedSummary)[]
+  ) => any
 }
 
 type AnnotatedSettingsProps = {
@@ -233,8 +246,8 @@ export type XYFrameState = {
   summaryData?: RawSummary[] | RawSummary
   projectedLines?: ProjectedLine[]
   projectedPoints?: ProjectedPoint[]
-  projectedSummaries?: ProjectedPoint[]
-  fullDataset: ProjectedPoint[]
+  projectedSummaries?: ProjectedSummary[]
+  fullDataset: Array<ProjectedPoint | ProjectedBin | ProjectedSummary>
   adjustedPosition: number[]
   adjustedSize: number[]
   backgroundGraphics?: React.ReactNode | Function
@@ -304,7 +317,9 @@ const projectedCoordinateNames = {
   xBottom: projectedXBottom
 }
 
-function mapParentsToPoints(fullDataset: ProjectedPoint[]) {
+function mapParentsToPoints(
+  fullDataset: Array<ProjectedPoint | ProjectedBin | ProjectedSummary>
+) {
   return fullDataset.map((d: ProjectedPoint) => {
     if (d.parentLine) {
       return Object.assign({}, d.parentLine, d)
@@ -784,6 +799,9 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
         }))
       }
     }
+
+    console.log("projectedPoints", projectedPoints)
+    console.log("projectedLines", projectedLines)
 
     xExtent =
       Array.isArray(xExtentSettings.extent) &&

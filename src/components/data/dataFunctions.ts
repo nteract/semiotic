@@ -150,9 +150,21 @@ type CalculateDataTypes = {
   baseMarkProps?: object
   margin: object
   defined?: Function
-  filterRenderedLines: Function
-  filterRenderedSummaries: Function
-  filterRenderedPoints: Function
+  filterRenderedLines: (
+    value: ProjectedLine,
+    index: number,
+    array: ProjectedLine[]
+  ) => any
+  filterRenderedSummaries: (
+    value: ProjectedSummary,
+    index: number,
+    array: ProjectedSummary[]
+  ) => any
+  filterRenderedPoints: (
+    value: ProjectedPoint | ProjectedBin | ProjectedSummary,
+    index: number,
+    array: (ProjectedPoint | ProjectedBin | ProjectedSummary)[]
+  ) => any
 }
 
 export const calculateDataExtent = ({
@@ -278,7 +290,6 @@ export const calculateDataExtent = ({
         showLinePoints === true
           ? projectedYMiddle
           : whichPointsHash[showLinePoints]
-      projectedPoints = []
 
       projectedLines.forEach((d: ProjectedLine) => {
         d.data
@@ -527,21 +538,18 @@ export const calculateDataExtent = ({
 
   if (filterRenderedLines) {
     projectedLines = projectedLines.filter(filterRenderedLines)
-    fullDataset = fullDataset.filter((d, i) =>
-      filterRenderedLines(!d.parentLine || filterRenderedLines(d.parentLine))
-    )
+    fullDataset = fullDataset.filter((d: ProjectedPoint, i) => {
+      return !d.parentLine || filterRenderedLines(d.parentLine, i, [])
+    })
   }
   if (filterRenderedPoints) {
-    projectedLines = projectedPoints.filter(filterRenderedPoints)
     fullDataset = fullDataset.filter(filterRenderedPoints)
   }
   if (filterRenderedSummaries) {
-    projectedLines = projectedSummaries.filter(filterRenderedSummaries)
-    fullDataset = fullDataset.filter((d, i) =>
-      filterRenderedLines(
-        !d.parentSummary || filterRenderedLines(d.parentSummary)
-      )
-    )
+    projectedSummaries = projectedSummaries.filter(filterRenderedSummaries)
+    fullDataset = fullDataset.filter((d: ProjectedPoint, i) => {
+      return !d.parentSummary || filterRenderedSummaries(d.parentSummary, i, [])
+    })
   }
 
   return {

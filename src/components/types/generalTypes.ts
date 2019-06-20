@@ -15,8 +15,8 @@ export interface ProjectedPoint {
   yTop?: number
   yMiddle?: number
   yBottom?: number
-  parentSummary?: object
-  parentLine?: object
+  parentSummary?: ProjectedSummary
+  parentLine?: ProjectedLine
   percent?: number
   data?: object
   _XYFrameRank?: number
