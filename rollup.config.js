@@ -25,8 +25,6 @@ export default {
   plugins: [
     typescript(),
     node({ jsnext: true, preferBuiltins: false }),
-    globals(),
-    builtins(),
     commonjs({
       include: "node_modules/**",
       namedExports: {
@@ -36,9 +34,13 @@ export default {
           "sankeyCenter",
           "sankeyRight",
           "sankeyJustify"
-        ]
+        ],
+        "node_modules/process/index.js": ["nextTick"],
+        "node_modules/events/events.js": ["EventEmitter"]
       }
     }),
+    globals(),
+    builtins(),
     babel({
       babelrc: false,
       runtimeHelpers: true,
