@@ -800,9 +800,6 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       }
     }
 
-    console.log("projectedPoints", projectedPoints)
-    console.log("projectedLines", projectedLines)
-
     xExtent =
       Array.isArray(xExtentSettings.extent) &&
       xExtentSettings.extent.length === 2
