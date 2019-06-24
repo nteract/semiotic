@@ -21,7 +21,7 @@ export default {
   /*  exports: "named",
   interop: false,
   , */
-  external: ["react", "react-dom"],
+  external: ["react", "react-dom", "process"],
   plugins: [
     typescript(),
     node({ jsnext: true, preferBuiltins: false }),
