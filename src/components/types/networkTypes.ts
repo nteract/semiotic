@@ -82,6 +82,7 @@ export interface NetworkSettingsType {
   customSankey?: Function
   groupWidth?: number
   padAngle?: number
+  padding?: number
   orient?: string
   nodePadding?: number
   nodePaddingRatio?: number

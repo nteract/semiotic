@@ -18,7 +18,7 @@ function flatShortArray(array) {
     .map(
       d =>
         (d instanceof Date && d.toString()) ||
-        (d && d.toFixed && d.toFixed(2)) ||
+        (d !== undefined && d.toFixed && d.toFixed(2)) ||
         "empty"
     )
     .toString()

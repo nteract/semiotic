@@ -20,6 +20,7 @@
     "indent": "off",
     "no-empty-function": "off",
     "react/prefer-stateless-function": "off",
-    "no-shadow": "off"
+    "no-shadow": "off",
+    "quote-props": "off"
   }
 }

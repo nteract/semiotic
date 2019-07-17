@@ -447,8 +447,8 @@ export default class CreatingLineChart extends React.Component {
           <XYFrame
             size={[650, 400]}
             lines={movies}
-            xScaleType={scaleTime()}
-            xAccessor={d => new Date(d.date)}
+            //            xScaleType={scaleTime()}
+            xAccessor={"week"}
             yAccessor={"grossWeekly"}
             lineType={"line"}
             lineStyle={d => ({
@@ -463,7 +463,8 @@ export default class CreatingLineChart extends React.Component {
               },
               {
                 orient: "bottom",
-                tickFormat: d => `${d.getMonth()}/${d.getDate()}`,
+                tickFormat: d =>
+                  (d.getMonth && `${d.getMonth()}/${d.getDate()}`) || d,
                 ticks: 5
               }
             ]}
@@ -475,6 +476,7 @@ export default class CreatingLineChart extends React.Component {
               }
             ]}
             lineIDAccessor={d => d.title}
+            defined={d => d.week !== 3 && d.week !== 4}
           />
         </div>
       ),

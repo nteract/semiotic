@@ -23,7 +23,8 @@ import { Interactivity } from "./types/interactionTypes"
 import { CustomHoverType } from "./types/annotationTypes"
 import { MarginType } from "./types/generalTypes"
 
-import { ScaleLinear } from "d3-scale"
+import { ScaleLinear, scaleLinear } from "d3-scale"
+import { canvasEvent } from "./svg/frameFunctions"
 
 type BaseColumnType = { x: number; width: number }
 
@@ -136,74 +137,63 @@ class InteractionLayer extends React.Component<Props, State> {
 
     this.state = {
       overlayRegions: this.calculateOverlay(props),
-      interactionCanvas: (
-        <canvas
-          className="frame-canvas-interaction"
-          ref={(canvasContext: any) => {
-            if (canvasContext) {
-              canvasContext.onmousemove = e => {
-                const interactionContext = canvasContext.getContext("2d")
-                const hoverPoint = interactionContext.getImageData(
-                  e.offsetX,
-                  e.offsetY,
-                  1,
-                  1
-                )
-
-                const mostCommonRGB = `rgba(${hoverPoint.data[0]},${
-                  hoverPoint.data[1]
-                },${hoverPoint.data[2]},255)`
-
-                let overlay: React.ReactElement = this.state.overlayRegions[
-                  this.canvasMap.get(mostCommonRGB)
-                ]
-                if (!overlay) {
-                  const hoverArea = interactionContext.getImageData(
-                    e.offsetX - 2,
-                    e.offsetY - 2,
-                    5,
-                    5
-                  )
-                  let x = 0
-
-                  while (!overlay && x < 100) {
-                    overlay = this.state.overlayRegions[
-                      this.canvasMap.get(
-                        `rgba(${hoverArea.data[x]},${hoverArea.data[x + 1]},${
-                          hoverArea.data[x + 2]
-                        },255)`
-                      )
-                    ]
-                    x += 4
-                  }
-                }
-
-                if (overlay && overlay.props) {
-                  overlay.props.onMouseEnter()
-                } else {
-                  this.changeVoronoi()
-                }
-              }
-            }
-            this.interactionContext = canvasContext
-          }}
-          style={{
-            position: "absolute",
-            left: `0px`,
-            top: `0px`,
-            imageRendering: "pixelated",
-            pointerEvents: "all",
-            opacity: 0
-          }}
-          width={props.svgSize[0]}
-          height={props.svgSize[1]}
-        />
-      )
+      interactionCanvas: this.generateInteractionCanvas(props)
     }
   }
 
   static defaultProps = {
     svgSize: [500, 500]
+  }
+
+  generateInteractionCanvas = props => {
+    return (
+      <canvas
+        className="frame-canvas-interaction"
+        ref={(canvasContext: any) => {
+          const { overlayRegions } = this.state
+          const canvasMap = this.canvasMap
+          const boundCanvasEvent = canvasEvent.bind(
+            null,
+            canvasContext,
+            overlayRegions,
+            canvasMap
+          )
+          if (canvasContext) {
+            canvasContext.onmousemove = e => {
+              const overlay = boundCanvasEvent(e)
+              if (overlay && overlay.props) {
+                overlay.props.onMouseEnter()
+              } else {
+                this.changeVoronoi()
+              }
+            }
+            canvasContext.onclick = e => {
+              const overlay = boundCanvasEvent(e)
+              if (overlay && overlay.props) {
+                overlay.props.onClick()
+              }
+            }
+            canvasContext.ondblclick = e => {
+              const overlay = boundCanvasEvent(e)
+              if (overlay && overlay.props) {
+                overlay.props.onDoubleClick()
+              }
+            }
+          }
+          this.interactionContext = canvasContext
+        }}
+        style={{
+          position: "absolute",
+          left: `0px`,
+          top: `0px`,
+          imageRendering: "pixelated",
+          pointerEvents: "all",
+          opacity: 0
+        }}
+        width={props.svgSize[0]}
+        height={props.svgSize[1]}
+      />
+    )
   }
 
   interactionContext = null
@@ -213,8 +203,7 @@ class InteractionLayer extends React.Component<Props, State> {
   constructDataObject = (d?: { data?: object[]; type?: string }) => {
     if (d === undefined) return d
     const { points } = this.props
-    return d && d.data ? { points, ...d.data, ...d }
-      : (d ? { points, ...d } : d)
+    return d && d.data ? { points, ...d.data, ...d } : { points, ...d }
   }
 
   changeVoronoi = (
@@ -414,7 +403,10 @@ class InteractionLayer extends React.Component<Props, State> {
       this.props.yScale !== nextProps.yScale ||
       this.props.hoverAnnotation !== nextProps.hoverAnnotation
     ) {
-      this.setState({ overlayRegions: this.calculateOverlay(nextProps) })
+      this.setState({
+        overlayRegions: this.calculateOverlay(nextProps),
+        interactionCanvas: this.generateInteractionCanvas(nextProps)
+      })
     }
   }
 
@@ -635,7 +627,7 @@ class InteractionLayer extends React.Component<Props, State> {
   }
 
   createColumnsBrush = (interaction: Interactivity) => {
-    const { projection, rScale, size, oColumns, renderPipeline } = this.props
+    const { projection, rScale, oColumns, renderPipeline } = this.props
 
     if (!projection || !rScale || !oColumns) return
 
@@ -648,19 +640,23 @@ class InteractionLayer extends React.Component<Props, State> {
 
     let semioticBrush, mappingFn
 
-    const max = rScale.domain()[1]
+    const rScaleReverse = rScale
+      .copy()
+      .domain(rScale.domain())
+      .range(rScale.domain().reverse())
 
     if (projection && projection === "horizontal") {
       mappingFn = (d): null | Array<number> =>
         !d ? null : [rScale.invert(d[0]), rScale.invert(d[1])]
     } else
-      mappingFn = (d): null | Array<number> =>
-        !d
+      mappingFn = (d): null | Array<number> => {
+        return !d
           ? null
           : [
-              Math.abs(rScale.invert(d[1]) - max),
-              Math.abs(rScale.invert(d[0]) - max)
+              rScaleReverse(rScale.invert(d[1])),
+              rScaleReverse(rScale.invert(d[0]))
             ]
+      }
 
     const rRange = rScale.range()
 
