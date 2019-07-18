@@ -84,6 +84,7 @@ import {
   CanvasPostProcessTypes,
   accessorType,
   ProjectedSummary,
+  ProjectedBin,
   ProjectedLine,
   GenericObject,
   LineTypeSettings,
@@ -196,7 +197,7 @@ export type XYFrameProps = {
   customSummaryMark?: Function
   lineIDAccessor?: GenericAccessor<string> | string
   minimap?: object
-  fullDataset?: ProjectedPoint[]
+  fullDataset?: Array<ProjectedPoint | ProjectedBin | ProjectedSummary>
   projectedLines?: ProjectedLine[]
   projectedAreas?: Array<ProjectedSummary>
   projectedSummaries?: Array<ProjectedSummary>
@@ -205,6 +206,21 @@ export type XYFrameProps = {
   useAreasAsInteractionLayer?: boolean
   useSummariesAsInteractionLayer?: boolean
   onUnmount?: Function
+  filterRenderedLines?: (
+    value: ProjectedLine,
+    index: number,
+    array: ProjectedLine[]
+  ) => any
+  filterRenderedSummaries?: (
+    value: ProjectedSummary,
+    index: number,
+    array: ProjectedSummary[]
+  ) => any
+  filterRenderedPoints?: (
+    value: ProjectedPoint | ProjectedBin | ProjectedSummary,
+    index: number,
+    array: (ProjectedPoint | ProjectedBin | ProjectedSummary)[]
+  ) => any
 }
 
 type AnnotatedSettingsProps = {
@@ -230,8 +246,8 @@ export type XYFrameState = {
   summaryData?: RawSummary[] | RawSummary
   projectedLines?: ProjectedLine[]
   projectedPoints?: ProjectedPoint[]
-  projectedSummaries?: ProjectedPoint[]
-  fullDataset: ProjectedPoint[]
+  projectedSummaries?: ProjectedSummary[]
+  fullDataset: Array<ProjectedPoint | ProjectedBin | ProjectedSummary>
   adjustedPosition: number[]
   adjustedSize: number[]
   backgroundGraphics?: React.ReactNode | Function
@@ -301,7 +317,9 @@ const projectedCoordinateNames = {
   xBottom: projectedXBottom
 }
 
-function mapParentsToPoints(fullDataset: ProjectedPoint[]) {
+function mapParentsToPoints(
+  fullDataset: Array<ProjectedPoint | ProjectedBin | ProjectedSummary>
+) {
   return fullDataset.map((d: ProjectedPoint) => {
     if (d.parentLine) {
       return Object.assign({}, d.parentLine, d)
@@ -555,7 +573,10 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       xAccessor,
       useSummariesAsInteractionLayer,
       useAreasAsInteractionLayer = useSummariesAsInteractionLayer,
-      baseMarkProps
+      baseMarkProps,
+      filterRenderedLines,
+      filterRenderedSummaries,
+      filterRenderedPoints
     } = currentProps
     let {
       projectedLines,
@@ -737,7 +758,10 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
           chartSize: size,
           xScaleType,
           yScaleType,
-          defined
+          defined,
+          filterRenderedLines,
+          filterRenderedSummaries,
+          filterRenderedPoints
         }))
       }
 
@@ -840,7 +864,8 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
               tickLineGenerator: d.tickLineGenerator,
               baseMarkProps,
               className: axisClassname,
-              jaggedBase: d.jaggedBase
+              jaggedBase: d.jaggedBase,
+              scale: axisScale
             })}
             {d.baseline === "under" &&
               baselineGenerator(d.orient, adjustedSize, d.className)}
@@ -1082,7 +1107,7 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       styleFn: (args?: GenericObject, index?: number) => GenericObject
     }
   }) => {
-    const showLinePoints = this.props.showLinePoints
+    const { showLinePoints, defined } = this.props
 
     const { xyFrameRender, xScale, yScale, xAccessor, yAccessor } = this.state
 
@@ -1099,7 +1124,8 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
         points,
         xScale,
         yScale,
-        xyFrameRender
+        xyFrameRender,
+        defined
       })
     }
 

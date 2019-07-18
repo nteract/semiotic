@@ -209,7 +209,6 @@ export const getColumnScreenCoordinates = ({
   if (!column) {
     return { coordinates: [0, 0], pieces: undefined, column: undefined }
   }
-
   const pieces = column.pieceData || column.pieces
 
   const positionValue =
@@ -217,8 +216,8 @@ export const getColumnScreenCoordinates = ({
     ["swarm", "point", "clusterbar"].find(p => p === type.type)
       ? max(pieces.map(p => p.scaledValue))
       : projection === "horizontal"
-      ? max(pieces.map(p => p.scaledValue + p.bottom))
-      : min(pieces.map(p => p.bottom - p.scaledValue))
+      ? max(pieces.map(p => p.value>=0 ? p.scaledValue + p.bottom : p.bottom))
+      : min(pieces.map(p => p.value>=0 ? p.bottom - p.scaledValue : p.bottom ))
 
   let xPosition = column.middle + adjustedPosition[0]
   let yPosition =
@@ -832,7 +831,7 @@ export const htmlColumnHoverRule = ({
       </SpanOrDiv>
     )
   }
-
+  
   return (
     <SpanOrDiv
       span={useSpans}

@@ -43,7 +43,8 @@ import {
 
 const whichPointsHash = {
   top: projectedYTop,
-  bottom: projectedYBottom
+  bottom: projectedYBottom,
+  orphan: projectedY
 }
 
 const builtInTransformations = {
@@ -149,6 +150,21 @@ type CalculateDataTypes = {
   baseMarkProps?: object
   margin: object
   defined?: Function
+  filterRenderedLines: (
+    value: ProjectedLine,
+    index: number,
+    array: ProjectedLine[]
+  ) => any
+  filterRenderedSummaries: (
+    value: ProjectedSummary,
+    index: number,
+    array: ProjectedSummary[]
+  ) => any
+  filterRenderedPoints: (
+    value: ProjectedPoint | ProjectedBin | ProjectedSummary,
+    index: number,
+    array: (ProjectedPoint | ProjectedBin | ProjectedSummary)[]
+  ) => any
 }
 
 export const calculateDataExtent = ({
@@ -174,6 +190,9 @@ export const calculateDataExtent = ({
   summaryClassFn,
   summaryRenderModeFn,
   chartSize,
+  filterRenderedLines,
+  filterRenderedSummaries,
+  filterRenderedPoints,
   defined = () => true
 }: CalculateDataTypes) => {
   let fullDataset: Array<ProjectedPoint | ProjectedBin | ProjectedSummary> = []
@@ -271,18 +290,47 @@ export const calculateDataExtent = ({
         showLinePoints === true
           ? projectedYMiddle
           : whichPointsHash[showLinePoints]
-      projectedPoints = fullDataset.map(d => {
-        return {
-          ...d,
-          [projectedY]:
-            d[whichPoints] !== undefined
-              ? d[whichPoints]
-              : d[projectedYMiddle] !== undefined
-              ? d[projectedYMiddle]
-              : d[projectedYBottom] !== undefined
-              ? d[projectedYBottom]
-              : d.y
-        }
+
+      projectedLines.forEach((d: ProjectedLine) => {
+        d.data
+          .filter((p, q) => {
+            const isDefined = defined(Object.assign({}, p.data, p))
+            if (isDefined) {
+              if (showLinePoints === "orphan") {
+                const prePoint = d.data[q - 1]
+                const postPoint = d.data[q + 1]
+
+                if (
+                  (!prePoint ||
+                    !defined(Object.assign({}, prePoint.data, prePoint))) &&
+                  (!postPoint ||
+                    !defined(Object.assign({}, postPoint.data, postPoint)))
+                ) {
+                  return true
+                } else {
+                  return false
+                }
+              } else {
+                return true
+              }
+            } else {
+              return false
+            }
+          })
+          .forEach(p => {
+            projectedPoints.push({
+              ...p,
+              parentLine: d,
+              [projectedY]:
+                p[whichPoints] !== undefined
+                  ? p[whichPoints]
+                  : p[projectedYMiddle] !== undefined
+                  ? p[projectedYMiddle]
+                  : p[projectedYBottom] !== undefined
+                  ? p[projectedYBottom]
+                  : p.y
+            })
+          })
       })
     }
   }
@@ -486,6 +534,22 @@ export const calculateDataExtent = ({
       ...projectedSummaries.map(d => ({ ...d })),
       ...fullDataset.filter(d => !d.parentSummary)
     ]
+  }
+
+  if (filterRenderedLines) {
+    projectedLines = projectedLines.filter(filterRenderedLines)
+    fullDataset = fullDataset.filter((d: ProjectedPoint, i) => {
+      return !d.parentLine || filterRenderedLines(d.parentLine, i, [])
+    })
+  }
+  if (filterRenderedPoints) {
+    fullDataset = fullDataset.filter(filterRenderedPoints)
+  }
+  if (filterRenderedSummaries) {
+    projectedSummaries = projectedSummaries.filter(filterRenderedSummaries)
+    fullDataset = fullDataset.filter((d: ProjectedPoint, i) => {
+      return !d.parentSummary || filterRenderedSummaries(d.parentSummary, i, [])
+    })
   }
 
   return {

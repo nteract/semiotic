@@ -12,12 +12,12 @@ const stepColors = {
 }
 
 const regionColors = {
-  "Wonderland": "#007190",
+  Wonderland: "#007190",
   "Final Fantasy": "#00a2ce",
   "Middle Earth": "#d38779",
   "Long Ago and Far Away": "#b3331d",
-  "return": "rgb(77, 67, 12)",
-  "extra": "rgb(182, 167, 86)"
+  return: "rgb(77, 67, 12)",
+  extra: "rgb(182, 167, 86)"
 }
 const stepValueHash = {
   home: 0,
@@ -290,13 +290,13 @@ const funnelData = [
     step: "return",
     country: "Minas Tirith",
     region: "Middle Earth",
-    people: 0
+    people: 1
   },
   {
     step: "return",
     country: "Fantastica",
     region: "Long Ago and Far Away",
-    people: 0
+    people: 1
   }
 ]
 
