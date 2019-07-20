@@ -28,7 +28,7 @@ class TooltipPositioner extends React.Component<Props, State> {
       offset.x = window.innerWidth - right
     }
     else if(left<0){
-      offset.x = -left
+      offset.x = - left
     }
 
     if(top<0){
