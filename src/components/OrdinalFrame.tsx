@@ -227,6 +227,7 @@ export type OrdinalFrameProps = {
   summaryPosition?: Function
   additionalDefs?: React.ReactNode
   tooltipContent?: Function
+  optimizeCustomTooltipPosition? : boolean
   renderOrder?: ReadonlyArray<"pieces" | "summaries" | "connectors">
   multiAxis?: boolean
   onUnmount?: Function
@@ -278,7 +279,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
     rScaleType: scaleLinear,
     type: "none",
     summaryType: "none",
-    useSpans: false
+    useSpans: false,
+    optimizeCustomTooltipPosition: false
   }
 
   static displayName = "OrdinalFrame"
@@ -1640,6 +1642,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
     const {
       htmlAnnotationRules,
       tooltipContent,
+      optimizeCustomTooltipPosition,
       projection,
       size,
       useSpans
@@ -1734,6 +1737,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         oAccessor,
         projection,
         tooltipContent,
+        optimizeCustomTooltipPosition,
         projectedColumns,
         useSpans,
         pieceIDAccessor,
@@ -1754,6 +1758,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         adjustedSize,
         projection,
         tooltipContent,
+        optimizeCustomTooltipPosition,
         useSpans
       })
     }

@@ -14,6 +14,7 @@ import SpanOrDiv from "../SpanOrDiv"
 import { findFirstAccessorValue } from "../data/multiAccessorUtils"
 import { line } from "d3-shape"
 import { curveHash } from "../visualizationLayerBehavior/general"
+import TooltipPositioner from '../TooltipPositioner'
 
 function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
   const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0
@@ -770,11 +771,11 @@ export const htmlColumnHoverRule = ({
   adjustedSize,
   projection,
   tooltipContent,
+  optimizeCustomTooltipPosition,
   useSpans,
   projectedColumns
 }) => {
   //we need to ignore negative pieces to make sure the hover behavior populates on top of the positive bar
-
   const {
     coordinates: [xPosition, yPosition],
     pieces,
@@ -817,13 +818,17 @@ export const htmlColumnHoverRule = ({
     if (tooltipContent === "pie") {
       tooltipContent = pieContentGenerator
     }
-
-    content = tooltipContent({
+    const tooltipContentArgs = {
       ...d,
       pieces: pieces.map(p => p.data),
       column,
       oAccessor
-    })
+    }
+    content = optimizeCustomTooltipPosition ? (<TooltipPositioner
+      tooltipContent={tooltipContent}
+      tooltipContentArgs={tooltipContentArgs}
+    />) : tooltipContent(tooltipContentArgs)
+
   } else if (d.label) {
     content = (
       <SpanOrDiv span={useSpans} className="tooltip-content">
@@ -831,7 +836,7 @@ export const htmlColumnHoverRule = ({
       </SpanOrDiv>
     )
   }
-  
+
   return (
     <SpanOrDiv
       span={useSpans}
