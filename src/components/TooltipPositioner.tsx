@@ -5,7 +5,7 @@ type Props = {
   tooltipContentArgs?: object
 }
 
-class TooltipPositioner extends React.Component<Props, State> {
+class TooltipPositioner extends React.Component<Props> {
   private containerRef = React.createRef<HTMLDivElement>()
 
   state = {
