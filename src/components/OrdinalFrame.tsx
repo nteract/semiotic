@@ -1737,7 +1737,6 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         oAccessor,
         projection,
         tooltipContent,
-        optimizeCustomTooltipPosition,
         projectedColumns,
         useSpans,
         pieceIDAccessor,
