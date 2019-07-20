@@ -6,6 +6,8 @@ type Props = {
 }
 
 class TooltipPositioner extends React.Component<Props, State> {
+  private containerRef: HTMLDivElement;
+
   constructor(props) {
     super(props);
     this.containerRef = React.createRef();

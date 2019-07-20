@@ -260,6 +260,7 @@ export const ordinalframeproptypes = {
   summaryType: true,
   connectorType: true,
   tooltipContent: true,
+  optimizeCustomTooltipPosition: true,
   baseMarkProps: true,
   dataAccessor: true,
   rBaseline: true,

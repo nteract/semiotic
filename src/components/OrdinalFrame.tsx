@@ -227,7 +227,7 @@ export type OrdinalFrameProps = {
   summaryPosition?: Function
   additionalDefs?: React.ReactNode
   tooltipContent?: Function
-  optimizeCustomTooltipPosition? : boolean
+  optimizeCustomTooltipPosition?: boolean
   renderOrder?: ReadonlyArray<"pieces" | "summaries" | "connectors">
   multiAxis?: boolean
   onUnmount?: Function
