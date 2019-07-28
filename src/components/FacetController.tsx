@@ -140,7 +140,7 @@ class FacetController extends React.Component<Props, State> {
       this.props.hoverAnnotation || this.props.pieceHoverAnnotation
 
     if (!annotationSettings || !annotationBase) {
-      return []
+      return originalAnnotations
     }
 
     if (state.facetHover) {
