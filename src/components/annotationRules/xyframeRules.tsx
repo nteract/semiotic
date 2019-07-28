@@ -425,7 +425,6 @@ export const svgAreaAnnotation = ({
     <Mark
       key={`${d.label}-annotation-area-${i}`}
       markType="path"
-      transform={`translate(${annotationLayer.position})`}
       d={mappedCoordinates}
       className={`annotation annotation-area ${d.className || ""} `}
     />

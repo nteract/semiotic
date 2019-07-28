@@ -1,7 +1,6 @@
 import * as React from "react"
 import { XYFrame } from "../../components"
 import { curveMonotoneX } from "d3-shape"
-import ProcessViz from "./ProcessViz"
 
 const dataSeeds = [20, 10, -10, -20]
 const colors = ["4d430c", "#d38779", "#b3331d", "#00a2ce", "#007190", "#b6a756"]
@@ -33,6 +32,15 @@ export default (type = "stackedarea") => {
     showLinePoints: "top",
     hoverAnnotation: true,
     lineStyle: d => ({ fill: d.label, stroke: d.label, fillOpacity: 0.75 }),
+    annotations: [{
+      type: "area",
+      coordinates: [
+        { step: 5, value: -15 },
+        { step: 10, value: 10 },
+        { step: 8, value: 20 }
+      ],
+      label: "test-area"
+    }],
     axes: [
       { orient: "left" },
       {
@@ -44,16 +52,6 @@ export default (type = "stackedarea") => {
   }
   return (
     <div>
-      <iframe
-        title="stacked-chart-video"
-        width="560"
-        height="315"
-        src="https://www.youtube.com/embed/xiu3cuCio1w"
-        frameBorder="0"
-        allow="autoplay; encrypted-media"
-        allowFullScreen
-      />
-      <ProcessViz frameSettings={negativeChart} frameType="XYFrame" />
       <XYFrame {...negativeChart} />
     </div>
   )
