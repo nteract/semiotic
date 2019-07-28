@@ -25,7 +25,14 @@ const framePropHash = {
   SparkOrdinalFrame: { ...ordinalframeproptypes }
 }
 
-const buildNewState = (prevState, extentValue, extentType, extentPosition) => {
+const invertKeys = {
+  rExtent: "invertR",
+  xExtent: "invertX",
+  yExtent: "invertY",
+
+}
+
+const buildNewState = (prevState, extentValue, extentType, extentPosition, invertedExtent) => {
   const oldExtents: object = prevState.rawExtents[extentType] || {}
   oldExtents[extentPosition] = extentValue
 
@@ -33,13 +40,20 @@ const buildNewState = (prevState, extentValue, extentType, extentPosition) => {
     .flat()
     .filter(d => d !== undefined && d !== null && !isNaN(d))
 
+  let baseExtent = [Math.min(...extentMinMaxValues), Math.max(...extentMinMaxValues)]
+
+  if (invertedExtent) {
+    baseExtent = baseExtent.reverse()
+  }
+
+
   return {
     extents: {
       ...prevState.extents,
       [extentType]:
         extentMinMaxValues.length === 0
           ? undefined
-          : [Math.min(...extentMinMaxValues), Math.max(...extentMinMaxValues)]
+          : baseExtent
     },
     rawExtents: {
       ...prevState.rawExtents,
@@ -101,9 +115,10 @@ class FacetController extends React.Component<Props, State> {
    * so this could be rExtent for OrdinalFrame or x/yExtent for the XYFrame
    */
   extentHandler = (extentType: string, extentPosition: number) => {
+    const invertedExtent = this.props[invertKeys[extentType]] || false
     return (extentValue: Array<number>) => {
       this.setState(prevState => {
-        return buildNewState(prevState, extentValue, extentType, extentPosition)
+        return buildNewState(prevState, extentValue, extentType, extentPosition, invertedExtent)
       })
 
       return extentValue
@@ -218,10 +233,12 @@ class FacetController extends React.Component<Props, State> {
         frameType === "SparkOrdinalFrame") &&
       props.sharedRExtent === true
     ) {
+      const invertedExtent = customProps[invertKeys["rExtent"]] || false
+
       customProps.rExtent = this.createExtent("rExtent", state, index)
       customProps.onUnmount = () => {
         this.setState(prevState => {
-          return buildNewState(prevState, [], "rExtent", index)
+          return buildNewState(prevState, [], "rExtent", index, invertedExtent)
         })
       }
     }
@@ -232,10 +249,11 @@ class FacetController extends React.Component<Props, State> {
         frameType === "SparkXYFrame") &&
       props.sharedXExtent === true
     ) {
+      const invertedExtent = customProps[invertKeys["xExtent"]] || false
       customProps.xExtent = this.createExtent("xExtent", state, index)
       customProps.onUnmount = () => {
         this.setState(prevState => {
-          return buildNewState(prevState, [], "xExtent", index)
+          return buildNewState(prevState, [], "xExtent", index, invertedExtent)
         })
       }
     }
@@ -246,10 +264,11 @@ class FacetController extends React.Component<Props, State> {
         frameType === "SparkXYFrame") &&
       props.sharedYExtent === true
     ) {
+      const invertedExtent = customProps[invertKeys["yExtent"]] || false
       customProps.yExtent = this.createExtent("yExtent", state, index)
       customProps.onUnmount = () => {
         this.setState(prevState => {
-          return buildNewState(prevState, [], "yExtent", index)
+          return buildNewState(prevState, [], "yExtent", index, invertedExtent)
         })
       }
     }
