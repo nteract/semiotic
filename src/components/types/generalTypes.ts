@@ -9,6 +9,8 @@ export interface MarginType {
 
 export type ProjectionTypes = "vertical" | "horizontal" | "radial"
 
+export type ExtentType = number[] | { extent?: number[]; onChange?: Function, includeAnnotations?: boolean }
+
 export interface ProjectedPoint {
   x?: number
   y?: number

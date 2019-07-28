@@ -38,7 +38,8 @@ import {
   LineTypeSettings,
   SummaryTypeSettings,
   AccessorFnType,
-  GenericObject
+  GenericObject,
+  ExtentType
 } from "../types/generalTypes"
 
 const whichPointsHash = {
@@ -138,8 +139,8 @@ type CalculateDataTypes = {
   lineType: LineTypeSettings
   showLinePoints?: boolean | string
   showSummaryPoints?: boolean
-  xExtent?: Array<number> | object
-  yExtent?: Array<number> | object
+  xExtent?: ExtentType
+  yExtent?: ExtentType
   invertX?: boolean
   invertY?: boolean
   summaryType: SummaryTypeSettings
@@ -150,6 +151,7 @@ type CalculateDataTypes = {
   baseMarkProps?: object
   margin: object
   defined?: Function
+  annotations: object[]
   filterRenderedLines: (
     value: ProjectedLine,
     index: number,
@@ -193,7 +195,8 @@ export const calculateDataExtent = ({
   filterRenderedLines,
   filterRenderedSummaries,
   filterRenderedPoints,
-  defined = () => true
+  defined = () => true,
+  annotations = []
 }: CalculateDataTypes) => {
   let fullDataset: Array<ProjectedPoint | ProjectedBin | ProjectedSummary> = []
   let initialProjectedLines = []
@@ -394,9 +397,43 @@ export const calculateDataExtent = ({
     })
   }
 
+  let suitableXAnnotations = []
+  let suitableYAnnotations = []
+
+  if (xExtent && !Array.isArray(xExtent) && xExtent.includeAnnotations === true) {
+    xAccessor.forEach((actualXAccessor) => {
+        annotations.forEach((annotation, annotationIndex) => {
+          const x = actualXAccessor(annotation, annotationIndex)
+          if (isFinite(x)) {
+            suitableXAnnotations.push({
+              [projectedX]: x
+            })
+          }
+        })
+        })
+
+  }
+
+  if (yExtent && !Array.isArray(yExtent) && yExtent.includeAnnotations === true) {
+    yAccessor.forEach((actualYAccessor) => {
+      annotations.forEach((annotation, annotationIndex) => {
+        const y = actualYAccessor(annotation, annotationIndex)
+        if (isFinite(y)) {
+          suitableYAnnotations.push({
+            [projectedY]: y
+          })
+        }
+      })
+      })
+  
+  }
+
+  const dataForXExtent = [ ...fullDataset, ...suitableXAnnotations ]
+  const dataForYExtent = [ ...fullDataset, ...suitableYAnnotations ]
+
   const calculatedXExtent = [
     min(
-      fullDataset.map(d =>
+      dataForXExtent.map(d =>
         d[projectedXBottom] === undefined
           ? d[projectedX]
           : Math.min(d[projectedXTop], d[projectedXBottom])
@@ -404,7 +441,7 @@ export const calculateDataExtent = ({
     ),
 
     max(
-      fullDataset.map(d =>
+      dataForXExtent.map(d =>
         d[projectedXTop] === undefined
           ? d[projectedX]
           : Math.max(d[projectedXBottom], d[projectedXTop])
@@ -414,7 +451,7 @@ export const calculateDataExtent = ({
 
   const calculatedYExtent = [
     min(
-      fullDataset.map(d =>
+      dataForYExtent.map(d =>
         d[projectedYBottom] === undefined
           ? d[projectedY]
           : Math.min(d[projectedYTop], d[projectedYBottom])
@@ -422,7 +459,7 @@ export const calculateDataExtent = ({
     ),
 
     max(
-      fullDataset.map(d =>
+      dataForYExtent.map(d =>
         d[projectedYTop] === undefined
           ? d[projectedY]
           : Math.max(d[projectedYBottom], d[projectedYTop])

@@ -125,6 +125,7 @@ type OExtentSettingsType = Array<string> | OExtentObject
 interface RExtentObject {
   extent?: Array<number>
   onChange?: Function
+  includeAnnotations?: boolean 
 }
 
 type PieceTypes =
@@ -370,7 +371,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       pieceIDAccessor: basePieceIDAccessor,
       summaryPosition: baseSummaryPosition,
       multiAxis,
-      baseMarkProps = {}
+      baseMarkProps = {},
+      annotations
     } = currentProps
 
     const summaryType = objectifyType(baseSummaryType)
@@ -589,13 +591,26 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       pieceType.type = "none"
     }
 
+    const annotationsForExtent = []
+
+    if (rExtentSettings.includeAnnotations && annotations) {
+      rAccessor.forEach(actualRAccessor => {
+        annotations.forEach((annotation, annotationIndex) => {
+          const r = actualRAccessor(annotation, annotationIndex)
+          if (isFinite(r)) {
+            annotationsForExtent.push(r)
+          }
+        })
+      })
+    }
+
     if (pieceType.type === "timeline") {
       const rData = allData.map((d: { value: number }) => d.value)
       const leftExtent = extent(rData.map(d => d[0]))
       const rightExtent = extent(rData.map(d => d[1]))
-      rExtent = extent([...leftExtent, ...rightExtent])
+      rExtent = extent([...leftExtent, ...rightExtent, ...annotationsForExtent])
     } else if (pieceType.type !== "bar") {
-      rExtent = extent(allData, d => d.value)
+      rExtent = extent([ ...allData.map((d: { value: number}) => d.value), ...annotationsForExtent ])
     } else {
       const positiveData = allData.filter(
         (d: { value: number }) => d.value >= 0
@@ -612,18 +627,22 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         .rollup(leaves => sum(leaves.map(d => d.value)))
         .entries(negativeData)
 
+      const positiveAnnotations = annotationsForExtent.filter(d => d > 0)
+
       rExtent = [
         0,
-        nestedPositiveData.length === 0
+        nestedPositiveData.length === 0 && positiveAnnotations.length === 0
           ? 0
-          : Math.max(max(nestedPositiveData, d => d.value), 0)
+          : Math.max(max([...nestedPositiveData.map((d:{value: number}) => d.value), ...positiveAnnotations]), 0)
       ]
+
+      const negativeAnnotations = annotationsForExtent.filter(d => d < 0)
 
       subZeroRExtent = [
         0,
         nestedNegativeData.length === 0
           ? 0
-          : Math.min(min(nestedNegativeData, d => d.value), 0)
+          : Math.min(min([ ...nestedNegativeData.map((d: {value: number}) => d.value), ...negativeAnnotations ]), 0)
       ]
       rExtent = [subZeroRExtent[1], rExtent[1]]
     }

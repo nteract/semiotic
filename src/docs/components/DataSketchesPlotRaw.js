@@ -1,7 +1,6 @@
 import * as React from "react"
 import { XYFrame } from "../../components"
 import { Mark } from "semiotic-mark"
-import ProcessViz from "./ProcessViz"
 
 const speciousColors = {
   shirley: "#ff269d",
@@ -154,9 +153,33 @@ const speciousDataset = [
 
 const datasketchesChart = {
   size: [750, 750],
-  xExtent: [-1, 1],
-  yExtent: [-1, 1],
+  xExtent: { includeAnnotations: true },
+  yExtent: { includeAnnotations: true },
   points: speciousDataset,
+  annotations: [{
+    type: "react-annotation",
+    meaningfulFrivolous: 1.1,
+    accessibleShowingOff: 1.1,
+    dy: -20,
+    dx: -20,
+    label: "off the scale"
+  },
+  {
+    type: "x",
+    meaningfulFrivolous: -1.5,
+    dy: 20,
+    dx: 20,
+    label: "Whoa that's a threshold"
+  },
+  {
+    type: "y",
+    accessibleShowingOff: -1.5,
+    dy: 20,
+    dx: 20,
+    label: "And this is Y threshold"
+  }
+
+],
   customPointMark: ({ d }) => (
     <Mark markType="g" opacity={0.75}>
       <text
@@ -252,7 +275,6 @@ const datasketchesChart = {
 
 export default (
   <div>
-    <ProcessViz frameSettings={datasketchesChart} frameType="XYFrame" />
     <XYFrame {...datasketchesChart} />
   </div>
 )

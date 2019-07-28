@@ -1,6 +1,5 @@
 import * as React from "react"
 import { OrdinalFrame } from "../../components"
-import ProcessViz from "./ProcessViz"
 
 const colors = {
   "Almond lovers": "#00a2ce",
@@ -79,6 +78,12 @@ const mekkoChart = {
     { orient: "left", tickFormat: d => d },
     { orient: "bottom", tickFormat: d => `${d / 1000}k` }
   ],
+  rExtent: { includeAnnotations: true },
+  annotations: [{
+    type: "r",
+    value: 8500,
+    label: "An R threshold"
+  }],
   margin: { left: 55, top: 50, bottom: 80, right: 50 },
   oLabel: {
     orient: "top",
@@ -88,7 +93,6 @@ const mekkoChart = {
 
 export default (
   <div>
-    <ProcessViz frameSettings={mekkoChart} frameType="OrdinalFrame" />
     <OrdinalFrame {...mekkoChart} />
   </div>
 )

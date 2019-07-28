@@ -93,7 +93,8 @@ import {
   RawSummary,
   RawPoint,
   GenericAccessor,
-  RenderPipelineType
+  RenderPipelineType,
+  ExtentType
 } from "./types/generalTypes"
 
 import {
@@ -107,11 +108,6 @@ import {
 import { Interactivity } from "./types/interactionTypes"
 
 import { AnnotationLayerProps } from "./AnnotationLayer"
-
-type ExtentType = {
-  extent?: number[]
-  onChange?: Function
-}
 
 export type XYFrameProps = {
   useSpans: boolean
@@ -160,8 +156,8 @@ export type XYFrameProps = {
   matte?: object
   xScaleType?: ScaleLinear<number, number>
   yScaleType?: ScaleLinear<number, number>
-  xExtent?: number[] | { extent?: number[]; onChange?: Function }
-  yExtent?: number[] | { extent?: number[]; onChange?: Function }
+  xExtent?: ExtentType
+  yExtent?: ExtentType
   invertX?: boolean
   invertY?: boolean
   xAccessor?: accessorType<number>
@@ -576,7 +572,8 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       baseMarkProps,
       filterRenderedLines,
       filterRenderedSummaries,
-      filterRenderedPoints
+      filterRenderedPoints,
+      annotations
     } = currentProps
     let {
       projectedLines,
@@ -761,7 +758,8 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
           defined,
           filterRenderedLines,
           filterRenderedSummaries,
-          filterRenderedPoints
+          filterRenderedPoints,
+          annotations
         }))
       }
 
