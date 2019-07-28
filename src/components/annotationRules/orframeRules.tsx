@@ -14,6 +14,7 @@ import SpanOrDiv from "../SpanOrDiv"
 import { findFirstAccessorValue } from "../data/multiAccessorUtils"
 import { line } from "d3-shape"
 import { curveHash } from "../visualizationLayerBehavior/general"
+import TooltipPositioner from '../TooltipPositioner'
 
 function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
   const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0
@@ -209,7 +210,6 @@ export const getColumnScreenCoordinates = ({
   if (!column) {
     return { coordinates: [0, 0], pieces: undefined, column: undefined }
   }
-
   const pieces = column.pieceData || column.pieces
 
   const positionValue =
@@ -217,8 +217,8 @@ export const getColumnScreenCoordinates = ({
     ["swarm", "point", "clusterbar"].find(p => p === type.type)
       ? max(pieces.map(p => p.scaledValue))
       : projection === "horizontal"
-      ? max(pieces.map(p => p.scaledValue + p.bottom))
-      : min(pieces.map(p => p.bottom - p.scaledValue))
+      ? max(pieces.map(p => p.value>=0 ? p.scaledValue + p.bottom : p.bottom))
+      : min(pieces.map(p => p.value>=0 ? p.bottom - p.scaledValue : p.bottom ))
 
   let xPosition = column.middle + adjustedPosition[0]
   let yPosition =
@@ -771,11 +771,11 @@ export const htmlColumnHoverRule = ({
   adjustedSize,
   projection,
   tooltipContent,
+  optimizeCustomTooltipPosition,
   useSpans,
   projectedColumns
 }) => {
   //we need to ignore negative pieces to make sure the hover behavior populates on top of the positive bar
-
   const {
     coordinates: [xPosition, yPosition],
     pieces,
@@ -818,13 +818,17 @@ export const htmlColumnHoverRule = ({
     if (tooltipContent === "pie") {
       tooltipContent = pieContentGenerator
     }
-
-    content = tooltipContent({
+    const tooltipContentArgs = {
       ...d,
       pieces: pieces.map(p => p.data),
       column,
       oAccessor
-    })
+    }
+    content = optimizeCustomTooltipPosition ? (<TooltipPositioner
+      tooltipContent={tooltipContent}
+      tooltipContentArgs={tooltipContentArgs}
+    />) : tooltipContent(tooltipContentArgs)
+
   } else if (d.label) {
     content = (
       <SpanOrDiv span={useSpans} className="tooltip-content">
