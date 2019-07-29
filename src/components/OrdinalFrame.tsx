@@ -579,7 +579,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
 
     const rExtentSettings =
       baseRExtent === undefined || Array.isArray(baseRExtent)
-        ? { extent: baseRExtent, onChange: undefined }
+        ? { extent: baseRExtent, onChange: undefined, includeAnnotations: false }
         : baseRExtent
 
     let rExtent = rExtentSettings.extent as number[]
