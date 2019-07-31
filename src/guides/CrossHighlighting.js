@@ -302,7 +302,7 @@ Highlight annotations will return all points, lines and areas that match the id 
 />
 \`\`\`
 
-## OrinalFrame Highlighting
+## OrdinalFrame Highlighting
 \`OrdinalFrames\` unlike in \`XYFrame\`, already has a built-in id accessor: \`oAccessor\`, additionally if you define a \`pieceIDAccessor\` you can use that to highlight individual pieces (this is the same property used to annotate specific pieces with other OrdinalFrame annotations). Without a \`pieceIDAccessor\` defined, all items in a column/row will be highlighted. To enable highlighting on hover for a piece use \`pieceHoverAnnotation\`, for the entire column/row use \`hoverAnnotation\`
 
 Highlighting is not available for custom graphics or summary graphics.
