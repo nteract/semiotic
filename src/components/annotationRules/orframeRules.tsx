@@ -384,7 +384,7 @@ export const screenProject = ({
       idPiece && (idPiece.x || idPiece.scaledValue)
         ? idPiece.x === undefined
           ? idPiece.x
-          : idPiece.bottom + idPiece.scaledValue / 2
+          : ( idPiece.value >= 0? idPiece.bottom + idPiece.scaledValue / 2 : idPiece.bottom )
         : rScale(pValue),
       o
     ]
@@ -398,7 +398,8 @@ export const screenProject = ({
     o,
     idPiece && (idPiece.x || idPiece.scaledValue)
       ? idPiece.y === undefined
-        ? idPiece.bottom - idPiece.scaledValue
+        ? (idPiece.value >= 0? idPiece.bottom - idPiece.scaledValue
+          : idPiece.bottom )
         : idPiece.y
       : newScale(pValue)
   ]
@@ -640,6 +641,7 @@ export const htmlFrameHoverRule = ({
   oAccessor,
   projection,
   tooltipContent,
+  optimizeCustomTooltipPosition,
   useSpans,
   pieceIDAccessor,
   projectedColumns,
@@ -741,7 +743,12 @@ export const htmlFrameHoverRule = ({
   )
 
   if (d.type === "frame-hover" && tooltipContent && idPiece) {
-    content = tooltipContent({ ...idPiece, ...idPiece.data })
+    const tooltipContentArgs = { ...idPiece, ...idPiece.data }
+    content = optimizeCustomTooltipPosition ? (<TooltipPositioner
+      tooltipContent={tooltipContent}
+      tooltipContentArgs={tooltipContentArgs}
+    />) : tooltipContent(tooltipContentArgs)
+
   }
 
   return (
