@@ -13,6 +13,7 @@ import {
 import Axis from "./Axis"
 import DownloadButton from "./DownloadButton"
 import Frame from "./Frame"
+import TooltipPositioner from './TooltipPositioner'
 import {
   svgXYAnnotation,
   svgHighlight,
@@ -141,6 +142,7 @@ export type XYFrameProps = {
   svgAnnotationRules?: Function
   htmlAnnotationRules?: Function
   tooltipContent?: Function
+  optimizeCustomTooltipPosition?: boolean
   annotations: object[]
   baseMarkProps?: object
   backgroundGraphics?: React.ReactNode | Function
@@ -1337,7 +1339,13 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
 
     let screenCoordinates = []
 
-    const { useSpans } = this.props
+    const {
+      useSpans,
+      tooltipContent,
+      optimizeCustomTooltipPosition,
+      htmlAnnotationRules,
+      size
+    } = this.props
 
     const idAccessor = this.state.annotatedSettings.lineIDAccessor
     const d: AnnotationType = findPointByID({
@@ -1371,7 +1379,7 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       title: this.state.annotatedSettings.title
     })
     const { adjustedPosition, adjustedSize } = adjustedPositionSize({
-      size: this.props.size,
+      size,
       margin
     })
     if (!d.coordinates) {
@@ -1411,8 +1419,8 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
     }
 
     const customAnnotation =
-      this.props.htmlAnnotationRules &&
-      this.props.htmlAnnotationRules({
+      htmlAnnotationRules &&
+      htmlAnnotationRules({
         d,
         i,
         screenCoordinates,
@@ -1431,7 +1439,7 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
         annotationLayer
       })
 
-    if (this.props.htmlAnnotationRules && customAnnotation !== null) {
+    if (htmlAnnotationRules && customAnnotation !== null) {
       return customAnnotation
     }
     if (d.type === "frame-hover") {
@@ -1447,8 +1455,11 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
         </SpanOrDiv>
       )
 
-      if (d.type === "frame-hover" && this.props.tooltipContent) {
-        content = this.props.tooltipContent(d)
+      if (d.type === "frame-hover" && tooltipContent) {
+        content = optimizeCustomTooltipPosition ? (<TooltipPositioner
+            tooltipContent={tooltipContent}
+            tooltipContentArgs={d}
+          />) : tooltipContent(d)
       }
       return htmlTooltipAnnotation({
         content,

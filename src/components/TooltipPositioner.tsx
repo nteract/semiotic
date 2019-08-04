@@ -76,7 +76,7 @@ class TooltipPositioner extends React.Component<Props> {
       {
         opacity: 0
       }
-
+      
     return (
       <div ref={this.containerRef} style={containerStyle}>
         {tooltipContent({...tooltipContentArgs,
