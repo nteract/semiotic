@@ -166,7 +166,7 @@ export interface NetworkFrameProps {
   svgAnnotationRules?: Function
   htmlAnnotationRules?: Function
   tooltipContent?: Function
-  NetworkFrameProps?: boolean
+  optimizeCustomTooltipPosition?: boolean
   annotations: object[]
   annotationSettings?: AnnotationHandling
   className?: string
