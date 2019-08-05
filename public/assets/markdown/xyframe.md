@@ -735,6 +735,8 @@ A function that takes an annotation object and returns a JSX HTML element. The f
 
 An object with `{ layout, pointSizeFunction, labelSizeFunction }` containing [annotation settings](/guides/annotations#annotation-settings) to enable annotations bumping out of each others' way or placing them in the margins.
 
+By default, marginalia will consider the entire frame size, i.e. height (if orient is `left` or `right`) or width (if orient is `top` or `bottom`). If you want to add a certain padding, you can use an additional `layout` property called `axisMarginOverride`. E.g. if you want the labels to not go below the bottom axis, set `axisMarginOverride={ bottom:0 }`, where `bottom:0` refers to the y-coordinate of `size[1] - margin.bottom`. If you want to add another 10px padding above the bottom x-axis, then set `axisMarginOverride={ bottom:-10 }`
+
 ```jsx
 <XYFrame
   annotationSettings={{
