@@ -1792,7 +1792,12 @@ class NetworkFrame extends React.Component<
     i: number
     annotationLayer: AnnotationLayerProps
   }) => {
-    const { tooltipContent, size, useSpans } = this.props
+    const {
+      tooltipContent,
+      optimizeCustomTooltipPosition, 
+      size,
+      useSpans
+    } = this.props
     const {
       projectedNodes,
       projectedEdges,
@@ -1842,6 +1847,7 @@ class NetworkFrame extends React.Component<
         d,
         i,
         tooltipContent,
+        optimizeCustomTooltipPosition,
         useSpans,
         nodes: projectedNodes,
         edges: projectedEdges,
