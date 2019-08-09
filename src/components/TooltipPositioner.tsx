@@ -20,19 +20,20 @@ class TooltipPositioner extends React.Component<Props> {
       y: 0
     }
     const { right, left, top, bottom } = this.containerRef.current.getBoundingClientRect()
+    const containerWidth = right - left
+    const containerHeight = bottom - top
 
-    if(right>window.innerWidth){
-      offset.x = window.innerWidth - right
+    if(right > window.innerWidth){
+      offset.x = - containerWidth
     }
-    else if(left<0){
-      offset.x = - left
+    else if(left < 0){
+      offset.x = containerWidth
     }
-
-    if(top<0){
-      offset.y = - top
+    if(bottom > window.innerHeight){
+      offset.y = - containerHeight
     }
-    else if(bottom > window.innerHeight){
-      offset.x = window.innerHeight - bottom
+    else if(top < 0){
+      offset.y = containerHeight
     }
 
     this.setState({
@@ -57,8 +58,6 @@ class TooltipPositioner extends React.Component<Props> {
       this.checkPosition()
     }
   }
-
-
 
   render() {
     const {

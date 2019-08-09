@@ -177,6 +177,7 @@ const sharedframeproptypes = {
   svgAnnotationRules: true,
   htmlAnnotationRules: true,
   tooltipContent: true,
+  optimizeCustomTooltipPosition: true,
   annotations: true,
   baseMarkProps: true,
   backgroundGraphics: true,

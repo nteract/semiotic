@@ -5,11 +5,13 @@ import AnnotationCalloutCircle from "react-annotation/lib/Types/AnnotationCallou
 import { packEnclose } from "d3-hierarchy"
 import { circleEnclosure, rectangleEnclosure, hullEnclosure } from "./baseRules"
 import SpanOrDiv from "../SpanOrDiv"
+import TooltipPositioner from '../TooltipPositioner'
 
 export const htmlFrameHoverRule = ({
   d: baseD,
   i,
   tooltipContent,
+  optimizeCustomTooltipPosition,
   useSpans,
   nodes,
   edges,
@@ -45,7 +47,10 @@ export const htmlFrameHoverRule = ({
   )
 
   if (d.type === "frame-hover" && tooltipContent) {
-    content = tooltipContent(d)
+    content = optimizeCustomTooltipPosition ? (<TooltipPositioner
+      tooltipContent={tooltipContent}
+      tooltipContentArgs={d}
+    />) : tooltipContent(d)
   }
 
   return (
