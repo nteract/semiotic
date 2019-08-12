@@ -17,6 +17,7 @@ const violinChart = {
   size: [700, 600],
   axis: axis,
   ...summaryChart,
+  rAccessor: ["stepValue", d => d.stepValue + 10],
   hoverAnnotation: true,
   tooltipContent: d => {
     return (
@@ -26,9 +27,10 @@ const violinChart = {
       </div>
     )
   },
+  summaryStyle: (s, i, ii) => ({ fill: ii === 0 ? "darkred" : "darkgreen", fillOpacity: 0.5, stroke: "black" }),
   margin: { top: 75, bottom: 50, left: 60, right: 50 },
   dynamicColumnWidth: d => Math.max(...d.map(p => p.stepValue)),
-  summaryType: "violin",
+  summaryType: { type: "violin", subsets: [d => d.rIndex === 0, d => d.rIndex === 1] },
   annotations: [
     {
       type: "category",

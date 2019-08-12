@@ -901,10 +901,10 @@ export function bucketizedRenderingFn({
     const columnWidth = summary.width
     const renderValue = renderMode && renderMode(summary, summaryI)
 
-    const calculatedSummaryStyle = thisSummaryData[0]
+    let calculatedSummaryStyle = thisSummaryData[0]
       ? styleFn(thisSummaryData[0].piece.data, summaryI)
       : {}
-    const calculatedSummaryClass = thisSummaryData[0]
+    let calculatedSummaryClass = thisSummaryData[0]
       ? classFn(thisSummaryData[0].piece.data, summaryI)
       : ""
 
@@ -972,131 +972,154 @@ export function bucketizedRenderingFn({
         </g>
       )
     } else if (type.type === "violin") {
+      const subsets = type.subsets || [false]
       bins[0].y = bins[0].y - bucketSize / 2
       bins[bins.length - 1].y = bins[bins.length - 1].y + bucketSize / 2
-      let violinArea = area().curve(type.curve || curveCatmullRom)
 
-      let violinPoints = []
-
-      if (projection === "horizontal") {
-        bins.forEach(summaryPoint => {
-          const xValue = summaryPoint.y - bucketSize / 2
-          const yValue = ((summaryPoint.value / actualMax) * columnWidth) / 2
-
-          violinPoints.push({
-            x: xValue,
-            y0: -yValue,
-            y1: yValue
-          })
-          summaryXYCoords.push({
-            key: summary.name,
-            x: xValue + translate[0],
-            y: yValue + translate[1],
-            pieces: summaryPoint.pieces.map(d => d.piece),
-            value: summaryPoint.value
-          })
-        })
-        violinArea
-          .x(d => d.x)
-          .y0(d => d.y0)
-          .y1(d => d.y1)
-          .defined(
-            (d, i) =>
-              d.y0 !== 0 ||
-              ((violinPoints[i - 1] && violinPoints[i - 1].y0 !== 0) ||
-                (violinPoints[i + 1] && violinPoints[i + 1].y0 !== 0))
-          )
-      } else if (projection === "vertical") {
-        bins.forEach(summaryPoint => {
-          const yValue = summaryPoint.y + bucketSize / 2
-          const xValue = ((summaryPoint.value / actualMax) * columnWidth) / 2
-
-          violinPoints.push({
-            y: yValue,
-            x0: -xValue,
-            x1: xValue
-          })
-
-          summaryXYCoords.push({
-            key: summary.name,
-            x: xValue + translate[0],
-            y: yValue + translate[1],
-            pieces: summaryPoint.pieces.map(d => d.piece),
-            value: summaryPoint.value
-          })
-        })
-        violinArea
-          .y(d => d.y)
-          .x0(d => d.x0)
-          .x1(d => d.x1)
-          .defined(
-            (d, i) =>
-              d.x0 !== 0 ||
-              ((violinPoints[i - 1] && violinPoints[i - 1].x0 !== 0) ||
-                (violinPoints[i + 1] && violinPoints[i + 1].x0 !== 0))
-          )
-      } else if (projection === "radial") {
-        const angle = summary.pct - summary.pct_padding / 2
-        const midAngle = summary.pct_middle
-        violinPoints = bins
-        violinArea = inbins => {
-          const forward = []
-          const backward = []
-          inbins.forEach(bin => {
-            const outsidePoint = pointOnArcAtAngle(
-              [0, 0],
-              midAngle + (angle * bin.value) / actualMax / 2,
-              (bin.y + bin.y1 - bucketSize / 2) / 2
-            )
-            const insidePoint = pointOnArcAtAngle(
-              [0, 0],
-              midAngle - (angle * bin.value) / actualMax / 2,
-              (bin.y + bin.y1 - bucketSize / 2) / 2
-            )
-
-            //Ugh a terrible side effect has appeared
-            summaryXYCoords.push({
-              key: summary.name,
-              x: insidePoint[0] + translate[0],
-              y: insidePoint[1] + translate[1],
-              pieces: bin.pieces.map(d => d.piece),
-              value: bin.value
-            })
-            summaryXYCoords.push({
-              key: summary.name,
-              x: outsidePoint[0] + translate[0],
-              y: outsidePoint[1] + translate[1],
-              pieces: bin.pieces.map(d => d.piece),
-              value: bin.value
-            })
-
-            forward.push(outsidePoint)
-            backward.push(insidePoint)
-          })
-          return `M${forward.map(d => d.join(",")).join("L")}L${backward
-            .reverse()
-            .map(d => d.join(","))
-            .join("L")}Z`
+      subsets.forEach((subsettingFn, subsettingIndex) => {
+        let actualBins = bins
+        if (subsettingFn) {
+          calculatedSummaryStyle = thisSummaryData[0]
+          ? styleFn(thisSummaryData[0].piece.data, summaryI, subsettingIndex)
+          : {}
+        calculatedSummaryClass = thisSummaryData[0]
+          ? classFn(thisSummaryData[0].piece.data, summaryI, subsettingIndex)
+          : ""
+          actualBins = bins.map(d => {
+            const actualPieces = d.pieces.filter((p, pi) => subsettingFn(p.piece, pi)).map(d => d)
+            const actualValue = summaryValueAccessor(actualPieces)
+            return ({
+            ...d,
+            pieces: actualPieces,
+            value: actualValue
+          })})
         }
-      }
 
-      renderedSummaryMarks.push(
-        <Mark
-          {...baseMarkProps}
-          transform={`translate(${translate})`}
-          key={`summaryPiece-${summaryI}`}
-          {...eventListeners}
-          renderMode={renderValue}
-          markType="path"
-          className={calculatedSummaryClass}
-          style={calculatedSummaryStyle}
-          d={violinArea(violinPoints)}
-          role="img"
-          tabIndex={-1}
-          data-o={summary.name}
-          aria-label={`${summary.name} distribution`}
-        />
-      )
+        let violinArea = area().curve(type.curve || curveCatmullRom)
+  
+        let violinPoints = []
+  
+        if (projection === "horizontal") {
+          actualBins.forEach(summaryPoint => {
+            const xValue = summaryPoint.y - bucketSize / 2
+            const yValue = ((summaryPoint.value / actualMax) * columnWidth) / 2
+  
+            violinPoints.push({
+              x: xValue,
+              y0: -yValue,
+              y1: yValue
+            })
+            summaryXYCoords.push({
+              key: summary.name,
+              x: xValue + translate[0],
+              y: yValue + translate[1],
+              pieces: summaryPoint.pieces.map(d => d.piece),
+              value: summaryPoint.value
+            })
+          })
+          violinArea
+            .x(d => d.x)
+            .y0(d => d.y0)
+            .y1(d => d.y1)
+            .defined(
+              (d, i) =>
+                d.y0 !== 0 ||
+                ((violinPoints[i - 1] && violinPoints[i - 1].y0 !== 0) ||
+                  (violinPoints[i + 1] && violinPoints[i + 1].y0 !== 0))
+            )
+        } else if (projection === "vertical") {
+          actualBins.forEach(summaryPoint => {
+            const yValue = summaryPoint.y + bucketSize / 2
+            const xValue = ((summaryPoint.value / actualMax) * columnWidth) / 2
+  
+            violinPoints.push({
+              y: yValue,
+              x0: -xValue,
+              x1: xValue
+            })
+  
+            summaryXYCoords.push({
+              key: summary.name,
+              x: xValue + translate[0],
+              y: yValue + translate[1],
+              pieces: summaryPoint.pieces.map(d => d.piece),
+              value: summaryPoint.value
+            })
+          })
+          violinArea
+            .y(d => d.y)
+            .x0(d => d.x0)
+            .x1(d => d.x1)
+            .defined(
+              (d, i) =>
+                d.x0 !== 0 ||
+                ((violinPoints[i - 1] && violinPoints[i - 1].x0 !== 0) ||
+                  (violinPoints[i + 1] && violinPoints[i + 1].x0 !== 0))
+            )
+        } else if (projection === "radial") {
+          const angle = summary.pct - summary.pct_padding / 2
+          const midAngle = summary.pct_middle
+          violinPoints = actualBins
+          violinArea = inbins => {
+            const forward = []
+            const backward = []
+            inbins.forEach(bin => {
+              const outsidePoint = pointOnArcAtAngle(
+                [0, 0],
+                midAngle + (angle * bin.value) / actualMax / 2,
+                (bin.y + bin.y1 - bucketSize / 2) / 2
+              )
+              const insidePoint = pointOnArcAtAngle(
+                [0, 0],
+                midAngle - (angle * bin.value) / actualMax / 2,
+                (bin.y + bin.y1 - bucketSize / 2) / 2
+              )
+  
+              //Ugh a terrible side effect has appeared
+              summaryXYCoords.push({
+                key: summary.name,
+                x: insidePoint[0] + translate[0],
+                y: insidePoint[1] + translate[1],
+                pieces: bin.pieces.map(d => d.piece),
+                value: bin.value
+              })
+              summaryXYCoords.push({
+                key: summary.name,
+                x: outsidePoint[0] + translate[0],
+                y: outsidePoint[1] + translate[1],
+                pieces: bin.pieces.map(d => d.piece),
+                value: bin.value
+              })
+  
+              forward.push(outsidePoint)
+              backward.push(insidePoint)
+            })
+            return `M${forward.map(d => d.join(",")).join("L")}L${backward
+              .reverse()
+              .map(d => d.join(","))
+              .join("L")}Z`
+          }
+        }
+  
+        renderedSummaryMarks.push(
+          <Mark
+            {...baseMarkProps}
+            transform={`translate(${translate})`}
+            key={`summaryPiece-${summaryI}-${subsettingIndex}`}
+            {...eventListeners}
+            renderMode={renderValue}
+            markType="path"
+            className={calculatedSummaryClass}
+            style={calculatedSummaryStyle}
+            d={violinArea(violinPoints)}
+            role="img"
+            tabIndex={-1}
+            data-o={summary.name}
+            aria-label={`${summary.name} distribution`}
+          />
+        )
+      })
+
     } else if (type.type === "joy" || type.type === "ridgeline") {
       const zeroedStart = Object.assign({}, bins[0], { value: 0 })
       const zeroedEnd = Object.assign({}, bins[bins.length - 1], { value: 0 })

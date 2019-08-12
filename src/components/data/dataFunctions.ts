@@ -348,7 +348,8 @@ export const calculateDataExtent = ({
 
     projectedSummaries.forEach(d => {
       const baseData = d._baseData
-      if (d._xyfCoordinates[0][0][0]) {
+
+      if (d._xyfCoordinates.length > 0 && d._xyfCoordinates[0][0][0]) {
         d._xyfCoordinates[0].forEach(multi => {
           if (Array.isArray(multi)) {
             multi
@@ -371,7 +372,7 @@ export const calculateDataExtent = ({
               })
           }
         })
-      } else {
+      } else if (d._xyfCoordinates.length > 0) {
         if (Array.isArray(d._xyfCoordinates)) {
           const coordArray: number[][] = d._xyfCoordinates as number[][]
           coordArray

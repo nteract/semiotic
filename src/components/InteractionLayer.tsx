@@ -251,19 +251,19 @@ class InteractionLayer extends React.Component<Props, State> {
       this.props.customDoubleClickBehavior(dataObject)
   }
 
-  brushStart = (e?: number[] | number[][], column?: string, data?: object) => {
+  brushStart = (e?: number[] | number[][], columnName?: string, data?: object, columnData?: object) => {
     if (this.props.interaction && this.props.interaction.start)
-      this.props.interaction.start(e, column, data)
+      this.props.interaction.start(e, columnName, data, columnData)
   }
 
-  brush = (e?: number[] | number[][], column?: string, data?: object) => {
+  brush = (e?: number[] | number[][], columnName?: string, data?: object, columnData?: object) => {
     if (this.props.interaction && this.props.interaction.during)
-      this.props.interaction.during(e, column, data)
+      this.props.interaction.during(e, columnName, data, columnData)
   }
 
-  brushEnd = (e?: number[] | number[][], column?: string, data?: object) => {
+  brushEnd = (e?: number[] | number[][], columnName?: string, data?: object, columnData?: object ) => {
     if (this.props.interaction && this.props.interaction.end)
-      this.props.interaction.end(e, column, data)
+      this.props.interaction.end(e, columnName, data, columnData)
   }
 
   createBrush = (interaction: Interactivity) => {
@@ -672,13 +672,13 @@ class InteractionLayer extends React.Component<Props, State> {
         semioticBrush
           .extent([[rRange[0], 0], [rRange[1], columnHash[c].width]])
           .on("start", () => {
-            this.brushStart(mappingFn(event.selection), c, brushData)
+            this.brushStart(mappingFn(event.selection), c, brushData, columnHash[c])
           })
           .on("brush", () => {
-            this.brush(mappingFn(event.selection), c, brushData)
+            this.brush(mappingFn(event.selection), c, brushData, columnHash[c])
           })
           .on("end", () => {
-            this.brushEnd(mappingFn(event.selection), c, brushData)
+            this.brushEnd(mappingFn(event.selection), c, brushData, columnHash[c])
           })
       } else {
         selectedExtent = interaction.extent[c]
@@ -689,13 +689,13 @@ class InteractionLayer extends React.Component<Props, State> {
         semioticBrush
           .extent([[0, rRange[0]], [columnHash[c].width, rRange[1]]])
           .on("start", () => {
-            this.brushStart(mappingFn(event.selection), c, brushData)
+            this.brushStart(mappingFn(event.selection), c, brushData, columnHash[c])
           })
           .on("brush", () => {
-            this.brush(mappingFn(event.selection), c, brushData)
+            this.brush(mappingFn(event.selection), c, brushData, columnHash[c])
           })
           .on("end", () => {
-            this.brushEnd(mappingFn(event.selection), c, brushData)
+            this.brushEnd(mappingFn(event.selection), c, brushData, columnHash[c])
           })
       }
 
