@@ -7,4 +7,5 @@ export interface Interactivity {
   columnsBrush?: boolean
   projection?: string
   projectedColumns?: object
+  startEmpty?: boolean
 }

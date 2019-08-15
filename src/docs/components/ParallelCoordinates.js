@@ -52,6 +52,8 @@ export default class ParallelCoordinatesDocs extends React.Component {
 
     const hiddenHash = new Map()
 
+    console.log("this.state", this.state)
+
     Object.keys(this.state.columnExtent).forEach(key => {
       if (this.state.columnExtent[key]) {
         const extent = this.state.columnExtent[key].sort((a, b) => a - b)
@@ -104,7 +106,10 @@ export default class ParallelCoordinatesDocs extends React.Component {
       interaction: {
         columnsBrush: true,
         during: this.brushing,
-        extent: this.state.columnExtent
+        end: this.brushing,
+        extent: this.state.columnExtent,
+        startEmpty: true,
+        clearOnBrush: true
       },
       canvasConnectors: true,
       canvasPieces: true

@@ -666,7 +666,8 @@ class InteractionLayer extends React.Component<Props, State> {
       if (projection && projection === "horizontal") {
         selectedExtent = interaction.extent[c]
           ? interaction.extent[c].map(d => rScale(d))
-          : rRange
+          : interaction.startEmpty ? null : rRange
+
         brushPosition = [0, columnHash[c].x]
         semioticBrush = brushX()
         semioticBrush
@@ -683,7 +684,7 @@ class InteractionLayer extends React.Component<Props, State> {
       } else {
         selectedExtent = interaction.extent[c]
           ? interaction.extent[c].map(d => rRange[1] - rScale(d)).reverse()
-          : rRange
+          : interaction.startEmpty ? null : rRange
         brushPosition = [columnHash[c].x, 0]
         semioticBrush = brushY()
         semioticBrush
