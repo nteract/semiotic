@@ -59,7 +59,7 @@ const appleChart = {
   )
 }
 
-export default (editMode, overridePosition, setNewPosition) => {
+export default (editMode, overridePosition, setNewPosition, annotationLabel) => {
   const onDragEnd = d => {
     setNewPosition(d)
   }
@@ -69,13 +69,13 @@ export default (editMode, overridePosition, setNewPosition) => {
       className: "dot-com-bubble",
       type: "bounds",
       bounds: [{ date: new Date("1/2/1997") }, { date: new Date("1/2/2001") }],
-      label: "The dot-com bubble",
+      label: annotationLabel,
       dx: 350
     },
     {
       type: "x",
       date: "7/9/1997",
-      note: { label: "Steve Jobs Returns", align: "middle" },
+      note: { label: annotationLabel, align: "middle" },
       color: "rgb(0, 162, 206)",
       dy: -10,
       dx: 0,

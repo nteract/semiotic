@@ -16,7 +16,8 @@ export default class AppleStockChart extends React.Component {
 
     this.state = {
       editMode: true,
-      overridePosition: {}
+      overridePosition: {},
+      annotationLabel: "annotate"
     }
   }
   render() {
@@ -25,7 +26,7 @@ export default class AppleStockChart extends React.Component {
     const examples = []
     examples.push({
       name: "Basic",
-      demo: AppleStockChartRaw(this.state.editMode, {}, () => {}),
+      demo: AppleStockChartRaw(this.state.editMode, {}, () => {}, this.state.annotationLabel),
       source: `
 import { XYFrame, DividedLine } from "../../components"
 import { data } from '../sampledata/apple_stock'
@@ -120,6 +121,12 @@ const customTooltip = d => <div className="tooltip-content">
           >
             {this.state.editMode ? "Turn off editMode" : "Turn on editMode"}
           </button>
+          <button
+            style={{ color: "black" }}
+            onClick={() => this.setState({ annotationLabel: "birdbirdbird" })}
+          >
+            Change Annotation
+          </button>
           {AppleStockChartRaw(
             this.state.editMode,
             this.state.overridePosition,
@@ -133,7 +140,8 @@ const customTooltip = d => <div className="tooltip-content">
                   }
                 }
               })
-            }
+            },
+            this.state.annotationLabel
           )}
         </div>
       ),
