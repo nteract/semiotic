@@ -399,6 +399,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       () => ({}),
       true
     )
+
     const pieceStyle = stringToFn<GenericObject>(baseStyle, () => ({}), true)
     const pieceClass = stringToFn<string>(basePieceClass, () => "", true)
     const summaryClass = stringToFn<string>(baseSummaryClass, () => "", true)
@@ -1224,10 +1225,12 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
     }) as any[]
 
     const keyedData = calculatedPieceData.reduce((p, c) => {
-      if (!p[c.o]) {
-        p[c.o] = []
+      if (c.o) {
+        if (!p[c.o]) {
+          p[c.o] = []
+        }
+        p[c.o].push(c)  
       }
-      p[c.o].push(c)
       return p
     }, {})
 
@@ -1262,14 +1265,17 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
 
     const yMod = projection === "horizontal" ? midMod : zeroFunction
     const xMod = projection === "vertical" ? midMod : zeroFunction
-
     const basePieceData = calculatedPieceData.map(d =>
-      Object.assign({}, d.piece, {
-        type: "frame-hover",
-        x: d.xy.x + xMod(d.xy),
-        y: d.xy.y + yMod(d.xy)
-      })
-    )
+      { if (d.piece && d.xy) {
+        return { ...d.piece,
+          type: "frame-hover",
+          x: d.xy.x + xMod(d.xy),
+          y: d.xy.y + yMod(d.xy)
+        }  
+      }
+      return null
+    }
+    ).filter(d => d)
 
     if (
       (pieceHoverAnnotation &&

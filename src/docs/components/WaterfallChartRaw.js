@@ -50,10 +50,7 @@ function waterfall({ data, rScale, adjustedSize }) {
     const markObject = {
       o: key,
       piece: thisPiece,
-      renderElement: {
-        markType: "g",
-        children: []
-      },
+      renderElement: null,
       xy: {
         x: x + width / 2,
         y: y
@@ -62,7 +59,9 @@ function waterfall({ data, rScale, adjustedSize }) {
 
     renderedPieces.push(markObject)
 
-    markObject.renderElement.children.push(
+    const vizPieces = []
+
+    vizPieces.push(
       <rect
         height={Math.abs(height)}
         x={x}
@@ -74,7 +73,7 @@ function waterfall({ data, rScale, adjustedSize }) {
     const lineY = name === "Total" || value > 0 ? y : y + Math.abs(height)
 
     if (name !== "Total") {
-      markObject.renderElement.children.push(
+      vizPieces.push(
         <line
           x1={x + width}
           x2={x + width + padding}
@@ -85,7 +84,7 @@ function waterfall({ data, rScale, adjustedSize }) {
       )
     }
     const textOffset = name === "Total" || value > 0 ? 15 : -5
-    markObject.renderElement.children.push(
+    vizPieces.push(
       <text
         x={x + width / 2}
         y={lineY + textOffset}
@@ -95,10 +94,12 @@ function waterfall({ data, rScale, adjustedSize }) {
       </text>
     )
 
+    markObject.renderElement = <g>{vizPieces}</g>
+
     currentY -= height
   })
 
-  return renderedPieces
+  return renderedPieces.map(d => d.renderElement)
 }
 
 const waterfallChart = {
@@ -107,7 +108,7 @@ const waterfallChart = {
   rExtent: [0, 65000],
   rAccessor: d => d.value,
   oAccessor: d => d.name,
-  axis: { tickFormat: d => `$${d / 1000}k` },
+  axes: [{ orient: "left", tickFormat: d => `$${d / 1000}k` }],
   style: d => ({
     fill: d.value > 0 ? "green" : "red",
     stroke: "darkgray",
