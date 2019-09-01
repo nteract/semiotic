@@ -1437,6 +1437,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       oExtentSettings.onChange(calculatedOExtent)
     }
 
+    console.log("pieceDataXY", pieceDataXY)
+
     this.setState({
       pieceDataXY,
       adjustedPosition,

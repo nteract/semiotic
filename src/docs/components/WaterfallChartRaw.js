@@ -99,7 +99,8 @@ function waterfall({ data, rScale, adjustedSize }) {
     currentY -= height
   })
 
-  return renderedPieces.map(d => d.renderElement)
+//  return renderedPieces.map(d => d.renderElement)
+  return renderedPieces
 }
 
 const waterfallChart = {
@@ -118,7 +119,8 @@ const waterfallChart = {
   oLabel: d => <text transform="rotate(45)">{d}</text>,
   margin: { left: 60, top: 20, bottom: 100, right: 20 },
   oPadding: padding,
-  hoverAnnotation: true
+  pieceHoverAnnotation: true,
+  tooltipContent: d => { return <div className="tooltip-content"><p>{d.name}</p><p>{d.value}</p></div> }
 }
 export default (
   <div>

@@ -15,16 +15,17 @@ export default {
     name: "Semiotic",
     globals: {
       react: "React",
-      "react-dom": "ReactDOM"
+      "react-dom": "ReactDOM",
+      process: "process"
     }
   },
   /*  exports: "named",
   interop: false,
   , */
-  external: ["react", "react-dom", "process"],
+  external: ["react", "react-dom"],
   plugins: [
     typescript(),
-    node({ jsnext: true, preferBuiltins: false }),
+    node({ browser: true, jsnext: true, preferBuiltins: false }),
     commonjs({
       include: "node_modules/**",
       namedExports: {
@@ -35,6 +36,7 @@ export default {
           "sankeyRight",
           "sankeyJustify"
         ],
+        "node_modules/json2csv/dist/json2csv.umd.js": ["Parser"],
         "node_modules/process/index.js": ["nextTick"],
         "node_modules/events/events.js": ["EventEmitter"]
       }
