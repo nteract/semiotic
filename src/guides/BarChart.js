@@ -152,7 +152,7 @@ an axis in Semiotic.
       
 ## Horizontal Bar Chart
 
-Change the bar chart orientation to horizontal by specifying \`projection={"horizontal"}\`. The three possible options are \`"horizontal"`\, \`"vertical"\` or \`"radial"\`. Defaults to "vertical".
+Change the bar chart orientation to horizontal by specifying \`projection={"horizontal"}\`. The three possible options are \`"horizontal"\`, \`"vertical"\` or \`"radial"\`. Defaults to "vertical".
       `}
       />
 
