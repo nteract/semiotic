@@ -37,9 +37,9 @@ export default {
           "sankeyJustify"
         ],
         "node_modules/json2csv/dist/json2csv.umd.js": ["Parser"],
-        "node_modules/process/index.js": ["nextTick"],
+        "process": ["nextTick"],
         "node_modules/events/events.js": ["EventEmitter"]
-      }
+        }
     }),
     globals(),
     builtins(),
