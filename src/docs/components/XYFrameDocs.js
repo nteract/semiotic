@@ -855,15 +855,6 @@ export default class XYFrameDocs extends React.Component {
       undefinedOptions.responsiveWidth = true
     const displayFrame = (
       <div>
-        <Button
-          raised
-          color="primary"
-          onTouchTap={() =>
-            window.open(`https://github.com/emeeks/semiotic/wiki/xyframe`)
-          }
-        >
-          XYFrame API
-        </Button>
         <ReactFrame
           {...undefinedOptions}
           title={titleTypesHash[this.state.title]}

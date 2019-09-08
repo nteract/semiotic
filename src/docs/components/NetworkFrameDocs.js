@@ -302,11 +302,6 @@ export default class NetworkFrameDocs extends React.Component {
           <Button
             color="primary"
             raised
-            onTouchTap={() =>
-              window.open(
-                `https://github.com/emeeks/semiotic/wiki/networkframe`
-              )
-            }
           >
             NetworkFrame API
           </Button>

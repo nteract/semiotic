@@ -260,19 +260,11 @@ export default class Process extends React.Component {
             raised
             color="primary"
             label={"Prototype!"}
-            onTouchTap={() => {
-              this.setState({
-                prototypeSeed: (this.state.prototypeSeed + 1) % 3
-              })
-            }}
           />
           <Button
             raised
             color="primary"
             label={"On to Design!"}
-            onTouchTap={() => {
-              this.setState({ mode: "design" })
-            }}
           />
         </div>
         {sketchyFrames}

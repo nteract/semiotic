@@ -44,18 +44,6 @@ const DocumentComponent = props => {
   } = props
   return (
     <div className="docs-component-section">
-      <h1>
-        {name}{" "}
-        {api ? (
-          <IconButton
-            tooltip="API documentation"
-            onTouchTap={() => window.open(api)}
-          >
-            <CodeIcon />
-          </IconButton>
-        ) : null}
-      </h1>
-
       {children}
       <div>
         <div style={{ width: "850px" }}>

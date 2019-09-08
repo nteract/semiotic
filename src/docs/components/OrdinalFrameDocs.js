@@ -466,9 +466,6 @@ export default class OrdinalFrameDocs extends React.Component {
           <Button
             color="primary"
             raised
-            onTouchTap={() =>
-              window.open(`https://github.com/emeeks/semiotic/wiki/orframe`)
-            }
           >
             OrdinalFrame API
           </Button>

@@ -25,35 +25,6 @@ export default () => {
                 Interactive Examples
               </Link>
             </Button>
-            <Button
-              color="primary"
-              raised
-              onTouchTap={() =>
-                window.open(`https://github.com/emeeks/semiotic`)
-              }
-            >
-              Github Repo
-            </Button>
-            <Button
-              color="primary"
-              raised
-              onTouchTap={() =>
-                window.open(
-                  `https://github.com/emeeks/semiotic/wiki/API-Reference`
-                )
-              }
-            >
-              API Docs
-            </Button>
-            <Button
-              color="primary"
-              raised
-              onTouchTap={() =>
-                window.open(`https://github.com/emeeks/semiotic/wiki/Tutorials`)
-              }
-            >
-              Tutorials
-            </Button>
           </header>
         </div>
       </div>
