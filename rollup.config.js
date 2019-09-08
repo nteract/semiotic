@@ -15,8 +15,7 @@ export default {
     name: "Semiotic",
     globals: {
       react: "React",
-      "react-dom": "ReactDOM",
-      process: "process"
+      "react-dom": "ReactDOM"
     }
   },
   /*  exports: "named",
@@ -36,8 +35,6 @@ export default {
           "sankeyRight",
           "sankeyJustify"
         ],
-        "node_modules/json2csv/dist/json2csv.umd.js": ["Parser"],
-        "process": ["nextTick"],
         "node_modules/events/events.js": ["EventEmitter"]
         }
     }),

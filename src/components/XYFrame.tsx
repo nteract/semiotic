@@ -11,7 +11,6 @@ import {
 // components
 
 import Axis from "./Axis"
-import DownloadButton from "./DownloadButton"
 import Frame from "./Frame"
 import TooltipPositioner from './TooltipPositioner'
 import {
@@ -49,7 +48,7 @@ import {
   adjustedPositionSize,
   objectifyType
 } from "./svg/frameFunctions"
-import { xyDownloadMapping } from "./downloadDataMapping"
+
 import {
   projectedX,
   projectedY,
@@ -145,8 +144,6 @@ export type XYFrameProps = {
   foregroundGraphics?: React.ReactNode | Function
   beforeElements?: React.ReactNode
   afterElements?: React.ReactNode
-  download?: boolean | string
-  downloadFields?: Array<string>
   annotationSettings?: AnnotationHandling
   renderKey?: string | GenericAccessor<string>
   legend?: object | boolean
@@ -1472,7 +1469,6 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
 
   render() {
     const {
-      downloadFields,
       xAccessor,
       yAccessor,
       lines,
@@ -1480,7 +1476,6 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       areas,
       summaries = areas,
       name,
-      download,
       size,
       className,
       annotationSettings,
@@ -1525,32 +1520,6 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       overlay
     } = this.state
 
-    let downloadButton
-    if (download && (points || lines)) {
-      const downloadData =
-        download === "points"
-          ? mapParentsToPoints(fullDataset)
-          : points || lines || summaries || areas
-      downloadButton = (
-        <DownloadButton
-          csvName={`${name}-${new Date().toJSON()}`}
-          width={Math.floor(size[0])}
-          data={xyDownloadMapping({
-            data: downloadData,
-            xAccessor:
-              download === "points" || points
-                ? stringToArrayFn<number>(xAccessor)
-                : undefined,
-            yAccessor:
-              download === "points" || points
-                ? stringToArrayFn<number>(yAccessor)
-                : undefined,
-            fields: downloadFields
-          })}
-        />
-      )
-    }
-
     return (
       <Frame
         name="xyframe"
@@ -1593,7 +1562,6 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
         foregroundGraphics={foregroundGraphics}
         beforeElements={beforeElements}
         afterElements={afterElements}
-        downloadButton={downloadButton}
         disableContext={this.props.disableContext}
         canvasPostProcess={canvasPostProcess}
         baseMarkProps={baseMarkProps}

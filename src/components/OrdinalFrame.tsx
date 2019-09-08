@@ -42,10 +42,6 @@ import { findFirstAccessorValue } from "./data/multiAccessorUtils"
 
 import Frame from "./Frame"
 
-import DownloadButton from "./DownloadButton"
-
-import { orDownloadMapping } from "./downloadDataMapping"
-
 import {
   calculateMargin,
   objectifyType,
@@ -156,13 +152,11 @@ export type OrdinalFrameProps = {
   className?: string
   annotationSettings?: AnnotationHandling
   size: Array<number>
-  downloadFields: Array<string>
   rAccessor?: accessorType<number>
   oAccessor?: accessorType<string | number>
   oExtent?: OExtentSettingsType
   rExtent?: RExtentObject | number[]
   name?: string
-  download: boolean
   annotations: Array<object>
   matte?: boolean | object | Element | Function
   renderKey?: accessorType<string | number>
@@ -1812,11 +1806,9 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
     const {
       className,
       annotationSettings,
-      downloadFields,
       rAccessor,
       oAccessor,
       name,
-      download,
       annotations,
       matte,
       renderKey,
@@ -1859,27 +1851,10 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
       title
     } = this.state
 
-    let downloadButton
-
     const size = [
       adjustedSize[0] + margin.left + margin.right,
       adjustedSize[1] + margin.top + margin.bottom
     ]
-
-    if (download) {
-      downloadButton = (
-        <DownloadButton
-          csvName={`${name || "orframe"}-${new Date().toJSON()}`}
-          width={size[0]}
-          data={orDownloadMapping({
-            data: projectedColumns,
-            rAccessor: stringToArrayFn(rAccessor),
-            oAccessor: stringToArrayFn(oAccessor),
-            fields: downloadFields
-          })}
-        />
-      )
-    }
 
     let interactionOverflow
 
@@ -1953,7 +1928,6 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, State> {
         foregroundGraphics={[renderedForegroundGraphics, oLabels]}
         beforeElements={beforeElements}
         afterElements={afterElements}
-        downloadButton={downloadButton}
         overlay={columnOverlays}
         rScale={this.state.rScale}
         projection={projection}

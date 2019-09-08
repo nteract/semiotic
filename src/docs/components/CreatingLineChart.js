@@ -464,7 +464,6 @@ export default class CreatingLineChart extends React.Component {
           <XYFrame
             title={"Two Movies"}
             size={[700, 400]}
-            download={true}
             dataVersion="fixed"
             lines={movies}
             lineType={{

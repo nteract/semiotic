@@ -123,9 +123,7 @@ const xyFrameOtherProps = [
   "customClickBehavior",
   "customDoubleClickBehavior",
   "backgroundGraphics",
-  "foregroundGraphics",
-  "download",
-  "downloadFields"
+  "foregroundGraphics"
 ]
 
 const orFrameOtherProps = [
@@ -184,8 +182,6 @@ const sharedframeproptypes = {
   foregroundGraphics: true,
   beforeElements: true,
   afterElements: true,
-  download: true,
-  downloadFields: true,
   annotationSettings: true,
   renderKey: true,
   renderOrder: true,

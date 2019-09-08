@@ -245,7 +245,6 @@ export default class NetworkFrameDocs extends React.Component {
       edgeType: this.state.edge,
       nodeSizeAccessor: nodeSizeHash[this.state.nodeSize],
       nodeLabels: false,
-      download: true,
       hoverAnnotation: [
         { type: "frame-hover" },
         { type: "highlight", style: { fill: "red", opacity: 0.5 } }

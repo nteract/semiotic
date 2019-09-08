@@ -18,7 +18,6 @@ import AnnotationLabel from "react-annotation/lib/Types/AnnotationLabel"
 
 import Frame from "./Frame"
 
-import DownloadButton from "./DownloadButton"
 
 import {
   calculateMargin,
@@ -50,11 +49,6 @@ import {
 } from "./svg/networkDrawing"
 
 import { stringToFn } from "./data/dataFunctions"
-
-import {
-  networkNodeDownloadMapping,
-  networkEdgeDownloadMapping
-} from "./downloadDataMapping"
 
 import {
   sankeyLeft,
@@ -1878,8 +1872,6 @@ class NetworkFrame extends React.Component<
       canvasNodes,
       canvasEdges,
       name,
-      downloadFields,
-      download,
       additionalDefs,
       renderOrder = this.state.graphSettings &&
       this.state.graphSettings.type === "matrix"
@@ -1901,37 +1893,6 @@ class NetworkFrame extends React.Component<
       projectedEdges,
       title
     } = this.state
-
-    const downloadButton = []
-
-    if (download && projectedNodes.length > 0) {
-      downloadButton.push(
-        <DownloadButton
-          key="network-download-nodes"
-          csvName={`${name}-${new Date().toJSON()}`}
-          width={size[0]}
-          label={"Download Node List"}
-          data={networkNodeDownloadMapping({
-            data: projectedNodes,
-            fields: downloadFields
-          })}
-        />
-      )
-    }
-    if (download && projectedEdges.length > 0) {
-      downloadButton.push(
-        <DownloadButton
-          key="network-download-edges"
-          csvName={`${name}-${new Date().toJSON()}`}
-          width={size[0]}
-          label={"Download Edge List"}
-          data={networkEdgeDownloadMapping({
-            data: projectedEdges,
-            fields: downloadFields
-          })}
-        />
-      )
-    }
 
     let formattedOverlay
 
@@ -1973,7 +1934,6 @@ class NetworkFrame extends React.Component<
         foregroundGraphics={foregroundGraphics}
         beforeElements={beforeElements}
         afterElements={afterElements}
-        downloadButton={downloadButton}
         disableContext={disableContext}
         canvasPostProcess={canvasPostProcess}
         baseMarkProps={baseMarkProps}

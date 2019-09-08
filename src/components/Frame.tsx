@@ -54,7 +54,6 @@ type Props = {
   adjustedPosition: Array<number>
   defaultHTMLRule: Function
   defaultSVGRule: Function
-  downloadButton: React.ReactNode
   beforeElements?: React.ReactNode
   afterElements?: React.ReactNode
   points?: Array<object>
@@ -147,7 +146,6 @@ class Frame extends React.Component<Props, State> {
       foregroundGraphics,
       beforeElements,
       afterElements,
-      downloadButton,
       defaultSVGRule,
       defaultHTMLRule,
       adjustedPosition,
@@ -402,9 +400,8 @@ class Frame extends React.Component<Props, State> {
           />
           {annotationLayer}
         </SpanOrDiv>
-        {(downloadButton || afterElements) && (
+        {afterElements && (
           <SpanOrDiv span={useSpans} className={`${name} frame-after-elements`}>
-            {downloadButton}
             {afterElements}
           </SpanOrDiv>
         )}

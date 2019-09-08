@@ -179,8 +179,6 @@ export interface NetworkFrameProps {
   afterElements?: Element
   interaction?: object
   hoverAnnotation?: boolean | string | Array<object | Function>
-  download?: boolean
-  downloadFields?: Array<string>
   baseMarkProps?: object
   canvasPostProcess?: CanvasPostProcessTypes
   disableContext?: boolean

@@ -498,12 +498,6 @@ const annotationSettingTypes = {
   }
 }
 
-// const downloadFieldOptions = {
-//   line: ["id", "color", "data"],
-//   area: ["id", "coordinates"],
-//   point: ["step", "cat"]
-// }
-
 const annotationSettingLabels = setting => {
   const hash = {
     empty: "",
@@ -1033,12 +1027,6 @@ export default class XYFrameDocs extends React.Component {
             )
           }
           yScaleType={customScaleType[this.state.customScale]}
-          download={"points"}
-          //            legend={{ title: "test", position: "right", width: 200, legendGroups: [
-          //              { label: "Red stuff", styleFn: (d,i) => ({ fill: "red", fillOpacity: i * .25 + .25 }), items: [{ label: "a" }, { label: "b" }, { label: "c" }] },
-          //              { label: "Blue stuff", styleFn: (d,i) => ({ fill: "blue", fillOpacity: i * .25 + .25 }), items: [{ label: "d" }, { label: "e" }, { label: "f" }] }
-          //            ] }}
-          downloadFields={["px"]}
           axes={axesHash[this.state.axes]}
           legend={this.state.dataType === "line" && this.state.legend === "on"}
           minimap={
