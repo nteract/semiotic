@@ -1,6 +1,6 @@
 import * as React from "react"
 
-import { scaleLinear } from "d3-scale"
+import { scaleLinear, ScaleLinear } from "d3-scale"
 
 import Axis from "../Axis"
 

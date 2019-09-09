@@ -8,8 +8,8 @@ import {
   responsiveprops
 } from "./constants/frame_props"
 
-import { OrdinalFrameProps } from "./OrdinalFrame"
-import { XYFrameProps } from "./XYFrame"
+import { OrdinalFrameProps } from "./types/ordinalTypes"
+import { XYFrameProps } from "./types/xyTypes"
 
 import { CustomHoverType } from "./types/annotationTypes"
 

@@ -1,5 +1,8 @@
-
-
+import { AxisProps, CustomHoverType, AnnotationHandling, AxisGeneratingFunction } from "./annotationTypes";
+import { TitleType } from "../svg/frameFunctions";
+import { CanvasPostProcessTypes, GenericAccessor, RawLine, RawPoint, RawSummary, ExtentType, accessorType, LineTypeSettings, SummaryTypeSettings, ProjectedPoint, ProjectedBin, ProjectedSummary, ProjectedLine, MarginType, RenderPipelineType } from "./generalTypes"
+import { Interactivity } from "./interactionTypes";
+import { ScaleLinear } from "d3-scale";
 
 export type XYFrameProps = {
     useSpans: boolean
@@ -121,7 +124,7 @@ export type AnnotatedSettingsProps = {
     lineIDAccessor?: GenericAccessor<string>
     summaries?: object[]
     lines?: object[]
-    title?: React.ReactNode | object
+    title?: TitleType
     xExtent?: number[]
     yExtent?: number[]
 }
@@ -139,7 +142,7 @@ export type XYFrameState = {
     adjustedSize: number[]
     backgroundGraphics?: React.ReactNode | Function
     foregroundGraphics?: React.ReactNode | Function
-    axesData?: object[]
+    axesData?: AxisProps[]
     axes?: React.ReactNode[]
     axesTickLines?: React.ReactNode
     renderNumber: number
@@ -160,4 +163,5 @@ export type XYFrameState = {
     size: number[]
     annotatedSettings: AnnotatedSettingsProps
     overlay?: object[]
+    props: XYFrameProps
 }

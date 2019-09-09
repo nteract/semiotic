@@ -2,7 +2,6 @@ import * as React from "react"
 
 import { scaleLinear } from "d3-scale"
 
-
 // components
 
 import Frame from "./Frame"
@@ -24,8 +23,6 @@ import {
   htmlTooltipAnnotation
 } from "./annotationRules/xyframeRules"
 
-
-
 import { desaturationLayer } from "./annotationRules/baseRules"
 
 
@@ -33,8 +30,7 @@ import { relativeY, relativeX, findPointByID } from "./svg/lineDrawing"
 
 import {
   calculateMargin,
-  adjustedPositionSize,
-  objectifyType
+  adjustedPositionSize
 } from "./svg/frameFunctions"
 
 import {
@@ -65,34 +61,16 @@ import SpanOrDiv from "./SpanOrDiv"
 
 import {
   ProjectedPoint,
-  MarginType,
-  CanvasPostProcessTypes,
-  accessorType,
   ProjectedSummary,
-  ProjectedBin,
   ProjectedLine,
   GenericObject,
-  LineTypeSettings,
-  SummaryTypeSettings,
-  RawLine,
-  RawSummary,
-  RawPoint,
-  GenericAccessor,
-  RenderPipelineType,
-  ExtentType
 } from "./types/generalTypes"
 
 import {
-  AnnotationHandling,
-  CustomHoverType,
   AnnotationType,
-  AxisProps,
-  AxisGeneratingFunction
 } from "./types/annotationTypes"
 
 import { XYFrameProps, XYFrameState } from "./types/xyTypes"
-
-import { Interactivity } from "./types/interactionTypes"
 
 import { AnnotationLayerProps } from "./AnnotationLayer"
 
@@ -110,20 +88,6 @@ const projectedCoordinateNames = {
   xMiddle: projectedXMiddle,
   xTop: projectedXTop,
   xBottom: projectedXBottom
-}
-
-function mapParentsToPoints(
-  fullDataset: Array<ProjectedPoint | ProjectedBin | ProjectedSummary>
-) {
-  return fullDataset.map((d: ProjectedPoint) => {
-    if (d.parentLine) {
-      return Object.assign({}, d.parentLine, d)
-    }
-    if (d.parentSummary) {
-      return Object.assign({}, d.parentSummary, d)
-    }
-    return d
-  })
 }
 
 class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
