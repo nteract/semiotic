@@ -45,7 +45,7 @@ type Props = {
   canvasRendering?: boolean
   useSpans: boolean
   baseMarkProps?: object
-  canvasPostProcess?: "chuckClose" | Function
+  canvasPostProcess?: Function
   projection?: string
   rScale?: ScaleLinear<number, number>
   columns?: object
@@ -185,45 +185,45 @@ class Frame extends React.Component<Props, State> {
     const annotationLayer = ((totalAnnotations &&
       totalAnnotations.length > 0) ||
       legendSettings) && (
-      <AnnotationLayer
-        legendSettings={legendSettings}
-        margin={margin}
-        axes={axes}
-        voronoiHover={this.setVoronoi}
-        annotationHandling={annotationSettings}
-        pointSizeFunction={
-          annotationSettings.layout &&
-          annotationSettings.layout.pointSizeFunction
-        }
-        labelSizeFunction={
-          annotationSettings.layout &&
-          annotationSettings.layout.labelSizeFunction
-        }
-        annotations={totalAnnotations}
-        svgAnnotationRule={(d, i, thisALayer) =>
-          defaultSVGRule({
-            d,
-            i,
-            annotationLayer: thisALayer,
-            ...renderPipeline
-          })
-        }
-        htmlAnnotationRule={(d, i, thisALayer) =>
-          defaultHTMLRule({
-            d,
-            i,
-            annotationLayer: thisALayer,
-            ...renderPipeline
-          })
-        }
-        useSpans={useSpans}
-        size={adjustedSize}
-        position={[
-          adjustedPosition[0] + margin.left,
-          adjustedPosition[1] + margin.top
-        ]}
-      />
-    )
+        <AnnotationLayer
+          legendSettings={legendSettings}
+          margin={margin}
+          axes={axes}
+          voronoiHover={this.setVoronoi}
+          annotationHandling={annotationSettings}
+          pointSizeFunction={
+            annotationSettings.layout &&
+            annotationSettings.layout.pointSizeFunction
+          }
+          labelSizeFunction={
+            annotationSettings.layout &&
+            annotationSettings.layout.labelSizeFunction
+          }
+          annotations={totalAnnotations}
+          svgAnnotationRule={(d, i, thisALayer) =>
+            defaultSVGRule({
+              d,
+              i,
+              annotationLayer: thisALayer,
+              ...renderPipeline
+            })
+          }
+          htmlAnnotationRule={(d, i, thisALayer) =>
+            defaultHTMLRule({
+              d,
+              i,
+              annotationLayer: thisALayer,
+              ...renderPipeline
+            })
+          }
+          useSpans={useSpans}
+          size={adjustedSize}
+          position={[
+            adjustedPosition[0] + margin.left,
+            adjustedPosition[1] + margin.top
+          ]}
+        />
+      )
 
     const generatedTitle = generateFrameTitle({
       title: title,

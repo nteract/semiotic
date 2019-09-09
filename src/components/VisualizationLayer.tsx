@@ -2,8 +2,6 @@ import * as React from "react"
 
 import * as Rough from "roughjs-es5/lib/canvas"
 
-import { chuckCloseCanvasTransform } from "./canvas/basicCanvasEffects"
-
 import {
   MarginType,
   RenderPipelineType,
@@ -21,7 +19,7 @@ type Props = {
   canvasContext?: { getContext: Function } | null
   size: Array<number>
   margin: MarginType
-  canvasPostProcess?: string | Function
+  canvasPostProcess?: Function
   title?: { props?: any } | string
   ariaTitle?: string
   matte?: React.ReactNode
@@ -104,13 +102,13 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
       const style = piece.styleFn
         ? piece.styleFn({ ...piece.d, ...piece.d.data }, piece.i) || {}
         : {
-            fill: "black",
-            stroke: "black",
-            opacity: 1,
-            fillOpacity: 1,
-            strokeOpacity: 1,
-            strokeWidth: 1
-          }
+          fill: "black",
+          stroke: "black",
+          opacity: 1,
+          fillOpacity: 1,
+          strokeOpacity: 1,
+          strokeWidth: 1
+        }
 
       const fill = style.fill ? style.fill : "black"
       const stroke = style.stroke ? style.stroke : "black"
@@ -234,9 +232,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     context.setTransform(1, 0, 0, 1, 0, 0)
     context.globalAlpha = 1
 
-    if (this.props.canvasPostProcess === "chuckClose") {
-      chuckCloseCanvasTransform(this.props.canvasContext, context, size)
-    } else if (typeof this.props.canvasPostProcess === "function") {
+    if (typeof this.props.canvasPostProcess) {
       this.props.canvasPostProcess(this.props.canvasContext, context, size)
     }
 
@@ -314,7 +310,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
               aria-label={
                 (pipe.ariaLabel &&
                   `${renderedPipe.length} ${pipe.ariaLabel.items}s in a ${
-                    pipe.ariaLabel.chart
+                  pipe.ariaLabel.chart
                   }`) ||
                 k
               }

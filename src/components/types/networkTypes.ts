@@ -56,8 +56,8 @@ export interface EdgeType {
 
 export interface GraphSettingsType {
   type:
-    | string
-    | (({ edges, nodes }: { edges: EdgeType[]; nodes: NodeType[] }) => void)
+  | string
+  | (({ edges, nodes }: { edges: EdgeType[]; nodes: NodeType[] }) => void)
   nodes: object[]
   edges: object[] | object
   nodeHash: Map<any, NodeType>
@@ -67,8 +67,8 @@ export interface GraphSettingsType {
 
 export interface NetworkSettingsType {
   type:
-    | string
-    | (({ edges, nodes }: { edges: EdgeType[]; nodes: NodeType[] }) => void)
+  | string
+  | (({ edges, nodes }: { edges: EdgeType[]; nodes: NodeType[] }) => void)
   hierarchyChildren?: Function
   hierarchySum?: Function
   layout?: Function
@@ -128,21 +128,22 @@ export interface NetworkFrameState {
   nodeLabelAnnotations: object[]
   graphSettings: GraphSettingsType
   networkFrameRender: RenderPipelineType
+  props: NetworkFrameProps
 }
 
 export interface NetworkFrameProps {
   dataVersion?: string
   name: string
   graph?:
-    | { nodes: NodeType[]; edges: EdgeType[] }
-    | EdgeType[]
-    | {
-        (): any
-        nodes: Function
-        edges: Function
-        node: Function
-        edge: Function
-      }
+  | { nodes: NodeType[]; edges: EdgeType[] }
+  | EdgeType[]
+  | {
+    (): any
+    nodes: Function
+    edges: Function
+    node: Function
+    edge: Function
+  }
   nodes?: object[]
   edges?: object[] | object
   networkType?: string | object

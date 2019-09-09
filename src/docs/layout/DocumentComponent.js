@@ -1,8 +1,6 @@
 import * as React from "react"
 import { PrismCode } from "react-prism"
 import { dedent } from "dentist"
-import CodeIcon from "material-ui-icons/Code"
-import IconButton from "material-ui/IconButton"
 
 const DocumentProptypes = props => {
   const { name, proptypes } = props.component
@@ -35,12 +33,10 @@ const DocumentExamples = props => {
 
 const DocumentComponent = props => {
   const {
-    name,
     children,
     components = [],
     examples = [],
-    buttons = [],
-    api
+    buttons = []
   } = props
   return (
     <div className="docs-component-section">

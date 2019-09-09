@@ -62,7 +62,7 @@ export interface ProjectedSummary {
   curve?: Function
 }
 
-export type CanvasPostProcessTypes = Function | "chuckClose"
+export type CanvasPostProcessTypes = Function
 
 export type ExtentSettingsType = { extent?: Array<number>; onChange?: Function }
 
@@ -112,7 +112,7 @@ export interface RawSummary {
   coordinates?: object[]
 }
 
-export interface RawPoint {}
+export interface RawPoint { }
 
 export interface CustomAreaMarkProps {
   d: object

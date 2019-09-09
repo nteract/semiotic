@@ -326,13 +326,6 @@ export default class UsingPatternsTextures extends React.Component {
             <li>OrdinalFrame: canvasPieces</li>
             <li>NetworkFrame: canvasNodes, canvasEdges</li>
           </ol>
-          <p>
-            Additionally the canvas itself can be used for post-processing
-            effects using the frames canvasPostProcess property, which will be
-            sent (canvas, context, size) is shown below using the demo
-            "chuckClose" restyling (which does a fun Chuck Close style filter)
-            and also a custom glow filter.
-          </p>
           <div>
             <div
               style={{
@@ -350,7 +343,6 @@ export default class UsingPatternsTextures extends React.Component {
                 })}
                 oPadding={15}
                 canvasPieces={true}
-                canvasPostProcess={"chuckClose"}
               />
             </div>
             <div
@@ -407,7 +399,6 @@ export default class UsingPatternsTextures extends React.Component {
   })}
   oPadding={15}
   canvasPieces={true}
-  canvasPostProcess={"chuckClose"}
   />`
     })
 
