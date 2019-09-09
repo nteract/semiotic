@@ -75,7 +75,6 @@ function validFrameProps(originalProps, frameType) {
 
 interface FacetControllerProps {
   children: Element
-  react15Wrapper: React.ReactElement
   sharedRExtent: boolean
   sharedXExtent: boolean
   sharedYExtent: boolean
@@ -104,9 +103,9 @@ class FacetController extends React.Component<Props, State> {
   createExtent = (extentType: string, state: State, index: number) => {
     return state.extents && state.extents[extentType]
       ? {
-          onChange: this.extentHandler(extentType, index),
-          extent: state.extents[extentType]
-        }
+        onChange: this.extentHandler(extentType, index),
+        extent: state.extents[extentType]
+      }
       : { onChange: this.extentHandler(extentType, index) }
   }
 
@@ -302,16 +301,6 @@ class FacetController extends React.Component<Props, State> {
   })
 
   render() {
-    const Wrapper = this.props.react15Wrapper
-
-    if (Wrapper) {
-      return React.cloneElement(
-        Wrapper,
-        undefined,
-        this.processFacetController(this.props, this.state)
-      )
-    }
-
     return (
       <React.Fragment>
         {this.processFacetController(this.props, this.state)}
