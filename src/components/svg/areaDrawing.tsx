@@ -393,7 +393,6 @@ export function heatmapping({
 }
 
 export function trendlining({
-  preprocess = true,
   processedData = false,
   summaryType,
   data: baseData,
@@ -401,19 +400,7 @@ export function trendlining({
     Math.min(...baseData.coordinates.map(d => d.x)),
     Math.max(...baseData.coordinates.map(d => d.x))
   ],
-  finalYExtent = [
-    Math.min(...baseData.coordinates.map(d => d.y)),
-    Math.max(...baseData.coordinates.map(d => d.y))
-  ],
-  size,
-  xScaleType = scaleLinear(),
-  yScaleType = scaleLinear(),
-  margin,
-  baseMarkProps,
-  styleFn,
-  classFn,
-  renderFn,
-  chartSize
+  xScaleType = scaleLinear()
 }) {
   if (processedData) {
     return baseData[0].coordinates

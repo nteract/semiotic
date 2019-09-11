@@ -1,7 +1,7 @@
 import * as React from "react"
 import { OrdinalFrame } from "../../components"
 
-import roughjs from "roughjs/dist/rough.umd"
+import roughjs from "roughjs/dist/rough.es5.umd.js"
 
 const colors = {
   "Almond lovers": "#00a2ce",

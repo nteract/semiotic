@@ -38,8 +38,7 @@
     "email": "elijahmeeks@gmail.com"
   },
   "contributors": [
-    "Susie Lu <susie.lu.shan@gmail.com>",
-    "James J. Womack (@james_womack)"
+    "Susie Lu <susie.lu.shan@gmail.com>"
   ],
   "license": "Apache-2.0",
   "devDependencies": {
@@ -149,8 +148,8 @@
     "webpack-manifest-plugin": "1.3.2"
   },
   "peerDependencies": {
-    "react": "^15.0.0 || ^16.0.0",
-    "react-dom": "^15.0.0 || ^16.0.0"
+    "react": "^16.9.0",
+    "react-dom": "^16.9.0"
   },
   "dependencies": {
     "d3-array": "^1.2.0",
@@ -174,8 +173,6 @@
     "memoize-one": "4.0.0",
     "object-assign": "4.1.1",
     "polygon-offset": "0.3.1",
-    "promise": "8.0.1",
-    "prop-types": "15.6.0",
     "react-annotation": "^2.1.6",
     "regression": "^2.0.1",
     "semiotic-mark": "0.4.1",

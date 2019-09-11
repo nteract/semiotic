@@ -2,7 +2,7 @@ import * as React from "react"
 import { summaryChart } from "../example_settings/orframe"
 import { OrdinalFrame } from "../../components"
 import ProcessViz from "./ProcessViz"
-import roughjs from "roughjs/dist/rough.umd"
+import roughjs from "roughjs/dist/rough.es5.umd.js"
 
 const axis = {
   orient: "left",
