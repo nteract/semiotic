@@ -466,7 +466,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, OrdinalFrameState>
       canvasSummaries,
       canvasConnectors,
       renderOrder,
-      additionalDefs
+      additionalDefs,
+      sketchyRenderingEngine
     } = this.props
 
     const {
@@ -573,6 +574,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, OrdinalFrameState>
         }
         renderOrder={renderOrder}
         disableCanvasInteraction={true}
+        sketchyRenderingEngine={sketchyRenderingEngine}
       />
     )
   }

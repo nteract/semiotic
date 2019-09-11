@@ -142,6 +142,7 @@
     "typescript-eslint-parser": "^22.0.0",
     "uglify-js": "^3.1.10",
     "url-loader": "0.6.2",
+    "roughjs": "^3.1.0",
     "webpack": "3.11.0",
     "webpack-bundle-analyzer": "3.0.3",
     "webpack-dev-server": "3.0.0",
@@ -152,7 +153,6 @@
     "react-dom": "^15.0.0 || ^16.0.0"
   },
   "dependencies": {
-    "@mapbox/polylabel": "1",
     "d3-array": "^1.2.0",
     "d3-bboxCollide": "^1.0.3",
     "d3-brush": "^1.0.6",
@@ -167,7 +167,7 @@
     "d3-polygon": "^1.0.5",
     "d3-sankey-circular": "0.25.0",
     "d3-scale": "^1.0.3",
-    "d3-selection": "^1.1.0",
+    "d3-selection": "^1.4.0",
     "d3-shape": "^1.2.0",
     "d3-voronoi": "^1.0.2",
     "labella": "1.1.4",
@@ -178,8 +178,7 @@
     "prop-types": "15.6.0",
     "react-annotation": "^2.1.6",
     "regression": "^2.0.1",
-    "roughjs-es5": "0.1.0",
-    "semiotic-mark": "0.3.1",
+    "semiotic-mark": "0.4.1",
     "svg-path-bounding-box": "1.0.4"
   },
   "nyc": {

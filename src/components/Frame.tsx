@@ -7,7 +7,7 @@ import { drawMarginPath } from "./svg/frameFunctions"
 import { filterDefs } from "./constants/jsx"
 
 import SpanOrDiv from "./SpanOrDiv"
-import { MarginType } from "./types/generalTypes"
+import { MarginType, RoughType } from "./types/generalTypes"
 import { AxisProps, AnnotationHandling } from "./types/annotationTypes"
 import { LegendProps } from "./types/legendTypes"
 import { ScaleLinear } from "d3-scale"
@@ -72,6 +72,7 @@ type Props = {
   disableCanvasInteraction?: boolean
   showLinePoints?: string
   renderOrder: ReadonlyArray<VizDataLayerKeys>
+  sketchyRenderingEngine: RoughType
 }
 
 type State = {
@@ -163,7 +164,8 @@ class Frame extends React.Component<Props, State> {
       renderOrder,
       additionalDefs,
       showLinePoints,
-      disableCanvasInteraction = false
+      disableCanvasInteraction = false,
+      sketchyRenderingEngine
     } = this.props
 
     const { voronoiHover } = this.state
@@ -357,6 +359,7 @@ class Frame extends React.Component<Props, State> {
                 baseMarkProps={baseMarkProps}
                 voronoiHover={this.setVoronoi}
                 renderOrder={renderOrder}
+                sketchyRenderingEngine={sketchyRenderingEngine}
               />
               {generatedTitle && (
                 <g className="frame-title">{generatedTitle}</g>

@@ -126,7 +126,8 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
         summaryPosition: baseSummaryPosition,
         multiAxis,
         baseMarkProps = {},
-        annotations
+        annotations,
+        sketchyRenderingEngine
     } = currentProps
 
     const summaryType = objectifyType(baseSummaryType)
@@ -971,7 +972,7 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
         chartSize: size,
         margin,
         rScale,
-        baseMarkProps
+        baseMarkProps: { ...baseMarkProps, sketchyGenerator: sketchyRenderingEngine && sketchyRenderingEngine.generator },
     }) as any[]
 
     const keyedData = calculatedPieceData.reduce((p, c) => {
@@ -1005,7 +1006,7 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
             projection,
             eventListenersGenerator,
             adjustedSize,
-            baseMarkProps,
+            baseMarkProps: { ...baseMarkProps, sketchyGenerator: sketchyRenderingEngine && sketchyRenderingEngine.generator },
             //        chartSize: size,
             margin
         })

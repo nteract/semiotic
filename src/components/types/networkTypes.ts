@@ -3,7 +3,8 @@ import {
   CanvasPostProcessTypes,
   GenericObject,
   MarginType,
-  RenderPipelineType
+  RenderPipelineType,
+  RoughType
 } from "./generalTypes"
 import { LegendProps } from "./legendTypes"
 
@@ -202,4 +203,5 @@ export interface NetworkFrameProps {
     array?: NodeType[]
   ) => any
   onUnmount?: Function
+  sketchyRenderingEngine?: RoughType
 }

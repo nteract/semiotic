@@ -62,6 +62,8 @@ export interface ProjectedSummary {
   curve?: Function
 }
 
+export type RoughType = { canvas: Function, generator: Function }
+
 export type CanvasPostProcessTypes = Function
 
 export type ExtentSettingsType = { extent?: Array<number>; onChange?: Function }

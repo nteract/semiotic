@@ -670,7 +670,8 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       renderOrder,
       matte,
       frameKey,
-      showLinePoints
+      showLinePoints,
+      sketchyRenderingEngine
     } = this.props
 
     const {
@@ -741,6 +742,7 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
         canvasRendering={!!(canvasSummaries || canvasPoints || canvasLines)}
         renderOrder={renderOrder}
         overlay={overlay}
+        sketchyRenderingEngine={sketchyRenderingEngine}
       />
     )
   }

@@ -376,12 +376,12 @@ class NetworkFrame extends React.Component<
       useSpans,
       canvasNodes,
       canvasEdges,
-      name,
       additionalDefs,
       renderOrder = this.state.graphSettings &&
         this.state.graphSettings.type === "matrix"
         ? matrixRenderOrder
-        : generalRenderOrder
+        : generalRenderOrder,
+      sketchyRenderingEngine
     } = this.props
     const {
       backgroundGraphics,
@@ -394,8 +394,6 @@ class NetworkFrame extends React.Component<
       networkFrameRender,
       nodeLabelAnnotations,
       overlay,
-      projectedNodes,
-      projectedEdges,
       title
     } = this.state
 
@@ -446,6 +444,7 @@ class NetworkFrame extends React.Component<
         canvasRendering={!!(canvasNodes || canvasEdges)}
         renderOrder={renderOrder}
         disableCanvasInteraction={true}
+        sketchyRenderingEngine={sketchyRenderingEngine}
       />
     )
   }

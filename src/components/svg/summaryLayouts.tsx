@@ -809,12 +809,12 @@ export function bucketizedRenderingFn({
   if (type.axis) {
     type.axis.orient =
       projection === "horizontal" &&
-      ["left", "right"].indexOf(type.axis.orient) === -1
+        ["left", "right"].indexOf(type.axis.orient) === -1
         ? "left"
         : type.axis.orient
     type.axis.orient =
       projection === "vertical" &&
-      ["bottom", "top"].indexOf(type.axis.orient) === -1
+        ["bottom", "top"].indexOf(type.axis.orient) === -1
         ? "bottom"
         : type.axis.orient
     axisCreator = axisGenerator
@@ -980,30 +980,31 @@ export function bucketizedRenderingFn({
         let actualBins = bins
         if (subsettingFn) {
           calculatedSummaryStyle = thisSummaryData[0]
-          ? styleFn(thisSummaryData[0].piece.data, summaryI, subsettingIndex)
-          : {}
-        calculatedSummaryClass = thisSummaryData[0]
-          ? classFn(thisSummaryData[0].piece.data, summaryI, subsettingIndex)
-          : ""
+            ? styleFn(thisSummaryData[0].piece.data, summaryI, subsettingIndex)
+            : {}
+          calculatedSummaryClass = thisSummaryData[0]
+            ? classFn(thisSummaryData[0].piece.data, summaryI, subsettingIndex)
+            : ""
           actualBins = bins.map(d => {
             const actualPieces = d.pieces.filter((p, pi) => subsettingFn(p.piece, pi)).map(d => d)
             const actualValue = summaryValueAccessor(actualPieces)
             return ({
-            ...d,
-            pieces: actualPieces,
-            value: actualValue
-          })})
+              ...d,
+              pieces: actualPieces,
+              value: actualValue
+            })
+          })
         }
 
         let violinArea = area().curve(type.curve || curveCatmullRom)
-  
+
         let violinPoints = []
-  
+
         if (projection === "horizontal") {
           actualBins.forEach(summaryPoint => {
             const xValue = summaryPoint.y - bucketSize / 2
             const yValue = ((summaryPoint.value / actualMax) * columnWidth) / 2
-  
+
             violinPoints.push({
               x: xValue,
               y0: -yValue,
@@ -1031,13 +1032,13 @@ export function bucketizedRenderingFn({
           actualBins.forEach(summaryPoint => {
             const yValue = summaryPoint.y + bucketSize / 2
             const xValue = ((summaryPoint.value / actualMax) * columnWidth) / 2
-  
+
             violinPoints.push({
               y: yValue,
               x0: -xValue,
               x1: xValue
             })
-  
+
             summaryXYCoords.push({
               key: summary.name,
               x: xValue + translate[0],
@@ -1074,7 +1075,7 @@ export function bucketizedRenderingFn({
                 midAngle - (angle * bin.value) / actualMax / 2,
                 (bin.y + bin.y1 - bucketSize / 2) / 2
               )
-  
+
               //Ugh a terrible side effect has appeared
               summaryXYCoords.push({
                 key: summary.name,
@@ -1090,7 +1091,7 @@ export function bucketizedRenderingFn({
                 pieces: bin.pieces.map(d => d.piece),
                 value: bin.value
               })
-  
+
               forward.push(outsidePoint)
               backward.push(insidePoint)
             })
@@ -1100,7 +1101,7 @@ export function bucketizedRenderingFn({
               .join("L")}Z`
           }
         }
-  
+
         renderedSummaryMarks.push(
           <Mark
             {...baseMarkProps}
@@ -1166,9 +1167,9 @@ export function bucketizedRenderingFn({
 
           const yValue = type.flip
             ? (summaryPoint.value / actualMax) * (columnWidth + joyHeight) -
-              columnWidth / 2
+            columnWidth / 2
             : (-summaryPoint.value / actualMax) * (columnWidth + joyHeight) +
-              columnWidth / 2
+            columnWidth / 2
 
           joyPoints.push({
             y: yValue,
@@ -1192,9 +1193,9 @@ export function bucketizedRenderingFn({
           const xValue =
             type.flip === true
               ? (summaryPoint.value / actualMax) * (columnWidth + joyHeight) -
-                columnWidth / 2
+              columnWidth / 2
               : (-summaryPoint.value / actualMax) * (columnWidth + joyHeight) +
-                columnWidth / 2
+              columnWidth / 2
 
           joyPoints.push({
             y: yValue,
@@ -1291,6 +1292,7 @@ export const drawSummaries = ({
   //  canvasDrawing,
   baseMarkProps
 }) => {
+  console.log("baseMarkProps", baseMarkProps)
   if (!type || !type.type) return
   type = typeof type === "string" ? { type } : type
   const chartSize =

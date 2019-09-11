@@ -1,6 +1,6 @@
 import { AxisProps, CustomHoverType, AnnotationHandling, AxisGeneratingFunction } from "./annotationTypes";
 import { TitleType } from "../svg/frameFunctions";
-import { CanvasPostProcessTypes, GenericAccessor, RawLine, RawPoint, RawSummary, ExtentType, accessorType, LineTypeSettings, SummaryTypeSettings, ProjectedPoint, ProjectedBin, ProjectedSummary, ProjectedLine, MarginType, RenderPipelineType } from "./generalTypes"
+import { CanvasPostProcessTypes, GenericAccessor, RawLine, RawPoint, RawSummary, ExtentType, accessorType, LineTypeSettings, SummaryTypeSettings, ProjectedPoint, ProjectedBin, ProjectedSummary, ProjectedLine, MarginType, RenderPipelineType, RoughType } from "./generalTypes"
 import { Interactivity } from "./interactionTypes";
 import { ScaleLinear } from "d3-scale";
 
@@ -111,6 +111,7 @@ export type XYFrameProps = {
         index: number,
         array: (ProjectedPoint | ProjectedBin | ProjectedSummary)[]
     ) => any
+    sketchyRenderingEngine?: RoughType
 }
 
 export type AnnotatedSettingsProps = {

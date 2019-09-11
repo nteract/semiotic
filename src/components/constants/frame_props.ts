@@ -111,49 +111,6 @@ export const networkFrameChangeProps = [
   "edgeType"
 ]
 
-/*
-const xyFrameOtherProps = [
-  "matte",
-  "tooltipContent",
-  "interaction",
-  "annotations",
-  "svgAnnotationRules",
-  "htmlAnnotationRules",
-  "customHoverBehavior",
-  "customClickBehavior",
-  "customDoubleClickBehavior",
-  "backgroundGraphics",
-  "foregroundGraphics"
-]
-
-const orFrameOtherProps = [
-  "annotations",
-  "htmlAnnotationRules",
-  "tooltipContent",
-  "interaction",
-  "customHoverBehavior",
-  "customClickBehavior",
-  "svgAnnotationRules",
-  "hoverAnnotation",
-  "backgroundGraphics",
-  "foregroundGraphics"
-]
-
-const networkFrameOtherProps = [
-  "annotations",
-  "htmlAnnotationRules",
-  "tooltipContent",
-  "interaction",
-  "customHoverBehavior",
-  "customClickBehavior",
-  "customDoubleClickBehavior",
-  "svgAnnotationRules",
-  "hoverAnnotation",
-  "backgroundGraphics",
-  "foregroundGraphics"
-]
-*/
-
 const sharedframeproptypes = {
   useSpans: true,
   title: true,
@@ -186,7 +143,8 @@ const sharedframeproptypes = {
   renderKey: true,
   renderOrder: true,
   legend: true,
-  onUnmount: true
+  onUnmount: true,
+  sketchyRenderingEngine: true
 }
 
 export const xyframeproptypes = {

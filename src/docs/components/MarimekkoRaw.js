@@ -1,6 +1,8 @@
 import * as React from "react"
 import { OrdinalFrame } from "../../components"
 
+import roughjs from "roughjs/dist/rough.umd"
+
 const colors = {
   "Almond lovers": "#00a2ce",
   "Berry buyers": "#4d430c",
@@ -88,7 +90,8 @@ const mekkoChart = {
   oLabel: {
     orient: "top",
     label: d => <text transform="rotate(-45)">{d}</text>
-  }
+  },
+  sketchyRenderingEngine: roughjs
 }
 
 export default (

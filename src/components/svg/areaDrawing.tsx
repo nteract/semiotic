@@ -1,7 +1,6 @@
 import * as React from "react"
 import { contourDensity } from "d3-contour"
 import { scaleLinear } from "d3-scale"
-import polylabel from "@mapbox/polylabel"
 import { hexbin } from "d3-hexbin"
 import regression from "regression"
 import { curveCardinal } from "d3-shape"
@@ -302,9 +301,9 @@ export function heatmapping({
 
   const actualResolution = [
     Math.ceil(((xCellPx && xCellPx / size[0]) || xBinPercent) * size[0] * 10) /
-      10,
+    10,
     Math.ceil(((yCellPx && yCellPx / size[1]) || yBinPercent) * size[1] * 10) /
-      10
+    10
   ]
   let maxValue = -Infinity
 
@@ -511,5 +510,5 @@ export function shapeBounds(coordinates) {
     top = d[1] < top[1] ? d : top
   })
 
-  return { center: polylabel([coordinates]), top, left, right, bottom }
+  return { center: [(left[0] + right[0]) / 2, (top[1] + bottom[1]) / 2], top, left, right, bottom }
 }

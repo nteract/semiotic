@@ -10,7 +10,8 @@ import {
     ProjectionTypes,
     accessorType,
     GenericObject,
-    OrdinalSummaryTypeSettings
+    OrdinalSummaryTypeSettings,
+    RoughType
 } from "./generalTypes"
 
 import {
@@ -140,6 +141,7 @@ export type OrdinalFrameProps = {
     renderOrder?: ReadonlyArray<"pieces" | "summaries" | "connectors">
     multiAxis?: boolean
     onUnmount?: Function
+    sketchyRenderingEngine?: RoughType
 }
 
 export type OrdinalFrameState = {

@@ -2,6 +2,7 @@ import * as React from "react"
 import { summaryChart } from "../example_settings/orframe"
 import { OrdinalFrame } from "../../components"
 import ProcessViz from "./ProcessViz"
+import roughjs from "roughjs/dist/rough.umd"
 
 const axis = {
   orient: "left",
@@ -96,7 +97,9 @@ const violinChart = {
       stepName: "August",
       label: "HTML Note at 30"
     }
-  ]
+  ],
+  summaryRenderMode: "sketchy",
+  sketchyRenderingEngine: roughjs
 }
 
 export default (

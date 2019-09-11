@@ -1,14 +1,12 @@
 import * as React from "react"
 
-import * as Rough from "roughjs-es5/lib/canvas"
-
 import {
   MarginType,
   RenderPipelineType,
-  VizLayerTypes
+  VizLayerTypes,
+  RoughType
 } from "./types/generalTypes"
 
-const RoughCanvas = Rough.RoughCanvas
 
 type Props = {
   axes?: Array<React.ReactNode>
@@ -31,6 +29,7 @@ type Props = {
   position: Array<number>
   disableContext?: boolean
   renderOrder: ReadonlyArray<VizLayerTypes>
+  sketchyRenderingEngine?: RoughType
 }
 
 type State = {
@@ -76,6 +75,8 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
       !this.canvasDrawing
     )
       return
+
+    const { sketchyRenderingEngine } = this.props
 
     const size = [
       this.props.size[0] + this.props.margin.left + this.props.margin.right,
@@ -131,18 +132,30 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
         piece.markProps.renderMode ||
         (piece.renderFn &&
           piece.renderFn({ ...piece.d, ...piece.d.data }, piece.i))
-      const actualRenderMode =
+      let actualRenderMode =
         (renderObject && renderObject.renderMode) || renderObject
 
       if (actualRenderMode) {
-        rc = rc || new RoughCanvas(this.props.canvasContext)
-        const rcExtension =
-          (typeof renderObject === "object" && renderObject) || {}
-        rcSettings = {
-          fill,
-          stroke,
-          strokeWidth: context.lineWidth,
-          ...rcExtension
+        if (!sketchyRenderingEngine) {
+          console.error("You cannot render sketchy graphics without specifying a Rough.js-like library as the sketchyRenderingEngine prop of your frame")
+          actualRenderMode = undefined
+        }
+        else {
+          const RoughCanvas = sketchyRenderingEngine.canvas
+          console.log("RoughCanvas", RoughCanvas)
+          if (!RoughCanvas) {
+            console.error("The sketchyRenderingEngine you specify does not expose a prop `RoughCanvas` and so cannot render sketchy HTML5 Canvas graphics")
+          } else {
+            rc = rc || RoughCanvas(this.props.canvasContext)
+            const rcExtension =
+              (typeof renderObject === "object" && renderObject) || {}
+            rcSettings = {
+              fill,
+              stroke,
+              strokeWidth: context.lineWidth,
+              ...rcExtension
+            }
+          }
         }
       }
 
@@ -232,7 +245,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     context.setTransform(1, 0, 0, 1, 0, 0)
     context.globalAlpha = 1
 
-    if (typeof this.props.canvasPostProcess) {
+    if (this.props.canvasPostProcess) {
       this.props.canvasPostProcess(this.props.canvasContext, context, size)
     }
 
@@ -264,7 +277,8 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
       projectedCoordinateNames,
       renderPipeline = {},
       baseMarkProps = {},
-      renderOrder = []
+      renderOrder = [],
+      sketchyRenderingEngine
     } = props
     this.canvasDrawing = []
     const canvasDrawing = this.canvasDrawing
@@ -286,17 +300,22 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
           !Array.isArray(pipe.data)) ||
           (pipe.data && pipe.data.length > 0))
       ) {
+        console.log("sketchyRenderingEngine", sketchyRenderingEngine, sketchyRenderingEngine.generator)
+        const additionalMarkProps = {
+          sketchyGenerator: sketchyRenderingEngine && sketchyRenderingEngine.generator,
+          "aria-label":
+            (pipe.ariaLabel && pipe.ariaLabel.items) || "dataviz-element",
+          role: "img",
+          tabIndex: -1
+        }
+
+        console.log("{ ...baseMarkProps, ...additionalMarkProps }", { ...baseMarkProps, ...additionalMarkProps })
         const renderedPipe = pipe.behavior({
           xScale,
           yScale,
           canvasDrawing,
           projectedCoordinateNames,
-          baseMarkProps: Object.assign(baseMarkProps, {
-            "aria-label":
-              (pipe.ariaLabel && pipe.ariaLabel.items) || "dataviz-element",
-            role: "img",
-            tabIndex: -1
-          }),
+          baseMarkProps: { ...baseMarkProps, ...additionalMarkProps },
           ...pipe
         })
 
