@@ -129,6 +129,7 @@
     "rollup-plugin-nodent": "^0.2.2",
     "rollup-plugin-replace": "^2.0.0",
     "rollup-plugin-typescript": "^1.0.0",
+    "roughjs": "^3.1.0",
     "source-map-loader": "^0.2.4",
     "style-loader": "^0.21.0",
     "sw-precache-webpack-plugin": "0.11.4",
@@ -141,9 +142,8 @@
     "typescript-eslint-parser": "^22.0.0",
     "uglify-js": "^3.1.10",
     "url-loader": "0.6.2",
-    "roughjs": "^3.1.0",
     "webpack": "3.11.0",
-    "webpack-bundle-analyzer": "3.0.3",
+    "webpack-bundle-analyzer": "^3.4.1",
     "webpack-dev-server": "3.0.0",
     "webpack-manifest-plugin": "1.3.2"
   },

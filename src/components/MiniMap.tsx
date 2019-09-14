@@ -1,6 +1,8 @@
 import * as React from "react"
 
-import XYFrame, { XYFrameProps } from "./XYFrame"
+import XYFrame from "./XYFrame"
+
+import { XYFrameProps } from "./types/xyTypes"
 
 import { Interactivity } from "./types/interactionTypes"
 

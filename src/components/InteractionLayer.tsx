@@ -26,6 +26,8 @@ import { MarginType } from "./types/generalTypes"
 import { ScaleLinear, scaleLinear } from "d3-scale"
 import { canvasEvent } from "./svg/frameFunctions"
 
+import { changeVoronoi, clickVoronoi, doubleclickVoronoi, brushing, brushEnd, brushStart } from "./processing/interaction"
+
 type BaseColumnType = { x: number; width: number }
 
 type VoronoiEntryType = {
@@ -113,9 +115,9 @@ const generateOEndMappingFn = projectedColumns => (d): null | Array<any> => {
     const lastColumn: { x: number; width: number } = foundColumns[
       foundColumns.length - 1
     ] || {
-      x: 0,
-      width: 0
-    }
+        x: 0,
+        width: 0
+      }
 
     const columnPosition = [
       firstColumn.x + Math.min(5, firstColumn.width / 10),
@@ -164,7 +166,7 @@ class InteractionLayer extends React.Component<Props, State> {
               if (overlay && overlay.props) {
                 overlay.props.onMouseEnter()
               } else {
-                this.changeVoronoi()
+                changeVoronoi()
               }
             }
             canvasContext.onclick = e => {
@@ -200,72 +202,6 @@ class InteractionLayer extends React.Component<Props, State> {
 
   canvasMap: Map<string, number> = new Map()
 
-  constructDataObject = (d?: { data?: object[]; type?: string }) => {
-    if (d === undefined) return d
-    const { points } = this.props
-    return d && d.data ? { points, ...d.data, ...d } : { points, ...d }
-  }
-
-  changeVoronoi = (
-    d?: { type?: string; data?: object[] },
-    customHoverTypes?: CustomHoverType
-  ) => {
-    const { customHoverBehavior, voronoiHover } = this.props
-    //Until semiotic 2
-    const dataObject = this.constructDataObject(d)
-    if (customHoverBehavior) customHoverBehavior(dataObject)
-
-    if (!d) voronoiHover(null)
-    else if (customHoverTypes === true) {
-      const vorD = Object.assign({}, dataObject)
-      vorD.type = vorD.type === "column-hover" ? "column-hover" : "frame-hover"
-      voronoiHover(vorD)
-    } else if (customHoverTypes) {
-      const arrayWrappedHoverTypes = Array.isArray(customHoverTypes)
-        ? customHoverTypes
-        : [customHoverTypes]
-      const mappedHoverTypes = arrayWrappedHoverTypes
-        .map(c => {
-          const finalC = typeof c === "function" ? c(dataObject) : c
-          if (!finalC) return undefined
-          return Object.assign({}, dataObject, finalC)
-        })
-        .filter(d => d)
-
-      voronoiHover(mappedHoverTypes)
-    }
-  }
-
-  clickVoronoi = (d: Object) => {
-    //Until semiotic 2
-    const dataObject = this.constructDataObject(d)
-
-    if (this.props.customClickBehavior)
-      this.props.customClickBehavior(dataObject)
-  }
-  doubleclickVoronoi = (d: Object) => {
-    //Until semiotic 2
-    const dataObject = this.constructDataObject(d)
-
-    if (this.props.customDoubleClickBehavior)
-      this.props.customDoubleClickBehavior(dataObject)
-  }
-
-  brushStart = (e?: number[] | number[][], columnName?: string, data?: object, columnData?: object) => {
-    if (this.props.interaction && this.props.interaction.start)
-      this.props.interaction.start(e, columnName, data, columnData)
-  }
-
-  brush = (e?: number[] | number[][], columnName?: string, data?: object, columnData?: object) => {
-    if (this.props.interaction && this.props.interaction.during)
-      this.props.interaction.during(e, columnName, data, columnData)
-  }
-
-  brushEnd = (e?: number[] | number[][], columnName?: string, data?: object, columnData?: object ) => {
-    if (this.props.interaction && this.props.interaction.end)
-      this.props.interaction.end(e, columnName, data, columnData)
-  }
-
   createBrush = (interaction: Interactivity) => {
     let semioticBrush, mappingFn, selectedExtent, endMappingFn
 
@@ -291,12 +227,12 @@ class InteractionLayer extends React.Component<Props, State> {
     const {
       extent = actualBrush === "xyBrush"
         ? [
-            [xScale.invert(0), yScale.invert(0)],
-            [xScale.invert(size[0]), yScale.invert(size[1])]
-          ]
+          [xScale.invert(0), yScale.invert(0)],
+          [xScale.invert(size[0]), yScale.invert(size[1])]
+        ]
         : actualBrush === "xBrush"
-        ? [xScale.invert(0), xScale.invert(size[0])]
-        : [yScale.invert(0), yScale.invert(size[1])]
+          ? [xScale.invert(0), xScale.invert(size[0])]
+          : [yScale.invert(0), yScale.invert(size[1])]
     } = interaction
 
     if (extent.indexOf && extent.indexOf(undefined) !== -1) {
@@ -363,7 +299,7 @@ class InteractionLayer extends React.Component<Props, State> {
           selectedExtent = [
             projectedColumns[leftExtent].x,
             projectedColumns[rightExtent].x +
-              projectedColumns[rightExtent].width
+            projectedColumns[rightExtent].width
           ]
         }
       }
@@ -375,13 +311,13 @@ class InteractionLayer extends React.Component<Props, State> {
     semioticBrush
       .extent([[0, 0], [this.props.size[0], this.props.size[1]]])
       .on("start", () => {
-        this.brushStart(mappingFn(event.selection), undefined, brushData)
+        brushStart(mappingFn(event.selection), undefined, brushData, interaction)
       })
       .on("brush", () => {
-        this.brush(mappingFn(event.selection), undefined, brushData)
+        brushing(mappingFn(event.selection), undefined, brushData, interaction)
       })
       .on("end", () => {
-        this.brushEnd(endMappingFn(event.selection), undefined, brushData)
+        brushEnd(endMappingFn(event.selection), undefined, brushData, interaction)
       })
 
     return (
@@ -423,7 +359,9 @@ class InteractionLayer extends React.Component<Props, State> {
       interactionOverflow = { top: 0, bottom: 0, left: 0, right: 0 },
       customClickBehavior,
       customDoubleClickBehavior,
-      hoverAnnotation
+      customHoverBehavior,
+      hoverAnnotation,
+      voronoiHover
     } = props
     const whichPoints = {
       top: projectedYTop,
@@ -446,8 +384,8 @@ class InteractionLayer extends React.Component<Props, State> {
             showLinePoints && d[whichPoints[showLinePoints]] !== undefined
               ? d[whichPoints[showLinePoints]]
               : d[projectedYMiddle] !== undefined
-              ? d[projectedYMiddle]
-              : d[projectedY]
+                ? d[projectedYMiddle]
+                : d[projectedY]
           )
         )
         if (
@@ -499,16 +437,16 @@ class InteractionLayer extends React.Component<Props, State> {
         return (
           <path
             onClick={() => {
-              this.clickVoronoi(voronoiDataset[i])
+              clickVoronoi(voronoiDataset[i], customClickBehavior, points)
             }}
             onDoubleClick={() => {
-              this.doubleclickVoronoi(voronoiDataset[i])
+              doubleclickVoronoi(voronoiDataset[i], customDoubleClickBehavior, points)
             }}
             onMouseEnter={() => {
-              this.changeVoronoi(voronoiDataset[i], props.hoverAnnotation)
+              changeVoronoi(voronoiDataset[i], hoverAnnotation, customHoverBehavior, voronoiHover, points)
             }}
             onMouseLeave={() => {
-              this.changeVoronoi()
+              changeVoronoi()
             }}
             key={`interactionVoronoi${i}`}
             d={`M${d.join("L")}Z`}
@@ -530,23 +468,24 @@ class InteractionLayer extends React.Component<Props, State> {
           i: number
         ) => {
           const { overlayData, ...rest } = overlayRegion
+          const overlayProps = {
+            key: `overlay-${i}`,
+            onMouseEnter: () => {
+              changeVoronoi(overlayData, props.hoverAnnotation, customHoverBehavior, voronoiHover, points)
+            },
+            onMouseLeave: () => {
+              changeVoronoi()
+            },
+            onClick: () => {
+              clickVoronoi(overlayData, customClickBehavior, points)
+            },
+            onDoubleClick: () => {
+              doubleclickVoronoi(overlayData, customDoubleClickBehavior, points)
+            },
+            style: { opacity: 0, ...pointerStyle }
+          }
+
           if (React.isValidElement(overlayRegion.renderElement)) {
-            const overlayProps = {
-              key: `overlay-${i}`,
-              onMouseEnter: () => {
-                this.changeVoronoi(overlayData, props.hoverAnnotation)
-              },
-              onMouseLeave: () => {
-                this.changeVoronoi()
-              },
-              onClick: () => {
-                this.clickVoronoi(overlayData)
-              },
-              onDoubleClick: () => {
-                this.doubleclickVoronoi(overlayData)
-              },
-              style: { opacity: 0, ...pointerStyle }
-            }
             return React.cloneElement(overlayRegion.renderElement, overlayProps)
           } else {
             return (
@@ -554,19 +493,7 @@ class InteractionLayer extends React.Component<Props, State> {
                 forceUpdate={true}
                 {...rest}
                 key={`overlay-${i}`}
-                onMouseEnter={() => {
-                  this.changeVoronoi(overlayData, props.hoverAnnotation)
-                }}
-                onMouseLeave={() => {
-                  this.changeVoronoi()
-                }}
-                onClick={() => {
-                  this.clickVoronoi(overlayData)
-                }}
-                onDoubleClick={() => {
-                  this.doubleclickVoronoi(overlayData)
-                }}
-                style={{ opacity: 0, ...pointerStyle }}
+                {...overlayProps}
               />
             )
           }
@@ -653,9 +580,9 @@ class InteractionLayer extends React.Component<Props, State> {
         return !d
           ? null
           : [
-              rScaleReverse(rScale.invert(d[1])),
-              rScaleReverse(rScale.invert(d[0]))
-            ]
+            rScaleReverse(rScale.invert(d[1])),
+            rScaleReverse(rScale.invert(d[0]))
+          ]
       }
 
     const rRange = rScale.range()
@@ -673,13 +600,13 @@ class InteractionLayer extends React.Component<Props, State> {
         semioticBrush
           .extent([[rRange[0], 0], [rRange[1], columnHash[c].width]])
           .on("start", () => {
-            this.brushStart(mappingFn(event.selection), c, brushData, columnHash[c])
+            brushStart(mappingFn(event.selection), c, brushData, columnHash[c], interaction)
           })
           .on("brush", () => {
-            this.brush(mappingFn(event.selection), c, brushData, columnHash[c])
+            brushing(mappingFn(event.selection), c, brushData, columnHash[c], interaction)
           })
           .on("end", () => {
-            this.brushEnd(mappingFn(event.selection), c, brushData, columnHash[c])
+            brushEnd(mappingFn(event.selection), c, brushData, columnHash[c], interaction)
           })
       } else {
         selectedExtent = interaction.extent[c]
@@ -690,13 +617,13 @@ class InteractionLayer extends React.Component<Props, State> {
         semioticBrush
           .extent([[0, rRange[0]], [columnHash[c].width, rRange[1]]])
           .on("start", () => {
-            this.brushStart(mappingFn(event.selection), c, brushData, columnHash[c])
+            brushStart(mappingFn(event.selection), c, brushData, columnHash[c], interaction)
           })
           .on("brush", () => {
-            this.brush(mappingFn(event.selection), c, brushData, columnHash[c])
+            brushing(mappingFn(event.selection), c, brushData, columnHash[c], interaction)
           })
           .on("end", () => {
-            this.brushEnd(mappingFn(event.selection), c, brushData, columnHash[c])
+            brushEnd(mappingFn(event.selection), c, brushData, columnHash[c], interaction)
           })
       }
 

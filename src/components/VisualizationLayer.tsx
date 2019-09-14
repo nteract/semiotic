@@ -33,12 +33,102 @@ type Props = {
 }
 
 type State = {
-  canvasDrawing: Array<object>
+  canvasDrawing: Array<{ tx: number, ty: number, i: number, d: { data: object }, styleFn: Function, markProps: { renderMode?: object, markType: string, width: number, height: number, x: number, y: number, r: number, rx: number, d: string }, renderFn?: Function }>
   dataVersion?: string
   renderedElements: Array<React.ReactNode>
   focusedPieceIndex: number | null
-  focusedVisualizationGroup?: any
+  focusedVisualizationGroup?: any,
+  piecesGroup: object,
+  props: Props
 }
+
+const updateVisualizationLayer = (props: Props) => {
+  const {
+    xScale,
+    yScale,
+    dataVersion,
+    projectedCoordinateNames,
+    renderPipeline = {},
+    baseMarkProps = {},
+    renderOrder = [],
+    sketchyRenderingEngine
+  } = props
+
+  const canvasDrawing = []
+
+  const piecesGroup = {}
+
+  const renderedElements = []
+  const renderVizKeys: Array<VizLayerTypes> = Object.keys(
+    renderPipeline
+  ) as VizLayerTypes[]
+  const renderKeys = renderOrder.concat(
+    renderVizKeys.filter(d => renderOrder.indexOf(d) === -1)
+  )
+
+  renderKeys.forEach(k => {
+    const pipe = renderPipeline[k]
+    if (
+      pipe &&
+      ((pipe.data &&
+        typeof pipe.data === "object" &&
+        !Array.isArray(pipe.data)) ||
+        (pipe.data && pipe.data.length > 0))
+    ) {
+      const additionalMarkProps = {
+        sketchyGenerator: sketchyRenderingEngine && sketchyRenderingEngine.generator,
+        "aria-label":
+          (pipe.ariaLabel && pipe.ariaLabel.items) || "dataviz-element",
+        role: "img",
+        tabIndex: -1
+      }
+
+      const renderedPipe = pipe.behavior({
+        xScale,
+        yScale,
+        canvasDrawing,
+        projectedCoordinateNames,
+        baseMarkProps: { ...baseMarkProps, ...additionalMarkProps },
+        ...pipe
+      })
+
+      if (renderedPipe && renderedPipe.length > 0) {
+        renderedElements.push(
+          <g
+            key={k}
+            className={k}
+            role={"group"}
+            tabIndex={0}
+            aria-label={
+              (pipe.ariaLabel &&
+                `${renderedPipe.length} ${pipe.ariaLabel.items}s in a ${
+                pipe.ariaLabel.chart
+                }`) ||
+              k
+            }
+            onKeyDown={e => this.handleKeyDown(e, k)}
+            onBlur={() => {
+              this.props.voronoiHover(undefined)
+            }}
+            ref={thisNode =>
+              thisNode && (piecesGroup[k] = thisNode.childNodes)
+            }
+          >
+            {renderedPipe}
+          </g>
+        )
+      }
+    }
+  })
+
+  return {
+    renderedElements,
+    dataVersion,
+    canvasDrawing,
+    piecesGroup
+  }
+}
+
 
 class VisualizationLayer extends React.PureComponent<Props, State> {
   static defaultProps = {
@@ -46,16 +136,20 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     margin: { left: 0, top: 0, right: 0, bottom: 0 }
   }
 
-  piecesGroup = {}
-  canvasDrawing = []
-
-  state = {
-    canvasDrawing: [],
-    dataVersion: "",
-    renderedElements: [],
-    focusedPieceIndex: null,
-    focusedVisualizationGroup: null
+  constructor(props: Props) {
+    super(props)
+    this.state = {
+      canvasDrawing: [],
+      dataVersion: "",
+      renderedElements: [],
+      focusedPieceIndex: null,
+      focusedVisualizationGroup: null,
+      piecesGroup: {},
+      props,
+      ...updateVisualizationLayer(props)
+    }
   }
+
 
   componentDidUpdate(lp: object) {
     const np = this.props
@@ -71,8 +165,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     if (
       update === false ||
       this.props.disableContext ||
-      !this.props.canvasContext ||
-      !this.canvasDrawing
+      !this.props.canvasContext
     )
       return
 
@@ -99,7 +192,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
       size[1]
     )
 
-    this.canvasDrawing.forEach(piece => {
+    this.state.canvasDrawing.forEach(piece => {
       const style = piece.styleFn
         ? piece.styleFn({ ...piece.d, ...piece.d.data }, piece.i) || {}
         : {
@@ -251,10 +344,10 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
 
     if (
       this.state.focusedVisualizationGroup !== null &&
-      this.piecesGroup[this.state.focusedVisualizationGroup] &&
+      this.state.piecesGroup[this.state.focusedVisualizationGroup] &&
       this.state.focusedPieceIndex !== null
     ) {
-      const focusElParent = this.piecesGroup[
+      const focusElParent = this.state.piecesGroup[
         this.state.focusedVisualizationGroup
       ][this.state.focusedPieceIndex]
 
@@ -269,111 +362,25 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     }
   }
 
-  updateVisualizationLayer = (props: Props) => {
-    const {
-      xScale,
-      yScale,
-      dataVersion,
-      projectedCoordinateNames,
-      renderPipeline = {},
-      baseMarkProps = {},
-      renderOrder = [],
-      sketchyRenderingEngine
-    } = props
-    this.canvasDrawing = []
-    const canvasDrawing = this.canvasDrawing
-
-    const renderedElements = []
-    const renderVizKeys: Array<VizLayerTypes> = Object.keys(
-      renderPipeline
-    ) as VizLayerTypes[]
-    const renderKeys = renderOrder.concat(
-      renderVizKeys.filter(d => renderOrder.indexOf(d) === -1)
-    )
-
-    renderKeys.forEach(k => {
-      const pipe = renderPipeline[k]
-      if (
-        pipe &&
-        ((pipe.data &&
-          typeof pipe.data === "object" &&
-          !Array.isArray(pipe.data)) ||
-          (pipe.data && pipe.data.length > 0))
-      ) {
-        console.log("sketchyRenderingEngine", sketchyRenderingEngine, sketchyRenderingEngine.generator)
-        const additionalMarkProps = {
-          sketchyGenerator: sketchyRenderingEngine && sketchyRenderingEngine.generator,
-          "aria-label":
-            (pipe.ariaLabel && pipe.ariaLabel.items) || "dataviz-element",
-          role: "img",
-          tabIndex: -1
-        }
-
-        console.log("{ ...baseMarkProps, ...additionalMarkProps }", { ...baseMarkProps, ...additionalMarkProps })
-        const renderedPipe = pipe.behavior({
-          xScale,
-          yScale,
-          canvasDrawing,
-          projectedCoordinateNames,
-          baseMarkProps: { ...baseMarkProps, ...additionalMarkProps },
-          ...pipe
-        })
-
-        if (renderedPipe && renderedPipe.length > 0) {
-          renderedElements.push(
-            <g
-              key={k}
-              className={k}
-              role={"group"}
-              tabIndex={0}
-              aria-label={
-                (pipe.ariaLabel &&
-                  `${renderedPipe.length} ${pipe.ariaLabel.items}s in a ${
-                  pipe.ariaLabel.chart
-                  }`) ||
-                k
-              }
-              onKeyDown={e => this.handleKeyDown(e, k)}
-              onBlur={() => {
-                this.props.voronoiHover(undefined)
-              }}
-              ref={thisNode =>
-                thisNode && (this.piecesGroup[k] = thisNode.childNodes)
-              }
-            >
-              {renderedPipe}
-            </g>
-          )
-        }
-      }
-    })
-
-    this.setState({
-      renderedElements,
-      dataVersion
-    })
-  }
-  componentWillMount() {
-    this.updateVisualizationLayer(this.props)
-  }
-
-  componentWillReceiveProps(np: Props) {
-    const lp = this.props
-    const propKeys = Object.keys(np)
+  static getDerivedStateFromProps(nextProps: Props, prevState: State) {
+    const { props } = prevState
+    const lp = props
+    const propKeys = Object.keys(nextProps)
 
     let update = false
     propKeys.forEach(key => {
-      if (key !== "title" && lp[key] !== np[key]) {
+      if (key !== "title" && lp[key] !== nextProps[key]) {
         update = true
       }
     })
 
     if (
       update ||
-      (np.dataVersion && np.dataVersion !== this.state.dataVersion)
+      (nextProps.dataVersion && nextProps.dataVersion !== prevState.dataVersion)
     ) {
-      this.updateVisualizationLayer(np)
+      return { ...updateVisualizationLayer(nextProps), props: nextProps }
     }
+    return null
   }
 
   handleKeyDown = (e: { keyCode }, vizgroup: string) => {
@@ -396,8 +403,8 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
 
     newPieceIndex =
       newPieceIndex < 0
-        ? this.piecesGroup[vizgroup].length + newPieceIndex
-        : newPieceIndex % this.piecesGroup[vizgroup].length
+        ? this.state.piecesGroup[vizgroup].length + newPieceIndex
+        : newPieceIndex % this.state.piecesGroup[vizgroup].length
 
     /*
     const piece = this.props.renderPipeline[vizgroup].accessibleTransform(
@@ -408,7 +415,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     const piece = this.props.renderPipeline[vizgroup].accessibleTransform(
       this.props.renderPipeline[vizgroup].data,
       newPieceIndex,
-      this.piecesGroup[vizgroup][newPieceIndex]
+      this.state.piecesGroup[vizgroup][newPieceIndex]
     )
 
     this.props.voronoiHover(piece)
@@ -420,8 +427,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const props = this.props
-    const { matte, matteClip, axes, frameKey = "", margin } = props
+    const { matte, matteClip, axes, frameKey = "", margin, title, ariaTitle } = this.props
 
     const { renderedElements } = this.state
 
@@ -433,15 +439,15 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
 
     let ariaLabel = ""
 
-    const title =
-      (this.props.title && this.props.ariaTitle) || this.props.title
-        ? typeof this.props.title !== "string" &&
-          this.props.title.props &&
-          typeof this.props.title.props.children === "string"
-          ? `titled ${this.props.title.props.children}`
+    const finalTitle =
+      (title && ariaTitle) || title
+        ? typeof title !== "string" &&
+          title.props &&
+          typeof title.props.children === "string"
+          ? `titled ${title.props.children}`
           : "with a complex title"
         : "with no title"
-    ariaLabel = `Visualization ${title}. Use arrow keys to navigate elements.`
+    ariaLabel = `Visualization ${finalTitle}. Use arrow keys to navigate elements.`
 
     const renderedDataVisualization =
       ((renderedAxes || (renderedElements && renderedElements.length > 0)) && (

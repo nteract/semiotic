@@ -244,18 +244,18 @@ class Axis extends React.Component<AxisProps, AxisState> {
           value: this.props.scale.invert(this.state.hoverAnnotation)
         })
       ) : (
-        <g>
-          {React.isValidElement(formattedValue) ? (
-            <g transform={`translate(${textX},${textY})`}>{formattedValue}</g>
-          ) : (
-            <text x={textX} y={textY}>
-              {formattedValue}
-            </text>
-          )}
-          <circle r={5} />
-          <line x1={lineWidth} y1={lineHeight} style={{ stroke: "black" }} />
-        </g>
-      )
+          <g>
+            {React.isValidElement(formattedValue) ? (
+              <g transform={`translate(${textX},${textY})`}>{formattedValue}</g>
+            ) : (
+                <text x={textX} y={textY}>
+                  {formattedValue}
+                </text>
+              )}
+            <circle r={5} />
+            <line x1={lineWidth} y1={lineHeight} style={{ stroke: "black" }} />
+          </g>
+        )
       const annotationSymbol = this.state.hoverAnnotation ? (
         <g
           style={{ pointerEvents: "none" }}
@@ -309,11 +309,11 @@ class Axis extends React.Component<AxisProps, AxisState> {
       const summaryStyle = decoratedSummaryType.summaryStyle
         ? () => decoratedSummaryType.summaryStyle
         : () => ({
-            fill: "black",
-            fillOpacity: 0.5,
-            stroke: "black",
-            strokeDasharray: "0"
-          })
+          fill: "black",
+          fillOpacity: 0.5,
+          stroke: "black",
+          strokeDasharray: "0"
+        })
 
       const summaryRenderMode = decoratedSummaryType.renderMode
         ? () => decoratedSummaryType.renderMode
@@ -361,7 +361,6 @@ class Axis extends React.Component<AxisProps, AxisState> {
           decoratedSummaryType.eventListenersGenerator || (() => ({})),
         styleFn: summaryStyle,
         classFn: summaryClass,
-        positionFn: () => [0, 0],
         projection:
           orient === "top" || orient === "bottom" ? "horizontal" : "vertical",
         adjustedSize: size,
@@ -407,16 +406,16 @@ class Axis extends React.Component<AxisProps, AxisState> {
             transform={`translate(${
               (decoratedSummaryType.type === "contour" ||
                 decoratedSummaryType.type === "boxplot") &&
-              (orient === "left" || orient === "right")
+                (orient === "left" || orient === "right")
                 ? summaryWidth / 2
                 : 0
-            },${
+              },${
               (decoratedSummaryType.type === "contour" ||
                 decoratedSummaryType.type === "boxplot") &&
-              (orient === "top" || orient === "bottom")
+                (orient === "top" || orient === "bottom")
                 ? summaryWidth / 2
                 : 0
-            })`}
+              })`}
           >
             {renderedSummary.marks}
           </g>
@@ -505,8 +504,8 @@ class Axis extends React.Component<AxisProps, AxisState> {
           {React.isValidElement(labelName) ? (
             labelName
           ) : (
-            <text textAnchor={anchorMod}>{labelName}</text>
-          )}
+              <text textAnchor={anchorMod}>{labelName}</text>
+            )}
         </g>
       )
     }

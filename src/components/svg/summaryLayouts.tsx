@@ -20,7 +20,6 @@ type BoxplotFnType = {
   eventListenersGenerator: Function
   styleFn: Function
   classFn: Function
-  positionFn: Function
   projection: "horizontal" | "vertical" | "radial"
   adjustedSize: number[]
   baseMarkProps: GenericObject
@@ -85,7 +84,6 @@ export function boxplotRenderFn({
   eventListenersGenerator,
   styleFn,
   classFn,
-  positionFn = position => position,
   projection,
   adjustedSize,
   baseMarkProps
@@ -163,9 +161,6 @@ export function boxplotRenderFn({
         quantile(summaryPositionNest, 1.0)
       ]
 
-      const xPosition = positionFn(summary.middle, key, summaryI)
-
-      translate = `translate(${xPosition},0)`
       extentlineX1 = 0
       extentlineX2 = 0
       extentlineY1 = summaryPositionNest[0]
@@ -200,7 +195,7 @@ export function boxplotRenderFn({
           label: "Maximum",
           key,
           summaryPieceName: "max",
-          x: xPosition,
+          x: 0,
           y: summaryPositionNest[4],
           value: summaryValueNest[4]
         },
@@ -208,7 +203,7 @@ export function boxplotRenderFn({
           label: "3rd Quartile",
           key,
           summaryPieceName: "q3area",
-          x: xPosition,
+          x: 0,
           y: summaryPositionNest[3],
           value: summaryValueNest[3]
         },
@@ -216,7 +211,7 @@ export function boxplotRenderFn({
           label: "Median",
           key,
           summaryPieceName: "median",
-          x: xPosition,
+          x: 0,
           y: summaryPositionNest[2],
           value: summaryValueNest[2]
         },
@@ -224,7 +219,7 @@ export function boxplotRenderFn({
           label: "1st Quartile",
           key,
           summaryPieceName: "q1area",
-          x: xPosition,
+          x: 0,
           y: summaryPositionNest[1],
           value: summaryValueNest[1]
         },
@@ -232,7 +227,7 @@ export function boxplotRenderFn({
           label: "Minimum",
           key,
           summaryPieceName: "min",
-          x: xPosition,
+          x: 0,
           y: summaryPositionNest[0],
           value: summaryValueNest[0]
         }
@@ -250,9 +245,6 @@ export function boxplotRenderFn({
         quantile(summaryPositionNest, 1.0)
       ]
 
-      const yPosition = positionFn(summary.middle, key, summaryI)
-
-      translate = `translate(0,${yPosition})`
       extentlineY1 = 0
       extentlineY2 = 0
       extentlineX1 = summaryPositionNest[0]
@@ -288,7 +280,7 @@ export function boxplotRenderFn({
           key,
           summaryPieceName: "max",
           x: summaryPositionNest[4],
-          y: yPosition,
+          y: 0,
           value: summaryValueNest[4]
         },
         {
@@ -296,7 +288,7 @@ export function boxplotRenderFn({
           key,
           summaryPieceName: "q3area",
           x: summaryPositionNest[3],
-          y: yPosition,
+          y: 0,
           value: summaryValueNest[3]
         },
         {
@@ -304,7 +296,7 @@ export function boxplotRenderFn({
           key,
           summaryPieceName: "median",
           x: summaryPositionNest[2],
-          y: yPosition,
+          y: 0,
           value: summaryValueNest[2]
         },
         {
@@ -312,7 +304,7 @@ export function boxplotRenderFn({
           key,
           summaryPieceName: "q1area",
           x: summaryPositionNest[1],
-          y: yPosition,
+          y: 0,
           value: summaryValueNest[1]
         },
         {
@@ -320,7 +312,7 @@ export function boxplotRenderFn({
           key,
           summaryPieceName: "min",
           x: summaryPositionNest[0],
-          y: yPosition,
+          y: 0,
           value: summaryValueNest[0]
         }
       )
@@ -1284,15 +1276,11 @@ export const drawSummaries = ({
   eventListenersGenerator,
   styleFn,
   classFn,
-  positionFn,
   projection,
   adjustedSize,
   margin,
-  //  canvasRender,
-  //  canvasDrawing,
   baseMarkProps
 }) => {
-  console.log("baseMarkProps", baseMarkProps)
   if (!type || !type.type) return
   type = typeof type === "string" ? { type } : type
   const chartSize =
@@ -1305,13 +1293,10 @@ export const drawSummaries = ({
     eventListenersGenerator,
     styleFn,
     classFn,
-    positionFn,
     projection,
     adjustedSize,
     chartSize,
     margin,
-    //    canvasRender,
-    //    canvasDrawing,
     baseMarkProps
   })
 }

@@ -102,7 +102,6 @@ export type OrdinalFrameProps = {
     canvasConnectors?: boolean | accessorType<boolean>
     summaryStyle?: object | accessorType<object>
     style?: object | accessorType<object>
-    sortO?: (a: any, b: any, c: object[], d: object[]) => number
     oSort?: (a: any, b: any, c: object[], d: object[]) => number
     dynamicColumnWidth?: string | accessorType<number>
     pieceIDAccessor?: string | accessorType<string>
@@ -129,12 +128,10 @@ export type OrdinalFrameProps = {
     legend?: object
     data: Array<object | number>
     oPadding?: number
-    axis?: AxisProps | Array<AxisProps>
     axes?:
     | AxisGeneratingFunction
     | AxisProps
     | Array<AxisProps | AxisGeneratingFunction>
-    summaryPosition?: Function
     additionalDefs?: React.ReactNode
     tooltipContent?: Function
     optimizeCustomTooltipPosition?: boolean

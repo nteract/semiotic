@@ -200,8 +200,7 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       size: newSize,
       dataVersion: newDataVersion,
       lines: newLines,
-      areas,
-      summaries: newSummaries = areas,
+      summaries: newSummaries,
       points: newPoints
     } = nextProps
 
@@ -641,13 +640,6 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
 
   render() {
     const {
-      xAccessor,
-      yAccessor,
-      lines,
-      points,
-      areas,
-      summaries = areas,
-      name,
       size,
       className,
       annotationSettings,
@@ -661,8 +653,7 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       canvasPostProcess,
       baseMarkProps,
       useSpans,
-      canvasAreas,
-      canvasSummaries = canvasAreas,
+      canvasSummaries,
       canvasPoints,
       canvasLines,
       afterElements,

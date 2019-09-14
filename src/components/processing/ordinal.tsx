@@ -95,7 +95,6 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
         style: baseStyle,
         rExtent: baseRExtent,
         oSort,
-        sortO = oSort,
         pieceClass: basePieceClass,
         summaryStyle: baseSummaryStyle,
         summaryClass: baseSummaryClass,
@@ -120,10 +119,8 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
         data,
         margin: baseMargin,
         oExtent: baseOExtent,
-        axes,
-        axis: baseAxis = axes,
+        axes: baseAxes,
         pieceIDAccessor: basePieceIDAccessor,
-        summaryPosition: baseSummaryPosition,
         multiAxis,
         baseMarkProps = {},
         annotations,
@@ -156,7 +153,6 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
     const pieceStyle = stringToFn<GenericObject>(baseStyle, () => ({}), true)
     const pieceClass = stringToFn<string>(basePieceClass, () => "", true)
     const summaryClass = stringToFn<string>(baseSummaryClass, () => "", true)
-    const summaryPosition = baseSummaryPosition || (position => position)
     const title =
         typeof baseTitle === "object" &&
             !React.isValidElement(baseTitle) &&
@@ -186,21 +182,21 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
 
     let arrayWrappedAxis: AxisProps[] | undefined
 
-    if (Array.isArray(baseAxis)) {
-        arrayWrappedAxis = baseAxis.map(axisFnOrObject =>
+    if (Array.isArray(baseAxes)) {
+        arrayWrappedAxis = baseAxes.map(axisFnOrObject =>
             typeof axisFnOrObject === "function"
                 ? axisFnOrObject({ size: currentProps.size })
                 : axisFnOrObject
         )
-    } else if (baseAxis) {
-        arrayWrappedAxis = [baseAxis].map(axisFnOrObject =>
+    } else if (baseAxes) {
+        arrayWrappedAxis = [baseAxes].map(axisFnOrObject =>
             typeof axisFnOrObject === "function"
                 ? axisFnOrObject({ size: currentProps.size })
                 : axisFnOrObject
         )
     }
 
-    if (multiExtents && baseAxis) {
+    if (multiExtents && baseAxes) {
         arrayWrappedAxis.forEach((d, i) => {
             d.extentOverride = multiExtents[i]
         })
@@ -449,9 +445,9 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
             nestedPieces[d.key] = d.values
         })
 
-    if (sortO !== undefined) {
+    if (oSort !== undefined) {
         oExtent = oExtent.sort((a, b) =>
-            sortO(
+            oSort(
                 a,
                 b,
                 nestedPieces[a].map(d => d.data),
@@ -1002,7 +998,6 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
             styleFn: stringToFn<GenericObject>(summaryStyle, () => ({}), true),
             classFn: stringToFn<string>(summaryClass, () => "", true),
             //        canvasRender: stringToFn<boolean>(canvasSummaries, undefined, true),
-            positionFn: summaryPosition,
             projection,
             eventListenersGenerator,
             adjustedSize,

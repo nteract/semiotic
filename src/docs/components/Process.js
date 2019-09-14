@@ -78,11 +78,6 @@ const networkPossibilities = [
   {
     networkType: "chord",
     edgeWidthAccessor: d => d.value
-  },
-  {
-    networkType: { type: "wordcloud", textAccessor: d => d.id },
-    nodeSizeAccessor: d => nodeScale(d.input + d.output),
-    edges: undefined
   }]
 
 const formatter = d => (d > 1000 ? `${parseInt(d / 1000)}k` : d)

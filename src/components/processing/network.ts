@@ -40,7 +40,6 @@ import {
   matrixEdgeGenerator,
   arcEdgeGenerator,
   sankeyNodeGenerator,
-  wordcloudNodeGenerator,
   circleNodeGenerator,
   areaLink,
   ribbonLink,
@@ -96,8 +95,6 @@ function determineNodeIcon(baseCustomNodeIcon, networkSettings, size, nodes) {
         : hierarchicalRectNodeGenerator
     case "circlepack":
       return circleNodeGenerator
-    case "wordcloud":
-      return wordcloudNodeGenerator
     case "chord":
       return chordNodeGenerator(size)
     case "dagre":
@@ -123,8 +120,6 @@ function determineEdgeIcon({
     case "treemap":
       return () => null
     case "circlepack":
-      return () => null
-    case "wordcloud":
       return () => null
     case "chord":
       return chordEdgeGenerator(size)
@@ -897,108 +892,6 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
         d.direction = direction
         d.width = undefined
       })
-    } else if (networkSettings.type === "wordcloud") {
-      const {
-        iterations = 500,
-        fontSize = 18,
-        rotate,
-        fontWeight = 300,
-        textAccessor = d => d.text
-      } = networkSettings
-
-      const fontWeightMod = (fontWeight / 300 - 1) / 5 + 1
-      const fontWidth = (fontSize / 1.5) * fontWeightMod
-
-      projectedNodes.forEach((d, i) => {
-        const calcualatedNodeSize = nodeSizeAccessor(d)
-        d._NWFText = textAccessor(d) || ""
-        const textWidth =
-          fontWidth * d._NWFText.length * calcualatedNodeSize * 1.4
-        const textHeight = fontSize * calcualatedNodeSize
-
-        d.textHeight = textHeight + 4
-        d.textWidth = textWidth + 4
-        d.rotate = rotate ? rotate(d, i) : 0
-        d.fontSize = fontSize * calcualatedNodeSize
-        d.fontWeight = fontWeight
-        d.radius = d.r = textWidth / 2
-      })
-
-      projectedNodes.sort((a, b) => b.textWidth - a.textWidth)
-
-      //bubblepack for initial position
-      packSiblings(projectedNodes)
-
-      //        if (rotate) {
-      const collide = bboxCollide(d => {
-        if (d.rotate) {
-          return [
-            [-d.textHeight / 2, -d.textWidth / 2],
-            [d.textHeight / 2, d.textWidth / 2]
-          ]
-        }
-        return [
-          [-d.textWidth / 2, -d.textHeight / 2],
-          [d.textWidth / 2, d.textHeight / 2]
-        ]
-      }).iterations(1)
-
-      const xCenter = size[0] / 2
-      const yCenter = size[1] / 2
-
-      const simulation = forceSimulation(projectedNodes)
-        .velocityDecay(0.6)
-        .force("x", forceX(xCenter).strength(1.2))
-        .force("y", forceY(yCenter).strength(1.2))
-        .force("collide", collide)
-
-      simulation.stop()
-
-      for (let i = 0; i < iterations; ++i) simulation.tick()
-      //      }
-
-      const xMin = min(
-        projectedNodes.map(
-          p => p.x - (p.rotate ? p.textHeight / 2 : p.textWidth / 2)
-        )
-      )
-      const xMax = max(
-        projectedNodes.map(
-          p => p.x + (p.rotate ? p.textHeight / 2 : p.textWidth / 2)
-        )
-      )
-      const yMin = min(
-        projectedNodes.map(
-          p => p.y - (p.rotate ? p.textWidth / 2 : p.textHeight / 2)
-        )
-      )
-      const yMax = max(
-        projectedNodes.map(
-          p => p.y + (p.rotate ? p.textWidth / 2 : p.textHeight / 2)
-        )
-      )
-      const projectionScaleX = scaleLinear()
-        .domain([xMin, xMax])
-        .range([0, adjustedSize[0]])
-      const projectionScaleY = scaleLinear()
-        .domain([yMin, yMax])
-        .range([0, adjustedSize[1]])
-      const xMod = adjustedSize[0] / xMax
-      const yMod = adjustedSize[1] / yMax
-
-      const sizeMod = Math.min(xMod, yMod) * 1.2
-      projectedNodes.forEach(node => {
-        node.x = projectionScaleX(node.x)
-        node.y = projectionScaleY(node.y)
-        node.fontSize = node.fontSize * sizeMod
-        node.scale = 1
-        node.radius = node.r = Math.max(
-          (node.textHeight / 4) * yMod,
-          (node.textWidth / 4) * xMod
-        )
-        //      node.textHeight = projectionScaleY(node.textHeight)
-        //      node.textWidth = projectionScaleY(node.textWidth)
-      })
     } else if (networkSettings.type === "force") {
       const {
         iterations = 500,
@@ -1253,7 +1146,6 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
   } else if (
     networkSettings.zoom !== false &&
     networkSettings.type !== "matrix" &&
-    networkSettings.type !== "wordcloud" &&
     networkSettings.type !== "chord" &&
     networkSettings.type !== "sankey" &&
     networkSettings.type !== "partition" &&

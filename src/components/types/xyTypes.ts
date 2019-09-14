@@ -44,7 +44,6 @@ export type XYFrameProps = {
     legend?: object | boolean
     lines?: RawLine[] | RawLine
     points?: RawPoint[]
-    areas?: RawSummary[] | RawSummary
     summaries?: RawSummary[] | RawSummary
     axes?: Array<AxisProps | AxisGeneratingFunction>
     matte?: object
@@ -57,43 +56,34 @@ export type XYFrameProps = {
     xAccessor?: accessorType<number>
     yAccessor?: accessorType<number>
     lineDataAccessor?: accessorType<RawPoint[]>
-    areaDataAccessor?: accessorType<RawPoint[]>
     summaryDataAccessor?: accessorType<RawPoint[]>
     lineType: LineTypeSettings
-    areaType: SummaryTypeSettings
     summaryType: SummaryTypeSettings
     lineRenderMode?: string | object | Function
     pointRenderMode?: string | object | Function
-    areaRenderMode?: string | object | Function
     summaryRenderMode?: string | object | Function
     showLinePoints?: boolean | string
     showSummaryPoints?: boolean
     defined?: Function
     lineStyle?: GenericAccessor<object> | object
     pointStyle?: GenericAccessor<object> | object
-    areaStyle?: GenericAccessor<object> | object
     summaryStyle?: GenericAccessor<object> | object
     lineClass?: GenericAccessor<string> | string
     pointClass?: GenericAccessor<string> | string
-    areaClass?: GenericAccessor<string> | string
     summaryClass?: GenericAccessor<string> | string
     canvasPoints?: GenericAccessor<boolean> | boolean
     canvasLines?: GenericAccessor<boolean> | boolean
-    canvasAreas?: GenericAccessor<boolean> | boolean
     canvasSummaries?: GenericAccessor<boolean> | boolean
     customPointMark?: Function | object
     customLineMark?: Function
-    customAreaMark?: Function
     customSummaryMark?: Function
     lineIDAccessor?: GenericAccessor<string> | string
     minimap?: object
     fullDataset?: Array<ProjectedPoint | ProjectedBin | ProjectedSummary>
     projectedLines?: ProjectedLine[]
-    projectedAreas?: Array<ProjectedSummary>
     projectedSummaries?: Array<ProjectedSummary>
     projectedPoints?: ProjectedPoint[]
     renderOrder?: ReadonlyArray<"lines" | "points" | "summaries">
-    useAreasAsInteractionLayer?: boolean
     useSummariesAsInteractionLayer?: boolean
     onUnmount?: Function
     filterRenderedLines?: (

@@ -32,7 +32,6 @@ import BulletChart from "./components/BulletChart"
 import NeighborhoodMap from "./components/NeighborhoodMap"
 import CanvasInteraction from "./components/CanvasInteraction"
 import BaseballMap from "./components/BaseballMap"
-import WordCloud from "./components/WordCloud"
 import SwarmBrush from "./components/SwarmBrush"
 import LineBrush from "./components/LineBrush"
 import Minimap from "./components/Minimap"
@@ -123,7 +122,6 @@ const components = {
   realtimebar: { docs: RealtimeOrdinalFrame, parent: "orframe" },
   networkframe: { docs: NetworkFrameDocs },
   //  networkminimap: { docs: NetworkMinimap, parent: "networkframe" },
-  wordcloud: { docs: WordCloud, parent: "networkframe" },
   sankey: { docs: Sankey, parent: "networkframe" },
   chord: { docs: Chord, parent: "networkframe" },
   dendrogram: { docs: Dendrogram, parent: "networkframe" },
@@ -268,11 +266,11 @@ class Documentation extends React.Component {
         const finalStyle =
           selected === c
             ? {
-                borderTop: "5px double #ac9739",
-                borderBottom: "5px double #ac9739",
-                fontWeight: 900,
-                ...styleOver
-              }
+              borderTop: "5px double #ac9739",
+              borderBottom: "5px double #ac9739",
+              fontWeight: 900,
+              ...styleOver
+            }
             : styleOver
         allDocs.push(
           <Link to={`/${c}`} key={`${c}-link`}>
