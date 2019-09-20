@@ -235,7 +235,6 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
         }
         else {
           const RoughCanvas = sketchyRenderingEngine.canvas
-          console.log("RoughCanvas", RoughCanvas)
           if (!RoughCanvas) {
             console.error("The sketchyRenderingEngine you specify does not expose a prop `RoughCanvas` and so cannot render sketchy HTML5 Canvas graphics")
           } else {

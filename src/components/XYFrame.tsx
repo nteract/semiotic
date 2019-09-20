@@ -255,6 +255,7 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
         !!xyFrameDataProps.find(d => props[d] !== nextProps[d])
       return calculateXYFrame(nextProps, prevState, dataChanged)
     }
+    return null
   }
 
   defaultXYSVGRule = ({

@@ -1,83 +1,16 @@
 import * as React from "react"
 import { brushX, brushY, brush } from "d3-brush"
-import { extent as d3Extent } from "d3-array"
 import { select, event } from "d3-selection"
-import { voronoi } from "d3-voronoi"
-import { Mark } from "semiotic-mark"
 
 // components
 import Brush from "./Brush"
 
 import SpanOrDiv from "./SpanOrDiv"
 
-import { ReactNode } from "react"
+import { Interactivity, InteractionLayerProps, BaseColumnType, InteractionLayerState } from "./types/interactionTypes"
 
-import {
-  projectedY,
-  projectedYTop,
-  projectedYMiddle,
-  projectedYBottom
-} from "./constants/coordinateNames"
-import { Interactivity } from "./types/interactionTypes"
-
-import { CustomHoverType } from "./types/annotationTypes"
-import { MarginType } from "./types/generalTypes"
-
-import { ScaleLinear, scaleLinear } from "d3-scale"
-import { canvasEvent } from "./svg/frameFunctions"
-
-import { changeVoronoi, clickVoronoi, doubleclickVoronoi, brushing, brushEnd, brushStart } from "./processing/interaction"
-
-type BaseColumnType = { x: number; width: number }
-
-type VoronoiEntryType = {
-  voronoiX: number
-  voronoiY: number
-  coincidentPoints: object[]
-  type?: string
-  data?: object[]
-}
-
-type Props = {
-  name?: string
-  interaction?: Interactivity
-  overlay?: Array<object>
-  oColumns?: object
-  xScale: ScaleLinear<number, number>
-  yScale: ScaleLinear<number, number>
-  rScale?: ScaleLinear<number, number>
-  svgSize: Array<number>
-  hoverAnnotation?: CustomHoverType
-  interactionOverflow?: {
-    top?: number
-    bottom?: number
-    left?: number
-    right?: number
-  }
-  size: Array<number>
-  projectedYMiddle?: string
-  projectedX: string
-  projectedY: string
-  points?: Array<object>
-  position?: number[]
-  enabled?: boolean
-  useSpans?: boolean
-  margin: MarginType
-  projection?: string
-  customDoubleClickBehavior?: Function
-  customClickBehavior?: Function
-  customHoverBehavior?: Function
-  voronoiHover: Function
-  canvasRendering?: boolean
-  disableCanvasInteraction: boolean
-  showLinePoints?: string
-  renderPipeline: object
-}
-
-type State = {
-  overlayRegions: Array<React.ReactElement>
-  interactionCanvas: ReactNode
-}
+import { brushing, brushEnd, brushStart, calculateOverlay } from "./processing/InteractionItems"
+import InteractionCanvas from "./interactionLayerBehavior/InteractionCanvas";
 
 const generateOMappingFn = projectedColumns => (d): null | any => {
   if (d) {
@@ -133,74 +66,25 @@ const generateOEndMappingFn = projectedColumns => (d): null | Array<any> => {
   return null
 }
 
-class InteractionLayer extends React.Component<Props, State> {
-  constructor(props: Props) {
+class InteractionLayer extends React.Component<InteractionLayerProps, InteractionLayerState> {
+  constructor(props: InteractionLayerProps) {
     super(props)
 
+    const initialOverlayRegions = calculateOverlay(props)
+
+    const canvasMap: Map<string, number> = new Map()
+
     this.state = {
-      overlayRegions: this.calculateOverlay(props),
-      interactionCanvas: this.generateInteractionCanvas(props)
+      overlayRegions: initialOverlayRegions,
+      canvasMap,
+      interactionCanvas: null,
+      props
     }
   }
 
   static defaultProps = {
     svgSize: [500, 500]
   }
-
-  generateInteractionCanvas = props => {
-    return (
-      <canvas
-        className="frame-canvas-interaction"
-        ref={(canvasContext: any) => {
-          const { overlayRegions } = this.state
-          const canvasMap = this.canvasMap
-          const boundCanvasEvent = canvasEvent.bind(
-            null,
-            canvasContext,
-            overlayRegions,
-            canvasMap
-          )
-          if (canvasContext) {
-            canvasContext.onmousemove = e => {
-              const overlay = boundCanvasEvent(e)
-              if (overlay && overlay.props) {
-                overlay.props.onMouseEnter()
-              } else {
-                changeVoronoi()
-              }
-            }
-            canvasContext.onclick = e => {
-              const overlay = boundCanvasEvent(e)
-              if (overlay && overlay.props) {
-                overlay.props.onClick()
-              }
-            }
-            canvasContext.ondblclick = e => {
-              const overlay = boundCanvasEvent(e)
-              if (overlay && overlay.props) {
-                overlay.props.onDoubleClick()
-              }
-            }
-          }
-          this.interactionContext = canvasContext
-        }}
-        style={{
-          position: "absolute",
-          left: `0px`,
-          top: `0px`,
-          imageRendering: "pixelated",
-          pointerEvents: "all",
-          opacity: 0
-        }}
-        width={props.svgSize[0]}
-        height={props.svgSize[1]}
-      />
-    )
-  }
-
-  interactionContext = null
-
-  canvasMap: Map<string, number> = new Map()
 
   createBrush = (interaction: Interactivity) => {
     let semioticBrush, mappingFn, selectedExtent, endMappingFn
@@ -331,226 +215,36 @@ class InteractionLayer extends React.Component<Props, State> {
     )
   }
 
-  componentWillReceiveProps(nextProps: Props) {
+  static getDerivedStateFromProps(nextProps: InteractionLayerProps, prevState: InteractionLayerState) {
+    const { props } = prevState
+
     if (
-      this.props.overlay !== nextProps.overlay ||
-      nextProps.points !== this.props.points ||
-      this.props.xScale !== nextProps.xScale ||
-      this.props.yScale !== nextProps.yScale ||
-      this.props.hoverAnnotation !== nextProps.hoverAnnotation
+      props.overlay !== nextProps.overlay ||
+      nextProps.points !== props.points ||
+      props.xScale !== nextProps.xScale ||
+      props.yScale !== nextProps.yScale ||
+      props.hoverAnnotation !== nextProps.hoverAnnotation
     ) {
-      this.setState({
-        overlayRegions: this.calculateOverlay(nextProps),
-        interactionCanvas: this.generateInteractionCanvas(nextProps)
-      })
-    }
-  }
+      const { disableCanvasInteraction, canvasRendering, svgSize, margin, voronoiHover } = nextProps
+      const { overlayRegions } = prevState
 
-  calculateOverlay = (props: Props) => {
-    let voronoiPaths = []
-    const {
-      xScale,
-      yScale,
-      points,
-      projectedX,
-      showLinePoints,
-      size,
-      overlay,
-      interactionOverflow = { top: 0, bottom: 0, left: 0, right: 0 },
-      customClickBehavior,
-      customDoubleClickBehavior,
-      customHoverBehavior,
-      hoverAnnotation,
-      voronoiHover
-    } = props
-    const whichPoints = {
-      top: projectedYTop,
-      bottom: projectedYBottom
-    }
-
-    const pointerStyle =
-      customClickBehavior || customDoubleClickBehavior
-        ? { cursor: "pointer" }
-        : {}
-
-    if (points && hoverAnnotation && !overlay) {
-      const voronoiDataset: VoronoiEntryType[] = []
-      const voronoiUniqueHash = {}
-
-      points.forEach((d: object) => {
-        const xValue = Math.floor(xScale(d[projectedX]))
-        const yValue = Math.floor(
-          yScale(
-            showLinePoints && d[whichPoints[showLinePoints]] !== undefined
-              ? d[whichPoints[showLinePoints]]
-              : d[projectedYMiddle] !== undefined
-                ? d[projectedYMiddle]
-                : d[projectedY]
-          )
-        )
-        if (
-          xValue >= 0 &&
-          xValue <= size[0] &&
-          yValue >= 0 &&
-          yValue <= size[1] &&
-          xValue !== undefined &&
-          yValue !== undefined &&
-          isNaN(xValue) === false &&
-          isNaN(yValue) === false
-        ) {
-          const pointKey = `${xValue},${yValue}`
-          if (!voronoiUniqueHash[pointKey]) {
-            const voronoiPoint = {
-              ...d,
-              coincidentPoints: [d],
-              voronoiX: xValue,
-              voronoiY: yValue
-            }
-            voronoiDataset.push(voronoiPoint)
-            voronoiUniqueHash[pointKey] = voronoiPoint
-          } else voronoiUniqueHash[pointKey].coincidentPoints.push(d)
-        }
-      })
-
-      const voronoiXExtent = d3Extent(voronoiDataset.map(d => d.voronoiX))
-      const voronoiYExtent = d3Extent(voronoiDataset.map(d => d.voronoiY))
-
-      const voronoiExtent = [
-        [
-          Math.min(voronoiXExtent[0], -interactionOverflow.left),
-          Math.min(voronoiYExtent[0], -interactionOverflow.top)
-        ],
-        [
-          Math.max(voronoiXExtent[1], size[0] + interactionOverflow.right),
-          Math.max(voronoiYExtent[1], size[1] + interactionOverflow.bottom)
-        ]
-      ]
-
-      const voronoiDiagram = voronoi()
-        .extent(voronoiExtent)
-        .x((d: VoronoiEntryType) => d.voronoiX)
-        .y((d: VoronoiEntryType) => d.voronoiY)
-
-      const voronoiData = voronoiDiagram.polygons(voronoiDataset)
-
-      voronoiPaths = voronoiData.map((d: Array<number>, i: number) => {
-        return (
-          <path
-            onClick={() => {
-              clickVoronoi(voronoiDataset[i], customClickBehavior, points)
-            }}
-            onDoubleClick={() => {
-              doubleclickVoronoi(voronoiDataset[i], customDoubleClickBehavior, points)
-            }}
-            onMouseEnter={() => {
-              changeVoronoi(voronoiDataset[i], hoverAnnotation, customHoverBehavior, voronoiHover, points)
-            }}
-            onMouseLeave={() => {
-              changeVoronoi()
-            }}
-            key={`interactionVoronoi${i}`}
-            d={`M${d.join("L")}Z`}
-            style={{
-              fillOpacity: 0,
-              ...pointerStyle
-            }}
+      return {
+        overlayRegions: calculateOverlay(nextProps),
+        props: nextProps,
+        interactionCanvas: !disableCanvasInteraction &&
+          canvasRendering &&
+          overlayRegions &&
+          <InteractionCanvas
+            height={svgSize[1]}
+            width={svgSize[0]}
+            overlayRegions={overlayRegions}
+            margin={margin}
+            voronoiHover={voronoiHover}
           />
-        )
-      }, this)
-      return voronoiPaths
-    } else if (overlay) {
-      const renderedOverlay: Array<React.ReactNode> = overlay.map(
-        (
-          overlayRegion: {
-            overlayData: object
-            renderElement: React.ReactNode
-          },
-          i: number
-        ) => {
-          const { overlayData, ...rest } = overlayRegion
-          const overlayProps = {
-            key: `overlay-${i}`,
-            onMouseEnter: () => {
-              changeVoronoi(overlayData, props.hoverAnnotation, customHoverBehavior, voronoiHover, points)
-            },
-            onMouseLeave: () => {
-              changeVoronoi()
-            },
-            onClick: () => {
-              clickVoronoi(overlayData, customClickBehavior, points)
-            },
-            onDoubleClick: () => {
-              doubleclickVoronoi(overlayData, customDoubleClickBehavior, points)
-            },
-            style: { opacity: 0, ...pointerStyle }
-          }
-
-          if (React.isValidElement(overlayRegion.renderElement)) {
-            return React.cloneElement(overlayRegion.renderElement, overlayProps)
-          } else {
-            return (
-              <Mark
-                forceUpdate={true}
-                {...rest}
-                key={`overlay-${i}`}
-                {...overlayProps}
-              />
-            )
-          }
-        }
-      )
-
-      return renderedOverlay
+      }
     }
-  }
+    return null
 
-  componentDidMount() {
-    this.canvasRendering()
-  }
-
-  componentDidUpdate(prevProps: Props, prevState: State) {
-    if (this.state.overlayRegions !== prevState.overlayRegions) {
-      this.canvasRendering()
-    }
-  }
-
-  canvasRendering = () => {
-    if (this.interactionContext === null || !this.state.overlayRegions) return
-
-    const { svgSize, margin } = this.props
-    const { overlayRegions } = this.state
-
-    this.canvasMap.clear()
-
-    const interactionContext = this.interactionContext.getContext("2d")
-
-    interactionContext.imageSmoothingEnabled = false
-    interactionContext.setTransform(1, 0, 0, 1, margin.left, margin.top)
-    interactionContext.clearRect(
-      -margin.left,
-      -margin.top,
-      svgSize[0],
-      svgSize[1]
-    )
-
-    interactionContext.lineWidth = 1
-
-    overlayRegions.forEach((overlay, oi) => {
-      const interactionRGBA = `rgba(${Math.floor(
-        Math.random() * 255
-      )},${Math.floor(Math.random() * 255)},${Math.floor(
-        Math.random() * 255
-      )},255)`
-
-      this.canvasMap.set(interactionRGBA, oi)
-
-      interactionContext.fillStyle = interactionRGBA
-      interactionContext.strokeStyle = interactionRGBA
-
-      const p = new Path2D(overlay.props.d)
-      interactionContext.stroke(p)
-      interactionContext.fill(p)
-    })
   }
 
   createColumnsBrush = (interaction: Interactivity) => {
@@ -647,12 +341,10 @@ class InteractionLayer extends React.Component<Props, State> {
       interaction,
       svgSize,
       margin,
-      useSpans = false,
-      canvasRendering,
-      disableCanvasInteraction
+      useSpans = false
     } = this.props
 
-    const { overlayRegions } = this.state
+    const { overlayRegions, interactionCanvas } = this.state
     let { enabled } = this.props
 
     if (interaction && interaction.brush) {
@@ -668,12 +360,6 @@ class InteractionLayer extends React.Component<Props, State> {
     if (!overlayRegions && !semioticBrush) {
       return null
     }
-
-    const interactionCanvas =
-      !disableCanvasInteraction &&
-      canvasRendering &&
-      this.state.overlayRegions &&
-      this.state.interactionCanvas
 
     return (
       <SpanOrDiv
