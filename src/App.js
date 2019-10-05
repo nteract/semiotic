@@ -38,6 +38,7 @@ import MarginalGraphics from "./examples/MarginalGraphics"
 
 import MarimekkoChart from "./examples/MarimekkoChart"
 import BarLineChart from "./examples/BarLineChart"
+import BarToParallel from "./examples/BarToParallel"
 import DotPlot from "./examples/DotPlot"
 import SwarmPlot from "./examples/SwarmPlot"
 import RidgelinePlot from "./examples/RidgelinePlot"
@@ -272,6 +273,12 @@ export const PAGES = [
         url: "bar-line-chart",
         component: BarLineChart,
         img: "bar-line"
+      },
+      {
+        name: "Bar to Parallel Coordinates",
+        url: "bar-to-parallel-coordinates",
+        component: BarToParallel,
+        img: "bar-to-parallel"
       },
       {
         name: "Waterfall Chart",
