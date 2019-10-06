@@ -40,7 +40,7 @@ class InteractionCanvas extends React.Component<InteractionCanvasProps, Interact
 
     componentDidUpdate(prevProps: InteractionCanvasProps, prevState: InteractionCanvasState) {
         if (this.state.overlayRegions !== prevState.overlayRegions) {
-            //            this.canvasRendering()
+            this.canvasRendering()
         }
     }
 
