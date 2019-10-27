@@ -5,12 +5,17 @@ type Props = {
   tooltipContentArgs?: object
 }
 
-class TooltipPositioner extends React.Component<Props> {
+type State = {
+  offset: object,
+  tooltipContainerInitialDimensions: object
+}
+
+class TooltipPositioner extends React.Component<Props, State> {
   private containerRef = React.createRef<HTMLDivElement>()
 
   state = {
     offset: null,
-    tooltipDimensions: null
+    tooltipContainerInitialDimensions: null
   }
 
   // simple heuristics to check if the tooltip container exceeds the viewport
