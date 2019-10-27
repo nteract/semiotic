@@ -9,7 +9,8 @@ class TooltipPositioner extends React.Component<Props> {
   private containerRef = React.createRef<HTMLDivElement>()
 
   state = {
-    offset: null
+    offset: null,
+    tooltipContainerInitialDimensions: null
   }
 
   // simple heuristics to check if the tooltip container exceeds the viewport
@@ -19,7 +20,8 @@ class TooltipPositioner extends React.Component<Props> {
       x: 0,
       y: 0
     }
-    const { right, left, top, bottom } = this.containerRef.current.getBoundingClientRect()
+    const tooltipContainerInitialDimensions = this.containerRef.current.getBoundingClientRect()
+    const { right, left, top, bottom } = tooltipContainerInitialDimensions
     const containerWidth = right - left
     const containerHeight = bottom - top
 
@@ -37,7 +39,8 @@ class TooltipPositioner extends React.Component<Props> {
     }
 
     this.setState({
-      offset
+      offset,
+      tooltipContainerInitialDimensions
     })
   }
 
@@ -66,7 +69,8 @@ class TooltipPositioner extends React.Component<Props> {
     } = this.props
 
     const {
-      offset
+      offset,
+      tooltipContainerInitialDimensions
     } = this.state
 
     const containerStyle = offset?
@@ -77,10 +81,15 @@ class TooltipPositioner extends React.Component<Props> {
         opacity: 0
       }
 
+    const tooltipContainerAttributes = {
+      offset,
+      tooltipContainerInitialDimensions
+    }
+
     return (
       <div ref={this.containerRef} style={containerStyle}>
         {tooltipContent({...tooltipContentArgs,
-          tooltipContainerOffset: offset? offset: {x:0, y:0}})}
+          tooltipContainerAttributes})}
       </div>
     )
   }
