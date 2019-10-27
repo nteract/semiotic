@@ -5,7 +5,12 @@ type Props = {
   tooltipContentArgs?: object
 }
 
-class TooltipPositioner extends React.Component<Props> {
+type State = {
+  offset: object,
+  tooltipContainerInitialDimensions: object
+}
+
+class TooltipPositioner extends React.Component<Props, State> {
   private containerRef = React.createRef<HTMLDivElement>()
 
   state = {
