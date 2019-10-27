@@ -7,7 +7,8 @@ type Props = {
 
 type State = {
   offset: object,
-  tooltipContainerInitialDimensions: object
+  tooltipContainerInitialDimensions: object,
+  tooltipContentArgsCurrent: object
 }
 
 class TooltipPositioner extends React.Component<Props, State> {
@@ -15,7 +16,8 @@ class TooltipPositioner extends React.Component<Props, State> {
 
   state = {
     offset: null,
-    tooltipContainerInitialDimensions: null
+    tooltipContainerInitialDimensions: null,
+    tooltipContentArgsCurrent: null
   }
 
   // simple heuristics to check if the tooltip container exceeds the viewport
@@ -45,7 +47,8 @@ class TooltipPositioner extends React.Component<Props, State> {
 
     this.setState({
       offset,
-      tooltipContainerInitialDimensions
+      tooltipContainerInitialDimensions,
+      tooltipContentArgsCurrent: this.props.tooltipContentArgs
     })
   }
 
@@ -59,7 +62,8 @@ class TooltipPositioner extends React.Component<Props, State> {
     // if new args, reset offset state
     if(pp.tooltipContentArgs !== this.props.tooltipContentArgs){
       this.setState({
-        offset: null
+        offset: null,
+        tooltipContainerInitialDimensions: null
       })
     }
     else if(this.containerRef.current && !this.state.offset){
@@ -75,10 +79,11 @@ class TooltipPositioner extends React.Component<Props, State> {
 
     const {
       offset,
-      tooltipContainerInitialDimensions
+      tooltipContainerInitialDimensions,
+      tooltipContentArgsCurrent
     } = this.state
 
-    const containerStyle = offset?
+    const containerStyle = offset && (tooltipContentArgsCurrent===tooltipContentArgs)?
       {
         transform: `translate(${offset.x}px,${offset.y}px)`
       } :
@@ -87,7 +92,7 @@ class TooltipPositioner extends React.Component<Props, State> {
       }
 
     const tooltipContainerAttributes = {
-      offset,
+      offset: offset || {x:0, y:0},
       tooltipContainerInitialDimensions
     }
 
