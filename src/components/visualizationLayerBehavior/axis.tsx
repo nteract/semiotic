@@ -102,7 +102,7 @@ const outboundTickLineGenerator = ({
   xy,
   orient,
   i,
-  className = "",
+  className = ""
 }) => {
   const tickLength = 8
   let genD = `M-4,${xy.y1}L${xy.x1},${xy.y2}`
@@ -350,10 +350,7 @@ export const axisLines = ({
         xy: axisPart,
         orient,
         i,
-        baseMarkProps,
-        className,
-        jaggedBase,
-        scale
+        className
       })
     ) as React.ReactNode
     : []
