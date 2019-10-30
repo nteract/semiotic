@@ -344,7 +344,6 @@ export const axisLines = ({
     })
   ) as React.ReactNode
 
-  //TODO: if attribute is true
   const outboundAxisLines = showOutboundTickLines?
     axisParts.map((axisPart, i) =>
       outboundTickLineGenerator({
