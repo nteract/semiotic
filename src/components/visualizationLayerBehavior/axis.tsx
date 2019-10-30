@@ -330,7 +330,7 @@ export const axisLines = ({
   className: string
   jaggedBase?: boolean
   scale: ScaleLinear<number, number>
-  showOutboundTickLines: boolean
+  showOutboundTickLines?: boolean
 }) => {
   const axisLines = axisParts.map((axisPart, i) =>
     tickLineGenerator({
