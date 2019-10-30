@@ -98,6 +98,33 @@ const defaultTickLineGenerator = ({
   )
 }
 
+const outboundTickLineGenerator = ({
+  xy,
+  orient,
+  i,
+  className = "",
+}) => {
+  const tickLength = 8
+  let genD = `M-4,${xy.y1}L${xy.x1},${xy.y2}`
+  if(orient==="left") { genD = `M${xy.x1-tickLength},${xy.y1}L${xy.x1},${xy.y2}` }
+  else if(orient==="right") { genD = `M${xy.x2},${xy.y1}L${xy.x2 + tickLength},${xy.y2}` }
+  else if(orient==="top") { genD = `M${xy.x1},${xy.y1 - tickLength}L${xy.x1},${xy.y1}` }
+  else if(orient==="bottom") { genD = `M${xy.x1},${xy.y2}L${xy.x1},${xy.y2 + tickLength}` }
+  return (
+    <Mark
+      key={i}
+      markType="path"
+      renderMode={xy.renderMode}
+      fill="none"
+      stroke="black"
+      strokeWidth="1px"
+      simpleInterpolate={true}
+      d={genD}
+      className={`outbound-tick-line tick ${orient} ${className}`}
+    />
+  )
+}
+
 export function generateTickValues(tickValues, ticks, scale) {
   const axisSize = Math.abs(scale.range()[1] - scale.range()[0])
 
@@ -293,7 +320,8 @@ export const axisLines = ({
   baseMarkProps,
   className,
   jaggedBase,
-  scale
+  scale,
+  showOutboundTickLines = false
 }: {
   axisParts: object[]
   orient: string
@@ -302,8 +330,9 @@ export const axisLines = ({
   className: string
   jaggedBase?: boolean
   scale: ScaleLinear<number, number>
+  showOutboundTickLines: boolean
 }) => {
-  return axisParts.map((axisPart, i) =>
+  const axisLines = axisParts.map((axisPart, i) =>
     tickLineGenerator({
       xy: axisPart,
       orient,
@@ -314,4 +343,21 @@ export const axisLines = ({
       scale
     })
   ) as React.ReactNode
+
+  //TODO: if attribute is true
+  const outboundAxisLines = showOutboundTickLines?
+    axisParts.map((axisPart, i) =>
+      outboundTickLineGenerator({
+        xy: axisPart,
+        orient,
+        i,
+        baseMarkProps,
+        className,
+        jaggedBase,
+        scale
+      })
+    ) as React.ReactNode
+    : []
+
+  return [...axisLines, outboundAxisLines]
 }

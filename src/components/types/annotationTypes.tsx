@@ -149,6 +149,7 @@ export interface AxisProps {
   axisAnnotationFunction?: (args: any) => void
   xyPoints?: object[]
   marginalSummaryType?: AxisSummaryTypeSettings | OrdinalSummaryTypes
+  showOutboundTickLines?: boolean
 }
 
 export type AxisGeneratingFunction = (args: object) => AxisProps
