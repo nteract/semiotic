@@ -5,11 +5,19 @@ type Props = {
   tooltipContentArgs?: object
 }
 
-class TooltipPositioner extends React.Component<Props> {
+type State = {
+  offset: object,
+  tooltipContainerInitialDimensions: object,
+  tooltipContentArgsCurrent: object
+}
+
+class TooltipPositioner extends React.Component<Props, State> {
   private containerRef = React.createRef<HTMLDivElement>()
 
   state = {
-    offset: null
+    offset: null,
+    tooltipContainerInitialDimensions: null,
+    tooltipContentArgsCurrent: null
   }
 
   // simple heuristics to check if the tooltip container exceeds the viewport
@@ -19,7 +27,8 @@ class TooltipPositioner extends React.Component<Props> {
       x: 0,
       y: 0
     }
-    const { right, left, top, bottom } = this.containerRef.current.getBoundingClientRect()
+    const tooltipContainerInitialDimensions = this.containerRef.current.getBoundingClientRect()
+    const { right, left, top, bottom } = tooltipContainerInitialDimensions
     const containerWidth = right - left
     const containerHeight = bottom - top
 
@@ -37,7 +46,9 @@ class TooltipPositioner extends React.Component<Props> {
     }
 
     this.setState({
-      offset
+      offset,
+      tooltipContainerInitialDimensions,
+      tooltipContentArgsCurrent: this.props.tooltipContentArgs
     })
   }
 
@@ -51,7 +62,8 @@ class TooltipPositioner extends React.Component<Props> {
     // if new args, reset offset state
     if(pp.tooltipContentArgs !== this.props.tooltipContentArgs){
       this.setState({
-        offset: null
+        offset: null,
+        tooltipContainerInitialDimensions: null
       })
     }
     else if(this.containerRef.current && !this.state.offset){
@@ -66,10 +78,12 @@ class TooltipPositioner extends React.Component<Props> {
     } = this.props
 
     const {
-      offset
+      offset,
+      tooltipContainerInitialDimensions,
+      tooltipContentArgsCurrent
     } = this.state
 
-    const containerStyle = offset?
+    const containerStyle = offset && (tooltipContentArgsCurrent===tooltipContentArgs)?
       {
         transform: `translate(${offset.x}px,${offset.y}px)`
       } :
@@ -77,10 +91,15 @@ class TooltipPositioner extends React.Component<Props> {
         opacity: 0
       }
 
+    const tooltipContainerAttributes = {
+      offset: offset || {x:0, y:0},
+      tooltipContainerInitialDimensions
+    }
+
     return (
       <div ref={this.containerRef} style={containerStyle}>
         {tooltipContent({...tooltipContentArgs,
-          tooltipContainerOffset: offset? offset: {x:0, y:0}})}
+          tooltipContainerAttributes})}
       </div>
     )
   }
