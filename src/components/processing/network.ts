@@ -1285,8 +1285,7 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
       projection: networkSettings.projection,
       type: edgeType,
       customMark: customEdgeIcon,
-      networkType: networkSettings.type,
-      direction: networkSettings.direction
+      networkSettings
     },
     nodes: {
       accessibleTransform: (data, i) => ({

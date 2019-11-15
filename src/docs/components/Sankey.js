@@ -20,7 +20,7 @@ export default class Sankey extends React.Component {
       type: "sankey",
       orient: "center",
       cycle: "no cycles",
-      projection: "horizontal"
+      direction: "horizontal"
     }
   }
 
@@ -31,8 +31,8 @@ export default class Sankey extends React.Component {
       </MenuItem>
     ))
 
-    const projectionOptions = ["horizontal", "vertical"].map(d => (
-      <MenuItem key={`projection-option-${d}`} label={d} value={d}>
+    const directionOptions = ["horizontal", "vertical"].map(d => (
+      <MenuItem key={`direction-option-${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
@@ -63,12 +63,12 @@ export default class Sankey extends React.Component {
         </Select>
       </FormControl>,
       <FormControl key="button-3-0-0">
-        <InputLabel htmlFor="orient-input">projection</InputLabel>
+        <InputLabel htmlFor="orient-input">direction</InputLabel>
         <Select
-          value={this.state.projection}
-          onChange={e => this.setState({ projection: e.target.value })}
+          value={this.state.direction}
+          onChange={e => this.setState({ direction: e.target.value })}
         >
-          {projectionOptions}
+          {directionOptions}
         </Select>
       </FormControl>
     ]
@@ -92,7 +92,7 @@ export default class Sankey extends React.Component {
         type: this.state.type,
         orient: this.state.orient,
         cyclical: false,
-        projection: this.state.projection
+        direction: this.state.direction
       }),
       source: ""
     })
@@ -104,7 +104,7 @@ export default class Sankey extends React.Component {
         type: this.state.type,
         orient: this.state.orient,
         cyclical: true,
-        projection: this.state.projection
+        direction: this.state.direction
       }),
       source: `
 const or_data = [{"id":"Agricultural 'waste'","input":0,"output":262.6972158,"years":[9.282517755,14.61107771,30.99950457,31.97585802,32.98811297,34.0375862,35.12564273,36.2536977,37.42321811],"category":"Agriculture","color":"#4d430c"},
@@ -119,13 +119,13 @@ const network_data = [
 ...]
 
 ${
-  this.state.type === "chord"
-    ? `const mirroredNetworkData = [
+        this.state.type === "chord"
+          ? `const mirroredNetworkData = [
     ...network_data.map(d => ({ source: d.source.id, target: d.target.id, value: d["2010"] })),
     ...network_data.map(d => ({ target: d.source.id, source: d.target.id, value: d["2050"] }))
     ]`
-    : ""
-}
+          : ""
+        }
 
 const colors = {
   Oil: "#b3331d",
@@ -150,8 +150,8 @@ const areaLegendGroups = [
   size={[ 700,400 ]}
   nodes={or_data}
   edges={${
-    this.state.type === "chord" ? "mirroredNetworkData" : "network_data"
-  }}
+        this.state.type === "chord" ? "mirroredNetworkData" : "network_data"
+        }}
   nodeStyle={d => ({
     fill: colors[d.category],
     stroke: "black"
@@ -172,7 +172,7 @@ const areaLegendGroups = [
   ${this.state.type === "chord" ? "edgeWidthAccessor={d => d.value}" : ""}
   networkType={{ type: ${this.state.type}, orient: ${
         this.state.orient
-      }, iterations: 500 }}
+        }, iterations: 500 }}
   annotations={[ { type: 'node', dy: 0, dx: 100, id: 'International aviation', label: 'Energy spent on international aviation' }
   ,{ type: 'node', dy: 0, dx: 50, id: 'Oil', label: 'Big Oil' }
   ,{ type: 'enclose', dy: -100, dx: 50, ids: [ 'Wave', 'Geothermal', 'Hydro', 'Tidal' ], label: 'Energy made with wave, tidal, hydro and geothermal' }
@@ -189,7 +189,7 @@ const areaLegendGroups = [
         type: this.state.type,
         orient: this.state.orient,
         cyclical: true,
-        projection: "down",
+        direction: "down",
         size: [700, 800]
       }),
       source: ``

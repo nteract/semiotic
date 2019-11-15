@@ -642,13 +642,13 @@ export const drawEdges = ({
   canvasDrawing,
   type,
   baseMarkProps,
-  networkType,
-  direction,
+  networkSettings,
   projection
 }) => {
+  const { type: networkType, direction, edgeSort = sankeyEdgeSort } = networkSettings
   const data =
     networkType === "sankey"
-      ? baseData.sort((a, b) => sankeyEdgeSort(a, b, direction))
+      ? baseData.sort((a, b) => edgeSort(a, b, direction))
       : baseData
 
   let dGenerator = genericLineGenerator

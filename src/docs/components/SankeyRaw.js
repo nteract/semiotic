@@ -1,7 +1,6 @@
 import * as React from "react"
 import { NetworkFrame } from "../../components"
 import { network_data, or_data } from "../sampledata/energy_time"
-import ProcessViz from "./ProcessViz"
 import { sankey } from "d3-sankey"
 
 const mirroredNetworkData = [
@@ -61,7 +60,7 @@ export default ({
   type = "sankey",
   orient = "left",
   cyclical = false,
-  projection,
+  direction,
   size = [700, 400]
 }) => {
   const sankeyChart = {
@@ -71,8 +70,8 @@ export default ({
       type === "chord"
         ? mirroredNetworkData
         : cyclical
-        ? cyclicalData
-        : network_data,
+          ? cyclicalData
+          : network_data,
     nodeStyle: d => ({
       fill: colors[d.category],
       stroke: "black"
@@ -93,8 +92,9 @@ export default ({
       type: type,
       orient: orient,
       iterations: 500,
-      projection,
+      direction,
       nodePaddingRatio: 0.05,
+      edgeSort: cyclical ? undefined : ((a, b) => { return a.value - b.value }),
       customSankey: sankey
     },
     legend: { legendGroups: areaLegendGroups },
@@ -107,7 +107,6 @@ export default ({
 
   return (
     <div>
-      <ProcessViz frameSettings={sankeyChart} frameType="NetworkFrame" />
       <NetworkFrame {...sankeyChart} />
     </div>
   )
