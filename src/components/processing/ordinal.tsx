@@ -1013,6 +1013,7 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
     const xMod = projection === "vertical" ? midMod : zeroFunction
     const basePieceData = calculatedPieceData.map(d => {
         if (d.piece && d.xy) {
+            console.log("d.xy", d.xy)
             return {
                 ...d.piece,
                 type: "frame-hover",

@@ -20,10 +20,10 @@ const constructDataObject = (d?: { data?: object[]; type?: string }, points?: Ob
   return d && d.data ? { points, ...d.data, ...d } : { points, ...d }
 }
 
-export const changeVoronoi = (
+export const changeVoronoi = (voronoiHover: Function,
   d?: { type?: string; data?: object[] },
   customHoverTypes?: CustomHoverType,
-  customHoverBehavior?: Function, voronoiHover?: Function, points?: Object[]
+  customHoverBehavior?: Function, points?: Object[]
 ) => {
   //Until semiotic 2
   const dataObject = constructDataObject(d, points)
@@ -177,10 +177,10 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
             doubleclickVoronoi(voronoiDataset[i], customDoubleClickBehavior, points)
           }}
           onMouseEnter={() => {
-            changeVoronoi(voronoiDataset[i], hoverAnnotation, customHoverBehavior, voronoiHover, points)
+            changeVoronoi(voronoiHover, voronoiDataset[i], hoverAnnotation, customHoverBehavior, points)
           }}
           onMouseLeave={() => {
-            changeVoronoi(undefined, undefined, undefined, voronoiHover)
+            changeVoronoi(voronoiHover)
           }}
           key={`interactionVoronoi${i}`}
           d={`M${d.join("L")}Z`}
@@ -205,10 +205,10 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
         const overlayProps = {
           key: `overlay-${i}`,
           onMouseEnter: () => {
-            changeVoronoi(overlayData, props.hoverAnnotation, customHoverBehavior, voronoiHover, points)
+            changeVoronoi(voronoiHover, overlayData, props.hoverAnnotation, customHoverBehavior, points)
           },
           onMouseLeave: () => {
-            changeVoronoi()
+            changeVoronoi(voronoiHover)
           },
           onClick: () => {
             clickVoronoi(overlayData, customClickBehavior, points)

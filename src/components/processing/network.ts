@@ -66,8 +66,7 @@ import {
   pack,
   cluster,
   treemap,
-  partition,
-  packSiblings
+  partition
 } from "d3-hierarchy"
 
 import { genericFunction } from "../generic_utilities/functions"

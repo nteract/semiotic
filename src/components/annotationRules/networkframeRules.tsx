@@ -21,7 +21,7 @@ export const htmlFrameHoverRule = ({
     baseD.x && baseD.y
       ? baseD
       : baseD.edge
-      ? {
+        ? {
           ...(edges.find(
             p =>
               nodeIDAccessor(p.source) === nodeIDAccessor(baseD.source) &&
@@ -29,7 +29,7 @@ export const htmlFrameHoverRule = ({
           ) || {}),
           ...baseD
         }
-      : nodes.find(p => nodeIDAccessor(p) === baseD.id)
+        : nodes.find(p => nodeIDAccessor(p) === baseD.id)
 
   if (!d) return null
 
@@ -40,11 +40,11 @@ export const htmlFrameHoverRule = ({
       </p>
     </SpanOrDiv>
   ) : (
-    <SpanOrDiv span={useSpans} className="tooltip-content">
-      <p key="html-annotation-content-1">{d.id}</p>
-      <p key="html-annotation-content-2">Degree: {d.degree}</p>
-    </SpanOrDiv>
-  )
+      <SpanOrDiv span={useSpans} className="tooltip-content">
+        <p key="html-annotation-content-1">{d.id}</p>
+        <p key="html-annotation-content-2">Degree: {d.degree}</p>
+      </SpanOrDiv>
+    )
 
   if (d.type === "frame-hover" && tooltipContent) {
     content = optimizeCustomTooltipPosition ? (<TooltipPositioner
@@ -207,7 +207,7 @@ export const svgHullEncloseRule = ({
   return hullEnclosure({ points: projectedPoints.map(d => [d.x, d.y]), d, i })
 }
 
-export const svgHighlightRule = ({ d, networkFrameRender }) => {
+export const svgHighlightRule = ({ d, i, networkFrameRender }) => {
   const { nodes } = networkFrameRender
   const { customMark, styleFn: baseStyle } = nodes
 
@@ -221,7 +221,7 @@ export const svgHighlightRule = ({ d, networkFrameRender }) => {
   const transform = `translate(${d.x},${d.y})`
   const baseMarkProps = { forceUpdate: true }
 
-  const HighlightMark = customMark({ d, styleFn, transform, baseMarkProps })
+  const HighlightMark = customMark({ d, styleFn, transform, baseMarkProps, key: `highlight-${i}` })
 
   return HighlightMark
 }

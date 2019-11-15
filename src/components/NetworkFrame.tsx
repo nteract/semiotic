@@ -276,6 +276,7 @@ class NetworkFrame extends React.Component<
     } else if (d.type === "highlight") {
       return svgHighlightRule({
         d,
+        i,
         networkFrameRender
       })
     }
