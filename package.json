@@ -1,6 +1,6 @@
 {
   "name": "semiotic",
-  "version": "2.0.0-beta.1",
+  "version": "2.0.0-beta.2",
   "description": "The semiotic JavaScript data visualization framework",
   "main": "lib/index.js",
   "unpkg": "dist/semiotic.min.js",
