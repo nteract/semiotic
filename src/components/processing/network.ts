@@ -896,7 +896,8 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
         iterations = 500,
         edgeStrength = 0.1,
         distanceMax = Infinity,
-        edgeDistance
+        edgeDistance,
+        forceManyBody:nsForceMB = (d => -25 * nodeSizeAccessor(d))
       } = networkSettings
 
       const linkForce = forceLink().strength(d =>
@@ -913,10 +914,7 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
           "charge",
           forceManyBody()
             .distanceMax(distanceMax)
-            .strength(
-              networkSettings.forceManyBody ||
-              (d => -25 * nodeSizeAccessor(d))
-            )
+            .strength(nsForceMB)
         )
 
       //        simulation.force("link", linkForce).nodes(projectedNodes)
