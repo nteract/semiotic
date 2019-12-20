@@ -173,7 +173,7 @@
     "memoize-one": "4.0.0",
     "object-assign": "4.1.1",
     "polygon-offset": "0.3.1",
-    "react-annotation": "^2.1.6",
+    "react-annotation": "3.0.0-beta.3",
     "regression": "^2.0.1",
     "semiotic-mark": "0.4.3",
     "svg-path-bounding-box": "1.0.4"
