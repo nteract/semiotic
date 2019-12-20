@@ -21,6 +21,7 @@ circle.frame-hover {
 }
 ```
 
+
 Semiotic automatically creates a voronoi of hover regions on your chart. For \`ORFrame\`, it defaults to hovering for the entire column, if you'd prefer to have hover enabled for individual pieces, you can set `pieceHoverAnnotation` to `true`.
 
 ```jsx
@@ -75,3 +76,6 @@ If you're ambitious, you could even drop another frame in the tooltip to show da
 ```
 
 Tooltips are processed along with any other annotation, so you can override them by writing [custom annotation rules](/guides/annotations#custom-annotation-rules) to handle the `frame-hover` or `column-hover` event.
+
+More on tooltip positioning:
+By default, without the additional css style above, the top-right bounding box of the tooltip will be positioned at the hovered data point. If you're looking for more control on the position, set `optimizeCustomTooltipPosition = true`. This option will do 2 things: 1) detect if the the tooltip container hits the viewport and offset the position by 100% of the width and/or height if it does collide (e.g. if it collides with the right side of viewport, the tooltip will then be positioned to the left of the data point),  and 2) provide `tooltipContainerAttributes` to the user's `tooltipContent` function. These attributes include the dimensions of the tooltip container, and the offset applied to the container.
