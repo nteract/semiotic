@@ -8,6 +8,7 @@ import theme from "./theme.js"
 import "./flexboxgrid.css"
 import "./prism.css"
 import "./index.css"
+import ResponsiveXYExample from "./responsive/ResponsiveXYExample"
 
 const gh = "emeeks/semiotic"
 const basename = process.env.REACT_APP_GH_PAGES_PATH
@@ -35,6 +36,7 @@ const Docs = () => {
               return null
             }}
           />
+          <Route path="/responsivexy/" component={ResponsiveXYExample} />
           <Route path="/:component" component={Documentation} />
           <LayoutFooter gh={gh} />
         </div>

@@ -377,7 +377,7 @@ export const calculateXYFrame = (currentProps: XYFrameProps, prevState: XYFrameS
             xScale = prevState.xScale
             yScale = prevState.yScale
         } else {
-            ; ({ xScale, yScale } = this.screenScales({
+            ; ({ xScale, yScale } = screenScales({
                 xExtent,
                 yExtent,
                 adjustedSize,

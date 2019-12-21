@@ -25,6 +25,11 @@ export default () => {
                 Interactive Examples
               </Link>
             </Button>
+            <Button color="primary" raised>
+              <Link style={{ color: "black" }} to="responsivexy">
+                Responsive Example
+              </Link>
+            </Button>
           </header>
         </div>
       </div>
