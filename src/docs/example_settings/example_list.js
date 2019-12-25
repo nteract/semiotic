@@ -44,13 +44,13 @@ const exampos = [
     label: "Home Run Map",
     viz: BaseballMapRaw({
       pointStyle: { fill: "black" },
-      areaStyle: () => ({
+      summaryStyle: () => ({
         stroke: "none",
         fill: "#b3331d",
         opacity: 0.25
       }),
-      areaType: "contour",
-      areaRenderMode: "sketchy"
+      summaryType: "contour",
+      summaryRenderMode: "sketchy"
     }),
     path: "homerunmap"
   },
@@ -67,7 +67,7 @@ const exampos = [
   { label: "Dot Plot", viz: DotPlotRaw, path: "dotplot" },
   {
     label: "Minimap Basics",
-    viz: MinimapRaw(() => {}, [10, 30], [10, 30]),
+    viz: MinimapRaw(() => { }, [10, 30], [10, 30]),
     path: "minimap"
   },
   /*  {
@@ -131,7 +131,7 @@ const exampos = [
       Array.from(Array(200), () => ({
         value: parseInt(Math.random() * 100, 10)
       })),
-      () => {}
+      () => { }
     ),
     path: "swarmbrush"
   },

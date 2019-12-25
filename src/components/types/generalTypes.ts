@@ -151,7 +151,6 @@ export type VizLayerTypes =
   | "connectors"
   | "edges"
   | "nodes"
-  | "areas"
   | "lines"
   | "points"
 

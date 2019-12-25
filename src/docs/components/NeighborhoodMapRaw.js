@@ -55,12 +55,12 @@ annotationData.push({
 
 const neighborhoodMapChart = {
   size: [700, 700],
-  areas: groupedData,
+  summaries: groupedData,
   lineDataAccessor: "d",
   showLinePoints: true,
   xAccessor: "posx",
   yAccessor: "posy",
-  areaStyle: d => ({
+  summaryStyle: d => ({
     stroke: "none",
     fill: d.parentSummary.color,
     opacity: 0.25
@@ -85,7 +85,7 @@ const neighborhoodMapChart = {
   hoverAnnotation: true,
   annotations: [] || annotationData,
   tooltipContent: d => <div className="tooltip-content">{d.hood}</div>,
-  areaType: {
+  summaryType: {
     type: "contour",
     thresholds: 4,
     bandwidth: 5,

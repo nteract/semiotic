@@ -3,13 +3,12 @@ import DocumentComponent from "../layout/DocumentComponent"
 import { OrdinalFrame } from "../../components"
 import { randomNormal } from "d3-random"
 import { funnelData } from "../example_settings/orframe"
-import Button from "material-ui/Button"
+import Button from "@material-ui/core/Button"
 import { sum } from "d3-array"
-import Select from "material-ui/Select"
-import { MenuItem } from "material-ui/Menu"
-import Icon from "material-ui-icons/Sort"
-import { /* Input, */ InputLabel } from "material-ui/Input"
-import { FormControl /*, FormHelperText */ } from "material-ui/Form"
+import Select from "@material-ui/core/Select"
+import MenuItem from '@material-ui/core/MenuItem'
+import InputLabel from '@material-ui/core/InputLabel'
+import FormControl from "@material-ui/core/FormControl"
 
 // const monthHash = {}
 
@@ -465,7 +464,6 @@ export default class OrdinalFrameDocs extends React.Component {
         <div>
           <Button
             color="primary"
-            raised
           >
             OrdinalFrame API
           </Button>
@@ -534,7 +532,7 @@ export default class OrdinalFrameDocs extends React.Component {
                 : undefined
             }
             baseMarkProps={{ transitionDuration: 3000 }}
-            //            canvasPostProcess={glowyCanvas}
+          //            canvasPostProcess={glowyCanvas}
           />
         </div>
       ),
@@ -552,15 +550,15 @@ export default class OrdinalFrameDocs extends React.Component {
     }
 
     const data = ${JSON.stringify(
-      dataTypeHash[this.state.dataType].data.filter((d, i) => i < 3)
-    )}
+        dataTypeHash[this.state.dataType].data.filter((d, i) => i < 3)
+      )}
     ${
-      this.state.annotations === "off"
-        ? ""
-        : `const exampleAnnotations = ${JSON.stringify(
+        this.state.annotations === "off"
+          ? ""
+          : `const exampleAnnotations = ${JSON.stringify(
             dataTypeHash[this.state.dataType].annotations
           )}`
-    }
+        }
         <OrdinalFrame
             size={[ 700,700 ]}
             data={data}
@@ -577,10 +575,10 @@ export default class OrdinalFrameDocs extends React.Component {
             }}
             projection={'${this.state.projection}'}
             ${
-              this.state.type !== "none"
-                ? this.state.type !== "custom"
-                  ? `type={'${this.state.type}'}`
-                  : `type={{
+        this.state.type !== "none"
+          ? this.state.type !== "custom"
+            ? `type={'${this.state.type}'}`
+            : `type={{
               type: "clusterbar",
               customMark: (d, i, xy) => [
                 <rect
@@ -612,60 +610,60 @@ export default class OrdinalFrameDocs extends React.Component {
                 />
               ]
             }}`
-                : ""
-            }
+          : ""
+        }
             ${
-              this.state.summaryType !== "none"
-                ? `summaryType={'${this.state.summaryType}'}`
-                : ""
-            }
+        this.state.summaryType !== "none"
+          ? `summaryType={'${this.state.summaryType}'}`
+          : ""
+        }
             ${
-              reFn && this.state.type !== "none"
-                ? `renderMode={ '${this.state.renderFn}'}`
-                : ""
-            }
+        reFn && this.state.type !== "none"
+          ? `renderMode={ '${this.state.renderFn}'}`
+          : ""
+        }
             ${
-              reFn && this.state.summaryType !== "none"
-                ? `summaryRenderMode={ '${this.state.renderFn}'}`
-                : ""
-            }
+        reFn && this.state.summaryType !== "none"
+          ? `summaryRenderMode={ '${this.state.renderFn}'}`
+          : ""
+        }
             oLabel={true}
             oPadding={${this.state.oPadding}}
             oAccessor={d => d.stepName}
             ${
-              this.state.dataType === "simple"
-                ? ""
-                : `rAccessor={${
-                    this.state.dataType === "stacked"
-                      ? "'stepValue'"
-                      : "'value'"
-                  }}`
-            }
+        this.state.dataType === "simple"
+          ? ""
+          : `rAccessor={${
+          this.state.dataType === "stacked"
+            ? "'stepValue'"
+            : "'value'"
+          }}`
+        }
             ${
-              this.state.connector === "off"
-                ? ""
-                : `connectorType={d => d.funnelKey}
+        this.state.connector === "off"
+          ? ""
+          : `connectorType={d => d.funnelKey}
             connectorStyle={d => {return { fill: d.source.funnelKey, stroke: d.source.funnelKey }}}`
-            }
+        }
             style={d => {return { fill: d.funnelKey, stroke: 'black' }}}
             ${
-              this.state.hoverBehavior === "none"
-                ? ""
-                : this.state.hoverBehavior === "piece"
-                ? "pieceHoverAnnotation={true}"
-                : "hoverAnnotation={true}"
-            }
+        this.state.hoverBehavior === "none"
+          ? ""
+          : this.state.hoverBehavior === "piece"
+            ? "pieceHoverAnnotation={true}"
+            : "hoverAnnotation={true}"
+        }
             ${
-              this.state.dynamicColumnWidth === "fixed"
-                ? ""
-                : "dynamicColumnWidth={'stepValue'}"
-            }
+        this.state.dynamicColumnWidth === "fixed"
+          ? ""
+          : "dynamicColumnWidth={'stepValue'}"
+        }
             margin={{ left: 55, top: 0, bottom: 50, right: 0 }}
             ${
-              this.state.annotations === "off"
-                ? ""
-                : "annotations={exampleAnnotations}"
-            }
+        this.state.annotations === "off"
+          ? ""
+          : "annotations={exampleAnnotations}"
+        }
         />
       `
     })
@@ -701,4 +699,3 @@ export default class OrdinalFrameDocs extends React.Component {
 }
 
 OrdinalFrameDocs.title = "OrdinalFrame"
-OrdinalFrameDocs.icon = <Icon />

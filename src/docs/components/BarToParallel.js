@@ -1,6 +1,6 @@
 import * as React from "react"
 import { OrdinalFrame } from "../../components"
-import Button from "material-ui/Button"
+import Button from "@material-ui/core/Button"
 
 const stepColors = {
   home: "#007190",
@@ -592,7 +592,6 @@ export default class InformationModel extends React.Component {
         <div className="infomodel-buttons">
           {this.state.step === 0 ? null : (
             <Button
-              raised
               color="primary"
               onClick={() => {
                 this.setState({ step: this.state.step - 1 })
@@ -603,7 +602,6 @@ export default class InformationModel extends React.Component {
           )}
           {this.state.step === stepSettings.length - 1 ? null : (
             <Button
-              raised
               color="primary"
               onClick={() => {
                 this.setState({ step: this.state.step + 1 })

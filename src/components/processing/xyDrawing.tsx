@@ -117,26 +117,20 @@ export const calculateXYFrame = (currentProps: XYFrameProps, prevState: XYFrameS
         pointStyle,
         pointRenderMode,
         pointClass,
-        areaClass,
-        summaryClass = areaClass,
+        summaryClass,
         canvasLines,
         canvasPoints,
-        canvasAreas,
-        canvasSummaries = canvasAreas,
+        canvasSummaries,
         defined,
         size,
         renderKey,
         lineType,
-        areaType,
-        summaryType = areaType,
+        summaryType,
         customLineMark,
         customPointMark,
-        customAreaMark,
-        customSummaryMark = customAreaMark,
-        areaStyle,
-        summaryStyle = areaStyle,
-        areaRenderMode,
-        summaryRenderMode = areaRenderMode,
+        customSummaryMark,
+        summaryStyle,
+        summaryRenderMode,
         lineStyle,
         lineRenderMode,
         xExtent: baseXExtent,
@@ -150,14 +144,11 @@ export const calculateXYFrame = (currentProps: XYFrameProps, prevState: XYFrameS
         showLinePoints,
         showSummaryPoints,
         points,
-        areas,
         lineDataAccessor,
-        areaDataAccessor,
-        summaryDataAccessor = areaDataAccessor,
+        summaryDataAccessor,
         yAccessor,
         xAccessor,
         useSummariesAsInteractionLayer,
-        useAreasAsInteractionLayer = useSummariesAsInteractionLayer,
         baseMarkProps,
         filterRenderedLines,
         filterRenderedSummaries,
@@ -167,8 +158,8 @@ export const calculateXYFrame = (currentProps: XYFrameProps, prevState: XYFrameS
     let {
         projectedLines,
         projectedPoints,
-        projectedSummaries = currentProps.projectedAreas,
-        summaries = areas,
+        projectedSummaries,
+        summaries,
         fullDataset
     } = currentProps
 
@@ -622,7 +613,7 @@ export const calculateXYFrame = (currentProps: XYFrameProps, prevState: XYFrameS
     }
 
     let overlay = undefined
-    if (useAreasAsInteractionLayer && projectedSummaries) {
+    if (useSummariesAsInteractionLayer && projectedSummaries) {
         overlay = createSummaries({
             xScale,
             yScale,
@@ -637,7 +628,7 @@ export const calculateXYFrame = (currentProps: XYFrameProps, prevState: XYFrameS
     return {
         lineData: currentProps.lines,
         pointData: currentProps.points,
-        summaryData: currentProps.summaries || currentProps.areas,
+        summaryData: currentProps.summaries,
         dataVersion: currentProps.dataVersion,
         projectedLines,
         projectedPoints,

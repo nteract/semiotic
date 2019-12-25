@@ -156,13 +156,13 @@ export default (editMode, overridePosition, setNewPosition, annotationLabel) => 
         {...appleChart}
         annotations={annotations}
         hoverAnnotation={!editMode}
-        areaType={{
+        summaryType={{
           type: "trendline",
           regressionType: "polynomial",
           order: 8
         }}
-        areas={{ label: "Apple Stock", coordinates: data }}
-        areaStyle={{
+        summaries={{ label: "Apple Stock", coordinates: data }}
+        summaryStyle={{
           fill: "none",
           stroke: "darkred",
           strokeWidth: 3,

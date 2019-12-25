@@ -15,23 +15,6 @@ export default class NeighborhoodMapDocs extends React.Component {
       name: "Basic",
       demo: NeighborhoodMapRaw,
       source: `
-            <XYFrame
-                areas={groupedData}
-                lineDataAccessor={"data"}
-                showLinePoints={true}
-                xAccessor={"x"}
-                yAccessor={"y"}
-                areaStyle={d => ({ stroke: 'none', fill: d.parentSummary.color, opacity: 0.25 })}
-                pointStyle={d => ({ stroke: colors[d.vertical_id%39], strokeOpacity: 0, fill: colors[d.vertical_id%39] })}
-                customPointMark={() => <Mark markType='circle' r='1' />}
-                canvasPoints={true}
-                areaType={{
-                type: "contour",
-                thresholds: 4,
-                bandwidth: 5,
-                neighborhood: true
-             }}
-            />
       `
     })
 

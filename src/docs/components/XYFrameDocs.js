@@ -19,11 +19,10 @@ import AnnotationBadge from "react-annotation/lib/Types/AnnotationBadge"
 
 import { testData } from "../example_settings/xyframe"
 
-import Select from "material-ui/Select"
-import { MenuItem } from "material-ui/Menu"
-import Icon from "material-ui-icons/Timeline"
-import { /* Input, */ InputLabel } from "material-ui/Input"
-import { FormControl /* FormHelperText */ } from "material-ui/Form"
+import Select from "@material-ui/core/Select"
+import MenuItem from '@material-ui/core/MenuItem'
+import InputLabel from '@material-ui/core/InputLabel'
+import FormControl from "@material-ui/core/FormControl"
 
 class NameForm extends React.Component {
   constructor(props) {
@@ -246,7 +245,7 @@ const canvasRenderLabelHash = {
 
 const canvasRenderNameHash = {
   line: "canvasLines",
-  area: "canvasAreas",
+  summary: "canvassummarys",
   points: "canvasPoints"
 }
 
@@ -274,8 +273,8 @@ const customPointHash = {
     return d.step < 20 ? (
       <Mark markType="circle" r="5" />
     ) : (
-      <Mark markType="rect" x={-4} y={-4} width={8} height={8} />
-    )
+        <Mark markType="rect" x={-4} y={-4} width={8} height={8} />
+      )
   }
 }
 
@@ -283,7 +282,7 @@ const customPointLabelHash = {
   variable: `({ i }) => i%2 ? <Mark markType='circle' r='5' /> : <Mark markType='rect' x={-4} y={-4} width={8} height={8} />`
 }
 
-const areaStyleHash = {
+const summaryStyleHash = {
   basic: () => ({ fill: "#b6a756", stroke: "black", strokeWidth: "1px" }),
   contours: d => ({
     fill: badColors(d.value),
@@ -293,7 +292,7 @@ const areaStyleHash = {
   })
 }
 
-const areaTypeHash = {
+const summaryTypeHash = {
   basic: undefined,
   contours: { type: "contour" }
 }
@@ -399,7 +398,7 @@ const exampleAnnotations = [
   }
 ]
 
-const areaTestData = [
+const summaryTestData = [
   {
     id: "shape1",
     coordinates: [
@@ -472,11 +471,11 @@ const pointAnnotations = pointTestData
     )
   )
 
-const contourAreaData = [{ id: "#00a2ce", coordinates: pointTestData }]
+const contoursummaryData = [{ id: "#00a2ce", coordinates: pointTestData }]
 
-const areaDataHash = {
-  basic: areaTestData,
-  contours: contourAreaData
+const summaryDataHash = {
+  basic: summaryTestData,
+  contours: contoursummaryData
 }
 
 const annotationSettingTypes = {
@@ -548,10 +547,10 @@ export default class XYFrameDocs extends React.Component {
       matte: "off",
       dataType: "line",
       customPoint: "none",
-      areaType: "basic",
+      summaryType: "basic",
       lineExtent: [1, 8],
       pointExtent: [[-1000, 1000], [1000, -1000]],
-      areaExtent: [[-1000, 1000], [1000, -1000]],
+      summaryExtent: [[-1000, 1000], [1000, -1000]],
       showPoints: "off",
       annotationSettings: "empty",
       axisAnnotatable: "off",
@@ -615,7 +614,7 @@ export default class XYFrameDocs extends React.Component {
   }
 
   render() {
-    const dataTypeOptions = ["line", "point", "area"].map(d => (
+    const dataTypeOptions = ["line", "point", "summary"].map(d => (
       <MenuItem key={`data-type-option-${d}`} value={d}>
         {d}
       </MenuItem>
@@ -636,9 +635,9 @@ export default class XYFrameDocs extends React.Component {
       "none",
       "line",
       "difference",
-      "stackedarea",
+      "stackedsummary",
       "bumpline",
-      "bumparea"
+      "bumpsummary"
     ].map(d => (
       <MenuItem key={`line-option-${d}`} value={d}>
         {d}
@@ -723,8 +722,8 @@ export default class XYFrameDocs extends React.Component {
       </MenuItem>
     ))
 
-    const areaTypeOptions = ["basic", "contours"].map(d => (
-      <MenuItem key={`area-type-option-${d}`} value={d}>
+    const summaryTypeOptions = ["basic", "contours"].map(d => (
+      <MenuItem key={`summary-type-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
@@ -779,59 +778,59 @@ export default class XYFrameDocs extends React.Component {
 
     const linesSource = removeEmptyLines`lines={displayData}
       lineDataAccessor={${
-        this.state.frame === "MinimapXYFrame"
-          ? "d => d.data.filter(p => p.px >= this.state.extent[0] && p.px <= this.state.extent[1])"
-          : '"data"'
+      this.state.frame === "MinimapXYFrame"
+        ? "d => d.data.filter(p => p.px >= this.state.extent[0] && p.px <= this.state.extent[1])"
+        : '"data"'
       }}
       lineStyle={d => ({ fill: d.color, fillOpacity: 0.5, stroke: d.color, strokeWidth: '3px' })}
       ${
-        this.state.lineType === "none"
+      this.state.lineType === "none"
+        ? ""
+        : `lineType={{ type: "${this.state.lineType}"${
+        this.state.curve === "none"
           ? ""
-          : `lineType={{ type: "${this.state.lineType}"${
-              this.state.curve === "none"
-                ? ""
-                : `, interpolator: ${this.state.curve}`
-            } }}`
+          : `, interpolator: ${this.state.curve}`
+        } }}`
       }
       ${
-        this.state.renderMode === "none"
-          ? ""
-          : `lineRenderMode={() => "${this.state.renderMode}"}`
+      this.state.renderMode === "none"
+        ? ""
+        : `lineRenderMode={() => "${this.state.renderMode}"}`
       }
       ${this.state.defined === "inactive" ? "" : "defined={d => d.py !== 0}"}
       ${this.state.showPoints === "on" ? "showLinePoints={true}" : ""}`
 
-    const areasSource = removeEmptyLines`areas={areaData}
-      areaStyle={() => ({ fill: 'purple', stroke: 'red', strokeWidth: '1px' })}
+    const summarysSource = removeEmptyLines`summarys={summaryData}
+      summaryStyle={() => ({ fill: 'purple', stroke: 'red', strokeWidth: '1px' })}
       ${this.state.showPoints === "on" ? "showLinePoints={true}" : ""}
       ${
-        this.state.renderMode === "none"
-          ? ""
-          : `areaRenderMode={() => "${this.state.renderMode}"}`
+      this.state.renderMode === "none"
+        ? ""
+        : `summaryRenderMode={() => "${this.state.renderMode}"}`
       }`
 
     const pointsSource = removeEmptyLines`points={testData}
       pointStyle={d => ({ fill: d.cat, stroke: 'black', strokeWidth: 1 })}
       ${
-        this.state.customPoint !== "none"
-          ? `customPointMark={${customPointLabelHash[this.state.customPoint]}}`
-          : ""
+      this.state.customPoint !== "none"
+        ? `customPointMark={${customPointLabelHash[this.state.customPoint]}}`
+        : ""
       }
       ${
-        this.state.renderMode === "none"
-          ? ""
-          : `pointRenderMode={() => "${this.state.renderMode}"}`
+      this.state.renderMode === "none"
+        ? ""
+        : `pointRenderMode={() => "${this.state.renderMode}"}`
       }`
 
     const dataTypeSource = {
       line: linesSource,
-      area: areasSource,
+      summary: summarysSource,
       point: pointsSource
     }
 
     const annotationType = {
       line: exampleAnnotations,
-      area: pointAnnotations,
+      summary: pointAnnotations,
       point: pointAnnotations
     }
 
@@ -860,13 +859,13 @@ export default class XYFrameDocs extends React.Component {
           title={titleTypesHash[this.state.title]}
           size={[700, 700]}
           lines={this.state.dataType === "line" ? displayData : undefined}
-          areas={
-            this.state.dataType === "area"
-              ? areaDataHash[this.state.areaType]
+          summarys={
+            this.state.dataType === "summary"
+              ? summaryDataHash[this.state.summaryType]
               : undefined
           }
-          areaStyle={areaStyleHash[this.state.areaType]}
-          areaType={areaTypeHash[this.state.areaType]}
+          summaryStyle={summaryStyleHash[this.state.summaryType]}
+          summaryType={summaryTypeHash[this.state.summaryType]}
           points={this.state.dataType === "point" ? pointTestData : undefined}
           pointStyle={d => ({
             fill: (d.parentLine && d.parentLine.color) || d.cat,
@@ -893,24 +892,24 @@ export default class XYFrameDocs extends React.Component {
           matte={this.state.matte === "on"}
           xExtent={
             this.state.frame === "MinimapXYFrame" &&
-            this.state.dataType !== "line" &&
-            this.state[`${this.state.dataType}Extent`] &&
-            this.state[`${this.state.dataType}Extent`][0]
+              this.state.dataType !== "line" &&
+              this.state[`${this.state.dataType}Extent`] &&
+              this.state[`${this.state.dataType}Extent`][0]
               ? [
-                  this.state[`${this.state.dataType}Extent`][0][0],
-                  this.state[`${this.state.dataType}Extent`][1][0]
-                ]
+                this.state[`${this.state.dataType}Extent`][0][0],
+                this.state[`${this.state.dataType}Extent`][1][0]
+              ]
               : undefined
           }
           yExtent={
             this.state.frame === "MinimapXYFrame" &&
-            this.state.dataType !== "line" &&
-            this.state[`${this.state.dataType}Extent`] &&
-            this.state[`${this.state.dataType}Extent`][0]
+              this.state.dataType !== "line" &&
+              this.state[`${this.state.dataType}Extent`] &&
+              this.state[`${this.state.dataType}Extent`][0]
               ? [
-                  this.state[`${this.state.dataType}Extent`][1][1],
-                  this.state[`${this.state.dataType}Extent`][0][1]
-                ]
+                this.state[`${this.state.dataType}Extent`][1][1],
+                this.state[`${this.state.dataType}Extent`][0][1]
+              ]
               : fixedExtentHash[this.state.fixedExtent]
           }
           lineStyle={d => ({
@@ -926,10 +925,10 @@ export default class XYFrameDocs extends React.Component {
             this.state.lineType === "none"
               ? undefined
               : {
-                  type: this.state.lineType,
-                  interpolator: curveHash[this.state.curve],
-                  sort: null
-                }
+                type: this.state.lineType,
+                interpolator: curveHash[this.state.curve],
+                sort: null
+              }
           }
           margin={marginHash[this.state.margin]}
           defined={
@@ -940,7 +939,7 @@ export default class XYFrameDocs extends React.Component {
               ? undefined
               : () => this.state.renderMode
           }
-          areaRenderMode={
+          summaryRenderMode={
             this.state.renderMode === "none"
               ? undefined
               : () => this.state.renderMode
@@ -977,7 +976,7 @@ export default class XYFrameDocs extends React.Component {
               ? undefined
               : canvasRenderHash[this.state.canvasRender]
           }
-          canvasAreas={
+          canvassummarys={
             this.state.canvasRender === "none"
               ? undefined
               : canvasRenderHash[this.state.canvasRender]
@@ -1023,59 +1022,59 @@ export default class XYFrameDocs extends React.Component {
           minimap={
             this.state.frame === "MinimapXYFrame"
               ? {
-                  margin: { top: 20, bottom: 35, left: 20, right: 20 },
-                  lineStyle: d => ({
-                    fill: d.color,
-                    fillOpacity: 0.5,
-                    stroke: d.color
-                  }),
-                  lineType:
-                    this.state.lineType === "none"
-                      ? undefined
-                      : {
-                          type: this.state.lineType,
-                          interpolator: curveHash[this.state.curve],
-                          sort: null
-                        },
-                  brushEnd: e =>
-                    this.updateDateRange(`${this.state.dataType}`, e),
-                  yBrushable: this.state.dataType === "line" ? false : true,
-                  xBrushExtent:
-                    this.state.dataType === "line"
-                      ? this.state[`${this.state.dataType}Extent`]
-                      : this.state[`${this.state.dataType}Extent`][0],
-                  yBrushExtent: this.state[`${this.state.dataType}Extent`][1],
-                  lines:
-                    this.state.dataType === "line" ? displayData : undefined,
-                  areas:
-                    this.state.dataType === "area"
-                      ? areaDataHash[this.state.areaType]
-                      : undefined,
-                  points:
-                    this.state.dataType === "point" ? pointTestData : undefined,
-                  areaStyle: areaStyleHash[this.state.areaType],
-                  areaType: areaTypeHash[this.state.areaType],
-                  pointStyle: d => ({
-                    fill: d.cat,
-                    stroke: "black",
-                    strokeWidth: 1
-                  }),
-                  lineDataAccessor: d => d.data,
-                  size:
-                    this.state.dataType === "line" ? [700, 150] : [300, 300],
-                  axes: axesHash[this.state.axes]
-                    ? [axesHash[this.state.axes][1]]
+                margin: { top: 20, bottom: 35, left: 20, right: 20 },
+                lineStyle: d => ({
+                  fill: d.color,
+                  fillOpacity: 0.5,
+                  stroke: d.color
+                }),
+                lineType:
+                  this.state.lineType === "none"
+                    ? undefined
+                    : {
+                      type: this.state.lineType,
+                      interpolator: curveHash[this.state.curve],
+                      sort: null
+                    },
+                brushEnd: e =>
+                  this.updateDateRange(`${this.state.dataType}`, e),
+                yBrushable: this.state.dataType === "line" ? false : true,
+                xBrushExtent:
+                  this.state.dataType === "line"
+                    ? this.state[`${this.state.dataType}Extent`]
+                    : this.state[`${this.state.dataType}Extent`][0],
+                yBrushExtent: this.state[`${this.state.dataType}Extent`][1],
+                lines:
+                  this.state.dataType === "line" ? displayData : undefined,
+                summarys:
+                  this.state.dataType === "summary"
+                    ? summaryDataHash[this.state.summaryType]
                     : undefined,
-                  annotations:
-                    this.state.annotations === "on"
-                      ? finalAnnotations.map(d =>
-                          Object.assign({}, d, {
-                            type: AnnotationBadge,
-                            subject: { text: "A", radius: 12 }
-                          })
-                        )
-                      : undefined
-                }
+                points:
+                  this.state.dataType === "point" ? pointTestData : undefined,
+                summaryStyle: summaryStyleHash[this.state.summaryType],
+                summaryType: summaryTypeHash[this.state.summaryType],
+                pointStyle: d => ({
+                  fill: d.cat,
+                  stroke: "black",
+                  strokeWidth: 1
+                }),
+                lineDataAccessor: d => d.data,
+                size:
+                  this.state.dataType === "line" ? [700, 150] : [300, 300],
+                axes: axesHash[this.state.axes]
+                  ? [axesHash[this.state.axes][1]]
+                  : undefined,
+                annotations:
+                  this.state.annotations === "on"
+                    ? finalAnnotations.map(d =>
+                      Object.assign({}, d, {
+                        type: AnnotationBadge,
+                        subject: { text: "A", radius: 12 }
+                      })
+                    )
+                    : undefined
+              }
               : undefined
           }
         />
@@ -1094,14 +1093,14 @@ export default class XYFrameDocs extends React.Component {
       size={[ 700,500 ]}
       ${
         this.state.frame === "ResponsiveXYFrame" ? "responsiveWidth={true}" : ""
-      }
+        }
       ${this.state.annotations === "on" ? annotationSource : ""}
       ${dataTypeSource[this.state.dataType]}
       ${
         this.state.fixedExtent === "none"
           ? ""
           : `yExtent={${fixedExtentLabelHash[this.state.fixedExtent]}}`
-      }
+        }
       ${this.state.matte === "off" ? "" : "matte={true}"}
       xAccessor="px"
       yAccessor="py"
@@ -1110,35 +1109,35 @@ export default class XYFrameDocs extends React.Component {
         this.state.margin === "none"
           ? ""
           : `margin={${JSON.stringify(marginHash[this.state.margin])}}`
-      }
+        }
       ${
         this.state.axes === "none"
           ? ""
           : `axes={${axesLabelHash[this.state.axes]}}`
-      }
+        }
       ${this.state.hoverAnnotation === "off" ? "" : "hoverAnnotation={true}"}
       ${
         this.state.canvasRender === "none"
           ? ""
           : `${canvasRenderNameHash[this.state.dataType]}={${
-              canvasRenderLabelHash[this.state.canvasRender]
-            }}`
-      }
+          canvasRenderLabelHash[this.state.canvasRender]
+          }}`
+        }
       ${
         this.state.backgroundGraphics === "off"
           ? ""
           : 'backgroundGraphics={<text x={300} y={350} style={{ opacity: 0.25, fontWeight: 900, fontSize: "36px" }}>backgroundGraphics</text>}'
-      }
+        }
       ${
         this.state.foregroundGraphics === "off"
           ? ""
           : 'foregroundGraphics={<text x={300} y={400} style={{ fill: "white", stroke: "black", fontWeight: 900, fontSize: "36px" }}>foregroundGraphics</text>}'
-      }
+        }
       ${
         this.state.dataType === "line" && this.state.legend === "on"
           ? "legend={true}"
           : ""
-      }
+        }
       ${
         this.state.frame === "MinimapXYFrame"
           ? removeEmptyLines`minimap={
@@ -1155,10 +1154,10 @@ export default class XYFrameDocs extends React.Component {
             this.state.annotations === "on"
               ? "annotations: badgeAnnotations"
               : ""
-          }
+            }
           }`
           : ""
-      }
+        }
       />`
     })
 
@@ -1224,18 +1223,18 @@ export default class XYFrameDocs extends React.Component {
       </FormControl>
     ]
 
-    const areaButtons = [
+    const summaryButtons = [
       <FormControl key="button-1">
-        <InputLabel htmlFor="hover-behavior-input">areaType</InputLabel>
+        <InputLabel htmlFor="hover-behavior-input">summaryType</InputLabel>
         <Select
-          value={this.state.areaType}
+          value={this.state.summaryType}
           onChange={e =>
             this.setState({
-              areaType: e.target.value
+              summaryType: e.target.value
             })
           }
         >
-          {areaTypeOptions}
+          {summaryTypeOptions}
         </Select>
       </FormControl>,
       <FormControl key="button-3-0-0">
@@ -1328,7 +1327,7 @@ export default class XYFrameDocs extends React.Component {
       </FormControl>,
       this.state.dataType === "line" ? lineButtons : null,
       this.state.dataType === "point" ? pointButtons : null,
-      this.state.dataType === "area" ? areaButtons : null,
+      this.state.dataType === "summary" ? summaryButtons : null,
       annotationButtons,
 
       <FormControl key="button-3-0">
@@ -1427,13 +1426,13 @@ export default class XYFrameDocs extends React.Component {
         buttons={buttons}
       >
         <p>
-          The XYFrame lets you create scatterplots, line charts and area
+          The XYFrame lets you create scatterplots, line charts and summary
           visualizations like contours. You can experiment with the settings to
           see the code necessary to deploy that chart in your app.
         </p>
         <p>
           For instance, adjust the lineType property to see different variations
-          of the line chart, such as a bump chart or stacked area chart.
+          of the line chart, such as a bump chart or stacked summary chart.
         </p>
         <p>
           Or turn on annotations to see how semiotic automatically processes
@@ -1453,5 +1452,3 @@ export default class XYFrameDocs extends React.Component {
 }
 
 XYFrameDocs.title = "XYFrame"
-
-XYFrameDocs.icon = <Icon />

@@ -35,7 +35,7 @@ const processNodes = [
       data: true,
       points: true,
       lines: true,
-      areas: true,
+      summaries: true,
       nodes: true,
       edges: true,
       graph: true
@@ -66,7 +66,6 @@ const processNodes = [
       type: true,
       connectorType: true,
       summaryType: true,
-      areaType: true,
       networkType: true,
       projection: true,
       oPadding: true,
@@ -258,8 +257,8 @@ export default class ProcessViz extends React.Component {
                           {k === "nodes" || k === "edges"
                             ? "these data tend to be circular"
                             : typeof frameSettings[k] === "function"
-                            ? `${frameSettings[k]}`
-                            : JSON.stringify(
+                              ? `${frameSettings[k]}`
+                              : JSON.stringify(
                                 frameSettings[k],
                                 (key, value) => {
                                   if (typeof value === "function") {

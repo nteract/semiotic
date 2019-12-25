@@ -1,6 +1,6 @@
 import * as React from "react"
 import { PrismCode } from "react-prism"
-import Button from "material-ui/Button"
+import Button from "@material-ui/core/Button"
 import { Link } from "react-router-dom"
 
 export default () => {
@@ -20,12 +20,12 @@ export default () => {
               opinionated framework optimized to enable effective communication
               through data visualization.
             </p>
-            <Button color="primary" raised>
+            <Button color="primary" >
               <Link style={{ color: "black" }} to="examples">
                 Interactive Examples
               </Link>
             </Button>
-            <Button color="primary" raised>
+            <Button color="primary" >
               <Link style={{ color: "black" }} to="responsivexy">
                 Responsive Example
               </Link>

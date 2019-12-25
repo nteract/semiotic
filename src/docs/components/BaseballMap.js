@@ -1,17 +1,17 @@
 import React from 'react'
 import DocumentComponent from '../layout/DocumentComponent'
 import BaseballMapRaw from './BaseballMapRaw'
-import Select from 'material-ui/Select'
-import { MenuItem } from 'material-ui/Menu'
+import Select from '@material-ui/core/Select'
 import { Mark } from 'semiotic-mark'
 import { scaleTime } from 'd3-scale'
-import { InputLabel } from 'material-ui/Input'
-import { FormControl } from 'material-ui/Form'
+import MenuItem from '@material-ui/core/MenuItem'
+import InputLabel from '@material-ui/core/InputLabel'
+import FormControl from "@material-ui/core/FormControl"
 
 const components = []
 const modes = {
   basic: {
-    areas: undefined,
+    summaries: undefined,
     annotations: [
       {
         type: 'enclose',
@@ -25,17 +25,17 @@ const modes = {
   sketchy: {
     customPointMark: () => <Mark markType="circle" r={6} />,
     pointRenderMode: 'sketchy',
-    areas: undefined
+    summaries: undefined
   },
   contourplot: {
     customPointMark: () => <Mark markType="circle" r={2} />,
     pointStyle: { fill: 'black' },
-    areaStyle: () => ({
+    summaryStyle: () => ({
       stroke: 'none',
       fill: '#b3331d',
       opacity: 0.25
     }),
-    areaType: 'contour',
+    summaryType: 'contour',
     areaRenderMode: 'sketchy'
   },
   scatterplot: {
@@ -52,7 +52,7 @@ const modes = {
     ],
     margin: { left: 60, top: 50, bottom: 25, right: 25 },
     backgroundGraphics: undefined,
-    areas: undefined
+    summaries: undefined
   },
   overtime: {
     xScaleType: scaleTime(),
@@ -71,7 +71,7 @@ const modes = {
     ],
     margin: { left: 60, top: 25, bottom: 25, right: 25 },
     backgroundGraphics: undefined,
-    areas: undefined
+    summaries: undefined
   }
 }
 
@@ -95,7 +95,7 @@ export default class BaseballMapDocs extends React.Component {
       'contourplot',
       'scatterplot',
       'overtime'
-    ].map(d => 
+    ].map(d =>
       (<MenuItem key={`mode-option-${d}`} label={d} value={d}>
         {d}
       </MenuItem>)
@@ -123,7 +123,7 @@ export default class BaseballMapDocs extends React.Component {
             <XYFrame
     size={[500, 500]}
     points={data}
-    areas={[{ label: "stanton", coordinates: data }]}
+    summaries={[{ label: "stanton", coordinates: data }]}
     xAccessor={d => d.bx}
     yAccessor={d => d.by}
     yExtent={[-50]}
@@ -165,7 +165,7 @@ export default class BaseballMapDocs extends React.Component {
         <p>
           Switch modes to see how different XYFrame settings could display the
           data differently. Another approach could be to plot the park layout in
-          actual coordinates and pass it to the areas function instead of using
+          actual coordinates and pass it to the summaries function instead of using
           backgroundGraphics.
         </p>
       </DocumentComponent>

@@ -95,8 +95,8 @@ export default class CreatingXYPlots extends React.Component {
             yAccessor="y"
             pointStyle={d => ({ fill: d.color })}
             yExtent={[-8500, 8500]}
-            //            areaType={{ type: "trendline", regressionType: "logarithmic" }}
-            areaStyle={{ stroke: "darkred" }}
+            //            summaryType={{ type: "trendline", regressionType: "logarithmic" }}
+            summaryStyle={{ stroke: "darkred" }}
             margin={d => d.size[0] / 20}
             axes={[
               {
@@ -187,7 +187,7 @@ export default class CreatingXYPlots extends React.Component {
           <p>
             A heatmap, or any other area visualization, requires us to send the
             points data as a coordinates attribute of an object being sent to
-            the areas prop of an XYFrame. By setting the summaryType to
+            the summaries prop of an XYFrame. By setting the summaryType to
             "heatmap" we get a grid of density of that same data.
           </p>
           <p>
@@ -226,7 +226,7 @@ export default class CreatingXYPlots extends React.Component {
             useAreasAsInteractionLayer={true}
             xAccessor="x"
             yAccessor="y"
-            areaStyle={d => ({
+            summaryStyle={d => ({
               fill: thresholds(d.percent),
               stroke: "black"
             })}
@@ -252,30 +252,7 @@ export default class CreatingXYPlots extends React.Component {
           />
         </div>
       ),
-      source: `<XYFrame
-      size={[500, 800]}
-      areas={[{ coordinates: pointTestData }]}
-      summaryType={{ type: "heatmap", yBins: 10, xCellPx: 50 }}
-      xAccessor="x"
-      yAccessor="y"
-      areaStyle={d => ({
-        fill: thresholds(d.percent),
-        stroke: "black"
-      })}
-      hoverAnnotation={true}
-      tooltipContent={d => {
-        return (
-          <div className="tooltip-content">
-            <p>Points in cell: {d.binItems.length}</p>
-          </div>
-        )
-      }}
-      margin={{ left: 60, bottom: 60, top: 30, right: 30 }}
-      axes={[
-        { orient: "left", footer: true },
-        { orient: "bottom", footer: true }
-      ]}
-    />`
+      source: ``
     })
     function makeHex(h) {
       const hexBase = h.hexCoordinates.map(d => [
@@ -335,14 +312,14 @@ export default class CreatingXYPlots extends React.Component {
             percent calculation for styling.
           </p>
           <XYFrame
-            areas={[{ coordinates: pointTestData }]}
+            summaries={[{ coordinates: pointTestData }]}
             summaryType={{
               type: "hexbin",
               bins: 10
             }}
             xAccessor="x"
             yAccessor="y"
-            areaStyle={d => ({
+            summaryStyle={d => ({
               fill: thresholds(d.percent),
               stroke: "black"
             })}
@@ -363,11 +340,11 @@ export default class CreatingXYPlots extends React.Component {
         </div>
       ),
       source: `<XYFrame
-      areas={[{ coordinates: pointTestData }]}
-      areaType={{ type: "hexbin", xBins: 10 }}
+      summaries={[{ coordinates: pointTestData }]}
+      summaryType={{ type: "hexbin", xBins: 10 }}
       xAccessor="x"
       yAccessor="y"
-      areaStyle={d => ({
+      summaryStyle={d => ({
         fill: thresholds(d.percent),
         stroke: "black"
       })}
@@ -393,7 +370,7 @@ export default class CreatingXYPlots extends React.Component {
       demo: (
         <div>
           <p>
-            A contour plot results from setting the areaType to "contour". The
+            A contour plot results from setting the summaryType to "contour". The
             contours are regions of density of that same data.
           </p>
           <p>
@@ -403,20 +380,20 @@ export default class CreatingXYPlots extends React.Component {
             the main way to visualize them is via fillOpacity.
           </p>
           <XYFrame
-            areas={[{ coordinates: pointTestData }]}
-            areaType="contour"
+            summaries={[{ coordinates: pointTestData }]}
+            summaryType="contour"
             xAccessor="x"
             yAccessor="y"
-            areaStyle={d => ({ fill: thresholds(d.percent), stroke: "black" })}
+            summaryStyle={d => ({ fill: thresholds(d.percent), stroke: "black" })}
           />
         </div>
       ),
       source: `<XYFrame
-      areas={[{ coordinates: pointTestData }]}
-      areaType="contour"
+      summaries={[{ coordinates: pointTestData }]}
+      summaryType="contour"
       xAccessor="x"
       yAccessor="y"
-      areaStyle={{ fill: "#b3331d", fillOpacity: 0.2 }}
+      summaryStyle={{ fill: "#b3331d", fillOpacity: 0.2 }}
     />`
     })
 
@@ -433,24 +410,24 @@ export default class CreatingXYPlots extends React.Component {
             this with hoverAnnotation for interactivity.
           </p>
           <XYFrame
-            areas={[{ coordinates: pointTestData }]}
+            summaries={[{ coordinates: pointTestData }]}
             showSummaryPoints={true}
-            areaType={{ type: "contour", thresholds: 5 }}
+            summaryType={{ type: "contour", thresholds: 5 }}
             xAccessor="x"
             yAccessor="y"
-            areaStyle={d => ({ fill: thresholds(d.percent), stroke: "black" })}
+            summaryStyle={d => ({ fill: thresholds(d.percent), stroke: "black" })}
             pointStyle={{ fill: "none", stroke: "black", strokeOpacity: 0.5 }}
             hoverAnnotation={true}
           />
         </div>
       ),
       source: `<XYFrame
-      areas={[{ coordinates: pointTestData }]}
+      summaries={[{ coordinates: pointTestData }]}
       showSummaryPoints={true}
-      areaType="contour"
+      summaryType="contour"
       xAccessor="x"
       yAccessor="y"
-      areaStyle={{ fill: "#b3331d", fillOpacity: 0.2 }}
+      summaryStyle={{ fill: "#b3331d", fillOpacity: 0.2 }}
       pointStyle={{ fill: "none", stroke: "black", strokeOpacity: 0.5 }}
       hoverAnnotation={true}
     />`
@@ -467,15 +444,15 @@ export default class CreatingXYPlots extends React.Component {
             data generated by the areaDataAccessor.
           </p>
           <XYFrame
-            areas={[{ coordinates: pointTestData }]}
+            summaries={[{ coordinates: pointTestData }]}
             areaDataAccessor={[
               d => d.coordinates.filter(p => p.color === "#4d430c"),
               d => d.coordinates.filter(p => p.color === "#00a2ce")
             ]}
-            areaType={{ type: "contour", thresholds: 5 }}
+            summaryType={{ type: "contour", thresholds: 5 }}
             xAccessor="x"
             yAccessor="y"
-            areaStyle={d => {
+            summaryStyle={d => {
               return {
                 stroke: d.parentSummary._baseData[0].color,
                 fill: "none",
@@ -488,15 +465,15 @@ export default class CreatingXYPlots extends React.Component {
         </div>
       ),
       source: `<XYFrame
-      areas={[{ coordinates: pointTestData }]}
+      summaries={[{ coordinates: pointTestData }]}
       areaDataAccessor={[
         d => d.coordinates.filter(p => p.color === "#4d430c"),
         d => d.coordinates.filter(p => p.color === "#00a2ce")
       ]}
-      areaType={{ type: "contour", thresholds: 5 }}
+      summaryType={{ type: "contour", thresholds: 5 }}
       xAccessor="x"
       yAccessor="y"
-      areaStyle={d => {
+      summaryStyle={d => {
         return {
           stroke: d.parentSummary._baseData[0].color,
           fill: "none",
@@ -519,13 +496,13 @@ export default class CreatingXYPlots extends React.Component {
           <XYFrame
             title={`Max Bin: ${preprocessedHexbinData.binMax} (Gold)`}
             size={[500, 500]}
-            areas={preprocessedHexbinData}
-            areaType={{
+            summaries={preprocessedHexbinData}
+            summaryType={{
               type: "hexbin"
             }}
             xAccessor="x"
             yAccessor="y"
-            areaStyle={d => ({
+            summaryStyle={d => ({
               fill:
                 d.value === preprocessedHexbinData.binMax
                   ? "gold"
@@ -536,13 +513,13 @@ export default class CreatingXYPlots extends React.Component {
           <XYFrame
             title={`Max Bin: ${preprocessedHeatmapData.binMax} (Gold)`}
             size={[500, 500]}
-            areas={preprocessedHeatmapData}
-            areaType={{
+            summaries={preprocessedHeatmapData}
+            summaryType={{
               type: "heatmap"
             }}
             xAccessor="x"
             yAccessor="y"
-            areaStyle={d => ({
+            summaryStyle={d => ({
               fill:
                 d.value === preprocessedHeatmapData.binMax
                   ? "gold"
@@ -553,7 +530,7 @@ export default class CreatingXYPlots extends React.Component {
         </div>
       ),
       source: `const preprocessedHexbinData = hexbinning({
-  areaType: { type: "hexbin" },
+  summaryType: { type: "hexbin" },
   data: { coordinates: pointTestData },
   size: [500, 500]
 })
@@ -570,8 +547,8 @@ export default class CreatingXYPlots extends React.Component {
           </p>
           <XYFrame
             size={[500, 800]}
-            areas={[{ coordinates: pointTestData }]}
-            areaType={{
+            summaries={[{ coordinates: pointTestData }]}
+            summaryType={{
               type: "heatmap",
               yBins: 10,
               xCellPx: 35,
@@ -592,8 +569,8 @@ export default class CreatingXYPlots extends React.Component {
             yAccessor="y"
           />
           <XYFrame
-            areas={[{ coordinates: pointTestData }]}
-            areaType={{
+            summaries={[{ coordinates: pointTestData }]}
+            summaryType={{
               type: "hexbin",
               bins: 10,
               customMark: ({ d }) => makeHex(d)
@@ -607,8 +584,8 @@ export default class CreatingXYPlots extends React.Component {
       source: `//customMark for heatmap
 <XYFrame
 size={[500, 800]}
-areas={[{ coordinates: pointTestData }]}
-areaType={{
+summaries={[{ coordinates: pointTestData }]}
+summaryType={{
   type: "heatmap",
   yBins: 10,
   xCellPx: 35,
@@ -661,8 +638,8 @@ function makeHex(h) {
   )
 }
 <XYFrame
-areas={[{ coordinates: pointTestData }]}
-areaType={{
+summaries={[{ coordinates: pointTestData }]}
+summaryType={{
   type: "hexbin",
   bins: 10,
   customMark: d => makeHex(d)

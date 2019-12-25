@@ -4,12 +4,11 @@ import { NetworkFrame } from "../../components"
 import { Mark } from "semiotic-mark"
 
 import { edgeData } from "../example_settings/networkframe"
-import Button from "material-ui/Button"
-import Select from "material-ui/Select"
-import { MenuItem } from "material-ui/Menu"
-import Icon from "material-ui-icons/Share"
-import { /* Input, */ InputLabel } from "material-ui/Input"
-import { FormControl /*, FormHelperText */ } from "material-ui/Form"
+import Button from "@material-ui/core/Button"
+import Select from "@material-ui/core/Select"
+import MenuItem from '@material-ui/core/MenuItem'
+import InputLabel from '@material-ui/core/InputLabel'
+import FormControl from "@material-ui/core/FormControl"
 import ProcessViz from "./ProcessViz"
 
 import { PrismCode } from "react-prism"
@@ -301,7 +300,6 @@ export default class NetworkFrameDocs extends React.Component {
         <div>
           <Button
             color="primary"
-            raised
           >
             NetworkFrame API
           </Button>
@@ -320,13 +318,13 @@ export default class NetworkFrameDocs extends React.Component {
             edgeStyle={() => ({ stroke: '#a91a1a', fill: '#a91a1a', fillOpacity: 0.25, strokeWidth: '1px' })}
             nodeStyle={d => ({ fill: d.createdByFrame ? '#1aa962' : "rgb(179, 51, 29)" })}
             networkType={{ type: '${
-              this.state.networkType
-            }', iterations: 500, edgeStrength: 0.1 }}
+        this.state.networkType
+        }', iterations: 500, edgeStrength: 0.1 }}
             edgeType={'${this.state.edge}'}
             ${
-              this.state.customNodeIcon !== "on"
-                ? ""
-                : `customNodeIcon={ ? ({ d }) => <Mark
+        this.state.customNodeIcon !== "on"
+          ? ""
+          : `customNodeIcon={ ? ({ d }) => <Mark
                 markType="rect"
                 width={d.degree}
                 height={d.degree}
@@ -334,11 +332,11 @@ export default class NetworkFrameDocs extends React.Component {
                 y={-d.degree / 2}
                 style={{ fill: d.createdByFrame ? "rgb(0, 162, 206)" : "rgb(179, 51, 29)" }}
             />`
-            }
+        }
             nodeSizeAccessor={d => d.${this.state.nodeSize} + 2}
             ${
-              this.state.annotations === "on" ? "annotations={annotations}" : ""
-            }
+        this.state.annotations === "on" ? "annotations={annotations}" : ""
+        }
             nodeLabels={true}
             hoverAnnotation={true}
             annotationSettings={{
@@ -398,4 +396,3 @@ export default class NetworkFrameDocs extends React.Component {
 }
 
 NetworkFrameDocs.title = "NetworkFrame"
-NetworkFrameDocs.icon = <Icon />

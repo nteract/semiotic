@@ -187,15 +187,15 @@ export const regionatedLineChart = {
     strokeWidth: 1,
     strokeOpacity: 0.5
   }),
-  areaStyle: () => ({
+  summaryStyle: () => ({
     fillOpacity: 0.15,
     fill: "#E1E1E1",
     stroke: "#838383",
     strokeWidth: "1.5px",
     strokeDasharray: "2 4"
   }),
-  areas: [bounds],
-  areaDataAccessor: d => d.coordinates,
+  summaries: [bounds],
+  summaryDataAccessor: d => d.coordinates,
   annotations: [
     {
       type: AnnotationCalloutElbow,

@@ -698,11 +698,11 @@ export default class CreatingLineChart extends React.Component {
     })
 
     examples.push({
-      name: "Point and Area Highlighting",
+      name: "Point and Summary Highlighting",
       demo: (
         <div>
           <p>
-            Highlight annotations will return all points, lines and areas that
+            Highlight annotations will return all points, lines and summaries that
             match the id value of the passed highlight. This can be used to
             highlight multiple shapes if your lineIDAccessor is sophisticated
             (or simple) enough. Here I check in lineIDAccessor not only for

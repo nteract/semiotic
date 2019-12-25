@@ -1,10 +1,10 @@
 import * as React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 import DendrogramRaw from "./DendrogramRaw"
-import { MenuItem } from "material-ui/Menu"
-import { InputLabel } from "material-ui/Input"
-import { FormControl } from "material-ui/Form"
-import Select from "material-ui/Select"
+import MenuItem from '@material-ui/core/MenuItem'
+import InputLabel from '@material-ui/core/InputLabel'
+import FormControl from "@material-ui/core/FormControl"
+import Select from "@material-ui/core/Select"
 
 const components = []
 

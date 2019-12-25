@@ -2,7 +2,7 @@ import * as React from "react"
 import { NetworkFrame, XYFrame, OrdinalFrame } from "../../components"
 import { network_data, or_data } from "../sampledata/energy_time"
 import { scaleLinear } from "d3-scale"
-import Button from "material-ui/Button"
+import Button from "@material-ui/core/Button"
 
 const nodeScale = scaleLinear()
   .domain([1, 1000, 2000])
@@ -43,8 +43,8 @@ const xyPossibilities = [
     yAccessor: d => d
   },
   {
-    areas: [{ label: "Area", coordinates: or_data }],
-    areaType: "contour",
+    summaries: [{ label: "Area", coordinates: or_data }],
+    summaryType: "contour",
     xAccessor: d => d.years[0],
     yAccessor: d => d.years[8]
   }
@@ -252,7 +252,6 @@ export default class Process extends React.Component {
       <div className="process-proto process">
         <div className="process-buttons">
           <Button
-            raised
             color="primary"
             label={"Prototype!"}
             onTouchTap={() => {
@@ -262,7 +261,6 @@ export default class Process extends React.Component {
             }}
           />
           <Button
-            raised
             color="primary"
             label={"On to Design!"}
             onTouchTap={() => {
@@ -277,7 +275,6 @@ export default class Process extends React.Component {
       <div className="process-design process">
         <div className="process-buttons">
           <Button
-            raised
             color="primary"
             label={"Back to prototyping!"}
             onTouchTap={() => {
@@ -285,7 +282,6 @@ export default class Process extends React.Component {
             }}
           />
           <Button
-            raised
             color="primary"
             label={"Design!"}
             onTouchTap={() => {
@@ -293,7 +289,6 @@ export default class Process extends React.Component {
             }}
           />
           <Button
-            raised
             color="primary"
             label={"On to production!"}
             onTouchTap={() => {

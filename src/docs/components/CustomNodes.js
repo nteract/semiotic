@@ -1,10 +1,10 @@
 import * as React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 import CustomNodesRaw from "./CustomNodesRaw"
-import { MenuItem } from "material-ui/Menu"
-import { InputLabel } from "material-ui/Input"
-import { FormControl } from "material-ui/Form"
-import Select from "material-ui/Select"
+import MenuItem from '@material-ui/core/MenuItem'
+import InputLabel from '@material-ui/core/InputLabel'
+import FormControl from "@material-ui/core/FormControl"
+import Select from "@material-ui/core/Select"
 
 const components = []
 
@@ -69,7 +69,7 @@ export default class DagreGraph extends React.Component {
 const g = new dagre.graphlib.Graph()
 g.setGraph({ rankdir:  "${this.state.direction}", ranker: "${
         this.state.ranker
-      }" })
+        }" })
 g.setDefaultEdgeLabel(() => ({}))
 
 g.setNode("spongebob", { label: "Mr. Squarepants", width: 44, height: 35 })
@@ -148,7 +148,7 @@ hoverAnnotation={true}
 const g = new dagre.graphlib.Graph()
 g.setGraph({ rankdir: "${this.state.direction}", ranker: "${
         this.state.ranker
-      }" })
+        }" })
 g.setDefaultEdgeLabel(() => ({}))
 
 g.setNode("spongebob", { label: "Mr. Squarepants", width: 44, height: 35 })

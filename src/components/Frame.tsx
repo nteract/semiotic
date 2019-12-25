@@ -18,7 +18,6 @@ type VizDataLayerKeys =
   | "connectors"
   | "edges"
   | "nodes"
-  | "areas"
   | "lines"
   | "points"
 

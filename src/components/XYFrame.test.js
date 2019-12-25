@@ -31,12 +31,12 @@ const svgAnnotation = {
 //Enzyme doesn't do well with context so disable it for now
 
 describe("XYFrame", () => {
-  it("renders points, lines, areas without crashing", () => {
+  it("renders points, lines, summaries without crashing", () => {
     mount(
       <XYFrame
         points={somePointData}
         lines={[{ label: "points", coordinates: somePointData }]}
-        areas={[{ label: "areas", coordinates: somePointData }]}
+        summaries={[{ label: "summaries", coordinates: somePointData }]}
         xAccessor="day"
         yAccessor="value"
         disableContext={true}
@@ -52,7 +52,7 @@ describe("XYFrame", () => {
         { label: "points", coordinates: somePointData },
         { label: "otherpoints", coordinates: someOtherPointData }
       ]}
-      areas={[{ label: "areas", coordinates: somePointData }]}
+      summaries={[{ label: "summaries", coordinates: somePointData }]}
       xExtent={{
         onChange: d => {
           returnedExtent = d
@@ -79,7 +79,7 @@ describe("XYFrame", () => {
         { label: "points", coordinates: somePointData },
         { label: "otherpoints", coordinates: someOtherPointData }
       ]}
-      areas={[{ label: "areas", coordinates: somePointData }]}
+      summaries={[{ label: "summaries", coordinates: somePointData }]}
       xExtent={{
         onChange: d => {
           returnedExtent = d

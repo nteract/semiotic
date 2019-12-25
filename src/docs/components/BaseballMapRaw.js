@@ -22,7 +22,7 @@ export default mode => {
       stroke: "black",
       fill: velocityScale(d.exit_velocity)
     }),
-    areas: [{ label: "stanton", coordinates: data }],
+    summaries: [{ label: "stanton", coordinates: data }],
     hoverAnnotation: true,
     tooltipContent: d => (
       <div className="tooltip-content">

@@ -13,6 +13,14 @@ b {
 body {
   background-color: white;
   color: black;
+  font-family: -apple-system, system-ui, BlinkMacSystemFont, Helvetica, Arial,
+  sans-serif;
+  line-height: 1.8em;
+  overflow-y: scroll !important;
+}
+
+#root {
+  overflow-y: scroll;
 }
 
 .accent-font {
@@ -61,11 +69,6 @@ hr {
   border-bottom: none;
 }
 
-body {
-  font-family: -apple-system, system-ui, BlinkMacSystemFont, Helvetica, Arial,
-    sans-serif;
-  line-height: 1.8em;
-}
 
 .center {
   text-align: center;
@@ -429,6 +432,18 @@ circle.frame-hover {
   .drawer-title {
     min-height: 48px;
   }
+}
+
+.MuiBackdrop-root {
+  opacity: 0 !important;
+}
+
+.MuiDrawer-modal {
+  pointer-events: none;
+}
+
+.MuiDrawer-paper {
+  pointer-events: all;
 }
 
 .semiotic-header {

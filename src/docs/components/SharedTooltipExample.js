@@ -2,10 +2,10 @@ import * as React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 import SharedTooltipExampleRaw from "./SharedTooltipExampleRaw"
 
-import Select from "material-ui/Select"
-import { MenuItem } from "material-ui/Menu"
-import { InputLabel } from "material-ui/Input"
-import { FormControl } from "material-ui/Form"
+import Select from "@material-ui/core/Select"
+import MenuItem from '@material-ui/core/MenuItem'
+import InputLabel from '@material-ui/core/InputLabel'
+import FormControl from "@material-ui/core/FormControl"
 
 const components = []
 // Add your component proptype data here

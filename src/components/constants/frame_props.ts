@@ -3,7 +3,6 @@
 export const xyFrameDataProps = [
   "lines",
   "points",
-  "areas",
   "summaries",
   "xScaleType",
   "yScaleType",
@@ -16,8 +15,7 @@ export const xyFrameDataProps = [
   "showLinePoints",
   "showSummaryPoints",
   "defined",
-  "summaryType",
-  "areaType"
+  "summaryType"
 ]
 
 export const xyFrameChangeProps = [
@@ -151,7 +149,6 @@ export const xyframeproptypes = {
   ...sharedframeproptypes,
   lines: true,
   points: true,
-  areas: true,
   summaries: true,
   axes: true,
   matte: true,
@@ -164,21 +161,17 @@ export const xyframeproptypes = {
   xAccessor: true,
   yAccessor: true,
   lineDataAccessor: true,
-  areaDataAccessor: true,
   summaryDataAccessor: true,
   lineType: true,
-  areaType: true,
   summaryType: true,
   lineRenderMode: true,
   pointRenderMode: true,
-  areaRenderMode: true,
   summaryRenderMode: true,
   showLinePoints: true,
   showSummaryPoints: true,
   defined: true,
   lineStyle: true,
   pointStyle: true,
-  areaStyle: true,
   summaryStyle: true,
   lineClass: true,
   pointClass: true,
@@ -194,8 +187,8 @@ export const xyframeproptypes = {
   customSummaryMark: true,
   lineIDAccessor: true,
   minimap: true,
-  useAreasAsInteractionLayer: true,
-  useSummariesAsInteractionLayer: true
+  useSummariesAsInteractionLayer: true,
+  filterRenderedLines: true
 }
 
 export const ordinalframeproptypes = {
