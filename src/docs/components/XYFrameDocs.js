@@ -245,7 +245,7 @@ const canvasRenderLabelHash = {
 
 const canvasRenderNameHash = {
   line: "canvasLines",
-  summary: "canvassummarys",
+  summary: "canvasSummaries",
   points: "canvasPoints"
 }
 
@@ -800,7 +800,7 @@ export default class XYFrameDocs extends React.Component {
       ${this.state.defined === "inactive" ? "" : "defined={d => d.py !== 0}"}
       ${this.state.showPoints === "on" ? "showLinePoints={true}" : ""}`
 
-    const summarysSource = removeEmptyLines`summarys={summaryData}
+    const summariesSource = removeEmptyLines`summaries={summaryData}
       summaryStyle={() => ({ fill: 'purple', stroke: 'red', strokeWidth: '1px' })}
       ${this.state.showPoints === "on" ? "showLinePoints={true}" : ""}
       ${
@@ -824,7 +824,7 @@ export default class XYFrameDocs extends React.Component {
 
     const dataTypeSource = {
       line: linesSource,
-      summary: summarysSource,
+      summary: summariesSource,
       point: pointsSource
     }
 
@@ -859,7 +859,7 @@ export default class XYFrameDocs extends React.Component {
           title={titleTypesHash[this.state.title]}
           size={[700, 700]}
           lines={this.state.dataType === "line" ? displayData : undefined}
-          summarys={
+          summaries={
             this.state.dataType === "summary"
               ? summaryDataHash[this.state.summaryType]
               : undefined
@@ -976,7 +976,7 @@ export default class XYFrameDocs extends React.Component {
               ? undefined
               : canvasRenderHash[this.state.canvasRender]
           }
-          canvassummarys={
+          canvasSummaries={
             this.state.canvasRender === "none"
               ? undefined
               : canvasRenderHash[this.state.canvasRender]
@@ -1046,7 +1046,7 @@ export default class XYFrameDocs extends React.Component {
                 yBrushExtent: this.state[`${this.state.dataType}Extent`][1],
                 lines:
                   this.state.dataType === "line" ? displayData : undefined,
-                summarys:
+                summaries:
                   this.state.dataType === "summary"
                     ? summaryDataHash[this.state.summaryType]
                     : undefined,
