@@ -195,13 +195,13 @@ class InteractionLayer extends React.PureComponent<InteractionLayerProps, Intera
     semioticBrush
       .extent([[0, 0], [this.props.size[0], this.props.size[1]]])
       .on("start", () => {
-        brushStart(mappingFn(event.selection), undefined, brushData, interaction)
+        brushStart(mappingFn(event.selection), undefined, brushData, undefined, interaction)
       })
       .on("brush", () => {
-        brushing(mappingFn(event.selection), undefined, brushData, interaction)
+        brushing(mappingFn(event.selection), undefined, brushData, undefined, interaction)
       })
       .on("end", () => {
-        brushEnd(endMappingFn(event.selection), undefined, brushData, interaction)
+        brushEnd(endMappingFn(event.selection), undefined, brushData, undefined, interaction)
       })
 
     return (
@@ -336,7 +336,6 @@ class InteractionLayer extends React.PureComponent<InteractionLayerProps, Intera
   }
 
   render() {
-    console.log("interaction render")
     let semioticBrush = null
     const {
       interaction,

@@ -3,12 +3,11 @@ import AnnotationLayer from "./AnnotationLayer"
 import InteractionLayer from "./InteractionLayer"
 import VisualizationLayer from "./VisualizationLayer"
 import { generateFrameTitle } from "./svg/frameFunctions"
-import { drawMarginPath } from "./svg/frameFunctions"
-import { filterDefs } from "./constants/jsx"
+import { generateFinalDefs } from "./constants/jsx"
 
 import SpanOrDiv from "./SpanOrDiv"
 import { MarginType, RoughType } from "./types/generalTypes"
-import { AxisProps, AnnotationHandling } from "./types/annotationTypes"
+import { AnnotationHandling } from "./types/annotationTypes"
 import { LegendProps } from "./types/legendTypes"
 import { ScaleLinear } from "d3-scale"
 
@@ -76,7 +75,9 @@ type Props = {
 
 type State = {
   canvasContext?: { getContext: Function }
-  voronoiHover?: object
+  voronoiHover?: object,
+  finalDefs: object,
+  props: Props
 }
 
 const defaultZeroMargin = { top: 0, bottom: 0, left: 0, right: 0 }
@@ -92,9 +93,13 @@ class Frame extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props)
 
+    const { matte, size, margin, frameKey, additionalDefs, name } = props
+
     this.state = {
       canvasContext: null,
-      voronoiHover: undefined
+      voronoiHover: undefined,
+      finalDefs: generateFinalDefs({ matte, size, margin, frameKey, additionalDefs, name }),
+      props
     }
   }
 
@@ -111,6 +116,18 @@ class Frame extends React.Component<Props, State> {
       this.setState({
         canvasContext: this.canvasContext
       })
+
+
+  }
+
+  static getDerivedStateFromProps(nextProps: Props, prevState: State) {
+    const { props: lp } = prevState
+
+    if (lp.matte !== nextProps.matte || lp.additionalDefs !== nextProps.additionalDefs) {
+      return { finalDefs: generateFinalDefs, props: nextProps }
+    }
+
+    return null
   }
 
   setVoronoi = (d: Object) => {
@@ -122,7 +139,6 @@ class Frame extends React.Component<Props, State> {
       axes,
       axesTickLines,
       className = "",
-      matte,
       name = "",
       frameKey,
       projectedCoordinateNames,
@@ -161,14 +177,13 @@ class Frame extends React.Component<Props, State> {
       useSpans,
       canvasRendering,
       renderOrder,
-      additionalDefs,
       showLinePoints,
       disableCanvasInteraction = false,
       sketchyRenderingEngine,
       disableContext
     } = this.props
 
-    const { voronoiHover, canvasContext } = this.state
+    const { voronoiHover, canvasContext, finalDefs } = this.state
 
     const areaAnnotations = []
 
@@ -232,8 +247,6 @@ class Frame extends React.Component<Props, State> {
       size: size
     })
 
-    let marginGraphic
-
     const finalBackgroundGraphics =
       typeof backgroundGraphics === "function"
         ? backgroundGraphics({ size, margin })
@@ -244,30 +257,6 @@ class Frame extends React.Component<Props, State> {
         ? foregroundGraphics({ size, margin })
         : foregroundGraphics
 
-    if (typeof matte === "function") {
-      marginGraphic = matte({ size, margin })
-    } else if (React.isValidElement(matte)) {
-      marginGraphic = matte
-    } else if (matte === true) {
-      marginGraphic = (
-        <path
-          fill="white"
-          transform={`translate(${-margin.left},${-margin.top})`}
-          d={drawMarginPath({
-            margin,
-            size: size,
-            inset: 0
-          })}
-          className={`${name}-matte`}
-        />
-      )
-    }
-
-    const finalFilterDefs = filterDefs({
-      matte: marginGraphic,
-      key: matte && (frameKey || name),
-      additionalDefs: additionalDefs
-    })
 
     return (
       <SpanOrDiv
@@ -338,8 +327,7 @@ class Frame extends React.Component<Props, State> {
               width={size[0]}
               height={size[1]}
             >
-              {finalFilterDefs}
-
+              {finalDefs}
               <VisualizationLayer
                 disableContext={disableContext}
                 renderPipeline={renderPipeline}
@@ -353,7 +341,7 @@ class Frame extends React.Component<Props, State> {
                 frameKey={frameKey}
                 canvasContext={canvasContext}
                 dataVersion={dataVersion}
-                matte={marginGraphic}
+                matte={finalDefs.matte}
                 margin={margin}
                 canvasPostProcess={canvasPostProcess}
                 baseMarkProps={baseMarkProps}
