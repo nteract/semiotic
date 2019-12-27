@@ -77,7 +77,8 @@ type State = {
   canvasContext?: { getContext: Function }
   voronoiHover?: object,
   finalDefs: object,
-  props: Props
+  props: Props,
+  matte: React.ReactNode
 }
 
 const defaultZeroMargin = { top: 0, bottom: 0, left: 0, right: 0 }
@@ -95,10 +96,13 @@ class Frame extends React.Component<Props, State> {
 
     const { matte, size, margin, frameKey, additionalDefs, name } = props
 
+    const generatedDefs = generateFinalDefs({ matte, size, margin, frameKey, additionalDefs, name })
+
     this.state = {
       canvasContext: null,
       voronoiHover: undefined,
-      finalDefs: generateFinalDefs({ matte, size, margin, frameKey, additionalDefs, name }),
+      finalDefs: generatedDefs.defs,
+      matte: generatedDefs.matte,
       props
     }
   }
@@ -124,7 +128,9 @@ class Frame extends React.Component<Props, State> {
     const { props: lp } = prevState
 
     if (lp.matte !== nextProps.matte || lp.additionalDefs !== nextProps.additionalDefs) {
-      return { finalDefs: generateFinalDefs, props: nextProps }
+      const generatedDefs = generateFinalDefs({ matte, size, margin, frameKey, additionalDefs, name })
+
+      return { finalDefs: generatedDefs.defs, matte: generatedDefs.matte, props: nextProps }
     }
 
     return null
@@ -183,7 +189,7 @@ class Frame extends React.Component<Props, State> {
       disableContext
     } = this.props
 
-    const { voronoiHover, canvasContext, finalDefs } = this.state
+    const { voronoiHover, canvasContext, finalDefs, matte } = this.state
 
     const areaAnnotations = []
 
@@ -341,7 +347,7 @@ class Frame extends React.Component<Props, State> {
                 frameKey={frameKey}
                 canvasContext={canvasContext}
                 dataVersion={dataVersion}
-                matte={finalDefs.matte}
+                matte={matte}
                 margin={margin}
                 canvasPostProcess={canvasPostProcess}
                 baseMarkProps={baseMarkProps}

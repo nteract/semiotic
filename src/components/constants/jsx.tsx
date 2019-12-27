@@ -73,5 +73,5 @@ export const generateFinalDefs = ({ matte, size, margin, frameKey, additionalDef
     additionalDefs: additionalDefs
   })
 
-  return finalFilterDefs
+  return { defs: finalFilterDefs, matte: marginGraphic }
 }
