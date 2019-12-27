@@ -20,6 +20,41 @@ const cutHash = {
   Fair: colors[4]
 }
 
+const pointStylingFn = d => ({ fill: d.color, fillOpacity: 0.9 })
+
+const canvasAxes = [
+  { orient: "bottom", label: "Carat" },
+  {
+    label: "Price",
+    orient: "left",
+    tickFormat: d => `$${d / 1000}k`
+  }
+]
+
+const customCanvasClick = d => {
+  console.info("clicked", d)
+}
+
+const customCanvasDoubleclick = d => {
+  console.info("double-clicked", d)
+}
+
+const customTooltipContent = d => (
+  <div className="tooltip-content">
+    <p>Price: ${d.y}</p>
+    <p>Caret: {d.x}</p>
+    <p>
+      {d.coincidentPoints.length > 1 &&
+        `+${d.coincidentPoints.length - 1} more diamond${(d
+          .coincidentPoints.length > 2 &&
+          "s") ||
+        ""} here`}
+    </p>
+  </div>
+)
+
+const customMargin = { left: 75, bottom: 100, top: 10, right: 10 }
+
 export default class DecisionMatrixExample extends React.Component {
   state = { parsedDiamonds: [], size: [700, 700] }
   constructor(props) {
@@ -61,37 +96,14 @@ export default class DecisionMatrixExample extends React.Component {
           size={size}
           xAccessor="x"
           yAccessor="y"
-          pointStyle={d => ({ fill: d.color, fillOpacity: 0.9 })}
+          pointStyle={pointStylingFn}
           canvasPoints={true}
-          axes={[
-            { orient: "bottom", label: "Carat" },
-            {
-              label: "Price",
-              orient: "left",
-              tickFormat: d => `$${d / 1000}k`
-            }
-          ]}
-          margin={{ left: 75, bottom: 100, top: 10, right: 10 }}
+          axes={canvasAxes}
+          margin={customMargin}
           hoverAnnotation={true}
-          customClickBehavior={d => {
-            console.info("clicked", d)
-          }}
-          customDoubleClickBehavior={d => {
-            console.info("double-clicked", d)
-          }}
-          tooltipContent={d => (
-            <div className="tooltip-content">
-              <p>Price: ${d.y}</p>
-              <p>Caret: {d.x}</p>
-              <p>
-                {d.coincidentPoints.length > 1 &&
-                  `+${d.coincidentPoints.length - 1} more diamond${(d
-                    .coincidentPoints.length > 2 &&
-                    "s") ||
-                    ""} here`}
-              </p>
-            </div>
-          )}
+          customClickBehavior={customCanvasClick}
+          customDoubleClickBehavior={customCanvasDoubleclick}
+          tooltipContent={customTooltipContent}
         />
       </div>
     )

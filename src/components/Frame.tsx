@@ -164,10 +164,11 @@ class Frame extends React.Component<Props, State> {
       additionalDefs,
       showLinePoints,
       disableCanvasInteraction = false,
-      sketchyRenderingEngine
+      sketchyRenderingEngine,
+      disableContext
     } = this.props
 
-    const { voronoiHover } = this.state
+    const { voronoiHover, canvasContext } = this.state
 
     const areaAnnotations = []
 
@@ -321,7 +322,7 @@ class Frame extends React.Component<Props, State> {
             {canvasRendering && (
               <canvas
                 className="frame-canvas"
-                ref={canvasContext => (this.canvasContext = canvasContext)}
+                ref={canvasContextRef => (this.canvasContext = canvasContextRef)}
                 style={{
                   position: "absolute",
                   left: `0px`,
@@ -340,7 +341,7 @@ class Frame extends React.Component<Props, State> {
               {finalFilterDefs}
 
               <VisualizationLayer
-                disableContext={this.props.disableContext}
+                disableContext={disableContext}
                 renderPipeline={renderPipeline}
                 position={adjustedPosition}
                 size={adjustedSize}
@@ -348,9 +349,9 @@ class Frame extends React.Component<Props, State> {
                 xScale={xScale}
                 yScale={yScale}
                 axes={axes}
-                title={generatedTitle}
+                title={title}
                 frameKey={frameKey}
-                canvasContext={this.state.canvasContext}
+                canvasContext={canvasContext}
                 dataVersion={dataVersion}
                 matte={marginGraphic}
                 margin={margin}

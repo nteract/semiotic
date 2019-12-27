@@ -66,7 +66,7 @@ const generateOEndMappingFn = projectedColumns => (d): null | Array<any> => {
   return null
 }
 
-class InteractionLayer extends React.Component<InteractionLayerProps, InteractionLayerState> {
+class InteractionLayer extends React.PureComponent<InteractionLayerProps, InteractionLayerState> {
   constructor(props: InteractionLayerProps) {
     super(props)
 
@@ -336,6 +336,7 @@ class InteractionLayer extends React.Component<InteractionLayerProps, Interactio
   }
 
   render() {
+    console.log("interaction render")
     let semioticBrush = null
     const {
       interaction,

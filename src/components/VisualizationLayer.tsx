@@ -150,7 +150,6 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     }
   }
 
-
   componentDidUpdate(lp: object) {
     const np = this.props
     const propKeys = Object.keys(np)
@@ -426,6 +425,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
   }
 
   render() {
+    console.log("viz layer render")
     const { matte, matteClip, axes, frameKey = "", margin, title, ariaTitle } = this.props
 
     const { renderedElements } = this.state
