@@ -225,6 +225,7 @@ class InteractionLayer extends React.PureComponent<InteractionLayerProps, Intera
       props.yScale !== nextProps.yScale ||
       props.hoverAnnotation !== nextProps.hoverAnnotation
     ) {
+
       const { disableCanvasInteraction, canvasRendering, svgSize, margin, voronoiHover } = nextProps
       const { overlayRegions } = prevState
 

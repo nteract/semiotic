@@ -127,6 +127,8 @@ class Frame extends React.Component<Props, State> {
   static getDerivedStateFromProps(nextProps: Props, prevState: State) {
     const { props: lp } = prevState
 
+    const { matte, size, margin, frameKey, additionalDefs } = nextProps
+
     if (lp.matte !== nextProps.matte || lp.additionalDefs !== nextProps.additionalDefs) {
       const generatedDefs = generateFinalDefs({ matte, size, margin, frameKey, additionalDefs, name })
 
@@ -139,6 +141,7 @@ class Frame extends React.Component<Props, State> {
   setVoronoi = (d: Object) => {
     this.setState({ voronoiHover: d })
   }
+
 
   render() {
     const {

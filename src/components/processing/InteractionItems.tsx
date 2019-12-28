@@ -30,6 +30,7 @@ export const changeVoronoi = (voronoiHover: Function,
   if (customHoverBehavior) customHoverBehavior(dataObject)
 
   if (!d) voronoiHover(null)
+
   else if (customHoverTypes === true) {
     const vorD = Object.assign({}, dataObject)
     vorD.type = vorD.type === "column-hover" ? "column-hover" : "frame-hover"
@@ -180,7 +181,7 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
             changeVoronoi(voronoiHover, voronoiDataset[i], hoverAnnotation, customHoverBehavior, points)
           }}
           onMouseLeave={() => {
-            changeVoronoi(voronoiHover)
+            changeVoronoi(voronoiHover, undefined, undefined, customHoverBehavior)
           }}
           key={`interactionVoronoi${i}`}
           d={`M${d.join("L")}Z`}
@@ -208,7 +209,7 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
             changeVoronoi(voronoiHover, overlayData, props.hoverAnnotation, customHoverBehavior, points)
           },
           onMouseLeave: () => {
-            changeVoronoi(voronoiHover)
+            changeVoronoi(voronoiHover, undefined, undefined, customHoverBehavior)
           },
           onClick: () => {
             clickVoronoi(overlayData, customClickBehavior, points)

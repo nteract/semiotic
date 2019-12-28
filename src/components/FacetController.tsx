@@ -218,12 +218,13 @@ class FacetController extends React.Component<Props, State> {
 
     // pieceHoverAnnotation could be an object, so we need to be explicit in checking for true
     if (props.hoverAnnotation || props.pieceHoverAnnotation) {
-      customProps.customHoverBehavior = d =>
+      customProps.customHoverBehavior = d => {
         this.setState({
           facetHover: d,
           facetHoverAnnotations:
             props.hoverAnnotation || props.pieceHoverAnnotation
         })
+      }
     }
 
     if (

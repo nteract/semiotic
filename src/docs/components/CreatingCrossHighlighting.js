@@ -716,10 +716,6 @@ export default class CreatingLineChart extends React.Component {
             xScaleType={scaleTime()}
             xAccessor={d => new Date(d.date)}
             yAccessor={"grossWeekly"}
-            yExtent={{
-              extent: this.state.extent,
-              onChange: e => this.setState({ yMax: e[1] })
-            }}
             lineType={{
               type: "linepercent",
               interpolator: curveMonotoneX
