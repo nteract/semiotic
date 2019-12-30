@@ -37,7 +37,6 @@ import {
   RawLine,
   LineTypeSettings,
   SummaryTypeSettings,
-  AccessorFnType,
   GenericObject,
   ExtentType
 } from "../types/generalTypes"
@@ -514,8 +513,8 @@ export const calculateDataExtent = ({
     projectedSummaries = hexbinning({
       summaryType,
       data: projectedSummaries,
-      processedData: summaries && !!summaries[0].processedData,
-      preprocess: false,
+      preprocess: summaries && !!summaries[0].processedData,
+      processedData: summaries && summaries[0].processedData,
       finalXExtent,
       finalYExtent,
       size,
@@ -555,17 +554,9 @@ export const calculateDataExtent = ({
     projectedSummaries = trendlining({
       summaryType,
       data: projectedSummaries,
-      processedData: summaries && !!summaries[0].processedData,
-      preprocess: false,
-      finalXExtent,
-      finalYExtent,
-      size,
-      margin,
-      baseMarkProps,
-      styleFn: summaryStyleFn,
-      classFn: summaryClassFn,
-      renderFn: summaryRenderModeFn,
-      chartSize
+      processedData: summaries && summaries[0].processedData,
+      preprocess: summaries && !!summaries[0].processedData,
+      finalXExtent
     })
 
     fullDataset = [

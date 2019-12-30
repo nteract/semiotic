@@ -98,7 +98,7 @@ export interface LineTypeSettings {
   y1?: (d?: ProjectedPoint, index?: number) => number
 }
 
-export type BasicSummaryTypes = "basic" | "contour" | "hexbin" | "heatmap"
+export type BasicSummaryTypes = "basic" | "contour" | "hexbin" | "heatmap" | "trendline"
 
 export interface SummaryTypeSettings {
   type: BasicSummaryTypes | Function
@@ -112,6 +112,7 @@ export interface RawLine {
 export interface RawSummary {
   processedData?: object[]
   coordinates?: object[]
+  preprocess?: boolean
 }
 
 export interface RawPoint { }

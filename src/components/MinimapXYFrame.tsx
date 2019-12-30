@@ -4,7 +4,7 @@ import * as React from "react"
 import XYFrame from "./XYFrame"
 import MiniMap from "./MiniMap"
 
-import { XYFrameProps } from "./XYFrame"
+import { XYFrameProps } from "./types/xyTypes"
 
 interface MinimapXYFrameProps extends XYFrameProps {
   renderBefore?: boolean

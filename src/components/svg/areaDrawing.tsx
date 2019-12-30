@@ -77,7 +77,7 @@ export function contouring({ summaryType, data, finalXExtent, finalYExtent }) {
 
 export function hexbinning({
   preprocess = true,
-  processedData = false,
+  processedData,
   summaryType,
   data: baseData,
   finalXExtent = [
@@ -98,7 +98,7 @@ export function hexbinning({
   renderFn,
   chartSize
 }) {
-  if (processedData) {
+  if (preprocess) {
     return baseData[0].coordinates
   }
 
@@ -393,7 +393,8 @@ export function heatmapping({
 }
 
 export function trendlining({
-  processedData = false,
+  processedData,
+  preprocess = false,
   summaryType,
   data: baseData,
   finalXExtent = [
@@ -402,7 +403,7 @@ export function trendlining({
   ],
   xScaleType = scaleLinear()
 }) {
-  if (processedData) {
+  if (preprocess) {
     return baseData[0].coordinates
   }
 
