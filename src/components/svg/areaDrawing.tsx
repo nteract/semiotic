@@ -77,7 +77,6 @@ export function contouring({ summaryType, data, finalXExtent, finalYExtent }) {
 
 export function hexbinning({
   preprocess = true,
-  processedData,
   summaryType,
   data: baseData,
   finalXExtent = [
@@ -98,8 +97,9 @@ export function hexbinning({
   renderFn,
   chartSize
 }) {
+
   if (preprocess) {
-    return baseData[0].coordinates
+    return baseData.coordinates
   }
 
   let projectedSummaries = []

@@ -7,18 +7,23 @@ type Props = {
   span: boolean
 }
 
-export default (props: Props) => {
-  const { style, className, children, span } = props
-  if (span)
-    return (
-      <span className={className} style={{ display: "block", ...style }}>
-        {children}
-      </span>
-    )
+class SpanOrDiv extends React.PureComponent<Props, State> {
+  render() {
+    const { style, className, span, children } = this.props
 
-  return (
-    <div className={className} style={style}>
-      {children}
-    </div>
-  )
+    if (span)
+      return (
+        <span className={className} style={{ display: "block", ...style }}>
+          {children}
+        </span>
+      )
+
+    return (
+      <div className={className} style={style}>
+        {children}
+      </div>
+    )
+  }
 }
+
+export default SpanOrDiv

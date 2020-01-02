@@ -47,8 +47,9 @@ export default () => {
             responsiveWidth={true}
             pointStyle={d => ({ fill: d.color })}
             yExtent={[-8500, 8500]}
-            areaStyle={{ stroke: "darkred" }}
+            summaryStyle={{ stroke: "darkred" }}
             margin={d => d.size[0] / 20}
+            hoverAnnotation={true}
             axes={[
                 {
                     orient: "top",

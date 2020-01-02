@@ -34,7 +34,6 @@ export const xyFrameChangeProps = [
   "defined",
   "lineStyle",
   "pointStyle",
-  "areaStyle",
   "summaryStyle",
   "lineClass",
   "pointClass",

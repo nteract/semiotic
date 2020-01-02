@@ -314,7 +314,8 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
     const margin = calculateMargin({
       margin: this.props.margin,
       axes: this.state.axesData,
-      title: this.state.annotatedSettings.title
+      title: this.state.annotatedSettings.title,
+      size: this.props.size
     })
     const { adjustedPosition, adjustedSize } = adjustedPositionSize({
       size: this.props.size,
@@ -543,7 +544,8 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
     const margin = calculateMargin({
       margin: this.props.margin,
       axes: this.state.axesData,
-      title: this.state.annotatedSettings.title
+      title: this.state.annotatedSettings.title,
+      size: this.props.size
     })
     const { adjustedPosition, adjustedSize } = adjustedPositionSize({
       size,

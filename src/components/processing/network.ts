@@ -412,7 +412,8 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
 
   const margin = calculateMargin({
     margin: baseMargin,
-    title
+    title,
+    size
   })
 
   const { adjustedPosition, adjustedSize } = adjustedPositionSize({
@@ -897,7 +898,7 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
         edgeStrength = 0.1,
         distanceMax = Infinity,
         edgeDistance,
-        forceManyBody:nsForceMB = (d => -25 * nodeSizeAccessor(d))
+        forceManyBody: nsForceMB = (d => -25 * nodeSizeAccessor(d))
       } = networkSettings
 
       const linkForce = forceLink().strength(d =>

@@ -107,7 +107,6 @@ const processNodes = [
       summaryStyle: true,
       pointStyle: true,
       lineStyle: true,
-      areaStyle: true,
       nodeStyle: true,
       edgeStyle: true,
       pieceClass: true,

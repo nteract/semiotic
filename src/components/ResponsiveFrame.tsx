@@ -15,11 +15,11 @@ type ResponsiveFrameState = {
   containerWidth?: number
 }
 
-const createResponsiveFrame = Frame =>
+const createResponsiveFrame = ParticularFrame =>
   class ResponsiveFrame extends React.Component<
     ResponsiveFrameProps,
     ResponsiveFrameState
-  > {
+    > {
     constructor(props) {
       super(props)
 
@@ -36,7 +36,7 @@ const createResponsiveFrame = Frame =>
       debounce: 200
     }
 
-    static displayName = `Responsive${Frame.displayName}`
+    static displayName = `Responsive${ParticularFrame.displayName}`
 
     isResizing = undefined
 
@@ -103,7 +103,7 @@ const createResponsiveFrame = Frame =>
           ref={node => (this.node = node)}
         >
           {!returnEmpty && (
-            <Frame
+            <ParticularFrame
               {...rest}
               size={actualSize}
               dataVersion={dataVersion ? dataVersionWithSize : undefined}

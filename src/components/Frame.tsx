@@ -341,7 +341,8 @@ class Frame extends React.Component<Props, State> {
                 disableContext={disableContext}
                 renderPipeline={renderPipeline}
                 position={adjustedPosition}
-                size={adjustedSize}
+                width={adjustedSize[0]}
+                height={adjustedSize[1]}
                 projectedCoordinateNames={projectedCoordinateNames}
                 xScale={xScale}
                 yScale={yScale}

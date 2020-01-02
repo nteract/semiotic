@@ -127,7 +127,7 @@ const networkSettings = {
 const xySettings = {
   lineStyle: d => ({ fill: d.color, stroke: d.color, fillOpacity: 0.75 }),
   pointStyle: d => ({ fill: d.color, stroke: "black", fillOpacity: 0.75 }),
-  areaStyle: d => ({
+  summaryStyle: d => ({
     fill: d.color || "red",
     stroke: "black",
     fillOpacity: 0.75

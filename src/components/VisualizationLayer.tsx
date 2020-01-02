@@ -15,7 +15,8 @@ type Props = {
   yScale: Function
   dataVersion?: string
   canvasContext?: { getContext: Function } | null
-  size: Array<number>
+  width: number
+  height: number
   margin: MarginType
   canvasPostProcess?: Function
   title?: { props?: any } | string
@@ -168,11 +169,11 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     )
       return
 
-    const { sketchyRenderingEngine } = this.props
+    const { sketchyRenderingEngine, width, height, margin } = this.props
 
     const size = [
-      this.props.size[0] + this.props.margin.left + this.props.margin.right,
-      this.props.size[1] + this.props.margin.top + this.props.margin.bottom
+      width + margin.left + margin.right,
+      height + margin.top + margin.bottom
     ]
     let rc
     const context = this.props.canvasContext.getContext("2d")
@@ -181,12 +182,12 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
       0,
       0,
       1,
-      this.props.margin.left,
-      this.props.margin.top
+      margin.left,
+      margin.top
     )
     context.clearRect(
-      -this.props.margin.left,
-      -this.props.margin.top,
+      -margin.left,
+      -margin.top,
       size[0],
       size[1]
     )
@@ -210,8 +211,8 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
         0,
         0,
         1,
-        this.props.margin.left,
-        this.props.margin.top
+        margin.left,
+        margin.top
       )
       context.translate(...this.props.position)
       context.translate(piece.tx, piece.ty)
