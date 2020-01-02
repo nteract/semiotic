@@ -7,7 +7,7 @@ type Props = {
   span: boolean
 }
 
-class SpanOrDiv extends React.PureComponent<Props, State> {
+class SpanOrDiv extends React.PureComponent<Props> {
   render() {
     const { style, className, span, children } = this.props
 
