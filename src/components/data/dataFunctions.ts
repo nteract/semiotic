@@ -102,10 +102,10 @@ export function stringToArrayFn<StrFnType extends validStrFnTypes>(
     | string
     | StrFnType
     | Array<
-        | ((arg?: GenericObject, index?: number) => StrFnType)
-        | string
-        | StrFnType
-      >,
+      | ((arg?: GenericObject, index?: number) => StrFnType)
+      | string
+      | StrFnType
+    >,
   defaultAccessor?: (arg?: GenericObject, index?: number) => StrFnType,
   raw?: boolean
 ): Array<(arg?: GenericObject, index?: number) => StrFnType> {
@@ -327,10 +327,10 @@ export const calculateDataExtent = ({
                 p[whichPoints] !== undefined
                   ? p[whichPoints]
                   : p[projectedYMiddle] !== undefined
-                  ? p[projectedYMiddle]
-                  : p[projectedYBottom] !== undefined
-                  ? p[projectedYBottom]
-                  : p.y
+                    ? p[projectedYMiddle]
+                    : p[projectedYBottom] !== undefined
+                      ? p[projectedYBottom]
+                      : p.y
             })
           })
       })
@@ -402,15 +402,15 @@ export const calculateDataExtent = ({
 
   if (xExtent && !Array.isArray(xExtent) && xExtent.includeAnnotations === true) {
     xAccessor.forEach((actualXAccessor) => {
-        annotations.forEach((annotation, annotationIndex) => {
-          const x = actualXAccessor(annotation, annotationIndex)
-          if (isFinite(x)) {
-            suitableXAnnotations.push({
-              [projectedX]: x
-            })
-          }
-        })
-        })
+      annotations.forEach((annotation, annotationIndex) => {
+        const x = actualXAccessor(annotation, annotationIndex)
+        if (isFinite(x)) {
+          suitableXAnnotations.push({
+            [projectedX]: x
+          })
+        }
+      })
+    })
 
   }
 
@@ -424,12 +424,12 @@ export const calculateDataExtent = ({
           })
         }
       })
-      })
-  
+    })
+
   }
 
-  const dataForXExtent = [ ...fullDataset, ...suitableXAnnotations ]
-  const dataForYExtent = [ ...fullDataset, ...suitableYAnnotations ]
+  const dataForXExtent = [...fullDataset, ...suitableXAnnotations]
+  const dataForYExtent = [...fullDataset, ...suitableYAnnotations]
 
   const calculatedXExtent = [
     min(
@@ -514,7 +514,6 @@ export const calculateDataExtent = ({
       summaryType,
       data: projectedSummaries,
       preprocess: summaries && !!summaries[0].processedData,
-      processedData: summaries && summaries[0].processedData,
       finalXExtent,
       finalYExtent,
       size,
