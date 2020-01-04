@@ -19,7 +19,6 @@ import {
 import {
   MarginType,
   ProjectionTypes,
-  GenericObject,
   accessorType
 } from "../types/generalTypes"
 
@@ -594,7 +593,6 @@ const summaryRenderHash = {
   boxplot: boxplotRenderFn,
   violin: bucketizedRenderingFn,
   heatmap: bucketizedRenderingFn,
-  joy: bucketizedRenderingFn,
   ridgeline: bucketizedRenderingFn,
   histogram: bucketizedRenderingFn
 }

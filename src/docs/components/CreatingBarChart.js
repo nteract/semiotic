@@ -194,7 +194,7 @@ export default class CreatingBarChart extends React.Component {
               </g>
             )}
             foregroundGraphics={({ size, margin }) => (
-              <g>
+              <g key="margin-line-example">
                 <line
                   strokeWidth={3}
                   stroke={"#fcebff"}

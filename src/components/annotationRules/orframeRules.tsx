@@ -214,11 +214,11 @@ export const getColumnScreenCoordinates = ({
 
   const positionValue =
     (summaryType.type && summaryType.type !== "none") ||
-    ["swarm", "point", "clusterbar"].find(p => p === type.type)
+      ["swarm", "point", "clusterbar"].find(p => p === type.type)
       ? max(pieces.map(p => p.scaledValue))
       : projection === "horizontal"
-      ? max(pieces.map(p => p.value>=0 ? p.scaledValue + p.bottom : p.bottom))
-      : min(pieces.map(p => p.value>=0 ? p.bottom - p.scaledValue : p.bottom ))
+        ? max(pieces.map(p => p.value >= 0 ? p.scaledValue + p.bottom : p.bottom))
+        : min(pieces.map(p => p.value >= 0 ? p.bottom - p.scaledValue : p.bottom))
 
   let xPosition = column.middle + adjustedPosition[0]
   let yPosition =
@@ -226,8 +226,8 @@ export const getColumnScreenCoordinates = ({
       ? adjustedSize[0] - positionValue
       : (summaryType.type && summaryType.type !== "none") ||
         ["swarm", "point", "clusterbar"].find(p => p === type.type)
-      ? adjustedSize[1] - positionValue
-      : positionValue
+        ? adjustedSize[1] - positionValue
+        : positionValue
   yPosition += 10
 
   if (projection === "horizontal") {
@@ -384,7 +384,7 @@ export const screenProject = ({
       idPiece && (idPiece.x || idPiece.scaledValue)
         ? idPiece.x === undefined
           ? idPiece.x
-          : ( idPiece.value >= 0? idPiece.bottom + idPiece.scaledValue / 2 : idPiece.bottom )
+          : (idPiece.value >= 0 ? idPiece.bottom + idPiece.scaledValue / 2 : idPiece.bottom)
         : rScale(pValue),
       o
     ]
@@ -398,8 +398,8 @@ export const screenProject = ({
     o,
     idPiece && (idPiece.x || idPiece.scaledValue)
       ? idPiece.y === undefined
-        ? (idPiece.value >= 0? idPiece.bottom - idPiece.scaledValue
-          : idPiece.bottom )
+        ? (idPiece.value >= 0 ? idPiece.bottom - idPiece.scaledValue
+          : idPiece.bottom)
         : idPiece.y
       : newScale(pValue)
   ]
@@ -653,10 +653,10 @@ export const htmlFrameHoverRule = ({
   tooltipContent =
     tooltipContent === "pie"
       ? () =>
-          pieContentGenerator({
-            column: d.column,
-            useSpans
-          })
+        pieContentGenerator({
+          column: d.column,
+          useSpans
+        })
       : tooltipContent
   //To string because React gives a DOM error if it gets a date
   let contentFill
@@ -675,18 +675,18 @@ export const htmlFrameHoverRule = ({
       type.type === "swarm") &&
       d.x !== undefined &&
       d.y !== undefined) ||
-    d.isSummaryData
+      d.isSummaryData
       ? [d.x, d.y]
       : screenProject({
-          p: d,
-          adjustedSize,
-          rScale,
-          oColumn,
-          rAccessor,
-          idPiece,
-          projection,
-          rScaleType
-        })
+        p: d,
+        adjustedSize,
+        rScale,
+        oColumn,
+        rAccessor,
+        idPiece,
+        projection,
+        rScaleType
+      })
 
   if (d.isSummaryData) {
     let summaryContent = d.label
@@ -887,7 +887,7 @@ export const svgOrdinalLine = ({ screenCoordinates, d, voronoiHover }) => {
     typeof d.lineStyle === "function" ? d.lineStyle(d) : d.lineStyle || {}
 
   return (
-    <g>
+    <g key="ordinal-line-annotation">
       <path
         stroke="black"
         fill="none"

@@ -148,10 +148,14 @@ export function boxplotRenderFn({
       quantile(summaryValueNest, 1.0)
     ]
 
+    //translate
+
     if (projection === "vertical") {
       summaryPositionNest = thisSummaryData
         .map(p => p.scaledVerticalValue)
         .sort((a, b) => b - a)
+
+      translate = `translate(${summary.x + summary.padding},0)`
 
       summaryPositionNest = [
         quantile(summaryPositionNest, 0.0),
@@ -236,6 +240,8 @@ export function boxplotRenderFn({
       summaryPositionNest = thisSummaryData
         .map(p => p.scaledValue)
         .sort((a, b) => a - b)
+
+      translate = `translate(0,${summary.x + summary.padding})`
 
       summaryPositionNest = [
         quantile(summaryPositionNest, 0.0),
@@ -691,6 +697,8 @@ export function boxplotRenderFn({
       )
     }
   })
+
+  console.log("renderedSummaryMarks", renderedSummaryMarks)
 
   return { marks: renderedSummaryMarks, xyPoints: summaryXYCoords }
 }

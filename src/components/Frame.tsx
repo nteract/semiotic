@@ -99,8 +99,6 @@ class Frame extends React.Component<Props, State> {
 
     const generatedDefs = generateFinalDefs({ matte, size, margin, frameKey, additionalDefs, name })
 
-    console.log("HOCSpanOrDiv(props.useSpans)", HOCSpanOrDiv(props.useSpans))
-
     this.state = {
       canvasContext: null,
       voronoiHover: undefined,
@@ -197,7 +195,7 @@ class Frame extends React.Component<Props, State> {
     } = this.props
 
     const { voronoiHover, canvasContext, finalDefs, matte, SpanOrDiv } = this.state
-    console.log("SpanOrDiv", SpanOrDiv)
+
     const areaAnnotations = []
 
     const totalAnnotations = annotations

@@ -16,7 +16,7 @@ const axis = {
 
 const violinChart = {
   size: [700, 600],
-  axes: axis,
+  axis: axis,
   ...summaryChart,
   rAccessor: ["stepValue", d => d.stepValue + 10],
   hoverAnnotation: true,

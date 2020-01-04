@@ -294,7 +294,7 @@ export default class FacetControllerDemo extends React.Component {
               lineStyle={{ stroke: "darkred" }}
               hoverAnnotation={true}
               lineIDAccessor={() => true}
-              axes={[{ orient: "left" }, { orient: "bottom" }]}
+              axes={[{ orient: "left" }]}
               sharedXExtent={true}
               sharedYExtent={true}
               oPadding={5}
@@ -308,7 +308,6 @@ export default class FacetControllerDemo extends React.Component {
               ]}
               pieceIDAccessor="color"
               sharedRExtent={true}
-              axes={{ orient: "left" }}
             >
               <OrdinalFrame data={orData} />
               <XYFrame
@@ -339,7 +338,7 @@ export default class FacetControllerDemo extends React.Component {
               lineStyle={{ stroke: "darkred" }}
               hoverAnnotation={true}
               lineIDAccessor={() => true}
-              axes={[{ orient: "left" }, { orient: "bottom" }]}
+              axes={[{ orient: "left" }]}
               sharedYExtent={true}
               oPadding={5}
               oAccessor="column"
@@ -349,7 +348,6 @@ export default class FacetControllerDemo extends React.Component {
               pieceHoverAnnotation={true}
               pieceIDAccessor="color"
               sharedRExtent={true}
-              axes={{ orient: "left" }}
             >
               <ResponsiveXYFrame
                 title={"LC1"}
