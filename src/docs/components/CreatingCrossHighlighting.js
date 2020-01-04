@@ -6,6 +6,62 @@ import { curveMonotoneX /* , curveCardinal */ } from "d3-shape"
 import DocumentComponent from "../layout/DocumentComponent"
 // import { line, area } from "d3-shape"
 
+const instantiatedTimeScale = scaleTime()
+
+const dateAccessor = d => new Date(d.date)
+
+const CrossHighlightHoverArray = [
+  { type: "frame-hover" },
+  {
+    type: "highlight",
+    style: d => ({
+      fill: d.title === "Ex Machina" ? "blue" : "purple",
+      stroke: "orange",
+      strokeWidth: 3
+    })
+  }
+]
+
+const SimpleHighlightHoverAnnotation = [
+  {
+    type: "highlight",
+    style: { fill: "red", strokeWidth: 3 }
+  }
+]
+
+const ParentLineHighlightAnnotation = {
+  type: "highlight",
+  style: d => ({
+    fill:
+      d.parentLine && d.parentLine.title === "Ex Machina"
+        ? "blue"
+        : "purple",
+    stroke: d.parentLine ? "darkred" : "orange",
+    strokeWidth: 3
+  })
+}
+
+const InflatedHighlight = [
+  {
+    type: "highlight",
+    class: d =>
+      d.action === "tweets" ? "purple-gradient" : "blue-gradient"
+  }
+]
+
+const SimpleInflatedHighlight = [
+  { type: "highlight", style: { fill: "red" } }
+]
+
+const BarHighlight = [
+  {
+    type: "highlight",
+    style: d => ({
+      fill: d.rIndex === 1 ? "purple" : "blue"
+    })
+  }
+]
+
 const inflatedBarChartData = [
   { user: "Jason", user2: "Jaammm", action: "tweets", value: 10 },
   { user: "Susie", user2: "Suammm", action: "tweets", value: 5 },
@@ -469,12 +525,7 @@ export default class CreatingLineChart extends React.Component {
               }
             ]}
             svgAnnotationRules={this.makeLines}
-            hoverAnnotation={[
-              {
-                type: "highlight",
-                style: { fill: "red", strokeWidth: 3 }
-              }
-            ]}
+            hoverAnnotation={SimpleHighlightHoverAnnotation}
             lineIDAccessor={d => d.title}
             defined={d => d.week !== 3 && d.week !== 4}
           />
@@ -535,7 +586,7 @@ export default class CreatingLineChart extends React.Component {
             size={[650, 400]}
             lines={movies}
             xScaleType={scaleTime()}
-            xAccessor={d => new Date(d.date)}
+            xAccessor={dateAccessor}
             yAccessor={"grossWeekly"}
             lineType={{
               type: this.state.brushChart,
@@ -557,18 +608,8 @@ export default class CreatingLineChart extends React.Component {
                 ticks: 5
               }
             ]}
-            hoverAnnotation={[
-              { type: "frame-hover" },
-              {
-                type: "highlight",
-                style: d => ({
-                  fill: d.title === "Ex Machina" ? "blue" : "purple",
-                  stroke: "orange",
-                  strokeWidth: 3
-                })
-              }
-            ]}
-            lineIDAccessor={d => d.title}
+            hoverAnnotation={CrossHighlightHoverArray}
+            lineIDAccessor={"title"}
           />
         </div>
       ),
@@ -603,8 +644,8 @@ export default class CreatingLineChart extends React.Component {
               <XYFrame
                 size={[350, 400]}
                 lines={movies}
-                xScaleType={scaleTime()}
-                xAccessor={d => new Date(d.date)}
+                xScaleType={instantiatedTimeScale}
+                xAccessor={dateAccessor}
                 yAccessor={"grossWeekly"}
                 lineType={{
                   type: "line",
@@ -636,8 +677,8 @@ export default class CreatingLineChart extends React.Component {
               <XYFrame
                 size={[350, 400]}
                 lines={movies}
-                xScaleType={scaleTime()}
-                xAccessor={d => new Date(d.date)}
+                xScaleType={instantiatedTimeScale}
+                xAccessor={dateAccessor}
                 yAccessor={"grossWeekly"}
                 lineType={{
                   type: "stackedpercent",
@@ -739,17 +780,7 @@ export default class CreatingLineChart extends React.Component {
                 ticks: 5
               }
             ]}
-            hoverAnnotation={{
-              type: "highlight",
-              style: d => ({
-                fill:
-                  d.parentLine && d.parentLine.title === "Ex Machina"
-                    ? "blue"
-                    : "purple",
-                stroke: d.parentLine ? "darkred" : "orange",
-                strokeWidth: 3
-              })
-            }}
+            hoverAnnotation={ParentLineHighlightAnnotation}
             lineIDAccessor={d =>
               (d.parentLine && d.parentLine.title) || d.title
             }
@@ -797,9 +828,7 @@ lineIDAccessor={d =>
             style={d => ({ fill: barColorHash[d.action] })}
             type={"bar"}
             oPadding={5}
-            pieceHoverAnnotation={[
-              { type: "highlight", style: { fill: "red" } }
-            ]}
+            pieceHoverAnnotation={SimpleInflatedHighlight}
             pieceIDAccessor="action"
             margin={10}
           />
@@ -811,13 +840,7 @@ lineIDAccessor={d =>
             style={d => ({ fill: barColorHash[d.action] })}
             type={"bar"}
             oPadding={5}
-            pieceHoverAnnotation={[
-              {
-                type: "highlight",
-                class: d =>
-                  d.action === "tweets" ? "purple-gradient" : "blue-gradient"
-              }
-            ]}
+            pieceHoverAnnotation={InflatedHighlight}
             pieceIDAccessor="action"
             margin={10}
             additionalDefs={[
@@ -853,14 +876,7 @@ lineIDAccessor={d =>
             style={d => ({ fill: barColorHash[d.action] })}
             type={"point"}
             oPadding={5}
-            pieceHoverAnnotation={[
-              {
-                type: "highlight",
-                style: d => ({
-                  fill: d.action === "tweets" ? "purple" : "blue"
-                })
-              }
-            ]}
+            pieceHoverAnnotation={InflatedHighlight}
             pieceIDAccessor="action"
             margin={10}
           />
@@ -931,14 +947,7 @@ lineIDAccessor={d =>
             })}
             type={"clusterbar"}
             oPadding={5}
-            pieceHoverAnnotation={[
-              {
-                type: "highlight",
-                style: d => ({
-                  fill: d.rIndex === 1 ? "purple" : "blue"
-                })
-              }
-            ]}
+            pieceHoverAnnotation={BarHighlight}
             annotations={[
               {
                 type: "highlight",

@@ -346,7 +346,7 @@ export default class CreatingPieChart extends React.Component {
             //canvasPieces={true}
             //connectorRenderMode="sketchy"
             projection={"radial"}
-            axis={{
+            axes={{
               label: { name: "Windiness", locationDistance: 15 }
             }}
             oPadding={0}
@@ -440,7 +440,7 @@ export default class CreatingPieChart extends React.Component {
       //canvasPieces={true}
       //connectorRenderMode="sketchy"
       projection={"radial"}
-      axis={{
+      axes={{
         label: { name: "Windiness", locationDistance: 15 }
       }}
       oPadding={0}
@@ -544,7 +544,7 @@ export default class CreatingPieChart extends React.Component {
             })}
             type={"bar"}
             projection={"radial"}
-            axis={{
+            axes={{
               label: { name: "Casualties", locationDistance: 15 }
             }}
             rScaleType={scaleSqrt}
@@ -578,7 +578,7 @@ const colorHash = {
     })}
     type={"bar"}
     projection={"radial"}
-    axis={{
+    axes={{
         label: { name: "Casualties", locationDistance: 15 }
     }}
     margin={{ bottom: 50, top: 70, left: 25, right: 25 }}
@@ -633,7 +633,7 @@ const colorHash = {
             oPadding={40}
             projection={"radial"}
             rExtent={[0]}
-            axis={{
+            axes={{
               label: { name: "Casualties", locationDistance: 15 }
             }}
             margin={{ bottom: 50, top: 60, left: 40, right: 40 }}

@@ -110,7 +110,7 @@ function waterfall({ data, rScale, adjustedSize, margin }) {
             rExtent={[ 0,65000 ]}
             rAccessor={d => d.value}
             oAccessor={d => d.name}
-            axis={{ tickFormat: d => ${"`$${d/1000}k`"} }}
+            axes={{ tickFormat: d => ${"`$${d/1000}k`"} }}
             style={d => ({ fill: d.value > 0 ? "green" : "red", stroke: "darkgray", strokeWidth: 1 })}
             type={waterfall}
             oLabel={d => <text transform="rotate(45)">{d}</text>}

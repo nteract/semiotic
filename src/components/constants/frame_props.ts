@@ -80,7 +80,6 @@ export const orFrameChangeProps = [
   "summaryStyle",
   "summaryPosition",
   "oLabel",
-  "axis",
   "axes"
 ]
 
@@ -229,7 +228,6 @@ export const ordinalframeproptypes = {
   pieceIDAccessor: true,
   pieceHoverAnnotation: true,
   summaryHoverAnnotation: true,
-  axis: true,
   axes: true,
   ordinalAlign: true,
   multiAxis: true,

@@ -114,7 +114,7 @@ export const ordinalFrameDefaults = props => ({
   ...allFrameDefaults,
   ...props,
   hoverAnnotation: props.hoverAnnotation,
-  axis: props.axis ? { axisDefaults, ...props.axis } : props.axis
+  axes: props.axes ? { ...axisDefaults, ...props.axes } : props.axes
 })
 
 export const networkFrameDefaults = props => ({

@@ -172,7 +172,7 @@ export default class CreatingBarChart extends React.Component {
             oLabel={d => (
               <text transform="translate(-15,0)rotate(45)">{d}</text>
             )}
-            axis={{
+            axes={{
               orient: "left",
               label: "Favorites +  Retweets",
               jaggedBase: true
@@ -220,7 +220,7 @@ export default class CreatingBarChart extends React.Component {
             oLabel={d => (
               <text transform="translate(-15,0)rotate(45)">{d}</text>
             )}
-            axis={{ orient: "left", label: "Favorites + Retweets" }}
+            axes={{ orient: "left", label: "Favorites + Retweets" }}
             margin={{ left: 70, bottom: 50, right: 5, top: 55 }}
             oPadding={5}
           />`
@@ -283,7 +283,7 @@ export default class CreatingBarChart extends React.Component {
             style={stackedBarStyle}
             type={"bar"}
             oLabel={stackedBarLabel}
-            axis={stackedBarAxis}
+            axes={stackedBarAxis}
             margin={stackedBarMargin}
             oPadding={5}
             pieceHoverAnnotation={true}
@@ -292,15 +292,15 @@ export default class CreatingBarChart extends React.Component {
               this.state.hoverPoint
                 ? [Object.assign({}, this.state.hoverPoint, { type: "hover" })]
                 : [
-                    {
-                      type: "react-annotation",
-                      rName: "retweets",
-                      user: "Matt",
-                      label: "Testing a relative value annotation",
-                      dx: 100,
-                      dy: -50
-                    }
-                  ]
+                  {
+                    type: "react-annotation",
+                    rName: "retweets",
+                    user: "Matt",
+                    label: "Testing a relative value annotation",
+                    dx: 100,
+                    dy: -50
+                  }
+                ]
             }
             svgAnnotationRules={this.barAnnotator}
           />
@@ -321,7 +321,7 @@ export default class CreatingBarChart extends React.Component {
             oLabel={d => (
               <text transform="translate(-15,0)rotate(45)">{d}</text>
             )}
-            axis={{ orient: "left", label: "Tweets + Favorites + Retweets" }}
+            axes={{ orient: "left", label: "Tweets + Favorites + Retweets" }}
             margin={{ left: 70, bottom: 50, right: 5, top: 5 }}
             oPadding={5}
           />

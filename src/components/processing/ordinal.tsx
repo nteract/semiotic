@@ -180,6 +180,16 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
         multiAxis
     })
 
+    let columnOverlays
+
+    const prevProps = currentState.props
+    const shouldRecalculateOverlay = currentProps.data !== prevProps.data
+        || currentProps.size[0] !== prevProps.size[0]
+        || currentProps.size[1] !== prevProps.size[1]
+        || currentProps.margin !== prevProps.margin
+        || (!currentState.columnOverlays || currentState.columnOverlays.length === 0)
+
+
     let arrayWrappedAxis: AxisProps[] | undefined
 
     if (Array.isArray(baseAxes)) {
@@ -826,99 +836,104 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
         }
     }
 
-    let columnOverlays
-
     if (currentProps.hoverAnnotation) {
-        columnOverlays = oExtent.map((d, i) => {
-            const barColumnWidth = projectedColumns[d].width
-            let xPosition = projectedColumns[d].x
-            let yPosition = 0
-            let height = rScale.range()[1]
-            let width = barColumnWidth + padding
-            if (projection === "horizontal") {
-                yPosition = projectedColumns[d].x
-                xPosition = 0
-                width = rScale.range()[1]
-                height = barColumnWidth
-            }
 
-            if (projection === "radial") {
-                const { markD, centroid, translate, midAngle } = pieArcs[i]
-                const radialMousePackage = {
+        if (shouldRecalculateOverlay) {
+            columnOverlays = oExtent.map((d, i) => {
+                const barColumnWidth = projectedColumns[d].width
+                let xPosition = projectedColumns[d].x
+                let yPosition = 0
+                let height = rScale.range()[1]
+                let width = barColumnWidth + padding
+                if (projection === "horizontal") {
+                    yPosition = projectedColumns[d].x
+                    xPosition = 0
+                    width = rScale.range()[1]
+                    height = barColumnWidth
+                }
+
+                if (projection === "radial") {
+                    const { markD, centroid, translate, midAngle } = pieArcs[i]
+                    const radialMousePackage = {
+                        type: "column-hover",
+                        column: projectedColumns[d],
+                        pieces: projectedColumns[d].pieceData,
+                        summary: projectedColumns[d].pieceData,
+                        arcAngles: {
+                            centroid,
+                            translate,
+                            midAngle,
+                            length: rScale.range()[1] / 2
+                        }
+                    }
+                    return {
+                        markType: "path",
+                        key: `hover${d}`,
+                        d: markD,
+                        transform: `translate(${translate.join(",")})`,
+                        style: { opacity: 0, fill: "pink" },
+                        overlayData: radialMousePackage,
+                        onDoubleClick:
+                            customDoubleClickBehavior &&
+                            (() => {
+                                customDoubleClickBehavior(radialMousePackage)
+                            }),
+                        onClick:
+                            customClickBehavior &&
+                            (() => {
+                                customClickBehavior(radialMousePackage)
+                            }),
+                        onMouseEnter:
+                            customHoverBehavior &&
+                            (() => {
+                                customHoverBehavior(radialMousePackage)
+                            }),
+                        onMouseLeave:
+                            customHoverBehavior &&
+                            (() => {
+                                customHoverBehavior()
+                            })
+                    }
+                }
+
+                const baseMousePackage = {
                     type: "column-hover",
                     column: projectedColumns[d],
                     pieces: projectedColumns[d].pieceData,
-                    summary: projectedColumns[d].pieceData,
-                    arcAngles: {
-                        centroid,
-                        translate,
-                        midAngle,
-                        length: rScale.range()[1] / 2
-                    }
+                    summary: projectedColumns[d].pieceData
                 }
                 return {
-                    markType: "path",
-                    key: `hover${d}`,
-                    d: markD,
-                    transform: `translate(${translate.join(",")})`,
-                    style: { opacity: 0, fill: "pink" },
-                    overlayData: radialMousePackage,
+                    markType: "rect",
+                    key: `hover-${d}`,
+                    x: xPosition,
+                    y: yPosition,
+                    height: height,
+                    width: width,
+                    style: { opacity: 0, stroke: "black", fill: "pink" },
                     onDoubleClick:
                         customDoubleClickBehavior &&
                         (() => {
-                            customDoubleClickBehavior(radialMousePackage)
+                            customDoubleClickBehavior(baseMousePackage)
                         }),
                     onClick:
                         customClickBehavior &&
                         (() => {
-                            customClickBehavior(radialMousePackage)
+                            customClickBehavior(baseMousePackage)
                         }),
                     onMouseEnter:
                         customHoverBehavior &&
                         (() => {
-                            customHoverBehavior(radialMousePackage)
+                            customHoverBehavior(baseMousePackage)
                         }),
-                    onMouseLeave:
-                        customHoverBehavior &&
-                        (() => {
-                            customHoverBehavior()
-                        })
+                    onMouseLeave: () => ({}),
+                    overlayData: baseMousePackage
                 }
-            }
+            })
+        }
+        else {
+            columnOverlays = currentState.columnOverlays
+        }
 
-            const baseMousePackage = {
-                type: "column-hover",
-                column: projectedColumns[d],
-                pieces: projectedColumns[d].pieceData,
-                summary: projectedColumns[d].pieceData
-            }
-            return {
-                markType: "rect",
-                key: `hover-${d}`,
-                x: xPosition,
-                y: yPosition,
-                height: height,
-                width: width,
-                style: { opacity: 0, stroke: "black", fill: "pink" },
-                onDoubleClick:
-                    customDoubleClickBehavior &&
-                    (() => {
-                        customDoubleClickBehavior(baseMousePackage)
-                    }),
-                onClick:
-                    customClickBehavior &&
-                    (() => {
-                        customClickBehavior(baseMousePackage)
-                    }),
-                onMouseEnter:
-                    customHoverBehavior &&
-                    (() => {
-                        customHoverBehavior(baseMousePackage)
-                    }),
-                onMouseLeave: () => ({}),
-                overlayData: baseMousePackage
-            }
-        })
     }
 
     const {
@@ -1065,47 +1080,52 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
     ) {
         const yMod = projection === "horizontal" ? midMod : zeroFunction
         const xMod = projection === "vertical" ? midMod : zeroFunction
+        if (shouldRecalculateOverlay) {
 
-        columnOverlays = calculatedPieceData.map((d, i) => {
-            const mousePackage = {
-                ...d.piece,
-                x: d.xy.x + xMod(d.xy),
-                y: d.xy.y + yMod(d.xy)
-            }
-            if (React.isValidElement(d.renderElement)) {
-                return {
-                    renderElement: d.renderElement,
-                    overlayData: mousePackage
+            columnOverlays = calculatedPieceData.map((d, i) => {
+                const mousePackage = {
+                    ...d.piece,
+                    x: d.xy.x + xMod(d.xy),
+                    y: d.xy.y + yMod(d.xy)
                 }
-            }
-            return {
-                ...d.renderElement,
-                key: `hover-${i}`,
-                type: "frame-hover",
-                style: { opacity: 0, stroke: "black", fill: "pink" },
-                overlayData: mousePackage,
-                onClick:
-                    customClickBehavior &&
-                    (() => {
-                        customClickBehavior(mousePackage.data)
-                    }),
-                onDoubleClick:
-                    customDoubleClickBehavior &&
-                    (() => {
-                        customDoubleClickBehavior(mousePackage.data)
-                    }),
-                onMouseEnter:
-                    customHoverBehavior &&
-                    (() => {
-                        customHoverBehavior(mousePackage.data)
-                    }),
-                onMouseLeave:
-                    customHoverBehavior &&
-                    (() => {
-                        customHoverBehavior()
-                    })
-            }
-        })
+                if (React.isValidElement(d.renderElement)) {
+                    return {
+                        renderElement: d.renderElement,
+                        overlayData: mousePackage
+                    }
+                }
+                return {
+                    ...d.renderElement,
+                    key: `hover-${i}`,
+                    type: "frame-hover",
+                    style: { opacity: 0, stroke: "black", fill: "pink" },
+                    overlayData: mousePackage,
+                    onClick:
+                        customClickBehavior &&
+                        (() => {
+                            customClickBehavior(mousePackage.data)
+                        }),
+                    onDoubleClick:
+                        customDoubleClickBehavior &&
+                        (() => {
+                            customDoubleClickBehavior(mousePackage.data)
+                        }),
+                    onMouseEnter:
+                        customHoverBehavior &&
+                        (() => {
+                            customHoverBehavior(mousePackage.data)
+                        }),
+                    onMouseLeave:
+                        customHoverBehavior &&
+                        (() => {
+                            customHoverBehavior()
+                        })
+                }
+            })
+        }
+        else {
+            columnOverlays = currentState.columnOverlays
+        }
     }
 
     const typeAriaLabel = (pieceType.type !== undefined &&

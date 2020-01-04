@@ -31,8 +31,8 @@ const daysAxis = {
         {daysOfTheWeek[d]}
       </text>
     ) : (
-      ""
-    )
+        ""
+      )
 }
 const heatmapChart = {
   size: [700, 400],
@@ -45,7 +45,7 @@ const heatmapChart = {
     strokeWidth: 1
   }),
   type: "bar",
-  axis: daysAxis,
+  axes: daysAxis,
   oLabel: d => <text transform="rotate(90)">Week {d}</text>,
   margin: { left: 100, top: 10, bottom: 80, right: 50 },
   oPadding: 0

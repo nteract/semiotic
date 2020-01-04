@@ -88,7 +88,7 @@ export default class ParallelCoordinatesDocs extends React.Component {
         strokeOpacity: hiddenHash.get(d.source.funnelKey) ? 0.25 : 0.5
       }),
       type: { type: "point", r: 2 },
-      axis: {
+      axes: {
         ...axis,
         orient: "left",
         tickFormat: degreeDiffFormat,

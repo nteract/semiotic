@@ -46,7 +46,7 @@ export default class MarimekkoDocs extends React.Component {
     dynamicColumnWidth="value"
     style={(d,i) => ({ fill: colors[d.segment], stroke: "white", strokeWidth: 1 })}
     type={"bar"}
-    axis={{ orient: 'left', tickFormat: d => Math.floor(d * 100) + "%"}}
+    axes={{ orient: 'left', tickFormat: d => Math.floor(d * 100) + "%"}}
     margin={{ left: 45, top: 10, bottom: 80, right: 50 }}
     oLabel={d => <text transform="rotate(45)">{d}</text>
       `

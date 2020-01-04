@@ -243,7 +243,7 @@ export default class FacetControllerDemo extends React.Component {
                 }
               ]}
               sharedRExtent={true}
-              axis={{ orient: "left" }}
+              axes={{ orient: "left" }}
             >
               <OrdinalFrame data={orData} />
               <OrdinalFrame data={orData2} />
@@ -308,7 +308,7 @@ export default class FacetControllerDemo extends React.Component {
               ]}
               pieceIDAccessor="color"
               sharedRExtent={true}
-              axis={{ orient: "left" }}
+              axes={{ orient: "left" }}
             >
               <OrdinalFrame data={orData} />
               <XYFrame
@@ -349,7 +349,7 @@ export default class FacetControllerDemo extends React.Component {
               pieceHoverAnnotation={true}
               pieceIDAccessor="color"
               sharedRExtent={true}
-              axis={{ orient: "left" }}
+              axes={{ orient: "left" }}
             >
               <ResponsiveXYFrame
                 title={"LC1"}
@@ -389,7 +389,7 @@ export default class FacetControllerDemo extends React.Component {
     pieceIDAccessor="color"
     pieceHoverAnnotation={true}
     sharedRExtent={true}
-    axis={{ orient: "left" }}
+    axes={{ orient: "left" }}
   >
     <OrdinalFrame data={orData} />
     <OrdinalFrame data={orData2} />
@@ -435,7 +435,7 @@ export default class FacetControllerDemo extends React.Component {
     pieceHoverAnnotation={true}
     pieceIDAccessor="color"
     sharedRExtent={true}
-    axis={{ orient: "left" }}
+    axes={{ orient: "left" }}
   >
     <OrdinalFrame data={orData} />
     <XYFrame
@@ -483,7 +483,7 @@ export default class FacetControllerDemo extends React.Component {
     pieceHoverAnnotation={true}
     pieceIDAccessor="color"
     sharedRExtent={true}
-    axis={{ orient: "left" }}
+    axes={{ orient: "left" }}
   >
     <ResponsiveXYFrame
       title={"LC1"}

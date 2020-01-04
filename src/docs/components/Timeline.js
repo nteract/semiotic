@@ -49,7 +49,7 @@ export default class Timeline extends React.Component {
       }
     ]}
     style={{ fill: "lightblue", stroke: "blue" }}
-    axis={{ orient: "left" }}
+    axes={{ orient: "left" }}
     margin={{ left: 200, top: 20, right: 20, bottom: 50 }}
     oLabel={d => (
       <text y={2} textAnchor="end" fontSize={8}>

@@ -32,7 +32,7 @@ const divStackedBarChart = {
     </g>
   ),
   pixelColumnWidth: 50,
-  axis: {
+  axes: {
     orient: "top",
     tickValues: [-0.6, -0.3, 0, 0.2, 0.4, 0.6, 0.8, 1]
   },

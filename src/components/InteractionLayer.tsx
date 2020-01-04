@@ -5,7 +5,7 @@ import { select, event } from "d3-selection"
 // components
 import Brush from "./Brush"
 
-import SpanOrDiv from "./SpanOrDiv"
+import { HOCSpanOrDiv } from "./SpanOrDiv"
 
 import { Interactivity, InteractionLayerProps, BaseColumnType, InteractionLayerState } from "./types/interactionTypes"
 
@@ -78,7 +78,8 @@ class InteractionLayer extends React.PureComponent<InteractionLayerProps, Intera
       overlayRegions: initialOverlayRegions,
       canvasMap,
       interactionCanvas: null,
-      props
+      props,
+      SpanOrDiv: HOCSpanOrDiv(props.useSpans)
     }
   }
 
@@ -223,14 +224,15 @@ class InteractionLayer extends React.PureComponent<InteractionLayerProps, Intera
       nextProps.points !== props.points ||
       props.xScale !== nextProps.xScale ||
       props.yScale !== nextProps.yScale ||
-      props.hoverAnnotation !== nextProps.hoverAnnotation
+      ((!props.hoverAnnotation && nextProps.hoverAnnotation) || (props.hoverAnnotation && !nextProps.hoverAnnotation))
     ) {
 
       const { disableCanvasInteraction, canvasRendering, svgSize, margin, voronoiHover } = nextProps
       const { overlayRegions } = prevState
+      const nextOverlay = calculateOverlay(nextProps)
 
       return {
-        overlayRegions: calculateOverlay(nextProps),
+        overlayRegions: nextOverlay,
         props: nextProps,
         interactionCanvas: !disableCanvasInteraction &&
           canvasRendering &&
@@ -238,7 +240,7 @@ class InteractionLayer extends React.PureComponent<InteractionLayerProps, Intera
           <InteractionCanvas
             height={svgSize[1]}
             width={svgSize[0]}
-            overlayRegions={overlayRegions}
+            overlayRegions={nextOverlay}
             margin={margin}
             voronoiHover={voronoiHover}
           />
@@ -345,7 +347,7 @@ class InteractionLayer extends React.PureComponent<InteractionLayerProps, Intera
       useSpans = false
     } = this.props
 
-    const { overlayRegions, interactionCanvas } = this.state
+    const { overlayRegions, interactionCanvas, SpanOrDiv } = this.state
     let { enabled } = this.props
 
     if (interaction && interaction.brush) {

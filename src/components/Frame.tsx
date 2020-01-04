@@ -5,7 +5,7 @@ import VisualizationLayer from "./VisualizationLayer"
 import { generateFrameTitle } from "./svg/frameFunctions"
 import { generateFinalDefs } from "./constants/jsx"
 
-import SpanOrDiv from "./SpanOrDiv"
+import { HOCSpanOrDiv } from "./SpanOrDiv"
 import { MarginType, RoughType } from "./types/generalTypes"
 import { AnnotationHandling } from "./types/annotationTypes"
 import { LegendProps } from "./types/legendTypes"
@@ -78,7 +78,8 @@ type State = {
   voronoiHover?: object,
   finalDefs: object,
   props: Props,
-  matte: React.ReactNode
+  matte: React.ReactNode,
+  SpanOrDiv: Function
 }
 
 const defaultZeroMargin = { top: 0, bottom: 0, left: 0, right: 0 }
@@ -98,11 +99,14 @@ class Frame extends React.Component<Props, State> {
 
     const generatedDefs = generateFinalDefs({ matte, size, margin, frameKey, additionalDefs, name })
 
+    console.log("HOCSpanOrDiv(props.useSpans)", HOCSpanOrDiv(props.useSpans))
+
     this.state = {
       canvasContext: null,
       voronoiHover: undefined,
       finalDefs: generatedDefs.defs,
       matte: generatedDefs.matte,
+      SpanOrDiv: HOCSpanOrDiv(props.useSpans),
       props
     }
   }
@@ -192,8 +196,8 @@ class Frame extends React.Component<Props, State> {
       disableContext
     } = this.props
 
-    const { voronoiHover, canvasContext, finalDefs, matte } = this.state
-
+    const { voronoiHover, canvasContext, finalDefs, matte, SpanOrDiv } = this.state
+    console.log("SpanOrDiv", SpanOrDiv)
     const areaAnnotations = []
 
     const totalAnnotations = annotations

@@ -41,7 +41,7 @@ export const genericBarChart = (
     rAccessor={"stepValue"}
     type={Math.random() < 0.5 ? "clusterbar" : "bar"}
     projection={"horizontal"}
-    axis={{ orient: "left" }}
+    axes={{ orient: "left" }}
     oPadding={10}
     style={d => ({ fill: d.funnelKey, stroke: "black" })}
   />

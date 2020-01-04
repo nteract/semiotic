@@ -44,7 +44,7 @@ const daysAxis = { orient: 'left',
     oAccessor={"step"}
     style={d => ({ fill: heatScale(d.value), stroke: "darkgray", strokeWidth: 1 })}
     type={"bar"}
-    axis={daysAxis}
+    axes={daysAxis}
     oLabel={d => <text transform="rotate(90)">Week {d}</text>}
     margin={{ left: 100, top: 10, bottom: 80, right: 50 }}
     oPadding={0}

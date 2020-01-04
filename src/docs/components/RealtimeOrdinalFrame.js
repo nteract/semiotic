@@ -165,7 +165,7 @@ export default class RealtimeOrdinalFrame extends React.Component {
             stroke: eventColors[d.eventType]
           })}
           renderKey={d => d.time + d.eventType}
-          axis={{ orient: "left" }}
+          axes={{ orient: "left" }}
           margin={{ top: 50, bottom: 0, left: 50, right: 50 }}
           connectorStyle={d => ({
             fill: eventColors[d.source.eventType],
@@ -338,7 +338,7 @@ export default class RealtimeOrdinalFrame extends React.Component {
             stroke: eventColors[d.eventType]
           })}
           renderKey={d => d.time + d.eventType}
-          axis={{ orient: "left" }}
+          axes={{ orient: "left" }}
           margin={{ top: 50, bottom: 0, left: 50, right: 50 }}
           connectorStyle={d => ({
             fill: eventColors[d.source.eventType],

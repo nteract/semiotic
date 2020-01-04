@@ -134,7 +134,7 @@ export default (
         rExtent: [0, undefined],
         oAccessor: () => "fixed",
         projection: "horizontal",
-        axis: { orient: "bottom", ticks: 6, footer: true },
+        axes: { orient: "bottom", ticks: 6, footer: true },
         style: d => ({
           fill: d.value > 0 ? "green" : "red",
           stroke: "darkgray",

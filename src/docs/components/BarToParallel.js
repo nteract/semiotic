@@ -495,7 +495,7 @@ export default class InformationModel extends React.Component {
         }),
         type: "swarm",
         rAccessor: "percent",
-        axis: {
+        axes: {
           orient: "left",
           tickFormat: d => `${Math.floor(d * 10) * 10}%`
         },
@@ -522,7 +522,7 @@ export default class InformationModel extends React.Component {
           opacity: hiddenHash.get(d.country) ? 0.25 : 1
         }),
         type: "swarm",
-        axis: {
+        axes: {
           orient: "left",
           tickFormat: d => `${Math.floor(d * 10) * 10}%`
         },
@@ -562,7 +562,7 @@ export default class InformationModel extends React.Component {
           fill: regionColors[d.region],
           stroke: regionColors[d.region]
         }),
-        axis: {
+        axes: {
           orient: "left",
           tickFormat: d => `${Math.floor(d * 10) * 10}%`
         },
@@ -619,7 +619,7 @@ export default class InformationModel extends React.Component {
           oPadding={10}
           oLabel={true}
           margin={{ left: 50, bottom: 50, right: 0, top: 30 }}
-          axis={{ orient: "left" }}
+          axes={{ orient: "left" }}
           {...stepSettings[this.state.step]}
         />
       </div>

@@ -25,7 +25,6 @@ import {
 
 import { desaturationLayer } from "./annotationRules/baseRules"
 
-
 import { relativeY, relativeX, findPointByID } from "./svg/lineDrawing"
 
 import {
@@ -45,6 +44,9 @@ import {
 } from "./constants/coordinateNames"
 
 import { extentValue } from "./data/unflowedFunctions"
+
+import { basicPropDiffing, basicDataChangeCheck } from "./processing/diffing"
+
 import { findFirstAccessorValue } from "./data/multiAccessorUtils"
 
 import { calculateXYFrame } from "./processing/xyDrawing"
@@ -57,7 +59,7 @@ import {
   networkframeproptypes
 } from "./constants/frame_props"
 
-import SpanOrDiv from "./SpanOrDiv"
+import { HOCSpanOrDiv } from "./SpanOrDiv"
 
 import {
   ProjectedPoint,
@@ -123,6 +125,7 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
     })
 
     const baseState = {
+      SpanOrDiv: HOCSpanOrDiv(props.useSpans),
       size: [500, 500],
       dataVersion: undefined,
       lineData: undefined,
@@ -214,23 +217,11 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       (oldXExtent[1] !== newXExtent[1] && newXExtent[1] !== undefined) ||
       (oldYExtent[1] !== newYExtent[1] && newYExtent[1] !== undefined)
 
-    const lineChange =
-      lineData !== newLines ||
-      (Array.isArray(lineData) &&
-        Array.isArray(newLines) &&
-        !!lineData.find(p => newLines.indexOf(p) === -1))
+    const lineChange = basicDataChangeCheck(lineData, newLines)
 
-    const summaryChange =
-      summaryData !== newSummaries ||
-      (Array.isArray(summaryData) &&
-        Array.isArray(newSummaries) &&
-        !!summaryData.find(p => newSummaries.indexOf(p) === -1))
+    const summaryChange = basicDataChangeCheck(summaryData, newSummaries)
 
-    const pointChange =
-      pointData !== newPoints ||
-      (Array.isArray(pointData) &&
-        Array.isArray(newPoints) &&
-        !!pointData.find(p => newPoints.indexOf(p) === -1))
+    const pointChange = basicDataChangeCheck(pointData, newPoints)
 
     if (
       (oldDataVersion && oldDataVersion !== newDataVersion) ||
@@ -252,7 +243,8 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
         summaryChange ||
         pointChange ||
         extentChange ||
-        !!xyFrameDataProps.find(d => props[d] !== nextProps[d])
+        !!xyFrameDataProps.find(d => basicPropDiffing(props[d], nextProps[d]))
+
       return calculateXYFrame(nextProps, prevState, dataChanged)
     }
     return null
@@ -496,12 +488,8 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       styleFn: (args?: GenericObject, index?: number) => GenericObject
     }
   }) => {
-    const xAccessor = this.state.xAccessor
-    const yAccessor = this.state.yAccessor
-    const showLinePoints = this.props.showLinePoints
 
-    const xScale = this.state.xScale
-    const yScale = this.state.yScale
+    const { xAccessor, yAccessor, xScale, yScale, SpanOrDiv, annotatedSettings } = this.state
 
     const { voronoiHover } = annotationLayer
 
@@ -512,10 +500,11 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       tooltipContent,
       optimizeCustomTooltipPosition,
       htmlAnnotationRules,
-      size
+      size,
+      showLinePoints
     } = this.props
 
-    const idAccessor = this.state.annotatedSettings.lineIDAccessor
+    const idAccessor = annotatedSettings.lineIDAccessor
     const d: AnnotationType = findPointByID({
       point: baseD,
       idAccessor,

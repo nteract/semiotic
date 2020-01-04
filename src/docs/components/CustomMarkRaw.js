@@ -314,7 +314,7 @@ export default (annotations = "none") => {
         <p>Age at Death: {d.pieces[0].death - d.pieces[0].birth}</p>
       </div>
     ),
-    axis: {
+    axes: {
       orient: "left",
       tickValues: [1750, 1800, 1850, 1900, 1950, 2000]
     },

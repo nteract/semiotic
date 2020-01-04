@@ -5,7 +5,8 @@ import { bumpAnnotations } from "./annotationLayerBehavior/annotationHandling"
 import Legend from "./Legend"
 import Annotation from "./Annotation"
 import * as labella from "labella"
-import SpanOrDiv from "./SpanOrDiv"
+import { HOCSpanOrDiv } from "./SpanOrDiv"
+
 import {
   AnnotationHandling,
   AnnotationTypes,
@@ -41,6 +42,7 @@ interface AnnotationLayerState {
   adjustedAnnotationsKey?: string
   adjustedAnnotationsDataVersion?: string
   adjustedAnnotations: Object[]
+  SpanOrDiv: Function
 }
 
 function marginOffsetFn(orient, axisSettings, marginOffset) {
@@ -440,7 +442,8 @@ class AnnotationLayer extends React.Component<
       htmlAnnotations: [],
       adjustedAnnotations: [],
       adjustedAnnotationsKey: "",
-      adjustedAnnotationsDataVersion: ""
+      adjustedAnnotationsDataVersion: "",
+      SpanOrDiv: HOCSpanOrDiv(props.useSpans)
     }
 
     this.state = {
@@ -459,7 +462,7 @@ class AnnotationLayer extends React.Component<
 
 
   render() {
-    const { svgAnnotations, htmlAnnotations } = this.state
+    const { svgAnnotations, htmlAnnotations, SpanOrDiv } = this.state
     const { useSpans, legendSettings, margin, size } = this.props
 
     let renderedLegend
@@ -479,7 +482,6 @@ class AnnotationLayer extends React.Component<
 
     return (
       <SpanOrDiv
-        span={useSpans}
         className="annotation-layer"
         style={{
           position: "absolute",
@@ -506,7 +508,6 @@ class AnnotationLayer extends React.Component<
           </g>
         </svg>
         <SpanOrDiv
-          span={useSpans}
           className="annotation-layer-html"
           style={{
             background: "none",

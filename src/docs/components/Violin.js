@@ -23,7 +23,7 @@ const summaryChart = {
     summaryStyle: () => ({ fill: "red", fillOpacity: 0.5, stroke: "red", strokeOpacity: 0.75 }),
     data: orframe_data,
     summaryType: "violin",
-    axis: { orient: 'left', tickFormat: degreeDiffFormat, label: "Monthly temperature" },
+    axes: { orient: 'left', tickFormat: degreeDiffFormat, label: "Monthly temperature" },
     oLabel: d => <text transform="rotate(45) translate(-20,0)">{d}</text>,
     oPadding: 10
 }
@@ -35,7 +35,7 @@ const axis = { orient: 'left', tickFormat: d => d, label: {
 
 <OrdinalFrame
     size={[ 700,500 ]}
-    axis={axis}
+    axes={axis}
     { ...summaryChart }
     margin={{ top: 75, bottom: 50, left: 50, right: 50 }}
     dynamicColumnWidth={d => max(d.map(p => p.stepValue))}

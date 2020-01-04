@@ -28,7 +28,7 @@ export default state => {
   }
 
   if (state.kind !== "pie") {
-    donutSettings.axis = {
+    donutSettings.axes = {
       orient: "left",
       tickFormat: d => +(d * 10) / 10,
       label: { name: "Radial Label", locationDistance: 15 }

@@ -16,7 +16,7 @@ export const summaryChart = {
   }),
   data: orframe_data,
   summaryType: { type: "violin", bins: 40 },
-  axis: {
+  axes: {
     orient: "left",
     tickFormat: degreeDiffFormat,
     label: "Monthly temperature"

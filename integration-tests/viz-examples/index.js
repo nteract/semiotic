@@ -615,7 +615,7 @@ ReactDOM.render(
             fillOpacity: 0.75
           }
         },
-        axis: {
+        axes: {
           orient: "left",
           tickValues: [0, 20, 40, 60, 80, 100],
           tickFormat: function tickFormat(d) {
@@ -641,7 +641,7 @@ ReactDOM.render(
         data: barData,
         type: "bar",
         style: { fill: "lightblue", stroke: "darkblue", opacity: 0.5 },
-        axis: {
+        axes: {
           orient: "left"
         },
         margin: 30,
@@ -677,7 +677,7 @@ ReactDOM.render(
         data: barData,
         type: "bar",
         style: { fill: "lightblue", stroke: "darkblue", opacity: 0.5 },
-        axis: {
+        axes: {
           orient: "left"
         },
         tooltipContent: d =>

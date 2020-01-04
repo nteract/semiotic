@@ -155,4 +155,5 @@ export type XYFrameState = {
     annotatedSettings: AnnotatedSettingsProps
     overlay?: object[]
     props: XYFrameProps
+    SpanOrDiv: Function
 }

@@ -84,7 +84,7 @@ const formatter = d => (d > 1000 ? `${parseInt(d / 1000)}k` : d)
 
 const productionSettings = {
   hoverAnnotation: true,
-  axis: { orient: "left", tickFormat: formatter },
+  axes: { orient: "left", tickFormat: formatter },
   axes: [
     { orient: "left", tickFormat: formatter },
     { orient: "bottom", tickFormat: formatter }

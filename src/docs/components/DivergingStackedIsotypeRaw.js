@@ -34,7 +34,7 @@ const chartProps = {
   margin: { top: 30, bottom: 0, left: 10, right: 80 },
   oPadding: 4,
   oLabel: { orient: "right" },
-  axis: {
+  axes: {
     orient: "top",
     tickValues: [-0.3, -0.15, 0, 0.2, 0.4, 0.6, 0.8, 1]
   }

@@ -73,7 +73,7 @@ export default class DotPlotDocs extends React.Component {
       style={(d,i) => ({ fill: colors[d.type], stroke: "white", strokeWidth: 1 })}
       type={{ type: "point", r: dotRadius }}
       projection={"horizontal"}
-      axis={{ orient: 'bottom', tickFormat: d => ${percentFormat} }}
+      axes={{ orient: 'bottom', tickFormat: d => ${percentFormat} }}
       margin={{ left: 205, top: 50, bottom: 40, right: 10 }}
       oPadding={10}
       svgAnnotationRules={drawRange}

@@ -58,7 +58,7 @@
     "@types/babel__template": "^7.0.2",
     "@types/d3-scale": "^2.1.1",
     "@types/node": "9.6.7",
-    "@types/react": "^16.8.7",
+    "@types/react": "^16.9.17",
     "@types/react-dom": "^16.8.2",
     "@typescript-eslint/eslint-plugin": "^1.4.2",
     "@vx/pattern": "0.0.143",

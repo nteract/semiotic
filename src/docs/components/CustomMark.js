@@ -135,7 +135,7 @@ function timeline({ data, rScale, adjustedSize, margin }) {
         </div>
       )}
       lineStyle={d => ({ fill: d.label, stroke: d.label, fillOpacity: 0.75 })}
-      axis={{ orient: "left" }}
+      axes={{ orient: "left" }}
       margin={{ left: 140, top: 10, bottom: 50, right: 20 }}
     />
   `

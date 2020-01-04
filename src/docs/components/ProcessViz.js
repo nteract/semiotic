@@ -128,7 +128,6 @@ const processNodes = [
       foregroundGraphics: true,
       backgroundGraphics: true,
       axes: true,
-      axis: true,
       matte: true,
       minimap: true
     }

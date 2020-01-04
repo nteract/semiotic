@@ -472,7 +472,7 @@ export default class OrdinalFrameDocs extends React.Component {
           <OrdinalFrame
             size={[700, 700]}
             data={dataTypeHash[this.state.dataType].data}
-            axis={{ orient: "left", baseline: "under" }}
+            axes={{ orient: "left", baseline: "under" }}
             projection={this.state.projection}
             type={actualType}
             renderMode={
@@ -562,7 +562,7 @@ export default class OrdinalFrameDocs extends React.Component {
         <OrdinalFrame
             size={[ 700,700 ]}
             data={data}
-            axis={axis}
+            axes={axis}
             rExtent={{
               onChange: d => {
                 this.setState({ rExtent: d })

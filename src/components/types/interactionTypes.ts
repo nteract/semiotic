@@ -64,5 +64,6 @@ export type InteractionLayerState = {
   overlayRegions: Array<React.ReactElement>
   props: InteractionLayerProps,
   canvasMap: any,
-  interactionCanvas: React.ReactNode
+  interactionCanvas: React.ReactNode,
+  SpanOrDiv: Function
 }

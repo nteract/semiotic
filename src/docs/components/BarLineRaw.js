@@ -62,7 +62,7 @@ export default (
         rAccessor={["leads", "sales"]}
         multiAxis={true}
         style={() => ({ fill: "#b3331d", opacity: 1, stroke: "white" })}
-        axis={barLineAxes}
+        axes={barLineAxes}
         //only draw connectors for the data represented as circles in the customMark
         connectorType={d => {
           return d.rIndex !== 0 && d.rIndex
