@@ -698,8 +698,6 @@ export function boxplotRenderFn({
     }
   })
 
-  console.log("renderedSummaryMarks", renderedSummaryMarks)
-
   return { marks: renderedSummaryMarks, xyPoints: summaryXYCoords }
 }
 

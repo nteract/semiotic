@@ -84,6 +84,16 @@ export default (editMode, overridePosition, setNewPosition, annotationLabel) => 
       onDragEnd
     },
     {
+      type: "react-annotation",
+      date: "1/1/1998",
+      close: 20,
+      note: <g><circle r={20} fill="green" /><text fontWeight={900} fill="gold" textAnchor="middle">SVG Note Prop</text></g>,
+      color: "rgb(0, 162, 206)",
+      dy: -10,
+      dx: 0,
+      connector: { end: "none" }
+    },
+    {
       type: "x",
       date: "8/15/1998",
       note: { label: "iMac Release", align: "middle" },

@@ -24,8 +24,8 @@ export type AnnotationType = {
   key?: string
   percent?: number
   style?:
-    | GenericObject
-    | ((arg?: GenericObject, index?: number) => GenericObject)
+  | GenericObject
+  | ((arg?: GenericObject, index?: number) => GenericObject)
   ids?: string[]
   edge?: boolean
   source?: NodeType
@@ -44,27 +44,32 @@ export type CustomHoverType =
 
 export type AnnotationTypes = "marginalia" | "bump" | false
 
-export interface AnnotationHandling {
-  dataVersion?: string
-  layout: {
-    type: AnnotationTypes
-    orient?: "nearest" | "left" | "right" | "top" | "bottom" | Array<string>
-    characterWidth?: number
-    lineWidth?: number
-    lineHeight?: number
-    padding?: number
-    iterations?: number
-    pointSizeFunction?: Function
-    labelSizeFunction?: Function
-    marginOffset?: number
-    axisMarginOverride?: {
-      top?: number
-      right?: number
-      bottom?: number
-      left?: number
-    }
+interface AnnotationLayout {
+  type: AnnotationTypes
+  orient?: "nearest" | "left" | "right" | "top" | "bottom" | Array<string>
+  characterWidth?: number
+  noteHeight?: Function | number
+  noteWidth?: Function | number
+  lineWidth?: number
+  lineHeight?: number
+  padding?: number
+  iterations?: number
+  pointSizeFunction?: Function
+  labelSizeFunction?: Function
+  marginOffset?: number
+  axisMarginOverride?: {
+    top?: number
+    right?: number
+    bottom?: number
+    left?: number
   }
 }
+
+export interface AnnotationHandling {
+  dataVersion?: string
+  layout: AnnotationLayout
+}
+
 
 export interface AnnotationProps {
   noteData: {
@@ -79,6 +84,8 @@ export interface AnnotationProps {
     // What is this type supposed to be? It gets used only in a boolean context
     // I mostly assume this is used to indicate the presence of `nx`, `ny`, `dx`, `dy`
     coordinates?: boolean
+    noteHeight?: Function | number
+    noteWidth?: Function | number
     x: number | number[]
     y: number | number[]
     nx?: number

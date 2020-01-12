@@ -40,12 +40,18 @@ csvParse(data).forEach((d, i) => {
         type: "react-annotation",
         dx: 0,
         dy: 0,
+        note: <g><circle r={5} /><text fill="purple">annotationData.length + 1</text></g>,
         label: `Note ${annotationData.length + 1}`,
-        color: colors[+d.hood % 6]
+        color: colors[+d.hood % 6],
+        noteHeight: d => { return d.hood === 98 || d.hood === 113 ? 50 : 20 },
+        noteWidth: d => { return d.hood === 98 || d.hood === 113 ? 100 : 200 }
+
+
       })
     )
   }
 })
+
 
 annotationData.push({
   type: "enclose-hull",
@@ -78,12 +84,15 @@ const neighborhoodMapChart = {
       lineWidth: 20,
       padding: 2,
       iterations: 1000,
-      pointSizeFunction: () => 2
+      pointSizeFunction: () => 2,
+      noteHeight: 100,
+      noteWidth: 200
+
     }
   },
   customPointMark: () => <Mark markType="circle" r="1" />,
   hoverAnnotation: true,
-  annotations: [] || annotationData,
+  annotations: annotationData,
   tooltipContent: d => <div className="tooltip-content">{d.hood}</div>,
   summaryType: {
     type: "contour",

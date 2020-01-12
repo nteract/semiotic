@@ -62,18 +62,37 @@ function adjustedAnnotationKeyMapper(d) {
   return `${id}-${label}`
 }
 
-function noteDataWidth(noteData, charWidth = 8) {
+function noteDataWidth(noteData, charWidth = 8, layoutNoteWidth) {
+  let { noteWidth = layoutNoteWidth } = noteData
+
+  let noteWidthFn = noteWidth
+
+  if (typeof (noteWidth) === "number") {
+    noteWidthFn = () => noteWidth
+  }
+
   const wrap = (noteData.note && noteData.note.wrap) || 120
   const noteText = noteData.note.label || noteData.note.label || ""
-  return Math.min(wrap, noteText.length * charWidth)
+  const width = noteWidth && noteWidthFn(noteData) || (React.isValidElement(noteData.note) ? 100 : Math.min(wrap, noteText.length * charWidth))
+  return width
 }
 
-function noteDataHeight(noteData, charWidth = 8, lineHeight = 20) {
+function noteDataHeight(noteData, charWidth = 8, lineHeight = 20, layoutNoteHeight) {
+
+  let { noteHeight = layoutNoteHeight } = noteData
+
+  let noteHeightFn = noteHeight
+
+  if (typeof (noteHeight) === "number") {
+    noteHeightFn = () => noteHeight
+  }
   const wrap = (noteData.note && noteData.note.wrap) || 120
   const text = noteData.note.label || noteData.note.title || ""
+  const height = noteHeight && noteHeightFn(noteData) || (React.isValidElement(noteData.note) ? 30 : Math.ceil((text.length * charWidth) / wrap) * lineHeight +
+    (noteData.note.label && noteData.note.title ? lineHeight : 0))
+
   return (
-    Math.ceil((text.length * charWidth) / wrap) * lineHeight +
-    (noteData.note.label && noteData.note.title ? lineHeight : 0)
+    height
   )
 }
 
@@ -82,11 +101,13 @@ const processAnnotations = (
   annotationProcessor: AnnotationHandling,
   props: AnnotationLayerProps
 ) => {
-  const { layout = { type: false } } = annotationProcessor
+  const { layout = { type: false, noteHeight: undefined, noteWidth: undefined } } = annotationProcessor
 
   if (layout.type === false) {
     return adjustableAnnotations
   }
+
+  const { noteWidth: layoutNoteHeight, noteHeight: layoutNoteWidth } = layout
 
   let { margin = { top: 0, bottom: 0, left: 0, right: 0 } } = props
 
@@ -134,6 +155,7 @@ const processAnnotations = (
 
     adjustableAnnotations.forEach((aNote: NoteType) => {
       const noteData = aNote.props.noteData
+
       const noteX = noteData.x[0] || noteData.x
       const noteY = noteData.y[0] || noteData.y
 
@@ -172,7 +194,7 @@ const processAnnotations = (
           const noteY = d.props.noteData.y[0] || d.props.noteData.y
           return new labella.Node(
             noteY,
-            noteDataHeight(d.props.noteData, characterWidth, lineHeight) +
+            noteDataHeight(d.props.noteData, characterWidth, lineHeight, layoutNoteHeight) +
             padding
           )
         })
@@ -194,7 +216,7 @@ const processAnnotations = (
           const noteY = d.props.noteData.y[0] || d.props.noteData.y
           return new labella.Node(
             noteY,
-            noteDataHeight(d.props.noteData, characterWidth, lineHeight) +
+            noteDataHeight(d.props.noteData, characterWidth, lineHeight, layoutNoteHeight) +
             padding
           )
         })
@@ -216,7 +238,7 @@ const processAnnotations = (
           const noteX = d.props.noteData.x[0] || d.props.noteData.x
           return new labella.Node(
             noteX,
-            noteDataWidth(d.props.noteData, characterWidth) + padding
+            noteDataWidth(d.props.noteData, characterWidth, layoutNoteWidth) + padding
           )
         })
       )
@@ -237,7 +259,7 @@ const processAnnotations = (
           const noteX = d.props.noteData.x[0] || d.props.noteData.x
           return new labella.Node(
             noteX,
-            noteDataWidth(d.props.noteData, characterWidth) + padding
+            noteDataWidth(d.props.noteData, characterWidth, layoutNoteWidth) + padding
           )
         })
       )
@@ -246,25 +268,25 @@ const processAnnotations = (
     const bottomOffset = Math.max(
       ...bottomNodes.map(
         d =>
-          noteDataHeight(d.props.noteData, characterWidth, lineHeight) +
+          noteDataHeight(d.props.noteData, characterWidth, lineHeight, layoutNoteHeight) +
           padding
       )
     )
     const topOffset = Math.max(
       ...topNodes.map(
         d =>
-          noteDataHeight(d.props.noteData, characterWidth, lineHeight) +
+          noteDataHeight(d.props.noteData, characterWidth, lineHeight, layoutNoteHeight) +
           padding
       )
     )
     const leftOffset = Math.max(
       ...leftNodes.map(
-        d => noteDataWidth(d.props.noteData, characterWidth) + padding
+        d => noteDataWidth(d.props.noteData, characterWidth, layoutNoteWidth) + padding
       )
     )
     const rightOffset = Math.max(
       ...rightNodes.map(
-        d => noteDataWidth(d.props.noteData, characterWidth) + padding
+        d => noteDataWidth(d.props.noteData, characterWidth, layoutNoteWidth) + padding
       )
     )
 
@@ -276,12 +298,15 @@ const processAnnotations = (
     const bottomSortedNodes = bottomForce.nodes()
 
     leftNodes.forEach((note, i) => {
-      note.props.noteData.ny = leftSortedNodes[i].currentPos
-      note.props.noteData.nx =
-        0 -
+      const x = 0 -
         leftSortedNodes[i].layerIndex * leftOffset -
         marginOffsetFn("left", axes, marginOffset)
-      if (note.props.noteData.note) {
+
+      const y = leftSortedNodes[i].currentPos
+      note.props.noteData.nx = x
+      note.props.noteData.ny = y
+
+      if (note.props.noteData.note && !React.isValidElement(note)) {
         note.props.noteData.note.orientation =
           note.props.noteData.note.orientation || "leftRight"
         note.props.noteData.note.align =
@@ -290,12 +315,15 @@ const processAnnotations = (
     })
 
     rightNodes.forEach((note, i) => {
-      note.props.noteData.ny = rightSortedNodes[i].currentPos
-      note.props.noteData.nx =
-        size[0] +
+      const x = size[0] +
         rightSortedNodes[i].layerIndex * rightOffset +
         marginOffsetFn("right", axes, marginOffset)
-      if (note.props.noteData.note) {
+      const y = rightSortedNodes[i].currentPos
+
+      note.props.noteData.nx = x
+      note.props.noteData.ny = y
+
+      if (note.props.noteData.note && !React.isValidElement(note)) {
         note.props.noteData.note.orientation =
           note.props.noteData.note.orientation || "leftRight"
         note.props.noteData.note.align =
@@ -304,20 +332,26 @@ const processAnnotations = (
     })
 
     topNodes.forEach((note, i) => {
-      note.props.noteData.nx = topSortedNodes[i].currentPos
-      note.props.noteData.ny =
-        0 -
+      const x = topSortedNodes[i].currentPos
+      const y = 0 -
         topSortedNodes[i].layerIndex * topOffset -
         marginOffsetFn("top", axes, marginOffset)
+
+      note.props.noteData.nx = x
+      note.props.noteData.ny = y
     })
 
     bottomNodes.forEach((note, i) => {
-      note.props.noteData.nx = bottomSortedNodes[i].currentPos
-      note.props.noteData.ny =
-        size[1] +
+      const x = bottomSortedNodes[i].currentPos
+      const y = size[1] +
         bottomSortedNodes[i].layerIndex * bottomOffset +
         marginOffsetFn("bottom", axes, marginOffset)
+
+      note.props.noteData.nx = x
+      note.props.noteData.ny = y
+
     })
+
     return adjustableAnnotations
   }
   return adjustableAnnotations
