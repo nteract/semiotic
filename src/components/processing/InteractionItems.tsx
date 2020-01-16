@@ -187,10 +187,8 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
           key={`interactionVoronoi${i}`}
           d={`M${d.join("L")}Z`}
           style={{
-            ...pointerStyle,
-            fillOpacity: 0.5,
-            fill: "pink",
-            stroke: "red"
+            fillOpacity: 0,
+            ...pointerStyle
           }}
         />
       )
