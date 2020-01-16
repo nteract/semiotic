@@ -124,10 +124,6 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
         )
       )
       if (
-        xValue >= 0 &&
-        xValue <= size[0] &&
-        yValue >= 0 &&
-        yValue <= size[1] &&
         xValue !== undefined &&
         yValue !== undefined &&
         isNaN(xValue) === false &&
@@ -152,12 +148,12 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
 
     const voronoiExtent = [
       [
-        Math.min(voronoiXExtent[0], -interactionOverflow.left),
-        Math.min(voronoiYExtent[0], -interactionOverflow.top)
+        Math.min(voronoiXExtent[0] - 5, -interactionOverflow.left),
+        Math.min(voronoiYExtent[0] - 5, -interactionOverflow.top)
       ],
       [
-        Math.max(voronoiXExtent[1], size[0] + interactionOverflow.right),
-        Math.max(voronoiYExtent[1], size[1] + interactionOverflow.bottom)
+        Math.max(voronoiXExtent[1] + 5, size[0] + interactionOverflow.right),
+        Math.max(voronoiYExtent[1] + 5, size[1] + interactionOverflow.bottom)
       ]
     ]
 
@@ -186,8 +182,10 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
           key={`interactionVoronoi${i}`}
           d={`M${d.join("L")}Z`}
           style={{
-            fillOpacity: 0,
-            ...pointerStyle
+            ...pointerStyle,
+            fillOpacity: 0.5,
+            fill: "pink",
+            stroke: "red"
           }}
         />
       )

@@ -19,7 +19,7 @@ const violinChart = {
   axis: axis,
   ...summaryChart,
   rAccessor: ["stepValue", d => d.stepValue + 10],
-  hoverAnnotation: true,
+  //  hoverAnnotation: true,
   tooltipContent: d => {
     return (
       <div className="tooltip-content">
@@ -123,6 +123,10 @@ export default (
         }
         return null
       }}
+      projection="horizontal"
+      type={{ type: "swarm", r: 5 }}
+      style={{ fill: "pink", stroke: "red" }}
+      pieceHoverAnnotation={true}
     />
   </div>
 )
