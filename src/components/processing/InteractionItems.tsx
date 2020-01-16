@@ -96,7 +96,8 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
     customDoubleClickBehavior,
     customHoverBehavior,
     hoverAnnotation,
-    voronoiHover
+    voronoiHover,
+    margin
   } = props
   const whichPoints = {
     top: projectedYTop,
@@ -124,6 +125,10 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
         )
       )
       if (
+        xValue >= (0 - margin.left) &&
+        xValue <= (size[0] + margin.right) &&
+        yValue >= (0 - margin.top) &&
+        yValue <= (size[1] + margin.bottom) &&
         xValue !== undefined &&
         yValue !== undefined &&
         isNaN(xValue) === false &&
