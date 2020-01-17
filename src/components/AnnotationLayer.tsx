@@ -41,7 +41,7 @@ interface AnnotationLayerState {
   htmlAnnotations: Object[]
   adjustedAnnotationsKey?: string
   adjustedAnnotationsDataVersion?: string
-  adjustedAnnotations: Object[]
+  adjustedAnnotations: AdjustedAnnotations[]
 }
 
 function marginOffsetFn(orient, axisSettings, marginOffset) {
@@ -430,8 +430,9 @@ class AnnotationLayer extends React.Component<
       } else {
         //Handle when style or other attributes change
         adjustedAnnotations = adjustableAnnotations.map((d: NoteType, i) => {
+          const oldAnnotation = adjustedAnnotations[i] as NoteType
           const newNoteData = Object.assign(
-            adjustedAnnotations[i].props.noteData,
+            oldAnnotation.props.noteData,
             {
               nx: d.props.noteData.nx,
               ny: d.props.noteData.ny,
