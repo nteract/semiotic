@@ -41,7 +41,7 @@ interface AnnotationLayerState {
   htmlAnnotations: Object[]
   adjustedAnnotationsKey?: string
   adjustedAnnotationsDataVersion?: string
-  adjustedAnnotations: AdjustedAnnotations[]
+  adjustedAnnotations: Object[]
 }
 
 function marginOffsetFn(orient, axisSettings, marginOffset) {
