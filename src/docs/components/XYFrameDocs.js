@@ -564,7 +564,8 @@ export default class XYFrameDocs extends React.Component {
       foregroundGraphics: "off",
       customScale: "none",
       legend: "off",
-      title: "none"
+      title: "none",
+      yAccessor: "py"
     }
 
     //In constructor to get access to this
@@ -634,10 +635,13 @@ export default class XYFrameDocs extends React.Component {
     const options = [
       "none",
       "line",
+      "linepercent",
+      "cumulative",
       "difference",
-      "stackedsummary",
+      "stackedarea",
+      "stackedpercent",
       "bumpline",
-      "bumpsummary"
+      "bumparea"
     ].map(d => (
       <MenuItem key={`line-option-${d}`} value={d}>
         {d}
@@ -850,10 +854,13 @@ export default class XYFrameDocs extends React.Component {
 
     const undefinedOptions = {}
 
+    console.log("displayData", displayData)
+
     if (this.state.frame === "ResponsiveXYFrame")
       undefinedOptions.responsiveWidth = true
     const displayFrame = (
       <div>
+        <button onClick={() => { this.setState({ yAccessor: "px" }) }}>Change yAccessor</button>
         <ReactFrame
           {...undefinedOptions}
           title={titleTypesHash[this.state.title]}
@@ -883,7 +890,7 @@ export default class XYFrameDocs extends React.Component {
             )
           }
           xAccessor={"px"}
-          yAccessor={"py"}
+          yAccessor={this.state.yAccessor}
           showLinePoints={true}
           annotations={finalAnnotations}
           annotationSettings={

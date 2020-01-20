@@ -8,8 +8,6 @@ import {
   forceManyBody
 } from "d3-force"
 
-import { bboxCollide } from "d3-bboxCollide"
-
 import { scaleLinear } from "d3-scale"
 
 import { min, max } from "d3-array"
@@ -1443,6 +1441,7 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
     graphSettings: {
       ...networkSettings.graphSettings,
       ...networkSettings
-    }
+    },
+    props: currentProps
   }
 }

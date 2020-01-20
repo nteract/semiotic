@@ -663,6 +663,7 @@ export const calculateXYFrame = (currentProps: XYFrameProps, prevState: XYFrameS
         xyFrameRender,
         size,
         annotatedSettings,
-        overlay
+        overlay,
+        props: currentProps
     }
 }

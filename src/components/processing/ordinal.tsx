@@ -1233,6 +1233,7 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
         orFrameRender,
         summaryType,
         type: pieceType,
-        pieceIDAccessor
+        pieceIDAccessor,
+        props: currentProps
     }
 }
