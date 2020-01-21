@@ -113,9 +113,9 @@ const generateOEndMappingFn = projectedColumns => (d): null | Array<any> => {
     const lastColumn: { x: number; width: number } = foundColumns[
       foundColumns.length - 1
     ] || {
-      x: 0,
-      width: 0
-    }
+        x: 0,
+        width: 0
+      }
 
     const columnPosition = [
       firstColumn.x + Math.min(5, firstColumn.width / 10),
@@ -261,7 +261,7 @@ class InteractionLayer extends React.Component<Props, State> {
       this.props.interaction.during(e, columnName, data, columnData)
   }
 
-  brushEnd = (e?: number[] | number[][], columnName?: string, data?: object, columnData?: object ) => {
+  brushEnd = (e?: number[] | number[][], columnName?: string, data?: object, columnData?: object) => {
     if (this.props.interaction && this.props.interaction.end)
       this.props.interaction.end(e, columnName, data, columnData)
   }
@@ -288,16 +288,20 @@ class InteractionLayer extends React.Component<Props, State> {
           : "xBrush"
         : interaction.brush
 
-    const {
+    let {
+      extent
+    } = interaction
+
+    if (!extent) {
       extent = actualBrush === "xyBrush"
         ? [
-            [xScale.invert(0), yScale.invert(0)],
-            [xScale.invert(size[0]), yScale.invert(size[1])]
-          ]
+          [xScale.invert(0), yScale.invert(0)],
+          [xScale.invert(size[0]), yScale.invert(size[1])]
+        ]
         : actualBrush === "xBrush"
-        ? [xScale.invert(0), xScale.invert(size[0])]
-        : [yScale.invert(0), yScale.invert(size[1])]
-    } = interaction
+          ? [xScale.invert(0), xScale.invert(size[0])]
+          : [yScale.invert(0), yScale.invert(size[1])]
+    }
 
     if (extent.indexOf && extent.indexOf(undefined) !== -1) {
       return <g />
@@ -363,7 +367,7 @@ class InteractionLayer extends React.Component<Props, State> {
           selectedExtent = [
             projectedColumns[leftExtent].x,
             projectedColumns[rightExtent].x +
-              projectedColumns[rightExtent].width
+            projectedColumns[rightExtent].width
           ]
         }
       }
@@ -446,8 +450,8 @@ class InteractionLayer extends React.Component<Props, State> {
             showLinePoints && d[whichPoints[showLinePoints]] !== undefined
               ? d[whichPoints[showLinePoints]]
               : d[projectedYMiddle] !== undefined
-              ? d[projectedYMiddle]
-              : d[projectedY]
+                ? d[projectedYMiddle]
+                : d[projectedY]
           )
         )
         if (
@@ -653,9 +657,9 @@ class InteractionLayer extends React.Component<Props, State> {
         return !d
           ? null
           : [
-              rScaleReverse(rScale.invert(d[1])),
-              rScaleReverse(rScale.invert(d[0]))
-            ]
+            rScaleReverse(rScale.invert(d[1])),
+            rScaleReverse(rScale.invert(d[0]))
+          ]
       }
 
     const rRange = rScale.range()

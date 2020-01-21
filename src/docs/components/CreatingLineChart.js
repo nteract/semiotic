@@ -469,9 +469,16 @@ export default class CreatingLineChart extends React.Component {
             lines={movies}
             lineType={{
               type: "line",
+              y1: () => 0,
               interpolator: "monotonex"
             }}
-            lineDataAccessor={["coordinates"]}
+            annotations={[{
+              type: "highlight",
+              title: "Ex Machina",
+              style: { fill: "red", stroke: "purple" }
+            }]}
+            lineIDAccessor={"title"}
+            lineDataAccessor={"coordinates"}
             xAccessor={["week"]}
             yAccessor={["theaterCount"]}
             lineStyle={d => ({
