@@ -623,7 +623,7 @@ export function orFrameSummaryRenderer({
         summaryRenderHash
       ).join(", ")}`
     )
-    return
+    return {}
   }
   return summaryRenderFn({
     data,

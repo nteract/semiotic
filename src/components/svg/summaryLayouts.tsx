@@ -1119,7 +1119,7 @@ export function bucketizedRenderingFn({
         )
       })
 
-    } else if (type.type === "joy" || type.type === "ridgeline") {
+    } else if (type.type === "ridgeline") {
       const zeroedStart = Object.assign({}, bins[0], { value: 0 })
       const zeroedEnd = Object.assign({}, bins[bins.length - 1], { value: 0 })
       //Ridgeline plots need to visually signify the zero baseline with their start and end position

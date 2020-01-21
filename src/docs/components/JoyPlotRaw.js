@@ -22,8 +22,9 @@ const joyChartSettings = {
   summaryType: {
     type: "ridgeline",
     bins: 10,
-    amplitude: 50,
-    curve: "monotonex"
+    amplitude: 0,
+    curve: "monotonex",
+    axis: { orient: "right", tickValues: [ 20 ] }
   },
   summaryStyle: (d, i) => ({
     fill: colors[i % 4],
@@ -34,7 +35,7 @@ const joyChartSettings = {
   }),
   oAccessor: "term",
   rAccessor: "value",
-  margin: { left: 150, top: 50, bottom: 55, right: 15 },
+  margin: { left: 150, top: 50, bottom: 55, right: 35 },
   axes: { orient: "bottom", label: "Percent" },
   summaryHoverAnnotation: true,
   oLabel: d => (
