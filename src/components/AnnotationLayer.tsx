@@ -429,15 +429,13 @@ class AnnotationLayer extends React.Component<
         )
       } else {
         //Handle when style or other attributes change
-        adjustedAnnotations = adjustedAnnotations.map((d: NoteType, i) => {
-          const newNoteData = Object.assign(
-            adjustableAnnotations[i].props.noteData,
-            {
-              nx: d.props.noteData.nx,
-              ny: d.props.noteData.ny,
-              note: d.props.noteData.note
-            }
-          )
+        adjustedAnnotations = adjustableAnnotations.map((d: NoteType, i) => {
+          const oldAnnotation = adjustedAnnotations[i] as NoteType
+          const newNoteData = {
+            ...oldAnnotation.props.noteData,
+            ...d.props.noteData
+          }
+
           return <Annotation key={d.key} noteData={newNoteData} />
         })
       }
