@@ -135,8 +135,10 @@ class FacetController extends React.Component<Props, State> {
     state: State
   }) => {
     let annotationBase = state.facetHoverAnnotations
+
+    const { hoverAnnotation, pieceHoverAnnotation } = this.props
     const annotationSettings =
-      this.props.hoverAnnotation || this.props.pieceHoverAnnotation
+      hoverAnnotation || pieceHoverAnnotation
 
     if (!annotationSettings || !annotationBase) {
       return originalAnnotations

@@ -45,17 +45,18 @@ class Brush extends React.Component<BrushProps, null> {
     this.createBrush()
   }
   componentDidUpdate(lastProps) {
+    const { extent, selectedExtent } = this.props
     if (
       (lastProps.extent &&
-        this.props.extent &&
+        extent &&
         flatShortArray(lastProps.extent) !==
-          flatShortArray(this.props.extent)) ||
+          flatShortArray(extent)) ||
       ((lastProps.selectedExtent &&
-        this.props.selectedExtent &&
+        selectedExtent &&
         flatShortArray(lastProps.selectedExtent) !==
-          flatShortArray(this.props.selectedExtent)) ||
-        (!lastProps.selectedExtent && this.props.selectedExtent) ||
-        (lastProps.selectedExtent && !this.props.selectedExtent))
+          flatShortArray(selectedExtent)) ||
+        (!lastProps.selectedExtent && selectedExtent) ||
+        (lastProps.selectedExtent && !selectedExtent))
     ) {
       this.createBrush()
     }
@@ -63,11 +64,12 @@ class Brush extends React.Component<BrushProps, null> {
 
   createBrush() {
     const node = this.node
-    const brush = this.props.svgBrush
+
+    const { svgBrush: brush, selectedExtent: baseSelectedExtent } = this.props
     select(node).call(brush)
-    if (this.props.selectedExtent) {
-      let selectedExtent = this.props.selectedExtent
-      if (Array.isArray(this.props.selectedExtent[0])) {
+    if (baseSelectedExtent) {
+      let selectedExtent = baseSelectedExtent
+      if (Array.isArray(baseSelectedExtent[0])) {
         const sortedY = [selectedExtent[0][1], selectedExtent[1][1]].sort(
           (a, b) => a - b
         )
@@ -77,7 +79,7 @@ class Brush extends React.Component<BrushProps, null> {
         ]
       }
 
-      select(node).call(brush.move, this.props.selectedExtent)
+      select(node).call(brush.move, selectedExtent)
     }
   }
 

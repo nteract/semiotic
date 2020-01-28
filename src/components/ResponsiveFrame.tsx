@@ -46,6 +46,8 @@ const createResponsiveFrame = ParticularFrame =>
     componentDidMount() {
       const element = this.node
 
+      const { debounce } = this.props
+
       elementResizeEvent(element, () => {
         window.clearTimeout(this.isResizing)
         this.isResizing = setTimeout(() => {
@@ -55,7 +57,7 @@ const createResponsiveFrame = ParticularFrame =>
             containerHeight: element.offsetHeight,
             containerWidth: element.offsetWidth
           })
-        }, this.props.debounce)
+        }, debounce)
       })
       this.setState({
         containerHeight: element.offsetHeight,

@@ -131,8 +131,9 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, OrdinalFrameState>
   }
 
   componentWillUnmount() {
-    if (this.props.onUnmount) {
-      this.props.onUnmount(this.props, this.state)
+    const { onUnmount } = this.props
+    if (onUnmount) {
+      onUnmount(this.props, this.state)
     }
   }
 
@@ -166,7 +167,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, OrdinalFrameState>
     i: number
     annotationLayer: AnnotationLayerProps
   }) => {
-    const { projection } = this.props
+    const { projection, svgAnnotationRules } = this.props
 
     const {
       adjustedPosition,
@@ -224,8 +225,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, OrdinalFrameState>
 
     //TODO: Process your rules first
     const customAnnotation =
-      this.props.svgAnnotationRules &&
-      this.props.svgAnnotationRules({
+      svgAnnotationRules &&
+      svgAnnotationRules({
         d,
         i,
         oScale,
@@ -238,10 +239,10 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, OrdinalFrameState>
         adjustedPosition,
         adjustedSize,
         annotationLayer,
-        categories: this.state.projectedColumns,
+        categories: projectedColumns,
         voronoiHover
       })
-    if (this.props.svgAnnotationRules && customAnnotation !== null) {
+    if (svgAnnotationRules && customAnnotation !== null) {
       return customAnnotation
     } else if (d.type === "desaturation-layer") {
       return desaturationLayer({

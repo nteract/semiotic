@@ -63,18 +63,19 @@ class Axis extends React.Component<AxisProps, AxisState> {
   }
 
   componentDidUpdate() {
-    const { label = { position: false } } = this.props
-    if (!label.position && this.props.dynamicLabelPosition) {
+    const { label = { position: false }, dynamicLabelPosition } = this.props
+    const { calculatedLabelPosition } = this.state
+    if (!label.position && dynamicLabelPosition) {
       const newBBMax = this.boundingBoxMax()
-      if (newBBMax !== this.state.calculatedLabelPosition) {
+      if (newBBMax !== calculatedLabelPosition) {
         this.setState({ calculatedLabelPosition: newBBMax })
       }
     }
   }
 
   componentDidMount() {
-    const { label = { position: false } } = this.props
-    if (!label.position && this.props.dynamicLabelPosition) {
+    const { label = { position: false }, dynamicLabelPosition } = this.props
+    if (!label.position && dynamicLabelPosition) {
       const newBBMax = this.boundingBoxMax()
       this.setState({ calculatedLabelPosition: newBBMax })
     }
@@ -100,7 +101,10 @@ class Axis extends React.Component<AxisProps, AxisState> {
       tickLineGenerator,
       baseline = true,
       margin = { top: 0, bottom: 0, left: 0, right: 0 },
-      center = false
+      center = false,
+      annotationFunction,
+      glyphFunction,
+      xyPoints
     } = this.props
 
     let { axisParts, position = [0, 0] } = this.props
@@ -232,16 +236,16 @@ class Axis extends React.Component<AxisProps, AxisState> {
 
     let annotationBrush
 
-    if (this.props.annotationFunction) {
+    if (annotationFunction) {
       const formattedValue = formatValue(
-        this.props.scale.invert(this.state.hoverAnnotation),
+        scale.invert(this.state.hoverAnnotation),
         this.props
       )
-      const hoverGlyph = this.props.glyphFunction ? (
-        this.props.glyphFunction({
+      const hoverGlyph = glyphFunction ? (
+        glyphFunction({
           lineHeight,
           lineWidth,
-          value: this.props.scale.invert(this.state.hoverAnnotation)
+          value: scale.invert(this.state.hoverAnnotation)
         })
       ) : (
           <g>
@@ -276,10 +280,10 @@ class Axis extends React.Component<AxisProps, AxisState> {
             width={hoverWidth}
             onMouseMove={hoverFunction}
             onClick={() =>
-              this.props.annotationFunction({
+              annotationFunction({
                 className: "dynamic-axis-annotation",
                 type: annotationType,
-                value: this.props.scale.invert(this.state.hoverAnnotation)
+                value: scale.invert(this.state.hoverAnnotation)
               })
             }
             onMouseOut={() => this.setState({ hoverAnnotation: undefined })}
@@ -291,7 +295,7 @@ class Axis extends React.Component<AxisProps, AxisState> {
 
     let summaryGraphic
 
-    if (marginalSummaryType && this.props.xyPoints) {
+    if (marginalSummaryType && xyPoints) {
       const summaryWidth = Math.max(margin[orient] - 6, 5)
 
       const decoratedSummaryType: AxisSummaryTypeSettings =
@@ -325,7 +329,7 @@ class Axis extends React.Component<AxisProps, AxisState> {
 
       const dataFilter = decoratedSummaryType.filter || (() => true)
 
-      const forSummaryData = this.props.xyPoints
+      const forSummaryData = xyPoints
         .filter(
           (p: { x?: number; y?: number; data?: object }) =>
             p.x !== undefined && p.y !== undefined && dataFilter(p.data)

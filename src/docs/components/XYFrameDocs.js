@@ -42,28 +42,32 @@ class NameForm extends React.Component {
   }
 
   handleSubmit(event) {
+    const { dataPoint, updateAnnotations } = this.props
+    const { type, value } = this.state
     event.preventDefault()
-    this.props.updateAnnotations(
-      Object.assign({}, this.props.dataPoint, {
-        type: this.state.type,
-        label: this.state.value
+    updateAnnotations(
+      Object.assign({}, dataPoint, {
+        type: type,
+        label: value
       })
     )
   }
 
   render() {
+    const { dataPoint } = this.props
+    const { value, type } = this.state
     return (
       <form style={{ background: "#DDDDDD" }} onSubmit={this.handleSubmit}>
         <p>
-          {this.props.dataPoint.x},{this.props.dataPoint.y}
+          {dataPoint.x},{dataPoint.y}
         </p>
         <p>Name:</p>
         <input
           type="text"
-          value={this.state.value}
+          value={value}
           onChange={this.handleChange}
         />
-        <Select value={this.state.type} onChange={this.changeType}>
+        <Select value={type} onChange={this.changeType}>
           <MenuItem label="x" value="x">
             X
           </MenuItem>

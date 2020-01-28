@@ -181,8 +181,9 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
   }
 
   componentWillUnmount() {
-    if (this.props.onUnmount) {
-      this.props.onUnmount(this.props, this.state)
+    const { onUnmount } = this.props
+    if (onUnmount) {
+      onUnmount(this.props, this.state)
     }
   }
 
@@ -268,12 +269,12 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       styleFn: (args?: GenericObject, index?: number) => GenericObject
     }
   }) => {
-    const { showLinePoints, defined } = this.props
+    const { showLinePoints, defined, margin: baseMargin, size, svgAnnotationRules } = this.props
 
-    const { xyFrameRender, xScale, yScale, xAccessor, yAccessor } = this.state
+    const { xyFrameRender, xScale, yScale, xAccessor, yAccessor, axesData, annotatedSettings } = this.state
 
     let screenCoordinates: number[] | number[][] = []
-    const idAccessor = this.state.annotatedSettings.lineIDAccessor
+    const idAccessor = annotatedSettings.lineIDAccessor
 
     if (baseD.type === "highlight") {
       return svgHighlight({
@@ -304,13 +305,13 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
     if (!d) return null
 
     const margin = calculateMargin({
-      margin: this.props.margin,
-      axes: this.state.axesData,
-      title: this.state.annotatedSettings.title,
-      size: this.props.size
+      margin: baseMargin,
+      axes: axesData,
+      title: annotatedSettings.title,
+      size: size
     })
     const { adjustedPosition, adjustedSize } = adjustedPositionSize({
-      size: this.props.size,
+      size: size,
       margin
     })
 
@@ -373,8 +374,8 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
     const { voronoiHover } = annotationLayer
 
     const customSVG =
-      this.props.svgAnnotationRules &&
-      this.props.svgAnnotationRules({
+      svgAnnotationRules &&
+      svgAnnotationRules({
         d,
         i,
         screenCoordinates,
@@ -392,7 +393,7 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
         adjustedSize,
         annotationLayer
       })
-    if (this.props.svgAnnotationRules !== undefined && customSVG !== null) {
+    if (svgAnnotationRules !== undefined && customSVG !== null) {
       return customSVG
     } else if (d.type === "desaturation-layer") {
       return desaturationLayer({
@@ -489,7 +490,7 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
     }
   }) => {
 
-    const { xAccessor, yAccessor, xScale, yScale, SpanOrDiv, annotatedSettings } = this.state
+    const { xAccessor, yAccessor, xScale, yScale, SpanOrDiv, annotatedSettings, axesData } = this.state
 
     const { voronoiHover } = annotationLayer
 
@@ -501,7 +502,8 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       optimizeCustomTooltipPosition,
       htmlAnnotationRules,
       size,
-      showLinePoints
+      showLinePoints,
+      margin: baseMargin
     } = this.props
 
     const idAccessor = annotatedSettings.lineIDAccessor
@@ -531,10 +533,10 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
     const yString = yCoord && yCoord.toString ? yCoord.toString() : yCoord
 
     const margin = calculateMargin({
-      margin: this.props.margin,
-      axes: this.state.axesData,
-      title: this.state.annotatedSettings.title,
-      size: this.props.size
+      margin: baseMargin,
+      axes: axesData,
+      title: annotatedSettings.title,
+      size: size
     })
     const { adjustedPosition, adjustedSize } = adjustedPositionSize({
       size,
@@ -654,7 +656,8 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       matte,
       frameKey,
       showLinePoints,
-      sketchyRenderingEngine
+      sketchyRenderingEngine,
+      disableContext
     } = this.props
 
     const {
@@ -718,7 +721,7 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
         foregroundGraphics={foregroundGraphics}
         beforeElements={beforeElements}
         afterElements={afterElements}
-        disableContext={this.props.disableContext}
+        disableContext={disableContext}
         canvasPostProcess={canvasPostProcess}
         baseMarkProps={baseMarkProps}
         useSpans={useSpans}

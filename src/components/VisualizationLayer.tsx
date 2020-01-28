@@ -40,10 +40,11 @@ type State = {
   focusedPieceIndex: number | null
   focusedVisualizationGroup?: any,
   piecesGroup: object,
-  props: Props
+  props: Props,
+  handleKeyDown: Function
 }
 
-const updateVisualizationLayer = (props: Props) => {
+const updateVisualizationLayer = (props: Props, handleKeyDown: Function) => {
   const {
     xScale,
     yScale,
@@ -107,9 +108,9 @@ const updateVisualizationLayer = (props: Props) => {
                 }`) ||
               k
             }
-            onKeyDown={e => this.handleKeyDown(e, k)}
+            onKeyDown={e => handleKeyDown(e, k)}
             onBlur={() => {
-              this.props.voronoiHover(undefined)
+              props.voronoiHover(undefined)
             }}
             ref={thisNode =>
               thisNode && (piecesGroup[k] = thisNode.childNodes)
@@ -147,7 +148,8 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
       focusedVisualizationGroup: null,
       piecesGroup: {},
       props,
-      ...updateVisualizationLayer(props)
+      handleKeyDown: this.handleKeyDown,
+      ...updateVisualizationLayer(props, this.handleKeyDown)
     }
   }
 
@@ -164,19 +166,19 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
 
     if (
       update === false ||
-      this.props.disableContext ||
-      !this.props.canvasContext
+      np.disableContext ||
+      !np.canvasContext
     )
       return
 
-    const { sketchyRenderingEngine, width, height, margin } = this.props
+    const { sketchyRenderingEngine, width, height, margin } = np
 
     const size = [
       width + margin.left + margin.right,
       height + margin.top + margin.bottom
     ]
     let rc
-    const context = this.props.canvasContext.getContext("2d")
+    const context = np.canvasContext.getContext("2d")
     context.setTransform(
       1,
       0,
@@ -214,7 +216,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
         margin.left,
         margin.top
       )
-      context.translate(...this.props.position)
+      context.translate(...np.position)
       context.translate(piece.tx, piece.ty)
       context.fillStyle = fill
       context.strokeStyle = stroke
@@ -238,7 +240,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
           if (!RoughCanvas) {
             console.error("The sketchyRenderingEngine you specify does not expose a prop `RoughCanvas` and so cannot render sketchy HTML5 Canvas graphics")
           } else {
-            rc = rc || RoughCanvas(this.props.canvasContext)
+            rc = rc || RoughCanvas(np.canvasContext)
             const rcExtension =
               (typeof renderObject === "object" && renderObject) || {}
             rcSettings = {
@@ -337,8 +339,8 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     context.setTransform(1, 0, 0, 1, 0, 0)
     context.globalAlpha = 1
 
-    if (this.props.canvasPostProcess) {
-      this.props.canvasPostProcess(this.props.canvasContext, context, size)
+    if (np.canvasPostProcess) {
+      np.canvasPostProcess(np.canvasContext, context, size)
     }
 
     if (
@@ -377,13 +379,15 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
       update ||
       (nextProps.dataVersion && nextProps.dataVersion !== prevState.dataVersion)
     ) {
-      return { ...updateVisualizationLayer(nextProps), props: nextProps }
+      return { ...updateVisualizationLayer(nextProps, prevState.handleKeyDown ), props: nextProps }
     }
     return null
   }
 
   handleKeyDown = (e: { keyCode }, vizgroup: string) => {
     // If enter, focus on the first element
+
+    const { renderPipeline, voronoiHover } = this.props
     const pushed = e.keyCode
     if (pushed !== 37 && pushed !== 39 && pushed !== 13) return
 
@@ -405,19 +409,13 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
         ? this.state.piecesGroup[vizgroup].length + newPieceIndex
         : newPieceIndex % this.state.piecesGroup[vizgroup].length
 
-    /*
-    const piece = this.props.renderPipeline[vizgroup].accessibleTransform(
-      this.props.renderPipeline[vizgroup].data[newPieceIndex]
-    )
-    */
-
-    const piece = this.props.renderPipeline[vizgroup].accessibleTransform(
-      this.props.renderPipeline[vizgroup].data,
+    const piece = renderPipeline[vizgroup].accessibleTransform(
+      renderPipeline[vizgroup].data,
       newPieceIndex,
       this.state.piecesGroup[vizgroup][newPieceIndex]
     )
 
-    this.props.voronoiHover(piece)
+    voronoiHover(piece)
 
     this.setState({
       focusedPieceIndex: newPieceIndex,

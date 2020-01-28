@@ -49,12 +49,14 @@ class TooltipPositioner extends React.Component<Props> {
 
   componentDidUpdate(pp){
     // if new args, reset offset state
-    if(pp.tooltipContentArgs !== this.props.tooltipContentArgs){
+    const { tooltipContentArgs} = this.props
+    const { offset } = this.state
+    if(pp.tooltipContentArgs !== tooltipContentArgs){
       this.setState({
         offset: null
       })
     }
-    else if(this.containerRef.current && !this.state.offset){
+    else if(this.containerRef.current && !offset){
       this.checkPosition()
     }
   }

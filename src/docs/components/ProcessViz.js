@@ -204,7 +204,7 @@ export default class ProcessViz extends React.Component {
     const width = 1000
     const { frameSettings /*, frameType */ } = this.props
     const frameKeys = Object.keys(frameSettings).filter(
-      d => this.props.frameSettings[d] !== undefined
+      d => frameSettings[d] !== undefined
     )
     let processPosition = 0
     const mappedFrames = processNodes.map(process =>

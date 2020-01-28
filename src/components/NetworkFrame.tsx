@@ -124,8 +124,9 @@ class NetworkFrame extends React.Component<
   }
 
   componentWillUnmount() {
-    if (this.props.onUnmount) {
-      this.props.onUnmount(this.props, this.state)
+    const { onUnmount } = this.props
+    if (onUnmount) {
+      onUnmount(this.props, this.state)
     }
   }
 
@@ -149,20 +150,23 @@ class NetworkFrame extends React.Component<
   }
 
   onNodeClick(d: Object, i: number) {
-    if (this.props.onNodeClick) {
-      this.props.onNodeClick(d, i)
+    const { onNodeClick } = this.props
+    if (onNodeClick) {
+      onNodeClick(d, i)
     }
   }
 
   onNodeEnter(d: Object, i: number) {
-    if (this.props.onNodeEnter) {
-      this.props.onNodeEnter(d, i)
+    const { onNodeEnter } = this.props
+    if (onNodeEnter) {
+      onNodeEnter(d, i)
     }
   }
 
   onNodeOut(d: Object, i: number) {
-    if (this.props.onNodeOut) {
-      this.props.onNodeOut(d, i)
+    const { onNodeOut } = this.props
+    if (onNodeOut) {
+      onNodeOut(d, i)
     }
   }
 
@@ -295,7 +299,7 @@ class NetworkFrame extends React.Component<
     const {
       tooltipContent,
       optimizeCustomTooltipPosition,
-      size,
+      htmlAnnotationRules,
       useSpans
     } = this.props
     const {
@@ -324,8 +328,8 @@ class NetworkFrame extends React.Component<
           ...baseD
         }
 
-    if (this.props.htmlAnnotationRules) {
-      const customAnnotation = this.props.htmlAnnotationRules({
+    if (htmlAnnotationRules) {
+      const customAnnotation = htmlAnnotationRules({
         d,
         i,
         networkFrameProps: this.props,
