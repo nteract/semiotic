@@ -49,6 +49,7 @@ import DecisionMatrix from "./components/DecisionMatrix"
 import CometPlot from "./components/CometPlot"
 import Networks from "./components/Networks"
 import Sparkline from "./components/Sparkline"
+import ResponsiveExample from "./components/ResponsiveExample"
 
 import FacetControllerDocs from "./components/FacetControllerDocs"
 
@@ -156,6 +157,10 @@ class Documentation extends React.Component {
     //   borderTop: "5px double #ac9739",
     //   borderBottom: "5px double #ac9739"
     // }
+
+    if (selected === "responsive") {
+      return <ResponsiveExample />
+    }
 
     const allDocs = [
       <Link to={"/"} key="home-link">
