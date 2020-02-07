@@ -836,7 +836,7 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
         }
     }
 
-    if (currentProps.hoverAnnotation) {
+    if (currentProps.hoverAnnotation || currentProps.customClickBehavior || currentProps.customDoubleClickBehavior || currentProps.customHoverBehavior) {
 
         if (shouldRecalculateOverlay) {
             columnOverlays = oExtent.map((d, i) => {

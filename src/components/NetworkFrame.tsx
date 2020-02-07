@@ -31,6 +31,8 @@ import { scaleLinear } from "d3-scale"
 
 import { calculateNetworkFrame } from "./processing/network"
 
+const blankArray = []
+
 const matrixRenderOrder: ReadonlyArray<"nodes" | "edges"> = ["nodes", "edges"]
 const generalRenderOrder: ReadonlyArray<"nodes" | "edges"> = ["edges", "nodes"]
 
@@ -408,6 +410,15 @@ class NetworkFrame extends React.Component<
       formattedOverlay = overlay
     }
 
+    let activeHoverAnnotation
+    if (Array.isArray(hoverAnnotation)) {
+      activeHoverAnnotation = hoverAnnotation
+    } else if (customClickBehavior || customDoubleClickBehavior || customHoverBehavior) {
+      activeHoverAnnotation = blankArray
+    } else {
+      activeHoverAnnotation = !!hoverAnnotation
+    }
+
     return (
       <Frame
         name="networkframe"
@@ -425,9 +436,7 @@ class NetworkFrame extends React.Component<
         projectedCoordinateNames={projectedCoordinateNames}
         defaultSVGRule={this.defaultNetworkSVGRule}
         defaultHTMLRule={this.defaultNetworkHTMLRule}
-        hoverAnnotation={
-          Array.isArray(hoverAnnotation) ? hoverAnnotation : !!hoverAnnotation
-        }
+        hoverAnnotation={activeHoverAnnotation}
         annotations={[...annotations, ...nodeLabelAnnotations]}
         annotationSettings={annotationSettings}
         legendSettings={legendSettings}

@@ -82,6 +82,8 @@ type State = {
   SpanOrDiv: Function
 }
 
+const blankArray = []
+
 const defaultZeroMargin = { top: 0, bottom: 0, left: 0, right: 0 }
 
 class Frame extends React.Component<Props, State> {
@@ -161,7 +163,6 @@ class Frame extends React.Component<Props, State> {
       yScale,
       dataVersion,
       annotations,
-      hoverAnnotation,
       projectedYMiddle,
       interaction,
       customClickBehavior,
@@ -193,6 +194,12 @@ class Frame extends React.Component<Props, State> {
       sketchyRenderingEngine,
       disableContext
     } = this.props
+
+    let { hoverAnnotation } = this.props
+
+    if (!hoverAnnotation && (customClickBehavior || customHoverBehavior || customDoubleClickBehavior)) {
+      hoverAnnotation = blankArray
+    }
 
     const { voronoiHover, canvasContext, finalDefs, matte, SpanOrDiv } = this.state
 

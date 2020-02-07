@@ -858,8 +858,6 @@ export default class XYFrameDocs extends React.Component {
 
     const undefinedOptions = {}
 
-    console.log("displayData", displayData)
-
     if (this.state.frame === "ResponsiveXYFrame")
       undefinedOptions.responsiveWidth = true
     const displayFrame = (

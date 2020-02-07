@@ -342,7 +342,7 @@ export default class CreatingBarChart extends React.Component {
             rAccessor={"tweets"}
             oPadding={10}
             projection="vertical"
-            style={{ fill: "#00a2ce", stroke: "white" }}
+            style={{ fill: "black", stroke: "white" }}
             type={"bar"}
             oLabel={true}
             //            hoverAnnotation={[]}

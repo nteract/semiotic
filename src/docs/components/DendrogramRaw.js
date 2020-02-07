@@ -1,6 +1,6 @@
 import * as React from "react"
 import { NetworkFrame } from "../../components"
-import { data } from "../sampledata/d3_api"
+//import { data } from "../sampledata/d3_api"
 import ProcessViz from "./ProcessViz"
 import { scaleLinear } from "d3-scale"
 
@@ -13,21 +13,29 @@ const blockScale = scaleLinear()
 
 //separation
 
+const data = {
+  name: "d3",
+  children: [
+    { name: "Twitter", leafColor: "red", blockCalls: 16.7 },
+    { name: "Slack", leafColor: "blue", blockCalls: 9.3 },
+    { name: "LinkedIn", leafColor: "green", blockCalls: 12.3 },
+    { name: "Instagram", leafColor: "purple", blockCalls: 7.3 },
+    { name: "DVS", leafColor: "brown", blockCalls: 11.3 }
+  ]
+}
+
 export default ({
   annotation = "rectangle",
   type = "dendrogram",
-  projection,
-  filter
+  projection
 }) => {
-  const nodeFilter =
-    filter === "none" ? undefined : d => d.parent && d.parent.name === filter
 
   const hierarchicalChart = {
     title: "D3v3 API",
     size: [700, 700],
     edges: data,
     nodeStyle: d => ({
-      fill: colors[d.depth],
+      fill: d.leafColor,
       stroke: "black",
       strokeOpacity: 0.25,
       fillOpacity: 0.25
@@ -37,6 +45,7 @@ export default ({
       stroke: colors[d.source.depth],
       opacity: 0.5
     }),
+    nodeLabels: d => <g><text fontSize="26px" y={-8} textAnchor="middle">{d.name}</text><text fontSize="28px" fontWeight={900} y={20} textAnchor="middle">{d.blockCalls}k</text></g>,
     nodeIDAccessor: "hierarchicalID",
     hoverAnnotation: true,
     nodeSizeAccessor: type === "tree" && (d => blockScale(d.blockCalls || 1)),
@@ -57,13 +66,13 @@ export default ({
           <p>{d.edge.target.name}</p>
         </div>
       ) : (
-        <div className="tooltip-content">
-          {d.parent ? <p>{d.parent.data.name}</p> : undefined}
-          <p>{d.data.name}</p>
-        </div>
-      )
+          <div className="tooltip-content">
+            {d.parent ? <p>{d.parent.data.name}</p> : undefined}
+            <p>{d.data.name}</p>
+          </div>
+        )
     },
-    filterRenderedNodes: nodeFilter,
+    filterRenderedNodes: d => d.depth !== 0,
     annotations: [
       {
         type: annotation,

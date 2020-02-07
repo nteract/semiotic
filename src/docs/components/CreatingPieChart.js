@@ -184,13 +184,13 @@ export default class CreatingPieChart extends React.Component {
           </p>
           <OrdinalFrame
             size={[300, 300]}
-            data={pieChartData}
+            data={pieChartData.filter((d, i) => i < 2)}
             oAccessor={"user"}
             dynamicColumnWidth={"tweets"}
-            style={{ fill: "#00a2ce", stroke: "white" }}
-            type={{ type: "bar", offsetAngle: 270 }}
+            style={{ fill: "white", stroke: "black", strokeWidth: "3px" }}
+            type={{ type: "bar", offsetAngle: 0 }}
             projection={"radial"}
-            oLabel={{ label: true, orient: "stem", padding: -5 }}
+            //            oLabel={{ label: true, orient: "stem", padding: -5 }}
             margin={50}
             hoverAnnotation={true}
           />
