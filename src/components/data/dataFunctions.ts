@@ -513,7 +513,8 @@ export const calculateDataExtent = ({
     projectedSummaries = hexbinning({
       summaryType,
       data: projectedSummaries,
-      preprocess: summaries && !!summaries[0].processedData,
+      processedData: summaries && !!summaries[0].processedData,
+      preprocess: false,
       finalXExtent,
       finalYExtent,
       size,
@@ -524,6 +525,7 @@ export const calculateDataExtent = ({
       renderFn: summaryRenderModeFn,
       chartSize
     })
+
     fullDataset = [
       ...projectedSummaries.map(d => ({ ...d })),
       ...fullDataset.filter(d => !d.parentSummary)
