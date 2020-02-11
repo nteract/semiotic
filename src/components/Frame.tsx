@@ -131,9 +131,11 @@ class Frame extends React.Component<Props, State> {
   static getDerivedStateFromProps(nextProps: Props, prevState: State) {
     const { props: lp } = prevState
 
-    const { matte, size, margin, frameKey, additionalDefs } = nextProps
+    const { matte, size, margin = defaultZeroMargin, frameKey, additionalDefs } = nextProps
 
-    if (lp.size[0] !== size[0] || lp.size[1] !== size[1] || lp.margin.top !== margin.top || lp.margin.bottom !== margin.bottom || lp.margin.right !== margin.right || lp.margin.left !== margin.left || lp.margin.top !== margin.top || lp.matte !== nextProps.matte || lp.additionalDefs !== nextProps.additionalDefs) {
+    const lpMargin = margin || defaultZeroMargin
+
+    if (lp.size[0] !== size[0] || lp.size[1] !== size[1] || lpMargin.top !== margin.top || lpMargin.bottom !== margin.bottom || lpMargin.right !== margin.right || lpMargin.left !== margin.left || lpMargin.top !== margin.top || lp.matte !== nextProps.matte || lp.additionalDefs !== nextProps.additionalDefs) {
       const generatedDefs = generateFinalDefs({ matte, size, margin, frameKey, additionalDefs, name })
 
       return { finalDefs: generatedDefs.defs, matte: generatedDefs.matte, props: nextProps }
