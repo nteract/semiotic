@@ -17,7 +17,7 @@ export default class Dendrogram extends React.Component {
     super(props)
 
     this.state = {
-      type: "tree",
+      type: "circlepack",
       projection: "vertical",
       annotation: "enclose-hull",
       filter: "none"

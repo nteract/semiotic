@@ -26,7 +26,7 @@ const data = {
 
 export default ({
   annotation = "rectangle",
-  type = "dendrogram",
+  type = "circlepack",
   projection
 }) => {
 

@@ -54,6 +54,7 @@ type CumulativeLineTypes = {
   yPropMiddle: string
   yPropTop: string
   yPropBottom: string
+  y1?: Function
 }
 
 type LineChartTypes = {
@@ -300,6 +301,7 @@ export const lineChart = ({
 
 export const cumulativeLine = ({
   data,
+  y1,
   yPropTop,
   yPropMiddle,
   yPropBottom,
@@ -311,6 +313,11 @@ export const cumulativeLine = ({
     dataArray.forEach(p => {
       cumulativeValue += p[yPropTop]
       p[yPropBottom] = p[yPropTop] = p[yPropMiddle] = cumulativeValue
+      if (y1) {
+        p[yPropBottom] = y1(p)
+        p[yPropMiddle] = p[yPropBottom] + p[yPropTop] / 2
+      }
+
     })
   })
 
@@ -518,14 +525,14 @@ export function relativeY({
   const baseData =
     point &&
     (showLinePoints &&
-    showLinePoints !== true &&
-    point[whichPoint[showLinePoints]] !== undefined
+      showLinePoints !== true &&
+      point[whichPoint[showLinePoints]] !== undefined
       ? point[whichPoint[showLinePoints]]
       : point.yMiddle !== undefined
-      ? point.yMiddle
-      : point[projectedY] !== undefined
-      ? point[projectedY]
-      : findFirstAccessorValue(yAccessor, point))
+        ? point.yMiddle
+        : point[projectedY] !== undefined
+          ? point[projectedY]
+          : findFirstAccessorValue(yAccessor, point))
 
   if (Array.isArray(baseData)) {
     return baseData.map(d => yScale(d))
@@ -545,8 +552,8 @@ export function relativeX({
     (point[projectedXMiddle] !== undefined
       ? point[projectedXMiddle]
       : point[projectedX] !== undefined
-      ? point[projectedX]
-      : findFirstAccessorValue(xAccessor, point))
+        ? point[projectedX]
+        : findFirstAccessorValue(xAccessor, point))
 
   if (Array.isArray(baseData)) {
     return baseData.map(d => xScale(d))

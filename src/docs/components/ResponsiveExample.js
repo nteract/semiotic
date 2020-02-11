@@ -29,7 +29,8 @@ const responsiveSettings = {
     pointStyle: d => ({
         fill: d.parentLine.title === "Ex Machina" ? "#00a2ce" : "red"
     }),
-    margin: { left: 80, bottom: 50, right: 10, top: 40 },
+    margin: { left: 80, bottom: 50, right: 50, top: 40 },
+    matte: true,
     axes: [
         {
             orient: "left",
@@ -74,12 +75,6 @@ const responsiveSettings = {
 export default () => {
 
     return (<div style={{ display: "flex", marginTop: "200px", minWidth: "0", overflow: "hidden" }}>
-        <ResponsiveXYFrame
-            {...responsiveSettings}
-        />
-        <ResponsiveXYFrame
-            {...responsiveSettings}
-        />
         <ResponsiveXYFrame
             {...responsiveSettings}
         />

@@ -569,10 +569,12 @@ export default class CreatingLineChart extends React.Component {
             xScaleType={scaleTime()}
             xAccessor={d => new Date(d.day)}
             yAccessor={d => d.things}
-            lineStyle={{ stroke: "#1d6cb1", strokeWidth: 3 }}
+            lineStyle={{ stroke: "#1d6cb1", fill: "#1d6cb1", strokeWidth: 3 }}
             lineType={{
               type: "cumulative",
-              interpolator: curveCardinal.tension(0.75)
+              interpolator: curveCardinal.tension(0.75),
+              y1: () => 0,
+              simpleLine: false
             }}
             hoverAnnotation={true}
             tooltipContent={d => (
@@ -584,7 +586,8 @@ export default class CreatingLineChart extends React.Component {
             margin={{ left: 50, bottom: 40, right: 20, top: 13 }}
             axes={[
               {
-                orient: "left"
+                orient: "left",
+                tickFormat: d => `${d / 1000}k`
               },
               {
                 orient: "bottom",
