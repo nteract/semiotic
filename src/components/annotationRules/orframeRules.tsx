@@ -16,6 +16,11 @@ import { line } from "d3-shape"
 import { curveHash } from "../visualizationLayerBehavior/general"
 import TooltipPositioner from '../TooltipPositioner'
 
+const derivePieceValue = (accessor, piece) => {
+  const pieceVal = accessor(piece)
+  return pieceVal && pieceVal.toString && pieceVal.toString() || pieceVal
+}
+
 function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
   const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0
 
@@ -717,21 +722,27 @@ export const htmlFrameHoverRule = ({
     contentFill = []
 
     oAccessor.forEach((actualOAccessor, i) => {
-      if (actualOAccessor(idPiece.data))
+      if (idPiece.data) {
+        const pieceOVal = derivePieceValue(actualOAccessor, idPiece.data)
         contentFill.push(
           <p key={`html-annotation-content-o-${i}`}>
-            {actualOAccessor(idPiece.data).toString()}
+            {pieceOVal}
           </p>
         )
+
+      }
     })
 
     rAccessor.forEach((actualRAccessor, i) => {
-      if (actualRAccessor(idPiece.data))
+      if (idPiece.data) {
+        const pieceRVal = derivePieceValue(actualRAccessor, idPiece.data)
         contentFill.push(
           <p key={`html-annotation-content-r-${i}`}>
-            {actualRAccessor(idPiece.data).toString()}
+            {pieceRVal}
           </p>
         )
+
+      }
     })
   } else if (d.label) {
     contentFill = d.label
@@ -804,12 +815,15 @@ export const htmlColumnHoverRule = ({
   //To string because React gives a DOM error if it gets a date
   const oContent = []
   oAccessor.forEach((actualOAccessor, i) => {
-    if (pieces[0].data)
+    if (pieces[0].data) {
+      const pieceOVal = derivePieceValue(actualOAccessor, pieces[0].data)
       oContent.push(
         <p key={`or-annotation-o-${i}`}>
-          {actualOAccessor(pieces[0].data).toString()}
+          {pieceOVal}
         </p>
       )
+    }
+
   })
 
   let content = (

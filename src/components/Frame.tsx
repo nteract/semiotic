@@ -133,7 +133,7 @@ class Frame extends React.Component<Props, State> {
 
     const { matte, size, margin = defaultZeroMargin, frameKey, additionalDefs } = nextProps
 
-    const lpMargin = margin || defaultZeroMargin
+    const lpMargin = lp.margin || defaultZeroMargin
 
     if (lp.size[0] !== size[0] || lp.size[1] !== size[1] || lpMargin.top !== margin.top || lpMargin.bottom !== margin.bottom || lpMargin.right !== margin.right || lpMargin.left !== margin.left || lpMargin.top !== margin.top || lp.matte !== nextProps.matte || lp.additionalDefs !== nextProps.additionalDefs) {
       const generatedDefs = generateFinalDefs({ matte, size, margin, frameKey, additionalDefs, name })
