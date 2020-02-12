@@ -836,7 +836,7 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
         }
     }
 
-    if (currentProps.hoverAnnotation || currentProps.customClickBehavior || currentProps.customDoubleClickBehavior || currentProps.customHoverBehavior) {
+    if (!currentProps.pieceHoverAnnotation && !currentProps.summaryHoverAnnotation && (currentProps.hoverAnnotation || currentProps.customClickBehavior || currentProps.customDoubleClickBehavior || currentProps.customHoverBehavior)) {
 
         if (shouldRecalculateOverlay) {
             columnOverlays = oExtent.map((d, i) => {
@@ -1081,7 +1081,6 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
         const yMod = projection === "horizontal" ? midMod : zeroFunction
         const xMod = projection === "vertical" ? midMod : zeroFunction
         if (shouldRecalculateOverlay) {
-
             columnOverlays = calculatedPieceData.map((d, i) => {
                 const mousePackage = {
                     ...d.piece,
