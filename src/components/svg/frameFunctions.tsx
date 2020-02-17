@@ -853,6 +853,7 @@ export const canvasEvent = (canvasContext, overlayRegions, canvasMap, e) => {
     },255)`
 
   let overlay: React.ReactElement = overlayRegions[canvasMap.get(mostCommonRGB)]
+
   if (!overlay) {
     const hoverArea = interactionContext.getImageData(
       e.offsetX - 2,

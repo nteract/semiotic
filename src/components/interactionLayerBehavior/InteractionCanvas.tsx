@@ -11,24 +11,16 @@ type InteractionCanvasProps = {
 
 type InteractionCanvasState = {
     ref: any,
-    interactionContext: any,
-    overlayRegions: any,
-    margin: any
+    interactionContext: any
 }
 
 class InteractionCanvas extends React.Component<InteractionCanvasProps, InteractionCanvasState> {
     constructor(props: InteractionCanvasProps) {
         super(props)
 
-        const {
-            overlayRegions,
-            margin } = props
-
         this.state = {
             ref: null,
-            interactionContext: null,
-            overlayRegions,
-            margin
+            interactionContext: null
         }
     }
 
@@ -39,20 +31,45 @@ class InteractionCanvas extends React.Component<InteractionCanvasProps, Interact
     }
 
     componentDidUpdate(prevProps: InteractionCanvasProps, prevState: InteractionCanvasState) {
-        if (this.state.overlayRegions !== prevState.overlayRegions) {
+        if (prevProps.width !== this.props.width || prevProps.height !== this.props.height || this.props.overlayRegions !== prevProps.overlayRegions || !prevState.interactionContext && this.state.interactionContext) {
             this.canvasRendering()
         }
     }
 
 
     canvasRendering = () => {
-
         const canvasMap = this.canvasMap
-        const { overlayRegions, interactionContext } = this.state
+        const { interactionContext } = this.state
+        const { voronoiHover, height, width, overlayRegions, margin } = this.props
+
         if (interactionContext === null || !overlayRegions) return
 
-        const { height, width } = this.props
-        const { margin } = this.state
+        const boundCanvasEvent = canvasEvent.bind(
+            null,
+            interactionContext,
+            overlayRegions,
+            this.canvasMap
+        )
+        interactionContext.onmousemove = e => {
+            const overlay = boundCanvasEvent(e)
+            if (overlay && overlay.props) {
+                overlay.props.onMouseEnter()
+            } else {
+                voronoiHover(null)
+            }
+        }
+        interactionContext.onclick = e => {
+            const overlay = boundCanvasEvent(e)
+            if (overlay && overlay.props) {
+                overlay.props.onClick()
+            }
+        }
+        interactionContext.ondblclick = e => {
+            const overlay = boundCanvasEvent(e)
+            if (overlay && overlay.props) {
+                overlay.props.onDoubleClick()
+            }
+        }
 
         canvasMap.clear()
 
@@ -89,42 +106,14 @@ class InteractionCanvas extends React.Component<InteractionCanvasProps, Interact
 
 
     render() {
-        const { width, height, voronoiHover } = this.props
-        const { overlayRegions } = this.state
-
+        const { width, height } = this.props
 
         return <canvas
             className="frame-canvas-interaction"
             ref={(canvasContext: any) => {
-                const boundCanvasEvent = canvasEvent.bind(
-                    null,
-                    canvasContext,
-                    overlayRegions,
-                    this.canvasMap
-                )
-                if (canvasContext) {
-                    canvasContext.onmousemove = e => {
-                        const overlay = boundCanvasEvent(e)
-                        if (overlay && overlay.props) {
-                            overlay.props.onMouseEnter()
-                        } else {
-                            voronoiHover(null)
-                        }
-                    }
-                    canvasContext.onclick = e => {
-                        const overlay = boundCanvasEvent(e)
-                        if (overlay && overlay.props) {
-                            overlay.props.onClick()
-                        }
-                    }
-                    canvasContext.ondblclick = e => {
-                        const overlay = boundCanvasEvent(e)
-                        if (overlay && overlay.props) {
-                            overlay.props.onDoubleClick()
-                        }
-                    }
+                if (canvasContext && this.state.interactionContext !== canvasContext) {
+                    this.setState({ interactionContext: canvasContext })
                 }
-                this.setState({ interactionContext: canvasContext })
             }}
             style={{
                 position: "absolute",

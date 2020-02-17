@@ -70,16 +70,25 @@ class InteractionLayer extends React.PureComponent<InteractionLayerProps, Intera
   constructor(props: InteractionLayerProps) {
     super(props)
 
+    const canvasMap: Map<string, number> = new Map()
+
+    const { canvasRendering, useSpans, svgSize, margin, voronoiHover } = props
+
     const initialOverlayRegions = calculateOverlay(props)
 
-    const canvasMap: Map<string, number> = new Map()
 
     this.state = {
       overlayRegions: initialOverlayRegions,
       canvasMap,
-      interactionCanvas: null,
+      interactionCanvas: canvasRendering && <InteractionCanvas
+        height={svgSize[1]}
+        width={svgSize[0]}
+        overlayRegions={initialOverlayRegions}
+        margin={margin}
+        voronoiHover={voronoiHover}
+      />,
       props,
-      SpanOrDiv: HOCSpanOrDiv(props.useSpans)
+      SpanOrDiv: HOCSpanOrDiv(useSpans)
     }
   }
 
@@ -229,14 +238,24 @@ class InteractionLayer extends React.PureComponent<InteractionLayerProps, Intera
 
       const { disableCanvasInteraction, canvasRendering, svgSize, margin, voronoiHover } = nextProps
       const { overlayRegions } = prevState
+
+
+      if (disableCanvasInteraction ||
+        !canvasRendering ||
+        !overlayRegions) {
+        return {
+          overlayRegions: null,
+          props: nextProps,
+          interactionCanvas: null
+        }
+      }
+
       const nextOverlay = calculateOverlay(nextProps)
 
       return {
         overlayRegions: nextOverlay,
         props: nextProps,
-        interactionCanvas: !disableCanvasInteraction &&
-          canvasRendering &&
-          overlayRegions &&
+        interactionCanvas:
           <InteractionCanvas
             height={svgSize[1]}
             width={svgSize[0]}
@@ -246,6 +265,7 @@ class InteractionLayer extends React.PureComponent<InteractionLayerProps, Intera
           />
       }
     }
+
     return null
 
   }
@@ -339,6 +359,7 @@ class InteractionLayer extends React.PureComponent<InteractionLayerProps, Intera
   }
 
   render() {
+
     let semioticBrush = null
     const {
       interaction,
