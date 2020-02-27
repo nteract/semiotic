@@ -57,7 +57,7 @@
     "@types/babel__core": "^7.1.2",
     "@types/babel__template": "^7.0.2",
     "@types/d3-scale": "^2.1.1",
-    "@types/node": "9.6.7",
+    "@types/node": "^13.7.4",
     "@types/react": "^16.9.17",
     "@types/react-dom": "^16.8.2",
     "@typescript-eslint/eslint-plugin": "^1.4.2",
@@ -170,7 +170,7 @@
     "memoize-one": "4.0.0",
     "object-assign": "4.1.1",
     "polygon-offset": "0.3.1",
-    "react-annotation": "3.0.0-beta.3",
+    "react-annotation": "3.0.0-beta.4",
     "regression": "^2.0.1",
     "semiotic-mark": "0.4.3",
     "svg-path-bounding-box": "1.0.4"

@@ -52,6 +52,8 @@ export const circleEnclosure = ({ d, i, circle }) => {
   }
   //TODO: Support .ra (setting angle)
 
+  console.log("noteData", noteData)
+
   return <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
 }
 
@@ -167,12 +169,12 @@ export const desaturationLayer = ({
   i?: number
   key?: string
 }) => (
-  <rect
-    key={key || `desaturation-${i}`}
-    x={-5}
-    y={-5}
-    width={size[0] + 10}
-    height={size[1] + 10}
-    style={style}
-  />
-)
+    <rect
+      key={key || `desaturation-${i}`}
+      x={-5}
+      y={-5}
+      width={size[0] + 10}
+      height={size[1] + 10}
+      style={style}
+    />
+  )

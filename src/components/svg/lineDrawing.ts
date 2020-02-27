@@ -23,6 +23,8 @@ type LineProjectionTypes = {
   data: Array<RawLine>
   lineDataAccessor: Array<Function>
   xProp: string
+  xPropTop?: string
+  xPropBottom?: string
   yProp: string
   yPropTop?: string
   yPropBottom?: string
@@ -60,9 +62,14 @@ type CumulativeLineTypes = {
 type LineChartTypes = {
   data: Array<ProjectedLine>
   y1?: Function
+  x1?: Function
   yPropTop: string
   yPropMiddle: string
   yPropBottom: string
+  xPropTop: string
+  xPropMiddle: string
+  xPropBottom: string
+
 }
 
 type RelativeYTypes = {
@@ -116,6 +123,8 @@ export const projectLineData = ({
   data,
   lineDataAccessor,
   xProp,
+  xPropTop,
+  xPropBottom,
   yProp,
   yPropTop,
   yPropBottom,
@@ -137,6 +146,8 @@ export const projectLineData = ({
             const originalCoords = { data: p }
 
             originalCoords[xProp] = actualXAccessor(p, q)
+            originalCoords[xPropTop] = originalCoords[xProp]
+            originalCoords[xPropBottom] = originalCoords[xProp]
             originalCoords[yProp] = actualYAccessor(p, q)
             originalCoords[yPropTop] = originalCoords[yProp]
             originalCoords[yPropBottom] = originalCoords[yProp]
@@ -283,15 +294,28 @@ export const stackedArea = ({
 export const lineChart = ({
   data,
   y1,
+  x1,
   yPropTop,
   yPropMiddle,
-  yPropBottom
+  yPropBottom,
+  xPropTop,
+  xPropMiddle,
+  xPropBottom
 }: LineChartTypes) => {
   if (y1) {
     data.forEach(d => {
       d.data.forEach(p => {
         p[yPropBottom] = y1(p)
-        p[yPropMiddle] = p[yPropBottom] + p[yPropTop] / 2
+        p[yPropMiddle] = (p[yPropBottom] + p[yPropTop]) / 2
+      })
+    })
+  }
+
+  if (x1) {
+    data.forEach(d => {
+      d.data.forEach(p => {
+        p[xPropBottom] = x1(p)
+        p[xPropMiddle] = (p[xPropBottom] + p[xPropTop]) / 2
       })
     })
   }

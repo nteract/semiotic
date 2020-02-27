@@ -14,6 +14,9 @@ export type ExtentType = number[] | { extent?: number[]; onChange?: Function, in
 export interface ProjectedPoint {
   x?: number
   y?: number
+  xTop?: number
+  xMiddle?: number
+  xBottom?: number
   yTop?: number
   yMiddle?: number
   yBottom?: number

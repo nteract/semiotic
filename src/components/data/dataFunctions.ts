@@ -41,10 +41,16 @@ import {
   ExtentType
 } from "../types/generalTypes"
 
-const whichPointsHash = {
+const whichPointsHashY = {
   top: projectedYTop,
   bottom: projectedYBottom,
   orphan: projectedY
+}
+
+const whichPointsHashX = {
+  top: projectedXTop,
+  bottom: projectedXBottom,
+  orphan: projectedX
 }
 
 const builtInTransformations = {
@@ -234,6 +240,7 @@ export const calculateDataExtent = ({
     fullDataset = [
       ...projectedPoints.map(d => ({
         ...d,
+        [projectedX]: d[projectedXTop] || d[projectedXBottom] || d.x,
         [projectedY]: d[projectedYTop] || d[projectedYBottom] || d.y
       }))
     ]
@@ -243,6 +250,8 @@ export const calculateDataExtent = ({
       data: lines,
       lineDataAccessor,
       xProp: projectedX,
+      xPropTop: projectedXTop,
+      xPropBottom: projectedXBottom,
       yProp: projectedY,
       yPropTop: projectedYTop,
       yPropBottom: projectedYBottom,
@@ -275,6 +284,9 @@ export const calculateDataExtent = ({
               parentLine: d,
               y: p.y,
               x: p.x,
+              xTop: p.xTop,
+              xMiddle: p.xMiddle,
+              xBottom: p.xBottom,
               yTop: p.yTop,
               yMiddle: p.yMiddle,
               yBottom: p.yBottom,
@@ -288,10 +300,15 @@ export const calculateDataExtent = ({
       ]
     })
     if (showLinePoints) {
-      const whichPoints =
+      const whichPointsX =
+        showLinePoints === true
+          ? projectedXMiddle
+          : whichPointsHashX[showLinePoints]
+
+      const whichPointsY =
         showLinePoints === true
           ? projectedYMiddle
-          : whichPointsHash[showLinePoints]
+          : whichPointsHashY[showLinePoints]
 
       projectedLines.forEach((d: ProjectedLine) => {
         d.data
@@ -324,12 +341,20 @@ export const calculateDataExtent = ({
               ...p,
               parentLine: d,
               [projectedY]:
-                p[whichPoints] !== undefined
-                  ? p[whichPoints]
+                p[whichPointsY] !== undefined
+                  ? p[whichPointsY]
                   : p[projectedYMiddle] !== undefined
                     ? p[projectedYMiddle]
                     : p[projectedYBottom] !== undefined
                       ? p[projectedYBottom]
+                      : p.y,
+              [projectedX]:
+                p[whichPointsX] !== undefined
+                  ? p[whichPointsX]
+                  : p[projectedXMiddle] !== undefined
+                    ? p[projectedXMiddle]
+                    : p[projectedXBottom] !== undefined
+                      ? p[projectedXBottom]
                       : p.y
             })
           })

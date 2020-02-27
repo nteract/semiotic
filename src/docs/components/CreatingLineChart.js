@@ -491,6 +491,80 @@ export default class CreatingLineChart extends React.Component {
       { day: "1/31/2020", things: 24 },
       { day: "2/1/2020", things: 6 }
     ]
+    examples.push({
+      name: "Simple",
+      demo: (
+        <div>
+          <XYFrame
+            title={"Two Movies"}
+            size={[700, 400]}
+            dataVersion="fixed"
+            lines={movies}
+            lineType={{
+              type: "line",
+              interpolator: "monotonex",
+              y1: () => 0
+            }}
+            lineDataAccessor={["coordinates"]}
+            xAccessor={["week"]}
+            yAccessor={["theaterCount"]}
+            lineStyle={d => ({
+              stroke: d.title === "Ex Machina" ? "#00a2ce" : "red",
+              fill: d.title === "Ex Machina" ? "#00a2ce" : "red",
+              fillOpacity: 0.5
+            })}
+            margin={{ left: 80, bottom: 50, right: 10, top: 40 }}
+            axes={[
+              {
+                orient: "left",
+                jaggedBase: true,
+                baseline: false
+              },
+              {
+                orient: "bottom",
+                jaggedBase: true,
+                baseline: false
+              }
+            ]}
+          />
+          <h3>X1</h3>
+          <XYFrame
+            title={"Two Movies"}
+            size={[700, 400]}
+            dataVersion="fixed"
+            lines={movies}
+            lineType={{
+              type: "line",
+              interpolator: "monotonex",
+              x1: () => 0
+            }}
+            lineDataAccessor={["coordinates"]}
+            yAccessor={"week"}
+            xAccessor={"theaterCount"}
+            lineStyle={d => ({
+              stroke: d.title === "Ex Machina" ? "#00a2ce" : "red",
+              fill: d.title === "Ex Machina" ? "#00a2ce" : "red",
+              fillOpacity: 0.5
+            })}
+            margin={{ left: 80, bottom: 50, right: 10, top: 40 }}
+            axes={[
+              {
+                orient: "left",
+                jaggedBase: true,
+                baseline: false
+              },
+              {
+                orient: "bottom",
+                jaggedBase: true,
+                baseline: false
+              }
+            ]}
+          />
+        </div>
+      ),
+      source: ``
+    })
+
 
     examples.push({
       name: "Simple",

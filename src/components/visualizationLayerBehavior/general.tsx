@@ -43,14 +43,16 @@ export function lineGeneratorDecorator({
   interpolator,
   simpleLine
 }) {
-  const { x, y, yTop, yBottom } = projectedCoordinateNames
+  const { x, y, yTop, yBottom, xBottom, xTop } = projectedCoordinateNames
 
   generator.x(d => xScale(d[x])).curve(interpolator)
 
   if (simpleLine) {
     generator.y(d => yScale(d[y]))
+    generator.x(d => yScale(d[x]))
   } else {
     generator.y0(d => yScale(d[yBottom])).y1(d => yScale(d[yTop]))
+    generator.x0(d => xScale(d[xBottom])).x1(d => xScale(d[xTop]))
   }
 
   if (defined) {
@@ -95,8 +97,8 @@ export function createPoints({
       d[whichWay] !== undefined
         ? d[whichWay]
         : d[yMiddle] !== undefined
-        ? d[yMiddle]
-        : d[y]
+          ? d[yMiddle]
+          : d[y]
     )
 
     const pointAriaLabel = `Point at x ${d.x} and y ${d.y}`
@@ -105,19 +107,19 @@ export function createPoints({
     const renderedCustomMark = !customMark
       ? undefined
       : React.isValidElement(customMark)
-      ? customMark
-      : customMark({ d: d.data, xy: d, i, xScale, yScale })
+        ? customMark
+        : customMark({ d: d.data, xy: d, i, xScale, yScale })
     const markProps = customMark
       ? Object.assign(baseMarkProps, renderedCustomMark.props, {
-          "aria-label": pointAriaLabel
-        })
+        "aria-label": pointAriaLabel
+      })
       : {
-          ...baseMarkProps,
-          key: `piece-${i}`,
-          markType: "circle",
-          r: 2,
-          "aria-label": pointAriaLabel
-        }
+        ...baseMarkProps,
+        key: `piece-${i}`,
+        markType: "circle",
+        r: 2,
+        "aria-label": pointAriaLabel
+      }
 
     if (
       renderedCustomMark &&
@@ -274,7 +276,7 @@ export function createLines({
           d.data &&
           d.data.length > 0 &&
           `${d.data.length} point ${
-            ariaLabel.items
+          ariaLabel.items
           } starting value ${yAxisFormatter(d.data[0].y)} at ${xAxisFormatter(
             d.data[0].x
           )} ending value ${yAxisFormatter(

@@ -85,7 +85,7 @@ export default class AxisDocs extends React.Component {
           >
             Change Domain
           </button>
-          <svg style={{ height: "600px", width: "700px" }}>
+          <svg style={{ height: "900px", width: "700px" }}>
             <g transform={"translate(200,20)"}>
               <Axis
                 size={[200, 200]}
@@ -131,7 +131,7 @@ export default class AxisDocs extends React.Component {
                     style={{ fill: "lightgrey", stroke: "grey" }}
                     d={`M${xy.x1},${xy.y1 - 5}L${xy.x2},${xy.y1 - 5}L${
                       xy.x2
-                    },${xy.y1 + 5}L${xy.x1},${xy.y1 + 5}Z`}
+                      },${xy.y1 + 5}L${xy.x1},${xy.y1 + 5}Z`}
                   />
                 )}
               />
@@ -148,65 +148,37 @@ export default class AxisDocs extends React.Component {
                 footer={true}
               />
             </g>
+          </svg><svg width="700px" height="700px">
+            <g transform={"translate(50,0)"}>
+              <Axis
+                size={[200, 200]}
+                scale={scaleTime()
+                  .domain([new Date(2017, 1, 1), new Date(2017, 10, 17)])
+                  .range([0, 200])}
+                orient={"bottom"}
+                tickFormat={d => `${d.getMonth()}-${d.getDate()}`}
+                label={"Brushable?"}
+                footer={true}
+                annotationFunction={e => { console.log("Brush e", e) }}
+              />
+            </g>
+            <g transform={"translate(500,0)"}>
+              <Axis
+                size={[200, 200]}
+                scale={scaleTime()
+                  .domain([new Date(2017, 1, 1), new Date(2017, 10, 17)])
+                  .range([0, 200])}
+                orient={"left"}
+                tickFormat={d => `${d.getMonth()}-${d.getDate()}`}
+                label={"Brushable?"}
+                footer={true}
+                annotationFunction={e => { console.log("Brush e", e) }}
+              />
+            </g>
           </svg>
         </div>
       ),
       source: `
-      import { Axis } from 'semiotic';
-
-        <svg style={{ height: '400px', width: '800px' }}>
-          <g transform={"translate(100,20)"}>
-            <Axis
-              size={[200, 200]}
-              scale={scaleLinear()
-                .domain([10, 1000])
-                .range([200, 0])}
-              orient={"left"}
-              label={"dynamicLabelPosition={true}"}
-              dynamicLabelPosition
-            />
-          </g>
-          <g transform={"translate(400,20)"}>
-            <Axis
-              size={[200, 200]}
-              scale={scaleTime()
-                .domain([new Date(2017, 1, 1), new Date(2017, 10, 17)])
-                .range([0, 200])}
-              orient={"bottom"}
-              tickFormat={d => ${"`${d.getMonth()}-${d.getDate()}`"}}
-              label={"Format Your Dates"}
-            />
-          </g>
-          <g transform={"translate(100,320)"}>
-            <Axis
-              size={[200, 200]}
-              scale={scaleLinear()
-                .domain([10, 1000])
-                .range([200, 0])}
-              orient={"left"}
-              label={"Custom tickLineGenerator"}
-              tickLineGenerator={({ xy }) => (
-                <path
-                  style={{ fill: "lightgrey", stroke: "grey" }}
-                  d={${"`M${xy.x1},${xy.y1 - 5}L${xy.x2},${xy.y1 - 5}L${xy.x2},${xy.y1 + 5}L${xy.x1},${xy.y1 + 5}Z`"}}
-                />
-              )}
-            />
-          </g>
-          <g transform={"translate(400,320)"}>
-            <Axis
-              size={[200, 200]}
-              scale={scaleTime()
-                .domain([new Date(2017, 1, 1), new Date(2017, 10, 17)])
-                .range([0, 200])}
-              orient={"bottom"}
-              tickFormat={d => ${"`${d.getMonth()}-${d.getDate()}`"}}
-              label={"Footer Bottom"}
-              footer={true}
-            />
-          </g>
-        </g>
-        </svg>
       `
     })
 

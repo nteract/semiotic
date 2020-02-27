@@ -147,8 +147,9 @@ class Axis extends React.Component<AxisProps, AxisState> {
     let baselineX2 = 0
     let baselineY2 = height
 
-    let hoverFunction = e =>
+    let hoverFunction = e => {
       this.setState({ hoverAnnotation: e.nativeEvent.offsetY })
+    }
     let circleX = 25
     let textX = -25
     let textY = 18
@@ -157,6 +158,8 @@ class Axis extends React.Component<AxisProps, AxisState> {
     let circleY = this.state.hoverAnnotation
     let annotationOffset = 0
     let annotationType = "y"
+
+    console.log("annotationOffset", annotationOffset)
 
     switch (orient) {
       case "right":
@@ -228,10 +231,11 @@ class Axis extends React.Component<AxisProps, AxisState> {
         if (center === true) {
           baselineX2 = baselineX = width / 2
         }
-        hoverFunction = e =>
+        hoverFunction = e => {
           this.setState({
             hoverAnnotation: e.nativeEvent.offsetY - annotationOffset
           })
+        }
     }
 
     let annotationBrush
@@ -275,7 +279,7 @@ class Axis extends React.Component<AxisProps, AxisState> {
           transform={`translate(${hoverX},${hoverY})`}
         >
           <rect
-            style={{ fillOpacity: 0 }}
+            style={{ fillOpacity: 0.5, fill: "pink" }}
             height={hoverHeight}
             width={hoverWidth}
             onMouseMove={hoverFunction}
@@ -291,6 +295,7 @@ class Axis extends React.Component<AxisProps, AxisState> {
           {annotationSymbol}
         </g>
       )
+      console.log("annotationBrush", annotationBrush)
     }
 
     let summaryGraphic
