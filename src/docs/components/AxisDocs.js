@@ -159,7 +159,7 @@ export default class AxisDocs extends React.Component {
                 tickFormat={d => `${d.getMonth()}-${d.getDate()}`}
                 label={"Brushable?"}
                 footer={true}
-                annotationFunction={e => { console.log("Brush e", e) }}
+                annotationFunction={e => { console.info("Brush e", e) }}
               />
             </g>
             <g transform={"translate(500,0)"}>
@@ -172,7 +172,7 @@ export default class AxisDocs extends React.Component {
                 tickFormat={d => `${d.getMonth()}-${d.getDate()}`}
                 label={"Brushable?"}
                 footer={true}
-                annotationFunction={e => { console.log("Brush e", e) }}
+                annotationFunction={e => { console.info("Brush e", e) }}
               />
             </g>
           </svg>

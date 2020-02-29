@@ -52,8 +52,6 @@ export const circleEnclosure = ({ d, i, circle }) => {
   }
   //TODO: Support .ra (setting angle)
 
-  console.log("noteData", noteData)
-
   return <Annotation key={d.key || `annotation-${i}`} noteData={noteData} />
 }
 

@@ -343,11 +343,6 @@ class InteractionLayer extends React.PureComponent<InteractionLayerProps, Intera
             brushEnd(mappingFn(event.selection), c, brushData, columnHash[c], interaction)
           })
       }
-      console.log("brush settings OR")
-
-      console.log("selectedExtent", selectedExtent)
-      console.log("brushPosition", brushPosition)
-      console.log("semioticBrush", semioticBrush)
 
       return (
         <g key={`column-brush-${c}`} className="brush">

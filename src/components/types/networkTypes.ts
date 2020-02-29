@@ -204,4 +204,5 @@ export interface NetworkFrameProps {
   ) => any
   onUnmount?: Function
   sketchyRenderingEngine?: RoughType
+  frameRenderOrder?: Array<string>
 }

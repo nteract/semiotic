@@ -71,6 +71,8 @@ type Props = {
   showLinePoints?: string
   renderOrder: ReadonlyArray<VizDataLayerKeys>
   sketchyRenderingEngine: RoughType
+  frameRenderOrder: Array<string>
+  additionalVizElements?: object
 }
 
 type State = {
@@ -91,7 +93,9 @@ class Frame extends React.Component<Props, State> {
     annotationSettings: {},
     adjustedPosition: [0, 0],
     projectedCoordinateNames: { x: "x", y: "y" },
-    renderOrder: []
+    renderOrder: [],
+    frameRenderOrder: ["axes-tick-lines", "viz-layer", "matte", "axes-labels", "labels"],
+    additionalVizElements: {}
   }
 
   constructor(props: Props) {
@@ -194,7 +198,9 @@ class Frame extends React.Component<Props, State> {
       showLinePoints,
       disableCanvasInteraction = false,
       sketchyRenderingEngine,
-      disableContext
+      disableContext,
+      frameRenderOrder,
+      additionalVizElements
     } = this.props
 
     let { hoverAnnotation } = this.props
@@ -304,7 +310,7 @@ class Frame extends React.Component<Props, State> {
             className="visualization-layer"
             style={{ position: "absolute" }}
           >
-            {(axesTickLines || backgroundGraphics) && (
+            {(backgroundGraphics) && (
               <svg
                 className="background-graphics"
                 style={{ position: "absolute" }}
@@ -314,16 +320,6 @@ class Frame extends React.Component<Props, State> {
                 {backgroundGraphics && (
                   <g aria-hidden={true} className="background-graphics">
                     {finalBackgroundGraphics}
-                  </g>
-                )}
-                {axesTickLines && (
-                  <g
-                    transform={`translate(${margin.left},${margin.top})`}
-                    key="visualization-tick-lines"
-                    className={"axis axis-tick-lines"}
-                    aria-hidden={true}
-                  >
-                    {axesTickLines}
                   </g>
                 )}
               </svg>
@@ -369,6 +365,9 @@ class Frame extends React.Component<Props, State> {
                 voronoiHover={this.setVoronoi}
                 renderOrder={renderOrder}
                 sketchyRenderingEngine={sketchyRenderingEngine}
+                axesTickLines={axesTickLines}
+                additionalVizElements={additionalVizElements}
+                frameRenderOrder={frameRenderOrder}
               />
               {generatedTitle && (
                 <g className="frame-title">{generatedTitle}</g>
@@ -380,7 +379,6 @@ class Frame extends React.Component<Props, State> {
               )}
             </svg>
           </SpanOrDiv>
-
           <InteractionLayer
             useSpans={useSpans}
             hoverAnnotation={hoverAnnotation}

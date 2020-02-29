@@ -181,6 +181,7 @@ const timelineChart = {
       {d}
     </text>
   ),
+  frameRenderOrder: ["viz-layer", "matte", "axes-labels", "labels", "axes-tick-lines"],
   pieceHoverAnnotation: true
 }
 

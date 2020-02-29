@@ -805,19 +805,15 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
                 <g
                     key="ordinalframe-labels-container"
                     className="ordinal-labels"
-                    transform={`translate(${margin.left},${labelY + margin.top})`
-                    }
                 >
                     {labelArray}
-                </g>
+                </g >
             )
         } else if (projection === "horizontal") {
             oLabels = (
                 <g
                     key="ordinalframe-labels-container"
                     className="ordinal-labels"
-                    transform={`translate(${margin.left},${margin.top})`
-                    }
                 >
                     {labelArray}
                 </g>
@@ -827,8 +823,6 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
                 <g
                     key="ordinalframe-labels-container"
                     className="ordinal-labels"
-                    transform={`translate(${margin.left},${margin.top})`
-                    }
                 >
                     {labelArray}
                 </g>
@@ -1212,7 +1206,7 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
         axisData: arrayWrappedAxis,
         axes: axis,
         axesTickLines,
-        oLabels,
+        oLabels: { labels: oLabels },
         title,
         columnOverlays,
         renderNumber: currentState.renderNumber + 1,

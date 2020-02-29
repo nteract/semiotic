@@ -30,7 +30,10 @@ type Props = {
   position: Array<number>
   disableContext?: boolean
   renderOrder: ReadonlyArray<VizLayerTypes>
-  sketchyRenderingEngine?: RoughType
+  sketchyRenderingEngine?: RoughType,
+  axesTickLines?: React.ReactNode
+  frameRenderOrder: Array<string>
+  additionalVizElements: object
 }
 
 type State = {
@@ -379,7 +382,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
       update ||
       (nextProps.dataVersion && nextProps.dataVersion !== prevState.dataVersion)
     ) {
-      return { ...updateVisualizationLayer(nextProps, prevState.handleKeyDown ), props: nextProps }
+      return { ...updateVisualizationLayer(nextProps, prevState.handleKeyDown), props: nextProps }
     }
     return null
   }
@@ -424,15 +427,28 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { matte, matteClip, axes, frameKey = "", margin, title, ariaTitle } = this.props
-
+    const { matte, matteClip, axes, frameKey = "", margin, title, ariaTitle, axesTickLines, frameRenderOrder, additionalVizElements } = this.props
     const { renderedElements } = this.state
 
-    const renderedAxes = axes && (
-      <g key="visualization-axis-labels" className="axis axis-labels">
-        {axes}
-      </g>
-    )
+    const renderHash = {
+      ["axes-tick-lines"]: axesTickLines && (
+        <g
+          key="visualization-tick-lines"
+          className={"axis axis-tick-lines"}
+          aria-hidden={true}
+        >
+          {axesTickLines}
+        </g>
+      ),
+      ["axes-labels"]: axes && (
+        <g key="visualization-axis-labels" className="axis axis-labels">
+          {axes}
+        </g>
+      ),
+      matte: matte,
+      ["viz-layer"]: renderedElements,
+      ...additionalVizElements
+    }
 
     let ariaLabel = ""
 
@@ -446,8 +462,16 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
         : "with no title"
     ariaLabel = `Visualization ${finalTitle}. Use arrow keys to navigate elements.`
 
+    const orderedElements = []
+
+    frameRenderOrder.forEach(r => {
+      if (renderHash[r]) {
+        orderedElements.push(renderHash[r])
+      }
+    })
+
     const renderedDataVisualization =
-      ((renderedAxes || (renderedElements && renderedElements.length > 0)) && (
+      ((orderedElements.length > 0 && (renderedElements && renderedElements.length > 0)) && (
         <g
           className="data-visualization"
           key="visualization-clip-path"
@@ -458,9 +482,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
           }
           transform={`translate(${margin.left},${margin.top})`}
         >
-          {renderedElements}
-          {matte}
-          {renderedAxes}
+          {orderedElements}
         </g>
       )) ||
       null

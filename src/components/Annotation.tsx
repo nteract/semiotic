@@ -8,7 +8,6 @@ const interactivityFns = ["onDragEnd", "onDragStart", "onDrag"]
 
 class SemioticAnnotation extends React.Component<AnnotationProps, null> {
   render() {
-    console.log("this.props", this.props)
     const { noteData: baseNoteData } = this.props
     const { screenCoordinates } = baseNoteData
 

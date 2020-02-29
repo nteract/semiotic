@@ -39,6 +39,11 @@ const stackedGeneratedHTMLAnnotation = {
   rName: "dog"
 }
 
+const columnHTMLAnnotation = {
+  column: "b",
+  type: "column-hover"
+}
+
 const stackedHTMLAnnotation = {
   column: "c",
   type: "frame-hover",
@@ -175,44 +180,51 @@ describe("OrdinalFrame", () => {
     expect(secondColumnBar.height).toEqual(firstColumnBar.height)
   })
 
-  projections.forEach((projection, index) => {
-    const mountedFrameWithAnnotation = mount(
-      <OrdinalFrame
-        data={someBarData}
-        oAccessor="column"
-        rAccessor="cats"
-        disableContext={true}
-        annotations={[htmlAnnotation, svgAnnotation]}
-        projection={projection}
-      />
-    )
+  const pieceTypes = ["bar", "point", "timeline", "swarm", "clusterbar"]
 
-    const svgAnnotationOR = mountedFrameWithAnnotation.find(
-      "g.annotation-or-label > text"
-    )
+  pieceTypes.forEach(pieceType => {
+    projections.forEach((projection, index) => {
+      const mountedFrameWithAnnotation = mount(
+        <OrdinalFrame
+          data={someBarData}
+          oAccessor="column"
+          rAccessor="cats"
+          disableContext={true}
+          annotations={[htmlAnnotation, svgAnnotation]}
+          projection={projection}
+          type={pieceType}
+        />
+      )
 
-    it("renders an svg annotation", () => {
-      expect(svgAnnotationOR.length).toEqual(1)
-    })
-    it("renders an html annotation", () => {
-      expect(
-        mountedFrameWithAnnotation.find("div.annotation.annotation-or-label")
-          .length
-      ).toEqual(1)
-    })
+      const svgAnnotationOR = mountedFrameWithAnnotation.find(
+        "g.annotation-or-label > text"
+      )
 
-    const htmlAnnotationStyle = mountedFrameWithAnnotation
-      .find("div.annotation.annotation-or-label")
-      .getDOMNode().style
+      it("renders an svg annotation", () => {
+        expect(svgAnnotationOR.length).toEqual(1)
+      })
+      it("renders an html annotation", () => {
+        expect(
+          mountedFrameWithAnnotation.find("div.annotation.annotation-or-label")
+            .length
+        ).toEqual(1)
+      })
 
-    const x = xValues[index]
-    const y = yValues[index]
+      const htmlAnnotationStyle = mountedFrameWithAnnotation
+        .find("div.annotation.annotation-or-label")
+        .getDOMNode().style
 
-    it(`${projection} html and svg annotations have the same x & y positions for each`, () => {
-      expect(svgAnnotationOR.props().x).toEqual(x + xMods[index])
-      expect(svgAnnotationOR.props().y).toEqual(y + yMods[index])
-      expect(htmlAnnotationStyle.left).toEqual(`${x}px`)
-      expect(htmlAnnotationStyle.top).toEqual(`${y}px`)
+      const x = xValues[index]
+      const y = yValues[index]
+
+      it(`${pieceType} + ${projection} html and svg annotations have the same x & y positions for each`, () => {
+        expect(svgAnnotationOR.props().x).toEqual(x + xMods[index])
+        expect(svgAnnotationOR.props().y).toEqual(y + yMods[index])
+        expect(htmlAnnotationStyle.left).toEqual(`${x}px`)
+        expect(htmlAnnotationStyle.top).toEqual(`${y}px`)
+      })
     })
   })
+
+
 })

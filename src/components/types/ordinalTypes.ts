@@ -139,6 +139,7 @@ export type OrdinalFrameProps = {
     multiAxis?: boolean
     onUnmount?: Function
     sketchyRenderingEngine?: RoughType
+    frameRenderOrder?: Array<string>
 }
 
 export type OrdinalFrameState = {
@@ -151,7 +152,7 @@ export type OrdinalFrameState = {
     axisData?: AxisProps[]
     axes?: React.ReactNode[]
     axesTickLines?: React.ReactNode
-    oLabels: React.ReactNode
+    oLabels: { labels: React.ReactNode }
     title: object
     columnOverlays: Array<object>
     renderNumber: number

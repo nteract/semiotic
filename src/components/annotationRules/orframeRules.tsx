@@ -208,9 +208,9 @@ export const getColumnScreenCoordinates = ({
   adjustedSize
 }) => {
   const column =
-    d.column ||
-    projectedColumns[d.facetColumn] ||
-    projectedColumns[findFirstAccessorValue(oAccessor, d)]
+    typeof d.column === "object" ? d.column :
+      projectedColumns[d.facetColumn] ||
+      projectedColumns[findFirstAccessorValue(oAccessor, d)]
 
   if (!column) {
     return { coordinates: [0, 0], pieces: undefined, column: undefined }
@@ -219,7 +219,7 @@ export const getColumnScreenCoordinates = ({
 
   const positionValue =
     (summaryType.type && summaryType.type !== "none") ||
-      ["swarm", "point", "clusterbar"].find(p => p === type.type)
+      ["swarm", "point", "clusterbar", "timeline"].find(p => p === type.type)
       ? max(pieces.map(p => p.scaledValue))
       : projection === "horizontal"
         ? max(pieces.map(p => p.value >= 0 ? p.scaledValue + p.bottom : p.bottom))
@@ -230,7 +230,7 @@ export const getColumnScreenCoordinates = ({
     projection === "horizontal"
       ? adjustedSize[0] - positionValue
       : (summaryType.type && summaryType.type !== "none") ||
-        ["swarm", "point", "clusterbar"].find(p => p === type.type)
+        ["swarm", "point", "clusterbar", , "timeline"].find(p => p === type.type)
         ? adjustedSize[1] - positionValue
         : positionValue
   yPosition += 10
@@ -366,7 +366,8 @@ export const screenProject = ({
   projection,
   rScaleType
 }) => {
-  const pValue = findFirstAccessorValue(rAccessor, p) || p.value
+  const basePValue = findFirstAccessorValue(rAccessor, p) || p.value
+  const pValue = Array.isArray(basePValue) ? Math.max(...basePValue) : basePValue
 
   let o
   if (oColumn) {
@@ -388,8 +389,8 @@ export const screenProject = ({
     return [
       idPiece && (idPiece.x || idPiece.scaledValue)
         ? idPiece.x === undefined
-          ? idPiece.x
-          : (idPiece.value >= 0 ? idPiece.bottom + idPiece.scaledValue / 2 : idPiece.bottom)
+          ? (idPiece.value >= 0 ? idPiece.bottom + idPiece.scaledValue / 2 : idPiece.bottom)
+          : idPiece.x
         : rScale(pValue),
       o
     ]

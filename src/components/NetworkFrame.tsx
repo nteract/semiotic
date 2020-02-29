@@ -388,7 +388,8 @@ class NetworkFrame extends React.Component<
         this.state.graphSettings.type === "matrix"
         ? matrixRenderOrder
         : generalRenderOrder,
-      sketchyRenderingEngine
+      sketchyRenderingEngine,
+      frameRenderOrder
     } = this.props
     const {
       backgroundGraphics,
@@ -459,6 +460,7 @@ class NetworkFrame extends React.Component<
         renderOrder={renderOrder}
         disableCanvasInteraction={true}
         sketchyRenderingEngine={sketchyRenderingEngine}
+        frameRenderOrder={frameRenderOrder}
       />
     )
   }

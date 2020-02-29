@@ -82,7 +82,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, OrdinalFrameState>
       foregroundGraphics: undefined,
       axisData: undefined,
       renderNumber: 0,
-      oLabels: [],
+      oLabels: { labels: [] },
       oAccessor: stringToArrayFn<string>("renderKey"),
       rAccessor: stringToArrayFn<number>("value"),
       oScale: scaleBand(),
@@ -468,7 +468,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, OrdinalFrameState>
       canvasConnectors,
       renderOrder,
       additionalDefs,
-      sketchyRenderingEngine
+      sketchyRenderingEngine,
+      frameRenderOrder
     } = this.props
 
     const {
@@ -560,7 +561,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, OrdinalFrameState>
         margin={margin}
         columns={projectedColumns}
         backgroundGraphics={backgroundGraphics}
-        foregroundGraphics={[renderedForegroundGraphics, oLabels]}
+        foregroundGraphics={renderedForegroundGraphics}
         beforeElements={beforeElements}
         afterElements={afterElements}
         overlay={columnOverlays}
@@ -576,6 +577,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, OrdinalFrameState>
         renderOrder={renderOrder}
         disableCanvasInteraction={true}
         sketchyRenderingEngine={sketchyRenderingEngine}
+        frameRenderOrder={frameRenderOrder}
+        additionalVizElements={oLabels}
       />
     )
   }

@@ -102,6 +102,7 @@ export type XYFrameProps = {
         array: (ProjectedPoint | ProjectedBin | ProjectedSummary)[]
     ) => any
     sketchyRenderingEngine?: RoughType
+    frameRenderOrder?: Array<string>
 }
 
 export type AnnotatedSettingsProps = {

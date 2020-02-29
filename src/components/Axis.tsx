@@ -159,8 +159,6 @@ class Axis extends React.Component<AxisProps, AxisState> {
     let annotationOffset = 0
     let annotationType = "y"
 
-    console.log("annotationOffset", annotationOffset)
-
     switch (orient) {
       case "right":
         position = [position[0], position[1]]
@@ -295,7 +293,6 @@ class Axis extends React.Component<AxisProps, AxisState> {
           {annotationSymbol}
         </g>
       )
-      console.log("annotationBrush", annotationBrush)
     }
 
     let summaryGraphic
