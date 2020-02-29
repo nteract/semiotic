@@ -6,7 +6,8 @@ const visualizationLayerWidth = 100
 const visualizationLayerHeight = 200
 
 const visualizationLayerProps = {
-  size: [visualizationLayerWidth, visualizationLayerHeight]
+  size: [visualizationLayerWidth, visualizationLayerHeight],
+  frameRenderOrder: ["axes-tick-lines", "viz-layer", "matte", "axes-labels", "labels"]
 }
 
 function drawSomeRectangles({

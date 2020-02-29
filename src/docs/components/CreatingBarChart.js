@@ -88,26 +88,42 @@ export default class CreatingBarChart extends React.Component {
   }
 
   render() {
+    const stackedBarData = [
+      { column: "a", species: "cat", value: 30 },
+      { column: "a", species: "cat", value: 50 },
+      { column: "b", species: "cat", value: 10 },
+      { column: "c", species: "cat", value: 50 },
+      { column: "a", species: "dog", value: 15 },
+      { column: "a", species: "dog", value: 20 },
+      { column: "b", species: "dog", value: 30 },
+      { column: "c", species: "dog", value: 100 }
+    ]
+
+    const stackedHTMLAnnotation = {
+      column: "c",
+      type: "frame-hover",
+      species: "dog"
+    }
     const examples = []
     examples.push({
       name: "Data",
       demo: (
         <div>
-          <p>
-            OrdinalFrame operates on an array of data referred to in the API as
-            "pieces". These pieces can be shown individually or stacked in a bar
-            chart, or as points on a dot plot or you can show summary
-            visualizations of the patterns of the data.
-          </p>
-          <p>This is the dataset we'll be using in our examples:</p>
+          <OrdinalFrame
+            size={[500, 500]}
+            data={stackedBarData}
+            oAccessor="column"
+            rAccessor="value"
+            pieceIDAccessor="species"
+            disableContext={true}
+            projection="horizontal"
+            annotations={[stackedHTMLAnnotation]}
+            type="bar"
+            pieceHoverAnnotation={true}
+          />
         </div>
       ),
-      source: `const barChartData = [
-  { user: "Jason", tweets: 10, retweets: 5, favorites: 15 },
-  { user: "Susie", tweets: 5, retweets: 100, favorites: 100 },
-  { user: "Matt", tweets: 20, retweets: 25, favorites: 50 },
-  { user: "Betty", tweets: 30, retweets: 20, favorites: 10 }
-];      `
+      source: ``
     })
 
     examples.push({

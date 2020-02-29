@@ -389,8 +389,8 @@ export const screenProject = ({
     return [
       idPiece && (idPiece.x || idPiece.scaledValue)
         ? idPiece.x === undefined
-          ? (idPiece.value >= 0 ? idPiece.bottom + idPiece.scaledValue / 2 : idPiece.bottom)
-          : idPiece.x
+          ? idPiece.x
+          : (idPiece.value >= 0 ? idPiece.bottom + idPiece.scaledValue / 2 : idPiece.bottom)
         : rScale(pValue),
       o
     ]
