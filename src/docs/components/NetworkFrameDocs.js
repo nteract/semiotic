@@ -11,8 +11,6 @@ import InputLabel from '@material-ui/core/InputLabel'
 import FormControl from "@material-ui/core/FormControl"
 import ProcessViz from "./ProcessViz"
 
-import { PrismCode } from "react-prism"
-
 const glowyCanvas = (canvas, context, size) => {
   const dataURL = canvas.toDataURL("image/png")
   const baseImage = document.createElement("img")
@@ -85,13 +83,7 @@ components.push({
 })
 
 const nodeData = [
-  { id: "Susie" },
-  { id: "Kai" },
-  { id: "Elijah" },
-  { id: "Enrico" },
-  { id: "j" },
-  { id: "k" },
-  { id: "l" }
+
 ]
 
 const networkGraph = { nodes: nodeData, edges: edgeData }
@@ -308,43 +300,6 @@ export default class NetworkFrameDocs extends React.Component {
         </div>
       ),
       source: `
-      import { NetworkFrame } from 'semiotic';
-
-        <NetworkFrame
-            size={[ 750, 500 ]}
-            edges={edgeData}
-            nodes={nodeData}
-            margin={60}
-            edgeStyle={() => ({ stroke: '#a91a1a', fill: '#a91a1a', fillOpacity: 0.25, strokeWidth: '1px' })}
-            nodeStyle={d => ({ fill: d.createdByFrame ? '#1aa962' : "rgb(179, 51, 29)" })}
-            networkType={{ type: '${
-        this.state.networkType
-        }', iterations: 500, edgeStrength: 0.1 }}
-            edgeType={'${this.state.edge}'}
-            ${
-        this.state.customNodeIcon !== "on"
-          ? ""
-          : `customNodeIcon={ ? ({ d }) => <Mark
-                markType="rect"
-                width={d.degree}
-                height={d.degree}
-                x={-d.degree / 2}
-                y={-d.degree / 2}
-                style={{ fill: d.createdByFrame ? "rgb(0, 162, 206)" : "rgb(179, 51, 29)" }}
-            />`
-        }
-            nodeSizeAccessor={d => d.${this.state.nodeSize} + 2}
-            ${
-        this.state.annotations === "on" ? "annotations={annotations}" : ""
-        }
-            nodeLabels={true}
-            hoverAnnotation={true}
-            annotationSettings={{
-                pointSizeFunction: d => d.subject && d.subject.radius || 5,
-                labelSizeFunction: noteData => {
-                    return noteData.note.label.length * 5.5
-              } }}
-        />
       `
     })
 
@@ -356,40 +311,7 @@ export default class NetworkFrameDocs extends React.Component {
         examples={examples}
         buttons={buttons}
       >
-        <p>
-          The NetworkFrame lets you create network diagrams like chord diagrams,
-          sankey diagrams and force-directed network diagrams.
-        </p>
 
-        <p>
-          Data are sent to the nodes and edges properties. Nodes are not
-          required (the corresponding nodes will be created based on edge data)
-          and edges are not required (if you want to make bubble charts) but you
-          do have to send one or the other.
-        </p>
-        <p>
-          Node data format:
-          <br />
-          <PrismCode>{`[
-  { id: "Bob" },
-  { id: "Xianlin" }
-]`}</PrismCode>
-        </p>
-        <p>
-          Edge Data can be sent as an edge list:
-          <br />
-          <PrismCode>{`[
-  { source: "Bob", target: "Xianlin" },
-  { source: "Xianlin", target: "Baboo" }
-]`}</PrismCode>
-          <br />
-          Or as hierarchical JSON (which can be used for hierarchical charts or
-          for sankey or force-directed networks):
-          <br />
-          <PrismCode>{`{
-  id: "root", children: [ { id: "A Child", children: [{ id: "A Grandchild" }] } ]
-}`}</PrismCode>
-        </p>
       </DocumentComponent>
     )
   }

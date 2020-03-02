@@ -511,6 +511,7 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
       return baseEdge
     })
   } else if (changedData) {
+    const previousNodes = projectedNodes
     edgeHash = new Map()
     nodeHash = new Map()
     networkSettings.graphSettings.edgeHash = edgeHash
@@ -520,6 +521,7 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
     nodes.forEach(node => {
       const projectedNode = { ...node }
       const id = nodeIDAccessor(projectedNode)
+      const equivalentOldNode = previousNodes.find(prevNode => prevNode.id === id) || { x: undefined, y: undefined }
       nodeHash.set(id, projectedNode)
       nodeHash.set(node, projectedNode)
       projectedNodes.push(projectedNode)
@@ -527,6 +529,8 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
       projectedNode.inDegree = 0
       projectedNode.outDegree = 0
       projectedNode.degree = 0
+      projectedNode.x = equivalentOldNode.x
+      projectedNode.y = equivalentOldNode.y
     })
 
     let operationalEdges = edges
@@ -630,6 +634,7 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
             }
 
             nodeHash.set(nodeDirection, nodeObject)
+
             projectedNodes.push(nodeObject)
           }
         })
@@ -1098,6 +1103,8 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
 
   //filter out user-defined nodes
   projectedNodes = projectedNodes.filter(filterRenderedNodes)
+
+  console.log("projectedNodes", projectedNodes)
   projectedEdges = projectedEdges.filter(
     d =>
       projectedNodes.indexOf(d.target) !== -1 &&

@@ -937,15 +937,16 @@ const hierarchyDecorator = (hierarchy, hashEntries, nodeIDAccessor, nodes) => {
   if (hierarchy.children) {
     hierarchy.children.forEach(child => {
       const theseEntries = hashEntries.filter(entry => entry[1] === child.id)
+
       theseEntries.forEach(entry => {
         const idNode =
           nodes.find(node => nodeIDAccessor(node) === entry[0]) || {}
 
         child.childHash[entry[0]] = {
           id: entry[0],
+          ...idNode,
           children: [],
-          childHash: {},
-          ...idNode
+          childHash: {}
         }
         child.children.push(child.childHash[entry[0]])
       })
@@ -963,6 +964,9 @@ export const softStack = (
   targetAccessor,
   nodeIDAccessor
 ) => {
+
+  console.log("edges", edges)
+  console.log("nodes", nodes)
   let hierarchy = { id: "root-generated", children: [], childHash: {} }
   const discoveredHierarchyHash = {}
   const targetToSourceHash = {}
@@ -988,18 +992,19 @@ export const softStack = (
       break
     }
   }
+
   if (isHierarchical) {
-    const hashEntries: string[] = Object.values(discoveredHierarchyHash)
+    const hashEntries: Array<string[]> = Object.entries(discoveredHierarchyHash)
     hashEntries.forEach(entry => {
-      const target = entry
+      const target = entry[1]
       if (!discoveredHierarchyHash[target]) {
         discoveredHierarchyHash[target] = "root-generated"
         const idNode = nodes.find(node => nodeIDAccessor(node) === target) || {}
         hierarchy.childHash[target] = {
           id: target,
+          ...idNode,
           children: [],
-          childHash: {},
-          ...idNode
+          childHash: {}
         }
         hierarchy.children.push(hierarchy.childHash[target])
       }
@@ -1012,9 +1017,9 @@ export const softStack = (
       if (!discoveredHierarchyHash[nodeID] && !targetToSourceHash[nodeID]) {
         hierarchy.children.push({
           id: nodeID,
+          ...node,
           children: [],
-          childHash: {},
-          ...node
+          childHash: {}
         })
       }
     })
