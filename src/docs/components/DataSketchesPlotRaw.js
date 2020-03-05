@@ -13,10 +13,9 @@ const speciousColors = {
 
 const htmlAnnotationRules = (annotation) => {
 
-  console.log("annotation", annotation)
   const { screenCoordinates, d } = annotation
   const pop =  parseInt(depthScale(d.pop))
-  console.log("pop", pop)
+
   return (<div
   style={{
     position: "absolute",
