@@ -658,7 +658,8 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       showLinePoints,
       sketchyRenderingEngine,
       disableContext,
-      frameRenderOrder
+      frameRenderOrder,
+      disableCanvasInteraction
     } = this.props
 
     const {
@@ -731,6 +732,7 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
         overlay={overlay}
         sketchyRenderingEngine={sketchyRenderingEngine}
         frameRenderOrder={frameRenderOrder}
+        disableCanvasInteraction={disableCanvasInteraction}
       />
     )
   }

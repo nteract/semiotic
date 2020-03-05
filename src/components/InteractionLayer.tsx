@@ -239,30 +239,27 @@ class InteractionLayer extends React.PureComponent<InteractionLayerProps, Intera
       const { disableCanvasInteraction, canvasRendering, svgSize, margin, voronoiHover } = nextProps
       const { overlayRegions } = prevState
 
+      let nextOverlay, interactionCanvas
 
       if (disableCanvasInteraction ||
-        !canvasRendering ||
         !overlayRegions) {
-        return {
-          overlayRegions: null,
-          props: nextProps,
-          interactionCanvas: null
-        }
+        nextOverlay = null
+        interactionCanvas = null
+      } else {
+        nextOverlay = calculateOverlay(nextProps)
+        interactionCanvas = <InteractionCanvas
+          height={svgSize[1]}
+          width={svgSize[0]}
+          overlayRegions={nextOverlay}
+          margin={margin}
+          voronoiHover={voronoiHover}
+        />
       }
-
-      const nextOverlay = calculateOverlay(nextProps)
 
       return {
         overlayRegions: nextOverlay,
         props: nextProps,
-        interactionCanvas:
-          <InteractionCanvas
-            height={svgSize[1]}
-            width={svgSize[0]}
-            overlayRegions={nextOverlay}
-            margin={margin}
-            voronoiHover={voronoiHover}
-          />
+        interactionCanvas
       }
     }
 

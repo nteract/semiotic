@@ -140,6 +140,7 @@ export type OrdinalFrameProps = {
     onUnmount?: Function
     sketchyRenderingEngine?: RoughType
     frameRenderOrder?: Array<string>
+    disableCanvasInteraction?: boolean
 }
 
 export type OrdinalFrameState = {

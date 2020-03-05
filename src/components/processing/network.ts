@@ -1104,7 +1104,6 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
   //filter out user-defined nodes
   projectedNodes = projectedNodes.filter(filterRenderedNodes)
 
-  console.log("projectedNodes", projectedNodes)
   projectedEdges = projectedEdges.filter(
     d =>
       projectedNodes.indexOf(d.target) !== -1 &&

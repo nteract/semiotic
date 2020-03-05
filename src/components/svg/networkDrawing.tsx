@@ -965,8 +965,6 @@ export const softStack = (
   nodeIDAccessor
 ) => {
 
-  console.log("edges", edges)
-  console.log("nodes", nodes)
   let hierarchy = { id: "root-generated", children: [], childHash: {} }
   const discoveredHierarchyHash = {}
   const targetToSourceHash = {}
