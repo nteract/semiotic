@@ -805,6 +805,7 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
                 <g
                     key="ordinalframe-labels-container"
                     className="ordinal-labels"
+                    transform={`translate(0,${labelY})`}
                 >
                     {labelArray}
                 </g >

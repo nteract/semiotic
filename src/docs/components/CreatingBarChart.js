@@ -146,10 +146,22 @@ export default class CreatingBarChart extends React.Component {
             rAccessor={"tweets"}
             style={{ fill: "#00a2ce", stroke: "white" }}
             type={"bar"}
-            oLabel={true}
             customHoverBehavior={d => console.info("hover", d)}
             customClickBehavior={d => console.info("click", d)}
             customDoubleClickBehavior={d => console.info("doubleclick", d)}
+            margin={50}
+            oLabel={(d) => {
+              const text = (
+                <text className="ft-12" y={5} x={20} transform="rotate(-90)">
+                  {d}
+                </text>
+              )
+              return (
+                <g>
+                  <g strokeWidth="3">{text}</g>
+                </g>
+              )
+            }}
           />
         </div>
       ),
