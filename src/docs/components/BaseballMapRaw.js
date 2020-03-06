@@ -39,7 +39,7 @@ export default mode => {
   return (
     <div>
       <ProcessViz frameSettings={baseballChart} frameType="XYFrame" />
-      <XYFrame {...baseballChart} />
+      <XYFrame {...baseballChart} interactionSettings={{ voronoiFilter: d=> d.distance < 400, voronoiClipping: 100 }} />
     </div>
   )
 }

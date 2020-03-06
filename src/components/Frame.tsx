@@ -10,6 +10,7 @@ import { MarginType, RoughType } from "./types/generalTypes"
 import { AnnotationHandling } from "./types/annotationTypes"
 import { LegendProps } from "./types/legendTypes"
 import { ScaleLinear } from "d3-scale"
+import { AdvancedInteractionSettings } from "./types/interactionTypes"
 
 type VizDataLayerKeys =
   | "pieces"
@@ -73,6 +74,7 @@ type Props = {
   sketchyRenderingEngine: RoughType
   frameRenderOrder: Array<string>
   additionalVizElements?: object
+  interactionSettings?: AdvancedInteractionSettings
 }
 
 type State = {
@@ -200,7 +202,8 @@ class Frame extends React.Component<Props, State> {
       sketchyRenderingEngine,
       disableContext,
       frameRenderOrder,
-      additionalVizElements
+      additionalVizElements,
+      interactionSettings
     } = this.props
 
     let { hoverAnnotation } = this.props
@@ -407,6 +410,7 @@ class Frame extends React.Component<Props, State> {
             interactionOverflow={interactionOverflow}
             disableCanvasInteraction={disableCanvasInteraction}
             renderPipeline={renderPipeline}
+            advancedSettings={interactionSettings}
           />
           {annotationLayer}
         </SpanOrDiv>

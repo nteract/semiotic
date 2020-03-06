@@ -390,7 +390,8 @@ class NetworkFrame extends React.Component<
         : generalRenderOrder,
       sketchyRenderingEngine,
       frameRenderOrder,
-      disableCanvasInteraction
+      disableCanvasInteraction,
+      interactionSettings
     } = this.props
     const {
       backgroundGraphics,
@@ -462,6 +463,7 @@ class NetworkFrame extends React.Component<
         disableCanvasInteraction={disableCanvasInteraction}
         sketchyRenderingEngine={sketchyRenderingEngine}
         frameRenderOrder={frameRenderOrder}
+        interactionSettings={interactionSettings}
       />
     )
   }

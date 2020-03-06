@@ -659,7 +659,8 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       sketchyRenderingEngine,
       disableContext,
       frameRenderOrder,
-      disableCanvasInteraction
+      disableCanvasInteraction,
+      interactionSettings
     } = this.props
 
     const {
@@ -733,6 +734,7 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
         sketchyRenderingEngine={sketchyRenderingEngine}
         frameRenderOrder={frameRenderOrder}
         disableCanvasInteraction={disableCanvasInteraction}
+        interactionSettings={interactionSettings}
       />
     )
   }

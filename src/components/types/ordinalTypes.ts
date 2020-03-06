@@ -21,7 +21,7 @@ import {
 
 import { AxisProps, AxisGeneratingFunction } from "./annotationTypes"
 
-import { Interactivity } from "./interactionTypes"
+import { Interactivity, AdvancedInteractionSettings } from "./interactionTypes"
 
 import {
     MarginType,
@@ -141,6 +141,7 @@ export type OrdinalFrameProps = {
     sketchyRenderingEngine?: RoughType
     frameRenderOrder?: Array<string>
     disableCanvasInteraction?: boolean
+    interactionSettings?: AdvancedInteractionSettings
 }
 
 export type OrdinalFrameState = {

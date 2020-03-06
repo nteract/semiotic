@@ -97,7 +97,8 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
     customHoverBehavior,
     hoverAnnotation,
     voronoiHover,
-    margin
+    margin,
+    advancedSettings = {}
   } = props
   const whichPoints = {
     top: projectedYTop,
@@ -110,10 +111,13 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
       : {}
 
   if (points && hoverAnnotation && !overlay) {
+
+    const { voronoiFilter = () => true } = advancedSettings
     const voronoiDataset: VoronoiEntryType[] = []
     const voronoiUniqueHash = {}
 
-    points.forEach((d: object) => {
+    points.filter((d: {data: object}) => voronoiFilter({ ...d, ...d.data })).forEach((d: object) => {
+
       const xValue = Math.floor(xScale(d[projectedX]))
       const yValue = Math.floor(
         yScale(
@@ -170,8 +174,16 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
     const voronoiData = voronoiDiagram.polygons(voronoiDataset)
 
     voronoiPaths = voronoiData.map((d: Array<number>, i: number) => {
+      let clipPath = null
+      if (advancedSettings.voronoiClipping) {
+        const circleSize = advancedSettings.voronoiClipping === true ? 50 : advancedSettings.voronoiClipping
+        const correspondingD = voronoiDataset[i]
+        clipPath = <clipPath id={`voronoi-${i}`}>
+        <circle r={circleSize} cx={correspondingD.voronoiX} cy={correspondingD.voronoiY} />
+        </clipPath>
+      }
       return (
-        <path
+        <g><path
           onClick={() => {
             clickVoronoi(voronoiDataset[i], customClickBehavior, points)
           }}
@@ -187,10 +199,15 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
           key={`interactionVoronoi${i}`}
           d={`M${d.join("L")}Z`}
           style={{
-            fillOpacity: 0,
+            fill: "pink",
+            stroke: "red",
+            fillOpacity: 0.5,
             ...pointerStyle
           }}
+          clip-path={`url(#voronoi-${i})`}
         />
+        {clipPath}
+        </g>
       )
     }, this)
     return voronoiPaths

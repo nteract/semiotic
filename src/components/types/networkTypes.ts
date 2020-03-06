@@ -7,6 +7,7 @@ import {
   RoughType
 } from "./generalTypes"
 import { LegendProps } from "./legendTypes"
+import { AdvancedInteractionSettings } from "./interactionTypes"
 
 export interface NodeType {
   degree: number
@@ -206,4 +207,5 @@ export interface NetworkFrameProps {
   sketchyRenderingEngine?: RoughType
   frameRenderOrder?: Array<string>
   disableCanvasInteraction?: boolean
+  interactionSettings?: AdvancedInteractionSettings
 }

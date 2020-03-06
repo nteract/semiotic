@@ -2,6 +2,11 @@ import { ScaleLinear } from "d3-scale"
 import { CustomHoverType } from "./annotationTypes"
 import { MarginType } from "./generalTypes"
 
+export interface AdvancedInteractionSettings {
+   voronoiClipping?: boolean | number
+   voronoiFilter?: Function 
+}
+
 export interface Interactivity {
   start?: Function
   during?: Function
@@ -48,6 +53,7 @@ export type InteractionLayerProps = {
   disableCanvasInteraction: boolean
   showLinePoints?: string
   renderPipeline: object
+  advancedSettings?: AdvancedInteractionSettings
 }
 
 export type VoronoiEntryType = {
