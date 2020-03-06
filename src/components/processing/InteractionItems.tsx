@@ -199,9 +199,7 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
           key={`interactionVoronoi${i}`}
           d={`M${d.join("L")}Z`}
           style={{
-            fill: "pink",
-            stroke: "red",
-            fillOpacity: 0.5,
+              fillOpacity: 0,
             ...pointerStyle
           }}
           clip-path={`url(#voronoi-${i})`}

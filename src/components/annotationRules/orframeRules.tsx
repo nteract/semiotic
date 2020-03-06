@@ -928,7 +928,6 @@ export const svgOrdinalLine = ({ screenCoordinates, d, voronoiHover }) => {
                 <circle
                   style={{ pointerEvents: "all" }}
                   r={d.hoverRadius || 15}
-                  fill="pink"
                   opacity={0}
                   onMouseEnter={() =>
                     voronoiHover({
