@@ -866,7 +866,7 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
                         key: `hover${d}`,
                         d: markD,
                         transform: `translate(${translate.join(",")})`,
-                        style: { opacity: 0, fill: "pink" },
+                        style: { opacity: 0 },
                         overlayData: radialMousePackage,
                         onDoubleClick:
                             customDoubleClickBehavior &&
@@ -904,7 +904,7 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
                     y: yPosition,
                     height: height,
                     width: width,
-                    style: { opacity: 0, stroke: "black", fill: "pink" },
+                    style: { opacity: 0 },
                     onDoubleClick:
                         customDoubleClickBehavior &&
                         (() => {
@@ -1092,7 +1092,7 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
                     ...d.renderElement,
                     key: `hover-${i}`,
                     type: "frame-hover",
-                    style: { opacity: 0, stroke: "black", fill: "pink" },
+                    style: { opacity: 0 },
                     overlayData: mousePackage,
                     onClick:
                         customClickBehavior &&

@@ -1371,7 +1371,7 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
           d,
           i,
           transform: `translate(${d.x},${d.y})`,
-          styleFn: () => ({ fill: "pink", opacity: 0 })
+          styleFn: () => ({ opacity: 0 })
         }).props
       }))
 
@@ -1383,7 +1383,7 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
           d,
           i,
           transform: `translate(${d.x},${d.y})`,
-          styleFn: () => ({ fill: "pink", opacity: 0 })
+          styleFn: () => ({ opacity: 0 })
         })
         if (generatedIcon) {
           overlay.push({

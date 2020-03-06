@@ -277,7 +277,7 @@ class Axis extends React.Component<AxisProps, AxisState> {
           transform={`translate(${hoverX},${hoverY})`}
         >
           <rect
-            style={{ fillOpacity: 0.5, fill: "pink" }}
+            style={{ fillOpacity: 0 }}
             height={hoverHeight}
             width={hoverWidth}
             onMouseMove={hoverFunction}

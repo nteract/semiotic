@@ -446,7 +446,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
         </g>
       ),
       matte: matte,
-      ["viz-layer"]: renderedElements,
+      ["viz-layer"]: renderedElements && renderedElements.length > 0 ? renderedElements : null,
       ...additionalVizElements
     }
 
@@ -471,7 +471,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     })
 
     const renderedDataVisualization =
-      ((orderedElements.length > 0 && (renderedElements && renderedElements.length > 0)) && (
+      ((orderedElements.length > 0) && (
         <g
           className="data-visualization"
           key="visualization-clip-path"
@@ -486,6 +486,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
         </g>
       )) ||
       null
+
 
     return renderedDataVisualization
   }
