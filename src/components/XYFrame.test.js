@@ -147,7 +147,7 @@ describe("XYFrame", () => {
       mountedFrameWithOptions.find("div.interaction-layer").length
     ).toEqual(1)
     expect(
-      mountedFrameWithOptions.find("g.interaction-regions > path").length
+      mountedFrameWithOptions.find("g.interaction-regions > g > path").length
     ).toEqual(8)
   })
 

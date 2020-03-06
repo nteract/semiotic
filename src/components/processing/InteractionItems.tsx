@@ -110,13 +110,14 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
       ? { cursor: "pointer" }
       : {}
 
+
   if (points && hoverAnnotation && !overlay) {
 
     const { voronoiFilter = () => true } = advancedSettings
     const voronoiDataset: VoronoiEntryType[] = []
     const voronoiUniqueHash = {}
 
-    points.filter((d: {data: object}) => voronoiFilter({ ...d, ...d.data })).forEach((d: object) => {
+    points.filter((d: { data: object }) => voronoiFilter({ ...d, ...d.data })).forEach((d: object) => {
 
       const xValue = Math.floor(xScale(d[projectedX]))
       const yValue = Math.floor(
@@ -179,7 +180,7 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
         const circleSize = advancedSettings.voronoiClipping === true ? 50 : advancedSettings.voronoiClipping
         const correspondingD = voronoiDataset[i]
         clipPath = <clipPath id={`voronoi-${i}`}>
-        <circle r={circleSize} cx={correspondingD.voronoiX} cy={correspondingD.voronoiY} />
+          <circle r={circleSize} cx={correspondingD.voronoiX} cy={correspondingD.voronoiY} />
         </clipPath>
       }
       return (
@@ -199,15 +200,16 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
           key={`interactionVoronoi${i}`}
           d={`M${d.join("L")}Z`}
           style={{
-              fillOpacity: 0,
+            fillOpacity: 0,
             ...pointerStyle
           }}
-          clip-path={`url(#voronoi-${i})`}
+          clipPath={`url(#voronoi-${i})`}
         />
-        {clipPath}
+          {clipPath}
         </g>
       )
     }, this)
+
     return voronoiPaths
   } else if (overlay) {
     const renderedOverlay: Array<React.ReactNode> = overlay.map(

@@ -48,7 +48,8 @@ class MinimapXYFrame extends React.Component<MinimapXYFrameProps> {
       useSpans,
       name,
       annotations,
-      summaryType
+      summaryType,
+      interactionSettings
     } = this.props
     const miniDefaults = {
       position: [0, 0],
@@ -82,7 +83,8 @@ class MinimapXYFrame extends React.Component<MinimapXYFrameProps> {
       useSpans,
       name,
       annotations,
-      summaryType
+      summaryType,
+      interactionSettings
     }
 
     const combinedOptions = {

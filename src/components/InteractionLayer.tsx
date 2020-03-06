@@ -76,7 +76,6 @@ class InteractionLayer extends React.PureComponent<InteractionLayerProps, Intera
 
     const initialOverlayRegions = calculateOverlay(props)
 
-
     this.state = {
       overlayRegions: initialOverlayRegions,
       canvasMap,
@@ -247,13 +246,16 @@ class InteractionLayer extends React.PureComponent<InteractionLayerProps, Intera
         interactionCanvas = null
       } else {
         nextOverlay = calculateOverlay(nextProps)
-        interactionCanvas = <InteractionCanvas
-          height={svgSize[1]}
-          width={svgSize[0]}
-          overlayRegions={nextOverlay}
-          margin={margin}
-          voronoiHover={voronoiHover}
-        />
+        if (canvasRendering) {
+          interactionCanvas = <InteractionCanvas
+            height={svgSize[1]}
+            width={svgSize[0]}
+            overlayRegions={nextOverlay}
+            margin={margin}
+            voronoiHover={voronoiHover}
+          />
+
+        }
       }
 
       return {
