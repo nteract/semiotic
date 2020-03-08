@@ -539,7 +539,7 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
     if (isHierarchical && Array.isArray(edges)) {
       const createdHierarchicalData = softStack(
         edges,
-        projectedNodes,
+        nodes,
         sourceAccessor,
         targetAccessor,
         nodeIDAccessor

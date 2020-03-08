@@ -83,7 +83,7 @@ components.push({
 })
 
 const nodeData = [
-
+  { id: "Miles", special: true }
 ]
 
 const networkGraph = { nodes: nodeData, edges: edgeData }

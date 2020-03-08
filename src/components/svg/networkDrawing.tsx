@@ -998,6 +998,7 @@ export const softStack = (
       if (!discoveredHierarchyHash[target]) {
         discoveredHierarchyHash[target] = "root-generated"
         const idNode = nodes.find(node => nodeIDAccessor(node) === target) || {}
+
         hierarchy.childHash[target] = {
           id: target,
           ...idNode,
