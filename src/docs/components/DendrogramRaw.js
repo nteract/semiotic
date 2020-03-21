@@ -16,11 +16,10 @@ const blockScale = scaleLinear()
 const data = {
   name: "d3",
   children: [
-    { name: "Twitter", leafColor: "red", blockCalls: 16.7 },
-    { name: "Slack", leafColor: "blue", blockCalls: 9.3 },
-    { name: "LinkedIn", leafColor: "green", blockCalls: 12.3 },
-    { name: "Instagram", leafColor: "purple", blockCalls: 7.3 },
-    { name: "DVS", leafColor: "brown", blockCalls: 11.3 }
+    { name: "Platform", leafColor: "red", blockCalls: 2 },
+    { name: "Product", leafColor: "blue", blockCalls: 3 },
+    { name: "Content", leafColor: "purple", blockCalls: 5 },
+    { name: "Analytics", leafColor: "brown", blockCalls: 11 }
   ]
 }
 
@@ -35,17 +34,18 @@ export default ({
     size: [700, 700],
     edges: data,
     nodeStyle: d => ({
-      fill: d.leafColor,
+      fill: d.depth === 0 ? "none" : d.leafColor,
       stroke: "black",
       strokeOpacity: 0.25,
-      fillOpacity: 0.25
+      fillOpacity: 0.25,
+      strokeWidth: d.depth === 0 ? 4 : 1
     }),
     edgeStyle: d => ({
       fill: colors[d.source.depth],
       stroke: colors[d.source.depth],
       opacity: 0.5
     }),
-    nodeLabels: d => <g><text fontSize="26px" y={-8} textAnchor="middle">{d.name}</text><text fontSize="28px" fontWeight={900} y={20} textAnchor="middle">{d.blockCalls}k</text></g>,
+    nodeLabels: d => { return d.depth === 0 ? <g /> : <g><text fontSize="26px" y={-8} textAnchor="middle">{d.name}</text><text fontSize="28px" fontWeight={900} y={20} textAnchor="middle">{d.blockCalls}k</text></g> },
     nodeIDAccessor: "hierarchicalID",
     hoverAnnotation: true,
     nodeSizeAccessor: type === "tree" && (d => blockScale(d.blockCalls || 1)),
@@ -72,7 +72,7 @@ export default ({
           </div>
         )
     },
-    filterRenderedNodes: d => d.depth !== 0,
+    //    filterRenderedNodes: d => d.depth !== 0,
     annotations: [
       {
         type: annotation,

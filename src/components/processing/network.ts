@@ -518,10 +518,13 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
     networkSettings.graphSettings.nodeHash = nodeHash
     projectedNodes = []
     projectedEdges = []
+    const fixFunction = typeof networkSettings.fixExistingNodes === "function" ? networkSettings.fixExistingNodes : networkSettings.fixExistingNodes ? () => true : false
     nodes.forEach(node => {
       const projectedNode = { ...node }
       const id = nodeIDAccessor(projectedNode)
-      const equivalentOldNode = previousNodes.find(prevNode => prevNode.id === id) || { x: undefined, y: undefined }
+      const existingNode = previousNodes.find(prevNode => prevNode.id === id)
+
+      const equivalentOldNode = existingNode || { x: undefined, y: undefined }
       nodeHash.set(id, projectedNode)
       nodeHash.set(node, projectedNode)
       projectedNodes.push(projectedNode)
@@ -531,6 +534,11 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
       projectedNode.degree = 0
       projectedNode.x = equivalentOldNode.x
       projectedNode.y = equivalentOldNode.y
+      if (existingNode && fixFunction && fixFunction(existingNode)) {
+        projectedNode.fx = existingNode.x
+        projectedNode.fy = existingNode.y
+      }
+
     })
 
     let operationalEdges = edges
@@ -949,7 +957,12 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
 
       simulation.stop()
 
-      for (let i = 0; i < iterations; ++i) simulation.tick()
+      console.log("projectedNodes", projectedNodes)
+
+      for (let i = 0; i < iterations; ++i) {
+        //    console.log("projectedNodes filtered", projectedNodes.filter(d => d.fx))
+        simulation.tick()
+      }
     } else if (networkSettings.type === "motifs") {
       const componentHash = new Map()
       projectedEdges.forEach(edge => {

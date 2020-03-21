@@ -8,10 +8,10 @@ const components = []
 // Add your component proptype data here
 // multiple component proptype documentation supported
 const barChartData = [
-  { user: "Jason", tweets: 10, retweets: 10, favorites: 15 },
-  { user: "Susie", tweets: 5, retweets: 100, favorites: 100 },
-  { user: "Matt", tweets: 20, retweets: 25, favorites: 50 },
-  { user: "Betty", tweets: 30, retweets: 20, favorites: 10 }
+  { user: "Jason", tweets: 0, retweets: 3, favorites: 0 },
+  { user: "Susie", tweets: 1, retweets: 5, favorites: 100 },
+  { user: "Matt", tweets: 5, retweets: 2, favorites: 150 },
+  { user: "Betty", tweets: 0, retweets: 5, favorites: 0 }
 ]
 
 const longBarChartData = [
@@ -44,7 +44,7 @@ const colorHash = {
   favorites: "#b6a756"
 }
 
-const barSize = [300, 500]
+const barSize = [300, 100]
 const stackedBarStyle = d => ({ fill: colorHash[d.rName], stroke: "white" })
 const stackedBarLabel = d => (
   <text transform="translate(-15,0)rotate(45)">{d}</text>
@@ -305,10 +305,10 @@ export default class CreatingBarChart extends React.Component {
             size={barSize}
             data={barChartData}
             oAccessor={"user"}
-            rAccessor={[d => d.tweets, "favorites", "retweets"]}
-            projection={"horizontal"}
+            rAccessor={["favorites", "retweets"]}
+            projection={"vertical"}
             style={stackedBarStyle}
-            type={"bar"}
+            type={"clusterbar"}
             oLabel={stackedBarLabel}
             axes={stackedBarAxis}
             margin={stackedBarMargin}

@@ -32,8 +32,28 @@ const bubbleSimulation = forceSimulation().force(
 
 const bunchaNodes = [...Array(40)].map((d, i) => ({
   name: `Node ${i}`,
-  r: Math.random() * 30 + 10
+  color: "gold",
+  r: Math.random() * 3 + 5
 }))
+
+const bunchaEdges = [...Array(20)].map(() => ({
+  source: `Node ${parseInt(Math.random() * 40)}`,
+  target: `Node ${parseInt(Math.random() * 40)}`,
+  weight: 20
+}))
+
+const bunchaOtherNodes = [...Array(20)].map((d, i) => ({
+  name: `Other Node ${i}`,
+  r: Math.random() * 3 + 5,
+  color: "brown"
+}))
+
+const bunchaOtherEdges = [...Array(20)].map(() => ({
+  source: `Other Node ${parseInt(Math.random() * 20)}`,
+  target: `Node ${parseInt(Math.random() * 40)}`,
+  weight: 20
+}))
+
 
 const multiFociSimulation = forceSimulation()
   .force("collide", forceCollide().radius(d => d.r))
@@ -65,6 +85,28 @@ const multiFociNodes = [...Array(500)].map((d, i) => ({
   fociY: Math.floor((i % 4) / 2) * 200 + 200,
   color: colors[i % 4]
 }))
+
+
+export const changeEdges = moreNodes => {
+  const finalNodes = !moreNodes ? bunchaNodes : [...bunchaNodes, ...bunchaOtherNodes]
+  const finalEdges = !moreNodes ? bunchaEdges : [...bunchaEdges, ...bunchaOtherEdges]
+  return (
+    <NetworkFrame
+      nodes={finalNodes}
+      edges={finalEdges}
+      size={[700, 700]}
+      networkType={{
+        type: "force",
+        fixExistingNodes: false
+      }}
+      nodeSizeAccessor={d => d.r}
+      nodeStyle={d => ({ fill: d.color, stroke: "darkred" })}
+      edgeStyle={{ stroke: "red", strokeWidth: 2 }}
+      nodeIDAccessor="name"
+    />
+  )
+}
+
 
 export const basic = (
   <NetworkFrame

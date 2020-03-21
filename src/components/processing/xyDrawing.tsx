@@ -34,22 +34,12 @@ import {
 } from "../svg/frameFunctions"
 
 import {
-    ProjectedPoint,
-    MarginType,
-    CanvasPostProcessTypes,
-    accessorType,
-    ProjectedSummary,
-    ProjectedBin,
     ProjectedLine,
     GenericObject,
     LineTypeSettings,
     SummaryTypeSettings,
-    RawLine,
     RawSummary,
-    RawPoint,
-    GenericAccessor,
-    RenderPipelineType,
-    ExtentType
+    RawPoint
 } from "../types/generalTypes"
 
 const screenScales = ({

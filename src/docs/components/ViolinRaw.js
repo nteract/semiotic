@@ -124,9 +124,11 @@ export default (
         return null
       }}
       projection="horizontal"
-      type={{ type: "swarm", r: 5 }}
+      //      type={{ type: "swarm", r: 5 }}
       style={{ fill: "pink", stroke: "red" }}
       pieceHoverAnnotation={true}
+      summaryType={{ type: "histogram", elementStyleFn: (a, b, c) => { console.log("a,b,c", a, b, c); return { fill: "red" } } }}
+
     />
   </div>
 )

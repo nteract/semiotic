@@ -1,6 +1,6 @@
 import * as React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
-import { bubbleChart } from "./NetworksRaw"
+import { changeEdges } from "./NetworksRaw"
 
 const components = []
 // Add your component proptype data here
@@ -14,7 +14,8 @@ export default class Networks extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      mode: "combined"
+      mode: "combined",
+      moreNodes: false
     }
 
     this.changeMode = this.changeMode.bind(this)
@@ -29,25 +30,9 @@ export default class Networks extends React.Component {
     const examples = []
 
     examples.push({
-      name: "Bubble Chart",
-      demo: bubbleChart,
-      source: `const bubbleSimulation = forceSimulation().force(
-  "collide",
-  forceCollide().radius(d => d.r)
-)
-
-  <NetworkFrame
-    nodes={bunchaNodes}
-    networkType={{
-      type: "force",
-      iterations: 400,
-      simulation: bubbleSimulation,
-      zoom: false
-    }}
-    nodeSizeAccessor={d => d.r}
-    nodeStyle={{ stroke: "darkred" }}
-    nodeIDAccessor="name"
-  />`
+      name: "Change Edges",
+      demo: changeEdges(this.state.moreNodes),
+      source: ``
     })
 
     return (
@@ -57,12 +42,7 @@ export default class Networks extends React.Component {
         examples={examples}
         buttons={[]}
       >
-        <p>
-          {" "}
-          Networks of various kinds showing off different ways of playing with
-          network settings. This uses the flare.json dataset, which is
-          technically hierarchical JSON but NetworkFrame doesn't care.
-        </p>
+        <button onClick={() => { this.setState({ moreNodes: true }) }}>Add more nodes</button>
       </DocumentComponent>
     )
   }

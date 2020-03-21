@@ -104,6 +104,7 @@ export interface NetworkSettingsType {
   simulation?: Function
   sort?: (a: GenericObject, b: GenericObject) => number
   zoom?: boolean | "stretch" | ((nodes: NodeType[], size: number[]) => void)
+  fixExistingNodes?: boolean | Function
 }
 
 export interface NetworkFrameState {
