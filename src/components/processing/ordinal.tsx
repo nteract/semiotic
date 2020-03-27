@@ -479,13 +479,19 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
         ? rScaleType
         : castRScaleType()
 
+    const zeroCheck = instantiatedRScaleType(0)
+
+    if (rExtentSettings.extent &&
+        rExtentSettings.extent[0] !== undefined && (zeroCheck === -Infinity || zeroCheck === Infinity)) {
+        rExtent[0] = rExtentSettings.extent[0]
+    }
+
     const rScale = instantiatedRScaleType
         .copy()
         .domain(rExtent)
         .range(rDomain)
 
-    const rScaleReverse = instantiatedRScaleType
-        .copy()
+    const rScaleReverse = scaleLinear()
         .domain(rDomain)
         .range(rDomain.reverse())
 
@@ -506,8 +512,13 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
 
     pieceData = oExtent.map(d => (nestedPieces[d] ? nestedPieces[d] : []))
 
-    const zeroValue =
+    let zeroValue =
         projection === "vertical" ? rScaleReverse(rScale(0)) : rScale(0)
+
+    if ((isNaN(zeroValue) || zeroValue === -Infinity || zeroValue === Infinity) && rExtentSettings.extent &&
+        rExtentSettings.extent[0] !== undefined && (zeroCheck === -Infinity || zeroCheck === Infinity)) {
+        zeroValue = projection === "vertical" ? rScaleReverse(rScale(rExtentSettings.extent[0])) : rScale(rExtentSettings.extent[0])
+    }
 
     oExtent.forEach((o, i) => {
         projectedColumns[o] = {

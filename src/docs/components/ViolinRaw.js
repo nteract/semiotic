@@ -2,7 +2,7 @@ import * as React from "react"
 import { summaryChart } from "../example_settings/orframe"
 import { OrdinalFrame } from "../../components"
 import ProcessViz from "./ProcessViz"
-//import roughjs from "roughjs/dist/rough.es5.umd.js"
+import roughjs from "roughjs/dist/rough.es5.umd.js"
 
 const blues = [
   "#eff3ff",
@@ -133,13 +133,15 @@ export default (
       }}
       projection="horizontal"
       //      type={{ type: "swarm", r: 5 }}
-      summaryStyle={{ fill: "none", stroke: "none" }}
+      summaryStyle={{ fill: "none", stroke: "#CCC" }}
       oPadding={0}
       pieceHoverAnnotation={true}
       summaryType={{ type: "horizon", bins: 50, elementStyleFn: (d, i) => ({ fill: blues[i] }) }}
       oLabel={true}
       annotations={undefined}
       dynamicColumnWidth={false}
+      summaryRenderMode="sketchy"
+      sketchyRenderingEngine={roughjs}
     />
     <OrdinalFrame
       {...violinChart}

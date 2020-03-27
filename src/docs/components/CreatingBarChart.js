@@ -1,6 +1,7 @@
 import * as React from "react"
 import { OrdinalFrame } from "../../components"
-import { scaleSqrt } from "d3-scale"
+import { scaleSqrt, scaleLog } from "d3-scale"
+import roughjs from "roughjs/dist/rough.es5.umd.js"
 
 import DocumentComponent from "../layout/DocumentComponent"
 
@@ -8,10 +9,10 @@ const components = []
 // Add your component proptype data here
 // multiple component proptype documentation supported
 const barChartData = [
-  { user: "Jason", tweets: 0, retweets: 3, favorites: 0 },
-  { user: "Susie", tweets: 1, retweets: 5, favorites: 100 },
-  { user: "Matt", tweets: 5, retweets: 2, favorites: 150 },
-  { user: "Betty", tweets: 0, retweets: 5, favorites: 0 }
+  { user: "Jason", tweets: 20, retweets: 30, favorites: 0 },
+  { user: "Susie", tweets: 50, retweets: 50, favorites: 100 },
+  { user: "Matt", tweets: 30, retweets: 20, favorites: 150 },
+  { user: "Betty", tweets: 10, retweets: 50, favorites: 10 }
 ]
 
 const longBarChartData = [
@@ -144,8 +145,12 @@ export default class CreatingBarChart extends React.Component {
             data={barChartData}
             oAccessor={"user"}
             rAccessor={"tweets"}
+            rScaleType={scaleLog()}
+            rExtent={[1]}
             style={{ fill: "#00a2ce", stroke: "white" }}
             type={"bar"}
+            projection="vertical"
+            axes={[{ orient: "bottom" }]}
             customHoverBehavior={d => console.info("hover", d)}
             customClickBehavior={d => console.info("click", d)}
             customDoubleClickBehavior={d => console.info("doubleclick", d)}
@@ -377,7 +382,6 @@ export default class CreatingBarChart extends React.Component {
             customHoverBehavior={d => console.info("hover", d)}
             customClickBehavior={d => console.info("click", d)}
             customDoubleClickBehavior={d => console.info("doubleclick", d)}
-            renderMode="sketchy"
             interaction={{
               extent: ["Matt1", "Susie2"],
               end: e => {
@@ -395,10 +399,11 @@ export default class CreatingBarChart extends React.Component {
             rAccessor={"tweets"}
             oPadding={10}
             projection="horizontal"
-            style={{ fill: "#00a2ce", stroke: "white" }}
+            style={{ fill: "#00a2ce", stroke: "white", fillOpacity: 0.1 }}
             type={"bar"}
             oLabel={true}
-            renderMode="sketchy"
+            renderMode={{ renderMode: "sketchy", hachureGap: 2 }}
+            sketchyRenderingEngine={roughjs}
             interaction={{
               extent: ["Jason", "Betty"],
               end: e => {

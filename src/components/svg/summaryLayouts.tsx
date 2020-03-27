@@ -977,6 +977,7 @@ export function bucketizedRenderingFn({
         </g>
       )
     } else if (type.type === "violin") {
+
       const subsets = type.subsets || [false]
       bins[0].y = bins[0].y - bucketSize / 2
       bins[bins.length - 1].y = bins[bins.length - 1].y + bucketSize / 2
@@ -1302,8 +1303,6 @@ export function bucketizedRenderingFn({
       }
 
       multiBins = multiBins.filter(d => sum(d.map(p => p.value)) > 0)
-
-      console.log("multiBins", multiBins)
 
       horizonBins.forEach((summaryPoint, i) => {
         if (i !== 0 && i !== horizonBins.length - 1) {
