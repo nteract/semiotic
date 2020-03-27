@@ -6,12 +6,13 @@ import { contouring } from "../svg/areaDrawing"
 import { quantile } from "d3-array"
 import { histogram, max } from "d3-array"
 import { groupBarMark } from "../svg/SvgHelper"
-import { area, line, curveCatmullRom, arc } from "d3-shape"
+import { area, line, curveCatmullRom, curveLinear, arc } from "d3-shape"
 import { pointOnArcAtAngle } from "./pieceDrawing"
 import { orFrameSummaryRenderer } from "./frameFunctions"
 import { scaleLinear } from "d3-scale"
 import { curveHash } from "../visualizationLayerBehavior/general"
 import { GenericObject } from "../types/generalTypes"
+import { sum } from "d3-array"
 
 type BoxplotFnType = {
   data: GenericObject[]
@@ -803,6 +804,7 @@ export function bucketizedRenderingFn({
   const buckets = type.bins || 25
   const relativeBuckets = type.relative ? {} : false
   const summaryValueAccessor = type.binValue || (d => d.length)
+
   let axisCreator
   if (type.axis) {
     type.axis.orient =
@@ -894,6 +896,11 @@ export function bucketizedRenderingFn({
 
     return { bins: keyBins, summary, summaryI, thisSummaryData }
   })
+
+  const numHorizons = type.horizon ? binMax / type.horizon : type.numHorizons || 4
+  const horizon = type.horizon || binMax / numHorizons
+
+
   calculatedBins.forEach(({ bins, summary, summaryI, thisSummaryData }) => {
     const eventListeners = eventListenersGenerator(summary, summaryI)
     const columnWidth = summary.width
@@ -1268,6 +1275,174 @@ export function bucketizedRenderingFn({
           data-o={summary.name}
           aria-label={`${summary.name} distribution`}
         />
+      )
+    } else if (type.type === "horizon") {
+      const zeroedStart = Object.assign({}, bins[0], { value: 0 })
+      const zeroedEnd = Object.assign({}, bins[bins.length - 1], { value: 0 })
+
+      zeroedStart.y = zeroedStart.y - bucketSize / 2
+      zeroedEnd.y = zeroedEnd.y + bucketSize / 2
+
+      const horizonBins = [zeroedStart, ...bins, zeroedEnd]
+
+      const horizonStyle = type.elementStyleFn || (() => ({}))
+
+      let multiBins = []
+      let remainingPieces = true
+      let currentHorizon = 0
+
+      while (remainingPieces === true) {
+        const currentStrip = horizonBins.map(d => ({ ...d, value: Math.max(0, Math.min(d.value - currentHorizon, horizon)) }))
+        multiBins.push(currentStrip.map(d => ({ ...d, value: d.value * numHorizons })))
+        currentHorizon += horizon
+        if (max(currentStrip.map(d => d.value)) < horizon) {
+          remainingPieces = false
+        }
+
+      }
+
+      multiBins = multiBins.filter(d => sum(d.map(p => p.value)) > 0)
+
+      console.log("multiBins", multiBins)
+
+      horizonBins.forEach((summaryPoint, i) => {
+        if (i !== 0 && i !== horizonBins.length - 1) {
+          if (projection === "horizontal") {
+            const xValue = summaryPoint.y - bucketSize / 2
+            const yValue = (-summaryPoint.value / actualMax) * (columnWidth) +
+              columnWidth / 2
+
+            summaryXYCoords.push({
+              key: summary.name,
+              x: xValue + translate[0],
+              y: yValue + translate[1],
+              pieces: summaryPoint.pieces.map(d => d.piece),
+              value: summaryPoint.value
+            })
+          }
+          else if (projection === "vertical") {
+            const yValue = summaryPoint.y + bucketSize / 2
+            const xValue =
+              type.flip === true
+                ? (summaryPoint.value / actualMax) * (columnWidth) -
+                columnWidth / 2
+                : (-summaryPoint.value / actualMax) * (columnWidth) +
+                columnWidth / 2
+
+            summaryXYCoords.push({
+              key: summary.name,
+              x: xValue + translate[0],
+              y: yValue + translate[1],
+              pieces: summaryPoint.pieces.map(d => d.piece),
+              value: summaryPoint.value
+            })
+          }
+        }
+
+      })
+
+      const multiBinMarks = multiBins.map((multiBin, multiBinI) => {
+        let horizonPoints = []
+
+        const interpolatorSetting = type.curve || type.interpolator
+
+        const actualInterpolator =
+          typeof interpolatorSetting === "string"
+            ? curveHash[interpolatorSetting]
+            : interpolatorSetting
+
+        let horizonArea = line()
+          .curve(actualInterpolator || curveLinear)
+          .x(d => d.x)
+          .y(d => d.y)
+
+        if (projection === "horizontal") {
+          multiBin.forEach((summaryPoint) => {
+            const xValue = summaryPoint.y - bucketSize / 2
+            const yValue = (-summaryPoint.value / actualMax) * (columnWidth) +
+              columnWidth / 2
+
+            horizonPoints.push({
+              y: yValue,
+              x: xValue
+            })
+
+            //Don't make an interaction point for the first or last
+          })
+        } else if (projection === "vertical") {
+          multiBin.forEach(summaryPoint => {
+            const yValue = summaryPoint.y + bucketSize / 2
+            const xValue =
+              type.flip === true
+                ? (summaryPoint.value / actualMax) * (columnWidth) -
+                columnWidth / 2
+                : (-summaryPoint.value / actualMax) * (columnWidth) +
+                columnWidth / 2
+
+            horizonPoints.push({
+              y: yValue,
+              x: xValue
+            })
+          })
+        } else if (projection === "radial") {
+          const angle = summary.pct - summary.pct_padding / 2
+          const midAngle = summary.pct_start + summary.pct_padding / 2
+
+          translate = [0, 0]
+          horizonPoints = multiBin
+          horizonArea = inbins => {
+            const forward = []
+            inbins.forEach(bin => {
+              const outsidePoint = pointOnArcAtAngle(
+                [adjustedSize[0] / 2, adjustedSize[1] / 2],
+                midAngle + (angle * bin.value) / actualMax,
+                (bin.y + bin.y1 - bucketSize / 2) / 2
+              )
+
+
+              forward.push(outsidePoint)
+            })
+            return `M${forward.map(d => d.join(",")).join("L")}Z`
+          }
+        }
+
+        return <Mark
+          {...baseMarkProps}
+          transform={`translate(${translate})`}
+          key={`summaryPiece-${summaryI}-${multiBinI}`}
+          {...eventListeners}
+          renderMode={renderValue}
+          markType="path"
+          className={calculatedSummaryClass}
+          style={{ ...calculatedSummaryStyle, ...horizonStyle(multiBin, multiBinI) }}
+          d={horizonArea(horizonPoints)}
+          role="img"
+          tabIndex={-1}
+          data-o={summary.name}
+          aria-label={`${summary.name} distribution`}
+        />
+
+
+
+      })
+
+      if (type.axis) {
+        renderedSummaryMarks.push(
+          createSummaryAxis({
+            summary,
+            summaryI,
+            axisSettings: type.axis,
+            axisCreator,
+            projection,
+            actualMax,
+            adjustedSize,
+            columnWidth
+          })
+        )
+      }
+
+      renderedSummaryMarks.push(
+        <g>{multiBinMarks}</g>
       )
     }
   })

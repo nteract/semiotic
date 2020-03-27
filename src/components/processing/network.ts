@@ -957,10 +957,7 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
 
       simulation.stop()
 
-      console.log("projectedNodes", projectedNodes)
-
       for (let i = 0; i < iterations; ++i) {
-        //    console.log("projectedNodes filtered", projectedNodes.filter(d => d.fx))
         simulation.tick()
       }
     } else if (networkSettings.type === "motifs") {

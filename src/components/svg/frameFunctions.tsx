@@ -594,7 +594,8 @@ const summaryRenderHash = {
   violin: bucketizedRenderingFn,
   heatmap: bucketizedRenderingFn,
   ridgeline: bucketizedRenderingFn,
-  histogram: bucketizedRenderingFn
+  histogram: bucketizedRenderingFn,
+  horizon: bucketizedRenderingFn
 }
 
 export function orFrameSummaryRenderer({

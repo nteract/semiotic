@@ -3,6 +3,7 @@ import { NetworkFrame } from "../../components"
 //import { data } from "../sampledata/d3_api"
 import ProcessViz from "./ProcessViz"
 import { scaleLinear } from "d3-scale"
+import roughjs from "roughjs/dist/rough.es5.umd.js"
 
 const colors = ["#00a2ce", "#b6a756", "#4d430c", "#b3331d"]
 
@@ -48,7 +49,10 @@ export default ({
     nodeLabels: d => { return d.depth === 0 ? <g /> : <g><text fontSize="26px" y={-8} textAnchor="middle">{d.name}</text><text fontSize="28px" fontWeight={900} y={20} textAnchor="middle">{d.blockCalls}k</text></g> },
     nodeIDAccessor: "hierarchicalID",
     hoverAnnotation: true,
-    nodeSizeAccessor: type === "tree" && (d => blockScale(d.blockCalls || 1)),
+    nodeSizeAccessor: type === "tree" && (d => blockScale(d.blockCalls || 10)),
+    sketchyRenderingEngine: roughjs,
+    nodeRenderMode: "sketchy",
+    edgeRenderMode: "sketchy",
     networkType: {
       zoom: false,
       type: type,

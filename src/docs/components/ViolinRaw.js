@@ -2,10 +2,17 @@ import * as React from "react"
 import { summaryChart } from "../example_settings/orframe"
 import { OrdinalFrame } from "../../components"
 import ProcessViz from "./ProcessViz"
-import roughjs from "roughjs/dist/rough.es5.umd.js"
+//import roughjs from "roughjs/dist/rough.es5.umd.js"
+
+const blues = [
+  "#eff3ff",
+  "#bdd7e7",
+  "#6baed6",
+  "#2171b5"
+]
 
 const axis = {
-  orient: "left",
+  orient: "bottom",
   tickFormat: d => d,
   label: {
     name: "axis label",
@@ -16,7 +23,7 @@ const axis = {
 
 const violinChart = {
   size: [700, 600],
-  axes: axis,
+  axes: [axis],
   ...summaryChart,
   rAccessor: ["stepValue", d => d.stepValue + 10],
   //  hoverAnnotation: true,
@@ -97,9 +104,10 @@ const violinChart = {
       stepName: "August",
       label: "HTML Note at 30"
     }
-  ],
-  summaryRenderMode: "sketchy",
-  sketchyRenderingEngine: roughjs
+  ]
+  //,
+  //summaryRenderMode: "sketchy",
+  //sketchyRenderingEngine: roughjs
 }
 
 export default (
@@ -125,10 +133,41 @@ export default (
       }}
       projection="horizontal"
       //      type={{ type: "swarm", r: 5 }}
-      style={{ fill: "pink", stroke: "red" }}
+      summaryStyle={{ fill: "none", stroke: "none" }}
+      oPadding={0}
       pieceHoverAnnotation={true}
-      summaryType={{ type: "histogram", elementStyleFn: (a, b, c) => { console.log("a,b,c", a, b, c); return { fill: "red" } } }}
-
+      summaryType={{ type: "horizon", bins: 50, elementStyleFn: (d, i) => ({ fill: blues[i] }) }}
+      oLabel={true}
+      annotations={undefined}
+      dynamicColumnWidth={false}
+    />
+    <OrdinalFrame
+      {...violinChart}
+      htmlAnnotationRules={({ d, oScale, rScale }) => {
+        if (d.type === "check-html") {
+          return (
+            <div
+              style={{
+                left: `${oScale(d.stepName)}px`,
+                top: `${rScale(d.stepValue)}px`,
+                position: "absolute"
+              }}
+            >
+              {d.label}
+            </div>
+          )
+        }
+        return null
+      }}
+      projection="horizontal"
+      //      type={{ type: "swarm", r: 5 }}
+      summaryStyle={{ fill: "blue", stroke: "black", opacity: 0.25 }}
+      pieceHoverAnnotation={true}
+      summaryType={{ type: "ridgeline", bins: 50 }}
+      oLabel={true}
+      annotations={undefined}
+      oPadding={2}
+      dynamicColumnWidth={false}
     />
   </div>
 )
