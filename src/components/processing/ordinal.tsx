@@ -482,7 +482,7 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
     const zeroCheck = instantiatedRScaleType(0)
 
     if (rExtentSettings.extent &&
-        rExtentSettings.extent[0] !== undefined && (zeroCheck === -Infinity || zeroCheck === Infinity)) {
+        rExtentSettings.extent[0] !== undefined && (isNaN(zeroCheck) || zeroCheck === -Infinity || zeroCheck === Infinity)) {
         rExtent[0] = rExtentSettings.extent[0]
     }
 

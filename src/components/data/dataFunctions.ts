@@ -21,7 +21,8 @@ import {
   contouring,
   hexbinning,
   heatmapping,
-  trendlining
+  trendlining,
+  lineBounding
 } from "../svg/areaDrawing"
 import { max, min } from "d3-array"
 
@@ -534,7 +535,15 @@ export const calculateDataExtent = ({
       finalXExtent,
       finalYExtent
     })
-  } else if (summaryType.type && summaryType.type === "hexbin") {
+  } else if (summaryType.type && summaryType.type === "linebounds") {
+    projectedSummaries = lineBounding({
+      summaryType,
+      data: projectedSummaries,
+      finalXExtent,
+      finalYExtent
+    })
+  }
+  else if (summaryType.type && summaryType.type === "hexbin") {
     projectedSummaries = hexbinning({
       summaryType,
       data: projectedSummaries,

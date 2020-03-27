@@ -13,6 +13,45 @@ interface BinArray {
   y?: number
 }
 
+const generateLineBounds = (xydata, basedata, topBoundingAccessor, bottomBoundingAccessor) => {
+  const tops = xydata.map((d, i) => [
+    d[0],
+    d[1] + topBoundingAccessor(basedata[i])
+  ])
+  const bottoms = xydata.map((d, i) => [
+    d[0],
+    d[1] - bottomBoundingAccessor(basedata[i])
+  ])
+  return [...tops, ...bottoms.reverse()]
+
+}
+
+export function lineBounding({ summaryType, data, finalXExtent, finalYExtent }) {
+  let projectedSummaries = []
+  if (!summaryType.type) {
+    summaryType = { type: summaryType }
+  }
+
+  const {
+    boundingAccessor,
+    topBoundingAccessor = boundingAccessor,
+    bottomBoundingAccessor = boundingAccessor
+  } = summaryType
+
+  data.forEach(lineData => {
+    const boundingProjectedSummary = {
+      data: lineData,
+      parentSummary: lineData,
+      _xyfCoordinates: generateLineBounds(lineData._xyfCoordinates, lineData._baseData, topBoundingAccessor, bottomBoundingAccessor)
+    }
+
+    projectedSummaries = [...projectedSummaries, boundingProjectedSummary]
+  })
+
+  return projectedSummaries
+}
+
+
 export function contouring({ summaryType, data, finalXExtent, finalYExtent }) {
   let projectedSummaries = []
   if (!summaryType.type) {

@@ -101,7 +101,7 @@ export interface LineTypeSettings {
   y1?: (d?: ProjectedPoint, index?: number) => number
 }
 
-export type BasicSummaryTypes = "basic" | "contour" | "hexbin" | "heatmap" | "trendline"
+export type BasicSummaryTypes = "basic" | "contour" | "hexbin" | "heatmap" | "trendline" | "linebounds"
 
 export interface SummaryTypeSettings {
   type: BasicSummaryTypes | Function

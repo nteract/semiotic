@@ -167,16 +167,21 @@ export default (editMode, overridePosition, setNewPosition, annotationLabel) => 
         annotations={annotations}
         hoverAnnotation={!editMode}
         summaryType={{
-          type: "trendline",
+          type: "linebounds",
+          boundingAccessor: d => d.close / 5,
+          topBoundingAccessor: d => d.close / 5,
+          bottomBoundingAccessor: d => d.close / 10,
           regressionType: "polynomial",
           order: 8
         }}
         summaries={{ label: "Apple Stock", coordinates: data }}
         summaryStyle={{
-          fill: "none",
+          fill: "darkred",
           stroke: "darkred",
-          strokeWidth: 3,
-          strokeOpacity: 0.5
+          strokeWidth: 1,
+          strokeOpacity: 1,
+          strokeDasharray: "5 5",
+          fillOpacity: 0.25
         }}
       />
     </div>
