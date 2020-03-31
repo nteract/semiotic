@@ -42,6 +42,8 @@ import {
   ExtentType
 } from "../types/generalTypes"
 
+const baseDefinedFunction = (() => true)
+
 const whichPointsHashY = {
   top: projectedYTop,
   bottom: projectedYBottom,
@@ -201,7 +203,7 @@ export const calculateDataExtent = ({
   filterRenderedLines,
   filterRenderedSummaries,
   filterRenderedPoints,
-  defined = () => true,
+  defined = baseDefinedFunction,
   annotations = []
 }: CalculateDataTypes) => {
   let fullDataset: Array<ProjectedPoint | ProjectedBin | ProjectedSummary> = []

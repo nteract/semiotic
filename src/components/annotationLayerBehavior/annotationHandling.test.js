@@ -19,6 +19,7 @@ const annotationProcessor = {
     marginOffset?: number
     */
 }
+
 describe("annotationHandling", () => {
 
     const bumpedAnnotations = bumpAnnotations(annotations,
