@@ -21,12 +21,7 @@ describe("dataFunctions", () => {
 
     const calculatedEdges = nodesEdgesFromHierarchy(hierarchy, d => d.key)
 
-    console.log("calculatedEdges", calculatedEdges)
-
     const { edges, nodes } = calculatedEdges
-
-    console.log("edges[0]", edges[0])
-    console.log("nodes[0]", nodes[0])
 
     const firstEdge = edges[0]
     const firstNode = nodes[0]
