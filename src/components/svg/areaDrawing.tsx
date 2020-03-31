@@ -26,7 +26,7 @@ const generateLineBounds = (xydata, basedata, topBoundingAccessor, bottomBoundin
 
 }
 
-export function lineBounding({ summaryType, data, finalXExtent, finalYExtent }) {
+export function lineBounding({ summaryType, data, defined }) {
   let projectedSummaries = []
   if (!summaryType.type) {
     summaryType = { type: summaryType }
@@ -39,13 +39,37 @@ export function lineBounding({ summaryType, data, finalXExtent, finalYExtent }) 
   } = summaryType
 
   data.forEach(lineData => {
-    const boundingProjectedSummary = {
-      data: lineData,
-      parentSummary: lineData,
-      _xyfCoordinates: generateLineBounds(lineData._xyfCoordinates, lineData._baseData, topBoundingAccessor, bottomBoundingAccessor)
-    }
+    const definedData = lineData._baseData.map(defined)
+    let currentBaseData = []
+    let currentXYFC = []
+    const boundingPieces = [{
+      xyf: currentXYFC,
+      base: currentBaseData
+    }]
+    definedData.forEach((d, i) => {
+      if (d === true) {
+        currentBaseData.push(lineData._baseData[i])
+        currentXYFC.push(lineData._xyfCoordinates[i])
+      } else if (definedData[i + 1]) {
+        currentBaseData = []
+        currentXYFC = []
+        boundingPieces.push({
+          xyf: currentXYFC,
+          base: currentBaseData
+        })
+      }
+    })
 
-    projectedSummaries = [...projectedSummaries, boundingProjectedSummary]
+    boundingPieces.forEach(({ xyf, base }) => {
+      const boundingProjectedSummary = {
+        data: lineData,
+        parentSummary: lineData,
+        _xyfCoordinates: generateLineBounds(xyf, base, topBoundingAccessor, bottomBoundingAccessor)
+      }
+
+      projectedSummaries = [...projectedSummaries, boundingProjectedSummary]
+
+    })
   })
 
   return projectedSummaries
@@ -433,7 +457,6 @@ export function heatmapping({
 }
 
 export function trendlining({
-  processedData,
   preprocess = false,
   summaryType,
   data: baseData,

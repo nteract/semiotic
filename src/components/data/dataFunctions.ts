@@ -539,8 +539,7 @@ export const calculateDataExtent = ({
     projectedSummaries = lineBounding({
       summaryType,
       data: projectedSummaries,
-      finalXExtent,
-      finalYExtent
+      defined
     })
   }
   else if (summaryType.type && summaryType.type === "hexbin") {
@@ -589,7 +588,6 @@ export const calculateDataExtent = ({
     projectedSummaries = trendlining({
       summaryType,
       data: projectedSummaries,
-      processedData: summaries && summaries[0].processedData,
       preprocess: summaries && !!summaries[0].processedData,
       finalXExtent
     })
