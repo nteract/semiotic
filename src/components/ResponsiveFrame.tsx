@@ -1,5 +1,6 @@
 import * as React from "react"
-import elementResizeEvent from "./vendor/element-resize-event"
+
+import elementResizeEvent from "element-resize-event"
 
 type ResponsiveFrameProps = {
   debounce: number
@@ -8,6 +9,7 @@ type ResponsiveFrameProps = {
   size?: number[]
   dataVersion?: string
   gridDisplay?: boolean
+  elementResizeEvent?: Function
 }
 
 type ResponsiveFrameState = {
@@ -48,7 +50,9 @@ const createResponsiveFrame = ParticularFrame =>
 
       const { debounce } = this.props
 
-      elementResizeEvent(element, () => {
+      const actualElementResizeEvent = this.props.elementResizeEvent || elementResizeEvent
+
+      actualElementResizeEvent(element, () => {
         window.clearTimeout(this.isResizing)
         this.isResizing = setTimeout(() => {
           this.isResizing = false

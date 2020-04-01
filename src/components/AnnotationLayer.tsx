@@ -497,7 +497,7 @@ class AnnotationLayer extends React.Component<
 
   render() {
     const { svgAnnotations, htmlAnnotations, SpanOrDiv } = this.state
-    const { useSpans, legendSettings, margin, size } = this.props
+    const { legendSettings, margin, size } = this.props
 
     let renderedLegend
     if (legendSettings) {

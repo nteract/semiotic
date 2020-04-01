@@ -4,6 +4,7 @@ import ResponsiveNetworkFrame from "./ResponsiveNetworkFrame"
 import ResponsiveMinimapXYFrame from "./ResponsiveMinimapXYFrame"
 import ResponsiveXYFrame from "./ResponsiveXYFrame"
 import ResponsiveOrdinalFrame from "./ResponsiveOrdinalFrame"
+const elementResizeEvent = require('element-resize-event');
 
 const ResponsiveFrameComponents = {
   ResponsiveXYFrame: ResponsiveXYFrame,
@@ -23,6 +24,7 @@ describe("ResponsiveFrameComponents", () => {
           disableContext={true}
           responsiveHeight={true}
           responsiveWidth={true}
+          elementResizeEvent={elementResizeEvent}
         />
       )
     })
