@@ -1,35 +1,6 @@
 export const data = {
   name: "d3",
   children: [
-    { name: "version", leafColor: "#fdcc8a", blockCalls: 1 },
-    { name: "ascending", leafColor: "#e34a33", blockCalls: 120 },
-    { name: "descending", leafColor: "#e34a33", blockCalls: 119 },
-    { name: "min", leafColor: "#b30000", blockCalls: 1200 },
-    { name: "max", leafColor: "#b30000", blockCalls: 721 },
-    { name: "extent", leafColor: "#e34a33", blockCalls: 443 },
-    { name: "sum", leafColor: "#e34a33", blockCalls: 103 },
-    { name: "mean", leafColor: "#fc8d59", blockCalls: 49 },
-    { name: "quantile", leafColor: "#fc8d59", blockCalls: 37 },
-    { name: "median", leafColor: "#fc8d59", blockCalls: 28 },
-    { name: "variance", leafColor: "#fc8d59", blockCalls: 8 },
-    { name: "deviation", leafColor: "#fc8d59", blockCalls: 8 },
-    { name: "bisectLeft", leafColor: "#fc8d59", blockCalls: 24 },
-    { name: "bisectRight", leafColor: "#fc8d59", blockCalls: 24 },
-    { name: "bisect", leafColor: "#e34a33", blockCalls: 73 },
-    { name: "bisector", leafColor: "#fc8d59", blockCalls: 49 },
-    { name: "shuffle", leafColor: "#fc8d59", blockCalls: 44 },
-    { name: "permute", leafColor: "#fc8d59", blockCalls: 25 },
-    { name: "pairs", leafColor: "#fc8d59", blockCalls: 19 },
-    { name: "zip", leafColor: "#fc8d59", blockCalls: 38 },
-    { name: "transpose", leafColor: "#fc8d59", blockCalls: 27 },
-    { name: "keys", leafColor: "#e34a33", blockCalls: 255 },
-    { name: "values", leafColor: "#e34a33", blockCalls: 77 },
-    { name: "entries", leafColor: "#e34a33", blockCalls: 84 },
-    { name: "merge", leafColor: "#e34a33", blockCalls: 76 },
-    { name: "range", leafColor: "#b30000", blockCalls: 1204 },
-    { name: "map", leafColor: "#e34a33", blockCalls: 74 },
-    { name: "nest", leafColor: "#e34a33", blockCalls: 331 },
-    { name: "set", leafColor: "#fc8d59", blockCalls: 36 },
     {
       name: "behavior",
       children: [
@@ -38,10 +9,6 @@ export const data = {
       ],
       leafColor: "#e34a33"
     },
-    { name: "rebind", leafColor: "#e34a33", blockCalls: 128 },
-    { name: "dispatch", leafColor: "#e34a33", blockCalls: 177 },
-    { name: "event", leafColor: "#b30000", blockCalls: 619 },
-    { name: "requote", leafColor: "#fc8d59", blockCalls: 24 },
     {
       name: "selection",
       children: [{ name: "enter", leafColor: "#fdcc8a", blockCalls: 1 }],
@@ -65,20 +32,6 @@ export const data = {
       ],
       leafColor: "#fc8d59"
     },
-    { name: "select", leafColor: "#7f0000", blockCalls: 4195 },
-    { name: "selectAll", leafColor: "#b30000", blockCalls: 600 },
-    { name: "mouse", leafColor: "#e34a33", blockCalls: 339 },
-    { name: "touch", leafColor: "#fc8d59", blockCalls: 39 },
-    { name: "touches", leafColor: "#fc8d59", blockCalls: 39 },
-    { name: "interpolateZoom", leafColor: "#fc8d59", blockCalls: 17 },
-    { name: "color", leafColor: "#fdcc8a", blockCalls: 1 },
-    { name: "hsl", leafColor: "#e34a33", blockCalls: 80 },
-    { name: "hcl", leafColor: "#fc8d59", blockCalls: 38 },
-    { name: "lab", leafColor: "#fc8d59", blockCalls: 31 },
-    { name: "rgb", leafColor: "#e34a33", blockCalls: 188 },
-    { name: "functor", leafColor: "#e34a33", blockCalls: 104 },
-    { name: "xhr", leafColor: "#fc8d59", blockCalls: 29 },
-    { name: "dsv", leafColor: "#fc8d59", blockCalls: 18 },
     {
       name: "csv",
       children: [
@@ -324,49 +277,6 @@ export const data = {
       leafColor: "#b30000"
     },
     {
-      name: "geom",
-      children: [
-        { name: "hull", leafColor: "#fc8d59", blockCalls: 25 },
-        { name: "polygon", leafColor: "#e34a33", blockCalls: 62 },
-        { name: "voronoi", leafColor: "#e34a33", blockCalls: 129 },
-        { name: "delaunay", leafColor: "#fc8d59", blockCalls: 34 },
-        { name: "quadtree", leafColor: "#e34a33", blockCalls: 97 }
-      ],
-      leafColor: "#e34a33"
-    },
-    { name: "interpolateRgb", leafColor: "#e34a33", blockCalls: 94 },
-    { name: "interpolateObject", leafColor: "#fc8d59", blockCalls: 24 },
-    { name: "interpolateNumber", leafColor: "#e34a33", blockCalls: 149 },
-    { name: "interpolateString", leafColor: "#fc8d59", blockCalls: 41 },
-    { name: "interpolate", leafColor: "#b30000", blockCalls: 616 },
-    { name: "interpolators", leafColor: "#fc8d59", blockCalls: 24 },
-    { name: "interpolateArray", leafColor: "#fc8d59", blockCalls: 26 },
-    { name: "ease", leafColor: "#e34a33", blockCalls: 87 },
-    { name: "interpolateHcl", leafColor: "#e34a33", blockCalls: 104 },
-    { name: "interpolateHsl", leafColor: "#e34a33", blockCalls: 207 },
-    { name: "interpolateLab", leafColor: "#e34a33", blockCalls: 80 },
-    { name: "interpolateRound", leafColor: "#fc8d59", blockCalls: 27 },
-    { name: "transform", leafColor: "#fc8d59", blockCalls: 41 },
-    { name: "interpolateTransform", leafColor: "#fc8d59", blockCalls: 27 },
-    {
-      name: "layout",
-      children: [
-        { name: "bundle", leafColor: "#fc8d59", blockCalls: 30 },
-        { name: "chord", leafColor: "#e34a33", blockCalls: 56 },
-        { name: "force", leafColor: "#e34a33", blockCalls: 258 },
-        { name: "hierarchy", leafColor: "#fc8d59", blockCalls: 29 },
-        { name: "partition", leafColor: "#e34a33", blockCalls: 56 },
-        { name: "pie", leafColor: "#e34a33", blockCalls: 145 },
-        { name: "stack", leafColor: "#e34a33", blockCalls: 78 },
-        { name: "histogram", leafColor: "#fc8d59", blockCalls: 46 },
-        { name: "pack", leafColor: "#e34a33", blockCalls: 61 },
-        { name: "tree", leafColor: "#e34a33", blockCalls: 122 },
-        { name: "cluster", leafColor: "#fc8d59", blockCalls: 41 },
-        { name: "treemap", leafColor: "#e34a33", blockCalls: 52 }
-      ],
-      leafColor: "#b30000"
-    },
-    {
       name: "random",
       children: [
         { name: "normal", leafColor: "#e34a33", blockCalls: 55 },
@@ -376,25 +286,6 @@ export const data = {
       ],
       leafColor: "#fdcc8a",
       blockCalls: 1
-    },
-    {
-      name: "scale",
-      children: [
-        { name: "linear", leafColor: "#b30000", blockCalls: 1730 },
-        { name: "log", leafColor: "#e34a33", blockCalls: 75 },
-        { name: "pow", leafColor: "#fc8d59", blockCalls: 39 },
-        { name: "sqrt", leafColor: "#e34a33", blockCalls: 152 },
-        { name: "ordinal", leafColor: "#b30000", blockCalls: 613 },
-        { name: "category10", leafColor: "#fdcc8a", blockCalls: 1 },
-        { name: "category20", leafColor: "#fdcc8a", blockCalls: 1 },
-        { name: "category20b", leafColor: "#fdcc8a", blockCalls: 1 },
-        { name: "category20c", leafColor: "#fdcc8a", blockCalls: 1 },
-        { name: "quantile", leafColor: "#fc8d59", blockCalls: 36 },
-        { name: "quantize", leafColor: "#e34a33", blockCalls: 94 },
-        { name: "threshold", leafColor: "#fc8d59", blockCalls: 42 },
-        { name: "identity", leafColor: "#fc8d59", blockCalls: 47 }
-      ],
-      leafColor: "#7f0000"
     },
     {
       name: "svg",

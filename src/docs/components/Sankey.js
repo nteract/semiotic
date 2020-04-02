@@ -17,7 +17,7 @@ export default class Sankey extends React.Component {
     super(props)
 
     this.state = {
-      type: "chord",
+      type: "sankey",
       orient: "center",
       cycle: "no cycles",
       direction: "horizontal"

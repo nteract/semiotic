@@ -4,7 +4,6 @@ import { sum } from "d3-array"
 import { scaleSqrt } from "d3-scale"
 import roughjs from "roughjs/dist/rough.es5.umd.js"
 
-
 import DocumentComponent from "../layout/DocumentComponent"
 
 const components = []
@@ -250,14 +249,14 @@ export default class CreatingPieChart extends React.Component {
             data={pieChartData}
             oAccessor={"user"}
             dynamicColumnWidth={d => sum(d.map(p => p.retweets + p.favorites))}
-            style={d => ({ fill: colorHash[d.user], stroke: colorHash[d.user], strokeWidth: 2 })}
-            type={{ type: "bar", innerRadius: 50 }}
+            style={d => ({ fill: colorHash[d.user], stroke: colorHash[d.user], strokeWidth: 5 })}
+            type={{ type: "bar", innerRadius: 0 }}
             projection="radial"
             margin={{ top: 50, bottom: 50, left: 50, right: 50 }}
             oPadding={1}
             hoverAnnotation={true}
             tooltipContent="pie"
-            renderMode={d => sketchyHash[d.user]}
+            renderMode={() => sketchyHash.Susie}
             sketchyRenderingEngine={roughjs}
 
           />

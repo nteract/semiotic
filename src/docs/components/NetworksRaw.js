@@ -8,6 +8,8 @@ import {
   forceCollide,
   forceManyBody
 } from "d3-force"
+import roughjs from "roughjs/dist/rough.es5.umd.js"
+
 // import ProcessViz from "./ProcessViz"
 /*
   <div>
@@ -39,7 +41,7 @@ const bunchaNodes = [...Array(40)].map((d, i) => ({
 const bunchaEdges = [...Array(20)].map(() => ({
   source: `Node ${parseInt(Math.random() * 40)}`,
   target: `Node ${parseInt(Math.random() * 40)}`,
-  weight: 20
+  weight: 2
 }))
 
 const bunchaOtherNodes = [...Array(20)].map((d, i) => ({
@@ -91,19 +93,43 @@ export const changeEdges = moreNodes => {
   const finalNodes = !moreNodes ? bunchaNodes : [...bunchaNodes, ...bunchaOtherNodes]
   const finalEdges = !moreNodes ? bunchaEdges : [...bunchaEdges, ...bunchaOtherEdges]
   return (
-    <NetworkFrame
-      nodes={finalNodes}
-      edges={finalEdges}
-      size={[700, 700]}
-      networkType={{
-        type: "force",
-        fixExistingNodes: false
-      }}
-      nodeSizeAccessor={d => d.r}
-      nodeStyle={d => ({ fill: d.color, stroke: "darkred" })}
-      edgeStyle={{ stroke: "red", strokeWidth: 2 }}
-      nodeIDAccessor="name"
-    />
+    <div>
+      <NetworkFrame
+        nodes={finalNodes}
+        edges={finalEdges}
+        size={[700, 700]}
+        networkType={{
+          type: "force",
+          fixExistingNodes: false
+        }}
+        edgeType="arrowhead"
+        nodeSizeAccessor={d => d.r + 3}
+        nodeStyle={() => ({ fill: "#fcc089", stroke: "#fcc089" })}
+        edgeStyle={{ stroke: "#00b0b9", fill: "#00b0b9", strokeWidth: 2 }}
+        nodeIDAccessor="name"
+        sketchyRenderingEngine={roughjs}
+        nodeRenderMode={{ renderMode: "sketchy", fillStyle: "solid" }}
+        edgeRenderMode="sketchy"
+      />
+      <NetworkFrame
+        nodes={finalNodes}
+        edges={finalEdges}
+        size={[700, 700]}
+        networkType={{
+          type: "force",
+          fixExistingNodes: false
+        }}
+        edgeType="ribbon"
+        nodeSizeAccessor={d => d.r + 3}
+        nodeStyle={() => ({ fill: "#fcc089", stroke: "#fcc089" })}
+        edgeStyle={{ stroke: "#00b0b9", fill: "#00b0b9", strokeWidth: 2 }}
+        nodeIDAccessor="name"
+        sketchyRenderingEngine={roughjs}
+        nodeRenderMode={{ renderMode: "sketchy", fillStyle: "solid" }}
+        edgeRenderMode="sketchy"
+      />
+
+    </div>
   )
 }
 

@@ -9,9 +9,9 @@ const components = []
 // Add your component proptype data here
 // multiple component proptype documentation supported
 const barChartData = [
-  { user: "Jason", tweets: 20, retweets: 30, favorites: 0 },
   { user: "Susie", tweets: 50, retweets: 50, favorites: 100 },
   { user: "Matt", tweets: 30, retweets: 20, favorites: 150 },
+  { user: "Jason", tweets: 20, retweets: 30, favorites: 0 },
   { user: "Betty", tweets: 10, retweets: 50, favorites: 10 }
 ]
 
@@ -147,7 +147,7 @@ export default class CreatingBarChart extends React.Component {
             rAccessor={"tweets"}
             rScaleType={scaleLog()}
             rExtent={[1]}
-            style={{ fill: "#00a2ce", stroke: "white" }}
+            style={{ fill: "#00a2ce", stroke: "black", strokeWidth: 4 }}
             type={"bar"}
             projection="vertical"
             axes={[{ orient: "bottom" }]}
@@ -155,13 +155,16 @@ export default class CreatingBarChart extends React.Component {
             customClickBehavior={d => console.info("click", d)}
             customDoubleClickBehavior={d => console.info("doubleclick", d)}
             margin={50}
+            sketchyRenderingEngine={roughjs}
+            oPadding={10}
+            renderMode={{ renderMode: "sketchy", fillStyle: "zigzag", hachureGap: 5, fillWeight: 3 }}
             oLabel={(d) => {
               const text = (
                 <text className="ft-12" y={5} x={20} transform="rotate(-90)">
                   {d}
                 </text>
               )
-              return (
+              return <g /> || (
                 <g>
                   <g strokeWidth="3">{text}</g>
                 </g>
