@@ -36,22 +36,22 @@ const radialBarFeatureGenerator = ({
   const adjustedPct =
     rangeMod < 1
       ? scaleLinear()
-          .domain([0, 1])
-          .range(rangePct)
+        .domain([0, 1])
+        .range(rangePct)
       : d => d
 
   let innerSize =
     type.type === "clusterbar"
       ? 0
       : type.type === "timeline"
-      ? piece.scaledValue / 2
-      : piece.bottom / 2
+        ? piece.scaledValue / 2
+        : piece.bottom / 2
   let outerSize =
     type.type === "clusterbar"
       ? piece.scaledValue / 2
       : type.type === "timeline"
-      ? piece.scaledEndValue / 2
-      : piece.scaledValue / 2 + piece.bottom / 2
+        ? piece.scaledEndValue / 2
+        : piece.scaledValue / 2 + piece.bottom / 2
 
   if (innerRadius) {
     innerRadius = parseInt(innerRadius, 10)
@@ -73,10 +73,10 @@ const radialBarFeatureGenerator = ({
   const startAngle = adjustedPct(
     type.type === "clusterbar"
       ? ordset.pct_start +
-          (i / ordset.pieceData.length) * (ordset.pct - ordset.pct_padding)
+      (i / ordset.pieceData.length) * (ordset.pct - ordset.pct_padding)
       : ordset.pct === 1
-      ? 0
-      : ordset.pct_start + offsetPct
+        ? 0
+        : ordset.pct_start + offsetPct
   )
 
   const endAngle =
@@ -309,7 +309,7 @@ export function clusterBarLayout({
         markProps = {}
 
       if (projection === "radial") {
-        ;({ xPosition, yPosition, markProps, xy } = radialBarFeatureGenerator({
+        ; ({ xPosition, yPosition, markProps, xy } = radialBarFeatureGenerator({
           type,
           ordset,
           adjustedSize,
@@ -378,16 +378,16 @@ export function clusterBarLayout({
           )}
         </g>
       ) : (
-        {
-          className: classFn({ ...piece, ...piece.data }, i),
-          renderMode: renderValue,
-          key: `piece-${piece.renderKey}`,
-          transform: translate,
-          style: styleFn({ ...piece, ...piece.data }, ordsetI),
-          ...markProps,
-          ...eventListeners
-        }
-      )
+          {
+            className: classFn({ ...piece, ...piece.data }, i),
+            renderMode: renderValue,
+            key: `piece-${piece.renderKey}`,
+            transform: translate,
+            style: styleFn({ ...piece, ...piece.data }, ordsetI),
+            ...markProps,
+            ...eventListeners
+          }
+        )
 
       const calculatedPiece = {
         o: key,
@@ -438,24 +438,43 @@ export function barLayout({
       let finalWidth = barColumnWidth
       let finalHeight = pieceSize
 
+      let xy = {}
+
       if (!piece.negative) {
         yPosition -= piece.scaledValue
       }
 
-      if (projection === "horizontal") {
+      if (projection === "vertical") {
+        xy = {
+          x: xPosition,
+          y: yPosition,
+          middle: barColumnWidth / 2,
+          height: finalHeight,
+          width: finalWidth
+        }
+      } else if (projection === "horizontal") {
         yPosition = piece.x
         xPosition = piece.bottom
         finalHeight = barColumnWidth
         finalWidth = pieceSize
+
+        xy = {
+          x: xPosition + piece.scaledValue,
+          y: yPosition,
+          middle: barColumnWidth / 2,
+          height: finalHeight,
+          width: finalWidth
+        }
         if (piece.negative) {
           xPosition = piece.bottom - piece.scaledValue
         }
+
       }
 
       let markProps
 
       if (projection === "radial") {
-        ;({ markProps, xPosition, yPosition } = radialBarFeatureGenerator({
+        ; ({ markProps, xPosition, yPosition } = radialBarFeatureGenerator({
           type,
           ordset,
           adjustedSize,
@@ -464,6 +483,15 @@ export function barLayout({
         }))
         finalHeight = undefined
         finalWidth = undefined
+
+        xy = {
+          x: xPosition,
+          y: yPosition,
+          middle: barColumnWidth / 2,
+          height: finalHeight,
+          width: finalWidth
+        }
+
       } else {
         markProps = {
           markType: "rect",
@@ -477,14 +505,6 @@ export function barLayout({
       }
 
       const eventListeners = eventListenersGenerator(piece, i)
-
-      const xy = {
-        x: xPosition,
-        y: yPosition,
-        middle: barColumnWidth / 2,
-        height: finalHeight,
-        width: finalWidth
-      }
 
       if (type.icon && projection !== "radial") {
         type.customMark = iconBarCustomMark({
@@ -524,15 +544,15 @@ export function barLayout({
           )}
         </g>
       ) : (
-        {
-          className: classFn({ ...piece, ...piece.data }, i),
-          renderMode: renderValue,
-          key: `piece-${piece.renderKey}`,
-          style: styleFn({ ...piece, ...piece.data }, ordsetI),
-          ...eventListeners,
-          ...markProps
-        }
-      )
+          {
+            className: classFn({ ...piece, ...piece.data }, i),
+            renderMode: renderValue,
+            key: `piece-${piece.renderKey}`,
+            style: styleFn({ ...piece, ...piece.data }, ordsetI),
+            ...eventListeners,
+            ...markProps
+          }
+        )
 
       const calculatedPiece = {
         o: key,
@@ -569,6 +589,9 @@ export function timelineLayout({
     const calculatedPieces = []
 
     ordset.pieceData.forEach((piece, i) => {
+      let scaledValue,
+        scaledBottom
+
       const renderValue = renderMode && renderMode(piece.data, i)
       let xPosition = ordset.x
       let height = piece.scaledEndValue - piece.scaledValue
@@ -602,6 +625,8 @@ export function timelineLayout({
       if (projection === "horizontal") {
         yPosition = ordset.x
         xPosition = piece.scaledValue
+        scaledValue = piece.scaledEndValue - piece.scaledValue
+        scaledBottom = piece.scaledBottom
         width = piece.scaledEndValue - piece.scaledValue
         height = ordset.width
         markProps = {
@@ -612,7 +637,7 @@ export function timelineLayout({
           y: yPosition
         }
       } else if (projection === "radial") {
-        ;({ markProps } = radialBarFeatureGenerator({
+        ; ({ markProps } = radialBarFeatureGenerator({
           piece,
           type,
           ordset,
@@ -627,6 +652,8 @@ export function timelineLayout({
       const xy = {
         x: xPosition,
         y: yPosition,
+        scaledValue,
+        scaledBottom,
         height
       }
 
@@ -652,15 +679,15 @@ export function timelineLayout({
           )}
         </g>
       ) : (
-        {
-          className: classFn({ ...piece, ...piece.data }, i),
-          renderMode: renderValue,
-          key: `piece-${piece.renderKey}`,
-          style: styleFn({ ...piece, ...piece.data }, ordsetI),
-          ...markProps,
-          ...eventListeners
-        }
-      )
+          {
+            className: classFn({ ...piece, ...piece.data }, i),
+            renderMode: renderValue,
+            key: `piece-${piece.renderKey}`,
+            style: styleFn({ ...piece, ...piece.data }, ordsetI),
+            ...markProps,
+            ...eventListeners
+          }
+        )
 
       const calculatedPiece = {
         o: key,
@@ -752,21 +779,21 @@ export function pointLayout({
           )}
         </g>
       ) : (
-        {
-          className: classFn({ ...piece, ...piece.data }, i),
-          markType: "rect",
-          renderMode: renderValue,
-          key: `piece-${piece.renderKey}`,
-          height: actualCircleRadius * 2,
-          width: actualCircleRadius * 2,
-          x: xPosition - actualCircleRadius,
-          y: yPosition - actualCircleRadius,
-          rx: actualCircleRadius,
-          ry: actualCircleRadius,
-          style: styleFn({ ...piece, ...piece.data }, ordsetI),
-          ...eventListeners
-        }
-      )
+          {
+            className: classFn({ ...piece, ...piece.data }, i),
+            markType: "rect",
+            renderMode: renderValue,
+            key: `piece-${piece.renderKey}`,
+            height: actualCircleRadius * 2,
+            width: actualCircleRadius * 2,
+            x: xPosition - actualCircleRadius,
+            y: yPosition - actualCircleRadius,
+            rx: actualCircleRadius,
+            ry: actualCircleRadius,
+            style: styleFn({ ...piece, ...piece.data }, ordsetI),
+            ...eventListeners
+          }
+        )
 
       const calculatedPiece = {
         o: key,
@@ -885,21 +912,21 @@ export function swarmLayout({
           )}
         </g>
       ) : (
-        {
-          className: classFn({ ...piece, ...piece.data }, i),
-          markType: "rect",
-          renderMode: renderValue,
-          key: `piece-${piece.renderKey}`,
-          height: actualCircleRadius * 2,
-          width: actualCircleRadius * 2,
-          x: xPosition - actualCircleRadius,
-          y: yPosition - actualCircleRadius,
-          rx: actualCircleRadius,
-          ry: actualCircleRadius,
-          style: styleFn({ ...piece, ...piece.data }, ordsetI),
-          ...eventListeners
-        }
-      )
+          {
+            className: classFn({ ...piece, ...piece.data }, i),
+            markType: "rect",
+            renderMode: renderValue,
+            key: `piece-${piece.renderKey}`,
+            height: actualCircleRadius * 2,
+            width: actualCircleRadius * 2,
+            x: xPosition - actualCircleRadius,
+            y: yPosition - actualCircleRadius,
+            rx: actualCircleRadius,
+            ry: actualCircleRadius,
+            style: styleFn({ ...piece, ...piece.data }, ordsetI),
+            ...eventListeners
+          }
+        )
 
       const calculatedPiece = {
         o: key,

@@ -141,7 +141,8 @@ const sharedframeproptypes = {
   legend: true,
   onUnmount: true,
   sketchyRenderingEngine: true,
-  interactionSettings: true
+  interactionSettings: true,
+  frameRenderOrder: true
 }
 
 export const xyframeproptypes = {

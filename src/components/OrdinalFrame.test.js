@@ -99,7 +99,7 @@ describe("OrdinalFrame", () => {
     .getDOMNode().style
 
   it("properly positions a piece ID accessor annotation", () => {
-    expect(stackedAnnotationPosition.left).toEqual("250px")
+    expect(stackedAnnotationPosition.left).toEqual("500px")
     expect(parseInt(stackedAnnotationPosition.top)).toEqual(416)
   })
 

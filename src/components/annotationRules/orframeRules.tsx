@@ -387,11 +387,10 @@ export const screenProject = ({
   }
   if (projection === "horizontal") {
     return [
-      idPiece && (idPiece.x || idPiece.scaledValue)
-        ? idPiece.x === undefined
-          ? idPiece.x
-          : (idPiece.value >= 0 ? idPiece.bottom + idPiece.scaledValue / 2 : idPiece.bottom)
-        : rScale(pValue),
+      idPiece && idPiece.scaledEndValue ? idPiece.scaledEndValue :
+        idPiece && idPiece.scaledValue
+          ? (idPiece.value >= 0 ? idPiece.bottom + idPiece.scaledValue : idPiece.bottom)
+          : rScale(pValue),
       o
     ]
   }
