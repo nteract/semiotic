@@ -51,6 +51,7 @@ class MinimapXYFrame extends React.Component<MinimapXYFrameProps> {
       summaryType,
       interactionSettings
     } = this.props
+
     const miniDefaults = {
       position: [0, 0],
       size: [size[0], size[1] * 0.25],

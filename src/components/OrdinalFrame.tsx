@@ -92,7 +92,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, OrdinalFrameState>
       calculatedRExtent: [0, 1],
       columnOverlays: [],
       dataVersion: undefined,
-      legendSettings: {},
+      legendSettings: undefined,
       margin: { top: 0, bottom: 0, left: 0, right: 0 },
       oExtent: [],
       oScaleType: scaleBand(),
