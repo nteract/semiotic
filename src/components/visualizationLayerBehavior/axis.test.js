@@ -1,5 +1,3 @@
-import React from "react"
-import { mount } from "enzyme"
 import { axisPieces } from "./axis"
 import { scaleLinear } from "d3-scale"
 
