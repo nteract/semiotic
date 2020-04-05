@@ -49,7 +49,6 @@ export function lineGeneratorDecorator({
 
   if (simpleLine) {
     generator.y(d => yScale(d[y]))
-    generator.x(d => yScale(d[x]))
   } else {
     generator.y0(d => yScale(d[yBottom])).y1(d => yScale(d[yTop]))
     generator.x0(d => xScale(d[xBottom])).x1(d => xScale(d[xTop]))
