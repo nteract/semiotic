@@ -155,7 +155,10 @@ export const calculateXYFrame = (currentProps: XYFrameProps, prevState: XYFrameS
 
     if (summaryType && points && !summaries) {
         summaries = [{ coordinates: points }]
+    } else if (summaryType && summaryType.type === "linebounds" && lines && !summaries) {
+        summaries = lines
     }
+
 
     const castXScaleType = (baseXScaleType as unknown) as Function
 

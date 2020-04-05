@@ -40,7 +40,6 @@ const createLinesSettings = {
 describe("axisPieces", () => {
 
     const createdLine = createLines(createLinesSettings)
-    console.log("createdLine", createdLine)
 
     it("Creates a simple line", () => {
         expect(createdLine[0].props.d).toEqual("M0,15L100,50L200,40L300,30L400,25")
