@@ -20,9 +20,9 @@ position?: "left" | "right"
 
 describe("Legend", () => {
     it("renders without crashing", () => {
-        mount(<Legend
+        mount(<svg><Legend
             legendGroups={legendGroups}
-        />)
+        /></svg>)
     })
 
 })

@@ -15,7 +15,7 @@ const axisProps = {
 
 describe("Axis", () => {
   it("renders without crashing", () => {
-    mount(<Axis {...axisProps} />)
+    mount(<svg><Axis {...axisProps} /></svg>)
   })
   const shallowAxis = shallow(<Axis {...axisProps} className="test-class" />)
 
@@ -33,8 +33,8 @@ describe("Axis", () => {
       //      console.info("e", e)
       clicked = true
     }
-    const shallowAxisBrushLeft = shallow(
-      <Axis {...axisProps} annotationFunction={testFuncStub} orient={"left"} />
+    const shallowAxisBrushLeft = mount(
+      <svg><Axis {...axisProps} annotationFunction={testFuncStub} orient={"left"} /></svg>
     )
 
     expect(shallowAxisBrushLeft.find("g.annotation-brush").length).toEqual(1)
@@ -46,12 +46,12 @@ describe("Axis", () => {
       shallowAxisBrushLeft.find("g.annotation-brush").props().transform
     ).toEqual(`translate(-50,0)`)
 
-    const shallowAxisBrushBottom = shallow(
-      <Axis
+    const shallowAxisBrushBottom = mount(
+      <svg><Axis
         {...axisProps}
         annotationFunction={testFuncStub}
         orient={"bottom"}
-      />
+      /></svg>
     )
     expect(
       shallowAxisBrushBottom.find("g.annotation-brush").props().transform

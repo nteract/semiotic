@@ -10,11 +10,11 @@ const svgBrush = brushX().extent([0, 0], [500, 500])
 
 describe("Brush", () => {
     it("renders without crashing", () => {
-        mount(<Brush
+        mount(<svg><Brush
             extent={extent}
             selectedExtent={selectedExtent}
             svgBrush={svgBrush}
-        />)
+        /></svg>)
     })
 
     const mountedBrush = mount(

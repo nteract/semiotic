@@ -2,8 +2,8 @@ import React from "react"
 import { mount } from "enzyme"
 import AnnotationLayer from "./AnnotationLayer"
 
-const svgAnnotationRule = () => <g><text>Just a blank</text></g>
-const htmlAnnotationRule = () => <div>Just a blank</div>
+const svgAnnotationRule = (d, i) => <g key={`annotation-${i}`}><text>Just a blank</text></g>
+const htmlAnnotationRule = (d, i) => <div key={`annotation-${i}`} > Just a blank</ div>
 const voronoiHover = () => { }
 
 const annotations = [
