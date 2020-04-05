@@ -23,7 +23,7 @@ import CrossHighlighting from "./guides/CrossHighlighting"
 import Tooltips from "./guides/Tooltips"
 import Test from "./Test"
 import Annotations from "./guides/Annotations"
-import UsingSketchyPaintyPatterns from "./guides/UsingSketchyPaintyPatterns"
+import UsingSketchyPatterns from "./guides/UsingSketchyPatterns"
 import ForegroundBackgroundSVG from "./guides/ForegroundBackgroundSVG"
 import CanvasRendering from "./guides/CanvasRendering"
 import AxisSettings from "./guides/AxisSettings"
@@ -209,9 +209,9 @@ export const PAGES = [
         img: "sparkline"
       },
       {
-        name: "Using Sketchy / Painty / Patterns",
-        url: "sketchy-painty-patterns",
-        component: UsingSketchyPaintyPatterns,
+        name: "Using Sketchy / Patterns",
+        url: "sketchy-patterns",
+        component: UsingSketchyPatterns,
         img: "pattern"
       },
       {

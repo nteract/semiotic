@@ -68,7 +68,11 @@ export default class CreateXYBrushes extends React.Component {
   }
 
   changeExtent(e) {
-    this.setState({ selectedExtent: [Math.floor(e[0]), Math.ceil(e[1])] })
+    if (e) {
+      this.setState({ selectedExtent: [Math.floor(e[0]), Math.ceil(e[1])] })
+    } else {
+      this.setState({ selectedExtent: [20, 30] })
+    }
   }
   render() {
     const frameProps = {

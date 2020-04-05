@@ -38,7 +38,7 @@ const frameProps = {
     fill: velocityScale(d.exit_velocity),
     r: 6
   }),
-  // areas: [{ label: "stanton", coordinates: data }],
+  // summaries: [{ label: "stanton", coordinates: data }],
   hoverAnnotation: true,
   tooltipContent: d => (
     <div className="tooltip-content">

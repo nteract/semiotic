@@ -80,8 +80,6 @@ export default () => (
   - [name: { _string_ }](#name-string-)
   - [position: { _array_ }](#position-array-)
   - [additionalDefs: { _JSX_ }](#additionaldefs-jsx-)
-  - [download: { _bool_ }](#download-bool-)
-  - [downloadFields: { _array_ }](#downloadfields-array-)
 
 ## General Properties
 
@@ -323,7 +321,7 @@ Sets the css `class` of each piece element. This can be a string class name or a
 
 ### canvasPieces: { _boolean_ | _function_ }
 
-If _canvasPieces_ is specified, renders area elements in Canvas. The _canvasPieces_ attribute accepts a _boolean_ or a _function_ that evaluates a piece and returns a boolean that determines whether or not to render the area to [`Canvas`](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API) instead of [`SVG`](https://developer.mozilla.org/en-US/docs/Web/SVG).
+If _canvasPieces_ is specified, renders piece elements in Canvas. The _canvasPieces_ attribute accepts a _boolean_ or a _function_ that evaluates a piece and returns a boolean that determines whether or not to render the piece to [`Canvas`](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API) instead of [`SVG`](https://developer.mozilla.org/en-US/docs/Web/SVG).
 
 ```jsx
 /*Boolean option */
@@ -334,7 +332,7 @@ If _canvasPieces_ is specified, renders area elements in Canvas. The _canvasPiec
 
 ### renderMode: { _string_ | _function_ | _object_ }
 
-If _renderMode_ is specified, pieces are rendered in a non-photorealistic manner. This can be basic sketchy rendering using `"sketchy"` or primitive paint-style using `"painty"` or an object with `renderMode: "sketchy"` and properties matching those found in [roughjs](https://roughjs.com/) or a function that takes a line data object and returns a string or object such as that. Sketchy (but not painty) render mode is honored in canvas rendering.
+If _renderMode_ is specified, pieces are rendered in a non-photorealistic manner. This can be basic sketchy rendering using `"sketchy"` or an object with `renderMode: "sketchy"` and properties matching those found in [roughjs](https://roughjs.com/) or a function that takes a line data object and returns a string or object such as that. Sketchy render mode is honored in canvas rendering.
 
 ````jsx
 /*Boolean option */
@@ -385,7 +383,7 @@ Since this is connecting two pieces you have access to both the `source` piece a
 
 ### canvasConnectors: { _boolean_ | _function_ }
 
-If _canvasConnectors_ is specified, renders area elements in Canvas. The _canvasConnectors_ attribute accepts a _boolean_ or a _function_ that evaluates a connector and returns a boolean that determines whether or not to render the area to [`Canvas`](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API) instead of [`SVG`](https://developer.mozilla.org/en-US/docs/Web/SVG).
+If _canvasConnectors_ is specified, renders connector elements in Canvas. The _canvasConnectors_ attribute accepts a _boolean_ or a _function_ that evaluates a connector and returns a boolean that determines whether or not to render the connector to [`Canvas`](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API) instead of [`SVG`](https://developer.mozilla.org/en-US/docs/Web/SVG).
 
 ```jsx
 /*Boolean option */
@@ -396,7 +394,7 @@ If _canvasConnectors_ is specified, renders area elements in Canvas. The _canvas
 
 ### connectorRenderMode: { _string_ | _function_ | _object_ }
 
-If _connectorRenderMode_ is specified, pieces are rendered in a non-photorealistic manner. This can be basic sketchy rendering using `"sketchy"` or primitive paint-style using `"painty"` or an object with `renderMode: "sketchy"` and properties matching those found in [roughjs](https://roughjs.com/) or a function that takes a line data object and returns a string or object such as that. Sketchy (but not painty) render mode is honored in canvas rendering.
+If _connectorRenderMode_ is specified, pieces are rendered in a non-photorealistic manner. This can be basic sketchy rendering using `"sketchy"` or an object with `renderMode: "sketchy"` and properties matching those found in [roughjs](https://roughjs.com/) or a function that takes a line data object and returns a string or object such as that. Sketchy render mode is honored in canvas rendering.
 
 ```jsx
 /*Boolean option */
@@ -503,7 +501,7 @@ A function that takes a the `middle` of a `summary`, the `key`, and the index of
 
 ### canvasSummaries: { _boolean_ | _function_ }
 
-If _canvasSummaries_ is specified, renders area elements in Canvas. The _canvasSummaries_ attribute accepts a _boolean_ or a _function_ that evaluates a summary and returns a boolean that determines whether or not to render the area to [`Canvas`](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API) instead of [`SVG`](https://developer.mozilla.org/en-US/docs/Web/SVG).
+If _canvasSummaries_ is specified, renders summary elements in Canvas. The _canvasSummaries_ attribute accepts a _boolean_ or a _function_ that evaluates a summary and returns a boolean that determines whether or not to render the summary to [`Canvas`](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API) instead of [`SVG`](https://developer.mozilla.org/en-US/docs/Web/SVG).
 
 ```jsx
 /*Boolean option */
@@ -514,7 +512,7 @@ If _canvasSummaries_ is specified, renders area elements in Canvas. The _canvasS
 
 ### summaryRenderMode: { _string_ | _function_ | _object_ }
 
-If _summaryRenderMode_ is specified, summaries are rendered in a non-photorealistic manner. This can be basic sketchy rendering using `"sketchy"` or primitive paint-style using `"painty"` or an object with `renderMode: "sketchy"` and properties matching those found in [roughjs](https://roughjs.com/) or a function that takes a line data object and returns a string or object such as that. Sketchy (but not painty) render mode is honored in canvas rendering.
+If _summaryRenderMode_ is specified, summaries are rendered in a non-photorealistic manner. This can be basic sketchy rendering using `"sketchy"` or an object with `renderMode: "sketchy"` and properties matching those found in [roughjs](https://roughjs.com/) or a function that takes a line data object and returns a string or object such as that. Sketchy render mode is honored in canvas rendering.
 
 ```jsx
 /*Boolean option */
@@ -712,7 +710,7 @@ Just an offset and hardly ever useful
 
 ### additionalDefs: { _JSX_ }
 
-A JSX or array of JSX to be injected into the visualization layer's SVG `defs`. This is useful for [defining patterns](/guides/sketchy-painty-patterns) that you want to use as fills, or markers or gradients or other SVG material typically defined in defs.
+A JSX or array of JSX to be injected into the visualization layer's SVG `defs`. This is useful for [defining patterns](/guides/sketchy-patterns) that you want to use as fills, or markers or gradients or other SVG material typically defined in defs.
 
 ```jsx
 <OrdinalFrame
@@ -725,10 +723,3 @@ A JSX or array of JSX to be injected into the visualization layer's SVG `defs`. 
 />
 ```
 
-### download: { _bool_ }
-
-Enable a download button to download the data as a CSV
-
-### downloadFields: { _array_ }
-
-The field keys to download from each datapoint. By default, the CSV download only shows the o and r values.

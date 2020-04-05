@@ -82,8 +82,6 @@ export default () => <XYFrame
   - [dataVersion: { _string_ }](#dataversion-string-)
   - [name: { _string_ }](#name-string-)
   - [additionalDefs: { _JSX_ }](#additionaldefs-jsx-)
-  - [download: { _bool_ }](#download-bool-)
-  - [downloadFields: { _array_ }](#downloadfields-array-)
 
 ## General Properties
 
@@ -221,7 +219,7 @@ Inverts the _y_ axis such that the _min_ and _max_ values are transposed.
 
 ### showLinePoints: { _boolean_ }
 
-If _showLinePoints_ is specified, displays the points that make up the line elements. These points will be styled just like points that are added to the `points` array using `pointStyle` or `pointClass` with the only difference being that points will have a `parentLine` or `parentArea` property that will point to the line or area that this point is a part of.
+If _showLinePoints_ is specified, displays the points that make up the line elements. These points will be styled just like points that are added to the `points` array using `pointStyle` or `pointClass` with the only difference being that points will have a `parentLine` or `parentSummary` property that will point to the line or summary that this point is a part of.
 
 ```jsx
 <XYFrame showLinePoints={ true } ... />
@@ -229,7 +227,7 @@ If _showLinePoints_ is specified, displays the points that make up the line elem
 
 ### showSummaryPoints: { _boolean_ }
 
-If _showSummaryPoints_ is specified, displays the points that make up the areas for summary elements. These points will be styled just like points that are added to the `points` array using `pointStyle` or `pointClass`.
+If _showSummaryPoints_ is specified, displays the points that make up the summaries for summary elements. These points will be styled just like points that are added to the `points` array using `pointStyle` or `pointClass`.
 
 ```jsx
 <XYFrame showSummaryPoints={ true } ... />
@@ -261,7 +259,7 @@ By default, generated marks will be rendered with a key based on their array pos
 
 ### points: { [_data_] }
 
-An _array_ of arrays or objects representing individual points on a chart. If you want to show points on a line or area chart, use the [`showLinePoints`](#showlinepoints-boolean) property.
+An _array_ of arrays or objects representing individual points on a chart. If you want to show points on a line or summary chart, use the [`showLinePoints`](#showlinepoints-boolean) property.
 
 ```jsx
 var points = [[1, 2], [3, 4], [5, 8], [7, 16], [9, 32], [11, 64], [13, 128]]
@@ -350,7 +348,7 @@ A function taking the point data and returning SVG JSX representation of the poi
 
 ### pointRenderMode: { _string_ | _function_ | _object_ }
 
-If _pointRenderMode_ is specified, points are rendered in a non-photorealistic manner. This can be basic sketchy rendering using `"sketchy"` or primitive paint-style using `"painty"` or an object with `renderMode: "sketchy"` and properties matching those found in [roughjs](https://roughjs.com/) or a function that takes a line data object and returns a string or object such as that. Sketchy (but not painty) render mode is honored in canvas rendering.
+If _pointRenderMode_ is specified, points are rendered in a non-photorealistic manner. This can be basic sketchy rendering using `"sketchy"` or an object with `renderMode: "sketchy"` and properties matching those found in [roughjs](https://roughjs.com/) or a function that takes a line data object and returns a string or object such as that. Sketchy render mode is honored in canvas rendering.
 
 ```jsx
 /*Boolean option */
@@ -506,7 +504,7 @@ If _canvasLines_ is specified, renders line elements in [`Canvas`](https://devel
 
 ### lineRenderMode: { _string_ | _function_ | _object_ }
 
-If _lineRenderMode_ is specified, lines are rendered in a non-photorealistic manner. This can be basic sketchy rendering using `"sketchy"` or primitive paint-style using `"painty"` or an object with `renderMode: "sketchy"` and properties matching those found in [roughjs](https://roughjs.com/) or a function that takes a line data object and returns a string or object such as that. Sketchy (but not painty) render mode is honored in canvas rendering.
+If _lineRenderMode_ is specified, lines are rendered in a non-photorealistic manner. This can be basic sketchy rendering using `"sketchy"` or an object with `renderMode: "sketchy"` and properties matching those found in [roughjs](https://roughjs.com/) or a function that takes a line data object and returns a string or object such as that. Sketchy render mode is honored in canvas rendering.
 
 ```jsx
 /*Boolean option */
@@ -537,47 +535,47 @@ If _defined_ is specified, sets the accessor function that controls where the li
 
 ### summaries: { [_data_] }
 
-An array of arrays or objects representing individual points on a chart. If you want to show points on an area chart, use the [`showLinePoints`](#showlinepoints-boolean) property.
+An array of arrays or objects representing individual points on a chart. If you want to show points on an summary chart, use the [`showSummaryPoints`](#showsummarypoints-boolean) property.
 
 ```js
 var points = [[1, 2], [3, 4], [5, 8], [7, 16], [9, 32], [11, 64], [13, 128]]
 
 function MyAreaChart() {
-  return <XYFrame xAccessor={d => d[0]} yAccessor={d => d[1]} areas={points} />
+  return <XYFrame xAccessor={d => d[0]} yAccessor={d => d[1]} summaries={points} />
 }
 ```
 
 ### summaryDataAccessor: { _string_ | _function_ }
 
-If _areaDataAccessor_ is specified, determines how area coordinates are accessed from the data array passed to the areas attribute. Defaults to `coordinates`.
+If _summaryDataAccessor_ is specified, determines how summary coordinates are accessed from the data array passed to the summaries attribute. Defaults to `coordinates`.
 
 ```html
-/*String option */ <XYFrame areaDataAccessor={ "areaValues" } ... /> /*Function
-option */ <XYFrame areaDataAccessor={ d => d.areaValues } ... />
+/*String option */ <XYFrame summaryDataAccessor={ "areaValues" } ... /> /*Function
+option */ <XYFrame summaryDataAccessor={ d => d.areaValues } ... />
 ```
 
 ### summaryStyle: { _function_ | _object_ }
 
-If _areaStyle_ is specified, sets the inline css style of each area element.
+If _summaryStyle_ is specified, sets the inline css style of each summary element.
 
 ```html
-/*Object option */ <XYFrame areaStyle={ { fill: "#e3e3e3", stroke: "#e3e3e3" } }
-... /> /*Function option */ <XYFrame ... areaStyle={ d => ({ fill: d.fill,
+/*Object option */ <XYFrame summaryStyle={ { fill: "#e3e3e3", stroke: "#e3e3e3" } }
+... /> /*Function option */ <XYFrame ... summaryStyle={ d => ({ fill: d.fill,
 stroke: d.stroke }) } />
 ```
 
 ### summaryClass: { _string_ | _function_ }
 
-If _areaClass_ is specified, sets the css class of each area element.
+If _summaryClass_ is specified, sets the css class of each summary element.
 
 ```html
-/*String option */ <XYFrame areaClass={ "area" } ... /> /*Function option */
-<XYFrame areaClass={ d => d.className } ... />
+/*String option */ <XYFrame summaryClass={ "area" } ... /> /*Function option */
+<XYFrame summaryClass={ d => d.className } ... />
 ```
 
 ### summaryType: { _string_ | _object_ }
 
-If _summaryType_ is specified, renders one of the following supported summary types: `"contour"`, `"heatmap"`, `"hexbin"`, `"basic"`, otherwise it defaults to `"basic"`. Each of these takes a set of points passed either to the `points` prop or as `coordinates` of an object (or objects) sent to the `summaries` and either creates summary graphics (all options except `basic`) or draws areas assuming the points sent are coordinates in order for a shape (`basic`).
+If _summaryType_ is specified, renders one of the following supported summary types: `"contour"`, `"heatmap"`, `"hexbin"`, `"basic"`, otherwise it defaults to `"basic"`. Each of these takes a set of points passed either to the `points` prop or as `coordinates` of an object (or objects) sent to the `summaries` and either creates summary graphics (all options except `basic`) or draws summaries assuming the points sent are coordinates in order for a shape (`basic`).
 
 See the [XY summaries](/guides/xy-summaries) guide for detailed settings.
 
@@ -620,18 +618,18 @@ A function taking the summary datapoint and returning SVG JSX representation of 
 
 ### canvasSummaries: { _boolean_ | _function_ }
 
-If _canvasAreas_ is specified, renders area elements in Canvas. The _canvasAreas_ attribute accepts a _boolean_ or a _function_ that evaluates an area and returns a boolean that determines whether or not to render the area to [`Canvas`](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API) instead of [`SVG`](https://developer.mozilla.org/en-US/docs/Web/SVG).
+If _canvasSummaries_ is specified, renders summary elements in Canvas. The _canvasSummaries_ attribute accepts a _boolean_ or a _function_ that evaluates an summary and returns a boolean that determines whether or not to render the summary to [`Canvas`](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API) instead of [`SVG`](https://developer.mozilla.org/en-US/docs/Web/SVG).
 
 ```jsx
 /*Boolean option */
-<XYFrame canvasAreas="{" true } ... />
+<XYFrame canvasSummaries="{" true } ... />
 
-/*Function option */ <XYFrame canvasAreas={ (d, i) => } ... />
+/*Function option */ <XYFrame canvasSummaries={ (d, i) => } ... />
 ```
 
 ### summaryRenderMode: { _string_ | _function_ | _object_ }
 
-If _summaryRenderMode_ is specified, summaries are rendered in a non-photorealistic manner. This can be basic sketchy rendering using `"sketchy"` or primitive paint-style using `"painty"` or an object with `renderMode: "sketchy"` and properties matching those found in [roughjs](https://roughjs.com/) or a function that takes a line data object and returns a string or object such as that. Sketchy (but not painty) render mode is honored in canvas rendering.
+If _summaryRenderMode_ is specified, summaries are rendered in a non-photorealistic manner. This can be basic sketchy rendering using `"sketchy"` or an object with `renderMode: "sketchy"` and properties matching those found in [roughjs](https://roughjs.com/) or a function that takes a line data object and returns a string or object such as that. Sketchy render mode is honored in canvas rendering.
 
 ```jsx
 /*Boolean option */
@@ -654,7 +652,7 @@ If _summaryRenderMode_ is specified, summaries are rendered in a non-photorealis
 
 ### tooltipContent: { _function_ }
 
-A function returning JSX HTML to display in the [tooltip](/guides/tooltips) (only active if `hoverAnnotation` is set to `true`). The tooltip is passed the data point (which if part of a line or summary will be decorated with a corresponding `parentLine` or `parentArea` pointer to that object). The content is placed on and directly above the hovered point, so take that into account when using CSS to style the position and any additional elements. You can drop any HTML into this floating div, including another frame.
+A function returning JSX HTML to display in the [tooltip](/guides/tooltips) (only active if `hoverAnnotation` is set to `true`). The tooltip is passed the data point (which if part of a line or summary will be decorated with a corresponding `parentLine` or `parentSummary` pointer to that object). The content is placed on and directly above the hovered point, so take that into account when using CSS to style the position and any additional elements. You can drop any HTML into this floating div, including another frame.
 
 ```jsx
 <XYFrame
@@ -689,7 +687,7 @@ An array of objects to be processed using the frame's [built-in annotation](/gui
 
 ### svgAnnotationRules: { _function_ }
 
-A function that takes an annotation object and returns a JSX SVG element. The function is sent `{ d, i, screenCoordinates, xScale, yScale, xAccessor, yAccessor, xyFrameProps, xyFrameState, areas, points, lines, adjustedPosition, adjustedSize, annotationLayer, voronoiHover }`
+A function that takes an annotation object and returns a JSX SVG element. The function is sent `{ d, i, screenCoordinates, xScale, yScale, xAccessor, yAccessor, xyFrameProps, xyFrameState, summaries, points, lines, adjustedPosition, adjustedSize, annotationLayer, voronoiHover }`
 
 ```jsx
 <XYFrame svgAnnotationRules={({ d, screenCoordinates }) => {
@@ -899,7 +897,7 @@ Used internally to identify frames, which comes in handy when you need to link f
 
 ### additionalDefs: { _JSX_ }
 
-A JSX or array of JSX to be injected into the visualization layer's SVG `defs`. This is useful for [defining patterns](/guides/sketchy-painty-patterns) that you want to use as fills, or markers or gradients or other SVG material typically defined in defs.
+A JSX or array of JSX to be injected into the visualization layer's SVG `defs`. This is useful for [defining patterns](/guides/sketchy-patterns) that you want to use as fills, or markers or gradients or other SVG material typically defined in defs.
 
 ```jsx
 <XYFrame
@@ -912,10 +910,3 @@ A JSX or array of JSX to be injected into the visualization layer's SVG `defs`. 
 />
 ```
 
-### download: { _bool_ }
-
-Enable a download button to download the data as a CSV
-
-### downloadFields: { _array_ }
-
-The field keys to download from each datapoint. By default, the CSV download only shows the x and y values.

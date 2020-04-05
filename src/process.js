@@ -5,11 +5,10 @@ export const processNodes = [
       "data",
       "points",
       "lines",
-      "areas",
+      "summaries",
       "nodes",
       "edges",
-      "graph",
-      "summaries"
+      "graph"
     ]
   },
   {
@@ -39,7 +38,6 @@ export const processNodes = [
       "type",
       "connectorType",
       "summaryType",
-      "areaType",
       "networkType",
       "projection",
       "oPadding",
@@ -68,7 +66,7 @@ export const processNodes = [
       "invertO",
       "invertR",
       "lineDataAccessor",
-      "areaDataAccessor",
+      "summaryDataAccessor",
       "nodeIDAccessor",
       "sourceAccessor",
       "targetAccessor"
@@ -82,14 +80,12 @@ export const processNodes = [
       "summaryStyle",
       "pointStyle",
       "lineStyle",
-      "areaStyle",
       "nodeStyle",
       "edgeStyle",
       "pieceClass",
       "summaryClass",
       "pointClass",
       "lineClass",
-      "areaClass",
       "summaryClass",
       "nodeClass",
       "edgeClass",
@@ -100,7 +96,7 @@ export const processNodes = [
       "className",
       "pointRenderMode",
       "lineRenderMode",
-      "areaRenderMode",
+      "summaryRenderMode",
       "title",
       "foregroundGraphics",
       "backgroundGraphics",
@@ -113,7 +109,7 @@ export const processNodes = [
       "oSort",
       "filterRenderedNodes",
       "renderMode",
-      "summaryRenderMode",
+      "connectorRenderMode",
       "nodeRenderMode",
       "edgeRenderMode"
     ]
@@ -123,7 +119,7 @@ export const processNodes = [
     keys: [
       "canvasPoints",
       "canvasLines",
-      "canvasAreas",
+      "canvasSummaries",
       "canvasPieces",
       "canvasSummary",
       "canvasNodes",

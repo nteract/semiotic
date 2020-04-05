@@ -1,11 +1,10 @@
-`<Mark>` is a simple component that instantiates different SVG elements depending on the `markType` but also other attributes sent. So, for example, a markType of `rect` will usually result in an SVG rectangle but if you set `renderMode="sketchy"` it will return two SVG paths. All display elements are wrapped in a `<g>` and Mark does have a limited drag-and-drop context. This will probably eventually be its own library in the future. You would pass a Mark any of the native SVG properties you would expect of the markType you intend to render, and Mark will adjust those if the final product is not an element that supports it (such as "r" when the actual rendered element is a path). By default Marks will try to make an animated transition from one state to another, using `flubber.js` if they are SVG paths in their initial and end state.
+`<Mark>` is a simple component that instantiates different SVG elements depending on the `markType` but also other attributes sent. So, for example, a markType of `rect` will usually result in an SVG rectangle but if you set `renderMode="sketchy"` it will return two SVG paths. All display elements are wrapped in a `<g>` and Mark does have a limited drag-and-drop context. This will probably eventually be its own library in the future. You would pass a Mark any of the native SVG properties you would expect of the markType you intend to render, and Mark will adjust those if the final product is not an element that supports it (such as "r" when the actual rendered element is a path). By default Marks will try to make an animated transition from one state to another, using simple `d3-transition` rules.
 
 ```js
 import { Mark } from "semiotic-mark";
 
 <Mark
   markType="circle"
-  renderMode="painty"
   r={5}
   cx={150}
   cy={150}
@@ -35,10 +34,12 @@ If set to `true`, then _forceUpdate_ will cause an element to change to any new 
 
 ### renderMode: { _string_ }
 
-Marks currently ship with two kinds of renderMode, `sketchy` and `painty`. If set to `sketchy` you'll get a jittered outline and a fill made of individual lines, which doesn't work great for very complex shapes. If set to `painty` you'll get a gooey, painty sort of fill that uses SVG filters. Marks with either of these modes will not experience automatic transitions.
+Mark ship with one kinds of renderMode, `sketchy`. If set to `sketchy` you'll get a jittered outline and a fill made of individual lines, which doesn't work great for very complex shapes. To enable renderMode, you need to pass a `sketchyGenerator` prop to the mark that uses an SVG generator that matches the pattern of [roughjs](https://roughjs.com/). If you want to enable more options found in roughjs, you can pass an object to renderMode with a signature of `{ renderMode: "sketchy", ...roughSettings }`.
 
-```html
-<mark renderMode="sketchy" ... />
+```jsx
+import { generator } from "roughjs/dist/rough.es5.umd.js"
+
+<mark renderMode="sketchy" sketchyGenerator={generator} ... />
 ```
 
 ## Interactivity

@@ -70,18 +70,13 @@ const sketchyFrameProps = {
   renderMode: "sketchy"
 }
 
-const paintyFrameProps = {
-  ...frameProps,
-  renderMode: "painty"
-}
-
 export default () => {
   return (
     <div>
       <MarkdownText
         text={`
       
-Semiotic has built-in props to render viz in a sketchy way, or otherwise modify the appearance of your data visualization. Below you'll find examples for how to use textures, gradients, sketchy rendering, painty rendering, and canvas post-processing.
+Semiotic has built-in props to render viz in a sketchy way, or otherwise modify the appearance of your data visualization. Below you'll find examples for how to use textures, gradients, sketchy rendering, and canvas post-processing.
 
 ## Using additionalDefs for patterns
 
@@ -102,9 +97,9 @@ Textures are added to the \`additionalDefs\` property of the frame and then refe
       <MarkdownText
         text={`
       
-Under the hood, Semiotic uses the [semiotic-mark](https://github.com/emeeks/semiotic-mark) library, which allows you to set \`renderMode\` for \`"sketchy"\` and \`"painty"\` rendering. You can also send a function that takes the item and returns "sketchy" or "painty". Sketchy fill density reflects the fillOpacity sent to the object, with higher opacity giving more fill lines.
+Under the hood, Semiotic uses the [semiotic-mark](https://github.com/emeeks/semiotic-mark) library, which allows you to set \`renderMode\` for \`"sketchy"\` rendering. You can also send a function that takes the item and returns "sketchy". Sketchy fill density reflects the fillOpacity sent to the object, with higher opacity giving more fill lines.
 
-- \`XYFrame\`: pointRenderMode, areaRenderMode, lineRenderMode
+- \`XYFrame\`: pointRenderMode, summaryRenderMode, lineRenderMode
 - \`OrdinalFrame\`: renderMode, summaryRenderMode
 - \`NetworkFrame\`: nodeRenderMode, edgeRenderMode
       
@@ -116,19 +111,13 @@ Under the hood, Semiotic uses the [semiotic-mark](https://github.com/emeeks/semi
         startHidden
         overrideProps={overrideProps}
       />
-      <DocumentFrame
-        frameProps={paintyFrameProps}
-        type={OrdinalFrame}
-        startHidden
-        overrideProps={overrideProps}
-      />
 
       <MarkdownText
         text={`
       
 Except for summary types and custom shape types, frames can render their graphics in canvas. This can be useful to reduce the number of nodes in the DOM, which can show performance gains. Canvas graphics will not be animated.
 
-- \`XYFrame\`: canvasPoints, canvasAreas, canvasLines
+- \`XYFrame\`: canvasPoints, canvasSummaries, canvasLines
 - \`OrdinalFrame\`: canvasPieces
 - \`NetworkFrame\`: canvasNodes, canvasEdges
 

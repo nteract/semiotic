@@ -24,15 +24,15 @@ minimap={
 }
 ```
 
-## XY Brush Settings for Scatterplots and Area Charts
+## XY Brush Settings for Scatterplots and Summary Charts
 ```js
 minimap={
     { margin: { top: 20, bottom: 35, left: 20, right: 20 },
     lineStyle: d => ({ fill: d.color, fillOpacity: 0.5, stroke: d.color }),
     brushEnd: e => this.updateExtent(e),
-    areas: data,
-    areaStyle: areaStyleObject,
-    areaType: areaTypeObject,
+    summaries: data,
+    summaryStyle: areaStyleObject,
+    summaryType: areaTypeObject,
     size: [ 300, 300 ]
     }
 }

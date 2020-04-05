@@ -71,8 +71,6 @@ import { NetworkFrame } from "semiotic"
   - [name: { _string_ }](#name-string)
   - [position: { _array_ }](#position-array)
   - [additionalDefs: { _JSX_ }](#additionaldefs-jsx)
-  - [download: { _bool_ }](#download-bool)
-  - [downloadFields: { _array_ }](#downloadfields-array)
 
 ## General Properties
 
@@ -217,7 +215,7 @@ If nodeRenderMode is specified, determines the renderMode of the underlying Mark
 
 ### canvasNodes: { _boolean_ | _function_ }
 
-If _canvasNodes_ is specified, renders nodes elements in Canvas. The _canvasNodes_ attribute accepts a _boolean_ or a _function_ that evaluates a connector and returns a boolean that determines whether or not to render the area to [`Canvas`](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API) instead of [`SVG`](https://developer.mozilla.org/en-US/docs/Web/SVG).
+If _canvasNodes_ is specified, renders nodes elements in Canvas. The _canvasNodes_ attribute accepts a _boolean_ or a _function_ that evaluates a connector and returns a boolean that determines whether or not to render the node to [`Canvas`](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API) instead of [`SVG`](https://developer.mozilla.org/en-US/docs/Web/SVG).
 
 ```jsx
 /*Boolean option */
@@ -363,7 +361,7 @@ If edgeRenderMode is specified, determines the renderMode of the underlying Mark
 
 ### canvasEdges: { _boolean_ | _function_ }
 
-If _canvasEdges_ is specified, renders edge elements in Canvas. The _canvasEdges_ attribute accepts a _boolean_ or a _function_ that evaluates a connector and returns a boolean that determines whether or not to render the area to [`Canvas`](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API) instead of [`SVG`](https://developer.mozilla.org/en-US/docs/Web/SVG).
+If _canvasEdges_ is specified, renders edge elements in Canvas. The _canvasEdges_ attribute accepts a _boolean_ or a _function_ that evaluates a connector and returns a boolean that determines whether or not to render the edge to [`Canvas`](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API) instead of [`SVG`](https://developer.mozilla.org/en-US/docs/Web/SVG).
 
 ```jsx
 /*Boolean option */
@@ -531,7 +529,7 @@ Used internally to identify frames, which comes in handy when you need to link f
 
 ### additionalDefs: { _JSX_ }
 
-A JSX or array of JSX to be injected into the visualization layer's SVG `defs`. This is useful for [defining patterns](/guides/sketchy-painty-patterns) that you want to use as fills, or markers or gradients or other SVG material typically defined in defs.
+A JSX or array of JSX to be injected into the visualization layer's SVG `defs`. This is useful for [defining patterns](/guides/sketchy-patterns) that you want to use as fills, or markers or gradients or other SVG material typically defined in defs.
 
 ```jsx
 <NetworkFrame
@@ -543,11 +541,3 @@ A JSX or array of JSX to be injected into the visualization layer's SVG `defs`. 
   }
 />
 ```
-
-### download: { _bool_ }
-
-Enable a Node Download button and Edge Download button to download the data as a CSV.
-
-### downloadFields: { _array_ }
-
-The field keys to download from each datapoint. By default, the CSV download only shows the id, source and target values.
