@@ -23,110 +23,18 @@ const linesData = [
       { month: 12, pct: 22 },
       { month: 13, pct: 21 },
       { month: 14, pct: 23 },
-      { month: 15, pct: 21 },
-      { month: 16 },
-      { month: 17 },
-      { month: 18 }
-    ]
-  },
-  {
-    title: "Curve A",
-    forecast: "lower",
-    data: [
-      { month: 1 },
-      { month: 2 },
-      { month: 3 },
-      { month: 4 },
-      { month: 5 },
-      { month: 6 },
-      { month: 7 },
-      { month: 8 },
-      { month: 9 },
-      { month: 10 },
-      { month: 11 },
-      { month: 12 },
-      { month: 13 },
-      { month: 14 },
-      { month: 15, pct: 21 },
-      { month: 16, pct: 18 },
-      { month: 17, pct: 15 },
-      { month: 18, pct: 10 }
+      { month: 15, pct: 21 }
     ]
   },
   {
     title: "Curve A",
     forecast: "mean",
     data: [
-      { month: 1 },
-      { month: 2 },
-      { month: 3 },
-      { month: 4 },
-      { month: 5 },
-      { month: 6 },
-      { month: 7 },
-      { month: 8 },
-      { month: 9 },
-      { month: 10 },
-      { month: 11 },
-      { month: 12 },
-      { month: 13 },
-      { month: 14 },
-      { month: 15, pct: 21 },
-      { month: 16, pct: 22 },
-      { month: 17, pct: 23 },
-      { month: 18, pct: 25 }
+      { month: 15, pct: 21, uncertainty: 0 },
+      { month: 16, pct: 22, uncertainty: 3 },
+      { month: 17, pct: 23, uncertainty: 7 },
+      { month: 18, pct: 25, uncertainty: 13 }
     ]
-  },
-  {
-    title: "Curve A",
-    forecast: "upper",
-    data: [
-      { month: 1 },
-      { month: 2 },
-      { month: 3 },
-      { month: 4 },
-      { month: 5 },
-      { month: 6 },
-      { month: 7 },
-      { month: 8 },
-      { month: 9 },
-      { month: 10 },
-      { month: 11 },
-      { month: 12 },
-      { month: 13 },
-      { month: 14 },
-      { month: 15, pct: 21 },
-      { month: 16, pct: 25 },
-      { month: 17, pct: 30 },
-      { month: 18, pct: 38 }
-    ]
-  }
-]
-
-let annotations = [
-  {
-    type: "area",
-    className: "uncertainty_cone",
-    coordinates: linesData
-      //Take only upper and lower datasets
-      .filter(d => d.forecast && d.forecast !== "mean")
-      //ensure lower data set comes before upper data set
-      .sort((a, b) => {
-        return ("" + a.forecast).localeCompare(b.forecast)
-      })
-      .map((d, i) => {
-        //Ensure sorted month order (desc) and drop all non-forecasted values
-        let tmpArr = d.data
-          .sort((a, b) => a.month - b.month)
-          .filter(x => x.pct !== undefined)
-        //If we're switching from lower to upper, reverse the coordinates orders to close the uncertainty polygon
-        if (i % 2 === 1) {
-          tmpArr = tmpArr.reverse()
-        }
-        return tmpArr
-        //Merge the two coordinate arrays into one to create final polygon
-      })
-      .flat()
   }
 ]
 
@@ -147,6 +55,9 @@ const frameProps = {
       return { strokeWidth: "0px" }
     }
   },
+  summaryType: { type: "linebounds", boundingAccessor: d => d.uncertainty || 0 },
+  summaryDataAccessor: "data",
+  summaryClass: "uncertainty_cone",
   showLinePoints: true,
   pointStyle: { fill: "none", stroke: "none" },
   hoverAnnotation: true,
@@ -156,7 +67,6 @@ const frameProps = {
   defined: d => d.pct !== undefined,
   xExtent: [0, 20],
   margin: { left: 80, bottom: 50, right: 10, top: 40 },
-  annotations: annotations,
   axes: [
     {
       orient: "left",
@@ -255,13 +165,11 @@ const UncertaintyViz = () => {
       <MarkdownText
         text={`If you find yourself visualizing forecasts for time series data, the below example can help you communicate the \`forecast\`, as well as it's \`confidence interval\`
         
-This example stitches together four separate lines
+This example stitches together two separate lines
         - Actual (Observed) Values
-        - Mean Forecast +3 Months
-        - Upper Forecast +σ
-        - Lower Forecast -σ
+        - Mean Forecast +3 Months with certainty values
 
-... and uses [react-annotation](https://react-annotation.susielu.com/)'s [area](guides/annotations#xyframe) type to create the uncertainty cone, communicating the \`confidence interval\`
+... and uses the linebounds summaryType to create the uncertainty cone, communicating the \`confidence interval\`
         `}
       />
       <DocumentFrame

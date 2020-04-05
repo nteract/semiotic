@@ -503,6 +503,19 @@ const withHoverFrameProps = {
   hoverAnnotation: true
 }
 
+const withLineBoundingFrameProps = {
+  ...frameProps,
+  summaryType: { type: "linebounds", boundingAccessor: d => d.theaterCount / 10 },
+  summaryStyle: (d, i) => {
+    return {
+      stroke: theme[i],
+      strokeWidth: 0.5,
+      strokeDasharray: "4 4",
+      fill: theme[i],
+      fillOpacity: 0.5
+    }
+  },
+}
 export default function CreateALineChart() {
   return (
     <div>
@@ -720,6 +733,21 @@ To make your chart responsive, instead of using \`XYFrame\` use \`ResponsiveXYFr
       />
       <DocumentFrame
         frameProps={{ ...withHoverFrameProps, responsiveWidth: true }}
+        type={ResponsiveXYFrame}
+        overrideProps={overrideProps}
+        startHidden
+      />
+
+      <MarkdownText
+        text={`
+## Line Chart with Uncertainty Bounds
+
+When you send the \`linebounds\` type of \`summaryType\` and you have not sent any data to \`summaries\` it will default to the data you send to \`lines\`. This allows you to easily draw bounding regions (often used for uncertainty) around your lines.
+
+`}
+      />
+      <DocumentFrame
+        frameProps={{ ...withLineBoundingFrameProps }}
         type={ResponsiveXYFrame}
         overrideProps={overrideProps}
         startHidden

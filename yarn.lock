@@ -1537,7 +1537,7 @@ bser@1.0.2:
   dependencies:
     node-int64 "^0.4.0"
 
-bser@^2.0.0:
+bser@2.1.1:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/bser/-/bser-2.1.1.tgz#e6787da20ece9d07998533cfd9de6f5c38f4bc05"
   integrity sha512-gQxTNE/GAfIIrmHLUE3oJyp5FO6HRBfhjnw4/wMmA63ZGDJnWBmgY/lyQBpnDUkGmAhbSe39tx2d/iTOAfglwQ==
@@ -2837,6 +2837,11 @@ electron-to-chromium@^1.2.7, electron-to-chromium@^1.3.30:
   version "1.4.25"
   resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.25.tgz#ce95e6678f8c6893ae892c7e95a5000e83f1957f"
   integrity sha512-bTwub9Y/76EiNmfaiJih+hAy6xn7Ns95S4KvI2NuKNOz8TEEKKQUu44xuy0PYMudjM9zdjKRS1bitsUvHTfuUg==
+
+element-resize-event@^3.0.3:
+  version "3.0.3"
+  resolved "https://registry.yarnpkg.com/element-resize-event/-/element-resize-event-3.0.3.tgz#3f59facef6b8f23fbd678a5f364ee5723af98a2a"
+  integrity sha512-vhGNxT87PdZA6Ak4E0QhArwGzNcSPUwSN7n9wCFLeBlY2NNuuiwguQuQIp7P5oB65PLJ892yKcHiqz1xLWeiug==
 
 elliptic@^6.5.3:
   version "6.5.4"
@@ -7620,10 +7625,10 @@ semiotic-mark@0.4.5:
     d3-selection "^1.4.0"
     d3-transition "^1.2.0"
 
-semiotic@2.0.0-beta.25:
-  version "2.0.0-beta.25"
-  resolved "https://registry.yarnpkg.com/semiotic/-/semiotic-2.0.0-beta.25.tgz#0a308f292c954679e3a00914d9e9168342fe8b54"
-  integrity sha512-TwLQIb4//LWC8igyEtJKXutOPYqTD22UiEUfC/Nwn5WvOaNXOe18fYTpvfaCKzCz6buq8Ioj7qxqezvDJuYPYg==
+semiotic@2.0.0-rc.0:
+  version "2.0.0-rc.0"
+  resolved "https://registry.yarnpkg.com/semiotic/-/semiotic-2.0.0-rc.0.tgz#d86a7f53485b96ddd58ff9daa5d6601b9c228d78"
+  integrity sha512-cDa9y8ZQVSuK8bs55uJmlxYnbKZgk7pNSWvjJ8KzokQYFwjgSD5fmQ9bYLTigIiurHD+mOvlP3S0Gxnhu5lPjQ==
   dependencies:
     d3-array "^1.2.0"
     d3-brush "^1.0.6"
@@ -7641,6 +7646,7 @@ semiotic@2.0.0-beta.25:
     d3-selection "^1.4.0"
     d3-shape "^1.3.5"
     d3-voronoi "^1.0.2"
+    element-resize-event "^3.0.3"
     labella "1.1.4"
     memoize-one "4.0.0"
     object-assign "4.1.1"
