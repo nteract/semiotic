@@ -86,6 +86,11 @@ const ridgeline = {
   summaryType: "ridgeline"
 }
 
+const horizon = {
+  ...frameProps,
+  summaryType: "horizon"
+}
+
 const boxplot = {
   ...frameProps,
   oPadding: 20,
@@ -292,6 +297,39 @@ summaryType={{ type: "ridgeline",
 }}\`\`\`
 `}
       />
+      <MarkdownText
+        text={`
+## Horizon
+
+This example is the same as the heatmap except we are passing \`"horizon"\` as the \`summaryType\`.
+
+`} />
+      <DocumentFrame
+        frameProps={horizon}
+        type={OrdinalFrame}
+        overrideProps={overrideProps}
+        startHidden
+        pre={pre}
+      />
+
+      <MarkdownText
+        text={`
+### Horizon Settings
+
+Instead of sending just a string \`summaryType="horizon"\` you can send an object with additional options to specify the bin sizes and behavior.
+\`\`\`jsx
+summaryType={{ type: "horizon", 
+    bins: 25, // Number, bins ito bin the values into,
+    binValue: d => d.length, //Function that determines the summarized value (by default it’s the number of items in a bin),
+    useBins: true, //Boolean, if set to false, bins will have a one-to-one correspondence with the points passed to the column, allowing you to create your own samples without trying to wrangle bin numbers,
+    curve: curveCatmullRom, //d3-shape-like curve function,
+    numHorizons: 4, //Number, the maximum number of overlapping area charts drawn over each other.
+    horizon: max / numHorizons, //Number, the value at which a horizon is drawn and the chart is overlaid, if set it overrides numHorizons
+    relative: false, //Boolean, Whether or not the scale of each individual plot is relative to the maximum of all plots or only to its own plot (you can combine a relative={true} with,
+}}\`\`\`
+`}
+      />
     </div>
   )
 }
+
