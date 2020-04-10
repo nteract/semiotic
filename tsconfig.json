@@ -1,20 +1,21 @@
 {
   "compilerOptions": {
-      "outDir": "./dist/",
-      "sourceMap": true,
-      "module": "commonjs",
-      "target": "es5",
-      "downlevelIteration": true,
-      "lib": [
-        "esnext",
-        "dom",
-        "dom.iterable"
-      ],
-      "jsx": "react"
+    "outDir": "./dist/",
+    "sourceMap": true,
+    "module": "commonjs",
+    "target": "es5",
+    "downlevelIteration": true,
+    "allowSyntheticDefaultImports": true,
+    "lib": [
+      "esnext",
+      "dom",
+      "dom.iterable"
+    ],
+    "jsx": "react"
   },
   "include": [
     "./src/**/*.ts",
     "./src/**/*.tsx",
-      "./src/**/*"
+    "./src/**/*"
   ]
 }
