@@ -6,6 +6,7 @@
     "target": "es5",
     "downlevelIteration": true,
     "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "lib": [
       "esnext",
       "dom",
