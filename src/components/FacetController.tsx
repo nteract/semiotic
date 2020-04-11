@@ -1,5 +1,5 @@
 import * as React from "react"
-const memoize = require("memoize-one")
+import memoize from "memoize-one"
 
 import {
   xyframeproptypes,
