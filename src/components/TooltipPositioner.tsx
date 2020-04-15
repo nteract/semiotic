@@ -15,7 +15,7 @@ class TooltipPositioner extends React.Component<Props, State> {
   private containerRef = React.createRef<HTMLDivElement>()
 
   state = {
-    collision:null,
+    collision: null,
     tooltipContainerInitialDimensions: null,
     tooltipContentArgsCurrent: null
   }
@@ -37,16 +37,16 @@ class TooltipPositioner extends React.Component<Props, State> {
       bottom: false
     }
 
-    if( (x + width) > window.innerWidth){
+    if ((x + width) > window.innerWidth) {
       collision.right = true
     }
-    if( (x - width) < 0){
+    if ((x - width) < 0) {
       collision.left = true
     }
-    if( (y + height) > window.innerHeight){
+    if ((y + height) > window.innerHeight) {
       collision.bottom = true
     }
-    if( (y - height) < 0){
+    if ((y - height) < 0) {
       collision.top = true
     }
 
@@ -57,21 +57,21 @@ class TooltipPositioner extends React.Component<Props, State> {
     })
   }
 
-  componentDidMount(){
-    if(this.containerRef.current && !this.state.collision){
+  componentDidMount() {
+    if (this.containerRef.current && !this.state.collision) {
       this.checkPosition()
     }
   }
 
-  componentDidUpdate(pp){
+  componentDidUpdate(pp) {
     // if new args, reset collision state
-    if(pp.tooltipContentArgs !== this.props.tooltipContentArgs){
+    if (pp.tooltipContentArgs !== this.props.tooltipContentArgs) {
       this.setState({
         collision: null,
         tooltipContainerInitialDimensions: null
       })
     }
-    else if(this.containerRef.current && !this.state.collision){
+    else if (this.containerRef.current && !this.state.collision) {
       this.checkPosition()
     }
   }
@@ -96,7 +96,7 @@ class TooltipPositioner extends React.Component<Props, State> {
       // (ref: https://www.w3.org/TR/css-box-3/#collapsing-margins)
       overflow: 'hidden',
 
-      opacity: collision && (tooltipContentArgsCurrent===tooltipContentArgs)? 1 : 0
+      opacity: collision && (tooltipContentArgsCurrent === tooltipContentArgs) ? 1 : 0
     }
 
     const tooltipContainerAttributes = {
@@ -104,20 +104,22 @@ class TooltipPositioner extends React.Component<Props, State> {
     }
 
     const tooltipContainerClasses = collision ?
-    [
-      'tooltip-container',
-      'tooltip-collision-evaluated',
-      collision && collision.top && 'collision-top',
-      collision && collision.bottom && 'collision-bottom',
-      collision && collision.right && 'collision-right',
-      collision && collision.left && 'collision-left',
-    ].filter(el => el).join(' ')
-    : ['tooltip-container']
+      [
+        'tooltip-container',
+        'tooltip-collision-evaluated',
+        collision && collision.top && 'collision-top',
+        collision && collision.bottom && 'collision-bottom',
+        collision && collision.right && 'collision-right',
+        collision && collision.left && 'collision-left',
+      ].filter(el => el).join(' ')
+      : 'tooltip-container'
 
     return (
       <div ref={this.containerRef} style={containerStyle} className={tooltipContainerClasses}>
-        {tooltipContent({...tooltipContentArgs,
-          tooltipContainerAttributes})}
+        {tooltipContent({
+          ...tooltipContentArgs,
+          tooltipContainerAttributes
+        })}
       </div>
     )
   }
