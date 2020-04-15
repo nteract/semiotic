@@ -26,7 +26,7 @@ class TooltipPositioner extends React.Component<Props, State> {
 
     const tooltipContainerInitialDimensions = this.containerRef.current.getBoundingClientRect()
 
-    const { right, left, top, bottom, width, height, x, y } = tooltipContainerInitialDimensions
+    const { right, left, top, bottom, width, height } = tooltipContainerInitialDimensions
 
     // flags to indicate whether the data point + tooltip dimension collides with the viewport
     // on each of the 4 directions/sides
@@ -37,16 +37,16 @@ class TooltipPositioner extends React.Component<Props, State> {
       bottom: false
     }
 
-    if ((x + width) > window.innerWidth) {
+    if ((left + width) > window.innerWidth) {
       collision.right = true
     }
-    if ((x - width) < 0) {
+    if ((left - width) < 0) {
       collision.left = true
     }
-    if ((y + height) > window.innerHeight) {
+    if ((top + height) > window.innerHeight) {
       collision.bottom = true
     }
-    if ((y - height) < 0) {
+    if ((top - height) < 0) {
       collision.top = true
     }
 
