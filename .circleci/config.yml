@@ -29,7 +29,7 @@ jobs:
       - run:
           name: tests
           command: |
-            npm run test -- --cacheDirectory=~/.jestcache
+            npm run test -- --maxWorkers=2 --cacheDirectory=~/.jestcache
 
       - run:
           name: tests against the dist copy (for the web)
