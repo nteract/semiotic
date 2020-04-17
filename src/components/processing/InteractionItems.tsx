@@ -184,7 +184,7 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
         </clipPath>
       }
       return (
-        <g><path
+        <g key={`voronoi-${i}`}><path
           onClick={() => {
             clickVoronoi(voronoiDataset[i], customClickBehavior, points)
           }}
