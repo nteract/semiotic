@@ -1,0 +1,84 @@
+/// <reference types="react" />
+import { GenericObject, ProjectedSummary } from "../types/generalTypes";
+import { ScaleLinear } from "d3-scale";
+export declare const curveHash: {
+    step: any;
+    stepbefore: any;
+    stepafter: any;
+    cardinal: any;
+    basis: any;
+    linear: any;
+    catmullrom: any;
+    monotone: any;
+    monotonex: any;
+    monotoney: any;
+    natural: any;
+};
+export declare function lineGeneratorDecorator({ generator, projectedCoordinateNames, defined, xScale, yScale, interpolator, simpleLine }: {
+    generator: any;
+    projectedCoordinateNames: any;
+    defined: any;
+    xScale: any;
+    yScale: any;
+    interpolator: any;
+    simpleLine: any;
+}): void;
+export declare function createPoints({ xScale, yScale, canvasDrawing, data, projectedCoordinateNames, customMark, canvasRender, styleFn, classFn, renderKeyFn, renderMode, baseMarkProps, showLinePoints: baseShowLinePoints }: {
+    xScale: any;
+    yScale: any;
+    canvasDrawing: any;
+    data: any;
+    projectedCoordinateNames: any;
+    customMark: any;
+    canvasRender: any;
+    styleFn: any;
+    classFn: any;
+    renderKeyFn: any;
+    renderMode: any;
+    baseMarkProps: any;
+    showLinePoints: any;
+}): any[];
+export declare function createLines({ xScale, yScale, canvasDrawing, data, projectedCoordinateNames, customMark, canvasRender, styleFn, classFn, renderMode, renderKeyFn, type, defined, baseMarkProps, ariaLabel, axesData }: {
+    xScale: any;
+    yScale: any;
+    canvasDrawing: any;
+    data: any;
+    projectedCoordinateNames: any;
+    customMark: any;
+    canvasRender: any;
+    styleFn: any;
+    classFn: any;
+    renderMode: any;
+    renderKeyFn: any;
+    type: any;
+    defined: any;
+    baseMarkProps: any;
+    ariaLabel: any;
+    axesData?: any[];
+}): any[];
+export declare function createSummaries({ xScale, yScale, canvasDrawing, data, canvasRender, styleFn, classFn, renderKeyFn, renderMode, baseMarkProps, customMark }: {
+    xScale: ScaleLinear<number, number>;
+    yScale: ScaleLinear<number, number>;
+    canvasDrawing?: object[];
+    data: ProjectedSummary[];
+    canvasRender?: Function;
+    styleFn?: Function;
+    classFn?: Function;
+    renderKeyFn?: Function;
+    renderMode?: Function;
+    baseMarkProps?: GenericObject;
+    customMark?: Function;
+}): any[];
+export declare function clonedAppliedElement({ tx, ty, d, i, markProps, styleFn, renderFn, classFn, renderKeyFn, baseClass, yi }: {
+    tx?: number;
+    ty?: number;
+    d: GenericObject;
+    i: number;
+    markProps: GenericObject;
+    styleFn: Function;
+    renderFn: Function;
+    classFn: Function;
+    renderKeyFn: Function;
+    baseClass: string;
+    yi?: number;
+}): JSX.Element;

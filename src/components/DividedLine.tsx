@@ -12,11 +12,11 @@ import { ProjectedLine } from "./types/generalTypes"
 interface DividedLineProps {
   parameters: Function
   className: string
-  interpolate: Function
   customAccessors: { x: Function; y: Function }
   lineDataAccessor: Function
   data: ProjectedLine[]
-  searchIterations: number
+  interpolate?: Function
+  searchIterations?: number
 }
 
 class DividedLine extends React.Component<DividedLineProps, null> {
@@ -49,16 +49,16 @@ class DividedLine extends React.Component<DividedLineProps, null> {
     })
 
     //Compatibility before Semiotic 2
-    lineData.forEach(projectedD => {
-      projectedD.data = projectedD.data.map(d => ({ ...d.data, ...d }))
+    lineData.forEach((projectedD) => {
+      projectedD.data = projectedD.data.map((d) => ({ ...d.data, ...d }))
     })
 
     const lines = dividedLine(parameters, lineData[0].data, searchIterations)
 
     const lineRender = line()
       .curve(interpolate)
-      .x(d => d.x)
-      .y(d => d.y)
+      .x((d) => d.x)
+      .y((d) => d.y)
 
     return lines.map((d, i) => (
       <Mark
