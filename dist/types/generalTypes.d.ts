@@ -73,7 +73,7 @@ export declare type ExtentSettingsType = {
     extent?: Array<number>;
     onChange?: Function;
 };
-export declare type accessorType<ReturnValue> = string | ((args?: GenericObject, index?: number) => ReturnValue);
+export declare type accessorType<ReturnValue> = string | ((args?: unknown, index?: number) => ReturnValue);
 export interface AccessorFnType {
     <T>(arg: GenericObject): T;
 }
