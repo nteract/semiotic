@@ -24,8 +24,8 @@ export type AnnotationType = {
   key?: string
   percent?: number
   style?:
-  | GenericObject
-  | ((arg?: GenericObject, index?: number) => GenericObject)
+    | GenericObject
+    | ((arg?: GenericObject, index?: number) => GenericObject)
   ids?: string[]
   edge?: boolean
   source?: NodeType
@@ -69,7 +69,6 @@ export interface AnnotationHandling {
   dataVersion?: string
   layout: AnnotationLayout
 }
-
 
 export interface AnnotationProps {
   noteData: {
@@ -129,7 +128,7 @@ export interface AxisProps {
   scale?: ScaleLinear<number, number>
   ticks?: number
   footer?: boolean
-  tickSize: number
+  tickSize?: number
   tickLineGenerator?: ({
     xy,
     orient,

@@ -9,7 +9,9 @@ export interface MarginType {
 
 export type ProjectionTypes = "vertical" | "horizontal" | "radial"
 
-export type ExtentType = number[] | { extent?: number[]; onChange?: Function, includeAnnotations?: boolean }
+export type ExtentType =
+  | number[]
+  | { extent?: number[]; onChange?: Function; includeAnnotations?: boolean }
 
 export interface ProjectedPoint {
   x?: number
@@ -65,7 +67,7 @@ export interface ProjectedSummary {
   curve?: Function
 }
 
-export type RoughType = { canvas: Function, generator: Function }
+export type RoughType = { canvas: Function; generator: Function }
 
 export type CanvasPostProcessTypes = Function
 
@@ -73,7 +75,7 @@ export type ExtentSettingsType = { extent?: Array<number>; onChange?: Function }
 
 export type accessorType<ReturnValue> =
   | string
-  | ((args?: GenericObject, index?: number) => ReturnValue)
+  | ((args?: unknown, index?: number) => ReturnValue)
 
 export interface AccessorFnType {
   <T>(arg: GenericObject): T
@@ -101,7 +103,13 @@ export interface LineTypeSettings {
   y1?: (d?: ProjectedPoint, index?: number) => number
 }
 
-export type BasicSummaryTypes = "basic" | "contour" | "hexbin" | "heatmap" | "trendline" | "linebounds"
+export type BasicSummaryTypes =
+  | "basic"
+  | "contour"
+  | "hexbin"
+  | "heatmap"
+  | "trendline"
+  | "linebounds"
 
 export interface SummaryTypeSettings {
   type: BasicSummaryTypes | Function
@@ -118,7 +126,7 @@ export interface RawSummary {
   preprocess?: boolean
 }
 
-export interface RawPoint { }
+export interface RawPoint {}
 
 export interface CustomAreaMarkProps {
   d: object

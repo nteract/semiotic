@@ -25,9 +25,10 @@
     "deploy-docs": "sh ./scripts/docs.sh",
     "ci-deploy-docs": "sh ./scripts/docs-ci.sh",
     "gh-pages": "REACT_APP_GH_PAGES_PATH='semiotic' npm run build",
+    "typescript": "tsc --declaration",
     "dist": "rollup -c && uglifyjs ./dist/semiotic.js -o ./dist/semiotic.min.js",
     "docs-bundle-stats": "GENERATE_SOURCEMAP='true' NODE_ENV='production' webpack --config ./config/webpack.config.prod.js --profile --json > stats.json && webpack-bundle-analyzer stats.json",
-    "prepublishOnly": "npm run dist && rm ./dist/semiotic.js"
+    "prepublishOnly": "npm run typescript && npm run dist && rm ./dist/semiotic.js"
   },
   "repository": {
     "type": "git",
@@ -171,6 +172,7 @@
     "memoize-one": "^5.1.1",
     "object-assign": "4.1.1",
     "polygon-offset": "0.3.1",
+    "promise": "8.1.0",
     "react-annotation": "3.0.0-beta.4",
     "regression": "^2.0.1",
     "semiotic-mark": "0.4.5",
