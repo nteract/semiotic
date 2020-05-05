@@ -436,7 +436,8 @@ export const calculateXYFrame = (currentProps: XYFrameProps, prevState: XYFrameS
                         baseMarkProps,
                         className: axisClassname,
                         jaggedBase: d.jaggedBase,
-                        scale: axisScale
+                        scale: axisScale,
+                        showOutboundTickLines: d.showOutboundTickLines
                     })}
                     {d.baseline === "under" &&
                         baselineGenerator(d.orient, adjustedSize, d.className)}
