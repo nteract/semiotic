@@ -108,7 +108,7 @@ export interface AxisProps {
     scale?: ScaleLinear<number, number>;
     ticks?: number;
     footer?: boolean;
-    tickSize: number;
+    tickSize?: number;
     tickLineGenerator?: ({ xy, orient, i, baseMarkProps, className }: {
         xy?: any;
         orient?: any;
