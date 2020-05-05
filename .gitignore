@@ -21,5 +21,6 @@ examples/dist/bundle.js
 *.sublime-workspace
 dist/semiotic.js
 
+/dist
 
 screenshots

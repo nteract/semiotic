@@ -5,7 +5,8 @@
   "main": "lib/index.js",
   "unpkg": "dist/semiotic.min.js",
   "files": [
-    "lib"
+    "lib",
+    "dist"
   ],
   "scripts": {
     "start": "node scripts/start.js",
