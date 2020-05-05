@@ -19,7 +19,7 @@ interface DividedLineProps {
   searchIterations?: number
 }
 
-class DividedLine extends React.Component<DividedLineProps, null> {
+class DividedLine extends React.Component<DividedLineProps, {}> {
   constructor(props) {
     super(props)
     this.createLineSegments = this.createLineSegments.bind(this)

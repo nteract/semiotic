@@ -94,7 +94,7 @@ export declare type XYFrameProps = {
     sketchyRenderingEngine?: RoughType;
     frameRenderOrder?: Array<string>;
     disableCanvasInteraction?: boolean;
-    interactionSettings: AdvancedInteractionSettings;
+    interactionSettings?: AdvancedInteractionSettings;
 };
 export declare type AnnotatedSettingsProps = {
     xAccessor?: GenericAccessor<number>[];

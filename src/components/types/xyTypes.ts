@@ -125,7 +125,7 @@ export type XYFrameProps = {
   sketchyRenderingEngine?: RoughType
   frameRenderOrder?: Array<string>
   disableCanvasInteraction?: boolean
-  interactionSettings: AdvancedInteractionSettings
+  interactionSettings?: AdvancedInteractionSettings
 }
 
 export type AnnotatedSettingsProps = {
