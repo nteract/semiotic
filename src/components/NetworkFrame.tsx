@@ -5,10 +5,7 @@ import Frame from "./Frame"
 import { stringToFn } from "./data/dataFunctions"
 
 import {
-  networkFrameChangeProps,
-  xyframeproptypes,
-  ordinalframeproptypes,
-  networkframeproptypes
+  networkFrameChangeProps
 } from "./constants/frame_props"
 
 import {
@@ -69,22 +66,6 @@ class NetworkFrame extends React.Component<
 
   constructor(props: NetworkFrameProps) {
     super(props)
-
-    Object.keys(props).forEach(propName => {
-      if (!networkframeproptypes[propName]) {
-        if (xyframeproptypes[propName]) {
-          console.error(
-            `${propName} is an XYFrame prop are you sure you're using the right frame?`
-          )
-        } else if (ordinalframeproptypes[propName]) {
-          console.error(
-            `${propName} is an OrdinalFrame prop are you sure you're using the right frame?`
-          )
-        } else {
-          console.error(`${propName} is not a valid NetworkFrame prop`)
-        }
-      }
-    })
 
     const baseState = {
       dataVersion: undefined,

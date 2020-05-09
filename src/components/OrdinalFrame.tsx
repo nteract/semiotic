@@ -7,10 +7,7 @@ import {
 } from "d3-scale"
 
 import {
-  orFrameChangeProps,
-  xyframeproptypes,
-  ordinalframeproptypes,
-  networkframeproptypes
+  orFrameChangeProps
 } from "./constants/frame_props"
 import {
   svgORRule,
@@ -113,21 +110,6 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, OrdinalFrameState>
       ...calculateOrdinalFrame(props, baseState)
     }
 
-    Object.keys(props).forEach(d => {
-      if (!ordinalframeproptypes[d]) {
-        if (xyframeproptypes[d]) {
-          console.error(
-            `${d} is an XYFrame prop are you sure you're using the right frame?`
-          )
-        } else if (networkframeproptypes[d]) {
-          console.error(
-            `${d} is a NetworkFrame prop are you sure you're using the right frame?`
-          )
-        } else {
-          console.error(`${d} is not a valid OrdinalFrame prop`)
-        }
-      }
-    })
   }
 
   componentWillUnmount() {

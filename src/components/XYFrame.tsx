@@ -53,10 +53,7 @@ import { calculateXYFrame } from "./processing/xyDrawing"
 
 import {
   xyFrameChangeProps,
-  xyFrameDataProps,
-  xyframeproptypes,
-  ordinalframeproptypes,
-  networkframeproptypes
+  xyFrameDataProps
 } from "./constants/frame_props"
 
 import { HOCSpanOrDiv } from "./SpanOrDiv"
@@ -107,22 +104,6 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
 
   constructor(props: XYFrameProps) {
     super(props)
-
-    Object.keys(props).forEach((d: string) => {
-      if (!xyframeproptypes[d]) {
-        if (ordinalframeproptypes[d]) {
-          console.error(
-            `${d} is an OrdinalFrame prop are you sure you're using the right frame?`
-          )
-        } else if (networkframeproptypes[d]) {
-          console.error(
-            `${d} is a NetworkFrame prop are you sure you're using the right frame?`
-          )
-        } else {
-          console.error(`${d} is not a valid XYFrame prop`)
-        }
-      }
-    })
 
     const baseState = {
       SpanOrDiv: HOCSpanOrDiv(props.useSpans),

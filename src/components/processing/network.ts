@@ -1293,7 +1293,7 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
         canvasEdges && stringToFn<boolean>(canvasEdges, undefined, true),
       renderKeyFn: currentProps.edgeRenderKey
         ? currentProps.edgeRenderKey
-        : d => d._NWFEdgeKey || `${d.source.id}-${d.target.id}`,
+        : d => d._NWFEdgeKey || d.key || `${d.source.id}-${d.target.id}`,
       behavior: drawEdges,
       projection: networkSettings.projection,
       type: edgeType,
