@@ -2,9 +2,6 @@ import * as React from "react"
 import memoize from "memoize-one"
 
 import {
-  xyframeproptypes,
-  ordinalframeproptypes,
-  networkframeproptypes,
   responsiveprops
 } from "./constants/frame_props"
 
@@ -14,15 +11,15 @@ import { XYFrameProps } from "./types/xyTypes"
 import { CustomHoverType } from "./types/annotationTypes"
 
 const framePropHash = {
-  NetworkFrame: networkframeproptypes,
-  XYFrame: xyframeproptypes,
-  OrdinalFrame: ordinalframeproptypes,
-  ResponsiveNetworkFrame: { ...networkframeproptypes, ...responsiveprops },
-  ResponsiveXYFrame: { ...xyframeproptypes, ...responsiveprops },
-  ResponsiveOrdinalFrame: { ...ordinalframeproptypes, ...responsiveprops },
-  SparkNetworkFrame: { ...networkframeproptypes },
-  SparkXYFrame: { ...xyframeproptypes },
-  SparkOrdinalFrame: { ...ordinalframeproptypes }
+  NetworkFrame: true,
+  XYFrame: true,
+  OrdinalFrame: true,
+  ResponsiveNetworkFrame: true,
+  ResponsiveXYFrame: true,
+  ResponsiveOrdinalFrame: true,
+  SparkNetworkFrame: true,
+  SparkXYFrame: true,
+  SparkOrdinalFrame: true,
 }
 
 const invertKeys = {
@@ -62,14 +59,8 @@ const buildNewState = (prevState, extentValue, extentType, extentPosition, inver
   }
 }
 
-function validFrameProps(originalProps, frameType) {
-  const newProps = {}
-  const frameProps = framePropHash[frameType]
-  Object.keys(originalProps).forEach(key => {
-    if (frameProps[key]) {
-      newProps[key] = originalProps[key]
-    }
-  })
+function validFrameProps(originalProps) {
+  const newProps = { ...originalProps }
   return newProps
 }
 
@@ -280,7 +271,7 @@ class FacetController extends React.Component<Props, State> {
       customProps.hoverAnnotation = []
     }
 
-    return React.cloneElement(child, validFrameProps(customProps, frameType))
+    return React.cloneElement(child, validFrameProps(customProps))
   }
 
   /**
