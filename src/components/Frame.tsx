@@ -12,6 +12,8 @@ import { LegendProps } from "./types/legendTypes"
 import { ScaleLinear } from "d3-scale"
 import { AdvancedInteractionSettings } from "./types/interactionTypes"
 
+import { ContextType } from "./types/canvasTypes"
+
 type VizDataLayerKeys =
   | "pieces"
   | "summaries"
@@ -78,7 +80,7 @@ type Props = {
 }
 
 type State = {
-  canvasContext?: { getContext: Function }
+  canvasContext?: ContextType
   voronoiHover?: object,
   finalDefs: object,
   props: Props,

@@ -184,27 +184,28 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
         </clipPath>
       }
       return (
-        <g key={`voronoi-${i}`}><path
-          onClick={() => {
-            clickVoronoi(voronoiDataset[i], customClickBehavior, points)
-          }}
-          onDoubleClick={() => {
-            doubleclickVoronoi(voronoiDataset[i], customDoubleClickBehavior, points)
-          }}
-          onMouseEnter={() => {
-            changeVoronoi(voronoiHover, voronoiDataset[i], hoverAnnotation, customHoverBehavior, points)
-          }}
-          onMouseLeave={() => {
-            changeVoronoi(voronoiHover, undefined, undefined, customHoverBehavior)
-          }}
-          key={`interactionVoronoi${i}`}
-          d={`M${d.join("L")}Z`}
-          style={{
-            fillOpacity: 0,
-            ...pointerStyle
-          }}
-          clipPath={`url(#voronoi-${i})`}
-        />
+        <g key={`voronoi-${i}`}>
+          <path
+            onClick={() => {
+              clickVoronoi(voronoiDataset[i], customClickBehavior, points)
+            }}
+            onDoubleClick={() => {
+              doubleclickVoronoi(voronoiDataset[i], customDoubleClickBehavior, points)
+            }}
+            onMouseEnter={() => {
+              changeVoronoi(voronoiHover, voronoiDataset[i], hoverAnnotation, customHoverBehavior, points)
+            }}
+            onMouseLeave={() => {
+              changeVoronoi(voronoiHover, undefined, undefined, customHoverBehavior)
+            }}
+            key={`interactionVoronoi${i}`}
+            d={`M${d.join("L")}Z`}
+            style={{
+              fillOpacity: 0,
+              ...pointerStyle
+            }}
+            clipPath={`url(#voronoi-${i})`}
+          />
           {clipPath}
         </g>
       )

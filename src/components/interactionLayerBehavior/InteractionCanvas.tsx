@@ -52,8 +52,8 @@ class InteractionCanvas extends React.Component<InteractionCanvasProps, Interact
         )
         interactionContext.onmousemove = e => {
             const overlay = boundCanvasEvent(e)
-            if (overlay && overlay.props) {
-                overlay.props.onMouseEnter()
+            if (overlay && overlay.props && overlay.props.children[0]) {
+                overlay.props.children[0].props.onMouseEnter()
             } else {
                 voronoiHover(null)
             }
@@ -61,13 +61,13 @@ class InteractionCanvas extends React.Component<InteractionCanvasProps, Interact
         interactionContext.onclick = e => {
             const overlay = boundCanvasEvent(e)
             if (overlay && overlay.props) {
-                overlay.props.onClick()
+                overlay.props.children[0].props.onClick()
             }
         }
         interactionContext.ondblclick = e => {
             const overlay = boundCanvasEvent(e)
             if (overlay && overlay.props) {
-                overlay.props.onDoubleClick()
+                overlay.props.children[0].props.onDoubleClick()
             }
         }
 
@@ -86,7 +86,14 @@ class InteractionCanvas extends React.Component<InteractionCanvasProps, Interact
 
         interactionContext2D.lineWidth = 1
 
+        console.log("SHOULD BE DRAWING")
+
         overlayRegions.forEach((overlay, oi) => {
+
+            const overlayD = overlay.props.d || overlay.props.children[0].props.d
+            if (oi < 100) {
+                console.log("overlayD", overlayD)
+            }
             const interactionRGBA = `rgba(${Math.floor(
                 Math.random() * 255
             )},${Math.floor(Math.random() * 255)},${Math.floor(
@@ -98,7 +105,7 @@ class InteractionCanvas extends React.Component<InteractionCanvasProps, Interact
             interactionContext2D.fillStyle = interactionRGBA
             interactionContext2D.strokeStyle = interactionRGBA
 
-            const p = new Path2D(overlay.props.d)
+            const p = new Path2D(overlayD)
             interactionContext2D.stroke(p)
             interactionContext2D.fill(p)
         })
