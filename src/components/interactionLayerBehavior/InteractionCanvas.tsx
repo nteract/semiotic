@@ -86,14 +86,9 @@ class InteractionCanvas extends React.Component<InteractionCanvasProps, Interact
 
         interactionContext2D.lineWidth = 1
 
-        console.log("SHOULD BE DRAWING")
-
         overlayRegions.forEach((overlay, oi) => {
 
             const overlayD = overlay.props.d || overlay.props.children[0].props.d
-            if (oi < 100) {
-                console.log("overlayD", overlayD)
-            }
             const interactionRGBA = `rgba(${Math.floor(
                 Math.random() * 255
             )},${Math.floor(Math.random() * 255)},${Math.floor(
