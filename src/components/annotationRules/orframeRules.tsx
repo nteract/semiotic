@@ -239,12 +239,14 @@ export const getColumnScreenCoordinates = ({
     yPosition = column.middle
     xPosition = positionValue + adjustedPosition[0]
   } else if (projection === "radial") {
-    ;[xPosition, yPosition] = pointOnArcAtAngle(
-      [d.arcAngles.translate[0], d.arcAngles.translate[1]],
-      d.arcAngles.midAngle,
-      d.arcAngles.length
-    )
-    yPosition += 10
+
+    const { pieArc } = column
+
+    const { translate, outerPoint, centroid } = pieArc
+
+    xPosition = (centroid[0] + outerPoint[0]) / 2 + translate[0]
+    yPosition = (centroid[1] + outerPoint[1]) / 2 + translate[1]
+
   }
   return { coordinates: [xPosition, yPosition], pieces, column }
 }

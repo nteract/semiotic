@@ -3,6 +3,9 @@ import { NetworkFrame } from "../../components"
 import data from "../sampledata/flare"
 import ProcessViz from "./ProcessViz"
 
+const filterBaseNode = d => d.depth !== 0
+const filterSubNodes = d => d.depth !== 1
+
 const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"]
 const sunburstSettings = {
   size: [700, 700],
@@ -46,12 +49,14 @@ const sunburstSettings = {
   margin: 10,
   filterRenderedNodes: d => d.depth !== 0
 }
-export default zoom => (
-  <div>
-    <ProcessViz frameSettings={sunburstSettings} frameType="NetworkFrame" />
-    <NetworkFrame
-      {...sunburstSettings}
-      edges={zoom ? { name: "flare", children: [data.children[9]] } : data}
-    />
-  </div>
-)
+export default zoom => {
+  return (
+    <div>
+      <ProcessViz frameSettings={sunburstSettings} frameType="NetworkFrame" />
+      <NetworkFrame
+        {...sunburstSettings}
+        filterRenderedNodes={zoom ? filterBaseNode : filterSubNodes}
+      />
+    </div>
+  )
+}

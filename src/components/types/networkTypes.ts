@@ -65,6 +65,7 @@ export interface GraphSettingsType {
   nodeHash: Map<any, NodeType>
   edgeHash: Map<any, EdgeType>
   hierarchicalNetwork: boolean
+  filterRenderedNodes?: Function
 }
 
 export interface NetworkSettingsType {

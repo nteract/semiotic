@@ -199,11 +199,26 @@ export default class CreatingPieChart extends React.Component {
             oAccessor={"user"}
             dynamicColumnWidth={"tweets"}
             style={{ fill: "white", stroke: "black", strokeWidth: "3px" }}
-            type={{ type: "bar", offsetAngle: 0 }}
+            type={{ type: "bar", offsetAngle: 0, innerRadius: 2 }}
             projection={"radial"}
             //            oLabel={{ label: true, orient: "stem", padding: -5 }}
-            margin={50}
+            margin={10}
             hoverAnnotation={true}
+            annotations={[{
+              type: "react-annotation",
+              label: "SUSIE",
+              user: "Susie",
+              isColumnAnnotation: true,
+              dx: -100,
+              dy: -100
+            }, {
+              type: "react-annotation",
+              label: "JASON",
+              user: "Jason",
+              isColumnAnnotation: true,
+              dx: 150,
+              dy: 150
+            }]}
           />
         </div>
       ),

@@ -104,7 +104,8 @@ export const networkFrameChangeProps = [
   "renderFn",
   "nodeStyle",
   "edgeStyle",
-  "edgeType"
+  "edgeType",
+  "filterRenderedNodes"
 ]
 
 const sharedframeproptypes = {

@@ -372,6 +372,8 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     }
   }
 
+  queuedCanvasRender = renderQueue(() => { })
+
   componentDidUpdate(lp: object) {
     const np = this.props
     const propKeys = Object.keys(np)
@@ -425,7 +427,10 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
       size[1]
     )
 
-    const render = renderQueue(this.renderCanvas(context, margin, np, sketchyRenderingEngine, rc))
+    this.queuedCanvasRender.invalidate()
+    this.queuedCanvasRender.clear()
+
+    this.queuedCanvasRender = renderQueue(this.renderCanvas(context, margin, np, sketchyRenderingEngine, rc))
       .clear(() => {
         context.clearRect(
           -margin.left,
@@ -435,7 +440,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
         )
       });
 
-    render(this.state.canvasDrawing)
+    this.queuedCanvasRender(this.state.canvasDrawing)
     context.setTransform(1, 0, 0, 1, 0, 0)
     context.globalAlpha = 1
 

@@ -232,7 +232,10 @@ class InteractionLayer extends React.PureComponent<InteractionLayerProps, Intera
       nextProps.points !== props.points ||
       props.xScale !== nextProps.xScale ||
       props.yScale !== nextProps.yScale ||
-      ((!props.hoverAnnotation && nextProps.hoverAnnotation) || (props.hoverAnnotation && !nextProps.hoverAnnotation))
+      ((!props.hoverAnnotation && nextProps.hoverAnnotation) || (props.hoverAnnotation && !nextProps.hoverAnnotation)) ||
+      ((!props.customClickBehavior && nextProps.customClickBehavior) || (props.customClickBehavior && !nextProps.customClickBehavior)) ||
+      ((!props.customDoubleClickBehavior && nextProps.customDoubleClickBehavior) || (props.customDoubleClickBehavior && !nextProps.customDoubleClickBehavior)) ||
+      ((!props.customHoverBehavior && nextProps.customHoverBehavior) || (props.customHoverBehavior && !nextProps.customHoverBehavior))
     ) {
 
       const { disableCanvasInteraction, canvasRendering, svgSize, margin, voronoiHover } = nextProps

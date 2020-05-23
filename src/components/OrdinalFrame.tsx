@@ -161,13 +161,32 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, OrdinalFrameState>
       projectedColumns,
       orFrameRender,
       pieceIDAccessor,
-      rScaleType
+      rScaleType,
+      summaryType,
+      type,
     } = this.state
+
 
     let screenCoordinates: number[] | number[][] = [0, 0]
 
-    //TODO: Support radial??
-    if (d.coordinates || (d.type === "enclose" && d.neighbors)) {
+    getColumnScreenCoordinates
+
+    if (d.isColumnAnnotation) {
+      const {
+        coordinates: [xPosition, yPosition]
+      } = getColumnScreenCoordinates({
+        d,
+        projectedColumns,
+        oAccessor,
+        summaryType,
+        type,
+        projection,
+        adjustedPosition,
+        adjustedSize
+      })
+      screenCoordinates = [xPosition, yPosition]
+    }
+    else if (d.coordinates || (d.type === "enclose" && d.neighbors)) {
       screenCoordinates = (d.coordinates || d.neighbors).map(
         (p: { column?: string }) => {
           const pO = findFirstAccessorValue(oAccessor, p) || p.column

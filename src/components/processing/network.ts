@@ -421,6 +421,7 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
 
   networkSettings.graphSettings.nodes = nodes
   networkSettings.graphSettings.edges = edges
+  networkSettings.graphSettings.filterRenderedNodes = filterRenderedNodes
 
   let { edgeHash, nodeHash } = networkSettings.graphSettings
 
@@ -471,7 +472,8 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
     !prevState.projectedEdges ||
     prevState.graphSettings.nodes !== nodes ||
     prevState.graphSettings.edges !== edges ||
-    isHierarchical
+    isHierarchical ||
+    prevState.graphSettings.filterRenderedNodes !== filterRenderedNodes
 
   if (networkSettings.type === "dagre") {
     const dagreGraph = graph as {

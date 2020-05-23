@@ -159,7 +159,6 @@ export const calculateXYFrame = (currentProps: XYFrameProps, prevState: XYFrameS
         summaries = lines
     }
 
-
     const castXScaleType = (baseXScaleType as unknown) as Function
 
     const xScaleType = baseXScaleType.domain ? baseXScaleType : castXScaleType()

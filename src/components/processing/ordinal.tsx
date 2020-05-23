@@ -700,7 +700,7 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
                 rScale.range()[1] / 2 + labelSettings.padding + addedPadding
             )
 
-            pieArcs.push({
+            const pieArc = {
                 startAngle,
                 endAngle,
                 midAngle,
@@ -708,7 +708,11 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
                 translate,
                 centroid,
                 outerPoint
-            })
+            }
+
+            projectedColumns[d].pieArc = pieArc
+
+            pieArcs.push(pieArc)
         })
     }
 

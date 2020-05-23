@@ -56,7 +56,8 @@ export default class CreatingLineChart extends React.Component {
     this.lineHoverBehavior = this.lineHoverBehavior.bind(this)
     this.state = {
       hoverPoint: undefined,
-      brushChart: "stackedpercent"
+      brushChart: "stackedpercent",
+      customClickBehavior: undefined
     }
   }
   lineHoverBehavior(d) {
@@ -495,6 +496,7 @@ export default class CreatingLineChart extends React.Component {
       name: "Simple",
       demo: (
         <div>
+          <button onClick={() => { this.setState({ customClickBehavior: d => console.info("HEY NEW D", d) }) }}>Turn on click behavior</button>
           <XYFrame
             title={"Two Movies"}
             size={[700, 400]}
@@ -513,6 +515,8 @@ export default class CreatingLineChart extends React.Component {
               fill: d.title === "Ex Machina" ? "#00a2ce" : "red",
               fillOpacity: 0.5
             })}
+            hoverAnnotation={true}
+            customClickBehavior={this.state.customClickBehavior}
             margin={{ left: 80, bottom: 50, right: 10, top: 40 }}
             axes={[
               {
