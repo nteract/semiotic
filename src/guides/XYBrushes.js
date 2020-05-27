@@ -171,13 +171,13 @@ You can programmatically change brush extent by sending a new xBrushExtent.
 export default class CreateXYBrushes extends React.Component {
   constructor(props) {
     super(props)
-    this.state = { selectedExtent: [20, 30]}
+    this.state = { extent: [20, 30]}
     this.changeExtent = this.changeExtent.bind(this)
-
   }
 
   changeExtent(e) {
-    this.setState({ selectedExtent: [Math.floor(e[0]), Math.ceil(e[1])] })
+    this.setState({ extent: [Math.floor(e[0]), Math.ceil(e[1])] })
+    frameProps.xExtent = [Math.floor(e[0]), Math.ceil(e[1])];
   }
 
   render() {          
