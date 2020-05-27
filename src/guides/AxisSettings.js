@@ -42,17 +42,19 @@ export default function AxisSettings() {
     <div>
       <MarkdownText
         text={`\`OrdinalFrame\` and \`XYFrame\`  both take an \`axes\` prop that takes an array of objects that determine how your axes are displayed:
-- \`orient\`: the only required prop, determines where to place the axis (\`left\`, \`right\`, \`top\`, \`bottom\`). 
+- \`orient\`: the only required prop, determines where to place the axis (\`left\`, \`right\`, \`top\`, \`bottom\`).
 - \`ticks\`: guidance for a prefered number of ticks to display
 - \`tickValues\`: an array of explicit tick values to use
-- \`tickFormat\`: determines how to render the value displayed by the ticks  
+- \`tickFormat\`: determines how to render the value displayed by the ticks
 - \`tickLineGenerator\`: Allows you to overwrite how the tick lines are displayed, it gives you a parameter ({ x1, x2, y1, y2}) and the function should return a JSX element
-- \`label\`: (which can be a string or an object with more settings) to label the axis 
+- \`label\`: (which can be a string or an object with more settings) to label the axis
 - \`baseline\`: defaults to \`true\` can be overwritten with \`false\`. By default it is drawn over the visualization layer but can be drawn underneath the visualization by setting it to \`"under"\`.
 - \`jaggedBase\`  (v1.19.6+): defaults to \`false\`, \`true\` renders the tick at the minimum point in your dataset with a "torn" appearance
 - \`marginalSummaryGraphics\` (v1.19.6+): Lets you add an ordinal summary to your chart in the axis, see the [marginal graphics](/examples/marginal-graphics) page for an details
-- \`axisAnnotationFunction\`: defaults to \`undefined\`, if a function is supplied, it creates a hover region on the axis, turns on the default hover display, when you click this function is run with ({ className, type, value }) 
-- \`glyphFunction\`: Allows you create a custom hover display on the axis, it passed ({ lineWidth, lineHeight, value }) and expects you to return a JSX element`}
+- \`axisAnnotationFunction\`: defaults to \`undefined\`, if a function is supplied, it creates a hover region on the axis, turns on the default hover display, when you click this function is run with ({ className, type, value })
+- \`glyphFunction\`: Allows you create a custom hover display on the axis, it passed ({ lineWidth, lineHeight, value }) and expects you to return a JSX element
+- \`showOutboundTickLines\` (boolean): Display tick lines outside the chart to accompany the tick labels
+`}
       />
       <XYFrame
         {...chartSettings}
@@ -153,6 +155,22 @@ If you set the \`axisAnnotationFunction\` it will turn on a region on the axis t
         type={XYFrame}
         overrideProps={overrideProps}
         startHidden
+      />
+      <MarkdownText
+        text={`
+  ### Outbound Tick Lines Example
+
+  If you set \`showOutboundTickLines\` to true, additional outbound tick lines will be drawn.
+  `}
+      />{" "}
+      <DocumentFrame
+        frameProps={{
+          ...chartSettings,
+          lines:generatedData[0],
+          axes:[{ orient: "left", label: "Amount of Sales", showOutboundTickLines: true }]
+        }}
+        type={XYFrame}
+        overrideProps={overrideProps}
       />
     </div>
   )
