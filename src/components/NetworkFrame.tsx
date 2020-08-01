@@ -4,9 +4,7 @@ import Frame from "./Frame"
 
 import { stringToFn } from "./data/dataFunctions"
 
-import {
-  networkFrameChangeProps
-} from "./constants/frame_props"
+import { networkFrameChangeProps } from "./constants/frame_props"
 
 import {
   htmlFrameHoverRule,
@@ -50,7 +48,7 @@ import { AnnotationLayerProps } from "./AnnotationLayer"
 class NetworkFrame extends React.Component<
   NetworkFrameProps,
   NetworkFrameState
-  > {
+> {
   static defaultProps = {
     annotations: [],
     foregroundGraphics: [],
@@ -62,7 +60,7 @@ class NetworkFrame extends React.Component<
     filterRenderedNodes: (d: NodeType) => d.id !== "root-generated"
   }
 
-  static displayName = "NetworkFrame"
+  static displayName: string = "NetworkFrame"
 
   constructor(props: NetworkFrameProps) {
     super(props)
@@ -113,21 +111,26 @@ class NetworkFrame extends React.Component<
     }
   }
 
-  static getDerivedStateFromProps(nextProps: NetworkFrameProps, prevState: NetworkFrameState) {
+  static getDerivedStateFromProps(
+    nextProps: NetworkFrameProps,
+    prevState: NetworkFrameState
+  ) {
     const { props } = prevState
-    if ((
+    if (
       (prevState.dataVersion &&
         prevState.dataVersion !== nextProps.dataVersion) ||
-      (!prevState.projectedNodes && !prevState.projectedEdges)
-    ) || (
-        props.size[0] !== nextProps.size[0] ||
+      (!prevState.projectedNodes && !prevState.projectedEdges) ||
+      props.size[0] !== nextProps.size[0] ||
         props.size[1] !== nextProps.size[1] ||
         (!prevState.dataVersion &&
           networkFrameChangeProps.find(d => {
             return props[d] !== nextProps[d]
           }))
-      )) {
-      return { ...calculateNetworkFrame(nextProps, prevState), props: nextProps }
+    ) {
+      return {
+        ...calculateNetworkFrame(nextProps, prevState),
+        props: nextProps
+      }
     }
     return { props: nextProps }
   }
@@ -177,7 +180,7 @@ class NetworkFrame extends React.Component<
     const d = baseD.ids
       ? baseD
       : baseD.edge
-        ? {
+      ? {
           ...(projectedEdges.find(
             p =>
               nodeIDAccessor(p.source) === nodeIDAccessor(baseD.source) &&
@@ -185,7 +188,7 @@ class NetworkFrame extends React.Component<
           ) || {}),
           ...baseD
         }
-        : {
+      : {
           ...(projectedNodes.find(p => nodeIDAccessor(p) === baseD.id) || {}),
           ...baseD
         }
@@ -298,7 +301,7 @@ class NetworkFrame extends React.Component<
     const d = baseD.ids
       ? baseD
       : baseD.edge
-        ? {
+      ? {
           ...(projectedEdges.find(
             p =>
               nodeIDAccessor(p.source) === nodeIDAccessor(baseD.source) &&
@@ -306,7 +309,7 @@ class NetworkFrame extends React.Component<
           ) || {}),
           ...baseD
         }
-        : {
+      : {
           ...(projectedNodes.find(p => nodeIDAccessor(p) === baseD.id) || {}),
           ...baseD
         }
@@ -366,7 +369,7 @@ class NetworkFrame extends React.Component<
       canvasEdges,
       additionalDefs,
       renderOrder = this.state.graphSettings &&
-        this.state.graphSettings.type === "matrix"
+      this.state.graphSettings.type === "matrix"
         ? matrixRenderOrder
         : generalRenderOrder,
       sketchyRenderingEngine,
@@ -397,7 +400,11 @@ class NetworkFrame extends React.Component<
     let activeHoverAnnotation
     if (Array.isArray(hoverAnnotation)) {
       activeHoverAnnotation = hoverAnnotation
-    } else if (customClickBehavior || customDoubleClickBehavior || customHoverBehavior) {
+    } else if (
+      customClickBehavior ||
+      customDoubleClickBehavior ||
+      customHoverBehavior
+    ) {
       activeHoverAnnotation = blankArray
     } else {
       activeHoverAnnotation = !!hoverAnnotation

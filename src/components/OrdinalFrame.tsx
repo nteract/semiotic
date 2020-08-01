@@ -1,14 +1,8 @@
 import * as React from "react"
 
+import { scaleBand, scaleLinear } from "d3-scale"
 
-import {
-  scaleBand,
-  scaleLinear,
-} from "d3-scale"
-
-import {
-  orFrameChangeProps
-} from "./constants/frame_props"
+import { orFrameChangeProps } from "./constants/frame_props"
 import {
   svgORRule,
   svgHighlightRule,
@@ -35,9 +29,7 @@ import { stringToFn, stringToArrayFn } from "./data/dataFunctions"
 
 import { calculateOrdinalFrame } from "./processing/ordinal"
 
-import {
-  AnnotationType
-} from "./types/annotationTypes"
+import { AnnotationType } from "./types/annotationTypes"
 
 import { AnnotationLayerProps } from "./AnnotationLayer"
 
@@ -50,7 +42,10 @@ const projectedCoordinatesObject = { y: "y", x: "x" }
 
 const defaultOverflow = { top: 0, bottom: 0, left: 0, right: 0 }
 
-class OrdinalFrame extends React.Component<OrdinalFrameProps, OrdinalFrameState> {
+class OrdinalFrame extends React.Component<
+  OrdinalFrameProps,
+  OrdinalFrameState
+> {
   static defaultProps = {
     annotations: [],
     foregroundGraphics: [],
@@ -67,7 +62,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, OrdinalFrameState>
     optimizeCustomTooltipPosition: false
   }
 
-  static displayName = "OrdinalFrame"
+  static displayName: string = "OrdinalFrame"
 
   constructor(props: OrdinalFrameProps) {
     super(props)
@@ -109,7 +104,6 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, OrdinalFrameState>
       ...baseState,
       ...calculateOrdinalFrame(props, baseState)
     }
-
   }
 
   componentWillUnmount() {
@@ -119,22 +113,27 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, OrdinalFrameState>
     }
   }
 
-  static getDerivedStateFromProps(nextProps: OrdinalFrameProps, prevState: OrdinalFrameState) {
+  static getDerivedStateFromProps(
+    nextProps: OrdinalFrameProps,
+    prevState: OrdinalFrameState
+  ) {
     const { props } = prevState
 
     if (
-      (((prevState.dataVersion &&
+      (prevState.dataVersion &&
         prevState.dataVersion !== nextProps.dataVersion) ||
-        !prevState.projectedColumns) || (
-          props.size[0] !== nextProps.size[0] ||
-          props.size[1] !== nextProps.size[1] ||
-          (!prevState.dataVersion &&
-            orFrameChangeProps.find(d => {
-              return props[d] !== nextProps[d]
-            }))
-        ))
+      !prevState.projectedColumns ||
+      props.size[0] !== nextProps.size[0] ||
+      props.size[1] !== nextProps.size[1] ||
+      (!prevState.dataVersion &&
+        orFrameChangeProps.find(d => {
+          return props[d] !== nextProps[d]
+        }))
     ) {
-      return { ...calculateOrdinalFrame(nextProps, prevState), props: nextProps }
+      return {
+        ...calculateOrdinalFrame(nextProps, prevState),
+        props: nextProps
+      }
     } else {
       return { props: nextProps }
     }
@@ -163,9 +162,8 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, OrdinalFrameState>
       pieceIDAccessor,
       rScaleType,
       summaryType,
-      type,
+      type
     } = this.state
-
 
     let screenCoordinates: number[] | number[][] = [0, 0]
 
@@ -185,8 +183,7 @@ class OrdinalFrame extends React.Component<OrdinalFrameProps, OrdinalFrameState>
         adjustedSize
       })
       screenCoordinates = [xPosition, yPosition]
-    }
-    else if (d.coordinates || (d.type === "enclose" && d.neighbors)) {
+    } else if (d.coordinates || (d.type === "enclose" && d.neighbors)) {
       screenCoordinates = (d.coordinates || d.neighbors).map(
         (p: { column?: string }) => {
           const pO = findFirstAccessorValue(oAccessor, p) || p.column

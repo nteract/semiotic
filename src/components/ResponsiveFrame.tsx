@@ -1,27 +1,30 @@
 import * as React from "react"
 
 import elementResizeEvent from "element-resize-event"
+import { OrdinalFrameProps } from "./types/ordinalTypes"
+import { XYFrameProps } from "./types/xyTypes"
+import { NetworkFrameProps } from "./types/networkTypes"
 
-type ResponsiveFrameProps = {
-  debounce: number
+export interface ResponsiveFrameProps {
+  debounce?: number
   responsiveWidth?: boolean
   responsiveHeight?: boolean
-  size?: number[]
-  dataVersion?: string
   gridDisplay?: boolean
   elementResizeEvent?: Function
 }
 
-type ResponsiveFrameState = {
+export interface ResponsiveFrameState {
   containerHeight?: number
   containerWidth?: number
 }
 
-const createResponsiveFrame = ParticularFrame =>
-  class ResponsiveFrame extends React.Component<
-    ResponsiveFrameProps,
+type ActualFrameProps = OrdinalFrameProps | XYFrameProps | NetworkFrameProps
+
+const createResponsiveFrame = ParticularFrame => {
+  return class ResponsiveFrame extends React.Component<
+    ResponsiveFrameProps & ActualFrameProps,
     ResponsiveFrameState
-    > {
+  > {
     constructor(props) {
       super(props)
 
@@ -50,7 +53,8 @@ const createResponsiveFrame = ParticularFrame =>
 
       const { debounce } = this.props
 
-      const actualElementResizeEvent = this.props.elementResizeEvent || elementResizeEvent
+      const actualElementResizeEvent =
+        this.props.elementResizeEvent || elementResizeEvent
 
       actualElementResizeEvent(element, () => {
         window.clearTimeout(this.isResizing)
@@ -119,5 +123,6 @@ const createResponsiveFrame = ParticularFrame =>
       )
     }
   }
+}
 
 export default createResponsiveFrame

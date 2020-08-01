@@ -5,7 +5,7 @@ import { scaleLinear } from "d3-scale"
 // components
 
 import Frame from "./Frame"
-import TooltipPositioner from './TooltipPositioner'
+import TooltipPositioner from "./TooltipPositioner"
 import {
   svgXYAnnotation,
   svgHighlight,
@@ -27,10 +27,7 @@ import { desaturationLayer } from "./annotationRules/baseRules"
 
 import { relativeY, relativeX, findPointByID } from "./svg/lineDrawing"
 
-import {
-  calculateMargin,
-  adjustedPositionSize
-} from "./svg/frameFunctions"
+import { calculateMargin, adjustedPositionSize } from "./svg/frameFunctions"
 
 import {
   projectedX,
@@ -51,10 +48,7 @@ import { findFirstAccessorValue } from "./data/multiAccessorUtils"
 
 import { calculateXYFrame } from "./processing/xyDrawing"
 
-import {
-  xyFrameChangeProps,
-  xyFrameDataProps
-} from "./constants/frame_props"
+import { xyFrameChangeProps, xyFrameDataProps } from "./constants/frame_props"
 
 import { HOCSpanOrDiv } from "./SpanOrDiv"
 
@@ -62,12 +56,10 @@ import {
   ProjectedPoint,
   ProjectedSummary,
   ProjectedLine,
-  GenericObject,
+  GenericObject
 } from "./types/generalTypes"
 
-import {
-  AnnotationType,
-} from "./types/annotationTypes"
+import { AnnotationType } from "./types/annotationTypes"
 
 import { XYFrameProps, XYFrameState } from "./types/xyTypes"
 
@@ -100,7 +92,7 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
     dataVersion: undefined
   }
 
-  static displayName = "XYFrame"
+  static displayName: string = "XYFrame"
 
   constructor(props: XYFrameProps) {
     super(props)
@@ -158,7 +150,6 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
     }
 
     this.state = { ...baseState, ...calculateXYFrame(props, baseState, true) }
-
   }
 
   componentWillUnmount() {
@@ -168,7 +159,10 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
     }
   }
 
-  static getDerivedStateFromProps(nextProps: XYFrameProps, prevState: XYFrameState) {
+  static getDerivedStateFromProps(
+    nextProps: XYFrameProps,
+    prevState: XYFrameState
+  ) {
     const { props } = prevState
     const {
       xExtent: oldXExtent = [],
@@ -250,9 +244,23 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       styleFn: (args?: GenericObject, index?: number) => GenericObject
     }
   }) => {
-    const { showLinePoints, defined, margin: baseMargin, size, svgAnnotationRules } = this.props
+    const {
+      showLinePoints,
+      defined,
+      margin: baseMargin,
+      size,
+      svgAnnotationRules
+    } = this.props
 
-    const { xyFrameRender, xScale, yScale, xAccessor, yAccessor, axesData, annotatedSettings } = this.state
+    const {
+      xyFrameRender,
+      xScale,
+      yScale,
+      xAccessor,
+      yAccessor,
+      axesData,
+      annotatedSettings
+    } = this.state
 
     let screenCoordinates: number[] | number[][] = []
     const idAccessor = annotatedSettings.lineIDAccessor
@@ -275,13 +283,13 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
     const d: AnnotationType = baseD.coordinates
       ? baseD
       : findPointByID({
-        point: baseD,
-        idAccessor,
-        lines,
-        xScale,
-        projectedX,
-        xAccessor
-      })
+          point: baseD,
+          idAccessor,
+          lines,
+          xScale,
+          projectedX,
+          xAccessor
+        })
 
     if (!d) return null
 
@@ -470,8 +478,15 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       styleFn: (args?: GenericObject, index?: number) => GenericObject
     }
   }) => {
-
-    const { xAccessor, yAccessor, xScale, yScale, SpanOrDiv, annotatedSettings, axesData } = this.state
+    const {
+      xAccessor,
+      yAccessor,
+      xScale,
+      yScale,
+      SpanOrDiv,
+      annotatedSettings,
+      axesData
+    } = this.state
 
     const { voronoiHover } = annotationLayer
 
@@ -547,7 +562,7 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
         })
         return [
           (xScale(findFirstAccessorValue(xAccessor, d)) || 0) +
-          adjustedPosition[0],
+            adjustedPosition[0],
           (relativeY({
             point: foundP,
             projectedYMiddle,
@@ -597,10 +612,14 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       )
 
       if (d.type === "frame-hover" && tooltipContent) {
-        content = optimizeCustomTooltipPosition ? (<TooltipPositioner
-          tooltipContent={tooltipContent}
-          tooltipContentArgs={d}
-        />) : tooltipContent(d)
+        content = optimizeCustomTooltipPosition ? (
+          <TooltipPositioner
+            tooltipContent={tooltipContent}
+            tooltipContentArgs={d}
+          />
+        ) : (
+          tooltipContent(d)
+        )
       }
       return htmlTooltipAnnotation({
         content,

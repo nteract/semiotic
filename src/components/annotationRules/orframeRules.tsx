@@ -940,7 +940,6 @@ export const svgOrdinalLine = ({ screenCoordinates, d, voronoiHover }) => {
                   onMouseOut={() => voronoiHover()}
                 />
               )}
-              }
             </g>
           )
         })}

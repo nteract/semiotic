@@ -1,5 +1,18 @@
 //size is a special case and handled checking the actual values in the size array
 
+const sharedChangeProps = [
+  "customClickBehavior",
+  "customHoverBehavior",
+  "customDoubleClickBehavior",
+  "hoverAnnotation",
+  "name",
+  "title",
+  "margin",
+  "className",
+  "additionalDefs",
+  "renderKey"
+]
+
 export const xyFrameDataProps = [
   "lines",
   "points",
@@ -19,18 +32,13 @@ export const xyFrameDataProps = [
 ]
 
 export const xyFrameChangeProps = [
+  ...sharedChangeProps,
   ...xyFrameDataProps,
-  "name",
-  "title",
-  "margin",
   "axes",
-  "position",
   "xExtent",
   "yExtent",
   "invertX",
   "invertY",
-  "hoverAnnotation",
-  "additionalDefs",
   "defined",
   "lineStyle",
   "pointStyle",
@@ -46,13 +54,11 @@ export const xyFrameChangeProps = [
 ]
 
 export const orFrameChangeProps = [
+  ...sharedChangeProps,
+  "pieceHoverAnnotation",
+  "summaryHoverAnnotation",
   "data",
-  "name",
   "orient",
-  "title",
-  "margin",
-  "format",
-  "position",
   "oScaleType",
   "rScaleType",
   "oExtent",
@@ -66,31 +72,24 @@ export const orFrameChangeProps = [
   "type",
   "summaryType",
   "connectorType",
-  "className",
-  "additionalDefs",
-  "renderKey",
   "dataAccessor",
   "rBaseline",
-  "sortO",
   "oSort",
   "dynamicColumnWidth",
-  "renderFn",
   "style",
   "connectorStyle",
   "summaryStyle",
   "summaryPosition",
   "oLabel",
-  "axes"
+  "axes",
+  "renderFn"
 ]
 
 export const networkFrameChangeProps = [
-  "name",
+  ...sharedChangeProps,
   "graph",
   "nodes",
   "edges",
-  "title",
-  "margin",
-  "position",
   "nodeIDAccessor",
   "sourceAccessor",
   "targetAccessor",
@@ -99,55 +98,9 @@ export const networkFrameChangeProps = [
   "nodeLabels",
   "edgeWidthAccessor",
   "networkType",
-  "className",
-  "additionalDefs",
   "renderFn",
   "nodeStyle",
   "edgeStyle",
   "edgeType",
   "filterRenderedNodes"
 ]
-
-const sharedframeproptypes = {
-  useSpans: true,
-  title: true,
-  margin: true,
-  name: true,
-  dataVersion: true,
-  frameKey: true,
-  size: true,
-  position: true,
-  canvasPostProcess: true,
-  additionalDefs: true,
-  className: true,
-  customHoverBehavior: true,
-  customClickBehavior: true,
-  customDoubleClickBehavior: true,
-  hoverAnnotation: true,
-  disableContext: true,
-  interaction: true,
-  svgAnnotationRules: true,
-  htmlAnnotationRules: true,
-  tooltipContent: true,
-  optimizeCustomTooltipPosition: true,
-  annotations: true,
-  baseMarkProps: true,
-  backgroundGraphics: true,
-  foregroundGraphics: true,
-  beforeElements: true,
-  afterElements: true,
-  annotationSettings: true,
-  renderKey: true,
-  renderOrder: true,
-  legend: true,
-  onUnmount: true,
-  sketchyRenderingEngine: true,
-  interactionSettings: true,
-  frameRenderOrder: true
-}
-
-export const responsiveprops = {
-  responsiveWidth: true,
-  responsiveHeight: true,
-  debounce: true
-}

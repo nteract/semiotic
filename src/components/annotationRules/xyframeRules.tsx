@@ -12,7 +12,7 @@ import SpanOrDiv from "../SpanOrDiv"
 import { findFirstAccessorValue } from "../data/multiAccessorUtils"
 import { curveHash } from "../visualizationLayerBehavior/general"
 import { ScaleLinear } from "d3-scale"
-import { ProjectedPoint } from "../types/generalTypes"
+import { ProjectedPoint, RenderPipelineType } from "../types/generalTypes"
 
 const pointsAlong = along => ({
   d,
@@ -95,7 +95,7 @@ export const svgHighlight = ({
   idAccessor: Function
   xScale: ScaleLinear<number, number>
   yScale: ScaleLinear<number, number>
-  xyFrameRender: any
+  xyFrameRender: RenderPipelineType
   defined: Function
 }) => {
   let dID

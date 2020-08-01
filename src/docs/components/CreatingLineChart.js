@@ -522,7 +522,8 @@ export default class CreatingLineChart extends React.Component {
               {
                 orient: "left",
                 jaggedBase: true,
-                baseline: false
+                baseline: false,
+                annotationFunction: e => { console.info("Brush e", e) }
               },
               {
                 orient: "bottom",

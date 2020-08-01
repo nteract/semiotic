@@ -7,7 +7,7 @@ import { generateFinalDefs } from "./constants/jsx"
 
 import { HOCSpanOrDiv } from "./SpanOrDiv"
 import { MarginType, RoughType } from "./types/generalTypes"
-import { AnnotationHandling } from "./types/annotationTypes"
+import { AnnotationHandling, CustomHoverType } from "./types/annotationTypes"
 import { LegendProps } from "./types/legendTypes"
 import { ScaleLinear } from "d3-scale"
 import { AdvancedInteractionSettings } from "./types/interactionTypes"
@@ -25,7 +25,7 @@ type VizDataLayerKeys =
 
 type Props = {
   name?: string
-  title: object
+  title: string | Element | { title?: string | Element }
   margin: MarginType
   size: Array<number>
   annotationSettings: AnnotationHandling
@@ -38,7 +38,7 @@ type Props = {
   className?: string
   interaction?: object
   renderFn?: string | Function
-  hoverAnnotation?: boolean | object | Array<object | Function> | Function
+  hoverAnnotation?: CustomHoverType
   backgroundGraphics?: React.ReactNode | Function
   foregroundGraphics?: React.ReactNode | Function
   interactionOverflow?: object
@@ -81,10 +81,10 @@ type Props = {
 
 type State = {
   canvasContext?: ContextType
-  voronoiHover?: object,
-  finalDefs: object,
-  props: Props,
-  matte: React.ReactNode,
+  voronoiHover?: object
+  finalDefs: object
+  props: Props
+  matte: React.ReactNode
   SpanOrDiv: Function
 }
 
@@ -98,7 +98,13 @@ class Frame extends React.Component<Props, State> {
     adjustedPosition: [0, 0],
     projectedCoordinateNames: { x: "x", y: "y" },
     renderOrder: [],
-    frameRenderOrder: ["axes-tick-lines", "viz-layer", "matte", "axes-labels", "labels"],
+    frameRenderOrder: [
+      "axes-tick-lines",
+      "viz-layer",
+      "matte",
+      "axes-labels",
+      "labels"
+    ],
     additionalVizElements: {}
   }
 
@@ -107,7 +113,14 @@ class Frame extends React.Component<Props, State> {
 
     const { matte, size, margin, frameKey, additionalDefs, name } = props
 
-    const generatedDefs = generateFinalDefs({ matte, size, margin, frameKey, additionalDefs, name })
+    const generatedDefs = generateFinalDefs({
+      matte,
+      size,
+      margin,
+      frameKey,
+      additionalDefs,
+      name
+    })
 
     this.state = {
       canvasContext: null,
@@ -132,21 +145,46 @@ class Frame extends React.Component<Props, State> {
       this.setState({
         canvasContext: this.canvasContext
       })
-
-
   }
 
   static getDerivedStateFromProps(nextProps: Props, prevState: State) {
     const { props: lp } = prevState
 
-    const { matte, size, margin = defaultZeroMargin, frameKey, additionalDefs } = nextProps
+    const {
+      matte,
+      size,
+      margin = defaultZeroMargin,
+      frameKey,
+      additionalDefs
+    } = nextProps
 
     const lpMargin = lp.margin || defaultZeroMargin
 
-    if (lp.size[0] !== size[0] || lp.size[1] !== size[1] || lpMargin.top !== margin.top || lpMargin.bottom !== margin.bottom || lpMargin.right !== margin.right || lpMargin.left !== margin.left || lpMargin.top !== margin.top || lp.matte !== nextProps.matte || lp.additionalDefs !== nextProps.additionalDefs) {
-      const generatedDefs = generateFinalDefs({ matte, size, margin, frameKey, additionalDefs, name })
+    if (
+      lp.size[0] !== size[0] ||
+      lp.size[1] !== size[1] ||
+      lpMargin.top !== margin.top ||
+      lpMargin.bottom !== margin.bottom ||
+      lpMargin.right !== margin.right ||
+      lpMargin.left !== margin.left ||
+      lpMargin.top !== margin.top ||
+      lp.matte !== nextProps.matte ||
+      lp.additionalDefs !== nextProps.additionalDefs
+    ) {
+      const generatedDefs = generateFinalDefs({
+        matte,
+        size,
+        margin,
+        frameKey,
+        additionalDefs,
+        name
+      })
 
-      return { finalDefs: generatedDefs.defs, matte: generatedDefs.matte, props: nextProps }
+      return {
+        finalDefs: generatedDefs.defs,
+        matte: generatedDefs.matte,
+        props: nextProps
+      }
     }
 
     return null
@@ -155,7 +193,6 @@ class Frame extends React.Component<Props, State> {
   setVoronoi = (d: Object) => {
     this.setState({ voronoiHover: d })
   }
-
 
   render() {
     const {
@@ -210,11 +247,20 @@ class Frame extends React.Component<Props, State> {
 
     let { hoverAnnotation } = this.props
 
-    if (!hoverAnnotation && (customClickBehavior || customHoverBehavior || customDoubleClickBehavior)) {
+    if (
+      !hoverAnnotation &&
+      (customClickBehavior || customHoverBehavior || customDoubleClickBehavior)
+    ) {
       hoverAnnotation = blankArray
     }
 
-    const { voronoiHover, canvasContext, finalDefs, matte, SpanOrDiv } = this.state
+    const {
+      voronoiHover,
+      canvasContext,
+      finalDefs,
+      matte,
+      SpanOrDiv
+    } = this.state
 
     const areaAnnotations = []
 
@@ -233,45 +279,45 @@ class Frame extends React.Component<Props, State> {
     const annotationLayer = ((totalAnnotations &&
       totalAnnotations.length > 0) ||
       legendSettings) && (
-        <AnnotationLayer
-          legendSettings={legendSettings}
-          margin={margin}
-          axes={axes}
-          voronoiHover={this.setVoronoi}
-          annotationHandling={annotationSettings}
-          pointSizeFunction={
-            annotationSettings.layout &&
-            annotationSettings.layout.pointSizeFunction
-          }
-          labelSizeFunction={
-            annotationSettings.layout &&
-            annotationSettings.layout.labelSizeFunction
-          }
-          annotations={totalAnnotations}
-          svgAnnotationRule={(d, i, thisALayer) =>
-            defaultSVGRule({
-              d,
-              i,
-              annotationLayer: thisALayer,
-              ...renderPipeline
-            })
-          }
-          htmlAnnotationRule={(d, i, thisALayer) =>
-            defaultHTMLRule({
-              d,
-              i,
-              annotationLayer: thisALayer,
-              ...renderPipeline
-            })
-          }
-          useSpans={useSpans}
-          size={adjustedSize}
-          position={[
-            adjustedPosition[0] + margin.left,
-            adjustedPosition[1] + margin.top
-          ]}
-        />
-      )
+      <AnnotationLayer
+        legendSettings={legendSettings}
+        margin={margin}
+        axes={axes}
+        voronoiHover={this.setVoronoi}
+        annotationHandling={annotationSettings}
+        pointSizeFunction={
+          annotationSettings.layout &&
+          annotationSettings.layout.pointSizeFunction
+        }
+        labelSizeFunction={
+          annotationSettings.layout &&
+          annotationSettings.layout.labelSizeFunction
+        }
+        annotations={totalAnnotations}
+        svgAnnotationRule={(d, i, thisALayer) =>
+          defaultSVGRule({
+            d,
+            i,
+            annotationLayer: thisALayer,
+            ...renderPipeline
+          })
+        }
+        htmlAnnotationRule={(d, i, thisALayer) =>
+          defaultHTMLRule({
+            d,
+            i,
+            annotationLayer: thisALayer,
+            ...renderPipeline
+          })
+        }
+        useSpans={useSpans}
+        size={adjustedSize}
+        position={[
+          adjustedPosition[0] + margin.left,
+          adjustedPosition[1] + margin.top
+        ]}
+      />
+    )
 
     const generatedTitle = generateFrameTitle({
       title: title,
@@ -287,7 +333,6 @@ class Frame extends React.Component<Props, State> {
       typeof foregroundGraphics === "function"
         ? foregroundGraphics({ size, margin })
         : foregroundGraphics
-
 
     return (
       <SpanOrDiv
@@ -315,7 +360,7 @@ class Frame extends React.Component<Props, State> {
             className="visualization-layer"
             style={{ position: "absolute" }}
           >
-            {(backgroundGraphics) && (
+            {backgroundGraphics && (
               <svg
                 className="background-graphics"
                 style={{ position: "absolute" }}
@@ -332,7 +377,9 @@ class Frame extends React.Component<Props, State> {
             {canvasRendering && (
               <canvas
                 className="frame-canvas"
-                ref={canvasContextRef => (this.canvasContext = canvasContextRef)}
+                ref={canvasContextRef =>
+                  (this.canvasContext = canvasContextRef)
+                }
                 style={{
                   position: "absolute",
                   left: `0px`,
@@ -359,7 +406,7 @@ class Frame extends React.Component<Props, State> {
                 xScale={xScale}
                 yScale={yScale}
                 axes={axes}
-                title={title}
+                title={generatedTitle}
                 frameKey={frameKey}
                 canvasContext={canvasContext}
                 dataVersion={dataVersion}

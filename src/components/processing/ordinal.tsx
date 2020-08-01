@@ -188,7 +188,9 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
         || currentProps.size[1] !== prevProps.size[1]
         || currentProps.margin !== prevProps.margin
         || (!currentState.columnOverlays || currentState.columnOverlays.length === 0)
-
+        || currentProps.customClickBehavior !== prevProps.customClickBehavior
+        || currentProps.customDoubleClickBehavior !== prevProps.customDoubleClickBehavior
+        || currentProps.customHoverBehavior !== prevProps.customHoverBehavior
 
     let arrayWrappedAxis: AxisProps[] | undefined
 
@@ -1213,6 +1215,12 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
         oExtentSettings.onChange(calculatedOExtent)
     }
 
+    let legendSettings
+
+    if (legend) {
+        legendSettings = legend === true ? {} : legend
+    }
+
     return {
         pieceDataXY,
         adjustedPosition,
@@ -1238,7 +1246,7 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
         calculatedRExtent,
         projectedColumns,
         margin,
-        legendSettings: legend,
+        legendSettings,
         orFrameRender,
         summaryType,
         type: pieceType,

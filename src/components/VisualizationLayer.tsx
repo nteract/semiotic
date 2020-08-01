@@ -20,7 +20,7 @@ type Props = {
   height: number
   margin: MarginType
   canvasPostProcess?: Function
-  title?: { props?: any } | string
+  title?: JSX.Element | string
   ariaTitle?: string
   matte?: React.ReactNode
   matteClip?: boolean
@@ -31,20 +31,38 @@ type Props = {
   position: Array<number>
   disableContext?: boolean
   renderOrder: ReadonlyArray<VizLayerTypes>
-  sketchyRenderingEngine?: RoughType,
+  sketchyRenderingEngine?: RoughType
   axesTickLines?: React.ReactNode
   frameRenderOrder: Array<string>
   additionalVizElements: object
 }
 
 type State = {
-  canvasDrawing: Array<{ tx: number, ty: number, i: number, d: { data: object }, styleFn: Function, markProps: { renderMode?: object, markType: string, width: number, height: number, x: number, y: number, r: number, rx: number, d: string }, renderFn?: Function }>
+  canvasDrawing: Array<{
+    tx: number
+    ty: number
+    i: number
+    d: { data: object }
+    styleFn: Function
+    markProps: {
+      renderMode?: object
+      markType: string
+      width: number
+      height: number
+      x: number
+      y: number
+      r: number
+      rx: number
+      d: string
+    }
+    renderFn?: Function
+  }>
   dataVersion?: string
   renderedElements: Array<React.ReactNode>
   focusedPieceIndex: number | null
-  focusedVisualizationGroup?: any,
-  piecesGroup: object,
-  props: Props,
+  focusedVisualizationGroup?: string
+  piecesGroup: object
+  props: Props
   handleKeyDown: Function
 }
 
@@ -52,73 +70,77 @@ type RenderQueue = {
   data: Function
 }
 
-const renderQueue = (function (func) {
-  let _queue = [],                  // data to be rendered
-    _rate = 1000,                 // number of calls per frame
-    _invalidate = () => { },  // invalidate last render queue
-    _clear = () => { };       // clearing function
+const renderQueue = function(func) {
+  let _queue = [], // data to be rendered
+    _rate = 1000, // number of calls per frame
+    _invalidate = () => {}, // invalidate last render queue
+    _clear = () => {} // clearing function
 
-  let rq: any = function (data) {
-    if (data) rq.data(data);
-    _invalidate();
-    _clear();
-    rq.render();
-  };
+  // type RenderQueueType = { (): (data: any) => void, render?: Function, invalidate?: Function, data?: Function}
+  let rq: any = function(data) {
+    if (data) rq.data(data)
+    _invalidate()
+    _clear()
+    rq.render()
+  }
 
-  rq.render = function () {
-    let valid = true;
-    _invalidate = rq.invalidate = function () {
-      valid = false;
-    };
+  rq.render = function() {
+    let valid = true
+    _invalidate = rq.invalidate = function() {
+      valid = false
+    }
 
     function doFrame() {
-      if (!valid) return true;
-      let chunk = _queue.splice(0, _rate);
-      chunk.map(func);
-      timer_frame(doFrame);
+      if (!valid) return true
+      let chunk = _queue.splice(0, _rate)
+      chunk.map(func)
+      timer_frame(doFrame)
     }
 
-    doFrame();
-  };
+    doFrame()
+  }
 
-  rq.data = function (data) {
-    _invalidate();
-    _queue = data.slice(0);   // creates a copy of the data
-    return rq;
-  };
+  rq.data = function(data) {
+    _invalidate()
+    _queue = data.slice(0) // creates a copy of the data
+    return rq
+  }
 
-  rq.add = function (data) {
-    _queue = _queue.concat(data);
-  };
+  rq.add = function(data) {
+    _queue = _queue.concat(data)
+  }
 
-  rq.rate = function (value) {
-    if (!arguments.length) return _rate;
-    _rate = value;
-    return rq;
-  };
+  rq.rate = function(value) {
+    if (!arguments.length) return _rate
+    _rate = value
+    return rq
+  }
 
-  rq.remaining = function () {
-    return _queue.length;
-  };
+  rq.remaining = function() {
+    return _queue.length
+  }
 
   // clear the canvas
-  rq.clear = function (func) {
+  rq.clear = function(func) {
     if (!arguments.length) {
-      _clear();
-      return rq;
+      _clear()
+      return rq
     }
-    _clear = func;
-    return rq;
-  };
+    _clear = func
+    return rq
+  }
 
-  rq.invalidate = _invalidate;
+  rq.invalidate = _invalidate
 
-  let timer_frame = window.requestAnimationFrame
-    || window.webkitRequestAnimationFrame
-    || function (callback) { setTimeout(callback, 17); };
+  let timer_frame =
+    window.requestAnimationFrame ||
+    window.webkitRequestAnimationFrame ||
+    function(callback) {
+      setTimeout(callback, 17)
+    }
 
-  return rq;
-});
+  return rq
+}
 
 const updateVisualizationLayer = (props: Props, handleKeyDown: Function) => {
   const {
@@ -154,7 +176,8 @@ const updateVisualizationLayer = (props: Props, handleKeyDown: Function) => {
         (pipe.data && pipe.data.length > 0))
     ) {
       const additionalMarkProps = {
-        sketchyGenerator: sketchyRenderingEngine && sketchyRenderingEngine.generator,
+        sketchyGenerator:
+          sketchyRenderingEngine && sketchyRenderingEngine.generator,
         "aria-label":
           (pipe.ariaLabel && pipe.ariaLabel.items) || "dataviz-element",
         role: "img",
@@ -179,18 +202,14 @@ const updateVisualizationLayer = (props: Props, handleKeyDown: Function) => {
             tabIndex={0}
             aria-label={
               (pipe.ariaLabel &&
-                `${renderedPipe.length} ${pipe.ariaLabel.items}s in a ${
-                pipe.ariaLabel.chart
-                }`) ||
+                `${renderedPipe.length} ${pipe.ariaLabel.items}s in a ${pipe.ariaLabel.chart}`) ||
               k
             }
             onKeyDown={e => handleKeyDown(e, k)}
             onBlur={() => {
               props.voronoiHover(undefined)
             }}
-            ref={thisNode =>
-              thisNode && (piecesGroup[k] = thisNode.childNodes)
-            }
+            ref={thisNode => thisNode && (piecesGroup[k] = thisNode.childNodes)}
           >
             {renderedPipe}
           </g>
@@ -206,7 +225,6 @@ const updateVisualizationLayer = (props: Props, handleKeyDown: Function) => {
     piecesGroup
   }
 }
-
 
 class VisualizationLayer extends React.PureComponent<Props, State> {
   static defaultProps = {
@@ -233,24 +251,17 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     const style = piece.styleFn
       ? piece.styleFn({ ...piece.d, ...piece.d.data }, piece.i) || {}
       : {
-        fill: "black",
-        stroke: "black",
-        opacity: 1,
-        fillOpacity: 1,
-        strokeOpacity: 1,
-        strokeWidth: 1
-      }
+          fill: "black",
+          stroke: "black",
+          opacity: 1,
+          fillOpacity: 1,
+          strokeOpacity: 1,
+          strokeWidth: 1
+        }
 
     const fill = style.fill ? style.fill : "black"
     const stroke = style.stroke ? style.stroke : "black"
-    context.setTransform(
-      1,
-      0,
-      0,
-      1,
-      margin.left,
-      margin.top
-    )
+    context.setTransform(1, 0, 0, 1, margin.left, margin.top)
     context.translate(...np.position)
     context.translate(piece.tx, piece.ty)
     context.fillStyle = fill
@@ -267,13 +278,16 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
 
     if (actualRenderMode) {
       if (!sketchyRenderingEngine) {
-        console.error("You cannot render sketchy graphics without specifying a Rough.js-like library as the sketchyRenderingEngine prop of your frame")
+        console.error(
+          "You cannot render sketchy graphics without specifying a Rough.js-like library as the sketchyRenderingEngine prop of your frame"
+        )
         actualRenderMode = undefined
-      }
-      else {
+      } else {
         const RoughCanvas = sketchyRenderingEngine.canvas
         if (!RoughCanvas) {
-          console.error("The sketchyRenderingEngine you specify does not expose a prop `RoughCanvas` and so cannot render sketchy HTML5 Canvas graphics")
+          console.error(
+            "The sketchyRenderingEngine you specify does not expose a prop `RoughCanvas` and so cannot render sketchy HTML5 Canvas graphics"
+          )
         } else {
           rc = rc || RoughCanvas(np.canvasContext)
           const rcExtension =
@@ -372,7 +386,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     }
   }
 
-  queuedCanvasRender = renderQueue(() => { })
+  queuedCanvasRender = renderQueue(() => {})
 
   componentDidUpdate(lp: object) {
     const np = this.props
@@ -385,12 +399,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
       }
     })
 
-    if (
-      update === false ||
-      np.disableContext ||
-      !np.canvasContext
-    )
-      return
+    if (update === false || np.disableContext || !np.canvasContext) return
 
     const { sketchyRenderingEngine, width, height, margin } = np
 
@@ -400,7 +409,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     ]
 
     let rc
-    const devicePixelRatio = window.devicePixelRatio || 1;
+    const devicePixelRatio = window.devicePixelRatio || 1
 
     np.canvasContext.width = size[0] * devicePixelRatio
     np.canvasContext.height = size[1] * devicePixelRatio
@@ -411,34 +420,18 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
 
     context.scale(devicePixelRatio, devicePixelRatio)
 
-    context.setTransform(
-      1,
-      0,
-      0,
-      1,
-      margin.left,
-      margin.top
-    )
+    context.setTransform(1, 0, 0, 1, margin.left, margin.top)
 
-    context.clearRect(
-      -margin.left,
-      -margin.top,
-      size[0],
-      size[1]
-    )
+    context.clearRect(-margin.left, -margin.top, size[0], size[1])
 
     this.queuedCanvasRender.invalidate()
     this.queuedCanvasRender.clear()
 
-    this.queuedCanvasRender = renderQueue(this.renderCanvas(context, margin, np, sketchyRenderingEngine, rc))
-      .clear(() => {
-        context.clearRect(
-          -margin.left,
-          -margin.top,
-          size[0],
-          size[1]
-        )
-      });
+    this.queuedCanvasRender = renderQueue(
+      this.renderCanvas(context, margin, np, sketchyRenderingEngine, rc)
+    ).clear(() => {
+      context.clearRect(-margin.left, -margin.top, size[0], size[1])
+    })
 
     this.queuedCanvasRender(this.state.canvasDrawing)
     context.setTransform(1, 0, 0, 1, 0, 0)
@@ -484,7 +477,10 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
       update ||
       (nextProps.dataVersion && nextProps.dataVersion !== prevState.dataVersion)
     ) {
-      return { ...updateVisualizationLayer(nextProps, prevState.handleKeyDown), props: nextProps }
+      return {
+        ...updateVisualizationLayer(nextProps, prevState.handleKeyDown),
+        props: nextProps
+      }
     }
     return null
   }
@@ -497,7 +493,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     if (pushed !== 37 && pushed !== 39 && pushed !== 13) return
 
     let newPieceIndex = 0
-    const vizGroupSetting: { focusedVisualizationGroup?: any } = {}
+    const vizGroupSetting: { focusedVisualizationGroup?: string } = {}
 
     // If a user pressed enter, highlight the first one
     // Let a user move up and down in stacked bar by getting keys of bars?
@@ -529,7 +525,18 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { matte, matteClip, axes, frameKey = "", margin, title, ariaTitle, axesTickLines, frameRenderOrder, additionalVizElements } = this.props
+    const {
+      matte,
+      matteClip,
+      axes,
+      frameKey = "",
+      margin,
+      title,
+      ariaTitle,
+      axesTickLines,
+      frameRenderOrder,
+      additionalVizElements
+    } = this.props
     const { renderedElements } = this.state
 
     const renderHash = {
@@ -548,7 +555,10 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
         </g>
       ),
       matte: matte,
-      ["viz-layer"]: renderedElements && renderedElements.length > 0 ? renderedElements : null,
+      ["viz-layer"]:
+        renderedElements && renderedElements.length > 0
+          ? renderedElements
+          : null,
       ...additionalVizElements
     }
 
@@ -573,7 +583,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     })
 
     const renderedDataVisualization =
-      ((orderedElements.length > 0) && (
+      (orderedElements.length > 0 && (
         <g
           className="data-visualization"
           key="visualization-clip-path"
@@ -588,7 +598,6 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
         </g>
       )) ||
       null
-
 
     return renderedDataVisualization
   }

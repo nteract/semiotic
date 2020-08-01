@@ -1,10 +1,6 @@
 import * as React from "react"
 import memoize from "memoize-one"
 
-import {
-  responsiveprops
-} from "./constants/frame_props"
-
 import { OrdinalFrameProps } from "./types/ordinalTypes"
 import { XYFrameProps } from "./types/xyTypes"
 
@@ -19,17 +15,22 @@ const framePropHash = {
   ResponsiveOrdinalFrame: true,
   SparkNetworkFrame: true,
   SparkXYFrame: true,
-  SparkOrdinalFrame: true,
+  SparkOrdinalFrame: true
 }
 
 const invertKeys = {
   rExtent: "invertR",
   xExtent: "invertX",
-  yExtent: "invertY",
-
+  yExtent: "invertY"
 }
 
-const buildNewState = (prevState, extentValue, extentType, extentPosition, invertedExtent) => {
+const buildNewState = (
+  prevState,
+  extentValue,
+  extentType,
+  extentPosition,
+  invertedExtent
+) => {
   const oldExtents: object = prevState.rawExtents[extentType] || {}
   oldExtents[extentPosition] = extentValue
 
@@ -37,20 +38,19 @@ const buildNewState = (prevState, extentValue, extentType, extentPosition, inver
     .flat()
     .filter(d => d !== undefined && d !== null && !isNaN(d))
 
-  let baseExtent = [Math.min(...extentMinMaxValues), Math.max(...extentMinMaxValues)]
+  let baseExtent = [
+    Math.min(...extentMinMaxValues),
+    Math.max(...extentMinMaxValues)
+  ]
 
   if (invertedExtent) {
     baseExtent = baseExtent.reverse()
   }
 
-
   return {
     extents: {
       ...prevState.extents,
-      [extentType]:
-        extentMinMaxValues.length === 0
-          ? undefined
-          : baseExtent
+      [extentType]: extentMinMaxValues.length === 0 ? undefined : baseExtent
     },
     rawExtents: {
       ...prevState.rawExtents,
@@ -94,9 +94,9 @@ class FacetController extends React.Component<Props, State> {
   createExtent = (extentType: string, state: State, index: number) => {
     return state.extents && state.extents[extentType]
       ? {
-        onChange: this.extentHandler(extentType, index),
-        extent: state.extents[extentType]
-      }
+          onChange: this.extentHandler(extentType, index),
+          extent: state.extents[extentType]
+        }
       : { onChange: this.extentHandler(extentType, index) }
   }
 
@@ -108,7 +108,13 @@ class FacetController extends React.Component<Props, State> {
     const invertedExtent = this.props[invertKeys[extentType]] || false
     return (extentValue: Array<number>) => {
       this.setState(prevState => {
-        return buildNewState(prevState, extentValue, extentType, extentPosition, invertedExtent)
+        return buildNewState(
+          prevState,
+          extentValue,
+          extentType,
+          extentPosition,
+          invertedExtent
+        )
       })
 
       return extentValue
@@ -128,8 +134,7 @@ class FacetController extends React.Component<Props, State> {
     let annotationBase = state.facetHoverAnnotations
 
     const { hoverAnnotation, pieceHoverAnnotation } = this.props
-    const annotationSettings =
-      hoverAnnotation || pieceHoverAnnotation
+    const annotationSettings = hoverAnnotation || pieceHoverAnnotation
 
     if (!annotationSettings || !annotationBase) {
       return originalAnnotations

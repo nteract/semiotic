@@ -6,7 +6,7 @@ import { XYFrameProps } from "./types/xyTypes"
 
 import { Interactivity } from "./types/interactionTypes"
 
-interface MinimapProps extends XYFrameProps {
+export interface MinimapProps extends XYFrameProps {
   brushStart: Function
   brush: Function
   brushEnd: Function

@@ -24,8 +24,8 @@ export type AnnotationType = {
   key?: string
   percent?: number
   style?:
-  | GenericObject
-  | ((arg?: GenericObject, index?: number) => GenericObject)
+    | GenericObject
+    | ((arg?: GenericObject, index?: number) => GenericObject)
   ids?: string[]
   edge?: boolean
   source?: NodeType
@@ -42,6 +42,10 @@ export type CustomHoverType =
   | Array<AnnotationType | Function>
   | object
   | Function
+  | "all"
+  | "edge"
+  | "node"
+  | "area"
 
 export type AnnotationTypes = "marginalia" | "bump" | false
 
@@ -78,7 +82,7 @@ export interface AnnotationProps {
     onDragEnd?: Function
     onDragStart?: Function
     onDrag?: Function
-    type: any
+    type: string | Function
     editMode?: boolean
     screenCoordinates?: Array<Array<number>>
     // What is this type supposed to be? It gets used only in a boolean context
@@ -137,10 +141,10 @@ export interface AxisProps {
     baseMarkProps,
     className
   }: {
-    xy?: any
-    orient?: any
-    i?: any
-    baseMarkProps?: any
+    xy?: object
+    orient?: string
+    i?: number
+    baseMarkProps?: object
     className?: string
   }) => SVGElement
   baseline?: boolean | "under"
@@ -150,10 +154,10 @@ export interface AxisProps {
   axisParts?: AxisPart[]
   annotationFunction?: (args) => void
   glyphFunction?: (args: GlyphProps) => SVGElement
-  axis?: any
+  axis?: object
   extentOverride?: number[]
   key?: string | number
-  axisAnnotationFunction?: (args: any) => void
+  axisAnnotationFunction?: (args: object) => void
   xyPoints?: object[]
   marginalSummaryType?: AxisSummaryTypeSettings | OrdinalSummaryTypes
   showOutboundTickLines?: boolean

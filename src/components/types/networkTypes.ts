@@ -1,13 +1,5 @@
-import { AnnotationHandling } from "./annotationTypes"
-import {
-  CanvasPostProcessTypes,
-  GenericObject,
-  MarginType,
-  RenderPipelineType,
-  RoughType
-} from "./generalTypes"
-import { LegendProps } from "./legendTypes"
-import { AdvancedInteractionSettings } from "./interactionTypes"
+import { GenericObject, RenderPipelineType } from "./generalTypes"
+import { GeneralFrameProps, GeneralFrameState } from "./generalTypes"
 
 export interface NodeType {
   degree: number
@@ -58,8 +50,8 @@ export interface EdgeType {
 
 export interface GraphSettingsType {
   type:
-  | string
-  | (({ edges, nodes }: { edges: EdgeType[]; nodes: NodeType[] }) => void)
+    | string
+    | (({ edges, nodes }: { edges: EdgeType[]; nodes: NodeType[] }) => void)
   nodes: object[]
   edges: object[] | object
   nodeHash: Map<any, NodeType>
@@ -69,9 +61,9 @@ export interface GraphSettingsType {
 }
 
 export interface NetworkSettingsType {
-  type:
-  | string
-  | (({ edges, nodes }: { edges: EdgeType[]; nodes: NodeType[] }) => void)
+  type?:
+    | string
+    | (({ edges, nodes }: { edges: EdgeType[]; nodes: NodeType[] }) => void)
   hierarchyChildren?: Function
   hierarchySum?: Function
   layout?: Function
@@ -108,14 +100,7 @@ export interface NetworkSettingsType {
   fixExistingNodes?: boolean | Function
 }
 
-export interface NetworkFrameState {
-  dataVersion?: string
-  adjustedPosition: number[]
-  adjustedSize: number[]
-  backgroundGraphics?: React.ReactNode | Function
-  foregroundGraphics?: React.ReactNode | Function
-  title: object
-  renderNumber: number
+export interface NetworkFrameState extends GeneralFrameState {
   nodeData: object[]
   edgeData: object[]
   projectedNodes: NodeType[]
@@ -127,31 +112,26 @@ export interface NetworkFrameState {
   targetAccessor: (args: GenericObject) => GenericObject | string
   nodeSizeAccessor: (args: GenericObject) => number
   edgeWidthAccessor: (args: GenericObject) => number
-  margin: MarginType
-  legendSettings: LegendProps
   nodeLabelAnnotations: object[]
   graphSettings: GraphSettingsType
   networkFrameRender: RenderPipelineType
   props: NetworkFrameProps
 }
 
-export interface NetworkFrameProps {
-  dataVersion?: string
-  name: string
+export interface NetworkFrameProps extends GeneralFrameProps {
   graph?:
-  | { nodes: NodeType[]; edges: EdgeType[] }
-  | EdgeType[]
-  | {
-    (): any
-    nodes: Function
-    edges: Function
-    node: Function
-    edge: Function
-  }
+    | { nodes: NodeType[]; edges: EdgeType[] }
+    | EdgeType[]
+    | {
+        (): () => void
+        nodes: Function
+        edges: Function
+        node: Function
+        edge: Function
+      }
   nodes?: object[]
   edges?: object[] | object
   networkType?: string | object
-  size: number[]
   nodeStyle?: GenericObject | ((args: GenericObject) => GenericObject)
   nodeClass?: string | ((args: GenericObject) => string)
   canvasNodes?: boolean | ((args: GenericObject) => boolean)
@@ -161,32 +141,8 @@ export interface NetworkFrameProps {
   nodeRenderMode?: string | ((args: GenericObject) => string)
   edgeRenderMode?: string | ((args: GenericObject) => string)
   nodeLabels?: boolean | ((args: GenericObject) => boolean)
-  title?: Element
-  legend?: object
   edgeRenderKey?: (args: GenericObject) => string
   nodeRenderKey?: (args: GenericObject) => string
-  backgroundGraphics?: React.ReactNode | Function
-  foregroundGraphics?: React.ReactNode | Function
-  additionalDefs?: Element
-  svgAnnotationRules?: Function
-  htmlAnnotationRules?: Function
-  tooltipContent?: Function
-  optimizeCustomTooltipPosition?: boolean
-  annotations: object[]
-  annotationSettings?: AnnotationHandling
-  className?: string
-  customClickBehavior?: Function
-  customDoubleClickBehavior?: Function
-  customHoverBehavior?: Function
-  matte?: boolean | object | Element | Function
-  useSpans?: boolean
-  beforeElements?: Element
-  afterElements?: Element
-  interaction?: object
-  hoverAnnotation?: boolean | string | Array<object | Function>
-  baseMarkProps?: object
-  canvasPostProcess?: CanvasPostProcessTypes
-  disableContext?: boolean
   edgeWidthAccessor?: string | ((args: GenericObject) => number)
   nodeSizeAccessor?: string | ((args: GenericObject) => number)
   targetAccessor?: string | ((args: GenericObject) => string | GenericObject)
@@ -195,7 +151,6 @@ export interface NetworkFrameProps {
   edgeType?: string | Function
   customNodeIcon?: Function
   customEdgeIcon?: Function
-  margin?: number | object
   onNodeOut?: Function
   onNodeClick?: Function
   onNodeEnter?: Function
@@ -205,9 +160,4 @@ export interface NetworkFrameProps {
     index?: number,
     array?: NodeType[]
   ) => any
-  onUnmount?: Function
-  sketchyRenderingEngine?: RoughType
-  frameRenderOrder?: Array<string>
-  disableCanvasInteraction?: boolean
-  interactionSettings?: AdvancedInteractionSettings
 }

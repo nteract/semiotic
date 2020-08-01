@@ -28,7 +28,7 @@ function flatShortArray(array) {
 interface BrushProps {
   extent?: number[] | number[][]
   selectedExtent?: number[] | number[][]
-  svgBrush: { (): any; move: Function }
+  svgBrush: { (): () => void; move: Function }
   position?: number[]
 }
 
@@ -49,14 +49,13 @@ class Brush extends React.Component<BrushProps, null> {
     if (
       (lastProps.extent &&
         extent &&
-        flatShortArray(lastProps.extent) !==
-          flatShortArray(extent)) ||
-      ((lastProps.selectedExtent &&
+        flatShortArray(lastProps.extent) !== flatShortArray(extent)) ||
+      (lastProps.selectedExtent &&
         selectedExtent &&
         flatShortArray(lastProps.selectedExtent) !==
           flatShortArray(selectedExtent)) ||
         (!lastProps.selectedExtent && selectedExtent) ||
-        (lastProps.selectedExtent && !selectedExtent))
+        (lastProps.selectedExtent && !selectedExtent)
     ) {
       this.createBrush()
     }

@@ -1,3 +1,8 @@
+import { CustomHoverType, AnnotationHandling } from "./annotationTypes"
+import { TitleType } from "../svg/frameFunctions"
+import { Interactivity, AdvancedInteractionSettings } from "./interactionTypes"
+import { LegendProps } from "./legendTypes"
+
 export type GenericObject = { [key: string]: any }
 
 export interface MarginType {
@@ -33,18 +38,18 @@ export interface ProjectedPoint {
 }
 
 export type PieceLayoutType = (args: {
-  type: any
+  type: string | { type: string }
   data: any
-  renderMode: any
+  renderMode: (d?: GenericObject, i?: number) => string | GenericObject
   eventListenersGenerator: any
-  styleFn: any
-  projection
-  classFn: any
-  adjustedSize: any
-  chartSize: any
-  margin: any
-  rScale?: any
-  baseMarkProps: any
+  styleFn: (d: object) => object
+  projection: string
+  classFn: (d: object) => string
+  adjustedSize: number[]
+  chartSize: number[]
+  margin: MarginType
+  rScale?: Function
+  baseMarkProps: object
 }) => GenericObject[]
 
 export interface ProjectedLine {
@@ -171,6 +176,7 @@ export type RenderPipelineType = {
     data?: object[]
     ariaLabel?: { chart?: string; items?: string }
     behavior?: Function
+    styleFn?: Function
   }
 }
 
@@ -199,4 +205,61 @@ export interface AxisSummaryTypeSettings extends OrdinalSummaryTypeSettings {
   r?: number
   showPoints?: boolean
   filter?: Function
+}
+
+export interface GeneralFrameProps {
+  useSpans?: boolean
+  title?: string | object
+  margin?:
+    | number
+    | { top?: number; bottom?: number; left?: number; right?: number }
+    | ((
+        args: object
+      ) =>
+        | number
+        | { top?: number; left?: number; right?: number; bottom?: number })
+  name?: string
+  dataVersion?: string
+  frameKey?: string
+  size?: number[]
+  canvasPostProcess?: CanvasPostProcessTypes
+  additionalDefs?: React.ReactNode
+  className?: string
+  customHoverBehavior?: Function
+  customClickBehavior?: Function
+  customDoubleClickBehavior?: Function
+  hoverAnnotation?: CustomHoverType
+  disableContext?: boolean
+  interaction?: Interactivity
+  svgAnnotationRules?: Function
+  htmlAnnotationRules?: Function
+  tooltipContent?: Function
+  optimizeCustomTooltipPosition?: boolean
+  annotations: object[]
+  baseMarkProps?: object
+  backgroundGraphics?: React.ReactNode | Function
+  foregroundGraphics?: React.ReactNode | Function
+  beforeElements?: React.ReactNode
+  afterElements?: React.ReactNode
+  annotationSettings?: AnnotationHandling
+  renderKey?: string | GenericAccessor<string>
+  legend?: object | boolean
+  matte?: object
+  onUnmount?: Function
+  sketchyRenderingEngine?: RoughType
+  frameRenderOrder?: Array<string>
+  disableCanvasInteraction?: boolean
+  interactionSettings?: AdvancedInteractionSettings
+}
+
+export interface GeneralFrameState {
+  dataVersion?: string
+  adjustedPosition: number[]
+  adjustedSize: number[]
+  backgroundGraphics?: React.ReactNode | Function
+  foregroundGraphics?: React.ReactNode | Function
+  title: TitleType
+  margin: MarginType
+  legendSettings?: LegendProps
+  renderNumber: number
 }

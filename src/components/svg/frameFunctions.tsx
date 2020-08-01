@@ -33,7 +33,10 @@ const extent = inputArray =>
     [Infinity, -Infinity]
   )
 
-export type TitleType = { title?: string | Element; orient?: string }
+export type TitleType =
+  | string
+  | Element
+  | { title?: string | Element; orient?: string }
 
 type PieceType = { type: string; innerRadius?: number }
 
@@ -98,6 +101,21 @@ type ORFrameAxisGeneratorTypes = {
   margin: MarginType
 }
 
+const findActualTitle = rawTitle => {
+  let title = null
+  let orient = "top"
+  if (typeof rawTitle === "string") {
+    title = rawTitle
+  } else if ("title" in rawTitle) {
+    title = rawTitle.title
+    orient = rawTitle.orient || "top"
+  } else {
+    title = rawTitle
+  }
+
+  return { orient, title }
+}
+
 function roundToTenth(number: number) {
   return Math.round(number * 10) / 10
 }
@@ -148,7 +166,7 @@ export const drawMarginPath = ({
 export const calculateMargin = ({
   margin,
   axes,
-  title,
+  title: rawTitle,
   oLabel,
   projection,
   size
@@ -175,12 +193,10 @@ export const calculateMargin = ({
     })
   }
 
-  if (
-    title.title &&
-    !(typeof title.title === "string" && title.title.length === 0)
-  ) {
-    const { orient = "top" } = title
-    finalMargin[orient] += 40
+  const { title, orient: titleOrient } = findActualTitle(rawTitle)
+
+  if (title && !(typeof title === "string" && title.length === 0)) {
+    finalMargin[titleOrient] += 40
   }
 
   if (oLabel && projection !== "radial") {
@@ -272,7 +288,7 @@ export function keyAndObjectifyBarData({
   const decoratedData = []
   oAccessor.forEach((actualOAccessor, oIndex) => {
     rAccessor.forEach((actualRAccessor, rIndex) => {
-      ; (data || []).forEach(d => {
+      ;(data || []).forEach(d => {
         const appliedKey = renderKey(d, decoratedData.length)
         const originalR = originalRAccessor[rIndex]
         const originalO = originalOAccessor[oIndex]
@@ -344,7 +360,9 @@ export function generateFrameTitle({
   size: Array<number>
 }) {
   let finalTitle = null
-  const { title, orient = "top" } = rawTitle
+
+  const { title, orient } = findActualTitle(rawTitle)
+
   let x = 0,
     y = 0,
     transform
@@ -619,7 +637,7 @@ export function orFrameSummaryRenderer({
   } else {
     console.error(
       `Invalid summary type: ${
-      type.type
+        type.type
       } - Must be a function or one of the following strings: ${Object.keys(
         summaryRenderHash
       ).join(", ")}`
@@ -670,14 +688,14 @@ export const orFrameAxisGenerator = ({
 
       const axisScale =
         (leftRight.indexOf(d.orient) === -1 && projection !== "vertical") ||
-          (leftRight.indexOf(d.orient) !== -1 && projection !== "horizontal")
+        (leftRight.indexOf(d.orient) !== -1 && projection !== "horizontal")
           ? rScaleType.domain(axisDomain)
           : rScaleType.domain([0, maxColumnValues])
 
       const orient = d.orient
       const axisRange =
         (leftRight.indexOf(d.orient) === -1 && projection !== "vertical") ||
-          (leftRight.indexOf(d.orient) !== -1 && projection !== "horizontal")
+        (leftRight.indexOf(d.orient) !== -1 && projection !== "horizontal")
           ? rScale.range()
           : [0, projection === "vertical" ? adjustedSize[0] : adjustedSize[1]]
 
@@ -776,8 +794,8 @@ export const orFrameAxisGenerator = ({
       const tickValues =
         baseTickValues instanceof Function
           ? baseTickValues({
-            orient: axisObj.orient
-          })
+              orient: axisObj.orient
+            })
           : baseTickValues
       tickValues.forEach((t, i) => {
         const tickSize = tickScale(t)
@@ -849,9 +867,7 @@ export const canvasEvent = (canvasContext, overlayRegions, canvasMap, e) => {
   const interactionContext = canvasContext.getContext("2d")
   const hoverPoint = interactionContext.getImageData(e.offsetX, e.offsetY, 1, 1)
 
-  const mostCommonRGB = `rgba(${hoverPoint.data[0]},${hoverPoint.data[1]},${
-    hoverPoint.data[2]
-    },255)`
+  const mostCommonRGB = `rgba(${hoverPoint.data[0]},${hoverPoint.data[1]},${hoverPoint.data[2]},255)`
 
   let overlay: React.ReactElement = overlayRegions[canvasMap.get(mostCommonRGB)]
 
@@ -867,11 +883,11 @@ export const canvasEvent = (canvasContext, overlayRegions, canvasMap, e) => {
     while (!overlay && x < 100) {
       overlay =
         overlayRegions[
-        canvasMap.get(
-          `rgba(${hoverArea.data[x]},${hoverArea.data[x + 1]},${
-          hoverArea.data[x + 2]
-          },255)`
-        )
+          canvasMap.get(
+            `rgba(${hoverArea.data[x]},${hoverArea.data[x + 1]},${
+              hoverArea.data[x + 2]
+            },255)`
+          )
         ]
       x += 4
     }

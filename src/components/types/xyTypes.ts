@@ -1,12 +1,6 @@
-import {
-  AxisProps,
-  CustomHoverType,
-  AnnotationHandling,
-  AxisGeneratingFunction
-} from "./annotationTypes"
+import { AxisProps, AxisGeneratingFunction } from "./annotationTypes"
 import { TitleType } from "../svg/frameFunctions"
 import {
-  CanvasPostProcessTypes,
   GenericAccessor,
   RawLine,
   RawPoint,
@@ -19,55 +13,17 @@ import {
   ProjectedBin,
   ProjectedSummary,
   ProjectedLine,
-  MarginType,
   RenderPipelineType,
-  RoughType
+  GeneralFrameState,
+  GeneralFrameProps
 } from "./generalTypes"
-import { Interactivity, AdvancedInteractionSettings } from "./interactionTypes"
 import { ScaleLinear } from "d3-scale"
 
-export type XYFrameProps = {
-  useSpans?: boolean
-  title?: string | object
-  margin?:
-    | number
-    | { top?: number; bottom?: number; left?: number; right?: number }
-    | ((
-        args: object
-      ) =>
-        | number
-        | { top?: number; left?: number; right?: number; bottom?: number })
-  name: string
-  dataVersion?: string
-  frameKey?: string
-  size: number[]
-  canvasPostProcess?: CanvasPostProcessTypes
-  additionalDefs?: React.ReactNode
-  className?: string
-  customHoverBehavior?: Function
-  customClickBehavior?: Function
-  customDoubleClickBehavior?: Function
-  hoverAnnotation?: CustomHoverType
-  disableContext?: boolean
-  interaction?: Interactivity
-  svgAnnotationRules?: Function
-  htmlAnnotationRules?: Function
-  tooltipContent?: Function
-  optimizeCustomTooltipPosition?: boolean
-  annotations: object[]
-  baseMarkProps?: object
-  backgroundGraphics?: React.ReactNode | Function
-  foregroundGraphics?: React.ReactNode | Function
-  beforeElements?: React.ReactNode
-  afterElements?: React.ReactNode
-  annotationSettings?: AnnotationHandling
-  renderKey?: string | GenericAccessor<string>
-  legend?: object | boolean
+export interface XYFrameProps extends GeneralFrameProps {
   lines?: RawLine[] | RawLine
   points?: RawPoint[]
   summaries?: RawSummary[] | RawSummary
   axes?: Array<AxisProps | AxisGeneratingFunction>
-  matte?: object
   xScaleType?: ScaleLinear<number, number>
   yScaleType?: ScaleLinear<number, number>
   xExtent?: ExtentType
@@ -106,7 +62,6 @@ export type XYFrameProps = {
   projectedPoints?: ProjectedPoint[]
   renderOrder?: ReadonlyArray<"lines" | "points" | "summaries">
   useSummariesAsInteractionLayer?: boolean
-  onUnmount?: Function
   filterRenderedLines?: (
     value: ProjectedLine,
     index: number,
@@ -122,10 +77,6 @@ export type XYFrameProps = {
     index: number,
     array: (ProjectedPoint | ProjectedBin | ProjectedSummary)[]
   ) => any
-  sketchyRenderingEngine?: RoughType
-  frameRenderOrder?: Array<string>
-  disableCanvasInteraction?: boolean
-  interactionSettings?: AdvancedInteractionSettings
 }
 
 export type AnnotatedSettingsProps = {
@@ -144,8 +95,7 @@ export type AnnotatedSettingsProps = {
   yExtent?: number[]
 }
 
-export type XYFrameState = {
-  dataVersion?: string
+export interface XYFrameState extends GeneralFrameState {
   lineData?: RawLine[] | RawLine
   pointData?: RawPoint[] | RawPoint
   summaryData?: RawSummary[] | RawSummary
@@ -153,16 +103,9 @@ export type XYFrameState = {
   projectedPoints?: ProjectedPoint[]
   projectedSummaries?: ProjectedSummary[]
   fullDataset: Array<ProjectedPoint | ProjectedBin | ProjectedSummary>
-  adjustedPosition: number[]
-  adjustedSize: number[]
-  backgroundGraphics?: React.ReactNode | Function
-  foregroundGraphics?: React.ReactNode | Function
   axesData?: AxisProps[]
   axes?: React.ReactNode[]
   axesTickLines?: React.ReactNode
-  renderNumber: number
-  margin: MarginType
-  matte?: boolean | object | Element | Function
   calculatedXExtent: number[]
   calculatedYExtent: number[]
   xAccessor: GenericAccessor<number>[]
@@ -172,7 +115,6 @@ export type XYFrameState = {
   xExtent: number[]
   yExtent: number[]
   areaAnnotations: object[]
-  legendSettings?: object
   xyFrameRender: RenderPipelineType
   canvasDrawing: object[]
   size: number[]

@@ -3,8 +3,8 @@ import { CustomHoverType } from "./annotationTypes"
 import { MarginType } from "./generalTypes"
 
 export interface AdvancedInteractionSettings {
-   voronoiClipping?: boolean | number
-   voronoiFilter?: Function 
+  voronoiClipping?: boolean | number
+  voronoiFilter?: Function
 }
 
 export interface Interactivity {
@@ -68,8 +68,8 @@ export type BaseColumnType = { x: number; width: number }
 
 export type InteractionLayerState = {
   overlayRegions: Array<React.ReactElement>
-  props: InteractionLayerProps,
-  canvasMap: any,
-  interactionCanvas: React.ReactNode,
+  props: InteractionLayerProps
+  canvasMap: Map<string, number>
+  interactionCanvas: React.ReactNode
   SpanOrDiv: Function
 }
