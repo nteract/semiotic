@@ -8,7 +8,7 @@ import nodent from "rollup-plugin-nodent"
 import typescript from "rollup-plugin-typescript"
 
 export default {
-  input: "src/components/index.js",
+  input: "lib/index.js",
   output: {
     format: "umd",
     file: "dist/semiotic.js",
@@ -36,7 +36,7 @@ export default {
           "sankeyJustify"
         ],
         "node_modules/events/events.js": ["EventEmitter"]
-        }
+      }
     }),
     globals(),
     builtins(),
@@ -54,7 +54,6 @@ export default {
       ],
       plugins: [
         ["@babel/plugin-proposal-class-properties"],
-        "@babel/external-helpers",
         ["@babel/plugin-proposal-decorators", { legacy: true }],
         "@babel/plugin-transform-object-assign",
         "react-require"
