@@ -8,7 +8,7 @@ import nodent from "rollup-plugin-nodent"
 import typescript from "rollup-plugin-typescript"
 
 export default {
-  input: "lib/index.js",
+  input: "src/components/index.ts",
   output: {
     format: "umd",
     file: "dist/semiotic.js",
