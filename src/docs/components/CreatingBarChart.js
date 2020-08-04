@@ -157,17 +157,24 @@ export default class CreatingBarChart extends React.Component {
             margin={50}
             sketchyRenderingEngine={roughjs}
             oPadding={10}
-            renderMode={{ renderMode: "sketchy", fillStyle: "zigzag", hachureGap: 5, fillWeight: 3 }}
-            oLabel={(d) => {
+            renderMode={{
+              renderMode: "sketchy",
+              fillStyle: "zigzag",
+              hachureGap: 5,
+              fillWeight: 3
+            }}
+            oLabel={d => {
               const text = (
                 <text className="ft-12" y={5} x={20} transform="rotate(-90)">
                   {d}
                 </text>
               )
-              return <g /> || (
-                <g>
-                  <g strokeWidth="3">{text}</g>
-                </g>
+              return (
+                <g /> || (
+                  <g>
+                    <g strokeWidth="3">{text}</g>
+                  </g>
+                )
               )
             }}
           />
@@ -241,24 +248,9 @@ export default class CreatingBarChart extends React.Component {
               </g>
             )}
           />
-          />
         </div>
       ),
-      source: `<OrdinalFrame
-            title={"A Bar Chart"}
-            size={[300, 500]}
-            data={barChartData}
-            oAccessor={"user"}
-            rAccessor={d => d.retweets + d.favorites}
-            style={{ fill: "#00a2ce", stroke: "white" }}
-            type={"bar"}
-            oLabel={d => (
-              <text transform="translate(-15,0)rotate(45)">{d}</text>
-            )}
-            axes={{ orient: "left", label: "Favorites + Retweets" }}
-            margin={{ left: 70, bottom: 50, right: 5, top: 55 }}
-            oPadding={5}
-          />`
+      source: ``
     })
 
     examples.push({
@@ -327,15 +319,15 @@ export default class CreatingBarChart extends React.Component {
               this.state.hoverPoint
                 ? [Object.assign({}, this.state.hoverPoint, { type: "hover" })]
                 : [
-                  {
-                    type: "react-annotation",
-                    rName: "retweets",
-                    user: "Matt",
-                    label: "Testing a relative value annotation",
-                    dx: 100,
-                    dy: -50
-                  }
-                ]
+                    {
+                      type: "react-annotation",
+                      rName: "retweets",
+                      user: "Matt",
+                      label: "Testing a relative value annotation",
+                      dx: 100,
+                      dy: -50
+                    }
+                  ]
             }
             svgAnnotationRules={this.barAnnotator}
           />

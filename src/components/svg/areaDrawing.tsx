@@ -6,6 +6,7 @@ import regression from "regression"
 import { curveCardinal } from "d3-shape"
 
 import { ProjectedPoint, GenericObject } from "../types/generalTypes"
+import { SummaryLayoutType } from "../types/xyTypes"
 
 interface BinArray {
   [position: number]: number
@@ -13,7 +14,12 @@ interface BinArray {
   y?: number
 }
 
-const generateLineBounds = (xydata, basedata, topBoundingAccessor, bottomBoundingAccessor) => {
+const generateLineBounds = (
+  xydata,
+  basedata,
+  topBoundingAccessor,
+  bottomBoundingAccessor
+) => {
   const tops = xydata.map((d, i) => [
     d[0],
     d[1] + topBoundingAccessor(basedata[i])
@@ -23,7 +29,6 @@ const generateLineBounds = (xydata, basedata, topBoundingAccessor, bottomBoundin
     d[1] - bottomBoundingAccessor(basedata[i])
   ])
   return [...tops, ...bottoms.reverse()]
-
 }
 
 export function lineBounding({ summaryType, data, defined }) {
@@ -42,10 +47,12 @@ export function lineBounding({ summaryType, data, defined }) {
     const definedData = lineData._baseData.map(defined)
     let currentBaseData = []
     let currentXYFC = []
-    const boundingPieces = [{
-      xyf: currentXYFC,
-      base: currentBaseData
-    }]
+    const boundingPieces = [
+      {
+        xyf: currentXYFC,
+        base: currentBaseData
+      }
+    ]
     definedData.forEach((d, i) => {
       if (d === true) {
         currentBaseData.push(lineData._baseData[i])
@@ -64,17 +71,20 @@ export function lineBounding({ summaryType, data, defined }) {
       const boundingProjectedSummary = {
         data: lineData,
         parentSummary: lineData,
-        _xyfCoordinates: generateLineBounds(xyf, base, topBoundingAccessor, bottomBoundingAccessor)
+        _xyfCoordinates: generateLineBounds(
+          xyf,
+          base,
+          topBoundingAccessor,
+          bottomBoundingAccessor
+        )
       }
 
       projectedSummaries = [...projectedSummaries, boundingProjectedSummary]
-
     })
   })
 
   return projectedSummaries
 }
-
 
 export function contouring({ summaryType, data, finalXExtent, finalYExtent }) {
   let projectedSummaries = []
@@ -141,16 +151,10 @@ export function contouring({ summaryType, data, finalXExtent, finalYExtent }) {
 export function hexbinning({
   preprocess = true,
   processedData = false,
-  summaryType,
+  summaryType: baseSummaryType,
   data: baseData,
-  finalXExtent = [
-    Math.min(...baseData.coordinates.map(d => d.x)),
-    Math.max(...baseData.coordinates.map(d => d.x))
-  ],
-  finalYExtent = [
-    Math.min(...baseData.coordinates.map(d => d.y)),
-    Math.max(...baseData.coordinates.map(d => d.y))
-  ],
+  finalXExtent: baseXExtent,
+  finalYExtent: baseYExtent,
   size,
   xScaleType = scaleLinear(),
   yScaleType = scaleLinear(),
@@ -160,15 +164,32 @@ export function hexbinning({
   classFn,
   renderFn,
   chartSize
-}) {
+}: SummaryLayoutType) {
+  let finalXExtent = baseXExtent
+  let finalYExtent = baseYExtent
 
-  if (processedData) {
+  console.log("baseData", baseData)
+
+  if (!finalXExtent) {
+    const xData = baseData.coordinates.map(p => p.x)
+    finalXExtent = [Math.min(...xData), Math.max(...xData)]
+  }
+
+  if (!finalYExtent) {
+    const yData = baseData.coordinates.map(p => p.y)
+    finalYExtent = [Math.min(...yData), Math.max(...yData)]
+  }
+
+  if (processedData && baseData[0]) {
     return baseData[0].coordinates
   }
 
   let projectedSummaries = []
-  if (!summaryType.type) {
+  let summaryType: any
+  if (!baseSummaryType.type) {
     summaryType = { type: summaryType }
+  } else {
+    summaryType = baseSummaryType
   }
 
   const {
@@ -312,7 +333,7 @@ export function hexbinning({
 export function heatmapping({
   preprocess = true,
   processedData = false,
-  summaryType,
+  summaryType: baseSummaryType,
   data: baseData,
   finalXExtent = [
     Math.min(...baseData.coordinates.map(d => d.x)),
@@ -331,8 +352,8 @@ export function heatmapping({
   classFn,
   renderFn,
   chartSize
-}) {
-  if (processedData) {
+}: SummaryLayoutType) {
+  if (processedData && baseData[0]) {
     return baseData[0].coordinates
   }
 
@@ -343,8 +364,12 @@ export function heatmapping({
   const data = Array.isArray(baseData) ? baseData : [baseData]
 
   let projectedSummaries = []
-  if (!summaryType.type) {
+
+  let summaryType: any
+  if (!baseSummaryType.type) {
     summaryType = { type: summaryType }
+  } else {
+    summaryType = baseSummaryType
   }
 
   const {
@@ -365,9 +390,9 @@ export function heatmapping({
 
   const actualResolution = [
     Math.ceil(((xCellPx && xCellPx / size[0]) || xBinPercent) * size[0] * 10) /
-    10,
+      10,
     Math.ceil(((yCellPx && yCellPx / size[1]) || yBinPercent) * size[1] * 10) /
-    10
+      10
   ]
   let maxValue = -Infinity
 
@@ -396,7 +421,12 @@ export function heatmapping({
           y: (y + y1) / 2,
           binItems: [],
           value: 0,
-          _xyfCoordinates: [[x, y], [x1, y], [x1, y1], [x, y1]],
+          _xyfCoordinates: [
+            [x, y],
+            [x1, y],
+            [x1, y1],
+            [x, y1]
+          ],
           parentSummary: heatmapData
         }
         gridColumn.push(cell)
@@ -406,14 +436,18 @@ export function heatmapping({
     }
     grid.push(gridColumn)
 
-    heatmapData._xyfCoordinates.forEach((d: number[], di: number) => {
-      const xCoordinate = Math.floor(
-        heatmapBinXScale(d[0]) / actualResolution[0]
-      )
-      const yCoordinate = Math.floor(
-        heatmapBinYScale(d[1]) / actualResolution[1]
-      )
-      grid[xCoordinate][yCoordinate].binItems.push(heatmapData.coordinates[di])
+    heatmapData._xyfCoordinates.forEach((d: [number, number], di: number) => {
+      const baseX = heatmapBinXScale(d[0]) as number
+      const baseY = heatmapBinXScale(d[1]) as number
+
+      const xCoordinate = Math.floor(baseX / actualResolution[0])
+      const yCoordinate = Math.floor(baseY / actualResolution[1])
+
+      if (grid[xCoordinate][yCoordinate]) {
+        grid[xCoordinate][yCoordinate].binItems.push(
+          heatmapData.coordinates[di]
+        )
+      }
     })
 
     flatGrid.forEach(d => {
@@ -458,21 +492,25 @@ export function heatmapping({
 
 export function trendlining({
   preprocess = false,
-  summaryType,
+  summaryType: baseSummaryType,
   data: baseData,
   finalXExtent = [
     Math.min(...baseData.coordinates.map(d => d.x)),
     Math.max(...baseData.coordinates.map(d => d.x))
   ],
   xScaleType = scaleLinear()
-}) {
+}: SummaryLayoutType) {
   if (preprocess) {
     return baseData[0].coordinates
   }
 
   let projectedSummaries = []
-  if (!summaryType.type) {
+
+  let summaryType: any
+  if (!baseSummaryType.type) {
     summaryType = { type: summaryType }
+  } else {
+    summaryType = baseSummaryType
   }
 
   const {
@@ -508,10 +546,19 @@ export function trendlining({
   projectedSummaries = []
   data.forEach(bdata => {
     const regressionLine = regression[regressionType](
-      bdata._xyfCoordinates.map(d => [
-        d[0].getTime ? d[0].getTime() : d[0],
-        d[1].getTime ? d[1].getTime() : d[1]
-      ]),
+      bdata._xyfCoordinates.map(d => {
+        let x = d[0]
+        let y = d[1]
+
+        if (typeof x !== "number") {
+          x = x.getTime()
+        }
+        if (typeof y !== "number") {
+          y = y.getTime()
+        }
+
+        return [x, y]
+      }),
       {
         order,
         precision
@@ -561,5 +608,11 @@ export function shapeBounds(coordinates) {
     top = d[1] < top[1] ? d : top
   })
 
-  return { center: [(left[0] + right[0]) / 2, (top[1] + bottom[1]) / 2], top, left, right, bottom }
+  return {
+    center: [(left[0] + right[0]) / 2, (top[1] + bottom[1]) / 2],
+    top,
+    left,
+    right,
+    bottom
+  }
 }

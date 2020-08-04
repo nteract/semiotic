@@ -140,7 +140,7 @@ export interface NetworkFrameProps extends GeneralFrameProps {
   canvasEdges?: boolean | ((args: GenericObject) => boolean)
   nodeRenderMode?: string | ((args: GenericObject) => string)
   edgeRenderMode?: string | ((args: GenericObject) => string)
-  nodeLabels?: boolean | ((args: GenericObject) => boolean)
+  nodeLabels?: boolean | ((args: GenericObject) => JSX.Element | string | null)
   edgeRenderKey?: (args: GenericObject) => string
   nodeRenderKey?: (args: GenericObject) => string
   edgeWidthAccessor?: string | ((args: GenericObject) => number)

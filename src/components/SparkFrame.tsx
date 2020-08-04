@@ -1,4 +1,9 @@
 import * as React from "react"
+import { OrdinalFrameProps } from "./types/ordinalTypes"
+import { XYFrameProps } from "./types/xyTypes"
+import { NetworkFrameProps } from "./types/networkTypes"
+
+type ActualFrameProps = OrdinalFrameProps | XYFrameProps | NetworkFrameProps
 
 const allFrameDefaults = {
   margin: 0
@@ -23,8 +28,7 @@ function sparkNetworkSettings(originalSettings = "force") {
 }
 
 type SparkFrameProps = {
-  size?: number[]
-  style: object
+  sparkStyle?: object
 }
 
 type SparkFrameState = {
@@ -33,7 +37,10 @@ type SparkFrameState = {
 }
 
 const createSparkFrame = (Frame, defaults, frameName) =>
-  class SparkFrame extends React.Component<SparkFrameProps, SparkFrameState> {
+  class SparkFrame extends React.Component<
+    SparkFrameProps & ActualFrameProps,
+    SparkFrameState
+  > {
     constructor(props) {
       super(props)
 
@@ -66,7 +73,7 @@ const createSparkFrame = (Frame, defaults, frameName) =>
     }
 
     render() {
-      const { size, style = {} } = this.props
+      const { size, sparkStyle = {} } = this.props
 
       const { containerHeight = 30 } = this.state
 
@@ -86,7 +93,7 @@ const createSparkFrame = (Frame, defaults, frameName) =>
               marginLeft: "5px",
               marginRight: "5px"
             },
-            style
+            sparkStyle
           )}
           ref={node => (this.node = node)}
         >

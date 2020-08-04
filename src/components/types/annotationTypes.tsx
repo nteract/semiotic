@@ -97,9 +97,10 @@ export interface AnnotationProps {
     dx?: number
     dy?: number
     // TODO: What should this be typed as?
-    note: object
+    note: { label?: string; title?: string }
     i?: number
     fixedPosition?: boolean
+    label?: string
   }
 }
 
@@ -115,7 +116,7 @@ type AxisPart = {
 
 export interface AxisProps {
   orient: "left" | "right" | "top" | "bottom"
-  label: {
+  label?: {
     position?: { anchor?: string; location?: string; rotation?: string }
     name: string
     locationDistance: number

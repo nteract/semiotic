@@ -96,8 +96,8 @@ export function createPoints({
       d[whichWay] !== undefined
         ? d[whichWay]
         : d[yMiddle] !== undefined
-          ? d[yMiddle]
-          : d[y]
+        ? d[yMiddle]
+        : d[y]
     )
 
     const pointAriaLabel = `Point at x ${d.x} and y ${d.y}`
@@ -106,19 +106,19 @@ export function createPoints({
     const renderedCustomMark = !customMark
       ? undefined
       : React.isValidElement(customMark)
-        ? customMark
-        : customMark({ d: d.data, xy: d, i, xScale, yScale })
+      ? customMark
+      : customMark({ d: d.data, xy: d, i, xScale, yScale })
     const markProps = customMark
       ? Object.assign(baseMarkProps, renderedCustomMark.props, {
-        "aria-label": pointAriaLabel
-      })
+          "aria-label": pointAriaLabel
+        })
       : {
-        ...baseMarkProps,
-        key: `piece-${i}`,
-        markType: "circle",
-        r: 2,
-        "aria-label": pointAriaLabel
-      }
+          ...baseMarkProps,
+          key: `piece-${i}`,
+          markType: "circle",
+          r: 2,
+          "aria-label": pointAriaLabel
+        }
 
     if (
       renderedCustomMark &&
@@ -201,7 +201,6 @@ export function createLines({
   ariaLabel,
   axesData = []
 }) {
-
   const xAxis = axesData.find(d => d.orient === "bottom" || d.orient === "top")
   const yAxis = axesData.find(d => d.orient === "left" || d.orient === "right")
 
@@ -263,9 +262,10 @@ export function createLines({
         builtInDisplayProps.stroke = "black"
       }
 
-      const pathString = dynamicLineGenerator(d, i)(
-        d.data.map(p => Object.assign({}, p.data, p))
-      )
+      const pathString = dynamicLineGenerator(
+        d,
+        i
+      )(d.data.map(p => Object.assign({}, p.data, p)))
 
       const markProps = {
         ...builtInDisplayProps,
@@ -276,7 +276,7 @@ export function createLines({
           d.data &&
           d.data.length > 0 &&
           `${d.data.length} point ${
-          ariaLabel.items
+            ariaLabel.items
           } starting value ${yAxisFormatter(d.data[0].y)} at ${xAxisFormatter(
             d.data[0].x
           )} ending value ${yAxisFormatter(
@@ -437,8 +437,9 @@ export function createSummaries({
       drawD = d.customMark
       shouldBeValid = true
     } else if (d.type === "MultiPolygon") {
-      const polycoords = d.coordinates
-      polycoords.forEach((coord: number[][]) => {
+      const polycoords = (d.coordinates as unknown) as [number, number][][][]
+
+      polycoords.forEach((coord: [number, number][][]) => {
         coord.forEach(c => {
           drawD += `M${c
             .map(p => `${xScale(p[0])},${yScale(p[1])}`)
@@ -446,7 +447,7 @@ export function createSummaries({
         })
       })
     } else if (customMark) {
-      const xyfCoords = d._xyfCoordinates as number[][]
+      const xyfCoords = d._xyfCoordinates as [number, number][]
       const projectedCoordinates = xyfCoords.map(p => [
         xScale(p[0]),
         yScale(p[1])

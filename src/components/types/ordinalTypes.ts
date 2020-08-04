@@ -1,11 +1,10 @@
-import { AnnotationHandling, CustomHoverType } from "./annotationTypes"
+import { CustomHoverType } from "./annotationTypes"
 
 import {
   CanvasPostProcessTypes,
   ProjectionTypes,
   accessorType,
   GenericObject,
-  MarginType,
   GenericAccessor,
   RenderPipelineType,
   OrdinalSummaryTypeSettings,
@@ -27,7 +26,7 @@ interface RExtentObject {
   includeAnnotations?: boolean
 }
 
-type PieceTypes =
+export type PieceTypes =
   | "none"
   | "bar"
   | "clusterbar"
@@ -49,7 +48,7 @@ export interface ProjectedOrdinalSummary {
 }
 
 export interface OrdinalFrameProps extends GeneralFrameProps {
-  type?: PieceTypeSettings
+  type?: PieceTypes | PieceTypeSettings
   summaryType?: OrdinalSummaryTypeSettings
   connectorType?: Function
   rAccessor?: accessorType<number>

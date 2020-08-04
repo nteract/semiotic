@@ -39,10 +39,11 @@ import {
   LineTypeSettings,
   SummaryTypeSettings,
   GenericObject,
-  ExtentType
+  ExtentType,
+  MarginType
 } from "../types/generalTypes"
 
-const baseDefinedFunction = (() => true)
+const baseDefinedFunction = () => true
 
 const whichPointsHashY = {
   top: projectedYTop,
@@ -111,10 +112,10 @@ export function stringToArrayFn<StrFnType extends validStrFnTypes>(
     | string
     | StrFnType
     | Array<
-      | ((arg?: GenericObject, index?: number) => StrFnType)
-      | string
-      | StrFnType
-    >,
+        | ((arg?: GenericObject, index?: number) => StrFnType)
+        | string
+        | StrFnType
+      >,
   defaultAccessor?: (arg?: GenericObject, index?: number) => StrFnType,
   raw?: boolean
 ): Array<(arg?: GenericObject, index?: number) => StrFnType> {
@@ -157,7 +158,7 @@ type CalculateDataTypes = {
   xScaleType: Function
   yScaleType: Function
   baseMarkProps?: object
-  margin: object
+  margin: MarginType
   defined?: Function
   annotations: object[]
   filterRenderedLines: (
@@ -273,9 +274,10 @@ export const calculateDataExtent = ({
       xPropBottom: projectedXBottom
     }
 
-    projectedLines = lineTransformation(lineType, optionsObject)(
-      initialProjectedLines
-    )
+    projectedLines = lineTransformation(
+      lineType,
+      optionsObject
+    )(initialProjectedLines)
 
     projectedLines.forEach((d: ProjectedLine) => {
       fullDataset = [
@@ -347,18 +349,18 @@ export const calculateDataExtent = ({
                 p[whichPointsY] !== undefined
                   ? p[whichPointsY]
                   : p[projectedYMiddle] !== undefined
-                    ? p[projectedYMiddle]
-                    : p[projectedYBottom] !== undefined
-                      ? p[projectedYBottom]
-                      : p.y,
+                  ? p[projectedYMiddle]
+                  : p[projectedYBottom] !== undefined
+                  ? p[projectedYBottom]
+                  : p.y,
               [projectedX]:
                 p[whichPointsX] !== undefined
                   ? p[whichPointsX]
                   : p[projectedXMiddle] !== undefined
-                    ? p[projectedXMiddle]
-                    : p[projectedXBottom] !== undefined
-                      ? p[projectedXBottom]
-                      : p.y
+                  ? p[projectedXMiddle]
+                  : p[projectedXBottom] !== undefined
+                  ? p[projectedXBottom]
+                  : p.y
             })
           })
       })
@@ -401,7 +403,10 @@ export const calculateDataExtent = ({
         })
       } else if (d._xyfCoordinates.length > 0) {
         if (Array.isArray(d._xyfCoordinates)) {
-          const coordArray: number[][] = d._xyfCoordinates as number[][]
+          const coordArray: [number, number][] = d._xyfCoordinates as [
+            number,
+            number
+          ][]
           coordArray
             .map((p, q) => ({
               parentSummary: d,
@@ -428,8 +433,12 @@ export const calculateDataExtent = ({
   let suitableXAnnotations = []
   let suitableYAnnotations = []
 
-  if (xExtent && !Array.isArray(xExtent) && xExtent.includeAnnotations === true) {
-    xAccessor.forEach((actualXAccessor) => {
+  if (
+    xExtent &&
+    !Array.isArray(xExtent) &&
+    xExtent.includeAnnotations === true
+  ) {
+    xAccessor.forEach(actualXAccessor => {
       annotations.forEach((annotation, annotationIndex) => {
         const x = actualXAccessor(annotation, annotationIndex)
         if (isFinite(x)) {
@@ -439,11 +448,14 @@ export const calculateDataExtent = ({
         }
       })
     })
-
   }
 
-  if (yExtent && !Array.isArray(yExtent) && yExtent.includeAnnotations === true) {
-    yAccessor.forEach((actualYAccessor) => {
+  if (
+    yExtent &&
+    !Array.isArray(yExtent) &&
+    yExtent.includeAnnotations === true
+  ) {
+    yAccessor.forEach(actualYAccessor => {
       annotations.forEach((annotation, annotationIndex) => {
         const y = actualYAccessor(annotation, annotationIndex)
         if (isFinite(y)) {
@@ -453,7 +465,6 @@ export const calculateDataExtent = ({
         }
       })
     })
-
   }
 
   const dataForXExtent = [...fullDataset, ...suitableXAnnotations]
@@ -543,11 +554,10 @@ export const calculateDataExtent = ({
       data: projectedSummaries,
       defined
     })
-  }
-  else if (summaryType.type && summaryType.type === "hexbin") {
+  } else if (summaryType.type && summaryType.type === "hexbin") {
     projectedSummaries = hexbinning({
       summaryType,
-      data: projectedSummaries,
+      data: projectedSummaries[0],
       processedData: summaries && !!summaries[0].processedData,
       preprocess: false,
       finalXExtent,
@@ -568,7 +578,7 @@ export const calculateDataExtent = ({
   } else if (summaryType.type && summaryType.type === "heatmap") {
     projectedSummaries = heatmapping({
       summaryType,
-      data: projectedSummaries,
+      data: projectedSummaries[0],
       processedData: summaries && !!summaries[0].processedData,
       preprocess: false,
       finalXExtent,
@@ -589,7 +599,7 @@ export const calculateDataExtent = ({
   } else if (summaryType.type && summaryType.type === "trendline") {
     projectedSummaries = trendlining({
       summaryType,
-      data: projectedSummaries,
+      data: projectedSummaries[0],
       preprocess: summaries && !!summaries[0].processedData,
       finalXExtent
     })

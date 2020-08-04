@@ -58,8 +58,18 @@ class SemioticAnnotation extends React.Component<AnnotationProps, null> {
       )
     }
 
+    console.log("noteData", noteData)
+
+    const keyData = noteData.note || { title: "none", label: noteData.label }
+
+    const annotationKey = `${keyData.label}-${keyData.title}-${noteData.i}`
+
     const finalAnnotation = (
-      <AnnotationType events={eventListeners} {...noteData} />
+      <AnnotationType
+        key={annotationKey}
+        events={eventListeners}
+        {...noteData}
+      />
     )
 
     if (finalStyle.pointerEvents) {

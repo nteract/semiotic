@@ -2,6 +2,7 @@ import { CustomHoverType, AnnotationHandling } from "./annotationTypes"
 import { TitleType } from "../svg/frameFunctions"
 import { Interactivity, AdvancedInteractionSettings } from "./interactionTypes"
 import { LegendProps } from "./legendTypes"
+import { AxisProps } from "./annotationTypes"
 
 export type GenericObject = { [key: string]: any }
 
@@ -60,8 +61,8 @@ export interface ProjectedLine {
 
 export interface ProjectedSummary {
   _baseData: object[]
-  _xyfCoordinates: object[][][] | object[][] | number[][]
-  coordinates: object[]
+  _xyfCoordinates: [number | Date, number | Date][]
+  coordinates: { x: number; y: number }[]
   data: object[]
   y: number
   x: number
@@ -106,6 +107,7 @@ export interface LineTypeSettings {
   type: BasicLineTypes | Function
   simpleLine?: boolean
   y1?: (d?: ProjectedPoint, index?: number) => number
+  interpolator: string | Function
 }
 
 export type BasicSummaryTypes =
@@ -119,6 +121,15 @@ export type BasicSummaryTypes =
 export interface SummaryTypeSettings {
   type: BasicSummaryTypes | Function
   label?: string | Function
+  cellPx?: number
+  xCellPx?: number
+  yCellPx?: number
+  bins?: number
+  xBins?: number
+  yBins?: number
+  binValue?: Function
+  binMax?: number
+  customMark?: Function
 }
 
 export interface RawLine {
@@ -195,6 +206,8 @@ export type OrdinalSummaryTypeSettings = {
   amplitude?: number
   eventListenersGenerator?: Function
   flip?: boolean
+  bins?: number
+  axis?: AxisProps
 }
 
 export interface AxisSummaryTypeSettings extends OrdinalSummaryTypeSettings {
@@ -235,7 +248,7 @@ export interface GeneralFrameProps {
   htmlAnnotationRules?: Function
   tooltipContent?: Function
   optimizeCustomTooltipPosition?: boolean
-  annotations: object[]
+  annotations?: object[]
   baseMarkProps?: object
   backgroundGraphics?: React.ReactNode | Function
   foregroundGraphics?: React.ReactNode | Function

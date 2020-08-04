@@ -15,7 +15,8 @@ import {
   ProjectedLine,
   RenderPipelineType,
   GeneralFrameState,
-  GeneralFrameProps
+  GeneralFrameProps,
+  MarginType
 } from "./generalTypes"
 import { ScaleLinear } from "d3-scale"
 
@@ -34,7 +35,7 @@ export interface XYFrameProps extends GeneralFrameProps {
   yAccessor?: accessorType<number>
   lineDataAccessor?: accessorType<RawPoint[]>
   summaryDataAccessor?: accessorType<RawPoint[]>
-  lineType: LineTypeSettings
+  lineType?: LineTypeSettings
   summaryType?: SummaryTypeSettings
   lineRenderMode?: string | object | Function
   pointRenderMode?: string | object | Function
@@ -122,4 +123,25 @@ export interface XYFrameState extends GeneralFrameState {
   overlay?: object[]
   props: XYFrameProps
   SpanOrDiv: Function
+}
+
+export interface SummaryLayoutType {
+  preprocess?: boolean
+  processedData?: boolean
+  summaryType: SummaryTypeSettings
+  data: {
+    _xyfCoordinates?: [number | Date, number | Date][]
+    coordinates: { x: number; y: number }[]
+  }
+  finalXExtent?: number[]
+  finalYExtent?: number[]
+  size?: number[]
+  xScaleType?: ScaleLinear<Number, Number>
+  yScaleType?: ScaleLinear<Number, Number>
+  margin?: MarginType
+  baseMarkProps?: object
+  styleFn?: Function
+  classFn?: Function
+  renderFn?: Function
+  chartSize?: number[]
 }

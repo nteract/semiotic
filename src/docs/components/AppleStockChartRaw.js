@@ -59,10 +59,17 @@ const appleChart = {
   )
 }
 
-export default (editMode, overridePosition, setNewPosition, annotationLabel) => {
+export default (
+  editMode,
+  overridePosition,
+  setNewPosition,
+  annotationLabel
+) => {
   const onDragEnd = d => {
     setNewPosition(d)
   }
+
+  console.log("annotationLabel", annotationLabel)
 
   const annotations = [
     {
@@ -87,7 +94,14 @@ export default (editMode, overridePosition, setNewPosition, annotationLabel) => 
       type: "react-annotation",
       date: "1/1/1998",
       close: 20,
-      note: <g><circle r={20} fill="green" /><text fontWeight={900} fill="gold" textAnchor="middle">SVG Note Prop</text></g>,
+      note: (
+        <g>
+          <circle r={20} fill="green" />
+          <text fontWeight={900} fill="gold" textAnchor="middle">
+            SVG Note Prop
+          </text>
+        </g>
+      ),
       color: "rgb(0, 162, 206)",
       dy: -10,
       dx: 0,
