@@ -168,8 +168,6 @@ export function hexbinning({
   let finalXExtent = baseXExtent
   let finalYExtent = baseYExtent
 
-  console.log("baseData", baseData)
-
   if (!finalXExtent) {
     const xData = baseData.coordinates.map(p => p.x)
     finalXExtent = [Math.min(...xData), Math.max(...xData)]

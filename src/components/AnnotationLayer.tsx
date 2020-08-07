@@ -429,7 +429,6 @@ const createAnnotations = (
   props: AnnotationLayerProps,
   state: AnnotationLayerState
 ) => {
-  console.log(" in createAnnotations")
   let renderedSVGAnnotations = state.svgAnnotations,
     renderedHTMLAnnotations = [],
     adjustedAnnotations = state.adjustedAnnotations,
@@ -477,7 +476,6 @@ const createAnnotations = (
       adjustedAnnotationsKey !== adjustableAnnotationsKey ||
       adjustedAnnotationsDataVersion !== dataVersion
     ) {
-      console.log("adjusted 1")
       adjustedAnnotations = processAnnotations(
         adjustableAnnotations,
         annotationProcessor,
@@ -485,7 +483,6 @@ const createAnnotations = (
       )
     } else {
       //Handle when style or other attributes change
-      console.log("adjusted 2")
       adjustedAnnotations = adjustableAnnotations.map((d: NoteType, i) => {
         const oldAnnotation = adjustedAnnotations[i] as NoteType
         const newNoteData = {

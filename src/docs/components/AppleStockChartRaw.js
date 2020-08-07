@@ -69,8 +69,6 @@ export default (
     setNewPosition(d)
   }
 
-  console.log("annotationLabel", annotationLabel)
-
   const annotations = [
     {
       className: "dot-com-bubble",

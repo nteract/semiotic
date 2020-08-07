@@ -58,8 +58,6 @@ class SemioticAnnotation extends React.Component<AnnotationProps, null> {
       )
     }
 
-    console.log("noteData", noteData)
-
     const keyData = noteData.note || { title: "none", label: noteData.label }
 
     const annotationKey = `${keyData.label}-${keyData.title}-${noteData.i}`
