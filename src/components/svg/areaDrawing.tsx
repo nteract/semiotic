@@ -178,8 +178,8 @@ export function hexbinning({
     finalYExtent = [Math.min(...yData), Math.max(...yData)]
   }
 
-  if (processedData && baseData[0]) {
-    return baseData[0].coordinates
+  if (processedData && baseData) {
+    return baseData.coordinates
   }
 
   let projectedSummaries = []
@@ -351,8 +351,8 @@ export function heatmapping({
   renderFn,
   chartSize
 }: SummaryLayoutType) {
-  if (processedData && baseData[0]) {
-    return baseData[0].coordinates
+  if (processedData && baseData) {
+    return baseData.coordinates
   }
 
   if (baseData.coordinates && !baseData._xyfCoordinates) {
