@@ -68,9 +68,11 @@ export interface ProjectedSummary {
   x: number
   parentSummary?: GenericObject
   bounds: object[] | number[]
-  customMark: Function
+  customMark?: Function
   type?: string
   curve?: Function
+  processedData?: boolean
+  binMax?: number
 }
 
 export type RoughType = { canvas: Function; generator: Function }

@@ -555,7 +555,7 @@ export const calculateDataExtent = ({
       defined
     })
   } else if (summaryType.type && summaryType.type === "hexbin") {
-    projectedSummaries = hexbinning({
+    projectedSummaries = (hexbinning({
       summaryType,
       data: projectedSummaries[0],
       processedData: summaries && !!summaries[0].processedData,
@@ -569,14 +569,14 @@ export const calculateDataExtent = ({
       classFn: summaryClassFn,
       renderFn: summaryRenderModeFn,
       chartSize
-    })
+    }) as unknown) as ProjectedSummary[]
 
     fullDataset = [
       ...projectedSummaries.map(d => ({ ...d })),
       ...fullDataset.filter(d => !d.parentSummary)
     ]
   } else if (summaryType.type && summaryType.type === "heatmap") {
-    projectedSummaries = heatmapping({
+    projectedSummaries = (heatmapping({
       summaryType,
       data: projectedSummaries[0],
       processedData: summaries && !!summaries[0].processedData,
@@ -590,7 +590,7 @@ export const calculateDataExtent = ({
       classFn: summaryClassFn,
       renderFn: summaryRenderModeFn,
       chartSize
-    })
+    }) as unknown) as ProjectedSummary[]
 
     fullDataset = [
       ...projectedSummaries.map(d => ({ ...d })),

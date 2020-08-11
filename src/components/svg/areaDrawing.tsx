@@ -7,6 +7,7 @@ import { curveCardinal } from "d3-shape"
 
 import { ProjectedPoint, GenericObject } from "../types/generalTypes"
 import { SummaryLayoutType } from "../types/xyTypes"
+import { ProjectedSummary } from "../types/generalTypes"
 
 interface BinArray {
   [position: number]: number
@@ -361,7 +362,7 @@ export function heatmapping({
 
   const data = Array.isArray(baseData) ? baseData : [baseData]
 
-  let projectedSummaries = []
+  let projectedSummaries: ProjectedSummary[] = []
 
   let summaryType: any
   if (!baseSummaryType.type) {
@@ -477,12 +478,19 @@ export function heatmapping({
     binMax(maxValue)
   }
   if (preprocess) {
-    return {
+    const preprocessedSummary: ProjectedSummary = {
       type: "heatmap",
       processedData: true,
+      _baseData: [],
+      _xyfCoordinates: [],
+      data: [],
+      bounds: [],
+      x: 0,
+      y: 0,
       coordinates: projectedSummaries,
       binMax: maxValue
     }
+    return preprocessedSummary
   }
 
   return projectedSummaries
