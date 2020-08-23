@@ -65,7 +65,7 @@ function validFrameProps(originalProps) {
 }
 
 interface FacetControllerProps {
-  children: Element
+  children: React.ReactElement
   sharedRExtent: boolean
   sharedXExtent: boolean
   sharedYExtent: boolean
