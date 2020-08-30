@@ -121,11 +121,11 @@ class NetworkFrame extends React.Component<
         prevState.dataVersion !== nextProps.dataVersion) ||
       (!prevState.projectedNodes && !prevState.projectedEdges) ||
       props.size[0] !== nextProps.size[0] ||
-        props.size[1] !== nextProps.size[1] ||
-        (!prevState.dataVersion &&
-          networkFrameChangeProps.find(d => {
-            return props[d] !== nextProps[d]
-          }))
+      props.size[1] !== nextProps.size[1] ||
+      (!prevState.dataVersion &&
+        networkFrameChangeProps.find(d => {
+          return props[d] !== nextProps[d]
+        }))
     ) {
       return {
         ...calculateNetworkFrame(nextProps, prevState),

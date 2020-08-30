@@ -158,22 +158,6 @@ export const matrixEdgeGenerator = (size, nodes) => ({
         aria-label={`Connection from ${d.source.id} to ${d.target.id}`}
         tabIndex={-1}
       />
-      <Mark
-        {...baseMarkProps}
-        renderMode={renderMode ? renderMode(d, i) : undefined}
-        key={`${key}-mirror`}
-        className={className}
-        simpleInterpolate={true}
-        transform={`translate(${d.target.y},${d.source.y})`}
-        markType="rect"
-        x={-gridSize / 2}
-        y={-gridSize / 2}
-        width={gridSize}
-        height={gridSize}
-        style={styleFn(d, i)}
-        aria-label={`Connection from ${d.source.id} to ${d.target.id}`}
-        tabIndex={-1}
-      />
     </g>
   )
 }
@@ -184,7 +168,11 @@ export const arcEdgeGenerator = size => {
     const draw = line().curve(curveBasis)
     const midX = (d.source.x + d.target.x) / 2
     const midY = d.source.x - d.target.x
-    return draw([[d.source.x, 0], [midX, midY * yAdjust], [d.target.x, 0]])
+    return draw([
+      [d.source.x, 0],
+      [midX, midY * yAdjust],
+      [d.target.x, 0]
+    ])
   }
 
   return ({ d, i, styleFn, renderMode, key, className, baseMarkProps }) => {
@@ -215,20 +203,20 @@ export const chordEdgeGenerator = size => ({
   className,
   baseMarkProps
 }) => (
-    <Mark
-      {...baseMarkProps}
-      renderMode={renderMode ? renderMode(d, i) : undefined}
-      key={key}
-      className={className}
-      simpleInterpolate={true}
-      transform={`translate(${size[0] / 2},${size[1] / 2})`}
-      markType="path"
-      d={d.d}
-      style={styleFn(d, i)}
-      aria-label={`Connection from ${d.source.id} to ${d.target.id}`}
-      tabIndex={-1}
-    />
-  )
+  <Mark
+    {...baseMarkProps}
+    renderMode={renderMode ? renderMode(d, i) : undefined}
+    key={key}
+    className={className}
+    simpleInterpolate={true}
+    transform={`translate(${size[0] / 2},${size[1] / 2})`}
+    markType="path"
+    d={d.d}
+    style={styleFn(d, i)}
+    aria-label={`Connection from ${d.source.id} to ${d.target.id}`}
+    tabIndex={-1}
+  />
+)
 
 export const dagreEdgeGenerator = direction => {
   const dagreLineGenerator =
@@ -345,19 +333,19 @@ export const chordNodeGenerator = size => ({
   className,
   baseMarkProps
 }) => (
-    <Mark
-      {...baseMarkProps}
-      renderMode={renderMode ? renderMode(d, i) : undefined}
-      key={key}
-      className={className}
-      transform={`translate(${size[0] / 2},${size[1] / 2})`}
-      markType="path"
-      d={d.d}
-      style={styleFn(d, i)}
-      aria-label={`Node ${d.id}`}
-      tabIndex={-1}
-    />
-  )
+  <Mark
+    {...baseMarkProps}
+    renderMode={renderMode ? renderMode(d, i) : undefined}
+    key={key}
+    className={className}
+    transform={`translate(${size[0] / 2},${size[1] / 2})`}
+    markType="path"
+    d={d.d}
+    style={styleFn(d, i)}
+    aria-label={`Node ${d.id}`}
+    tabIndex={-1}
+  />
+)
 
 export const matrixNodeGenerator = (size, nodes) => {
   const gridSize = Math.min(...size)
@@ -488,8 +476,8 @@ export const radialRectNodeGenerator = (size, center, type) => {
   const adjustedPct =
     rangeMod < 1
       ? scaleLinear()
-        .domain([0, 1])
-        .range(rangePct)
+          .domain([0, 1])
+          .range(rangePct)
       : d => d
 
   return ({ d, i, styleFn, renderMode, key, className, baseMarkProps }) => {
@@ -536,8 +524,8 @@ export const radialLabelGenerator = (node, nodei, nodeIDAccessor, size) => {
           {nodeLabel}
         </text>
       ) : (
-          nodeLabel
-        )}
+        nodeLabel
+      )}
     </g>
   )
 }
@@ -645,7 +633,11 @@ export const drawEdges = ({
   networkSettings,
   projection
 }) => {
-  const { type: networkType, direction, edgeSort = sankeyEdgeSort } = networkSettings
+  const {
+    type: networkType,
+    direction,
+    edgeSort = sankeyEdgeSort
+  } = networkSettings
   const data =
     networkType === "sankey"
       ? baseData.sort((a, b) => edgeSort(a, b, direction))
@@ -794,41 +786,41 @@ export const ribbonLink = d => {
   const testCoordinates =
     d.direction === "down"
       ? [
-        {
-          x: d.y0,
-          y: d.source.y
-        },
-        {
-          x: d.y0,
-          y: d.source.y + diff / 3
-        },
-        {
-          x: d.y1,
-          y: d.target.y - diff / 3
-        },
-        {
-          x: d.y1,
-          y: d.target.y
-        }
-      ]
+          {
+            x: d.y0,
+            y: d.source.y
+          },
+          {
+            x: d.y0,
+            y: d.source.y + diff / 3
+          },
+          {
+            x: d.y1,
+            y: d.target.y - diff / 3
+          },
+          {
+            x: d.y1,
+            y: d.target.y
+          }
+        ]
       : [
-        {
-          x: d.source.x0,
-          y: d.y0
-        },
-        {
-          x: d.source.x0 + diff / 3,
-          y: d.y0
-        },
-        {
-          x: d.target.x0 - diff / 3,
-          y: d.y1
-        },
-        {
-          x: d.target.x0,
-          y: d.y1
-        }
-      ]
+          {
+            x: d.source.x0,
+            y: d.y0
+          },
+          {
+            x: d.source.x0 + diff / 3,
+            y: d.y0
+          },
+          {
+            x: d.target.x0 - diff / 3,
+            y: d.y1
+          },
+          {
+            x: d.target.x0,
+            y: d.y1
+          }
+        ]
 
   const linkGenerator = linearRibbon()
 
@@ -855,7 +847,7 @@ export const areaLink = d => {
 
     return `M${x0},${y0}C${x0},${y2} ${x1},${y3} ${x1},${y1}L${x2},${y1}C${x2},${y3} ${x3},${y2} ${x3},${y0}Z`
   }
-  ; (x0 = d.source.x1), // eslint-disable-line no-sequences
+  ;(x0 = d.source.x1), // eslint-disable-line no-sequences
     (x1 = d.target.x0),
     (xi = interpolateNumber(x0, x1)),
     (x2 = xi(curvature)),
@@ -878,57 +870,57 @@ export function circularAreaLink(link) {
   const xyForLink =
     link.direction === "down"
       ? [
-        {
-          x: link.circularPathData.sourceY,
-          y: link.circularPathData.sourceX
-        },
-        {
-          x: link.circularPathData.sourceY,
-          y: link.circularPathData.leftFullExtent
-        },
-        {
-          x: link.circularPathData.verticalFullExtent,
-          y: link.circularPathData.leftFullExtent
-        },
-        {
-          x: link.circularPathData.verticalFullExtent,
-          y: link.circularPathData.rightFullExtent
-        },
-        {
-          x: link.circularPathData.targetY,
-          y: link.circularPathData.rightFullExtent
-        },
-        {
-          x: link.circularPathData.targetY,
-          y: link.circularPathData.targetX
-        }
-      ]
+          {
+            x: link.circularPathData.sourceY,
+            y: link.circularPathData.sourceX
+          },
+          {
+            x: link.circularPathData.sourceY,
+            y: link.circularPathData.leftFullExtent
+          },
+          {
+            x: link.circularPathData.verticalFullExtent,
+            y: link.circularPathData.leftFullExtent
+          },
+          {
+            x: link.circularPathData.verticalFullExtent,
+            y: link.circularPathData.rightFullExtent
+          },
+          {
+            x: link.circularPathData.targetY,
+            y: link.circularPathData.rightFullExtent
+          },
+          {
+            x: link.circularPathData.targetY,
+            y: link.circularPathData.targetX
+          }
+        ]
       : [
-        {
-          x: link.circularPathData.sourceX,
-          y: link.circularPathData.sourceY
-        },
-        {
-          x: link.circularPathData.leftFullExtent,
-          y: link.circularPathData.sourceY
-        },
-        {
-          x: link.circularPathData.leftFullExtent,
-          y: link.circularPathData.verticalFullExtent
-        },
-        {
-          x: link.circularPathData.rightFullExtent,
-          y: link.circularPathData.verticalFullExtent
-        },
-        {
-          x: link.circularPathData.rightFullExtent,
-          y: link.circularPathData.targetY
-        },
-        {
-          x: link.circularPathData.targetX,
-          y: link.circularPathData.targetY
-        }
-      ]
+          {
+            x: link.circularPathData.sourceX,
+            y: link.circularPathData.sourceY
+          },
+          {
+            x: link.circularPathData.leftFullExtent,
+            y: link.circularPathData.sourceY
+          },
+          {
+            x: link.circularPathData.leftFullExtent,
+            y: link.circularPathData.verticalFullExtent
+          },
+          {
+            x: link.circularPathData.rightFullExtent,
+            y: link.circularPathData.verticalFullExtent
+          },
+          {
+            x: link.circularPathData.rightFullExtent,
+            y: link.circularPathData.targetY
+          },
+          {
+            x: link.circularPathData.targetX,
+            y: link.circularPathData.targetY
+          }
+        ]
 
   return linkGenerator(xyForLink)
 }
@@ -964,7 +956,6 @@ export const softStack = (
   targetAccessor,
   nodeIDAccessor
 ) => {
-
   let hierarchy = { id: "root-generated", children: [], childHash: {} }
   const discoveredHierarchyHash = {}
   const targetToSourceHash = {}

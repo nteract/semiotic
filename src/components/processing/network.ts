@@ -69,10 +69,14 @@ import {
 
 import { genericFunction } from "../generic_utilities/functions"
 
-import { NetworkFrameProps, NetworkFrameState, NetworkSettingsType, NodeType } from "../types/networkTypes"
+import {
+  NetworkFrameProps,
+  NetworkFrameState,
+  NetworkSettingsType,
+  NodeType
+} from "../types/networkTypes"
 
 import { GenericObject } from "../types/generalTypes"
-
 
 function determineNodeIcon(baseCustomNodeIcon, networkSettings, size, nodes) {
   if (baseCustomNodeIcon) return baseCustomNodeIcon
@@ -316,7 +320,7 @@ export const nodesEdgesFromHierarchy = (
         { ...node.parent, ...node.parent.data },
         ""
       )) ||
-    "root"}`
+      "root"}`
     const dataD = Object.assign(node, node.data || {}, {
       hierarchicalID: generatedID
     })
@@ -337,8 +341,10 @@ export const nodesEdgesFromHierarchy = (
   return { edges, nodes }
 }
 
-
-export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState: NetworkFrameState) => {
+export const calculateNetworkFrame = (
+  currentProps: NetworkFrameProps,
+  prevState: NetworkFrameState
+) => {
   const {
     graph,
     nodes = Array.isArray(graph) || typeof graph === "function"
@@ -347,8 +353,8 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
     edges = typeof graph === "function"
       ? emptyArray
       : Array.isArray(graph)
-        ? graph
-        : (graph && graph.edges) || emptyArray,
+      ? graph
+      : (graph && graph.edges) || emptyArray,
     networkType,
     size,
     nodeStyle,
@@ -403,8 +409,8 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
 
   const title =
     typeof baseTitle === "object" &&
-      !React.isValidElement(baseTitle) &&
-      baseTitle !== null
+    !React.isValidElement(baseTitle) &&
+    baseTitle !== null
       ? (baseTitle as TitleType)
       : ({ title: baseTitle, orient: "top" } as TitleType)
 
@@ -520,7 +526,12 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
     networkSettings.graphSettings.nodeHash = nodeHash
     projectedNodes = []
     projectedEdges = []
-    const fixFunction = typeof networkSettings.fixExistingNodes === "function" ? networkSettings.fixExistingNodes : networkSettings.fixExistingNodes ? () => true : false
+    const fixFunction =
+      typeof networkSettings.fixExistingNodes === "function"
+        ? networkSettings.fixExistingNodes
+        : networkSettings.fixExistingNodes
+        ? () => true
+        : false
     nodes.forEach(node => {
       const projectedNode = { ...node }
       const id = nodeIDAccessor(projectedNode)
@@ -540,7 +551,6 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
         projectedNode.fx = existingNode.x
         projectedNode.fy = existingNode.y
       }
-
     })
 
     let operationalEdges = edges
@@ -606,8 +616,7 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
         hierarchicalLayout(rootNode)
       }
 
-      operationalEdges = nodesEdgesFromHierarchy(rootNode, nodeIDAccessor)
-        .edges
+      operationalEdges = nodesEdgesFromHierarchy(rootNode, nodeIDAccessor).edges
     }
 
     baseNodeProps.shapeNode = createPointLayer
@@ -621,14 +630,14 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
             const nodeObject: NodeType =
               typeof nodeDirection === "object"
                 ? {
-                  ...baseNodeProps,
-                  ...nodeDirection
-                }
+                    ...baseNodeProps,
+                    ...nodeDirection
+                  }
                 : {
-                  ...baseNodeProps,
-                  id: nodeDirection,
-                  createdByFrame: true
-                }
+                    ...baseNodeProps,
+                    id: nodeDirection,
+                    createdByFrame: true
+                  }
 
             const nodeIDValue = nodeObject.id || nodeIDAccessor(nodeObject)
             nodeHierarchicalIDFill[nodeIDValue]
@@ -667,6 +676,13 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
         })
         edgeHash.set(edgeKey, newEdge)
         projectedEdges.push(newEdge)
+        if (networkSettings.type === "matrix") {
+          projectedEdges.push({
+            ...newEdge,
+            source: newEdge.target,
+            target: newEdge.source
+          })
+        }
       })
     }
   } else {
@@ -730,8 +746,8 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
       d.circular
         ? circularAreaLink(d)
         : edgeType === "angled"
-          ? ribbonLink(d)
-          : areaLink(d)
+        ? ribbonLink(d)
+        : areaLink(d)
   } else if (isHierarchical) {
     projectedNodes.forEach(node => {
       if (createPointLayer) {
@@ -764,10 +780,10 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
           node.depth === 0
             ? [adjustedSize[0] / 2, adjustedSize[1] / 2]
             : pointOnArcAtAngle(
-              [adjustedSize[0] / 2, adjustedSize[1] / 2],
-              node.x / adjustedSize[0],
-              node.y / 2
-            )
+                [adjustedSize[0] / 2, adjustedSize[1] / 2],
+                node.x / adjustedSize[0],
+                node.y / 2
+              )
         node.x = radialPoint[0]
         node.y = radialPoint[1]
       } else {
@@ -871,7 +887,10 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
         networkSettings.direction === "up" ||
         networkSettings.direction === "down"
       ) {
-        frameExtent = [[0, 0], [adjustedSize[1], adjustedSize[0]]]
+        frameExtent = [
+          [0, 0],
+          [adjustedSize[1], adjustedSize[0]]
+        ]
       }
 
       const frameSankey = actualSankey()
@@ -911,7 +930,7 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
         edgeStrength = 0.1,
         distanceMax = Infinity,
         edgeDistance,
-        forceManyBody: nsForceMB = (d => -25 * nodeSizeAccessor(d))
+        forceManyBody: nsForceMB = d => -25 * nodeSizeAccessor(d)
       } = networkSettings
 
       const linkForce = forceLink().strength(d =>
@@ -1039,8 +1058,7 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
           .force(
             "charge",
             forceManyBody().strength(
-              networkSettings.forceManyBody ||
-              (d => -25 * nodeSizeAccessor(d))
+              networkSettings.forceManyBody || (d => -25 * nodeSizeAccessor(d))
             )
           )
           .force("link", linkForce)
@@ -1329,14 +1347,14 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
         const actualLabel =
           networkSettings.projection === "radial" && node.depth !== 0
             ? radialLabelGenerator(
-              node,
-              nodei,
-              nodeLabels === true ? nodeIDAccessor : nodeLabels,
-              adjustedSize
-            )
+                node,
+                nodei,
+                nodeLabels === true ? nodeIDAccessor : nodeLabels,
+                adjustedSize
+              )
             : nodeLabels === true
-              ? nodeIDAccessor(node, nodei)
-              : feasibleLabel
+            ? nodeIDAccessor(node, nodei)
+            : feasibleLabel
 
         let nodeLabel
 
@@ -1370,10 +1388,15 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
 
   let projectedXYPoints
   const overlay = []
-  const areaBasedTypes = ["circlepack", "treemap", "partition", "chord"]
+  const areaBasedTypes = [
+    "circlepack",
+    "treemap",
+    "partition",
+    "chord",
+    "matrix"
+  ]
   if (
-    (hoverAnnotation &&
-      areaBasedTypes.find(d => d === networkSettings.type)) ||
+    (hoverAnnotation && areaBasedTypes.find(d => d === networkSettings.type)) ||
     hoverAnnotation === "area"
   ) {
     if (hoverAnnotation !== "edge") {
@@ -1389,7 +1412,27 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
 
       overlay.push(...renderedNodeOverlays)
     }
-    if (hoverAnnotation !== "node") {
+    if (hoverAnnotation === "edge" && networkSettings.type === "matrix") {
+      projectedEdges.forEach((d, i) => {
+        const generatedIcon = customEdgeIcon({
+          d,
+          i,
+          transform: `translate(${d.x},${d.y})`,
+          styleFn: () => ({ opacity: 0 })
+        })
+        if (generatedIcon) {
+          overlay.push({
+            overlayData: {
+              ...d,
+              x: d.source.y,
+              y: d.target.y,
+              edge: true
+            },
+            renderElement: generatedIcon
+          })
+        }
+      })
+    } else if (hoverAnnotation !== "node") {
       projectedEdges.forEach((d, i) => {
         const generatedIcon = customEdgeIcon({
           d,
@@ -1415,9 +1458,7 @@ export const calculateNetworkFrame = (currentProps: NetworkFrameProps, prevState
     typeof networkSettings.type === "string" &&
     edgePointHash[networkSettings.type]
   ) {
-    projectedXYPoints = projectedEdges.map(
-      edgePointHash[networkSettings.type]
-    )
+    projectedXYPoints = projectedEdges.map(edgePointHash[networkSettings.type])
   } else if (
     Array.isArray(hoverAnnotation) ||
     hoverAnnotation === true ||
