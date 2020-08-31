@@ -1,11 +1,11 @@
-import React from 'react'
-import DocumentComponent from '../layout/DocumentComponent'
-import BaseballMapRaw from './BaseballMapRaw'
-import Select from '@material-ui/core/Select'
-import { Mark } from 'semiotic-mark'
-import { scaleTime } from 'd3-scale'
-import MenuItem from '@material-ui/core/MenuItem'
-import InputLabel from '@material-ui/core/InputLabel'
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import BaseballMapRaw from "./BaseballMapRaw"
+import Select from "@material-ui/core/Select"
+import { Mark } from "semiotic-mark"
+import { scaleTime } from "d3-scale"
+import MenuItem from "@material-ui/core/MenuItem"
+import InputLabel from "@material-ui/core/InputLabel"
 import FormControl from "@material-ui/core/FormControl"
 
 const components = []
@@ -14,29 +14,55 @@ const modes = {
     summaries: undefined,
     annotations: [
       {
-        type: 'enclose',
-        label: 'Shortest distance home runs.',
+        type: "enclose",
+        label: "Shortest distance home runs.",
         dy: -120,
         dx: -1,
-        coordinates: [{ bx: 235, by: 250 }, { bx: 235, by: 275 }]
+        coordinates: [
+          { bx: 235, by: 250 },
+          { bx: 235, by: 275 }
+        ]
+      }
+    ]
+  },
+  trendPoly: {
+    summaryType: { type: "trendline", regressionType: "polynomial" },
+    summaryStyle: { stroke: "red", fill: "none", strokeWidth: 2 }
+  },
+  trendLinear: {
+    summaryType: { type: "trendline", regressionType: "linear" },
+    summaryStyle: { stroke: "red", fill: "none", strokeWidth: 2 }
+  },
+  basic: {
+    summaries: undefined,
+    annotations: [
+      {
+        type: "enclose",
+        label: "Shortest distance home runs.",
+        dy: -120,
+        dx: -1,
+        coordinates: [
+          { bx: 235, by: 250 },
+          { bx: 235, by: 275 }
+        ]
       }
     ]
   },
   sketchy: {
     customPointMark: () => <Mark markType="circle" r={6} />,
-    pointRenderMode: 'sketchy',
+    pointRenderMode: "sketchy",
     summaries: undefined
   },
   contourplot: {
     customPointMark: () => <Mark markType="circle" r={2} />,
-    pointStyle: { fill: 'black' },
+    pointStyle: { fill: "black" },
     summaryStyle: () => ({
-      stroke: 'none',
-      fill: '#b3331d',
+      stroke: "none",
+      fill: "#b3331d",
       opacity: 0.25
     }),
-    summaryType: 'contour',
-    areaRenderMode: 'sketchy'
+    summaryType: "contour",
+    areaRenderMode: "sketchy"
   },
   scatterplot: {
     xAccessor: d => d.exit_velocity,
@@ -44,10 +70,10 @@ const modes = {
     xExtent: undefined,
     yExtent: undefined,
     axes: [
-      { orient: 'left', label: 'Distance' },
+      { orient: "left", label: "Distance" },
       {
-        orient: 'top',
-        label: 'Exit Velocity'
+        orient: "top",
+        label: "Exit Velocity"
       }
     ],
     margin: { left: 60, top: 50, bottom: 25, right: 25 },
@@ -62,9 +88,9 @@ const modes = {
     xExtent: undefined,
     yExtent: undefined,
     axes: [
-      { orient: 'left', label: 'Distance' },
+      { orient: "left", label: "Distance" },
       {
-        orient: 'top',
+        orient: "top",
         ticks: 8,
         tickFormat: d => `${d.getMonth()}-${d.getDate()}`
       }
@@ -76,7 +102,7 @@ const modes = {
 }
 
 components.push({
-  name: 'BaseballMap'
+  name: "BaseballMap"
 })
 
 export default class BaseballMapDocs extends React.Component {
@@ -84,22 +110,24 @@ export default class BaseballMapDocs extends React.Component {
     super(props)
 
     this.state = {
-      mode: 'basic'
+      mode: "basic"
     }
   }
 
   render() {
     const modeOptions = [
-      'basic',
-      'sketchy',
-      'contourplot',
-      'scatterplot',
-      'overtime'
-    ].map(d =>
-      (<MenuItem key={`mode-option-${d}`} label={d} value={d}>
+      "basic",
+      "sketchy",
+      "contourplot",
+      "scatterplot",
+      "overtime",
+      "trendPoly",
+      "trendLinear"
+    ].map(d => (
+      <MenuItem key={`mode-option-${d}`} label={d} value={d}>
         {d}
-      </MenuItem>)
-    )
+      </MenuItem>
+    ))
 
     const buttons = [
       <FormControl key="button-1-0-0">
@@ -115,7 +143,7 @@ export default class BaseballMapDocs extends React.Component {
 
     const examples = []
     examples.push({
-      name: 'Basic',
+      name: "Basic",
       demo: BaseballMapRaw(modes[this.state.mode]),
       source: `
       const mode = ${JSON.stringify(modes[this.state.mode])}
@@ -157,7 +185,7 @@ export default class BaseballMapDocs extends React.Component {
         buttons={buttons}
       >
         <p>
-          Giancarlo Stanton's home runs shown with his park outline based on{' '}
+          Giancarlo Stanton's home runs shown with his park outline based on{" "}
           <a href="https://github.com/darenwillman/baseball">
             Daren Willman's data and sports visualization work.
           </a>
@@ -165,12 +193,12 @@ export default class BaseballMapDocs extends React.Component {
         <p>
           Switch modes to see how different XYFrame settings could display the
           data differently. Another approach could be to plot the park layout in
-          actual coordinates and pass it to the summaries function instead of using
-          backgroundGraphics.
+          actual coordinates and pass it to the summaries function instead of
+          using backgroundGraphics.
         </p>
       </DocumentComponent>
     )
   }
 }
 
-BaseballMapDocs.title = 'Home Run Map'
+BaseballMapDocs.title = "Home Run Map"

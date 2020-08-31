@@ -219,7 +219,7 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
         summaryChange ||
         pointChange ||
         extentChange ||
-        !!xyFrameDataProps.find(d => basicPropDiffing(props[d], nextProps[d]))
+        !!xyFrameChangeProps.find(d => props[d] !== nextProps[d])
 
       return calculateXYFrame(nextProps, prevState, dataChanged)
     }
