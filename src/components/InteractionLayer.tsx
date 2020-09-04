@@ -1,16 +1,26 @@
 import * as React from "react"
 import { brushX, brushY, brush } from "d3-brush"
-import { select, event } from "d3-selection"
+import { select } from "d3-selection"
 
 // components
 import Brush from "./Brush"
 
 import { HOCSpanOrDiv } from "./SpanOrDiv"
 
-import { Interactivity, InteractionLayerProps, BaseColumnType, InteractionLayerState } from "./types/interactionTypes"
+import {
+  Interactivity,
+  InteractionLayerProps,
+  BaseColumnType,
+  InteractionLayerState
+} from "./types/interactionTypes"
 
-import { brushing, brushEnd, brushStart, calculateOverlay } from "./processing/InteractionItems"
-import InteractionCanvas from "./interactionLayerBehavior/InteractionCanvas";
+import {
+  brushing,
+  brushEnd,
+  brushStart,
+  calculateOverlay
+} from "./processing/InteractionItems"
+import InteractionCanvas from "./interactionLayerBehavior/InteractionCanvas"
 
 const generateOMappingFn = projectedColumns => (d): null | any => {
   if (d) {
@@ -26,7 +36,10 @@ const generateOMappingFn = projectedColumns => (d): null | any => {
   return null
 }
 
-const generateOEndMappingFn = projectedColumns => (d): null | Array<any> => {
+const generateOEndMappingFn = projectedColumns => (
+  event,
+  d
+): null | Array<any> => {
   if (
     d &&
     event.sourceEvent &&
@@ -48,9 +61,9 @@ const generateOEndMappingFn = projectedColumns => (d): null | Array<any> => {
     const lastColumn: { x: number; width: number } = foundColumns[
       foundColumns.length - 1
     ] || {
-        x: 0,
-        width: 0
-      }
+      x: 0,
+      width: 0
+    }
 
     const columnPosition = [
       firstColumn.x + Math.min(5, firstColumn.width / 10),
@@ -66,7 +79,10 @@ const generateOEndMappingFn = projectedColumns => (d): null | Array<any> => {
   return null
 }
 
-class InteractionLayer extends React.PureComponent<InteractionLayerProps, InteractionLayerState> {
+class InteractionLayer extends React.PureComponent<
+  InteractionLayerProps,
+  InteractionLayerState
+> {
   constructor(props: InteractionLayerProps) {
     super(props)
 
@@ -79,13 +95,15 @@ class InteractionLayer extends React.PureComponent<InteractionLayerProps, Intera
     this.state = {
       overlayRegions: initialOverlayRegions,
       canvasMap,
-      interactionCanvas: canvasRendering && <InteractionCanvas
-        height={svgSize[1]}
-        width={svgSize[0]}
-        overlayRegions={initialOverlayRegions}
-        margin={margin}
-        voronoiHover={voronoiHover}
-      />,
+      interactionCanvas: canvasRendering && (
+        <InteractionCanvas
+          height={svgSize[1]}
+          width={svgSize[0]}
+          overlayRegions={initialOverlayRegions}
+          margin={margin}
+          voronoiHover={voronoiHover}
+        />
+      ),
       props,
       SpanOrDiv: HOCSpanOrDiv(useSpans)
     }
@@ -120,12 +138,12 @@ class InteractionLayer extends React.PureComponent<InteractionLayerProps, Intera
     const {
       extent = actualBrush === "xyBrush"
         ? [
-          [xScale.invert(0), yScale.invert(0)],
-          [xScale.invert(size[0]), yScale.invert(size[1])]
-        ]
+            [xScale.invert(0), yScale.invert(0)],
+            [xScale.invert(size[0]), yScale.invert(size[1])]
+          ]
         : actualBrush === "xBrush"
-          ? [xScale.invert(0), xScale.invert(size[0])]
-          : [yScale.invert(0), yScale.invert(size[1])]
+        ? [xScale.invert(0), xScale.invert(size[0])]
+        : [yScale.invert(0), yScale.invert(size[1])]
     } = interaction
 
     if (extent.indexOf && extent.indexOf(undefined) !== -1) {
@@ -192,7 +210,7 @@ class InteractionLayer extends React.PureComponent<InteractionLayerProps, Intera
           selectedExtent = [
             projectedColumns[leftExtent].x,
             projectedColumns[rightExtent].x +
-            projectedColumns[rightExtent].width
+              projectedColumns[rightExtent].width
           ]
         }
       }
@@ -202,15 +220,36 @@ class InteractionLayer extends React.PureComponent<InteractionLayerProps, Intera
     }
 
     semioticBrush
-      .extent([[0, 0], [size[0], size[1]]])
-      .on("start", () => {
-        brushStart(mappingFn(event.selection), undefined, brushData, undefined, interaction)
+      .extent([
+        [0, 0],
+        [size[0], size[1]]
+      ])
+      .on("start", event => {
+        brushStart(
+          mappingFn(event.selection),
+          undefined,
+          brushData,
+          undefined,
+          interaction
+        )
       })
-      .on("brush", () => {
-        brushing(mappingFn(event.selection), undefined, brushData, undefined, interaction)
+      .on("brush", event => {
+        brushing(
+          mappingFn(event.selection),
+          undefined,
+          brushData,
+          undefined,
+          interaction
+        )
       })
-      .on("end", () => {
-        brushEnd(endMappingFn(event.selection), undefined, brushData, undefined, interaction)
+      .on("end", event => {
+        brushEnd(
+          endMappingFn(event.selection),
+          undefined,
+          brushData,
+          undefined,
+          interaction
+        )
       })
 
     return (
@@ -224,7 +263,10 @@ class InteractionLayer extends React.PureComponent<InteractionLayerProps, Intera
     )
   }
 
-  static getDerivedStateFromProps(nextProps: InteractionLayerProps, prevState: InteractionLayerState) {
+  static getDerivedStateFromProps(
+    nextProps: InteractionLayerProps,
+    prevState: InteractionLayerState
+  ) {
     const { props } = prevState
 
     if (
@@ -232,32 +274,43 @@ class InteractionLayer extends React.PureComponent<InteractionLayerProps, Intera
       nextProps.points !== props.points ||
       props.xScale !== nextProps.xScale ||
       props.yScale !== nextProps.yScale ||
-      ((!props.hoverAnnotation && nextProps.hoverAnnotation) || (props.hoverAnnotation && !nextProps.hoverAnnotation)) ||
-      ((!props.customClickBehavior && nextProps.customClickBehavior) || (props.customClickBehavior && !nextProps.customClickBehavior)) ||
-      ((!props.customDoubleClickBehavior && nextProps.customDoubleClickBehavior) || (props.customDoubleClickBehavior && !nextProps.customDoubleClickBehavior)) ||
-      ((!props.customHoverBehavior && nextProps.customHoverBehavior) || (props.customHoverBehavior && !nextProps.customHoverBehavior))
+      (!props.hoverAnnotation && nextProps.hoverAnnotation) ||
+        (props.hoverAnnotation && !nextProps.hoverAnnotation) ||
+      (!props.customClickBehavior && nextProps.customClickBehavior) ||
+        (props.customClickBehavior && !nextProps.customClickBehavior) ||
+      (!props.customDoubleClickBehavior &&
+        nextProps.customDoubleClickBehavior) ||
+        (props.customDoubleClickBehavior &&
+          !nextProps.customDoubleClickBehavior) ||
+      (!props.customHoverBehavior && nextProps.customHoverBehavior) ||
+        (props.customHoverBehavior && !nextProps.customHoverBehavior)
     ) {
-
-      const { disableCanvasInteraction, canvasRendering, svgSize, margin, voronoiHover } = nextProps
+      const {
+        disableCanvasInteraction,
+        canvasRendering,
+        svgSize,
+        margin,
+        voronoiHover
+      } = nextProps
       const { overlayRegions } = prevState
 
       let nextOverlay, interactionCanvas
 
-      if (disableCanvasInteraction ||
-        !overlayRegions) {
+      if (disableCanvasInteraction || !overlayRegions) {
         nextOverlay = null
         interactionCanvas = null
       } else {
         nextOverlay = calculateOverlay(nextProps)
         if (canvasRendering) {
-          interactionCanvas = <InteractionCanvas
-            height={svgSize[1]}
-            width={svgSize[0]}
-            overlayRegions={nextOverlay}
-            margin={margin}
-            voronoiHover={voronoiHover}
-          />
-
+          interactionCanvas = (
+            <InteractionCanvas
+              height={svgSize[1]}
+              width={svgSize[0]}
+              overlayRegions={nextOverlay}
+              margin={margin}
+              voronoiHover={voronoiHover}
+            />
+          )
         }
       }
 
@@ -269,7 +322,6 @@ class InteractionLayer extends React.PureComponent<InteractionLayerProps, Intera
     }
 
     return null
-
   }
 
   createColumnsBrush = (interaction: Interactivity) => {
@@ -299,9 +351,9 @@ class InteractionLayer extends React.PureComponent<InteractionLayerProps, Intera
         return !d
           ? null
           : [
-            rScaleReverse(rScale.invert(d[1])),
-            rScaleReverse(rScale.invert(d[0]))
-          ]
+              rScaleReverse(rScale.invert(d[1])),
+              rScaleReverse(rScale.invert(d[0]))
+            ]
       }
 
     const rRange = rScale.range()
@@ -312,37 +364,83 @@ class InteractionLayer extends React.PureComponent<InteractionLayerProps, Intera
       if (projection && projection === "horizontal") {
         selectedExtent = interaction.extent[c]
           ? interaction.extent[c].map(d => rScale(d))
-          : interaction.startEmpty ? null : rRange
+          : interaction.startEmpty
+          ? null
+          : rRange
 
         brushPosition = [0, columnHash[c].x]
         semioticBrush = brushX()
         semioticBrush
-          .extent([[rRange[0], 0], [rRange[1], columnHash[c].width]])
-          .on("start", () => {
-            brushStart(mappingFn(event.selection), c, brushData, columnHash[c], interaction)
+          .extent([
+            [rRange[0], 0],
+            [rRange[1], columnHash[c].width]
+          ])
+          .on("start", event => {
+            brushStart(
+              mappingFn(event.selection),
+              c,
+              brushData,
+              columnHash[c],
+              interaction
+            )
           })
-          .on("brush", () => {
-            brushing(mappingFn(event.selection), c, brushData, columnHash[c], interaction)
+          .on("brush", event => {
+            brushing(
+              mappingFn(event.selection),
+              c,
+              brushData,
+              columnHash[c],
+              interaction
+            )
           })
-          .on("end", () => {
-            brushEnd(mappingFn(event.selection), c, brushData, columnHash[c], interaction)
+          .on("end", event => {
+            brushEnd(
+              mappingFn(event.selection),
+              c,
+              brushData,
+              columnHash[c],
+              interaction
+            )
           })
       } else {
         selectedExtent = interaction.extent[c]
           ? interaction.extent[c].map(d => rRange[1] - rScale(d)).reverse()
-          : interaction.startEmpty ? null : rRange
+          : interaction.startEmpty
+          ? null
+          : rRange
         brushPosition = [columnHash[c].x, 0]
         semioticBrush = brushY()
         semioticBrush
-          .extent([[0, rRange[0]], [columnHash[c].width, rRange[1]]])
-          .on("start", () => {
-            brushStart(mappingFn(event.selection), c, brushData, columnHash[c], interaction)
+          .extent([
+            [0, rRange[0]],
+            [columnHash[c].width, rRange[1]]
+          ])
+          .on("start", event => {
+            brushStart(
+              mappingFn(event.selection),
+              c,
+              brushData,
+              columnHash[c],
+              interaction
+            )
           })
-          .on("brush", () => {
-            brushing(mappingFn(event.selection), c, brushData, columnHash[c], interaction)
+          .on("brush", event => {
+            brushing(
+              mappingFn(event.selection),
+              c,
+              brushData,
+              columnHash[c],
+              interaction
+            )
           })
-          .on("end", () => {
-            brushEnd(mappingFn(event.selection), c, brushData, columnHash[c], interaction)
+          .on("end", event => {
+            brushEnd(
+              mappingFn(event.selection),
+              c,
+              brushData,
+              columnHash[c],
+              interaction
+            )
           })
       }
 
@@ -361,14 +459,8 @@ class InteractionLayer extends React.PureComponent<InteractionLayerProps, Intera
   }
 
   render() {
-
     let semioticBrush = null
-    const {
-      interaction,
-      svgSize,
-      margin,
-      useSpans = false
-    } = this.props
+    const { interaction, svgSize, margin, useSpans = false } = this.props
 
     const { overlayRegions, interactionCanvas, SpanOrDiv } = this.state
     let { enabled } = this.props
