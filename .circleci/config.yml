@@ -31,11 +31,6 @@ jobs:
           command: |
             npm run test -- --maxWorkers=2 --cacheDirectory=~/.jestcache
 
-      - run:
-          name: tests against the dist copy (for the web)
-          command: |
-            npm run test:dist
-
       - save_cache:
           paths:
             - ~/.npm
