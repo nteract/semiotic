@@ -4,7 +4,6 @@ const autoprefixer = require("autoprefixer")
 const path = require("path")
 const webpack = require("webpack")
 const HtmlWebpackPlugin = require("html-webpack-plugin")
-const ExtractTextPlugin = require("extract-text-webpack-plugin")
 const ManifestPlugin = require("webpack-manifest-plugin")
 const InterpolateHtmlPlugin = require("react-dev-utils/InterpolateHtmlPlugin")
 const SWPrecacheWebpackPlugin = require("sw-precache-webpack-plugin")
@@ -12,6 +11,7 @@ const eslintFormatter = require("react-dev-utils/eslintFormatter")
 const ModuleScopePlugin = require("react-dev-utils/ModuleScopePlugin")
 const paths = require("./paths")
 const getClientEnvironment = require("./env")
+const TerserPlugin = require("terser-webpack-plugin-legacy")
 
 // Webpack uses `publicPath` to determine where the app is being served from.
 // It requires a trailing slash, or the file assets will get an incorrect path.
@@ -171,50 +171,35 @@ module.exports = {
           // in the main CSS file.
           {
             test: /\.css$/,
-            loader: ExtractTextPlugin.extract(
-              Object.assign(
-                {
-                  fallback: {
-                    loader: require.resolve("style-loader"),
-                    options: {
-                      hmr: false
-                    }
-                  },
-                  use: [
-                    {
-                      loader: require.resolve("css-loader"),
-                      options: {
-                        importLoaders: 1,
-                        minimize: true,
-                        sourceMap: shouldUseSourceMap
-                      }
-                    },
-                    {
-                      loader: require.resolve("postcss-loader"),
-                      options: {
-                        // Necessary for external CSS imports to work
-                        // https://github.com/facebookincubator/create-react-app/issues/2677
-                        ident: "postcss",
-                        plugins: () => [
-                          require("postcss-flexbugs-fixes"),
-                          autoprefixer({
-                            browsers: [
-                              ">1%",
-                              "last 4 versions",
-                              "Firefox ESR",
-                              "not ie < 9" // React doesn't support IE8 anyway
-                            ],
-                            flexbox: "no-2009"
-                          })
-                        ]
-                      }
-                    }
+            use: [
+              require.resolve("style-loader"),
+              {
+                loader: require.resolve("css-loader"),
+                options: {
+                  importLoaders: 1
+                }
+              },
+              {
+                loader: require.resolve("postcss-loader"),
+                options: {
+                  // Necessary for external CSS imports to work
+                  // https://github.com/facebookincubator/create-react-app/issues/2677
+                  ident: "postcss",
+                  plugins: () => [
+                    require("postcss-flexbugs-fixes"),
+                    autoprefixer({
+                      browsers: [
+                        ">1%",
+                        "last 4 versions",
+                        "Firefox ESR",
+                        "not ie < 9" // React doesn't support IE8 anyway
+                      ],
+                      flexbox: "no-2009"
+                    })
                   ]
-                },
-                extractTextPluginOptions
-              )
-            )
-            // Note: this won't work without `new ExtractTextPlugin()` in `plugins`.
+                }
+              }
+            ]
           },
           // "file" loader makes sure assets end up in the `build` folder.
           // When you `import` an asset, you get its filename.
@@ -267,6 +252,47 @@ module.exports = {
     // Otherwise React will be compiled in the very slow development mode.
     new webpack.DefinePlugin(env.stringified),
     // Minify the code.
+    new TerserPlugin({
+      terserOptions: {
+        parse: {
+          // We want terser to parse ecma 8 code. However, we don't want it
+          // to apply any minification steps that turns valid ecma 5 code
+          // into invalid ecma 5 code. This is why the 'compress' and 'output'
+          // sections only apply transformations that are ecma 5 safe
+          // https://github.com/facebook/create-react-app/pull/4234
+          ecma: 8
+        },
+        compress: {
+          ecma: 5,
+          warnings: false,
+          // Disabled because of an issue with Uglify breaking seemingly valid code:
+          // https://github.com/facebook/create-react-app/issues/2376
+          // Pending further investigation:
+          // https://github.com/mishoo/UglifyJS2/issues/2011
+          comparisons: false,
+          // Disabled because of an issue with Terser breaking valid code:
+          // https://github.com/facebook/create-react-app/issues/5250
+          // Pending further investigation:
+          // https://github.com/terser-js/terser/issues/120
+          inline: 2
+        },
+        mangle: {
+          safari10: true
+        },
+        // Added for profiling in devtools
+        keep_classnames: true,
+        keep_fnames: true,
+        output: {
+          ecma: 5,
+          comments: false,
+          // Turned on because emoji and regex is not minified properly using default
+          // https://github.com/facebook/create-react-app/issues/2488
+          ascii_only: true
+        }
+      },
+      sourceMap: shouldUseSourceMap
+    }),
+    /*
     new webpack.optimize.UglifyJsPlugin({
       compress: {
         warnings: false,
@@ -290,7 +316,7 @@ module.exports = {
     // Note: this won't work without ExtractTextPlugin.extract(..) in `loaders`.
     new ExtractTextPlugin({
       filename: cssFilename
-    }),
+    }), */
     // Generate a manifest file which contains a mapping of all asset filenames
     // to their corresponding output file so that tools can pick it up without
     // having to parse `index.html`.

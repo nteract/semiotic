@@ -67,13 +67,12 @@ import UsingPatternsTextures from "./components/UsingPatternsTextures"
 import RealtimeOrdinalFrame from "./components/RealtimeOrdinalFrame"
 import RealtimeXYFrame from "./components/RealtimeXYFrame"
 
-import "./../components/styles.css"
 import Drawer from "@material-ui/core/Drawer"
-import AppBar from '@material-ui/core/AppBar'
-import Toolbar from '@material-ui/core/Toolbar'
+import AppBar from "@material-ui/core/AppBar"
+import Toolbar from "@material-ui/core/Toolbar"
 import List from "@material-ui/core/List"
-import ListItem from '@material-ui/core/ListItem'
-import ListItemText from '@material-ui/core/ListItemText'
+import ListItem from "@material-ui/core/ListItem"
+import ListItemText from "@material-ui/core/ListItemText"
 import { Link } from "react-router-dom"
 
 const components = {
@@ -131,7 +130,6 @@ const components = {
   dividedline: { docs: DividedLineDocs }
 }
 
-
 class Documentation extends React.Component {
   state = {
     open: true
@@ -152,7 +150,8 @@ class Documentation extends React.Component {
 
     const classes = {}
 
-    let selectedDoc = null, Doc = null
+    let selectedDoc = null,
+      Doc = null
     // const selectedStyles = {
     //   borderTop: "5px double #ac9739",
     //   borderBottom: "5px double #ac9739"
@@ -192,11 +191,11 @@ class Documentation extends React.Component {
         const finalStyle =
           selected === c
             ? {
-              borderTop: "5px double #ac9739",
-              borderBottom: "5px double #ac9739",
-              fontWeight: 900,
-              ...styleOver
-            }
+                borderTop: "5px double #ac9739",
+                borderBottom: "5px double #ac9739",
+                fontWeight: 900,
+                ...styleOver
+              }
             : styleOver
         allDocs.push(
           <Link to={`/${c}`} key={`${c}-link`}>
@@ -221,14 +220,16 @@ class Documentation extends React.Component {
 
     const { AdditionalContent } = this.props
 
-
     return (
       <div className={classes.root}>
-        <div className={classes.appFrame} style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'flex-end'
-        }}>
+        <div
+          className={classes.appFrame}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end"
+          }}
+        >
           <AppBar
             className={classNames(
               classes.appBar,
@@ -246,7 +247,7 @@ class Documentation extends React.Component {
                 }
               >
                 Semiotic
-                </span>
+              </span>
               <img
                 style={{ paddingTop: "10px", width: "40px", height: "40px" }}
                 src="/semiotic/semiotic_white.png"
@@ -261,9 +262,7 @@ class Documentation extends React.Component {
             open={this.state.open}
           >
             <div className={classes.drawerInner}>
-              <div className={"drawer-title"}>
-                Semiotic
-              </div>
+              <div className={"drawer-title"}>Semiotic</div>
               <Divider />
               <List className={classes.list}>{allDocs}</List>
             </div>
