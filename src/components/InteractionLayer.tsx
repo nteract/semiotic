@@ -37,8 +37,8 @@ const generateOMappingFn = projectedColumns => (d): null | any => {
 }
 
 const generateOEndMappingFn = projectedColumns => (
-  event,
-  d
+  d,
+  event
 ): null | Array<any> => {
   if (
     d &&
@@ -76,6 +76,7 @@ const generateOEndMappingFn = projectedColumns => (
 
     return foundColumns
   }
+
   return null
 }
 
@@ -244,7 +245,7 @@ class InteractionLayer extends React.PureComponent<
       })
       .on("end", event => {
         brushEnd(
-          endMappingFn(event.selection),
+          endMappingFn(event.selection, event),
           undefined,
           brushData,
           undefined,
@@ -275,15 +276,15 @@ class InteractionLayer extends React.PureComponent<
       props.xScale !== nextProps.xScale ||
       props.yScale !== nextProps.yScale ||
       (!props.hoverAnnotation && nextProps.hoverAnnotation) ||
-        (props.hoverAnnotation && !nextProps.hoverAnnotation) ||
+      (props.hoverAnnotation && !nextProps.hoverAnnotation) ||
       (!props.customClickBehavior && nextProps.customClickBehavior) ||
-        (props.customClickBehavior && !nextProps.customClickBehavior) ||
+      (props.customClickBehavior && !nextProps.customClickBehavior) ||
       (!props.customDoubleClickBehavior &&
         nextProps.customDoubleClickBehavior) ||
-        (props.customDoubleClickBehavior &&
-          !nextProps.customDoubleClickBehavior) ||
+      (props.customDoubleClickBehavior &&
+        !nextProps.customDoubleClickBehavior) ||
       (!props.customHoverBehavior && nextProps.customHoverBehavior) ||
-        (props.customHoverBehavior && !nextProps.customHoverBehavior)
+      (props.customHoverBehavior && !nextProps.customHoverBehavior)
     ) {
       const {
         disableCanvasInteraction,
