@@ -25,14 +25,26 @@ function renderType(
 }
 
 class Legend extends React.Component<LegendProps, null> {
-  renderLegendGroupVertical(legendGroup: LegendGroup) {
+  renderLegendGroupVertical(
+    legendGroup: LegendGroup,
+    customClickBehavior?: Function
+  ) {
     const { type = "fill", styleFn, items } = legendGroup
     const renderedItems = []
     let itemOffset = 0
     items.forEach((item, i) => {
       const renderedType = renderType(item, i, type, styleFn)
       renderedItems.push(
-        <g key={`legend-item-${i}`} transform={`translate(0,${itemOffset})`}>
+        <g
+          key={`legend-item-${i}`}
+          transform={`translate(0,${itemOffset})`}
+          onClick={
+            customClickBehavior ? () => customClickBehavior(item) : undefined
+          }
+          style={{
+            cursor: customClickBehavior ? "pointer" : "default"
+          }}
+        >
           {renderedType}
           <text y={15} x={30}>
             {item.label}
@@ -44,14 +56,26 @@ class Legend extends React.Component<LegendProps, null> {
     return renderedItems
   }
 
-  renderLegendGroupHorizontal(legendGroup: LegendGroup) {
+  renderLegendGroupHorizontal(
+    legendGroup: LegendGroup,
+    customClickBehavior?: Function
+  ) {
     const { type = "fill", styleFn, items } = legendGroup
     const renderedItems = []
     let itemOffset = 0
     items.forEach((item, i) => {
       const renderedType = renderType(item, i, type, styleFn)
       renderedItems.push(
-        <g key={`legend-item-${i}`} transform={`translate(${itemOffset},0)`}>
+        <g
+          key={`legend-item-${i}`}
+          transform={`translate(${itemOffset},0)`}
+          onClick={
+            customClickBehavior ? () => customClickBehavior(item) : undefined
+          }
+          style={{
+            cursor: customClickBehavior ? 'pointer' : 'default'
+          }}
+        >
           {renderedType}
           <text y={15} x={25}>
             {item.label}
@@ -66,10 +90,12 @@ class Legend extends React.Component<LegendProps, null> {
 
   renderVerticalGroup({
     legendGroups,
-    width
+    width,
+    customClickBehavior
   }: {
     legendGroups: LegendGroup[]
     width: number
+    customClickBehavior?: Function
   }) {
     let offset = 30
 
@@ -108,7 +134,7 @@ class Legend extends React.Component<LegendProps, null> {
           className="legend-item"
           transform={`translate(0,${offset})`}
         >
-          {this.renderLegendGroupVertical(l)}
+          {this.renderLegendGroupVertical(l, customClickBehavior)}
         </g>
       )
       offset += l.items.length * 25 + 10
@@ -120,11 +146,13 @@ class Legend extends React.Component<LegendProps, null> {
   renderHorizontalGroup({
     legendGroups,
     title,
-    height
+    height,
+    customClickBehavior
   }: {
     legendGroups: LegendGroup[]
     title: string | boolean
     height: number
+    customClickBehavior?: Function
   }) {
     let offset = 0
 
@@ -147,7 +175,10 @@ class Legend extends React.Component<LegendProps, null> {
         offset += 20
       }
 
-      const renderedItems = this.renderLegendGroupHorizontal(l)
+      const renderedItems = this.renderLegendGroupHorizontal(
+        l,
+        customClickBehavior
+      )
 
       renderedGroups.push(
         <g
@@ -195,6 +226,7 @@ class Legend extends React.Component<LegendProps, null> {
   render() {
     const {
       legendGroups,
+      customClickBehavior,
       title = "Legend",
       width = 100,
       height = 20,
@@ -204,12 +236,14 @@ class Legend extends React.Component<LegendProps, null> {
       orientation === "vertical"
         ? this.renderVerticalGroup({
             legendGroups,
-            width
+            width,
+            customClickBehavior
           })
         : this.renderHorizontalGroup({
             legendGroups,
             title,
-            height
+            height,
+            customClickBehavior
           })
 
     return (
