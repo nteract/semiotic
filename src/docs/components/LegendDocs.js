@@ -60,11 +60,19 @@ export default class LegendDocs extends React.Component {
               legendGroups={[...lineLegendGroups, ...areaLegendGroups]}
             />
           </g>
-          <g transform={"translate(50,250)"}>
+          <g transform={"translate(50,220)"}>
             <Legend
               title={"Horizontal Legend"}
               legendGroups={[...lineLegendGroups, ...areaLegendGroups]}
               orientation="horizontal"
+            />
+          </g>
+          <g transform={"translate(50,320)"}>
+            <Legend
+              title={"Clickable Legend"}
+              legendGroups={[...lineLegendGroups, ...areaLegendGroups]}
+              orientation="horizontal"
+              customClickBehavior={(d) => window.alert(JSON.stringify(d))}
             />
           </g>
         </svg>
@@ -109,6 +117,21 @@ const lineLegendGroups = [
       <Legend
         title={"Both Legend"}
         legendGroups={[...lineLegendGroups, ...areaLegendGroups]}
+      />
+    </g>
+    <g transform={"translate(50,220)"}>
+      <Legend
+        title={"Horizontal Legend"}
+        legendGroups={[...lineLegendGroups, ...areaLegendGroups]}
+        orientation="horizontal"
+      />
+    </g>
+    <g transform={"translate(50,320)"}>
+      <Legend
+        title={"Clickable Legend"}
+        legendGroups={[...lineLegendGroups, ...areaLegendGroups]}
+        orientation="horizontal"
+        customClickBehavior={(d) => window.alert(JSON.stringify(d))}
       />
     </g>
   </svg>
