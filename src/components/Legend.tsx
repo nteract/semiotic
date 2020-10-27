@@ -25,7 +25,7 @@ function renderType(
 }
 
 class Legend extends React.Component<LegendProps, null> {
-  renderLegendGroup(legendGroup: LegendGroup) {
+  renderLegendGroupVertical(legendGroup: LegendGroup) {
     const { type = "fill", styleFn, items } = legendGroup
     const renderedItems = []
     let itemOffset = 0
@@ -64,7 +64,7 @@ class Legend extends React.Component<LegendProps, null> {
     return { items: renderedItems, offset: itemOffset }
   }
 
-  renderGroup({
+  renderVerticalGroup({
     legendGroups,
     width
   }: {
@@ -108,7 +108,7 @@ class Legend extends React.Component<LegendProps, null> {
           className="legend-item"
           transform={`translate(0,${offset})`}
         >
-          {this.renderLegendGroup(l)}
+          {this.renderLegendGroupVertical(l)}
         </g>
       )
       offset += l.items.length * 25 + 10
@@ -202,7 +202,7 @@ class Legend extends React.Component<LegendProps, null> {
     } = this.props
     const renderedGroups =
       orientation === "vertical"
-        ? this.renderGroup({
+        ? this.renderVerticalGroup({
             legendGroups,
             width
           })
