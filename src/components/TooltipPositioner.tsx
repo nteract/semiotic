@@ -1,129 +1,59 @@
-import * as React from "react"
+import React, { useState, useEffect, useRef } from "react"
+import { usePopper } from "react-popper"
 
-type Props = {
-  tooltipContent: Function
-  tooltipContentArgs?: object
-}
+const TooltipPositioner = (props) => {
+  const { tooltipContent, tooltipContentArgs = true } = props
+  const [referenceElement, setReferenceElement] = useState(null)
+  const [popperElement, setPopperElement] = useState(null)
+  const [arrowElement, setArrowElement] = useState(null)
 
-type State = {
-  collision: object,
-  tooltipContainerInitialDimensions: object,
-  tooltipContentArgsCurrent: object
-}
+  const { styles, attributes, forceUpdate } = usePopper(
+    referenceElement,
+    popperElement,
+    {
+      modifiers: [
+        { name: "arrow", options: { element: arrowElement } },
+        { name: "preventOverflow" },
+        { name: "offset", options: { offset: [0, 20] } }
+      ]
+    }
+  )
 
-class TooltipPositioner extends React.Component<Props, State> {
-  private containerRef = React.createRef<HTMLDivElement>()
+  // Popper doesn't recalculate positions unless any ref elements changed
+  // This is a problem because semiotic only adjusts the position of the annotation component
+  // (when hovering to another data point), and Popper won't help us detect any resulting
+  // boundary collision. It seems that using `forceUpdate` when the tooltipContentArgs
+  // changes solves this issue.
+  useEffect(() => {
+    if (forceUpdate) {
+      forceUpdate()
+    }
+  }, [tooltipContentArgs])
 
-  state = {
-    collision: null,
-    tooltipContainerInitialDimensions: null,
-    tooltipContentArgsCurrent: null
+  const refElementStyle: React.CSSProperties = {
+    width: "1px",
+    height: "1px",
+    visibility: "hidden"
   }
 
-  // simple heuristics to check if the tooltip container exceeds the viewport
-  // if so, capture the suggested offset
-  checkPosition = () => {
-
-    const tooltipContainerInitialDimensions = this.containerRef.current.getBoundingClientRect()
-
-    const { right, left, top, bottom, width, height } = tooltipContainerInitialDimensions
-
-    // flags to indicate whether the data point + tooltip dimension collides with the viewport
-    // on each of the 4 directions/sides
-    let collision = {
-      left: false,
-      right: false,
-      top: false,
-      bottom: false
-    }
-
-    if ((left + width) > window.innerWidth) {
-      collision.right = true
-    }
-    if ((left - width) < 0) {
-      collision.left = true
-    }
-    if ((top + height) > window.innerHeight) {
-      collision.bottom = true
-    }
-    if ((top - height) < 0) {
-      collision.top = true
-    }
-
-    this.setState({
-      collision,
-      tooltipContainerInitialDimensions,
-      tooltipContentArgsCurrent: this.props.tooltipContentArgs
-    })
-  }
-
-  componentDidMount() {
-    if (this.containerRef.current && !this.state.collision) {
-      this.checkPosition()
-    }
-  }
-
-  componentDidUpdate(pp) {
-    // if new args, reset collision state
-    if (pp.tooltipContentArgs !== this.props.tooltipContentArgs) {
-      this.setState({
-        collision: null,
-        tooltipContainerInitialDimensions: null
-      })
-    }
-    else if (this.containerRef.current && !this.state.collision) {
-      this.checkPosition()
-    }
-  }
-
-  render() {
-    const {
-      tooltipContent,
-      tooltipContentArgs
-    } = this.props
-
-    const {
-      collision,
-      tooltipContainerInitialDimensions,
-      tooltipContentArgsCurrent
-    } = this.state
-
-    const containerStyle = {
-
-      //to handle issue when the tooltip content has margins set by client,
-      // which results in the tooltip container having smaller height,
-      // which in turn causes the css transform to be inaccurate
-      // (ref: https://www.w3.org/TR/css-box-3/#collapsing-margins)
-      overflow: 'hidden',
-
-      opacity: collision && (tooltipContentArgsCurrent === tooltipContentArgs) ? 1 : 0
-    }
-
-    const tooltipContainerAttributes = {
-      tooltipContainerInitialDimensions,
-    }
-
-    const tooltipContainerClasses = collision ?
-      [
-        'tooltip-container',
-        'tooltip-collision-evaluated',
-        collision && collision.top && 'collision-top',
-        collision && collision.bottom && 'collision-bottom',
-        collision && collision.right && 'collision-right',
-        collision && collision.left && 'collision-left',
-      ].filter(el => el).join(' ')
-      : 'tooltip-container'
-
-    return (
-      <div ref={this.containerRef} style={containerStyle} className={tooltipContainerClasses}>
-        {tooltipContent({
-          ...tooltipContentArgs,
-          tooltipContainerAttributes
-        })}
+  return (
+    <>
+      <div style={refElementStyle} ref={setReferenceElement}></div>
+      <div
+        className="tooltip"
+        ref={setPopperElement}
+        style={styles.popper}
+        {...attributes.popper}
+      >
+        {tooltipContent({ ...tooltipContentArgs })}
+        <div
+          className="tooltip-arrow"
+          ref={setArrowElement}
+          style={styles.arrow}
+        />
       </div>
-    )
-  }
+    </>
+  )
 }
-
 
 export default TooltipPositioner
