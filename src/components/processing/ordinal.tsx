@@ -798,8 +798,8 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
             const label = labelingFn(
                 d,
                 projectedColumns[d].pieceData.map(d => d.data),
-                i
-                //          ,{ arc: pieArcs[i], data: projectedColumns[d] }
+                i,
+                projectedColumns[d]
             )
             labelArray.push(
                 <g
