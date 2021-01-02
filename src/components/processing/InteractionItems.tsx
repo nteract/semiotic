@@ -13,28 +13,36 @@ import { Mark } from "semiotic-mark"
 
 import { CustomHoverType } from "../types/annotationTypes"
 
-import { InteractionLayerProps, VoronoiEntryType } from "../types/interactionTypes"
+import {
+  InteractionLayerProps,
+  VoronoiEntryType
+} from "../types/interactionTypes"
 
-const constructDataObject = (d?: { data?: object[]; type?: string }, points?: Object[]) => {
+const constructDataObject = (
+  d?: { data?: object[]; type?: string },
+  points?: Object[]
+) => {
   if (d === undefined) return d
   return d && d.data ? { points, ...d.data, ...d } : { points, ...d }
 }
 
-export const changeVoronoi = (voronoiHover: Function,
-  d?: { type?: string; data?: object[] },
-  customHoverTypes?: CustomHoverType,
-  customHoverBehavior?: Function, points?: Object[]
+export const changeVoronoi = (
+  voronoiHover: Function,
+  d: { type?: string; data?: object[] },
+  customHoverTypes: CustomHoverType,
+  customHoverBehavior: Function,
+  points: Object[],
+  e: any
 ) => {
   //Until semiotic 2
   const dataObject = constructDataObject(d, points)
   if (customHoverBehavior) customHoverBehavior(dataObject)
 
   if (!d) voronoiHover(null)
-
   else if (customHoverTypes === true) {
     const vorD = Object.assign({}, dataObject)
     vorD.type = vorD.type === "column-hover" ? "column-hover" : "frame-hover"
-    voronoiHover(vorD)
+    voronoiHover(vorD, e)
   } else if (customHoverTypes) {
     const arrayWrappedHoverTypes = Array.isArray(customHoverTypes)
       ? customHoverTypes
@@ -47,36 +55,62 @@ export const changeVoronoi = (voronoiHover: Function,
       })
       .filter(d => d)
 
-    voronoiHover(mappedHoverTypes)
+    voronoiHover(mappedHoverTypes, e)
   }
 }
 
-export const clickVoronoi = (d: Object, customClickBehavior: Function, points: Object[]) => {
+export const clickVoronoi = (
+  d: Object,
+  customClickBehavior: Function,
+  points: Object[],
+  e: any
+) => {
   //Until semiotic 2
   const dataObject = constructDataObject(d, points)
 
-  if (customClickBehavior)
-    customClickBehavior(dataObject)
+  if (customClickBehavior) customClickBehavior(dataObject, e)
 }
-export const doubleclickVoronoi = (d: Object, customDoubleClickBehavior: Function, points: Object[]) => {
+export const doubleclickVoronoi = (
+  d: Object,
+  customDoubleClickBehavior: Function,
+  points: Object[],
+  e
+) => {
   //Until semiotic 2
   const dataObject = constructDataObject(d, points)
 
-  if (customDoubleClickBehavior)
-    customDoubleClickBehavior(dataObject)
+  if (customDoubleClickBehavior) customDoubleClickBehavior(dataObject, e)
 }
 
-export const brushStart = (e?: number[] | number[][], columnName?: string, data?: object, columnData?: object, interaction?) => {
+export const brushStart = (
+  e?: number[] | number[][],
+  columnName?: string,
+  data?: object,
+  columnData?: object,
+  interaction?
+) => {
   if (interaction && interaction.start)
     interaction.start(e, columnName, data, columnData)
 }
 
-export const brushing = (e?: number[] | number[][], columnName?: string, data?: object, columnData?: object, interaction?) => {
+export const brushing = (
+  e?: number[] | number[][],
+  columnName?: string,
+  data?: object,
+  columnData?: object,
+  interaction?
+) => {
   if (interaction && interaction.during)
     interaction.during(e, columnName, data, columnData)
 }
 
-export const brushEnd = (e?: number[] | number[][], columnName?: string, data?: object, columnData?: object, interaction?) => {
+export const brushEnd = (
+  e?: number[] | number[][],
+  columnName?: string,
+  data?: object,
+  columnData?: object,
+  interaction?
+) => {
   if (interaction && interaction.end)
     interaction.end(e, columnName, data, columnData)
 }
@@ -110,48 +144,47 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
       ? { cursor: "pointer" }
       : {}
 
-
   if (points && hoverAnnotation && !overlay) {
-
     const { voronoiFilter = () => true } = advancedSettings
     const voronoiDataset: VoronoiEntryType[] = []
     const voronoiUniqueHash = {}
 
-    points.filter((d: { data: object }) => voronoiFilter({ ...d, ...d.data })).forEach((d: object) => {
-
-      const xValue = Math.floor(xScale(d[projectedX]))
-      const yValue = Math.floor(
-        yScale(
-          showLinePoints && d[whichPoints[showLinePoints]] !== undefined
-            ? d[whichPoints[showLinePoints]]
-            : d[projectedYMiddle] !== undefined
+    points
+      .filter((d: { data: object }) => voronoiFilter({ ...d, ...d.data }))
+      .forEach((d: object) => {
+        const xValue = Math.floor(xScale(d[projectedX]))
+        const yValue = Math.floor(
+          yScale(
+            showLinePoints && d[whichPoints[showLinePoints]] !== undefined
+              ? d[whichPoints[showLinePoints]]
+              : d[projectedYMiddle] !== undefined
               ? d[projectedYMiddle]
               : d[projectedY]
+          )
         )
-      )
-      if (
-        xValue >= (0 - margin.left) &&
-        xValue <= (size[0] + margin.right) &&
-        yValue >= (0 - margin.top) &&
-        yValue <= (size[1] + margin.bottom) &&
-        xValue !== undefined &&
-        yValue !== undefined &&
-        isNaN(xValue) === false &&
-        isNaN(yValue) === false
-      ) {
-        const pointKey = `${xValue},${yValue}`
-        if (!voronoiUniqueHash[pointKey]) {
-          const voronoiPoint = {
-            ...d,
-            coincidentPoints: [d],
-            voronoiX: xValue,
-            voronoiY: yValue
-          }
-          voronoiDataset.push(voronoiPoint)
-          voronoiUniqueHash[pointKey] = voronoiPoint
-        } else voronoiUniqueHash[pointKey].coincidentPoints.push(d)
-      }
-    })
+        if (
+          xValue >= 0 - margin.left &&
+          xValue <= size[0] + margin.right &&
+          yValue >= 0 - margin.top &&
+          yValue <= size[1] + margin.bottom &&
+          xValue !== undefined &&
+          yValue !== undefined &&
+          isNaN(xValue) === false &&
+          isNaN(yValue) === false
+        ) {
+          const pointKey = `${xValue},${yValue}`
+          if (!voronoiUniqueHash[pointKey]) {
+            const voronoiPoint = {
+              ...d,
+              coincidentPoints: [d],
+              voronoiX: xValue,
+              voronoiY: yValue
+            }
+            voronoiDataset.push(voronoiPoint)
+            voronoiUniqueHash[pointKey] = voronoiPoint
+          } else voronoiUniqueHash[pointKey].coincidentPoints.push(d)
+        }
+      })
 
     const voronoiXExtent = d3Extent(voronoiDataset.map(d => d.voronoiX))
     const voronoiYExtent = d3Extent(voronoiDataset.map(d => d.voronoiY))
@@ -177,26 +210,54 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
     voronoiPaths = voronoiData.map((d: Array<number>, i: number) => {
       let clipPath = null
       if (advancedSettings.voronoiClipping) {
-        const circleSize = advancedSettings.voronoiClipping === true ? 50 : advancedSettings.voronoiClipping
+        const circleSize =
+          advancedSettings.voronoiClipping === true
+            ? 50
+            : advancedSettings.voronoiClipping
         const correspondingD = voronoiDataset[i]
-        clipPath = <clipPath id={`voronoi-${i}`}>
-          <circle r={circleSize} cx={correspondingD.voronoiX} cy={correspondingD.voronoiY} />
-        </clipPath>
+        clipPath = (
+          <clipPath id={`voronoi-${i}`}>
+            <circle
+              r={circleSize}
+              cx={correspondingD.voronoiX}
+              cy={correspondingD.voronoiY}
+            />
+          </clipPath>
+        )
       }
       return (
         <g key={`voronoi-${i}`}>
           <path
-            onClick={() => {
-              clickVoronoi(voronoiDataset[i], customClickBehavior, points)
+            onClick={e => {
+              clickVoronoi(voronoiDataset[i], customClickBehavior, points, e)
             }}
-            onDoubleClick={() => {
-              doubleclickVoronoi(voronoiDataset[i], customDoubleClickBehavior, points)
+            onDoubleClick={e => {
+              doubleclickVoronoi(
+                voronoiDataset[i],
+                customDoubleClickBehavior,
+                points,
+                e
+              )
             }}
-            onMouseEnter={() => {
-              changeVoronoi(voronoiHover, voronoiDataset[i], hoverAnnotation, customHoverBehavior, points)
+            onMouseEnter={e => {
+              changeVoronoi(
+                voronoiHover,
+                voronoiDataset[i],
+                hoverAnnotation,
+                customHoverBehavior,
+                points,
+                e
+              )
             }}
-            onMouseLeave={() => {
-              changeVoronoi(voronoiHover, undefined, undefined, customHoverBehavior)
+            onMouseLeave={e => {
+              changeVoronoi(
+                voronoiHover,
+                undefined,
+                undefined,
+                customHoverBehavior,
+                undefined,
+                e
+              )
             }}
             key={`interactionVoronoi${i}`}
             d={`M${d.join("L")}Z`}
@@ -224,17 +285,36 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
         const { overlayData, ...rest } = overlayRegion
         const overlayProps = {
           key: `overlay-${i}`,
-          onMouseEnter: () => {
-            changeVoronoi(voronoiHover, overlayData, props.hoverAnnotation, customHoverBehavior, points)
+          onMouseEnter: e => {
+            changeVoronoi(
+              voronoiHover,
+              overlayData,
+              props.hoverAnnotation,
+              customHoverBehavior,
+              points,
+              e
+            )
           },
-          onMouseLeave: () => {
-            changeVoronoi(voronoiHover, undefined, undefined, customHoverBehavior)
+          onMouseLeave: e => {
+            changeVoronoi(
+              voronoiHover,
+              undefined,
+              undefined,
+              customHoverBehavior,
+              undefined,
+              e
+            )
           },
-          onClick: () => {
-            clickVoronoi(overlayData, customClickBehavior, points)
+          onClick: e => {
+            clickVoronoi(overlayData, customClickBehavior, points, e)
           },
-          onDoubleClick: () => {
-            doubleclickVoronoi(overlayData, customDoubleClickBehavior, points)
+          onDoubleClick: e => {
+            doubleclickVoronoi(
+              overlayData,
+              customDoubleClickBehavior,
+              points,
+              e
+            )
           },
           style: { opacity: 0, ...pointerStyle }
         }

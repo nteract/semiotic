@@ -75,13 +75,13 @@ class InteractionCanvas extends React.Component<
     interactionContext.onclick = e => {
       const overlay = boundCanvasEvent(e)
       if (overlay && overlay.props) {
-        overlay.props.children[0].props.onClick()
+        overlay.props.children[0].props.onClick(e)
       }
     }
     interactionContext.ondblclick = e => {
       const overlay = boundCanvasEvent(e)
       if (overlay && overlay.props) {
-        overlay.props.children[0].props.onDoubleClick()
+        overlay.props.children[0].props.onDoubleClick(e)
       }
     }
 

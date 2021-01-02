@@ -4,16 +4,13 @@ import { OrdinalFrame } from "../../components"
 import ProcessViz from "./ProcessViz"
 import roughjs from "roughjs/dist/rough.es5.umd.js"
 
-const blues = [
-  "#eff3ff",
-  "#bdd7e7",
-  "#6baed6",
-  "#2171b5"
-]
+const blues = ["#eff3ff", "#bdd7e7", "#6baed6", "#2171b5"]
 
 const axis = {
   orient: "bottom",
-  tickFormat: d => d,
+  tickFormat: (d, i) => {
+    return i % 3 === 0 ? Math.ceil(d) : ""
+  },
   label: {
     name: "axis label",
     position: { anchor: "middle" },
@@ -23,9 +20,8 @@ const axis = {
 
 const violinChart = {
   size: [700, 600],
-  axes: [axis],
   ...summaryChart,
-  rAccessor: ["stepValue", d => d.stepValue + 10],
+  rAccessor: ["stepValue"],
   //  hoverAnnotation: true,
   tooltipContent: d => {
     return (
@@ -35,10 +31,17 @@ const violinChart = {
       </div>
     )
   },
-  summaryStyle: (s, i, ii) => ({ fill: ii === 0 ? "darkred" : "darkgreen", fillOpacity: 0.5, stroke: "black" }),
+  summaryStyle: (s, i, ii) => ({
+    fill: ii === 0 ? "darkred" : "darkgreen",
+    fillOpacity: 0.5,
+    stroke: "black"
+  }),
   margin: { top: 75, bottom: 50, left: 60, right: 50 },
   dynamicColumnWidth: d => Math.max(...d.map(p => p.stepValue)),
-  summaryType: { type: "violin", subsets: [d => d.rIndex === 0, d => d.rIndex === 1] },
+  summaryType: {
+    type: "violin",
+    subsets: [d => d.rIndex === 0, d => d.rIndex === 1]
+  },
   annotations: [
     {
       type: "category",
@@ -136,40 +139,26 @@ export default (
       summaryStyle={{ fill: "none", stroke: "#CCC" }}
       oPadding={0}
       pieceHoverAnnotation={true}
-      summaryType={{ type: "horizon", bins: 50, elementStyleFn: (d, i) => ({ fill: blues[i] }) }}
-      oLabel={true}
-      annotations={undefined}
-      dynamicColumnWidth={false}
-      summaryRenderMode="sketchy"
-      sketchyRenderingEngine={roughjs}
-    />
-    <OrdinalFrame
-      {...violinChart}
-      htmlAnnotationRules={({ d, oScale, rScale }) => {
-        if (d.type === "check-html") {
-          return (
-            <div
-              style={{
-                left: `${oScale(d.stepName)}px`,
-                top: `${rScale(d.stepValue)}px`,
-                position: "absolute"
-              }}
-            >
-              {d.label}
-            </div>
-          )
+      summaryType={{
+        type: "violin",
+        bins: 50,
+        outliers: true,
+        iqr: true,
+        elementStyleFn: (d, i) => {
+          if (d === "iqr") {
+            return { stroke: "red" }
+          } else if (d === "median") {
+            return { fill: "red" }
+          }
+          return { fill: blues[i] }
         }
-        return null
       }}
-      projection="horizontal"
-      //      type={{ type: "swarm", r: 5 }}
-      summaryStyle={{ fill: "blue", stroke: "black", opacity: 0.25 }}
-      pieceHoverAnnotation={true}
-      summaryType={{ type: "ridgeline", bins: 50 }}
       oLabel={true}
       annotations={undefined}
-      oPadding={2}
       dynamicColumnWidth={false}
+      //      summaryRenderMode="sketchy"
+      sketchyRenderingEngine={roughjs}
+      axes={[axis]}
     />
   </div>
 )

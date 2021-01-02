@@ -99,6 +99,7 @@ type ORFrameAxisGeneratorTypes = {
   maxColumnValues?: number
   xyData: Array<{ value: number; data: object }>
   margin: MarginType
+  thresholds?: number[]
 }
 
 const findActualTitle = rawTitle => {
@@ -232,21 +233,21 @@ export function generateOrdinalFrameEventListeners(
     d?: object,
     i?: number
   ) => {
-    onMouseEnter?: () => void
-    onMouseLeave?: () => void
-    onClick?: () => void
+    onMouseEnter?: (e) => void
+    onMouseLeave?: (e) => void
+    onClick?: (e) => void
   } = () => ({})
 
   if (customHoverBehavior || customClickBehavior) {
     eventListenersGenerator = (d: object, i: number) => ({
       onMouseEnter: customHoverBehavior
-        ? (): void => customHoverBehavior(d, i)
+        ? (e): void => customHoverBehavior(d, i, e)
         : undefined,
       onMouseLeave: customHoverBehavior
-        ? (): void => customHoverBehavior(undefined)
+        ? (e): void => customHoverBehavior(undefined, undefined, e)
         : undefined,
       onClick: customClickBehavior
-        ? (): void => customClickBehavior(d, i)
+        ? (e): void => customClickBehavior(d, i, e)
         : undefined
     })
   }
@@ -671,7 +672,8 @@ export const orFrameAxisGenerator = ({
   data,
   maxColumnValues = 1,
   xyData,
-  margin
+  margin,
+  thresholds
 }: ORFrameAxisGeneratorTypes) => {
   if (!axis) return { axis: undefined, axesTickLines: undefined }
   let generatedAxis: Array<JSX.Element>, axesTickLines: Array<Object>
@@ -718,8 +720,9 @@ export const orFrameAxisGenerator = ({
       } else if (d.tickValues instanceof Function) {
         //otherwise assume a function
         tickValues = d.tickValues(data, size, rScale)
+      } else if (!d.tickValues && thresholds) {
+        tickValues = thresholds.map(d => rScale.invert(d))
       }
-
       const axisParts = axisPieces({
         padding: d.padding,
         tickValues,

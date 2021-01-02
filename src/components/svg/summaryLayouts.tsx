@@ -91,6 +91,8 @@ export function boxplotRenderFn({
 }: BoxplotFnType) {
   const summaryElementStylingFn = type.elementStyleFn || emptyObjectReturnFn
 
+  const { outliers } = type
+
   const keys = Object.keys(data)
   const renderedSummaryMarks = []
   const summaryXYCoords = []
@@ -149,6 +151,17 @@ export function boxplotRenderFn({
       quantile(summaryValueNest, 1.0)
     ]
 
+    const iqr = summaryValueNest[3] - summaryValueNest[1]
+    let minOutlier, maxOutlier
+
+    if (outliers) {
+      minOutlier = summaryValueNest[1] - iqr * 1.5
+      maxOutlier = summaryValueNest[3] + iqr * 1.5
+
+      summaryValueNest[0] = Math.max(summaryValueNest[0], minOutlier)
+      summaryValueNest[4] = Math.min(summaryValueNest[4], maxOutlier)
+    }
+
     //translate
 
     if (projection === "vertical") {
@@ -165,6 +178,19 @@ export function boxplotRenderFn({
         quantile(summaryPositionNest, 0.75),
         quantile(summaryPositionNest, 1.0)
       ]
+
+      if (outliers) {
+        const positionIQR = summaryPositionNest[3] - summaryPositionNest[1]
+
+        summaryPositionNest[0] = Math.min(
+          summaryPositionNest[0],
+          summaryPositionNest[1] - positionIQR * 1.5
+        )
+        summaryPositionNest[4] = Math.max(
+          summaryPositionNest[4],
+          summaryPositionNest[3] + positionIQR * 1.5
+        )
+      }
 
       extentlineX1 = 0
       extentlineX2 = 0
@@ -251,6 +277,19 @@ export function boxplotRenderFn({
         quantile(summaryPositionNest, 0.75),
         quantile(summaryPositionNest, 1.0)
       ]
+
+      if (outliers) {
+        const positionIQR = summaryPositionNest[3] - summaryPositionNest[1]
+
+        summaryPositionNest[0] = Math.max(
+          summaryPositionNest[0],
+          summaryPositionNest[1] - positionIQR * 1.5
+        )
+        summaryPositionNest[4] = Math.min(
+          summaryPositionNest[4],
+          summaryPositionNest[3] + positionIQR * 1.5
+        )
+      }
 
       extentlineY1 = 0
       extentlineY2 = 0
@@ -579,6 +618,134 @@ export function boxplotRenderFn({
         </g>
       )
     } else {
+      const boxplotMarks = [
+        <Mark
+          {...baseMarkProps}
+          renderMode={renderValue}
+          markType="line"
+          x1={extentlineX1}
+          x2={extentlineX2}
+          y1={extentlineY1}
+          y2={extentlineY2}
+          style={Object.assign(
+            { strokeWidth: "2px" },
+            calculatedSummaryStyle,
+            summaryElementStylingFn("whisker")
+          )}
+        />,
+        <Mark
+          {...baseMarkProps}
+          renderMode={renderValue}
+          markType="line"
+          x1={topLineX1}
+          x2={topLineX2}
+          y1={topLineY1}
+          y2={topLineY2}
+          style={Object.assign(
+            { strokeWidth: "2px" },
+            calculatedSummaryStyle,
+            summaryElementStylingFn("min")
+          )}
+        />,
+        <Mark
+          {...baseMarkProps}
+          renderMode={renderValue}
+          markType="line"
+          x1={bottomLineX1}
+          x2={bottomLineX2}
+          y1={bottomLineY1}
+          y2={bottomLineY2}
+          style={Object.assign(
+            { strokeWidth: "2px" },
+            calculatedSummaryStyle,
+            summaryElementStylingFn("max")
+          )}
+        />,
+        <Mark
+          {...baseMarkProps}
+          renderMode={renderValue}
+          markType="rect"
+          x={rectWholeX}
+          width={rectWholeWidth}
+          y={rectWholeY}
+          height={rectWholeHeight}
+          style={Object.assign(
+            { strokeWidth: "1px" },
+            calculatedSummaryStyle,
+            summaryElementStylingFn("iqrarea")
+          )}
+        />,
+
+        <Mark
+          {...baseMarkProps}
+          renderMode={renderValue}
+          markType="rect"
+          x={rectTopX}
+          width={rectTopWidth}
+          y={rectTopY}
+          height={rectTopHeight}
+          style={Object.assign(
+            {},
+            calculatedSummaryStyle,
+            { fill: "none", stroke: "none" },
+            summaryElementStylingFn("q3area")
+          )}
+        />,
+        <Mark
+          {...baseMarkProps}
+          renderMode={renderValue}
+          markType="rect"
+          x={rectBottomX}
+          width={rectBottomWidth}
+          y={rectBottomY}
+          height={rectBottomHeight}
+          style={Object.assign(
+            {},
+            calculatedSummaryStyle,
+            { fill: "none", stroke: "none" },
+            summaryElementStylingFn("q1area")
+          )}
+        />,
+        <Mark
+          {...baseMarkProps}
+          renderMode={renderValue}
+          markType="line"
+          x1={midLineX1}
+          x2={midLineX2}
+          y1={midLineY1}
+          y2={midLineY2}
+          style={Object.assign(
+            { strokeWidth: "2px" },
+            calculatedSummaryStyle,
+            summaryElementStylingFn("median")
+          )}
+        />
+      ]
+
+      const outlierMarks = []
+
+      if (outliers) {
+        const outlierPoints = thisSummaryData.filter(
+          d => d.value > maxOutlier || d.value < minOutlier
+        )
+
+        outlierPoints.forEach(point => {
+          outlierMarks.push(
+            <Mark
+              {...baseMarkProps}
+              //              renderMode={renderValue}
+              markType="circle"
+              cx={projection === "horizontal" ? point.scaledValue : 0}
+              cy={projection === "vertical" ? point.scaledVerticalValue : 0}
+              style={Object.assign(
+                { strokeWidth: "1px", stroke: "black", fill: "none", r: 2 },
+                calculatedSummaryStyle,
+                summaryElementStylingFn("outlier")
+              )}
+            />
+          )
+        })
+      }
       renderedSummaryMarks.push(
         <g
           {...eventListeners}
@@ -593,107 +760,8 @@ export function boxplotRenderFn({
             .map(d => `${d.label} ${d.value}`)
             .join(", ")}`}
         >
-          <Mark
-            {...baseMarkProps}
-            renderMode={renderValue}
-            markType="line"
-            x1={extentlineX1}
-            x2={extentlineX2}
-            y1={extentlineY1}
-            y2={extentlineY2}
-            style={Object.assign(
-              { strokeWidth: "2px" },
-              calculatedSummaryStyle,
-              summaryElementStylingFn("whisker")
-            )}
-          />
-          <Mark
-            {...baseMarkProps}
-            renderMode={renderValue}
-            markType="line"
-            x1={topLineX1}
-            x2={topLineX2}
-            y1={topLineY1}
-            y2={topLineY2}
-            style={Object.assign(
-              { strokeWidth: "2px" },
-              calculatedSummaryStyle,
-              summaryElementStylingFn("min")
-            )}
-          />
-          <Mark
-            {...baseMarkProps}
-            renderMode={renderValue}
-            markType="line"
-            x1={bottomLineX1}
-            x2={bottomLineX2}
-            y1={bottomLineY1}
-            y2={bottomLineY2}
-            style={Object.assign(
-              { strokeWidth: "2px" },
-              calculatedSummaryStyle,
-              summaryElementStylingFn("max")
-            )}
-          />
-          <Mark
-            {...baseMarkProps}
-            renderMode={renderValue}
-            markType="rect"
-            x={rectWholeX}
-            width={rectWholeWidth}
-            y={rectWholeY}
-            height={rectWholeHeight}
-            style={Object.assign(
-              { strokeWidth: "1px" },
-              calculatedSummaryStyle,
-              summaryElementStylingFn("iqrarea")
-            )}
-          />
-
-          <Mark
-            {...baseMarkProps}
-            renderMode={renderValue}
-            markType="rect"
-            x={rectTopX}
-            width={rectTopWidth}
-            y={rectTopY}
-            height={rectTopHeight}
-            style={Object.assign(
-              {},
-              calculatedSummaryStyle,
-              { fill: "none", stroke: "none" },
-              summaryElementStylingFn("q3area")
-            )}
-          />
-          <Mark
-            {...baseMarkProps}
-            renderMode={renderValue}
-            markType="rect"
-            x={rectBottomX}
-            width={rectBottomWidth}
-            y={rectBottomY}
-            height={rectBottomHeight}
-            style={Object.assign(
-              {},
-              calculatedSummaryStyle,
-              { fill: "none", stroke: "none" },
-              summaryElementStylingFn("q1area")
-            )}
-          />
-          <Mark
-            {...baseMarkProps}
-            renderMode={renderValue}
-            markType="line"
-            x1={midLineX1}
-            x2={midLineX2}
-            y1={midLineY1}
-            y2={midLineY2}
-            style={Object.assign(
-              { strokeWidth: "2px" },
-              calculatedSummaryStyle,
-              summaryElementStylingFn("median")
-            )}
-          />
+          {boxplotMarks}
+          {outlierMarks}
         </g>
       )
     }
@@ -805,16 +873,18 @@ export function bucketizedRenderingFn({
   const relativeBuckets = type.relative ? {} : false
   const summaryValueAccessor = type.binValue || (d => d.length)
 
+  const summaryElementStylingFn = type.elementStyleFn || emptyObjectReturnFn
+
   let axisCreator
   if (type.axis) {
     type.axis.orient =
       projection === "horizontal" &&
-        ["left", "right"].indexOf(type.axis.orient) === -1
+      ["left", "right"].indexOf(type.axis.orient) === -1
         ? "left"
         : type.axis.orient
     type.axis.orient =
       projection === "vertical" &&
-        ["bottom", "top"].indexOf(type.axis.orient) === -1
+      ["bottom", "top"].indexOf(type.axis.orient) === -1
         ? "bottom"
         : type.axis.orient
     axisCreator = axisGenerator
@@ -828,6 +898,27 @@ export function bucketizedRenderingFn({
 
   const keys = Object.keys(data)
   let binMax = 0
+
+  const baseHistogram = histogram()
+
+  const binDomain = [0, chartSize]
+
+  const binBuckets = []
+
+  for (let x = 0; x < buckets; x++) {
+    binBuckets.push(binDomain[0] + (x / buckets) * chartSize)
+  }
+
+  const xyValue =
+    projection === "vertical"
+      ? p => p.piece.scaledVerticalValue
+      : p => p.piece.scaledValue
+
+  const instantiatedHistogram = baseHistogram
+    .domain(binDomain)
+    .thresholds(binBuckets)
+    .value(xyValue)
+
   const calculatedBins = keys.map((key, summaryI) => {
     const summary = data[key]
 
@@ -837,23 +928,6 @@ export function bucketizedRenderingFn({
       projection === "vertical" ? verticalXYSorting : horizontalXYSorting
 
     const summaryPositionNest = thisSummaryData.sort(xySorting)
-
-    const violinHist = histogram()
-    const binDomain =
-      projection === "vertical" ? [0, chartSize] : [0, chartSize]
-
-    const binOffset = 0
-    const binBuckets = []
-
-    for (let x = 0; x < buckets; x++) {
-      binBuckets.push(binDomain[0] + (x / buckets) * (chartSize - binOffset))
-    }
-    //    binBuckets.push(binDomain[1]);
-
-    const xyValue =
-      projection === "vertical"
-        ? p => p.piece.scaledVerticalValue
-        : p => p.piece.scaledValue
 
     let keyBins
     if (type.useBins === false) {
@@ -869,10 +943,7 @@ export function bucketizedRenderingFn({
         .sort((a, b) => a.x0 - b.x0)
       bucketSize = chartSize / keyBins.length
     } else {
-      keyBins = violinHist
-        .domain(binDomain)
-        .thresholds(binBuckets)
-        .value(xyValue)(summaryPositionNest)
+      keyBins = instantiatedHistogram(summaryPositionNest)
     }
 
     keyBins = keyBins.map(d => ({
@@ -897,9 +968,10 @@ export function bucketizedRenderingFn({
     return { bins: keyBins, summary, summaryI, thisSummaryData }
   })
 
-  const numHorizons = type.horizon ? binMax / type.horizon : type.numHorizons || 4
+  const numHorizons = type.horizon
+    ? binMax / type.horizon
+    : type.numHorizons || 4
   const horizon = type.horizon || binMax / numHorizons
-
 
   calculatedBins.forEach(({ bins, summary, summaryI, thisSummaryData }) => {
     const eventListeners = eventListenersGenerator(summary, summaryI)
@@ -977,7 +1049,7 @@ export function bucketizedRenderingFn({
         </g>
       )
     } else if (type.type === "violin") {
-
+      const { iqr } = type
       const subsets = type.subsets || [false]
       bins[0].y = bins[0].y - bucketSize / 2
       bins[bins.length - 1].y = bins[bins.length - 1].y + bucketSize / 2
@@ -992,13 +1064,15 @@ export function bucketizedRenderingFn({
             ? classFn(thisSummaryData[0].piece.data, summaryI, subsettingIndex)
             : ""
           actualBins = bins.map(d => {
-            const actualPieces = d.pieces.filter((p, pi) => subsettingFn(p.piece, pi)).map(d => d)
+            const actualPieces = d.pieces
+              .filter((p, pi) => subsettingFn(p.piece, pi))
+              .map(d => d)
             const actualValue = summaryValueAccessor(actualPieces)
-            return ({
+            return {
               ...d,
               pieces: actualPieces,
               value: actualValue
-            })
+            }
           })
         }
 
@@ -1031,8 +1105,8 @@ export function bucketizedRenderingFn({
             .defined(
               (d, i) =>
                 d.y0 !== 0 ||
-                ((violinPoints[i - 1] && violinPoints[i - 1].y0 !== 0) ||
-                  (violinPoints[i + 1] && violinPoints[i + 1].y0 !== 0))
+                (violinPoints[i - 1] && violinPoints[i - 1].y0 !== 0) ||
+                (violinPoints[i + 1] && violinPoints[i + 1].y0 !== 0)
             )
         } else if (projection === "vertical") {
           actualBins.forEach(summaryPoint => {
@@ -1060,8 +1134,8 @@ export function bucketizedRenderingFn({
             .defined(
               (d, i) =>
                 d.x0 !== 0 ||
-                ((violinPoints[i - 1] && violinPoints[i - 1].x0 !== 0) ||
-                  (violinPoints[i + 1] && violinPoints[i + 1].x0 !== 0))
+                (violinPoints[i - 1] && violinPoints[i - 1].x0 !== 0) ||
+                (violinPoints[i + 1] && violinPoints[i + 1].x0 !== 0)
             )
         } else if (projection === "radial") {
           const angle = summary.pct - summary.pct_padding / 2
@@ -1125,8 +1199,80 @@ export function bucketizedRenderingFn({
             aria-label={`${summary.name} distribution`}
           />
         )
-      })
+        if (iqr) {
+          let iqrPieces = []
+          actualBins.forEach(aBin => {
+            iqrPieces.push(...aBin.pieces)
+          })
 
+          iqrPieces = iqrPieces
+            .map(d =>
+              projection === "vertical"
+                ? d.piece.scaledVerticalValue
+                : d.piece.scaledValue
+            )
+            .sort((a, b) => a - b)
+
+          const iqrValues = [
+            quantile(iqrPieces, 0.25),
+            quantile(iqrPieces, 0.5),
+            quantile(iqrPieces, 0.75)
+          ]
+
+          const iqrLine =
+            projection === "vertical"
+              ? (first, last, translate) =>
+                  `M${translate[0]},${first}L${translate[0]},${last}`
+              : (first, last, translate) =>
+                  `M${first},${translate[1]}L${last},${translate[1]}`
+
+          renderedSummaryMarks.push(
+            <Mark
+              {...baseMarkProps}
+              key={`summaryPiece-${summaryI}-${subsettingIndex}-iqr-line`}
+              {...eventListeners}
+              renderMode={renderValue}
+              markType="path"
+              className={calculatedSummaryClass}
+              style={{
+                stroke: "black",
+                strokeWidth: "2px",
+                ...calculatedSummaryStyle,
+                ...summaryElementStylingFn("iqr")
+              }}
+              d={iqrLine(iqrValues[0], iqrValues[2], translate)}
+              role="img"
+              tabIndex={-1}
+              data-o={summary.name}
+              aria-label={`${summary.name} distribution`}
+            />
+          )
+
+          renderedSummaryMarks.push(
+            <Mark
+              {...baseMarkProps}
+              key={`summaryPiece-${summaryI}-${subsettingIndex}-iqr-median`}
+              {...eventListeners}
+              markType="circle"
+              className={calculatedSummaryClass}
+              style={{
+                stroke: "black",
+                fill: "black",
+                strokeWidth: "1px",
+                r: "3px",
+                ...calculatedSummaryStyle,
+                ...summaryElementStylingFn("median")
+              }}
+              cx={projection === "vertical" ? translate[0] : iqrValues[1]}
+              cy={projection === "vertical" ? iqrValues[1] : translate[1]}
+              role="img"
+              tabIndex={-1}
+              data-o={summary.name}
+              aria-label={`${summary.name} distribution`}
+            />
+          )
+        }
+      })
     } else if (type.type === "ridgeline") {
       const zeroedStart = Object.assign({}, bins[0], { value: 0 })
       const zeroedEnd = Object.assign({}, bins[bins.length - 1], { value: 0 })
@@ -1173,9 +1319,9 @@ export function bucketizedRenderingFn({
 
           const yValue = type.flip
             ? (summaryPoint.value / actualMax) * (columnWidth + joyHeight) -
-            columnWidth / 2
+              columnWidth / 2
             : (-summaryPoint.value / actualMax) * (columnWidth + joyHeight) +
-            columnWidth / 2
+              columnWidth / 2
 
           joyPoints.push({
             y: yValue,
@@ -1199,9 +1345,9 @@ export function bucketizedRenderingFn({
           const xValue =
             type.flip === true
               ? (summaryPoint.value / actualMax) * (columnWidth + joyHeight) -
-              columnWidth / 2
+                columnWidth / 2
               : (-summaryPoint.value / actualMax) * (columnWidth + joyHeight) +
-              columnWidth / 2
+                columnWidth / 2
 
           joyPoints.push({
             y: yValue,
@@ -1286,20 +1432,22 @@ export function bucketizedRenderingFn({
 
       const horizonBins = [zeroedStart, ...bins, zeroedEnd]
 
-      const horizonStyle = type.elementStyleFn || (() => ({}))
-
       let multiBins = []
       let remainingPieces = true
       let currentHorizon = 0
 
       while (remainingPieces === true) {
-        const currentStrip = horizonBins.map(d => ({ ...d, value: Math.max(0, Math.min(d.value - currentHorizon, horizon)) }))
-        multiBins.push(currentStrip.map(d => ({ ...d, value: d.value * numHorizons })))
+        const currentStrip = horizonBins.map(d => ({
+          ...d,
+          value: Math.max(0, Math.min(d.value - currentHorizon, horizon))
+        }))
+        multiBins.push(
+          currentStrip.map(d => ({ ...d, value: d.value * numHorizons }))
+        )
         currentHorizon += horizon
         if (max(currentStrip.map(d => d.value)) < horizon) {
           remainingPieces = false
         }
-
       }
 
       multiBins = multiBins.filter(d => sum(d.map(p => p.value)) > 0)
@@ -1308,8 +1456,8 @@ export function bucketizedRenderingFn({
         if (i !== 0 && i !== horizonBins.length - 1) {
           if (projection === "horizontal") {
             const xValue = summaryPoint.y - bucketSize / 2
-            const yValue = (-summaryPoint.value / actualMax) * (columnWidth) +
-              columnWidth / 2
+            const yValue =
+              (-summaryPoint.value / actualMax) * columnWidth + columnWidth / 2
 
             summaryXYCoords.push({
               key: summary.name,
@@ -1318,15 +1466,14 @@ export function bucketizedRenderingFn({
               pieces: summaryPoint.pieces.map(d => d.piece),
               value: summaryPoint.value
             })
-          }
-          else if (projection === "vertical") {
+          } else if (projection === "vertical") {
             const yValue = summaryPoint.y + bucketSize / 2
             const xValue =
               type.flip === true
-                ? (summaryPoint.value / actualMax) * (columnWidth) -
-                columnWidth / 2
-                : (-summaryPoint.value / actualMax) * (columnWidth) +
-                columnWidth / 2
+                ? (summaryPoint.value / actualMax) * columnWidth -
+                  columnWidth / 2
+                : (-summaryPoint.value / actualMax) * columnWidth +
+                  columnWidth / 2
 
             summaryXYCoords.push({
               key: summary.name,
@@ -1337,7 +1484,6 @@ export function bucketizedRenderingFn({
             })
           }
         }
-
       })
 
       const multiBinMarks = multiBins.map((multiBin, multiBinI) => {
@@ -1356,10 +1502,10 @@ export function bucketizedRenderingFn({
           .y(d => d.y)
 
         if (projection === "horizontal") {
-          multiBin.forEach((summaryPoint) => {
+          multiBin.forEach(summaryPoint => {
             const xValue = summaryPoint.y - bucketSize / 2
-            const yValue = (-summaryPoint.value / actualMax) * (columnWidth) +
-              columnWidth / 2
+            const yValue =
+              (-summaryPoint.value / actualMax) * columnWidth + columnWidth / 2
 
             horizonPoints.push({
               y: yValue,
@@ -1373,10 +1519,10 @@ export function bucketizedRenderingFn({
             const yValue = summaryPoint.y + bucketSize / 2
             const xValue =
               type.flip === true
-                ? (summaryPoint.value / actualMax) * (columnWidth) -
-                columnWidth / 2
-                : (-summaryPoint.value / actualMax) * (columnWidth) +
-                columnWidth / 2
+                ? (summaryPoint.value / actualMax) * columnWidth -
+                  columnWidth / 2
+                : (-summaryPoint.value / actualMax) * columnWidth +
+                  columnWidth / 2
 
             horizonPoints.push({
               y: yValue,
@@ -1398,31 +1544,32 @@ export function bucketizedRenderingFn({
                 (bin.y + bin.y1 - bucketSize / 2) / 2
               )
 
-
               forward.push(outsidePoint)
             })
             return `M${forward.map(d => d.join(",")).join("L")}Z`
           }
         }
 
-        return <Mark
-          {...baseMarkProps}
-          transform={`translate(${translate})`}
-          key={`summaryPiece-${summaryI}-${multiBinI}`}
-          {...eventListeners}
-          renderMode={renderValue}
-          markType="path"
-          className={calculatedSummaryClass}
-          style={{ ...calculatedSummaryStyle, ...horizonStyle(multiBin, multiBinI) }}
-          d={horizonArea(horizonPoints)}
-          role="img"
-          tabIndex={-1}
-          data-o={summary.name}
-          aria-label={`${summary.name} distribution`}
-        />
-
-
-
+        return (
+          <Mark
+            {...baseMarkProps}
+            transform={`translate(${translate})`}
+            key={`summaryPiece-${summaryI}-${multiBinI}`}
+            {...eventListeners}
+            renderMode={renderValue}
+            markType="path"
+            className={calculatedSummaryClass}
+            style={{
+              ...calculatedSummaryStyle,
+              ...summaryElementStylingFn(multiBin, multiBinI)
+            }}
+            d={horizonArea(horizonPoints)}
+            role="img"
+            tabIndex={-1}
+            data-o={summary.name}
+            aria-label={`${summary.name} distribution`}
+          />
+        )
       })
 
       if (type.axis) {
@@ -1440,13 +1587,15 @@ export function bucketizedRenderingFn({
         )
       }
 
-      renderedSummaryMarks.push(
-        <g>{multiBinMarks}</g>
-      )
+      renderedSummaryMarks.push(<g>{multiBinMarks}</g>)
     }
   })
 
-  return { marks: renderedSummaryMarks, xyPoints: summaryXYCoords }
+  return {
+    marks: renderedSummaryMarks,
+    xyPoints: summaryXYCoords,
+    thresholds: binBuckets
+  }
 }
 
 export const drawSummaries = ({

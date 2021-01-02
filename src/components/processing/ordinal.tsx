@@ -450,6 +450,7 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
     }
 
     const nestedPieces = {}
+
     nest()
         .key(d => d.column)
         .entries(allData)
@@ -511,6 +512,7 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
         mappedMiddleSize = adjustedSize[0]
     }
     const mappedMiddles = calculateMappedMiddles(oScale, mappedMiddleSize, padding)
+
 
     pieceData = oExtent.map(d => (nestedPieces[d] ? nestedPieces[d] : []))
 
@@ -887,23 +889,23 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
                         overlayData: radialMousePackage,
                         onDoubleClick:
                             customDoubleClickBehavior &&
-                            (() => {
-                                customDoubleClickBehavior(radialMousePackage)
+                            ((e) => {
+                                customDoubleClickBehavior(radialMousePackage, e)
                             }),
                         onClick:
                             customClickBehavior &&
-                            (() => {
-                                customClickBehavior(radialMousePackage)
+                            ((e) => {
+                                customClickBehavior(radialMousePackage, e)
                             }),
                         onMouseEnter:
                             customHoverBehavior &&
-                            (() => {
-                                customHoverBehavior(radialMousePackage)
+                            ((e) => {
+                                customHoverBehavior(radialMousePackage, e)
                             }),
                         onMouseLeave:
                             customHoverBehavior &&
-                            (() => {
-                                customHoverBehavior()
+                            ((e) => {
+                                customHoverBehavior(e)
                             })
                     }
                 }
@@ -924,20 +926,20 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
                     style: { opacity: 0 },
                     onDoubleClick:
                         customDoubleClickBehavior &&
-                        (() => {
-                            customDoubleClickBehavior(baseMousePackage)
+                        ((e) => {
+                            customDoubleClickBehavior(baseMousePackage,e)
                         }),
                     onClick:
                         customClickBehavior &&
-                        (() => {
-                            customClickBehavior(baseMousePackage)
+                        ((e) => {
+                            customClickBehavior(baseMousePackage, e)
                         }),
                     onMouseEnter:
                         customHoverBehavior &&
-                        (() => {
-                            customHoverBehavior(baseMousePackage)
+                        ((e) => {
+                            customHoverBehavior(baseMousePackage, e)
                         }),
-                    onMouseLeave: () => ({}),
+                    onMouseLeave: (e) => {customHoverBehavior(undefined, e)},
                     overlayData: baseMousePackage
                 }
             })
@@ -1083,7 +1085,8 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
         rExtent,
         maxColumnValues,
         xyData: basePieceData,
-        margin
+        margin,
+        thresholds: calculatedSummaries.thresholds
     })
 
     if (
@@ -1113,23 +1116,23 @@ export const calculateOrdinalFrame = (currentProps: OrdinalFrameProps, currentSt
                     overlayData: mousePackage,
                     onClick:
                         customClickBehavior &&
-                        (() => {
-                            customClickBehavior(mousePackage.data)
+                        ((e) => {
+                            customClickBehavior(mousePackage.data,e)
                         }),
                     onDoubleClick:
                         customDoubleClickBehavior &&
-                        (() => {
-                            customDoubleClickBehavior(mousePackage.data)
+                        ((e) => {
+                            customDoubleClickBehavior(mousePackage.data,e)
                         }),
                     onMouseEnter:
                         customHoverBehavior &&
-                        (() => {
-                            customHoverBehavior(mousePackage.data)
+                        ((e) => {
+                            customHoverBehavior(mousePackage.data,e)
                         }),
                     onMouseLeave:
                         customHoverBehavior &&
-                        (() => {
-                            customHoverBehavior()
+                        ((e) => {
+                            customHoverBehavior(undefined, e)
                         })
                 }
             })
