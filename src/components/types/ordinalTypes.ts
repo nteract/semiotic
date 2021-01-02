@@ -45,6 +45,7 @@ export interface ProjectedOrdinalSummary {
   originalData?: { x?: number; y?: number }
   xyPoints?: object[]
   marks?: object[]
+  thresholds?: any
 }
 
 export interface OrdinalFrameProps extends GeneralFrameProps {
