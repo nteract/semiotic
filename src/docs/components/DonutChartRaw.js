@@ -1,10 +1,13 @@
 import * as React from "react"
 import { OrdinalFrame } from "../../components"
-import ProcessViz from "./ProcessViz"
 
 const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"]
 const data = [5, 8, 10, 15]
 const data2 = [15, 8, 5, 10]
+const data3 = [
+  { x: 0, y: 150 },
+  { x: 1, y: 115698 }
+]
 
 export default state => {
   const donutSettings = {
@@ -40,8 +43,14 @@ export default state => {
 
   return (
     <div>
-      <ProcessViz frameSettings={donutSettings} frameType="OrdinalFrame" />
       <OrdinalFrame {...donutSettings} />
+      <OrdinalFrame
+        {...donutSettings}
+        oAccessor={"x"}
+        rAccessor={() => 1}
+        dynamicColumnWidth={"y"}
+        data={data3}
+      />
     </div>
   )
 }

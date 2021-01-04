@@ -27,8 +27,7 @@ import { scaleLinear, ScaleLinear } from "d3-scale"
 const extent = inputArray =>
   inputArray.reduce(
     (p, c) => {
-      //      return [Math.min(c, p[0]), Math.max(c, p[1])]
-      return [0, Math.max(c, p[1])]
+      return [Math.min(c, p[0]), Math.max(c, p[1])]
     },
     [Infinity, -Infinity]
   )
@@ -274,12 +273,29 @@ export function keyAndObjectifyBarData({
   let rAccessor
   let multiExtents
   if (multiAxis && baseRAccessor.length > 1) {
-    multiExtents = baseRAccessor.map(accessor => extent(data.map(accessor)))
-    const rScales = multiExtents.map(ext =>
-      scaleLinear()
+    let minNegative = Infinity
+    multiExtents = baseRAccessor.map(accessor => {
+      const basicExtent = extent(data.map(accessor))
+      minNegative = Math.min(basicExtent[0] / basicExtent[1], minNegative)
+      return basicExtent
+    })
+    const rScales = multiExtents.map(ext => {
+      let range = [0, 1]
+      let adjustedExtent = ext
+
+      if (ext[0] < 0 && ext[1] > 0) {
+        range[0] = minNegative
+        adjustedExtent[0] = adjustedExtent[1] * minNegative
+      } else if (ext[0] < 0 && ext[1] < 0) {
+        adjustedExtent[1] = 0
+        range = [-1, 0]
+      } else {
+        adjustedExtent[0] = 0
+      }
+      return scaleLinear()
         .domain(ext)
-        .range([0, 1])
-    )
+        .range(range)
+    })
     rAccessor = rScales.map((scale, i) => d => {
       return scale(baseRAccessor[i](d))
     })
@@ -290,7 +306,13 @@ export function keyAndObjectifyBarData({
   oAccessor.forEach((actualOAccessor, oIndex) => {
     rAccessor.forEach((actualRAccessor, rIndex) => {
       ;(data || []).forEach(d => {
-        const appliedKey = renderKey(d, decoratedData.length)
+        const baseAppliedKey = renderKey(d, decoratedData.length)
+        const appliedKey =
+          (baseAppliedKey !== undefined &&
+            baseAppliedKey.toString &&
+            baseAppliedKey.toString()) ||
+          baseAppliedKey
+
         const originalR = originalRAccessor[rIndex]
         const originalO = originalOAccessor[oIndex]
         const rName =
@@ -308,15 +330,12 @@ export function keyAndObjectifyBarData({
             rName,
             oIndex,
             oName,
-            column:
-              (appliedKey !== undefined &&
-                appliedKey.toString &&
-                appliedKey.toString()) ||
-              appliedKey,
+            column: appliedKey,
             renderKey: appliedKey
           })
         } else {
           const value = actualRAccessor(d)
+          const column = actualOAccessor(d)
           decoratedData.push({
             renderKey: appliedKey,
             data: d,
@@ -325,7 +344,7 @@ export function keyAndObjectifyBarData({
             oIndex,
             oName,
             value,
-            column: actualOAccessor(d)
+            column: column && column.toString ? column.toString() : column
           })
         }
       })

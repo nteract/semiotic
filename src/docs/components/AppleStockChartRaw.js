@@ -1,5 +1,5 @@
 import * as React from "react"
-import { XYFrame, DividedLine } from "../../components"
+import { XYFrame /*, DividedLine */ } from "../../components"
 import { data } from "../sampledata/apple_stock"
 import { scaleTime } from "d3-scale"
 
@@ -14,6 +14,7 @@ const chartAxes = [
   }
 ]
 
+/*
 const thresholdLine = ({ d, i, xScale, yScale }) => {
   return (
     <DividedLine
@@ -30,6 +31,7 @@ const thresholdLine = ({ d, i, xScale, yScale }) => {
     />
   )
 }
+*/
 
 const customTooltip = d => (
   <div className="tooltip-content">
@@ -47,7 +49,7 @@ const appleChart = {
   yExtent: [0],
   yAccessor: "close",
   lines: [{ label: "Apple Stock", coordinates: data }],
-  customLineMark: thresholdLine,
+  //  customLineMark: thresholdLine,
   axes: chartAxes,
   margin: { top: 50, left: 40, right: 50, bottom: 40 },
   tooltipContent: customTooltip,
@@ -185,6 +187,13 @@ export default (
           bottomBoundingAccessor: d => d.close / 10,
           regressionType: "polynomial",
           order: 8
+        }}
+        lineType={{ type: "area" }}
+        lineStyle={{
+          fill: "red",
+          stroke: "red",
+          fillOpacity: 0.25,
+          strokeWidth: 1
         }}
         summaries={{ label: "Apple Stock", coordinates: data }}
         summaryStyle={{

@@ -4,9 +4,9 @@ import { OrdinalFrame } from "../../components"
 const testData = [
   { sales: 5, leads: 150, month: "Jan" },
   { sales: 7, leads: 100, month: "Feb" },
-  { sales: 7, leads: 75, month: "Mar" },
+  { sales: -7, leads: -75, month: "Mar" },
   { sales: 4, leads: 50, month: "Apr" },
-  { sales: 2, leads: 200, month: "May" },
+  { sales: -2, leads: -200, month: "May" },
   { sales: 3, leads: 175, month: "Jun" },
   { sales: 5, leads: 125, month: "Jul" }
 ]
@@ -18,7 +18,7 @@ const barLineAxes = [
     className: "leads",
     name: "CountAxis",
     ticks: 3,
-    tickValues: [0, 25, 50, 75, 100, 125, 150, 175, 200],
+    tickValues: [-200, -100, 0, 25, 50, 75, 100, 125, 150, 175, 200],
     tickFormat: d => d,
     label: "Leads"
   },
@@ -27,7 +27,7 @@ const barLineAxes = [
     orient: "left",
     className: "sales",
     name: "CountAxis",
-    tickValues: [0, 1, 2, 3, 4, 5, 6, 7],
+    tickValues: [-7, -2, 0, 1, 2, 3, 4, 5, 6, 7],
     tickFormat: d => d,
     label: "Sales"
   }
@@ -46,11 +46,22 @@ export default (
             if (d.rIndex === 1) {
               return <circle r={6} fill={"rgba(0, 162, 206)"} />
             }
+
+            let height = 0
+            let y = 0
+
+            if (d.negative) {
+              height = d.y - d.base
+              y = -height
+            } else {
+              height = d.base - d.y
+            }
             return (
               <rect
-                height={d.scaledValue}
+                height={height}
                 width={20}
                 x={-10}
+                y={y}
                 fill="rgba(179, 51, 29)"
               />
             )

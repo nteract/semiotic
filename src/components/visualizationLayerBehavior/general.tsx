@@ -246,11 +246,12 @@ export function createLines({
 
   const mappedLines = []
   data.forEach((d, i) => {
+    const mappedDataForLines = d.data.map(p => ({ ...p.data, ...p }))
     if (customMark && typeof customMark === "function") {
       //shim to make customLineMark work until Semiotic 2
       const compatibleData = {
         ...d,
-        data: d.data.map(p => ({ ...p.data, ...p }))
+        data: mappedDataForLines
       }
       mappedLines.push(
         customMark({ d: compatibleData, i, xScale, yScale, canvasDrawing })
@@ -262,10 +263,7 @@ export function createLines({
         builtInDisplayProps.stroke = "black"
       }
 
-      const pathString = dynamicLineGenerator(
-        d,
-        i
-      )(d.data.map(p => Object.assign({}, p.data, p)))
+      const pathString = dynamicLineGenerator(d, i)(mappedDataForLines)
 
       const markProps = {
         ...builtInDisplayProps,
@@ -299,18 +297,57 @@ export function createLines({
         }
         canvasDrawing.push(canvasLine)
       } else {
+        let moddedStyleFn = styleFn
+
+        if (customLine.type === "area" && customLine.enclosed !== true) {
+          moddedStyleFn = (d, i) => ({ ...styleFn(d, i), stroke: "none" })
+        }
+
         mappedLines.push(
           clonedAppliedElement({
             baseClass: "xyframe-line",
             d,
             i,
             markProps,
-            styleFn,
+            styleFn: moddedStyleFn,
             renderFn: renderMode,
             renderKeyFn,
             classFn
           })
         )
+        if (customLine.type === "area" && customLine.enclosed !== true) {
+          const topperStyleFn = (d, i) => ({ ...styleFn(d, i), fill: "none" })
+
+          const topperLineGenerator = line()
+
+          lineGeneratorDecorator({
+            projectedCoordinateNames,
+            defined,
+            interpolator: interpolator,
+            generator: topperLineGenerator,
+            xScale,
+            yScale,
+            simpleLine: true
+          })
+
+          const topperMarkProps = {
+            ...markProps,
+            d: topperLineGenerator(mappedDataForLines)
+          }
+
+          mappedLines.push(
+            clonedAppliedElement({
+              baseClass: "xyframe-line",
+              d,
+              i,
+              markProps: topperMarkProps,
+              styleFn: topperStyleFn,
+              renderFn: renderMode,
+              renderKeyFn,
+              classFn
+            })
+          )
+        }
       }
     }
   })
