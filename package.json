@@ -112,7 +112,7 @@
     "postcss-loader": "2.0.8",
     "puppeteer": "^1.5.0",
     "react": "^16.5.0",
-    "react-dev-utils": "^5.0.0",
+    "react-dev-utils": "^11.0.4",
     "react-dimensions": "git://github.com/AlesJiranek/react-dimensions",
     "react-dom": "^16.5.0",
     "react-element-to-jsx-string": "^12.0.0",
