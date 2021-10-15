@@ -170,7 +170,8 @@ class InteractionLayer extends React.PureComponent<
       selectedExtent = castExtent.map((d) => yScale(d)).sort((a, b) => a - b)
       endMappingFn = mappingFn
     } else {
-      const castExtent = [...extent.map((ee) => [...ee])] as number[][]
+      const typedExtent: any = extent
+      const castExtent = [...typedExtent.map((ee) => [...ee])] as number[][]
       if (
         castExtent.indexOf(undefined) !== -1 ||
         castExtent[0].indexOf(undefined) !== -1 ||

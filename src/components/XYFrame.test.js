@@ -54,7 +54,7 @@ describe("XYFrame", () => {
       ]}
       summaries={[{ label: "summaries", coordinates: somePointData }]}
       xExtent={{
-        onChange: d => {
+        onChange: (d) => {
           returnedExtent = d
         }
       }}
@@ -81,7 +81,7 @@ describe("XYFrame", () => {
       ]}
       summaries={[{ label: "summaries", coordinates: somePointData }]}
       xExtent={{
-        onChange: d => {
+        onChange: (d) => {
           returnedExtent = d
         }
       }}
@@ -126,7 +126,7 @@ describe("XYFrame", () => {
       ]}
       summaries={[{ label: "summaries", coordinates: somePointData }]}
       xExtent={{
-        onChange: d => {
+        onChange: (d) => {
           returnedExtent = d
         }
       }}
@@ -196,13 +196,19 @@ describe("XYFrame", () => {
     .find("div.annotation.annotation-xy-label")
     .getDOMNode().style
 
-  const x = 333.3333333333333
-  const y = 295.7142857142857
+  const x = 333
+  const y = 295
+
+  const svgX = Math.floor(svgAnnotationXY.props().cx)
+  const svgY = Math.floor((svgAnnotationXY.props().cx = y))
+
+  const htmlX = parseInt(htmlAnnotationStyle.left.split("px")[0])
+  const htmlY = parseInt(htmlAnnotationStyle.top.split("px")[0])
 
   it("html and svg annotations have the same x & y positions for each", () => {
-    expect(svgAnnotationXY.props().cx).toEqual(x)
-    expect(svgAnnotationXY.props().cy).toEqual(y)
-    expect(htmlAnnotationStyle.left).toEqual(`${x}px`)
-    expect(htmlAnnotationStyle.top).toEqual(`${y}px`)
+    expect(svgX).toEqual(x)
+    expect(svgY).toEqual(y)
+    expect(htmlX).toEqual(x)
+    expect(htmlY).toEqual(y)
   })
 })

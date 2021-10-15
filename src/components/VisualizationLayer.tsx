@@ -257,7 +257,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
       np,
       sketchyRenderingEngine,
       rc,
-      disableProgressiveRendering
+      disableProgressiveRendering = false
     ) =>
     (piece) => {
       const style = piece.styleFn
@@ -418,7 +418,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
       width,
       height,
       margin,
-      disableProgressiveRendering
+      disableProgressiveRendering = false
     } = np
 
     const size = [
