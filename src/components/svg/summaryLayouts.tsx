@@ -268,7 +268,9 @@ export function boxplotRenderFn({
 
       const boxplotY = summary.x + summary.padding
 
-      translate = `translate(0,${summary.x + summary.padding})`
+      translate = `translate(0,${
+        summary.x + summary.padding + summary.width / 2
+      })`
 
       summaryPositionNest = [
         quantile(summaryPositionNest, 0.0),

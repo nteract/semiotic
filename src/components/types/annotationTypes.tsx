@@ -27,7 +27,7 @@ export type AnnotationType = {
     | GenericObject
     | ((arg?: GenericObject, index?: number) => GenericObject)
   ids?: string[]
-  edge?: boolean
+  edge?: any
   source?: NodeType
   target?: NodeType
   id?: string

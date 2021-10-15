@@ -1,6 +1,6 @@
 {
   "name": "semiotic",
-  "version": "2.0.0-rc.13",
+  "version": "2.0.0-rc.14",
   "description": "The semiotic JavaScript data visualization framework",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -65,7 +65,7 @@
     "@types/d3-scale": "^2.1.1",
     "@types/node": "^13.7.4",
     "@types/react": "^16.9.17",
-    "@types/react-dom": "^16.8.2",
+    "@types/react-dom": "^16.9.8",
     "@typescript-eslint/eslint-plugin": "^1.4.2",
     "@vx/pattern": "0.0.143",
     "autoprefixer": "7.1.6",

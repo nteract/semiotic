@@ -14,11 +14,11 @@ import SpanOrDiv from "../SpanOrDiv"
 import { findFirstAccessorValue } from "../data/multiAccessorUtils"
 import { line } from "d3-shape"
 import { curveHash } from "../visualizationLayerBehavior/general"
-import TooltipPositioner from '../TooltipPositioner'
+import TooltipPositioner from "../TooltipPositioner"
 
 const derivePieceValue = (accessor, piece) => {
   const pieceVal = accessor(piece)
-  return pieceVal && pieceVal.toString && pieceVal.toString() || pieceVal
+  return (pieceVal && pieceVal.toString && pieceVal.toString()) || pieceVal
 }
 
 function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
@@ -208,9 +208,10 @@ export const getColumnScreenCoordinates = ({
   adjustedSize
 }) => {
   const column =
-    typeof d.column === "object" ? d.column :
-      projectedColumns[d.facetColumn] ||
-      projectedColumns[findFirstAccessorValue(oAccessor, d)]
+    typeof d.column === "object"
+      ? d.column
+      : projectedColumns[d.facetColumn] ||
+        projectedColumns[findFirstAccessorValue(oAccessor, d)]
 
   if (!column) {
     return { coordinates: [0, 0], pieces: undefined, column: undefined }
@@ -219,34 +220,42 @@ export const getColumnScreenCoordinates = ({
 
   const positionValue =
     (summaryType.type && summaryType.type !== "none") ||
-      ["swarm", "point", "clusterbar", "timeline"].find(p => p === type.type)
-      ? max(pieces.map(p => p.scaledValue))
+    ["swarm", "point", "clusterbar", "timeline"].find((p) => p === type.type)
+      ? max(pieces.map((p) => p.scaledValue))
       : projection === "horizontal"
-        ? max(pieces.map(p => p.value >= 0 ? p.scaledValue + p.bottom : p.bottom))
-        : min(pieces.map(p => p.value >= 0 ? p.bottom - p.scaledValue : p.bottom))
+      ? max(
+          pieces.map((p) =>
+            p.value >= 0 ? p.scaledValue + p.bottom : p.bottom
+          )
+        )
+      : min(
+          pieces.map((p) =>
+            p.value >= 0 ? p.bottom - p.scaledValue : p.bottom
+          )
+        )
 
   let xPosition = column.middle + adjustedPosition[0]
   let yPosition =
     projection === "horizontal"
       ? adjustedSize[0] - positionValue
       : (summaryType.type && summaryType.type !== "none") ||
-        ["swarm", "point", "clusterbar", , "timeline"].find(p => p === type.type)
-        ? adjustedSize[1] - positionValue
-        : positionValue
+        ["swarm", "point", "clusterbar", , "timeline"].find(
+          (p) => p === type.type
+        )
+      ? adjustedSize[1] - positionValue
+      : positionValue
   yPosition += 10
 
   if (projection === "horizontal") {
     yPosition = column.middle
     xPosition = positionValue + adjustedPosition[0]
   } else if (projection === "radial") {
-
     const { pieArc } = column
 
     const { translate, outerPoint, centroid } = pieArc
 
     xPosition = (centroid[0] + outerPoint[0]) / 2 + translate[0]
     yPosition = (centroid[1] + outerPoint[1]) / 2 + translate[1]
-
   }
   return { coordinates: [xPosition, yPosition], pieces, column }
 }
@@ -266,7 +275,7 @@ export const svgHighlightRule = ({
   const foundPieces =
     (pieces &&
       pieces.data
-        .filter(p => {
+        .filter((p) => {
           return (
             (thisID === undefined ||
               pieceIDAccessor({ ...p.piece, ...p.piece.data }) === thisID) &&
@@ -289,11 +298,13 @@ export const svgHighlightRule = ({
             styleObject = { style: { ...styleObject, ...d.style } }
           }
           const styledD = { ...p.renderElement, ...styleObject }
-          const className = `highlight-annotation ${(d.class &&
-            typeof d.class === "function" &&
-            d.class(p.piece.data, q)) ||
+          const className = `highlight-annotation ${
+            (d.class &&
+              typeof d.class === "function" &&
+              d.class(p.piece.data, q)) ||
             (d.class && d.class) ||
-            ""}`
+            ""
+          }`
 
           if (React.isValidElement(p.renderElement)) {
             return React.cloneElement(p.renderElement, {
@@ -326,7 +337,7 @@ export const findIDPiece = (pieceIDAccessor, oColumn, d) => {
   const basePieces =
     oColumn &&
     oColumn.pieceData.filter(
-      r => r.rName === pieceID || pieceIDAccessor(r.data) === pieceID
+      (r) => r.rName === pieceID || pieceIDAccessor(r.data) === pieceID
     )
 
   if (
@@ -350,7 +361,7 @@ export const findIDPiece = (pieceIDAccessor, oColumn, d) => {
   ]
 
   if (basePiece) {
-    reactAnnotationProps.forEach(prop => {
+    reactAnnotationProps.forEach((prop) => {
       if (d[prop]) basePiece[prop] = d[prop]
     })
   }
@@ -369,7 +380,9 @@ export const screenProject = ({
   rScaleType
 }) => {
   const basePValue = findFirstAccessorValue(rAccessor, p) || p.value
-  const pValue = Array.isArray(basePValue) ? Math.max(...basePValue) : basePValue
+  const pValue = Array.isArray(basePValue)
+    ? Math.max(...basePValue)
+    : basePValue
 
   let o
   if (oColumn) {
@@ -382,17 +395,20 @@ export const screenProject = ({
     return pointOnArcAtAngle(
       [adjustedSize[0] / 2, adjustedSize[1] / 2],
       oColumn.pct_middle,
-      idPiece && (idPiece.x || idPiece.scaledValue)
+      idPiece && (idPiece.x === undefined ? idPiece.scaledValue : idPiece.x)
         ? idPiece.x / 2 || (idPiece.bottom + idPiece.scaledValue / 2) / 2
         : pValue / 2
     )
   }
   if (projection === "horizontal") {
     return [
-      idPiece && idPiece.scaledEndValue ? idPiece.scaledEndValue :
-        idPiece && idPiece.scaledValue
-          ? (idPiece.value >= 0 ? idPiece.bottom + idPiece.scaledValue : idPiece.bottom)
-          : rScale(pValue),
+      idPiece && idPiece.scaledEndValue
+        ? idPiece.scaledEndValue
+        : idPiece && idPiece.scaledValue
+        ? idPiece.value >= 0
+          ? idPiece.bottom + idPiece.scaledValue
+          : idPiece.bottom
+        : rScale(pValue),
       o
     ]
   }
@@ -403,10 +419,11 @@ export const screenProject = ({
 
   return [
     o,
-    idPiece && (idPiece.x || idPiece.scaledValue)
+    idPiece && (idPiece.x === undefined ? idPiece.scaledValue : idPiece.x)
       ? idPiece.y === undefined
-        ? (idPiece.value >= 0 ? idPiece.bottom - idPiece.scaledValue
-          : idPiece.bottom)
+        ? idPiece.value >= 0
+          ? idPiece.bottom - idPiece.scaledValue
+          : idPiece.bottom
         : idPiece.y
       : newScale(pValue)
   ]
@@ -451,7 +468,7 @@ export const basicReactAnnotationRule = ({ d, i, screenCoordinates }) => {
 
 export const svgEncloseRule = ({ d, i, screenCoordinates }) => {
   const circle = packEnclose(
-    screenCoordinates.map(p => ({ x: p[0], y: p[1], r: 2 }))
+    screenCoordinates.map((p) => ({ x: p[0], y: p[1], r: 2 }))
   )
 
   return circleEnclosure({ d, i, circle })
@@ -552,15 +569,15 @@ export const svgCategoryRule = ({
     ? d.categories
     : [d.categories]
 
-  const cats = actualCategories.map(c => categories[c])
+  const cats = actualCategories.map((c) => categories[c])
 
   if (projection === "radial") {
     const arcPadding = padding / adjustedSize[1]
     const leftX = min(
-      cats.map(p => p.pct_start + p.pct_padding / 2 + arcPadding / 2)
+      cats.map((p) => p.pct_start + p.pct_padding / 2 + arcPadding / 2)
     )
     const rightX = max(
-      cats.map(p => p.pct_start + p.pct - p.pct_padding / 2 - arcPadding / 2)
+      cats.map((p) => p.pct_start + p.pct - p.pct_padding / 2 - arcPadding / 2)
     )
 
     const chartSize = Math.min(adjustedSize[0], adjustedSize[1]) / 2
@@ -598,8 +615,8 @@ export const svgCategoryRule = ({
       </g>
     )
   } else {
-    const leftX = min(cats.map(p => p.x))
-    const rightX = max(cats.map(p => p.x + p.width))
+    const leftX = min(cats.map((p) => p.x))
+    const rightX = max(cats.map((p) => p.x + p.width))
 
     if (projection === "vertical") {
       let yPosition = position === "top" ? 0 : adjustedSize[1]
@@ -660,10 +677,10 @@ export const htmlFrameHoverRule = ({
   tooltipContent =
     tooltipContent === "pie"
       ? () =>
-        pieContentGenerator({
-          column: d.column,
-          useSpans
-        })
+          pieContentGenerator({
+            column: d.column,
+            useSpans
+          })
       : tooltipContent
   //To string because React gives a DOM error if it gets a date
   let contentFill
@@ -682,18 +699,18 @@ export const htmlFrameHoverRule = ({
       type.type === "swarm") &&
       d.x !== undefined &&
       d.y !== undefined) ||
-      d.isSummaryData
+    d.isSummaryData
       ? [d.x, d.y]
       : screenProject({
-        p: d,
-        adjustedSize,
-        rScale,
-        oColumn,
-        rAccessor,
-        idPiece,
-        projection,
-        rScaleType
-      })
+          p: d,
+          adjustedSize,
+          rScale,
+          oColumn,
+          rAccessor,
+          idPiece,
+          projection,
+          rScaleType
+        })
 
   if (d.isSummaryData) {
     let summaryContent = d.label
@@ -701,14 +718,14 @@ export const htmlFrameHoverRule = ({
     if (d.pieces && d.pieces.length !== 0) {
       if (d.pieces.length === 1) {
         summaryContent = []
-        rAccessor.forEach(actualRAccessor => {
+        rAccessor.forEach((actualRAccessor) => {
           summaryContent.push(actualRAccessor(d.pieces[0].data))
         })
       } else {
         summaryContent = []
-        rAccessor.forEach(actualRAccessor => {
+        rAccessor.forEach((actualRAccessor) => {
           const pieceData = extent(
-            d.pieces.map(p => p.data).map(actualRAccessor)
+            d.pieces.map((p) => p.data).map(actualRAccessor)
           )
           summaryContent.push(`From ${pieceData[0]} to ${pieceData[1]}`)
         })
@@ -727,11 +744,8 @@ export const htmlFrameHoverRule = ({
       if (idPiece.data) {
         const pieceOVal = derivePieceValue(actualOAccessor, idPiece.data)
         contentFill.push(
-          <p key={`html-annotation-content-o-${i}`}>
-            {pieceOVal}
-          </p>
+          <p key={`html-annotation-content-o-${i}`}>{pieceOVal}</p>
         )
-
       }
     })
 
@@ -739,11 +753,8 @@ export const htmlFrameHoverRule = ({
       if (idPiece.data) {
         const pieceRVal = derivePieceValue(actualRAccessor, idPiece.data)
         contentFill.push(
-          <p key={`html-annotation-content-r-${i}`}>
-            {pieceRVal}
-          </p>
+          <p key={`html-annotation-content-r-${i}`}>{pieceRVal}</p>
         )
-
       }
     })
   } else if (d.label) {
@@ -757,19 +768,23 @@ export const htmlFrameHoverRule = ({
 
   if (d.type === "frame-hover" && tooltipContent && idPiece) {
     const tooltipContentArgs = { ...idPiece, ...idPiece.data }
-    content = optimizeCustomTooltipPosition ? (<TooltipPositioner
-      tooltipContent={tooltipContent}
-      tooltipContentArgs={tooltipContentArgs}
-    />) : tooltipContent(tooltipContentArgs)
-
+    content = optimizeCustomTooltipPosition ? (
+      <TooltipPositioner
+        tooltipContent={tooltipContent}
+        tooltipContentArgs={tooltipContentArgs}
+      />
+    ) : (
+      tooltipContent(tooltipContentArgs)
+    )
   }
 
   return (
     <SpanOrDiv
       span={useSpans}
       key={`xylabel-${i}`}
-      className={`annotation annotation-or-label ${projection} ${d.className ||
-        ""}`}
+      className={`annotation annotation-or-label ${projection} ${
+        d.className || ""
+      }`}
       style={{
         position: "absolute",
         top: `${screenCoordinates[1]}px`,
@@ -819,20 +834,15 @@ export const htmlColumnHoverRule = ({
   oAccessor.forEach((actualOAccessor, i) => {
     if (pieces[0].data) {
       const pieceOVal = derivePieceValue(actualOAccessor, pieces[0].data)
-      oContent.push(
-        <p key={`or-annotation-o-${i}`}>
-          {pieceOVal}
-        </p>
-      )
+      oContent.push(<p key={`or-annotation-o-${i}`}>{pieceOVal}</p>)
     }
-
   })
 
   let content = (
     <SpanOrDiv span={useSpans} className="tooltip-content">
       {oContent}
       <p key="or-annotation-2">
-        {sum(pieces.map(p => p.value).filter(p => p > 0))}
+        {sum(pieces.map((p) => p.value).filter((p) => p > 0))}
       </p>
     </SpanOrDiv>
   )
@@ -843,15 +853,18 @@ export const htmlColumnHoverRule = ({
     }
     const tooltipContentArgs = {
       ...d,
-      pieces: pieces.map(p => p.data),
+      pieces: pieces.map((p) => p.data),
       column,
       oAccessor
     }
-    content = optimizeCustomTooltipPosition ? (<TooltipPositioner
-      tooltipContent={tooltipContent}
-      tooltipContentArgs={tooltipContentArgs}
-    />) : tooltipContent(tooltipContentArgs)
-
+    content = optimizeCustomTooltipPosition ? (
+      <TooltipPositioner
+        tooltipContent={tooltipContent}
+        tooltipContentArgs={tooltipContentArgs}
+      />
+    ) : (
+      tooltipContent(tooltipContentArgs)
+    )
   } else if (d.label) {
     content = (
       <SpanOrDiv span={useSpans} className="tooltip-content">
@@ -864,8 +877,9 @@ export const htmlColumnHoverRule = ({
     <SpanOrDiv
       span={useSpans}
       key={`orlabel-${i}`}
-      className={`annotation annotation-or-label ${projection} ${d.className ||
-        ""}`}
+      className={`annotation annotation-or-label ${projection} ${
+        d.className || ""
+      }`}
       style={{
         position: "absolute",
         top: `${yPosition}px`,
@@ -878,12 +892,12 @@ export const htmlColumnHoverRule = ({
 }
 
 export const svgRectEncloseRule = ({ d, i, screenCoordinates }) => {
-  const bboxNodes = screenCoordinates.map(p => {
+  const bboxNodes = screenCoordinates.map((p) => {
     return {
-      x0: p.x0 = p[0],
-      x1: p.x1 = p[0],
-      y0: p.y0 = p[1],
-      y1: p.y1 = p[1]
+      x0: (p.x0 = p[0]),
+      x1: (p.x1 = p[0]),
+      y0: (p.y0 = p[1]),
+      y1: (p.y1 = p[1])
     }
   })
 
@@ -892,8 +906,8 @@ export const svgRectEncloseRule = ({ d, i, screenCoordinates }) => {
 
 export const svgOrdinalLine = ({ screenCoordinates, d, voronoiHover }) => {
   const lineGenerator = line()
-    .x(d => d[0])
-    .y(d => d[1])
+    .x((d) => d[0])
+    .y((d) => d[1])
   if (d.curve) {
     const interpolator = curveHash[d.curve] || d.curve
     lineGenerator.curve(interpolator)

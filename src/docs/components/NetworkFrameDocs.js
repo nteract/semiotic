@@ -6,8 +6,8 @@ import { Mark } from "semiotic-mark"
 import { edgeData } from "../example_settings/networkframe"
 import Button from "@material-ui/core/Button"
 import Select from "@material-ui/core/Select"
-import MenuItem from '@material-ui/core/MenuItem'
-import InputLabel from '@material-ui/core/InputLabel'
+import MenuItem from "@material-ui/core/MenuItem"
+import InputLabel from "@material-ui/core/InputLabel"
 import FormControl from "@material-ui/core/FormControl"
 import ProcessViz from "./ProcessViz"
 
@@ -32,9 +32,9 @@ const components = []
 // multiple component proptype documentation supported
 
 const nodeSizeHash = {
-  degree: d => Math.min(20, d.degree + 2),
-  inDegree: d => d.inDegree,
-  outDegree: d => d.outDegree
+  degree: (d) => Math.min(20, d.degree + 2),
+  inDegree: (d) => d.inDegree,
+  outDegree: (d) => d.outDegree
 }
 
 const squareNodeGenerator = ({ d, transform, key }) => (
@@ -56,7 +56,7 @@ const squareNodeGenerator = ({ d, transform, key }) => (
 
 const chartSize = [600, 1000]
 
-const networkNodeStyle = d => ({
+const networkNodeStyle = (d) => ({
   fill: d.createdByFrame ? "#00a2ce" : "#b3331d",
   stroke: d.createdByFrame ? "#00a2ce" : "#b3331d"
 })
@@ -73,6 +73,9 @@ const networkTypeHash = {
     iterations: 500,
     edgeStrength: 0.1,
     zoom: true
+  },
+  matrix: {
+    type: "matrix"
   }
 }
 
@@ -82,9 +85,7 @@ components.push({
   `
 })
 
-const nodeData = [
-  { id: "Miles", special: true }
-]
+const nodeData = [{ id: "Miles", special: true }]
 
 const networkGraph = { nodes: nodeData, edges: edgeData }
 
@@ -100,7 +101,7 @@ export default class NetworkFrameDocs extends React.Component {
     super(props)
     this.state = {
       annotations: "on",
-      networkType: "force",
+      networkType: "matrix",
       edge: "none",
       nodeSize: "degree",
       customNodeIcon: "off"
@@ -118,31 +119,31 @@ export default class NetworkFrameDocs extends React.Component {
       "nail",
       "comet",
       "taffy"
-    ].map(d => (
+    ].map((d) => (
       <MenuItem key={`edgeType-option-${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
 
-    const nodeSizeOptions = ["degree", "inDegree", "outDegree"].map(d => (
+    const nodeSizeOptions = ["degree", "inDegree", "outDegree"].map((d) => (
       <MenuItem key={`nodeSize-option-${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
 
-    const annotationOptions = ["off", "on"].map(d => (
+    const annotationOptions = ["off", "on"].map((d) => (
       <MenuItem key={`annotation-option-${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
 
-    const networkTypeOptions = ["force", "motifs"].map(d => (
+    const networkTypeOptions = ["matrix", "force", "motifs"].map((d) => (
       <MenuItem key={`networkType-option-${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
 
-    const customNodeOptions = ["off", "on"].map(d => (
+    const customNodeOptions = ["off", "on"].map((d) => (
       <MenuItem key={`customNode-option-${d}`} label={d} value={d}>
         {d}
       </MenuItem>
@@ -171,7 +172,7 @@ export default class NetworkFrameDocs extends React.Component {
           <InputLabel htmlFor="edge-type-input">edgeType</InputLabel>
           <Select
             value={this.state.edge}
-            onChange={e => this.setState({ edge: e.target.value })}
+            onChange={(e) => this.setState({ edge: e.target.value })}
           >
             {edgeOptions}
           </Select>
@@ -182,7 +183,7 @@ export default class NetworkFrameDocs extends React.Component {
           <InputLabel htmlFor="node-size-input">nodeSize</InputLabel>
           <Select
             value={this.state.nodeSize}
-            onChange={e => this.setState({ nodeSize: e.target.value })}
+            onChange={(e) => this.setState({ nodeSize: e.target.value })}
           >
             {nodeSizeOptions}
           </Select>
@@ -193,7 +194,7 @@ export default class NetworkFrameDocs extends React.Component {
           <InputLabel htmlFor="annotations-input">annotations</InputLabel>
           <Select
             value={this.state.annotations}
-            onChange={e => this.setState({ annotations: e.target.value })}
+            onChange={(e) => this.setState({ annotations: e.target.value })}
           >
             {annotationOptions}
           </Select>
@@ -204,7 +205,7 @@ export default class NetworkFrameDocs extends React.Component {
           <InputLabel htmlFor="network-type-input">networkType</InputLabel>
           <Select
             value={this.state.networkType}
-            onChange={e => this.setState({ networkType: e.target.value })}
+            onChange={(e) => this.setState({ networkType: e.target.value })}
           >
             {networkTypeOptions}
           </Select>
@@ -215,7 +216,7 @@ export default class NetworkFrameDocs extends React.Component {
           <InputLabel htmlFor="custom-node-input">customNodeIcon</InputLabel>
           <Select
             value={this.state.customNodeIcon}
-            onChange={e => {
+            onChange={(e) => {
               this.setState({ customNodeIcon: e.target.value })
             }}
           >
@@ -236,10 +237,7 @@ export default class NetworkFrameDocs extends React.Component {
       edgeType: this.state.edge,
       nodeSizeAccessor: nodeSizeHash[this.state.nodeSize],
       nodeLabels: false,
-      hoverAnnotation: [
-        { type: "frame-hover" },
-        { type: "highlight", style: { fill: "red", opacity: 0.5 } }
-      ],
+      hoverAnnotation: "edge",
       htmlAnnotationRules: ({ d }) => {
         if (d.type === "frame-hover" || !d.id) {
           return null
@@ -272,8 +270,8 @@ export default class NetworkFrameDocs extends React.Component {
       edgeRenderMode: "sketchy", */
       canvasPostProcess: glowyCanvas,
       annotationSettings: {
-        pointSizeFunction: d => (d.subject && d.subject.radius) || 5,
-        labelSizeFunction: noteData => {
+        pointSizeFunction: (d) => (d.subject && d.subject.radius) || 5,
+        labelSizeFunction: (noteData) => {
           return noteData.note.label.length * 5.5
         }
       }
@@ -290,11 +288,7 @@ export default class NetworkFrameDocs extends React.Component {
       name: "Basic",
       demo: (
         <div>
-          <Button
-            color="primary"
-          >
-            NetworkFrame API
-          </Button>
+          <Button color="primary">NetworkFrame API</Button>
           <ProcessViz frameSettings={networkChart} frameType="NetworkFrame" />
           <NetworkFrame {...networkChart} />
         </div>
@@ -310,9 +304,7 @@ export default class NetworkFrameDocs extends React.Component {
         components={components}
         examples={examples}
         buttons={buttons}
-      >
-
-      </DocumentComponent>
+      ></DocumentComponent>
     )
   }
 }

@@ -104,7 +104,9 @@ export const svgReactAnnotationRule = ({
   nodeIDAccessor
 }) => {
   const selectedNode =
-    d.x && d.y ? d : projectedNodes.find((p) => nodeIDAccessor(p) === d.id)
+    d.x !== undefined && d.y !== undefined
+      ? d
+      : projectedNodes.find((p) => nodeIDAccessor(p) === d.id)
   if (!selectedNode) {
     return null
   }

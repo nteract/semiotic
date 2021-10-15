@@ -123,7 +123,7 @@ class NetworkFrame extends React.Component<
       props.size[0] !== nextProps.size[0] ||
       props.size[1] !== nextProps.size[1] ||
       (!prevState.dataVersion &&
-        networkFrameChangeProps.find(d => {
+        networkFrameChangeProps.find((d) => {
           return props[d] !== nextProps[d]
         }))
     ) {
@@ -181,15 +181,16 @@ class NetworkFrame extends React.Component<
       ? baseD
       : baseD.edge
       ? {
-          ...(projectedEdges.find(
-            p =>
-              nodeIDAccessor(p.source) === nodeIDAccessor(baseD.source) &&
-              nodeIDAccessor(p.target) === nodeIDAccessor(baseD.target)
-          ) || {}),
+          ...(projectedEdges.find((p) => {
+            return (
+              nodeIDAccessor(p.source) === nodeIDAccessor(baseD.edge.source) &&
+              nodeIDAccessor(p.target) === nodeIDAccessor(baseD.edge.target)
+            )
+          }) || {}),
           ...baseD
         }
       : {
-          ...(projectedNodes.find(p => nodeIDAccessor(p) === baseD.id) || {}),
+          ...(projectedNodes.find((p) => nodeIDAccessor(p) === baseD.id) || {}),
           ...baseD
         }
 
@@ -303,14 +304,14 @@ class NetworkFrame extends React.Component<
       : baseD.edge
       ? {
           ...(projectedEdges.find(
-            p =>
+            (p) =>
               nodeIDAccessor(p.source) === nodeIDAccessor(baseD.source) &&
               nodeIDAccessor(p.target) === nodeIDAccessor(baseD.target)
           ) || {}),
           ...baseD
         }
       : {
-          ...(projectedNodes.find(p => nodeIDAccessor(p) === baseD.id) || {}),
+          ...(projectedNodes.find((p) => nodeIDAccessor(p) === baseD.id) || {}),
           ...baseD
         }
 

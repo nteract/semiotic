@@ -23,7 +23,7 @@ const violinChart = {
   ...summaryChart,
   rAccessor: ["stepValue"],
   //  hoverAnnotation: true,
-  tooltipContent: d => {
+  tooltipContent: (d) => {
     return (
       <div className="tooltip-content">
         <p>{d.column.name}</p>
@@ -37,10 +37,10 @@ const violinChart = {
     stroke: "black"
   }),
   margin: { top: 75, bottom: 50, left: 60, right: 50 },
-  dynamicColumnWidth: d => Math.max(...d.map(p => p.stepValue)),
+  dynamicColumnWidth: (d) => Math.max(...d.map((p) => p.stepValue)),
   summaryType: {
     type: "violin",
-    subsets: [d => d.rIndex === 0, d => d.rIndex === 1]
+    subsets: [(d) => d.rIndex === 0, (d) => d.rIndex === 1]
   },
   annotations: [
     {
@@ -140,7 +140,7 @@ export default (
       oPadding={0}
       pieceHoverAnnotation={true}
       summaryType={{
-        type: "violin",
+        type: "boxplot",
         bins: 50,
         outliers: true,
         iqr: true,
@@ -154,7 +154,6 @@ export default (
         }
       }}
       oLabel={true}
-      annotations={undefined}
       dynamicColumnWidth={false}
       //      summaryRenderMode="sketchy"
       sketchyRenderingEngine={roughjs}

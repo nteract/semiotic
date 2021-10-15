@@ -150,7 +150,14 @@ const edgePointHash = {
   }),
   force: basicMiddle,
   tree: basicMiddle,
-  cluster: basicMiddle
+  cluster: basicMiddle,
+  matrix: (d) => {
+    return {
+      edge: d,
+      x: d.source.y,
+      y: d.target.y
+    }
+  }
 }
 
 const hierarchicalTypeHash = {
@@ -440,7 +447,9 @@ export const calculateNetworkFrame = (
 
   const nodeIDAccessor = stringToFn<string>(
     currentProps.nodeIDAccessor,
-    (d) => d.id
+    (d) => {
+      return d ? d.id : undefined
+    }
   )
   const sourceAccessor = stringToFn<string | GenericObject>(
     currentProps.sourceAccessor,
@@ -1415,7 +1424,7 @@ export const calculateNetworkFrame = (
 
       overlay.push(...renderedNodeOverlays)
     }
-    if (hoverAnnotation === "edge" && networkSettings.type === "matrix") {
+    if (hoverAnnotation !== "node") {
       projectedEdges.forEach((d, i) => {
         const generatedIcon = customEdgeIcon({
           d,
@@ -1427,28 +1436,8 @@ export const calculateNetworkFrame = (
           overlay.push({
             overlayData: {
               ...d,
-              x: d.source.y,
-              y: d.target.y,
-              edge: true
-            },
-            renderElement: generatedIcon
-          })
-        }
-      })
-    } else if (hoverAnnotation !== "node") {
-      projectedEdges.forEach((d, i) => {
-        const generatedIcon = customEdgeIcon({
-          d,
-          i,
-          transform: `translate(${d.x},${d.y})`,
-          styleFn: () => ({ opacity: 0 })
-        })
-        if (generatedIcon) {
-          overlay.push({
-            overlayData: {
-              ...d,
-              x: d.x || (d.source.x + d.target.x) / 2,
-              y: d.y || (d.source.y + d.target.y) / 2,
+              x: d.x === undefined ? (d.source.x + d.target.x) / 2 : d.x,
+              y: d.y === undefined ? (d.source.y + d.target.y) / 2 : d.y,
               edge: true
             },
             ...generatedIcon.props

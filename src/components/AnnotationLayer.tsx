@@ -49,7 +49,7 @@ function marginOffsetFn(orient, axisSettings, marginOffset) {
   if (typeof marginOffset === "number") {
     return marginOffset
   }
-  if (axisSettings && axisSettings.find(d => d.props.orient === orient)) {
+  if (axisSettings && axisSettings.find((d) => d.props.orient === orient)) {
     return 50
   }
   return 10
@@ -156,10 +156,10 @@ const processAnnotations = (
         ? orient
         : [orient]
 
-    const leftOn = finalOrientation.find(d => d === "left")
-    const rightOn = finalOrientation.find(d => d === "right")
-    const topOn = finalOrientation.find(d => d === "top")
-    const bottomOn = finalOrientation.find(d => d === "bottom")
+    const leftOn = finalOrientation.find((d) => d === "left")
+    const rightOn = finalOrientation.find((d) => d === "right")
+    const topOn = finalOrientation.find((d) => d === "top")
+    const bottomOn = finalOrientation.find((d) => d === "bottom")
 
     const leftNodes = []
     const rightNodes = []
@@ -205,7 +205,7 @@ const processAnnotations = (
           : size[1] + margin.bottom
     })
       .nodes(
-        leftNodes.map(d => {
+        leftNodes.map((d) => {
           const noteY = d.props.noteData.y[0] || d.props.noteData.y
           return new labella.Node(
             noteY,
@@ -233,7 +233,7 @@ const processAnnotations = (
           : size[1] + margin.bottom
     })
       .nodes(
-        rightNodes.map(d => {
+        rightNodes.map((d) => {
           const noteY = d.props.noteData.y[0] || d.props.noteData.y
           return new labella.Node(
             noteY,
@@ -261,7 +261,7 @@ const processAnnotations = (
           : size[0] + margin.right
     })
       .nodes(
-        topNodes.map(d => {
+        topNodes.map((d) => {
           const noteX = d.props.noteData.x[0] || d.props.noteData.x
           return new labella.Node(
             noteX,
@@ -285,7 +285,7 @@ const processAnnotations = (
           : size[0] + margin.right
     })
       .nodes(
-        bottomNodes.map(d => {
+        bottomNodes.map((d) => {
           const noteX = d.props.noteData.x[0] || d.props.noteData.x
           return new labella.Node(
             noteX,
@@ -298,7 +298,7 @@ const processAnnotations = (
 
     const bottomOffset = Math.max(
       ...bottomNodes.map(
-        d =>
+        (d) =>
           noteDataHeight(
             d.props.noteData,
             characterWidth,
@@ -309,7 +309,7 @@ const processAnnotations = (
     )
     const topOffset = Math.max(
       ...topNodes.map(
-        d =>
+        (d) =>
           noteDataHeight(
             d.props.noteData,
             characterWidth,
@@ -320,14 +320,14 @@ const processAnnotations = (
     )
     const leftOffset = Math.max(
       ...leftNodes.map(
-        d =>
+        (d) =>
           noteDataWidth(d.props.noteData, characterWidth, layoutNoteWidth) +
           padding
       )
     )
     const rightOffset = Math.max(
       ...rightNodes.map(
-        d =>
+        (d) =>
           noteDataWidth(d.props.noteData, characterWidth, layoutNoteWidth) +
           padding
       )
@@ -409,7 +409,7 @@ const generateSVGAnnotations = (
 ): NoteType[] => {
   const renderedAnnotations = annotations
     .map((d, i) => props.svgAnnotationRule(d, i, props))
-    .filter(d => d !== null && d !== undefined)
+    .filter((d) => d !== null && d !== undefined)
 
   return renderedAnnotations
 }
@@ -420,7 +420,7 @@ const generateHTMLAnnotations = (
 ): Object[] => {
   const renderedAnnotations = annotations
     .map((d, i) => props.htmlAnnotationRule(d, i, props))
-    .filter(d => d !== null && d !== undefined)
+    .filter((d) => d !== null && d !== undefined)
 
   return renderedAnnotations
 }
@@ -458,10 +458,10 @@ const createAnnotations = (
       annotations
     )
     const adjustableAnnotations = initialSVGAnnotations.filter(
-      d => d.props && d.props.noteData && !d.props.noteData.fixedPosition
+      (d) => d.props && d.props.noteData && !d.props.noteData.fixedPosition
     )
     const fixedAnnotations = initialSVGAnnotations.filter(
-      d => !d.props || !d.props.noteData || d.props.noteData.fixedPosition
+      (d) => !d.props || !d.props.noteData || d.props.noteData.fixedPosition
     )
     adjustableAnnotationsKey = `${adjustableAnnotations
       .map(adjustedAnnotationKeyMapper)
