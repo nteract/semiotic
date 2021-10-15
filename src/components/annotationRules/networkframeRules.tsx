@@ -5,7 +5,7 @@ import AnnotationCalloutCircle from "react-annotation/lib/Types/AnnotationCallou
 import { packEnclose } from "d3-hierarchy"
 import { circleEnclosure, rectangleEnclosure, hullEnclosure } from "./baseRules"
 import SpanOrDiv from "../SpanOrDiv"
-import TooltipPositioner from '../TooltipPositioner'
+import TooltipPositioner from "../TooltipPositioner"
 
 export const htmlFrameHoverRule = ({
   d: baseD,
@@ -18,18 +18,18 @@ export const htmlFrameHoverRule = ({
   nodeIDAccessor
 }) => {
   const d =
-    baseD.x && baseD.y
+    baseD.x !== undefined && baseD.y !== undefined
       ? baseD
       : baseD.edge
-        ? {
+      ? {
           ...(edges.find(
-            p =>
+            (p) =>
               nodeIDAccessor(p.source) === nodeIDAccessor(baseD.source) &&
               nodeIDAccessor(p.target) === nodeIDAccessor(baseD.target)
           ) || {}),
           ...baseD
         }
-        : nodes.find(p => nodeIDAccessor(p) === baseD.id)
+      : nodes.find((p) => nodeIDAccessor(p) === baseD.id)
 
   if (!d) return null
 
@@ -40,17 +40,21 @@ export const htmlFrameHoverRule = ({
       </p>
     </SpanOrDiv>
   ) : (
-      <SpanOrDiv span={useSpans} className="tooltip-content">
-        <p key="html-annotation-content-1">{d.id}</p>
-        <p key="html-annotation-content-2">Degree: {d.degree}</p>
-      </SpanOrDiv>
-    )
+    <SpanOrDiv span={useSpans} className="tooltip-content">
+      <p key="html-annotation-content-1">{d.id}</p>
+      <p key="html-annotation-content-2">Degree: {d.degree}</p>
+    </SpanOrDiv>
+  )
 
   if (d.type === "frame-hover" && tooltipContent) {
-    content = optimizeCustomTooltipPosition ? (<TooltipPositioner
-      tooltipContent={tooltipContent}
-      tooltipContentArgs={d}
-    />) : tooltipContent(d)
+    content = optimizeCustomTooltipPosition ? (
+      <TooltipPositioner
+        tooltipContent={tooltipContent}
+        tooltipContentArgs={d}
+      />
+    ) : (
+      tooltipContent(d)
+    )
   }
 
   return (
@@ -100,7 +104,7 @@ export const svgReactAnnotationRule = ({
   nodeIDAccessor
 }) => {
   const selectedNode =
-    d.x && d.y ? d : projectedNodes.find(p => nodeIDAccessor(p) === d.id)
+    d.x && d.y ? d : projectedNodes.find((p) => nodeIDAccessor(p) === d.id)
   if (!selectedNode) {
     return null
   }
@@ -127,13 +131,13 @@ export const svgEncloseRule = ({
   nodeSizeAccessor
 }) => {
   const selectedNodes = projectedNodes.filter(
-    p => d.ids.indexOf(nodeIDAccessor(p)) !== -1
+    (p) => d.ids.indexOf(nodeIDAccessor(p)) !== -1
   )
   if (selectedNodes.length === 0) {
     return null
   }
   const circle = packEnclose(
-    selectedNodes.map(p => ({ x: p.x, y: p.y, r: nodeSizeAccessor(p) }))
+    selectedNodes.map((p) => ({ x: p.x, y: p.y, r: nodeSizeAccessor(p) }))
   )
   return circleEnclosure({ circle, d, i })
 }
@@ -146,13 +150,13 @@ export const svgRectEncloseRule = ({
   nodeSizeAccessor
 }) => {
   const selectedNodes = projectedNodes.filter(
-    p => d.ids.indexOf(nodeIDAccessor(p)) !== -1
+    (p) => d.ids.indexOf(nodeIDAccessor(p)) !== -1
   )
   if (selectedNodes.length === 0) {
     return null
   }
 
-  const bboxNodes = selectedNodes.map(p => {
+  const bboxNodes = selectedNodes.map((p) => {
     if (p.shapeNode) {
       return {
         x0: p.x0,
@@ -181,7 +185,7 @@ export const svgHullEncloseRule = ({
   nodeSizeAccessor
 }) => {
   const selectedNodes = projectedNodes.filter(
-    p => d.ids.indexOf(nodeIDAccessor(p)) !== -1
+    (p) => d.ids.indexOf(nodeIDAccessor(p)) !== -1
   )
   if (selectedNodes.length === 0) {
     return null
@@ -189,7 +193,7 @@ export const svgHullEncloseRule = ({
 
   const projectedPoints = []
 
-  selectedNodes.forEach(p => {
+  selectedNodes.forEach((p) => {
     if (p.shapeNode) {
       projectedPoints.push({ x: p.x0, y: p.y0 })
       projectedPoints.push({ x: p.x0, y: p.y1 })
@@ -204,7 +208,7 @@ export const svgHullEncloseRule = ({
     }
   })
 
-  return hullEnclosure({ points: projectedPoints.map(d => [d.x, d.y]), d, i })
+  return hullEnclosure({ points: projectedPoints.map((d) => [d.x, d.y]), d, i })
 }
 
 export const svgHighlightRule = ({ d, i, networkFrameRender }) => {
@@ -213,15 +217,21 @@ export const svgHighlightRule = ({ d, i, networkFrameRender }) => {
 
   let styleFn = baseStyle
   if (d.style && typeof d.style === "function") {
-    styleFn = d => ({ ...baseStyle(d), ...d.style(d) })
+    styleFn = (d) => ({ ...baseStyle(d), ...d.style(d) })
   } else if (d.style) {
-    styleFn = d => ({ ...baseStyle(d), ...d.style })
+    styleFn = (d) => ({ ...baseStyle(d), ...d.style })
   }
 
   const transform = `translate(${d.x},${d.y})`
   const baseMarkProps = { forceUpdate: true }
 
-  const HighlightMark = customMark({ d, styleFn, transform, baseMarkProps, key: `highlight-${i}` })
+  const HighlightMark = customMark({
+    d,
+    styleFn,
+    transform,
+    baseMarkProps,
+    key: `highlight-${i}`
+  })
 
   return HighlightMark
 }

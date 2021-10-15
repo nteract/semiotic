@@ -50,7 +50,7 @@ const layoutHash = {
   timeline: timelineLayout
 }
 
-const midMod = d => (d.middle ? d.middle : 0)
+const midMod = (d) => (d.middle ? d.middle : 0)
 const zeroFunction = genericFunction(0)
 const twoPI = Math.PI * 2
 
@@ -137,9 +137,9 @@ export const calculateOrdinalFrame = (
   const connectorType = objectifyType(baseConnectorType)
   const oAccessor = stringToArrayFn<string | number>(
     baseOAccessor,
-    d => d.renderKey
+    (d) => d.renderKey
   )
-  const rAccessor = stringToArrayFn<number>(baseRAccessor, d => d.value || 1)
+  const rAccessor = stringToArrayFn<number>(baseRAccessor, (d) => d.value || 1)
   const renderKey = stringToFn<string | number>(baseRenderKey, (d, i) => i)
 
   const eventListenersGenerator = () => ({})
@@ -203,13 +203,13 @@ export const calculateOrdinalFrame = (
   let arrayWrappedAxis: AxisProps[] | undefined
 
   if (Array.isArray(baseAxes)) {
-    arrayWrappedAxis = baseAxes.map(axisFnOrObject =>
+    arrayWrappedAxis = baseAxes.map((axisFnOrObject) =>
       typeof axisFnOrObject === "function"
         ? axisFnOrObject({ size: currentProps.size })
         : axisFnOrObject
     )
   } else if (baseAxes) {
-    arrayWrappedAxis = [baseAxes].map(axisFnOrObject =>
+    arrayWrappedAxis = [baseAxes].map((axisFnOrObject) =>
       typeof axisFnOrObject === "function"
         ? axisFnOrObject({ size: currentProps.size })
         : axisFnOrObject
@@ -260,7 +260,7 @@ export const calculateOrdinalFrame = (
 
   if (pieceType.type === "barpercent") {
     const oExtentSums = oExtent
-      .map(d =>
+      .map((d) =>
         allData
           .filter((p: { column: string }) => String(p.column) === d)
           .reduce((p, c: { value: number }) => p + c.value, 0)
@@ -301,7 +301,7 @@ export const calculateOrdinalFrame = (
     { total: 0 }
   )
 
-  const castOScaleType = (oScaleType as unknown) as Function
+  const castOScaleType = oScaleType as unknown as Function
 
   const oScale = dynamicColumnWidth ? scaleOrdinal() : castOScaleType()
 
@@ -312,15 +312,15 @@ export const calculateOrdinalFrame = (
   if (dynamicColumnWidth) {
     let columnValueCreator
     if (typeof dynamicColumnWidth === "string") {
-      columnValueCreator = d => sum(d.map(p => p.data[dynamicColumnWidth]))
+      columnValueCreator = (d) => sum(d.map((p) => p.data[dynamicColumnWidth]))
     } else {
-      columnValueCreator = d => dynamicColumnWidth(d.map(p => p.data))
+      columnValueCreator = (d) => dynamicColumnWidth(d.map((p) => p.data))
     }
     const thresholdDomain = [0]
     maxColumnValues = 0
     const columnValues = []
 
-    oExtent.forEach(d => {
+    oExtent.forEach((d) => {
       const oValues = allData.filter((p: { column: string }) => p.column === d)
       const columnValue = columnValueCreator(oValues)
 
@@ -362,7 +362,7 @@ export const calculateOrdinalFrame = (
   const annotationsForExtent = []
 
   if (rExtentSettings.includeAnnotations && annotations) {
-    rAccessor.forEach(actualRAccessor => {
+    rAccessor.forEach((actualRAccessor) => {
       annotations.forEach((annotation, annotationIndex) => {
         const r = actualRAccessor(annotation, annotationIndex)
         if (isFinite(r)) {
@@ -374,8 +374,8 @@ export const calculateOrdinalFrame = (
 
   if (pieceType.type === "timeline") {
     const rData = allData.map((d: { value: number }) => d.value)
-    const leftExtent = extent(rData.map(d => d[0]))
-    const rightExtent = extent(rData.map(d => d[1]))
+    const leftExtent = extent(rData.map((d) => d[0]))
+    const rightExtent = extent(rData.map((d) => d[1]))
     rExtent = extent([...leftExtent, ...rightExtent, ...annotationsForExtent])
   } else if (pieceType.type !== "bar") {
     rExtent = extent([
@@ -387,16 +387,16 @@ export const calculateOrdinalFrame = (
     const negativeData = allData.filter((d: { value: number }) => d.value < 0)
 
     const nestedPositiveData = nest()
-      .key(d => d.column)
-      .rollup(leaves => sum(leaves.map(d => d.value)))
+      .key((d) => d.column)
+      .rollup((leaves) => sum(leaves.map((d) => d.value)))
       .entries(positiveData)
 
     const nestedNegativeData = nest()
-      .key(d => d.column)
-      .rollup(leaves => sum(leaves.map(d => d.value)))
+      .key((d) => d.column)
+      .rollup((leaves) => sum(leaves.map((d) => d.value)))
       .entries(negativeData)
 
-    const positiveAnnotations = annotationsForExtent.filter(d => d > 0)
+    const positiveAnnotations = annotationsForExtent.filter((d) => d > 0)
 
     rExtent = [
       0,
@@ -411,7 +411,7 @@ export const calculateOrdinalFrame = (
           )
     ]
 
-    const negativeAnnotations = annotationsForExtent.filter(d => d < 0)
+    const negativeAnnotations = annotationsForExtent.filter((d) => d < 0)
 
     subZeroRExtent = [
       0,
@@ -469,9 +469,9 @@ export const calculateOrdinalFrame = (
   const nestedPieces = {}
 
   nest()
-    .key(d => d.column)
+    .key((d) => d.column)
     .entries(allData)
-    .forEach(d => {
+    .forEach((d) => {
       nestedPieces[d.key] = d.values
     })
 
@@ -480,8 +480,8 @@ export const calculateOrdinalFrame = (
       oSort(
         a,
         b,
-        nestedPieces[a].map(d => d.data),
-        nestedPieces[b].map(d => d.data)
+        nestedPieces[a].map((d) => d.data),
+        nestedPieces[b].map((d) => d.data)
       )
     )
 
@@ -493,7 +493,7 @@ export const calculateOrdinalFrame = (
     adjustedSize[0]
   ]
 
-  const castRScaleType = (rScaleType as unknown) as Function
+  const castRScaleType = rScaleType as unknown as Function
 
   const instantiatedRScaleType = rScaleType.domain
     ? rScaleType
@@ -509,14 +509,9 @@ export const calculateOrdinalFrame = (
     rExtent[0] = rExtentSettings.extent[0]
   }
 
-  const rScale = instantiatedRScaleType
-    .copy()
-    .domain(rExtent)
-    .range(rDomain)
+  const rScale = instantiatedRScaleType.copy().domain(rExtent).range(rDomain)
 
-  const rScaleReverse = scaleLinear()
-    .domain(rDomain)
-    .range(rDomain.reverse())
+  const rScaleReverse = scaleLinear().domain(rDomain).range(rDomain.reverse())
 
   const rScaleVertical = instantiatedRScaleType
     .copy()
@@ -537,7 +532,7 @@ export const calculateOrdinalFrame = (
     padding
   )
 
-  pieceData = oExtent.map(d => (nestedPieces[d] ? nestedPieces[d] : []))
+  pieceData = oExtent.map((d) => (nestedPieces[d] ? nestedPieces[d] : []))
 
   let zeroValue =
     projection === "vertical" ? rScaleReverse(rScale(0)) : rScale(0)
@@ -571,7 +566,7 @@ export const calculateOrdinalFrame = (
     let negativeBaseValue = 0
     let positiveBaseValue = 0
 
-    projectedColumns[o].pieceData.forEach(piece => {
+    projectedColumns[o].pieceData.forEach((piece) => {
       let valPosition
 
       if (pieceType.type === "timeline") {
@@ -684,17 +679,13 @@ export const calculateOrdinalFrame = (
       (pieceType.offsetAngle && pieceType.offsetAngle / 360) || 0
 
     const rangePct = (pieceType.angleRange &&
-      pieceType.angleRange.map(d => d / 360)) || [0, 1]
+      pieceType.angleRange.map((d) => d / 360)) || [0, 1]
     const rangeMod = rangePct[1] - rangePct[0]
 
     const adjustedPct =
-      rangeMod < 1
-        ? scaleLinear()
-            .domain([0, 1])
-            .range(rangePct)
-        : d => d
+      rangeMod < 1 ? scaleLinear().domain([0, 1]).range(rangePct) : (d) => d
 
-    oExtent.forEach(d => {
+    oExtent.forEach((d) => {
       const arcGenerator = arc()
         .innerRadius(0)
         .outerRadius(rScale.range()[1] / 2)
@@ -826,7 +817,7 @@ export const calculateOrdinalFrame = (
 
       const label = labelingFn(
         d,
-        projectedColumns[d].pieceData.map(d => d.data),
+        projectedColumns[d].pieceData.map((d) => d.data),
         i,
         projectedColumns[d]
       )
@@ -916,22 +907,22 @@ export const calculateOrdinalFrame = (
             overlayData: radialMousePackage,
             onDoubleClick:
               customDoubleClickBehavior &&
-              (e => {
+              ((e) => {
                 customDoubleClickBehavior(radialMousePackage, e)
               }),
             onClick:
               customClickBehavior &&
-              (e => {
+              ((e) => {
                 customClickBehavior(radialMousePackage, e)
               }),
             onMouseEnter:
               customHoverBehavior &&
-              (e => {
+              ((e) => {
                 customHoverBehavior(radialMousePackage, e)
               }),
             onMouseLeave:
               customHoverBehavior &&
-              (e => {
+              ((e) => {
                 customHoverBehavior(e)
               })
           }
@@ -953,20 +944,20 @@ export const calculateOrdinalFrame = (
           style: { opacity: 0 },
           onDoubleClick:
             customDoubleClickBehavior &&
-            (e => {
+            ((e) => {
               customDoubleClickBehavior(baseMousePackage, e)
             }),
           onClick:
             customClickBehavior &&
-            (e => {
+            ((e) => {
               customClickBehavior(baseMousePackage, e)
             }),
           onMouseEnter:
             customHoverBehavior &&
-            (e => {
+            ((e) => {
               customHoverBehavior(baseMousePackage, e)
             }),
-          onMouseLeave: e => {
+          onMouseLeave: (e) => {
             customHoverBehavior(undefined, e)
           },
           overlayData: baseMousePackage
@@ -1041,7 +1032,7 @@ export const calculateOrdinalFrame = (
     return p
   }, {})
 
-  Object.keys(projectedColumns).forEach(d => {
+  Object.keys(projectedColumns).forEach((d) => {
     projectedColumns[d].xyData = keyedData[d] || []
   })
   let calculatedSummaries: ProjectedOrdinalSummary = {}
@@ -1076,7 +1067,7 @@ export const calculateOrdinalFrame = (
   const yMod = projection === "horizontal" ? midMod : zeroFunction
   const xMod = projection === "vertical" ? midMod : zeroFunction
   const basePieceData = calculatedPieceData
-    .map(d => {
+    .map((d) => {
       if (d.piece && d.xy) {
         return {
           ...d.piece,
@@ -1087,7 +1078,7 @@ export const calculateOrdinalFrame = (
       }
       return null
     })
-    .filter(d => d)
+    .filter((d) => d)
 
   if (
     (pieceHoverAnnotation &&
@@ -1152,22 +1143,22 @@ export const calculateOrdinalFrame = (
           overlayData: mousePackage,
           onClick:
             customClickBehavior &&
-            (e => {
+            ((e) => {
               customClickBehavior(mousePackage.data, e)
             }),
           onDoubleClick:
             customDoubleClickBehavior &&
-            (e => {
+            ((e) => {
               customDoubleClickBehavior(mousePackage.data, e)
             }),
           onMouseEnter:
             customHoverBehavior &&
-            (e => {
+            ((e) => {
               customHoverBehavior(mousePackage.data, e)
             }),
           onMouseLeave:
             customHoverBehavior &&
-            (e => {
+            ((e) => {
               customHoverBehavior(undefined, e)
             })
         }

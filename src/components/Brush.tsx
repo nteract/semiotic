@@ -7,7 +7,8 @@ const flatten = list =>
     []
   )
 
-function flatShortArray(array) {
+function flatShortArray(baseArray) {
+  let array = [...baseArray]
   if (!Array.isArray(array)) return "not-array"
   if (!Array.isArray(array[0])) {
     array = array.sort((a, b) => a - b)
@@ -54,8 +55,8 @@ class Brush extends React.Component<BrushProps, null> {
         selectedExtent &&
         flatShortArray(lastProps.selectedExtent) !==
           flatShortArray(selectedExtent)) ||
-        (!lastProps.selectedExtent && selectedExtent) ||
-        (lastProps.selectedExtent && !selectedExtent)
+      (!lastProps.selectedExtent && selectedExtent) ||
+      (lastProps.selectedExtent && !selectedExtent)
     ) {
       this.createBrush()
     }

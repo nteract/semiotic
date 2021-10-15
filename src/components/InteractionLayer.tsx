@@ -22,63 +22,64 @@ import {
 } from "./processing/InteractionItems"
 import InteractionCanvas from "./interactionLayerBehavior/InteractionCanvas"
 
-const generateOMappingFn = projectedColumns => (d): null | any => {
-  if (d) {
-    const columnValues = Object.values(projectedColumns)
+const generateOMappingFn =
+  (projectedColumns) =>
+  (d): null | any => {
+    if (d) {
+      const columnValues = Object.values(projectedColumns)
 
-    const foundColumns = columnValues.filter(
-      (c: { x: number; width: number }) => {
-        return d[1] >= c.x && d[0] <= c.x + c.width
+      const foundColumns = columnValues.filter(
+        (c: { x: number; width: number }) => {
+          return d[1] >= c.x && d[0] <= c.x + c.width
+        }
+      )
+      return foundColumns
+    }
+    return null
+  }
+
+const generateOEndMappingFn =
+  (projectedColumns) =>
+  (d, event): null | Array<any> => {
+    if (
+      d &&
+      event.sourceEvent &&
+      event.sourceEvent.path &&
+      event.sourceEvent.path[1] &&
+      event.sourceEvent.path[1].classList.contains("xybrush") &&
+      event.target.move
+    ) {
+      const columnValues: BaseColumnType[] = Object.values(projectedColumns)
+      const foundColumns: BaseColumnType[] = columnValues.filter(
+        (c: BaseColumnType) => d[1] >= c.x && d[0] <= c.x + c.width
+      )
+
+      const firstColumn: { x: number; width: number } = foundColumns[0] || {
+        x: 0,
+        width: 0
       }
-    )
-    return foundColumns
-  }
-  return null
-}
 
-const generateOEndMappingFn = projectedColumns => (
-  d,
-  event
-): null | Array<any> => {
-  if (
-    d &&
-    event.sourceEvent &&
-    event.sourceEvent.path &&
-    event.sourceEvent.path[1] &&
-    event.sourceEvent.path[1].classList.contains("xybrush") &&
-    event.target.move
-  ) {
-    const columnValues: BaseColumnType[] = Object.values(projectedColumns)
-    const foundColumns: BaseColumnType[] = columnValues.filter(
-      (c: BaseColumnType) => d[1] >= c.x && d[0] <= c.x + c.width
-    )
+      const lastColumn: { x: number; width: number } = foundColumns[
+        foundColumns.length - 1
+      ] || {
+        x: 0,
+        width: 0
+      }
 
-    const firstColumn: { x: number; width: number } = foundColumns[0] || {
-      x: 0,
-      width: 0
+      const columnPosition = [
+        firstColumn.x + Math.min(5, firstColumn.width / 10),
+        lastColumn.x + lastColumn.width - Math.min(5, lastColumn.width / 10)
+      ]
+
+      select(event.sourceEvent.path[1])
+        .transition(750)
+        .call(event.target.move, columnPosition)
+
+      return foundColumns
     }
 
-    const lastColumn: { x: number; width: number } = foundColumns[
-      foundColumns.length - 1
-    ] || {
-      x: 0,
-      width: 0
-    }
-
-    const columnPosition = [
-      firstColumn.x + Math.min(5, firstColumn.width / 10),
-      lastColumn.x + lastColumn.width - Math.min(5, lastColumn.width / 10)
-    ]
-
-    select(event.sourceEvent.path[1])
-      .transition(750)
-      .call(event.target.move, columnPosition)
-
-    return foundColumns
+    return null
   }
-
-  return null
-}
 
 class InteractionLayer extends React.PureComponent<
   InteractionLayerProps,
@@ -152,24 +153,24 @@ class InteractionLayer extends React.PureComponent<
     }
 
     if (actualBrush === "xBrush") {
-      const castExtent = extent as number[]
+      const castExtent = [...extent] as number[]
       mappingFn = (d): null | Array<number> =>
         !d ? null : [xScale.invert(d[0]), xScale.invert(d[1])]
       semioticBrush = brushX()
-      selectedExtent = castExtent.map(d => xScale(d)) as number[]
+      selectedExtent = castExtent.map((d) => xScale(d)) as number[]
       endMappingFn = mappingFn
     } else if (actualBrush === "yBrush") {
-      const castExtent = extent as number[]
+      const castExtent = [...extent] as number[]
 
       mappingFn = (d): null | Array<number> =>
         !d
           ? null
           : [yScale.invert(d[0]), yScale.invert(d[1])].sort((a, b) => a - b)
       semioticBrush = brushY()
-      selectedExtent = castExtent.map(d => yScale(d)).sort((a, b) => a - b)
+      selectedExtent = castExtent.map((d) => yScale(d)).sort((a, b) => a - b)
       endMappingFn = mappingFn
     } else {
-      const castExtent = extent as number[][]
+      const castExtent = [...extent.map((ee) => [...ee])] as number[][]
       if (
         castExtent.indexOf(undefined) !== -1 ||
         castExtent[0].indexOf(undefined) !== -1 ||
@@ -225,7 +226,7 @@ class InteractionLayer extends React.PureComponent<
         [0, 0],
         [size[0], size[1]]
       ])
-      .on("start", event => {
+      .on("start", (event) => {
         brushStart(
           mappingFn(event.selection),
           undefined,
@@ -234,7 +235,7 @@ class InteractionLayer extends React.PureComponent<
           interaction
         )
       })
-      .on("brush", event => {
+      .on("brush", (event) => {
         brushing(
           mappingFn(event.selection),
           undefined,
@@ -243,7 +244,7 @@ class InteractionLayer extends React.PureComponent<
           interaction
         )
       })
-      .on("end", event => {
+      .on("end", (event) => {
         brushEnd(
           endMappingFn(event.selection, event),
           undefined,
@@ -361,10 +362,10 @@ class InteractionLayer extends React.PureComponent<
 
     const columnHash = oColumns
     let brushPosition, selectedExtent
-    const brushes: Array<React.ReactNode> = Object.keys(columnHash).map(c => {
+    const brushes: Array<React.ReactNode> = Object.keys(columnHash).map((c) => {
       if (projection && projection === "horizontal") {
         selectedExtent = interaction.extent[c]
-          ? interaction.extent[c].map(d => rScale(d))
+          ? interaction.extent[c].map((d) => rScale(d))
           : interaction.startEmpty
           ? null
           : rRange
@@ -376,7 +377,7 @@ class InteractionLayer extends React.PureComponent<
             [rRange[0], 0],
             [rRange[1], columnHash[c].width]
           ])
-          .on("start", event => {
+          .on("start", (event) => {
             brushStart(
               mappingFn(event.selection),
               c,
@@ -385,7 +386,7 @@ class InteractionLayer extends React.PureComponent<
               interaction
             )
           })
-          .on("brush", event => {
+          .on("brush", (event) => {
             brushing(
               mappingFn(event.selection),
               c,
@@ -394,7 +395,7 @@ class InteractionLayer extends React.PureComponent<
               interaction
             )
           })
-          .on("end", event => {
+          .on("end", (event) => {
             brushEnd(
               mappingFn(event.selection),
               c,
@@ -405,7 +406,7 @@ class InteractionLayer extends React.PureComponent<
           })
       } else {
         selectedExtent = interaction.extent[c]
-          ? interaction.extent[c].map(d => rRange[1] - rScale(d)).reverse()
+          ? interaction.extent[c].map((d) => rRange[1] - rScale(d)).reverse()
           : interaction.startEmpty
           ? null
           : rRange
@@ -416,7 +417,7 @@ class InteractionLayer extends React.PureComponent<
             [0, rRange[0]],
             [columnHash[c].width, rRange[1]]
           ])
-          .on("start", event => {
+          .on("start", (event) => {
             brushStart(
               mappingFn(event.selection),
               c,
@@ -425,7 +426,7 @@ class InteractionLayer extends React.PureComponent<
               interaction
             )
           })
-          .on("brush", event => {
+          .on("brush", (event) => {
             brushing(
               mappingFn(event.selection),
               c,
@@ -434,7 +435,7 @@ class InteractionLayer extends React.PureComponent<
               interaction
             )
           })
-          .on("end", event => {
+          .on("end", (event) => {
             brushEnd(
               mappingFn(event.selection),
               c,

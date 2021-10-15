@@ -25,13 +25,13 @@ import { arcTweener } from "./SvgHelper"
 
 const horizontalDagreLineGenerator = line()
   .curve(curveMonotoneX)
-  .x(d => d.x)
-  .y(d => d.y)
+  .x((d) => d.x)
+  .y((d) => d.y)
 
 const verticalDagreLineGenerator = line()
   .curve(curveMonotoneY)
-  .x(d => d.x)
-  .y(d => d.y)
+  .x((d) => d.x)
+  .y((d) => d.y)
 
 function sankeyEdgeSort(a, b, direction) {
   if (a.circular && !b.circular) return -1
@@ -48,25 +48,25 @@ function sankeyEdgeSort(a, b, direction) {
 
 const sigmoidLinks = {
   horizontal: linkHorizontal()
-    .x(d => d.x)
-    .y(d => d.y),
+    .x((d) => d.x)
+    .y((d) => d.y),
   vertical: linkVertical()
-    .x(d => d.x)
-    .y(d => d.y),
+    .x((d) => d.x)
+    .y((d) => d.y),
   radial: glyphD.lineArc
 }
 
 const customEdgeHashD = {
   curve: (d, projection = "vertical") => sigmoidLinks[projection](d),
-  linearc: d => glyphD.lineArc(d),
-  ribbon: d => glyphD.ribbon(d, d.width),
-  arrowhead: d =>
+  linearc: (d) => glyphD.lineArc(d),
+  ribbon: (d) => glyphD.ribbon(d, d.width),
+  arrowhead: (d) =>
     glyphD.arrowHead(d, d.target.nodeSize, d.width, d.width * 1.5),
-  halfarrow: d =>
+  halfarrow: (d) =>
     glyphD.halfArrow(d, d.target.nodeSize, d.width, d.width * 1.5),
-  nail: d => glyphD.nail(d, d.source.nodeSize),
-  comet: d => glyphD.comet(d, d.target.nodeSize),
-  taffy: d =>
+  nail: (d) => glyphD.nail(d, d.source.nodeSize),
+  comet: (d) => glyphD.comet(d, d.target.nodeSize),
+  taffy: (d) =>
     glyphD.taffy(
       d,
       d.source.nodeSize / 2,
@@ -75,10 +75,10 @@ const customEdgeHashD = {
     )
 }
 
-export const radialCurveGenerator = size => {
+export const radialCurveGenerator = (size) => {
   const radialCurve = linkRadial()
-    .angle(d => (d.x / size[0]) * Math.PI * 2)
-    .radius(d => d.y)
+    .angle((d) => (d.x / size[0]) * Math.PI * 2)
+    .radius((d) => d.y)
 
   return ({ d, i, styleFn, renderMode, key, className, baseMarkProps }) => (
     <Mark
@@ -129,40 +129,34 @@ export const circleNodeGenerator = ({
   )
 }
 
-export const matrixEdgeGenerator = (size, nodes) => ({
-  d,
-  i,
-  styleFn,
-  renderMode,
-  key,
-  className,
-  baseMarkProps
-}) => {
-  const gridSize = Math.min(...size) / nodes.length
+export const matrixEdgeGenerator =
+  (size, nodes) =>
+  ({ d, i, styleFn, renderMode, key, className, baseMarkProps }) => {
+    const gridSize = Math.min(...size) / nodes.length
 
-  return (
-    <g key={key}>
-      <Mark
-        {...baseMarkProps}
-        renderMode={renderMode ? renderMode(d, i) : undefined}
-        key={key}
-        className={className}
-        simpleInterpolate={true}
-        transform={`translate(${d.source.y},${d.target.y})`}
-        markType="rect"
-        x={-gridSize / 2}
-        y={-gridSize / 2}
-        width={gridSize}
-        height={gridSize}
-        style={styleFn(d, i)}
-        aria-label={`Connection from ${d.source.id} to ${d.target.id}`}
-        tabIndex={-1}
-      />
-    </g>
-  )
-}
+    return (
+      <g key={key}>
+        <Mark
+          {...baseMarkProps}
+          renderMode={renderMode ? renderMode(d, i) : undefined}
+          key={key}
+          className={className}
+          simpleInterpolate={true}
+          transform={`translate(${d.source.y},${d.target.y})`}
+          markType="rect"
+          x={-gridSize / 2}
+          y={-gridSize / 2}
+          width={gridSize}
+          height={gridSize}
+          style={styleFn(d, i)}
+          aria-label={`Connection from ${d.source.id} to ${d.target.id}`}
+          tabIndex={-1}
+        />
+      </g>
+    )
+  }
 
-export const arcEdgeGenerator = size => {
+export const arcEdgeGenerator = (size) => {
   const yAdjust = size[1] / size[0]
   function arcDiagramArc(d) {
     const draw = line().curve(curveBasis)
@@ -194,31 +188,26 @@ export const arcEdgeGenerator = size => {
   }
 }
 
-export const chordEdgeGenerator = size => ({
-  d,
-  i,
-  styleFn,
-  renderMode,
-  key,
-  className,
-  baseMarkProps
-}) => (
-  <Mark
-    {...baseMarkProps}
-    renderMode={renderMode ? renderMode(d, i) : undefined}
-    key={key}
-    className={className}
-    simpleInterpolate={true}
-    transform={`translate(${size[0] / 2},${size[1] / 2})`}
-    markType="path"
-    d={d.d}
-    style={styleFn(d, i)}
-    aria-label={`Connection from ${d.source.id} to ${d.target.id}`}
-    tabIndex={-1}
-  />
-)
+export const chordEdgeGenerator =
+  (size) =>
+  ({ d, i, styleFn, renderMode, key, className, baseMarkProps }) =>
+    (
+      <Mark
+        {...baseMarkProps}
+        renderMode={renderMode ? renderMode(d, i) : undefined}
+        key={key}
+        className={className}
+        simpleInterpolate={true}
+        transform={`translate(${size[0] / 2},${size[1] / 2})`}
+        markType="path"
+        d={d.d}
+        style={styleFn(d, i)}
+        aria-label={`Connection from ${d.source.id} to ${d.target.id}`}
+        tabIndex={-1}
+      />
+    )
 
-export const dagreEdgeGenerator = direction => {
+export const dagreEdgeGenerator = (direction) => {
   const dagreLineGenerator =
     direction === "LR" || direction === "RL"
       ? horizontalDagreLineGenerator
@@ -227,8 +216,8 @@ export const dagreEdgeGenerator = direction => {
     if (d.ribbon || d.parallelEdges) {
       const ribbonGenerator = linearRibbon()
 
-      ribbonGenerator.x(p => p.x)
-      ribbonGenerator.y(p => p.y)
+      ribbonGenerator.x((p) => p.x)
+      ribbonGenerator.y((p) => p.y)
       ribbonGenerator.r(() => d.weight || 1)
 
       if (d.parallelEdges) {
@@ -324,28 +313,23 @@ export const sankeyNodeGenerator = ({
   )
 }
 
-export const chordNodeGenerator = size => ({
-  d,
-  i,
-  styleFn,
-  renderMode,
-  key,
-  className,
-  baseMarkProps
-}) => (
-  <Mark
-    {...baseMarkProps}
-    renderMode={renderMode ? renderMode(d, i) : undefined}
-    key={key}
-    className={className}
-    transform={`translate(${size[0] / 2},${size[1] / 2})`}
-    markType="path"
-    d={d.d}
-    style={styleFn(d, i)}
-    aria-label={`Node ${d.id}`}
-    tabIndex={-1}
-  />
-)
+export const chordNodeGenerator =
+  (size) =>
+  ({ d, i, styleFn, renderMode, key, className, baseMarkProps }) =>
+    (
+      <Mark
+        {...baseMarkProps}
+        renderMode={renderMode ? renderMode(d, i) : undefined}
+        key={key}
+        className={className}
+        transform={`translate(${size[0] / 2},${size[1] / 2})`}
+        markType="path"
+        d={d.d}
+        style={styleFn(d, i)}
+        aria-label={`Node ${d.id}`}
+        tabIndex={-1}
+      />
+    )
 
 export const matrixNodeGenerator = (size, nodes) => {
   const gridSize = Math.min(...size)
@@ -454,8 +438,9 @@ export const matrixNodeGenerator = (size, nodes) => {
         )}
         {showText && (
           <text
-            transform={`translate(${d.y}) rotate(90) translate(0,${stepSize /
-              5})`}
+            transform={`translate(${d.y}) rotate(90) translate(0,${
+              stepSize / 5
+            })`}
             {...textProps}
             y={0}
           >
@@ -470,15 +455,11 @@ export const matrixNodeGenerator = (size, nodes) => {
 export const radialRectNodeGenerator = (size, center, type) => {
   const radialArc = arc()
   const { angleRange = [0, 360] } = type
-  const rangePct = angleRange.map(d => d / 360)
+  const rangePct = angleRange.map((d) => d / 360)
   const rangeMod = rangePct[1] - rangePct[0]
 
   const adjustedPct =
-    rangeMod < 1
-      ? scaleLinear()
-          .domain([0, 1])
-          .range(rangePct)
-      : d => d
+    rangeMod < 1 ? scaleLinear().domain([0, 1]).range(rangePct) : (d) => d
 
   return ({ d, i, styleFn, renderMode, key, className, baseMarkProps }) => {
     radialArc.innerRadius(d.y0 / 2).outerRadius(d.y1 / 2)
@@ -561,7 +542,7 @@ export const hierarchicalRectNodeGenerator = ({
   )
 }
 
-const genericLineGenerator = d =>
+const genericLineGenerator = (d) =>
   `M${d.source.x},${d.source.y}L${d.target.x},${d.target.y}`
 
 export const drawNodes = ({
@@ -674,7 +655,7 @@ export const drawEdges = ({
       if (typeof type === "function") {
         dGenerator = type
       } else if (customEdgeHashD[type]) {
-        dGenerator = d => customEdgeHashD[type](d, projection)
+        dGenerator = (d) => customEdgeHashD[type](d, projection)
       }
     }
     data.forEach((d, i) => {
@@ -719,7 +700,7 @@ export function topologicalSort(nodesArray, edgesArray) {
   // adapted from https://simplapi.wordpress.com/2015/08/19/detect-graph-cycle-in-javascript/
   const nodes = []
   const nodeHash = {}
-  edgesArray.forEach(edge => {
+  edgesArray.forEach((edge) => {
     if (!edge.source.id || !edge.target.id) {
       return false
     }
@@ -746,7 +727,7 @@ export function topologicalSort(nodesArray, edgesArray) {
 
   // Kahn Algorithm
   const L = [],
-    S = nodes.filter(node => !hasIncomingEdge(nodes, node))
+    S = nodes.filter((node) => !hasIncomingEdge(nodes, node))
 
   let n = null
 
@@ -759,7 +740,7 @@ export function topologicalSort(nodesArray, edgesArray) {
     let i = n.links.length
     while (i--) {
       // Getting the node associated to the current stored id in links
-      const m = nodes[nodes.map(d => d._id).indexOf(n.links[i])]
+      const m = nodes[nodes.map((d) => d._id).indexOf(n.links[i])]
 
       // Remove edge e from the graph
       n.links.pop()
@@ -771,13 +752,13 @@ export function topologicalSort(nodesArray, edgesArray) {
   }
 
   // If any of them still got links, there is cycle somewhere
-  const nodeWithEdge = nodes.find(node => node.links.length !== 0)
+  const nodeWithEdge = nodes.find((node) => node.links.length !== 0)
 
   return nodeWithEdge ? null : L
 }
 const curvature = 0.5
 
-export const ribbonLink = d => {
+export const ribbonLink = (d) => {
   const diff =
     d.direction === "down"
       ? Math.abs(d.target.y - d.source.y)
@@ -824,14 +805,14 @@ export const ribbonLink = d => {
 
   const linkGenerator = linearRibbon()
 
-  linkGenerator.x(d => d.x)
-  linkGenerator.y(d => d.y)
+  linkGenerator.x((d) => d.x)
+  linkGenerator.y((d) => d.y)
   linkGenerator.r(() => d.sankeyWidth / 2)
 
   return linkGenerator(testCoordinates)
 }
 
-export const areaLink = d => {
+export const areaLink = (d) => {
   let x0, x1, x2, x3, y0, y1, xi, y2, y3
 
   if (d.direction === "down") {
@@ -863,8 +844,8 @@ export const areaLink = d => {
 export function circularAreaLink(link) {
   const linkGenerator = linearRibbon()
 
-  linkGenerator.x(d => d.x)
-  linkGenerator.y(d => d.y)
+  linkGenerator.x((d) => d.x)
+  linkGenerator.y((d) => d.y)
   linkGenerator.r(() => link.sankeyWidth / 2)
 
   const xyForLink =
@@ -927,12 +908,12 @@ export function circularAreaLink(link) {
 
 const hierarchyDecorator = (hierarchy, hashEntries, nodeIDAccessor, nodes) => {
   if (hierarchy.children) {
-    hierarchy.children.forEach(child => {
-      const theseEntries = hashEntries.filter(entry => entry[1] === child.id)
+    hierarchy.children.forEach((child) => {
+      const theseEntries = hashEntries.filter((entry) => entry[1] === child.id)
 
-      theseEntries.forEach(entry => {
+      theseEntries.forEach((entry) => {
         const idNode =
-          nodes.find(node => nodeIDAccessor(node) === entry[0]) || {}
+          nodes.find((node) => nodeIDAccessor(node) === entry[0]) || {}
 
         child.childHash[entry[0]] = {
           id: entry[0],
@@ -984,11 +965,12 @@ export const softStack = (
 
   if (isHierarchical) {
     const hashEntries: Array<string[]> = Object.entries(discoveredHierarchyHash)
-    hashEntries.forEach(entry => {
+    hashEntries.forEach((entry) => {
       const target = entry[1]
       if (!discoveredHierarchyHash[target]) {
         discoveredHierarchyHash[target] = "root-generated"
-        const idNode = nodes.find(node => nodeIDAccessor(node) === target) || {}
+        const idNode =
+          nodes.find((node) => nodeIDAccessor(node) === target) || {}
 
         hierarchy.childHash[target] = {
           id: target,
@@ -1002,7 +984,7 @@ export const softStack = (
 
     hierarchyDecorator(hierarchy, hashEntries, nodeIDAccessor, nodes)
 
-    nodes.forEach(node => {
+    nodes.forEach((node) => {
       const nodeID = nodeIDAccessor(node)
       if (!discoveredHierarchyHash[nodeID] && !targetToSourceHash[nodeID]) {
         hierarchy.children.push({

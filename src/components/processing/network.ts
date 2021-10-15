@@ -134,14 +134,14 @@ function determineEdgeIcon({
   return undefined
 }
 
-const basicMiddle = d => ({
+const basicMiddle = (d) => ({
   edge: d,
   x: (d.source.x + d.target.x) / 2,
   y: (d.source.y + d.target.y) / 2
 })
 
 const edgePointHash = {
-  sankey: d => ({
+  sankey: (d) => ({
     edge: d,
     x: (d.source.x1 + d.target.x0) / 2,
     y: d.circularPathData
@@ -194,7 +194,7 @@ function breadthFirstCompontents(baseNodes, hash) {
   traverseNodesBF(baseNodes, true)
 
   function traverseNodesBF(nodes, top) {
-    nodes.forEach(node => {
+    nodes.forEach((node) => {
       const hashNode = hash.get(node)
       if (!hashNode) {
         componentHash["0"].componentNodes.push(node)
@@ -224,11 +224,11 @@ function breadthFirstCompontents(baseNodes, hash) {
 
 const matrixify = ({ edgeHash, nodes, edgeWidthAccessor, nodeIDAccessor }) => {
   const matrix = []
-  nodes.forEach(nodeSource => {
+  nodes.forEach((nodeSource) => {
     const nodeSourceID = nodeIDAccessor(nodeSource)
     const sourceRow = []
     matrix.push(sourceRow)
-    nodes.forEach(nodeTarget => {
+    nodes.forEach((nodeTarget) => {
       const nodeTargetID = nodeIDAccessor(nodeTarget)
       const theEdge = edgeHash.get(`${nodeSourceID}|${nodeTargetID}`)
       if (theEdge) {
@@ -295,7 +295,7 @@ function recursiveIDAccessor(idAccessor, node, accessorString) {
 
 export const nodesEdgesFromHierarchy = (
   baseRootNode,
-  idAccessor = d => d.id || d.descendantIndex
+  idAccessor = (d) => d.id || d.descendantIndex
 ) => {
   const edges = []
   const nodes = []
@@ -314,13 +314,15 @@ export const nodesEdgesFromHierarchy = (
     const generatedID = `${idAccessor({
       ...node,
       ...node.data
-    })}-${(node.parent &&
-      recursiveIDAccessor(
-        idAccessor,
-        { ...node.parent, ...node.parent.data },
-        ""
-      )) ||
-      "root"}`
+    })}-${
+      (node.parent &&
+        recursiveIDAccessor(
+          idAccessor,
+          { ...node.parent, ...node.parent.data },
+          ""
+        )) ||
+      "root"
+    }`
     const dataD = Object.assign(node, node.data || {}, {
       hierarchicalID: generatedID
     })
@@ -438,24 +440,24 @@ export const calculateNetworkFrame = (
 
   const nodeIDAccessor = stringToFn<string>(
     currentProps.nodeIDAccessor,
-    d => d.id
+    (d) => d.id
   )
   const sourceAccessor = stringToFn<string | GenericObject>(
     currentProps.sourceAccessor,
-    d => d.source
+    (d) => d.source
   )
   const targetAccessor = stringToFn<string | GenericObject>(
     currentProps.targetAccessor,
-    d => d.target
+    (d) => d.target
   )
 
   const nodeSizeAccessor: (args?: GenericObject) => number =
     typeof currentProps.nodeSizeAccessor === "number"
       ? genericFunction(currentProps.nodeSizeAccessor)
-      : stringToFn<number>(currentProps.nodeSizeAccessor, d => d.r || 5)
+      : stringToFn<number>(currentProps.nodeSizeAccessor, (d) => d.r || 5)
   const edgeWidthAccessor = stringToFn<number>(
     currentProps.edgeWidthAccessor,
-    d => d.weight || 1
+    (d) => d.weight || 1
   )
   const nodeStyleFn = stringToFn<GenericObject>(nodeStyle, () => ({}), true)
   const nodeClassFn = stringToFn<string>(nodeClass, () => "", true)
@@ -489,7 +491,7 @@ export const calculateNetworkFrame = (
       edge: Function
     }
     const dagreNodeHash = {}
-    projectedNodes = dagreGraph.nodes().map(n => {
+    projectedNodes = dagreGraph.nodes().map((n) => {
       const baseNode = dagreGraph.node(n)
       dagreNodeHash[n] = {
         ...baseNode,
@@ -504,14 +506,14 @@ export const calculateNetworkFrame = (
       }
       return dagreNodeHash[n]
     })
-    projectedEdges = dagreGraph.edges().map(e => {
+    projectedEdges = dagreGraph.edges().map((e) => {
       const dagreEdge = dagreGraph.edge(e)
       const baseEdge = {
         ...dagreEdge,
-        points: dagreEdge.points.map(d => ({ ...d }))
+        points: dagreEdge.points.map((d) => ({ ...d }))
       }
-      baseEdge.source = projectedNodes.find(p => p.id === e.v)
-      baseEdge.target = projectedNodes.find(p => p.id === e.w)
+      baseEdge.source = projectedNodes.find((p) => p.id === e.v)
+      baseEdge.target = projectedNodes.find((p) => p.id === e.w)
       baseEdge.points.unshift({ x: baseEdge.source.x, y: baseEdge.source.y })
       baseEdge.points.push({ x: baseEdge.target.x, y: baseEdge.target.y })
       dagreNodeHash[e.v].targetLinks.push(baseEdge)
@@ -532,10 +534,10 @@ export const calculateNetworkFrame = (
         : networkSettings.fixExistingNodes
         ? () => true
         : false
-    nodes.forEach(node => {
+    nodes.forEach((node) => {
       const projectedNode = { ...node }
       const id = nodeIDAccessor(projectedNode)
-      const existingNode = previousNodes.find(prevNode => prevNode.id === id)
+      const existingNode = previousNodes.find((prevNode) => prevNode.id === id)
 
       const equivalentOldNode = existingNode || { x: undefined, y: undefined }
       nodeHash.set(id, projectedNode)
@@ -580,7 +582,7 @@ export const calculateNetworkFrame = (
       networkSettings.hierarchicalNetwork = true
       const rootNode = hierarchy(baseEdges, networkSettings.hierarchyChildren)
 
-      rootNode.sum(networkSettings.hierarchySum || (d => d.value))
+      rootNode.sum(networkSettings.hierarchySum || ((d) => d.value))
 
       if (isHierarchical) {
         const layout = networkSettings.layout || isHierarchical
@@ -600,7 +602,7 @@ export const calculateNetworkFrame = (
           )
         }
 
-        networkSettingKeys.forEach(key => {
+        networkSettingKeys.forEach((key) => {
           if (hierarchicalLayout[key]) {
             hierarchicalLayout[key](networkSettings[key])
           }
@@ -621,11 +623,11 @@ export const calculateNetworkFrame = (
 
     baseNodeProps.shapeNode = createPointLayer
     if (Array.isArray(operationalEdges)) {
-      operationalEdges.forEach(edge => {
+      operationalEdges.forEach((edge) => {
         const source = sourceAccessor(edge)
         const target = targetAccessor(edge)
         const sourceTarget = [source, target]
-        sourceTarget.forEach(nodeDirection => {
+        sourceTarget.forEach((nodeDirection) => {
           if (!nodeHash.get(nodeDirection)) {
             const nodeObject: NodeType =
               typeof nodeDirection === "object"
@@ -668,8 +670,9 @@ export const calculateNetworkFrame = (
         targetNode.degree += edgeWeight
         sourceNode.degree += edgeWeight
 
-        const edgeKey = `${nodeIDAccessor(sourceNode) ||
-          source}|${nodeIDAccessor(targetNode) || target}`
+        const edgeKey = `${nodeIDAccessor(sourceNode) || source}|${
+          nodeIDAccessor(targetNode) || target
+        }`
         const newEdge = Object.assign({}, edge, {
           source: nodeHash.get(source),
           target: nodeHash.get(target)
@@ -688,7 +691,7 @@ export const calculateNetworkFrame = (
   } else {
     edgeHash = new Map()
     networkSettings.graphSettings.edgeHash = edgeHash
-    projectedEdges.forEach(edge => {
+    projectedEdges.forEach((edge) => {
       const edgeSource =
         typeof edge.source === "string"
           ? edge.source
@@ -730,7 +733,7 @@ export const calculateNetworkFrame = (
 
   let networkSettingsChanged = false
 
-  networkSettingsKeys.forEach(key => {
+  networkSettingsKeys.forEach((key) => {
     if (
       key !== "edgeType" &&
       key !== "graphSettings" &&
@@ -742,14 +745,14 @@ export const calculateNetworkFrame = (
 
   //Support bubble chart with circle pack and with force
   if (networkSettings.type === "sankey") {
-    edgeType = d =>
+    edgeType = (d) =>
       d.circular
         ? circularAreaLink(d)
         : edgeType === "angled"
         ? ribbonLink(d)
         : areaLink(d)
   } else if (isHierarchical) {
-    projectedNodes.forEach(node => {
+    projectedNodes.forEach((node) => {
       if (createPointLayer) {
         node.x = (node.x0 + node.x1) / 2
         node.y = (node.y0 + node.y1) / 2
@@ -836,7 +839,7 @@ export const calculateNetworkFrame = (
       const chords = chordLayout(matrixifiedNetwork)
       const groups = chords.groups
 
-      groups.forEach(group => {
+      groups.forEach((group) => {
         const groupCentroid = arcGenerator.centroid(group)
         const groupD = arcGenerator(group)
         const groupNode = projectedNodes[group.index]
@@ -846,7 +849,7 @@ export const calculateNetworkFrame = (
         groupNode.y = groupCentroid[1] + adjustedSize[1] / 2
       })
 
-      chords.forEach(generatedChord => {
+      chords.forEach((generatedChord) => {
         const chordD = ribbonGenerator(generatedChord)
 
         //this is incorrect should use edgeHash
@@ -910,7 +913,7 @@ export const calculateNetworkFrame = (
 
       frameSankey()
 
-      projectedNodes.forEach(d => {
+      projectedNodes.forEach((d) => {
         d.height = d.y1 - d.y0
         d.width = d.x1 - d.x0
         d.x = d.x0 + d.width / 2
@@ -919,7 +922,7 @@ export const calculateNetworkFrame = (
         d.direction = direction
       })
 
-      projectedEdges.forEach(d => {
+      projectedEdges.forEach((d) => {
         d.sankeyWidth = d.width
         d.direction = direction
         d.width = undefined
@@ -930,10 +933,10 @@ export const calculateNetworkFrame = (
         edgeStrength = 0.1,
         distanceMax = Infinity,
         edgeDistance,
-        forceManyBody: nsForceMB = d => -25 * nodeSizeAccessor(d)
+        forceManyBody: nsForceMB = (d) => -25 * nodeSizeAccessor(d)
       } = networkSettings
 
-      const linkForce = forceLink().strength(d =>
+      const linkForce = forceLink().strength((d) =>
         Math.min(2.5, d.weight ? d.weight * edgeStrength : edgeStrength)
       )
 
@@ -945,9 +948,7 @@ export const calculateNetworkFrame = (
         networkSettings.simulation ||
         forceSimulation().force(
           "charge",
-          forceManyBody()
-            .distanceMax(distanceMax)
-            .strength(nsForceMB)
+          forceManyBody().distanceMax(distanceMax).strength(nsForceMB)
         )
 
       //        simulation.force("link", linkForce).nodes(projectedNodes)
@@ -983,8 +984,8 @@ export const calculateNetworkFrame = (
       }
     } else if (networkSettings.type === "motifs") {
       const componentHash = new Map()
-      projectedEdges.forEach(edge => {
-        ;[edge.source, edge.target].forEach(node => {
+      projectedEdges.forEach((edge) => {
+        ;[edge.source, edge.target].forEach((node) => {
           if (!componentHash.get(node)) {
             componentHash.set(node, {
               node,
@@ -1021,7 +1022,7 @@ export const calculateNetworkFrame = (
       let currentY = padding
 
       components.forEach(({ componentNodes, componentEdges }) => {
-        const linkForce = forceLink().strength(d =>
+        const linkForce = forceLink().strength((d) =>
           Math.min(2.5, d.weight ? d.weight * edgeStrength : edgeStrength)
         )
 
@@ -1058,7 +1059,8 @@ export const calculateNetworkFrame = (
           .force(
             "charge",
             forceManyBody().strength(
-              networkSettings.forceManyBody || (d => -25 * nodeSizeAccessor(d))
+              networkSettings.forceManyBody ||
+                ((d) => -25 * nodeSizeAccessor(d))
             )
           )
           .force("link", linkForce)
@@ -1074,10 +1076,10 @@ export const calculateNetworkFrame = (
 
         for (let i = 0; i < iterations; ++i) simulation.tick()
 
-        const maxX = max(componentNodes.map(d => d.x))
-        const maxY = max(componentNodes.map(d => d.y))
-        const minX = min(componentNodes.map(d => d.x))
-        const minY = min(componentNodes.map(d => d.y))
+        const maxX = max(componentNodes.map((d) => d.x))
+        const maxY = max(componentNodes.map((d) => d.y))
+        const minX = min(componentNodes.map((d) => d.x))
+        const minY = min(componentNodes.map((d) => d.y))
 
         const resetX = scaleLinear()
           .domain([minX, maxX])
@@ -1086,7 +1088,7 @@ export const calculateNetworkFrame = (
           .domain([minY, maxY])
           .range([currentY - componentLayoutSize, currentY - 20])
 
-        componentNodes.forEach(node => {
+        componentNodes.forEach((node) => {
           node.x = resetX(node.x)
           node.y = resetY(node.y)
         })
@@ -1121,7 +1123,7 @@ export const calculateNetworkFrame = (
         edges: projectedEdges
       })
     } else {
-      projectedNodes.forEach(node => {
+      projectedNodes.forEach((node) => {
         node.x = node.x === undefined ? (node.x0 + node.x1) / 2 : node.x
         node.y = node.y === undefined ? node.y0 : node.y
       })
@@ -1135,13 +1137,13 @@ export const calculateNetworkFrame = (
   projectedNodes = projectedNodes.filter(filterRenderedNodes)
 
   projectedEdges = projectedEdges.filter(
-    d =>
+    (d) =>
       projectedNodes.indexOf(d.target) !== -1 &&
       projectedNodes.indexOf(d.source) !== -1
   )
 
   if (networkSettings.direction === "flip") {
-    projectedNodes.forEach(node => {
+    projectedNodes.forEach((node) => {
       // const ox = node.x
       // const oy = node.y
       node.x = adjustedSize[0] - node.x
@@ -1153,9 +1155,9 @@ export const calculateNetworkFrame = (
   ) {
     const mod =
       networkSettings.direction === "up"
-        ? value => adjustedSize[1] - value
-        : value => value
-    projectedNodes.forEach(node => {
+        ? (value) => adjustedSize[1] - value
+        : (value) => value
+    projectedNodes.forEach((node) => {
       const ox = node.x
       const ox0 = node.x0
       const ox1 = node.x1
@@ -1167,7 +1169,7 @@ export const calculateNetworkFrame = (
       node.y1 = ox1
     })
   } else if (networkSettings.direction === "left") {
-    projectedNodes.forEach(node => {
+    projectedNodes.forEach((node) => {
       node.x = adjustedSize[0] - node.x
       node.x0 = adjustedSize[0] - node.x0
       node.x1 = adjustedSize[0] - node.x1
@@ -1186,10 +1188,10 @@ export const calculateNetworkFrame = (
     networkSettings.type !== "dagre"
   ) {
     // ZOOM SHOULD MAINTAIN ASPECT RATIO, ADD "stretch" to fill whole area
-    const xMin = min(projectedNodes.map(p => p.x - nodeSizeAccessor(p)))
-    const xMax = max(projectedNodes.map(p => p.x + nodeSizeAccessor(p)))
-    const yMin = min(projectedNodes.map(p => p.y - nodeSizeAccessor(p)))
-    const yMax = max(projectedNodes.map(p => p.y + nodeSizeAccessor(p)))
+    const xMin = min(projectedNodes.map((p) => p.x - nodeSizeAccessor(p)))
+    const xMax = max(projectedNodes.map((p) => p.x + nodeSizeAccessor(p)))
+    const yMin = min(projectedNodes.map((p) => p.y - nodeSizeAccessor(p)))
+    const yMax = max(projectedNodes.map((p) => p.y + nodeSizeAccessor(p)))
 
     const xSize = Math.abs(xMax - xMin)
     const ySize = Math.abs(yMax - yMin)
@@ -1226,7 +1228,7 @@ export const calculateNetworkFrame = (
     const projectionScaleY = scaleLinear()
       .domain([yMin, yMax])
       .range([yMod, adjustedSize[1] - yMod])
-    projectedNodes.forEach(node => {
+    projectedNodes.forEach((node) => {
       node.x = projectionScaleX(node.x)
       node.y = projectionScaleY(node.y)
     })
@@ -1237,10 +1239,10 @@ export const calculateNetworkFrame = (
       networkSettings.type === "treemap" ||
       networkSettings.type === "dagre")
   ) {
-    const xMin = min(projectedNodes.map(p => p.x0))
-    const xMax = max(projectedNodes.map(p => p.x1))
-    const yMin = min(projectedNodes.map(p => p.y0))
-    const yMax = max(projectedNodes.map(p => p.y1))
+    const xMin = min(projectedNodes.map((p) => p.x0))
+    const xMax = max(projectedNodes.map((p) => p.x1))
+    const yMin = min(projectedNodes.map((p) => p.y0))
+    const yMax = max(projectedNodes.map((p) => p.y1))
 
     const projectionScaleX = scaleLinear()
       .domain([xMin, xMax])
@@ -1248,7 +1250,7 @@ export const calculateNetworkFrame = (
     const projectionScaleY = scaleLinear()
       .domain([yMin, yMax])
       .range([margin.top, adjustedSize[1] - margin.bottom])
-    projectedNodes.forEach(node => {
+    projectedNodes.forEach((node) => {
       node.x = projectionScaleX(node.x)
       node.y = projectionScaleY(node.y)
       node.x0 = projectionScaleX(node.x0)
@@ -1259,9 +1261,9 @@ export const calculateNetworkFrame = (
       node.zoomedWidth = node.x1 - node.x0
     })
 
-    projectedEdges.forEach(edge => {
+    projectedEdges.forEach((edge) => {
       if (edge.points) {
-        edge.points.forEach(p => {
+        edge.points.forEach((p) => {
           p.x = projectionScaleX(p.x)
           p.y = projectionScaleY(p.y)
         })
@@ -1269,11 +1271,11 @@ export const calculateNetworkFrame = (
     })
   }
 
-  projectedNodes.forEach(node => {
+  projectedNodes.forEach((node) => {
     node.nodeSize = nodeSizeAccessor(node)
   })
 
-  projectedEdges.forEach(edge => {
+  projectedEdges.forEach((edge) => {
     edge.width = edgeWidthAccessor(edge)
   })
 
@@ -1313,7 +1315,7 @@ export const calculateNetworkFrame = (
         canvasEdges && stringToFn<boolean>(canvasEdges, undefined, true),
       renderKeyFn: currentProps.edgeRenderKey
         ? currentProps.edgeRenderKey
-        : d => d._NWFEdgeKey || d.key || `${d.source.id}-${d.target.id}`,
+        : (d) => d._NWFEdgeKey || d.key || `${d.source.id}-${d.target.id}`,
       behavior: drawEdges,
       projection: networkSettings.projection,
       type: edgeType,
@@ -1392,11 +1394,12 @@ export const calculateNetworkFrame = (
     "circlepack",
     "treemap",
     "partition",
-    "chord",
-    "matrix"
+    "chord"
+    //    "matrix"
   ]
   if (
-    (hoverAnnotation && areaBasedTypes.find(d => d === networkSettings.type)) ||
+    (hoverAnnotation &&
+      areaBasedTypes.find((d) => d === networkSettings.type)) ||
     hoverAnnotation === "area"
   ) {
     if (hoverAnnotation !== "edge") {

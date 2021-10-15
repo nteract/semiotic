@@ -33,7 +33,7 @@ interface BuckeyArrayType {
   push(item: GenericObject): number
 }
 
-const contourMap = d => [d.xy.x, d.xy.y]
+const contourMap = (d) => [d.xy.x, d.xy.y]
 
 const verticalXYSorting = (a, b) => a.xy.y - b.xy.y
 const horizontalXYSorting = (a, b) => b.xy.x - a.xy.x
@@ -61,9 +61,7 @@ function createSummaryAxis({
   const axisWidth = projection === "horizontal" ? adjustedSize[0] : columnWidth
   const axisHeight = projection === "vertical" ? adjustedSize[1] : columnWidth
   axisSettings.size = [axisWidth, axisHeight]
-  const axisScale = scaleLinear()
-    .domain(axisDomain)
-    .range([0, columnWidth])
+  const axisScale = scaleLinear().domain(axisDomain).range([0, columnWidth])
 
   const renderedSummaryAxis = axisCreator(axisSettings, summaryI, axisScale)
 
@@ -141,7 +139,7 @@ export function boxplotRenderFn({
 
     const renderValue = renderMode ? renderMode(summary, summaryI) : undefined
 
-    summaryValueNest = thisSummaryData.map(p => p.value).sort((a, b) => a - b)
+    summaryValueNest = thisSummaryData.map((p) => p.value).sort((a, b) => a - b)
 
     summaryValueNest = [
       quantile(summaryValueNest, 0.0),
@@ -166,7 +164,7 @@ export function boxplotRenderFn({
 
     if (projection === "vertical") {
       summaryPositionNest = thisSummaryData
-        .map(p => p.scaledVerticalValue)
+        .map((p) => p.scaledVerticalValue)
         .sort((a, b) => b - a)
 
       translate = `translate(${summary.x + summary.padding},0)`
@@ -265,8 +263,10 @@ export function boxplotRenderFn({
       )
     } else if (projection === "horizontal") {
       summaryPositionNest = thisSummaryData
-        .map(p => p.scaledValue)
+        .map((p) => p.scaledValue)
         .sort((a, b) => a - b)
+
+      const boxplotY = summary.x + summary.padding
 
       translate = `translate(0,${summary.x + summary.padding})`
 
@@ -326,7 +326,7 @@ export function boxplotRenderFn({
           key,
           summaryPieceName: "max",
           x: summaryPositionNest[4],
-          y: 0,
+          y: boxplotY,
           value: summaryValueNest[4]
         },
         {
@@ -334,7 +334,7 @@ export function boxplotRenderFn({
           key,
           summaryPieceName: "q3area",
           x: summaryPositionNest[3],
-          y: 0,
+          y: boxplotY,
           value: summaryValueNest[3]
         },
         {
@@ -342,7 +342,7 @@ export function boxplotRenderFn({
           key,
           summaryPieceName: "median",
           x: summaryPositionNest[2],
-          y: 0,
+          y: boxplotY,
           value: summaryValueNest[2]
         },
         {
@@ -350,7 +350,7 @@ export function boxplotRenderFn({
           key,
           summaryPieceName: "q1area",
           x: summaryPositionNest[1],
-          y: 0,
+          y: boxplotY,
           value: summaryValueNest[1]
         },
         {
@@ -358,7 +358,7 @@ export function boxplotRenderFn({
           key,
           summaryPieceName: "min",
           x: summaryPositionNest[0],
-          y: 0,
+          y: boxplotY,
           value: summaryValueNest[0]
         }
       )
@@ -366,7 +366,7 @@ export function boxplotRenderFn({
 
     if (projection === "radial") {
       summaryPositionNest = thisSummaryData
-        .map(p => p.scaledValue)
+        .map((p) => p.scaledValue)
         .sort((a, b) => a - b)
 
       summaryPositionNest = [
@@ -526,8 +526,8 @@ export function boxplotRenderFn({
           tabIndex={-1}
           data-o={key}
           aria-label={`${key} boxplot showing ${summaryXYCoords
-            .filter(d => d.key === key)
-            .map(d => `${d.label} ${d.value}`)}`}
+            .filter((d) => d.key === key)
+            .map((d) => `${d.label} ${d.value}`)}`}
         >
           <Mark
             {...baseMarkProps}
@@ -726,10 +726,10 @@ export function boxplotRenderFn({
 
       if (outliers) {
         const outlierPoints = thisSummaryData.filter(
-          d => d.value > maxOutlier || d.value < minOutlier
+          (d) => d.value > maxOutlier || d.value < minOutlier
         )
 
-        outlierPoints.forEach(point => {
+        outlierPoints.forEach((point) => {
           outlierMarks.push(
             <Mark
               {...baseMarkProps}
@@ -756,8 +756,8 @@ export function boxplotRenderFn({
           tabIndex={-1}
           data-o={key}
           aria-label={`${key} boxplot showing ${summaryXYCoords
-            .filter(d => d.key === key)
-            .map(d => `${d.label} ${d.value}`)
+            .filter((d) => d.key === key)
+            .map((d) => `${d.label} ${d.value}`)
             .join(", ")}`}
         >
           {boxplotMarks}
@@ -815,7 +815,7 @@ export function contourRenderFn({
             style={styleFn(ordset.pieceData[0].data, ordsetI)}
             className={classFn(ordset.pieceData[0].data, ordsetI)}
             markType={"path"}
-            d={`M${d.coordinates[0].map(p => p.join(",")).join("L")}Z`}
+            d={`M${d.coordinates[0].map((p) => p.join(",")).join("L")}Z`}
           />
         )
       })
@@ -871,7 +871,7 @@ export function bucketizedRenderingFn({
 
   const buckets = type.bins || 25
   const relativeBuckets = type.relative ? {} : false
-  const summaryValueAccessor = type.binValue || (d => d.length)
+  const summaryValueAccessor = type.binValue || ((d) => d.length)
 
   const summaryElementStylingFn = type.elementStyleFn || emptyObjectReturnFn
 
@@ -911,8 +911,8 @@ export function bucketizedRenderingFn({
 
   const xyValue =
     projection === "vertical"
-      ? p => p.piece.scaledVerticalValue
-      : p => p.piece.scaledValue
+      ? (p) => p.piece.scaledVerticalValue
+      : (p) => p.piece.scaledValue
 
   const instantiatedHistogram = baseHistogram
     .domain(binDomain)
@@ -931,7 +931,9 @@ export function bucketizedRenderingFn({
 
     let keyBins
     if (type.useBins === false) {
-      const calculatedValues = summaryPositionNest.map(value => xyValue(value))
+      const calculatedValues = summaryPositionNest.map((value) =>
+        xyValue(value)
+      )
       keyBins = summaryPositionNest
         .map((value, i) => {
           const bucketArray: BuckeyArrayType = []
@@ -946,19 +948,19 @@ export function bucketizedRenderingFn({
       keyBins = instantiatedHistogram(summaryPositionNest)
     }
 
-    keyBins = keyBins.map(d => ({
+    keyBins = keyBins.map((d) => ({
       y: d.x0,
       y1: d.x1 - d.x0,
       pieces: d,
-      value: summaryValueAccessor(d.map(p => p.piece.data))
+      value: summaryValueAccessor(d.map((p) => p.piece.data))
     }))
 
     if (type.type === "histogram" || type.type === "heatmap") {
-      keyBins = keyBins.filter(d => d.value !== 0)
+      keyBins = keyBins.filter((d) => d.value !== 0)
     }
 
     const relativeMax =
-      keyBins.length === 0 ? 0 : max(keyBins.map(d => d.value))
+      keyBins.length === 0 ? 0 : max(keyBins.map((d) => d.value))
     if (relativeBuckets) {
       relativeBuckets[key] = relativeMax
     }
@@ -1029,7 +1031,7 @@ export function bucketizedRenderingFn({
           })
         )
       }
-      mappedBars.points.forEach(d => {
+      mappedBars.points.forEach((d) => {
         d.x += translate[0]
         d.y += translate[1]
       })
@@ -1063,10 +1065,10 @@ export function bucketizedRenderingFn({
           calculatedSummaryClass = thisSummaryData[0]
             ? classFn(thisSummaryData[0].piece.data, summaryI, subsettingIndex)
             : ""
-          actualBins = bins.map(d => {
+          actualBins = bins.map((d) => {
             const actualPieces = d.pieces
               .filter((p, pi) => subsettingFn(p.piece, pi))
-              .map(d => d)
+              .map((d) => d)
             const actualValue = summaryValueAccessor(actualPieces)
             return {
               ...d,
@@ -1081,7 +1083,7 @@ export function bucketizedRenderingFn({
         let violinPoints = []
 
         if (projection === "horizontal") {
-          actualBins.forEach(summaryPoint => {
+          actualBins.forEach((summaryPoint) => {
             const xValue = summaryPoint.y - bucketSize / 2
             const yValue = ((summaryPoint.value / actualMax) * columnWidth) / 2
 
@@ -1094,14 +1096,14 @@ export function bucketizedRenderingFn({
               key: summary.name,
               x: xValue + translate[0],
               y: yValue + translate[1],
-              pieces: summaryPoint.pieces.map(d => d.piece),
+              pieces: summaryPoint.pieces.map((d) => d.piece),
               value: summaryPoint.value
             })
           })
           violinArea
-            .x(d => d.x)
-            .y0(d => d.y0)
-            .y1(d => d.y1)
+            .x((d) => d.x)
+            .y0((d) => d.y0)
+            .y1((d) => d.y1)
             .defined(
               (d, i) =>
                 d.y0 !== 0 ||
@@ -1109,7 +1111,7 @@ export function bucketizedRenderingFn({
                 (violinPoints[i + 1] && violinPoints[i + 1].y0 !== 0)
             )
         } else if (projection === "vertical") {
-          actualBins.forEach(summaryPoint => {
+          actualBins.forEach((summaryPoint) => {
             const yValue = summaryPoint.y + bucketSize / 2
             const xValue = ((summaryPoint.value / actualMax) * columnWidth) / 2
 
@@ -1123,14 +1125,14 @@ export function bucketizedRenderingFn({
               key: summary.name,
               x: xValue + translate[0],
               y: yValue + translate[1],
-              pieces: summaryPoint.pieces.map(d => d.piece),
+              pieces: summaryPoint.pieces.map((d) => d.piece),
               value: summaryPoint.value
             })
           })
           violinArea
-            .y(d => d.y)
-            .x0(d => d.x0)
-            .x1(d => d.x1)
+            .y((d) => d.y)
+            .x0((d) => d.x0)
+            .x1((d) => d.x1)
             .defined(
               (d, i) =>
                 d.x0 !== 0 ||
@@ -1141,10 +1143,10 @@ export function bucketizedRenderingFn({
           const angle = summary.pct - summary.pct_padding / 2
           const midAngle = summary.pct_middle
           violinPoints = actualBins
-          violinArea = inbins => {
+          violinArea = (inbins) => {
             const forward = []
             const backward = []
-            inbins.forEach(bin => {
+            inbins.forEach((bin) => {
               const outsidePoint = pointOnArcAtAngle(
                 [0, 0],
                 midAngle + (angle * bin.value) / actualMax / 2,
@@ -1161,23 +1163,23 @@ export function bucketizedRenderingFn({
                 key: summary.name,
                 x: insidePoint[0] + translate[0],
                 y: insidePoint[1] + translate[1],
-                pieces: bin.pieces.map(d => d.piece),
+                pieces: bin.pieces.map((d) => d.piece),
                 value: bin.value
               })
               summaryXYCoords.push({
                 key: summary.name,
                 x: outsidePoint[0] + translate[0],
                 y: outsidePoint[1] + translate[1],
-                pieces: bin.pieces.map(d => d.piece),
+                pieces: bin.pieces.map((d) => d.piece),
                 value: bin.value
               })
 
               forward.push(outsidePoint)
               backward.push(insidePoint)
             })
-            return `M${forward.map(d => d.join(",")).join("L")}L${backward
+            return `M${forward.map((d) => d.join(",")).join("L")}L${backward
               .reverse()
-              .map(d => d.join(","))
+              .map((d) => d.join(","))
               .join("L")}Z`
           }
         }
@@ -1201,12 +1203,12 @@ export function bucketizedRenderingFn({
         )
         if (iqr) {
           let iqrPieces = []
-          actualBins.forEach(aBin => {
+          actualBins.forEach((aBin) => {
             iqrPieces.push(...aBin.pieces)
           })
 
           iqrPieces = iqrPieces
-            .map(d =>
+            .map((d) =>
               projection === "vertical"
                 ? d.piece.scaledVerticalValue
                 : d.piece.scaledValue
@@ -1293,8 +1295,8 @@ export function bucketizedRenderingFn({
 
       let joyArea = line()
         .curve(actualInterpolator || curveCatmullRom)
-        .x(d => d.x)
-        .y(d => d.y)
+        .x((d) => d.x)
+        .y((d) => d.y)
 
       const joyHeight = type.amplitude || 0
 
@@ -1334,13 +1336,13 @@ export function bucketizedRenderingFn({
               key: summary.name,
               x: xValue + translate[0],
               y: yValue + translate[1],
-              pieces: summaryPoint.pieces.map(d => d.piece),
+              pieces: summaryPoint.pieces.map((d) => d.piece),
               value: summaryPoint.value
             })
           }
         })
       } else if (projection === "vertical") {
-        joyBins.forEach(summaryPoint => {
+        joyBins.forEach((summaryPoint) => {
           const yValue = summaryPoint.y + bucketSize / 2
           const xValue =
             type.flip === true
@@ -1358,7 +1360,7 @@ export function bucketizedRenderingFn({
             key: summary.name,
             x: xValue + translate[0],
             y: yValue + translate[1],
-            pieces: summaryPoint.pieces.map(d => d.piece),
+            pieces: summaryPoint.pieces.map((d) => d.piece),
             value: summaryPoint.value
           })
         })
@@ -1368,9 +1370,9 @@ export function bucketizedRenderingFn({
 
         translate = [0, 0]
         joyPoints = joyBins
-        joyArea = inbins => {
+        joyArea = (inbins) => {
           const forward = []
-          inbins.forEach(bin => {
+          inbins.forEach((bin) => {
             const outsidePoint = pointOnArcAtAngle(
               [adjustedSize[0] / 2, adjustedSize[1] / 2],
               midAngle + (angle * bin.value) / actualMax,
@@ -1381,13 +1383,13 @@ export function bucketizedRenderingFn({
               key: summary.name,
               x: outsidePoint[0] + translate[0],
               y: outsidePoint[1] + translate[1],
-              pieces: bin.pieces.map(d => d.piece),
+              pieces: bin.pieces.map((d) => d.piece),
               value: bin.value
             })
 
             forward.push(outsidePoint)
           })
-          return `M${forward.map(d => d.join(",")).join("L")}Z`
+          return `M${forward.map((d) => d.join(",")).join("L")}Z`
         }
       }
 
@@ -1437,20 +1439,20 @@ export function bucketizedRenderingFn({
       let currentHorizon = 0
 
       while (remainingPieces === true) {
-        const currentStrip = horizonBins.map(d => ({
+        const currentStrip = horizonBins.map((d) => ({
           ...d,
           value: Math.max(0, Math.min(d.value - currentHorizon, horizon))
         }))
         multiBins.push(
-          currentStrip.map(d => ({ ...d, value: d.value * numHorizons }))
+          currentStrip.map((d) => ({ ...d, value: d.value * numHorizons }))
         )
         currentHorizon += horizon
-        if (max(currentStrip.map(d => d.value)) < horizon) {
+        if (max(currentStrip.map((d) => d.value)) < horizon) {
           remainingPieces = false
         }
       }
 
-      multiBins = multiBins.filter(d => sum(d.map(p => p.value)) > 0)
+      multiBins = multiBins.filter((d) => sum(d.map((p) => p.value)) > 0)
 
       horizonBins.forEach((summaryPoint, i) => {
         if (i !== 0 && i !== horizonBins.length - 1) {
@@ -1463,7 +1465,7 @@ export function bucketizedRenderingFn({
               key: summary.name,
               x: xValue + translate[0],
               y: yValue + translate[1],
-              pieces: summaryPoint.pieces.map(d => d.piece),
+              pieces: summaryPoint.pieces.map((d) => d.piece),
               value: summaryPoint.value
             })
           } else if (projection === "vertical") {
@@ -1479,7 +1481,7 @@ export function bucketizedRenderingFn({
               key: summary.name,
               x: xValue + translate[0],
               y: yValue + translate[1],
-              pieces: summaryPoint.pieces.map(d => d.piece),
+              pieces: summaryPoint.pieces.map((d) => d.piece),
               value: summaryPoint.value
             })
           }
@@ -1498,11 +1500,11 @@ export function bucketizedRenderingFn({
 
         let horizonArea = line()
           .curve(actualInterpolator || curveLinear)
-          .x(d => d.x)
-          .y(d => d.y)
+          .x((d) => d.x)
+          .y((d) => d.y)
 
         if (projection === "horizontal") {
-          multiBin.forEach(summaryPoint => {
+          multiBin.forEach((summaryPoint) => {
             const xValue = summaryPoint.y - bucketSize / 2
             const yValue =
               (-summaryPoint.value / actualMax) * columnWidth + columnWidth / 2
@@ -1515,7 +1517,7 @@ export function bucketizedRenderingFn({
             //Don't make an interaction point for the first or last
           })
         } else if (projection === "vertical") {
-          multiBin.forEach(summaryPoint => {
+          multiBin.forEach((summaryPoint) => {
             const yValue = summaryPoint.y + bucketSize / 2
             const xValue =
               type.flip === true
@@ -1535,9 +1537,9 @@ export function bucketizedRenderingFn({
 
           translate = [0, 0]
           horizonPoints = multiBin
-          horizonArea = inbins => {
+          horizonArea = (inbins) => {
             const forward = []
-            inbins.forEach(bin => {
+            inbins.forEach((bin) => {
               const outsidePoint = pointOnArcAtAngle(
                 [adjustedSize[0] / 2, adjustedSize[1] / 2],
                 midAngle + (angle * bin.value) / actualMax,
@@ -1546,7 +1548,7 @@ export function bucketizedRenderingFn({
 
               forward.push(outsidePoint)
             })
-            return `M${forward.map(d => d.join(",")).join("L")}Z`
+            return `M${forward.map((d) => d.join(",")).join("L")}Z`
           }
         }
 

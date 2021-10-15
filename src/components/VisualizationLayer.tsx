@@ -35,6 +35,7 @@ type Props = {
   axesTickLines?: React.ReactNode
   frameRenderOrder: Array<string>
   additionalVizElements: object
+  disableProgressiveRendering?: boolean
 }
 
 type State = {
@@ -70,23 +71,23 @@ type RenderQueue = {
   data: Function
 }
 
-const renderQueue = function(func) {
+const renderQueue = function (func) {
   let _queue = [], // data to be rendered
     _rate = 1000, // number of calls per frame
     _invalidate = () => {}, // invalidate last render queue
     _clear = () => {} // clearing function
 
   // type RenderQueueType = { (): (data: any) => void, render?: Function, invalidate?: Function, data?: Function}
-  let rq: any = function(data) {
+  let rq: any = function (data) {
     if (data) rq.data(data)
     _invalidate()
     _clear()
     rq.render()
   }
 
-  rq.render = function() {
+  rq.render = function () {
     let valid = true
-    _invalidate = rq.invalidate = function() {
+    _invalidate = rq.invalidate = function () {
       valid = false
     }
 
@@ -100,28 +101,28 @@ const renderQueue = function(func) {
     doFrame()
   }
 
-  rq.data = function(data) {
+  rq.data = function (data) {
     _invalidate()
     _queue = data.slice(0) // creates a copy of the data
     return rq
   }
 
-  rq.add = function(data) {
+  rq.add = function (data) {
     _queue = _queue.concat(data)
   }
 
-  rq.rate = function(value) {
+  rq.rate = function (value) {
     if (!arguments.length) return _rate
     _rate = value
     return rq
   }
 
-  rq.remaining = function() {
+  rq.remaining = function () {
     return _queue.length
   }
 
   // clear the canvas
-  rq.clear = function(func) {
+  rq.clear = function (func) {
     if (!arguments.length) {
       _clear()
       return rq
@@ -135,7 +136,7 @@ const renderQueue = function(func) {
   let timer_frame =
     window.requestAnimationFrame ||
     window.webkitRequestAnimationFrame ||
-    function(callback) {
+    function (callback) {
       setTimeout(callback, 17)
     }
 
@@ -163,10 +164,10 @@ const updateVisualizationLayer = (props: Props, handleKeyDown: Function) => {
     renderPipeline
   ) as VizLayerTypes[]
   const renderKeys = renderOrder.concat(
-    renderVizKeys.filter(d => renderOrder.indexOf(d) === -1)
+    renderVizKeys.filter((d) => renderOrder.indexOf(d) === -1)
   )
 
-  renderKeys.forEach(k => {
+  renderKeys.forEach((k) => {
     const pipe = renderPipeline[k]
     if (
       pipe &&
@@ -205,11 +206,13 @@ const updateVisualizationLayer = (props: Props, handleKeyDown: Function) => {
                 `${renderedPipe.length} ${pipe.ariaLabel.items}s in a ${pipe.ariaLabel.chart}`) ||
               k
             }
-            onKeyDown={e => handleKeyDown(e, k)}
+            onKeyDown={(e) => handleKeyDown(e, k)}
             onBlur={() => {
               props.voronoiHover(undefined)
             }}
-            ref={thisNode => thisNode && (piecesGroup[k] = thisNode.childNodes)}
+            ref={(thisNode) =>
+              thisNode && (piecesGroup[k] = thisNode.childNodes)
+            }
           >
             {renderedPipe}
           </g>
@@ -247,144 +250,153 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     }
   }
 
-  renderCanvas = (context, margin, np, sketchyRenderingEngine, rc) => piece => {
-    const style = piece.styleFn
-      ? piece.styleFn({ ...piece.d, ...piece.d.data }, piece.i) || {}
-      : {
-          fill: "black",
-          stroke: "black",
-          opacity: 1,
-          fillOpacity: 1,
-          strokeOpacity: 1,
-          strokeWidth: 1
-        }
+  renderCanvas =
+    (
+      context,
+      margin,
+      np,
+      sketchyRenderingEngine,
+      rc,
+      disableProgressiveRendering
+    ) =>
+    (piece) => {
+      const style = piece.styleFn
+        ? piece.styleFn({ ...piece.d, ...piece.d.data }, piece.i) || {}
+        : {
+            fill: "black",
+            stroke: "black",
+            opacity: 1,
+            fillOpacity: 1,
+            strokeOpacity: 1,
+            strokeWidth: 1
+          }
 
-    const fill = style.fill ? style.fill : "black"
-    const stroke = style.stroke ? style.stroke : "black"
-    context.setTransform(1, 0, 0, 1, margin.left, margin.top)
-    context.translate(...np.position)
-    context.translate(piece.tx, piece.ty)
-    context.fillStyle = fill
-    context.strokeStyle = stroke
-    context.lineWidth = style.strokeWidth ? style.strokeWidth : 0
+      const fill = style.fill ? style.fill : "black"
+      const stroke = style.stroke ? style.stroke : "black"
+      context.setTransform(1, 0, 0, 1, margin.left, margin.top)
+      context.translate(...np.position)
+      context.translate(piece.tx, piece.ty)
+      context.fillStyle = fill
+      context.strokeStyle = stroke
+      context.lineWidth = style.strokeWidth ? style.strokeWidth : 0
 
-    let rcSettings = {}
-    const renderObject =
-      piece.markProps.renderMode ||
-      (piece.renderFn &&
-        piece.renderFn({ ...piece.d, ...piece.d.data }, piece.i))
-    let actualRenderMode =
-      (renderObject && renderObject.renderMode) || renderObject
+      let rcSettings = {}
+      const renderObject =
+        piece.markProps.renderMode ||
+        (piece.renderFn &&
+          piece.renderFn({ ...piece.d, ...piece.d.data }, piece.i))
+      let actualRenderMode =
+        (renderObject && renderObject.renderMode) || renderObject
 
-    if (actualRenderMode) {
-      if (!sketchyRenderingEngine) {
-        console.error(
-          "You cannot render sketchy graphics without specifying a Rough.js-like library as the sketchyRenderingEngine prop of your frame"
-        )
-        actualRenderMode = undefined
-      } else {
-        const RoughCanvas = sketchyRenderingEngine.canvas
-        if (!RoughCanvas) {
+      if (actualRenderMode) {
+        if (!sketchyRenderingEngine) {
           console.error(
-            "The sketchyRenderingEngine you specify does not expose a prop `RoughCanvas` and so cannot render sketchy HTML5 Canvas graphics"
+            "You cannot render sketchy graphics without specifying a Rough.js-like library as the sketchyRenderingEngine prop of your frame"
           )
+          actualRenderMode = undefined
         } else {
-          rc = rc || RoughCanvas(np.canvasContext)
-          const rcExtension =
-            (typeof renderObject === "object" && renderObject) || {}
-          rcSettings = {
-            fill,
-            stroke,
-            strokeWidth: context.lineWidth,
-            ...rcExtension
+          const RoughCanvas = sketchyRenderingEngine.canvas
+          if (!RoughCanvas) {
+            console.error(
+              "The sketchyRenderingEngine you specify does not expose a prop `RoughCanvas` and so cannot render sketchy HTML5 Canvas graphics"
+            )
+          } else {
+            rc = rc || RoughCanvas(np.canvasContext)
+            const rcExtension =
+              (typeof renderObject === "object" && renderObject) || {}
+            rcSettings = {
+              fill,
+              stroke,
+              strokeWidth: context.lineWidth,
+              ...rcExtension
+            }
           }
         }
       }
-    }
 
-    if (
-      piece.markProps.markType === "circle" ||
-      (piece.markProps.markType === "rect" && piece.markProps.rx > 0)
-    ) {
-      let vizX = 0,
-        vizY = 0,
-        r = style.r || piece.markProps.r
-      if (piece.markProps.width) {
-        const halfWidth = piece.markProps.width / 2
-        vizX = piece.markProps.x + halfWidth
-        vizY = piece.markProps.y + halfWidth
-        r = halfWidth
-      }
-      if (actualRenderMode === "sketchy") {
-        if (context.globalAlpha !== 0) rc.circle(vizX, vizY, r, rcSettings)
-      } else {
-        context.beginPath()
-        context.arc(vizX, vizY, r, 0, 2 * Math.PI)
-        context.globalAlpha = style.fillOpacity || style.opacity || 1
-        if (style.fill && style.fill !== "none" && context.globalAlpha !== 0)
-          context.fill()
-        context.globalAlpha = style.strokeOpacity || style.opacity || 1
-        if (
-          style.stroke &&
-          style.stroke !== "none" &&
-          context.globalAlpha !== 0
-        )
-          context.stroke()
-      }
-    } else if (piece.markProps.markType === "rect") {
-      if (actualRenderMode === "sketchy") {
-        context.globalAlpha = style.opacity || 1
-        if (context.globalAlpha !== 0)
-          rc.rectangle(
-            piece.markProps.x,
-            piece.markProps.y,
-            piece.markProps.width,
-            piece.markProps.height,
-            rcSettings
+      if (
+        piece.markProps.markType === "circle" ||
+        (piece.markProps.markType === "rect" && piece.markProps.rx > 0)
+      ) {
+        let vizX = 0,
+          vizY = 0,
+          r = style.r || piece.markProps.r
+        if (piece.markProps.width) {
+          const halfWidth = piece.markProps.width / 2
+          vizX = piece.markProps.x + halfWidth
+          vizY = piece.markProps.y + halfWidth
+          r = halfWidth
+        }
+        if (actualRenderMode === "sketchy") {
+          if (context.globalAlpha !== 0) rc.circle(vizX, vizY, r, rcSettings)
+        } else {
+          context.beginPath()
+          context.arc(vizX, vizY, r, 0, 2 * Math.PI)
+          context.globalAlpha = style.fillOpacity || style.opacity || 1
+          if (style.fill && style.fill !== "none" && context.globalAlpha !== 0)
+            context.fill()
+          context.globalAlpha = style.strokeOpacity || style.opacity || 1
+          if (
+            style.stroke &&
+            style.stroke !== "none" &&
+            context.globalAlpha !== 0
           )
-      } else {
-        context.globalAlpha = style.fillOpacity || style.opacity || 1
-        if (style.fill && style.fill !== "none" && context.globalAlpha !== 0)
-          context.fillRect(
-            piece.markProps.x,
-            piece.markProps.y,
-            piece.markProps.width,
-            piece.markProps.height
+            context.stroke()
+        }
+      } else if (piece.markProps.markType === "rect") {
+        if (actualRenderMode === "sketchy") {
+          context.globalAlpha = style.opacity || 1
+          if (context.globalAlpha !== 0)
+            rc.rectangle(
+              piece.markProps.x,
+              piece.markProps.y,
+              piece.markProps.width,
+              piece.markProps.height,
+              rcSettings
+            )
+        } else {
+          context.globalAlpha = style.fillOpacity || style.opacity || 1
+          if (style.fill && style.fill !== "none" && context.globalAlpha !== 0)
+            context.fillRect(
+              piece.markProps.x,
+              piece.markProps.y,
+              piece.markProps.width,
+              piece.markProps.height
+            )
+          context.globalAlpha = style.strokeOpacity || style.opacity || 1
+          if (
+            style.stroke &&
+            style.stroke !== "none" &&
+            context.globalAlpha !== 0
           )
-        context.globalAlpha = style.strokeOpacity || style.opacity || 1
-        if (
-          style.stroke &&
-          style.stroke !== "none" &&
-          context.globalAlpha !== 0
-        )
-          context.strokeRect(
-            piece.markProps.x,
-            piece.markProps.y,
-            piece.markProps.width,
-            piece.markProps.height
+            context.strokeRect(
+              piece.markProps.x,
+              piece.markProps.y,
+              piece.markProps.width,
+              piece.markProps.height
+            )
+        }
+      } else if (piece.markProps.markType === "path") {
+        if (actualRenderMode === "sketchy") {
+          context.globalAlpha = style.opacity || 1
+          rc.path(piece.markProps.d, rcSettings)
+        } else {
+          const p = new Path2D(piece.markProps.d)
+          context.globalAlpha = style.strokeOpacity || style.opacity || 1
+          if (
+            style.stroke &&
+            style.stroke !== "none" &&
+            context.globalAlpha !== 0
           )
-      }
-    } else if (piece.markProps.markType === "path") {
-      if (actualRenderMode === "sketchy") {
-        context.globalAlpha = style.opacity || 1
-        rc.path(piece.markProps.d, rcSettings)
+            context.stroke(p)
+          context.globalAlpha = style.fillOpacity || style.opacity || 1
+          if (style.fill && style.fill !== "none" && context.globalAlpha !== 0)
+            context.fill(p)
+        }
       } else {
-        const p = new Path2D(piece.markProps.d)
-        context.globalAlpha = style.strokeOpacity || style.opacity || 1
-        if (
-          style.stroke &&
-          style.stroke !== "none" &&
-          context.globalAlpha !== 0
-        )
-          context.stroke(p)
-        context.globalAlpha = style.fillOpacity || style.opacity || 1
-        if (style.fill && style.fill !== "none" && context.globalAlpha !== 0)
-          context.fill(p)
+        console.error("CURRENTLY UNSUPPORTED MARKTYPE FOR CANVAS RENDERING")
       }
-    } else {
-      console.error("CURRENTLY UNSUPPORTED MARKTYPE FOR CANVAS RENDERING")
     }
-  }
 
   queuedCanvasRender = renderQueue(() => {})
 
@@ -393,7 +405,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     const propKeys = Object.keys(np)
 
     let update = false
-    propKeys.forEach(key => {
+    propKeys.forEach((key) => {
       if (key !== "title" && lp[key] !== np[key]) {
         update = true
       }
@@ -401,7 +413,13 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
 
     if (update === false || np.disableContext || !np.canvasContext) return
 
-    const { sketchyRenderingEngine, width, height, margin } = np
+    const {
+      sketchyRenderingEngine,
+      width,
+      height,
+      margin,
+      disableProgressiveRendering
+    } = np
 
     const size = [
       width + margin.left + margin.right,
@@ -424,16 +442,21 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
 
     context.clearRect(-margin.left, -margin.top, size[0], size[1])
 
-    this.queuedCanvasRender.invalidate()
-    this.queuedCanvasRender.clear()
-
-    this.queuedCanvasRender = renderQueue(
+    if (disableProgressiveRendering) {
       this.renderCanvas(context, margin, np, sketchyRenderingEngine, rc)
-    ).clear(() => {
-      context.clearRect(-margin.left, -margin.top, size[0], size[1])
-    })
+    } else {
+      this.queuedCanvasRender.invalidate()
+      this.queuedCanvasRender.clear()
 
-    this.queuedCanvasRender(this.state.canvasDrawing)
+      this.queuedCanvasRender = renderQueue(
+        this.renderCanvas(context, margin, np, sketchyRenderingEngine, rc)
+      ).clear(() => {
+        context.clearRect(-margin.left, -margin.top, size[0], size[1])
+      })
+
+      this.queuedCanvasRender(this.state.canvasDrawing)
+    }
+
     context.setTransform(1, 0, 0, 1, 0, 0)
     context.globalAlpha = 1
 
@@ -446,13 +469,14 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
       this.state.piecesGroup[this.state.focusedVisualizationGroup] &&
       this.state.focusedPieceIndex !== null
     ) {
-      const focusElParent = this.state.piecesGroup[
-        this.state.focusedVisualizationGroup
-      ][this.state.focusedPieceIndex]
+      const focusElParent =
+        this.state.piecesGroup[this.state.focusedVisualizationGroup][
+          this.state.focusedPieceIndex
+        ]
 
       const focusEl =
         (focusElParent &&
-          [...focusElParent.childNodes].find(child =>
+          [...focusElParent.childNodes].find((child) =>
             child.getAttribute("aria-label")
           )) ||
         focusElParent
@@ -467,7 +491,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     const propKeys = Object.keys(nextProps)
 
     let update = false
-    propKeys.forEach(key => {
+    propKeys.forEach((key) => {
       if (key !== "title" && lp[key] !== nextProps[key]) {
         update = true
       }
@@ -576,7 +600,7 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
 
     const orderedElements = []
 
-    frameRenderOrder.forEach(r => {
+    frameRenderOrder.forEach((r) => {
       if (renderHash[r]) {
         orderedElements.push(renderHash[r])
       }
