@@ -44,7 +44,7 @@ export function lineBounding({ summaryType, data, defined }) {
     bottomBoundingAccessor = boundingAccessor
   } = summaryType
 
-  data.forEach(lineData => {
+  data.forEach((lineData) => {
     const definedData = lineData._baseData.map(defined)
     let currentBaseData = []
     let currentXYFC = []
@@ -109,11 +109,11 @@ export function contouring({ summaryType, data, finalXExtent, finalYExtent }) {
     .rangeRound([resolution, 0])
     .nice()
 
-  data.forEach(contourData => {
+  data.forEach((contourData) => {
     let contourProjectedSummaries = contourDensity()
       .size([resolution, resolution])
-      .x(d => xScale(d[0]))
-      .y(d => yScale(d[1]))
+      .x((d) => xScale(d[0]))
+      .y((d) => yScale(d[1]))
       .thresholds(thresholds)
       .bandwidth(bandwidth)(contourData._xyfCoordinates)
 
@@ -121,15 +121,15 @@ export function contouring({ summaryType, data, finalXExtent, finalYExtent }) {
       contourProjectedSummaries = [contourProjectedSummaries[0]]
     }
 
-    const max = Math.max(...contourProjectedSummaries.map(d => d.value))
+    const max = Math.max(...contourProjectedSummaries.map((d) => d.value))
 
-    contourProjectedSummaries.forEach(summary => {
+    contourProjectedSummaries.forEach((summary) => {
       summary.parentSummary = contourData
       summary.bounds = []
       summary.percent = summary.value / max
-      summary.coordinates.forEach(poly => {
+      summary.coordinates.forEach((poly) => {
         poly.forEach((subpoly, i) => {
-          poly[i] = subpoly.map(coordpair => {
+          poly[i] = subpoly.map((coordpair) => {
             coordpair = [
               xScale.invert(coordpair[0]),
               yScale.invert(coordpair[1])
@@ -170,12 +170,12 @@ export function hexbinning({
   let finalYExtent = baseYExtent
 
   if (!finalXExtent) {
-    const xData = baseData.coordinates.map(p => p.x)
+    const xData = baseData.coordinates.map((p) => p.x)
     finalXExtent = [Math.min(...xData), Math.max(...xData)]
   }
 
   if (!finalYExtent) {
-    const yData = baseData.coordinates.map(p => p.y)
+    const yData = baseData.coordinates.map((p) => p.y)
     finalYExtent = [Math.min(...yData), Math.max(...yData)]
   }
 
@@ -195,13 +195,13 @@ export function hexbinning({
     //    binGraphic = "hex",
     bins = 0.05,
     cellPx,
-    binValue = d => d.length,
+    binValue = (d) => d.length,
     binMax,
     customMark
   } = summaryType
 
   if (baseData.coordinates && !baseData._xyfCoordinates) {
-    baseData._xyfCoordinates = baseData.coordinates.map(d => [d.x, d.y])
+    baseData._xyfCoordinates = baseData.coordinates.map((d) => [d.x, d.y])
   }
 
   const data = Array.isArray(baseData) ? baseData : [baseData]
@@ -213,15 +213,15 @@ export function hexbinning({
     (cellPx && cellPx / 2) || ((bins > 1 ? 1 / bins : bins) * size[0]) / 2
 
   const hexbinner = hexbin()
-    .x(d => hexBinXScale(d._xyfPoint[0]))
-    .y(d => hexBinYScale(d._xyfPoint[1]))
+    .x((d) => hexBinXScale(d._xyfPoint[0]))
+    .y((d) => hexBinYScale(d._xyfPoint[1]))
     .radius(actualResolution)
     .size(size)
 
   let hexMax
   const allHexes: ProjectedPoint[] = hexbinner.centers()
 
-  data.forEach(hexbinData => {
+  data.forEach((hexbinData) => {
     hexMax = 0
     const hexes = hexbinner(
       hexbinData._xyfCoordinates.map((d, i) => ({
@@ -232,11 +232,11 @@ export function hexbinning({
 
     const centerHash = {}
 
-    hexes.forEach(d => {
+    hexes.forEach((d) => {
       centerHash[`${parseInt(d.x)}-${parseInt(d.y)}`] = true
     })
 
-    allHexes.forEach(hexCenter => {
+    allHexes.forEach((hexCenter) => {
       if (!centerHash[`${parseInt(hexCenter[0])}-${parseInt(hexCenter[1])}`]) {
         const newHex: BinArray = []
         newHex.x = hexCenter[0]
@@ -245,7 +245,7 @@ export function hexbinning({
       }
     })
 
-    hexMax = Math.max(...hexes.map(d => binValue(d)))
+    hexMax = Math.max(...hexes.map((d) => binValue(d)))
 
     if (binMax) {
       binMax(hexMax)
@@ -264,7 +264,7 @@ export function hexbinning({
     const hexWidth = hexBinXScale.invert(actualResolution) - finalXExtent[0]
     const hexHeight = hexBinYScale.invert(actualResolution) - finalYExtent[0]
 
-    const hexacoordinates = hexBase.map(d => [
+    const hexacoordinates = hexBase.map((d) => [
       d[0] * hexWidth,
       d[1] * hexHeight
     ])
@@ -286,7 +286,7 @@ export function hexbinning({
                 percent,
                 value: hexValue,
                 radius: actualResolution,
-                hexCoordinates: hexBase.map(d => [
+                hexCoordinates: hexBase.map((d) => [
                   d[0] * actualResolution,
                   d[1] * actualResolution
                 ])
@@ -301,7 +301,7 @@ export function hexbinning({
             })}
           </g>
         ),
-        _xyfCoordinates: hexacoordinates.map(p => [p[0] + d.x, p[1] + d.y]),
+        _xyfCoordinates: hexacoordinates.map((p) => [p[0] + d.x, p[1] + d.y]),
         value: hexValue,
         percent,
         data: d,
@@ -313,7 +313,7 @@ export function hexbinning({
   })
 
   if (preprocess) {
-    projectedSummaries.forEach(d => {
+    projectedSummaries.forEach((d) => {
       d.x = d.data.x
       d.y = d.data.y
     })
@@ -335,12 +335,12 @@ export function heatmapping({
   summaryType: baseSummaryType,
   data: baseData,
   finalXExtent = [
-    Math.min(...baseData.coordinates.map(d => d.x)),
-    Math.max(...baseData.coordinates.map(d => d.x))
+    Math.min(...baseData.coordinates.map((d) => d.x)),
+    Math.max(...baseData.coordinates.map((d) => d.x))
   ],
   finalYExtent = [
-    Math.min(...baseData.coordinates.map(d => d.y)),
-    Math.max(...baseData.coordinates.map(d => d.y))
+    Math.min(...baseData.coordinates.map((d) => d.y)),
+    Math.max(...baseData.coordinates.map((d) => d.y))
   ],
   size,
   xScaleType = scaleLinear(),
@@ -357,7 +357,7 @@ export function heatmapping({
   }
 
   if (baseData.coordinates && !baseData._xyfCoordinates) {
-    baseData._xyfCoordinates = baseData.coordinates.map(d => [d.x, d.y])
+    baseData._xyfCoordinates = baseData.coordinates.map((d) => [d.x, d.y])
   }
 
   const data = Array.isArray(baseData) ? baseData : [baseData]
@@ -373,7 +373,7 @@ export function heatmapping({
 
   const {
     //    binGraphic = "square",
-    binValue = d => d.length,
+    binValue = (d) => d.length,
     xBins = summaryType.yBins || 0.05,
     yBins = xBins,
     xCellPx = !summaryType.xBins && summaryType.yCellPx,
@@ -395,7 +395,7 @@ export function heatmapping({
   ]
   let maxValue = -Infinity
 
-  data.forEach(heatmapData => {
+  data.forEach((heatmapData) => {
     const grid = []
     const flatGrid = []
 
@@ -449,12 +449,12 @@ export function heatmapping({
       }
     })
 
-    flatGrid.forEach(d => {
+    flatGrid.forEach((d) => {
       d.value = binValue(d.binItems)
       maxValue = Math.max(maxValue, d.value)
     })
 
-    flatGrid.forEach(d => {
+    flatGrid.forEach((d) => {
       d.percent = d.value / maxValue
       d.customMark = customMark && (
         <g transform={`translate(${d.gx},${d.gy})`}>
@@ -501,8 +501,8 @@ export function trendlining({
   summaryType: baseSummaryType,
   data: baseData,
   finalXExtent = [
-    Math.min(...baseData.coordinates.map(d => d.x)),
-    Math.max(...baseData.coordinates.map(d => d.x))
+    Math.min(...baseData.coordinates.map((d) => d.x)),
+    Math.max(...baseData.coordinates.map((d) => d.x))
   ],
   xScaleType = scaleLinear()
 }: SummaryLayoutType) {
@@ -542,7 +542,7 @@ export function trendlining({
   }
 
   if (baseData.coordinates && !baseData._xyfCoordinates) {
-    baseData._xyfCoordinates = baseData.coordinates.map(d => [d.x, d.y])
+    baseData._xyfCoordinates = baseData.coordinates.map((d) => [d.x, d.y])
   }
 
   const data = Array.isArray(baseData) ? baseData : [baseData]
@@ -550,9 +550,9 @@ export function trendlining({
   const xScale = xScaleType.domain([0, 1]).range(finalXExtent)
 
   projectedSummaries = []
-  data.forEach(bdata => {
+  data.forEach((bdata) => {
     const regressionLine = regression[regressionType](
-      bdata._xyfCoordinates.map(d => {
+      bdata._xyfCoordinates.map((d) => {
         let x = d[0]
         let y = d[1]
 
@@ -583,7 +583,7 @@ export function trendlining({
 
     const controlPointArray = []
 
-    steps.forEach(controlPoint => {
+    steps.forEach((controlPoint) => {
       controlPointArray.push(regressionLine.predict(xScale(controlPoint)))
     })
 
@@ -607,7 +607,7 @@ export function shapeBounds(coordinates) {
   let right = [-Infinity, 0]
   let top = [0, Infinity]
   let bottom = [0, -Infinity]
-  coordinates.forEach(d => {
+  coordinates.forEach((d) => {
     left = d[0] < left[0] ? d : left
     right = d[0] > right[0] ? d : right
     bottom = d[1] > bottom[1] ? d : bottom

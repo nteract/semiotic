@@ -254,13 +254,8 @@ class Frame extends React.Component<Props, State> {
       hoverAnnotation = blankArray
     }
 
-    const {
-      voronoiHover,
-      canvasContext,
-      finalDefs,
-      matte,
-      SpanOrDiv
-    } = this.state
+    const { voronoiHover, canvasContext, finalDefs, matte, SpanOrDiv } =
+      this.state
 
     const areaAnnotations = []
 
@@ -377,7 +372,7 @@ class Frame extends React.Component<Props, State> {
             {canvasRendering && (
               <canvas
                 className="frame-canvas"
-                ref={canvasContextRef =>
+                ref={(canvasContextRef) =>
                   (this.canvasContext = canvasContextRef)
                 }
                 style={{

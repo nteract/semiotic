@@ -121,6 +121,7 @@ export type BasicSummaryTypes =
   | "linebounds"
 
 export interface SummaryTypeSettings {
+  showSlope?: boolean
   type: BasicSummaryTypes | Function
   label?: string | Function
   cellPx?: number

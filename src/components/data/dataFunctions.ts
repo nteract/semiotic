@@ -97,10 +97,10 @@ export function stringToFn<StrFnType extends validStrFnTypes>(
   } else if (accessor instanceof Function) {
     return accessor
   } else if (raw === true) {
-    const castAccessor = (accessor as unknown) as StrFnType
+    const castAccessor = accessor as unknown as StrFnType
     return () => castAccessor
   } else if (typeof accessor === "string") {
-    return (d: GenericObject) => d[accessor]
+    return (d: GenericObject) => (d ? d[accessor] : undefined)
   }
 
   return () => undefined
@@ -129,7 +129,7 @@ export function stringToArrayFn<StrFnType extends validStrFnTypes>(
     arrayOfAccessors = [accessor]
   }
 
-  return arrayOfAccessors.map(a =>
+  return arrayOfAccessors.map((a) =>
     stringToFn<StrFnType>(a, defaultAccessor, raw)
   )
 }
@@ -242,7 +242,7 @@ export const calculateDataExtent = ({
     })
 
     fullDataset = [
-      ...projectedPoints.map(d => ({
+      ...projectedPoints.map((d) => ({
         ...d,
         [projectedX]: d[projectedXTop] || d[projectedXBottom] || d.x,
         [projectedY]: d[projectedYTop] || d[projectedYBottom] || d.y
@@ -284,7 +284,7 @@ export const calculateDataExtent = ({
         ...fullDataset,
         ...d.data
           .filter((p, q) => defined(Object.assign({}, p.data, p), q))
-          .map(p => {
+          .map((p) => {
             const mappedP: ProjectedPoint = {
               parentLine: d,
               y: p.y,
@@ -341,7 +341,7 @@ export const calculateDataExtent = ({
               return false
             }
           })
-          .forEach(p => {
+          .forEach((p) => {
             projectedPoints.push({
               ...p,
               parentLine: d,
@@ -375,11 +375,11 @@ export const calculateDataExtent = ({
       yAccessor
     })
 
-    projectedSummaries.forEach(d => {
+    projectedSummaries.forEach((d) => {
       const baseData = d._baseData
 
       if (d._xyfCoordinates.length > 0 && d._xyfCoordinates[0][0][0]) {
-        d._xyfCoordinates[0].forEach(multi => {
+        d._xyfCoordinates[0].forEach((multi) => {
           if (Array.isArray(multi)) {
             multi
               .map((p, q) =>
@@ -388,7 +388,7 @@ export const calculateDataExtent = ({
                   [projectedY]: p[1]
                 })
               )
-              .forEach(e => {
+              .forEach((e) => {
                 if (showSummaryPoints) {
                   projectedPoints.push({
                     x: 0,
@@ -414,7 +414,7 @@ export const calculateDataExtent = ({
               [projectedX]: p[0],
               [projectedY]: p[1]
             }))
-            .forEach(e => {
+            .forEach((e) => {
               if (showSummaryPoints) {
                 projectedPoints.push({
                   x: 0,
@@ -438,7 +438,7 @@ export const calculateDataExtent = ({
     !Array.isArray(xExtent) &&
     xExtent.includeAnnotations === true
   ) {
-    xAccessor.forEach(actualXAccessor => {
+    xAccessor.forEach((actualXAccessor) => {
       annotations.forEach((annotation, annotationIndex) => {
         const x = actualXAccessor(annotation, annotationIndex)
         if (isFinite(x)) {
@@ -455,7 +455,7 @@ export const calculateDataExtent = ({
     !Array.isArray(yExtent) &&
     yExtent.includeAnnotations === true
   ) {
-    yAccessor.forEach(actualYAccessor => {
+    yAccessor.forEach((actualYAccessor) => {
       annotations.forEach((annotation, annotationIndex) => {
         const y = actualYAccessor(annotation, annotationIndex)
         if (isFinite(y)) {
@@ -472,7 +472,7 @@ export const calculateDataExtent = ({
 
   const calculatedXExtent = [
     min(
-      dataForXExtent.map(d =>
+      dataForXExtent.map((d) =>
         d[projectedXBottom] === undefined
           ? d[projectedX]
           : Math.min(d[projectedXTop], d[projectedXBottom])
@@ -480,7 +480,7 @@ export const calculateDataExtent = ({
     ),
 
     max(
-      dataForXExtent.map(d =>
+      dataForXExtent.map((d) =>
         d[projectedXTop] === undefined
           ? d[projectedX]
           : Math.max(d[projectedXBottom], d[projectedXTop])
@@ -490,7 +490,7 @@ export const calculateDataExtent = ({
 
   const calculatedYExtent = [
     min(
-      dataForYExtent.map(d =>
+      dataForYExtent.map((d) =>
         d[projectedYBottom] === undefined
           ? d[projectedY]
           : Math.min(d[projectedYTop], d[projectedYBottom])
@@ -498,7 +498,7 @@ export const calculateDataExtent = ({
     ),
 
     max(
-      dataForYExtent.map(d =>
+      dataForYExtent.map((d) =>
         d[projectedYTop] === undefined
           ? d[projectedY]
           : Math.max(d[projectedYBottom], d[projectedYTop])
@@ -555,7 +555,7 @@ export const calculateDataExtent = ({
       defined
     })
   } else if (summaryType.type && summaryType.type === "hexbin") {
-    projectedSummaries = (hexbinning({
+    projectedSummaries = hexbinning({
       summaryType,
       data: projectedSummaries[0],
       processedData: summaries && !!summaries[0].processedData,
@@ -569,14 +569,14 @@ export const calculateDataExtent = ({
       classFn: summaryClassFn,
       renderFn: summaryRenderModeFn,
       chartSize
-    }) as unknown) as ProjectedSummary[]
+    }) as unknown as ProjectedSummary[]
 
     fullDataset = [
-      ...projectedSummaries.map(d => ({ ...d })),
-      ...fullDataset.filter(d => !d.parentSummary)
+      ...projectedSummaries.map((d) => ({ ...d })),
+      ...fullDataset.filter((d) => !d.parentSummary)
     ]
   } else if (summaryType.type && summaryType.type === "heatmap") {
-    projectedSummaries = (heatmapping({
+    projectedSummaries = heatmapping({
       summaryType,
       data: projectedSummaries[0],
       processedData: summaries && !!summaries[0].processedData,
@@ -590,11 +590,11 @@ export const calculateDataExtent = ({
       classFn: summaryClassFn,
       renderFn: summaryRenderModeFn,
       chartSize
-    }) as unknown) as ProjectedSummary[]
+    }) as unknown as ProjectedSummary[]
 
     fullDataset = [
-      ...projectedSummaries.map(d => ({ ...d })),
-      ...fullDataset.filter(d => !d.parentSummary)
+      ...projectedSummaries.map((d) => ({ ...d })),
+      ...fullDataset.filter((d) => !d.parentSummary)
     ]
   } else if (summaryType.type && summaryType.type === "trendline") {
     projectedSummaries = trendlining({
@@ -605,8 +605,8 @@ export const calculateDataExtent = ({
     })
 
     fullDataset = [
-      ...projectedSummaries.map(d => ({ ...d })),
-      ...fullDataset.filter(d => !d.parentSummary)
+      ...projectedSummaries.map((d) => ({ ...d })),
+      ...fullDataset.filter((d) => !d.parentSummary)
     ]
   }
 
@@ -642,7 +642,7 @@ const differenceCatch = (olineType, data) =>
   olineType === "difference" && data.length !== 2 ? "line" : olineType
 
 function lineTransformation(lineType, options) {
-  return data =>
+  return (data) =>
     builtInTransformations[differenceCatch(lineType.type, data)]({
       ...lineType,
       ...options,

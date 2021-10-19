@@ -167,11 +167,11 @@ export const calculateXYFrame = (
     summaries = lines
   }
 
-  const castXScaleType = (baseXScaleType as unknown) as Function
+  const castXScaleType = baseXScaleType as unknown as Function
 
   const xScaleType = baseXScaleType.domain ? baseXScaleType : castXScaleType()
 
-  const castYScaleType = (baseYScaleType as unknown) as Function
+  const castYScaleType = baseYScaleType as unknown as Function
 
   const yScaleType = baseYScaleType.domain ? baseYScaleType : castYScaleType()
 
@@ -193,7 +193,7 @@ export const calculateXYFrame = (
     ),
     lineType: objectifyType(lineType) as LineTypeSettings,
     summaryType: objectifyType(summaryType) as SummaryTypeSettings,
-    lineIDAccessor: stringToFn<string>(lineIDAccessor, l => l.semioticLineID),
+    lineIDAccessor: stringToFn<string>(lineIDAccessor, (l) => l.semioticLineID),
     summaries:
       !summaries || (Array.isArray(summaries) && summaries.length === 0)
         ? undefined
@@ -251,7 +251,7 @@ export const calculateXYFrame = (
 
   const generatedAxes =
     currentProps.axes &&
-    currentProps.axes.map(axisFnOrObject =>
+    currentProps.axes.map((axisFnOrObject) =>
       typeof axisFnOrObject === "function"
         ? axisFnOrObject({ size: currentProps.size })
         : axisFnOrObject
@@ -480,7 +480,7 @@ export const calculateXYFrame = (
         {
           styleFn: currentProps.lineStyle,
           type,
-          items: projectedLines.map(d =>
+          items: projectedLines.map((d) =>
             Object.assign({ label: annotatedSettings.lineIDAccessor(d) }, d)
           )
         }
@@ -494,7 +494,7 @@ export const calculateXYFrame = (
     projectedSummaries.forEach((d, i) => {
       if (d.bounds) {
         const bounds = Array.isArray(d.bounds) ? d.bounds : [d.bounds]
-        bounds.forEach(labelBounds => {
+        bounds.forEach((labelBounds) => {
           const label =
             typeof annotatedSettings.summaryType.label === "function"
               ? annotatedSettings.summaryType.label(d)
@@ -505,7 +505,7 @@ export const calculateXYFrame = (
               xScale(labelBounds[labelPosition][0]),
               yScale(labelBounds[labelPosition][1])
             ] || [xScale(d._xyfCoordinates[0]), yScale(d._xyfCoordinates[1])]
-            const labelContent = label.content || (p => p.value || p.id || i)
+            const labelContent = label.content || ((p) => p.value || p.id || i)
 
             areaAnnotations.push({
               x: labelCenter[0],
@@ -521,6 +521,26 @@ export const calculateXYFrame = (
           }
         })
       }
+    })
+  } else if (
+    annotatedSettings.summaryType.showSlope &&
+    projectedSummaries &&
+    projectedSummaries[0]
+  ) {
+    const firstSummary: any = projectedSummaries[0]
+
+    const firstPoint = firstSummary._xyfCoordinates[0]
+    const finalPoint =
+      firstSummary._xyfCoordinates[firstSummary._xyfCoordinates.length - 1]
+
+    areaAnnotations.push({
+      x: firstPoint[0],
+      y: firstPoint[1],
+      x1: finalPoint[0],
+      x2: finalPoint[1],
+      type: "trendline-annotation",
+      value: firstSummary.value,
+      r2: firstSummary.r2
     })
   }
 
