@@ -1,6 +1,6 @@
 {
   "name": "semiotic",
-  "version": "2.0.0-rc.15",
+  "version": "2.0.0-rc.16",
   "description": "The semiotic JavaScript data visualization framework",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

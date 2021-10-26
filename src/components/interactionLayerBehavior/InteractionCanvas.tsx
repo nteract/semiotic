@@ -64,7 +64,7 @@ class InteractionCanvas extends React.Component<
       overlayRegions,
       this.canvasMap
     )
-    interactionContext.onmousemove = e => {
+    interactionContext.onmousemove = (e) => {
       const overlay = boundCanvasEvent(e)
       if (overlay && overlay.props && overlay.props.children[0]) {
         overlay.props.children[0].props.onMouseEnter()
@@ -72,13 +72,17 @@ class InteractionCanvas extends React.Component<
         voronoiHover(null)
       }
     }
-    interactionContext.onclick = e => {
+    interactionContext.onmouseout = () => {
+      voronoiHover(null)
+    }
+
+    interactionContext.onclick = (e) => {
       const overlay = boundCanvasEvent(e)
       if (overlay && overlay.props) {
         overlay.props.children[0].props.onClick(e)
       }
     }
-    interactionContext.ondblclick = e => {
+    interactionContext.ondblclick = (e) => {
       const overlay = boundCanvasEvent(e)
       if (overlay && overlay.props) {
         overlay.props.children[0].props.onDoubleClick(e)
