@@ -94,8 +94,8 @@ const renderQueue = function (func) {
     function doFrame() {
       if (!valid) return true
       let chunk = _queue.splice(0, _rate)
-      chunk.map(func)
-      timer_frame(doFrame)
+      chunk.forEach(func)
+      if (_queue.length > 0) timer_frame(doFrame)
     }
 
     doFrame()
