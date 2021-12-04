@@ -77,6 +77,7 @@ type Props = {
   frameRenderOrder: Array<string>
   additionalVizElements?: object
   interactionSettings?: AdvancedInteractionSettings
+  disableProgressiveRendering: boolean
 }
 
 type State = {

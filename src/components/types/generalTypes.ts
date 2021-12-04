@@ -266,6 +266,7 @@ export interface GeneralFrameProps {
   frameRenderOrder?: Array<string>
   disableCanvasInteraction?: boolean
   interactionSettings?: AdvancedInteractionSettings
+  disableProgressiveRendering?: boolean
 }
 
 export interface GeneralFrameState {
