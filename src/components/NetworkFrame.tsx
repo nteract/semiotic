@@ -376,7 +376,8 @@ class NetworkFrame extends React.Component<
       sketchyRenderingEngine,
       frameRenderOrder,
       disableCanvasInteraction,
-      interactionSettings
+      interactionSettings,
+      disableProgressiveRendering
     } = this.props
     const {
       backgroundGraphics,
@@ -453,6 +454,7 @@ class NetworkFrame extends React.Component<
         sketchyRenderingEngine={sketchyRenderingEngine}
         frameRenderOrder={frameRenderOrder}
         interactionSettings={interactionSettings}
+        disableProgressiveRendering={disableProgressiveRendering}
       />
     )
   }

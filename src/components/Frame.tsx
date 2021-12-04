@@ -242,7 +242,8 @@ class Frame extends React.Component<Props, State> {
       disableContext,
       frameRenderOrder,
       additionalVizElements,
-      interactionSettings
+      interactionSettings,
+      disableProgressiveRendering
     } = this.props
 
     let { hoverAnnotation } = this.props
@@ -415,6 +416,7 @@ class Frame extends React.Component<Props, State> {
                 axesTickLines={axesTickLines}
                 additionalVizElements={additionalVizElements}
                 frameRenderOrder={frameRenderOrder}
+                disableProgressiveRendering={disableProgressiveRendering}
               />
               {generatedTitle && (
                 <g className="frame-title">{generatedTitle}</g>

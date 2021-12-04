@@ -15,32 +15,6 @@ export default class CanvasInteractionDocs extends React.Component {
       name: "Basic",
       demo: <CanvasInteractionRaw />,
       source: `
-      <XYFrame
-      points={parsedDiamonds}
-      size={[700, 700]}
-      xAccessor="x"
-      yAccessor="y"
-      pointStyle={d => ({ fill: d.color })}
-      canvasPoints={true}
-      axes={[
-        { orient: "left" },
-        {
-          orient: "bottom",
-          tickFormat: d => <text transform="rotate(45)">{d}</text>
-        }
-      ]}
-      margin={50}
-      hoverAnnotation={true}
-      tooltipContent={d => (
-        <div className="tooltip-content">
-          <p>Price: {d.x}</p>
-          <p>Carat: {d.y}</p>
-          <p>
-            {d.coincidentPoints.length}
-          </p>
-        </div>
-      )}
-    />
       `
     })
 

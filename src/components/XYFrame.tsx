@@ -212,14 +212,14 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       oldSize[1] !== newSize[1] ||
       extentChange ||
       (!oldDataVersion &&
-        xyFrameChangeProps.find(d => props[d] !== nextProps[d]))
+        xyFrameChangeProps.find((d) => props[d] !== nextProps[d]))
     ) {
       const dataChanged =
         lineChange ||
         summaryChange ||
         pointChange ||
         extentChange ||
-        !!xyFrameChangeProps.find(d => props[d] !== nextProps[d])
+        !!xyFrameChangeProps.find((d) => props[d] !== nextProps[d])
 
       return calculateXYFrame(nextProps, prevState, dataChanged)
     }
@@ -551,7 +551,7 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
         }) || 0
       ]
     } else {
-      screenCoordinates = d.coordinates.map(p => {
+      screenCoordinates = d.coordinates.map((p) => {
         const foundP = findPointByID({
           point: { x: 0, y: 0, ...p },
           idAccessor,
@@ -660,7 +660,8 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
       disableContext,
       frameRenderOrder,
       disableCanvasInteraction,
-      interactionSettings
+      interactionSettings,
+      disableProgressiveRendering
     } = this.props
 
     const {
@@ -735,6 +736,7 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
         frameRenderOrder={frameRenderOrder}
         disableCanvasInteraction={disableCanvasInteraction}
         interactionSettings={interactionSettings}
+        disableProgressiveRendering={disableProgressiveRendering}
       />
     )
   }

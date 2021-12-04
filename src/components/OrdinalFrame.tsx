@@ -126,7 +126,7 @@ class OrdinalFrame extends React.Component<
       props.size[0] !== nextProps.size[0] ||
       props.size[1] !== nextProps.size[1] ||
       (!prevState.dataVersion &&
-        orFrameChangeProps.find(d => {
+        orFrameChangeProps.find((d) => {
           return props[d] !== nextProps[d]
         }))
     ) {
@@ -468,7 +468,8 @@ class OrdinalFrame extends React.Component<
       additionalDefs,
       sketchyRenderingEngine,
       frameRenderOrder,
-      disableCanvasInteraction
+      disableCanvasInteraction,
+      disableProgressiveRendering
     } = this.props
 
     const {
@@ -578,6 +579,7 @@ class OrdinalFrame extends React.Component<
         sketchyRenderingEngine={sketchyRenderingEngine}
         frameRenderOrder={frameRenderOrder}
         additionalVizElements={oLabels}
+        disableProgressiveRendering={disableProgressiveRendering}
       />
     )
   }

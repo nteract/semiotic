@@ -20,35 +20,34 @@ const cutHash = {
   Fair: colors[4]
 }
 
-const pointStylingFn = d => ({ fill: d.color, fillOpacity: 0.9 })
+const pointStylingFn = (d) => ({ fill: d.color, fillOpacity: 0.9 })
 
 const canvasAxes = [
   { orient: "bottom", label: "Carat" },
   {
     label: "Price",
     orient: "left",
-    tickFormat: d => `$${d / 1000}k`
+    tickFormat: (d) => `$${d / 1000}k`
   }
 ]
 
-const customCanvasClick = d => {
+const customCanvasClick = (d) => {
   console.info("clicked", d)
 }
 
-const customCanvasDoubleclick = d => {
+const customCanvasDoubleclick = (d) => {
   console.info("double-clicked", d)
 }
 
-const customTooltipContent = d => (
+const customTooltipContent = (d) => (
   <div className="tooltip-content">
     <p>Price: ${d.y}</p>
     <p>Caret: {d.x}</p>
     <p>
       {d.coincidentPoints.length > 1 &&
-        `+${d.coincidentPoints.length - 1} more diamond${(d
-          .coincidentPoints.length > 2 &&
-          "s") ||
-        ""} here`}
+        `+${d.coincidentPoints.length - 1} more diamond${
+          (d.coincidentPoints.length > 2 && "s") || ""
+        } here`}
     </p>
   </div>
 )
@@ -61,10 +60,10 @@ export default class DecisionMatrixExample extends React.Component {
     super(props)
 
     fetch(`${ROOT}/sampledata/diamonds.csv`)
-      .then(response => response.text())
-      .then(data => {
+      .then((response) => response.text())
+      .then((data) => {
         const parsedDiamonds = []
-        csvParse(data).forEach(d => {
+        csvParse(data).forEach((d) => {
           parsedDiamonds.push({
             y: +d.price,
             x: +d.carat,
@@ -104,6 +103,7 @@ export default class DecisionMatrixExample extends React.Component {
           customClickBehavior={customCanvasClick}
           customDoubleClickBehavior={customCanvasDoubleclick}
           tooltipContent={customTooltipContent}
+          disableProgressiveRendering={false}
         />
       </div>
     )
