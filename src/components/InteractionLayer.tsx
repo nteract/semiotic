@@ -137,16 +137,20 @@ class InteractionLayer extends React.PureComponent<
           : "xBrush"
         : interaction.brush
 
-    const {
+    let {
+      extent
+    } = interaction
+
+    if (!extent) {
       extent = actualBrush === "xyBrush"
         ? [
-            [xScale.invert(0), yScale.invert(0)],
-            [xScale.invert(size[0]), yScale.invert(size[1])]
-          ]
+          [xScale.invert(0), yScale.invert(0)],
+          [xScale.invert(size[0]), yScale.invert(size[1])]
+        ]
         : actualBrush === "xBrush"
-        ? [xScale.invert(0), xScale.invert(size[0])]
-        : [yScale.invert(0), yScale.invert(size[1])]
-    } = interaction
+          ? [xScale.invert(0), xScale.invert(size[0])]
+          : [yScale.invert(0), yScale.invert(size[1])]
+    }
 
     if (extent.indexOf && extent.indexOf(undefined) !== -1) {
       return <g />
@@ -213,7 +217,7 @@ class InteractionLayer extends React.PureComponent<
           selectedExtent = [
             projectedColumns[leftExtent].x,
             projectedColumns[rightExtent].x +
-              projectedColumns[rightExtent].width
+            projectedColumns[rightExtent].width
           ]
         }
       }
@@ -288,6 +292,7 @@ class InteractionLayer extends React.PureComponent<
       (!props.customHoverBehavior && nextProps.customHoverBehavior) ||
       (props.customHoverBehavior && !nextProps.customHoverBehavior)
     ) {
+
       const {
         disableCanvasInteraction,
         canvasRendering,
@@ -313,6 +318,7 @@ class InteractionLayer extends React.PureComponent<
               margin={margin}
               voronoiHover={voronoiHover}
             />
+
           )
         }
       }
@@ -354,9 +360,9 @@ class InteractionLayer extends React.PureComponent<
         return !d
           ? null
           : [
-              rScaleReverse(rScale.invert(d[1])),
-              rScaleReverse(rScale.invert(d[0]))
-            ]
+            rScaleReverse(rScale.invert(d[1])),
+            rScaleReverse(rScale.invert(d[0]))
+          ]
       }
 
     const rRange = rScale.range()

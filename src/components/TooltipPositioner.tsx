@@ -114,6 +114,11 @@ class TooltipPositioner extends React.Component<Props, State> {
       ].filter(el => el).join(' ')
       : 'tooltip-container'
 
+    const tooltipContainerAttributes = {
+      offset: offset || {x:0, y:0},
+      tooltipContainerInitialDimensions
+    }
+
     return (
       <div ref={this.containerRef} style={containerStyle} className={tooltipContainerClasses}>
         {tooltipContent({
