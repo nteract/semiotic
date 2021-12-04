@@ -111,6 +111,7 @@ class OrdinalFrame extends React.Component<
     if (onUnmount) {
       onUnmount(this.props, this.state)
     }
+
   }
 
   static getDerivedStateFromProps(

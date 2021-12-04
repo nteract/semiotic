@@ -223,7 +223,9 @@ class XYFrame extends React.Component<XYFrameProps, XYFrameState> {
 
       return calculateXYFrame(nextProps, prevState, dataChanged)
     }
+
     return null
+
   }
 
   defaultXYSVGRule = ({

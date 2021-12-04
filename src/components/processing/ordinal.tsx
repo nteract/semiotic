@@ -22,6 +22,7 @@ import {
   pointLayout,
   swarmLayout,
   timelineLayout
+
 } from "../svg/pieceLayouts"
 
 import { stringToFn, stringToArrayFn } from "../data/dataFunctions"
@@ -51,6 +52,7 @@ const layoutHash = {
 }
 
 const midMod = (d) => (d.middle ? d.middle : 0)
+
 const zeroFunction = genericFunction(0)
 const twoPI = Math.PI * 2
 

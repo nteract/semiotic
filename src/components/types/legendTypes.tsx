@@ -15,6 +15,7 @@ export interface LegendGroup {
 
 export interface LegendProps {
   legendGroups?: LegendGroup[]
+  customClickBehavior?: Function
   title?: string
   width?: number
   height?: number
