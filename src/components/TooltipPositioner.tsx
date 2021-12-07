@@ -6,8 +6,8 @@ type Props = {
 }
 
 type State = {
-  collision: object,
-  tooltipContainerInitialDimensions: object,
+  collision: object
+  tooltipContainerInitialDimensions: object
   tooltipContentArgsCurrent: object
 }
 
@@ -23,10 +23,11 @@ class TooltipPositioner extends React.Component<Props, State> {
   // simple heuristics to check if the tooltip container exceeds the viewport
   // if so, capture the suggested offset
   checkPosition = () => {
+    const tooltipContainerInitialDimensions =
+      this.containerRef.current.getBoundingClientRect()
 
-    const tooltipContainerInitialDimensions = this.containerRef.current.getBoundingClientRect()
-
-    const { right, left, top, bottom, width, height } = tooltipContainerInitialDimensions
+    const { right, left, top, bottom, width, height } =
+      tooltipContainerInitialDimensions
 
     // flags to indicate whether the data point + tooltip dimension collides with the viewport
     // on each of the 4 directions/sides
@@ -37,16 +38,16 @@ class TooltipPositioner extends React.Component<Props, State> {
       bottom: false
     }
 
-    if ((left + width) > window.innerWidth) {
+    if (left + width > window.innerWidth) {
       collision.right = true
     }
-    if ((left - width) < 0) {
+    if (left - width < 0) {
       collision.left = true
     }
-    if ((top + height) > window.innerHeight) {
+    if (top + height > window.innerHeight) {
       collision.bottom = true
     }
-    if ((top - height) < 0) {
+    if (top - height < 0) {
       collision.top = true
     }
 
@@ -70,17 +71,13 @@ class TooltipPositioner extends React.Component<Props, State> {
         collision: null,
         tooltipContainerInitialDimensions: null
       })
-    }
-    else if (this.containerRef.current && !this.state.collision) {
+    } else if (this.containerRef.current && !this.state.collision) {
       this.checkPosition()
     }
   }
 
   render() {
-    const {
-      tooltipContent,
-      tooltipContentArgs
-    } = this.props
+    const { tooltipContent, tooltipContentArgs } = this.props
 
     const {
       collision,
@@ -89,38 +86,40 @@ class TooltipPositioner extends React.Component<Props, State> {
     } = this.state
 
     const containerStyle = {
-
       //to handle issue when the tooltip content has margins set by client,
       // which results in the tooltip container having smaller height,
       // which in turn causes the css transform to be inaccurate
       // (ref: https://www.w3.org/TR/css-box-3/#collapsing-margins)
-      overflow: 'hidden',
+      overflow: "hidden",
 
-      opacity: collision && (tooltipContentArgsCurrent === tooltipContentArgs) ? 1 : 0
+      opacity:
+        collision && tooltipContentArgsCurrent === tooltipContentArgs ? 1 : 0
     }
 
-    const tooltipContainerAttributes = {
-      tooltipContainerInitialDimensions,
-    }
-
-    const tooltipContainerClasses = collision ?
-      [
-        'tooltip-container',
-        'tooltip-collision-evaluated',
-        collision && collision.top && 'collision-top',
-        collision && collision.bottom && 'collision-bottom',
-        collision && collision.right && 'collision-right',
-        collision && collision.left && 'collision-left',
-      ].filter(el => el).join(' ')
-      : 'tooltip-container'
+    const tooltipContainerClasses = collision
+      ? [
+          "tooltip-container",
+          "tooltip-collision-evaluated",
+          collision && collision.top && "collision-top",
+          collision && collision.bottom && "collision-bottom",
+          collision && collision.right && "collision-right",
+          collision && collision.left && "collision-left"
+        ]
+          .filter((el) => el)
+          .join(" ")
+      : "tooltip-container"
 
     const tooltipContainerAttributes = {
-      offset: offset || {x:0, y:0},
+      offset: { x: 0, y: 0 },
       tooltipContainerInitialDimensions
     }
 
     return (
-      <div ref={this.containerRef} style={containerStyle} className={tooltipContainerClasses}>
+      <div
+        ref={this.containerRef}
+        style={containerStyle}
+        className={tooltipContainerClasses}
+      >
         {tooltipContent({
           ...tooltipContentArgs,
           tooltipContainerAttributes
@@ -129,6 +128,5 @@ class TooltipPositioner extends React.Component<Props, State> {
     )
   }
 }
-
 
 export default TooltipPositioner
