@@ -133,7 +133,7 @@ export default (
     }}
     projection="horizontal"
     //      type={{ type: "swarm", r: 5 }}
-    summaryStyle={{ fill: "none", stroke: "#CCC" }}
+    summaryStyle={{ fill: "red", stroke: "#CCC" }}
     oPadding={0}
     pieceHoverAnnotation={true}
     summaryType={{
@@ -152,7 +152,7 @@ export default (
     }}
     oLabel={true}
     dynamicColumnWidth={false}
-    //      summaryRenderMode="sketchy"
+    //summaryRenderMode="sketchy"
     sketchyRenderingEngine={roughjs}
     axes={[axis]}
   />
