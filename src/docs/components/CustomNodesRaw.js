@@ -1,6 +1,5 @@
 import * as React from "react"
 import { NetworkFrame } from "../../components"
-//import ProcessViz from "./ProcessViz"
 import dagre from "dagre"
 
 export default ({ direction, ranker, parallelEdges }) => {
@@ -190,13 +189,13 @@ export default ({ direction, ranker, parallelEdges }) => {
         graph={parallelEdges ? parallelG : g}
         networkType={{ type: "dagre", dagreGraph: g, zoom: true }}
         nodeStyle={{ fill: "#b6a756", stroke: "black" }}
-        edgeStyle={d => ({
+        edgeStyle={(d) => ({
           stroke: parallelEdges ? "black" : d.color,
           fill: parallelEdges ? d.color || "black" : "none",
           fillOpacity: 0.5,
           strokeWidth: parallelEdges ? 0.5 : d.weight
         })}
-        nodeLabels={d => {
+        nodeLabels={(d) => {
           return (
             <text x={-d.zoomedWidth / 2} y={-d.zoomedHeight / 2}>
               {d.id}
@@ -205,7 +204,7 @@ export default ({ direction, ranker, parallelEdges }) => {
         }}
         margin={50}
         hoverAnnotation={true}
-        tooltipContent={d => {
+        tooltipContent={(d) => {
           return <div className="tooltip-content">{d.id}</div>
         }}
         annotations={[

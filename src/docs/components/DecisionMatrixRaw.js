@@ -5,7 +5,6 @@ import { forceSimulation, forceX, forceY, forceCollide } from "d3-force"
 import { Mark } from "semiotic-mark"
 import { MATRIX_DATA } from "../sampledata/matrixData"
 import { XYFrame } from "../../components"
-import ProcessViz from "./ProcessViz"
 
 const speedLabels = ["6 Weeks", "3 Months", "6 Months", "1 Year", "2 Years"]
 const expenseLabels = ["$1K", "$10K", "$100K", "$1M", "$10M"]
@@ -51,7 +50,7 @@ const axes = [
     orient: "left",
     className: "hiddenTickLine",
     tickValues: [1, 2, 3, 4, 5],
-    tickFormat: d => {
+    tickFormat: (d) => {
       return expenseLabels[d - 1]
     }
   },
@@ -60,7 +59,7 @@ const axes = [
     orient: "bottom",
     className: "hiddenTickLine",
     tickValues: [1, 2, 3, 4, 5],
-    tickFormat: d => {
+    tickFormat: (d) => {
       return speedLabels[d - 1]
     }
   }
@@ -71,14 +70,14 @@ function processData(data, sizeBy) {
   const scale = scaleLinear()
     .domain(
       extent(
-        data.map(d => {
+        data.map((d) => {
           return +d[sizeBy]
         })
       )
     )
     .range([MIN_RADIUS, MAX_RADIUS])
 
-  data = data.map(d => {
+  data = data.map((d) => {
     d.radius = sizeBy === "None" ? 10 : scale(+d[sizeBy])
     return d
   })
@@ -88,19 +87,19 @@ function processData(data, sizeBy) {
   const simulation = forceSimulation(data)
     .force(
       "x",
-      forceX(d => {
+      forceX((d) => {
         return +d.Timeline
       }).strength(1)
     )
     .force(
       "y",
-      forceY(d => {
+      forceY((d) => {
         return +d.Cost
       }).strength(1)
     )
     .force(
       "collide",
-      forceCollide(d => {
+      forceCollide((d) => {
         return d.radius / 100
       })
     )
@@ -140,12 +139,12 @@ export default function DecisionMatrixRaw(sizeBy) {
     customPointMark: ({ d }) => {
       return <Mark markType="circle" r={d.radius} />
     },
-    renderKey: d => {
+    renderKey: (d) => {
       return d.Index
     },
     axes: axes,
-    xAccessor: d => d.x,
-    yAccessor: d => d.y,
+    xAccessor: (d) => d.x,
+    yAccessor: (d) => d.y,
     xExtent: [0.5, 5.5],
     yExtent: [0.5, 5.5],
     backgroundGraphics: (
@@ -160,13 +159,12 @@ export default function DecisionMatrixRaw(sizeBy) {
       </linearGradient>
     ),
     hoverAnnotation: true,
-    tooltipContent: d => {
+    tooltipContent: (d) => {
       return fetchTooltipContent(d)
     }
   }
   return (
     <div className="matrixWrapper">
-      <ProcessViz frameSettings={decisionMatrixChart} frameType="XYFrame" />
       <XYFrame {...decisionMatrixChart} />
     </div>
   )

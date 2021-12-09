@@ -1,6 +1,5 @@
 import * as React from "react"
 import { NetworkFrame } from "../../components"
-import ProcessViz from "./ProcessViz"
 
 const dematrixifiedEdges = [
   { source: "apples are amazing", target: "apples are amazing", value: 11975 },
@@ -103,8 +102,8 @@ export default ({ padAngle = 0.01, annotations }) => {
     size: [700, 700],
     edges: dematrixifiedEdges,
     nodes: nodes,
-    nodeStyle: d => ({ fill: d.color || colors[d.index], stroke: "black" }),
-    edgeStyle: d => ({
+    nodeStyle: (d) => ({ fill: d.color || colors[d.index], stroke: "black" }),
+    edgeStyle: (d) => ({
       fill: colors[d.source.index],
       stroke: "black",
       opacity: 0.5
@@ -122,10 +121,5 @@ export default ({ padAngle = 0.01, annotations }) => {
     nodeLabels: true,
     margin: 50
   }
-  return (
-    <div>
-      <ProcessViz frameSettings={chordChart} frameType="NetworkFrame" />
-      <NetworkFrame {...chordChart} />
-    </div>
-  )
+  return <NetworkFrame {...chordChart} />
 }

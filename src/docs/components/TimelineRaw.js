@@ -1,6 +1,5 @@
 import * as React from "react"
 import { OrdinalFrame } from "../../components"
-import ProcessViz from "./ProcessViz"
 
 const data = [
   {
@@ -159,7 +158,7 @@ const data = [
 const timelineChart = {
   size: [700, 500],
   data: data,
-  rAccessor: d => [d.start, d.end],
+  rAccessor: (d) => [d.start, d.end],
   oAccessor: "name",
   type: "timeline",
   projection: "horizontal",
@@ -176,18 +175,19 @@ const timelineChart = {
   style: { fill: "lightblue", stroke: "blue" },
   axes: { orient: "bottom" },
   margin: { left: 200, top: 20, right: 20, bottom: 50 },
-  oLabel: d => (
+  oLabel: (d) => (
     <text y={2} textAnchor="end" fontSize={8}>
       {d}
     </text>
   ),
-  frameRenderOrder: ["viz-layer", "matte", "axes-labels", "labels", "axes-tick-lines"],
+  frameRenderOrder: [
+    "viz-layer",
+    "matte",
+    "axes-labels",
+    "labels",
+    "axes-tick-lines"
+  ],
   pieceHoverAnnotation: true
 }
 
-export default (
-  <div>
-    <ProcessViz frameSettings={timelineChart} frameType="OrdinalFrame" />
-    <OrdinalFrame {...timelineChart} />
-  </div>
-)
+export default <OrdinalFrame {...timelineChart} />

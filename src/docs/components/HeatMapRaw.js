@@ -1,7 +1,6 @@
 import * as React from "react"
 import { scaleLinear } from "d3-scale"
 import { OrdinalFrame } from "../../components"
-import ProcessViz from "./ProcessViz"
 
 let startSeed = 0.5
 
@@ -25,34 +24,33 @@ const daysOfTheWeek = {
 }
 const daysAxis = {
   orient: "left",
-  tickFormat: d =>
+  tickFormat: (d) =>
     daysOfTheWeek[d] ? (
       <text style={{ textAnchor: "end" }} y={20}>
         {daysOfTheWeek[d]}
       </text>
     ) : (
-        ""
-      )
+      ""
+    )
 }
 const heatmapChart = {
   size: [700, 400],
   data: tiles,
   rAccessor: () => 1,
   oAccessor: "step",
-  style: d => ({
+  style: (d) => ({
     fill: heatScale(d.value),
     stroke: "darkgray",
     strokeWidth: 1
   }),
   type: "bar",
   axes: daysAxis,
-  oLabel: d => <text transform="rotate(90)">Week {d}</text>,
+  oLabel: (d) => <text transform="rotate(90)">Week {d}</text>,
   margin: { left: 100, top: 10, bottom: 80, right: 50 },
   oPadding: 0
 }
 export default (
   <div>
-    <ProcessViz frameSettings={heatmapChart} frameType="OrdinalFrame" />
     <OrdinalFrame {...heatmapChart} />
   </div>
 )

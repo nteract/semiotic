@@ -1,6 +1,5 @@
 import * as React from "react"
 import { OrdinalFrame } from "../../components"
-import ProcessViz from "./ProcessViz"
 
 const dotRadius = 8
 
@@ -21,7 +20,7 @@ const baseData = [
   { region: "World", y1990: 33.3, y2013: 20 }
 ]
 
-const lineAnnotations = baseData.map(d => Object.assign({ type: "range" }, d))
+const lineAnnotations = baseData.map((d) => Object.assign({ type: "range" }, d))
 lineAnnotations.push({
   type: "category",
   categories: [
@@ -58,8 +57,8 @@ function drawRange({ d, rScale, orFrameState }) {
   return null
 }
 const data = [
-  ...baseData.map(d => ({ region: d.region, type: "y1990", value: d.y1990 })),
-  ...baseData.map(d => ({ region: d.region, type: "y2013", value: d.y2013 }))
+  ...baseData.map((d) => ({ region: d.region, type: "y1990", value: d.y1990 })),
+  ...baseData.map((d) => ({ region: d.region, type: "y2013", value: d.y2013 }))
 ]
 
 const colors = {
@@ -73,12 +72,12 @@ const dotPlotChart = {
   data: data,
   rAccessor: "value",
   oAccessor: "region",
-  style: d => ({ fill: colors[d.type], stroke: "white", strokeWidth: 1 }),
+  style: (d) => ({ fill: colors[d.type], stroke: "white", strokeWidth: 1 }),
   type: { type: "point", r: dotRadius },
   projection: "horizontal",
   axes: {
     orient: "bottom",
-    tickFormat: d => `${d}%`,
+    tickFormat: (d) => `${d}%`,
     marginalSummaryType: "ridgeline"
   },
   margin: { left: 215, top: 50, bottom: 40, right: 70 },
@@ -87,7 +86,7 @@ const dotPlotChart = {
   svgAnnotationRules: drawRange,
   annotations: lineAnnotations,
   pieceHoverAnnotation: true,
-  oLabel: d => (
+  oLabel: (d) => (
     <text style={{ textAnchor: "end" }} transform="translate(-15,6)">
       {d}
     </text>
@@ -96,7 +95,6 @@ const dotPlotChart = {
 
 export default (
   <div>
-    <ProcessViz frameSettings={dotPlotChart} frameType="OrdinalFrame" />
     <OrdinalFrame {...dotPlotChart} />
     <OrdinalFrame {...dotPlotChart} margin={200} />
   </div>

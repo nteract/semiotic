@@ -10,26 +10,16 @@ import {
 } from "d3-force"
 import roughjs from "roughjs/dist/rough.es5.umd.js"
 
-// import ProcessViz from "./ProcessViz"
-/*
-  <div>
-    <ProcessViz frameSettings={regionatedLineChart} frameType="XYFrame" />
-    <XYFrame {...regionatedLineChart} />
-  </div>
-*/
-
 const colors = ["#4d430c", "#b3331d", "#b6a756", "black"]
 
 const customSimulation = forceSimulation().force(
   "charge",
-  forceManyBody()
-    .distanceMax(500)
-    .strength(-100)
+  forceManyBody().distanceMax(500).strength(-100)
 )
 
 const bubbleSimulation = forceSimulation().force(
   "collide",
-  forceCollide().radius(d => d.r)
+  forceCollide().radius((d) => d.r)
 )
 
 const bunchaNodes = [...Array(40)].map((d, i) => ({
@@ -56,11 +46,19 @@ const bunchaOtherEdges = [...Array(20)].map(() => ({
   weight: 20
 }))
 
-
 const multiFociSimulation = forceSimulation()
-  .force("collide", forceCollide().radius(d => d.r))
-  .force("x", forceX(d => d.fociX))
-  .force("y", forceY(d => d.fociY))
+  .force(
+    "collide",
+    forceCollide().radius((d) => d.r)
+  )
+  .force(
+    "x",
+    forceX((d) => d.fociX)
+  )
+  .force(
+    "y",
+    forceY((d) => d.fociY)
+  )
 
 const combinedFociNodes = [...Array(500)].map((d, i) => ({
   name: `Node ${i}`,
@@ -72,13 +70,28 @@ const combinedFociNodes = [...Array(500)].map((d, i) => ({
 }))
 
 const combinedFociSimulation = forceSimulation()
-  .force("collide", forceCollide().radius(d => d.r))
-  .force("y", forceY(d => d.combinedY))
+  .force(
+    "collide",
+    forceCollide().radius((d) => d.r)
+  )
+  .force(
+    "y",
+    forceY((d) => d.combinedY)
+  )
 
 const multiFociSimulationForCombined = forceSimulation()
-  .force("collide", forceCollide().radius(d => d.r))
-  .force("x", forceX(d => d.fociX))
-  .force("y", forceY(d => d.fociY))
+  .force(
+    "collide",
+    forceCollide().radius((d) => d.r)
+  )
+  .force(
+    "x",
+    forceX((d) => d.fociX)
+  )
+  .force(
+    "y",
+    forceY((d) => d.fociY)
+  )
 
 const multiFociNodes = [...Array(500)].map((d, i) => ({
   name: `Node ${i}`,
@@ -88,10 +101,13 @@ const multiFociNodes = [...Array(500)].map((d, i) => ({
   color: colors[i % 4]
 }))
 
-
-export const changeEdges = moreNodes => {
-  const finalNodes = !moreNodes ? bunchaNodes : [...bunchaNodes, ...bunchaOtherNodes]
-  const finalEdges = !moreNodes ? bunchaEdges : [...bunchaEdges, ...bunchaOtherEdges]
+export const changeEdges = (moreNodes) => {
+  const finalNodes = !moreNodes
+    ? bunchaNodes
+    : [...bunchaNodes, ...bunchaOtherNodes]
+  const finalEdges = !moreNodes
+    ? bunchaEdges
+    : [...bunchaEdges, ...bunchaOtherEdges]
   return (
     <div>
       <NetworkFrame
@@ -103,7 +119,7 @@ export const changeEdges = moreNodes => {
           fixExistingNodes: false
         }}
         edgeType="arrowhead"
-        nodeSizeAccessor={d => d.r + 3}
+        nodeSizeAccessor={(d) => d.r + 3}
         nodeStyle={() => ({ fill: "#fcc089", stroke: "#fcc089" })}
         edgeStyle={{ stroke: "#00b0b9", fill: "#00b0b9", strokeWidth: 2 }}
         nodeIDAccessor="name"
@@ -120,7 +136,7 @@ export const changeEdges = moreNodes => {
           fixExistingNodes: false
         }}
         edgeType="ribbon"
-        nodeSizeAccessor={d => d.r + 3}
+        nodeSizeAccessor={(d) => d.r + 3}
         nodeStyle={() => ({ fill: "#fcc089", stroke: "#fcc089" })}
         edgeStyle={{ stroke: "#00b0b9", fill: "#00b0b9", strokeWidth: 2 }}
         nodeIDAccessor="name"
@@ -128,11 +144,9 @@ export const changeEdges = moreNodes => {
         nodeRenderMode={{ renderMode: "sketchy", fillStyle: "solid" }}
         edgeRenderMode="sketchy"
       />
-
     </div>
   )
 }
-
 
 export const basic = (
   <NetworkFrame
@@ -175,7 +189,7 @@ export const bubbleChart = (
       simulation: bubbleSimulation,
       zoom: true
     }}
-    nodeSizeAccessor={d => d.r}
+    nodeSizeAccessor={(d) => d.r}
     nodeStyle={{ stroke: "darkred" }}
     nodeIDAccessor="name"
   />
@@ -190,8 +204,8 @@ export const multiFoci = (
       simulation: multiFociSimulation,
       zoom: false
     }}
-    nodeSizeAccessor={d => d.r}
-    nodeStyle={d => ({ stroke: "darkred", fill: d.color })}
+    nodeSizeAccessor={(d) => d.r}
+    nodeStyle={(d) => ({ stroke: "darkred", fill: d.color })}
     nodeIDAccessor="name"
   />
 )
@@ -210,8 +224,8 @@ export const changeSimulationMode = (mode, changeModeFunction) => (
             : multiFociSimulationForCombined,
         zoom: false
       }}
-      nodeSizeAccessor={d => d.r}
-      nodeStyle={d => ({ stroke: "darkred", fill: d.color })}
+      nodeSizeAccessor={(d) => d.r}
+      nodeStyle={(d) => ({ stroke: "darkred", fill: d.color })}
       nodeIDAccessor="name"
     />
   </div>

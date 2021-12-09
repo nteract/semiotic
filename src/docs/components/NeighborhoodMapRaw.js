@@ -3,7 +3,6 @@ import { data } from "../sampledata/verticality"
 import { csvParse } from "d3-dsv"
 import { XYFrame } from "../../components"
 import { Mark } from "semiotic-mark"
-import ProcessViz from "./ProcessViz"
 
 const groupedData = []
 const groupHash = {}
@@ -40,22 +39,28 @@ csvParse(data).forEach((d, i) => {
         type: "react-annotation",
         dx: 0,
         dy: 0,
-        note: <g><circle r={5} /><text fill="purple">annotationData.length + 1</text></g>,
+        note: (
+          <g>
+            <circle r={5} />
+            <text fill="purple">annotationData.length + 1</text>
+          </g>
+        ),
         label: `Note ${annotationData.length + 1}`,
         color: colors[+d.hood % 6],
-        noteHeight: d => { return d.hood === 98 || d.hood === 113 ? 50 : 20 },
-        noteWidth: d => { return d.hood === 98 || d.hood === 113 ? 100 : 200 }
-
-
+        noteHeight: (d) => {
+          return d.hood === 98 || d.hood === 113 ? 50 : 20
+        },
+        noteWidth: (d) => {
+          return d.hood === 98 || d.hood === 113 ? 100 : 200
+        }
       })
     )
   }
 })
 
-
 annotationData.push({
   type: "enclose-hull",
-  coordinates: parsedPoints.filter(d => d.hood === 98),
+  coordinates: parsedPoints.filter((d) => d.hood === 98),
   label: "Hull Annotation"
 })
 
@@ -66,12 +71,12 @@ const neighborhoodMapChart = {
   showLinePoints: true,
   xAccessor: "posx",
   yAccessor: "posy",
-  summaryStyle: d => ({
+  summaryStyle: (d) => ({
     stroke: "none",
     fill: d.parentSummary.color,
     opacity: 0.25
   }),
-  pointStyle: d => ({
+  pointStyle: (d) => ({
     stroke: colors[d.hood % 6],
     strokeOpacity: 1,
     fill: colors[d.hood % 6]
@@ -87,13 +92,12 @@ const neighborhoodMapChart = {
       pointSizeFunction: () => 2,
       noteHeight: 100,
       noteWidth: 200
-
     }
   },
   customPointMark: () => <Mark markType="circle" r="1" />,
   hoverAnnotation: true,
   annotations: annotationData,
-  tooltipContent: d => <div className="tooltip-content">{d.hood}</div>,
+  tooltipContent: (d) => <div className="tooltip-content">{d.hood}</div>,
   summaryType: {
     type: "contour",
     thresholds: 4,
@@ -109,9 +113,4 @@ const neighborhoodMapChart = {
   ]
 }
 
-export default (
-  <div>
-    <ProcessViz frameSettings={neighborhoodMapChart} frameType="XYFrame" />
-    <XYFrame {...neighborhoodMapChart} />
-  </div>
-)
+export default <XYFrame {...neighborhoodMapChart} />

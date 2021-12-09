@@ -3,11 +3,10 @@ import { XYFrame } from "../../components"
 import lines from "../sampledata/sharedTooltipData"
 import { scaleTime } from "d3-scale"
 import { timeFormat } from "d3-time-format"
-import ProcessViz from "./ProcessViz"
 
 const chartAxes = [
   { orient: "left" },
-  { orient: "bottom", ticks: 6, tickFormat: d => timeFormat("%m/%d")(d) }
+  { orient: "bottom", ticks: 6, tickFormat: (d) => timeFormat("%m/%d")(d) }
 ]
 
 const tooltipStyles = {
@@ -29,11 +28,11 @@ const tooltipStyles = {
 
 function fetchSharedTooltipContent(passedData) {
   const points = lines
-    .map(point => {
+    .map((point) => {
       return {
         id: point.id,
         color: point.color,
-        data: point.data.find(i => {
+        data: point.data.find((i) => {
           // Search the lines for a similar x value for vertical shared tooltip
           // Can implement a 'close enough' conditional here too (fuzzy equality)
           return i.x.getTime() === passedData.x.getTime()
@@ -129,7 +128,7 @@ export default function generateSharedTooltipFrame(isShared) {
     xAccessor: "x",
     yAccessor: "y",
     lines: lines,
-    lineStyle: d => {
+    lineStyle: (d) => {
       return { stroke: d.color, strokeWidth: "2px", fill: "none" }
     },
     axes: chartAxes,
@@ -149,16 +148,11 @@ export default function generateSharedTooltipFrame(isShared) {
             { type: "vertical-points", threshold: 0.1, r: () => 5 }
           ]
         : true,
-    tooltipContent: d => {
+    tooltipContent: (d) => {
       return isShared === "Shared"
         ? fetchSharedTooltipContent(d)
         : fetchSingletonTooltip(d)
     }
   }
-  return (
-    <div>
-      <ProcessViz frameSettings={sharedTooltipChart} frameType="XYFrame" />
-      <XYFrame {...sharedTooltipChart} />
-    </div>
-  )
+  return <XYFrame {...sharedTooltipChart} />
 }

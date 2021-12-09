@@ -1,7 +1,6 @@
 import * as React from "react"
 import { summaryChart } from "../example_settings/orframe"
 import { OrdinalFrame } from "../../components"
-import ProcessViz from "./ProcessViz"
 import roughjs from "roughjs/dist/rough.es5.umd.js"
 
 const blues = ["#eff3ff", "#bdd7e7", "#6baed6", "#2171b5"]
@@ -114,50 +113,47 @@ const violinChart = {
 }
 
 export default (
-  <div>
-    <ProcessViz frameSettings={violinChart} frameType="OrdinalFrame" />
-    <OrdinalFrame
-      {...violinChart}
-      htmlAnnotationRules={({ d, oScale, rScale }) => {
-        if (d.type === "check-html") {
-          return (
-            <div
-              style={{
-                left: `${oScale(d.stepName)}px`,
-                top: `${rScale(d.stepValue)}px`,
-                position: "absolute"
-              }}
-            >
-              {d.label}
-            </div>
-          )
+  <OrdinalFrame
+    {...violinChart}
+    htmlAnnotationRules={({ d, oScale, rScale }) => {
+      if (d.type === "check-html") {
+        return (
+          <div
+            style={{
+              left: `${oScale(d.stepName)}px`,
+              top: `${rScale(d.stepValue)}px`,
+              position: "absolute"
+            }}
+          >
+            {d.label}
+          </div>
+        )
+      }
+      return null
+    }}
+    projection="horizontal"
+    //      type={{ type: "swarm", r: 5 }}
+    summaryStyle={{ fill: "none", stroke: "#CCC" }}
+    oPadding={0}
+    pieceHoverAnnotation={true}
+    summaryType={{
+      type: "boxplot",
+      bins: 50,
+      outliers: true,
+      iqr: true,
+      elementStyleFn: (d, i) => {
+        if (d === "iqr") {
+          return { stroke: "red" }
+        } else if (d === "median") {
+          return { fill: "red" }
         }
-        return null
-      }}
-      projection="horizontal"
-      //      type={{ type: "swarm", r: 5 }}
-      summaryStyle={{ fill: "none", stroke: "#CCC" }}
-      oPadding={0}
-      pieceHoverAnnotation={true}
-      summaryType={{
-        type: "boxplot",
-        bins: 50,
-        outliers: true,
-        iqr: true,
-        elementStyleFn: (d, i) => {
-          if (d === "iqr") {
-            return { stroke: "red" }
-          } else if (d === "median") {
-            return { fill: "red" }
-          }
-          return { fill: blues[i] }
-        }
-      }}
-      oLabel={true}
-      dynamicColumnWidth={false}
-      //      summaryRenderMode="sketchy"
-      sketchyRenderingEngine={roughjs}
-      axes={[axis]}
-    />
-  </div>
+        return { fill: blues[i] }
+      }
+    }}
+    oLabel={true}
+    dynamicColumnWidth={false}
+    //      summaryRenderMode="sketchy"
+    sketchyRenderingEngine={roughjs}
+    axes={[axis]}
+  />
 )
