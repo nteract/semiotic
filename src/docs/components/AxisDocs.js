@@ -59,7 +59,7 @@ export default class AxisDocs extends React.Component {
     examples.push({
       name: "Basic",
       demo: (
-        <div>
+        <div style={{ marginLeft: "200px" }}>
           <button
             onClick={() => {
               this.setState({
@@ -88,6 +88,7 @@ export default class AxisDocs extends React.Component {
           <svg style={{ height: "900px", width: "700px" }}>
             <g transform={"translate(200,20)"}>
               <Axis
+                margin={{ left: 30, right: 30, top: 30, bottom: 30 }}
                 size={[200, 200]}
                 scale={scaleThreshold()
                   .domain([1, 2, 3])
@@ -97,6 +98,7 @@ export default class AxisDocs extends React.Component {
             </g>
             <g transform={"translate(100,20)"}>
               <Axis
+                margin={{ left: 30, right: 30, top: 30, bottom: 30 }}
                 size={[50, 200]}
                 scale={scaleLinear()
                   .domain(this.state.fixedDomain)
@@ -109,29 +111,29 @@ export default class AxisDocs extends React.Component {
             </g>
             <g transform={"translate(400,20)"}>
               <Axis
+                margin={{ left: 30, right: 30, top: 30, bottom: 30 }}
                 size={[200, 200]}
                 scale={scaleTime()
                   .domain([new Date(2017, 1, 1), new Date(2017, 10, 17)])
                   .range([0, 200])}
                 orient={"bottom"}
-                tickFormat={d => `${d.getMonth()}-${d.getDate()}`}
+                tickFormat={(d) => `${d.getMonth()}-${d.getDate()}`}
                 label={"Format Your Dates"}
               />
             </g>
             <g transform={"translate(100,320)"}>
               <Axis
+                margin={{ left: 30, right: 30, top: 30, bottom: 30 }}
                 size={[200, 200]}
-                scale={scaleLinear()
-                  .domain([10, 1000])
-                  .range([200, 0])}
+                scale={scaleLinear().domain([10, 1000]).range([200, 0])}
                 orient={"left"}
                 label={"Custom tickLineGenerator"}
                 tickLineGenerator={({ xy }) => (
                   <path
                     style={{ fill: "lightgrey", stroke: "grey" }}
-                    d={`M${xy.x1},${xy.y1 - 5}L${xy.x2},${xy.y1 - 5}L${
-                      xy.x2
-                      },${xy.y1 + 5}L${xy.x1},${xy.y1 + 5}Z`}
+                    d={`M${xy.x1},${xy.y1 - 5}L${xy.x2},${xy.y1 - 5}L${xy.x2},${
+                      xy.y1 + 5
+                    }L${xy.x1},${xy.y1 + 5}Z`}
                   />
                 )}
               />
@@ -143,36 +145,77 @@ export default class AxisDocs extends React.Component {
                   .domain([new Date(2017, 1, 1), new Date(2017, 10, 17)])
                   .range([0, 200])}
                 orient={"bottom"}
-                tickFormat={d => `${d.getMonth()}-${d.getDate()}`}
+                tickFormat={(d) => `${d.getMonth()}-${d.getDate()}`}
                 label={"Footer Bottom"}
                 footer={true}
               />
             </g>
-          </svg><svg width="700px" height="700px">
-            <g transform={"translate(50,0)"}>
+          </svg>
+          <svg width="500px" height="500px">
+            <g>
               <Axis
                 size={[200, 200]}
                 scale={scaleTime()
                   .domain([new Date(2017, 1, 1), new Date(2017, 10, 17)])
                   .range([0, 200])}
                 orient={"bottom"}
-                tickFormat={d => `${d.getMonth()}-${d.getDate()}`}
+                tickFormat={(d) => `${d.getMonth()}-${d.getDate()}`}
                 label={"Brushable?"}
                 footer={true}
-                annotationFunction={e => { console.info("Brush e", e) }}
+                annotationFunction={(e) => {
+                  console.info("Brush e", e)
+                }}
               />
             </g>
-            <g transform={"translate(500,0)"}>
+          </svg>
+          <svg width="500px" height="500px">
+            <g>
               <Axis
                 size={[200, 200]}
                 scale={scaleTime()
                   .domain([new Date(2017, 1, 1), new Date(2017, 10, 17)])
                   .range([0, 200])}
                 orient={"left"}
-                tickFormat={d => `${d.getMonth()}-${d.getDate()}`}
+                tickFormat={(d) => `${d.getMonth()}-${d.getDate()}`}
                 label={"Brushable?"}
                 footer={true}
-                annotationFunction={e => { console.info("Brush e", e) }}
+                annotationFunction={(e) => {
+                  console.info("Brush e", e)
+                }}
+              />
+            </g>
+          </svg>
+          <svg width="500px" height="500px">
+            <g>
+              <Axis
+                size={[200, 200]}
+                scale={scaleTime()
+                  .domain([new Date(2017, 1, 1), new Date(2017, 10, 17)])
+                  .range([0, 200])}
+                orient={"top"}
+                tickFormat={(d) => `${d.getMonth()}-${d.getDate()}`}
+                label={"Brushable?"}
+                footer={true}
+                annotationFunction={(e) => {
+                  console.info("Brush e", e)
+                }}
+              />
+            </g>
+          </svg>
+          <svg width="500px" height="500px">
+            <g>
+              <Axis
+                size={[200, 200]}
+                scale={scaleTime()
+                  .domain([new Date(2017, 1, 1), new Date(2017, 10, 17)])
+                  .range([0, 200])}
+                orient={"right"}
+                tickFormat={(d) => `${d.getMonth()}-${d.getDate()}`}
+                label={"Brushable?"}
+                footer={true}
+                annotationFunction={(e) => {
+                  console.info("Brush e", e)
+                }}
               />
             </g>
           </svg>
