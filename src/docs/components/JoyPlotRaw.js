@@ -2,15 +2,14 @@ import * as React from "react"
 import { OrdinalFrame } from "../../components"
 import probsRaw from "../sampledata/probly"
 import { csvParse } from "d3-dsv"
-import ProcessViz from "./ProcessViz"
 
 const probsData = csvParse(probsRaw)
 
 const colors = ["#4d430c", "#00a2ce", "#b6a756", "#b3331d"]
 
 const probsPoints = []
-probsData.forEach(d => {
-  Object.keys(d).forEach(key => {
+probsData.forEach((d) => {
+  Object.keys(d).forEach((key) => {
     probsPoints.push({ term: key, value: +d[key] })
   })
 })
@@ -24,7 +23,7 @@ const joyChartSettings = {
     bins: 10,
     amplitude: 0,
     curve: "monotonex",
-    axis: { orient: "right", tickValues: [ 20 ] }
+    axis: { orient: "right", tickValues: [20] }
   },
   summaryStyle: (d, i) => ({
     fill: colors[i % 4],
@@ -38,7 +37,7 @@ const joyChartSettings = {
   margin: { left: 150, top: 50, bottom: 55, right: 35 },
   axes: { orient: "bottom", label: "Percent" },
   summaryHoverAnnotation: true,
-  oLabel: d => (
+  oLabel: (d) => (
     <text style={{ textAnchor: "end", fill: "grey" }} x={-10} y={5}>
       {d}
     </text>
@@ -56,7 +55,6 @@ export default (
       allow="autoplay; encrypted-media"
       allowFullScreen
     />
-    <ProcessViz frameSettings={joyChartSettings} frameType="OrdinalFrame" />
     <OrdinalFrame {...joyChartSettings} />
   </div>
 )

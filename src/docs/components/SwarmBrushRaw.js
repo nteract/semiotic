@@ -1,13 +1,9 @@
 import * as React from "react"
 import { OrdinalFrame } from "../../components"
-import ProcessViz from "./ProcessViz"
-/*
-
-*/
 
 const settings = {
   size: [200, 700],
-  rAccessor: d => d.value,
+  rAccessor: (d) => d.value,
   oAccessor: () => "singleColumn",
   style: () => ({ fill: "#007190", stroke: "white", strokeWidth: 1 }),
   type: "swarm",
@@ -38,10 +34,5 @@ export default (data, event, resetExtent) => {
     }
   }
 
-  return (
-    <div>
-      <ProcessViz frameSettings={swarmBrushChart} frameType="OrdinalFrame" />
-      <OrdinalFrame {...swarmBrushChart} />
-    </div>
-  )
+  return <OrdinalFrame {...swarmBrushChart} />
 }

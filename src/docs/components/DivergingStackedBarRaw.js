@@ -1,7 +1,6 @@
 import * as React from "react"
 import { answers } from "../sampledata/questions"
 import { OrdinalFrame } from "../../components"
-import ProcessViz from "./ProcessViz"
 
 const divStackedBarChart = {
   size: [700, 500],
@@ -10,7 +9,7 @@ const divStackedBarChart = {
   projection: "horizontal",
   oAccessor: "question",
   rAccessor: "percent",
-  style: d => ({ fill: d.color }),
+  style: (d) => ({ fill: d.color }),
   margin: { top: 30, bottom: 0, left: 80, right: 10 },
   oPadding: 20,
   oLabel: (d, column, i) => (
@@ -40,9 +39,4 @@ const divStackedBarChart = {
   pieceHoverAnnotation: true
 }
 
-export default (
-  <div>
-    <ProcessViz frameSettings={divStackedBarChart} frameType="OrdinalFrame" />
-    <OrdinalFrame {...divStackedBarChart} />
-  </div>
-)
+export default <OrdinalFrame {...divStackedBarChart} />

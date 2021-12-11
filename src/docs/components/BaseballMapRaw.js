@@ -4,26 +4,25 @@ import { XYFrame } from "../../components"
 import { scaleLinear } from "d3-scale"
 import { extent } from "d3-array"
 import { Mark } from "semiotic-mark"
-import ProcessViz from "./ProcessViz"
 
-const velocityExtent = extent(data.map(d => d.exit_velocity))
+const velocityExtent = extent(data.map((d) => d.exit_velocity))
 const velocityScale = scaleLinear()
   .domain(velocityExtent)
   .range(["#00a2ce", "#b3331d"])
 
 const baseSettings = {
   points: data,
-  xAccessor: d => d.bx,
-  yAccessor: d => d.by,
+  xAccessor: (d) => d.bx,
+  yAccessor: (d) => d.by,
   yExtent: [-50],
   customPointMark: () => <Mark markType="circle" r={5} />,
-  pointStyle: d => ({
+  pointStyle: (d) => ({
     stroke: "black",
     fill: velocityScale(d.exit_velocity)
   }),
   summaries: [{ label: "stanton", coordinates: data }],
   hoverAnnotation: true,
-  tooltipContent: d => (
+  tooltipContent: (d) => (
     <div className="tooltip-content">
       <p>Date: {d.game_date}</p>
       <p>Distance: {d.distance}</p>
@@ -34,22 +33,19 @@ const baseSettings = {
   backgroundGraphics: fieldGraphic
 }
 
-export default mode => {
+export default (mode) => {
   const baseballChart = {
     ...baseSettings,
     ...mode
   }
 
   return (
-    <div>
-      <ProcessViz frameSettings={baseballChart} frameType="XYFrame" />
-      <XYFrame
-        {...baseballChart}
-        interactionSettings={{
-          voronoiFilter: d => d.distance < 400,
-          voronoiClipping: 100
-        }}
-      />
-    </div>
+    <XYFrame
+      {...baseballChart}
+      interactionSettings={{
+        voronoiFilter: (d) => d.distance < 400,
+        voronoiClipping: 100
+      }}
+    />
   )
 }

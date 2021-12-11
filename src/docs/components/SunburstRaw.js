@@ -1,16 +1,15 @@
 import * as React from "react"
 import { NetworkFrame } from "../../components"
 import data from "../sampledata/flare"
-import ProcessViz from "./ProcessViz"
 
-const filterBaseNode = d => d.depth !== 0
-const filterSubNodes = d => d.depth !== 1
+const filterBaseNode = (d) => d.depth !== 0
+const filterSubNodes = (d) => d.depth !== 1
 
 const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"]
 const sunburstSettings = {
   size: [700, 700],
   edges: data,
-  nodeStyle: d => ({
+  nodeStyle: (d) => ({
     fill: colors[d.depth],
     stroke: "black",
     opacity: 0.75
@@ -28,15 +27,15 @@ const sunburstSettings = {
     type: "partition",
     projection: "radial",
     nodePadding: 1,
-    hierarchySum: d => d.size
+    hierarchySum: (d) => d.size
   },
-  tooltipContent: d => (
+  tooltipContent: (d) => (
     <div className="tooltip-content">
       {d.parent ? <p>{d.parent.data.name}</p> : undefined}
       <p>{d.data.name}</p>
     </div>
   ),
-  nodeLabels: d => {
+  nodeLabels: (d) => {
     return d.x1 - d.x0 < 8 ? null : (
       <g transform="translate(0,5)">
         <text textAnchor="middle" strokeWidth={2} stroke="white" fill="white">
@@ -47,16 +46,13 @@ const sunburstSettings = {
     )
   },
   margin: 10,
-  filterRenderedNodes: d => d.depth !== 0
+  filterRenderedNodes: (d) => d.depth !== 0
 }
-export default zoom => {
+export default (zoom) => {
   return (
-    <div>
-      <ProcessViz frameSettings={sunburstSettings} frameType="NetworkFrame" />
-      <NetworkFrame
-        {...sunburstSettings}
-        filterRenderedNodes={zoom ? filterBaseNode : filterSubNodes}
-      />
-    </div>
+    <NetworkFrame
+      {...sunburstSettings}
+      filterRenderedNodes={zoom ? filterBaseNode : filterSubNodes}
+    />
   )
 }

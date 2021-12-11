@@ -1,7 +1,6 @@
 import * as React from "react"
 import { MinimapXYFrame } from "../../components"
 import { curveMonotoneX } from "d3-shape"
-import ProcessViz from "./ProcessViz"
 
 const dataSeeds = [20, 10, -10, -20]
 const colors = ["4d430c", "#d38779", "#b3331d", "#00a2ce", "#007190", "#b6a756"]
@@ -28,7 +27,7 @@ const xyFrameSettings = {
   lineType: { type: "line", interpolator: curveMonotoneX },
   xAccessor: "step",
   yAccessor: "value",
-  lineStyle: d => ({ fill: "none", stroke: d.label, fillOpacity: 0.75 }),
+  lineStyle: (d) => ({ fill: "none", stroke: d.label, fillOpacity: 0.75 }),
   axes: [
     { orient: "left" },
     {
@@ -56,7 +55,6 @@ export default (brushFunction, extent, selectedExtent) => {
   }
   return (
     <div>
-      <ProcessViz frameSettings={minimapChart} frameType="MinimapXYFrame" />
       <MinimapXYFrame {...minimapChart} />
     </div>
   )

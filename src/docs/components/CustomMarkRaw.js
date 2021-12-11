@@ -2,8 +2,6 @@ import * as React from "react"
 import { OrdinalFrame } from "../../components"
 import AnnotationCallout from "react-annotation/lib/Types/AnnotationCallout"
 
-import ProcessViz from "./ProcessViz"
-
 const data = [
   {
     name: "George Washington",
@@ -173,12 +171,12 @@ const data = [
   { name: "Donald Trump", birth: 1946, start: 2017, end: 2018, death: 2018 }
 ]
 
-function timeline({ data, rScale/*, adjustedSize, margin */ }) {
+function timeline({ data, rScale /*, adjustedSize, margin */ }) {
   const renderedPieces = []
 
   const keys = Object.keys(data)
 
-  keys.forEach(key => {
+  keys.forEach((key) => {
     //Only one piece of data per column though we'll render multiple graphical elements
     const column = data[key]
     const president = column.pieceData[0].data
@@ -301,7 +299,7 @@ export default (annotations = "none") => {
     annotationSettings: {
       layout: { type: "marginalia", orient: "right", textPadding: 30 }
     },
-    tooltipContent: d => (
+    tooltipContent: (d) => (
       <div className="tooltip-content">
         <p>{d.pieces[0].name}</p>
         <p>
@@ -321,10 +319,5 @@ export default (annotations = "none") => {
     margin: { left: 140, top: 10, bottom: 50, right: 50 }
   }
 
-  return (
-    <div>
-      <ProcessViz frameSettings={customMarkChart} frameType="OrdinalFrame" />
-      <OrdinalFrame {...customMarkChart} />
-    </div>
-  )
+  return <OrdinalFrame {...customMarkChart} />
 }

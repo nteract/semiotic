@@ -3,7 +3,6 @@ import DocumentComponent from "../layout/DocumentComponent"
 import { OrdinalFrame } from "../../components"
 import { orframe_data } from "../sampledata/nyc_temp"
 import { degreeDiffFormat } from "../example_settings/orframe"
-import ProcessViz from "./ProcessViz"
 
 const components = []
 
@@ -42,7 +41,7 @@ export default class ParallelCoordinatesDocs extends React.Component {
   render() {
     const axis = {
       orient: "left",
-      tickFormat: d => d,
+      tickFormat: (d) => d,
       label: {
         name: "axis label",
         position: { anchor: "middle" },
@@ -52,16 +51,16 @@ export default class ParallelCoordinatesDocs extends React.Component {
 
     const hiddenHash = new Map()
 
-    Object.keys(this.state.columnExtent).forEach(key => {
+    Object.keys(this.state.columnExtent).forEach((key) => {
       if (this.state.columnExtent[key]) {
         const extent = this.state.columnExtent[key].sort((a, b) => a - b)
         orframe_data
           .filter(
-            d =>
+            (d) =>
               d.stepName === key &&
               (d.stepValue < extent[0] || d.stepValue > extent[1])
           )
-          .forEach(p => {
+          .forEach((p) => {
             hiddenHash.set(p.funnelKey, true)
           })
       }
@@ -75,14 +74,14 @@ export default class ParallelCoordinatesDocs extends React.Component {
       data: orframe_data,
       rAccessor: "stepValue",
       oAccessor: "stepName",
-      style: d => ({
+      style: (d) => ({
         fill: hiddenHash.get(d.funnelKey) ? "none" : "red",
         fillOpacity: 0.75,
         stroke: hiddenHash.get(d.funnelKey) ? "black" : "none",
         strokeOpacity: 0.5
       }),
-      connectorType: d => d.funnelKey,
-      connectorStyle: d => ({
+      connectorType: (d) => d.funnelKey,
+      connectorStyle: (d) => ({
         stroke: hiddenHash.get(d.source.funnelKey) ? "gray" : "red",
         strokeWidth: 1,
         strokeOpacity: hiddenHash.get(d.source.funnelKey) ? 0.25 : 0.5
@@ -94,10 +93,10 @@ export default class ParallelCoordinatesDocs extends React.Component {
         tickFormat: degreeDiffFormat,
         label: "Monthly temperature"
       },
-      oLabel: d => <text transform="rotate(45) translate(0,20)">{d}</text>,
+      oLabel: (d) => <text transform="rotate(45) translate(0,20)">{d}</text>,
       margin: { left: 60, top: 20, bottom: 50, right: 30 },
       oPadding: 5,
-      renderKey: d =>
+      renderKey: (d) =>
         d.source
           ? `${d.source.stepName}-${d.source.funnelKey}`
           : `${d.stepName}-${d.funnelKey}`,
@@ -115,55 +114,8 @@ export default class ParallelCoordinatesDocs extends React.Component {
 
     examples.push({
       name: "Basic",
-      demo: (
-        <div>
-          <ProcessViz
-            frameSettings={parralelCoordinatesChart}
-            frameType="OrdinalFrame"
-          />
-          <OrdinalFrame {...parralelCoordinatesChart} />
-        </div>
-      ),
-      source: `
-constructor(props) {
-  super(props)
-  this.brushing = this.brushing.bind(this)
-  this.state = { columnExtent: { 'January': undefined, 'February': undefined, 'March': undefined, 'April': undefined, 'May': undefined, 'June': undefined, 'July': undefined, 'August': undefined, 'September': undefined, 'October': undefined, 'November': undefined, 'December': undefined } }
-}
-
-brushing(e,c) {   
-  const columnExtent = this.state.columnExtent    
-  columnExtent[c] = e   
-  this.setState(columnExtent)   
-}
-
-const axis = { orient: 'left', tickFormat: d => d, label: {
-    name: "axis label",
-    position: { anchor: "middle" },
-    locationDistance: 40
-} }
-
-const hiddenHash = new Map()
-
-Object.keys(this.state.columnExtent).forEach(key => {
-  if (this.state.columnExtent[key]) {
-    const extent = this.state.columnExtent[key].sort((a,b) => a - b)
-    orframe_data
-      .filter(d => d.stepName === key && (d.stepValue < extent[0] || d.stepValue > extent[1]))
-      .forEach(p => {
-        hiddenHash.set(p.funnelKey, true)
-      })
-  }
-})
-const parallelCoordinatesChart = ${JSON.stringify(
-        { ...parralelCoordinatesChart, data: [] },
-        null,
-        2
-      )}
-<OrdinalFrame
-  {...parallelCoordinatesChart}
-/>
-      `
+      demo: <OrdinalFrame {...parralelCoordinatesChart} />,
+      source: ``
     })
 
     return (

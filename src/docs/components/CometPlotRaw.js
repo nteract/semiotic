@@ -7,13 +7,12 @@ import { d as glyphD } from "d3-glyphedge"
 import AnnotationCalloutCircle from "react-annotation/lib/Types/AnnotationCalloutCircle"
 
 import "../example_settings/comet.css"
-import ProcessViz from "./ProcessViz"
 
 const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"]
 
 const processedData = csvParse(data)
 let diff = 0
-processedData.forEach(d => {
+processedData.forEach((d) => {
   d.endweight = +d.endweight
   d.startweight = +d.startweight
   d.endvalue = +d.endvalue
@@ -28,9 +27,7 @@ const colorScale = scaleLinear()
   .domain([-diff, 0, diff])
   .range(["orange", "grey", "blue"])
 
-const widthScale = scaleLinear()
-  .domain([-diff, 0, diff])
-  .range([5, 1, 5])
+const widthScale = scaleLinear().domain([-diff, 0, diff]).range([5, 1, 5])
 
 function customCometMark({ d, xScale, yScale }) {
   const edge = {
@@ -120,7 +117,7 @@ const nflx = [
   { date: "06/14/2018", open: 384, high: 395, low: 383, close: 392.87 }
 ]
 
-const complexTickFormat = tickValue => {
+const complexTickFormat = (tickValue) => {
   if (
     tickValue < 6 ||
     (tickValue >= 10 && tickValue <= 50) ||
@@ -136,7 +133,7 @@ const cometChart = {
   margin: 70,
   xScaleType: scaleLog(),
   yScaleType: scaleLog(),
-  pointStyle: d => ({ fill: colorScale(d.weightDiff) }),
+  pointStyle: (d) => ({ fill: colorScale(d.weightDiff) }),
   customPointMark: customCometMark,
   points: processedData,
   xAccessor: "endweight",
@@ -146,7 +143,7 @@ const cometChart = {
     {
       type: "enclose",
       coordinates: processedData.filter(
-        d => d.birthweight === " 2000 - 2499 grams"
+        (d) => d.birthweight === " 2000 - 2499 grams"
       ),
       dx: -100,
       dy: -1,
@@ -154,7 +151,7 @@ const cometChart = {
     },
     {
       type: AnnotationCalloutCircle,
-      coordinates: processedData.filter(d => d.state === "Georgia"),
+      coordinates: processedData.filter((d) => d.state === "Georgia"),
       nx: 503,
       ny: 80,
       label: "Georgia",
@@ -170,12 +167,12 @@ const cometChart = {
     },
     {
       orient: "bottom",
-      tickFormat: d => (d === 1000000 ? "1m" : `${d / 1000}k`),
+      tickFormat: (d) => (d === 1000000 ? "1m" : `${d / 1000}k`),
       tickValues: [1000, 10000, 100000, 1000000],
       label: "Number of Births"
     }
   ],
-  tooltipContent: d => (
+  tooltipContent: (d) => (
     <div className="tooltip-content">
       <p>{d.state}</p>
       <p>{d.birthweight}</p>
@@ -185,7 +182,6 @@ const cometChart = {
 }
 export default (
   <div>
-    <ProcessViz frameSettings={cometChart} frameType="XYFrame" />
     <XYFrame {...cometChart} />
     <XYFrame
       title={"Candlestick Chart"}
@@ -195,8 +191,8 @@ export default (
       pointStyle={(d, i, yi) => ({ fill: colors[yi] })}
       hoverAnnotation={true}
       xScaleType={scaleTime()}
-      xAccessor={d => new Date(d.date)}
-      yAccessor={d => [d.open, d.high, d.low, d.close]}
+      xAccessor={(d) => new Date(d.date)}
+      yAccessor={(d) => [d.open, d.high, d.low, d.close]}
       margin={{ left: 80, bottom: 50, right: 10, top: 40 }}
       axes={[
         {
@@ -204,7 +200,7 @@ export default (
         },
         {
           orient: "bottom",
-          tickFormat: d => `${d.getMonth()}/${d.getDate()}`
+          tickFormat: (d) => `${d.getMonth()}/${d.getDate()}`
         }
       ]}
     />
@@ -244,8 +240,8 @@ export default (
       ]}
       hoverAnnotation={true}
       xScaleType={scaleTime()}
-      xAccessor={d => new Date(d.date)}
-      yAccessor={d => [d.open, d.high, d.low, d.close]}
+      xAccessor={(d) => new Date(d.date)}
+      yAccessor={(d) => [d.open, d.high, d.low, d.close]}
       margin={{ left: 80, bottom: 50, right: 10, top: 40 }}
       axes={[
         {
@@ -253,7 +249,7 @@ export default (
         },
         {
           orient: "bottom",
-          tickFormat: d => `${d.getMonth()}/${d.getDate()}`
+          tickFormat: (d) => `${d.getMonth()}/${d.getDate()}`
         }
       ]}
     />
@@ -294,13 +290,13 @@ export default (
       ]}
       hoverAnnotation={true}
       yScaleType={scaleTime()}
-      yAccessor={d => new Date(d.date)}
-      xAccessor={d => [d.open, d.high, d.low, d.close]}
+      yAccessor={(d) => new Date(d.date)}
+      xAccessor={(d) => [d.open, d.high, d.low, d.close]}
       margin={{ left: 80, bottom: 50, right: 10, top: 40 }}
       axes={[
         {
           orient: "left",
-          tickFormat: d => `${d.getMonth()}/${d.getDate()}`
+          tickFormat: (d) => `${d.getMonth()}/${d.getDate()}`
         },
         {
           orient: "bottom"
