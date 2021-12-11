@@ -7,28 +7,26 @@ type Props = {
   span: boolean
 }
 
-class SpanOrDiv extends React.PureComponent<Props> {
-  render() {
-    const { style, className, span, children } = this.props
+export default function SpanOrDiv(props: Props) {
+  const { style, className, span, children } = props
 
-    if (span)
-      return (
-        <span className={className} style={{ display: "block", ...style }}>
-          {children}
-        </span>
-      )
-
+  if (span)
     return (
-      <div className={className} style={style}>
+      <span className={className} style={{ display: "block", ...style }}>
         {children}
-      </div>
+      </span>
     )
-  }
+
+  return (
+    <div className={className} style={style}>
+      {children}
+    </div>
+  )
 }
 
-export const HOCSpanOrDiv = span => {
+export const HOCSpanOrDiv = (span) => {
   if (span) {
-    return props => {
+    return (props) => {
       const { className, style, children } = props
       return (
         <span className={className} style={{ display: "block", ...style }}>
@@ -37,7 +35,7 @@ export const HOCSpanOrDiv = span => {
       )
     }
   }
-  return props => {
+  return (props) => {
     const { className, style, children } = props
     return (
       <div className={className} style={style}>
@@ -46,5 +44,3 @@ export const HOCSpanOrDiv = span => {
     )
   }
 }
-
-export default SpanOrDiv

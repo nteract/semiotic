@@ -30,15 +30,9 @@ function formatValue(value, props) {
   return value
 }
 
-interface AxisState {
-  hoverAnnotation: number
-  calculatedLabelPosition?: number
-}
-
-const boundingBoxMax = (axisRef, props) => {
-  // && props.dynamicLabel ???
+const boundingBoxMax = (axisNode, orient) => {
+  const axisRef = axisNode.current
   if (!axisRef) return 30
-  const { orient = "left" } = props
 
   const positionType =
     orient === "left" || orient === "right" ? "width" : "height"
@@ -56,10 +50,11 @@ const boundingBoxMax = (axisRef, props) => {
   return axisLabelMax
 }
 
-const Axis = (props) => {
+export default function Axis(props: AxisProps) {
   const {
     rotate,
     label,
+    dynamicLabelPosition,
     orient = "left",
     marginalSummaryType,
     tickFormat = marginalSummaryType ? () => "" : (d) => d,
@@ -82,24 +77,22 @@ const Axis = (props) => {
     xyPoints
   } = props
 
-  let { axisParts, position = [0, 0] } = props
-
-  const [hoverAnnotation, setHoverAnnotation] = useState(0)
-  const [calculatedLabelPosition, setCalculatedHoverPosition] =
+  const [hoverPosition, changeHoverPosition] = useState(0)
+  const [calculatedLabelPosition, changeCalculatedLabelPosition] =
     useState(undefined)
-  const axisRef = useRef(null)
+
+  const axisNode = useRef(null)
 
   useEffect(() => {
-    if (axisRef?.current) {
-      const { label = { position: false }, dynamicLabelPosition } = props
-      if (!label.position && dynamicLabelPosition) {
-        const newBBMax = boundingBoxMax(axisRef.current, props)
-        if (newBBMax !== calculatedLabelPosition) {
-          setCalculatedHoverPosition(newBBMax)
-        }
+    if (!label?.position && dynamicLabelPosition) {
+      const newBBMax = boundingBoxMax(axisNode, orient)
+      if (newBBMax !== calculatedLabelPosition) {
+        changeCalculatedLabelPosition(newBBMax)
       }
     }
-  })
+  }, [label, dynamicLabelPosition])
+
+  let { axisParts, position = [0, 0] } = props
 
   let axisTickLines
 
@@ -140,14 +133,14 @@ const Axis = (props) => {
   let baselineY2 = height
 
   let hoverFunction = (e) => {
-    setHoverAnnotation(e.nativeEvent.offsetY)
+    changeHoverPosition(e.nativeEvent.offsetY)
   }
   let circleX = 25
   let textX = -25
   let textY = 18
   let lineWidth = width + 25
   let lineHeight = 0
-  let circleY = hoverAnnotation
+  let circleY = hoverPosition
   let annotationOffset = 0
   let annotationType = "y"
 
@@ -159,9 +152,9 @@ const Axis = (props) => {
       annotationOffset = margin.top
       lineWidth = -width - 25
       textX = 5
-      hoverFunction = (e) =>
-        setHoverAnnotation(e.nativeEvent.offsetY - annotationOffset)
-
+      hoverFunction = (e) => {
+        changeHoverPosition(e.nativeEvent.offsetY - annotationOffset)
+      }
       if (center === true) {
         baselineX2 = baselineX = width / 2
       }
@@ -179,9 +172,10 @@ const Axis = (props) => {
       if (center === true) {
         baselineY2 = baselineY = height / 2
       }
-      hoverFunction = (e) =>
-        setHoverAnnotation(e.nativeEvent.offsetX - annotationOffset)
-      circleX = hoverAnnotation
+      hoverFunction = (e) => {
+        changeHoverPosition(e.nativeEvent.offsetX - annotationOffset)
+      }
+      circleX = hoverPosition
       circleY = 25
       textX = 0
       textY = -10
@@ -197,9 +191,10 @@ const Axis = (props) => {
       baselineX2 = width
       annotationOffset = margin.left
 
-      hoverFunction = (e) =>
-        setHoverAnnotation(e.nativeEvent.offsetX - annotationOffset)
-      circleX = hoverAnnotation
+      hoverFunction = (e) => {
+        changeHoverPosition(e.nativeEvent.offsetX - annotationOffset)
+      }
+      circleX = hoverPosition
       circleY = 25
       textX = 0
       textY = 15
@@ -216,19 +211,20 @@ const Axis = (props) => {
       if (center === true) {
         baselineX2 = baselineX = width / 2
       }
-      hoverFunction = (e) =>
-        setHoverAnnotation(e.nativeEvent.offsetY - annotationOffset)
+      hoverFunction = (e) => {
+        changeHoverPosition(e.nativeEvent.offsetY - annotationOffset)
+      }
   }
 
   let annotationBrush
 
   if (annotationFunction) {
-    const formattedValue = formatValue(scale.invert(hoverAnnotation), props)
+    const formattedValue = formatValue(scale.invert(hoverPosition), props)
     const hoverGlyph = glyphFunction ? (
       glyphFunction({
         lineHeight,
         lineWidth,
-        value: scale.invert(hoverAnnotation)
+        value: scale.invert(hoverPosition)
       })
     ) : (
       <g>
@@ -243,7 +239,7 @@ const Axis = (props) => {
         <line x1={lineWidth} y1={lineHeight} style={{ stroke: "black" }} />
       </g>
     )
-    const annotationSymbol = hoverAnnotation ? (
+    const annotationSymbol = hoverPosition ? (
       <g
         style={{ pointerEvents: "none" }}
         transform={`translate(${circleX},${circleY})`}
@@ -266,11 +262,13 @@ const Axis = (props) => {
             annotationFunction({
               className: "dynamic-axis-annotation",
               type: annotationType,
-              value: scale.invert(hoverAnnotation),
+              value: scale.invert(hoverPosition),
               e
             })
           }
-          onMouseOut={() => setHoverAnnotation(undefined)}
+          onMouseOut={() => {
+            changeHoverPosition(undefined)
+          }}
         />
         {annotationSymbol}
       </g>
@@ -508,7 +506,7 @@ const Axis = (props) => {
   }`
 
   return (
-    <g className={className} aria-label={axisAriaLabel} ref={axisRef}>
+    <g className={className} aria-label={axisAriaLabel} ref={axisNode}>
       {annotationBrush}
       {axisTickLabels}
       {axisTickLines}
@@ -529,5 +527,3 @@ const Axis = (props) => {
     </g>
   )
 }
-
-export default Axis

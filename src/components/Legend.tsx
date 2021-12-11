@@ -24,244 +24,237 @@ function renderType(
   return renderedType
 }
 
-class Legend extends React.Component<LegendProps, null> {
-  renderLegendGroupVertical(
-    legendGroup: LegendGroup,
-    customClickBehavior?: Function
-  ) {
-    const { type = "fill", styleFn, items } = legendGroup
-    const renderedItems = []
-    let itemOffset = 0
-    items.forEach((item, i) => {
-      const renderedType = renderType(item, i, type, styleFn)
-      renderedItems.push(
-        <g
-          key={`legend-item-${i}`}
-          transform={`translate(0,${itemOffset})`}
-          onClick={
-            customClickBehavior ? () => customClickBehavior(item) : undefined
-          }
-          style={{
-            cursor: customClickBehavior ? "pointer" : "default"
-          }}
+const renderLegendGroupVertical = (
+  legendGroup: LegendGroup,
+  customClickBehavior?: Function
+) => {
+  const { type = "fill", styleFn, items } = legendGroup
+  const renderedItems = []
+  let itemOffset = 0
+  items.forEach((item, i) => {
+    const renderedType = renderType(item, i, type, styleFn)
+    renderedItems.push(
+      <g
+        key={`legend-item-${i}`}
+        transform={`translate(0,${itemOffset})`}
+        onClick={
+          customClickBehavior ? () => customClickBehavior(item) : undefined
+        }
+        style={{
+          cursor: customClickBehavior ? "pointer" : "default"
+        }}
+      >
+        {renderedType}
+        <text y={15} x={30}>
+          {item.label}
+        </text>
+      </g>
+    )
+    itemOffset += 25
+  })
+  return renderedItems
+}
+
+const renderLegendGroupHorizontal = (
+  legendGroup: LegendGroup,
+  customClickBehavior?: Function
+) => {
+  const { type = "fill", styleFn, items } = legendGroup
+  const renderedItems = []
+  let itemOffset = 0
+  items.forEach((item, i) => {
+    const renderedType = renderType(item, i, type, styleFn)
+    renderedItems.push(
+      <g
+        key={`legend-item-${i}`}
+        transform={`translate(${itemOffset},0)`}
+        onClick={
+          customClickBehavior ? () => customClickBehavior(item) : undefined
+        }
+        style={{
+          cursor: customClickBehavior ? "pointer" : "default"
+        }}
+      >
+        {renderedType}
+        <text y={15} x={25}>
+          {item.label}
+        </text>
+      </g>
+    )
+    itemOffset += 35
+    itemOffset += item.label.length * 8
+  })
+  return { items: renderedItems, offset: itemOffset }
+}
+
+const renderVerticalGroup = ({
+  legendGroups,
+  width,
+  customClickBehavior
+}: {
+  legendGroups: LegendGroup[]
+  width: number
+  customClickBehavior?: Function
+}) => {
+  let offset = 30
+
+  const renderedGroups = []
+
+  legendGroups.forEach((l, i) => {
+    offset += 5
+    renderedGroups.push(
+      <line
+        key={`legend-top-line legend-symbol-${i}`}
+        stroke="gray"
+        x1={0}
+        y1={offset}
+        x2={width}
+        y2={offset}
+      />
+    )
+    offset += 10
+    if (l.label) {
+      offset += 20
+      renderedGroups.push(
+        <text
+          key={`legend-text-${i}`}
+          y={offset}
+          className="legend-group-label"
         >
-          {renderedType}
-          <text y={15} x={30}>
-            {item.label}
-          </text>
-        </g>
+          {l.label}
+        </text>
       )
-      itemOffset += 25
-    })
-    return renderedItems
-  }
+      offset += 10
+    }
 
-  renderLegendGroupHorizontal(
-    legendGroup: LegendGroup,
-    customClickBehavior?: Function
-  ) {
-    const { type = "fill", styleFn, items } = legendGroup
-    const renderedItems = []
-    let itemOffset = 0
-    items.forEach((item, i) => {
-      const renderedType = renderType(item, i, type, styleFn)
-      renderedItems.push(
-        <g
-          key={`legend-item-${i}`}
-          transform={`translate(${itemOffset},0)`}
-          onClick={
-            customClickBehavior ? () => customClickBehavior(item) : undefined
-          }
-          style={{
-            cursor: customClickBehavior ? 'pointer' : 'default'
-          }}
+    renderedGroups.push(
+      <g
+        key={`legend-group-${i}`}
+        className="legend-item"
+        transform={`translate(0,${offset})`}
+      >
+        {renderLegendGroupVertical(l, customClickBehavior)}
+      </g>
+    )
+    offset += l.items.length * 25 + 10
+  })
+
+  return renderedGroups
+}
+
+const renderHorizontalGroup = ({
+  legendGroups,
+  title,
+  height,
+  customClickBehavior
+}: {
+  legendGroups: LegendGroup[]
+  title: string | boolean
+  height: number
+  customClickBehavior?: Function
+}) => {
+  let offset = 0
+
+  const renderedGroups = []
+
+  const verticalOffset = title === false ? 10 : 40
+
+  legendGroups.forEach((l, i) => {
+    if (l.label) {
+      renderedGroups.push(
+        <text
+          key={`legend-text-${i}`}
+          transform={`translate(${offset},${verticalOffset}) rotate(90)`}
+          textAnchor="start"
+          className="legend-group-label"
         >
-          {renderedType}
-          <text y={15} x={25}>
-            {item.label}
-          </text>
-        </g>
+          {l.label}
+        </text>
       )
-      itemOffset += 35
-      itemOffset += item.label.length * 8
-    })
-    return { items: renderedItems, offset: itemOffset }
-  }
+      offset += 20
+    }
 
-  renderVerticalGroup({
-    legendGroups,
-    width,
-    customClickBehavior
-  }: {
-    legendGroups: LegendGroup[]
-    width: number
-    customClickBehavior?: Function
-  }) {
-    let offset = 30
+    const renderedItems = renderLegendGroupHorizontal(l, customClickBehavior)
 
-    const renderedGroups = []
+    renderedGroups.push(
+      <g
+        key={`legend-group-${i}`}
+        className="legend-item"
+        transform={`translate(${offset},${verticalOffset})`}
+      >
+        {renderedItems.items}
+      </g>
+    )
+    offset += renderedItems.offset + 5
 
-    legendGroups.forEach((l, i) => {
-      offset += 5
+    if (legendGroups[i + 1]) {
       renderedGroups.push(
         <line
           key={`legend-top-line legend-symbol-${i}`}
           stroke="gray"
-          x1={0}
-          y1={offset}
-          x2={width}
-          y2={offset}
+          x1={offset}
+          y1={verticalOffset - 10}
+          x2={offset}
+          y2={height + verticalOffset + 10}
         />
       )
-      offset += 10
-      if (l.label) {
-        offset += 20
-        renderedGroups.push(
-          <text
-            key={`legend-text-${i}`}
-            y={offset}
-            className="legend-group-label"
-          >
-            {l.label}
-          </text>
-        )
-        offset += 10
-      }
+    }
+    offset += 15
+  })
 
-      renderedGroups.push(
-        <g
-          key={`legend-group-${i}`}
-          className="legend-item"
-          transform={`translate(0,${offset})`}
-        >
-          {this.renderLegendGroupVertical(l, customClickBehavior)}
-        </g>
-      )
-      offset += l.items.length * 25 + 10
-    })
-
-    return renderedGroups
-  }
-
-  renderHorizontalGroup({
-    legendGroups,
-    title,
-    height,
-    customClickBehavior
-  }: {
-    legendGroups: LegendGroup[]
-    title: string | boolean
-    height: number
-    customClickBehavior?: Function
-  }) {
-    let offset = 0
-
-    const renderedGroups = []
-
-    const verticalOffset = title === false ? 10 : 40
-
-    legendGroups.forEach((l, i) => {
-      if (l.label) {
-        renderedGroups.push(
-          <text
-            key={`legend-text-${i}`}
-            transform={`translate(${offset},${verticalOffset}) rotate(90)`}
-            textAnchor="start"
-            className="legend-group-label"
-          >
-            {l.label}
-          </text>
-        )
-        offset += 20
-      }
-
-      const renderedItems = this.renderLegendGroupHorizontal(
-        l,
-        customClickBehavior
-      )
-
-      renderedGroups.push(
-        <g
-          key={`legend-group-${i}`}
-          className="legend-item"
-          transform={`translate(${offset},${verticalOffset})`}
-        >
-          {renderedItems.items}
-        </g>
-      )
-      offset += renderedItems.offset + 5
-
-      if (legendGroups[i + 1]) {
-        renderedGroups.push(
-          <line
-            key={`legend-top-line legend-symbol-${i}`}
-            stroke="gray"
-            x1={offset}
-            y1={verticalOffset - 10}
-            x2={offset}
-            y2={height + verticalOffset + 10}
-          />
-        )
-      }
-      offset += 15
-    })
-
-    return (
-      <g>
-        {title !== false && (
-          <line
-            x1={0}
-            x2={offset + 10}
-            y1={verticalOffset - 10}
-            y2={verticalOffset - 10}
-            stroke="gray"
-            className="title-neatline"
-          />
-        )}
-        {renderedGroups}
-      </g>
-    )
-  }
-
-  render() {
-    const {
-      legendGroups,
-      customClickBehavior,
-      title = "Legend",
-      width = 100,
-      height = 20,
-      orientation = "vertical"
-    } = this.props
-    const renderedGroups =
-      orientation === "vertical"
-        ? this.renderVerticalGroup({
-            legendGroups,
-            width,
-            customClickBehavior
-          })
-        : this.renderHorizontalGroup({
-            legendGroups,
-            title,
-            height,
-            customClickBehavior
-          })
-
-    return (
-      <g>
-        {title !== undefined && (
-          <text
-            className="legend-title"
-            y={20}
-            x={orientation === "horizontal" ? 0 : width / 2}
-            textAnchor={orientation === "horizontal" ? "start" : "middle"}
-          >
-            {title}
-          </text>
-        )}
-        {renderedGroups}
-      </g>
-    )
-  }
+  return (
+    <g>
+      {title !== false && (
+        <line
+          x1={0}
+          x2={offset + 10}
+          y1={verticalOffset - 10}
+          y2={verticalOffset - 10}
+          stroke="gray"
+          className="title-neatline"
+        />
+      )}
+      {renderedGroups}
+    </g>
+  )
 }
 
-export default Legend
+export default function Legend(props: LegendProps) {
+  const {
+    legendGroups,
+    customClickBehavior,
+    title = "Legend",
+    width = 100,
+    height = 20,
+    orientation = "vertical"
+  } = props
+  const renderedGroups =
+    orientation === "vertical"
+      ? renderVerticalGroup({
+          legendGroups,
+          width,
+          customClickBehavior
+        })
+      : renderHorizontalGroup({
+          legendGroups,
+          title,
+          height,
+          customClickBehavior
+        })
+
+  return (
+    <g>
+      {title !== undefined && (
+        <text
+          className="legend-title"
+          y={20}
+          x={orientation === "horizontal" ? 0 : width / 2}
+          textAnchor={orientation === "horizontal" ? "start" : "middle"}
+        >
+          {title}
+        </text>
+      )}
+      {renderedGroups}
+    </g>
+  )
+}
