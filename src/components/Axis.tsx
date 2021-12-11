@@ -31,11 +31,6 @@ function formatValue(value, props) {
   return value
 }
 
-interface AxisState {
-  hoverAnnotation: number
-  calculatedLabelPosition?: number
-}
-
 const boundingBoxMax = (axisNode, orient) => {
   const axisRef = axisNode.current
   if (!axisRef) return 30
@@ -60,6 +55,7 @@ export default function Axis(props: AxisProps) {
   const {
     rotate,
     label,
+    dynamicLabelPosition,
     orient = "left",
     marginalSummaryType,
     tickFormat = marginalSummaryType ? () => "" : (d) => d,
@@ -89,15 +85,13 @@ export default function Axis(props: AxisProps) {
   const axisNode = useRef(null)
 
   useEffect(() => {
-    const { label = { position: false }, dynamicLabelPosition } = props
-
-    if (!label.position && dynamicLabelPosition) {
+    if (!label?.position && dynamicLabelPosition) {
       const newBBMax = boundingBoxMax(axisNode, orient)
       if (newBBMax !== calculatedLabelPosition) {
         changeCalculatedLabelPosition(newBBMax)
       }
     }
-  })
+  }, [label, dynamicLabelPosition])
 
   let { axisParts, position = [0, 0] } = props
 
