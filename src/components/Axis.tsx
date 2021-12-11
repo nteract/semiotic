@@ -56,14 +56,6 @@ const boundingBoxMax = (axisRef, props) => {
   return axisLabelMax
 }
 
-class ClassAxis extends React.Component<AxisProps, AxisState> {
-  constructor(props) {
-    super(props)
-    this.state = { hoverAnnotation: 0 }
-  }
-  axisRef?: { querySelectorAll: Function } = null
-}
-
 const Axis = (props) => {
   const {
     rotate,
