@@ -7,7 +7,7 @@ type Props = {
   span: boolean
 }
 
-const SpanOrDiv = (props: Props) => {
+export default function SpanOrDiv(props: Props) {
   const { style, className, span, children } = props
 
   if (span)
@@ -44,5 +44,3 @@ export const HOCSpanOrDiv = (span) => {
     )
   }
 }
-
-export default SpanOrDiv

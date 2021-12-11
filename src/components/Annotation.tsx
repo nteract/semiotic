@@ -6,7 +6,7 @@ import { GenericObject } from "./types/generalTypes"
 
 const interactivityFns = ["onDragEnd", "onDragStart", "onDrag"]
 
-export default (props: AnnotationProps) => {
+export default function SemioticAnnotation(props: AnnotationProps) {
   const { noteData: baseNoteData } = props
   const { screenCoordinates } = baseNoteData
 

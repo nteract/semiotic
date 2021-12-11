@@ -88,7 +88,7 @@ const generateMinimap = (props: MinimapXYFrameProps) => {
   return <MiniMap {...combinedOptions} />
 }
 
-const MinimapXYFrame = (props: MinimapXYFrameProps) => {
+export default function MinimapXYFrame(props: MinimapXYFrameProps) {
   const miniMap = generateMinimap(props)
   const options: {
     beforeElements?: React.ReactNode
@@ -104,7 +104,3 @@ const MinimapXYFrame = (props: MinimapXYFrameProps) => {
 
   return <XYFrame {...rest} {...options} />
 }
-
-MinimapXYFrame.displayName = "MinimapXYFrame"
-
-export default MinimapXYFrame

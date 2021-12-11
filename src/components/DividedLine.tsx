@@ -66,10 +66,8 @@ const createLineSegments = (props) => {
   ))
 }
 
-const DividedLine = (props: DividedLineProps) => {
+export default function DividedLine(props: DividedLineProps) {
   const lines = createLineSegments(props)
 
   return <g>{lines}</g>
 }
-
-export default DividedLine

@@ -219,7 +219,7 @@ const renderHorizontalGroup = ({
   )
 }
 
-export default (props: LegendProps) => {
+export default function Legend(props: LegendProps) {
   const {
     legendGroups,
     customClickBehavior,

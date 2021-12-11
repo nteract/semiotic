@@ -56,7 +56,7 @@ const boundingBoxMax = (axisNode, orient) => {
   return axisLabelMax
 }
 
-export default (props: AxisProps) => {
+export default function Axis(props: AxisProps) {
   const {
     rotate,
     label,
@@ -534,12 +534,3 @@ export default (props: AxisProps) => {
     </g>
   )
 }
-
-/*
-class Axis extends React.Component<AxisProps, AxisState> {
-  constructor(props) {
-    super(props)
-    this.state = { hoverAnnotation: 0 }
-  }
-  axisRef?: { querySelectorAll: Function } = null
-*/
