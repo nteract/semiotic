@@ -1,6 +1,5 @@
 import * as React from "react"
 import { OrdinalFrame } from "../../components"
-import ProcessViz from "./ProcessViz"
 
 const padding = 40
 const data = [
@@ -14,7 +13,7 @@ const data = [
   { name: "Total" }
 ]
 
-const fillRule = d =>
+const fillRule = (d) =>
   d.name === "Total" ? "#00a2ce" : d.value > 0 ? "#4d430c" : "#b3331d"
 const formatLabel = (name, value) =>
   `$${(name === "Total" ? Math.abs(value) : value) / 1000}k`
@@ -27,7 +26,7 @@ function waterfall({ data, rScale, adjustedSize }) {
   const zeroValue = rScale(0)
   const keys = Object.keys(data)
 
-  keys.forEach(key => {
+  keys.forEach((key) => {
     //assume only one per column though...
     const thisPiece = data[key].pieceData[0].data
 
@@ -99,7 +98,7 @@ function waterfall({ data, rScale, adjustedSize }) {
     currentY -= height
   })
 
-//  return renderedPieces.map(d => d.renderElement)
+  //  return renderedPieces.map(d => d.renderElement)
   return renderedPieces
 }
 
@@ -107,24 +106,26 @@ const waterfallChart = {
   size: [700, 400],
   data: data,
   rExtent: [0, 65000],
-  rAccessor: d => d.value,
-  oAccessor: d => d.name,
-  axes: [{ orient: "left", tickFormat: d => `$${d / 1000}k` }],
-  style: d => ({
+  rAccessor: (d) => d.value,
+  oAccessor: (d) => d.name,
+  axes: [{ orient: "left", tickFormat: (d) => `$${d / 1000}k` }],
+  style: (d) => ({
     fill: d.value > 0 ? "green" : "red",
     stroke: "darkgray",
     strokeWidth: 1
   }),
   type: waterfall,
-  oLabel: d => <text transform="rotate(45)">{d}</text>,
+  oLabel: (d) => <text transform="rotate(45)">{d}</text>,
   margin: { left: 60, top: 20, bottom: 100, right: 20 },
   oPadding: padding,
   pieceHoverAnnotation: true,
-  tooltipContent: d => { return <div className="tooltip-content"><p>{d.name}</p><p>{d.value}</p></div> }
+  tooltipContent: (d) => {
+    return (
+      <div className="tooltip-content">
+        <p>{d.name}</p>
+        <p>{d.value}</p>
+      </div>
+    )
+  }
 }
-export default (
-  <div>
-    <ProcessViz frameSettings={waterfallChart} frameType="OrdinalFrame" />
-    <OrdinalFrame {...waterfallChart} />
-  </div>
-)
+export default <OrdinalFrame {...waterfallChart} />

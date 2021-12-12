@@ -5,7 +5,6 @@ import {
   SparkNetworkFrame
 } from "../../components"
 import { curveMonotoneX } from "d3-shape"
-import ProcessViz from "./ProcessViz"
 
 const dataSeeds = [40, 40]
 const colors = ["4d430c", "#d38779", "#b3331d", "#00a2ce", "#007190", "#b6a756"]
@@ -60,7 +59,7 @@ export default (type = "stackedarea") => {
     lineType: { type, interpolator: curveMonotoneX },
     xAccessor: "step",
     yAccessor: "value",
-    lineStyle: d => ({ fill: d.label, stroke: d.label, fillOpacity: 0.75 }),
+    lineStyle: (d) => ({ fill: d.label, stroke: d.label, fillOpacity: 0.75 }),
     axes: [{ orient: "left" }]
   }
   return (
@@ -74,7 +73,6 @@ export default (type = "stackedarea") => {
         allow="autoplay; encrypted-media"
         allowFullScreen
       />
-      <ProcessViz frameSettings={negativeChart} frameType="SparkXYFrame" />
       <p style={{ fontSize: "20px", lineHeight: "28px" }}>
         When you insert small graphs into text those graphs are typically
         referred to as <b>sparklines</b>, because they're typically small line
@@ -101,7 +99,7 @@ export default (type = "stackedarea") => {
             { source: "a", target: "j" }
           ]}
           edgeStyle={{ stroke: "black" }}
-          nodeStyle={d => ({
+          nodeStyle={(d) => ({
             fill: d.id === "a" ? "#00a2ce" : "black",
             stroke: d.id === "a" ? "#00a2ce" : "none"
           })}
@@ -118,7 +116,7 @@ export default (type = "stackedarea") => {
             { source: "g", target: "j" }
           ]}
           edgeStyle={{ stroke: "black" }}
-          nodeStyle={d => ({
+          nodeStyle={(d) => ({
             fill: d.id === "d" ? "#d38779" : "black",
             stroke: d.id === "d" ? "#d38779" : "none"
           })}
@@ -126,7 +124,7 @@ export default (type = "stackedarea") => {
       </p>
       <p style={{ fontSize: "20px", lineHeight: "28px" }}>
         Line charts may be typical, but that doesn't keep a sparkline from being
-        a<SparkXYFrame {...negativeChart} renderKey={d => d.label} /> or maybe
+        a<SparkXYFrame {...negativeChart} renderKey={(d) => d.label} /> or maybe
         even a
         <SparkOrdinalFrame
           data={[8, 4, 12, 3, 4, 5, 6, 7]}
@@ -138,7 +136,7 @@ export default (type = "stackedarea") => {
         <SparkOrdinalFrame
           data={summarySample}
           size={[50, 100]}
-          style={d => ({ fill: stackedColors[d.o] })}
+          style={(d) => ({ fill: stackedColors[d.o] })}
           oAccessor="s"
           rAccessor="v"
           type="bar"
@@ -149,7 +147,7 @@ export default (type = "stackedarea") => {
         <SparkOrdinalFrame
           data={summarySample}
           size={[50, 100]}
-          oAccessor={d => (d.o === "a" ? "a" : "o")}
+          oAccessor={(d) => (d.o === "a" ? "a" : "o")}
           rAccessor="v"
           oPadding={2}
           summaryStyle={{
@@ -264,12 +262,12 @@ export default (type = "stackedarea") => {
             { source: "d", target: "a", weight: 2 },
             { source: "b", target: "d", weight: 4 }
           ]}
-          edgeStyle={d => ({
+          edgeStyle={(d) => ({
             fill: stackedColors[d.source.id],
             opacity: 0.5
           })}
           networkType={{ type: "chord", padAngle: 0.3 }}
-          nodeStyle={d => ({
+          nodeStyle={(d) => ({
             fill: stackedColors[d.id],
             stroke: "black"
           })}

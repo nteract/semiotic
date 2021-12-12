@@ -1,6 +1,5 @@
 import * as React from "react"
 import { OrdinalFrame } from "../../components"
-import ProcessViz from "./ProcessViz"
 
 const bulletData = [
   {
@@ -41,7 +40,7 @@ const bulletData = [
 ]
 
 //type, data, renderMode, eventListenersGenerator, styleFn, projection, classFn, adjustedSize, margin, rScale
-function generateBulletChart({ data, rScale/*, adjustedSize */ }) {
+function generateBulletChart({ data, rScale /*, adjustedSize */ }) {
   const rangeColors = ["eee", "ddd", "ccc"]
   const measureColors = ["rgb(0, 162, 206)", "rgb(0, 113, 144)"]
   const markerColors = ["black"]
@@ -114,28 +113,28 @@ export default (
   <div>
     {bulletData.map((data, i) => {
       const bulletRanges = data.ranges
-        .map(p => ({ class: "range", value: p }))
+        .map((p) => ({ class: "range", value: p }))
         .sort((a, b) => b.value - a.value)
       const bulletMeasures = data.measures
-        .map(p => ({
+        .map((p) => ({
           class: "measure",
           value: p
         }))
         .sort((a, b) => b.value - a.value)
       const bulletMarkers = data.markers
-        .map(p => ({ class: "marker", value: p }))
+        .map((p) => ({ class: "marker", value: p }))
         .sort((a, b) => b.value - a.value)
 
       const bulletChart = {
         key: `orframe-${i}`,
         size: [700, 100],
         data: [...bulletRanges, ...bulletMeasures, ...bulletMarkers],
-        rAccessor: d => d.value,
+        rAccessor: (d) => d.value,
         rExtent: [0, undefined],
         oAccessor: () => "fixed",
         projection: "horizontal",
         axes: { orient: "bottom", ticks: 6, footer: true },
-        style: d => ({
+        style: (d) => ({
           fill: d.value > 0 ? "green" : "red",
           stroke: "darkgray",
           strokeWidth: 1
@@ -149,7 +148,7 @@ export default (
             </text>
           </g>
         ),
-        tooltipContent: d => (
+        tooltipContent: (d) => (
           <div className="tooltip-content">
             <p>{d.class}</p>
             <p>{d.value}</p>
@@ -161,9 +160,6 @@ export default (
       }
       return (
         <div key={`bulletChart-${i}`}>
-          {i === 0 ? (
-            <ProcessViz frameSettings={bulletChart} frameType="OrdinalFrame" />
-          ) : null}
           <OrdinalFrame {...bulletChart} />
         </div>
       )

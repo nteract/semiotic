@@ -2,8 +2,6 @@ import * as React from "react"
 import { OrdinalFrame } from "../../components"
 import AnnotationCalloutElbow from "react-annotation/lib/Types/AnnotationCalloutElbow"
 
-import ProcessViz from "./ProcessViz"
-
 const vizzers = [
   { type: "journalist", writeviz: 1, number: 9 },
   { type: "journalist", writeviz: 0.95, number: 9 },
@@ -65,7 +63,7 @@ const verticalISOTYPEChart = {
   data: vizzers,
   type: {
     type: "bar",
-    icon: d => iconHash[d.type],
+    icon: (d) => iconHash[d.type],
     iconPadding: 2,
     resize: "fixed"
   },
@@ -73,7 +71,7 @@ const verticalISOTYPEChart = {
   oAccessor: "writeviz",
   oSort: (a, b) => parseFloat(a) - parseFloat(b),
   rAccessor: "number",
-  style: d => ({
+  style: (d) => ({
     fill: colorHash[d.type],
     stroke: colorHash[d.type],
     fillOpacity: 1,
@@ -134,9 +132,4 @@ const verticalISOTYPEChart = {
   )
 }
 
-export default (
-  <div>
-    <ProcessViz frameSettings={verticalISOTYPEChart} frameType="OrdinalFrame" />
-    <OrdinalFrame {...verticalISOTYPEChart} />
-  </div>
-)
+export default <OrdinalFrame {...verticalISOTYPEChart} />

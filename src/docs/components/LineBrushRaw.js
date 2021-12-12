@@ -1,7 +1,6 @@
 import * as React from "react"
 import { XYFrame } from "../../components"
 import { scaleTime } from "d3-scale"
-import ProcessViz from "./ProcessViz"
 
 const chartScale = scaleTime()
 const lineStyle = {
@@ -16,7 +15,7 @@ const axes = [
   {
     orient: "bottom",
     ticks: 6,
-    tickFormat: d => d.getFullYear()
+    tickFormat: (d) => d.getFullYear()
   }
 ]
 
@@ -40,7 +39,6 @@ export default (data, startEvent, duringEvent, endEvent, extent) => {
   }
   return (
     <div>
-      <ProcessViz frameSettings={lineBrushChart} frameType="XYFrame" />
       <XYFrame {...lineBrushChart} />
       <XYFrame
         {...lineBrushChart}

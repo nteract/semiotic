@@ -9,7 +9,6 @@ import Select from "@material-ui/core/Select"
 import MenuItem from "@material-ui/core/MenuItem"
 import InputLabel from "@material-ui/core/InputLabel"
 import FormControl from "@material-ui/core/FormControl"
-import ProcessViz from "./ProcessViz"
 
 const glowyCanvas = (canvas, context, size) => {
   const dataURL = canvas.toDataURL("image/png")
@@ -289,7 +288,6 @@ export default class NetworkFrameDocs extends React.Component {
       demo: (
         <div>
           <Button color="primary">NetworkFrame API</Button>
-          <ProcessViz frameSettings={networkChart} frameType="NetworkFrame" />
           <NetworkFrame {...networkChart} />
         </div>
       ),

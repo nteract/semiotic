@@ -5,7 +5,6 @@ import cow from "material-design-icons-svg/paths/cannabis"
 import cat from "material-design-icons-svg/paths/cannabis"
 import cake from "material-design-icons-svg/paths/cannabis"
 import cannabis from "material-design-icons-svg/paths/cannabis"
-import ProcessViz from "./ProcessViz"
 
 const iconHash = {
   disagree: cow,
@@ -19,14 +18,14 @@ const chartProps = {
   data: answers,
   type: {
     type: "bar",
-    icon: d => iconHash[d.type],
+    icon: (d) => iconHash[d.type],
     iconPadding: 0,
     resize: "fixed"
   },
   projection: "horizontal",
   oAccessor: "question",
   rAccessor: "percent",
-  style: d => ({
+  style: (d) => ({
     fill: d.color,
     stroke: "black",
     strokeWidth: 0.5
@@ -40,9 +39,4 @@ const chartProps = {
   }
 }
 
-export default (
-  <div>
-    <ProcessViz frameSettings={chartProps} frameType="OrdinalFrame" />
-    <OrdinalFrame {...chartProps} />
-  </div>
-)
+export default <OrdinalFrame {...chartProps} />
