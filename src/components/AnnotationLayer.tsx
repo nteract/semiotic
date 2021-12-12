@@ -53,6 +53,9 @@ function safeStringify(value) {
       return "..."
     }
     if (typeof v === "object") {
+      if (Array.isArray(v)) {
+        return "..."
+      }
       seen.add(v)
     }
     return v
