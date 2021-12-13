@@ -101,7 +101,7 @@ export default function createSparkFrame(Frame, defaults, frameName) {
         )}
         ref={sparkNodeRef}
       >
-        <Frame {...defaults(this.props)} size={actualSize} useSpans={true} />
+        <Frame {...defaults(props)} size={actualSize} useSpans={true} />
       </span>
     )
   }
