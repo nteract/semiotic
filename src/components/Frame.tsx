@@ -271,8 +271,6 @@ export default function Frame(props) {
       ? foregroundGraphics({ size, margin })
       : foregroundGraphics
 
-  console.log("voronoiHover", voronoiHover)
-
   return (
     <SpanOrDiv
       span={useSpans}
