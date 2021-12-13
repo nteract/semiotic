@@ -32,14 +32,11 @@ const onResize = (
 }
 
 const createResponsiveFrame = (ParticularFrame) => {
-  function ResponsiveFrame(
-    props: ResponsiveFrameProps & ActualFrameProps,
-    isResizing: any
-  ) {
+  function ResponsiveFrame(props: ResponsiveFrameProps & ActualFrameProps) {
     const {
       responsiveWidth,
       responsiveHeight,
-      size,
+      size = [500, 500],
       dataVersion,
       debounce = 200,
       gridDisplay,
@@ -74,7 +71,7 @@ const createResponsiveFrame = (ParticularFrame) => {
           () => {
             window.clearTimeout(ResponsiveFrame.isResizing)
             ResponsiveFrame.isResizing = setTimeout(() => {
-              isResizing = false
+              ResponsiveFrame.isResizing = 0
 
               changeContainerHeight(element.offsetHeight)
               changeContainerWidth(element.offsetWidth)

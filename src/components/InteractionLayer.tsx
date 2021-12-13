@@ -379,8 +379,8 @@ export default function InteractionLayer(props: InteractionLayerProps) {
   let semioticBrush = null
   const {
     interaction,
-    svgSize,
-    margin,
+    svgSize = [500, 500],
+    margin = { left: 0, right: 0, top: 0, bottom: 0 },
     useSpans = false,
     overlay,
     points,
