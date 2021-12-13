@@ -1,4 +1,5 @@
 import * as React from "react"
+import { useCallback, useState } from "react"
 import { OrdinalFrameProps } from "./types/ordinalTypes"
 import { XYFrameProps } from "./types/xyTypes"
 import { NetworkFrameProps } from "./types/networkTypes"
@@ -29,6 +30,7 @@ function sparkNetworkSettings(originalSettings = "force") {
 
 type SparkFrameProps = {
   sparkStyle?: object
+  size?: number | number[]
 }
 
 type SparkFrameState = {
@@ -36,102 +38,71 @@ type SparkFrameState = {
   containerWidth: number
 }
 
-const createSparkFrame = (Frame, defaults, frameName) =>
-  class SparkFrame extends React.Component<
-    SparkFrameProps & ActualFrameProps,
-    SparkFrameState
-  > {
-    constructor(props) {
-      super(props)
-
-      this.state = {
-        containerHeight: props.size[1],
-        containerWidth: props.size[0]
-      }
-    }
-
-    static displayName = frameName
-
-    static defaultProps = {
-      size: []
-    }
-
-    node = null
-
-    _onResize = (width, height) => {
-      this.setState({ containerHeight: height, containerWidth: width })
-    }
-    componentDidMount() {
-      const element = this.node
-      const lineHeight =
-        +window.getComputedStyle(element).lineHeight.split("px")[0] - 5
-
-      this.setState({
-        containerHeight: isNaN(lineHeight) ? element.offsetHeight : lineHeight,
-        containerWidth: element.offsetWidth
-      })
-    }
-
-    render() {
-      const { size, sparkStyle = {} } = this.props
-
-      const { containerHeight = 30 } = this.state
-
-      const actualSize = []
-
-      actualSize[0] =
-        typeof size === "number" ? size : size[0] ? size[0] : containerHeight
-      actualSize[1] = containerHeight
-
-      return (
-        <span
-          style={Object.assign(
-            {
-              width: `${actualSize[0]}px`,
-              height: `${actualSize[1]}px`,
-              display: "inline-block",
-              marginLeft: "5px",
-              marginRight: "5px"
-            },
-            sparkStyle
-          )}
-          ref={node => (this.node = node)}
-        >
-          <Frame {...defaults(this.props)} size={actualSize} useSpans={true} />
-        </span>
-      )
-    }
-  }
-
 export const axisDefaults = {
   tickFormat: () => "",
   baseline: false
 }
 
-export const xyFrameDefaults = props => ({
+export const xyFrameDefaults = (props) => ({
   ...allFrameDefaults,
   ...props,
   hoverAnnotation: props.hoverAnnotation,
   axes: props.axes
-    ? props.axes.map(a => ({ ...axisDefaults, ...a }))
+    ? props.axes.map((a) => ({ ...axisDefaults, ...a }))
     : props.axes
 })
 
-export const ordinalFrameDefaults = props => ({
+export const ordinalFrameDefaults = (props) => ({
   ...allFrameDefaults,
   ...props,
   hoverAnnotation: props.hoverAnnotation,
   axes: props.axes
-    ? props.axes.map(a => ({ ...axisDefaults, ...a }))
+    ? props.axes.map((a) => ({ ...axisDefaults, ...a }))
     : props.axes
 })
 
-export const networkFrameDefaults = props => ({
+export const networkFrameDefaults = (props) => ({
   ...allFrameDefaults,
   nodeSizeAccessor: 2,
   ...props,
   networkType: sparkNetworkSettings(props.networkType)
-  //  hoverAnnotation: props.hoverAnnotation === true ? [{ type: "react-annotation"}] : props.hoverAnnotation,
 })
 
-export default createSparkFrame
+export default function createSparkFrame(Frame, defaults, frameName) {
+  return (props: SparkFrameProps) => {
+    const { size, sparkStyle = {} } = props
+
+    const [containerHeight, changeContainerHeight] = useState(30)
+
+    const actualSize = []
+
+    actualSize[0] =
+      typeof size === "number" ? size : size[0] ? size[0] : containerHeight
+    actualSize[1] = containerHeight
+
+    const sparkNodeRef = useCallback((node) => {
+      const lineHeight =
+        +window.getComputedStyle(node).lineHeight.split("px")[0] - 5
+
+      changeContainerHeight(isNaN(lineHeight) ? node.offsetHeight : lineHeight)
+    }, [])
+
+    return (
+      <span
+        style={Object.assign(
+          {
+            width: `${actualSize[0]}px`,
+            height: `${actualSize[1]}px`,
+            display: "inline-block",
+            marginLeft: "5px",
+            marginRight: "5px"
+          },
+          sparkStyle
+        )}
+        ref={sparkNodeRef}
+      >
+        <Frame {...defaults(this.props)} size={actualSize} useSpans={true} />
+      </span>
+    )
+  }
+}
