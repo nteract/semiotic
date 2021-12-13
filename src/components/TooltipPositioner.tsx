@@ -1,4 +1,5 @@
 import * as React from "react"
+import { useState, useEffect, useCallback } from "react"
 
 type Props = {
   tooltipContent: Function
@@ -11,20 +12,16 @@ type State = {
   tooltipContentArgsCurrent: object
 }
 
-class TooltipPositioner extends React.Component<Props, State> {
-  private containerRef = React.createRef<HTMLDivElement>()
-
-  state = {
-    collision: null,
-    tooltipContainerInitialDimensions: null,
-    tooltipContentArgsCurrent: null
-  }
-
-  // simple heuristics to check if the tooltip container exceeds the viewport
+const // simple heuristics to check if the tooltip container exceeds the viewport
   // if so, capture the suggested offset
-  checkPosition = () => {
-    const tooltipContainerInitialDimensions =
-      this.containerRef.current.getBoundingClientRect()
+  checkPosition = ({
+    tooltipRef,
+    tooltipContentArgs,
+    changeTooltipContentArgsCurrent,
+    changeTooltipContainerInitialDimensions,
+    changeCollision
+  }) => {
+    const tooltipContainerInitialDimensions = tooltipRef.getBoundingClientRect()
 
     const { right, left, top, bottom, width, height } =
       tooltipContainerInitialDimensions
@@ -51,82 +48,92 @@ class TooltipPositioner extends React.Component<Props, State> {
       collision.top = true
     }
 
-    this.setState({
-      collision,
-      tooltipContainerInitialDimensions,
-      tooltipContentArgsCurrent: this.props.tooltipContentArgs
+    changeTooltipContentArgsCurrent()
+    changeTooltipContainerInitialDimensions(tooltipContainerInitialDimensions)
+    changeCollision(collision)
+  }
+
+export default function TooltipPositioner(props: Props) {
+  const { tooltipContent, tooltipContentArgs } = props
+
+  const [collision, changeCollision] = useState(null)
+  const [
+    tooltipContainerInitialDimensions,
+    changeTooltipContainerInitialDimensions
+  ] = useState(null)
+  const [tooltipContentArgsCurrent, changeTooltipContentArgsCurrent] =
+    useState(null)
+  const [tooltipNode, setTooltipNode] = useState(null)
+
+  const tooltipNodeRef = useCallback((node) => {
+    setTooltipNode(node)
+
+    checkPosition({
+      tooltipRef: node,
+      tooltipContentArgs,
+      changeTooltipContentArgsCurrent,
+      changeTooltipContainerInitialDimensions,
+      changeCollision
     })
-  }
+  }, [])
 
-  componentDidMount() {
-    if (this.containerRef.current && !this.state.collision) {
-      this.checkPosition()
-    }
-  }
-
-  componentDidUpdate(pp) {
+  useEffect(() => {
     // if new args, reset collision state
-    if (pp.tooltipContentArgs !== this.props.tooltipContentArgs) {
-      this.setState({
-        collision: null,
-        tooltipContainerInitialDimensions: null
+    changeCollision(null)
+    changeTooltipContainerInitialDimensions(null)
+  }, [JSON.stringify(tooltipContentArgs)])
+
+  useEffect(() => {
+    if (tooltipNode && !collision) {
+      checkPosition({
+        tooltipRef: tooltipNode,
+        tooltipContentArgs,
+        changeTooltipContentArgsCurrent,
+        changeTooltipContainerInitialDimensions,
+        changeCollision
       })
-    } else if (this.containerRef.current && !this.state.collision) {
-      this.checkPosition()
     }
+  })
+
+  const containerStyle = {
+    //to handle issue when the tooltip content has margins set by client,
+    // which results in the tooltip container having smaller height,
+    // which in turn causes the css transform to be inaccurate
+    // (ref: https://www.w3.org/TR/css-box-3/#collapsing-margins)
+    overflow: "hidden",
+
+    opacity:
+      collision && tooltipContentArgsCurrent === tooltipContentArgs ? 1 : 0
   }
 
-  render() {
-    const { tooltipContent, tooltipContentArgs } = this.props
+  const tooltipContainerClasses = collision
+    ? [
+        "tooltip-container",
+        "tooltip-collision-evaluated",
+        collision && collision.top && "collision-top",
+        collision && collision.bottom && "collision-bottom",
+        collision && collision.right && "collision-right",
+        collision && collision.left && "collision-left"
+      ]
+        .filter((el) => el)
+        .join(" ")
+    : "tooltip-container"
 
-    const {
-      collision,
-      tooltipContainerInitialDimensions,
-      tooltipContentArgsCurrent
-    } = this.state
-
-    const containerStyle = {
-      //to handle issue when the tooltip content has margins set by client,
-      // which results in the tooltip container having smaller height,
-      // which in turn causes the css transform to be inaccurate
-      // (ref: https://www.w3.org/TR/css-box-3/#collapsing-margins)
-      overflow: "hidden",
-
-      opacity:
-        collision && tooltipContentArgsCurrent === tooltipContentArgs ? 1 : 0
-    }
-
-    const tooltipContainerClasses = collision
-      ? [
-          "tooltip-container",
-          "tooltip-collision-evaluated",
-          collision && collision.top && "collision-top",
-          collision && collision.bottom && "collision-bottom",
-          collision && collision.right && "collision-right",
-          collision && collision.left && "collision-left"
-        ]
-          .filter((el) => el)
-          .join(" ")
-      : "tooltip-container"
-
-    const tooltipContainerAttributes = {
-      offset: { x: 0, y: 0 },
-      tooltipContainerInitialDimensions
-    }
-
-    return (
-      <div
-        ref={this.containerRef}
-        style={containerStyle}
-        className={tooltipContainerClasses}
-      >
-        {tooltipContent({
-          ...tooltipContentArgs,
-          tooltipContainerAttributes
-        })}
-      </div>
-    )
+  const tooltipContainerAttributes = {
+    offset: { x: 0, y: 0 },
+    tooltipContainerInitialDimensions
   }
+
+  return (
+    <div
+      ref={tooltipNodeRef}
+      style={containerStyle}
+      className={tooltipContainerClasses}
+    >
+      {tooltipContent({
+        ...tooltipContentArgs,
+        tooltipContainerAttributes
+      })}
+    </div>
+  )
 }
-
-export default TooltipPositioner
