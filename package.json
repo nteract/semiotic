@@ -12,7 +12,7 @@
   "scripts": {
     "start": "node scripts/start.js",
     "build": "node scripts/build.js",
-    "test": "BABEL_ENV=test NODE_ENV=test PUBLIC_URL='' jest --env=jsdom",
+    "test": "jest --config jest.config.js",
     "test:watch": "npm run test -- --watch",
     "test:coverage": "npm run test -- --coverage",
     "test:old": "node scripts/test.js --env=jsdom",
@@ -180,57 +180,6 @@
     "regression": "^2.0.1",
     "semiotic-mark": "0.5.0",
     "svg-path-bounding-box": "1.0.4"
-  },
-  "nyc": {
-    "exclude": [
-      "tests/unit/lib/*.js",
-      "tests/unit/specs/**/*.js"
-    ]
-  },
-  "jest": {
-    "verbose": true,
-    "preset": "ts-jest",
-    "collectCoverage": true,
-    "collectCoverageFrom": [
-      "src/**/*.{ts,js,jsx,mjs}",
-      "!src/docs/**"
-    ],
-    "setupFiles": [
-      "core-js",
-      "<rootDir>/config/polyfills.js"
-    ],
-    "setupFilesAfterEnv": [
-      "<rootDir>/src/setupTests.js"
-    ],
-    "testMatch": [
-      "<rootDir>/src/**/__tests__/**/*.{js,jsx,mjs}",
-      "<rootDir>/src/**/?(*.)(spec|test).{ts,js,jsx,mjs}"
-    ],
-    "testEnvironment": "node",
-    "testURL": "http://localhost",
-    "transform": {
-      "\\.(ts|tsx)$": "ts-jest",
-      "^.+\\.(js|jsx|mjs)$": "<rootDir>/node_modules/babel-jest",
-      "^.+\\.css$": "<rootDir>/config/jest/cssTransform.js",
-      "^(?!.*\\.(js|jsx|mjs|css|json)$)": "<rootDir>/config/jest/fileTransform.js"
-    },
-    "transformIgnorePatterns": [
-      "[/\\\\]node_modules[/\\\\].+\\.(js|jsx|mjs)$"
-    ],
-    "moduleNameMapper": {
-      "^react-native$": "react-native-web"
-    },
-    "moduleFileExtensions": [
-      "web.js",
-      "mjs",
-      "js",
-      "ts",
-      "json",
-      "web.jsx",
-      "jsx",
-      "tsx",
-      "node"
-    ]
   },
   "eslintConfig": {
     "extends": "react-app"
