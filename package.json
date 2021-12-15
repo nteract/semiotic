@@ -111,6 +111,7 @@
     "parcel-plugin-typescript": "^1.0.0",
     "postcss-flexbugs-fixes": "3.2.0",
     "postcss-loader": "2.0.8",
+    "prettier": "^2.5.1",
     "puppeteer": "^1.5.0",
     "react": "16.14.0",
     "react-dev-utils": "^5.0.0",
