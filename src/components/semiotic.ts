@@ -30,36 +30,6 @@ import { hexbinning, heatmapping } from "./svg/areaDrawing"
 
 import { nodesEdgesFromHierarchy } from "./processing/network"
 
-export default {
-  AnnotationLayer,
-  DividedLine,
-  XYFrame,
-  MinimapXYFrame,
-  MiniMap,
-  Brush,
-  Axis,
-  InteractionLayer,
-  VisualizationLayer,
-  OrdinalFrame,
-  Annotation,
-  NetworkFrame,
-  ResponsiveMinimapXYFrame,
-  ResponsiveOrdinalFrame,
-  ResponsiveNetworkFrame,
-  ResponsiveXYFrame,
-  SparkOrdinalFrame,
-  SparkNetworkFrame,
-  SparkXYFrame,
-  Legend,
-  Mark,
-  FacetController,
-  funnelize,
-  calculateDataExtent,
-  hexbinning,
-  heatmapping,
-  nodesEdgesFromHierarchy
-}
-
 export {
   AnnotationLayer,
   DividedLine,

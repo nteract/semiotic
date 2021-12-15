@@ -2,17 +2,17 @@
   "name": "semiotic",
   "version": "2.0.0",
   "description": "The semiotic JavaScript data visualization framework",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
-  "unpkg": "dist/semiotic.min.js",
+  "main": "dist/semiotic.js",
+  "module": "dist/semiotic.module.js",
+  "types": "dist/semiotic.d.ts",
+  "sideEffects": false,
   "files": [
-    "lib",
     "dist"
   ],
   "scripts": {
     "start": "node scripts/start.js",
     "build": "node scripts/build.js",
-    "test": "BABEL_ENV=test NODE_ENV=test PUBLIC_URL='' jest --env=jsdom",
+    "test": "jest --config jest.config.js",
     "test:watch": "npm run test -- --watch",
     "test:coverage": "npm run test -- --coverage",
     "test:old": "node scripts/test.js --env=jsdom",
@@ -26,15 +26,12 @@
     "deploy-docs": "sh ./scripts/docs.sh",
     "ci-deploy-docs": "sh ./scripts/docs-ci.sh",
     "gh-pages": "REACT_APP_GH_PAGES_PATH='semiotic' npm run build",
-    "typescript": "tsc --declaration",
-    "dist": "rollup -c && uglifyjs ./dist/semiotic.js -o ./dist/semiotic.min.js",
+    "typescript": "tsc --declaration --noEmit",
+    "dist": "rollup --config rollup.config.js",
     "docs-bundle-stats": "GENERATE_SOURCEMAP='true' NODE_ENV='production' webpack --config ./config/webpack.config.prod.js --profile --json > stats.json && webpack-bundle-analyzer stats.json",
-    "prepublishOnly": "npm run typescript && npm run dist && rm ./dist/semiotic.js"
+    "prepublishOnly": "npm run typescript && npm run dist"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/emeeks/semiotic.git"
-  },
+  "repository": "nteract/semiotic",
   "author": {
     "name": "Elijah Meeks",
     "email": "elijahmeeks@gmail.com"
@@ -114,6 +111,7 @@
     "parcel-plugin-typescript": "^1.0.0",
     "postcss-flexbugs-fixes": "3.2.0",
     "postcss-loader": "2.0.8",
+    "prettier": "^2.5.1",
     "puppeteer": "^1.5.0",
     "react": "16.14.0",
     "react-dev-utils": "^5.0.0",
@@ -123,14 +121,10 @@
     "react-router-dom": "^5.1.2",
     "react-test-renderer": "^16",
     "rollup": "^1.6.0",
-    "rollup-plugin-babel": "^4",
+    "rollup-plugin-auto-external": "^2.0.0",
+    "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-commonjs": "^8.2.5",
-    "rollup-plugin-node-builtins": "2.1.2",
-    "rollup-plugin-node-globals": "^1.4.0",
-    "rollup-plugin-node-resolve": "^3.0.0",
-    "rollup-plugin-nodent": "^0.2.2",
-    "rollup-plugin-replace": "^2.0.0",
-    "rollup-plugin-typescript": "^1.0.0",
+    "rollup-plugin-ts": "1",
     "roughjs": "^3.1.0",
     "source-map-loader": "^0.2.4",
     "style-loader": "^0.21.0",
@@ -180,57 +174,6 @@
     "regression": "^2.0.1",
     "semiotic-mark": "0.5.0",
     "svg-path-bounding-box": "1.0.4"
-  },
-  "nyc": {
-    "exclude": [
-      "tests/unit/lib/*.js",
-      "tests/unit/specs/**/*.js"
-    ]
-  },
-  "jest": {
-    "verbose": true,
-    "preset": "ts-jest",
-    "collectCoverage": true,
-    "collectCoverageFrom": [
-      "src/**/*.{ts,js,jsx,mjs}",
-      "!src/docs/**"
-    ],
-    "setupFiles": [
-      "core-js",
-      "<rootDir>/config/polyfills.js"
-    ],
-    "setupFilesAfterEnv": [
-      "<rootDir>/src/setupTests.js"
-    ],
-    "testMatch": [
-      "<rootDir>/src/**/__tests__/**/*.{js,jsx,mjs}",
-      "<rootDir>/src/**/?(*.)(spec|test).{ts,js,jsx,mjs}"
-    ],
-    "testEnvironment": "node",
-    "testURL": "http://localhost",
-    "transform": {
-      "\\.(ts|tsx)$": "ts-jest",
-      "^.+\\.(js|jsx|mjs)$": "<rootDir>/node_modules/babel-jest",
-      "^.+\\.css$": "<rootDir>/config/jest/cssTransform.js",
-      "^(?!.*\\.(js|jsx|mjs|css|json)$)": "<rootDir>/config/jest/fileTransform.js"
-    },
-    "transformIgnorePatterns": [
-      "[/\\\\]node_modules[/\\\\].+\\.(js|jsx|mjs)$"
-    ],
-    "moduleNameMapper": {
-      "^react-native$": "react-native-web"
-    },
-    "moduleFileExtensions": [
-      "web.js",
-      "mjs",
-      "js",
-      "ts",
-      "json",
-      "web.jsx",
-      "jsx",
-      "tsx",
-      "node"
-    ]
   },
   "eslintConfig": {
     "extends": "react-app"
