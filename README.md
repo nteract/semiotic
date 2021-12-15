@@ -22,16 +22,12 @@ Example
 import { XYFrame } from "semiotic"
 ```
 
-You can also use the static distribution:
+You can also use the static distribution (via https://unpkg.com or https://esm.sh):
 
-```
-https://unpkg.com/semiotic/dist/semiotic.min.js
-```
-
-In which case the elements are exposed as properties of a `Semiotic` object:
-
-```js
-const { XYFrame } = Semiotic
+```html
+<script type="module">
+	import { XYFrame } from "https://unpkg.com/semiotic?module"
+</script>
 ```
 
 This is how it's used in [these Codepen examples](https://codepen.io/emeeks/).
