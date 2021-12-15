@@ -540,7 +540,7 @@ const createAnnotations = (
   }
 }
 
-export default (props: AnnotationLayerProps) => {
+export default function AnnotationLayer(props: AnnotationLayerProps) {
   const { legendSettings, margin, size, annotations, annotationHandling } =
     props
 
