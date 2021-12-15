@@ -1,4 +1,5 @@
 import * as React from "react"
+import { useState, useCallback, useEffect } from "react"
 
 import elementResizeEvent from "element-resize-event"
 import { OrdinalFrameProps } from "./types/ordinalTypes"
@@ -20,109 +21,105 @@ export interface ResponsiveFrameState {
 
 type ActualFrameProps = OrdinalFrameProps | XYFrameProps | NetworkFrameProps
 
-const createResponsiveFrame = ParticularFrame => {
-  return class ResponsiveFrame extends React.Component<
-    ResponsiveFrameProps & ActualFrameProps,
-    ResponsiveFrameState
-  > {
-    constructor(props) {
-      super(props)
+const onResize = (
+  width,
+  height,
+  changeContainerHeight,
+  changeContainerWidth
+) => {
+  changeContainerWidth(width)
+  changeContainerHeight(height)
+}
 
-      this.state = {
-        containerHeight: undefined,
-        containerWidth: undefined
-      }
-    }
+const createResponsiveFrame = (ParticularFrame) => {
+  function ResponsiveFrame(props: ResponsiveFrameProps & ActualFrameProps) {
+    const {
+      responsiveWidth,
+      responsiveHeight,
+      size = [500, 500],
+      dataVersion,
+      debounce = 200,
+      gridDisplay,
+      ...rest
+    } = props
 
-    node = null
+    const [containerHeight, changeContainerHeight] = useState(undefined)
+    const [containerWidth, changeContainerWidth] = useState(undefined)
 
-    static defaultProps = {
-      size: [500, 500],
-      debounce: 200
-    }
+    const actualSize = [...size]
 
-    static displayName = `Responsive${ParticularFrame.displayName}`
+    let returnEmpty = false
 
-    isResizing = undefined
+    const [responsiveNode, setResponsiveNode] = useState(null)
 
-    _onResize = (width, height) => {
-      this.setState({ containerHeight: height, containerWidth: width })
-    }
-    componentDidMount() {
-      const element = this.node
+    const responsiveNodeRef = useCallback((node) => {
+      setResponsiveNode(node)
 
-      const { debounce } = this.props
+      changeContainerHeight(node.offsetHeight)
+      changeContainerWidth(node.offsetWidth)
+    }, [])
+
+    useEffect(() => {
+      const element = responsiveNode
 
       const actualElementResizeEvent =
-        this.props.elementResizeEvent || elementResizeEvent
+        props.elementResizeEvent || elementResizeEvent
 
-      actualElementResizeEvent(element, () => {
-        window.clearTimeout(this.isResizing)
-        this.isResizing = setTimeout(() => {
-          this.isResizing = false
+      if (element) {
+        actualElementResizeEvent(
+          element,
+          () => {
+            window.clearTimeout(ResponsiveFrame.isResizing)
+            ResponsiveFrame.isResizing = setTimeout(() => {
+              ResponsiveFrame.isResizing = 0
 
-          this.setState({
-            containerHeight: element.offsetHeight,
-            containerWidth: element.offsetWidth
-          })
-        }, debounce)
-      })
-      this.setState({
-        containerHeight: element.offsetHeight,
-        containerWidth: element.offsetWidth
-      })
+              changeContainerHeight(element.offsetHeight)
+              changeContainerWidth(element.offsetWidth)
+            })
+          },
+          debounce
+        )
+      }
+      //      changeContainerHeight(element.offsetHeight)
+      //      changeContainerWidth(element.offsetWidth)
+    })
+
+    if (responsiveWidth) {
+      if (!containerWidth) returnEmpty = true
+      actualSize[0] = containerWidth
     }
 
-    render() {
-      const {
-        responsiveWidth,
-        responsiveHeight,
-        size,
-        dataVersion,
-        debounce,
-        gridDisplay,
-        ...rest
-      } = this.props
-
-      const { containerHeight, containerWidth } = this.state
-
-      const actualSize = [...size]
-
-      let returnEmpty = false
-
-      if (responsiveWidth) {
-        if (!containerWidth) returnEmpty = true
-        actualSize[0] = containerWidth
-      }
-
-      if (responsiveHeight) {
-        if (!containerHeight) returnEmpty = true
-        actualSize[1] = containerHeight
-      }
-
-      const dataVersionWithSize = dataVersion + actualSize.toString() + debounce
-
-      return (
-        <div
-          className="responsive-container"
-          style={
-            gridDisplay
-              ? { minWidth: "0px", minHeight: "0px" }
-              : { height: "100%", width: "100%" }
-          }
-          ref={node => (this.node = node)}
-        >
-          {!returnEmpty && (
-            <ParticularFrame
-              {...rest}
-              size={actualSize}
-              dataVersion={dataVersion ? dataVersionWithSize : undefined}
-            />
-          )}
-        </div>
-      )
+    if (responsiveHeight) {
+      if (!containerHeight) returnEmpty = true
+      actualSize[1] = containerHeight
     }
+
+    const dataVersionWithSize = dataVersion + actualSize.toString() + debounce
+
+    return (
+      <div
+        className="responsive-container"
+        style={
+          gridDisplay
+            ? { minWidth: "0px", minHeight: "0px" }
+            : { height: "100%", width: "100%" }
+        }
+        ref={responsiveNodeRef}
+      >
+        {!returnEmpty && (
+          <ParticularFrame
+            {...rest}
+            size={actualSize}
+            dataVersion={dataVersion ? dataVersionWithSize : undefined}
+          />
+        )}
+      </div>
+    )
   }
+  ResponsiveFrame.isResizing = setTimeout(() => {})
+
+  ResponsiveFrame.displayName = `Responsive${ParticularFrame.displayName}`
+  return ResponsiveFrame
 }
 
 export default createResponsiveFrame

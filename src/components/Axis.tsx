@@ -1,6 +1,5 @@
 import * as React from "react"
-
-import { useState, useRef, useEffect } from "react"
+import { useEffect, useState, useRef } from "react"
 
 import {
   axisLabels,

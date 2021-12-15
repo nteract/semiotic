@@ -1,5 +1,6 @@
 // modules
 import * as React from "react"
+import { useState, useEffect } from "react"
 import { bumpAnnotations } from "./annotationLayerBehavior/annotationHandling"
 
 import Legend from "./Legend"
@@ -10,7 +11,8 @@ import { HOCSpanOrDiv } from "./SpanOrDiv"
 import {
   AnnotationHandling,
   AnnotationTypes,
-  AnnotationProps
+  AnnotationProps,
+  AnnotationType
 } from "./types/annotationTypes"
 
 import { LegendProps } from "./types/legendTypes"
@@ -27,7 +29,7 @@ export interface AnnotationLayerProps {
   size: number[]
   axes?: React.ReactNode[]
   annotationHandling?: AnnotationHandling | AnnotationTypes
-  annotations: Object[]
+  annotations: AnnotationType[]
   pointSizeFunction?: Function
   labelSizeFunction?: Function
   svgAnnotationRule: Function
@@ -37,12 +39,37 @@ export interface AnnotationLayerProps {
 }
 
 interface AnnotationLayerState {
-  svgAnnotations: Object[]
-  htmlAnnotations: Object[]
   adjustedAnnotationsKey?: string
   adjustedAnnotationsDataVersion?: string
   adjustedAnnotations: Object[]
-  SpanOrDiv: Function
+  fixedAnnotations: any[]
+  adjustableAnnotations: any[]
+}
+
+function safeStringify(value) {
+  const seen = new Set()
+  return JSON.stringify(value, (k, v) => {
+    if (seen.has(v)) {
+      return "..."
+    }
+    if (typeof v === "object") {
+      if (Array.isArray(v)) {
+        return "..."
+      }
+      seen.add(v)
+    }
+    return v
+  })
+}
+
+const keyFromSVGAnnotations = (
+  adjustableAnnotations,
+  annotationProcessor,
+  size
+) => {
+  return `${adjustableAnnotations
+    .map(adjustedAnnotationKeyMapper)
+    .join(",")}${JSON.stringify(annotationProcessor)}${size.join(",")}`
 }
 
 function marginOffsetFn(orient, axisSettings, marginOffset) {
@@ -56,6 +83,9 @@ function marginOffsetFn(orient, axisSettings, marginOffset) {
 }
 
 function adjustedAnnotationKeyMapper(d) {
+  if (!d.props?.noteData) {
+    return ""
+  }
   const { note = {} } = d.props.noteData
   const { label, title } = note
   const id =
@@ -429,10 +459,13 @@ const createAnnotations = (
   props: AnnotationLayerProps,
   state: AnnotationLayerState
 ) => {
-  let renderedSVGAnnotations = state.svgAnnotations,
-    renderedHTMLAnnotations = [],
-    adjustedAnnotations = state.adjustedAnnotations,
-    adjustableAnnotationsKey = state.adjustedAnnotationsKey
+  let adjustedAnnotations = state.adjustedAnnotations,
+    adjustableAnnotationsKey = state.adjustedAnnotationsKey,
+    adjustableAnnotations = state.adjustableAnnotations,
+    fixedAnnotations = state.fixedAnnotations
+
+  let renderedSVGAnnotations = []
+  let renderedHTMLAnnotations = []
 
   const adjustedAnnotationsKey = state.adjustedAnnotationsKey,
     adjustedAnnotationsDataVersion = state.adjustedAnnotationsDataVersion
@@ -457,15 +490,12 @@ const createAnnotations = (
       props,
       annotations
     )
-    const adjustableAnnotations = initialSVGAnnotations.filter(
-      (d) => d.props && d.props.noteData && !d.props.noteData.fixedPosition
+
+    adjustableAnnotationsKey = keyFromSVGAnnotations(
+      initialSVGAnnotations,
+      annotationProcessor,
+      size
     )
-    const fixedAnnotations = initialSVGAnnotations.filter(
-      (d) => !d.props || !d.props.noteData || d.props.noteData.fixedPosition
-    )
-    adjustableAnnotationsKey = `${adjustableAnnotations
-      .map(adjustedAnnotationKeyMapper)
-      .join(",")}${JSON.stringify(annotationProcessor)}${size.join(",")}`
 
     if (annotationHandling === false) {
       adjustedAnnotations = adjustableAnnotations
@@ -510,98 +540,124 @@ const createAnnotations = (
   }
 }
 
-class AnnotationLayer extends React.Component<
-  AnnotationLayerProps,
-  AnnotationLayerState
-> {
-  constructor(props: AnnotationLayerProps) {
-    super(props)
+export default function AnnotationLayer(props: AnnotationLayerProps) {
+  const { legendSettings, margin, size, annotations, annotationHandling } =
+    props
 
-    const baseState = {
-      svgAnnotations: [],
-      htmlAnnotations: [],
-      adjustedAnnotations: [],
-      adjustedAnnotationsKey: "",
-      adjustedAnnotationsDataVersion: "",
-      SpanOrDiv: HOCSpanOrDiv(props.useSpans)
+  const [SpanOrDiv] = useState(() => HOCSpanOrDiv(props.useSpans))
+
+  const annotationProcessor: AnnotationHandling =
+    typeof annotationHandling === "object"
+      ? annotationHandling
+      : { layout: { type: annotationHandling }, dataVersion: "" }
+
+  const { dataVersion = "" } = annotationProcessor
+
+  const [adjustedAnnotations, changeAdjustedAnnotations] = useState([])
+  const [svgAnnotations, changeSVGAnnotations] = useState([])
+  const [htmlAnnotations, changeHTMLAnnotations] = useState([])
+  const [adjustedAnnotationsKey, changeAdjustedAnnotationsKey] = useState("")
+  const [adjustedAnnotationsDataVersion, changeAdjustedAnnotationsDataVersion] =
+    useState(dataVersion)
+
+  const initialSVGAnnotations: NoteType[] = generateSVGAnnotations(
+    props,
+    annotations
+  )
+
+  const adjustableAnnotations = initialSVGAnnotations.filter(
+    (d) => d.props && d.props.noteData && !d.props.noteData.fixedPosition
+  )
+
+  const updatedAnnotationsKey = keyFromSVGAnnotations(
+    adjustableAnnotations,
+    annotationProcessor,
+    size
+  )
+
+  useEffect(() => {
+    const fixedAnnotations = initialSVGAnnotations.filter(
+      (d) => !d.props || !d.props.noteData || d.props.noteData.fixedPosition
+    )
+
+    const updatedState = createAnnotations(props, {
+      adjustedAnnotations,
+      adjustedAnnotationsKey,
+      adjustedAnnotationsDataVersion,
+      adjustableAnnotations,
+      fixedAnnotations
+    })
+
+    changeAdjustedAnnotations(updatedState.adjustedAnnotations)
+    changeAdjustedAnnotationsKey(updatedState.adjustedAnnotationsKey)
+    changeAdjustedAnnotationsDataVersion(
+      updatedState.adjustedAnnotationsDataVersion
+    )
+    changeSVGAnnotations(updatedState.svgAnnotations)
+    changeHTMLAnnotations(updatedState.htmlAnnotations)
+  }, [
+    updatedAnnotationsKey,
+    dataVersion,
+    annotations.length,
+    annotations.map((a) => safeStringify(a)).join("-")
+  ])
+
+  let renderedLegend
+  if (legendSettings) {
+    const positionHash = {
+      left: [15, 15],
+      right: [size[0] + 15, 15]
     }
-
-    this.state = {
-      ...baseState,
-      ...createAnnotations(props, baseState)
-    }
-  }
-
-  static getDerivedStateFromProps(
-    nextProps: AnnotationLayerProps,
-    prevState: AnnotationLayerState
-  ) {
-    return createAnnotations(nextProps, prevState)
-  }
-
-  render() {
-    const { svgAnnotations, htmlAnnotations, SpanOrDiv } = this.state
-    const { legendSettings, margin, size } = this.props
-
-    let renderedLegend
-    if (legendSettings) {
-      const positionHash = {
-        left: [15, 15],
-        right: [size[0] + 15, 15]
-      }
-      const { position = "right", title = "Legend" } = legendSettings
-      const legendPosition = positionHash[position]
-      renderedLegend = (
-        <g transform={`translate(${legendPosition.join(",")})`}>
-          <Legend {...legendSettings} title={title} position={position} />
-        </g>
-      )
-    }
-
-    return (
-      <SpanOrDiv
-        className="annotation-layer"
-        style={{
-          position: "absolute",
-          pointerEvents: "none",
-          background: "none"
-        }}
-      >
-        <svg
-          className="annotation-layer-svg"
-          height={size[1]}
-          width={size[0]}
-          style={{
-            background: "none",
-            pointerEvents: "none",
-            position: "absolute",
-            left: `${margin.left}px`,
-            top: `${margin.top}px`,
-            overflow: "visible"
-          }}
-        >
-          <g>
-            {renderedLegend}
-            {svgAnnotations}
-          </g>
-        </svg>
-        <SpanOrDiv
-          className="annotation-layer-html"
-          style={{
-            background: "none",
-            pointerEvents: "none",
-            position: "absolute",
-            height: `${size[1]}px`,
-            width: `${size[0]}px`,
-            left: `${margin.left}px`,
-            top: `${margin.top}px`
-          }}
-        >
-          {htmlAnnotations}
-        </SpanOrDiv>
-      </SpanOrDiv>
+    const { position = "right", title = "Legend" } = legendSettings
+    const legendPosition = positionHash[position]
+    renderedLegend = (
+      <g transform={`translate(${legendPosition.join(",")})`}>
+        <Legend {...legendSettings} title={title} position={position} />
+      </g>
     )
   }
-}
 
-export default AnnotationLayer
+  return (
+    <SpanOrDiv
+      className="annotation-layer"
+      style={{
+        position: "absolute",
+        pointerEvents: "none",
+        background: "none"
+      }}
+    >
+      <svg
+        className="annotation-layer-svg"
+        height={size[1]}
+        width={size[0]}
+        style={{
+          background: "none",
+          pointerEvents: "none",
+          position: "absolute",
+          left: `${margin.left}px`,
+          top: `${margin.top}px`,
+          overflow: "visible"
+        }}
+      >
+        <g>
+          {renderedLegend}
+          {svgAnnotations}
+        </g>
+      </svg>
+      <SpanOrDiv
+        className="annotation-layer-html"
+        style={{
+          background: "none",
+          pointerEvents: "none",
+          position: "absolute",
+          height: `${size[1]}px`,
+          width: `${size[0]}px`,
+          left: `${margin.left}px`,
+          top: `${margin.top}px`
+        }}
+      >
+        {htmlAnnotations}
+      </SpanOrDiv>
+    </SpanOrDiv>
+  )
+}
