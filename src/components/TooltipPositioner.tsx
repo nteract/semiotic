@@ -93,7 +93,7 @@ export default function TooltipPositioner(props: Props) {
         changeCollision
       })
     }
-  })
+  }, [tooltipNode, collision])
 
   const containerStyle = {
     //to handle issue when the tooltip content has margins set by client,
