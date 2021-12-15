@@ -1,9 +1,9 @@
 import React from "react"
 import { mount } from "enzyme"
-import ResponsiveNetworkFrame from "./ResponsiveNetworkFrame"
-import ResponsiveMinimapXYFrame from "./ResponsiveMinimapXYFrame"
-import ResponsiveXYFrame from "./ResponsiveXYFrame"
-import ResponsiveOrdinalFrame from "./ResponsiveOrdinalFrame"
+import { ResponsiveNetworkFrame } from "./ResponsiveNetworkFrame"
+import { ResponsiveMinimapXYFrame } from "./ResponsiveMinimapXYFrame"
+import { ResponsiveXYFrame } from "./ResponsiveXYFrame"
+import { ResponsiveOrdinalFrame } from "./ResponsiveOrdinalFrame"
 const elementResizeEvent = require('element-resize-event');
 
 const ResponsiveFrameComponents = {

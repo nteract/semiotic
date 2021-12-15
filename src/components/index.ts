@@ -16,14 +16,14 @@ import { calculateDataExtent } from "./data/dataFunctions"
 
 import FacetController from "./FacetController"
 
-import ResponsiveNetworkFrame from "./ResponsiveNetworkFrame"
-import ResponsiveMinimapXYFrame from "./ResponsiveMinimapXYFrame"
-import ResponsiveXYFrame from "./ResponsiveXYFrame"
-import ResponsiveOrdinalFrame from "./ResponsiveOrdinalFrame"
+import { ResponsiveNetworkFrame } from "./ResponsiveNetworkFrame"
+import { ResponsiveMinimapXYFrame } from "./ResponsiveMinimapXYFrame"
+import { ResponsiveXYFrame } from "./ResponsiveXYFrame"
+import { ResponsiveOrdinalFrame } from "./ResponsiveOrdinalFrame"
 
-import SparkXYFrame from "./SparkXYFrame"
-import SparkOrdinalFrame from "./SparkOrdinalFrame"
-import SparkNetworkFrame from "./SparkNetworkFrame"
+import { SparkXYFrame } from "./SparkXYFrame"
+import { SparkOrdinalFrame } from "./SparkOrdinalFrame"
+import { SparkNetworkFrame } from "./SparkNetworkFrame"
 import { Mark } from "semiotic-mark"
 
 import { hexbinning, heatmapping } from "./svg/areaDrawing"

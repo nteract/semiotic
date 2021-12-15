@@ -2,7 +2,7 @@ import React from "react"
 import { mount } from "enzyme"
 import FacetController from "./FacetController"
 import OrdinalFrame from "./OrdinalFrame"
-import ResponsiveXYFrame from "./ResponsiveXYFrame"
+import { ResponsiveXYFrame } from "./ResponsiveXYFrame"
 
 const SimpleDivPropsDisplay = props => (
   <div style={{ padding: "20px" }}>

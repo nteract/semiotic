@@ -2,7 +2,7 @@ import OrdinalFrame from "./OrdinalFrame"
 import createSparkFrame from "./SparkFrame"
 import { ordinalFrameDefaults } from "./SparkFrame"
 
-export default createSparkFrame(
+export const SparkOrdinalFrame = createSparkFrame(
   OrdinalFrame,
   ordinalFrameDefaults,
   "SparkOrdinalFrame"
