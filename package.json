@@ -5,6 +5,7 @@
   "main": "dist/semiotic.js",
   "module": "dist/semiotic.module.js",
   "types": "dist/semiotic.d.ts",
+  "sideEffects": false,
   "files": [
     "dist"
   ],
@@ -30,10 +31,7 @@
     "docs-bundle-stats": "GENERATE_SOURCEMAP='true' NODE_ENV='production' webpack --config ./config/webpack.config.prod.js --profile --json > stats.json && webpack-bundle-analyzer stats.json",
     "prepublishOnly": "npm run typescript && npm run dist"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/emeeks/semiotic.git"
-  },
+  "repository": "nteract/semiotic",
   "author": {
     "name": "Elijah Meeks",
     "email": "elijahmeeks@gmail.com"
