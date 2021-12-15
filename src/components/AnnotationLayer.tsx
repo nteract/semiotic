@@ -5,7 +5,7 @@ import { bumpAnnotations } from "./annotationLayerBehavior/annotationHandling"
 
 import Legend from "./Legend"
 import Annotation from "./Annotation"
-import * as labella from "labella"
+import labella from "labella"
 import { HOCSpanOrDiv } from "./SpanOrDiv"
 
 import {
