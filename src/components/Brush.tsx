@@ -53,7 +53,7 @@ interface BrushProps {
   position?: number[]
 }
 
-export default (props: BrushProps) => {
+export default function Brush(props: BrushProps) {
   const { extent, selectedExtent } = props
 
   const node = useRef(null)
