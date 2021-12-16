@@ -10,7 +10,7 @@ import "./prism.css"
 import "./index.css"
 import ResponsiveXYExample from "./responsive/ResponsiveXYExample"
 
-const gh = "emeeks/semiotic"
+const gh = "nteract/semiotic"
 const basename = process.env.PUBLIC_URL
 
 const muiTheme = createMuiTheme(theme)
