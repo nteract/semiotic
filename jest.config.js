@@ -2,7 +2,6 @@ module.exports = {
   verbose: true,
   preset: "ts-jest",
   collectCoverage: true,
-  setupFiles: ["core-js", "<rootDir>/config/polyfills.js"],
   setupFilesAfterEnv: ["<rootDir>/src/setupTests.js"],
   testMatch: [
     "<rootDir>/src/**/__tests__/**/*.{js,jsx,mjs}",
@@ -12,7 +11,7 @@ module.exports = {
   testURL: "http://localhost",
   transform: {
     "\\.(ts|tsx)$": "ts-jest",
-    "^.+\\.(js|jsx|mjs)$": "<rootDir>/node_modules/babel-jest",
+    "^.+\\.(js|jsx|mjs)$": "<rootDir>/config/jest/jsTransformer.js",
     "^.+\\.css$": "<rootDir>/config/jest/cssTransform.js",
     "^(?!.*\\.(js|jsx|mjs|css|json)$)": "<rootDir>/config/jest/fileTransform.js"
   },
