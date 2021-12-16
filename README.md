@@ -2,22 +2,25 @@
 
 [![Semiotic](https://github.com/nteract/semiotic/actions/workflows/node.js.yml/badge.svg?branch=main)](https://github.com/nteract/semiotic/actions/workflows/node.js.yml)
 
-Semiotic is a data visualization framework combining React &amp; D3
+Semiotic is a data visualization framework combining React &amp; D3.
+
+## Documentation
 
 [Interactive Documentation](https://semiotic.nteract.io)
 
-[API Docs on the wiki](https://semiotic.nteract.io/api)
+[API Docs](https://semiotic.nteract.io/api)
 
-[Examples](https://semiotic.nteract.io/examples)
+[Interactive Examples](https://semiotic.nteract.io/examples)
 
-Installation
+## Installation
 
+```bash
+yarn install semiotic
 ```
-npm i semiotic
-```
 
-Example
+## Usage Example
 
+As a library:
 ```js
 import { XYFrame } from "semiotic"
 ```
@@ -30,7 +33,9 @@ You can also use the static distribution (via https://unpkg.com or https://esm.s
 </script>
 ```
 
-This is how it's used in [these Codepen examples](https://codepen.io/emeeks/).
+[These Codepen examples](https://codepen.io/emeeks/) use the static distributionß.
+
+## Project recognition
 
 _Semiotic icon based on an icon by André Schauer_
 
@@ -43,7 +48,19 @@ It may not be apparent in the commit logs but development of this library owes a
 * Shelby Sturgis
 * Tristan Reid
 
+## Testing
 
 Using BrowserStack for browser compatibility testing
-[![Semiotic](https://github.com/nteract/semiotic/actions/workflows/node.js.yml/badge.svg?branch=main)](https://github.com/nteract/semiotic/actions/workflows/node.js.yml)
-[![BrowserStack](browserstack_logo.png "browserstack")](http://browserstack.com/) 
+[![BrowserStack](browserstack_logo.png "browserstack")](http://browserstack.com/)
+
+## Changelog
+
+[Changelog](./CHANGELOG.md)
+
+## License
+
+[License](./LICENSE)
+
+## nteract community
+
+Our community follows the nteract [Contributor Code of Conduct](https://github.com/nteract/nteract/blob/main/CODE_OF_CONDUCT.md).
