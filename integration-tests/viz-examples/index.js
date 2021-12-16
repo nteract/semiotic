@@ -1,4 +1,7 @@
-"use strict"
+import * as Semiotic from "../../dist/semiotic.module.js"
+import React from "react"
+import ReactDOM from "react-dom"
+import { csvParse } from "d3-dsv"
 
 const data = {
   name: "d3",
@@ -524,12 +527,12 @@ const XYSettings = {
       ]
     }
   ],
-  lineStyle: line => ({
+  lineStyle: (line) => ({
     stroke: line.color,
     strokeWidth: 2
   }),
   margin: { top: 30, right: 0, bottom: 30, left: 60 },
-  pointStyle: point => ({
+  pointStyle: (point) => ({
     fill: point.parentLine.color,
     stroke: point.parentLine.color,
     strokeWidth: "2px"
@@ -544,7 +547,7 @@ let _Semiotic = Semiotic,
   NetworkFrame = _Semiotic.NetworkFrame,
   XYFrame = _Semiotic.XYFrame
 
-const parsedAnswers = d3.csvParse(joyData)
+const parsedAnswers = csvParse(joyData)
 
 const atomicData = []
 
@@ -577,7 +580,7 @@ const colors = [
 ]
 
 parsedAnswers.forEach((answer, i) => {
-  Object.keys(answer).forEach(key => {
+  Object.keys(answer).forEach((key) => {
     answer[key] = +answer[key]
     atomicData.push({
       respondent: `person ${i}`,
@@ -680,7 +683,7 @@ ReactDOM.render(
         axes: {
           orient: "left"
         },
-        tooltipContent: d =>
+        tooltipContent: (d) =>
           React.createElement("div", {
             className: "tooltip-content",
             children:
@@ -693,8 +696,8 @@ ReactDOM.render(
       React.createElement(NetworkFrame, {
         size: [200, 200],
         edges: data,
-        networkType: { type: "treemap", hierarchySum: d => d.blockCalls },
-        nodeStyle: d => ({
+        networkType: { type: "treemap", hierarchySum: (d) => d.blockCalls },
+        nodeStyle: (d) => ({
           fill: colors[d.depth],
           stroke: "black",
           strokeOpacity: 0.25,
@@ -707,7 +710,7 @@ ReactDOM.render(
         edges: data,
         networkType: { type: "tree" },
         nodeSizeAccessor: 2,
-        nodeStyle: d => ({
+        nodeStyle: (d) => ({
           fill: colors[d.depth],
           stroke: "black",
           strokeOpacity: 0.25,
