@@ -4,14 +4,13 @@
 
 Semiotic is a data visualization framework combining React &amp; D3.
 
+## Documentation
 
 [Interactive Documentation](https://semiotic.nteract.io)
 
-[API Docs on the wiki](https://semiotic.nteract.io/api)
+[API Docs](https://semiotic.nteract.io/api)
 
-[Examples](https://semiotic.nteract.io/examples)
-
-[License](./LICENSE)
+[Interactive Examples](https://semiotic.nteract.io/examples)
 
 ## Installation
 
@@ -57,6 +56,10 @@ Using BrowserStack for browser compatibility testing
 ## Changelog
 
 [Changelog](./CHANGELOG.md)
+
+## License
+
+[License](./LICENSE)
 
 ## nteract community
 
