@@ -11,9 +11,7 @@ import "./index.css"
 import ResponsiveXYExample from "./responsive/ResponsiveXYExample"
 
 const gh = "emeeks/semiotic"
-const basename = process.env.REACT_APP_GH_PAGES_PATH
-  ? `/${process.env.REACT_APP_GH_PAGES_PATH}`
-  : ""
+const basename = process.env.PUBLIC_URL
 
 const muiTheme = createMuiTheme(theme)
 
