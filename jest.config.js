@@ -1,6 +1,5 @@
 module.exports = {
   verbose: true,
-  preset: "ts-jest",
   collectCoverage: true,
   setupFilesAfterEnv: ["<rootDir>/src/setupTests.js"],
   testMatch: [
@@ -16,13 +15,10 @@ module.exports = {
     "^(?!.*\\.(js|jsx|mjs|css|json)$)": "<rootDir>/config/jest/fileTransform.js"
   },
   transformIgnorePatterns: ["[/\\\\]node_modules[/\\\\].+\\.(js|jsx|mjs)$"],
-  moduleNameMapper: {
-    "^react-native$": "react-native-web"
-  },
   moduleFileExtensions: [
+    "js",
     "web.js",
     "mjs",
-    "js",
     "ts",
     "json",
     "web.jsx",
