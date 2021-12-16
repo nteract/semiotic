@@ -71,7 +71,7 @@ const createResponsiveFrame = (ParticularFrame) => {
           () => {
             window.clearTimeout(ResponsiveFrame.isResizing)
             ResponsiveFrame.isResizing = setTimeout(() => {
-              ResponsiveFrame.isResizing = 0
+              ResponsiveFrame.isResizing = null
 
               changeContainerHeight(element.offsetHeight)
               changeContainerWidth(element.offsetWidth)
