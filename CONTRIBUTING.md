@@ -19,8 +19,10 @@ repo.*
 TODO and Notes:
 - Which repo is providing the source for [semiotic.nteract.io]?
 - The semiotic repo refers to gh-pages. Are we using that? Looking at the repo
-  setting gh-pages is disabled. (Next step: Remove gh-pages deploy scripts.
-  We can leave any gh-page build scripts if they are needed.)
+  setting gh-pages is disabled. Added a Vercel project for semiotic under the
+  vercel nteract org (Next step: Remove gh-pages deploy scripts.
+  We can leave any gh-page build scripts if they are needed. Update build script
+ for dev docs using parcel and add to vercel dev doc builds for PRs.)
 - Most nteract docs use vercel/now for deployment. Is this being used for semiotic-docs?
   No. semiotic-docs is building to GH Pages https://nteract.github.io/semiotic-docs/
   Assuming that there is a redirect in our domain provider config to semiotic.nteract.io.
