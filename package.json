@@ -10,8 +10,8 @@
     "dist"
   ],
   "scripts": {
-    "start": "node scripts/start.js",
-    "build": "node scripts/build.js",
+    "start": "parcel serve public/index.html --dist-dir build",
+    "build": "parcel build public/index.html --dist-dir build",
     "test": "jest --config jest.config.js",
     "test:watch": "npm run test -- --watch",
     "test:coverage": "npm run test -- --coverage",
@@ -20,15 +20,13 @@
     "test:dist": "node scripts/test-dist.js",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
-    "prebuild": "babel src/components --extensions '.js,.jsx,.ts,.tsx' --out-dir lib --ignore test.js",
     "create-release-branch": "sh ./scripts/create-release-branch.sh",
     "publish-release": "sh ./scripts/publish-release.sh",
     "deploy-docs": "sh ./scripts/docs.sh",
     "ci-deploy-docs": "sh ./scripts/docs-ci.sh",
-    "gh-pages": "REACT_APP_GH_PAGES_PATH='semiotic' npm run build",
+    "gh-pages": "PUBLIC_URL=semiotic npm run build -- --public-url semiotic",
     "typescript": "tsc --declaration --noEmit",
     "dist": "rollup --config rollup.config.js",
-    "docs-bundle-stats": "GENERATE_SOURCEMAP='true' NODE_ENV='production' webpack --config ./config/webpack.config.prod.js --profile --json > stats.json && webpack-bundle-analyzer stats.json",
     "prepublishOnly": "npm run typescript && npm run dist"
   },
   "repository": "nteract/semiotic",
@@ -133,5 +131,14 @@
   },
   "eslintConfig": {
     "extends": "react-app"
+  },
+  "browserslist": {
+    "development": [
+      "Edge 17",
+      "Firefox 60",
+      "Chrome 67",
+      "Safari 11.1",
+      "IE 11"
+    ]
   }
 }
