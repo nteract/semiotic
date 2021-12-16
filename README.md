@@ -1,6 +1,6 @@
 [![Semiotic](semiotic_logo_horizontal.png "semiotic")](https://semiotic.nteract.io)
 
-[![Circle CI status](https://circleci.com/gh/nteract/semiotic/tree/master.svg?style=shield)](https://circleci.com/gh/nteract/semiotic/tree/master)
+[![Semiotic](https://github.com/nteract/semiotic/actions/workflows/node.js.yml/badge.svg?branch=main)](https://github.com/nteract/semiotic/actions/workflows/node.js.yml)
 
 Semiotic is a data visualization framework combining React &amp; D3
 
@@ -45,5 +45,5 @@ It may not be apparent in the commit logs but development of this library owes a
 
 
 Using BrowserStack for browser compatibility testing
-
+[![Semiotic](https://github.com/nteract/semiotic/actions/workflows/node.js.yml/badge.svg?branch=main)](https://github.com/nteract/semiotic/actions/workflows/node.js.yml)
 [![BrowserStack](browserstack_logo.png "browserstack")](http://browserstack.com/) 
