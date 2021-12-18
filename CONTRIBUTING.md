@@ -36,3 +36,48 @@ repo.*
 ### Building and deploying user docs
 
 Currently, use [semiotic-docs] and vercel/now project configuration.
+
+## Modernization plan
+
+1. upgrade react to 17
+2. upgrade d3
+4. switch to esm/cjs dual bundle
+5. move d3/react to peer dependencies (thus making sure that the users’ dependencies are the same as semiotic’s)
+6. add sideEffects: true (a small nice thing to have in package.json, once previous steps are complete)
+7. replace enzyme with react-testing-library 
+8. add acceptance testing via playwright (to cover things like canvas, a11y, and some user-based testing scenarios)
+
+## Tools we use
+
+### Build toolchain
+
+- Parcel
+  - [Parcel](https://parceljs.org) is a performant, zero config, end to end build tool
+
+- Rollup
+  - [Rollup](https://rollupjs.org/guide/en/) is a module bundler for JavaScript
+  - `rollup.config.js` config file for creating esm and cjs dual bundle
+
+### Testing
+
+- Playwright
+  - [Playwright](https://playwright.dev) is a fast test runner that supports screenshotting
+  - `playwright.config.js` provides basic configuration
+  - Used to run the integration tests found in `integration-tests` directory
+- jest
+  - used for unit tests
+  - `jest.config.js` configures testing environment
+  - Additional configuration is in `config/jest` directory containing transforms for Parcel
+- GitHub actions (CI - Continuous Integration)
+  - Used to automatically run tests on every PR
+  - `.github` directory contains configuration
+  
+### Code quality
+
+- GitHub's CodeQL action runs on every PR
+- GitHub's Dependency alerts are used
+
+## Publishing a release
+
+1. Run all tests
+2. Publish
