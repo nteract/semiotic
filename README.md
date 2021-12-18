@@ -33,7 +33,7 @@ You can also use the static distribution (via https://unpkg.com or https://esm.s
 </script>
 ```
 
-[These Codepen examples](https://codepen.io/emeeks/) use the static distributionß.
+[These Codepen examples](https://codepen.io/emeeks/) use the static distribution.
 
 ## Project recognition
 
