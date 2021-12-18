@@ -61,6 +61,8 @@ Using BrowserStack for browser compatibility testing
 
 [License](./LICENSE)
 
-## nteract community
+## Contributing
 
 Our community follows the nteract [Contributor Code of Conduct](https://github.com/nteract/nteract/blob/main/CODE_OF_CONDUCT.md).
+
+If you are interested in contributing to the project, please read our [CONTRIBUTING.md](CONTRIBUTING.md) file.
