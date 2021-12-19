@@ -376,8 +376,8 @@ export function heatmapping({
     binValue = (d) => d.length,
     xBins = summaryType.yBins || 0.05,
     yBins = xBins,
-    xCellPx = !summaryType.xBins && summaryType.yCellPx,
-    yCellPx = !summaryType.yBins && xCellPx,
+    xCellPx = !summaryType.xBins && summaryType.xCellPx,
+    yCellPx = !summaryType.yBins && summaryType.yCellPx,
     customMark,
     binMax
   } = summaryType
@@ -395,6 +395,7 @@ export function heatmapping({
   ]
   let maxValue = -Infinity
 
+  console.log("summaryType", summaryType)
   data.forEach((heatmapData) => {
     const grid = []
     const flatGrid = []
@@ -402,13 +403,13 @@ export function heatmapping({
     let cell
     let gridColumn
 
-    for (let i = 0; i < size[0]; i += actualResolution[0]) {
+    for (let i = 0; Math.ceil(i) < size[0]; i += actualResolution[0]) {
       const x = heatmapBinXScale.invert(i)
       const x1 = heatmapBinXScale.invert(i + actualResolution[0])
 
       gridColumn = []
       grid.push(gridColumn)
-      for (let j = 0; j < size[1]; j += actualResolution[1]) {
+      for (let j = 0; Math.ceil(j) < size[1]; j += actualResolution[1]) {
         const y = heatmapBinYScale.invert(j)
         const y1 = heatmapBinYScale.invert(j + actualResolution[1])
         cell = {
@@ -437,7 +438,7 @@ export function heatmapping({
 
     heatmapData._xyfCoordinates.forEach((d: [number, number], di: number) => {
       const baseX = heatmapBinXScale(d[0]) as number
-      const baseY = heatmapBinXScale(d[1]) as number
+      const baseY = heatmapBinYScale(d[1]) as number
 
       const xCoordinate = Math.floor(baseX / actualResolution[0])
       const yCoordinate = Math.floor(baseY / actualResolution[1])
