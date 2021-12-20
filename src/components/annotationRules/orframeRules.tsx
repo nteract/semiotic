@@ -2,9 +2,11 @@ import * as React from "react"
 import { Mark } from "semiotic-mark"
 import Annotation from "../Annotation"
 
-import AnnotationCalloutCircle from "react-annotation/lib/Types/AnnotationCalloutCircle"
-import AnnotationBracket from "react-annotation/lib/Types/AnnotationBracket"
-import AnnotationXYThreshold from "react-annotation/lib/Types/AnnotationXYThreshold"
+import {
+  AnnotationCalloutCircle,
+  AnnotationBracket,
+  AnnotationXYThreshold
+} from "react-annotation"
 
 import { packEnclose } from "d3-hierarchy"
 import { max, min, sum, extent } from "d3-array"

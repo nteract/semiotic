@@ -1,5 +1,5 @@
 import * as React from "react"
-import AnnotationLabel from "react-annotation/lib/Types/AnnotationLabel"
+import { AnnotationLabel } from "react-annotation"
 
 import { AnnotationProps } from "./types/annotationTypes"
 import { GenericObject } from "./types/generalTypes"

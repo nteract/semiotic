@@ -1,7 +1,9 @@
 import * as React from "react"
-import AnnotationCalloutCircle from "react-annotation/lib/Types/AnnotationCalloutCircle"
-import AnnotationCalloutRect from "react-annotation/lib/Types/AnnotationCalloutRect"
-import AnnotationCalloutCustom from "react-annotation/lib/Types/AnnotationCalloutCustom"
+import {
+  AnnotationCalloutCircle,
+  AnnotationCalloutRect,
+  AnnotationCalloutCustom
+} from "react-annotation"
 
 import Annotation from "../Annotation"
 import { polygonHull } from "d3-polygon"

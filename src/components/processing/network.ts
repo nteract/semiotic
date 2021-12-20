@@ -12,7 +12,7 @@ import { scaleLinear } from "d3-scale"
 
 import { min, max } from "d3-array"
 
-import AnnotationLabel from "react-annotation/lib/Types/AnnotationLabel"
+import { AnnotationLabel } from "react-annotation"
 
 import {
   calculateMargin,

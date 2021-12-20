@@ -18,7 +18,7 @@ import {
   stringToArrayFn
 } from "../data/dataFunctions"
 
-import AnnotationCallout from "react-annotation/lib/Types/AnnotationCallout"
+import { AnnotationCallout } from "react-annotation"
 
 import {
   createPoints,
