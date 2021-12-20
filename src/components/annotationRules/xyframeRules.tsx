@@ -1,8 +1,7 @@
 import * as React from "react"
 import { Mark } from "semiotic-mark"
 import Annotation from "../Annotation"
-import AnnotationCalloutRect from "react-annotation/lib/Types/AnnotationCalloutRect"
-import AnnotationXYThreshold from "react-annotation/lib/Types/AnnotationXYThreshold"
+import { AnnotationCalloutRect, AnnotationXYThreshold } from "react-annotation"
 
 import { line, area } from "d3-shape"
 import { packEnclose } from "d3-hierarchy"
