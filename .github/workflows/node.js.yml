@@ -29,3 +29,5 @@ jobs:
     - name: Run tests
       run: yarn test
 
+      - name: Run type check
+        run: yarn typescript

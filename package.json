@@ -23,7 +23,7 @@
     "docs:dev-badcss": "parcel serve --target docs",
     "docs:dev-error": "parcel build --target docs",
     "gh-pages": "PUBLIC_URL=semiotic npm run build -- --public-url semiotic",
-    "typescript": "tsc --declaration --noEmit",
+    "typescript": "tsc --noEmit",
     "dist": "rollup --config rollup.config.js",
     "prepublishOnly": "npm run typescript && npm run dist"
   },
