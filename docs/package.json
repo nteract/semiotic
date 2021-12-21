@@ -1,0 +1,32 @@
+{
+  "name": "semiotic-docs",
+  "version": "0.1.0",
+  "private": true,
+  "homepage": "https://semiotic.nteract.io",
+  "dependencies": {
+    "babel-eslint": "^10.0.1",
+    "d3-dsv": "1.0.10",
+    "d3-flextree-v4": "^1.0.1",
+    "dagre": "^0.8.4",
+    "eslint-plugin-babel": "^5.2.1",
+    "eslint-plugin-react": "7.3.0",
+    "gh-pages": "^1.2.0",
+    "marked": "0.7.0",
+    "react": "^16.5.1",
+    "react-dom": "^16.5.1",
+    "react-router-dom": "^4.3.1",
+    "react-scripts": "1.1.5",
+    "semiotic": "2.0.0-rc.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject",
+    "deploy": "npm run build && now && now alias"
+  },
+  "devDependencies": {
+    "eslint": "4.19.0",
+    "react-element-to-jsx-string": "14.0.2"
+  }
+}

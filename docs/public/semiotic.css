@@ -1,0 +1,35 @@
+.frame {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 0.8em;
+}
+
+.axis-baseline {
+  stroke: #ddd;
+}
+
+.tick,
+.axis-tick path {
+  stroke: #ddd;
+}
+
+.tooltip-content {
+  background: white;
+  position: relative;
+  border: 1px solid #ddd;
+  color: black;
+  padding: 10px;
+  z-index: 100;
+  transform: translateX(-50%) translateY(5px);
+  min-width: 120px;
+}
+
+.uncertainty_cone{
+  transform:none;
+  fill:#de4b8b;
+  fill-opacity:0.20;
+}
+
+circle.frame-hover {
+  stroke: #aaa;
+  r: 4;
+}
