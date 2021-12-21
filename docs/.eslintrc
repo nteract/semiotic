@@ -1,0 +1,48 @@
+{
+  "parser": "babel-eslint",
+  "plugins": ["react"],
+  "parserOptions": {
+    "ecmaVersion": 6,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true,
+      "modules": true
+    }
+  },
+  "rules": {
+    "array-bracket-spacing": 0,
+    "curly": 0,
+    "no-var": 2,
+    "object-curly-spacing": 0,
+    "quotes": 0,
+    "eqeqeq": 2,
+    "eol-last": 0,
+    "prefer-const": 0,
+    "no-cond-assign": 0,
+    "space-before-blocks": 2,
+    "no-unused-vars": 2,
+    "prefer-template": 0,
+
+    "no-loop-func": 0,
+    "dot-notation": 2,
+    "comma-dangle": 2,
+    "no-unused-expressions": [
+      2,
+      { "allowShortCircuit": true, "allowTernary": true }
+    ],
+    "no-multiple-empty-lines": 0,
+    "react/jsx-no-duplicate-props": 2,
+    "react/jsx-no-undef": 2,
+    "react/jsx-uses-vars": 2,
+    "react/jsx-pascal-case": 1,
+    "react/jsx-uses-react": 1,
+    "react/prefer-stateless-function": 2,
+    "react/no-deprecated": 2,
+    "react/no-did-mount-set-state": 2,
+    "react/require-render-return": 2,
+    "react/jsx-no-bind": 2,
+    "react/jsx-key": 2,
+    "react/jsx-wrap-multilines": 1,
+    "no-sequences": 0
+  }
+}
