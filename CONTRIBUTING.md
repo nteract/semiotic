@@ -24,7 +24,7 @@ repo.*
     - Looking at the repo setting gh-pages is disabled.
     - (2021-12-16) Added a Vercel project for semiotic under the
       vercel nteract org (Next step: Remove gh-pages deploy scripts.
-    - Recommend removing gh-page build scripts from repo. 
+    - Recommend removing gh-page build scripts from repo. (Removed 2021-12-22)
     - Update build script for dev docs using parcel and add to vercel dev doc builds for PRs.)
 3. Most nteract docs use vercel/now for deployment. Is this being used for semiotic-docs?  
    - Yes. For semiotic-docs but not deployed in approximately 2 years.
