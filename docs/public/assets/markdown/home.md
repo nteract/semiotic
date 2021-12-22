@@ -36,7 +36,9 @@ import NetworkFrame from "semiotic/lib/NetworkFrame"
 Alternatively, you can use semiotic's bundled version available on unpkg.com.
 
 ```html
-<script src="https://unpkg.com/semiotic" />
+<script type="module">
+  import { XYFrame } from "https://unpkg.com/semiotic?module";
+</script>
 ```
 
 Use with the following import syntax:
