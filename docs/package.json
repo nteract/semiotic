@@ -10,7 +10,6 @@
     "dagre": "^0.8.4",
     "eslint-plugin-babel": "^5.2.1",
     "eslint-plugin-react": "7.3.0",
-    "gh-pages": "^1.2.0",
     "marked": "0.7.0",
     "react": "^16.5.1",
     "react-dom": "^16.5.1",
