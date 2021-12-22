@@ -44,13 +44,13 @@ Along with the semiotic and React components, these examples rely on some basic
 [CSS](https://github.com/nteract/semiotic-docs/blob/master/public/semiotic.css)
 for styling.
 
-## History
+### History
 
 This library is created and maintained by [Elijah Meeks](https://twitter.com/Elijah_Meeks).
 
 These docs were created in collaboration with [Susie Lu](https://twitter.com/DataToViz).
 
-## Questions
+### Questions
 
 Visit the **#semiotic** channel at nteract's Discord. New to Discord? 
 [Here's an invitation to join the nteract Discord.](https://discord.gg/W2anQdA2)
