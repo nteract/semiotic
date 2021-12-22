@@ -160,7 +160,7 @@ export const PAGES = [
         name: "Axis",
         url: "axis",
         component: AxisSettings,
-        img: "axis"
+        img: "axis-settings"
       },
       {
         name: "Annotations",
