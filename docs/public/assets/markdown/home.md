@@ -1,15 +1,20 @@
 # Semiotic
 
-**Semiotic (v 2.0.0+) is a data visualization framework for React.**
+*These pages contain information about semiotic's upcoming 2.0 release.*
+*Looking for 1.x release documentation? Please visit https://semioticv1.nteract.io.*
 
-It provides three types of frames XYFrame, OrdinalFrame, NetworkFrame, to
-deploy a wide variety of charts.
+**Semiotic is a data visualization framework for React.**
+
+It offers frame types, such as XYFrame, OrdinalFrame, and NetworkFrame, to
+deploy a wide variety of charts:
 
 - `XYFrame`: XY data i.e. line charts and scatterplots
 - `OrdinalFrame`: categorical data i.e. bar charts, violin plots, parallel
   coordinates
 - `NetworkFrame`: topological and network data i.e. flow diagrams, network
   visualization, and hierarchical views
+
+![](assets/img/or-summary.png)
 
 ### Getting Started
 
