@@ -1,19 +1,26 @@
 import React from "react"
 import MarkdownPage from "./MarkdownPage"
-import SubPage from "./SubPage"
+import { GuidesIndex, ExamplesIndex, ApiIndex } from "./IndexPages"
 
 export default function Home() {
   return (
     <div>
       <MarkdownPage filename="home" />
+
       <a className="heading-link" href="#guides">
         <h2 id="guides">Guides</h2>
       </a>
-      <SubPage page="Guides" />
+      <GuidesIndex />
+
       <a className="heading-link" href="#examples">
         <h2 id="examples">Examples</h2>
       </a>
-      <SubPage page="Examples" />
+      <ExamplesIndex />
+
+      <a className="heading-link" href="#examples">
+        <h2 id="api">API</h2>
+      </a>
+      <ApiIndex />
     </div>
   )
 }

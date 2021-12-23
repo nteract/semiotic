@@ -2,8 +2,8 @@ import React from "react"
 import { Routes, Route, NavLink, Outlet } from "react-router-dom"
 
 import MarkdownPage from "./MarkdownPage"
-import SubPage from "./SubPage"
 import Home from "./Home"
+import { GuidesIndex, ExamplesIndex, ApiIndex } from "./IndexPages"
 
 import LineChart from "./guides/LineChart.mdx"
 import AreaChart from "./guides/AreaChart"
@@ -98,7 +98,15 @@ export default function DocsApp() {
             <Route path="/" element={<Home />} />
 
             <Route path="guides" element={<Outlet />}>
-              <Route path="" element={<h1>nothing yet</h1>} />
+              <Route
+                path=""
+                element={
+                  <>
+                    <h1>Guides</h1>
+                    <GuidesIndex />
+                  </>
+                }
+              />
               <Route path="line-chart" element={<LineChart />} />
               <Route path="area-chart" element={<AreaChart />} />
               <Route path="scatterplot" element={<Scatterplot />} />
@@ -124,7 +132,15 @@ export default function DocsApp() {
             </Route>
 
             <Route path="examples" element={<Outlet />}>
-              <Route path="" element={<h1>nothing yet</h1>} />
+              <Route
+                path=""
+                element={
+                  <>
+                    <h1>Examples</h1>
+                    <ExamplesIndex />
+                  </>
+                }
+              />
               <Route path="candlestick-chart" element={<CandlestickChart />} />
               <Route path="homerun-map" element={<HomerunMap />} />
               <Route path="canvas-interaction" element={<CanvasInteraction />} />
@@ -146,7 +162,15 @@ export default function DocsApp() {
             </Route>
 
             <Route path="api" element={<Outlet />}>
-              <Route path="" element={<h1>nothing yet</h1>} />
+              <Route
+                path=""
+                element={
+                  <>
+                    <h1>API</h1>
+                    <ApiIndex />
+                  </>
+                }
+              />
               <Route path="xyframe" component={<MarkdownPage filename="xyframe" />} />
               <Route path="ordinalframe" component={<MarkdownPage filename="ordinalframe" />} />
               <Route path="networkframe" component={<MarkdownPage filename="networkframe" />} />
