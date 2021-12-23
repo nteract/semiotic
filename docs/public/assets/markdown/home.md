@@ -30,21 +30,15 @@ npm i -SE semiotic
 Use with the following import syntax:
 
 ```js
-import NetworkFrame from "semiotic/lib/NetworkFrame"
+import { NetworkFrame } from "semiotic"
 ```
 
 Alternatively, you can use semiotic's bundled version available on unpkg.com.
 
 ```html
 <script type="module">
-  import { XYFrame } from "https://unpkg.com/semiotic?module";
+  import { NetworkFrame } from "https://unpkg.com/semiotic?module"
 </script>
-```
-
-Use with the following import syntax:
-
-```js
-const { NetworkFrame } = Semiotic
 ```
 
 Along with the semiotic and React components, these examples rely on some basic
