@@ -3,14 +3,14 @@ import theme from "../theme"
 import { XYFrame, ResponsiveXYFrame } from "semiotic"
 import { curveCatmullRom } from "d3-shape"
 import {
-	frameProps,
-	overrideProps,
-	dateChart,
-	linePercent,
-	cumulativeLine,
-	bumpLine,
-	withHoverFrameProps,
-	withLineBoundingFrameProps,
+  frameProps,
+  overrideProps,
+  dateChart,
+  linePercent,
+  cumulativeLine,
+  bumpLine,
+  withHoverFrameProps,
+  withLineBoundingFrameProps,
 } from "./LineChart.js"
 
 A guide for creating a line chart, timeseries, difference line, and line percents using `XYFrame`
@@ -39,16 +39,16 @@ Your accessors can be a string key to access the property or a function.
 Set the `showLinePoints={true}` to automatically display the underlying points in each line.
 
 <DocumentFrame
-	frameProps={{
-		...frameProps,
-		showLinePoints: true,
-		pointStyle(d) {
-			return { fill: theme[d.parentLine.key], r: 4 }
-		},
-	}}
-	type={XYFrame}
-	overrideProps={overrideProps}
-	startHidden
+  frameProps={{
+    ...frameProps,
+    showLinePoints: true,
+    pointStyle(d) {
+      return { fill: theme[d.parentLine.key], r: 4 }
+    },
+  }}
+  type={XYFrame}
+  overrideProps={overrideProps}
+  startHidden
 />
 
 ## Curvy Line Chart
@@ -58,17 +58,17 @@ By default the line uses a linear interpolation between the points, but you can 
 `lineType: { type: "line", interpolator: curveCatmullRom }`.
 
 <DocumentFrame
-	frameProps={{
-		...frameProps,
-		lineType: { type: "line", interpolator: curveCatmullRom },
-	}}
-	type={XYFrame}
-	overrideProps={{
-		...overrideProps,
-		lineType: `{ type: "line", interpolator: curveCatmullRom }`,
-	}}
-	pre={`import {curveCatmullRom} from "d3-shape"`}
-	startHidden
+  frameProps={{
+    ...frameProps,
+    lineType: { type: "line", interpolator: curveCatmullRom },
+  }}
+  type={XYFrame}
+  overrideProps={{
+    ...overrideProps,
+    lineType: `{ type: "line", interpolator: curveCatmullRom }`,
+  }}
+  pre={`import {curveCatmullRom} from "d3-shape"`}
+  startHidden
 />
 
 ## Line Chart by Date
@@ -81,11 +81,11 @@ series data. Below we've changed:
 - `tickFormat: d => d.getMonth() + 1 + "/" + d.getDate()`
 
 <DocumentFrame
-	frameProps={dateChart}
-	type={XYFrame}
-	overrideProps={overrideProps}
-	pre={`import { scaleTime } from "d3-scale"`}
-	startHidden
+  frameProps={dateChart}
+  type={XYFrame}
+  overrideProps={overrideProps}
+  pre={`import { scaleTime } from "d3-scale"`}
+  startHidden
 />
 
 # Difference Line Chart
@@ -99,25 +99,25 @@ and XYFrame will automatically create cutout regions between the two lines color
 is on top.
 
 <DocumentFrame
-	frameProps={{
-		...frameProps,
-		lineType: "difference",
-		lineStyle: (d, i) => ({
-			stroke: theme[i],
-			strokeWidth: 2,
-			fill: theme[i],
-		}),
-	}}
-	type={XYFrame}
-	overrideProps={{
-		...overrideProps,
-		lineStyle: `(d, i) => ({
+  frameProps={{
+    ...frameProps,
+    lineType: "difference",
+    lineStyle: (d, i) => ({
+      stroke: theme[i],
+      strokeWidth: 2,
+      fill: theme[i],
+    }),
+  }}
+  type={XYFrame}
+  overrideProps={{
+    ...overrideProps,
+    lineStyle: `(d, i) => ({
       stroke: theme[i],
       strokeWidth: 2,
       fill: theme[i]
     })`,
-	}}
-	startHidden
+  }}
+  startHidden
 />
 
 ## Line Percent Chart
@@ -133,10 +133,10 @@ Automatically adds each following day to the sum of the previous days. Create th
 `lineType="cumulative"`.
 
 <DocumentFrame
-	frameProps={cumulativeLine}
-	type={XYFrame}
-	overrideProps={overrideProps}
-	startHidden
+  frameProps={cumulativeLine}
+  type={XYFrame}
+  overrideProps={overrideProps}
+  startHidden
 />
 
 ## Bump Line Chart
@@ -153,10 +153,10 @@ values, but you can customize this with the `tooltipContent` prop. To learn more
 [tooltips](/guides/tooltips) guide.
 
 <DocumentFrame
-	frameProps={withHoverFrameProps}
-	type={XYFrame}
-	overrideProps={overrideProps}
-	startHidden
+  frameProps={withHoverFrameProps}
+  type={XYFrame}
+  overrideProps={overrideProps}
+  startHidden
 />
 
 ## Line Chart with Simple Lines
@@ -168,25 +168,25 @@ can pass a `simpleLine: true` prop to `lineType` to force it to render as a norm
 any styling issues.
 
 <DocumentFrame
-	frameProps={{
-		...withHoverFrameProps,
-		lineType: { type: "line", simpleLine: true },
-		lineStyle: (d, i) => ({
-			stroke: theme[d.key],
-			strokeWidth: 2,
-			strokeDasharray: i === 0 ? "10 10" : "5 5",
-		}),
-	}}
-	type={XYFrame}
-	overrideProps={{
-		...overrideProps,
-		lineType: `(d, i) => ({
+  frameProps={{
+    ...withHoverFrameProps,
+    lineType: { type: "line", simpleLine: true },
+    lineStyle: (d, i) => ({
+      stroke: theme[d.key],
+      strokeWidth: 2,
+      strokeDasharray: i === 0 ? "10 10" : "5 5",
+    }),
+  }}
+  type={XYFrame}
+  overrideProps={{
+    ...overrideProps,
+    lineType: `(d, i) => ({
       stroke: theme[d.key],
       strokeWidth: 2,
       strokeDasharray: i === 0 ? "10 10" : "5 5"
     })`,
-	}}
-	startHidden
+  }}
+  startHidden
 />
 
 ## Line Chart with Responsive Width
@@ -195,10 +195,10 @@ To make your chart responsive, instead of using `XYFrame` use `ResponsiveXYFrame
 `responsiveWidth={true}`.
 
 <DocumentFrame
-	frameProps={{ ...withHoverFrameProps, responsiveWidth: true }}
-	type={ResponsiveXYFrame}
-	overrideProps={overrideProps}
-	startHidden
+  frameProps={{ ...withHoverFrameProps, responsiveWidth: true }}
+  type={ResponsiveXYFrame}
+  overrideProps={overrideProps}
+  startHidden
 />
 
 ## Line Chart with Uncertainty Bounds
@@ -208,8 +208,8 @@ it will default to the data you send to `lines`. This allows you to easily draw 
 (often used for uncertainty) around your lines.
 
 <DocumentFrame
-	frameProps={{ ...withLineBoundingFrameProps }}
-	type={ResponsiveXYFrame}
-	overrideProps={overrideProps}
-	startHidden
+  frameProps={{ ...withLineBoundingFrameProps }}
+  type={ResponsiveXYFrame}
+  overrideProps={overrideProps}
+  startHidden
 />
