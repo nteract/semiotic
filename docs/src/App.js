@@ -5,7 +5,7 @@ import MarkdownPage from "./MarkdownPage"
 import SubPage from "./SubPage"
 import Home from "./Home"
 
-import LineChartPage from "./guides/LineChart.mdx"
+import LineChart from "./guides/LineChart.mdx"
 import AreaChart from "./guides/AreaChart"
 import Scatterplot from "./guides/Scatterplot"
 import XYSummaries from "./guides/XYSummaries"
@@ -99,7 +99,7 @@ export default function DocsApp() {
 
             <Route path="guides" element={<Outlet />}>
               <Route path="" element={<h1>nothing yet</h1>} />
-              <Route path="line-chart" element={<LineChartPage />} />
+              <Route path="line-chart" element={<LineChart />} />
               <Route path="area-chart" element={<AreaChart />} />
               <Route path="scatterplot" element={<Scatterplot />} />
               <Route path="xy-summaries" element={<XYSummaries />} />
