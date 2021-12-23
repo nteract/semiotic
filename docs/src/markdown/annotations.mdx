@@ -107,7 +107,7 @@ In addition to creating annotations by passing them through the `annotations` pr
 - `type`: “bump” or “marginalia”
   - `“bump”` will use simple force collision rules to try to move annotations away from each other.
   - `“marginalia”` will put them into the margins, these settings are made possible by the [labella.js](http://twitter.github.io/labella.js/) library
-- `orient`: "nearest" | "left" | "right" | "top" | "bottom" | Array<of-those-strings> Used in “marginalia” mode, determines whether the margin used to place the annotation should be nearest or, barring that, which margins are available (one or an array)
+- `orient`: "nearest" | "left" | "right" | "top" | "bottom" | `Array<of-those-strings>` Used in “marginalia” mode, determines whether the margin used to place the annotation should be nearest or, barring that, which margins are available (one or an array)
 - `characterWidth`: defaults to 8, a way to express the font size since we’re not using bounding boxes (so the size of the note is 8 \* the number of characters in pixels)
 - `lineHeight`: defaults to 20 to determine the bounding box of the note
 - `padding`: defaults to 1 in “bump” mode and creates additional space around an annotation

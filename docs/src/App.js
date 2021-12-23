@@ -1,9 +1,15 @@
 import React from "react"
 import { Routes, Route, NavLink, Outlet } from "react-router-dom"
 
-import MarkdownPage from "./MarkdownPage"
 import Home from "./Home"
 import { GuidesIndex, ExamplesIndex, ApiIndex } from "./IndexPages"
+import Accessibility from "./markdown/accessibility.mdx"
+import Xyframe from "./markdown/xyframe.mdx"
+import Ordinalframe from "./markdown/ordinalframe.mdx"
+import Networkframe from "./markdown/networkframe.mdx"
+import Responsiveframes from "./markdown/responsiveframes.mdx"
+import Sparkframes from "./markdown/sparkframes.mdx"
+import Facetcontroller from "./markdown/facetcontroller.mdx"
 
 import LineChart from "./guides/LineChart.mdx"
 import AreaChart from "./guides/AreaChart"
@@ -123,7 +129,7 @@ export default function DocsApp() {
               <Route path="annotations" element={<Annotations />} />
               <Route path="tooltips" element={<Tooltips />} />
               <Route path="highlighting" element={<CrossHighlighting />} />
-              <Route path="accessibility" element={<MarkdownPage filename="accessibility" />} />
+              <Route path="accessibility" element={<Accessibility />} />
               <Route path="small-multiples" element={<SmallMultiples />} />
               <Route path="canvas-rendering" element={<CanvasRendering />} />
               <Route path="sparklines" element={<Sparklines />} />
@@ -171,20 +177,14 @@ export default function DocsApp() {
                   </>
                 }
               />
-              <Route path="xyframe" component={<MarkdownPage filename="xyframe" />} />
-              <Route path="ordinalframe" component={<MarkdownPage filename="ordinalframe" />} />
-              <Route path="networkframe" component={<MarkdownPage filename="networkframe" />} />
-              <Route
-                path="responsiveframe"
-                component={<MarkdownPage filename="responsiveframes" />}
-              />
-              <Route path="sparkFrame" component={<MarkdownPage filename="sparkframes" />} />
-              <Route
-                path="facetcontroller"
-                component={<MarkdownPage filename="facetcontroller" />}
-              />
-              <Route path="mark" component={<Mark />} />
-              <Route path="dividedline" component={<DividedLine />} />
+              <Route path="xyframe" element={<Xyframe />} />
+              <Route path="ordinalframe" element={<Ordinalframe />} />
+              <Route path="networkframe" element={<Networkframe />} />
+              <Route path="responsiveframe" element={<Responsiveframes />} />
+              <Route path="sparkFrame" element={<Sparkframes />} />
+              <Route path="facetcontroller" element={<Facetcontroller />} />
+              <Route path="mark" element={<Mark />} />
+              <Route path="dividedline" element={<DividedLine />} />
             </Route>
           </Routes>
         </div>

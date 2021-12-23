@@ -1,10 +1,11 @@
-import React from "react";
-import MarkdownPage from "../MarkdownPage";
+import React from "react"
+import Mark from "../markdown/mark.mdx"
 
 export default () => {
   return (
     <div>
-      <MarkdownPage filename="mark" />
+      <h1>Mark</h1>
+      <Mark />
     </div>
-  );
-};
+  )
+}

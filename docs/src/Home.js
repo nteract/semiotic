@@ -1,11 +1,11 @@
 import React from "react"
-import MarkdownPage from "./MarkdownPage"
+import Home from "./markdown/home.mdx"
 import { GuidesIndex, ExamplesIndex, ApiIndex } from "./IndexPages"
 
 export default function Home() {
   return (
     <div>
-      <MarkdownPage filename="home" />
+      <Home />
 
       <a className="heading-link" href="#guides">
         <h2 id="guides">Guides</h2>
