@@ -319,7 +319,7 @@ a {
 a.heading-link {
   text-decoration: none;
   color: inherit;
-  background-image: url(/assets/img/link.png);
+  background-image: url(../public/assets/img/link.png);
   background-repeat: no-repeat;
   background-size: 1em;
   background-position-y: center;
@@ -365,7 +365,8 @@ div.page-image img {
   cursor: disabled;
 }
 
-.selected.black a {
+.selected.black a,
+.black a.active {
   /* font-weight: bold; */
   color: var(--link-color);
   font-weight: bold;
