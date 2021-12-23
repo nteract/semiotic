@@ -1,10 +1,6 @@
 import React from "react"
-import DocumentFrame from "../DocumentFrame"
-import { XYFrame, ResponsiveXYFrame } from "semiotic"
 import theme from "../theme"
-import MarkdownText from "../MarkdownText"
 import { scaleTime } from "d3-scale"
-import { curveCatmullRom } from "d3-shape"
 
 export const lines = [
   {
@@ -16,7 +12,7 @@ export const lines = [
         theaterCount: 4,
         theaterAvg: 81904,
         date: "2015-04-10",
-        rank: 18
+        rank: 18,
       },
       {
         week: 2,
@@ -24,7 +20,7 @@ export const lines = [
         theaterCount: 39,
         theaterAvg: 29508,
         date: "2015-04-17",
-        rank: 15
+        rank: 15,
       },
       {
         week: 3,
@@ -32,7 +28,7 @@ export const lines = [
         theaterCount: 1255,
         theaterAvg: 5702,
         date: "2015-04-24",
-        rank: 6
+        rank: 6,
       },
       {
         week: 4,
@@ -40,7 +36,7 @@ export const lines = [
         theaterCount: 1279,
         theaterAvg: 2826,
         date: "2015-05-01",
-        rank: 6
+        rank: 6,
       },
       {
         week: 5,
@@ -48,7 +44,7 @@ export const lines = [
         theaterCount: 2004,
         theaterAvg: 2601,
         date: "2015-05-08",
-        rank: 6
+        rank: 6,
       },
       {
         week: 6,
@@ -56,7 +52,7 @@ export const lines = [
         theaterCount: 1718,
         theaterAvg: 1809,
         date: "2015-05-15",
-        rank: 9
+        rank: 9,
       },
       {
         week: 7,
@@ -64,7 +60,7 @@ export const lines = [
         theaterCount: 896,
         theaterAvg: 2509,
         date: "2015-05-22",
-        rank: 12
+        rank: 12,
       },
       {
         week: 8,
@@ -72,7 +68,7 @@ export const lines = [
         theaterCount: 506,
         theaterAvg: 2217,
         date: "2015-05-29",
-        rank: 13
+        rank: 13,
       },
       {
         week: 9,
@@ -80,7 +76,7 @@ export const lines = [
         theaterCount: 302,
         theaterAvg: 1826,
         date: "2015-06-05",
-        rank: 19
+        rank: 19,
       },
       {
         week: 10,
@@ -88,7 +84,7 @@ export const lines = [
         theaterCount: 194,
         theaterAvg: 1633,
         date: "2015-06-12",
-        rank: 20
+        rank: 20,
       },
       {
         week: 11,
@@ -96,7 +92,7 @@ export const lines = [
         theaterCount: 124,
         theaterAvg: 1624,
         date: "2015-06-19",
-        rank: 29
+        rank: 29,
       },
       {
         week: 12,
@@ -104,7 +100,7 @@ export const lines = [
         theaterCount: 81,
         theaterAvg: 1891,
         date: "2015-06-26",
-        rank: 34
+        rank: 34,
       },
       {
         week: 13,
@@ -112,7 +108,7 @@ export const lines = [
         theaterCount: 61,
         theaterAvg: 1674,
         date: "2015-07-03",
-        rank: 36
+        rank: 36,
       },
       {
         week: 14,
@@ -120,7 +116,7 @@ export const lines = [
         theaterCount: 39,
         theaterAvg: 1650,
         date: "2015-07-10",
-        rank: 42
+        rank: 42,
       },
       {
         week: 15,
@@ -128,9 +124,9 @@ export const lines = [
         theaterCount: 31,
         theaterAvg: 1463,
         date: "2015-07-17",
-        rank: 47
-      }
-    ]
+        rank: 47,
+      },
+    ],
   },
   {
     title: "Far from the Madding Crowd",
@@ -141,7 +137,7 @@ export const lines = [
         theaterCount: 10,
         theaterAvg: 24016,
         date: "2015-05-01",
-        rank: 24
+        rank: 24,
       },
       {
         week: 2,
@@ -149,7 +145,7 @@ export const lines = [
         theaterCount: 99,
         theaterAvg: 11015,
         date: "2015-05-08",
-        rank: 15
+        rank: 15,
       },
       {
         week: 3,
@@ -157,7 +153,7 @@ export const lines = [
         theaterCount: 289,
         theaterAvg: 6339,
         date: "2015-05-15",
-        rank: 10
+        rank: 10,
       },
       {
         week: 4,
@@ -165,7 +161,7 @@ export const lines = [
         theaterCount: 865,
         theaterAvg: 4370,
         date: "2015-05-22",
-        rank: 7
+        rank: 7,
       },
       {
         week: 5,
@@ -173,7 +169,7 @@ export const lines = [
         theaterCount: 902,
         theaterAvg: 2490,
         date: "2015-05-29",
-        rank: 9
+        rank: 9,
       },
       {
         week: 6,
@@ -181,7 +177,7 @@ export const lines = [
         theaterCount: 610,
         theaterAvg: 1851,
         date: "2015-06-05",
-        rank: 14
+        rank: 14,
       },
       {
         week: 7,
@@ -189,7 +185,7 @@ export const lines = [
         theaterCount: 366,
         theaterAvg: 1916,
         date: "2015-06-12",
-        rank: 17
+        rank: 17,
       },
       {
         week: 8,
@@ -197,7 +193,7 @@ export const lines = [
         theaterCount: 256,
         theaterAvg: 1683,
         date: "2015-06-19",
-        rank: 20
+        rank: 20,
       },
       {
         week: 9,
@@ -205,7 +201,7 @@ export const lines = [
         theaterCount: 122,
         theaterAvg: 2221,
         date: "2015-06-26",
-        rank: 24
+        rank: 24,
       },
       {
         week: 10,
@@ -213,7 +209,7 @@ export const lines = [
         theaterCount: 105,
         theaterAvg: 1862,
         date: "2015-07-03",
-        rank: 28
+        rank: 28,
       },
       {
         week: 11,
@@ -221,7 +217,7 @@ export const lines = [
         theaterCount: 98,
         theaterAvg: 1409,
         date: "2015-07-10",
-        rank: 30
+        rank: 30,
       },
       {
         week: 12,
@@ -229,7 +225,7 @@ export const lines = [
         theaterCount: 74,
         theaterAvg: 1167,
         date: "2015-07-17",
-        rank: 39
+        rank: 39,
       },
       {
         week: 13,
@@ -237,7 +233,7 @@ export const lines = [
         theaterCount: 47,
         theaterAvg: 1124,
         date: "2015-07-24",
-        rank: 42
+        rank: 42,
       },
       {
         week: 14,
@@ -245,7 +241,7 @@ export const lines = [
         theaterCount: 27,
         theaterAvg: 952,
         date: "2015-07-31",
-        rank: 58
+        rank: 58,
       },
       {
         week: 15,
@@ -253,10 +249,10 @@ export const lines = [
         theaterCount: 18,
         theaterAvg: 961,
         date: "2015-08-07",
-        rank: 60
-      }
-    ]
-  }
+        rank: 60,
+      },
+    ],
+  },
 ]
 
 export const threeTitles = lines.concat([
@@ -270,7 +266,7 @@ export const threeTitles = lines.concat([
         theaterCount: 3366,
         theaterAvg: 4950,
         date: "2015-04-10",
-        rank: 3
+        rank: 3,
       },
       {
         week: 2,
@@ -278,7 +274,7 @@ export const threeTitles = lines.concat([
         theaterCount: 3371,
         theaterAvg: 2780,
         date: "2015-04-17",
-        rank: 5
+        rank: 5,
       },
       {
         week: 3,
@@ -286,7 +282,7 @@ export const threeTitles = lines.concat([
         theaterCount: 3140,
         theaterAvg: 1754,
         date: "2015-04-24",
-        rank: 7
+        rank: 7,
       },
       {
         week: 4,
@@ -294,7 +290,7 @@ export const threeTitles = lines.concat([
         theaterCount: 2115,
         theaterAvg: 1120,
         date: "2015-05-01",
-        rank: 10
+        rank: 10,
       },
       {
         week: 5,
@@ -302,7 +298,7 @@ export const threeTitles = lines.concat([
         theaterCount: 1464,
         theaterAvg: 1246,
         date: "2015-05-08",
-        rank: 11
+        rank: 11,
       },
       {
         week: 6,
@@ -310,7 +306,7 @@ export const threeTitles = lines.concat([
         theaterCount: 803,
         theaterAvg: 972,
         date: "2015-05-15",
-        rank: 14
+        rank: 14,
       },
       {
         week: 7,
@@ -318,7 +314,7 @@ export const threeTitles = lines.concat([
         theaterCount: 329,
         theaterAvg: 1276,
         date: "2015-05-22",
-        rank: 17
+        rank: 17,
       },
       {
         week: 8,
@@ -326,7 +322,7 @@ export const threeTitles = lines.concat([
         theaterCount: 230,
         theaterAvg: 983,
         date: "2015-05-29",
-        rank: 21
+        rank: 21,
       },
       {
         week: 9,
@@ -334,7 +330,7 @@ export const threeTitles = lines.concat([
         theaterCount: 155,
         theaterAvg: 815,
         date: "2015-06-05",
-        rank: 28
+        rank: 28,
       },
       {
         week: 10,
@@ -342,7 +338,7 @@ export const threeTitles = lines.concat([
         theaterCount: 116,
         theaterAvg: 877,
         date: "2015-06-12",
-        rank: 31
+        rank: 31,
       },
       {
         week: 11,
@@ -350,7 +346,7 @@ export const threeTitles = lines.concat([
         theaterCount: 45,
         theaterAvg: 751,
         date: "2015-06-19",
-        rank: 40
+        rank: 40,
       },
       {
         week: 12,
@@ -358,7 +354,7 @@ export const threeTitles = lines.concat([
         theaterCount: 24,
         theaterAvg: 724,
         date: "2015-06-26",
-        rank: 56
+        rank: 56,
       },
       {
         week: 13,
@@ -366,10 +362,10 @@ export const threeTitles = lines.concat([
         theaterCount: 9,
         theaterAvg: 764,
         date: "2015-07-03",
-        rank: 67
-      }
-    ]
-  }
+        rank: 67,
+      },
+    ],
+  },
 ])
 
 export const frameProps = {
@@ -387,21 +383,21 @@ export const frameProps = {
     {
       orient: "left",
       label: "Number of Theaters",
-      tickFormat: d => d / 1000 + "k"
+      tickFormat: (d) => d / 1000 + "k",
     },
     {
       orient: "bottom",
-      label: { name: "Weeks from Opening Day", locationDistance: 55 }
-    }
+      label: { name: "Weeks from Opening Day", locationDistance: 55 },
+    },
   ],
-  lineStyle: d => ({
+  lineStyle: (d) => ({
     stroke: theme[d.key],
     strokeWidth: 2,
-    fill: "none"
+    fill: "none",
   }),
   // hoverAnnotation: true,
   margin: { left: 80, bottom: 90, right: 10, top: 40 },
-  lines
+  lines,
 }
 
 export const overrideProps = {
@@ -419,7 +415,7 @@ export const overrideProps = {
   pointStyle: `d => {
     return { fill: theme[d.parentLine.key], r: 4 }
   }`,
-  xScaleType: `scaleTime()`
+  xScaleType: `scaleTime()`,
 }
 
 //Add in multi-line accessor example
@@ -428,23 +424,23 @@ export const overrideProps = {
 //Add percent value into the tooltip example
 //Add in cumulative-revers?
 
-const dateChart = {
+export const dateChart = {
   ...frameProps,
   xScaleType: scaleTime(),
-  xAccessor: d => new Date(d.date),
+  xAccessor: (d) => new Date(d.date),
   axes: [
     {
       orient: "left",
       label: "Number of Theaters",
-      tickFormat: d => d / 1000 + "k"
+      tickFormat: (d) => d / 1000 + "k",
     },
     {
       orient: "bottom",
-      tickFormat: d => d.getMonth() + 1 + "/" + d.getDate(),
+      tickFormat: (d) => d.getMonth() + 1 + "/" + d.getDate(),
 
-      label: { name: "Weeks from Opening Day", locationDistance: 55 }
-    }
-  ]
+      label: { name: "Weeks from Opening Day", locationDistance: 55 },
+    },
+  ],
 }
 
 export const linePercent = {
@@ -462,16 +458,16 @@ export const linePercent = {
     {
       orient: "left",
       label: "Number of Theaters",
-      tickFormat: d => d * 100 + "%"
+      tickFormat: (d) => d * 100 + "%",
     },
     {
       orient: "bottom",
-      label: { name: "Weeks from Opening Day", locationDistance: 55 }
-    }
-  ]
+      label: { name: "Weeks from Opening Day", locationDistance: 55 },
+    },
+  ],
 }
 
-const bumpLine = {
+export const bumpLine = {
   ...linePercent,
   lineType: "bumpline",
   size: [700, 200],
@@ -479,14 +475,14 @@ const bumpLine = {
     {
       orient: "left",
       label: "Rank",
-      tickFormat: d => d,
-      tickValues: [2, 1, 0]
+      tickFormat: (d) => d,
+      tickValues: [2, 1, 0],
     },
     {
       orient: "bottom",
-      label: { name: "Weeks from Opening Day", locationDistance: 55 }
-    }
-  ]
+      label: { name: "Weeks from Opening Day", locationDistance: 55 },
+    },
+  ],
 }
 
 export const cumulativeLine = {
@@ -494,265 +490,28 @@ export const cumulativeLine = {
   lines: threeTitles,
   title: linePercent.title,
   lineType: "cumulative",
-  yAccessor: "grossWeekly"
+  yAccessor: "grossWeekly",
 }
 
-const withHoverFrameProps = {
+export const withHoverFrameProps = {
   ...frameProps,
   // lineType: "stackedarea"
-  hoverAnnotation: true
+  hoverAnnotation: true,
 }
 
-const withLineBoundingFrameProps = {
+export const withLineBoundingFrameProps = {
   ...frameProps,
-  summaryType: { type: "linebounds", boundingAccessor: d => d.theaterCount / 10 },
+  summaryType: {
+    type: "linebounds",
+    boundingAccessor: (d) => d.theaterCount / 10,
+  },
   summaryStyle: (d, i) => {
     return {
       stroke: theme[i],
       strokeWidth: 0.5,
       strokeDasharray: "4 4",
       fill: theme[i],
-      fillOpacity: 0.5
+      fillOpacity: 0.5,
     }
   },
-}
-export default function CreateALineChart() {
-  return (
-    <div>
-      <MarkdownText
-        text={`
-A guide for creating a line chart, timeseries, difference line, and line percents using \`XYFrame\` along with hover behavior, responsive dimensions, and styling.
-
-This page uses box office data from [Box Office Mojo](https://www.boxofficemojo.com/).
-
-## Line Chart
-
-\`XYFrame\` takes \`lines\` as an object or an array of objects. Each object represents a line. 
-
-Every object needs a \`coordinates\` property with the array of points for that line. The points will be rendered in the order of that array.
-
-You can use a key other than \`coordinates\` by chaging the \`lineDataAccessor\` props.
-
-In this example, we also pass \`yExtent={[0]}\` to set the lower bound of the yAxis to zero, otherwise it would create an exent based on the minimum and maximum values derived from your \`yAccessor\`.
-
-Your accessors can be a string key to access the property or a function.
-
-`}
-      />
-      <DocumentFrame
-        frameProps={frameProps}
-        type={XYFrame}
-        overrideProps={overrideProps}
-        useExpanded
-      />
-      <MarkdownText
-        text={`
-## Line Chart with Points
-
-Set the \`showLinePoints={true}\` to automatically display the underlying points in each line.
-
-`}
-      />
-      <DocumentFrame
-        frameProps={{
-          ...frameProps,
-          showLinePoints: true,
-          pointStyle: d => {
-            return { fill: theme[d.parentLine.key], r: 4 }
-          }
-        }}
-        type={XYFrame}
-        overrideProps={overrideProps}
-        startHidden
-      />
-      <MarkdownText
-        text={`
-## Curvy Line Chart
-
-By default the line uses a linear interpolation between the points, but you can change the \`lineType\` to an object and pass a custom interpolator to override the default behavior, \`lineType: { type: "line", interpolator: curveCatmullRom }\`.
-
-`}
-      />
-      <DocumentFrame
-        frameProps={{
-          ...frameProps,
-          lineType: { type: "line", interpolator: curveCatmullRom }
-        }}
-        type={XYFrame}
-        overrideProps={{
-          ...overrideProps,
-          lineType: `{ type: "line", interpolator: curveCatmullRom }`
-        }}
-        pre={`import {curveCatmullRom} from "d3-shape"`}
-        startHidden
-      />
-      <MarkdownText
-        text={`
-## Line Chart by Date
-
-You can also change the xScaleType to be a \`scaleTime()\` from \`d3-scale\` if you want to show time series data. Below we've changed:
-- \`xScaleType={scaleTime()}\`
-- \`xAccessor: d => new Date(d.date)\`
-- \`tickFormat: d => d.getMonth() + 1 + "/" + d.getDate()\` 
-
-`}
-      />
-      <DocumentFrame
-        frameProps={dateChart}
-        type={XYFrame}
-        overrideProps={overrideProps}
-        pre={`import { scaleTime } from "d3-scale"`}
-        startHidden
-      />
-
-      <MarkdownText
-        text={`
-## Difference Line Chart
-
-This only works if you have two lines in your XYFrame. Change your 
-- \`lineType="difference"\` 
-- \`lineStyle\` to return a fill color
-
-and XYFrame will automatically create cutout regions between the two lines colored by the line that is on top.
-
-`}
-      />
-      <DocumentFrame
-        frameProps={{
-          ...frameProps,
-          lineType: "difference",
-          lineStyle: (d, i) => ({
-            stroke: theme[i],
-            strokeWidth: 2,
-            fill: theme[i]
-          })
-        }}
-        type={XYFrame}
-        overrideProps={{
-          ...overrideProps,
-          lineStyle: `(d, i) => ({
-          stroke: theme[i],
-          strokeWidth: 2,
-          fill: theme[i]
-        })`
-        }}
-        startHidden
-      />
-      <MarkdownText
-        text={`
-## Line Percent Chart
-
-Changing the \`lineType="linepercent"\` and XYFrame will automatically sum each data point as a % of the total for each \`xAccessor\` value as the y data position instead of using the raw values.
-
-`}
-      />
-      <DocumentFrame
-        frameProps={linePercent}
-        type={XYFrame}
-        overrideProps={overrideProps}
-        startHidden
-      />
-      <MarkdownText
-        text={`
-## Cumulative Line Chart
-
-Automatically adds each following day to the sum of the previous days. Create this by setting \`lineType"cumulative"\`.
-
-`}
-      />
-      <DocumentFrame
-        frameProps={cumulativeLine}
-        type={XYFrame}
-        overrideProps={overrideProps}
-        startHidden
-      />
-      <MarkdownText
-        text={`
-## Bump Line Chart
-
-Instead of using the raw values from the \`yAccessor\` this chart type is based on rank, \`lineType"bumpline"\`.
-
-`}
-      />
-      <DocumentFrame
-        frameProps={bumpLine}
-        type={XYFrame}
-        overrideProps={overrideProps}
-        startHidden
-      />
-      <MarkdownText
-        text={`
-## Line Chart with Hover
-
-To add tooltips, you simply set \`hoverAnnotation={true}\`. By default the tooltips show the x and y values, but you can customize this with the \`tooltipContent\` prop. To learn more, see the [tooltips](/guides/tooltips) guide.
-
-`}
-      />
-      <DocumentFrame
-        frameProps={withHoverFrameProps}
-        type={XYFrame}
-        overrideProps={overrideProps}
-        startHidden
-      />
-      <MarkdownText
-        text={`
-## Line Chart with Simple Lines
-
-By default the line rendered by \`linetype: "line"\` is actually two-sided so that it can easily transition in an animated way from a line into a filled area (like those found in stacked area charts). This can cause some issues with styling, especially when using \`stroke-dasharray\` so you can pass a \`simpleLine: true\` prop to \`lineType\` to force it to render as a normal line if you see any styling issues.
-`}
-      />
-      <DocumentFrame
-        frameProps={{
-          ...withHoverFrameProps,
-          lineType: { type: "line", simpleLine: true },
-          lineStyle: (d, i) => ({
-            stroke: theme[d.key],
-            strokeWidth: 2,
-            strokeDasharray: i === 0 ? "10 10" : "5 5"
-          })
-        }}
-        type={XYFrame}
-        overrideProps={{
-          ...overrideProps,
-          lineType: `(d, i) => ({
-        stroke: theme[d.key],
-        strokeWidth: 2,
-        strokeDasharray: i === 0 ? "10 10" : "5 5"
-      })`
-        }}
-        startHidden
-      />
-
-      <MarkdownText
-        text={`
-## Line Chart with Responsive Width
-
-To make your chart responsive, instead of using \`XYFrame\` use \`ResponsiveXYFrame\` and set the \`responsiveWidth={true}\`.
-
-`}
-      />
-      <DocumentFrame
-        frameProps={{ ...withHoverFrameProps, responsiveWidth: true }}
-        type={ResponsiveXYFrame}
-        overrideProps={overrideProps}
-        startHidden
-      />
-
-      <MarkdownText
-        text={`
-## Line Chart with Uncertainty Bounds
-
-When you send the \`linebounds\` type of \`summaryType\` and you have not sent any data to \`summaries\` it will default to the data you send to \`lines\`. This allows you to easily draw bounding regions (often used for uncertainty) around your lines.
-
-`}
-      />
-      <DocumentFrame
-        frameProps={{ ...withLineBoundingFrameProps }}
-        type={ResponsiveXYFrame}
-        overrideProps={overrideProps}
-        startHidden
-      />
-
-    </div>
-  )
 }

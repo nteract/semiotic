@@ -1,1 +1,1 @@
-{ "semi": false }
+{ "semi": false, "proseWrap": "always", "printWidth": 100, "trailingComma": "all" }

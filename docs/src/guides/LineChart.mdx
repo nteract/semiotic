@@ -1,0 +1,215 @@
+import DocumentFrame from "../DocumentFrame"
+import theme from "../theme"
+import { XYFrame, ResponsiveXYFrame } from "semiotic"
+import { curveCatmullRom } from "d3-shape"
+import {
+	frameProps,
+	overrideProps,
+	dateChart,
+	linePercent,
+	cumulativeLine,
+	bumpLine,
+	withHoverFrameProps,
+	withLineBoundingFrameProps,
+} from "./LineChart.js"
+
+A guide for creating a line chart, timeseries, difference line, and line percents using `XYFrame`
+along with hover behavior, responsive dimensions, and styling.
+
+This page uses box office data from [Box Office Mojo](https://www.boxofficemojo.com/).
+
+## Line Chart
+
+`XYFrame` takes `lines` as an object or an array of objects. Each object represents a line.
+
+Every object needs a `coordinates` property with the array of points for that line. The points will
+be rendered in the order of that array.
+
+You can use a key other than `coordinates` by chaging the `lineDataAccessor` props.
+
+In this example, we also pass `yExtent={[0]}` to set the lower bound of the yAxis to zero, otherwise
+it would create an exent based on the minimum and maximum values derived from your `yAccessor`.
+
+Your accessors can be a string key to access the property or a function.
+
+<DocumentFrame frameProps={frameProps} type={XYFrame} overrideProps={overrideProps} useExpanded />
+
+## Line Chart with Points
+
+Set the `showLinePoints={true}` to automatically display the underlying points in each line.
+
+<DocumentFrame
+	frameProps={{
+		...frameProps,
+		showLinePoints: true,
+		pointStyle(d) {
+			return { fill: theme[d.parentLine.key], r: 4 }
+		},
+	}}
+	type={XYFrame}
+	overrideProps={overrideProps}
+	startHidden
+/>
+
+## Curvy Line Chart
+
+By default the line uses a linear interpolation between the points, but you can change the
+`lineType` to an object and pass a custom interpolator to override the default behavior,
+`lineType: { type: "line", interpolator: curveCatmullRom }`.
+
+<DocumentFrame
+	frameProps={{
+		...frameProps,
+		lineType: { type: "line", interpolator: curveCatmullRom },
+	}}
+	type={XYFrame}
+	overrideProps={{
+		...overrideProps,
+		lineType: `{ type: "line", interpolator: curveCatmullRom }`,
+	}}
+	pre={`import {curveCatmullRom} from "d3-shape"`}
+	startHidden
+/>
+
+## Line Chart by Date
+
+You can also change the xScaleType to be a `scaleTime()` from `d3-scale` if you want to show time
+series data. Below we've changed:
+
+- `xScaleType={scaleTime()}`
+- `xAccessor: d => new Date(d.date)`
+- `tickFormat: d => d.getMonth() + 1 + "/" + d.getDate()`
+
+<DocumentFrame
+	frameProps={dateChart}
+	type={XYFrame}
+	overrideProps={overrideProps}
+	pre={`import { scaleTime } from "d3-scale"`}
+	startHidden
+/>
+
+# Difference Line Chart
+
+This only works if you have two lines in your XYFrame. Change your
+
+- `lineType="difference"`
+- `lineStyle` to return a fill color
+
+and XYFrame will automatically create cutout regions between the two lines colored by the line that
+is on top.
+
+<DocumentFrame
+	frameProps={{
+		...frameProps,
+		lineType: "difference",
+		lineStyle: (d, i) => ({
+			stroke: theme[i],
+			strokeWidth: 2,
+			fill: theme[i],
+		}),
+	}}
+	type={XYFrame}
+	overrideProps={{
+		...overrideProps,
+		lineStyle: `(d, i) => ({
+      stroke: theme[i],
+      strokeWidth: 2,
+      fill: theme[i]
+    })`,
+	}}
+	startHidden
+/>
+
+## Line Percent Chart
+
+Changing the `lineType="linepercent"` and XYFrame will automatically sum each data point as a % of
+the total for each `xAccessor` value as the y data position instead of using the raw values.
+
+<DocumentFrame frameProps={linePercent} type={XYFrame} overrideProps={overrideProps} startHidden />
+
+## Cumulative Line Chart
+
+Automatically adds each following day to the sum of the previous days. Create this by setting
+`lineType="cumulative"`.
+
+<DocumentFrame
+	frameProps={cumulativeLine}
+	type={XYFrame}
+	overrideProps={overrideProps}
+	startHidden
+/>
+
+## Bump Line Chart
+
+Instead of using the raw values from the `yAccessor` this chart type is based on rank,
+`lineType"bumpline"`.
+
+<DocumentFrame frameProps={bumpLine} type={XYFrame} overrideProps={overrideProps} startHidden />
+
+## Line Chart with Hover
+
+To add tooltips, you simply set `hoverAnnotation={true}`. By default the tooltips show the x and y
+values, but you can customize this with the `tooltipContent` prop. To learn more, see the
+[tooltips](/guides/tooltips) guide.
+
+<DocumentFrame
+	frameProps={withHoverFrameProps}
+	type={XYFrame}
+	overrideProps={overrideProps}
+	startHidden
+/>
+
+## Line Chart with Simple Lines
+
+By default the line rendered by `linetype: "line"` is actually two-sided so that it can easily
+transition in an animated way from a line into a filled area (like those found in stacked area
+charts). This can cause some issues with styling, especially when using `stroke-dasharray` so you
+can pass a `simpleLine: true` prop to `lineType` to force it to render as a normal line if you see
+any styling issues.
+
+<DocumentFrame
+	frameProps={{
+		...withHoverFrameProps,
+		lineType: { type: "line", simpleLine: true },
+		lineStyle: (d, i) => ({
+			stroke: theme[d.key],
+			strokeWidth: 2,
+			strokeDasharray: i === 0 ? "10 10" : "5 5",
+		}),
+	}}
+	type={XYFrame}
+	overrideProps={{
+		...overrideProps,
+		lineType: `(d, i) => ({
+      stroke: theme[d.key],
+      strokeWidth: 2,
+      strokeDasharray: i === 0 ? "10 10" : "5 5"
+    })`,
+	}}
+	startHidden
+/>
+
+## Line Chart with Responsive Width
+
+To make your chart responsive, instead of using `XYFrame` use `ResponsiveXYFrame` and set the
+`responsiveWidth={true}`.
+
+<DocumentFrame
+	frameProps={{ ...withHoverFrameProps, responsiveWidth: true }}
+	type={ResponsiveXYFrame}
+	overrideProps={overrideProps}
+	startHidden
+/>
+
+## Line Chart with Uncertainty Bounds
+
+When you send the `linebounds` type of `summaryType` and you have not sent any data to `summaries`
+it will default to the data you send to `lines`. This allows you to easily draw bounding regions
+(often used for uncertainty) around your lines.
+
+<DocumentFrame
+	frameProps={{ ...withLineBoundingFrameProps }}
+	type={ResponsiveXYFrame}
+	overrideProps={overrideProps}
+	startHidden
+/>
