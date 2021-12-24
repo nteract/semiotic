@@ -1,7 +1,6 @@
 import * as React from "react"
-import { useState, useCallback, useEffect } from "react"
+import { useState, useLayoutEffect, useRef } from "react"
 
-import elementResizeEvent from "element-resize-event"
 import { OrdinalFrameProps } from "./types/ordinalTypes"
 import { XYFrameProps } from "./types/xyTypes"
 import { NetworkFrameProps } from "./types/networkTypes"
@@ -21,14 +20,26 @@ export interface ResponsiveFrameState {
 
 type ActualFrameProps = OrdinalFrameProps | XYFrameProps | NetworkFrameProps
 
-const onResize = (
-  width,
-  height,
-  changeContainerHeight,
-  changeContainerWidth
-) => {
-  changeContainerWidth(width)
-  changeContainerHeight(height)
+/** ISC License (c) 2021 Alexey Raspopov */
+
+function useElementSize(ref) {
+  let [size, setSize] = useState([null, null])
+  useLayoutEffect(() => {
+    let element = ref.current
+    if (element != null) {
+      let rect = element.getBoundingClientRect()
+      setSize([rect.width, rect.height])
+      let observer = new ResizeObserver((entries) => {
+        if (entries.length > 0) {
+          let rect = entries[0].contentRect
+          setSize([rect.width, rect.height])
+        }
+      })
+      observer.observe(element)
+      return () => observer.disconnect()
+    }
+  }, [])
+  return size
 }
 
 const createResponsiveFrame = (ParticularFrame) => {
@@ -43,46 +54,12 @@ const createResponsiveFrame = (ParticularFrame) => {
       ...rest
     } = props
 
-    const [containerHeight, changeContainerHeight] = useState(undefined)
-    const [containerWidth, changeContainerWidth] = useState(undefined)
-
     const actualSize = [...size]
 
     let returnEmpty = false
 
-    const [responsiveNode, setResponsiveNode] = useState(null)
-
-    const responsiveNodeRef = useCallback((node) => {
-      setResponsiveNode(node)
-
-      changeContainerHeight(node.offsetHeight)
-      changeContainerWidth(node.offsetWidth)
-    }, [])
-
-    useEffect(() => {
-      const element = responsiveNode
-
-      const actualElementResizeEvent =
-        props.elementResizeEvent || elementResizeEvent
-
-      if (element) {
-        actualElementResizeEvent(
-          element,
-          () => {
-            window.clearTimeout(ResponsiveFrame.isResizing)
-            ResponsiveFrame.isResizing = setTimeout(() => {
-              ResponsiveFrame.isResizing = null
-
-              changeContainerHeight(element.offsetHeight)
-              changeContainerWidth(element.offsetWidth)
-            })
-          },
-          debounce
-        )
-      }
-      //      changeContainerHeight(element.offsetHeight)
-      //      changeContainerWidth(element.offsetWidth)
-    })
+    let sceneRef = useRef()
+    let [containerWidth, containerHeight] = useElementSize(sceneRef)
 
     if (responsiveWidth) {
       if (!containerWidth) returnEmpty = true
@@ -104,7 +81,7 @@ const createResponsiveFrame = (ParticularFrame) => {
             ? { minWidth: "0px", minHeight: "0px" }
             : { height: "100%", width: "100%" }
         }
-        ref={responsiveNodeRef}
+        ref={sceneRef}
       >
         {!returnEmpty && (
           <ParticularFrame
