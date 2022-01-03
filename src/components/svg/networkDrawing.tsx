@@ -292,6 +292,11 @@ export const sankeyNodeGenerator = ({
 }) => {
   const height = d.direction !== "down" ? d.height : d.width
   const width = d.direction !== "down" ? d.width : d.height
+
+  if (!d) {
+    return <g />
+  }
+
   return (
     <Mark
       {...baseMarkProps}
@@ -315,8 +320,12 @@ export const sankeyNodeGenerator = ({
 
 export const chordNodeGenerator =
   (size) =>
-  ({ d, i, styleFn, renderMode, key, className, baseMarkProps }) =>
-    (
+  ({ d, i, styleFn, renderMode, key, className, baseMarkProps }) => {
+    if (!d) {
+      return <g />
+    }
+
+    return (
       <Mark
         {...baseMarkProps}
         renderMode={renderMode ? renderMode(d, i) : undefined}
@@ -330,12 +339,17 @@ export const chordNodeGenerator =
         tabIndex={-1}
       />
     )
+  }
 
 export const matrixNodeGenerator = (size, nodes) => {
   const gridSize = Math.min(...size)
   const stepSize = gridSize / (nodes.length + 1)
 
   return ({ d, i, styleFn, renderMode, key, className, baseMarkProps }) => {
+    if (!d) {
+      return <g />
+    }
+
     const showText = stepSize > 6
     const showLine = stepSize > 3
     const showRect = stepSize > 0.5
@@ -462,6 +476,10 @@ export const radialRectNodeGenerator = (size, center, type) => {
     rangeMod < 1 ? scaleLinear().domain([0, 1]).range(rangePct) : (d) => d
 
   return ({ d, i, styleFn, renderMode, key, className, baseMarkProps }) => {
+    if (!d) {
+      return <g />
+    }
+
     radialArc.innerRadius(d.y0 / 2).outerRadius(d.y1 / 2)
 
     return (
@@ -520,6 +538,9 @@ export const hierarchicalRectNodeGenerator = ({
   className,
   baseMarkProps
 }) => {
+  if (!d) {
+    return <g />
+  }
   //this is repetitious
   return (
     <Mark

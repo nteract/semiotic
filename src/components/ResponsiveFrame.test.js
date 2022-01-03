@@ -4,7 +4,8 @@ import { ResponsiveNetworkFrame } from "./ResponsiveNetworkFrame"
 import { ResponsiveMinimapXYFrame } from "./ResponsiveMinimapXYFrame"
 import { ResponsiveXYFrame } from "./ResponsiveXYFrame"
 import { ResponsiveOrdinalFrame } from "./ResponsiveOrdinalFrame"
-const elementResizeEvent = require('element-resize-event');
+
+global.ResizeObserver = require("resize-observer-polyfill")
 
 const ResponsiveFrameComponents = {
   ResponsiveXYFrame: ResponsiveXYFrame,
@@ -14,7 +15,7 @@ const ResponsiveFrameComponents = {
 }
 
 describe("ResponsiveFrameComponents", () => {
-  Object.keys(ResponsiveFrameComponents).forEach(componentName => {
+  Object.keys(ResponsiveFrameComponents).forEach((componentName) => {
     const ResponsiveFrameComponent = ResponsiveFrameComponents[componentName]
     let mounted
     it(`${componentName} renders`, () => {
@@ -24,7 +25,6 @@ describe("ResponsiveFrameComponents", () => {
           disableContext={true}
           responsiveHeight={true}
           responsiveWidth={true}
-          elementResizeEvent={elementResizeEvent}
         />
       )
     })
