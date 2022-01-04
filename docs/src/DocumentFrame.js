@@ -130,7 +130,7 @@ const getCodeBlock = (
   return <${frameName} {...frameProps} />
 }`
 
-  let codeblock = `import ${frameName} from "semiotic/lib/${frameName}"
+  let codeblock = `import { ${frameName} } from "semiotic"
 ${pre || ""}${(pre && "\n") || ""}${importTheme}
 ${functionsString}${framePropsString}
 

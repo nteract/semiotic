@@ -298,7 +298,7 @@ A detailed example of a single chart with annotations and rich information displ
           overrideProps={overrideProps}
           type={XYFrame}
           pre={`import { scaleTime } from "d3-scale"
-import DividedLine from "semiotic/lib/DividedLine"
+import { DividedLine } from "semiotic"
 import { AnnotationXYThreshold } from "react-annotation"
 `}
         />
