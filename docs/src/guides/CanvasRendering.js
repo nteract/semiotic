@@ -1,10 +1,11 @@
-import React from "react";
-import MarkdownPage from "../MarkdownPage";
+import React from "react"
+import Canvas from "../markdown/canvas.mdx"
 
 export default () => {
   return (
     <div>
-      <MarkdownPage filename="canvas" />
+      <h1>Canvas Rendering</h1>
+      <Canvas />
     </div>
-  );
-};
+  )
+}

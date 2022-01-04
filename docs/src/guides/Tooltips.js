@@ -1,5 +1,5 @@
 import React from "react"
-import MarkdownPage from "../MarkdownPage"
+import Tooltips from "../markdown/tooltips.mdx"
 import DocumentFrame, { propertyToString } from "../DocumentFrame"
 import { XYFrame } from "semiotic"
 import lines from "./sharedTooltipData"
@@ -12,7 +12,7 @@ const tooltipStyles = {
     fontWeight: "bold",
     borderBottom: "thin solid black",
     marginBottom: "10px",
-    textAlign: "center"
+    textAlign: "center",
   },
   lineItem: { position: "relative", display: "block", textAlign: "left" },
   title: { display: "inline-block", margin: "0 5px 0 15px" },
@@ -20,47 +20,47 @@ const tooltipStyles = {
   wrapper: {
     background: "rgba(255,255,255,0.8)",
     minWidth: "max-content",
-    whiteSpace: "nowrap"
-  }
+    whiteSpace: "nowrap",
+  },
 }
 
 const sharedTooltipChart = {
   size: [700, 300],
   className: "sharedTooltip",
   lineDataAccessor: "data",
-  xAccessor: d => new Date(d.x),
+  xAccessor: (d) => new Date(d.x),
   xScaleType: scaleTime(),
   yAccessor: "y",
   lines: lines,
-  lineStyle: d => {
+  lineStyle: (d) => {
     return { stroke: d.color, strokeWidth: "2px", fill: "none" }
   },
   axes: [
     { orient: "left" },
-    { orient: "bottom", ticks: 6, tickFormat: d => timeFormat("%m/%d")(d) }
+    { orient: "bottom", ticks: 6, tickFormat: (d) => timeFormat("%m/%d")(d) },
   ],
   margin: { top: 10, left: 40, right: 10, bottom: 60 },
   pointStyle: {
     fill: "none",
     stroke: "black",
-    strokeWidth: "1.5px"
+    strokeWidth: "1.5px",
   },
   hoverAnnotation: [
     { type: "x", disable: ["connector", "note"] },
     { type: "frame-hover" },
-    { type: "vertical-points", threshold: 0.1, r: () => 5 }
+    { type: "vertical-points", threshold: 0.1, r: () => 5 },
   ],
-  tooltipContent: d => {
+  tooltipContent: (d) => {
     const points = lines
-      .map(point => {
+      .map((point) => {
         return {
           id: point.id,
           color: point.color,
-          data: point.data.find(i => {
+          data: point.data.find((i) => {
             // Search the lines for a similar x value for vertical shared tooltip
             // Can implement a 'close enough' conditional here too (fuzzy equality)
             return new Date(i.x).getTime() === new Date(d.x).getTime()
-          })
+          }),
         }
       })
       .sort((a, b) => b.data.y - a.data.y)
@@ -68,7 +68,7 @@ const sharedTooltipChart = {
     const returnArray = [
       <div key={"header_multi"} style={tooltipStyles.header}>
         {`Records for: ${timeFormat("%m/%d/%Y")(new Date(d.x))}`}
-      </div>
+      </div>,
     ]
 
     points.forEach((point, i) => {
@@ -87,17 +87,14 @@ const sharedTooltipChart = {
               position: "absolute",
               top: "8px",
               left: "0",
-              margin: "0"
+              margin: "0",
             }}
           />
-          <p
-            key={`tooltip_p_${i}`}
-            style={tooltipStyles.title}
-          >{`${title} =`}</p>
+          <p key={`tooltip_p_${i}`} style={tooltipStyles.title}>{`${title} =`}</p>
           <p key={`tooltip_p_val_${i}`} style={tooltipStyles.value}>
             {valString}
           </p>
-        </div>
+        </div>,
       ])
     })
 
@@ -106,7 +103,7 @@ const sharedTooltipChart = {
         {returnArray}
       </div>
     )
-  }
+  },
 }
 
 const overrideProps = {
@@ -172,13 +169,14 @@ const overrideProps = {
         {returnArray}
       </div>
     );
-}`
+}`,
 }
 
 export default () => {
   return (
     <div>
-      <MarkdownPage filename="tooltips" />
+      <h1>Annotations - Tooltips</h1>
+      <Tooltips />
       <MarkdownText
         text={`
 ## Shared Tooltip Example

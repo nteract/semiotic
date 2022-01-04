@@ -21,11 +21,20 @@
     "create-release-branch": "sh ./scripts/create-release-branch.sh",
     "publish-release": "sh ./scripts/publish-release.sh",
     "docs:localdev": "cd docs && yarn install && yarn build && serve -s build",
+    "website:start": "parcel serve --target website",
+    "website:build": "parcel build --target website",
     "typescript": "tsc --noEmit",
     "dist": "rollup --config rollup.config.js",
     "prepublishOnly": "npm run typescript && npm run dist"
   },
   "targets": {
+    "website": {
+      "source": "docs/public/index.html",
+      "distDir": "docs/build",
+      "engines": {
+        "browsers": "Firefox 60, Chrome 67, Safari 11.1"
+      }
+    },
     "docs": {
       "source": "public/index.html",
       "distDir": "build",
@@ -52,6 +61,8 @@
     "@babel/preset-react": "^7.16.5",
     "@babel/preset-typescript": "^7.16.5",
     "@material-ui/core": "^4.8.1",
+    "@mdx-js/react": "^1.6.22",
+    "@parcel/transformer-mdx": "^2.0.1",
     "@playwright/test": "^1.17.1",
     "@types/d3-scale": "^2.1.1",
     "@types/node": "^13.7.4",

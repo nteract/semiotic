@@ -74,7 +74,7 @@ The \`DividedLine\` lets you create a line that is split based on a parameters f
       <MarkdownText
         text={`
 \`\`\`jsx
-import { DividedLine } from "semiotic/lib/DividedLine"
+import { DividedLine } from "semiotic"
 import { curveBasis } from "d3-shape"
 
 function randomLineGenerator(width, height, points) {

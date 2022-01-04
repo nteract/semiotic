@@ -1,5 +1,5 @@
 import React from "react"
-import XYFrame from "semiotic/lib/XYFrame"
+import { XYFrame } from "semiotic"
 const frameProps = {
   lines: {
     label: "#ac58e5", coordinates: [{ step: 0, value: 40 },
