@@ -719,7 +719,7 @@ export function pointLayout({
   const circleRadius = type.r || 3
   let allCalculatedPieces = []
   const keys = Object.keys(data)
-  console.log("point data", data)
+
   keys.forEach((key, ordsetI) => {
     const ordset = data[key]
 
