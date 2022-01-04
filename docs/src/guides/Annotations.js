@@ -1,6 +1,4 @@
 import React from "react"
-import Annotations from "../markdown/annotations.mdx"
-import MarkdownText from "../MarkdownText"
 import DocumentFrame from "../DocumentFrame"
 import { XYFrame, DividedLine } from "semiotic"
 import { scaleTime } from "d3-scale"
@@ -243,7 +241,7 @@ const overrideProps = {
   ]`,
 }
 
-export default class Annotations extends React.Component {
+export class AnnotationsDocumentFrame extends React.Component {
   constructor(props) {
     super(props)
 
@@ -254,56 +252,18 @@ export default class Annotations extends React.Component {
       })
     })
   }
+
   render() {
-    if (!this.state) return <p>Loading...</p>
-
     return (
-      <div>
-        <MarkdownText
-          text={`
-All frames have annotation capabilities that let you easily deploy [react-annotation](https://react-annotation.susielu.com/). There is also built-in support for automatic label adjustment using [labella.js](http://twitter.github.io/labella.js/).
-
-All frames takes a prop \`annotations\` which is an array of annotation objects:
-
-\`\`\`jsx
-<XYFrame annotations={[{ type: "react-annotation", label: "a note" }]} />
-\`\`\`
-
-This array of annotations is sent to **both** an:
-
-- \`svgAnnotationRules\` function which renders in an SVG layer
-- \`htmlAnnotationRules\` function which renders in an HTML layer
-
-This allows for the creation of graphical elements in both SVG & HTML for the same annotation type.
-
-There are built-in annotation types handled in the default \`htmlAnnotationRules\` and \`svgAnnotationRules\` functions on all frames that let you simply pass an array of settings to the \`annotations\` prop without having to write custom rendering functions.
-
-Otherwise, you can pass your own \`htmlAnnotationRules\` and \`svgAnnotationRules\` to create completely [custom rendering logic](#custom-annotation-rules) based on the annotation type.
-
-## Built-in Annotation Types
-
-Each of the following options is a type of annotation that can be passed to the \`annotations\` prop:
-
-\`\`\`jsx
-<XYFrame annotations={[{ type: "react-annotation", label: "a note" }, {type: "highlight"}}]]} />
-
-\`\`\`       
-
-A detailed example of a single chart with annotations and rich information display. It leverages the \`DividedLine\` component and built-in annotation handling to reproduce [Susie Lu's Apple stock chart](https://bl.ocks.org/susielu/23dc3082669ee026c552b85081d90976).
-
-    `}
-        />
-        <DocumentFrame
-          frameProps={this.state || {}}
-          overrideProps={overrideProps}
-          type={XYFrame}
-          pre={`import { scaleTime } from "d3-scale"
+      <DocumentFrame
+        frameProps={this.state || {}}
+        overrideProps={overrideProps}
+        type={XYFrame}
+        pre={`import { scaleTime } from "d3-scale"
 import { DividedLine } from "semiotic"
 import { AnnotationXYThreshold } from "react-annotation"
-`}
-        />
-        <Annotations />
-      </div>
+      `}
+      />
     )
   }
 }

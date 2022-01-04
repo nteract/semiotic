@@ -28,7 +28,7 @@ import SmallMultiples from "./guides/SmallMultiples"
 import CrossHighlighting from "./guides/CrossHighlighting"
 import Tooltips from "./guides/Tooltips"
 
-import Annotations from "./guides/Annotations"
+import Annotations from "./guides/Annotations.mdx"
 import UsingSketchyPatterns from "./guides/UsingSketchyPatterns"
 import ForegroundBackgroundSVG from "./guides/ForegroundBackgroundSVG"
 import CanvasRendering from "./guides/CanvasRendering"
