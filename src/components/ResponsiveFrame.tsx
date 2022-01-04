@@ -29,6 +29,7 @@ function useElementSize(ref) {
     if (element != null) {
       let rect = element.getBoundingClientRect()
       setSize([rect.width, rect.height])
+      // @ts-ignore
       let observer = new ResizeObserver((entries) => {
         if (entries.length > 0) {
           let rect = entries[0].contentRect

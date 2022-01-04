@@ -59,3 +59,90 @@ export {
   heatmapping,
   nodesEdgesFromHierarchy
 }
+
+export {
+  NodeType,
+  EdgeType,
+  GraphSettingsType,
+  NetworkSettingsType,
+  NetworkFrameState,
+  NetworkFrameProps
+} from "./types/networkTypes"
+
+export {
+  AnnotationType,
+  CustomHoverType,
+  AnnotationTypes,
+  AnnotationHandling,
+  AnnotationProps,
+  AxisProps,
+  AxisGeneratingFunction
+} from "./types/annotationTypes"
+
+export { ContextType } from "./types/canvasTypes"
+
+export {
+  GenericObject,
+  MarginType,
+  ProjectionTypes,
+  ExtentType,
+  ProjectedPoint,
+  PieceLayoutType,
+  ProjectedLine,
+  ProjectedSummary,
+  RoughType,
+  CanvasPostProcessTypes,
+  ExtentSettingsType,
+  accessorType,
+  AccessorFnType,
+  BasicLineTypes,
+  LineTypeSettings,
+  BasicSummaryTypes,
+  SummaryTypeSettings,
+  RawLine,
+  RawSummary,
+  RawPoint,
+  CustomAreaMarkProps,
+  ProjectedBin,
+  GenericAccessor,
+  VizLayerTypes,
+  RenderPipelineType,
+  OrdinalSummaryTypes,
+  OrdinalSummaryTypeSettings,
+  AxisSummaryTypeSettings,
+  GeneralFrameProps,
+  GeneralFrameState
+} from "./types/generalTypes"
+
+export {
+  AdvancedInteractionSettings,
+  Interactivity,
+  InteractionLayerProps,
+  VoronoiEntryType,
+  BaseColumnType,
+  InteractionLayerState
+} from "./types/interactionTypes"
+
+export {
+  SupportedLegendGlyphs,
+  ItemType,
+  LegendItem,
+  LegendGroup,
+  LegendProps
+} from "./types/legendTypes"
+
+export {
+  OExtentObject,
+  PieceTypes,
+  PieceTypeSettings,
+  ProjectedOrdinalSummary,
+  OrdinalFrameProps,
+  OrdinalFrameState
+} from "./types/ordinalTypes"
+
+export {
+  XYFrameProps,
+  AnnotatedSettingsProps,
+  XYFrameState,
+  SummaryLayoutType
+} from "./types/xyTypes"
