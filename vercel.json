@@ -1,0 +1,44 @@
+{
+  "version": 2,
+  "name": "semiotic-docs",
+  "builds": [{ "src": "./docs/build/**", "use": "@now/static" }],
+  "alias": "semiotic.nteract.io",
+  "routes": [
+    {
+      "src": "^/static/(.*)",
+      "headers": { "cache-control": "s-maxage=31536000,immutable" },
+      "dest": "docs/build/static/$1"
+    },
+    {
+      "src": "^/assets/(.*)",
+      "dest": "docs/build/assets/$1"
+    },
+    {
+      "src": "^/data/(.*)",
+      "dest": "docs/build/data/$1"
+    },
+    { "src": "^/favicon.ico", "dest": "docs/build/favicon.ico" },
+    {
+      "src": "^/asset-manifest.json",
+      "dest": "docs/build/asset-manifest.json"
+    },
+    { "src": "^/manifest.json", "dest": "docs/build/manifest.json" },
+    { "src": "^/prism.css", "dest": "docs/build/prism.css" },
+    { "src": "^/prism.js", "dest": "docs/build/prism.js" },
+    { "src": "^/semiotic.css", "dest": "docs/build/semiotic.css" },
+    {
+      "src": "^/precache-manifest.(.*)",
+      "dest": "docs/build/precache-manifest.$1"
+    },
+    {
+      "src": "^/service-worker.js",
+      "headers": { "cache-control": "s-maxage=0" },
+      "dest": "docs/build/service-worker.js"
+    },
+    {
+      "src": "^/(.*)",
+      "headers": { "cache-control": "s-maxage=0" },
+      "dest": "docs/build/index.html"
+    }
+  ]
+}
