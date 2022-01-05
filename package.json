@@ -51,9 +51,6 @@
   "contributors": [
     "Susie Lu <susie.lu.shan@gmail.com>"
   ],
-  "engines": {
-    "node": ">=12"
-  },
   "license": "Apache-2.0",
   "devDependencies": {
     "@babel/core": "^7.16.5",
