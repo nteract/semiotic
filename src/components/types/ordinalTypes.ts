@@ -116,3 +116,10 @@ export interface OrdinalFrameState extends GeneralFrameState {
   summaryType: object
   props: OrdinalFrameProps
 }
+
+export interface LabelSettingsType {
+  orient?: string
+  padding?: number
+  label?: any
+  labelFormatter?: Function
+}
