@@ -60,7 +60,10 @@ import DividedLine from "./sub-components/DividedLine"
 
 import semioticLogo from "../public/assets/img/semiotic.png"
 
+import { useScrollRestoration } from "./useScrollRestoration"
+
 export default function DocsApp() {
+  useScrollRestoration()
   return (
     <div className="App">
       <header className="flex">

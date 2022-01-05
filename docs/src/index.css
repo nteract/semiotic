@@ -3,7 +3,6 @@ body {
   padding: 0;
   font-family: "Poppins", sans-serif;
   font-size: 15px;
-  overflow-y: hidden;
 }
 
 :root {
@@ -45,6 +44,8 @@ header {
   background: white;
   z-index: 300;
   border-bottom: 1px solid var(--bg-color);
+  position: sticky;
+  top: 0;
 }
 
 header .logo,
@@ -228,29 +229,25 @@ button:focus:after {
   align-items: flex-end;
 } */
 
-.sidebar,
-.container {
-  height: calc(100vh - 140px);
-  overflow-y: auto;
-}
-
 .sidebar {
-  z-index: 1000;
-  margin-bottom: -60px;
-  padding-bottom: 60px;
   background: white;
   border-right: 1px solid var(--bg-color);
 }
 
 .sidebar > div {
-  padding: 30px 30px 0px 60px;
+  padding: 30px 30px 30px 60px;
+  position: sticky;
+  top: 101px;
+  overflow: auto;
+  max-height: calc(100vh - 101px);
+  box-sizing: border-box;
 }
 
 .container {
   padding: 20px;
   position: relative;
   padding-left: 50px;
-  flex-grow: 1;
+  min-width: 0;
 }
 
 .bold {
