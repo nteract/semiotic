@@ -1,7 +1,6 @@
 {
   "version": 2,
   "name": "semiotic-docs",
-  "builds": [{ "src": "./docs/build/**", "use": "@now/static" }],
   "alias": "semiotic.nteract.io",
   "routes": [
     {
