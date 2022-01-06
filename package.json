@@ -20,7 +20,6 @@
     "lint:fix": "eslint src --fix",
     "create-release-branch": "sh ./scripts/create-release-branch.sh",
     "publish-release": "sh ./scripts/publish-release.sh",
-    "docs:localdev": "cd docs && yarn install && yarn build && serve -s build",
     "website:start": "parcel serve --target website",
     "website:build": "parcel build --target website",
     "typescript": "tsc --noEmit",
