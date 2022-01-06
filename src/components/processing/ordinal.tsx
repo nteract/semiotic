@@ -22,7 +22,6 @@ import {
   pointLayout,
   swarmLayout,
   timelineLayout
-
 } from "../svg/pieceLayouts"
 
 import { stringToFn, stringToArrayFn } from "../data/dataFunctions"
@@ -32,7 +31,8 @@ import {
   OrdinalFrameState,
   PieceTypeSettings,
   OExtentObject,
-  ProjectedOrdinalSummary
+  ProjectedOrdinalSummary,
+  LabelSettingsType
 } from "../types/ordinalTypes"
 
 import { AxisProps } from "../types/annotationTypes"
@@ -671,7 +671,7 @@ export const calculateOrdinalFrame = (
 
   const pieArcs = []
 
-  const labelSettings =
+  const labelSettings: LabelSettingsType =
     typeof oLabel === "object"
       ? Object.assign({ label: true, padding: 5 }, oLabel)
       : { orient: "default", label: oLabel, padding: 5 }
@@ -817,8 +817,12 @@ export const calculateOrdinalFrame = (
         }
       }
 
+      const labelValue = labelSettings.labelFormatter
+        ? labelSettings.labelFormatter(d)
+        : d
+
       const label = labelingFn(
-        d,
+        labelValue,
         projectedColumns[d].pieceData.map((d) => d.data),
         i,
         projectedColumns[d]
