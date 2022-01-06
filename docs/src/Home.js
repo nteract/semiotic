@@ -17,8 +17,8 @@ export default function Home() {
       </a>
       <ExamplesIndex />
 
-      <a className="heading-link" href="#examples">
-        <h2 id="api">API</h2>
+      <a className="heading-link" href="#api">
+        <h2 id="api">API Reference</h2>
       </a>
       <ApiIndex />
     </div>
