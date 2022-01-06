@@ -1,4 +1,14 @@
-`<Mark>` is a simple component that instantiates different SVG elements depending on the `markType` but also other attributes sent. So, for example, a markType of `rect` will usually result in an SVG rectangle but if you set `renderMode="sketchy"` it will return two SVG paths. All display elements are wrapped in a `<g>` and Mark does have a limited drag-and-drop context. This will probably eventually be its own library in the future. You would pass a Mark any of the native SVG properties you would expect of the markType you intend to render, and Mark will adjust those if the final product is not an element that supports it (such as "r" when the actual rendered element is a path). By default Marks will try to make an animated transition from one state to another, using simple `d3-transition` rules.
+`<Mark>` is a simple component that instantiates different SVG elements depending
+ on the `markType` but also other attributes sent. So, for example, a markType
+ of `rect` will usually result in an SVG rectangle but if you set
+`renderMode="sketchy"` it will return two SVG paths. All display elements are
+wrapped in a `<g>` and Mark does have a limited drag-and-drop context. This will
+probably eventually be its own library in the future. You would pass a Mark any
+of the native SVG properties you would expect of the markType you intend to
+render, and Mark will adjust those if the final product is not an element that
+supports it (such as "r" when the actual rendered element is a path). By default
+Marks will try to make an animated transition from one state to another, using
+simple `d3-transition` rules.
 
 ```js
 import { Mark } from "semiotic-mark";
