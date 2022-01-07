@@ -83,16 +83,7 @@ export default function DocsApp() {
                 target="_blank"
                 href="https://github.com/nteract/semiotic"
               >
-                Semiotic GitHub
-              </a>
-            </p>
-            <p className="no-margin">
-              <a
-                rel="noopener noreferrer"
-                target="_blank"
-                href="https://github.com/nteract/semiotic-docs"
-              >
-                Docs GitHub
+                GitHub
               </a>
             </p>
           </div>
@@ -350,7 +341,7 @@ function Sidebar() {
         <NavLink to="/api">API</NavLink>
       </p>
 
-      <p className="sub-header sub-page selected">Main Components</p>
+      <p className="sub-header sub-page selected">Frames</p>
       <p className="black sub-page">
         <NavLink to="/api/xyframe">XYFrame</NavLink>
       </p>
@@ -366,6 +357,8 @@ function Sidebar() {
       <p className="black sub-page">
         <NavLink to="/api/sparkFrame">SparkFrame</NavLink>
       </p>
+
+      <p className="sub-header sub-page selected">Controls</p>
       <p className="black sub-page">
         <NavLink to="/api/facetcontroller">FacetController</NavLink>
       </p>

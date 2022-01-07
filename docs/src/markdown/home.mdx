@@ -2,32 +2,40 @@ import summary from "../../public/assets/img/or-summary.png"
 
 # Semiotic
 
-*These pages contain information about semiotic's upcoming 2.0 release.*
-*Looking for 1.x release documentation? Please visit https://semioticv1.nteract.io.*
+**Welcome to Semiotic's documentation for the upcoming 2.0 release.**
 
-**Semiotic is a data visualization framework for React.**
+Looking for 1.x release documentation? Please visit https://semioticv1.nteract.io.
 
-It offers frame types, such as XYFrame, OrdinalFrame, and NetworkFrame, to
-deploy a wide variety of charts:
+## Semiotic is a data visualization framework for React.
 
-- `XYFrame`: XY data i.e. line charts and scatterplots
-- `OrdinalFrame`: categorical data i.e. bar charts, violin plots, parallel
-  coordinates
-- `NetworkFrame`: topological and network data i.e. flow diagrams, network
-  visualization, and hierarchical views
+Semiotic offers several frame types to deploy a wide variety of charts. These
+frame types:
+
+- `XYFrame` XY data i.e. line charts and scatterplots 
+- `OrdinalFrame` categorical data i.e. bar charts, violin plots, parallel coordinates
+- `NetworkFrame` topological and network data i.e. flow diagrams, network visualization, and hierarchical views
+
+provide the foundation for rich visualizations and highly customizable charts.
 
 <img src={summary} />
 
-### Getting Started
+## Getting Started
+
+### Installation
 
 Install and save `semiotic` to your project with `yarn` or `npm`.
 
-```js
+```bash
 yarn add -E semiotic
+```
 
-//or npm
+or
+
+```bash
 npm i -SE semiotic
 ```
+
+### Usage
 
 Use with the following import syntax:
 
@@ -42,18 +50,21 @@ Alternatively, you can use semiotic's bundled version available on unpkg.com.
   import { NetworkFrame } from "https://unpkg.com/semiotic?module"
 </script>
 ```
+### Explore
 
-Along with the semiotic and React components, these examples rely on some basic
-[CSS](https://github.com/nteract/semiotic-docs/blob/master/public/semiotic.css)
+Explore the interactive examples and guides to learn more about the flexibility
+and power of Semiotic. Along with the semiotic and React components, these
+examples rely on some basic
+[CSS](https://github.com/nteract/semiotic/blob/main/docs/public/semiotic.css)
 for styling.
 
-### History
+## Project History
 
 This library is created and maintained by [Elijah Meeks](https://twitter.com/Elijah_Meeks).
 
 These docs were created in collaboration with [Susie Lu](https://twitter.com/DataToViz).
 
-### Questions
+## Questions
 
 Visit the **#semiotic** channel at nteract's Discord. New to Discord? 
 [Here's an invitation to join the nteract Discord.](https://discord.gg/W2anQdA2)
