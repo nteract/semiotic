@@ -311,40 +311,6 @@ export const calculateOrdinalFrame = (
 
   let maxColumnValues
 
-  if (dynamicColumnWidth) {
-    let columnValueCreator
-    if (typeof dynamicColumnWidth === "string") {
-      columnValueCreator = (d) => sum(d.map((p) => p.data[dynamicColumnWidth]))
-    } else {
-      columnValueCreator = (d) => dynamicColumnWidth(d.map((p) => p.data))
-    }
-    const thresholdDomain = [0]
-    maxColumnValues = 0
-    const columnValues = []
-
-    oExtent.forEach((d) => {
-      const oValues = allData.filter((p: { column: string }) => p.column === d)
-      const columnValue = columnValueCreator(oValues)
-
-      columnValues.push(columnValue)
-      maxColumnValues += columnValue
-    })
-
-    cwHash.total = 0
-    oExtent.forEach((d, i) => {
-      const oValue = columnValues[i]
-      const stepValue = (oValue / maxColumnValues) * (oDomain[1] - oDomain[0])
-      cwHash[d] = stepValue
-      cwHash.total += stepValue
-      if (i !== oExtent.length - 1) {
-        thresholdDomain.push(stepValue + thresholdDomain[i])
-      }
-    })
-    oScale.range(thresholdDomain)
-  } else {
-    oScale.range(oDomain)
-  }
-
   const rExtentSettings =
     baseRExtent === undefined || Array.isArray(baseRExtent)
       ? { extent: baseRExtent, onChange: undefined, includeAnnotations: false }
@@ -488,6 +454,40 @@ export const calculateOrdinalFrame = (
     )
 
     oScale.domain(oExtent)
+  }
+
+  if (dynamicColumnWidth) {
+    let columnValueCreator
+    if (typeof dynamicColumnWidth === "string") {
+      columnValueCreator = (d) => sum(d.map((p) => p.data[dynamicColumnWidth]))
+    } else {
+      columnValueCreator = (d) => dynamicColumnWidth(d.map((p) => p.data))
+    }
+    const thresholdDomain = [0]
+    const columnValues = []
+    maxColumnValues = 0
+
+    oExtent.forEach((d) => {
+      const oValues = allData.filter((p: { column: string }) => p.column === d)
+      const columnValue = columnValueCreator(oValues)
+
+      columnValues.push(columnValue)
+      maxColumnValues += columnValue
+    })
+
+    cwHash.total = 0
+    oExtent.forEach((d, i) => {
+      const oValue = columnValues[i]
+      const stepValue = (oValue / maxColumnValues) * (oDomain[1] - oDomain[0])
+      cwHash[d] = stepValue
+      cwHash.total += stepValue
+      if (i !== oExtent.length - 1) {
+        thresholdDomain.push(stepValue + thresholdDomain[i])
+      }
+    })
+    oScale.range(thresholdDomain)
+  } else {
+    oScale.range(oDomain)
   }
 
   const rDomain = (projection === "vertical" && [0, adjustedSize[1]]) || [

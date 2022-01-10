@@ -65,31 +65,36 @@ const mekkoChart = {
   oAccessor: "market",
   projection: "vertical",
   dynamicColumnWidth: "value",
-  style: d => ({
+  style: (d) => ({
     fill: colors[d.segment],
     stroke: "black",
     strokeWidth: 1
   }),
+  oSort: (d, i, a, b) => {
+    return -a[0].pct
+  },
   canvasPieces: true,
-  renderMode: d =>
+  /*  renderMode: d =>
     d.market === "Birmingham, AL"
       ? { renderMode: "sketchy", fillWeight: 3, bowing: 5 }
-      : { renderMode: "sketchy", fillWeight: 2 },
+      : { renderMode: "sketchy", fillWeight: 2 }, */
   type: "bar",
   axes: [
-    { orient: "left", tickFormat: d => d },
-    { orient: "bottom", tickFormat: d => `${d / 1000}k` }
+    { orient: "left", tickFormat: (d) => d },
+    { orient: "bottom", tickFormat: (d) => `${d / 1000}k` }
   ],
   rExtent: { includeAnnotations: true },
-  annotations: [{
-    type: "r",
-    value: 8500,
-    label: "An R threshold"
-  }],
+  annotations: [
+    {
+      type: "r",
+      value: 8500,
+      label: "An R threshold"
+    }
+  ],
   margin: { left: 55, top: 50, bottom: 80, right: 50 },
   oLabel: {
     orient: "top",
-    label: d => <text transform="rotate(-45)">{d}</text>
+    label: (d) => <text transform="rotate(-45)">{d}</text>
   },
   sketchyRenderingEngine: roughjs
 }

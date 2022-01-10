@@ -395,7 +395,6 @@ export function heatmapping({
   ]
   let maxValue = -Infinity
 
-  console.log("summaryType", summaryType)
   data.forEach((heatmapData) => {
     const grid = []
     const flatGrid = []
