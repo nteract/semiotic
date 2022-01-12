@@ -213,7 +213,7 @@ describe("FacetController", () => {
     )
   })
 
-  it("renders mixed vanilla HTML & Semiotic frames", () => {
+  it.skip("renders mixed vanilla HTML & Semiotic frames", () => {
     mount(
       <FacetController
         size={[300, 300]}
