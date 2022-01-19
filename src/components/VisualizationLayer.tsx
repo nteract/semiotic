@@ -494,6 +494,10 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     }
   }
 
+  componentWillUnmount() {
+    this.updateCtrl.abort()
+  }
+
   static getDerivedStateFromProps(nextProps: Props, prevState: State) {
     const { props } = prevState
     const lp = props
