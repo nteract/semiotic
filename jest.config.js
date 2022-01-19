@@ -1,5 +1,6 @@
 module.exports = {
   verbose: true,
+  resetMocks: true,
   collectCoverage: true,
   setupFilesAfterEnv: ["<rootDir>/src/setupTests.js"],
   testMatch: [
