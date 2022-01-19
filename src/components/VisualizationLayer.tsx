@@ -68,82 +68,6 @@ type State = {
   handleKeyDown: Function
 }
 
-type RenderQueue = {
-  data: Function
-}
-
-const renderQueue = function (func) {
-  let _queue = [], // data to be rendered
-    _rate = 1000, // number of calls per frame
-    _invalidate = () => {}, // invalidate last render queue
-    _clear = () => {} // clearing function
-
-  // type RenderQueueType = { (): (data: any) => void, render?: Function, invalidate?: Function, data?: Function}
-  let rq: any = function (data) {
-    if (data) rq.data(data)
-    _invalidate()
-    _clear()
-    rq.render()
-  }
-
-  rq.render = function () {
-    let valid = true
-    _invalidate = rq.invalidate = function () {
-      valid = false
-    }
-
-    function doFrame() {
-      if (!valid) return true
-      let chunk = _queue.splice(0, _rate)
-      chunk.forEach(func)
-      if (_queue.length > 0) timer_frame(doFrame)
-    }
-
-    doFrame()
-  }
-
-  rq.data = function (data) {
-    _invalidate()
-    _queue = data.slice(0) // creates a copy of the data
-    return rq
-  }
-
-  rq.add = function (data) {
-    _queue = _queue.concat(data)
-  }
-
-  rq.rate = function (value) {
-    if (!arguments.length) return _rate
-    _rate = value
-    return rq
-  }
-
-  rq.remaining = function () {
-    return _queue.length
-  }
-
-  // clear the canvas
-  rq.clear = function (func) {
-    if (!arguments.length) {
-      _clear()
-      return rq
-    }
-    _clear = func
-    return rq
-  }
-
-  rq.invalidate = _invalidate
-
-  let timer_frame =
-    window.requestAnimationFrame ||
-    window.webkitRequestAnimationFrame ||
-    function (callback) {
-      setTimeout(callback, 17)
-    }
-
-  return rq
-}
-
 const updateVisualizationLayer = (props: Props, handleKeyDown: Function) => {
   const {
     xScale,
@@ -400,8 +324,6 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
         console.error("CURRENTLY UNSUPPORTED MARKTYPE FOR CANVAS RENDERING")
       }
     }
-
-  queuedCanvasRender = renderQueue(() => {})
 
   componentDidUpdate(lp: object) {
     const np = this.props
