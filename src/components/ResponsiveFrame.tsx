@@ -5,6 +5,8 @@ import { OrdinalFrameProps } from "./types/ordinalTypes"
 import { XYFrameProps } from "./types/xyTypes"
 import { NetworkFrameProps } from "./types/networkTypes"
 
+import { useBoundingRect } from "./useBoundingRect"
+
 export interface ResponsiveFrameProps {
   debounce?: number
   responsiveWidth?: boolean
@@ -19,29 +21,6 @@ export interface ResponsiveFrameState {
 }
 
 type ActualFrameProps = OrdinalFrameProps | XYFrameProps | NetworkFrameProps
-
-/** ISC License (c) 2021 Alexey Raspopov */
-
-function useElementSize(ref) {
-  let [size, setSize] = useState([null, null])
-  useLayoutEffect(() => {
-    let element = ref.current
-    if (element != null) {
-      let rect = element.getBoundingClientRect()
-      setSize([rect.width, rect.height])
-      // @ts-ignore
-      let observer = new ResizeObserver((entries) => {
-        if (entries.length > 0) {
-          let rect = entries[0].contentRect
-          setSize([rect.width, rect.height])
-        }
-      })
-      observer.observe(element)
-      return () => observer.disconnect()
-    }
-  }, [])
-  return size
-}
 
 const createResponsiveFrame = (ParticularFrame) => {
   function ResponsiveFrame(props: ResponsiveFrameProps & ActualFrameProps) {
@@ -60,16 +39,16 @@ const createResponsiveFrame = (ParticularFrame) => {
     let returnEmpty = false
 
     let sceneRef = useRef()
-    let [containerWidth, containerHeight] = useElementSize(sceneRef)
+    let rect = useBoundingRect(sceneRef)
 
     if (responsiveWidth) {
-      if (!containerWidth) returnEmpty = true
-      actualSize[0] = containerWidth
+      if (rect == null) returnEmpty = true
+      else actualSize[0] = rect.width
     }
 
     if (responsiveHeight) {
-      if (!containerHeight) returnEmpty = true
-      actualSize[1] = containerHeight
+      if (rect == null) returnEmpty = true
+      else actualSize[1] = rect.height
     }
 
     const dataVersionWithSize = dataVersion + actualSize.toString() + debounce
