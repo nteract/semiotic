@@ -4,6 +4,8 @@ import FacetController from "./FacetController"
 import OrdinalFrame from "./OrdinalFrame"
 import { ResponsiveXYFrame } from "./ResponsiveXYFrame"
 
+jest.mock("./useBoundingRect")
+
 const SimpleDivPropsDisplay = props => (
   <div style={{ padding: "20px" }}>
     <h3 style={{ fontSize: "14px", fontWeight: 900 }}>
@@ -213,7 +215,7 @@ describe("FacetController", () => {
     )
   })
 
-  it.skip("renders mixed vanilla HTML & Semiotic frames", () => {
+  it("renders mixed vanilla HTML & Semiotic frames", () => {
     mount(
       <FacetController
         size={[300, 300]}
