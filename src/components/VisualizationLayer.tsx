@@ -442,8 +442,18 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
 
     context.clearRect(-margin.left, -margin.top, size[0], size[1])
 
+    const renderCanvasPiece = this.renderCanvas(
+      context,
+      margin,
+      np,
+      sketchyRenderingEngine,
+      rc
+    )
+
+    context.clearRect(-margin.left, -margin.top, size[0], size[1])
+
     if (disableProgressiveRendering) {
-      this.renderCanvas(context, margin, np, sketchyRenderingEngine, rc)
+      this.state.canvasDrawing.forEach((piece) => renderCanvasPiece(piece))
     } else {
       this.queuedCanvasRender.invalidate()
       this.queuedCanvasRender.clear()
