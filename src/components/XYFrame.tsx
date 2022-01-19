@@ -43,13 +43,13 @@ import {
 
 import { extentValue } from "./data/unflowedFunctions"
 
-import { basicPropDiffing, basicDataChangeCheck } from "./processing/diffing"
+import { basicDataChangeCheck } from "./processing/diffing"
 
 import { findFirstAccessorValue } from "./data/multiAccessorUtils"
 
 import { calculateXYFrame } from "./processing/xyDrawing"
 
-import { xyFrameChangeProps, xyFrameDataProps } from "./constants/frame_props"
+import { xyFrameChangeProps } from "./constants/frame_props"
 
 import { HOCSpanOrDiv } from "./SpanOrDiv"
 
@@ -94,7 +94,7 @@ const defaultProps = {
   dataVersion: undefined
 }
 
-export default React.memo(function XYFrame_(allProps: XYFrameProps) {
+export default React.memo(function XYFrame(allProps: XYFrameProps) {
   const props = { ...defaultProps, ...allProps }
   const baseState = {
     SpanOrDiv: HOCSpanOrDiv(props.useSpans),
