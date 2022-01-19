@@ -8,6 +8,7 @@ import {
 } from "./types/generalTypes"
 
 import { ContextType } from "./types/canvasTypes"
+import { batchWork } from "./batchWork"
 
 type Props = {
   axes?: Array<React.ReactNode>
@@ -250,6 +251,8 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     }
   }
 
+  updateCtrl = new AbortController()
+
   renderCanvas =
     (
       context,
@@ -455,16 +458,12 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     if (disableProgressiveRendering) {
       this.state.canvasDrawing.forEach((piece) => renderCanvasPiece(piece))
     } else {
-      this.queuedCanvasRender.invalidate()
-      this.queuedCanvasRender.clear()
+      this.updateCtrl.abort()
+      this.updateCtrl = new AbortController()
 
-      this.queuedCanvasRender = renderQueue(
-        this.renderCanvas(context, margin, np, sketchyRenderingEngine, rc)
-      ).clear(() => {
-        context.clearRect(-margin.left, -margin.top, size[0], size[1])
+      batchCollectionWork(renderCanvasPiece, this.state.canvasDrawing, {
+        signal: this.updateCtrl.signal
       })
-
-      this.queuedCanvasRender(this.state.canvasDrawing)
     }
 
     context.setTransform(1, 0, 0, 1, 0, 0)
@@ -635,6 +634,22 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
 
     return renderedDataVisualization
   }
+}
+
+// using batchWork utility, this function iterates over a collection of data
+// in batches of 1000 and invokes `process` function for each data point
+function batchCollectionWork(process, data, options) {
+  let pointer = 0
+  let batchSize = 1000
+
+  return batchWork(() => {
+    let limit = Math.min(pointer + batchSize, data.length)
+    for (let i = pointer; i < limit; i++) {
+      process(data[i])
+    }
+    pointer = pointer + batchSize
+    return data.length > pointer
+  }, options)
 }
 
 export default VisualizationLayer
