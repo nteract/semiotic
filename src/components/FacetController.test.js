@@ -4,9 +4,9 @@ import FacetController from "./FacetController"
 import OrdinalFrame from "./OrdinalFrame"
 import { ResponsiveXYFrame } from "./ResponsiveXYFrame"
 
-const SimpleDivPropsDisplay = props => (
 jest.mock("./useBoundingRect")
 
+const SimpleDivPropsDisplay = props => (
   <div style={{ padding: "20px" }}>
     <h3 style={{ fontSize: "14px", fontWeight: 900 }}>
       Component showing inherited facetprops
