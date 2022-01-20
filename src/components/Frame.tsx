@@ -340,7 +340,7 @@ export default function Frame(props) {
               axes={axes}
               title={generatedTitle}
               frameKey={frameKey}
-              canvasContext={canvasContext?.current}
+              canvasContext={canvasContext}
               dataVersion={dataVersion}
               matte={matte}
               margin={margin}

@@ -1,4 +1,5 @@
 import * as React from "react"
+import { RefObject } from "react"
 
 import {
   MarginType,
@@ -16,7 +17,7 @@ type Props = {
   xScale: Function
   yScale: Function
   dataVersion?: string
-  canvasContext?: ContextType
+  canvasContext?: RefObject<ContextType>
   width: number
   height: number
   margin: MarginType
@@ -154,7 +155,10 @@ const updateVisualizationLayer = (props: Props, handleKeyDown: Function) => {
   }
 }
 
-class VisualizationLayer extends React.PureComponent<Props, State> {
+export default class VisualizationLayer extends React.PureComponent<
+  Props,
+  State
+> {
   static defaultProps = {
     position: [0, 0],
     margin: { left: 0, top: 0, right: 0, bottom: 0 }
@@ -177,154 +181,6 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
 
   updateCtrl = new AbortController()
 
-  renderCanvas =
-    (
-      context,
-      margin,
-      np,
-      sketchyRenderingEngine,
-      rc,
-      disableProgressiveRendering = false
-    ) =>
-    (piece) => {
-      const style = piece.styleFn
-        ? piece.styleFn({ ...piece.d, ...piece.d.data }, piece.i) || {}
-        : {
-            fill: "black",
-            stroke: "black",
-            opacity: 1,
-            fillOpacity: 1,
-            strokeOpacity: 1,
-            strokeWidth: 1
-          }
-
-      const fill = style.fill ? style.fill : "black"
-      const stroke = style.stroke ? style.stroke : "black"
-      context.setTransform(1, 0, 0, 1, margin.left, margin.top)
-      context.translate(...np.position)
-      context.translate(piece.tx, piece.ty)
-      context.fillStyle = fill
-      context.strokeStyle = stroke
-      context.lineWidth = style.strokeWidth ? style.strokeWidth : 0
-
-      let rcSettings = {}
-      const renderObject =
-        piece.markProps.renderMode ||
-        (piece.renderFn &&
-          piece.renderFn({ ...piece.d, ...piece.d.data }, piece.i))
-      let actualRenderMode =
-        (renderObject && renderObject.renderMode) || renderObject
-
-      if (actualRenderMode) {
-        if (!sketchyRenderingEngine) {
-          console.error(
-            "You cannot render sketchy graphics without specifying a Rough.js-like library as the sketchyRenderingEngine prop of your frame"
-          )
-          actualRenderMode = undefined
-        } else {
-          const RoughCanvas = sketchyRenderingEngine.canvas
-          if (!RoughCanvas) {
-            console.error(
-              "The sketchyRenderingEngine you specify does not expose a prop `RoughCanvas` and so cannot render sketchy HTML5 Canvas graphics"
-            )
-          } else {
-            rc = rc || RoughCanvas(np.canvasContext)
-            const rcExtension =
-              (typeof renderObject === "object" && renderObject) || {}
-            rcSettings = {
-              fill,
-              stroke,
-              strokeWidth: context.lineWidth,
-              ...rcExtension
-            }
-          }
-        }
-      }
-
-      if (
-        piece.markProps.markType === "circle" ||
-        (piece.markProps.markType === "rect" && piece.markProps.rx > 0)
-      ) {
-        let vizX = 0,
-          vizY = 0,
-          r = style.r || piece.markProps.r
-        if (piece.markProps.width) {
-          const halfWidth = piece.markProps.width / 2
-          vizX = piece.markProps.x + halfWidth
-          vizY = piece.markProps.y + halfWidth
-          r = halfWidth
-        }
-        if (actualRenderMode === "sketchy") {
-          if (context.globalAlpha !== 0) rc.circle(vizX, vizY, r, rcSettings)
-        } else {
-          context.beginPath()
-          context.arc(vizX, vizY, r, 0, 2 * Math.PI)
-          context.globalAlpha = style.fillOpacity || style.opacity || 1
-          if (style.fill && style.fill !== "none" && context.globalAlpha !== 0)
-            context.fill()
-          context.globalAlpha = style.strokeOpacity || style.opacity || 1
-          if (
-            style.stroke &&
-            style.stroke !== "none" &&
-            context.globalAlpha !== 0
-          )
-            context.stroke()
-        }
-      } else if (piece.markProps.markType === "rect") {
-        if (actualRenderMode === "sketchy") {
-          context.globalAlpha = style.opacity || 1
-          if (context.globalAlpha !== 0)
-            rc.rectangle(
-              piece.markProps.x,
-              piece.markProps.y,
-              piece.markProps.width,
-              piece.markProps.height,
-              rcSettings
-            )
-        } else {
-          context.globalAlpha = style.fillOpacity || style.opacity || 1
-          if (style.fill && style.fill !== "none" && context.globalAlpha !== 0)
-            context.fillRect(
-              piece.markProps.x,
-              piece.markProps.y,
-              piece.markProps.width,
-              piece.markProps.height
-            )
-          context.globalAlpha = style.strokeOpacity || style.opacity || 1
-          if (
-            style.stroke &&
-            style.stroke !== "none" &&
-            context.globalAlpha !== 0
-          )
-            context.strokeRect(
-              piece.markProps.x,
-              piece.markProps.y,
-              piece.markProps.width,
-              piece.markProps.height
-            )
-        }
-      } else if (piece.markProps.markType === "path") {
-        if (actualRenderMode === "sketchy") {
-          context.globalAlpha = style.opacity || 1
-          rc.path(piece.markProps.d, rcSettings)
-        } else {
-          const p = new Path2D(piece.markProps.d)
-          context.globalAlpha = style.strokeOpacity || style.opacity || 1
-          if (
-            style.stroke &&
-            style.stroke !== "none" &&
-            context.globalAlpha !== 0
-          )
-            context.stroke(p)
-          context.globalAlpha = style.fillOpacity || style.opacity || 1
-          if (style.fill && style.fill !== "none" && context.globalAlpha !== 0)
-            context.fill(p)
-        }
-      } else {
-        console.error("CURRENTLY UNSUPPORTED MARKTYPE FOR CANVAS RENDERING")
-      }
-    }
-
   componentDidUpdate(lp: object) {
     const np = this.props
     const propKeys = Object.keys(np)
@@ -336,7 +192,8 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
       }
     })
 
-    if (update === false || np.disableContext || !np.canvasContext) return
+    const canvasContext = np.canvasContext.current
+    if (update === false || np.disableContext || !canvasContext) return
 
     const {
       sketchyRenderingEngine,
@@ -354,12 +211,12 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
     let rc
     const devicePixelRatio = window.devicePixelRatio || 1
 
-    np.canvasContext.width = size[0] * devicePixelRatio
-    np.canvasContext.height = size[1] * devicePixelRatio
-    np.canvasContext.style.width = size[0]
-    np.canvasContext.style.height = size[1]
+    canvasContext.width = size[0] * devicePixelRatio
+    canvasContext.height = size[1] * devicePixelRatio
+    canvasContext.style.width = size[0]
+    canvasContext.style.height = size[1]
 
-    const context = np.canvasContext.getContext("2d")
+    const context = canvasContext.getContext("2d")
 
     context.scale(devicePixelRatio, devicePixelRatio)
 
@@ -367,7 +224,8 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
 
     context.clearRect(-margin.left, -margin.top, size[0], size[1])
 
-    const renderCanvasPiece = this.renderCanvas(
+    const renderCanvasPiece = renderCanvas(
+      canvasContext,
       context,
       margin,
       np,
@@ -562,6 +420,156 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
   }
 }
 
+function renderCanvas(
+  canvasContext,
+  context,
+  margin,
+  np,
+  sketchyRenderingEngine,
+  rc
+) {
+  const defaultStyle = {
+    fill: "black",
+    stroke: "black",
+    opacity: 1,
+    fillOpacity: 1,
+    strokeOpacity: 1,
+    strokeWidth: 1
+  }
+
+  return (piece) => {
+    const combinedDatum = { ...piece.d, ...piece.d.data }
+    const style = piece.styleFn
+      ? piece.styleFn(combinedDatum, piece.i) || defaultStyle
+      : defaultStyle
+
+    const fill = style.fill ? style.fill : "black"
+    const stroke = style.stroke ? style.stroke : "black"
+    context.setTransform(1, 0, 0, 1, margin.left, margin.top)
+    context.translate(np.position[0], np.position[1])
+    context.translate(piece.tx, piece.ty)
+    context.fillStyle = fill
+    context.strokeStyle = stroke
+    context.lineWidth = style.strokeWidth ? style.strokeWidth : 0
+
+    let rcSettings = {}
+    const renderObject =
+      piece.markProps.renderMode ||
+      (piece.renderFn && piece.renderFn(combinedDatum, piece.i))
+    let actualRenderMode =
+      (renderObject && renderObject.renderMode) || renderObject
+
+    if (actualRenderMode) {
+      if (!sketchyRenderingEngine) {
+        console.error(
+          "You cannot render sketchy graphics without specifying a Rough.js-like library as the sketchyRenderingEngine prop of your frame"
+        )
+        actualRenderMode = undefined
+      } else {
+        const RoughCanvas = sketchyRenderingEngine.canvas
+        if (!RoughCanvas) {
+          console.error(
+            "The sketchyRenderingEngine you specify does not expose a prop `RoughCanvas` and so cannot render sketchy HTML5 Canvas graphics"
+          )
+        } else {
+          rc = rc || RoughCanvas(canvasContext)
+          const rcExtension =
+            (typeof renderObject === "object" && renderObject) || {}
+          rcSettings = {
+            fill,
+            stroke,
+            strokeWidth: context.lineWidth,
+            ...rcExtension
+          }
+        }
+      }
+    }
+
+    if (
+      piece.markProps.markType === "circle" ||
+      (piece.markProps.markType === "rect" && piece.markProps.rx > 0)
+    ) {
+      let vizX = 0,
+        vizY = 0,
+        r = style.r || piece.markProps.r
+      if (piece.markProps.width) {
+        const halfWidth = piece.markProps.width / 2
+        vizX = piece.markProps.x + halfWidth
+        vizY = piece.markProps.y + halfWidth
+        r = halfWidth
+      }
+      if (actualRenderMode === "sketchy") {
+        if (context.globalAlpha !== 0) rc.circle(vizX, vizY, r, rcSettings)
+      } else {
+        context.beginPath()
+        context.arc(vizX, vizY, r, 0, 2 * Math.PI)
+        context.globalAlpha = style.fillOpacity || style.opacity || 1
+        if (style.fill && style.fill !== "none" && context.globalAlpha !== 0)
+          context.fill()
+        context.globalAlpha = style.strokeOpacity || style.opacity || 1
+        if (
+          style.stroke &&
+          style.stroke !== "none" &&
+          context.globalAlpha !== 0
+        )
+          context.stroke()
+      }
+    } else if (piece.markProps.markType === "rect") {
+      if (actualRenderMode === "sketchy") {
+        context.globalAlpha = style.opacity || 1
+        if (context.globalAlpha !== 0)
+          rc.rectangle(
+            piece.markProps.x,
+            piece.markProps.y,
+            piece.markProps.width,
+            piece.markProps.height,
+            rcSettings
+          )
+      } else {
+        context.globalAlpha = style.fillOpacity || style.opacity || 1
+        if (style.fill && style.fill !== "none" && context.globalAlpha !== 0)
+          context.fillRect(
+            piece.markProps.x,
+            piece.markProps.y,
+            piece.markProps.width,
+            piece.markProps.height
+          )
+        context.globalAlpha = style.strokeOpacity || style.opacity || 1
+        if (
+          style.stroke &&
+          style.stroke !== "none" &&
+          context.globalAlpha !== 0
+        )
+          context.strokeRect(
+            piece.markProps.x,
+            piece.markProps.y,
+            piece.markProps.width,
+            piece.markProps.height
+          )
+      }
+    } else if (piece.markProps.markType === "path") {
+      if (actualRenderMode === "sketchy") {
+        context.globalAlpha = style.opacity || 1
+        rc.path(piece.markProps.d, rcSettings)
+      } else {
+        const p = new Path2D(piece.markProps.d)
+        context.globalAlpha = style.strokeOpacity || style.opacity || 1
+        if (
+          style.stroke &&
+          style.stroke !== "none" &&
+          context.globalAlpha !== 0
+        )
+          context.stroke(p)
+        context.globalAlpha = style.fillOpacity || style.opacity || 1
+        if (style.fill && style.fill !== "none" && context.globalAlpha !== 0)
+          context.fill(p)
+      }
+    } else {
+      console.error("CURRENTLY UNSUPPORTED MARKTYPE FOR CANVAS RENDERING")
+    }
+  }
+}
+
 // using batchWork utility, this function iterates over a collection of data
 // in batches of 1000 and invokes `process` function for each data point
 function batchCollectionWork(process, data, options) {
@@ -577,5 +585,3 @@ function batchCollectionWork(process, data, options) {
     return data.length > pointer
   }, options)
 }
-
-export default VisualizationLayer
