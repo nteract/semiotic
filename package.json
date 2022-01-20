@@ -10,8 +10,6 @@
     "dist"
   ],
   "scripts": {
-    "start": "parcel serve --target docs",
-    "build": "parcel build --target docs",
     "test": "jest --config jest.config.js",
     "pretest:dist": "npm run dist",
     "test:dist": "playwright test",
