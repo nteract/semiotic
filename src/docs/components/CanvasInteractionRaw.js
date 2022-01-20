@@ -1,7 +1,6 @@
 import * as React from "react"
 import { csvParse } from "d3-dsv"
 import { XYFrame } from "../../components"
-const ROOT = process.env.PUBLIC_URL
 
 const colors = [
   "#007190",
@@ -59,21 +58,16 @@ export default class DecisionMatrixExample extends React.Component {
   constructor(props) {
     super(props)
 
-    fetch(`${ROOT}/sampledata/diamonds.csv`)
-      .then((response) => response.text())
-      .then((data) => {
-        const parsedDiamonds = []
-        csvParse(data).forEach((d) => {
-          parsedDiamonds.push({
-            y: +d.price,
-            x: +d.carat,
-            size: +d.table,
-            color: cutHash[d.cut],
-            clarity: d.clarity
-          })
-        })
-        this.setState({ parsedDiamonds })
-      })
+    import("bundle-text:~/public/sampledata/diamonds.csv").then((data) => {
+      const parsedDiamonds = csvParse(data).map((d) => ({
+        y: +d.price,
+        x: +d.carat,
+        size: +d.table,
+        color: cutHash[d.cut],
+        clarity: d.clarity
+      }))
+      this.setState({ parsedDiamonds })
+    })
   }
 
   render() {
