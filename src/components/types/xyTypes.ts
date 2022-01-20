@@ -35,7 +35,7 @@ export interface XYFrameProps extends GeneralFrameProps {
   yAccessor?: accessorType<number>
   lineDataAccessor?: accessorType<RawPoint[]>
   summaryDataAccessor?: accessorType<RawPoint[]>
-  lineType?: LineTypeSettings
+  lineType?: LineTypeSettings | string
   summaryType?: SummaryTypeSettings
   lineRenderMode?: string | object | Function
   pointRenderMode?: string | object | Function

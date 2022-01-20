@@ -638,8 +638,15 @@ export const calculateDataExtent = ({
   }
 }
 
-const differenceCatch = (olineType, data) =>
-  olineType === "difference" && data.length !== 2 ? "line" : olineType
+const differenceCatch = (olineType, data) => {
+  if (
+    !builtInTransformations[olineType] ||
+    (olineType === "difference" && data.length !== 2)
+  ) {
+    return "line"
+  }
+  return olineType
+}
 
 function lineTransformation(lineType, options) {
   return (data) =>
