@@ -8,6 +8,7 @@ import {
 } from "./types/generalTypes"
 
 import { ContextType } from "./types/canvasTypes"
+import { batchWork } from "./batchWork"
 
 type Props = {
   axes?: Array<React.ReactNode>
@@ -65,82 +66,6 @@ type State = {
   piecesGroup: object
   props: Props
   handleKeyDown: Function
-}
-
-type RenderQueue = {
-  data: Function
-}
-
-const renderQueue = function (func) {
-  let _queue = [], // data to be rendered
-    _rate = 1000, // number of calls per frame
-    _invalidate = () => {}, // invalidate last render queue
-    _clear = () => {} // clearing function
-
-  // type RenderQueueType = { (): (data: any) => void, render?: Function, invalidate?: Function, data?: Function}
-  let rq: any = function (data) {
-    if (data) rq.data(data)
-    _invalidate()
-    _clear()
-    rq.render()
-  }
-
-  rq.render = function () {
-    let valid = true
-    _invalidate = rq.invalidate = function () {
-      valid = false
-    }
-
-    function doFrame() {
-      if (!valid) return true
-      let chunk = _queue.splice(0, _rate)
-      chunk.forEach(func)
-      if (_queue.length > 0) timer_frame(doFrame)
-    }
-
-    doFrame()
-  }
-
-  rq.data = function (data) {
-    _invalidate()
-    _queue = data.slice(0) // creates a copy of the data
-    return rq
-  }
-
-  rq.add = function (data) {
-    _queue = _queue.concat(data)
-  }
-
-  rq.rate = function (value) {
-    if (!arguments.length) return _rate
-    _rate = value
-    return rq
-  }
-
-  rq.remaining = function () {
-    return _queue.length
-  }
-
-  // clear the canvas
-  rq.clear = function (func) {
-    if (!arguments.length) {
-      _clear()
-      return rq
-    }
-    _clear = func
-    return rq
-  }
-
-  rq.invalidate = _invalidate
-
-  let timer_frame =
-    window.requestAnimationFrame ||
-    window.webkitRequestAnimationFrame ||
-    function (callback) {
-      setTimeout(callback, 17)
-    }
-
-  return rq
 }
 
 const updateVisualizationLayer = (props: Props, handleKeyDown: Function) => {
@@ -249,6 +174,8 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
       ...updateVisualizationLayer(props, this.handleKeyDown)
     }
   }
+
+  updateCtrl = new AbortController()
 
   renderCanvas =
     (
@@ -398,8 +325,6 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
       }
     }
 
-  queuedCanvasRender = renderQueue(() => {})
-
   componentDidUpdate(lp: object) {
     const np = this.props
     const propKeys = Object.keys(np)
@@ -442,19 +367,25 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
 
     context.clearRect(-margin.left, -margin.top, size[0], size[1])
 
+    const renderCanvasPiece = this.renderCanvas(
+      context,
+      margin,
+      np,
+      sketchyRenderingEngine,
+      rc
+    )
+
+    context.clearRect(-margin.left, -margin.top, size[0], size[1])
+
     if (disableProgressiveRendering) {
-      this.renderCanvas(context, margin, np, sketchyRenderingEngine, rc)
+      this.state.canvasDrawing.forEach((piece) => renderCanvasPiece(piece))
     } else {
-      this.queuedCanvasRender.invalidate()
-      this.queuedCanvasRender.clear()
+      this.updateCtrl.abort()
+      this.updateCtrl = new AbortController()
 
-      this.queuedCanvasRender = renderQueue(
-        this.renderCanvas(context, margin, np, sketchyRenderingEngine, rc)
-      ).clear(() => {
-        context.clearRect(-margin.left, -margin.top, size[0], size[1])
+      batchCollectionWork(renderCanvasPiece, this.state.canvasDrawing, {
+        signal: this.updateCtrl.signal
       })
-
-      this.queuedCanvasRender(this.state.canvasDrawing)
     }
 
     context.setTransform(1, 0, 0, 1, 0, 0)
@@ -483,6 +414,10 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
 
       focusEl && focusEl.focus && focusEl.focus()
     }
+  }
+
+  componentWillUnmount() {
+    this.updateCtrl.abort()
   }
 
   static getDerivedStateFromProps(nextProps: Props, prevState: State) {
@@ -625,6 +560,22 @@ class VisualizationLayer extends React.PureComponent<Props, State> {
 
     return renderedDataVisualization
   }
+}
+
+// using batchWork utility, this function iterates over a collection of data
+// in batches of 1000 and invokes `process` function for each data point
+function batchCollectionWork(process, data, options) {
+  let pointer = 0
+  let batchSize = 1000
+
+  return batchWork(() => {
+    let limit = Math.min(pointer + batchSize, data.length)
+    for (let i = pointer; i < limit; i++) {
+      process(data[i])
+    }
+    pointer = pointer + batchSize
+    return data.length > pointer
+  }, options)
 }
 
 export default VisualizationLayer
