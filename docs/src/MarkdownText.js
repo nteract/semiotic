@@ -1,5 +1,5 @@
 import React from "react"
-import marked from "marked"
+import { marked } from "marked"
 
 export default class MarkdownText extends React.Component {
   state = { marked: "" }
