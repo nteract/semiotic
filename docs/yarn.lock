@@ -418,10 +418,8 @@ semiotic-mark@0.5.0:
     d3-selection "2"
     d3-transition "2"
 
-semiotic@2.0.0-rc.19:
-  version "2.0.0-rc.19"
-  resolved "https://registry.yarnpkg.com/semiotic/-/semiotic-2.0.0-rc.19.tgz#398846b10ead0ed91aed354bee8f99dae7f2f7b5"
-  integrity sha512-Wnjwe/JA+yXdcfyHzdXvhdFrXAU9tRz/LwYImpytGeTwFM9Rl7YFmVzVpEaOb4I5MQCFYCWR6Z7l5p1Dn7KquQ==
+"semiotic@file:..":
+  version "2.0.0"
   dependencies:
     d3-array "^1.2.0"
     d3-brush "^2.1.0"

@@ -20,8 +20,8 @@
     "lint:fix": "eslint src --fix",
     "create-release-branch": "sh ./scripts/create-release-branch.sh",
     "publish-release": "sh ./scripts/publish-release.sh",
-    "website:start": "parcel serve --target website",
-    "website:build": "parcel build --target website",
+    "website:start": "npm run dist && parcel serve --target website",
+    "website:build": "npm run dist && parcel build --target website",
     "typescript": "tsc --noEmit",
     "dist": "rollup --config rollup.config.js",
     "prepublishOnly": "npm run typescript && npm run dist"
