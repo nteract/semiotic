@@ -151,9 +151,6 @@ export interface NetworkFrameProps extends GeneralFrameProps {
   edgeType?: string | Function
   customNodeIcon?: Function
   customEdgeIcon?: Function
-  onNodeOut?: Function
-  onNodeClick?: Function
-  onNodeEnter?: Function
   renderOrder?: ReadonlyArray<"edges" | "nodes">
   filterRenderedNodes: (
     value?: NodeType,
