@@ -1,5 +1,5 @@
 import * as React from "react"
-import { HashRouter, Route } from "react-router-dom"
+import { HashRouter, Routes, Route } from "react-router-dom"
 import Home from "./Home"
 import Documentation from "./Documentation"
 import LayoutFooter from "./layout/Footer"
@@ -20,22 +20,14 @@ const Docs = () => {
     <MuiThemeProvider theme={muiTheme}>
       <HashRouter basename={basename}>
         <div className="App">
-          <Route
-            exact
-            pattern="/"
-            render={({ location }) => {
-              if (location.pathname === "/") {
-                return (
-                  <div>
-                    <Documentation AdditionalContent={Home} />
-                  </div>
-                )
-              }
-              return null
-            }}
-          />
-          <Route path="/responsivexy/" component={ResponsiveXYExample} />
-          <Route path="/:component" component={Documentation} />
+          <Routes>
+            <Route path="/responsivexy/" element={<ResponsiveXYExample />} />
+            <Route path="/:component" element={<Documentation />} />
+            <Route
+              path="/"
+              element={<Documentation AdditionalContent={Home} />}
+            />
+          </Routes>
           <LayoutFooter gh={gh} />
         </div>
       </HashRouter>

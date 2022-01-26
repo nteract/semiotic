@@ -1,4 +1,6 @@
 import * as React from "react"
+import { useState } from "react"
+import { useParams } from "react-router-dom"
 import Introduction from "./Introduction"
 import Examples from "./Examples"
 
@@ -130,165 +132,142 @@ const components = {
   dividedline: { docs: DividedLineDocs }
 }
 
-class Documentation extends React.Component {
-  state = {
-    open: true
+function Documentation(props) {
+  let [open, setOpen] = useState(true)
+
+  const match = useParams()
+  const selected = match && match.component
+  const selectedComponent = components[selected]
+
+  const classes = {}
+
+  let selectedDoc = null,
+    Doc = null
+  // const selectedStyles = {
+  //   borderTop: "5px double #ac9739",
+  //   borderBottom: "5px double #ac9739"
+  // }
+
+  if (selected === "responsive") {
+    return <ResponsiveExample />
   }
 
-  handleDrawerOpen = () => {
-    this.setState({ open: true })
-  }
+  const allDocs = [
+    <Link to={"/"} key="home-link">
+      <ListItem button>
+        <ListItemText primary="Home" />
+      </ListItem>
+    </Link>,
+    <Link to={"/examples"} key="examples-link">
+      <ListItem button>
+        <ListItemText primary="Examples" />
+      </ListItem>
+    </Link>
+  ]
 
-  handleDrawerClose = () => {
-    this.setState({ open: false })
-  }
+  Object.keys(components).forEach((c) => {
+    const cTitle = components[c].docs.title
 
-  render() {
-    const { match /* history, */ /* theme = {} */ } = this.props
-    const selected = match && match.params.component
-    const selectedComponent = components[selected]
-
-    const classes = {}
-
-    let selectedDoc = null,
-      Doc = null
-    // const selectedStyles = {
-    //   borderTop: "5px double #ac9739",
-    //   borderBottom: "5px double #ac9739"
-    // }
-
-    if (selected === "responsive") {
-      return <ResponsiveExample />
-    }
-
-    const allDocs = [
-      <Link to={"/"} key="home-link">
-        <ListItem button>
-          <ListItemText primary="Home" />
-        </ListItem>
-      </Link>,
-      <Link to={"/examples"} key="examples-link">
-        <ListItem button>
-          <ListItemText primary="Examples" />
-        </ListItem>
-      </Link>
-    ]
-
-    Object.keys(components).forEach(c => {
-      const cTitle = components[c].docs.title
-
-      if (
-        !components[c].parent ||
-        components[c].parent === selected ||
-        (selectedComponent &&
-          components[c].parent === selectedComponent.parent) ||
-        c === selected
-      ) {
-        let styleOver = {}
-        if (components[c].parent) {
-          styleOver = { paddingLeft: "20px" }
-        }
-        const finalStyle =
-          selected === c
-            ? {
-                borderTop: "5px double #ac9739",
-                borderBottom: "5px double #ac9739",
-                fontWeight: 900,
-                ...styleOver
-              }
-            : styleOver
-        allDocs.push(
-          <Link to={`/${c}`} key={`${c}-link`}>
-            <ListItem key={cTitle} style={finalStyle}>
-              <ListItemText primary={cTitle} />
-            </ListItem>
-          </Link>
-        )
+    if (
+      !components[c].parent ||
+      components[c].parent === selected ||
+      (selectedComponent &&
+        components[c].parent === selectedComponent.parent) ||
+      c === selected
+    ) {
+      let styleOver = {}
+      if (components[c].parent) {
+        styleOver = { paddingLeft: "20px" }
       }
-    })
-
-    if (components[selected]) {
-      Doc = selectedComponent.docs
-      selectedDoc = (
-        <div className="row">
-          <div className="col-xs-10 col-xs-offset-2">
-            <Doc />
-          </div>
-        </div>
+      const finalStyle =
+        selected === c
+          ? {
+              borderTop: "5px double #ac9739",
+              borderBottom: "5px double #ac9739",
+              fontWeight: 900,
+              ...styleOver
+            }
+          : styleOver
+      allDocs.push(
+        <Link to={`/${c}`} key={`${c}-link`}>
+          <ListItem key={cTitle} style={finalStyle}>
+            <ListItemText primary={cTitle} />
+          </ListItem>
+        </Link>
       )
     }
+  })
 
-    const { AdditionalContent } = this.props
-
-    return (
-      <div className={classes.root}>
-        <div
-          className={classes.appFrame}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-end"
-          }}
-        >
-          <AppBar
-            className={classNames(
-              classes.appBar,
-              this.state.open && classes.appBarShift
-            )}
-          >
-            <Toolbar
-              disableGutters={!this.state.open}
-              className="semiotic-header"
-            >
-              <span
-                style={{ cursor: "pointer", color: "white" }}
-                onClick={() =>
-                  this.props.history ? this.props.history.push("/") : null
-                }
-              >
-                Semiotic
-              </span>
-              <img
-                style={{ paddingTop: "10px", width: "40px", height: "40px" }}
-                src="/semiotic/semiotic_white.png"
-              />
-            </Toolbar>
-          </AppBar>
-          <Drawer
-            type="persistent"
-            classes={{
-              paper: classes.drawerPaper
-            }}
-            open={this.state.open}
-          >
-            <div className={classes.drawerInner}>
-              <div className={"drawer-title"}>Semiotic</div>
-              <Divider />
-              <List className={classes.list}>{allDocs}</List>
-            </div>
-          </Drawer>
-          <main
-            className={classNames(
-              classes.content,
-              this.state.open && classes.contentShift
-            )}
-          >
-            {AdditionalContent ? <AdditionalContent /> : null}
-            {selected === "examples" ? (
-              <div className="row">
-                <div className="col-xs-10 col-xs-offset-1">{Examples}</div>
-              </div>
-            ) : !selectedDoc ? (
-              <div className="row">
-                <div className="col-xs-10 col-xs-offset-1">{Introduction}</div>
-              </div>
-            ) : null}
-            {selectedDoc}
-          </main>
+  if (components[selected]) {
+    Doc = selectedComponent.docs
+    selectedDoc = (
+      <div className="row">
+        <div className="col-xs-10 col-xs-offset-2">
+          <Doc />
         </div>
       </div>
     )
   }
+
+  const { AdditionalContent } = props
+
+  return (
+    <div className={classes.root}>
+      <div
+        className={classes.appFrame}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-end"
+        }}
+      >
+        <AppBar
+          className={classNames(classes.appBar, open && classes.appBarShift)}
+        >
+          <Toolbar disableGutters={!open} className="semiotic-header">
+            <span
+              style={{ cursor: "pointer", color: "white" }}
+              onClick={() => (props.history ? props.history.push("/") : null)}
+            >
+              Semiotic
+            </span>
+            <img
+              style={{ paddingTop: "10px", width: "40px", height: "40px" }}
+              src="/semiotic/semiotic_white.png"
+            />
+          </Toolbar>
+        </AppBar>
+        <Drawer
+          type="persistent"
+          classes={{
+            paper: classes.drawerPaper
+          }}
+          open={open}
+        >
+          <div className={classes.drawerInner}>
+            <div className={"drawer-title"}>Semiotic</div>
+            <Divider />
+            <List className={classes.list}>{allDocs}</List>
+          </div>
+        </Drawer>
+        <main
+          className={classNames(classes.content, open && classes.contentShift)}
+        >
+          {AdditionalContent ? <AdditionalContent /> : null}
+          {selected === "examples" ? (
+            <div className="row">
+              <div className="col-xs-10 col-xs-offset-1">{Examples}</div>
+            </div>
+          ) : !selectedDoc ? (
+            <div className="row">
+              <div className="col-xs-10 col-xs-offset-1">{Introduction}</div>
+            </div>
+          ) : null}
+          {selectedDoc}
+        </main>
+      </div>
+    </div>
+  )
 }
 
 export default Documentation
