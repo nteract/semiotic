@@ -7,7 +7,7 @@ export function useLegacyUnmountCallback(props: any, state: any) {
   let ref = useRef<[any, any]>()
   ref.current = [props, state]
   useEffect(() => {
-    ;() => {
+    return () => {
       const [props, state] = ref.current
       const onUnmount = props.onUnmount
       if (onUnmount) {
