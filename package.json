@@ -28,6 +28,8 @@
   },
   "targets": {
     "website": {
+      "context": "browser",
+      "scopeHoist": false,
       "source": "docs/public/index.html",
       "distDir": "docs/build",
       "engines": {
