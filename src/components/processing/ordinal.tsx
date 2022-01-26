@@ -303,9 +303,13 @@ export const calculateOrdinalFrame = (
     { total: 0 }
   )
 
-  const castOScaleType = oScaleType as unknown as Function
+  const castOScaleType = oScaleType as unknown as any
 
-  const oScale = dynamicColumnWidth ? scaleOrdinal() : castOScaleType()
+  const oScale = dynamicColumnWidth
+    ? scaleOrdinal()
+    : castOScaleType?.domain
+    ? castOScaleType
+    : castOScaleType()
 
   oScale.domain(oExtent)
 
@@ -495,10 +499,11 @@ export const calculateOrdinalFrame = (
     adjustedSize[0]
   ]
 
-  const castRScaleType = rScaleType as unknown as Function
+  const castRScaleType = rScaleType as unknown as any
 
-  const instantiatedRScaleType = rScaleType.domain
-    ? rScaleType
+  // if rScaleType has a domain that means it's instantiated, otherwise, it needs to be instantiated
+  const instantiatedRScaleType = castRScaleType.domain
+    ? castRScaleType
     : castRScaleType()
 
   const zeroCheck = instantiatedRScaleType(0)

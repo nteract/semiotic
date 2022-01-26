@@ -52,7 +52,7 @@ const defaultProps: Partial<OrdinalFrameProps> = {
   size: [500, 500],
   className: "",
   data: [],
-  oScaleType: scaleBand,
+  oScaleType: scaleBand(),
   rScaleType: scaleLinear,
   type: "none",
   useSpans: false,
