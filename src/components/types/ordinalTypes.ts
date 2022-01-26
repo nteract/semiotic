@@ -80,8 +80,8 @@ export interface OrdinalFrameProps extends GeneralFrameProps {
   renderMode?: object | string | accessorType<string | object>
   summaryRenderMode?: object | string | accessorType<string | object>
   pixelColumnWidth?: number
-  oScaleType?: ScaleBand<string>
-  rScaleType?: ScaleLinear<number, number>
+  oScaleType?: () => ScaleBand<string>
+  rScaleType?: () => ScaleLinear<number, number>
   data: Array<object | number>
   oPadding?: number
   axes?:
