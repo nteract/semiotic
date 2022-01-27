@@ -94,7 +94,7 @@ const defaultProps = {
   dataVersion: undefined
 }
 
-export default React.memo(function XYFrame(allProps: XYFrameProps) {
+const XYFrame = React.memo(function XYFrame(allProps: XYFrameProps) {
   const props = { ...defaultProps, ...allProps }
   const baseState = {
     SpanOrDiv: HOCSpanOrDiv(props.useSpans),
@@ -745,3 +745,6 @@ function defaultXYHTMLRule(
   }
   return null
 }
+
+XYFrame.displayName = "XYFrame"
+export default XYFrame
