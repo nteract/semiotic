@@ -164,12 +164,10 @@ export default function Frame(props) {
 
   const canvasContext = useRef(null)
 
-  const [voronoiHover, changeVoronoiHover] = useState(undefined)
+  const [voronoiHover, setVoronoi] = useState(undefined)
   const [finalDefs, changeFinalDefs] = useState(null)
   const [matte, changeMatte] = useState(null)
   const [SpanOrDiv] = useState(() => HOCSpanOrDiv(props.useSpans))
-
-  const [setVoronoi] = useState(() => (d) => changeVoronoiHover(d))
 
   useEffect(() => {
     const generatedDefs = generateFinalDefs({

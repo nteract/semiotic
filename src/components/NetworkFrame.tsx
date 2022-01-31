@@ -58,7 +58,9 @@ const defaultProps = {
   filterRenderedNodes: (d: NodeType) => d.id !== "root-generated"
 }
 
-export default React.memo(function NetworkFrame(allProps: NetworkFrameProps) {
+const NetworkFrame = React.memo(function NetworkFrame(
+  allProps: NetworkFrameProps
+) {
   const props: NetworkFrameProps = { ...defaultProps, ...allProps }
   const baseState = {
     dataVersion: undefined,
@@ -442,3 +444,6 @@ function defaultNetworkHTMLRule(
   }
   return null
 }
+
+NetworkFrame.displayName = "NetworkFrame"
+export default NetworkFrame

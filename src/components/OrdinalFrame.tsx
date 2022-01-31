@@ -59,7 +59,9 @@ const defaultProps: Partial<OrdinalFrameProps> = {
   optimizeCustomTooltipPosition: false
 }
 
-export default React.memo(function OrdinalFrame(allProps: OrdinalFrameProps) {
+const OrdinalFrame = React.memo(function OrdinalFrame(
+  allProps: OrdinalFrameProps
+) {
   const props: OrdinalFrameProps = { ...defaultProps, ...allProps }
   const baseState = {
     adjustedPosition: [],
@@ -584,3 +586,6 @@ function defaultORHTMLRule(
   }
   return null
 }
+
+OrdinalFrame.displayName = "OrdinalFrame"
+export default OrdinalFrame
