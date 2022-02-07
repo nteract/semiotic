@@ -70,7 +70,7 @@ export const networkFrameDefaults = (props) => ({
 
 export default function createSparkFrame(Frame, defaults, frameName) {
   return (props: SparkFrameProps) => {
-    const { size, sparkStyle = {} } = props
+    const { size = [], sparkStyle = {} } = props
 
     const [containerHeight, changeContainerHeight] = useState(30)
 

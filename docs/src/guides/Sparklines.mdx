@@ -1,0 +1,69 @@
+import { SparkXYFrame, SparkNetworkFrame, SparkOrdinalFrame } from "semiotic"
+import {
+  negativeChart,
+  generatedData,
+  overrideProps,
+  SparkXYExample1,
+  SparkNetworkExample1,
+  SparkNetworkExample2,
+  SparkXYExample2,
+  SparkOrdinalExample1,
+  SparkOrdinalExample2,
+  SparkOrdinalExample3,
+  SparkOrdinalExample4,
+  SparkOrdinalExample5,
+  SparkOrdinalExample6,
+  SparkNetworkExample3,
+  SparkNetworkExample4,
+  SparkNetworkExample5,
+} from "./Sparklines.js"
+import DocumentFrame from "../DocumentFrame"
+
+# Sparklines
+
+Sparklines are made with the `SparkXYFrame`, `SparkOrdinalFrame` and `SparkNetworkFrame`. They
+create frames using spans instead of divs so they can be embedded in paragraphs based on the
+inherited `line-height` property.
+
+When you insert small graphs into text, **sparklines**, they're typically small line charts
+like&nbsp;<SparkXYExample1 />. But let's say there's an essay discussing how two people have
+different friend networks one as a "broker" and one as a "hub", it could use a network like this for
+the hub friend <SparkNetworkExample1 /> and for the broker friend: <SparkNetworkExample2 />
+
+Line charts may be typical, but that doesn't keep a sparkline from being a <SparkXYExample2 /> or
+maybe even a <SparkOrdinalExample1 />, and how about a <SparkOrdinalExample2/>,
+a&nbsp;<SparkOrdinalExample3 /> or, you know, a <SparkOrdinalExample4 />, or
+a&nbsp;<SparkOrdinalExample5 />, or maybe a <SparkOrdinalExample6 />.
+
+All the network charts are also available like the <SparkNetworkExample3 /> and
+the&nbsp;<SparkNetworkExample4 /> or a <SparkNetworkExample5 />.
+
+### Sparkline Code Example
+
+<DocumentFrame
+  frameProps={{
+    ...negativeChart,
+    size: undefined,
+    lines: generatedData[0],
+  }}
+  type={SparkXYFrame}
+  overrideProps={overrideProps}
+  pre={`import { curveMonotoneX } from "d3-shape"`}
+  showExpanded
+/>
+
+### Sparkline with Defined Size
+
+Sometimes the default size isn't the aspect ratio you need, you can still pass an explicit
+`size={[100, 20]}` prop to override the default size based on `lineHeight`
+
+<DocumentFrame
+  frameProps={{
+    ...negativeChart,
+    lines: generatedData[0],
+  }}
+  type={SparkXYFrame}
+  overrideProps={overrideProps}
+  pre={`import { curveMonotoneX } from "d3-shape"`}
+  startHidden
+/>
