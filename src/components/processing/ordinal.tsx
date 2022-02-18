@@ -360,12 +360,12 @@ export const calculateOrdinalFrame = (
 
     const nestedPositiveData = nest()
       .key((d) => d.column)
-      .rollup((leaves) => sum(leaves.map((d) => d.value)))
+      .rollup((leaves) => sum(leaves, (d) => d.value))
       .entries(positiveData)
 
     const nestedNegativeData = nest()
       .key((d) => d.column)
-      .rollup((leaves) => sum(leaves.map((d) => d.value)))
+      .rollup((leaves) => sum(leaves, (d) => d.value))
       .entries(negativeData)
 
     const positiveAnnotations = annotationsForExtent.filter((d) => d > 0)
@@ -463,7 +463,7 @@ export const calculateOrdinalFrame = (
   if (dynamicColumnWidth) {
     let columnValueCreator
     if (typeof dynamicColumnWidth === "string") {
-      columnValueCreator = (d) => sum(d.map((p) => p.data[dynamicColumnWidth]))
+      columnValueCreator = (d) => sum(d, (p) => p.data[dynamicColumnWidth])
     } else {
       columnValueCreator = (d) => dynamicColumnWidth(d.map((p) => p.data))
     }

@@ -1454,7 +1454,7 @@ export function bucketizedRenderingFn({
         }
       }
 
-      multiBins = multiBins.filter((d) => sum(d.map((p) => p.value)) > 0)
+      multiBins = multiBins.filter((d) => sum(d, (p) => p.value) > 0)
 
       horizonBins.forEach((summaryPoint, i) => {
         if (i !== 0 && i !== horizonBins.length - 1) {
