@@ -206,10 +206,10 @@ export const stackedArea = ({
     }, [])
 
   let stackSort = (a, b) =>
-    sum(b.data.map(p => p[yProp])) - sum(a.data.map(p => p[yProp]))
+    sum(b.data, (p) => p[yProp]) - sum(a.data, (p) => p[yProp])
   if (type === "stackedpercent-invert" || type === "stackedarea-invert") {
     stackSort = (a, b) =>
-      sum(a.data.map(p => p[yProp])) - sum(b.data.map(p => p[yProp]))
+      sum(a.data, (p) => p[yProp]) - sum(b.data, (p) => p[yProp])
   }
   sort = sort === undefined ? stackSort : sort
 
@@ -224,11 +224,11 @@ export const stackedArea = ({
       .map(d => d.data.filter(p => datesForUnique(p[xProp]) === xValue))
       .reduce((a, b) => a.concat(b), [])
 
-    const positiveStepTotal = sum(
-      stepValues.map(d => (d[yProp] > 0 ? d[yProp] : 0))
+    const positiveStepTotal = sum(stepValues, (d) =>
+      d[yProp] > 0 ? d[yProp] : 0
     )
-    const negativeStepTotal = sum(
-      stepValues.map(d => (d[yProp] < 0 ? d[yProp] : 0))
+    const negativeStepTotal = sum(stepValues, (d) =>
+      d[yProp] < 0 ? d[yProp] : 0
     )
 
     stepValues.forEach(l => {

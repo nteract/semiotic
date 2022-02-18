@@ -430,7 +430,7 @@ export function barLayout({
     const ordset = data[key]
     const barColumnWidth = Math.max(ordset.width, 1)
 
-    const calculatedPieces = ordset.pieceData.map((piece, i) => {
+    ordset.pieceData.forEach((piece, i) => {
       const pieceSize = piece.scaledValue
       const renderValue = renderMode && renderMode(piece.data, i)
 
@@ -553,15 +553,13 @@ export function barLayout({
         }
       )
 
-      const calculatedPiece = {
+      allCalculatedPieces.push({
         o: key,
         xy,
         piece,
         renderElement: renderElementObject
-      }
-      return calculatedPiece
+      })
     })
-    allCalculatedPieces = [...allCalculatedPieces, ...calculatedPieces]
   })
 
   return allCalculatedPieces
