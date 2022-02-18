@@ -152,7 +152,7 @@ export interface NetworkFrameProps extends GeneralFrameProps {
   customNodeIcon?: Function
   customEdgeIcon?: Function
   renderOrder?: ReadonlyArray<"edges" | "nodes">
-  filterRenderedNodes: (
+  filterRenderedNodes?: (
     value?: NodeType,
     index?: number,
     array?: NodeType[]
