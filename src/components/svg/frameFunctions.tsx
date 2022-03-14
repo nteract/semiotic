@@ -24,7 +24,7 @@ import {
 
 import { scaleLinear, ScaleLinear } from "d3-scale"
 
-const extent = inputArray =>
+const extent = (inputArray) =>
   inputArray.reduce(
     (p, c) => {
       return [Math.min(c, p[0]), Math.max(c, p[1])]
@@ -59,7 +59,7 @@ type AdjustedPositionSizeTypes = {
 
 type ORFrameConnectionRendererTypes = {
   type: { type: Function }
-  data: object
+  data: any
   renderMode: Function
   eventListenersGenerator: Function
   styleFn: Function
@@ -101,7 +101,7 @@ type ORFrameAxisGeneratorTypes = {
   thresholds?: number[]
 }
 
-const findActualTitle = rawTitle => {
+const findActualTitle = (rawTitle) => {
   let title = null
   let orient = "top"
   if (typeof rawTitle === "string") {
@@ -153,14 +153,11 @@ export const drawMarginPath = ({
   inset: number
 }) => {
   const iSize = [size[0] - inset, size[1] - inset]
-  return `M0,0 h${size[0]} v${size[1]} h-${size[0]}Z M${margin.left -
-    inset},${margin.top - inset} v${size[1] +
-    inset * 2 -
-    margin.top -
-    margin.bottom} h${iSize[0] +
-    inset * 3 -
-    margin.left -
-    margin.right} v-${iSize[1] + inset * 3 - margin.top - margin.bottom}Z`
+  return `M0,0 h${size[0]} v${size[1]} h-${size[0]}Z M${margin.left - inset},${
+    margin.top - inset
+  } v${size[1] + inset * 2 - margin.top - margin.bottom} h${
+    iSize[0] + inset * 3 - margin.left - margin.right
+  } v-${iSize[1] + inset * 3 - margin.top - margin.bottom}Z`
 }
 
 export const calculateMargin = ({
@@ -186,7 +183,7 @@ export const calculateMargin = ({
   let orient = "left"
 
   if (axes && projection !== "radial") {
-    axes.forEach(axisObj => {
+    axes.forEach((axisObj) => {
       const axisObjAdditionMargin = axisObj.label ? 60 : 50
       orient = axisObj.orient
       finalMargin[orient] = axisObjAdditionMargin
@@ -274,12 +271,12 @@ export function keyAndObjectifyBarData({
   let multiExtents
   if (multiAxis && baseRAccessor.length > 1) {
     let minNegative = Infinity
-    multiExtents = baseRAccessor.map(accessor => {
+    multiExtents = baseRAccessor.map((accessor) => {
       const basicExtent = extent(data.map(accessor))
       minNegative = Math.min(basicExtent[0] / basicExtent[1], minNegative)
       return basicExtent
     })
-    const rScales = multiExtents.map(ext => {
+    const rScales = multiExtents.map((ext) => {
       let range = [0, 1]
       let adjustedExtent = ext
 
@@ -292,11 +289,9 @@ export function keyAndObjectifyBarData({
       } else {
         adjustedExtent[0] = 0
       }
-      return scaleLinear()
-        .domain(ext)
-        .range(range)
+      return scaleLinear().domain(ext).range(range)
     })
-    rAccessor = rScales.map((scale, i) => d => {
+    rAccessor = rScales.map((scale, i) => (d) => {
       return scale(baseRAccessor[i](d))
     })
   } else {
@@ -305,7 +300,7 @@ export function keyAndObjectifyBarData({
   const decoratedData = []
   oAccessor.forEach((actualOAccessor, oIndex) => {
     rAccessor.forEach((actualRAccessor, rIndex) => {
-      ;(data || []).forEach(d => {
+      ;(data || []).forEach((d) => {
         const baseAppliedKey = renderKey(d, decoratedData.length)
         const appliedKey =
           (baseAppliedKey !== undefined &&
@@ -446,13 +441,15 @@ export function orFrameConnectionRenderer({
   const renderedConnectorMarks = []
   const radarHash = new Map()
 
+  const { keyedData, oExtent } = data
+
   if (typeof type.type === "function") {
     const connectionRule = type.type
-    const keys = Object.keys(data)
+    const keys = oExtent
 
-    keys.forEach((key, pieceArrayI) => {
-      const pieceArray = data[key]
-      const nextColumn = data[keys[pieceArrayI + 1]]
+    oExtent.forEach((key, pieceArrayI) => {
+      const pieceArray = keyedData[key]
+      const nextColumn = keyedData[keys[pieceArrayI + 1]]
       if (nextColumn) {
         const matchArray = nextColumn.map((d, i) =>
           connectionRule({ ...d.piece, ...d.piece.data }, i)
@@ -586,7 +583,7 @@ export function orFrameConnectionRenderer({
     if (radarHash.size > 0) {
       for (const ring of radarHash.values()) {
         const ringPiece = { ...ring[0].piece, ...ring[0].piece.data }
-        const markD = `M${ring.map(d => `${d.xy.x},${d.xy.y}`).join("L")}Z`
+        const markD = `M${ring.map((d) => `${d.xy.x},${d.xy.y}`).join("L")}Z`
         if (canvasRender && canvasRender(ringPiece)) {
           const canvasRadar = {
             baseClass: "ordinal-radar",
@@ -740,7 +737,7 @@ export const orFrameAxisGenerator = ({
         //otherwise assume a function
         tickValues = d.tickValues(data, size, rScale)
       } else if (!d.tickValues && thresholds) {
-        tickValues = thresholds.map(d => rScale.invert(d))
+        tickValues = thresholds.map((d) => rScale.invert(d))
       }
       const axisParts = axisPieces({
         padding: d.padding,
@@ -788,7 +785,7 @@ export const orFrameAxisGenerator = ({
           className={axisClassname}
           marginalSummaryType={marginalSummaryType}
           margin={margin}
-          xyPoints={xyData.map(d => ({
+          xyPoints={xyData.map((d) => ({
             x: projection === "vertical" ? 0 : d.value,
             y: projection === "vertical" ? d.value : 0,
             data: d.data
@@ -800,13 +797,13 @@ export const orFrameAxisGenerator = ({
     const { innerRadius = 0 } = pieceType
 
     const ticks = []
-    axis.forEach(axisObj => {
+    axis.forEach((axisObj) => {
       const {
         tickValues: baseTickValues = rScale.ticks(
           Math.max(2, (adjustedSize[0] / 2 - innerRadius) / 50)
         ),
         label,
-        tickFormat = d => d
+        tickFormat = (d) => d
       } = axisObj
 
       const tickScale = rScaleType

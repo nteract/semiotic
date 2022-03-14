@@ -1190,7 +1190,7 @@ export const calculateOrdinalFrame = (
     connectors: {
       accessibleTransform: (data, i) => data[i],
       projection,
-      data: keyedData,
+      data: { keyedData, oExtent },
       styleFn: stringToFn<GenericObject>(connectorStyle, () => ({}), true),
       classFn: stringToFn<string>(connectorClass, () => "", true),
       renderMode: stringToFn<GenericObject | string>(
