@@ -187,7 +187,7 @@ export type VizLayerTypes =
 
 export type RenderPipelineType = {
   [key in VizLayerTypes]?: {
-    data?: object[]
+    data?: any
     ariaLabel?: { chart?: string; items?: string }
     behavior?: Function
     styleFn?: Function
