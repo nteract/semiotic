@@ -204,7 +204,7 @@ export default function VisualizationLayer(props: Props) {
     matteClip,
     axes,
     frameKey = "",
-    margin,
+    margin = { left: 0, right: 0, bottom: 0, top: 0 },
     title,
     ariaTitle,
     axesTickLines,
@@ -399,6 +399,8 @@ function renderCanvas(
     strokeWidth: 1
   }
 
+  const { position = [0, 0] } = np
+
   return (piece) => {
     const combinedDatum = { ...piece.d, ...piece.d.data }
     const style = piece.styleFn
@@ -408,7 +410,7 @@ function renderCanvas(
     const fill = style.fill ? style.fill : "black"
     const stroke = style.stroke ? style.stroke : "black"
     context.setTransform(1, 0, 0, 1, margin.left, margin.top)
-    context.translate(np.position[0], np.position[1])
+    context.translate(position[0], position[1])
     context.translate(piece.tx, piece.ty)
     context.fillStyle = fill
     context.strokeStyle = stroke
