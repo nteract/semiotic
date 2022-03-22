@@ -227,7 +227,7 @@ export default function VisualizationLayer(props: Props) {
   const { renderedElements } = vizState
 
   useEffect(() => {
-    const canvasContext = props.canvasContext.current
+    const canvasContext = props.canvasContext?.current
     let updateCtrl = new AbortController()
 
     if (props.disableContext || !canvasContext) return
