@@ -212,8 +212,6 @@ export default function VisualizationLayer(props: Props) {
     additionalVizElements
   } = props
 
-  const [updateCtrl, setupdateCtrl] = useState(() => new AbortController())
-
   const [focusedPieceIndex, changeFocusedPieceIndex] = useState(null)
   const [focusedVisualizationGroup, changeFocusedVisualizationGroup] =
     useState(null)
@@ -229,6 +227,7 @@ export default function VisualizationLayer(props: Props) {
 
   useEffect(() => {
     const canvasContext = props.canvasContext.current
+    let updateCtrl = new AbortController()
 
     if (props.disableContext || !canvasContext) return
 
@@ -275,9 +274,7 @@ export default function VisualizationLayer(props: Props) {
     if (disableProgressiveRendering) {
       vizState.canvasDrawing.forEach((piece) => renderCanvasPiece(piece))
     } else {
-      //     updateCtrl.abort()
-      //      const newUpdateCtrol = new AbortController()
-      //      setupdateCtrl(newUpdateCtrol)
+      updateCtrl = new AbortController()
 
       batchCollectionWork(renderCanvasPiece, vizState.canvasDrawing, {
         signal: updateCtrl.signal
