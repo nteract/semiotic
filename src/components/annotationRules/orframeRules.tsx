@@ -238,12 +238,8 @@ export const getColumnScreenCoordinates = ({
 
   let xPosition = column.middle + adjustedPosition[0]
   let yPosition =
-    projection === "horizontal"
-      ? adjustedSize[0] - positionValue
-      : (summaryType.type && summaryType.type !== "none") ||
-        ["swarm", "point", "clusterbar", , "timeline"].find(
-          (p) => p === type.type
-        )
+    (summaryType.type && summaryType.type !== "none") ||
+    ["swarm", "point", "clusterbar", "timeline"].find((p) => p === type.type)
       ? adjustedSize[1] - positionValue
       : positionValue
   yPosition += 10

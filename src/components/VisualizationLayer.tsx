@@ -1,5 +1,5 @@
 import * as React from "react"
-import { RefObject } from "react"
+import { RefObject, useEffect, useState } from "react"
 
 import {
   MarginType,
@@ -132,7 +132,7 @@ const updateVisualizationLayer = (props: Props, handleKeyDown: Function) => {
                 `${renderedPipe.length} ${pipe.ariaLabel.items}s in a ${pipe.ariaLabel.chart}`) ||
               k
             }
-            onKeyDown={(e) => handleKeyDown(e, k)}
+            onKeyDown={(e) => handleKeyDown({ e, k, props, piecesGroup })}
             onBlur={() => {
               props.voronoiHover(undefined)
             }}
@@ -155,45 +155,82 @@ const updateVisualizationLayer = (props: Props, handleKeyDown: Function) => {
   }
 }
 
-export default class VisualizationLayer extends React.PureComponent<
-  Props,
-  State
-> {
-  static defaultProps = {
-    position: [0, 0],
-    margin: { left: 0, top: 0, right: 0, bottom: 0 }
-  }
+const handleKeyDown =
+  ({
+    focusedPieceIndex,
+    changeFocusedPieceIndex,
+    changeFocusedVisualizationGroup
+  }) =>
+  ({ e: { keyCode }, vizgroup, props, piecesGroup }) => {
+    // If enter, focus on the first element
 
-  constructor(props: Props) {
-    super(props)
-    this.state = {
-      canvasDrawing: [],
-      dataVersion: "",
-      renderedElements: [],
-      focusedPieceIndex: null,
-      focusedVisualizationGroup: null,
-      piecesGroup: {},
-      props,
-      handleKeyDown: this.handleKeyDown,
-      ...updateVisualizationLayer(props, this.handleKeyDown)
+    const { renderPipeline, voronoiHover } = props
+    const pushed = keyCode
+    if (pushed !== 37 && pushed !== 39 && pushed !== 13) return
+
+    let newPieceIndex = 0
+    const vizGroupSetting: { focusedVisualizationGroup?: string } = {}
+
+    // If a user pressed enter, highlight the first one
+    // Let a user move up and down in stacked bar by getting keys of bars?
+    if (focusedPieceIndex === null || pushed === 13) {
+      vizGroupSetting.focusedVisualizationGroup = vizgroup
+    } else if (pushed === 37) {
+      newPieceIndex = focusedPieceIndex - 1
+    } else if (pushed === 39) {
+      newPieceIndex = focusedPieceIndex + 1
     }
+
+    newPieceIndex =
+      newPieceIndex < 0
+        ? piecesGroup[vizgroup].length + newPieceIndex
+        : newPieceIndex % piecesGroup[vizgroup].length
+
+    const piece = renderPipeline[vizgroup].accessibleTransform(
+      renderPipeline[vizgroup].data,
+      newPieceIndex,
+      piecesGroup[vizgroup][newPieceIndex]
+    )
+
+    voronoiHover(piece)
+
+    changeFocusedPieceIndex(newPieceIndex)
+    changeFocusedVisualizationGroup(vizGroupSetting.focusedVisualizationGroup)
   }
 
-  updateCtrl = new AbortController()
+export default function VisualizationLayer(props: Props) {
+  const {
+    matte,
+    matteClip,
+    axes,
+    frameKey = "",
+    margin,
+    title,
+    ariaTitle,
+    axesTickLines,
+    frameRenderOrder,
+    additionalVizElements
+  } = props
 
-  componentDidUpdate(lp: object) {
-    const np = this.props
-    const propKeys = Object.keys(np)
+  const [updateCtrl, setupdateCtrl] = useState(() => new AbortController())
 
-    let update = false
-    propKeys.forEach((key) => {
-      if (key !== "title" && lp[key] !== np[key]) {
-        update = true
-      }
-    })
+  const [focusedPieceIndex, changeFocusedPieceIndex] = useState(null)
+  const [focusedVisualizationGroup, changeFocusedVisualizationGroup] =
+    useState(null)
+  const decoratedKeydown = handleKeyDown({
+    focusedPieceIndex,
+    changeFocusedPieceIndex,
+    changeFocusedVisualizationGroup
+  })
 
-    const canvasContext = np.canvasContext.current
-    if (update === false || np.disableContext || !canvasContext) return
+  const vizState = updateVisualizationLayer(props, decoratedKeydown)
+
+  const { renderedElements } = vizState
+
+  useEffect(() => {
+    const canvasContext = props.canvasContext.current
+
+    if (props.disableContext || !canvasContext) return
 
     const {
       sketchyRenderingEngine,
@@ -201,7 +238,7 @@ export default class VisualizationLayer extends React.PureComponent<
       height,
       margin,
       disableProgressiveRendering = false
-    } = np
+    } = props
 
     const size = [
       width + margin.left + margin.right,
@@ -228,7 +265,7 @@ export default class VisualizationLayer extends React.PureComponent<
       canvasContext,
       context,
       margin,
-      np,
+      props,
       sketchyRenderingEngine,
       rc
     )
@@ -236,32 +273,31 @@ export default class VisualizationLayer extends React.PureComponent<
     context.clearRect(-margin.left, -margin.top, size[0], size[1])
 
     if (disableProgressiveRendering) {
-      this.state.canvasDrawing.forEach((piece) => renderCanvasPiece(piece))
+      vizState.canvasDrawing.forEach((piece) => renderCanvasPiece(piece))
     } else {
-      this.updateCtrl.abort()
-      this.updateCtrl = new AbortController()
+      //     updateCtrl.abort()
+      //      const newUpdateCtrol = new AbortController()
+      //      setupdateCtrl(newUpdateCtrol)
 
-      batchCollectionWork(renderCanvasPiece, this.state.canvasDrawing, {
-        signal: this.updateCtrl.signal
+      batchCollectionWork(renderCanvasPiece, vizState.canvasDrawing, {
+        signal: updateCtrl.signal
       })
     }
 
     context.setTransform(1, 0, 0, 1, 0, 0)
     context.globalAlpha = 1
 
-    if (np.canvasPostProcess) {
-      np.canvasPostProcess(np.canvasContext, context, size)
+    if (props.canvasPostProcess) {
+      props.canvasPostProcess(props.canvasContext, context, size)
     }
 
     if (
-      this.state.focusedVisualizationGroup !== null &&
-      this.state.piecesGroup[this.state.focusedVisualizationGroup] &&
-      this.state.focusedPieceIndex !== null
+      focusedVisualizationGroup !== null &&
+      vizState.piecesGroup[focusedVisualizationGroup] &&
+      focusedPieceIndex !== null
     ) {
       const focusElParent =
-        this.state.piecesGroup[this.state.focusedVisualizationGroup][
-          this.state.focusedPieceIndex
-        ]
+        vizState.piecesGroup[focusedVisualizationGroup][focusedPieceIndex]
 
       const focusEl =
         (focusElParent &&
@@ -272,152 +308,81 @@ export default class VisualizationLayer extends React.PureComponent<
 
       focusEl && focusEl.focus && focusEl.focus()
     }
-  }
 
-  componentWillUnmount() {
-    this.updateCtrl.abort()
-  }
-
-  static getDerivedStateFromProps(nextProps: Props, prevState: State) {
-    const { props } = prevState
-    const lp = props
-    const propKeys = Object.keys(nextProps)
-
-    let update = false
-    propKeys.forEach((key) => {
-      if (key !== "title" && lp[key] !== nextProps[key]) {
-        update = true
-      }
-    })
-
-    if (
-      update ||
-      (nextProps.dataVersion && nextProps.dataVersion !== prevState.dataVersion)
-    ) {
-      return {
-        ...updateVisualizationLayer(nextProps, prevState.handleKeyDown),
-        props: nextProps
-      }
+    return function cleanup() {
+      updateCtrl.abort()
     }
-    return null
+  }, [
+    matte,
+    matteClip,
+    axes,
+    frameKey,
+    margin,
+    ariaTitle,
+    axesTickLines,
+    frameRenderOrder,
+    additionalVizElements
+  ])
+
+  const renderHash = {
+    ["axes-tick-lines"]: axesTickLines && (
+      <g
+        key="visualization-tick-lines"
+        className={"axis axis-tick-lines"}
+        aria-hidden={true}
+      >
+        {axesTickLines}
+      </g>
+    ),
+    ["axes-labels"]: axes && (
+      <g key="visualization-axis-labels" className="axis axis-labels">
+        {axes}
+      </g>
+    ),
+    matte: matte,
+    ["viz-layer"]:
+      renderedElements && renderedElements.length > 0 ? renderedElements : null,
+    ...additionalVizElements
   }
 
-  handleKeyDown = (e: { keyCode }, vizgroup: string) => {
-    // If enter, focus on the first element
+  let ariaLabel = ""
 
-    const { renderPipeline, voronoiHover } = this.props
-    const pushed = e.keyCode
-    if (pushed !== 37 && pushed !== 39 && pushed !== 13) return
+  const finalTitle =
+    (title && ariaTitle) || title
+      ? typeof title !== "string" &&
+        title.props &&
+        typeof title.props.children === "string"
+        ? `titled ${title.props.children}`
+        : "with a complex title"
+      : "with no title"
+  ariaLabel = `Visualization ${finalTitle}. Use arrow keys to navigate elements.`
 
-    let newPieceIndex = 0
-    const vizGroupSetting: { focusedVisualizationGroup?: string } = {}
+  const orderedElements = []
 
-    // If a user pressed enter, highlight the first one
-    // Let a user move up and down in stacked bar by getting keys of bars?
-    if (this.state.focusedPieceIndex === null || pushed === 13) {
-      vizGroupSetting.focusedVisualizationGroup = vizgroup
-    } else if (pushed === 37) {
-      newPieceIndex = this.state.focusedPieceIndex - 1
-    } else if (pushed === 39) {
-      newPieceIndex = this.state.focusedPieceIndex + 1
+  frameRenderOrder.forEach((r) => {
+    if (renderHash[r]) {
+      orderedElements.push(renderHash[r])
     }
+  })
 
-    newPieceIndex =
-      newPieceIndex < 0
-        ? this.state.piecesGroup[vizgroup].length + newPieceIndex
-        : newPieceIndex % this.state.piecesGroup[vizgroup].length
+  const renderedDataVisualization =
+    (orderedElements.length > 0 && (
+      <g
+        className="data-visualization"
+        key="visualization-clip-path"
+        aria-label={ariaLabel}
+        role="group"
+        clipPath={
+          matteClip && matte ? `url(#matte-clip${frameKey})` : undefined
+        }
+        transform={`translate(${margin.left},${margin.top})`}
+      >
+        {orderedElements}
+      </g>
+    )) ||
+    null
 
-    const piece = renderPipeline[vizgroup].accessibleTransform(
-      renderPipeline[vizgroup].data,
-      newPieceIndex,
-      this.state.piecesGroup[vizgroup][newPieceIndex]
-    )
-
-    voronoiHover(piece)
-
-    this.setState({
-      focusedPieceIndex: newPieceIndex,
-      ...vizGroupSetting
-    })
-  }
-
-  render() {
-    const {
-      matte,
-      matteClip,
-      axes,
-      frameKey = "",
-      margin,
-      title,
-      ariaTitle,
-      axesTickLines,
-      frameRenderOrder,
-      additionalVizElements
-    } = this.props
-    const { renderedElements } = this.state
-
-    const renderHash = {
-      ["axes-tick-lines"]: axesTickLines && (
-        <g
-          key="visualization-tick-lines"
-          className={"axis axis-tick-lines"}
-          aria-hidden={true}
-        >
-          {axesTickLines}
-        </g>
-      ),
-      ["axes-labels"]: axes && (
-        <g key="visualization-axis-labels" className="axis axis-labels">
-          {axes}
-        </g>
-      ),
-      matte: matte,
-      ["viz-layer"]:
-        renderedElements && renderedElements.length > 0
-          ? renderedElements
-          : null,
-      ...additionalVizElements
-    }
-
-    let ariaLabel = ""
-
-    const finalTitle =
-      (title && ariaTitle) || title
-        ? typeof title !== "string" &&
-          title.props &&
-          typeof title.props.children === "string"
-          ? `titled ${title.props.children}`
-          : "with a complex title"
-        : "with no title"
-    ariaLabel = `Visualization ${finalTitle}. Use arrow keys to navigate elements.`
-
-    const orderedElements = []
-
-    frameRenderOrder.forEach((r) => {
-      if (renderHash[r]) {
-        orderedElements.push(renderHash[r])
-      }
-    })
-
-    const renderedDataVisualization =
-      (orderedElements.length > 0 && (
-        <g
-          className="data-visualization"
-          key="visualization-clip-path"
-          aria-label={ariaLabel}
-          role="group"
-          clipPath={
-            matteClip && matte ? `url(#matte-clip${frameKey})` : undefined
-          }
-          transform={`translate(${margin.left},${margin.top})`}
-        >
-          {orderedElements}
-        </g>
-      )) ||
-      null
-
-    return renderedDataVisualization
-  }
+  return renderedDataVisualization
 }
 
 function renderCanvas(
