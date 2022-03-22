@@ -173,6 +173,7 @@ const handleKeyDown =
 
     // If a user pressed enter, highlight the first one
     // Let a user move up and down in stacked bar by getting keys of bars?
+
     if (focusedPieceIndex === null || pushed === 13) {
       vizGroupSetting.focusedVisualizationGroup = vizgroup
     } else if (pushed === 37) {
