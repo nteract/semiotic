@@ -4,7 +4,8 @@ import { select } from "d3-selection"
 
 const flatten = (list) =>
   list.reduce(
-    (a, b) => a.concat(Array.isArray(b) ? flatten(b.sort((a, b) => a - b)) : b),
+    (a, b) =>
+      a.concat(Array.isArray(b) ? flatten([...b].sort((a, b) => a - b)) : b),
     []
   )
 
@@ -12,7 +13,7 @@ function flatShortArray(baseArray = []) {
   let array = [...baseArray]
   if (!Array.isArray(array)) return "not-array"
   if (!Array.isArray(array[0])) {
-    array = array.sort((a, b) => a - b)
+    array = [...array].sort((a, b) => a - b)
   }
   const flat = flatten(array)
 

@@ -123,7 +123,7 @@
   },
   "dependencies": {
     "d3-array": "^1.2.0",
-    "d3-brush": "^2.1.0",
+    "d3-brush": "^3.0.0",
     "d3-chord": "^1.0.4",
     "d3-collection": "^1.0.1",
     "d3-contour": "^1.1.1",
