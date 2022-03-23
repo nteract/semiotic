@@ -57,6 +57,9 @@ function safeStringify(value) {
         return "..."
       }
       seen.add(v)
+      if (k === "note") {
+        return v.label
+      }
     }
     return v
   })
