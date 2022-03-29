@@ -53,13 +53,14 @@ function safeStringify(value) {
       return "..."
     }
     if (typeof v === "object") {
-      if (Array.isArray(v)) {
-        return "..."
-      }
       seen.add(v)
       if (k === "note") {
         return v.label
       }
+      if (v.label || v.type || v.key || v.hierarchicalID || v.id || v.name) {
+        return `${v.label}-${v.type}-${v.key}-${v.hierarchicalID}-${v.id}-${v.name}`
+      }
+      return "..."
     }
     return v
   })
