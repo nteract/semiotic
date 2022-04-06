@@ -57,8 +57,19 @@ function safeStringify(value) {
       if (k === "note") {
         return v.label
       }
-      if (v.label || v.type || v.key || v.hierarchicalID || v.id || v.name) {
-        return `${v.label}-${v.type}-${v.key}-${v.hierarchicalID}-${v.id}-${v.name}`
+      if (
+        v.voronoiX ||
+        v.voronoiY ||
+        v.x ||
+        v.y ||
+        v.label ||
+        v.type ||
+        v.key ||
+        v.hierarchicalID ||
+        v.id ||
+        v.name
+      ) {
+        return `${v.voronoiX}-${v.voronoiY}-${v.x}-${v.y}-${v.label}-${v.type}-${v.key}-${v.hierarchicalID}-${v.id}-${v.name}`
       }
       return "..."
     }
