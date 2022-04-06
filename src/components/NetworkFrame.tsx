@@ -113,7 +113,7 @@ const NetworkFrame = React.memo(function NetworkFrame(
   useLegacyUnmountCallback(props, state)
 
   const {
-    annotations,
+    annotations = [],
     annotationSettings,
     className,
     customClickBehavior,

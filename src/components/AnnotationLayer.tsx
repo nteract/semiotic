@@ -48,6 +48,7 @@ interface AnnotationLayerState {
 
 function safeStringify(value) {
   const seen = new Set()
+
   return JSON.stringify(value, (k, v) => {
     if (seen.has(v)) {
       return "..."
@@ -56,6 +57,9 @@ function safeStringify(value) {
       seen.add(v)
       if (k === "note") {
         return v.label
+      }
+      if (v.column) {
+        return JSON.stringify(v.column)
       }
       if (
         v.voronoiX ||
@@ -71,6 +75,7 @@ function safeStringify(value) {
       ) {
         return `${v.voronoiX}-${v.voronoiY}-${v.x}-${v.y}-${v.label}-${v.type}-${v.key}-${v.hierarchicalID}-${v.id}-${v.name}`
       }
+
       return "..."
     }
     return v
