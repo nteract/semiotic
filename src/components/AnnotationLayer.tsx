@@ -58,9 +58,10 @@ function safeStringify(value) {
       if (k === "note") {
         return v.label
       }
-      if (v.column) {
-        return JSON.stringify(v.column)
+      if (typeof v.column === "object") {
+        return `${v.column.x}-${v.column.y}-${v.column.name}`
       }
+
       if (
         v.voronoiX ||
         v.voronoiY ||
