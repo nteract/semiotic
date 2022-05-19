@@ -39,7 +39,7 @@ export type InteractionLayerProps = {
   projectedYMiddle?: string
   projectedX: string
   projectedY: string
-  points?: Array<object>
+  points?: Array<{ data: any }>
   position?: number[]
   enabled?: boolean
   useSpans?: boolean

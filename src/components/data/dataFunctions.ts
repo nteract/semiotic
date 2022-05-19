@@ -216,7 +216,8 @@ export const calculateDataExtent = ({
   if (points) {
     xAccessor.forEach((actualXAccessor, xIndex) => {
       yAccessor.forEach((actualYAccessor, yIndex) => {
-        points.forEach((d, i) => {
+        let i = 0
+        for (const d of points) {
           const x = actualXAccessor(d, i)
           const y = actualYAccessor(d, i)
           const projectedPoint = { x, y, data: d, xIndex, yIndex }
@@ -237,7 +238,8 @@ export const calculateDataExtent = ({
               2
           }
           projectedPoints.push(projectedPoint)
-        })
+          i++
+        }
       })
     })
 

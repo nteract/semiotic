@@ -439,7 +439,7 @@ export function orFrameConnectionRenderer({
     return null
   }
   const renderedConnectorMarks = []
-  const radarHash = new Map()
+  const radarMap = new Map()
 
   const { keyedData, oExtent } = data
 
@@ -477,14 +477,14 @@ export function orFrameConnectionRenderer({
             const matchingPiece = nextColumn[matchingPieceIndex]
             let markD
             if (projection === "radial" && pieceType.type === "point") {
-              if (!radarHash.get(piece)) {
-                radarHash.set(piece, [piece])
+              if (!radarMap.get(piece)) {
+                radarMap.set(piece, [piece])
               }
-              const thisRadar = radarHash.get(piece)
+              const thisRadar = radarMap.get(piece)
               if (thisRadar) {
                 thisRadar.push(matchingPiece)
-                radarHash.set(matchingPiece, thisRadar)
-                radarHash.delete(piece)
+                radarMap.set(matchingPiece, thisRadar)
+                radarMap.delete(piece)
               }
             } else {
               const { xy } = piece
@@ -580,8 +580,8 @@ export function orFrameConnectionRenderer({
       }
     })
 
-    if (radarHash.size > 0) {
-      for (const ring of radarHash.values()) {
+    if (radarMap.size > 0) {
+      for (const ring of radarMap.values()) {
         const ringPiece = { ...ring[0].piece, ...ring[0].piece.data }
         const markD = `M${ring.map((d) => `${d.xy.x},${d.xy.y}`).join("L")}Z`
         if (canvasRender && canvasRender(ringPiece)) {

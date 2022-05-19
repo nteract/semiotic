@@ -43,9 +43,9 @@ const createLineSegments = (props) => {
   })
 
   //Compatibility before Semiotic 2
-  lineData.forEach((projectedD) => {
+  for (const projectedD of lineData) {
     projectedD.data = projectedD.data.map((d) => ({ ...d.data, ...d }))
-  })
+  }
 
   const lines = dividedLine(parameters, lineData[0].data, searchIterations)
 

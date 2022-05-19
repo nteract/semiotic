@@ -217,7 +217,7 @@ const processAnnotations = (
     const topNodes = []
     const bottomNodes = []
 
-    adjustableAnnotations.forEach((aNote: NoteType) => {
+    for (const aNote of adjustableAnnotations) {
       const noteData = aNote.props.noteData
 
       const noteX = noteData.x[0] || noteData.x
@@ -239,7 +239,7 @@ const processAnnotations = (
       } else {
         bottomNodes.push(aNote)
       }
-    })
+    }
 
     //Adjust the margins based on which regions are active
 
