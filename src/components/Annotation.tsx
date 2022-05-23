@@ -12,11 +12,11 @@ export default function SemioticAnnotation(props: AnnotationProps) {
 
   const noteData = { ...baseNoteData }
 
-  interactivityFns.forEach((d) => {
-    if (baseNoteData[d]) {
-      delete noteData[d]
-      const originalFn = baseNoteData[d]
-      noteData[d] = (updatedSettingsFromRA) => {
+  for (const fn of interactivityFns) {
+    if (baseNoteData[fn]) {
+      delete noteData[fn]
+      const originalFn = baseNoteData[fn]
+      noteData[fn] = (updatedSettingsFromRA) => {
         originalFn({
           originalSettings: baseNoteData,
           updatedSettings: updatedSettingsFromRA,
@@ -24,7 +24,7 @@ export default function SemioticAnnotation(props: AnnotationProps) {
         })
       }
     }
-  })
+  }
 
   const AnnotationType =
     typeof noteData.type === "function" ? noteData.type : AnnotationLabel

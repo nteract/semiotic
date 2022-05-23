@@ -273,7 +273,9 @@ export default function VisualizationLayer(props: Props) {
     context.clearRect(-margin.left, -margin.top, size[0], size[1])
 
     if (disableProgressiveRendering) {
-      vizState.canvasDrawing.forEach((piece) => renderCanvasPiece(piece))
+      for (const piece of vizState.canvasDrawing) {
+        renderCanvasPiece(piece)
+      }
     } else {
       updateCtrl = new AbortController()
 

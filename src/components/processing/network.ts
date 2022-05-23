@@ -191,37 +191,37 @@ const sankeyOrientHash = {
 }
 
 function breadthFirstCompontents(baseNodes, hash) {
-  const componentHash = {
+  const componentMap = {
     "0": { componentNodes: [], componentEdges: [] }
   }
-  const components = [componentHash["0"]]
+  const components = [componentMap["0"]]
 
   let componentID = 0
 
   traverseNodesBF(baseNodes, true)
 
   function traverseNodesBF(nodes, top) {
-    nodes.forEach((node) => {
+    for (const node of nodes) {
       const hashNode = hash.get(node)
       if (!hashNode) {
-        componentHash["0"].componentNodes.push(node)
+        componentMap["0"].componentNodes.push(node)
       } else if (hashNode.component === -99) {
         if (top === true) {
           componentID++
-          componentHash[componentID] = {
+          componentMap[componentID] = {
             componentNodes: [],
             componentEdges: []
           }
-          components.push(componentHash[componentID])
+          components.push(componentMap[componentID])
         }
 
         hashNode.component = componentID
-        componentHash[componentID].componentNodes.push(node)
-        componentHash[componentID].componentEdges.push(...hashNode.edges)
+        componentMap[componentID].componentNodes.push(node)
+        componentMap[componentID].componentEdges.push(...hashNode.edges)
         const traversibleNodes = [...hashNode.connectedNodes]
         traverseNodesBF(traversibleNodes, hash)
       }
-    })
+    }
   }
 
   return components.sort(
@@ -231,11 +231,11 @@ function breadthFirstCompontents(baseNodes, hash) {
 
 const matrixify = ({ edgeHash, nodes, edgeWidthAccessor, nodeIDAccessor }) => {
   const matrix = []
-  nodes.forEach((nodeSource) => {
+  for (const nodeSource of nodes) {
     const nodeSourceID = nodeIDAccessor(nodeSource)
     const sourceRow = []
     matrix.push(sourceRow)
-    nodes.forEach((nodeTarget) => {
+    for (const nodeTarget of nodes) {
       const nodeTargetID = nodeIDAccessor(nodeTarget)
       const theEdge = edgeHash.get(`${nodeSourceID}|${nodeTargetID}`)
       if (theEdge) {
@@ -243,8 +243,8 @@ const matrixify = ({ edgeHash, nodes, edgeWidthAccessor, nodeIDAccessor }) => {
       } else {
         sourceRow.push(0)
       }
-    })
-  })
+    }
+  }
   return matrix
 }
 
@@ -313,11 +313,14 @@ export const nodesEdgesFromHierarchy = (
 
   const descendants = rootNode.descendants()
 
-  descendants.forEach((d, i) => {
-    d.descendantIndex = i
-  })
+  let i = 0
 
-  descendants.forEach((node, i) => {
+  for (const node of descendants) {
+    node.descendantIndex = i
+    i++
+  }
+
+  for (const node of descendants) {
     const generatedID = `${idAccessor({
       ...node,
       ...node.data
@@ -345,7 +348,7 @@ export const nodesEdgesFromHierarchy = (
         _NWFEdgeKey: generatedID
       })
     }
-  })
+  }
 
   return { edges, nodes }
 }
@@ -499,10 +502,10 @@ export const calculateNetworkFrame = (
       node: Function
       edge: Function
     }
-    const dagreNodeHash = {}
+    const dagreNodeMap = new Map()
     projectedNodes = dagreGraph.nodes().map((n) => {
       const baseNode = dagreGraph.node(n)
-      dagreNodeHash[n] = {
+      const dagreNode = {
         ...baseNode,
         x0: baseNode.x - baseNode.width / 2,
         x1: baseNode.x + baseNode.width / 2,
@@ -513,7 +516,8 @@ export const calculateNetworkFrame = (
         sourceLinks: [],
         targetLinks: []
       }
-      return dagreNodeHash[n]
+      dagreNodeMap.set(n, dagreNode)
+      return dagreNode
     })
     projectedEdges = dagreGraph.edges().map((e) => {
       const dagreEdge = dagreGraph.edge(e)
@@ -525,8 +529,8 @@ export const calculateNetworkFrame = (
       baseEdge.target = projectedNodes.find((p) => p.id === e.w)
       baseEdge.points.unshift({ x: baseEdge.source.x, y: baseEdge.source.y })
       baseEdge.points.push({ x: baseEdge.target.x, y: baseEdge.target.y })
-      dagreNodeHash[e.v].targetLinks.push(baseEdge)
-      dagreNodeHash[e.w].sourceLinks.push(baseEdge)
+      dagreNodeMap.get(e.v).targetLinks.push(baseEdge)
+      dagreNodeMap.get(e.w).sourceLinks.push(baseEdge)
       return baseEdge
     })
   } else if (changedData) {
@@ -992,11 +996,11 @@ export const calculateNetworkFrame = (
         simulation.tick()
       }
     } else if (networkSettings.type === "motifs") {
-      const componentHash = new Map()
+      const componentMap = new Map()
       projectedEdges.forEach((edge) => {
         ;[edge.source, edge.target].forEach((node) => {
-          if (!componentHash.get(node)) {
-            componentHash.set(node, {
+          if (!componentMap.get(node)) {
+            componentMap.set(node, {
               node,
               component: -99,
               connectedNodes: [],
@@ -1005,12 +1009,12 @@ export const calculateNetworkFrame = (
           }
         })
 
-        componentHash.get(edge.source).connectedNodes.push(edge.target)
-        componentHash.get(edge.target).connectedNodes.push(edge.source)
-        componentHash.get(edge.source).edges.push(edge)
+        componentMap.get(edge.source).connectedNodes.push(edge.target)
+        componentMap.get(edge.target).connectedNodes.push(edge.source)
+        componentMap.get(edge.source).edges.push(edge)
       })
 
-      components = breadthFirstCompontents(projectedNodes, componentHash)
+      components = breadthFirstCompontents(projectedNodes, componentMap)
 
       const largestComponent = Math.max(
         projectedNodes.length / 3,
@@ -1329,7 +1333,9 @@ export const calculateNetworkFrame = (
       projection: networkSettings.projection,
       type: edgeType,
       customMark: customEdgeIcon,
-      networkSettings
+      networkSettings,
+      numberOfNodes: projectedNodes.length,
+      size: adjustedSize
     },
     nodes: {
       accessibleTransform: (data, i) => ({
@@ -1344,7 +1350,8 @@ export const calculateNetworkFrame = (
       canvasRenderFn: nodeCanvasRenderFn,
       customMark: customNodeIcon,
       behavior: drawNodes,
-      renderKeyFn: currentProps.nodeRenderKey
+      renderKeyFn: currentProps.nodeRenderKey,
+      networkSettings
     }
   }
 

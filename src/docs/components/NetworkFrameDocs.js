@@ -267,7 +267,9 @@ export default class NetworkFrameDocs extends React.Component {
             }
           : { renderMode: "sketchy", fillWeight: 2, roughness: 2.4 },
       edgeRenderMode: "sketchy", */
-      canvasPostProcess: glowyCanvas,
+      //      canvasPostProcess: glowyCanvas,
+      canvasEdges: true,
+      canvasNodes: true,
       annotationSettings: {
         pointSizeFunction: (d) => (d.subject && d.subject.radius) || 5,
         labelSizeFunction: (noteData) => {

@@ -129,6 +129,15 @@ export const circleNodeGenerator = ({
   )
 }
 
+const gridProps = (gridSize) => {
+  return {
+    x: -gridSize / 2,
+    y: -gridSize / 2,
+    width: gridSize,
+    height: gridSize
+  }
+}
+
 export const matrixEdgeGenerator =
   (size, nodes) =>
   ({ d, i, styleFn, renderMode, key, className, baseMarkProps }) => {
@@ -144,13 +153,10 @@ export const matrixEdgeGenerator =
           simpleInterpolate={true}
           transform={`translate(${d.source.y},${d.target.y})`}
           markType="rect"
-          x={-gridSize / 2}
-          y={-gridSize / 2}
-          width={gridSize}
-          height={gridSize}
           style={styleFn(d, i)}
           aria-label={`Connection from ${d.source.id} to ${d.target.id}`}
           tabIndex={-1}
+          {...gridProps(gridSize)}
         />
       </g>
     )
@@ -575,7 +581,8 @@ export const drawNodes = ({
   renderMode,
   canvasDrawing,
   canvasRenderFn,
-  baseMarkProps
+  baseMarkProps,
+  networkSettings
 }) => {
   const markGenerator = customMark
   const renderedData = []
@@ -586,55 +593,64 @@ export const drawNodes = ({
     )
   }
 
-  data.forEach((d, i) => {
-    if (canvasRenderFn && canvasRenderFn(d, i) === true) {
-      const canvasNode = {
-        baseClass: "frame-piece",
-        tx: d.x,
-        ty: d.y,
-        d,
-        i,
-        markProps: { markType: "circle", r: d.nodeSize },
-        styleFn,
-        renderFn: renderMode,
-        classFn
-      }
-      canvasDrawing.push(canvasNode)
-    } else {
-      // CUSTOM MARK IMPLEMENTATION
-      renderedData.push(
-        markGenerator({
+  if (networkSettings.type === "matrix") {
+    return
+  }
+
+  if (networkSettings)
+    data.forEach((d, i) => {
+      if (canvasRenderFn && canvasRenderFn(d, i) === true) {
+        const canvasNode = {
+          baseClass: "frame-piece",
+          tx: d.x,
+          ty: d.y,
           d,
           i,
-          renderKeyFn,
+          markProps: { markType: "circle", r: d.nodeSize },
           styleFn,
-          classFn,
-          renderMode,
-          key: renderKeyFn ? renderKeyFn(d, i) : d.id || `node-${i}`,
-          className: `node ${classFn(d, i)}`,
-          transform: `translate(${d.x},${d.y})`,
-          baseMarkProps
-        })
-      )
-    }
-  })
+          renderFn: renderMode,
+          classFn
+        }
+        canvasDrawing.push(canvasNode)
+      } else {
+        // CUSTOM MARK IMPLEMENTATION
+        renderedData.push(
+          markGenerator({
+            d,
+            i,
+            renderKeyFn,
+            styleFn,
+            classFn,
+            renderMode,
+            key: renderKeyFn ? renderKeyFn(d, i) : d.id || `node-${i}`,
+            className: `node ${classFn(d, i)}`,
+            transform: `translate(${d.x},${d.y})`,
+            baseMarkProps
+          })
+        )
+      }
+    })
   return renderedData
 }
 
-export const drawEdges = ({
-  data: baseData,
-  renderKeyFn,
-  customMark,
-  styleFn,
-  classFn,
-  renderMode,
-  canvasRenderFn,
-  canvasDrawing,
-  type,
-  baseMarkProps,
-  networkSettings,
-  projection
-}) => {
+export const drawEdges = (settings) => {
+  const {
+    data: baseData,
+    renderKeyFn,
+    customMark,
+    styleFn,
+    classFn,
+    renderMode,
+    canvasRenderFn,
+    canvasDrawing,
+    type,
+    baseMarkProps,
+    networkSettings,
+    projection,
+    numberOfNodes,
+    size
+  } = settings
+
   const {
     type: networkType,
     direction,
@@ -647,9 +663,28 @@ export const drawEdges = ({
 
   let dGenerator = genericLineGenerator
   const renderedData = []
-  if (customMark) {
+  if (canvasRenderFn && networkSettings.type === "matrix") {
+    let i = 0
+    const gridSize = Math.floor(Math.min(...size) / numberOfNodes)
+    for (const d of data) {
+      const canvasEdge = {
+        baseClass: "frame-piece",
+        tx: d.source.y,
+        ty: d.target.y,
+        d,
+        i,
+        markProps: { markType: "rect", ...gridProps(gridSize) },
+        styleFn,
+        renderFn: renderMode,
+        classFn
+      }
+      canvasDrawing.push(canvasEdge)
+      i++
+    }
+  } else if (customMark) {
     // CUSTOM MARK IMPLEMENTATION
-    data.forEach((d, i) => {
+    let i = 0
+    for (const d of data) {
       const renderedCustomMark = customMark({
         d,
         i,
@@ -670,7 +705,8 @@ export const drawEdges = ({
       ) {
         renderedData.push(renderedCustomMark)
       }
-    })
+      i++
+    }
   } else {
     if (type) {
       if (typeof type === "function") {
@@ -679,7 +715,8 @@ export const drawEdges = ({
         dGenerator = (d) => customEdgeHashD[type](d, projection)
       }
     }
-    data.forEach((d, i) => {
+    let i = 0
+    for (const d of data) {
       const renderedD = dGenerator(d)
 
       if (renderedD && canvasRenderFn && canvasRenderFn(d, i) === true) {
@@ -711,7 +748,7 @@ export const drawEdges = ({
           />
         )
       }
-    })
+    }
   }
 
   return renderedData
@@ -720,21 +757,23 @@ export const drawEdges = ({
 export function topologicalSort(nodesArray, edgesArray) {
   // adapted from https://simplapi.wordpress.com/2015/08/19/detect-graph-cycle-in-javascript/
   const nodes = []
-  const nodeHash = {}
-  edgesArray.forEach((edge) => {
+  const nodeMap = new Map()
+  for (const edge of edgesArray) {
     if (!edge.source.id || !edge.target.id) {
       return false
     }
-    if (!nodeHash[edge.source.id]) {
-      nodeHash[edge.source.id] = { _id: edge.source.id, links: [] }
-      nodes.push(nodeHash[edge.source.id])
+    if (!nodeMap.has(edge.source.id)) {
+      const newNode = { _id: edge.source.id, links: [] }
+      nodeMap.set(edge.source.id, newNode)
+      nodes.push(newNode)
     }
-    if (!nodeHash[edge.target.id]) {
-      nodeHash[edge.target.id] = { _id: edge.target.id, links: [] }
-      nodes.push(nodeHash[edge.target.id])
+    if (!nodeMap.has(edge.target.id)) {
+      const newNode = { _id: edge.target.id, links: [] }
+      nodeMap.set(edge.target.id, newNode)
+      nodes.push(newNode)
     }
-    nodeHash[edge.source.id].links.push(edge.target.id)
-  })
+    nodeMap.get(edge.source.id).links.push(edge.target.id)
+  }
 
   // Test if a node got any icoming edge
   function hasIncomingEdge(list, node) {
@@ -929,25 +968,27 @@ export function circularAreaLink(link) {
 
 const hierarchyDecorator = (hierarchy, hashEntries, nodeIDAccessor, nodes) => {
   if (hierarchy.children) {
-    hierarchy.children.forEach((child) => {
+    for (const child of hierarchy.children) {
       const theseEntries = hashEntries.filter((entry) => entry[1] === child.id)
 
-      theseEntries.forEach((entry) => {
+      for (const entry of theseEntries) {
         const idNode =
           nodes.find((node) => nodeIDAccessor(node) === entry[0]) || {}
 
-        child.childHash[entry[0]] = {
+        const newNode = {
           id: entry[0],
           ...idNode,
           children: [],
-          childHash: {}
+          childMap: {}
         }
-        child.children.push(child.childHash[entry[0]])
-      })
+
+        child.childMap.set(entry[0], newNode)
+        child.children.push(newNode)
+      }
       if (child.children.length > 0) {
         hierarchyDecorator(child, hashEntries, nodeIDAccessor, nodes)
       }
-    })
+    }
   }
 }
 
@@ -958,9 +999,9 @@ export const softStack = (
   targetAccessor,
   nodeIDAccessor
 ) => {
-  let hierarchy = { id: "root-generated", children: [], childHash: {} }
-  const discoveredHierarchyHash = {}
-  const targetToSourceHash = {}
+  let hierarchy = { id: "root-generated", children: [], childMap: new Map() }
+  const discoveredHierarchyMap = new Map()
+  const targetToSourceMap = new Map()
   let hasLogicalRoot = true
   let isHierarchical = true
 
@@ -974,10 +1015,10 @@ export const softStack = (
     const targetID =
       typeof target === "object" ? nodeIDAccessor(target) : target
 
-    targetToSourceHash[targetID] = sourceID
+    targetToSourceMap.set(targetID, sourceID)
 
-    if (!discoveredHierarchyHash[sourceID]) {
-      discoveredHierarchyHash[sourceID] = targetID
+    if (!discoveredHierarchyMap.has(sourceID)) {
+      discoveredHierarchyMap.set(sourceID, targetID)
     } else {
       isHierarchical = false
       break
@@ -985,34 +1026,39 @@ export const softStack = (
   }
 
   if (isHierarchical) {
-    const hashEntries: Array<string[]> = Object.entries(discoveredHierarchyHash)
-    hashEntries.forEach((entry) => {
+    const hashEntries: Array<string[]> = []
+    for (const entry of discoveredHierarchyMap) {
+      hashEntries.push(entry)
       const target = entry[1]
-      if (!discoveredHierarchyHash[target]) {
-        discoveredHierarchyHash[target] = "root-generated"
+      if (!discoveredHierarchyMap.has(target)) {
+        discoveredHierarchyMap.set(target, "root-generated")
         const idNode =
           nodes.find((node) => nodeIDAccessor(node) === target) || {}
 
-        hierarchy.childHash[target] = {
+        const newNode = {
           id: target,
           ...idNode,
           children: [],
-          childHash: {}
+          childMap: new Map()
         }
-        hierarchy.children.push(hierarchy.childHash[target])
+        hierarchy.childMap.set(target, newNode)
+        hierarchy.children.push(newNode)
       }
-    })
+    }
 
     hierarchyDecorator(hierarchy, hashEntries, nodeIDAccessor, nodes)
 
     nodes.forEach((node) => {
       const nodeID = nodeIDAccessor(node)
-      if (!discoveredHierarchyHash[nodeID] && !targetToSourceHash[nodeID]) {
+      if (
+        !discoveredHierarchyMap.has(nodeID) &&
+        !targetToSourceMap.has(nodeID)
+      ) {
         hierarchy.children.push({
           id: nodeID,
           ...node,
           children: [],
-          childHash: {}
+          childMap: new Map()
         })
       }
     })

@@ -48,12 +48,12 @@ export const changeVoronoi = (
       ? customHoverTypes
       : [customHoverTypes]
     const mappedHoverTypes = arrayWrappedHoverTypes
-      .map(c => {
+      .map((c) => {
         const finalC = typeof c === "function" ? c(dataObject) : c
         if (!finalC) return undefined
         return Object.assign({}, dataObject, finalC)
       })
-      .filter(d => d)
+      .filter((d) => d)
 
     voronoiHover(mappedHoverTypes, e)
   }
@@ -147,11 +147,10 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
   if (points && hoverAnnotation && !overlay) {
     const { voronoiFilter = () => true } = advancedSettings
     const voronoiDataset: VoronoiEntryType[] = []
-    const voronoiUniqueHash = {}
+    const voronoiUniqueMap = new Map()
 
-    points
-      .filter((d: { data: object }) => voronoiFilter({ ...d, ...d.data }))
-      .forEach((d: object) => {
+    for (const d of points) {
+      if (voronoiFilter({ ...d, ...d.data })) {
         const xValue = Math.floor(xScale(d[projectedX]))
         const yValue = Math.floor(
           yScale(
@@ -173,7 +172,7 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
           isNaN(yValue) === false
         ) {
           const pointKey = `${xValue},${yValue}`
-          if (!voronoiUniqueHash[pointKey]) {
+          if (!voronoiUniqueMap.has(pointKey)) {
             const voronoiPoint = {
               ...d,
               coincidentPoints: [d],
@@ -181,13 +180,14 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
               voronoiY: yValue
             }
             voronoiDataset.push(voronoiPoint)
-            voronoiUniqueHash[pointKey] = voronoiPoint
-          } else voronoiUniqueHash[pointKey].coincidentPoints.push(d)
+            voronoiUniqueMap.set(pointKey, voronoiPoint)
+          } else voronoiUniqueMap.get(pointKey).coincidentPoints.push(d)
         }
-      })
+      }
+    }
 
-    const voronoiXExtent = d3Extent(voronoiDataset.map(d => d.voronoiX))
-    const voronoiYExtent = d3Extent(voronoiDataset.map(d => d.voronoiY))
+    const voronoiXExtent = d3Extent(voronoiDataset.map((d) => d.voronoiX))
+    const voronoiYExtent = d3Extent(voronoiDataset.map((d) => d.voronoiY))
 
     const voronoiExtent = [
       [
@@ -228,10 +228,10 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
       return (
         <g key={`voronoi-${i}`}>
           <path
-            onClick={e => {
+            onClick={(e) => {
               clickVoronoi(voronoiDataset[i], customClickBehavior, points, e)
             }}
-            onDoubleClick={e => {
+            onDoubleClick={(e) => {
               doubleclickVoronoi(
                 voronoiDataset[i],
                 customDoubleClickBehavior,
@@ -239,7 +239,7 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
                 e
               )
             }}
-            onMouseEnter={e => {
+            onMouseEnter={(e) => {
               changeVoronoi(
                 voronoiHover,
                 voronoiDataset[i],
@@ -249,7 +249,7 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
                 e
               )
             }}
-            onMouseLeave={e => {
+            onMouseLeave={(e) => {
               changeVoronoi(
                 voronoiHover,
                 undefined,
@@ -285,7 +285,7 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
         const { overlayData, ...rest } = overlayRegion
         const overlayProps = {
           key: `overlay-${i}`,
-          onMouseEnter: e => {
+          onMouseEnter: (e) => {
             changeVoronoi(
               voronoiHover,
               overlayData,
@@ -295,7 +295,7 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
               e
             )
           },
-          onMouseLeave: e => {
+          onMouseLeave: (e) => {
             changeVoronoi(
               voronoiHover,
               undefined,
@@ -305,10 +305,10 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
               e
             )
           },
-          onClick: e => {
+          onClick: (e) => {
             clickVoronoi(overlayData, customClickBehavior, points, e)
           },
-          onDoubleClick: e => {
+          onDoubleClick: (e) => {
             doubleclickVoronoi(
               overlayData,
               customDoubleClickBehavior,
