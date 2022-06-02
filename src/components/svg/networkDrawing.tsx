@@ -593,7 +593,7 @@ export const drawNodes = ({
     )
   }
 
-  if (networkSettings.type === "matrix") {
+  if (networkSettings.type === "matrix" && canvasRenderFn) {
     return
   }
 
