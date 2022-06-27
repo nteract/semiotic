@@ -17,7 +17,6 @@ import {
 
 import { LegendProps } from "./types/legendTypes"
 
-import { DEXState } from "./store"
 import { useTooltip } from "./store/TooltipStore"
 
 interface NoteType {
@@ -38,6 +37,10 @@ export interface AnnotationLayerProps {
   svgAnnotationRule: Function
   htmlAnnotationRule: Function
   position?: number[]
+}
+
+export interface UpdatedAnnotationLayerProps extends AnnotationLayerProps {
+  voronoiHover: Function
 }
 
 interface AnnotationLayerState {
@@ -586,7 +589,17 @@ export default function AnnotationLayer(props: AnnotationLayerProps) {
     }
   }
 
-  const updatedAnnotationProps = { ...props, annotations }
+  let changeTooltip = useTooltip((state) => state.changeTooltip)
+
+  const voronoiHover = (d) => {
+    changeTooltip(d)
+  }
+
+  const updatedAnnotationProps: UpdatedAnnotationLayerProps = {
+    ...props,
+    annotations,
+    voronoiHover
+  }
 
   const [SpanOrDiv] = useState(() => HOCSpanOrDiv(useSpans))
 

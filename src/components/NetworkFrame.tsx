@@ -44,7 +44,7 @@ import {
   NetworkFrameProps,
   NetworkFrameState
 } from "./types/networkTypes"
-import { AnnotationLayerProps } from "./AnnotationLayer"
+import { UpdatedAnnotationLayerProps } from "./AnnotationLayer"
 import { useDerivedStateFromProps } from "./useDerivedStateFromProps"
 import { useLegacyUnmountCallback } from "./useLegacyUnmountCallback"
 
@@ -255,7 +255,7 @@ function defaultNetworkSVGRule(
   }: {
     d: AnnotationType
     i: number
-    annotationLayer: AnnotationLayerProps
+    annotationLayer: UpdatedAnnotationLayerProps
   }
 ) {
   const {
@@ -377,7 +377,7 @@ function defaultNetworkHTMLRule(
   }: {
     d: AnnotationType
     i: number
-    annotationLayer: AnnotationLayerProps
+    annotationLayer: UpdatedAnnotationLayerProps
   }
 ) {
   const {

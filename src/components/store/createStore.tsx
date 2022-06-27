@@ -13,7 +13,7 @@ export function createStore(fn) {
   let useSelector = (selector) => {
     let source = useContext(Ctx)
     let getSnapshot = () => selector(source.getState())
-    return useSyncExternalStore(source.subscribe, getSnapshot)
+    return useSyncExternalStore(source?.subscribe, getSnapshot)
   }
 
   return [Provider, useSelector]
