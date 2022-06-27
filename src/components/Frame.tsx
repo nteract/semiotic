@@ -12,6 +12,9 @@ import { AnnotationHandling, CustomHoverType } from "./types/annotationTypes"
 import { LegendProps } from "./types/legendTypes"
 import { ScaleLinear } from "d3-scale"
 import { AdvancedInteractionSettings } from "./types/interactionTypes"
+import { Provider, useDispatch } from "react-redux"
+import { createStore } from "redux"
+import reducers from "./reducers/index"
 
 import { ContextType } from "./types/canvasTypes"
 
@@ -79,15 +82,6 @@ type Props = {
   additionalVizElements?: object
   interactionSettings?: AdvancedInteractionSettings
   disableProgressiveRendering: boolean
-}
-
-type State = {
-  canvasContext?: ContextType
-  voronoiHover?: object
-  finalDefs: object
-  props: Props
-  matte: React.ReactNode
-  SpanOrDiv: Function
 }
 
 const blankArray = []
@@ -164,7 +158,8 @@ export default function Frame(props) {
 
   const canvasContext = useRef(null)
 
-  const [voronoiHover, setVoronoi] = useState(undefined)
+  const [store] = useState(() => createStore(reducers))
+
   const [finalDefs, changeFinalDefs] = useState(null)
   const [matte, changeMatte] = useState(null)
   const [SpanOrDiv] = useState(() => HOCSpanOrDiv(props.useSpans))
@@ -206,21 +201,11 @@ export default function Frame(props) {
     ? [...annotations, ...areaAnnotations]
     : areaAnnotations
 
-  if (voronoiHover) {
-    if (Array.isArray(voronoiHover)) {
-      totalAnnotations.push(...voronoiHover)
-    } else {
-      totalAnnotations.push(voronoiHover)
-    }
-  }
-
-  const annotationLayer = ((totalAnnotations && totalAnnotations.length > 0) ||
-    legendSettings) && (
+  const annotationLayer = (
     <AnnotationLayer
       legendSettings={legendSettings}
       margin={margin}
       axes={axes}
-      voronoiHover={setVoronoi}
       annotationHandling={annotationSettings}
       pointSizeFunction={
         annotationSettings.layout && annotationSettings.layout.pointSizeFunction
@@ -287,110 +272,112 @@ export default function Frame(props) {
         className="frame-elements"
         style={{ height: `${size[1]}px`, width: `${size[0]}px` }}
       >
-        <SpanOrDiv
-          span={useSpans}
-          className="visualization-layer"
-          style={{ position: "absolute" }}
-        >
-          {backgroundGraphics && (
+        <Provider store={store}>
+          <SpanOrDiv
+            span={useSpans}
+            className="visualization-layer"
+            style={{ position: "absolute" }}
+          >
+            {backgroundGraphics && (
+              <svg
+                className="background-graphics"
+                style={{ position: "absolute" }}
+                width={size[0]}
+                height={size[1]}
+              >
+                {backgroundGraphics && (
+                  <g aria-hidden={true} className="background-graphics">
+                    {finalBackgroundGraphics}
+                  </g>
+                )}
+              </svg>
+            )}
+            {canvasRendering && (
+              <canvas
+                className="frame-canvas"
+                ref={canvasContext}
+                style={{
+                  position: "absolute",
+                  left: `0px`,
+                  top: `0px`
+                }}
+                width={size[0]}
+                height={size[1]}
+              />
+            )}
             <svg
-              className="background-graphics"
+              className="visualization-layer"
               style={{ position: "absolute" }}
               width={size[0]}
               height={size[1]}
             >
-              {backgroundGraphics && (
-                <g aria-hidden={true} className="background-graphics">
-                  {finalBackgroundGraphics}
+              {finalDefs}
+              <VisualizationLayer
+                disableContext={disableContext}
+                renderPipeline={renderPipeline}
+                position={adjustedPosition}
+                width={adjustedSize[0]}
+                height={adjustedSize[1]}
+                projectedCoordinateNames={projectedCoordinateNames}
+                xScale={xScale}
+                yScale={yScale}
+                axes={axes}
+                title={generatedTitle}
+                frameKey={frameKey}
+                canvasContext={canvasContext}
+                dataVersion={dataVersion}
+                matte={matte}
+                margin={margin}
+                canvasPostProcess={canvasPostProcess}
+                baseMarkProps={baseMarkProps}
+                renderOrder={renderOrder}
+                sketchyRenderingEngine={sketchyRenderingEngine}
+                axesTickLines={axesTickLines}
+                additionalVizElements={additionalVizElements}
+                frameRenderOrder={frameRenderOrder}
+                disableProgressiveRendering={disableProgressiveRendering}
+              />
+              {generatedTitle && (
+                <g className="frame-title">{generatedTitle}</g>
+              )}
+              {foregroundGraphics && (
+                <g aria-hidden={true} className="foreground-graphics">
+                  {finalForegroundGraphics}
                 </g>
               )}
             </svg>
-          )}
-          {canvasRendering && (
-            <canvas
-              className="frame-canvas"
-              ref={canvasContext}
-              style={{
-                position: "absolute",
-                left: `0px`,
-                top: `0px`
-              }}
-              width={size[0]}
-              height={size[1]}
-            />
-          )}
-          <svg
-            className="visualization-layer"
-            style={{ position: "absolute" }}
-            width={size[0]}
-            height={size[1]}
-          >
-            {finalDefs}
-            <VisualizationLayer
-              disableContext={disableContext}
-              renderPipeline={renderPipeline}
-              position={adjustedPosition}
-              width={adjustedSize[0]}
-              height={adjustedSize[1]}
-              projectedCoordinateNames={projectedCoordinateNames}
-              xScale={xScale}
-              yScale={yScale}
-              axes={axes}
-              title={generatedTitle}
-              frameKey={frameKey}
-              canvasContext={canvasContext}
-              dataVersion={dataVersion}
-              matte={matte}
-              margin={margin}
-              canvasPostProcess={canvasPostProcess}
-              baseMarkProps={baseMarkProps}
-              voronoiHover={setVoronoi}
-              renderOrder={renderOrder}
-              sketchyRenderingEngine={sketchyRenderingEngine}
-              axesTickLines={axesTickLines}
-              additionalVizElements={additionalVizElements}
-              frameRenderOrder={frameRenderOrder}
-              disableProgressiveRendering={disableProgressiveRendering}
-            />
-            {generatedTitle && <g className="frame-title">{generatedTitle}</g>}
-            {foregroundGraphics && (
-              <g aria-hidden={true} className="foreground-graphics">
-                {finalForegroundGraphics}
-              </g>
-            )}
-          </svg>
-        </SpanOrDiv>
-        <InteractionLayer
-          useSpans={useSpans}
-          hoverAnnotation={hoverAnnotation}
-          projectedX={projectedCoordinateNames.x}
-          projectedY={projectedCoordinateNames.y}
-          projectedYMiddle={projectedYMiddle}
-          interaction={interaction}
-          voronoiHover={setVoronoi}
-          customClickBehavior={customClickBehavior}
-          customHoverBehavior={customHoverBehavior}
-          customDoubleClickBehavior={customDoubleClickBehavior}
-          points={points}
-          showLinePoints={showLinePoints}
-          canvasRendering={canvasRendering}
-          position={adjustedPosition}
-          margin={margin}
-          size={adjustedSize}
-          svgSize={size}
-          xScale={xScale}
-          yScale={yScale}
-          enabled={true}
-          overlay={overlay}
-          oColumns={columns}
-          rScale={rScale}
-          projection={projection}
-          interactionOverflow={interactionOverflow}
-          disableCanvasInteraction={disableCanvasInteraction}
-          renderPipeline={renderPipeline}
-          advancedSettings={interactionSettings}
-        />
-        {annotationLayer}
+          </SpanOrDiv>
+          <InteractionLayer
+            useSpans={useSpans}
+            hoverAnnotation={hoverAnnotation}
+            projectedX={projectedCoordinateNames.x}
+            projectedY={projectedCoordinateNames.y}
+            projectedYMiddle={projectedYMiddle}
+            interaction={interaction}
+            customClickBehavior={customClickBehavior}
+            customHoverBehavior={customHoverBehavior}
+            customDoubleClickBehavior={customDoubleClickBehavior}
+            points={points}
+            showLinePoints={showLinePoints}
+            canvasRendering={canvasRendering}
+            position={adjustedPosition}
+            margin={margin}
+            size={adjustedSize}
+            svgSize={size}
+            xScale={xScale}
+            yScale={yScale}
+            enabled={true}
+            overlay={overlay}
+            oColumns={columns}
+            rScale={rScale}
+            projection={projection}
+            interactionOverflow={interactionOverflow}
+            disableCanvasInteraction={disableCanvasInteraction}
+            renderPipeline={renderPipeline}
+            advancedSettings={interactionSettings}
+          />
+          {annotationLayer}
+        </Provider>
       </SpanOrDiv>
       {afterElements && (
         <SpanOrDiv span={useSpans} className={`${name} frame-after-elements`}>

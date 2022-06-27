@@ -1,5 +1,6 @@
 import * as React from "react"
 import { RefObject, useEffect, useState } from "react"
+import { useDispatch } from "react-redux"
 
 import {
   MarginType,
@@ -26,7 +27,6 @@ type Props = {
   ariaTitle?: string
   matte?: React.ReactNode
   matteClip?: boolean
-  voronoiHover: Function
   renderPipeline: RenderPipelineType
   baseMarkProps?: object
   projectedCoordinateNames: object
@@ -69,7 +69,11 @@ type State = {
   handleKeyDown: Function
 }
 
-const updateVisualizationLayer = (props: Props, handleKeyDown: Function) => {
+const updateVisualizationLayer = (
+  props: Props,
+  handleKeyDown: Function,
+  voronoiHover: Function
+) => {
   const {
     xScale,
     yScale,
@@ -134,7 +138,7 @@ const updateVisualizationLayer = (props: Props, handleKeyDown: Function) => {
             }
             onKeyDown={(e) => handleKeyDown({ e, k, props, piecesGroup })}
             onBlur={() => {
-              props.voronoiHover(undefined)
+              voronoiHover(undefined)
             }}
             ref={(thisNode) =>
               thisNode && (piecesGroup[k] = thisNode.childNodes)
@@ -213,6 +217,14 @@ export default function VisualizationLayer(props: Props) {
     additionalVizElements
   } = props
 
+  const dispatch = useDispatch()
+  const voronoiHover = (d) => {
+    dispatch({
+      type: "CHANGE_TOOLTIP",
+      tooltip: d
+    })
+  }
+
   const [focusedPieceIndex, changeFocusedPieceIndex] = useState(null)
   const [focusedVisualizationGroup, changeFocusedVisualizationGroup] =
     useState(null)
@@ -222,7 +234,11 @@ export default function VisualizationLayer(props: Props) {
     changeFocusedVisualizationGroup
   })
 
-  const vizState = updateVisualizationLayer(props, decoratedKeydown)
+  const vizState = updateVisualizationLayer(
+    props,
+    decoratedKeydown,
+    voronoiHover
+  )
 
   const { renderedElements } = vizState
 

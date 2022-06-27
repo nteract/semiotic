@@ -17,6 +17,9 @@ import {
 
 import { LegendProps } from "./types/legendTypes"
 
+import { useSelector } from "react-redux"
+import { DEXState } from "./reducers"
+
 interface NoteType {
   key: string
   props: AnnotationProps
@@ -34,7 +37,6 @@ export interface AnnotationLayerProps {
   labelSizeFunction?: Function
   svgAnnotationRule: Function
   htmlAnnotationRule: Function
-  voronoiHover: Function
   position?: number[]
 }
 
@@ -562,10 +564,31 @@ const createAnnotations = (
 }
 
 export default function AnnotationLayer(props: AnnotationLayerProps) {
-  const { legendSettings, margin, size, annotations, annotationHandling } =
-    props
+  const {
+    legendSettings,
+    margin,
+    size,
+    annotations: baseAnnotations,
+    annotationHandling,
+    useSpans
+  } = props
 
-  const [SpanOrDiv] = useState(() => HOCSpanOrDiv(props.useSpans))
+  const tooltip = useSelector((store: DEXState) => {
+    return store.annotation.tooltip
+  })
+
+  let annotations = [...baseAnnotations]
+  if (tooltip) {
+    if (Array.isArray(tooltip)) {
+      annotations.push(...tooltip)
+    } else {
+      annotations.push(tooltip)
+    }
+  }
+
+  const updatedAnnotationProps = { ...props, annotations }
+
+  const [SpanOrDiv] = useState(() => HOCSpanOrDiv(useSpans))
 
   const annotationProcessor: AnnotationHandling =
     typeof annotationHandling === "object"
@@ -582,7 +605,7 @@ export default function AnnotationLayer(props: AnnotationLayerProps) {
     useState(dataVersion)
 
   const initialSVGAnnotations: NoteType[] = generateSVGAnnotations(
-    props,
+    updatedAnnotationProps,
     annotations
   )
 
@@ -601,7 +624,7 @@ export default function AnnotationLayer(props: AnnotationLayerProps) {
       (d) => !d.props || !d.props.noteData || d.props.noteData.fixedPosition
     )
 
-    const updatedState = createAnnotations(props, {
+    const updatedState = createAnnotations(updatedAnnotationProps, {
       adjustedAnnotations,
       adjustedAnnotationsKey,
       adjustedAnnotationsDataVersion,
@@ -636,6 +659,10 @@ export default function AnnotationLayer(props: AnnotationLayerProps) {
         <Legend {...legendSettings} title={title} position={position} />
       </g>
     )
+  }
+
+  if (annotations.length === 0) {
+    return null
   }
 
   return (

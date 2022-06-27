@@ -48,7 +48,6 @@ export type InteractionLayerProps = {
   customDoubleClickBehavior?: Function
   customClickBehavior?: Function
   customHoverBehavior?: Function
-  voronoiHover: Function
   canvasRendering?: boolean
   disableCanvasInteraction: boolean
   showLinePoints?: string

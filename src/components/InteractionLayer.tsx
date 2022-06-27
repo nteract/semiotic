@@ -2,6 +2,7 @@ import * as React from "react"
 import { useState, useEffect } from "react"
 import { brushX, brushY, brush } from "d3-brush"
 import { select } from "d3-selection"
+import { useDispatch } from "react-redux"
 
 // components
 import Brush from "./Brush"
@@ -391,10 +392,18 @@ export default function InteractionLayer(props: InteractionLayerProps) {
     customDoubleClickBehavior,
     customHoverBehavior,
     disableCanvasInteraction,
-    canvasRendering,
-    voronoiHover
+    canvasRendering
+    //    voronoiHover
   } = props
   let { enabled } = props
+
+  const dispatch = useDispatch()
+  const voronoiHover = (d) => {
+    dispatch({
+      type: "CHANGE_TOOLTIP",
+      tooltip: d
+    })
+  }
 
   const [overlayRegions, changeOverlayRegions] = useState([])
   const [interactionCanvas, changeInteractionCanvas] = useState(null)
@@ -407,7 +416,7 @@ export default function InteractionLayer(props: InteractionLayerProps) {
       nextOverlay = null
       interactionCanvas = null
     } else {
-      nextOverlay = calculateOverlay(props)
+      nextOverlay = calculateOverlay(props, voronoiHover)
       if (canvasRendering) {
         interactionCanvas = (
           <InteractionCanvas

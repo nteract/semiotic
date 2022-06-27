@@ -143,6 +143,8 @@
     "object-assign": "4.1.1",
     "polygon-offset": "0.3.1",
     "react-annotation": "3.0.0-beta.4",
+    "react-redux": "^8.0.2",
+    "redux": "^4.2.0",
     "regression": "^2.0.1",
     "semiotic-mark": "0.5.0",
     "svg-path-bounding-box": "1.0.4"
