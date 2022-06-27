@@ -2,7 +2,6 @@ import * as React from "react"
 import { useState, useEffect } from "react"
 import { brushX, brushY, brush } from "d3-brush"
 import { select } from "d3-selection"
-import { useDispatch } from "react-redux"
 
 // components
 import Brush from "./Brush"
@@ -12,8 +11,7 @@ import { HOCSpanOrDiv } from "./SpanOrDiv"
 import {
   Interactivity,
   InteractionLayerProps,
-  BaseColumnType,
-  InteractionLayerState
+  BaseColumnType
 } from "./types/interactionTypes"
 
 import {
@@ -23,6 +21,7 @@ import {
   calculateOverlay
 } from "./processing/InteractionItems"
 import InteractionCanvas from "./interactionLayerBehavior/InteractionCanvas"
+import { useTooltip } from "./store/TooltipStore"
 
 const generateOMappingFn =
   (projectedColumns) =>
@@ -397,12 +396,10 @@ export default function InteractionLayer(props: InteractionLayerProps) {
   } = props
   let { enabled } = props
 
-  const dispatch = useDispatch()
+  let changeTooltip = useTooltip((state) => state.changeTooltip)
+
   const voronoiHover = (d) => {
-    dispatch({
-      type: "CHANGE_TOOLTIP",
-      tooltip: d
-    })
+    changeTooltip(d)
   }
 
   const [overlayRegions, changeOverlayRegions] = useState([])

@@ -1,6 +1,5 @@
 import * as React from "react"
 import { RefObject, useEffect, useState } from "react"
-import { useDispatch } from "react-redux"
 
 import {
   MarginType,
@@ -11,6 +10,7 @@ import {
 
 import { ContextType } from "./types/canvasTypes"
 import { batchWork } from "./batchWork"
+import { useTooltip } from "./store/TooltipStore"
 
 type Props = {
   axes?: Array<React.ReactNode>
@@ -217,12 +217,10 @@ export default function VisualizationLayer(props: Props) {
     additionalVizElements
   } = props
 
-  const dispatch = useDispatch()
+  let changeTooltip = useTooltip((state) => state.changeTooltip)
+
   const voronoiHover = (d) => {
-    dispatch({
-      type: "CHANGE_TOOLTIP",
-      tooltip: d
-    })
+    changeTooltip(d)
   }
 
   const [focusedPieceIndex, changeFocusedPieceIndex] = useState(null)

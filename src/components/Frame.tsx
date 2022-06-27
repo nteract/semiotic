@@ -12,11 +12,8 @@ import { AnnotationHandling, CustomHoverType } from "./types/annotationTypes"
 import { LegendProps } from "./types/legendTypes"
 import { ScaleLinear } from "d3-scale"
 import { AdvancedInteractionSettings } from "./types/interactionTypes"
-import { Provider, useDispatch } from "react-redux"
-import { createStore } from "redux"
-import reducers from "./reducers/index"
 
-import { ContextType } from "./types/canvasTypes"
+import { TooltipProvider } from "./store/TooltipStore"
 
 type VizDataLayerKeys =
   | "pieces"
@@ -158,8 +155,6 @@ export default function Frame(props) {
 
   const canvasContext = useRef(null)
 
-  const [store] = useState(() => createStore(reducers))
-
   const [finalDefs, changeFinalDefs] = useState(null)
   const [matte, changeMatte] = useState(null)
   const [SpanOrDiv] = useState(() => HOCSpanOrDiv(props.useSpans))
@@ -272,7 +267,7 @@ export default function Frame(props) {
         className="frame-elements"
         style={{ height: `${size[1]}px`, width: `${size[0]}px` }}
       >
-        <Provider store={store}>
+        <TooltipProvider>
           <SpanOrDiv
             span={useSpans}
             className="visualization-layer"
@@ -377,7 +372,7 @@ export default function Frame(props) {
             advancedSettings={interactionSettings}
           />
           {annotationLayer}
-        </Provider>
+        </TooltipProvider>
       </SpanOrDiv>
       {afterElements && (
         <SpanOrDiv span={useSpans} className={`${name} frame-after-elements`}>

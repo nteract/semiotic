@@ -17,8 +17,8 @@ import {
 
 import { LegendProps } from "./types/legendTypes"
 
-import { useSelector } from "react-redux"
-import { DEXState } from "./reducers"
+import { DEXState } from "./store"
+import { useTooltip } from "./store/TooltipStore"
 
 interface NoteType {
   key: string
@@ -573,8 +573,8 @@ export default function AnnotationLayer(props: AnnotationLayerProps) {
     useSpans
   } = props
 
-  const tooltip = useSelector((store: DEXState) => {
-    return store.annotation.tooltip
+  const tooltip = useTooltip((store) => {
+    return store.tooltip
   })
 
   let annotations = [...baseAnnotations]
