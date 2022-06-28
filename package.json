@@ -26,6 +26,9 @@
     "dist": "rollup --config rollup.config.js",
     "prepublishOnly": "npm run typescript && npm run dist"
   },
+  "resolutions": {
+    "@types/react": "^17.0.37"
+  },
   "targets": {
     "website": {
       "context": "browser",
