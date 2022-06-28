@@ -115,7 +115,10 @@ export const brushEnd = (
     interaction.end(e, columnName, data, columnData)
 }
 
-export const calculateOverlay = (props: InteractionLayerProps) => {
+export const calculateOverlay = (
+  props: InteractionLayerProps,
+  voronoiHover: Function
+) => {
   let voronoiPaths = []
   const {
     xScale,
@@ -130,7 +133,6 @@ export const calculateOverlay = (props: InteractionLayerProps) => {
     customDoubleClickBehavior,
     customHoverBehavior,
     hoverAnnotation,
-    voronoiHover,
     margin,
     advancedSettings = {}
   } = props

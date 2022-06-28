@@ -1,7 +1,7 @@
 import * as Semiotic from "../../dist/semiotic.module.js"
 import React from "react"
-import ReactDOM from "react-dom"
 import { csvParse } from "d3-dsv"
+import ReactDOM from "react-dom"
 
 const data = {
   name: "d3",

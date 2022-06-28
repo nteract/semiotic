@@ -220,7 +220,7 @@ export default function Axis(props: AxisProps) {
 
   if (annotationFunction) {
     const formattedValue = formatValue(scale.invert(hoverPosition), props)
-    const hoverGlyph = glyphFunction ? (
+    const hoverGlyph: any = glyphFunction ? (
       glyphFunction({
         lineHeight,
         lineWidth,
@@ -420,7 +420,7 @@ export default function Axis(props: AxisProps) {
     center
   })
   if (label) {
-    const labelName = label.name || label
+    const labelName: any = label.name || label
     const labelPosition = label.position || {}
     const locationMod = labelPosition.location || "outside"
     let anchorMod = labelPosition.anchor || "middle"

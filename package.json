@@ -26,6 +26,9 @@
     "dist": "rollup --config rollup.config.js",
     "prepublishOnly": "npm run typescript && npm run dist"
   },
+  "resolutions": {
+    "@types/react": "^17.0.37"
+  },
   "targets": {
     "website": {
       "context": "browser",
@@ -118,8 +121,8 @@
     "typescript-eslint-parser": "^22.0.0"
   },
   "peerDependencies": {
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2"
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0"
   },
   "dependencies": {
     "d3-array": "^1.2.0",

@@ -2,7 +2,7 @@ import * as React from "react"
 import { drawMarginPath } from "../svg/frameFunctions"
 
 type FilterDefTypes = {
-  matte?: Element
+  matte?: any
   key: string
   additionalDefs?: React.ReactNode
 }
@@ -44,8 +44,14 @@ export const filterDefs = ({ matte, key, additionalDefs }: FilterDefTypes) => (
   </defs>
 )
 
-export const generateFinalDefs = ({ matte, size, margin, frameKey, additionalDefs, name }) => {
-
+export const generateFinalDefs = ({
+  matte,
+  size,
+  margin,
+  frameKey,
+  additionalDefs,
+  name
+}) => {
   let marginGraphic
 
   if (typeof matte === "function") {

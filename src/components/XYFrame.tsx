@@ -64,7 +64,7 @@ import { AnnotationType } from "./types/annotationTypes"
 
 import { XYFrameProps, XYFrameState } from "./types/xyTypes"
 
-import { AnnotationLayerProps } from "./AnnotationLayer"
+import { UpdatedAnnotationLayerProps } from "./AnnotationLayer"
 import { useDerivedStateFromProps } from "./useDerivedStateFromProps"
 import { useLegacyUnmountCallback } from "./useLegacyUnmountCallback"
 
@@ -349,7 +349,7 @@ function defaultXYSVGRule(
   }: {
     d: AnnotationType
     i: number
-    annotationLayer: AnnotationLayerProps
+    annotationLayer: UpdatedAnnotationLayerProps
     lines: { data: [] }
     summaries: { data: [] }
     points: {
@@ -587,7 +587,7 @@ function defaultXYHTMLRule(
   }: {
     d: AnnotationType
     i: number
-    annotationLayer: AnnotationLayerProps
+    annotationLayer: UpdatedAnnotationLayerProps
     lines: { data: ProjectedLine[] }
     summaries: { data: ProjectedSummary[] }
     points: {

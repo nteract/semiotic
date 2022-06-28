@@ -32,7 +32,7 @@ import { calculateOrdinalFrame } from "./processing/ordinal"
 
 import { AnnotationType } from "./types/annotationTypes"
 
-import { AnnotationLayerProps } from "./AnnotationLayer"
+import { UpdatedAnnotationLayerProps } from "./AnnotationLayer"
 
 import { OrdinalFrameProps, OrdinalFrameState } from "./types/ordinalTypes"
 import { useDerivedStateFromProps } from "./useDerivedStateFromProps"
@@ -291,7 +291,7 @@ function defaultORSVGRule(
   }: {
     d: AnnotationType
     i: number
-    annotationLayer: AnnotationLayerProps
+    annotationLayer: UpdatedAnnotationLayerProps
   }
 ) {
   const { projection, svgAnnotationRules } = props
@@ -445,7 +445,7 @@ function defaultORHTMLRule(
   }: {
     d: AnnotationType
     i: number
-    annotationLayer: AnnotationLayerProps
+    annotationLayer: UpdatedAnnotationLayerProps
   }
 ) {
   const {

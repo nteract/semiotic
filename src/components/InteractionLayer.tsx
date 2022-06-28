@@ -11,8 +11,7 @@ import { HOCSpanOrDiv } from "./SpanOrDiv"
 import {
   Interactivity,
   InteractionLayerProps,
-  BaseColumnType,
-  InteractionLayerState
+  BaseColumnType
 } from "./types/interactionTypes"
 
 import {
@@ -22,6 +21,7 @@ import {
   calculateOverlay
 } from "./processing/InteractionItems"
 import InteractionCanvas from "./interactionLayerBehavior/InteractionCanvas"
+import { useTooltip } from "./store/TooltipStore"
 
 const generateOMappingFn =
   (projectedColumns) =>
@@ -391,10 +391,16 @@ export default function InteractionLayer(props: InteractionLayerProps) {
     customDoubleClickBehavior,
     customHoverBehavior,
     disableCanvasInteraction,
-    canvasRendering,
-    voronoiHover
+    canvasRendering
+    //    voronoiHover
   } = props
   let { enabled } = props
+
+  let changeTooltip = useTooltip((state) => state.changeTooltip)
+
+  const voronoiHover = (d) => {
+    changeTooltip(d)
+  }
 
   const [overlayRegions, changeOverlayRegions] = useState([])
   const [interactionCanvas, changeInteractionCanvas] = useState(null)
@@ -407,7 +413,7 @@ export default function InteractionLayer(props: InteractionLayerProps) {
       nextOverlay = null
       interactionCanvas = null
     } else {
-      nextOverlay = calculateOverlay(props)
+      nextOverlay = calculateOverlay(props, voronoiHover)
       if (canvasRendering) {
         interactionCanvas = (
           <InteractionCanvas
