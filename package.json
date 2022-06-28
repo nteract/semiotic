@@ -68,8 +68,8 @@
     "@playwright/test": "^1.17.1",
     "@types/d3-scale": "^2.1.1",
     "@types/node": "^13.7.4",
-    "@types/react": "^18.0.14",
-    "@types/react-dom": "^18.0.5",
+    "@types/react": "^17.0.37",
+    "@types/react-dom": "^17.0.11",
     "@typescript-eslint/eslint-plugin": "^1.4.2",
     "@vx/pattern": "0.0.143",
     "@wojtekmaj/enzyme-adapter-react-17": "^0.6.6",
@@ -99,12 +99,12 @@
     "parcel": "^2.2.1",
     "playwright-chromium": "^1.17.1",
     "prettier": "^2.5.1",
-    "react": "^18.1.0",
-    "react-dom": "^18.1.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
     "react-element-to-jsx-string": "^12.0.0",
     "react-prism": "4.3.2",
     "react-router-dom": "^6.2.1",
-    "react-test-renderer": "^18.1.0",
+    "react-test-renderer": "^17.0.2",
     "resize-observer-polyfill": "^1.5.1",
     "rollup": "^2.61.1",
     "rollup-plugin-auto-external": "^2.0.0",
@@ -145,7 +145,8 @@
     "react-annotation": "3.0.0-beta.4",
     "regression": "^2.0.1",
     "semiotic-mark": "0.5.0",
-    "svg-path-bounding-box": "1.0.4"
+    "svg-path-bounding-box": "1.0.4",
+    "use-sync-external-store": "^1.2.0"
   },
   "eslintConfig": {
     "extends": "react-app"

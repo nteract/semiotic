@@ -1,7 +1,7 @@
 import * as Semiotic from "../../dist/semiotic.module.js"
 import React from "react"
 import { csvParse } from "d3-dsv"
-import { createRoot } from "react-dom/client"
+import ReactDOM from "react-dom"
 
 const data = {
   name: "d3",
@@ -591,9 +591,7 @@ parsedAnswers.forEach((answer, i) => {
   answer.respondent = `person ${i}`
 })
 
-const main = createRoot(document.getElementById("main"))
-
-main.render(
+ReactDOM.render(
   React.createElement(
     "div",
     {
@@ -723,5 +721,6 @@ main.render(
       }),
       React.createElement(XYFrame, XYSettings)
     ]
-  )
+  ),
+  document.getElementById("main")
 )

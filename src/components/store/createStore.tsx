@@ -1,5 +1,6 @@
 import * as React from "react"
-import { createContext, useContext, useMemo, useSyncExternalStore } from "react"
+import { createContext, useContext, useMemo } from "react"
+import { useSyncExternalStore } from "use-sync-external-store/shim"
 
 export function createStore(fn) {
   let Ctx = createContext(null)
