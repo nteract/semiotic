@@ -580,14 +580,7 @@ export default function AnnotationLayer(props: AnnotationLayerProps) {
     return store.tooltip
   })
 
-  let annotations = [...baseAnnotations]
-  if (tooltip) {
-    if (Array.isArray(tooltip)) {
-      annotations.push(...tooltip)
-    } else {
-      annotations.push(tooltip)
-    }
-  }
+  let annotations = tooltip != null ? baseAnnotations.concat(tooltip) : baseAnnotations
 
   let changeTooltip = useTooltip((state) => state.changeTooltip)
 
