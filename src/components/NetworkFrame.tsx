@@ -253,7 +253,7 @@ function defaultNetworkSVGRule(
     i,
     annotationLayer
   }: {
-    d: AnnotationType
+    d: any
     i: number
     annotationLayer: UpdatedAnnotationLayerProps
   }

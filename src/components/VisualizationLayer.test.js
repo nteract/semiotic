@@ -1,13 +1,20 @@
 import React from "react"
 import { mount, shallow } from "enzyme"
 import VisualizationLayer from "./VisualizationLayer"
+import { TooltipProvider } from "./store/TooltipStore"
 
 const visualizationLayerWidth = 100
 const visualizationLayerHeight = 200
 
 const visualizationLayerProps = {
   size: [visualizationLayerWidth, visualizationLayerHeight],
-  frameRenderOrder: ["axes-tick-lines", "viz-layer", "matte", "axes-labels", "labels"]
+  frameRenderOrder: [
+    "axes-tick-lines",
+    "viz-layer",
+    "matte",
+    "axes-labels",
+    "labels"
+  ]
 }
 
 function drawSomeRectangles({
@@ -19,7 +26,7 @@ function drawSomeRectangles({
   //  baseMarkProps,
   data
 }) {
-  return data.map(d => (
+  return data.map((d) => (
     <rect
       key={`test-render-rect-${d}`}
       x={d * 10}
@@ -36,13 +43,19 @@ const simplePipeline = {
 
 describe("VisualizationLayer", () => {
   it("renders without crashing", () => {
-    mount(<VisualizationLayer {...visualizationLayerProps} />)
+    mount(
+      <TooltipProvider>
+        <VisualizationLayer {...visualizationLayerProps} />
+      </TooltipProvider>
+    )
   })
-  const shallowVisualizationLayer = shallow(
-    <VisualizationLayer
-      {...visualizationLayerProps}
-      renderPipeline={simplePipeline}
-    />
+  const shallowVisualizationLayer = mount(
+    <TooltipProvider>
+      <VisualizationLayer
+        {...visualizationLayerProps}
+        renderPipeline={simplePipeline}
+      />
+    </TooltipProvider>
   )
 
   it("draws things in the render pipeline according to behavior", () => {

@@ -96,7 +96,7 @@ export interface OrdinalFrameState extends GeneralFrameState {
   pieceDataXY: Array<object>
   axisData?: AxisProps[]
   axes?: React.ReactNode[]
-  axesTickLines?: React.ReactNode
+  axesTickLines?: any
   oLabels: { labels: React.ReactNode }
   columnOverlays: Array<object>
   oAccessor: Array<Function>
