@@ -1,6 +1,22 @@
 import * as React from "react"
-import { createContext, useContext, useMemo } from "react"
-import { useSyncExternalStore } from "use-sync-external-store/shim"
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useState,
+  useLayoutEffect
+} from "react"
+
+function useSyncExternalStoreShim<T>(
+  subscribe: (cb: Function) => () => void,
+  getSnapshot: () => T
+): T {
+  const [value, setValue] = useState<T>(getSnapshot)
+  useLayoutEffect(() => {
+    return subscribe(() => setValue(getSnapshot))
+  }, [subscribe])
+  return value
+}
 
 export function createStore(fn) {
   let Ctx = createContext(null)
@@ -14,7 +30,7 @@ export function createStore(fn) {
   let useSelector = (selector) => {
     let source = useContext(Ctx)
     let getSnapshot = () => selector(source.getState())
-    return useSyncExternalStore(source?.subscribe, getSnapshot)
+    return useSyncExternalStoreShim(source?.subscribe, getSnapshot)
   }
 
   return [Provider, useSelector]
