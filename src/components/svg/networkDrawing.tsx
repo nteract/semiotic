@@ -587,12 +587,6 @@ export const drawNodes = ({
   const markGenerator = customMark
   const renderedData = []
 
-  if (customMark && canvasRenderFn) {
-    console.error(
-      "canvas rendering currently only supports generic circle nodes based on nodeSize"
-    )
-  }
-
   if (networkSettings.type === "matrix" && canvasRenderFn) {
     return
   }
