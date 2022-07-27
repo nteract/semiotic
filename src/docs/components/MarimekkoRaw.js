@@ -70,7 +70,7 @@ const mekkoChart = {
     stroke: "black",
     strokeWidth: 1
   }),
-  oSort: (d, i, a, b) => {
+  oSort: (d, i, a) => {
     return -a[0].pct
   },
   canvasPieces: true,

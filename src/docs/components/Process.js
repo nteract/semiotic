@@ -1,13 +1,7 @@
 import * as React from "react"
 import { NetworkFrame, XYFrame, OrdinalFrame } from "../../components"
 import { network_data, or_data } from "../sampledata/energy_time"
-import { scaleLinear } from "d3-scale"
 import Button from "@material-ui/core/Button"
-
-const nodeScale = scaleLinear()
-  .domain([1, 1000, 2000])
-  .range([5, 10, 20])
-  .clamp(true)
 
 const components = []
 const lineTypes = ["stackedarea", "line", "bumpline", "bumparea"]
@@ -18,35 +12,35 @@ const xyPossibilities = [
   {
     lines: null,
     points: or_data,
-    xAccessor: d => d.years[0],
-    yAccessor: d => d.years[8]
+    xAccessor: (d) => d.years[0],
+    yAccessor: (d) => d.years[8]
   },
   {
     lines: or_data,
     lineType: lineTypes[lineSeed],
     lineDataAccessor: "years",
     xAccessor: (d, i) => i,
-    yAccessor: d => d
+    yAccessor: (d) => d
   },
   {
     lines: or_data,
     lineType: lineTypes[(lineSeed + 1) % 5],
     lineDataAccessor: "years",
     xAccessor: (d, i) => i,
-    yAccessor: d => d
+    yAccessor: (d) => d
   },
   {
     lines: or_data,
     lineType: lineTypes[(lineSeed + 2) % 5],
     lineDataAccessor: "years",
     xAccessor: (d, i) => i,
-    yAccessor: d => d
+    yAccessor: (d) => d
   },
   {
     summaries: [{ label: "Area", coordinates: or_data }],
     summaryType: "contour",
-    xAccessor: d => d.years[0],
-    yAccessor: d => d.years[8]
+    xAccessor: (d) => d.years[0],
+    yAccessor: (d) => d.years[8]
   }
 ]
 
@@ -77,10 +71,11 @@ const networkPossibilities = [
   },
   {
     networkType: "chord",
-    edgeWidthAccessor: d => d.value
-  }]
+    edgeWidthAccessor: (d) => d.value
+  }
+]
 
-const formatter = d => (d > 1000 ? `${parseInt(d / 1000)}k` : d)
+const formatter = (d) => (d > 1000 ? `${parseInt(d / 1000)}k` : d)
 
 const productionSettings = {
   hoverAnnotation: true,
@@ -116,8 +111,8 @@ const networkSettings = {
   nodeIDAccessor: "id",
   sourceAccessor: "source",
   targetAccessor: "target",
-  nodeStyle: d => ({ fill: d.color, stroke: d.color }),
-  edgeStyle: d => ({
+  nodeStyle: (d) => ({ fill: d.color, stroke: d.color }),
+  edgeStyle: (d) => ({
     fill: d.source.color,
     stroke: d.source.color,
     fillOpacity: 0.75
@@ -125,9 +120,9 @@ const networkSettings = {
 }
 
 const xySettings = {
-  lineStyle: d => ({ fill: d.color, stroke: d.color, fillOpacity: 0.75 }),
-  pointStyle: d => ({ fill: d.color, stroke: "black", fillOpacity: 0.75 }),
-  summaryStyle: d => ({
+  lineStyle: (d) => ({ fill: d.color, stroke: d.color, fillOpacity: 0.75 }),
+  pointStyle: (d) => ({ fill: d.color, stroke: "black", fillOpacity: 0.75 }),
+  summaryStyle: (d) => ({
     fill: d.color || "red",
     stroke: "black",
     fillOpacity: 0.75
@@ -138,13 +133,13 @@ const orSettings = {
   data: or_data,
   oAccessor: "category",
   rAccessor: "output",
-  style: d => ({ fill: d.color, stroke: d.color }),
-  summaryStyle: d => ({ fill: d.color, stroke: d.color, fillOpacity: 0.5 }),
+  style: (d) => ({ fill: d.color, stroke: d.color }),
+  summaryStyle: (d) => ({ fill: d.color, stroke: d.color, fillOpacity: 0.5 }),
   oPadding: 5,
   margin: { top: 5, bottom: 5, left: 0, right: 0 }
 }
 
-const renderNetworkFrame = additionalSettings => (
+const renderNetworkFrame = (additionalSettings) => (
   <NetworkFrame
     {...sharedSettings}
     {...networkSettings}
@@ -152,11 +147,11 @@ const renderNetworkFrame = additionalSettings => (
   />
 )
 
-const renderOrdinalFrame = additionalSettings => (
+const renderOrdinalFrame = (additionalSettings) => (
   <OrdinalFrame {...sharedSettings} {...orSettings} {...additionalSettings} />
 )
 
-const renderXYFrame = additionalSettings => (
+const renderXYFrame = (additionalSettings) => (
   <XYFrame {...sharedSettings} {...xySettings} {...additionalSettings} />
 )
 
@@ -242,7 +237,7 @@ export default class Process extends React.Component {
       </div>
     ]
 
-    prototypedSeeds.forEach(d => {
+    prototypedSeeds.forEach((d) => {
       sketchyFrames.push(possibleSketchyFrames[d])
       frames.push(possibleFrames[d])
       productionFrames.push(possibleProductionFrames[d])

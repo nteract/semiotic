@@ -23,7 +23,7 @@ export default (state) => {
     oLabel: {
       orient: "stem",
       labelFormatter: (d) => (
-        <>
+        <div>
           <tspan>Hey</tspan>
           <tspan x="0" y="16">
             Hey
@@ -31,7 +31,7 @@ export default (state) => {
           <tspan x="0" y="32">
             {d}
           </tspan>
-        </>
+        </div>
       )
     },
     margin: { left: 100, top: 100, bottom: 100, right: 100 },

@@ -287,19 +287,6 @@ export default function Frame(props) {
                 )}
               </svg>
             )}
-            {canvasRendering && (
-              <canvas
-                className="frame-canvas"
-                ref={canvasContext}
-                style={{
-                  position: "absolute",
-                  left: `0px`,
-                  top: `0px`
-                }}
-                width={size[0]}
-                height={size[1]}
-              />
-            )}
             <svg
               className="visualization-layer"
               style={{ position: "absolute" }}
@@ -342,6 +329,18 @@ export default function Frame(props) {
               )}
             </svg>
           </SpanOrDiv>
+          {canvasRendering && (
+            <canvas
+              className="frame-canvas"
+              ref={canvasContext}
+              style={{
+                pointerEvents: "none",
+                position: "absolute"
+              }}
+              width={size[0]}
+              height={size[1]}
+            />
+          )}
           <InteractionLayer
             useSpans={useSpans}
             hoverAnnotation={hoverAnnotation}

@@ -4,11 +4,11 @@ jest.useFakeTimers("modern")
 
 test("batching", () => {
   let count = 0
-  let performWork = jest.fn(() => {
+  const performWork = jest.fn(() => {
     jest.advanceTimersByTime(10)
     return ++count < 6
   })
-  let promise = batchWork(performWork, { timeFrameMs: 30 })
+  const promise = batchWork(performWork, { timeFrameMs: 30 })
   expect(performWork).not.toHaveBeenCalled()
   jest.runOnlyPendingTimers()
   expect(performWork).toHaveBeenCalledTimes(3)
@@ -18,13 +18,16 @@ test("batching", () => {
 })
 
 test("cancellation", () => {
-  let ctrl = new AbortController()
+  const ctrl = new AbortController()
   let count = 0
-  let performWork = jest.fn(() => {
+  const performWork = jest.fn(() => {
     jest.advanceTimersByTime(10)
     return ++count < 6
   })
-  let promise = batchWork(performWork, { timeFrameMs: 30, signal: ctrl.signal })
+  const promise = batchWork(performWork, {
+    timeFrameMs: 30,
+    signal: ctrl.signal
+  })
   expect(performWork).not.toHaveBeenCalled()
   jest.runOnlyPendingTimers()
   expect(performWork).toHaveBeenCalledTimes(3)
@@ -36,12 +39,12 @@ test("cancellation", () => {
 
 test("rejection", () => {
   let count = 0
-  let performWork = jest.fn(() => {
+  const performWork = jest.fn(() => {
     jest.advanceTimersByTime(10)
     return ++count < 6
   })
-  let rejection = jest.fn()
-  let promise = batchWork(performWork)
+  const rejection = jest.fn()
+  const promise = batchWork(performWork)
   // catch promise rejection to avoid node.js exit
   promise.catch(rejection)
   expect(performWork).not.toHaveBeenCalled()

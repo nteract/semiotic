@@ -61,7 +61,13 @@ function safeStringify(value) {
     if (typeof v === "object") {
       seen.add(v)
       if (k === "note") {
-        return v.label
+        return `${v.label}-${v.title}`
+      }
+      if (k === "connector") {
+        return `${v.end}-${v.type}`
+      }
+      if (k === "subject") {
+        return `${v.radius}`
       }
       if (typeof v.column === "object") {
         return `${v.column.x}-${v.column.y}-${v.column.name}`
@@ -72,6 +78,8 @@ function safeStringify(value) {
         v.voronoiY ||
         v.x ||
         v.y ||
+        v.dx ||
+        v.dy ||
         v.label ||
         v.type ||
         v.key ||
@@ -79,7 +87,7 @@ function safeStringify(value) {
         v.id ||
         v.name
       ) {
-        return `${v.voronoiX}-${v.voronoiY}-${v.x}-${v.y}-${v.label}-${v.type}-${v.key}-${v.hierarchicalID}-${v.id}-${v.name}`
+        return `${v.voronoiX}-${v.voronoiY}-${v.dx}-${v.dy}-${v.x}-${v.y}-${v.label}-${v.type}-${v.key}-${v.hierarchicalID}-${v.id}-${v.name}`
       }
 
       return "..."
@@ -580,7 +588,8 @@ export default function AnnotationLayer(props: AnnotationLayerProps) {
     return store.tooltip
   })
 
-  let annotations = tooltip != null ? baseAnnotations.concat(tooltip) : baseAnnotations
+  let annotations =
+    tooltip != null ? baseAnnotations.concat(tooltip) : baseAnnotations
 
   let changeTooltip = useTooltip((state) => state.changeTooltip)
 

@@ -6,13 +6,13 @@ import { ResponsiveXYFrame } from "./ResponsiveXYFrame"
 
 jest.mock("./useBoundingRect")
 
-const SimpleDivPropsDisplay = props => (
+const SimpleDivPropsDisplay = (props) => (
   <div style={{ padding: "20px" }}>
     <h3 style={{ fontSize: "14px", fontWeight: 900 }}>
       Component showing inherited facetprops
     </h3>
     {Object.keys(props.facetprops)
-      .map(k => k)
+      .map((k) => k)
       .join(",")}
   </div>
 )
@@ -160,7 +160,7 @@ components.push({
 
 const xyFrameData1 = {
   color: "darkred",
-  coordinates: orData.map(d => ({ ...d }))
+  coordinates: orData.map((d) => ({ ...d }))
 }
 const xyFrameData2 = {
   color: "darkred",
@@ -168,11 +168,7 @@ const xyFrameData2 = {
 }
 const xyFrameData3 = {
   color: "darkred",
-  coordinates: orData3.map(d => ({ ...d }))
-}
-const xyFrameDataBase = {
-  color: "gray",
-  coordinates: orData3.map(d => ({ ...d }))
+  coordinates: orData3.map((d) => ({ ...d }))
 }
 
 describe("FacetController", () => {
@@ -195,7 +191,7 @@ describe("FacetController", () => {
         rAccessor="ovalue"
         projection="horizontal"
         type="bar"
-        style={d => ({ fill: d.color })}
+        style={(d) => ({ fill: d.color })}
         pieceIDAccessor="color"
         pieceHoverAnnotation={[
           { type: "desaturation-layer" },
@@ -232,7 +228,7 @@ describe("FacetController", () => {
         oAccessor="column"
         rAccessor="ovalue"
         type="bar"
-        style={d => ({ fill: d.color })}
+        style={(d) => ({ fill: d.color })}
         pieceHoverAnnotation={true}
         pieceIDAccessor="color"
         sharedRExtent={true}

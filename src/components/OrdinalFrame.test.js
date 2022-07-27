@@ -39,11 +39,6 @@ const stackedGeneratedHTMLAnnotation = {
   rName: "dog"
 }
 
-const columnHTMLAnnotation = {
-  column: "b",
-  type: "column-hover"
-}
-
 const stackedHTMLAnnotation = {
   column: "c",
   type: "frame-hover",
@@ -162,10 +157,7 @@ describe("OrdinalFrame", () => {
     />
   )
 
-  const firstColumnBar = mountedPixelColumnWidth
-    .find("rect")
-    .first()
-    .props()
+  const firstColumnBar = mountedPixelColumnWidth.find("rect").first().props()
 
   const secondColumnBar = mountedPixelColumnWidthWithMargin
     .find("rect")
@@ -183,7 +175,7 @@ describe("OrdinalFrame", () => {
   //  const pieceTypes = ["bar", "point", "timeline", "swarm", "clusterbar"]
   const pieceTypes = [""]
 
-  pieceTypes.forEach(pieceType => {
+  pieceTypes.forEach((pieceType) => {
     projections.forEach((projection, index) => {
       const mountedFrameWithAnnotation = mount(
         <OrdinalFrame
@@ -226,6 +218,4 @@ describe("OrdinalFrame", () => {
       })
     })
   })
-
-
 })
