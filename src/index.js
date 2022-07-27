@@ -1,6 +1,7 @@
 import * as React from "react"
 import Docs from "./docs"
 import "../public/prism.js"
-import ReactDOM from "react-dom"
+import { createRoot } from "react-dom/client"
 
-ReactDOM.render(<Docs />, document.getElementById("root"))
+const root = createRoot(document.getElementById("root"))
+root.render(<Docs />)

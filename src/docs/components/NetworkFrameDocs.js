@@ -10,22 +10,6 @@ import MenuItem from "@material-ui/core/MenuItem"
 import InputLabel from "@material-ui/core/InputLabel"
 import FormControl from "@material-ui/core/FormControl"
 
-const glowyCanvas = (canvas, context, size) => {
-  const dataURL = canvas.toDataURL("image/png")
-  const baseImage = document.createElement("img")
-
-  baseImage.src = dataURL
-  baseImage.onload = () => {
-    context.clearRect(0, 0, size[0] + 120, size[1] + 120)
-    context.filter = "blur(10px)"
-    context.drawImage(baseImage, 0, 0)
-    context.filter = "blur(5px)"
-    context.drawImage(baseImage, 0, 0)
-    context.filter = "none"
-    context.drawImage(baseImage, 0, 0)
-  }
-}
-
 const components = []
 // Add your component proptype data here
 // multiple component proptype documentation supported

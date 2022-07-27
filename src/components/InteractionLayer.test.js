@@ -4,7 +4,7 @@ import InteractionLayer from "./InteractionLayer"
 import { scaleLinear } from "d3-scale"
 import { TooltipProvider } from "./store/TooltipStore"
 
-const xyEndFunction = (end) => {
+const xyEndFunction = () => {
   //  console.info(end)
 }
 

@@ -591,8 +591,9 @@ export const drawNodes = ({
     return
   }
 
-  if (networkSettings)
-    data.forEach((d, i) => {
+  if (networkSettings) {
+    let i = 0
+    for (const d of data) {
       if (canvasRenderFn && canvasRenderFn(d, i) === true) {
         const canvasNode = {
           baseClass: "frame-piece",
@@ -623,7 +624,9 @@ export const drawNodes = ({
           })
         )
       }
-    })
+      i++
+    }
+  }
   return renderedData
 }
 

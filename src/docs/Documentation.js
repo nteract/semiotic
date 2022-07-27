@@ -133,7 +133,7 @@ const components = {
 }
 
 function Documentation(props) {
-  let [open, setOpen] = useState(true)
+  const [open] = useState(true)
 
   const match = useParams()
   const selected = match && match.component
@@ -143,10 +143,6 @@ function Documentation(props) {
 
   let selectedDoc = null,
     Doc = null
-  // const selectedStyles = {
-  //   borderTop: "5px double #ac9739",
-  //   borderBottom: "5px double #ac9739"
-  // }
 
   if (selected === "responsive") {
     return <ResponsiveExample />
