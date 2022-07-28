@@ -111,8 +111,6 @@ const OrdinalFrame = React.memo(function OrdinalFrame(
 
   useLegacyUnmountCallback(props, state)
 
-  console.log("ORFrame props", props)
-
   const {
     className,
     annotationSettings,
