@@ -461,7 +461,10 @@ export default function InteractionLayer(props: InteractionLayerProps) {
       style={{
         position: "absolute",
         background: "none",
-        pointerEvents: "none"
+        pointerEvents: "none",
+        height: "100%",
+        width: "100%",
+        overflow: "hidden"
       }}
     >
       {interactionCanvas || (
