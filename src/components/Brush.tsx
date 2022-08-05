@@ -10,8 +10,8 @@ const flatten = (list) =>
   )
 
 function flatShortArray(baseArray = []) {
+  if (!Array.isArray(baseArray)) return "not-array"
   let array = baseArray.slice()
-  if (!Array.isArray(array)) return "not-array"
   if (!Array.isArray(array[0])) {
     array = array.slice().sort((a, b) => a - b)
   }
