@@ -260,10 +260,8 @@ export default function VisualizationLayer(props: Props) {
     ]
 
     let rc
-    const devicePixelRatio = window.devicePixelRatio || 1
-
-    canvasContext.width = size[0] * devicePixelRatio
-    canvasContext.height = size[1] * devicePixelRatio
+    canvasContext.width = size[0]
+    canvasContext.height = size[1]
     canvasContext.style.width = size[0]
     canvasContext.style.height = size[1]
 

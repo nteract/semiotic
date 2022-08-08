@@ -337,8 +337,8 @@ export default function Frame(props) {
                 pointerEvents: "none",
                 position: "absolute"
               }}
-              width={size[0]}
-              height={size[1]}
+              width={size[0] / 2}
+              height={size[1] / 2}
             />
           )}
           <InteractionLayer
