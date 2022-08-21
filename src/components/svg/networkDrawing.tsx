@@ -1,10 +1,14 @@
 import * as React from "react"
+import { useEffect, useRef } from "react"
+import { select, selectAll } from "d3-selection"
 
 import { Mark } from "semiotic-mark"
 
 import {
   d as glyphD /*, project as glyphProject, mutate as glyphMutate*/
 } from "d3-glyphedge"
+
+import { pathArrows } from "d3-path-arrows"
 
 import {
   arc,
@@ -192,6 +196,92 @@ export const arcEdgeGenerator = (size) => {
       />
     )
   }
+}
+
+const ArrowedPath = (props) => {
+  const { d, width } = props
+  const pathRef = useRef(null)
+  useEffect(() => {
+    if (pathRef?.current) {
+      const arrowHeadSize = Math.max(width / 5, 2)
+      let arrows = pathArrows()
+        .arrowLength(arrowHeadSize * 2.5)
+        .gapLength(100)
+        .arrowHeadSize(arrowHeadSize)
+        .path(() => d)
+
+      select(pathRef.current).call(arrows)
+
+      select(pathRef.current)
+        .selectAll(":not(.arrow-head)")
+        .style("fill", "none")
+        .style("stroke-width", arrowHeadSize / 4)
+        .style("stroke", "white")
+
+      select(pathRef.current).selectAll(".arrow-head").style("fill", "white")
+    }
+  }, [!!pathRef?.current])
+
+  return <g ref={pathRef} />
+}
+
+export const sankeyArrowGenerator = (props) => {
+  const {
+    d,
+    i,
+    styleFn,
+    renderMode,
+    key,
+    className,
+    baseMarkProps,
+    generatedPath
+  } = props
+
+  const { showArrows } = d
+
+  let arrowPath = ""
+  if (d.circular) {
+    const { circularPathData } = d
+    const {
+      sourceX,
+      sourceY,
+      leftFullExtent,
+      rightFullExtent,
+      verticalFullExtent,
+      targetX,
+      targetY
+    } = circularPathData
+
+    arrowPath = `M${sourceX},${sourceY}L${leftFullExtent},${sourceY}L${leftFullExtent},${verticalFullExtent}L${rightFullExtent},${verticalFullExtent}L${rightFullExtent},${targetY}L${targetX},${targetY}`
+  } else {
+    let x0 = d.source.x1,
+      x1 = d.target.x0,
+      xi = interpolateNumber(x0, x1),
+      x2 = xi(curvature),
+      x3 = xi(1 - curvature),
+      y0 = d.y0,
+      y1 = d.y1
+
+    arrowPath = `M${x0},${y0}C${x2},${y0} ${x3},${y1} ${x1},${y1}`
+  }
+
+  return (
+    <>
+      <Mark
+        {...baseMarkProps}
+        renderMode={renderMode ? renderMode(d, i) : undefined}
+        key={key}
+        className={className}
+        simpleInterpolate={true}
+        markType="path"
+        d={generatedPath}
+        style={styleFn(d, i)}
+        aria-label={`Connection from ${d.source.id} to ${d.target.id}`}
+        tabIndex={-1}
+      />
+      {showArrows && <ArrowedPath d={arrowPath} width={d.sankeyWidth} />}
+    </>
+  )
 }
 
 export const chordEdgeGenerator =
@@ -680,6 +770,13 @@ export const drawEdges = (settings) => {
     }
   } else if (customMark) {
     // CUSTOM MARK IMPLEMENTATION
+    if (type) {
+      if (typeof type === "function") {
+        dGenerator = type
+      } else if (customEdgeHashD[type]) {
+        dGenerator = (d) => customEdgeHashD[type](d, projection)
+      }
+    }
     let i = 0
     for (const d of data) {
       const renderedCustomMark = customMark({
@@ -692,7 +789,8 @@ export const drawEdges = (settings) => {
         key: renderKeyFn ? renderKeyFn(d, i) : `edge-${i}`,
         className: `${classFn(d, i)} edge`,
         transform: `translate(${d.x},${d.y})`,
-        baseMarkProps
+        baseMarkProps,
+        generatedPath: dGenerator(d)
       })
       if (
         renderedCustomMark &&

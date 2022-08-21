@@ -135,6 +135,7 @@
     "d3-hexbin": "^0.2.2",
     "d3-hierarchy": "^1.1.3",
     "d3-interpolate": "^1.1.5",
+    "d3-path-arrows": "^0.4.0",
     "d3-polygon": "^1.0.5",
     "d3-sankey-circular": "0.25.0",
     "d3-scale": "^1.0.3",
