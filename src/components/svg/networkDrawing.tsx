@@ -201,6 +201,7 @@ export const arcEdgeGenerator = (size) => {
 const ArrowedPath = (props) => {
   const { d, width } = props
   const pathRef = useRef(null)
+
   useEffect(() => {
     if (pathRef?.current) {
       const arrowHeadSize = Math.max(width / 5, 2)
@@ -208,7 +209,9 @@ const ArrowedPath = (props) => {
         .arrowLength(arrowHeadSize * 2.5)
         .gapLength(100)
         .arrowHeadSize(arrowHeadSize)
-        .path(() => d)
+        .path(d)
+
+      select(pathRef.current).selectAll("*").remove()
 
       select(pathRef.current).call(arrows)
 
@@ -220,7 +223,7 @@ const ArrowedPath = (props) => {
 
       select(pathRef.current).selectAll(".arrow-head").style("fill", "white")
     }
-  }, [!!pathRef?.current])
+  }, [d])
 
   return <g ref={pathRef} />
 }
