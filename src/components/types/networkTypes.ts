@@ -37,15 +37,20 @@ export interface NodeType {
 }
 
 export interface EdgeType {
+  circular?: boolean
+  circularPathData?: any
   source?: NodeType
   target?: NodeType
   d?: string
   x?: number
   y?: number
+  y0?: number
+  y1?: number
   sankeyWidth?: number
   direction?: string
   width?: number
   points?: Array<{ x: number; y: number }>
+  showArrows?: boolean
 }
 
 export interface GraphSettingsType {
@@ -96,8 +101,12 @@ export interface NetworkSettingsType {
   sortGroups?: Function
   simulation?: Function
   sort?: (a: GenericObject, b: GenericObject) => number
-  zoom?: boolean | "stretch" | ((nodes: NodeType[], size: number[]) => void)
+  zoom?:
+    | boolean
+    | "stretch"
+    | ((nodes: NodeType[], edges: EdgeType[], size: number[]) => void)
   fixExistingNodes?: boolean | Function
+  showArrows?: boolean
 }
 
 export interface NetworkFrameState extends GeneralFrameState {

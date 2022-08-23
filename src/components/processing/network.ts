@@ -44,7 +44,8 @@ import {
   circularAreaLink,
   radialLabelGenerator,
   dagreEdgeGenerator,
-  softStack
+  softStack,
+  sankeyArrowGenerator
 } from "../svg/networkDrawing"
 
 import {
@@ -130,6 +131,8 @@ function determineEdgeIcon({
       return arcEdgeGenerator(size)
     case "dagre":
       if (graph) return dagreEdgeGenerator(graph.graph().rankdir)
+    case "sankey":
+      return sankeyArrowGenerator
   }
   return undefined
 }
@@ -891,8 +894,10 @@ export const calculateNetworkFrame = (
         nodePaddingRatio = nodePadding ? undefined : 0.5,
         nodeWidth = networkSettings.type === "flowchart" ? 2 : 24,
         customSankey,
-        direction = "right"
+        direction = "right",
+        showArrows = false
       } = networkSettings
+
       const sankeyOrient = sankeyOrientHash[orient]
 
       const actualSankey = customSankey || sankeyCircular
@@ -936,6 +941,7 @@ export const calculateNetworkFrame = (
       })
 
       projectedEdges.forEach((d) => {
+        d.showArrows = showArrows
         d.sankeyWidth = d.width
         d.direction = direction
         d.width = undefined
@@ -1189,7 +1195,7 @@ export const calculateNetworkFrame = (
     })
   }
   if (typeof networkSettings.zoom === "function") {
-    networkSettings.zoom(projectedNodes, adjustedSize)
+    networkSettings.zoom(projectedNodes, projectedEdges, adjustedSize)
   } else if (
     networkSettings.zoom !== false &&
     networkSettings.type !== "matrix" &&
@@ -1282,6 +1288,87 @@ export const calculateNetworkFrame = (
         })
       }
     })
+  } else if (
+    networkSettings.zoom !== false &&
+    networkSettings.type === "sankey" &&
+    projectedEdges.some((e) => e.circular)
+  ) {
+    const circularLinks = projectedEdges.filter((e) => e.circular)
+    const xMinEdge = min(
+      circularLinks,
+      (e) => e.circularPathData.rightFullExtent - e.sankeyWidth / 2
+    )
+    const xMaxEdge = max(
+      circularLinks,
+      (e) => e.circularPathData.leftFullExtent + e.sankeyWidth / 2
+    )
+    const yMinEdge = min(
+      circularLinks,
+      (e) => e.circularPathData.verticalFullExtent - e.sankeyWidth / 2
+    )
+    const yMaxEdge = max(
+      circularLinks,
+      (e) => e.circularPathData.verticalFullExtent + e.sankeyWidth / 2
+    )
+
+    const yMinNode = min(projectedNodes, (node) => node.y0)
+    const yMaxNode = max(projectedNodes, (node) => node.y1)
+
+    const sankeyMinX = Math.min(xMinEdge, 0)
+    const sankeyMaxX = Math.max(xMaxEdge, adjustedSize[0])
+    const sankeyMinY = Math.min(yMinEdge, yMinNode)
+    const sankeyMaxY = Math.max(yMaxEdge, yMaxNode)
+
+    const projectionScaleX = scaleLinear()
+      .domain([sankeyMinX, sankeyMaxX])
+      .range([0, adjustedSize[0]])
+    const projectionScaleY = scaleLinear()
+      .domain([sankeyMinY, sankeyMaxY])
+      .range([0, adjustedSize[1]])
+
+    const widthFactor =
+      (adjustedSize[1] - margin.top - margin.bottom) / (sankeyMaxY - sankeyMinY)
+
+    for (const node of projectedNodes) {
+      node.x = projectionScaleX(node.x)
+      node.x0 = projectionScaleX(node.x0)
+      node.x1 = projectionScaleX(node.x1)
+      node.y = projectionScaleY(node.y)
+      node.y0 = projectionScaleY(node.y0)
+      node.y1 = projectionScaleY(node.y1)
+      node.width = node.x1 - node.x0
+      node.height = node.y1 - node.y0
+    }
+
+    for (const edge of projectedEdges) {
+      if (edge.circular) {
+        edge.circularPathData.sourceX = projectionScaleX(
+          edge.circularPathData.sourceX
+        )
+        edge.circularPathData.sourceY = projectionScaleY(
+          edge.circularPathData.sourceY
+        )
+        edge.circularPathData.leftFullExtent = projectionScaleX(
+          edge.circularPathData.leftFullExtent
+        )
+        edge.circularPathData.verticalFullExtent = projectionScaleY(
+          edge.circularPathData.verticalFullExtent
+        )
+        edge.circularPathData.rightFullExtent = projectionScaleX(
+          edge.circularPathData.rightFullExtent
+        )
+        edge.circularPathData.targetX = projectionScaleX(
+          edge.circularPathData.targetX
+        )
+        edge.circularPathData.targetY = projectionScaleY(
+          edge.circularPathData.targetY
+        )
+      } else {
+        edge.y0 = projectionScaleY(edge.y0)
+        edge.y1 = projectionScaleY(edge.y1)
+      }
+      edge.sankeyWidth = edge.sankeyWidth * widthFactor
+    }
   }
 
   projectedNodes.forEach((node) => {

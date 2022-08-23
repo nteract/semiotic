@@ -4280,6 +4280,14 @@ d3-interpolate@1, d3-interpolate@^1.1.5:
   dependencies:
     d3-color "1 - 2"
 
+d3-path-arrows@^0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/d3-path-arrows/-/d3-path-arrows-0.4.0.tgz#b1dfd47425e339a687721ffc0b3131ccd8b3220e"
+  integrity sha512-L0N4QvV+TVR6suxVcGaSWtnoOmlwHAdK4cAZylc2t8lS+sQR3/LYkRhkNYdQa4eRsWw+4XKklIYEv+ljLQxH4Q==
+  dependencies:
+    d3-array "^1.2.1"
+    d3-selection "^1.1.0"
+
 d3-path@1:
   version "1.0.9"
   resolved "https://registry.yarnpkg.com/d3-path/-/d3-path-1.0.9.tgz#48c050bb1fe8c262493a8caf5524e3e9591701cf"
@@ -4335,6 +4343,11 @@ d3-selection@2:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/d3-selection/-/d3-selection-2.0.0.tgz#94a11638ea2141b7565f883780dabc7ef6a61066"
   integrity sha512-XoGGqhLUN/W14NmaqcO/bb1nqjDAw5WtSYb2X8wiuQWvSZUsUVYsOSkOybUrNvcBjaywBdYPy03eXHMXjk9nZA==
+
+d3-selection@^1.1.0:
+  version "1.4.2"
+  resolved "https://registry.yarnpkg.com/d3-selection/-/d3-selection-1.4.2.tgz#dcaa49522c0dbf32d6c1858afc26b6094555bc5c"
+  integrity sha512-SJ0BqYihzOjDnnlfyeHT0e30k0K1+5sR3d5fNueCNeuhZTnGw4M4o8mqJchSwgKMXCNFo+e2VTChiSJ0vYtXkg==
 
 d3-shape@^1.2.0, d3-shape@^1.3.5:
   version "1.3.7"
