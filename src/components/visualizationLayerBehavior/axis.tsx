@@ -98,18 +98,18 @@ const defaultTickLineGenerator = ({
   )
 }
 
-const outboundTickLineGenerator = ({
-  xy,
-  orient,
-  i,
-  className = ""
-}) => {
+const outboundTickLineGenerator = ({ xy, orient, i, className = "" }) => {
   const tickLength = 8
   let genD = `M-4,${xy.y1}L${xy.x1},${xy.y2}`
-  if(orient==="left") { genD = `M${xy.x1-tickLength},${xy.y1}L${xy.x1},${xy.y2}` }
-  else if(orient==="right") { genD = `M${xy.x2},${xy.y1}L${xy.x2 + tickLength},${xy.y2}` }
-  else if(orient==="top") { genD = `M${xy.x1},${xy.y1 - tickLength}L${xy.x1},${xy.y1}` }
-  else if(orient==="bottom") { genD = `M${xy.x1},${xy.y2}L${xy.x1},${xy.y2 + tickLength}` }
+  if (orient === "left") {
+    genD = `M${xy.x1 - tickLength},${xy.y1}L${xy.x1},${xy.y2}`
+  } else if (orient === "right") {
+    genD = `M${xy.x2},${xy.y1}L${xy.x2 + tickLength},${xy.y2}`
+  } else if (orient === "top") {
+    genD = `M${xy.x1},${xy.y1 - tickLength}L${xy.x1},${xy.y1}`
+  } else if (orient === "bottom") {
+    genD = `M${xy.x1},${xy.y2}L${xy.x1},${xy.y2 + tickLength}`
+  }
   return (
     <Mark
       key={i}
@@ -149,7 +149,7 @@ export function axisPieces({
   footer = false,
   tickSize = footer
     ? -10
-    : ["top", "bottom"].find(d => d === orient)
+    : ["top", "bottom"].find((d) => d === orient)
     ? size[1]
     : size[0],
   jaggedBase
@@ -218,7 +218,7 @@ export function axisPieces({
 
   if (
     jaggedBase &&
-    generatedTicks.find(t => t === scale.domain()[0]) === undefined
+    generatedTicks.find((t) => t === scale.domain()[0]) === undefined
   ) {
     generatedTicks = [scale.domain()[0], ...generatedTicks]
   }
@@ -342,17 +342,17 @@ export const axisLines = ({
       jaggedBase,
       scale
     })
-  ) as React.ReactNode
+  ) as React.ReactNode[]
 
-  const outboundAxisLines = showOutboundTickLines?
-    axisParts.map((axisPart, i) =>
-      outboundTickLineGenerator({
-        xy: axisPart,
-        orient,
-        i,
-        className
-      })
-    ) as React.ReactNode
+  const outboundAxisLines = showOutboundTickLines
+    ? (axisParts.map((axisPart, i) =>
+        outboundTickLineGenerator({
+          xy: axisPart,
+          orient,
+          i,
+          className
+        })
+      ) as React.ReactNode)
     : []
 
   return [...axisLines, outboundAxisLines]

@@ -508,9 +508,16 @@ export function orFrameConnectionRenderer({
                   sizeY2: mheight
                 })
               } else if (projection === "horizontal") {
+                const { value } = piece.piece
+                const { value: mvalue } = matchingPiece.piece
+                const x1 = value >= 0 ? x - width : piece.piece.bottom - width
+                const x2 =
+                  mvalue >= 0
+                    ? mx - mwidth
+                    : matchingPiece.piece.bottom - mwidth
                 markD = drawAreaConnector({
-                  x1: x,
-                  x2: mx,
+                  x1,
+                  x2,
                   y1: y + height,
                   y2: my,
                   sizeX1: width,
