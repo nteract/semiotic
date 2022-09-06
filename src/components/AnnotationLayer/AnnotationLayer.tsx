@@ -57,13 +57,6 @@ const processAnnotations = (
   annotationProcessor: AnnotationHandling,
   props: AnnotationLayerProps
 ) => {
-  console.log('- - - - processAnnotations')
-  console.log({
-    adjustableAnnotations,
-    annotationProcessor,
-    props
-  })
-  
   
   const {
     layout = { type: false, noteHeight: undefined, noteWidth: undefined }
