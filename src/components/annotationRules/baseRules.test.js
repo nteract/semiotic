@@ -97,7 +97,7 @@ describe("annotationRules", () => {
         const foundAnnotation = mounted.find("Annotation")
         expect(foundAnnotation.length).toBe(1)
       })
-      it.only("passes noteVals: {dx: 0, dy: 0, padding: 2}", () => {
+      it("passes noteVals: {dx: 0, dy: 0, padding: 2}", () => {
         const {
           noteData: {
             dx,
