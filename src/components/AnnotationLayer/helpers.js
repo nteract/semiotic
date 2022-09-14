@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'
 
 function marginOffsetFn(orient, axisSettings, marginOffset) {
   if (typeof marginOffset === "number") {
@@ -21,7 +21,7 @@ const keyFromSVGAnnotations = (
 }
 
 function adjustedAnnotationKeyMapper(d) {
-  if (!d.props?.noteData) {
+  if (!d || !d.props || !d.props.noteData) {
     return ""
   }
   const { note = {} } = d.props.noteData
@@ -76,7 +76,7 @@ function safeStringify(value) {
 }
 
 function noteDataWidth(noteData, charWidth = 8, layoutNoteWidth) {
-  let { noteWidth = layoutNoteWidth } = noteData
+  const { noteWidth = layoutNoteWidth } = noteData
 
   let noteWidthFn = noteWidth
 
@@ -100,7 +100,7 @@ function noteDataHeight(
   lineHeight = 20,
   layoutNoteHeight
 ) {
-  let { noteHeight = layoutNoteHeight } = noteData
+  const { noteHeight = layoutNoteHeight } = noteData
 
   let noteHeightFn = noteHeight
 
