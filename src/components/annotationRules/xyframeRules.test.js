@@ -14,16 +14,8 @@ import {
   svgEncloseAnnotation,
   svgHullEncloseAnnotation
 } from "./xyframeRules"
-// svgHorizontalPointsAnnotation,
-// svgVerticalPointsAnnotation,
 
 describe("xyframeRules", () => {
-  // describe('svgHorizontalPointsAnnotation', () => {
-
-  // })
-  // describe('svgVerticalPointsAnnotation', () => {
-
-  // })
   describe('svgXYAnnotation', () => {
     
     it("without d.type === xy, returns 1 Mark, skipping label", () => {
