@@ -467,7 +467,7 @@ describe("xyframeRules", () => {
           i: 2,
           lines: {
             type: {
-              curve: 'linear'
+              curve: "linear"
             },
             data: []
           },
@@ -479,9 +479,13 @@ describe("xyframeRules", () => {
             type: {
               curve: "linear"
             },
-            data: [{
-              id: 123
-            }]
+            data: [
+              {
+                id: 123,
+                x: 25,
+                y: 75
+              }
+            ]
           },
           idAccessor: (d) => d.id,
           xScale: scaleLinear().domain([0, 100]).range([0, 100]),
@@ -492,11 +496,9 @@ describe("xyframeRules", () => {
             }
           }
         })
-        const mounted = mount(<svg>{ThisResult}</svg>)
-        console.log('mounted.debug()')
-        console.log(mounted.debug())
+        const mountedCircle = mount(<svg>{ThisResult}</svg>).find('circle')
         
-        expect(mounted.length).toBe(1)
+        expect(mountedCircle.length).toBe(1)
       })
     })
   // })
