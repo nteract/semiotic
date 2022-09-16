@@ -199,12 +199,13 @@ export const arcEdgeGenerator = (size) => {
 }
 
 const ArrowedPath = (props) => {
-  const { d, width } = props
+  const { d, width, edgeLength, circular } = props
   const pathRef = useRef(null)
 
   useEffect(() => {
     if (pathRef?.current) {
-      const arrowHeadSize = Math.max(width / 5, 2)
+      const circularMod = circular ? width : edgeLength
+      const arrowHeadSize = Math.max(Math.min(width, circularMod) / 5, 2)
       let arrows = pathArrows()
         .arrowLength(arrowHeadSize * 2.5)
         .gapLength(100)
@@ -282,7 +283,14 @@ export const sankeyArrowGenerator = (props) => {
         aria-label={`Connection from ${d.source.id} to ${d.target.id}`}
         tabIndex={-1}
       />
-      {showArrows && <ArrowedPath d={arrowPath} width={d.sankeyWidth} />}
+      {showArrows && (
+        <ArrowedPath
+          d={arrowPath}
+          width={d.sankeyWidth}
+          edgeLength={Math.abs(d.target.x - d.source.x)}
+          circular={d.circular}
+        />
+      )}
     </>
   )
 }

@@ -34,6 +34,7 @@ export interface NodeType {
   index?: number
   zoomedHeight?: number
   zoomedWidth?: number
+  value?: number
 }
 
 export interface EdgeType {
@@ -51,6 +52,8 @@ export interface EdgeType {
   width?: number
   points?: Array<{ x: number; y: number }>
   showArrows?: boolean
+  ephemeral?: boolean
+  value?: number
 }
 
 export interface GraphSettingsType {

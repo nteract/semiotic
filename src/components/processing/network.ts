@@ -914,6 +914,46 @@ export const calculateNetworkFrame = (
         ]
       }
 
+      //CREATE FAKE EDGES TO GET UP TO PASSED VALUE
+      const generateEphemeralEdges = projectedNodes.some(
+        (n) => !n.createdByFrame && n.value > 0
+      )
+      if (generateEphemeralEdges) {
+        const edgeValueMap = new Map()
+        for (const edge of projectedEdges) {
+          if (!edgeValueMap.has(edge.source.id)) {
+            edgeValueMap.set(edge.source.id, {
+              source: 0,
+              target: 0
+            })
+          }
+          if (!edgeValueMap.has(edge.target.id)) {
+            edgeValueMap.set(edge.target.id, {
+              source: 0,
+              target: 0
+            })
+          }
+          edgeValueMap.get(edge.source.id).source += edge.value
+          edgeValueMap.get(edge.target.id).target += edge.value
+        }
+        for (const node of projectedNodes) {
+          if (!node.createdByFrame) {
+            const maxEdgeValue = Math.max(
+              edgeValueMap.get(node.id).source,
+              edgeValueMap.get(node.id).target
+            )
+            if (node.value > maxEdgeValue) {
+              projectedEdges.push({
+                source: node,
+                target: node,
+                value: node.value - maxEdgeValue,
+                ephemeral: true
+              })
+            }
+          }
+        }
+      }
+
       const frameSankey = actualSankey()
         .extent(frameExtent)
         .links(projectedEdges)
@@ -922,6 +962,10 @@ export const calculateNetworkFrame = (
         .nodeId(nodeIDAccessor)
         .nodeWidth(nodeWidth)
         .iterations(iterations)
+
+      if (generateEphemeralEdges) {
+        projectedEdges = projectedEdges.filter((e) => !e.ephemeral)
+      }
 
       if (frameSankey.nodePaddingRatio && nodePaddingRatio) {
         frameSankey.nodePaddingRatio(nodePaddingRatio)
