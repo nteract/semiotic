@@ -1,6 +1,6 @@
 import React from "react"
 import { mount } from "enzyme"
-import AnnotationLayer, { processAnnotations } from "./AnnotationLayer"
+import AnnotationLayer from "./AnnotationLayer"
 import { TooltipProvider } from "./../store/TooltipStore"
 import {
   marginOffsetFn,
