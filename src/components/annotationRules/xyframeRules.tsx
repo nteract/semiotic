@@ -13,7 +13,7 @@ import { curveHash } from "../visualizationLayerBehavior/general"
 import { ScaleLinear } from "d3-scale"
 import { ProjectedPoint, RenderPipelineType } from "../types/generalTypes"
 
-const pointsAlong = along => ({
+export const pointsAlong = along => ({
   d,
   lines,
   points,
