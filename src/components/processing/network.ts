@@ -818,6 +818,8 @@ export const calculateNetworkFrame = (
     })
   }
 
+  let generateEphemeralEdges = false
+
   if (
     networkSettings.type !== "static" &&
     (changedData || networkSettingsChanged)
@@ -915,7 +917,7 @@ export const calculateNetworkFrame = (
       }
 
       //CREATE FAKE EDGES TO GET UP TO PASSED VALUE
-      const generateEphemeralEdges = projectedNodes.some(
+      generateEphemeralEdges = projectedNodes.some(
         (n) => !n.createdByFrame && n.value > 0
       )
       if (generateEphemeralEdges) {
@@ -1238,6 +1240,7 @@ export const calculateNetworkFrame = (
       node.x1 = adjustedSize[0] - node.x1
     })
   }
+
   if (typeof networkSettings.zoom === "function") {
     networkSettings.zoom(projectedNodes, projectedEdges, adjustedSize)
   } else if (
@@ -1335,31 +1338,37 @@ export const calculateNetworkFrame = (
   } else if (
     networkSettings.zoom !== false &&
     networkSettings.type === "sankey" &&
-    projectedEdges.some((e) => e.circular)
+    (projectedEdges.some((e) => e.circular) || generateEphemeralEdges)
   ) {
     const circularLinks = projectedEdges.filter((e) => e.circular)
-    const xMinEdge = min(
-      circularLinks,
-      (e) => e.circularPathData.rightFullExtent - e.sankeyWidth / 2
-    )
-    const xMaxEdge = max(
-      circularLinks,
-      (e) => e.circularPathData.leftFullExtent + e.sankeyWidth / 2
-    )
-    const yMinEdge = min(
-      circularLinks,
-      (e) => e.circularPathData.verticalFullExtent - e.sankeyWidth / 2
-    )
-    const yMaxEdge = max(
-      circularLinks,
-      (e) => e.circularPathData.verticalFullExtent + e.sankeyWidth / 2
-    )
+    const xMinEdge =
+      min(
+        circularLinks,
+        (e) => e.circularPathData.rightFullExtent - e.sankeyWidth / 2
+      ) || Infinity
+    const xMaxEdge =
+      max(
+        circularLinks,
+        (e) => e.circularPathData.leftFullExtent + e.sankeyWidth / 2
+      ) || -Infinity
+    const yMinEdge =
+      min(
+        circularLinks,
+        (e) => e.circularPathData.verticalFullExtent - e.sankeyWidth / 2
+      ) || Infinity
+    const yMaxEdge =
+      max(
+        circularLinks,
+        (e) => e.circularPathData.verticalFullExtent + e.sankeyWidth / 2
+      ) || -Infinity
 
     const yMinNode = min(projectedNodes, (node) => node.y0)
     const yMaxNode = max(projectedNodes, (node) => node.y1)
+    const xMinNode = min(projectedNodes, (node) => node.x0)
+    const xMaxNode = max(projectedNodes, (node) => node.x1)
 
-    const sankeyMinX = Math.min(xMinEdge, 0)
-    const sankeyMaxX = Math.max(xMaxEdge, adjustedSize[0])
+    const sankeyMinX = Math.min(xMinEdge, xMinNode)
+    const sankeyMaxX = Math.max(xMaxEdge, xMaxNode)
     const sankeyMinY = Math.min(yMinEdge, yMinNode)
     const sankeyMaxY = Math.max(yMaxEdge, yMaxNode)
 
@@ -1370,8 +1379,7 @@ export const calculateNetworkFrame = (
       .domain([sankeyMinY, sankeyMaxY])
       .range([0, adjustedSize[1]])
 
-    const widthFactor =
-      (adjustedSize[1] - margin.top - margin.bottom) / (sankeyMaxY - sankeyMinY)
+    const widthFactor = adjustedSize[1] / (sankeyMaxY - sankeyMinY)
 
     for (const node of projectedNodes) {
       node.x = projectionScaleX(node.x)
