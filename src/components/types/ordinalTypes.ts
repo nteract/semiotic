@@ -80,8 +80,8 @@ export interface OrdinalFrameProps extends GeneralFrameProps {
     | boolean
     | ((
         labelValue: string,
-        index: number,
         columnData: any,
+        index: number,
         column: any
       ) => string | Element)
   renderMode?: object | string | accessorType<string | object>
