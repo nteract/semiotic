@@ -76,7 +76,14 @@ export interface OrdinalFrameProps extends GeneralFrameProps {
   dynamicColumnWidth?: string | accessorType<number>
   pieceIDAccessor?: string | accessorType<string>
   ordinalAlign?: string
-  oLabel?: boolean | accessorType<string | Element>
+  oLabel?:
+    | boolean
+    | ((
+        labelValue: string,
+        index: number,
+        columnData: any,
+        column: any
+      ) => string | Element)
   renderMode?: object | string | accessorType<string | object>
   summaryRenderMode?: object | string | accessorType<string | object>
   pixelColumnWidth?: number

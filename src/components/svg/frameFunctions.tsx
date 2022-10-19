@@ -45,7 +45,7 @@ type CalculateMarginTypes = {
   margin?: number | object
   axes?: Array<AxisProps>
   title: TitleType
-  oLabel?: boolean | accessorType<string | Element>
+  oLabel?: any
   projection?: ProjectionTypes
   size?: number[]
 }

@@ -15,6 +15,7 @@ import {
 } from "../svg/frameFunctions"
 import { pointOnArcAtAngle, renderLaidOutPieces } from "../svg/pieceDrawing"
 import { drawSummaries, renderLaidOutSummaries } from "../svg/summaryLayouts"
+import AnnotationCalloutElbow from "react-annotation/lib/Types/AnnotationCalloutElbow"
 
 import {
   clusterBarLayout,
@@ -745,7 +746,9 @@ export const calculateOrdinalFrame = (
 
   if (currentProps.oLabel) {
     let labelingFn
-    if (labelSettings.label === true) {
+    if (typeof labelSettings.label === "function") {
+      labelingFn = labelSettings.label
+    } else {
       const labelStyle = {
         textAnchor: "middle"
       }
@@ -767,6 +770,43 @@ export const calculateOrdinalFrame = (
               ? pieArcs[i].midAngle * 360 + 90
               : pieArcs[i].midAngle * 360 - 90
           })`
+        } else if (
+          projection === "radial" &&
+          labelSettings.orient === "annotation"
+        ) {
+          const { centroid } = pieArcs[i]
+
+          const labelIndex = pieArcs.filter(
+            (p, q) =>
+              q <= i &&
+              centroid[0] < 0 === pieArcs[q].centroid[0] < 0 &&
+              centroid[1] < 0 === pieArcs[q].centroid[1] < 0
+          ).length
+          const labelMod = labelIndex * 15
+
+          let positionProps = { dx: 0, dy: 0 }
+          if (centroid[0] < 0) {
+            positionProps.dx = -30
+          } else {
+            positionProps.dx = 30
+          }
+
+          if (centroid[1] < 0) {
+            positionProps.dy = -35 + labelMod
+          } else {
+            positionProps.dy = 35 - labelMod
+          }
+          return (
+            <AnnotationCalloutElbow
+              x={0}
+              y={0}
+              {...positionProps}
+              color={"black"}
+              note={{
+                label: d
+              }}
+            />
+          )
         } else if (
           projection === "radial" &&
           labelSettings.orient !== "center"
@@ -797,8 +837,6 @@ export const calculateOrdinalFrame = (
           </text>
         )
       }
-    } else if (typeof labelSettings.label === "function") {
-      labelingFn = labelSettings.label
     }
 
     oExtent.forEach((d, i) => {
@@ -813,7 +851,16 @@ export const calculateOrdinalFrame = (
           xPosition = -3
         }
       } else if (projection === "radial") {
-        if (labelSettings.orient === "center") {
+        if (labelSettings.orient === "annotation") {
+          xPosition =
+            pieArcs[i].centroid[0] * 0.25 +
+            pieArcs[i].outerPoint[0] * 0.75 +
+            pieArcs[i].translate[0]
+          yPosition =
+            pieArcs[i].centroid[1] * 0.25 +
+            pieArcs[i].outerPoint[1] * 0.75 +
+            pieArcs[i].translate[1]
+        } else if (labelSettings.orient === "center") {
           xPosition = pieArcs[i].centroid[0] + pieArcs[i].translate[0]
           yPosition = pieArcs[i].centroid[1] + pieArcs[i].translate[1]
         } else {
