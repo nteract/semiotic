@@ -69,6 +69,8 @@
     "@parcel/transformer-inline-string": "^2.2.1",
     "@parcel/transformer-mdx": "^2.2.1",
     "@playwright/test": "^1.17.1",
+    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/react": "^13.4.0",
     "@types/d3-scale": "^2.1.1",
     "@types/node": "^13.7.4",
     "@types/react": "^17.0.37",
