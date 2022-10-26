@@ -1,10 +1,10 @@
 import React from "react"
-import { mount } from "enzyme"
+import { render } from "@testing-library/react"
 import MiniMap from "./MiniMap"
 
 describe("MiniMap", () => {
     it("renders without crashing", () => {
-        mount(<MiniMap
+        render(<MiniMap
         />)
     })
 

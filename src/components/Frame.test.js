@@ -1,5 +1,5 @@
 import React from "react"
-import { mount /*, shallow*/ } from "enzyme"
+import { render } from "@testing-library/react"
 import Frame from "./Frame"
 
 const frameWidth = 100
@@ -12,7 +12,6 @@ const frameProps = {
 
 describe("Frame", () => {
   it("renders without crashing", () => {
-    mount(<Frame {...frameProps} />)
+    render(<Frame {...frameProps} />)
   })
-  //  const shallowFrame = shallow(<Frame {...frameProps} className="test-class" />)
 })

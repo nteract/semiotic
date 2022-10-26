@@ -2,7 +2,6 @@ import React from "react"
 import Brush from "./Brush"
 import { brushX } from "d3-brush"
 import { render } from "@testing-library/react"
-import "@testing-library/jest-dom"
 
 const extent = [0, 100]
 const selectedExtent = [20, 40]

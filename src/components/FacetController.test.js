@@ -1,5 +1,5 @@
 import React from "react"
-import { mount } from "enzyme"
+import { render } from "@testing-library/react"
 import FacetController from "./FacetController"
 import OrdinalFrame from "./OrdinalFrame"
 import { ResponsiveXYFrame } from "./ResponsiveXYFrame"
@@ -173,7 +173,7 @@ const xyFrameData3 = {
 
 describe("FacetController", () => {
   it("renders without crashing", () => {
-    mount(
+    render(
       <FacetController>
         <div>Div Child 1</div>
         <div>Div Child 2</div>
@@ -182,7 +182,7 @@ describe("FacetController", () => {
   })
 
   it("renders Semiotic frames", () => {
-    mount(
+    render(
       <FacetController
         size={[300, 300]}
         margin={{ top: 10, left: 55, bottom: 10, right: 10 }}
@@ -212,7 +212,7 @@ describe("FacetController", () => {
   })
 
   it("renders mixed vanilla HTML & Semiotic frames", () => {
-    mount(
+    render(
       <FacetController
         size={[300, 300]}
         responsiveWidth={true}

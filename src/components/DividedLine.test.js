@@ -2,7 +2,6 @@ import React from "react"
 import DividedLine from "./DividedLine"
 import { curveBasis } from "d3-shape"
 import { render } from "@testing-library/react"
-import "@testing-library/jest-dom"
 
 function parameters(point) {
     if (point.x < 100)

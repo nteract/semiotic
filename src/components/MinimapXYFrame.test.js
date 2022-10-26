@@ -1,5 +1,5 @@
 import React from "react"
-import { mount } from "enzyme"
+import { render } from "@testing-library/react"
 import MinimapXYFrame from "./MinimapXYFrame"
 
 const settings = {
@@ -11,9 +11,7 @@ const settings = {
 
 describe("MinimapXYFrame", () => {
     it("renders without crashing", () => {
-        mount(<MinimapXYFrame
-            {...settings}
-        />)
+        render(<MinimapXYFrame {...settings} />)
     })
 
 })

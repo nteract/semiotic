@@ -1,6 +1,7 @@
 import React from "react"
-import { mount } from "enzyme"
+import { render } from "@testing-library/react"
 import Legend from "./Legend"
+// import "@testing-library/jest-dom"
 
 const legendGroups = [
     {
@@ -20,7 +21,7 @@ position?: "left" | "right"
 
 describe("Legend", () => {
     it("renders without crashing", () => {
-        mount(<svg><Legend
+        render(<svg><Legend
             legendGroups={legendGroups}
         /></svg>)
     })
