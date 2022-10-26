@@ -1,7 +1,8 @@
 import React from "react"
-import { mount } from "enzyme"
+import { render, screen } from "@testing-library/react"
 import AnnotationLayer from "./AnnotationLayer"
 import { TooltipProvider } from "./../store/TooltipStore"
+import "@testing-library/jest-dom"
 import {
   marginOffsetFn,
   adjustedAnnotationKeyMapper,
@@ -221,7 +222,7 @@ describe("AnnotationLayer", () => {
   })
 
   it("renders without crashing", () => {
-    mount(
+    render(
       <TooltipProvider>
         <AnnotationLayer
           margin={{ left: 10, right: 10, top: 10, bottom: 10 }}
@@ -236,28 +237,31 @@ describe("AnnotationLayer", () => {
     )
   })
 
-  const mountedLayerWithOptions = mount(
-    <TooltipProvider>
-      <AnnotationLayer
-        margin={{ left: 10, right: 10, top: 10, bottom: 10 }}
-        size={[400, 400]}
-        useSpans={false}
-        annotations={annotations}
-        svgAnnotationRule={svgAnnotationRule}
-        htmlAnnotationRule={htmlAnnotationRule}
-        voronoiHover={voronoiHover}
-      />
-    </TooltipProvider>
-  )
   it("creates a div and an SVG with annotations", () => {
-    expect(mountedLayerWithOptions.find("svg").length).toEqual(1)
+    const { container } = render(
+      <TooltipProvider>
+        <AnnotationLayer
+          margin={{ left: 10, right: 10, top: 10, bottom: 10 }}
+          size={[400, 400]}
+          useSpans={false}
+          annotations={annotations}
+          svgAnnotationRule={svgAnnotationRule}
+          htmlAnnotationRule={htmlAnnotationRule}
+          voronoiHover={voronoiHover}
+        />
+      </TooltipProvider>
+    )
+
+    const annotationLayer = container.getElementsByClassName("annotation-layer")
+    
+    expect(annotationLayer).toBeTruthy()
     //        expect(mountedLayerWithOptions.find("g.annotation").length).toEqual(1)
   })
 
   it("includes a legend with legendSettings prop", () => { 
     const mockLegendStyleFn = jest.fn()
     const mockClickFn = jest.fn()
-    const tooltipElement = mount(
+    const { container } = render(
       <TooltipProvider>
         <AnnotationLayer
           margin={{ left: 10, right: 10, top: 10, bottom: 10 }}
@@ -285,8 +289,8 @@ describe("AnnotationLayer", () => {
       </TooltipProvider>
     )
 
-    const legendElement = tooltipElement.find('Legend')
-    expect(legendElement.length).toBe(1)
+    const legendElement = screen.getByText("mock-legend-grp-label")
+    expect(legendElement).toBeTruthy()
     
   })
 })
