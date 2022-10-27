@@ -1,5 +1,5 @@
 import React from "react"
-import { mount } from "enzyme"
+import { render } from '@testing-library/react'
 import Annotation from "./Annotation"
 import { AnnotationCalloutCircle } from "react-annotation"
 
@@ -22,23 +22,20 @@ const simpleNoteSettings = {
 }
 
 describe("Annotation", () => {
-
-    /*
-    it("renders without crashing", () => {
-        shallow(<Annotation noteData={simpleNoteSettings} />)
-    })
-    */
-    const mountedLayerWithOptions = mount(
-        <svg>
-            <Annotation
-                noteData={simpleNoteSettings}
-            />
-        </svg>
-    )
     it("creates a G with a React-Annotation note", () => {
-        expect(mountedLayerWithOptions.find("g.annotation").length).toEqual(1)
-        expect(mountedLayerWithOptions.find("g.annotation-subject").length).toEqual(1)
-        expect(mountedLayerWithOptions.find("g.annotation-connector").length).toEqual(1)
+        const { container } = render(
+            <svg>
+                <Annotation noteData={simpleNoteSettings} />
+            </svg>
+        )
+
+        const annotations = container.getElementsByClassName('annotation')
+        const annotationSubjects = container.getElementsByClassName("annotation-subject")
+        const annotationConnectors =
+          container.getElementsByClassName("annotation-connector")
+        expect(annotations.length).toEqual(1)
+        expect(annotationSubjects.length).toEqual(1)
+        expect(annotationConnectors.length).toEqual(1)
     })
 
 

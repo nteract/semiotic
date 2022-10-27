@@ -1,5 +1,5 @@
 import React from "react"
-import { mount, shallow } from "enzyme"
+import { render } from '@testing-library/react'
 import NetworkFrame from "./NetworkFrame"
 
 const someEdgeData = [
@@ -12,21 +12,23 @@ const someEdgeData = [
 
 describe("NetworkFrame", () => {
   it("renders", () => {
-    mount(<NetworkFrame edges={someEdgeData} disableContext={true} />)
-  })
-  const wrapper = shallow(
-    <NetworkFrame edges={someEdgeData} disableContext={true} />
-  )
-
-  it("renders a <Frame>", () => {
-    expect(wrapper.find("Frame").length).toEqual(1)
+    render(<NetworkFrame edges={someEdgeData} disableContext={true} />)
   })
 
-  it("renders some edges", () => {
-    const mountedFrame = mount(
-      <NetworkFrame edges={someEdgeData} disableContext={true} />
+  it("renders an element with passed test-class", () => {
+    const { container } = render(
+      <NetworkFrame edges={someEdgeData} disableContext={true} className="test-class"/>
     )
-
-    expect(mountedFrame.find("g.edge").length).toEqual(3)
+    
+    expect(container.getElementsByClassName("test-class").length).toEqual(1)
   })
+
+  // it("renders some edges", () => {
+  //   const { container } = render(
+  //     <NetworkFrame edges={someEdgeData} disableContext={true} />
+  //   )
+  //   const renderedEdgeGroups = container.getElementsByClassName("edge")
+    
+  //   expect(renderedEdgeGroups.length).toEqual(3)
+  // })
 })
