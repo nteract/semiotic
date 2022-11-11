@@ -18,7 +18,7 @@ function generatePoints(start, number) {
 const generatedData = dataSeeds.map((s, i) => {
   return {
     label: colors[i],
-    coordinates: generatePoints(s, 40)
+    coordinates: generatePoints(s, 40 - i)
   }
 })
 
@@ -31,16 +31,18 @@ export default (type = "stackedarea") => {
     yAccessor: "value",
     showLinePoints: "top",
     hoverAnnotation: true,
-    lineStyle: d => ({ fill: d.label, stroke: d.label, fillOpacity: 0.75 }),
-    annotations: [{
-      type: "area",
-      coordinates: [
-        { step: 5, value: -15 },
-        { step: 10, value: 10 },
-        { step: 8, value: 20 }
-      ],
-      label: "test-area"
-    }],
+    lineStyle: (d) => ({ fill: d.label, stroke: d.label, fillOpacity: 0.75 }),
+    annotations: [
+      {
+        type: "area",
+        coordinates: [
+          { step: 5, value: -15 },
+          { step: 10, value: 10 },
+          { step: 8, value: 20 }
+        ],
+        label: "test-area"
+      }
+    ],
     axes: [
       { orient: "left" },
       {

@@ -10,7 +10,7 @@ import {
 } from "../types/generalTypes"
 import { AnnotationType } from "../types/annotationTypes"
 
-const datesForUnique = d => (d instanceof Date ? d.getTime() : d)
+const datesForUnique = (d) => (d instanceof Date ? d.getTime() : d)
 
 type SummaryProjectionTypes = {
   data: Array<RawSummary>
@@ -95,16 +95,16 @@ export const projectSummaryData = ({
   yAccessor
 }: SummaryProjectionTypes) => {
   const projectedData = []
-  summaryDataAccessor.forEach(actualSummaryAccessor => {
-    xAccessor.forEach(actualXAccessor => {
-      yAccessor.forEach(actualYAccessor => {
+  summaryDataAccessor.forEach((actualSummaryAccessor) => {
+    xAccessor.forEach((actualXAccessor) => {
+      yAccessor.forEach((actualYAccessor) => {
         const projection = (d: Object) =>
           actualSummaryAccessor(d).map((p, q) => [
             actualXAccessor(p, q),
             actualYAccessor(p, q)
           ])
 
-        data.forEach(d => {
+        data.forEach((d) => {
           projectedData.push({
             ...d,
             _baseData: actualSummaryAccessor(d),
@@ -195,21 +195,31 @@ export const stackedArea = ({
   yPropTop,
   yPropBottom
 }: StackedAreaTypes) => {
-  const uniqXValues = data
-    .map(d => d.data.map(p => datesForUnique(p[xProp])))
-    .reduce((a, b) => a.concat(b), [])
-    .reduce((p, c) => {
-      if (p.indexOf(c) === -1) {
-        p.push(c)
-      }
-      return p
-    }, [])
+  const valueMap = new Map()
+  const lineSums = data.map(() => 0)
 
-  let stackSort = (a, b) =>
-    sum(b.data, (p) => p[yProp]) - sum(a.data, (p) => p[yProp])
+  let lineIndex = 0
+  for (const line of data) {
+    /*
+      After we calculate this, we then sort the lines (and the value used for the sorting is in this for loop)
+      So, we need to know their original index order in order to use the naively populated coordinate array in valueMap
+      Otherwise the coordinates in the map will be in different order than the sorted order of the lines
+    */
+    line.__lineIndex = lineIndex
+    for (const coord of line.data) {
+      const coordX = datesForUnique(coord[xProp])
+      lineSums[lineIndex] += coord[yProp]
+      if (!valueMap.has(coordX)) {
+        valueMap.set(coordX, [])
+      }
+      valueMap.get(coordX)[lineIndex] = coord
+    }
+    lineIndex++
+  }
+
+  let stackSort = (a, b) => lineSums[b.key] - lineSums[a.key]
   if (type === "stackedpercent-invert" || type === "stackedarea-invert") {
-    stackSort = (a, b) =>
-      sum(a.data, (p) => p[yProp]) - sum(b.data, (p) => p[yProp])
+    stackSort = (a, b) => lineSums[a.key] - lineSums[b.key]
   }
   sort = sort === undefined ? stackSort : sort
 
@@ -217,75 +227,79 @@ export const stackedArea = ({
     data = data.sort(sort)
   }
 
-  uniqXValues.forEach(xValue => {
+  const lineIndexSortLookup = data.map((line) => line.__lineIndex)
+
+  for (const [, coordsAtX] of valueMap) {
     let negativeOffset = 0
     let positiveOffset = 0
-    const stepValues = data
-      .map(d => d.data.filter(p => datesForUnique(p[xProp]) === xValue))
-      .reduce((a, b) => a.concat(b), [])
 
-    const positiveStepTotal = sum(stepValues, (d) =>
+    const positiveStepTotal = sum(coordsAtX, (d) =>
       d[yProp] > 0 ? d[yProp] : 0
     )
-    const negativeStepTotal = sum(stepValues, (d) =>
+    const negativeStepTotal = sum(coordsAtX, (d) =>
       d[yProp] < 0 ? d[yProp] : 0
     )
 
-    stepValues.forEach(l => {
-      if (l[yProp] < 0) {
-        if (
-          type === "linepercent" ||
-          type === "stackedpercent" ||
-          type === "stackedpercent-invert"
-        ) {
-          const percent = l[yProp] / negativeStepTotal
-          l.percent = percent
-          if (type === "linepercent") {
-            l[yPropBottom] = l[yPropBottom] = l[yPropTop] = l[
-              yPropMiddle
-            ] = percent
+    for (const newIndex of lineIndexSortLookup) {
+      const l = coordsAtX[newIndex]
+      if (l) {
+        if (l[yProp] < 0) {
+          if (
+            type === "linepercent" ||
+            type === "stackedpercent" ||
+            type === "stackedpercent-invert"
+          ) {
+            const percent = l[yProp] / negativeStepTotal
+            l.percent = percent
+            if (type === "linepercent") {
+              l[yPropBottom] =
+                l[yPropBottom] =
+                l[yPropTop] =
+                l[yPropMiddle] =
+                  percent
+            } else {
+              const adjustment = negativeStepTotal >= 0 ? 0 : percent
+              l[yPropBottom] =
+                negativeStepTotal === 0
+                  ? 0
+                  : -(negativeOffset / negativeStepTotal)
+              l[yPropTop] = l[yPropBottom] - adjustment
+              l[yPropMiddle] = l[yPropBottom] - adjustment / 2
+            }
           } else {
-            const adjustment = negativeStepTotal >= 0 ? 0 : percent
-            l[yPropBottom] =
-              negativeStepTotal === 0
-                ? 0
-                : -(negativeOffset / negativeStepTotal)
-            l[yPropTop] = l[yPropBottom] - adjustment
-            l[yPropMiddle] = l[yPropBottom] - adjustment / 2
+            l[yPropBottom] = negativeOffset
+            l[yPropTop] = negativeOffset + l[yProp]
+            l[yPropMiddle] = negativeOffset + l[yProp] / 2
           }
+          negativeOffset += l[yProp]
         } else {
-          l[yPropBottom] = negativeOffset
-          l[yPropTop] = negativeOffset + l[yProp]
-          l[yPropMiddle] = negativeOffset + l[yProp] / 2
-        }
-        negativeOffset += l[yProp]
-      } else {
-        if (
-          type === "linepercent" ||
-          type === "stackedpercent" ||
-          type === "stackedpercent-invert"
-        ) {
-          const percent = l[yProp] / positiveStepTotal
-          l.percent = percent
+          if (
+            type === "linepercent" ||
+            type === "stackedpercent" ||
+            type === "stackedpercent-invert"
+          ) {
+            const percent = l[yProp] / positiveStepTotal
+            l.percent = percent
 
-          if (type === "linepercent") {
-            l[yPropBottom] = l[yPropTop] = l[yPropMiddle] = percent
+            if (type === "linepercent") {
+              l[yPropBottom] = l[yPropTop] = l[yPropMiddle] = percent
+            } else {
+              const adjustment = positiveStepTotal <= 0 ? 0 : percent
+              l[yPropBottom] =
+                positiveStepTotal === 0 ? 0 : positiveOffset / positiveStepTotal
+              l[yPropTop] = l[yPropBottom] + adjustment
+              l[yPropMiddle] = l[yPropBottom] + adjustment / 2
+            }
           } else {
-            const adjustment = positiveStepTotal <= 0 ? 0 : percent
-            l[yPropBottom] =
-              positiveStepTotal === 0 ? 0 : positiveOffset / positiveStepTotal
-            l[yPropTop] = l[yPropBottom] + adjustment
-            l[yPropMiddle] = l[yPropBottom] + adjustment / 2
+            l[yPropBottom] = positiveOffset
+            l[yPropTop] = positiveOffset + l[yProp]
+            l[yPropMiddle] = positiveOffset + l[yProp] / 2
           }
-        } else {
-          l[yPropBottom] = positiveOffset
-          l[yPropTop] = positiveOffset + l[yProp]
-          l[yPropMiddle] = positiveOffset + l[yProp] / 2
+          positiveOffset += l[yProp]
         }
-        positiveOffset += l[yProp]
       }
-    })
-  })
+    }
+  }
 
   return data
 }
@@ -302,8 +316,8 @@ export const lineChart = ({
   xPropBottom
 }: LineChartTypes) => {
   if (y1) {
-    data.forEach(d => {
-      d.data.forEach(p => {
+    data.forEach((d) => {
+      d.data.forEach((p) => {
         p[yPropBottom] = y1(p)
         p[yPropMiddle] = (p[yPropBottom] + p[yPropTop]) / 2
       })
@@ -311,8 +325,8 @@ export const lineChart = ({
   }
 
   if (x1) {
-    data.forEach(d => {
-      d.data.forEach(p => {
+    data.forEach((d) => {
+      d.data.forEach((p) => {
         p[xPropBottom] = x1(p)
         p[xPropMiddle] = (p[xPropBottom] + p[xPropTop]) / 2
       })
@@ -330,10 +344,10 @@ export const cumulativeLine = ({
   yPropBottom,
   type = "cumulative"
 }: CumulativeLineTypes) => {
-  data.forEach(d => {
+  data.forEach((d) => {
     let cumulativeValue = 0
     const dataArray = type === "cumulative-reverse" ? d.data.reverse() : d.data
-    dataArray.forEach(p => {
+    dataArray.forEach((p) => {
       cumulativeValue += p[yPropTop]
       p[yPropBottom] = p[yPropTop] = p[yPropMiddle] = cumulativeValue
       if (y1) {
@@ -356,7 +370,7 @@ export const bumpChart = ({
   yPropBottom
 }: StackedAreaTypes) => {
   const uniqXValues = data
-    .map(d => d.data.map(p => datesForUnique(p[xProp])))
+    .map((d) => d.data.map((p) => datesForUnique(p[xProp])))
     .reduce((a, b) => a.concat(b), [])
     .reduce((p, c) => {
       if (p.indexOf(c) === -1) {
@@ -386,12 +400,12 @@ export const bumpChart = ({
     }
   }
 
-  uniqXValues.forEach(xValue => {
+  uniqXValues.forEach((xValue) => {
     let negativeOffset = 0
     let positiveOffset = 0
 
     data
-      .map(d => d.data.filter(p => datesForUnique(p[xProp]) === xValue))
+      .map((d) => d.data.filter((p) => datesForUnique(p[xProp]) === xValue))
       .reduce((a, b) => a.concat(b), [])
       .sort(bumpSort)
       .forEach((l, rank) => {
@@ -487,7 +501,7 @@ function simpleSearchFunction({
   keys: Array<string>
 }) {
   const betweenPoint = {}
-  keys.forEach(key => {
+  keys.forEach((key) => {
     betweenPoint[key] =
       typeof pointA[key] === "number"
         ? (pointA[key] + pointB[key]) / 2
@@ -516,12 +530,12 @@ export function funnelize({
     data = [data]
   }
   if (!steps) {
-    steps = data.map(d => Object.keys(d)).reduce((a, b) => a.concat(b), [])
+    steps = data.map((d) => Object.keys(d)).reduce((a, b) => a.concat(b), [])
   }
 
   data.forEach((datum, i) => {
     const datumKey = key ? datum[key] : i
-    steps.forEach(step => {
+    steps.forEach((step) => {
       const funnelDatum = { funnelKey: datumKey, stepName: "", stepValue: 0 }
       funnelDatum.stepName = step
       funnelDatum.stepValue = datum[step] ? datum[step] : 0
@@ -557,7 +571,7 @@ export function relativeY({
       : findFirstAccessorValue(yAccessor, point))
 
   if (Array.isArray(baseData)) {
-    return baseData.map(d => yScale(d))
+    return baseData.map((d) => yScale(d))
   }
   return baseData !== undefined ? yScale(baseData) : 0
 }
@@ -578,7 +592,7 @@ export function relativeX({
       : findFirstAccessorValue(xAccessor, point))
 
   if (Array.isArray(baseData)) {
-    return baseData.map(d => xScale(d))
+    return baseData.map((d) => xScale(d))
   }
   return baseData !== undefined ? xScale(baseData) : 0
 }
@@ -601,13 +615,15 @@ export function findPointByID({
   const pointID = idAccessor(point.parentLine || point)
 
   if (pointID) {
-    const thisLine = lines.data.find(l => idAccessor(l) === pointID)
+    const thisLine = lines.data.find((l) => idAccessor(l) === pointID)
 
     if (!thisLine) {
       return null
     }
     const pointX = xScale(findFirstAccessorValue(xAccessor, point))
-    const thisPoint = thisLine.data.find(p => xScale(p[projectedX]) === pointX)
+    const thisPoint = thisLine.data.find(
+      (p) => xScale(p[projectedX]) === pointX
+    )
 
     if (!thisPoint) {
       return null
@@ -629,7 +645,7 @@ export function findPointByID({
       "subject"
     ]
 
-    reactAnnotationProps.forEach(prop => {
+    reactAnnotationProps.forEach((prop) => {
       if (point[prop]) newPoint[prop] = point[prop]
     })
     return newPoint
