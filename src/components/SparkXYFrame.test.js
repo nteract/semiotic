@@ -1,5 +1,5 @@
 import React from "react"
-import { mount } from "enzyme"
+import { render } from "@testing-library/react"
 import { SparkXYFrame } from "./SparkXYFrame"
 
 const settings = {
@@ -8,7 +8,7 @@ const settings = {
 
 describe("SparkXYFrame", () => {
     it("renders without crashing", () => {
-        mount(<SparkXYFrame
+        render(<SparkXYFrame
             {...settings}
         />)
     })

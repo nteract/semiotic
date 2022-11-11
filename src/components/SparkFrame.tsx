@@ -81,10 +81,11 @@ export default function createSparkFrame(Frame, defaults, frameName) {
     actualSize[1] = containerHeight
 
     const sparkNodeRef = useCallback((node) => {
-      const lineHeight =
-        +window.getComputedStyle(node).lineHeight.split("px")[0] - 5
-
-      changeContainerHeight(isNaN(lineHeight) ? node.offsetHeight : lineHeight)
+      if (node) { 
+        const lineHeight =
+          +window.getComputedStyle(node).lineHeight.split("px")[0] - 5
+        changeContainerHeight(isNaN(lineHeight) ? node.offsetHeight : lineHeight)
+      }
     }, [])
 
     return (

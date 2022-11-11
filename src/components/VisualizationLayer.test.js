@@ -1,5 +1,5 @@
 import React from "react"
-import { mount } from "enzyme"
+import { render } from "@testing-library/react"
 import VisualizationLayer from "./VisualizationLayer"
 import { TooltipProvider } from "./store/TooltipStore"
 
@@ -43,22 +43,25 @@ const simplePipeline = {
 
 describe("VisualizationLayer", () => {
   it("renders without crashing", () => {
-    mount(
+    render(
       <TooltipProvider>
         <VisualizationLayer {...visualizationLayerProps} />
       </TooltipProvider>
     )
   })
-  const shallowVisualizationLayer = mount(
-    <TooltipProvider>
-      <VisualizationLayer
-        {...visualizationLayerProps}
-        renderPipeline={simplePipeline}
-      />
-    </TooltipProvider>
-  )
 
   it("draws things in the render pipeline according to behavior", () => {
-    expect(shallowVisualizationLayer.find("rect").length).toEqual(5)
+      const { container } = render(
+        <svg>
+          <TooltipProvider>
+            <VisualizationLayer
+              {...visualizationLayerProps}
+              renderPipeline={simplePipeline}
+            />
+          </TooltipProvider>
+        </svg>
+      )
+    const renderedRects = Array.from(container.querySelectorAll("rect"))
+    expect(renderedRects.length).toEqual(5)
   })
 })

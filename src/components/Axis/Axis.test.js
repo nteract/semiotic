@@ -1,5 +1,5 @@
 import * as React from "react"
-import { mount, shallow } from "enzyme"
+import { render, fireEvent, screen } from "@testing-library/react"
 import Axis, { marginalPointMapper, formatValue, boundingBoxMax } from "./Axis"
 import { scaleLinear } from "d3-scale"
 import SummaryGraphic from "./summaryGraphic"
@@ -15,23 +15,29 @@ const axisProps = {
 describe("<Axis />", () => {
   describe("renders", () => {
     it("without crashing, including center prop", () => {
-      mount(
+      render(
         <svg>
           <Axis {...axisProps} />
         </svg>
       )
     })
 
-    const shallowAxis = shallow(
-      <Axis {...axisProps} className="test-class" center />
-    )
-
     it("with a className", () => {
-      expect(shallowAxis.find("g.test-class").length).toEqual(2)
+      const { container } = render(
+        <Axis {...axisProps} className="test-class" center />
+      )
+      expect(
+        container.getElementsByClassName("axis test-class").length
+      ).toEqual(1)
     })
 
     it("without an annotation brush", () => {
-      expect(shallowAxis.find("g.annotation-brush").length).toEqual(0)
+      const { container } = render(
+        <Axis {...axisProps} className="test-class" center />
+      )
+      expect(
+        container.getElementsByClassName("annotation-brush").length
+      ).toEqual(0)
     })
 
     describe("with annotation brush area properly", () => {
@@ -41,7 +47,7 @@ describe("<Axis />", () => {
       }
 
       it("oriented left", () => {
-        const shallowAxisBrushLeft = mount(
+        const { container } = render(
           <svg>
             <Axis
               {...axisProps}
@@ -51,30 +57,31 @@ describe("<Axis />", () => {
           </svg>
         )
 
-        expect(shallowAxisBrushLeft.find("g.annotation-brush").length).toEqual(
-          1
-        )
+        expect(
+          container.getElementsByClassName("annotation-brush").length
+        ).toEqual(1)
 
         // "cover" the onMouseMove callback simulation
-        shallowAxisBrushLeft
-          .find("g.annotation-brush > rect")
-          .simulate("mousemove")
+        const annotationRect = container.querySelectorAll(
+          "g.annotation-brush > rect"
+        )[0]
+
+        fireEvent.mouseMove(annotationRect)
 
         // "cover" the onMouseOut callback simulation
-        shallowAxisBrushLeft
-          .find("g.annotation-brush > rect")
-          .simulate("mouseout")
+        fireEvent.mouseOut(container.querySelectorAll("g.annotation-brush")[0])
 
-        shallowAxisBrushLeft.find("g.annotation-brush > rect").simulate("click")
+        fireEvent.click(
+          container.querySelectorAll("g.annotation-brush > rect")[0]
+        )
         expect(clicked).toEqual(true)
 
-        expect(
-          shallowAxisBrushLeft.find("g.annotation-brush").props().transform
-        ).toEqual(`translate(-50,0)`)
+        const brush = container.querySelectorAll(".annotation-brush")[0]
+        expect(brush).toHaveAttribute("transform", "translate(-50,0)")
       })
 
       it("oriented bottom + center", () => {
-        const shallowAxisBrushBottom = mount(
+        const { container } = render(
           <svg>
             <Axis
               {...axisProps}
@@ -86,22 +93,20 @@ describe("<Axis />", () => {
         )
 
         // "cover" the onMouseMove callback simulation
-        shallowAxisBrushBottom
-          .find("g.annotation-brush > rect")
-          .simulate("mousemove")
+        fireEvent.mouseMove(
+          container.querySelectorAll(".annotation-brush > rect")[0]
+        )
 
         // "cover" the onMouseOut callback simulation
-        shallowAxisBrushBottom
-          .find("g.annotation-brush > rect")
-          .simulate("mouseout")
+        fireEvent.mouseOut(container.querySelectorAll("g.annotation-brush")[0])
 
         expect(
-          shallowAxisBrushBottom.find("g.annotation-brush").props().transform
-        ).toEqual(`translate(0,${axisHeight})`)
+          container.querySelectorAll("g.annotation-brush")[0]
+        ).toHaveAttribute("transform", `translate(0,${axisHeight})`)
       })
 
       it("oriented right + center", () => {
-        const rightOriented = mount(
+        const { container } = render(
           <svg>
             <Axis
               {...axisProps}
@@ -113,14 +118,18 @@ describe("<Axis />", () => {
         )
 
         // "cover" the onMouseMove callback simulation
-        rightOriented.find("g.annotation-brush > rect").simulate("mousemove")
+        fireEvent.mouseMove(
+          container.querySelectorAll("g.annotation-brush > rect")[0]
+        )
 
         // "cover" the onMouseOut callback simulation
-        rightOriented.find("g.annotation-brush > rect").simulate("mouseout")
+        fireEvent.mouseOut(
+          container.querySelectorAll("g.annotation-brush > rect")[0]
+        )
       })
 
       it("oriented top + center", () => {
-        const rightOriented = mount(
+        const { container } = render(
           <svg>
             <Axis
               {...axisProps}
@@ -132,17 +141,21 @@ describe("<Axis />", () => {
         )
 
         // "cover" the onMouseMove callback simulation
-        rightOriented.find("g.annotation-brush > rect").simulate("mousemove")
+        fireEvent.mouseMove(
+          container.querySelectorAll("g.annotation-brush > rect")[0]
+        )
 
         // "cover" the onMouseOut callback simulation
-        rightOriented.find("g.annotation-brush > rect").simulate("mouseout")
+        fireEvent.mouseOut(
+          container.querySelectorAll("g.annotation-brush > rect")[0]
+        )
       })
     })
 
     describe('handles "label" prop', () => {
       it('renders the "axis-title group element & shows "name" prop text', () => {
         const AXIS_NAME = "the axis name"
-        const axisWithLabel = mount(
+        render(
           <Axis
             {...axisProps}
             className="test-class"
@@ -151,27 +164,25 @@ describe("<Axis />", () => {
           />
         )
 
-        const labelG = axisWithLabel.find("g.axis-title")
-        expect(labelG.length).toBe(1)
-
-        const labelText = labelG.childAt(0).text()
-        expect(labelText).toBe(AXIS_NAME)
+        const labelG = screen.getByText(AXIS_NAME)
+        expect(labelG).toBeTruthy()
       })
 
       describe("sets label text textAnchor attr", () => {
         it('defaults to "middle"', () => {
-          const axisWithLabel = mount(
+          const { container } = render(
             <Axis
               {...axisProps}
               className="test-class"
               label={{ name: "test label" }}
             />
           )
-          const middleAncorElement = axisWithLabel.find('[textAnchor="middle"]')
-          expect(middleAncorElement.length).toBe(1)
+
+          const axisTitle = container.querySelectorAll("g.axis-title > text")[0]
+          expect(axisTitle).toHaveAttribute("text-anchor", "middle")
         })
         it('sets to "end" when labelPosition.anchor is "start" and orient is "right"', () => {
-          const axisWithLabel = mount(
+          const { container } = render(
             <Axis
               {...axisProps}
               className="test-class"
@@ -190,11 +201,11 @@ describe("<Axis />", () => {
               size={[100, 200]}
             />
           )
-          const endAnchorElement = axisWithLabel.find('[textAnchor="end"]')
-          expect(endAnchorElement.length).toBe(1)
+          const axisTitle = container.querySelectorAll("g.axis-title > text")[0]
+          expect(axisTitle).toHaveAttribute("text-anchor", "end")
         })
         it('sets to "start" when labelPosition.anchor is "end" and orient is "right"', () => {
-          const axisWithLabel = mount(
+          const { container } = render(
             <Axis
               {...axisProps}
               className="test-class"
@@ -213,25 +224,24 @@ describe("<Axis />", () => {
               size={[100, 200]}
             />
           )
-          const startAnchorElement = axisWithLabel.find(
-            'g.axis-title > [textAnchor="start"]'
-          )
-          expect(startAnchorElement.length).toBe(1)
+          const axisTitle = container.querySelectorAll("g.axis-title > text")[0]
+          expect(axisTitle).toHaveAttribute("text-anchor", "start")
         })
       })
 
       it("renders label component instead of label.name string", () => {
-        const axisWithLabel = mount(
+        const { container } = render(
           <Axis
             {...axisProps}
             className="test-class"
             label={<span className="tested-label-component"></span>}
           />
         )
-        const labelComponent = axisWithLabel.find(".tested-label-component")
-        const defaultLabelElement = axisWithLabel.find('[textAnchor="middle"]')
-        expect(labelComponent.length).toBe(1)
-        expect(defaultLabelElement.length).toBe(0)
+        const labelComponent = container.querySelectorAll("span")[0]
+        expect(labelComponent).toHaveAttribute(
+          "class",
+          "tested-label-component"
+        )
       })
     })
   })
@@ -240,7 +250,7 @@ describe("<Axis />", () => {
     describe("<SummaryGraphic />", () => {
       it("nested g translates x to summaryWidth / 2 when decoratedSummaryType.type === boxplot & orient is left", () => {
         const SUM_WIDTH = 100
-        const sg = mount(
+        const { container } = render(
           <SummaryGraphic
             translation={{ left: 10, right: 0, top: 10, bottom: 0 }}
             orient="left"
@@ -250,13 +260,17 @@ describe("<Axis />", () => {
             points={<span id="test-points" />}
           />
         )
-        const translatedNestedG = sg.find('[transform="translate(50,0)"]')
-        expect(translatedNestedG.length).toBe(1)
+        const translatedNestedG = container.querySelectorAll("g > g")[0]
+        //
+        expect(translatedNestedG).toHaveAttribute(
+          "transform",
+          "translate(50,0)"
+        )
       })
 
       it("nested g translates x to 0 when decoratedSummaryType.type === histogram", () => {
         const SUM_WIDTH = 100
-        const sg = mount(
+        const { container } = render(
           <SummaryGraphic
             translation={{ left: 10, right: 0, top: 10, bottom: 0 }}
             orient="top"
@@ -266,12 +280,12 @@ describe("<Axis />", () => {
             points={<span id="test-points" />}
           />
         )
-        const translatedNestedG = sg.find('[transform="translate(0,0)"]')
-        expect(translatedNestedG.length).toBe(1)
+        const translatedNestedG = container.querySelectorAll("g > g")[0]
+        expect(translatedNestedG).toHaveAttribute("transform", "translate(0,0)")
       })
       it("nested g translates y to summaryWidth / 2 when decoratedSummaryType.type === boxplot and orient = top", () => {
         const SUM_WIDTH = 100
-        const sg = mount(
+        const { container } = render(
           <SummaryGraphic
             translation={{ left: 10, right: 0, top: 10, bottom: 0 }}
             orient="top"
@@ -281,8 +295,11 @@ describe("<Axis />", () => {
             points={<span id="test-points" />}
           />
         )
-        const translatedNestedG = sg.find('[transform="translate(0,50)"]')
-        expect(translatedNestedG.length).toBe(1)
+        const translatedNestedG = container.querySelectorAll("g > g")[0]
+        expect(translatedNestedG).toHaveAttribute(
+          "transform",
+          "translate(0,50)"
+        )
       })
     })
 
@@ -351,17 +368,17 @@ describe("<Axis />", () => {
       })
     })
 
-    describe("boundingBoxMax", () => { 
-      it('returns 30 as default when no axisNode.current', () => {
-        const res = boundingBoxMax({ current: null }, 'right')
+    describe("boundingBoxMax", () => {
+      it("returns 30 as default when no axisNode.current", () => {
+        const res = boundingBoxMax({ current: null }, "right")
         expect(res).toBe(30)
       })
       it("returns 55 when getBBox returns nothing found", () => {
-        const x = document.createElement('svg')
+        const x = document.createElement("svg")
         const y = document.createElement("rect")
         x.appendChild(y)
-        y.setAttribute('class', 'axis-label')
-        const res = boundingBoxMax({ current:  x }, "right")
+        y.setAttribute("class", "axis-label")
+        const res = boundingBoxMax({ current: x }, "right")
         expect(res).toBe(55)
       })
     })
