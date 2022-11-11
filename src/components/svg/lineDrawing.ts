@@ -195,12 +195,16 @@ export const stackedArea = ({
   yPropTop,
   yPropBottom
 }: StackedAreaTypes) => {
-  const a = performance.now()
   const valueMap = new Map()
   const lineSums = data.map(() => 0)
 
   let lineIndex = 0
   for (const line of data) {
+    /*
+      After we calculate this, we then sort the lines (and the value used for the sorting is in this for loop)
+      So, we need to know their original index order in order to use the naively populated coordinate array in valueMap
+      Otherwise the coordinates in the map will be in different order than the sorted order of the lines
+    */
     line.__lineIndex = lineIndex
     for (const coord of line.data) {
       const coordX = datesForUnique(coord[xProp])
