@@ -208,7 +208,7 @@ export const stackedArea = ({
       if (!valueMap.has(coordX)) {
         valueMap.set(coordX, [])
       }
-      valueMap.get(coordX).push(coord)
+      valueMap.get(coordX)[lineIndex] = coord
     }
     lineIndex++
   }
@@ -238,59 +238,61 @@ export const stackedArea = ({
 
     for (const newIndex of lineIndexSortLookup) {
       const l = coordsAtX[newIndex]
-      if (l[yProp] < 0) {
-        if (
-          type === "linepercent" ||
-          type === "stackedpercent" ||
-          type === "stackedpercent-invert"
-        ) {
-          const percent = l[yProp] / negativeStepTotal
-          l.percent = percent
-          if (type === "linepercent") {
-            l[yPropBottom] =
+      if (l) {
+        if (l[yProp] < 0) {
+          if (
+            type === "linepercent" ||
+            type === "stackedpercent" ||
+            type === "stackedpercent-invert"
+          ) {
+            const percent = l[yProp] / negativeStepTotal
+            l.percent = percent
+            if (type === "linepercent") {
               l[yPropBottom] =
-              l[yPropTop] =
-              l[yPropMiddle] =
-                percent
+                l[yPropBottom] =
+                l[yPropTop] =
+                l[yPropMiddle] =
+                  percent
+            } else {
+              const adjustment = negativeStepTotal >= 0 ? 0 : percent
+              l[yPropBottom] =
+                negativeStepTotal === 0
+                  ? 0
+                  : -(negativeOffset / negativeStepTotal)
+              l[yPropTop] = l[yPropBottom] - adjustment
+              l[yPropMiddle] = l[yPropBottom] - adjustment / 2
+            }
           } else {
-            const adjustment = negativeStepTotal >= 0 ? 0 : percent
-            l[yPropBottom] =
-              negativeStepTotal === 0
-                ? 0
-                : -(negativeOffset / negativeStepTotal)
-            l[yPropTop] = l[yPropBottom] - adjustment
-            l[yPropMiddle] = l[yPropBottom] - adjustment / 2
+            l[yPropBottom] = negativeOffset
+            l[yPropTop] = negativeOffset + l[yProp]
+            l[yPropMiddle] = negativeOffset + l[yProp] / 2
           }
+          negativeOffset += l[yProp]
         } else {
-          l[yPropBottom] = negativeOffset
-          l[yPropTop] = negativeOffset + l[yProp]
-          l[yPropMiddle] = negativeOffset + l[yProp] / 2
-        }
-        negativeOffset += l[yProp]
-      } else {
-        if (
-          type === "linepercent" ||
-          type === "stackedpercent" ||
-          type === "stackedpercent-invert"
-        ) {
-          const percent = l[yProp] / positiveStepTotal
-          l.percent = percent
+          if (
+            type === "linepercent" ||
+            type === "stackedpercent" ||
+            type === "stackedpercent-invert"
+          ) {
+            const percent = l[yProp] / positiveStepTotal
+            l.percent = percent
 
-          if (type === "linepercent") {
-            l[yPropBottom] = l[yPropTop] = l[yPropMiddle] = percent
+            if (type === "linepercent") {
+              l[yPropBottom] = l[yPropTop] = l[yPropMiddle] = percent
+            } else {
+              const adjustment = positiveStepTotal <= 0 ? 0 : percent
+              l[yPropBottom] =
+                positiveStepTotal === 0 ? 0 : positiveOffset / positiveStepTotal
+              l[yPropTop] = l[yPropBottom] + adjustment
+              l[yPropMiddle] = l[yPropBottom] + adjustment / 2
+            }
           } else {
-            const adjustment = positiveStepTotal <= 0 ? 0 : percent
-            l[yPropBottom] =
-              positiveStepTotal === 0 ? 0 : positiveOffset / positiveStepTotal
-            l[yPropTop] = l[yPropBottom] + adjustment
-            l[yPropMiddle] = l[yPropBottom] + adjustment / 2
+            l[yPropBottom] = positiveOffset
+            l[yPropTop] = positiveOffset + l[yProp]
+            l[yPropMiddle] = positiveOffset + l[yProp] / 2
           }
-        } else {
-          l[yPropBottom] = positiveOffset
-          l[yPropTop] = positiveOffset + l[yProp]
-          l[yPropMiddle] = positiveOffset + l[yProp] / 2
+          positiveOffset += l[yProp]
         }
-        positiveOffset += l[yProp]
       }
     }
   }
