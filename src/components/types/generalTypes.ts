@@ -56,6 +56,7 @@ export type PieceLayoutType = (args: {
 export interface ProjectedLine {
   data: ProjectedPoint[]
   key: string | number
+  __lineIndex?: number
   coordinates: object[]
 }
 
