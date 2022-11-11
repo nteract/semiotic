@@ -1,6 +1,6 @@
 import * as React from "react"
 import { useEffect, useRef } from "react"
-import { select, selectAll } from "d3-selection"
+import { select } from "d3-selection"
 
 import { Mark } from "semiotic-mark"
 

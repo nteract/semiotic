@@ -15,7 +15,6 @@ import {
 } from "../svg/frameFunctions"
 import { pointOnArcAtAngle, renderLaidOutPieces } from "../svg/pieceDrawing"
 import { drawSummaries, renderLaidOutSummaries } from "../svg/summaryLayouts"
-import AnnotationCalloutElbow from "react-annotation/lib/Types/AnnotationCalloutElbow"
 
 import {
   clusterBarLayout,
@@ -778,34 +777,46 @@ export const calculateOrdinalFrame = (
 
           const labelIndex = pieArcs.filter(
             (p, q) =>
-              q <= i &&
+              q < i &&
               centroid[0] < 0 === pieArcs[q].centroid[0] < 0 &&
               centroid[1] < 0 === pieArcs[q].centroid[1] < 0
           ).length
           const labelMod = labelIndex * 15
+          let labelLength = d.length * 7
+          let textAnchor = "start"
 
           let positionProps = { dx: 0, dy: 0 }
           if (centroid[0] < 0) {
-            positionProps.dx = -30
+            textAnchor = "end"
+            labelLength = -labelLength
+            positionProps.dx = -35
           } else {
-            positionProps.dx = 30
+            positionProps.dx = 35
           }
 
           if (centroid[1] < 0) {
-            positionProps.dy = -35 + labelMod
+            positionProps.dy = -35 - labelMod
           } else {
-            positionProps.dy = 35 - labelMod
+            positionProps.dy = 35 + labelMod
           }
           return (
-            <AnnotationCalloutElbow
-              x={0}
-              y={0}
-              {...positionProps}
-              color={"black"}
-              note={{
-                label: d
-              }}
-            />
+            <g>
+              <path
+                fill="none"
+                stroke="black"
+                strokeWidth={2}
+                d={`M0,0L${positionProps.dx},${positionProps.dy}L${
+                  positionProps.dx + labelLength
+                },${positionProps.dy}`}
+              />
+              <text
+                textAnchor={textAnchor}
+                x={positionProps.dx}
+                y={positionProps.dy - 2}
+              >
+                {d}
+              </text>
+            </g>
           )
         } else if (
           projection === "radial" &&
