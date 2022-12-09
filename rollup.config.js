@@ -1,7 +1,7 @@
 import commonjs from "rollup-plugin-commonjs"
 import size from "rollup-plugin-bundle-size"
 import external from "rollup-plugin-auto-external"
-import typescript from "rollup-plugin-ts"
+import typescript from "rollup-plugin-typescript2"
 
 export default {
   input: "src/components/semiotic.ts",
