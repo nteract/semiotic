@@ -2,8 +2,9 @@
   "compilerOptions": {
     "outDir": "./lib/",
     "sourceMap": true,
-    "module": "commonjs",
-    "target": "es5",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "target": "ES2015",
     "downlevelIteration": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
