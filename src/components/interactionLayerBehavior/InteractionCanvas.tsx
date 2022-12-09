@@ -89,7 +89,7 @@ function renderInteractionCanvas(
 
     if (overlay?.props?.onMouseEnter) {
       overlay?.props?.onMouseEnter()
-    } else if (overlay?.props?.children[0]) {
+    } else if (overlay?.props?.children?.[0]) {
       overlay.props.children[0].props.onMouseEnter()
     } else {
       voronoiHover(null)
@@ -103,7 +103,7 @@ function renderInteractionCanvas(
     const overlay = boundCanvasEvent(e)
     if (overlay?.props?.onClick) {
       overlay?.props?.onClick()
-    } else if (overlay?.props?.children[0]) {
+    } else if (overlay?.props?.children?.[0]) {
       overlay.props.children[0].props.onClick(e)
     }
   }
@@ -111,7 +111,7 @@ function renderInteractionCanvas(
     const overlay = boundCanvasEvent(e)
     if (overlay?.props?.onDoubleClick) {
       overlay?.props?.onDoubleClick()
-    } else if (overlay?.props?.children[0]) {
+    } else if (overlay?.props?.children?.[0]) {
       overlay.props.children[0].props.onDoubleClick(e)
     }
   }
@@ -137,11 +137,11 @@ function renderInteractionCanvas(
     interactionContext2D.fillStyle = interactionRGBA
     interactionContext2D.strokeStyle = interactionRGBA
 
-    if (props.d || props.children[0]?.props.d) {
-      const overlayD = props.d || props.children[0]?.props.d
+    if (props.d || props.children?.[0]?.props?.d) {
+      const overlayD = props.d || props.children[0].props.d
       const transform =
         props.transform ||
-        props.children[0]?.props.transform ||
+        props.children?.[0]?.props?.transform ||
         "translate(0,0)"
       const [x, y] = transform
         .replace("translate(", "")
