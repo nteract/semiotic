@@ -86,7 +86,10 @@ function renderInteractionCanvas(
   )
   interactionContext.onmousemove = (e) => {
     const overlay = boundCanvasEvent(e)
-    if (overlay && overlay.props && overlay.props.children[0]) {
+
+    if (overlay?.props?.onMouseEnter) {
+      overlay?.props?.onMouseEnter()
+    } else if (overlay?.props?.children[0]) {
       overlay.props.children[0].props.onMouseEnter()
     } else {
       voronoiHover(null)
@@ -98,13 +101,17 @@ function renderInteractionCanvas(
 
   interactionContext.onclick = (e) => {
     const overlay = boundCanvasEvent(e)
-    if (overlay && overlay.props) {
+    if (overlay?.props?.onClick) {
+      overlay?.props?.onClick()
+    } else if (overlay?.props?.children[0]) {
       overlay.props.children[0].props.onClick(e)
     }
   }
   interactionContext.ondblclick = (e) => {
     const overlay = boundCanvasEvent(e)
-    if (overlay && overlay.props) {
+    if (overlay?.props?.onDoubleClick) {
+      overlay?.props?.onDoubleClick()
+    } else if (overlay?.props?.children[0]) {
       overlay.props.children[0].props.onDoubleClick(e)
     }
   }
@@ -118,20 +125,42 @@ function renderInteractionCanvas(
   interactionContext2D.lineWidth = 1
 
   overlayRegions.forEach((overlay, oi) => {
-    const overlayD = overlay.props.d || overlay.props.children[0].props.d
     const interactionRGBA = `rgba(${Math.floor(
       Math.random() * 255
     )},${Math.floor(Math.random() * 255)},${Math.floor(
       Math.random() * 255
     )},255)`
-
     canvasMap.set(interactionRGBA, oi)
+
+    const props: any = overlay.props
 
     interactionContext2D.fillStyle = interactionRGBA
     interactionContext2D.strokeStyle = interactionRGBA
 
-    const p = new Path2D(overlayD)
-    interactionContext2D.stroke(p)
-    interactionContext2D.fill(p)
+    if (props.d || props.children[0]?.props.d) {
+      const overlayD = props.d || props.children[0]?.props.d
+      const transform =
+        props.transform ||
+        props.children[0]?.props.transform ||
+        "translate(0,0)"
+      const [x, y] = transform
+        .replace("translate(", "")
+        .replace(")", "")
+        .split(",")
+
+      interactionContext2D.translate(x, y)
+      const p = new Path2D(overlayD)
+      interactionContext2D.stroke(p)
+      interactionContext2D.fill(p)
+      interactionContext2D.translate(-x, -y)
+    } else if (props.markType === "rect") {
+      interactionContext2D.fillRect(props.x, props.y, props.width, props.height)
+      interactionContext2D.strokeRect(
+        props.x,
+        props.y,
+        props.width,
+        props.height
+      )
+    }
   })
 }

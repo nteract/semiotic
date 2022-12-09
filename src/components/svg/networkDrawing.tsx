@@ -695,14 +695,32 @@ export const drawNodes = ({
   if (networkSettings) {
     let i = 0
     for (const d of data) {
+      const generatedMark = markGenerator({
+        d,
+        i,
+        renderKeyFn,
+        styleFn,
+        classFn,
+        renderMode,
+        key: renderKeyFn ? renderKeyFn(d, i) : d.id || `node-${i}`,
+        className: `node ${classFn(d, i)}`,
+        transform: `translate(${d.x},${d.y})`,
+        baseMarkProps
+      })
+
       if (canvasRenderFn && canvasRenderFn(d, i) === true) {
+        const { transform = "translate(0,0)" } = generatedMark.props
+        const [x, y] = transform
+          .replace("translate(", "")
+          .replace(")", "")
+          .split(",")
         const canvasNode = {
           baseClass: "frame-piece",
-          tx: d.x,
-          ty: d.y,
+          tx: x,
+          ty: y,
           d,
           i,
-          markProps: { markType: "circle", r: d.nodeSize },
+          markProps: generatedMark.props,
           styleFn,
           renderFn: renderMode,
           classFn
