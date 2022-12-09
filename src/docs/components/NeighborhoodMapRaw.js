@@ -2,7 +2,7 @@ import * as React from "react"
 import { data } from "../sampledata/verticality"
 import { csvParse } from "d3-dsv"
 import { XYFrame } from "../../components"
-import { Mark } from "semiotic-mark"
+import Mark from "../../components/Mark/Mark"
 
 const groupedData = []
 const groupHash = {}

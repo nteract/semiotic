@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Mark } from "semiotic-mark"
+import Mark from "../../components/Mark/Mark"
 
 export function pointOnArcAtAngle(center, angle, distance) {
   const radians = Math.PI * (angle + 0.75) * 2
@@ -43,9 +43,9 @@ export const renderLaidOutPieces = ({
         renderedPieces.push(d.renderElement || d)
       } else {
         /*ariaLabel.items*/
-        const pieceAriaLabel = `${d.o} ${
-          ariaLabel.items
-        } value ${(valueFormat && valueFormat(d.piece.value)) || d.piece.value}`
+        const pieceAriaLabel = `${d.o} ${ariaLabel.items} value ${
+          (valueFormat && valueFormat(d.piece.value)) || d.piece.value
+        }`
         renderedPieces.push(
           <Mark
             {...baseMarkProps}
@@ -54,7 +54,7 @@ export const renderLaidOutPieces = ({
                 ? renderKeyFn(d.piece)
                 : d.renderKey || `piece-render-${i}`
             }
-            {...d.renderElement || d}
+            {...(d.renderElement || d)}
             aria-label={pieceAriaLabel}
           />
         )

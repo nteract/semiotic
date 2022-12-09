@@ -1,6 +1,7 @@
 import * as React from "react"
 
-import { Mark } from "semiotic-mark"
+import Mark from "../../components/Mark/Mark"
+
 import {
   line,
   area,
@@ -45,19 +46,19 @@ export function lineGeneratorDecorator({
 }) {
   const { x, y, yTop, yBottom, xBottom, xTop } = projectedCoordinateNames
 
-  generator.x(d => xScale(d[x])).curve(interpolator)
+  generator.x((d) => xScale(d[x])).curve(interpolator)
 
   if (simpleLine) {
-    generator.y(d => yScale(d[y]))
+    generator.y((d) => yScale(d[y]))
   } else {
-    generator.y0(d => yScale(d[yBottom])).y1(d => yScale(d[yTop]))
-    generator.x0(d => xScale(d[xBottom])).x1(d => xScale(d[xTop]))
+    generator.y0((d) => yScale(d[yBottom])).y1((d) => yScale(d[yTop]))
+    generator.x0((d) => xScale(d[xBottom])).x1((d) => xScale(d[xTop]))
   }
 
   if (defined) {
     generator.defined((p, q) => defined(p, q))
   } else {
-    generator.defined(p => !p._xyFrameUndefined)
+    generator.defined((p) => !p._xyFrameUndefined)
   }
 }
 
@@ -153,11 +154,11 @@ export function createPoints({
         canvasDrawing.push(canvasPoint)
       } else {
         const yCoordinates = Array.isArray(d[y])
-          ? d[y].map(p => yScale(p))
+          ? d[y].map((p) => yScale(p))
           : [dY]
         yCoordinates.forEach((yc, yi) => {
           const xCoordinates = Array.isArray(d[x])
-            ? d[x].map(p => xScale(p))
+            ? d[x].map((p) => xScale(p))
             : [dX]
           xCoordinates.forEach((xc, xi) => {
             mappedPoints.push(
@@ -201,11 +202,15 @@ export function createLines({
   ariaLabel,
   axesData = []
 }) {
-  const xAxis = axesData.find(d => d.orient === "bottom" || d.orient === "top")
-  const yAxis = axesData.find(d => d.orient === "left" || d.orient === "right")
+  const xAxis = axesData.find(
+    (d) => d.orient === "bottom" || d.orient === "top"
+  )
+  const yAxis = axesData.find(
+    (d) => d.orient === "left" || d.orient === "right"
+  )
 
-  const xAxisFormatter = (xAxis && xAxis.tickFormat) || (d => d)
-  const yAxisFormatter = (yAxis && yAxis.tickFormat) || (d => d)
+  const xAxisFormatter = (xAxis && xAxis.tickFormat) || ((d) => d)
+  const yAxisFormatter = (yAxis && yAxis.tickFormat) || ((d) => d)
 
   const customLine = typeof type === "object" ? type : { type }
 
@@ -246,7 +251,7 @@ export function createLines({
 
   const mappedLines = []
   data.forEach((d, i) => {
-    const mappedDataForLines = d.data.map(p => ({ ...p.data, ...p }))
+    const mappedDataForLines = d.data.map((p) => ({ ...p.data, ...p }))
     if (customMark && typeof customMark === "function") {
       //shim to make customLineMark work until Semiotic 2
       const compatibleData = {
@@ -474,18 +479,18 @@ export function createSummaries({
       drawD = d.customMark
       shouldBeValid = true
     } else if (d.type === "MultiPolygon") {
-      const polycoords = (d.coordinates as unknown) as [number, number][][][]
+      const polycoords = d.coordinates as unknown as [number, number][][][]
 
       polycoords.forEach((coord: [number, number][][]) => {
-        coord.forEach(c => {
+        coord.forEach((c) => {
           drawD += `M${c
-            .map(p => `${xScale(p[0])},${yScale(p[1])}`)
+            .map((p) => `${xScale(p[0])},${yScale(p[1])}`)
             .join("L")}Z `
         })
       })
     } else if (customMark) {
       const xyfCoords = d._xyfCoordinates as [number, number][]
-      const projectedCoordinates = xyfCoords.map(p => [
+      const projectedCoordinates = xyfCoords.map((p) => [
         xScale(p[0]),
         yScale(p[1])
       ])
@@ -506,13 +511,13 @@ export function createSummaries({
       const xyfCoords = d._xyfCoordinates as number[][]
       if (d.curve) {
         const lineDrawing = line()
-          .x(d => xScale(d[0]))
-          .y(d => yScale(d[1]))
+          .x((d) => xScale(d[0]))
+          .y((d) => yScale(d[1]))
           .curve(d.curve)
         drawD = lineDrawing(xyfCoords)
       } else {
         drawD = `M${xyfCoords
-          .map(p => `${xScale(p[0])},${yScale(p[1])}`)
+          .map((p) => `${xScale(p[0])},${yScale(p[1])}`)
           .join("L")}Z`
       }
     }

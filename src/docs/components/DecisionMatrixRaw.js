@@ -2,7 +2,7 @@ import * as React from "react"
 import { scaleLinear } from "d3-scale"
 import { extent } from "d3-array"
 import { forceSimulation, forceX, forceY, forceCollide } from "d3-force"
-import { Mark } from "semiotic-mark"
+import Mark from "../../components/Mark/Mark"
 import { MATRIX_DATA } from "../sampledata/matrixData"
 import { XYFrame } from "../../components"
 

@@ -3,7 +3,7 @@ import { data, fieldGraphic } from "../sampledata/stanton"
 import { XYFrame } from "../../components"
 import { scaleLinear } from "d3-scale"
 import { extent } from "d3-array"
-import { Mark } from "semiotic-mark"
+import Mark from "../../components/Mark/Mark"
 
 const velocityExtent = extent(data.map((d) => d.exit_velocity))
 const velocityScale = scaleLinear()

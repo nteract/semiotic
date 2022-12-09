@@ -2,24 +2,26 @@ import * as React from "react"
 
 import { select } from "d3-selection"
 import { arc, line, curveLinearClosed } from "d3-shape"
-import { Mark } from "semiotic-mark"
+import Mark from "../../components/Mark/Mark"
 import { interpolateNumber } from "d3-interpolate"
 
 const emptyObjectReturnFn = () => ({})
 
 const twoPI = Math.PI * 2
 
-const dedupeRibbonPoints = (weight = 1) => (p, c) => {
-  const l = p[p.length - 1]
-  if (
-    !l ||
-    Math.round(l.x / weight) !== Math.round(c.x / weight) ||
-    Math.round(l.y / weight) !== Math.round(c.y / weight)
-  ) {
-    p.push(c)
+const dedupeRibbonPoints =
+  (weight = 1) =>
+  (p, c) => {
+    const l = p[p.length - 1]
+    if (
+      !l ||
+      Math.round(l.x / weight) !== Math.round(c.x / weight) ||
+      Math.round(l.y / weight) !== Math.round(c.y / weight)
+    ) {
+      p.push(c)
+    }
+    return p
   }
-  return p
-}
 
 export const arcTweener = (oldProps, newProps) => {
   const innerRadiusInterpolator = interpolateNumber(
@@ -39,7 +41,7 @@ export const arcTweener = (oldProps, newProps) => {
     newProps.endAngle
   )
 
-  return t => {
+  return (t) => {
     const sliceGenerator = arc()
       .innerRadius(innerRadiusInterpolator(t))
       .outerRadius(outerRadiusInterpolator(t))
@@ -60,17 +62,15 @@ export const drawAreaConnector = ({
   sizeX2,
   sizeY2
 }) => {
-  return `M${x1},${y1}L${x2},${y2}L${x2 + sizeX2},${y2 + sizeY2}L${x1 +
-    sizeX1},${y1 + sizeY1}Z`
+  return `M${x1},${y1}L${x2},${y2}L${x2 + sizeX2},${y2 + sizeY2}L${
+    x1 + sizeX1
+  },${y1 + sizeY1}Z`
 }
 
 export const wrap = (text, width) => {
-  text.each(function() {
+  text.each(function () {
     const textNode = select(this),
-      words = textNode
-        .text()
-        .split(/\s+/)
-        .reverse(),
+      words = textNode.text().split(/\s+/).reverse(),
       lineHeight = 1.1, // ems
       y = textNode.attr("y"),
       dy = parseFloat(textNode.attr("dy"))
@@ -105,12 +105,9 @@ export const wrap = (text, width) => {
   })
 }
 
-export const hexToRgb = hex => {
+export const hexToRgb = (hex) => {
   if (hex.substr(0, 2).toLowerCase() === "rg") {
-    return hex
-      .split("(")[1]
-      .split(")")[0]
-      .split(",")
+    return hex.split("(")[1].split(")")[0].split(",")
   }
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
   return result
@@ -202,7 +199,7 @@ export const groupBarMark = ({
       mappedPoints.push({
         key: summary.name,
         value: d.value,
-        pieces: d.pieces.map(p => p.piece),
+        pieces: d.pieces.map((p) => p.piece),
         label: "Heatmap",
         x: arcCenter[0] + arcAdjustX,
         y: arcCenter[1] + arcAdjustY
@@ -223,7 +220,7 @@ export const groupBarMark = ({
       mappedPoints.push({
         key: summary.name,
         value: d.value,
-        pieces: d.pieces.map(p => p.piece),
+        pieces: d.pieces.map((p) => p.piece),
         label: "Heatmap",
         x: xProp + xOffset,
         y: yProp + yOffset
@@ -251,13 +248,13 @@ export const groupBarMark = ({
 // FROM d3-svg-ribbon
 export function linearRibbon() {
   const _lineConstructor = line()
-  let _xAccessor = function(d) {
+  let _xAccessor = function (d) {
     return d.x
   }
-  let _yAccessor = function(d) {
+  let _yAccessor = function (d) {
     return d.y
   }
-  let _rAccessor = function(d) {
+  let _rAccessor = function (d) {
     return d.r
   }
   let _interpolator = curveLinearClosed
@@ -272,7 +269,7 @@ export function linearRibbon() {
       const totalPoints = buildRibbon(pathData.points)
 
       let currentPoints = totalPoints
-        .filter(d => d.direction === "forward")
+        .filter((d) => d.direction === "forward")
         .reduce(dedupeRibbonPoints(), [])
 
       const allRibbons = []
@@ -286,7 +283,7 @@ export function linearRibbon() {
         if (nextSibling) {
           const currentLeftSide = currentRibbon
             .reverse()
-            .filter(d => d.direction === "back")
+            .filter((d) => d.direction === "back")
             .reduce(dedupeRibbonPoints(), [])
 
           _rAccessor = () => nextSibling.weight
@@ -294,49 +291,45 @@ export function linearRibbon() {
           const leftHandInflatedRibbon = buildRibbon(currentLeftSide)
           currentPoints = leftHandInflatedRibbon
             .reverse()
-            .filter(d => d.direction === "back")
+            .filter((d) => d.direction === "back")
             .reduce(dedupeRibbonPoints(), [])
         }
       })
 
       _rAccessor = original_r
-      return allRibbons.map(d =>
-        _lineConstructor
-          .x(_xAccessor)
-          .y(_yAccessor)
-          .curve(_interpolator)(d)
+      return allRibbons.map((d) =>
+        _lineConstructor.x(_xAccessor).y(_yAccessor).curve(_interpolator)(d)
       )
     }
     const bothPoints = buildRibbon(pathData).reduce(dedupeRibbonPoints(), [])
 
-    return _lineConstructor
-      .x(_xAccessor)
-      .y(_yAccessor)
-      .curve(_interpolator)(bothPoints)
+    return _lineConstructor.x(_xAccessor).y(_yAccessor).curve(_interpolator)(
+      bothPoints
+    )
   }
 
-  _ribbon.x = function(_value) {
+  _ribbon.x = function (_value) {
     if (!arguments.length) return _xAccessor
 
     _xAccessor = _value
     return _ribbon
   }
 
-  _ribbon.y = function(_value) {
+  _ribbon.y = function (_value) {
     if (!arguments.length) return _yAccessor
 
     _yAccessor = _value
     return _ribbon
   }
 
-  _ribbon.r = function(_value) {
+  _ribbon.r = function (_value) {
     if (!arguments.length) return _rAccessor
 
     _rAccessor = _value
     return _ribbon
   }
 
-  _ribbon.interpolate = function(_value) {
+  _ribbon.interpolate = function (_value) {
     if (!arguments.length) return _interpolator
 
     _interpolator = _value
@@ -479,7 +472,7 @@ export function linearRibbon() {
     result.x = l1x1 + a * (l1x2 - l1x1)
     result.y = l1y1 + a * (l1y2 - l1y1)
 
-    if (a > 0 && a < 1 && (b > 0 && b < 1)) {
+    if (a > 0 && a < 1 && b > 0 && b < 1) {
       result.found = true
     }
 

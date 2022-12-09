@@ -1,7 +1,7 @@
 import * as React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 import { NetworkFrame } from "../../components"
-import { Mark } from "semiotic-mark"
+import Mark from "../../components/Mark/Mark"
 
 import { edgeData } from "../example_settings/networkframe"
 import Button from "@material-ui/core/Button"

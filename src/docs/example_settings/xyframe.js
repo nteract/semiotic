@@ -3,7 +3,7 @@ import { xyframe_data } from "../sampledata/nyc_temp"
 import { quantile } from "d3-array"
 import { DividedLine } from "../../components"
 
-import { Mark } from "semiotic-mark"
+import Mark from "../../components/Mark/Mark"
 import { scaleLinear } from "d3-scale"
 import AnnotationCalloutElbow from "react-annotation/lib/Types/AnnotationCalloutElbow"
 
@@ -13,19 +13,17 @@ const blue = "rgb(0, 162, 206)"
 const red = "rgb(179, 51, 29)"
 
 //const opacityScale = scaleLinear().domain([0, 148]).range([0.1, 1])
-const opacityScale = scaleLinear()
-  .domain([1869, 2017])
-  .range([0.1, 1])
+const opacityScale = scaleLinear().domain([1869, 2017]).range([0.1, 1])
 
 const processedNYCTemp = xyframe_data
 
 const monthHash = {}
 const lines = []
 const bounds = { label: "boundingRegion", bounding: [], coordinates: [] }
-processedNYCTemp.forEach(d => {
+processedNYCTemp.forEach((d) => {
   const line = { label: d.year, average: d.Annual, coordinates: [] }
   lines.push(line)
-  Object.keys(d).forEach(k => {
+  Object.keys(d).forEach((k) => {
     if (k !== "year" && k !== "Annual") {
       if (!monthHash[k]) {
         monthHash[k] = []
@@ -40,7 +38,7 @@ processedNYCTemp.forEach(d => {
   })
 })
 
-Object.keys(monthHash).forEach(key => {
+Object.keys(monthHash).forEach((key) => {
   const values = monthHash[key].sort((a, b) => b - a)
 
   const topVal = quantile(values, 0.05)
@@ -54,8 +52,8 @@ Object.keys(monthHash).forEach(key => {
   })
 })
 
-lines.forEach(line => {
-  line.coordinates.forEach(point => {
+lines.forEach((line) => {
+  line.coordinates.forEach((point) => {
     const thisBound = bounds.bounding[point.step]
     point.top = thisBound.top
     point.bottom = thisBound.bottom
@@ -66,13 +64,13 @@ lines.forEach(line => {
 })
 
 bounds.coordinates = [
-  ...bounds.bounding.map(d => ({
+  ...bounds.bounding.map((d) => ({
     value: d.top,
     delta: d.top - d.median,
     step: d.step
   })),
   ...bounds.bounding
-    .map(d => ({ value: d.bottom, delta: d.bottom - d.median, step: d.step }))
+    .map((d) => ({ value: d.bottom, delta: d.bottom - d.median, step: d.step }))
     .sort((a, b) => b.step - a.step)
 ]
 
@@ -83,7 +81,7 @@ const borderCutLine = ({ d, i, xScale, yScale }) => {
     <DividedLine
       key={`regionated-line-${i}`}
       data={[d]}
-      parameters={p => {
+      parameters={(p) => {
         //    if (p.value < p.bottom) {
         if (p.delta < p.bottomDelta) {
           return {
@@ -105,9 +103,9 @@ const borderCutLine = ({ d, i, xScale, yScale }) => {
         return { fill: "none", stroke: "gray", strokeOpacity: lineOpacity / 4 }
       }}
       searchIterations={20}
-      customAccessors={{ x: d => xScale(d.x), y: d => yScale(d.y) }}
+      customAccessors={{ x: (d) => xScale(d.x), y: (d) => yScale(d.y) }}
       forceUpdate={true}
-      lineDataAccessor={d => d.data}
+      lineDataAccessor={(d) => d.data}
       interpolate={curveMonotoneX}
     />
   )
@@ -127,16 +125,17 @@ const monthNameHash = [
   "December"
 ]
 
-const degreeDiffFormat = d => `${d > 0 ? "+" : ""}${Math.ceil(d * 100) / 100}°`
-const monthNameFormat = d => monthNameHash[d]
+const degreeDiffFormat = (d) =>
+  `${d > 0 ? "+" : ""}${Math.ceil(d * 100) / 100}°`
+const monthNameFormat = (d) => monthNameHash[d]
 
 const lineAnnotater = ({ d, xScale, yScale }) => {
   if (!d.coincidentPoints) {
     return null
   }
   const lineRenderer = line()
-    .x(d => xScale(d.x))
-    .y(d => yScale(d.y))
+    .x((d) => xScale(d.x))
+    .y((d) => yScale(d.y))
     .curve(curveMonotoneX)
 
   return d.coincidentPoints.map((p, q) => {
@@ -164,7 +163,7 @@ export const regionatedLineChart = {
   title: "Monthly Temperature in New York Since 1869",
   size: [720, 500],
   lines,
-  xAccessor: d => d.step,
+  xAccessor: (d) => d.step,
   axes: [
     {
       orient: "left",
@@ -174,13 +173,13 @@ export const regionatedLineChart = {
     { orient: "bottom", rotate: 45, tickFormat: monthNameFormat }
   ],
   //    yAccessor: d => d.value,
-  yAccessor: d => d.delta,
+  yAccessor: (d) => d.delta,
   margin: { top: 35, right: 30, left: 70, bottom: 50 },
   customLineMark: borderCutLine,
   customPointMark: () => <Mark markType="circle" r={2} />,
   showLinePoints: true,
   //    pointStyle: (d,i) => ({ stroke: d.value < bounds.bounding[d.step].bottom ? blue : d.value > bounds.bounding[d.step].top ? red : "none", fill: "none", strokeWidth: "1px", strokeOpacity: 0.1 }),
-  pointStyle: d => ({
+  pointStyle: (d) => ({
     stroke:
       d.delta < d.bottomDelta ? blue : d.delta > d.topDelta ? red : "none",
     fill: "none",
@@ -195,7 +194,7 @@ export const regionatedLineChart = {
     strokeDasharray: "2 4"
   }),
   summaries: [bounds],
-  summaryDataAccessor: d => d.coordinates,
+  summaryDataAccessor: (d) => d.coordinates,
   annotations: [
     {
       type: AnnotationCalloutElbow,
@@ -209,10 +208,10 @@ export const regionatedLineChart = {
     }
   ],
   dataVersion: "fixed",
-  tooltipContent: d => (
+  tooltipContent: (d) => (
     <div className="tooltip-content">
       <h2 style={{ marginTop: "10px" }}>
-        {d.coincidentPoints.map(d => d.year).join(",")}
+        {d.coincidentPoints.map((d) => d.year).join(",")}
       </h2>
       <h3 style={{ marginTop: "10px" }}>{d.step}</h3>
       <p>{d.value}°</p>

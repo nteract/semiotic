@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Mark } from "semiotic-mark"
+import Mark from "../../components/Mark/Mark"
 import Annotation from "../Annotation"
 
 import {

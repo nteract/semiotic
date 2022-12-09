@@ -1,6 +1,6 @@
 import * as React from "react"
 import { XYFrame } from "../../components"
-import { Mark } from "semiotic-mark"
+import Mark from "../../components/Mark/Mark"
 import { scaleLinear } from "d3-scale"
 
 const depthScale = scaleLinear().domain([0, 100]).range([1, 10])
@@ -12,22 +12,25 @@ const speciousColors = {
 }
 
 const htmlAnnotationRules = (annotation) => {
-
   const { screenCoordinates, d } = annotation
-  const pop =  parseInt(depthScale(d.pop))
+  const pop = parseInt(depthScale(d.pop))
 
-  return (<div
-  style={{
-    position: "absolute",
-    left: `${parseInt(screenCoordinates[0] - 20)}px`,
-    top: `${parseInt(screenCoordinates[1] - 20)}px`,
-    width: "40px",
-    height: "40px",
-    borderRadius: "50%",
-    background: "#55b9f3",
-    boxShadow: `inset ${pop}px ${pop}px ${pop * 2}px #489dcf, inset -${pop}px -${pop}px ${pop * 2}px #62d5ff`
-
-  }} />)
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: `${parseInt(screenCoordinates[0] - 20)}px`,
+        top: `${parseInt(screenCoordinates[1] - 20)}px`,
+        width: "40px",
+        height: "40px",
+        borderRadius: "50%",
+        background: "#55b9f3",
+        boxShadow: `inset ${pop}px ${pop}px ${
+          pop * 2
+        }px #489dcf, inset -${pop}px -${pop}px ${pop * 2}px #62d5ff`
+      }}
+    />
+  )
 }
 
 const speciousDataset = [
@@ -220,11 +223,10 @@ const datasketchesChart = {
       >
         {d.name}
       </text>
-
     </Mark>
   ),
   hoverAnnotation: true,
-  tooltipContent: d => (
+  tooltipContent: (d) => (
     <div
       className="tooltip-content"
       style={{
@@ -250,18 +252,12 @@ const datasketchesChart = {
   yAccessor: "accessibleShowingOff",
   margin: { left: 100, bottom: 100, right: 100, top: 100 },
   htmlAnnotationRules: htmlAnnotationRules,
-  backgroundGraphics: (
-    <rect
-      width={1000}
-      height={1000}
-      fill="#55b9f3"
-    />
-  ),
+  backgroundGraphics: <rect width={1000} height={1000} fill="#55b9f3" />,
   axes: [
     {
       orient: "left",
       center: true,
-//      label: "← Accessible - Showing Off →",
+      //      label: "← Accessible - Showing Off →",
       tickFormat: () => "",
       tickValues: [-1, -0.5, 0.5, 1]
     },

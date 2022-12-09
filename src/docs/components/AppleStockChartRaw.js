@@ -1,11 +1,13 @@
 import * as React from "react"
+import { useState } from "react"
 import { XYFrame /*, DividedLine */ } from "../../components"
 import { data } from "../sampledata/apple_stock"
 import { scaleTime } from "d3-scale"
+import SemioticMark from "../../components/Mark/Mark"
 
 const chartAxes = [
-  { orient: "left", tickFormat: d => `$${d}` },
-  { orient: "bottom", ticks: 6, tickFormat: d => d.getFullYear() },
+  { orient: "left", tickFormat: (d) => `$${d}` },
+  { orient: "bottom", ticks: 6, tickFormat: (d) => d.getFullYear() },
   {
     orient: "right",
     marginalSummaryType: {
@@ -33,7 +35,7 @@ const thresholdLine = ({ d, i, xScale, yScale }) => {
 }
 */
 
-const customTooltip = d => (
+const customTooltip = (d) => (
   <div className="tooltip-content">
     <p>
       Date: {`${d.date.getMonth()}-${d.date.getDate()}-${d.date.getYear()}`}
@@ -45,7 +47,7 @@ const customTooltip = d => (
 const appleChart = {
   size: [700, 300],
   xScaleType: scaleTime(),
-  xAccessor: d => new Date(d.date),
+  xAccessor: (d) => new Date(d.date),
   yExtent: [0],
   yAccessor: "close",
   lines: [{ label: "Apple Stock", coordinates: data }],
@@ -65,9 +67,11 @@ export default (
   editMode,
   overridePosition,
   setNewPosition,
-  annotationLabel
+  annotationLabel,
+  xy,
+  markType
 ) => {
-  const onDragEnd = d => {
+  const onDragEnd = (d) => {
     setNewPosition(d)
   }
 
@@ -174,17 +178,33 @@ export default (
     })
   }
 
+  console.log("AARARHARHARAHRHR ****(*xy", xy)
   return (
     <div>
+      <svg height={500} width={500}>
+        <SemioticMark
+          renderMode="sketchy"
+          cx={xy[0]}
+          cy={xy[1]}
+          x={100}
+          y={100}
+          width={50}
+          height={50}
+          markType={markType}
+          r={5}
+          fill="red"
+        />
+      </svg>
+      {/*
       <XYFrame
         {...appleChart}
         annotations={annotations}
         hoverAnnotation={!editMode}
         summaryType={{
           type: "linebounds",
-          boundingAccessor: d => d.close / 5,
-          topBoundingAccessor: d => d.close / 5,
-          bottomBoundingAccessor: d => d.close / 10,
+          boundingAccessor: (d) => d.close / 5,
+          topBoundingAccessor: (d) => d.close / 5,
+          bottomBoundingAccessor: (d) => d.close / 10,
           regressionType: "polynomial",
           order: 8
         }}
@@ -204,7 +224,7 @@ export default (
           strokeDasharray: "5 5",
           fillOpacity: 0.25
         }}
-      />
+      /> */}
     </div>
   )
 }

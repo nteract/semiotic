@@ -1,6 +1,6 @@
 import * as React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
-import { Mark } from "semiotic-mark"
+import Mark from "../../components/Mark/Mark"
 
 import { XYFrame, ResponsiveXYFrame, MinimapXYFrame } from "../../components"
 import {
@@ -20,8 +20,8 @@ import AnnotationBadge from "react-annotation/lib/Types/AnnotationBadge"
 import { testData } from "../example_settings/xyframe"
 
 import Select from "@material-ui/core/Select"
-import MenuItem from '@material-ui/core/MenuItem'
-import InputLabel from '@material-ui/core/InputLabel'
+import MenuItem from "@material-ui/core/MenuItem"
+import InputLabel from "@material-ui/core/InputLabel"
 import FormControl from "@material-ui/core/FormControl"
 
 class NameForm extends React.Component {
@@ -62,11 +62,7 @@ class NameForm extends React.Component {
           {dataPoint.x},{dataPoint.y}
         </p>
         <p>Name:</p>
-        <input
-          type="text"
-          value={value}
-          onChange={this.handleChange}
-        />
+        <input type="text" value={value} onChange={this.handleChange} />
         <Select value={type} onChange={this.changeType}>
           <MenuItem label="x" value="x">
             X
@@ -167,8 +163,8 @@ const axesLabelHash = {
 const axesHash = {
   none: undefined,
   basic: [
-    { orient: "left", tickFormat: d => d },
-    { orient: "bottom", tickFormat: d => d, footer: true },
+    { orient: "left", tickFormat: (d) => d },
+    { orient: "bottom", tickFormat: (d) => d, footer: true },
     {
       orient: "bottom",
       tickLineGenerator: ({ xy }) => (
@@ -191,7 +187,7 @@ const axesHash = {
   labeled: [
     {
       orient: "right",
-      tickFormat: d => d,
+      tickFormat: (d) => d,
       label: {
         name: "right label",
         position: { anchor: "middle" }
@@ -199,7 +195,7 @@ const axesHash = {
     },
     {
       orient: "top",
-      tickFormat: d => d,
+      tickFormat: (d) => d,
       label: {
         name: "top label",
         position: { anchor: "middle" }
@@ -207,7 +203,7 @@ const axesHash = {
     },
     {
       orient: "left",
-      tickFormat: d => d,
+      tickFormat: (d) => d,
       label: {
         name: "left label",
         position: { anchor: "middle" }
@@ -215,7 +211,7 @@ const axesHash = {
     },
     {
       orient: "bottom",
-      tickFormat: d => d,
+      tickFormat: (d) => d,
       label: {
         name: "bottom label",
         position: { anchor: "middle" }
@@ -225,12 +221,12 @@ const axesHash = {
   hover: [
     {
       orient: "bottom",
-      tickFormat: d => d,
+      tickFormat: (d) => d,
       axisAnnotationFunction: undefined
     },
     {
       orient: "left",
-      tickFormat: d => d,
+      tickFormat: (d) => d,
       axisAnnotationFunction: undefined
     }
   ]
@@ -277,8 +273,8 @@ const customPointHash = {
     return d.step < 20 ? (
       <Mark markType="circle" r="5" />
     ) : (
-        <Mark markType="rect" x={-4} y={-4} width={8} height={8} />
-      )
+      <Mark markType="rect" x={-4} y={-4} width={8} height={8} />
+    )
   }
 }
 
@@ -288,7 +284,7 @@ const customPointLabelHash = {
 
 const summaryStyleHash = {
   basic: () => ({ fill: "#b6a756", stroke: "black", strokeWidth: "1px" }),
-  contours: d => ({
+  contours: (d) => ({
     fill: badColors(d.value),
     stroke: "black",
     strokeWidth: "1px",
@@ -349,10 +345,10 @@ components.push({
   `
 })
 
-let displayData = testData.map(d => {
+let displayData = testData.map((d) => {
   const moreData = [
     ...d.data,
-    ...d.data.map(p => ({ py: p.py + Math.random() * 1000, px: p.px + 7 }))
+    ...d.data.map((p) => ({ py: p.py + Math.random() * 1000, px: p.px + 7 }))
   ]
   return Object.assign(d, { data: moreData })
 })
@@ -488,7 +484,7 @@ const annotationSettingTypes = {
   bumpOptions: {
     layout: "bump",
     pointSizeFunction: () => 15,
-    labelSizeFunction: noteData => {
+    labelSizeFunction: (noteData) => {
       return [(noteData.note.title || noteData.note.label).length * 6, 30]
     }
   },
@@ -501,7 +497,7 @@ const annotationSettingTypes = {
   }
 }
 
-const annotationSettingLabels = setting => {
+const annotationSettingLabels = (setting) => {
   const hash = {
     empty: "",
     plainBump: '{ layout: "bump" }',
@@ -523,11 +519,13 @@ const annotationSettingLabels = setting => {
   return hash[setting] === "" ? "" : `annotationSettings={${hash[setting]}}`
 }
 
-const annotationSettingOptions = Object.keys(annotationSettingTypes).map(d => (
-  <MenuItem key={d} label={d} value={d}>
-    {d}
-  </MenuItem>
-))
+const annotationSettingOptions = Object.keys(annotationSettingTypes).map(
+  (d) => (
+    <MenuItem key={d} label={d} value={d}>
+      {d}
+    </MenuItem>
+  )
+)
 
 export default class XYFrameDocs extends React.Component {
   constructor(props) {
@@ -553,8 +551,14 @@ export default class XYFrameDocs extends React.Component {
       customPoint: "none",
       summaryType: "basic",
       lineExtent: [1, 8],
-      pointExtent: [[-1000, 1000], [1000, -1000]],
-      summaryExtent: [[-1000, 1000], [1000, -1000]],
+      pointExtent: [
+        [-1000, 1000],
+        [1000, -1000]
+      ],
+      summaryExtent: [
+        [-1000, 1000],
+        [1000, -1000]
+      ],
       showPoints: "off",
       annotationSettings: "empty",
       axisAnnotatable: "off",
@@ -573,7 +577,7 @@ export default class XYFrameDocs extends React.Component {
     }
 
     //In constructor to get access to this
-    axesHash.hover[0].axisAnnotationFunction = d =>
+    axesHash.hover[0].axisAnnotationFunction = (d) =>
       this.setState({
         axisAnnotation: {
           type: d.type,
@@ -581,7 +585,7 @@ export default class XYFrameDocs extends React.Component {
           label: "clicked annotation"
         }
       })
-    axesHash.hover[1].axisAnnotationFunction = d =>
+    axesHash.hover[1].axisAnnotationFunction = (d) =>
       this.setState({
         axisAnnotation: {
           type: d.type,
@@ -619,7 +623,7 @@ export default class XYFrameDocs extends React.Component {
   }
 
   render() {
-    const dataTypeOptions = ["line", "point", "summary"].map(d => (
+    const dataTypeOptions = ["line", "point", "summary"].map((d) => (
       <MenuItem key={`data-type-option-${d}`} value={d}>
         {d}
       </MenuItem>
@@ -646,127 +650,127 @@ export default class XYFrameDocs extends React.Component {
       "stackedpercent",
       "bumpline",
       "bumparea"
-    ].map(d => (
+    ].map((d) => (
       <MenuItem key={`line-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
-    const renderOptions = ["none", "sketchy", "painty"].map(d => (
+    const renderOptions = ["none", "sketchy", "painty"].map((d) => (
       <MenuItem key={`render-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
-    const definedOptions = ["active", "inactive"].map(d => (
+    const definedOptions = ["active", "inactive"].map((d) => (
       <MenuItem key={`defined-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
-    const hoverAnnotationOptions = ["off", "on"].map(d => (
+    const hoverAnnotationOptions = ["off", "on"].map((d) => (
       <MenuItem key={`hover-annotation-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
-    const matteOptions = ["off", "on"].map(d => (
+    const matteOptions = ["off", "on"].map((d) => (
       <MenuItem key={`matte-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
-    const annotationOptions = ["off", "on"].map(d => (
+    const annotationOptions = ["off", "on"].map((d) => (
       <MenuItem key={`annotation-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
-    const showPointOptions = ["off", "on"].map(d => (
+    const showPointOptions = ["off", "on"].map((d) => (
       <MenuItem key={`show-point-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
-    const axisAnnotationableOptions = ["off", "on"].map(d => (
+    const axisAnnotationableOptions = ["off", "on"].map((d) => (
       <MenuItem key={`axis-annotatable-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
-    const foregroundGraphicsOptions = ["off", "on"].map(d => (
+    const foregroundGraphicsOptions = ["off", "on"].map((d) => (
       <MenuItem key={`foreground-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
-    const backgroundGraphicsOptions = ["off", "on"].map(d => (
+    const backgroundGraphicsOptions = ["off", "on"].map((d) => (
       <MenuItem key={`background-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
-    const legendOptions = ["off", "on"].map(d => (
+    const legendOptions = ["off", "on"].map((d) => (
       <MenuItem key={`legend-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
-    const customScaleOptions = ["none", "pow"].map(d => (
+    const customScaleOptions = ["none", "pow"].map((d) => (
       <MenuItem key={`customScale-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
-    const fixedExtentOptions = ["none", "partial", "full"].map(d => (
+    const fixedExtentOptions = ["none", "partial", "full"].map((d) => (
       <MenuItem key={`fixed-extent-annotation-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
-    const customPointOptions = ["none", "basic", "variable"].map(d => (
+    const customPointOptions = ["none", "basic", "variable"].map((d) => (
       <MenuItem key={`custom-point-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
-    const summaryTypeOptions = ["basic", "contours"].map(d => (
+    const summaryTypeOptions = ["basic", "contours"].map((d) => (
       <MenuItem key={`summary-type-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
-    const titleOptions = Object.keys(titleTypesHash).map(d => (
+    const titleOptions = Object.keys(titleTypesHash).map((d) => (
       <MenuItem key={`title-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
-    const canvasRenderOptions = Object.keys(canvasRenderHash).map(d => (
+    const canvasRenderOptions = Object.keys(canvasRenderHash).map((d) => (
       <MenuItem key={`canvas-render-annotation-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
-    const curveOptions = Object.keys(curveHash).map(d => (
+    const curveOptions = Object.keys(curveHash).map((d) => (
       <MenuItem key={`curve-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
-    const marginOptions = Object.keys(marginHash).map(d => (
+    const marginOptions = Object.keys(marginHash).map((d) => (
       <MenuItem key={`margin-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
-    const axesOptions = Object.keys(axesHash).map(d => (
+    const axesOptions = Object.keys(axesHash).map((d) => (
       <MenuItem key={`axes-option-${d}`} value={d}>
         {d}
       </MenuItem>
     ))
 
-    const frameOptions = Object.keys(frameHash).map(d => (
+    const frameOptions = Object.keys(frameHash).map((d) => (
       <MenuItem key={`frame-option-${d}`} value={d}>
         {d}
       </MenuItem>
@@ -786,24 +790,24 @@ export default class XYFrameDocs extends React.Component {
 
     const linesSource = removeEmptyLines`lines={displayData}
       lineDataAccessor={${
-      this.state.frame === "MinimapXYFrame"
-        ? "d => d.data.filter(p => p.px >= this.state.extent[0] && p.px <= this.state.extent[1])"
-        : '"data"'
+        this.state.frame === "MinimapXYFrame"
+          ? "d => d.data.filter(p => p.px >= this.state.extent[0] && p.px <= this.state.extent[1])"
+          : '"data"'
       }}
       lineStyle={d => ({ fill: d.color, fillOpacity: 0.5, stroke: d.color, strokeWidth: '3px' })}
       ${
-      this.state.lineType === "none"
-        ? ""
-        : `lineType={{ type: "${this.state.lineType}"${
-        this.state.curve === "none"
+        this.state.lineType === "none"
           ? ""
-          : `, interpolator: ${this.state.curve}`
-        } }}`
+          : `lineType={{ type: "${this.state.lineType}"${
+              this.state.curve === "none"
+                ? ""
+                : `, interpolator: ${this.state.curve}`
+            } }}`
       }
       ${
-      this.state.renderMode === "none"
-        ? ""
-        : `lineRenderMode={() => "${this.state.renderMode}"}`
+        this.state.renderMode === "none"
+          ? ""
+          : `lineRenderMode={() => "${this.state.renderMode}"}`
       }
       ${this.state.defined === "inactive" ? "" : "defined={d => d.py !== 0}"}
       ${this.state.showPoints === "on" ? "showLinePoints={true}" : ""}`
@@ -812,22 +816,22 @@ export default class XYFrameDocs extends React.Component {
       summaryStyle={() => ({ fill: 'purple', stroke: 'red', strokeWidth: '1px' })}
       ${this.state.showPoints === "on" ? "showLinePoints={true}" : ""}
       ${
-      this.state.renderMode === "none"
-        ? ""
-        : `summaryRenderMode={() => "${this.state.renderMode}"}`
+        this.state.renderMode === "none"
+          ? ""
+          : `summaryRenderMode={() => "${this.state.renderMode}"}`
       }`
 
     const pointsSource = removeEmptyLines`points={testData}
       pointStyle={d => ({ fill: d.cat, stroke: 'black', strokeWidth: 1 })}
       ${
-      this.state.customPoint !== "none"
-        ? `customPointMark={${customPointLabelHash[this.state.customPoint]}}`
-        : ""
+        this.state.customPoint !== "none"
+          ? `customPointMark={${customPointLabelHash[this.state.customPoint]}}`
+          : ""
       }
       ${
-      this.state.renderMode === "none"
-        ? ""
-        : `pointRenderMode={() => "${this.state.renderMode}"}`
+        this.state.renderMode === "none"
+          ? ""
+          : `pointRenderMode={() => "${this.state.renderMode}"}`
       }`
 
     const dataTypeSource = {
@@ -862,7 +866,13 @@ export default class XYFrameDocs extends React.Component {
       undefinedOptions.responsiveWidth = true
     const displayFrame = (
       <div>
-        <button onClick={() => { this.setState({ yAccessor: "px" }) }}>Change yAccessor</button>
+        <button
+          onClick={() => {
+            this.setState({ yAccessor: "px" })
+          }}
+        >
+          Change yAccessor
+        </button>
         <ReactFrame
           {...undefinedOptions}
           title={titleTypesHash[this.state.title]}
@@ -876,16 +886,16 @@ export default class XYFrameDocs extends React.Component {
           summaryStyle={summaryStyleHash[this.state.summaryType]}
           summaryType={summaryTypeHash[this.state.summaryType]}
           points={this.state.dataType === "point" ? pointTestData : undefined}
-          pointStyle={d => ({
+          pointStyle={(d) => ({
             fill: (d.parentLine && d.parentLine.color) || d.cat,
             stroke: "black",
             strokeWidth: 0.5,
             r: d.parentSummary && 5
           })}
           customPointMark={customPointHash[this.state.customPoint]}
-          lineDataAccessor={d =>
+          lineDataAccessor={(d) =>
             d.data.filter(
-              p =>
+              (p) =>
                 this.state.frame !== "MinimapXYFrame" ||
                 (p.px >= this.state.lineExtent[0] &&
                   p.px <= this.state.lineExtent[1])
@@ -901,27 +911,27 @@ export default class XYFrameDocs extends React.Component {
           matte={this.state.matte === "on"}
           xExtent={
             this.state.frame === "MinimapXYFrame" &&
-              this.state.dataType !== "line" &&
-              this.state[`${this.state.dataType}Extent`] &&
-              this.state[`${this.state.dataType}Extent`][0]
+            this.state.dataType !== "line" &&
+            this.state[`${this.state.dataType}Extent`] &&
+            this.state[`${this.state.dataType}Extent`][0]
               ? [
-                this.state[`${this.state.dataType}Extent`][0][0],
-                this.state[`${this.state.dataType}Extent`][1][0]
-              ]
+                  this.state[`${this.state.dataType}Extent`][0][0],
+                  this.state[`${this.state.dataType}Extent`][1][0]
+                ]
               : undefined
           }
           yExtent={
             this.state.frame === "MinimapXYFrame" &&
-              this.state.dataType !== "line" &&
-              this.state[`${this.state.dataType}Extent`] &&
-              this.state[`${this.state.dataType}Extent`][0]
+            this.state.dataType !== "line" &&
+            this.state[`${this.state.dataType}Extent`] &&
+            this.state[`${this.state.dataType}Extent`][0]
               ? [
-                this.state[`${this.state.dataType}Extent`][1][1],
-                this.state[`${this.state.dataType}Extent`][0][1]
-              ]
+                  this.state[`${this.state.dataType}Extent`][1][1],
+                  this.state[`${this.state.dataType}Extent`][0][1]
+                ]
               : fixedExtentHash[this.state.fixedExtent]
           }
-          lineStyle={d => ({
+          lineStyle={(d) => ({
             fill:
               this.state.lineType === "line" || this.state.lineType === "none"
                 ? "none"
@@ -934,14 +944,14 @@ export default class XYFrameDocs extends React.Component {
             this.state.lineType === "none"
               ? undefined
               : {
-                type: this.state.lineType,
-                interpolator: curveHash[this.state.curve],
-                sort: null
-              }
+                  type: this.state.lineType,
+                  interpolator: curveHash[this.state.curve],
+                  sort: null
+                }
           }
           margin={marginHash[this.state.margin]}
           defined={
-            this.state.defined === "inactive" ? undefined : d => d.py !== 0
+            this.state.defined === "inactive" ? undefined : (d) => d.py !== 0
           }
           lineRenderMode={
             this.state.renderMode === "none"
@@ -991,7 +1001,7 @@ export default class XYFrameDocs extends React.Component {
               : canvasRenderHash[this.state.canvasRender]
           }
           lineIDAccessor={"id"}
-          customClickBehavior={d =>
+          customClickBehavior={(d) =>
             this.setState({
               clickAnnotation: Object.assign({ type: "form" }, d)
             })
@@ -1031,59 +1041,59 @@ export default class XYFrameDocs extends React.Component {
           minimap={
             this.state.frame === "MinimapXYFrame"
               ? {
-                margin: { top: 20, bottom: 35, left: 20, right: 20 },
-                lineStyle: d => ({
-                  fill: d.color,
-                  fillOpacity: 0.5,
-                  stroke: d.color
-                }),
-                lineType:
-                  this.state.lineType === "none"
-                    ? undefined
-                    : {
-                      type: this.state.lineType,
-                      interpolator: curveHash[this.state.curve],
-                      sort: null
-                    },
-                brushEnd: e =>
-                  this.updateDateRange(`${this.state.dataType}`, e),
-                yBrushable: this.state.dataType === "line" ? false : true,
-                xBrushExtent:
-                  this.state.dataType === "line"
-                    ? this.state[`${this.state.dataType}Extent`]
-                    : this.state[`${this.state.dataType}Extent`][0],
-                yBrushExtent: this.state[`${this.state.dataType}Extent`][1],
-                lines:
-                  this.state.dataType === "line" ? displayData : undefined,
-                summaries:
-                  this.state.dataType === "summary"
-                    ? summaryDataHash[this.state.summaryType]
+                  margin: { top: 20, bottom: 35, left: 20, right: 20 },
+                  lineStyle: (d) => ({
+                    fill: d.color,
+                    fillOpacity: 0.5,
+                    stroke: d.color
+                  }),
+                  lineType:
+                    this.state.lineType === "none"
+                      ? undefined
+                      : {
+                          type: this.state.lineType,
+                          interpolator: curveHash[this.state.curve],
+                          sort: null
+                        },
+                  brushEnd: (e) =>
+                    this.updateDateRange(`${this.state.dataType}`, e),
+                  yBrushable: this.state.dataType === "line" ? false : true,
+                  xBrushExtent:
+                    this.state.dataType === "line"
+                      ? this.state[`${this.state.dataType}Extent`]
+                      : this.state[`${this.state.dataType}Extent`][0],
+                  yBrushExtent: this.state[`${this.state.dataType}Extent`][1],
+                  lines:
+                    this.state.dataType === "line" ? displayData : undefined,
+                  summaries:
+                    this.state.dataType === "summary"
+                      ? summaryDataHash[this.state.summaryType]
+                      : undefined,
+                  points:
+                    this.state.dataType === "point" ? pointTestData : undefined,
+                  summaryStyle: summaryStyleHash[this.state.summaryType],
+                  summaryType: summaryTypeHash[this.state.summaryType],
+                  pointStyle: (d) => ({
+                    fill: d.cat,
+                    stroke: "black",
+                    strokeWidth: 1
+                  }),
+                  lineDataAccessor: (d) => d.data,
+                  size:
+                    this.state.dataType === "line" ? [700, 150] : [300, 300],
+                  axes: axesHash[this.state.axes]
+                    ? [axesHash[this.state.axes][1]]
                     : undefined,
-                points:
-                  this.state.dataType === "point" ? pointTestData : undefined,
-                summaryStyle: summaryStyleHash[this.state.summaryType],
-                summaryType: summaryTypeHash[this.state.summaryType],
-                pointStyle: d => ({
-                  fill: d.cat,
-                  stroke: "black",
-                  strokeWidth: 1
-                }),
-                lineDataAccessor: d => d.data,
-                size:
-                  this.state.dataType === "line" ? [700, 150] : [300, 300],
-                axes: axesHash[this.state.axes]
-                  ? [axesHash[this.state.axes][1]]
-                  : undefined,
-                annotations:
-                  this.state.annotations === "on"
-                    ? finalAnnotations.map(d =>
-                      Object.assign({}, d, {
-                        type: AnnotationBadge,
-                        subject: { text: "A", radius: 12 }
-                      })
-                    )
-                    : undefined
-              }
+                  annotations:
+                    this.state.annotations === "on"
+                      ? finalAnnotations.map((d) =>
+                          Object.assign({}, d, {
+                            type: AnnotationBadge,
+                            subject: { text: "A", radius: 12 }
+                          })
+                        )
+                      : undefined
+                }
               : undefined
           }
         />
@@ -1102,14 +1112,14 @@ export default class XYFrameDocs extends React.Component {
       size={[ 700,500 ]}
       ${
         this.state.frame === "ResponsiveXYFrame" ? "responsiveWidth={true}" : ""
-        }
+      }
       ${this.state.annotations === "on" ? annotationSource : ""}
       ${dataTypeSource[this.state.dataType]}
       ${
         this.state.fixedExtent === "none"
           ? ""
           : `yExtent={${fixedExtentLabelHash[this.state.fixedExtent]}}`
-        }
+      }
       ${this.state.matte === "off" ? "" : "matte={true}"}
       xAccessor="px"
       yAccessor="py"
@@ -1118,35 +1128,35 @@ export default class XYFrameDocs extends React.Component {
         this.state.margin === "none"
           ? ""
           : `margin={${JSON.stringify(marginHash[this.state.margin])}}`
-        }
+      }
       ${
         this.state.axes === "none"
           ? ""
           : `axes={${axesLabelHash[this.state.axes]}}`
-        }
+      }
       ${this.state.hoverAnnotation === "off" ? "" : "hoverAnnotation={true}"}
       ${
         this.state.canvasRender === "none"
           ? ""
           : `${canvasRenderNameHash[this.state.dataType]}={${
-          canvasRenderLabelHash[this.state.canvasRender]
-          }}`
-        }
+              canvasRenderLabelHash[this.state.canvasRender]
+            }}`
+      }
       ${
         this.state.backgroundGraphics === "off"
           ? ""
           : 'backgroundGraphics={<text x={300} y={350} style={{ opacity: 0.25, fontWeight: 900, fontSize: "36px" }}>backgroundGraphics</text>}'
-        }
+      }
       ${
         this.state.foregroundGraphics === "off"
           ? ""
           : 'foregroundGraphics={<text x={300} y={400} style={{ fill: "white", stroke: "black", fontWeight: 900, fontSize: "36px" }}>foregroundGraphics</text>}'
-        }
+      }
       ${
         this.state.dataType === "line" && this.state.legend === "on"
           ? "legend={true}"
           : ""
-        }
+      }
       ${
         this.state.frame === "MinimapXYFrame"
           ? removeEmptyLines`minimap={
@@ -1163,10 +1173,10 @@ export default class XYFrameDocs extends React.Component {
             this.state.annotations === "on"
               ? "annotations: badgeAnnotations"
               : ""
-            }
+          }
           }`
           : ""
-        }
+      }
       />`
     })
 
@@ -1175,7 +1185,7 @@ export default class XYFrameDocs extends React.Component {
         <InputLabel htmlFor="hover-behavior-input">lineType</InputLabel>
         <Select
           value={this.state.lineType}
-          onChange={e =>
+          onChange={(e) =>
             this.setState({
               lineType: e.target.value
             })
@@ -1189,7 +1199,7 @@ export default class XYFrameDocs extends React.Component {
           <InputLabel htmlFor="hover-behavior-input">lineType.curve</InputLabel>
           <Select
             value={this.state.curve}
-            onChange={e => this.setState({ curve: e.target.value })}
+            onChange={(e) => this.setState({ curve: e.target.value })}
           >
             {curveOptions}
           </Select>
@@ -1200,7 +1210,7 @@ export default class XYFrameDocs extends React.Component {
         <InputLabel htmlFor="hover-behavior-input">defined</InputLabel>
         <Select
           value={this.state.defined}
-          onChange={e => this.setState({ defined: e.target.value })}
+          onChange={(e) => this.setState({ defined: e.target.value })}
         >
           {definedOptions}
         </Select>
@@ -1209,7 +1219,7 @@ export default class XYFrameDocs extends React.Component {
         <InputLabel htmlFor="hover-behavior-input">legend</InputLabel>
         <Select
           value={this.state.legend}
-          onChange={e => this.setState({ legend: e.target.value })}
+          onChange={(e) => this.setState({ legend: e.target.value })}
         >
           {legendOptions}
         </Select>
@@ -1221,7 +1231,7 @@ export default class XYFrameDocs extends React.Component {
         <InputLabel htmlFor="hover-behavior-input">customPointMark</InputLabel>
         <Select
           value={this.state.customPoint}
-          onChange={e =>
+          onChange={(e) =>
             this.setState({
               customPoint: e.target.value
             })
@@ -1237,7 +1247,7 @@ export default class XYFrameDocs extends React.Component {
         <InputLabel htmlFor="hover-behavior-input">summaryType</InputLabel>
         <Select
           value={this.state.summaryType}
-          onChange={e =>
+          onChange={(e) =>
             this.setState({
               summaryType: e.target.value
             })
@@ -1250,7 +1260,7 @@ export default class XYFrameDocs extends React.Component {
         <InputLabel htmlFor="hover-behavior-input">showPoints</InputLabel>
         <Select
           value={this.state.showPoints}
-          onChange={e => this.setState({ showPoints: e.target.value })}
+          onChange={(e) => this.setState({ showPoints: e.target.value })}
         >
           {showPointOptions}
         </Select>
@@ -1262,7 +1272,7 @@ export default class XYFrameDocs extends React.Component {
         <InputLabel htmlFor="hover-behavior-input">annotations</InputLabel>
         <Select
           value={this.state.annotations}
-          onChange={e => this.setState({ annotations: e.target.value })}
+          onChange={(e) => this.setState({ annotations: e.target.value })}
         >
           {annotationOptions}
         </Select>
@@ -1273,7 +1283,9 @@ export default class XYFrameDocs extends React.Component {
         </InputLabel>
         <Select
           value={this.state.annotationSettings}
-          onChange={e => this.setState({ annotationSettings: e.target.value })}
+          onChange={(e) =>
+            this.setState({ annotationSettings: e.target.value })
+          }
         >
           {annotationSettingOptions}
         </Select>
@@ -1287,7 +1299,9 @@ export default class XYFrameDocs extends React.Component {
         </InputLabel>
         <Select
           value={this.state.backgroundGraphics}
-          onChange={e => this.setState({ backgroundGraphics: e.target.value })}
+          onChange={(e) =>
+            this.setState({ backgroundGraphics: e.target.value })
+          }
         >
           {backgroundGraphicsOptions}
         </Select>
@@ -1299,7 +1313,9 @@ export default class XYFrameDocs extends React.Component {
         </InputLabel>
         <Select
           value={this.state.foregroundGraphics}
-          onChange={e => this.setState({ foregroundGraphics: e.target.value })}
+          onChange={(e) =>
+            this.setState({ foregroundGraphics: e.target.value })
+          }
         >
           {foregroundGraphicsOptions}
         </Select>
@@ -1311,7 +1327,7 @@ export default class XYFrameDocs extends React.Component {
         <InputLabel htmlFor="hover-behavior-input">Change Frame</InputLabel>
         <Select
           value={this.state.frame}
-          onChange={e => this.setState({ frame: e.target.value })}
+          onChange={(e) => this.setState({ frame: e.target.value })}
         >
           {frameOptions}
         </Select>
@@ -1320,7 +1336,7 @@ export default class XYFrameDocs extends React.Component {
         <InputLabel htmlFor="hover-behavior-input">title</InputLabel>
         <Select
           value={this.state.title}
-          onChange={e => this.setState({ title: e.target.value })}
+          onChange={(e) => this.setState({ title: e.target.value })}
         >
           {titleOptions}
         </Select>
@@ -1329,7 +1345,7 @@ export default class XYFrameDocs extends React.Component {
         <InputLabel htmlFor="hover-behavior-input">Data Type</InputLabel>
         <Select
           value={this.state.dataType}
-          onChange={e => this.setState({ dataType: e.target.value })}
+          onChange={(e) => this.setState({ dataType: e.target.value })}
         >
           {dataTypeOptions}
         </Select>
@@ -1343,7 +1359,7 @@ export default class XYFrameDocs extends React.Component {
         <InputLabel htmlFor="hover-behavior-input">fixedExtent</InputLabel>
         <Select
           value={this.state.fixedExtent}
-          onChange={e => this.setState({ fixedExtent: e.target.value })}
+          onChange={(e) => this.setState({ fixedExtent: e.target.value })}
         >
           {fixedExtentOptions}
         </Select>
@@ -1352,7 +1368,7 @@ export default class XYFrameDocs extends React.Component {
         <InputLabel htmlFor="hover-behavior-input">matte</InputLabel>
         <Select
           value={this.state.matte}
-          onChange={e => this.setState({ matte: e.target.value })}
+          onChange={(e) => this.setState({ matte: e.target.value })}
         >
           {matteOptions}
         </Select>
@@ -1361,7 +1377,7 @@ export default class XYFrameDocs extends React.Component {
         <InputLabel htmlFor="hover-behavior-input">margin</InputLabel>
         <Select
           value={this.state.margin}
-          onChange={e => this.setState({ margin: e.target.value })}
+          onChange={(e) => this.setState({ margin: e.target.value })}
         >
           {marginOptions}
         </Select>
@@ -1370,7 +1386,7 @@ export default class XYFrameDocs extends React.Component {
         <InputLabel htmlFor="hover-behavior-input">axes</InputLabel>
         <Select
           value={this.state.axes}
-          onChange={e => this.setState({ axes: e.target.value })}
+          onChange={(e) => this.setState({ axes: e.target.value })}
         >
           {axesOptions}
         </Select>
@@ -1380,7 +1396,7 @@ export default class XYFrameDocs extends React.Component {
           <InputLabel htmlFor="hover-behavior-input">Axis Annotate</InputLabel>
           <Select
             value={this.state.axisAnnotatable}
-            onChange={e => this.setState({ axisAnnotatable: e.target.value })}
+            onChange={(e) => this.setState({ axisAnnotatable: e.target.value })}
           >
             {axisAnnotationableOptions}
           </Select>
@@ -1391,7 +1407,7 @@ export default class XYFrameDocs extends React.Component {
         <InputLabel htmlFor="hover-behavior-input">Render Mode</InputLabel>
         <Select
           value={this.state.renderMode}
-          onChange={e => this.setState({ renderMode: e.target.value })}
+          onChange={(e) => this.setState({ renderMode: e.target.value })}
         >
           {renderOptions}
         </Select>
@@ -1400,7 +1416,7 @@ export default class XYFrameDocs extends React.Component {
         <InputLabel htmlFor="hover-behavior-input">hoverAnnotation</InputLabel>
         <Select
           value={this.state.hoverAnnotation}
-          onChange={e => this.setState({ hoverAnnotation: e.target.value })}
+          onChange={(e) => this.setState({ hoverAnnotation: e.target.value })}
         >
           {hoverAnnotationOptions}
         </Select>
@@ -1409,7 +1425,7 @@ export default class XYFrameDocs extends React.Component {
         <InputLabel htmlFor="hover-behavior-input">canvasRender</InputLabel>
         <Select
           value={this.state.canvasRender}
-          onChange={e => this.setState({ canvasRender: e.target.value })}
+          onChange={(e) => this.setState({ canvasRender: e.target.value })}
         >
           {canvasRenderOptions}
         </Select>
@@ -1418,7 +1434,7 @@ export default class XYFrameDocs extends React.Component {
         <InputLabel htmlFor="hover-behavior-input">customScale</InputLabel>
         <Select
           value={this.state.customScale}
-          onChange={e => this.setState({ customScale: e.target.value })}
+          onChange={(e) => this.setState({ customScale: e.target.value })}
         >
           {customScaleOptions}
         </Select>

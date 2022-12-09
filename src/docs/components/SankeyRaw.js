@@ -110,6 +110,7 @@ export default ({
   }
 
   sankeyChart = {
+    nodes: [{ id: "login", value: 200 }],
     edges: [
       {
         id: "login-shop-California-California",
@@ -121,132 +122,6 @@ export default ({
         value: 82
       },
       {
-        id: "home-error-California-California",
-        key: "home-error-California-California",
-        _NWFEdgeKey: "home-error-California-California",
-        source: "home",
-        target: "error",
-        group: "California",
-        value: 2
-      },
-      {
-        id: "home-login-California-California",
-        key: "home-login-California-California",
-        _NWFEdgeKey: "home-login-California-California",
-        source: "home",
-        target: "login",
-        group: "California",
-        value: 221
-      },
-      {
-        id: "home-login-Colorado-Colorado",
-        key: "home-login-Colorado-Colorado",
-        _NWFEdgeKey: "home-login-Colorado-Colorado",
-        source: "home",
-        target: "login",
-        group: "Colorado",
-        value: 133
-      },
-      {
-        id: "home-shop-Colorado-Colorado",
-        key: "home-shop-Colorado-Colorado",
-        _NWFEdgeKey: "home-shop-Colorado-Colorado",
-        source: "home",
-        target: "shop",
-        group: "Colorado",
-        value: 50
-      },
-      {
-        id: "home-cart-Colorado-Colorado",
-        key: "home-cart-Colorado-Colorado",
-        _NWFEdgeKey: "home-cart-Colorado-Colorado",
-        source: "home",
-        target: "cart",
-        group: "Colorado",
-        value: 27
-      },
-      {
-        id: "cart-checkout-Colorado-Colorado",
-        key: "cart-checkout-Colorado-Colorado",
-        _NWFEdgeKey: "cart-checkout-Colorado-Colorado",
-        source: "cart",
-        target: "checkout",
-        group: "Colorado",
-        value: 107
-      },
-      {
-        id: "cart-login-Colorado-Colorado",
-        key: "cart-login-Colorado-Colorado",
-        _NWFEdgeKey: "cart-login-Colorado-Colorado",
-        source: "cart",
-        target: "login",
-        group: "Colorado",
-        value: 34
-      },
-      {
-        id: "checkout-login-California-California",
-        key: "checkout-login-California-California",
-        _NWFEdgeKey: "checkout-login-California-California",
-        source: "checkout",
-        target: "login",
-        group: "California",
-        value: 138
-      },
-      {
-        id: "home-login-Colombia-Colombia",
-        key: "home-login-Colombia-Colombia",
-        _NWFEdgeKey: "home-login-Colombia-Colombia",
-        source: "home",
-        target: "login",
-        group: "Colombia",
-        value: 3
-      },
-      {
-        id: "home-checkout-Colombia-Colombia",
-        key: "home-checkout-Colombia-Colombia",
-        _NWFEdgeKey: "home-checkout-Colombia-Colombia",
-        source: "home",
-        target: "checkout",
-        group: "Colombia",
-        value: 20
-      },
-      {
-        id: "home-cart-Colombia-Colombia",
-        key: "home-cart-Colombia-Colombia",
-        _NWFEdgeKey: "home-cart-Colombia-Colombia",
-        source: "home",
-        target: "cart",
-        group: "Colombia",
-        value: 21
-      },
-      {
-        id: "home-home-Colombia-Colombia",
-        key: "home-home-Colombia-Colombia",
-        _NWFEdgeKey: "home-home-Colombia-Colombia",
-        source: "home",
-        target: "home",
-        group: "Colombia",
-        value: 92
-      },
-      {
-        id: "home-error-Colombia-Colombia",
-        key: "home-error-Colombia-Colombia",
-        _NWFEdgeKey: "home-error-Colombia-Colombia",
-        source: "home",
-        target: "error",
-        group: "Colombia",
-        value: 35
-      },
-      {
-        id: "checkout-login-Colorado-Colorado",
-        key: "checkout-login-Colorado-Colorado",
-        _NWFEdgeKey: "checkout-login-Colorado-Colorado",
-        source: "checkout",
-        target: "login",
-        group: "Colorado",
-        value: 53
-      },
-      {
         id: "shop-cart-Colorado-Colorado",
         key: "shop-cart-Colorado-Colorado",
         _NWFEdgeKey: "shop-cart-Colorado-Colorado",
@@ -256,24 +131,6 @@ export default ({
         value: 99
       },
       {
-        id: "shop-login-Colorado-Colorado",
-        key: "shop-login-Colorado-Colorado",
-        _NWFEdgeKey: "shop-login-Colorado-Colorado",
-        source: "shop",
-        target: "login",
-        group: "Colorado",
-        value: 50
-      },
-      {
-        id: "shop-checkout-Colorado-Colorado",
-        key: "shop-checkout-Colorado-Colorado",
-        _NWFEdgeKey: "shop-checkout-Colorado-Colorado",
-        source: "shop",
-        target: "checkout",
-        group: "Colorado",
-        value: 21
-      },
-      {
         id: "cart-checkout-Colombia-Colombia",
         key: "cart-checkout-Colombia-Colombia",
         _NWFEdgeKey: "cart-checkout-Colombia-Colombia",
@@ -281,15 +138,6 @@ export default ({
         target: "checkout",
         group: "Colombia",
         value: 69
-      },
-      {
-        id: "cart-OLD_CHECKOUT-Colombia-Colombia",
-        key: "cart-OLD_CHECKOUT-Colombia-Colombia",
-        _NWFEdgeKey: "cart-OLD_CHECKOUT-Colombia-Colombia",
-        source: "cart",
-        target: "OLD_CHECKOUT",
-        group: "Colombia",
-        value: 9
       }
     ],
     networkType: {
@@ -305,7 +153,7 @@ export default ({
       fill: "blue",
       opacity: 0.5
     },
-    size: [700, 500],
+    size: size,
     margin: {
       left: 10,
       top: 10,

@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Mark } from "semiotic-mark"
+import Mark from "../../components/Mark/Mark"
 import Annotation from "../Annotation"
 import { AnnotationCalloutRect, AnnotationXYThreshold } from "react-annotation"
 
@@ -13,25 +13,34 @@ import { curveHash } from "../visualizationLayerBehavior/general"
 import { ScaleLinear } from "d3-scale"
 import { ProjectedPoint, RenderPipelineType } from "../types/generalTypes"
 
-export const pointsAlong = along => ({
-  d,
-  lines,
-  points,
-  xScale,
-  yScale,
-  pointStyle
-}) => {
-  const alongScale = along === "x" ? xScale : yScale
-  along = along === "yTop" && d.yMiddle ? "yMiddle" : along
-  if (d && d[along]) {
-    const { threshold = 1, r = () => 4, styleFn = pointStyle } = d
-    const foundPoints = []
+export const pointsAlong =
+  (along) =>
+  ({ d, lines, points, xScale, yScale, pointStyle }) => {
+    const alongScale = along === "x" ? xScale : yScale
+    along = along === "yTop" && d.yMiddle ? "yMiddle" : along
+    if (d && d[along]) {
+      const { threshold = 1, r = () => 4, styleFn = pointStyle } = d
+      const foundPoints = []
 
-    const halfThreshold = threshold / 2
+      const halfThreshold = threshold / 2
 
-    if (lines && lines.length > 0) {
-      lines.forEach(linedata => {
-        const linePoints = linedata.data.filter(p => {
+      if (lines && lines.length > 0) {
+        lines.forEach((linedata) => {
+          const linePoints = linedata.data.filter((p) => {
+            const pAlong = alongScale(p[along])
+            const dAlong = alongScale(d[along])
+
+            return (
+              pAlong <= dAlong + halfThreshold &&
+              pAlong >= dAlong - halfThreshold
+            )
+          })
+          foundPoints.push(...linePoints)
+        })
+      }
+
+      if (points && points.length > 0) {
+        const pointPoints = points.filter((p) => {
           const pAlong = alongScale(p[along])
           const dAlong = alongScale(d[along])
 
@@ -39,34 +48,21 @@ export const pointsAlong = along => ({
             pAlong <= dAlong + halfThreshold && pAlong >= dAlong - halfThreshold
           )
         })
-        foundPoints.push(...linePoints)
-      })
+        foundPoints.push(...pointPoints)
+      }
+
+      return foundPoints.map((p, i) => (
+        <circle
+          key={`found-circle-${i}`}
+          r={r(p, i)}
+          style={styleFn(p, i)}
+          cx={xScale(p.xMiddle || p.x)}
+          cy={yScale(p.yMiddle || p.yTop)}
+        />
+      ))
     }
-
-    if (points && points.length > 0) {
-      const pointPoints = points.filter(p => {
-        const pAlong = alongScale(p[along])
-        const dAlong = alongScale(d[along])
-
-        return (
-          pAlong <= dAlong + halfThreshold && pAlong >= dAlong - halfThreshold
-        )
-      })
-      foundPoints.push(...pointPoints)
-    }
-
-    return foundPoints.map((p, i) => (
-      <circle
-        key={`found-circle-${i}`}
-        r={r(p, i)}
-        style={styleFn(p, i)}
-        cx={xScale(p.xMiddle || p.x)}
-        cy={yScale(p.yMiddle || p.yTop)}
-      />
-    ))
+    return null
   }
-  return null
-}
 
 export const svgHorizontalPointsAnnotation = pointsAlong("yTop")
 export const svgVerticalPointsAnnotation = pointsAlong("x")
@@ -129,19 +125,21 @@ export const svgHighlight = ({
           stroke="black"
           strokeWidth={2}
           style={{ ...baseStyle, ...highlightStyle }}
-          className={`highlight-annotation ${(d.class &&
-            typeof d.class === "function" &&
-            d.class({ ...p, ...p.data }, q)) ||
+          className={`highlight-annotation ${
+            (d.class &&
+              typeof d.class === "function" &&
+              d.class({ ...p, ...p.data }, q)) ||
             (d.class && d.class) ||
-            ""}`}
+            ""
+          }`}
         />
       )
     })
 
   const lineGenerator = area()
-    .x(p => xScale(p.x))
-    .y0(p => yScale(p.yBottom))
-    .y1(p => yScale(p.yTop))
+    .x((p) => xScale(p.x))
+    .y0((p) => yScale(p.yBottom))
+    .y1((p) => yScale(p.yTop))
 
   const interpolatorSetting = lines.type.interpolator || lines.type.curve
 
@@ -168,11 +166,11 @@ export const svgHighlight = ({
 
       return (
         <path
-          className={`highlight-annotation ${(d.class &&
-            typeof d.class === "function" &&
-            d.class(p, q)) ||
+          className={`highlight-annotation ${
+            (d.class && typeof d.class === "function" && d.class(p, q)) ||
             (d.class && d.class) ||
-            ""}`}
+            ""
+          }`}
           key={`highlight-summary-${q}`}
           d={lineGenerator(p.data)}
           fill="none"
@@ -193,11 +191,11 @@ export const svgHighlight = ({
 
       return (
         <path
-          className={`highlight-annotation ${(d.class &&
-            typeof d.class === "function" &&
-            d.class(p, q)) ||
+          className={`highlight-annotation ${
+            (d.class && typeof d.class === "function" && d.class(p, q)) ||
             (d.class && d.class) ||
-            ""}`}
+            ""
+          }`}
           key={`highlight-summary-${q}`}
           d={`M${p.coordinates.join("L")}`}
           fill="none"
@@ -369,8 +367,8 @@ export const svgBoundsAnnotation = ({
 
 export const svgLineAnnotation = ({ d, i, screenCoordinates }) => {
   const lineGenerator = line()
-    .x(p => p[0])
-    .y(p => p[1])
+    .x((p) => p[0])
+    .y((p) => p[1])
   const lineD = lineGenerator(screenCoordinates)
   const laLine = (
     <Mark
@@ -406,16 +404,16 @@ export const svgAreaAnnotation = ({
   annotationLayer
 }) => {
   const mappedCoordinates = `M${d.coordinates
-    .map(p => [
+    .map((p) => [
       xScale(findFirstAccessorValue(xAccessor, p)),
       yScale(findFirstAccessorValue(yAccessor, p))
     ])
     .join("L")}Z`
   const xBounds = extent(
-    d.coordinates.map(p => xScale(findFirstAccessorValue(xAccessor, p)))
+    d.coordinates.map((p) => xScale(findFirstAccessorValue(xAccessor, p)))
   )
   const yBounds = extent(
-    d.coordinates.map(p => yScale(findFirstAccessorValue(yAccessor, p)))
+    d.coordinates.map((p) => yScale(findFirstAccessorValue(yAccessor, p)))
   )
   const xCenter = (xBounds[0] + xBounds[1]) / 2
   const yCenter = (yBounds[0] + yBounds[1]) / 2
@@ -473,12 +471,12 @@ export const htmlTooltipAnnotation = ({
 }
 
 export const svgRectEncloseAnnotation = ({ d, i, screenCoordinates }) => {
-  const bboxNodes = screenCoordinates.map(p => {
+  const bboxNodes = screenCoordinates.map((p) => {
     return {
-      x0: p.x0 = p[0],
-      x1: p.x1 = p[0],
-      y0: p.y0 = p[1],
-      y1: p.y1 = p[1]
+      x0: (p.x0 = p[0]),
+      x1: (p.x1 = p[0]),
+      y0: (p.y0 = p[1]),
+      y1: (p.y1 = p[1])
     }
   })
 
@@ -487,7 +485,7 @@ export const svgRectEncloseAnnotation = ({ d, i, screenCoordinates }) => {
 
 export const svgEncloseAnnotation = ({ screenCoordinates, d, i }) => {
   const circle = packEnclose(
-    screenCoordinates.map(p => ({ x: p[0], y: p[1], r: 2 }))
+    screenCoordinates.map((p) => ({ x: p[0], y: p[1], r: 2 }))
   )
 
   return circleEnclosure({ d, circle, i })
