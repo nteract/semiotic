@@ -189,6 +189,7 @@ export const svgHullEncloseRule = ({
   const selectedNodes = projectedNodes.filter(
     (p) => d.ids.indexOf(nodeIDAccessor(p)) !== -1
   )
+
   if (selectedNodes.length === 0) {
     return null
   }

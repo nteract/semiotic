@@ -178,7 +178,6 @@ export default (
     })
   }
 
-  console.log("AARARHARHARAHRHR ****(*xy", xy)
   return (
     <div>
       <svg height={500} width={500}>

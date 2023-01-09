@@ -248,7 +248,7 @@ export default class UsingPatternsTextures extends React.Component {
                   fill: "#b6a756",
                   fillOpacity: 0.2 + i * 0.2
                 })}
-                oLabel={d => (
+                oLabel={(d) => (
                   <text textAnchor="middle">{`${(0.2 + d * 0.2).toFixed(
                     1
                   )}`}</text>
@@ -364,42 +364,7 @@ export default class UsingPatternsTextures extends React.Component {
           </div>
         </div>
       ),
-      source: `
-  const glowyCanvas = (canvas, context, size) => {
-    const dataURL = canvas.toDataURL("image/png")
-    const baseImage = document.createElement("img")
-  
-    baseImage.src = dataURL
-    baseImage.onload = () => {
-      context.clearRect(0, 0, size[0] + 120, size[1] + 120)
-      context.filter = "blur(10px)"
-      context.drawImage(baseImage, 0, 0)
-      context.filter = "blur(5px)"
-      context.drawImage(baseImage, 0, 0)
-      context.filter = "none"
-      context.drawImage(baseImage, 0, 0)
-    }
-  }
-
-  <OrdinalFrame
-  {...barChartSettings}
-  size={[350, 350]}
-  title="painty"
-  style={{ fill: "#b6a756" }}
-  canvasPieces={true}
-  canvasPostProcess={glowyCanvas}
-  />
-
-  <OrdinalFrame
-  {...barChartSettings}
-  size={[350, 350]}
-  style={(d, i) => ({
-    fill: "#b6a756",
-    stroke: "#b6a756"
-  })}
-  oPadding={15}
-  canvasPieces={true}
-  />`
+      source: ``
     })
 
     return (

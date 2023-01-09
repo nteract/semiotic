@@ -300,7 +300,7 @@ export default function VisualizationLayer(props: Props) {
     context.globalAlpha = 1
 
     if (props.canvasPostProcess) {
-      props.canvasPostProcess(props.canvasContext, context, size)
+      props.canvasPostProcess(props.canvasContext?.current, context, size)
     }
 
     if (

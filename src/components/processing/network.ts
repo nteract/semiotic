@@ -303,9 +303,11 @@ function recursiveIDAccessor(idAccessor, node, accessorString) {
   return `${accessorString}-${idAccessor({ ...node, ...node.data })}`
 }
 
+const defaultHierarchicalIDAccessor = (d) => d.id || d.descendantIndex
+
 export const nodesEdgesFromHierarchy = (
   baseRootNode,
-  idAccessor = (d) => d.id || d.descendantIndex
+  idAccessor = defaultHierarchicalIDAccessor
 ) => {
   const edges = []
   const nodes = []
@@ -324,18 +326,21 @@ export const nodesEdgesFromHierarchy = (
   }
 
   for (const node of descendants) {
-    const generatedID = `${idAccessor({
-      ...node,
-      ...node.data
-    })}-${
-      (node.parent &&
-        recursiveIDAccessor(
-          idAccessor,
-          { ...node.parent, ...node.parent.data },
-          ""
-        )) ||
-      "root"
+    const generatedID = `${
+      idAccessor({
+        ...node,
+        ...node.data
+      }) ?? defaultHierarchicalIDAccessor(node)
+    }-${
+      node.parent
+        ? recursiveIDAccessor(
+            idAccessor,
+            { ...node.parent, ...node.parent.data },
+            ""
+          ) ?? node.parent.name
+        : "root"
     }`
+
     const dataD = Object.assign(node, node.data || {}, {
       hierarchicalID: generatedID
     })

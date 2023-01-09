@@ -1,43 +1,24 @@
 import React from "react"
-import { useRef, useEffect, useState } from "react"
-import { dequal } from "dequal"
-import { select } from "d3-selection"
-import "d3-transition"
+import { useEffect, useState } from "react"
 
 import { generateSVG } from "./markBehavior/drawing"
 
 import {
-  attributeTransitionWhitelist,
   reactCSSNameStyleHash,
-  redrawSketchyList,
-  differentD
+  redrawSketchyList
 } from "./constants/markTransition"
 import { FillOpacity, MarkProps, StrokeOpacity } from "./Mark.types"
 
-function filterProps(originalProps, filterKeys) {
-  const newProps = {}
-  filterKeys.forEach((f) => {
-    if (originalProps[f] !== undefined) {
-      newProps[f] = originalProps[f]
-    }
-  })
-  return newProps
-}
-
-function generateSketchyHash(props) {
+function generateSketchyKey(props) {
   let { style = {} } = props
-  let sketchyHash = ""
+  let sketchyKey = ""
   redrawSketchyList.forEach((d) => {
-    sketchyHash += `-${style[d] || props[d]}`
+    sketchyKey += `-${style[d] || props[d]}`
   })
-  return sketchyHash
+  return sketchyKey
 }
 
-function adjustedPropName(propname) {
-  return reactCSSNameStyleHash[propname] || propname
-}
-
-const updateSketchy = (nextProps, oldSketchyHash) => {
+const updateSketchy = (nextProps, previousSketchyKey) => {
   const RoughGenerator = nextProps.sketchyGenerator
 
   const renderOptions =
@@ -45,9 +26,10 @@ const updateSketchy = (nextProps, oldSketchyHash) => {
       ? nextProps.renderMode
       : { renderMode: nextProps.renderMode }
 
-  const sketchyHash =
-    renderOptions.renderMode === "sketchy" && generateSketchyHash(nextProps)
-  if (RoughGenerator && sketchyHash && sketchyHash !== oldSketchyHash) {
+  const sketchyKey =
+    renderOptions.renderMode === "sketchy" && generateSketchyKey(nextProps)
+
+  if (RoughGenerator && sketchyKey && sketchyKey !== previousSketchyKey) {
     const { style = {} } = nextProps
     const {
       simplification = 0,
@@ -130,8 +112,14 @@ const updateSketchy = (nextProps, oldSketchyHash) => {
         )
         break
       case "path":
-        drawingInstructions = roughGenerator.path(nextProps.d, roughOptions)
+        if (!nextProps.d.includes("NaN") && !nextProps.d.includes("Infinity")) {
+          drawingInstructions = roughGenerator.path(nextProps.d, roughOptions)
+        }
         break
+    }
+
+    if (!drawingInstructions) {
+      return null
     }
 
     const fillOpacityStyles: FillOpacity = {}
@@ -199,201 +187,27 @@ const updateSketchy = (nextProps, oldSketchyHash) => {
 }
 
 export default function SemioticMark(props: MarkProps) {
-  const {
-    renderMode,
-    markType,
-    forceUpdate,
-    className = "",
-    children,
-    customTween
-  } = props
+  const { className = "" } = props
 
-  const [sketchyHash, changeSketchyHash] = useState(generateSketchyHash(props))
+  const sketchyKey = generateSketchyKey(props)
+
   const [sketchyFill, changeSketchyFill] = useState(
-    updateSketchy(props, sketchyHash)
+    updateSketchy(props, sketchyKey)
   )
-  const [actualSVG, changeActualSVG] = useState(
-    () =>
-      ((props.renderMode === "sketchy" ||
-        (props.renderMode && props.renderMode.renderMode === "sketchy")) &&
-        sketchyFill) ||
-      generateSVG(props, className)
-  )
-
-  const markRef = useRef(null)
-
-  const prevPropsRef: any = useRef()
+  const [previousSketchyKey, updateSketchyKey] = useState("")
 
   useEffect(() => {
-    console.log(
-      "renderMode, markType, forceUpdate, className, children, !!customTween",
-      renderMode,
-      markType,
-      forceUpdate,
-      className,
-      !!customTween
-    )
-  }, [renderMode, markType, forceUpdate, className, !!customTween])
+    changeSketchyFill(updateSketchy(props, previousSketchyKey))
+    updateSketchyKey(sketchyKey)
+  }, [sketchyKey, props.renderMode?.renderMode ?? props.renderMode])
 
-  useEffect(() => {
-    let node = markRef.current
-
-    let cloneProps = actualSVG.props
-
-    const prevProps = prevPropsRef.current ?? props
-    const prevClassname = prevProps.className || ""
-
-    if (
-      !dequal(renderMode, prevProps.renderMode) ||
-      prevProps.markType !== markType ||
-      forceUpdate !== prevProps.forceUpdate ||
-      !!prevProps.customTween !== !!customTween ||
-      prevClassname !== className
-    ) {
-      console.log("OVERRIDE")
-      changeActualSVG(generateSVG(props, props.className))
-      changeSketchyHash(generateSketchyHash(props))
-      changeSketchyFill(updateSketchy(props, sketchyHash))
-    } else if (!cloneProps || !node) {
-      console.log("MISSING")
-      return
-    } else {
-      const transitionableProps = filterProps(
-        props,
-        attributeTransitionWhitelist
-      )
-      const transitionablePrevProps = filterProps(
-        prevProps,
-        attributeTransitionWhitelist
-      )
-
-      console.log("props", props)
-      console.log("prevProps", prevProps)
-      console.log("transitionableProps", transitionableProps)
-      console.log("transitionablePrevProps", transitionablePrevProps)
-      console.log(
-        "!dequal(transitionableProps, transitionablePrevProps) ",
-        !dequal(transitionableProps, transitionablePrevProps)
-      )
-
-      console.log("props.style", props.style)
-      console.log("prevProps.style", prevProps.style)
-      if (
-        !dequal(transitionableProps, transitionablePrevProps) ||
-        !dequal(props.style, prevProps.style)
-      ) {
-        let { transitionDuration = {} } = props
-        const isDefault = typeof transitionDuration === "number"
-        const defaultDuration = isDefault ? transitionDuration : 1000
-        transitionDuration = isDefault
-          ? { default: defaultDuration }
-          : { default: defaultDuration, ...transitionDuration }
-
-        const newProps = Object.keys(transitionableProps)
-        const oldProps = Object.keys(transitionablePrevProps).filter(
-          (d) => !newProps.find((p) => p === d)
-        )
-
-        const hasTransition = select(node).select("*").transition
-        console.log("hasTransition", hasTransition)
-        console.log("newProps", newProps)
-        console.log("oldProps", oldProps)
-        oldProps.forEach((oldProp) => {
-          if (oldProp !== "style") {
-            select(node).select("*").attr(adjustedPropName(oldProp), undefined)
-          }
-        })
-
-        newProps.forEach((newProp) => {
-          console.log("newProp", newProp)
-          if (
-            !hasTransition ||
-            (newProp === "d" && differentD(cloneProps.d, prevProps.d))
-          ) {
-            if (newProp === "d" && props.customTween) {
-              select(node)
-                .select("*")
-                .attr(
-                  "d",
-                  props.customTween.fn(
-                    props.customTween.props,
-                    props.customTween.props
-                  )(1)
-                )
-            } else {
-              console.log("SJHOUDL DBE CHANGING")
-              select(node)
-                .select("*")
-                .attr(adjustedPropName(newProp), cloneProps[newProp])
-            }
-          } else {
-            const {
-              default: defaultDur,
-              [newProp]: appliedDuration = defaultDur
-            } = transitionDuration
-
-            if (newProp === "d" && props.customTween) {
-              const initialTweenProps = { ...prevProps.customTween.props }
-              const nextTweenProps = { ...props.customTween.props }
-              select(node)
-                .select("*")
-                .transition(adjustedPropName("d"))
-                .duration(appliedDuration)
-                .attrTween("d", () => {
-                  return props.customTween.fn(initialTweenProps, nextTweenProps)
-                })
-            } else {
-              console.log("NO REALLY CHANGE NO REALLY CHANGE NO REALLY CHANGE")
-              console.log(
-                "adjustedPropName(newProp)",
-                adjustedPropName(newProp)
-              )
-              console.log("cloneProps[newProp]", cloneProps[newProp])
-              console.log("select node", select(node))
-              select(node)
-                .select("*")
-                .transition(adjustedPropName(newProp))
-                .duration(appliedDuration)
-                .attr(adjustedPropName(newProp), cloneProps[newProp])
-            }
-          }
-        })
-
-        const newStyleProps = Object.keys(cloneProps.style || {})
-        const oldStyleProps = Object.keys(prevProps.style || {}).filter(
-          (d) => !newStyleProps.find((p) => p === d)
-        )
-
-        oldStyleProps.forEach((oldProp) => {
-          select(node).select("*").style(adjustedPropName(oldProp), undefined)
-        })
-
-        newStyleProps.forEach((newProp) => {
-          if (!hasTransition) {
-            select(node)
-              .select("*")
-              .style(adjustedPropName(newProp), cloneProps.style[newProp])
-          } else {
-            const {
-              default: defaultDur,
-              [newProp]: appliedDuration = defaultDur
-            } = transitionDuration
-
-            select(node)
-              .select("*")
-              .transition(adjustedPropName(newProp))
-              .duration(appliedDuration)
-              .style(adjustedPropName(newProp), cloneProps.style[newProp])
-          }
-        })
-      }
-    }
-
-    prevPropsRef.current = props
-  })
+  const actualSVG =
+    props.renderMode && props.renderMode?.renderMode === "sketchy"
+      ? sketchyFill
+      : generateSVG(props, className)
 
   return (
-    <g ref={markRef} className={className} aria-label={props["aria-label"]}>
+    <g className={className} aria-label={props["aria-label"]}>
       {actualSVG}
     </g>
   )

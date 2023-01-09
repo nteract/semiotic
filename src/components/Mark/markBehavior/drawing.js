@@ -67,10 +67,7 @@ export function generateSVG(props, className) {
   let cloneProps = Object.assign({}, props)
   delete cloneProps.markType
   delete cloneProps.renderMode
-  delete cloneProps.resetAfter
-  delete cloneProps.droppable
   delete cloneProps.nid
-  delete cloneProps.dropFunction
   delete cloneProps.context
   delete cloneProps.updateContext
   delete cloneProps.parameters
