@@ -5,7 +5,23 @@ function roundToTenth(number) {
   return Math.round(number * 10) / 10
 }
 
-export function pathStr({ x, y, width, height, cx, cy, r }) {
+export function pathStr({
+  x,
+  y,
+  width,
+  height,
+  cx,
+  cy,
+  r
+}: {
+  x?: number
+  y?: number
+  width?: number
+  height?: number
+  cx?: number
+  cy?: number
+  r?: number
+}) {
   if (cx !== undefined) {
     return (
       [
