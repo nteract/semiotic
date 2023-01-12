@@ -61,12 +61,12 @@ export const rectangleEnclosure = ({ bboxNodes, d, i }) => {
   const { padding = 0, dx = -25, dy = -25, label } = d
   const bbox = [
     [
-      Math.min(...bboxNodes.map(p => p.x0)) - padding,
-      Math.min(...bboxNodes.map(p => p.y0)) - padding
+      Math.min(...bboxNodes.map((p) => p.x0)) - padding,
+      Math.min(...bboxNodes.map((p) => p.y0)) - padding
     ],
     [
-      Math.max(...bboxNodes.map(p => p.x1)) + padding,
-      Math.max(...bboxNodes.map(p => p.y1)) + padding
+      Math.max(...bboxNodes.map((p) => p.x1)) + padding,
+      Math.max(...bboxNodes.map((p) => p.y1)) + padding
     ]
   ]
 
@@ -111,7 +111,7 @@ export const hullEnclosure = ({ points, d, i }) => {
     .data([...hullPoints, hullPoints[0]])
     .margin(buffer)[0]
 
-  const hullD = `M${bufferedHull.map(d => d.join(",")).join("L")}Z`
+  const hullD = `M${bufferedHull.map((d) => d.join(",")).join("L")}Z`
 
   const firstCoord = bufferedHull[0]
 
@@ -169,12 +169,13 @@ export const desaturationLayer = ({
   i?: number
   key?: string
 }) => (
-    <rect
-      key={key || `desaturation-${i}`}
-      x={-5}
-      y={-5}
-      width={size[0] + 10}
-      height={size[1] + 10}
-      style={style}
-    />
-  )
+  <rect
+    data-testid="desaturation-layer"
+    key={key || `desaturation-${i}`}
+    x={-5}
+    y={-5}
+    width={size[0] + 10}
+    height={size[1] + 10}
+    style={style}
+  />
+)

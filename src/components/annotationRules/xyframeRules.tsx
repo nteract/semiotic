@@ -236,6 +236,7 @@ export const svgXYAnnotation = ({ screenCoordinates, i, d }) => {
         forceUpdate={true}
         x={screenCoordinates[0]}
         y={10 + screenCoordinates[1]}
+        data-testid="annotation-xy-label"
         className={`annotation annotation-xy-label ${d.className || ""} `}
       >
         {d.label}

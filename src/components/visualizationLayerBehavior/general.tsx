@@ -544,6 +544,7 @@ export function createSummaries({
       renderedSummaries.push(
         <Mark
           {...baseMarkProps}
+          data-testid="xyframe-summary"
           key={renderKey}
           forceUpdate={true}
           renderMode={renderFn ? renderFn(d, i) : undefined}
@@ -602,6 +603,7 @@ export function clonedAppliedElement({
   if (markProps.style.r) {
     markProps.r = markProps.style.r
   }
+  markProps["data-testid"] = baseClass
 
   if (!markProps.markType) {
     const RenderableMark = markProps as React.ComponentClass

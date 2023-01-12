@@ -714,7 +714,11 @@ function defaultXYHTMLRule(
   }
   if (d.type === "frame-hover") {
     let content = (
-      <SpanOrDiv span={useSpans} className="tooltip-content">
+      <SpanOrDiv
+        span={useSpans}
+        className="tooltip-content"
+        data-testid="tooltip-content"
+      >
         <p key="html-annotation-content-1">{xString}</p>
         <p key="html-annotation-content-2">{yString}</p>
         {d.percent ? (

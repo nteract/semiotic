@@ -687,6 +687,7 @@ root.render(
         tooltipContent: (d) =>
           React.createElement("div", {
             className: "tooltip-content",
+            "data-testid": "tooltip-content",
             children:
               (d.column && `Column hover: ${d.column.name}`) ||
               `Frame hover: ${d.position}`

@@ -129,6 +129,7 @@ const updateVisualizationLayer = (
           <g
             key={k}
             className={k}
+            data-testid={k}
             role={"group"}
             tabIndex={0}
             aria-label={
@@ -340,7 +341,7 @@ export default function VisualizationLayer(props: Props) {
     ["axes-tick-lines"]: axesTickLines && (
       <g
         key="visualization-tick-lines"
-        className={"axis axis-tick-lines"}
+        className="axis axis-tick-lines"
         aria-hidden={true}
       >
         {axesTickLines}
@@ -381,6 +382,7 @@ export default function VisualizationLayer(props: Props) {
     (orderedElements.length > 0 && (
       <g
         className="data-visualization"
+        data-testid="data-visualization"
         key="visualization-clip-path"
         aria-label={ariaLabel}
         role="group"

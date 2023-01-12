@@ -1,5 +1,5 @@
 import * as React from "react"
-import { OrdinalFrame } from "../../components"
+import { OrdinalFrame, XYFrame } from "../../components"
 
 const dotRadius = 8
 
@@ -93,8 +93,36 @@ const dotPlotChart = {
   )
 }
 
+const somePointData = [
+  { day: 1, date: "2017-01-01", value: 180 },
+  { day: 2, date: "2017-02-01", value: 80 },
+  { day: 3, date: "2017-03-14", value: 0 },
+  { day: 4, date: "2017-06-20", value: 20 }
+]
+
 export default (
   <div>
+    <XYFrame
+      title={"test title"}
+      points={somePointData}
+      lines={[
+        { label: "points", coordinates: somePointData },
+        { label: "otherpoints", coordinates: somePointData }
+      ]}
+      summaries={[{ label: "summaries", coordinates: somePointData }]}
+      xExtent={{
+        onChange: (d) => {
+          returnedExtent = d
+        }
+      }}
+      xAccessor="day"
+      yAccessor="value"
+      disableContext={true}
+      showLinePoints={true}
+      showSummaryPoints={true}
+      hoverAnnotation={true}
+      axes={[{ orient: "left" }, { orient: "bottom" }]}
+    />
     <OrdinalFrame {...dotPlotChart} />
     <OrdinalFrame {...dotPlotChart} margin={200} />
   </div>

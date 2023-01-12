@@ -1,16 +1,13 @@
 import React from "react"
-import { mount } from "enzyme"
+import { render } from "@testing-library/react"
 import { SparkOrdinalFrame } from "./SparkOrdinalFrame"
 
 const settings = {
-    size: [500, 500]
+  size: [500, 500]
 }
 
 describe("SparkOrdinalFrame", () => {
-    it("renders without crashing", () => {
-        mount(<SparkOrdinalFrame
-            {...settings}
-        />)
-    })
-
+  it("renders without crashing", () => {
+    render(<SparkOrdinalFrame {...settings} />)
+  })
 })

@@ -13,14 +13,14 @@ const cutHash = {
   Good: theme[2],
   "Very Good": theme[3],
   Fair: theme[4],
-  Premium: theme[5]
+  Premium: theme[5],
 }
 
 const frameProps = {
   size: [700, 500],
   xAccessor: "x",
   yAccessor: "y",
-  pointStyle: d => ({ fill: d.color, fillOpacity: 0.9 }),
+  pointStyle: (d) => ({ fill: d.color, fillOpacity: 0.9 }),
   canvasPoints: true,
   margin: { top: 60, bottom: 50, left: 60, right: 60 },
   hoverAnnotation: true,
@@ -29,25 +29,24 @@ const frameProps = {
     {
       label: "Price",
       orient: "left",
-      tickFormat: d => `$${d / 1000}k`
-    }
+      tickFormat: (d) => `$${d / 1000}k`,
+    },
   ],
   title: "Diamonds: Carat vs Price",
-  tooltipContent: d => {
+  tooltipContent: (d) => {
     return (
-      <div className="tooltip-content">
+      <div className="tooltip-content" data-testid="tooltip-content">
         <p>Price: ${d.y}</p>
         <p>Caret: {d.x}</p>
         <p>
           {d.coincidentPoints.length > 1 &&
-            `+${d.coincidentPoints.length - 1} more diamond${(d.coincidentPoints
-              .length > 2 &&
-              "s") ||
-              ""} here`}
+            `+${d.coincidentPoints.length - 1} more diamond${
+              (d.coincidentPoints.length > 2 && "s") || ""
+            } here`}
         </p>
       </div>
     )
-  }
+  },
 }
 
 const overrideProps = {
@@ -66,7 +65,7 @@ const overrideProps = {
       </div>
     );
   }
-  `
+  `,
 }
 
 export default class CanvasInteraction extends React.Component {
@@ -74,21 +73,21 @@ export default class CanvasInteraction extends React.Component {
     super(props)
 
     fetch(`${ROOT}/data/diamonds.csv`)
-      .then(response => response.text())
-      .then(data => {
+      .then((response) => response.text())
+      .then((data) => {
         const parsedDiamonds = []
-        csvParse(data).forEach(d => {
+        csvParse(data).forEach((d) => {
           parsedDiamonds.push({
             y: +d.price,
             x: +d.carat,
             size: +d.table,
             color: cutHash[d.cut],
-            clarity: d.clarity
+            clarity: d.clarity,
           })
         })
         this.setState({ ...frameProps, points: parsedDiamonds })
       })
-      .catch(err => console.log(err))
+      .catch((err) => console.log(err))
   }
 
   render() {

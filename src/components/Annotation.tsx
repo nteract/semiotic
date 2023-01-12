@@ -47,7 +47,13 @@ export default function SemioticAnnotation(props: AnnotationProps) {
         nx: setNX,
         ny: setNY
       })
-      return <AnnotationType key={`multi-annotation-${i}`} {...subjectNote} />
+      return (
+        <AnnotationType
+          data-testid="semiotic-annotation"
+          key={`multi-annotation-${i}`}
+          {...subjectNote}
+        />
+      )
     })
 
     return (
@@ -62,11 +68,20 @@ export default function SemioticAnnotation(props: AnnotationProps) {
   const annotationKey = `${keyData.label}-${keyData.title}-${noteData.i}`
 
   const finalAnnotation = (
-    <AnnotationType key={annotationKey} events={eventListeners} {...noteData} />
+    <AnnotationType
+      data-testid="semiotic-annotation"
+      key={annotationKey}
+      events={eventListeners}
+      {...noteData}
+    />
   )
 
   if (finalStyle.pointerEvents) {
-    return <g style={finalStyle}>{finalAnnotation}</g>
+    return (
+      <g data-testid="annotation-pointer-events-wrapper" style={finalStyle}>
+        {finalAnnotation}
+      </g>
+    )
   }
 
   return finalAnnotation

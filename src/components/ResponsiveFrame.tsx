@@ -55,6 +55,7 @@ const createResponsiveFrame = (ParticularFrame) => {
 
     return (
       <div
+        data-testid="responsive-container"
         className="responsive-container"
         style={
           gridDisplay
