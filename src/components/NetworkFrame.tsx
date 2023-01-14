@@ -165,9 +165,8 @@ const NetworkFrame = React.memo(function NetworkFrame(
   if (Array.isArray(hoverAnnotation)) {
     activeHoverAnnotation = hoverAnnotation
   } else if (
-    customClickBehavior ||
-    customDoubleClickBehavior ||
-    customHoverBehavior
+    (customClickBehavior || customDoubleClickBehavior || customHoverBehavior) &&
+    (hoverAnnotation === undefined || hoverAnnotation === false)
   ) {
     activeHoverAnnotation = blankArray
   } else {

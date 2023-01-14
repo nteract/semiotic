@@ -52,6 +52,11 @@ export default (zoom) => {
   return (
     <NetworkFrame
       {...sunburstSettings}
+      edges={
+        zoom
+          ? { ...data, children: data.children.filter((d, i) => i < 4) }
+          : data
+      }
       filterRenderedNodes={zoom ? filterBaseNode : filterSubNodes}
     />
   )

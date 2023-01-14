@@ -27,23 +27,17 @@ const frameProps = {
   type: "bar",
   style: (d, i) => ({ fill: i < 5 ? "url(#gradient)" : "url(#triangle)" }),
   additionalDefs: [
-    <pattern
-      key="triangle"
-      id="triangle"
-      width="10"
-      height="10"
-      patternUnits="userSpaceOnUse"
-    >
+    <pattern key="triangle" id="triangle" width="10" height="10" patternUnits="userSpaceOnUse">
       <rect fill={theme[2]} width="10" height="10" />
       <circle fill={theme[4]} r="5" cx="3" cy="3" />
     </pattern>,
     <linearGradient key="gradient" x1="0" x2="0" y1="0" y2="1" id="gradient">
       <stop stopColor={theme[0]} offset="0%" />
       <stop stopColor={theme[4]} offset="100%" />
-    </linearGradient>
+    </linearGradient>,
   ],
   oPadding: 2,
-  margin: 20
+  margin: 20,
 }
 
 const overrideProps = {
@@ -62,12 +56,12 @@ const overrideProps = {
       <stop stopColor={theme[0]} offset="0%" />
       <stop stopColor={theme[4]} offset="100%" />
     </linearGradient>
-  ]`
+  ]`,
 }
 
 const sketchyFrameProps = {
   ...frameProps,
-  renderMode: "sketchy"
+  renderMode: "sketchy",
 }
 
 export default () => {
@@ -129,7 +123,7 @@ Additionally the canvas itself can be used for post-processing effects using the
         {...frameProps}
         style={{
           fill: theme[0],
-          stroke: theme[0]
+          stroke: theme[0],
         }}
         canvasPieces={true}
         canvasPostProcess={"chuckClose"}

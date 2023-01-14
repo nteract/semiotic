@@ -458,6 +458,7 @@ export default function InteractionLayer(props: InteractionLayerProps) {
     <SpanOrDiv
       span={useSpans}
       className="interaction-layer"
+      data-testid="interaction-layer"
       style={{
         position: "absolute",
         background: "none",

@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Mark } from "semiotic-mark"
+import Mark from "../../components/Mark/Mark"
 import Annotation from "../Annotation"
 
 import {
@@ -34,7 +34,11 @@ function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
 
 function pieContentGenerator({ column, useSpans }) {
   return (
-    <SpanOrDiv span={useSpans} className="tooltip-content">
+    <SpanOrDiv
+      span={useSpans}
+      className="tooltip-content"
+      data-testid="tooltip-content"
+    >
       <p key="or-annotation-1">{column.name}</p>
       <p key="or-annotation-2">{`${(column.pct * 100).toFixed(0)}%`}</p>
     </SpanOrDiv>
@@ -433,9 +437,12 @@ export const svgORRule = ({ d, i, screenCoordinates, projection }) => {
       markType="text"
       key={`${d.label}annotationtext${i}`}
       forceUpdate={true}
-      x={screenCoordinates[0] + (projection === "horizontal" ? 10 : 0)}
-      y={screenCoordinates[1] + (projection === "vertical" ? 10 : 0)}
+      x={parseInt(
+        screenCoordinates[0] + (projection === "horizontal" ? 10 : 0)
+      )}
+      y={parseInt(screenCoordinates[1] + (projection === "vertical" ? 10 : 0))}
       className={`annotation annotation-or-label ${d.className || ""}`}
+      data-testid="annotation-or-label"
       textAnchor="middle"
     >
       {d.label}
@@ -759,7 +766,11 @@ export const htmlFrameHoverRule = ({
     contentFill = d.label
   }
   let content = (
-    <SpanOrDiv span={useSpans} className="tooltip-content">
+    <SpanOrDiv
+      span={useSpans}
+      className="tooltip-content"
+      data-testid="tooltip-content"
+    >
       {contentFill}
     </SpanOrDiv>
   )
@@ -783,10 +794,11 @@ export const htmlFrameHoverRule = ({
       className={`annotation annotation-or-label ${projection} ${
         d.className || ""
       }`}
+      data-testid="annotation-or-label"
       style={{
         position: "absolute",
-        top: `${screenCoordinates[1]}px`,
-        left: `${screenCoordinates[0]}px`
+        top: `${parseInt(screenCoordinates[1])}px`,
+        left: `${parseInt(screenCoordinates[0])}px`
       }}
     >
       {content}
@@ -837,7 +849,11 @@ export const htmlColumnHoverRule = ({
   })
 
   let content = (
-    <SpanOrDiv span={useSpans} className="tooltip-content">
+    <SpanOrDiv
+      span={useSpans}
+      className="tooltip-content"
+      data-testid="tooltip-content"
+    >
       {oContent}
       <p key="or-annotation-2">
         {sum(pieces.map((p) => p.value).filter((p) => p > 0))}
@@ -865,7 +881,11 @@ export const htmlColumnHoverRule = ({
     )
   } else if (d.label) {
     content = (
-      <SpanOrDiv span={useSpans} className="tooltip-content">
+      <SpanOrDiv
+        span={useSpans}
+        className="tooltip-content"
+        data-testid="tooltip-content"
+      >
         {d.label}
       </SpanOrDiv>
     )
@@ -878,10 +898,11 @@ export const htmlColumnHoverRule = ({
       className={`annotation annotation-or-label ${projection} ${
         d.className || ""
       }`}
+      data-testid="annotation-or-label"
       style={{
         position: "absolute",
-        top: `${yPosition}px`,
-        left: `${xPosition}px`
+        top: `${parseInt(yPosition)}px`,
+        left: `${parseInt(xPosition)}px`
       }}
     >
       {content}

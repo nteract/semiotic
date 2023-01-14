@@ -1,8 +1,21 @@
 import * as React from "react"
 import { OrdinalFrame } from "../../components"
 
-const colors = ["#00a2ce", "#4d430c", "#b3331d", "#b6a756"]
-const data = [5, 8, 10, 15]
+const colors = [
+  "#00a2ce",
+  "#4d430c",
+  "#b3331d",
+  "#b6a756",
+  "#00a2ce",
+  "#4d430c",
+  "#b3331d",
+  "#b6a756",
+  "#00a2ce",
+  "#4d430c",
+  "#b3331d",
+  "#b6a756"
+]
+const data = [10, 8, 5, 4, 3, 3, 2, 1, 1, 1, 1, 1, 1]
 const data2 = [15, 8, 5, 10]
 const data3 = [
   { x: 0, y: 150 },
@@ -11,7 +24,7 @@ const data3 = [
 
 export default (state) => {
   const donutSettings = {
-    size: [600, 400],
+    size: [500, 500],
     data: state.changeData ? data2 : data,
     projection: "radial",
     style: (d, i) => ({
@@ -21,18 +34,8 @@ export default (state) => {
     }),
     type: { type: "bar", innerRadius: +state.innerRadius },
     oLabel: {
-      orient: "stem",
-      labelFormatter: (d) => (
-        <div>
-          <tspan>Hey</tspan>
-          <tspan x="0" y="16">
-            Hey
-          </tspan>
-          <tspan x="0" y="32">
-            {d}
-          </tspan>
-        </div>
-      )
+      orient: "annotation",
+      labelFormatter: () => "This a Label a really long label"
     },
     margin: { left: 100, top: 100, bottom: 100, right: 100 },
     tooltipContent: "pie",

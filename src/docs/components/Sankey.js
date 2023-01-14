@@ -84,6 +84,8 @@ export default class Sankey extends React.Component {
       { type: "node", dy: -50, dx: -50, id: "Oil", label: "Big Oil" }
     ]
 
+    const size = this.state.orient === "center" ? [600, 500] : [300, 400]
+
     const examples = []
     examples.push({
       name: "Without Cycles",
@@ -92,7 +94,8 @@ export default class Sankey extends React.Component {
         type: this.state.type,
         orient: this.state.orient,
         cyclical: false,
-        direction: this.state.direction
+        direction: this.state.direction,
+        size
       }),
       source: ""
     })

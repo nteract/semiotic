@@ -24,7 +24,9 @@ describe("<Axis />", () => {
 
     it("with a className", () => {
       const { container } = render(
-        <Axis {...axisProps} className="test-class" center />
+        <svg>
+          <Axis {...axisProps} className="test-class" center />
+        </svg>
       )
       expect(
         container.getElementsByClassName("axis test-class").length
@@ -33,7 +35,9 @@ describe("<Axis />", () => {
 
     it("without an annotation brush", () => {
       const { container } = render(
-        <Axis {...axisProps} className="test-class" center />
+        <svg>
+          <Axis {...axisProps} className="test-class" center />
+        </svg>
       )
       expect(
         container.getElementsByClassName("annotation-brush").length
@@ -156,12 +160,14 @@ describe("<Axis />", () => {
       it('renders the "axis-title group element & shows "name" prop text', () => {
         const AXIS_NAME = "the axis name"
         render(
-          <Axis
-            {...axisProps}
-            className="test-class"
-            label={{ name: AXIS_NAME }}
-            baseline={false}
-          />
+          <svg>
+            <Axis
+              {...axisProps}
+              className="test-class"
+              label={{ name: AXIS_NAME }}
+              baseline={false}
+            />
+          </svg>
         )
 
         const labelG = screen.getByText(AXIS_NAME)
@@ -171,11 +177,13 @@ describe("<Axis />", () => {
       describe("sets label text textAnchor attr", () => {
         it('defaults to "middle"', () => {
           const { container } = render(
-            <Axis
-              {...axisProps}
-              className="test-class"
-              label={{ name: "test label" }}
-            />
+            <svg>
+              <Axis
+                {...axisProps}
+                className="test-class"
+                label={{ name: "test label" }}
+              />
+            </svg>
           )
 
           const axisTitle = container.querySelectorAll("g.axis-title > text")[0]
@@ -183,46 +191,50 @@ describe("<Axis />", () => {
         })
         it('sets to "end" when labelPosition.anchor is "start" and orient is "right"', () => {
           const { container } = render(
-            <Axis
-              {...axisProps}
-              className="test-class"
-              orient="right"
-              label={{
-                name: "test label",
-                position: { anchor: "start" },
-                locationDistance: 5
-              }}
-              margin={{
-                laft: 10,
-                right: 10,
-                top: 10,
-                botto: 0
-              }}
-              size={[100, 200]}
-            />
+            <svg>
+              <Axis
+                {...axisProps}
+                className="test-class"
+                orient="right"
+                label={{
+                  name: "test label",
+                  position: { anchor: "start" },
+                  locationDistance: 5
+                }}
+                margin={{
+                  laft: 10,
+                  right: 10,
+                  top: 10,
+                  botto: 0
+                }}
+                size={[100, 200]}
+              />
+            </svg>
           )
           const axisTitle = container.querySelectorAll("g.axis-title > text")[0]
           expect(axisTitle).toHaveAttribute("text-anchor", "end")
         })
         it('sets to "start" when labelPosition.anchor is "end" and orient is "right"', () => {
           const { container } = render(
-            <Axis
-              {...axisProps}
-              className="test-class"
-              orient="right"
-              label={{
-                name: "test label",
-                position: { anchor: "end" },
-                locationDistance: 5
-              }}
-              margin={{
-                laft: 10,
-                right: 10,
-                top: 10,
-                botto: 0
-              }}
-              size={[100, 200]}
-            />
+            <svg>
+              <Axis
+                {...axisProps}
+                className="test-class"
+                orient="right"
+                label={{
+                  name: "test label",
+                  position: { anchor: "end" },
+                  locationDistance: 5
+                }}
+                margin={{
+                  laft: 10,
+                  right: 10,
+                  top: 10,
+                  botto: 0
+                }}
+                size={[100, 200]}
+              />
+            </svg>
           )
           const axisTitle = container.querySelectorAll("g.axis-title > text")[0]
           expect(axisTitle).toHaveAttribute("text-anchor", "start")
@@ -231,11 +243,13 @@ describe("<Axis />", () => {
 
       it("renders label component instead of label.name string", () => {
         const { container } = render(
-          <Axis
-            {...axisProps}
-            className="test-class"
-            label={<span className="tested-label-component"></span>}
-          />
+          <svg>
+            <Axis
+              {...axisProps}
+              className="test-class"
+              label={<span className="tested-label-component"></span>}
+            />
+          </svg>
         )
         const labelComponent = container.querySelectorAll("span")[0]
         expect(labelComponent).toHaveAttribute(
@@ -251,14 +265,16 @@ describe("<Axis />", () => {
       it("nested g translates x to summaryWidth / 2 when decoratedSummaryType.type === boxplot & orient is left", () => {
         const SUM_WIDTH = 100
         const { container } = render(
-          <SummaryGraphic
-            translation={{ left: 10, right: 0, top: 10, bottom: 0 }}
-            orient="left"
-            decoratedSummaryType={{ type: "boxplot" }}
-            summaryWidth={SUM_WIDTH}
-            renderedSummary={{ marks: "test string here" }}
-            points={<span id="test-points" />}
-          />
+          <svg>
+            <SummaryGraphic
+              translation={{ left: 10, right: 0, top: 10, bottom: 0 }}
+              orient="left"
+              decoratedSummaryType={{ type: "boxplot" }}
+              summaryWidth={SUM_WIDTH}
+              renderedSummary={{ marks: "test string here" }}
+              points={<span id="test-points" />}
+            />
+          </svg>
         )
         const translatedNestedG = container.querySelectorAll("g > g")[0]
         //
@@ -271,14 +287,16 @@ describe("<Axis />", () => {
       it("nested g translates x to 0 when decoratedSummaryType.type === histogram", () => {
         const SUM_WIDTH = 100
         const { container } = render(
-          <SummaryGraphic
-            translation={{ left: 10, right: 0, top: 10, bottom: 0 }}
-            orient="top"
-            decoratedSummaryType={{ type: "histogram" }}
-            summaryWidth={SUM_WIDTH}
-            renderedSummary={{ marks: "test string here" }}
-            points={<span id="test-points" />}
-          />
+          <svg>
+            <SummaryGraphic
+              translation={{ left: 10, right: 0, top: 10, bottom: 0 }}
+              orient="top"
+              decoratedSummaryType={{ type: "histogram" }}
+              summaryWidth={SUM_WIDTH}
+              renderedSummary={{ marks: "test string here" }}
+              points={<span id="test-points" />}
+            />
+          </svg>
         )
         const translatedNestedG = container.querySelectorAll("g > g")[0]
         expect(translatedNestedG).toHaveAttribute("transform", "translate(0,0)")
@@ -286,14 +304,16 @@ describe("<Axis />", () => {
       it("nested g translates y to summaryWidth / 2 when decoratedSummaryType.type === boxplot and orient = top", () => {
         const SUM_WIDTH = 100
         const { container } = render(
-          <SummaryGraphic
-            translation={{ left: 10, right: 0, top: 10, bottom: 0 }}
-            orient="top"
-            decoratedSummaryType={{ type: "boxplot" }}
-            summaryWidth={SUM_WIDTH}
-            renderedSummary={{ marks: "test string here" }}
-            points={<span id="test-points" />}
-          />
+          <svg>
+            <SummaryGraphic
+              translation={{ left: 10, right: 0, top: 10, bottom: 0 }}
+              orient="top"
+              decoratedSummaryType={{ type: "boxplot" }}
+              summaryWidth={SUM_WIDTH}
+              renderedSummary={{ marks: "test string here" }}
+              points={<span id="test-points" />}
+            />
+          </svg>
         )
         const translatedNestedG = container.querySelectorAll("g > g")[0]
         expect(translatedNestedG).toHaveAttribute(

@@ -17,12 +17,29 @@ export default class AppleStockChart extends React.Component {
     this.state = {
       editMode: true,
       overridePosition: {},
-      annotationLabel: "annotate"
+      annotationLabel: "annotate",
+      xy: [50, 50],
+      markType: "circle"
     }
   }
 
   render() {
     const buttons = [
+      <button
+        onClick={() => {
+          this.setState({ xy: [25, 25] })
+        }}
+      >
+        HEYEYE
+      </button>,
+      <button
+        onClick={() => {
+          this.setState({ markType: "rect" })
+        }}
+      >
+        CHANGE MARK TYPE
+      </button>,
+
       <button
         key="button-name"
         onClick={() => {
@@ -38,7 +55,9 @@ export default class AppleStockChart extends React.Component {
         this.state.editMode,
         {},
         () => {},
-        this.state.annotationLabel
+        this.state.annotationLabel,
+        this.state.xy,
+        this.state.markType
       ),
       source: ``
     })
@@ -73,7 +92,7 @@ export default class AppleStockChart extends React.Component {
           {AppleStockChartRaw(
             this.state.editMode,
             this.state.overridePosition,
-            d => {
+            (d) => {
               this.setState({
                 overridePosition: {
                   ...this.state.overridePosition,
@@ -84,7 +103,9 @@ export default class AppleStockChart extends React.Component {
                 }
               })
             },
-            this.state.annotationLabel
+            this.state.annotationLabel,
+            this.state.xy,
+            this.state.markType
           )}
         </div>
       ),

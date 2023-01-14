@@ -2,7 +2,7 @@ import React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 import BaseballMapRaw from "./BaseballMapRaw"
 import Select from "@material-ui/core/Select"
-import { Mark } from "semiotic-mark"
+import Mark from "../../components/Mark/Mark"
 import { scaleTime } from "d3-scale"
 import MenuItem from "@material-ui/core/MenuItem"
 import InputLabel from "@material-ui/core/InputLabel"
@@ -65,8 +65,8 @@ const modes = {
     areaRenderMode: "sketchy"
   },
   scatterplot: {
-    xAccessor: d => d.exit_velocity,
-    yAccessor: d => d.distance,
+    xAccessor: (d) => d.exit_velocity,
+    yAccessor: (d) => d.distance,
     xExtent: undefined,
     yExtent: undefined,
     axes: [
@@ -82,8 +82,8 @@ const modes = {
   },
   overtime: {
     xScaleType: scaleTime(),
-    xAccessor: d => new Date(d.game_date),
-    yAccessor: d => d.distance,
+    xAccessor: (d) => new Date(d.game_date),
+    yAccessor: (d) => d.distance,
     customPointMark: () => <Mark markType="circle" r={4} />,
     xExtent: undefined,
     yExtent: undefined,
@@ -92,7 +92,7 @@ const modes = {
       {
         orient: "top",
         ticks: 8,
-        tickFormat: d => `${d.getMonth()}-${d.getDate()}`
+        tickFormat: (d) => `${d.getMonth()}-${d.getDate()}`
       }
     ],
     margin: { left: 60, top: 25, bottom: 25, right: 25 },
@@ -123,7 +123,7 @@ export default class BaseballMapDocs extends React.Component {
       "overtime",
       "trendPoly",
       "trendLinear"
-    ].map(d => (
+    ].map((d) => (
       <MenuItem key={`mode-option-${d}`} label={d} value={d}>
         {d}
       </MenuItem>
@@ -134,7 +134,7 @@ export default class BaseballMapDocs extends React.Component {
         <InputLabel htmlFor="mode-input">Mode</InputLabel>
         <Select
           value={this.state.mode}
-          onChange={e => this.setState({ mode: e.target.value })}
+          onChange={(e) => this.setState({ mode: e.target.value })}
         >
           {modeOptions}
         </Select>

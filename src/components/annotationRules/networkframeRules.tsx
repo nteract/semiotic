@@ -34,13 +34,21 @@ export const htmlFrameHoverRule = ({
   if (!d) return null
 
   let content = d.edge ? (
-    <SpanOrDiv span={useSpans} className="tooltip-content">
+    <SpanOrDiv
+      span={useSpans}
+      className="tooltip-content"
+      data-testid="tooltip-content"
+    >
       <p key="html-annotation-content-1">
         {(d.source || d.edge.source).id} to {(d.target || d.edge.target).id}
       </p>
     </SpanOrDiv>
   ) : (
-    <SpanOrDiv span={useSpans} className="tooltip-content">
+    <SpanOrDiv
+      span={useSpans}
+      className="tooltip-content"
+      data-testid="tooltip-content"
+    >
       <p key="html-annotation-content-1">{d.id}</p>
       <p key="html-annotation-content-2">Degree: {d.degree}</p>
     </SpanOrDiv>
@@ -62,6 +70,7 @@ export const htmlFrameHoverRule = ({
       span={useSpans}
       key={`network-annotation-label-${i}`}
       className={`annotation annotation-network-label ${d.className || ""}`}
+      data-testid="network-tooltip-container"
       style={{
         position: "absolute",
         top: `${d.y}px`,
@@ -189,6 +198,7 @@ export const svgHullEncloseRule = ({
   const selectedNodes = projectedNodes.filter(
     (p) => d.ids.indexOf(nodeIDAccessor(p)) !== -1
   )
+
   if (selectedNodes.length === 0) {
     return null
   }

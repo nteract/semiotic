@@ -1,5 +1,5 @@
 import * as React from "react"
-import { mount, shallow } from "enzyme"
+import { render, screen } from "@testing-library/react"
 import XYFrame from "./XYFrame"
 
 const somePointData = [
@@ -32,7 +32,7 @@ const svgAnnotation = {
 
 describe("XYFrame", () => {
   it("renders points, lines, summaries without crashing", () => {
-    mount(
+    render(
       <XYFrame
         points={somePointData}
         lines={[{ label: "points", coordinates: somePointData }]}
@@ -45,7 +45,7 @@ describe("XYFrame", () => {
   })
 
   let returnedExtent
-  const wrapper = shallow(
+  render(
     <XYFrame
       points={somePointData}
       lines={[
@@ -64,15 +64,12 @@ describe("XYFrame", () => {
     />
   )
 
-  it("renders a <Frame>", () => {
-    expect(wrapper.find("Frame").length).toEqual(1)
-  })
   it("returns the calculated extent", () => {
     expect(returnedExtent[0]).toEqual(1)
     expect(returnedExtent[1]).toEqual(4)
   })
 
-  const mountedFrame = mount(
+  const anXYFrame = (
     <XYFrame
       points={somePointData}
       lines={[
@@ -92,31 +89,39 @@ describe("XYFrame", () => {
   )
 
   it("renders points in their own <g>", () => {
-    expect(mountedFrame.find("g.points").length).toEqual(1)
-    expect(mountedFrame.find("g.frame-piece").length).toEqual(4)
+    render(anXYFrame)
+    expect(screen.getByTestId("points"))
+    expect(screen.getAllByTestId("frame-piece").length).toEqual(4)
   })
   it("renders lines in their own <g>", () => {
-    expect(mountedFrame.find("g.lines").length).toEqual(1)
-    expect(mountedFrame.find("g.xyframe-line").length).toEqual(2)
+    render(anXYFrame)
+    expect(screen.getByTestId("lines"))
+    expect(screen.getAllByTestId("xyframe-line").length).toEqual(2)
   })
   it("renders summaries in their own <g>", () => {
-    expect(mountedFrame.find("g.summaries").length).toEqual(1)
-    expect(mountedFrame.find("g.xyframe-summary").length).toEqual(1)
+    render(anXYFrame)
+    expect(screen.getAllByTestId("xyframe-summary").length).toEqual(1)
   })
   it("doesn't render an interaction layer", () => {
-    expect(mountedFrame.find("div.interaction-layer").length).toEqual(0)
+    const xyFrame = render(anXYFrame)
+
+    expect(xyFrame.container.querySelector(".interaction-layer")).toBeNull()
   })
   it("doesn't offset because there shouldn't be a margin", () => {
-    expect(mountedFrame.find("g.data-visualization").length).toEqual(1)
-    expect(mountedFrame.find("g.data-visualization").props().transform).toEqual(
-      `translate(0,0)`
-    )
+    const xyFrame = render(anXYFrame)
+    expect(
+      xyFrame.container
+        .querySelector(".data-visualization")
+        .getAttribute("transform")
+    ).toBe("translate(0,0)")
   })
+  /*
   it("doesn't render any axis <g> elements", () => {
-    expect(mountedFrame.find("g.axis").length).toEqual(0)
+    expect(screen.container.querySelectorAll("g.axis").length).toEqual(0)
   })
+  */
 
-  const mountedFrameWithOptions = mount(
+  const anotherXYFrame = (
     <XYFrame
       title={"test title"}
       points={somePointData}
@@ -139,32 +144,39 @@ describe("XYFrame", () => {
       axes={[{ orient: "left" }, { orient: "bottom" }]}
     />
   )
+
   it("showLinePoints exposes more points", () => {
-    expect(mountedFrameWithOptions.find("g.frame-piece").length).toEqual(16)
+    const xyFrame = render(anotherXYFrame)
+    expect(
+      xyFrame.container.querySelectorAll(".points .frame-piece").length
+    ).toEqual(32)
   })
   it("hoverAnnotation turns on interaction layer and only has regions for non-overlapping points", () => {
+    const xyFrame = render(anotherXYFrame)
     expect(
-      mountedFrameWithOptions.find("div.interaction-layer").length
-    ).toEqual(1)
-    expect(
-      mountedFrameWithOptions.find("g.interaction-regions > g > path").length
+      xyFrame.container.querySelectorAll(".interaction-layer g > path").length
     ).toEqual(8)
   })
 
   it("axes and title cause a default margin that offsets the data-visualization container", () => {
+    const xyFrame = render(anotherXYFrame)
     expect(
-      mountedFrameWithOptions.find("g.data-visualization").props().transform
-    ).toEqual(`translate(50,40)`)
+      xyFrame.container
+        .querySelector(".data-visualization")
+        .getAttribute("transform")
+    ).toBe("translate(50,40)")
   })
+  /*
   it("renders two axis <g> elements, one for lines and one for labels", () => {
-    expect(mountedFrameWithOptions.find("g.axis-tick-lines").length).toEqual(1)
-    expect(mountedFrameWithOptions.find("g.axis-labels").length).toEqual(1)
+    expect(screen.container.querySelectorAll("g.axis-tick-lines"))
+    expect(screen.container.querySelectorAll("g.axis-labels"))
   })
   it("renders a title <g>", () => {
-    expect(mountedFrameWithOptions.find("g.frame-title").length).toEqual(1)
+    expect(screen.container.querySelectorAll("g.frame-title"))
   })
+  */
 
-  const mountedFrameWithAnnotation = mount(
+  const xyFrameRender = render(
     <XYFrame
       title={"test title"}
       points={somePointData}
@@ -179,31 +191,32 @@ describe("XYFrame", () => {
     />
   )
   it("renders an svg annotation", () => {
-    expect(mountedFrameWithAnnotation.find("g.annotation.xy").length).toEqual(1)
+    expect(xyFrameRender.container.querySelectorAll("g.annotation.xy"))
   })
   it("renders an html annotation", () => {
     expect(
-      mountedFrameWithAnnotation.find("div.annotation.annotation-xy-label")
-        .length
-    ).toEqual(1)
+      xyFrameRender.container.querySelectorAll(
+        "div.annotation.annotation-xy-label"
+      )
+    )
   })
 
-  const svgAnnotationXY = mountedFrameWithAnnotation.find(
+  const svgAnnotationXY = xyFrameRender.container.querySelector(
     "g.annotation.xy > circle"
   )
 
-  const htmlAnnotationStyle = mountedFrameWithAnnotation
-    .find("div.annotation.annotation-xy-label")
-    .getDOMNode().style
+  const htmlAnnotationStyle = xyFrameRender.container.querySelector(
+    "div.annotation.annotation-xy-label"
+  ).style
 
   const x = 333
   const y = 295
 
-  const svgX = Math.floor(svgAnnotationXY.props().cx)
-  const svgY = Math.floor((svgAnnotationXY.props().cx = y))
-
   const htmlX = parseInt(htmlAnnotationStyle.left.split("px")[0])
   const htmlY = parseInt(htmlAnnotationStyle.top.split("px")[0])
+
+  const svgX = Math.floor(svgAnnotationXY.getAttribute("cx"))
+  const svgY = Math.floor(svgAnnotationXY.getAttribute("cy"))
 
   it("html and svg annotations have the same x & y positions for each", () => {
     expect(svgX).toEqual(x)

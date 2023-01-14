@@ -3,7 +3,8 @@ import { data, fieldGraphic } from "../sampledata/stanton"
 import { XYFrame } from "../../components"
 import { scaleLinear } from "d3-scale"
 import { extent } from "d3-array"
-import { Mark } from "semiotic-mark"
+import Mark from "../../components/Mark/Mark"
+import roughjs from "roughjs/dist/rough.es5.umd.js"
 
 const velocityExtent = extent(data.map((d) => d.exit_velocity))
 const velocityScale = scaleLinear()
@@ -42,6 +43,7 @@ export default (mode) => {
   return (
     <XYFrame
       {...baseballChart}
+      sketchyRenderingEngine={roughjs}
       interactionSettings={{
         voronoiFilter: (d) => d.distance < 400,
         voronoiClipping: 100

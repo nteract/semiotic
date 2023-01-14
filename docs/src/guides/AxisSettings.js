@@ -6,7 +6,6 @@ import { XYFrame } from "semiotic"
 
 const dataSeeds = [40, 40]
 
-
 function generatePoints(start, number) {
   const arrayOfPoints = []
   let currentValue = start
@@ -20,12 +19,12 @@ function generatePoints(start, number) {
 const generatedData = dataSeeds.map((s, i) => {
   return {
     label: theme[i],
-    coordinates: generatePoints(s, 40)
+    coordinates: generatePoints(s, 40),
   }
 })
 
 const overrideProps = {
-  lineType: `{ type: "stackedarea", interpolator: curveMonotoneX }`
+  lineType: `{ type: "stackedarea", interpolator: curveMonotoneX }`,
 }
 
 const chartSettings = {
@@ -34,7 +33,7 @@ const chartSettings = {
   pointStyle: { fill: theme[1] },
   xAccessor: "step",
   yAccessor: "value",
-  margin: 70
+  margin: 70,
 }
 
 export default function AxisSettings() {
@@ -73,7 +72,7 @@ If you set \`jaggedBase\` to true, a tick at the minimum point in your dataset w
           ...chartSettings,
           size: undefined,
           lines: generatedData[0],
-          axes: [{ orient: "left", baseline: false, jaggedBase: true }]
+          axes: [{ orient: "left", baseline: false, jaggedBase: true }],
         }}
         type={XYFrame}
         overrideProps={overrideProps}
@@ -98,15 +97,15 @@ Axes can take a \`tickLineGenerator\` prop which you can use to draw whatever ki
                   style={{
                     fill: "#efefef",
                     stroke: "#ccc",
-                    strokeDasharray: "2 2"
+                    strokeDasharray: "2 2",
                   }}
-                  d={`M${xy.x1},${xy.y1 - 5}L${xy.x2},${xy.y1 - 5}L${
-                    xy.x2
-                    },${xy.y1 + 5}L${xy.x1},${xy.y1 + 5}Z`}
+                  d={`M${xy.x1},${xy.y1 - 5}L${xy.x2},${xy.y1 - 5}L${xy.x2},${xy.y1 + 5}L${xy.x1},${
+                    xy.y1 + 5
+                  }Z`}
                 />
-              )
-            }
-          ]
+              ),
+            },
+          ],
         }}
         type={XYFrame}
         overrideProps={{
@@ -128,7 +127,7 @@ Axes can take a \`tickLineGenerator\` prop which you can use to draw whatever ki
                 />
               )
             }
-        ]`
+        ]`,
         }}
         startHidden
       />
@@ -146,11 +145,11 @@ If you set the \`axisAnnotationFunction\` it will turn on a region on the axis t
             {
               orient: "left",
               label: "Hover your mouse on the tick labels",
-              axisAnnotationFunction: d => {
-                console.log("Here's the axis that you clicked on:", d)
-              }
-            }
-          ]
+              axisAnnotationFunction: (d) => {
+                console.info("Here's the axis that you clicked on:", d)
+              },
+            },
+          ],
         }}
         type={XYFrame}
         overrideProps={overrideProps}
@@ -166,8 +165,8 @@ If you set the \`axisAnnotationFunction\` it will turn on a region on the axis t
       <DocumentFrame
         frameProps={{
           ...chartSettings,
-          lines:generatedData[0],
-          axes:[{ orient: "left", label: "Amount of Sales", showOutboundTickLines: true }]
+          lines: generatedData[0],
+          axes: [{ orient: "left", label: "Amount of Sales", showOutboundTickLines: true }],
         }}
         type={XYFrame}
         overrideProps={overrideProps}

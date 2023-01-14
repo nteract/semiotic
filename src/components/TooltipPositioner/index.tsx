@@ -21,7 +21,12 @@ const // simple heuristics to check if the tooltip container exceeds the viewpor
     changeTooltipContainerInitialDimensions,
     changeCollision
   }) => {
-    const tooltipContainerInitialDimensions = tooltipRef.getBoundingClientRect()
+    const tooltipContainerInitialDimensions =
+      tooltipRef?.getBoundingClientRect()
+
+    if (!tooltipContainerInitialDimensions) {
+      return
+    }
 
     const { right, left, top, bottom, width, height } =
       tooltipContainerInitialDimensions
@@ -129,6 +134,7 @@ export default function TooltipPositioner(props: Props) {
       ref={tooltipNodeRef}
       style={containerStyle}
       className={tooltipContainerClasses}
+      data-testid="TooltipPositioner"
     >
       {tooltipContent({
         ...tooltipContentArgs,
