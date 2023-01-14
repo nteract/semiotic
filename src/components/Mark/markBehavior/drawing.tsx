@@ -76,28 +76,8 @@ export function linePath(x1, x2, y1, y2) {
   return "M" + x1 + "," + y1 + "L" + x2 + "," + y2 + "L"
 }
 
-export function generateSVG(props, className) {
-  let markType = props.markType
-  let renderMode = props.renderMode
-
-  let cloneProps = Object.assign({}, props)
-  delete cloneProps.markType
-  delete cloneProps.renderMode
-  delete cloneProps.nid
-  delete cloneProps.context
-  delete cloneProps.updateContext
-  delete cloneProps.parameters
-  delete cloneProps.lineDataAccessor
-  delete cloneProps.customAccessors
-  delete cloneProps.interpolate
-  delete cloneProps.forceUpdate
-  delete cloneProps.searchIterations
-  delete cloneProps.simpleInterpolate
-  delete cloneProps.transitionDuration
-  delete cloneProps.tx
-  delete cloneProps.ty
-  delete cloneProps.customTween
-  delete cloneProps.sketchyGenerator
+export function generateSVG(props, className, markType, renderMode) {
+  const cloneProps = props
 
   cloneProps.className = className
 

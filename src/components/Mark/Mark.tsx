@@ -18,13 +18,17 @@ function generateSketchyKey(props) {
   return sketchyKey
 }
 
-const updateSketchy = (nextProps, previousSketchyKey) => {
-  const RoughGenerator = nextProps.sketchyGenerator
-
+const updateSketchy = (
+  nextProps,
+  previousSketchyKey,
+  RoughGenerator,
+  markType,
+  renderMode
+) => {
   const renderOptions =
-    nextProps.renderMode !== null && typeof nextProps.renderMode === "object"
-      ? nextProps.renderMode
-      : { renderMode: nextProps.renderMode }
+    renderMode !== null && typeof renderMode === "object"
+      ? renderMode
+      : { renderMode }
 
   const sketchyKey =
     renderOptions.renderMode === "sketchy" && generateSketchyKey(nextProps)
@@ -60,7 +64,7 @@ const updateSketchy = (nextProps, previousSketchyKey) => {
       simplification: simplification
     }
 
-    switch (nextProps.markType) {
+    switch (markType) {
       case "line":
         drawingInstructions = roughGenerator.line(
           nextProps.x1 || 0,
@@ -186,28 +190,42 @@ const updateSketchy = (nextProps, previousSketchyKey) => {
   return null
 }
 
-export default function SemioticMark(props: MarkProps) {
+export default function SemioticMark({
+  sketchyGenerator,
+  markType,
+  renderMode,
+  ["aria-label"]: ariaLabel,
+  ...props
+}: MarkProps) {
   const { className = "" } = props
 
   const sketchyKey = generateSketchyKey(props)
 
   const [sketchyFill, changeSketchyFill] = useState(
-    updateSketchy(props, sketchyKey)
+    updateSketchy(props, sketchyKey, sketchyGenerator, markType, renderMode)
   )
   const [previousSketchyKey, updateSketchyKey] = useState("")
 
   useEffect(() => {
-    changeSketchyFill(updateSketchy(props, previousSketchyKey))
+    changeSketchyFill(
+      updateSketchy(
+        props,
+        previousSketchyKey,
+        sketchyGenerator,
+        markType,
+        renderMode
+      )
+    )
     updateSketchyKey(sketchyKey)
-  }, [sketchyKey, props.renderMode?.renderMode ?? props.renderMode])
+  }, [!!sketchyGenerator, sketchyKey, renderMode?.renderMode ?? renderMode])
 
   const actualSVG =
-    props.renderMode && props.renderMode?.renderMode === "sketchy"
+    sketchyGenerator && (renderMode?.renderMode ?? renderMode === "sketchy")
       ? sketchyFill
-      : generateSVG(props, className)
+      : generateSVG(props, className, markType, renderMode)
 
   return (
-    <g className={className} aria-label={props["aria-label"]}>
+    <g className={className} aria-label={ariaLabel}>
       {actualSVG}
     </g>
   )
