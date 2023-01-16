@@ -316,21 +316,21 @@ export const lineChart = ({
   xPropBottom
 }: LineChartTypes) => {
   if (y1) {
-    data.forEach((d) => {
-      d.data.forEach((p) => {
-        p[yPropBottom] = y1(p)
-        p[yPropMiddle] = (p[yPropBottom] + p[yPropTop]) / 2
-      })
-    })
+    for (const line of data) {
+      for (const point of line.data) {
+        point[yPropBottom] = y1(point)
+        point[yPropMiddle] = (point[yPropBottom] + point[yPropTop]) / 2
+      }
+    }
   }
 
   if (x1) {
-    data.forEach((d) => {
-      d.data.forEach((p) => {
-        p[xPropBottom] = x1(p)
-        p[xPropMiddle] = (p[xPropBottom] + p[xPropTop]) / 2
-      })
-    })
+    for (const line of data) {
+      for (const point of line.data) {
+        point[xPropBottom] = x1(point)
+        point[xPropMiddle] = (point[xPropBottom] + point[xPropTop]) / 2
+      }
+    }
   }
 
   return data
