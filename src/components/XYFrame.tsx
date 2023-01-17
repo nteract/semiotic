@@ -43,8 +43,6 @@ import {
 
 import { extentValue } from "./data/unflowedFunctions"
 
-import { basicDataChangeCheck } from "./processing/diffing"
-
 import { findFirstAccessorValue } from "./data/multiAccessorUtils"
 
 import { calculateXYFrame } from "./processing/xyDrawing"
@@ -302,11 +300,11 @@ function deriveXYFrameState(nextProps: XYFrameProps, prevState: XYFrameState) {
     (oldXExtent[1] !== newXExtent[1] && newXExtent[1] !== undefined) ||
     (oldYExtent[1] !== newYExtent[1] && newYExtent[1] !== undefined)
 
-  const lineChange = basicDataChangeCheck(lineData, newLines)
+  const lineChange = lineData !== newLines
 
-  const summaryChange = basicDataChangeCheck(summaryData, newSummaries)
+  const summaryChange = summaryData !== newSummaries
 
-  const pointChange = basicDataChangeCheck(pointData, newPoints)
+  const pointChange = pointData !== newPoints
 
   if (
     (oldDataVersion && oldDataVersion !== newDataVersion) ||
