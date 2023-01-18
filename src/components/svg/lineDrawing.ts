@@ -316,21 +316,21 @@ export const lineChart = ({
   xPropBottom
 }: LineChartTypes) => {
   if (y1) {
-    data.forEach((d) => {
-      d.data.forEach((p) => {
-        p[yPropBottom] = y1(p)
-        p[yPropMiddle] = (p[yPropBottom] + p[yPropTop]) / 2
-      })
-    })
+    for (const line of data) {
+      for (const point of line.data) {
+        point[yPropBottom] = y1(point)
+        point[yPropMiddle] = (point[yPropBottom] + point[yPropTop]) / 2
+      }
+    }
   }
 
   if (x1) {
-    data.forEach((d) => {
-      d.data.forEach((p) => {
-        p[xPropBottom] = x1(p)
-        p[xPropMiddle] = (p[xPropBottom] + p[xPropTop]) / 2
-      })
-    })
+    for (const line of data) {
+      for (const point of line.data) {
+        point[xPropBottom] = x1(point)
+        point[xPropMiddle] = (point[xPropBottom] + point[xPropTop]) / 2
+      }
+    }
   }
 
   return data
@@ -344,18 +344,23 @@ export const cumulativeLine = ({
   yPropBottom,
   type = "cumulative"
 }: CumulativeLineTypes) => {
-  data.forEach((d) => {
+  for (const line of data) {
     let cumulativeValue = 0
-    const dataArray = type === "cumulative-reverse" ? d.data.reverse() : d.data
-    dataArray.forEach((p) => {
-      cumulativeValue += p[yPropTop]
-      p[yPropBottom] = p[yPropTop] = p[yPropMiddle] = cumulativeValue
+    const dataArray =
+      type === "cumulative-reverse" ? line.data.reverse() : line.data
+
+    for (const point of dataArray) {
+      cumulativeValue += point[yPropTop]
+      point[yPropBottom] =
+        point[yPropTop] =
+        point[yPropMiddle] =
+          cumulativeValue
       if (y1) {
-        p[yPropBottom] = y1(p)
-        p[yPropMiddle] = p[yPropBottom] + p[yPropTop] / 2
+        point[yPropBottom] = y1(point)
+        point[yPropMiddle] = point[yPropBottom] + point[yPropTop] / 2
       }
-    })
-  })
+    }
+  }
 
   return data
 }
@@ -369,15 +374,16 @@ export const bumpChart = ({
   yPropTop,
   yPropBottom
 }: StackedAreaTypes) => {
-  const uniqXValues = data
-    .map((d) => d.data.map((p) => datesForUnique(p[xProp])))
-    .reduce((a, b) => a.concat(b), [])
-    .reduce((p, c) => {
-      if (p.indexOf(c) === -1) {
-        p.push(c)
+  const uniqXValues = new Map()
+  for (const line of data) {
+    for (const point of line.data) {
+      const xValue = datesForUnique(point[xProp])
+      if (!uniqXValues.has(xValue)) {
+        uniqXValues.set(xValue, [])
       }
-      return p
-    }, [])
+      uniqXValues.get(xValue).push(point)
+    }
+  }
 
   let bumpSort = (a, b) => {
     if (a[yProp] > b[yProp]) {
@@ -400,36 +406,35 @@ export const bumpChart = ({
     }
   }
 
-  uniqXValues.forEach((xValue) => {
+  for (const [, pointsAtXArray] of uniqXValues) {
     let negativeOffset = 0
     let positiveOffset = 0
 
-    data
-      .map((d) => d.data.filter((p) => datesForUnique(p[xProp]) === xValue))
-      .reduce((a, b) => a.concat(b), [])
-      .sort(bumpSort)
-      .forEach((l, rank) => {
-        //determine ranking and offset by the number of less than this one at each step
-        l._XYFrameRank = rank + 1
-        if (type === "bumparea" || type === "bumparea-invert") {
-          if (l[yProp] < 0) {
-            l[yPropTop] = negativeOffset + l[yProp]
-            l[yPropMiddle] = negativeOffset + l[yProp] / 2
-            l[yPropBottom] = negativeOffset
-            negativeOffset += l[yProp]
-          } else {
-            l[yPropTop] = positiveOffset + l[yProp]
-            l[yPropMiddle] = positiveOffset + l[yProp] / 2
-            l[yPropBottom] = positiveOffset
-            positiveOffset += l[yProp]
-          }
+    pointsAtXArray.sort(bumpSort)
+
+    let rank = 1
+    for (const point of pointsAtXArray) {
+      point._XYFrameRank
+      if (type === "bumparea" || type === "bumparea-invert") {
+        if (point[yProp] < 0) {
+          point[yPropTop] = negativeOffset + point[yProp]
+          point[yPropMiddle] = negativeOffset + point[yProp] / 2
+          point[yPropBottom] = negativeOffset
+          negativeOffset += point[yProp]
         } else {
-          l[yProp] = rank + 1
-          l[yPropTop] = rank + 1
-          l[yPropBottom] = rank + 1
+          point[yPropTop] = positiveOffset + point[yProp]
+          point[yPropMiddle] = positiveOffset + point[yProp] / 2
+          point[yPropBottom] = positiveOffset
+          positiveOffset += point[yProp]
         }
-      })
-  })
+      } else {
+        point[yProp] = rank
+        point[yPropTop] = rank
+        point[yPropBottom] = rank
+      }
+      rank++
+    }
+  }
 
   return data
 }
