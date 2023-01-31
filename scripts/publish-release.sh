@@ -23,7 +23,7 @@ if [ -z "$VERSION" ]; then
   exit 1
 fi
 
-git checkout master
+git checkout main
 git pull
 npm install
 npm run build

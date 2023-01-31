@@ -171,6 +171,11 @@ hr {
   padding-top: 10px;
 }
 
+.annotation-xy-label {
+  transition-property: top, left;
+  transition-duration: 0.25s;
+}
+
 .annotation-xy-label .tooltip-content,
 .annotation-network-label .tooltip-content {
   position: relative;
