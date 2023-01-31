@@ -7,7 +7,7 @@
   "types": "dist/semiotic.d.ts",
   "sideEffects": false,
   "files": [
-    "dist"
+    "dist/semiotic.*"
   ],
   "scripts": {
     "start": "parcel serve --target docs",
