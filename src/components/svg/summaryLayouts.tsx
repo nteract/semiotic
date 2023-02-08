@@ -812,7 +812,6 @@ export function contourRenderFn({
             {...baseMarkProps}
             {...eventListeners}
             renderMode={renderValue}
-            simpleInterpolate={true}
             key={`${i}-${ii}`}
             style={styleFn(ordset.pieceData[0].data, ordsetI)}
             className={classFn(ordset.pieceData[0].data, ordsetI)}

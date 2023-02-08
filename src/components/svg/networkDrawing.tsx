@@ -154,7 +154,6 @@ export const matrixEdgeGenerator =
           renderMode={renderMode ? renderMode(d, i) : undefined}
           key={key}
           className={className}
-          simpleInterpolate={true}
           transform={`translate(${d.source.y},${d.target.y})`}
           markType="rect"
           style={styleFn(d, i)}
@@ -186,7 +185,6 @@ export const arcEdgeGenerator = (size) => {
         renderMode={renderMode ? renderMode(d, i) : undefined}
         key={key}
         className={className}
-        simpleInterpolate={true}
         markType="path"
         transform={`translate(0,${size[1] / 2})`}
         d={arcDiagramArc(d)}
@@ -276,7 +274,6 @@ export const sankeyArrowGenerator = (props) => {
         renderMode={renderMode ? renderMode(d, i) : undefined}
         key={key}
         className={className}
-        simpleInterpolate={true}
         markType="path"
         d={generatedPath}
         style={styleFn(d, i)}
@@ -304,7 +301,6 @@ export const chordEdgeGenerator =
         renderMode={renderMode ? renderMode(d, i) : undefined}
         key={key}
         className={className}
-        simpleInterpolate={true}
         transform={`translate(${size[0] / 2},${size[1] / 2})`}
         markType="path"
         d={d.d}
@@ -342,7 +338,6 @@ export const dagreEdgeGenerator = (direction) => {
                 renderMode={renderMode ? renderMode(d, i) : undefined}
                 key={`${key}-${ribbonI}`}
                 className={className}
-                simpleInterpolate={true}
                 markType="path"
                 d={ribbonD}
                 style={styleFn(sortedParallelEdges[ribbonI], i)}
@@ -360,7 +355,6 @@ export const dagreEdgeGenerator = (direction) => {
           renderMode={renderMode ? renderMode(d, i) : undefined}
           key={key}
           className={className}
-          simpleInterpolate={true}
           markType="path"
           d={ribbonGenerator(d.points)}
           style={styleFn(d, i)}
@@ -376,7 +370,6 @@ export const dagreEdgeGenerator = (direction) => {
         renderMode={renderMode ? renderMode(d, i) : undefined}
         key={key}
         className={className}
-        simpleInterpolate={true}
         markType="path"
         d={dagreLineGenerator(d.points)}
         style={styleFn(d, i)}

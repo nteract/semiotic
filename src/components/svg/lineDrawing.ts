@@ -234,10 +234,10 @@ export const stackedArea = ({
     let positiveOffset = 0
 
     const positiveStepTotal = sum(coordsAtX, (d) =>
-      d[yProp] > 0 ? d[yProp] : 0
+      d?.[yProp] > 0 ? d[yProp] : 0
     )
     const negativeStepTotal = sum(coordsAtX, (d) =>
-      d[yProp] < 0 ? d[yProp] : 0
+      d?.[yProp] < 0 ? d[yProp] : 0
     )
 
     for (const newIndex of lineIndexSortLookup) {

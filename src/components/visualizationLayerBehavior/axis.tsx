@@ -90,7 +90,6 @@ const defaultTickLineGenerator = ({
       fill="none"
       stroke="black"
       strokeWidth="1px"
-      simpleInterpolate={true}
       d={genD}
       className={`tick-line tick ${orient} ${className}`}
       {...baseMarkProps}
@@ -118,7 +117,6 @@ const outboundTickLineGenerator = ({ xy, orient, i, className = "" }) => {
       fill="none"
       stroke="black"
       strokeWidth="1px"
-      simpleInterpolate={true}
       d={genD}
       className={`outbound-tick-line tick ${orient} ${className}`}
     />
