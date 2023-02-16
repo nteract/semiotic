@@ -546,7 +546,6 @@ export function createSummaries({
           {...baseMarkProps}
           data-testid="xyframe-summary"
           key={renderKey}
-          forceUpdate={true}
           renderMode={renderFn ? renderFn(d, i) : undefined}
           className={className}
           markType="path"

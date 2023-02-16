@@ -220,7 +220,6 @@ export const svgXYAnnotation = ({ screenCoordinates, i, d }) => {
       markType="circle"
       cx={screenCoordinates[0]}
       cy={screenCoordinates[1]}
-      forceUpdate={true}
       style={inlineStyle}
       fill="none"
       stroke="black"
@@ -233,7 +232,6 @@ export const svgXYAnnotation = ({ screenCoordinates, i, d }) => {
       <Mark
         markType="text"
         key={`${d.label}annotationtext${i}`}
-        forceUpdate={true}
         x={screenCoordinates[0]}
         y={10 + screenCoordinates[1]}
         data-testid="annotation-xy-label"
@@ -432,7 +430,6 @@ export const svgAreaAnnotation = ({
     <Mark
       markType="text"
       key={`${d.label}-annotationtext-${i}`}
-      forceUpdate={true}
       x={xCenter}
       y={yCenter}
       transform={`translate(${annotationLayer.position})`}

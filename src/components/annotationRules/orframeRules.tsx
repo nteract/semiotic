@@ -436,7 +436,6 @@ export const svgORRule = ({ d, i, screenCoordinates, projection }) => {
     <Mark
       markType="text"
       key={`${d.label}annotationtext${i}`}
-      forceUpdate={true}
       x={parseInt(
         screenCoordinates[0] + (projection === "horizontal" ? 10 : 0)
       )}

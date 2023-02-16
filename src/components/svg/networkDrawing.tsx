@@ -472,7 +472,6 @@ export const matrixNodeGenerator = (size, nodes) => {
             height={stepSize}
             style={{ ...style, stroke: "none" }}
             renderMode={renderModeValue}
-            forceUpdate={true}
             baseMarkProps={baseMarkProps}
           />
         )}
@@ -485,7 +484,6 @@ export const matrixNodeGenerator = (size, nodes) => {
             width={stepSize}
             style={{ ...style, stroke: "none" }}
             renderMode={renderModeValue}
-            forceUpdate={true}
             baseMarkProps={baseMarkProps}
           />
         )}
@@ -499,7 +497,6 @@ export const matrixNodeGenerator = (size, nodes) => {
             y2={d.y - stepSize / 2}
             style={style}
             renderMode={renderModeValue}
-            forceUpdate={true}
             baseMarkProps={baseMarkProps}
           />
         )}
@@ -513,7 +510,6 @@ export const matrixNodeGenerator = (size, nodes) => {
             x2={d.y - stepSize / 2}
             style={style}
             renderMode={renderModeValue}
-            forceUpdate={true}
             baseMarkProps={baseMarkProps}
           />
         )}
@@ -527,7 +523,6 @@ export const matrixNodeGenerator = (size, nodes) => {
             y2={d.y + stepSize / 2}
             style={style}
             renderMode={renderModeValue}
-            forceUpdate={true}
             baseMarkProps={baseMarkProps}
           />
         )}
@@ -541,7 +536,6 @@ export const matrixNodeGenerator = (size, nodes) => {
             x2={d.y + stepSize / 2}
             style={style}
             renderMode={renderModeValue}
-            forceUpdate={true}
             baseMarkProps={baseMarkProps}
           />
         )}

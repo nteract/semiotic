@@ -235,7 +235,7 @@ export const svgHighlightRule = ({ d, i, networkFrameRender }) => {
   }
 
   const transform = `translate(${d.x},${d.y})`
-  const baseMarkProps = { forceUpdate: true }
+  const baseMarkProps = {}
 
   const HighlightMark = customMark({
     d,

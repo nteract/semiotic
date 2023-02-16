@@ -8,7 +8,6 @@ import {
   calculateMargin,
   objectifyType,
   keyAndObjectifyBarData,
-  //  generateOrdinalFrameEventListeners,
   adjustedPositionSize,
   orFrameConnectionRenderer,
   orFrameAxisGenerator
@@ -1117,7 +1116,6 @@ export const calculateOrdinalFrame = (
       ),
       styleFn: stringToFn<GenericObject>(summaryStyle, () => ({}), true),
       classFn: stringToFn<string>(summaryClass, () => "", true),
-      //        canvasRender: stringToFn<boolean>(canvasSummaries, undefined, true),
       projection,
       eventListenersGenerator,
       adjustedSize,
@@ -1165,6 +1163,7 @@ export const calculateOrdinalFrame = (
           })
       )
     } else if (pieceHoverAnnotation && calculatedPieceData) {
+      //Check interaction layer rendering when only one point per column
       pieceDataXY = basePieceData
     }
   }

@@ -167,7 +167,7 @@ export function boxplotRenderFn({
         .map((p) => p.scaledVerticalValue)
         .sort((a, b) => b - a)
 
-      translate = `translate(${summary.x + summary.padding},0)`
+      translate = `translate(${summary.x + summary.width / 2},0)`
 
       summaryPositionNest = [
         quantile(summaryPositionNest, 0.0),
@@ -268,9 +268,7 @@ export function boxplotRenderFn({
 
       const boxplotY = summary.x + summary.padding
 
-      translate = `translate(0,${
-        summary.x + summary.padding + summary.width / 2
-      })`
+      translate = `translate(0,${summary.x + summary.width / 2})`
 
       summaryPositionNest = [
         quantile(summaryPositionNest, 0.0),
@@ -518,210 +516,211 @@ export function boxplotRenderFn({
       )
       translate = `translate(${radialAdjustX},${radialAdjustY})`
 
-      renderedSummaryMarks.push(
-        <g
-          {...eventListeners}
-          className={calculatedSummaryClass}
-          transform={translate}
-          key={`summaryPiece-${summaryI}`}
-          role="img"
-          tabIndex={-1}
-          data-o={key}
-          aria-label={`${key} boxplot showing ${summaryXYCoords
+      renderedSummaryMarks.push({
+        //This is a g element
+        containerProps: {
+          ...eventListeners,
+          className: calculatedSummaryClass,
+          transform: translate,
+          key: `summaryPiece-${summaryI}`,
+          role: "img",
+          tabIndex: -1,
+          "data-o": key,
+          "aria-label": `${key} boxplot showing ${summaryXYCoords
             .filter((d) => d.key === key)
-            .map((d) => `${d.label} ${d.value}`)}`}
-        >
-          <Mark
-            {...baseMarkProps}
-            renderMode={renderValue}
-            markType="line"
-            x1={bottomPoint[0]}
-            x2={topPoint[0]}
-            y1={bottomPoint[1]}
-            y2={topPoint[1]}
-            style={Object.assign(
+            .map((d) => `${d.label} ${d.value}`)}`
+        },
+        //These are drawn items
+        elements: [
+          {
+            ...baseMarkProps,
+            renderMode: renderValue,
+            markType: "line",
+            x1: bottomPoint[0],
+            x2: topPoint[0],
+            y1: bottomPoint[1],
+            y2: topPoint[1],
+            style: Object.assign(
               { strokeWidth: 2 },
               calculatedSummaryStyle,
               summaryElementStylingFn("whisker")
-            )}
-          />
-          <Mark
-            {...baseMarkProps}
-            renderMode={renderValue}
-            markType="path"
-            d={topLineArcGenerator({ startAngle, endAngle })}
-            style={Object.assign(
+            )
+          },
+          {
+            ...baseMarkProps,
+            renderMode: renderValue,
+            markType: "path",
+            d: topLineArcGenerator({ startAngle, endAngle }),
+            style: Object.assign(
               { strokeWidth: 4 },
               calculatedSummaryStyle,
               { fill: "none" },
               summaryElementStylingFn("max")
-            )}
-          />
-          <Mark
-            {...baseMarkProps}
-            renderMode={renderValue}
-            markType="path"
-            d={midLineArcGenerator({ startAngle, endAngle })}
-            style={Object.assign(
+            )
+          },
+          {
+            ...baseMarkProps,
+            renderMode: renderValue,
+            markType: "path",
+            d: midLineArcGenerator({ startAngle, endAngle }),
+            style: Object.assign(
               { strokeWidth: 4 },
               calculatedSummaryStyle,
               { fill: "none" },
               summaryElementStylingFn("median")
-            )}
-          />
-          <Mark
-            {...baseMarkProps}
-            renderMode={renderValue}
-            markType="path"
-            d={bottomLineArcGenerator({ startAngle, endAngle })}
-            style={Object.assign(
+            )
+          },
+          {
+            ...baseMarkProps,
+            renderMode: renderValue,
+            markType: "path",
+            d: bottomLineArcGenerator({ startAngle, endAngle }),
+            style: Object.assign(
               { strokeWidth: 4 },
               calculatedSummaryStyle,
               { fill: "none" },
               summaryElementStylingFn("min")
-            )}
-          />
-          <Mark
-            {...baseMarkProps}
-            renderMode={renderValue}
-            markType="path"
-            d={bodyArcWholeGenerator({ startAngle, endAngle })}
-            style={Object.assign(
+            )
+          },
+          {
+            ...baseMarkProps,
+            renderMode: renderValue,
+            markType: "path",
+            d: bodyArcWholeGenerator({ startAngle, endAngle }),
+            style: Object.assign(
               { strokeWidth: 4 },
               calculatedSummaryStyle,
               summaryElementStylingFn("iqrarea")
-            )}
-          />
-
-          <Mark
-            {...baseMarkProps}
-            renderMode={renderValue}
-            markType="path"
-            d={bodyArcTopGenerator({ startAngle, endAngle })}
-            style={Object.assign(
+            )
+          },
+          {
+            ...baseMarkProps,
+            renderMode: renderValue,
+            markType: "path",
+            d: bodyArcTopGenerator({ startAngle, endAngle }),
+            style: Object.assign(
               {},
               calculatedSummaryStyle,
               { fill: "none", stroke: "none" },
               summaryElementStylingFn("q3area")
-            )}
-          />
-          <Mark
-            {...baseMarkProps}
-            renderMode={renderValue}
-            markType="path"
-            d={bodyArcBottomGenerator({ startAngle, endAngle })}
-            style={Object.assign(
+            )
+          },
+          {
+            ...baseMarkProps,
+            renderMode: renderValue,
+            markType: "path",
+            d: bodyArcBottomGenerator({ startAngle, endAngle }),
+            style: Object.assign(
               {},
               calculatedSummaryStyle,
               { fill: "none", stroke: "none" },
               summaryElementStylingFn("q1area")
-            )}
-          />
-        </g>
-      )
+            )
+          }
+        ]
+      })
     } else {
       const boxplotMarks = [
-        <Mark
-          {...baseMarkProps}
-          renderMode={renderValue}
-          markType="line"
-          x1={extentlineX1}
-          x2={extentlineX2}
-          y1={extentlineY1}
-          y2={extentlineY2}
-          style={Object.assign(
-            { strokeWidth: "2px" },
+        {
+          ...baseMarkProps,
+          renderMode: renderValue,
+          markType: "line",
+          x1: extentlineX1,
+          x2: extentlineX2,
+          y1: extentlineY1,
+          y2: extentlineY2,
+          style: Object.assign(
+            { strokeWidth: 2 },
             calculatedSummaryStyle,
             summaryElementStylingFn("whisker")
-          )}
-        />,
-        <Mark
-          {...baseMarkProps}
-          renderMode={renderValue}
-          markType="line"
-          x1={topLineX1}
-          x2={topLineX2}
-          y1={topLineY1}
-          y2={topLineY2}
-          style={Object.assign(
-            { strokeWidth: "2px" },
+          )
+        },
+        {
+          ...baseMarkProps,
+          renderMode: renderValue,
+          markType: "line",
+          x1: topLineX1,
+          x2: topLineX2,
+          y1: topLineY1,
+          y2: topLineY2,
+          style: Object.assign(
+            { strokeWidth: 2 },
             calculatedSummaryStyle,
             summaryElementStylingFn("min")
-          )}
-        />,
-        <Mark
-          {...baseMarkProps}
-          renderMode={renderValue}
-          markType="line"
-          x1={bottomLineX1}
-          x2={bottomLineX2}
-          y1={bottomLineY1}
-          y2={bottomLineY2}
-          style={Object.assign(
-            { strokeWidth: "2px" },
+          )
+        },
+        {
+          ...baseMarkProps,
+          renderMode: renderValue,
+          markType: "line",
+          x1: bottomLineX1,
+          x2: bottomLineX2,
+          y1: bottomLineY1,
+          y2: bottomLineY2,
+          style: Object.assign(
+            { strokeWidth: 2 },
             calculatedSummaryStyle,
             summaryElementStylingFn("max")
-          )}
-        />,
-        <Mark
-          {...baseMarkProps}
-          renderMode={renderValue}
-          markType="rect"
-          x={rectWholeX}
-          width={rectWholeWidth}
-          y={rectWholeY}
-          height={rectWholeHeight}
-          style={Object.assign(
-            { strokeWidth: "1px" },
+          )
+        },
+        {
+          ...baseMarkProps,
+          renderMode: renderValue,
+          markType: "rect",
+          x: rectWholeX,
+          width: rectWholeWidth,
+          y: rectWholeY,
+          height: rectWholeHeight,
+          style: Object.assign(
+            { strokeWidth: 1 },
             calculatedSummaryStyle,
             summaryElementStylingFn("iqrarea")
-          )}
-        />,
-
-        <Mark
-          {...baseMarkProps}
-          renderMode={renderValue}
-          markType="rect"
-          x={rectTopX}
-          width={rectTopWidth}
-          y={rectTopY}
-          height={rectTopHeight}
-          style={Object.assign(
+          )
+        },
+        {
+          ...baseMarkProps,
+          renderMode: renderValue,
+          markType: "rect",
+          x: rectTopX,
+          width: rectTopWidth,
+          y: rectTopY,
+          height: rectTopHeight,
+          style: Object.assign(
             {},
             calculatedSummaryStyle,
             { fill: "none", stroke: "none" },
             summaryElementStylingFn("q3area")
-          )}
-        />,
-        <Mark
-          {...baseMarkProps}
-          renderMode={renderValue}
-          markType="rect"
-          x={rectBottomX}
-          width={rectBottomWidth}
-          y={rectBottomY}
-          height={rectBottomHeight}
-          style={Object.assign(
+          )
+        },
+        {
+          ...baseMarkProps,
+          renderMode: renderValue,
+          markType: "rect",
+          x: rectBottomX,
+          width: rectBottomWidth,
+          y: rectBottomY,
+          height: rectBottomHeight,
+          style: Object.assign(
             {},
             calculatedSummaryStyle,
             { fill: "none", stroke: "none" },
             summaryElementStylingFn("q1area")
-          )}
-        />,
-        <Mark
-          {...baseMarkProps}
-          renderMode={renderValue}
-          markType="line"
-          x1={midLineX1}
-          x2={midLineX2}
-          y1={midLineY1}
-          y2={midLineY2}
-          style={Object.assign(
-            { strokeWidth: "2px" },
+          )
+        },
+        {
+          ...baseMarkProps,
+          renderMode: renderValue,
+          markType: "line",
+          x1: midLineX1,
+          x2: midLineX2,
+          y1: midLineY1,
+          y2: midLineY2,
+          style: Object.assign(
+            { strokeWidth: 2 },
             calculatedSummaryStyle,
             summaryElementStylingFn("median")
-          )}
-        />
+          )
+        }
       ]
 
       const outlierMarks = []
@@ -732,40 +731,36 @@ export function boxplotRenderFn({
         )
 
         outlierPoints.forEach((point) => {
-          outlierMarks.push(
-            <Mark
-              {...baseMarkProps}
-              //              renderMode={renderValue}
-              markType="circle"
-              cx={projection === "horizontal" ? point.scaledValue : 0}
-              cy={projection === "vertical" ? point.scaledVerticalValue : 0}
-              style={Object.assign(
-                { strokeWidth: "1px", stroke: "black", fill: "none", r: 2 },
-                calculatedSummaryStyle,
-                summaryElementStylingFn("outlier")
-              )}
-            />
-          )
+          outlierMarks.push({
+            ...baseMarkProps,
+            renderMode: renderValue,
+            markType: "circle",
+            cx: projection === "horizontal" ? point.scaledValue : 0,
+            cy: projection === "vertical" ? point.scaledVerticalValue : 0,
+            style: Object.assign(
+              { strokeWidth: "1px", stroke: "black", fill: "none", r: 2 },
+              calculatedSummaryStyle,
+              summaryElementStylingFn("outlier")
+            )
+          })
         })
       }
-      renderedSummaryMarks.push(
-        <g
-          {...eventListeners}
-          className={calculatedSummaryClass}
-          transform={translate}
-          key={`summaryPiece-${summaryI}`}
-          role="img"
-          tabIndex={-1}
-          data-o={key}
-          aria-label={`${key} boxplot showing ${summaryXYCoords
+      renderedSummaryMarks.push({
+        containerProps: {
+          ...eventListeners,
+          className: calculatedSummaryClass,
+          transform: translate,
+          key: `summaryPiece-${summaryI}`,
+          role: "img",
+          tabIndex: -1,
+          "data-o": key,
+          "aria-label": `${key} boxplot showing ${summaryXYCoords
             .filter((d) => d.key === key)
-            .map((d) => `${d.label} ${d.value}`)
-            .join(", ")}`}
-        >
-          {boxplotMarks}
-          {outlierMarks}
-        </g>
-      )
+            .map((d) => `${d.label} ${d.value}`)}`
+        },
+        //These are drawn items
+        elements: [...boxplotMarks, ...outlierMarks]
+      })
     }
   })
 
@@ -807,32 +802,32 @@ export function contourRenderFn({
     oContours.forEach((d, i) => {
       d.coordinates.forEach((coords, ii) => {
         const eventListeners = eventListenersGenerator(d, i)
-        contourMarks.push(
-          <Mark
-            {...baseMarkProps}
-            {...eventListeners}
-            renderMode={renderValue}
-            key={`${i}-${ii}`}
-            style={styleFn(ordset.pieceData[0].data, ordsetI)}
-            className={classFn(ordset.pieceData[0].data, ordsetI)}
-            markType={"path"}
-            d={`M${d.coordinates[0].map((p) => p.join(",")).join("L")}Z`}
-          />
-        )
+        contourMarks.push({
+          ...baseMarkProps,
+          ...eventListeners,
+          renderMode: renderValue,
+          key: `${i}-${ii}`,
+          style: styleFn(ordset.pieceData[0].data, ordsetI),
+          className: classFn(ordset.pieceData[0].data, ordsetI),
+          markType: "path",
+          d: `M${d.coordinates[0].map((p) => p.join(",")).join("L")}Z`
+        })
       })
     })
 
-    renderedSummaryMarks.push(
-      <g
-        key={`contour-container-${ordsetI}`}
-        role="img"
-        tabIndex={-1}
-        data-o={key}
-        aria-label={`${key} Contour plot`}
-      >
-        {contourMarks}
-      </g>
-    )
+    renderedSummaryMarks.push({
+      containerProps: {
+        key: `contour-container-${ordsetI}`,
+        role: "img",
+        tabIndex: -1,
+        "data-o": key,
+        "aria-label": `${key} boxplot showing ${summaryXYCoords
+          .filter((d) => d.key === key)
+          .map((d) => `${d.label} ${d.value}`)}`
+      },
+      //These are drawn items
+      elements: contourMarks
+    })
   })
   return { marks: renderedSummaryMarks, xyPoints: summaryXYCoords }
 }
@@ -1038,22 +1033,25 @@ export function bucketizedRenderingFn({
       })
 
       summaryXYCoords.push(...mappedBars.points)
-      renderedSummaryMarks.push(
-        <g
-          {...eventListeners}
-          transform={`translate(${translate})`}
-          key={`summaryPiece-${summaryI}`}
-          role="img"
-          tabIndex={-1}
-          data-o={summary.name}
-          aria-label={`${summary.name} ${type.type}`}
-        >
-          {tiles}
-        </g>
-      )
+      renderedSummaryMarks.push({
+        containerProps: {
+          ...eventListeners,
+          transform: `translate(${translate})`,
+          className: calculatedSummaryClass,
+          key: `summaryPiece-${summaryI}`,
+          role: "img",
+          tabIndex: -1,
+          "data-o": summary.name,
+          "aria-label": `${summary.name} ${type.type}`
+        },
+        //These are drawn items
+        elements: tiles
+      })
     } else if (type.type === "violin") {
       const { iqr } = type
       const subsets = type.subsets || [false]
+      const violinElements: any = []
+
       bins[0].y = bins[0].y - bucketSize / 2
       bins[bins.length - 1].y = bins[bins.length - 1].y + bucketSize / 2
 
@@ -1185,23 +1183,21 @@ export function bucketizedRenderingFn({
           }
         }
 
-        renderedSummaryMarks.push(
-          <Mark
-            {...baseMarkProps}
-            transform={`translate(${translate})`}
-            key={`summaryPiece-${summaryI}-${subsettingIndex}`}
-            {...eventListeners}
-            renderMode={renderValue}
-            markType="path"
-            className={calculatedSummaryClass}
-            style={calculatedSummaryStyle}
-            d={violinArea(violinPoints)}
-            role="img"
-            tabIndex={-1}
-            data-o={summary.name}
-            aria-label={`${summary.name} distribution`}
-          />
-        )
+        violinElements.push({
+          ...baseMarkProps,
+          ...eventListeners,
+          transform: `translate(${translate})`,
+          key: `summaryPiece-${summaryI}-${subsettingIndex}`,
+          renderMode: renderValue,
+          markType: "path",
+          className: calculatedSummaryClass,
+          style: calculatedSummaryStyle,
+          d: violinArea(violinPoints),
+          role: "img",
+          tabIndex: -1,
+          "data-o": summary.name,
+          "aria-label": `${summary.name} distribution`
+        })
         if (iqr) {
           let iqrPieces = []
           actualBins.forEach((aBin) => {
@@ -1229,52 +1225,52 @@ export function bucketizedRenderingFn({
               : (first, last, translate) =>
                   `M${first},${translate[1]}L${last},${translate[1]}`
 
-          renderedSummaryMarks.push(
-            <Mark
-              {...baseMarkProps}
-              key={`summaryPiece-${summaryI}-${subsettingIndex}-iqr-line`}
-              {...eventListeners}
-              renderMode={renderValue}
-              markType="path"
-              className={calculatedSummaryClass}
-              style={{
-                stroke: "black",
-                strokeWidth: "2px",
-                ...calculatedSummaryStyle,
-                ...summaryElementStylingFn("iqr")
-              }}
-              d={iqrLine(iqrValues[0], iqrValues[2], translate)}
-              role="img"
-              tabIndex={-1}
-              data-o={summary.name}
-              aria-label={`${summary.name} distribution`}
-            />
-          )
+          violinElements.push({
+            ...baseMarkProps,
+            ...eventListeners,
+            key: `summaryPiece-${summaryI}-${subsettingIndex}-iqr-line`,
+            renderMode: renderValue,
+            markType: "path",
+            className: calculatedSummaryClass,
+            style: {
+              stroke: "black",
+              strokeWidth: "2px",
+              ...calculatedSummaryStyle,
+              ...summaryElementStylingFn("iqr")
+            },
+            d: iqrLine(iqrValues[0], iqrValues[2], translate),
+            role: "img",
+            tabIndex: -1,
+            "data-o": summary.name,
+            "aria-label": `${summary.name} distribution`
+          })
 
-          renderedSummaryMarks.push(
-            <Mark
-              {...baseMarkProps}
-              key={`summaryPiece-${summaryI}-${subsettingIndex}-iqr-median`}
-              {...eventListeners}
-              markType="circle"
-              className={calculatedSummaryClass}
-              style={{
-                stroke: "black",
-                fill: "black",
-                strokeWidth: "1px",
-                r: "3px",
-                ...calculatedSummaryStyle,
-                ...summaryElementStylingFn("median")
-              }}
-              cx={projection === "vertical" ? translate[0] : iqrValues[1]}
-              cy={projection === "vertical" ? iqrValues[1] : translate[1]}
-              role="img"
-              tabIndex={-1}
-              data-o={summary.name}
-              aria-label={`${summary.name} distribution`}
-            />
-          )
+          violinElements.push({
+            ...baseMarkProps,
+            ...eventListeners,
+            key: `summaryPiece-${summaryI}-${subsettingIndex}-iqr-median`,
+            markType: "circle",
+            className: calculatedSummaryClass,
+            style: {
+              stroke: "black",
+              fill: "black",
+              strokeWidth: "1px",
+              r: "3px",
+              ...calculatedSummaryStyle,
+              ...summaryElementStylingFn("median")
+            },
+            cx: projection === "vertical" ? translate[0] : iqrValues[1],
+            cy: projection === "vertical" ? iqrValues[1] : translate[1],
+            role: "img",
+            tabIndex: -1,
+            "data-o": summary.name,
+            "aria-label": `${summary.name} distribution`
+          })
         }
+      })
+
+      renderedSummaryMarks.push({
+        elements: violinElements
       })
     } else if (type.type === "ridgeline") {
       const zeroedStart = Object.assign({}, bins[0], { value: 0 })
@@ -1302,8 +1298,9 @@ export function bucketizedRenderingFn({
       const joyHeight = type.amplitude || 0
 
       if (type.axis && type.type === "histogram") {
-        renderedSummaryMarks.push(
-          createSummaryAxis({
+        renderedSummaryMarks.push({
+          type: "svg-only-mark",
+          Mark: createSummaryAxis({
             summary,
             summaryI,
             axisSettings: { baseline: false, ...type.axis },
@@ -1313,7 +1310,7 @@ export function bucketizedRenderingFn({
             adjustedSize,
             columnWidth
           })
-        )
+        })
       }
 
       if (projection === "horizontal") {
@@ -1395,8 +1392,9 @@ export function bucketizedRenderingFn({
       }
 
       if (type.axis) {
-        renderedSummaryMarks.push(
-          createSummaryAxis({
+        renderedSummaryMarks.push({
+          type: "svg-only-mark",
+          Mark: createSummaryAxis({
             summary,
             summaryI,
             axisSettings: type.axis,
@@ -1406,26 +1404,28 @@ export function bucketizedRenderingFn({
             adjustedSize,
             columnWidth
           })
-        )
+        })
       }
 
-      renderedSummaryMarks.push(
-        <Mark
-          {...baseMarkProps}
-          transform={`translate(${translate})`}
-          key={`summaryPiece-${summaryI}`}
-          {...eventListeners}
-          renderMode={renderValue}
-          markType="path"
-          className={calculatedSummaryClass}
-          style={calculatedSummaryStyle}
-          d={joyArea(joyPoints)}
-          role="img"
-          tabIndex={-1}
-          data-o={summary.name}
-          aria-label={`${summary.name} distribution`}
-        />
-      )
+      renderedSummaryMarks.push({
+        elements: [
+          {
+            ...baseMarkProps,
+            ...eventListeners,
+            transform: `translate(${translate})`,
+            key: `summaryPiece-${summaryI}`,
+            renderMode: renderValue,
+            markType: "path",
+            className: calculatedSummaryClass,
+            style: calculatedSummaryStyle,
+            d: joyArea(joyPoints),
+            role: "img",
+            tabIndex: -1,
+            "data-o": summary.name,
+            "aria-label": `${summary.name} distribution`
+          }
+        ]
+      })
     } else if (type.type === "horizon") {
       const zeroedStart = Object.assign({}, bins[0], { value: 0 })
       const zeroedEnd = Object.assign({}, bins[bins.length - 1], { value: 0 })
@@ -1553,31 +1553,30 @@ export function bucketizedRenderingFn({
           }
         }
 
-        return (
-          <Mark
-            {...baseMarkProps}
-            transform={`translate(${translate})`}
-            key={`summaryPiece-${summaryI}-${multiBinI}`}
-            {...eventListeners}
-            renderMode={renderValue}
-            markType="path"
-            className={calculatedSummaryClass}
-            style={{
-              ...calculatedSummaryStyle,
-              ...summaryElementStylingFn(multiBin, multiBinI)
-            }}
-            d={horizonArea(horizonPoints)}
-            role="img"
-            tabIndex={-1}
-            data-o={summary.name}
-            aria-label={`${summary.name} distribution`}
-          />
-        )
+        return {
+          ...baseMarkProps,
+          ...eventListeners,
+          transform: `translate(${translate})`,
+          key: `summaryPiece-${summaryI}-${multiBinI}`,
+          renderMode: renderValue,
+          markType: "path",
+          className: calculatedSummaryClass,
+          style: {
+            ...calculatedSummaryStyle,
+            ...summaryElementStylingFn(multiBin, multiBinI)
+          },
+          d: horizonArea(horizonPoints),
+          role: "img",
+          tabIndex: -1,
+          "data-o": summary.name,
+          "aria-label": `${summary.name} distribution`
+        }
       })
 
       if (type.axis) {
-        renderedSummaryMarks.push(
-          createSummaryAxis({
+        renderedSummaryMarks.push({
+          type: "svg-only-mark",
+          Mark: createSummaryAxis({
             summary,
             summaryI,
             axisSettings: type.axis,
@@ -1587,10 +1586,10 @@ export function bucketizedRenderingFn({
             adjustedSize,
             columnWidth
           })
-        )
+        })
       }
 
-      renderedSummaryMarks.push(<g>{multiBinMarks}</g>)
+      renderedSummaryMarks.push({ elements: multiBinMarks })
     }
   })
 
@@ -1633,6 +1632,59 @@ export const drawSummaries = ({
   })
 }
 
-export const renderLaidOutSummaries = ({ data }) => {
-  return data
+export const renderLaidOutSummaries = ({
+  data,
+  canvasRender,
+  canvasDrawing,
+  ...rest
+}) => {
+  if (canvasRender()) {
+    for (const container of data) {
+      const { transform: containerTransform = "translate(0,0)" } =
+        container?.containerProps ?? {
+          transform: "translate(0,0)"
+        }
+
+      const [containerX, containerY] = containerTransform
+        .replace("translate(", "")
+        .replace(")", "")
+        .split(",")
+      for (const element of container.elements) {
+        const { transform: elementTransform = "translate(0,0)" } = element
+
+        const [elementX, elementY] = elementTransform
+          .replace("translate(", "")
+          .replace(")", "")
+          .split(",")
+
+        const canvasNode = {
+          baseClass: "frame-piece",
+          tx: parseInt(elementX) + parseInt(containerX),
+          ty: parseInt(elementY) + parseInt(containerY),
+          d: {},
+          i: 0,
+          markProps: element,
+          styleFn: () => element.style,
+          renderFn: element.renderMode,
+          classFn: () => ""
+        }
+        canvasDrawing.push(canvasNode)
+      }
+    }
+    return null
+  }
+  const renderedSummaries: any = []
+  for (const container of data) {
+    const renderedElements: any = []
+    const { elements, containerProps } = container
+    for (const element of elements) {
+      renderedElements.push(<Mark {...element} />)
+    }
+    if (containerProps) {
+      renderedSummaries.push(<g {...containerProps}>{renderedElements}</g>)
+    } else {
+      renderedSummaries.push(...renderedElements)
+    }
+  }
+  return renderedSummaries
 }

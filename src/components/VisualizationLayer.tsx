@@ -545,6 +545,29 @@ function renderCanvas(
         if (style.fill && style.fill !== "none" && context.globalAlpha !== 0)
           context.fill(p)
       }
+    } else if (piece.markProps.markType === "line") {
+      if (actualRenderMode === "sketchy") {
+        context.globalAlpha = style.opacity || 1
+        rc.line(
+          piece.markProps.x1,
+          piece.markProps.y1,
+          piece.markProps.x2,
+          piece.markProps.y2,
+          rcSettings
+        )
+      } else {
+        context.globalAlpha = style.strokeOpacity || style.opacity || 1
+        context.beginPath()
+        context.moveTo(piece.markProps.x1, piece.markProps.y1)
+        context.lineTo(piece.markProps.x2, piece.markProps.y2)
+        if (
+          style.stroke &&
+          style.stroke !== "none" &&
+          context.globalAlpha !== 0
+        ) {
+          context.stroke()
+        }
+      }
     } else {
       console.error("CURRENTLY UNSUPPORTED MARKTYPE FOR CANVAS RENDERING")
     }

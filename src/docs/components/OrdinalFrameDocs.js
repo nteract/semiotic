@@ -6,8 +6,8 @@ import { funnelData } from "../example_settings/orframe"
 import Button from "@material-ui/core/Button"
 import { sum } from "d3-array"
 import Select from "@material-ui/core/Select"
-import MenuItem from '@material-ui/core/MenuItem'
-import InputLabel from '@material-ui/core/InputLabel'
+import MenuItem from "@material-ui/core/MenuItem"
+import InputLabel from "@material-ui/core/InputLabel"
 import FormControl from "@material-ui/core/FormControl"
 
 // const monthHash = {}
@@ -154,15 +154,15 @@ const groupAnnotations = [
 const dataTypeHash = {
   stacked: {
     data: funnelData,
-    oAccessor: d => d.stepName,
-    pieceStyle: d => ({ fill: d.funnelKey, stroke: d.funnelKey }),
-    connectorType: d => d.funnelKey,
-    connectorStyle: d => ({
+    oAccessor: (d) => d.stepName,
+    pieceStyle: (d) => ({ fill: d.funnelKey, stroke: d.funnelKey }),
+    connectorType: (d) => d.funnelKey,
+    connectorStyle: (d) => ({
       fill: d.source.funnelKey,
       stroke: d.source.funnelKey
     }),
-    rAccessor: d => d.stepValue,
-    summaryStyle: d => ({
+    rAccessor: (d) => d.stepValue,
+    summaryStyle: (d) => ({
       stroke: d.funnelKey,
       fill: d.funnelKey,
       fillOpacity: 0.5,
@@ -172,20 +172,20 @@ const dataTypeHash = {
   },
   group: {
     data: groupData,
-    oAccessor: d => d.color,
-    pieceStyle: d => ({
+    oAccessor: (d) => d.color,
+    pieceStyle: (d) => ({
       fill: d.color,
       opacity: 1,
       stroke: d.color
     }),
     connectorType: (d, i) => i,
-    connectorStyle: d => ({
+    connectorStyle: (d) => ({
       fill: d.source.color,
       stroke: d.source.color,
       opacity: outsideHash[d.source.color] ? 0.1 : 1
     }),
-    rAccessor: d => d.value,
-    summaryStyle: d => ({
+    rAccessor: (d) => d.value,
+    summaryStyle: (d) => ({
       stroke: d.color,
       fill: d.color,
       fillOpacity: 0.5,
@@ -240,52 +240,52 @@ export default class OrdinalFrameDocs extends React.Component {
       "swarm",
       "custom",
       "none"
-    ].map(d => (
+    ].map((d) => (
       <MenuItem key={`type-option${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
-    const projectionOptions = ["vertical", "horizontal", "radial"].map(d => (
+    const projectionOptions = ["vertical", "horizontal", "radial"].map((d) => (
       <MenuItem key={`projection-option${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
-    const cwOptions = ["fixed", "relative"].map(d => (
+    const cwOptions = ["fixed", "relative"].map((d) => (
       <MenuItem key={`cw-option${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
-    const rAccessorOptions = ["relative", "fixed"].map(d => (
+    const rAccessorOptions = ["relative", "fixed"].map((d) => (
       <MenuItem key={`rAccessor-option${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
-    const renderFnOptions = ["none", "sketchy", "painty"].map(d => (
+    const renderFnOptions = ["none", "sketchy", "painty"].map((d) => (
       <MenuItem key={`renderfn-option${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
-    const connectorOptions = ["off", "on"].map(d => (
+    const connectorOptions = ["off", "on"].map((d) => (
       <MenuItem key={`connector-option${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
-    const annotationOptions = ["off", "on"].map(d => (
+    const annotationOptions = ["off", "on"].map((d) => (
       <MenuItem key={`annotation-option${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
-    const oPaddingOptions = [50, 20, 5, 0].map(d => (
+    const oPaddingOptions = [50, 20, 5, 0].map((d) => (
       <MenuItem key={`opadding-option${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
-    const dataTypeOptions = ["stacked", "group", "simple"].map(d => (
+    const dataTypeOptions = ["stacked", "group", "simple"].map((d) => (
       <MenuItem key={`dataType-option${d}`} label={d} value={d}>
         {d}
       </MenuItem>
     ))
-    const hoverOptions = ["general", "piece", "none"].map(d => (
+    const hoverOptions = ["general", "piece", "none"].map((d) => (
       <MenuItem key={`hover-option${d}`} label={d} value={d}>
         {d}
       </MenuItem>
@@ -298,7 +298,7 @@ export default class OrdinalFrameDocs extends React.Component {
       "histogram",
       "contour",
       "ridgeline"
-    ].map(d => (
+    ].map((d) => (
       <MenuItem key={`summary-option${d}`} label={d} value={d}>
         {d}
       </MenuItem>
@@ -320,7 +320,7 @@ export default class OrdinalFrameDocs extends React.Component {
           <InputLabel htmlFor="data-type-input">Data Type</InputLabel>
           <Select
             value={this.state.dataType}
-            onChange={e => this.setState({ dataType: e.target.value })}
+            onChange={(e) => this.setState({ dataType: e.target.value })}
           >
             {dataTypeOptions}
           </Select>
@@ -331,7 +331,7 @@ export default class OrdinalFrameDocs extends React.Component {
           <InputLabel htmlFor="type-input">type</InputLabel>
           <Select
             value={this.state.type}
-            onChange={e => this.setState({ type: e.target.value })}
+            onChange={(e) => this.setState({ type: e.target.value })}
           >
             {typeOptions}
           </Select>
@@ -342,7 +342,7 @@ export default class OrdinalFrameDocs extends React.Component {
           <InputLabel htmlFor="summary-type-input">summaryType</InputLabel>
           <Select
             value={this.state.summaryType}
-            onChange={e =>
+            onChange={(e) =>
               this.setState({ dataType: "group", summaryType: e.target.value })
             }
           >
@@ -355,7 +355,7 @@ export default class OrdinalFrameDocs extends React.Component {
           <InputLabel htmlFor="projection-input">projection</InputLabel>
           <Select
             value={this.state.projection}
-            onChange={e => this.setState({ projection: e.target.value })}
+            onChange={(e) => this.setState({ projection: e.target.value })}
           >
             {projectionOptions}
           </Select>
@@ -368,7 +368,7 @@ export default class OrdinalFrameDocs extends React.Component {
           </InputLabel>
           <Select
             value={this.state.dynamicColumnWidth}
-            onChange={e =>
+            onChange={(e) =>
               this.setState({ dynamicColumnWidth: e.target.value })
             }
           >
@@ -381,7 +381,7 @@ export default class OrdinalFrameDocs extends React.Component {
           <InputLabel htmlFor="r-accessor-input">rAccessor</InputLabel>
           <Select
             value={this.state.rAccessor}
-            onChange={e => this.setState({ rAccessor: e.target.value })}
+            onChange={(e) => this.setState({ rAccessor: e.target.value })}
           >
             {rAccessorOptions}
           </Select>
@@ -392,7 +392,7 @@ export default class OrdinalFrameDocs extends React.Component {
           <InputLabel htmlFor="render-mode-input">renderMode</InputLabel>
           <Select
             value={this.state.renderFn}
-            onChange={e => this.setState({ renderFn: e.target.value })}
+            onChange={(e) => this.setState({ renderFn: e.target.value })}
           >
             {renderFnOptions}
           </Select>
@@ -403,7 +403,7 @@ export default class OrdinalFrameDocs extends React.Component {
           <InputLabel htmlFor="connector-input">connector</InputLabel>
           <Select
             value={this.state.connector}
-            onChange={e => this.setState({ connector: e.target.value })}
+            onChange={(e) => this.setState({ connector: e.target.value })}
           >
             {connectorOptions}
           </Select>
@@ -414,7 +414,7 @@ export default class OrdinalFrameDocs extends React.Component {
           <InputLabel htmlFor="annotations-input">annotations</InputLabel>
           <Select
             value={this.state.annotations}
-            onChange={e => this.setState({ annotations: e.target.value })}
+            onChange={(e) => this.setState({ annotations: e.target.value })}
           >
             {annotationOptions}
           </Select>
@@ -425,7 +425,7 @@ export default class OrdinalFrameDocs extends React.Component {
           <InputLabel htmlFor="o-padding-input">oPadding</InputLabel>
           <Select
             value={this.state.oPadding}
-            onChange={e => this.setState({ oPadding: e.target.value })}
+            onChange={(e) => this.setState({ oPadding: e.target.value })}
           >
             {oPaddingOptions}
           </Select>
@@ -436,7 +436,7 @@ export default class OrdinalFrameDocs extends React.Component {
           <InputLabel htmlFor="hover-behavior-input">hoverBehavior</InputLabel>
           <Select
             value={this.state.hoverBehavior}
-            onChange={e => this.setState({ hoverBehavior: e.target.value })}
+            onChange={(e) => this.setState({ hoverBehavior: e.target.value })}
           >
             {hoverOptions}
           </Select>
@@ -462,11 +462,7 @@ export default class OrdinalFrameDocs extends React.Component {
       name: "Basic",
       demo: (
         <div>
-          <Button
-            color="primary"
-          >
-            OrdinalFrame API
-          </Button>
+          <Button color="primary">OrdinalFrame API</Button>
           <p>O Extent Values: {this.state.oExtent.join(", ")}</p>
           <p>R Extent Values: {this.state.rExtent.join(", ")}</p>
           <OrdinalFrame
@@ -493,12 +489,12 @@ export default class OrdinalFrameDocs extends React.Component {
                 : this.state.summaryType
             }
             rExtent={{
-              onChange: d => {
+              onChange: (d) => {
                 this.setState({ rExtent: d })
               }
             }}
             oExtent={{
-              onChange: d => {
+              onChange: (d) => {
                 this.setState({ oExtent: d })
               }
             }}
@@ -523,7 +519,7 @@ export default class OrdinalFrameDocs extends React.Component {
             dynamicColumnWidth={
               this.state.dynamicColumnWidth === "fixed"
                 ? undefined
-                : d => sum(d.map(dataTypeHash[this.state.dataType].rAccessor))
+                : (d) => sum(d.map(dataTypeHash[this.state.dataType].rAccessor))
             }
             //            margin={{ left: 55, top: 50, bottom: 90, right: 55 }}
             annotations={
@@ -532,7 +528,7 @@ export default class OrdinalFrameDocs extends React.Component {
                 : undefined
             }
             baseMarkProps={{ transitionDuration: 3000 }}
-          //            canvasPostProcess={glowyCanvas}
+            canvasSummaries={true}
           />
         </div>
       ),
@@ -550,15 +546,15 @@ export default class OrdinalFrameDocs extends React.Component {
     }
 
     const data = ${JSON.stringify(
-        dataTypeHash[this.state.dataType].data.filter((d, i) => i < 3)
-      )}
+      dataTypeHash[this.state.dataType].data.filter((d, i) => i < 3)
+    )}
     ${
-        this.state.annotations === "off"
-          ? ""
-          : `const exampleAnnotations = ${JSON.stringify(
+      this.state.annotations === "off"
+        ? ""
+        : `const exampleAnnotations = ${JSON.stringify(
             dataTypeHash[this.state.dataType].annotations
           )}`
-        }
+    }
         <OrdinalFrame
             size={[ 700,700 ]}
             data={data}
@@ -575,10 +571,10 @@ export default class OrdinalFrameDocs extends React.Component {
             }}
             projection={'${this.state.projection}'}
             ${
-        this.state.type !== "none"
-          ? this.state.type !== "custom"
-            ? `type={'${this.state.type}'}`
-            : `type={{
+              this.state.type !== "none"
+                ? this.state.type !== "custom"
+                  ? `type={'${this.state.type}'}`
+                  : `type={{
               type: "clusterbar",
               customMark: (d, i, xy) => [
                 <rect
@@ -610,60 +606,60 @@ export default class OrdinalFrameDocs extends React.Component {
                 />
               ]
             }}`
-          : ""
-        }
+                : ""
+            }
             ${
-        this.state.summaryType !== "none"
-          ? `summaryType={'${this.state.summaryType}'}`
-          : ""
-        }
+              this.state.summaryType !== "none"
+                ? `summaryType={'${this.state.summaryType}'}`
+                : ""
+            }
             ${
-        reFn && this.state.type !== "none"
-          ? `renderMode={ '${this.state.renderFn}'}`
-          : ""
-        }
+              reFn && this.state.type !== "none"
+                ? `renderMode={ '${this.state.renderFn}'}`
+                : ""
+            }
             ${
-        reFn && this.state.summaryType !== "none"
-          ? `summaryRenderMode={ '${this.state.renderFn}'}`
-          : ""
-        }
+              reFn && this.state.summaryType !== "none"
+                ? `summaryRenderMode={ '${this.state.renderFn}'}`
+                : ""
+            }
             oLabel={true}
             oPadding={${this.state.oPadding}}
             oAccessor={d => d.stepName}
             ${
-        this.state.dataType === "simple"
-          ? ""
-          : `rAccessor={${
-          this.state.dataType === "stacked"
-            ? "'stepValue'"
-            : "'value'"
-          }}`
-        }
+              this.state.dataType === "simple"
+                ? ""
+                : `rAccessor={${
+                    this.state.dataType === "stacked"
+                      ? "'stepValue'"
+                      : "'value'"
+                  }}`
+            }
             ${
-        this.state.connector === "off"
-          ? ""
-          : `connectorType={d => d.funnelKey}
+              this.state.connector === "off"
+                ? ""
+                : `connectorType={d => d.funnelKey}
             connectorStyle={d => {return { fill: d.source.funnelKey, stroke: d.source.funnelKey }}}`
-        }
+            }
             style={d => {return { fill: d.funnelKey, stroke: 'black' }}}
             ${
-        this.state.hoverBehavior === "none"
-          ? ""
-          : this.state.hoverBehavior === "piece"
-            ? "pieceHoverAnnotation={true}"
-            : "hoverAnnotation={true}"
-        }
+              this.state.hoverBehavior === "none"
+                ? ""
+                : this.state.hoverBehavior === "piece"
+                ? "pieceHoverAnnotation={true}"
+                : "hoverAnnotation={true}"
+            }
             ${
-        this.state.dynamicColumnWidth === "fixed"
-          ? ""
-          : "dynamicColumnWidth={'stepValue'}"
-        }
+              this.state.dynamicColumnWidth === "fixed"
+                ? ""
+                : "dynamicColumnWidth={'stepValue'}"
+            }
             margin={{ left: 55, top: 0, bottom: 50, right: 0 }}
             ${
-        this.state.annotations === "off"
-          ? ""
-          : "annotations={exampleAnnotations}"
-        }
+              this.state.annotations === "off"
+                ? ""
+                : "annotations={exampleAnnotations}"
+            }
         />
       `
     })

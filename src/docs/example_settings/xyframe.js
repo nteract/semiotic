@@ -104,7 +104,6 @@ const borderCutLine = ({ d, i, xScale, yScale }) => {
       }}
       searchIterations={20}
       customAccessors={{ x: (d) => xScale(d.x), y: (d) => yScale(d.y) }}
-      forceUpdate={true}
       lineDataAccessor={(d) => d.data}
       interpolate={curveMonotoneX}
     />

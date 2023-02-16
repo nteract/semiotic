@@ -91,18 +91,18 @@ export default class CreatingXYPlots extends React.Component {
           </p>
           <XYFrame
             points={pointTestData}
-            xAccessor={["x", d => d.x + 1000]}
+            xAccessor={["x", (d) => d.x + 1000]}
             yAccessor="y"
-            pointStyle={d => ({ fill: d.color })}
+            pointStyle={(d) => ({ fill: d.color })}
             yExtent={[-8500, 8500]}
             //            summaryType={{ type: "trendline", regressionType: "logarithmic" }}
             summaryStyle={{ stroke: "darkred" }}
-            margin={d => d.size[0] / 20}
+            margin={(d) => d.size[0] / 20}
             axes={[
               {
                 orient: "top",
                 marginalSummaryType: {
-                  filter: d => d.color === "#00a2ce",
+                  filter: (d) => d.color === "#00a2ce",
                   type: "ridgeline",
                   showPoints: true,
                   summaryStyle: {
@@ -121,7 +121,7 @@ export default class CreatingXYPlots extends React.Component {
                 orient: "left",
                 baseline: "under",
                 marginalSummaryType: {
-                  filter: d => d.color === "#4d430c",
+                  filter: (d) => d.color === "#4d430c",
                   type: "ridgeline",
                   bins: 6,
                   summaryStyle: {
@@ -134,7 +134,7 @@ export default class CreatingXYPlots extends React.Component {
               {
                 orient: "right",
                 marginalSummaryType: {
-                  filter: d => d.color === "#b3331d",
+                  filter: (d) => d.color === "#b3331d",
                   type: "ridgeline",
                   showPoints: true,
                   summaryStyle: {
@@ -148,7 +148,7 @@ export default class CreatingXYPlots extends React.Component {
                 orient: "top",
                 marginalSummaryType: {
                   type: "ridgeline",
-                  filter: d => d.color === "#b6a756",
+                  filter: (d) => d.color === "#b6a756",
                   summaryStyle: {
                     fill: "#b6a756",
                     stroke: "#b6a756",
@@ -162,7 +162,7 @@ export default class CreatingXYPlots extends React.Component {
                   }
                 }
               },
-              d => {
+              (d) => {
                 return {
                   orient: "bottom",
                   ticks: Math.ceil(d.size[0] / 150)
@@ -221,18 +221,18 @@ export default class CreatingXYPlots extends React.Component {
               type: "heatmap",
               yBins: 10,
               xCellPx: 35,
-              binMax: binMax => console.info("bin max", binMax)
+              binMax: (binMax) => console.info("bin max", binMax)
             }}
             useSummariesAsInteractionLayer={true}
             xAccessor="x"
             yAccessor="y"
-            summaryStyle={d => ({
+            summaryStyle={(d) => ({
               fill: thresholds(d.percent),
               stroke: "black"
             })}
             showSummaryPoints={true}
             hoverAnnotation={true}
-            tooltipContent={d => {
+            tooltipContent={(d) => {
               return (
                 <div className="tooltip-content">
                   <p>Points in cell: {d.binItems.length}</p>
@@ -255,13 +255,13 @@ export default class CreatingXYPlots extends React.Component {
       source: ``
     })
     function makeHex(h) {
-      const hexBase = h.hexCoordinates.map(d => [
+      const hexBase = h.hexCoordinates.map((d) => [
         d[0] * h.percent,
         d[1] * h.percent
       ])
 
       const sortedColors = h.binItems
-        .map(d => d.color)
+        .map((d) => d.color)
         .sort((a, b) => {
           if (a < b) return -1
           if (a > b) return 1
@@ -285,7 +285,7 @@ export default class CreatingXYPlots extends React.Component {
             )
           })}
           <path
-            d={`M${h.hexCoordinates.map(d => d.join(",")).join("L")}Z`}
+            d={`M${h.hexCoordinates.map((d) => d.join(",")).join("L")}Z`}
             fill="none"
             stroke="black"
           />
@@ -319,12 +319,12 @@ export default class CreatingXYPlots extends React.Component {
             }}
             xAccessor="x"
             yAccessor="y"
-            summaryStyle={d => ({
+            summaryStyle={(d) => ({
               fill: thresholds(d.percent),
               stroke: "black"
             })}
             hoverAnnotation={true}
-            tooltipContent={d => {
+            tooltipContent={(d) => {
               return (
                 <div className="tooltip-content">
                   <p>{(d.binItems && d.binItems.length) || "empty"}</p>
@@ -347,8 +347,8 @@ export default class CreatingXYPlots extends React.Component {
       demo: (
         <div>
           <p>
-            A contour plot results from setting the summaryType to "contour". The
-            contours are regions of density of that same data.
+            A contour plot results from setting the summaryType to "contour".
+            The contours are regions of density of that same data.
           </p>
           <p>
             The contour shapes in Semiotic are basically just graphics, they
@@ -361,7 +361,10 @@ export default class CreatingXYPlots extends React.Component {
             summaryType="contour"
             xAccessor="x"
             yAccessor="y"
-            summaryStyle={d => ({ fill: thresholds(d.percent), stroke: "black" })}
+            summaryStyle={(d) => ({
+              fill: thresholds(d.percent),
+              stroke: "black"
+            })}
           />
         </div>
       ),
@@ -392,7 +395,10 @@ export default class CreatingXYPlots extends React.Component {
             summaryType={{ type: "contour", thresholds: 5 }}
             xAccessor="x"
             yAccessor="y"
-            summaryStyle={d => ({ fill: thresholds(d.percent), stroke: "black" })}
+            summaryStyle={(d) => ({
+              fill: thresholds(d.percent),
+              stroke: "black"
+            })}
             pointStyle={{ fill: "none", stroke: "black", strokeOpacity: 0.5 }}
             hoverAnnotation={true}
           />
@@ -415,21 +421,21 @@ export default class CreatingXYPlots extends React.Component {
       demo: (
         <div>
           <p>
-            You can send an array of accessors to summaryDataAccessor (or xAccessor
-            or yAccessor). The parentSummary has the same basic properties you
-            pass but you can inspect the _baseData property to get access to the
-            data generated by the summaryDataAccessor.
+            You can send an array of accessors to summaryDataAccessor (or
+            xAccessor or yAccessor). The parentSummary has the same basic
+            properties you pass but you can inspect the _baseData property to
+            get access to the data generated by the summaryDataAccessor.
           </p>
           <XYFrame
             summaries={[{ coordinates: pointTestData }]}
             summaryDataAccessor={[
-              d => d.coordinates.filter(p => p.color === "#4d430c"),
-              d => d.coordinates.filter(p => p.color === "#00a2ce")
+              (d) => d.coordinates.filter((p) => p.color === "#4d430c"),
+              (d) => d.coordinates.filter((p) => p.color === "#00a2ce")
             ]}
             summaryType={{ type: "contour", thresholds: 5 }}
             xAccessor="x"
             yAccessor="y"
-            summaryStyle={d => {
+            summaryStyle={(d) => {
               return {
                 stroke: d.parentSummary._baseData[0].color,
                 fill: "none",
@@ -479,7 +485,7 @@ export default class CreatingXYPlots extends React.Component {
             }}
             xAccessor="x"
             yAccessor="y"
-            summaryStyle={d => ({
+            summaryStyle={(d) => ({
               fill:
                 d.value === preprocessedHexbinData.binMax
                   ? "gold"
@@ -496,7 +502,7 @@ export default class CreatingXYPlots extends React.Component {
             }}
             xAccessor="x"
             yAccessor="y"
-            summaryStyle={d => ({
+            summaryStyle={(d) => ({
               fill:
                 d.value === preprocessedHeatmapData.binMax
                   ? "gold"
@@ -555,7 +561,6 @@ export default class CreatingXYPlots extends React.Component {
             }}
             xAccessor="x"
             yAccessor="y"
-            baseMarkProps={{ forceUpdate: true }}
           />
         </div>
       ),

@@ -225,7 +225,6 @@ const iconBarCustomMark =
           const paddedY = stepY + iconTranslate[1]
           iconPieces.push(
             <Mark
-              forceUpdate={true}
               markType="path"
               key={`icon-${step}-${stack}`}
               transform={`translate(${paddedX},${paddedY}) scale(${iconScale})`}

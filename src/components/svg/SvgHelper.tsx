@@ -1,8 +1,5 @@
-import * as React from "react"
-
 import { select } from "d3-selection"
 import { arc, line, curveLinearClosed } from "d3-shape"
-import Mark from "../../components/Mark/Mark"
 import { interpolateNumber } from "d3-interpolate"
 
 const emptyObjectReturnFn = () => ({})
@@ -204,17 +201,15 @@ export const groupBarMark = ({
         x: arcCenter[0] + arcAdjustX,
         y: arcCenter[1] + arcAdjustY
       })
-      mappedBins.push(
-        <Mark
-          {...baseMarkProps}
-          markType="path"
-          transform={arcTranslate}
-          renderMode={renderValue}
-          key={`groupIcon-${summaryI}-${i}`}
-          d={arcGenerator({ startAngle, endAngle })}
-          style={finalStyle}
-        />
-      )
+      mappedBins.push({
+        ...baseMarkProps,
+        markType: "path",
+        transform: arcTranslate,
+        renderMode: renderValue,
+        key: `groupIcon-${summaryI}-${i}`,
+        d: arcGenerator({ startAngle, endAngle }),
+        style: finalStyle
+      })
     }
     if (projection !== "radial") {
       mappedPoints.push({
@@ -226,19 +221,17 @@ export const groupBarMark = ({
         y: yProp + yOffset
       })
 
-      mappedBins.push(
-        <Mark
-          {...baseMarkProps}
-          markType="rect"
-          renderMode={renderValue}
-          key={`groupIcon-${summaryI}-${i}`}
-          x={xProp}
-          y={yProp}
-          height={height}
-          width={width}
-          style={finalStyle}
-        />
-      )
+      mappedBins.push({
+        ...baseMarkProps,
+        markType: "rect",
+        renderMode: renderValue,
+        key: `groupIcon-${summaryI}-${i}`,
+        x: xProp,
+        y: yProp,
+        height: height,
+        width: width,
+        style: finalStyle
+      })
     }
   })
 

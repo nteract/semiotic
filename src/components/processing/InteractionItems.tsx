@@ -324,14 +324,7 @@ export const calculateOverlay = (
         if (React.isValidElement(overlayRegion.renderElement)) {
           return React.cloneElement(overlayRegion.renderElement, overlayProps)
         } else {
-          return (
-            <Mark
-              forceUpdate={true}
-              {...rest}
-              key={`overlay-${i}`}
-              {...overlayProps}
-            />
-          )
+          return <Mark {...rest} key={`overlay-${i}`} {...overlayProps} />
         }
       }
     )
