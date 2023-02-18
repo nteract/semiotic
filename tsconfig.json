@@ -24,5 +24,6 @@
   "exclude": [
     "./src/docs/**/*",
     "./src/**/*.test.*",
+    "*.png",
   ]
 }

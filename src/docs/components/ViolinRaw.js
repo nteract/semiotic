@@ -141,13 +141,23 @@ export default (
       bins: 50,
       outliers: true,
       iqr: true,
-      elementStyleFn: (d, i) => {
-        if (d === "iqr") {
+      elementStyleFn: (partName, data) => {
+        if (partName === "iqrarea") {
+          if (data[0].value < 40) {
+            return { fill: "green" }
+          }
+          if (data[0].value > 70) {
+            return { fill: "red" }
+          }
+          return { fill: "purple" }
+        } else if (partName === "median") {
           return { stroke: "red" }
-        } else if (d === "median") {
-          return { fill: "red" }
+        } else if (partName === "q3area") {
+          return { fill: "none" }
+        } else if (partName === "q1area") {
+          return { fill: "none" }
         }
-        return { fill: blues[i] }
+        return { fill: blues[1] }
       }
     }}
     oLabel={true}
@@ -155,5 +165,6 @@ export default (
     //summaryRenderMode="sketchy"
     sketchyRenderingEngine={roughjs}
     axes={[axis]}
+    canvasSummaries={true}
   />
 )
