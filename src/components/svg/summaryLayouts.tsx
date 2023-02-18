@@ -543,7 +543,7 @@ export function boxplotRenderFn({
             style: Object.assign(
               { strokeWidth: 2 },
               calculatedSummaryStyle,
-              summaryElementStylingFn("whisker")
+              summaryElementStylingFn("whisker", thisSummaryData)
             )
           },
           {
@@ -555,7 +555,7 @@ export function boxplotRenderFn({
               { strokeWidth: 4 },
               calculatedSummaryStyle,
               { fill: "none" },
-              summaryElementStylingFn("max")
+              summaryElementStylingFn("max", thisSummaryData)
             )
           },
           {
@@ -567,7 +567,7 @@ export function boxplotRenderFn({
               { strokeWidth: 4 },
               calculatedSummaryStyle,
               { fill: "none" },
-              summaryElementStylingFn("median")
+              summaryElementStylingFn("median", thisSummaryData)
             )
           },
           {
@@ -579,7 +579,7 @@ export function boxplotRenderFn({
               { strokeWidth: 4 },
               calculatedSummaryStyle,
               { fill: "none" },
-              summaryElementStylingFn("min")
+              summaryElementStylingFn("min", thisSummaryData)
             )
           },
           {
@@ -590,7 +590,7 @@ export function boxplotRenderFn({
             style: Object.assign(
               { strokeWidth: 4 },
               calculatedSummaryStyle,
-              summaryElementStylingFn("iqrarea")
+              summaryElementStylingFn("iqrarea", thisSummaryData)
             )
           },
           {
@@ -602,7 +602,7 @@ export function boxplotRenderFn({
               {},
               calculatedSummaryStyle,
               { fill: "none", stroke: "none" },
-              summaryElementStylingFn("q3area")
+              summaryElementStylingFn("q3area", thisSummaryData)
             )
           },
           {
@@ -614,7 +614,7 @@ export function boxplotRenderFn({
               {},
               calculatedSummaryStyle,
               { fill: "none", stroke: "none" },
-              summaryElementStylingFn("q1area")
+              summaryElementStylingFn("q1area", thisSummaryData)
             )
           }
         ]
@@ -632,7 +632,7 @@ export function boxplotRenderFn({
           style: Object.assign(
             { strokeWidth: 2 },
             calculatedSummaryStyle,
-            summaryElementStylingFn("whisker")
+            summaryElementStylingFn("whisker", thisSummaryData)
           )
         },
         {
@@ -646,7 +646,7 @@ export function boxplotRenderFn({
           style: Object.assign(
             { strokeWidth: 2 },
             calculatedSummaryStyle,
-            summaryElementStylingFn("min")
+            summaryElementStylingFn("min", thisSummaryData)
           )
         },
         {
@@ -660,7 +660,7 @@ export function boxplotRenderFn({
           style: Object.assign(
             { strokeWidth: 2 },
             calculatedSummaryStyle,
-            summaryElementStylingFn("max")
+            summaryElementStylingFn("max", thisSummaryData)
           )
         },
         {
@@ -674,7 +674,7 @@ export function boxplotRenderFn({
           style: Object.assign(
             { strokeWidth: 1 },
             calculatedSummaryStyle,
-            summaryElementStylingFn("iqrarea")
+            summaryElementStylingFn("iqrarea", thisSummaryData)
           )
         },
         {
@@ -689,7 +689,7 @@ export function boxplotRenderFn({
             {},
             calculatedSummaryStyle,
             { fill: "none", stroke: "none" },
-            summaryElementStylingFn("q3area")
+            summaryElementStylingFn("q3area", thisSummaryData)
           )
         },
         {
@@ -704,7 +704,7 @@ export function boxplotRenderFn({
             {},
             calculatedSummaryStyle,
             { fill: "none", stroke: "none" },
-            summaryElementStylingFn("q1area")
+            summaryElementStylingFn("q1area", thisSummaryData)
           )
         },
         {
@@ -718,7 +718,7 @@ export function boxplotRenderFn({
           style: Object.assign(
             { strokeWidth: 2 },
             calculatedSummaryStyle,
-            summaryElementStylingFn("median")
+            summaryElementStylingFn("median", thisSummaryData)
           )
         }
       ]
@@ -740,7 +740,7 @@ export function boxplotRenderFn({
             style: Object.assign(
               { strokeWidth: "1px", stroke: "black", fill: "none", r: 2 },
               calculatedSummaryStyle,
-              summaryElementStylingFn("outlier")
+              summaryElementStylingFn("outlier", thisSummaryData)
             )
           })
         })
@@ -1632,11 +1632,32 @@ export const drawSummaries = ({
   })
 }
 
+interface summaryInstruction {
+  containerProps?: object
+  elements: object[]
+}
+
+export function summaryInstructionsToMarks(data: summaryInstruction[]) {
+  const renderedSummaries: JSX.Element[] = []
+  for (const container of data) {
+    const renderedElements: JSX.Element[] = []
+    const { elements, containerProps } = container
+    for (const element of elements) {
+      renderedElements.push(<Mark {...element} />)
+    }
+    if (containerProps) {
+      renderedSummaries.push(<g {...containerProps}>{renderedElements}</g>)
+    } else {
+      renderedSummaries.push(...renderedElements)
+    }
+  }
+  return renderedSummaries
+}
+
 export const renderLaidOutSummaries = ({
   data,
   canvasRender,
-  canvasDrawing,
-  ...rest
+  canvasDrawing
 }) => {
   if (canvasRender()) {
     for (const container of data) {
@@ -1673,18 +1694,6 @@ export const renderLaidOutSummaries = ({
     }
     return null
   }
-  const renderedSummaries: any = []
-  for (const container of data) {
-    const renderedElements: any = []
-    const { elements, containerProps } = container
-    for (const element of elements) {
-      renderedElements.push(<Mark {...element} />)
-    }
-    if (containerProps) {
-      renderedSummaries.push(<g {...containerProps}>{renderedElements}</g>)
-    } else {
-      renderedSummaries.push(...renderedElements)
-    }
-  }
-  return renderedSummaries
+
+  return summaryInstructionsToMarks(data)
 }

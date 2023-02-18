@@ -12,12 +12,15 @@ import AxisTitle from "./axisTitle"
 
 import { AxisProps } from "./../types/annotationTypes"
 
-import { drawSummaries } from "./../svg/summaryLayouts"
+import {
+  drawSummaries,
+  summaryInstructionsToMarks
+} from "./../svg/summaryLayouts"
 import { AxisSummaryTypeSettings } from "./../types/generalTypes"
 
 // components
 
-const marginalPointMapper = (orient, width, data) => {  
+const marginalPointMapper = (orient, width, data) => {
   const xMod = orient === "left" || orient === "right" ? width / 2 : 0
   const yMod = orient === "bottom" || orient === "top" ? width / 2 : 0
   return data.map((p) => [p.xy.x + xMod, p.xy.y + yMod])
@@ -39,7 +42,7 @@ const boundingBoxMax = (axisNode, orient) => {
 
   const positionType =
     orient === "left" || orient === "right" ? "width" : "height"
-  
+
   const axisLabelMax =
     Math.max(
       ...[...axisRef.querySelectorAll(".axis-label")]
@@ -49,7 +52,7 @@ const boundingBoxMax = (axisNode, orient) => {
         )
         .map((d) => d[positionType])
     ) + 25
-          
+
   return axisLabelMax
 }
 
@@ -135,7 +138,7 @@ export default function Axis(props: AxisProps) {
   let baselineX2 = 0
   let baselineY2 = height
   // hoverFunction is set is switch(orient) below
-  let hoverFunction;
+  let hoverFunction
   let circleX = 25
   let textX = -25
   let textY = 18
@@ -333,7 +336,7 @@ export default function Axis(props: AxisProps) {
         scaledVerticalValue: scale(d.y)
       }))
 
-    const renderedSummary = drawSummaries({
+    const calculatedSummary = drawSummaries({
       data: {
         column: {
           middle: summaryWidth / 2,
@@ -354,6 +357,8 @@ export default function Axis(props: AxisProps) {
       margin: { top: 0, bottom: 0, left: 0, right: 0 },
       baseMarkProps: {}
     })
+
+    const renderedSummary = summaryInstructionsToMarks(calculatedSummary.marks)
 
     let points
 
@@ -387,14 +392,16 @@ export default function Axis(props: AxisProps) {
       bottom: [0, size[1] + 2]
     }
 
-    summaryGraphic = <SummaryGraphic
-      translation={translation}
-      orient={orient}
-      decoratedSummaryType={decoratedSummaryType}
-      summaryWidth={summaryWidth}
-      renderedSummary={renderedSummary}
-      points={points}
-    />
+    summaryGraphic = (
+      <SummaryGraphic
+        translation={translation}
+        orient={orient}
+        decoratedSummaryType={decoratedSummaryType}
+        summaryWidth={summaryWidth}
+        renderedSummary={renderedSummary}
+        points={points}
+      />
+    )
   }
 
   let axisTitle
@@ -464,15 +471,17 @@ export default function Axis(props: AxisProps) {
     } else if (anchorMod === "end" && orient === "right") {
       anchorMod = "start"
     }
-    
-    axisTitle = <AxisTitle
-      className={className}
-      translation={translation}
-      position={position}
-      rotation={rotation}
-      labelName={labelName}
-      anchorMod={anchorMod}
-    />
+
+    axisTitle = (
+      <AxisTitle
+        className={className}
+        translation={translation}
+        position={position}
+        rotation={rotation}
+        labelName={labelName}
+        anchorMod={anchorMod}
+      />
+    )
   }
 
   const axisAriaLabel = `${orient} axis ${
@@ -507,6 +516,5 @@ export default function Axis(props: AxisProps) {
     </g>
   )
 }
-
 
 export { marginalPointMapper, formatValue, boundingBoxMax }
