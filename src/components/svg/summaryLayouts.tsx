@@ -89,7 +89,7 @@ export function boxplotRenderFn({
 }: BoxplotFnType) {
   const summaryElementStylingFn = type.elementStyleFn || emptyObjectReturnFn
 
-  const { outliers } = type
+  const { outliers, fixedInput } = type
 
   const keys = Object.keys(data)
   const renderedSummaryMarks = []
@@ -141,13 +141,15 @@ export function boxplotRenderFn({
 
     summaryValueNest = thisSummaryData.map((p) => p.value).sort((a, b) => a - b)
 
-    summaryValueNest = [
-      quantile(summaryValueNest, 0.0),
-      quantile(summaryValueNest, 0.25),
-      quantile(summaryValueNest, 0.5),
-      quantile(summaryValueNest, 0.75),
-      quantile(summaryValueNest, 1.0)
-    ]
+    if (fixedInput !== true && summaryValueNest.length === 5) {
+      summaryValueNest = [
+        quantile(summaryValueNest, 0.0),
+        quantile(summaryValueNest, 0.25),
+        quantile(summaryValueNest, 0.5),
+        quantile(summaryValueNest, 0.75),
+        quantile(summaryValueNest, 1.0)
+      ]
+    }
 
     const iqr = summaryValueNest[3] - summaryValueNest[1]
     let minOutlier, maxOutlier
