@@ -271,7 +271,7 @@ describe("<Axis />", () => {
               orient="left"
               decoratedSummaryType={{ type: "boxplot" }}
               summaryWidth={SUM_WIDTH}
-              renderedSummary={{ marks: "test string here" }}
+              renderedSummary={<text>test string here</text>}
               points={<span id="test-points" />}
             />
           </svg>
@@ -293,7 +293,7 @@ describe("<Axis />", () => {
               orient="top"
               decoratedSummaryType={{ type: "histogram" }}
               summaryWidth={SUM_WIDTH}
-              renderedSummary={{ marks: "test string here" }}
+              renderedSummary={<text>test string here</text>}
               points={<span id="test-points" />}
             />
           </svg>
@@ -310,7 +310,7 @@ describe("<Axis />", () => {
               orient="top"
               decoratedSummaryType={{ type: "boxplot" }}
               summaryWidth={SUM_WIDTH}
-              renderedSummary={{ marks: "test string here" }}
+              renderedSummary={<text>test string here</text>}
               points={<span id="test-points" />}
             />
           </svg>
