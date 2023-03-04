@@ -945,19 +945,20 @@ export const calculateNetworkFrame = (
         }
         for (const node of projectedNodes) {
           if (!node.createdByFrame) {
+            let maxEdgeValue = 0
             if (edgeValueMap.has(node.id)) {
-              const maxEdgeValue = Math.max(
+              maxEdgeValue = Math.max(
                 edgeValueMap.get(node.id).source,
                 edgeValueMap.get(node.id).target
               )
-              if (node.value > maxEdgeValue) {
-                projectedEdges.push({
-                  source: node,
-                  target: node,
-                  value: node.value - maxEdgeValue,
-                  ephemeral: true
-                })
-              }
+            }
+            if (node.value > maxEdgeValue) {
+              projectedEdges.push({
+                source: node,
+                target: node,
+                value: node.value - maxEdgeValue,
+                ephemeral: true
+              })
             }
           }
         }
