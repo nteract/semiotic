@@ -586,15 +586,6 @@ export const radialRectNodeGenerator = (size, center, type) => {
           startAngle: adjustedPct(d.x0 / size[0]) * Math.PI * 2,
           endAngle: adjustedPct(d.x1 / size[0]) * Math.PI * 2
         })}
-        customTween={{
-          fn: arcTweener,
-          props: {
-            startAngle: adjustedPct(d.x0 / size[0]) * Math.PI * 2,
-            endAngle: adjustedPct(d.x1 / size[0]) * Math.PI * 2,
-            innerRadius: d.y0 / 2,
-            outerRadius: d.y1 / 2
-          }
-        }}
         style={styleFn(d, i)}
         renderMode={renderMode ? renderMode(d, i) : undefined}
         className={className}

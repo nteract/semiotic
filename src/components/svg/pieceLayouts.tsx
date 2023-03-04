@@ -121,16 +121,7 @@ const radialBarFeatureGenerator = ({
       d: markD,
       tx: xOffset,
       ty: yOffset,
-      transform: translate,
-      customTween: {
-        fn: arcTweener,
-        props: {
-          startAngle: startAngleFinal,
-          endAngle: endAngleFinal,
-          innerRadius: innerSize,
-          outerRadius: outerSize
-        }
-      }
+      transform: translate
     }
   }
 }
@@ -600,15 +591,6 @@ export function timelineLayout({
         y?: number
         d?: string
         transform?: string
-        customTween?: {
-          fn: (oldProps: object, newProps: object) => (t: number) => string
-          props: {
-            startAngle: number
-            endAngle: number
-            innerRadius: number
-            outerRadius: number
-          }
-        }
       } = {
         markType: "rect",
         height: height < 0 ? -height : height,
