@@ -35,7 +35,7 @@ export const propertyToString = (value, indent, trimmed) => {
     const arr = trimmed ? value.slice(0, 2) : value
     string = (
       `[` +
-      arr.map(d => propertyToString(d, indent + 1, trimmed)) +
+      arr.map((d) => propertyToString(d, indent + 1, trimmed)) +
       `${value.length > 2 && trimmed ? `, ... ` : ""}]`
     ).replace(/},{/g, `},\n${spaces}    {`)
   } else {
@@ -47,7 +47,7 @@ export const propertyToString = (value, indent, trimmed) => {
 const getFunctionString = (functions, overrideProps) => {
   let functionsString = ""
 
-  Object.keys(functions).forEach(d => {
+  Object.keys(functions).forEach((d) => {
     functionsString += overrideProps[d] || functions[d]
     functionsString += "\n"
   })
@@ -57,28 +57,21 @@ const getFunctionString = (functions, overrideProps) => {
   return functionsString
 }
 
-const getFramePropsString = (
-  frameProps,
-  functions,
-  overrideProps,
-  trimmed,
-  hiddenProps
-) => {
+const getFramePropsString = (frameProps, functions, overrideProps, trimmed, hiddenProps) => {
   const frameString = Object.keys(frameProps)
-    .filter(d => !hiddenProps[d])
-    .map(d => {
-      const order = processNodes.findIndex(p => p.keys.indexOf(d) !== -1)
+    .filter((d) => !hiddenProps[d])
+    .map((d) => {
+      const order = processNodes.findIndex((p) => p.keys.indexOf(d) !== -1)
 
       const match = processNodes[order]
 
-      if (!match) console.log(`ERROR: no label found for ${d}`)
+      if (!match) console.error(`ERROR: no label found for ${d}`)
 
       return {
         key: d,
         value: frameProps[d],
         label: match && match.label,
-        order:
-          order + ((match && match.keys.indexOf(d) / match.keys.length) || 0)
+        order: order + ((match && match.keys.indexOf(d) / match.keys.length) || 0),
       }
     })
     .sort((a, b) => {
@@ -104,10 +97,7 @@ const getFramePropsString = (
       propertyToString(d.value, 0, trimmed)
 
     if (string !== "") {
-      framePropsString += `  ${d.key}: ${string}${(i !==
-        frameString.length - 1 &&
-        ",") ||
-        ""}`
+      framePropsString += `  ${d.key}: ${string}${(i !== frameString.length - 1 && ",") || ""}`
     }
   })
 
@@ -115,13 +105,7 @@ const getFramePropsString = (
   return framePropsString
 }
 
-const getCodeBlock = (
-  frameName,
-  pre,
-  functionsString,
-  framePropsString,
-  overrideRender
-) => {
+const getCodeBlock = (frameName, pre, functionsString, framePropsString, overrideRender) => {
   const importTheme = `const theme = ${JSON.stringify(theme)}`
 
   let render =
@@ -158,12 +142,12 @@ ${render}`
 
 const styles = {
   hidden: {
-    display: "none"
+    display: "none",
   },
   expanded: {},
   collapsed: {
-    maxHeight: 350
-  }
+    maxHeight: 350,
+  },
 }
 
 class DocumentFrame extends React.Component {
@@ -174,11 +158,7 @@ class DocumentFrame extends React.Component {
     this.onCopy = this.onCopy.bind(this)
 
     this.state = {
-      codeBlock: props.startHidden
-        ? "hidden"
-        : props.useExpanded
-        ? "expanded"
-        : "collapsed"
+      codeBlock: props.startHidden ? "hidden" : props.useExpanded ? "expanded" : "collapsed",
     }
   }
 
@@ -198,7 +178,7 @@ class DocumentFrame extends React.Component {
       functions = {},
       pre,
       overrideRender,
-      hiddenProps = {}
+      hiddenProps = {},
     } = this.props
 
     const Frame = type
@@ -208,22 +188,16 @@ class DocumentFrame extends React.Component {
       functions,
       overrideProps,
       false,
-      hiddenProps
+      hiddenProps,
     )
 
     const functionsString = getFunctionString(functions, overrideProps)
 
     const frameName = Frame.displayName
 
-    const text = getCodeBlock(
-      frameName,
-      pre,
-      functionsString,
-      framePropsString,
-      overrideRender
-    )
+    const text = getCodeBlock(frameName, pre, functionsString, framePropsString, overrideRender)
 
-    const callback = e => {
+    const callback = (e) => {
       e.clipboardData.clearData()
       e.clipboardData.setData("text/plain", text)
       e.preventDefault()
@@ -242,7 +216,7 @@ class DocumentFrame extends React.Component {
       pre,
       useExpanded,
       overrideRender,
-      hiddenProps = {}
+      hiddenProps = {},
     } = this.props
     const Frame = type
 
@@ -251,7 +225,7 @@ class DocumentFrame extends React.Component {
       functions,
       overrideProps,
       true,
-      hiddenProps
+      hiddenProps,
     )
     const functionsString = getFunctionString(functions, overrideProps)
 
@@ -260,13 +234,7 @@ class DocumentFrame extends React.Component {
     const trimmedMarkdown = (
       <pre className="language-jxs" style={styles[this.state.codeBlock]}>
         <code className="language-jsx">
-          {getCodeBlock(
-            frameName,
-            pre,
-            functionsString,
-            trimmedFramePropsString,
-            overrideRender
-          )}{" "}
+          {getCodeBlock(frameName, pre, functionsString, trimmedFramePropsString, overrideRender)}{" "}
         </code>
       </pre>
     )
@@ -276,10 +244,7 @@ class DocumentFrame extends React.Component {
         <Frame {...frameProps} />
 
         <div className="toolbar">
-          <button
-            value={useExpanded ? "expanded" : "collapsed"}
-            onClick={this.onClick}
-          >
+          <button value={useExpanded ? "expanded" : "collapsed"} onClick={this.onClick}>
             Show Code
           </button>
           <button value="hidden" onClick={this.onClick}>

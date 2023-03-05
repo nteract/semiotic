@@ -864,6 +864,7 @@ export const htmlColumnHoverRule = ({
     if (tooltipContent === "pie") {
       tooltipContent = pieContentGenerator
     }
+
     const tooltipContentArgs = {
       ...d,
       pieces: pieces.map((p) => p.data),

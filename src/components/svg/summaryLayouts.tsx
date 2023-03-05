@@ -141,7 +141,7 @@ export function boxplotRenderFn({
 
     summaryValueNest = thisSummaryData.map((p) => p.value).sort((a, b) => a - b)
 
-    if (fixedInput !== true && summaryValueNest.length === 5) {
+    if (fixedInput !== true || summaryValueNest.length !== 5) {
       summaryValueNest = [
         quantile(summaryValueNest, 0.0),
         quantile(summaryValueNest, 0.25),
@@ -171,13 +171,15 @@ export function boxplotRenderFn({
 
       translate = `translate(${summary.x + summary.width / 2},0)`
 
-      summaryPositionNest = [
-        quantile(summaryPositionNest, 0.0),
-        quantile(summaryPositionNest, 0.25),
-        quantile(summaryPositionNest, 0.5),
-        quantile(summaryPositionNest, 0.75),
-        quantile(summaryPositionNest, 1.0)
-      ]
+      if (fixedInput !== true || summaryValueNest.length !== 5) {
+        summaryPositionNest = [
+          quantile(summaryPositionNest, 0.0),
+          quantile(summaryPositionNest, 0.25),
+          quantile(summaryPositionNest, 0.5),
+          quantile(summaryPositionNest, 0.75),
+          quantile(summaryPositionNest, 1.0)
+        ]
+      }
 
       if (outliers) {
         const positionIQR = summaryPositionNest[3] - summaryPositionNest[1]
@@ -271,14 +273,15 @@ export function boxplotRenderFn({
       const boxplotY = summary.x + summary.padding
 
       translate = `translate(0,${summary.x + summary.width / 2})`
-
-      summaryPositionNest = [
-        quantile(summaryPositionNest, 0.0),
-        quantile(summaryPositionNest, 0.25),
-        quantile(summaryPositionNest, 0.5),
-        quantile(summaryPositionNest, 0.75),
-        quantile(summaryPositionNest, 1.0)
-      ]
+      if (fixedInput !== true || summaryValueNest.length !== 5) {
+        summaryPositionNest = [
+          quantile(summaryPositionNest, 0.0),
+          quantile(summaryPositionNest, 0.25),
+          quantile(summaryPositionNest, 0.5),
+          quantile(summaryPositionNest, 0.75),
+          quantile(summaryPositionNest, 1.0)
+        ]
+      }
 
       if (outliers) {
         const positionIQR = summaryPositionNest[3] - summaryPositionNest[1]
@@ -371,13 +374,15 @@ export function boxplotRenderFn({
         .map((p) => p.scaledValue)
         .sort((a, b) => a - b)
 
-      summaryPositionNest = [
-        quantile(summaryPositionNest, 0.0),
-        quantile(summaryPositionNest, 0.25),
-        quantile(summaryPositionNest, 0.5),
-        quantile(summaryPositionNest, 0.75),
-        quantile(summaryPositionNest, 1.0)
-      ]
+      if (fixedInput !== true || summaryValueNest.length !== 5) {
+        summaryPositionNest = [
+          quantile(summaryPositionNest, 0.0),
+          quantile(summaryPositionNest, 0.25),
+          quantile(summaryPositionNest, 0.5),
+          quantile(summaryPositionNest, 0.75),
+          quantile(summaryPositionNest, 1.0)
+        ]
+      }
 
       extentlineX1 = 0
       extentlineX2 = 0
@@ -1691,6 +1696,7 @@ export const renderLaidOutSummaries = ({
           renderFn: element.renderMode,
           classFn: () => ""
         }
+
         canvasDrawing.push(canvasNode)
       }
     }

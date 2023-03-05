@@ -87,7 +87,7 @@ export default class CanvasInteraction extends React.Component {
         })
         this.setState({ ...frameProps, points: parsedDiamonds })
       })
-      .catch((err) => console.log(err))
+      .catch((err) => console.error(err))
   }
 
   render() {

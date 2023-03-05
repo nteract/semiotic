@@ -470,8 +470,8 @@ function renderCanvas(
       piece.markProps.markType === "circle" ||
       (piece.markProps.markType === "rect" && piece.markProps.rx > 0)
     ) {
-      let vizX = 0,
-        vizY = 0,
+      let vizX = piece.markProps.cx,
+        vizY = piece.markProps.cy,
         r = style.r || piece.markProps.r
       if (piece.markProps.width) {
         const halfWidth = piece.markProps.width / 2
