@@ -470,9 +470,9 @@ function renderCanvas(
       piece.markProps.markType === "circle" ||
       (piece.markProps.markType === "rect" && piece.markProps.rx > 0)
     ) {
-      let vizX = piece.markProps.cx,
-        vizY = piece.markProps.cy,
-        r = style.r || piece.markProps.r
+      let vizX = piece.markProps.cx ?? 0,
+        vizY = piece.markProps.cy ?? 0,
+        r = style.r ?? piece.markProps.r
       if (piece.markProps.width) {
         const halfWidth = piece.markProps.width / 2
         vizX = piece.markProps.x + halfWidth
@@ -485,9 +485,12 @@ function renderCanvas(
         context.beginPath()
         context.arc(vizX, vizY, r, 0, 2 * Math.PI)
         context.globalAlpha = style.fillOpacity || style.opacity || 1
-        if (style.fill && style.fill !== "none" && context.globalAlpha !== 0)
+        if (style.fill && style.fill !== "none" && context.globalAlpha !== 0) {
           context.fill()
+        }
+
         context.globalAlpha = style.strokeOpacity || style.opacity || 1
+
         if (
           style.stroke &&
           style.stroke !== "none" &&
