@@ -67,7 +67,7 @@ const exampos = [
   { label: "Dot Plot", viz: DotPlotRaw, path: "dotplot" },
   {
     label: "Minimap Basics",
-    viz: MinimapRaw(() => { }, [10, 30], [10, 30]),
+    viz: MinimapRaw(() => {}, [10, 30], [10, 30]),
     path: "minimap"
   },
   /*  {
@@ -131,7 +131,7 @@ const exampos = [
       Array.from(Array(200), () => ({
         value: parseInt(Math.random() * 100, 10)
       })),
-      () => { }
+      () => {}
     ),
     path: "swarmbrush"
   },
@@ -160,12 +160,11 @@ const exampos = [
   { label: "Comet Plot", viz: CometPlotRaw, path: "cometplot" }
 ]
 
-export const wrappedExamples = exampos.map(d => (
+export const wrappedExamples = exampos.map((d) => (
   <div key={d.path} className="example-wrapper">
     <Link to={`/${d.path}`}>
       <h1 style={{ background: "none", margin: 0 }}>{d.label}</h1>
       <div className="frame-cover" />
-      <img width="400px" src={`/semiotic/${d.path}.png`} />
     </Link>
   </div>
 ))

@@ -32,13 +32,6 @@ const intro = (
       variety of visualizations, while still providing control over
       interactivity and presentation of the data.{" "}
     </p>
-    <div style={{ textAlign: "center" }}>
-      <img
-        alt="Data visualization is created in the DOM using a series of layers."
-        width="400px"
-        src="/semiotic/layers.png"
-      />
-    </div>
     <p>
       Semiotic uses a layer model for data visualization, separating interactive
       and annotation elements from graphical elements representing data. This

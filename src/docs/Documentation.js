@@ -227,10 +227,6 @@ function Documentation(props) {
             >
               Semiotic
             </span>
-            <img
-              style={{ paddingTop: "10px", width: "40px", height: "40px" }}
-              src="/semiotic/semiotic_white.png"
-            />
           </Toolbar>
         </AppBar>
         <Drawer
