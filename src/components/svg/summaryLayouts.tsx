@@ -12,6 +12,8 @@ import { orFrameSummaryRenderer } from "./frameFunctions"
 import { scaleLinear } from "d3-scale"
 import { curveHash } from "../visualizationLayerBehavior/general"
 import { GenericObject } from "../types/generalTypes"
+import { ckmeans } from "./ckmeans"
+
 import { sum } from "d3-array"
 
 type BoxplotFnType = {
@@ -76,6 +78,132 @@ function createSummaryAxis({
   )
 }
 
+export function ckBinsRenderFn(props: BoxplotFnType) {
+  const {
+    data,
+    type,
+    renderMode,
+    eventListenersGenerator,
+    styleFn,
+    classFn,
+    projection,
+    adjustedSize,
+    baseMarkProps
+  } = props
+  const renderedSummaryMarks: any = []
+
+  const summaryXYCoords = []
+
+  const keys = Object.keys(data)
+
+  let maxClusterSize = 0
+
+  const allBins: any = []
+
+  keys.forEach((key, summaryI) => {
+    const summary = data[key]
+    const eventListeners = eventListenersGenerator(summary, summaryI)
+
+    const columnWidth = summary.width
+
+    const thisSummaryData = summary.pieceData.sort((a, b) => a.value - b.value)
+
+    const firstElement = thisSummaryData[0]
+    const lastElement = thisSummaryData[thisSummaryData.length - 1]
+
+    const binScale = scaleLinear()
+      .domain([firstElement.value, lastElement.value])
+      .range([firstElement.scaledValue, lastElement.scaledValue])
+
+    const calculatedSummaryStyle = styleFn(thisSummaryData[0].data, summaryI)
+    const calculatedSummaryClass = classFn(thisSummaryData[0].data, summaryI)
+
+    const binData = thisSummaryData.map((d) => d.value)
+
+    const clusters = 5
+
+    const ckstops = ckmeans(binData, clusters)
+
+    let ckBins = []
+
+    ckstops.forEach((ckstop, i) => {
+      const start = ckstop
+      const end = ckstops[i + 1] ?? lastElement.value
+
+      ckBins.push({
+        start,
+        end,
+        key,
+        summary,
+        calculatedSummaryStyle,
+        calculatedSummaryClass,
+        scaledStart: binScale(start),
+        scaledEnd: binScale(end),
+        values: []
+      })
+    })
+
+    allBins.push(ckBins)
+
+    let binI = 0
+
+    for (const datapoint of thisSummaryData) {
+      if (ckBins[binI].end <= datapoint.value) {
+        if (ckBins[binI + 1]) {
+          binI++
+        }
+      }
+      ckBins[binI].values.push(datapoint)
+    }
+
+    ckBins.forEach((ckbin) => {
+      const clusterSize = ckbin.values.length
+      maxClusterSize = Math.max(clusterSize, maxClusterSize)
+    })
+  })
+
+  allBins.forEach((ckBins, index) => {
+    const CKBinElements = ckBins.map((ckBin) => {
+      const { key, summary, calculatedSummaryStyle, calculatedSummaryClass } =
+        ckBin
+
+      const { fill = "black", stroke = "black" } = calculatedSummaryStyle
+
+      const lightScale = scaleLinear()
+        .domain([1, maxClusterSize])
+        .range(["white", fill])
+
+      return {
+        ...baseMarkProps,
+        //        renderMode: renderValue,
+        markType: "rect",
+        x: ckBin.scaledStart,
+        width: ckBin.scaledEnd - ckBin.scaledStart,
+        y: ckBin.summary.x,
+        height: ckBin.summary.width,
+        style: Object.assign({ strokeWidth: 2 }, calculatedSummaryStyle, {
+          fill: lightScale(ckBin.values.length),
+          strokeWidth: 1,
+          stroke
+        })
+      }
+    })
+
+    renderedSummaryMarks.push({
+      containerProps: {
+        //        className: calculatedSummaryClass,
+        transform: "",
+        key: `summaryPiece-${index}`,
+        role: "img",
+        tabIndex: -1
+      },
+      //These are drawn items
+      elements: CKBinElements
+    })
+  })
+
+  return { marks: renderedSummaryMarks, xyPoints: summaryXYCoords }
+}
 export function boxplotRenderFn({
   data,
   type,
@@ -1640,6 +1768,7 @@ export const drawSummaries = ({
 }
 
 interface summaryInstruction {
+  Mark?: JSX.Element
   containerProps?: object
   elements: object[]
 }
@@ -1649,13 +1778,17 @@ export function summaryInstructionsToMarks(data: summaryInstruction[]) {
   for (const container of data) {
     const renderedElements: JSX.Element[] = []
     const { elements, containerProps } = container
-    for (const element of elements) {
-      renderedElements.push(<Mark {...element} />)
-    }
-    if (containerProps) {
-      renderedSummaries.push(<g {...containerProps}>{renderedElements}</g>)
+    if (container.Mark) {
+      renderedSummaries.push(container.Mark)
     } else {
-      renderedSummaries.push(...renderedElements)
+      for (const element of elements) {
+        renderedElements.push(<Mark {...element} />)
+      }
+      if (containerProps) {
+        renderedSummaries.push(<g {...containerProps}>{renderedElements}</g>)
+      } else {
+        renderedSummaries.push(...renderedElements)
+      }
     }
   }
   return renderedSummaries
@@ -1668,40 +1801,43 @@ export const renderLaidOutSummaries = ({
 }) => {
   if (canvasRender()) {
     for (const container of data) {
-      const { transform: containerTransform = "translate(0,0)" } =
-        container?.containerProps ?? {
-          transform: "translate(0,0)"
-        }
+      if (container.type !== "svg-only-mark") {
+        const { transform: containerTransform = "translate(0,0)" } =
+          container?.containerProps ?? {
+            transform: "translate(0,0)"
+          }
 
-      const [containerX, containerY] = containerTransform
-        .replace("translate(", "")
-        .replace(")", "")
-        .split(",")
-      for (const element of container.elements) {
-        const { transform: elementTransform = "translate(0,0)" } = element
-
-        const [elementX, elementY] = elementTransform
+        const [containerX, containerY] = containerTransform
           .replace("translate(", "")
           .replace(")", "")
           .split(",")
+        for (const element of container.elements) {
+          const { transform: elementTransform = "translate(0,0)" } = element
 
-        const canvasNode = {
-          baseClass: "frame-piece",
-          tx: parseInt(elementX) + parseInt(containerX),
-          ty: parseInt(elementY) + parseInt(containerY),
-          d: {},
-          i: 0,
-          markProps: element,
-          styleFn: () => element.style,
-          renderFn: element.renderMode,
-          classFn: () => ""
+          const [elementX, elementY] = elementTransform
+            .replace("translate(", "")
+            .replace(")", "")
+            .split(",")
+
+          const canvasNode = {
+            baseClass: "frame-piece",
+            tx: parseInt(elementX) + parseInt(containerX),
+            ty: parseInt(elementY) + parseInt(containerY),
+            d: {},
+            i: 0,
+            markProps: element,
+            styleFn: () => element.style,
+            renderFn: element.renderMode,
+            classFn: () => ""
+          }
+
+          canvasDrawing.push(canvasNode)
         }
-
-        canvasDrawing.push(canvasNode)
       }
     }
-    return null
   }
 
-  return summaryInstructionsToMarks(data)
+  return summaryInstructionsToMarks(
+    data.filter((d) => !canvasRender() || d.type === "svg-only-mark")
+  )
 }

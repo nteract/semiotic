@@ -8,7 +8,8 @@ import { AxisProps } from "../types/annotationTypes"
 import {
   boxplotRenderFn,
   contourRenderFn,
-  bucketizedRenderingFn
+  bucketizedRenderingFn,
+  ckBinsRenderFn
 } from "./summaryLayouts"
 import {
   axisPieces,
@@ -637,7 +638,8 @@ const summaryRenderHash = {
   heatmap: bucketizedRenderingFn,
   ridgeline: bucketizedRenderingFn,
   histogram: bucketizedRenderingFn,
-  horizon: bucketizedRenderingFn
+  horizon: bucketizedRenderingFn,
+  ckbins: ckBinsRenderFn
 }
 
 export function orFrameSummaryRenderer({
