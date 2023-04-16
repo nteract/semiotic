@@ -15,7 +15,7 @@ import {
   axisPieces,
   axisLines,
   baselineGenerator
-} from "../visualizationLayerBehavior/axis"
+} from "../Layer/visualizationLayerBehavior/axis"
 
 import {
   MarginType,

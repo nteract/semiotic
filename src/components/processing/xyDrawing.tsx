@@ -10,7 +10,7 @@ import {
   axisPieces,
   axisLines,
   baselineGenerator
-} from "../visualizationLayerBehavior/axis"
+} from "../Layer/visualizationLayerBehavior/axis"
 
 import {
   calculateDataExtent,
@@ -24,7 +24,7 @@ import {
   createPoints,
   createLines,
   createSummaries
-} from "../visualizationLayerBehavior/general"
+} from "../Layer/visualizationLayerBehavior/general"
 
 import {
   calculateMargin,

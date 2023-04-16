@@ -26,7 +26,8 @@ import {
 } from "../svg/areaDrawing"
 import { max, min } from "d3-array"
 
-import { extentValue } from "./unflowedFunctions"
+export const extentValue = (extent) =>
+  (extent && extent.extent) || (Array.isArray(extent) && extent) || []
 
 import {
   ProjectedPoint,

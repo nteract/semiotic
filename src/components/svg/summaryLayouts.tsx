@@ -10,7 +10,7 @@ import { area, line, curveCatmullRom, curveLinear, arc } from "d3-shape"
 import { pointOnArcAtAngle } from "./pieceDrawing"
 import { orFrameSummaryRenderer } from "./frameFunctions"
 import { scaleLinear } from "d3-scale"
-import { curveHash } from "../visualizationLayerBehavior/general"
+import { curveHash } from "../Layer/visualizationLayerBehavior/general"
 import { GenericObject } from "../types/generalTypes"
 import { ckmeans } from "./ckmeans"
 

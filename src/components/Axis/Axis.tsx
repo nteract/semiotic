@@ -5,7 +5,7 @@ import {
   axisLabels,
   axisPieces,
   axisLines
-} from "./../visualizationLayerBehavior/axis"
+} from "../Layer/visualizationLayerBehavior/axis"
 
 import SummaryGraphic from "./summaryGraphic"
 import AxisTitle from "./axisTitle"

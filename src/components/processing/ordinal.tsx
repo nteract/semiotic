@@ -38,7 +38,7 @@ import { AxisProps } from "../types/annotationTypes"
 
 import { PieceLayoutType, GenericObject } from "../types/generalTypes"
 
-import { genericFunction } from "../generic_utilities/functions"
+import { genericFunction } from "../utils/functions"
 
 import { scaleOrdinal, scaleLinear, ScaleBand } from "d3-scale"
 
