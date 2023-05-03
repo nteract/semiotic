@@ -1149,8 +1149,9 @@ export function bucketizedRenderingFn({
       }
 
       if (type.axis && type.type === "histogram") {
-        renderedSummaryMarks.push(
-          createSummaryAxis({
+        renderedSummaryMarks.push({
+          type: "svg-only-mark",
+          Mark: createSummaryAxis({
             summary,
             summaryI,
             axisSettings: type.axis,
@@ -1160,7 +1161,7 @@ export function bucketizedRenderingFn({
             adjustedSize,
             columnWidth
           })
-        )
+        })
       }
       mappedBars.points.forEach((d) => {
         d.x += translate[0]
