@@ -8,7 +8,7 @@ import {
 } from "../constants/coordinateNames"
 
 import { extent as d3Extent } from "d3-array"
-import { voronoi } from "d3-voronoi"
+import { Delaunay, Voronoi } from "d3-delaunay"
 import Mark from "../../components/Mark/Mark"
 
 import { CustomHoverType } from "../types/annotationTypes"
@@ -188,42 +188,39 @@ export const calculateOverlay = (
       }
     }
 
-    const voronoiXExtent = d3Extent(voronoiDataset.map((d) => d.voronoiX))
-    const voronoiYExtent = d3Extent(voronoiDataset.map((d) => d.voronoiY))
+    let voronoiXExtent = d3Extent(voronoiDataset.map((d) => d.voronoiX))
+    let voronoiYExtent = d3Extent(voronoiDataset.map((d) => d.voronoiY))
+
+    if (voronoiXExtent[0] == null || voronoiYExtent == null) {
+      voronoiXExtent = [0, 0]
+      voronoiYExtent = [0, 0]
+    }
 
     const voronoiExtent = [
-      [
-        Math.min(voronoiXExtent[0] - 5, -interactionOverflow.left),
-        Math.min(voronoiYExtent[0] - 5, -interactionOverflow.top)
-      ],
-      [
-        Math.max(voronoiXExtent[1] + 5, size[0] + interactionOverflow.right),
-        Math.max(voronoiYExtent[1] + 5, size[1] + interactionOverflow.bottom)
-      ]
+      Math.min(voronoiXExtent[0] - 5, -interactionOverflow.left),
+      Math.min(voronoiYExtent[0] - 5, -interactionOverflow.top),
+      Math.max(voronoiXExtent[1] + 5, size[0] + interactionOverflow.right),
+      Math.max(voronoiYExtent[1] + 5, size[1] + interactionOverflow.bottom)
     ]
 
-    const voronoiDiagram = voronoi()
-      .extent(voronoiExtent)
-      .x((d: VoronoiEntryType) => d.voronoiX)
-      .y((d: VoronoiEntryType) => d.voronoiY)
+    const delaunay = Delaunay.from(
+      voronoiDataset,
+      (d) => d.voronoiX,
+      (d) => d.voronoiY
+    )
 
-    const voronoiData = voronoiDiagram.polygons(voronoiDataset)
+    const voronoi = delaunay.voronoi(voronoiExtent)
 
-    voronoiPaths = voronoiData.map((d: Array<number>, i: number) => {
+    voronoiPaths = voronoiDataset.map((d, i: number) => {
       let clipPath = null
       if (advancedSettings.voronoiClipping) {
         const circleSize =
           advancedSettings.voronoiClipping === true
             ? 50
             : advancedSettings.voronoiClipping
-        const correspondingD = voronoiDataset[i]
         clipPath = (
           <clipPath id={`voronoi-${i}`}>
-            <circle
-              r={circleSize}
-              cx={correspondingD.voronoiX}
-              cy={correspondingD.voronoiY}
-            />
+            <circle r={circleSize} cx={d.voronoiX} cy={d.voronoiY} />
           </clipPath>
         )
       }
@@ -262,7 +259,7 @@ export const calculateOverlay = (
               )
             }}
             key={`interactionVoronoi${i}`}
-            d={`M${d.join("L")}Z`}
+            d={voronoi.renderCell(i)}
             style={{
               fillOpacity: 0,
               ...pointerStyle

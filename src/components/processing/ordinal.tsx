@@ -1,6 +1,5 @@
 import * as React from "react"
 
-import { nest } from "d3-collection"
 import { sum, max, min, extent } from "d3-array"
 
 import { arc } from "d3-shape"
@@ -354,18 +353,32 @@ export const calculateOrdinalFrame = (
       ...annotationsForExtent
     ])
   } else {
-    const positiveData = allData.filter((d: { value: number }) => d.value >= 0)
-    const negativeData = allData.filter((d: { value: number }) => d.value < 0)
+    const nestedPositiveData = []
+    const nestedNegativeData = []
 
-    const nestedPositiveData = nest()
-      .key((d) => d.column)
-      .rollup((leaves) => sum(leaves, (d) => d.value))
-      .entries(positiveData)
-
-    const nestedNegativeData = nest()
-      .key((d) => d.column)
-      .rollup((leaves) => sum(leaves, (d) => d.value))
-      .entries(negativeData)
+    const positiveDataKeys = {}
+    const negativeDataKeys = {}
+    for (const datum of allData as { column: string; value: number }[]) {
+      if (datum.value >= 0) {
+        if (!positiveDataKeys[datum.column]) {
+          positiveDataKeys[datum.column] = {
+            column: datum.column,
+            value: 0
+          }
+          nestedPositiveData.push(positiveDataKeys[datum.column])
+        }
+        positiveDataKeys[datum.column].value += datum.value
+      } else {
+        if (!negativeDataKeys[datum.column]) {
+          negativeDataKeys[datum.column] = {
+            column: datum.column,
+            value: 0
+          }
+          nestedNegativeData.push(negativeDataKeys[datum.column])
+        }
+        negativeDataKeys[datum.column].value += datum.value
+      }
+    }
 
     const positiveAnnotations = annotationsForExtent.filter((d) => d > 0)
 
@@ -439,12 +452,12 @@ export const calculateOrdinalFrame = (
 
   const nestedPieces = {}
 
-  nest()
-    .key((d) => d.column)
-    .entries(allData)
-    .forEach((d) => {
-      nestedPieces[d.key] = d.values
-    })
+  for (const datum of allData as any) {
+    if (!nestedPieces[datum.column]) {
+      nestedPieces[datum.column] = []
+    }
+    nestedPieces[datum.column].push(datum)
+  }
 
   if (oSort !== undefined) {
     oExtent = oExtent.sort((a, b) =>
