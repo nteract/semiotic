@@ -1,12 +1,8 @@
 import React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 import BaseballMapRaw from "./BaseballMapRaw"
-import Select from "@material-ui/core/Select"
 import Mark from "../../components/Mark/Mark"
 import { scaleTime } from "d3-scale"
-import MenuItem from "@material-ui/core/MenuItem"
-import InputLabel from "@material-ui/core/InputLabel"
-import FormControl from "@material-ui/core/FormControl"
 
 const components = []
 const modes = {
@@ -124,21 +120,21 @@ export default class BaseballMapDocs extends React.Component {
       "trendPoly",
       "trendLinear"
     ].map((d) => (
-      <MenuItem key={`mode-option-${d}`} label={d} value={d}>
+      <option key={`mode-option-${d}`} label={d} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const buttons = [
-      <FormControl key="button-1-0-0">
-        <InputLabel htmlFor="mode-input">Mode</InputLabel>
-        <Select
+      <form key="button-1-0-0">
+        <label htmlFor="mode-input">Mode</label>
+        <select
           value={this.state.mode}
           onChange={(e) => this.setState({ mode: e.target.value })}
         >
           {modeOptions}
-        </Select>
-      </FormControl>
+        </select>
+      </form>
     ]
 
     const examples = []

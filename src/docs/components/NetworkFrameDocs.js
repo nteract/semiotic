@@ -4,11 +4,6 @@ import { NetworkFrame } from "../../components"
 import Mark from "../../components/Mark/Mark"
 
 import { edgeData } from "../example_settings/networkframe"
-import Button from "@material-ui/core/Button"
-import Select from "@material-ui/core/Select"
-import MenuItem from "@material-ui/core/MenuItem"
-import InputLabel from "@material-ui/core/InputLabel"
-import FormControl from "@material-ui/core/FormControl"
 
 const components = []
 // Add your component proptype data here
@@ -103,33 +98,33 @@ export default class NetworkFrameDocs extends React.Component {
       "comet",
       "taffy"
     ].map((d) => (
-      <MenuItem key={`edgeType-option-${d}`} label={d} value={d}>
+      <option key={`edgeType-option-${d}`} label={d} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const nodeSizeOptions = ["degree", "inDegree", "outDegree"].map((d) => (
-      <MenuItem key={`nodeSize-option-${d}`} label={d} value={d}>
+      <option key={`nodeSize-option-${d}`} label={d} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const annotationOptions = ["off", "on"].map((d) => (
-      <MenuItem key={`annotation-option-${d}`} label={d} value={d}>
+      <option key={`annotation-option-${d}`} label={d} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const networkTypeOptions = ["matrix", "force", "motifs"].map((d) => (
-      <MenuItem key={`networkType-option-${d}`} label={d} value={d}>
+      <option key={`networkType-option-${d}`} label={d} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const customNodeOptions = ["off", "on"].map((d) => (
-      <MenuItem key={`customNode-option-${d}`} label={d} value={d}>
+      <option key={`customNode-option-${d}`} label={d} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const annotations = [
@@ -151,61 +146,61 @@ export default class NetworkFrameDocs extends React.Component {
     ]
     const buttons = [
       <div key="button-0">
-        <FormControl>
-          <InputLabel htmlFor="edge-type-input">edgeType</InputLabel>
-          <Select
+        <form>
+          <label htmlFor="edge-type-input">edgeType</label>
+          <select
             value={this.state.edge}
             onChange={(e) => this.setState({ edge: e.target.value })}
           >
             {edgeOptions}
-          </Select>
-        </FormControl>
+          </select>
+        </form>
       </div>,
       <div key="button-1">
-        <FormControl>
-          <InputLabel htmlFor="node-size-input">nodeSize</InputLabel>
-          <Select
+        <form>
+          <label htmlFor="node-size-input">nodeSize</label>
+          <select
             value={this.state.nodeSize}
             onChange={(e) => this.setState({ nodeSize: e.target.value })}
           >
             {nodeSizeOptions}
-          </Select>
-        </FormControl>
+          </select>
+        </form>
       </div>,
       <div key="button-2">
-        <FormControl>
-          <InputLabel htmlFor="annotations-input">annotations</InputLabel>
-          <Select
+        <form>
+          <label htmlFor="annotations-input">annotations</label>
+          <select
             value={this.state.annotations}
             onChange={(e) => this.setState({ annotations: e.target.value })}
           >
             {annotationOptions}
-          </Select>
-        </FormControl>
+          </select>
+        </form>
       </div>,
       <div key="button-3">
-        <FormControl>
-          <InputLabel htmlFor="network-type-input">networkType</InputLabel>
-          <Select
+        <form>
+          <label htmlFor="network-type-input">networkType</label>
+          <select
             value={this.state.networkType}
             onChange={(e) => this.setState({ networkType: e.target.value })}
           >
             {networkTypeOptions}
-          </Select>
-        </FormControl>
+          </select>
+        </form>
       </div>,
       <div key="button-4">
-        <FormControl>
-          <InputLabel htmlFor="custom-node-input">customNodeIcon</InputLabel>
-          <Select
+        <form>
+          <label htmlFor="custom-node-input">customNodeIcon</label>
+          <select
             value={this.state.customNodeIcon}
             onChange={(e) => {
               this.setState({ customNodeIcon: e.target.value })
             }}
           >
             {customNodeOptions}
-          </Select>
-        </FormControl>
+          </select>
+        </form>
       </div>
     ]
 
@@ -273,7 +268,7 @@ export default class NetworkFrameDocs extends React.Component {
       name: "Basic",
       demo: (
         <div>
-          <Button color="primary">NetworkFrame API</Button>
+          <button color="primary">NetworkFrame API</button>
           <NetworkFrame {...networkChart} />
         </div>
       ),

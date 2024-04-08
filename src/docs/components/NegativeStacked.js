@@ -1,28 +1,24 @@
-import React from 'react'
-import DocumentComponent from '../layout/DocumentComponent'
-import NegativeStackedRaw from './NegativeStackedRaw'
-import MenuItem from '@material-ui/core/MenuItem'
-import InputLabel from '@material-ui/core/InputLabel'
-import FormControl from "@material-ui/core/FormControl"
-import Select from '@material-ui/core/Select'
+import React from "react"
+import DocumentComponent from "../layout/DocumentComponent"
+import NegativeStackedRaw from "./NegativeStackedRaw"
 
 const components = []
 
 components.push({
-  name: 'Negative Stacked Chart'
+  name: "Negative Stacked Chart"
 })
 
-const typeOptions = ['stackedarea', 'stackedpercent', 'bumparea'].map(d =>
-  (<MenuItem key={`type-option-${d}`} label={d} value={d}>
+const typeOptions = ["stackedarea", "stackedpercent", "bumparea"].map((d) => (
+  <option key={`type-option-${d}`} label={d} value={d}>
     {d}
-  </MenuItem>)
-)
+  </option>
+))
 
 export default class NegativeStacked extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      type: 'stackedarea'
+      type: "stackedarea"
     }
   }
 
@@ -30,19 +26,19 @@ export default class NegativeStacked extends React.Component {
     const examples = []
 
     const buttons = [
-      <FormControl key="button-1-0-0">
-        <InputLabel htmlFor="chart-type-input">Chart Type</InputLabel>
-        <Select
+      <form key="button-1-0-0">
+        <label htmlFor="chart-type-input">Chart Type</label>
+        <select
           value={this.state.type}
-          onChange={e => this.setState({ type: e.target.value })}
+          onChange={(e) => this.setState({ type: e.target.value })}
         >
           {typeOptions}
-        </Select>
-      </FormControl>
+        </select>
+      </form>
     ]
 
     examples.push({
-      name: 'Basic',
+      name: "Basic",
       demo: NegativeStackedRaw(this.state.type),
       source: `const chartSettings = {
         size: [700, 700],
@@ -83,4 +79,4 @@ export default class NegativeStacked extends React.Component {
   }
 }
 
-NegativeStacked.title = 'Negative Stacked Chart'
+NegativeStacked.title = "Negative Stacked Chart"

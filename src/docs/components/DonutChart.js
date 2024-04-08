@@ -1,10 +1,6 @@
 import * as React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 import DonutChartRaw from "./DonutChartRaw"
-import Select from "@material-ui/core/Select"
-import MenuItem from '@material-ui/core/MenuItem'
-import InputLabel from '@material-ui/core/InputLabel'
-import FormControl from "@material-ui/core/FormControl"
 
 const components = []
 
@@ -26,55 +22,55 @@ export default class PieDonutDocs extends React.Component {
   render() {
     const examples = []
 
-    const kindOptions = ["pie", "nightingale"].map(d => (
-      <MenuItem key={`kind-option${d}`} label={d} value={d}>
+    const kindOptions = ["pie", "nightingale"].map((d) => (
+      <option key={`kind-option${d}`} label={d} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
-    const innerOptions = ["25", "0", "5", "75", "150"].map(d => (
-      <MenuItem key={`radius-option${d}`} label={d} value={d}>
+    const innerOptions = ["25", "0", "5", "75", "150"].map((d) => (
+      <option key={`radius-option${d}`} label={d} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
-    const paddingOptions = ["0", "10", "20", "40"].map(d => (
-      <MenuItem key={`padding-option${d}`} label={d} value={d}>
+    const paddingOptions = ["0", "10", "20", "40"].map((d) => (
+      <option key={`padding-option${d}`} label={d} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const buttons = [
       <div key="button-0">
-        <FormControl>
-          <InputLabel htmlFor="type-input">Kind of Chart</InputLabel>
-          <Select
+        <form>
+          <label htmlFor="type-input">Kind of Chart</label>
+          <select
             value={this.state.kind}
-            onChange={e => this.setState({ kind: e.target.value })}
+            onChange={(e) => this.setState({ kind: e.target.value })}
           >
             {kindOptions}
-          </Select>
-        </FormControl>
+          </select>
+        </form>
       </div>,
       <div key="button-1">
-        <FormControl>
-          <InputLabel htmlFor="inner-radius-input">innerRadius</InputLabel>
-          <Select
+        <form>
+          <label htmlFor="inner-radius-input">innerRadius</label>
+          <select
             value={this.state.innerRadius}
-            onChange={e => this.setState({ innerRadius: e.target.value })}
+            onChange={(e) => this.setState({ innerRadius: e.target.value })}
           >
             {innerOptions}
-          </Select>
-        </FormControl>
+          </select>
+        </form>
       </div>,
       <div key="button-2">
-        <FormControl>
-          <InputLabel htmlFor="padding-input">padding</InputLabel>
-          <Select
+        <form>
+          <label htmlFor="padding-input">padding</label>
+          <select
             value={this.state.padding}
-            onChange={e => this.setState({ padding: e.target.value })}
+            onChange={(e) => this.setState({ padding: e.target.value })}
           >
             {paddingOptions}
-          </Select>
-        </FormControl>
+          </select>
+        </form>
       </div>,
       <div key="button-3">
         <button

@@ -3,12 +3,7 @@ import DocumentComponent from "../layout/DocumentComponent"
 import { OrdinalFrame } from "../../components"
 import { randomNormal } from "d3-random"
 import { funnelData } from "../example_settings/orframe"
-import Button from "@material-ui/core/Button"
 import { sum } from "d3-array"
-import Select from "@material-ui/core/Select"
-import MenuItem from "@material-ui/core/MenuItem"
-import InputLabel from "@material-ui/core/InputLabel"
-import FormControl from "@material-ui/core/FormControl"
 
 // const monthHash = {}
 
@@ -241,54 +236,54 @@ export default class OrdinalFrameDocs extends React.Component {
       "custom",
       "none"
     ].map((d) => (
-      <MenuItem key={`type-option${d}`} label={d} value={d}>
+      <option key={`type-option${d}`} label={d} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
     const projectionOptions = ["vertical", "horizontal", "radial"].map((d) => (
-      <MenuItem key={`projection-option${d}`} label={d} value={d}>
+      <option key={`projection-option${d}`} label={d} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
     const cwOptions = ["fixed", "relative"].map((d) => (
-      <MenuItem key={`cw-option${d}`} label={d} value={d}>
+      <option key={`cw-option${d}`} label={d} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
     const rAccessorOptions = ["relative", "fixed"].map((d) => (
-      <MenuItem key={`rAccessor-option${d}`} label={d} value={d}>
+      <option key={`rAccessor-option${d}`} label={d} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
     const renderFnOptions = ["none", "sketchy", "painty"].map((d) => (
-      <MenuItem key={`renderfn-option${d}`} label={d} value={d}>
+      <option key={`renderfn-option${d}`} label={d} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
     const connectorOptions = ["off", "on"].map((d) => (
-      <MenuItem key={`connector-option${d}`} label={d} value={d}>
+      <option key={`connector-option${d}`} label={d} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
     const annotationOptions = ["off", "on"].map((d) => (
-      <MenuItem key={`annotation-option${d}`} label={d} value={d}>
+      <option key={`annotation-option${d}`} label={d} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
     const oPaddingOptions = [50, 20, 5, 0].map((d) => (
-      <MenuItem key={`opadding-option${d}`} label={d} value={d}>
+      <option key={`opadding-option${d}`} label={d} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
     const dataTypeOptions = ["stacked", "group", "simple"].map((d) => (
-      <MenuItem key={`dataType-option${d}`} label={d} value={d}>
+      <option key={`dataType-option${d}`} label={d} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
     const hoverOptions = ["general", "piece", "none"].map((d) => (
-      <MenuItem key={`hover-option${d}`} label={d} value={d}>
+      <option key={`hover-option${d}`} label={d} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
     const summaryOptions = [
       "none",
@@ -299,16 +294,16 @@ export default class OrdinalFrameDocs extends React.Component {
       "contour",
       "ridgeline"
     ].map((d) => (
-      <MenuItem key={`summary-option${d}`} label={d} value={d}>
+      <option key={`summary-option${d}`} label={d} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
     // const exampleOptions = ["basic", "nyc_temp"].map(d => (
-    //   <MenuItem key={`example-option${d}`} label={d} value={d}>
+    //   <option key={`example-option${d}`} label={d} value={d}>
     //     {d}
-    //   </MenuItem>
+    //   </option>
     // ))
-    //    const barNumberOptions = [1, 2, 3, 4, 5, 20].map(d => <MenuItem key={'example-option' + d} label={d} value={d}>{d}</MenuItem>)
+    //    const barNumberOptions = [1, 2, 3, 4, 5, 20].map(d => <option key={'example-option' + d} label={d} value={d}>{d}</option>)
     // const rAccessor =
     //   this.state.rAccessor === "fixed" ? () => 1 : d => d.stepValue || d.value
     const reFn =
@@ -316,131 +311,129 @@ export default class OrdinalFrameDocs extends React.Component {
 
     const buttons = [
       <div key="button-0">
-        <FormControl>
-          <InputLabel htmlFor="data-type-input">Data Type</InputLabel>
-          <Select
+        <form>
+          <label htmlFor="data-type-input">Data Type</label>
+          <select
             value={this.state.dataType}
             onChange={(e) => this.setState({ dataType: e.target.value })}
           >
             {dataTypeOptions}
-          </Select>
-        </FormControl>
+          </select>
+        </form>
       </div>,
       <div key="button-1">
-        <FormControl>
-          <InputLabel htmlFor="type-input">type</InputLabel>
-          <Select
+        <form>
+          <label htmlFor="type-input">type</label>
+          <select
             value={this.state.type}
             onChange={(e) => this.setState({ type: e.target.value })}
           >
             {typeOptions}
-          </Select>
-        </FormControl>
+          </select>
+        </form>
       </div>,
       <div key="button-1-0">
-        <FormControl>
-          <InputLabel htmlFor="summary-type-input">summaryType</InputLabel>
-          <Select
+        <form>
+          <label htmlFor="summary-type-input">summaryType</label>
+          <select
             value={this.state.summaryType}
             onChange={(e) =>
               this.setState({ dataType: "group", summaryType: e.target.value })
             }
           >
             {summaryOptions}
-          </Select>
-        </FormControl>
+          </select>
+        </form>
       </div>,
       <div key="button-2">
-        <FormControl>
-          <InputLabel htmlFor="projection-input">projection</InputLabel>
-          <Select
+        <form>
+          <label htmlFor="projection-input">projection</label>
+          <select
             value={this.state.projection}
             onChange={(e) => this.setState({ projection: e.target.value })}
           >
             {projectionOptions}
-          </Select>
-        </FormControl>
+          </select>
+        </form>
       </div>,
       <div key="button-3">
-        <FormControl>
-          <InputLabel htmlFor="dynamic-column-width-input">
-            dynamicColumnWidth
-          </InputLabel>
-          <Select
+        <form>
+          <label htmlFor="dynamic-column-width-input">dynamicColumnWidth</label>
+          <select
             value={this.state.dynamicColumnWidth}
             onChange={(e) =>
               this.setState({ dynamicColumnWidth: e.target.value })
             }
           >
             {cwOptions}
-          </Select>
-        </FormControl>
+          </select>
+        </form>
       </div>,
       <div key="button-4">
-        <FormControl>
-          <InputLabel htmlFor="r-accessor-input">rAccessor</InputLabel>
-          <Select
+        <form>
+          <label htmlFor="r-accessor-input">rAccessor</label>
+          <select
             value={this.state.rAccessor}
             onChange={(e) => this.setState({ rAccessor: e.target.value })}
           >
             {rAccessorOptions}
-          </Select>
-        </FormControl>
+          </select>
+        </form>
       </div>,
       <div key="button-5">
-        <FormControl>
-          <InputLabel htmlFor="render-mode-input">renderMode</InputLabel>
-          <Select
+        <form>
+          <label htmlFor="render-mode-input">renderMode</label>
+          <select
             value={this.state.renderFn}
             onChange={(e) => this.setState({ renderFn: e.target.value })}
           >
             {renderFnOptions}
-          </Select>
-        </FormControl>
+          </select>
+        </form>
       </div>,
       <div key="button-6">
-        <FormControl>
-          <InputLabel htmlFor="connector-input">connector</InputLabel>
-          <Select
+        <form>
+          <label htmlFor="connector-input">connector</label>
+          <select
             value={this.state.connector}
             onChange={(e) => this.setState({ connector: e.target.value })}
           >
             {connectorOptions}
-          </Select>
-        </FormControl>
+          </select>
+        </form>
       </div>,
       <div key="button-7">
-        <FormControl>
-          <InputLabel htmlFor="annotations-input">annotations</InputLabel>
-          <Select
+        <form>
+          <label htmlFor="annotations-input">annotations</label>
+          <select
             value={this.state.annotations}
             onChange={(e) => this.setState({ annotations: e.target.value })}
           >
             {annotationOptions}
-          </Select>
-        </FormControl>
+          </select>
+        </form>
       </div>,
       <div key="button-8">
-        <FormControl>
-          <InputLabel htmlFor="o-padding-input">oPadding</InputLabel>
-          <Select
+        <form>
+          <label htmlFor="o-padding-input">oPadding</label>
+          <select
             value={this.state.oPadding}
             onChange={(e) => this.setState({ oPadding: e.target.value })}
           >
             {oPaddingOptions}
-          </Select>
-        </FormControl>
+          </select>
+        </form>
       </div>,
       <div key="button-9">
-        <FormControl>
-          <InputLabel htmlFor="hover-behavior-input">hoverBehavior</InputLabel>
-          <Select
+        <form>
+          <label htmlFor="hover-behavior-input">hoverBehavior</label>
+          <select
             value={this.state.hoverBehavior}
             onChange={(e) => this.setState({ hoverBehavior: e.target.value })}
           >
             {hoverOptions}
-          </Select>
-        </FormControl>
+          </select>
+        </form>
       </div>
     ]
 
@@ -462,7 +455,7 @@ export default class OrdinalFrameDocs extends React.Component {
       name: "Basic",
       demo: (
         <div>
-          <Button color="primary">OrdinalFrame API</Button>
+          <button color="primary">OrdinalFrame API</button>
           <p>O Extent Values: {this.state.oExtent.join(", ")}</p>
           <p>R Extent Values: {this.state.rExtent.join(", ")}</p>
           <OrdinalFrame

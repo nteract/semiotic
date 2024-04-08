@@ -1,10 +1,6 @@
 import * as React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 import DendrogramRaw from "./DendrogramRaw"
-import MenuItem from "@material-ui/core/MenuItem"
-import InputLabel from "@material-ui/core/InputLabel"
-import FormControl from "@material-ui/core/FormControl"
-import Select from "@material-ui/core/Select"
 
 const components = []
 
@@ -33,67 +29,67 @@ export default class Dendrogram extends React.Component {
       "treemap",
       "partition"
     ].map((d) => (
-      <MenuItem key={`type-option-${d}`} label={d} value={d}>
+      <option key={`type-option-${d}`} label={d} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const projectionOptions = ["vertical", "horizontal", "radial"].map((d) => (
-      <MenuItem key={`type-option-${d}`} label={d} value={d}>
+      <option key={`type-option-${d}`} label={d} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
     const annotationOptions = ["enclose-rect", "enclose", "enclose-hull"].map(
       (d) => (
-        <MenuItem key={`type-option-${d}`} label={d} value={d}>
+        <option key={`type-option-${d}`} label={d} value={d}>
           {d}
-        </MenuItem>
+        </option>
       )
     )
 
     const filterOptions = ["none", "time", "layout", "geo"].map((d) => (
-      <MenuItem key={`type-option-${d}`} label={d} value={d}>
+      <option key={`type-option-${d}`} label={d} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const buttons = [
-      <FormControl key="button-1-0-0">
-        <InputLabel htmlFor="chart-type-input">Chart Type</InputLabel>
-        <Select
+      <form key="button-1-0-0">
+        <label htmlFor="chart-type-input">Chart Type</label>
+        <select
           value={this.state.type}
           onChange={(e) => this.setState({ type: e.target.value })}
         >
           {typeOptions}
-        </Select>
-      </FormControl>,
-      <FormControl key="button-2-0-0">
-        <InputLabel htmlFor="chart-projection-input">Projection</InputLabel>
-        <Select
+        </select>
+      </form>,
+      <form key="button-2-0-0">
+        <label htmlFor="chart-projection-input">Projection</label>
+        <select
           value={this.state.projection}
           onChange={(e) => this.setState({ projection: e.target.value })}
         >
           {projectionOptions}
-        </Select>
-      </FormControl>,
-      <FormControl key="button-3-0-0">
-        <InputLabel htmlFor="chart-projection-input">Annotation</InputLabel>
-        <Select
+        </select>
+      </form>,
+      <form key="button-3-0-0">
+        <label htmlFor="chart-projection-input">Annotation</label>
+        <select
           value={this.state.annotation}
           onChange={(e) => this.setState({ annotation: e.target.value })}
         >
           {annotationOptions}
-        </Select>
-      </FormControl>,
-      <FormControl key="button-4-0-0">
-        <InputLabel htmlFor="chart-projection-input">Filter</InputLabel>
-        <Select
+        </select>
+      </form>,
+      <form key="button-4-0-0">
+        <label htmlFor="chart-projection-input">Filter</label>
+        <select
           value={this.state.filter}
           onChange={(e) => this.setState({ filter: e.target.value })}
         >
           {filterOptions}
-        </Select>
-      </FormControl>
+        </select>
+      </form>
     ]
 
     const examples = []

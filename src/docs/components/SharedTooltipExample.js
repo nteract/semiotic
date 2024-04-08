@@ -2,11 +2,6 @@ import * as React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 import SharedTooltipExampleRaw from "./SharedTooltipExampleRaw"
 
-import Select from "@material-ui/core/Select"
-import MenuItem from '@material-ui/core/MenuItem'
-import InputLabel from '@material-ui/core/InputLabel'
-import FormControl from "@material-ui/core/FormControl"
-
 const components = []
 // Add your component proptype data here
 // multiple component proptype documentation supported
@@ -221,23 +216,23 @@ export default class SharedTooltipExample extends React.Component {
           : singletonExampleCode
     })
 
-    const toolTipOptions = ["Shared", "Individual"].map(d => (
-      <MenuItem key={`shared-tooltip-option-${d}`} value={d}>
+    const toolTipOptions = ["Shared", "Individual"].map((d) => (
+      <option key={`shared-tooltip-option-${d}`} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const buttons = [
-      <FormControl key="button-1">
-        <InputLabel htmlFor="hover-behavior-input">toolTip</InputLabel>
-        <Select
+      <form key="button-1">
+        <label htmlFor="hover-behavior-input">toolTip</label>
+        <select
           id="tooltip-selection-option"
           value={this.state.tooltipSelection}
-          onChange={e => this.setState({ tooltipSelection: e.target.value })}
+          onChange={(e) => this.setState({ tooltipSelection: e.target.value })}
         >
           {toolTipOptions}
-        </Select>
-      </FormControl>
+        </select>
+      </form>
     ]
 
     return (
