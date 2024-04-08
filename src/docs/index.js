@@ -3,7 +3,7 @@ import { HashRouter, Routes, Route } from "react-router-dom"
 import Home from "./Home"
 import Documentation from "./Documentation"
 import LayoutFooter from "./layout/Footer"
-import theme from "./theme.js"
+
 import "./flexboxgrid.css"
 import "./prism.css"
 import "./index.css"

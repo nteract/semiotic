@@ -15,7 +15,7 @@ module.exports = {
     "^.+\\.css$": "<rootDir>/config/jest/cssTransform.js",
     "^(?!.*\\.(js|jsx|mjs|css|json)$)": "<rootDir>/config/jest/fileTransform.js"
   },
-  transformIgnorePatterns: ["[/\\\\]node_modules[/\\\\].+\\.(js|jsx|mjs)$"],
+  transformIgnorePatterns: ["node_modules/(?!d3|d3-.*)/"],
   moduleFileExtensions: [
     "js",
     "web.js",
