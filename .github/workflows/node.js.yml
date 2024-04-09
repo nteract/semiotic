@@ -24,7 +24,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm install --frozen-lockfile
+        run: npm install --legacy-peer-deps --frozen-lockfile
 
       - name: Run tests
         run: npm test
