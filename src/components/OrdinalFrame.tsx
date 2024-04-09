@@ -32,7 +32,7 @@ import { calculateOrdinalFrame } from "./processing/ordinal"
 
 import { AnnotationType } from "./types/annotationTypes"
 
-import { UpdatedAnnotationLayerProps } from "./AnnotationLayer"
+import { UpdatedAnnotationLayerProps } from "./AnnotationLayer/AnnotationLayer"
 
 import { OrdinalFrameProps, OrdinalFrameState } from "./types/ordinalTypes"
 import { useDerivedStateFromProps } from "./useDerivedStateFromProps"

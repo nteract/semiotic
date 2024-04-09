@@ -6,7 +6,7 @@ import { dividedLine, projectLineData } from "./svg/lineDrawing"
 
 // components
 
-import Mark from "../components/Mark/Mark"
+import Mark from "./Mark/Mark"
 import { ProjectedLine } from "./types/generalTypes"
 
 interface DividedLineProps {

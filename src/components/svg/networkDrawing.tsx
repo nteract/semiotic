@@ -2,7 +2,7 @@ import * as React from "react"
 import { useEffect, useRef } from "react"
 import { select } from "d3-selection"
 
-import Mark from "../../components/Mark/Mark"
+import Mark from "../Mark/Mark"
 
 import {
   d as glyphD /*, project as glyphProject, mutate as glyphMutate*/

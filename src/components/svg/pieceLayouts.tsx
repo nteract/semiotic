@@ -2,7 +2,7 @@ import * as React from "react"
 import { forceSimulation, forceX, forceY, forceCollide } from "d3-force"
 import { /*area, curveCatmullRom,*/ arc } from "d3-shape"
 import pathBounds from "svg-path-bounding-box"
-import Mark from "../../components/Mark/Mark"
+import Mark from "../Mark/Mark"
 import { scaleLinear } from "d3-scale"
 import { arcTweener } from "./SvgHelper"
 

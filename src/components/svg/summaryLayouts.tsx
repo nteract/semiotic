@@ -1,7 +1,7 @@
 import * as React from "react"
 
 import Axis from "../Axis"
-import Mark from "../../components/Mark/Mark"
+import Mark from "../Mark/Mark"
 import { contouring } from "../svg/areaDrawing"
 import { quantile } from "d3-array"
 import { histogram, max } from "d3-array"

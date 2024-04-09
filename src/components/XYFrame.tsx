@@ -62,7 +62,7 @@ import { AnnotationType } from "./types/annotationTypes"
 
 import { XYFrameProps, XYFrameState } from "./types/xyTypes"
 
-import { UpdatedAnnotationLayerProps } from "./AnnotationLayer"
+import { UpdatedAnnotationLayerProps } from "./AnnotationLayer/AnnotationLayer"
 import { useDerivedStateFromProps } from "./useDerivedStateFromProps"
 import { useLegacyUnmountCallback } from "./useLegacyUnmountCallback"
 
