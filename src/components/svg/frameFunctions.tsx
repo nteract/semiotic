@@ -298,7 +298,16 @@ export function keyAndObjectifyBarData({
   } else {
     rAccessor = baseRAccessor
   }
-  const decoratedData = []
+  const decoratedData: {
+    value: number
+    renderKey: string
+    data: any
+    rIndex: number
+    rName: string
+    oIndex: number
+    oName: string
+    column: string
+  }[] = []
   oAccessor.forEach((actualOAccessor, oIndex) => {
     rAccessor.forEach((actualRAccessor, rIndex) => {
       ;(data || []).forEach((d) => {

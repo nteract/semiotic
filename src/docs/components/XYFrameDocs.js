@@ -19,11 +19,6 @@ import AnnotationBadge from "react-annotation/lib/Types/AnnotationBadge"
 
 import { testData } from "../example_settings/xyframe"
 
-import Select from "@material-ui/core/Select"
-import MenuItem from "@material-ui/core/MenuItem"
-import InputLabel from "@material-ui/core/InputLabel"
-import FormControl from "@material-ui/core/FormControl"
-
 class NameForm extends React.Component {
   constructor(props) {
     super(props)
@@ -63,17 +58,17 @@ class NameForm extends React.Component {
         </p>
         <p>Name:</p>
         <input type="text" value={value} onChange={this.handleChange} />
-        <Select value={type} onChange={this.changeType}>
-          <MenuItem label="x" value="x">
+        <select value={type} onChange={this.changeType}>
+          <option label="x" value="x">
             X
-          </MenuItem>
-          <MenuItem label="y" value="y">
+          </option>
+          <option label="y" value="y">
             Y
-          </MenuItem>
-          <MenuItem label="xy" value="xy">
+          </option>
+          <option label="xy" value="xy">
             XY
-          </MenuItem>
-        </Select>
+          </option>
+        </select>
         <input type="submit" value="Submit" />
       </form>
     )
@@ -521,9 +516,9 @@ const annotationSettingLabels = (setting) => {
 
 const annotationSettingOptions = Object.keys(annotationSettingTypes).map(
   (d) => (
-    <MenuItem key={d} label={d} value={d}>
+    <option key={d} label={d} value={d}>
       {d}
-    </MenuItem>
+    </option>
   )
 )
 
@@ -624,9 +619,9 @@ export default class XYFrameDocs extends React.Component {
 
   render() {
     const dataTypeOptions = ["line", "point", "summary"].map((d) => (
-      <MenuItem key={`data-type-option-${d}`} value={d}>
+      <option key={`data-type-option-${d}`} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const marginHash = {
@@ -651,129 +646,129 @@ export default class XYFrameDocs extends React.Component {
       "bumpline",
       "bumparea"
     ].map((d) => (
-      <MenuItem key={`line-option-${d}`} value={d}>
+      <option key={`line-option-${d}`} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const renderOptions = ["none", "sketchy", "painty"].map((d) => (
-      <MenuItem key={`render-option-${d}`} value={d}>
+      <option key={`render-option-${d}`} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const definedOptions = ["active", "inactive"].map((d) => (
-      <MenuItem key={`defined-option-${d}`} value={d}>
+      <option key={`defined-option-${d}`} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const hoverAnnotationOptions = ["off", "on"].map((d) => (
-      <MenuItem key={`hover-annotation-option-${d}`} value={d}>
+      <option key={`hover-annotation-option-${d}`} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const matteOptions = ["off", "on"].map((d) => (
-      <MenuItem key={`matte-option-${d}`} value={d}>
+      <option key={`matte-option-${d}`} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const annotationOptions = ["off", "on"].map((d) => (
-      <MenuItem key={`annotation-option-${d}`} value={d}>
+      <option key={`annotation-option-${d}`} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const showPointOptions = ["off", "on"].map((d) => (
-      <MenuItem key={`show-point-option-${d}`} value={d}>
+      <option key={`show-point-option-${d}`} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const axisAnnotationableOptions = ["off", "on"].map((d) => (
-      <MenuItem key={`axis-annotatable-option-${d}`} value={d}>
+      <option key={`axis-annotatable-option-${d}`} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const foregroundGraphicsOptions = ["off", "on"].map((d) => (
-      <MenuItem key={`foreground-option-${d}`} value={d}>
+      <option key={`foreground-option-${d}`} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const backgroundGraphicsOptions = ["off", "on"].map((d) => (
-      <MenuItem key={`background-option-${d}`} value={d}>
+      <option key={`background-option-${d}`} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const legendOptions = ["off", "on"].map((d) => (
-      <MenuItem key={`legend-option-${d}`} value={d}>
+      <option key={`legend-option-${d}`} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const customScaleOptions = ["none", "pow"].map((d) => (
-      <MenuItem key={`customScale-option-${d}`} value={d}>
+      <option key={`customScale-option-${d}`} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const fixedExtentOptions = ["none", "partial", "full"].map((d) => (
-      <MenuItem key={`fixed-extent-annotation-option-${d}`} value={d}>
+      <option key={`fixed-extent-annotation-option-${d}`} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const customPointOptions = ["none", "basic", "variable"].map((d) => (
-      <MenuItem key={`custom-point-option-${d}`} value={d}>
+      <option key={`custom-point-option-${d}`} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const summaryTypeOptions = ["basic", "contours"].map((d) => (
-      <MenuItem key={`summary-type-option-${d}`} value={d}>
+      <option key={`summary-type-option-${d}`} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const titleOptions = Object.keys(titleTypesHash).map((d) => (
-      <MenuItem key={`title-option-${d}`} value={d}>
+      <option key={`title-option-${d}`} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const canvasRenderOptions = Object.keys(canvasRenderHash).map((d) => (
-      <MenuItem key={`canvas-render-annotation-option-${d}`} value={d}>
+      <option key={`canvas-render-annotation-option-${d}`} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const curveOptions = Object.keys(curveHash).map((d) => (
-      <MenuItem key={`curve-option-${d}`} value={d}>
+      <option key={`curve-option-${d}`} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const marginOptions = Object.keys(marginHash).map((d) => (
-      <MenuItem key={`margin-option-${d}`} value={d}>
+      <option key={`margin-option-${d}`} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const axesOptions = Object.keys(axesHash).map((d) => (
-      <MenuItem key={`axes-option-${d}`} value={d}>
+      <option key={`axes-option-${d}`} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const frameOptions = Object.keys(frameHash).map((d) => (
-      <MenuItem key={`frame-option-${d}`} value={d}>
+      <option key={`frame-option-${d}`} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     if (
@@ -1180,10 +1175,10 @@ export default class XYFrameDocs extends React.Component {
       />`
     })
 
-    const lineButtons = [
-      <FormControl key="button-1">
-        <InputLabel htmlFor="hover-behavior-input">lineType</InputLabel>
-        <Select
+    const linebuttons = [
+      <form key="button-1">
+        <label htmlFor="hover-behavior-input">lineType</label>
+        <select
           value={this.state.lineType}
           onChange={(e) =>
             this.setState({
@@ -1192,44 +1187,44 @@ export default class XYFrameDocs extends React.Component {
           }
         >
           {options}
-        </Select>
-      </FormControl>,
+        </select>
+      </form>,
       this.state.lineType === "none" ? null : (
-        <FormControl key="button-2">
-          <InputLabel htmlFor="hover-behavior-input">lineType.curve</InputLabel>
-          <Select
+        <form key="button-2">
+          <label htmlFor="hover-behavior-input">lineType.curve</label>
+          <select
             value={this.state.curve}
             onChange={(e) => this.setState({ curve: e.target.value })}
           >
             {curveOptions}
-          </Select>
-        </FormControl>
+          </select>
+        </form>
       ),
 
-      <FormControl key="button-6">
-        <InputLabel htmlFor="hover-behavior-input">defined</InputLabel>
-        <Select
+      <form key="button-6">
+        <label htmlFor="hover-behavior-input">defined</label>
+        <select
           value={this.state.defined}
           onChange={(e) => this.setState({ defined: e.target.value })}
         >
           {definedOptions}
-        </Select>
-      </FormControl>,
-      <FormControl key="button-6-3-6-2">
-        <InputLabel htmlFor="hover-behavior-input">legend</InputLabel>
-        <Select
+        </select>
+      </form>,
+      <form key="button-6-3-6-2">
+        <label htmlFor="hover-behavior-input">legend</label>
+        <select
           value={this.state.legend}
           onChange={(e) => this.setState({ legend: e.target.value })}
         >
           {legendOptions}
-        </Select>
-      </FormControl>
+        </select>
+      </form>
     ]
 
-    const pointButtons = [
-      <FormControl key="button-1">
-        <InputLabel htmlFor="hover-behavior-input">customPointMark</InputLabel>
-        <Select
+    const pointbuttons = [
+      <form key="button-1">
+        <label htmlFor="hover-behavior-input">customPointMark</label>
+        <select
           value={this.state.customPoint}
           onChange={(e) =>
             this.setState({
@@ -1238,14 +1233,14 @@ export default class XYFrameDocs extends React.Component {
           }
         >
           {customPointOptions}
-        </Select>
-      </FormControl>
+        </select>
+      </form>
     ]
 
-    const summaryButtons = [
-      <FormControl key="button-1">
-        <InputLabel htmlFor="hover-behavior-input">summaryType</InputLabel>
-        <Select
+    const summarybuttons = [
+      <form key="button-1">
+        <label htmlFor="hover-behavior-input">summaryType</label>
+        <select
           value={this.state.summaryType}
           onChange={(e) =>
             this.setState({
@@ -1254,192 +1249,186 @@ export default class XYFrameDocs extends React.Component {
           }
         >
           {summaryTypeOptions}
-        </Select>
-      </FormControl>,
-      <FormControl key="button-3-0-0">
-        <InputLabel htmlFor="hover-behavior-input">showPoints</InputLabel>
-        <Select
+        </select>
+      </form>,
+      <form key="button-3-0-0">
+        <label htmlFor="hover-behavior-input">showPoints</label>
+        <select
           value={this.state.showPoints}
           onChange={(e) => this.setState({ showPoints: e.target.value })}
         >
           {showPointOptions}
-        </Select>
-      </FormControl>
+        </select>
+      </form>
     ]
 
-    const annotationButtons = [
-      <FormControl key="button-3-0-0">
-        <InputLabel htmlFor="hover-behavior-input">annotations</InputLabel>
-        <Select
+    const annotationbuttons = [
+      <form key="button-3-0-0">
+        <label htmlFor="hover-behavior-input">annotations</label>
+        <select
           value={this.state.annotations}
           onChange={(e) => this.setState({ annotations: e.target.value })}
         >
           {annotationOptions}
-        </Select>
-      </FormControl>,
-      <FormControl key="button-3-2-0">
-        <InputLabel htmlFor="hover-behavior-input">
-          annotationSettings
-        </InputLabel>
-        <Select
+        </select>
+      </form>,
+      <form key="button-3-2-0">
+        <label htmlFor="hover-behavior-input">annotationSettings</label>
+        <select
           value={this.state.annotationSettings}
           onChange={(e) =>
             this.setState({ annotationSettings: e.target.value })
           }
         >
           {annotationSettingOptions}
-        </Select>
-      </FormControl>
+        </select>
+      </form>
     ]
 
-    const graphicsButtons = [
-      <FormControl key="button-g-1-0">
-        <InputLabel htmlFor="hover-behavior-input">
-          backgroundGraphics
-        </InputLabel>
-        <Select
+    const graphicsbuttons = [
+      <form key="button-g-1-0">
+        <label htmlFor="hover-behavior-input">backgroundGraphics</label>
+        <select
           value={this.state.backgroundGraphics}
           onChange={(e) =>
             this.setState({ backgroundGraphics: e.target.value })
           }
         >
           {backgroundGraphicsOptions}
-        </Select>
-      </FormControl>,
+        </select>
+      </form>,
 
-      <FormControl key="button-g-2-0">
-        <InputLabel htmlFor="hover-behavior-input">
-          foregroundGraphics
-        </InputLabel>
-        <Select
+      <form key="button-g-2-0">
+        <label htmlFor="hover-behavior-input">foregroundGraphics</label>
+        <select
           value={this.state.foregroundGraphics}
           onChange={(e) =>
             this.setState({ foregroundGraphics: e.target.value })
           }
         >
           {foregroundGraphicsOptions}
-        </Select>
-      </FormControl>
+        </select>
+      </form>
     ]
 
     const buttons = [
-      <FormControl key="button-0">
-        <InputLabel htmlFor="hover-behavior-input">Change Frame</InputLabel>
-        <Select
+      <form key="button-0">
+        <label htmlFor="hover-behavior-input">Change Frame</label>
+        <select
           value={this.state.frame}
           onChange={(e) => this.setState({ frame: e.target.value })}
         >
           {frameOptions}
-        </Select>
-      </FormControl>,
-      <FormControl key="button-0-1-0">
-        <InputLabel htmlFor="hover-behavior-input">title</InputLabel>
-        <Select
+        </select>
+      </form>,
+      <form key="button-0-1-0">
+        <label htmlFor="hover-behavior-input">title</label>
+        <select
           value={this.state.title}
           onChange={(e) => this.setState({ title: e.target.value })}
         >
           {titleOptions}
-        </Select>
-      </FormControl>,
-      <FormControl key="button-0-1">
-        <InputLabel htmlFor="hover-behavior-input">Data Type</InputLabel>
-        <Select
+        </select>
+      </form>,
+      <form key="button-0-1">
+        <label htmlFor="hover-behavior-input">Data Type</label>
+        <select
           value={this.state.dataType}
           onChange={(e) => this.setState({ dataType: e.target.value })}
         >
           {dataTypeOptions}
-        </Select>
-      </FormControl>,
-      this.state.dataType === "line" ? lineButtons : null,
-      this.state.dataType === "point" ? pointButtons : null,
-      this.state.dataType === "summary" ? summaryButtons : null,
-      annotationButtons,
+        </select>
+      </form>,
+      this.state.dataType === "line" ? linebuttons : null,
+      this.state.dataType === "point" ? pointbuttons : null,
+      this.state.dataType === "summary" ? summarybuttons : null,
+      annotationbuttons,
 
-      <FormControl key="button-3-0">
-        <InputLabel htmlFor="hover-behavior-input">fixedExtent</InputLabel>
-        <Select
+      <form key="button-3-0">
+        <label htmlFor="hover-behavior-input">fixedExtent</label>
+        <select
           value={this.state.fixedExtent}
           onChange={(e) => this.setState({ fixedExtent: e.target.value })}
         >
           {fixedExtentOptions}
-        </Select>
-      </FormControl>,
-      <FormControl key="button-3-1">
-        <InputLabel htmlFor="hover-behavior-input">matte</InputLabel>
-        <Select
+        </select>
+      </form>,
+      <form key="button-3-1">
+        <label htmlFor="hover-behavior-input">matte</label>
+        <select
           value={this.state.matte}
           onChange={(e) => this.setState({ matte: e.target.value })}
         >
           {matteOptions}
-        </Select>
-      </FormControl>,
-      <FormControl key="button-3">
-        <InputLabel htmlFor="hover-behavior-input">margin</InputLabel>
-        <Select
+        </select>
+      </form>,
+      <form key="button-3">
+        <label htmlFor="hover-behavior-input">margin</label>
+        <select
           value={this.state.margin}
           onChange={(e) => this.setState({ margin: e.target.value })}
         >
           {marginOptions}
-        </Select>
-      </FormControl>,
-      <FormControl key="button-4">
-        <InputLabel htmlFor="hover-behavior-input">axes</InputLabel>
-        <Select
+        </select>
+      </form>,
+      <form key="button-4">
+        <label htmlFor="hover-behavior-input">axes</label>
+        <select
           value={this.state.axes}
           onChange={(e) => this.setState({ axes: e.target.value })}
         >
           {axesOptions}
-        </Select>
-      </FormControl>,
+        </select>
+      </form>,
       this.state.axes === "hover" ? (
         <div key="button-3-1-0">
-          <InputLabel htmlFor="hover-behavior-input">Axis Annotate</InputLabel>
-          <Select
+          <label htmlFor="hover-behavior-input">Axis Annotate</label>
+          <select
             value={this.state.axisAnnotatable}
             onChange={(e) => this.setState({ axisAnnotatable: e.target.value })}
           >
             {axisAnnotationableOptions}
-          </Select>
+          </select>
         </div>
       ) : null,
 
-      <FormControl key="button-5">
-        <InputLabel htmlFor="hover-behavior-input">Render Mode</InputLabel>
-        <Select
+      <form key="button-5">
+        <label htmlFor="hover-behavior-input">Render Mode</label>
+        <select
           value={this.state.renderMode}
           onChange={(e) => this.setState({ renderMode: e.target.value })}
         >
           {renderOptions}
-        </Select>
-      </FormControl>,
-      <FormControl key="button-7">
-        <InputLabel htmlFor="hover-behavior-input">hoverAnnotation</InputLabel>
-        <Select
+        </select>
+      </form>,
+      <form key="button-7">
+        <label htmlFor="hover-behavior-input">hoverAnnotation</label>
+        <select
           value={this.state.hoverAnnotation}
           onChange={(e) => this.setState({ hoverAnnotation: e.target.value })}
         >
           {hoverAnnotationOptions}
-        </Select>
-      </FormControl>,
-      <FormControl key="button-8">
-        <InputLabel htmlFor="hover-behavior-input">canvasRender</InputLabel>
-        <Select
+        </select>
+      </form>,
+      <form key="button-8">
+        <label htmlFor="hover-behavior-input">canvasRender</label>
+        <select
           value={this.state.canvasRender}
           onChange={(e) => this.setState({ canvasRender: e.target.value })}
         >
           {canvasRenderOptions}
-        </Select>
-      </FormControl>,
-      <FormControl key="button-9">
-        <InputLabel htmlFor="hover-behavior-input">customScale</InputLabel>
-        <Select
+        </select>
+      </form>,
+      <form key="button-9">
+        <label htmlFor="hover-behavior-input">customScale</label>
+        <select
           value={this.state.customScale}
           onChange={(e) => this.setState({ customScale: e.target.value })}
         >
           {customScaleOptions}
-        </Select>
-      </FormControl>,
-      graphicsButtons
+        </select>
+      </form>,
+      graphicsbuttons
     ]
 
     return (

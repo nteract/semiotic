@@ -1,10 +1,6 @@
 import React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 import SparklineRaw from "./SparklineRaw"
-import MenuItem from "@material-ui/core/MenuItem"
-import InputLabel from "@material-ui/core/InputLabel"
-import FormControl from "@material-ui/core/FormControl"
-import Select from "@material-ui/core/Select"
 
 const components = []
 
@@ -13,9 +9,9 @@ components.push({
 })
 
 const typeOptions = ["stackedarea", "line", "difference"].map((d) => (
-  <MenuItem key={`type-option-${d}`} label={d} value={d}>
+  <option key={`type-option-${d}`} label={d} value={d}>
     {d}
-  </MenuItem>
+  </option>
 ))
 
 export default class Sparkline extends React.Component {
@@ -30,15 +26,15 @@ export default class Sparkline extends React.Component {
     const examples = []
 
     const buttons = [
-      <FormControl key="button-1-0-0">
-        <InputLabel htmlFor="chart-type-input">Chart Type</InputLabel>
-        <Select
+      <form key="button-1-0-0">
+        <label htmlFor="chart-type-input">Chart Type</label>
+        <select
           value={this.state.type}
           onChange={(e) => this.setState({ type: e.target.value })}
         >
           {typeOptions}
-        </Select>
-      </FormControl>
+        </select>
+      </form>
     ]
 
     examples.push({

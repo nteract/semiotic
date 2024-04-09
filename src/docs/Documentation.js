@@ -11,8 +11,6 @@ import AxisDocs from "./components/AxisDocs"
 import LegendDocs from "./components/LegendDocs"
 import DividedLineDocs from "./components/DividedLineDocs"
 
-import Divider from "@material-ui/core/Divider"
-
 import classNames from "classnames"
 
 //Examples
@@ -69,12 +67,6 @@ import UsingPatternsTextures from "./components/UsingPatternsTextures"
 import RealtimeOrdinalFrame from "./components/RealtimeOrdinalFrame"
 import RealtimeXYFrame from "./components/RealtimeXYFrame"
 
-import Drawer from "@material-ui/core/Drawer"
-import AppBar from "@material-ui/core/AppBar"
-import Toolbar from "@material-ui/core/Toolbar"
-import List from "@material-ui/core/List"
-import ListItem from "@material-ui/core/ListItem"
-import ListItemText from "@material-ui/core/ListItemText"
 import { Link } from "react-router-dom"
 
 const components = {
@@ -150,14 +142,10 @@ function Documentation(props) {
 
   const allDocs = [
     <Link to={"/"} key="home-link">
-      <ListItem button>
-        <ListItemText primary="Home" />
-      </ListItem>
+      <button>Home</button>
     </Link>,
     <Link to={"/examples"} key="examples-link">
-      <ListItem button>
-        <ListItemText primary="Examples" />
-      </ListItem>
+      <button>Examples</button>
     </Link>
   ]
 
@@ -171,24 +159,9 @@ function Documentation(props) {
         components[c].parent === selectedComponent.parent) ||
       c === selected
     ) {
-      let styleOver = {}
-      if (components[c].parent) {
-        styleOver = { paddingLeft: "20px" }
-      }
-      const finalStyle =
-        selected === c
-          ? {
-              borderTop: "5px double #ac9739",
-              borderBottom: "5px double #ac9739",
-              fontWeight: 900,
-              ...styleOver
-            }
-          : styleOver
       allDocs.push(
         <Link to={`/${c}`} key={`${c}-link`}>
-          <ListItem key={cTitle} style={finalStyle}>
-            <ListItemText primary={cTitle} />
-          </ListItem>
+          <button>{cTitle}</button>
         </Link>
       )
     }
@@ -217,32 +190,13 @@ function Documentation(props) {
           justifyContent: "flex-end"
         }}
       >
-        <AppBar
-          className={classNames(classes.appBar, open && classes.appBarShift)}
-        >
-          <Toolbar disableGutters={!open} className="semiotic-header">
-            <span
-              style={{ cursor: "pointer", color: "white" }}
-              onClick={() => (props.history ? props.history.push("/") : null)}
-            >
-              Semiotic
-            </span>
-          </Toolbar>
-        </AppBar>
-        <Drawer
-          type="persistent"
-          classes={{
-            paper: classes.drawerPaper
-          }}
-          open={open}
-        >
-          <div className={classes.drawerInner}>
-            <div className={"drawer-title"}>Semiotic</div>
-            <Divider />
-            <List className={classes.list}>{allDocs}</List>
-          </div>
-        </Drawer>
+        <div style={{ width: "100px", position: "fixed", top: 0, left: 0 }}>
+          <div className={"drawer-title"}>Semiotic</div>
+
+          <li className={classes.list}>{allDocs}</li>
+        </div>
         <main
+          style={{ width: "calc(100% - 200px)" }}
           className={classNames(classes.content, open && classes.contentShift)}
         >
           {AdditionalContent ? <AdditionalContent /> : null}

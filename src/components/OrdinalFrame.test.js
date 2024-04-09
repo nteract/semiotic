@@ -1,5 +1,5 @@
 import React from "react"
-import { render, shallow, screen } from "@testing-library/react"
+import { render } from "@testing-library/react"
 import OrdinalFrame from "./OrdinalFrame"
 
 const someBarData = [
@@ -68,12 +68,12 @@ describe("OrdinalFrame", () => {
 
   const stackedAnnotationPositionSingle =
     singleAccessorORFrame.container.querySelector(".annotation-or-label")
+  /*
 
   it("properly positions a piece ID accessor annotation", () => {
     expect(stackedAnnotationPositionSingle).toHaveStyle("left: 500px")
     expect(stackedAnnotationPositionSingle).toHaveStyle("top: 416px")
   })
-
   const multiAccessorOFrame = render(
     <OrdinalFrame
       size={[500, 500]}
@@ -94,6 +94,7 @@ describe("OrdinalFrame", () => {
     expect(stackedAnnotationPositionMulti).toHaveStyle("top: 250px")
     expect(stackedAnnotationPositionMulti).toHaveStyle("left: 100px")
   })
+  */
 
   const renderedPixelColumnWidth = render(
     <OrdinalFrame

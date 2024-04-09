@@ -1,10 +1,6 @@
 import * as React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 import CustomNodesRaw from "./CustomNodesRaw"
-import MenuItem from '@material-ui/core/MenuItem'
-import InputLabel from '@material-ui/core/InputLabel'
-import FormControl from "@material-ui/core/FormControl"
-import Select from "@material-ui/core/Select"
 
 const components = []
 
@@ -22,39 +18,39 @@ export default class DagreGraph extends React.Component {
     }
   }
   render() {
-    const directionOptions = ["BT", "TB", "LR", "RL"].map(d => (
-      <MenuItem key={`direction-option-${d}`} label={d} value={d}>
+    const directionOptions = ["BT", "TB", "LR", "RL"].map((d) => (
+      <option key={`direction-option-${d}`} label={d} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const rankerOptions = ["network-simplex", "tight-tree", "longest-path"].map(
-      d => (
-        <MenuItem key={`direction-option-${d}`} label={d} value={d}>
+      (d) => (
+        <option key={`direction-option-${d}`} label={d} value={d}>
           {d}
-        </MenuItem>
+        </option>
       )
     )
 
     const buttons = [
-      <FormControl key="button-1-0-0">
-        <InputLabel htmlFor="chart-direction-input">Layout</InputLabel>
-        <Select
+      <form key="button-1-0-0">
+        <label htmlFor="chart-direction-input">Layout</label>
+        <select
           value={this.state.ranker}
-          onChange={e => this.setState({ ranker: e.target.value })}
+          onChange={(e) => this.setState({ ranker: e.target.value })}
         >
           {rankerOptions}
-        </Select>
-      </FormControl>,
-      <FormControl key="button-2-0-0">
-        <InputLabel htmlFor="chart-direction-input">Direction</InputLabel>
-        <Select
+        </select>
+      </form>,
+      <form key="button-2-0-0">
+        <label htmlFor="chart-direction-input">Direction</label>
+        <select
           value={this.state.direction}
-          onChange={e => this.setState({ direction: e.target.value })}
+          onChange={(e) => this.setState({ direction: e.target.value })}
         >
           {directionOptions}
-        </Select>
-      </FormControl>
+        </select>
+      </form>
     ]
 
     const examples = []
@@ -67,9 +63,7 @@ export default class DagreGraph extends React.Component {
       }),
       source: `import dagre from "dagre"
 const g = new dagre.graphlib.Graph()
-g.setGraph({ rankdir:  "${this.state.direction}", ranker: "${
-        this.state.ranker
-        }" })
+g.setGraph({ rankdir:  "${this.state.direction}", ranker: "${this.state.ranker}" })
 g.setDefaultEdgeLabel(() => ({}))
 
 g.setNode("spongebob", { label: "Mr. Squarepants", width: 44, height: 35 })
@@ -146,9 +140,7 @@ hoverAnnotation={true}
       }),
       source: `import dagre from "dagre"
 const g = new dagre.graphlib.Graph()
-g.setGraph({ rankdir: "${this.state.direction}", ranker: "${
-        this.state.ranker
-        }" })
+g.setGraph({ rankdir: "${this.state.direction}", ranker: "${this.state.ranker}" })
 g.setDefaultEdgeLabel(() => ({}))
 
 g.setNode("spongebob", { label: "Mr. Squarepants", width: 44, height: 35 })

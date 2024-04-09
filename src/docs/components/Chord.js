@@ -1,10 +1,6 @@
 import * as React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 import ChordRaw from "./ChordRaw"
-import Select from "@material-ui/core/Select"
-import MenuItem from '@material-ui/core/MenuItem'
-import InputLabel from '@material-ui/core/InputLabel'
-import FormControl from "@material-ui/core/FormControl"
 
 const components = []
 
@@ -22,22 +18,22 @@ export default class Chord extends React.Component {
   }
 
   render() {
-    const padAngleOptions = ["0.01", "0", "0.2", "0.4"].map(d => (
-      <MenuItem key={`pad-option-${d}`} label={d} value={d}>
+    const padAngleOptions = ["0.01", "0", "0.2", "0.4"].map((d) => (
+      <option key={`pad-option-${d}`} label={d} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const buttons = [
-      <FormControl key="button-1-0-0">
-        <InputLabel htmlFor="pad-angle-input">padAngle</InputLabel>
-        <Select
+      <form key="button-1-0-0">
+        <label htmlFor="pad-angle-input">padAngle</label>
+        <select
           value={this.state.padAngle}
-          onChange={e => this.setState({ padAngle: e.target.value })}
+          onChange={(e) => this.setState({ padAngle: e.target.value })}
         >
           {padAngleOptions}
-        </Select>
-      </FormControl>
+        </select>
+      </form>
     ]
 
     const examples = []

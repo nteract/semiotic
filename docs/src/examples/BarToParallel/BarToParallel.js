@@ -6,7 +6,7 @@ import theme from "../../theme"
 import { funnelData } from "./funnelData"
 import "./bar-to-parallel.css"
 
-const Button = props => {
+const button = (props) => {
   return (
     <button type="button" onClick={props.onClick}>
       {props.text}
@@ -20,7 +20,7 @@ const stepColors = {
   basket: theme[2],
   purchase: theme[3],
   return: theme[4],
-  extra: theme[5]
+  extra: theme[5],
 }
 
 const regionColors = {
@@ -29,18 +29,18 @@ const regionColors = {
   "Middle Earth": theme[2],
   "Long Ago and Far Away": theme[3],
   return: theme[4],
-  extra: theme[5]
+  extra: theme[5],
 }
 const stepValueHash = {
   home: 0,
   shop: 1,
   basket: 2,
   purchase: 3,
-  return: 4
+  return: 4,
 }
 
 const funnelHash = {}
-funnelData.forEach(d => {
+funnelData.forEach((d) => {
   if (!funnelHash[d.country]) {
     d.percent = d.people / 1200
   } else {
@@ -50,7 +50,6 @@ funnelData.forEach(d => {
 })
 
 export class BarToParallel extends React.Component {
-
   state = {
     type: "Process",
     step: 0,
@@ -63,8 +62,8 @@ export class BarToParallel extends React.Component {
       shop: [0.35, 0.6],
       basket: [0.2, 0.9],
       purchase: [0.25, 1.2],
-      return: [0, 0.8]
-    }
+      return: [0, 0.8],
+    },
   }
 
   brushing = (e, c) => {
@@ -106,15 +105,12 @@ export class BarToParallel extends React.Component {
 
     const hiddenHash = new Map()
 
-    Object.keys(this.state.columnExtent).forEach(key => {
+    Object.keys(this.state.columnExtent).forEach((key) => {
       if (this.state.columnExtent[key]) {
         const extent = this.state.columnExtent[key]
         funnelData
-          .filter(
-            d =>
-              d.step === key && (d.percent < extent[0] || d.percent > extent[1])
-          )
-          .forEach(p => {
+          .filter((d) => d.step === key && (d.percent < extent[0] || d.percent > extent[1]))
+          .forEach((p) => {
             hiddenHash.set(p.country, true)
           })
       }
@@ -122,224 +118,212 @@ export class BarToParallel extends React.Component {
 
     const stepSettings = [
       {
-        style: d => ({
+        style: (d) => ({
           fill: stepColors[d.step],
-          stroke: stepColors[d.step]
+          stroke: stepColors[d.step],
         }),
         type: "bar",
         afterElements: (
           <div className="bar-to-parallel__caption">
             <p>
-              Representing funnels is a common problem in analytical
-              applications. You have a site or a process that your users move
-              through, and the health of that process is seen in the amount of
-              users moving from one step to the next.
+              Representing funnels is a common problem in analytical applications. You have a site
+              or a process that your users move through, and the health of that process is seen in
+              the amount of users moving from one step to the next.
             </p>
             <p>
-              Funnels are commonly represented as bar charts. Here we see the
-              steps and a bar showing the amount of users at each step. By
-              providing the data in a familiar form, you can then iterate within
-              that particular model of the information (a set of steps and the
-              numerical value at that step).
+              Funnels are commonly represented as bar charts. Here we see the steps and a bar
+              showing the amount of users at each step. By providing the data in a familiar form,
+              you can then iterate within that particular model of the information (a set of steps
+              and the numerical value at that step).
             </p>
           </div>
-        )
+        ),
       },
       {
         data: funnelData.sort(sortRegions),
-        style: d => ({
+        style: (d) => ({
           fill: regionColors[d.region],
-          stroke: regionColors[d.region]
+          stroke: regionColors[d.region],
         }),
         type: "bar",
         afterElements: (
           <div className="bar-to-parallel__caption">
             <p>
-              One common way to add value to a chart like this is to use a
-              stacked bar chart. Because the individual "pieces" of data are
-              modeled, it's just a matter of sorting and coloring the pieces by
-              region. This allows you to show the contribution of each region to
-              each step.
+              One common way to add value to a chart like this is to use a stacked bar chart.
+              Because the individual "pieces" of data are modeled, it's just a matter of sorting and
+              coloring the pieces by region. This allows you to show the contribution of each region
+              to each step.
             </p>
           </div>
-        )
+        ),
       },
       {
         data: funnelData.sort(sortRegions),
-        style: d => ({
+        style: (d) => ({
           fill: regionColors[d.region],
-          stroke: regionColors[d.region]
+          stroke: regionColors[d.region],
         }),
         type: "bar",
         oPadding: 40,
-        connectorType: d => d.country,
-        connectorStyle: d => ({
+        connectorType: (d) => d.country,
+        connectorStyle: (d) => ({
           fill: regionColors[d.source.region],
-          stroke: regionColors[d.source.region]
+          stroke: regionColors[d.source.region],
         }),
         afterElements: (
           <div className="bar-to-parallel__caption">
             <p>
-              Because a funnel is about "flow" you might end up drawing
-              connections between the steps, to show the magnitude of flow from
-              one step to another.
+              Because a funnel is about "flow" you might end up drawing connections between the
+              steps, to show the magnitude of flow from one step to another.
             </p>
           </div>
-        )
+        ),
       },
       {
         data: funnelData.sort(sortRegions),
-        style: d => ({
+        style: (d) => ({
           fill: regionColors[d.region],
-          stroke: regionColors[d.region]
+          stroke: regionColors[d.region],
         }),
         type: "point",
-        connectorType: d => d.country,
-        connectorStyle: d => ({
+        connectorType: (d) => d.country,
+        connectorStyle: (d) => ({
           fill: regionColors[d.source.region],
-          stroke: regionColors[d.source.region]
+          stroke: regionColors[d.source.region],
         }),
         afterElements: (
           <div className="bar-to-parallel__caption">
             <p>
-              Rather than showing the aggregate value at each step, we can use
-              the "point" type to show the individual country values at each
-              step. Notice the axis has adjusted so you can see how much each
-              country contributes, with each point still colored by region. By
+              Rather than showing the aggregate value at each step, we can use the "point" type to
+              show the individual country values at each step. Notice the axis has adjusted so you
+              can see how much each country contributes, with each point still colored by region. By
               connecting these points you've created a slopegraph.
             </p>
           </div>
-        )
+        ),
       },
       {
         data: funnelData.sort(sortRegions),
-        style: d => ({
+        style: (d) => ({
           fill: regionColors[d.region],
-          stroke: regionColors[d.region]
+          stroke: regionColors[d.region],
         }),
         type: "swarm",
-        connectorType: d => d.country,
-        connectorStyle: d => ({
+        connectorType: (d) => d.country,
+        connectorStyle: (d) => ({
           fill: regionColors[d.source.region],
-          stroke: regionColors[d.source.region]
+          stroke: regionColors[d.source.region],
         }),
         afterElements: (
           <div className="bar-to-parallel__caption">
             <p>
-              To clear up overlap in crowded regions, you might use the "swarm"
-              type to create a "swarmgraph" if that's a thing.
+              To clear up overlap in crowded regions, you might use the "swarm" type to create a
+              "swarmgraph" if that's a thing.
             </p>
           </div>
-        )
+        ),
       },
       {
         data: funnelData.sort(sortRegions),
-        style: d => ({
+        style: (d) => ({
           fill: regionColors[d.region],
-          stroke: regionColors[d.region]
+          stroke: regionColors[d.region],
         }),
         type: "swarm",
         rAccessor: "percent",
         axis: {
           orient: "left",
-          tickFormat: d => `${Math.floor(d * 10) * 10}%`
+          tickFormat: (d) => `${Math.floor(d * 10) * 10}%`,
         },
-        connectorType: d => d.country,
-        connectorStyle: d => ({
+        connectorType: (d) => d.country,
+        connectorStyle: (d) => ({
           fill: regionColors[d.source.region],
-          stroke: regionColors[d.source.region]
+          stroke: regionColors[d.source.region],
         }),
         afterElements: (
           <div className="bar-to-parallel__caption">
             <p>
-              Or you might realize that what's important aren't the raw numbers
-              but rather the percent that of people who made it from each step
-              to the next.
+              Or you might realize that what's important aren't the raw numbers but rather the
+              percent that of people who made it from each step to the next.
             </p>
           </div>
-        )
+        ),
       },
       {
         data: funnelData.sort(sortRegions),
-        style: d => ({
+        style: (d) => ({
           fill: hiddenHash.get(d.country) ? "gray" : regionColors[d.region],
           stroke: hiddenHash.get(d.country) ? "gray" : regionColors[d.region],
-          opacity: hiddenHash.get(d.country) ? 0.25 : 1
+          opacity: hiddenHash.get(d.country) ? 0.25 : 1,
         }),
         type: "swarm",
         axis: {
           orient: "left",
-          tickFormat: d => `${Math.floor(d * 10) * 10}%`
+          tickFormat: (d) => `${Math.floor(d * 10) * 10}%`,
         },
         rAccessor: "percent",
-        connectorType: d => d.country,
-        connectorStyle: d => ({
-          fill: hiddenHash.get(d.source.country)
-            ? "gray"
-            : regionColors[d.source.region],
-          stroke: hiddenHash.get(d.source.country)
-            ? "gray"
-            : regionColors[d.source.region],
-          opacity: hiddenHash.get(d.source.country) ? 0.25 : 1
+        connectorType: (d) => d.country,
+        connectorStyle: (d) => ({
+          fill: hiddenHash.get(d.source.country) ? "gray" : regionColors[d.source.region],
+          stroke: hiddenHash.get(d.source.country) ? "gray" : regionColors[d.source.region],
+          opacity: hiddenHash.get(d.source.country) ? 0.25 : 1,
         }),
         interaction: {
           columnsBrush: true,
           end: this.brushing,
-          extent: this.state.columnExtent
+          extent: this.state.columnExtent,
         },
         afterElements: (
           <div className="bar-to-parallel__caption">
             <p>
-              If you add a brush to the columns to let users highlight different
-              paths, you've created a parallel coordinates chart. Had you walked
-              in with a parallel coordinates chart when the ask was for a bar
-              chart, stakeholders might have been resistant, but it's a natural
-              progression in the design process and didn't require any change in
-              the data, just the settings for how it's displayed.
+              If you add a brush to the columns to let users highlight different paths, you've
+              created a parallel coordinates chart. Had you walked in with a parallel coordinates
+              chart when the ask was for a bar chart, stakeholders might have been resistant, but
+              it's a natural progression in the design process and didn't require any change in the
+              data, just the settings for how it's displayed.
             </p>
           </div>
-        )
+        ),
       },
       {
         size: [700, 700],
         data: funnelData.sort(sortRegions),
-        style: d => ({
+        style: (d) => ({
           fill: regionColors[d.region],
-          stroke: regionColors[d.region]
+          stroke: regionColors[d.region],
         }),
         axis: {
           orient: "left",
-          tickFormat: d => `${Math.floor(d * 10) * 10}%`
+          tickFormat: (d) => `${Math.floor(d * 10) * 10}%`,
         },
         type: "swarm",
         rAccessor: "percent",
         projection: "radial",
         oPadding: 25,
-        connectorType: d => d.country,
-        connectorStyle: d => ({
+        connectorType: (d) => d.country,
+        connectorStyle: (d) => ({
           fill: regionColors[d.source.region],
-          stroke: regionColors[d.source.region]
+          stroke: regionColors[d.source.region],
         }),
         afterElements: (
           <div className="bar-to-parallel__caption">
             <p>
-              And if your stakeholders need to enter their chart in the next
-              data visualization contest, you can easily transform it into a
-              radial chart.
+              And if your stakeholders need to enter their chart in the next data visualization
+              contest, you can easily transform it into a radial chart.
             </p>
           </div>
-        )
-      }
+        ),
+      },
     ]
 
     const contentDiv = (
       <div className="infomodel-proto infomodel">
         <div className="infomodel-buttons">
           {this.state.step === 0 ? null : (
-            <Button onClick={this.stepBackward} text="Back!"></Button>
+            <button onClick={this.stepBackward} text="Back!"></button>
           )}
           {this.state.step === stepSettings.length - 1 ? null : (
-            <Button onClick={this.stepForward} text="Forward"></Button>
+            <button onClick={this.stepForward} text="Forward"></button>
           )}
         </div>
         <OrdinalFrame
@@ -360,11 +344,10 @@ export class BarToParallel extends React.Component {
       <div className="bar-to-parallel__container">
         <h2>Ideating within an information model</h2>
         <p>
-          This simple stepper lets you move from a bar chart representation of
-          funnel data to a sophisticated parallel coordinates representation of
-          that same data simply by changing the settings of OrdinalFrame. It's
-          meant to mimic the process of iterative design of data visualization
-          with stakeholders.
+          This simple stepper lets you move from a bar chart representation of funnel data to a
+          sophisticated parallel coordinates representation of that same data simply by changing the
+          settings of OrdinalFrame. It's meant to mimic the process of iterative design of data
+          visualization with stakeholders.
         </p>
         {contentDiv}
       </div>

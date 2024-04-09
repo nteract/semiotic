@@ -1,6 +1,5 @@
 import * as React from "react"
 import { OrdinalFrame } from "../../components"
-import Button from "@material-ui/core/Button"
 
 const stepColors = {
   home: "#007190",
@@ -301,7 +300,7 @@ const funnelData = [
 ]
 
 const funnelHash = {}
-funnelData.forEach(d => {
+funnelData.forEach((d) => {
   if (!funnelHash[d.country]) {
     d.percent = d.people / 1200
   } else {
@@ -364,15 +363,15 @@ export default class InformationModel extends React.Component {
 
     const hiddenHash = new Map()
 
-    Object.keys(this.state.columnExtent).forEach(key => {
+    Object.keys(this.state.columnExtent).forEach((key) => {
       if (this.state.columnExtent[key]) {
         const extent = this.state.columnExtent[key]
         funnelData
           .filter(
-            d =>
+            (d) =>
               d.step === key && (d.percent < extent[0] || d.percent > extent[1])
           )
-          .forEach(p => {
+          .forEach((p) => {
             hiddenHash.set(p.country, true)
           })
       }
@@ -380,7 +379,10 @@ export default class InformationModel extends React.Component {
 
     const stepSettings = [
       {
-        style: d => ({ fill: stepColors[d.step], stroke: stepColors[d.step] }),
+        style: (d) => ({
+          fill: stepColors[d.step],
+          stroke: stepColors[d.step]
+        }),
         type: "bar",
         afterElements: (
           <div>
@@ -402,7 +404,7 @@ export default class InformationModel extends React.Component {
       },
       {
         data: funnelData.sort(sortRegions),
-        style: d => ({
+        style: (d) => ({
           fill: regionColors[d.region],
           stroke: regionColors[d.region]
         }),
@@ -421,14 +423,14 @@ export default class InformationModel extends React.Component {
       },
       {
         data: funnelData.sort(sortRegions),
-        style: d => ({
+        style: (d) => ({
           fill: regionColors[d.region],
           stroke: regionColors[d.region]
         }),
         type: "bar",
         oPadding: 40,
-        connectorType: d => d.country,
-        connectorStyle: d => ({
+        connectorType: (d) => d.country,
+        connectorStyle: (d) => ({
           fill: regionColors[d.source.region],
           stroke: regionColors[d.source.region]
         }),
@@ -444,13 +446,13 @@ export default class InformationModel extends React.Component {
       },
       {
         data: funnelData.sort(sortRegions),
-        style: d => ({
+        style: (d) => ({
           fill: regionColors[d.region],
           stroke: regionColors[d.region]
         }),
         type: "point",
-        connectorType: d => d.country,
-        connectorStyle: d => ({
+        connectorType: (d) => d.country,
+        connectorStyle: (d) => ({
           fill: regionColors[d.source.region],
           stroke: regionColors[d.source.region]
         }),
@@ -468,13 +470,13 @@ export default class InformationModel extends React.Component {
       },
       {
         data: funnelData.sort(sortRegions),
-        style: d => ({
+        style: (d) => ({
           fill: regionColors[d.region],
           stroke: regionColors[d.region]
         }),
         type: "swarm",
-        connectorType: d => d.country,
-        connectorStyle: d => ({
+        connectorType: (d) => d.country,
+        connectorStyle: (d) => ({
           fill: regionColors[d.source.region],
           stroke: regionColors[d.source.region]
         }),
@@ -489,7 +491,7 @@ export default class InformationModel extends React.Component {
       },
       {
         data: funnelData.sort(sortRegions),
-        style: d => ({
+        style: (d) => ({
           fill: regionColors[d.region],
           stroke: regionColors[d.region]
         }),
@@ -497,10 +499,10 @@ export default class InformationModel extends React.Component {
         rAccessor: "percent",
         axes: {
           orient: "left",
-          tickFormat: d => `${Math.floor(d * 10) * 10}%`
+          tickFormat: (d) => `${Math.floor(d * 10) * 10}%`
         },
-        connectorType: d => d.country,
-        connectorStyle: d => ({
+        connectorType: (d) => d.country,
+        connectorStyle: (d) => ({
           fill: regionColors[d.source.region],
           stroke: regionColors[d.source.region]
         }),
@@ -516,7 +518,7 @@ export default class InformationModel extends React.Component {
       },
       {
         data: funnelData.sort(sortRegions),
-        style: d => ({
+        style: (d) => ({
           fill: hiddenHash.get(d.country) ? "gray" : regionColors[d.region],
           stroke: hiddenHash.get(d.country) ? "gray" : regionColors[d.region],
           opacity: hiddenHash.get(d.country) ? 0.25 : 1
@@ -524,11 +526,11 @@ export default class InformationModel extends React.Component {
         type: "swarm",
         axes: {
           orient: "left",
-          tickFormat: d => `${Math.floor(d * 10) * 10}%`
+          tickFormat: (d) => `${Math.floor(d * 10) * 10}%`
         },
         rAccessor: "percent",
-        connectorType: d => d.country,
-        connectorStyle: d => ({
+        connectorType: (d) => d.country,
+        connectorStyle: (d) => ({
           fill: hiddenHash.get(d.source.country)
             ? "gray"
             : regionColors[d.source.region],
@@ -558,20 +560,20 @@ export default class InformationModel extends React.Component {
       {
         size: [700, 700],
         data: funnelData.sort(sortRegions),
-        style: d => ({
+        style: (d) => ({
           fill: regionColors[d.region],
           stroke: regionColors[d.region]
         }),
         axes: {
           orient: "left",
-          tickFormat: d => `${Math.floor(d * 10) * 10}%`
+          tickFormat: (d) => `${Math.floor(d * 10) * 10}%`
         },
         type: "swarm",
         rAccessor: "percent",
         projection: "radial",
         oPadding: 25,
-        connectorType: d => d.country,
-        connectorStyle: d => ({
+        connectorType: (d) => d.country,
+        connectorStyle: (d) => ({
           fill: regionColors[d.source.region],
           stroke: regionColors[d.source.region]
         }),
@@ -591,24 +593,24 @@ export default class InformationModel extends React.Component {
       <div className="infomodel-proto infomodel">
         <div className="infomodel-buttons">
           {this.state.step === 0 ? null : (
-            <Button
+            <button
               color="primary"
               onClick={() => {
                 this.setState({ step: this.state.step - 1 })
               }}
             >
               Back!
-            </Button>
+            </button>
           )}
           {this.state.step === stepSettings.length - 1 ? null : (
-            <Button
+            <button
               color="primary"
               onClick={() => {
                 this.setState({ step: this.state.step + 1 })
               }}
             >
               Forward!
-            </Button>
+            </button>
           )}
         </div>
         <OrdinalFrame

@@ -1,7 +1,6 @@
 import * as React from "react"
 import { NetworkFrame, XYFrame, OrdinalFrame } from "../../components"
 import { network_data, or_data } from "../sampledata/energy_time"
-import Button from "@material-ui/core/Button"
 
 const components = []
 const lineTypes = ["stackedarea", "line", "bumpline", "bumparea"]
@@ -246,7 +245,7 @@ export default class Process extends React.Component {
     const prototypeDiv = (
       <div className="process-proto process">
         <div className="process-buttons">
-          <Button
+          <button
             color="primary"
             label={"Prototype!"}
             onTouchTap={() => {
@@ -255,7 +254,7 @@ export default class Process extends React.Component {
               })
             }}
           />
-          <Button
+          <button
             color="primary"
             label={"On to Design!"}
             onTouchTap={() => {
@@ -269,21 +268,21 @@ export default class Process extends React.Component {
     const designDiv = (
       <div className="process-design process">
         <div className="process-buttons">
-          <Button
+          <button
             color="primary"
             label={"Back to prototyping!"}
             onTouchTap={() => {
               this.setState({ mode: "prototype" })
             }}
           />
-          <Button
+          <button
             color="primary"
             label={"Design!"}
             onTouchTap={() => {
               this.setState({ designSeed: (this.state.designSeed + 1) % 5 })
             }}
           />
-          <Button
+          <button
             color="primary"
             label={"On to production!"}
             onTouchTap={() => {
@@ -298,7 +297,7 @@ export default class Process extends React.Component {
     const productionDiv = (
       <div className="process-production process">
         <div className="process-buttons">
-          <Button
+          <button
             primary
             label={"Back to design!"}
             onTouchTap={() => {

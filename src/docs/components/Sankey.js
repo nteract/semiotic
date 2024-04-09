@@ -1,10 +1,6 @@
 import * as React from "react"
 import DocumentComponent from "../layout/DocumentComponent"
 import SankeyRaw from "./SankeyRaw"
-import Select from "@material-ui/core/Select"
-import MenuItem from "@material-ui/core/MenuItem"
-import InputLabel from "@material-ui/core/InputLabel"
-import FormControl from "@material-ui/core/FormControl"
 
 const components = []
 
@@ -26,51 +22,51 @@ export default class Sankey extends React.Component {
 
   render() {
     const typeOptions = ["sankey", "force", "chord"].map((d) => (
-      <MenuItem key={`type-option-${d}`} label={d} value={d}>
+      <option key={`type-option-${d}`} label={d} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const directionOptions = ["horizontal", "vertical"].map((d) => (
-      <MenuItem key={`direction-option-${d}`} label={d} value={d}>
+      <option key={`direction-option-${d}`} label={d} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const orientOptions = ["justify", "left", "right", "center"].map((d) => (
-      <MenuItem key={`orient-option-${d}`} label={d} value={d}>
+      <option key={`orient-option-${d}`} label={d} value={d}>
         {d}
-      </MenuItem>
+      </option>
     ))
 
     const buttons = [
-      <FormControl key="button-1-0-0">
-        <InputLabel htmlFor="chart-type-input">Chart Type</InputLabel>
-        <Select
+      <form key="button-1-0-0">
+        <label htmlFor="chart-type-input">Chart Type</label>
+        <select
           value={this.state.type}
           onChange={(e) => this.setState({ type: e.target.value })}
         >
           {typeOptions}
-        </Select>
-      </FormControl>,
-      <FormControl key="button-2-0-0">
-        <InputLabel htmlFor="orient-input">orient</InputLabel>
-        <Select
+        </select>
+      </form>,
+      <form key="button-2-0-0">
+        <label htmlFor="orient-input">orient</label>
+        <select
           value={this.state.orient}
           onChange={(e) => this.setState({ orient: e.target.value })}
         >
           {orientOptions}
-        </Select>
-      </FormControl>,
-      <FormControl key="button-3-0-0">
-        <InputLabel htmlFor="orient-input">direction</InputLabel>
-        <Select
+        </select>
+      </form>,
+      <form key="button-3-0-0">
+        <label htmlFor="orient-input">direction</label>
+        <select
           value={this.state.direction}
           onChange={(e) => this.setState({ direction: e.target.value })}
         >
           {directionOptions}
-        </Select>
-      </FormControl>
+        </select>
+      </form>
     ]
 
     const annotations = [
