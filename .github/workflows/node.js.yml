@@ -30,4 +30,4 @@ jobs:
         run: npm test
 
       - name: Run type check
-        run: npm typescript
+        run: npm run typescript
