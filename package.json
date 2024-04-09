@@ -14,7 +14,7 @@
     "start": "parcel serve --target docs",
     "build": "parcel build --target docs",
     "test": "jest --config jest.config.js",
-    "pretest:dist": "npm run dist",
+    "pretest:dist": "gulp build",
     "test:dist": "playwright test",
     "serve-examples": "npm run dist && parcel serve integration-tests/viz-examples/index.html",
     "lint": "eslint src",
@@ -23,6 +23,7 @@
     "publish-release": "sh ./scripts/publish-release.sh",
     "website:start": "npm run dist && parcel serve --target website",
     "website:build": "npm run dist && parcel build --target website",
+    "typescript": "tsc --noEmit",
     "prepublishOnly": "gulp build"
   },
   "resolutions": {
