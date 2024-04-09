@@ -2,7 +2,7 @@ module.exports = {
   verbose: true,
   resetMocks: true,
   collectCoverage: true,
-  setupFilesAfterEnv: ["<rootDir>/src/setupTests.js"],
+  setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts"],
   testMatch: [
     "<rootDir>/src/**/__tests__/**/*.{js,jsx,mjs}",
     "<rootDir>/src/**/?(*.)(spec|test).{ts,js,jsx,mjs}"

@@ -19,7 +19,8 @@
   "include": [
     "./src/**/*.ts",
     "./src/**/*.tsx",
-    "./src/**/*"
+    "./src/**/*",
+    "./jest-setup.ts"
   ],
   "exclude": [
     "./src/docs/**/*",
