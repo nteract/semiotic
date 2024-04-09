@@ -1,4 +1,4 @@
-import AnnotationLayer from "./AnnotationLayer"
+import AnnotationLayer from "./AnnotationLayer/AnnotationLayer"
 import DividedLine from "./DividedLine"
 import XYFrame from "./XYFrame"
 import OrdinalFrame from "./OrdinalFrame"
@@ -24,7 +24,7 @@ import { ResponsiveOrdinalFrame } from "./ResponsiveOrdinalFrame"
 import { SparkXYFrame } from "./SparkXYFrame"
 import { SparkOrdinalFrame } from "./SparkOrdinalFrame"
 import { SparkNetworkFrame } from "./SparkNetworkFrame"
-import Mark from "../components/Mark/Mark"
+import Mark from "./Mark/Mark"
 
 import { hexbinning, heatmapping } from "./svg/areaDrawing"
 
