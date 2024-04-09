@@ -1,5 +1,5 @@
 import * as React from "react"
-import Mark from "../../components/Mark/Mark"
+import Mark from "../Mark/Mark"
 
 export function pointOnArcAtAngle(center, angle, distance) {
   const radians = Math.PI * (angle + 0.75) * 2

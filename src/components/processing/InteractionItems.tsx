@@ -9,7 +9,7 @@ import {
 
 import { extent as d3Extent } from "d3-array"
 import { Delaunay, Voronoi } from "d3-delaunay"
-import Mark from "../../components/Mark/Mark"
+import Mark from "../Mark/Mark"
 
 import { CustomHoverType } from "../types/annotationTypes"
 

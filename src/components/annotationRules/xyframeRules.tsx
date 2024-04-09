@@ -1,5 +1,5 @@
 import * as React from "react"
-import Mark from "../../components/Mark/Mark"
+import Mark from "../Mark/Mark"
 import Annotation from "../Annotation"
 import { AnnotationCalloutRect, AnnotationXYThreshold } from "react-annotation"
 

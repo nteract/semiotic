@@ -1,6 +1,6 @@
 import * as React from "react"
 
-import Mark from "../../components/Mark/Mark"
+import Mark from "../Mark/Mark"
 import { GenericObject } from "../types/generalTypes"
 import { ScaleLinear } from "d3-scale"
 

@@ -1,7 +1,7 @@
 import * as React from "react"
 
 import { drawAreaConnector } from "../svg/SvgHelper"
-import Mark from "../../components/Mark/Mark"
+import Mark from "../Mark/Mark"
 import Axis from "../Axis"
 import { AxisProps } from "../types/annotationTypes"
 

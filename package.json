@@ -7,13 +7,14 @@
   "types": "dist/semiotic.d.ts",
   "sideEffects": false,
   "files": [
-    "dist/semiotic.*"
+    "dist/semiotic.*",
+    "dist/**/*.d.ts"
   ],
   "scripts": {
     "start": "parcel serve --target docs",
     "build": "parcel build --target docs",
     "test": "jest --config jest.config.js",
-    "pretest:dist": "npm run dist",
+    "pretest:dist": "gulp build",
     "test:dist": "playwright test",
     "serve-examples": "npm run dist && parcel serve integration-tests/viz-examples/index.html",
     "lint": "eslint src",
@@ -23,8 +24,7 @@
     "website:start": "npm run dist && parcel serve --target website",
     "website:build": "npm run dist && parcel build --target website",
     "typescript": "tsc --noEmit",
-    "dist": "rollup --config rollup.config.js",
-    "prepublishOnly": "npm run typescript && npm run dist"
+    "prepublishOnly": "gulp build"
   },
   "resolutions": {
     "@types/react": "^17.0.37"
@@ -96,6 +96,7 @@
     "eslint-plugin-jsx-a11y": "^6.5.1",
     "eslint-plugin-react": "^7.27.1",
     "eslint-plugin-typescript": "^0.14.0",
+    "gulp": "^5.0.0",
     "history": "4.2.0",
     "in-publish": "2.0.0",
     "jest": "^27.4.5",

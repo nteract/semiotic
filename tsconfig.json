@@ -8,23 +8,9 @@
     "downlevelIteration": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "declaration": true,
-    "lib": [
-      "esnext",
-      "dom",
-      "dom.iterable"
-    ],
+    "lib": ["esnext", "dom", "dom.iterable"],
     "jsx": "react"
   },
-  "include": [
-    "./src/**/*.ts",
-    "./src/**/*.tsx",
-    "./src/**/*",
-    "./jest-setup.ts"
-  ],
-  "exclude": [
-    "./src/docs/**/*",
-    "./src/**/*.test.*",
-    "*.png",
-  ]
+  "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/**/*"],
+  "exclude": ["./src/docs/**/*", "./src/**/*.test.*", "*.png"]
 }

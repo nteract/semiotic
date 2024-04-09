@@ -44,7 +44,7 @@ import {
   NetworkFrameProps,
   NetworkFrameState
 } from "./types/networkTypes"
-import { UpdatedAnnotationLayerProps } from "./AnnotationLayer"
+import { UpdatedAnnotationLayerProps } from "./AnnotationLayer/AnnotationLayer"
 import { useDerivedStateFromProps } from "./useDerivedStateFromProps"
 import { useLegacyUnmountCallback } from "./useLegacyUnmountCallback"
 
