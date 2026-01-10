@@ -14,3 +14,5 @@ coverage
 dist
 .parcel-cache
 test-results
+bundle-analysis.html
+test-imports.mjs

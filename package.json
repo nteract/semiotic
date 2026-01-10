@@ -48,6 +48,10 @@
     "test": "jest --config jest.config.js",
     "pretest:dist": "gulp build",
     "test:dist": "playwright test",
+    "bench": "vitest bench",
+    "bench:ui": "vitest bench --ui",
+    "bench:baseline": "vitest bench --run && node scripts/save-baseline.js",
+    "bench:compare": "vitest bench --run && node scripts/compare-baseline.js",
     "serve-examples": "npm run dist && parcel serve integration-tests/index.html integration-tests/xy-examples/index.html integration-tests/ordinal-examples/index.html integration-tests/network-examples/index.html integration-tests/viz-examples/index.html --dist-dir .parcel-cache/integration-tests",
     "dist": "gulp build",
     "lint": "eslint src",
@@ -159,7 +163,11 @@
     "ts-jest": "^27.1.1",
     "tslib": "^1.14.1",
     "typescript": "4.8.4",
-    "typescript-eslint-parser": "^22.0.0"
+    "typescript-eslint-parser": "^22.0.0",
+    "vitest": "^1.2.0",
+    "@vitest/ui": "^1.2.0",
+    "seedrandom": "^3.0.5",
+    "@types/seedrandom": "^3.0.5"
   },
   "peerDependencies": {
     "react": "^18.1.0",
