@@ -13,6 +13,7 @@ const sharedChangeProps = [
   "renderKey"
 ]
 
+// Legacy export for backward compatibility
 export const xyFrameDataProps = [
   "lines",
   "points",
@@ -31,26 +32,105 @@ export const xyFrameDataProps = [
   "summaryType"
 ]
 
-export const xyFrameChangeProps = [
-  ...sharedChangeProps,
-  ...xyFrameDataProps,
-  "axes",
+// NEW: Props that affect data projection - trigger calculateDataExtent
+export const xyFrameDataAffectingProps = [
+  // Core data props
+  "lines",
+  "points",
+  "summaries",
+
+  // Data accessors
+  "xAccessor",
+  "yAccessor",
+  "lineDataAccessor",
+  "areaDataAccessor",
+  "summaryDataAccessor",
+  "lineIDAccessor",
+
+  // Data transformation
+  "lineType",
+  "summaryType",
+  "showLinePoints",
+  "showSummaryPoints",
+  "defined",
+
+  // Extent overrides (affect extent calculation)
   "xExtent",
   "yExtent",
+
+  // Scale types (affect data domain)
+  "xScaleType",
+  "yScaleType",
   "invertX",
   "invertY",
-  "defined",
+
+  // Filters (affect which data is processed)
+  "filterRenderedLines",
+  "filterRenderedPoints",
+  "filterRenderedSummaries"
+]
+
+// NEW: Props that affect scales/layout - trigger scale recalc but not data projection
+export const xyFrameScaleAffectingProps = [
+  // Size and layout
+  "size",
+  "margin",
+  "title",
+
+  // Axes (affect margin calculation)
+  "axes",
+
+  // All data-affecting props also affect scales
+  ...xyFrameDataAffectingProps
+]
+
+// NEW: Props that only affect styling/rendering - no data or scale recalc
+export const xyFrameStylingProps = [
+  // Styling
   "lineStyle",
   "pointStyle",
   "summaryStyle",
+
+  // Classes
   "lineClass",
   "pointClass",
   "areaClass",
   "summaryClass",
-  "canvasPoints",
+  "className",
+
+  // Custom marks
   "customPointMark",
   "customLineMark",
-  "lineIDAccessor"
+  "customSummaryMark",
+
+  // Render modes
+  "lineRenderMode",
+  "pointRenderMode",
+  "summaryRenderMode",
+  "canvasLines",
+  "canvasPoints",
+  "canvasSummaries",
+
+  // Interaction (no data recalc needed)
+  "customClickBehavior",
+  "customHoverBehavior",
+  "customDoubleClickBehavior",
+  "hoverAnnotation",
+
+  // Other rendering
+  "additionalDefs",
+  "renderKey",
+  "name"
+]
+
+// Legacy export - now includes all prop categories
+export const xyFrameChangeProps = [
+  ...xyFrameDataAffectingProps,
+  ...xyFrameStylingProps,
+  "axes",  // Duplicated but needed for backward compatibility
+  "size",
+  "margin",
+  "title"
 ]
 
 export const orFrameChangeProps = [

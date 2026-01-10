@@ -47,7 +47,12 @@ import { findFirstAccessorValue } from "./data/multiAccessorUtils"
 
 import { calculateXYFrame } from "./processing/xyDrawing"
 
-import { xyFrameChangeProps } from "./constants/frame_props"
+import {
+  xyFrameChangeProps,
+  xyFrameDataAffectingProps,
+  xyFrameScaleAffectingProps,
+  xyFrameStylingProps
+} from "./constants/frame_props"
 
 import { HOCSpanOrDiv } from "./SpanOrDiv"
 
@@ -306,31 +311,50 @@ function deriveXYFrameState(nextProps: XYFrameProps, prevState: XYFrameState) {
 
   const pointChange = pointData !== newPoints
 
+  // Check which category of props changed
+  const dataPropsChanged = !oldDataVersion && xyFrameDataAffectingProps.some(
+    (prop) => props[prop] !== nextProps[prop]
+  )
+
+  const scalePropsChanged = !oldDataVersion && xyFrameScaleAffectingProps.some(
+    (prop) => props[prop] !== nextProps[prop]
+  )
+
+  const sizeChanged = oldSize[0] !== newSize[0] || oldSize[1] !== newSize[1]
+
+  // Force full recalc if dataVersion changed or no fullDataset exists
   if (
     (oldDataVersion && oldDataVersion !== newDataVersion) ||
     !prevState.fullDataset
   ) {
     return calculateXYFrame(nextProps, prevState, true)
-  } else if (
+  }
+
+  // Full data recalculation needed if:
+  // - Data arrays changed (lines, points, summaries)
+  // - Extent overrides changed
+  // - Data-affecting props changed (accessors, types, etc.)
+  if (
     lineChange ||
     summaryChange ||
     pointChange ||
-    oldSize[0] !== newSize[0] ||
-    oldSize[1] !== newSize[1] ||
     extentChange ||
-    (!oldDataVersion &&
-      xyFrameChangeProps.find((d) => props[d] !== nextProps[d]))
+    dataPropsChanged
   ) {
-    const dataChanged =
-      lineChange ||
-      summaryChange ||
-      pointChange ||
-      extentChange ||
-      !!xyFrameChangeProps.find((d) => props[d] !== nextProps[d])
-
-    return calculateXYFrame(nextProps, prevState, dataChanged)
+    return calculateXYFrame(nextProps, prevState, true)
   }
 
+  // Scale-only recalculation needed if:
+  // - Size changed
+  // - Scale-affecting props changed (but not data props)
+  if (sizeChanged || scalePropsChanged) {
+    // TODO: Once calculateXYFrame supports updateScales flag, use:
+    // return calculateXYFrame(nextProps, prevState, { updateData: false, updateScales: true })
+    // For now, still do full recalc to avoid breaking changes
+    return calculateXYFrame(nextProps, prevState, false)
+  }
+
+  // Only styling changed - no recalc needed, React will re-render with existing state
   return null
 }
 
