@@ -8,7 +8,9 @@ module.exports = {
     "<rootDir>/src/**/?(*.)(spec|test).{ts,js,jsx,mjs}"
   ],
   testEnvironment: "jsdom",
-  testURL: "http://localhost",
+  testEnvironmentOptions: {
+    url: "http://localhost"
+  },
   transform: {
     "\\.(ts|tsx)$": "ts-jest",
     "^.+\\.(js|jsx|mjs)$": "<rootDir>/config/jest/jsTransformer.js",

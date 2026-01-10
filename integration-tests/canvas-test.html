@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Canvas Test</title>
+</head>
+<body>
+  <h1>Canvas Rendering Test</h1>
+  <div id="root"></div>
+  <script type="module">
+    import * as Semiotic from "../dist/semiotic.module.js"
+    import React from "react"
+    import { createRoot } from "react-dom/client"
+
+    const { XYFrame } = Semiotic
+
+    const data = [
+      { x: 0, y: 5 },
+      { x: 1, y: 10 },
+      { x: 2, y: 7 },
+      { x: 3, y: 15 },
+      { x: 4, y: 12 }
+    ]
+
+    const root = createRoot(document.getElementById("root"))
+
+    // Test 1: SVG rendering (should work)
+    const svgChart = React.createElement("div", { style: { marginBottom: "20px" } },
+      React.createElement("h2", null, "SVG Rendering (should see line)"),
+      React.createElement(XYFrame, {
+        size: [400, 300],
+        lines: [{ coordinates: data }],
+        lineType: "line",
+        xAccessor: "x",
+        yAccessor: "y",
+        lineStyle: { stroke: "blue", strokeWidth: 2 },
+        axes: [{ orient: "left" }, { orient: "bottom" }],
+        margin: 50
+      })
+    )
+
+    // Test 2: Canvas rendering (might not work)
+    const canvasChart = React.createElement("div", { style: { marginBottom: "20px" } },
+      React.createElement("h2", null, "Canvas Rendering (canvasLines: true)"),
+      React.createElement(XYFrame, {
+        size: [400, 300],
+        lines: [{ coordinates: data }],
+        lineType: "line",
+        xAccessor: "x",
+        yAccessor: "y",
+        lineStyle: { stroke: "red", strokeWidth: 2 },
+        canvasLines: true,
+        axes: [{ orient: "left" }, { orient: "bottom" }],
+        margin: 50
+      })
+    )
+
+    root.render(
+      React.createElement("div", null, [svgChart, canvasChart])
+    )
+
+    // Log to console
+    setTimeout(() => {
+      const canvases = document.querySelectorAll('canvas')
+      console.log('Canvas elements found:', canvases.length)
+      console.log('SVG elements found:', document.querySelectorAll('svg.visualization-layer').length)
+
+      canvases.forEach((c, i) => {
+        console.log(`Canvas ${i}:`, {
+          width: c.width,
+          height: c.height,
+          className: c.className,
+          visible: window.getComputedStyle(c).display !== 'none'
+        })
+      })
+    }, 1000)
+  </script>
+</body>
+</html>
