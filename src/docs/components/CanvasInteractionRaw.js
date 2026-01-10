@@ -58,16 +58,18 @@ export default class DecisionMatrixExample extends React.Component {
   constructor(props) {
     super(props)
 
-    import("bundle-text:~/public/sampledata/diamonds.csv").then((data) => {
-      const parsedDiamonds = csvParse(data).map((d) => ({
-        y: +d.price,
-        x: +d.carat,
-        size: +d.table,
-        color: cutHash[d.cut],
-        clarity: d.clarity
-      }))
-      this.setState({ parsedDiamonds })
-    })
+    fetch("./data/diamonds.csv")
+      .then(response => response.text())
+      .then((data) => {
+        const parsedDiamonds = csvParse(data).map((d) => ({
+          y: +d.price,
+          x: +d.carat,
+          size: +d.table,
+          color: cutHash[d.cut],
+          clarity: d.clarity
+        }))
+        this.setState({ parsedDiamonds })
+      })
   }
 
   render() {
