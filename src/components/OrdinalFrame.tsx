@@ -192,10 +192,56 @@ const OrdinalFrame = React.memo(function OrdinalFrame(
     }
   }
 
-  const renderedForegroundGraphics =
-    typeof foregroundGraphics === "function"
-      ? foregroundGraphics({ size, margin })
-      : foregroundGraphics
+  // Memoize foreground graphics calculation
+  const renderedForegroundGraphics = useMemo(
+    () =>
+      typeof foregroundGraphics === "function"
+        ? foregroundGraphics({ size, margin })
+        : foregroundGraphics,
+    [foregroundGraphics, size, margin]
+  )
+
+  // Memoize className concatenation
+  const frameClassName = useMemo(
+    () => `${className} ${projection}`,
+    [className, projection]
+  )
+
+  // Memoize SVG rule callback to prevent Frame re-renders
+  const memoizedSVGRule = useMemo(
+    () => (args: any) => defaultORSVGRule(props, state, args),
+    [props, state]
+  )
+
+  // Memoize HTML rule callback to prevent Frame re-renders
+  const memoizedHTMLRule = useMemo(
+    () => (args: any) => defaultORHTMLRule(props, state, args),
+    [props, state]
+  )
+
+  // Memoize hoverAnnotation selection
+  const selectedHoverAnnotation = useMemo(
+    () => summaryHoverAnnotation || pieceHoverAnnotation || hoverAnnotation,
+    [summaryHoverAnnotation, pieceHoverAnnotation, hoverAnnotation]
+  )
+
+  // Memoize interaction object
+  const memoizedInteraction = useMemo(
+    () =>
+      interaction && {
+        ...interaction,
+        brush: interaction.columnsBrush !== true && "oBrush",
+        projection,
+        projectedColumns
+      },
+    [interaction, projection, projectedColumns]
+  )
+
+  // Memoize canvas rendering flag
+  const canvasRendering = useMemo(
+    () => !!(canvasPieces || canvasSummaries || canvasConnectors),
+    [canvasPieces, canvasSummaries, canvasConnectors]
+  )
 
   return (
     <Frame
@@ -212,26 +258,17 @@ const OrdinalFrame = React.memo(function OrdinalFrame(
       title={title}
       matte={matte}
       additionalDefs={additionalDefs}
-      className={`${className} ${projection}`}
+      className={frameClassName}
       frameKey={"none"}
       renderFn={renderKey}
       projectedCoordinateNames={projectedCoordinatesObject}
-      defaultSVGRule={(args) => defaultORSVGRule(props, state, args)}
-      defaultHTMLRule={(args) => defaultORHTMLRule(props, state, args)}
-      hoverAnnotation={
-        summaryHoverAnnotation || pieceHoverAnnotation || hoverAnnotation
-      }
+      defaultSVGRule={memoizedSVGRule}
+      defaultHTMLRule={memoizedHTMLRule}
+      hoverAnnotation={selectedHoverAnnotation}
       annotations={annotations}
       annotationSettings={annotationSettings}
       legendSettings={legendSettings}
-      interaction={
-        interaction && {
-          ...interaction,
-          brush: interaction.columnsBrush !== true && "oBrush",
-          projection,
-          projectedColumns
-        }
-      }
+      interaction={memoizedInteraction}
       customClickBehavior={customClickBehavior}
       customHoverBehavior={customHoverBehavior}
       customDoubleClickBehavior={customDoubleClickBehavior}
@@ -249,7 +286,7 @@ const OrdinalFrame = React.memo(function OrdinalFrame(
       interactionOverflow={interactionOverflow}
       canvasPostProcess={canvasPostProcess}
       baseMarkProps={baseMarkProps}
-      canvasRendering={!!(canvasPieces || canvasSummaries || canvasConnectors)}
+      canvasRendering={canvasRendering}
       renderOrder={renderOrder}
       disableCanvasInteraction={disableCanvasInteraction}
       sketchyRenderingEngine={sketchyRenderingEngine}

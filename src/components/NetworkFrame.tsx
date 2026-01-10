@@ -160,23 +160,59 @@ const NetworkFrame = React.memo(function NetworkFrame(
     title
   } = state
 
-  let formattedOverlay
+  // Memoize overlay formatting
+  const formattedOverlay = useMemo(
+    () => (overlay && overlay.length > 0 ? overlay : undefined),
+    [overlay]
+  )
 
-  if (overlay && overlay.length > 0) {
-    formattedOverlay = overlay
-  }
+  // Memoize active hover annotation logic
+  const activeHoverAnnotation = useMemo(() => {
+    if (Array.isArray(hoverAnnotation)) {
+      return hoverAnnotation
+    } else if (
+      (customClickBehavior ||
+        customDoubleClickBehavior ||
+        customHoverBehavior) &&
+      (hoverAnnotation === undefined || hoverAnnotation === false)
+    ) {
+      return blankArray
+    } else {
+      return !!hoverAnnotation
+    }
+  }, [
+    hoverAnnotation,
+    customClickBehavior,
+    customDoubleClickBehavior,
+    customHoverBehavior
+  ])
 
-  let activeHoverAnnotation
-  if (Array.isArray(hoverAnnotation)) {
-    activeHoverAnnotation = hoverAnnotation
-  } else if (
-    (customClickBehavior || customDoubleClickBehavior || customHoverBehavior) &&
-    (hoverAnnotation === undefined || hoverAnnotation === false)
-  ) {
-    activeHoverAnnotation = blankArray
-  } else {
-    activeHoverAnnotation = !!hoverAnnotation
-  }
+  // Memoize SVG rule callback to prevent Frame re-renders
+  const memoizedSVGRule = useMemo(
+    () => (args: any) => defaultNetworkSVGRule(props, state, args),
+    [props, state]
+  )
+
+  // Memoize HTML rule callback to prevent Frame re-renders
+  const memoizedHTMLRule = useMemo(
+    () => (args: any) => defaultNetworkHTMLRule(props, state, args),
+    [props, state]
+  )
+
+  // Memoize merged annotations to prevent unnecessary array creation
+  const mergedAnnotations = useMemo(
+    () => [...annotations, ...nodeLabelAnnotations],
+    [annotations, nodeLabelAnnotations]
+  )
+
+  // Memoize useSpans conversion
+  const useSpansValue = useMemo(() => !!useSpans, [useSpans])
+
+  // Memoize canvas rendering flag
+  const canvasRendering = useMemo(
+    () => !!(canvasNodes || canvasEdges),
+    [canvasNodes, canvasEdges]
+  )
 
   return (
     <Frame
@@ -193,10 +229,10 @@ const NetworkFrame = React.memo(function NetworkFrame(
       additionalDefs={additionalDefs}
       frameKey={"none"}
       projectedCoordinateNames={projectedCoordinateNames}
-      defaultSVGRule={(args) => defaultNetworkSVGRule(props, state, args)}
-      defaultHTMLRule={(args) => defaultNetworkHTMLRule(props, state, args)}
+      defaultSVGRule={memoizedSVGRule}
+      defaultHTMLRule={memoizedHTMLRule}
       hoverAnnotation={activeHoverAnnotation}
-      annotations={[...annotations, ...nodeLabelAnnotations]}
+      annotations={mergedAnnotations}
       annotationSettings={annotationSettings}
       legendSettings={legendSettings}
       interaction={interaction}
@@ -213,8 +249,8 @@ const NetworkFrame = React.memo(function NetworkFrame(
       disableContext={disableContext}
       canvasPostProcess={canvasPostProcess}
       baseMarkProps={baseMarkProps}
-      useSpans={!!useSpans}
-      canvasRendering={!!(canvasNodes || canvasEdges)}
+      useSpans={useSpansValue}
+      canvasRendering={canvasRendering}
       renderOrder={renderOrder}
       disableCanvasInteraction={disableCanvasInteraction}
       sketchyRenderingEngine={sketchyRenderingEngine}

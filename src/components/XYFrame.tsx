@@ -216,6 +216,39 @@ const XYFrame = React.memo(function XYFrame(allProps: XYFrameProps) {
 
   useLegacyUnmountCallback(props, state)
 
+  // Memoize merged annotations to prevent unnecessary array creation
+  const mergedAnnotations = useMemo(
+    () =>
+      areaAnnotations.length > 0
+        ? [...annotations, ...areaAnnotations]
+        : annotations,
+    [annotations, areaAnnotations]
+  )
+
+  // Memoize SVG rule callback to prevent Frame re-renders
+  const memoizedSVGRule = useMemo(
+    () => (args: any) => defaultXYSVGRule(props, state, args),
+    [props, state]
+  )
+
+  // Memoize HTML rule callback to prevent Frame re-renders
+  const memoizedHTMLRule = useMemo(
+    () => (args: any) => defaultXYHTMLRule(props, state, args),
+    [props, state]
+  )
+
+  // Memoize showLinePoints conversion
+  const showLinePointsValue = useMemo(
+    () => (typeof showLinePoints === "string" ? showLinePoints : undefined),
+    [showLinePoints]
+  )
+
+  // Memoize canvas rendering flag
+  const canvasRendering = useMemo(
+    () => !!(canvasSummaries || canvasPoints || canvasLines),
+    [canvasSummaries, canvasPoints, canvasLines]
+  )
+
   return (
     <Frame
       name="xyframe"
@@ -235,13 +268,9 @@ const XYFrame = React.memo(function XYFrame(allProps: XYFrameProps) {
       frameKey={frameKey || xyframeKey}
       additionalDefs={additionalDefs}
       hoverAnnotation={hoverAnnotation}
-      defaultSVGRule={(args) => defaultXYSVGRule(props, state, args)}
-      defaultHTMLRule={(args) => defaultXYHTMLRule(props, state, args)}
-      annotations={
-        areaAnnotations.length > 0
-          ? [...annotations, ...areaAnnotations]
-          : annotations
-      }
+      defaultSVGRule={memoizedSVGRule}
+      defaultHTMLRule={memoizedHTMLRule}
+      annotations={mergedAnnotations}
       annotationSettings={annotationSettings}
       legendSettings={legendSettings}
       projectedYMiddle={projectedYMiddle}
@@ -250,9 +279,7 @@ const XYFrame = React.memo(function XYFrame(allProps: XYFrameProps) {
       customHoverBehavior={customHoverBehavior}
       customDoubleClickBehavior={customDoubleClickBehavior}
       points={fullDataset}
-      showLinePoints={
-        typeof showLinePoints === "string" ? showLinePoints : undefined
-      }
+      showLinePoints={showLinePointsValue}
       margin={margin}
       backgroundGraphics={backgroundGraphics}
       foregroundGraphics={foregroundGraphics}
@@ -262,7 +289,7 @@ const XYFrame = React.memo(function XYFrame(allProps: XYFrameProps) {
       canvasPostProcess={canvasPostProcess}
       baseMarkProps={baseMarkProps}
       useSpans={useSpans}
-      canvasRendering={!!(canvasSummaries || canvasPoints || canvasLines)}
+      canvasRendering={canvasRendering}
       renderOrder={renderOrder}
       overlay={overlay}
       sketchyRenderingEngine={sketchyRenderingEngine}
