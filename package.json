@@ -41,7 +41,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "start": "parcel serve --target docs",
+    "start": "parcel serve --target website --port 3000",
     "build": "parcel build --target docs",
     "build:analyze": "gulp analyze",
     "build:prod": "gulp production",

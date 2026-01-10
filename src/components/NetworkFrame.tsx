@@ -187,18 +187,6 @@ const NetworkFrame = React.memo(function NetworkFrame(
     customHoverBehavior
   ])
 
-  // Memoize SVG rule callback to prevent Frame re-renders
-  const memoizedSVGRule = useMemo(
-    () => (args: any) => defaultNetworkSVGRule(props, state, args),
-    [props, state]
-  )
-
-  // Memoize HTML rule callback to prevent Frame re-renders
-  const memoizedHTMLRule = useMemo(
-    () => (args: any) => defaultNetworkHTMLRule(props, state, args),
-    [props, state]
-  )
-
   // Memoize merged annotations to prevent unnecessary array creation
   const mergedAnnotations = useMemo(
     () => [...annotations, ...nodeLabelAnnotations],
@@ -229,8 +217,8 @@ const NetworkFrame = React.memo(function NetworkFrame(
       additionalDefs={additionalDefs}
       frameKey={"none"}
       projectedCoordinateNames={projectedCoordinateNames}
-      defaultSVGRule={memoizedSVGRule}
-      defaultHTMLRule={memoizedHTMLRule}
+      defaultSVGRule={(args) => defaultNetworkSVGRule(props, state, args)}
+      defaultHTMLRule={(args) => defaultNetworkHTMLRule(props, state, args)}
       hoverAnnotation={activeHoverAnnotation}
       annotations={mergedAnnotations}
       annotationSettings={annotationSettings}

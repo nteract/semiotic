@@ -207,18 +207,6 @@ const OrdinalFrame = React.memo(function OrdinalFrame(
     [className, projection]
   )
 
-  // Memoize SVG rule callback to prevent Frame re-renders
-  const memoizedSVGRule = useMemo(
-    () => (args: any) => defaultORSVGRule(props, state, args),
-    [props, state]
-  )
-
-  // Memoize HTML rule callback to prevent Frame re-renders
-  const memoizedHTMLRule = useMemo(
-    () => (args: any) => defaultORHTMLRule(props, state, args),
-    [props, state]
-  )
-
   // Memoize hoverAnnotation selection
   const selectedHoverAnnotation = useMemo(
     () => summaryHoverAnnotation || pieceHoverAnnotation || hoverAnnotation,
@@ -262,8 +250,8 @@ const OrdinalFrame = React.memo(function OrdinalFrame(
       frameKey={"none"}
       renderFn={renderKey}
       projectedCoordinateNames={projectedCoordinatesObject}
-      defaultSVGRule={memoizedSVGRule}
-      defaultHTMLRule={memoizedHTMLRule}
+      defaultSVGRule={(args) => defaultORSVGRule(props, state, args)}
+      defaultHTMLRule={(args) => defaultORHTMLRule(props, state, args)}
       hoverAnnotation={selectedHoverAnnotation}
       annotations={annotations}
       annotationSettings={annotationSettings}

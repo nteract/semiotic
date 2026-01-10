@@ -225,18 +225,6 @@ const XYFrame = React.memo(function XYFrame(allProps: XYFrameProps) {
     [annotations, areaAnnotations]
   )
 
-  // Memoize SVG rule callback to prevent Frame re-renders
-  const memoizedSVGRule = useMemo(
-    () => (args: any) => defaultXYSVGRule(props, state, args),
-    [props, state]
-  )
-
-  // Memoize HTML rule callback to prevent Frame re-renders
-  const memoizedHTMLRule = useMemo(
-    () => (args: any) => defaultXYHTMLRule(props, state, args),
-    [props, state]
-  )
-
   // Memoize showLinePoints conversion
   const showLinePointsValue = useMemo(
     () => (typeof showLinePoints === "string" ? showLinePoints : undefined),
@@ -268,8 +256,8 @@ const XYFrame = React.memo(function XYFrame(allProps: XYFrameProps) {
       frameKey={frameKey || xyframeKey}
       additionalDefs={additionalDefs}
       hoverAnnotation={hoverAnnotation}
-      defaultSVGRule={memoizedSVGRule}
-      defaultHTMLRule={memoizedHTMLRule}
+      defaultSVGRule={(args) => defaultXYSVGRule(props, state, args)}
+      defaultHTMLRule={(args) => defaultXYHTMLRule(props, state, args)}
       annotations={mergedAnnotations}
       annotationSettings={annotationSettings}
       legendSettings={legendSettings}
