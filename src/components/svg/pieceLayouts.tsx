@@ -812,9 +812,27 @@ export function swarmLayout({
   rScale
 }) {
   let allCalculatedPieces = []
-  const iterations = type.iterations || 120
 
   const columnKeys = Object.keys(data)
+
+  // Calculate total data points for adaptive iterations
+  const totalDataPoints = columnKeys.reduce((sum, key) => {
+    return sum + (data[key].pieceData?.length || 0)
+  }, 0)
+
+  // Adaptive iteration count: reduce iterations for large datasets to maintain performance
+  // Formula: max(30, min(120, 120 - (totalDataPoints - 100) / 20))
+  // - Small datasets (<100 pts): 120 iterations (full quality)
+  // - Medium datasets (100-1900 pts): Gradual reduction
+  // - Large datasets (>1900 pts): 30 iterations (fast but stable)
+  const adaptiveIterations = Math.max(
+    30,
+    Math.min(120, Math.floor(120 - (totalDataPoints - 100) / 20))
+  )
+
+  const iterations = type.iterations !== undefined ? type.iterations : adaptiveIterations
+
+
 
   columnKeys.forEach((key, ordsetI) => {
     const oColumn = data[key]

@@ -113,6 +113,71 @@ npm run bench:compare
 
 **Combined with change detection**: The memoization complements the earlier optimization. Change detection prevents expensive data recalculation, while memoization prevents unnecessary render work.
 
+### Adaptive Force Simulation Iterations (2026-01)
+
+**Problem**: Force simulations (swarmLayout and NetworkFrame force layouts) used fixed iteration counts regardless of dataset size, causing slow performance for large datasets.
+
+**Background**:
+- Force simulations are O(iterations × n²) complexity
+- Default 120 iterations for swarm, 500 for network force
+- For 1000 swarm points: 120,000+ force calculations (~179ms)
+- For 500 network nodes: 250,000+ force calculations (~1.7s)
+
+**Solution**: Implemented adaptive iteration counts that automatically reduce iterations for large datasets while maintaining quality for small datasets.
+
+**Adaptive formulas**:
+
+**SwarmLayout** (OrdinalFrame):
+```
+iterations = max(30, min(120, 120 - (dataPoints - 100) / 20))
+```
+- Small (<100 pts): 120 iterations (full quality)
+- Medium (100-1900 pts): Gradual reduction
+- Large (>1900 pts): 30 iterations (fast but stable)
+
+**NetworkFrame Force/Motifs**:
+```
+iterations = max(100, min(500, 500 - (nodes - 50) * 2))
+```
+- Small (<50 nodes): 500 iterations (full quality)
+- Medium (50-250 nodes): Gradual reduction
+- Large (>250 nodes): 100 iterations (fast but stable)
+
+**Manual Override**: Users can still specify exact iteration counts:
+```javascript
+// Swarm layout
+<OrdinalFrame
+  type={{ type: "swarm", iterations: 60 }}  // Override adaptive
+  data={data}
+/>
+
+// Network force
+<NetworkFrame
+  networkSettings={{ type: "force", iterations: 250 }}  // Override adaptive
+  nodes={nodes}
+  edges={edges}
+/>
+```
+
+**Expected impact** (based on iteration reduction):
+
+| Dataset | Old Iterations | New Iterations | Time Savings |
+|---------|---------------|----------------|--------------|
+| Swarm 100 pts | 120 | 120 | 0% (no change) |
+| Swarm 500 pts | 120 | 100 | ~17% faster |
+| Swarm 1000 pts | 120 | 75 | ~38% faster (~179ms → ~111ms) |
+| Swarm 2000 pts | 120 | 30 | ~75% faster |
+| Network 50 nodes | 500 | 500 | 0% (no change) |
+| Network 100 nodes | 500 | 400 | ~20% faster |
+| Network 250 nodes | 500 | 100 | ~80% faster |
+| Network 500 nodes | 500 | 100 | ~80% faster (~1.7s → ~340ms) |
+
+**Visual quality**: Reduced iterations may result in slightly less "settled" layouts for large datasets, but remain stable and visually acceptable. The trade-off heavily favors performance for interactive applications.
+
+**Files modified**:
+- `src/components/svg/pieceLayouts.tsx` - Adaptive swarmLayout iterations
+- `src/components/processing/network.ts` - Adaptive force and motifs iterations
+
 ## Benchmark Suite
 
 ### Critical Benchmarks (O(n²) Operations)

@@ -1001,8 +1001,19 @@ export const calculateNetworkFrame = (
         d.width = undefined
       })
     } else if (networkSettings.type === "force") {
+      // Adaptive iteration count for force layout: reduce iterations for large networks
+      // Formula: max(100, min(500, 500 - (nodeCount - 50) * 2))
+      // - Small networks (<50 nodes): 500 iterations (full quality)
+      // - Medium networks (50-250 nodes): Gradual reduction
+      // - Large networks (>250 nodes): 100 iterations (fast but stable)
+      const nodeCount = projectedNodes.length
+      const adaptiveIterations = Math.max(
+        100,
+        Math.min(500, Math.floor(500 - (nodeCount - 50) * 2))
+      )
+
       const {
-        iterations = 500,
+        iterations = adaptiveIterations,
         edgeStrength = 0.1,
         distanceMax = Infinity,
         edgeDistance,
@@ -1084,8 +1095,15 @@ export const calculateNetworkFrame = (
       const layoutSize = size[0] > size[1] ? size[1] : size[0]
       const layoutDirection = size[0] > size[1] ? "horizontal" : "vertical"
 
+      // Adaptive iteration count for motifs layout (same as force layout)
+      const nodeCount = projectedNodes.length
+      const adaptiveIterations = Math.max(
+        100,
+        Math.min(500, Math.floor(500 - (nodeCount - 50) * 2))
+      )
+
       const {
-        iterations = 500,
+        iterations = adaptiveIterations,
         edgeStrength = 0.1,
         edgeDistance,
         padding = 0
