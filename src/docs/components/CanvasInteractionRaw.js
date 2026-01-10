@@ -59,8 +59,14 @@ export default class DecisionMatrixExample extends React.Component {
     super(props)
 
     fetch("./data/diamonds.csv")
-      .then(response => response.text())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        return response.text()
+      })
       .then((data) => {
+        console.log("CSV loaded, length:", data.length)
         const parsedDiamonds = csvParse(data).map((d) => ({
           y: +d.price,
           x: +d.carat,
@@ -68,13 +74,19 @@ export default class DecisionMatrixExample extends React.Component {
           color: cutHash[d.cut],
           clarity: d.clarity
         }))
+        console.log("Parsed diamonds:", parsedDiamonds.length)
         this.setState({ parsedDiamonds })
+      })
+      .catch(error => {
+        console.error("Failed to load diamonds.csv:", error)
+        this.setState({ error: error.message })
       })
   }
 
   render() {
-    const { parsedDiamonds, size } = this.state
-    if (parsedDiamonds.length === 0) return <div>Loading...</div>
+    const { parsedDiamonds, size, error } = this.state
+    if (error) return <div style={{color: 'red'}}>Error: {error}</div>
+    if (parsedDiamonds.length === 0) return <div>Loading diamonds data...</div>
     return (
       <div>
         <button

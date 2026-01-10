@@ -116,7 +116,7 @@ function renderInteractionCanvas(
     }
   }
 
-  const interactionContext2D = interactionContext.getContext("2d")
+  const interactionContext2D = interactionContext.getContext("2d", { willReadFrequently: true })
 
   interactionContext2D.imageSmoothingEnabled = false
   interactionContext2D.setTransform(1, 0, 0, 1, margin.left, margin.top)

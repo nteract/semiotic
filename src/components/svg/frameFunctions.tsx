@@ -901,7 +901,7 @@ export const orFrameAxisGenerator = ({
 }
 
 export const canvasEvent = (canvasContext, overlayRegions, canvasMap, e) => {
-  const interactionContext = canvasContext.getContext("2d")
+  const interactionContext = canvasContext.getContext("2d", { willReadFrequently: true })
   const hoverPoint = interactionContext.getImageData(e.offsetX, e.offsetY, 1, 1)
 
   const mostCommonRGB = `rgba(${hoverPoint.data[0]},${hoverPoint.data[1]},${hoverPoint.data[2]},255)`
