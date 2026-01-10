@@ -2,17 +2,49 @@
   "name": "semiotic",
   "version": "2.0.2",
   "description": "The semiotic JavaScript data visualization framework",
-  "main": "dist/semiotic.js",
-  "module": "dist/semiotic.module.js",
+  "main": "dist/semiotic.min.js",
+  "module": "dist/semiotic.module.min.js",
   "types": "dist/semiotic.d.ts",
   "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/semiotic.d.ts",
+      "import": "./dist/semiotic.module.min.js",
+      "require": "./dist/semiotic.min.js",
+      "default": "./dist/semiotic.module.min.js"
+    },
+    "./xy": {
+      "types": "./dist/XYFrame.d.ts",
+      "import": "./dist/xy.module.min.js",
+      "require": "./dist/xy.min.js",
+      "default": "./dist/xy.module.min.js"
+    },
+    "./ordinal": {
+      "types": "./dist/OrdinalFrame.d.ts",
+      "import": "./dist/ordinal.module.min.js",
+      "require": "./dist/ordinal.min.js",
+      "default": "./dist/ordinal.module.min.js"
+    },
+    "./network": {
+      "types": "./dist/NetworkFrame.d.ts",
+      "import": "./dist/network.module.min.js",
+      "require": "./dist/network.min.js",
+      "default": "./dist/network.module.min.js"
+    },
+    "./package.json": "./package.json"
+  },
   "files": [
-    "dist/semiotic.*",
-    "dist/**/*.d.ts"
+    "dist/*.js",
+    "dist/*.js.map",
+    "dist/**/*.d.ts",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "start": "parcel serve --target docs",
     "build": "parcel build --target docs",
+    "build:analyze": "gulp analyze",
+    "build:prod": "gulp production",
     "test": "jest --config jest.config.js",
     "pretest:dist": "gulp build",
     "test:dist": "playwright test",
@@ -25,7 +57,7 @@
     "website:start": "npm run dist && parcel serve --target website",
     "website:build": "npm run dist && parcel build --target website",
     "typescript": "tsc --noEmit",
-    "prepublishOnly": "gulp build"
+    "prepublishOnly": "gulp production"
   },
   "resolutions": {
     "@types/react": "^17.0.37"
@@ -69,6 +101,9 @@
     "@parcel/transformer-inline-string": "^2.8.2",
     "@parcel/transformer-mdx": "^2.8.2",
     "@playwright/test": "^1.17.1",
+    "@rollup/plugin-commonjs": "^29.0.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-terser": "^0.4.4",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^14.3.0",
     "@testing-library/user-event": "^14.4.3",
@@ -114,11 +149,12 @@
     "react-router-dom": "^6.2.1",
     "react-test-renderer": "^17.0.2",
     "resize-observer-polyfill": "^1.5.1",
-    "rollup": "^2.79.1",
+    "rollup": "^4.55.1",
     "rollup-plugin-auto-external": "^2.0.0",
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-typescript2": "^0.34.1",
+    "rollup-plugin-visualizer": "^6.0.5",
     "roughjs": "^3.1.0",
     "ts-jest": "^27.1.1",
     "tslib": "^1.14.1",
