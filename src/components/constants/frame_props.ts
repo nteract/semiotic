@@ -133,54 +133,163 @@ export const xyFrameChangeProps = [
   "title"
 ]
 
-export const orFrameChangeProps = [
-  ...sharedChangeProps,
-  "pieceHoverAnnotation",
-  "summaryHoverAnnotation",
+// NEW: Props that affect data projection - trigger calculateOrdinalFrame data processing
+export const orFrameDataAffectingProps = [
+  // Core data
   "data",
+
+  // Data accessors
+  "oAccessor",
+  "rAccessor",
+  "dataAccessor",
+
+  // Data transformation
+  "type",
+  "summaryType",
+  "connectorType",
+  "projection",
   "orient",
+
+  // Scale types (affect data domain)
   "oScaleType",
   "rScaleType",
+
+  // Extent overrides
   "oExtent",
   "rExtent",
   "invertO",
   "invertR",
-  "oAccessor",
-  "rAccessor",
+
+  // Layout affecting data
   "oPadding",
-  "projection",
-  "type",
-  "summaryType",
-  "connectorType",
-  "dataAccessor",
-  "rBaseline",
   "oSort",
   "dynamicColumnWidth",
-  "style",
-  "connectorStyle",
-  "summaryStyle",
+  "rBaseline",
   "summaryPosition",
-  "oLabel",
-  "axes",
+
+  // Custom rendering
   "renderFn"
 ]
 
-export const networkFrameChangeProps = [
-  ...sharedChangeProps,
+// NEW: Props that affect scales/layout - trigger scale recalc but not data projection
+export const orFrameScaleAffectingProps = [
+  // Size and layout
+  "size",
+  "margin",
+  "title",
+
+  // Axes and labels (affect margin/layout)
+  "axes",
+  "oLabel",
+
+  // All data-affecting props also affect scales
+  ...orFrameDataAffectingProps
+]
+
+// NEW: Props that only affect styling/rendering - no data or scale recalc
+export const orFrameStylingProps = [
+  // Styling
+  "style",
+  "connectorStyle",
+  "summaryStyle",
+
+  // Classes
+  "className",
+
+  // Interaction (no data recalc needed)
+  "customClickBehavior",
+  "customHoverBehavior",
+  "customDoubleClickBehavior",
+  "hoverAnnotation",
+  "pieceHoverAnnotation",
+  "summaryHoverAnnotation",
+
+  // Other rendering
+  "additionalDefs",
+  "renderKey",
+  "name"
+]
+
+// Legacy export - now includes all prop categories
+export const orFrameChangeProps = [
+  ...orFrameDataAffectingProps,
+  ...orFrameStylingProps,
+  "axes",  // Duplicated but needed for backward compatibility
+  "size",
+  "margin",
+  "title",
+  "oLabel"
+]
+
+// NEW: Props that affect data projection - trigger calculateNetworkFrame data processing
+export const networkFrameDataAffectingProps = [
+  // Core data
   "graph",
   "nodes",
   "edges",
+
+  // Data accessors
   "nodeIDAccessor",
   "sourceAccessor",
   "targetAccessor",
   "nodeSizeAccessor",
-  "customNodeIcon",
-  "nodeLabels",
   "edgeWidthAccessor",
+
+  // Layout and type
   "networkType",
-  "renderFn",
+  "edgeType",
+
+  // Filters
+  "filterRenderedNodes",
+
+  // Custom rendering
+  "renderFn"
+]
+
+// NEW: Props that affect scales/layout - trigger scale recalc but not data projection
+export const networkFrameScaleAffectingProps = [
+  // Size and layout
+  "size",
+  "margin",
+  "title",
+
+  // Labels (might affect layout)
+  "nodeLabels",
+
+  // All data-affecting props also affect scales
+  ...networkFrameDataAffectingProps
+]
+
+// NEW: Props that only affect styling/rendering - no data or scale recalc
+export const networkFrameStylingProps = [
+  // Styling
   "nodeStyle",
   "edgeStyle",
-  "edgeType",
-  "filterRenderedNodes"
+
+  // Custom marks
+  "customNodeIcon",
+
+  // Classes
+  "className",
+
+  // Interaction (no data recalc needed)
+  "customClickBehavior",
+  "customHoverBehavior",
+  "customDoubleClickBehavior",
+  "hoverAnnotation",
+
+  // Other rendering
+  "additionalDefs",
+  "renderKey",
+  "name"
+]
+
+// Legacy export - now includes all prop categories
+export const networkFrameChangeProps = [
+  ...networkFrameDataAffectingProps,
+  ...networkFrameStylingProps,
+  "size",
+  "margin",
+  "title",
+  "nodeLabels"
 ]

@@ -5,7 +5,12 @@ import Frame from "./Frame"
 
 import { stringToFn } from "./data/dataFunctions"
 
-import { networkFrameChangeProps } from "./constants/frame_props"
+import {
+  networkFrameChangeProps,
+  networkFrameDataAffectingProps,
+  networkFrameScaleAffectingProps,
+  networkFrameStylingProps
+} from "./constants/frame_props"
 
 import {
   htmlFrameHoverRule,
@@ -225,22 +230,47 @@ function deriveNetworkFrameState(
   prevState: NetworkFrameState
 ) {
   const { props } = prevState
+
+  // Check which category of props changed
+  const dataPropsChanged = !prevState.dataVersion && networkFrameDataAffectingProps.some(
+    (prop) => props[prop] !== nextProps[prop]
+  )
+
+  const scalePropsChanged = !prevState.dataVersion && networkFrameScaleAffectingProps.some(
+    (prop) => props[prop] !== nextProps[prop]
+  )
+
+  const sizeChanged = props.size[0] !== nextProps.size[0] || props.size[1] !== nextProps.size[1]
+
+  // Force full recalc if dataVersion changed or no projected data exists
   if (
-    (prevState.dataVersion &&
-      prevState.dataVersion !== nextProps.dataVersion) ||
-    (!prevState.projectedNodes && !prevState.projectedEdges) ||
-    props.size[0] !== nextProps.size[0] ||
-    props.size[1] !== nextProps.size[1] ||
-    (!prevState.dataVersion &&
-      networkFrameChangeProps.find((d) => {
-        return props[d] !== nextProps[d]
-      }))
+    (prevState.dataVersion && prevState.dataVersion !== nextProps.dataVersion) ||
+    (!prevState.projectedNodes && !prevState.projectedEdges)
   ) {
     return {
       ...calculateNetworkFrame(nextProps, prevState),
       props: nextProps
     }
   }
+
+  // Full data recalculation needed if data-affecting props changed
+  if (dataPropsChanged) {
+    return {
+      ...calculateNetworkFrame(nextProps, prevState),
+      props: nextProps
+    }
+  }
+
+  // Scale/layout recalculation needed if size or scale-affecting props changed
+  // Note: For network layouts (especially force), size changes might affect positioning
+  if (sizeChanged || scalePropsChanged) {
+    return {
+      ...calculateNetworkFrame(nextProps, prevState),
+      props: nextProps
+    }
+  }
+
+  // Only styling changed - no recalc needed, React will re-render with existing state
   return { props: nextProps }
 }
 
