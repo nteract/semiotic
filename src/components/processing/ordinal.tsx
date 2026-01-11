@@ -760,7 +760,9 @@ export const calculateOrdinalFrame = (
     if (typeof labelSettings.label === "function") {
       labelingFn = labelSettings.label
     } else {
-      const labelStyle = {
+      const labelStyle: {
+        textAnchor: "inherit" | "middle" | "end" | "start"
+      } = {
         textAnchor: "middle"
       }
       if (projection === "horizontal" && labelSettings.orient === "right") {
@@ -771,7 +773,7 @@ export const calculateOrdinalFrame = (
 
       labelingFn = (d, p, i) => {
         const additionalStyle: {
-          textAnchor?: string | null
+          textAnchor?: "inherit" | "middle" | "end" | "start" | null
         } = {}
         let transformRotate
 
@@ -795,7 +797,7 @@ export const calculateOrdinalFrame = (
           ).length
           const labelMod = labelIndex * 15
           let labelLength = d.length * 7
-          let textAnchor = "start"
+          let textAnchor: "inherit" | "middle" | "end" | "start" = "start"
 
           let positionProps = { dx: 0, dy: 0 }
           if (centroid[0] < 0) {

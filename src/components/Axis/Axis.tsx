@@ -417,7 +417,7 @@ export default function Axis(props: AxisProps) {
     const labelName: any = label.name || label
     const labelPosition = label.position || {}
     const locationMod = labelPosition.location || "outside"
-    let anchorMod = labelPosition.anchor || "middle"
+    let anchorMod = (labelPosition.anchor || "middle") as "inherit" | "middle" | "end" | "start"
     const distance = label.locationDistance || calculatedLabelPosition
 
     const rotateHash = {

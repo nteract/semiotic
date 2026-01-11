@@ -454,7 +454,10 @@ export const matrixNodeGenerator = (size, nodes) => {
     const showLine = stepSize > 3
     const showRect = stepSize > 0.5
 
-    const textProps = {
+    const textProps: {
+      textAnchor: "inherit" | "middle" | "end" | "start"
+      fontSize: string
+    } = {
       textAnchor: "end",
       fontSize: `${stepSize / 2}px`
     }

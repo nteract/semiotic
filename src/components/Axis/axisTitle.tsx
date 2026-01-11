@@ -1,12 +1,12 @@
 import React from 'react';
 
-export interface AxisTitleProps { 
+export interface AxisTitleProps {
   className: string,
   translation: Array<number>,
   position: Array<number>,
   rotation: number | string,
   labelName: any,
-  anchorMod: string
+  anchorMod: "inherit" | "middle" | "end" | "start"
 }
 
 export default function AxisTitle(props: AxisTitleProps) { 
