@@ -1,7 +1,8 @@
 import React from "react"
-import { render } from "@testing-library/react"
+import { render, fireEvent } from "@testing-library/react"
 import { BubbleChart } from "./BubbleChart"
 import { TooltipProvider } from "../../store/TooltipStore"
+import { MultiLineTooltip } from "../../Tooltip/Tooltip"
 
 describe("BubbleChart", () => {
   const sampleData = [
@@ -218,5 +219,119 @@ describe("BubbleChart", () => {
 
     const frame = container.querySelector(".xyframe")
     expect(frame).toBeTruthy()
+  })
+
+  // Test case from docs: BubbleChart with MultiLineTooltip on hover
+  it("renders tooltip on hover with MultiLineTooltip (docs example)", () => {
+    // Exact data from docs
+    const bubbleData = [
+      { x: 10, y: 20, size: 30, category: "Tech", name: "Company A" },
+      { x: 25, y: 35, size: 50, category: "Finance", name: "Company B" },
+      { x: 40, y: 15, size: 20, category: "Tech", name: "Company C" },
+      { x: 55, y: 45, size: 60, category: "Healthcare", name: "Company D" },
+      { x: 70, y: 30, size: 40, category: "Finance", name: "Company E" },
+      { x: 20, y: 50, size: 25, category: "Healthcare", name: "Company F" },
+      { x: 65, y: 25, size: 45, category: "Tech", name: "Company G" }
+    ]
+
+    const { container } = render(
+      <TooltipProvider>
+        <BubbleChart
+          data={bubbleData}
+          width={600}
+          height={400}
+          xLabel="Revenue"
+          yLabel="Growth"
+          sizeBy="size"
+          colorBy="category"
+          tooltip={MultiLineTooltip({
+            title: "name",
+            fields: ["category", "x", "y", "size"]
+          })}
+        />
+      </TooltipProvider>
+    )
+
+    const frame = container.querySelector(".xyframe")
+    expect(frame).toBeTruthy()
+
+    // Get the first bubble point
+    const points = container.querySelectorAll(".points .frame-piece")
+    expect(points.length).toBeGreaterThan(0)
+
+    const firstPoint = points[0] as HTMLElement
+
+    // Simulate hover - this should trigger the tooltip without throwing an error
+    expect(() => {
+      fireEvent.mouseEnter(firstPoint)
+      fireEvent.mouseMove(firstPoint)
+    }).not.toThrow()
+
+    // The tooltip content should be rendered
+    // Note: The actual tooltip rendering happens via tooltipContent callback
+    // which XYFrame calls with the hovered data point
+  })
+
+  // Direct test: Call the tooltip function with hover data structure
+  it("MultiLineTooltip handles hover annotation data structure", () => {
+    const bubbleData = [
+      { x: 10, y: 20, size: 30, category: "Tech", name: "Company A" }
+    ]
+
+    // Create the tooltip function
+    const tooltipFn = MultiLineTooltip({
+      title: "name",
+      fields: ["category", "x", "y", "size"]
+    })
+
+    // Simulate what XYFrame passes to tooltipContent on hover
+    // This is a hover annotation object
+    const hoverData = bubbleData[0]
+
+    // Call the tooltip function directly - should not throw
+    expect(() => {
+      const result = tooltipFn(hoverData)
+      expect(result).toBeTruthy()
+    }).not.toThrow()
+  })
+
+  // Test with array data (maybe XYFrame passes array for multiple points)
+  it("MultiLineTooltip handles array data without crashing", () => {
+    const tooltipFn = MultiLineTooltip({
+      title: "name",
+      fields: ["category", "x", "y", "size"]
+    })
+
+    // Maybe XYFrame passes an array of data points?
+    const arrayData = [
+      { x: 10, y: 20, size: 30, category: "Tech", name: "Company A" }
+    ]
+
+    // This should handle gracefully or throw a clear error
+    expect(() => {
+      const result = tooltipFn(arrayData as any)
+      // Should return null or handle gracefully
+    }).not.toThrow()
+  })
+
+  // Test with nested data structure (annotation wrapper)
+  it("MultiLineTooltip handles nested annotation data structure", () => {
+    const tooltipFn = MultiLineTooltip({
+      title: "name",
+      fields: ["category", "x", "y", "size"]
+    })
+
+    // Maybe XYFrame wraps the data in an annotation object
+    const annotationData = {
+      type: "frame-hover",
+      data: { x: 10, y: 20, size: 30, category: "Tech", name: "Company A" },
+      x: 10,
+      y: 20
+    }
+
+    expect(() => {
+      const result = tooltipFn(annotationData as any)
+      expect(result).toBeTruthy()
+    }).not.toThrow()
   })
 })

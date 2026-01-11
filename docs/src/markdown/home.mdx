@@ -8,14 +8,27 @@ Looking for 1.x release documentation? Please visit https://semioticv1.nteract.i
 
 ## Semiotic is a data visualization framework for React.
 
-Semiotic offers several frame types to deploy a wide variety of charts. These
-frame types:
+Semiotic provides two ways to create charts:
 
-- `XYFrame` XY data i.e. line charts and scatterplots 
-- `OrdinalFrame` categorical data i.e. bar charts, violin plots, parallel coordinates
-- `NetworkFrame` topological and network data i.e. flow diagrams, network visualization, and hierarchical views
+### Higher-Order Chart Components (Recommended)
 
-provide the foundation for rich visualizations and highly customizable charts.
+Simplified components with intuitive APIs for common chart types:
+
+- **XY Charts**: `Scatterplot`, `LineChart`, `AreaChart`, `BubbleChart`, `Heatmap` - [Guide →](/guides/xy-charts-hoc)
+- **Ordinal Charts**: `BarChart`, `StackedBarChart`, `SwarmPlot`, `BoxPlot`, `DotPlot` - [Guide →](/guides/ordinal-charts-hoc)
+- **Network Charts**: `ForceDirectedGraph`, `ChordDiagram`, `SankeyDiagram`, `TreeDiagram` - [Guide →](/guides/network-charts-hoc)
+
+These components offer smart defaults, built-in tooltips, and an easy-to-learn API.
+
+### Frame Components (Advanced)
+
+Powerful, flexible frame types for custom visualizations:
+
+- `XYFrame` - XY data (line charts, scatterplots, area charts)
+- `OrdinalFrame` - Categorical data (bar charts, violin plots, parallel coordinates)
+- `NetworkFrame` - Topological and network data (flow diagrams, hierarchies)
+
+Frames provide complete control over every aspect of your visualization.
 
 <img src={summary} />
 
@@ -37,17 +50,37 @@ npm i -SE semiotic
 
 ### Usage
 
-Use with the following import syntax:
+Import higher-order components for quick charts:
 
-```js
-import { NetworkFrame } from "semiotic"
+```jsx
+import { Scatterplot, BarChart, LineChart } from "semiotic"
+
+function MyChart() {
+  return (
+    <Scatterplot
+      data={[
+        { x: 1, y: 5, category: "A" },
+        { x: 2, y: 8, category: "B" }
+      ]}
+      xLabel="X Axis"
+      yLabel="Y Axis"
+      colorBy="category"
+    />
+  )
+}
+```
+
+Or import frame components for advanced customization:
+
+```jsx
+import { XYFrame, OrdinalFrame, NetworkFrame } from "semiotic"
 ```
 
 Alternatively, you can use semiotic's bundled version available on unpkg.com.
 
 ```html
 <script type="module">
-  import { NetworkFrame } from "https://unpkg.com/semiotic?module"
+  import { Scatterplot, BarChart } from "https://unpkg.com/semiotic?module"
 </script>
 ```
 ### Explore

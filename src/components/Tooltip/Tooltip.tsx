@@ -8,12 +8,18 @@ export interface TooltipField {
   /**
    * Label for this field
    */
-  label: string
+  label?: string
+
+  /**
+   * Field name or accessor function to get the value
+   * (alias for 'accessor')
+   */
+  key?: Accessor<any>
 
   /**
    * Field name or accessor function to get the value
    */
-  accessor: Accessor<any>
+  accessor?: Accessor<any>
 
   /**
    * Optional format function for the value
@@ -151,6 +157,11 @@ export function Tooltip(config: TooltipConfig = {}) {
 
   // Return a tooltipContent function that Semiotic expects
   return (data: any) => {
+    // Guard against undefined/null data
+    if (!data || typeof data !== "object") {
+      return null
+    }
+
     let content: React.ReactNode
 
     if (title) {
@@ -160,7 +171,7 @@ export function Tooltip(config: TooltipConfig = {}) {
     } else if (fields && fields.length > 0) {
       // Show first field's value
       const field = fields[0]
-      const accessor = typeof field === "string" ? field : field.accessor
+      const accessor = typeof field === "string" ? field : (field.accessor || field.key || "")
       const fieldFormat = typeof field === "object" ? field.format : undefined
       const value = getValue(data, accessor)
       content = formatValue(value, fieldFormat || format)
@@ -251,6 +262,11 @@ export function MultiLineTooltip(config: MultiLineTooltipConfig = {}) {
 
   // Return a tooltipContent function that Semiotic expects
   return (data: any) => {
+    // Guard against undefined/null data
+    if (!data || typeof data !== "object") {
+      return null
+    }
+
     const lines: Array<{ label?: string; value: string }> = []
 
     // Add title line if specified
@@ -262,7 +278,7 @@ export function MultiLineTooltip(config: MultiLineTooltipConfig = {}) {
     }
 
     // Add field lines
-    if (fields.length > 0) {
+    if (fields && Array.isArray(fields) && fields.length > 0) {
       fields.forEach((field) => {
         let label: string | undefined
         let accessor: Accessor<any>
@@ -275,8 +291,9 @@ export function MultiLineTooltip(config: MultiLineTooltipConfig = {}) {
           fieldFormat = format
         } else {
           // Full TooltipField object
+          // Support both 'key' and 'accessor' for backward compatibility
           label = field.label
-          accessor = field.accessor
+          accessor = field.accessor || field.key || ""
           fieldFormat = field.format || format
         }
 
@@ -302,6 +319,11 @@ export function MultiLineTooltip(config: MultiLineTooltipConfig = {}) {
     }
 
     const mergedStyle = { ...defaultTooltipStyle, ...style }
+
+    // Safety check: ensure lines is an array
+    if (!Array.isArray(lines) || lines.length === 0) {
+      return null
+    }
 
     return (
       <div

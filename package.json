@@ -42,7 +42,7 @@
   ],
   "scripts": {
     "start": "parcel serve --target website --port 3000",
-    "build": "parcel build --target docs",
+    "build": "parcel build --target website",
     "build:analyze": "gulp analyze",
     "build:prod": "gulp production",
     "test": "jest --config jest.config.js",
@@ -54,12 +54,16 @@
     "bench:compare": "vitest bench --run && node scripts/compare-baseline.js",
     "serve-examples": "npm run dist && parcel serve integration-tests/index.html integration-tests/xy-examples/index.html integration-tests/ordinal-examples/index.html integration-tests/network-examples/index.html integration-tests/viz-examples/index.html --dist-dir .parcel-cache/integration-tests",
     "dist": "gulp build",
+    "dist:prod": "gulp production",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "create-release-branch": "sh ./scripts/create-release-branch.sh",
     "publish-release": "sh ./scripts/publish-release.sh",
-    "website:start": "npm run dist && parcel serve --target website",
-    "website:build": "npm run dist && parcel build --target website",
+    "clean": "rm -rf .parcel-cache docs/build dist && echo 'All caches and build artifacts cleared'",
+    "website:clean": "npm run clean && npm run dist:prod",
+    "website:start": "npm run dist:prod && parcel serve --target website --no-cache",
+    "website:start:clean": "npm run clean && npm run dist:prod && parcel serve --target website --no-cache",
+    "website:build": "npm run dist:prod && parcel build --target website",
     "typescript": "tsc --noEmit",
     "prepublishOnly": "gulp production"
   },
@@ -72,13 +76,6 @@
       "scopeHoist": false,
       "source": "docs/public/index.html",
       "distDir": "docs/build",
-      "engines": {
-        "browsers": "Firefox 60, Chrome 67, Safari 11.1"
-      }
-    },
-    "docs": {
-      "source": "public/index.html",
-      "distDir": "build",
       "engines": {
         "browsers": "Firefox 60, Chrome 67, Safari 11.1"
       }
