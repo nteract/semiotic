@@ -4,8 +4,8 @@ module.exports = {
   collectCoverage: true,
   setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts"],
   testMatch: [
-    "<rootDir>/src/**/__tests__/**/*.{js,jsx,mjs}",
-    "<rootDir>/src/**/?(*.)(spec|test).{ts,js,jsx,mjs}"
+    "<rootDir>/src/**/__tests__/**/*.{js,jsx,mjs,tsx}",
+    "<rootDir>/src/**/?(*.)(spec|test).{ts,tsx,js,jsx,mjs}"
   ],
   testEnvironment: "jsdom",
   testEnvironmentOptions: {

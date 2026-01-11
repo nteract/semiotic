@@ -1,0 +1,336 @@
+import * as React from "react"
+import { useMemo } from "react"
+import OrdinalFrame from "../../OrdinalFrame"
+import type { OrdinalFrameProps } from "../../types/ordinalTypes"
+import { getColor, createColorScale } from "../shared/colorUtils"
+import type { BaseChartProps, Accessor } from "../shared/types"
+import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+
+/**
+ * StackedBarChart component props
+ */
+export interface StackedBarChartProps extends BaseChartProps {
+  /**
+   * Array of data points with category, subcategory, and value.
+   * @example
+   * ```ts
+   * [
+   *   {category: 'Q1', subcategory: 'Product A', value: 100},
+   *   {category: 'Q1', subcategory: 'Product B', value: 150},
+   *   {category: 'Q2', subcategory: 'Product A', value: 120}
+   * ]
+   * ```
+   */
+  data: Array<Record<string, any>>
+
+  /**
+   * Field name or function to access category values
+   * @default "category"
+   */
+  categoryAccessor?: Accessor<string>
+
+  /**
+   * Field name or function to access subcategory values (for stacking)
+   * @default "subcategory"
+   */
+  stackBy: Accessor<string>
+
+  /**
+   * Field name or function to access numeric values
+   * @default "value"
+   */
+  valueAccessor?: Accessor<number>
+
+  /**
+   * Chart orientation
+   * @default "vertical"
+   */
+  orientation?: "vertical" | "horizontal"
+
+  /**
+   * Label for the category axis
+   */
+  categoryLabel?: string
+
+  /**
+   * Label for the value axis
+   */
+  valueLabel?: string
+
+  /**
+   * Format function for value axis tick labels
+   */
+  valueFormat?: (d: any) => string
+
+  /**
+   * Field name or function to determine bar color (typically stackBy)
+   * @default stackBy value
+   */
+  colorBy?: Accessor<string>
+
+  /**
+   * Color scheme for categorical data or custom colors array
+   * @default "category10"
+   */
+  colorScheme?: string | string[]
+
+  /**
+   * Normalize to 100% (percentage stacked)
+   * @default false
+   */
+  normalize?: boolean
+
+  /**
+   * Padding between bar groups (in pixels)
+   * @default 5
+   */
+  barPadding?: number
+
+  /**
+   * Enable hover annotations
+   * @default true
+   */
+  enableHover?: boolean
+
+  /**
+   * Show grid lines
+   * @default false
+   */
+  showGrid?: boolean
+
+  /**
+   * Show legend for stack categories
+   * @default true
+   */
+  showLegend?: boolean
+
+  /**
+   * Tooltip configuration
+   */
+  tooltip?: TooltipProp
+
+  /**
+   * Additional OrdinalFrame props for advanced customization
+   * For full control, consider using OrdinalFrame directly
+   * @see https://semiotic.nteract.io/guides/ordinal-frame
+   */
+  frameProps?: Partial<Omit<OrdinalFrameProps, "data" | "size">>
+}
+
+/**
+ * StackedBarChart - Visualize part-to-whole relationships with stacked bars
+ *
+ * A simplified wrapper around OrdinalFrame for creating stacked bar charts.
+ * Perfect for showing composition and comparing totals across categories.
+ *
+ * @example
+ * ```tsx
+ * // Simple stacked bar chart
+ * <StackedBarChart
+ *   data={[
+ *     {category: 'Q1', product: 'A', value: 100},
+ *     {category: 'Q1', product: 'B', value: 150},
+ *     {category: 'Q2', product: 'A', value: 120},
+ *     {category: 'Q2', product: 'B', value: 180}
+ *   ]}
+ *   stackBy="product"
+ *   categoryLabel="Quarter"
+ *   valueLabel="Sales"
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Normalized (100%) stacked bar chart
+ * <StackedBarChart
+ *   data={data}
+ *   stackBy="subcategory"
+ *   normalize={true}
+ *   categoryLabel="Category"
+ *   valueLabel="Percentage"
+ * />
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Horizontal stacked bars
+ * <StackedBarChart
+ *   data={data}
+ *   stackBy="product"
+ *   orientation="horizontal"
+ *   colorScheme="tableau10"
+ * />
+ * ```
+ *
+ * @remarks
+ * This component wraps {@link OrdinalFrame} with sensible defaults for stacked bars.
+ * For more advanced features like custom ordering or piece styling,
+ * use OrdinalFrame directly.
+ *
+ * **Breadcrumb to advanced usage:**
+ * - Use the `frameProps` prop to pass any OrdinalFrame prop
+ * - See OrdinalFrame documentation: https://semiotic.nteract.io/guides/ordinal-frame
+ * - All OrdinalFrame props are available via `frameProps`
+ *
+ * @param props - StackedBarChart configuration
+ * @returns Rendered stacked bar chart
+ */
+export function StackedBarChart(props: StackedBarChartProps) {
+  const {
+    data,
+    width = 600,
+    height = 400,
+    margin = { top: 50, bottom: 60, left: 70, right: 120 },
+    className,
+    title,
+    categoryAccessor = "category",
+    stackBy,
+    valueAccessor = "value",
+    orientation = "vertical",
+    categoryLabel,
+    valueLabel,
+    valueFormat,
+    colorBy,
+    colorScheme = "category10",
+    normalize = false,
+    barPadding = 5,
+    enableHover = true,
+    showGrid = false,
+    showLegend = true,
+    tooltip,
+    frameProps = {}
+  } = props
+
+  // Validate data
+  if (!data || data.length === 0) {
+    console.warn("StackedBarChart: data prop is required and should not be empty")
+    return null
+  }
+
+  if (!stackBy) {
+    console.warn("StackedBarChart: stackBy prop is required for stacked bar charts")
+    return null
+  }
+
+  // Use stackBy as colorBy if not specified
+  const actualColorBy = colorBy || stackBy
+
+  // Get unique stack values for legend
+  const stackValues = useMemo(() => {
+    const getStackValue = typeof stackBy === "function" ? stackBy : (d: any) => d[stackBy]
+    return Array.from(new Set(data.map(getStackValue)))
+  }, [data, stackBy])
+
+  // Create color scale
+  const colorScale = useMemo(() => {
+    if (typeof actualColorBy === "function") {
+      return undefined
+    }
+
+    const scheme = Array.isArray(colorScheme) ? colorScheme : colorScheme
+    return createColorScale(data, actualColorBy as string, scheme)
+  }, [data, actualColorBy, colorScheme])
+
+  // Piece style function
+  const pieceStyle = useMemo(() => {
+    return (d: any) => {
+      const baseStyle: any = {}
+
+      // Apply color
+      if (actualColorBy) {
+        baseStyle.fill = getColor(d, actualColorBy, colorScale)
+      } else {
+        baseStyle.fill = "#007bff"
+      }
+
+      return baseStyle
+    }
+  }, [actualColorBy, colorScale])
+
+  // Build axes configuration
+  const axes = useMemo(() => {
+    const axesConfig: any[] = []
+
+    if (orientation === "vertical") {
+      // Vertical bars: category on bottom, value on left
+      axesConfig.push({
+        orient: "left",
+        label: valueLabel,
+        tickFormat: valueFormat,
+        ...(showGrid && { tickLineGenerator: () => null })
+      })
+
+      if (categoryLabel) {
+        axesConfig.push({
+          orient: "bottom",
+          label: categoryLabel
+        })
+      }
+    } else {
+      // Horizontal bars: category on left, value on bottom
+      if (categoryLabel) {
+        axesConfig.push({
+          orient: "left",
+          label: categoryLabel
+        })
+      }
+
+      axesConfig.push({
+        orient: "bottom",
+        label: valueLabel,
+        tickFormat: valueFormat,
+        ...(showGrid && { tickLineGenerator: () => null })
+      })
+    }
+
+    return axesConfig
+  }, [orientation, categoryLabel, valueLabel, valueFormat, showGrid])
+
+  // Build legend if needed
+  const legend = useMemo(() => {
+    if (!showLegend) return undefined
+
+    return {
+      legendGroups: stackValues.map((value) => {
+        const dummyData = typeof stackBy === "string" ? { [stackBy]: value } : {}
+        const color = getColor(dummyData, actualColorBy, colorScale)
+
+        return {
+          styleFn: () => ({ fill: color }),
+          label: String(value),
+          color
+        }
+      })
+    }
+  }, [showLegend, stackValues, stackBy, actualColorBy, colorScale])
+
+  // Build OrdinalFrame props
+  const ordinalFrameProps: OrdinalFrameProps = {
+    size: [width, height],
+    data,
+    oAccessor: categoryAccessor,
+    rAccessor: valueAccessor,
+    type: normalize ? "bar" : "bar",
+    projection: orientation === "horizontal" ? "horizontal" : "vertical",
+    style: pieceStyle,
+    axes,
+    hoverAnnotation: enableHover,
+    margin,
+    oPadding: barPadding,
+    // Configure stacking
+    pieceIDAccessor: stackBy,
+    ...(normalize && { rExtent: [0, 1] }),
+    ...(legend && { legend }),
+    ...(className && { className }),
+    ...(title && { title }),
+    // Add tooltip support
+    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) }),
+    // Allow frameProps to override defaults
+    ...frameProps
+  }
+
+  return <OrdinalFrame {...ordinalFrameProps} />
+}
+
+// Export default for convenience
+export default StackedBarChart

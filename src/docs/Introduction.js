@@ -40,6 +40,17 @@ const intro = (
       using the same mental model for interaction elements, labels or other
       related but distinct components.
     </p>
+    <h2>Higher-Order Chart Components</h2>
+    <p>
+      In addition to the powerful Frame components (XYFrame, OrdinalFrame, and
+      NetworkFrame), Semiotic now includes a collection of{" "}
+      <Link to="semiotic/higherordercharts">higher-order chart components</Link>{" "}
+      that provide simplified, opinionated APIs for common chart types. These
+      components—like Scatterplot, LineChart, BarChart, and TreeDiagram—offer
+      intuitive prop names, smart defaults, and progressive disclosure, making
+      it easy to create beautiful visualizations quickly while maintaining a
+      clear path to the advanced features of the underlying Frames.
+    </p>
   </div>
 )
 

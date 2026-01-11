@@ -67,6 +67,13 @@ import UsingPatternsTextures from "./components/UsingPatternsTextures"
 import RealtimeOrdinalFrame from "./components/RealtimeOrdinalFrame"
 import RealtimeXYFrame from "./components/RealtimeXYFrame"
 
+// Higher-Order Chart Components
+import HigherOrderCharts from "./components/HigherOrderCharts"
+import XYChartsDocs from "./components/XYChartsDocs"
+import OrdinalChartsDocs from "./components/OrdinalChartsDocs"
+import NetworkChartsDocs from "./components/NetworkChartsDocs"
+import TooltipDocs from "./components/TooltipDocs"
+
 import { Link } from "react-router-dom"
 
 const components = {
@@ -119,6 +126,12 @@ const components = {
   sunburst: { docs: Sunburst, parent: "networkframe" },
   networks: { docs: Networks, parent: "networkframe" },
   facet: { docs: FacetControllerDocs },
+  // Higher-Order Chart Components
+  higherordercharts: { docs: HigherOrderCharts },
+  xycharts: { docs: XYChartsDocs, parent: "higherordercharts" },
+  ordinalcharts: { docs: OrdinalChartsDocs, parent: "higherordercharts" },
+  networkcharts: { docs: NetworkChartsDocs, parent: "higherordercharts" },
+  tooltips: { docs: TooltipDocs, parent: "higherordercharts" },
   axis: { docs: AxisDocs },
   legend: { docs: LegendDocs },
   dividedline: { docs: DividedLineDocs }
