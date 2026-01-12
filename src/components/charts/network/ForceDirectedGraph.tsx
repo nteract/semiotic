@@ -3,6 +3,7 @@ import { useMemo } from "react"
 import NetworkFrame from "../../NetworkFrame"
 import type { NetworkFrameProps } from "../../types/networkTypes"
 import { getColor, createColorScale, getSize } from "../shared/colorUtils"
+import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 
@@ -133,6 +134,12 @@ export interface ForceDirectedGraphProps extends BaseChartProps {
   enableHover?: boolean
 
   /**
+   * Show legend
+   * @default true (when colorBy is specified)
+   */
+  showLegend?: boolean
+
+  /**
    * Tooltip configuration
    */
   tooltip?: TooltipProp
@@ -213,7 +220,7 @@ export function ForceDirectedGraph(props: ForceDirectedGraphProps) {
     edges,
     width = 600,
     height = 600,
-    margin = { top: 20, bottom: 20, left: 20, right: 20 },
+    margin: userMargin,
     className,
     title,
     nodeIDAccessor = "id",
@@ -231,6 +238,7 @@ export function ForceDirectedGraph(props: ForceDirectedGraphProps) {
     forceStrength = 0.1,
     showLabels = false,
     enableHover = true,
+    showLegend,
     tooltip,
     frameProps = {}
   } = props
@@ -329,6 +337,34 @@ export function ForceDirectedGraph(props: ForceDirectedGraphProps) {
     }
   }, [showLabels, nodeLabel])
 
+  // Determine if we should show legend
+  const shouldShowLegend = showLegend !== undefined ? showLegend : !!colorBy
+
+  // Build legend if needed
+  const legend = useMemo(() => {
+    if (!shouldShowLegend || !colorBy) return undefined
+
+    return createLegend({
+      data: nodes,
+      colorBy,
+      colorScale,
+      getColor
+    })
+  }, [shouldShowLegend, colorBy, nodes, colorScale])
+
+  // Adjust margin for legend if present
+  const margin = useMemo(() => {
+    const defaultMargin = { top: 20, bottom: 20, left: 20, right: 20 }
+    const finalMargin = { ...defaultMargin, ...userMargin }
+
+    // If legend is present and right margin is too small, increase it
+    if (legend && finalMargin.right < 120) {
+      finalMargin.right = 120
+    }
+
+    return finalMargin
+  }, [userMargin, legend])
+
   // Build NetworkFrame props
   const networkFrameProps: NetworkFrameProps = {
     size: [width, height],
@@ -342,6 +378,7 @@ export function ForceDirectedGraph(props: ForceDirectedGraphProps) {
     edgeStyle,
     hoverAnnotation: enableHover,
     margin,
+    ...(legend && { legend }),
     ...(nodeLabelFn && { nodeLabels: nodeLabelFn }),
     ...(className && { className }),
     ...(title && { title }),

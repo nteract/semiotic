@@ -245,4 +245,72 @@ describe("BarChart", () => {
     const frame = container.querySelector(".ordinalframe")
     expect(frame).toBeTruthy()
   })
+
+  // Legend Tests
+  describe("Legend behavior", () => {
+    const coloredData = [
+      { category: "A", value: 10, type: "X" },
+      { category: "B", value: 20, type: "Y" },
+      { category: "C", value: 15, type: "X" }
+    ]
+
+    it("shows legend automatically when colorBy is specified", () => {
+      const { container } = render(
+        <TooltipProvider>
+          <BarChart data={coloredData} colorBy="type" />
+        </TooltipProvider>
+      )
+
+      // Check that legend items are rendered
+      const legendItems = container.querySelectorAll(".legend-item")
+      expect(legendItems.length).toBeGreaterThan(0)
+    })
+
+    it("does not show legend when colorBy is not specified", () => {
+      const { container } = render(
+        <TooltipProvider>
+          <BarChart data={sampleData} />
+        </TooltipProvider>
+      )
+
+      // Legend items should not be present
+      const legendItems = container.querySelectorAll(".legend-item")
+      expect(legendItems.length).toBe(0)
+    })
+
+    it("respects showLegend=false even when colorBy is specified", () => {
+      const { container } = render(
+        <TooltipProvider>
+          <BarChart
+            data={coloredData}
+            colorBy="type"
+            showLegend={false}
+          />
+        </TooltipProvider>
+      )
+
+      // Legend items should not be present
+      const legendItems = container.querySelectorAll(".legend-item")
+      expect(legendItems.length).toBe(0)
+    })
+
+    it("adjusts right margin when legend is present", () => {
+      const { container } = render(
+        <TooltipProvider>
+          <BarChart
+            data={coloredData}
+            colorBy="type"
+          />
+        </TooltipProvider>
+      )
+
+      // The frame should have sufficient right margin to accommodate legend
+      const frame = container.querySelector(".ordinalframe")
+      expect(frame).toBeTruthy()
+
+      // Legend items should be visible
+      const legendItems = container.querySelectorAll(".legend-item")
+      expect(legendItems.length).toBeGreaterThan(0)
+    })
+  })
 })

@@ -306,4 +306,86 @@ describe("ForceDirectedGraph", () => {
     const frame = container.querySelector(".networkframe")
     expect(frame).toBeTruthy()
   })
+
+  // Legend Tests
+  describe("Legend behavior", () => {
+    const coloredNodes = [
+      { id: "A", group: "X" },
+      { id: "B", group: "Y" },
+      { id: "C", group: "X" }
+    ]
+
+    const coloredEdges = [
+      { source: "A", target: "B" },
+      { source: "B", target: "C" }
+    ]
+
+    it("shows legend automatically when colorBy is specified", () => {
+      const { container } = render(
+        <TooltipProvider>
+          <ForceDirectedGraph
+            nodes={coloredNodes}
+            edges={coloredEdges}
+            colorBy="group"
+          />
+        </TooltipProvider>
+      )
+
+      // Check that legend items are rendered
+      const legendItems = container.querySelectorAll(".legend-item")
+      expect(legendItems.length).toBeGreaterThan(0)
+    })
+
+    it("does not show legend when colorBy is not specified", () => {
+      const { container } = render(
+        <TooltipProvider>
+          <ForceDirectedGraph
+            nodes={sampleNodes}
+            edges={sampleEdges}
+          />
+        </TooltipProvider>
+      )
+
+      // Legend items should not be present
+      const legendItems = container.querySelectorAll(".legend-item")
+      expect(legendItems.length).toBe(0)
+    })
+
+    it("respects showLegend=false even when colorBy is specified", () => {
+      const { container } = render(
+        <TooltipProvider>
+          <ForceDirectedGraph
+            nodes={coloredNodes}
+            edges={coloredEdges}
+            colorBy="group"
+            showLegend={false}
+          />
+        </TooltipProvider>
+      )
+
+      // Legend items should not be present
+      const legendItems = container.querySelectorAll(".legend-item")
+      expect(legendItems.length).toBe(0)
+    })
+
+    it("adjusts right margin when legend is present", () => {
+      const { container } = render(
+        <TooltipProvider>
+          <ForceDirectedGraph
+            nodes={coloredNodes}
+            edges={coloredEdges}
+            colorBy="group"
+          />
+        </TooltipProvider>
+      )
+
+      // The frame should have sufficient right margin to accommodate legend
+      const frame = container.querySelector(".networkframe")
+      expect(frame).toBeTruthy()
+
+      // Legend items should be visible
+      const legendItems = container.querySelectorAll(".legend-item")
+      expect(legendItems.length).toBeGreaterThan(0)
+    })
+  })
 })

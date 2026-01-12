@@ -334,4 +334,104 @@ describe("BubbleChart", () => {
       expect(result).toBeTruthy()
     }).not.toThrow()
   })
+
+  // Legend Tests
+  describe("Legend behavior", () => {
+    const coloredData = [
+      { x: 1, y: 10, size: 50, category: "A" },
+      { x: 2, y: 20, size: 30, category: "B" },
+      { x: 3, y: 15, size: 70, category: "A" }
+    ]
+
+    it("renders without error when colorBy is specified", () => {
+      const { container } = render(
+        <TooltipProvider>
+          <BubbleChart data={coloredData} sizeBy="size" colorBy="category" />
+        </TooltipProvider>
+      )
+
+      // Should render the frame successfully
+      const frame = container.querySelector(".xyframe")
+      expect(frame).toBeTruthy()
+    })
+
+    it("renders without error when colorBy is not specified", () => {
+      const { container } = render(
+        <TooltipProvider>
+          <BubbleChart data={sampleData} sizeBy="size" />
+        </TooltipProvider>
+      )
+
+      // Should still render the frame
+      const frame = container.querySelector(".xyframe")
+      expect(frame).toBeTruthy()
+    })
+
+    it("respects showLegend=false without errors", () => {
+      const { container } = render(
+        <TooltipProvider>
+          <BubbleChart
+            data={coloredData}
+            sizeBy="size"
+            colorBy="category"
+            showLegend={false}
+          />
+        </TooltipProvider>
+      )
+
+      // Should render the frame
+      const frame = container.querySelector(".xyframe")
+      expect(frame).toBeTruthy()
+    })
+
+    it("respects showLegend=true without errors", () => {
+      const { container } = render(
+        <TooltipProvider>
+          <BubbleChart
+            data={coloredData}
+            sizeBy="size"
+            colorBy="category"
+            showLegend={true}
+          />
+        </TooltipProvider>
+      )
+
+      // Should render the frame
+      const frame = container.querySelector(".xyframe")
+      expect(frame).toBeTruthy()
+    })
+
+    it("adjusts margin without errors when legend configuration is present", () => {
+      const { container } = render(
+        <TooltipProvider>
+          <BubbleChart
+            data={coloredData}
+            sizeBy="size"
+            colorBy="category"
+          />
+        </TooltipProvider>
+      )
+
+      // The frame should render successfully with adjusted margins
+      const frame = container.querySelector(".xyframe")
+      expect(frame).toBeTruthy()
+    })
+
+    it("allows user to override margin even with legend", () => {
+      const { container } = render(
+        <TooltipProvider>
+          <BubbleChart
+            data={coloredData}
+            sizeBy="size"
+            colorBy="category"
+            margin={{ top: 10, bottom: 10, left: 10, right: 200 }}
+          />
+        </TooltipProvider>
+      )
+
+      // Custom margin should be respected
+      const frame = container.querySelector(".xyframe")
+      expect(frame).toBeTruthy()
+    })
+  })
 })

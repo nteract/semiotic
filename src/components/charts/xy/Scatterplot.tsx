@@ -3,6 +3,7 @@ import { useMemo } from "react"
 import XYFrame from "../../XYFrame"
 import type { XYFrameProps } from "../../types/xyTypes"
 import { getColor, getSize, createColorScale } from "../shared/colorUtils"
+import { createLegend } from "../shared/legendUtils"
 import { formatAxis } from "../shared/formatUtils"
 import type { BaseChartProps, AxisConfig, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -87,6 +88,12 @@ export interface ScatterplotProps extends BaseChartProps, AxisConfig {
    * @default false
    */
   showGrid?: boolean
+
+  /**
+   * Show legend
+   * @default true (when colorBy is specified)
+   */
+  showLegend?: boolean
 
   /**
    * Tooltip configuration
@@ -179,7 +186,7 @@ export function Scatterplot(props: ScatterplotProps) {
     data,
     width = 600,
     height = 400,
-    margin = { top: 50, bottom: 60, left: 70, right: 40 },
+    margin: userMargin,
     className,
     title,
     xLabel,
@@ -196,6 +203,7 @@ export function Scatterplot(props: ScatterplotProps) {
     pointOpacity = 0.8,
     enableHover = true,
     showGrid = false,
+    showLegend,
     tooltip,
     frameProps = {}
   } = props
@@ -278,6 +286,34 @@ export function Scatterplot(props: ScatterplotProps) {
     return axesConfig
   }, [xLabel, yLabel, xFormat, yFormat, showGrid])
 
+  // Determine if we should show legend
+  const shouldShowLegend = showLegend !== undefined ? showLegend : !!colorBy
+
+  // Build legend if needed
+  const legend = useMemo(() => {
+    if (!shouldShowLegend || !colorBy) return undefined
+
+    return createLegend({
+      data,
+      colorBy,
+      colorScale,
+      getColor
+    })
+  }, [shouldShowLegend, colorBy, data, colorScale])
+
+  // Adjust margin for legend if present
+  const margin = useMemo(() => {
+    const defaultMargin = { top: 50, bottom: 60, left: 70, right: 40 }
+    const finalMargin = { ...defaultMargin, ...userMargin }
+
+    // If legend is present and right margin is too small, increase it
+    if (legend && finalMargin.right < 120) {
+      finalMargin.right = 120
+    }
+
+    return finalMargin
+  }, [userMargin, legend])
+
   // Build XYFrame props
   const xyFrameProps: XYFrameProps = {
     size: [width, height],
@@ -288,6 +324,7 @@ export function Scatterplot(props: ScatterplotProps) {
     axes,
     hoverAnnotation: enableHover,
     margin,
+    ...(legend && { legend }),
     ...(className && { className }),
     ...(title && { title }),
     // Add tooltip support

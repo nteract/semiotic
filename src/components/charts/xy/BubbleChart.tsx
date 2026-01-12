@@ -3,6 +3,7 @@ import { useMemo } from "react"
 import XYFrame from "../../XYFrame"
 import type { XYFrameProps } from "../../types/xyTypes"
 import { getColor, getSize, createColorScale } from "../shared/colorUtils"
+import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, AxisConfig, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 
@@ -178,7 +179,7 @@ export function BubbleChart(props: BubbleChartProps) {
     data,
     width = 600,
     height = 400,
-    margin = { top: 50, bottom: 60, left: 70, right: 40 },
+    margin: userMargin,
     className,
     title,
     xLabel,
@@ -287,26 +288,28 @@ export function BubbleChart(props: BubbleChartProps) {
   const legend = useMemo(() => {
     if (!shouldShowLegend || !colorBy) return undefined
 
-    // Get unique values for legend
-    const uniqueValues = Array.from(new Set(data.map((d) => {
-      if (typeof colorBy === "function") {
-        return colorBy(d)
-      }
-      return d[colorBy as string]
-    })))
+    return createLegend({
+      data,
+      colorBy,
+      colorScale,
+      getColor,
+      strokeColor: bubbleStrokeColor,
+      strokeWidth: bubbleStrokeWidth
+    })
+  }, [shouldShowLegend, colorBy, data, colorScale, bubbleStrokeColor, bubbleStrokeWidth])
 
-    return {
-      legendGroups: uniqueValues.map((value) => {
-        const color = colorScale ? colorScale(value) : getColor({ [colorBy as string]: value }, colorBy, colorScale)
+  // Adjust margin for legend if present
+  const margin = useMemo(() => {
+    const defaultMargin = { top: 50, bottom: 60, left: 70, right: 40 }
+    const finalMargin = { ...defaultMargin, ...userMargin }
 
-        return {
-          styleFn: () => ({ fill: color, stroke: bubbleStrokeColor }),
-          label: String(value),
-          color
-        }
-      })
+    // If legend is present and right margin is too small, increase it
+    if (legend && finalMargin.right < 120) {
+      finalMargin.right = 120
     }
-  }, [shouldShowLegend, colorBy, data, colorScale, bubbleStrokeColor])
+
+    return finalMargin
+  }, [userMargin, legend])
 
   // Build XYFrame props
   const xyFrameProps: XYFrameProps = {

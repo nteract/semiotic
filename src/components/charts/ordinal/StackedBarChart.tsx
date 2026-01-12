@@ -3,6 +3,7 @@ import { useMemo } from "react"
 import OrdinalFrame from "../../OrdinalFrame"
 import type { OrdinalFrameProps } from "../../types/ordinalTypes"
 import { getColor, createColorScale } from "../shared/colorUtils"
+import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 
@@ -180,7 +181,7 @@ export function StackedBarChart(props: StackedBarChartProps) {
     data,
     width = 600,
     height = 400,
-    margin = { top: 50, bottom: 60, left: 70, right: 120 },
+    margin: userMargin,
     className,
     title,
     categoryAccessor = "category",
@@ -290,19 +291,26 @@ export function StackedBarChart(props: StackedBarChartProps) {
   const legend = useMemo(() => {
     if (!showLegend) return undefined
 
-    return {
-      legendGroups: stackValues.map((value) => {
-        const dummyData = typeof stackBy === "string" ? { [stackBy]: value } : {}
-        const color = getColor(dummyData, actualColorBy, colorScale)
+    return createLegend({
+      data,
+      colorBy: actualColorBy,
+      colorScale,
+      getColor
+    })
+  }, [showLegend, data, actualColorBy, colorScale])
 
-        return {
-          styleFn: () => ({ fill: color }),
-          label: String(value),
-          color
-        }
-      })
+  // Adjust margin for legend if present
+  const margin = useMemo(() => {
+    const defaultMargin = { top: 50, bottom: 60, left: 70, right: 120 }
+    const finalMargin = { ...defaultMargin, ...userMargin }
+
+    // If legend is present and right margin is too small, increase it
+    if (legend && finalMargin.right < 120) {
+      finalMargin.right = 120
     }
-  }, [showLegend, stackValues, stackBy, actualColorBy, colorScale])
+
+    return finalMargin
+  }, [userMargin, legend])
 
   // Build OrdinalFrame props
   const ordinalFrameProps: OrdinalFrameProps = {

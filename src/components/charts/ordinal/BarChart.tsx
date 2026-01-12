@@ -3,6 +3,7 @@ import { useMemo } from "react"
 import OrdinalFrame from "../../OrdinalFrame"
 import type { OrdinalFrameProps } from "../../types/ordinalTypes"
 import { getColor, createColorScale } from "../shared/colorUtils"
+import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 
@@ -100,6 +101,12 @@ export interface BarChartProps extends BaseChartProps {
   showGrid?: boolean
 
   /**
+   * Show legend
+   * @default true (when colorBy is specified)
+   */
+  showLegend?: boolean
+
+  /**
    * Tooltip configuration
    */
   tooltip?: TooltipProp
@@ -176,7 +183,7 @@ export function BarChart(props: BarChartProps) {
     data,
     width = 600,
     height = 400,
-    margin = { top: 50, bottom: 60, left: 70, right: 40 },
+    margin: userMargin,
     className,
     title,
     categoryAccessor = "category",
@@ -191,6 +198,7 @@ export function BarChart(props: BarChartProps) {
     barPadding = 5,
     enableHover = true,
     showGrid = false,
+    showLegend,
     tooltip,
     frameProps = {}
   } = props
@@ -289,6 +297,34 @@ export function BarChart(props: BarChartProps) {
     return axesConfig
   }, [orientation, categoryLabel, valueLabel, valueFormat, showGrid])
 
+  // Determine if we should show legend
+  const shouldShowLegend = showLegend !== undefined ? showLegend : !!colorBy
+
+  // Build legend if needed
+  const legend = useMemo(() => {
+    if (!shouldShowLegend || !colorBy) return undefined
+
+    return createLegend({
+      data: sortedData,
+      colorBy,
+      colorScale,
+      getColor
+    })
+  }, [shouldShowLegend, colorBy, sortedData, colorScale])
+
+  // Adjust margin for legend if present
+  const margin = useMemo(() => {
+    const defaultMargin = { top: 50, bottom: 60, left: 70, right: 40 }
+    const finalMargin = { ...defaultMargin, ...userMargin }
+
+    // If legend is present and right margin is too small, increase it
+    if (legend && finalMargin.right < 120) {
+      finalMargin.right = 120
+    }
+
+    return finalMargin
+  }, [userMargin, legend])
+
   // Build OrdinalFrame props
   const ordinalFrameProps: OrdinalFrameProps = {
     size: [width, height],
@@ -302,6 +338,7 @@ export function BarChart(props: BarChartProps) {
     hoverAnnotation: enableHover,
     margin,
     oPadding: barPadding,
+    ...(legend && { legend }),
     ...(className && { className }),
     ...(title && { title }),
     // Add tooltip support

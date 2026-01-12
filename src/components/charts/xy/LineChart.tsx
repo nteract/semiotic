@@ -4,6 +4,7 @@ import * as d3Curve from "d3-shape"
 import XYFrame from "../../XYFrame"
 import type { XYFrameProps } from "../../types/xyTypes"
 import { getColor, createColorScale } from "../shared/colorUtils"
+import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, AxisConfig, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 
@@ -218,7 +219,7 @@ export function LineChart(props: LineChartProps) {
     data,
     width = 600,
     height = 400,
-    margin = { top: 50, bottom: 60, left: 70, right: 40 },
+    margin: userMargin,
     className,
     title,
     xLabel,
@@ -399,22 +400,26 @@ export function LineChart(props: LineChartProps) {
   const legend = useMemo(() => {
     if (!shouldShowLegend || !colorBy) return undefined
 
-    return {
-      legendGroups: lineData.map((d, i) => {
-        const label = typeof colorBy === "function"
-          ? colorBy(d)
-          : d[colorBy as string] || `Line ${i + 1}`
-
-        const color = getColor(d, colorBy, colorScale)
-
-        return {
-          styleFn: () => ({ fill: color, stroke: color }),
-          label,
-          color
-        }
-      })
-    }
+    return createLegend({
+      data: lineData,
+      colorBy,
+      colorScale,
+      getColor
+    })
   }, [shouldShowLegend, colorBy, lineData, colorScale])
+
+  // Adjust margin for legend if present
+  const margin = useMemo(() => {
+    const defaultMargin = { top: 50, bottom: 60, left: 70, right: 40 }
+    const finalMargin = { ...defaultMargin, ...userMargin }
+
+    // If legend is present and right margin is too small, increase it
+    if (legend && finalMargin.right < 120) {
+      finalMargin.right = 120
+    }
+
+    return finalMargin
+  }, [userMargin, legend])
 
   // Build XYFrame props
   const xyFrameProps: XYFrameProps = {

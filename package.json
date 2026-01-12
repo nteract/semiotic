@@ -52,7 +52,7 @@
     "bench:ui": "vitest bench --ui",
     "bench:baseline": "vitest bench --run && node scripts/save-baseline.js",
     "bench:compare": "vitest bench --run && node scripts/compare-baseline.js",
-    "serve-examples": "npm run dist && parcel serve integration-tests/index.html integration-tests/xy-examples/index.html integration-tests/ordinal-examples/index.html integration-tests/network-examples/index.html integration-tests/viz-examples/index.html --dist-dir .parcel-cache/integration-tests",
+    "serve-examples": "npm run dist && parcel serve integration-tests/index.html integration-tests/xy-examples/index.html integration-tests/ordinal-examples/index.html integration-tests/network-examples/index.html integration-tests/viz-examples/index.html integration-tests/hoc-legend-examples/index.html --dist-dir .parcel-cache/integration-tests",
     "dist": "gulp build",
     "dist:prod": "gulp production",
     "lint": "eslint src",
