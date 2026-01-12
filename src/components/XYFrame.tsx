@@ -176,7 +176,6 @@ const XYFrame = React.memo(function XYFrame(allProps: XYFrameProps) {
     customHoverBehavior,
     customDoubleClickBehavior,
     canvasPostProcess,
-    baseMarkProps,
     useSpans,
     canvasSummaries,
     canvasPoints,
@@ -275,7 +274,7 @@ const XYFrame = React.memo(function XYFrame(allProps: XYFrameProps) {
       afterElements={afterElements}
       disableContext={disableContext}
       canvasPostProcess={canvasPostProcess}
-      baseMarkProps={baseMarkProps}
+      
       useSpans={useSpans}
       canvasRendering={canvasRendering}
       renderOrder={renderOrder}

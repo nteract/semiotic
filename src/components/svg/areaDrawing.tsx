@@ -160,7 +160,6 @@ export function hexbinning({
   xScaleType = scaleLinear(),
   yScaleType = scaleLinear(),
   margin,
-  baseMarkProps,
   styleFn,
   classFn,
   renderFn,
@@ -291,7 +290,6 @@ export function hexbinning({
                   d[1] * actualResolution
                 ])
               },
-              baseMarkProps,
               margin,
               styleFn,
               classFn,
@@ -346,7 +344,6 @@ export function heatmapping({
   xScaleType = scaleLinear(),
   yScaleType = scaleLinear(),
   margin,
-  baseMarkProps,
   styleFn,
   classFn,
   renderFn,
@@ -460,7 +457,6 @@ export function heatmapping({
         <g transform={`translate(${d.gx},${d.gy})`}>
           {customMark({
             d,
-            baseMarkProps,
             margin,
             styleFn,
             classFn,

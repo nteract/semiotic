@@ -12,7 +12,6 @@ import Axis from "./Axis"
 import Legend from "./Legend"
 import Annotation from "./Annotation"
 import AnnotationLayer from "./AnnotationLayer/AnnotationLayer"
-import Mark from "./Mark/Mark"
 
 // Utility functions
 import { calculateDataExtent } from "./data/dataFunctions"
@@ -28,7 +27,6 @@ export {
   Legend,
   Annotation,
   AnnotationLayer,
-  Mark,
   // Utility functions
   calculateDataExtent,
   nodesEdgesFromHierarchy

@@ -1,7 +1,6 @@
 import * as React from "react"
 
 import { drawAreaConnector } from "../svg/SvgHelper"
-import Mark from "../Mark/Mark"
 import Axis from "../Axis"
 import { AxisProps } from "../types/annotationTypes"
 
@@ -69,7 +68,6 @@ type ORFrameConnectionRendererTypes = {
   projection: ProjectionTypes
   canvasRender: Function
   canvasDrawing: Array<object>
-  baseMarkProps: object
   pieceType: PieceType
 }
 
@@ -429,7 +427,6 @@ export function orFrameConnectionRenderer({
   projection,
   canvasRender,
   canvasDrawing,
-  baseMarkProps,
   pieceType
 }: ORFrameConnectionRendererTypes) {
   if (!type.type) {
@@ -566,14 +563,12 @@ export function orFrameConnectionRenderer({
                 canvasDrawing.push(canvasConnector)
               } else {
                 renderedConnectorMarks.push(
-                  <Mark
-                    {...baseMarkProps}
+                  <path
                     {...eventListeners}
-                    renderMode={renderValue}
-                    markType="path"
                     d={markD}
                     className={classFn ? classFn(piece.piece.data, pieceI) : ""}
                     key={`connector${piece.piece.renderKey}`}
+                    {...calculatedStyle}
                     style={calculatedStyle}
                   />
                 )
@@ -603,17 +598,16 @@ export function orFrameConnectionRenderer({
           }
           canvasDrawing.push(canvasRadar)
         } else {
+          const style = styleFn({
+            source: ringPiece
+          })
           renderedConnectorMarks.push(
-            <Mark
-              {...baseMarkProps}
-              renderMode={renderMode && renderMode(ringPiece)}
-              markType="path"
+            <path
               d={markD}
               className={classFn ? classFn(ringPiece) : ""}
               key={`ordinal-ring-${ringPiece.renderKey}`}
-              style={styleFn({
-                source: ringPiece
-              })}
+              {...style}
+              style={style}
             />
           )
         }
@@ -705,7 +699,6 @@ export const orFrameAxisGenerator = ({
         className: d.className,
         axisParts,
         orient,
-        baseMarkProps: {},
         tickLineGenerator: d.tickLineGenerator,
         jaggedBase: d.jaggedBase,
         scale: axisScale

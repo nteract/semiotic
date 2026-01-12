@@ -127,7 +127,6 @@ export const calculateOrdinalFrame = (
     axes: baseAxes,
     pieceIDAccessor: basePieceIDAccessor,
     multiAxis,
-    baseMarkProps = {},
     annotations,
     sketchyRenderingEngine
   } = currentProps
@@ -1097,12 +1096,7 @@ export const calculateOrdinalFrame = (
     adjustedSize,
     chartSize: size,
     margin,
-    rScale,
-    baseMarkProps: {
-      ...baseMarkProps,
-      sketchyGenerator:
-        sketchyRenderingEngine && sketchyRenderingEngine.generator
-    }
+    rScale
   }) as any[]
 
   const keyedData = calculatedPieceData.reduce((p, c) => {
@@ -1134,11 +1128,6 @@ export const calculateOrdinalFrame = (
       projection,
       eventListenersGenerator,
       adjustedSize,
-      baseMarkProps: {
-        ...baseMarkProps,
-        sketchyGenerator:
-          sketchyRenderingEngine && sketchyRenderingEngine.generator
-      },
       //        chartSize: size,
       margin
     })

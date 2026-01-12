@@ -137,7 +137,6 @@ const OrdinalFrame = React.memo(function OrdinalFrame(
     pieceHoverAnnotation,
     hoverAnnotation,
     canvasPostProcess,
-    baseMarkProps,
     useSpans,
     canvasPieces,
     canvasSummaries,
@@ -273,7 +272,7 @@ const OrdinalFrame = React.memo(function OrdinalFrame(
       disableContext={disableContext}
       interactionOverflow={interactionOverflow}
       canvasPostProcess={canvasPostProcess}
-      baseMarkProps={baseMarkProps}
+      
       canvasRendering={canvasRendering}
       renderOrder={renderOrder}
       disableCanvasInteraction={disableCanvasInteraction}

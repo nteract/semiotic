@@ -1,6 +1,6 @@
 import * as React from "react"
 
-import Mark from "../Mark/Mark"
+
 import { GenericObject } from "../types/generalTypes"
 import { ScaleLinear } from "d3-scale"
 
@@ -74,7 +74,7 @@ const defaultTickLineGenerator = ({
   xy,
   orient,
   i,
-  baseMarkProps,
+  
   className = "",
   jaggedBase
 }) => {
@@ -83,17 +83,14 @@ const defaultTickLineGenerator = ({
     genD = generateTornBaseline(orient, xy)
   }
   return (
-    <Mark
-      key={i}
-      markType="path"
-      renderMode={xy.renderMode}
+    <path key={i}
+      
       fill="none"
       stroke="black"
       strokeWidth="1px"
       d={genD}
       className={`tick-line tick ${orient} ${className}`}
-      {...baseMarkProps}
-    />
+      />
   )
 }
 
@@ -110,10 +107,8 @@ const outboundTickLineGenerator = ({ xy, orient, i, className = "" }) => {
     genD = `M${xy.x1},${xy.y2}L${xy.x1},${xy.y2 + tickLength}`
   }
   return (
-    <Mark
-      key={i}
-      markType="path"
-      renderMode={xy.renderMode}
+    <path key={i}
+      
       fill="none"
       stroke="black"
       strokeWidth="1px"
@@ -148,8 +143,8 @@ export function axisPieces({
   tickSize = footer
     ? -10
     : ["top", "bottom"].find((d) => d === orient)
-    ? size[1]
-    : size[0],
+    ? (size ? size[1] : 0)
+    : (size ? size[0] : 0),
   jaggedBase
 }: AxisPiecesFnType) {
   //returns x1 (start of line), x2 (end of line) associated with the value of the tick
@@ -180,7 +175,7 @@ export function axisPieces({
       position2 = "x2"
       domain1 = "y2"
       domain2 = "y1"
-      axisDomain = [size[1], size[1] - tickSize]
+      axisDomain = size ? [size[1], size[1] - tickSize] : [0, -tickSize]
       tposition1 = "tx"
       tposition2 = "ty"
       textPositionMod += 20 + padding
@@ -190,7 +185,7 @@ export function axisPieces({
       position2 = "y1"
       domain1 = "x2"
       domain2 = "x1"
-      axisDomain = [size[0], size[0] - tickSize]
+      axisDomain = size ? [size[0], size[0] - tickSize] : [0, -tickSize]
       tposition1 = "ty"
       tposition2 = "tx"
       textPositionMod += 5 + padding
@@ -289,10 +284,10 @@ export const axisLabels = ({
 
 export const baselineGenerator = (orient, size, className) => {
   const offsets = {
-    left: { x: 0, y: 0, width: 0, height: size[1] },
-    right: { x: size[0], y: 0, width: 0, height: size[1] },
-    top: { x: 0, y: 0, width: size[0], height: 0 },
-    bottom: { x: 0, y: size[1], width: size[0], height: 0 }
+    left: { x: 0, y: 0, width: 0, height: size ? size[1] : 0 },
+    right: { x: size ? size[0] : 0, y: 0, width: 0, height: size ? size[1] : 0 },
+    top: { x: 0, y: 0, width: size ? size[0] : 0, height: 0 },
+    bottom: { x: 0, y: size ? size[1] : 0, width: size ? size[0] : 0, height: 0 }
   }
 
   const orientOffset = offsets[orient]
@@ -315,7 +310,7 @@ export const axisLines = ({
   axisParts,
   orient,
   tickLineGenerator = defaultTickLineGenerator,
-  baseMarkProps,
+  
   className,
   jaggedBase,
   scale,
@@ -324,7 +319,6 @@ export const axisLines = ({
   axisParts: object[]
   orient: string
   tickLineGenerator: Function
-  baseMarkProps?: GenericObject
   className: string
   jaggedBase?: boolean
   scale: ScaleLinear<number, number>
@@ -335,7 +329,7 @@ export const axisLines = ({
       xy: axisPart,
       orient,
       i,
-      baseMarkProps,
+      
       className,
       jaggedBase,
       scale

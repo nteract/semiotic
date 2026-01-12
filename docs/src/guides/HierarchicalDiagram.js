@@ -280,16 +280,29 @@ const treemapOverrideProps = {
 export default class HierarchicalDiagrams extends React.Component {
   constructor(props) {
     super(props)
+    this.state = { data: null }
+  }
 
+  componentDidMount() {
     fetch(`${ROOT}/data/flare.json`)
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        return response.json()
+      })
       .then(data => {
         this.setState({ data })
+      })
+      .catch(error => {
+        console.error('Error loading flare.json:', error)
+        this.setState({ error: error.message })
       })
   }
 
   render() {
-    if (!this.state) return "Loading..."
+    if (this.state.error) return <div>Error: {this.state.error}</div>
+    if (!this.state.data) return "Loading..."
 
     return (
       <div>

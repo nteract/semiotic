@@ -1,5 +1,6 @@
 import * as React from "react"
 
+import { createSVGElement } from "./markHelpers"
 import { axisGenerator, createSummaryAxis } from "./summaryAxis"
 import { contouring } from "../svg/areaDrawing"
 import { quantile } from "d3-array"
@@ -49,7 +50,7 @@ export function ckBinsRenderFn(props: BoxplotFnType) {
     styleFn,
     classFn,
     projection,
-    adjustedSize
+    adjustedSize,
   } = props
   const renderedSummaryMarks: any = []
 
@@ -135,8 +136,8 @@ export function ckBinsRenderFn(props: BoxplotFnType) {
         .range(["white", fill])
 
       return {
-
-
+        
+        //        renderMode: renderValue,
         markType: "rect",
         x: ckBin.scaledStart,
         width: ckBin.scaledEnd - ckBin.scaledStart,
@@ -174,6 +175,7 @@ export function boxplotRenderFn({
   classFn,
   projection,
   adjustedSize,
+  
 }: BoxplotFnType) {
   const summaryElementStylingFn = type.elementStyleFn || emptyObjectReturnFn
 
@@ -628,8 +630,8 @@ export function boxplotRenderFn({
         //These are drawn items
         elements: [
           {
-
-
+            
+            renderMode: renderValue,
             markType: "line",
             x1: bottomPoint[0],
             x2: topPoint[0],
@@ -642,8 +644,8 @@ export function boxplotRenderFn({
             )
           },
           {
-
-
+            
+            renderMode: renderValue,
             markType: "path",
             d: topLineArcGenerator({ startAngle, endAngle }),
             style: Object.assign(
@@ -654,8 +656,8 @@ export function boxplotRenderFn({
             )
           },
           {
-
-
+            
+            renderMode: renderValue,
             markType: "path",
             d: midLineArcGenerator({ startAngle, endAngle }),
             style: Object.assign(
@@ -666,8 +668,8 @@ export function boxplotRenderFn({
             )
           },
           {
-
-
+            
+            renderMode: renderValue,
             markType: "path",
             d: bottomLineArcGenerator({ startAngle, endAngle }),
             style: Object.assign(
@@ -678,8 +680,8 @@ export function boxplotRenderFn({
             )
           },
           {
-
-
+            
+            renderMode: renderValue,
             markType: "path",
             d: bodyArcWholeGenerator({ startAngle, endAngle }),
             style: Object.assign(
@@ -689,8 +691,8 @@ export function boxplotRenderFn({
             )
           },
           {
-
-
+            
+            renderMode: renderValue,
             markType: "path",
             d: bodyArcTopGenerator({ startAngle, endAngle }),
             style: Object.assign(
@@ -701,8 +703,8 @@ export function boxplotRenderFn({
             )
           },
           {
-
-
+            
+            renderMode: renderValue,
             markType: "path",
             d: bodyArcBottomGenerator({ startAngle, endAngle }),
             style: Object.assign(
@@ -717,8 +719,8 @@ export function boxplotRenderFn({
     } else {
       const boxplotMarks = [
         {
-
-
+          
+          renderMode: renderValue,
           markType: "line",
           x1: extentlineX1,
           x2: extentlineX2,
@@ -731,8 +733,8 @@ export function boxplotRenderFn({
           )
         },
         {
-
-
+          
+          renderMode: renderValue,
           markType: "line",
           x1: topLineX1,
           x2: topLineX2,
@@ -745,8 +747,8 @@ export function boxplotRenderFn({
           )
         },
         {
-
-
+          
+          renderMode: renderValue,
           markType: "line",
           x1: bottomLineX1,
           x2: bottomLineX2,
@@ -759,8 +761,8 @@ export function boxplotRenderFn({
           )
         },
         {
-
-
+          
+          renderMode: renderValue,
           markType: "rect",
           x: rectWholeX,
           width: rectWholeWidth,
@@ -773,8 +775,8 @@ export function boxplotRenderFn({
           )
         },
         {
-
-
+          
+          renderMode: renderValue,
           markType: "rect",
           x: rectTopX,
           width: rectTopWidth,
@@ -788,8 +790,8 @@ export function boxplotRenderFn({
           )
         },
         {
-
-
+          
+          renderMode: renderValue,
           markType: "rect",
           x: rectBottomX,
           width: rectBottomWidth,
@@ -803,8 +805,8 @@ export function boxplotRenderFn({
           )
         },
         {
-
-
+          
+          renderMode: renderValue,
           markType: "line",
           x1: midLineX1,
           x2: midLineX2,
@@ -827,8 +829,8 @@ export function boxplotRenderFn({
 
         outlierPoints.forEach((point) => {
           outlierMarks.push({
-
-
+            
+            renderMode: renderValue,
             markType: "circle",
             cx: projection === "horizontal" ? point.scaledValue : 0,
             cy: projection === "vertical" ? point.scaledVerticalValue : 0,
@@ -869,7 +871,8 @@ export function contourRenderFn({
   eventListenersGenerator,
   styleFn,
   classFn,
-  adjustedSize
+  adjustedSize,
+  
 }) {
   const keys = Object.keys(data)
   const renderedSummaryMarks = []
@@ -897,9 +900,9 @@ export function contourRenderFn({
       d.coordinates.forEach((coords, ii) => {
         const eventListeners = eventListenersGenerator(d, i)
         contourMarks.push({
-
+          
           ...eventListeners,
-
+          renderMode: renderValue,
           key: `${i}-${ii}`,
           style: styleFn(ordset.pieceData[0].data, ordsetI),
           className: classFn(ordset.pieceData[0].data, ordsetI),
@@ -935,7 +938,8 @@ export function bucketizedRenderingFn({
   classFn,
   projection,
   adjustedSize,
-  chartSize
+  chartSize,
+  
 }) {
   const renderedSummaryMarks = []
   const summaryXYCoords = []
@@ -1078,8 +1082,10 @@ export function bucketizedRenderingFn({
         adjustedSize,
         summaryI,
         summary,
+        renderValue,
         summaryStyle: calculatedSummaryStyle,
-        type
+        type,
+        
       })
       const tiles = mappedBars.marks
       if (projection === "radial") {
@@ -1258,11 +1264,11 @@ export function bucketizedRenderingFn({
         }
 
         violinElements.push({
-
+          
           ...eventListeners,
           transform: `translate(${translate})`,
           key: `summaryPiece-${summaryI}-${subsettingIndex}`,
-
+          renderMode: renderValue,
           markType: "path",
           className: calculatedSummaryClass,
           style: calculatedSummaryStyle,
@@ -1300,10 +1306,10 @@ export function bucketizedRenderingFn({
                   `M${first},${translate[1]}L${last},${translate[1]}`
 
           violinElements.push({
-
+            
             ...eventListeners,
             key: `summaryPiece-${summaryI}-${subsettingIndex}-iqr-line`,
-
+            renderMode: renderValue,
             markType: "path",
             className: calculatedSummaryClass,
             style: {
@@ -1320,7 +1326,7 @@ export function bucketizedRenderingFn({
           })
 
           violinElements.push({
-
+            
             ...eventListeners,
             key: `summaryPiece-${summaryI}-${subsettingIndex}-iqr-median`,
             markType: "circle",
@@ -1484,11 +1490,11 @@ export function bucketizedRenderingFn({
       renderedSummaryMarks.push({
         elements: [
           {
-
+            
             ...eventListeners,
             transform: `translate(${translate})`,
             key: `summaryPiece-${summaryI}`,
-
+            renderMode: renderValue,
             markType: "path",
             className: calculatedSummaryClass,
             style: calculatedSummaryStyle,
@@ -1628,11 +1634,11 @@ export function bucketizedRenderingFn({
         }
 
         return {
-
+          
           ...eventListeners,
           transform: `translate(${translate})`,
           key: `summaryPiece-${summaryI}-${multiBinI}`,
-
+          renderMode: renderValue,
           markType: "path",
           className: calculatedSummaryClass,
           style: {
@@ -1708,6 +1714,7 @@ export function orFrameSummaryRenderer({
   projection,
   adjustedSize,
   chartSize,
+  
   margin
 }: ORFrameSummaryRendererTypes) {
   let summaryRenderFn
@@ -1735,6 +1742,7 @@ export function orFrameSummaryRenderer({
     projection,
     adjustedSize,
     chartSize,
+    
     margin
   })
 }
@@ -1785,39 +1793,15 @@ export function summaryInstructionsToMarks(data: summaryInstruction[]) {
   const renderedSummaries: JSX.Element[] = []
   for (const container of data) {
     const renderedElements: JSX.Element[] = []
-    const { elements, containerProps} = container
+    const { elements, containerProps } = container
     if (container.Mark) {
       renderedSummaries.push(container.Mark)
     } else {
       for (let i = 0; i < elements.length; i++) {
-        const element: any = elements[i]
-        const { markType, style = {}, ...restProps } = element
-
-        // Merge style object into direct props for cleaner SVG
-        const elementProps: any = { ...restProps }
-        if (style.fill !== undefined) elementProps.fill = style.fill
-        if (style.stroke !== undefined) elementProps.stroke = style.stroke
-        if (style.strokeWidth !== undefined) elementProps.strokeWidth = style.strokeWidth
-        if (style.opacity !== undefined) elementProps.opacity = style.opacity
-        if (style.fillOpacity !== undefined) elementProps.fillOpacity = style.fillOpacity
-        if (style.strokeOpacity !== undefined) elementProps.strokeOpacity = style.strokeOpacity
-
-        // Keep remaining styles
-        const remainingStyles: any = { ...style }
-        delete remainingStyles.fill
-        delete remainingStyles.stroke
-        delete remainingStyles.strokeWidth
-        delete remainingStyles.opacity
-        delete remainingStyles.fillOpacity
-        delete remainingStyles.strokeOpacity
-        if (Object.keys(remainingStyles).length > 0) {
-          elementProps.style = remainingStyles
-        }
-
-        elementProps.key = element.key || i
-
-        if (markType) {
-          renderedElements.push(React.createElement(markType, elementProps))
+        const element = elements[i]
+        const svgElement = createSVGElement(element, element.key || i)
+        if (svgElement) {
+          renderedElements.push(svgElement)
         }
       }
       if (containerProps) {

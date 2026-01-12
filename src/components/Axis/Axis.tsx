@@ -354,8 +354,7 @@ export default function Axis(props: AxisProps) {
       projection:
         orient === "top" || orient === "bottom" ? "horizontal" : "vertical",
       adjustedSize: size,
-      margin: { top: 0, bottom: 0, left: 0, right: 0 },
-      baseMarkProps: {}
+      margin: { top: 0, bottom: 0, left: 0, right: 0 }
     })
 
     const renderedSummary = summaryInstructionsToMarks(calculatedSummary.marks)

@@ -23,7 +23,7 @@ function drawSomeRectangles({
   //  canvasDrawing,
   //  projectedCoordinateNames,
   //  renderKeyFn,
-  //  baseMarkProps,
+  //  ,
   data
 }) {
   return data.map((d) => (

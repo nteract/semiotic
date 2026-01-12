@@ -46,7 +46,6 @@ type Props = {
   disableContext?: boolean
   canvasRendering?: boolean
   useSpans: boolean
-  baseMarkProps?: object
   canvasPostProcess?: Function
   projection?: string
   rScale?: ScaleLinear<number, number>
@@ -136,7 +135,6 @@ export default function Frame(props) {
     projection,
     interactionOverflow,
     canvasPostProcess,
-    baseMarkProps,
     useSpans,
     canvasRendering,
     renderOrder = blankArray,
@@ -311,7 +309,7 @@ export default function Frame(props) {
                 matte={matte}
                 margin={margin}
                 canvasPostProcess={canvasPostProcess}
-                baseMarkProps={baseMarkProps}
+                
                 renderOrder={renderOrder}
                 sketchyRenderingEngine={sketchyRenderingEngine}
                 axesTickLines={axesTickLines}

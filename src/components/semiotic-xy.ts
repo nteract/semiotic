@@ -16,7 +16,6 @@ import AnnotationLayer from "./AnnotationLayer/AnnotationLayer"
 import Brush from "./Brush"
 import MiniMap from "./MiniMap"
 import DividedLine from "./DividedLine"
-import Mark from "./Mark/Mark"
 
 // Utility functions
 import { funnelize } from "./svg/lineDrawing"
@@ -37,7 +36,6 @@ export {
   Brush,
   MiniMap,
   DividedLine,
-  Mark,
   // Utility functions
   funnelize,
   calculateDataExtent,

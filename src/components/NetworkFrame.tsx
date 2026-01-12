@@ -132,7 +132,6 @@ const NetworkFrame = React.memo(function NetworkFrame(
     interaction,
     disableContext,
     canvasPostProcess,
-    baseMarkProps,
     useSpans,
     canvasNodes,
     canvasEdges,
@@ -236,7 +235,7 @@ const NetworkFrame = React.memo(function NetworkFrame(
       afterElements={afterElements}
       disableContext={disableContext}
       canvasPostProcess={canvasPostProcess}
-      baseMarkProps={baseMarkProps}
+      
       useSpans={useSpansValue}
       canvasRendering={canvasRendering}
       renderOrder={renderOrder}

@@ -1,5 +1,4 @@
 import * as React from "react"
-import Mark from "../Mark/Mark"
 
 export function pointOnArcAtAngle(center, angle, distance) {
   const radians = Math.PI * (angle + 0.75) * 2
@@ -17,7 +16,6 @@ export const renderLaidOutPieces = ({
   canvasDrawing,
   styleFn,
   classFn,
-  baseMarkProps,
   renderKeyFn,
   ariaLabel,
   axis
@@ -46,18 +44,36 @@ export const renderLaidOutPieces = ({
         const pieceAriaLabel = `${d.o} ${ariaLabel.items} value ${
           (valueFormat && valueFormat(d.piece.value)) || d.piece.value
         }`
-        renderedPieces.push(
-          <Mark
-            {...baseMarkProps}
-            key={
-              renderKeyFn
-                ? renderKeyFn(d.piece)
-                : d.renderKey || `piece-render-${i}`
-            }
-            {...(d.renderElement || d)}
-            aria-label={pieceAriaLabel}
-          />
-        )
+        const key = renderKeyFn
+          ? renderKeyFn(d.piece)
+          : d.renderKey || `piece-render-${i}`
+
+        const elementData = d.renderElement || d
+        const { markType, style = {}, ...restProps } = elementData
+
+        // Merge style into direct props
+        const elementProps = { ...restProps, key, "aria-label": pieceAriaLabel }
+        if (style.fill !== undefined) elementProps.fill = style.fill
+        if (style.stroke !== undefined) elementProps.stroke = style.stroke
+        if (style.strokeWidth !== undefined) elementProps.strokeWidth = style.strokeWidth
+        if (style.opacity !== undefined) elementProps.opacity = style.opacity
+        if (style.fillOpacity !== undefined) elementProps.fillOpacity = style.fillOpacity
+        if (style.strokeOpacity !== undefined) elementProps.strokeOpacity = style.strokeOpacity
+
+        const remainingStyles = { ...style }
+        delete remainingStyles.fill
+        delete remainingStyles.stroke
+        delete remainingStyles.strokeWidth
+        delete remainingStyles.opacity
+        delete remainingStyles.fillOpacity
+        delete remainingStyles.strokeOpacity
+        if (Object.keys(remainingStyles).length > 0) {
+          elementProps.style = remainingStyles
+        }
+
+        if (markType) {
+          renderedPieces.push(React.createElement(markType, elementProps))
+        }
       }
     }
   })

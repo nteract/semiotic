@@ -24,7 +24,6 @@ import { ResponsiveOrdinalFrame } from "./ResponsiveOrdinalFrame"
 import { SparkXYFrame } from "./SparkXYFrame"
 import { SparkOrdinalFrame } from "./SparkOrdinalFrame"
 import { SparkNetworkFrame } from "./SparkNetworkFrame"
-import Mark from "./Mark/Mark"
 
 import { hexbinning, heatmapping } from "./svg/areaDrawing"
 
@@ -57,7 +56,6 @@ export {
   SparkNetworkFrame,
   SparkXYFrame,
   Legend,
-  Mark,
   funnelize,
   calculateDataExtent,
   FacetController,

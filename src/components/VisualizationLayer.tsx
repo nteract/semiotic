@@ -28,7 +28,6 @@ type Props = {
   matte?: React.ReactNode
   matteClip?: boolean
   renderPipeline: RenderPipelineType
-  baseMarkProps?: object
   projectedCoordinateNames: object
   position: Array<number>
   disableContext?: boolean
@@ -80,7 +79,6 @@ const updateVisualizationLayer = (
     dataVersion,
     projectedCoordinateNames,
     renderPipeline = {},
-    baseMarkProps = {},
     renderOrder = [],
     sketchyRenderingEngine
   } = props
@@ -120,7 +118,6 @@ const updateVisualizationLayer = (
         yScale,
         canvasDrawing,
         projectedCoordinateNames,
-        baseMarkProps: { ...baseMarkProps, ...additionalMarkProps },
         ...pipe
       })
 

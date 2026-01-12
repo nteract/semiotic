@@ -58,7 +58,6 @@ import Matrix from "./examples/Matrix"
 import CustomLayout from "./examples/CustomLayout"
 import IsotypeChart from "./examples/IsotypeChart"
 
-import Mark from "./sub-components/Mark"
 import DividedLine from "./sub-components/DividedLine"
 
 import semioticLogo from "../public/assets/img/semiotic.png"
@@ -183,7 +182,6 @@ export default function DocsApp() {
               <Route path="responsiveframe" element={<Responsiveframes />} />
               <Route path="sparkFrame" element={<Sparkframes />} />
               <Route path="facetcontroller" element={<Facetcontroller />} />
-              <Route path="mark" element={<Mark />} />
               <Route path="dividedline" element={<DividedLine />} />
             </Route>
           </Routes>
@@ -381,9 +379,6 @@ function Sidebar() {
       </p>
 
       <p className="sub-header sub-page selected">Sub-Components</p>
-      <p className="black sub-page">
-        <NavLink to="/api/mark">Mark</NavLink>
-      </p>
       <p className="black sub-page">
         <NavLink to="/api/dividedline">DividedLine</NavLink>
       </p>
