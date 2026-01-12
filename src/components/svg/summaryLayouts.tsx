@@ -1,20 +1,21 @@
 import * as React from "react"
 
-import Axis from "../Axis"
 import Mark from "../Mark/Mark"
+import { axisGenerator, createSummaryAxis } from "./summaryAxis"
 import { contouring } from "../svg/areaDrawing"
 import { quantile } from "d3-array"
 import { histogram, max } from "d3-array"
 import { groupBarMark } from "../svg/SvgHelper"
 import { area, line, curveCatmullRom, curveLinear, arc } from "d3-shape"
 import { pointOnArcAtAngle } from "./pieceDrawing"
-import { orFrameSummaryRenderer } from "./frameFunctions"
 import { scaleLinear } from "d3-scale"
 import { curveHash } from "../visualizationLayerBehavior/general"
-import { GenericObject } from "../types/generalTypes"
+import { GenericObject, ProjectionTypes } from "../types/generalTypes"
 import { ckmeans } from "./ckmeans"
 
 import { sum } from "d3-array"
+
+type SummaryType = { type: string }
 
 type BoxplotFnType = {
   data: GenericObject[]
@@ -40,43 +41,6 @@ const contourMap = (d) => [d.xy.x, d.xy.y]
 const verticalXYSorting = (a, b) => a.xy.y - b.xy.y
 const horizontalXYSorting = (a, b) => b.xy.x - a.xy.x
 const emptyObjectReturnFn = () => ({})
-
-function createSummaryAxis({
-  summary,
-  summaryI,
-  axisSettings,
-  axisCreator,
-  projection,
-  actualMax,
-  adjustedSize,
-  columnWidth
-}) {
-  let axisTranslate = `translate(${summary.x},0)`
-  let axisDomain = [0, actualMax]
-  if (projection === "horizontal") {
-    axisTranslate = `translate(${0},${summary.x})`
-    axisDomain = [actualMax, 0]
-  } else if (projection === "radial") {
-    axisTranslate = "translate(0, 0)"
-  }
-
-  const axisWidth = projection === "horizontal" ? adjustedSize[0] : columnWidth
-  const axisHeight = projection === "vertical" ? adjustedSize[1] : columnWidth
-  axisSettings.size = [axisWidth, axisHeight]
-  const axisScale = scaleLinear().domain(axisDomain).range([0, columnWidth])
-
-  const renderedSummaryAxis = axisCreator(axisSettings, summaryI, axisScale)
-
-  return (
-    <g
-      className="summary-axis"
-      key={`summaryPiece-axis-${summaryI}`}
-      transform={axisTranslate}
-    >
-      {renderedSummaryAxis}
-    </g>
-  )
-}
 
 export function ckBinsRenderFn(props: BoxplotFnType) {
   const {
@@ -967,24 +931,6 @@ export function contourRenderFn({
   return { marks: renderedSummaryMarks, xyPoints: summaryXYCoords }
 }
 
-function axisGenerator(axisProps, i, axisScale) {
-  return (
-    <Axis
-      label={axisProps.label}
-      key={axisProps.key || `orframe-summary-axis-${i}`}
-      orient={axisProps.orient}
-      size={axisProps.size}
-      ticks={axisProps.ticks}
-      tickSize={axisProps.tickSize}
-      tickFormat={axisProps.tickFormat}
-      tickValues={axisProps.tickValues}
-      rotate={axisProps.rotate}
-      scale={axisScale}
-      className={axisProps.className}
-    />
-  )
-}
-
 export function bucketizedRenderingFn({
   data,
   type,
@@ -1736,6 +1682,77 @@ export function bucketizedRenderingFn({
   }
 }
 
+type ORFrameSummaryRendererTypes = {
+  data: Array<object>
+  type: SummaryType
+  renderMode: Function
+  eventListenersGenerator: Function
+  styleFn: Function
+  classFn: Function
+  projection: ProjectionTypes
+  adjustedSize: Array<number>
+  chartSize: number
+  baseMarkProps: object
+  margin: object
+}
+
+const summaryRenderHash = {
+  contour: contourRenderFn,
+  boxplot: boxplotRenderFn,
+  violin: bucketizedRenderingFn,
+  heatmap: bucketizedRenderingFn,
+  ridgeline: bucketizedRenderingFn,
+  histogram: bucketizedRenderingFn,
+  horizon: bucketizedRenderingFn,
+  ckbins: ckBinsRenderFn
+}
+
+export function orFrameSummaryRenderer({
+  data,
+  type,
+  renderMode,
+  eventListenersGenerator,
+  styleFn,
+  classFn,
+  projection,
+  adjustedSize,
+  chartSize,
+  baseMarkProps,
+  margin
+}: ORFrameSummaryRendererTypes) {
+  let summaryRenderFn
+  if (typeof type.type === "function") {
+    summaryRenderFn = type.type
+  } else if (summaryRenderHash[type.type]) {
+    summaryRenderFn = summaryRenderHash[type.type]
+  } else {
+    console.error(
+      `Invalid summary type: ${
+        type.type
+      } - Must be a function or one of the following strings: ${Object.keys(
+        summaryRenderHash
+      ).join(", ")}`
+    )
+    return {}
+  }
+  return summaryRenderFn({
+    data,
+    type,
+    renderMode,
+    eventListenersGenerator,
+    styleFn,
+    classFn,
+    projection,
+    adjustedSize,
+    chartSize,
+    baseMarkProps,
+    margin
+  })
+}
+
+/**
+ * Main drawing function for summary visualizations
+ */
 export const drawSummaries = ({
   data,
   type,
@@ -1774,6 +1791,9 @@ interface summaryInstruction {
   elements: object[]
 }
 
+/**
+ * Converts summary instructions to rendered Mark elements
+ */
 export function summaryInstructionsToMarks(data: summaryInstruction[]) {
   const renderedSummaries: JSX.Element[] = []
   for (const container of data) {

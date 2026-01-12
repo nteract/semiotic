@@ -9,7 +9,8 @@ import {
   boxplotRenderFn,
   contourRenderFn,
   bucketizedRenderingFn,
-  ckBinsRenderFn
+  ckBinsRenderFn,
+  orFrameSummaryRenderer
 } from "./summaryLayouts"
 import {
   axisPieces,
@@ -70,20 +71,6 @@ type ORFrameConnectionRendererTypes = {
   canvasDrawing: Array<object>
   baseMarkProps: object
   pieceType: PieceType
-}
-
-type ORFrameSummaryRendererTypes = {
-  data: Array<object>
-  type: SummaryType
-  renderMode: Function
-  eventListenersGenerator: Function
-  styleFn: Function
-  classFn: Function
-  projection: ProjectionTypes
-  adjustedSize: Array<number>
-  chartSize: number
-  baseMarkProps: object
-  margin: object
 }
 
 type ORFrameAxisGeneratorTypes = {
@@ -638,60 +625,6 @@ export function orFrameConnectionRenderer({
     )
   }
   return renderedConnectorMarks
-}
-
-const summaryRenderHash = {
-  contour: contourRenderFn,
-  boxplot: boxplotRenderFn,
-  violin: bucketizedRenderingFn,
-  heatmap: bucketizedRenderingFn,
-  ridgeline: bucketizedRenderingFn,
-  histogram: bucketizedRenderingFn,
-  horizon: bucketizedRenderingFn,
-  ckbins: ckBinsRenderFn
-}
-
-export function orFrameSummaryRenderer({
-  data,
-  type,
-  renderMode,
-  eventListenersGenerator,
-  styleFn,
-  classFn,
-  projection,
-  adjustedSize,
-  chartSize,
-  baseMarkProps,
-  margin
-}: ORFrameSummaryRendererTypes) {
-  let summaryRenderFn
-  if (typeof type.type === "function") {
-    summaryRenderFn = type.type
-  } else if (summaryRenderHash[type.type]) {
-    summaryRenderFn = summaryRenderHash[type.type]
-  } else {
-    console.error(
-      `Invalid summary type: ${
-        type.type
-      } - Must be a function or one of the following strings: ${Object.keys(
-        summaryRenderHash
-      ).join(", ")}`
-    )
-    return {}
-  }
-  return summaryRenderFn({
-    data,
-    type,
-    renderMode,
-    eventListenersGenerator,
-    styleFn,
-    classFn,
-    projection,
-    adjustedSize,
-    chartSize,
-    baseMarkProps,
-    margin
-  })
 }
 
 export const orFrameAxisGenerator = ({

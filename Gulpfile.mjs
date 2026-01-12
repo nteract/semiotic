@@ -142,9 +142,28 @@ async function createBundle(options = {}) {
     input,
     context: "window",
     plugins,
+    onLog(level, log, handler) {
+      // Suppress D3 dependency resolution info messages
+      if (log.message && typeof log.message === 'string') {
+        const d3Patterns = ["d3-", "internmap", "delaunator"]
+        if (d3Patterns.some(pattern => log.message.includes(pattern))) {
+          return
+        }
+      }
+      handler(level, log)
+    },
     onwarn(warning, warn) {
       // Skip certain warnings
       if (warning.code === "THIS_IS_UNDEFINED") return
+
+      // Skip D3 module resolution warnings (they're correctly externalized)
+      if (warning.code === "UNRESOLVED_IMPORT") {
+        const d3Modules = ["d3-", "internmap", "delaunator"]
+        if (d3Modules.some(mod => warning.source?.includes(mod))) {
+          return
+        }
+      }
+
       if (warning.code === "CIRCULAR_DEPENDENCY") {
         // Only log circular dependencies once
         if (!warning.message.includes("d3-")) {
