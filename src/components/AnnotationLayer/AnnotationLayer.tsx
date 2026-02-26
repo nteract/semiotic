@@ -558,7 +558,8 @@ export default function AnnotationLayer(props: AnnotationLayerProps) {
     )
   }
 
-  if (annotations.length === 0) {
+  // If there are no annotations but we have a legend, render just the legend
+  if (annotations.length === 0 && !legendSettings) {
     return null
   }
 

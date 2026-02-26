@@ -5,7 +5,12 @@ import Frame from "./Frame"
 
 import { stringToFn } from "./data/dataFunctions"
 
-import { networkFrameChangeProps } from "./constants/frame_props"
+import {
+  networkFrameChangeProps,
+  networkFrameDataAffectingProps,
+  networkFrameScaleAffectingProps,
+  networkFrameStylingProps
+} from "./constants/frame_props"
 
 import {
   htmlFrameHoverRule,
@@ -127,7 +132,6 @@ const NetworkFrame = React.memo(function NetworkFrame(
     interaction,
     disableContext,
     canvasPostProcess,
-    baseMarkProps,
     useSpans,
     canvasNodes,
     canvasEdges,
@@ -155,23 +159,47 @@ const NetworkFrame = React.memo(function NetworkFrame(
     title
   } = state
 
-  let formattedOverlay
+  // Memoize overlay formatting
+  const formattedOverlay = useMemo(
+    () => (overlay && overlay.length > 0 ? overlay : undefined),
+    [overlay]
+  )
 
-  if (overlay && overlay.length > 0) {
-    formattedOverlay = overlay
-  }
+  // Memoize active hover annotation logic
+  const activeHoverAnnotation = useMemo(() => {
+    if (Array.isArray(hoverAnnotation)) {
+      return hoverAnnotation
+    } else if (
+      (customClickBehavior ||
+        customDoubleClickBehavior ||
+        customHoverBehavior) &&
+      (hoverAnnotation === undefined || hoverAnnotation === false)
+    ) {
+      return blankArray
+    } else {
+      return !!hoverAnnotation
+    }
+  }, [
+    hoverAnnotation,
+    customClickBehavior,
+    customDoubleClickBehavior,
+    customHoverBehavior
+  ])
 
-  let activeHoverAnnotation
-  if (Array.isArray(hoverAnnotation)) {
-    activeHoverAnnotation = hoverAnnotation
-  } else if (
-    (customClickBehavior || customDoubleClickBehavior || customHoverBehavior) &&
-    (hoverAnnotation === undefined || hoverAnnotation === false)
-  ) {
-    activeHoverAnnotation = blankArray
-  } else {
-    activeHoverAnnotation = !!hoverAnnotation
-  }
+  // Memoize merged annotations to prevent unnecessary array creation
+  const mergedAnnotations = useMemo(
+    () => [...annotations, ...nodeLabelAnnotations],
+    [annotations, nodeLabelAnnotations]
+  )
+
+  // Memoize useSpans conversion
+  const useSpansValue = useMemo(() => !!useSpans, [useSpans])
+
+  // Memoize canvas rendering flag
+  const canvasRendering = useMemo(
+    () => !!(canvasNodes || canvasEdges),
+    [canvasNodes, canvasEdges]
+  )
 
   return (
     <Frame
@@ -191,7 +219,7 @@ const NetworkFrame = React.memo(function NetworkFrame(
       defaultSVGRule={(args) => defaultNetworkSVGRule(props, state, args)}
       defaultHTMLRule={(args) => defaultNetworkHTMLRule(props, state, args)}
       hoverAnnotation={activeHoverAnnotation}
-      annotations={[...annotations, ...nodeLabelAnnotations]}
+      annotations={mergedAnnotations}
       annotationSettings={annotationSettings}
       legendSettings={legendSettings}
       interaction={interaction}
@@ -207,9 +235,9 @@ const NetworkFrame = React.memo(function NetworkFrame(
       afterElements={afterElements}
       disableContext={disableContext}
       canvasPostProcess={canvasPostProcess}
-      baseMarkProps={baseMarkProps}
-      useSpans={!!useSpans}
-      canvasRendering={!!(canvasNodes || canvasEdges)}
+      
+      useSpans={useSpansValue}
+      canvasRendering={canvasRendering}
       renderOrder={renderOrder}
       disableCanvasInteraction={disableCanvasInteraction}
       sketchyRenderingEngine={sketchyRenderingEngine}
@@ -225,22 +253,47 @@ function deriveNetworkFrameState(
   prevState: NetworkFrameState
 ) {
   const { props } = prevState
+
+  // Check which category of props changed
+  const dataPropsChanged = !prevState.dataVersion && networkFrameDataAffectingProps.some(
+    (prop) => props[prop] !== nextProps[prop]
+  )
+
+  const scalePropsChanged = !prevState.dataVersion && networkFrameScaleAffectingProps.some(
+    (prop) => props[prop] !== nextProps[prop]
+  )
+
+  const sizeChanged = props.size[0] !== nextProps.size[0] || props.size[1] !== nextProps.size[1]
+
+  // Force full recalc if dataVersion changed or no projected data exists
   if (
-    (prevState.dataVersion &&
-      prevState.dataVersion !== nextProps.dataVersion) ||
-    (!prevState.projectedNodes && !prevState.projectedEdges) ||
-    props.size[0] !== nextProps.size[0] ||
-    props.size[1] !== nextProps.size[1] ||
-    (!prevState.dataVersion &&
-      networkFrameChangeProps.find((d) => {
-        return props[d] !== nextProps[d]
-      }))
+    (prevState.dataVersion && prevState.dataVersion !== nextProps.dataVersion) ||
+    (!prevState.projectedNodes && !prevState.projectedEdges)
   ) {
     return {
       ...calculateNetworkFrame(nextProps, prevState),
       props: nextProps
     }
   }
+
+  // Full data recalculation needed if data-affecting props changed
+  if (dataPropsChanged) {
+    return {
+      ...calculateNetworkFrame(nextProps, prevState),
+      props: nextProps
+    }
+  }
+
+  // Scale/layout recalculation needed if size or scale-affecting props changed
+  // Note: For network layouts (especially force), size changes might affect positioning
+  if (sizeChanged || scalePropsChanged) {
+    return {
+      ...calculateNetworkFrame(nextProps, prevState),
+      props: nextProps
+    }
+  }
+
+  // Only styling changed - no recalc needed, React will re-render with existing state
   return { props: nextProps }
 }
 

@@ -1,7 +1,16 @@
 import { test, expect } from "@playwright/test"
 
-test("my test", async ({ page }) => {
-  await page.goto("/")
+test("legacy viz examples render", async ({ page }) => {
+  await page.goto("/viz-examples/")
 
-  await expect(page.locator("svg.visualization-layer").first()).toBeVisible()
+  // Wait for page to load
+  await page.waitForTimeout(2000)
+
+  // Check that at least one SVG visualization rendered
+  const svgs = page.locator("svg.visualization-layer")
+  const count = await svgs.count()
+  expect(count).toBeGreaterThan(0)
+
+  // Check that first SVG is visible
+  await expect(svgs.first()).toBeVisible({ timeout: 10000 })
 })

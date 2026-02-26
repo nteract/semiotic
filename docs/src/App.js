@@ -33,6 +33,9 @@ import UsingSketchyPatterns from "./guides/UsingSketchyPatterns"
 import ForegroundBackgroundSVG from "./guides/ForegroundBackgroundSVG"
 import CanvasRendering from "./guides/CanvasRendering"
 import AxisSettings from "./guides/AxisSettings"
+import XYChartsHOC from "./guides/XYChartsHOC"
+import OrdinalChartsHOC from "./guides/OrdinalChartsHOC"
+import NetworkChartsHOC from "./guides/NetworkChartsHOC"
 
 import CandlestickChart from "./examples/CandlestickChart"
 import CanvasInteraction from "./examples/CanvasInteraction"
@@ -55,7 +58,6 @@ import Matrix from "./examples/Matrix"
 import CustomLayout from "./examples/CustomLayout"
 import IsotypeChart from "./examples/IsotypeChart"
 
-import Mark from "./sub-components/Mark"
 import DividedLine from "./sub-components/DividedLine"
 
 import semioticLogo from "../public/assets/img/semiotic.png"
@@ -129,6 +131,9 @@ export default function DocsApp() {
               <Route path="sparklines" element={<Sparklines />} />
               <Route path="sketchy-patterns" element={<UsingSketchyPatterns />} />
               <Route path="foreground-background-svg" element={<ForegroundBackgroundSVG />} />
+              <Route path="xy-charts-hoc" element={<XYChartsHOC />} />
+              <Route path="ordinal-charts-hoc" element={<OrdinalChartsHOC />} />
+              <Route path="network-charts-hoc" element={<NetworkChartsHOC />} />
             </Route>
 
             <Route path="examples" element={<Outlet />}>
@@ -177,7 +182,6 @@ export default function DocsApp() {
               <Route path="responsiveframe" element={<Responsiveframes />} />
               <Route path="sparkFrame" element={<Sparkframes />} />
               <Route path="facetcontroller" element={<Facetcontroller />} />
-              <Route path="mark" element={<Mark />} />
               <Route path="dividedline" element={<DividedLine />} />
             </Route>
           </Routes>
@@ -241,6 +245,17 @@ function Sidebar() {
       </p>
       <p className="black sub-page">
         <NavLink to="/guides/hierarchical">Hierarchical Diagrams</NavLink>
+      </p>
+
+      <p className="sub-header sub-page selected">Higher-Order Components</p>
+      <p className="black sub-page">
+        <NavLink to="/guides/xy-charts-hoc">XY Charts</NavLink>
+      </p>
+      <p className="black sub-page">
+        <NavLink to="/guides/ordinal-charts-hoc">Ordinal Charts</NavLink>
+      </p>
+      <p className="black sub-page">
+        <NavLink to="/guides/network-charts-hoc">Network Charts</NavLink>
       </p>
 
       <p className="sub-header sub-page selected">All Frames</p>
@@ -364,9 +379,6 @@ function Sidebar() {
       </p>
 
       <p className="sub-header sub-page selected">Sub-Components</p>
-      <p className="black sub-page">
-        <NavLink to="/api/mark">Mark</NavLink>
-      </p>
       <p className="black sub-page">
         <NavLink to="/api/dividedline">DividedLine</NavLink>
       </p>

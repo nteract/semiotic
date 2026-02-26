@@ -36,7 +36,6 @@ export default () => <XYFrame
   - [invertY: { _boolean_ }](#inverty-boolean-)
   - [showLinePoints: { _boolean_ }](#showlinepoints-boolean-)
   - [showSummaryPoints: { _boolean_ }](#showsummarypoints-boolean-)
-  - [baseMarkProps: { _object_ }](#basemarkprops-object-)
   - [renderKey: { _string_ | _function_ }](#renderkey-string-function-)
 - [Point Rendering](#point-rendering)
   - [points: { [_data_] }](#points-data-)
@@ -251,16 +250,6 @@ elements. These points will be styled just like points that are added to the `po
 <XYFrame showSummaryPoints={ true } ... />
 ```
 
-### baseMarkProps: { _object_ }
-
-This object will be spread to all marks that are generated in the frame. This is useful for any
-props that might be shared by all pieces, and especially useful to set the animation duration for
-the marks if you want to adjust from the default 1s duration.
-
-```jsx
-<XYFrame baseMarkProps={{ transitionDuration: { default: 500, fill: 2500 } }} />
-```
-
 ### renderKey: { _string_ | _function_ }
 
 By default, generated marks will be rendered with a key based on their array position. If you want
@@ -373,8 +362,6 @@ A function taking the point data and returning SVG JSX representation of the poi
 - renderMode: a function for determining the renderMode given `d` (passed through from the Frame
   from your pointRenderMode)
 - key: a string that is generated from the renderKeyFn
-- baseMarkProps: an object from the Frame’s baseMarkProps property that is meant to be spread to all
-  generated marks, like this edge
 - adjustedSize: size of the overall frame, helpful for ResponsiveFrames
 - chartSize: size of the chart without margins
 - margin
@@ -542,8 +529,6 @@ advantage of the `<Frame>`'s settings.
 - renderMode: a function for determining the renderMode given `d` (passed through from the Frame
   from your lineRenderMode)
 - key: a string that is generated from the renderKeyFn
-- baseMarkProps: an object from the Frame’s baseMarkProps property that is meant to be spread to all
-  generated marks, like this edge
 - adjustedSize: size of the overall frame, helpful for ResponsiveFrames
 - chartSize: size of the chart without margins
 - margin
@@ -693,8 +678,6 @@ A function taking the summary datapoint and returning SVG JSX representation of 
 - renderMode: a function for determining the renderMode given `d` (passed through from the Frame
   from your summaryRenderMode)
 - key: a string that is generated from the renderKeyFn
-- baseMarkProps: an object from the Frame’s baseMarkProps property that is meant to be spread to all
-  generated marks, like this edge
 - adjustedSize: size of the overall frame, helpful for ResponsiveFrames
 - chartSize: size of the chart without margins
 - margin

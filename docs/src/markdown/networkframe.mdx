@@ -35,7 +35,6 @@ import { NetworkFrame } from "semiotic"
   - [networkType: {_string_ | _object_ | _function_ }](#networktype-string-object-function-)
   - [title: {_string_ | _JSX_}](#title-string-jsx)
   - [margin: {_number_ | _object_}](#margin-number-object)
-  - [baseMarkProps: { _object_ }](#basemarkprops-object-)
   - [renderKey: { _string_ | _function_ }](#renderkey-string-function-)
 
 - [Node Rendering](#node-rendering)
@@ -139,16 +138,6 @@ The margin can be set to one number, which is applied equally to all sides, or a
 
 <!-- Object option -->
 <NetworkFrame margin={{ top: 5, bottom: 10, left: 15, right: 20 }} />
-```
-
-### baseMarkProps: { _object_ }
-
-This object will be spread to all marks that are generated in the frame. This is useful for any
-props that might be shared by all pieces, and especially useful to set the animation duration for
-the marks if you want to adjust from the default 1s duration.
-
-```jsx
-<NetworkFrame baseMarkProps={{ transitionDuration: { default: 500, fill: 2500 } }} />
 ```
 
 ### renderKey: { _string_ | _function_ }
@@ -294,8 +283,6 @@ A function taking the node datapoint and returning SVG JSX representation of the
 - className : The results of the class function + " node"
 - transform : Some nodes, like chord nodes, need to be translated (centered, typically) and the
   `translate(${d.x},${d.y})` is sent in this form
-- baseMarkProps : an object from the Frame’s baseMarkProps property that is meant to be spread to
-  all generated marks, like this edge
 - adjustedSize
 - chartSize
 - margin
@@ -457,8 +444,6 @@ A function taking the edge datapoint and returning SVG JSX representation of the
 - className: The results of the class function + “ edge”
 - transform: Some edges, like chord edges, need to be translated (centered, typically) and the
   `translate(${d.x},${d.y})` is sent in this form
-- baseMarkProps: an object from the Frame’s baseMarkProps property that is meant to be spread to all
-  generated marks, like this edge
 - adjustedSize
 - chartSize
 - margin

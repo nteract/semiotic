@@ -2,7 +2,6 @@ import * as React from "react"
 import { forceSimulation, forceX, forceY, forceCollide } from "d3-force"
 import { /*area, curveCatmullRom,*/ arc } from "d3-shape"
 import pathBounds from "svg-path-bounding-box"
-import Mark from "../Mark/Mark"
 import { scaleLinear } from "d3-scale"
 import { arcTweener } from "./SvgHelper"
 
@@ -215,14 +214,12 @@ const iconBarCustomMark =
           const paddedX = stepX + iconTranslate[0]
           const paddedY = stepY + iconTranslate[1]
           iconPieces.push(
-            <Mark
-              markType="path"
+            <path 
               key={`icon-${step}-${stack}`}
               transform={`translate(${paddedX},${paddedY}) scale(${iconScale})`}
               vectorEffect={"non-scaling-stroke"}
               d={iconD}
               style={styleFn({ ...piece, ...piece.data }, i)}
-              renderMode={renderValue}
               className={classFn({ ...piece, ...piece.data }, i)}
             />
           )
@@ -257,7 +254,7 @@ export function clusterBarLayout({
   adjustedSize,
   chartSize,
   margin,
-  baseMarkProps,
+  
   rScale
 }) {
   let allCalculatedPieces = []
@@ -357,7 +354,7 @@ export function clusterBarLayout({
             i,
             {
               ...xy,
-              baseMarkProps,
+              
               renderMode,
               styleFn,
               classFn,
@@ -411,7 +408,7 @@ export function barLayout({
   adjustedSize,
   chartSize,
   margin,
-  baseMarkProps,
+  
   rScale
 }) {
   const keys = Object.keys(data)
@@ -521,7 +518,7 @@ export function barLayout({
             i,
             {
               ...xy,
-              baseMarkProps,
+              
               renderMode,
               styleFn,
               classFn,
@@ -566,7 +563,7 @@ export function timelineLayout({
   adjustedSize,
   chartSize,
   margin,
-  baseMarkProps,
+  
   rScale
 }) {
   let allCalculatedPieces = []
@@ -644,7 +641,7 @@ export function timelineLayout({
             i,
             {
               ...xy,
-              baseMarkProps,
+              
               renderMode,
               styleFn,
               classFn,
@@ -692,7 +689,7 @@ export function pointLayout({
   adjustedSize,
   chartSize,
   margin,
-  baseMarkProps,
+  
   rScale
 }) {
   const circleRadius = type.r || 3
@@ -751,7 +748,7 @@ export function pointLayout({
               r: circleRadius,
               x: xPosition,
               y: yPosition,
-              baseMarkProps,
+              
               renderMode,
               styleFn,
               classFn,
@@ -808,13 +805,31 @@ export function swarmLayout({
   adjustedSize,
   chartSize,
   margin,
-  baseMarkProps,
+  
   rScale
 }) {
   let allCalculatedPieces = []
-  const iterations = type.iterations || 120
 
   const columnKeys = Object.keys(data)
+
+  // Calculate total data points for adaptive iterations
+  const totalDataPoints = columnKeys.reduce((sum, key) => {
+    return sum + (data[key].pieceData?.length || 0)
+  }, 0)
+
+  // Adaptive iteration count: reduce iterations for large datasets to maintain performance
+  // Formula: max(30, min(120, 120 - (totalDataPoints - 100) / 20))
+  // - Small datasets (<100 pts): 120 iterations (full quality)
+  // - Medium datasets (100-1900 pts): Gradual reduction
+  // - Large datasets (>1900 pts): 30 iterations (fast but stable)
+  const adaptiveIterations = Math.max(
+    30,
+    Math.min(120, Math.floor(120 - (totalDataPoints - 100) / 20))
+  )
+
+  const iterations = type.iterations !== undefined ? type.iterations : adaptiveIterations
+
+
 
   columnKeys.forEach((key, ordsetI) => {
     const oColumn = data[key]
@@ -884,7 +899,7 @@ export function swarmLayout({
               x: xPosition,
               y: yPosition,
               r: circleRadius,
-              baseMarkProps,
+              
               renderMode,
               styleFn,
               classFn,

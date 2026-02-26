@@ -2,29 +2,70 @@
   "name": "semiotic",
   "version": "2.0.2",
   "description": "The semiotic JavaScript data visualization framework",
-  "main": "dist/semiotic.js",
-  "module": "dist/semiotic.module.js",
+  "main": "dist/semiotic.min.js",
+  "module": "dist/semiotic.module.min.js",
   "types": "dist/semiotic.d.ts",
   "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/semiotic.d.ts",
+      "import": "./dist/semiotic.module.min.js",
+      "require": "./dist/semiotic.min.js",
+      "default": "./dist/semiotic.module.min.js"
+    },
+    "./xy": {
+      "types": "./dist/XYFrame.d.ts",
+      "import": "./dist/xy.module.min.js",
+      "require": "./dist/xy.min.js",
+      "default": "./dist/xy.module.min.js"
+    },
+    "./ordinal": {
+      "types": "./dist/OrdinalFrame.d.ts",
+      "import": "./dist/ordinal.module.min.js",
+      "require": "./dist/ordinal.min.js",
+      "default": "./dist/ordinal.module.min.js"
+    },
+    "./network": {
+      "types": "./dist/NetworkFrame.d.ts",
+      "import": "./dist/network.module.min.js",
+      "require": "./dist/network.min.js",
+      "default": "./dist/network.module.min.js"
+    },
+    "./package.json": "./package.json"
+  },
   "files": [
-    "dist/semiotic.*",
-    "dist/**/*.d.ts"
+    "dist/*.js",
+    "dist/*.js.map",
+    "dist/**/*.d.ts",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
-    "start": "parcel serve --target docs",
-    "build": "parcel build --target docs",
+    "start": "parcel serve --target website --port 3000",
+    "build": "parcel build --target website",
+    "build:analyze": "gulp analyze",
+    "build:prod": "gulp production",
     "test": "jest --config jest.config.js",
     "pretest:dist": "gulp build",
     "test:dist": "playwright test",
-    "serve-examples": "npm run dist && parcel serve integration-tests/viz-examples/index.html",
+    "bench": "vitest bench",
+    "bench:ui": "vitest bench --ui",
+    "bench:baseline": "vitest bench --run && node scripts/save-baseline.js",
+    "bench:compare": "vitest bench --run && node scripts/compare-baseline.js",
+    "serve-examples": "npm run dist && parcel serve integration-tests/index.html integration-tests/xy-examples/index.html integration-tests/ordinal-examples/index.html integration-tests/network-examples/index.html integration-tests/viz-examples/index.html integration-tests/hoc-legend-examples/index.html --dist-dir .parcel-cache/integration-tests",
+    "dist": "gulp build",
+    "dist:prod": "gulp production",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "create-release-branch": "sh ./scripts/create-release-branch.sh",
     "publish-release": "sh ./scripts/publish-release.sh",
-    "website:start": "npm run dist && parcel serve --target website",
-    "website:build": "npm run dist && parcel build --target website",
+    "clean": "rm -rf .parcel-cache docs/build dist && echo 'All caches and build artifacts cleared'",
+    "website:clean": "npm run clean && npm run dist:prod",
+    "website:start": "npm run dist:prod && parcel serve --target website --no-cache",
+    "website:start:clean": "npm run clean && npm run dist:prod && parcel serve --target website --no-cache",
+    "website:build": "npm run dist:prod && parcel build --target website",
     "typescript": "tsc --noEmit",
-    "prepublishOnly": "gulp build"
+    "prepublishOnly": "gulp production"
   },
   "resolutions": {
     "@types/react": "^17.0.37"
@@ -35,13 +76,6 @@
       "scopeHoist": false,
       "source": "docs/public/index.html",
       "distDir": "docs/build",
-      "engines": {
-        "browsers": "Firefox 60, Chrome 67, Safari 11.1"
-      }
-    },
-    "docs": {
-      "source": "public/index.html",
-      "distDir": "build",
       "engines": {
         "browsers": "Firefox 60, Chrome 67, Safari 11.1"
       }
@@ -68,6 +102,9 @@
     "@parcel/transformer-inline-string": "^2.8.2",
     "@parcel/transformer-mdx": "^2.8.2",
     "@playwright/test": "^1.17.1",
+    "@rollup/plugin-commonjs": "^29.0.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-terser": "^0.4.4",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^14.3.0",
     "@testing-library/user-event": "^14.4.3",
@@ -75,7 +112,9 @@
     "@types/node": "^13.7.4",
     "@types/react": "^17.0.37",
     "@types/react-dom": "^17.0.11",
+    "@types/seedrandom": "^3.0.5",
     "@typescript-eslint/eslint-plugin": "^5.4.6",
+    "@vitest/ui": "^1.2.0",
     "@vx/pattern": "0.0.143",
     "@wojtekmaj/enzyme-adapter-react-17": "^0.6.6",
     "babel-eslint": "^7.2.3",
@@ -113,16 +152,19 @@
     "react-router-dom": "^6.2.1",
     "react-test-renderer": "^17.0.2",
     "resize-observer-polyfill": "^1.5.1",
-    "rollup": "^2.79.1",
+    "rollup": "^4.55.1",
     "rollup-plugin-auto-external": "^2.0.0",
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-typescript2": "^0.34.1",
+    "rollup-plugin-visualizer": "^6.0.5",
     "roughjs": "^3.1.0",
+    "seedrandom": "^3.0.5",
     "ts-jest": "^27.1.1",
     "tslib": "^1.14.1",
     "typescript": "4.8.4",
-    "typescript-eslint-parser": "^22.0.0"
+    "typescript-eslint-parser": "^22.0.0",
+    "vitest": "^1.2.0"
   },
   "peerDependencies": {
     "react": "^18.1.0",
@@ -135,6 +177,7 @@
     "d3-contour": "^1.1.1",
     "d3-delaunay": "^6.0.4",
     "d3-force": "3.0.0",
+    "d3-format": "^3.1.0",
     "d3-glyphedge": "^1.2.0",
     "d3-hexbin": "^0.2.2",
     "d3-hierarchy": "3.1.2",
@@ -143,8 +186,10 @@
     "d3-polygon": "3.0.1",
     "d3-sankey-circular": "0.34.0",
     "d3-scale": "4.0.2",
+    "d3-scale-chromatic": "^3.1.0",
     "d3-selection": "3.0.0",
     "d3-shape": "3.2.0",
+    "d3-time-format": "^4.1.0",
     "dequal": "^2.0.3",
     "labella": "1.1.4",
     "memoize-one": "^5.1.1",

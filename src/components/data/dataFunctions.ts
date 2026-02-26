@@ -157,7 +157,6 @@ type CalculateDataTypes = {
   chartSize: Array<number>
   xScaleType: Function
   yScaleType: Function
-  baseMarkProps?: object
   margin: MarginType
   defined?: Function
   annotations: object[]
@@ -196,7 +195,6 @@ export const calculateDataExtent = ({
   summaryType,
   adjustedSize: size,
   margin,
-  baseMarkProps,
   summaryStyleFn,
   summaryClassFn,
   summaryRenderModeFn,
@@ -566,7 +564,6 @@ export const calculateDataExtent = ({
       finalYExtent,
       size,
       margin,
-      baseMarkProps,
       styleFn: summaryStyleFn,
       classFn: summaryClassFn,
       renderFn: summaryRenderModeFn,
@@ -587,7 +584,6 @@ export const calculateDataExtent = ({
       finalYExtent,
       size,
       margin,
-      baseMarkProps,
       styleFn: summaryStyleFn,
       classFn: summaryClassFn,
       renderFn: summaryRenderModeFn,

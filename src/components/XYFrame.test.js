@@ -149,7 +149,7 @@ describe("XYFrame", () => {
     const xyFrame = render(anotherXYFrame)
     expect(
       xyFrame.container.querySelectorAll(".points .frame-piece").length
-    ).toEqual(32)
+    ).toEqual(16)
   })
   it("hoverAnnotation turns on interaction layer and only has regions for non-overlapping points", () => {
     const xyFrame = render(anotherXYFrame)
@@ -202,7 +202,7 @@ describe("XYFrame", () => {
   })
 
   const svgAnnotationXY = xyFrameRender.container.querySelector(
-    "g.annotation.xy > circle"
+    "circle.annotation.xy"
   )
 
   const htmlAnnotationStyle = xyFrameRender.container.querySelector(

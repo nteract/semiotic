@@ -139,13 +139,11 @@ export interface AxisProps {
     xy,
     orient,
     i,
-    baseMarkProps,
     className
   }: {
     xy?: object
     orient?: string
     i?: number
-    baseMarkProps?: object
     className?: string
   }) => SVGElement
   baseline?: boolean | "under"

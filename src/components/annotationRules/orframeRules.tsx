@@ -1,5 +1,5 @@
 import * as React from "react"
-import Mark from "../Mark/Mark"
+
 import Annotation from "../Annotation"
 
 import {
@@ -315,16 +315,15 @@ export const svgHighlightRule = ({
             })
           }
 
-          return (
-            <Mark
-              fill="none"
-              stroke="black"
-              strokeWidth="2px"
-              key={`highlight-piece-${q}`}
-              {...styledD}
-              className={className}
-            />
-          )
+          const { markType, ...restProps } = styledD
+          return React.createElement(markType || 'path', {
+            fill: "none",
+            stroke: "black",
+            strokeWidth: "2px",
+            key: `highlight-piece-${q}`,
+            ...restProps,
+            className
+          })
         })) ||
     []
 
@@ -433,8 +432,7 @@ export const screenProject = ({
 
 export const svgORRule = ({ d, i, screenCoordinates, projection }) => {
   return (
-    <Mark
-      markType="text"
+    <text 
       key={`${d.label}annotationtext${i}`}
       x={parseInt(
         screenCoordinates[0] + (projection === "horizontal" ? 10 : 0)
@@ -445,7 +443,7 @@ export const svgORRule = ({ d, i, screenCoordinates, projection }) => {
       textAnchor="middle"
     >
       {d.label}
-    </Mark>
+    </text>
   )
 }
 

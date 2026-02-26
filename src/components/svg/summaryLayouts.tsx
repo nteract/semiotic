@@ -1,20 +1,20 @@
 import * as React from "react"
 
-import Axis from "../Axis"
-import Mark from "../Mark/Mark"
+import { axisGenerator, createSummaryAxis } from "./summaryAxis"
 import { contouring } from "../svg/areaDrawing"
 import { quantile } from "d3-array"
 import { histogram, max } from "d3-array"
 import { groupBarMark } from "../svg/SvgHelper"
 import { area, line, curveCatmullRom, curveLinear, arc } from "d3-shape"
 import { pointOnArcAtAngle } from "./pieceDrawing"
-import { orFrameSummaryRenderer } from "./frameFunctions"
 import { scaleLinear } from "d3-scale"
 import { curveHash } from "../visualizationLayerBehavior/general"
-import { GenericObject } from "../types/generalTypes"
+import { GenericObject, ProjectionTypes } from "../types/generalTypes"
 import { ckmeans } from "./ckmeans"
 
 import { sum } from "d3-array"
+
+type SummaryType = { type: string }
 
 type BoxplotFnType = {
   data: GenericObject[]
@@ -25,7 +25,6 @@ type BoxplotFnType = {
   classFn: Function
   projection: "horizontal" | "vertical" | "radial"
   adjustedSize: number[]
-  baseMarkProps: GenericObject
 }
 
 interface BuckeyArrayType {
@@ -41,43 +40,6 @@ const verticalXYSorting = (a, b) => a.xy.y - b.xy.y
 const horizontalXYSorting = (a, b) => b.xy.x - a.xy.x
 const emptyObjectReturnFn = () => ({})
 
-function createSummaryAxis({
-  summary,
-  summaryI,
-  axisSettings,
-  axisCreator,
-  projection,
-  actualMax,
-  adjustedSize,
-  columnWidth
-}) {
-  let axisTranslate = `translate(${summary.x},0)`
-  let axisDomain = [0, actualMax]
-  if (projection === "horizontal") {
-    axisTranslate = `translate(${0},${summary.x})`
-    axisDomain = [actualMax, 0]
-  } else if (projection === "radial") {
-    axisTranslate = "translate(0, 0)"
-  }
-
-  const axisWidth = projection === "horizontal" ? adjustedSize[0] : columnWidth
-  const axisHeight = projection === "vertical" ? adjustedSize[1] : columnWidth
-  axisSettings.size = [axisWidth, axisHeight]
-  const axisScale = scaleLinear().domain(axisDomain).range([0, columnWidth])
-
-  const renderedSummaryAxis = axisCreator(axisSettings, summaryI, axisScale)
-
-  return (
-    <g
-      className="summary-axis"
-      key={`summaryPiece-axis-${summaryI}`}
-      transform={axisTranslate}
-    >
-      {renderedSummaryAxis}
-    </g>
-  )
-}
-
 export function ckBinsRenderFn(props: BoxplotFnType) {
   const {
     data,
@@ -87,8 +49,7 @@ export function ckBinsRenderFn(props: BoxplotFnType) {
     styleFn,
     classFn,
     projection,
-    adjustedSize,
-    baseMarkProps
+    adjustedSize
   } = props
   const renderedSummaryMarks: any = []
 
@@ -174,8 +135,8 @@ export function ckBinsRenderFn(props: BoxplotFnType) {
         .range(["white", fill])
 
       return {
-        ...baseMarkProps,
-        //        renderMode: renderValue,
+
+
         markType: "rect",
         x: ckBin.scaledStart,
         width: ckBin.scaledEnd - ckBin.scaledStart,
@@ -213,7 +174,6 @@ export function boxplotRenderFn({
   classFn,
   projection,
   adjustedSize,
-  baseMarkProps
 }: BoxplotFnType) {
   const summaryElementStylingFn = type.elementStyleFn || emptyObjectReturnFn
 
@@ -668,8 +628,8 @@ export function boxplotRenderFn({
         //These are drawn items
         elements: [
           {
-            ...baseMarkProps,
-            renderMode: renderValue,
+
+
             markType: "line",
             x1: bottomPoint[0],
             x2: topPoint[0],
@@ -682,8 +642,8 @@ export function boxplotRenderFn({
             )
           },
           {
-            ...baseMarkProps,
-            renderMode: renderValue,
+
+
             markType: "path",
             d: topLineArcGenerator({ startAngle, endAngle }),
             style: Object.assign(
@@ -694,8 +654,8 @@ export function boxplotRenderFn({
             )
           },
           {
-            ...baseMarkProps,
-            renderMode: renderValue,
+
+
             markType: "path",
             d: midLineArcGenerator({ startAngle, endAngle }),
             style: Object.assign(
@@ -706,8 +666,8 @@ export function boxplotRenderFn({
             )
           },
           {
-            ...baseMarkProps,
-            renderMode: renderValue,
+
+
             markType: "path",
             d: bottomLineArcGenerator({ startAngle, endAngle }),
             style: Object.assign(
@@ -718,8 +678,8 @@ export function boxplotRenderFn({
             )
           },
           {
-            ...baseMarkProps,
-            renderMode: renderValue,
+
+
             markType: "path",
             d: bodyArcWholeGenerator({ startAngle, endAngle }),
             style: Object.assign(
@@ -729,8 +689,8 @@ export function boxplotRenderFn({
             )
           },
           {
-            ...baseMarkProps,
-            renderMode: renderValue,
+
+
             markType: "path",
             d: bodyArcTopGenerator({ startAngle, endAngle }),
             style: Object.assign(
@@ -741,8 +701,8 @@ export function boxplotRenderFn({
             )
           },
           {
-            ...baseMarkProps,
-            renderMode: renderValue,
+
+
             markType: "path",
             d: bodyArcBottomGenerator({ startAngle, endAngle }),
             style: Object.assign(
@@ -757,8 +717,8 @@ export function boxplotRenderFn({
     } else {
       const boxplotMarks = [
         {
-          ...baseMarkProps,
-          renderMode: renderValue,
+
+
           markType: "line",
           x1: extentlineX1,
           x2: extentlineX2,
@@ -771,8 +731,8 @@ export function boxplotRenderFn({
           )
         },
         {
-          ...baseMarkProps,
-          renderMode: renderValue,
+
+
           markType: "line",
           x1: topLineX1,
           x2: topLineX2,
@@ -785,8 +745,8 @@ export function boxplotRenderFn({
           )
         },
         {
-          ...baseMarkProps,
-          renderMode: renderValue,
+
+
           markType: "line",
           x1: bottomLineX1,
           x2: bottomLineX2,
@@ -799,8 +759,8 @@ export function boxplotRenderFn({
           )
         },
         {
-          ...baseMarkProps,
-          renderMode: renderValue,
+
+
           markType: "rect",
           x: rectWholeX,
           width: rectWholeWidth,
@@ -813,8 +773,8 @@ export function boxplotRenderFn({
           )
         },
         {
-          ...baseMarkProps,
-          renderMode: renderValue,
+
+
           markType: "rect",
           x: rectTopX,
           width: rectTopWidth,
@@ -828,8 +788,8 @@ export function boxplotRenderFn({
           )
         },
         {
-          ...baseMarkProps,
-          renderMode: renderValue,
+
+
           markType: "rect",
           x: rectBottomX,
           width: rectBottomWidth,
@@ -843,8 +803,8 @@ export function boxplotRenderFn({
           )
         },
         {
-          ...baseMarkProps,
-          renderMode: renderValue,
+
+
           markType: "line",
           x1: midLineX1,
           x2: midLineX2,
@@ -867,8 +827,8 @@ export function boxplotRenderFn({
 
         outlierPoints.forEach((point) => {
           outlierMarks.push({
-            ...baseMarkProps,
-            renderMode: renderValue,
+
+
             markType: "circle",
             cx: projection === "horizontal" ? point.scaledValue : 0,
             cy: projection === "vertical" ? point.scaledVerticalValue : 0,
@@ -909,8 +869,7 @@ export function contourRenderFn({
   eventListenersGenerator,
   styleFn,
   classFn,
-  adjustedSize,
-  baseMarkProps
+  adjustedSize
 }) {
   const keys = Object.keys(data)
   const renderedSummaryMarks = []
@@ -938,9 +897,9 @@ export function contourRenderFn({
       d.coordinates.forEach((coords, ii) => {
         const eventListeners = eventListenersGenerator(d, i)
         contourMarks.push({
-          ...baseMarkProps,
+
           ...eventListeners,
-          renderMode: renderValue,
+
           key: `${i}-${ii}`,
           style: styleFn(ordset.pieceData[0].data, ordsetI),
           className: classFn(ordset.pieceData[0].data, ordsetI),
@@ -967,24 +926,6 @@ export function contourRenderFn({
   return { marks: renderedSummaryMarks, xyPoints: summaryXYCoords }
 }
 
-function axisGenerator(axisProps, i, axisScale) {
-  return (
-    <Axis
-      label={axisProps.label}
-      key={axisProps.key || `orframe-summary-axis-${i}`}
-      orient={axisProps.orient}
-      size={axisProps.size}
-      ticks={axisProps.ticks}
-      tickSize={axisProps.tickSize}
-      tickFormat={axisProps.tickFormat}
-      tickValues={axisProps.tickValues}
-      rotate={axisProps.rotate}
-      scale={axisScale}
-      className={axisProps.className}
-    />
-  )
-}
-
 export function bucketizedRenderingFn({
   data,
   type,
@@ -994,8 +935,7 @@ export function bucketizedRenderingFn({
   classFn,
   projection,
   adjustedSize,
-  chartSize,
-  baseMarkProps
+  chartSize
 }) {
   const renderedSummaryMarks = []
   const summaryXYCoords = []
@@ -1138,10 +1078,8 @@ export function bucketizedRenderingFn({
         adjustedSize,
         summaryI,
         summary,
-        renderValue,
         summaryStyle: calculatedSummaryStyle,
-        type,
-        baseMarkProps
+        type
       })
       const tiles = mappedBars.marks
       if (projection === "radial") {
@@ -1320,11 +1258,11 @@ export function bucketizedRenderingFn({
         }
 
         violinElements.push({
-          ...baseMarkProps,
+
           ...eventListeners,
           transform: `translate(${translate})`,
           key: `summaryPiece-${summaryI}-${subsettingIndex}`,
-          renderMode: renderValue,
+
           markType: "path",
           className: calculatedSummaryClass,
           style: calculatedSummaryStyle,
@@ -1362,10 +1300,10 @@ export function bucketizedRenderingFn({
                   `M${first},${translate[1]}L${last},${translate[1]}`
 
           violinElements.push({
-            ...baseMarkProps,
+
             ...eventListeners,
             key: `summaryPiece-${summaryI}-${subsettingIndex}-iqr-line`,
-            renderMode: renderValue,
+
             markType: "path",
             className: calculatedSummaryClass,
             style: {
@@ -1382,7 +1320,7 @@ export function bucketizedRenderingFn({
           })
 
           violinElements.push({
-            ...baseMarkProps,
+
             ...eventListeners,
             key: `summaryPiece-${summaryI}-${subsettingIndex}-iqr-median`,
             markType: "circle",
@@ -1546,11 +1484,11 @@ export function bucketizedRenderingFn({
       renderedSummaryMarks.push({
         elements: [
           {
-            ...baseMarkProps,
+
             ...eventListeners,
             transform: `translate(${translate})`,
             key: `summaryPiece-${summaryI}`,
-            renderMode: renderValue,
+
             markType: "path",
             className: calculatedSummaryClass,
             style: calculatedSummaryStyle,
@@ -1690,11 +1628,11 @@ export function bucketizedRenderingFn({
         }
 
         return {
-          ...baseMarkProps,
+
           ...eventListeners,
           transform: `translate(${translate})`,
           key: `summaryPiece-${summaryI}-${multiBinI}`,
-          renderMode: renderValue,
+
           markType: "path",
           className: calculatedSummaryClass,
           style: {
@@ -1736,6 +1674,74 @@ export function bucketizedRenderingFn({
   }
 }
 
+type ORFrameSummaryRendererTypes = {
+  data: Array<object>
+  type: SummaryType
+  renderMode: Function
+  eventListenersGenerator: Function
+  styleFn: Function
+  classFn: Function
+  projection: ProjectionTypes
+  adjustedSize: Array<number>
+  chartSize: number
+  margin: object
+}
+
+const summaryRenderHash = {
+  contour: contourRenderFn,
+  boxplot: boxplotRenderFn,
+  violin: bucketizedRenderingFn,
+  heatmap: bucketizedRenderingFn,
+  ridgeline: bucketizedRenderingFn,
+  histogram: bucketizedRenderingFn,
+  horizon: bucketizedRenderingFn,
+  ckbins: ckBinsRenderFn
+}
+
+export function orFrameSummaryRenderer({
+  data,
+  type,
+  renderMode,
+  eventListenersGenerator,
+  styleFn,
+  classFn,
+  projection,
+  adjustedSize,
+  chartSize,
+  margin
+}: ORFrameSummaryRendererTypes) {
+  let summaryRenderFn
+  if (typeof type.type === "function") {
+    summaryRenderFn = type.type
+  } else if (summaryRenderHash[type.type]) {
+    summaryRenderFn = summaryRenderHash[type.type]
+  } else {
+    console.error(
+      `Invalid summary type: ${
+        type.type
+      } - Must be a function or one of the following strings: ${Object.keys(
+        summaryRenderHash
+      ).join(", ")}`
+    )
+    return {}
+  }
+  return summaryRenderFn({
+    data,
+    type,
+    renderMode,
+    eventListenersGenerator,
+    styleFn,
+    classFn,
+    projection,
+    adjustedSize,
+    chartSize,
+    margin
+  })
+}
+
+/**
+ * Main drawing function for summary visualizations
+ */
 export const drawSummaries = ({
   data,
   type,
@@ -1745,8 +1751,7 @@ export const drawSummaries = ({
   classFn,
   projection,
   adjustedSize,
-  margin,
-  baseMarkProps
+  margin
 }) => {
   if (!type || !type.type) return
   type = typeof type === "string" ? { type } : type
@@ -1763,8 +1768,7 @@ export const drawSummaries = ({
     projection,
     adjustedSize,
     chartSize,
-    margin,
-    baseMarkProps
+    margin
   })
 }
 
@@ -1774,16 +1778,47 @@ interface summaryInstruction {
   elements: object[]
 }
 
+/**
+ * Converts summary instructions to rendered SVG elements
+ */
 export function summaryInstructionsToMarks(data: summaryInstruction[]) {
   const renderedSummaries: JSX.Element[] = []
   for (const container of data) {
     const renderedElements: JSX.Element[] = []
-    const { elements, containerProps } = container
+    const { elements, containerProps} = container
     if (container.Mark) {
       renderedSummaries.push(container.Mark)
     } else {
-      for (const element of elements) {
-        renderedElements.push(<Mark {...element} />)
+      for (let i = 0; i < elements.length; i++) {
+        const element: any = elements[i]
+        const { markType, style = {}, ...restProps } = element
+
+        // Merge style object into direct props for cleaner SVG
+        const elementProps: any = { ...restProps }
+        if (style.fill !== undefined) elementProps.fill = style.fill
+        if (style.stroke !== undefined) elementProps.stroke = style.stroke
+        if (style.strokeWidth !== undefined) elementProps.strokeWidth = style.strokeWidth
+        if (style.opacity !== undefined) elementProps.opacity = style.opacity
+        if (style.fillOpacity !== undefined) elementProps.fillOpacity = style.fillOpacity
+        if (style.strokeOpacity !== undefined) elementProps.strokeOpacity = style.strokeOpacity
+
+        // Keep remaining styles
+        const remainingStyles: any = { ...style }
+        delete remainingStyles.fill
+        delete remainingStyles.stroke
+        delete remainingStyles.strokeWidth
+        delete remainingStyles.opacity
+        delete remainingStyles.fillOpacity
+        delete remainingStyles.strokeOpacity
+        if (Object.keys(remainingStyles).length > 0) {
+          elementProps.style = remainingStyles
+        }
+
+        elementProps.key = element.key || i
+
+        if (markType) {
+          renderedElements.push(React.createElement(markType, elementProps))
+        }
       }
       if (containerProps) {
         renderedSummaries.push(<g {...containerProps}>{renderedElements}</g>)

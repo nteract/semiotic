@@ -354,8 +354,7 @@ export default function Axis(props: AxisProps) {
       projection:
         orient === "top" || orient === "bottom" ? "horizontal" : "vertical",
       adjustedSize: size,
-      margin: { top: 0, bottom: 0, left: 0, right: 0 },
-      baseMarkProps: {}
+      margin: { top: 0, bottom: 0, left: 0, right: 0 }
     })
 
     const renderedSummary = summaryInstructionsToMarks(calculatedSummary.marks)
@@ -417,7 +416,7 @@ export default function Axis(props: AxisProps) {
     const labelName: any = label.name || label
     const labelPosition = label.position || {}
     const locationMod = labelPosition.location || "outside"
-    let anchorMod = labelPosition.anchor || "middle"
+    let anchorMod = (labelPosition.anchor || "middle") as "inherit" | "middle" | "end" | "start"
     const distance = label.locationDistance || calculatedLabelPosition
 
     const rotateHash = {

@@ -1,6 +1,6 @@
 import * as React from "react"
 
-import Mark from "../Mark/Mark"
+
 
 import {
   line,
@@ -74,7 +74,7 @@ export function createPoints({
   classFn,
   renderKeyFn,
   renderMode,
-  baseMarkProps,
+  
   showLinePoints: baseShowLinePoints
 }) {
   const { y, x, xMiddle, yMiddle, yTop, yBottom } = projectedCoordinateNames
@@ -110,11 +110,8 @@ export function createPoints({
       ? customMark
       : customMark({ d: d.data, xy: d, i, xScale, yScale })
     const markProps = customMark
-      ? Object.assign(baseMarkProps, renderedCustomMark.props, {
-          "aria-label": pointAriaLabel
-        })
+      ? { ...renderedCustomMark.props, "aria-label": pointAriaLabel }
       : {
-          ...baseMarkProps,
           key: `piece-${i}`,
           markType: "circle",
           r: 2,
@@ -198,7 +195,7 @@ export function createLines({
   renderKeyFn,
   type,
   defined,
-  baseMarkProps,
+  
   ariaLabel,
   axesData = []
 }) {
@@ -272,7 +269,6 @@ export function createLines({
 
       const markProps = {
         ...builtInDisplayProps,
-        ...baseMarkProps,
         markType: "path",
         d: pathString,
         "aria-label":
@@ -404,10 +400,9 @@ export function createLines({
 
     //      let baseStyle = props.lineStyle ? props.lineStyle(diffdata, 0) : {}
     const diffOverlayA = (
-      <Mark
-        key={"xyline-diff-a"}
+      <path key={"xyline-diff-a"}
         className={`${doClassname} difference-overlay-a`}
-        markType="path"
+        
         d={overLine(diffdataA)}
         style={{ fill: "none", pointerEvents: "none" }}
       />
@@ -415,10 +410,9 @@ export function createLines({
     mappedLines.push(diffOverlayA)
 
     const diffOverlayB = (
-      <Mark
-        key={"xyline-diff-b"}
+      <path key={"xyline-diff-b"}
         className={`${doClassname} difference-overlay-b`}
-        markType="path"
+        
         d={overLine(diffdataB)}
         style={{ fill: "none", pointerEvents: "none" }}
       />
@@ -439,7 +433,7 @@ export function createSummaries({
   classFn,
   renderKeyFn,
   renderMode,
-  baseMarkProps,
+  
   customMark
 }: {
   xScale: ScaleLinear<number, number>
@@ -451,7 +445,6 @@ export function createSummaries({
   classFn?: Function
   renderKeyFn?: Function
   renderMode?: Function
-  baseMarkProps?: GenericObject
   customMark?: Function
 }) {
   const summaryClass = classFn || (() => "")
@@ -542,14 +535,11 @@ export function createSummaries({
       canvasDrawing.push(canvasSummary)
     } else {
       renderedSummaries.push(
-        <Mark
-          {...baseMarkProps}
-          data-testid="xyframe-summary"
+        <path data-testid="xyframe-summary"
           key={renderKey}
-          renderMode={renderFn ? renderFn(d, i) : undefined}
           className={className}
-          markType="path"
-          d={drawD}
+
+          d={drawD as string}
           style={summaryStyle(d, i)}
         />
       )
@@ -609,7 +599,6 @@ export function clonedAppliedElement({
     return React.createElement(RenderableMark)
   }
 
-  markProps.renderMode = renderFn ? renderFn(d, i, yi) : undefined
-
-  return <Mark {...markProps} />
+  const { markType, ...restProps } = markProps
+  return React.createElement(markType, restProps)
 }

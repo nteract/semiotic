@@ -24,11 +24,16 @@ import { ResponsiveOrdinalFrame } from "./ResponsiveOrdinalFrame"
 import { SparkXYFrame } from "./SparkXYFrame"
 import { SparkOrdinalFrame } from "./SparkOrdinalFrame"
 import { SparkNetworkFrame } from "./SparkNetworkFrame"
-import Mark from "./Mark/Mark"
 
 import { hexbinning, heatmapping } from "./svg/areaDrawing"
 
 import { nodesEdgesFromHierarchy } from "./processing/network"
+
+// Higher-order chart components
+import { Scatterplot, LineChart, AreaChart, Heatmap, BubbleChart, BarChart, StackedBarChart, SwarmPlot, BoxPlot, DotPlot, ForceDirectedGraph, ChordDiagram, SankeyDiagram, TreeDiagram } from "./charts"
+
+// Tooltip utilities
+import { Tooltip, MultiLineTooltip, normalizeTooltip } from "./Tooltip/Tooltip"
 
 export {
   AnnotationLayer,
@@ -51,13 +56,31 @@ export {
   SparkNetworkFrame,
   SparkXYFrame,
   Legend,
-  Mark,
   funnelize,
   calculateDataExtent,
   FacetController,
   hexbinning,
   heatmapping,
-  nodesEdgesFromHierarchy
+  nodesEdgesFromHierarchy,
+  // Higher-order chart components
+  Scatterplot,
+  LineChart,
+  AreaChart,
+  Heatmap,
+  BubbleChart,
+  BarChart,
+  StackedBarChart,
+  SwarmPlot,
+  BoxPlot,
+  DotPlot,
+  ForceDirectedGraph,
+  ChordDiagram,
+  SankeyDiagram,
+  TreeDiagram,
+  // Tooltip utilities
+  Tooltip,
+  MultiLineTooltip,
+  normalizeTooltip
 }
 
 export {
@@ -146,3 +169,31 @@ export {
   XYFrameState,
   SummaryLayoutType
 } from "./types/xyTypes"
+
+export {
+  ScatterplotProps,
+  LineChartProps,
+  AreaChartProps,
+  HeatmapProps,
+  BubbleChartProps,
+  BarChartProps,
+  StackedBarChartProps,
+  SwarmPlotProps,
+  BoxPlotProps,
+  DotPlotProps,
+  ForceDirectedGraphProps,
+  ChordDiagramProps,
+  SankeyDiagramProps,
+  TreeDiagramProps,
+  BaseChartProps,
+  AxisConfig,
+  Accessor
+} from "./charts"
+
+// Tooltip types
+export type {
+  TooltipProp,
+  TooltipConfig,
+  TooltipField,
+  MultiLineTooltipConfig
+} from "./Tooltip/Tooltip"

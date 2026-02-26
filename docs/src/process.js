@@ -90,7 +90,6 @@ export const processNodes = [
       "nodeClass",
       "edgeClass",
       "additionalDefs",
-      "baseMarkProps",
       "renderKey",
       "renderFn",
       "className",

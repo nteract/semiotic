@@ -1,7 +1,6 @@
 import * as React from "react"
 
 import { drawAreaConnector } from "../svg/SvgHelper"
-import Mark from "../Mark/Mark"
 import Axis from "../Axis"
 import { AxisProps } from "../types/annotationTypes"
 
@@ -9,7 +8,8 @@ import {
   boxplotRenderFn,
   contourRenderFn,
   bucketizedRenderingFn,
-  ckBinsRenderFn
+  ckBinsRenderFn,
+  orFrameSummaryRenderer
 } from "./summaryLayouts"
 import {
   axisPieces,
@@ -68,22 +68,7 @@ type ORFrameConnectionRendererTypes = {
   projection: ProjectionTypes
   canvasRender: Function
   canvasDrawing: Array<object>
-  baseMarkProps: object
   pieceType: PieceType
-}
-
-type ORFrameSummaryRendererTypes = {
-  data: Array<object>
-  type: SummaryType
-  renderMode: Function
-  eventListenersGenerator: Function
-  styleFn: Function
-  classFn: Function
-  projection: ProjectionTypes
-  adjustedSize: Array<number>
-  chartSize: number
-  baseMarkProps: object
-  margin: object
 }
 
 type ORFrameAxisGeneratorTypes = {
@@ -442,7 +427,6 @@ export function orFrameConnectionRenderer({
   projection,
   canvasRender,
   canvasDrawing,
-  baseMarkProps,
   pieceType
 }: ORFrameConnectionRendererTypes) {
   if (!type.type) {
@@ -579,14 +563,12 @@ export function orFrameConnectionRenderer({
                 canvasDrawing.push(canvasConnector)
               } else {
                 renderedConnectorMarks.push(
-                  <Mark
-                    {...baseMarkProps}
+                  <path
                     {...eventListeners}
-                    renderMode={renderValue}
-                    markType="path"
                     d={markD}
                     className={classFn ? classFn(piece.piece.data, pieceI) : ""}
                     key={`connector${piece.piece.renderKey}`}
+                    {...calculatedStyle}
                     style={calculatedStyle}
                   />
                 )
@@ -616,17 +598,16 @@ export function orFrameConnectionRenderer({
           }
           canvasDrawing.push(canvasRadar)
         } else {
+          const style = styleFn({
+            source: ringPiece
+          })
           renderedConnectorMarks.push(
-            <Mark
-              {...baseMarkProps}
-              renderMode={renderMode && renderMode(ringPiece)}
-              markType="path"
+            <path
               d={markD}
               className={classFn ? classFn(ringPiece) : ""}
               key={`ordinal-ring-${ringPiece.renderKey}`}
-              style={styleFn({
-                source: ringPiece
-              })}
+              {...style}
+              style={style}
             />
           )
         }
@@ -638,60 +619,6 @@ export function orFrameConnectionRenderer({
     )
   }
   return renderedConnectorMarks
-}
-
-const summaryRenderHash = {
-  contour: contourRenderFn,
-  boxplot: boxplotRenderFn,
-  violin: bucketizedRenderingFn,
-  heatmap: bucketizedRenderingFn,
-  ridgeline: bucketizedRenderingFn,
-  histogram: bucketizedRenderingFn,
-  horizon: bucketizedRenderingFn,
-  ckbins: ckBinsRenderFn
-}
-
-export function orFrameSummaryRenderer({
-  data,
-  type,
-  renderMode,
-  eventListenersGenerator,
-  styleFn,
-  classFn,
-  projection,
-  adjustedSize,
-  chartSize,
-  baseMarkProps,
-  margin
-}: ORFrameSummaryRendererTypes) {
-  let summaryRenderFn
-  if (typeof type.type === "function") {
-    summaryRenderFn = type.type
-  } else if (summaryRenderHash[type.type]) {
-    summaryRenderFn = summaryRenderHash[type.type]
-  } else {
-    console.error(
-      `Invalid summary type: ${
-        type.type
-      } - Must be a function or one of the following strings: ${Object.keys(
-        summaryRenderHash
-      ).join(", ")}`
-    )
-    return {}
-  }
-  return summaryRenderFn({
-    data,
-    type,
-    renderMode,
-    eventListenersGenerator,
-    styleFn,
-    classFn,
-    projection,
-    adjustedSize,
-    chartSize,
-    baseMarkProps,
-    margin
-  })
 }
 
 export const orFrameAxisGenerator = ({
@@ -772,7 +699,6 @@ export const orFrameAxisGenerator = ({
         className: d.className,
         axisParts,
         orient,
-        baseMarkProps: {},
         tickLineGenerator: d.tickLineGenerator,
         jaggedBase: d.jaggedBase,
         scale: axisScale
@@ -901,7 +827,7 @@ export const orFrameAxisGenerator = ({
 }
 
 export const canvasEvent = (canvasContext, overlayRegions, canvasMap, e) => {
-  const interactionContext = canvasContext.getContext("2d")
+  const interactionContext = canvasContext.getContext("2d", { willReadFrequently: true })
   const hoverPoint = interactionContext.getImageData(e.offsetX, e.offsetY, 1, 1)
 
   const mostCommonRGB = `rgba(${hoverPoint.data[0]},${hoverPoint.data[1]},${hoverPoint.data[2]},255)`

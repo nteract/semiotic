@@ -139,7 +139,6 @@ export interface SummaryLayoutType {
   xScaleType?: ScaleLinear<Number, Number>
   yScaleType?: ScaleLinear<Number, Number>
   margin?: MarginType
-  baseMarkProps?: object
   styleFn?: Function
   classFn?: Function
   renderFn?: Function

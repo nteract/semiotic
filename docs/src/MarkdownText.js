@@ -2,18 +2,17 @@ import React from "react"
 import { marked } from "marked"
 
 export default class MarkdownText extends React.Component {
-  state = { marked: "" }
-
-  componentWillMount() {
-    if (this.props.text) {
-      this.setState({
-        marked: marked(this.props.text, { headerIds: true })
-          .replace(
-            /<h(\d) id="(.*?)"/g,
-            `<a class="heading-link" href="#$2">$&`
-          )
-          .replace(/<\/h[0-9]>/g, "$&</a>")
-      })
+  constructor(props) {
+    super(props)
+    this.state = {
+      marked: props.text
+        ? marked(props.text, { headerIds: true })
+            .replace(
+              /<h(\d) id="(.*?)"/g,
+              `<a class="heading-link" href="#$2">$&`
+            )
+            .replace(/<\/h[0-9]>/g, "$&</a>")
+        : ""
     }
   }
 

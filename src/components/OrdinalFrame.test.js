@@ -160,7 +160,7 @@ describe("OrdinalFrame", () => {
 
       const svgAnnotationOR =
         renderedFrameWithAnnotation.container.querySelector(
-          "g.annotation-or-label > text"
+          "text.annotation-or-label"
         )
       const htmlAnnotationOR =
         renderedFrameWithAnnotation.container.querySelector(

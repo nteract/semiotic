@@ -9,7 +9,6 @@ import {
 
 import { extent as d3Extent } from "d3-array"
 import { Delaunay, Voronoi } from "d3-delaunay"
-import Mark from "../Mark/Mark"
 
 import { CustomHoverType } from "../types/annotationTypes"
 
@@ -321,7 +320,12 @@ export const calculateOverlay = (
         if (React.isValidElement(overlayRegion.renderElement)) {
           return React.cloneElement(overlayRegion.renderElement, overlayProps)
         } else {
-          return <Mark {...rest} key={`overlay-${i}`} {...overlayProps} />
+          const { markType, ...restProps } = rest as any
+          return React.createElement(markType || 'path', {
+            ...restProps,
+            key: `overlay-${i}`,
+            ...overlayProps
+          })
         }
       }
     )

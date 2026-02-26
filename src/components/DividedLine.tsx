@@ -6,7 +6,6 @@ import { dividedLine, projectLineData } from "./svg/lineDrawing"
 
 // components
 
-import Mark from "./Mark/Mark"
 import { ProjectedLine } from "./types/generalTypes"
 
 interface DividedLineProps {
@@ -55,10 +54,9 @@ const createLineSegments = (props) => {
     .y((d) => d.y)
 
   return lines.map((d, i) => (
-    <Mark
-      {...rest}
+    <path {...rest}
       className={className}
-      markType="path"
+      
       key={`DividedLine-${i}`}
       style={d.key}
       d={lineRender(d.points)}

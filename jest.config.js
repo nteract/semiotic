@@ -4,11 +4,13 @@ module.exports = {
   collectCoverage: true,
   setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts"],
   testMatch: [
-    "<rootDir>/src/**/__tests__/**/*.{js,jsx,mjs}",
-    "<rootDir>/src/**/?(*.)(spec|test).{ts,js,jsx,mjs}"
+    "<rootDir>/src/**/__tests__/**/*.{js,jsx,mjs,tsx}",
+    "<rootDir>/src/**/?(*.)(spec|test).{ts,tsx,js,jsx,mjs}"
   ],
   testEnvironment: "jsdom",
-  testURL: "http://localhost",
+  testEnvironmentOptions: {
+    url: "http://localhost"
+  },
   transform: {
     "\\.(ts|tsx)$": "ts-jest",
     "^.+\\.(js|jsx|mjs)$": "<rootDir>/config/jest/jsTransformer.js",

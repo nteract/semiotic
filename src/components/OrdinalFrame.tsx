@@ -3,7 +3,12 @@ import { useMemo } from "react"
 
 import { scaleBand, scaleLinear } from "d3-scale"
 
-import { orFrameChangeProps } from "./constants/frame_props"
+import {
+  orFrameChangeProps,
+  orFrameDataAffectingProps,
+  orFrameScaleAffectingProps,
+  orFrameStylingProps
+} from "./constants/frame_props"
 import {
   svgORRule,
   svgHighlightRule,
@@ -132,7 +137,6 @@ const OrdinalFrame = React.memo(function OrdinalFrame(
     pieceHoverAnnotation,
     hoverAnnotation,
     canvasPostProcess,
-    baseMarkProps,
     useSpans,
     canvasPieces,
     canvasSummaries,
@@ -187,10 +191,44 @@ const OrdinalFrame = React.memo(function OrdinalFrame(
     }
   }
 
-  const renderedForegroundGraphics =
-    typeof foregroundGraphics === "function"
-      ? foregroundGraphics({ size, margin })
-      : foregroundGraphics
+  // Memoize foreground graphics calculation
+  const renderedForegroundGraphics = useMemo(
+    () =>
+      typeof foregroundGraphics === "function"
+        ? foregroundGraphics({ size, margin })
+        : foregroundGraphics,
+    [foregroundGraphics, size, margin]
+  )
+
+  // Memoize className concatenation
+  const frameClassName = useMemo(
+    () => `${className} ${projection}`,
+    [className, projection]
+  )
+
+  // Memoize hoverAnnotation selection
+  const selectedHoverAnnotation = useMemo(
+    () => summaryHoverAnnotation || pieceHoverAnnotation || hoverAnnotation,
+    [summaryHoverAnnotation, pieceHoverAnnotation, hoverAnnotation]
+  )
+
+  // Memoize interaction object
+  const memoizedInteraction = useMemo(
+    () =>
+      interaction && {
+        ...interaction,
+        brush: interaction.columnsBrush !== true && "oBrush",
+        projection,
+        projectedColumns
+      },
+    [interaction, projection, projectedColumns]
+  )
+
+  // Memoize canvas rendering flag
+  const canvasRendering = useMemo(
+    () => !!(canvasPieces || canvasSummaries || canvasConnectors),
+    [canvasPieces, canvasSummaries, canvasConnectors]
+  )
 
   return (
     <Frame
@@ -207,26 +245,17 @@ const OrdinalFrame = React.memo(function OrdinalFrame(
       title={title}
       matte={matte}
       additionalDefs={additionalDefs}
-      className={`${className} ${projection}`}
+      className={frameClassName}
       frameKey={"none"}
       renderFn={renderKey}
       projectedCoordinateNames={projectedCoordinatesObject}
       defaultSVGRule={(args) => defaultORSVGRule(props, state, args)}
       defaultHTMLRule={(args) => defaultORHTMLRule(props, state, args)}
-      hoverAnnotation={
-        summaryHoverAnnotation || pieceHoverAnnotation || hoverAnnotation
-      }
+      hoverAnnotation={selectedHoverAnnotation}
       annotations={annotations}
       annotationSettings={annotationSettings}
       legendSettings={legendSettings}
-      interaction={
-        interaction && {
-          ...interaction,
-          brush: interaction.columnsBrush !== true && "oBrush",
-          projection,
-          projectedColumns
-        }
-      }
+      interaction={memoizedInteraction}
       customClickBehavior={customClickBehavior}
       customHoverBehavior={customHoverBehavior}
       customDoubleClickBehavior={customDoubleClickBehavior}
@@ -243,8 +272,8 @@ const OrdinalFrame = React.memo(function OrdinalFrame(
       disableContext={disableContext}
       interactionOverflow={interactionOverflow}
       canvasPostProcess={canvasPostProcess}
-      baseMarkProps={baseMarkProps}
-      canvasRendering={!!(canvasPieces || canvasSummaries || canvasConnectors)}
+      
+      canvasRendering={canvasRendering}
       renderOrder={renderOrder}
       disableCanvasInteraction={disableCanvasInteraction}
       sketchyRenderingEngine={sketchyRenderingEngine}
@@ -261,24 +290,48 @@ function deriveOrdinalFrameState(
 ) {
   const { props } = prevState
 
+  // Check which category of props changed
+  const dataPropsChanged = !prevState.dataVersion && orFrameDataAffectingProps.some(
+    (prop) => props[prop] !== nextProps[prop]
+  )
+
+  const scalePropsChanged = !prevState.dataVersion && orFrameScaleAffectingProps.some(
+    (prop) => props[prop] !== nextProps[prop]
+  )
+
+  const sizeChanged = props.size[0] !== nextProps.size[0] || props.size[1] !== nextProps.size[1]
+
+  // Force full recalc if dataVersion changed or no projectedColumns exists
   if (
-    (prevState.dataVersion &&
-      prevState.dataVersion !== nextProps.dataVersion) ||
-    !prevState.projectedColumns ||
-    props.size[0] !== nextProps.size[0] ||
-    props.size[1] !== nextProps.size[1] ||
-    (!prevState.dataVersion &&
-      orFrameChangeProps.find((d) => {
-        return props[d] !== nextProps[d]
-      }))
+    (prevState.dataVersion && prevState.dataVersion !== nextProps.dataVersion) ||
+    !prevState.projectedColumns
   ) {
     return {
       ...calculateOrdinalFrame(nextProps, prevState),
       props: nextProps
     }
-  } else {
-    return { props: nextProps }
   }
+
+  // Full data recalculation needed if data-affecting props changed
+  if (dataPropsChanged) {
+    return {
+      ...calculateOrdinalFrame(nextProps, prevState),
+      props: nextProps
+    }
+  }
+
+  // Scale/layout recalculation needed if size or scale-affecting props changed
+  // Note: calculateOrdinalFrame doesn't have an updateData flag like XYFrame,
+  // but size changes typically need full recalc due to column layout
+  if (sizeChanged || scalePropsChanged) {
+    return {
+      ...calculateOrdinalFrame(nextProps, prevState),
+      props: nextProps
+    }
+  }
+
+  // Only styling changed - no recalc needed, React will re-render with existing state
+  return { props: nextProps }
 }
 
 function defaultORSVGRule(

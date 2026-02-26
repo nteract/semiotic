@@ -74,6 +74,24 @@ export function GuidesIndex() {
           thumbnail={new URL("../public/assets/img/hierarchy.png", import.meta.url)}
         />
 
+        <div className="sub-header">Higher-Order Components</div>
+
+        <PageLink
+          href="/guides/xy-charts-hoc"
+          title="XY Charts"
+          thumbnail={new URL("../public/assets/img/scatterplot.png", import.meta.url)}
+        />
+        <PageLink
+          href="/guides/ordinal-charts-hoc"
+          title="Ordinal Charts"
+          thumbnail={new URL("../public/assets/img/bar-chart.png", import.meta.url)}
+        />
+        <PageLink
+          href="/guides/network-charts-hoc"
+          title="Network Charts"
+          thumbnail={new URL("../public/assets/img/force.png", import.meta.url)}
+        />
+
         <div className="sub-header">All Frames</div>
 
         <PageLink

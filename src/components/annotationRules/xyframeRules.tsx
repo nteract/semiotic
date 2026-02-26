@@ -1,5 +1,5 @@
 import * as React from "react"
-import Mark from "../Mark/Mark"
+
 import Annotation from "../Annotation"
 import { AnnotationCalloutRect, AnnotationXYThreshold } from "react-annotation"
 
@@ -214,10 +214,9 @@ export const svgXYAnnotation = ({ screenCoordinates, i, d }) => {
   if (d.color) inlineStyle = { fill: d.color }
 
   const laLine = (
-    <Mark
-      className={`annotation ${d.type} ${d.className || ""} `}
+    <circle className={`annotation ${d.type} ${d.className || ""} `}
       key={`annotationpoint${i}`}
-      markType="circle"
+      
       cx={screenCoordinates[0]}
       cy={screenCoordinates[1]}
       style={inlineStyle}
@@ -229,8 +228,7 @@ export const svgXYAnnotation = ({ screenCoordinates, i, d }) => {
   let laLabel
   if (d.type === "xy") {
     laLabel = (
-      <Mark
-        markType="text"
+      <text 
         key={`${d.label}annotationtext${i}`}
         x={screenCoordinates[0]}
         y={10 + screenCoordinates[1]}
@@ -238,7 +236,7 @@ export const svgXYAnnotation = ({ screenCoordinates, i, d }) => {
         className={`annotation annotation-xy-label ${d.className || ""} `}
       >
         {d.label}
-      </Mark>
+      </text>
     )
   }
 
@@ -370,24 +368,22 @@ export const svgLineAnnotation = ({ d, i, screenCoordinates }) => {
     .y((p) => p[1])
   const lineD = lineGenerator(screenCoordinates)
   const laLine = (
-    <Mark
-      key={`${d.label}annotationline${i}`}
-      markType="path"
+    <path key={`${d.label}annotationline${i}`}
+      
       d={lineD}
       className={`annotation annotation-line ${d.className || ""} `}
     />
   )
 
   const laLabel = (
-    <Mark
-      markType="text"
+    <text 
       key={`${d.label}annotationlinetext${i}`}
       x={(screenCoordinates[0][0] + screenCoordinates[1][0]) / 2}
       y={(screenCoordinates[0][1] + screenCoordinates[1][1]) / 2}
       className={`annotation annotation-line-label ${d.className || ""} `}
     >
       {d.label}
-    </Mark>
+    </text>
   )
 
   return [laLine, laLabel]
@@ -418,17 +414,15 @@ export const svgAreaAnnotation = ({
   const yCenter = (yBounds[0] + yBounds[1]) / 2
 
   const laLine = (
-    <Mark
-      key={`${d.label}-annotation-area-${i}`}
-      markType="path"
+    <path key={`${d.label}-annotation-area-${i}`}
+      
       d={mappedCoordinates}
       className={`annotation annotation-area ${d.className || ""} `}
     />
   )
 
   const laLabel = (
-    <Mark
-      markType="text"
+    <text 
       key={`${d.label}-annotationtext-${i}`}
       x={xCenter}
       y={yCenter}
@@ -437,7 +431,7 @@ export const svgAreaAnnotation = ({
       style={{ textAnchor: "middle" }}
     >
       {d.label}
-    </Mark>
+    </text>
   )
 
   return [laLine, laLabel]

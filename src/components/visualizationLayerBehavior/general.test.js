@@ -39,7 +39,6 @@ const createLinesSettings = {
   renderKeyFn: undefined,
   type: { type: "line", simpleLine: true },
   defined: () => true,
-  baseMarkProps: {},
   ariaLabel: "No label",
   axesData: []
 }

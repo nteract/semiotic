@@ -50,7 +50,6 @@ export type PieceLayoutType = (args: {
   chartSize: number[]
   margin: MarginType
   rScale?: Function
-  baseMarkProps: object
 }) => GenericObject[]
 
 export interface ProjectedLine {
@@ -150,7 +149,6 @@ export interface RawPoint {}
 
 export interface CustomAreaMarkProps {
   d: object
-  baseMarkProps: object
   margin: object
   styleFn: Function
   classFn: Function
@@ -253,7 +251,6 @@ export interface GeneralFrameProps {
   tooltipContent?: Function
   optimizeCustomTooltipPosition?: boolean
   annotations?: object[]
-  baseMarkProps?: object
   backgroundGraphics?: React.ReactNode | Function
   foregroundGraphics?: React.ReactNode | Function
   beforeElements?: React.ReactNode

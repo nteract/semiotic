@@ -34,7 +34,6 @@ const summaryDataAccessor = [(d) => d.coordinates]
 const summaryType = { type: "basic" }
 const adjustedSize = [500, 500]
 const margin = { left: 10, top: 10, bottom: 10, right: 10 }
-const baseMarkProps = {}
 const summaryStyleFn = () => ({})
 const summaryClassFn = () => "no-class"
 const summaryRenderModeFn = undefined
@@ -64,7 +63,6 @@ describe("dataFunctions", () => {
     summaryType,
     adjustedSize,
     margin,
-    baseMarkProps,
     summaryStyleFn,
     summaryClassFn,
     summaryRenderModeFn,

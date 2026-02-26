@@ -2,8 +2,6 @@ import * as React from "react"
 import { useEffect, useRef } from "react"
 import { select } from "d3-selection"
 
-import Mark from "../Mark/Mark"
-
 import {
   d as glyphD /*, project as glyphProject, mutate as glyphMutate*/
 } from "d3-glyphedge"
@@ -84,20 +82,21 @@ export const radialCurveGenerator = (size) => {
     .angle((d) => (d.x / size[0]) * Math.PI * 2)
     .radius((d) => d.y)
 
-  return ({ d, i, styleFn, renderMode, key, className, baseMarkProps }) => (
-    <Mark
-      {...baseMarkProps}
-      key={key}
-      transform={`translate(${50},${size[1] / 2 - 50})`}
-      markType="path"
-      d={radialCurve(d)}
-      style={styleFn(d, i)}
-      renderMode={renderMode ? renderMode(d, i) : undefined}
-      className={className}
-      aria-label={`Node ${d.id}`}
-      tabIndex={-1}
-    />
-  )
+  return ({ d, i, styleFn, renderMode, key, className }) => {
+    const style = styleFn(d, i)
+    return (
+      <path
+        key={key}
+        transform={`translate(${50},${size[1] / 2 - 50})`}
+        d={radialCurve(d)}
+        {...style}
+        style={style}
+        className={className}
+        aria-label={`Node ${d.id}`}
+        tabIndex={-1}
+      />
+    )
+  }
 }
 
 export const circleNodeGenerator = ({
@@ -107,25 +106,22 @@ export const circleNodeGenerator = ({
   renderMode,
   key,
   className,
-  transform,
-  baseMarkProps
+  transform
 }) => {
   //this is repetitious
-
+  const style = styleFn(d, i)
   return (
-    <Mark
-      {...baseMarkProps}
+    <rect
       key={key}
       transform={transform}
-      markType="rect"
       width={d.nodeSize * 2}
       height={d.nodeSize * 2}
       ry={d.nodeSize * 2}
       rx={d.nodeSize * 2}
       x={-d.nodeSize}
       y={-d.nodeSize}
-      style={styleFn(d, i)}
-      renderMode={renderMode ? renderMode(d, i) : undefined}
+      {...style}
+      style={style}
       className={className}
       aria-label={`Node ${d.id}`}
       tabIndex={-1}
@@ -144,19 +140,17 @@ const gridProps = (gridSize) => {
 
 export const matrixEdgeGenerator =
   (size, nodes) =>
-  ({ d, i, styleFn, renderMode, key, className, baseMarkProps }) => {
+  ({ d, i, styleFn, renderMode, key, className }) => {
     const gridSize = Math.min(...size) / nodes.length
-
+    const style = styleFn(d, i)
     return (
       <g key={key}>
-        <Mark
-          {...baseMarkProps}
-          renderMode={renderMode ? renderMode(d, i) : undefined}
+        <rect
           key={key}
           className={className}
           transform={`translate(${d.source.y},${d.target.y})`}
-          markType="rect"
-          style={styleFn(d, i)}
+          {...style}
+          style={style}
           aria-label={`Connection from ${d.source.id} to ${d.target.id}`}
           tabIndex={-1}
           {...gridProps(gridSize)}
@@ -178,17 +172,16 @@ export const arcEdgeGenerator = (size) => {
     ])
   }
 
-  return ({ d, i, styleFn, renderMode, key, className, baseMarkProps }) => {
+  return ({ d, i, styleFn, renderMode, key, className }) => {
+    const style = styleFn(d, i)
     return (
-      <Mark
-        {...baseMarkProps}
-        renderMode={renderMode ? renderMode(d, i) : undefined}
+      <path
         key={key}
         className={className}
-        markType="path"
         transform={`translate(0,${size[1] / 2})`}
         d={arcDiagramArc(d)}
-        style={styleFn(d, i)}
+        {...style}
+        style={style}
         aria-label={`Connection from ${d.source.id} to ${d.target.id}`}
         tabIndex={-1}
       />
@@ -235,7 +228,7 @@ export const sankeyArrowGenerator = (props) => {
     renderMode,
     key,
     className,
-    baseMarkProps,
+    
     generatedPath
   } = props
 
@@ -269,12 +262,9 @@ export const sankeyArrowGenerator = (props) => {
 
   return (
     <>
-      <Mark
-        {...baseMarkProps}
-        renderMode={renderMode ? renderMode(d, i) : undefined}
-        key={key}
+      <path key={key}
         className={className}
-        markType="path"
+        
         d={generatedPath}
         style={styleFn(d, i)}
         aria-label={`Connection from ${d.source.id} to ${d.target.id}`}
@@ -294,15 +284,12 @@ export const sankeyArrowGenerator = (props) => {
 
 export const chordEdgeGenerator =
   (size) =>
-  ({ d, i, styleFn, renderMode, key, className, baseMarkProps }) =>
+  ({ d, i, styleFn, renderMode, key, className }) =>
     (
-      <Mark
-        {...baseMarkProps}
-        renderMode={renderMode ? renderMode(d, i) : undefined}
-        key={key}
+      <path key={key}
         className={className}
         transform={`translate(${size[0] / 2},${size[1] / 2})`}
-        markType="path"
+        
         d={d.d}
         style={styleFn(d, i)}
         aria-label={`Connection from ${d.source.id} to ${d.target.id}`}
@@ -315,7 +302,7 @@ export const dagreEdgeGenerator = (direction) => {
     direction === "LR" || direction === "RL"
       ? horizontalDagreLineGenerator
       : verticalDagreLineGenerator
-  return ({ d, i, styleFn, renderMode, key, className, baseMarkProps }) => {
+  return ({ d, i, styleFn, renderMode, key, className }) => {
     if (d.ribbon || d.parallelEdges) {
       const ribbonGenerator = linearRibbon()
 
@@ -333,12 +320,9 @@ export const dagreEdgeGenerator = (direction) => {
               points: d.points,
               multiple: d.parallelEdges
             }).map((ribbonD, ribbonI) => (
-              <Mark
-                {...baseMarkProps}
-                renderMode={renderMode ? renderMode(d, i) : undefined}
-                key={`${key}-${ribbonI}`}
+              <path key={`${key}-${ribbonI}`}
                 className={className}
-                markType="path"
+                
                 d={ribbonD}
                 style={styleFn(sortedParallelEdges[ribbonI], i)}
                 aria-label={`Connection from ${d.source.id} to ${d.target.id}`}
@@ -350,12 +334,9 @@ export const dagreEdgeGenerator = (direction) => {
       }
 
       return (
-        <Mark
-          {...baseMarkProps}
-          renderMode={renderMode ? renderMode(d, i) : undefined}
-          key={key}
+        <path key={key}
           className={className}
-          markType="path"
+          
           d={ribbonGenerator(d.points)}
           style={styleFn(d, i)}
           aria-label={`Connection from ${d.source.id} to ${d.target.id}`}
@@ -365,12 +346,9 @@ export const dagreEdgeGenerator = (direction) => {
     }
 
     return (
-      <Mark
-        {...baseMarkProps}
-        renderMode={renderMode ? renderMode(d, i) : undefined}
-        key={key}
+      <path key={key}
         className={className}
-        markType="path"
+        
         d={dagreLineGenerator(d.points)}
         style={styleFn(d, i)}
         aria-label={`Connection from ${d.source.id} to ${d.target.id}`}
@@ -387,8 +365,7 @@ export const sankeyNodeGenerator = ({
   renderMode,
   key,
   className,
-  transform,
-  baseMarkProps
+  transform
 }) => {
   const height = d.direction !== "down" ? d.height : d.width
   const width = d.direction !== "down" ? d.width : d.height
@@ -398,13 +375,10 @@ export const sankeyNodeGenerator = ({
   }
 
   return (
-    <Mark
-      {...baseMarkProps}
-      renderMode={renderMode ? renderMode(d, i) : undefined}
-      key={key}
+    <rect key={key}
       className={className}
       transform={transform}
-      markType="rect"
+      
       height={height}
       width={width}
       x={-width / 2}
@@ -420,19 +394,16 @@ export const sankeyNodeGenerator = ({
 
 export const chordNodeGenerator =
   (size) =>
-  ({ d, i, styleFn, renderMode, key, className, baseMarkProps }) => {
+  ({ d, i, styleFn, renderMode, key, className }) => {
     if (!d) {
       return <g />
     }
 
     return (
-      <Mark
-        {...baseMarkProps}
-        renderMode={renderMode ? renderMode(d, i) : undefined}
-        key={key}
+      <path key={key}
         className={className}
         transform={`translate(${size[0] / 2},${size[1] / 2})`}
-        markType="path"
+        
         d={d.d}
         style={styleFn(d, i)}
         aria-label={`Node ${d.id}`}
@@ -445,7 +416,7 @@ export const matrixNodeGenerator = (size, nodes) => {
   const gridSize = Math.min(...size)
   const stepSize = gridSize / (nodes.length + 1)
 
-  return ({ d, i, styleFn, renderMode, key, className, baseMarkProps }) => {
+  return ({ d, i, styleFn, renderMode, key, className }) => {
     if (!d) {
       return <g />
     }
@@ -454,7 +425,10 @@ export const matrixNodeGenerator = (size, nodes) => {
     const showLine = stepSize > 3
     const showRect = stepSize > 0.5
 
-    const textProps = {
+    const textProps: {
+      textAnchor: "inherit" | "middle" | "end" | "start"
+      fontSize: string
+    } = {
       textAnchor: "end",
       fontSize: `${stepSize / 2}px`
     }
@@ -464,79 +438,61 @@ export const matrixNodeGenerator = (size, nodes) => {
     return (
       <g key={key} className={className}>
         {showRect && (
-          <Mark
-            markType="rect"
+          <rect 
             x={stepSize / 2}
             y={d.y - stepSize / 2}
             width={gridSize - stepSize}
             height={stepSize}
             style={{ ...style, stroke: "none" }}
-            renderMode={renderModeValue}
-            baseMarkProps={baseMarkProps}
           />
         )}
         {showRect && (
-          <Mark
-            markType="rect"
+          <rect 
             y={stepSize / 2}
             x={d.y - stepSize / 2}
             height={gridSize - stepSize}
             width={stepSize}
             style={{ ...style, stroke: "none" }}
-            renderMode={renderModeValue}
-            baseMarkProps={baseMarkProps}
           />
         )}
         {showLine && (
-          <Mark
-            markType="line"
+          <line 
             stroke="black"
             x1={0}
             x2={gridSize - stepSize / 2}
             y1={d.y - stepSize / 2}
             y2={d.y - stepSize / 2}
             style={style}
-            renderMode={renderModeValue}
-            baseMarkProps={baseMarkProps}
           />
         )}
         {showLine && (
-          <Mark
-            markType="line"
+          <line 
             stroke="black"
             y1={0}
             y2={gridSize - stepSize / 2}
             x1={d.y - stepSize / 2}
             x2={d.y - stepSize / 2}
             style={style}
-            renderMode={renderModeValue}
-            baseMarkProps={baseMarkProps}
           />
         )}
         {showLine && i === nodes.length - 1 && (
-          <Mark
-            markType="line"
+          <line 
             stroke="black"
             x1={0}
             x2={gridSize - stepSize / 2}
             y1={d.y + stepSize / 2}
             y2={d.y + stepSize / 2}
             style={style}
-            renderMode={renderModeValue}
-            baseMarkProps={baseMarkProps}
           />
         )}
         {showLine && i === nodes.length - 1 && (
-          <Mark
-            markType="line"
+          <line 
             stroke="black"
             y1={0}
             y2={gridSize - stepSize / 2}
             x1={d.y + stepSize / 2}
             x2={d.y + stepSize / 2}
             style={style}
-            renderMode={renderModeValue}
-            baseMarkProps={baseMarkProps}
           />
         )}
         {showText && (
@@ -569,7 +525,7 @@ export const radialRectNodeGenerator = (size, center, type) => {
   const adjustedPct =
     rangeMod < 1 ? scaleLinear().domain([0, 1]).range(rangePct) : (d) => d
 
-  return ({ d, i, styleFn, renderMode, key, className, baseMarkProps }) => {
+  return ({ d, i, styleFn, renderMode, key, className }) => {
     if (!d) {
       return <g />
     }
@@ -577,17 +533,14 @@ export const radialRectNodeGenerator = (size, center, type) => {
     radialArc.innerRadius(d.y0 / 2).outerRadius(d.y1 / 2)
 
     return (
-      <Mark
-        {...baseMarkProps}
-        key={key}
+      <path key={key}
         transform={`translate(${center})`}
-        markType="path"
+        
         d={radialArc({
           startAngle: adjustedPct(d.x0 / size[0]) * Math.PI * 2,
           endAngle: adjustedPct(d.x1 / size[0]) * Math.PI * 2
         })}
         style={styleFn(d, i)}
-        renderMode={renderMode ? renderMode(d, i) : undefined}
         className={className}
         aria-label={`Node ${d.id}`}
         tabIndex={-1}
@@ -620,19 +573,16 @@ export const hierarchicalRectNodeGenerator = ({
   styleFn,
   renderMode,
   key,
-  className,
-  baseMarkProps
+  className
 }) => {
   if (!d) {
     return <g />
   }
   //this is repetitious
   return (
-    <Mark
-      {...baseMarkProps}
-      key={key}
+    <rect key={key}
       transform={`translate(0,0)`}
-      markType="rect"
+      
       width={d.x1 - d.x0}
       height={d.y1 - d.y0}
       x={d.x0}
@@ -640,7 +590,6 @@ export const hierarchicalRectNodeGenerator = ({
       rx={0}
       ry={0}
       style={styleFn(d, i)}
-      renderMode={renderMode ? renderMode(d, i) : undefined}
       className={className}
       aria-label={`Node ${d.id}`}
       tabIndex={-1}
@@ -660,7 +609,7 @@ export const drawNodes = ({
   renderMode,
   canvasDrawing,
   canvasRenderFn,
-  baseMarkProps,
+  
   networkSettings
 }) => {
   const markGenerator = customMark
@@ -682,8 +631,7 @@ export const drawNodes = ({
         renderMode,
         key: renderKeyFn ? renderKeyFn(d, i) : d.id || `node-${i}`,
         className: `node ${classFn(d, i)}`,
-        transform: `translate(${d.x},${d.y})`,
-        baseMarkProps
+        transform: `translate(${d.x},${d.y})`
       })
 
       if (canvasRenderFn && canvasRenderFn(d, i) === true) {
@@ -705,21 +653,8 @@ export const drawNodes = ({
         }
         canvasDrawing.push(canvasNode)
       } else {
-        // CUSTOM MARK IMPLEMENTATION
-        renderedData.push(
-          markGenerator({
-            d,
-            i,
-            renderKeyFn,
-            styleFn,
-            classFn,
-            renderMode,
-            key: renderKeyFn ? renderKeyFn(d, i) : d.id || `node-${i}`,
-            className: `node ${classFn(d, i)}`,
-            transform: `translate(${d.x},${d.y})`,
-            baseMarkProps
-          })
-        )
+        // Use the already generated mark
+        renderedData.push(generatedMark)
       }
       i++
     }
@@ -738,7 +673,7 @@ export const drawEdges = (settings) => {
     canvasRenderFn,
     canvasDrawing,
     type,
-    baseMarkProps,
+    
     networkSettings,
     projection,
     numberOfNodes,
@@ -796,7 +731,7 @@ export const drawEdges = (settings) => {
         key: renderKeyFn ? renderKeyFn(d, i) : `edge-${i}`,
         className: `${classFn(d, i)} edge`,
         transform: `translate(${d.x},${d.y})`,
-        baseMarkProps,
+        
         generatedPath: dGenerator(d)
       })
       if (
@@ -836,11 +771,8 @@ export const drawEdges = (settings) => {
         canvasDrawing.push(canvasEdge)
       } else if (renderedD) {
         renderedData.push(
-          <Mark
-            {...baseMarkProps}
-            key={renderKeyFn ? renderKeyFn(d, i) : `edge-${i}`}
-            markType="path"
-            renderMode={renderMode ? renderMode(d, i) : undefined}
+          <path key={renderKeyFn ? renderKeyFn(d, i) : `edge-${i}`}
+            
             className={`${classFn(d)} edge`}
             d={renderedD}
             style={styleFn(d, i)}

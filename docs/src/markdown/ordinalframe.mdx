@@ -41,7 +41,6 @@ export default () => (
   - [oPadding: { _number_ }](#opadding-number-)
   - [dynamicColumnWidth: { _string_ | \_func}](#dynamiccolumnwidth-string-func-)
   - [pixelColumnWidth: { _number_ }](#pixelcolumnwidth-number-)
-  - [baseMarkProps: { _object_ }](#basemarkprops-object-)
   - [renderKey: { _string_ | _function_ }](#renderkey-string-function-)
 - [Piece Rendering](#piece-rendering)
 
@@ -249,16 +248,6 @@ value.
 <OrdinalFrame pixelColumnWidth={40} />
 ```
 
-### baseMarkProps: { _object_ }
-
-This object will be spread to all marks that are generated in the frame. This is useful for any
-props that might be shared by all pieces, and especially useful to set the animation duration for
-the marks if you want to adjust from the default 1s duration.
-
-```jsx
-<OrdinalFrame baseMarkProps={{ transitionDuration: { default: 500, fill: 2500 } }} />
-```
-
 ### renderKey: { _string_ | _function_ }
 
 By default, generated marks will be rendered with a key based on their array position. If you want
@@ -302,7 +291,7 @@ see how to use custom type functions.
 
 - Shared settings
   - `customMark`: Takes a function that is passed
-    `(d,i,{ ...drawingProps, baseMarkProps, renderMode, styleFn, classFn, adjustedSize, chartSize, margin })`
+    `(d,i,{ ...drawingProps, renderMode, styleFn, classFn, adjustedSize, chartSize, margin })`
     and should return JSX SVG. The drawing props vary depending on whether it's a circle (like swarm
     plots) or a rectangle (like bar charts).
 - `"timeline"`, `"bar"`, `"clusterbar"` shared features

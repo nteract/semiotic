@@ -125,10 +125,8 @@ export const groupBarMark = ({
   adjustedSize,
   summaryI,
   summary,
-  renderValue,
   summaryStyle,
-  type,
-  baseMarkProps
+  type
 }) => {
   const mappedBins = []
   const mappedPoints = []
@@ -202,10 +200,8 @@ export const groupBarMark = ({
         y: arcCenter[1] + arcAdjustY
       })
       mappedBins.push({
-        ...baseMarkProps,
         markType: "path",
         transform: arcTranslate,
-        renderMode: renderValue,
         key: `groupIcon-${summaryI}-${i}`,
         d: arcGenerator({ startAngle, endAngle }),
         style: finalStyle
@@ -222,9 +218,7 @@ export const groupBarMark = ({
       })
 
       mappedBins.push({
-        ...baseMarkProps,
         markType: "rect",
-        renderMode: renderValue,
         key: `groupIcon-${summaryI}-${i}`,
         x: xProp,
         y: yProp,

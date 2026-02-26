@@ -177,7 +177,6 @@ summaryType={{ type: "heatmap",
   // customMark: function (default undefined) passed the following 
   //   exposed as an object in the first parameter
   //     d has the following parameters: { binItems, percent, value, gx, gy, gw, gh, x, y, parentSummary, _xyfCoordinates } 
-  //     baseMarkProps: an object from the Frame’s baseMarkProps property that is meant to be spread to all generated marks, like this edge
   //     margin, 
   //     styleFn: a function for determining the style object given \`d\` (passed through from the Frame from your summaryStyle)
   //     classFn: a function for determining the className given \`d\` (passed through from the Frame from your summaryClass)
@@ -225,7 +224,6 @@ summaryType={{ type: "hexbin",
   // customMark: function (default undefined) passed the following 
   //   exposed as an object in the first parameter
   //     d has the following parameters: { x, y, binItems (an array of items in the hex), percent, value, radius, hexCoordinates } 
-  //     baseMarkProps: an object from the Frame’s baseMarkProps property that is meant to be spread to all generated marks, like this edge
   //     margin, 
   //     styleFn: a function for determining the style object given \`d\` (passed through from the Frame from your summaryStyle)
   //     classFn: a function for determining the className given \`d\` (passed through from the Frame from your summaryClass)

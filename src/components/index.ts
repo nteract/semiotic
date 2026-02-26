@@ -24,11 +24,31 @@ import { ResponsiveOrdinalFrame } from "./ResponsiveOrdinalFrame"
 import { SparkXYFrame } from "./SparkXYFrame"
 import { SparkOrdinalFrame } from "./SparkOrdinalFrame"
 import { SparkNetworkFrame } from "./SparkNetworkFrame"
-import Mark from "./Mark/Mark"
 
 import { hexbinning, heatmapping } from "./svg/areaDrawing"
 
 import { nodesEdgesFromHierarchy } from "./processing/network"
+
+// Higher-order chart components
+import {
+  Scatterplot,
+  LineChart,
+  AreaChart,
+  Heatmap,
+  BubbleChart,
+  BarChart,
+  StackedBarChart,
+  SwarmPlot,
+  BoxPlot,
+  DotPlot,
+  ForceDirectedGraph,
+  ChordDiagram,
+  SankeyDiagram,
+  TreeDiagram
+} from "./charts"
+
+// Tooltip utilities
+import { Tooltip, MultiLineTooltip, normalizeTooltip } from "./Tooltip/Tooltip"
 
 export default {
   AnnotationLayer,
@@ -51,13 +71,31 @@ export default {
   SparkNetworkFrame,
   SparkXYFrame,
   Legend,
-  Mark,
   FacetController,
   funnelize,
   calculateDataExtent,
   hexbinning,
   heatmapping,
-  nodesEdgesFromHierarchy
+  nodesEdgesFromHierarchy,
+  // Higher-order chart components
+  Scatterplot,
+  LineChart,
+  AreaChart,
+  Heatmap,
+  BubbleChart,
+  BarChart,
+  StackedBarChart,
+  SwarmPlot,
+  BoxPlot,
+  DotPlot,
+  ForceDirectedGraph,
+  ChordDiagram,
+  SankeyDiagram,
+  TreeDiagram,
+  // Tooltip utilities
+  Tooltip,
+  MultiLineTooltip,
+  normalizeTooltip
 }
 
 export {
@@ -81,11 +119,29 @@ export {
   SparkNetworkFrame,
   SparkXYFrame,
   Legend,
-  Mark,
   funnelize,
   calculateDataExtent,
   FacetController,
   hexbinning,
   heatmapping,
-  nodesEdgesFromHierarchy
+  nodesEdgesFromHierarchy,
+  // Higher-order chart components
+  Scatterplot,
+  LineChart,
+  AreaChart,
+  Heatmap,
+  BubbleChart,
+  BarChart,
+  StackedBarChart,
+  SwarmPlot,
+  BoxPlot,
+  DotPlot,
+  ForceDirectedGraph,
+  ChordDiagram,
+  SankeyDiagram,
+  TreeDiagram,
+  // Tooltip utilities
+  Tooltip,
+  MultiLineTooltip,
+  normalizeTooltip
 }
