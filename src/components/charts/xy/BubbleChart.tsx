@@ -2,7 +2,8 @@ import * as React from "react"
 import { useMemo } from "react"
 import XYFrame from "../../XYFrame"
 import type { XYFrameProps } from "../../types/xyTypes"
-import { getColor, getSize, createColorScale } from "../shared/colorUtils"
+import { getColor, getSize } from "../shared/colorUtils"
+import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, AxisConfig, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -202,30 +203,14 @@ export function BubbleChart(props: BubbleChartProps) {
     frameProps = {}
   } = props
 
-  // Validate data
-  if (!data || data.length === 0) {
-    console.warn("BubbleChart: data prop is required and should not be empty")
-    return null
-  }
-
-  if (!sizeBy) {
-    console.warn("BubbleChart: sizeBy prop is required for bubble charts")
-    return null
-  }
+  const safeData = data || []
 
   // Create color scale if colorBy is specified
-  const colorScale = useMemo(() => {
-    if (!colorBy || typeof colorBy === "function") {
-      return undefined
-    }
-
-    const scheme = Array.isArray(colorScheme) ? colorScheme : colorScheme
-    return createColorScale(data, colorBy as string, scheme)
-  }, [data, colorBy, colorScheme])
+  const colorScale = useColorScale(safeData, colorBy, colorScheme)
 
   // Calculate size domain
   const sizeDomain = useMemo(() => {
-    const sizes = data.map((d) => {
+    const sizes = safeData.map((d) => {
       if (typeof sizeBy === "function") {
         return sizeBy(d)
       }
@@ -233,7 +218,7 @@ export function BubbleChart(props: BubbleChartProps) {
     })
 
     return [Math.min(...sizes), Math.max(...sizes)] as [number, number]
-  }, [data, sizeBy])
+  }, [safeData, sizeBy])
 
   // Point style function
   const pointStyle = useMemo(() => {
@@ -248,7 +233,7 @@ export function BubbleChart(props: BubbleChartProps) {
       if (colorBy) {
         baseStyle.fill = getColor(d, colorBy, colorScale)
       } else {
-        baseStyle.fill = "#007bff"
+        baseStyle.fill = DEFAULT_COLOR
       }
 
       // Apply size
@@ -289,14 +274,14 @@ export function BubbleChart(props: BubbleChartProps) {
     if (!shouldShowLegend || !colorBy) return undefined
 
     return createLegend({
-      data,
+      data: safeData,
       colorBy,
       colorScale,
       getColor,
       strokeColor: bubbleStrokeColor,
       strokeWidth: bubbleStrokeWidth
     })
-  }, [shouldShowLegend, colorBy, data, colorScale, bubbleStrokeColor, bubbleStrokeWidth])
+  }, [shouldShowLegend, colorBy, safeData, colorScale, bubbleStrokeColor, bubbleStrokeWidth])
 
   // Adjust margin for legend if present
   const margin = useMemo(() => {
@@ -311,10 +296,21 @@ export function BubbleChart(props: BubbleChartProps) {
     return finalMargin
   }, [userMargin, legend])
 
+  // Validate data (after all hooks)
+  if (safeData.length === 0) {
+    console.warn("BubbleChart: data prop is required and should not be empty")
+    return null
+  }
+
+  if (!sizeBy) {
+    console.warn("BubbleChart: sizeBy prop is required for bubble charts")
+    return null
+  }
+
   // Build XYFrame props
   const xyFrameProps: XYFrameProps = {
     size: [width, height],
-    points: data,
+    points: safeData,
     xAccessor,
     yAccessor,
     pointStyle,
@@ -332,6 +328,3 @@ export function BubbleChart(props: BubbleChartProps) {
 
   return <XYFrame {...xyFrameProps} />
 }
-
-// Export default for convenience
-export default BubbleChart

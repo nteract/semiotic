@@ -68,6 +68,9 @@ export type { TreeDiagramProps } from "./network/TreeDiagram"
 // Re-export shared types for convenience
 export type { BaseChartProps, AxisConfig, Accessor } from "./shared/types"
 
+// Shared hooks for building custom chart wrappers
+export { useColorScale, useSortedData, DEFAULT_COLOR } from "./shared/hooks"
+
 // Color utilities (if users want to use them directly)
 export {
   COLOR_SCHEMES,

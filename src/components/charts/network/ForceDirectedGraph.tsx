@@ -2,10 +2,11 @@ import * as React from "react"
 import { useMemo } from "react"
 import NetworkFrame from "../../NetworkFrame"
 import type { NetworkFrameProps } from "../../types/networkTypes"
-import { getColor, createColorScale, getSize } from "../shared/colorUtils"
+import { getColor, getSize } from "../shared/colorUtils"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 
 /**
  * ForceDirectedGraph component props
@@ -243,33 +244,19 @@ export function ForceDirectedGraph(props: ForceDirectedGraphProps) {
     frameProps = {}
   } = props
 
-  // Validate data
-  if (!nodes || nodes.length === 0) {
-    console.warn("ForceDirectedGraph: nodes prop is required and should not be empty")
-    return null
-  }
-
-  if (!edges || edges.length === 0) {
-    console.warn("ForceDirectedGraph: edges prop is required and should not be empty")
-    return null
-  }
+  // Safe data defaults (hooks must always run)
+  const safeNodes = nodes || []
+  const safeEdges = edges || []
 
   // Create color scale if colorBy is specified
-  const colorScale = useMemo(() => {
-    if (!colorBy || typeof colorBy === "function") {
-      return undefined
-    }
-
-    const scheme = Array.isArray(colorScheme) ? colorScheme : colorScheme
-    return createColorScale(nodes, colorBy as string, scheme)
-  }, [nodes, colorBy, colorScheme])
+  const colorScale = useColorScale(safeNodes, colorBy, colorScheme)
 
   // Calculate node size domain if dynamic sizing
   const nodeSizeDomain = useMemo(() => {
     if (typeof nodeSize === "number") return undefined
     if (!nodeSize) return undefined
 
-    const sizes = nodes.map((d) => {
+    const sizes = safeNodes.map((d) => {
       if (typeof nodeSize === "function") {
         return nodeSize(d)
       }
@@ -277,7 +264,7 @@ export function ForceDirectedGraph(props: ForceDirectedGraphProps) {
     })
 
     return [Math.min(...sizes), Math.max(...sizes)] as [number, number]
-  }, [nodes, nodeSize])
+  }, [safeNodes, nodeSize])
 
   // Node style function
   const nodeStyle = useMemo(() => {
@@ -288,7 +275,7 @@ export function ForceDirectedGraph(props: ForceDirectedGraphProps) {
       if (colorBy) {
         baseStyle.fill = getColor(d, colorBy, colorScale)
       } else {
-        baseStyle.fill = "#007bff"
+        baseStyle.fill = DEFAULT_COLOR
       }
 
       // Apply size
@@ -345,12 +332,12 @@ export function ForceDirectedGraph(props: ForceDirectedGraphProps) {
     if (!shouldShowLegend || !colorBy) return undefined
 
     return createLegend({
-      data: nodes,
+      data: safeNodes,
       colorBy,
       colorScale,
       getColor
     })
-  }, [shouldShowLegend, colorBy, nodes, colorScale])
+  }, [shouldShowLegend, colorBy, safeNodes, colorScale])
 
   // Adjust margin for legend if present
   const margin = useMemo(() => {
@@ -365,11 +352,22 @@ export function ForceDirectedGraph(props: ForceDirectedGraphProps) {
     return finalMargin
   }, [userMargin, legend])
 
+  // Validate data (after all hooks)
+  if (!nodes || nodes.length === 0) {
+    console.warn("ForceDirectedGraph: nodes prop is required and should not be empty")
+    return null
+  }
+
+  if (!edges || edges.length === 0) {
+    console.warn("ForceDirectedGraph: edges prop is required and should not be empty")
+    return null
+  }
+
   // Build NetworkFrame props
   const networkFrameProps: NetworkFrameProps = {
     size: [width, height],
-    nodes,
-    edges,
+    nodes: safeNodes,
+    edges: safeEdges,
     nodeIDAccessor,
     sourceAccessor,
     targetAccessor,
@@ -390,6 +388,3 @@ export function ForceDirectedGraph(props: ForceDirectedGraphProps) {
 
   return <NetworkFrame {...networkFrameProps} />
 }
-
-// Export default for convenience
-export default ForceDirectedGraph

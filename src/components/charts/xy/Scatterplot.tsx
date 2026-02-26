@@ -2,184 +2,57 @@ import * as React from "react"
 import { useMemo } from "react"
 import XYFrame from "../../XYFrame"
 import type { XYFrameProps } from "../../types/xyTypes"
-import { getColor, getSize, createColorScale } from "../shared/colorUtils"
+import { getColor, getSize } from "../shared/colorUtils"
 import { createLegend } from "../shared/legendUtils"
-import { formatAxis } from "../shared/formatUtils"
 import type { BaseChartProps, AxisConfig, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 
 /**
  * Scatterplot component props
  */
 export interface ScatterplotProps extends BaseChartProps, AxisConfig {
-  /**
-   * Array of data points. Each point should have x and y properties.
-   * @example
-   * ```ts
-   * [{x: 1, y: 10, category: 'A'}, {x: 2, y: 20, category: 'B'}]
-   * ```
-   */
+  /** Array of data points. Each point should have x and y properties. */
   data: Array<Record<string, any>>
-
-  /**
-   * Field name or function to access x values
-   * @default "x"
-   */
+  /** Field name or function to access x values @default "x" */
   xAccessor?: Accessor<number>
-
-  /**
-   * Field name or function to access y values
-   * @default "y"
-   */
+  /** Field name or function to access y values @default "y" */
   yAccessor?: Accessor<number>
-
-  /**
-   * Field name or function to determine point color
-   * @example
-   * ```ts
-   * colorBy="category"  // Use category field
-   * colorBy={d => d.value > 10 ? 'red' : 'blue'}  // Use function
-   * ```
-   */
+  /** Field name or function to determine point color */
   colorBy?: Accessor<string>
-
-  /**
-   * Color scheme for categorical data or custom colors array
-   * @default "category10"
-   */
+  /** Color scheme for categorical data or custom colors array @default "category10" */
   colorScheme?: string | string[]
-
-  /**
-   * Field name or function to determine point size
-   * @example
-   * ```ts
-   * sizeBy="importance"
-   * sizeBy={d => Math.sqrt(d.value)}
-   * ```
-   */
+  /** Field name or function to determine point size */
   sizeBy?: Accessor<number>
-
-  /**
-   * Min and max radius for points
-   * @default [3, 15]
-   */
+  /** Min and max radius for points @default [3, 15] */
   sizeRange?: [number, number]
-
-  /**
-   * Default point radius when sizeBy is not specified
-   * @default 5
-   */
+  /** Default point radius when sizeBy is not specified @default 5 */
   pointRadius?: number
-
-  /**
-   * Point opacity
-   * @default 0.8
-   */
+  /** Point opacity @default 0.8 */
   pointOpacity?: number
-
-  /**
-   * Enable hover annotations
-   * @default true
-   */
+  /** Enable hover annotations @default true */
   enableHover?: boolean
-
-  /**
-   * Show grid lines
-   * @default false
-   */
+  /** Show grid lines @default false */
   showGrid?: boolean
-
-  /**
-   * Show legend
-   * @default true (when colorBy is specified)
-   */
+  /** Show legend @default true (when colorBy is specified) */
   showLegend?: boolean
-
-  /**
-   * Tooltip configuration
-   * @example
-   * ```tsx
-   * // Simple tooltip with default behavior
-   * tooltip={true}
-   *
-   * // Custom tooltip with specific fields
-   * tooltip={Tooltip({ title: "name", format: v => v.toFixed(2) })}
-   *
-   * // Multi-line tooltip
-   * tooltip={MultiLineTooltip({ fields: ["x", "y", "category"] })}
-   *
-   * // Custom tooltip function
-   * tooltip={(d) => <div>{d.name}: {d.value}</div>}
-   * ```
-   */
+  /** Tooltip configuration */
   tooltip?: TooltipProp
-
-  /**
-   * Additional XYFrame props for advanced customization
-   * For full control, consider using XYFrame directly
-   * @see https://semiotic.nteract.io/guides/xy-frame
-   */
+  /** Additional XYFrame props for advanced customization */
   frameProps?: Partial<Omit<XYFrameProps, "points" | "size">>
 }
 
 /**
  * Scatterplot - Visualize relationships between two continuous variables
  *
- * A simplified wrapper around XYFrame for creating scatter plots. Perfect for
- * exploring correlations, distributions, and patterns in your data.
- *
  * @example
  * ```tsx
- * // Simple scatter plot
  * <Scatterplot
- *   data={[
- *     {x: 1, y: 10},
- *     {x: 2, y: 20},
- *     {x: 3, y: 15}
- *   ]}
+ *   data={[{x: 1, y: 10}, {x: 2, y: 20}]}
  *   xLabel="Time"
  *   yLabel="Value"
  * />
  * ```
- *
- * @example
- * ```tsx
- * // With color and size encoding
- * <Scatterplot
- *   data={data}
- *   colorBy="category"
- *   sizeBy="importance"
- *   xLabel="X Axis"
- *   yLabel="Y Axis"
- *   pointOpacity={0.6}
- * />
- * ```
- *
- * @example
- * ```tsx
- * // Advanced: Override XYFrame props
- * <Scatterplot
- *   data={data}
- *   xAccessor={d => d.customX}
- *   yAccessor={d => d.customY}
- *   frameProps={{
- *     customPointMark: ({ d }) => <circle r={10} fill="red" />
- *   }}
- * />
- * ```
- *
- * @remarks
- * This component wraps {@link XYFrame} with sensible defaults for scatter plots.
- * For more advanced features like custom marks, annotations, or complex interactions,
- * use XYFrame directly.
- *
- * **Breadcrumb to advanced usage:**
- * - Use the `frameProps` prop to pass any XYFrame prop
- * - See XYFrame documentation: https://semiotic.nteract.io/guides/xy-frame
- * - All XYFrame props are available via `frameProps`
- *
- * @param props - Scatterplot configuration
- * @returns Rendered scatter plot
  */
 export function Scatterplot(props: ScatterplotProps) {
   const {
@@ -208,116 +81,63 @@ export function Scatterplot(props: ScatterplotProps) {
     frameProps = {}
   } = props
 
-  // Validate data
-  if (!data || data.length === 0) {
-    console.warn("Scatterplot: data prop is required and should not be empty")
-    return null
-  }
+  const safeData = data || []
 
-  // Create color scale if colorBy is specified
-  const colorScale = useMemo(() => {
-    if (!colorBy || typeof colorBy === "function") {
-      return undefined
-    }
+  const colorScale = useColorScale(safeData, colorBy, colorScheme)
 
-    const scheme = Array.isArray(colorScheme) ? colorScheme : colorScheme
-    return createColorScale(data, colorBy as string, scheme)
-  }, [data, colorBy, colorScheme])
-
-  // Calculate size domain if sizeBy is specified
   const sizeDomain = useMemo(() => {
-    if (!sizeBy) return undefined
-
-    const sizes = data.map((d) => {
-      if (typeof sizeBy === "function") {
-        return sizeBy(d)
-      }
-      return d[sizeBy]
-    })
-
+    if (!sizeBy || safeData.length === 0) return undefined
+    const sizes = safeData.map((d) =>
+      typeof sizeBy === "function" ? sizeBy(d) : d[sizeBy]
+    )
     return [Math.min(...sizes), Math.max(...sizes)] as [number, number]
-  }, [data, sizeBy])
+  }, [safeData, sizeBy])
 
-  // Point style function
   const pointStyle = useMemo(() => {
     return (d: any) => {
-      const baseStyle: any = {
-        fillOpacity: pointOpacity
-      }
-
-      // Apply color
-      if (colorBy) {
-        baseStyle.fill = getColor(d, colorBy, colorScale)
-      } else {
-        baseStyle.fill = "#007bff"
-      }
-
-      // Apply size
-      if (sizeBy) {
-        baseStyle.r = getSize(d, sizeBy, sizeRange, sizeDomain)
-      } else {
-        baseStyle.r = pointRadius
-      }
-
+      const baseStyle: any = { fillOpacity: pointOpacity }
+      baseStyle.fill = colorBy ? getColor(d, colorBy, colorScale) : DEFAULT_COLOR
+      baseStyle.r = sizeBy
+        ? getSize(d, sizeBy, sizeRange, sizeDomain)
+        : pointRadius
       return baseStyle
     }
   }, [colorBy, colorScale, sizeBy, sizeRange, sizeDomain, pointRadius, pointOpacity])
 
-  // Build axes configuration
-  const axes = useMemo(() => {
-    const axesConfig: any[] = []
-
-    // Y axis (left)
-    axesConfig.push({
+  const axes = useMemo((): any[] => [
+    {
       orient: "left",
       label: yLabel,
       tickFormat: yFormat,
       ...(showGrid && { tickLineGenerator: () => null })
-    })
-
-    // X axis (bottom)
-    axesConfig.push({
+    },
+    {
       orient: "bottom",
       label: xLabel,
       tickFormat: xFormat,
       ...(showGrid && { tickLineGenerator: () => null })
-    })
+    }
+  ], [xLabel, yLabel, xFormat, yFormat, showGrid])
 
-    return axesConfig
-  }, [xLabel, yLabel, xFormat, yFormat, showGrid])
-
-  // Determine if we should show legend
   const shouldShowLegend = showLegend !== undefined ? showLegend : !!colorBy
 
-  // Build legend if needed
   const legend = useMemo(() => {
     if (!shouldShowLegend || !colorBy) return undefined
+    return createLegend({ data: safeData, colorBy, colorScale, getColor })
+  }, [shouldShowLegend, colorBy, safeData, colorScale])
 
-    return createLegend({
-      data,
-      colorBy,
-      colorScale,
-      getColor
-    })
-  }, [shouldShowLegend, colorBy, data, colorScale])
-
-  // Adjust margin for legend if present
   const margin = useMemo(() => {
-    const defaultMargin = { top: 50, bottom: 60, left: 70, right: 40 }
-    const finalMargin = { ...defaultMargin, ...userMargin }
-
-    // If legend is present and right margin is too small, increase it
-    if (legend && finalMargin.right < 120) {
-      finalMargin.right = 120
-    }
-
+    const finalMargin = { top: 50, bottom: 60, left: 70, right: 40, ...userMargin }
+    if (legend && finalMargin.right < 120) finalMargin.right = 120
     return finalMargin
   }, [userMargin, legend])
 
-  // Build XYFrame props
+  // Validate after all hooks (Rules of Hooks compliance)
+  if (safeData.length === 0) return null
+
   const xyFrameProps: XYFrameProps = {
     size: [width, height],
-    points: data,
+    points: safeData,
     xAccessor,
     yAccessor,
     pointStyle,
@@ -327,14 +147,9 @@ export function Scatterplot(props: ScatterplotProps) {
     ...(legend && { legend }),
     ...(className && { className }),
     ...(title && { title }),
-    // Add tooltip support
     ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) }),
-    // Allow frameProps to override defaults
     ...frameProps
   }
 
   return <XYFrame {...xyFrameProps} />
 }
-
-// Export default for convenience
-export default Scatterplot

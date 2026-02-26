@@ -2,7 +2,8 @@ import * as React from "react"
 import { useMemo } from "react"
 import OrdinalFrame from "../../OrdinalFrame"
 import type { OrdinalFrameProps } from "../../types/ordinalTypes"
-import { getColor, createColorScale } from "../shared/colorUtils"
+import { getColor } from "../shared/colorUtils"
+import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -124,14 +125,12 @@ export interface BoxPlotProps extends BaseChartProps {
 }
 
 /**
- * BoxPlot - Visualize statistical distributions with box-and-whisker plots
+ * BoxPlot - Visualize statistical distributions with box-and-whisker plots.
  *
  * A simplified wrapper around OrdinalFrame for creating box plots.
- * Perfect for showing quartiles, median, and outliers in your data.
  *
  * @example
  * ```tsx
- * // Simple box plot
  * <BoxPlot
  *   data={[
  *     {category: 'Group A', value: 10},
@@ -145,41 +144,6 @@ export interface BoxPlotProps extends BaseChartProps {
  *   valueLabel="Value"
  * />
  * ```
- *
- * @example
- * ```tsx
- * // With color encoding
- * <BoxPlot
- *   data={data}
- *   colorBy="category"
- *   showOutliers={true}
- *   categoryLabel="Category"
- *   valueLabel="Measurement"
- * />
- * ```
- *
- * @example
- * ```tsx
- * // Horizontal orientation
- * <BoxPlot
- *   data={data}
- *   orientation="horizontal"
- *   colorScheme="tableau10"
- * />
- * ```
- *
- * @remarks
- * This component wraps {@link OrdinalFrame} with sensible defaults for box plots.
- * For more advanced features like custom summary rendering or violin plots,
- * use OrdinalFrame directly.
- *
- * **Breadcrumb to advanced usage:**
- * - Use the `frameProps` prop to pass any OrdinalFrame prop
- * - See OrdinalFrame documentation: https://semiotic.nteract.io/guides/ordinal-frame
- * - All OrdinalFrame props are available via `frameProps`
- *
- * @param props - BoxPlot configuration
- * @returns Rendered box plot
  */
 export function BoxPlot(props: BoxPlotProps) {
   const {
@@ -207,21 +171,10 @@ export function BoxPlot(props: BoxPlotProps) {
     frameProps = {}
   } = props
 
-  // Validate data
-  if (!data || data.length === 0) {
-    console.warn("BoxPlot: data prop is required and should not be empty")
-    return null
-  }
+  const safeData = data || []
 
   // Create color scale if colorBy is specified
-  const colorScale = useMemo(() => {
-    if (!colorBy || typeof colorBy === "function") {
-      return undefined
-    }
-
-    const scheme = Array.isArray(colorScheme) ? colorScheme : colorScheme
-    return createColorScale(data, colorBy as string, scheme)
-  }, [data, colorBy, colorScheme])
+  const colorScale = useColorScale(safeData, colorBy, colorScheme)
 
   // Summary style function for boxes
   const summaryStyle = useMemo(() => {
@@ -234,7 +187,7 @@ export function BoxPlot(props: BoxPlotProps) {
       if (colorBy) {
         baseStyle.fill = getColor(d, colorBy, colorScale)
       } else {
-        baseStyle.fill = "#007bff"
+        baseStyle.fill = DEFAULT_COLOR
       }
 
       return baseStyle
@@ -253,10 +206,9 @@ export function BoxPlot(props: BoxPlotProps) {
 
       // Apply color (try to match box color)
       if (colorBy) {
-        // For outliers, try to get the category from the data
         baseStyle.fill = getColor(d, colorBy, colorScale)
       } else {
-        baseStyle.fill = "#007bff"
+        baseStyle.fill = DEFAULT_COLOR
       }
 
       return baseStyle
@@ -310,12 +262,12 @@ export function BoxPlot(props: BoxPlotProps) {
     if (!shouldShowLegend || !colorBy) return undefined
 
     return createLegend({
-      data,
+      data: safeData,
       colorBy,
       colorScale,
       getColor
     })
-  }, [shouldShowLegend, colorBy, data, colorScale])
+  }, [shouldShowLegend, colorBy, safeData, colorScale])
 
   // Adjust margin for legend if present
   const margin = useMemo(() => {
@@ -330,10 +282,16 @@ export function BoxPlot(props: BoxPlotProps) {
     return finalMargin
   }, [userMargin, legend])
 
+  // Validate data (after all hooks)
+  if (safeData.length === 0) {
+    console.warn("BoxPlot: data prop is required and should not be empty")
+    return null
+  }
+
   // Build OrdinalFrame props
   const ordinalFrameProps: OrdinalFrameProps = {
     size: [width, height],
-    data,
+    data: safeData,
     oAccessor: categoryAccessor,
     rAccessor: valueAccessor,
     summaryType: { type: "boxplot", outliers: showOutliers } as any,
@@ -355,6 +313,3 @@ export function BoxPlot(props: BoxPlotProps) {
 
   return <OrdinalFrame {...ordinalFrameProps} />
 }
-
-// Export default for convenience
-export default BoxPlot

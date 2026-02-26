@@ -2,7 +2,8 @@ import * as React from "react"
 import { useMemo } from "react"
 import OrdinalFrame from "../../OrdinalFrame"
 import type { OrdinalFrameProps } from "../../types/ordinalTypes"
-import { getColor, getSize, createColorScale } from "../shared/colorUtils"
+import { getColor, getSize } from "../shared/colorUtils"
+import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -139,14 +140,12 @@ export interface SwarmPlotProps extends BaseChartProps {
 }
 
 /**
- * SwarmPlot - Visualize distributions with non-overlapping points
+ * SwarmPlot - Visualize distributions with non-overlapping points.
  *
  * A simplified wrapper around OrdinalFrame for creating swarm plots (beeswarm plots).
- * Perfect for showing individual data points while revealing distribution patterns.
  *
  * @example
  * ```tsx
- * // Simple swarm plot
  * <SwarmPlot
  *   data={[
  *     {category: 'Group A', value: 10},
@@ -159,43 +158,6 @@ export interface SwarmPlotProps extends BaseChartProps {
  *   valueLabel="Value"
  * />
  * ```
- *
- * @example
- * ```tsx
- * // With color and size encoding
- * <SwarmPlot
- *   data={data}
- *   colorBy="type"
- *   sizeBy="importance"
- *   pointOpacity={0.8}
- *   categoryLabel="Category"
- *   valueLabel="Measurement"
- * />
- * ```
- *
- * @example
- * ```tsx
- * // Horizontal orientation
- * <SwarmPlot
- *   data={data}
- *   orientation="horizontal"
- *   colorBy="group"
- *   colorScheme="tableau10"
- * />
- * ```
- *
- * @remarks
- * This component wraps {@link OrdinalFrame} with sensible defaults for swarm plots.
- * For more advanced features like custom point marks or force simulation settings,
- * use OrdinalFrame directly.
- *
- * **Breadcrumb to advanced usage:**
- * - Use the `frameProps` prop to pass any OrdinalFrame prop
- * - See OrdinalFrame documentation: https://semiotic.nteract.io/guides/ordinal-frame
- * - All OrdinalFrame props are available via `frameProps`
- *
- * @param props - SwarmPlot configuration
- * @returns Rendered swarm plot
  */
 export function SwarmPlot(props: SwarmPlotProps) {
   const {
@@ -225,27 +187,16 @@ export function SwarmPlot(props: SwarmPlotProps) {
     frameProps = {}
   } = props
 
-  // Validate data
-  if (!data || data.length === 0) {
-    console.warn("SwarmPlot: data prop is required and should not be empty")
-    return null
-  }
+  const safeData = data || []
 
   // Create color scale if colorBy is specified
-  const colorScale = useMemo(() => {
-    if (!colorBy || typeof colorBy === "function") {
-      return undefined
-    }
-
-    const scheme = Array.isArray(colorScheme) ? colorScheme : colorScheme
-    return createColorScale(data, colorBy as string, scheme)
-  }, [data, colorBy, colorScheme])
+  const colorScale = useColorScale(safeData, colorBy, colorScheme)
 
   // Calculate size domain if sizeBy is specified
   const sizeDomain = useMemo(() => {
     if (!sizeBy) return undefined
 
-    const sizes = data.map((d) => {
+    const sizes = safeData.map((d) => {
       if (typeof sizeBy === "function") {
         return sizeBy(d)
       }
@@ -253,7 +204,7 @@ export function SwarmPlot(props: SwarmPlotProps) {
     })
 
     return [Math.min(...sizes), Math.max(...sizes)] as [number, number]
-  }, [data, sizeBy])
+  }, [safeData, sizeBy])
 
   // Point style function
   const pieceStyle = useMemo(() => {
@@ -266,7 +217,7 @@ export function SwarmPlot(props: SwarmPlotProps) {
       if (colorBy) {
         baseStyle.fill = getColor(d, colorBy, colorScale)
       } else {
-        baseStyle.fill = "#007bff"
+        baseStyle.fill = DEFAULT_COLOR
       }
 
       // Apply size
@@ -327,12 +278,12 @@ export function SwarmPlot(props: SwarmPlotProps) {
     if (!shouldShowLegend || !colorBy) return undefined
 
     return createLegend({
-      data,
+      data: safeData,
       colorBy,
       colorScale,
       getColor
     })
-  }, [shouldShowLegend, colorBy, data, colorScale])
+  }, [shouldShowLegend, colorBy, safeData, colorScale])
 
   // Adjust margin for legend if present
   const margin = useMemo(() => {
@@ -347,10 +298,16 @@ export function SwarmPlot(props: SwarmPlotProps) {
     return finalMargin
   }, [userMargin, legend])
 
+  // Validate data (after all hooks)
+  if (safeData.length === 0) {
+    console.warn("SwarmPlot: data prop is required and should not be empty")
+    return null
+  }
+
   // Build OrdinalFrame props
   const ordinalFrameProps: OrdinalFrameProps = {
     size: [width, height],
-    data,
+    data: safeData,
     oAccessor: categoryAccessor,
     rAccessor: valueAccessor,
     type: "swarm",
@@ -371,6 +328,3 @@ export function SwarmPlot(props: SwarmPlotProps) {
 
   return <OrdinalFrame {...ordinalFrameProps} />
 }
-
-// Export default for convenience
-export default SwarmPlot

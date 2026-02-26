@@ -5,6 +5,7 @@ import type { NetworkFrameProps } from "../../types/networkTypes"
 import { getColor, createColorScale } from "../shared/colorUtils"
 import type { BaseChartProps, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 
 /**
  * TreeDiagram component props
@@ -242,14 +243,9 @@ export function TreeDiagram(props: TreeDiagramProps) {
     frameProps = {}
   } = props
 
-  // Validate data
-  if (!data) {
-    console.warn("TreeDiagram: data prop is required")
-    return null
-  }
-
   // Flatten hierarchy to get all nodes for color scale
   const allNodes = useMemo(() => {
+    if (!data) return []
     const nodes: any[] = []
     const traverse = (node: any) => {
       nodes.push(node)
@@ -299,7 +295,7 @@ export function TreeDiagram(props: TreeDiagramProps) {
         baseStyle.fill = getColor(d, colorBy as any, colorScale)
       } else {
         // Default color
-        baseStyle.fill = "#00a2ce"
+        baseStyle.fill = DEFAULT_COLOR
       }
 
       return baseStyle
@@ -357,6 +353,12 @@ export function TreeDiagram(props: TreeDiagramProps) {
     return undefined
   }, [layout, valueAccessor])
 
+  // Validate data (after all hooks)
+  if (!data) {
+    console.warn("TreeDiagram: data prop is required")
+    return null
+  }
+
   // Build NetworkFrame props
   const networkFrameProps: NetworkFrameProps = {
     size: [width, height],
@@ -382,6 +384,3 @@ export function TreeDiagram(props: TreeDiagramProps) {
 
   return <NetworkFrame {...networkFrameProps} />
 }
-
-// Export default for convenience
-export default TreeDiagram

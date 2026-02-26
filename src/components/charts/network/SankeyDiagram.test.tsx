@@ -3,6 +3,21 @@ import { render } from "@testing-library/react"
 import { SankeyDiagram } from "./SankeyDiagram"
 import { TooltipProvider } from "../../store/TooltipStore"
 
+// JSDOM does not support SVG measurement methods used by node labels
+beforeAll(() => {
+  const proto = SVGElement.prototype as any
+  if (!proto.getComputedTextLength) {
+    proto.getComputedTextLength = function () {
+      return 0
+    }
+  }
+  if (!proto.getBBox) {
+    proto.getBBox = function () {
+      return { x: 0, y: 0, width: 0, height: 0 }
+    }
+  }
+})
+
 describe("SankeyDiagram", () => {
   const sampleEdges = [
     { source: "A", target: "D", value: 100 },
