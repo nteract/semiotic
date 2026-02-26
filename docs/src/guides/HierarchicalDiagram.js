@@ -3,8 +3,8 @@ import MarkdownText from "../MarkdownText"
 import DocumentFrame from "../DocumentFrame"
 import { NetworkFrame } from "semiotic"
 import theme from "../theme"
+import flareData from "../../public/data/flare.json"
 
-const ROOT = process.env.PUBLIC_URL
 const nodeStyle = d => ({
   fill: theme[d.depth],
   stroke: theme[d.depth],
@@ -277,38 +277,12 @@ const treemapOverrideProps = {
   })`
 }
 
-export default class HierarchicalDiagrams extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = { data: null }
-  }
-
-  componentDidMount() {
-    fetch(`${ROOT}/data/flare.json`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-        return response.json()
-      })
-      .then(data => {
-        this.setState({ data })
-      })
-      .catch(error => {
-        console.error('Error loading flare.json:', error)
-        this.setState({ error: error.message })
-      })
-  }
-
-  render() {
-    if (this.state.error) return <div>Error: {this.state.error}</div>
-    if (!this.state.data) return "Loading..."
-
-    return (
-      <div>
-        <MarkdownText
-          text={`
-\`NetworkFrame\` allows you to render several hierarchical data visualizations. For these examples you just pass an \`edges\` list and no \`nodes\`. Edges should be an object with an array of \`children\` containing objects with \`children\` all the way down the hierarchy. The assumption is that each child's \`id\` property is unique. These types of hierarchies can be created easily from a parent/child  list with d3's [stratify](https://github.com/d3/d3-hierarchy#stratify) functionality.  
+const HierarchicalDiagrams = () => {
+  return (
+    <div>
+      <MarkdownText
+        text={`
+\`NetworkFrame\` allows you to render several hierarchical data visualizations. For these examples you just pass an \`edges\` list and no \`nodes\`. Edges should be an object with an array of \`children\` containing objects with \`children\` all the way down the hierarchy. The assumption is that each child's \`id\` property is unique. These types of hierarchies can be created easily from a parent/child  list with d3's [stratify](https://github.com/d3/d3-hierarchy#stratify) functionality.
 
 The built-in hierarchical types are \`tree\`, \`cluster\`, \`circlepack\`, \`treemap\`, and \`partition\`
 
@@ -316,131 +290,131 @@ The data on this page use the [Flare visualization toolkit](https://github.com/p
 
 ## Dendrogram
 
-The dendrogram uses [d3-hierarchy's tree layout](https://github.com/d3/d3-hierarchy#tree) for placing nodes. 
+The dendrogram uses [d3-hierarchy's tree layout](https://github.com/d3/d3-hierarchy#tree) for placing nodes.
 
 In this example, we pass a hierarchical edge object and set \`networkType="tree" \`. You can also use \`networkType="cluster"\` to instead align the children nodes, mirroring [d3-hierarchy's cluster layout](https://github.com/d3/d3-hierarchy#cluster)
 `}
-        />
-        <DocumentFrame
-          frameProps={{ ...tree, edges: this.state.data }}
-          overrideProps={treeOverride}
-          type={NetworkFrame}
-        />
-        <MarkdownText
-          text={`
+      />
+      <DocumentFrame
+        frameProps={{ ...tree, edges: flareData }}
+        overrideProps={treeOverride}
+        type={NetworkFrame}
+      />
+      <MarkdownText
+        text={`
 ### Dendrogram/Cluster Settings
 
-Instead of sending \`networkType\` as a string, you can pass an object with additional layout options. 
+Instead of sending \`networkType\` as a string, you can pass an object with additional layout options.
 
 You can also pass any parameters for [d3-hierarchy's tree layout](https://github.com/d3/d3-hierarchy#tree)
 
 \`\`\`jsx
-networkType={{ 
+networkType={{
   type: "tree", // Could also be "cluster"
   zoom: true, // Zoom the laid out nodes in or out so that they fit the specified size, can also be "stretch" if you want zoom not to maintain aspect ratio
   padding: 0, // Pixel value to separate individual nodes from each other
   projection: "vertical", // Accepts (vertical|horizontal|radial) whether to display the chart with steps laid out on the y axis (vertical) or the x axis (horizontal)
   hierarhcySum: d => d.value, // Function for summing up children values into parent totals
-  hierarchyChildren: d => d.children // Function describing how children are defined in the hierarchical dataset, which will be passed as the second value to d3-hierarchy’s hierarchy function
+  hierarchyChildren: d => d.children // Function describing how children are defined in the hierarchical dataset, which will be passed as the second value to d3-hierarchy's hierarchy function
 }}\`\`\`
 `}
-        />
+      />
 
-        <MarkdownText
-          text={`
+      <MarkdownText
+        text={`
 
 ## Circle Pack
 
 This example is the same as the dendrogram except we are passing \`networkType="circlepack"\` and changing the logic for the \`nodeStyle\` and \`nodeLabel\`.
 
 `}
-        />
-        <DocumentFrame
-          frameProps={{ ...circlepack, edges: this.state.data }}
-          overrideProps={circlepackOverrideProps}
-          type={NetworkFrame}
-          startHidden
-        />
+      />
+      <DocumentFrame
+        frameProps={{ ...circlepack, edges: flareData }}
+        overrideProps={circlepackOverrideProps}
+        type={NetworkFrame}
+        startHidden
+      />
 
-        <MarkdownText
-          text={`
+      <MarkdownText
+        text={`
 
 ### Circle Pack Settings
 
-Instead of sending \`networkType\` as a string, you can pass an object with additional layout options. 
+Instead of sending \`networkType\` as a string, you can pass an object with additional layout options.
 
 You can also pass any parameters for [d3-hierarchy's pack layout](https://github.com/d3/d3-hierarchy#pack)
 
 \`\`\`jsx
-networkType={{ 
-  type: "circlepack", 
+networkType={{
+  type: "circlepack",
   zoom: true, // Zoom the laid out nodes in or out so that they fit the specified size, can also be "stretch" if you want zoom not to maintain aspect ratio
   padding: 0, // Pixel value to separate individual nodes from each other
   hierarhcySum: d => d.value, // Function for summing up children values into parent totals
-  hierarchyChildren: d => d.children // Function describing how children are defined in the hierarchical dataset, which will be passed as the second value to d3-hierarchy’s hierarchy function,
+  hierarchyChildren: d => d.children // Function describing how children are defined in the hierarchical dataset, which will be passed as the second value to d3-hierarchy's hierarchy function,
 }}\`\`\`
 `}
-        />
+      />
 
-        <MarkdownText
-          text={`
+      <MarkdownText
+        text={`
 
 ## Treemap
 
 This example is the same as the dendrogram except we are passing \`networkType="treemap"\`.
 `}
-        />
+      />
 
-        <DocumentFrame
-          frameProps={{ ...treemap, edges: this.state.data }}
-          overrideProps={treemapOverrideProps}
-          type={NetworkFrame}
-          startHidden
-        />
+      <DocumentFrame
+        frameProps={{ ...treemap, edges: flareData }}
+        overrideProps={treemapOverrideProps}
+        type={NetworkFrame}
+        startHidden
+      />
 
-        <MarkdownText
-          text={`
+      <MarkdownText
+        text={`
 
 ### Treemap Settings
 
-Instead of sending \`networkType\` as a string, you can pass an object with additional layout options. 
+Instead of sending \`networkType\` as a string, you can pass an object with additional layout options.
 
 You can also pass any parameters for [d3-hierarchy's treemap layout](https://github.com/d3/d3-hierarchy#treemap)
 
 \`\`\`jsx
 networkType={{
-  type: "treemap", 
+  type: "treemap",
   zoom: true, // Zoom the laid out nodes in or out so that they fit the specified size, can also be "stretch" if you want zoom not to maintain aspect ratio
   padding: 0, // Pixel value to separate individual nodes from each other
   projection: "vertical", // Accepts (vertical|horizontal) whether to display the chart with steps laid out on the y axis (vertical) or the x axis (horizontal)
   hierarhcySum: d => d.value, // Function for summing up children values into parent totals
-  hierarchyChildren: d => d.children // Function describing how children are defined in the hierarchical dataset, which will be passed as the second value to d3-hierarchy’s hierarchy function
+  hierarchyChildren: d => d.children // Function describing how children are defined in the hierarchical dataset, which will be passed as the second value to d3-hierarchy's hierarchy function
 }}
 \`\`\`
 `}
-        />
+      />
 
-        <MarkdownText
-          text={`
+      <MarkdownText
+        text={`
 
 ## Partition
 
 This example is the same as the dendrogram except we are passing \`networkType="partition"\`.
     `}
-        />
+      />
 
-        <DocumentFrame
-          frameProps={{ ...partition, edges: this.state.data }}
-          overrideProps={partitionOverrideProps}
-          type={NetworkFrame}
-          startHidden
-        />
-        <MarkdownText
-          text={`
+      <DocumentFrame
+        frameProps={{ ...partition, edges: flareData }}
+        overrideProps={partitionOverrideProps}
+        type={NetworkFrame}
+        startHidden
+      />
+      <MarkdownText
+        text={`
 
 ### Partition Settings
 
-Instead of sending \`networkType\` as a string, you can pass an object with additional layout options. 
+Instead of sending \`networkType\` as a string, you can pass an object with additional layout options.
 
 You can also pass any parameters for [d3-hierarchy's partition layout](https://github.com/d3/d3-hierarchy#partition)
 
@@ -451,29 +425,30 @@ networkType={{
   padding: 0, // Pixel value to separate individual nodes from each other
   projection: "vertical", // Accepts (vertical|horizontal|radial) whether to display the chart with steps laid out on the y axis (vertical) or the x axis (horizontal)
   hierarhcySum: d => d.value, // Function for summing up children values into parent totals
-  hierarchyChildren: d => d.children // Function describing how children are defined in the hierarchical dataset, which will be passed as the second value to d3-hierarchy’s hierarchy function
+  hierarchyChildren: d => d.children // Function describing how children are defined in the hierarchical dataset, which will be passed as the second value to d3-hierarchy's hierarchy function
 }}
 \`\`\`
-      
+
   `}
-        />
-        <MarkdownText
-          text={`
+      />
+      <MarkdownText
+        text={`
 
 ## Sunburst
 
 This uses the same settings as the parition above but instead of just sending \`networkType="partition"\` it passes an additional \`projection\` parameter to create a radial layout \`networkType={{ type: "partition", projection: "radial" }}\`
-        
-    `}
-        />
 
-        <DocumentFrame
-          frameProps={{ ...sunburst, edges: this.state.data }}
-          overrideProps={overrideProps}
-          type={NetworkFrame}
-          startHidden
-        />
-      </div>
-    )
-  }
+    `}
+      />
+
+      <DocumentFrame
+        frameProps={{ ...sunburst, edges: flareData }}
+        overrideProps={overrideProps}
+        type={NetworkFrame}
+        startHidden
+      />
+    </div>
+  )
 }
+
+export default HierarchicalDiagrams

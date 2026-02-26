@@ -3,11 +3,11 @@ import DocumentFrame from "../DocumentFrame"
 import { OrdinalFrame } from "semiotic"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
-
-const ROOT = process.env.PUBLIC_URL
+import boxofficeData from "../../public/data/boxofficetotals.json"
 
 const frameProps = {
   size: [700, 450],
+  data: boxofficeData,
   projection: "horizontal",
   oAccessor: "none",
   rAccessor: "total",
@@ -101,37 +101,25 @@ const overrideProps = {
   `
 }
 
-export default class SwarmPlot extends React.Component {
-  constructor(props) {
-    super(props)
+const SwarmPlot = () => {
+  return (
+    <div>
+      <MarkdownText
+        text={`
 
-    fetch(`${ROOT}/data/boxofficetotals.json`)
-      .then(response => response.json())
-      .then(data => {
-        this.setState({ ...frameProps, data })
-      })
-  }
-
-  render() {
-    if (!this.state) return null
-
-    return (
-      <div>
-        <MarkdownText
-          text={`
-
-Swarm plots allow you to position your data based on a numerical value but apply a collision force to prevent overlapping. 
+Swarm plots allow you to position your data based on a numerical value but apply a collision force to prevent overlapping.
 
 This page uses box office data from [Box Office Mojo](https://www.boxofficemojo.com/).
 `}
-        />
-        <DocumentFrame
-          frameProps={this.state || {}}
-          overrideProps={overrideProps}
-          type={OrdinalFrame}
-          useExpanded
-        />
-      </div>
-    )
-  }
+      />
+      <DocumentFrame
+        frameProps={frameProps}
+        overrideProps={overrideProps}
+        type={OrdinalFrame}
+        useExpanded
+      />
+    </div>
+  )
 }
+
+export default SwarmPlot
