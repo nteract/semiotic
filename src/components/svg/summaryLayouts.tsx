@@ -1,6 +1,5 @@
 import * as React from "react"
 
-import { axisGenerator, createSummaryAxis } from "./summaryAxis"
 import { contouring } from "../svg/areaDrawing"
 import { quantile } from "d3-array"
 import { histogram, max } from "d3-array"
@@ -878,6 +877,43 @@ export function contourRenderFn({
   return { marks: renderedSummaryMarks, xyPoints: summaryXYCoords }
 }
 
+function createSummaryAxis({
+  summary,
+  summaryI,
+  axisSettings,
+  axisCreator,
+  projection,
+  actualMax,
+  adjustedSize,
+  columnWidth
+}) {
+  let axisTranslate = `translate(${summary.x},0)`
+  let axisDomain = [0, actualMax]
+  if (projection === "horizontal") {
+    axisTranslate = `translate(${0},${summary.x})`
+    axisDomain = [actualMax, 0]
+  } else if (projection === "radial") {
+    axisTranslate = "translate(0, 0)"
+  }
+
+  const axisWidth = projection === "horizontal" ? adjustedSize[0] : columnWidth
+  const axisHeight = projection === "vertical" ? adjustedSize[1] : columnWidth
+  axisSettings.size = [axisWidth, axisHeight]
+  const axisScale = scaleLinear().domain(axisDomain).range([0, columnWidth])
+
+  const renderedSummaryAxis = axisCreator(axisSettings, summaryI, axisScale)
+
+  return (
+    <g
+      className="summary-axis"
+      key={`summaryPiece-axis-${summaryI}`}
+      transform={axisTranslate}
+    >
+      {renderedSummaryAxis}
+    </g>
+  )
+}
+
 export function bucketizedRenderingFn({
   data,
   type,
@@ -887,7 +923,8 @@ export function bucketizedRenderingFn({
   classFn,
   projection,
   adjustedSize,
-  chartSize
+  chartSize,
+  axisCreator: axisCreatorParam
 }) {
   const renderedSummaryMarks = []
   const summaryXYCoords = []
@@ -910,7 +947,7 @@ export function bucketizedRenderingFn({
       ["bottom", "top"].indexOf(type.axis.orient) === -1
         ? "bottom"
         : type.axis.orient
-    axisCreator = axisGenerator
+    axisCreator = axisCreatorParam
     if (projection === "radial") {
       console.error("Summary axes cannot be drawn for radial histograms")
       axisCreator = () => null
@@ -1637,6 +1674,7 @@ type ORFrameSummaryRendererTypes = {
   adjustedSize: Array<number>
   chartSize: number
   margin: object
+  axisCreator?: Function
 }
 
 const summaryRenderHash = {
@@ -1660,7 +1698,8 @@ export function orFrameSummaryRenderer({
   projection,
   adjustedSize,
   chartSize,
-  margin
+  margin,
+  axisCreator
 }: ORFrameSummaryRendererTypes) {
   let summaryRenderFn
   if (typeof type.type === "function") {
@@ -1687,7 +1726,8 @@ export function orFrameSummaryRenderer({
     projection,
     adjustedSize,
     chartSize,
-    margin
+    margin,
+    axisCreator
   })
 }
 
@@ -1703,7 +1743,19 @@ export const drawSummaries = ({
   classFn,
   projection,
   adjustedSize,
-  margin
+  margin,
+  axisCreator
+}: {
+  data: any
+  type: any
+  renderMode: any
+  eventListenersGenerator: any
+  styleFn: any
+  classFn: any
+  projection: any
+  adjustedSize: any
+  margin: any
+  axisCreator?: Function
 }) => {
   if (!type || !type.type) return
   type = typeof type === "string" ? { type } : type
@@ -1720,7 +1772,8 @@ export const drawSummaries = ({
     projection,
     adjustedSize,
     chartSize,
-    margin
+    margin,
+    axisCreator
   })
 }
 

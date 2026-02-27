@@ -13,6 +13,7 @@ import {
 } from "../svg/frameFunctions"
 import { pointOnArcAtAngle, renderLaidOutPieces } from "../svg/pieceDrawing"
 import { drawSummaries, renderLaidOutSummaries } from "../svg/summaryLayouts"
+import { axisGenerator } from "../svg/summaryAxis"
 
 import {
   clusterBarLayout,
@@ -1132,7 +1133,8 @@ export const calculateOrdinalFrame = (
       eventListenersGenerator,
       adjustedSize,
       //        chartSize: size,
-      margin
+      margin,
+      axisCreator: axisGenerator
     })
 
     calculatedSummaries.originalData = projectedColumns
