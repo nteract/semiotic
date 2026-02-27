@@ -432,8 +432,7 @@ function renderCanvas(
 
     let rcSettings = {}
     const renderObject =
-      piece.markProps.renderMode ||
-      (piece.renderFn && piece.renderFn(combinedDatum, piece.i))
+      piece.renderFn && piece.renderFn(combinedDatum, piece.i)
     let actualRenderMode =
       (renderObject && renderObject.renderMode) || renderObject
 

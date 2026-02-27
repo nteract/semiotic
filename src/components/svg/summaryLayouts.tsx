@@ -1796,7 +1796,7 @@ export function summaryInstructionsToMarks(data: summaryInstruction[]) {
     } else {
       for (let i = 0; i < elements.length; i++) {
         const element: any = elements[i]
-        const { markType, style = {}, renderMode: _rm, ...restProps } = element
+        const { markType, style = {}, ...restProps } = element
 
         // Merge style object into direct props for cleaner SVG
         const elementProps: any = { ...restProps }
