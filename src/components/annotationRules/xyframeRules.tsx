@@ -1,7 +1,6 @@
 import * as React from "react"
 
 import Annotation from "../Annotation"
-import { AnnotationCalloutRect, AnnotationXYThreshold } from "react-annotation"
 
 import { line, area } from "d3-shape"
 import { packEnclose } from "d3-hierarchy"
@@ -276,7 +275,7 @@ export const svgXAnnotation = ({ screenCoordinates, d, i, adjustedSize }) => {
     },
     d,
     {
-      type: AnnotationXYThreshold,
+      type: "xy-threshold",
       x: screenCoordinates[0],
       subject: {
         x: screenCoordinates[0],
@@ -308,7 +307,7 @@ export const svgYAnnotation = ({
     },
     d,
     {
-      type: AnnotationXYThreshold,
+      type: "xy-threshold",
       y: screenCoordinates[1],
       subject: {
         y: screenCoordinates[1],
@@ -349,7 +348,7 @@ export const svgBoundsAnnotation = ({
     },
     d,
     {
-      type: AnnotationCalloutRect,
+      type: "callout-rect",
       x: Math.min(x0Position, x1Position),
       y: Math.min(y0Position, y1Position),
       subject: {

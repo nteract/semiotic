@@ -372,6 +372,11 @@ function deriveXYFrameState(nextProps: XYFrameProps, prevState: XYFrameState) {
   return null
 }
 
+const annotationTypeStrings = new Set([
+  "label", "callout", "callout-circle", "callout-rect",
+  "callout-custom", "xy-threshold", "bracket"
+])
+
 function defaultXYSVGRule(
   props: XYFrameProps,
   state: XYFrameState,
@@ -543,7 +548,7 @@ function defaultXYSVGRule(
     })
   } else if (d.type === "xy" || d.type === "frame-hover") {
     return svgXYAnnotation({ d, i, screenCoordinates })
-  } else if (d.type === "react-annotation" || typeof d.type === "function") {
+  } else if (typeof d.type === "function" || annotationTypeStrings.has(d.type)) {
     return basicReactAnnotation({ d, screenCoordinates, i })
   } else if (d.type === "enclose") {
     return svgEncloseAnnotation({ d, screenCoordinates, i })

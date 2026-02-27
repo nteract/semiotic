@@ -2,11 +2,6 @@ import * as React from "react"
 
 import Annotation from "../Annotation"
 
-import {
-  AnnotationCalloutCircle,
-  AnnotationBracket,
-  AnnotationXYThreshold
-} from "react-annotation"
 
 import { packEnclose } from "d3-hierarchy"
 import { max, min, sum, extent } from "d3-array"
@@ -500,7 +495,7 @@ export const svgRRule = ({
           },
           d,
           {
-            type: AnnotationCalloutCircle,
+            type: "callout-circle",
             subject: {
               radius: rScale(findFirstAccessorValue(rAccessor, d)) / 2,
               radiusPadding: 0
@@ -544,7 +539,7 @@ export const svgRRule = ({
     },
     d,
     {
-      type: AnnotationXYThreshold,
+      type: "xy-threshold",
       x,
       y,
       subject
@@ -624,7 +619,7 @@ export const svgCategoryRule = ({
       let yPosition = position === "top" ? 0 : adjustedSize[1]
       yPosition += position === "top" ? -offset : offset
       const noteData = {
-        type: AnnotationBracket,
+        type: "bracket",
         y: yPosition,
         x: leftX - padding,
         note: {
@@ -642,7 +637,7 @@ export const svgCategoryRule = ({
       let yPosition = position === "left" ? 0 : adjustedSize[0]
       yPosition += position === "left" ? -offset : offset
       const noteData = {
-        type: AnnotationBracket,
+        type: "bracket",
         x: yPosition,
         y: leftX - padding,
         note: {

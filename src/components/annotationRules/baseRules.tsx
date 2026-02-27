@@ -1,9 +1,4 @@
 import * as React from "react"
-import {
-  AnnotationCalloutCircle,
-  AnnotationCalloutRect,
-  AnnotationCalloutCustom
-} from "react-annotation"
 
 import Annotation from "../Annotation"
 import { polygonHull } from "d3-polygon"
@@ -24,7 +19,7 @@ export const circleEnclosure = ({ d, i, circle }) => {
       coordinates: undefined,
       x: circle.x,
       y: circle.y,
-      type: AnnotationCalloutCircle,
+      type: "callout-circle",
       subject: {
         radius: circle.r,
         radiusPadding
@@ -79,7 +74,7 @@ export const rectangleEnclosure = ({ bboxNodes, d, i }) => {
     },
     d,
     {
-      type: AnnotationCalloutRect,
+      type: "callout-rect",
       x: bbox[0][0],
       y: bbox[0][1],
       subject: {
@@ -133,7 +128,7 @@ export const hullEnclosure = ({ points, d, i }) => {
     },
     d,
     {
-      type: AnnotationCalloutCustom,
+      type: "callout-custom",
       x: closestCoordinates[0],
       y: closestCoordinates[1],
       subject: {

@@ -3,7 +3,6 @@ import DocumentFrame from "../DocumentFrame"
 import { XYFrame, DividedLine } from "semiotic"
 import { scaleTime } from "d3-scale"
 import theme from "../theme"
-import { AnnotationXYThreshold } from "react-annotation"
 
 const chartAxes = [
   { orient: "left", tickFormat: (d) => `$${d}` },
@@ -69,7 +68,7 @@ const annotations = [
     connector: { end: "none" },
   },
   {
-    type: AnnotationXYThreshold,
+    type: "xy-threshold",
     note: {
       label: "Above $100",
       lineType: null,
@@ -197,7 +196,7 @@ const overrideProps = {
       connector: { end: "none" }
     },
     {
-      type: AnnotationXYThreshold,
+      type: "xy-threshold",
       note: {
         label: "Above $100",
         lineType: null,
@@ -261,7 +260,6 @@ export class AnnotationsDocumentFrame extends React.Component {
         type={XYFrame}
         pre={`import { scaleTime } from "d3-scale"
 import { DividedLine } from "semiotic"
-import { AnnotationXYThreshold } from "react-annotation"
       `}
       />
     )

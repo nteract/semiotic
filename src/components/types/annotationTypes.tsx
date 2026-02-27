@@ -11,7 +11,7 @@ import { ScaleLinear } from "d3-scale"
 //import { object } from "./generalTypes"
 
 export type AnnotationType = {
-  type?: string | Function
+  type?: string
   column?: { name: string }
   facetColumn?: string
   bounds?: RawPoint[]
@@ -79,11 +79,7 @@ export interface AnnotationProps {
   noteData: {
     eventListeners?: object
     events?: object
-    onDragEnd?: Function
-    onDragStart?: Function
-    onDrag?: Function
-    type: string | Function
-    editMode?: boolean
+    type: string
     screenCoordinates?: Array<Array<number>>
     // What is this type supposed to be? It gets used only in a boolean context
     // I mostly assume this is used to indicate the presence of `nx`, `ny`, `dx`, `dy`

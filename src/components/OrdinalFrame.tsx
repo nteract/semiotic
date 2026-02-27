@@ -334,6 +334,11 @@ function deriveOrdinalFrameState(
   return { props: nextProps }
 }
 
+const annotationTypeStrings = new Set([
+  "label", "callout", "callout-circle", "callout-rect",
+  "callout-custom", "xy-threshold", "bracket"
+])
+
 function defaultORSVGRule(
   props: OrdinalFrameProps,
   state: OrdinalFrameState,
@@ -459,7 +464,7 @@ function defaultORSVGRule(
       orFrameRender,
       oAccessor
     })
-  } else if (d.type === "react-annotation" || typeof d.type === "function") {
+  } else if (typeof d.type === "function" || annotationTypeStrings.has(d.type)) {
     return basicReactAnnotationRule({ d, i, screenCoordinates })
   } else if (d.type === "enclose") {
     return svgEncloseRule({ d, i, screenCoordinates })

@@ -297,6 +297,11 @@ function deriveNetworkFrameState(
   return { props: nextProps }
 }
 
+const annotationTypeStrings = new Set([
+  "label", "callout", "callout-circle", "callout-rect",
+  "callout-custom", "xy-threshold", "bracket"
+])
+
 function defaultNetworkSVGRule(
   props: NetworkFrameProps,
   state: NetworkFrameState,
@@ -378,7 +383,7 @@ function defaultNetworkSVGRule(
         {baseD.element || baseD.label}
       </g>
     )
-  } else if (d.type === "react-annotation" || typeof d.type === "function") {
+  } else if (typeof d.type === "function" || annotationTypeStrings.has(d.type)) {
     return svgReactAnnotationRule({
       d,
       i,

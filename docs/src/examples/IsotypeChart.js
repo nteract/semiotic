@@ -3,7 +3,6 @@ import DocumentFrame from "../DocumentFrame"
 import { OrdinalFrame } from "semiotic"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
-import AnnotationCalloutElbow from "react-annotation/lib/Types/AnnotationCalloutElbow"
 
 // const ROOT = process.env.PUBLIC_URL;
 
@@ -91,7 +90,7 @@ const frameProps = {
       dx: -0.01,
       dy: -50,
       color: theme[1],
-      type: AnnotationCalloutElbow,
+      type: "callout",
       note: { title: "Data viz peep who discovered her love for writing" }
     }
   ],
@@ -189,7 +188,7 @@ const overrideProps = {
       dx: -0.01,
       dy: -50,
       color: theme[1],
-      type: AnnotationCalloutElbow,
+      type: "callout",
       note: { title: "Data viz peep who discovered her love for writing" }
     }
   ]`
@@ -208,7 +207,7 @@ This example also shows how \`renderMode\` is honored by icon shapes.
       <DocumentFrame
         frameProps={frameProps}
         overrideProps={overrideProps}
-        pre={`import AnnotationCalloutElbow from "react-annotation/lib/Types/AnnotationCalloutElbow"
+        pre={`
 const colorHash = {
   journalist: theme[2],
   viz: theme[1]
