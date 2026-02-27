@@ -1,7 +1,7 @@
 import * as React from "react"
 import { useMemo } from "react"
 
-import { scaleBand, scaleLinear } from "d3-scale"
+import { scaleBand, scaleLinear, ScaleLinear } from "d3-scale"
 
 import {
   orFrameChangeProps,
@@ -58,7 +58,7 @@ const defaultProps: Partial<OrdinalFrameProps> = {
   className: "",
   data: [],
   oScaleType: scaleBand(),
-  rScaleType: scaleLinear,
+  rScaleType: scaleLinear as unknown as () => ScaleLinear<number, number>,
   type: "none",
   useSpans: false,
   optimizeCustomTooltipPosition: false

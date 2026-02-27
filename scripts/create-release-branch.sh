@@ -24,20 +24,12 @@ if [ -z "$CURRENT_BRANCH" ]; then
 fi
 
 if [ -z "$BUMP_TYPE" ]; then
-  echo "Grabbing recommended bump type..."
-  BUMP_TYPE="$(node_modules/.bin/conventional-recommended-bump -p angular)"
-fi
-
-if [ -z "$BUMP_TYPE" ]; then
-  error "Unable to set the type of version bump"
+  error "Bump type is required. Usage: create-release-branch.sh <major|minor|patch>"
   exit 1
 fi
 
 echo "==> Bumping version"
 VERSION="$(npm version --no-git-tag-version $BUMP_TYPE | sed 's/v//g')"
-
-echo "==> Updating Changelog"
-node_modules/.bin/conventional-changelog -i CHANGELOG.md -o CHANGELOG.md -p angular
 
 echo "==> Cleaning Build directory"
 rm -rf ./dist
