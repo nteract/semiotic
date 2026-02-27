@@ -6,8 +6,6 @@ import { select } from "d3-selection"
 // components
 import Brush from "./Brush"
 
-import { HOCSpanOrDiv } from "./SpanOrDiv"
-
 import {
   Interactivity,
   InteractionLayerProps,
@@ -381,7 +379,6 @@ export default function InteractionLayer(props: InteractionLayerProps) {
     interaction,
     svgSize = [500, 500],
     margin = { left: 0, right: 0, top: 0, bottom: 0 },
-    useSpans = false,
     overlay,
     points,
     xScale,
@@ -404,8 +401,6 @@ export default function InteractionLayer(props: InteractionLayerProps) {
 
   const [overlayRegions, changeOverlayRegions] = useState([])
   const [interactionCanvas, changeInteractionCanvas] = useState(null)
-  const [SpanOrDiv] = useState(() => HOCSpanOrDiv(useSpans))
-
   useEffect(() => {
     let nextOverlay, interactionCanvas
 
@@ -455,8 +450,7 @@ export default function InteractionLayer(props: InteractionLayerProps) {
   }
 
   return (
-    <SpanOrDiv
-      span={useSpans}
+    <div
       className="interaction-layer"
       data-testid="interaction-layer"
       style={{
@@ -484,6 +478,6 @@ export default function InteractionLayer(props: InteractionLayerProps) {
           </g>
         </svg>
       )}
-    </SpanOrDiv>
+    </div>
   )
 }

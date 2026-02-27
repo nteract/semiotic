@@ -1,3 +1,4 @@
+import * as React from "react"
 import { ScaleLinear } from "d3-scale"
 import { CustomHoverType } from "./annotationTypes"
 import { MarginType } from "./generalTypes"
@@ -42,7 +43,6 @@ export type InteractionLayerProps = {
   points?: Array<{ data: any }>
   position?: number[]
   enabled?: boolean
-  useSpans?: boolean
   margin: MarginType
   projection?: string
   customDoubleClickBehavior?: Function
@@ -70,5 +70,4 @@ export type InteractionLayerState = {
   props: InteractionLayerProps
   canvasMap: Map<string, number>
   interactionCanvas: React.ReactNode
-  SpanOrDiv: Function
 }

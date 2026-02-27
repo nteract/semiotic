@@ -60,7 +60,6 @@ const defaultProps: Partial<OrdinalFrameProps> = {
   oScaleType: scaleBand(),
   rScaleType: scaleLinear as unknown as () => ScaleLinear<number, number>,
   type: "none",
-  useSpans: false,
   optimizeCustomTooltipPosition: false
 }
 
@@ -137,7 +136,6 @@ const OrdinalFrame = React.memo(function OrdinalFrame(
     pieceHoverAnnotation,
     hoverAnnotation,
     canvasPostProcess,
-    useSpans,
     canvasPieces,
     canvasSummaries,
     canvasConnectors,
@@ -240,7 +238,6 @@ const OrdinalFrame = React.memo(function OrdinalFrame(
       xScale={xScale}
       yScale={yScale}
       axes={axes}
-      useSpans={useSpans}
       axesTickLines={axesTickLines}
       title={title}
       matte={matte}
@@ -524,8 +521,7 @@ function defaultORHTMLRule(
     tooltipContent,
     optimizeCustomTooltipPosition,
     projection,
-    size,
-    useSpans
+    size
   } = props
   let screenCoordinates: number[] | number[][] = [0, 0]
 
@@ -619,7 +615,6 @@ function defaultORHTMLRule(
       tooltipContent,
       optimizeCustomTooltipPosition,
       projectedColumns,
-      useSpans,
       pieceIDAccessor,
       adjustedSize,
       rScale,
@@ -638,8 +633,7 @@ function defaultORHTMLRule(
       adjustedSize,
       projection,
       tooltipContent,
-      optimizeCustomTooltipPosition,
-      useSpans
+      optimizeCustomTooltipPosition
     })
   }
   return null

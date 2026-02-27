@@ -223,7 +223,6 @@ export interface AxisSummaryTypeSettings extends OrdinalSummaryTypeSettings {
 }
 
 export interface GeneralFrameProps {
-  useSpans?: boolean
   title?: string | object
   margin?:
     | number

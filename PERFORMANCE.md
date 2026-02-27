@@ -97,12 +97,11 @@ npm run bench:compare
 - Interaction object
 - canvasRendering flag
 
-**NetworkFrame** (7 useMemo hooks):
+**NetworkFrame** (6 useMemo hooks):
 - Overlay formatting
 - Active hover annotation logic (complex conditional)
 - SVG and HTML rule callbacks
 - Merged annotations array
-- useSpans conversion
 - canvasRendering flag
 
 **Impact**:

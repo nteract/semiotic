@@ -132,7 +132,6 @@ const NetworkFrame = React.memo(function NetworkFrame(
     interaction,
     disableContext,
     canvasPostProcess,
-    useSpans,
     canvasNodes,
     canvasEdges,
     additionalDefs,
@@ -192,9 +191,6 @@ const NetworkFrame = React.memo(function NetworkFrame(
     [annotations, nodeLabelAnnotations]
   )
 
-  // Memoize useSpans conversion
-  const useSpansValue = useMemo(() => !!useSpans, [useSpans])
-
   // Memoize canvas rendering flag
   const canvasRendering = useMemo(
     () => !!(canvasNodes || canvasEdges),
@@ -235,8 +231,6 @@ const NetworkFrame = React.memo(function NetworkFrame(
       afterElements={afterElements}
       disableContext={disableContext}
       canvasPostProcess={canvasPostProcess}
-      
-      useSpans={useSpansValue}
       canvasRendering={canvasRendering}
       renderOrder={renderOrder}
       disableCanvasInteraction={disableCanvasInteraction}
@@ -440,8 +434,7 @@ function defaultNetworkHTMLRule(
   const {
     tooltipContent,
     optimizeCustomTooltipPosition,
-    htmlAnnotationRules,
-    useSpans
+    htmlAnnotationRules
   } = props
   const {
     projectedNodes,
@@ -493,7 +486,6 @@ function defaultNetworkHTMLRule(
       i,
       tooltipContent,
       optimizeCustomTooltipPosition,
-      useSpans,
       nodes: projectedNodes,
       edges: projectedEdges,
       nodeIDAccessor

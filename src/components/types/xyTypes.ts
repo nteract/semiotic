@@ -122,7 +122,6 @@ export interface XYFrameState extends GeneralFrameState {
   annotatedSettings: AnnotatedSettingsProps
   overlay?: object[]
   props: XYFrameProps
-  SpanOrDiv: Function
 }
 
 export interface SummaryLayoutType {

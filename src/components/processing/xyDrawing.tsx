@@ -500,7 +500,7 @@ export const calculateXYFrame = (
             const labelCenter = [
               xScale(labelBounds[labelPosition][0]),
               yScale(labelBounds[labelPosition][1])
-            ] || [xScale(d._xyfCoordinates[0]), yScale(d._xyfCoordinates[1])]
+            ]
             const labelContent = label.content || ((p) => p.value || p.id || i)
 
             areaAnnotations.push({

@@ -6,8 +6,6 @@ import { bumpAnnotations } from "./../annotationLayerBehavior/annotationHandling
 import Legend from "./../Legend"
 import Annotation from "./../Annotation"
 import labella from "labella"
-import { HOCSpanOrDiv } from "./../SpanOrDiv"
-
 import {
   AnnotationHandling,
   AnnotationTypes,
@@ -26,7 +24,6 @@ interface NoteType {
 }
 
 export interface AnnotationLayerProps {
-  useSpans: boolean
   legendSettings?: LegendProps
   margin: { top?: number; left?: number; right?: number; bottom?: number }
   size: number[]
@@ -462,8 +459,7 @@ export default function AnnotationLayer(props: AnnotationLayerProps) {
     margin,
     size,
     annotations: baseAnnotations,
-    annotationHandling,
-    useSpans
+    annotationHandling
   } = props
 
   const tooltip = useTooltip((store) => {
@@ -484,8 +480,6 @@ export default function AnnotationLayer(props: AnnotationLayerProps) {
     annotations,
     voronoiHover
   }
-
-  const [SpanOrDiv] = useState(() => HOCSpanOrDiv(useSpans))
 
   const annotationProcessor: AnnotationHandling =
     typeof annotationHandling === "object"
@@ -564,7 +558,7 @@ export default function AnnotationLayer(props: AnnotationLayerProps) {
   }
 
   return (
-    <SpanOrDiv
+    <div
       className="annotation-layer"
       style={{
         position: "absolute",
@@ -590,7 +584,7 @@ export default function AnnotationLayer(props: AnnotationLayerProps) {
           {svgAnnotations}
         </g>
       </svg>
-      <SpanOrDiv
+      <div
         className="annotation-layer-html"
         style={{
           background: "none",
@@ -603,7 +597,7 @@ export default function AnnotationLayer(props: AnnotationLayerProps) {
         }}
       >
         {htmlAnnotations}
-      </SpanOrDiv>
-    </SpanOrDiv>
+      </div>
+    </div>
   )
 }

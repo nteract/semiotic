@@ -227,7 +227,6 @@ describe("AnnotationLayer", () => {
         <AnnotationLayer
           margin={{ left: 10, right: 10, top: 10, bottom: 10 }}
           size={[400, 400]}
-          useSpans={false}
           annotations={annotations}
           svgAnnotationRule={svgAnnotationRule}
           htmlAnnotationRule={htmlAnnotationRule}
@@ -243,7 +242,6 @@ describe("AnnotationLayer", () => {
         <AnnotationLayer
           margin={{ left: 10, right: 10, top: 10, bottom: 10 }}
           size={[400, 400]}
-          useSpans={false}
           annotations={annotations}
           svgAnnotationRule={svgAnnotationRule}
           htmlAnnotationRule={htmlAnnotationRule}
@@ -266,7 +264,6 @@ describe("AnnotationLayer", () => {
         <AnnotationLayer
           margin={{ left: 10, right: 10, top: 10, bottom: 10 }}
           size={[400, 400]}
-          useSpans={false}
           annotations={annotations}
           svgAnnotationRule={svgAnnotationRule}
           htmlAnnotationRule={htmlAnnotationRule}

@@ -6,7 +6,6 @@ import VisualizationLayer from "./VisualizationLayer"
 import { generateFrameTitle } from "./svg/frameFunctions"
 import { generateFinalDefs } from "./constants/jsx"
 
-import { HOCSpanOrDiv } from "./SpanOrDiv"
 import { MarginType, RoughType } from "./types/generalTypes"
 import { AnnotationHandling, CustomHoverType } from "./types/annotationTypes"
 import { LegendProps } from "./types/legendTypes"
@@ -45,7 +44,6 @@ type Props = {
   interactionOverflow?: object
   disableContext?: boolean
   canvasRendering?: boolean
-  useSpans: boolean
   canvasPostProcess?: Function
   projection?: string
   rScale?: ScaleLinear<number, number>
@@ -135,7 +133,6 @@ export default function Frame(props) {
     projection,
     interactionOverflow,
     canvasPostProcess,
-    useSpans,
     canvasRendering,
     renderOrder = blankArray,
     showLinePoints,
@@ -155,8 +152,6 @@ export default function Frame(props) {
 
   const [finalDefs, changeFinalDefs] = useState(null)
   const [matte, changeMatte] = useState(null)
-  const [SpanOrDiv] = useState(() => HOCSpanOrDiv(props.useSpans))
-
   useEffect(() => {
     const generatedDefs = generateFinalDefs({
       matte,
@@ -223,7 +218,6 @@ export default function Frame(props) {
           ...renderPipeline
         })
       }
-      useSpans={useSpans}
       size={adjustedSize}
       position={[
         adjustedPosition[0] + margin.left,
@@ -248,26 +242,23 @@ export default function Frame(props) {
       : foregroundGraphics
 
   return (
-    <SpanOrDiv
-      span={useSpans}
+    <div
       className={`${className} frame ${name}`}
       style={{
         background: "none"
       }}
     >
       {beforeElements && (
-        <SpanOrDiv span={useSpans} className={`${name} frame-before-elements`}>
+        <div className={`${name} frame-before-elements`}>
           {beforeElements}
-        </SpanOrDiv>
+        </div>
       )}
-      <SpanOrDiv
-        span={useSpans}
+      <div
         className="frame-elements"
         style={{ height: `${size[1]}px`, width: `${size[0]}px` }}
       >
         <TooltipProvider>
-          <SpanOrDiv
-            span={useSpans}
+          <div
             className="visualization-layer"
             style={{ position: "absolute" }}
           >
@@ -326,7 +317,7 @@ export default function Frame(props) {
                 </g>
               )}
             </svg>
-          </SpanOrDiv>
+          </div>
           {canvasRendering && (
             <canvas
               className="frame-canvas"
@@ -340,7 +331,6 @@ export default function Frame(props) {
             />
           )}
           <InteractionLayer
-            useSpans={useSpans}
             hoverAnnotation={hoverAnnotation}
             projectedX={projectedCoordinateNames.x}
             projectedY={projectedCoordinateNames.y}
@@ -370,12 +360,12 @@ export default function Frame(props) {
           />
           {annotationLayer}
         </TooltipProvider>
-      </SpanOrDiv>
+      </div>
       {afterElements && (
-        <SpanOrDiv span={useSpans} className={`${name} frame-after-elements`}>
+        <div className={`${name} frame-after-elements`}>
           {afterElements}
-        </SpanOrDiv>
+        </div>
       )}
-    </SpanOrDiv>
+    </div>
   )
 }

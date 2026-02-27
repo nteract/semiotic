@@ -54,8 +54,6 @@ import {
   xyFrameStylingProps
 } from "./constants/frame_props"
 
-import { HOCSpanOrDiv } from "./SpanOrDiv"
-
 import {
   ProjectedPoint,
   ProjectedSummary,
@@ -100,7 +98,6 @@ const defaultProps = {
 const XYFrame = React.memo(function XYFrame(allProps: XYFrameProps) {
   const props = { ...defaultProps, ...allProps }
   const baseState = {
-    SpanOrDiv: HOCSpanOrDiv(props.useSpans),
     size: [500, 500],
     dataVersion: undefined,
     lineData: undefined,
@@ -176,7 +173,6 @@ const XYFrame = React.memo(function XYFrame(allProps: XYFrameProps) {
     customHoverBehavior,
     customDoubleClickBehavior,
     canvasPostProcess,
-    useSpans,
     canvasSummaries,
     canvasPoints,
     canvasLines,
@@ -274,8 +270,6 @@ const XYFrame = React.memo(function XYFrame(allProps: XYFrameProps) {
       afterElements={afterElements}
       disableContext={disableContext}
       canvasPostProcess={canvasPostProcess}
-      
-      useSpans={useSpans}
       canvasRendering={canvasRendering}
       renderOrder={renderOrder}
       overlay={overlay}
@@ -642,7 +636,6 @@ function defaultXYHTMLRule(
     yAccessor,
     xScale,
     yScale,
-    SpanOrDiv,
     annotatedSettings,
     axesData
   } = state
@@ -652,7 +645,6 @@ function defaultXYHTMLRule(
   let screenCoordinates = []
 
   const {
-    useSpans,
     tooltipContent,
     optimizeCustomTooltipPosition,
     htmlAnnotationRules,
@@ -755,8 +747,7 @@ function defaultXYHTMLRule(
   }
   if (d.type === "frame-hover") {
     let content = (
-      <SpanOrDiv
-        span={useSpans}
+      <div
         className="tooltip-content"
         data-testid="tooltip-content"
       >
@@ -767,7 +758,7 @@ function defaultXYHTMLRule(
             {Math.floor(d.percent * 1000) / 10}%
           </p>
         ) : null}
-      </SpanOrDiv>
+      </div>
     )
 
     if (d.type === "frame-hover" && tooltipContent) {
@@ -784,8 +775,7 @@ function defaultXYHTMLRule(
       content,
       screenCoordinates,
       i,
-      d,
-      useSpans
+      d
     })
   }
   return null
