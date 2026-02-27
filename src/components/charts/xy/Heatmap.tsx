@@ -232,41 +232,21 @@ export function Heatmap(props: HeatmapProps) {
     return scaleSequential(interpolator).domain(valueDomain)
   }, [colorScheme, customColorScale, valueDomain])
 
-  // Get unique x and y values for proper spacing
-  const { xValues, yValues } = useMemo(() => {
+  // Get unique x and y values for bin sizing
+  const { xBinCount, yBinCount } = useMemo(() => {
     const getX = typeof xAccessor === "function" ? xAccessor : (d: any) => d[xAccessor]
     const getY = typeof yAccessor === "function" ? yAccessor : (d: any) => d[yAccessor]
 
-    const xSet = new Set(safeData.map(getX))
-    const ySet = new Set(safeData.map(getY))
-
     return {
-      xValues: Array.from(xSet).sort((a, b) => (typeof a === "number" ? a - b : String(a).localeCompare(String(b)))),
-      yValues: Array.from(ySet).sort((a, b) => (typeof a === "number" ? a - b : String(a).localeCompare(String(b))))
+      xBinCount: new Set(safeData.map(getX)).size,
+      yBinCount: new Set(safeData.map(getY)).size
     }
   }, [safeData, xAccessor, yAccessor])
 
-  // Calculate cell dimensions
-  const cellWidth = useMemo(() => {
-    if (xValues.length <= 1) return 1
-    return 1 / xValues.length
-  }, [xValues])
-
-  const cellHeight = useMemo(() => {
-    if (yValues.length <= 1) return 1
-    return 1 / yValues.length
-  }, [yValues])
-
   // Transform data to summary format for XYFrame
   const summaryData = useMemo(() => {
-    return {
-      coordinates: safeData.map((d) => ({
-        ...d,
-        _cellWidth: cellWidth,
-        _cellHeight: cellHeight
-      }))
-    }
-  }, [safeData, cellWidth, cellHeight])
+    return { coordinates: safeData }
+  }, [safeData])
 
   // Summary style function
   const summaryStyle = useMemo(() => {
@@ -336,7 +316,16 @@ export function Heatmap(props: HeatmapProps) {
     summaries: summaryData,
     xAccessor,
     yAccessor,
-    summaryType: { type: "heatmap" },
+    summaryType: {
+      type: "heatmap",
+      xBins: xBinCount,
+      yBins: yBinCount,
+      binValue: (items: any[]) => {
+        if (items.length === 0) return 0
+        const sum = items.reduce((acc, item) => acc + getValueFn(item), 0)
+        return sum / items.length
+      }
+    },
     summaryStyle,
     axes,
     hoverAnnotation: enableHover,

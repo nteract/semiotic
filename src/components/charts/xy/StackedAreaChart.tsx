@@ -33,14 +33,13 @@ const CURVE_MAP = {
 } as const
 
 /**
- * AreaChart component props
+ * StackedAreaChart component props
  */
-export interface AreaChartProps extends BaseChartProps, AxisConfig {
+export interface StackedAreaChartProps extends BaseChartProps, AxisConfig {
   /**
    * Array of data points, grouped by category.
    * @example
    * ```ts
-   * // Multiple areas with grouping
    * [{x: 1, y: 10, category: 'A'}, {x: 2, y: 20, category: 'A'}, {x: 1, y: 15, category: 'B'}]
    * ```
    */
@@ -116,6 +115,12 @@ export interface AreaChartProps extends BaseChartProps, AxisConfig {
   lineWidth?: number
 
   /**
+   * Normalize to 100% stacked (proportional)
+   * @default false
+   */
+  normalize?: boolean
+
+  /**
    * Enable hover annotations
    * @default true
    */
@@ -147,16 +152,16 @@ export interface AreaChartProps extends BaseChartProps, AxisConfig {
 }
 
 /**
- * AreaChart - Visualize quantities over continuous intervals with overlapping filled areas
+ * StackedAreaChart - Visualize quantities stacked on top of each other over continuous intervals
  *
- * Each series fills from its line down to the baseline. Multiple series overlap
- * with transparency so all shapes remain visible.
+ * Each series is stacked so that the total height represents the sum of all series.
+ * Use `normalize` for 100% stacked (proportional) areas.
  *
- * For stacked areas use {@link StackedAreaChart}.
+ * For overlapping (non-stacked) areas use {@link AreaChart}.
  *
  * @example
  * ```tsx
- * <AreaChart
+ * <StackedAreaChart
  *   data={[
  *     {x: 1, y: 10, category: 'A'},
  *     {x: 2, y: 20, category: 'A'},
@@ -170,7 +175,7 @@ export interface AreaChartProps extends BaseChartProps, AxisConfig {
  * />
  * ```
  */
-export function AreaChart(props: AreaChartProps) {
+export function StackedAreaChart(props: StackedAreaChartProps) {
   const {
     data,
     width = 600,
@@ -192,6 +197,7 @@ export function AreaChart(props: AreaChartProps) {
     areaOpacity = 0.7,
     showLine = true,
     lineWidth = 2,
+    normalize = false,
     enableHover = true,
     showGrid = false,
     showLegend,
@@ -285,11 +291,11 @@ export function AreaChart(props: AreaChartProps) {
     return axesConfig
   }, [xLabel, yLabel, xFormat, yFormat, showGrid])
 
-  // Determine line type — always overlapping areas
+  // Stacked area line type
   const lineType = useMemo(() => ({
-    type: "area" as const,
+    type: normalize ? "stackedpercent-area" : "stackedarea",
     interpolator: curveFunction
-  }), [curveFunction])
+  } as any), [curveFunction, normalize])
 
   // Determine if we should show legend
   const shouldShowLegend = showLegend !== undefined ? showLegend : areaData.length > 1
@@ -321,7 +327,7 @@ export function AreaChart(props: AreaChartProps) {
 
   // Validate data (after all hooks)
   if (safeData.length === 0) {
-    console.warn("AreaChart: data prop is required and should not be empty")
+    console.warn("StackedAreaChart: data prop is required and should not be empty")
     return null
   }
 

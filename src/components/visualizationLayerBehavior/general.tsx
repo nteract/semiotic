@@ -334,14 +334,18 @@ export function createLines({
             d: topperLineGenerator(mappedDataForLines)
           }
 
+          const topperKeyFn = renderKeyFn
+            ? (d, i, yi) => `${renderKeyFn(d, i, yi)}-top`
+            : undefined
+
           mappedLines.push(
             clonedAppliedElement({
-              baseClass: "xyframe-line",
+              baseClass: "xyframe-line-top",
               d,
               i,
               markProps: topperMarkProps,
               styleFn: topperStyleFn,
-              renderKeyFn,
+              renderKeyFn: topperKeyFn,
               classFn
             })
           )

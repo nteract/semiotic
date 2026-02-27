@@ -283,33 +283,52 @@ export function BoxPlot(props: BoxPlotProps) {
     return null
   }
 
-  // Default tooltip function for piece hover
+  // Default tooltip for summary hover (boxplot quartile points)
   const defaultTooltipContent = useMemo(() => {
     const getVal = typeof valueAccessor === "function" ? valueAccessor : (d: any) => d[valueAccessor]
-    const getCat = typeof categoryAccessor === "function" ? categoryAccessor : (d: any) => d[categoryAccessor]
 
     return (d: any) => {
-      const cat = getCat(d)
-      const val = getVal(d)
+      // d has: label, key, summaryPieceName, value, column, pieces
       const pieces = d.pieces || []
       const values = pieces.map((p: any) => Number(getVal(p))).filter((v: number) => !isNaN(v)).sort((a: number, b: number) => a - b)
       const n = values.length
 
+      const fmt = (v: any) => typeof v === "number" ? v.toLocaleString() : String(v ?? "")
+
+      // Compute quartiles from the raw data
+      let stats: { label: string; value: string; active: boolean }[] = []
+      if (n >= 2) {
+        const q = (p: number) => {
+          const i = p * (n - 1)
+          const lo = Math.floor(i)
+          const hi = Math.ceil(i)
+          return values[lo] + (values[hi] - values[lo]) * (i - lo)
+        }
+        stats = [
+          { label: "Max", value: fmt(values[n - 1]), active: d.summaryPieceName === "max" },
+          { label: "Third Quartile", value: fmt(q(0.75)), active: d.summaryPieceName === "q3area" },
+          { label: "Median", value: fmt(q(0.5)), active: d.summaryPieceName === "median" },
+          { label: "First Quartile", value: fmt(q(0.25)), active: d.summaryPieceName === "q1area" },
+          { label: "Min", value: fmt(values[0]), active: d.summaryPieceName === "min" },
+        ]
+      }
+
       return (
         <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-          <div style={{ fontWeight: "bold" }}>{String(cat)}</div>
-          <div style={{ marginTop: "4px" }}>
-            Value: {typeof val === "number" ? val.toLocaleString() : String(val)}
-          </div>
-          {n > 0 && (
-            <div style={{ marginTop: "2px", opacity: 0.8 }}>
-              n={n}, median={values[Math.floor(n / 2)].toLocaleString()}
+          <div style={{ fontWeight: "bold", marginBottom: "4px" }}>{String(d.key)}</div>
+          {stats.map(s => (
+            <div key={s.label} style={{ display: "flex", justifyContent: "space-between", gap: "12px", fontWeight: s.active ? "bold" : "normal" }}>
+              <span>{s.label}</span>
+              <span>{s.value}</span>
             </div>
+          ))}
+          {n > 0 && (
+            <div style={{ marginTop: "4px", opacity: 0.6, fontSize: "0.9em" }}>n={n}</div>
           )}
         </div>
       )
     }
-  }, [categoryAccessor, valueAccessor])
+  }, [valueAccessor])
 
   // Build OrdinalFrame props
   const ordinalFrameProps: OrdinalFrameProps = {
@@ -321,7 +340,7 @@ export function BoxPlot(props: BoxPlotProps) {
     summaryStyle,
     projection: orientation === "horizontal" ? "horizontal" : "vertical",
     axes,
-    pieceHoverAnnotation: enableHover,
+    summaryHoverAnnotation: enableHover,
     margin,
     oPadding: categoryPadding,
     ...(pointStyle && { pointStyle }),

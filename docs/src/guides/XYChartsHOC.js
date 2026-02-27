@@ -4,6 +4,7 @@ import {
   Scatterplot,
   LineChart,
   AreaChart,
+  StackedAreaChart,
   Heatmap,
   BubbleChart,
   Tooltip,
@@ -59,7 +60,7 @@ for (let x = 0; x < 7; x++) {
     heatmapData.push({
       x,
       y,
-      value: Math.floor(Math.random() * 100)
+      value: Math.round(50 + 40 * Math.sin(x * 0.8) * Math.cos(y * 0.9) + (x * y) % 17)
     })
   }
 }
@@ -221,7 +222,7 @@ Pass \`lineType\`, \`lineStyle\`, or other \`XYFrame\` props for customization.
       />
 
       <ExampleContainer
-        title="AreaChart"
+        title="AreaChart (Overlapping)"
         code={`import { AreaChart, MultiLineTooltip } from "semiotic"
 
 const areaData = [
@@ -237,8 +238,8 @@ const areaData = [
   height={400}
   xLabel="Time"
   yLabel="Value"
-  groupBy="category"
-  stacked={true}
+  areaBy="category"
+  colorBy="category"
   tooltip={MultiLineTooltip({ title: "category", fields: ["x", "y"] })}
 />`}
       >
@@ -248,8 +249,8 @@ const areaData = [
           height={400}
           xLabel="Time"
           yLabel="Value"
-          groupBy="category"
-          stacked={true}
+          areaBy="category"
+          colorBy="category"
           tooltip={MultiLineTooltip({ title: "category", fields: ["x", "y"] })}
         />
       </ExampleContainer>
@@ -259,8 +260,61 @@ const areaData = [
 **Key Props:**
 - \`data\`: Array of \`{x, y, category?, ...}\` objects
 - \`xLabel\`, \`yLabel\`: Axis labels
-- \`groupBy\`: Field to group data into multiple areas
-- \`stacked\`: Stack areas on top of each other (default: false)
+- \`areaBy\`: Field to group data into multiple overlapping areas
+- \`colorBy\`: Field or function for area colors
+- \`curve\`: Area interpolation
+- \`tooltip\`: Tooltip configuration
+
+For stacked areas, use \`StackedAreaChart\` below.
+
+**Advanced:**
+Pass \`lineType\` settings or other \`XYFrame\` props for complete control.
+
+---
+`}
+      />
+
+      <ExampleContainer
+        title="StackedAreaChart"
+        code={`import { StackedAreaChart, MultiLineTooltip } from "semiotic"
+
+const areaData = [
+  { x: 1, y: 5, category: "Sales" },
+  { x: 2, y: 8, category: "Sales" },
+  { x: 1, y: 3, category: "Marketing" },
+  { x: 2, y: 6, category: "Marketing" }
+]
+
+<StackedAreaChart
+  data={areaData}
+  width={600}
+  height={400}
+  xLabel="Time"
+  yLabel="Value"
+  areaBy="category"
+  colorBy="category"
+  tooltip={MultiLineTooltip({ title: "category", fields: ["x", "y"] })}
+/>`}
+      >
+        <StackedAreaChart
+          data={areaData}
+          width={600}
+          height={400}
+          xLabel="Time"
+          yLabel="Value"
+          areaBy="category"
+          colorBy="category"
+          tooltip={MultiLineTooltip({ title: "category", fields: ["x", "y"] })}
+        />
+      </ExampleContainer>
+
+      <MarkdownText
+        text={`
+**Key Props:**
+- \`data\`: Array of \`{x, y, category?, ...}\` objects
+- \`xLabel\`, \`yLabel\`: Axis labels
+- \`areaBy\`: Field to group data into stacked areas
+- \`colorBy\`: Field or function for area colors
 - \`normalize\`: 100% stacked / proportional (default: false)
 - \`curve\`: Area interpolation
 - \`tooltip\`: Tooltip configuration

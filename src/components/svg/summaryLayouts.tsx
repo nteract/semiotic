@@ -250,37 +250,27 @@ export function boxplotRenderFn({
       summaryValueNest[4] = Math.min(summaryValueNest[4], maxOutlier)
     }
 
-    //translate
+    // Derive position quantiles from value quantiles via linear interpolation.
+    // This avoids depending on d3.quantile sort-order behavior (which changed in v3).
+    const posAccessor = projection === "vertical"
+      ? (p: any) => p.scaledVerticalValue
+      : (p: any) => p.scaledValue
+
+    const sortedPieces = [...thisSummaryData].sort((a, b) => a.value - b.value)
+    const valMin = sortedPieces[0].value
+    const valMax = sortedPieces[sortedPieces.length - 1].value
+    const posOfMin = posAccessor(sortedPieces[0])
+    const posOfMax = posAccessor(sortedPieces[sortedPieces.length - 1])
+
+    // summaryPositionNest indices now match summaryValueNest:
+    // [0]=min, [1]=Q1, [2]=median, [3]=Q3, [4]=max
+    summaryPositionNest = summaryValueNest.map((v: number) => {
+      if (valMax === valMin) return (posOfMin + posOfMax) / 2
+      return posOfMin + (v - valMin) / (valMax - valMin) * (posOfMax - posOfMin)
+    })
 
     if (projection === "vertical") {
-      summaryPositionNest = thisSummaryData
-        .map((p) => p.scaledVerticalValue)
-        .sort((a, b) => b - a)
-
       translate = `translate(${summary.x + summary.width / 2},0)`
-
-      if (fixedInput !== true || summaryValueNest.length !== 5) {
-        summaryPositionNest = [
-          quantile(summaryPositionNest, 0.0),
-          quantile(summaryPositionNest, 0.25),
-          quantile(summaryPositionNest, 0.5),
-          quantile(summaryPositionNest, 0.75),
-          quantile(summaryPositionNest, 1.0)
-        ]
-      }
-
-      if (outliers) {
-        const positionIQR = summaryPositionNest[3] - summaryPositionNest[1]
-
-        summaryPositionNest[0] = Math.min(
-          summaryPositionNest[0],
-          summaryPositionNest[1] - positionIQR * 1.5
-        )
-        summaryPositionNest[4] = Math.max(
-          summaryPositionNest[4],
-          summaryPositionNest[3] + positionIQR * 1.5
-        )
-      }
 
       extentlineX1 = 0
       extentlineX2 = 0
@@ -311,12 +301,14 @@ export function boxplotRenderFn({
       midLineY1 = summaryPositionNest[2]
       midLineY2 = summaryPositionNest[2]
 
+      const columnCenter = summary.x + summary.width / 2
+
       summaryXYCoords.push(
         {
           label: "Maximum",
           key,
           summaryPieceName: "max",
-          x: 0,
+          x: columnCenter,
           y: summaryPositionNest[4],
           value: summaryValueNest[4]
         },
@@ -324,7 +316,7 @@ export function boxplotRenderFn({
           label: "3rd Quartile",
           key,
           summaryPieceName: "q3area",
-          x: 0,
+          x: columnCenter,
           y: summaryPositionNest[3],
           value: summaryValueNest[3]
         },
@@ -332,7 +324,7 @@ export function boxplotRenderFn({
           label: "Median",
           key,
           summaryPieceName: "median",
-          x: 0,
+          x: columnCenter,
           y: summaryPositionNest[2],
           value: summaryValueNest[2]
         },
@@ -340,7 +332,7 @@ export function boxplotRenderFn({
           label: "1st Quartile",
           key,
           summaryPieceName: "q1area",
-          x: 0,
+          x: columnCenter,
           y: summaryPositionNest[1],
           value: summaryValueNest[1]
         },
@@ -348,41 +340,15 @@ export function boxplotRenderFn({
           label: "Minimum",
           key,
           summaryPieceName: "min",
-          x: 0,
+          x: columnCenter,
           y: summaryPositionNest[0],
           value: summaryValueNest[0]
         }
       )
     } else if (projection === "horizontal") {
-      summaryPositionNest = thisSummaryData
-        .map((p) => p.scaledValue)
-        .sort((a, b) => a - b)
+      const columnCenter = summary.x + summary.width / 2
 
-      const boxplotY = summary.x + summary.padding
-
-      translate = `translate(0,${summary.x + summary.width / 2})`
-      if (fixedInput !== true || summaryValueNest.length !== 5) {
-        summaryPositionNest = [
-          quantile(summaryPositionNest, 0.0),
-          quantile(summaryPositionNest, 0.25),
-          quantile(summaryPositionNest, 0.5),
-          quantile(summaryPositionNest, 0.75),
-          quantile(summaryPositionNest, 1.0)
-        ]
-      }
-
-      if (outliers) {
-        const positionIQR = summaryPositionNest[3] - summaryPositionNest[1]
-
-        summaryPositionNest[0] = Math.max(
-          summaryPositionNest[0],
-          summaryPositionNest[1] - positionIQR * 1.5
-        )
-        summaryPositionNest[4] = Math.min(
-          summaryPositionNest[4],
-          summaryPositionNest[3] + positionIQR * 1.5
-        )
-      }
+      translate = `translate(0,${columnCenter})`
 
       extentlineY1 = 0
       extentlineY2 = 0
@@ -419,7 +385,7 @@ export function boxplotRenderFn({
           key,
           summaryPieceName: "max",
           x: summaryPositionNest[4],
-          y: boxplotY,
+          y: columnCenter,
           value: summaryValueNest[4]
         },
         {
@@ -427,7 +393,7 @@ export function boxplotRenderFn({
           key,
           summaryPieceName: "q3area",
           x: summaryPositionNest[3],
-          y: boxplotY,
+          y: columnCenter,
           value: summaryValueNest[3]
         },
         {
@@ -435,7 +401,7 @@ export function boxplotRenderFn({
           key,
           summaryPieceName: "median",
           x: summaryPositionNest[2],
-          y: boxplotY,
+          y: columnCenter,
           value: summaryValueNest[2]
         },
         {
@@ -443,7 +409,7 @@ export function boxplotRenderFn({
           key,
           summaryPieceName: "q1area",
           x: summaryPositionNest[1],
-          y: boxplotY,
+          y: columnCenter,
           value: summaryValueNest[1]
         },
         {
@@ -451,27 +417,13 @@ export function boxplotRenderFn({
           key,
           summaryPieceName: "min",
           x: summaryPositionNest[0],
-          y: boxplotY,
+          y: columnCenter,
           value: summaryValueNest[0]
         }
       )
     }
 
     if (projection === "radial") {
-      summaryPositionNest = thisSummaryData
-        .map((p) => p.scaledValue)
-        .sort((a, b) => a - b)
-
-      if (fixedInput !== true || summaryValueNest.length !== 5) {
-        summaryPositionNest = [
-          quantile(summaryPositionNest, 0.0),
-          quantile(summaryPositionNest, 0.25),
-          quantile(summaryPositionNest, 0.5),
-          quantile(summaryPositionNest, 0.75),
-          quantile(summaryPositionNest, 1.0)
-        ]
-      }
-
       extentlineX1 = 0
       extentlineX2 = 0
       extentlineY1 = summaryPositionNest[0]

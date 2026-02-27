@@ -20,6 +20,9 @@ export type { LineChartProps } from "./xy/LineChart"
 export { AreaChart } from "./xy/AreaChart"
 export type { AreaChartProps } from "./xy/AreaChart"
 
+export { StackedAreaChart } from "./xy/StackedAreaChart"
+export type { StackedAreaChartProps } from "./xy/StackedAreaChart"
+
 export { Heatmap } from "./xy/Heatmap"
 export type { HeatmapProps } from "./xy/Heatmap"
 
