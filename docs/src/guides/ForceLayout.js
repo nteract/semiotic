@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState, useEffect, useMemo } from "react"
 import MarkdownText from "../MarkdownText"
 import DocumentFrame from "../DocumentFrame"
 import { NetworkFrame, nodesEdgesFromHierarchy } from "semiotic"
@@ -7,18 +7,16 @@ import theme from "../theme"
 import { forceSimulation, forceY, forceCollide } from "d3-force"
 import flareData from "../../public/data/flare.json"
 
-const hierarchy = nodesEdgesFromHierarchy(flareData)
-
 const frameProps = {
   networkType: {
     type: "force",
     forceManyBody: -250,
     distanceMax: 500,
-    edgeStrength: 2
+    edgeStrength: 2,
   },
   nodeSizeAccessor: 2,
   edgeStyle: { stroke: theme[2], fill: "none" },
-  nodeIDAccessor: d => d.hierarchicalID || d.name
+  nodeIDAccessor: (d) => d.hierarchicalID || d.name,
 }
 
 const combinedFociNodes = [...Array(100)].map((d, i) => ({
@@ -27,12 +25,18 @@ const combinedFociNodes = [...Array(100)].map((d, i) => ({
   fociX: (i % 2) * 200 + 50,
   fociY: Math.floor((i % 4) / 2) * 200,
   combinedY: (i % 4) * 75 + 150,
-  color: theme[i % 4]
+  color: theme[i % 4],
 }))
 
 const combinedFociSimulation = forceSimulation()
-  .force("collide", forceCollide().radius(d => d.r))
-  .force("y", forceY(d => d.combinedY))
+  .force(
+    "collide",
+    forceCollide().radius((d) => d.r),
+  )
+  .force(
+    "y",
+    forceY((d) => d.combinedY),
+  )
 
 const bubbleProps = {
   nodes: combinedFociNodes,
@@ -41,9 +45,9 @@ const bubbleProps = {
     type: "force",
     iterations: 200,
     simulation: combinedFociSimulation,
-    zoom: false
+    zoom: false,
   },
-  nodeStyle: d => ({ fill: d.color })
+  nodeStyle: (d) => ({ fill: d.color }),
 }
 
 const pre = `
@@ -63,17 +67,32 @@ const bubbleOverrideProps = {
     zoom: false
   }
   `,
-  nodes: combinedFociNodes.map(d => ({
+  nodes: combinedFociNodes.map((d) => ({
     name: d.name,
     r: d.r,
     fociX: d.fociX,
     fociY: d.fociY,
     combinedY: d.combinedY,
-    color: d.color
-  }))
+    color: d.color,
+  })),
 }
 
 const ForceLayouts = () => {
+  // Progressive rendering: mount charts one at a time so the browser
+  // can paint between expensive force simulations
+  const [chartsReady, setChartsReady] = useState(0)
+
+  const hierarchy = useMemo(() => nodesEdgesFromHierarchy(flareData), [])
+
+  useEffect(() => {
+    if (chartsReady < 3) {
+      const id = requestAnimationFrame(() => {
+        setChartsReady((n) => n + 1)
+      })
+      return () => cancelAnimationFrame(id)
+    }
+  }, [chartsReady])
+
   return (
     <div>
       <MarkdownText
@@ -91,19 +110,33 @@ The data on this page use the [Flare visualization toolkit](https://github.com/p
     `}
       />
 
-      <DocumentFrame
-        frameProps={{
-          ...frameProps,
-          nodes: hierarchy.nodes,
-          edges: hierarchy.edges
-        }}
-        hiddenProps={{ nodes: true, edges: true }}
-        overrideProps={{
-          nodes: `hierarchy.nodes`,
-          edges: `hierarchy.edges`
-        }}
-        type={NetworkFrame}
-      />
+      {chartsReady >= 1 ? (
+        <DocumentFrame
+          frameProps={{
+            ...frameProps,
+            nodes: hierarchy.nodes,
+            edges: hierarchy.edges,
+          }}
+          hiddenProps={{ nodes: true, edges: true }}
+          overrideProps={{
+            nodes: `hierarchy.nodes`,
+            edges: `hierarchy.edges`,
+          }}
+          type={NetworkFrame}
+        />
+      ) : (
+        <div
+          style={{
+            height: 500,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#999",
+          }}
+        >
+          Loading force layout...
+        </div>
+      )}
       <MarkdownText
         text={`
 ## Force Layout with Edge Type
@@ -112,19 +145,33 @@ This example is the same as the example above with the additional prop \`edgeTyp
 `}
       />
 
-      <DocumentFrame
-        frameProps={{
-          ...frameProps,
-          edges: flareData,
-          edgeType: "linearc"
-        }}
-        hiddenProps={{ edges: true }}
-        overrideProps={{
-          edges: `flareData`
-        }}
-        type={NetworkFrame}
-        startHidden
-      />
+      {chartsReady >= 2 ? (
+        <DocumentFrame
+          frameProps={{
+            ...frameProps,
+            edges: flareData,
+            edgeType: "linearc",
+          }}
+          hiddenProps={{ edges: true }}
+          overrideProps={{
+            edges: `flareData`,
+          }}
+          type={NetworkFrame}
+          startHidden
+        />
+      ) : (
+        <div
+          style={{
+            height: 500,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#999",
+          }}
+        >
+          Loading force layout...
+        </div>
+      )}
 
       <MarkdownText
         text={`
@@ -201,12 +248,26 @@ The following example uses a custom simulation, and it shows and example with th
   `}
       />
 
-      <DocumentFrame
-        frameProps={bubbleProps}
-        overrideProps={bubbleOverrideProps}
-        type={NetworkFrame}
-        pre={pre}
-      />
+      {chartsReady >= 3 ? (
+        <DocumentFrame
+          frameProps={bubbleProps}
+          overrideProps={bubbleOverrideProps}
+          type={NetworkFrame}
+          pre={pre}
+        />
+      ) : (
+        <div
+          style={{
+            height: 500,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#999",
+          }}
+        >
+          Loading bubble chart...
+        </div>
+      )}
     </div>
   )
 }

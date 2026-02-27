@@ -279,7 +279,6 @@ const baseNodeProps = {
 }
 
 const baseNetworkSettings = {
-  iterations: 500,
   hierarchicalNetwork: false
 }
 
@@ -1084,6 +1083,7 @@ export const calculateNetworkFrame = (
       for (let i = 0; i < iterations; ++i) {
         simulation.tick()
       }
+
     } else if (networkSettings.type === "motifs") {
       const componentMap = new Map()
       projectedEdges.forEach((edge) => {
