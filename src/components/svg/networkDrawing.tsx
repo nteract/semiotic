@@ -15,8 +15,7 @@ import {
   curveBasis,
   line,
   linkHorizontal,
-  linkVertical,
-  linkRadial
+  linkVertical
 } from "d3-shape"
 import { linearRibbon } from "./SvgHelper"
 import { interpolateNumber } from "d3-interpolate"
@@ -75,28 +74,6 @@ const customEdgeHashD = {
       d.target.nodeSize / 2,
       (d.source.nodeSize + d.target.nodeSize) / 4
     )
-}
-
-export const radialCurveGenerator = (size) => {
-  const radialCurve = linkRadial()
-    .angle((d) => (d.x / size[0]) * Math.PI * 2)
-    .radius((d) => d.y)
-
-  return ({ d, i, styleFn, renderMode, key, className }) => {
-    const style = styleFn(d, i)
-    return (
-      <path
-        key={key}
-        transform={`translate(${50},${size[1] / 2 - 50})`}
-        d={radialCurve(d)}
-        {...style}
-        style={style}
-        className={className}
-        aria-label={`Node ${d.id}`}
-        tabIndex={-1}
-      />
-    )
-  }
 }
 
 export const circleNodeGenerator = ({

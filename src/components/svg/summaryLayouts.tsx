@@ -224,8 +224,6 @@ export function boxplotRenderFn({
       midLineY1,
       midLineY2
 
-    const renderValue = renderMode ? renderMode(summary, summaryI) : undefined
-
     summaryValueNest = thisSummaryData.map((p) => p.value).sort((a, b) => a - b)
 
     if (fixedInput !== true || summaryValueNest.length !== 5) {
@@ -828,7 +826,6 @@ export function contourRenderFn({
 
   keys.forEach((key, ordsetI) => {
     const ordset = data[key]
-    const renderValue = renderMode && renderMode(ordset, ordsetI)
     type.thresholds = type.thresholds || 8
     type.bandwidth = type.bandwidth || 12
     type.resolution = type.resolution || 1000
@@ -1038,8 +1035,6 @@ export function bucketizedRenderingFn({
   calculatedBins.forEach(({ bins, summary, summaryI, thisSummaryData }) => {
     const eventListeners = eventListenersGenerator(summary, summaryI)
     const columnWidth = summary.width
-    const renderValue = renderMode && renderMode(summary, summaryI)
-
     let calculatedSummaryStyle = thisSummaryData[0]
       ? styleFn(thisSummaryData[0].piece.data, summaryI)
       : {}

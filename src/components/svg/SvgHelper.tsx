@@ -1,4 +1,3 @@
-import { select } from "d3-selection"
 import { arc, line, curveLinearClosed } from "d3-shape"
 import { interpolateNumber } from "d3-interpolate"
 
@@ -62,58 +61,6 @@ export const drawAreaConnector = ({
   return `M${x1},${y1}L${x2},${y2}L${x2 + sizeX2},${y2 + sizeY2}L${
     x1 + sizeX1
   },${y1 + sizeY1}Z`
-}
-
-export const wrap = (text, width) => {
-  text.each(function () {
-    const textNode = select(this),
-      words = textNode.text().split(/\s+/).reverse(),
-      lineHeight = 1.1, // ems
-      y = textNode.attr("y"),
-      dy = parseFloat(textNode.attr("dy"))
-
-    let word,
-      wordline = [],
-      lineNumber = 0,
-      tspan = textNode
-        .text(null)
-        .append("tspan")
-        .attr("x", 0)
-        .attr("y", y)
-        .attr("dy", `${dy}em`)
-
-    while (words.length > 0) {
-      word = words.pop()
-      wordline.push(word)
-      tspan.text(wordline.join(" "))
-      if (tspan.node().getComputedTextLength() > width) {
-        wordline.pop()
-        tspan.text(wordline.join(" "))
-        wordline = [word]
-
-        tspan = text
-          .append("tspan")
-          .attr("x", 0)
-          .attr("y", y)
-          .attr("dy", `${++lineNumber * lineHeight + dy}em`)
-          .text(word)
-      }
-    }
-  })
-}
-
-export const hexToRgb = (hex) => {
-  if (hex.substr(0, 2).toLowerCase() === "rg") {
-    return hex.split("(")[1].split(")")[0].split(",")
-  }
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-  return result
-    ? [
-        parseInt(result[1], 16),
-        parseInt(result[2], 16),
-        parseInt(result[3], 16)
-      ]
-    : [0, 0, 0]
 }
 
 export const groupBarMark = ({

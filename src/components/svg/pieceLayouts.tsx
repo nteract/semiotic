@@ -4,6 +4,7 @@ import { /*area, curveCatmullRom,*/ arc } from "d3-shape"
 import pathBounds from "svg-path-bounding-box"
 import { scaleLinear } from "d3-scale"
 import { arcTweener } from "./SvgHelper"
+import { pointOnArcAtAngle } from "./pieceDrawing"
 
 // RENAME XY to drawingProps
 
@@ -233,15 +234,6 @@ const iconBarCustomMark =
     }
     return icons
   }
-
-export function pointOnArcAtAngle(center, angle, distance) {
-  const radians = Math.PI * (angle + 0.75) * 2
-
-  const xPosition = center[0] + distance * Math.cos(radians)
-  const yPosition = center[1] + distance * Math.sin(radians)
-
-  return [xPosition, yPosition]
-}
 
 export function clusterBarLayout({
   type,
