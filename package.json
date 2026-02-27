@@ -120,7 +120,7 @@
     "babel-eslint": "^7.2.3",
     "babel-jest": "^27.5.1",
     "classnames": "2.2.5",
-    "conventional-changelog-cli": "1.1.1",
+    "conventional-changelog-cli": "5.0.0",
     "conventional-recommended-bump": "0.3.0",
     "d3-dsv": "1.0.5",
     "d3-flextree-v4": "^1.0.1",
