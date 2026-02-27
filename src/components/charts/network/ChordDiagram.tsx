@@ -2,7 +2,7 @@ import * as React from "react"
 import { useMemo } from "react"
 import NetworkFrame from "../../NetworkFrame"
 import type { NetworkFrameProps } from "../../types/networkTypes"
-import { getColor, createColorScale } from "../shared/colorUtils"
+import { getColor, COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"
 import type { BaseChartProps, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
@@ -268,16 +268,12 @@ export function ChordDiagram(props: ChordDiagramProps) {
       if (colorBy) {
         baseStyle.fill = getColor(d, colorBy, colorScale)
       } else {
-        // Default: color by index
-        const colors = Array.isArray(colorScheme)
+        // Default: color by index using the color scheme
+        const palette = Array.isArray(colorScheme)
           ? colorScheme
-          : createColorScale(
-              inferredNodes.map((_, idx) => ({ index: idx })),
-              "index",
-              colorScheme
-            )
-        baseStyle.fill =
-          typeof colors === "function" ? colors({ index: i }) : colors[i % 10]
+          : (COLOR_SCHEMES[colorScheme] || DEFAULT_COLORS)
+        const colors = Array.isArray(palette) ? palette : DEFAULT_COLORS
+        baseStyle.fill = colors[i % colors.length]
       }
 
       return baseStyle

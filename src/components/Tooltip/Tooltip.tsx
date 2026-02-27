@@ -121,6 +121,13 @@ function formatValue(value: any, format?: (value: any) => string): string {
     return value.toLocaleDateString()
   }
 
+  // Handle objects (e.g. resolved network nodes with an id property)
+  if (typeof value === "object" && value !== null) {
+    if (value.id !== undefined) return String(value.id)
+    if (value.name !== undefined) return String(value.name)
+    return JSON.stringify(value)
+  }
+
   return String(value)
 }
 

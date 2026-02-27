@@ -97,7 +97,11 @@ The data on this page use the [Flare visualization toolkit](https://github.com/p
           nodes: hierarchy.nodes,
           edges: hierarchy.edges
         }}
-        // overrideProps={this.state.hierarchyOverrideProps}
+        hiddenProps={{ nodes: true, edges: true }}
+        overrideProps={{
+          nodes: `hierarchy.nodes`,
+          edges: `hierarchy.edges`
+        }}
         type={NetworkFrame}
       />
       <MarkdownText
@@ -114,7 +118,10 @@ This example is the same as the example above with the additional prop \`edgeTyp
           edges: flareData,
           edgeType: "linearc"
         }}
-        // overrideProps={this.state.hierarchyOverrideProps}
+        hiddenProps={{ edges: true }}
+        overrideProps={{
+          edges: `flareData`
+        }}
         type={NetworkFrame}
         startHidden
       />
