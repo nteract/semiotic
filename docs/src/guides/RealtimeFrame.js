@@ -218,6 +218,41 @@ function AxesExample() {
   )
 }
 
+function DatetimeDemo() {
+  const frameRef = useRef()
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (!frameRef.current) return
+      frameRef.current.push({
+        time: new Date(),
+        value: Math.sin(Date.now() * 0.001) * 50 + 100 + (Math.random() - 0.5) * 20,
+      })
+    }, 50)
+    return () => clearInterval(id)
+  }, [])
+
+  const formatTime = (ms) => {
+    const d = new Date(ms)
+    const h = String(d.getHours()).padStart(2, "0")
+    const m = String(d.getMinutes()).padStart(2, "0")
+    const s = String(d.getSeconds()).padStart(2, "0")
+    return `${h}:${m}:${s}`
+  }
+
+  return (
+    <RealtimeFrame
+      ref={frameRef}
+      windowSize={200}
+      size={[700, 300]}
+      lineStyle={{ stroke: "#007bff", strokeWidth: 2 }}
+      tickFormatTime={formatTime}
+      tickFormatValue={(v) => v.toFixed(1)}
+      hoverAnnotation={true}
+    />
+  )
+}
+
 function AnnotationsExample() {
   const frameRef = useRef()
   const indexRef = useRef(0)
@@ -652,6 +687,18 @@ so ticks stay stable as data streams in.
 
       <MarkdownText
         text={`
+## Datetime Values
+
+RealtimeFrame accepts JavaScript \`Date\` objects as time values. Use \`tickFormatTime\` to format
+the time axis labels (e.g. HH:MM:SS) and \`tickFormatValue\` to format the value axis labels.
+The default tooltip also uses \`tickFormatTime\` to display human-readable timestamps on hover.
+`}
+      />
+
+      <DatetimeDemo />
+
+      <MarkdownText
+        text={`
 ## Annotations
 
 RealtimeFrame supports the same annotation system as other Semiotic frames.
@@ -779,6 +826,8 @@ Each instance manages its own ring buffer and requestAnimationFrame loop indepen
 | \`barStyle\` | \`object\` | — | Bar styling: fill, stroke, strokeWidth, gap |
 | \`waterfallStyle\` | \`object\` | — | Waterfall styling: positiveColor, negativeColor, connectorStroke, connectorWidth, gap, stroke, strokeWidth |
 | \`swarmStyle\` | \`object\` | — | Swarm styling: radius (default 3), fill, opacity (default 0.7), stroke, strokeWidth |
+| \`tickFormatTime\` | \`function\` | — | Custom formatter for time axis tick labels: \`(value: number) => string\` |
+| \`tickFormatValue\` | \`function\` | — | Custom formatter for value axis tick labels: \`(value: number) => string\` |
 
 ### Imperative API (via ref)
 

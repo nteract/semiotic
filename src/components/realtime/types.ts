@@ -90,6 +90,8 @@ export interface RealtimeFrameProps {
   barStyle?: BarStyle
   waterfallStyle?: WaterfallStyle
   swarmStyle?: SwarmStyle
+  tickFormatTime?: (value: number) => string
+  tickFormatValue?: (value: number) => string
 }
 
 export interface RealtimeFrameHandle {

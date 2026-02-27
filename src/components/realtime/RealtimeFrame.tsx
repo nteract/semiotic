@@ -43,9 +43,9 @@ function resolveAccessor(
   accessor: string | ((d: any) => number) | undefined,
   fallback: string
 ): (d: any) => number {
-  if (typeof accessor === "function") return accessor
+  if (typeof accessor === "function") return (d: any) => +accessor(d)
   const key = accessor || fallback
-  return (d: any) => d[key]
+  return (d: any) => +d[key]
 }
 
 function getTimeAxis(arrowOfTime: ArrowOfTime): "x" | "y" {
@@ -78,15 +78,22 @@ function buildScales(
   }
 }
 
+function defaultTickFormat(v: number): string {
+  return String(Math.round(v * 100) / 100)
+}
+
 function drawAxes(
   ctx: CanvasRenderingContext2D,
   arrowOfTime: ArrowOfTime,
   timeScale: any,
   valueScale: any,
   width: number,
-  height: number
+  height: number,
+  tickFormatTime?: (value: number) => string,
+  tickFormatValue?: (value: number) => string
 ) {
   const timeAxis = getTimeAxis(arrowOfTime)
+  const fmtValue = tickFormatValue || defaultTickFormat
 
   ctx.strokeStyle = "#ccc"
   ctx.lineWidth = 1
@@ -107,12 +114,17 @@ function drawAxes(
     ctx.stroke()
 
     const timeTicks = timeScale.ticks(5)
+    ctx.textAlign = "center"
+    ctx.textBaseline = "top"
     for (const tick of timeTicks) {
       const x = timeScale(tick)
       ctx.beginPath()
       ctx.moveTo(x, height)
       ctx.lineTo(x, height + 5)
       ctx.stroke()
+      if (tickFormatTime) {
+        ctx.fillText(tickFormatTime(tick), x, height + 7)
+      }
     }
 
     ctx.textAlign = "right"
@@ -124,7 +136,7 @@ function drawAxes(
       ctx.moveTo(-5, y)
       ctx.lineTo(0, y)
       ctx.stroke()
-      ctx.fillText(String(Math.round(tick * 100) / 100), -8, y)
+      ctx.fillText(fmtValue(tick), -8, y)
     }
   } else {
     ctx.beginPath()
@@ -146,6 +158,7 @@ function drawAxes(
       ctx.moveTo(x, height)
       ctx.lineTo(x, height + 5)
       ctx.stroke()
+      ctx.fillText(fmtValue(tick), x, height + 7)
     }
 
     ctx.textAlign = "right"
@@ -157,6 +170,9 @@ function drawAxes(
       ctx.moveTo(-5, y)
       ctx.lineTo(0, y)
       ctx.stroke()
+      if (tickFormatTime) {
+        ctx.fillText(tickFormatTime(tick), -8, y)
+      }
     }
   }
 }
@@ -248,9 +264,10 @@ const defaultTooltipStyle: React.CSSProperties = {
   whiteSpace: "nowrap"
 }
 
-function DefaultTooltip({ hover }: { hover: HoverData }) {
+function DefaultTooltip({ hover, formatTime }: { hover: HoverData; formatTime?: (v: number) => string }) {
   const fmtValue = (v: number) =>
     Number.isInteger(v) ? String(v) : v.toFixed(2)
+  const fmtTime = formatTime || fmtValue
 
   const colorMap: Record<string, string> | undefined = hover.data.barColors
   const hoveredCat: string | undefined = hover.data.hoveredCategory
@@ -277,7 +294,7 @@ function DefaultTooltip({ hover }: { hover: HoverData }) {
         </div>
       )}
       <div style={{ opacity: 0.7, fontSize: 11 }}>
-        {fmtValue(hover.time)}
+        {fmtTime(hover.time)}
       </div>
     </div>
   )
@@ -312,7 +329,9 @@ const RealtimeFrame = forwardRef<RealtimeFrameHandle, RealtimeFrameProps>(
       barColors,
       barStyle,
       waterfallStyle,
-    swarmStyle
+    swarmStyle,
+    tickFormatTime,
+    tickFormatValue
     } = props
 
     const margin = { ...DEFAULT_MARGIN, ...marginProp }
@@ -639,7 +658,7 @@ const RealtimeFrame = forwardRef<RealtimeFrameHandle, RealtimeFrameProps>(
 
       if (showAxes) {
         ctx.save()
-        drawAxes(ctx, arrowOfTime, scales.time, scales.value, adjustedWidth, adjustedHeight)
+        drawAxes(ctx, arrowOfTime, scales.time, scales.value, adjustedWidth, adjustedHeight, tickFormatTime, tickFormatValue)
         ctx.restore()
       }
 
@@ -806,7 +825,7 @@ const RealtimeFrame = forwardRef<RealtimeFrameHandle, RealtimeFrameProps>(
       >
         {tooltipContent
           ? tooltipContent(hoverPoint)
-          : <DefaultTooltip hover={hoverPoint} />}
+          : <DefaultTooltip hover={hoverPoint} formatTime={tickFormatTime} />}
       </div>
     ) : null
 

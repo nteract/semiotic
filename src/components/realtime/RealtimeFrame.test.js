@@ -521,6 +521,62 @@ describe("RealtimeFrame", () => {
     })
   })
 
+  describe("Date time values", () => {
+    it("renders with Date objects as time values", () => {
+      const data = [
+        { time: new Date("2024-01-01T00:00:00Z"), value: 10 },
+        { time: new Date("2024-01-01T00:01:00Z"), value: 20 },
+        { time: new Date("2024-01-01T00:02:00Z"), value: 30 }
+      ]
+      const { container } = render(<RealtimeFrame data={data} />)
+      expect(container.querySelector("canvas")).toBeTruthy()
+    })
+
+    it("imperative push works with Date time values", () => {
+      const ref = createRef()
+      render(<RealtimeFrame ref={ref} />)
+
+      ref.current.push({ time: new Date("2024-01-01T00:00:00Z"), value: 10 })
+      ref.current.push({ time: new Date("2024-01-01T00:01:00Z"), value: 20 })
+      ref.current.push({ time: new Date("2024-01-01T00:02:00Z"), value: 30 })
+      expect(ref.current.getData().length).toBe(3)
+    })
+
+    it("bar chart works with Date time values", () => {
+      const data = [
+        { time: new Date("2024-01-01T00:00:00Z"), value: 5 },
+        { time: new Date("2024-01-01T00:00:30Z"), value: 10 },
+        { time: new Date("2024-01-01T00:01:30Z"), value: 3 }
+      ]
+      const { container } = render(
+        <RealtimeFrame chartType="bar" binSize={60000} data={data} />
+      )
+      expect(container.querySelector(".realtime-frame")).toBeTruthy()
+    })
+
+    it("works with custom timeAccessor returning Date", () => {
+      const data = [
+        { ts: new Date("2024-01-01T00:00:00Z"), value: 10 },
+        { ts: new Date("2024-01-01T00:01:00Z"), value: 20 }
+      ]
+      const { container } = render(
+        <RealtimeFrame data={data} timeAccessor="ts" />
+      )
+      expect(container.querySelector("canvas")).toBeTruthy()
+    })
+
+    it("works with function timeAccessor that returns Date.getTime()", () => {
+      const ref = createRef()
+      render(
+        <RealtimeFrame ref={ref} timeAccessor={(d) => d.ts.getTime()} />
+      )
+
+      ref.current.push({ ts: new Date("2024-01-01T00:00:00Z"), value: 10 })
+      ref.current.push({ ts: new Date("2024-01-01T00:01:00Z"), value: 20 })
+      expect(ref.current.getData().length).toBe(2)
+    })
+  })
+
   describe("hover annotation", () => {
     function setupHover(hoverProps = {}) {
       const ref = createRef()
