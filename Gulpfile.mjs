@@ -37,6 +37,13 @@ export const network = () => createBundle({
   minify: false
 })
 
+export const realtime = () => createBundle({
+  input: "src/components/semiotic-realtime.ts",
+  name: "realtime",
+  analyze: false,
+  minify: false
+})
+
 /**
  * Build all frame-specific bundles + main bundle
  */
@@ -44,7 +51,8 @@ export const bundleAll = parallel(
   () => createMainBundle({ analyze: false, minify: false }),
   xy,
   ordinal,
-  network
+  network,
+  realtime
 )
 
 export function bundleWithAnalysis() {
@@ -55,7 +63,8 @@ export const bundleProduction = parallel(
   () => createMainBundle({ analyze: true, minify: true }),
   () => createBundle({ input: "src/components/semiotic-xy.ts", name: "xy", analyze: false, minify: true }),
   () => createBundle({ input: "src/components/semiotic-ordinal.ts", name: "ordinal", analyze: false, minify: true }),
-  () => createBundle({ input: "src/components/semiotic-network.ts", name: "network", analyze: false, minify: true })
+  () => createBundle({ input: "src/components/semiotic-network.ts", name: "network", analyze: false, minify: true }),
+  () => createBundle({ input: "src/components/semiotic-realtime.ts", name: "realtime", analyze: false, minify: true })
 )
 
 async function createMainBundle(options = {}) {

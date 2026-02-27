@@ -31,6 +31,12 @@
       "require": "./dist/network.min.js",
       "default": "./dist/network.module.min.js"
     },
+    "./realtime": {
+      "types": "./dist/RealtimeFrame.d.ts",
+      "import": "./dist/realtime.module.min.js",
+      "require": "./dist/realtime.min.js",
+      "default": "./dist/realtime.module.min.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [

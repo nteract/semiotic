@@ -35,6 +35,11 @@ import { Scatterplot, LineChart, AreaChart, StackedAreaChart, Heatmap, BubbleCha
 // Tooltip utilities
 import { Tooltip, MultiLineTooltip, normalizeTooltip } from "./Tooltip/Tooltip"
 
+// Realtime
+import RealtimeFrame from "./realtime/RealtimeFrame"
+import { RingBuffer } from "./realtime/RingBuffer"
+import { IncrementalExtent } from "./realtime/IncrementalExtent"
+
 export {
   AnnotationLayer,
   DividedLine,
@@ -81,7 +86,11 @@ export {
   // Tooltip utilities
   Tooltip,
   MultiLineTooltip,
-  normalizeTooltip
+  normalizeTooltip,
+  // Realtime
+  RealtimeFrame,
+  RingBuffer,
+  IncrementalExtent
 }
 
 export {
@@ -199,3 +208,22 @@ export type {
   TooltipField,
   MultiLineTooltipConfig
 } from "./Tooltip/Tooltip"
+
+// Realtime types
+export type {
+  ArrowOfTime,
+  WindowMode,
+  ThresholdType,
+  LineStyle,
+  AnnotationContext,
+  CrosshairStyle,
+  HoverAnnotationConfig,
+  HoverData,
+  RealtimeFrameProps,
+  RealtimeFrameHandle,
+  RealtimeScales,
+  RealtimeLayout,
+  RealtimeAccessors
+} from "./realtime/types"
+
+export type { RendererFn } from "./realtime/renderers/types"

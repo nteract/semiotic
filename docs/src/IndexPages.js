@@ -92,6 +92,14 @@ export function GuidesIndex() {
           thumbnail={new URL("../public/assets/img/force.png", import.meta.url)}
         />
 
+        <div className="sub-header">RealtimeFrame</div>
+
+        <PageLink
+          href="/guides/realtime-frame"
+          title="RealtimeFrame"
+          thumbnail={new URL("../public/assets/img/canvas-interaction.png", import.meta.url)}
+        />
+
         <div className="sub-header">All Frames</div>
 
         <PageLink
