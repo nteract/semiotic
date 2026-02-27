@@ -944,8 +944,11 @@ export const calculateOrdinalFrame = (
     }
   }
 
+  const isBarType = ["bar", "clusterbar", "timeline"].indexOf(pieceType.type) !== -1
+  const usesPieceOverlays = (currentProps.hoverAnnotation || currentProps.pieceHoverAnnotation) && isBarType
+
   if (
-    !currentProps.pieceHoverAnnotation &&
+    !usesPieceOverlays &&
     !currentProps.summaryHoverAnnotation &&
     (currentProps.hoverAnnotation ||
       currentProps.customClickBehavior ||
@@ -1152,7 +1155,7 @@ export const calculateOrdinalFrame = (
     .filter((d) => d)
 
   if (
-    (pieceHoverAnnotation &&
+    ((hoverAnnotation || pieceHoverAnnotation) &&
       ["bar", "clusterbar", "timeline"].indexOf(pieceType.type) === -1) ||
     summaryHoverAnnotation
   ) {
@@ -1166,7 +1169,7 @@ export const calculateOrdinalFrame = (
             y: d.y
           })
       )
-    } else if (pieceHoverAnnotation && calculatedPieceData) {
+    } else if ((hoverAnnotation || pieceHoverAnnotation) && calculatedPieceData) {
       //Check interaction layer rendering when only one point per column
       pieceDataXY = basePieceData
     }
@@ -1188,10 +1191,7 @@ export const calculateOrdinalFrame = (
     thresholds: calculatedSummaries.thresholds
   })
 
-  if (
-    pieceHoverAnnotation &&
-    ["bar", "clusterbar", "timeline"].indexOf(pieceType.type) !== -1
-  ) {
+  if (usesPieceOverlays) {
     const yMod = projection === "horizontal" ? midMod : zeroFunction
     const xMod = projection === "vertical" ? midMod : zeroFunction
     if (shouldRecalculateOverlay) {

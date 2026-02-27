@@ -6,7 +6,7 @@ import { getColor, getSize } from "../shared/colorUtils"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, Accessor } from "../shared/types"
-import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 
 /**
  * SwarmPlot component props
@@ -304,6 +304,33 @@ export function SwarmPlot(props: SwarmPlotProps) {
     return null
   }
 
+  // Default tooltip function for piece hover
+  const defaultTooltipContent = useMemo(() => {
+    const getVal = typeof valueAccessor === "function" ? valueAccessor : (d: any) => d[valueAccessor]
+    const getCat = typeof categoryAccessor === "function" ? categoryAccessor : (d: any) => d[categoryAccessor]
+
+    return (d: any) => {
+      const cat = getCat(d)
+      const val = getVal(d)
+      const pieces = d.pieces || []
+      const showCount = pieces.length > 1
+
+      return (
+        <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+          <div style={{ fontWeight: "bold" }}>{String(cat)}</div>
+          <div style={{ marginTop: "4px" }}>
+            {typeof val === "number" ? val.toLocaleString() : String(val)}
+          </div>
+          {showCount && (
+            <div style={{ marginTop: "2px", opacity: 0.8 }}>
+              {pieces.length} points in group
+            </div>
+          )}
+        </div>
+      )
+    }
+  }, [categoryAccessor, valueAccessor])
+
   // Build OrdinalFrame props
   const ordinalFrameProps: OrdinalFrameProps = {
     size: [width, height],
@@ -314,14 +341,14 @@ export function SwarmPlot(props: SwarmPlotProps) {
     projection: orientation === "horizontal" ? "horizontal" : "vertical",
     style: pieceStyle,
     axes,
-    hoverAnnotation: enableHover,
+    pieceHoverAnnotation: enableHover,
     margin,
     oPadding: categoryPadding,
     ...(legend && { legend }),
     ...(className && { className }),
     ...(title && { title }),
     // Add tooltip support
-    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) }),
+    tooltipContent: tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent,
     // Allow frameProps to override defaults
     ...frameProps
   }

@@ -76,7 +76,7 @@ export interface MultiLineTooltipConfig extends TooltipConfig {
 /**
  * Default tooltip styles following best practices
  */
-const defaultTooltipStyle: React.CSSProperties = {
+export const defaultTooltipStyle: React.CSSProperties = {
   background: "rgba(0, 0, 0, 0.85)",
   color: "white",
   padding: "8px 12px",
@@ -162,34 +162,51 @@ export function Tooltip(config: TooltipConfig = {}) {
       return null
     }
 
-    let content: React.ReactNode
+    let titleContent: React.ReactNode
+    const fieldLines: Array<{ label?: string; value: string }> = []
 
     if (title) {
-      // Show title
       const titleValue = getValue(data, title)
-      content = formatValue(titleValue, format)
-    } else if (fields && fields.length > 0) {
-      // Show first field's value
-      const field = fields[0]
-      const accessor = typeof field === "string" ? field : (field.accessor || field.key || "")
-      const fieldFormat = typeof field === "object" ? field.format : undefined
-      const value = getValue(data, accessor)
-      content = formatValue(value, fieldFormat || format)
-    } else {
-      // Default: try common field names
+      titleContent = formatValue(titleValue, format)
+    }
+
+    if (fields && fields.length > 0) {
+      fields.forEach((field) => {
+        let label: string | undefined
+        let accessor: Accessor<any>
+        let fieldFormat: ((value: any) => string) | undefined
+
+        if (typeof field === "string") {
+          label = field
+          accessor = field
+          fieldFormat = format
+        } else {
+          label = field.label
+          accessor = field.accessor || field.key || ""
+          fieldFormat = field.format || format
+        }
+
+        const value = getValue(data, accessor)
+        fieldLines.push({
+          label,
+          value: formatValue(value, fieldFormat)
+        })
+      })
+    } else if (!title) {
+      // Default: try common field names (only when no title or fields specified)
       const commonFields = ["value", "y", "name", "id", "label"]
       for (const field of commonFields) {
         if (data[field] !== undefined) {
-          content = formatValue(data[field], format)
+          titleContent = formatValue(data[field], format)
           break
         }
       }
 
       // If still nothing, show first non-internal property
-      if (!content) {
+      if (!titleContent) {
         const keys = Object.keys(data).filter(k => !k.startsWith("_"))
         if (keys.length > 0) {
-          content = formatValue(data[keys[0]], format)
+          titleContent = formatValue(data[keys[0]], format)
         }
       }
     }
@@ -201,7 +218,13 @@ export function Tooltip(config: TooltipConfig = {}) {
         className={`semiotic-tooltip ${className}`.trim()}
         style={mergedStyle}
       >
-        {content}
+        {titleContent && <div style={{ fontWeight: fieldLines.length > 0 ? "bold" : "normal" }}>{titleContent}</div>}
+        {fieldLines.map((line, index) => (
+          <div key={index} style={{ marginTop: index === 0 && titleContent ? "4px" : 0 }}>
+            {line.label && <span>{line.label}: </span>}
+            {line.value}
+          </div>
+        ))}
       </div>
     )
   }

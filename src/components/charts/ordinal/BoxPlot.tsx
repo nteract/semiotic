@@ -6,7 +6,7 @@ import { getColor } from "../shared/colorUtils"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, Accessor } from "../shared/types"
-import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 
 /**
  * BoxPlot component props
@@ -179,18 +179,13 @@ export function BoxPlot(props: BoxPlotProps) {
   // Summary style function for boxes
   const summaryStyle = useMemo(() => {
     return (d: any) => {
-      const baseStyle: any = {
+      const color = colorBy ? getColor(d, colorBy, colorScale) : DEFAULT_COLOR
+
+      return {
+        fill: color,
+        stroke: color,
         fillOpacity: 0.8
       }
-
-      // Apply color
-      if (colorBy) {
-        baseStyle.fill = getColor(d, colorBy, colorScale)
-      } else {
-        baseStyle.fill = DEFAULT_COLOR
-      }
-
-      return baseStyle
     }
   }, [colorBy, colorScale])
 
@@ -288,6 +283,34 @@ export function BoxPlot(props: BoxPlotProps) {
     return null
   }
 
+  // Default tooltip function for piece hover
+  const defaultTooltipContent = useMemo(() => {
+    const getVal = typeof valueAccessor === "function" ? valueAccessor : (d: any) => d[valueAccessor]
+    const getCat = typeof categoryAccessor === "function" ? categoryAccessor : (d: any) => d[categoryAccessor]
+
+    return (d: any) => {
+      const cat = getCat(d)
+      const val = getVal(d)
+      const pieces = d.pieces || []
+      const values = pieces.map((p: any) => Number(getVal(p))).filter((v: number) => !isNaN(v)).sort((a: number, b: number) => a - b)
+      const n = values.length
+
+      return (
+        <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+          <div style={{ fontWeight: "bold" }}>{String(cat)}</div>
+          <div style={{ marginTop: "4px" }}>
+            Value: {typeof val === "number" ? val.toLocaleString() : String(val)}
+          </div>
+          {n > 0 && (
+            <div style={{ marginTop: "2px", opacity: 0.8 }}>
+              n={n}, median={values[Math.floor(n / 2)].toLocaleString()}
+            </div>
+          )}
+        </div>
+      )
+    }
+  }, [categoryAccessor, valueAccessor])
+
   // Build OrdinalFrame props
   const ordinalFrameProps: OrdinalFrameProps = {
     size: [width, height],
@@ -298,7 +321,7 @@ export function BoxPlot(props: BoxPlotProps) {
     summaryStyle,
     projection: orientation === "horizontal" ? "horizontal" : "vertical",
     axes,
-    hoverAnnotation: enableHover,
+    pieceHoverAnnotation: enableHover,
     margin,
     oPadding: categoryPadding,
     ...(pointStyle && { pointStyle }),
@@ -306,7 +329,7 @@ export function BoxPlot(props: BoxPlotProps) {
     ...(className && { className }),
     ...(title && { title }),
     // Add tooltip support
-    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) }),
+    tooltipContent: tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent,
     // Allow frameProps to override defaults
     ...frameProps
   }

@@ -141,7 +141,7 @@ const scatterData = [
   xLabel="X Axis"
   yLabel="Y Axis"
   colorBy="category"
-  tooltip={Tooltip({ title: "category" })}
+  tooltip={Tooltip({ title: "category", fields: ["x", "y"] })}
 />`}
       >
         <Scatterplot
@@ -151,7 +151,7 @@ const scatterData = [
           xLabel="X Axis"
           yLabel="Y Axis"
           colorBy="category"
-          tooltip={Tooltip({ title: "category" })}
+          tooltip={Tooltip({ title: "category", fields: ["x", "y"] })}
         />
       </ExampleContainer>
 

@@ -6,7 +6,7 @@ import { getColor } from "../shared/colorUtils"
 import { useColorScale, useSortedData, DEFAULT_COLOR } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, Accessor } from "../shared/types"
-import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 
 /**
  * DotPlot component props
@@ -274,6 +274,22 @@ export function DotPlot(props: DotPlotProps) {
     return null
   }
 
+  // Default tooltip function for piece hover
+  const defaultTooltipContent = useMemo(() => {
+    return (d: any) => {
+      const cat = typeof categoryAccessor === "function" ? categoryAccessor(d) : d[categoryAccessor]
+      const val = typeof valueAccessor === "function" ? valueAccessor(d) : d[valueAccessor]
+      return (
+        <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+          <div style={{ fontWeight: "bold" }}>{String(cat)}</div>
+          <div style={{ marginTop: "4px" }}>
+            {typeof val === "number" ? val.toLocaleString() : String(val)}
+          </div>
+        </div>
+      )
+    }
+  }, [categoryAccessor, valueAccessor])
+
   // Build OrdinalFrame props
   const ordinalFrameProps: OrdinalFrameProps = {
     size: [width, height],
@@ -284,14 +300,14 @@ export function DotPlot(props: DotPlotProps) {
     projection: orientation === "horizontal" ? "horizontal" : "vertical",
     style: pieceStyle,
     axes,
-    hoverAnnotation: enableHover,
+    pieceHoverAnnotation: enableHover,
     margin,
     oPadding: categoryPadding,
     ...(legend && { legend }),
     ...(className && { className }),
     ...(title && { title }),
     // Add tooltip support
-    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) }),
+    tooltipContent: tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent,
     // Allow frameProps to override defaults
     ...frameProps
   }

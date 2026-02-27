@@ -137,7 +137,7 @@ Higher-order ordinal chart components provide simplified APIs for categorical da
 
       <ExampleContainer
         title="BarChart"
-        code={`import { BarChart, MultiLineTooltip } from "semiotic"
+        code={`import { BarChart } from "semiotic"
 
 const barData = [
   { category: "Product A", value: 45 },
@@ -151,7 +151,6 @@ const barData = [
   height={400}
   categoryLabel="Products"
   valueLabel="Sales"
-  tooltip={MultiLineTooltip({ title: "category", fields: ["value"] })}
 />`}
       >
         <BarChart
@@ -160,7 +159,6 @@ const barData = [
           height={400}
           categoryLabel="Products"
           valueLabel="Sales"
-          tooltip={MultiLineTooltip({ title: "category", fields: ["value"] })}
         />
       </ExampleContainer>
 
@@ -183,7 +181,7 @@ Pass any \`OrdinalFrame\` prop for complete control. [See OrdinalFrame API →](
 
       <ExampleContainer
         title="StackedBarChart"
-        code={`import { StackedBarChart, MultiLineTooltip } from "semiotic"
+        code={`import { StackedBarChart } from "semiotic"
 
 const stackedBarData = [
   { category: "Q1", subcategory: "Sales", value: 45 },
@@ -199,10 +197,6 @@ const stackedBarData = [
   categoryLabel="Quarter"
   valueLabel="Budget ($M)"
   stackBy="subcategory"
-  tooltip={MultiLineTooltip({
-    title: "subcategory",
-    fields: ["category", "value"]
-  })}
 />`}
       >
         <StackedBarChart
@@ -212,10 +206,6 @@ const stackedBarData = [
           categoryLabel="Quarter"
           valueLabel="Budget ($M)"
           stackBy="subcategory"
-          tooltip={MultiLineTooltip({
-            title: "subcategory",
-            fields: ["category", "value"]
-          })}
         />
       </ExampleContainer>
 
@@ -254,7 +244,7 @@ const swarmData = [
   height={400}
   categoryLabel="Groups"
   valueLabel="Measurements"
-  tooltip={Tooltip({ title: "category" })}
+  tooltip={Tooltip({ title: "category", fields: ["value"] })}
 />`}
       >
         <SwarmPlot
@@ -263,7 +253,7 @@ const swarmData = [
           height={400}
           categoryLabel="Groups"
           valueLabel="Measurements"
-          tooltip={Tooltip({ title: "category" })}
+          tooltip={Tooltip({ title: "category", fields: ["value"] })}
         />
       </ExampleContainer>
 
@@ -306,7 +296,7 @@ const boxPlotData = [
   height={400}
   categoryLabel="Datasets"
   valueLabel="Distribution"
-  tooltip={Tooltip({ title: "category" })}
+  tooltip={Tooltip({ title: "category", fields: ["value"] })}
 />`}
       >
         <BoxPlot
@@ -315,7 +305,7 @@ const boxPlotData = [
           height={400}
           categoryLabel="Datasets"
           valueLabel="Distribution"
-          tooltip={Tooltip({ title: "category" })}
+          tooltip={Tooltip({ title: "category", fields: ["value"] })}
         />
       </ExampleContainer>
 

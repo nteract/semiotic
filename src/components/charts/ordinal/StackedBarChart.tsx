@@ -6,7 +6,7 @@ import { getColor } from "../shared/colorUtils"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, Accessor } from "../shared/types"
-import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 
 /**
  * StackedBarChart component props
@@ -259,6 +259,36 @@ export function StackedBarChart(props: StackedBarChartProps) {
     return finalMargin
   }, [userMargin, legend])
 
+  // Default tooltip function for piece hover
+  const defaultTooltipContent = useMemo(() => {
+    const getStack = typeof stackBy === "function" ? stackBy : (d: any) => d[stackBy]
+    const getCat = typeof categoryAccessor === "function" ? categoryAccessor : (d: any) => d[categoryAccessor]
+    const getVal = typeof valueAccessor === "function" ? valueAccessor : (d: any) => d[valueAccessor]
+
+    return (d: any) => {
+      const stackValue = String(getStack(d))
+      const cat = String(getCat(d))
+      const val = Number(getVal(d))
+      const pieces = d.pieces || []
+      const total = pieces.reduce((sum: number, p: any) => sum + (Number(getVal(p)) || 0), 0)
+      const showTotal = pieces.length > 1
+
+      return (
+        <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+          <div style={{ fontWeight: "bold" }}>{stackValue}</div>
+          <div style={{ marginTop: "4px" }}>
+            {cat} &middot; {val.toLocaleString()}
+          </div>
+          {showTotal && (
+            <div style={{ marginTop: "2px", opacity: 0.8 }}>
+              Total: {total.toLocaleString()}
+            </div>
+          )}
+        </div>
+      )
+    }
+  }, [stackBy, categoryAccessor, valueAccessor])
+
   // Validate data and stackBy (after all hooks)
   if (safeData.length === 0) {
     console.warn("StackedBarChart: data prop is required and should not be empty")
@@ -290,7 +320,7 @@ export function StackedBarChart(props: StackedBarChartProps) {
     ...(className && { className }),
     ...(title && { title }),
     // Add tooltip support
-    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) }),
+    tooltipContent: tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent,
     // Allow frameProps to override defaults
     ...frameProps
   }

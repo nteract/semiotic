@@ -208,7 +208,7 @@ const OrdinalFrame = React.memo(function OrdinalFrame(
 
   // Memoize hoverAnnotation selection
   const selectedHoverAnnotation = useMemo(
-    () => summaryHoverAnnotation || pieceHoverAnnotation || hoverAnnotation,
+    () => summaryHoverAnnotation || hoverAnnotation || pieceHoverAnnotation,
     [summaryHoverAnnotation, pieceHoverAnnotation, hoverAnnotation]
   )
 
