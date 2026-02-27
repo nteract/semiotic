@@ -390,6 +390,64 @@ function HoverExample() {
   )
 }
 
+function BarChartDemo() {
+  const frameRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (!frameRef.current) return
+      frameRef.current.push({
+        time: indexRef.current++,
+        value: Math.floor(Math.random() * 10) + 1
+      })
+    }, 30)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <RealtimeFrame
+      ref={frameRef}
+      chartType="bar"
+      binSize={20}
+      windowSize={300}
+      size={[700, 300]}
+      barStyle={{ fill: "#007bff" }}
+    />
+  )
+}
+
+function StackedBarChartDemo() {
+  const frameRef = useRef()
+  const indexRef = useRef(0)
+  const categories = ["errors", "warnings", "info"]
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (!frameRef.current) return
+      const cat = categories[Math.floor(Math.random() * categories.length)]
+      frameRef.current.push({
+        time: indexRef.current++,
+        value: Math.floor(Math.random() * 8) + 1,
+        category: cat
+      })
+    }, 20)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <RealtimeFrame
+      ref={frameRef}
+      chartType="bar"
+      binSize={25}
+      windowSize={400}
+      size={[700, 300]}
+      categoryAccessor="category"
+      barColors={{ errors: "#dc3545", warnings: "#fd7e14", info: "#007bff" }}
+    />
+  )
+}
+
 function MultiInstanceDemo() {
   const refsArray = useRef([])
   const indexRef = useRef(0)
@@ -521,6 +579,28 @@ full control over hover state. Crosshair style is configurable via the object fo
 
       <MarkdownText
         text={`
+## Bar Chart (Temporal Histogram)
+
+Set \`chartType="bar"\` with a \`binSize\` to aggregate streaming data into time-bucketed bars.
+Values within each bin are summed. Without a \`categoryAccessor\`, each bin renders as a single bar.
+`}
+      />
+
+      <BarChartDemo />
+
+      <MarkdownText
+        text={`
+## Stacked Bar Chart
+
+Add a \`categoryAccessor\` and \`barColors\` to stack categories within each bin.
+Category order follows the keys in \`barColors\`, then alphabetical for unlisted categories.
+`}
+      />
+
+      <StackedBarChartDemo />
+
+      <MarkdownText
+        text={`
 ## Multiple Instances
 
 RealtimeFrame is designed to support 10+ simultaneous instances with no performance degradation.
@@ -538,7 +618,7 @@ Each instance manages its own ring buffer and requestAnimationFrame loop indepen
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| \`chartType\` | \`"line" \\| "swarm" \\| "candlestick" \\| "waterfall"\` | \`"line"\` | Chart visualization type |
+| \`chartType\` | \`"line" \\| "swarm" \\| "candlestick" \\| "waterfall" \\| "bar"\` | \`"line"\` | Chart visualization type |
 | \`arrowOfTime\` | \`"right" \\| "left" \\| "up" \\| "down"\` | \`"right"\` | Direction time flows |
 | \`windowMode\` | \`"sliding" \\| "growing"\` | \`"sliding"\` | Data retention strategy |
 | \`windowSize\` | \`number\` | \`200\` | Ring buffer capacity |
@@ -554,6 +634,10 @@ Each instance manages its own ring buffer and requestAnimationFrame loop indepen
 | \`hoverAnnotation\` | \`boolean \\| object\` | — | Enable hover interaction with crosshair + tooltip |
 | \`tooltipContent\` | \`function\` | — | Custom tooltip renderer: \`(d: HoverData) => ReactNode\` |
 | \`customHoverBehavior\` | \`function\` | — | Callback on hover: \`(d: HoverData \\| null) => void\` |
+| \`binSize\` | \`number\` | — | Time interval for bar chart binning |
+| \`categoryAccessor\` | \`string \\| function\` | — | Category accessor for stacked bars |
+| \`barColors\` | \`Record<string, string>\` | — | Category-to-color map for stacked bars |
+| \`barStyle\` | \`object\` | — | Bar styling: fill, stroke, strokeWidth, gap |
 
 ### Imperative API (via ref)
 

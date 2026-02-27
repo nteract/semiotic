@@ -362,6 +362,53 @@ describe("RealtimeFrame", () => {
     })
   })
 
+  describe("bar chart", () => {
+    it("renders without crashing with chartType=bar", () => {
+      const { container } = render(
+        <RealtimeFrame
+          chartType="bar"
+          binSize={10}
+          data={[
+            { time: 1, value: 5 },
+            { time: 5, value: 10 },
+            { time: 15, value: 3 }
+          ]}
+        />
+      )
+      expect(container.querySelector(".realtime-frame")).toBeTruthy()
+      expect(container.querySelector("canvas")).toBeTruthy()
+    })
+
+    it("imperative push works with bars", () => {
+      const ref = createRef()
+      render(
+        <RealtimeFrame ref={ref} chartType="bar" binSize={10} />
+      )
+
+      ref.current.push({ time: 1, value: 5 })
+      ref.current.push({ time: 5, value: 10 })
+      ref.current.push({ time: 15, value: 3 })
+      expect(ref.current.getData().length).toBe(3)
+    })
+
+    it("stacked mode with categoryAccessor renders", () => {
+      const { container } = render(
+        <RealtimeFrame
+          chartType="bar"
+          binSize={10}
+          categoryAccessor="cat"
+          barColors={{ errors: "red", warnings: "orange", info: "blue" }}
+          data={[
+            { time: 1, value: 5, cat: "errors" },
+            { time: 2, value: 3, cat: "warnings" },
+            { time: 3, value: 7, cat: "info" }
+          ]}
+        />
+      )
+      expect(container.querySelector(".realtime-frame")).toBeTruthy()
+    })
+  })
+
   describe("hover annotation", () => {
     function setupHover(hoverProps = {}) {
       const ref = createRef()

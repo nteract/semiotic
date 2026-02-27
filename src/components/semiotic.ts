@@ -215,6 +215,7 @@ export type {
   WindowMode,
   ThresholdType,
   LineStyle,
+  BarStyle,
   AnnotationContext,
   CrosshairStyle,
   HoverAnnotationConfig,
@@ -226,4 +227,4 @@ export type {
   RealtimeAccessors
 } from "./realtime/types"
 
-export type { RendererFn } from "./realtime/renderers/types"
+export type { RendererFn, RendererOptions } from "./realtime/renderers/types"

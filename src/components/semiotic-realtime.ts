@@ -14,6 +14,7 @@ import { lineRenderer } from "./realtime/renderers/lineRenderer"
 import { swarmRenderer } from "./realtime/renderers/swarmRenderer"
 import { candlestickRenderer } from "./realtime/renderers/candlestickRenderer"
 import { waterfallRenderer } from "./realtime/renderers/waterfallRenderer"
+import { barRenderer } from "./realtime/renderers/barRenderer"
 
 export {
   RealtimeFrame,
@@ -22,7 +23,8 @@ export {
   lineRenderer,
   swarmRenderer,
   candlestickRenderer,
-  waterfallRenderer
+  waterfallRenderer,
+  barRenderer
 }
 
 // Export types
@@ -31,6 +33,7 @@ export type {
   WindowMode,
   ThresholdType,
   LineStyle,
+  BarStyle,
   AnnotationContext,
   CrosshairStyle,
   HoverAnnotationConfig,
@@ -42,4 +45,4 @@ export type {
   RealtimeAccessors
 } from "./realtime/types"
 
-export type { RendererFn } from "./realtime/renderers/types"
+export type { RendererFn, RendererOptions } from "./realtime/renderers/types"

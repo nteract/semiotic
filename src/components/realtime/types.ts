@@ -37,8 +37,15 @@ export interface HoverData {
   y: number
 }
 
+export interface BarStyle {
+  fill?: string
+  stroke?: string
+  strokeWidth?: number
+  gap?: number
+}
+
 export interface RealtimeFrameProps {
-  chartType?: "line" | "swarm" | "candlestick" | "waterfall"
+  chartType?: "line" | "swarm" | "candlestick" | "waterfall" | "bar"
   arrowOfTime?: ArrowOfTime
   windowMode?: WindowMode
   windowSize?: number
@@ -59,6 +66,10 @@ export interface RealtimeFrameProps {
   customHoverBehavior?: (d: HoverData | null) => void
   showAxes?: boolean
   background?: string
+  categoryAccessor?: string | ((d: any) => string)
+  binSize?: number
+  barColors?: Record<string, string>
+  barStyle?: BarStyle
 }
 
 export interface RealtimeFrameHandle {
@@ -82,4 +93,5 @@ export interface RealtimeLayout {
 export interface RealtimeAccessors {
   time: (d: any) => number
   value: (d: any) => number
+  category?: (d: any) => string
 }

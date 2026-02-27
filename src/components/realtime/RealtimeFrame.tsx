@@ -16,6 +16,8 @@ import { lineRenderer } from "./renderers/lineRenderer"
 import { swarmRenderer } from "./renderers/swarmRenderer"
 import { candlestickRenderer } from "./renderers/candlestickRenderer"
 import { waterfallRenderer } from "./renderers/waterfallRenderer"
+import { barRenderer } from "./renderers/barRenderer"
+import { computeBinExtent } from "./BinAccumulator"
 import type { RendererFn } from "./renderers/types"
 import type {
   RealtimeFrameProps,
@@ -30,7 +32,8 @@ const RENDERERS: Record<string, RendererFn> = {
   line: lineRenderer,
   swarm: swarmRenderer,
   candlestick: candlestickRenderer,
-  waterfall: waterfallRenderer
+  waterfall: waterfallRenderer,
+  bar: barRenderer
 }
 
 const DEFAULT_MARGIN = { top: 20, right: 20, bottom: 30, left: 40 }
@@ -284,7 +287,11 @@ const RealtimeFrame = forwardRef<RealtimeFrameHandle, RealtimeFrameProps>(
       tooltipContent,
       customHoverBehavior,
       showAxes = true,
-      background
+      background,
+      categoryAccessor,
+      binSize,
+      barColors,
+      barStyle
     } = props
 
     const margin = { ...DEFAULT_MARGIN, ...marginProp }
@@ -298,6 +305,13 @@ const RealtimeFrame = forwardRef<RealtimeFrameHandle, RealtimeFrameProps>(
     const getTime = useMemo(() => resolveAccessor(timeAccessor, "time"), [timeAccessor])
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const getValue = useMemo(() => resolveAccessor(valueAccessor, "value"), [valueAccessor])
+
+    const getCategory = useMemo(
+      () => categoryAccessor
+        ? (typeof categoryAccessor === "function" ? categoryAccessor : (d: any) => d[categoryAccessor])
+        : undefined,
+      [categoryAccessor]
+    )
 
     const bufferRef = useRef<RingBuffer<Record<string, any>>>(
       new RingBuffer(windowSize)
@@ -497,7 +511,10 @@ const RealtimeFrame = forwardRef<RealtimeFrameHandle, RealtimeFrameProps>(
       let tDomain = fixedTimeExtent || tExtent.extent
       let vDomain = fixedValueExtent || vExtent.extent
 
-      if (!fixedValueExtent && vDomain[0] !== Infinity) {
+      if (chartType === "bar" && binSize && !fixedValueExtent && buf.size > 0) {
+        const [, maxTotal] = computeBinExtent(buf, getTime, getValue, binSize, getCategory)
+        vDomain = [0, maxTotal + maxTotal * extentPadding]
+      } else if (!fixedValueExtent && vDomain[0] !== Infinity) {
         const range = vDomain[1] - vDomain[0]
         const pad = range > 0 ? range * extentPadding : 1
         vDomain = [vDomain[0] - pad, vDomain[1] + pad]
@@ -547,7 +564,12 @@ const RealtimeFrame = forwardRef<RealtimeFrameHandle, RealtimeFrameProps>(
           height: adjustedHeight,
           timeAxis: getTimeAxis(arrowOfTime)
         }
-        renderer(ctx, buf, scales, layout, lineStyle, { time: getTime, value: getValue }, annotations)
+        renderer(
+          ctx, buf, scales, layout, lineStyle,
+          { time: getTime, value: getValue, category: getCategory },
+          annotations,
+          chartType === "bar" ? { binSize, barColors, barStyle } : undefined
+        )
       }
 
       // Draw crosshair after chart data so it renders on top
