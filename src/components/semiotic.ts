@@ -40,6 +40,12 @@ import RealtimeFrame from "./realtime/RealtimeFrame"
 import { RingBuffer } from "./realtime/RingBuffer"
 import { IncrementalExtent } from "./realtime/IncrementalExtent"
 
+// Realtime chart components
+import { RealtimeLineChart } from "./charts/realtime/RealtimeLineChart"
+import { RealtimeBarChart } from "./charts/realtime/RealtimeBarChart"
+import { RealtimeSwarmChart } from "./charts/realtime/RealtimeSwarmChart"
+import { RealtimeWaterfallChart } from "./charts/realtime/RealtimeWaterfallChart"
+
 export {
   AnnotationLayer,
   DividedLine,
@@ -90,7 +96,12 @@ export {
   // Realtime
   RealtimeFrame,
   RingBuffer,
-  IncrementalExtent
+  IncrementalExtent,
+  // Realtime chart components
+  RealtimeLineChart,
+  RealtimeBarChart,
+  RealtimeSwarmChart,
+  RealtimeWaterfallChart
 }
 
 export {
@@ -230,3 +241,9 @@ export type {
 } from "./realtime/types"
 
 export type { RendererFn, RendererOptions } from "./realtime/renderers/types"
+
+// Realtime chart component types
+export type { RealtimeLineChartProps } from "./charts/realtime/RealtimeLineChart"
+export type { RealtimeBarChartProps } from "./charts/realtime/RealtimeBarChart"
+export type { RealtimeSwarmChartProps } from "./charts/realtime/RealtimeSwarmChart"
+export type { RealtimeWaterfallChartProps } from "./charts/realtime/RealtimeWaterfallChart"

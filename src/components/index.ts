@@ -44,7 +44,11 @@ import {
   ForceDirectedGraph,
   ChordDiagram,
   SankeyDiagram,
-  TreeDiagram
+  TreeDiagram,
+  RealtimeLineChart,
+  RealtimeBarChart,
+  RealtimeSwarmChart,
+  RealtimeWaterfallChart
 } from "./charts"
 
 // Tooltip utilities
@@ -92,6 +96,11 @@ export default {
   ChordDiagram,
   SankeyDiagram,
   TreeDiagram,
+  // Realtime chart components
+  RealtimeLineChart,
+  RealtimeBarChart,
+  RealtimeSwarmChart,
+  RealtimeWaterfallChart,
   // Tooltip utilities
   Tooltip,
   MultiLineTooltip,
@@ -140,6 +149,11 @@ export {
   ChordDiagram,
   SankeyDiagram,
   TreeDiagram,
+  // Realtime chart components
+  RealtimeLineChart,
+  RealtimeBarChart,
+  RealtimeSwarmChart,
+  RealtimeWaterfallChart,
   // Tooltip utilities
   Tooltip,
   MultiLineTooltip,

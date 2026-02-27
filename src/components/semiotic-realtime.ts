@@ -16,6 +16,12 @@ import { candlestickRenderer } from "./realtime/renderers/candlestickRenderer"
 import { waterfallRenderer } from "./realtime/renderers/waterfallRenderer"
 import { barRenderer } from "./realtime/renderers/barRenderer"
 
+// Higher-order chart components
+import { RealtimeLineChart } from "./charts/realtime/RealtimeLineChart"
+import { RealtimeBarChart } from "./charts/realtime/RealtimeBarChart"
+import { RealtimeSwarmChart } from "./charts/realtime/RealtimeSwarmChart"
+import { RealtimeWaterfallChart } from "./charts/realtime/RealtimeWaterfallChart"
+
 export {
   RealtimeFrame,
   RingBuffer,
@@ -24,8 +30,18 @@ export {
   swarmRenderer,
   candlestickRenderer,
   waterfallRenderer,
-  barRenderer
+  barRenderer,
+  // Higher-order chart components
+  RealtimeLineChart,
+  RealtimeBarChart,
+  RealtimeSwarmChart,
+  RealtimeWaterfallChart
 }
+
+export type { RealtimeLineChartProps } from "./charts/realtime/RealtimeLineChart"
+export type { RealtimeBarChartProps } from "./charts/realtime/RealtimeBarChart"
+export type { RealtimeSwarmChartProps } from "./charts/realtime/RealtimeSwarmChart"
+export type { RealtimeWaterfallChartProps } from "./charts/realtime/RealtimeWaterfallChart"
 
 // Export types
 export type {
