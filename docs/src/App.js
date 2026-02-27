@@ -36,6 +36,8 @@ import AxisSettings from "./guides/AxisSettings"
 import XYChartsHOC from "./guides/XYChartsHOC"
 import OrdinalChartsHOC from "./guides/OrdinalChartsHOC"
 import NetworkChartsHOC from "./guides/NetworkChartsHOC"
+import RealtimeFrameGuide from "./guides/RealtimeFrame"
+import RealtimeChartsHOC from "./guides/RealtimeChartsHOC"
 
 import CandlestickChart from "./examples/CandlestickChart"
 import CanvasInteraction from "./examples/CanvasInteraction"
@@ -134,6 +136,8 @@ export default function DocsApp() {
               <Route path="xy-charts-hoc" element={<XYChartsHOC />} />
               <Route path="ordinal-charts-hoc" element={<OrdinalChartsHOC />} />
               <Route path="network-charts-hoc" element={<NetworkChartsHOC />} />
+              <Route path="realtime-frame" element={<RealtimeFrameGuide />} />
+              <Route path="realtime-charts-hoc" element={<RealtimeChartsHOC />} />
             </Route>
 
             <Route path="examples" element={<Outlet />}>
@@ -257,7 +261,14 @@ function Sidebar() {
       <p className="black sub-page">
         <NavLink to="/guides/network-charts-hoc">Network Charts</NavLink>
       </p>
+      <p className="black sub-page">
+        <NavLink to="/guides/realtime-charts-hoc">Realtime Charts</NavLink>
+      </p>
 
+      <p className="sub-header sub-page selected">RealtimeFrame</p>
+      <p className="black sub-page">
+        <NavLink to="/guides/realtime-frame">RealtimeFrame</NavLink>
+      </p>
       <p className="sub-header sub-page selected">All Frames</p>
       <p className="black sub-page">
         <NavLink to="/guides/axis">Axis</NavLink>

@@ -35,6 +35,17 @@ import { Scatterplot, LineChart, AreaChart, StackedAreaChart, Heatmap, BubbleCha
 // Tooltip utilities
 import { Tooltip, MultiLineTooltip, normalizeTooltip } from "./Tooltip/Tooltip"
 
+// Realtime
+import RealtimeFrame from "./realtime/RealtimeFrame"
+import { RingBuffer } from "./realtime/RingBuffer"
+import { IncrementalExtent } from "./realtime/IncrementalExtent"
+
+// Realtime chart components
+import { RealtimeLineChart } from "./charts/realtime/RealtimeLineChart"
+import { RealtimeBarChart } from "./charts/realtime/RealtimeBarChart"
+import { RealtimeSwarmChart } from "./charts/realtime/RealtimeSwarmChart"
+import { RealtimeWaterfallChart } from "./charts/realtime/RealtimeWaterfallChart"
+
 export {
   AnnotationLayer,
   DividedLine,
@@ -81,7 +92,16 @@ export {
   // Tooltip utilities
   Tooltip,
   MultiLineTooltip,
-  normalizeTooltip
+  normalizeTooltip,
+  // Realtime
+  RealtimeFrame,
+  RingBuffer,
+  IncrementalExtent,
+  // Realtime chart components
+  RealtimeLineChart,
+  RealtimeBarChart,
+  RealtimeSwarmChart,
+  RealtimeWaterfallChart
 }
 
 export {
@@ -199,3 +219,31 @@ export type {
   TooltipField,
   MultiLineTooltipConfig
 } from "./Tooltip/Tooltip"
+
+// Realtime types
+export type {
+  ArrowOfTime,
+  WindowMode,
+  ThresholdType,
+  LineStyle,
+  BarStyle,
+  WaterfallStyle,
+  SwarmStyle,
+  AnnotationContext,
+  CrosshairStyle,
+  HoverAnnotationConfig,
+  HoverData,
+  RealtimeFrameProps,
+  RealtimeFrameHandle,
+  RealtimeScales,
+  RealtimeLayout,
+  RealtimeAccessors
+} from "./realtime/types"
+
+export type { RendererFn, RendererOptions } from "./realtime/renderers/types"
+
+// Realtime chart component types
+export type { RealtimeLineChartProps } from "./charts/realtime/RealtimeLineChart"
+export type { RealtimeBarChartProps } from "./charts/realtime/RealtimeBarChart"
+export type { RealtimeSwarmChartProps } from "./charts/realtime/RealtimeSwarmChart"
+export type { RealtimeWaterfallChartProps } from "./charts/realtime/RealtimeWaterfallChart"

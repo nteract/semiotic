@@ -8,6 +8,7 @@
     "downlevelIteration": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
+    "skipLibCheck": true,
     "lib": ["esnext", "dom", "dom.iterable"],
     "jsx": "react"
   },

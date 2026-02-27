@@ -65,6 +65,22 @@ export { TreeDiagram } from "./network/TreeDiagram"
 export type { TreeDiagramProps } from "./network/TreeDiagram"
 
 // ============================================================================
+// Realtime Charts (based on RealtimeFrame)
+// ============================================================================
+
+export { RealtimeLineChart } from "./realtime/RealtimeLineChart"
+export type { RealtimeLineChartProps } from "./realtime/RealtimeLineChart"
+
+export { RealtimeBarChart } from "./realtime/RealtimeBarChart"
+export type { RealtimeBarChartProps } from "./realtime/RealtimeBarChart"
+
+export { RealtimeSwarmChart } from "./realtime/RealtimeSwarmChart"
+export type { RealtimeSwarmChartProps } from "./realtime/RealtimeSwarmChart"
+
+export { RealtimeWaterfallChart } from "./realtime/RealtimeWaterfallChart"
+export type { RealtimeWaterfallChartProps } from "./realtime/RealtimeWaterfallChart"
+
+// ============================================================================
 // Shared Utilities
 // ============================================================================
 
