@@ -310,7 +310,7 @@ export const svgHighlightRule = ({
             })
           }
 
-          const { markType, renderMode: _rm, ...restProps } = styledD
+          const { markType, renderMode: _rm, tx: _tx, ty: _ty, ...restProps } = styledD
           return React.createElement(markType || 'path', {
             fill: "none",
             stroke: "black",
@@ -768,7 +768,12 @@ export const htmlFrameHoverRule = ({
   )
 
   if (d.type === "frame-hover" && tooltipContent && idPiece) {
-    const tooltipContentArgs = { ...idPiece, ...idPiece.data }
+    const tooltipContentArgs = {
+      ...idPiece,
+      ...idPiece.data,
+      column: oColumn,
+      pieces: oColumn ? oColumn.pieceData.map(p => p.data) : []
+    }
     content = optimizeCustomTooltipPosition ? (
       <TooltipPositioner
         tooltipContent={tooltipContent}

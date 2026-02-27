@@ -2,10 +2,11 @@ import * as React from "react"
 import { useMemo } from "react"
 import OrdinalFrame from "../../OrdinalFrame"
 import type { OrdinalFrameProps } from "../../types/ordinalTypes"
-import { getColor, createColorScale } from "../shared/colorUtils"
+import { getColor } from "../shared/colorUtils"
+import { useColorScale, useSortedData, DEFAULT_COLOR } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, Accessor } from "../shared/types"
-import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 
 /**
  * BarChart component props
@@ -120,14 +121,12 @@ export interface BarChartProps extends BaseChartProps {
 }
 
 /**
- * BarChart - Visualize categorical data with bars
+ * BarChart - Visualize categorical data with bars.
  *
- * A simplified wrapper around OrdinalFrame for creating bar charts. Perfect for
- * comparing values across categories.
+ * A simplified wrapper around OrdinalFrame for creating bar charts.
  *
  * @example
  * ```tsx
- * // Simple bar chart
  * <BarChart
  *   data={[
  *     {category: 'A', value: 10},
@@ -138,45 +137,6 @@ export interface BarChartProps extends BaseChartProps {
  *   valueLabel="Value"
  * />
  * ```
- *
- * @example
- * ```tsx
- * // Horizontal bar chart with color encoding
- * <BarChart
- *   data={data}
- *   orientation="horizontal"
- *   colorBy="category"
- *   colorScheme="tableau10"
- *   sort="desc"
- * />
- * ```
- *
- * @example
- * ```tsx
- * // Advanced: Override OrdinalFrame props
- * <BarChart
- *   data={data}
- *   categoryAccessor={d => d.name}
- *   valueAccessor={d => d.count}
- *   frameProps={{
- *     pieceHoverAnnotation: true,
- *     tooltipContent: d => <div>{d.name}: {d.count}</div>
- *   }}
- * />
- * ```
- *
- * @remarks
- * This component wraps {@link OrdinalFrame} with sensible defaults for bar charts.
- * For more advanced features like stacking, grouping, or custom marks,
- * use OrdinalFrame directly.
- *
- * **Breadcrumb to advanced usage:**
- * - Use the `frameProps` prop to pass any OrdinalFrame prop
- * - See OrdinalFrame documentation: https://semiotic.nteract.io/guides/ordinal-frame
- * - All OrdinalFrame props are available via `frameProps`
- *
- * @param props - BarChart configuration
- * @returns Rendered bar chart
  */
 export function BarChart(props: BarChartProps) {
   const {
@@ -203,44 +163,13 @@ export function BarChart(props: BarChartProps) {
     frameProps = {}
   } = props
 
-  // Validate data
-  if (!data || data.length === 0) {
-    console.warn("BarChart: data prop is required and should not be empty")
-    return null
-  }
+  const safeData = data || []
 
   // Sort data if requested
-  const sortedData = useMemo(() => {
-    if (!sort) return data
-
-    const dataCopy = [...data]
-
-    if (typeof sort === "function") {
-      return dataCopy.sort(sort)
-    }
-
-    // Get value accessor function
-    const getValue = typeof valueAccessor === "function"
-      ? valueAccessor
-      : (d: any) => d[valueAccessor]
-
-    if (sort === "asc") {
-      return dataCopy.sort((a, b) => getValue(a) - getValue(b))
-    } else {
-      // sort === "desc" or sort === true
-      return dataCopy.sort((a, b) => getValue(b) - getValue(a))
-    }
-  }, [data, sort, valueAccessor])
+  const sortedData = useSortedData(safeData, sort, valueAccessor)
 
   // Create color scale if colorBy is specified
-  const colorScale = useMemo(() => {
-    if (!colorBy || typeof colorBy === "function") {
-      return undefined
-    }
-
-    const scheme = Array.isArray(colorScheme) ? colorScheme : colorScheme
-    return createColorScale(sortedData, colorBy as string, scheme)
-  }, [sortedData, colorBy, colorScheme])
+  const colorScale = useColorScale(safeData, colorBy, colorScheme)
 
   // Piece style function
   const pieceStyle = useMemo(() => {
@@ -251,7 +180,7 @@ export function BarChart(props: BarChartProps) {
       if (colorBy) {
         baseStyle.fill = getColor(d, colorBy, colorScale)
       } else {
-        baseStyle.fill = "#007bff"
+        baseStyle.fill = DEFAULT_COLOR
       }
 
       return baseStyle
@@ -325,6 +254,28 @@ export function BarChart(props: BarChartProps) {
     return finalMargin
   }, [userMargin, legend])
 
+  // Validate data (after all hooks)
+  if (safeData.length === 0) {
+    console.warn("BarChart: data prop is required and should not be empty")
+    return null
+  }
+
+  // Default tooltip function for piece hover
+  const defaultTooltipContent = useMemo(() => {
+    return (d: any) => {
+      const cat = typeof categoryAccessor === "function" ? categoryAccessor(d) : d[categoryAccessor]
+      const val = typeof valueAccessor === "function" ? valueAccessor(d) : d[valueAccessor]
+      return (
+        <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+          <div style={{ fontWeight: "bold" }}>{String(cat)}</div>
+          <div style={{ marginTop: "4px" }}>
+            {typeof val === "number" ? val.toLocaleString() : String(val)}
+          </div>
+        </div>
+      )
+    }
+  }, [categoryAccessor, valueAccessor])
+
   // Build OrdinalFrame props
   const ordinalFrameProps: OrdinalFrameProps = {
     size: [width, height],
@@ -342,13 +293,10 @@ export function BarChart(props: BarChartProps) {
     ...(className && { className }),
     ...(title && { title }),
     // Add tooltip support
-    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) }),
+    tooltipContent: tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent,
     // Allow frameProps to override defaults
     ...frameProps
   }
 
   return <OrdinalFrame {...ordinalFrameProps} />
 }
-
-// Export default for convenience
-export default BarChart

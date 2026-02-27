@@ -200,7 +200,7 @@ const chordData = [
 ]
 
 <ChordDiagram
-  data={chordData}
+  edges={chordData}
   width={600}
   height={600}
   tooltip={MultiLineTooltip({
@@ -209,7 +209,7 @@ const chordData = [
 />`}
       >
         <ChordDiagram
-          data={chordData}
+          edges={chordData}
           width={600}
           height={600}
           tooltip={MultiLineTooltip({
@@ -221,7 +221,7 @@ const chordData = [
       <MarkdownText
         text={`
 **Key Props:**
-- \`data\`: Array of \`{source, target, value, ...}\` objects
+- \`edges\`: Array of \`{source, target, value, ...}\` objects
 - \`colorScheme\`: Color scheme name
 - \`nodeLabel\`: Field or function for labels
 - \`showLabels\`: Display labels around circumference (default: true)

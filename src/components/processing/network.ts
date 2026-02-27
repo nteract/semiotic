@@ -278,7 +278,6 @@ const baseNodeProps = {
 }
 
 const baseNetworkSettings = {
-  iterations: 500,
   hierarchicalNetwork: false
 }
 
@@ -874,20 +873,25 @@ export const calculateNetworkFrame = (
       chords.forEach((generatedChord) => {
         const chordD = ribbonGenerator(generatedChord)
 
-        //this is incorrect should use edgeHash
         const nodeSourceID = nodeIDAccessor(
           projectedNodes[generatedChord.source.index]
         )
         const nodeTargetID = nodeIDAccessor(
           projectedNodes[generatedChord.target.index]
         )
-        const chordEdge = edgeHash.get(`${nodeSourceID}|${nodeTargetID}`)
-        chordEdge.d = chordD
-        const chordBounds = pathBounds(chordD)
-        chordEdge.x =
-          adjustedSize[0] / 2 + (chordBounds.x1 + chordBounds.x2) / 2
-        chordEdge.y =
-          adjustedSize[1] / 2 + (chordBounds.y1 + chordBounds.y2) / 2
+        // d3-chord always emits source.index < target.index, which may
+        // not match the original edge direction. Try both key orders.
+        const chordEdge =
+          edgeHash.get(`${nodeSourceID}|${nodeTargetID}`) ||
+          edgeHash.get(`${nodeTargetID}|${nodeSourceID}`)
+        if (chordEdge) {
+          chordEdge.d = chordD
+          const chordBounds = pathBounds(chordD)
+          chordEdge.x =
+            adjustedSize[0] / 2 + (chordBounds.x1 + chordBounds.x2) / 2
+          chordEdge.y =
+            adjustedSize[1] / 2 + (chordBounds.y1 + chordBounds.y2) / 2
+        }
       })
     } else if (
       networkSettings.type === "sankey" ||
@@ -1001,14 +1005,13 @@ export const calculateNetworkFrame = (
       })
     } else if (networkSettings.type === "force") {
       // Adaptive iteration count for force layout: reduce iterations for large networks
-      // Formula: max(100, min(500, 500 - (nodeCount - 50) * 2))
-      // - Small networks (<50 nodes): 500 iterations (full quality)
-      // - Medium networks (50-250 nodes): Gradual reduction
-      // - Large networks (>250 nodes): 100 iterations (fast but stable)
+      // - Small networks (<30 nodes): 300 iterations (full quality)
+      // - Medium networks (30-150 nodes): Gradual reduction
+      // - Large networks (>150 nodes): 50 iterations (fast but stable)
       const nodeCount = projectedNodes.length
       const adaptiveIterations = Math.max(
-        100,
-        Math.min(500, Math.floor(500 - (nodeCount - 50) * 2))
+        50,
+        Math.min(300, Math.floor(300 - (nodeCount - 30) * 2))
       )
 
       const {
@@ -1018,6 +1021,22 @@ export const calculateNetworkFrame = (
         edgeDistance,
         forceManyBody: nsForceMB = (d) => -25 * nodeSizeAccessor(d)
       } = networkSettings
+
+      // Set deterministic initial positions for nodes that don't have x/y yet.
+      // d3-force uses Math.random() for unpositioned nodes which produces
+      // different layouts on every render. A phyllotaxis spiral gives
+      // evenly-distributed starting positions based on index alone.
+      const cx = adjustedSize[0] / 2
+      const cy = adjustedSize[1] / 2
+      const goldenAngle = Math.PI * (3 - Math.sqrt(5))
+      projectedNodes.forEach((node, i) => {
+        if (node.x == null || node.y == null) {
+          const r = Math.sqrt(i + 0.5) * 10
+          const theta = i * goldenAngle
+          node.x = cx + r * Math.cos(theta)
+          node.y = cy + r * Math.sin(theta)
+        }
+      })
 
       const linkForce = forceLink().strength((d) =>
         Math.min(2.5, d.weight ? d.weight * edgeStrength : edgeStrength)
@@ -1033,8 +1052,6 @@ export const calculateNetworkFrame = (
           "charge",
           forceManyBody().distanceMax(distanceMax).strength(nsForceMB)
         )
-
-      //        simulation.force("link", linkForce).nodes(projectedNodes)
 
       simulation.nodes(projectedNodes)
 
@@ -1065,6 +1082,7 @@ export const calculateNetworkFrame = (
       for (let i = 0; i < iterations; ++i) {
         simulation.tick()
       }
+
     } else if (networkSettings.type === "motifs") {
       const componentMap = new Map()
       projectedEdges.forEach((edge) => {
@@ -1097,8 +1115,8 @@ export const calculateNetworkFrame = (
       // Adaptive iteration count for motifs layout (same as force layout)
       const nodeCount = projectedNodes.length
       const adaptiveIterations = Math.max(
-        100,
-        Math.min(500, Math.floor(500 - (nodeCount - 50) * 2))
+        50,
+        Math.min(300, Math.floor(300 - (nodeCount - 30) * 2))
       )
 
       const {

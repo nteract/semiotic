@@ -3,12 +3,11 @@ import DocumentFrame from "../DocumentFrame"
 import { OrdinalFrame } from "semiotic"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
-
-const ROOT = process.env.PUBLIC_URL
+import probablyData from "../../public/data/probably.json"
 
 const frameProps = {
   size: [700, 550],
-  data: [],
+  data: probablyData,
   projection: "horizontal",
   summaryType: {
     type: "ridgeline",
@@ -57,37 +56,26 @@ const overrideProps = {
   )`
 }
 
-export default class RidgelinePlot extends React.Component {
-  constructor(props) {
-    super(props)
+const RidgelinePlot = () => {
+  return (
+    <div>
+      <MarkdownText
+        text={`
 
-    fetch(`${ROOT}/data/probably.json`)
-      .then(response => response.json())
-      .then(data => {
-        this.setState({ ...frameProps, data })
-      })
-  }
-
-  render() {
-    if (!this.state) return null
-    return (
-      <div>
-        <MarkdownText
-          text={`
-
-Ridgeline plots show variation across values and allow overflowing of the plot into adjoining columns by adjusting the amplitude property of the \`summaryType\`. 
+Ridgeline plots show variation across values and allow overflowing of the plot into adjoining columns by adjusting the amplitude property of the \`summaryType\`.
 
 The example is a remake of the [Perceptions of Probability and Numbers](https://github.com/zonination/perceptions) by zonination.
 
 `}
-        />
-        <DocumentFrame
-          frameProps={this.state || {}}
-          overrideProps={overrideProps}
-          type={OrdinalFrame}
-          useExpanded
-        />
-      </div>
-    )
-  }
+      />
+      <DocumentFrame
+        frameProps={frameProps}
+        overrideProps={overrideProps}
+        type={OrdinalFrame}
+        useExpanded
+      />
+    </div>
+  )
 }
+
+export default RidgelinePlot

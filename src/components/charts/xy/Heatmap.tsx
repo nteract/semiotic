@@ -1,9 +1,10 @@
 import * as React from "react"
 import { useMemo } from "react"
-import { scaleLinear, scaleSequential } from "d3-scale"
+import { scaleSequential } from "d3-scale"
 import { interpolateBlues, interpolateReds, interpolateGreens, interpolateViridis } from "d3-scale-chromatic"
 import XYFrame from "../../XYFrame"
 import type { XYFrameProps } from "../../types/xyTypes"
+import { DEFAULT_COLOR } from "../shared/hooks"
 import type { BaseChartProps, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 
@@ -198,11 +199,7 @@ export function Heatmap(props: HeatmapProps) {
     frameProps = {}
   } = props
 
-  // Validate data
-  if (!data || data.length === 0) {
-    console.warn("Heatmap: data prop is required and should not be empty")
-    return null
-  }
+  const safeData = data || []
 
   // Get value accessor function
   const getValueFn = useMemo(() => {
@@ -213,9 +210,9 @@ export function Heatmap(props: HeatmapProps) {
 
   // Calculate value domain
   const valueDomain = useMemo(() => {
-    const values = data.map(getValueFn)
+    const values = safeData.map(getValueFn)
     return [Math.min(...values), Math.max(...values)] as [number, number]
-  }, [data, getValueFn])
+  }, [safeData, getValueFn])
 
   // Create color scale
   const colorScale = useMemo(() => {
@@ -235,41 +232,21 @@ export function Heatmap(props: HeatmapProps) {
     return scaleSequential(interpolator).domain(valueDomain)
   }, [colorScheme, customColorScale, valueDomain])
 
-  // Get unique x and y values for proper spacing
-  const { xValues, yValues } = useMemo(() => {
+  // Get unique x and y values for bin sizing
+  const { xBinCount, yBinCount } = useMemo(() => {
     const getX = typeof xAccessor === "function" ? xAccessor : (d: any) => d[xAccessor]
     const getY = typeof yAccessor === "function" ? yAccessor : (d: any) => d[yAccessor]
 
-    const xSet = new Set(data.map(getX))
-    const ySet = new Set(data.map(getY))
-
     return {
-      xValues: Array.from(xSet).sort((a, b) => (typeof a === "number" ? a - b : String(a).localeCompare(String(b)))),
-      yValues: Array.from(ySet).sort((a, b) => (typeof a === "number" ? a - b : String(a).localeCompare(String(b))))
+      xBinCount: new Set(safeData.map(getX)).size,
+      yBinCount: new Set(safeData.map(getY)).size
     }
-  }, [data, xAccessor, yAccessor])
-
-  // Calculate cell dimensions
-  const cellWidth = useMemo(() => {
-    if (xValues.length <= 1) return 1
-    return 1 / xValues.length
-  }, [xValues])
-
-  const cellHeight = useMemo(() => {
-    if (yValues.length <= 1) return 1
-    return 1 / yValues.length
-  }, [yValues])
+  }, [safeData, xAccessor, yAccessor])
 
   // Transform data to summary format for XYFrame
   const summaryData = useMemo(() => {
-    return {
-      coordinates: data.map((d) => ({
-        ...d,
-        _cellWidth: cellWidth,
-        _cellHeight: cellHeight
-      }))
-    }
-  }, [data, cellWidth, cellHeight])
+    return { coordinates: safeData }
+  }, [safeData])
 
   // Summary style function
   const summaryStyle = useMemo(() => {
@@ -287,6 +264,8 @@ export function Heatmap(props: HeatmapProps) {
   const summaryRenderMode = useMemo(() => {
     if (!showValues) return undefined
 
+    const midpoint = (valueDomain[0] + valueDomain[1]) / 2
+
     return (d: any, i: number) => {
       const value = getValueFn(d)
       const displayValue = valueFormat ? valueFormat(value) : String(value)
@@ -295,14 +274,14 @@ export function Heatmap(props: HeatmapProps) {
         <text
           textAnchor="middle"
           dominantBaseline="middle"
-          fill={colorScale(value) > 0.5 ? "#000" : "#fff"}
+          fill={getValueFn(d) > midpoint ? "#fff" : "#000"}
           fontSize="12px"
         >
           {displayValue}
         </text>
       )
     }
-  }, [showValues, getValueFn, valueFormat, colorScale])
+  }, [showValues, getValueFn, valueFormat, valueDomain])
 
   // Build axes configuration
   const axes = useMemo(() => {
@@ -325,13 +304,28 @@ export function Heatmap(props: HeatmapProps) {
     return axesConfig
   }, [xLabel, yLabel, xFormat, yFormat])
 
+  // Validate data (after all hooks)
+  if (safeData.length === 0) {
+    console.warn("Heatmap: data prop is required and should not be empty")
+    return null
+  }
+
   // Build XYFrame props
   const xyFrameProps: XYFrameProps = {
     size: [width, height],
     summaries: summaryData,
     xAccessor,
     yAccessor,
-    summaryType: { type: "heatmap" },
+    summaryType: {
+      type: "heatmap",
+      xBins: xBinCount,
+      yBins: yBinCount,
+      binValue: (items: any[]) => {
+        if (items.length === 0) return 0
+        const sum = items.reduce((acc, item) => acc + getValueFn(item), 0)
+        return sum / items.length
+      }
+    },
     summaryStyle,
     axes,
     hoverAnnotation: enableHover,
@@ -347,6 +341,3 @@ export function Heatmap(props: HeatmapProps) {
 
   return <XYFrame {...xyFrameProps} />
 }
-
-// Export default for convenience
-export default Heatmap

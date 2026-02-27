@@ -2,10 +2,11 @@ import * as React from "react"
 import { useMemo } from "react"
 import OrdinalFrame from "../../OrdinalFrame"
 import type { OrdinalFrameProps } from "../../types/ordinalTypes"
-import { getColor, createColorScale } from "../shared/colorUtils"
+import { getColor } from "../shared/colorUtils"
+import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, Accessor } from "../shared/types"
-import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 
 /**
  * BoxPlot component props
@@ -124,14 +125,12 @@ export interface BoxPlotProps extends BaseChartProps {
 }
 
 /**
- * BoxPlot - Visualize statistical distributions with box-and-whisker plots
+ * BoxPlot - Visualize statistical distributions with box-and-whisker plots.
  *
  * A simplified wrapper around OrdinalFrame for creating box plots.
- * Perfect for showing quartiles, median, and outliers in your data.
  *
  * @example
  * ```tsx
- * // Simple box plot
  * <BoxPlot
  *   data={[
  *     {category: 'Group A', value: 10},
@@ -145,41 +144,6 @@ export interface BoxPlotProps extends BaseChartProps {
  *   valueLabel="Value"
  * />
  * ```
- *
- * @example
- * ```tsx
- * // With color encoding
- * <BoxPlot
- *   data={data}
- *   colorBy="category"
- *   showOutliers={true}
- *   categoryLabel="Category"
- *   valueLabel="Measurement"
- * />
- * ```
- *
- * @example
- * ```tsx
- * // Horizontal orientation
- * <BoxPlot
- *   data={data}
- *   orientation="horizontal"
- *   colorScheme="tableau10"
- * />
- * ```
- *
- * @remarks
- * This component wraps {@link OrdinalFrame} with sensible defaults for box plots.
- * For more advanced features like custom summary rendering or violin plots,
- * use OrdinalFrame directly.
- *
- * **Breadcrumb to advanced usage:**
- * - Use the `frameProps` prop to pass any OrdinalFrame prop
- * - See OrdinalFrame documentation: https://semiotic.nteract.io/guides/ordinal-frame
- * - All OrdinalFrame props are available via `frameProps`
- *
- * @param props - BoxPlot configuration
- * @returns Rendered box plot
  */
 export function BoxPlot(props: BoxPlotProps) {
   const {
@@ -207,37 +171,21 @@ export function BoxPlot(props: BoxPlotProps) {
     frameProps = {}
   } = props
 
-  // Validate data
-  if (!data || data.length === 0) {
-    console.warn("BoxPlot: data prop is required and should not be empty")
-    return null
-  }
+  const safeData = data || []
 
   // Create color scale if colorBy is specified
-  const colorScale = useMemo(() => {
-    if (!colorBy || typeof colorBy === "function") {
-      return undefined
-    }
-
-    const scheme = Array.isArray(colorScheme) ? colorScheme : colorScheme
-    return createColorScale(data, colorBy as string, scheme)
-  }, [data, colorBy, colorScheme])
+  const colorScale = useColorScale(safeData, colorBy, colorScheme)
 
   // Summary style function for boxes
   const summaryStyle = useMemo(() => {
     return (d: any) => {
-      const baseStyle: any = {
+      const color = colorBy ? getColor(d, colorBy, colorScale) : DEFAULT_COLOR
+
+      return {
+        fill: color,
+        stroke: color,
         fillOpacity: 0.8
       }
-
-      // Apply color
-      if (colorBy) {
-        baseStyle.fill = getColor(d, colorBy, colorScale)
-      } else {
-        baseStyle.fill = "#007bff"
-      }
-
-      return baseStyle
     }
   }, [colorBy, colorScale])
 
@@ -253,10 +201,9 @@ export function BoxPlot(props: BoxPlotProps) {
 
       // Apply color (try to match box color)
       if (colorBy) {
-        // For outliers, try to get the category from the data
         baseStyle.fill = getColor(d, colorBy, colorScale)
       } else {
-        baseStyle.fill = "#007bff"
+        baseStyle.fill = DEFAULT_COLOR
       }
 
       return baseStyle
@@ -310,12 +257,12 @@ export function BoxPlot(props: BoxPlotProps) {
     if (!shouldShowLegend || !colorBy) return undefined
 
     return createLegend({
-      data,
+      data: safeData,
       colorBy,
       colorScale,
       getColor
     })
-  }, [shouldShowLegend, colorBy, data, colorScale])
+  }, [shouldShowLegend, colorBy, safeData, colorScale])
 
   // Adjust margin for legend if present
   const margin = useMemo(() => {
@@ -330,17 +277,70 @@ export function BoxPlot(props: BoxPlotProps) {
     return finalMargin
   }, [userMargin, legend])
 
+  // Validate data (after all hooks)
+  if (safeData.length === 0) {
+    console.warn("BoxPlot: data prop is required and should not be empty")
+    return null
+  }
+
+  // Default tooltip for summary hover (boxplot quartile points)
+  const defaultTooltipContent = useMemo(() => {
+    const getVal = typeof valueAccessor === "function" ? valueAccessor : (d: any) => d[valueAccessor]
+
+    return (d: any) => {
+      // d has: label, key, summaryPieceName, value, column, pieces
+      const pieces = d.pieces || []
+      const values = pieces.map((p: any) => Number(getVal(p))).filter((v: number) => !isNaN(v)).sort((a: number, b: number) => a - b)
+      const n = values.length
+
+      const fmt = (v: any) => typeof v === "number" ? v.toLocaleString() : String(v ?? "")
+
+      // Compute quartiles from the raw data
+      let stats: { label: string; value: string; active: boolean }[] = []
+      if (n >= 2) {
+        const q = (p: number) => {
+          const i = p * (n - 1)
+          const lo = Math.floor(i)
+          const hi = Math.ceil(i)
+          return values[lo] + (values[hi] - values[lo]) * (i - lo)
+        }
+        stats = [
+          { label: "Max", value: fmt(values[n - 1]), active: d.summaryPieceName === "max" },
+          { label: "Third Quartile", value: fmt(q(0.75)), active: d.summaryPieceName === "q3area" },
+          { label: "Median", value: fmt(q(0.5)), active: d.summaryPieceName === "median" },
+          { label: "First Quartile", value: fmt(q(0.25)), active: d.summaryPieceName === "q1area" },
+          { label: "Min", value: fmt(values[0]), active: d.summaryPieceName === "min" },
+        ]
+      }
+
+      return (
+        <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+          <div style={{ fontWeight: "bold", marginBottom: "4px" }}>{String(d.key)}</div>
+          {stats.map(s => (
+            <div key={s.label} style={{ display: "flex", justifyContent: "space-between", gap: "12px", fontWeight: s.active ? "bold" : "normal" }}>
+              <span>{s.label}</span>
+              <span>{s.value}</span>
+            </div>
+          ))}
+          {n > 0 && (
+            <div style={{ marginTop: "4px", opacity: 0.6, fontSize: "0.9em" }}>n={n}</div>
+          )}
+        </div>
+      )
+    }
+  }, [valueAccessor])
+
   // Build OrdinalFrame props
   const ordinalFrameProps: OrdinalFrameProps = {
     size: [width, height],
-    data,
+    data: safeData,
     oAccessor: categoryAccessor,
     rAccessor: valueAccessor,
     summaryType: { type: "boxplot", outliers: showOutliers } as any,
     summaryStyle,
     projection: orientation === "horizontal" ? "horizontal" : "vertical",
     axes,
-    hoverAnnotation: enableHover,
+    summaryHoverAnnotation: enableHover,
     margin,
     oPadding: categoryPadding,
     ...(pointStyle && { pointStyle }),
@@ -348,13 +348,10 @@ export function BoxPlot(props: BoxPlotProps) {
     ...(className && { className }),
     ...(title && { title }),
     // Add tooltip support
-    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) }),
+    tooltipContent: tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent,
     // Allow frameProps to override defaults
     ...frameProps
   }
 
   return <OrdinalFrame {...ordinalFrameProps} />
 }
-
-// Export default for convenience
-export default BoxPlot

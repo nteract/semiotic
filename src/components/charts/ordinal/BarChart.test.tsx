@@ -3,7 +3,23 @@ import { render } from "@testing-library/react"
 import { BarChart } from "./BarChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 
+// Mock OrdinalFrame to capture props
+let lastOrdinalFrameProps: any = null
+jest.mock("../../OrdinalFrame", () => {
+  return {
+    __esModule: true,
+    default: (props: any) => {
+      lastOrdinalFrameProps = props
+      return <div className="ordinalframe"><svg /></div>
+    }
+  }
+})
+
 describe("BarChart", () => {
+  beforeEach(() => {
+    lastOrdinalFrameProps = null
+  })
+
   const sampleData = [
     { category: "A", value: 10 },
     { category: "B", value: 20 },
@@ -45,7 +61,7 @@ describe("BarChart", () => {
   })
 
   it("accepts categoryLabel and valueLabel props", () => {
-    const { container } = render(
+    render(
       <TooltipProvider>
         <BarChart
           data={sampleData}
@@ -55,9 +71,9 @@ describe("BarChart", () => {
       </TooltipProvider>
     )
 
-    // Should render axes with labels
-    const axes = container.querySelectorAll(".axis")
-    expect(axes.length).toBeGreaterThan(0)
+    // Should pass axes config to OrdinalFrame
+    expect(lastOrdinalFrameProps.axes).toBeDefined()
+    expect(lastOrdinalFrameProps.axes.length).toBeGreaterThan(0)
   })
 
   it("accepts custom accessors", () => {
@@ -255,15 +271,14 @@ describe("BarChart", () => {
     ]
 
     it("shows legend automatically when colorBy is specified", () => {
-      const { container } = render(
+      render(
         <TooltipProvider>
           <BarChart data={coloredData} colorBy="type" />
         </TooltipProvider>
       )
 
-      // Check that legend items are rendered
-      const legendItems = container.querySelectorAll(".legend-item")
-      expect(legendItems.length).toBeGreaterThan(0)
+      // Check that legend config is passed to OrdinalFrame
+      expect(lastOrdinalFrameProps.legend).toBeDefined()
     })
 
     it("does not show legend when colorBy is not specified", () => {
@@ -295,7 +310,7 @@ describe("BarChart", () => {
     })
 
     it("adjusts right margin when legend is present", () => {
-      const { container } = render(
+      render(
         <TooltipProvider>
           <BarChart
             data={coloredData}
@@ -304,13 +319,92 @@ describe("BarChart", () => {
         </TooltipProvider>
       )
 
-      // The frame should have sufficient right margin to accommodate legend
-      const frame = container.querySelector(".ordinalframe")
-      expect(frame).toBeTruthy()
+      // Right margin should be at least 120 when legend is present
+      expect(lastOrdinalFrameProps.margin.right).toBeGreaterThanOrEqual(120)
+      expect(lastOrdinalFrameProps.legend).toBeDefined()
+    })
+  })
 
-      // Legend items should be visible
-      const legendItems = container.querySelectorAll(".legend-item")
-      expect(legendItems.length).toBeGreaterThan(0)
+  describe("hoverAnnotation", () => {
+    it("passes hoverAnnotation instead of pieceHoverAnnotation", () => {
+      render(
+        <TooltipProvider>
+          <BarChart data={sampleData} />
+        </TooltipProvider>
+      )
+
+      expect(lastOrdinalFrameProps.hoverAnnotation).toBe(true)
+      expect(lastOrdinalFrameProps.pieceHoverAnnotation).toBeUndefined()
+    })
+
+    it("disables hoverAnnotation when enableHover is false", () => {
+      render(
+        <TooltipProvider>
+          <BarChart data={sampleData} enableHover={false} />
+        </TooltipProvider>
+      )
+
+      expect(lastOrdinalFrameProps.hoverAnnotation).toBe(false)
+    })
+
+    it("provides a default tooltipContent function", () => {
+      render(
+        <TooltipProvider>
+          <BarChart data={sampleData} />
+        </TooltipProvider>
+      )
+
+      expect(typeof lastOrdinalFrameProps.tooltipContent).toBe("function")
+    })
+
+    it("default tooltip renders category and value from piece data", () => {
+      render(
+        <TooltipProvider>
+          <BarChart data={sampleData} />
+        </TooltipProvider>
+      )
+
+      const tooltipFn = lastOrdinalFrameProps.tooltipContent
+      const pieceData = { category: "A", value: 10 }
+      const { container } = render(<>{tooltipFn(pieceData)}</>)
+
+      expect(container.textContent).toContain("A")
+      expect(container.textContent).toContain("10")
+    })
+
+    it("default tooltip uses custom accessors", () => {
+      const customData = [
+        { name: "X", count: 42 },
+        { name: "Y", count: 99 }
+      ]
+
+      render(
+        <TooltipProvider>
+          <BarChart data={customData} categoryAccessor="name" valueAccessor="count" />
+        </TooltipProvider>
+      )
+
+      const tooltipFn = lastOrdinalFrameProps.tooltipContent
+      const pieceData = { name: "X", count: 42 }
+      const { container } = render(<>{tooltipFn(pieceData)}</>)
+
+      expect(container.textContent).toContain("X")
+      expect(container.textContent).toContain("42")
+    })
+
+    it("uses user-provided tooltip instead of default", () => {
+      const customTooltip = (d: any) => <div>custom: {d.category}</div>
+
+      render(
+        <TooltipProvider>
+          <BarChart data={sampleData} tooltip={customTooltip} />
+        </TooltipProvider>
+      )
+
+      const tooltipFn = lastOrdinalFrameProps.tooltipContent
+      const { container } = render(<>{tooltipFn({ category: "B" })}</>)
+
+      expect(container.textContent).toContain("custom: B")
     })
   })
 })

@@ -167,7 +167,6 @@ export function createPoints({
                 i: yi === 0 && xi === 0 ? i : `${i}-${yi}-${xi}`,
                 markProps,
                 styleFn,
-                renderFn: renderMode,
                 renderKeyFn,
                 classFn,
                 yi
@@ -311,7 +310,6 @@ export function createLines({
             i,
             markProps,
             styleFn: moddedStyleFn,
-            renderFn: renderMode,
             renderKeyFn,
             classFn
           })
@@ -336,15 +334,18 @@ export function createLines({
             d: topperLineGenerator(mappedDataForLines)
           }
 
+          const topperKeyFn = renderKeyFn
+            ? (d, i, yi) => `${renderKeyFn(d, i, yi)}-top`
+            : undefined
+
           mappedLines.push(
             clonedAppliedElement({
-              baseClass: "xyframe-line",
+              baseClass: "xyframe-line-top",
               d,
               i,
               markProps: topperMarkProps,
               styleFn: topperStyleFn,
-              renderFn: renderMode,
-              renderKeyFn,
+              renderKeyFn: topperKeyFn,
               classFn
             })
           )
@@ -555,7 +556,6 @@ export function clonedAppliedElement({
   i,
   markProps,
   styleFn,
-  renderFn,
   classFn,
   renderKeyFn,
   baseClass,
@@ -567,7 +567,6 @@ export function clonedAppliedElement({
   i: number
   markProps: GenericObject
   styleFn: Function
-  renderFn: Function
   classFn: Function
   renderKeyFn: Function
   baseClass: string

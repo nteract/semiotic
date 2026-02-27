@@ -319,7 +319,9 @@ export const lineChart = ({
     for (const line of data) {
       for (const point of line.data) {
         point[yPropBottom] = y1(point)
-        point[yPropMiddle] = (point[yPropBottom] + point[yPropTop]) / 2
+        // Use top position for hover so overlapping-area hover points
+        // align with the visible line rather than compressing toward the baseline.
+        point[yPropMiddle] = point[yPropTop]
       }
     }
   }
