@@ -7,7 +7,7 @@ import {
   BoxPlot,
   DotPlot,
   Tooltip,
-  MultiLineTooltip
+  MultiLineTooltip,
 } from "semiotic"
 
 // Sample data
@@ -16,7 +16,7 @@ const barData = [
   { category: "Product B", value: 38 },
   { category: "Product C", value: 52 },
   { category: "Product D", value: 29 },
-  { category: "Product E", value: 61 }
+  { category: "Product E", value: 61 },
 ]
 
 const stackedBarData = [
@@ -31,7 +31,7 @@ const stackedBarData = [
   { category: "Q3", subcategory: "R&D", value: 30 },
   { category: "Q4", subcategory: "Sales", value: 58 },
   { category: "Q4", subcategory: "Marketing", value: 40 },
-  { category: "Q4", subcategory: "R&D", value: 35 }
+  { category: "Q4", subcategory: "R&D", value: 35 },
 ]
 
 const swarmData = [
@@ -52,7 +52,7 @@ const swarmData = [
   { category: "Group C", value: 23 },
   { category: "Group C", value: 32 },
   { category: "Group C", value: 27 },
-  { category: "Group C", value: 30 }
+  { category: "Group C", value: 30 },
 ]
 
 const boxPlotData = [
@@ -75,7 +75,7 @@ const boxPlotData = [
   { category: "Dataset B", value: 40 },
   { category: "Dataset B", value: 12 },
   { category: "Dataset B", value: 18 },
-  { category: "Dataset B", value: 28 }
+  { category: "Dataset B", value: 28 },
 ]
 
 const dotPlotData = [
@@ -83,18 +83,20 @@ const dotPlotData = [
   { category: "Metric B", value: 38, comparison: 35 },
   { category: "Metric C", value: 52, comparison: 48 },
   { category: "Metric D", value: 29, comparison: 32 },
-  { category: "Metric E", value: 61, comparison: 58 }
+  { category: "Metric E", value: 61, comparison: 58 },
 ]
 
 const CodeBlock = ({ code }) => (
-  <pre style={{
-    background: "#f5f5f5",
-    padding: "16px",
-    borderRadius: "4px",
-    overflow: "auto",
-    fontSize: "14px",
-    lineHeight: "1.5"
-  }}>
+  <pre
+    style={{
+      background: "#f5f5f5",
+      padding: "16px",
+      borderRadius: "4px",
+      overflow: "auto",
+      fontSize: "14px",
+      lineHeight: "1.5",
+    }}
+  >
     <code>{code}</code>
   </pre>
 )
@@ -102,12 +104,14 @@ const CodeBlock = ({ code }) => (
 const ExampleContainer = ({ title, children, code }) => (
   <div style={{ marginBottom: "60px" }}>
     <h3>{title}</h3>
-    <div style={{
-      border: "1px solid #ddd",
-      padding: "20px",
-      marginBottom: "16px",
-      background: "white"
-    }}>
+    <div
+      style={{
+        border: "1px solid #ddd",
+        padding: "20px",
+        marginBottom: "16px",
+        background: "white",
+      }}
+    >
       {children}
     </div>
     <CodeBlock code={code} />
@@ -285,9 +289,23 @@ const boxPlotData = [
   { category: "Dataset A", value: 5 },
   { category: "Dataset A", value: 8 },
   { category: "Dataset A", value: 12 },
+  { category: "Dataset A", value: 15 },
+  { category: "Dataset A", value: 18 },
+  { category: "Dataset A", value: 22 },
+  { category: "Dataset A", value: 25 },
+  { category: "Dataset A", value: 7 },
+  { category: "Dataset A", value: 10 },
+  { category: "Dataset A", value: 13 },
+  { category: "Dataset B", value: 10 },
   { category: "Dataset B", value: 15 },
   { category: "Dataset B", value: 20 },
-  { category: "Dataset B", value: 25 }
+  { category: "Dataset B", value: 25 },
+  { category: "Dataset B", value: 30 },
+  { category: "Dataset B", value: 35 },
+  { category: "Dataset B", value: 40 },
+  { category: "Dataset B", value: 12 },
+  { category: "Dataset B", value: 18 },
+  { category: "Dataset B", value: 28 }
 ]
 
 <BoxPlot
@@ -359,7 +377,7 @@ const dotPlotData = [
           valueLabel="Score"
           tooltip={MultiLineTooltip({
             title: "category",
-            fields: ["value", "comparison"]
+            fields: ["value", "comparison"],
           })}
         />
       </ExampleContainer>

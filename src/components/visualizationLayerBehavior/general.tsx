@@ -167,7 +167,6 @@ export function createPoints({
                 i: yi === 0 && xi === 0 ? i : `${i}-${yi}-${xi}`,
                 markProps,
                 styleFn,
-                renderFn: renderMode,
                 renderKeyFn,
                 classFn,
                 yi
@@ -311,7 +310,6 @@ export function createLines({
             i,
             markProps,
             styleFn: moddedStyleFn,
-            renderFn: renderMode,
             renderKeyFn,
             classFn
           })
@@ -343,7 +341,6 @@ export function createLines({
               i,
               markProps: topperMarkProps,
               styleFn: topperStyleFn,
-              renderFn: renderMode,
               renderKeyFn,
               classFn
             })
@@ -555,7 +552,6 @@ export function clonedAppliedElement({
   i,
   markProps,
   styleFn,
-  renderFn,
   classFn,
   renderKeyFn,
   baseClass,
@@ -567,7 +563,6 @@ export function clonedAppliedElement({
   i: number
   markProps: GenericObject
   styleFn: Function
-  renderFn: Function
   classFn: Function
   renderKeyFn: Function
   baseClass: string
@@ -599,6 +594,6 @@ export function clonedAppliedElement({
     return React.createElement(RenderableMark)
   }
 
-  const { markType, ...restProps } = markProps
+  const { markType, renderMode: _rm, ...restProps } = markProps
   return React.createElement(markType, restProps)
 }

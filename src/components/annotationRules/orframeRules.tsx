@@ -315,7 +315,7 @@ export const svgHighlightRule = ({
             })
           }
 
-          const { markType, ...restProps } = styledD
+          const { markType, renderMode: _rm, tx: _tx, ty: _ty, ...restProps } = styledD
           return React.createElement(markType || 'path', {
             fill: "none",
             stroke: "black",

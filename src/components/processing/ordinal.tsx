@@ -1210,7 +1210,6 @@ export const calculateOrdinalFrame = (
         return {
           ...d.renderElement,
           key: `hover-${i}`,
-          type: "frame-hover",
           style: { opacity: 0 },
           overlayData: mousePackage,
           onClick:
