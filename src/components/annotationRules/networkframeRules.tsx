@@ -1,6 +1,5 @@
 import * as React from "react"
 import Annotation from "../Annotation"
-import { AnnotationCalloutCircle } from "react-annotation"
 
 import { packEnclose } from "d3-hierarchy"
 import { circleEnclosure, rectangleEnclosure, hullEnclosure } from "./baseRules"
@@ -97,7 +96,7 @@ export const svgNodeRule = ({ d, i, nodeSizeAccessor }) => {
     },
     d,
     {
-      type: AnnotationCalloutCircle,
+      type: "callout-circle",
       subject: {
         radius: d.radius || d.radius || nodeSizeAccessor(d)
       }

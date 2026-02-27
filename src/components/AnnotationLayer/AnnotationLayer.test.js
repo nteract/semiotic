@@ -22,7 +22,7 @@ const htmlAnnotationRule = (d, i) => (
 const voronoiHover = () => {}
 
 const annotations = [
-  { type: "react-annotation", label: "first", x: 5, y: 5 },
+  { type: "label", label: "first", x: 5, y: 5 },
   { type: "frame-hover", label: "hover" }
 ]
 

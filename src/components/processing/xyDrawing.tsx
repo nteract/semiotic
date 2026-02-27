@@ -18,7 +18,6 @@ import {
   stringToArrayFn
 } from "../data/dataFunctions"
 
-import { AnnotationCallout } from "react-annotation"
 
 import {
   createPoints,
@@ -510,7 +509,7 @@ export const calculateXYFrame = (
               dx: label.dx,
               dy: label.dy,
               className: label.className,
-              type: label.type || AnnotationCallout,
+              type: label.type || "callout",
               note: label.note || { title: labelContent(d) },
               subject: label.subject || { text: labelContent(d) },
               connector: label.connector

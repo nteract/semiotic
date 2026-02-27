@@ -49,7 +49,7 @@ export const renderLaidOutPieces = ({
           : d.renderKey || `piece-render-${i}`
 
         const elementData = d.renderElement || d
-        const { markType, style = {}, ...restProps } = elementData
+        const { markType, renderMode: _rm, style = {}, ...restProps } = elementData
 
         // Merge style into direct props
         const elementProps = { ...restProps, key, "aria-label": pieceAriaLabel }

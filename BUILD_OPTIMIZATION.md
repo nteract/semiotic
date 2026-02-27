@@ -160,7 +160,6 @@ Top dependencies by size (unminified):
    - Users provide their own React
 
 4. **Helper libraries** (~25% of bundle)
-   - react-annotation
    - polygon-offset
    - labella
    - memoize-one
@@ -308,11 +307,11 @@ Review which D3 functions are actually used and import only those.
 
 **Potential savings**: 10-20%
 
-### 2. Move Large Dependencies to Peer (Medium Value)
+### 2. Further Dependency Reduction (Medium Value)
 
-Consider making react-annotation a peer dependency.
+Audit remaining helper libraries for potential inlining or removal.
 
-**Potential savings**: ~15 KB
+**Potential savings**: ~10-15 KB
 
 ### 3. Bundle Size Monitoring (High Priority)
 

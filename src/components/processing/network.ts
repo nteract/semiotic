@@ -12,7 +12,6 @@ import { scaleLinear } from "d3-scale"
 
 import { min, max } from "d3-array"
 
-import { AnnotationLabel } from "react-annotation"
 
 import {
   calculateMargin,
@@ -1559,7 +1558,7 @@ export const calculateNetworkFrame = (
             y: node.y,
             note: { label: actualLabel },
             connector: { end: "none" },
-            type: AnnotationLabel,
+            type: "label",
             subject: { radius: nodeSizeAccessor(node) + 2 }
           }
         }

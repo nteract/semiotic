@@ -320,7 +320,7 @@ export const calculateOverlay = (
         if (React.isValidElement(overlayRegion.renderElement)) {
           return React.cloneElement(overlayRegion.renderElement, overlayProps)
         } else {
-          const { markType, ...restProps } = rest as any
+          const { markType, renderMode: _rm, ...restProps } = rest as any
           return React.createElement(markType || 'path', {
             ...restProps,
             key: `overlay-${i}`,

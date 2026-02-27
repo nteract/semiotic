@@ -4,14 +4,14 @@ import Annotations from "../markdown/annotations.mdx"
 
 ## Annotations
 
-All frames have annotation capabilities that let you easily deploy
+All frames have built-in annotation capabilities inspired by
 [react-annotation](https://react-annotation.susielu.com/). There is also built-in support for
 automatic label adjustment using [labella.js](http://twitter.github.io/labella.js/).
 
-All frames takes a prop \`annotations\` which is an array of annotation objects:
+All frames takes a prop `annotations` which is an array of annotation objects:
 
 ```jsx
-<XYFrame annotations={[{ type: "react-annotation", label: "a note" }]} />
+<XYFrame annotations={[{ type: "label", label: "a note" }]} />
 ```
 
 This array of annotations is sent to **both** an:
@@ -33,7 +33,7 @@ Otherwise, you can pass your own `htmlAnnotationRules` and `svgAnnotationRules` 
 Each of the following options is a type of annotation that can be passed to the `annotations` prop:
 
 ```jsx
-<XYFrame annotations={[{ type: "react-annotation", label: "a note" }, {type: "highlight"}}]]} />
+<XYFrame annotations={[{ type: "label", label: "a note" }, {type: "highlight"}]} />
 ```
 
 A detailed example of a single chart with annotations and rich information display. It leverages the
