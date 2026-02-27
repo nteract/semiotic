@@ -216,6 +216,8 @@ export type {
   ThresholdType,
   LineStyle,
   BarStyle,
+  WaterfallStyle,
+  SwarmStyle,
   AnnotationContext,
   CrosshairStyle,
   HoverAnnotationConfig,

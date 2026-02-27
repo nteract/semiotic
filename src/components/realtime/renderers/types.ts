@@ -1,9 +1,11 @@
-import type { RealtimeScales, RealtimeLayout, LineStyle, RealtimeAccessors, BarStyle } from "../types"
+import type { RealtimeScales, RealtimeLayout, LineStyle, RealtimeAccessors, BarStyle, WaterfallStyle, SwarmStyle } from "../types"
 
 export interface RendererOptions {
   binSize?: number
   barColors?: Record<string, string>
   barStyle?: BarStyle
+  waterfallStyle?: WaterfallStyle
+  swarmStyle?: SwarmStyle
 }
 
 export type RendererFn = (

@@ -5,8 +5,7 @@ import MarkdownText from "../MarkdownText"
 function generatePoint(index) {
   return {
     time: index,
-    value:
-      Math.sin(index * 0.05) * 50 + 100 + (Math.random() - 0.5) * 20
+    value: Math.sin(index * 0.05) * 50 + 100 + (Math.random() - 0.5) * 20,
   }
 }
 
@@ -47,8 +46,8 @@ function HeroExample() {
               type: "callout",
               time: prev.time,
               value: prev.value,
-              label: `Peak: ${Math.round(prev.value)}`
-            }
+              label: `Peak: ${Math.round(prev.value)}`,
+            },
           ]
           // Keep only the most recent 3 callouts
           return next.slice(-3)
@@ -77,30 +76,9 @@ function HeroExample() {
         return (
           <g key={`callout-${annotation.time}`}>
             <circle cx={x} cy={y} r={4} fill="#dc3545" />
-            <line
-              x1={x}
-              y1={y - 6}
-              x2={x}
-              y2={y - 24}
-              stroke="#dc3545"
-              strokeWidth={1}
-            />
-            <rect
-              x={x - 34}
-              y={y - 40}
-              width={68}
-              height={16}
-              rx={3}
-              fill="#dc3545"
-            />
-            <text
-              x={x}
-              y={y - 29}
-              textAnchor="middle"
-              fill="white"
-              fontSize={10}
-              fontWeight="bold"
-            >
+            <line x1={x} y1={y - 6} x2={x} y2={y - 24} stroke="#dc3545" strokeWidth={1} />
+            <rect x={x - 34} y={y - 40} width={68} height={16} rx={3} fill="#dc3545" />
+            <text x={x} y={y - 29} textAnchor="middle" fill="white" fontSize={10} fontWeight="bold">
               {annotation.label}
             </text>
           </g>
@@ -115,7 +93,7 @@ function ArrowOfTimeDemo() {
     right: useRef(),
     left: useRef(),
     down: useRef(),
-    up: useRef()
+    up: useRef(),
   }
   const indexRef = useRef(0)
 
@@ -133,9 +111,7 @@ function ArrowOfTimeDemo() {
     <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
       {["right", "left", "down", "up"].map((dir) => (
         <div key={dir} style={{ textAlign: "center" }}>
-          <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>
-            arrowOfTime="{dir}"
-          </p>
+          <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>arrowOfTime="{dir}"</p>
           <RealtimeFrame
             ref={refs[dir]}
             arrowOfTime={dir}
@@ -166,9 +142,7 @@ function WindowModeDemo() {
   return (
     <div style={{ display: "flex", gap: 24 }}>
       <div style={{ textAlign: "center" }}>
-        <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>
-          windowMode="sliding" (default)
-        </p>
+        <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>windowMode="sliding" (default)</p>
         <RealtimeFrame
           ref={slidingRef}
           windowMode="sliding"
@@ -178,9 +152,7 @@ function WindowModeDemo() {
         />
       </div>
       <div style={{ textAlign: "center" }}>
-        <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>
-          windowMode="growing"
-        </p>
+        <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>windowMode="growing"</p>
         <RealtimeFrame
           ref={growingRef}
           windowMode="growing"
@@ -212,9 +184,7 @@ function AxesExample() {
   return (
     <div style={{ display: "flex", flexWrap: "wrap", gap: 24 }}>
       <div style={{ textAlign: "center" }}>
-        <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>
-          showAxes=true (default)
-        </p>
+        <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>showAxes=true (default)</p>
         <RealtimeFrame
           ref={defaultRef}
           windowSize={100}
@@ -223,9 +193,7 @@ function AxesExample() {
         />
       </div>
       <div style={{ textAlign: "center" }}>
-        <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>
-          showAxes=false + background
-        </p>
+        <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>showAxes=false + background</p>
         <RealtimeFrame
           ref={noAxesRef}
           windowSize={100}
@@ -237,9 +205,7 @@ function AxesExample() {
         />
       </div>
       <div style={{ textAlign: "center" }}>
-        <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>
-          Fixed valueExtent=[0, 200]
-        </p>
+        <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>Fixed valueExtent=[0, 200]</p>
         <RealtimeFrame
           ref={fixedRef}
           windowSize={100}
@@ -274,7 +240,13 @@ function AnnotationsExample() {
       annotations={[
         { type: "threshold", value: 100, label: "Target: 100" },
         { type: "threshold", value: 140, label: "Too Much", color: "#dc3545" },
-        { type: "threshold", value: 60, label: "Too Little", color: "#007bff", thresholdType: "lesser" }
+        {
+          type: "threshold",
+          value: 60,
+          label: "Too Little",
+          color: "#007bff",
+          thresholdType: "lesser",
+        },
       ]}
       svgAnnotationRules={(annotation, i, context) => {
         if (annotation.type === "threshold" && context && context.scales) {
@@ -330,9 +302,7 @@ function HoverExample() {
   return (
     <div style={{ display: "flex", flexWrap: "wrap", gap: 24 }}>
       <div style={{ textAlign: "center" }}>
-        <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>
-          Default tooltip
-        </p>
+        <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>Default tooltip</p>
         <RealtimeFrame
           ref={defaultRef}
           windowSize={100}
@@ -342,9 +312,7 @@ function HoverExample() {
         />
       </div>
       <div style={{ textAlign: "center" }}>
-        <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>
-          Custom tooltipContent
-        </p>
+        <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>Custom tooltipContent</p>
         <RealtimeFrame
           ref={customRef}
           windowSize={100}
@@ -352,26 +320,24 @@ function HoverExample() {
           hoverAnnotation={true}
           lineStyle={{ stroke: "#6f42c1", strokeWidth: 1.5 }}
           tooltipContent={(d) => (
-            <div style={{
-              background: "#6f42c1",
-              color: "white",
-              padding: "8px 12px",
-              borderRadius: 6,
-              fontSize: 13,
-              pointerEvents: "none"
-            }}>
+            <div
+              style={{
+                background: "#6f42c1",
+                color: "white",
+                padding: "8px 12px",
+                borderRadius: 6,
+                fontSize: 13,
+                pointerEvents: "none",
+              }}
+            >
               <strong>{Math.round(d.value)}</strong>
-              <span style={{ opacity: 0.7, marginLeft: 8 }}>
-                t={Math.round(d.time)}
-              </span>
+              <span style={{ opacity: 0.7, marginLeft: 8 }}>t={Math.round(d.time)}</span>
             </div>
           )}
         />
       </div>
       <div style={{ textAlign: "center" }}>
-        <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>
-          customHoverBehavior
-        </p>
+        <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>customHoverBehavior</p>
         <RealtimeFrame
           ref={callbackRef}
           windowSize={100}
@@ -399,7 +365,7 @@ function BarChartDemo() {
       if (!frameRef.current) return
       frameRef.current.push({
         time: indexRef.current++,
-        value: Math.floor(Math.random() * 10) + 1
+        value: Math.floor(Math.random() * 10) + 1,
       })
     }, 30)
     return () => clearInterval(id)
@@ -413,6 +379,7 @@ function BarChartDemo() {
       windowSize={300}
       size={[700, 300]}
       barStyle={{ fill: "#007bff" }}
+      hoverAnnotation={true}
     />
   )
 }
@@ -429,7 +396,7 @@ function StackedBarChartDemo() {
       frameRef.current.push({
         time: indexRef.current++,
         value: Math.floor(Math.random() * 8) + 1,
-        category: cat
+        category: cat,
       })
     }, 20)
     return () => clearInterval(id)
@@ -444,6 +411,130 @@ function StackedBarChartDemo() {
       size={[700, 300]}
       categoryAccessor="category"
       barColors={{ errors: "#dc3545", warnings: "#fd7e14", info: "#007bff" }}
+      hoverAnnotation={true}
+    />
+  )
+}
+
+function WaterfallDemo() {
+  const frameRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (!frameRef.current) return
+      frameRef.current.push({
+        time: indexRef.current++,
+        value: (Math.random() - 0.45) * 20,
+      })
+    }, 40)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <RealtimeFrame
+      ref={frameRef}
+      chartType="waterfall"
+      windowSize={300}
+      size={[700, 300]}
+      waterfallStyle={{
+        positiveColor: "#28a745",
+        negativeColor: "#dc3545",
+        connectorStroke: "#999",
+        connectorWidth: 1,
+        gap: 1,
+      }}
+    />
+  )
+}
+
+function SwarmDemo() {
+  const frameRef = useRef()
+  const indexRef = useRef(0)
+  const categories = ["sensor1", "sensor2", "sensor3"]
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (!frameRef.current) return
+      const cat = categories[Math.floor(Math.random() * categories.length)]
+      frameRef.current.push({
+        time: indexRef.current++,
+        value: Math.random() * 100,
+        category: cat,
+      })
+    }, 30)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <RealtimeFrame
+      ref={frameRef}
+      chartType="swarm"
+      windowSize={400}
+      size={[700, 300]}
+      categoryAccessor="category"
+      barColors={{ sensor1: "#007bff", sensor2: "#28a745", sensor3: "#dc3545" }}
+      swarmStyle={{ radius: 3, opacity: 0.7 }}
+    />
+  )
+}
+
+function SwarmThresholdDemo() {
+  const frameRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (!frameRef.current) return
+      frameRef.current.push({
+        time: indexRef.current++,
+        value: Math.sin(indexRef.current * 0.03) * 40 + 50 + (Math.random() - 0.5) * 20,
+      })
+    }, 30)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <RealtimeFrame
+      ref={frameRef}
+      chartType="swarm"
+      windowSize={400}
+      size={[700, 300]}
+      valueExtent={[0, 100]}
+      swarmStyle={{ radius: 3, opacity: 0.8 }}
+      annotations={[
+        { type: "threshold", value: 75, color: "#0d9e4e" },
+        { type: "threshold", value: 25, color: "#d72400", thresholdType: "lesser" },
+      ]}
+      svgAnnotationRules={(annotation, i, context) => {
+        if (annotation.type === "threshold" && context && context.scales) {
+          const y = context.scales.value(annotation.value)
+          return (
+            <g key={`threshold-${i}`}>
+              <line
+                x1={0}
+                x2={context.width}
+                y1={y}
+                y2={y}
+                stroke={annotation.color}
+                strokeWidth={1.5}
+                strokeDasharray="6,3"
+              />
+              <text
+                x={context.width - 4}
+                y={y - 6}
+                textAnchor="end"
+                fill={annotation.color}
+                fontSize={11}
+                fontWeight="bold"
+              >
+                {annotation.thresholdType === "lesser" ? "Low" : "High"}: {annotation.value}
+              </text>
+            </g>
+          )
+        }
+        return null
+      }}
     />
   )
 }
@@ -465,9 +556,7 @@ function MultiInstanceDemo() {
           ref.current.push({
             time: indexRef.current,
             value:
-              Math.sin(indexRef.current * 0.05 + i * 0.5) * 50 +
-              100 +
-              (Math.random() - 0.5) * 20
+              Math.sin(indexRef.current * 0.05 + i * 0.5) * 50 + 100 + (Math.random() - 0.5) * 20,
           })
         }
       })
@@ -476,8 +565,16 @@ function MultiInstanceDemo() {
   }, [count])
 
   const colors = [
-    "#007bff", "#28a745", "#dc3545", "#fd7e14", "#6f42c1",
-    "#20c997", "#e83e8c", "#17a2b8", "#6610f2", "#ffc107"
+    "#007bff",
+    "#28a745",
+    "#dc3545",
+    "#fd7e14",
+    "#6f42c1",
+    "#20c997",
+    "#e83e8c",
+    "#17a2b8",
+    "#6610f2",
+    "#ffc107",
   ]
 
   return (
@@ -601,6 +698,48 @@ Category order follows the keys in \`barColors\`, then alphabetical for unlisted
 
       <MarkdownText
         text={`
+## Waterfall Chart
+
+Set \`chartType="waterfall"\` to visualize cumulative deltas as connected bars rising and falling
+from a running baseline. Each data point represents a positive or negative change — bars go up
+for gains (green) and down for losses (red). This is useful for P&L tracking, inventory changes,
+or any running-total scenario.
+
+Customize colors and connector lines with the \`waterfallStyle\` prop.
+`}
+      />
+
+      <WaterfallDemo />
+
+      <MarkdownText
+        text={`
+## Swarm Chart
+
+Set \`chartType="swarm"\` to render each data point as an individual dot at its (time, value) coordinates.
+This is ideal for streaming event data, sensor readings, or any scenario where individual observations
+matter more than aggregates. Add a \`categoryAccessor\` and \`barColors\` to color-code dots by category.
+
+Customize dot appearance with the \`swarmStyle\` prop: radius, fill, opacity, stroke, and strokeWidth.
+`}
+      />
+
+      <SwarmDemo />
+
+      <MarkdownText
+        text={`
+## Swarm with Threshold Coloring
+
+Like line charts, swarm charts support threshold coloring via annotations. Points whose values cross
+a threshold boundary are recolored automatically. Here, dots above 75 turn red and dots below 25
+turn blue, while the middle range keeps the default color. Threshold lines are drawn as SVG
+annotations on top of the canvas.
+`}
+      />
+
+      <SwarmThresholdDemo />
+
+      <MarkdownText
+        text={`
 ## Multiple Instances
 
 RealtimeFrame is designed to support 10+ simultaneous instances with no performance degradation.
@@ -638,6 +777,8 @@ Each instance manages its own ring buffer and requestAnimationFrame loop indepen
 | \`categoryAccessor\` | \`string \\| function\` | — | Category accessor for stacked bars |
 | \`barColors\` | \`Record<string, string>\` | — | Category-to-color map for stacked bars |
 | \`barStyle\` | \`object\` | — | Bar styling: fill, stroke, strokeWidth, gap |
+| \`waterfallStyle\` | \`object\` | — | Waterfall styling: positiveColor, negativeColor, connectorStroke, connectorWidth, gap, stroke, strokeWidth |
+| \`swarmStyle\` | \`object\` | — | Swarm styling: radius (default 3), fill, opacity (default 0.7), stroke, strokeWidth |
 
 ### Imperative API (via ref)
 

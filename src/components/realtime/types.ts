@@ -44,6 +44,24 @@ export interface BarStyle {
   gap?: number
 }
 
+export interface WaterfallStyle {
+  positiveColor?: string
+  negativeColor?: string
+  connectorStroke?: string
+  connectorWidth?: number
+  gap?: number
+  stroke?: string
+  strokeWidth?: number
+}
+
+export interface SwarmStyle {
+  radius?: number
+  fill?: string
+  opacity?: number
+  stroke?: string
+  strokeWidth?: number
+}
+
 export interface RealtimeFrameProps {
   chartType?: "line" | "swarm" | "candlestick" | "waterfall" | "bar"
   arrowOfTime?: ArrowOfTime
@@ -70,6 +88,8 @@ export interface RealtimeFrameProps {
   binSize?: number
   barColors?: Record<string, string>
   barStyle?: BarStyle
+  waterfallStyle?: WaterfallStyle
+  swarmStyle?: SwarmStyle
 }
 
 export interface RealtimeFrameHandle {

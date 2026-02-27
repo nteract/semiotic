@@ -15,9 +15,9 @@ import { IncrementalExtent } from "./IncrementalExtent"
 import { lineRenderer } from "./renderers/lineRenderer"
 import { swarmRenderer } from "./renderers/swarmRenderer"
 import { candlestickRenderer } from "./renderers/candlestickRenderer"
-import { waterfallRenderer } from "./renderers/waterfallRenderer"
+import { waterfallRenderer, computeWaterfallExtent } from "./renderers/waterfallRenderer"
 import { barRenderer } from "./renderers/barRenderer"
-import { computeBinExtent } from "./BinAccumulator"
+import { computeBins, computeBinExtent } from "./BinAccumulator"
 import type { RendererFn } from "./renderers/types"
 import type {
   RealtimeFrameProps,
@@ -252,11 +252,30 @@ function DefaultTooltip({ hover }: { hover: HoverData }) {
   const fmtValue = (v: number) =>
     Number.isInteger(v) ? String(v) : v.toFixed(2)
 
+  const colorMap: Record<string, string> | undefined = hover.data.barColors
+  const hoveredCat: string | undefined = hover.data.hoveredCategory
+  const hoveredCatVal: number | undefined = hover.data.hoveredCategoryValue
+
   return (
     <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-      <div style={{ fontWeight: 600, marginBottom: 2 }}>
-        {fmtValue(hover.value)}
-      </div>
+      {hoveredCat != null && hoveredCatVal != null ? (
+        <>
+          <div style={{ display: "flex", alignItems: "center", gap: 5, fontWeight: 600, marginBottom: 2 }}>
+            {colorMap && colorMap[hoveredCat] && (
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: colorMap[hoveredCat], flexShrink: 0 }} />
+            )}
+            <span>{hoveredCat}</span>
+            <span style={{ marginLeft: "auto" }}>{fmtValue(hoveredCatVal)}</span>
+          </div>
+          <div style={{ opacity: 0.6, fontSize: 11 }}>
+            total {fmtValue(hover.value)}
+          </div>
+        </>
+      ) : (
+        <div style={{ fontWeight: 600, marginBottom: 2 }}>
+          {fmtValue(hover.value)}
+        </div>
+      )}
       <div style={{ opacity: 0.7, fontSize: 11 }}>
         {fmtValue(hover.time)}
       </div>
@@ -291,7 +310,9 @@ const RealtimeFrame = forwardRef<RealtimeFrameHandle, RealtimeFrameProps>(
       categoryAccessor,
       binSize,
       barColors,
-      barStyle
+      barStyle,
+      waterfallStyle,
+    swarmStyle
     } = props
 
     const margin = { ...DEFAULT_MARGIN, ...marginProp }
@@ -447,19 +468,76 @@ const RealtimeFrame = forwardRef<RealtimeFrameHandle, RealtimeFrameProps>(
       const timePixel = timeAxis === "x" ? chartX : chartY
       const targetTime = scales.time.invert(timePixel)
 
-      const idx = findNearestIndex(buf, targetTime, getTime)
-      if (idx < 0) return
+      let hover: HoverData
 
-      const d = buf.get(idx)!
-      const t = getTime(d)
-      const v = getValue(d)
+      if (chartType === "bar" && binSize) {
+        // Snap to the bin the cursor is in
+        const bins = computeBins(buf, getTime, getValue, binSize, getCategory)
+        const binStart = Math.floor(targetTime / binSize) * binSize
+        const bin = bins.get(binStart)
+        if (!bin) return
 
-      const tPixel = scales.time(t)
-      const vPixel = scales.value(v)
-      const x = timeAxis === "x" ? tPixel : vPixel
-      const y = timeAxis === "x" ? vPixel : tPixel
+        const midTime = bin.start + (bin.end - bin.start) / 2
+        const tPixel = scales.time(midTime)
+        const vPixel = scales.value(bin.total)
+        const x = timeAxis === "x" ? tPixel : vPixel
+        const y = timeAxis === "x" ? vPixel : tPixel
 
-      const hover: HoverData = { data: d, time: t, value: v, x, y }
+        // Hit-test which category segment the cursor is in
+        let hoveredCategory: string | undefined
+        let hoveredCategoryValue: number | undefined
+        if (getCategory && bin.categories.size > 0) {
+          const colorKeys = barColors ? Object.keys(barColors) : []
+          const listed = new Set(colorKeys)
+          const unlisted = Array.from(bin.categories.keys()).filter(c => !listed.has(c)).sort()
+          const catOrder = [...colorKeys.filter(k => bin.categories.has(k)), ...unlisted]
+
+          const valuePixel = timeAxis === "x" ? chartY : chartX
+          let cumBase = 0
+          for (const cat of catOrder) {
+            const catVal = bin.categories.get(cat) || 0
+            if (catVal === 0) continue
+            const edgeA = scales.value(cumBase)
+            const edgeB = scales.value(cumBase + catVal)
+            const lo = Math.min(edgeA, edgeB)
+            const hi = Math.max(edgeA, edgeB)
+            if (valuePixel >= lo && valuePixel <= hi) {
+              hoveredCategory = cat
+              hoveredCategoryValue = catVal
+              break
+            }
+            cumBase += catVal
+          }
+        }
+
+        hover = {
+          data: {
+            binStart: bin.start, binEnd: bin.end, total: bin.total,
+            categories: Object.fromEntries(bin.categories),
+            barColors: barColors || {},
+            hoveredCategory,
+            hoveredCategoryValue
+          },
+          time: midTime,
+          value: bin.total,
+          x,
+          y
+        }
+      } else {
+        const idx = findNearestIndex(buf, targetTime, getTime)
+        if (idx < 0) return
+
+        const d = buf.get(idx)!
+        const t = getTime(d)
+        const v = getValue(d)
+
+        const tPixel = scales.time(t)
+        const vPixel = scales.value(v)
+        const x = timeAxis === "x" ? tPixel : vPixel
+        const y = timeAxis === "x" ? vPixel : tPixel
+
+        hover = { data: d, time: t, value: v, x, y }
+      }
       hoverRef.current = hover
       setHoverPoint(hover)
       if (customHoverBehavior) customHoverBehavior(hover)
@@ -514,6 +592,14 @@ const RealtimeFrame = forwardRef<RealtimeFrameHandle, RealtimeFrameProps>(
       if (chartType === "bar" && binSize && !fixedValueExtent && buf.size > 0) {
         const [, maxTotal] = computeBinExtent(buf, getTime, getValue, binSize, getCategory)
         vDomain = [0, maxTotal + maxTotal * extentPadding]
+      } else if (chartType === "waterfall" && !fixedValueExtent && buf.size > 0) {
+        const [minCum, maxCum] = computeWaterfallExtent(buf, getValue)
+        const range = maxCum - minCum
+        const pad = range > 0 ? range * extentPadding : 1
+        vDomain = [
+          Math.min(0, minCum - Math.abs(pad)),
+          Math.max(0, maxCum + Math.abs(pad))
+        ]
       } else if (!fixedValueExtent && vDomain[0] !== Infinity) {
         const range = vDomain[1] - vDomain[0]
         const pad = range > 0 ? range * extentPadding : 1
@@ -568,8 +654,73 @@ const RealtimeFrame = forwardRef<RealtimeFrameHandle, RealtimeFrameProps>(
           ctx, buf, scales, layout, lineStyle,
           { time: getTime, value: getValue, category: getCategory },
           annotations,
-          chartType === "bar" ? { binSize, barColors, barStyle } : undefined
+          chartType === "bar" ? { binSize, barColors, barStyle }
+            : chartType === "waterfall" ? { waterfallStyle }
+            : chartType === "swarm" ? { swarmStyle, barColors }
+            : undefined
         )
+      }
+
+      // Draw bar highlight on hovered bin/segment
+      if (hoverAnnotation && hoverRef.current && chartType === "bar" && binSize) {
+        const hd = hoverRef.current.data
+        if (hd.binStart != null) {
+          const gap = barStyle?.gap ?? 1
+          const tAxis = getTimeAxis(arrowOfTime)
+
+          // Determine which segment to highlight
+          const segBase = hd.hoveredCategory != null
+            ? (() => {
+                // Walk categories to find the cumulative base of the hovered segment
+                const cats: Record<string, number> = hd.categories || {}
+                const colorKeys = barColors ? Object.keys(barColors) : []
+                const listed = new Set(colorKeys)
+                const unlisted = Object.keys(cats).filter((c: string) => !listed.has(c)).sort()
+                const catOrder = [...colorKeys.filter((k: string) => k in cats), ...unlisted]
+                let base = 0
+                for (const cat of catOrder) {
+                  if (cat === hd.hoveredCategory) return base
+                  base += cats[cat] || 0
+                }
+                return base
+              })()
+            : 0
+          const segTop = hd.hoveredCategory != null
+            ? segBase + (hd.hoveredCategoryValue || 0)
+            : hd.total
+
+          if (tAxis === "x") {
+            const rawX0 = scales.time(hd.binStart)
+            const rawX1 = scales.time(hd.binEnd)
+            const x0 = Math.min(rawX0, rawX1) + gap / 2
+            const x1 = Math.max(rawX0, rawX1) - gap / 2
+            const yBot = scales.value(segBase)
+            const yTop = scales.value(segTop)
+            const ry = Math.min(yBot, yTop)
+            const rh = Math.abs(yBot - yTop)
+            ctx.fillStyle = "rgba(255, 255, 255, 0.3)"
+            ctx.fillRect(x0, ry, x1 - x0, rh)
+            ctx.strokeStyle = "rgba(0, 0, 0, 0.4)"
+            ctx.lineWidth = 1
+            ctx.setLineDash([])
+            ctx.strokeRect(x0, ry, x1 - x0, rh)
+          } else {
+            const rawY0 = scales.time(hd.binStart)
+            const rawY1 = scales.time(hd.binEnd)
+            const y0 = Math.min(rawY0, rawY1) + gap / 2
+            const y1 = Math.max(rawY0, rawY1) - gap / 2
+            const xLeft = scales.value(segBase)
+            const xRight = scales.value(segTop)
+            const rx = Math.min(xLeft, xRight)
+            const rw = Math.abs(xRight - xLeft)
+            ctx.fillStyle = "rgba(255, 255, 255, 0.3)"
+            ctx.fillRect(rx, y0, rw, y1 - y0)
+            ctx.strokeStyle = "rgba(0, 0, 0, 0.4)"
+            ctx.lineWidth = 1
+            ctx.setLineDash([])
+            ctx.strokeRect(rx, y0, rw, y1 - y0)
+          }
+        }
       }
 
       // Draw crosshair after chart data so it renders on top

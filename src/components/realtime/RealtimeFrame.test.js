@@ -409,6 +409,118 @@ describe("RealtimeFrame", () => {
     })
   })
 
+  describe("swarm chart", () => {
+    it("renders without crashing with chartType=swarm", () => {
+      const { container } = render(
+        <RealtimeFrame
+          chartType="swarm"
+          data={[
+            { time: 0, value: 10 },
+            { time: 1, value: 20 },
+            { time: 2, value: 15 }
+          ]}
+        />
+      )
+      expect(container.querySelector(".realtime-frame")).toBeTruthy()
+      expect(container.querySelector("canvas")).toBeTruthy()
+    })
+
+    it("imperative push works with swarm", () => {
+      const ref = createRef()
+      render(
+        <RealtimeFrame ref={ref} chartType="swarm" />
+      )
+
+      ref.current.push({ time: 0, value: 10 })
+      ref.current.push({ time: 1, value: 20 })
+      ref.current.push({ time: 2, value: 15 })
+      expect(ref.current.getData().length).toBe(3)
+    })
+
+    it("swarm with custom style renders", () => {
+      const { container } = render(
+        <RealtimeFrame
+          chartType="swarm"
+          swarmStyle={{
+            radius: 5,
+            fill: "purple",
+            opacity: 0.8,
+            stroke: "#000",
+            strokeWidth: 1
+          }}
+          data={[
+            { time: 0, value: 10 },
+            { time: 1, value: 20 }
+          ]}
+        />
+      )
+      expect(container.querySelector(".realtime-frame")).toBeTruthy()
+    })
+
+    it("swarm with categoryAccessor renders", () => {
+      const { container } = render(
+        <RealtimeFrame
+          chartType="swarm"
+          categoryAccessor="cat"
+          barColors={{ sensor1: "#007bff", sensor2: "#28a745", sensor3: "#dc3545" }}
+          data={[
+            { time: 0, value: 10, cat: "sensor1" },
+            { time: 1, value: 20, cat: "sensor2" },
+            { time: 2, value: 15, cat: "sensor3" }
+          ]}
+        />
+      )
+      expect(container.querySelector(".realtime-frame")).toBeTruthy()
+    })
+  })
+
+  describe("waterfall chart", () => {
+    it("renders without crashing with chartType=waterfall", () => {
+      const { container } = render(
+        <RealtimeFrame
+          chartType="waterfall"
+          data={[
+            { time: 0, value: 10 },
+            { time: 1, value: -5 },
+            { time: 2, value: 15 }
+          ]}
+        />
+      )
+      expect(container.querySelector(".realtime-frame")).toBeTruthy()
+      expect(container.querySelector("canvas")).toBeTruthy()
+    })
+
+    it("imperative push works with waterfall", () => {
+      const ref = createRef()
+      render(
+        <RealtimeFrame ref={ref} chartType="waterfall" />
+      )
+
+      ref.current.push({ time: 0, value: 10 })
+      ref.current.push({ time: 1, value: -5 })
+      ref.current.push({ time: 2, value: 15 })
+      expect(ref.current.getData().length).toBe(3)
+    })
+
+    it("waterfall with custom colors renders", () => {
+      const { container } = render(
+        <RealtimeFrame
+          chartType="waterfall"
+          waterfallStyle={{
+            positiveColor: "blue",
+            negativeColor: "orange",
+            connectorStroke: "#ccc"
+          }}
+          data={[
+            { time: 0, value: 10 },
+            { time: 1, value: -5 }
+          ]}
+        />
+      )
+      expect(container.querySelector(".realtime-frame")).toBeTruthy()
+    })
+  })
+
   describe("hover annotation", () => {
     function setupHover(hoverProps = {}) {
       const ref = createRef()
