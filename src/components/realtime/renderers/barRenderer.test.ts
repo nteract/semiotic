@@ -175,4 +175,115 @@ describe("barRenderer", () => {
 
     expect(gapWidth).toBeLessThan(noGapWidth)
   })
+
+  describe("partial edge bins", () => {
+    it("renders a narrower leading bin when data starts mid-bin", () => {
+      const ctx = makeCtx()
+      // Data starts at time=35 with binSize=20
+      // First bin is [20, 40], but domain starts at 35 → rendered [35, 40] = 25% width
+      // Second bin is [40, 60] → full width
+      const data = [
+        { time: 35, value: 10 },
+        { time: 45, value: 20 }
+      ]
+      const scales: RealtimeScales = {
+        time: scaleLinear().domain([35, 60]).range([0, 400]),
+        value: scaleLinear().domain([0, 50]).range([200, 0])
+      }
+      barRenderer(ctx, data, scales, layoutX, style, accessors, undefined, { binSize: 20, barStyle: { gap: 0 } })
+
+      const calls = (ctx.fillRect as jest.Mock).mock.calls
+      expect(calls.length).toBe(2)
+
+      // First bin: clamped to [35, 40] → width = timeScale(40) - timeScale(35)
+      const firstBarWidth = calls[0][2]
+      // Second bin: full [40, 60] → width = timeScale(60) - timeScale(40)
+      const secondBarWidth = calls[1][2]
+
+      expect(firstBarWidth).toBeLessThan(secondBarWidth)
+      // First bar should be 5/25 of chart width, second should be 20/25
+      expect(firstBarWidth).toBeCloseTo(400 * (5 / 25), 1)
+      expect(secondBarWidth).toBeCloseTo(400 * (20 / 25), 1)
+    })
+
+    it("renders a narrower trailing bin when data ends mid-bin", () => {
+      const ctx = makeCtx()
+      // Data ends at time=153 with binSize=20
+      // [140, 160] → rendered as [140, 153] = 65% width
+      const data = [
+        { time: 140, value: 10 },
+        { time: 153, value: 20 }
+      ]
+      const scales: RealtimeScales = {
+        time: scaleLinear().domain([140, 153]).range([0, 400]),
+        value: scaleLinear().domain([0, 50]).range([200, 0])
+      }
+      barRenderer(ctx, data, scales, layoutX, style, accessors, undefined, { binSize: 20, barStyle: { gap: 0 } })
+
+      const calls = (ctx.fillRect as jest.Mock).mock.calls
+      expect(calls.length).toBe(1)
+
+      // Clamped to [140, 153] → 13/13 of domain = full chart width
+      const barWidth = calls[0][2]
+      expect(barWidth).toBeCloseTo(400, 1)
+    })
+
+    it("renders both partial leading and trailing bins with full middle bins", () => {
+      const ctx = makeCtx()
+      // domain [35, 153], binSize=20
+      // Bins: [20,40]→clamped [35,40], [40,60] full, [60,80] full,
+      //        [80,100] full, [100,120] full, [120,140] full, [140,160]→clamped [140,153]
+      const data = [
+        { time: 35, value: 5 },
+        { time: 55, value: 10 },
+        { time: 75, value: 10 },
+        { time: 95, value: 10 },
+        { time: 115, value: 10 },
+        { time: 135, value: 10 },
+        { time: 153, value: 8 }
+      ]
+      const scales: RealtimeScales = {
+        time: scaleLinear().domain([35, 153]).range([0, 400]),
+        value: scaleLinear().domain([0, 50]).range([200, 0])
+      }
+      barRenderer(ctx, data, scales, layoutX, style, accessors, undefined, { binSize: 20, barStyle: { gap: 0 } })
+
+      const calls = (ctx.fillRect as jest.Mock).mock.calls
+      expect(calls.length).toBe(7)
+
+      const firstBarWidth = calls[0][2]
+      const middleBarWidth = calls[1][2]
+      const lastBarWidth = calls[calls.length - 1][2]
+
+      // First bin [35,40] = 5 units, middle bins = 20 units, last bin [140,153] = 13 units
+      // Total domain = 118 units mapped to 400px
+      const pxPerUnit = 400 / 118
+      expect(firstBarWidth).toBeCloseTo(5 * pxPerUnit, 1)
+      expect(middleBarWidth).toBeCloseTo(20 * pxPerUnit, 1)
+      expect(lastBarWidth).toBeCloseTo(13 * pxPerUnit, 1)
+      expect(firstBarWidth).toBeLessThan(middleBarWidth)
+      expect(lastBarWidth).toBeLessThan(middleBarWidth)
+    })
+
+    it("skips a bin entirely outside the domain", () => {
+      const ctx = makeCtx()
+      // domain [50, 100], binSize=20
+      // A data point at time=10 creates bin [0, 20] which is fully outside domain
+      // A data point at time=55 creates bin [40, 60] which partially overlaps
+      const data = [
+        { time: 10, value: 5 },
+        { time: 55, value: 10 }
+      ]
+      const scales: RealtimeScales = {
+        time: scaleLinear().domain([50, 100]).range([0, 400]),
+        value: scaleLinear().domain([0, 50]).range([200, 0])
+      }
+      barRenderer(ctx, data, scales, layoutX, style, accessors, undefined, { binSize: 20, barStyle: { gap: 0 } })
+
+      const calls = (ctx.fillRect as jest.Mock).mock.calls
+      // bin [0,20] is fully outside [50,100] → skipped
+      // bin [40,60] clamped to [50,60] → drawn
+      expect(calls.length).toBe(1)
+    })
+  })
 })

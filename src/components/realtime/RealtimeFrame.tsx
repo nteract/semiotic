@@ -496,7 +496,10 @@ const RealtimeFrame = forwardRef<RealtimeFrameHandle, RealtimeFrameProps>(
         const bin = bins.get(binStart)
         if (!bin) return
 
-        const midTime = bin.start + (bin.end - bin.start) / 2
+        const [domainMin, domainMax] = scales.time.domain() as [number, number]
+        const clampedStart = Math.max(bin.start, domainMin)
+        const clampedEnd = Math.min(bin.end, domainMax)
+        const midTime = clampedStart + (clampedEnd - clampedStart) / 2
         const tPixel = scales.time(midTime)
         const vPixel = scales.value(bin.total)
         const x = timeAxis === "x" ? tPixel : vPixel
@@ -708,9 +711,13 @@ const RealtimeFrame = forwardRef<RealtimeFrameHandle, RealtimeFrameProps>(
             ? segBase + (hd.hoveredCategoryValue || 0)
             : hd.total
 
+          const [domainMin, domainMax] = scales.time.domain() as [number, number]
+          const clampedBinStart = Math.max(hd.binStart, domainMin)
+          const clampedBinEnd = Math.min(hd.binEnd, domainMax)
+
           if (tAxis === "x") {
-            const rawX0 = scales.time(hd.binStart)
-            const rawX1 = scales.time(hd.binEnd)
+            const rawX0 = scales.time(clampedBinStart)
+            const rawX1 = scales.time(clampedBinEnd)
             const x0 = Math.min(rawX0, rawX1) + gap / 2
             const x1 = Math.max(rawX0, rawX1) - gap / 2
             const yBot = scales.value(segBase)
@@ -724,8 +731,8 @@ const RealtimeFrame = forwardRef<RealtimeFrameHandle, RealtimeFrameProps>(
             ctx.setLineDash([])
             ctx.strokeRect(x0, ry, x1 - x0, rh)
           } else {
-            const rawY0 = scales.time(hd.binStart)
-            const rawY1 = scales.time(hd.binEnd)
+            const rawY0 = scales.time(clampedBinStart)
+            const rawY1 = scales.time(clampedBinEnd)
             const y0 = Math.min(rawY0, rawY1) + gap / 2
             const y1 = Math.max(rawY0, rawY1) - gap / 2
             const xLeft = scales.value(segBase)

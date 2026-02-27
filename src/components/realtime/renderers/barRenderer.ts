@@ -20,6 +20,8 @@ export const barRenderer: RendererFn = (ctx, data, scales, layout, style, access
   const bins = computeBins(data, getTime, getValue, binSize, getCategory)
   if (bins.size === 0) return
 
+  const [domainMin, domainMax] = timeScale.domain() as [number, number]
+
   const gap = barStyle?.gap ?? 1
   const hasCategories = getCategory != null
 
@@ -47,8 +49,12 @@ export const barRenderer: RendererFn = (ctx, data, scales, layout, style, access
 
   for (const bin of bins.values()) {
     if (timeAxis === "x") {
-      const rawX0 = timeScale(bin.start)
-      const rawX1 = timeScale(bin.end)
+      const clampedStart = Math.max(bin.start, domainMin)
+      const clampedEnd = Math.min(bin.end, domainMax)
+      if (clampedStart >= clampedEnd) continue
+
+      const rawX0 = timeScale(clampedStart)
+      const rawX1 = timeScale(clampedEnd)
       const x0 = Math.min(rawX0, rawX1) + gap / 2
       const x1 = Math.max(rawX0, rawX1) - gap / 2
       const barWidth = x1 - x0
@@ -85,8 +91,12 @@ export const barRenderer: RendererFn = (ctx, data, scales, layout, style, access
       }
     } else {
       // timeAxis === "y": horizontal bars
-      const rawY0 = timeScale(bin.start)
-      const rawY1 = timeScale(bin.end)
+      const clampedStart = Math.max(bin.start, domainMin)
+      const clampedEnd = Math.min(bin.end, domainMax)
+      if (clampedStart >= clampedEnd) continue
+
+      const rawY0 = timeScale(clampedStart)
+      const rawY1 = timeScale(clampedEnd)
       const y0 = Math.min(rawY0, rawY1) + gap / 2
       const y1 = Math.max(rawY0, rawY1) - gap / 2
       const barHeight = y1 - y0
