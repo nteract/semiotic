@@ -20,6 +20,9 @@ export type { LineChartProps } from "./xy/LineChart"
 export { AreaChart } from "./xy/AreaChart"
 export type { AreaChartProps } from "./xy/AreaChart"
 
+export { StackedAreaChart } from "./xy/StackedAreaChart"
+export type { StackedAreaChartProps } from "./xy/StackedAreaChart"
+
 export { Heatmap } from "./xy/Heatmap"
 export type { HeatmapProps } from "./xy/Heatmap"
 
@@ -67,6 +70,9 @@ export type { TreeDiagramProps } from "./network/TreeDiagram"
 
 // Re-export shared types for convenience
 export type { BaseChartProps, AxisConfig, Accessor } from "./shared/types"
+
+// Shared hooks for building custom chart wrappers
+export { useColorScale, useSortedData, DEFAULT_COLOR } from "./shared/hooks"
 
 // Color utilities (if users want to use them directly)
 export {

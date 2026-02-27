@@ -2,10 +2,11 @@ import * as React from "react"
 import { useMemo } from "react"
 import OrdinalFrame from "../../OrdinalFrame"
 import type { OrdinalFrameProps } from "../../types/ordinalTypes"
-import { getColor, createColorScale } from "../shared/colorUtils"
+import { getColor } from "../shared/colorUtils"
+import { useColorScale, useSortedData, DEFAULT_COLOR } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, Accessor } from "../shared/types"
-import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 
 /**
  * DotPlot component props
@@ -130,14 +131,12 @@ export interface DotPlotProps extends BaseChartProps {
 }
 
 /**
- * DotPlot - Visualize categorical data with Cleveland dot plots
+ * DotPlot - Visualize categorical data with Cleveland dot plots.
  *
  * A simplified wrapper around OrdinalFrame for creating dot plots.
- * Perfect for comparing values across categories with a clean, minimal style.
  *
  * @example
  * ```tsx
- * // Simple dot plot
  * <DotPlot
  *   data={[
  *     {category: 'Item A', value: 25},
@@ -148,42 +147,6 @@ export interface DotPlotProps extends BaseChartProps {
  *   valueLabel="Value"
  * />
  * ```
- *
- * @example
- * ```tsx
- * // With color encoding and sorting
- * <DotPlot
- *   data={data}
- *   colorBy="type"
- *   sort="desc"
- *   dotRadius={6}
- *   showGrid={true}
- * />
- * ```
- *
- * @example
- * ```tsx
- * // Vertical orientation
- * <DotPlot
- *   data={data}
- *   orientation="vertical"
- *   colorScheme="tableau10"
- *   sort="asc"
- * />
- * ```
- *
- * @remarks
- * This component wraps {@link OrdinalFrame} with sensible defaults for dot plots.
- * For more advanced features like range connectors (dumbbell style) or custom marks,
- * use OrdinalFrame directly.
- *
- * **Breadcrumb to advanced usage:**
- * - Use the `frameProps` prop to pass any OrdinalFrame prop
- * - See OrdinalFrame documentation: https://semiotic.nteract.io/guides/ordinal-frame
- * - All OrdinalFrame props are available via `frameProps`
- *
- * @param props - DotPlot configuration
- * @returns Rendered dot plot
  */
 export function DotPlot(props: DotPlotProps) {
   const {
@@ -211,44 +174,13 @@ export function DotPlot(props: DotPlotProps) {
     frameProps = {}
   } = props
 
-  // Validate data
-  if (!data || data.length === 0) {
-    console.warn("DotPlot: data prop is required and should not be empty")
-    return null
-  }
+  const safeData = data || []
 
   // Sort data if requested
-  const sortedData = useMemo(() => {
-    if (!sort) return data
-
-    const dataCopy = [...data]
-
-    if (typeof sort === "function") {
-      return dataCopy.sort(sort)
-    }
-
-    // Get value accessor function
-    const getValue = typeof valueAccessor === "function"
-      ? valueAccessor
-      : (d: any) => d[valueAccessor]
-
-    if (sort === "asc") {
-      return dataCopy.sort((a, b) => getValue(a) - getValue(b))
-    } else {
-      // sort === "desc" or sort === true
-      return dataCopy.sort((a, b) => getValue(b) - getValue(a))
-    }
-  }, [data, sort, valueAccessor])
+  const sortedData = useSortedData(safeData, sort, valueAccessor)
 
   // Create color scale if colorBy is specified
-  const colorScale = useMemo(() => {
-    if (!colorBy || typeof colorBy === "function") {
-      return undefined
-    }
-
-    const scheme = Array.isArray(colorScheme) ? colorScheme : colorScheme
-    return createColorScale(sortedData, colorBy as string, scheme)
-  }, [sortedData, colorBy, colorScheme])
+  const colorScale = useColorScale(safeData, colorBy, colorScheme)
 
   // Piece style function
   const pieceStyle = useMemo(() => {
@@ -262,7 +194,7 @@ export function DotPlot(props: DotPlotProps) {
       if (colorBy) {
         baseStyle.fill = getColor(d, colorBy, colorScale)
       } else {
-        baseStyle.fill = "#007bff"
+        baseStyle.fill = DEFAULT_COLOR
       }
 
       return baseStyle
@@ -336,6 +268,28 @@ export function DotPlot(props: DotPlotProps) {
     return finalMargin
   }, [userMargin, legend])
 
+  // Validate data (after all hooks)
+  if (safeData.length === 0) {
+    console.warn("DotPlot: data prop is required and should not be empty")
+    return null
+  }
+
+  // Default tooltip function for piece hover
+  const defaultTooltipContent = useMemo(() => {
+    return (d: any) => {
+      const cat = typeof categoryAccessor === "function" ? categoryAccessor(d) : d[categoryAccessor]
+      const val = typeof valueAccessor === "function" ? valueAccessor(d) : d[valueAccessor]
+      return (
+        <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+          <div style={{ fontWeight: "bold" }}>{String(cat)}</div>
+          <div style={{ marginTop: "4px" }}>
+            {typeof val === "number" ? val.toLocaleString() : String(val)}
+          </div>
+        </div>
+      )
+    }
+  }, [categoryAccessor, valueAccessor])
+
   // Build OrdinalFrame props
   const ordinalFrameProps: OrdinalFrameProps = {
     size: [width, height],
@@ -346,20 +300,17 @@ export function DotPlot(props: DotPlotProps) {
     projection: orientation === "horizontal" ? "horizontal" : "vertical",
     style: pieceStyle,
     axes,
-    hoverAnnotation: enableHover,
+    pieceHoverAnnotation: enableHover,
     margin,
     oPadding: categoryPadding,
     ...(legend && { legend }),
     ...(className && { className }),
     ...(title && { title }),
     // Add tooltip support
-    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) }),
+    tooltipContent: tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent,
     // Allow frameProps to override defaults
     ...frameProps
   }
 
   return <OrdinalFrame {...ordinalFrameProps} />
 }
-
-// Export default for convenience
-export default DotPlot

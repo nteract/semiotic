@@ -1,21 +1,22 @@
-import React from "react"
+import React, { useState, useEffect, useMemo } from "react"
 import MarkdownText from "../MarkdownText"
 import DocumentFrame from "../DocumentFrame"
 import { NetworkFrame, nodesEdgesFromHierarchy } from "semiotic"
 import theme from "../theme"
 
 import { forceSimulation, forceY, forceCollide } from "d3-force"
+import flareData from "../../public/data/flare.json"
 
 const frameProps = {
   networkType: {
     type: "force",
     forceManyBody: -250,
     distanceMax: 500,
-    edgeStrength: 2
+    edgeStrength: 2,
   },
   nodeSizeAccessor: 2,
   edgeStyle: { stroke: theme[2], fill: "none" },
-  nodeIDAccessor: d => d.hierarchicalID || d.name
+  nodeIDAccessor: (d) => d.hierarchicalID || d.name,
 }
 
 const combinedFociNodes = [...Array(100)].map((d, i) => ({
@@ -24,12 +25,18 @@ const combinedFociNodes = [...Array(100)].map((d, i) => ({
   fociX: (i % 2) * 200 + 50,
   fociY: Math.floor((i % 4) / 2) * 200,
   combinedY: (i % 4) * 75 + 150,
-  color: theme[i % 4]
+  color: theme[i % 4],
 }))
 
 const combinedFociSimulation = forceSimulation()
-  .force("collide", forceCollide().radius(d => d.r))
-  .force("y", forceY(d => d.combinedY))
+  .force(
+    "collide",
+    forceCollide().radius((d) => d.r),
+  )
+  .force(
+    "y",
+    forceY((d) => d.combinedY),
+  )
 
 const bubbleProps = {
   nodes: combinedFociNodes,
@@ -38,9 +45,9 @@ const bubbleProps = {
     type: "force",
     iterations: 200,
     simulation: combinedFociSimulation,
-    zoom: false
+    zoom: false,
   },
-  nodeStyle: d => ({ fill: d.color })
+  nodeStyle: (d) => ({ fill: d.color }),
 }
 
 const pre = `
@@ -60,40 +67,36 @@ const bubbleOverrideProps = {
     zoom: false
   }
   `,
-  nodes: combinedFociNodes.map(d => ({
+  nodes: combinedFociNodes.map((d) => ({
     name: d.name,
     r: d.r,
     fociX: d.fociX,
     fociY: d.fociY,
     combinedY: d.combinedY,
-    color: d.color
-  }))
+    color: d.color,
+  })),
 }
 
-const ROOT = process.env.PUBLIC_URL
+const ForceLayouts = () => {
+  // Progressive rendering: mount charts one at a time so the browser
+  // can paint between expensive force simulations
+  const [chartsReady, setChartsReady] = useState(0)
 
-export default class ForceLayouts extends React.Component {
-  constructor(props) {
-    super(props)
+  const hierarchy = useMemo(() => nodesEdgesFromHierarchy(flareData), [])
 
-    this.state = {}
-
-    fetch(`${ROOT}/data/flare.json`)
-      .then(response => response.json())
-      .then(res => {
-        this.setState({
-          hierarchy: nodesEdgesFromHierarchy(res),
-          actualHierarchy: res
-        })
+  useEffect(() => {
+    if (chartsReady < 3) {
+      const id = requestAnimationFrame(() => {
+        setChartsReady((n) => n + 1)
       })
-  }
+      return () => cancelAnimationFrame(id)
+    }
+  }, [chartsReady])
 
-  render() {
-    if (!this.state.hierarchy) return "Loading..."
-    return (
-      <div>
-        <MarkdownText
-          text={`
+  return (
+    <div>
+      <MarkdownText
+        text={`
 
 \`NetworkFrame\` allows you to render several data visualizations using a force layout created with [d3-force](https://github.com/d3/d3-force). For these examples you can pass a \`nodes\` and an \`edges\` list, or just an \`edges\` list and nodes with be inferred.
 
@@ -105,45 +108,80 @@ The data on this page use the [Flare visualization toolkit](https://github.com/p
 
 ## Force Layout
     `}
-        />
+      />
 
+      {chartsReady >= 1 ? (
         <DocumentFrame
           frameProps={{
             ...frameProps,
-            nodes: this.state.hierarchy.nodes,
-            edges: this.state.hierarchy.edges
+            nodes: hierarchy.nodes,
+            edges: hierarchy.edges,
           }}
-          // overrideProps={this.state.hierarchyOverrideProps}
+          hiddenProps={{ nodes: true, edges: true }}
+          overrideProps={{
+            nodes: `hierarchy.nodes`,
+            edges: `hierarchy.edges`,
+          }}
           type={NetworkFrame}
         />
-        <MarkdownText
-          text={`
+      ) : (
+        <div
+          style={{
+            height: 500,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#999",
+          }}
+        >
+          Loading force layout...
+        </div>
+      )}
+      <MarkdownText
+        text={`
 ## Force Layout with Edge Type
 
 This example is the same as the example above with the additional prop \`edgeType="linearc"\`
 `}
-        />
+      />
 
+      {chartsReady >= 2 ? (
         <DocumentFrame
           frameProps={{
             ...frameProps,
-            edges: this.state.actualHierarchy,
-            edgeType: "linearc"
+            edges: flareData,
+            edgeType: "linearc",
           }}
-          // overrideProps={this.state.hierarchyOverrideProps}
+          hiddenProps={{ edges: true }}
+          overrideProps={{
+            edges: `flareData`,
+          }}
           type={NetworkFrame}
           startHidden
         />
+      ) : (
+        <div
+          style={{
+            height: 500,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#999",
+          }}
+        >
+          Loading force layout...
+        </div>
+      )}
 
-        <MarkdownText
-          text={`
-### Force Layout Settings 
+      <MarkdownText
+        text={`
+### Force Layout Settings
 
 A detailed list of force layout settings:
 
 \`\`\`jsx
-networkType={ 
-  type: "force" // Can also be "motifs" 
+networkType={
+  type: "force" // Can also be "motifs"
      //motifs lays out separated networks side by side
      //without applying a force between them
   zoom: true, // Zoom the laid out nodes in or out so that they fit the specified size, can also be "stretch" if you want zoom not to maintain aspect ratio
@@ -155,9 +193,9 @@ networkType={
 }
 edgeType={undefined} //Can take one of the following
   "angled"
-  "linearc" // Single curved edges 
+  "linearc" // Single curved edges
   "curve" // Double curved edges
-  "ribbon" // Filled area with a width equal to the width property of the edge (which you define via the networkFrame’s edgeWidthAccessor)
+  "ribbon" // Filled area with a width equal to the width property of the edge (which you define via the networkFrame's edgeWidthAccessor)
   "arrowhead" // A triangular arrowhead
   "halfarrow" // A half-triangle arrowhead
   "nail" // A fat end on the source and the sharp end on the target
@@ -167,10 +205,10 @@ edgeType={undefined} //Can take one of the following
 
 \`\`\`
 `}
-        />
+      />
 
-        <MarkdownText
-          text={`
+      <MarkdownText
+        text={`
 ## Network Graph Custom Simulation
 
 In addition to being able to specify parameters for the built-in force simulation, you can also create one and pass it as the \`simulation\` parameter
@@ -182,7 +220,7 @@ const customSimulation = forceSimulation().force(
     .distanceMax(100)
     .strength(-100)
 )
-      
+
 <NetworkFrame
   edges={data}
   networkType={{
@@ -198,25 +236,40 @@ const customSimulation = forceSimulation().force(
 
 
   `}
-        />
+      />
 
-        <MarkdownText
-          text={`
+      <MarkdownText
+        text={`
 
 
 ## Bubble Chart
 
 The following example uses a custom simulation, and it shows and example with the \`force\` layout that doesn't use any edges.
   `}
-        />
+      />
 
+      {chartsReady >= 3 ? (
         <DocumentFrame
           frameProps={bubbleProps}
           overrideProps={bubbleOverrideProps}
           type={NetworkFrame}
           pre={pre}
         />
-      </div>
-    )
-  }
+      ) : (
+        <div
+          style={{
+            height: 500,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#999",
+          }}
+        >
+          Loading bubble chart...
+        </div>
+      )}
+    </div>
+  )
 }
+
+export default ForceLayouts

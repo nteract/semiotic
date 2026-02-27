@@ -2,9 +2,10 @@ import * as React from "react"
 import { useMemo } from "react"
 import NetworkFrame from "../../NetworkFrame"
 import type { NetworkFrameProps } from "../../types/networkTypes"
-import { getColor, createColorScale } from "../shared/colorUtils"
+import { getColor, COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"
 import type { BaseChartProps, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 
 /**
  * ChordDiagram component props
@@ -227,18 +228,15 @@ export function ChordDiagram(props: ChordDiagramProps) {
     frameProps = {}
   } = props
 
-  // Validate data
-  if (!edges || edges.length === 0) {
-    console.warn("ChordDiagram: edges prop is required and should not be empty")
-    return null
-  }
+  // Safe data defaults (hooks must always run)
+  const safeEdges = edges || []
 
   // Infer nodes from edges if not provided
   const inferredNodes = useMemo(() => {
     if (nodes && nodes.length > 0) return nodes
 
     const nodeSet = new Set<string>()
-    edges.forEach((edge) => {
+    safeEdges.forEach((edge) => {
       const sourceId =
         typeof sourceAccessor === "function"
           ? sourceAccessor(edge)
@@ -253,17 +251,10 @@ export function ChordDiagram(props: ChordDiagramProps) {
     })
 
     return Array.from(nodeSet).map((id) => ({ id }))
-  }, [nodes, edges, sourceAccessor, targetAccessor])
+  }, [nodes, safeEdges, sourceAccessor, targetAccessor])
 
   // Create color scale if colorBy is specified
-  const colorScale = useMemo(() => {
-    if (!colorBy || typeof colorBy === "function") {
-      return undefined
-    }
-
-    const scheme = Array.isArray(colorScheme) ? colorScheme : colorScheme
-    return createColorScale(inferredNodes, colorBy as string, scheme)
-  }, [inferredNodes, colorBy, colorScheme])
+  const colorScale = useColorScale(inferredNodes, colorBy, colorScheme)
 
   // Node style function
   const nodeStyle = useMemo(() => {
@@ -277,16 +268,12 @@ export function ChordDiagram(props: ChordDiagramProps) {
       if (colorBy) {
         baseStyle.fill = getColor(d, colorBy, colorScale)
       } else {
-        // Default: color by index
-        const colors = Array.isArray(colorScheme)
+        // Default: color by index using the color scheme
+        const palette = Array.isArray(colorScheme)
           ? colorScheme
-          : createColorScale(
-              inferredNodes.map((_, idx) => ({ index: idx })),
-              "index",
-              colorScheme
-            )
-        baseStyle.fill =
-          typeof colors === "function" ? colors({ index: i }) : colors[i % 10]
+          : (COLOR_SCHEMES[colorScheme] || DEFAULT_COLORS)
+        const colors = Array.isArray(palette) ? palette : DEFAULT_COLORS
+        baseStyle.fill = colors[i % colors.length]
       }
 
       return baseStyle
@@ -324,6 +311,16 @@ export function ChordDiagram(props: ChordDiagramProps) {
     }
   }, [edgeColorBy, colorBy, colorScale, nodeStyle, edgeOpacity])
 
+  // Node label function
+  const nodeLabelFn = useMemo(() => {
+    if (!showLabels) return undefined
+    const accessor = nodeLabel || nodeIdAccessor
+    return (d: any) => {
+      if (typeof accessor === "function") return accessor(d)
+      return d[accessor]
+    }
+  }, [showLabels, nodeLabel, nodeIdAccessor])
+
   // Build network type configuration
   const networkType = useMemo(() => {
     const config: any = {
@@ -339,11 +336,17 @@ export function ChordDiagram(props: ChordDiagramProps) {
     return config
   }, [padAngle, groupWidth, sortGroups])
 
+  // Validate data (after all hooks)
+  if (!edges || edges.length === 0) {
+    console.warn("ChordDiagram: edges prop is required and should not be empty")
+    return null
+  }
+
   // Build NetworkFrame props
   const networkFrameProps: NetworkFrameProps = {
     size: [width, height],
     nodes: inferredNodes,
-    edges,
+    edges: safeEdges,
     nodeStyle,
     edgeStyle,
     nodeIDAccessor: nodeIdAccessor,
@@ -354,6 +357,7 @@ export function ChordDiagram(props: ChordDiagramProps) {
     hoverAnnotation: enableHover,
     margin,
     nodeSizeAccessor: () => 5, // Small size for hover target
+    ...(nodeLabelFn && { nodeLabels: nodeLabelFn }),
     ...(className && { className }),
     ...(title && { title }),
     // Add tooltip support
@@ -364,6 +368,3 @@ export function ChordDiagram(props: ChordDiagramProps) {
 
   return <NetworkFrame {...networkFrameProps} />
 }
-
-// Export default for convenience
-export default ChordDiagram

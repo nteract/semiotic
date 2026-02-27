@@ -1,11 +1,12 @@
-import React from "react"
+import React, { useState, useEffect } from "react"
 import DocumentFrame from "../DocumentFrame"
 import { XYFrame } from "semiotic"
 import { csvParse } from "d3-dsv"
 
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
-const ROOT = process.env.PUBLIC_URL
+
+const diamondsCsvUrl = new URL("../../public/data/diamonds.csv", import.meta.url)
 
 const cutHash = {
   Ideal: theme[0],
@@ -68,11 +69,11 @@ const overrideProps = {
   `,
 }
 
-export default class CanvasInteraction extends React.Component {
-  constructor(props) {
-    super(props)
+const CanvasInteraction = () => {
+  const [points, setPoints] = useState(null)
 
-    fetch(`${ROOT}/data/diamonds.csv`)
+  useEffect(() => {
+    fetch(diamondsCsvUrl)
       .then((response) => response.text())
       .then((data) => {
         const parsedDiamonds = []
@@ -85,31 +86,31 @@ export default class CanvasInteraction extends React.Component {
             clarity: d.clarity,
           })
         })
-        this.setState({ ...frameProps, points: parsedDiamonds })
+        setPoints(parsedDiamonds)
       })
       .catch((err) => console.error(err))
-  }
+  }, [])
 
-  render() {
-    return (
-      <div>
-        <MarkdownText
-          text={`
+  return (
+    <div>
+      <MarkdownText
+        text={`
 This page uses the classic diamond dataset of nearly 54,000 diamonds source from the [ggplot2](https://github.com/tidyverse/ggplot2/blob/master/data-raw/diamonds.csv) project.
 
 `}
+      />
+      {!points ? (
+        <div>Loading...</div>
+      ) : (
+        <DocumentFrame
+          frameProps={{ ...frameProps, points }}
+          overrideProps={overrideProps}
+          type={XYFrame}
+          useExpanded
         />
-        {!this.state ? (
-          <div>Loading...</div>
-        ) : (
-          <DocumentFrame
-            frameProps={this.state}
-            overrideProps={overrideProps}
-            type={XYFrame}
-            useExpanded
-          />
-        )}
-      </div>
-    )
-  }
+      )}
+    </div>
+  )
 }
+
+export default CanvasInteraction

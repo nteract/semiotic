@@ -7,7 +7,7 @@ import {
   BoxPlot,
   DotPlot,
   Tooltip,
-  MultiLineTooltip
+  MultiLineTooltip,
 } from "semiotic"
 
 // Sample data
@@ -16,7 +16,7 @@ const barData = [
   { category: "Product B", value: 38 },
   { category: "Product C", value: 52 },
   { category: "Product D", value: 29 },
-  { category: "Product E", value: 61 }
+  { category: "Product E", value: 61 },
 ]
 
 const stackedBarData = [
@@ -31,7 +31,7 @@ const stackedBarData = [
   { category: "Q3", subcategory: "R&D", value: 30 },
   { category: "Q4", subcategory: "Sales", value: 58 },
   { category: "Q4", subcategory: "Marketing", value: 40 },
-  { category: "Q4", subcategory: "R&D", value: 35 }
+  { category: "Q4", subcategory: "R&D", value: 35 },
 ]
 
 const swarmData = [
@@ -52,7 +52,7 @@ const swarmData = [
   { category: "Group C", value: 23 },
   { category: "Group C", value: 32 },
   { category: "Group C", value: 27 },
-  { category: "Group C", value: 30 }
+  { category: "Group C", value: 30 },
 ]
 
 const boxPlotData = [
@@ -75,7 +75,7 @@ const boxPlotData = [
   { category: "Dataset B", value: 40 },
   { category: "Dataset B", value: 12 },
   { category: "Dataset B", value: 18 },
-  { category: "Dataset B", value: 28 }
+  { category: "Dataset B", value: 28 },
 ]
 
 const dotPlotData = [
@@ -83,18 +83,20 @@ const dotPlotData = [
   { category: "Metric B", value: 38, comparison: 35 },
   { category: "Metric C", value: 52, comparison: 48 },
   { category: "Metric D", value: 29, comparison: 32 },
-  { category: "Metric E", value: 61, comparison: 58 }
+  { category: "Metric E", value: 61, comparison: 58 },
 ]
 
 const CodeBlock = ({ code }) => (
-  <pre style={{
-    background: "#f5f5f5",
-    padding: "16px",
-    borderRadius: "4px",
-    overflow: "auto",
-    fontSize: "14px",
-    lineHeight: "1.5"
-  }}>
+  <pre
+    style={{
+      background: "#f5f5f5",
+      padding: "16px",
+      borderRadius: "4px",
+      overflow: "auto",
+      fontSize: "14px",
+      lineHeight: "1.5",
+    }}
+  >
     <code>{code}</code>
   </pre>
 )
@@ -102,12 +104,14 @@ const CodeBlock = ({ code }) => (
 const ExampleContainer = ({ title, children, code }) => (
   <div style={{ marginBottom: "60px" }}>
     <h3>{title}</h3>
-    <div style={{
-      border: "1px solid #ddd",
-      padding: "20px",
-      marginBottom: "16px",
-      background: "white"
-    }}>
+    <div
+      style={{
+        border: "1px solid #ddd",
+        padding: "20px",
+        marginBottom: "16px",
+        background: "white",
+      }}
+    >
       {children}
     </div>
     <CodeBlock code={code} />
@@ -137,7 +141,7 @@ Higher-order ordinal chart components provide simplified APIs for categorical da
 
       <ExampleContainer
         title="BarChart"
-        code={`import { BarChart, MultiLineTooltip } from "semiotic"
+        code={`import { BarChart } from "semiotic"
 
 const barData = [
   { category: "Product A", value: 45 },
@@ -151,7 +155,6 @@ const barData = [
   height={400}
   categoryLabel="Products"
   valueLabel="Sales"
-  tooltip={MultiLineTooltip({ title: "category", fields: ["value"] })}
 />`}
       >
         <BarChart
@@ -160,7 +163,6 @@ const barData = [
           height={400}
           categoryLabel="Products"
           valueLabel="Sales"
-          tooltip={MultiLineTooltip({ title: "category", fields: ["value"] })}
         />
       </ExampleContainer>
 
@@ -183,7 +185,7 @@ Pass any \`OrdinalFrame\` prop for complete control. [See OrdinalFrame API →](
 
       <ExampleContainer
         title="StackedBarChart"
-        code={`import { StackedBarChart, MultiLineTooltip } from "semiotic"
+        code={`import { StackedBarChart } from "semiotic"
 
 const stackedBarData = [
   { category: "Q1", subcategory: "Sales", value: 45 },
@@ -199,10 +201,6 @@ const stackedBarData = [
   categoryLabel="Quarter"
   valueLabel="Budget ($M)"
   stackBy="subcategory"
-  tooltip={MultiLineTooltip({
-    title: "subcategory",
-    fields: ["category", "value"]
-  })}
 />`}
       >
         <StackedBarChart
@@ -212,10 +210,6 @@ const stackedBarData = [
           categoryLabel="Quarter"
           valueLabel="Budget ($M)"
           stackBy="subcategory"
-          tooltip={MultiLineTooltip({
-            title: "subcategory",
-            fields: ["category", "value"]
-          })}
         />
       </ExampleContainer>
 
@@ -254,7 +248,7 @@ const swarmData = [
   height={400}
   categoryLabel="Groups"
   valueLabel="Measurements"
-  tooltip={Tooltip({ title: "category" })}
+  tooltip={Tooltip({ title: "category", fields: ["value"] })}
 />`}
       >
         <SwarmPlot
@@ -263,7 +257,7 @@ const swarmData = [
           height={400}
           categoryLabel="Groups"
           valueLabel="Measurements"
-          tooltip={Tooltip({ title: "category" })}
+          tooltip={Tooltip({ title: "category", fields: ["value"] })}
         />
       </ExampleContainer>
 
@@ -295,9 +289,23 @@ const boxPlotData = [
   { category: "Dataset A", value: 5 },
   { category: "Dataset A", value: 8 },
   { category: "Dataset A", value: 12 },
+  { category: "Dataset A", value: 15 },
+  { category: "Dataset A", value: 18 },
+  { category: "Dataset A", value: 22 },
+  { category: "Dataset A", value: 25 },
+  { category: "Dataset A", value: 7 },
+  { category: "Dataset A", value: 10 },
+  { category: "Dataset A", value: 13 },
+  { category: "Dataset B", value: 10 },
   { category: "Dataset B", value: 15 },
   { category: "Dataset B", value: 20 },
-  { category: "Dataset B", value: 25 }
+  { category: "Dataset B", value: 25 },
+  { category: "Dataset B", value: 30 },
+  { category: "Dataset B", value: 35 },
+  { category: "Dataset B", value: 40 },
+  { category: "Dataset B", value: 12 },
+  { category: "Dataset B", value: 18 },
+  { category: "Dataset B", value: 28 }
 ]
 
 <BoxPlot
@@ -306,7 +314,7 @@ const boxPlotData = [
   height={400}
   categoryLabel="Datasets"
   valueLabel="Distribution"
-  tooltip={Tooltip({ title: "category" })}
+  tooltip={Tooltip({ title: "category", fields: ["value"] })}
 />`}
       >
         <BoxPlot
@@ -315,7 +323,7 @@ const boxPlotData = [
           height={400}
           categoryLabel="Datasets"
           valueLabel="Distribution"
-          tooltip={Tooltip({ title: "category" })}
+          tooltip={Tooltip({ title: "category", fields: ["value"] })}
         />
       </ExampleContainer>
 
@@ -369,7 +377,7 @@ const dotPlotData = [
           valueLabel="Score"
           tooltip={MultiLineTooltip({
             title: "category",
-            fields: ["value", "comparison"]
+            fields: ["value", "comparison"],
           })}
         />
       </ExampleContainer>

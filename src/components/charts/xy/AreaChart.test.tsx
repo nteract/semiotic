@@ -80,52 +80,6 @@ describe("AreaChart", () => {
     expect(frame).toBeTruthy()
   })
 
-  it("supports stacked areas", () => {
-    const stackedData = [
-      { x: 1, y: 10, category: "A" },
-      { x: 2, y: 20, category: "A" },
-      { x: 1, y: 15, category: "B" },
-      { x: 2, y: 25, category: "B" }
-    ]
-
-    const { container } = render(
-      <TooltipProvider>
-        <AreaChart
-          data={stackedData}
-          areaBy="category"
-          stacked={true}
-        />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".xyframe")
-    expect(frame).toBeTruthy()
-  })
-
-  // Skip normalized stacked test due to XYFrame internal aria label issue with stackedpercent-area type
-  it.skip("supports normalized (100%) stacked areas", () => {
-    const stackedData = [
-      { x: 1, y: 10, category: "A" },
-      { x: 2, y: 20, category: "A" },
-      { x: 1, y: 15, category: "B" },
-      { x: 2, y: 25, category: "B" }
-    ]
-
-    const { container } = render(
-      <TooltipProvider>
-        <AreaChart
-          data={stackedData}
-          areaBy="category"
-          stacked={true}
-          normalize={true}
-        />
-      </TooltipProvider>
-    )
-
-    const frame = container.querySelector(".xyframe")
-    expect(frame).toBeTruthy()
-  })
-
   it("applies color encoding", () => {
     const coloredData = [
       { x: 1, y: 10, category: "A" },

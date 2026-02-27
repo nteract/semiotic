@@ -1,12 +1,36 @@
 import * as React from "react"
 import { useMemo } from "react"
-import * as d3Curve from "d3-shape"
+import {
+  curveLinear,
+  curveMonotoneX,
+  curveMonotoneY,
+  curveStep,
+  curveStepAfter,
+  curveStepBefore,
+  curveBasis,
+  curveCardinal,
+  curveCatmullRom
+} from "d3-shape"
 import XYFrame from "../../XYFrame"
 import type { XYFrameProps } from "../../types/xyTypes"
-import { getColor, createColorScale } from "../shared/colorUtils"
+import { getColor } from "../shared/colorUtils"
+import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, AxisConfig, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+
+/** Map of curve name strings to d3-shape curve functions */
+const CURVE_MAP = {
+  linear: curveLinear,
+  monotoneX: curveMonotoneX,
+  monotoneY: curveMonotoneY,
+  step: curveStep,
+  stepAfter: curveStepAfter,
+  stepBefore: curveStepBefore,
+  basis: curveBasis,
+  cardinal: curveCardinal,
+  catmullRom: curveCatmullRom
+} as const
 
 /**
  * LineChart component props
@@ -245,25 +269,21 @@ export function LineChart(props: LineChartProps) {
     frameProps = {}
   } = props
 
-  // Validate data
-  if (!data || data.length === 0) {
-    console.warn("LineChart: data prop is required and should not be empty")
-    return null
-  }
+  const safeData = data || []
 
   // Check if data is in line objects format (has lineDataAccessor field)
-  const isLineObjectFormat = data[0]?.[lineDataAccessor] !== undefined
+  const isLineObjectFormat = safeData[0]?.[lineDataAccessor] !== undefined
 
   // Transform data to line format if needed
   const lineData = useMemo(() => {
     if (isLineObjectFormat) {
       // Data is already in line objects format
-      return data
+      return safeData
     }
 
     if (lineBy) {
       // Group data by lineBy field
-      const grouped = data.reduce((acc, d) => {
+      const grouped = safeData.reduce((acc, d) => {
         const key = typeof lineBy === "function" ? lineBy(d) : d[lineBy]
         if (!acc[key]) {
           const lineObj: any = { [lineDataAccessor]: [] }
@@ -281,22 +301,18 @@ export function LineChart(props: LineChartProps) {
     }
 
     // Single line - wrap in line object
-    return [{ [lineDataAccessor]: data }]
-  }, [data, lineBy, lineDataAccessor, isLineObjectFormat])
+    return [{ [lineDataAccessor]: safeData }]
+  }, [safeData, lineBy, lineDataAccessor, isLineObjectFormat])
 
   // Create color scale if colorBy is specified
-  const colorScale = useMemo(() => {
-    if (!colorBy || typeof colorBy === "function") {
-      return undefined
-    }
+  const colorScale = useColorScale(safeData, colorBy, colorScheme)
 
-    const scheme = Array.isArray(colorScheme) ? colorScheme : colorScheme
-    return createColorScale(lineData, colorBy as string, scheme)
-  }, [lineData, colorBy, colorScheme])
+  // Curve function from module-level map
+  const curveFunction = CURVE_MAP[curve] || curveLinear
 
   // Line style function
   const lineStyle = useMemo(() => {
-    return (d: any, i: number) => {
+    return (d: any) => {
       const baseStyle: any = {
         strokeWidth: lineWidth
       }
@@ -305,7 +321,7 @@ export function LineChart(props: LineChartProps) {
       if (colorBy) {
         baseStyle.stroke = getColor(d, colorBy, colorScale)
       } else {
-        baseStyle.stroke = "#007bff"
+        baseStyle.stroke = DEFAULT_COLOR
       }
 
       // Apply fill for area chart
@@ -332,7 +348,7 @@ export function LineChart(props: LineChartProps) {
       if (colorBy) {
         baseStyle.fill = getColor(d.parentLine || d, colorBy, colorScale)
       } else {
-        baseStyle.fill = "#007bff"
+        baseStyle.fill = DEFAULT_COLOR
       }
 
       return baseStyle
@@ -361,23 +377,6 @@ export function LineChart(props: LineChartProps) {
 
     return axesConfig
   }, [xLabel, yLabel, xFormat, yFormat, showGrid])
-
-  // Map curve names to d3 curve functions
-  const curveFunction = useMemo(() => {
-    const curveMap = {
-      linear: d3Curve.curveLinear,
-      monotoneX: d3Curve.curveMonotoneX,
-      monotoneY: d3Curve.curveMonotoneY,
-      step: d3Curve.curveStep,
-      stepAfter: d3Curve.curveStepAfter,
-      stepBefore: d3Curve.curveStepBefore,
-      basis: d3Curve.curveBasis,
-      cardinal: d3Curve.curveCardinal,
-      catmullRom: d3Curve.curveCatmullRom
-    }
-
-    return curveMap[curve] || d3Curve.curveLinear
-  }, [curve])
 
   // Determine line type
   const lineType = useMemo(() => {
@@ -421,6 +420,12 @@ export function LineChart(props: LineChartProps) {
     return finalMargin
   }, [userMargin, legend])
 
+  // Validate data (after all hooks)
+  if (safeData.length === 0) {
+    console.warn("LineChart: data prop is required and should not be empty")
+    return null
+  }
+
   // Build XYFrame props
   const xyFrameProps: XYFrameProps = {
     size: [width, height],
@@ -448,6 +453,3 @@ export function LineChart(props: LineChartProps) {
 
   return <XYFrame {...xyFrameProps} />
 }
-
-// Export default for convenience
-export default LineChart
