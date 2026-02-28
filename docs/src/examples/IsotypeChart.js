@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useRef, useState, useEffect } from "react"
 import DocumentFrame from "../DocumentFrame"
 import { OrdinalFrame } from "semiotic"
 import theme from "../theme"
@@ -62,79 +62,85 @@ const colorHash = {
   viz: theme[1]
 }
 
-const frameProps = {
-  size: [700, 368],
-  data: vizzers,
-  type: {
-    type: "bar",
-    icon: d => iconHash[d.type],
-    iconPadding: 2,
-    resize: "fixed"
-  },
-  projection: "vertical",
-  oAccessor: "writeviz",
-  oSort: (a, b) => parseFloat(a) - parseFloat(b),
-  rAccessor: "number",
-  style: d => ({
-    fill: colorHash[d.type],
-    stroke: colorHash[d.type],
-    fillOpacity: 1,
-    strokeWidth: 1.5
-  }),
-  margin: { top: 60, bottom: 70, left: 10, right: 80 },
-  oPadding: 2,
-  annotations: [
-    {
-      writeviz: 0.25,
-      number: 2,
-      dx: -0.01,
-      dy: -50,
-      color: theme[1],
-      type: "callout",
-      note: { title: "Data viz peep who discovered her love for writing" }
-    }
-  ],
-  hoverAnnotation: true,
-  renderMode: "sketchy",
-  foregroundGraphics: (
-    <g>
-      <g transform="translate(20,165)">
-        <rect fill={theme[1]} x={-10} y={-10} width={93} height={55} />
-        <text fontWeight="700" fill="white" x={5} y={15}>
-          DATA VIZ
-        </text>
-        <text fontWeight="700" fill="white" x={5} y={30}>
-          EXPERTS
-        </text>
+const makeFrameProps = (adjustedWidth) => {
+  // adjustedWidth = size[0] - margin.left(10) - margin.right(80)
+  const aw = adjustedWidth || 610
+  return {
+    size: [aw + 90, 368],
+    data: vizzers,
+    type: {
+      type: "bar",
+      icon: d => iconHash[d.type],
+      iconPadding: 2,
+      resize: "fixed"
+    },
+    projection: "vertical",
+    oAccessor: "writeviz",
+    oSort: (a, b) => parseFloat(a) - parseFloat(b),
+    rAccessor: "number",
+    style: d => ({
+      fill: colorHash[d.type],
+      stroke: colorHash[d.type],
+      fillOpacity: 1,
+      strokeWidth: 1.5
+    }),
+    margin: { top: 60, bottom: 70, left: 10, right: 80 },
+    oPadding: 2,
+    annotations: [
+      {
+        writeviz: 0.25,
+        number: 2,
+        dx: -0.01,
+        dy: -50,
+        color: theme[1],
+        type: "callout",
+        note: { title: "Data viz peep who discovered her love for writing" }
+      }
+    ],
+    hoverAnnotation: true,
+    renderMode: "sketchy",
+    foregroundGraphics: (
+      <g>
+        <g transform="translate(20,165)">
+          <rect fill={theme[1]} x={-10} y={-10} width={93} height={55} />
+          <text fontWeight="700" fill="white" x={5} y={15}>
+            DATA VIZ
+          </text>
+          <text fontWeight="700" fill="white" x={5} y={30}>
+            EXPERTS
+          </text>
+        </g>
+        <g transform={`translate(${aw - 105},10)`}>
+          <rect fill={theme[2]} x={-10} y={-10} width={123} height={40} />
+          <text fontWeight="700" fill="white" x={5} y={15}>
+            JOURNALISTS
+          </text>
+        </g>
+        <g transform="translate(0,300)">
+          <line strokeWidth={2} stroke={"darkgray"} x1={10} x2={aw + 10} />
+        </g>
+        <g fill="darkgray" transform="translate(5,305)">
+          <text fontWeight="700" x={5} y={15}>
+            CREATE MORE
+          </text>
+          <text fontWeight="700" x={5} y={30}>
+            DATA VIZ EACH DAY
+          </text>
+        </g>
+        <g fill="darkgray" textAnchor="end" transform={`translate(${aw + 5},305)`}>
+          <text fontWeight="700" x={5} y={15}>
+            WRITE MORE
+          </text>
+          <text fontWeight="700" x={5} y={30}>
+            EACH DAY
+          </text>
+        </g>
       </g>
-      <g transform="translate(505,10)">
-        <rect fill={theme[2]} x={-10} y={-10} width={123} height={40} />
-        <text fontWeight="700" fill="white" x={5} y={15}>
-          JOURNALISTS
-        </text>
-      </g>
-      <g transform="translate(0,300)">
-        <line strokeWidth={2} stroke={"darkgray"} x1={10} x2={620} />
-      </g>
-      <g fill="darkgray" transform="translate(5,305)">
-        <text fontWeight="700" x={5} y={15}>
-          CREATE MORE
-        </text>
-        <text fontWeight="700" x={5} y={30}>
-          DATA VIZ EACH DAY
-        </text>
-      </g>
-      <g fill="darkgray" textAnchor="end" transform="translate(615,305)">
-        <text fontWeight="700" x={5} y={15}>
-          WRITE MORE
-        </text>
-        <text fontWeight="700" x={5} y={30}>
-          EACH DAY
-        </text>
-      </g>
-    </g>
-  )
+    )
+  }
 }
+
+const frameProps = makeFrameProps(610)
 
 const overrideProps = {
   type: `{
@@ -195,8 +201,27 @@ const overrideProps = {
 }
 
 export default function SwarmPlot() {
+  const containerRef = useRef(null)
+  const [containerWidth, setContainerWidth] = useState(null)
+
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerWidth(entry.contentRect.width)
+      }
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  // margins: left 10 + right 80 = 90
+  const adjustedWidth = containerWidth ? containerWidth - 90 : 610
+  const dynamicFrameProps = makeFrameProps(adjustedWidth)
+
   return (
-    <div>
+    <div ref={containerRef}>
       <MarkdownText
         text={`
 Based on a [beautiful icon chart by Lisa Charlotte Rost](https://lisacharlotterost.github.io/2017/10/24/Frustrating-Data-Vis/). I called her little icons Rostos in her honor.
@@ -204,8 +229,8 @@ Based on a [beautiful icon chart by Lisa Charlotte Rost](https://lisacharlottero
 This example also shows how \`renderMode\` is honored by icon shapes.
 `}
       />
-      <DocumentFrame
-        frameProps={frameProps}
+      {containerWidth && <DocumentFrame
+        frameProps={dynamicFrameProps}
         overrideProps={overrideProps}
         pre={`
 const colorHash = {
@@ -215,7 +240,7 @@ const colorHash = {
 const iconHash = ${JSON.stringify(iconHash)}`}
         type={OrdinalFrame}
         useExpanded
-      />
+      />}
     </div>
   )
 }

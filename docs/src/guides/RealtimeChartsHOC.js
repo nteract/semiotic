@@ -27,7 +27,7 @@ const ExampleContainer = ({ title, children, code }) => (
       border: "1px solid #ddd",
       padding: "20px",
       marginBottom: "16px",
-      background: "white"
+      background: "var(--surface-1)"
     }}>
       {children}
     </div>

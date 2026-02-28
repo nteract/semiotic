@@ -1,0 +1,541 @@
+A frame for streaming, real-time data visualization using HTML5 Canvas for high-performance
+rendering. RealtimeFrame supports line charts, bar charts, scatter/swarm plots, and waterfall
+charts — all animated and continuously updating as new data arrives.
+
+Unlike other Semiotic frames, RealtimeFrame uses an imperative API via React refs: create a ref
+and call `ref.current.push(point)` to stream data in. A ring buffer manages data retention
+automatically.
+
+```jsx
+import { RealtimeFrame } from "semiotic"
+
+const chartRef = useRef()
+
+// Push data from a WebSocket, setInterval, etc.
+chartRef.current?.push({ time: Date.now(), value: 42 })
+
+<RealtimeFrame
+  ref={chartRef}
+  chartType="line"
+  windowSize={200}
+  lineStyle={{ stroke: "#007bff", strokeWidth: 2 }}
+  showAxes={true}
+/>
+```
+
+# &lt;API Reference>
+
+- [General Properties](#general-properties)
+  - [chartType: { _string_ }](#charttype-string-)
+  - [size: { [_width_, _height_] }](#size-width-height-)
+  - [margin: { _object_ }](#margin-object-)
+  - [arrowOfTime: { _string_ }](#arrowoftime-string-)
+  - [className: { _string_ }](#classname-string-)
+- [Data](#data)
+  - [data: { _array_ }](#data-array-)
+  - [timeAccessor: { _string_ | _function_ }](#timeaccessor-string-function-)
+  - [valueAccessor: { _string_ | _function_ }](#valueaccessor-string-function-)
+  - [categoryAccessor: { _string_ | _function_ }](#categoryaccessor-string-function-)
+- [Window & Buffering](#window--buffering)
+  - [windowMode: { _string_ }](#windowmode-string-)
+  - [windowSize: { _number_ }](#windowsize-number-)
+- [Extent & Scale](#extent--scale)
+  - [timeExtent: { [_min_, _max_] }](#timeextent-min-max-)
+  - [valueExtent: { [_min_, _max_] }](#valueextent-min-max-)
+  - [extentPadding: { _number_ }](#extentpadding-number-)
+- [Styling](#styling)
+  - [lineStyle: { _object_ }](#linestyle-object-)
+  - [barStyle: { _object_ }](#barstyle-object-)
+  - [barColors: { _object_ }](#barcolors-object-)
+  - [swarmStyle: { _object_ }](#swarmstyle-object-)
+  - [waterfallStyle: { _object_ }](#waterfallstyle-object-)
+  - [background: { _string_ }](#background-string-)
+- [Axes & Formatting](#axes--formatting)
+  - [showAxes: { _boolean_ }](#showaxes-boolean-)
+  - [tickFormatTime: { _function_ }](#tickformattime-function-)
+  - [tickFormatValue: { _function_ }](#tickformatvalue-function-)
+- [Bar Chart Specific](#bar-chart-specific)
+  - [binSize: { _number_ }](#binsize-number-)
+- [Annotations & Interaction](#annotations--interaction)
+  - [annotations: { _array_ }](#annotations-array-)
+  - [svgAnnotationRules: { _function_ }](#svgannotationrules-function-)
+  - [hoverAnnotation: { _boolean_ | _object_ }](#hoverannotation-boolean-object-)
+  - [tooltipContent: { _function_ }](#tooltipcontent-function-)
+  - [customHoverBehavior: { _function_ }](#customhoverbehavior-function-)
+- [Imperative API (ref)](#imperative-api-ref)
+  - [push](#push)
+  - [pushMany](#pushmany)
+  - [clear](#clear)
+  - [getData](#getdata)
+
+## General Properties
+
+### chartType: { _string_ }
+
+Sets the visualization type. Determines how data points are rendered on the canvas.
+
+Supported values: `"line"`, `"bar"`, `"swarm"`, `"waterfall"`, `"candlestick"`.
+
+Defaults to `"line"`.
+
+```jsx
+<RealtimeFrame chartType="line" />
+<RealtimeFrame chartType="bar" />
+<RealtimeFrame chartType="swarm" />
+<RealtimeFrame chartType="waterfall" />
+```
+
+### size: { [_width_, _height_] }
+
+Sets the width and height of the frame. Defaults to `[500, 300]`.
+
+```jsx
+<RealtimeFrame size={[800, 400]} />
+```
+
+### margin: { _object_ }
+
+Chart margins as `{ top, right, bottom, left }`. Defaults to `{ top: 20, right: 20, bottom: 30, left: 40 }`.
+
+```jsx
+<RealtimeFrame margin={{ top: 20, right: 20, bottom: 30, left: 40 }} />
+```
+
+### arrowOfTime: { _string_ }
+
+Direction that time flows across the chart. New data appears on the side indicated by this prop.
+
+Supported values: `"right"` (default), `"left"`.
+
+```jsx
+<!-- New data appears on the right, old data scrolls left -->
+<RealtimeFrame arrowOfTime="right" />
+
+<!-- New data appears on the left, old data scrolls right -->
+<RealtimeFrame arrowOfTime="left" />
+```
+
+### className: { _string_ }
+
+CSS class name applied to the wrapper element.
+
+```jsx
+<RealtimeFrame className="my-realtime-chart" />
+```
+
+## Data
+
+### data: { _array_ }
+
+Controlled data array. Each object should contain fields matched by `timeAccessor` and
+`valueAccessor`. For most use cases, prefer the imperative ref API (`ref.current.push()`) over
+passing data as a prop — the ref API avoids React re-renders and is much more performant for
+streaming data.
+
+```jsx
+<!-- Controlled mode (triggers re-render on every update) -->
+<RealtimeFrame data={dataArray} />
+
+<!-- Imperative mode (preferred for streaming) -->
+const ref = useRef()
+ref.current?.push({ time: 1, value: 42 })
+<RealtimeFrame ref={ref} />
+```
+
+### timeAccessor: { _string_ | _function_ }
+
+Field name or function to access the time value from each data point. Defaults to `"time"`.
+
+```jsx
+<!-- String option -->
+<RealtimeFrame timeAccessor="timestamp" />
+
+<!-- Function option -->
+<RealtimeFrame timeAccessor={d => d.ts / 1000} />
+```
+
+### valueAccessor: { _string_ | _function_ }
+
+Field name or function to access the numeric value from each data point. Defaults to `"value"`.
+
+```jsx
+<!-- String option -->
+<RealtimeFrame valueAccessor="price" />
+
+<!-- Function option -->
+<RealtimeFrame valueAccessor={d => d.high - d.low} />
+```
+
+### categoryAccessor: { _string_ | _function_ }
+
+Category accessor for grouping data points. Used with `chartType="bar"` for stacked bars and
+`chartType="swarm"` for color-coded dots. When set, each unique category value creates a
+separate visual group.
+
+```jsx
+<RealtimeFrame
+  chartType="bar"
+  categoryAccessor="eventType"
+  barColors={{ error: "#dc3545", warning: "#fd7e14", info: "#007bff" }}
+/>
+```
+
+## Window & Buffering
+
+### windowMode: { _string_ }
+
+Data retention strategy.
+
+- `"sliding"` (default) — maintains a fixed-capacity ring buffer; oldest points are evicted when
+  `windowSize` is reached. This is the standard mode for streaming data.
+- `"growing"` — accumulates all data indefinitely. Useful for bounded datasets or when you want
+  to show the full history.
+
+```jsx
+<RealtimeFrame windowMode="sliding" windowSize={300} />
+<RealtimeFrame windowMode="growing" />
+```
+
+### windowSize: { _number_ }
+
+Ring buffer capacity when using `windowMode="sliding"`. Once the buffer is full, each new point
+evicts the oldest. Defaults to `200`.
+
+Larger values show more history but require more canvas drawing per frame. For most use cases,
+100–500 is a good range.
+
+```jsx
+<RealtimeFrame windowSize={500} />
+```
+
+## Extent & Scale
+
+### timeExtent: { [_min_, _max_] }
+
+Fixed time domain as `[min, max]`. When omitted, the time axis auto-fits to the current data
+range. Setting this is useful when you want a stable time axis that doesn't shift.
+
+```jsx
+<RealtimeFrame timeExtent={[0, 1000]} />
+```
+
+### valueExtent: { [_min_, _max_] }
+
+Fixed value domain as `[min, max]`. When omitted, the value axis auto-fits to the current data
+range. Use this to pin the y-axis so the chart doesn't rescale as new data arrives.
+
+```jsx
+<!-- Pin the y-axis from 0 to 100 -->
+<RealtimeFrame valueExtent={[0, 100]} />
+```
+
+### extentPadding: { _number_ }
+
+Padding factor applied to auto-computed value extents. Expressed as a fraction of the data range.
+Defaults to `0.1` (10% padding above and below the data range).
+
+```jsx
+<RealtimeFrame extentPadding={0.2} />
+```
+
+## Styling
+
+### lineStyle: { _object_ }
+
+Style properties for `chartType="line"`. Controls the appearance of the line drawn on the canvas.
+
+```jsx
+<RealtimeFrame
+  chartType="line"
+  lineStyle={{
+    stroke: "#007bff",
+    strokeWidth: 2,
+    strokeDasharray: "4,2"
+  }}
+/>
+```
+
+### barStyle: { _object_ }
+
+Style properties for `chartType="bar"`. Controls the appearance of histogram bars.
+
+```jsx
+<RealtimeFrame
+  chartType="bar"
+  barStyle={{
+    fill: "#007bff",
+    stroke: "#0056b3",
+    strokeWidth: 1,
+    gap: 2
+  }}
+/>
+```
+
+### barColors: { _object_ }
+
+Mapping of category names to colors. Used with `categoryAccessor` for stacked bar charts and
+color-coded swarm dots.
+
+```jsx
+<RealtimeFrame
+  chartType="bar"
+  categoryAccessor="type"
+  barColors={{
+    errors: "#dc3545",
+    warnings: "#fd7e14",
+    info: "#007bff"
+  }}
+/>
+```
+
+### swarmStyle: { _object_ }
+
+Style properties for `chartType="swarm"`. Controls the appearance of individual dots.
+
+```jsx
+<RealtimeFrame
+  chartType="swarm"
+  swarmStyle={{
+    radius: 4,
+    fill: "#6f42c1",
+    opacity: 0.7,
+    stroke: "#4c2889",
+    strokeWidth: 1
+  }}
+/>
+```
+
+### waterfallStyle: { _object_ }
+
+Style properties for `chartType="waterfall"`. Controls the appearance of gain/loss bars and
+optional connector lines.
+
+```jsx
+<RealtimeFrame
+  chartType="waterfall"
+  waterfallStyle={{
+    positiveColor: "#28a745",
+    negativeColor: "#dc3545",
+    connectorStroke: "#999",
+    connectorWidth: 1,
+    gap: 2,
+    stroke: "#333",
+    strokeWidth: 1
+  }}
+/>
+```
+
+### background: { _string_ }
+
+Background fill color for the chart area. When omitted, the canvas is transparent.
+
+```jsx
+<RealtimeFrame background="#f8f9fa" />
+```
+
+## Axes & Formatting
+
+### showAxes: { _boolean_ }
+
+Show canvas-drawn axes with tick marks and labels. Defaults to `true`.
+
+```jsx
+<RealtimeFrame showAxes={true} />
+<RealtimeFrame showAxes={false} />
+```
+
+### tickFormatTime: { _function_ }
+
+Custom formatter for time axis tick labels. Receives the raw time value and should return a
+string.
+
+```jsx
+<RealtimeFrame tickFormatTime={t => new Date(t).toLocaleTimeString()} />
+```
+
+### tickFormatValue: { _function_ }
+
+Custom formatter for value axis tick labels. Receives the raw value and should return a string.
+
+```jsx
+<RealtimeFrame tickFormatValue={v => `$${v.toFixed(2)}`} />
+```
+
+## Bar Chart Specific
+
+### binSize: { _number_ }
+
+Time interval for aggregating data into bar chart bins. Each bin collects all data points within
+a time window of this size and renders them as a single bar (or stacked bar if `categoryAccessor`
+is set).
+
+```jsx
+<RealtimeFrame chartType="bar" binSize={20} />
+```
+
+## Annotations & Interaction
+
+### annotations: { _array_ }
+
+Array of annotation objects rendered as an SVG overlay on top of the canvas. Supports threshold
+lines, labels, and custom annotations.
+
+```jsx
+<RealtimeFrame
+  annotations={[
+    { type: "threshold", value: 80, label: "Warning", color: "#fd7e14" },
+    { type: "threshold", value: 95, label: "Critical", color: "#dc3545" }
+  ]}
+/>
+```
+
+### svgAnnotationRules: { _function_ }
+
+Custom SVG annotation renderer. Receives each annotation object along with rendering context
+including current scales, dimensions, and axis orientation. Return JSX to render, or `null` to
+skip.
+
+```jsx
+<RealtimeFrame
+  svgAnnotationRules={(annotation, index, { scales, width, height }) => {
+    if (annotation.type === "threshold" && scales) {
+      const y = scales.value(annotation.value)
+      return (
+        <g key={index}>
+          <line x1={0} x2={width} y1={y} y2={y}
+            stroke={annotation.color} strokeDasharray="4,4" />
+          <text x={width} y={y - 4} textAnchor="end"
+            fill={annotation.color} fontSize={12}>
+            {annotation.label}
+          </text>
+        </g>
+      )
+    }
+    return null
+  }}
+/>
+```
+
+### hoverAnnotation: { _boolean_ | _object_ }
+
+Enable hover interaction on the chart. When `true`, shows a crosshair and tooltip at the nearest
+data point. Pass an object to configure crosshair styling.
+
+```jsx
+<!-- Simple boolean -->
+<RealtimeFrame hoverAnnotation={true} />
+
+<!-- Object with crosshair configuration -->
+<RealtimeFrame
+  hoverAnnotation={{
+    crosshair: {
+      stroke: "#999",
+      strokeWidth: 1,
+      strokeDasharray: "4,4"
+    },
+    snapToPoint: true
+  }}
+/>
+```
+
+### tooltipContent: { _function_ }
+
+Custom tooltip render function. Receives a hover data object with `{ data, time, value, x, y }`
+and should return JSX.
+
+```jsx
+<RealtimeFrame
+  hoverAnnotation={true}
+  tooltipContent={({ data, time, value }) => (
+    <div style={{ padding: 8, background: "#333", color: "#fff", borderRadius: 4 }}>
+      <strong>Time:</strong> {time}<br />
+      <strong>Value:</strong> {value.toFixed(2)}
+    </div>
+  )}
+/>
+```
+
+### customHoverBehavior: { _function_ }
+
+Callback fired on hover. Receives the hover data object when hovering over a point, or `null`
+when the hover ends. Use this to synchronize hover state across multiple charts.
+
+```jsx
+<RealtimeFrame
+  hoverAnnotation={true}
+  customHoverBehavior={hoverData => {
+    if (hoverData) {
+      console.log("Hovering:", hoverData.time, hoverData.value)
+    }
+  }}
+/>
+```
+
+## Imperative API (ref)
+
+RealtimeFrame exposes an imperative API via React refs. This is the recommended way to stream
+data into the chart, as it bypasses React's render cycle for maximum performance.
+
+```jsx
+const frameRef = useRef()
+
+// In a useEffect, WebSocket handler, etc.
+frameRef.current?.push({ time: Date.now(), value: 42 })
+
+<RealtimeFrame ref={frameRef} chartType="line" />
+```
+
+### push
+
+```
+ref.current.push(point: object): void
+```
+
+Add a single data point to the ring buffer. The point should contain fields matched by
+`timeAccessor` and `valueAccessor`. Triggers a canvas redraw on the next animation frame.
+
+```jsx
+frameRef.current.push({ time: 1, value: 42 })
+```
+
+### pushMany
+
+```
+ref.current.pushMany(points: object[]): void
+```
+
+Add multiple data points at once. More efficient than calling `push` in a loop when you have a
+batch of points (e.g., from a WebSocket message containing multiple readings).
+
+```jsx
+frameRef.current.pushMany([
+  { time: 1, value: 42 },
+  { time: 2, value: 45 },
+  { time: 3, value: 38 }
+])
+```
+
+### clear
+
+```
+ref.current.clear(): void
+```
+
+Clear all data from the ring buffer. The chart will render empty until new data is pushed.
+
+```jsx
+frameRef.current.clear()
+```
+
+### getData
+
+```
+ref.current.getData(): object[]
+```
+
+Get the current data as an array. Returns a snapshot of all points currently in the ring buffer.
+
+```jsx
+const currentData = frameRef.current.getData()
+console.log(`${currentData.length} points in buffer`)
+```

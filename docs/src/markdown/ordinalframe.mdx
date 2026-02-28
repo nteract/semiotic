@@ -1,7 +1,7 @@
 A frame that displays categorical data along the _ordinal_(categorical) axis and continuous data
 along the _range_(numerical) axis. Examples include [bar charts](/guides/bar-chart),
 [pie charts](/guides/pie-chart), [violin plots](/guides/ordinal-summaries), and
-[timelines](/guides/examples/timeline)
+[timelines](/cookbook/timeline)
 
 `<OrdinalFrame>` charts render [pieces](#piece-rendering) and [summaries](#summary-rendering).
 
@@ -24,7 +24,7 @@ export default () => (
 )
 ```
 
-**Table of Contents**
+# &lt;API Reference>
 
 - [General Properties](#general-properties)
   - [size: {[_width_, _height_]}](#size-width-height-)
@@ -225,7 +225,7 @@ The distance in pixels between each column.
 
 If _dynamicColumnWidth_ is specified, sets the column width of the frame based on that data
 property. If a string, then columnWidth is proportionate to the total value of the string property
-for each column, for instance used in the [Marimekko Chart](/examples/marimekko-chart) example where
+for each column, for instance used in the [Marimekko Chart](/cookbook/marimekko-chart) example where
 bar width is based on the total value for that bar. If set to a function, the function is passed an
 array of pieces in that column which you can measure in any way you want.
 
@@ -276,7 +276,7 @@ bar chart, or one of the circles in a swarm plot.
 A string (`"bar"`, `"timeline"`, `"clusterbar"`, `"swarm"`, `"point"`, `"none"`) or object with
 `type` equal to one of those strings to use method-specific options such as
 `{ type: "swarm", r: 8 }`, or a function that takes data and the `OrdinalFrame` calculated settings
-and creates JSX elements. See the [Waterfall Chart](/examples/waterfall-chart) in the examples to
+and creates JSX elements. See the [Waterfall Chart](/cookbook/waterfall-chart) in the examples to
 see how to use custom type functions.
 
 ```jsx
@@ -404,7 +404,7 @@ and returns a string or object such as that. Sketchy render mode is honored in c
 
 Connectors in `OrdinalFrame` allow you to draw connections between elements in adjacent columns. The current, limited implementation is a simple test that if it returns true draws a link. This function is run on every piece, and it only tests for links to the next column (left to right in vertical, top to bottom in horizonal and clockwise in radial). For "bar" it draws a filled area, for "point" and "swarm" it draws a line.
 
-You can use this functionality to create [slope chart](/examples/slope-chart) or funnel diagrams.
+You can use this functionality to create [slope chart](/cookbook/slope-chart) or funnel diagrams.
 
 The following code will draw a connection between elements in adjoining columns that has the same `category` value. It will only draw a link to the first matching item in the next column so this cannot be used to draw branching paths or other multi-link connections from one piece to many pieces.
 

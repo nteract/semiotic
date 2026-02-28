@@ -311,7 +311,7 @@ export const svgHighlightRule = ({
           const { markType, ...restProps } = styledD
           return React.createElement(markType || 'path', {
             fill: "none",
-            stroke: "black",
+            stroke: "currentColor",
             strokeWidth: "2px",
             key: `highlight-piece-${q}`,
             ...restProps,
@@ -596,7 +596,7 @@ export const svgCategoryRule = ({
         className="category-annotation annotation"
         transform={`translate(${centerX},${centerY})`}
       >
-        <path d={arcPath} fill="none" stroke="black" />
+        <path d={arcPath} fill="none" stroke="currentColor" />
         <path id={textPathID} d={textArcPath} style={{ display: "none" }} />
         <text font-size="12.5">
           <textPath
@@ -926,7 +926,7 @@ export const svgOrdinalLine = ({ screenCoordinates, d, voronoiHover }) => {
   return (
     <g key="ordinal-line-annotation">
       <path
-        stroke="black"
+        stroke="currentColor"
         fill="none"
         style={lineStyle}
         d={lineGenerator(screenCoordinates)}
@@ -944,7 +944,7 @@ export const svgOrdinalLine = ({ screenCoordinates, d, voronoiHover }) => {
               key={`ordinal-line-point-${q}`}
             >
               {d.points && (
-                <circle style={pointStyle} r={d.radius || 5} fill="black" />
+                <circle style={pointStyle} r={d.radius || 5} fill="currentColor" />
               )}
               {d.interactive && (
                 <circle

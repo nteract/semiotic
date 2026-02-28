@@ -77,7 +77,10 @@ export const drawNodes = ({
           ty: y,
           d,
           i,
-          markProps: generatedMark.props,
+          markProps: {
+            markType: typeof generatedMark.type === "string" ? generatedMark.type : generatedMark.props.markType,
+            ...generatedMark.props
+          },
           styleFn,
           renderFn: renderMode,
           classFn

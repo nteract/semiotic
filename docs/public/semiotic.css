@@ -4,19 +4,23 @@
 }
 
 .axis-baseline {
-  stroke: #ddd;
+  stroke: currentColor;
 }
 
 .tick,
 .axis-tick path {
-  stroke: #ddd;
+  stroke: currentColor;
+}
+
+.axis-label {
+  fill: currentColor;
 }
 
 .tooltip-content {
-  background: white;
+  background: var(--surface-1, white);
   position: relative;
-  border: 1px solid #ddd;
-  color: black;
+  border: 1px solid var(--surface-3, #ddd);
+  color: var(--text-primary, black);
   padding: 10px;
   z-index: 100;
   transform: translateX(-50%) translateY(5px);
@@ -29,7 +33,13 @@
   fill-opacity:0.20;
 }
 
+.legend-title,
+.legend-group-label,
+.legend-item text {
+  fill: currentColor;
+}
+
 circle.frame-hover {
-  stroke: #aaa;
+  stroke: currentColor;
   r: 4;
 }

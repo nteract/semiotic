@@ -1,12 +1,18 @@
-import React from "react"
-import { Routes, Route, NavLink, Outlet } from "react-router-dom"
+import React, { useState, useEffect } from "react"
+import { Routes, Route, NavLink, Outlet, Link } from "react-router-dom"
 
+// New components
+import Sidebar, { SidebarToggle } from "./components/Sidebar"
+import Landing from "./Landing"
+
+// Existing page components
 import Home from "./Home"
 import { GuidesIndex, ExamplesIndex, ApiIndex } from "./IndexPages"
 import Accessibility from "./markdown/accessibility.mdx"
 import Xyframe from "./markdown/xyframe.mdx"
 import Ordinalframe from "./markdown/ordinalframe.mdx"
 import Networkframe from "./markdown/networkframe.mdx"
+import Realtimeframe from "./markdown/realtimeframe.mdx"
 import Responsiveframes from "./markdown/responsiveframes.mdx"
 import Sparkframes from "./markdown/sparkframes.mdx"
 import Facetcontroller from "./markdown/facetcontroller.mdx"
@@ -39,68 +45,189 @@ import NetworkChartsHOC from "./guides/NetworkChartsHOC"
 import RealtimeFrameGuide from "./guides/RealtimeFrame"
 import RealtimeChartsHOC from "./guides/RealtimeChartsHOC"
 
-import CandlestickChart from "./examples/CandlestickChart"
-import CanvasInteraction from "./examples/CanvasInteraction"
-import UncertaintyVisualization from "./examples/UncertaintyVisualization"
-
-import WaterfallChart from "./examples/WaterfallChart"
-import HomerunMap from "./examples/HomerunMap"
-import MarginalGraphics from "./examples/MarginalGraphics"
-
-import MarimekkoChart from "./examples/MarimekkoChart"
-import BarLineChart from "./examples/BarLineChart"
-import BarToParallel from "./examples/BarToParallel"
-import DotPlot from "./examples/DotPlot"
-import SwarmPlot from "./examples/SwarmPlot"
-import RidgelinePlot from "./examples/RidgelinePlot"
-import Timeline from "./examples/Timeline"
-import SlopeChart from "./examples/SlopeChart"
-import RadarPlot from "./examples/RadarPlot"
-import Matrix from "./examples/Matrix"
-import CustomLayout from "./examples/CustomLayout"
-import IsotypeChart from "./examples/IsotypeChart"
-
 import DividedLine from "./sub-components/DividedLine"
+
+// API pages
+import ChartsApiPage from "./pages/api/ChartsApiPage"
+
+// New chart pages
+import GettingStartedPage from "./pages/GettingStartedPage"
+import LineChartPage from "./pages/charts/LineChartPage"
+import AreaChartPage from "./pages/charts/AreaChartPage"
+import StackedAreaChartPage from "./pages/charts/StackedAreaChartPage"
+import ScatterplotPage from "./pages/charts/ScatterplotPage"
+import BubbleChartPage from "./pages/charts/BubbleChartPage"
+import HeatmapPage from "./pages/charts/HeatmapPage"
+import BarChartPage from "./pages/charts/BarChartPage"
+import StackedBarChartPage from "./pages/charts/StackedBarChartPage"
+import SwarmPlotPage from "./pages/charts/SwarmPlotPage"
+import BoxPlotPage from "./pages/charts/BoxPlotPage"
+import DotPlotPage from "./pages/charts/DotPlotPage"
+import ForceDirectedGraphPage from "./pages/charts/ForceDirectedGraphPage"
+import ChordDiagramPage from "./pages/charts/ChordDiagramPage"
+import SankeyDiagramPage from "./pages/charts/SankeyDiagramPage"
+import TreeDiagramPage from "./pages/charts/TreeDiagramPage"
+import RealtimeLineChartPage from "./pages/charts/RealtimeLineChartPage"
+import RealtimeBarChartPage from "./pages/charts/RealtimeBarChartPage"
+import RealtimeSwarmChartPage from "./pages/charts/RealtimeSwarmChartPage"
+import RealtimeWaterfallChartPage from "./pages/charts/RealtimeWaterfallChartPage"
+
+// New frame pages
+import XYFramePage from "./pages/frames/XYFramePage"
+import OrdinalFramePage from "./pages/frames/OrdinalFramePage"
+import NetworkFramePage from "./pages/frames/NetworkFramePage"
+import RealtimeFramePage from "./pages/frames/RealtimeFramePage"
+
+// New feature pages
+import AxesPage from "./pages/features/AxesPage"
+import AnnotationsPage from "./pages/features/AnnotationsPage"
+import TooltipsPage from "./pages/features/TooltipsPage"
+import InteractionPage from "./pages/features/InteractionPage"
+import ResponsivePage from "./pages/features/ResponsivePage"
+import AccessibilityPage from "./pages/features/AccessibilityPage"
+import CanvasRenderingPage from "./pages/features/CanvasRenderingPage"
+import SparklinesPage from "./pages/features/SparklinesPage"
+import SmallMultiplesPage from "./pages/features/SmallMultiplesPage"
+import StylingPage from "./pages/features/StylingPage"
+import LegendsPage from "./pages/features/LegendsPage"
+
+// New cookbook pages
+import CandlestickChartPage from "./pages/cookbook/CandlestickChartPage"
+import HomerunMapPage from "./pages/cookbook/HomerunMapPage"
+import CanvasInteractionPage from "./pages/cookbook/CanvasInteractionPage"
+import UncertaintyVisualizationPage from "./pages/cookbook/UncertaintyVisualizationPage"
+import MarginalGraphicsPage from "./pages/cookbook/MarginalGraphicsPage"
+import BarLineChartPage from "./pages/cookbook/BarLineChartPage"
+import BarToParallelPage from "./pages/cookbook/BarToParallelPage"
+import WaterfallChartPage from "./pages/cookbook/WaterfallChartPage"
+import SlopeChartPage from "./pages/cookbook/SlopeChartPage"
+import MarimekkoChartPage from "./pages/cookbook/MarimekkoChartPage"
+import SwarmPlotRecipePage from "./pages/cookbook/SwarmPlotRecipePage"
+import RidgelinePlotPage from "./pages/cookbook/RidgelinePlotPage"
+import DotPlotRecipePage from "./pages/cookbook/DotPlotRecipePage"
+import TimelineCookbookPage from "./pages/cookbook/TimelinePage"
+import RadarPlotPage from "./pages/cookbook/RadarPlotPage"
+import IsotypeChartPage from "./pages/cookbook/IsotypeChartPage"
+import MatrixCookbookPage from "./pages/cookbook/MatrixPage"
 
 import semioticLogo from "../public/assets/img/semiotic.png"
 
 import { useScrollRestoration } from "./useScrollRestoration"
 
+// Theme toggle component
+function ThemeToggle() {
+  const [theme, setTheme] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("semiotic-theme") || "dark"
+    }
+    return "dark"
+  })
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme)
+    localStorage.setItem("semiotic-theme", theme)
+  }, [theme])
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"))
+  }
+
+  return (
+    <button
+      onClick={toggleTheme}
+      aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+      style={{
+        background: "none",
+        border: "1px solid var(--surface-3)",
+        borderRadius: "8px",
+        padding: "6px 10px",
+        cursor: "pointer",
+        fontSize: "16px",
+        lineHeight: 1,
+        color: "var(--text-primary)",
+      }}
+    >
+      {theme === "dark" ? "\u2600\uFE0F" : "\uD83C\uDF19"}
+    </button>
+  )
+}
+
+// Inject JSON-LD structured data dynamically (avoids Parcel transformer)
+function useJsonLd() {
+  useEffect(() => {
+    const existing = document.querySelector('script[data-jsonld="semiotic"]')
+    if (existing) return
+    const script = document.createElement("script")
+    script.type = "application/ld+json"
+    script.setAttribute("data-jsonld", "semiotic")
+    script.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: "Semiotic",
+      description: "A data visualization framework for React combining D3 and React for interactive charts, network diagrams, and more.",
+      applicationCategory: "DeveloperApplication",
+      operatingSystem: "Any",
+      programmingLanguage: "JavaScript",
+      url: "https://semiotic.nteract.io",
+      codeRepository: "https://github.com/nteract/semiotic",
+      license: "https://opensource.org/licenses/Apache-2.0",
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    })
+    document.head.appendChild(script)
+  }, [])
+}
+
 export default function DocsApp() {
   useScrollRestoration()
+  useJsonLd()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
   return (
     <div className="App">
       <header className="flex">
+        <SidebarToggle onClick={() => setSidebarOpen((prev) => !prev)} />
         <div className="logo">
-          <img src={semioticLogo} alt="Semiotic" />
+          <Link to="/">
+            <img src={semioticLogo} alt="Semiotic" />
+          </Link>
         </div>
         <div className="flex space-between">
           <h1>
-            Home
-            {/*{subpage && ` > ${subpage.name}`}*/}
+            <Link to="/" style={{ color: "inherit", textDecoration: "none", fontWeight: 600 }}>
+              Semiotic
+            </Link>
           </h1>
 
-          <div className="flex github-links">
-            <p className="no-margin">
-              <a
-                rel="noopener noreferrer"
-                target="_blank"
-                href="https://github.com/nteract/semiotic"
-              >
-                GitHub
-              </a>
-            </p>
+          <div className="flex" style={{ alignItems: "center", gap: "12px" }}>
+            <ThemeToggle />
+            <div className="github-links">
+              <p className="no-margin">
+                <a
+                  rel="noopener noreferrer"
+                  target="_blank"
+                  href="https://github.com/nteract/semiotic"
+                >
+                  GitHub
+                </a>
+              </p>
+            </div>
           </div>
         </div>
       </header>
       <div className="flex body">
-        <div className="sidebar">
-          <Sidebar />
-        </div>
+        <Sidebar
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
         <div className="container">
           <Routes>
-            <Route path="/" element={<Home />} />
+            {/* New landing page */}
+            <Route path="/" element={<Landing />} />
 
+            {/* Keep old Home accessible */}
+            <Route path="/home-legacy" element={<Home />} />
+
+            {/* Existing guide routes */}
             <Route path="guides" element={<Outlet />}>
               <Route
                 path=""
@@ -140,36 +267,7 @@ export default function DocsApp() {
               <Route path="realtime-charts-hoc" element={<RealtimeChartsHOC />} />
             </Route>
 
-            <Route path="examples" element={<Outlet />}>
-              <Route
-                path=""
-                element={
-                  <>
-                    <h1>Examples</h1>
-                    <ExamplesIndex />
-                  </>
-                }
-              />
-              <Route path="candlestick-chart" element={<CandlestickChart />} />
-              <Route path="homerun-map" element={<HomerunMap />} />
-              <Route path="canvas-interaction" element={<CanvasInteraction />} />
-              <Route path="uncertainty-visualization" element={<UncertaintyVisualization />} />
-              <Route path="marginal-graphics" element={<MarginalGraphics />} />
-              <Route path="bar-line-chart" element={<BarLineChart />} />
-              <Route path="bar-to-parallel-coordinates" element={<BarToParallel />} />
-              <Route path="waterfall-chart" element={<WaterfallChart />} />
-              <Route path="slope-chart" element={<SlopeChart />} />
-              <Route path="marimekko-chart" element={<MarimekkoChart />} />
-              <Route path="swarm-plot" element={<SwarmPlot />} />
-              <Route path="ridgeline-plot" element={<RidgelinePlot />} />
-              <Route path="dot-plot" element={<DotPlot />} />
-              <Route path="timeline" element={<Timeline />} />
-              <Route path="radar-plot" element={<RadarPlot />} />
-              <Route path="isotype-chart" element={<IsotypeChart />} />
-              <Route path="matrix" element={<Matrix />} />
-              <Route path="custom-layout" element={<CustomLayout />} />
-            </Route>
-
+            {/* Existing API routes */}
             <Route path="api" element={<Outlet />}>
               <Route
                 path=""
@@ -180,219 +278,102 @@ export default function DocsApp() {
                   </>
                 }
               />
+              <Route path="charts" element={<ChartsApiPage />} />
               <Route path="xyframe" element={<Xyframe />} />
               <Route path="ordinalframe" element={<Ordinalframe />} />
               <Route path="networkframe" element={<Networkframe />} />
+              <Route path="realtime-frame" element={<Realtimeframe />} />
               <Route path="responsiveframe" element={<Responsiveframes />} />
               <Route path="sparkFrame" element={<Sparkframes />} />
               <Route path="facetcontroller" element={<Facetcontroller />} />
               <Route path="dividedline" element={<DividedLine />} />
             </Route>
+
+            {/* Cookbook routes */}
+            <Route path="cookbook" element={<Outlet />}>
+              <Route
+                path=""
+                element={
+                  <>
+                    <h1>Cookbook</h1>
+                    <ExamplesIndex />
+                  </>
+                }
+              />
+              <Route path="candlestick-chart" element={<CandlestickChartPage />} />
+              <Route path="homerun-map" element={<HomerunMapPage />} />
+              <Route path="canvas-interaction" element={<CanvasInteractionPage />} />
+              <Route path="uncertainty-visualization" element={<UncertaintyVisualizationPage />} />
+              <Route path="marginal-graphics" element={<MarginalGraphicsPage />} />
+              <Route path="bar-line-chart" element={<BarLineChartPage />} />
+              <Route path="bar-to-parallel-coordinates" element={<BarToParallelPage />} />
+              <Route path="waterfall-chart" element={<WaterfallChartPage />} />
+              <Route path="slope-chart" element={<SlopeChartPage />} />
+              <Route path="marimekko-chart" element={<MarimekkoChartPage />} />
+              <Route path="swarm-plot" element={<SwarmPlotRecipePage />} />
+              <Route path="ridgeline-plot" element={<RidgelinePlotPage />} />
+              <Route path="dot-plot" element={<DotPlotRecipePage />} />
+              <Route path="timeline" element={<TimelineCookbookPage />} />
+              <Route path="radar-plot" element={<RadarPlotPage />} />
+              <Route path="isotype-chart" element={<IsotypeChartPage />} />
+              <Route path="matrix" element={<MatrixCookbookPage />} />
+            </Route>
+
+            {/* Frames routes */}
+            <Route path="frames" element={<Outlet />}>
+              <Route path="xy-frame" element={<XYFramePage />} />
+              <Route path="ordinal-frame" element={<OrdinalFramePage />} />
+              <Route path="network-frame" element={<NetworkFramePage />} />
+              <Route path="realtime-frame" element={<RealtimeFramePage />} />
+            </Route>
+
+            {/* Features routes */}
+            <Route path="features" element={<Outlet />}>
+              <Route path="axes" element={<AxesPage />} />
+              <Route path="annotations" element={<AnnotationsPage />} />
+              <Route path="tooltips" element={<TooltipsPage />} />
+              <Route path="interaction" element={<InteractionPage />} />
+              <Route path="responsive" element={<ResponsivePage />} />
+              <Route path="accessibility" element={<AccessibilityPage />} />
+              <Route path="canvas-rendering" element={<CanvasRenderingPage />} />
+              <Route path="sparklines" element={<SparklinesPage />} />
+              <Route path="small-multiples" element={<SmallMultiplesPage />} />
+              <Route path="styling" element={<StylingPage />} />
+              <Route path="legends" element={<LegendsPage />} />
+            </Route>
+
+            {/* Getting Started */}
+            <Route path="getting-started" element={<GettingStartedPage />} />
+
+            {/* New Charts routes */}
+            <Route path="charts" element={<Outlet />}>
+              {/* XY Charts */}
+              <Route path="line-chart" element={<LineChartPage />} />
+              <Route path="area-chart" element={<AreaChartPage />} />
+              <Route path="stacked-area-chart" element={<StackedAreaChartPage />} />
+              <Route path="scatterplot" element={<ScatterplotPage />} />
+              <Route path="bubble-chart" element={<BubbleChartPage />} />
+              <Route path="heatmap" element={<HeatmapPage />} />
+              {/* Categorical Charts */}
+              <Route path="bar-chart" element={<BarChartPage />} />
+              <Route path="stacked-bar-chart" element={<StackedBarChartPage />} />
+              <Route path="swarm-plot" element={<SwarmPlotPage />} />
+              <Route path="box-plot" element={<BoxPlotPage />} />
+              <Route path="dot-plot" element={<DotPlotPage />} />
+              {/* Network Charts */}
+              <Route path="force-directed-graph" element={<ForceDirectedGraphPage />} />
+              <Route path="chord-diagram" element={<ChordDiagramPage />} />
+              <Route path="sankey-diagram" element={<SankeyDiagramPage />} />
+              <Route path="tree-diagram" element={<TreeDiagramPage />} />
+              {/* Realtime Charts */}
+              <Route path="realtime-line-chart" element={<RealtimeLineChartPage />} />
+              <Route path="realtime-bar-chart" element={<RealtimeBarChartPage />} />
+              <Route path="realtime-swarm-chart" element={<RealtimeSwarmChartPage />} />
+              <Route path="realtime-waterfall-chart" element={<RealtimeWaterfallChartPage />} />
+            </Route>
           </Routes>
         </div>
       </div>
-    </div>
-  )
-}
-
-function Sidebar() {
-  return (
-    <div>
-      <p className="bold pointer black selected">
-        <NavLink to="/" end>
-          Home
-        </NavLink>
-      </p>
-      <p className="bold pointer black">
-        <NavLink to="/guides" end>
-          Guides
-        </NavLink>
-      </p>
-
-      <p className="sub-header sub-page selected">XYFrame</p>
-      <p className="black sub-page">
-        <NavLink to="/guides/line-chart">Line Charts</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/guides/area-chart">Area Charts</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/guides/scatterplot">Scatterplots</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/guides/xy-summaries">XY Summaries</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/guides/xy-brushes">XY Brushes</NavLink>
-      </p>
-
-      <p className="sub-header sub-page selected">OrdinalFrame</p>
-      <p className="black sub-page">
-        <NavLink to="/guides/bar-chart">Bar Charts</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/guides/pie-chart">Pie Charts</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/guides/ordinal-summaries">Ordinal Summaries</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/guides/ordinal-brushes">Ordinal Brushes</NavLink>
-      </p>
-
-      <p className="sub-header sub-page selected">NetworkFrame</p>
-      <p className="black sub-page">
-        <NavLink to="/guides/force-layouts">Force Layouts</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/guides/path-diagrams">Path Diagrams</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/guides/hierarchical">Hierarchical Diagrams</NavLink>
-      </p>
-
-      <p className="sub-header sub-page selected">Higher-Order Components</p>
-      <p className="black sub-page">
-        <NavLink to="/guides/xy-charts-hoc">XY Charts</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/guides/ordinal-charts-hoc">Ordinal Charts</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/guides/network-charts-hoc">Network Charts</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/guides/realtime-charts-hoc">Realtime Charts</NavLink>
-      </p>
-
-      <p className="sub-header sub-page selected">RealtimeFrame</p>
-      <p className="black sub-page">
-        <NavLink to="/guides/realtime-frame">RealtimeFrame</NavLink>
-      </p>
-      <p className="sub-header sub-page selected">All Frames</p>
-      <p className="black sub-page">
-        <NavLink to="/guides/axis">Axis</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/guides/annotations">Annotations</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/guides/tooltips">Annotations - Tooltips</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/guides/highlighting">Annotations - Highlighting</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/guides/accessibility">Accessibility</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/guides/small-multiples">Small Multiples</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/guides/canvas-rendering">Canvas Rendering</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/guides/sparklines">Sparklines</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/guides/sketchy-patterns">Using Sketchy / Patterns</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/guides/foreground-background-svg">Using Foreground / Background SVG</NavLink>
-      </p>
-      <p className="bold pointer black">
-        <NavLink to="/examples">Examples</NavLink>
-      </p>
-
-      <p className="sub-header sub-page selected">XYFrame</p>
-      <p className="black sub-page">
-        <NavLink to="/examples/candlestick-chart">Candlestick Chart</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/examples/homerun-map">Homerun Map</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/examples/canvas-interaction">Canvas Interaction</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/examples/uncertainty-visualization">Uncertainty Visualization</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/examples/marginal-graphics">Marginal Graphics</NavLink>
-      </p>
-
-      <p className="sub-header sub-page selected">OrdinalFrame</p>
-      <p className="black sub-page">
-        <NavLink to="/examples/bar-line-chart">Bar &amp; Line Chart</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/examples/bar-to-parallel-coordinates">Bar to Parallel Coordinates</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/examples/waterfall-chart">Waterfall Chart</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/examples/slope-chart">Slope Chart</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/examples/marimekko-chart">Marimekko Chart</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/examples/swarm-plot">Swarm Plot</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/examples/ridgeline-plot">Ridgeline Plot</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/examples/dot-plot">Dot Plot</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/examples/timeline">Timeline</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/examples/radar-plot">Radar Plot</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/examples/isotype-chart">Isotype Chart</NavLink>
-      </p>
-
-      <p className="sub-header sub-page selected">NetworkFrame</p>
-      <p className="black sub-page">
-        <NavLink to="/examples/matrix">Adjacency Matrix</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/examples/custom-layout">Custom Layout</NavLink>
-      </p>
-      <p className="bold pointer black">
-        <NavLink to="/api">API</NavLink>
-      </p>
-
-      <p className="sub-header sub-page selected">Frames</p>
-      <p className="black sub-page">
-        <NavLink to="/api/xyframe">XYFrame</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/api/ordinalframe">OrdinalFrame</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/api/networkframe">NetworkFrame</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/api/responsiveframe">ResponsiveFrame</NavLink>
-      </p>
-      <p className="black sub-page">
-        <NavLink to="/api/sparkFrame">SparkFrame</NavLink>
-      </p>
-
-      <p className="sub-header sub-page selected">Controls</p>
-      <p className="black sub-page">
-        <NavLink to="/api/facetcontroller">FacetController</NavLink>
-      </p>
-
-      <p className="sub-header sub-page selected">Sub-Components</p>
-      <p className="black sub-page">
-        <NavLink to="/api/dividedline">DividedLine</NavLink>
-      </p>
     </div>
   )
 }

@@ -156,14 +156,31 @@ class DocumentFrame extends React.Component {
 
     this.onClick = this.onClick.bind(this)
     this.onCopy = this.onCopy.bind(this)
+    this.vizRef = React.createRef()
+    this._observer = null
 
     this.state = {
       codeBlock: props.startHidden ? "hidden" : props.useExpanded ? "expanded" : "collapsed",
+      containerWidth: null,
     }
   }
 
   componentDidMount() {
     if (this.state.codeBlock !== "hidden") window.Prism.highlightAll()
+
+    const el = this.vizRef.current
+    if (el) {
+      this._observer = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          this.setState({ containerWidth: entry.contentRect.width })
+        }
+      })
+      this._observer.observe(el)
+    }
+  }
+
+  componentWillUnmount() {
+    if (this._observer) this._observer.disconnect()
   }
 
   onClick(e) {
@@ -239,9 +256,18 @@ class DocumentFrame extends React.Component {
       </pre>
     )
 
+    const responsiveFrameProps = { ...frameProps }
+    if (this.state.containerWidth) {
+      const height = frameProps.size ? frameProps.size[1] : (frameProps.height || 300)
+      responsiveFrameProps.size = [this.state.containerWidth, height]
+      responsiveFrameProps.width = this.state.containerWidth
+    }
+
     return (
       <div className="relative">
-        <Frame {...frameProps} />
+        <div ref={this.vizRef} style={{ overflow: "hidden" }}>
+          {this.state.containerWidth ? <Frame {...responsiveFrameProps} /> : null}
+        </div>
 
         <div className="toolbar">
           <button value={useExpanded ? "expanded" : "collapsed"} onClick={this.onClick}>

@@ -164,27 +164,27 @@ export function ExamplesIndex() {
         <div className="sub-header">XYFrame</div>
 
         <PageLink
-          href="/examples/candlestick-chart"
+          href="/cookbook/candlestick-chart"
           title="Candlestick Chart"
           thumbnail={new URL("../public/assets/img/candlestick.png", import.meta.url)}
         />
         <PageLink
-          href="/examples/homerun-map"
+          href="/cookbook/homerun-map"
           title="Homerun Map"
           thumbnail={new URL("../public/assets/img/baseball.png", import.meta.url)}
         />
         <PageLink
-          href="/examples/canvas-interaction"
+          href="/cookbook/canvas-interaction"
           title="Canvas Interaction"
           thumbnail={new URL("../public/assets/img/canvas-interaction.png", import.meta.url)}
         />
         <PageLink
-          href="/examples/uncertainty-visualization"
+          href="/cookbook/uncertainty-visualization"
           title="Uncertainty Visualization"
           thumbnail={new URL("../public/assets/img/uncertainty-visualization.png", import.meta.url)}
         />
         <PageLink
-          href="/examples/marginal-graphics"
+          href="/cookbook/marginal-graphics"
           title="Marginal Graphics"
           thumbnail={new URL("../public/assets/img/marginal-graphics.png", import.meta.url)}
         />
@@ -192,57 +192,57 @@ export function ExamplesIndex() {
         <div className="sub-header">OrdinalFrame</div>
 
         <PageLink
-          href="/examples/bar-line-chart"
+          href="/cookbook/bar-line-chart"
           title="Bar &amp; Line Chart"
           thumbnail={new URL("../public/assets/img/bar-line.png", import.meta.url)}
         />
         <PageLink
-          href="/examples/bar-to-parallel-coordinates"
+          href="/cookbook/bar-to-parallel-coordinates"
           title="Bar to Parallel Coordinates"
           thumbnail={new URL("../public/assets/img/bar-to-parallel.png", import.meta.url)}
         />
         <PageLink
-          href="/examples/waterfall-chart"
+          href="/cookbook/waterfall-chart"
           title="Waterfall Chart"
           thumbnail={new URL("../public/assets/img/waterfall.png", import.meta.url)}
         />
         <PageLink
-          href="/examples/slope-chart"
+          href="/cookbook/slope-chart"
           title="Slope Chart"
           thumbnail={new URL("../public/assets/img/slope.png", import.meta.url)}
         />
         <PageLink
-          href="/examples/marimekko-chart"
+          href="/cookbook/marimekko-chart"
           title="Marimekko Chart"
           thumbnail={new URL("../public/assets/img/marimekko.png", import.meta.url)}
         />
         <PageLink
-          href="/examples/swarm-plot"
+          href="/cookbook/swarm-plot"
           title="Swarm Plot"
           thumbnail={new URL("../public/assets/img/swarm.png", import.meta.url)}
         />
         <PageLink
-          href="/examples/ridgeline-plot"
+          href="/cookbook/ridgeline-plot"
           title="Ridgeline Plot"
           thumbnail={new URL("../public/assets/img/ridgeline.png", import.meta.url)}
         />
         <PageLink
-          href="/examples/dot-plot"
+          href="/cookbook/dot-plot"
           title="Dot Plot"
           thumbnail={new URL("../public/assets/img/dot.png", import.meta.url)}
         />
         <PageLink
-          href="/examples/timeline"
+          href="/cookbook/timeline"
           title="Timeline"
           thumbnail={new URL("../public/assets/img/timeline.png", import.meta.url)}
         />
         <PageLink
-          href="/examples/radar-plot"
+          href="/cookbook/radar-plot"
           title="Radar Plot"
           thumbnail={new URL("../public/assets/img/radar.png", import.meta.url)}
         />
         <PageLink
-          href="/examples/isotype-chart"
+          href="/cookbook/isotype-chart"
           title="Isotype Chart"
           thumbnail={new URL("../public/assets/img/isotype.png", import.meta.url)}
         />
@@ -250,14 +250,9 @@ export function ExamplesIndex() {
         <div className="sub-header">NetworkFrame</div>
 
         <PageLink
-          href="/examples/matrix"
+          href="/cookbook/matrix"
           title="Adjacency Matrix"
           thumbnail={new URL("../public/assets/img/matrix.png", import.meta.url)}
-        />
-        <PageLink
-          href="/examples/custom-layout"
-          title="Custom Layout"
-          thumbnail={new URL("../public/assets/img/custom-layout.png", import.meta.url)}
         />
       </div>
     </div>

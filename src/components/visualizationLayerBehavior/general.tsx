@@ -273,6 +273,7 @@ export function createLines({
         "aria-label":
           d.data &&
           d.data.length > 0 &&
+          ariaLabel &&
           `${d.data.length} point ${
             ariaLabel.items
           } starting value ${yAxisFormatter(d.data[0].y)} at ${xAxisFormatter(

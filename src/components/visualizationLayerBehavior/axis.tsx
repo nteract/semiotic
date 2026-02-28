@@ -86,7 +86,7 @@ const defaultTickLineGenerator = ({
     <path key={i}
       
       fill="none"
-      stroke="black"
+      stroke="currentColor"
       strokeWidth="1px"
       d={genD}
       className={`tick-line tick ${orient} ${className}`}
@@ -110,7 +110,7 @@ const outboundTickLineGenerator = ({ xy, orient, i, className = "" }) => {
     <path key={i}
       
       fill="none"
-      stroke="black"
+      stroke="currentColor"
       strokeWidth="1px"
       d={genD}
       className={`outbound-tick-line tick ${orient} ${className}`}
@@ -296,7 +296,7 @@ export const baselineGenerator = (orient, size, className) => {
     <line
       key="baseline"
       className={`axis-baseline ${className}`}
-      stroke="black"
+      stroke="currentColor"
       strokeLinecap="square"
       x1={orientOffset.x}
       x2={orientOffset.x + orientOffset.width}

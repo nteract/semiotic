@@ -41,10 +41,11 @@ export const renderLaidOutPieces = ({
       if (React.isValidElement(d.renderElement || d)) {
         renderedPieces.push(d.renderElement || d)
       } else {
-        /*ariaLabel.items*/
-        const pieceAriaLabel = `${d.o} ${ariaLabel.items} value ${
-          (valueFormat && valueFormat(d.piece.value)) || d.piece.value
-        }`
+        const pieceAriaLabel = ariaLabel
+          ? `${d.o} ${ariaLabel.items} value ${
+              (valueFormat && valueFormat(d.piece.value)) || d.piece.value
+            }`
+          : ""
         const key = renderKeyFn
           ? renderKeyFn(d.piece)
           : d.renderKey || `piece-render-${i}`
