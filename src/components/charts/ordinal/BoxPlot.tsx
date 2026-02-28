@@ -3,7 +3,7 @@ import { useMemo } from "react"
 import OrdinalFrame from "../../OrdinalFrame"
 import type { OrdinalFrameProps } from "../../types/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, DEFAULT_COLOR, resolveAccessor } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, Accessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -285,7 +285,7 @@ export function BoxPlot(props: BoxPlotProps) {
 
   // Default tooltip for summary hover (boxplot quartile points)
   const defaultTooltipContent = useMemo(() => {
-    const getVal = typeof valueAccessor === "function" ? valueAccessor : (d: Record<string, any>) => d[valueAccessor]
+    const getVal = resolveAccessor<number>(valueAccessor)
 
     return (d: Record<string, any>) => {
       // d has: label, key, summaryPieceName, value, column, pieces

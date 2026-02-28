@@ -3,7 +3,7 @@ import { useMemo } from "react"
 import OrdinalFrame from "../../OrdinalFrame"
 import type { OrdinalFrameProps } from "../../types/ordinalTypes"
 import { getColor, getSize } from "../shared/colorUtils"
-import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, DEFAULT_COLOR, resolveAccessor } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, Accessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -306,8 +306,8 @@ export function SwarmPlot(props: SwarmPlotProps) {
 
   // Default tooltip function for piece hover
   const defaultTooltipContent = useMemo(() => {
-    const getVal = typeof valueAccessor === "function" ? valueAccessor : (d: Record<string, any>) => d[valueAccessor]
-    const getCat = typeof categoryAccessor === "function" ? categoryAccessor : (d: Record<string, any>) => d[categoryAccessor]
+    const getVal = resolveAccessor<number>(valueAccessor)
+    const getCat = resolveAccessor(categoryAccessor)
 
     return (d: Record<string, any>) => {
       const cat = getCat(d)

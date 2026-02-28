@@ -3,7 +3,7 @@ import { useMemo } from "react"
 import OrdinalFrame from "../../OrdinalFrame"
 import type { OrdinalFrameProps } from "../../types/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, DEFAULT_COLOR, resolveAccessor } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, Accessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -172,7 +172,7 @@ export function StackedBarChart(props: StackedBarChartProps) {
 
   // Get unique stack values for legend
   const stackValues = useMemo(() => {
-    const getStackValue = typeof stackBy === "function" ? stackBy : (d: Record<string, any>) => d[stackBy]
+    const getStackValue = resolveAccessor(stackBy)
     return Array.from(new Set(safeData.map(getStackValue)))
   }, [safeData, stackBy])
 
@@ -261,9 +261,9 @@ export function StackedBarChart(props: StackedBarChartProps) {
 
   // Default tooltip function for piece hover
   const defaultTooltipContent = useMemo(() => {
-    const getStack = typeof stackBy === "function" ? stackBy : (d: Record<string, any>) => d[stackBy]
-    const getCat = typeof categoryAccessor === "function" ? categoryAccessor : (d: Record<string, any>) => d[categoryAccessor]
-    const getVal = typeof valueAccessor === "function" ? valueAccessor : (d: Record<string, any>) => d[valueAccessor]
+    const getStack = resolveAccessor(stackBy)
+    const getCat = resolveAccessor(categoryAccessor)
+    const getVal = resolveAccessor<number>(valueAccessor)
 
     return (d: Record<string, any>) => {
       const stackValue = String(getStack(d))

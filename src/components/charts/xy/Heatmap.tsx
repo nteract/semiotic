@@ -4,7 +4,7 @@ import { scaleSequential } from "d3-scale"
 import { interpolateBlues, interpolateReds, interpolateGreens, interpolateViridis } from "d3-scale-chromatic"
 import XYFrame from "../../XYFrame"
 import type { XYFrameProps } from "../../types/xyTypes"
-import { DEFAULT_COLOR } from "../shared/hooks"
+import { DEFAULT_COLOR, resolveAccessor } from "../shared/hooks"
 import type { BaseChartProps, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 
@@ -234,8 +234,8 @@ export function Heatmap(props: HeatmapProps) {
 
   // Get unique x and y values for bin sizing
   const { xBinCount, yBinCount } = useMemo(() => {
-    const getX = typeof xAccessor === "function" ? xAccessor : (d: Record<string, any>) => d[xAccessor]
-    const getY = typeof yAccessor === "function" ? yAccessor : (d: Record<string, any>) => d[yAccessor]
+    const getX = resolveAccessor(xAccessor)
+    const getY = resolveAccessor(yAccessor)
 
     return {
       xBinCount: new Set(safeData.map(getX)).size,

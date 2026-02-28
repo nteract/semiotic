@@ -8,6 +8,18 @@ import type { Accessor } from "./types"
 export const DEFAULT_COLOR = "#007bff"
 
 /**
+ * Resolve an accessor (string key or function) into a function.
+ * Used across chart components to normalize `valueAccessor`, `categoryAccessor`, etc.
+ */
+export function resolveAccessor<T = any>(
+  accessor: string | ((d: Record<string, any>, i?: number) => T)
+): (d: Record<string, any>) => T {
+  return typeof accessor === "function"
+    ? accessor
+    : (d: Record<string, any>) => d[accessor]
+}
+
+/**
  * Hook to create a color scale from data and colorBy configuration.
  * Returns undefined when colorBy is absent or is a function accessor.
  */
@@ -35,10 +47,7 @@ export function useSortedData(
     if (!sort) return data
     const copy = [...data]
     if (typeof sort === "function") return copy.sort(sort)
-    const getValue =
-      typeof valueAccessor === "function"
-        ? valueAccessor
-        : (d: Record<string, any>) => d[valueAccessor]
+    const getValue = resolveAccessor<number>(valueAccessor)
     return sort === "asc"
       ? copy.sort((a, b) => getValue(a) - getValue(b))
       : copy.sort((a, b) => getValue(b) - getValue(a))
