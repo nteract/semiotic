@@ -1,3 +1,4 @@
+"use client"
 import * as React from "react"
 import { useCallback, useEffect, useState, useRef } from "react"
 import AnnotationLayer from "./AnnotationLayer"

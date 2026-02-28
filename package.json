@@ -37,6 +37,12 @@
       "require": "./dist/realtime.min.js",
       "default": "./dist/realtime.module.min.js"
     },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.module.min.js",
+      "require": "./dist/server.min.js",
+      "default": "./dist/server.module.min.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [

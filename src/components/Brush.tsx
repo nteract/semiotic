@@ -1,3 +1,4 @@
+"use client"
 import * as React from "react"
 import { useEffect, useRef } from "react"
 import { select } from "d3-selection"

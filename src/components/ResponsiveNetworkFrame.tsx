@@ -1,3 +1,4 @@
+"use client"
 import NetworkFrame from "./NetworkFrame"
 import createResponsiveFrame from "./ResponsiveFrame"
 

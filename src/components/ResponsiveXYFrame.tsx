@@ -1,3 +1,4 @@
+"use client"
 import XYFrame from "./XYFrame"
 import createResponsiveFrame from "./ResponsiveFrame"
 

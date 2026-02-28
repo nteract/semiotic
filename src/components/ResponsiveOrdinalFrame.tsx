@@ -1,3 +1,4 @@
+"use client"
 import OrdinalFrame from "./OrdinalFrame"
 import createResponsiveFrame from "./ResponsiveFrame"
 

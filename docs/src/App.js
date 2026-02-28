@@ -114,6 +114,7 @@ import TimelineCookbookPage from "./pages/cookbook/TimelinePage"
 import RadarPlotPage from "./pages/cookbook/RadarPlotPage"
 import IsotypeChartPage from "./pages/cookbook/IsotypeChartPage"
 import MatrixCookbookPage from "./pages/cookbook/MatrixPage"
+import UsingSSRPage from "./pages/UsingSSRPage"
 
 import semioticLogo from "../public/assets/img/semiotic.png"
 
@@ -346,6 +347,9 @@ export default function DocsApp() {
               <Route path="styling" element={<StylingPage />} />
               <Route path="legends" element={<LegendsPage />} />
             </Route>
+
+            {/* Using Server-Side Rendering */}
+            <Route path="using-ssr" element={<UsingSSRPage />} />
 
             {/* Getting Started */}
             <Route path="getting-started" element={<GettingStartedPage />} />

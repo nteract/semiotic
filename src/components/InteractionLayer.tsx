@@ -1,3 +1,4 @@
+"use client"
 import * as React from "react"
 import { useState, useEffect } from "react"
 import { brushX, brushY, brush } from "d3-brush"

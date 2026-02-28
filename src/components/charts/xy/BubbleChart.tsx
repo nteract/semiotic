@@ -1,3 +1,4 @@
+"use client"
 import * as React from "react"
 import { useMemo } from "react"
 import XYFrame from "../../XYFrame"

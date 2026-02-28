@@ -1,3 +1,4 @@
+"use client"
 import MinimapXYFrame from "./MinimapXYFrame"
 import createResponsiveFrame from "./ResponsiveFrame"
 

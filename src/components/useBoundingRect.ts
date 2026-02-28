@@ -1,3 +1,4 @@
+"use client"
 import { useState, useLayoutEffect, RefObject } from "react"
 
 export function useBoundingRect(ref: RefObject<HTMLElement>): DOMRect | null {
