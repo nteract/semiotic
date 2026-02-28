@@ -31,8 +31,8 @@ export interface TreeDiagramProps extends BaseChartProps {
    * - "tree": standard tree layout
    * - "cluster": cluster (dendrogram) layout
    * - "partition": partition (icicle/sunburst) layout
-   * - "treemap": treemap layout
-   * - "circlepack": circle packing layout
+   * - "treemap": treemap layout (@deprecated — use the standalone {@link Treemap} component instead)
+   * - "circlepack": circle packing layout (@deprecated — use the standalone {@link CirclePack} component instead)
    * @default "tree"
    */
   layout?: "tree" | "cluster" | "partition" | "treemap" | "circlepack"
@@ -357,6 +357,12 @@ export function TreeDiagram(props: TreeDiagramProps) {
   if (!data) {
     console.warn("TreeDiagram: data prop is required")
     return null
+  }
+
+  if (layout === "treemap") {
+    console.info("TreeDiagram: Consider using the standalone <Treemap> component for treemap visualizations.")
+  } else if (layout === "circlepack") {
+    console.info("TreeDiagram: Consider using the standalone <CirclePack> component for circle packing visualizations.")
   }
 
   // Build NetworkFrame props

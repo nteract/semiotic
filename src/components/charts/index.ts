@@ -48,6 +48,15 @@ export type { BoxPlotProps } from "./ordinal/BoxPlot"
 export { DotPlot } from "./ordinal/DotPlot"
 export type { DotPlotProps } from "./ordinal/DotPlot"
 
+export { PieChart } from "./ordinal/PieChart"
+export type { PieChartProps } from "./ordinal/PieChart"
+
+export { DonutChart } from "./ordinal/DonutChart"
+export type { DonutChartProps } from "./ordinal/DonutChart"
+
+export { GroupedBarChart } from "./ordinal/GroupedBarChart"
+export type { GroupedBarChartProps } from "./ordinal/GroupedBarChart"
+
 // ============================================================================
 // Network Charts (based on NetworkFrame)
 // ============================================================================
@@ -63,6 +72,12 @@ export type { SankeyDiagramProps } from "./network/SankeyDiagram"
 
 export { TreeDiagram } from "./network/TreeDiagram"
 export type { TreeDiagramProps } from "./network/TreeDiagram"
+
+export { Treemap } from "./network/Treemap"
+export type { TreemapProps } from "./network/Treemap"
+
+export { CirclePack } from "./network/CirclePack"
+export type { CirclePackProps } from "./network/CirclePack"
 
 // ============================================================================
 // Realtime Charts (based on RealtimeFrame)

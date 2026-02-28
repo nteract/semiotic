@@ -33,6 +33,9 @@ const navData = [
           { title: "Swarm Plot", path: "/charts/swarm-plot" },
           { title: "Box Plot", path: "/charts/box-plot" },
           { title: "Dot Plot", path: "/charts/dot-plot" },
+          { title: "Pie Chart", path: "/charts/pie-chart" },
+          { title: "Donut Chart", path: "/charts/donut-chart" },
+          { title: "Grouped Bar Chart", path: "/charts/grouped-bar-chart" },
         ],
       },
       {
@@ -43,6 +46,8 @@ const navData = [
           { title: "Chord Diagram", path: "/charts/chord-diagram" },
           { title: "Sankey Diagram", path: "/charts/sankey-diagram" },
           { title: "Tree Diagram", path: "/charts/tree-diagram" },
+          { title: "Treemap", path: "/charts/treemap" },
+          { title: "Circle Pack", path: "/charts/circle-pack" },
         ],
       },
       {

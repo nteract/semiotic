@@ -71,6 +71,11 @@ import RealtimeLineChartPage from "./pages/charts/RealtimeLineChartPage"
 import RealtimeBarChartPage from "./pages/charts/RealtimeBarChartPage"
 import RealtimeSwarmChartPage from "./pages/charts/RealtimeSwarmChartPage"
 import RealtimeWaterfallChartPage from "./pages/charts/RealtimeWaterfallChartPage"
+import PieChartPage from "./pages/charts/PieChartPage"
+import DonutChartPage from "./pages/charts/DonutChartPage"
+import GroupedBarChartPage from "./pages/charts/GroupedBarChartPage"
+import TreemapPage from "./pages/charts/TreemapPage"
+import CirclePackPage from "./pages/charts/CirclePackPage"
 
 // New frame pages
 import XYFramePage from "./pages/frames/XYFramePage"
@@ -360,11 +365,16 @@ export default function DocsApp() {
               <Route path="swarm-plot" element={<SwarmPlotPage />} />
               <Route path="box-plot" element={<BoxPlotPage />} />
               <Route path="dot-plot" element={<DotPlotPage />} />
+              <Route path="pie-chart" element={<PieChartPage />} />
+              <Route path="donut-chart" element={<DonutChartPage />} />
+              <Route path="grouped-bar-chart" element={<GroupedBarChartPage />} />
               {/* Network Charts */}
               <Route path="force-directed-graph" element={<ForceDirectedGraphPage />} />
               <Route path="chord-diagram" element={<ChordDiagramPage />} />
               <Route path="sankey-diagram" element={<SankeyDiagramPage />} />
               <Route path="tree-diagram" element={<TreeDiagramPage />} />
+              <Route path="treemap" element={<TreemapPage />} />
+              <Route path="circle-pack" element={<CirclePackPage />} />
               {/* Realtime Charts */}
               <Route path="realtime-line-chart" element={<RealtimeLineChartPage />} />
               <Route path="realtime-bar-chart" element={<RealtimeBarChartPage />} />

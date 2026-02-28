@@ -30,7 +30,7 @@ import { hexbinning, heatmapping } from "./svg/areaDrawing"
 import { nodesEdgesFromHierarchy } from "./processing/network"
 
 // Higher-order chart components
-import { Scatterplot, LineChart, AreaChart, StackedAreaChart, Heatmap, BubbleChart, BarChart, StackedBarChart, SwarmPlot, BoxPlot, DotPlot, ForceDirectedGraph, ChordDiagram, SankeyDiagram, TreeDiagram } from "./charts"
+import { Scatterplot, LineChart, AreaChart, StackedAreaChart, Heatmap, BubbleChart, BarChart, StackedBarChart, SwarmPlot, BoxPlot, DotPlot, PieChart, DonutChart, GroupedBarChart, ForceDirectedGraph, ChordDiagram, SankeyDiagram, TreeDiagram, Treemap, CirclePack } from "./charts"
 
 // Tooltip utilities
 import { Tooltip, MultiLineTooltip, normalizeTooltip } from "./Tooltip/Tooltip"
@@ -89,6 +89,11 @@ export {
   ChordDiagram,
   SankeyDiagram,
   TreeDiagram,
+  PieChart,
+  DonutChart,
+  GroupedBarChart,
+  Treemap,
+  CirclePack,
   // Tooltip utilities
   Tooltip,
   MultiLineTooltip,
@@ -203,10 +208,15 @@ export {
   SwarmPlotProps,
   BoxPlotProps,
   DotPlotProps,
+  PieChartProps,
+  DonutChartProps,
+  GroupedBarChartProps,
   ForceDirectedGraphProps,
   ChordDiagramProps,
   SankeyDiagramProps,
   TreeDiagramProps,
+  TreemapProps,
+  CirclePackProps,
   BaseChartProps,
   AxisConfig,
   Accessor
