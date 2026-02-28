@@ -268,7 +268,20 @@ export function assembleRenderPipeline(args: AssembleRenderPipelineArgs) {
   let legendSettings
 
   if (legend) {
-    legendSettings = legend === true ? {} : legend
+    legendSettings = legend === true ? {} : { ...legend }
+
+    // Sort legend items to match the sorted oExtent order
+    if (legendSettings.legendGroups) {
+      const extentOrder = new Map(oExtent.map((d, i) => [d, i]))
+      legendSettings.legendGroups = legendSettings.legendGroups.map((group) => ({
+        ...group,
+        items: [...group.items].sort((a, b) => {
+          const aIdx = extentOrder.has(a.label) ? extentOrder.get(a.label) : Infinity
+          const bIdx = extentOrder.has(b.label) ? extentOrder.get(b.label) : Infinity
+          return aIdx - bIdx
+        })
+      }))
+    }
   }
 
   return {

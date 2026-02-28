@@ -1243,6 +1243,7 @@ export const calculateNetworkFrame = (
             dy: 0,
             x: node.x,
             y: node.y,
+            color: "currentColor",
             note: { label: actualLabel },
             connector: { end: "none" },
             type: "label",
