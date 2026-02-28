@@ -45,8 +45,8 @@ interface AnnotationLayerState {
   adjustedAnnotationsKey?: string
   adjustedAnnotationsDataVersion?: string
   adjustedAnnotations: Object[]
-  fixedAnnotations: any[]
-  adjustableAnnotations: any[]
+  fixedAnnotations: NoteType[]
+  adjustableAnnotations: NoteType[]
 }
 
 const processAnnotations = (

@@ -4,8 +4,8 @@ const DEFAULT_POSITIVE_COLOR = "#28a745"
 const DEFAULT_NEGATIVE_COLOR = "#dc3545"
 
 export function computeWaterfallExtent(
-  data: Iterable<any>,
-  getValue: (d: any) => number
+  data: Iterable<Record<string, any>>,
+  getValue: (d: Record<string, any>) => number
 ): [number, number] {
   let min = 0
   let max = 0
@@ -40,7 +40,7 @@ export const waterfallRenderer: RendererFn = (ctx, data, scales, layout, style, 
   }
 
   // Collect into array for random access (skip NaN/null values)
-  const arr: any[] = []
+  const arr: Record<string, any>[] = []
   for (const d of data) {
     const v = getValue(d)
     if (v == null || Number.isNaN(v)) continue

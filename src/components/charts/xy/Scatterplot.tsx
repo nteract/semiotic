@@ -94,8 +94,8 @@ export function Scatterplot(props: ScatterplotProps) {
   }, [safeData, sizeBy])
 
   const pointStyle = useMemo(() => {
-    return (d: any) => {
-      const baseStyle: any = { fillOpacity: pointOpacity }
+    return (d: Record<string, any>) => {
+      const baseStyle: Record<string, string | number> = { fillOpacity: pointOpacity }
       baseStyle.fill = colorBy ? getColor(d, colorBy, colorScale) : DEFAULT_COLOR
       baseStyle.r = sizeBy
         ? getSize(d, sizeBy, sizeRange, sizeDomain)
@@ -104,7 +104,7 @@ export function Scatterplot(props: ScatterplotProps) {
     }
   }, [colorBy, colorScale, sizeBy, sizeRange, sizeDomain, pointRadius, pointOpacity])
 
-  const axes = useMemo((): any[] => [
+  const axes = useMemo((): Array<Record<string, unknown>> => [
     {
       orient: "left",
       label: yLabel,
@@ -141,13 +141,13 @@ export function Scatterplot(props: ScatterplotProps) {
     xAccessor,
     yAccessor,
     pointStyle,
-    axes,
+    axes: axes as any,
     hoverAnnotation: enableHover,
     margin,
     ...(legend && { legend }),
     ...(className && { className }),
     ...(title && { title }),
-    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) }),
+    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
     ...frameProps
   }
 

@@ -6,11 +6,11 @@ export interface Bin {
 }
 
 export function computeBins(
-  data: Iterable<any>,
-  getTime: (d: any) => number,
-  getValue: (d: any) => number,
+  data: Iterable<Record<string, any>>,
+  getTime: (d: Record<string, any>) => number,
+  getValue: (d: Record<string, any>) => number,
   binSize: number,
-  getCategory?: (d: any) => string
+  getCategory?: (d: Record<string, any>) => string
 ): Map<number, Bin> {
   const bins = new Map<number, Bin>()
 
@@ -40,11 +40,11 @@ export function computeBins(
 }
 
 export function computeBinExtent(
-  data: Iterable<any>,
-  getTime: (d: any) => number,
-  getValue: (d: any) => number,
+  data: Iterable<Record<string, any>>,
+  getTime: (d: Record<string, any>) => number,
+  getValue: (d: Record<string, any>) => number,
   binSize: number,
-  getCategory?: (d: any) => string
+  getCategory?: (d: Record<string, any>) => string
 ): [number, number] {
   const bins = computeBins(data, getTime, getValue, binSize, getCategory)
 

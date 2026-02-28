@@ -56,7 +56,7 @@ export class RingBuffer<T> {
     const self = this
     return {
       next(): IteratorResult<T> {
-        if (i >= self._size) return { done: true, value: undefined as any }
+        if (i >= self._size) return { done: true, value: undefined } as IteratorReturnResult<undefined>
         return { done: false, value: self.get(i++)! }
       }
     }

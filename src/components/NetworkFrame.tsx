@@ -318,7 +318,7 @@ function defaultNetworkSVGRule(
     i,
     annotationLayer
   }: {
-    d: any
+    d: AnnotationType
     i: number
     annotationLayer: UpdatedAnnotationLayerProps
   }
@@ -388,7 +388,7 @@ function defaultNetworkSVGRule(
   } else if (d.type === "basic-node-label") {
     return (
       <g key={d.key || `basic-${i}`} transform={`translate(${d.x},${d.y})`}>
-        {baseD.element || baseD.label}
+        {(baseD.element || baseD.label) as React.ReactNode}
       </g>
     )
   } else if (typeof d.type === "function" || annotationTypeStrings.has(d.type)) {

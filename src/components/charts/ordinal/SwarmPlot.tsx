@@ -56,7 +56,7 @@ export interface SwarmPlotProps extends BaseChartProps {
   /**
    * Format function for value axis tick labels
    */
-  valueFormat?: (d: any) => string
+  valueFormat?: (d: number | string) => string
 
   /**
    * Field name or function to determine point color
@@ -208,8 +208,8 @@ export function SwarmPlot(props: SwarmPlotProps) {
 
   // Point style function
   const pieceStyle = useMemo(() => {
-    return (d: any) => {
-      const baseStyle: any = {
+    return (d: Record<string, any>) => {
+      const baseStyle: Record<string, string | number> = {
         fillOpacity: pointOpacity
       }
 
@@ -233,7 +233,7 @@ export function SwarmPlot(props: SwarmPlotProps) {
 
   // Build axes configuration
   const axes = useMemo(() => {
-    const axesConfig: any[] = []
+    const axesConfig: Array<Record<string, unknown>> = []
 
     if (orientation === "vertical") {
       // Vertical: category on bottom, value on left
@@ -306,10 +306,10 @@ export function SwarmPlot(props: SwarmPlotProps) {
 
   // Default tooltip function for piece hover
   const defaultTooltipContent = useMemo(() => {
-    const getVal = typeof valueAccessor === "function" ? valueAccessor : (d: any) => d[valueAccessor]
-    const getCat = typeof categoryAccessor === "function" ? categoryAccessor : (d: any) => d[categoryAccessor]
+    const getVal = typeof valueAccessor === "function" ? valueAccessor : (d: Record<string, any>) => d[valueAccessor]
+    const getCat = typeof categoryAccessor === "function" ? categoryAccessor : (d: Record<string, any>) => d[categoryAccessor]
 
-    return (d: any) => {
+    return (d: Record<string, any>) => {
       const cat = getCat(d)
       const val = getVal(d)
       const pieces = d.pieces || []
@@ -340,7 +340,7 @@ export function SwarmPlot(props: SwarmPlotProps) {
     type: "swarm",
     projection: orientation === "horizontal" ? "horizontal" : "vertical",
     style: pieceStyle,
-    axes,
+    axes: axes as any,
     pieceHoverAnnotation: enableHover,
     margin,
     oPadding: categoryPadding,
@@ -348,7 +348,7 @@ export function SwarmPlot(props: SwarmPlotProps) {
     ...(className && { className }),
     ...(title && { title }),
     // Add tooltip support
-    tooltipContent: tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent,
+    tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as Function,
     // Allow frameProps to override defaults
     ...frameProps
   }

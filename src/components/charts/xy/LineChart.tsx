@@ -13,6 +13,7 @@ import {
 } from "d3-shape"
 import XYFrame from "../../XYFrame"
 import type { XYFrameProps } from "../../types/xyTypes"
+import type { LineTypeSettings } from "../../types/generalTypes"
 import { getColor } from "../shared/colorUtils"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
@@ -286,7 +287,7 @@ export function LineChart(props: LineChartProps) {
       const grouped = safeData.reduce((acc, d) => {
         const key = typeof lineBy === "function" ? lineBy(d) : d[lineBy]
         if (!acc[key]) {
-          const lineObj: any = { [lineDataAccessor]: [] }
+          const lineObj: Record<string, unknown> = { [lineDataAccessor]: [] }
           // Add the grouping field
           if (typeof lineBy === "string") {
             lineObj[lineBy] = key
@@ -295,7 +296,7 @@ export function LineChart(props: LineChartProps) {
         }
         acc[key][lineDataAccessor].push(d)
         return acc
-      }, {} as Record<string, any>)
+      }, {} as Record<string, Record<string, unknown>>)
 
       return Object.values(grouped)
     }
@@ -312,8 +313,8 @@ export function LineChart(props: LineChartProps) {
 
   // Line style function
   const lineStyle = useMemo(() => {
-    return (d: any) => {
-      const baseStyle: any = {
+    return (d: Record<string, any>) => {
+      const baseStyle: Record<string, string | number> = {
         strokeWidth: lineWidth
       }
 
@@ -338,8 +339,8 @@ export function LineChart(props: LineChartProps) {
   const pointStyle = useMemo(() => {
     if (!showPoints) return undefined
 
-    return (d: any) => {
-      const baseStyle: any = {
+    return (d: Record<string, any>) => {
+      const baseStyle: Record<string, string | number> = {
         r: pointRadius,
         fillOpacity: 1
       }
@@ -357,7 +358,7 @@ export function LineChart(props: LineChartProps) {
 
   // Build axes configuration
   const axes = useMemo(() => {
-    const axesConfig: any[] = []
+    const axesConfig: Array<Record<string, unknown>> = []
 
     // Y axis (left)
     axesConfig.push({
@@ -380,16 +381,16 @@ export function LineChart(props: LineChartProps) {
 
   // Determine line type
   const lineType = useMemo(() => {
-    const type: any = {
+    const lineTypeConfig: LineTypeSettings = {
       type: fillArea ? "area" : "line",
       interpolator: curveFunction
     }
 
     if (fillArea) {
-      type.simpleLine = false
+      lineTypeConfig.simpleLine = false
     }
 
-    return type
+    return lineTypeConfig
   }, [fillArea, curveFunction])
 
   // Determine if we should show legend
@@ -435,7 +436,7 @@ export function LineChart(props: LineChartProps) {
     lineDataAccessor,
     lineType,
     lineStyle,
-    axes,
+    axes: axes as any,
     hoverAnnotation: enableHover,
     margin,
     ...(showPoints && {
@@ -446,7 +447,7 @@ export function LineChart(props: LineChartProps) {
     ...(className && { className }),
     ...(title && { title }),
     // Add tooltip support
-    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) }),
+    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
     // Allow frameProps to override defaults
     ...frameProps
   }

@@ -68,8 +68,8 @@ export interface RealtimeFrameProps {
   windowMode?: WindowMode
   windowSize?: number
   data?: Record<string, any>[]
-  timeAccessor?: string | ((d: any) => number)
-  valueAccessor?: string | ((d: any) => number)
+  timeAccessor?: string | ((d: Record<string, any>) => number)
+  valueAccessor?: string | ((d: Record<string, any>) => number)
   timeExtent?: [number, number]
   valueExtent?: [number, number]
   extentPadding?: number
@@ -78,13 +78,13 @@ export interface RealtimeFrameProps {
   className?: string
   lineStyle?: LineStyle
   annotations?: Record<string, any>[]
-  svgAnnotationRules?: (annotation: any, index: number, context: AnnotationContext) => ReactNode
+  svgAnnotationRules?: (annotation: Record<string, any>, index: number, context: AnnotationContext) => ReactNode
   hoverAnnotation?: boolean | HoverAnnotationConfig
   tooltipContent?: (d: HoverData) => ReactNode
   customHoverBehavior?: (d: HoverData | null) => void
   showAxes?: boolean
   background?: string
-  categoryAccessor?: string | ((d: any) => string)
+  categoryAccessor?: string | ((d: Record<string, any>) => string)
   binSize?: number
   barColors?: Record<string, string>
   barStyle?: BarStyle
@@ -113,7 +113,7 @@ export interface RealtimeLayout {
 }
 
 export interface RealtimeAccessors {
-  time: (d: any) => number
-  value: (d: any) => number
-  category?: (d: any) => string
+  time: (d: Record<string, any>) => number
+  value: (d: Record<string, any>) => number
+  category?: (d: Record<string, any>) => string
 }

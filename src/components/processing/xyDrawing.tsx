@@ -33,6 +33,7 @@ import {
 
 import {
   ProjectedLine,
+  ProjectedSummary,
   GenericObject,
   LineTypeSettings,
   SummaryTypeSettings,
@@ -523,7 +524,7 @@ export const calculateXYFrame = (
     projectedSummaries &&
     projectedSummaries[0]
   ) {
-    const firstSummary: any = projectedSummaries[0]
+    const firstSummary: ProjectedSummary & { value?: string; r2?: number } = projectedSummaries[0] as ProjectedSummary & { value?: string; r2?: number }
 
     const firstPoint = firstSummary._xyfCoordinates[0]
     const finalPoint =

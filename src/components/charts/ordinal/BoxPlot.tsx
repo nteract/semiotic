@@ -57,7 +57,7 @@ export interface BoxPlotProps extends BaseChartProps {
   /**
    * Format function for value axis tick labels
    */
-  valueFormat?: (d: any) => string
+  valueFormat?: (d: number | string) => string
 
   /**
    * Field name or function to determine box color
@@ -178,7 +178,7 @@ export function BoxPlot(props: BoxPlotProps) {
 
   // Summary style function for boxes
   const summaryStyle = useMemo(() => {
-    return (d: any) => {
+    return (d: Record<string, any>) => {
       const color = colorBy ? getColor(d, colorBy, colorScale) : DEFAULT_COLOR
 
       return {
@@ -193,8 +193,8 @@ export function BoxPlot(props: BoxPlotProps) {
   const pointStyle = useMemo(() => {
     if (!showOutliers) return undefined
 
-    return (d: any) => {
-      const baseStyle: any = {
+    return (d: Record<string, any>) => {
+      const baseStyle: Record<string, string | number> = {
         r: outlierRadius,
         fillOpacity: 0.6
       }
@@ -212,7 +212,7 @@ export function BoxPlot(props: BoxPlotProps) {
 
   // Build axes configuration
   const axes = useMemo(() => {
-    const axesConfig: any[] = []
+    const axesConfig: Array<Record<string, unknown>> = []
 
     if (orientation === "vertical") {
       // Vertical: category on bottom, value on left
@@ -285,15 +285,15 @@ export function BoxPlot(props: BoxPlotProps) {
 
   // Default tooltip for summary hover (boxplot quartile points)
   const defaultTooltipContent = useMemo(() => {
-    const getVal = typeof valueAccessor === "function" ? valueAccessor : (d: any) => d[valueAccessor]
+    const getVal = typeof valueAccessor === "function" ? valueAccessor : (d: Record<string, any>) => d[valueAccessor]
 
-    return (d: any) => {
+    return (d: Record<string, any>) => {
       // d has: label, key, summaryPieceName, value, column, pieces
       const pieces = d.pieces || []
-      const values = pieces.map((p: any) => Number(getVal(p))).filter((v: number) => !isNaN(v)).sort((a: number, b: number) => a - b)
+      const values = pieces.map((p: Record<string, any>) => Number(getVal(p))).filter((v: number) => !isNaN(v)).sort((a: number, b: number) => a - b)
       const n = values.length
 
-      const fmt = (v: any) => typeof v === "number" ? v.toLocaleString() : String(v ?? "")
+      const fmt = (v: unknown) => typeof v === "number" ? v.toLocaleString() : String(v ?? "")
 
       // Compute quartiles from the raw data
       let stats: { label: string; value: string; active: boolean }[] = []
@@ -339,7 +339,7 @@ export function BoxPlot(props: BoxPlotProps) {
     summaryType: { type: "boxplot", outliers: showOutliers } as any,
     summaryStyle,
     projection: orientation === "horizontal" ? "horizontal" : "vertical",
-    axes,
+    axes: axes as any,
     summaryHoverAnnotation: enableHover,
     margin,
     oPadding: categoryPadding,
@@ -348,7 +348,7 @@ export function BoxPlot(props: BoxPlotProps) {
     ...(className && { className }),
     ...(title && { title }),
     // Add tooltip support
-    tooltipContent: tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent,
+    tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as Function,
     // Allow frameProps to override defaults
     ...frameProps
   }

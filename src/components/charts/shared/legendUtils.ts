@@ -19,10 +19,10 @@ export function createLegend({
   strokeColor,
   strokeWidth
 }: {
-  data: any[]
+  data: Array<Record<string, any>>
   colorBy: Accessor<string>
-  colorScale?: any
-  getColor: (d: any, accessor: Accessor<string>, scale?: any) => string
+  colorScale?: ((v: string) => string)
+  getColor: (d: Record<string, any>, accessor: Accessor<string>, scale?: ((v: string) => string)) => string
   strokeColor?: string
   strokeWidth?: number
 }) {
@@ -60,8 +60,8 @@ export function createLegend({
   return {
     legendGroups: [
       {
-        styleFn: (d: any) => {
-          const style: any = { fill: d.color, stroke: d.color }
+        styleFn: (d: { color: string }) => {
+          const style: Record<string, string | number> = { fill: d.color, stroke: d.color }
           if (strokeColor !== undefined) {
             style.stroke = strokeColor
           }

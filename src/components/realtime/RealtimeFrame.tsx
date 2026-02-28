@@ -8,7 +8,7 @@ import {
   useImperativeHandle,
   forwardRef
 } from "react"
-import { scaleLinear } from "d3-scale"
+import { scaleLinear, type ScaleLinear } from "d3-scale"
 
 import { RingBuffer } from "./RingBuffer"
 import { IncrementalExtent } from "./IncrementalExtent"
@@ -40,12 +40,12 @@ const DEFAULT_MARGIN = { top: 20, right: 20, bottom: 30, left: 40 }
 const DEFAULT_LINE_STYLE: LineStyle = {}
 
 function resolveAccessor(
-  accessor: string | ((d: any) => number) | undefined,
+  accessor: string | ((d: Record<string, any>) => number) | undefined,
   fallback: string
-): (d: any) => number {
-  if (typeof accessor === "function") return (d: any) => +accessor(d)
+): (d: Record<string, any>) => number {
+  if (typeof accessor === "function") return (d: Record<string, any>) => +accessor(d)
   const key = accessor || fallback
-  return (d: any) => +d[key]
+  return (d: Record<string, any>) => +d[key]
 }
 
 function getTimeAxis(arrowOfTime: ArrowOfTime): "x" | "y" {
@@ -85,8 +85,8 @@ function defaultTickFormat(v: number): string {
 function drawAxes(
   ctx: CanvasRenderingContext2D,
   arrowOfTime: ArrowOfTime,
-  timeScale: any,
-  valueScale: any,
+  timeScale: ScaleLinear<number, number>,
+  valueScale: ScaleLinear<number, number>,
   width: number,
   height: number,
   tickFormatTime?: (value: number) => string,
@@ -181,7 +181,7 @@ function drawAxes(
 function findNearestIndex(
   buf: RingBuffer<Record<string, any>>,
   targetTime: number,
-  getTime: (d: any) => number
+  getTime: (d: Record<string, any>) => number
 ): number {
   if (buf.size === 0) return -1
 
@@ -348,7 +348,7 @@ const RealtimeFrame = forwardRef<RealtimeFrameHandle, RealtimeFrameProps>(
 
     const getCategory = useMemo(
       () => categoryAccessor
-        ? (typeof categoryAccessor === "function" ? categoryAccessor : (d: any) => d[categoryAccessor])
+        ? (typeof categoryAccessor === "function" ? categoryAccessor : (d: Record<string, any>) => d[categoryAccessor])
         : undefined,
       [categoryAccessor]
     )

@@ -39,7 +39,7 @@ const generateOMappingFn =
 
 const generateOEndMappingFn =
   (projectedColumns) =>
-  (d, event): null | Array<any> => {
+  (d, event): null | Array<BaseColumnType> => {
     if (
       d &&
       event.sourceEvent &&
@@ -141,7 +141,7 @@ const createBrush = (
     selectedExtent = castExtent.map((d) => yScale(d)).sort((a, b) => a - b)
     endMappingFn = mappingFn
   } else {
-    const typedExtent: any = extent
+    const typedExtent = extent as Array<number[]>
     const castExtent = [...typedExtent.map((ee) => [...ee])] as number[][]
     if (
       castExtent.indexOf(undefined) !== -1 ||

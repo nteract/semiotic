@@ -40,7 +40,7 @@ import { PieceLayoutType, GenericObject } from "../types/generalTypes"
 
 import { genericFunction } from "../generic_utilities/functions"
 
-import { scaleOrdinal, scaleLinear, ScaleBand } from "d3-scale"
+import { scaleOrdinal, scaleLinear, ScaleBand, ScaleLinear } from "d3-scale"
 
 const layoutHash = {
   clusterbar: clusterBarLayout,
@@ -301,13 +301,13 @@ export const calculateOrdinalFrame = (
     { total: 0 }
   )
 
-  const castOScaleType = oScaleType as unknown as any
+  const castOScaleType = oScaleType as unknown as (ScaleBand<string> & (() => ScaleBand<string>))
 
-  const oScale = dynamicColumnWidth
+  const oScale = (dynamicColumnWidth
     ? scaleOrdinal()
     : castOScaleType?.domain
     ? castOScaleType
-    : castOScaleType()
+    : castOScaleType()) as ScaleBand<string>
 
   oScale.domain(oExtent)
 
@@ -452,7 +452,7 @@ export const calculateOrdinalFrame = (
 
   const nestedPieces = {}
 
-  for (const datum of allData as any) {
+  for (const datum of allData as { column: string; value: number }[]) {
     if (!nestedPieces[datum.column]) {
       nestedPieces[datum.column] = []
     }
@@ -511,7 +511,7 @@ export const calculateOrdinalFrame = (
     adjustedSize[0]
   ]
 
-  const castRScaleType = rScaleType as unknown as any
+  const castRScaleType = rScaleType as unknown as (ScaleLinear<number, number> & { (): ScaleLinear<number, number> })
 
   // if rScaleType has a domain that means it's instantiated, otherwise, it needs to be instantiated
   const instantiatedRScaleType = castRScaleType.domain
@@ -1101,7 +1101,7 @@ export const calculateOrdinalFrame = (
     chartSize: size,
     margin,
     rScale
-  }) as any[]
+  }) as GenericObject[]
 
   const keyedData = calculatedPieceData.reduce((p, c) => {
     if (c.o) {
@@ -1252,7 +1252,7 @@ export const calculateOrdinalFrame = (
     connectors: {
       accessibleTransform: (data, i) => data[i],
       projection,
-      data: { keyedData, oExtent },
+      data: { keyedData, oExtent } as unknown as object[],
       styleFn: stringToFn<GenericObject>(connectorStyle, () => ({}), true),
       classFn: stringToFn<string>(connectorClass, () => "", true),
       renderMode: stringToFn<GenericObject | string>(

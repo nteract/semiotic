@@ -216,7 +216,7 @@ export function AreaChart(props: AreaChartProps) {
       const grouped = safeData.reduce((acc, d) => {
         const key = typeof areaBy === "function" ? areaBy(d) : d[areaBy]
         if (!acc[key]) {
-          const areaObj: any = { [lineDataAccessor]: [] }
+          const areaObj: Record<string, unknown> = { [lineDataAccessor]: [] }
           // Add the grouping field
           if (typeof areaBy === "string") {
             areaObj[areaBy] = key
@@ -225,7 +225,7 @@ export function AreaChart(props: AreaChartProps) {
         }
         acc[key][lineDataAccessor].push(d)
         return acc
-      }, {} as Record<string, any>)
+      }, {} as Record<string, Record<string, unknown>>)
 
       return Object.values(grouped)
     }
@@ -242,8 +242,8 @@ export function AreaChart(props: AreaChartProps) {
 
   // Area/line style function
   const lineStyle = useMemo(() => {
-    return (d: any) => {
-      const baseStyle: any = {}
+    return (d: Record<string, any>) => {
+      const baseStyle: Record<string, string | number> = {}
 
       // Apply color
       const color = colorBy ? getColor(d, colorBy, colorScale) : DEFAULT_COLOR
@@ -264,7 +264,7 @@ export function AreaChart(props: AreaChartProps) {
 
   // Build axes configuration
   const axes = useMemo(() => {
-    const axesConfig: any[] = []
+    const axesConfig: Array<Record<string, unknown>> = []
 
     // Y axis (left)
     axesConfig.push({
@@ -334,14 +334,14 @@ export function AreaChart(props: AreaChartProps) {
     lineDataAccessor,
     lineType,
     lineStyle,
-    axes,
+    axes: axes as any,
     hoverAnnotation: enableHover,
     margin,
     ...(legend && { legend }),
     ...(className && { className }),
     ...(title && { title }),
     // Add tooltip support
-    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) }),
+    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
     // Allow frameProps to override defaults
     ...frameProps
   }

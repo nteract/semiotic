@@ -222,8 +222,8 @@ export function BubbleChart(props: BubbleChartProps) {
 
   // Point style function
   const pointStyle = useMemo(() => {
-    return (d: any) => {
-      const baseStyle: any = {
+    return (d: Record<string, any>) => {
+      const baseStyle: Record<string, string | number> = {
         fillOpacity: bubbleOpacity,
         strokeWidth: bubbleStrokeWidth,
         stroke: bubbleStrokeColor
@@ -245,7 +245,7 @@ export function BubbleChart(props: BubbleChartProps) {
 
   // Build axes configuration
   const axes = useMemo(() => {
-    const axesConfig: any[] = []
+    const axesConfig: Array<Record<string, unknown>> = []
 
     // Y axis (left)
     axesConfig.push({
@@ -314,14 +314,14 @@ export function BubbleChart(props: BubbleChartProps) {
     xAccessor,
     yAccessor,
     pointStyle,
-    axes,
+    axes: axes as any,
     hoverAnnotation: enableHover,
     margin,
     ...(legend && { legend }),
     ...(className && { className }),
     ...(title && { title }),
     // Add tooltip support
-    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) }),
+    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
     // Allow frameProps to override defaults
     ...frameProps
   }

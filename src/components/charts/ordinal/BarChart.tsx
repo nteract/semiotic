@@ -52,7 +52,7 @@ export interface BarChartProps extends BaseChartProps {
   /**
    * Format function for value axis tick labels
    */
-  valueFormat?: (d: any) => string
+  valueFormat?: (d: number | string) => string
 
   /**
    * Field name or function to determine bar color
@@ -81,7 +81,7 @@ export interface BarChartProps extends BaseChartProps {
    * sort={(a, b) => a.value - b.value}  // Custom function
    * ```
    */
-  sort?: boolean | "asc" | "desc" | ((a: any, b: any) => number)
+  sort?: boolean | "asc" | "desc" | ((a: Record<string, any>, b: Record<string, any>) => number)
 
   /**
    * Padding between bars (in pixels)
@@ -173,8 +173,8 @@ export function BarChart(props: BarChartProps) {
 
   // Piece style function
   const pieceStyle = useMemo(() => {
-    return (d: any) => {
-      const baseStyle: any = {}
+    return (d: Record<string, any>) => {
+      const baseStyle: Record<string, string | number> = {}
 
       // Apply color
       if (colorBy) {
@@ -189,7 +189,7 @@ export function BarChart(props: BarChartProps) {
 
   // Build axes configuration
   const axes = useMemo(() => {
-    const axesConfig: any[] = []
+    const axesConfig: Array<Record<string, unknown>> = []
 
     if (orientation === "vertical") {
       // Vertical bars: category on bottom, value on left
@@ -262,7 +262,7 @@ export function BarChart(props: BarChartProps) {
 
   // Default tooltip function for piece hover
   const defaultTooltipContent = useMemo(() => {
-    return (d: any) => {
+    return (d: Record<string, any>) => {
       const cat = typeof categoryAccessor === "function" ? categoryAccessor(d) : d[categoryAccessor]
       const val = typeof valueAccessor === "function" ? valueAccessor(d) : d[valueAccessor]
       return (
@@ -285,7 +285,7 @@ export function BarChart(props: BarChartProps) {
     type: "bar",
     projection: orientation === "horizontal" ? "horizontal" : "vertical",
     style: pieceStyle,
-    axes,
+    axes: axes as any,
     hoverAnnotation: enableHover,
     margin,
     oPadding: barPadding,
@@ -293,7 +293,7 @@ export function BarChart(props: BarChartProps) {
     ...(className && { className }),
     ...(title && { title }),
     // Add tooltip support
-    tooltipContent: tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent,
+    tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as Function,
     // Allow frameProps to override defaults
     ...frameProps
   }

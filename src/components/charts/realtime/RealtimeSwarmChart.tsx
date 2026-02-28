@@ -28,9 +28,9 @@ export interface RealtimeSwarmChartProps {
   /** Controlled data array */
   data?: Record<string, any>[]
   /** Time value accessor */
-  timeAccessor?: string | ((d: any) => number)
+  timeAccessor?: string | ((d: Record<string, any>) => number)
   /** Value accessor */
-  valueAccessor?: string | ((d: any) => number)
+  valueAccessor?: string | ((d: Record<string, any>) => number)
   /** Fixed time domain */
   timeExtent?: [number, number]
   /** Fixed value domain */
@@ -38,7 +38,7 @@ export interface RealtimeSwarmChartProps {
   /** Extent padding factor */
   extentPadding?: number
   /** Category accessor for color-coding dots */
-  categoryAccessor?: string | ((d: any) => string)
+  categoryAccessor?: string | ((d: Record<string, any>) => string)
   /** Category-to-color map */
   colors?: Record<string, string>
   /** Dot radius */
@@ -64,7 +64,7 @@ export interface RealtimeSwarmChartProps {
   /** Annotation objects (including threshold coloring) */
   annotations?: Record<string, any>[]
   /** SVG annotation render function */
-  svgAnnotationRules?: (annotation: any, index: number, context: AnnotationContext) => ReactNode
+  svgAnnotationRules?: (annotation: Record<string, any>, index: number, context: AnnotationContext) => ReactNode
   /** Custom formatter for time axis ticks */
   tickFormatTime?: (value: number) => string
   /** Custom formatter for value axis ticks */

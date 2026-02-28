@@ -50,7 +50,7 @@ export function ckBinsRenderFn(props: BoxplotFnType) {
     projection,
     adjustedSize
   } = props
-  const renderedSummaryMarks: any = []
+  const renderedSummaryMarks: summaryInstruction[] = []
 
   const summaryXYCoords = []
 
@@ -58,7 +58,7 @@ export function ckBinsRenderFn(props: BoxplotFnType) {
 
   let maxClusterSize = 0
 
-  const allBins: any = []
+  const allBins: GenericObject[][] = []
 
   keys.forEach((key, summaryI) => {
     const summary = data[key]
@@ -250,8 +250,8 @@ export function boxplotRenderFn({
     // Derive position quantiles from value quantiles via linear interpolation.
     // This avoids depending on d3.quantile sort-order behavior (which changed in v3).
     const posAccessor = projection === "vertical"
-      ? (p: any) => p.scaledVerticalValue
-      : (p: any) => p.scaledValue
+      ? (p: { scaledVerticalValue: number }) => p.scaledVerticalValue
+      : (p: { scaledValue: number }) => p.scaledValue
 
     const sortedPieces = [...thisSummaryData].sort((a, b) => a.value - b.value)
     const valMin = sortedPieces[0].value
@@ -1108,7 +1108,7 @@ export function bucketizedRenderingFn({
     } else if (type.type === "violin") {
       const { iqr } = type
       const subsets = type.subsets || [false]
-      const violinElements: any = []
+      const violinElements: GenericObject[] = []
 
       bins[0].y = bins[0].y - bucketSize / 2
       bins[bins.length - 1].y = bins[bins.length - 1].y + bucketSize / 2
@@ -1741,15 +1741,15 @@ export const drawSummaries = ({
   margin,
   axisCreator
 }: {
-  data: any
-  type: any
-  renderMode: any
-  eventListenersGenerator: any
-  styleFn: any
-  classFn: any
-  projection: any
-  adjustedSize: any
-  margin: any
+  data: object
+  type: { type?: string | Function }
+  renderMode: Function
+  eventListenersGenerator: Function
+  styleFn: Function
+  classFn: Function
+  projection: ProjectionTypes
+  adjustedSize: number[]
+  margin: object
   axisCreator?: Function
 }) => {
   if (!type || !type.type) return
@@ -1758,8 +1758,8 @@ export const drawSummaries = ({
     projection === "vertical" ? adjustedSize[1] : adjustedSize[0]
 
   return orFrameSummaryRenderer({
-    data,
-    type,
+    data: data as unknown as Array<object>,
+    type: type as SummaryType,
     renderMode,
     eventListenersGenerator,
     styleFn,
@@ -1790,11 +1790,11 @@ export function summaryInstructionsToMarks(data: summaryInstruction[]) {
       renderedSummaries.push(container.Mark)
     } else {
       for (let i = 0; i < elements.length; i++) {
-        const element: any = elements[i]
+        const element: GenericObject = elements[i] as GenericObject
         const { markType, style = {}, ...restProps } = element
 
         // Merge style object into direct props for cleaner SVG
-        const elementProps: any = { ...restProps }
+        const elementProps: GenericObject = { ...restProps }
         if (style.fill !== undefined) elementProps.fill = style.fill
         if (style.stroke !== undefined) elementProps.stroke = style.stroke
         if (style.strokeWidth !== undefined) elementProps.strokeWidth = style.strokeWidth
@@ -1803,7 +1803,7 @@ export function summaryInstructionsToMarks(data: summaryInstruction[]) {
         if (style.strokeOpacity !== undefined) elementProps.strokeOpacity = style.strokeOpacity
 
         // Keep remaining styles
-        const remainingStyles: any = { ...style }
+        const remainingStyles: GenericObject = { ...style }
         delete remainingStyles.fill
         delete remainingStyles.stroke
         delete remainingStyles.strokeWidth
