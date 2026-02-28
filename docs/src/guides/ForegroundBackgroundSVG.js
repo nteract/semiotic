@@ -23,9 +23,9 @@ export default function CreateALineChart() {
       />
 
       <p>
-        See the <Link to="/examples/homerun-map">Homerun Map</Link> example for
+        See the <Link to="/cookbook/homerun-map">Homerun Map</Link> example for
         liberal use of <code>backgroundGraphics</code>, and the{" "}
-        <Link to="/examples/radar-plot">Radar Plot</Link> example for use of{" "}
+        <Link to="/cookbook/radar-plot">Radar Plot</Link> example for use of{" "}
         <code>foregroundGraphics</code>.
       </p>
     </div>

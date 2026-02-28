@@ -50,6 +50,12 @@ funnelData.forEach((d) => {
 })
 
 export class BarToParallel extends React.Component {
+  constructor(props) {
+    super(props)
+    this.containerRef = React.createRef()
+    this._observer = null
+  }
+
   state = {
     type: "Process",
     step: 0,
@@ -57,6 +63,7 @@ export class BarToParallel extends React.Component {
     prototypeSeed: 1,
     designSeed: 1,
     mode: "prototype",
+    containerWidth: null,
     columnExtent: {
       home: [0, 1.05],
       shop: [0.35, 0.6],
@@ -64,6 +71,22 @@ export class BarToParallel extends React.Component {
       purchase: [0.25, 1.2],
       return: [0, 0.8],
     },
+  }
+
+  componentDidMount() {
+    const el = this.containerRef.current
+    if (el) {
+      this._observer = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          this.setState({ containerWidth: entry.contentRect.width })
+        }
+      })
+      this._observer.observe(el)
+    }
+  }
+
+  componentWillUnmount() {
+    if (this._observer) this._observer.disconnect()
   }
 
   brushing = (e, c) => {
@@ -316,18 +339,29 @@ export class BarToParallel extends React.Component {
       },
     ]
 
+    const w = this.state.containerWidth
+    const stepOverrides = stepSettings[this.state.step]
+    // The radial step (index 7) specifies a square size
+    const isRadial = stepOverrides.projection === "radial"
+    const frameSize = w
+      ? isRadial ? [w, w] : [w, 500]
+      : null
+
+    // If a step overrides size, replace it with the responsive size
+    const { size: _stepSize, ...restStepOverrides } = stepOverrides
+
     const contentDiv = (
       <div className="infomodel-proto infomodel">
         <div className="infomodel-buttons">
           {this.state.step === 0 ? null : (
-            <button onClick={this.stepBackward} text="Back!"></button>
+            <button onClick={this.stepBackward}>Back!</button>
           )}
           {this.state.step === stepSettings.length - 1 ? null : (
-            <button onClick={this.stepForward} text="Forward"></button>
+            <button onClick={this.stepForward}>Forward</button>
           )}
         </div>
-        <OrdinalFrame
-          size={[700, 500]}
+        {frameSize && <OrdinalFrame
+          size={frameSize}
           rAccessor={"people"}
           oAccessor={"step"}
           data={funnelData}
@@ -335,13 +369,13 @@ export class BarToParallel extends React.Component {
           oLabel={true}
           margin={{ left: 50, bottom: 50, right: 0, top: 30 }}
           axis={{ orient: "left" }}
-          {...stepSettings[this.state.step]}
-        />
+          {...restStepOverrides}
+        />}
       </div>
     )
 
     return (
-      <div className="bar-to-parallel__container">
+      <div className="bar-to-parallel__container" ref={this.containerRef}>
         <h2>Ideating within an information model</h2>
         <p>
           This simple stepper lets you move from a bar chart representation of funnel data to a

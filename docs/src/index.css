@@ -1,59 +1,212 @@
+/* ==========================================================================
+   Semiotic Documentation Design System
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. CSS Custom Properties (Dark mode default)
+   -------------------------------------------------------------------------- */
+
+:root {
+  /* Surfaces */
+  --surface-0: #0a0a0f;
+  --surface-1: #12121a;
+  --surface-2: #1a1a25;
+  --surface-3: #252530;
+
+  /* Text */
+  --text-primary: #f0f0f5;
+  --text-secondary: #8888a0;
+
+  /* Accent */
+  --accent: #6366f1;
+
+  /* Tier colors */
+  --tier-charts: #22c55e;
+  --tier-frames: #a78bfa;
+  --tier-utilities: #f59e0b;
+
+  /* Visualization palette */
+  --viz-1: #6366f1;
+  --viz-2: #22c55e;
+  --viz-3: #f59e0b;
+  --viz-4: #ef4444;
+  --viz-5: #06b6d4;
+  --viz-6: #ec4899;
+  --viz-7: #8b5cf6;
+  --viz-8: #14b8a6;
+  --viz-9: #f97316;
+  --viz-10: #3b82f6;
+
+  /* Typography */
+  --font-heading: 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-code: 'JetBrains Mono', monospace;
+
+  /* Layout */
+  --sidebar-width: 220px;
+  --toc-width: 160px;
+  --content-max-width: 800px;
+
+  /* Legacy aliases (mapped to new tokens) */
+  --bg-color: var(--surface-2);
+  --light-color: var(--text-secondary);
+  --dark-color: var(--accent);
+  --link-color: var(--accent);
+  --scale-1: var(--viz-1);
+  --scale-2: var(--viz-4);
+  --scale-3: var(--viz-7);
+  --scale-4: var(--viz-8);
+  --scale-5: var(--viz-3);
+  --scale-6: var(--viz-10);
+  --scale-7: var(--viz-6);
+  --scale-8: var(--viz-7);
+  --scale-9: var(--viz-8);
+  --scale-10: var(--viz-3);
+  --sidebar: var(--sidebar-width);
+}
+
+/* --------------------------------------------------------------------------
+   2. Light Mode
+   -------------------------------------------------------------------------- */
+
+[data-theme="light"] {
+  --surface-0: #ffffff;
+  --surface-1: #f8f9fa;
+  --surface-2: #f0f1f3;
+  --surface-3: #e2e4e8;
+  --text-primary: #1a1a2e;
+  --text-secondary: #6b7280;
+  --accent: #4f46e5;
+}
+
+/* --------------------------------------------------------------------------
+   3. Reset & Base
+   -------------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   padding: 0;
-  font-family: "Poppins", sans-serif;
+  background: var(--surface-0);
+  color: var(--text-primary);
+  font-family: var(--font-body);
   font-size: 15px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-:root {
-  --bg-color: #f1eef0;
-  --light-color: #aca1a9;
-  --dark-color: #886a7e;
-  --link-color: #cc9acd;
-  --scale-1: #5c4aff;
-  --scale-2: #ff4966;
-  --scale-3: #9900ff;
-  --scale-4: #9fd0cb;
-  --scale-5: #e6de3d;
-  --scale-6: #3f4482;
-  --scale-7: #7a255d;
-  --scale-8: #533f82;
-  --scale-9: #365350;
-  --scale-10: #a19a11;
+/* --------------------------------------------------------------------------
+   4. Typography
+   -------------------------------------------------------------------------- */
 
-  --sidebar: 240px;
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+h3 {
+  font-size: 1em;
 }
 
 ul code,
 ol code,
 p code {
-  font-weight: bold;
-  /* font-size: 1.1em; */
-}
-.relative {
-  position: relative;
+  font-weight: 600;
 }
 
+code {
+  font-family: var(--font-code);
+  background: var(--surface-2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+}
+
+/* --------------------------------------------------------------------------
+   5. Links
+   -------------------------------------------------------------------------- */
+
+a {
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+a:hover {
+  opacity: 0.85;
+}
+
+/* --------------------------------------------------------------------------
+   6. Three-Column Layout
+   -------------------------------------------------------------------------- */
+
+.app-layout {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr var(--toc-width);
+  min-height: 100vh;
+}
+
+@media (max-width: 1200px) {
+  .app-layout {
+    grid-template-columns: var(--sidebar-width) 1fr;
+  }
+  .app-layout .toc-column {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-layout {
+    grid-template-columns: 1fr;
+  }
+  .app-layout .sidebar {
+    display: none;
+  }
+  .app-layout .sidebar.mobile-open {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: var(--sidebar-width);
+    z-index: 500;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   7. Header
+   -------------------------------------------------------------------------- */
+
 header {
-  width: calc(100% - 90px);
-  /* display: flex; */
-  /* width: 100%; */
-  /* display: inline-block; */
-  padding: 30px 30px 30px 60px;
-  /* margin: 30px 60px; */
-  background: white;
-  z-index: 300;
-  border-bottom: 1px solid var(--bg-color);
   position: sticky;
   top: 0;
+  z-index: 300;
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--surface-3);
+  padding: 16px 24px 16px 32px;
+  display: flex;
+  align-items: center;
+  width: 100%;
 }
 
 header .logo,
-.sidebar {
-  max-width: 240px;
-  min-width: 19%;
-
-  padding-right: 30px;
+header .logo img {
+  max-width: 200px;
 }
 
 .logo img {
@@ -61,211 +214,54 @@ header .logo,
 }
 
 header h1 {
-  margin: 0px;
-  font-weight: 300;
+  margin: 0;
+  font-weight: 600;
   font-size: 20px;
 }
 
 header .space-between {
   justify-content: space-between;
   flex-grow: 1;
-  align-items: baseline;
+  align-items: center;
 }
 
 header .github-links p {
   align-self: center;
-  margin: 0px;
+  margin: 0;
   margin-right: 10px;
 }
 
 header .github-links a {
-  color: black;
+  color: var(--text-secondary);
   text-decoration: none;
   font-size: 12px;
+  font-weight: 500;
+  transition: color 0.15s ease;
 }
 
-button {
-  color: var(--dark-color);
-  text-decoration: none;
-  -webkit-transition: 0.3s all ease;
-  transition: 0.3s ease all;
-  background: none;
-  /* font-size: 18px; */
-  letter-spacing: 1px;
-  /* text-transform: uppercase; */
-  display: inline-block;
-  text-align: center;
-  /* width: 270px; */
-  /* font-weight: bold; */
-  padding: 10px 14px;
-  z-index: 0;
-  /* border: none; */
-  border: 1px solid white;
-  border-radius: 14px;
-  position: relative;
-  overflow: hidden;
-  margin-right: 1px;
-  /* box-shadow: 0 2px 10px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.1); */
-  outline: none;
-  cursor: pointer;
-}
-button:hover,
-button:focus:hover {
-  color: #fff;
-}
-button:focus {
-  color: var(--dark-color);
+header .github-links a:hover {
+  color: var(--text-primary);
 }
 
-button:after {
-  -webkit-transition: 0.4s all ease;
-  transition: 0.4s all ease;
-  position: absolute;
-  top: 0;
-  left: 0%;
-  right: 0%;
-  border-radius: 14px;
-
-  bottom: 0%;
-  /* opacity: 0; */
-  /* width: 100%; */
-  content: "";
-  background-color: var(--bg-color);
-  z-index: -2;
-}
-
-button:before {
-  content: "";
-  background-color: var(--bg-color);
-  border-radius: 100px;
-  display: block;
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  overflow: hidden;
-
-  -webkit-transform: scale(0.001, 0.001);
-  transform: scale(0.001, 0.001);
-}
-button:focus:before {
-  -webkit-animation: effect_dylan 0.8s ease-out;
-  animation: effect_dylan 0.8s ease-out;
-}
-
-@-webkit-keyframes effect_dylan {
-  50% {
-    -webkit-transform: scale(1.5, 1.5);
-    transform: scale(1.5, 1.5);
-    opacity: 0;
-  }
-  99% {
-    -webkit-transform: scale(0.001, 0.001);
-    transform: scale(0.001, 0.001);
-    opacity: 0;
-  }
-  100% {
-    -webkit-transform: scale(0.001, 0.001);
-    transform: scale(0.001, 0.001);
-    opacity: 1;
-  }
-}
-@keyframes effect_dylan {
-  50% {
-    -webkit-transform: scale(1.5, 1.5);
-    transform: scale(1.5, 1.5);
-    opacity: 0;
-  }
-  99% {
-    -webkit-transform: scale(0.001, 0.001);
-    transform: scale(0.001, 0.001);
-    opacity: 0;
-  }
-  100% {
-    -webkit-transform: scale(0.001, 0.001);
-    transform: scale(0.001, 0.001);
-    opacity: 1;
-  }
-}
-
-button:hover:after,
-button:focus:hover {
-  -webkit-transition: 0.4s all ease;
-  transition: 0.4s all ease;
-  left: 0;
-  top: 0%;
-  bottom: 0%;
-  opacity: 1;
-  background-color: var(--light-color);
-}
-button:focus:after {
-  transition: 0.4s all ease;
-  left: 0;
-  right: 0;
-  opacity: 1;
-
-  background-color: var(--bg-color);
-}
-
-/* button {
-  padding: 10px;
-  background: var(--bg-color);
-  border: 2px solid #b699ac;
-  margin-right: 2px;
-  cursor: pointer;
-  outline: none;
-} */
-
-.pointer {
-  cursor: pointer;
-}
-
-.flex {
-  display: flex;
-}
-
-/* .align-bottom {
-  align-items: flex-end;
-} */
+/* --------------------------------------------------------------------------
+   8. Sidebar
+   -------------------------------------------------------------------------- */
 
 .sidebar {
-  background: white;
-  border-right: 1px solid var(--bg-color);
+  background: var(--surface-1);
+  border-right: 1px solid var(--surface-3);
+  max-width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  padding-right: 0;
 }
 
 .sidebar > div {
-  padding: 30px 30px 30px 60px;
+  padding: 24px 24px 24px 32px;
   position: sticky;
-  top: 101px;
+  top: 65px;
   overflow: auto;
-  max-height: calc(100vh - 101px);
+  max-height: calc(100vh - 65px);
   box-sizing: border-box;
-}
-
-.container {
-  padding: 20px;
-  position: relative;
-  padding-left: 50px;
-  min-width: 0;
-}
-
-.bold {
-  font-weight: 900;
-}
-
-.light-color,
-.light-color a {
-  color: var(--light-color);
-}
-
-.dark-color {
-  color: var(--dark-color);
-}
-
-a {
-  color: var(--link-color);
-  font-weight: bold;
 }
 
 .sidebar p {
@@ -273,35 +269,118 @@ a {
 }
 
 .sidebar a {
-  font-weight: 200;
+  font-weight: 400;
+  text-decoration: none;
+  color: var(--text-secondary);
+  transition: color 0.15s ease;
+}
+
+.sidebar a:hover {
+  color: var(--text-primary);
 }
 
 .sidebar p:not(.sub-page) a {
   font-size: 14px;
-  font-weight: bold;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
+/* --------------------------------------------------------------------------
+   9. Sidebar Navigation Classes
+   -------------------------------------------------------------------------- */
+
 .sub-header {
-  color: var(--light-color);
-  font-weight: bold;
+  color: var(--text-secondary);
+  font-weight: 700;
   margin-bottom: 0.2rem;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.05em;
 }
 
 .sidebar .sub-page:not(.sub-header) {
-  margin: 0.2rem 0px;
+  margin: 0.2rem 0;
+}
+
+.sub-page a {
+  display: inline-block;
+  padding: 1px 0;
+}
+
+.selected.black a,
+.black a.active {
+  color: var(--accent);
+  font-weight: 700;
+  background: var(--surface-2);
+  border-radius: 4px;
+  padding: 1px 6px;
 }
 
 .black,
 .black a {
-  color: black;
+  color: var(--text-primary);
 }
 
-.sidebar a {
-  text-decoration: none;
+/* --------------------------------------------------------------------------
+   10. Content Area
+   -------------------------------------------------------------------------- */
+
+.container {
+  max-width: var(--content-max-width);
+  padding: 32px 24px;
+  position: relative;
+  min-width: 0;
+  margin: 0 auto;
+}
+
+/* --------------------------------------------------------------------------
+   11. Buttons
+   -------------------------------------------------------------------------- */
+
+button {
+  background: var(--surface-2);
+  color: var(--text-primary);
+  border: 1px solid var(--surface-3);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  cursor: pointer;
+  outline: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  position: relative;
+  display: inline-block;
+  text-align: center;
+  letter-spacing: 0.01em;
+}
+
+button:hover {
+  background: var(--surface-3);
+}
+
+button:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   12. Utility Classes
+   -------------------------------------------------------------------------- */
+
+.flex {
+  display: flex;
+}
+
+.relative {
+  position: relative;
 }
 
 .margin-bottom {
   margin-bottom: 40px;
+}
+
+.capitalize {
+  text-transform: capitalize;
 }
 
 .pointer,
@@ -309,9 +388,54 @@ a {
   cursor: pointer;
 }
 
-.capitalize {
-  text-transform: capitalize;
+.bold {
+  font-weight: 900;
 }
+
+.dim {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.light-color,
+.light-color a {
+  color: var(--text-secondary);
+}
+
+.dark-color {
+  color: var(--accent);
+}
+
+/* --------------------------------------------------------------------------
+   13. Tier Badges
+   -------------------------------------------------------------------------- */
+
+.tier-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #fff;
+  line-height: 1.6;
+}
+
+.tier-badge.charts {
+  background: var(--tier-charts);
+}
+
+.tier-badge.frames {
+  background: var(--tier-frames);
+}
+
+.tier-badge.utilities {
+  background: var(--tier-utilities);
+}
+
+/* --------------------------------------------------------------------------
+   14. Heading Links
+   -------------------------------------------------------------------------- */
 
 a.heading-link {
   text-decoration: none;
@@ -320,35 +444,48 @@ a.heading-link {
   background-repeat: no-repeat;
   background-size: 1em;
   background-position-y: center;
-  /* background-position-x: -2px; */
   overflow: visible;
   margin-left: -20px;
-  padding-left: 20px; /* width of the image plus a little extra padding */
+  padding-left: 20px;
   display: block;
 }
 
+/* --------------------------------------------------------------------------
+   15. Subpages Gallery
+   -------------------------------------------------------------------------- */
+
 div.subpages > div:not(.sub-header) {
   display: inline-block;
-  margin: 0px 20px 20px 0px;
+  margin: 0 20px 20px 0;
   width: 150px;
 }
 
 div.subpages .sub-header {
   font-size: 18px;
-  color: black;
+  color: var(--text-primary);
 }
 
 div.subpages a {
   font-size: 14px;
   text-decoration: none;
-  font-weight: 300;
+  font-weight: 400;
+  color: var(--text-secondary);
 }
+
+div.subpages a:hover {
+  color: var(--text-primary);
+}
+
+/* --------------------------------------------------------------------------
+   16. Page Image Thumbnails
+   -------------------------------------------------------------------------- */
 
 div.page-image {
   overflow: hidden;
   width: 150px;
   height: 100px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--surface-3);
+  border-radius: 6px;
   display: flex;
   justify-content: center;
 }
@@ -357,27 +494,18 @@ div.page-image img {
   height: 100%;
 }
 
-.dim {
-  opacity: 0.5;
-  cursor: disabled;
-}
-
-.selected.black a,
-.black a.active {
-  /* font-weight: bold; */
-  color: var(--link-color);
-  font-weight: bold;
-  background: var(--bg-color);
-}
+/* --------------------------------------------------------------------------
+   17. Frame Title
+   -------------------------------------------------------------------------- */
 
 .frame-title {
-  font-weight: bold;
+  font-weight: 700;
   font-size: 1.1em;
 }
 
-h3 {
-  font-size: 1em;
-}
+/* --------------------------------------------------------------------------
+   18. SVG Visualization Classes (do not modify)
+   -------------------------------------------------------------------------- */
 
 .st0 {
   fill: #5b5b5b;
@@ -397,12 +525,6 @@ h3 {
 .st5 {
   fill: #e2b884;
 }
-/* .st6 {
-  font-family: "ArialMT";
-}
-.st7 {
-  font-size: 11px;
-} */
 .st8 {
   fill: #e2b884;
 }
@@ -422,7 +544,34 @@ h3 {
 }
 
 .dot-com-bubble .annotation-subject path {
-  fill: var(--scale-1);
+  fill: var(--viz-1);
   fill-opacity: 0.05;
   stroke: none;
+}
+
+/* --------------------------------------------------------------------------
+   19. PageLayout Component
+   -------------------------------------------------------------------------- */
+
+/* Show the "On this page" TOC sidebar on wide screens */
+@media (min-width: 1201px) {
+  .page-toc {
+    display: block !important;
+  }
+}
+
+/* Hover effect for prev/next navigation links */
+.page-nav a:hover {
+  border-color: var(--accent);
+  background: var(--surface-2);
+}
+
+/* Hover effect for breadcrumb links */
+.page-breadcrumbs a:hover {
+  color: var(--text-primary);
+}
+
+/* Hover effect for TOC links */
+.page-toc a:hover {
+  color: var(--text-primary);
 }
