@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useMemo } from "react"
+import { useCallback, useMemo, useRef } from "react"
 
 import Frame from "./Frame"
 
@@ -117,6 +117,20 @@ const NetworkFrame = React.memo(function NetworkFrame(
 
   useLegacyUnmountCallback(props, state)
 
+  const propsRef = useRef(props)
+  propsRef.current = props
+  const stateRef = useRef(state)
+  stateRef.current = state
+
+  const defaultSVGRuleCb = useCallback(
+    (args) => defaultNetworkSVGRule(propsRef.current, stateRef.current, args),
+    []
+  )
+  const defaultHTMLRuleCb = useCallback(
+    (args) => defaultNetworkHTMLRule(propsRef.current, stateRef.current, args),
+    []
+  )
+
   const {
     annotations = [],
     annotationSettings,
@@ -212,8 +226,8 @@ const NetworkFrame = React.memo(function NetworkFrame(
       additionalDefs={additionalDefs}
       frameKey={"none"}
       projectedCoordinateNames={projectedCoordinateNames}
-      defaultSVGRule={(args) => defaultNetworkSVGRule(props, state, args)}
-      defaultHTMLRule={(args) => defaultNetworkHTMLRule(props, state, args)}
+      defaultSVGRule={defaultSVGRuleCb}
+      defaultHTMLRule={defaultHTMLRuleCb}
       hoverAnnotation={activeHoverAnnotation}
       annotations={mergedAnnotations}
       annotationSettings={annotationSettings}

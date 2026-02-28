@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useEffect, useState, useRef } from "react"
+import { useCallback, useEffect, useState, useRef } from "react"
 import AnnotationLayer from "./AnnotationLayer"
 import InteractionLayer from "./InteractionLayer"
 import VisualizationLayer from "./VisualizationLayer"
@@ -189,6 +189,24 @@ export default function Frame(props) {
     ? [...annotations, ...areaAnnotations]
     : areaAnnotations
 
+  const defaultSVGRuleRef = useRef(defaultSVGRule)
+  defaultSVGRuleRef.current = defaultSVGRule
+  const defaultHTMLRuleRef = useRef(defaultHTMLRule)
+  defaultHTMLRuleRef.current = defaultHTMLRule
+  const renderPipelineRef = useRef(renderPipeline)
+  renderPipelineRef.current = renderPipeline
+
+  const svgAnnotationRuleCb = useCallback(
+    (d, i, thisALayer) =>
+      defaultSVGRuleRef.current({ d, i, annotationLayer: thisALayer, ...renderPipelineRef.current }),
+    []
+  )
+  const htmlAnnotationRuleCb = useCallback(
+    (d, i, thisALayer) =>
+      defaultHTMLRuleRef.current({ d, i, annotationLayer: thisALayer, ...renderPipelineRef.current }),
+    []
+  )
+
   const annotationLayer = (
     <AnnotationLayer
       legendSettings={legendSettings}
@@ -202,22 +220,8 @@ export default function Frame(props) {
         annotationSettings.layout && annotationSettings.layout.labelSizeFunction
       }
       annotations={totalAnnotations}
-      svgAnnotationRule={(d, i, thisALayer) =>
-        defaultSVGRule({
-          d,
-          i,
-          annotationLayer: thisALayer,
-          ...renderPipeline
-        })
-      }
-      htmlAnnotationRule={(d, i, thisALayer) =>
-        defaultHTMLRule({
-          d,
-          i,
-          annotationLayer: thisALayer,
-          ...renderPipeline
-        })
-      }
+      svgAnnotationRule={svgAnnotationRuleCb}
+      htmlAnnotationRule={htmlAnnotationRuleCb}
       size={adjustedSize}
       position={[
         adjustedPosition[0] + margin.left,

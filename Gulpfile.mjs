@@ -121,6 +121,7 @@ async function createBundle(options = {}) {
           unsafe_comps: true,
           warnings: false,
           drop_console: false,
+          pure_funcs: ['console.log', 'console.debug'],
           drop_debugger: true,
           passes: 2
         },

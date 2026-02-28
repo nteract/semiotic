@@ -1,5 +1,5 @@
 import * as React from "react"
-import { RefObject, useEffect, useState } from "react"
+import { RefObject, useCallback, useEffect, useMemo, useState } from "react"
 
 import {
   MarginType,
@@ -217,18 +217,21 @@ export default function VisualizationLayer(props: Props) {
 
   let changeTooltip = useTooltip((state) => state.changeTooltip)
 
-  const voronoiHover = (d) => {
+  const voronoiHover = useCallback((d) => {
     changeTooltip(d)
-  }
+  }, [changeTooltip])
 
   const [focusedPieceIndex, changeFocusedPieceIndex] = useState(null)
   const [focusedVisualizationGroup, changeFocusedVisualizationGroup] =
     useState(null)
-  const decoratedKeydown = handleKeyDown({
-    focusedPieceIndex,
-    changeFocusedPieceIndex,
-    changeFocusedVisualizationGroup
-  })
+  const decoratedKeydown = useMemo(
+    () => handleKeyDown({
+      focusedPieceIndex,
+      changeFocusedPieceIndex,
+      changeFocusedVisualizationGroup
+    }),
+    [focusedPieceIndex, changeFocusedPieceIndex, changeFocusedVisualizationGroup]
+  )
 
   const vizState = updateVisualizationLayer(
     props,

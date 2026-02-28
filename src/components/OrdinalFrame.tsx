@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useMemo } from "react"
+import { useCallback, useMemo, useRef } from "react"
 
 import { scaleBand, scaleLinear, ScaleLinear } from "d3-scale"
 
@@ -114,6 +114,20 @@ const OrdinalFrame = React.memo(function OrdinalFrame(
   )
 
   useLegacyUnmountCallback(props, state)
+
+  const propsRef = useRef(props)
+  propsRef.current = props
+  const stateRef = useRef(state)
+  stateRef.current = state
+
+  const defaultSVGRuleCb = useCallback(
+    (args) => defaultORSVGRule(propsRef.current, stateRef.current, args),
+    []
+  )
+  const defaultHTMLRuleCb = useCallback(
+    (args) => defaultORHTMLRule(propsRef.current, stateRef.current, args),
+    []
+  )
 
   const {
     className,
@@ -246,8 +260,8 @@ const OrdinalFrame = React.memo(function OrdinalFrame(
       frameKey={"none"}
       renderFn={renderKey}
       projectedCoordinateNames={projectedCoordinatesObject}
-      defaultSVGRule={(args) => defaultORSVGRule(props, state, args)}
-      defaultHTMLRule={(args) => defaultORHTMLRule(props, state, args)}
+      defaultSVGRule={defaultSVGRuleCb}
+      defaultHTMLRule={defaultHTMLRuleCb}
       hoverAnnotation={selectedHoverAnnotation}
       annotations={annotations}
       annotationSettings={annotationSettings}

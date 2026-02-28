@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useMemo } from "react"
+import { useCallback, useMemo, useRef } from "react"
 
 import { scaleLinear } from "d3-scale"
 
@@ -211,6 +211,20 @@ const XYFrame = React.memo(function XYFrame(allProps: XYFrameProps) {
 
   useLegacyUnmountCallback(props, state)
 
+  const propsRef = useRef(props)
+  propsRef.current = props
+  const stateRef = useRef(state)
+  stateRef.current = state
+
+  const defaultSVGRuleCb = useCallback(
+    (args) => defaultXYSVGRule(propsRef.current, stateRef.current, args),
+    []
+  )
+  const defaultHTMLRuleCb = useCallback(
+    (args) => defaultXYHTMLRule(propsRef.current, stateRef.current, args),
+    []
+  )
+
   // Memoize merged annotations to prevent unnecessary array creation
   const mergedAnnotations = useMemo(
     () =>
@@ -251,8 +265,8 @@ const XYFrame = React.memo(function XYFrame(allProps: XYFrameProps) {
       frameKey={frameKey || xyframeKey}
       additionalDefs={additionalDefs}
       hoverAnnotation={hoverAnnotation}
-      defaultSVGRule={(args) => defaultXYSVGRule(props, state, args)}
-      defaultHTMLRule={(args) => defaultXYHTMLRule(props, state, args)}
+      defaultSVGRule={defaultSVGRuleCb}
+      defaultHTMLRule={defaultHTMLRuleCb}
       annotations={mergedAnnotations}
       annotationSettings={annotationSettings}
       legendSettings={legendSettings}
