@@ -23,6 +23,7 @@ import { pointOnArcAtAngle } from "../svg/pieceDrawing"
 import pathBounds from "svg-path-bounding-box"
 
 import { stringToFn } from "../data/dataFunctions"
+import { NetworkPipelineCache } from "../data/networkPipelineCache"
 
 import {
   drawNodes,
@@ -61,7 +62,8 @@ export { nodesEdgesFromHierarchy } from "./hierarchyUtils"
 
 export const calculateNetworkFrame = (
   currentProps: NetworkFrameProps,
-  prevState: NetworkFrameState
+  prevState: NetworkFrameState,
+  cache?: NetworkPipelineCache
 ) => {
   const {
     graph,
@@ -132,16 +134,25 @@ export const calculateNetworkFrame = (
       ? (baseTitle as TitleType)
       : ({ title: baseTitle, orient: "top" } as TitleType)
 
-  const margin = calculateMargin({
-    margin: baseMargin,
-    title,
-    size
-  })
-
-  const { adjustedPosition, adjustedSize } = adjustedPositionSize({
-    size,
-    margin
-  })
+  let margin, adjustedPosition, adjustedSize
+  if (cache) {
+    const marginResult = cache.marginCalc(baseMargin, title, size)
+    margin = marginResult.margin
+    adjustedPosition = marginResult.adjustedPosition
+    adjustedSize = marginResult.adjustedSize
+  } else {
+    margin = calculateMargin({
+      margin: baseMargin,
+      title,
+      size
+    })
+    const posSize = adjustedPositionSize({
+      size,
+      margin
+    })
+    adjustedPosition = posSize.adjustedPosition
+    adjustedSize = posSize.adjustedSize
+  }
 
   networkSettings.graphSettings.nodes = nodes
   networkSettings.graphSettings.edges = edges
@@ -154,29 +165,41 @@ export const calculateNetworkFrame = (
     networkSettings.type === "partition" ||
     networkSettings.type === "sankey"
 
-  const nodeIDAccessor = stringToFn<string>(
-    currentProps.nodeIDAccessor,
-    (d) => {
-      return d ? d.id : undefined
-    }
-  )
-  const sourceAccessor = stringToFn<string | GenericObject>(
-    currentProps.sourceAccessor,
-    (d) => d.source
-  )
-  const targetAccessor = stringToFn<string | GenericObject>(
-    currentProps.targetAccessor,
-    (d) => d.target
-  )
+  const cachedAccessors = cache
+    ? cache.accessorConversions(
+        currentProps.nodeIDAccessor,
+        currentProps.sourceAccessor,
+        currentProps.targetAccessor,
+        currentProps.nodeSizeAccessor,
+        currentProps.edgeWidthAccessor
+      )
+    : {
+        nodeIDAccessor: stringToFn<string>(
+          currentProps.nodeIDAccessor,
+          (d) => { return d ? d.id : undefined }
+        ),
+        sourceAccessor: stringToFn<string | GenericObject>(
+          currentProps.sourceAccessor,
+          (d) => d.source
+        ),
+        targetAccessor: stringToFn<string | GenericObject>(
+          currentProps.targetAccessor,
+          (d) => d.target
+        ),
+        nodeSizeAccessor: typeof currentProps.nodeSizeAccessor === "number"
+          ? genericFunction(currentProps.nodeSizeAccessor)
+          : stringToFn<number>(currentProps.nodeSizeAccessor, (d) => d.r || 5),
+        edgeWidthAccessor: stringToFn<number>(
+          currentProps.edgeWidthAccessor,
+          (d) => d.weight || 1
+        ),
+      }
 
-  const nodeSizeAccessor: (args?: GenericObject) => number =
-    typeof currentProps.nodeSizeAccessor === "number"
-      ? genericFunction(currentProps.nodeSizeAccessor)
-      : stringToFn<number>(currentProps.nodeSizeAccessor, (d) => d.r || 5)
-  const edgeWidthAccessor = stringToFn<number>(
-    currentProps.edgeWidthAccessor,
-    (d) => d.weight || 1
-  )
+  const nodeIDAccessor = cachedAccessors.nodeIDAccessor
+  const sourceAccessor = cachedAccessors.sourceAccessor
+  const targetAccessor = cachedAccessors.targetAccessor
+  const nodeSizeAccessor: (args?: GenericObject) => number = cachedAccessors.nodeSizeAccessor as (args?: GenericObject) => number
+  const edgeWidthAccessor = cachedAccessors.edgeWidthAccessor
   const nodeStyleFn = stringToFn<GenericObject>(nodeStyle, () => ({}), true)
   const nodeClassFn = stringToFn<string>(nodeClass, () => "", true)
   const nodeRenderModeFn = stringToFn<string | GenericObject>(

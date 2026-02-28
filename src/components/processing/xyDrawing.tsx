@@ -18,6 +18,8 @@ import {
   stringToArrayFn
 } from "../data/dataFunctions"
 
+import { XYPipelineCache } from "../data/xyPipelineCache"
+
 
 import {
   createPoints,
@@ -101,7 +103,8 @@ const emptyStringReturnFunction = () => ""
 export const calculateXYFrame = (
   currentProps: XYFrameProps,
   prevState: XYFrameState,
-  updateData: boolean
+  updateData: boolean,
+  cache?: XYPipelineCache
 ) => {
   const {
     legend,
@@ -174,25 +177,34 @@ export const calculateXYFrame = (
 
   const yScaleType = baseYScaleType.domain ? baseYScaleType : castYScaleType()
 
+  const cachedAccessors = cache
+    ? cache.annotatedSettings(
+        xAccessor, yAccessor, summaryDataAccessor, lineDataAccessor,
+        renderKey, lineType, summaryType, lineIDAccessor
+      )
+    : {
+        xAccessor: stringToArrayFn<number>(xAccessor, (d: number[]) => d[0]),
+        yAccessor: stringToArrayFn<number>(yAccessor, (d: number[]) => d[1]),
+        summaryDataAccessor: stringToArrayFn<RawPoint[]>(
+          summaryDataAccessor,
+          (d: RawSummary | number[]) => (Array.isArray(d) ? d : d.coordinates)
+        ),
+        lineDataAccessor: stringToArrayFn<RawPoint[]>(
+          lineDataAccessor,
+          (d: ProjectedLine | number[]) => (Array.isArray(d) ? d : d.coordinates)
+        ),
+        renderKeyFn: stringToFn<string>(
+          renderKey,
+          (d: GenericObject, i: number) => `line-${i}`,
+          true
+        ),
+        lineIDAccessor: stringToFn<string>(lineIDAccessor, (l) => l.semioticLineID),
+      }
+
   const annotatedSettings = {
-    xAccessor: stringToArrayFn<number>(xAccessor, (d: number[]) => d[0]),
-    yAccessor: stringToArrayFn<number>(yAccessor, (d: number[]) => d[1]),
-    summaryDataAccessor: stringToArrayFn<RawPoint[]>(
-      summaryDataAccessor,
-      (d: RawSummary | number[]) => (Array.isArray(d) ? d : d.coordinates)
-    ),
-    lineDataAccessor: stringToArrayFn<RawPoint[]>(
-      lineDataAccessor,
-      (d: ProjectedLine | number[]) => (Array.isArray(d) ? d : d.coordinates)
-    ),
-    renderKeyFn: stringToFn<string>(
-      renderKey,
-      (d: GenericObject, i: number) => `line-${i}`,
-      true
-    ),
+    ...cachedAccessors,
     lineType: objectifyType(lineType) as LineTypeSettings,
     summaryType: objectifyType(summaryType) as SummaryTypeSettings,
-    lineIDAccessor: stringToFn<string>(lineIDAccessor, (l) => l.semioticLineID),
     summaries:
       !summaries || (Array.isArray(summaries) && summaries.length === 0)
         ? undefined
@@ -256,16 +268,28 @@ export const calculateXYFrame = (
         : axisFnOrObject
     )
 
-  const margin = calculateMargin({
-    margin: currentProps.margin,
-    axes: generatedAxes,
-    title: annotatedSettings.title,
-    size: currentProps.size
-  })
-  const { adjustedPosition, adjustedSize } = adjustedPositionSize({
-    size: currentProps.size,
-    margin
-  })
+  let margin, adjustedPosition, adjustedSize
+  if (cache) {
+    const marginResult = cache.marginCalc(
+      currentProps.margin, generatedAxes, annotatedSettings.title, currentProps.size
+    )
+    margin = marginResult.margin
+    adjustedPosition = marginResult.adjustedPosition
+    adjustedSize = marginResult.adjustedSize
+  } else {
+    margin = calculateMargin({
+      margin: currentProps.margin,
+      axes: generatedAxes,
+      title: annotatedSettings.title,
+      size: currentProps.size
+    })
+    const posSize = adjustedPositionSize({
+      size: currentProps.size,
+      margin
+    })
+    adjustedPosition = posSize.adjustedPosition
+    adjustedSize = posSize.adjustedSize
+  }
 
   let calculatedXExtent = [],
     calculatedYExtent = [],

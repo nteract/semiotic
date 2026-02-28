@@ -31,6 +31,7 @@ import { AnnotationType } from "./types/annotationTypes"
 import { scaleLinear } from "d3-scale"
 
 import { calculateNetworkFrame } from "./processing/network"
+import { createNetworkPipelineCache, NetworkPipelineCache } from "./data/networkPipelineCache"
 
 const blankArray = []
 
@@ -67,6 +68,7 @@ const NetworkFrame = React.memo(function NetworkFrame(
   allProps: NetworkFrameProps
 ) {
   const props: NetworkFrameProps = { ...defaultProps, ...allProps }
+  const pipelineCacheRef = useRef(createNetworkPipelineCache())
   const baseState = {
     dataVersion: undefined,
     nodeData: [],
@@ -104,13 +106,13 @@ const NetworkFrame = React.memo(function NetworkFrame(
   const initialState = useMemo(
     () => ({
       ...baseState,
-      ...calculateNetworkFrame(props, baseState)
+      ...calculateNetworkFrame(props, baseState, pipelineCacheRef.current)
     }),
     []
   )
 
   const state = useDerivedStateFromProps(
-    deriveNetworkFrameState,
+    (nextProps, prevState) => deriveNetworkFrameState(nextProps, prevState, pipelineCacheRef.current),
     props,
     initialState
   )
@@ -258,7 +260,8 @@ const NetworkFrame = React.memo(function NetworkFrame(
 
 function deriveNetworkFrameState(
   nextProps: NetworkFrameProps,
-  prevState: NetworkFrameState
+  prevState: NetworkFrameState,
+  cache?: NetworkPipelineCache
 ) {
   const { props } = prevState
 
@@ -279,7 +282,7 @@ function deriveNetworkFrameState(
     (!prevState.projectedNodes && !prevState.projectedEdges)
   ) {
     return {
-      ...calculateNetworkFrame(nextProps, prevState),
+      ...calculateNetworkFrame(nextProps, prevState, cache),
       props: nextProps
     }
   }
@@ -287,7 +290,7 @@ function deriveNetworkFrameState(
   // Full data recalculation needed if data-affecting props changed
   if (dataPropsChanged) {
     return {
-      ...calculateNetworkFrame(nextProps, prevState),
+      ...calculateNetworkFrame(nextProps, prevState, cache),
       props: nextProps
     }
   }
@@ -296,7 +299,7 @@ function deriveNetworkFrameState(
   // Note: For network layouts (especially force), size changes might affect positioning
   if (sizeChanged || scalePropsChanged) {
     return {
-      ...calculateNetworkFrame(nextProps, prevState),
+      ...calculateNetworkFrame(nextProps, prevState, cache),
       props: nextProps
     }
   }

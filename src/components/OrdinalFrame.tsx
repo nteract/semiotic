@@ -34,6 +34,7 @@ import Frame from "./Frame"
 import { stringToFn, stringToArrayFn } from "./data/dataFunctions"
 
 import { calculateOrdinalFrame } from "./processing/ordinal"
+import { createOrdinalPipelineCache, OrdinalPipelineCache } from "./data/ordinalPipelineCache"
 
 import { AnnotationType } from "./types/annotationTypes"
 
@@ -67,6 +68,7 @@ const OrdinalFrame = React.memo(function OrdinalFrame(
   allProps: OrdinalFrameProps
 ) {
   const props: OrdinalFrameProps = { ...defaultProps, ...allProps }
+  const pipelineCacheRef = useRef(createOrdinalPipelineCache())
   const baseState = {
     adjustedPosition: [],
     adjustedSize: [],
@@ -103,12 +105,12 @@ const OrdinalFrame = React.memo(function OrdinalFrame(
   const initialState = useMemo(
     () => ({
       ...baseState,
-      ...calculateOrdinalFrame(props, baseState)
+      ...calculateOrdinalFrame(props, baseState, pipelineCacheRef.current)
     }),
     []
   )
   const state = useDerivedStateFromProps(
-    deriveOrdinalFrameState,
+    (nextProps, prevState) => deriveOrdinalFrameState(nextProps, prevState, pipelineCacheRef.current),
     props,
     initialState
   )
@@ -297,7 +299,8 @@ const OrdinalFrame = React.memo(function OrdinalFrame(
 
 function deriveOrdinalFrameState(
   nextProps: OrdinalFrameProps,
-  prevState: OrdinalFrameState
+  prevState: OrdinalFrameState,
+  cache?: OrdinalPipelineCache
 ) {
   const { props } = prevState
 
@@ -318,7 +321,7 @@ function deriveOrdinalFrameState(
     !prevState.projectedColumns
   ) {
     return {
-      ...calculateOrdinalFrame(nextProps, prevState),
+      ...calculateOrdinalFrame(nextProps, prevState, cache),
       props: nextProps
     }
   }
@@ -326,7 +329,7 @@ function deriveOrdinalFrameState(
   // Full data recalculation needed if data-affecting props changed
   if (dataPropsChanged) {
     return {
-      ...calculateOrdinalFrame(nextProps, prevState),
+      ...calculateOrdinalFrame(nextProps, prevState, cache),
       props: nextProps
     }
   }
@@ -336,7 +339,7 @@ function deriveOrdinalFrameState(
   // but size changes typically need full recalc due to column layout
   if (sizeChanged || scalePropsChanged) {
     return {
-      ...calculateOrdinalFrame(nextProps, prevState),
+      ...calculateOrdinalFrame(nextProps, prevState, cache),
       props: nextProps
     }
   }

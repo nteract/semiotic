@@ -15,6 +15,7 @@ import { drawSummaries } from "../svg/summaryLayouts"
 import { axisGenerator } from "../svg/summaryAxis"
 
 import { stringToFn, stringToArrayFn } from "../data/dataFunctions"
+import { OrdinalPipelineCache } from "../data/ordinalPipelineCache"
 
 import {
   OrdinalFrameProps,
@@ -70,7 +71,8 @@ export const calculateMappedMiddles = (
 
 export const calculateOrdinalFrame = (
   currentProps: OrdinalFrameProps,
-  currentState: OrdinalFrameState
+  currentState: OrdinalFrameState,
+  cache?: OrdinalPipelineCache
 ) => {
   let oLabels
   const projectedColumns = {}
@@ -120,12 +122,19 @@ export const calculateOrdinalFrame = (
   const summaryType = objectifyType(baseSummaryType)
   const pieceType = objectifyType(baseType) as PieceTypeSettings
   const connectorType = objectifyType(baseConnectorType)
-  const oAccessor = stringToArrayFn<string | number>(
-    baseOAccessor,
-    (d) => d.renderKey
-  )
-  const rAccessor = stringToArrayFn<number>(baseRAccessor, (d) => d.value || 1)
-  const renderKey = stringToFn<string | number>(baseRenderKey, (d, i) => i)
+
+  const cachedAccessors = cache
+    ? cache.accessorConversions(baseOAccessor, baseRAccessor, baseRenderKey, basePieceIDAccessor)
+    : {
+        oAccessor: stringToArrayFn<string | number>(baseOAccessor, (d) => d.renderKey),
+        rAccessor: stringToArrayFn<number>(baseRAccessor, (d) => d.value || 1),
+        renderKey: stringToFn<string | number>(baseRenderKey, (d, i) => i),
+        pieceIDAccessor: stringToFn<string>(basePieceIDAccessor, () => ""),
+      }
+
+  const oAccessor = cachedAccessors.oAccessor
+  const rAccessor = cachedAccessors.rAccessor
+  const renderKey = cachedAccessors.renderKey
 
   const eventListenersGenerator = () => ({})
 
@@ -150,7 +159,7 @@ export const calculateOrdinalFrame = (
       ? baseTitle
       : { title: baseTitle, orient: "top" }
 
-  const pieceIDAccessor = stringToFn<string>(basePieceIDAccessor, () => "")
+  const pieceIDAccessor = cachedAccessors.pieceIDAccessor
 
   const originalRAccessor = Array.isArray(baseRAccessor)
     ? baseRAccessor
@@ -207,20 +216,29 @@ export const calculateOrdinalFrame = (
     })
   }
 
-  const margin = calculateMargin({
-    margin: baseMargin,
-    axes: arrayWrappedAxis,
-    title,
-    oLabel,
-    projection,
-    size
-  })
-
-  const { adjustedPosition, adjustedSize } = adjustedPositionSize({
-    size,
-    margin,
-    projection
-  })
+  let margin, adjustedPosition, adjustedSize
+  if (cache) {
+    const marginResult = cache.marginCalc(baseMargin, arrayWrappedAxis, title, oLabel, projection, size)
+    margin = marginResult.margin
+    adjustedPosition = marginResult.adjustedPosition
+    adjustedSize = marginResult.adjustedSize
+  } else {
+    margin = calculateMargin({
+      margin: baseMargin,
+      axes: arrayWrappedAxis,
+      title,
+      oLabel,
+      projection,
+      size
+    })
+    const posSize = adjustedPositionSize({
+      size,
+      margin,
+      projection
+    })
+    adjustedPosition = posSize.adjustedPosition
+    adjustedSize = posSize.adjustedSize
+  }
 
   const oExtentSettings: OExtentObject =
     baseOExtent === undefined || Array.isArray(baseOExtent)

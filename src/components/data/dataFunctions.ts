@@ -134,6 +134,22 @@ export function stringToArrayFn<StrFnType extends validStrFnTypes>(
   )
 }
 
+function rebuildFullDatasetWithSummaries(
+  fullDataset: Array<ProjectedPoint | ProjectedBin | ProjectedSummary>,
+  projectedSummaries: ProjectedSummary[]
+): Array<ProjectedPoint | ProjectedBin | ProjectedSummary> {
+  const rebuilt: Array<ProjectedPoint | ProjectedBin | ProjectedSummary> = []
+  for (const d of projectedSummaries) {
+    rebuilt.push({ ...d })
+  }
+  for (const d of fullDataset) {
+    if (!(d as ProjectedPoint).parentSummary) {
+      rebuilt.push(d)
+    }
+  }
+  return rebuilt
+}
+
 type CalculateDataTypes = {
   lineDataAccessor: Array<Function>
   summaryDataAccessor: Array<Function>
@@ -241,13 +257,13 @@ export const calculateDataExtent = ({
       })
     })
 
-    fullDataset = [
-      ...projectedPoints.map((d) => ({
+    for (const d of projectedPoints) {
+      fullDataset.push({
         ...d,
         [projectedX]: d[projectedXTop] || d[projectedXBottom] || d.x,
         [projectedY]: d[projectedYTop] || d[projectedYBottom] || d.y
-      }))
-    ]
+      })
+    }
   }
   if (lines) {
     initialProjectedLines = projectLineData({
@@ -279,31 +295,28 @@ export const calculateDataExtent = ({
       optionsObject
     )(initialProjectedLines)
 
-    projectedLines.forEach((d: ProjectedLine) => {
-      fullDataset = [
-        ...fullDataset,
-        ...d.data
-          .filter((p, q) => defined(Object.assign({}, p.data, p), q))
-          .map((p) => {
-            const mappedP: ProjectedPoint = {
-              parentLine: d,
-              y: p.y,
-              x: p.x,
-              xTop: p.xTop,
-              xMiddle: p.xMiddle,
-              xBottom: p.xBottom,
-              yTop: p.yTop,
-              yMiddle: p.yMiddle,
-              yBottom: p.yBottom,
-              data: p.data
-            }
-            if (p.percent) {
-              mappedP.percent = p.percent
-            }
-            return mappedP
-          })
-      ]
-    })
+    for (const d of projectedLines) {
+      for (let q = 0; q < d.data.length; q++) {
+        const p = d.data[q]
+        if (!defined(Object.assign({}, p.data, p), q)) continue
+        const mappedP: ProjectedPoint = {
+          parentLine: d,
+          y: p.y,
+          x: p.x,
+          xTop: p.xTop,
+          xMiddle: p.xMiddle,
+          xBottom: p.xBottom,
+          yTop: p.yTop,
+          yMiddle: p.yMiddle,
+          yBottom: p.yBottom,
+          data: p.data
+        }
+        if (p.percent) {
+          mappedP.percent = p.percent
+        }
+        fullDataset.push(mappedP)
+      }
+    }
     if (showLinePoints) {
       const whichPointsX =
         showLinePoints === true
@@ -467,44 +480,46 @@ export const calculateDataExtent = ({
     })
   }
 
-  const dataForXExtent = [...fullDataset, ...suitableXAnnotations]
-  const dataForYExtent = [...fullDataset, ...suitableYAnnotations]
+  // Single-pass extent calculation over fullDataset + annotations
+  let xMinVal: number | undefined
+  let xMaxVal: number | undefined
+  let yMinVal: number | undefined
+  let yMaxVal: number | undefined
 
-  const calculatedXExtent = [
-    min(
-      dataForXExtent.map((d) =>
-        d[projectedXBottom] === undefined
-          ? d[projectedX]
-          : Math.min(d[projectedXTop], d[projectedXBottom])
-      )
-    ),
+  for (const d of fullDataset) {
+    const xLo = d[projectedXBottom] === undefined
+      ? d[projectedX]
+      : Math.min(d[projectedXTop], d[projectedXBottom])
+    const xHi = d[projectedXTop] === undefined
+      ? d[projectedX]
+      : Math.max(d[projectedXBottom], d[projectedXTop])
+    const yLo = d[projectedYBottom] === undefined
+      ? d[projectedY]
+      : Math.min(d[projectedYTop], d[projectedYBottom])
+    const yHi = d[projectedYTop] === undefined
+      ? d[projectedY]
+      : Math.max(d[projectedYBottom], d[projectedYTop])
 
-    max(
-      dataForXExtent.map((d) =>
-        d[projectedXTop] === undefined
-          ? d[projectedX]
-          : Math.max(d[projectedXBottom], d[projectedXTop])
-      )
-    )
-  ]
+    if (xLo !== undefined && (xMinVal === undefined || xLo < xMinVal)) xMinVal = xLo
+    if (xHi !== undefined && (xMaxVal === undefined || xHi > xMaxVal)) xMaxVal = xHi
+    if (yLo !== undefined && (yMinVal === undefined || yLo < yMinVal)) yMinVal = yLo
+    if (yHi !== undefined && (yMaxVal === undefined || yHi > yMaxVal)) yMaxVal = yHi
+  }
 
-  const calculatedYExtent = [
-    min(
-      dataForYExtent.map((d) =>
-        d[projectedYBottom] === undefined
-          ? d[projectedY]
-          : Math.min(d[projectedYTop], d[projectedYBottom])
-      )
-    ),
+  for (const d of suitableXAnnotations) {
+    const v = d[projectedX]
+    if (v !== undefined && (xMinVal === undefined || v < xMinVal)) xMinVal = v
+    if (v !== undefined && (xMaxVal === undefined || v > xMaxVal)) xMaxVal = v
+  }
 
-    max(
-      dataForYExtent.map((d) =>
-        d[projectedYTop] === undefined
-          ? d[projectedY]
-          : Math.max(d[projectedYBottom], d[projectedYTop])
-      )
-    )
-  ]
+  for (const d of suitableYAnnotations) {
+    const v = d[projectedY]
+    if (v !== undefined && (yMinVal === undefined || v < yMinVal)) yMinVal = v
+    if (v !== undefined && (yMaxVal === undefined || v > yMaxVal)) yMaxVal = v
+  }
+
+  const calculatedXExtent = [xMinVal, xMaxVal]
+  const calculatedYExtent = [yMinVal, yMaxVal]
 
   const actualXExtent: number[] = extentValue(xExtent)
   const actualYExtent: number[] = extentValue(yExtent)
@@ -570,10 +585,7 @@ export const calculateDataExtent = ({
       chartSize
     }) as unknown as ProjectedSummary[]
 
-    fullDataset = [
-      ...projectedSummaries.map((d) => ({ ...d })),
-      ...fullDataset.filter((d) => !d.parentSummary)
-    ]
+    fullDataset = rebuildFullDatasetWithSummaries(fullDataset, projectedSummaries)
   } else if (summaryType.type && summaryType.type === "heatmap") {
     projectedSummaries = heatmapping({
       summaryType,
@@ -590,10 +602,7 @@ export const calculateDataExtent = ({
       chartSize
     }) as unknown as ProjectedSummary[]
 
-    fullDataset = [
-      ...projectedSummaries.map((d) => ({ ...d })),
-      ...fullDataset.filter((d) => !d.parentSummary)
-    ]
+    fullDataset = rebuildFullDatasetWithSummaries(fullDataset, projectedSummaries)
   } else if (summaryType.type && summaryType.type === "trendline") {
     projectedSummaries = trendlining({
       summaryType,
@@ -602,10 +611,7 @@ export const calculateDataExtent = ({
       finalXExtent
     })
 
-    fullDataset = [
-      ...projectedSummaries.map((d) => ({ ...d })),
-      ...fullDataset.filter((d) => !d.parentSummary)
-    ]
+    fullDataset = rebuildFullDatasetWithSummaries(fullDataset, projectedSummaries)
   }
 
   if (filterRenderedLines) {
