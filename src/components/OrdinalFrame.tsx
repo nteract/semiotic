@@ -1,7 +1,7 @@
 import * as React from "react"
-import { useMemo } from "react"
+import { useCallback, useMemo, useRef } from "react"
 
-import { scaleBand, scaleLinear } from "d3-scale"
+import { scaleBand, scaleLinear, ScaleLinear } from "d3-scale"
 
 import {
   orFrameChangeProps,
@@ -58,9 +58,8 @@ const defaultProps: Partial<OrdinalFrameProps> = {
   className: "",
   data: [],
   oScaleType: scaleBand(),
-  rScaleType: scaleLinear,
+  rScaleType: scaleLinear as unknown as () => ScaleLinear<number, number>,
   type: "none",
-  useSpans: false,
   optimizeCustomTooltipPosition: false
 }
 
@@ -116,6 +115,20 @@ const OrdinalFrame = React.memo(function OrdinalFrame(
 
   useLegacyUnmountCallback(props, state)
 
+  const propsRef = useRef(props)
+  propsRef.current = props
+  const stateRef = useRef(state)
+  stateRef.current = state
+
+  const defaultSVGRuleCb = useCallback(
+    (args) => defaultORSVGRule(propsRef.current, stateRef.current, args),
+    []
+  )
+  const defaultHTMLRuleCb = useCallback(
+    (args) => defaultORHTMLRule(propsRef.current, stateRef.current, args),
+    []
+  )
+
   const {
     className,
     annotationSettings,
@@ -137,7 +150,6 @@ const OrdinalFrame = React.memo(function OrdinalFrame(
     pieceHoverAnnotation,
     hoverAnnotation,
     canvasPostProcess,
-    useSpans,
     canvasPieces,
     canvasSummaries,
     canvasConnectors,
@@ -240,7 +252,6 @@ const OrdinalFrame = React.memo(function OrdinalFrame(
       xScale={xScale}
       yScale={yScale}
       axes={axes}
-      useSpans={useSpans}
       axesTickLines={axesTickLines}
       title={title}
       matte={matte}
@@ -249,8 +260,8 @@ const OrdinalFrame = React.memo(function OrdinalFrame(
       frameKey={"none"}
       renderFn={renderKey}
       projectedCoordinateNames={projectedCoordinatesObject}
-      defaultSVGRule={(args) => defaultORSVGRule(props, state, args)}
-      defaultHTMLRule={(args) => defaultORHTMLRule(props, state, args)}
+      defaultSVGRule={defaultSVGRuleCb}
+      defaultHTMLRule={defaultHTMLRuleCb}
       hoverAnnotation={selectedHoverAnnotation}
       annotations={annotations}
       annotationSettings={annotationSettings}
@@ -524,8 +535,7 @@ function defaultORHTMLRule(
     tooltipContent,
     optimizeCustomTooltipPosition,
     projection,
-    size,
-    useSpans
+    size
   } = props
   let screenCoordinates: number[] | number[][] = [0, 0]
 
@@ -619,7 +629,6 @@ function defaultORHTMLRule(
       tooltipContent,
       optimizeCustomTooltipPosition,
       projectedColumns,
-      useSpans,
       pieceIDAccessor,
       adjustedSize,
       rScale,
@@ -638,8 +647,7 @@ function defaultORHTMLRule(
       adjustedSize,
       projection,
       tooltipContent,
-      optimizeCustomTooltipPosition,
-      useSpans
+      optimizeCustomTooltipPosition
     })
   }
   return null

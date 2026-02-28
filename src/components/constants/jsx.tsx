@@ -2,7 +2,7 @@ import * as React from "react"
 import { drawMarginPath } from "../svg/frameFunctions"
 
 type FilterDefTypes = {
-  matte?: any
+  matte?: React.ReactNode
   key: string
   additionalDefs?: React.ReactNode
 }

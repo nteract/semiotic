@@ -20,7 +20,8 @@ import {
 import {
   MarginType,
   ProjectionTypes,
-  accessorType
+  accessorType,
+  GenericObject
 } from "../types/generalTypes"
 
 import { scaleLinear, ScaleLinear } from "d3-scale"
@@ -46,7 +47,7 @@ type CalculateMarginTypes = {
   margin?: number | object
   axes?: Array<AxisProps>
   title: TitleType
-  oLabel?: any
+  oLabel?: boolean | Function | { label?: boolean | Function; orient?: string; padding?: number }
   projection?: ProjectionTypes
   size?: number[]
 }
@@ -60,7 +61,7 @@ type AdjustedPositionSizeTypes = {
 
 type ORFrameConnectionRendererTypes = {
   type: { type: Function }
-  data: any
+  data: { keyedData: GenericObject; oExtent: string[] }
   renderMode: Function
   eventListenersGenerator: Function
   styleFn: Function
@@ -286,7 +287,7 @@ export function keyAndObjectifyBarData({
   const decoratedData: {
     value: number
     renderKey: string
-    data: any
+    data: object
     rIndex: number
     rName: string
     oIndex: number

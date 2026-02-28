@@ -132,7 +132,16 @@ function renderInteractionCanvas(
     )},255)`
     canvasMap.set(interactionRGBA, oi)
 
-    const props: any = overlay.props
+    const props = overlay.props as {
+      d?: string
+      children?: Array<{ props: { d?: string; transform?: string } }>
+      transform?: string
+      markType?: string
+      x?: number
+      y?: number
+      width?: number
+      height?: number
+    }
 
     interactionContext2D.fillStyle = interactionRGBA
     interactionContext2D.strokeStyle = interactionRGBA
@@ -147,6 +156,7 @@ function renderInteractionCanvas(
         .replace("translate(", "")
         .replace(")", "")
         .split(",")
+        .map(Number)
 
       interactionContext2D.translate(x, y)
       const p = new Path2D(overlayD)

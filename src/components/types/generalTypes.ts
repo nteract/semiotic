@@ -40,9 +40,9 @@ export interface ProjectedPoint {
 
 export type PieceLayoutType = (args: {
   type: string | { type: string }
-  data: any
+  data: GenericObject
   renderMode: (d?: GenericObject, i?: number) => string | GenericObject
-  eventListenersGenerator: any
+  eventListenersGenerator: (d: object, i: number) => Record<string, Function>
   styleFn: (d: object) => object
   projection: string
   classFn: (d: object) => string
@@ -186,7 +186,7 @@ export type VizLayerTypes =
 
 export type RenderPipelineType = {
   [key in VizLayerTypes]?: {
-    data?: any
+    data?: object[]
     ariaLabel?: { chart?: string; items?: string }
     behavior?: Function
     styleFn?: Function
@@ -223,7 +223,6 @@ export interface AxisSummaryTypeSettings extends OrdinalSummaryTypeSettings {
 }
 
 export interface GeneralFrameProps {
-  useSpans?: boolean
   title?: string | object
   margin?:
     | number

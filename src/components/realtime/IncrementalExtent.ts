@@ -15,9 +15,9 @@ export class IncrementalExtent {
     }
   }
 
-  recalculate(
-    values: Iterable<any>,
-    accessor?: (v: any) => number
+  recalculate<T>(
+    values: Iterable<T>,
+    accessor?: (v: T) => number
   ): void {
     this._min = Infinity
     this._max = -Infinity

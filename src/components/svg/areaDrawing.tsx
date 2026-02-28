@@ -183,7 +183,7 @@ export function hexbinning({
   }
 
   let projectedSummaries = []
-  let summaryType: any
+  let summaryType: GenericObject
   if (!baseSummaryType.type) {
     summaryType = { type: summaryType }
   } else {
@@ -361,7 +361,7 @@ export function heatmapping({
 
   let projectedSummaries: ProjectedSummary[] = []
 
-  let summaryType: any
+  let summaryType: GenericObject
   if (!baseSummaryType.type) {
     summaryType = { type: summaryType }
   } else {
@@ -508,7 +508,7 @@ export function trendlining({
 
   let projectedSummaries = []
 
-  let summaryType: any
+  let summaryType: GenericObject
   if (!baseSummaryType.type) {
     summaryType = { type: summaryType }
   } else {

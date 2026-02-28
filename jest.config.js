@@ -1,7 +1,6 @@
 module.exports = {
   verbose: true,
   resetMocks: true,
-  collectCoverage: true,
   setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts"],
   testMatch: [
     "<rootDir>/src/**/__tests__/**/*.{js,jsx,mjs,tsx}",
@@ -20,11 +19,9 @@ module.exports = {
   transformIgnorePatterns: ["node_modules/(?!d3|d3-.*)/"],
   moduleFileExtensions: [
     "js",
-    "web.js",
     "mjs",
     "ts",
     "json",
-    "web.jsx",
     "jsx",
     "tsx",
     "node"

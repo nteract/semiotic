@@ -45,7 +45,7 @@ export interface ProjectedOrdinalSummary {
   originalData?: { x?: number; y?: number }
   xyPoints?: object[]
   marks?: object[]
-  thresholds?: any
+  thresholds?: number[]
 }
 
 export interface OrdinalFrameProps extends GeneralFrameProps {
@@ -80,14 +80,14 @@ export interface OrdinalFrameProps extends GeneralFrameProps {
     | boolean
     | ((
         labelValue: string,
-        columnData: any,
+        columnData: object[],
         index: number,
-        column: any
+        column: { name: string; pieceData: object[]; x: number; y: number; middle: number; width: number; padding: number; pieces: object[] }
       ) => string | Element)
   renderMode?: object | string | accessorType<string | object>
   summaryRenderMode?: object | string | accessorType<string | object>
   pixelColumnWidth?: number
-  oScaleType?: any
+  oScaleType?: ScaleBand<string>
   rScaleType?: () => ScaleLinear<number, number>
   data: Array<object | number>
   oPadding?: number
@@ -103,7 +103,7 @@ export interface OrdinalFrameState extends GeneralFrameState {
   pieceDataXY: Array<object>
   axisData?: AxisProps[]
   axes?: React.ReactNode[]
-  axesTickLines?: any
+  axesTickLines?: Object[]
   oLabels: { labels: React.ReactNode }
   columnOverlays: Array<object>
   oAccessor: Array<Function>
@@ -127,6 +127,6 @@ export interface OrdinalFrameState extends GeneralFrameState {
 export interface LabelSettingsType {
   orient?: string
   padding?: number
-  label?: any
+  label?: boolean | Function
   labelFormatter?: Function
 }

@@ -276,8 +276,8 @@ export function SankeyDiagram(props: SankeyDiagramProps) {
 
   // Node style function
   const nodeStyle = useMemo(() => {
-    return (d: any) => {
-      const baseStyle: any = {
+    return (d: Record<string, any>) => {
+      const baseStyle: Record<string, string | number> = {
         stroke: "black",
         strokeWidth: 1
       }
@@ -296,8 +296,8 @@ export function SankeyDiagram(props: SankeyDiagramProps) {
 
   // Edge style function
   const edgeStyle = useMemo(() => {
-    return (d: any) => {
-      const baseStyle: any = {
+    return (d: Record<string, any>) => {
+      const baseStyle: Record<string, string | number> = {
         stroke: "black",
         strokeWidth: 0.5,
         fillOpacity: edgeOpacity,
@@ -334,7 +334,7 @@ export function SankeyDiagram(props: SankeyDiagramProps) {
   const nodeLabelFn = useMemo(() => {
     if (!showLabels) return undefined
     const accessor = nodeLabel || nodeIdAccessor
-    return (d: any) => {
+    return (d: Record<string, any>) => {
       if (typeof accessor === "function") return accessor(d)
       return d[accessor]
     }
@@ -342,7 +342,7 @@ export function SankeyDiagram(props: SankeyDiagramProps) {
 
   // Build network type configuration
   const networkType = useMemo(() => {
-    const config: any = {
+    const config: Record<string, unknown> = {
       type: "sankey",
       orient: nodeAlign,
       direction: orientation === "horizontal" ? undefined : "down",
@@ -382,7 +382,7 @@ export function SankeyDiagram(props: SankeyDiagramProps) {
     ...(className && { className }),
     ...(title && { title }),
     // Add tooltip support
-    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) }),
+    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
     // Allow frameProps to override defaults
     ...frameProps
   }

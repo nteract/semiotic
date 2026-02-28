@@ -1,6 +1,7 @@
+import * as React from "react"
 import { ScaleLinear } from "d3-scale"
 import { CustomHoverType } from "./annotationTypes"
-import { MarginType } from "./generalTypes"
+import { MarginType, GenericObject } from "./generalTypes"
 
 export interface AdvancedInteractionSettings {
   voronoiClipping?: boolean | number
@@ -39,10 +40,9 @@ export type InteractionLayerProps = {
   projectedYMiddle?: string
   projectedX: string
   projectedY: string
-  points?: Array<{ data: any }>
+  points?: Array<{ data: GenericObject }>
   position?: number[]
   enabled?: boolean
-  useSpans?: boolean
   margin: MarginType
   projection?: string
   customDoubleClickBehavior?: Function
@@ -60,7 +60,7 @@ export type VoronoiEntryType = {
   voronoiY: number
   coincidentPoints: object[]
   type?: string
-  data?: object[]
+  data?: GenericObject
 }
 
 export type BaseColumnType = { x: number; width: number }
@@ -70,5 +70,4 @@ export type InteractionLayerState = {
   props: InteractionLayerProps
   canvasMap: Map<string, number>
   interactionCanvas: React.ReactNode
-  SpanOrDiv: Function
 }

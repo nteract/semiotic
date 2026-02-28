@@ -6,8 +6,6 @@ import { select } from "d3-selection"
 // components
 import Brush from "./Brush"
 
-import { HOCSpanOrDiv } from "./SpanOrDiv"
-
 import {
   Interactivity,
   InteractionLayerProps,
@@ -41,7 +39,7 @@ const generateOMappingFn =
 
 const generateOEndMappingFn =
   (projectedColumns) =>
-  (d, event): null | Array<any> => {
+  (d, event): null | Array<BaseColumnType> => {
     if (
       d &&
       event.sourceEvent &&
@@ -143,7 +141,7 @@ const createBrush = (
     selectedExtent = castExtent.map((d) => yScale(d)).sort((a, b) => a - b)
     endMappingFn = mappingFn
   } else {
-    const typedExtent: any = extent
+    const typedExtent = extent as Array<number[]>
     const castExtent = [...typedExtent.map((ee) => [...ee])] as number[][]
     if (
       castExtent.indexOf(undefined) !== -1 ||
@@ -381,7 +379,6 @@ export default function InteractionLayer(props: InteractionLayerProps) {
     interaction,
     svgSize = [500, 500],
     margin = { left: 0, right: 0, top: 0, bottom: 0 },
-    useSpans = false,
     overlay,
     points,
     xScale,
@@ -404,8 +401,6 @@ export default function InteractionLayer(props: InteractionLayerProps) {
 
   const [overlayRegions, changeOverlayRegions] = useState([])
   const [interactionCanvas, changeInteractionCanvas] = useState(null)
-  const [SpanOrDiv] = useState(() => HOCSpanOrDiv(useSpans))
-
   useEffect(() => {
     let nextOverlay, interactionCanvas
 
@@ -455,8 +450,7 @@ export default function InteractionLayer(props: InteractionLayerProps) {
   }
 
   return (
-    <SpanOrDiv
-      span={useSpans}
+    <div
       className="interaction-layer"
       data-testid="interaction-layer"
       style={{
@@ -484,6 +478,6 @@ export default function InteractionLayer(props: InteractionLayerProps) {
           </g>
         </svg>
       )}
-    </SpanOrDiv>
+    </div>
   )
 }

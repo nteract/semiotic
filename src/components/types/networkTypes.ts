@@ -39,7 +39,15 @@ export interface NodeType {
 
 export interface EdgeType {
   circular?: boolean
-  circularPathData?: any
+  circularPathData?: {
+    sourceX: number
+    sourceY: number
+    leftFullExtent: number
+    rightFullExtent: number
+    verticalFullExtent: number
+    targetX: number
+    targetY: number
+  }
   source?: NodeType
   target?: NodeType
   d?: string

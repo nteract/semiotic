@@ -8,19 +8,11 @@ import {
   objectifyType,
   keyAndObjectifyBarData,
   adjustedPositionSize,
-  orFrameConnectionRenderer,
   orFrameAxisGenerator
 } from "../svg/frameFunctions"
-import { pointOnArcAtAngle, renderLaidOutPieces } from "../svg/pieceDrawing"
-import { drawSummaries, renderLaidOutSummaries } from "../svg/summaryLayouts"
-
-import {
-  clusterBarLayout,
-  barLayout,
-  pointLayout,
-  swarmLayout,
-  timelineLayout
-} from "../svg/pieceLayouts"
+import { pointOnArcAtAngle } from "../svg/pieceDrawing"
+import { drawSummaries } from "../svg/summaryLayouts"
+import { axisGenerator } from "../svg/summaryAxis"
 
 import { stringToFn, stringToArrayFn } from "../data/dataFunctions"
 
@@ -37,30 +29,24 @@ import { AxisProps } from "../types/annotationTypes"
 
 import { PieceLayoutType, GenericObject } from "../types/generalTypes"
 
-import { genericFunction } from "../generic_utilities/functions"
+import { scaleOrdinal, scaleLinear, ScaleBand, ScaleLinear } from "d3-scale"
 
-import { scaleOrdinal, scaleLinear, ScaleBand } from "d3-scale"
+import {
+  layoutHash,
+  midMod,
+  zeroFunction,
+  twoPI,
+  naturalLanguageTypes
+} from "./ordinalConstants"
 
-const layoutHash = {
-  clusterbar: clusterBarLayout,
-  bar: barLayout,
-  point: pointLayout,
-  swarm: swarmLayout,
-  timeline: timelineLayout
-}
+import { generateColumnOverlays } from "./ordinalOverlays"
+import { assembleRenderPipeline } from "./ordinalRenderPipeline"
 
-const midMod = (d) => (d.middle ? d.middle : 0)
-
-const zeroFunction = genericFunction(0)
-const twoPI = Math.PI * 2
-
-const naturalLanguageTypes = {
-  bar: { items: "bar", chart: "bar chart" },
-  clusterbar: { items: "bar", chart: "grouped bar chart" },
-  swarm: { items: "point", chart: "swarm plot" },
-  point: { items: "point", chart: "point plot" },
-  timeline: { items: "bar", chart: "timeline" }
-}
+export { layoutHash, midMod, zeroFunction, twoPI, naturalLanguageTypes } from "./ordinalConstants"
+export { generateColumnOverlays } from "./ordinalOverlays"
+export type { GenerateColumnOverlaysArgs } from "./ordinalOverlays"
+export { assembleRenderPipeline } from "./ordinalRenderPipeline"
+export type { AssembleRenderPipelineArgs } from "./ordinalRenderPipeline"
 
 export const calculateMappedMiddles = (
   oScale: ScaleBand<string>,
@@ -300,13 +286,13 @@ export const calculateOrdinalFrame = (
     { total: 0 }
   )
 
-  const castOScaleType = oScaleType as unknown as any
+  const castOScaleType = oScaleType as unknown as (ScaleBand<string> & (() => ScaleBand<string>))
 
-  const oScale = dynamicColumnWidth
+  const oScale = (dynamicColumnWidth
     ? scaleOrdinal()
     : castOScaleType?.domain
     ? castOScaleType
-    : castOScaleType()
+    : castOScaleType()) as ScaleBand<string>
 
   oScale.domain(oExtent)
 
@@ -451,7 +437,7 @@ export const calculateOrdinalFrame = (
 
   const nestedPieces = {}
 
-  for (const datum of allData as any) {
+  for (const datum of allData as { column: string; value: number }[]) {
     if (!nestedPieces[datum.column]) {
       nestedPieces[datum.column] = []
     }
@@ -510,7 +496,7 @@ export const calculateOrdinalFrame = (
     adjustedSize[0]
   ]
 
-  const castRScaleType = rScaleType as unknown as any
+  const castRScaleType = rScaleType as unknown as (ScaleLinear<number, number> & { (): ScaleLinear<number, number> })
 
   // if rScaleType has a domain that means it's instantiated, otherwise, it needs to be instantiated
   const instantiatedRScaleType = castRScaleType.domain
@@ -956,127 +942,25 @@ export const calculateOrdinalFrame = (
       currentProps.customHoverBehavior)
   ) {
     if (shouldRecalculateOverlay) {
-      columnOverlays = oExtent.map((d, i) => {
-        const barColumnWidth = projectedColumns[d].width
-        let xPosition = projectedColumns[d].x
-        let yPosition = 0
-        let height = rScale.range()[1]
-        let width = barColumnWidth + padding
-        if (projection === "horizontal") {
-          yPosition = projectedColumns[d].x
-          xPosition = 0
-          width = rScale.range()[1]
-          height = barColumnWidth
-        }
-
-        if (projection === "radial") {
-          const { markD, centroid, translate, midAngle } = pieArcs[i]
-          const radialMousePackage = {
-            type: "column-hover",
-            column: projectedColumns[d],
-            pieces: projectedColumns[d].pieceData,
-            summary: projectedColumns[d].pieceData,
-            arcAngles: {
-              centroid,
-              translate,
-              midAngle,
-              length: rScale.range()[1] / 2
-            }
-          }
-          return {
-            markType: "path",
-            key: `hover${d}`,
-            d: markD,
-            transform: `translate(${translate.join(",")})`,
-            style: { opacity: 0 },
-            overlayData: radialMousePackage,
-            onDoubleClick:
-              customDoubleClickBehavior &&
-              ((e) => {
-                customDoubleClickBehavior(radialMousePackage, e)
-              }),
-            onClick:
-              customClickBehavior &&
-              ((e) => {
-                customClickBehavior(radialMousePackage, e)
-              }),
-            onMouseEnter:
-              customHoverBehavior &&
-              ((e) => {
-                customHoverBehavior(radialMousePackage, e)
-              }),
-            onMouseLeave:
-              customHoverBehavior &&
-              ((e) => {
-                customHoverBehavior(e)
-              })
-          }
-        }
-
-        const baseMousePackage = {
-          type: "column-hover",
-          column: projectedColumns[d],
-          pieces: projectedColumns[d].pieceData,
-          summary: projectedColumns[d].pieceData
-        }
-        return {
-          markType: "rect",
-          key: `hover-${d}`,
-          x: xPosition,
-          y: yPosition,
-          height: height,
-          width: width,
-          style: { opacity: 0 },
-          onDoubleClick:
-            customDoubleClickBehavior &&
-            ((e) => {
-              customDoubleClickBehavior(baseMousePackage, e)
-            }),
-          onClick:
-            customClickBehavior &&
-            ((e) => {
-              customClickBehavior(baseMousePackage, e)
-            }),
-          onMouseEnter:
-            customHoverBehavior &&
-            ((e) => {
-              customHoverBehavior(baseMousePackage, e)
-            }),
-          onMouseLeave: (e) => {
-            customHoverBehavior(undefined, e)
-          },
-          overlayData: baseMousePackage
-        }
+      columnOverlays = generateColumnOverlays({
+        oExtent,
+        projectedColumns,
+        rScale,
+        pieArcs,
+        padding,
+        projection,
+        customDoubleClickBehavior,
+        customClickBehavior,
+        customHoverBehavior
       })
     } else {
       columnOverlays = currentState.columnOverlays
     }
   }
 
-  const {
-    renderMode,
-    canvasSummaries,
-    summaryRenderMode,
-    connectorClass,
-    connectorRenderMode,
-    canvasConnectors,
-    canvasPieces
-  } = currentProps
-
   let pieceDataXY
   const pieceRenderMode = stringToFn<GenericObject | string>(
-    renderMode,
-    undefined,
-    true
-  )
-  const pieceCanvasRender = stringToFn<boolean>(canvasPieces, undefined, true)
-  const summaryCanvasRender = stringToFn<boolean>(
-    canvasSummaries,
-    undefined,
-    true
-  )
-  const connectorCanvasRender = stringToFn<boolean>(
-    canvasConnectors,
+    currentProps.renderMode,
     undefined,
     true
   )
@@ -1100,7 +984,7 @@ export const calculateOrdinalFrame = (
     chartSize: size,
     margin,
     rScale
-  }) as any[]
+  }) as GenericObject[]
 
   const keyedData = calculatedPieceData.reduce((p, c) => {
     if (c.o) {
@@ -1122,7 +1006,7 @@ export const calculateOrdinalFrame = (
       data: projectedColumns,
       type: summaryType,
       renderMode: stringToFn<GenericObject | string>(
-        summaryRenderMode,
+        currentProps.summaryRenderMode,
         undefined,
         true
       ),
@@ -1132,7 +1016,8 @@ export const calculateOrdinalFrame = (
       eventListenersGenerator,
       adjustedSize,
       //        chartSize: size,
-      margin
+      margin,
+      axisCreator: axisGenerator
     })
 
     calculatedSummaries.originalData = projectedColumns
@@ -1191,166 +1076,88 @@ export const calculateOrdinalFrame = (
     thresholds: calculatedSummaries.thresholds
   })
 
-  if (usesPieceOverlays) {
-    const yMod = projection === "horizontal" ? midMod : zeroFunction
-    const xMod = projection === "vertical" ? midMod : zeroFunction
-    if (shouldRecalculateOverlay) {
-      columnOverlays = calculatedPieceData.map((d, i) => {
-        const mousePackage = {
-          ...d.piece,
-          x: d.xy.x + xMod(d.xy),
-          y: d.xy.y + yMod(d.xy)
-        }
-        if (React.isValidElement(d.renderElement)) {
-          return {
-            renderElement: d.renderElement,
-            overlayData: mousePackage
-          }
-        }
-        return {
-          ...d.renderElement,
-          key: `hover-${i}`,
-          style: { opacity: 0 },
-          overlayData: mousePackage,
-          onClick:
-            customClickBehavior &&
-            ((e) => {
-              customClickBehavior(mousePackage.data, e)
-            }),
-          onDoubleClick:
-            customDoubleClickBehavior &&
-            ((e) => {
-              customDoubleClickBehavior(mousePackage.data, e)
-            }),
-          onMouseEnter:
-            customHoverBehavior &&
-            ((e) => {
-              customHoverBehavior(mousePackage.data, e)
-            }),
-          onMouseLeave:
-            customHoverBehavior &&
-            ((e) => {
-              customHoverBehavior(undefined, e)
-            })
-        }
-      })
-    } else {
-      columnOverlays = currentState.columnOverlays
-    }
-  }
+  const {
+    canvasSummaries,
+    connectorClass,
+    connectorRenderMode,
+    canvasConnectors,
+    canvasPieces
+  } = currentProps
 
-  const typeAriaLabel = (pieceType.type !== undefined &&
-    typeof pieceType.type !== "function" &&
-    naturalLanguageTypes[pieceType.type]) || {
-    items: "piece",
-    chart: "ordinal chart"
-  }
-
-  const orFrameRender = {
-    connectors: {
-      accessibleTransform: (data, i) => data[i],
-      projection,
-      data: { keyedData, oExtent },
-      styleFn: stringToFn<GenericObject>(connectorStyle, () => ({}), true),
-      classFn: stringToFn<string>(connectorClass, () => "", true),
-      renderMode: stringToFn<GenericObject | string>(
-        connectorRenderMode,
-        undefined,
-        true
-      ),
-      canvasRender: connectorCanvasRender,
-      behavior: orFrameConnectionRenderer,
-      type: connectorType,
-      eventListenersGenerator,
-      pieceType
-    },
-    summaries: {
-      accessibleTransform: (data, i) => {
-        const columnName = oExtent[i]
-
-        const summaryPackage = {
-          type: "column-hover",
-          column: projectedColumns[columnName],
-          pieces: projectedColumns[columnName].pieceData,
-          summary: projectedColumns[columnName].pieceData,
-          oAccessor
-        }
-        return summaryPackage
-      },
-      data: calculatedSummaries.marks,
-      behavior: renderLaidOutSummaries,
-      canvasRender: summaryCanvasRender,
-      styleFn: stringToFn<GenericObject>(summaryStyle, () => ({}), true),
-      classFn: stringToFn<string>(summaryClass, () => "", true)
-    },
-    pieces: {
-      accessibleTransform: (data, i) => ({
-        ...(data[i].piece ? { ...data[i].piece, ...data[i].xy } : data[i]),
-        type: "frame-hover"
-      }),
-      shouldRender: pieceType.type && pieceType.type !== "none",
-      data: calculatedPieceData,
-      behavior: renderLaidOutPieces,
-      canvasRender: pieceCanvasRender,
-      styleFn: stringToFn<GenericObject>(pieceStyle, () => ({}), true),
-      classFn: stringToFn<string>(pieceClass, () => "", true),
-      axis: arrayWrappedAxis,
-      ariaLabel: typeAriaLabel
-    }
-  }
-
-  if (
-    rExtentSettings.onChange &&
-    (currentState.calculatedRExtent || []).join(",") !==
-      (calculatedRExtent || []).join(",")
-  ) {
-    rExtentSettings.onChange(calculatedRExtent)
-  }
-
-  if (
-    oExtentSettings.onChange &&
-    (currentState.calculatedOExtent || []).join(",") !==
-      (calculatedOExtent || []).join(",")
-  ) {
-    oExtentSettings.onChange(calculatedOExtent)
-  }
-
-  let legendSettings
-
-  if (legend) {
-    legendSettings = legend === true ? {} : legend
-  }
+  const pieceCanvasRender = stringToFn<boolean>(canvasPieces, undefined, true)
+  const summaryCanvasRender = stringToFn<boolean>(
+    canvasSummaries,
+    undefined,
+    true
+  )
+  const connectorCanvasRender = stringToFn<boolean>(
+    canvasConnectors,
+    undefined,
+    true
+  )
 
   return {
     pieceDataXY,
-    adjustedPosition,
-    adjustedSize,
-    backgroundGraphics,
-    foregroundGraphics,
-    axisData: arrayWrappedAxis,
-    axes: axis,
-    axesTickLines,
-    oLabels: { labels: oLabels },
-    title,
-    columnOverlays,
-    renderNumber: currentState.renderNumber + 1,
     oAccessor,
     rAccessor,
-    oScaleType,
-    rScaleType: instantiatedRScaleType,
-    oExtent,
-    rExtent,
-    oScale,
-    rScale,
-    calculatedOExtent,
-    calculatedRExtent,
-    projectedColumns,
-    margin,
-    legendSettings,
-    orFrameRender,
     summaryType,
     type: pieceType,
-    pieceIDAccessor,
-    props: currentProps
+    ...assembleRenderPipeline({
+      usesPieceOverlays,
+      shouldRecalculateOverlay,
+      calculatedPieceData,
+      projection,
+      customClickBehavior,
+      customDoubleClickBehavior,
+      customHoverBehavior,
+      currentState,
+
+      connectorStyle,
+      connectorClass,
+      connectorRenderMode,
+      connectorCanvasRender,
+      summaryCanvasRender,
+      pieceCanvasRender,
+      connectorType,
+      eventListenersGenerator,
+      pieceType,
+      summaryStyle,
+      summaryClass,
+      pieceStyle,
+      pieceClass,
+
+      keyedData,
+      oExtent,
+      projectedColumns,
+      calculatedSummaries,
+      oAccessor,
+
+      rScale,
+
+      calculatedRExtent,
+      calculatedOExtent,
+      rExtentSettings,
+      oExtentSettings,
+
+      adjustedPosition,
+      adjustedSize,
+      margin,
+
+      backgroundGraphics,
+      foregroundGraphics,
+      arrayWrappedAxis,
+      axis,
+      axesTickLines,
+      oLabels,
+      title,
+      columnOverlays,
+      oScaleType,
+      instantiatedRScaleType,
+      oScale,
+      rExtent,
+      legend,
+      pieceIDAccessor,
+      currentProps
+    })
   }
 }

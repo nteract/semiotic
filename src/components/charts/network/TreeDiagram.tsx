@@ -50,7 +50,7 @@ export interface TreeDiagramProps extends BaseChartProps {
    * Field name or function to access children array
    * @default "children"
    */
-  childrenAccessor?: Accessor<any[]>
+  childrenAccessor?: Accessor<Record<string, any>[]>
 
   /**
    * Field name or function to access node value for sizing
@@ -246,8 +246,8 @@ export function TreeDiagram(props: TreeDiagramProps) {
   // Flatten hierarchy to get all nodes for color scale
   const allNodes = useMemo(() => {
     if (!data) return []
-    const nodes: any[] = []
-    const traverse = (node: any) => {
+    const nodes: Array<Record<string, any>> = []
+    const traverse = (node: Record<string, any>) => {
       nodes.push(node)
       const children =
         typeof childrenAccessor === "function"
@@ -282,8 +282,8 @@ export function TreeDiagram(props: TreeDiagramProps) {
 
   // Node style function
   const nodeStyleFn = useMemo(() => {
-    return (d: any) => {
-      const baseStyle: any = {
+    return (d: Record<string, any>) => {
+      const baseStyle: Record<string, string | number> = {
         stroke: "black",
         strokeWidth: 1
       }
@@ -292,7 +292,7 @@ export function TreeDiagram(props: TreeDiagramProps) {
       if (colorByDepth) {
         baseStyle.fill = getColor({ depth: d.depth || 0 }, "depth", colorScale)
       } else if (colorBy) {
-        baseStyle.fill = getColor(d, colorBy as any, colorScale)
+        baseStyle.fill = getColor(d, colorBy as string | ((d: any) => string), colorScale)
       } else {
         // Default color
         baseStyle.fill = DEFAULT_COLOR
@@ -313,7 +313,7 @@ export function TreeDiagram(props: TreeDiagramProps) {
 
   // Build network type configuration
   const networkType = useMemo(() => {
-    const config: any = {
+    const config: Record<string, unknown> = {
       type: layout
     }
 
@@ -335,7 +335,7 @@ export function TreeDiagram(props: TreeDiagramProps) {
     if (typeof childrenAccessor === "function") {
       return childrenAccessor
     }
-    return (d: any) => d[childrenAccessor]
+    return (d: Record<string, any>) => d[childrenAccessor]
   }, [childrenAccessor])
 
   const hierarchySum = useMemo(() => {
@@ -348,7 +348,7 @@ export function TreeDiagram(props: TreeDiagramProps) {
       if (typeof valueAccessor === "function") {
         return valueAccessor
       }
-      return (d: any) => d[valueAccessor] || 1
+      return (d: Record<string, any>) => d[valueAccessor] || 1
     }
     return undefined
   }, [layout, valueAccessor])
@@ -371,13 +371,13 @@ export function TreeDiagram(props: TreeDiagramProps) {
     margin,
     nodeSizeAccessor: () => nodeSize,
     ...(hierarchyChildren && {
-      hierarchyChildren: hierarchyChildren as any
+      hierarchyChildren: hierarchyChildren as Function
     }),
-    ...(hierarchySum && { hierarchySum: hierarchySum as any }),
+    ...(hierarchySum && { hierarchySum: hierarchySum as Function }),
     ...(className && { className }),
     ...(title && { title }),
     // Add tooltip support
-    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) }),
+    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
     // Allow frameProps to override defaults
     ...frameProps
   }

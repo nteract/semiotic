@@ -598,6 +598,6 @@ export function clonedAppliedElement({
     return React.createElement(RenderableMark)
   }
 
-  const { markType, renderMode: _rm, ...restProps } = markProps
+  const { markType, ...restProps } = markProps
   return React.createElement(markType, restProps)
 }

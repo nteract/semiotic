@@ -268,8 +268,8 @@ export function ForceDirectedGraph(props: ForceDirectedGraphProps) {
 
   // Node style function
   const nodeStyle = useMemo(() => {
-    return (d: any) => {
-      const baseStyle: any = {}
+    return (d: Record<string, any>) => {
+      const baseStyle: Record<string, string | number> = {}
 
       // Apply color
       if (colorBy) {
@@ -293,8 +293,8 @@ export function ForceDirectedGraph(props: ForceDirectedGraphProps) {
 
   // Edge style function
   const edgeStyle = useMemo(() => {
-    return (d: any) => {
-      const baseStyle: any = {
+    return (d: Record<string, any>) => {
+      const baseStyle: Record<string, string | number> = {
         stroke: edgeColor,
         strokeOpacity: edgeOpacity
       }
@@ -316,7 +316,7 @@ export function ForceDirectedGraph(props: ForceDirectedGraphProps) {
   const nodeLabelFn = useMemo(() => {
     if (!showLabels || !nodeLabel) return undefined
 
-    return (d: any) => {
+    return (d: Record<string, any>) => {
       if (typeof nodeLabel === "function") {
         return nodeLabel(d)
       }
@@ -381,7 +381,7 @@ export function ForceDirectedGraph(props: ForceDirectedGraphProps) {
     ...(className && { className }),
     ...(title && { title }),
     // Add tooltip support
-    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) }),
+    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
     // Allow frameProps to override defaults
     ...frameProps
   }

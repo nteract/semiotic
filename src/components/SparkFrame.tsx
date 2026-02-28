@@ -89,7 +89,7 @@ export default function createSparkFrame(Frame, defaults, frameName) {
     }, [])
 
     return (
-      <span
+      <div
         style={Object.assign(
           {
             width: `${actualSize[0]}px`,
@@ -102,8 +102,8 @@ export default function createSparkFrame(Frame, defaults, frameName) {
         )}
         ref={sparkNodeRef}
       >
-        <Frame {...defaults(props)} size={actualSize} useSpans={true} />
-      </span>
+        <Frame {...defaults(props)} size={actualSize} />
+      </div>
     )
   }
 }

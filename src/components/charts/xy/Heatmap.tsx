@@ -4,7 +4,7 @@ import { scaleSequential } from "d3-scale"
 import { interpolateBlues, interpolateReds, interpolateGreens, interpolateViridis } from "d3-scale-chromatic"
 import XYFrame from "../../XYFrame"
 import type { XYFrameProps } from "../../types/xyTypes"
-import { DEFAULT_COLOR } from "../shared/hooks"
+import { DEFAULT_COLOR, resolveAccessor } from "../shared/hooks"
 import type { BaseChartProps, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 
@@ -205,7 +205,7 @@ export function Heatmap(props: HeatmapProps) {
   const getValueFn = useMemo(() => {
     return typeof valueAccessor === "function"
       ? valueAccessor
-      : (d: any) => d[valueAccessor]
+      : (d: Record<string, any>) => d[valueAccessor]
   }, [valueAccessor])
 
   // Calculate value domain
@@ -234,8 +234,8 @@ export function Heatmap(props: HeatmapProps) {
 
   // Get unique x and y values for bin sizing
   const { xBinCount, yBinCount } = useMemo(() => {
-    const getX = typeof xAccessor === "function" ? xAccessor : (d: any) => d[xAccessor]
-    const getY = typeof yAccessor === "function" ? yAccessor : (d: any) => d[yAccessor]
+    const getX = resolveAccessor(xAccessor)
+    const getY = resolveAccessor(yAccessor)
 
     return {
       xBinCount: new Set(safeData.map(getX)).size,
@@ -250,7 +250,7 @@ export function Heatmap(props: HeatmapProps) {
 
   // Summary style function
   const summaryStyle = useMemo(() => {
-    return (d: any) => {
+    return (d: Record<string, any>) => {
       const value = getValueFn(d)
       return {
         fill: colorScale(value),
@@ -266,7 +266,7 @@ export function Heatmap(props: HeatmapProps) {
 
     const midpoint = (valueDomain[0] + valueDomain[1]) / 2
 
-    return (d: any, i: number) => {
+    return (d: Record<string, any>, i: number) => {
       const value = getValueFn(d)
       const displayValue = valueFormat ? valueFormat(value) : String(value)
 
@@ -285,7 +285,7 @@ export function Heatmap(props: HeatmapProps) {
 
   // Build axes configuration
   const axes = useMemo(() => {
-    const axesConfig: any[] = []
+    const axesConfig: Array<Record<string, unknown>> = []
 
     // Y axis (left)
     axesConfig.push({
@@ -320,21 +320,21 @@ export function Heatmap(props: HeatmapProps) {
       type: "heatmap",
       xBins: xBinCount,
       yBins: yBinCount,
-      binValue: (items: any[]) => {
+      binValue: (items: Array<Record<string, any>>) => {
         if (items.length === 0) return 0
         const sum = items.reduce((acc, item) => acc + getValueFn(item), 0)
         return sum / items.length
       }
     },
     summaryStyle,
-    axes,
+    axes: axes as any,
     hoverAnnotation: enableHover,
     margin,
     ...(summaryRenderMode && { summaryRenderMode }),
     ...(className && { className }),
     ...(title && { title }),
     // Add tooltip support
-    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) }),
+    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
     // Allow frameProps to override defaults
     ...frameProps
   }

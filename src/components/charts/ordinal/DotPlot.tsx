@@ -56,7 +56,7 @@ export interface DotPlotProps extends BaseChartProps {
   /**
    * Format function for value axis tick labels
    */
-  valueFormat?: (d: any) => string
+  valueFormat?: (d: number | string) => string
 
   /**
    * Field name or function to determine dot color
@@ -85,7 +85,7 @@ export interface DotPlotProps extends BaseChartProps {
    * sort={(a, b) => a.value - b.value}  // Custom function
    * ```
    */
-  sort?: boolean | "asc" | "desc" | ((a: any, b: any) => number)
+  sort?: boolean | "asc" | "desc" | ((a: Record<string, any>, b: Record<string, any>) => number)
 
   /**
    * Dot radius
@@ -184,8 +184,8 @@ export function DotPlot(props: DotPlotProps) {
 
   // Piece style function
   const pieceStyle = useMemo(() => {
-    return (d: any) => {
-      const baseStyle: any = {
+    return (d: Record<string, any>) => {
+      const baseStyle: Record<string, string | number> = {
         r: dotRadius,
         fillOpacity: 0.8
       }
@@ -203,7 +203,7 @@ export function DotPlot(props: DotPlotProps) {
 
   // Build axes configuration
   const axes = useMemo(() => {
-    const axesConfig: any[] = []
+    const axesConfig: Array<Record<string, unknown>> = []
 
     if (orientation === "horizontal") {
       // Horizontal: category on left, value on bottom
@@ -276,7 +276,7 @@ export function DotPlot(props: DotPlotProps) {
 
   // Default tooltip function for piece hover
   const defaultTooltipContent = useMemo(() => {
-    return (d: any) => {
+    return (d: Record<string, any>) => {
       const cat = typeof categoryAccessor === "function" ? categoryAccessor(d) : d[categoryAccessor]
       const val = typeof valueAccessor === "function" ? valueAccessor(d) : d[valueAccessor]
       return (
@@ -299,7 +299,7 @@ export function DotPlot(props: DotPlotProps) {
     type: "point",
     projection: orientation === "horizontal" ? "horizontal" : "vertical",
     style: pieceStyle,
-    axes,
+    axes: axes as any,
     pieceHoverAnnotation: enableHover,
     margin,
     oPadding: categoryPadding,
@@ -307,7 +307,7 @@ export function DotPlot(props: DotPlotProps) {
     ...(className && { className }),
     ...(title && { title }),
     // Add tooltip support
-    tooltipContent: tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent,
+    tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as Function,
     // Allow frameProps to override defaults
     ...frameProps
   }

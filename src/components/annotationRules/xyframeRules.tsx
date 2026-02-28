@@ -6,7 +6,6 @@ import { line, area } from "d3-shape"
 import { packEnclose } from "d3-hierarchy"
 import { extent } from "d3-array"
 import { circleEnclosure, rectangleEnclosure, hullEnclosure } from "./baseRules"
-import SpanOrDiv from "../SpanOrDiv"
 import { findFirstAccessorValue } from "../data/multiAccessorUtils"
 import { curveHash } from "../visualizationLayerBehavior/general"
 import { ScaleLinear } from "d3-scale"
@@ -440,14 +439,12 @@ export const htmlTooltipAnnotation = ({
   content,
   screenCoordinates,
   i,
-  d,
-  useSpans
+  d
 }) => {
   //To string because React gives a DOM error if it gets a date
 
   return (
-    <SpanOrDiv
-      span={useSpans}
+    <div
       key={`xylabel-${i}`}
       className={`annotation annotation-xy-label ${d.className || ""} `}
       style={{
@@ -457,7 +454,7 @@ export const htmlTooltipAnnotation = ({
       }}
     >
       {content}
-    </SpanOrDiv>
+    </div>
   )
 }
 

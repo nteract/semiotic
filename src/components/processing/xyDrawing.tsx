@@ -33,6 +33,7 @@ import {
 
 import {
   ProjectedLine,
+  ProjectedSummary,
   GenericObject,
   LineTypeSettings,
   SummaryTypeSettings,
@@ -500,7 +501,7 @@ export const calculateXYFrame = (
             const labelCenter = [
               xScale(labelBounds[labelPosition][0]),
               yScale(labelBounds[labelPosition][1])
-            ] || [xScale(d._xyfCoordinates[0]), yScale(d._xyfCoordinates[1])]
+            ]
             const labelContent = label.content || ((p) => p.value || p.id || i)
 
             areaAnnotations.push({
@@ -523,7 +524,7 @@ export const calculateXYFrame = (
     projectedSummaries &&
     projectedSummaries[0]
   ) {
-    const firstSummary: any = projectedSummaries[0]
+    const firstSummary: ProjectedSummary & { value?: string; r2?: number } = projectedSummaries[0] as ProjectedSummary & { value?: string; r2?: number }
 
     const firstPoint = firstSummary._xyfCoordinates[0]
     const finalPoint =

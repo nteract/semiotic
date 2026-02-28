@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useMemo } from "react"
+import { useCallback, useMemo, useRef } from "react"
 
 import Frame from "./Frame"
 
@@ -117,6 +117,20 @@ const NetworkFrame = React.memo(function NetworkFrame(
 
   useLegacyUnmountCallback(props, state)
 
+  const propsRef = useRef(props)
+  propsRef.current = props
+  const stateRef = useRef(state)
+  stateRef.current = state
+
+  const defaultSVGRuleCb = useCallback(
+    (args) => defaultNetworkSVGRule(propsRef.current, stateRef.current, args),
+    []
+  )
+  const defaultHTMLRuleCb = useCallback(
+    (args) => defaultNetworkHTMLRule(propsRef.current, stateRef.current, args),
+    []
+  )
+
   const {
     annotations = [],
     annotationSettings,
@@ -132,7 +146,6 @@ const NetworkFrame = React.memo(function NetworkFrame(
     interaction,
     disableContext,
     canvasPostProcess,
-    useSpans,
     canvasNodes,
     canvasEdges,
     additionalDefs,
@@ -192,9 +205,6 @@ const NetworkFrame = React.memo(function NetworkFrame(
     [annotations, nodeLabelAnnotations]
   )
 
-  // Memoize useSpans conversion
-  const useSpansValue = useMemo(() => !!useSpans, [useSpans])
-
   // Memoize canvas rendering flag
   const canvasRendering = useMemo(
     () => !!(canvasNodes || canvasEdges),
@@ -216,8 +226,8 @@ const NetworkFrame = React.memo(function NetworkFrame(
       additionalDefs={additionalDefs}
       frameKey={"none"}
       projectedCoordinateNames={projectedCoordinateNames}
-      defaultSVGRule={(args) => defaultNetworkSVGRule(props, state, args)}
-      defaultHTMLRule={(args) => defaultNetworkHTMLRule(props, state, args)}
+      defaultSVGRule={defaultSVGRuleCb}
+      defaultHTMLRule={defaultHTMLRuleCb}
       hoverAnnotation={activeHoverAnnotation}
       annotations={mergedAnnotations}
       annotationSettings={annotationSettings}
@@ -235,8 +245,6 @@ const NetworkFrame = React.memo(function NetworkFrame(
       afterElements={afterElements}
       disableContext={disableContext}
       canvasPostProcess={canvasPostProcess}
-      
-      useSpans={useSpansValue}
       canvasRendering={canvasRendering}
       renderOrder={renderOrder}
       disableCanvasInteraction={disableCanvasInteraction}
@@ -310,7 +318,7 @@ function defaultNetworkSVGRule(
     i,
     annotationLayer
   }: {
-    d: any
+    d: AnnotationType
     i: number
     annotationLayer: UpdatedAnnotationLayerProps
   }
@@ -380,7 +388,7 @@ function defaultNetworkSVGRule(
   } else if (d.type === "basic-node-label") {
     return (
       <g key={d.key || `basic-${i}`} transform={`translate(${d.x},${d.y})`}>
-        {baseD.element || baseD.label}
+        {(baseD.element || baseD.label) as React.ReactNode}
       </g>
     )
   } else if (typeof d.type === "function" || annotationTypeStrings.has(d.type)) {
@@ -440,8 +448,7 @@ function defaultNetworkHTMLRule(
   const {
     tooltipContent,
     optimizeCustomTooltipPosition,
-    htmlAnnotationRules,
-    useSpans
+    htmlAnnotationRules
   } = props
   const {
     projectedNodes,
@@ -493,7 +500,6 @@ function defaultNetworkHTMLRule(
       i,
       tooltipContent,
       optimizeCustomTooltipPosition,
-      useSpans,
       nodes: projectedNodes,
       edges: projectedEdges,
       nodeIDAccessor

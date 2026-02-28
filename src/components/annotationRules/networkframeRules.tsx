@@ -3,7 +3,6 @@ import Annotation from "../Annotation"
 
 import { packEnclose } from "d3-hierarchy"
 import { circleEnclosure, rectangleEnclosure, hullEnclosure } from "./baseRules"
-import SpanOrDiv from "../SpanOrDiv"
 import TooltipPositioner from "../TooltipPositioner"
 
 export const htmlFrameHoverRule = ({
@@ -11,7 +10,6 @@ export const htmlFrameHoverRule = ({
   i,
   tooltipContent,
   optimizeCustomTooltipPosition,
-  useSpans,
   nodes,
   edges,
   nodeIDAccessor
@@ -33,24 +31,22 @@ export const htmlFrameHoverRule = ({
   if (!d) return null
 
   let content = d.edge ? (
-    <SpanOrDiv
-      span={useSpans}
+    <div
       className="tooltip-content"
       data-testid="tooltip-content"
     >
       <p key="html-annotation-content-1">
         {(d.source || d.edge.source).id} to {(d.target || d.edge.target).id}
       </p>
-    </SpanOrDiv>
+    </div>
   ) : (
-    <SpanOrDiv
-      span={useSpans}
+    <div
       className="tooltip-content"
       data-testid="tooltip-content"
     >
       <p key="html-annotation-content-1">{d.id}</p>
       <p key="html-annotation-content-2">Degree: {d.degree}</p>
-    </SpanOrDiv>
+    </div>
   )
 
   if (d.type === "frame-hover" && tooltipContent) {
@@ -65,8 +61,7 @@ export const htmlFrameHoverRule = ({
   }
 
   return (
-    <SpanOrDiv
-      span={useSpans}
+    <div
       key={`network-annotation-label-${i}`}
       className={`annotation annotation-network-label ${d.className || ""}`}
       data-testid="network-tooltip-container"
@@ -77,7 +72,7 @@ export const htmlFrameHoverRule = ({
       }}
     >
       {content}
-    </SpanOrDiv>
+    </div>
   )
 }
 

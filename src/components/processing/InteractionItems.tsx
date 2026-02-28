@@ -16,9 +16,10 @@ import {
   InteractionLayerProps,
   VoronoiEntryType
 } from "../types/interactionTypes"
+import { GenericObject } from "../types/generalTypes"
 
 const constructDataObject = (
-  d?: { data?: object[]; type?: string },
+  d?: { data?: GenericObject | object[]; type?: string },
   points?: Object[]
 ) => {
   if (d === undefined) return d
@@ -27,11 +28,11 @@ const constructDataObject = (
 
 export const changeVoronoi = (
   voronoiHover: Function,
-  d: { type?: string; data?: object[] },
+  d: { type?: string; data?: GenericObject | object[] },
   customHoverTypes: CustomHoverType,
   customHoverBehavior: Function,
   points: Object[],
-  e: any
+  e: React.MouseEvent
 ) => {
   //Until semiotic 2
   const dataObject = constructDataObject(d, points)
@@ -62,7 +63,7 @@ export const clickVoronoi = (
   d: Object,
   customClickBehavior: Function,
   points: Object[],
-  e: any
+  e: React.MouseEvent
 ) => {
   //Until semiotic 2
   const dataObject = constructDataObject(d, points)
@@ -73,7 +74,7 @@ export const doubleclickVoronoi = (
   d: Object,
   customDoubleClickBehavior: Function,
   points: Object[],
-  e
+  e: React.MouseEvent
 ) => {
   //Until semiotic 2
   const dataObject = constructDataObject(d, points)
@@ -320,7 +321,7 @@ export const calculateOverlay = (
         if (React.isValidElement(overlayRegion.renderElement)) {
           return React.cloneElement(overlayRegion.renderElement, overlayProps)
         } else {
-          const { markType, renderMode: _rm, type: _type, tx: _tx, ty: _ty, ...restProps } = rest as any
+          const { markType, ...restProps } = rest as { markType?: string; [key: string]: unknown }
           return React.createElement(markType || 'path', {
             ...restProps,
             key: `overlay-${i}`,

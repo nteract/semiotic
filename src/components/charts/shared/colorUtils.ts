@@ -87,10 +87,10 @@ export function getColor(
  * ```
  */
 export function createColorScale(
-  data: any[],
+  data: Array<Record<string, any>>,
   colorBy: string,
   scheme: string | string[] = "category10"
-): (v: any) => string {
+): (v: string) => string {
   // Get unique values
   const uniqueValues = Array.from(new Set(data.map(d => d[colorBy])))
 

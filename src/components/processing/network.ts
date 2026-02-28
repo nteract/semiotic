@@ -12,7 +12,6 @@ import { scaleLinear } from "d3-scale"
 
 import { min, max } from "d3-array"
 
-
 import {
   calculateMargin,
   adjustedPositionSize,
@@ -29,43 +28,19 @@ import {
   drawNodes,
   drawEdges,
   topologicalSort,
-  hierarchicalRectNodeGenerator,
-  matrixNodeGenerator,
-  radialRectNodeGenerator,
-  chordNodeGenerator,
-  chordEdgeGenerator,
-  matrixEdgeGenerator,
-  arcEdgeGenerator,
-  sankeyNodeGenerator,
-  circleNodeGenerator,
+  softStack,
   areaLink,
   ribbonLink,
   circularAreaLink,
-  radialLabelGenerator,
-  dagreEdgeGenerator,
-  softStack,
-  sankeyArrowGenerator
+  radialLabelGenerator
 } from "../svg/networkDrawing"
 
-import {
-  sankeyLeft,
-  sankeyRight,
-  sankeyCenter,
-  sankeyJustify,
-  sankeyCircular
-} from "d3-sankey-circular"
+import { sankeyCircular } from "d3-sankey-circular"
 
 import { chord, ribbon } from "d3-chord"
 import { arc } from "d3-shape"
 
-import {
-  tree,
-  hierarchy,
-  pack,
-  cluster,
-  treemap,
-  partition
-} from "d3-hierarchy"
+import { hierarchy } from "d3-hierarchy"
 
 import { genericFunction } from "../generic_utilities/functions"
 
@@ -78,286 +53,11 @@ import {
 
 import { GenericObject } from "../types/generalTypes"
 
-function determineNodeIcon(baseCustomNodeIcon, networkSettings, size, nodes) {
-  if (baseCustomNodeIcon) return baseCustomNodeIcon
+import { baseNodeProps, baseNetworkSettings, baseGraphSettings, emptyArray } from "./networkDefaults"
+import { determineNodeIcon, determineEdgeIcon, basicMiddle, edgePointHash, hierarchicalTypeHash, hierarchicalProjectable, radialProjectable, sankeyOrientHash } from "./networkLayoutHelpers"
+import { recursiveIDAccessor, defaultHierarchicalIDAccessor, nodesEdgesFromHierarchy, breadthFirstCompontents, matrixify } from "./hierarchyUtils"
 
-  const center = [size[0] / 2, size[1] / 2]
-
-  switch (networkSettings.type) {
-    case "sankey":
-      return sankeyNodeGenerator
-    case "partition":
-      return networkSettings.projection === "radial"
-        ? radialRectNodeGenerator(size, center, networkSettings)
-        : hierarchicalRectNodeGenerator
-    case "treemap":
-      return networkSettings.projection === "radial"
-        ? radialRectNodeGenerator(size, center, networkSettings)
-        : hierarchicalRectNodeGenerator
-    case "circlepack":
-      return circleNodeGenerator
-    case "chord":
-      return chordNodeGenerator(size)
-    case "dagre":
-      return hierarchicalRectNodeGenerator
-    case "matrix":
-      return matrixNodeGenerator(size, nodes)
-  }
-
-  return circleNodeGenerator
-}
-
-function determineEdgeIcon({
-  baseCustomEdgeIcon,
-  networkSettings,
-  size,
-  graph,
-  nodes
-}) {
-  if (baseCustomEdgeIcon) return baseCustomEdgeIcon
-  switch (networkSettings.type) {
-    case "partition":
-      return () => null
-    case "treemap":
-      return () => null
-    case "circlepack":
-      return () => null
-    case "chord":
-      return chordEdgeGenerator(size)
-    case "matrix":
-      return matrixEdgeGenerator(size, nodes)
-    case "arc":
-      return arcEdgeGenerator(size)
-    case "dagre":
-      if (graph) return dagreEdgeGenerator(graph.graph().rankdir)
-    case "sankey":
-      return sankeyArrowGenerator
-  }
-  return undefined
-}
-
-const basicMiddle = (d) => ({
-  edge: d,
-  x: (d.source.x + d.target.x) / 2,
-  y: (d.source.y + d.target.y) / 2
-})
-
-const edgePointHash = {
-  sankey: (d) => ({
-    edge: d,
-    x: (d.source.x1 + d.target.x0) / 2,
-    y: d.circularPathData
-      ? d.circularPathData.verticalFullExtent
-      : ((d.y0 + d.y1) / 2 + (d.y0 + d.y1) / 2) / 2
-  }),
-  force: basicMiddle,
-  tree: basicMiddle,
-  cluster: basicMiddle,
-  matrix: (d) => {
-    return {
-      edge: d,
-      x: d.source.y,
-      y: d.target.y
-    }
-  }
-}
-
-const hierarchicalTypeHash = {
-  dendrogram: tree,
-  tree,
-  circlepack: pack,
-  cluster,
-  treemap,
-  partition
-}
-
-const hierarchicalProjectable = {
-  partition: true,
-  cluster: true,
-  tree: true,
-  dendrogram: true
-}
-
-const radialProjectable = {
-  partition: true,
-  cluster: true,
-  tree: true,
-  dendrogram: true
-}
-
-const sankeyOrientHash = {
-  left: sankeyLeft,
-  right: sankeyRight,
-  center: sankeyCenter,
-  justify: sankeyJustify
-}
-
-function breadthFirstCompontents(baseNodes, hash) {
-  const componentMap = {
-    "0": { componentNodes: [], componentEdges: [] }
-  }
-  const components = [componentMap["0"]]
-
-  let componentID = 0
-
-  traverseNodesBF(baseNodes, true)
-
-  function traverseNodesBF(nodes, top) {
-    for (const node of nodes) {
-      const hashNode = hash.get(node)
-      if (!hashNode) {
-        componentMap["0"].componentNodes.push(node)
-      } else if (hashNode.component === -99) {
-        if (top === true) {
-          componentID++
-          componentMap[componentID] = {
-            componentNodes: [],
-            componentEdges: []
-          }
-          components.push(componentMap[componentID])
-        }
-
-        hashNode.component = componentID
-        componentMap[componentID].componentNodes.push(node)
-        componentMap[componentID].componentEdges.push(...hashNode.edges)
-        const traversibleNodes = [...hashNode.connectedNodes]
-        traverseNodesBF(traversibleNodes, hash)
-      }
-    }
-  }
-
-  return components.sort(
-    (a, b) => b.componentNodes.length - a.componentNodes.length
-  )
-}
-
-const matrixify = ({ edgeHash, nodes, edgeWidthAccessor, nodeIDAccessor }) => {
-  const matrix = []
-  for (const nodeSource of nodes) {
-    const nodeSourceID = nodeIDAccessor(nodeSource)
-    const sourceRow = []
-    matrix.push(sourceRow)
-    for (const nodeTarget of nodes) {
-      const nodeTargetID = nodeIDAccessor(nodeTarget)
-      const theEdge = edgeHash.get(`${nodeSourceID}|${nodeTargetID}`)
-      if (theEdge) {
-        sourceRow.push(edgeWidthAccessor(theEdge))
-      } else {
-        sourceRow.push(0)
-      }
-    }
-  }
-  return matrix
-}
-
-const emptyArray = []
-
-const baseNodeProps = {
-  id: undefined,
-  degree: 0,
-  inDegree: 0,
-  outDegree: 0,
-  x: 0,
-  y: 0,
-  x1: 0,
-  x0: 0,
-  y1: 0,
-  y0: 0,
-  height: 0,
-  width: 0,
-  radius: 0,
-  r: 0,
-  direction: undefined,
-  textHeight: 0,
-  textWidth: 0,
-  fontSize: 0,
-  scale: 1,
-  nodeSize: 0,
-  component: -99,
-  shapeNode: false
-}
-
-const baseNetworkSettings = {
-  hierarchicalNetwork: false
-}
-
-const baseGraphSettings = {
-  nodeHash: new Map(),
-  edgeHash: new Map(),
-  nodes: [],
-  edges: [],
-  hierarchicalNetwork: false,
-  type: "force"
-}
-
-function recursiveIDAccessor(idAccessor, node, accessorString) {
-  if (node.parent) {
-    accessorString = `${accessorString}-${recursiveIDAccessor(
-      idAccessor,
-      { ...node.parent, ...node.parent.data },
-      accessorString
-    )}`
-  }
-  return `${accessorString}-${idAccessor({ ...node, ...node.data })}`
-}
-
-const defaultHierarchicalIDAccessor = (d) => d.id || d.descendantIndex
-
-export const nodesEdgesFromHierarchy = (
-  baseRootNode,
-  idAccessor = defaultHierarchicalIDAccessor
-) => {
-  const edges = []
-  const nodes = []
-
-  const rootNode = baseRootNode.descendants
-    ? baseRootNode
-    : hierarchy(baseRootNode)
-
-  const descendants = rootNode.descendants()
-
-  let i = 0
-
-  for (const node of descendants) {
-    node.descendantIndex = i
-    i++
-  }
-
-  for (const node of descendants) {
-    const generatedID = `${
-      idAccessor({
-        ...node,
-        ...node.data
-      }) ?? defaultHierarchicalIDAccessor(node)
-    }-${
-      node.parent
-        ? recursiveIDAccessor(
-            idAccessor,
-            { ...node.parent, ...node.parent.data },
-            ""
-          ) ?? node.parent.name
-        : "root"
-    }`
-
-    const dataD = Object.assign(node, node.data || {}, {
-      hierarchicalID: generatedID
-    })
-    nodes.push(dataD)
-    if (node.parent !== null) {
-      const dataParent = Object.assign(node.parent, node.parent.data || {})
-      edges.push({
-        source: dataParent,
-        target: dataD,
-        depth: node.depth,
-        weight: 1,
-        value: 1,
-        _NWFEdgeKey: generatedID
-      })
-    }
-  }
-
-  return { edges, nodes }
-}
+export { nodesEdgesFromHierarchy } from "./hierarchyUtils"
 
 export const calculateNetworkFrame = (
   currentProps: NetworkFrameProps,

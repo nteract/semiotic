@@ -4,6 +4,7 @@ import { /*area, curveCatmullRom,*/ arc } from "d3-shape"
 import pathBounds from "svg-path-bounding-box"
 import { scaleLinear } from "d3-scale"
 import { arcTweener } from "./SvgHelper"
+import { pointOnArcAtAngle } from "./pieceDrawing"
 
 // RENAME XY to drawingProps
 
@@ -115,11 +116,11 @@ const radialBarFeatureGenerator = ({
     yPosition,
     xy,
     translate,
+    tx: xOffset,
+    ty: yOffset,
     markProps: {
       markType: "path",
       d: markD,
-      tx: xOffset,
-      ty: yOffset,
       transform: translate
     }
   }
@@ -234,15 +235,6 @@ const iconBarCustomMark =
     return icons
   }
 
-export function pointOnArcAtAngle(center, angle, distance) {
-  const radians = Math.PI * (angle + 0.75) * 2
-
-  const xPosition = center[0] + distance * Math.cos(radians)
-  const yPosition = center[1] + distance * Math.sin(radians)
-
-  return [xPosition, yPosition]
-}
-
 export function clusterBarLayout({
   type,
   data,
@@ -294,16 +286,21 @@ export function clusterBarLayout({
       }
 
       let translate,
-        markProps = {}
+        markProps = {},
+        pieceTx = 0,
+        pieceTy = 0
 
       if (projection === "radial") {
-        ;({ xPosition, yPosition, markProps, xy } = radialBarFeatureGenerator({
+        let tx, ty
+        ;({ xPosition, yPosition, markProps, xy, tx, ty } = radialBarFeatureGenerator({
           type,
           ordset,
           adjustedSize,
           piece,
           i
         }))
+        pieceTx = tx
+        pieceTy = ty
         xy.x = xPosition
       } else {
         xPosition += currentX
@@ -368,7 +365,6 @@ export function clusterBarLayout({
       ) : (
         {
           className: classFn({ ...piece, ...piece.data }, i),
-          renderMode: renderValue,
           key: `piece-${piece.renderKey}`,
           transform: translate,
           style: styleFn({ ...piece, ...piece.data }, ordsetI),
@@ -381,6 +377,9 @@ export function clusterBarLayout({
         o: key,
         xy,
         piece,
+        tx: pieceTx,
+        ty: pieceTy,
+        renderValue,
         renderElement: renderElementObject
       }
       if (projection === "horizontal") {
@@ -458,16 +457,21 @@ export function barLayout({
         }
       }
 
-      let markProps
+      let markProps,
+        pieceTx = 0,
+        pieceTy = 0
 
       if (projection === "radial") {
-        ;({ markProps, xPosition, yPosition } = radialBarFeatureGenerator({
+        let tx, ty
+        ;({ markProps, xPosition, yPosition, tx, ty } = radialBarFeatureGenerator({
           type,
           ordset,
           adjustedSize,
           piece,
           i
         }))
+        pieceTx = tx
+        pieceTy = ty
         finalHeight = undefined
         finalWidth = undefined
 
@@ -532,7 +536,6 @@ export function barLayout({
       ) : (
         {
           className: classFn({ ...piece, ...piece.data }, i),
-          renderMode: renderValue,
           key: `piece-${piece.renderKey}`,
           style: styleFn({ ...piece, ...piece.data }, ordsetI),
           ...eventListeners,
@@ -544,6 +547,9 @@ export function barLayout({
         o: key,
         xy,
         piece,
+        tx: pieceTx,
+        ty: pieceTy,
+        renderValue,
         renderElement: renderElementObject
       })
     })
@@ -574,6 +580,7 @@ export function timelineLayout({
 
     ordset.pieceData.forEach((piece, i) => {
       let scaledValue, scaledBottom
+      let pieceTx = 0, pieceTy = 0
 
       const renderValue = renderMode && renderMode(piece.data, i)
       let xPosition = ordset.x
@@ -611,13 +618,16 @@ export function timelineLayout({
           y: yPosition
         }
       } else if (projection === "radial") {
-        ;({ markProps } = radialBarFeatureGenerator({
+        let tx, ty
+        ;({ markProps, tx, ty } = radialBarFeatureGenerator({
           piece,
           type,
           ordset,
           adjustedSize,
           i
         }))
+        pieceTx = tx
+        pieceTy = ty
       }
 
       //Only return the actual piece if you're rendering points, otherwise you just needed to iterate and calculate the points for the contour summary type
@@ -655,7 +665,6 @@ export function timelineLayout({
       ) : (
         {
           className: classFn({ ...piece, ...piece.data }, i),
-          renderMode: renderValue,
           key: `piece-${piece.renderKey}`,
           style: styleFn({ ...piece, ...piece.data }, ordsetI),
           ...markProps,
@@ -667,6 +676,9 @@ export function timelineLayout({
         o: key,
         xy,
         piece,
+        tx: pieceTx,
+        ty: pieceTy,
+        renderValue,
         renderElement: renderElementObject
       }
 
@@ -763,7 +775,6 @@ export function pointLayout({
         {
           className: classFn({ ...piece, ...piece.data }, i),
           markType: "rect",
-          renderMode: renderValue,
           key: `piece-${piece.renderKey}`,
           height: actualCircleRadius * 2,
           width: actualCircleRadius * 2,
@@ -783,6 +794,7 @@ export function pointLayout({
           y: yPosition
         },
         piece,
+        renderValue,
         renderElement: renderElementObject
       }
 
@@ -914,7 +926,6 @@ export function swarmLayout({
         {
           className: classFn({ ...piece, ...piece.data }, i),
           markType: "rect",
-          renderMode: renderValue,
           key: `piece-${piece.renderKey}`,
           height: actualCircleRadius * 2,
           width: actualCircleRadius * 2,
@@ -934,6 +945,7 @@ export function swarmLayout({
           y: yPosition
         },
         piece,
+        renderValue,
         renderElement: renderElementObject
       }
 

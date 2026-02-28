@@ -10,7 +10,7 @@ export interface RendererOptions {
 
 export type RendererFn = (
   ctx: CanvasRenderingContext2D,
-  data: Iterable<any>,
+  data: Iterable<Record<string, any>>,
   scales: RealtimeScales,
   layout: RealtimeLayout,
   style: LineStyle,

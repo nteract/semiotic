@@ -30,9 +30,9 @@ export interface RealtimeBarChartProps {
   /** Controlled data array */
   data?: Record<string, any>[]
   /** Time value accessor */
-  timeAccessor?: string | ((d: any) => number)
+  timeAccessor?: string | ((d: Record<string, any>) => number)
   /** Value accessor */
-  valueAccessor?: string | ((d: any) => number)
+  valueAccessor?: string | ((d: Record<string, any>) => number)
   /** Fixed time domain */
   timeExtent?: [number, number]
   /** Fixed value domain */
@@ -43,7 +43,7 @@ export interface RealtimeBarChartProps {
    * Category accessor for stacked bars.
    * When provided, bars are stacked by category within each bin.
    */
-  categoryAccessor?: string | ((d: any) => string)
+  categoryAccessor?: string | ((d: Record<string, any>) => string)
   /**
    * Category-to-color map for stacked bars.
    * Keys also determine stack order (listed keys first, then alphabetical).
@@ -70,7 +70,7 @@ export interface RealtimeBarChartProps {
   /** Annotation objects */
   annotations?: Record<string, any>[]
   /** SVG annotation render function */
-  svgAnnotationRules?: (annotation: any, index: number, context: AnnotationContext) => ReactNode
+  svgAnnotationRules?: (annotation: Record<string, any>, index: number, context: AnnotationContext) => ReactNode
   /** Custom formatter for time axis ticks */
   tickFormatTime?: (value: number) => string
   /** Custom formatter for value axis ticks */

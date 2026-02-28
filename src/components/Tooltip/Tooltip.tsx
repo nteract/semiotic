@@ -14,17 +14,17 @@ export interface TooltipField {
    * Field name or accessor function to get the value
    * (alias for 'accessor')
    */
-  key?: Accessor<any>
+  key?: Accessor
 
   /**
    * Field name or accessor function to get the value
    */
-  accessor?: Accessor<any>
+  accessor?: Accessor
 
   /**
    * Optional format function for the value
    */
-  format?: (value: any) => string
+  format?: (value: unknown) => string
 }
 
 /**
@@ -45,7 +45,7 @@ export interface TooltipConfig {
   /**
    * Custom format function for all values (if fields don't specify their own)
    */
-  format?: (value: any) => string
+  format?: (value: unknown) => string
 
   /**
    * Custom style object for the tooltip container
@@ -92,7 +92,7 @@ export const defaultTooltipStyle: React.CSSProperties = {
 /**
  * Extract value from data using accessor
  */
-function getValue(data: any, accessor: Accessor<any>): any {
+function getValue(data: Record<string, unknown>, accessor: Accessor): unknown {
   if (typeof accessor === "function") {
     return accessor(data)
   }
@@ -102,7 +102,7 @@ function getValue(data: any, accessor: Accessor<any>): any {
 /**
  * Format a value for display
  */
-function formatValue(value: any, format?: (value: any) => string): string {
+function formatValue(value: unknown, format?: (value: unknown) => string): string {
   if (format) {
     return format(value)
   }
@@ -123,8 +123,9 @@ function formatValue(value: any, format?: (value: any) => string): string {
 
   // Handle objects (e.g. resolved network nodes with an id property)
   if (typeof value === "object" && value !== null) {
-    if (value.id !== undefined) return String(value.id)
-    if (value.name !== undefined) return String(value.name)
+    const obj = value as Record<string, unknown>
+    if (obj.id !== undefined) return String(obj.id)
+    if (obj.name !== undefined) return String(obj.name)
     return JSON.stringify(value)
   }
 
@@ -163,7 +164,7 @@ export function Tooltip(config: TooltipConfig = {}) {
   } = config
 
   // Return a tooltipContent function that Semiotic expects
-  return (data: any) => {
+  return (data: Record<string, unknown>) => {
     // Guard against undefined/null data
     if (!data || typeof data !== "object") {
       return null
@@ -180,8 +181,8 @@ export function Tooltip(config: TooltipConfig = {}) {
     if (fields && fields.length > 0) {
       fields.forEach((field) => {
         let label: string | undefined
-        let accessor: Accessor<any>
-        let fieldFormat: ((value: any) => string) | undefined
+        let accessor: Accessor
+        let fieldFormat: ((value: unknown) => string) | undefined
 
         if (typeof field === "string") {
           label = field
@@ -291,7 +292,7 @@ export function MultiLineTooltip(config: MultiLineTooltipConfig = {}) {
   } = config
 
   // Return a tooltipContent function that Semiotic expects
-  return (data: any) => {
+  return (data: Record<string, unknown>) => {
     // Guard against undefined/null data
     if (!data || typeof data !== "object") {
       return null
@@ -311,8 +312,8 @@ export function MultiLineTooltip(config: MultiLineTooltipConfig = {}) {
     if (fields && Array.isArray(fields) && fields.length > 0) {
       fields.forEach((field) => {
         let label: string | undefined
-        let accessor: Accessor<any>
-        let fieldFormat: ((value: any) => string) | undefined
+        let accessor: Accessor
+        let fieldFormat: ((value: unknown) => string) | undefined
 
         if (typeof field === "string") {
           // Simple string field name
@@ -381,14 +382,14 @@ export function MultiLineTooltip(config: MultiLineTooltipConfig = {}) {
  */
 export type TooltipProp =
   | boolean
-  | ((data: any) => React.ReactNode)
+  | ((data: Record<string, unknown>) => React.ReactNode)
   | ReturnType<typeof Tooltip>
   | ReturnType<typeof MultiLineTooltip>
 
 /**
  * Convert a tooltip prop to the format Semiotic expects
  */
-export function normalizeTooltip(tooltip: TooltipProp): any {
+export function normalizeTooltip(tooltip: TooltipProp): boolean | Function {
   if (tooltip === true) {
     // Enable default tooltip
     return true

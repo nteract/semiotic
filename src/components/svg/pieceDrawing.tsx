@@ -27,12 +27,13 @@ export const renderLaidOutPieces = ({
     if (canvasRender && canvasRender(d) === true) {
       const canvasPiece = {
         baseClass: "orframe-piece",
-        tx: d.renderElement.tx || 0,
-        ty: d.renderElement.ty || 0,
+        tx: d.tx || 0,
+        ty: d.ty || 0,
         d: d.piece,
         i,
         markProps: d.renderElement || d,
         styleFn: styleFn,
+        renderFn: () => d.renderValue,
         classFn
       }
       canvasDrawing.push(canvasPiece)
@@ -49,7 +50,7 @@ export const renderLaidOutPieces = ({
           : d.renderKey || `piece-render-${i}`
 
         const elementData = d.renderElement || d
-        const { markType, style = {}, renderMode: _rm, tx: _tx, ty: _ty, ...restProps } = elementData
+        const { markType, style = {}, ...restProps } = elementData
 
         // Merge style into direct props
         const elementProps = { ...restProps, key, "aria-label": pieceAriaLabel }

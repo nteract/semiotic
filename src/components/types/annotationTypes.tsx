@@ -5,7 +5,7 @@ import {
   AxisSummaryTypeSettings,
   OrdinalSummaryTypes
 } from "./generalTypes"
-import { NodeType } from "./networkTypes"
+import { NodeType, EdgeType } from "./networkTypes"
 import { ScaleLinear } from "d3-scale"
 
 //import { object } from "./generalTypes"
@@ -27,7 +27,7 @@ export type AnnotationType = {
     | GenericObject
     | ((arg?: GenericObject, index?: number) => GenericObject)
   ids?: string[]
-  edge?: any
+  edge?: EdgeType
   source?: NodeType
   target?: NodeType
   id?: string
