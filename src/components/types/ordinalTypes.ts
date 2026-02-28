@@ -39,6 +39,7 @@ export interface PieceTypeSettings {
   type: PieceTypes
   offsetAngle?: number
   angleRange?: number[]
+  innerRadius?: number
 }
 
 export interface ProjectedOrdinalSummary {
