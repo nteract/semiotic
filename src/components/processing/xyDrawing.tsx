@@ -13,9 +13,7 @@ import {
 } from "../visualizationLayerBehavior/axis"
 
 import {
-  calculateDataExtent,
-  stringToFn,
-  stringToArrayFn
+  calculateDataExtent
 } from "../data/dataFunctions"
 
 import { XYPipelineCache } from "../data/xyPipelineCache"
@@ -28,19 +26,13 @@ import {
 } from "../visualizationLayerBehavior/general"
 
 import {
-  calculateMargin,
-  adjustedPositionSize,
   objectifyType
 } from "../svg/frameFunctions"
 
 import {
-  ProjectedLine,
   ProjectedSummary,
-  GenericObject,
   LineTypeSettings,
-  SummaryTypeSettings,
-  RawSummary,
-  RawPoint
+  SummaryTypeSettings
 } from "../types/generalTypes"
 
 const screenScales = ({
@@ -97,14 +89,11 @@ const naturalLanguageLineType = {
   }
 }
 
-const emptyObjectReturnFunction = () => ({})
-const emptyStringReturnFunction = () => ""
-
 export const calculateXYFrame = (
   currentProps: XYFrameProps,
   prevState: XYFrameState,
   updateData: boolean,
-  cache?: XYPipelineCache
+  cache: XYPipelineCache
 ) => {
   const {
     legend,
@@ -177,29 +166,10 @@ export const calculateXYFrame = (
 
   const yScaleType = baseYScaleType.domain ? baseYScaleType : castYScaleType()
 
-  const cachedAccessors = cache
-    ? cache.annotatedSettings(
-        xAccessor, yAccessor, summaryDataAccessor, lineDataAccessor,
-        renderKey, lineType, summaryType, lineIDAccessor
-      )
-    : {
-        xAccessor: stringToArrayFn<number>(xAccessor, (d: number[]) => d[0]),
-        yAccessor: stringToArrayFn<number>(yAccessor, (d: number[]) => d[1]),
-        summaryDataAccessor: stringToArrayFn<RawPoint[]>(
-          summaryDataAccessor,
-          (d: RawSummary | number[]) => (Array.isArray(d) ? d : d.coordinates)
-        ),
-        lineDataAccessor: stringToArrayFn<RawPoint[]>(
-          lineDataAccessor,
-          (d: ProjectedLine | number[]) => (Array.isArray(d) ? d : d.coordinates)
-        ),
-        renderKeyFn: stringToFn<string>(
-          renderKey,
-          (d: GenericObject, i: number) => `line-${i}`,
-          true
-        ),
-        lineIDAccessor: stringToFn<string>(lineIDAccessor, (l) => l.semioticLineID),
-      }
+  const cachedAccessors = cache.annotatedSettings(
+    xAccessor, yAccessor, summaryDataAccessor, lineDataAccessor,
+    renderKey, lineType, summaryType, lineIDAccessor
+  )
 
   const annotatedSettings = {
     ...cachedAccessors,
@@ -244,20 +214,8 @@ export const calculateXYFrame = (
     annotatedSettings.lineType.simpleLine = false
   }
 
-  const summaryStyleFn = stringToFn<GenericObject>(
-    summaryStyle,
-    emptyObjectReturnFunction,
-    true
-  )
-  const summaryClassFn = stringToFn<string>(
-    summaryClass,
-    emptyStringReturnFunction,
-    true
-  )
-  const summaryRenderModeFn = stringToFn<GenericObject | string>(
-    summaryRenderMode,
-    undefined,
-    true
+  const { summaryStyleFn, summaryClassFn, summaryRenderModeFn } = cache.summaryStyleFns(
+    summaryStyle, summaryClass, summaryRenderMode
   )
 
   const generatedAxes =
@@ -268,28 +226,9 @@ export const calculateXYFrame = (
         : axisFnOrObject
     )
 
-  let margin, adjustedPosition, adjustedSize
-  if (cache) {
-    const marginResult = cache.marginCalc(
-      currentProps.margin, generatedAxes, annotatedSettings.title, currentProps.size
-    )
-    margin = marginResult.margin
-    adjustedPosition = marginResult.adjustedPosition
-    adjustedSize = marginResult.adjustedSize
-  } else {
-    margin = calculateMargin({
-      margin: currentProps.margin,
-      axes: generatedAxes,
-      title: annotatedSettings.title,
-      size: currentProps.size
-    })
-    const posSize = adjustedPositionSize({
-      size: currentProps.size,
-      margin
-    })
-    adjustedPosition = posSize.adjustedPosition
-    adjustedSize = posSize.adjustedSize
-  }
+  const { margin, adjustedPosition, adjustedSize } = cache.marginCalc(
+    currentProps.margin, generatedAxes, annotatedSettings.title, currentProps.size
+  )
 
   let calculatedXExtent = [],
     calculatedYExtent = [],
@@ -577,18 +516,7 @@ export const calculateXYFrame = (
         type: "frame-hover"
       }),
       data: projectedLines,
-      styleFn: stringToFn<GenericObject>(
-        lineStyle,
-        emptyObjectReturnFunction,
-        true
-      ),
-      classFn: stringToFn<string>(lineClass, emptyStringReturnFunction, true),
-      renderMode: stringToFn<GenericObject | string>(
-        lineRenderMode,
-        undefined,
-        true
-      ),
-      canvasRender: stringToFn<boolean>(canvasLines, undefined, true),
+      ...cache.lineStyleFns(lineStyle, lineClass, lineRenderMode, canvasLines),
       customMark: customLineMark,
       type: annotatedSettings.lineType,
       defined: defined,
@@ -603,7 +531,7 @@ export const calculateXYFrame = (
       styleFn: summaryStyleFn,
       classFn: summaryClassFn,
       renderMode: summaryRenderModeFn,
-      canvasRender: stringToFn<boolean>(canvasSummaries, undefined, true),
+      canvasRender: cache.summaryCanvasRender(canvasSummaries),
       customMark: customSummaryMark,
       type: annotatedSettings.summaryType,
       renderKeyFn: annotatedSettings.renderKeyFn,
@@ -615,18 +543,7 @@ export const calculateXYFrame = (
         ...(data[i].data || data[i])
       }),
       data: projectedPoints,
-      styleFn: stringToFn<GenericObject>(
-        pointStyle,
-        emptyObjectReturnFunction,
-        true
-      ),
-      classFn: stringToFn<string>(pointClass, emptyStringReturnFunction, true),
-      renderMode: stringToFn<GenericObject | string>(
-        pointRenderMode,
-        undefined,
-        true
-      ),
-      canvasRender: stringToFn<boolean>(canvasPoints, undefined, true),
+      ...cache.pointStyleFns(pointStyle, pointClass, pointRenderMode, canvasPoints),
       customMark: customPointMark,
       renderKeyFn: annotatedSettings.renderKeyFn,
       showLinePoints,

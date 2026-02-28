@@ -3,9 +3,11 @@ import { ProjectedLine, RawPoint, RawSummary, GenericObject } from "../types/gen
 import { calculateMargin, adjustedPositionSize } from "../svg/frameFunctions"
 import { stringToFn, stringToArrayFn } from "./dataFunctions"
 
+const emptyObjectReturnFunction = () => ({})
+const emptyStringReturnFunction = () => ""
+
 export function createXYPipelineCache() {
   return {
-    // Memoize the stringToFn/stringToArrayFn conversions that create new function references
     annotatedSettings: memoize((
       xAccessor: any,
       yAccessor: any,
@@ -34,7 +36,6 @@ export function createXYPipelineCache() {
       lineIDAccessor: stringToFn<string>(lineIDAccessor, (l) => l.semioticLineID),
     })),
 
-    // Memoize margin calculation
     marginCalc: memoize((
       margin: any,
       axes: any,
@@ -48,6 +49,44 @@ export function createXYPipelineCache() {
       })
       return { margin: calculatedMargin, adjustedPosition, adjustedSize }
     }),
+
+    summaryStyleFns: memoize((
+      summaryStyle: any,
+      summaryClass: any,
+      summaryRenderMode: any
+    ) => ({
+      summaryStyleFn: stringToFn<GenericObject>(summaryStyle, emptyObjectReturnFunction, true),
+      summaryClassFn: stringToFn<string>(summaryClass, emptyStringReturnFunction, true),
+      summaryRenderModeFn: stringToFn<GenericObject | string>(summaryRenderMode, undefined, true),
+    })),
+
+    lineStyleFns: memoize((
+      lineStyle: any,
+      lineClass: any,
+      lineRenderMode: any,
+      canvasLines: any
+    ) => ({
+      styleFn: stringToFn<GenericObject>(lineStyle, emptyObjectReturnFunction, true),
+      classFn: stringToFn<string>(lineClass, emptyStringReturnFunction, true),
+      renderMode: stringToFn<GenericObject | string>(lineRenderMode, undefined, true),
+      canvasRender: stringToFn<boolean>(canvasLines, undefined, true),
+    })),
+
+    pointStyleFns: memoize((
+      pointStyle: any,
+      pointClass: any,
+      pointRenderMode: any,
+      canvasPoints: any
+    ) => ({
+      styleFn: stringToFn<GenericObject>(pointStyle, emptyObjectReturnFunction, true),
+      classFn: stringToFn<string>(pointClass, emptyStringReturnFunction, true),
+      renderMode: stringToFn<GenericObject | string>(pointRenderMode, undefined, true),
+      canvasRender: stringToFn<boolean>(canvasPoints, undefined, true),
+    })),
+
+    summaryCanvasRender: memoize((canvasSummaries: any) =>
+      stringToFn<boolean>(canvasSummaries, undefined, true)
+    ),
   }
 }
 

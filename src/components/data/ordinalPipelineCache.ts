@@ -5,7 +5,6 @@ import { GenericObject, ProjectionTypes } from "../types/generalTypes"
 
 export function createOrdinalPipelineCache() {
   return {
-    // Memoize the margin calculation
     marginCalc: memoize((
       margin: any,
       axes: any,
@@ -23,7 +22,6 @@ export function createOrdinalPipelineCache() {
       return { margin: calculatedMargin, adjustedPosition, adjustedSize }
     }),
 
-    // Memoize data structuring
     structureData: memoize((
       data: any[],
       renderKey: any,
@@ -44,7 +42,6 @@ export function createOrdinalPipelineCache() {
       })
     }),
 
-    // Memoize accessor conversions
     accessorConversions: memoize((
       baseOAccessor: any,
       baseRAccessor: any,
@@ -55,6 +52,34 @@ export function createOrdinalPipelineCache() {
       rAccessor: stringToArrayFn<number>(baseRAccessor, (d) => d.value || 1),
       renderKey: stringToFn<string | number>(baseRenderKey, (d, i) => i),
       pieceIDAccessor: stringToFn<string>(basePieceIDAccessor, () => ""),
+    })),
+
+    styleFns: memoize((
+      baseConnectorStyle: any,
+      baseSummaryStyle: any,
+      baseStyle: any,
+      basePieceClass: any,
+      baseSummaryClass: any,
+      baseConnectorClass: any,
+      baseRenderMode: any,
+      baseSummaryRenderMode: any,
+      baseConnectorRenderMode: any,
+      canvasPieces: any,
+      canvasSummaries: any,
+      canvasConnectors: any
+    ) => ({
+      connectorStyle: stringToFn<GenericObject>(baseConnectorStyle, () => ({}), true),
+      summaryStyle: stringToFn<GenericObject>(baseSummaryStyle, () => ({}), true),
+      pieceStyle: stringToFn<GenericObject>(baseStyle, () => ({}), true),
+      pieceClass: stringToFn<string>(basePieceClass, () => "", true),
+      summaryClass: stringToFn<string>(baseSummaryClass, () => "", true),
+      connectorClass: stringToFn<string>(baseConnectorClass, () => "", true),
+      pieceRenderMode: stringToFn<GenericObject | string>(baseRenderMode, undefined, true),
+      summaryRenderMode: stringToFn<GenericObject | string>(baseSummaryRenderMode, undefined, true),
+      connectorRenderMode: stringToFn<GenericObject | string>(baseConnectorRenderMode, undefined, true),
+      pieceCanvasRender: stringToFn<boolean>(canvasPieces, undefined, true),
+      summaryCanvasRender: stringToFn<boolean>(canvasSummaries, undefined, true),
+      connectorCanvasRender: stringToFn<boolean>(canvasConnectors, undefined, true),
     })),
   }
 }

@@ -4,17 +4,15 @@ import { sum, max, min, extent } from "d3-array"
 
 import { arc } from "d3-shape"
 import {
-  calculateMargin,
   objectifyType,
   keyAndObjectifyBarData,
-  adjustedPositionSize,
   orFrameAxisGenerator
 } from "../svg/frameFunctions"
 import { pointOnArcAtAngle } from "../svg/pieceDrawing"
 import { drawSummaries } from "../svg/summaryLayouts"
 import { axisGenerator } from "../svg/summaryAxis"
 
-import { stringToFn, stringToArrayFn } from "../data/dataFunctions"
+
 import { OrdinalPipelineCache } from "../data/ordinalPipelineCache"
 
 import {
@@ -72,7 +70,7 @@ export const calculateMappedMiddles = (
 export const calculateOrdinalFrame = (
   currentProps: OrdinalFrameProps,
   currentState: OrdinalFrameState,
-  cache?: OrdinalPipelineCache
+  cache: OrdinalPipelineCache
 ) => {
   let oLabels
   const projectedColumns = {}
@@ -123,14 +121,7 @@ export const calculateOrdinalFrame = (
   const pieceType = objectifyType(baseType) as PieceTypeSettings
   const connectorType = objectifyType(baseConnectorType)
 
-  const cachedAccessors = cache
-    ? cache.accessorConversions(baseOAccessor, baseRAccessor, baseRenderKey, basePieceIDAccessor)
-    : {
-        oAccessor: stringToArrayFn<string | number>(baseOAccessor, (d) => d.renderKey),
-        rAccessor: stringToArrayFn<number>(baseRAccessor, (d) => d.value || 1),
-        renderKey: stringToFn<string | number>(baseRenderKey, (d, i) => i),
-        pieceIDAccessor: stringToFn<string>(basePieceIDAccessor, () => ""),
-      }
+  const cachedAccessors = cache.accessorConversions(baseOAccessor, baseRAccessor, baseRenderKey, basePieceIDAccessor)
 
   const oAccessor = cachedAccessors.oAccessor
   const rAccessor = cachedAccessors.rAccessor
@@ -138,20 +129,17 @@ export const calculateOrdinalFrame = (
 
   const eventListenersGenerator = () => ({})
 
-  const connectorStyle = stringToFn<GenericObject>(
-    baseConnectorStyle,
-    () => ({}),
-    true
+  const {
+    connectorStyle, summaryStyle, pieceStyle, pieceClass, summaryClass,
+    connectorClass: connectorClassFn, pieceRenderMode, summaryRenderMode,
+    connectorRenderMode: connectorRenderModeFn,
+    pieceCanvasRender, summaryCanvasRender, connectorCanvasRender
+  } = cache.styleFns(
+    baseConnectorStyle, baseSummaryStyle, baseStyle, basePieceClass, baseSummaryClass,
+    currentProps.connectorClass, currentProps.renderMode, currentProps.summaryRenderMode,
+    currentProps.connectorRenderMode,
+    currentProps.canvasPieces, currentProps.canvasSummaries, currentProps.canvasConnectors
   )
-  const summaryStyle = stringToFn<GenericObject>(
-    baseSummaryStyle,
-    () => ({}),
-    true
-  )
-
-  const pieceStyle = stringToFn<GenericObject>(baseStyle, () => ({}), true)
-  const pieceClass = stringToFn<string>(basePieceClass, () => "", true)
-  const summaryClass = stringToFn<string>(baseSummaryClass, () => "", true)
   const title =
     typeof baseTitle === "object" &&
     !React.isValidElement(baseTitle) &&
@@ -216,29 +204,9 @@ export const calculateOrdinalFrame = (
     })
   }
 
-  let margin, adjustedPosition, adjustedSize
-  if (cache) {
-    const marginResult = cache.marginCalc(baseMargin, arrayWrappedAxis, title, oLabel, projection, size)
-    margin = marginResult.margin
-    adjustedPosition = marginResult.adjustedPosition
-    adjustedSize = marginResult.adjustedSize
-  } else {
-    margin = calculateMargin({
-      margin: baseMargin,
-      axes: arrayWrappedAxis,
-      title,
-      oLabel,
-      projection,
-      size
-    })
-    const posSize = adjustedPositionSize({
-      size,
-      margin,
-      projection
-    })
-    adjustedPosition = posSize.adjustedPosition
-    adjustedSize = posSize.adjustedSize
-  }
+  const { margin, adjustedPosition, adjustedSize } = cache.marginCalc(
+    baseMargin, arrayWrappedAxis, title, oLabel, projection, size
+  )
 
   const oExtentSettings: OExtentObject =
     baseOExtent === undefined || Array.isArray(baseOExtent)
@@ -977,11 +945,6 @@ export const calculateOrdinalFrame = (
   }
 
   let pieceDataXY
-  const pieceRenderMode = stringToFn<GenericObject | string>(
-    currentProps.renderMode,
-    undefined,
-    true
-  )
 
   const pieceTypeForXY =
     pieceType.type && pieceType.type !== "none" ? pieceType.type : "point"
@@ -1023,13 +986,9 @@ export const calculateOrdinalFrame = (
     calculatedSummaries = drawSummaries({
       data: projectedColumns,
       type: summaryType,
-      renderMode: stringToFn<GenericObject | string>(
-        currentProps.summaryRenderMode,
-        undefined,
-        true
-      ),
-      styleFn: stringToFn<GenericObject>(summaryStyle, () => ({}), true),
-      classFn: stringToFn<string>(summaryClass, () => "", true),
+      renderMode: summaryRenderMode,
+      styleFn: summaryStyle,
+      classFn: summaryClass,
       projection,
       eventListenersGenerator,
       adjustedSize,
@@ -1094,26 +1053,6 @@ export const calculateOrdinalFrame = (
     thresholds: calculatedSummaries.thresholds
   })
 
-  const {
-    canvasSummaries,
-    connectorClass,
-    connectorRenderMode,
-    canvasConnectors,
-    canvasPieces
-  } = currentProps
-
-  const pieceCanvasRender = stringToFn<boolean>(canvasPieces, undefined, true)
-  const summaryCanvasRender = stringToFn<boolean>(
-    canvasSummaries,
-    undefined,
-    true
-  )
-  const connectorCanvasRender = stringToFn<boolean>(
-    canvasConnectors,
-    undefined,
-    true
-  )
-
   return {
     pieceDataXY,
     oAccessor,
@@ -1131,8 +1070,8 @@ export const calculateOrdinalFrame = (
       currentState,
 
       connectorStyle,
-      connectorClass,
-      connectorRenderMode,
+      connectorClass: connectorClassFn,
+      connectorRenderMode: connectorRenderModeFn,
       connectorCanvasRender,
       summaryCanvasRender,
       pieceCanvasRender,

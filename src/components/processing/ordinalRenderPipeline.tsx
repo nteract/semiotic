@@ -3,7 +3,6 @@ import * as React from "react"
 import { orFrameConnectionRenderer } from "../svg/frameFunctions"
 import { renderLaidOutPieces } from "../svg/pieceDrawing"
 import { renderLaidOutSummaries } from "../svg/summaryLayouts"
-import { stringToFn } from "../data/dataFunctions"
 
 import {
   OrdinalFrameProps,
@@ -14,7 +13,7 @@ import {
 
 import { AxisProps } from "../types/annotationTypes"
 
-import { GenericObject, MarginType, GenericAccessor, accessorType } from "../types/generalTypes"
+import { GenericObject, MarginType, GenericAccessor } from "../types/generalTypes"
 
 import { midMod, zeroFunction, naturalLanguageTypes } from "./ordinalConstants"
 
@@ -31,20 +30,20 @@ export interface AssembleRenderPipelineArgs {
   customHoverBehavior?: Function
   currentState: OrdinalFrameState
 
-  // Render config
-  connectorStyle: object | accessorType<GenericObject>
-  connectorClass: string | accessorType<string>
-  connectorRenderMode: object | string | accessorType<string | GenericObject>
+  // Render config (all style/class/renderMode values are pre-converted functions from the cache)
+  connectorStyle: Function
+  connectorClass: Function
+  connectorRenderMode: Function
   connectorCanvasRender: Function
   summaryCanvasRender: Function
   pieceCanvasRender: Function
   connectorType: GenericObject
   eventListenersGenerator: () => Record<string, never>
   pieceType: PieceTypeSettings
-  summaryStyle: object | accessorType<GenericObject>
-  summaryClass: string | accessorType<string>
-  pieceStyle: object | accessorType<GenericObject>
-  pieceClass: string | accessorType<string>
+  summaryStyle: Function
+  summaryClass: Function
+  pieceStyle: Function
+  pieceClass: Function
 
   // Data
   keyedData: { [key: string]: GenericObject[] }
@@ -206,13 +205,9 @@ export function assembleRenderPipeline(args: AssembleRenderPipelineArgs) {
       accessibleTransform: (data, i) => data[i],
       projection,
       data: { keyedData, oExtent } as unknown as object[],
-      styleFn: stringToFn<GenericObject>(connectorStyle, () => ({}), true),
-      classFn: stringToFn<string>(connectorClass, () => "", true),
-      renderMode: stringToFn<GenericObject | string>(
-        connectorRenderMode,
-        undefined,
-        true
-      ),
+      styleFn: connectorStyle,
+      classFn: connectorClass,
+      renderMode: connectorRenderMode,
       canvasRender: connectorCanvasRender,
       behavior: orFrameConnectionRenderer,
       type: connectorType,
@@ -235,8 +230,8 @@ export function assembleRenderPipeline(args: AssembleRenderPipelineArgs) {
       data: calculatedSummaries.marks,
       behavior: renderLaidOutSummaries,
       canvasRender: summaryCanvasRender,
-      styleFn: stringToFn<GenericObject>(summaryStyle, () => ({}), true),
-      classFn: stringToFn<string>(summaryClass, () => "", true)
+      styleFn: summaryStyle,
+      classFn: summaryClass
     },
     pieces: {
       accessibleTransform: (data, i) => ({
@@ -247,8 +242,8 @@ export function assembleRenderPipeline(args: AssembleRenderPipelineArgs) {
       data: calculatedPieceData,
       behavior: renderLaidOutPieces,
       canvasRender: pieceCanvasRender,
-      styleFn: stringToFn<GenericObject>(pieceStyle, () => ({}), true),
-      classFn: stringToFn<string>(pieceClass, () => "", true),
+      styleFn: pieceStyle,
+      classFn: pieceClass,
       axis: arrayWrappedAxis,
       ariaLabel: typeAriaLabel
     }
