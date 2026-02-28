@@ -1,33 +1,176 @@
-import React from "react"
+import React, { useRef, useEffect, useState } from "react"
 import { RealtimeLineChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
-import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
-// Sample data — static snapshots representing streaming time-series readings
+// Responsive container hook
 // ---------------------------------------------------------------------------
 
-const now = Date.now()
+function useContainerWidth() {
+  const ref = useRef(null)
+  const [width, setWidth] = useState(null)
 
-const simpleData = Array.from({ length: 60 }, (_, i) => ({
-  time: now - (60 - i) * 1000,
-  value: 50 + Math.sin(i / 5) * 20 + (Math.random() - 0.5) * 6,
-}))
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setWidth(entry.contentRect.width)
+      }
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
-const smoothData = Array.from({ length: 60 }, (_, i) => ({
-  time: now - (60 - i) * 1000,
-  value: 30 + i * 0.8 + Math.sin(i / 4) * 10,
-}))
+  return [ref, width]
+}
 
-const dashedData = Array.from({ length: 60 }, (_, i) => ({
-  time: now - (60 - i) * 1000,
-  value: 100 - Math.cos(i / 6) * 30 + (Math.random() - 0.5) * 8,
-}))
+// ---------------------------------------------------------------------------
+// Live streaming demos
+// ---------------------------------------------------------------------------
+
+function BasicLineDemo() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+  const [containerRef, containerWidth] = useContainerWidth()
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          time: i,
+          value: 50 + Math.sin(i * 0.05) * 20 + (Math.random() - 0.5) * 6,
+        })
+      }
+    }, 50)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <div ref={containerRef} style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "hidden" }}>
+      {containerWidth && (
+        <RealtimeLineChart
+          ref={chartRef}
+          size={[containerWidth, 280]}
+          stroke="#007bff"
+          strokeWidth={2}
+          windowSize={150}
+          showAxes={true}
+        />
+      )}
+    </div>
+  )
+}
+
+function StyledLineDemo() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+  const [containerRef, containerWidth] = useContainerWidth()
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          time: i,
+          value: 30 + i * 0.3 + Math.sin(i * 0.08) * 15,
+        })
+      }
+    }, 50)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <div ref={containerRef} style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "hidden" }}>
+      {containerWidth && (
+        <RealtimeLineChart
+          ref={chartRef}
+          size={[containerWidth, 280]}
+          stroke="#e74c3c"
+          strokeWidth={3}
+          windowSize={150}
+          showAxes={true}
+        />
+      )}
+    </div>
+  )
+}
+
+function DashedLineDemo() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+  const [containerRef, containerWidth] = useContainerWidth()
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          time: i,
+          value: 100 - Math.cos(i * 0.04) * 30 + (Math.random() - 0.5) * 8,
+        })
+      }
+    }, 50)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <div ref={containerRef} style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "hidden" }}>
+      {containerWidth && (
+        <RealtimeLineChart
+          ref={chartRef}
+          size={[containerWidth, 280]}
+          stroke="#28a745"
+          strokeWidth={2}
+          strokeDasharray="6,3"
+          windowSize={150}
+          showAxes={true}
+        />
+      )}
+    </div>
+  )
+}
+
+function FixedExtentDemo() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+  const [containerRef, containerWidth] = useContainerWidth()
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          time: i,
+          value: 50 + Math.sin(i * 0.05) * 20 + (Math.random() - 0.5) * 6,
+        })
+      }
+    }, 50)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <div ref={containerRef} style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "hidden" }}>
+      {containerWidth && (
+        <RealtimeLineChart
+          ref={chartRef}
+          size={[containerWidth, 280]}
+          stroke="#6f42c1"
+          strokeWidth={2}
+          valueExtent={[0, 100]}
+          windowSize={150}
+          showAxes={true}
+        />
+      )}
+    </div>
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Props definition for PropTable
@@ -97,8 +240,8 @@ export default function RealtimeLineChartPage() {
         data. It wraps{" "}
         <Link to="/frames/realtime-frame">RealtimeFrame</Link> with{" "}
         <code>chartType="line"</code> and promotes stroke styling to top-level
-        props. Pass a controlled <code>data</code> array or push points
-        imperatively via a ref for high-frequency updates.
+        props. Create a ref and call <code>ref.current.push(point)</code> in a{" "}
+        <code>setInterval</code> to stream data in.
       </p>
 
       {/* ----------------------------------------------------------------- */}
@@ -107,31 +250,44 @@ export default function RealtimeLineChartPage() {
       <h2 id="quick-start">Quick Start</h2>
 
       <p>
-        The simplest realtime line chart requires just a <code>data</code>{" "}
-        array with <code>time</code> and <code>value</code> fields.
+        Create a ref, push data points on an interval, and
+        RealtimeLineChart handles the rest. The sliding window keeps the
+        most recent points in view.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: simpleData,
-          timeAccessor: "time",
-          valueAccessor: "value",
-          stroke: "#007bff",
-          strokeWidth: 2,
-          showAxes: true,
-        }}
-        type={RealtimeLineChart}
-        startHidden={false}
-        overrideProps={{
-          data: `[
-  { time: 1709000000, value: 52.3 },
-  { time: 1709001000, value: 48.7 },
-  { time: 1709002000, value: 55.1 },
-  // ...streaming data points
-]`,
-        }}
-        hiddenProps={{}}
-      />
+      <BasicLineDemo />
+      <div style={{ marginTop: 8 }}>
+        <CodeBlock
+          code={`import { RealtimeLineChart } from "semiotic"
+import { useRef, useEffect } from "react"
+
+function StreamingLine() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      chartRef.current?.push({
+        time: indexRef.current++,
+        value: 50 + Math.sin(indexRef.current * 0.05) * 20
+      })
+    }, 50)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <RealtimeLineChart
+      ref={chartRef}
+      stroke="#007bff"
+      strokeWidth={2}
+      windowSize={150}
+      showAxes={true}
+    />
+  )
+}`}
+          language="jsx"
+        />
+      </div>
 
       {/* ----------------------------------------------------------------- */}
       {/* Examples */}
@@ -141,27 +297,21 @@ export default function RealtimeLineChartPage() {
       <h3 id="custom-stroke">Custom Stroke Color and Width</h3>
       <p>
         Use <code>stroke</code> and <code>strokeWidth</code> to style the
-        line. Add a <code>background</code> to set the chart area fill.
+        line.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: smoothData,
-          timeAccessor: "time",
-          valueAccessor: "value",
-          stroke: "#e74c3c",
-          strokeWidth: 3,
-          background: "#fdf2f2",
-          showAxes: true,
-        }}
-        type={RealtimeLineChart}
-        overrideProps={{
-          data: "sensorReadings",
-          stroke: '"#e74c3c"',
-          background: '"#fdf2f2"',
-        }}
-        hiddenProps={{}}
-      />
+      <StyledLineDemo />
+      <div style={{ marginTop: 8 }}>
+        <CodeBlock
+          code={`<RealtimeLineChart
+  ref={chartRef}
+  stroke="#e74c3c"
+  strokeWidth={3}
+  windowSize={150}
+/>`}
+          language="jsx"
+        />
+      </div>
 
       <h3 id="dashed-line">Dashed Line</h3>
       <p>
@@ -169,23 +319,19 @@ export default function RealtimeLineChartPage() {
         useful for representing projected or estimated values.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: dashedData,
-          timeAccessor: "time",
-          valueAccessor: "value",
-          stroke: "#28a745",
-          strokeWidth: 2,
-          strokeDasharray: "6,3",
-          showAxes: true,
-        }}
-        type={RealtimeLineChart}
-        overrideProps={{
-          data: "projectedValues",
-          strokeDasharray: '"6,3"',
-        }}
-        hiddenProps={{}}
-      />
+      <DashedLineDemo />
+      <div style={{ marginTop: 8 }}>
+        <CodeBlock
+          code={`<RealtimeLineChart
+  ref={chartRef}
+  stroke="#28a745"
+  strokeWidth={2}
+  strokeDasharray="6,3"
+  windowSize={150}
+/>`}
+          language="jsx"
+        />
+      </div>
 
       <h3 id="fixed-extent">Fixed Value Extent</h3>
       <p>
@@ -193,23 +339,19 @@ export default function RealtimeLineChartPage() {
         not rescale as new data arrives.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: simpleData,
-          timeAccessor: "time",
-          valueAccessor: "value",
-          stroke: "#6f42c1",
-          strokeWidth: 2,
-          valueExtent: [0, 100],
-          showAxes: true,
-        }}
-        type={RealtimeLineChart}
-        overrideProps={{
-          data: "cpuMetrics",
-          valueExtent: "[0, 100]",
-        }}
-        hiddenProps={{}}
-      />
+      <FixedExtentDemo />
+      <div style={{ marginTop: 8 }}>
+        <CodeBlock
+          code={`<RealtimeLineChart
+  ref={chartRef}
+  stroke="#6f42c1"
+  strokeWidth={2}
+  valueExtent={[0, 100]}
+  windowSize={150}
+/>`}
+          language="jsx"
+        />
+      </div>
 
       {/* ----------------------------------------------------------------- */}
       {/* Props */}
@@ -239,11 +381,9 @@ export default function RealtimeLineChartPage() {
 
 <RealtimeLineChart
   ref={chartRef}
-  data={streamData}
-  timeAccessor="time"
-  valueAccessor="value"
   stroke="#007bff"
   strokeWidth={2}
+  windowSize={150}
   enableHover
 />`}
             language="jsx"
@@ -257,27 +397,18 @@ export default function RealtimeLineChartPage() {
 <RealtimeFrame
   ref={frameRef}
   chartType="line"
-  data={streamData}
-  timeAccessor="time"
-  valueAccessor="value"
+  windowSize={150}
   lineStyle={{
     stroke: "#007bff",
     strokeWidth: 2
   }}
   hoverAnnotation={true}
   showAxes={true}
-  size={[500, 300]}
 />`}
             language="jsx"
           />
         </div>
       </div>
-
-      <p>
-        All RealtimeFrame capabilities remain accessible through the chart
-        component — <code>RealtimeLineChart</code> simply provides a more
-        convenient prop surface for the most common line-chart options.
-      </p>
 
       {/* ----------------------------------------------------------------- */}
       {/* Related */}

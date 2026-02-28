@@ -1,37 +1,147 @@
-import React from "react"
+import React, { useRef, useEffect, useState } from "react"
 import { RealtimeBarChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
-import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
-// Sample data — static snapshots representing streaming event counts
+// Responsive container hook
 // ---------------------------------------------------------------------------
 
-const now = Date.now()
+function useContainerWidth() {
+  const ref = useRef(null)
+  const [width, setWidth] = useState(null)
 
-const simpleData = Array.from({ length: 80 }, (_, i) => ({
-  time: now - (80 - i) * 500,
-  value: Math.floor(Math.random() * 40) + 10,
-}))
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setWidth(entry.contentRect.width)
+      }
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
-const stackedData = []
-const categories = ["errors", "warnings", "info"]
-for (let i = 0; i < 60; i++) {
-  const t = now - (60 - i) * 800
-  stackedData.push({ time: t, value: Math.floor(Math.random() * 5) + 1, category: "errors" })
-  stackedData.push({ time: t, value: Math.floor(Math.random() * 10) + 3, category: "warnings" })
-  stackedData.push({ time: t, value: Math.floor(Math.random() * 20) + 8, category: "info" })
+  return [ref, width]
 }
 
-const styledData = Array.from({ length: 60 }, (_, i) => ({
-  time: now - (60 - i) * 600,
-  value: Math.floor(Math.abs(Math.sin(i / 4)) * 50) + 5,
-}))
+// ---------------------------------------------------------------------------
+// Live streaming demos
+// ---------------------------------------------------------------------------
+
+function BasicBarDemo() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+  const [containerRef, containerWidth] = useContainerWidth()
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          time: i,
+          value: Math.floor(Math.random() * 39) + 1,
+        })
+      }
+    }, 30)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <div ref={containerRef} style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "hidden" }}>
+      {containerWidth && (
+        <RealtimeBarChart
+          ref={chartRef}
+          size={[containerWidth, 280]}
+          binSize={20}
+          fill="#007bff"
+          windowSize={200}
+          showAxes={true}
+        />
+      )}
+    </div>
+  )
+}
+
+function StackedBarDemo() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+  const [containerRef, containerWidth] = useContainerWidth()
+  const categories = ["errors", "warnings", "info"]
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        const cat = categories[i % categories.length]
+        const ranges = { errors: 5, warnings: 10, info: 20 }
+        chartRef.current.push({
+          time: Math.floor(i / 3),
+          value: Math.floor(Math.random() * ranges[cat]) + 1,
+          category: cat,
+        })
+      }
+    }, 30)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <div ref={containerRef} style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "hidden" }}>
+      {containerWidth && (
+        <RealtimeBarChart
+          ref={chartRef}
+          size={[containerWidth, 280]}
+          binSize={20}
+          categoryAccessor="category"
+          colors={{ errors: "#dc3545", warnings: "#fd7e14", info: "#007bff" }}
+          windowSize={200}
+          showAxes={true}
+        />
+      )}
+    </div>
+  )
+}
+
+function StyledBarDemo() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+  const [containerRef, containerWidth] = useContainerWidth()
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          time: i,
+          value: Math.floor(Math.abs(Math.sin(i * 0.04)) * 50) + 5,
+        })
+      }
+    }, 30)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <div ref={containerRef} style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "hidden" }}>
+      {containerWidth && (
+        <RealtimeBarChart
+          ref={chartRef}
+          size={[containerWidth, 280]}
+          binSize={20}
+          fill="#28a745"
+          stroke="#1e7e34"
+          gap={2}
+          windowSize={200}
+          showAxes={true}
+        />
+      )}
+    </div>
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Props definition for PropTable
@@ -115,32 +225,44 @@ export default function RealtimeBarChartPage() {
       <h2 id="quick-start">Quick Start</h2>
 
       <p>
-        A basic streaming bar chart needs <code>data</code> and a{" "}
-        <code>binSize</code> to define the time interval for aggregation.
+        Create a ref, push data points on an interval, and
+        RealtimeBarChart bins and renders them as bars. The{" "}
+        <code>binSize</code> prop defines the time interval for aggregation.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: simpleData,
-          binSize: 5000,
-          timeAccessor: "time",
-          valueAccessor: "value",
-          fill: "#007bff",
-          showAxes: true,
-        }}
-        type={RealtimeBarChart}
-        startHidden={false}
-        overrideProps={{
-          data: `[
-  { time: 1709000000, value: 23 },
-  { time: 1709000500, value: 31 },
-  { time: 1709001000, value: 18 },
-  // ...streaming event counts
-]`,
-          binSize: "5000",
-        }}
-        hiddenProps={{}}
-      />
+      <BasicBarDemo />
+      <div style={{ marginTop: 8 }}>
+        <CodeBlock
+          code={`import { RealtimeBarChart } from "semiotic"
+import { useRef, useEffect } from "react"
+
+function StreamingBars() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      chartRef.current?.push({
+        time: indexRef.current++,
+        value: Math.floor(Math.random() * 39) + 1
+      })
+    }, 30)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <RealtimeBarChart
+      ref={chartRef}
+      binSize={20}
+      fill="#007bff"
+      windowSize={200}
+      showAxes={true}
+    />
+  )
+}`}
+          language="jsx"
+        />
+      </div>
 
       {/* ----------------------------------------------------------------- */}
       {/* Examples */}
@@ -154,29 +276,33 @@ export default function RealtimeBarChartPage() {
         order of the <code>colors</code> object.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: stackedData,
-          binSize: 8000,
-          timeAccessor: "time",
-          valueAccessor: "value",
-          categoryAccessor: "category",
-          colors: { errors: "#dc3545", warnings: "#fd7e14", info: "#007bff" },
-          showAxes: true,
-        }}
-        type={RealtimeBarChart}
-        overrideProps={{
-          data: `[
-  { time: t, value: 3, category: "errors" },
-  { time: t, value: 7, category: "warnings" },
-  { time: t, value: 15, category: "info" },
-  // ...streaming categorized events
-]`,
-          categoryAccessor: '"category"',
-          colors: '{ errors: "#dc3545", warnings: "#fd7e14", info: "#007bff" }',
-        }}
-        hiddenProps={{}}
-      />
+      <StackedBarDemo />
+      <div style={{ marginTop: 8 }}>
+        <CodeBlock
+          code={`const categories = ["errors", "warnings", "info"]
+
+useEffect(() => {
+  const id = setInterval(() => {
+    const cat = categories[indexRef.current % 3]
+    chartRef.current?.push({
+      time: Math.floor(indexRef.current++ / 3),
+      value: Math.floor(Math.random() * 10) + 1,
+      category: cat
+    })
+  }, 30)
+  return () => clearInterval(id)
+}, [])
+
+<RealtimeBarChart
+  ref={chartRef}
+  binSize={20}
+  categoryAccessor="category"
+  colors={{ errors: "#dc3545", warnings: "#fd7e14", info: "#007bff" }}
+  windowSize={200}
+/>`}
+          language="jsx"
+        />
+      </div>
 
       <h3 id="styled-bars">Custom Bar Styling</h3>
       <p>
@@ -184,28 +310,31 @@ export default function RealtimeBarChartPage() {
         and <code>gap</code> to create distinct visual styles.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: styledData,
-          binSize: 6000,
-          timeAccessor: "time",
-          valueAccessor: "value",
-          fill: "#28a745",
-          stroke: "#1e7e34",
-          strokeWidth: 1,
-          gap: 2,
-          background: "#f0faf3",
-          showAxes: true,
-        }}
-        type={RealtimeBarChart}
-        overrideProps={{
-          data: "throughputData",
-          fill: '"#28a745"',
-          stroke: '"#1e7e34"',
-          background: '"#f0faf3"',
-        }}
-        hiddenProps={{}}
-      />
+      <StyledBarDemo />
+      <div style={{ marginTop: 8 }}>
+        <CodeBlock
+          code={`useEffect(() => {
+  const id = setInterval(() => {
+    const i = indexRef.current++
+    chartRef.current?.push({
+      time: i,
+      value: Math.floor(Math.abs(Math.sin(i * 0.04)) * 50) + 5
+    })
+  }, 30)
+  return () => clearInterval(id)
+}, [])
+
+<RealtimeBarChart
+  ref={chartRef}
+  binSize={20}
+  fill="#28a745"
+  stroke="#1e7e34"
+  gap={2}
+  windowSize={200}
+/>`}
+          language="jsx"
+        />
+      </div>
 
       {/* ----------------------------------------------------------------- */}
       {/* Props */}

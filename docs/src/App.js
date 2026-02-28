@@ -12,6 +12,7 @@ import Accessibility from "./markdown/accessibility.mdx"
 import Xyframe from "./markdown/xyframe.mdx"
 import Ordinalframe from "./markdown/ordinalframe.mdx"
 import Networkframe from "./markdown/networkframe.mdx"
+import Realtimeframe from "./markdown/realtimeframe.mdx"
 import Responsiveframes from "./markdown/responsiveframes.mdx"
 import Sparkframes from "./markdown/sparkframes.mdx"
 import Facetcontroller from "./markdown/facetcontroller.mdx"
@@ -281,6 +282,7 @@ export default function DocsApp() {
               <Route path="xyframe" element={<Xyframe />} />
               <Route path="ordinalframe" element={<Ordinalframe />} />
               <Route path="networkframe" element={<Networkframe />} />
+              <Route path="realtime-frame" element={<Realtimeframe />} />
               <Route path="responsiveframe" element={<Responsiveframes />} />
               <Route path="sparkFrame" element={<Sparkframes />} />
               <Route path="facetcontroller" element={<Facetcontroller />} />

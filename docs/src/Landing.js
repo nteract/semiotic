@@ -1,5 +1,6 @@
-import React, { useState } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { Link } from "react-router-dom"
+import { XYFrame, OrdinalFrame, NetworkFrame, RealtimeBarChart } from "semiotic"
 
 const tierSnippets = {
   charts: `import { LineChart } from "semiotic"
@@ -188,6 +189,318 @@ function MiniCodeBlock({ code, language = "jsx", showCopy = false }) {
   )
 }
 
+// ---------------------------------------------------------------------------
+// Gallery data
+// ---------------------------------------------------------------------------
+
+const galleryLineData = [
+  {
+    label: "Revenue",
+    coordinates: [
+      { month: 1, value: 42 }, { month: 2, value: 58 }, { month: 3, value: 53 },
+      { month: 4, value: 71 }, { month: 5, value: 64 }, { month: 6, value: 88 },
+      { month: 7, value: 79 }, { month: 8, value: 95 }, { month: 9, value: 102 },
+      { month: 10, value: 89 }, { month: 11, value: 110 }, { month: 12, value: 124 },
+    ],
+  },
+  {
+    label: "Costs",
+    coordinates: [
+      { month: 1, value: 35 }, { month: 2, value: 38 }, { month: 3, value: 41 },
+      { month: 4, value: 44 }, { month: 5, value: 48 }, { month: 6, value: 52 },
+      { month: 7, value: 50 }, { month: 8, value: 55 }, { month: 9, value: 58 },
+      { month: 10, value: 54 }, { month: 11, value: 60 }, { month: 12, value: 63 },
+    ],
+  },
+]
+
+const galleryBarData = [
+  { region: "North", q1: 84, q2: 92, q3: 78, q4: 105 },
+  { region: "South", q1: 62, q2: 71, q3: 88, q4: 76 },
+  { region: "East", q1: 95, q2: 88, q3: 102, q4: 110 },
+  { region: "West", q1: 73, q2: 80, q3: 69, q4: 91 },
+]
+
+const galleryScatterData = Array.from({ length: 40 }, (_, i) => ({
+  x: 10 + Math.random() * 80,
+  y: 10 + Math.random() * 80,
+  size: 3 + Math.random() * 8,
+  group: ["A", "B", "C"][i % 3],
+}))
+
+const galleryAreaData = [
+  {
+    label: "Desktop",
+    coordinates: [
+      { week: 1, users: 120 }, { week: 2, users: 135 }, { week: 3, users: 142 },
+      { week: 4, users: 128 }, { week: 5, users: 155 }, { week: 6, users: 168 },
+      { week: 7, users: 160 }, { week: 8, users: 172 },
+    ],
+  },
+  {
+    label: "Mobile",
+    coordinates: [
+      { week: 1, users: 80 }, { week: 2, users: 95 }, { week: 3, users: 110 },
+      { week: 4, users: 105 }, { week: 5, users: 130 }, { week: 6, users: 145 },
+      { week: 7, users: 155 }, { week: 8, users: 170 },
+    ],
+  },
+]
+
+const galleryNetworkNodes = [
+  { id: "A" }, { id: "B" }, { id: "C" }, { id: "D" }, { id: "E" },
+  { id: "F" }, { id: "G" }, { id: "H" }, { id: "I" }, { id: "J" },
+  { id: "K" }, { id: "L" },
+]
+const galleryNetworkEdges = [
+  { source: "A", target: "B" }, { source: "A", target: "C" }, { source: "A", target: "D" },
+  { source: "B", target: "E" }, { source: "B", target: "F" }, { source: "C", target: "G" },
+  { source: "D", target: "H" }, { source: "E", target: "I" }, { source: "F", target: "J" },
+  { source: "G", target: "K" }, { source: "H", target: "L" }, { source: "I", target: "A" },
+  { source: "J", target: "C" }, { source: "K", target: "E" },
+]
+
+const galleryColors = ["#6366f1", "#ec4899", "#f97316", "#10b981", "#06b6d4"]
+
+const galleryItems = [
+  {
+    title: "Line Chart",
+    path: "/charts/line-chart",
+    render: (w, h) => (
+      <XYFrame
+        size={[w, h]}
+        lines={galleryLineData}
+        xAccessor="month"
+        yAccessor="value"
+        lineDataAccessor="coordinates"
+        lineStyle={(d, i) => ({ stroke: galleryColors[i], strokeWidth: 2, fill: "none" })}
+        axes={[
+          { orient: "left", tickFormat: d => d, ticks: 5 },
+          { orient: "bottom", ticks: 6 },
+        ]}
+        margin={{ top: 16, right: 16, bottom: 36, left: 44 }}
+        hoverAnnotation={true}
+      />
+    ),
+  },
+  {
+    title: "Bar Chart",
+    path: "/charts/bar-chart",
+    render: (w, h) => (
+      <OrdinalFrame
+        size={[w, h]}
+        data={galleryBarData.flatMap(d =>
+          [
+            { region: d.region, quarter: "Q1", value: d.q1 },
+            { region: d.region, quarter: "Q2", value: d.q2 },
+            { region: d.region, quarter: "Q3", value: d.q3 },
+            { region: d.region, quarter: "Q4", value: d.q4 },
+          ]
+        )}
+        oAccessor="region"
+        rAccessor="value"
+        type="clusterbar"
+        style={d => {
+          const qi = ["Q1", "Q2", "Q3", "Q4"].indexOf(d.quarter)
+          return { fill: galleryColors[qi], stroke: "none" }
+        }}
+        oLabel={true}
+        oPadding={8}
+        axes={[{ orient: "left", ticks: 5 }]}
+        margin={{ top: 16, right: 16, bottom: 36, left: 44 }}
+      />
+    ),
+  },
+  {
+    title: "Scatterplot",
+    path: "/charts/scatterplot",
+    render: (w, h) => (
+      <XYFrame
+        size={[w, h]}
+        points={galleryScatterData}
+        xAccessor="x"
+        yAccessor="y"
+        pointStyle={d => {
+          const gi = ["A", "B", "C"].indexOf(d.group)
+          return { fill: galleryColors[gi], fillOpacity: 0.7, r: d.size }
+        }}
+        axes={[
+          { orient: "left", ticks: 5 },
+          { orient: "bottom", ticks: 5 },
+        ]}
+        margin={{ top: 16, right: 16, bottom: 36, left: 44 }}
+        hoverAnnotation={true}
+      />
+    ),
+  },
+  {
+    title: "Stacked Area",
+    path: "/charts/area-chart",
+    render: (w, h) => (
+      <XYFrame
+        size={[w, h]}
+        lines={galleryAreaData}
+        xAccessor="week"
+        yAccessor="users"
+        lineDataAccessor="coordinates"
+        lineType={{ type: "stackedarea" }}
+        lineStyle={(d, i) => ({ fill: galleryColors[i], fillOpacity: 0.6, stroke: galleryColors[i], strokeWidth: 2 })}
+        axes={[
+          { orient: "left", ticks: 5 },
+          { orient: "bottom", ticks: 4 },
+        ]}
+        margin={{ top: 16, right: 16, bottom: 36, left: 44 }}
+      />
+    ),
+  },
+  {
+    title: "Network Graph",
+    path: "/charts/force-directed-graph",
+    render: (w, h) => (
+      <NetworkFrame
+        size={[w, h]}
+        nodes={galleryNetworkNodes}
+        edges={galleryNetworkEdges}
+        networkType={{ type: "force", iterations: 300 }}
+        nodeSizeAccessor={5}
+        nodeStyle={(d, i) => ({ fill: galleryColors[i % galleryColors.length], stroke: "#fff", strokeWidth: 1.5 })}
+        edgeStyle={() => ({ stroke: "var(--text-secondary)", strokeWidth: 1, opacity: 0.4 })}
+        nodeIDAccessor="id"
+        margin={16}
+      />
+    ),
+  },
+  {
+    title: "Realtime Bar Chart",
+    path: "/charts/realtime-bar-chart",
+    render: (w, h) => <GalleryRealtimeBars width={w} height={h} />,
+  },
+]
+
+function GalleryRealtimeBars({ width, height }) {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const categories = ["errors", "warnings", "info"]
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        const cat = categories[i % 3]
+        chartRef.current.push({
+          time: i,
+          value: cat === "errors" ? 2 + Math.random() * 8
+            : cat === "warnings" ? 5 + Math.random() * 15
+            : 10 + Math.random() * 20,
+          category: cat,
+        })
+      }
+    }, 40)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <RealtimeBarChart
+      ref={chartRef}
+      size={[width, height]}
+      categoryAccessor="category"
+      colors={{ errors: "#ef4444", warnings: "#f97316", info: "#6366f1" }}
+      binSize={20}
+      windowSize={200}
+      showAxes={true}
+    />
+  )
+}
+
+function HeroGallery() {
+  const [index, setIndex] = useState(() => Math.floor(Math.random() * galleryItems.length))
+  const containerRef = useRef(null)
+  const [width, setWidth] = useState(null)
+
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const observer = new ResizeObserver(entries => {
+      for (const entry of entries) setWidth(entry.contentRect.width)
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  const item = galleryItems[index]
+  const chartHeight = 280
+
+  return (
+    <div style={{ maxWidth: 700, margin: "0 auto" }}>
+      <div
+        ref={containerRef}
+        style={{
+          borderRadius: "12px",
+          border: "1px solid var(--surface-3)",
+          background: "var(--surface-1)",
+          overflow: "hidden",
+          color: "var(--text-primary)",
+        }}
+      >
+        {width && item.render(width, chartHeight)}
+      </div>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 12,
+          marginTop: 12,
+        }}
+      >
+        <button
+          onClick={() => setIndex((index - 1 + galleryItems.length) % galleryItems.length)}
+          style={{
+            background: "var(--surface-2)",
+            border: "1px solid var(--surface-3)",
+            borderRadius: 6,
+            padding: "4px 12px",
+            cursor: "pointer",
+            color: "var(--text-secondary)",
+            fontSize: 14,
+            lineHeight: "1.4",
+          }}
+          aria-label="Previous chart"
+        >
+          &larr;
+        </button>
+        <Link
+          to={item.path}
+          style={{
+            fontSize: 14,
+            fontWeight: 600,
+            color: "var(--accent)",
+            textDecoration: "none",
+          }}
+        >
+          {item.title}
+        </Link>
+        <button
+          onClick={() => setIndex((index + 1) % galleryItems.length)}
+          style={{
+            background: "var(--surface-2)",
+            border: "1px solid var(--surface-3)",
+            borderRadius: 6,
+            padding: "4px 12px",
+            cursor: "pointer",
+            color: "var(--text-secondary)",
+            fontSize: 14,
+            lineHeight: "1.4",
+          }}
+          aria-label="Next chart"
+        >
+          &rarr;
+        </button>
+      </div>
+    </div>
+  )
+}
+
 const styles = {
   /* ---- Hero ---- */
   hero: {
@@ -297,7 +610,6 @@ const styles = {
   /* ---- Section Shell ---- */
   section: {
     padding: "64px 24px",
-    maxWidth: "1100px",
     margin: "0 auto"
   },
   sectionTitle: {
@@ -330,7 +642,9 @@ const styles = {
     borderRadius: "12px",
     padding: "24px",
     display: "flex",
-    flexDirection: "column"
+    flexDirection: "column",
+    minWidth: 0,
+    overflow: "hidden"
   },
   tierLabel: {
     display: "inline-block",
@@ -475,7 +789,7 @@ const styles = {
 
 export default function Landing() {
   return (
-    <div>
+    <div className="landing-page">
       {/* ================================================================
           HERO SECTION
           ================================================================ */}
@@ -501,9 +815,7 @@ export default function Landing() {
             <CopyButton text="npm install semiotic" style={styles.installCopy} />
           </div>
 
-          <div style={styles.vizPlaceholder}>
-            <span>Interactive visualization coming soon</span>
-          </div>
+          <HeroGallery />
         </div>
       </section>
 

@@ -120,7 +120,7 @@ export const svgHighlight = ({
           cy={yScale(p.y)}
           r={5}
           fill="none"
-          stroke="black"
+          stroke="currentColor"
           strokeWidth={2}
           style={{ ...baseStyle, ...highlightStyle }}
           className={`highlight-annotation ${
@@ -172,7 +172,7 @@ export const svgHighlight = ({
           key={`highlight-summary-${q}`}
           d={lineGenerator(p.data)}
           fill="none"
-          stroke="black"
+          stroke="currentColor"
           strokeWidth={1}
           style={{ ...baseStyle, ...highlightStyle }}
         />
@@ -197,7 +197,7 @@ export const svgHighlight = ({
           key={`highlight-summary-${q}`}
           d={`M${p.coordinates.join("L")}`}
           fill="none"
-          stroke="black"
+          stroke="currentColor"
           strokeWidth={1}
           style={{ ...baseStyle, ...highlightStyle }}
         />
@@ -219,7 +219,7 @@ export const svgXYAnnotation = ({ screenCoordinates, i, d }) => {
       cy={screenCoordinates[1]}
       style={inlineStyle}
       fill="none"
-      stroke="black"
+      stroke="currentColor"
       r={5}
     />
   )

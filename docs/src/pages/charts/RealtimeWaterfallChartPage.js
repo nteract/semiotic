@@ -1,33 +1,147 @@
-import React from "react"
+import React, { useRef, useEffect, useState } from "react"
 import { RealtimeWaterfallChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
-import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
-// Sample data — static snapshots representing streaming deltas (gains/losses)
+// Responsive container hook
 // ---------------------------------------------------------------------------
 
-const now = Date.now()
+function useContainerWidth() {
+  const ref = useRef(null)
+  const [width, setWidth] = useState(null)
 
-const simpleData = Array.from({ length: 40 }, (_, i) => ({
-  time: now - (40 - i) * 1000,
-  value: (Math.random() - 0.45) * 30,
-}))
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setWidth(entry.contentRect.width)
+      }
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
-const styledData = Array.from({ length: 35 }, (_, i) => ({
-  time: now - (35 - i) * 1200,
-  value: Math.sin(i / 3) * 20 + (Math.random() - 0.5) * 8,
-}))
+  return [ref, width]
+}
 
-const connectorData = Array.from({ length: 30 }, (_, i) => ({
-  time: now - (30 - i) * 1500,
-  value: i % 5 === 0 ? -15 - Math.random() * 10 : 5 + Math.random() * 15,
-}))
+// ---------------------------------------------------------------------------
+// Live streaming demos
+// ---------------------------------------------------------------------------
+
+function BasicWaterfallDemo() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+  const [containerRef, containerWidth] = useContainerWidth()
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          time: i,
+          value: (Math.random() - 0.45) * 30,
+        })
+      }
+    }, 40)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <div ref={containerRef} style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "hidden" }}>
+      {containerWidth && (
+        <RealtimeWaterfallChart
+          ref={chartRef}
+          size={[containerWidth, 280]}
+          positiveColor="#28a745"
+          negativeColor="#dc3545"
+          windowSize={150}
+          showAxes={true}
+        />
+      )}
+    </div>
+  )
+}
+
+function ConnectorWaterfallDemo() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+  const [containerRef, containerWidth] = useContainerWidth()
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          time: i,
+          value: i % 5 === 0 ? -15 - Math.random() * 10 : 5 + Math.random() * 15,
+        })
+      }
+    }, 40)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <div ref={containerRef} style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "hidden" }}>
+      {containerWidth && (
+        <RealtimeWaterfallChart
+          ref={chartRef}
+          size={[containerWidth, 280]}
+          positiveColor="#28a745"
+          negativeColor="#dc3545"
+          connectorStroke="#999"
+          connectorWidth={1}
+          windowSize={150}
+          showAxes={true}
+        />
+      )}
+    </div>
+  )
+}
+
+function StyledWaterfallDemo() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+  const [containerRef, containerWidth] = useContainerWidth()
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          time: i,
+          value: Math.sin(i * 0.1) * 20 + (Math.random() - 0.5) * 8,
+        })
+      }
+    }, 40)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <div ref={containerRef} style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "hidden" }}>
+      {containerWidth && (
+        <RealtimeWaterfallChart
+          ref={chartRef}
+          size={[containerWidth, 280]}
+          positiveColor="#007bff"
+          negativeColor="#fd7e14"
+          stroke="#333"
+          strokeWidth={1}
+          gap={2}
+          connectorStroke="#aaa"
+          connectorWidth={1}
+          windowSize={150}
+          showAxes={true}
+        />
+      )}
+    </div>
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Props definition for PropTable
@@ -102,7 +216,9 @@ export default function RealtimeWaterfallChartPage() {
         lines linking consecutive bars. It wraps{" "}
         <Link to="/frames/realtime-frame">RealtimeFrame</Link> with{" "}
         <code>chartType="waterfall"</code> and promotes waterfall styling to
-        top-level props.
+        top-level props. Create a ref and call{" "}
+        <code>ref.current.push(point)</code> in a <code>setInterval</code> to
+        stream data in.
       </p>
 
       {/* ----------------------------------------------------------------- */}
@@ -111,34 +227,45 @@ export default function RealtimeWaterfallChartPage() {
       <h2 id="quick-start">Quick Start</h2>
 
       <p>
-        A basic waterfall chart needs <code>data</code> with positive and
-        negative <code>value</code> fields representing gains and losses over
-        time.
+        Create a ref, push delta data points on an interval, and
+        RealtimeWaterfallChart handles the rest. The sliding window keeps the
+        most recent points in view. Positive values render as gain bars,
+        negative values as loss bars.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: simpleData,
-          timeAccessor: "time",
-          valueAccessor: "value",
-          positiveColor: "#28a745",
-          negativeColor: "#dc3545",
-          showAxes: true,
-        }}
-        type={RealtimeWaterfallChart}
-        startHidden={false}
-        overrideProps={{
-          data: `[
-  { time: 1709000000, value: 12.5 },
-  { time: 1709001000, value: -8.3 },
-  { time: 1709002000, value: 15.1 },
-  // ...streaming gain/loss deltas
-]`,
-          positiveColor: '"#28a745"',
-          negativeColor: '"#dc3545"',
-        }}
-        hiddenProps={{}}
-      />
+      <BasicWaterfallDemo />
+      <div style={{ marginTop: 8 }}>
+        <CodeBlock
+          code={`import { RealtimeWaterfallChart } from "semiotic"
+import { useRef, useEffect } from "react"
+
+function StreamingWaterfall() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      chartRef.current?.push({
+        time: indexRef.current++,
+        value: (Math.random() - 0.45) * 30
+      })
+    }, 40)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <RealtimeWaterfallChart
+      ref={chartRef}
+      positiveColor="#28a745"
+      negativeColor="#dc3545"
+      windowSize={150}
+      showAxes={true}
+    />
+  )
+}`}
+          language="jsx"
+        />
+      </div>
 
       {/* ----------------------------------------------------------------- */}
       {/* Examples */}
@@ -151,25 +278,20 @@ export default function RealtimeWaterfallChartPage() {
         bars, making the cumulative flow easier to follow.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: connectorData,
-          timeAccessor: "time",
-          valueAccessor: "value",
-          positiveColor: "#28a745",
-          negativeColor: "#dc3545",
-          connectorStroke: "#999",
-          connectorWidth: 1,
-          showAxes: true,
-        }}
-        type={RealtimeWaterfallChart}
-        overrideProps={{
-          data: "revenueDeltas",
-          connectorStroke: '"#999"',
-          connectorWidth: "1",
-        }}
-        hiddenProps={{}}
-      />
+      <ConnectorWaterfallDemo />
+      <div style={{ marginTop: 8 }}>
+        <CodeBlock
+          code={`<RealtimeWaterfallChart
+  ref={chartRef}
+  positiveColor="#28a745"
+  negativeColor="#dc3545"
+  connectorStroke="#999"
+  connectorWidth={1}
+  windowSize={150}
+/>`}
+          language="jsx"
+        />
+      </div>
 
       <h3 id="custom-styling">Custom Colors and Gaps</h3>
       <p>
@@ -178,31 +300,23 @@ export default function RealtimeWaterfallChartPage() {
         style.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: styledData,
-          timeAccessor: "time",
-          valueAccessor: "value",
-          positiveColor: "#007bff",
-          negativeColor: "#fd7e14",
-          stroke: "#333",
-          strokeWidth: 1,
-          gap: 2,
-          connectorStroke: "#aaa",
-          connectorWidth: 1,
-          background: "#f8f9fa",
-          showAxes: true,
-        }}
-        type={RealtimeWaterfallChart}
-        overrideProps={{
-          data: "tradeDeltas",
-          positiveColor: '"#007bff"',
-          negativeColor: '"#fd7e14"',
-          stroke: '"#333"',
-          background: '"#f8f9fa"',
-        }}
-        hiddenProps={{}}
-      />
+      <StyledWaterfallDemo />
+      <div style={{ marginTop: 8 }}>
+        <CodeBlock
+          code={`<RealtimeWaterfallChart
+  ref={chartRef}
+  positiveColor="#007bff"
+  negativeColor="#fd7e14"
+  stroke="#333"
+  strokeWidth={1}
+  gap={2}
+  connectorStroke="#aaa"
+  connectorWidth={1}
+  windowSize={150}
+/>`}
+          language="jsx"
+        />
+      </div>
 
       {/* ----------------------------------------------------------------- */}
       {/* Props */}
@@ -232,9 +346,6 @@ export default function RealtimeWaterfallChartPage() {
 
 <RealtimeWaterfallChart
   ref={chartRef}
-  data={deltaStream}
-  timeAccessor="time"
-  valueAccessor="delta"
   positiveColor="#28a745"
   negativeColor="#dc3545"
   connectorStroke="#999"
@@ -252,15 +363,12 @@ export default function RealtimeWaterfallChartPage() {
 <RealtimeFrame
   ref={frameRef}
   chartType="waterfall"
-  data={deltaStream}
-  timeAccessor="time"
-  valueAccessor="delta"
+  windowSize={300}
   waterfallStyle={{
     positiveColor: "#28a745",
     negativeColor: "#dc3545",
     connectorStroke: "#999"
   }}
-  windowSize={300}
   hoverAnnotation={true}
   showAxes={true}
   size={[500, 300]}

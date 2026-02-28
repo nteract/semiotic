@@ -117,7 +117,6 @@ const navData = [
       { title: "OrdinalFrame", path: "/api/ordinalframe" },
       { title: "NetworkFrame", path: "/api/networkframe" },
       { title: "RealtimeFrame", path: "/api/realtime-frame" },
-      { title: "Utilities", path: "/api/utilities" },
     ],
   },
 ]

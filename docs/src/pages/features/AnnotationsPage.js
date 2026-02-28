@@ -96,7 +96,7 @@ export default function AnnotationsPage() {
                 type: "x",
                 week: 7,
                 label: "Peak week",
-                color: "#e11d48",
+                color: "#f97316",
                 disable: ["connector"],
               },
             ],
@@ -112,7 +112,7 @@ export default function AnnotationsPage() {
 ]`,
           frameProps: `{
   annotations: [
-    { type: "x", week: 7, label: "Peak week", color: "#e11d48", disable: ["connector"] }
+    { type: "x", week: 7, label: "Peak week", color: "#f97316", disable: ["connector"] }
   ]
 }`,
         }}
@@ -150,7 +150,7 @@ export default function AnnotationsPage() {
           ],
           annotations: [
             { type: "xy", x: 55, y: 45, label: "Peak" },
-            { type: "y", y: 35, label: "Target", color: "#e11d48", disable: ["connector"] },
+            { type: "y", y: 35, label: "Target", color: "#f97316", disable: ["connector"] },
           ],
         }}
         type={XYFrame}
@@ -165,7 +165,7 @@ export default function AnnotationsPage() {
 ]`,
           annotations: `[
   { type: "xy", x: 55, y: 45, label: "Peak" },
-  { type: "y", y: 35, label: "Target", color: "#e11d48", disable: ["connector"] }
+  { type: "y", y: 35, label: "Target", color: "#f97316", disable: ["connector"] }
 ]`,
         }}
         hiddenProps={{}}
@@ -382,10 +382,10 @@ export default function AnnotationsPage() {
             x2={adjustedSize[0]}
             y1={y}
             y2={y}
-            stroke="#e11d48"
+            stroke="#f97316"
             strokeDasharray="4 4"
           />
-          <text x={adjustedSize[0]} y={y - 5} textAnchor="end" fill="#e11d48">
+          <text x={adjustedSize[0]} y={y - 5} textAnchor="end" fill="#f97316">
             {d.label}
           </text>
         </g>

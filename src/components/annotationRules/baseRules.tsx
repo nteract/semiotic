@@ -89,7 +89,7 @@ export const rectangleEnclosure = ({ bboxNodes, d, i }) => {
 
 export const hullEnclosure = ({ points, d, i }) => {
   const {
-    color = "black",
+    color = "currentColor",
     dx = -25,
     dy = -25,
     label,
