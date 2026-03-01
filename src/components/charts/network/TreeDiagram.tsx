@@ -7,6 +7,7 @@ import { getColor, createColorScale } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
+import { hierarchyLayouts } from "../../processing/layouts/hierarchyLayout"
 
 /**
  * TreeDiagram component props
@@ -387,7 +388,8 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
     ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
     // Allow frameProps to override defaults
     transition: true,
-    ...frameProps
+    ...frameProps,
+    _layoutMap: hierarchyLayouts
   }
 
   return <NetworkFrame {...networkFrameProps} />

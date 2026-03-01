@@ -580,3 +580,391 @@ div.page-image img {
 .page-toc a:hover {
   color: var(--text-primary);
 }
+
+/* --------------------------------------------------------------------------
+   20. Recipe Components
+   -------------------------------------------------------------------------- */
+
+/* Recipe badge */
+.recipe-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #fff;
+  background: var(--accent);
+  line-height: 1.6;
+}
+
+/* Dependency tags */
+.recipe-deps {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.recipe-dep-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font-code);
+  color: var(--text-secondary);
+  background: var(--surface-2);
+  border: 1px solid var(--surface-3);
+}
+
+/* Full source code section */
+.recipe-source {
+  border-top: 2px solid var(--accent);
+  padding-top: 24px;
+}
+
+/* KPI card grid */
+.recipe-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.recipe-kpi-card {
+  background: var(--surface-1);
+  border: 1px solid var(--surface-3);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.recipe-kpi-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.recipe-kpi-value {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+
+.recipe-kpi-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.recipe-kpi-change {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.recipe-kpi-change.positive {
+  color: #22c55e;
+}
+
+.recipe-kpi-change.negative {
+  color: #ef4444;
+}
+
+/* Network explorer layout */
+.recipe-network-layout {
+  display: flex;
+  gap: 24px;
+}
+
+.recipe-network-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+}
+
+.recipe-search-input {
+  width: 100%;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--surface-3);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: var(--font-body);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.recipe-search-input:focus {
+  border-color: var(--accent);
+}
+
+@media (max-width: 768px) {
+  .recipe-network-layout {
+    flex-direction: column;
+  }
+
+  .recipe-network-sidebar {
+    width: 100%;
+  }
+}
+
+/* Customization table */
+.recipe-customization-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0 24px;
+  font-size: 14px;
+}
+
+.recipe-customization-table th {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 2px solid var(--surface-3);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.recipe-customization-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--surface-3);
+  vertical-align: top;
+}
+
+.recipe-customization-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* --------------------------------------------------------------------------
+   21. Playground Components
+   -------------------------------------------------------------------------- */
+
+.playground-chart-container {
+  background: var(--surface-1);
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid var(--surface-3);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.playground-controls {
+  background: var(--surface-1);
+  border: 1px solid var(--surface-3);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.playground-group-header {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  margin: 16px 0 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--surface-3);
+}
+
+.playground-group-header:first-child {
+  margin-top: 0;
+}
+
+.playground-controls-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 24px;
+}
+
+@media (max-width: 600px) {
+  .playground-controls-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.playground-control-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+}
+
+.playground-control-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  min-width: 100px;
+  flex-shrink: 0;
+}
+
+.playground-control-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.playground-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.playground-range input[type="range"] {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--accent);
+}
+
+.playground-number-input {
+  width: 56px;
+  padding: 3px 6px;
+  border: 1px solid var(--surface-3);
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  font-family: var(--font-code);
+  font-size: 12px;
+  text-align: center;
+}
+
+.playground-number-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.playground-select {
+  width: 100%;
+  padding: 5px 8px;
+  border: 1px solid var(--surface-3);
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.playground-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.playground-text-input {
+  width: 100%;
+  padding: 5px 8px;
+  border: 1px solid var(--surface-3);
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.playground-text-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.playground-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border: 1px solid var(--surface-3);
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  position: relative;
+}
+
+.playground-toggle::after {
+  content: "";
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  transition: background 0.15s ease;
+}
+
+.playground-toggle.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.playground-toggle.active::after {
+  background: #fff;
+}
+
+.playground-color-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.playground-color-input {
+  width: 32px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--surface-3);
+  border-radius: 4px;
+  cursor: pointer;
+  background: none;
+}
+
+.playground-color-value {
+  font-family: var(--font-code);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.playground-dataset-picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.playground-dataset-picker label {
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.playground-dataset-picker .playground-select {
+  max-width: 320px;
+}
+
+.playground-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--surface-3);
+}
+
+.playground-reset-button {
+  background: none;
+  border: 1px solid var(--surface-3);
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: var(--font-code);
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.playground-reset-button:hover {
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+}

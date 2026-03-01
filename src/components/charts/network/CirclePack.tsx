@@ -7,6 +7,7 @@ import { getColor, createColorScale } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { DEFAULT_COLOR } from "../shared/hooks"
+import { hierarchyLayouts } from "../../processing/layouts/hierarchyLayout"
 
 /**
  * CirclePack component props
@@ -251,7 +252,8 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
     ...(title && { title }),
     ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
     transition: true,
-    ...frameProps
+    ...frameProps,
+    _layoutMap: { circlepack: hierarchyLayouts.circlepack }
   }
 
   return <NetworkFrame {...networkFrameProps} />
