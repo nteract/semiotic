@@ -1,3 +1,4 @@
+"use client"
 import { useEffect, useRef } from "react"
 import { GeneralFrameProps, GeneralFrameState } from "./types/generalTypes"
 

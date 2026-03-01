@@ -1,6 +1,6 @@
 import * as React from "react"
 
-import { GenericObject, ProjectionTypes } from "../types/generalTypes"
+import { ProjectionTypes } from "../types/generalTypes"
 
 import { boxplotRenderFn } from "./boxplotRenderer"
 import { ckBinsRenderFn } from "./ckbinsRenderer"
@@ -147,11 +147,11 @@ export function summaryInstructionsToMarks(data: summaryInstruction[]) {
       renderedSummaries.push(container.Mark)
     } else {
       for (let i = 0; i < elements.length; i++) {
-        const element: GenericObject = elements[i] as GenericObject
+        const element: Record<string, any> = elements[i] as Record<string, any>
         const { markType, style = {}, ...restProps } = element
 
         // Merge style object into direct props for cleaner SVG
-        const elementProps: GenericObject = { ...restProps }
+        const elementProps: Record<string, any> = { ...restProps }
         if (style.fill !== undefined) elementProps.fill = style.fill
         if (style.stroke !== undefined) elementProps.stroke = style.stroke
         if (style.strokeWidth !== undefined) elementProps.strokeWidth = style.strokeWidth
@@ -160,7 +160,7 @@ export function summaryInstructionsToMarks(data: summaryInstruction[]) {
         if (style.strokeOpacity !== undefined) elementProps.strokeOpacity = style.strokeOpacity
 
         // Keep remaining styles
-        const remainingStyles: GenericObject = { ...style }
+        const remainingStyles: Record<string, any> = { ...style }
         delete remainingStyles.fill
         delete remainingStyles.stroke
         delete remainingStyles.strokeWidth

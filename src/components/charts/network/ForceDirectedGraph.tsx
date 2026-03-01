@@ -1,17 +1,18 @@
+"use client"
 import * as React from "react"
 import { useMemo } from "react"
 import NetworkFrame from "../../NetworkFrame"
 import type { NetworkFrameProps } from "../../types/networkTypes"
 import { getColor, getSize } from "../shared/colorUtils"
 import { createLegend } from "../shared/legendUtils"
-import type { BaseChartProps, Accessor } from "../shared/types"
+import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 
 /**
  * ForceDirectedGraph component props
  */
-export interface ForceDirectedGraphProps extends BaseChartProps {
+export interface ForceDirectedGraphProps<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   /**
    * Array of nodes. Each node should have an id property.
    * @example
@@ -19,7 +20,7 @@ export interface ForceDirectedGraphProps extends BaseChartProps {
    * [{id: 'A', label: 'Node A'}, {id: 'B', label: 'Node B'}]
    * ```
    */
-  nodes: Array<Record<string, any>>
+  nodes: TNode[]
 
   /**
    * Array of edges connecting nodes.
@@ -28,25 +29,25 @@ export interface ForceDirectedGraphProps extends BaseChartProps {
    * [{source: 'A', target: 'B'}, {source: 'B', target: 'C'}]
    * ```
    */
-  edges: Array<Record<string, any>>
+  edges: TEdge[]
 
   /**
    * Field name or function to access node IDs
    * @default "id"
    */
-  nodeIDAccessor?: Accessor<string>
+  nodeIDAccessor?: ChartAccessor<TNode, string>
 
   /**
    * Field name or function to access edge source IDs
    * @default "source"
    */
-  sourceAccessor?: Accessor<string>
+  sourceAccessor?: ChartAccessor<TEdge, string>
 
   /**
    * Field name or function to access edge target IDs
    * @default "target"
    */
-  targetAccessor?: Accessor<string>
+  targetAccessor?: ChartAccessor<TEdge, string>
 
   /**
    * Field name or function to determine node labels
@@ -56,7 +57,7 @@ export interface ForceDirectedGraphProps extends BaseChartProps {
    * nodeLabel={d => d.name}  // Use function
    * ```
    */
-  nodeLabel?: Accessor<string>
+  nodeLabel?: ChartAccessor<TNode, string>
 
   /**
    * Field name or function to determine node color
@@ -66,7 +67,7 @@ export interface ForceDirectedGraphProps extends BaseChartProps {
    * colorBy={d => d.value > 10 ? 'red' : 'blue'}
    * ```
    */
-  colorBy?: Accessor<string>
+  colorBy?: ChartAccessor<TNode, string>
 
   /**
    * Color scheme for categorical data or custom colors array
@@ -83,7 +84,7 @@ export interface ForceDirectedGraphProps extends BaseChartProps {
    * nodeSize={d => d.connections * 2}  // Use function
    * ```
    */
-  nodeSize?: number | Accessor<number>
+  nodeSize?: number | ChartAccessor<TNode, number>
 
   /**
    * Min and max radius for nodes when using dynamic sizing
@@ -95,7 +96,7 @@ export interface ForceDirectedGraphProps extends BaseChartProps {
    * Field name, number, or function to determine edge width
    * @default 1
    */
-  edgeWidth?: number | Accessor<number>
+  edgeWidth?: number | ChartAccessor<TEdge, number>
 
   /**
    * Edge color
@@ -215,7 +216,7 @@ export interface ForceDirectedGraphProps extends BaseChartProps {
  * @param props - ForceDirectedGraph configuration
  * @returns Rendered force-directed graph
  */
-export function ForceDirectedGraph(props: ForceDirectedGraphProps) {
+export function ForceDirectedGraph<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: ForceDirectedGraphProps<TNode, TEdge>) {
   const {
     nodes,
     edges,
@@ -303,7 +304,7 @@ export function ForceDirectedGraph(props: ForceDirectedGraphProps) {
       if (typeof edgeWidth === "number") {
         baseStyle.strokeWidth = edgeWidth
       } else if (typeof edgeWidth === "function") {
-        baseStyle.strokeWidth = edgeWidth(d)
+        baseStyle.strokeWidth = edgeWidth(d as TEdge)
       } else if (edgeWidth) {
         baseStyle.strokeWidth = d[edgeWidth]
       }
@@ -318,7 +319,7 @@ export function ForceDirectedGraph(props: ForceDirectedGraphProps) {
 
     return (d: Record<string, any>) => {
       if (typeof nodeLabel === "function") {
-        return nodeLabel(d)
+        return nodeLabel(d as TNode)
       }
       return d[nodeLabel]
     }
@@ -383,6 +384,7 @@ export function ForceDirectedGraph(props: ForceDirectedGraphProps) {
     // Add tooltip support
     ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
     // Allow frameProps to override defaults
+    transition: true,
     ...frameProps
   }
 

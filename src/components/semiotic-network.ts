@@ -63,6 +63,7 @@ export {
   CanvasPostProcessTypes,
   ExtentSettingsType,
   accessorType,
+  DataAccessor,
   AccessorFnType,
   GenericAccessor,
   VizLayerTypes,

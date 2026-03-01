@@ -1,3 +1,4 @@
+"use client"
 import * as React from "react"
 import { useCallback, useMemo, useRef } from "react"
 
@@ -34,6 +35,7 @@ import Frame from "./Frame"
 import { stringToFn, stringToArrayFn } from "./data/dataFunctions"
 
 import { calculateOrdinalFrame } from "./processing/ordinal"
+import { createOrdinalPipelineCache, OrdinalPipelineCache } from "./data/ordinalPipelineCache"
 
 import { AnnotationType } from "./types/annotationTypes"
 
@@ -63,10 +65,11 @@ const defaultProps: Partial<OrdinalFrameProps> = {
   optimizeCustomTooltipPosition: false
 }
 
-const OrdinalFrame = React.memo(function OrdinalFrame(
-  allProps: OrdinalFrameProps
+export function OrdinalFrameInner<TDatum = Record<string, any>>(
+  allProps: OrdinalFrameProps<TDatum>
 ) {
-  const props: OrdinalFrameProps = { ...defaultProps, ...allProps }
+  const props = { ...defaultProps, ...allProps } as OrdinalFrameProps<TDatum>
+  const pipelineCacheRef = useRef(createOrdinalPipelineCache())
   const baseState = {
     adjustedPosition: [],
     adjustedSize: [],
@@ -97,19 +100,19 @@ const OrdinalFrame = React.memo(function OrdinalFrame(
     summaryType: { type: "none" },
     title: {},
     type: { type: "none" },
-    props
+    props: props as OrdinalFrameProps
   }
 
   const initialState = useMemo(
     () => ({
       ...baseState,
-      ...calculateOrdinalFrame(props, baseState)
-    }),
+      ...calculateOrdinalFrame(props as OrdinalFrameProps, baseState, pipelineCacheRef.current)
+    } as OrdinalFrameState),
     []
   )
   const state = useDerivedStateFromProps(
-    deriveOrdinalFrameState,
-    props,
+    (nextProps, prevState) => deriveOrdinalFrameState(nextProps as OrdinalFrameProps, prevState, pipelineCacheRef.current),
+    props as OrdinalFrameProps,
     initialState
   )
 
@@ -121,11 +124,11 @@ const OrdinalFrame = React.memo(function OrdinalFrame(
   stateRef.current = state
 
   const defaultSVGRuleCb = useCallback(
-    (args) => defaultORSVGRule(propsRef.current, stateRef.current, args),
+    (args) => defaultORSVGRule(propsRef.current as OrdinalFrameProps, stateRef.current, args),
     []
   )
   const defaultHTMLRuleCb = useCallback(
-    (args) => defaultORHTMLRule(propsRef.current, stateRef.current, args),
+    (args) => defaultORHTMLRule(propsRef.current as OrdinalFrameProps, stateRef.current, args),
     []
   )
 
@@ -158,7 +161,8 @@ const OrdinalFrame = React.memo(function OrdinalFrame(
     sketchyRenderingEngine,
     frameRenderOrder,
     disableCanvasInteraction,
-    disableProgressiveRendering
+    disableProgressiveRendering,
+    transition
   } = props
 
   const {
@@ -291,13 +295,15 @@ const OrdinalFrame = React.memo(function OrdinalFrame(
       frameRenderOrder={frameRenderOrder}
       additionalVizElements={oLabels}
       disableProgressiveRendering={disableProgressiveRendering}
+      transition={transition}
     />
   )
-})
+}
 
 function deriveOrdinalFrameState(
   nextProps: OrdinalFrameProps,
-  prevState: OrdinalFrameState
+  prevState: OrdinalFrameState,
+  cache?: OrdinalPipelineCache
 ) {
   const { props } = prevState
 
@@ -318,7 +324,7 @@ function deriveOrdinalFrameState(
     !prevState.projectedColumns
   ) {
     return {
-      ...calculateOrdinalFrame(nextProps, prevState),
+      ...calculateOrdinalFrame(nextProps, prevState, cache),
       props: nextProps
     }
   }
@@ -326,7 +332,7 @@ function deriveOrdinalFrameState(
   // Full data recalculation needed if data-affecting props changed
   if (dataPropsChanged) {
     return {
-      ...calculateOrdinalFrame(nextProps, prevState),
+      ...calculateOrdinalFrame(nextProps, prevState, cache),
       props: nextProps
     }
   }
@@ -336,7 +342,7 @@ function deriveOrdinalFrameState(
   // but size changes typically need full recalc due to column layout
   if (sizeChanged || scalePropsChanged) {
     return {
-      ...calculateOrdinalFrame(nextProps, prevState),
+      ...calculateOrdinalFrame(nextProps, prevState, cache),
       props: nextProps
     }
   }
@@ -653,5 +659,6 @@ function defaultORHTMLRule(
   return null
 }
 
-OrdinalFrame.displayName = "OrdinalFrame"
+OrdinalFrameInner.displayName = "OrdinalFrame"
+const OrdinalFrame = React.memo(OrdinalFrameInner) as typeof OrdinalFrameInner
 export default OrdinalFrame

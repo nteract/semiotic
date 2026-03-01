@@ -1,3 +1,4 @@
+"use client"
 import * as React from "react"
 import { useMemo } from "react"
 import {
@@ -17,7 +18,7 @@ import type { LineTypeSettings } from "../../types/generalTypes"
 import { getColor } from "../shared/colorUtils"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
-import type { BaseChartProps, AxisConfig, Accessor } from "../shared/types"
+import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 
 /** Map of curve name strings to d3-shape curve functions */
@@ -36,7 +37,7 @@ const CURVE_MAP = {
 /**
  * LineChart component props
  */
-export interface LineChartProps extends BaseChartProps, AxisConfig {
+export interface LineChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps, AxisConfig {
   /**
    * Array of data points or array of line objects with coordinates.
    * @example
@@ -51,19 +52,19 @@ export interface LineChartProps extends BaseChartProps, AxisConfig {
    * [{label: 'Series A', coordinates: [{x: 1, y: 10}, {x: 2, y: 20}]}]
    * ```
    */
-  data: Array<Record<string, any>>
+  data: TDatum[]
 
   /**
    * Field name or function to access x values
    * @default "x"
    */
-  xAccessor?: Accessor<number>
+  xAccessor?: ChartAccessor<TDatum, number>
 
   /**
    * Field name or function to access y values
    * @default "y"
    */
-  yAccessor?: Accessor<number>
+  yAccessor?: ChartAccessor<TDatum, number>
 
   /**
    * Field name or function to group data into multiple lines
@@ -73,7 +74,7 @@ export interface LineChartProps extends BaseChartProps, AxisConfig {
    * lineBy={d => d.category}  // Use function
    * ```
    */
-  lineBy?: Accessor<string>
+  lineBy?: ChartAccessor<TDatum, string>
 
   /**
    * Field name in line objects that contains coordinate arrays
@@ -90,7 +91,7 @@ export interface LineChartProps extends BaseChartProps, AxisConfig {
    * colorBy={d => d.label}
    * ```
    */
-  colorBy?: Accessor<string>
+  colorBy?: ChartAccessor<TDatum, string>
 
   /**
    * Color scheme for categorical data or custom colors array
@@ -239,7 +240,7 @@ export interface LineChartProps extends BaseChartProps, AxisConfig {
  * @param props - LineChart configuration
  * @returns Rendered line chart
  */
-export function LineChart(props: LineChartProps) {
+export function LineChart<TDatum extends Record<string, any> = Record<string, any>>(props: LineChartProps<TDatum>) {
   const {
     data,
     width = 600,
@@ -287,7 +288,7 @@ export function LineChart(props: LineChartProps) {
       const grouped = safeData.reduce((acc, d) => {
         const key = typeof lineBy === "function" ? lineBy(d) : d[lineBy]
         if (!acc[key]) {
-          const lineObj: Record<string, unknown> = { [lineDataAccessor]: [] }
+          const lineObj: Record<string, any> = { [lineDataAccessor]: [] }
           // Add the grouping field
           if (typeof lineBy === "string") {
             lineObj[lineBy] = key
@@ -296,7 +297,7 @@ export function LineChart(props: LineChartProps) {
         }
         acc[key][lineDataAccessor].push(d)
         return acc
-      }, {} as Record<string, Record<string, unknown>>)
+      }, {} as Record<string, Record<string, any>>)
 
       return Object.values(grouped)
     }
@@ -449,6 +450,7 @@ export function LineChart(props: LineChartProps) {
     // Add tooltip support
     ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
     // Allow frameProps to override defaults
+    transition: true,
     ...frameProps
   }
 

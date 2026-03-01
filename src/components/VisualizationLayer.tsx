@@ -1,3 +1,4 @@
+"use client"
 import * as React from "react"
 import { RefObject, useCallback, useEffect, useMemo, useState } from "react"
 
@@ -5,7 +6,8 @@ import {
   MarginType,
   RenderPipelineType,
   VizLayerTypes,
-  RoughType
+  RoughType,
+  TransitionConfig
 } from "./types/generalTypes"
 
 import { ContextType } from "./types/canvasTypes"
@@ -37,6 +39,7 @@ type Props = {
   frameRenderOrder: Array<string>
   additionalVizElements: object
   disableProgressiveRendering?: boolean
+  transition?: boolean | TransitionConfig
 }
 
 type State = {
@@ -80,7 +83,8 @@ const updateVisualizationLayer = (
     projectedCoordinateNames,
     renderPipeline = {},
     renderOrder = [],
-    sketchyRenderingEngine
+    sketchyRenderingEngine,
+    transition
   } = props
 
   const canvasDrawing = []
@@ -129,6 +133,7 @@ const updateVisualizationLayer = (
             data-testid={k}
             role={"group"}
             tabIndex={0}
+            {...(transition ? { "data-semiotic-transition": "" } : undefined)}
             aria-label={
               (pipe.ariaLabel &&
                 `${renderedPipe.length} ${pipe.ariaLabel.items}s in a ${pipe.ariaLabel.chart}`) ||
@@ -201,6 +206,45 @@ const handleKeyDown =
     changeFocusedVisualizationGroup(vizGroupSetting.focusedVisualizationGroup)
   }
 
+function buildTransitionStyle(
+  transition: boolean | TransitionConfig | undefined
+): React.ReactNode {
+  if (!transition) return null
+
+  const duration =
+    typeof transition === "object" && transition.duration != null
+      ? transition.duration
+      : 300
+  const ease =
+    typeof transition === "object" && transition.ease != null
+      ? transition.ease
+      : "ease"
+
+  const dur = `${duration}ms`
+
+  const css = `
+@keyframes semiotic-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+g[data-semiotic-transition] > rect,
+g[data-semiotic-transition] > circle,
+g[data-semiotic-transition] > path,
+g[data-semiotic-transition] > line,
+g[data-semiotic-transition] > g > rect,
+g[data-semiotic-transition] > g > circle,
+g[data-semiotic-transition] > g > path,
+g[data-semiotic-transition] > g > line {
+  transition: fill ${dur} ${ease},
+              stroke ${dur} ${ease},
+              opacity ${dur} ${ease},
+              transform ${dur} ${ease};
+  animation: semiotic-enter ${dur} ${ease};
+}
+`
+  return <style key="semiotic-transition-style">{css}</style>
+}
+
 export default function VisualizationLayer(props: Props) {
   const {
     matte,
@@ -212,7 +256,8 @@ export default function VisualizationLayer(props: Props) {
     ariaTitle,
     axesTickLines,
     frameRenderOrder,
-    additionalVizElements
+    additionalVizElements,
+    transition
   } = props
 
   let changeTooltip = useTooltip((state) => state.changeTooltip)
@@ -337,6 +382,8 @@ export default function VisualizationLayer(props: Props) {
     additionalVizElements
   ])
 
+  const transitionStyle = buildTransitionStyle(transition)
+
   const renderHash = {
     ["axes-tick-lines"]: axesTickLines && (
       <g
@@ -354,7 +401,11 @@ export default function VisualizationLayer(props: Props) {
     ),
     matte: matte,
     ["viz-layer"]:
-      renderedElements && renderedElements.length > 0 ? renderedElements : null,
+      renderedElements && renderedElements.length > 0
+        ? transitionStyle
+          ? [transitionStyle, ...renderedElements]
+          : renderedElements
+        : null,
     ...additionalVizElements
   }
 

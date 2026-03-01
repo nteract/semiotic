@@ -1,3 +1,4 @@
+"use client"
 import * as React from "react"
 import { useMemo } from "react"
 import OrdinalFrame from "../../OrdinalFrame"
@@ -5,13 +6,13 @@ import type { OrdinalFrameProps } from "../../types/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
 import { useColorScale, useSortedData, DEFAULT_COLOR } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
-import type { BaseChartProps, Accessor } from "../shared/types"
+import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 
 /**
  * DotPlot component props
  */
-export interface DotPlotProps extends BaseChartProps {
+export interface DotPlotProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   /**
    * Array of data points with category and value.
    * @example
@@ -23,19 +24,19 @@ export interface DotPlotProps extends BaseChartProps {
    * ]
    * ```
    */
-  data: Array<Record<string, any>>
+  data: TDatum[]
 
   /**
    * Field name or function to access category values
    * @default "category"
    */
-  categoryAccessor?: Accessor<string>
+  categoryAccessor?: ChartAccessor<TDatum, string>
 
   /**
    * Field name or function to access numeric values
    * @default "value"
    */
-  valueAccessor?: Accessor<number>
+  valueAccessor?: ChartAccessor<TDatum, number>
 
   /**
    * Chart orientation
@@ -66,7 +67,7 @@ export interface DotPlotProps extends BaseChartProps {
    * colorBy={d => d.value > 20 ? 'high' : 'low'}
    * ```
    */
-  colorBy?: Accessor<string>
+  colorBy?: ChartAccessor<TDatum, string>
 
   /**
    * Color scheme for categorical data or custom colors array
@@ -148,7 +149,7 @@ export interface DotPlotProps extends BaseChartProps {
  * />
  * ```
  */
-export function DotPlot(props: DotPlotProps) {
+export function DotPlot<TDatum extends Record<string, any> = Record<string, any>>(props: DotPlotProps<TDatum>) {
   const {
     data,
     width = 600,
@@ -277,8 +278,8 @@ export function DotPlot(props: DotPlotProps) {
   // Default tooltip function for piece hover
   const defaultTooltipContent = useMemo(() => {
     return (d: Record<string, any>) => {
-      const cat = typeof categoryAccessor === "function" ? categoryAccessor(d) : d[categoryAccessor]
-      const val = typeof valueAccessor === "function" ? valueAccessor(d) : d[valueAccessor]
+      const cat = typeof categoryAccessor === "function" ? categoryAccessor(d as TDatum) : d[categoryAccessor]
+      const val = typeof valueAccessor === "function" ? valueAccessor(d as TDatum) : d[valueAccessor]
       return (
         <div className="semiotic-tooltip" style={defaultTooltipStyle}>
           <div style={{ fontWeight: "bold" }}>{String(cat)}</div>
@@ -309,6 +310,7 @@ export function DotPlot(props: DotPlotProps) {
     // Add tooltip support
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as Function,
     // Allow frameProps to override defaults
+    transition: true,
     ...frameProps
   }
 

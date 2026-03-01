@@ -4,17 +4,16 @@ import { sum, max, min, extent } from "d3-array"
 
 import { arc } from "d3-shape"
 import {
-  calculateMargin,
   objectifyType,
   keyAndObjectifyBarData,
-  adjustedPositionSize,
   orFrameAxisGenerator
 } from "../svg/frameFunctions"
 import { pointOnArcAtAngle } from "../svg/pieceDrawing"
 import { drawSummaries } from "../svg/summaryLayouts"
 import { axisGenerator } from "../svg/summaryAxis"
 
-import { stringToFn, stringToArrayFn } from "../data/dataFunctions"
+
+import { OrdinalPipelineCache } from "../data/ordinalPipelineCache"
 
 import {
   OrdinalFrameProps,
@@ -27,7 +26,7 @@ import {
 
 import { AxisProps } from "../types/annotationTypes"
 
-import { PieceLayoutType, GenericObject } from "../types/generalTypes"
+import { PieceLayoutType } from "../types/generalTypes"
 
 import { scaleOrdinal, scaleLinear, ScaleBand, ScaleLinear } from "d3-scale"
 
@@ -70,13 +69,14 @@ export const calculateMappedMiddles = (
 
 export const calculateOrdinalFrame = (
   currentProps: OrdinalFrameProps,
-  currentState: OrdinalFrameState
+  currentState: OrdinalFrameState,
+  cache: OrdinalPipelineCache
 ) => {
   let oLabels
   const projectedColumns = {}
 
   const {
-    oPadding: padding = 0,
+    oPadding: basePadding = 0,
     summaryType: baseSummaryType,
     type: baseType,
     connectorType: baseConnectorType,
@@ -117,32 +117,33 @@ export const calculateOrdinalFrame = (
     sketchyRenderingEngine
   } = currentProps
 
+  // Radial (pie chart) projection ignores oPadding — angular gaps widen
+  // radially and create visual artifacts between slices
+  const padding = projection === "radial" ? 0 : basePadding
+
   const summaryType = objectifyType(baseSummaryType)
   const pieceType = objectifyType(baseType) as PieceTypeSettings
   const connectorType = objectifyType(baseConnectorType)
-  const oAccessor = stringToArrayFn<string | number>(
-    baseOAccessor,
-    (d) => d.renderKey
-  )
-  const rAccessor = stringToArrayFn<number>(baseRAccessor, (d) => d.value || 1)
-  const renderKey = stringToFn<string | number>(baseRenderKey, (d, i) => i)
+
+  const cachedAccessors = cache.accessorConversions(baseOAccessor, baseRAccessor, baseRenderKey, basePieceIDAccessor)
+
+  const oAccessor = cachedAccessors.oAccessor
+  const rAccessor = cachedAccessors.rAccessor
+  const renderKey = cachedAccessors.renderKey
 
   const eventListenersGenerator = () => ({})
 
-  const connectorStyle = stringToFn<GenericObject>(
-    baseConnectorStyle,
-    () => ({}),
-    true
+  const {
+    connectorStyle, summaryStyle, pieceStyle, pieceClass, summaryClass,
+    connectorClass: connectorClassFn, pieceRenderMode, summaryRenderMode,
+    connectorRenderMode: connectorRenderModeFn,
+    pieceCanvasRender, summaryCanvasRender, connectorCanvasRender
+  } = cache.styleFns(
+    baseConnectorStyle, baseSummaryStyle, baseStyle, basePieceClass, baseSummaryClass,
+    currentProps.connectorClass, currentProps.renderMode, currentProps.summaryRenderMode,
+    currentProps.connectorRenderMode,
+    currentProps.canvasPieces, currentProps.canvasSummaries, currentProps.canvasConnectors
   )
-  const summaryStyle = stringToFn<GenericObject>(
-    baseSummaryStyle,
-    () => ({}),
-    true
-  )
-
-  const pieceStyle = stringToFn<GenericObject>(baseStyle, () => ({}), true)
-  const pieceClass = stringToFn<string>(basePieceClass, () => "", true)
-  const summaryClass = stringToFn<string>(baseSummaryClass, () => "", true)
   const title =
     typeof baseTitle === "object" &&
     !React.isValidElement(baseTitle) &&
@@ -150,7 +151,7 @@ export const calculateOrdinalFrame = (
       ? baseTitle
       : { title: baseTitle, orient: "top" }
 
-  const pieceIDAccessor = stringToFn<string>(basePieceIDAccessor, () => "")
+  const pieceIDAccessor = cachedAccessors.pieceIDAccessor
 
   const originalRAccessor = Array.isArray(baseRAccessor)
     ? baseRAccessor
@@ -160,11 +161,32 @@ export const calculateOrdinalFrame = (
     ? baseOAccessor
     : [baseOAccessor]
 
+  // For radial (pie chart) projection, force uniform arc depth by overriding
+  // rAccessor to always return 1. Encode value via dynamicColumnWidth instead.
+  let effectiveRAccessor = rAccessor
+  let effectiveDynamicColumnWidth = dynamicColumnWidth
+  if (projection === "radial") {
+    if (!effectiveDynamicColumnWidth) {
+      // Auto-set dynamicColumnWidth to sum original rAccessor values
+      // so angular extent still encodes the data
+      const originalAccessors = rAccessor
+      effectiveDynamicColumnWidth = (pieces: object[]) =>
+        sum(pieces, (d) => {
+          let total = 0
+          for (const accessor of originalAccessors) {
+            total += accessor(d) || 0
+          }
+          return total
+        })
+    }
+    effectiveRAccessor = [() => 1]
+  }
+
   const { allData, multiExtents } = keyAndObjectifyBarData({
     data,
     renderKey,
     oAccessor,
-    rAccessor,
+    rAccessor: effectiveRAccessor,
     originalRAccessor,
     originalOAccessor,
     multiAxis
@@ -207,20 +229,9 @@ export const calculateOrdinalFrame = (
     })
   }
 
-  const margin = calculateMargin({
-    margin: baseMargin,
-    axes: arrayWrappedAxis,
-    title,
-    oLabel,
-    projection,
-    size
-  })
-
-  const { adjustedPosition, adjustedSize } = adjustedPositionSize({
-    size,
-    margin,
-    projection
-  })
+  const { margin, adjustedPosition, adjustedSize } = cache.marginCalc(
+    baseMargin, arrayWrappedAxis, title, oLabel, projection, size
+  )
 
   const oExtentSettings: OExtentObject =
     baseOExtent === undefined || Array.isArray(baseOExtent)
@@ -288,7 +299,7 @@ export const calculateOrdinalFrame = (
 
   const castOScaleType = oScaleType as unknown as (ScaleBand<string> & (() => ScaleBand<string>))
 
-  const oScale = (dynamicColumnWidth
+  const oScale = (effectiveDynamicColumnWidth
     ? scaleOrdinal()
     : castOScaleType?.domain
     ? castOScaleType
@@ -455,14 +466,43 @@ export const calculateOrdinalFrame = (
     )
 
     oScale.domain(oExtent)
+  } else {
+    // Default sort: descending by summed value, with dynamicColumnWidth as tiebreaker
+    const columnSums: Record<string, number> = {}
+    for (const col of oExtent) {
+      columnSums[col] = sum(nestedPieces[col], (d: { value: number }) => d.value)
+    }
+
+    let columnWidthValues: Record<string, number> | undefined
+    if (effectiveDynamicColumnWidth) {
+      columnWidthValues = {}
+      let columnValueCreator: (d: any[]) => number
+      if (typeof effectiveDynamicColumnWidth === "string") {
+        columnValueCreator = (d) => sum(d, (p: any) => p.data[effectiveDynamicColumnWidth as string])
+      } else {
+        columnValueCreator = (d) => (effectiveDynamicColumnWidth as Function)(d.map((p: any) => p.data))
+      }
+      for (const col of oExtent) {
+        columnWidthValues[col] = columnValueCreator(nestedPieces[col])
+      }
+    }
+
+    oExtent = oExtent.sort((a, b) => {
+      const diff = columnSums[b] - columnSums[a]
+      if (diff !== 0) return diff
+      if (columnWidthValues) return columnWidthValues[b] - columnWidthValues[a]
+      return 0
+    })
+
+    oScale.domain(oExtent)
   }
 
-  if (dynamicColumnWidth) {
+  if (effectiveDynamicColumnWidth) {
     let columnValueCreator
-    if (typeof dynamicColumnWidth === "string") {
-      columnValueCreator = (d) => sum(d, (p) => p.data[dynamicColumnWidth])
+    if (typeof effectiveDynamicColumnWidth === "string") {
+      columnValueCreator = (d) => sum(d, (p) => p.data[effectiveDynamicColumnWidth as string])
     } else {
-      columnValueCreator = (d) => dynamicColumnWidth(d.map((p) => p.data))
+      columnValueCreator = (d) => (effectiveDynamicColumnWidth as Function)(d.map((p) => p.data))
     }
     const thresholdDomain = [0]
     const columnValues = []
@@ -959,11 +999,6 @@ export const calculateOrdinalFrame = (
   }
 
   let pieceDataXY
-  const pieceRenderMode = stringToFn<GenericObject | string>(
-    currentProps.renderMode,
-    undefined,
-    true
-  )
 
   const pieceTypeForXY =
     pieceType.type && pieceType.type !== "none" ? pieceType.type : "point"
@@ -984,7 +1019,7 @@ export const calculateOrdinalFrame = (
     chartSize: size,
     margin,
     rScale
-  }) as GenericObject[]
+  }) as Record<string, any>[]
 
   const keyedData = calculatedPieceData.reduce((p, c) => {
     if (c.o) {
@@ -1005,13 +1040,9 @@ export const calculateOrdinalFrame = (
     calculatedSummaries = drawSummaries({
       data: projectedColumns,
       type: summaryType,
-      renderMode: stringToFn<GenericObject | string>(
-        currentProps.summaryRenderMode,
-        undefined,
-        true
-      ),
-      styleFn: stringToFn<GenericObject>(summaryStyle, () => ({}), true),
-      classFn: stringToFn<string>(summaryClass, () => "", true),
+      renderMode: summaryRenderMode,
+      styleFn: summaryStyle,
+      classFn: summaryClass,
       projection,
       eventListenersGenerator,
       adjustedSize,
@@ -1076,26 +1107,6 @@ export const calculateOrdinalFrame = (
     thresholds: calculatedSummaries.thresholds
   })
 
-  const {
-    canvasSummaries,
-    connectorClass,
-    connectorRenderMode,
-    canvasConnectors,
-    canvasPieces
-  } = currentProps
-
-  const pieceCanvasRender = stringToFn<boolean>(canvasPieces, undefined, true)
-  const summaryCanvasRender = stringToFn<boolean>(
-    canvasSummaries,
-    undefined,
-    true
-  )
-  const connectorCanvasRender = stringToFn<boolean>(
-    canvasConnectors,
-    undefined,
-    true
-  )
-
   return {
     pieceDataXY,
     oAccessor,
@@ -1113,8 +1124,8 @@ export const calculateOrdinalFrame = (
       currentState,
 
       connectorStyle,
-      connectorClass,
-      connectorRenderMode,
+      connectorClass: connectorClassFn,
+      connectorRenderMode: connectorRenderModeFn,
       connectorCanvasRender,
       summaryCanvasRender,
       pieceCanvasRender,

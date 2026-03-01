@@ -1,4 +1,4 @@
-import { ProjectionTypes, GenericObject } from "../types/generalTypes"
+import { ProjectionTypes } from "../types/generalTypes"
 
 interface PieArc {
   markD: string
@@ -12,7 +12,7 @@ interface ProjectedColumn {
   x: number
   middle: number
   y: number
-  pieceData: GenericObject[]
+  pieceData: Record<string, any>[]
   pieArc?: PieArc
   [key: string]: unknown
 }
@@ -39,7 +39,7 @@ export function generateColumnOverlays({
   customDoubleClickBehavior,
   customClickBehavior,
   customHoverBehavior
-}: GenerateColumnOverlaysArgs): GenericObject[] {
+}: GenerateColumnOverlaysArgs): Record<string, any>[] {
   return oExtent.map((d, i) => {
     const barColumnWidth = projectedColumns[d].width
     let xPosition = projectedColumns[d].x

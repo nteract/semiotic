@@ -1,3 +1,4 @@
+"use client"
 import * as React from "react"
 import { useMemo } from "react"
 import OrdinalFrame from "../../OrdinalFrame"
@@ -5,14 +6,14 @@ import type { OrdinalFrameProps } from "../../types/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
-import type { BaseChartProps, Accessor } from "../shared/types"
+import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 import type { PieceTypeSettings } from "../../types/ordinalTypes"
 
 /**
  * PieChart component props
  */
-export interface PieChartProps extends BaseChartProps {
+export interface PieChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   /**
    * Array of data points, one per slice.
    * @example
@@ -20,25 +21,25 @@ export interface PieChartProps extends BaseChartProps {
    * [{category: 'A', value: 30}, {category: 'B', value: 50}, {category: 'C', value: 20}]
    * ```
    */
-  data: Array<Record<string, any>>
+  data: TDatum[]
 
   /**
    * Field name or function to access slice labels
    * @default "category"
    */
-  categoryAccessor?: Accessor<string>
+  categoryAccessor?: ChartAccessor<TDatum, string>
 
   /**
    * Field name or function to access slice values
    * @default "value"
    */
-  valueAccessor?: Accessor<number>
+  valueAccessor?: ChartAccessor<TDatum, number>
 
   /**
    * Field name or function to determine slice color
    * @default categoryAccessor
    */
-  colorBy?: Accessor<string>
+  colorBy?: ChartAccessor<TDatum, string>
 
   /**
    * Color scheme for categorical data or custom colors array
@@ -98,7 +99,7 @@ export interface PieChartProps extends BaseChartProps {
  * />
  * ```
  */
-export function PieChart(props: PieChartProps) {
+export function PieChart<TDatum extends Record<string, any> = Record<string, any>>(props: PieChartProps<TDatum>) {
   const {
     data,
     width = 400,
@@ -179,8 +180,8 @@ export function PieChart(props: PieChartProps) {
   // Default tooltip
   const defaultTooltipContent = useMemo(() => {
     return (d: Record<string, any>) => {
-      const cat = typeof categoryAccessor === "function" ? categoryAccessor(d) : d[categoryAccessor]
-      const val = typeof valueAccessor === "function" ? valueAccessor(d) : d[valueAccessor]
+      const cat = typeof categoryAccessor === "function" ? categoryAccessor(d as TDatum) : d[categoryAccessor]
+      const val = typeof valueAccessor === "function" ? valueAccessor(d as TDatum) : d[valueAccessor]
       return (
         <div className="semiotic-tooltip" style={defaultTooltipStyle}>
           <div style={{ fontWeight: "bold" }}>{String(cat)}</div>
@@ -214,6 +215,7 @@ export function PieChart(props: PieChartProps) {
     ...(className && { className }),
     ...(title && { title }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as Function,
+    transition: true,
     ...frameProps
   }
 

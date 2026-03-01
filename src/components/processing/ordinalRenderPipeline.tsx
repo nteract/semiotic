@@ -3,7 +3,6 @@ import * as React from "react"
 import { orFrameConnectionRenderer } from "../svg/frameFunctions"
 import { renderLaidOutPieces } from "../svg/pieceDrawing"
 import { renderLaidOutSummaries } from "../svg/summaryLayouts"
-import { stringToFn } from "../data/dataFunctions"
 
 import {
   OrdinalFrameProps,
@@ -14,7 +13,7 @@ import {
 
 import { AxisProps } from "../types/annotationTypes"
 
-import { GenericObject, MarginType, GenericAccessor, accessorType } from "../types/generalTypes"
+import { MarginType, GenericAccessor } from "../types/generalTypes"
 
 import { midMod, zeroFunction, naturalLanguageTypes } from "./ordinalConstants"
 
@@ -24,32 +23,32 @@ export interface AssembleRenderPipelineArgs {
   // Piece / overlay data
   usesPieceOverlays: boolean
   shouldRecalculateOverlay: boolean
-  calculatedPieceData: GenericObject[]
+  calculatedPieceData: Record<string, any>[]
   projection: string
   customClickBehavior?: Function
   customDoubleClickBehavior?: Function
   customHoverBehavior?: Function
   currentState: OrdinalFrameState
 
-  // Render config
-  connectorStyle: object | accessorType<GenericObject>
-  connectorClass: string | accessorType<string>
-  connectorRenderMode: object | string | accessorType<string | GenericObject>
+  // Render config (all style/class/renderMode values are pre-converted functions from the cache)
+  connectorStyle: Function
+  connectorClass: Function
+  connectorRenderMode: Function
   connectorCanvasRender: Function
   summaryCanvasRender: Function
   pieceCanvasRender: Function
-  connectorType: GenericObject
+  connectorType: Record<string, any>
   eventListenersGenerator: () => Record<string, never>
   pieceType: PieceTypeSettings
-  summaryStyle: object | accessorType<GenericObject>
-  summaryClass: string | accessorType<string>
-  pieceStyle: object | accessorType<GenericObject>
-  pieceClass: string | accessorType<string>
+  summaryStyle: Function
+  summaryClass: Function
+  pieceStyle: Function
+  pieceClass: Function
 
   // Data
-  keyedData: { [key: string]: GenericObject[] }
+  keyedData: { [key: string]: Record<string, any>[] }
   oExtent: string[]
-  projectedColumns: { [key: string]: GenericObject }
+  projectedColumns: { [key: string]: Record<string, any> }
   calculatedSummaries: ProjectedOrdinalSummary
   oAccessor: Function[]
 
@@ -59,7 +58,7 @@ export interface AssembleRenderPipelineArgs {
   // Extent
   calculatedRExtent: number[]
   calculatedOExtent: string[]
-  rExtentSettings: GenericObject
+  rExtentSettings: Record<string, any>
   oExtentSettings: { extent?: string[]; onChange?: Function }
 
   // Layout
@@ -75,7 +74,7 @@ export interface AssembleRenderPipelineArgs {
   axesTickLines: object[]
   oLabels: React.ReactNode
   title: object
-  columnOverlays: GenericObject[]
+  columnOverlays: Record<string, any>[]
   oScaleType: ScaleBand<string>
   instantiatedRScaleType: ScaleLinear<number, number>
   oScale: ScaleBand<string>
@@ -206,13 +205,9 @@ export function assembleRenderPipeline(args: AssembleRenderPipelineArgs) {
       accessibleTransform: (data, i) => data[i],
       projection,
       data: { keyedData, oExtent } as unknown as object[],
-      styleFn: stringToFn<GenericObject>(connectorStyle, () => ({}), true),
-      classFn: stringToFn<string>(connectorClass, () => "", true),
-      renderMode: stringToFn<GenericObject | string>(
-        connectorRenderMode,
-        undefined,
-        true
-      ),
+      styleFn: connectorStyle,
+      classFn: connectorClass,
+      renderMode: connectorRenderMode,
       canvasRender: connectorCanvasRender,
       behavior: orFrameConnectionRenderer,
       type: connectorType,
@@ -235,8 +230,8 @@ export function assembleRenderPipeline(args: AssembleRenderPipelineArgs) {
       data: calculatedSummaries.marks,
       behavior: renderLaidOutSummaries,
       canvasRender: summaryCanvasRender,
-      styleFn: stringToFn<GenericObject>(summaryStyle, () => ({}), true),
-      classFn: stringToFn<string>(summaryClass, () => "", true)
+      styleFn: summaryStyle,
+      classFn: summaryClass
     },
     pieces: {
       accessibleTransform: (data, i) => ({
@@ -247,8 +242,8 @@ export function assembleRenderPipeline(args: AssembleRenderPipelineArgs) {
       data: calculatedPieceData,
       behavior: renderLaidOutPieces,
       canvasRender: pieceCanvasRender,
-      styleFn: stringToFn<GenericObject>(pieceStyle, () => ({}), true),
-      classFn: stringToFn<string>(pieceClass, () => "", true),
+      styleFn: pieceStyle,
+      classFn: pieceClass,
       axis: arrayWrappedAxis,
       ariaLabel: typeAriaLabel
     }
@@ -273,7 +268,20 @@ export function assembleRenderPipeline(args: AssembleRenderPipelineArgs) {
   let legendSettings
 
   if (legend) {
-    legendSettings = legend === true ? {} : legend
+    legendSettings = legend === true ? {} : { ...legend }
+
+    // Sort legend items to match the sorted oExtent order
+    if (legendSettings.legendGroups) {
+      const extentOrder = new Map(oExtent.map((d, i) => [d, i]))
+      legendSettings.legendGroups = legendSettings.legendGroups.map((group) => ({
+        ...group,
+        items: [...group.items].sort((a, b) => {
+          const aIdx = extentOrder.has(a.label) ? extentOrder.get(a.label) : Infinity
+          const bIdx = extentOrder.has(b.label) ? extentOrder.get(b.label) : Infinity
+          return aIdx - bIdx
+        })
+      }))
+    }
   }
 
   return {

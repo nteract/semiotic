@@ -1,7 +1,7 @@
 import * as React from "react"
 import { ScaleLinear } from "d3-scale"
 import { CustomHoverType } from "./annotationTypes"
-import { MarginType, GenericObject } from "./generalTypes"
+import { MarginType } from "./generalTypes"
 
 export interface AdvancedInteractionSettings {
   voronoiClipping?: boolean | number
@@ -40,7 +40,7 @@ export type InteractionLayerProps = {
   projectedYMiddle?: string
   projectedX: string
   projectedY: string
-  points?: Array<{ data: GenericObject }>
+  points?: Array<{ data: Record<string, any> }>
   position?: number[]
   enabled?: boolean
   margin: MarginType
@@ -60,7 +60,7 @@ export type VoronoiEntryType = {
   voronoiY: number
   coincidentPoints: object[]
   type?: string
-  data?: GenericObject
+  data?: Record<string, any>
 }
 
 export type BaseColumnType = { x: number; width: number }

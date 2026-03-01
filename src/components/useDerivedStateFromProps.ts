@@ -1,3 +1,4 @@
+"use client"
 import { useRef, useMemo } from "react"
 
 // this hooks should only be used for transitioning from class to function components

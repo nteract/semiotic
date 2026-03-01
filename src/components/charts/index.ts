@@ -100,7 +100,7 @@ export type { RealtimeWaterfallChartProps } from "./realtime/RealtimeWaterfallCh
 // ============================================================================
 
 // Re-export shared types for convenience
-export type { BaseChartProps, AxisConfig, Accessor } from "./shared/types"
+export type { BaseChartProps, AxisConfig, Accessor, ChartAccessor } from "./shared/types"
 
 // Shared hooks for building custom chart wrappers
 export { useColorScale, useSortedData, DEFAULT_COLOR } from "./shared/hooks"

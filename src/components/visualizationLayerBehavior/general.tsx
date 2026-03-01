@@ -18,7 +18,7 @@ import {
 } from "d3-shape"
 
 import { shapeBounds } from "../svg/areaDrawing"
-import { GenericObject, ProjectedSummary } from "../types/generalTypes"
+import { ProjectedSummary } from "../types/generalTypes"
 import { ScaleLinear } from "d3-scale"
 
 export const curveHash = {
@@ -564,9 +564,9 @@ export function clonedAppliedElement({
 }: {
   tx?: number
   ty?: number
-  d: GenericObject
+  d: Record<string, any>
   i: number
-  markProps: GenericObject
+  markProps: Record<string, any>
   styleFn: Function
   classFn: Function
   renderKeyFn: Function

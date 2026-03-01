@@ -1,3 +1,4 @@
+"use client"
 import * as React from "react"
 import { useCallback, useMemo, useRef } from "react"
 
@@ -31,6 +32,7 @@ import { AnnotationType } from "./types/annotationTypes"
 import { scaleLinear } from "d3-scale"
 
 import { calculateNetworkFrame } from "./processing/network"
+import { createNetworkPipelineCache, NetworkPipelineCache } from "./data/networkPipelineCache"
 
 const blankArray = []
 
@@ -42,7 +44,6 @@ const projectedCoordinateNames = { y: "y", x: "x" }
 const xScale = scaleLinear()
 const yScale = scaleLinear()
 
-import { GenericObject } from "./types/generalTypes"
 
 import {
   NodeType,
@@ -63,10 +64,11 @@ const defaultProps = {
   filterRenderedNodes: (d: NodeType) => d.id !== "root-generated"
 }
 
-const NetworkFrame = React.memo(function NetworkFrame(
-  allProps: NetworkFrameProps
+export function NetworkFrameInner<TNode = Record<string, any>, TEdge = Record<string, any>>(
+  allProps: NetworkFrameProps<TNode, TEdge>
 ) {
-  const props: NetworkFrameProps = { ...defaultProps, ...allProps }
+  const props: NetworkFrameProps<TNode, TEdge> = { ...defaultProps, ...allProps }
+  const pipelineCacheRef = useRef(createNetworkPipelineCache())
   const baseState = {
     dataVersion: undefined,
     nodeData: [],
@@ -95,23 +97,23 @@ const NetworkFrame = React.memo(function NetworkFrame(
     nodeSizeAccessor: genericFunction(5),
     overlay: [],
     projectedXYPoints: [],
-    sourceAccessor: stringToFn<string | GenericObject>("source"),
-    targetAccessor: stringToFn<string | GenericObject>("target"),
+    sourceAccessor: stringToFn<string | Record<string, any>>("source"),
+    targetAccessor: stringToFn<string | Record<string, any>>("target"),
     title: { title: undefined },
-    props
+    props: props as NetworkFrameProps
   }
 
   const initialState = useMemo(
     () => ({
       ...baseState,
-      ...calculateNetworkFrame(props, baseState)
-    }),
+      ...calculateNetworkFrame(props as NetworkFrameProps, baseState, pipelineCacheRef.current)
+    } as NetworkFrameState),
     []
   )
 
   const state = useDerivedStateFromProps(
-    deriveNetworkFrameState,
-    props,
+    (nextProps, prevState) => deriveNetworkFrameState(nextProps as NetworkFrameProps, prevState, pipelineCacheRef.current),
+    props as NetworkFrameProps,
     initialState
   )
 
@@ -123,11 +125,11 @@ const NetworkFrame = React.memo(function NetworkFrame(
   stateRef.current = state
 
   const defaultSVGRuleCb = useCallback(
-    (args) => defaultNetworkSVGRule(propsRef.current, stateRef.current, args),
+    (args) => defaultNetworkSVGRule(propsRef.current as NetworkFrameProps, stateRef.current, args),
     []
   )
   const defaultHTMLRuleCb = useCallback(
-    (args) => defaultNetworkHTMLRule(propsRef.current, stateRef.current, args),
+    (args) => defaultNetworkHTMLRule(propsRef.current as NetworkFrameProps, stateRef.current, args),
     []
   )
 
@@ -156,7 +158,8 @@ const NetworkFrame = React.memo(function NetworkFrame(
     frameRenderOrder,
     disableCanvasInteraction,
     interactionSettings,
-    disableProgressiveRendering
+    disableProgressiveRendering,
+    transition
   } = props
   const {
     backgroundGraphics,
@@ -252,13 +255,15 @@ const NetworkFrame = React.memo(function NetworkFrame(
       frameRenderOrder={frameRenderOrder}
       interactionSettings={interactionSettings}
       disableProgressiveRendering={disableProgressiveRendering}
+      transition={transition}
     />
   )
-})
+}
 
 function deriveNetworkFrameState(
   nextProps: NetworkFrameProps,
-  prevState: NetworkFrameState
+  prevState: NetworkFrameState,
+  cache?: NetworkPipelineCache
 ) {
   const { props } = prevState
 
@@ -279,7 +284,7 @@ function deriveNetworkFrameState(
     (!prevState.projectedNodes && !prevState.projectedEdges)
   ) {
     return {
-      ...calculateNetworkFrame(nextProps, prevState),
+      ...calculateNetworkFrame(nextProps, prevState, cache),
       props: nextProps
     }
   }
@@ -287,7 +292,7 @@ function deriveNetworkFrameState(
   // Full data recalculation needed if data-affecting props changed
   if (dataPropsChanged) {
     return {
-      ...calculateNetworkFrame(nextProps, prevState),
+      ...calculateNetworkFrame(nextProps, prevState, cache),
       props: nextProps
     }
   }
@@ -296,7 +301,7 @@ function deriveNetworkFrameState(
   // Note: For network layouts (especially force), size changes might affect positioning
   if (sizeChanged || scalePropsChanged) {
     return {
-      ...calculateNetworkFrame(nextProps, prevState),
+      ...calculateNetworkFrame(nextProps, prevState, cache),
       props: nextProps
     }
   }
@@ -508,5 +513,6 @@ function defaultNetworkHTMLRule(
   return null
 }
 
-NetworkFrame.displayName = "NetworkFrame"
+NetworkFrameInner.displayName = "NetworkFrame"
+const NetworkFrame = React.memo(NetworkFrameInner) as typeof NetworkFrameInner
 export default NetworkFrame

@@ -10,6 +10,27 @@ const args = process.argv.slice(2)
 const isProduction = args.includes("--production")
 const isAnalyze = args.includes("--analyze")
 
+function useClientPlugin() {
+  const clientModules = new Set()
+  return {
+    name: "use-client",
+    transform(code, id) {
+      if (code.startsWith('"use client"') || code.startsWith("'use client'")) {
+        clientModules.add(id)
+      }
+      return null
+    },
+    renderChunk(code, chunk) {
+      for (const id of Object.keys(chunk.modules)) {
+        if (clientModules.has(id)) {
+          return { code: `"use client";\n${code}`, map: null }
+        }
+      }
+      return null
+    }
+  }
+}
+
 async function createBundle(options = {}) {
   const {
     input = "src/components/semiotic.ts",
@@ -23,6 +44,8 @@ async function createBundle(options = {}) {
       dependencies: true,
       peerDependencies: true
     }),
+
+    useClientPlugin(),
 
     typescript({
       tsconfig: "tsconfig.json",
@@ -108,6 +131,7 @@ async function createBundle(options = {}) {
         return
       }
       if (warning.code === "UNUSED_EXTERNAL_IMPORT") return
+      if (warning.code === "MODULE_LEVEL_DIRECTIVE" && warning.message?.includes('"use client"')) return
       warn(warning)
     },
     treeshake: {
@@ -163,7 +187,8 @@ async function build() {
     { input: "src/components/semiotic-xy.ts", name: "xy", analyze: false, minify },
     { input: "src/components/semiotic-ordinal.ts", name: "ordinal", analyze: false, minify },
     { input: "src/components/semiotic-network.ts", name: "network", analyze: false, minify },
-    { input: "src/components/semiotic-realtime.ts", name: "realtime", analyze: false, minify }
+    { input: "src/components/semiotic-realtime.ts", name: "realtime", analyze: false, minify },
+    { input: "src/components/semiotic-server.ts", name: "server", analyze: false, minify }
   ]
 
   await Promise.all([

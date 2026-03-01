@@ -48,8 +48,8 @@ const stackedHTMLAnnotation = {
 describe("OrdinalFrame", () => {
   const projections = ["vertical", "horizontal", "radial"]
 
-  const xValues = [250, 88, 250]
-  const yValues = [411, 250, 265]
+  const xValues = [416, 88, 241]
+  const yValues = [411, 416, 237]
   const yMods = [10, 0, 0]
   const xMods = [0, 10, 0]
 

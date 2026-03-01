@@ -13,8 +13,6 @@ import { scaleLinear } from "d3-scale"
 import { min, max } from "d3-array"
 
 import {
-  calculateMargin,
-  adjustedPositionSize,
   TitleType
 } from "../svg/frameFunctions"
 
@@ -22,7 +20,7 @@ import { pointOnArcAtAngle } from "../svg/pieceDrawing"
 
 import pathBounds from "svg-path-bounding-box"
 
-import { stringToFn } from "../data/dataFunctions"
+import { NetworkPipelineCache } from "../data/networkPipelineCache"
 
 import {
   drawNodes,
@@ -42,8 +40,6 @@ import { arc } from "d3-shape"
 
 import { hierarchy } from "d3-hierarchy"
 
-import { genericFunction } from "../generic_utilities/functions"
-
 import {
   NetworkFrameProps,
   NetworkFrameState,
@@ -51,7 +47,7 @@ import {
   NodeType
 } from "../types/networkTypes"
 
-import { GenericObject } from "../types/generalTypes"
+
 
 import { baseNodeProps, baseNetworkSettings, baseGraphSettings, emptyArray } from "./networkDefaults"
 import { determineNodeIcon, determineEdgeIcon, basicMiddle, edgePointHash, hierarchicalTypeHash, hierarchicalProjectable, radialProjectable, sankeyOrientHash } from "./networkLayoutHelpers"
@@ -61,7 +57,8 @@ export { nodesEdgesFromHierarchy } from "./hierarchyUtils"
 
 export const calculateNetworkFrame = (
   currentProps: NetworkFrameProps,
-  prevState: NetworkFrameState
+  prevState: NetworkFrameState,
+  cache: NetworkPipelineCache
 ) => {
   const {
     graph,
@@ -132,16 +129,7 @@ export const calculateNetworkFrame = (
       ? (baseTitle as TitleType)
       : ({ title: baseTitle, orient: "top" } as TitleType)
 
-  const margin = calculateMargin({
-    margin: baseMargin,
-    title,
-    size
-  })
-
-  const { adjustedPosition, adjustedSize } = adjustedPositionSize({
-    size,
-    margin
-  })
+  const { margin, adjustedPosition, adjustedSize } = cache.marginCalc(baseMargin, title, size)
 
   networkSettings.graphSettings.nodes = nodes
   networkSettings.graphSettings.edges = edges
@@ -154,38 +142,22 @@ export const calculateNetworkFrame = (
     networkSettings.type === "partition" ||
     networkSettings.type === "sankey"
 
-  const nodeIDAccessor = stringToFn<string>(
+  const cachedAccessors = cache.accessorConversions(
     currentProps.nodeIDAccessor,
-    (d) => {
-      return d ? d.id : undefined
-    }
-  )
-  const sourceAccessor = stringToFn<string | GenericObject>(
     currentProps.sourceAccessor,
-    (d) => d.source
-  )
-  const targetAccessor = stringToFn<string | GenericObject>(
     currentProps.targetAccessor,
-    (d) => d.target
+    currentProps.nodeSizeAccessor,
+    currentProps.edgeWidthAccessor
   )
 
-  const nodeSizeAccessor: (args?: GenericObject) => number =
-    typeof currentProps.nodeSizeAccessor === "number"
-      ? genericFunction(currentProps.nodeSizeAccessor)
-      : stringToFn<number>(currentProps.nodeSizeAccessor, (d) => d.r || 5)
-  const edgeWidthAccessor = stringToFn<number>(
-    currentProps.edgeWidthAccessor,
-    (d) => d.weight || 1
+  const nodeIDAccessor = cachedAccessors.nodeIDAccessor
+  const sourceAccessor = cachedAccessors.sourceAccessor
+  const targetAccessor = cachedAccessors.targetAccessor
+  const nodeSizeAccessor: (args?: Record<string, any>) => number = cachedAccessors.nodeSizeAccessor as (args?: Record<string, any>) => number
+  const edgeWidthAccessor = cachedAccessors.edgeWidthAccessor
+  const { nodeStyleFn, nodeClassFn, nodeRenderModeFn, nodeCanvasRenderFn } = cache.nodeStyleFns(
+    nodeStyle, nodeClass, nodeRenderMode, canvasNodes
   )
-  const nodeStyleFn = stringToFn<GenericObject>(nodeStyle, () => ({}), true)
-  const nodeClassFn = stringToFn<string>(nodeClass, () => "", true)
-  const nodeRenderModeFn = stringToFn<string | GenericObject>(
-    nodeRenderMode,
-    undefined,
-    true
-  )
-  const nodeCanvasRenderFn =
-    canvasNodes && stringToFn<boolean>(canvasNodes, undefined, true)
 
   let { projectedNodes, projectedEdges } = prevState
 
@@ -1191,6 +1163,8 @@ export const calculateNetworkFrame = (
     }
   }
 
+  const cachedEdgeStyles = cache.edgeStyleFns(edgeStyle, edgeClass, edgeRenderMode, canvasEdges)
+
   const networkFrameRender = {
     edges: {
       accessibleTransform: (data, i) => {
@@ -1199,15 +1173,10 @@ export const calculateNetworkFrame = (
         return { type: "frame-hover", ...data[i], x: edgeX, y: edgeY }
       },
       data: projectedEdges,
-      styleFn: stringToFn<GenericObject>(edgeStyle, () => ({}), true),
-      classFn: stringToFn<string>(edgeClass, () => "", true),
-      renderMode: stringToFn<string | GenericObject>(
-        edgeRenderMode,
-        undefined,
-        true
-      ),
-      canvasRenderFn:
-        canvasEdges && stringToFn<boolean>(canvasEdges, undefined, true),
+      styleFn: cachedEdgeStyles.edgeStyleFn,
+      classFn: cachedEdgeStyles.edgeClassFn,
+      renderMode: cachedEdgeStyles.edgeRenderModeFn,
+      canvasRenderFn: cachedEdgeStyles.edgeCanvasRenderFn,
       renderKeyFn: currentProps.edgeRenderKey
         ? currentProps.edgeRenderKey
         : (d) => d._NWFEdgeKey || d.key || `${d.source.id}-${d.target.id}`,
@@ -1274,6 +1243,7 @@ export const calculateNetworkFrame = (
             dy: 0,
             x: node.x,
             y: node.y,
+            color: "currentColor",
             note: { label: actualLabel },
             connector: { end: "none" },
             type: "label",

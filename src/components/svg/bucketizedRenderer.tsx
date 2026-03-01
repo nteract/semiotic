@@ -6,15 +6,14 @@ import { area, line, curveCatmullRom, curveLinear, arc } from "d3-shape"
 import { pointOnArcAtAngle } from "./pieceDrawing"
 import { scaleLinear } from "d3-scale"
 import { curveHash } from "../visualizationLayerBehavior/general"
-import { GenericObject } from "../types/generalTypes"
 import { quantile } from "d3-array"
 import { sum } from "d3-array"
 
 interface BuckeyArrayType {
-  [position: number]: GenericObject
+  [position: number]: Record<string, any>
   x0?: number
   x1?: number
-  push(item: GenericObject): number
+  push(item: Record<string, any>): number
 }
 
 const verticalXYSorting = (a, b) => a.xy.y - b.xy.y
@@ -255,7 +254,7 @@ export function bucketizedRenderingFn({
     } else if (type.type === "violin") {
       const { iqr } = type
       const subsets = type.subsets || [false]
-      const violinElements: GenericObject[] = []
+      const violinElements: Record<string, any>[] = []
 
       bins[0].y = bins[0].y - bucketSize / 2
       bins[bins.length - 1].y = bins[bins.length - 1].y + bucketSize / 2

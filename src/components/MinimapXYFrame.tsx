@@ -1,3 +1,4 @@
+"use client"
 import * as React from "react"
 
 // components
@@ -6,12 +7,12 @@ import MiniMap from "./MiniMap"
 
 import { XYFrameProps } from "./types/xyTypes"
 
-interface MinimapXYFrameProps extends XYFrameProps {
+interface MinimapXYFrameProps<TDatum = Record<string, any>> extends XYFrameProps<TDatum> {
   renderBefore?: boolean
   minimap: { summaries: object[] }
 }
 
-const generateMinimap = (props: MinimapXYFrameProps) => {
+const generateMinimap = <TDatum = Record<string, any>>(props: MinimapXYFrameProps<TDatum>) => {
   const {
     xAccessor,
     yAccessor,
@@ -86,7 +87,7 @@ const generateMinimap = (props: MinimapXYFrameProps) => {
   return <MiniMap {...combinedOptions} />
 }
 
-export default function MinimapXYFrame(props: MinimapXYFrameProps) {
+export default function MinimapXYFrame<TDatum = Record<string, any>>(props: MinimapXYFrameProps<TDatum>) {
   const miniMap = generateMinimap(props)
   const options: {
     beforeElements?: React.ReactNode

@@ -1,3 +1,4 @@
+"use client"
 import * as React from "react"
 import { useCallback, useEffect, useState, useRef } from "react"
 import AnnotationLayer from "./AnnotationLayer"
@@ -6,7 +7,7 @@ import VisualizationLayer from "./VisualizationLayer"
 import { generateFrameTitle } from "./svg/frameFunctions"
 import { generateFinalDefs } from "./constants/jsx"
 
-import { MarginType, RoughType } from "./types/generalTypes"
+import { MarginType, RoughType, TransitionConfig } from "./types/generalTypes"
 import { AnnotationHandling, CustomHoverType } from "./types/annotationTypes"
 import { LegendProps } from "./types/legendTypes"
 import { ScaleLinear } from "d3-scale"
@@ -76,6 +77,7 @@ type Props = {
   additionalVizElements?: object
   interactionSettings?: AdvancedInteractionSettings
   disableProgressiveRendering: boolean
+  transition?: boolean | TransitionConfig
 }
 
 const blankArray = []
@@ -143,7 +145,8 @@ export default function Frame(props) {
     additionalVizElements = blankObject,
     interactionSettings,
     disableProgressiveRendering,
-    additionalDefs
+    additionalDefs,
+    transition
   } = props
 
   let { hoverAnnotation } = props
@@ -304,13 +307,14 @@ export default function Frame(props) {
                 matte={matte}
                 margin={margin}
                 canvasPostProcess={canvasPostProcess}
-                
+
                 renderOrder={renderOrder}
                 sketchyRenderingEngine={sketchyRenderingEngine}
                 axesTickLines={axesTickLines}
                 additionalVizElements={additionalVizElements}
                 frameRenderOrder={frameRenderOrder}
                 disableProgressiveRendering={disableProgressiveRendering}
+                transition={transition}
               />
               {generatedTitle && (
                 <g className="frame-title">{generatedTitle}</g>

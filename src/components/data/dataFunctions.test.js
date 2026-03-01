@@ -1,4 +1,5 @@
 import { calculateDataExtent } from "./dataFunctions"
+import { createXYPipelineCache } from "./xyPipelineCache"
 
 const lineDataAccessor = [(d) => d.coordinates]
 const xAccessor = [(d) => d.x]
@@ -80,5 +81,31 @@ describe("dataFunctions", () => {
     expect(calculatedExtent.yExtent[0]).toEqual(-300)
     expect(calculatedExtent.yExtent[1]).toEqual(200)
     expect(calculatedExtent.fullDataset.length).toEqual(6)
+  })
+})
+
+describe("XYPipelineCache memoization", () => {
+  it("annotatedSettings returns same reference for same inputs", () => {
+    const cache = createXYPipelineCache()
+    const result1 = cache.annotatedSettings("x", "y", undefined, undefined, undefined, "line", undefined, undefined)
+    const result2 = cache.annotatedSettings("x", "y", undefined, undefined, undefined, "line", undefined, undefined)
+    expect(result1).toBe(result2)
+  })
+
+  it("annotatedSettings returns new reference when inputs change", () => {
+    const cache = createXYPipelineCache()
+    const result1 = cache.annotatedSettings("x", "y", undefined, undefined, undefined, "line", undefined, undefined)
+    const result2 = cache.annotatedSettings("x2", "y", undefined, undefined, undefined, "line", undefined, undefined)
+    expect(result1).not.toBe(result2)
+  })
+
+  it("marginCalc returns same reference for same inputs", () => {
+    const cache = createXYPipelineCache()
+    const margin = { top: 10, bottom: 10, left: 10, right: 10 }
+    const size = [500, 500]
+    const title = { title: "test", orient: "top" }
+    const result1 = cache.marginCalc(margin, undefined, title, size)
+    const result2 = cache.marginCalc(margin, undefined, title, size)
+    expect(result1).toBe(result2)
   })
 })

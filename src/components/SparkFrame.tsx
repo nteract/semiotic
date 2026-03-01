@@ -1,3 +1,4 @@
+"use client"
 import * as React from "react"
 import { useCallback, useState } from "react"
 import { OrdinalFrameProps } from "./types/ordinalTypes"

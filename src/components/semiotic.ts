@@ -143,6 +143,7 @@ export {
   CanvasPostProcessTypes,
   ExtentSettingsType,
   accessorType,
+  DataAccessor,
   AccessorFnType,
   BasicLineTypes,
   LineTypeSettings,
@@ -160,7 +161,8 @@ export {
   OrdinalSummaryTypeSettings,
   AxisSummaryTypeSettings,
   GeneralFrameProps,
-  GeneralFrameState
+  GeneralFrameState,
+  TransitionConfig
 } from "./types/generalTypes"
 
 export {
@@ -219,7 +221,8 @@ export {
   CirclePackProps,
   BaseChartProps,
   AxisConfig,
-  Accessor
+  Accessor,
+  ChartAccessor
 } from "./charts"
 
 // Tooltip types

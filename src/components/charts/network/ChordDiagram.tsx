@@ -1,16 +1,17 @@
+"use client"
 import * as React from "react"
 import { useMemo } from "react"
 import NetworkFrame from "../../NetworkFrame"
 import type { NetworkFrameProps } from "../../types/networkTypes"
 import { getColor, COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"
-import type { BaseChartProps, Accessor } from "../shared/types"
+import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 
 /**
  * ChordDiagram component props
  */
-export interface ChordDiagramProps extends BaseChartProps {
+export interface ChordDiagramProps<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   /**
    * Array of nodes (optional - will be inferred from edges if not provided)
    * @example
@@ -18,7 +19,7 @@ export interface ChordDiagramProps extends BaseChartProps {
    * [{id: 'A', category: 'Group1'}, {id: 'B', category: 'Group2'}]
    * ```
    */
-  nodes?: Array<Record<string, any>>
+  nodes?: TNode[]
 
   /**
    * Array of edges with source, target, and value
@@ -31,31 +32,31 @@ export interface ChordDiagramProps extends BaseChartProps {
    * ]
    * ```
    */
-  edges: Array<Record<string, any>>
+  edges: TEdge[]
 
   /**
    * Field name or function to access source node identifier
    * @default "source"
    */
-  sourceAccessor?: Accessor<string>
+  sourceAccessor?: ChartAccessor<TEdge, string>
 
   /**
    * Field name or function to access target node identifier
    * @default "target"
    */
-  targetAccessor?: Accessor<string>
+  targetAccessor?: ChartAccessor<TEdge, string>
 
   /**
    * Field name or function to access edge value (width)
    * @default "value"
    */
-  valueAccessor?: Accessor<number>
+  valueAccessor?: ChartAccessor<TEdge, number>
 
   /**
    * Field name or function to access node identifier
    * @default "id"
    */
-  nodeIdAccessor?: Accessor<string>
+  nodeIdAccessor?: ChartAccessor<TNode, string>
 
   /**
    * Field name or function to determine node color
@@ -65,7 +66,7 @@ export interface ChordDiagramProps extends BaseChartProps {
    * colorBy={d => d.group}
    * ```
    */
-  colorBy?: Accessor<string>
+  colorBy?: ChartAccessor<TNode, string>
 
   /**
    * Color scheme for nodes or custom colors array
@@ -107,7 +108,7 @@ export interface ChordDiagramProps extends BaseChartProps {
    * Label accessor for nodes
    * @default Uses nodeIdAccessor
    */
-  nodeLabel?: Accessor<string>
+  nodeLabel?: ChartAccessor<TNode, string>
 
   /**
    * Show labels around circumference
@@ -201,7 +202,7 @@ export interface ChordDiagramProps extends BaseChartProps {
  * @param props - ChordDiagram configuration
  * @returns Rendered chord diagram
  */
-export function ChordDiagram(props: ChordDiagramProps) {
+export function ChordDiagram<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: ChordDiagramProps<TNode, TEdge>) {
   const {
     nodes,
     edges,
@@ -316,7 +317,7 @@ export function ChordDiagram(props: ChordDiagramProps) {
     if (!showLabels) return undefined
     const accessor = nodeLabel || nodeIdAccessor
     return (d: Record<string, any>) => {
-      if (typeof accessor === "function") return accessor(d)
+      if (typeof accessor === "function") return accessor(d as TNode)
       return d[accessor]
     }
   }, [showLabels, nodeLabel, nodeIdAccessor])
@@ -363,6 +364,7 @@ export function ChordDiagram(props: ChordDiagramProps) {
     // Add tooltip support
     ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
     // Allow frameProps to override defaults
+    transition: true,
     ...frameProps
   }
 

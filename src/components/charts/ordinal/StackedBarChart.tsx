@@ -1,3 +1,4 @@
+"use client"
 import * as React from "react"
 import { useMemo } from "react"
 import OrdinalFrame from "../../OrdinalFrame"
@@ -5,13 +6,13 @@ import type { OrdinalFrameProps } from "../../types/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
 import { useColorScale, DEFAULT_COLOR, resolveAccessor } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
-import type { BaseChartProps, Accessor } from "../shared/types"
+import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 
 /**
  * StackedBarChart component props
  */
-export interface StackedBarChartProps extends BaseChartProps {
+export interface StackedBarChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   /**
    * Array of data points with category, subcategory, and value.
    * @example
@@ -23,25 +24,25 @@ export interface StackedBarChartProps extends BaseChartProps {
    * ]
    * ```
    */
-  data: Array<Record<string, any>>
+  data: TDatum[]
 
   /**
    * Field name or function to access category values
    * @default "category"
    */
-  categoryAccessor?: Accessor<string>
+  categoryAccessor?: ChartAccessor<TDatum, string>
 
   /**
    * Field name or function to access subcategory values (for stacking)
    * @default "subcategory"
    */
-  stackBy: Accessor<string>
+  stackBy: ChartAccessor<TDatum, string>
 
   /**
    * Field name or function to access numeric values
    * @default "value"
    */
-  valueAccessor?: Accessor<number>
+  valueAccessor?: ChartAccessor<TDatum, number>
 
   /**
    * Chart orientation
@@ -68,7 +69,7 @@ export interface StackedBarChartProps extends BaseChartProps {
    * Field name or function to determine bar color (typically stackBy)
    * @default stackBy value
    */
-  colorBy?: Accessor<string>
+  colorBy?: ChartAccessor<TDatum, string>
 
   /**
    * Color scheme for categorical data or custom colors array
@@ -139,7 +140,7 @@ export interface StackedBarChartProps extends BaseChartProps {
  * />
  * ```
  */
-export function StackedBarChart(props: StackedBarChartProps) {
+export function StackedBarChart<TDatum extends Record<string, any> = Record<string, any>>(props: StackedBarChartProps<TDatum>) {
   const {
     data,
     width = 600,
@@ -322,6 +323,7 @@ export function StackedBarChart(props: StackedBarChartProps) {
     // Add tooltip support
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as Function,
     // Allow frameProps to override defaults
+    transition: true,
     ...frameProps
   }
 

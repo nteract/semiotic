@@ -1,3 +1,4 @@
+"use client"
 import * as React from "react"
 import { useMemo } from "react"
 import {
@@ -16,7 +17,7 @@ import type { XYFrameProps } from "../../types/xyTypes"
 import { getColor } from "../shared/colorUtils"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
-import type { BaseChartProps, AxisConfig, Accessor } from "../shared/types"
+import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 
 /** Map of curve name strings to d3-shape curve functions */
@@ -35,7 +36,7 @@ const CURVE_MAP = {
 /**
  * AreaChart component props
  */
-export interface AreaChartProps extends BaseChartProps, AxisConfig {
+export interface AreaChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps, AxisConfig {
   /**
    * Array of data points, grouped by category.
    * @example
@@ -44,19 +45,19 @@ export interface AreaChartProps extends BaseChartProps, AxisConfig {
    * [{x: 1, y: 10, category: 'A'}, {x: 2, y: 20, category: 'A'}, {x: 1, y: 15, category: 'B'}]
    * ```
    */
-  data: Array<Record<string, any>>
+  data: TDatum[]
 
   /**
    * Field name or function to access x values
    * @default "x"
    */
-  xAccessor?: Accessor<number>
+  xAccessor?: ChartAccessor<TDatum, number>
 
   /**
    * Field name or function to access y values
    * @default "y"
    */
-  yAccessor?: Accessor<number>
+  yAccessor?: ChartAccessor<TDatum, number>
 
   /**
    * Field name or function to group data into multiple areas
@@ -66,7 +67,7 @@ export interface AreaChartProps extends BaseChartProps, AxisConfig {
    * areaBy={d => d.group}  // Use function
    * ```
    */
-  areaBy?: Accessor<string>
+  areaBy?: ChartAccessor<TDatum, string>
 
   /**
    * Field name in area objects that contains coordinate arrays
@@ -83,7 +84,7 @@ export interface AreaChartProps extends BaseChartProps, AxisConfig {
    * colorBy={d => d.label}
    * ```
    */
-  colorBy?: Accessor<string>
+  colorBy?: ChartAccessor<TDatum, string>
 
   /**
    * Color scheme for categorical data or custom colors array
@@ -170,7 +171,7 @@ export interface AreaChartProps extends BaseChartProps, AxisConfig {
  * />
  * ```
  */
-export function AreaChart(props: AreaChartProps) {
+export function AreaChart<TDatum extends Record<string, any> = Record<string, any>>(props: AreaChartProps<TDatum>) {
   const {
     data,
     width = 600,
@@ -216,7 +217,7 @@ export function AreaChart(props: AreaChartProps) {
       const grouped = safeData.reduce((acc, d) => {
         const key = typeof areaBy === "function" ? areaBy(d) : d[areaBy]
         if (!acc[key]) {
-          const areaObj: Record<string, unknown> = { [lineDataAccessor]: [] }
+          const areaObj: Record<string, any> = { [lineDataAccessor]: [] }
           // Add the grouping field
           if (typeof areaBy === "string") {
             areaObj[areaBy] = key
@@ -225,7 +226,7 @@ export function AreaChart(props: AreaChartProps) {
         }
         acc[key][lineDataAccessor].push(d)
         return acc
-      }, {} as Record<string, Record<string, unknown>>)
+      }, {} as Record<string, Record<string, any>>)
 
       return Object.values(grouped)
     }
@@ -343,6 +344,7 @@ export function AreaChart(props: AreaChartProps) {
     // Add tooltip support
     ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
     // Allow frameProps to override defaults
+    transition: true,
     ...frameProps
   }
 

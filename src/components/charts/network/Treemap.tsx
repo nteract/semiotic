@@ -1,16 +1,17 @@
+"use client"
 import * as React from "react"
 import { useMemo } from "react"
 import NetworkFrame from "../../NetworkFrame"
 import type { NetworkFrameProps } from "../../types/networkTypes"
 import { getColor, createColorScale } from "../shared/colorUtils"
-import type { BaseChartProps, Accessor } from "../shared/types"
+import type { BaseChartProps, ChartAccessor, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { DEFAULT_COLOR } from "../shared/hooks"
 
 /**
  * Treemap component props
  */
-export interface TreemapProps extends BaseChartProps {
+export interface TreemapProps<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   /**
    * Hierarchical data structure with children and values.
    * @example
@@ -24,13 +25,13 @@ export interface TreemapProps extends BaseChartProps {
    * }
    * ```
    */
-  data: Record<string, any>
+  data: TNode
 
   /**
    * Field name or function to access children array
    * @default "children"
    */
-  childrenAccessor?: Accessor<Record<string, any>[]>
+  childrenAccessor?: ChartAccessor<TNode, TNode[]>
 
   /**
    * Field name or function to access node value for sizing
@@ -42,12 +43,12 @@ export interface TreemapProps extends BaseChartProps {
    * Field name or function to access node identifier
    * @default "name"
    */
-  nodeIdAccessor?: Accessor<string>
+  nodeIdAccessor?: ChartAccessor<TNode, string>
 
   /**
    * Field name or function to determine node color
    */
-  colorBy?: Accessor<string | number>
+  colorBy?: ChartAccessor<TNode, string | number>
 
   /**
    * Color scheme for nodes or custom colors array
@@ -71,7 +72,7 @@ export interface TreemapProps extends BaseChartProps {
    * Node label accessor
    * @default Uses nodeIdAccessor
    */
-  nodeLabel?: Accessor<string>
+  nodeLabel?: ChartAccessor<TNode, string>
 
   /**
    * Enable hover annotations
@@ -112,7 +113,7 @@ export interface TreemapProps extends BaseChartProps {
  * />
  * ```
  */
-export function Treemap(props: TreemapProps) {
+export function Treemap<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: TreemapProps<TNode, TEdge>) {
   const {
     data,
     width = 600,
@@ -141,7 +142,7 @@ export function Treemap(props: TreemapProps) {
       nodes.push(node)
       const children =
         typeof childrenAccessor === "function"
-          ? childrenAccessor(node)
+          ? childrenAccessor(node as TNode)
           : node[childrenAccessor]
       if (children && Array.isArray(children)) {
         children.forEach(traverse)
@@ -242,6 +243,7 @@ export function Treemap(props: TreemapProps) {
     ...(className && { className }),
     ...(title && { title }),
     ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
+    transition: true,
     ...frameProps
   }
 

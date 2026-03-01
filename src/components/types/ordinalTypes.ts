@@ -4,7 +4,7 @@ import {
   CanvasPostProcessTypes,
   ProjectionTypes,
   accessorType,
-  GenericObject,
+  DataAccessor,
   GenericAccessor,
   RenderPipelineType,
   OrdinalSummaryTypeSettings,
@@ -49,12 +49,12 @@ export interface ProjectedOrdinalSummary {
   thresholds?: number[]
 }
 
-export interface OrdinalFrameProps extends GeneralFrameProps {
+export interface OrdinalFrameProps<TDatum = Record<string, any>> extends GeneralFrameProps {
   type?: PieceTypes | PieceTypeSettings
   summaryType?: OrdinalSummaryTypeSettings
   connectorType?: Function
-  rAccessor?: accessorType<number>
-  oAccessor?: accessorType<string | number>
+  rAccessor?: DataAccessor<TDatum, number> | DataAccessor<TDatum, number>[]
+  oAccessor?: DataAccessor<TDatum, string | number> | DataAccessor<TDatum, string | number>[]
   oExtent?: OExtentSettingsType
   rExtent?: RExtentObject | number[]
   invertR?: boolean
@@ -68,8 +68,8 @@ export interface OrdinalFrameProps extends GeneralFrameProps {
   connectorClass?: string | accessorType<string>
   pieceClass?: string | accessorType<string>
   summaryClass?: string | accessorType<string>
-  connectorRenderMode?: string | accessorType<string | GenericObject>
-  connectorStyle?: object | accessorType<GenericObject>
+  connectorRenderMode?: string | accessorType<string | Record<string, any>>
+  connectorStyle?: object | accessorType<Record<string, any>>
   canvasConnectors?: boolean | accessorType<boolean>
   summaryStyle?: object | accessorType<object>
   style?: object | accessorType<object>
@@ -90,7 +90,7 @@ export interface OrdinalFrameProps extends GeneralFrameProps {
   pixelColumnWidth?: number
   oScaleType?: ScaleBand<string>
   rScaleType?: () => ScaleLinear<number, number>
-  data: Array<object | number>
+  data: TDatum[]
   oPadding?: number
   axes?:
     | AxisGeneratingFunction
@@ -100,7 +100,7 @@ export interface OrdinalFrameProps extends GeneralFrameProps {
   multiAxis?: boolean
 }
 
-export interface OrdinalFrameState extends GeneralFrameState {
+export interface OrdinalFrameState<TDatum = Record<string, any>> extends GeneralFrameState {
   pieceDataXY: Array<object>
   axisData?: AxisProps[]
   axes?: React.ReactNode[]
@@ -122,7 +122,7 @@ export interface OrdinalFrameState extends GeneralFrameState {
   pieceIDAccessor: GenericAccessor<string>
   type: object
   summaryType: object
-  props: OrdinalFrameProps
+  props: OrdinalFrameProps<TDatum>
 }
 
 export interface LabelSettingsType {

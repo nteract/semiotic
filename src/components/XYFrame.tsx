@@ -1,3 +1,4 @@
+"use client"
 import * as React from "react"
 import { useCallback, useMemo, useRef } from "react"
 
@@ -46,6 +47,7 @@ import { extentValue } from "./data/unflowedFunctions"
 import { findFirstAccessorValue } from "./data/multiAccessorUtils"
 
 import { calculateXYFrame } from "./processing/xyDrawing"
+import { createXYPipelineCache, XYPipelineCache } from "./data/xyPipelineCache"
 
 import {
   xyFrameChangeProps,
@@ -57,8 +59,7 @@ import {
 import {
   ProjectedPoint,
   ProjectedSummary,
-  ProjectedLine,
-  GenericObject
+  ProjectedLine
 } from "./types/generalTypes"
 
 import { AnnotationType } from "./types/annotationTypes"
@@ -95,8 +96,9 @@ const defaultProps = {
   dataVersion: undefined
 }
 
-const XYFrame = React.memo(function XYFrame(allProps: XYFrameProps) {
+export function XYFrameInner<TDatum = Record<string, any>>(allProps: XYFrameProps<TDatum>) {
   const props = { ...defaultProps, ...allProps }
+  const pipelineCacheRef = useRef(createXYPipelineCache())
   const baseState = {
     size: [500, 500],
     dataVersion: undefined,
@@ -151,12 +153,12 @@ const XYFrame = React.memo(function XYFrame(allProps: XYFrameProps) {
   const initialState = useMemo(
     () => ({
       ...baseState,
-      ...calculateXYFrame(props, baseState, true)
+      ...calculateXYFrame(props, baseState, true, pipelineCacheRef.current)
     }),
     []
   )
   const state = useDerivedStateFromProps(
-    deriveXYFrameState,
+    (nextProps, prevState) => deriveXYFrameState(nextProps, prevState, pipelineCacheRef.current),
     props,
     initialState
   )
@@ -187,7 +189,8 @@ const XYFrame = React.memo(function XYFrame(allProps: XYFrameProps) {
     frameRenderOrder,
     disableCanvasInteraction,
     interactionSettings,
-    disableProgressiveRendering
+    disableProgressiveRendering,
+    transition
   } = props
 
   const {
@@ -292,11 +295,12 @@ const XYFrame = React.memo(function XYFrame(allProps: XYFrameProps) {
       disableCanvasInteraction={disableCanvasInteraction}
       interactionSettings={interactionSettings}
       disableProgressiveRendering={disableProgressiveRendering}
+      transition={transition}
     />
   )
-})
+}
 
-function deriveXYFrameState(nextProps: XYFrameProps, prevState: XYFrameState) {
+function deriveXYFrameState(nextProps: XYFrameProps, prevState: XYFrameState, cache?: XYPipelineCache) {
   const { props } = prevState
   const {
     xExtent: oldXExtent = [],
@@ -349,7 +353,7 @@ function deriveXYFrameState(nextProps: XYFrameProps, prevState: XYFrameState) {
     (oldDataVersion && oldDataVersion !== newDataVersion) ||
     !prevState.fullDataset
   ) {
-    return calculateXYFrame(nextProps, prevState, true)
+    return calculateXYFrame(nextProps, prevState, true, cache)
   }
 
   // Full data recalculation needed if:
@@ -363,7 +367,7 @@ function deriveXYFrameState(nextProps: XYFrameProps, prevState: XYFrameState) {
     extentChange ||
     dataPropsChanged
   ) {
-    return calculateXYFrame(nextProps, prevState, true)
+    return calculateXYFrame(nextProps, prevState, true, cache)
   }
 
   // Scale-only recalculation needed if:
@@ -373,7 +377,7 @@ function deriveXYFrameState(nextProps: XYFrameProps, prevState: XYFrameState) {
     // TODO: Once calculateXYFrame supports updateScales flag, use:
     // return calculateXYFrame(nextProps, prevState, { updateData: false, updateScales: true })
     // For now, still do full recalc to avoid breaking changes
-    return calculateXYFrame(nextProps, prevState, false)
+    return calculateXYFrame(nextProps, prevState, false, cache)
   }
 
   // Only styling changed - no recalc needed, React will re-render with existing state
@@ -403,7 +407,7 @@ function defaultXYSVGRule(
     summaries: { data: [] }
     points: {
       data: []
-      styleFn: (args?: GenericObject, index?: number) => GenericObject
+      styleFn: (args?: Record<string, any>, index?: number) => Record<string, any>
     }
   }
 ) {
@@ -641,7 +645,7 @@ function defaultXYHTMLRule(
     summaries: { data: ProjectedSummary[] }
     points: {
       data: ProjectedPoint[]
-      styleFn: (args?: GenericObject, index?: number) => GenericObject
+      styleFn: (args?: Record<string, any>, index?: number) => Record<string, any>
     }
   }
 ) {
@@ -795,5 +799,6 @@ function defaultXYHTMLRule(
   return null
 }
 
-XYFrame.displayName = "XYFrame"
+XYFrameInner.displayName = "XYFrame"
+const XYFrame = React.memo(XYFrameInner) as typeof XYFrameInner
 export default XYFrame

@@ -1,3 +1,4 @@
+"use client"
 import { createStore } from "./createStore"
 
 let [TooltipProvider, useTooltip] = createStore((set) => ({

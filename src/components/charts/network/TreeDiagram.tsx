@@ -1,16 +1,17 @@
+"use client"
 import * as React from "react"
 import { useMemo } from "react"
 import NetworkFrame from "../../NetworkFrame"
 import type { NetworkFrameProps } from "../../types/networkTypes"
 import { getColor, createColorScale } from "../shared/colorUtils"
-import type { BaseChartProps, Accessor } from "../shared/types"
+import type { BaseChartProps, ChartAccessor, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 
 /**
  * TreeDiagram component props
  */
-export interface TreeDiagramProps extends BaseChartProps {
+export interface TreeDiagramProps<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   /**
    * Hierarchical data structure
    * @example
@@ -24,7 +25,7 @@ export interface TreeDiagramProps extends BaseChartProps {
    * }
    * ```
    */
-  data: Record<string, any>
+  data: TNode
 
   /**
    * Tree layout algorithm
@@ -50,7 +51,7 @@ export interface TreeDiagramProps extends BaseChartProps {
    * Field name or function to access children array
    * @default "children"
    */
-  childrenAccessor?: Accessor<Record<string, any>[]>
+  childrenAccessor?: ChartAccessor<TNode, TNode[]>
 
   /**
    * Field name or function to access node value for sizing
@@ -63,7 +64,7 @@ export interface TreeDiagramProps extends BaseChartProps {
    * Field name or function to access node identifier
    * @default "name"
    */
-  nodeIdAccessor?: Accessor<string>
+  nodeIdAccessor?: ChartAccessor<TNode, string>
 
   /**
    * Field name or function to determine node color
@@ -73,7 +74,7 @@ export interface TreeDiagramProps extends BaseChartProps {
    * colorBy={d => d.depth}
    * ```
    */
-  colorBy?: Accessor<string | number>
+  colorBy?: ChartAccessor<TNode, string | number>
 
   /**
    * Color scheme for nodes or custom colors array
@@ -99,7 +100,7 @@ export interface TreeDiagramProps extends BaseChartProps {
    * Label accessor for nodes
    * @default Uses nodeIdAccessor
    */
-  nodeLabel?: Accessor<string>
+  nodeLabel?: ChartAccessor<TNode, string>
 
   /**
    * Show node labels
@@ -218,7 +219,7 @@ export interface TreeDiagramProps extends BaseChartProps {
  * @param props - TreeDiagram configuration
  * @returns Rendered tree diagram
  */
-export function TreeDiagram(props: TreeDiagramProps) {
+export function TreeDiagram<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: TreeDiagramProps<TNode, TEdge>) {
   const {
     data,
     width = 600,
@@ -251,7 +252,7 @@ export function TreeDiagram(props: TreeDiagramProps) {
       nodes.push(node)
       const children =
         typeof childrenAccessor === "function"
-          ? childrenAccessor(node)
+          ? childrenAccessor(node as TNode)
           : node[childrenAccessor]
       if (children && Array.isArray(children)) {
         children.forEach(traverse)
@@ -385,6 +386,7 @@ export function TreeDiagram(props: TreeDiagramProps) {
     // Add tooltip support
     ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
     // Allow frameProps to override defaults
+    transition: true,
     ...frameProps
   }
 
