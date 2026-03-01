@@ -8,6 +8,8 @@ import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
+import ChartError from "../shared/ChartError"
+import { validateNetworkData } from "../shared/validateChartData"
 import { forceLayout } from "../../processing/layouts/forceLayout"
 
 /**
@@ -355,15 +357,15 @@ export function ForceDirectedGraph<TNode extends Record<string, any> = Record<st
   }, [userMargin, legend])
 
   // Validate data (after all hooks)
-  if (!nodes || nodes.length === 0) {
-    console.warn("ForceDirectedGraph: nodes prop is required and should not be empty")
-    return null
-  }
-
-  if (!edges || edges.length === 0) {
-    console.warn("ForceDirectedGraph: edges prop is required and should not be empty")
-    return null
-  }
+  const error = validateNetworkData({
+    componentName: "ForceDirectedGraph",
+    nodes,
+    edges,
+    nodesRequired: true,
+    edgesRequired: true,
+    accessors: { nodeIDAccessor },
+  })
+  if (error) return <ChartError componentName="ForceDirectedGraph" message={error} width={width} height={height} />
 
   // Build NetworkFrame props
   const networkFrameProps: NetworkFrameProps = {

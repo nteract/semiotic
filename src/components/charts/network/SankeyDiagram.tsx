@@ -7,6 +7,8 @@ import { getColor } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
+import ChartError from "../shared/ChartError"
+import { validateNetworkData } from "../shared/validateChartData"
 import { sankeyLayout } from "../../processing/layouts/sankeyLayout"
 
 /**
@@ -360,10 +362,12 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
   }, [nodeAlign, orientation, nodePaddingRatio, nodeWidth, edgeSort])
 
   // Validate data (after all hooks)
-  if (!edges || edges.length === 0) {
-    console.warn("SankeyDiagram: edges prop is required and should not be empty")
-    return null
-  }
+  const error = validateNetworkData({
+    componentName: "SankeyDiagram",
+    edges,
+    edgesRequired: true,
+  })
+  if (error) return <ChartError componentName="SankeyDiagram" message={error} width={width} height={height} />
 
   // Build NetworkFrame props
   const networkFrameProps: NetworkFrameProps = {

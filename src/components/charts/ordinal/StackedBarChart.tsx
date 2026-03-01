@@ -8,6 +8,8 @@ import { useColorScale, DEFAULT_COLOR, resolveAccessor } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
+import ChartError from "../shared/ChartError"
+import { validateArrayData } from "../shared/validateChartData"
 
 /**
  * StackedBarChart component props
@@ -290,16 +292,17 @@ export function StackedBarChart<TDatum extends Record<string, any> = Record<stri
     }
   }, [stackBy, categoryAccessor, valueAccessor])
 
-  // Validate data and stackBy (after all hooks)
-  if (safeData.length === 0) {
-    console.warn("StackedBarChart: data prop is required and should not be empty")
-    return null
-  }
-
-  if (!stackBy) {
-    console.warn("StackedBarChart: stackBy prop is required for stacked bar charts")
-    return null
-  }
+  // Validate data (after all hooks)
+  const error = validateArrayData({
+    componentName: "StackedBarChart",
+    data: safeData,
+    accessors: {
+      categoryAccessor,
+      valueAccessor,
+    },
+    requiredProps: { stackBy },
+  })
+  if (error) return <ChartError componentName="StackedBarChart" message={error} width={width} height={height} />
 
   // Build OrdinalFrame props
   const ordinalFrameProps: OrdinalFrameProps = {

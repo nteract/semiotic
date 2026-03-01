@@ -7,6 +7,8 @@ import { getColor, createColorScale } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { DEFAULT_COLOR } from "../shared/hooks"
+import ChartError from "../shared/ChartError"
+import { validateObjectData } from "../shared/validateChartData"
 import { hierarchyLayouts } from "../../processing/layouts/hierarchyLayout"
 
 /**
@@ -228,10 +230,11 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
   }, [showLabels, nodeLabel, nodeIdAccessor])
 
   // Validate data (after all hooks)
-  if (!data) {
-    console.warn("CirclePack: data prop is required")
-    return null
-  }
+  const error = validateObjectData({
+    componentName: "CirclePack",
+    data,
+  })
+  if (error) return <ChartError componentName="CirclePack" message={error} width={width} height={height} />
 
   // Build NetworkFrame props
   const networkFrameProps: NetworkFrameProps = {

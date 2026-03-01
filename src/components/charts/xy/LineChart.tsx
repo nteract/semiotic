@@ -20,6 +20,8 @@ import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import ChartError from "../shared/ChartError"
+import { validateArrayData } from "../shared/validateChartData"
 
 /** Map of curve name strings to d3-shape curve functions */
 const CURVE_MAP = {
@@ -423,10 +425,15 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
   }, [userMargin, legend])
 
   // Validate data (after all hooks)
-  if (safeData.length === 0) {
-    console.warn("LineChart: data prop is required and should not be empty")
-    return null
-  }
+  const error = validateArrayData({
+    componentName: "LineChart",
+    data: safeData,
+    accessors: {
+      xAccessor,
+      yAccessor,
+    },
+  })
+  if (error) return <ChartError componentName="LineChart" message={error} width={width} height={height} />
 
   // Build XYFrame props
   const xyFrameProps: XYFrameProps = {
