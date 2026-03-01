@@ -44,17 +44,16 @@ describe("BubbleChart", () => {
     expect(frame).toBeFalsy()
   })
 
-  it("warns when sizeBy is missing", () => {
-    const consoleSpy = jest.spyOn(console, "warn").mockImplementation()
-
+  it("shows error when sizeBy is missing", () => {
     const { container } = render(
       <TooltipProvider>
         <BubbleChart data={sampleData} sizeBy={undefined as any} />
       </TooltipProvider>
     )
 
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("sizeBy prop is required"))
-    consoleSpy.mockRestore()
+    const errorEl = container.querySelector("[role='alert']")
+    expect(errorEl).toBeTruthy()
+    expect(errorEl!.textContent).toContain("sizeBy")
   })
 
   it("applies custom width and height", () => {
