@@ -43,12 +43,19 @@
       "require": "./dist/server.min.js",
       "default": "./dist/server.module.min.js"
     },
+    "./ai": {
+      "types": "./dist/semiotic-ai.d.ts",
+      "import": "./dist/semiotic-ai.module.min.js",
+      "require": "./dist/semiotic-ai.min.js",
+      "default": "./dist/semiotic-ai.module.min.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
     "dist/*.js",
     "dist/*.js.map",
     "dist/**/*.d.ts",
+    "ai/schema.json",
     "README.md",
     "LICENSE"
   ],
