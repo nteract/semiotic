@@ -20,8 +20,7 @@ import {
 import {
   MarginType,
   ProjectionTypes,
-  accessorType,
-  GenericObject
+  accessorType
 } from "../types/generalTypes"
 
 import { scaleLinear, ScaleLinear } from "d3-scale"
@@ -61,7 +60,7 @@ type AdjustedPositionSizeTypes = {
 
 type ORFrameConnectionRendererTypes = {
   type: { type: Function }
-  data: { keyedData: GenericObject; oExtent: string[] }
+  data: { keyedData: Record<string, any>; oExtent: string[] }
   renderMode: Function
   eventListenersGenerator: Function
   styleFn: Function

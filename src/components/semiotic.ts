@@ -143,6 +143,7 @@ export {
   CanvasPostProcessTypes,
   ExtentSettingsType,
   accessorType,
+  DataAccessor,
   AccessorFnType,
   BasicLineTypes,
   LineTypeSettings,
@@ -219,7 +220,8 @@ export {
   CirclePackProps,
   BaseChartProps,
   AxisConfig,
-  Accessor
+  Accessor,
+  ChartAccessor
 } from "./charts"
 
 // Tooltip types

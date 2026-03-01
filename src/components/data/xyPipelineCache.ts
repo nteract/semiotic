@@ -1,5 +1,5 @@
 import memoize from "memoize-one"
-import { ProjectedLine, RawPoint, RawSummary, GenericObject } from "../types/generalTypes"
+import { ProjectedLine, RawPoint, RawSummary } from "../types/generalTypes"
 import { calculateMargin, adjustedPositionSize } from "../svg/frameFunctions"
 import { stringToFn, stringToArrayFn } from "./dataFunctions"
 
@@ -30,7 +30,7 @@ export function createXYPipelineCache() {
       ),
       renderKeyFn: stringToFn<string>(
         renderKey,
-        (d: GenericObject, i: number) => `line-${i}`,
+        (d: Record<string, any>, i: number) => `line-${i}`,
         true
       ),
       lineIDAccessor: stringToFn<string>(lineIDAccessor, (l) => l.semioticLineID),
@@ -55,9 +55,9 @@ export function createXYPipelineCache() {
       summaryClass: any,
       summaryRenderMode: any
     ) => ({
-      summaryStyleFn: stringToFn<GenericObject>(summaryStyle, emptyObjectReturnFunction, true),
+      summaryStyleFn: stringToFn<Record<string, any>>(summaryStyle, emptyObjectReturnFunction, true),
       summaryClassFn: stringToFn<string>(summaryClass, emptyStringReturnFunction, true),
-      summaryRenderModeFn: stringToFn<GenericObject | string>(summaryRenderMode, undefined, true),
+      summaryRenderModeFn: stringToFn<Record<string, any> | string>(summaryRenderMode, undefined, true),
     })),
 
     lineStyleFns: memoize((
@@ -66,9 +66,9 @@ export function createXYPipelineCache() {
       lineRenderMode: any,
       canvasLines: any
     ) => ({
-      styleFn: stringToFn<GenericObject>(lineStyle, emptyObjectReturnFunction, true),
+      styleFn: stringToFn<Record<string, any>>(lineStyle, emptyObjectReturnFunction, true),
       classFn: stringToFn<string>(lineClass, emptyStringReturnFunction, true),
-      renderMode: stringToFn<GenericObject | string>(lineRenderMode, undefined, true),
+      renderMode: stringToFn<Record<string, any> | string>(lineRenderMode, undefined, true),
       canvasRender: stringToFn<boolean>(canvasLines, undefined, true),
     })),
 
@@ -78,9 +78,9 @@ export function createXYPipelineCache() {
       pointRenderMode: any,
       canvasPoints: any
     ) => ({
-      styleFn: stringToFn<GenericObject>(pointStyle, emptyObjectReturnFunction, true),
+      styleFn: stringToFn<Record<string, any>>(pointStyle, emptyObjectReturnFunction, true),
       classFn: stringToFn<string>(pointClass, emptyStringReturnFunction, true),
-      renderMode: stringToFn<GenericObject | string>(pointRenderMode, undefined, true),
+      renderMode: stringToFn<Record<string, any> | string>(pointRenderMode, undefined, true),
       canvasRender: stringToFn<boolean>(canvasPoints, undefined, true),
     })),
 

@@ -38,7 +38,6 @@ import {
   RawLine,
   LineTypeSettings,
   SummaryTypeSettings,
-  GenericObject,
   ExtentType,
   MarginType
 } from "../types/generalTypes"
@@ -77,19 +76,19 @@ type validStrFnTypes =
   | boolean
   | string
   | number
-  | GenericObject
-  | GenericObject[]
+  | Record<string, any>
+  | Record<string, any>[]
   | RawPoint
   | RawPoint[]
 
 export function stringToFn<StrFnType extends validStrFnTypes>(
   accessor?:
-    | ((args?: GenericObject, index?: number) => StrFnType)
+    | ((args?: Record<string, any>, index?: number) => StrFnType)
     | string
     | StrFnType,
-  defaultAccessor?: (arg?: GenericObject, i?: number) => StrFnType,
+  defaultAccessor?: (arg?: Record<string, any>, i?: number) => StrFnType,
   raw?: boolean
-): (d?: GenericObject, i?: number) => StrFnType {
+): (d?: Record<string, any>, i?: number) => StrFnType {
   if (!accessor && defaultAccessor) {
     return defaultAccessor
   } else if (typeof accessor === "object") {
@@ -100,7 +99,7 @@ export function stringToFn<StrFnType extends validStrFnTypes>(
     const castAccessor = accessor as unknown as StrFnType
     return () => castAccessor
   } else if (typeof accessor === "string") {
-    return (d: GenericObject) => (d ? d[accessor] : undefined)
+    return (d: Record<string, any>) => (d ? d[accessor] : undefined)
   }
 
   return () => undefined
@@ -108,17 +107,17 @@ export function stringToFn<StrFnType extends validStrFnTypes>(
 
 export function stringToArrayFn<StrFnType extends validStrFnTypes>(
   accessor?:
-    | ((arg?: GenericObject, index?: number) => StrFnType)
+    | ((arg?: Record<string, any>, index?: number) => StrFnType)
     | string
     | StrFnType
     | Array<
-        | ((arg?: GenericObject, index?: number) => StrFnType)
+        | ((arg?: Record<string, any>, index?: number) => StrFnType)
         | string
         | StrFnType
       >,
-  defaultAccessor?: (arg?: GenericObject, index?: number) => StrFnType,
+  defaultAccessor?: (arg?: Record<string, any>, index?: number) => StrFnType,
   raw?: boolean
-): Array<(arg?: GenericObject, index?: number) => StrFnType> {
+): Array<(arg?: Record<string, any>, index?: number) => StrFnType> {
   if (accessor === undefined) {
     return [stringToFn<StrFnType>(undefined, defaultAccessor, raw)]
   }

@@ -2,11 +2,10 @@ import { quantile } from "d3-array"
 import { arc } from "d3-shape"
 import { pointOnArcAtAngle } from "./pieceDrawing"
 import { scaleLinear } from "d3-scale"
-import { GenericObject } from "../types/generalTypes"
 
 type BoxplotFnType = {
-  data: GenericObject[]
-  type: GenericObject
+  data: Record<string, any>[]
+  type: Record<string, any>
   renderMode: Function
   eventListenersGenerator: Function
   styleFn: Function

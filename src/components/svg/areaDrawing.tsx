@@ -5,7 +5,7 @@ import { hexbin } from "d3-hexbin"
 import regression from "regression"
 import { curveCardinal } from "d3-shape"
 
-import { ProjectedPoint, GenericObject } from "../types/generalTypes"
+import { ProjectedPoint } from "../types/generalTypes"
 import { SummaryLayoutType } from "../types/xyTypes"
 import { ProjectedSummary } from "../types/generalTypes"
 
@@ -183,7 +183,7 @@ export function hexbinning({
   }
 
   let projectedSummaries = []
-  let summaryType: GenericObject
+  let summaryType: Record<string, any>
   if (!baseSummaryType.type) {
     summaryType = { type: summaryType }
   } else {
@@ -268,7 +268,7 @@ export function hexbinning({
       d[1] * hexHeight
     ])
 
-    const hexbinProjectedSummaries = hexes.map((d: GenericObject) => {
+    const hexbinProjectedSummaries = hexes.map((d: Record<string, any>) => {
       const hexValue = binValue(d)
       const gx = d.x
       const gy = d.y
@@ -361,7 +361,7 @@ export function heatmapping({
 
   let projectedSummaries: ProjectedSummary[] = []
 
-  let summaryType: GenericObject
+  let summaryType: Record<string, any>
   if (!baseSummaryType.type) {
     summaryType = { type: summaryType }
   } else {
@@ -508,7 +508,7 @@ export function trendlining({
 
   let projectedSummaries = []
 
-  let summaryType: GenericObject
+  let summaryType: Record<string, any>
   if (!baseSummaryType.type) {
     summaryType = { type: summaryType }
   } else {

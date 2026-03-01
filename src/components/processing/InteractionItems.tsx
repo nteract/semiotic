@@ -16,10 +16,10 @@ import {
   InteractionLayerProps,
   VoronoiEntryType
 } from "../types/interactionTypes"
-import { GenericObject } from "../types/generalTypes"
+
 
 const constructDataObject = (
-  d?: { data?: GenericObject | object[]; type?: string },
+  d?: { data?: Record<string, any> | object[]; type?: string },
   points?: Object[]
 ) => {
   if (d === undefined) return d
@@ -28,7 +28,7 @@ const constructDataObject = (
 
 export const changeVoronoi = (
   voronoiHover: Function,
-  d: { type?: string; data?: GenericObject | object[] },
+  d: { type?: string; data?: Record<string, any> | object[] },
   customHoverTypes: CustomHoverType,
   customHoverBehavior: Function,
   points: Object[],

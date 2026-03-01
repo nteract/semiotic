@@ -32,8 +32,16 @@ export interface AxisConfig {
 
 /**
  * Accessor type - can be a property name or a function
+ * @deprecated Use DataAccessor from generalTypes for generic type safety
  */
 export type Accessor<T = any> = string | ((d: any, i?: number) => T)
+
+/**
+ * Generic accessor type that provides autocomplete when TDatum is specified
+ */
+export type ChartAccessor<TDatum, T> =
+  | (keyof TDatum & string)
+  | ((d: TDatum, i?: number) => T)
 
 /**
  * Color configuration

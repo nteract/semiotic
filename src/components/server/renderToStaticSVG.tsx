@@ -33,7 +33,7 @@ import {
 import { XYFrameProps, XYFrameState } from "../types/xyTypes"
 import { OrdinalFrameProps, OrdinalFrameState } from "../types/ordinalTypes"
 import { NetworkFrameProps, NetworkFrameState } from "../types/networkTypes"
-import { GenericObject, RenderPipelineType } from "../types/generalTypes"
+import { RenderPipelineType } from "../types/generalTypes"
 
 type FrameType = "xy" | "ordinal" | "network"
 
@@ -219,8 +219,8 @@ function buildNetworkBaseState(props: NetworkFrameProps): NetworkFrameState {
     nodeSizeAccessor: genericFunction(5),
     overlay: [],
     projectedXYPoints: [],
-    sourceAccessor: stringToFn<string | GenericObject>("source"),
-    targetAccessor: stringToFn<string | GenericObject>("target"),
+    sourceAccessor: stringToFn<string | Record<string, any>>("source"),
+    targetAccessor: stringToFn<string | Record<string, any>>("target"),
     title: { title: undefined },
     props
   } as NetworkFrameState

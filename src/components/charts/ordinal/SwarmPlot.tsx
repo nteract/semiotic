@@ -6,13 +6,13 @@ import type { OrdinalFrameProps } from "../../types/ordinalTypes"
 import { getColor, getSize } from "../shared/colorUtils"
 import { useColorScale, DEFAULT_COLOR, resolveAccessor } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
-import type { BaseChartProps, Accessor } from "../shared/types"
+import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 
 /**
  * SwarmPlot component props
  */
-export interface SwarmPlotProps extends BaseChartProps {
+export interface SwarmPlotProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   /**
    * Array of data points with category and value.
    * @example
@@ -24,19 +24,19 @@ export interface SwarmPlotProps extends BaseChartProps {
    * ]
    * ```
    */
-  data: Array<Record<string, any>>
+  data: TDatum[]
 
   /**
    * Field name or function to access category values
    * @default "category"
    */
-  categoryAccessor?: Accessor<string>
+  categoryAccessor?: ChartAccessor<TDatum, string>
 
   /**
    * Field name or function to access numeric values
    * @default "value"
    */
-  valueAccessor?: Accessor<number>
+  valueAccessor?: ChartAccessor<TDatum, number>
 
   /**
    * Chart orientation
@@ -67,7 +67,7 @@ export interface SwarmPlotProps extends BaseChartProps {
    * colorBy={d => d.score > 10 ? 'red' : 'blue'}
    * ```
    */
-  colorBy?: Accessor<string>
+  colorBy?: ChartAccessor<TDatum, string>
 
   /**
    * Color scheme for categorical data or custom colors array
@@ -83,7 +83,7 @@ export interface SwarmPlotProps extends BaseChartProps {
    * sizeBy={d => Math.sqrt(d.value)}
    * ```
    */
-  sizeBy?: Accessor<number>
+  sizeBy?: ChartAccessor<TDatum, number>
 
   /**
    * Min and max radius for points when using dynamic sizing
@@ -160,7 +160,7 @@ export interface SwarmPlotProps extends BaseChartProps {
  * />
  * ```
  */
-export function SwarmPlot(props: SwarmPlotProps) {
+export function SwarmPlot<TDatum extends Record<string, any> = Record<string, any>>(props: SwarmPlotProps<TDatum>) {
   const {
     data,
     width = 600,

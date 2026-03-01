@@ -4,7 +4,8 @@ import { Interactivity, AdvancedInteractionSettings } from "./interactionTypes"
 import { LegendProps } from "./legendTypes"
 import { AxisProps } from "./annotationTypes"
 
-export type GenericObject = { [key: string]: any }
+/** @deprecated Use Record<string, any> instead */
+export type GenericObject = Record<string, any>
 
 export interface MarginType {
   top: number
@@ -40,8 +41,8 @@ export interface ProjectedPoint {
 
 export type PieceLayoutType = (args: {
   type: string | { type: string }
-  data: GenericObject
-  renderMode: (d?: GenericObject, i?: number) => string | GenericObject
+  data: Record<string, any>
+  renderMode: (d?: Record<string, any>, i?: number) => string | Record<string, any>
   eventListenersGenerator: (d: object, i: number) => Record<string, Function>
   styleFn: (d: object) => object
   projection: string
@@ -50,7 +51,7 @@ export type PieceLayoutType = (args: {
   chartSize: number[]
   margin: MarginType
   rScale?: Function
-}) => GenericObject[]
+}) => Record<string, any>[]
 
 export interface ProjectedLine {
   data: ProjectedPoint[]
@@ -66,7 +67,7 @@ export interface ProjectedSummary {
   data: object[]
   y: number
   x: number
-  parentSummary?: GenericObject
+  parentSummary?: Record<string, any>
   bounds: object[] | number[]
   customMark?: Function
   type?: string
@@ -85,8 +86,12 @@ export type accessorType<ReturnValue> =
   | string
   | ((args?: unknown, index?: number) => ReturnValue)
 
+export type DataAccessor<TDatum, ReturnValue> =
+  | (keyof TDatum & string)
+  | ((datum: TDatum, index?: number) => ReturnValue)
+
 export interface AccessorFnType {
-  <T>(arg: GenericObject): T
+  <T>(arg: Record<string, any>): T
 }
 
 export type BasicLineTypes =
@@ -135,17 +140,17 @@ export interface SummaryTypeSettings {
   customMark?: Function
 }
 
-export interface RawLine {
-  coordinates?: object[]
+export interface RawLine<TDatum = Record<string, any>> {
+  coordinates?: TDatum[]
 }
 
-export interface RawSummary {
-  processedData?: object[]
-  coordinates?: object[]
+export interface RawSummary<TDatum = Record<string, any>> {
+  processedData?: TDatum[]
+  coordinates?: TDatum[]
   preprocess?: boolean
 }
 
-export interface RawPoint {}
+export interface RawPoint<TDatum = Record<string, any>> {}
 
 export interface CustomAreaMarkProps {
   d: object
@@ -171,7 +176,7 @@ export interface ProjectedBin {
 }
 
 export type GenericAccessor<GenericValue> = (
-  args?: GenericObject,
+  args?: Record<string, any>,
   index?: number
 ) => GenericValue
 

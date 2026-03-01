@@ -4,14 +4,14 @@ import { useMemo } from "react"
 import NetworkFrame from "../../NetworkFrame"
 import type { NetworkFrameProps } from "../../types/networkTypes"
 import { getColor } from "../shared/colorUtils"
-import type { BaseChartProps, Accessor } from "../shared/types"
+import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 
 /**
  * SankeyDiagram component props
  */
-export interface SankeyDiagramProps extends BaseChartProps {
+export interface SankeyDiagramProps<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   /**
    * Array of nodes (optional - will be inferred from edges if not provided)
    * @example
@@ -19,7 +19,7 @@ export interface SankeyDiagramProps extends BaseChartProps {
    * [{id: 'A', category: 'Source'}, {id: 'B', category: 'Target'}]
    * ```
    */
-  nodes?: Array<Record<string, any>>
+  nodes?: TNode[]
 
   /**
    * Array of edges (links) with source, target, and value
@@ -31,31 +31,31 @@ export interface SankeyDiagramProps extends BaseChartProps {
    * ]
    * ```
    */
-  edges: Array<Record<string, any>>
+  edges: TEdge[]
 
   /**
    * Field name or function to access source node identifier
    * @default "source"
    */
-  sourceAccessor?: Accessor<string>
+  sourceAccessor?: ChartAccessor<TEdge, string>
 
   /**
    * Field name or function to access target node identifier
    * @default "target"
    */
-  targetAccessor?: Accessor<string>
+  targetAccessor?: ChartAccessor<TEdge, string>
 
   /**
    * Field name or function to access edge value (flow width)
    * @default "value"
    */
-  valueAccessor?: Accessor<number>
+  valueAccessor?: ChartAccessor<TEdge, number>
 
   /**
    * Field name or function to access node identifier
    * @default "id"
    */
-  nodeIdAccessor?: Accessor<string>
+  nodeIdAccessor?: ChartAccessor<TNode, string>
 
   /**
    * Field name or function to determine node color
@@ -65,7 +65,7 @@ export interface SankeyDiagramProps extends BaseChartProps {
    * colorBy={d => d.type}
    * ```
    */
-  colorBy?: Accessor<string>
+  colorBy?: ChartAccessor<TNode, string>
 
   /**
    * Color scheme for nodes or custom colors array
@@ -115,7 +115,7 @@ export interface SankeyDiagramProps extends BaseChartProps {
    * Label accessor for nodes
    * @default Uses nodeIdAccessor
    */
-  nodeLabel?: Accessor<string>
+  nodeLabel?: ChartAccessor<TNode, string>
 
   /**
    * Show node labels
@@ -218,7 +218,7 @@ export interface SankeyDiagramProps extends BaseChartProps {
  * @param props - SankeyDiagram configuration
  * @returns Rendered Sankey diagram
  */
-export function SankeyDiagram(props: SankeyDiagramProps) {
+export function SankeyDiagram<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: SankeyDiagramProps<TNode, TEdge>) {
   const {
     nodes,
     edges,
@@ -336,7 +336,7 @@ export function SankeyDiagram(props: SankeyDiagramProps) {
     if (!showLabels) return undefined
     const accessor = nodeLabel || nodeIdAccessor
     return (d: Record<string, any>) => {
-      if (typeof accessor === "function") return accessor(d)
+      if (typeof accessor === "function") return accessor(d as TNode)
       return d[accessor]
     }
   }, [showLabels, nodeLabel, nodeIdAccessor])

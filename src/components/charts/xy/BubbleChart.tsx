@@ -6,13 +6,13 @@ import type { XYFrameProps } from "../../types/xyTypes"
 import { getColor, getSize } from "../shared/colorUtils"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
-import type { BaseChartProps, AxisConfig, Accessor } from "../shared/types"
+import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 
 /**
  * BubbleChart component props
  */
-export interface BubbleChartProps extends BaseChartProps, AxisConfig {
+export interface BubbleChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps, AxisConfig {
   /**
    * Array of data points. Each point should have x, y, and size properties.
    * @example
@@ -20,19 +20,19 @@ export interface BubbleChartProps extends BaseChartProps, AxisConfig {
    * [{x: 1, y: 10, size: 50, category: 'A'}, {x: 2, y: 20, size: 30, category: 'B'}]
    * ```
    */
-  data: Array<Record<string, any>>
+  data: TDatum[]
 
   /**
    * Field name or function to access x values
    * @default "x"
    */
-  xAccessor?: Accessor<number>
+  xAccessor?: ChartAccessor<TDatum, number>
 
   /**
    * Field name or function to access y values
    * @default "y"
    */
-  yAccessor?: Accessor<number>
+  yAccessor?: ChartAccessor<TDatum, number>
 
   /**
    * Field name or function to determine bubble size (required)
@@ -42,7 +42,7 @@ export interface BubbleChartProps extends BaseChartProps, AxisConfig {
    * sizeBy={d => Math.sqrt(d.value)}
    * ```
    */
-  sizeBy: Accessor<number>
+  sizeBy: ChartAccessor<TDatum, number>
 
   /**
    * Min and max radius for bubbles
@@ -58,7 +58,7 @@ export interface BubbleChartProps extends BaseChartProps, AxisConfig {
    * colorBy={d => d.value > 10 ? 'red' : 'blue'}
    * ```
    */
-  colorBy?: Accessor<string>
+  colorBy?: ChartAccessor<TDatum, string>
 
   /**
    * Color scheme for categorical data or custom colors array
@@ -176,7 +176,7 @@ export interface BubbleChartProps extends BaseChartProps, AxisConfig {
  * @param props - BubbleChart configuration
  * @returns Rendered bubble chart
  */
-export function BubbleChart(props: BubbleChartProps) {
+export function BubbleChart<TDatum extends Record<string, any> = Record<string, any>>(props: BubbleChartProps<TDatum>) {
   const {
     data,
     width = 600,

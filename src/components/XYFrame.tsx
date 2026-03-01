@@ -59,8 +59,7 @@ import {
 import {
   ProjectedPoint,
   ProjectedSummary,
-  ProjectedLine,
-  GenericObject
+  ProjectedLine
 } from "./types/generalTypes"
 
 import { AnnotationType } from "./types/annotationTypes"
@@ -97,7 +96,7 @@ const defaultProps = {
   dataVersion: undefined
 }
 
-const XYFrame = React.memo(function XYFrame(allProps: XYFrameProps) {
+export function XYFrameInner<TDatum = Record<string, any>>(allProps: XYFrameProps<TDatum>) {
   const props = { ...defaultProps, ...allProps }
   const pipelineCacheRef = useRef(createXYPipelineCache())
   const baseState = {
@@ -297,7 +296,7 @@ const XYFrame = React.memo(function XYFrame(allProps: XYFrameProps) {
       disableProgressiveRendering={disableProgressiveRendering}
     />
   )
-})
+}
 
 function deriveXYFrameState(nextProps: XYFrameProps, prevState: XYFrameState, cache?: XYPipelineCache) {
   const { props } = prevState
@@ -406,7 +405,7 @@ function defaultXYSVGRule(
     summaries: { data: [] }
     points: {
       data: []
-      styleFn: (args?: GenericObject, index?: number) => GenericObject
+      styleFn: (args?: Record<string, any>, index?: number) => Record<string, any>
     }
   }
 ) {
@@ -644,7 +643,7 @@ function defaultXYHTMLRule(
     summaries: { data: ProjectedSummary[] }
     points: {
       data: ProjectedPoint[]
-      styleFn: (args?: GenericObject, index?: number) => GenericObject
+      styleFn: (args?: Record<string, any>, index?: number) => Record<string, any>
     }
   }
 ) {
@@ -798,5 +797,6 @@ function defaultXYHTMLRule(
   return null
 }
 
-XYFrame.displayName = "XYFrame"
+XYFrameInner.displayName = "XYFrame"
+const XYFrame = React.memo(XYFrameInner) as typeof XYFrameInner
 export default XYFrame

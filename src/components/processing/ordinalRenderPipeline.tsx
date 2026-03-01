@@ -13,7 +13,7 @@ import {
 
 import { AxisProps } from "../types/annotationTypes"
 
-import { GenericObject, MarginType, GenericAccessor } from "../types/generalTypes"
+import { MarginType, GenericAccessor } from "../types/generalTypes"
 
 import { midMod, zeroFunction, naturalLanguageTypes } from "./ordinalConstants"
 
@@ -23,7 +23,7 @@ export interface AssembleRenderPipelineArgs {
   // Piece / overlay data
   usesPieceOverlays: boolean
   shouldRecalculateOverlay: boolean
-  calculatedPieceData: GenericObject[]
+  calculatedPieceData: Record<string, any>[]
   projection: string
   customClickBehavior?: Function
   customDoubleClickBehavior?: Function
@@ -37,7 +37,7 @@ export interface AssembleRenderPipelineArgs {
   connectorCanvasRender: Function
   summaryCanvasRender: Function
   pieceCanvasRender: Function
-  connectorType: GenericObject
+  connectorType: Record<string, any>
   eventListenersGenerator: () => Record<string, never>
   pieceType: PieceTypeSettings
   summaryStyle: Function
@@ -46,9 +46,9 @@ export interface AssembleRenderPipelineArgs {
   pieceClass: Function
 
   // Data
-  keyedData: { [key: string]: GenericObject[] }
+  keyedData: { [key: string]: Record<string, any>[] }
   oExtent: string[]
-  projectedColumns: { [key: string]: GenericObject }
+  projectedColumns: { [key: string]: Record<string, any> }
   calculatedSummaries: ProjectedOrdinalSummary
   oAccessor: Function[]
 
@@ -58,7 +58,7 @@ export interface AssembleRenderPipelineArgs {
   // Extent
   calculatedRExtent: number[]
   calculatedOExtent: string[]
-  rExtentSettings: GenericObject
+  rExtentSettings: Record<string, any>
   oExtentSettings: { extent?: string[]; onChange?: Function }
 
   // Layout
@@ -74,7 +74,7 @@ export interface AssembleRenderPipelineArgs {
   axesTickLines: object[]
   oLabels: React.ReactNode
   title: object
-  columnOverlays: GenericObject[]
+  columnOverlays: Record<string, any>[]
   oScaleType: ScaleBand<string>
   instantiatedRScaleType: ScaleLinear<number, number>
   oScale: ScaleBand<string>

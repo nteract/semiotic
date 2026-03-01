@@ -47,7 +47,7 @@ import {
   NodeType
 } from "../types/networkTypes"
 
-import { GenericObject } from "../types/generalTypes"
+
 
 import { baseNodeProps, baseNetworkSettings, baseGraphSettings, emptyArray } from "./networkDefaults"
 import { determineNodeIcon, determineEdgeIcon, basicMiddle, edgePointHash, hierarchicalTypeHash, hierarchicalProjectable, radialProjectable, sankeyOrientHash } from "./networkLayoutHelpers"
@@ -153,7 +153,7 @@ export const calculateNetworkFrame = (
   const nodeIDAccessor = cachedAccessors.nodeIDAccessor
   const sourceAccessor = cachedAccessors.sourceAccessor
   const targetAccessor = cachedAccessors.targetAccessor
-  const nodeSizeAccessor: (args?: GenericObject) => number = cachedAccessors.nodeSizeAccessor as (args?: GenericObject) => number
+  const nodeSizeAccessor: (args?: Record<string, any>) => number = cachedAccessors.nodeSizeAccessor as (args?: Record<string, any>) => number
   const edgeWidthAccessor = cachedAccessors.edgeWidthAccessor
   const { nodeStyleFn, nodeClassFn, nodeRenderModeFn, nodeCanvasRenderFn } = cache.nodeStyleFns(
     nodeStyle, nodeClass, nodeRenderMode, canvasNodes

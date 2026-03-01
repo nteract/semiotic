@@ -1,10 +1,9 @@
 import * as React from "react"
 
 
-import { GenericObject } from "../types/generalTypes"
 import { ScaleLinear } from "d3-scale"
 
-type RenderModeFnType = (d: number, i: number) => string | GenericObject
+type RenderModeFnType = (d: number, i: number) => string | Record<string, any>
 
 type AxisPiecesFnType = {
   renderMode?: RenderModeFnType

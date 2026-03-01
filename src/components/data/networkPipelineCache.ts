@@ -1,7 +1,7 @@
 import memoize from "memoize-one"
 import { calculateMargin, adjustedPositionSize } from "../svg/frameFunctions"
 import { stringToFn } from "./dataFunctions"
-import { GenericObject } from "../types/generalTypes"
+
 import { genericFunction } from "../generic_utilities/functions"
 
 export function createNetworkPipelineCache() {
@@ -27,8 +27,8 @@ export function createNetworkPipelineCache() {
       edgeWidthAccessor: any
     ) => ({
       nodeIDAccessor: stringToFn<string>(nodeIDAccessor, (d) => d ? d.id : undefined),
-      sourceAccessor: stringToFn<string | GenericObject>(sourceAccessor, (d) => d.source),
-      targetAccessor: stringToFn<string | GenericObject>(targetAccessor, (d) => d.target),
+      sourceAccessor: stringToFn<string | Record<string, any>>(sourceAccessor, (d) => d.source),
+      targetAccessor: stringToFn<string | Record<string, any>>(targetAccessor, (d) => d.target),
       nodeSizeAccessor: typeof nodeSizeAccessor === "number"
         ? genericFunction(nodeSizeAccessor)
         : stringToFn<number>(nodeSizeAccessor, genericFunction(5)),
@@ -41,9 +41,9 @@ export function createNetworkPipelineCache() {
       nodeRenderMode: any,
       canvasNodes: any
     ) => ({
-      nodeStyleFn: stringToFn<GenericObject>(nodeStyle, () => ({}), true),
+      nodeStyleFn: stringToFn<Record<string, any>>(nodeStyle, () => ({}), true),
       nodeClassFn: stringToFn<string>(nodeClass, () => "", true),
-      nodeRenderModeFn: stringToFn<string | GenericObject>(nodeRenderMode, undefined, true),
+      nodeRenderModeFn: stringToFn<string | Record<string, any>>(nodeRenderMode, undefined, true),
       nodeCanvasRenderFn: canvasNodes ? stringToFn<boolean>(canvasNodes, undefined, true) : undefined,
     })),
 
@@ -53,9 +53,9 @@ export function createNetworkPipelineCache() {
       edgeRenderMode: any,
       canvasEdges: any
     ) => ({
-      edgeStyleFn: stringToFn<GenericObject>(edgeStyle, () => ({}), true),
+      edgeStyleFn: stringToFn<Record<string, any>>(edgeStyle, () => ({}), true),
       edgeClassFn: stringToFn<string>(edgeClass, () => "", true),
-      edgeRenderModeFn: stringToFn<string | GenericObject>(edgeRenderMode, undefined, true),
+      edgeRenderModeFn: stringToFn<string | Record<string, any>>(edgeRenderMode, undefined, true),
       edgeCanvasRenderFn: canvasEdges ? stringToFn<boolean>(canvasEdges, undefined, true) : undefined,
     })),
   }

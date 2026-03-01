@@ -1,7 +1,7 @@
 import memoize from "memoize-one"
 import { calculateMargin, adjustedPositionSize, keyAndObjectifyBarData } from "../svg/frameFunctions"
 import { stringToFn, stringToArrayFn } from "./dataFunctions"
-import { GenericObject, ProjectionTypes } from "../types/generalTypes"
+import { ProjectionTypes } from "../types/generalTypes"
 
 export function createOrdinalPipelineCache() {
   return {
@@ -68,15 +68,15 @@ export function createOrdinalPipelineCache() {
       canvasSummaries: any,
       canvasConnectors: any
     ) => ({
-      connectorStyle: stringToFn<GenericObject>(baseConnectorStyle, () => ({}), true),
-      summaryStyle: stringToFn<GenericObject>(baseSummaryStyle, () => ({}), true),
-      pieceStyle: stringToFn<GenericObject>(baseStyle, () => ({}), true),
+      connectorStyle: stringToFn<Record<string, any>>(baseConnectorStyle, () => ({}), true),
+      summaryStyle: stringToFn<Record<string, any>>(baseSummaryStyle, () => ({}), true),
+      pieceStyle: stringToFn<Record<string, any>>(baseStyle, () => ({}), true),
       pieceClass: stringToFn<string>(basePieceClass, () => "", true),
       summaryClass: stringToFn<string>(baseSummaryClass, () => "", true),
       connectorClass: stringToFn<string>(baseConnectorClass, () => "", true),
-      pieceRenderMode: stringToFn<GenericObject | string>(baseRenderMode, undefined, true),
-      summaryRenderMode: stringToFn<GenericObject | string>(baseSummaryRenderMode, undefined, true),
-      connectorRenderMode: stringToFn<GenericObject | string>(baseConnectorRenderMode, undefined, true),
+      pieceRenderMode: stringToFn<Record<string, any> | string>(baseRenderMode, undefined, true),
+      summaryRenderMode: stringToFn<Record<string, any> | string>(baseSummaryRenderMode, undefined, true),
+      connectorRenderMode: stringToFn<Record<string, any> | string>(baseConnectorRenderMode, undefined, true),
       pieceCanvasRender: stringToFn<boolean>(canvasPieces, undefined, true),
       summaryCanvasRender: stringToFn<boolean>(canvasSummaries, undefined, true),
       connectorCanvasRender: stringToFn<boolean>(canvasConnectors, undefined, true),

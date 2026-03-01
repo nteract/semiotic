@@ -6,13 +6,13 @@ import type { OrdinalFrameProps } from "../../types/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
 import { useColorScale, useSortedData, DEFAULT_COLOR } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
-import type { BaseChartProps, Accessor } from "../shared/types"
+import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 
 /**
  * BarChart component props
  */
-export interface BarChartProps extends BaseChartProps {
+export interface BarChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   /**
    * Array of data points. Each point should have a category and value.
    * @example
@@ -20,19 +20,19 @@ export interface BarChartProps extends BaseChartProps {
    * [{category: 'A', value: 10}, {category: 'B', value: 20}]
    * ```
    */
-  data: Array<Record<string, any>>
+  data: TDatum[]
 
   /**
    * Field name or function to access category values
    * @default "category"
    */
-  categoryAccessor?: Accessor<string>
+  categoryAccessor?: ChartAccessor<TDatum, string>
 
   /**
    * Field name or function to access numeric values
    * @default "value"
    */
-  valueAccessor?: Accessor<number>
+  valueAccessor?: ChartAccessor<TDatum, number>
 
   /**
    * Chart orientation
@@ -63,7 +63,7 @@ export interface BarChartProps extends BaseChartProps {
    * colorBy={d => d.value > 10 ? 'green' : 'red'}  // Use function
    * ```
    */
-  colorBy?: Accessor<string>
+  colorBy?: ChartAccessor<TDatum, string>
 
   /**
    * Color scheme for categorical data or custom colors array
@@ -139,7 +139,7 @@ export interface BarChartProps extends BaseChartProps {
  * />
  * ```
  */
-export function BarChart(props: BarChartProps) {
+export function BarChart<TDatum extends Record<string, any> = Record<string, any>>(props: BarChartProps<TDatum>) {
   const {
     data,
     width = 600,
@@ -264,8 +264,8 @@ export function BarChart(props: BarChartProps) {
   // Default tooltip function for piece hover
   const defaultTooltipContent = useMemo(() => {
     return (d: Record<string, any>) => {
-      const cat = typeof categoryAccessor === "function" ? categoryAccessor(d) : d[categoryAccessor]
-      const val = typeof valueAccessor === "function" ? valueAccessor(d) : d[valueAccessor]
+      const cat = typeof categoryAccessor === "function" ? categoryAccessor(d as TDatum) : d[categoryAccessor]
+      const val = typeof valueAccessor === "function" ? valueAccessor(d as TDatum) : d[valueAccessor]
       return (
         <div className="semiotic-tooltip" style={defaultTooltipStyle}>
           <div style={{ fontWeight: "bold" }}>{String(cat)}</div>

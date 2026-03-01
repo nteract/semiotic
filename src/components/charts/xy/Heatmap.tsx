@@ -6,13 +6,13 @@ import { interpolateBlues, interpolateReds, interpolateGreens, interpolateViridi
 import XYFrame from "../../XYFrame"
 import type { XYFrameProps } from "../../types/xyTypes"
 import { DEFAULT_COLOR, resolveAccessor } from "../shared/hooks"
-import type { BaseChartProps, Accessor } from "../shared/types"
+import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 
 /**
  * Heatmap component props
  */
-export interface HeatmapProps extends BaseChartProps {
+export interface HeatmapProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   /**
    * Array of data points with x, y, and value properties.
    * @example
@@ -20,25 +20,25 @@ export interface HeatmapProps extends BaseChartProps {
    * [{x: 1, y: 1, value: 10}, {x: 1, y: 2, value: 20}, {x: 2, y: 1, value: 15}]
    * ```
    */
-  data: Array<Record<string, any>>
+  data: TDatum[]
 
   /**
    * Field name or function to access x values
    * @default "x"
    */
-  xAccessor?: Accessor<number>
+  xAccessor?: ChartAccessor<TDatum, number>
 
   /**
    * Field name or function to access y values
    * @default "y"
    */
-  yAccessor?: Accessor<number>
+  yAccessor?: ChartAccessor<TDatum, number>
 
   /**
    * Field name or function to access cell values
    * @default "value"
    */
-  valueAccessor?: Accessor<number>
+  valueAccessor?: ChartAccessor<TDatum, number>
 
   /**
    * Label for the x-axis
@@ -174,7 +174,7 @@ export interface HeatmapProps extends BaseChartProps {
  * @param props - Heatmap configuration
  * @returns Rendered heatmap
  */
-export function Heatmap(props: HeatmapProps) {
+export function Heatmap<TDatum extends Record<string, any> = Record<string, any>>(props: HeatmapProps<TDatum>) {
   const {
     data,
     width = 600,
@@ -205,7 +205,7 @@ export function Heatmap(props: HeatmapProps) {
   // Get value accessor function
   const getValueFn = useMemo(() => {
     return typeof valueAccessor === "function"
-      ? valueAccessor
+      ? (d: Record<string, any>) => valueAccessor(d as TDatum)
       : (d: Record<string, any>) => d[valueAccessor]
   }, [valueAccessor])
 

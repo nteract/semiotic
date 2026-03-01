@@ -74,6 +74,7 @@ export {
   CanvasPostProcessTypes,
   ExtentSettingsType,
   accessorType,
+  DataAccessor,
   AccessorFnType,
   BasicLineTypes,
   LineTypeSettings,

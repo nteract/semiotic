@@ -44,7 +44,6 @@ const projectedCoordinateNames = { y: "y", x: "x" }
 const xScale = scaleLinear()
 const yScale = scaleLinear()
 
-import { GenericObject } from "./types/generalTypes"
 
 import {
   NodeType,
@@ -65,10 +64,10 @@ const defaultProps = {
   filterRenderedNodes: (d: NodeType) => d.id !== "root-generated"
 }
 
-const NetworkFrame = React.memo(function NetworkFrame(
-  allProps: NetworkFrameProps
+export function NetworkFrameInner<TNode = Record<string, any>, TEdge = Record<string, any>>(
+  allProps: NetworkFrameProps<TNode, TEdge>
 ) {
-  const props: NetworkFrameProps = { ...defaultProps, ...allProps }
+  const props: NetworkFrameProps<TNode, TEdge> = { ...defaultProps, ...allProps }
   const pipelineCacheRef = useRef(createNetworkPipelineCache())
   const baseState = {
     dataVersion: undefined,
@@ -98,23 +97,23 @@ const NetworkFrame = React.memo(function NetworkFrame(
     nodeSizeAccessor: genericFunction(5),
     overlay: [],
     projectedXYPoints: [],
-    sourceAccessor: stringToFn<string | GenericObject>("source"),
-    targetAccessor: stringToFn<string | GenericObject>("target"),
+    sourceAccessor: stringToFn<string | Record<string, any>>("source"),
+    targetAccessor: stringToFn<string | Record<string, any>>("target"),
     title: { title: undefined },
-    props
+    props: props as NetworkFrameProps
   }
 
   const initialState = useMemo(
     () => ({
       ...baseState,
-      ...calculateNetworkFrame(props, baseState, pipelineCacheRef.current)
-    }),
+      ...calculateNetworkFrame(props as NetworkFrameProps, baseState, pipelineCacheRef.current)
+    } as NetworkFrameState),
     []
   )
 
   const state = useDerivedStateFromProps(
-    (nextProps, prevState) => deriveNetworkFrameState(nextProps, prevState, pipelineCacheRef.current),
-    props,
+    (nextProps, prevState) => deriveNetworkFrameState(nextProps as NetworkFrameProps, prevState, pipelineCacheRef.current),
+    props as NetworkFrameProps,
     initialState
   )
 
@@ -126,11 +125,11 @@ const NetworkFrame = React.memo(function NetworkFrame(
   stateRef.current = state
 
   const defaultSVGRuleCb = useCallback(
-    (args) => defaultNetworkSVGRule(propsRef.current, stateRef.current, args),
+    (args) => defaultNetworkSVGRule(propsRef.current as NetworkFrameProps, stateRef.current, args),
     []
   )
   const defaultHTMLRuleCb = useCallback(
-    (args) => defaultNetworkHTMLRule(propsRef.current, stateRef.current, args),
+    (args) => defaultNetworkHTMLRule(propsRef.current as NetworkFrameProps, stateRef.current, args),
     []
   )
 
@@ -257,7 +256,7 @@ const NetworkFrame = React.memo(function NetworkFrame(
       disableProgressiveRendering={disableProgressiveRendering}
     />
   )
-})
+}
 
 function deriveNetworkFrameState(
   nextProps: NetworkFrameProps,
@@ -512,5 +511,6 @@ function defaultNetworkHTMLRule(
   return null
 }
 
-NetworkFrame.displayName = "NetworkFrame"
+NetworkFrameInner.displayName = "NetworkFrame"
+const NetworkFrame = React.memo(NetworkFrameInner) as typeof NetworkFrameInner
 export default NetworkFrame

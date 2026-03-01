@@ -2,6 +2,7 @@ import { AxisProps, AxisGeneratingFunction } from "./annotationTypes"
 import { TitleType } from "../svg/frameFunctions"
 import {
   GenericAccessor,
+  DataAccessor,
   RawLine,
   RawPoint,
   RawSummary,
@@ -20,10 +21,10 @@ import {
 } from "./generalTypes"
 import { ScaleLinear } from "d3-scale"
 
-export interface XYFrameProps extends GeneralFrameProps {
-  lines?: RawLine[] | RawLine
-  points?: RawPoint[]
-  summaries?: RawSummary[] | RawSummary
+export interface XYFrameProps<TDatum = Record<string, any>> extends GeneralFrameProps {
+  lines?: RawLine<TDatum>[] | RawLine<TDatum>
+  points?: TDatum[]
+  summaries?: RawSummary<TDatum>[] | RawSummary<TDatum>
   axes?: Array<AxisProps | AxisGeneratingFunction>
   xScaleType?: ScaleLinear<number, number>
   yScaleType?: ScaleLinear<number, number>
@@ -31,8 +32,8 @@ export interface XYFrameProps extends GeneralFrameProps {
   yExtent?: ExtentType
   invertX?: boolean
   invertY?: boolean
-  xAccessor?: accessorType<number>
-  yAccessor?: accessorType<number>
+  xAccessor?: DataAccessor<TDatum, number> | DataAccessor<TDatum, number>[]
+  yAccessor?: DataAccessor<TDatum, number> | DataAccessor<TDatum, number>[]
   lineDataAccessor?: accessorType<RawPoint[]>
   summaryDataAccessor?: accessorType<RawPoint[]>
   lineType?: LineTypeSettings | string
@@ -96,10 +97,10 @@ export type AnnotatedSettingsProps = {
   yExtent?: number[]
 }
 
-export interface XYFrameState extends GeneralFrameState {
-  lineData?: RawLine[] | RawLine
-  pointData?: RawPoint[] | RawPoint
-  summaryData?: RawSummary[] | RawSummary
+export interface XYFrameState<TDatum = Record<string, any>> extends GeneralFrameState {
+  lineData?: RawLine<TDatum>[] | RawLine<TDatum>
+  pointData?: RawPoint<TDatum>[] | RawPoint<TDatum>
+  summaryData?: RawSummary<TDatum>[] | RawSummary<TDatum>
   projectedLines?: ProjectedLine[]
   projectedPoints?: ProjectedPoint[]
   projectedSummaries?: ProjectedSummary[]
@@ -121,7 +122,7 @@ export interface XYFrameState extends GeneralFrameState {
   size: number[]
   annotatedSettings: AnnotatedSettingsProps
   overlay?: object[]
-  props: XYFrameProps
+  props: XYFrameProps<TDatum>
 }
 
 export interface SummaryLayoutType {

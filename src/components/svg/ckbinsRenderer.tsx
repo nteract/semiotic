@@ -1,10 +1,9 @@
 import { scaleLinear } from "d3-scale"
 import { ckmeans } from "./ckmeans"
-import { GenericObject } from "../types/generalTypes"
 
 type BoxplotFnType = {
-  data: GenericObject[]
-  type: GenericObject
+  data: Record<string, any>[]
+  type: Record<string, any>
   renderMode: Function
   eventListenersGenerator: Function
   styleFn: Function
@@ -38,7 +37,7 @@ export function ckBinsRenderFn(props: BoxplotFnType) {
 
   let maxClusterSize = 0
 
-  const allBins: GenericObject[][] = []
+  const allBins: Record<string, any>[][] = []
 
   keys.forEach((key, summaryI) => {
     const summary = data[key]

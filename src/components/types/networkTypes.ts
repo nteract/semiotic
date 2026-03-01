@@ -1,4 +1,4 @@
-import { GenericObject, RenderPipelineType } from "./generalTypes"
+import { RenderPipelineType, DataAccessor } from "./generalTypes"
 import { GeneralFrameProps, GeneralFrameState } from "./generalTypes"
 
 export interface NodeType {
@@ -111,7 +111,7 @@ export interface NetworkSettingsType {
   graphSettings: GraphSettingsType
   sortGroups?: Function
   simulation?: Function
-  sort?: (a: GenericObject, b: GenericObject) => number
+  sort?: (a: Record<string, any>, b: Record<string, any>) => number
   zoom?:
     | boolean
     | "stretch"
@@ -120,25 +120,25 @@ export interface NetworkSettingsType {
   showArrows?: boolean
 }
 
-export interface NetworkFrameState extends GeneralFrameState {
+export interface NetworkFrameState<TNode = Record<string, any>, TEdge = Record<string, any>> extends GeneralFrameState {
   nodeData: object[]
   edgeData: object[]
   projectedNodes: NodeType[]
   projectedEdges: EdgeType[]
   projectedXYPoints: object[]
   overlay: object[]
-  nodeIDAccessor: (args: GenericObject) => string
-  sourceAccessor: (args: GenericObject) => GenericObject | string
-  targetAccessor: (args: GenericObject) => GenericObject | string
-  nodeSizeAccessor: (args: GenericObject) => number
-  edgeWidthAccessor: (args: GenericObject) => number
+  nodeIDAccessor: (args: Record<string, any>) => string
+  sourceAccessor: (args: Record<string, any>) => Record<string, any> | string
+  targetAccessor: (args: Record<string, any>) => Record<string, any> | string
+  nodeSizeAccessor: (args: Record<string, any>) => number
+  edgeWidthAccessor: (args: Record<string, any>) => number
   nodeLabelAnnotations: object[]
   graphSettings: GraphSettingsType
   networkFrameRender: RenderPipelineType
-  props: NetworkFrameProps
+  props: NetworkFrameProps<TNode, TEdge>
 }
 
-export interface NetworkFrameProps extends GeneralFrameProps {
+export interface NetworkFrameProps<TNode = Record<string, any>, TEdge = Record<string, any>> extends GeneralFrameProps {
   graph?:
     | { nodes: NodeType[]; edges: EdgeType[] }
     | EdgeType[]
@@ -149,25 +149,25 @@ export interface NetworkFrameProps extends GeneralFrameProps {
         node: Function
         edge: Function
       }
-  nodes?: object[]
-  edges?: object[] | object
+  nodes?: TNode[]
+  edges?: TEdge[] | TEdge
   networkType?: string | object
-  nodeStyle?: GenericObject | ((args: GenericObject) => GenericObject)
-  nodeClass?: string | ((args: GenericObject) => string)
-  canvasNodes?: boolean | ((args: GenericObject) => boolean)
-  edgeStyle?: GenericObject | ((args: GenericObject) => GenericObject)
-  edgeClass?: string | ((args: GenericObject) => string)
-  canvasEdges?: boolean | ((args: GenericObject) => boolean)
-  nodeRenderMode?: string | ((args: GenericObject) => string)
-  edgeRenderMode?: string | ((args: GenericObject) => string)
-  nodeLabels?: boolean | ((args: GenericObject) => JSX.Element | string | null)
-  edgeRenderKey?: (args: GenericObject) => string
-  nodeRenderKey?: (args: GenericObject) => string
-  edgeWidthAccessor?: string | ((args: GenericObject) => number)
-  nodeSizeAccessor?: string | ((args: GenericObject) => number)
-  targetAccessor?: string | ((args: GenericObject) => string | GenericObject)
-  sourceAccessor?: string | ((args: GenericObject) => string | GenericObject)
-  nodeIDAccessor?: string | ((args: GenericObject) => string)
+  nodeStyle?: Record<string, any> | ((args: Record<string, any>) => Record<string, any>)
+  nodeClass?: string | ((args: Record<string, any>) => string)
+  canvasNodes?: boolean | ((args: Record<string, any>) => boolean)
+  edgeStyle?: Record<string, any> | ((args: Record<string, any>) => Record<string, any>)
+  edgeClass?: string | ((args: Record<string, any>) => string)
+  canvasEdges?: boolean | ((args: Record<string, any>) => boolean)
+  nodeRenderMode?: string | ((args: Record<string, any>) => string)
+  edgeRenderMode?: string | ((args: Record<string, any>) => string)
+  nodeLabels?: boolean | ((args: Record<string, any>) => JSX.Element | string | null)
+  edgeRenderKey?: (args: Record<string, any>) => string
+  nodeRenderKey?: (args: Record<string, any>) => string
+  edgeWidthAccessor?: DataAccessor<TEdge, number>
+  nodeSizeAccessor?: DataAccessor<TNode, number> | number
+  targetAccessor?: DataAccessor<TEdge, string | Record<string, any>>
+  sourceAccessor?: DataAccessor<TEdge, string | Record<string, any>>
+  nodeIDAccessor?: DataAccessor<TNode, string>
   edgeType?: string | Function
   customNodeIcon?: Function
   customEdgeIcon?: Function

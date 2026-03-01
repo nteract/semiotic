@@ -26,7 +26,7 @@ import {
 
 import { AxisProps } from "../types/annotationTypes"
 
-import { PieceLayoutType, GenericObject } from "../types/generalTypes"
+import { PieceLayoutType } from "../types/generalTypes"
 
 import { scaleOrdinal, scaleLinear, ScaleBand, ScaleLinear } from "d3-scale"
 
@@ -1019,7 +1019,7 @@ export const calculateOrdinalFrame = (
     chartSize: size,
     margin,
     rScale
-  }) as GenericObject[]
+  }) as Record<string, any>[]
 
   const keyedData = calculatedPieceData.reduce((p, c) => {
     if (c.o) {

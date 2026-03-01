@@ -4,14 +4,14 @@ import { useMemo } from "react"
 import NetworkFrame from "../../NetworkFrame"
 import type { NetworkFrameProps } from "../../types/networkTypes"
 import { getColor, createColorScale } from "../shared/colorUtils"
-import type { BaseChartProps, Accessor } from "../shared/types"
+import type { BaseChartProps, ChartAccessor, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { DEFAULT_COLOR } from "../shared/hooks"
 
 /**
  * CirclePack component props
  */
-export interface CirclePackProps extends BaseChartProps {
+export interface CirclePackProps<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   /**
    * Hierarchical data structure with children and values.
    * @example
@@ -25,13 +25,13 @@ export interface CirclePackProps extends BaseChartProps {
    * }
    * ```
    */
-  data: Record<string, any>
+  data: TNode
 
   /**
    * Field name or function to access children array
    * @default "children"
    */
-  childrenAccessor?: Accessor<Record<string, any>[]>
+  childrenAccessor?: ChartAccessor<TNode, TNode[]>
 
   /**
    * Field name or function to access node value for sizing
@@ -43,12 +43,12 @@ export interface CirclePackProps extends BaseChartProps {
    * Field name or function to access node identifier
    * @default "name"
    */
-  nodeIdAccessor?: Accessor<string>
+  nodeIdAccessor?: ChartAccessor<TNode, string>
 
   /**
    * Field name or function to determine node color
    */
-  colorBy?: Accessor<string | number>
+  colorBy?: ChartAccessor<TNode, string | number>
 
   /**
    * Color scheme for nodes or custom colors array
@@ -72,7 +72,7 @@ export interface CirclePackProps extends BaseChartProps {
    * Node label accessor
    * @default Uses nodeIdAccessor
    */
-  nodeLabel?: Accessor<string>
+  nodeLabel?: ChartAccessor<TNode, string>
 
   /**
    * Circle fill opacity (helps see nesting)
@@ -119,7 +119,7 @@ export interface CirclePackProps extends BaseChartProps {
  * />
  * ```
  */
-export function CirclePack(props: CirclePackProps) {
+export function CirclePack<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: CirclePackProps<TNode, TEdge>) {
   const {
     data,
     width = 600,
@@ -149,7 +149,7 @@ export function CirclePack(props: CirclePackProps) {
       nodes.push(node)
       const children =
         typeof childrenAccessor === "function"
-          ? childrenAccessor(node)
+          ? childrenAccessor(node as TNode)
           : node[childrenAccessor]
       if (children && Array.isArray(children)) {
         children.forEach(traverse)

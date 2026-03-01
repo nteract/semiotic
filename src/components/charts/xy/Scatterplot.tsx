@@ -5,26 +5,26 @@ import XYFrame from "../../XYFrame"
 import type { XYFrameProps } from "../../types/xyTypes"
 import { getColor, getSize } from "../shared/colorUtils"
 import { createLegend } from "../shared/legendUtils"
-import type { BaseChartProps, AxisConfig, Accessor } from "../shared/types"
+import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 
 /**
  * Scatterplot component props
  */
-export interface ScatterplotProps extends BaseChartProps, AxisConfig {
+export interface ScatterplotProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps, AxisConfig {
   /** Array of data points. Each point should have x and y properties. */
-  data: Array<Record<string, any>>
+  data: TDatum[]
   /** Field name or function to access x values @default "x" */
-  xAccessor?: Accessor<number>
+  xAccessor?: ChartAccessor<TDatum, number>
   /** Field name or function to access y values @default "y" */
-  yAccessor?: Accessor<number>
+  yAccessor?: ChartAccessor<TDatum, number>
   /** Field name or function to determine point color */
-  colorBy?: Accessor<string>
+  colorBy?: ChartAccessor<TDatum, string>
   /** Color scheme for categorical data or custom colors array @default "category10" */
   colorScheme?: string | string[]
   /** Field name or function to determine point size */
-  sizeBy?: Accessor<number>
+  sizeBy?: ChartAccessor<TDatum, number>
   /** Min and max radius for points @default [3, 15] */
   sizeRange?: [number, number]
   /** Default point radius when sizeBy is not specified @default 5 */
@@ -55,7 +55,7 @@ export interface ScatterplotProps extends BaseChartProps, AxisConfig {
  * />
  * ```
  */
-export function Scatterplot(props: ScatterplotProps) {
+export function Scatterplot<TDatum extends Record<string, any> = Record<string, any>>(props: ScatterplotProps<TDatum>) {
   const {
     data,
     width = 600,

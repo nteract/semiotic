@@ -1,6 +1,5 @@
 import {
   RawPoint,
-  GenericObject,
   MarginType,
   AxisSummaryTypeSettings,
   OrdinalSummaryTypes
@@ -24,8 +23,8 @@ export type AnnotationType = {
   key?: string
   percent?: number
   style?:
-    | GenericObject
-    | ((arg?: GenericObject, index?: number) => GenericObject)
+    | Record<string, any>
+    | ((arg?: Record<string, any>, index?: number) => Record<string, any>)
   ids?: string[]
   edge?: EdgeType
   source?: NodeType
