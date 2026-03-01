@@ -38,3 +38,7 @@ export { RealtimeWaterfallChart } from "./charts/realtime/RealtimeWaterfallChart
 // Essential utilities
 export { TooltipProvider } from "./store/TooltipStore"
 export { MultiLineTooltip } from "./Tooltip/Tooltip"
+
+// AI validation
+export { validateProps } from "./charts/shared/validateProps"
+export type { ValidationResult } from "./charts/shared/validateProps"
