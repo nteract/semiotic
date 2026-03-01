@@ -3,7 +3,10 @@
 ## Quick Start
 - Install: `npm install semiotic`
 - Import from `semiotic` or granular: `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`, `semiotic/realtime`, `semiotic/ai`
-- `semiotic/ai` exports only the 24 HOC chart components + TooltipProvider + MultiLineTooltip
+- `semiotic/ai` exports the 24 HOC chart components + TooltipProvider + MultiLineTooltip + `validateProps`
+- `validateProps(componentName, props)` — validate props before rendering, returns `{ valid, errors }`
+- CLI: `npx semiotic-ai [--schema|--compact|--examples]` — dump AI context to stdout
+- MCP: `npx semiotic-mcp` — MCP server that renders charts to static SVG
 
 ## Architecture
 - **HOC Charts** (recommended): Simple props, sensible defaults — use these

@@ -47,9 +47,11 @@ are all React components with the same clean prop API as LineChart.
 Semiotic is built for projects that need network visualization, statistical summaries,
 or custom mark rendering — capabilities that general-purpose charting libraries don't offer.
 
-**AI-ready.** Semiotic ships with structured schemas (`ai/schema.json`) and
-an `import from "semiotic/ai"` entry point designed for LLM code generation.
-AI coding assistants can generate correct Semiotic code on the first try.
+**AI-ready.** Semiotic ships with structured schemas (`ai/schema.json`), an
+`import from "semiotic/ai"` entry point, and an MCP server — all designed for
+LLM code generation. AI coding assistants can generate correct Semiotic code on
+the first try. Run `npx semiotic-ai --help` for CLI options or add `semiotic-mcp`
+to your MCP client config for tool-based chart rendering.
 
 ## Install
 
