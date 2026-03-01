@@ -285,6 +285,39 @@ export function RecipesIndex() {
   )
 }
 
+export function PlaygroundIndex() {
+  return (
+    <div className="margin-bottom">
+      <p>
+        Interactively explore Semiotic's chart components. Adjust props via
+        controls and see changes in real time with auto-generated code.
+      </p>
+      <div className="subpages">
+        <PageLink
+          href="/playground/line-chart"
+          title="Line Chart"
+          thumbnail={new URL("../public/assets/img/line-chart.png", import.meta.url)}
+        />
+        <PageLink
+          href="/playground/bar-chart"
+          title="Bar Chart"
+          thumbnail={new URL("../public/assets/img/bar-chart.png", import.meta.url)}
+        />
+        <PageLink
+          href="/playground/scatterplot"
+          title="Scatterplot"
+          thumbnail={new URL("../public/assets/img/scatterplot.png", import.meta.url)}
+        />
+        <PageLink
+          href="/playground/force-directed-graph"
+          title="Force Directed Graph"
+          thumbnail={new URL("../public/assets/img/force.png", import.meta.url)}
+        />
+      </div>
+    </div>
+  )
+}
+
 export function ApiIndex() {
   return (
     <div className="margin-bottom">

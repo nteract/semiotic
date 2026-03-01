@@ -123,6 +123,16 @@ const navData = [
     ]
   },
   {
+    title: "Playground",
+    path: "/playground",
+    children: [
+      { title: "Line Chart", path: "/playground/line-chart" },
+      { title: "Bar Chart", path: "/playground/bar-chart" },
+      { title: "Scatterplot", path: "/playground/scatterplot" },
+      { title: "Force Directed Graph", path: "/playground/force-directed-graph" }
+    ]
+  },
+  {
     title: "Server-Side Rendering",
     path: "/using-ssr"
   },

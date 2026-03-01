@@ -7,7 +7,7 @@ import Landing from "./Landing"
 
 // Existing page components
 import Home from "./Home"
-import { GuidesIndex, ExamplesIndex, ApiIndex, RecipesIndex } from "./IndexPages"
+import { GuidesIndex, ExamplesIndex, ApiIndex, RecipesIndex, PlaygroundIndex } from "./IndexPages"
 import Accessibility from "./markdown/accessibility.mdx"
 import Xyframe from "./markdown/xyframe.mdx"
 import Ordinalframe from "./markdown/ordinalframe.mdx"
@@ -118,6 +118,12 @@ import KpiCardSparklinePage from "./pages/recipes/KpiCardSparklinePage"
 import TimeSeriesBrushPage from "./pages/recipes/TimeSeriesBrushPage"
 import NetworkExplorerPage from "./pages/recipes/NetworkExplorerPage"
 import UsingSSRPage from "./pages/UsingSSRPage"
+
+// Playground pages
+import LineChartPlayground from "./pages/playground/LineChartPlayground"
+import BarChartPlayground from "./pages/playground/BarChartPlayground"
+import ScatterplotPlayground from "./pages/playground/ScatterplotPlayground"
+import ForceDirectedGraphPlayground from "./pages/playground/ForceDirectedGraphPlayground"
 
 import semioticLogo from "../public/assets/img/semiotic.png"
 
@@ -334,6 +340,15 @@ export default function DocsApp() {
               <Route path="kpi-card-sparkline" element={<KpiCardSparklinePage />} />
               <Route path="time-series-brush" element={<TimeSeriesBrushPage />} />
               <Route path="network-explorer" element={<NetworkExplorerPage />} />
+            </Route>
+
+            {/* Playground routes */}
+            <Route path="playground" element={<Outlet />}>
+              <Route path="" element={<><h1>Playground</h1><PlaygroundIndex /></>} />
+              <Route path="line-chart" element={<LineChartPlayground />} />
+              <Route path="bar-chart" element={<BarChartPlayground />} />
+              <Route path="scatterplot" element={<ScatterplotPlayground />} />
+              <Route path="force-directed-graph" element={<ForceDirectedGraphPlayground />} />
             </Route>
 
             {/* Frames routes */}
