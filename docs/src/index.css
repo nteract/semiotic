@@ -580,3 +580,162 @@ div.page-image img {
 .page-toc a:hover {
   color: var(--text-primary);
 }
+
+/* --------------------------------------------------------------------------
+   20. Recipe Components
+   -------------------------------------------------------------------------- */
+
+/* Recipe badge */
+.recipe-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #fff;
+  background: var(--accent);
+  line-height: 1.6;
+}
+
+/* Dependency tags */
+.recipe-deps {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.recipe-dep-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font-code);
+  color: var(--text-secondary);
+  background: var(--surface-2);
+  border: 1px solid var(--surface-3);
+}
+
+/* Full source code section */
+.recipe-source {
+  border-top: 2px solid var(--accent);
+  padding-top: 24px;
+}
+
+/* KPI card grid */
+.recipe-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.recipe-kpi-card {
+  background: var(--surface-1);
+  border: 1px solid var(--surface-3);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.recipe-kpi-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.recipe-kpi-value {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+
+.recipe-kpi-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.recipe-kpi-change {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.recipe-kpi-change.positive {
+  color: #22c55e;
+}
+
+.recipe-kpi-change.negative {
+  color: #ef4444;
+}
+
+/* Network explorer layout */
+.recipe-network-layout {
+  display: flex;
+  gap: 24px;
+}
+
+.recipe-network-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+}
+
+.recipe-search-input {
+  width: 100%;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--surface-3);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: var(--font-body);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.recipe-search-input:focus {
+  border-color: var(--accent);
+}
+
+@media (max-width: 768px) {
+  .recipe-network-layout {
+    flex-direction: column;
+  }
+
+  .recipe-network-sidebar {
+    width: 100%;
+  }
+}
+
+/* Customization table */
+.recipe-customization-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0 24px;
+  font-size: 14px;
+}
+
+.recipe-customization-table th {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 2px solid var(--surface-3);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.recipe-customization-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--surface-3);
+  vertical-align: top;
+}
+
+.recipe-customization-table tr:last-child td {
+  border-bottom: none;
+}

@@ -259,6 +259,32 @@ export function ExamplesIndex() {
   )
 }
 
+export function RecipesIndex() {
+  return (
+    <div className="margin-bottom">
+      <div className="subpages">
+        <div className="sub-header">Dashboard Panels</div>
+
+        <PageLink
+          href="/recipes/kpi-card-sparkline"
+          title="KPI Card + Sparkline"
+          thumbnail={new URL("../public/assets/img/sparkline.png", import.meta.url)}
+        />
+        <PageLink
+          href="/recipes/time-series-brush"
+          title="Time Series with Brush"
+          thumbnail={new URL("../public/assets/img/xy-brush.png", import.meta.url)}
+        />
+        <PageLink
+          href="/recipes/network-explorer"
+          title="Network Explorer"
+          thumbnail={new URL("../public/assets/img/force.png", import.meta.url)}
+        />
+      </div>
+    </div>
+  )
+}
+
 export function ApiIndex() {
   return (
     <div className="margin-bottom">

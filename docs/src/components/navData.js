@@ -114,6 +114,15 @@ const navData = [
     ]
   },
   {
+    title: "Recipes",
+    path: "/recipes",
+    children: [
+      { title: "KPI Card + Sparkline", path: "/recipes/kpi-card-sparkline" },
+      { title: "Time Series with Brush", path: "/recipes/time-series-brush" },
+      { title: "Network Explorer", path: "/recipes/network-explorer" }
+    ]
+  },
+  {
     title: "Server-Side Rendering",
     path: "/using-ssr"
   },
