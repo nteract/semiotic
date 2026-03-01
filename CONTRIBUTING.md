@@ -1,83 +1,96 @@
-# CONTRIBUTING
+# Contributing to Semiotic
 
-Welcome to Semiotic. We're glad to see you here.
+Welcome! We're glad you're here.
 
-*This document is currently under development as we move toward a 2.0 release
-and modernization of the build tooling.*
+## Getting started
 
-## Documentation
+```bash
+git clone https://github.com/nteract/semiotic.git
+cd semiotic
+npm install --legacy-peer-deps
+npm test          # 628 unit tests (Jest)
+npm run dist      # build all bundles (Rollup)
+npm run typescript  # type check
+```
 
-There are currently two sources for documentation:
-- **developer docs**: This repo contains docs useful during development of
-  Semiotic.
-- **user docs**: The [semiotic-docs](https://github.com/nteract/semiotic-docs) 
-  repo contains the source for documentation about using semiotic.
+Requires Node 18+. See `.node-version`.
 
-*Note: At some point, the `semiotic-docs` repo content may be moved to this
-repo.*
+## Project structure
 
-### Documentation Modernization FAQ
+```
+src/
+  components/
+    XYFrame.tsx, OrdinalFrame.tsx, NetworkFrame.tsx   # core Frames
+    charts/
+      xy/         # LineChart, AreaChart, Scatterplot, etc.
+      ordinal/    # BarChart, StackedBarChart, PieChart, etc.
+      network/    # ForceDirectedGraph, SankeyDiagram, TreeDiagram, etc.
+      realtime/   # RealtimeLineChart, RealtimeBarChart, etc.
+      shared/     # colorUtils, hooks, validateChartData, validateProps
+    realtime/     # RealtimeFrame, RingBuffer, renderers
+    server/       # renderToStaticSVG
+  processing/     # data pipelines and layout algorithms
+ai/               # schema.json, MCP server, CLI, system prompt, examples
+scripts/          # build.mjs, release scripts
+docs/             # website source (Parcel)
+```
 
-1. Which repo is providing the source for semiotic.nteract.io?
-    - Currently, semiotic-docs using Vercel project settings.
-2. The semiotic repo refers to gh-pages. Are we using that?
-    - Looking at the repo setting gh-pages is disabled.
-    - (2021-12-16) Added a Vercel project for semiotic under the
-      vercel nteract org (Next step: Remove gh-pages deploy scripts.
-    - Recommend removing gh-page build scripts from repo. (Removed 2021-12-22)
-    - Update build script for dev docs using parcel and add to vercel dev doc builds for PRs.)
-3. Most nteract docs use vercel/now for deployment. Is this being used for semiotic-docs?  
-   - Yes. For semiotic-docs but not deployed in approximately 2 years.
-   - semiotic-docs is also building to GH Pages https://nteract.github.io/semiotic-docs/
+## Development workflow
 
+1. Create a branch from `main`
+2. Make your changes
+3. Run `npm test` and `npm run dist` to verify
+4. Open a PR against `main`
+5. CI runs tests, build, and type check automatically
 
-### Building and deploying developer docs
+## Build toolchain
 
-### Building and deploying user docs
+- **Rollup 4** — library bundles (`npm run dist`)
+- **Parcel** — docs website (`npm start`)
+- **TypeScript 5** — type checking (`npm run typescript`)
+- **Jest** — unit tests (`npm test`)
+- **Playwright** — integration tests (`npm run test:dist`)
 
-Currently, use [semiotic-docs] and vercel/now project configuration.
+## Architecture
 
-## Modernization plan
+Semiotic has three layers:
 
-1. upgrade react to 17
-2. upgrade d3
-4. switch to esm/cjs dual bundle
-5. move d3/react to peer dependencies (thus making sure that the users’ dependencies are the same as semiotic’s)
-6. add sideEffects: true (a small nice thing to have in package.json, once previous steps are complete)
-7. replace enzyme with react-testing-library 
-8. add acceptance testing via playwright (to cover things like canvas, a11y, and some user-based testing scenarios)
+| Layer | Purpose | Example |
+|---|---|---|
+| **HOC Charts** | Simple props, sensible defaults | `<LineChart data={d} xAccessor="x" yAccessor="y" />` |
+| **Frames** | Full control over rendering and interaction | `<XYFrame lines={d} customLineMark={...} />` |
+| **Utilities** | Axes, legends, annotations, brushes | Used internally by Frames |
 
-## Tools we use
+HOC charts wrap Frames. Every HOC accepts `frameProps` to pass through to
+the underlying Frame for advanced use cases.
 
-### Build toolchain
+## Testing
 
-- Parcel
-  - [Parcel](https://parceljs.org) is a performant, zero config, end to end build tool
+- Unit tests live next to source files: `ComponentName.test.tsx`
+- Run a single test: `npx jest --testPathPattern=LineChart`
+- Integration tests: `npm run test:dist` (requires build first)
 
-- Rollup
-  - [Rollup](https://rollupjs.org/guide/en/) is a module bundler for JavaScript
-  - `rollup.config.js` config file for creating esm and cjs dual bundle
+## Code style
 
-### Testing
+- TypeScript, no `any` in new code where avoidable
+- Prettier handles formatting (see `.prettierrc`)
+- ESLint for linting (`npm run lint`)
+- No semicolons, double quotes, trailing commas
 
-- Playwright
-  - [Playwright](https://playwright.dev) is a fast test runner that supports screenshotting
-  - `playwright.config.js` provides basic configuration
-  - Used to run the integration tests found in `integration-tests` directory
-- jest
-  - used for unit tests
-  - `jest.config.js` configures testing environment
-  - Additional configuration is in `config/jest` directory containing transforms for Parcel
-- GitHub actions (CI - Continuous Integration)
-  - Used to automatically run tests on every PR
-  - `.github` directory contains configuration
-  
-### Code quality
+## Publishing releases
 
-- GitHub's CodeQL action runs on every PR
-- GitHub's Dependency alerts are used
+Releases are automated via GitHub Actions. The workflow:
 
-## Publishing a release
+1. Update `version` in `package.json`
+2. Update `CHANGELOG.md`
+3. Commit: `git commit -m "chore(release): v3.0.0"`
+4. Tag: `git tag v3.0.0`
+5. Push: `git push && git push --tags`
+6. CI builds, tests, and publishes to npm automatically
 
-1. Run all tests
-2. Publish
+The `NPM_TOKEN` secret must be configured in the repo's GitHub settings.
+
+## Community
+
+This project follows the nteract
+[Code of Conduct](https://github.com/nteract/nteract/blob/main/CODE_OF_CONDUCT.md).

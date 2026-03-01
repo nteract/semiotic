@@ -1,0 +1,72 @@
+name: Bug Report
+description: Report a bug in Semiotic
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened? What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Minimal code or steps to reproduce the issue.
+      placeholder: |
+        ```jsx
+        <LineChart data={[...]} xAccessor="x" yAccessor="y" />
+        ```
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Semiotic version
+      placeholder: "3.0.0-beta.1"
+    validations:
+      required: true
+
+  - type: input
+    id: react-version
+    attributes:
+      label: React version
+      placeholder: "18.2.0"
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - LineChart
+        - AreaChart
+        - StackedAreaChart
+        - Scatterplot
+        - BubbleChart
+        - Heatmap
+        - BarChart
+        - StackedBarChart
+        - GroupedBarChart
+        - SwarmPlot
+        - BoxPlot
+        - DotPlot
+        - PieChart
+        - DonutChart
+        - ForceDirectedGraph
+        - ChordDiagram
+        - SankeyDiagram
+        - TreeDiagram
+        - Treemap
+        - CirclePack
+        - RealtimeLineChart
+        - RealtimeBarChart
+        - RealtimeSwarmChart
+        - RealtimeWaterfallChart
+        - XYFrame
+        - OrdinalFrame
+        - NetworkFrame
+        - RealtimeFrame
+        - Other

@@ -4,7 +4,7 @@ set -e
 
 BUMP_TYPE=$1
 
-git checkout master
+git checkout main
 git pull
 npm install
 

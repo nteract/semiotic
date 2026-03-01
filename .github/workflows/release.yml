@@ -1,14 +1,16 @@
-name: Semiotic
+name: Release
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    tags: ["v*"]
 
 jobs:
-  testing:
+  publish:
     runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - name: Checkout source code
@@ -19,6 +21,7 @@ jobs:
         with:
           node-version: 18.x
           cache: "npm"
+          registry-url: "https://registry.npmjs.org"
 
       - name: Install dependencies
         run: npm install --legacy-peer-deps
@@ -34,3 +37,6 @@ jobs:
 
       - name: Run type check
         run: npm run typescript
+
+      - name: Publish to npm
+        run: npm publish --provenance --access public
