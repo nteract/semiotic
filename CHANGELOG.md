@@ -132,6 +132,14 @@ import { Tooltip, normalizeTooltip } from "semiotic"
 - `TooltipProp`, `TooltipConfig`, `TooltipField` TypeScript types
 - Custom styling, field labels, format functions, max-width
 
+#### Documentation Playgrounds
+
+Interactive playground pages for live chart exploration:
+
+- `SankeyDiagramPlayground` — orientation, alignment, padding, node width, edge opacity
+- `RealtimeLineChartPlayground` — line and waterfall modes with live signal generators
+- `RealtimeBarChartPlayground` — stacked time bars and swarm plots with live data
+
 ### Changed
 
 #### Functional Components
@@ -219,6 +227,17 @@ Area drawing, piece layouts, and summary layouts have been split out:
 
 ### Fixed
 
+- **Tooltip position flipping** — tooltips now render to the left of the cursor
+  when the hovered element is past the horizontal midpoint of the chart, preventing
+  content from being clipped or compressed against the right edge of the frame.
+  Applies to all frame types (XYFrame, OrdinalFrame, NetworkFrame) and all HOC
+  chart components.
+- **SankeyDiagram tooltip** — Sankey tooltips now show flow values for edges
+  (`Source → Target: Value`) and totals/degree for nodes. Uses `htmlAnnotationRules`
+  for reliable rendering in the annotation pipeline.
+- **HOC chart data validation** — all chart components now render a visible
+  `ChartError` element instead of silently returning null when required props are
+  missing or empty.
 - Canvas interaction tooltip behavior improved
 - Matrix edges rendering corrected
 - Memoization added to data pipeline for better re-render performance
