@@ -215,6 +215,7 @@ export function PieChart<TDatum extends Record<string, any> = Record<string, any
     ...(className && { className }),
     ...(title && { title }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as Function,
+    transition: true,
     ...frameProps
   }
 

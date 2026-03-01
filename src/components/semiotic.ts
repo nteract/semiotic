@@ -161,7 +161,8 @@ export {
   OrdinalSummaryTypeSettings,
   AxisSummaryTypeSettings,
   GeneralFrameProps,
-  GeneralFrameState
+  GeneralFrameState,
+  TransitionConfig
 } from "./types/generalTypes"
 
 export {

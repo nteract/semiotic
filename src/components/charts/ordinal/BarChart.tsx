@@ -296,6 +296,7 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
     // Add tooltip support
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as Function,
     // Allow frameProps to override defaults
+    transition: true,
     ...frameProps
   }
 

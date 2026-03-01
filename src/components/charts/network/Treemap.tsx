@@ -243,6 +243,7 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>,
     ...(className && { className }),
     ...(title && { title }),
     ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
+    transition: true,
     ...frameProps
   }
 

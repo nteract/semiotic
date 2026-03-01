@@ -250,6 +250,7 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
     ...(className && { className }),
     ...(title && { title }),
     ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
+    transition: true,
     ...frameProps
   }
 

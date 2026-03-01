@@ -161,7 +161,8 @@ export function OrdinalFrameInner<TDatum = Record<string, any>>(
     sketchyRenderingEngine,
     frameRenderOrder,
     disableCanvasInteraction,
-    disableProgressiveRendering
+    disableProgressiveRendering,
+    transition
   } = props
 
   const {
@@ -294,6 +295,7 @@ export function OrdinalFrameInner<TDatum = Record<string, any>>(
       frameRenderOrder={frameRenderOrder}
       additionalVizElements={oLabels}
       disableProgressiveRendering={disableProgressiveRendering}
+      transition={transition}
     />
   )
 }

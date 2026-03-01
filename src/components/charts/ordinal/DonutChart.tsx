@@ -265,6 +265,7 @@ export function DonutChart<TDatum extends Record<string, any> = Record<string, a
     ...(className && { className }),
     ...(title && { title }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as Function,
+    transition: true,
     ...frameProps
   }
 

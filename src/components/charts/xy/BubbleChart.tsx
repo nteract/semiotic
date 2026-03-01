@@ -324,6 +324,7 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
     // Add tooltip support
     ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
     // Allow frameProps to override defaults
+    transition: true,
     ...frameProps
   }
 

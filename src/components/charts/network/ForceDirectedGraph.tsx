@@ -384,6 +384,7 @@ export function ForceDirectedGraph<TNode extends Record<string, any> = Record<st
     // Add tooltip support
     ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
     // Allow frameProps to override defaults
+    transition: true,
     ...frameProps
   }
 

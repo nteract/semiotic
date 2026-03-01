@@ -337,6 +337,7 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
     // Add tooltip support
     ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
     // Allow frameProps to override defaults
+    transition: true,
     ...frameProps
   }
 

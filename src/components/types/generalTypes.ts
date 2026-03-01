@@ -227,6 +227,13 @@ export interface AxisSummaryTypeSettings extends OrdinalSummaryTypeSettings {
   filter?: Function
 }
 
+export interface TransitionConfig {
+  /** Duration in milliseconds. @default 300 */
+  duration?: number
+  /** CSS easing function. @default "ease" */
+  ease?: string
+}
+
 export interface GeneralFrameProps {
   title?: string | object
   margin?:
@@ -269,6 +276,7 @@ export interface GeneralFrameProps {
   disableCanvasInteraction?: boolean
   interactionSettings?: AdvancedInteractionSettings
   disableProgressiveRendering?: boolean
+  transition?: boolean | TransitionConfig
 }
 
 export interface GeneralFrameState {

@@ -386,6 +386,7 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
     // Add tooltip support
     ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
     // Allow frameProps to override defaults
+    transition: true,
     ...frameProps
   }
 

@@ -189,7 +189,8 @@ export function XYFrameInner<TDatum = Record<string, any>>(allProps: XYFrameProp
     frameRenderOrder,
     disableCanvasInteraction,
     interactionSettings,
-    disableProgressiveRendering
+    disableProgressiveRendering,
+    transition
   } = props
 
   const {
@@ -294,6 +295,7 @@ export function XYFrameInner<TDatum = Record<string, any>>(allProps: XYFrameProp
       disableCanvasInteraction={disableCanvasInteraction}
       interactionSettings={interactionSettings}
       disableProgressiveRendering={disableProgressiveRendering}
+      transition={transition}
     />
   )
 }

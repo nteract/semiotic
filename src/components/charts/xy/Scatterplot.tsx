@@ -149,6 +149,7 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
     ...(className && { className }),
     ...(title && { title }),
     ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
+    transition: true,
     ...frameProps
   }
 

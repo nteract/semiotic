@@ -293,6 +293,7 @@ export function GroupedBarChart<TDatum extends Record<string, any> = Record<stri
     ...(className && { className }),
     ...(title && { title }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as Function,
+    transition: true,
     ...frameProps
   }
 

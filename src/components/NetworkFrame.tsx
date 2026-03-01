@@ -158,7 +158,8 @@ export function NetworkFrameInner<TNode = Record<string, any>, TEdge = Record<st
     frameRenderOrder,
     disableCanvasInteraction,
     interactionSettings,
-    disableProgressiveRendering
+    disableProgressiveRendering,
+    transition
   } = props
   const {
     backgroundGraphics,
@@ -254,6 +255,7 @@ export function NetworkFrameInner<TNode = Record<string, any>, TEdge = Record<st
       frameRenderOrder={frameRenderOrder}
       interactionSettings={interactionSettings}
       disableProgressiveRendering={disableProgressiveRendering}
+      transition={transition}
     />
   )
 }
