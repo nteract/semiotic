@@ -9,7 +9,8 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "lib": ["esnext", "dom", "dom.iterable"],
-    "jsx": "react"
+    "jsx": "react",
+    "types": ["node", "jest"]
   },
   "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/**/*"],
   "exclude": ["./src/docs/**/*", "./src/**/*.test.*", "*.png"]
