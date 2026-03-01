@@ -201,8 +201,8 @@ export const sankeyArrowGenerator = (props) => {
   }
 
   return (
-    <>
-      <path key={key}
+    <React.Fragment key={key}>
+      <path
         className={className}
 
         d={generatedPath}
@@ -218,7 +218,7 @@ export const sankeyArrowGenerator = (props) => {
           circular={d.circular}
         />
       )}
-    </>
+    </React.Fragment>
   )
 }
 

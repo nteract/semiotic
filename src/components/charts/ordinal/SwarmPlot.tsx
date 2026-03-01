@@ -8,6 +8,8 @@ import { useColorScale, DEFAULT_COLOR, resolveAccessor } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
+import ChartError from "../shared/ChartError"
+import { validateArrayData } from "../shared/validateChartData"
 
 /**
  * SwarmPlot component props
@@ -299,12 +301,6 @@ export function SwarmPlot<TDatum extends Record<string, any> = Record<string, an
     return finalMargin
   }, [userMargin, legend])
 
-  // Validate data (after all hooks)
-  if (safeData.length === 0) {
-    console.warn("SwarmPlot: data prop is required and should not be empty")
-    return null
-  }
-
   // Default tooltip function for piece hover
   const defaultTooltipContent = useMemo(() => {
     const getVal = resolveAccessor<number>(valueAccessor)
@@ -331,6 +327,17 @@ export function SwarmPlot<TDatum extends Record<string, any> = Record<string, an
       )
     }
   }, [categoryAccessor, valueAccessor])
+
+  // Validate data (after all hooks)
+  const error = validateArrayData({
+    componentName: "SwarmPlot",
+    data: safeData,
+    accessors: {
+      categoryAccessor,
+      valueAccessor,
+    },
+  })
+  if (error) return <ChartError componentName="SwarmPlot" message={error} width={width} height={height} />
 
   // Build OrdinalFrame props
   const ordinalFrameProps: OrdinalFrameProps = {

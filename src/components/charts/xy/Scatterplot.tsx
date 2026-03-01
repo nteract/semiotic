@@ -8,6 +8,8 @@ import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
+import ChartError from "../shared/ChartError"
+import { validateArrayData } from "../shared/validateChartData"
 
 /**
  * Scatterplot component props
@@ -133,8 +135,16 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
     return finalMargin
   }, [userMargin, legend])
 
-  // Validate after all hooks (Rules of Hooks compliance)
-  if (safeData.length === 0) return null
+  // Validate data (after all hooks)
+  const error = validateArrayData({
+    componentName: "Scatterplot",
+    data: safeData,
+    accessors: {
+      xAccessor,
+      yAccessor,
+    },
+  })
+  if (error) return <ChartError componentName="Scatterplot" message={error} width={width} height={height} />
 
   const xyFrameProps: XYFrameProps = {
     size: [width, height],

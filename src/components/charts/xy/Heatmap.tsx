@@ -8,6 +8,8 @@ import type { XYFrameProps } from "../../types/xyTypes"
 import { DEFAULT_COLOR, resolveAccessor } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import ChartError from "../shared/ChartError"
+import { validateArrayData } from "../shared/validateChartData"
 
 /**
  * Heatmap component props
@@ -306,10 +308,16 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
   }, [xLabel, yLabel, xFormat, yFormat])
 
   // Validate data (after all hooks)
-  if (safeData.length === 0) {
-    console.warn("Heatmap: data prop is required and should not be empty")
-    return null
-  }
+  const error = validateArrayData({
+    componentName: "Heatmap",
+    data: safeData,
+    accessors: {
+      xAccessor,
+      yAccessor,
+      valueAccessor,
+    },
+  })
+  if (error) return <ChartError componentName="Heatmap" message={error} width={width} height={height} />
 
   // Build XYFrame props
   const xyFrameProps: XYFrameProps = {

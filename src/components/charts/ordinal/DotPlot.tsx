@@ -8,6 +8,8 @@ import { useColorScale, useSortedData, DEFAULT_COLOR } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
+import ChartError from "../shared/ChartError"
+import { validateArrayData } from "../shared/validateChartData"
 
 /**
  * DotPlot component props
@@ -269,12 +271,6 @@ export function DotPlot<TDatum extends Record<string, any> = Record<string, any>
     return finalMargin
   }, [userMargin, legend])
 
-  // Validate data (after all hooks)
-  if (safeData.length === 0) {
-    console.warn("DotPlot: data prop is required and should not be empty")
-    return null
-  }
-
   // Default tooltip function for piece hover
   const defaultTooltipContent = useMemo(() => {
     return (d: Record<string, any>) => {
@@ -290,6 +286,17 @@ export function DotPlot<TDatum extends Record<string, any> = Record<string, any>
       )
     }
   }, [categoryAccessor, valueAccessor])
+
+  // Validate data (after all hooks)
+  const error = validateArrayData({
+    componentName: "DotPlot",
+    data: safeData,
+    accessors: {
+      categoryAccessor,
+      valueAccessor,
+    },
+  })
+  if (error) return <ChartError componentName="DotPlot" message={error} width={width} height={height} />
 
   // Build OrdinalFrame props
   const ordinalFrameProps: OrdinalFrameProps = {

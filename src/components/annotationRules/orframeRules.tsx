@@ -779,6 +779,19 @@ export const htmlFrameHoverRule = ({
     )
   }
 
+  const xPos = parseInt(screenCoordinates[0])
+  const flipped = adjustedSize && xPos > adjustedSize[0] / 2
+  const tooltipStyle: React.CSSProperties = {
+    position: "absolute",
+    top: `${parseInt(screenCoordinates[1])}px`
+  }
+
+  if (flipped) {
+    tooltipStyle.right = `${adjustedSize[0] - xPos}px`
+  } else {
+    tooltipStyle.left = `${xPos}px`
+  }
+
   return (
     <div
       key={`xylabel-${i}`}
@@ -786,11 +799,7 @@ export const htmlFrameHoverRule = ({
         d.className || ""
       }`}
       data-testid="annotation-or-label"
-      style={{
-        position: "absolute",
-        top: `${parseInt(screenCoordinates[1])}px`,
-        left: `${parseInt(screenCoordinates[0])}px`
-      }}
+      style={tooltipStyle}
     >
       {content}
     </div>
@@ -880,6 +889,19 @@ export const htmlColumnHoverRule = ({
     )
   }
 
+  const xPos = parseInt(xPosition)
+  const flipped = adjustedSize && xPos > adjustedSize[0] / 2
+  const tooltipStyle: React.CSSProperties = {
+    position: "absolute",
+    top: `${parseInt(yPosition)}px`
+  }
+
+  if (flipped) {
+    tooltipStyle.right = `${adjustedSize[0] - xPos}px`
+  } else {
+    tooltipStyle.left = `${xPos}px`
+  }
+
   return (
     <div
       key={`orlabel-${i}`}
@@ -887,11 +909,7 @@ export const htmlColumnHoverRule = ({
         d.className || ""
       }`}
       data-testid="annotation-or-label"
-      style={{
-        position: "absolute",
-        top: `${parseInt(yPosition)}px`,
-        left: `${parseInt(xPosition)}px`
-      }}
+      style={tooltipStyle}
     >
       {content}
     </div>

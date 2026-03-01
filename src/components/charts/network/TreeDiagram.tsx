@@ -7,6 +7,8 @@ import { getColor, createColorScale } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
+import ChartError from "../shared/ChartError"
+import { validateObjectData } from "../shared/validateChartData"
 import { hierarchyLayouts } from "../../processing/layouts/hierarchyLayout"
 
 /**
@@ -356,10 +358,11 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
   }, [layout, valueAccessor])
 
   // Validate data (after all hooks)
-  if (!data) {
-    console.warn("TreeDiagram: data prop is required")
-    return null
-  }
+  const error = validateObjectData({
+    componentName: "TreeDiagram",
+    data,
+  })
+  if (error) return <ChartError componentName="TreeDiagram" message={error} width={width} height={height} />
 
   if (layout === "treemap") {
     console.info("TreeDiagram: Consider using the standalone <Treemap> component for treemap visualizations.")

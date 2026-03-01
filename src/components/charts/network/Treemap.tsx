@@ -7,6 +7,8 @@ import { getColor, createColorScale } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { DEFAULT_COLOR } from "../shared/hooks"
+import ChartError from "../shared/ChartError"
+import { validateObjectData } from "../shared/validateChartData"
 import { hierarchyLayouts } from "../../processing/layouts/hierarchyLayout"
 
 /**
@@ -221,10 +223,11 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>,
   }, [showLabels, nodeLabel, nodeIdAccessor])
 
   // Validate data (after all hooks)
-  if (!data) {
-    console.warn("Treemap: data prop is required")
-    return null
-  }
+  const error = validateObjectData({
+    componentName: "Treemap",
+    data,
+  })
+  if (error) return <ChartError componentName="Treemap" message={error} width={width} height={height} />
 
   // Build NetworkFrame props
   const networkFrameProps: NetworkFrameProps = {

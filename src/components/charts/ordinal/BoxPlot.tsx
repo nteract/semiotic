@@ -8,6 +8,8 @@ import { useColorScale, DEFAULT_COLOR, resolveAccessor } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
+import ChartError from "../shared/ChartError"
+import { validateArrayData } from "../shared/validateChartData"
 
 /**
  * BoxPlot component props
@@ -278,12 +280,6 @@ export function BoxPlot<TDatum extends Record<string, any> = Record<string, any>
     return finalMargin
   }, [userMargin, legend])
 
-  // Validate data (after all hooks)
-  if (safeData.length === 0) {
-    console.warn("BoxPlot: data prop is required and should not be empty")
-    return null
-  }
-
   // Default tooltip for summary hover (boxplot quartile points)
   const defaultTooltipContent = useMemo(() => {
     const getVal = resolveAccessor<number>(valueAccessor)
@@ -330,6 +326,17 @@ export function BoxPlot<TDatum extends Record<string, any> = Record<string, any>
       )
     }
   }, [valueAccessor])
+
+  // Validate data (after all hooks)
+  const error = validateArrayData({
+    componentName: "BoxPlot",
+    data: safeData,
+    accessors: {
+      categoryAccessor,
+      valueAccessor,
+    },
+  })
+  if (error) return <ChartError componentName="BoxPlot" message={error} width={width} height={height} />
 
   // Build OrdinalFrame props
   const ordinalFrameProps: OrdinalFrameProps = {

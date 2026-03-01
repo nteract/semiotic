@@ -12,7 +12,8 @@ export const htmlFrameHoverRule = ({
   optimizeCustomTooltipPosition,
   nodes,
   edges,
-  nodeIDAccessor
+  nodeIDAccessor,
+  adjustedSize
 }) => {
   const d =
     baseD.x !== undefined && baseD.y !== undefined
@@ -60,16 +61,24 @@ export const htmlFrameHoverRule = ({
     )
   }
 
+  const flipped = adjustedSize && d.x > adjustedSize[0] / 2
+  const tooltipStyle: React.CSSProperties = {
+    position: "absolute",
+    top: `${d.y}px`
+  }
+
+  if (flipped) {
+    tooltipStyle.right = `${adjustedSize[0] - d.x}px`
+  } else {
+    tooltipStyle.left = `${d.x}px`
+  }
+
   return (
     <div
       key={`network-annotation-label-${i}`}
       className={`annotation annotation-network-label ${d.className || ""}`}
       data-testid="network-tooltip-container"
-      style={{
-        position: "absolute",
-        top: `${d.y}px`,
-        left: `${d.x}px`
-      }}
+      style={tooltipStyle}
     >
       {content}
     </div>

@@ -124,6 +124,9 @@ import LineChartPlayground from "./pages/playground/LineChartPlayground"
 import BarChartPlayground from "./pages/playground/BarChartPlayground"
 import ScatterplotPlayground from "./pages/playground/ScatterplotPlayground"
 import ForceDirectedGraphPlayground from "./pages/playground/ForceDirectedGraphPlayground"
+import SankeyDiagramPlayground from "./pages/playground/SankeyDiagramPlayground"
+import RealtimeLineChartPlayground from "./pages/playground/RealtimeLineChartPlayground"
+import RealtimeBarChartPlayground from "./pages/playground/RealtimeBarChartPlayground"
 
 import semioticLogo from "../public/assets/img/semiotic.png"
 
@@ -349,6 +352,9 @@ export default function DocsApp() {
               <Route path="bar-chart" element={<BarChartPlayground />} />
               <Route path="scatterplot" element={<ScatterplotPlayground />} />
               <Route path="force-directed-graph" element={<ForceDirectedGraphPlayground />} />
+              <Route path="sankey-diagram" element={<SankeyDiagramPlayground />} />
+              <Route path="realtime-line-chart" element={<RealtimeLineChartPlayground />} />
+              <Route path="realtime-bar-chart" element={<RealtimeBarChartPlayground />} />
             </Route>
 
             {/* Frames routes */}

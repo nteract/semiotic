@@ -8,6 +8,8 @@ import { useColorScale, DEFAULT_COLOR, resolveAccessor } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
+import ChartError from "../shared/ChartError"
+import { validateArrayData } from "../shared/validateChartData"
 
 /**
  * GroupedBarChart component props
@@ -264,16 +266,17 @@ export function GroupedBarChart<TDatum extends Record<string, any> = Record<stri
     }
   }, [groupBy, categoryAccessor, valueAccessor])
 
-  // Validate data and groupBy (after all hooks)
-  if (safeData.length === 0) {
-    console.warn("GroupedBarChart: data prop is required and should not be empty")
-    return null
-  }
-
-  if (!groupBy) {
-    console.warn("GroupedBarChart: groupBy prop is required for grouped bar charts")
-    return null
-  }
+  // Validate data (after all hooks)
+  const error = validateArrayData({
+    componentName: "GroupedBarChart",
+    data: safeData,
+    accessors: {
+      categoryAccessor,
+      valueAccessor,
+    },
+    requiredProps: { groupBy },
+  })
+  if (error) return <ChartError componentName="GroupedBarChart" message={error} width={width} height={height} />
 
   // Build OrdinalFrame props
   const ordinalFrameProps: OrdinalFrameProps = {

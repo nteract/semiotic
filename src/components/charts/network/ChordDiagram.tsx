@@ -7,6 +7,8 @@ import { getColor, COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
+import ChartError from "../shared/ChartError"
+import { validateNetworkData } from "../shared/validateChartData"
 import { chordLayout } from "../../processing/layouts/chordLayout"
 
 /**
@@ -339,10 +341,12 @@ export function ChordDiagram<TNode extends Record<string, any> = Record<string, 
   }, [padAngle, groupWidth, sortGroups])
 
   // Validate data (after all hooks)
-  if (!edges || edges.length === 0) {
-    console.warn("ChordDiagram: edges prop is required and should not be empty")
-    return null
-  }
+  const error = validateNetworkData({
+    componentName: "ChordDiagram",
+    edges,
+    edgesRequired: true,
+  })
+  if (error) return <ChartError componentName="ChordDiagram" message={error} width={width} height={height} />
 
   // Build NetworkFrame props
   const networkFrameProps: NetworkFrameProps = {

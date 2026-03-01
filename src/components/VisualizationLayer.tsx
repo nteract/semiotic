@@ -402,9 +402,12 @@ export default function VisualizationLayer(props: Props) {
     matte: matte,
     ["viz-layer"]:
       renderedElements && renderedElements.length > 0
-        ? transitionStyle
-          ? [transitionStyle, ...renderedElements]
-          : renderedElements
+        ? (
+          <React.Fragment key="viz-layer">
+            {transitionStyle}
+            {renderedElements}
+          </React.Fragment>
+        )
         : null,
     ...additionalVizElements
   }

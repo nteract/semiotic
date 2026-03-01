@@ -49,17 +49,16 @@ describe("StackedBarChart", () => {
     expect(frame).toBeFalsy()
   })
 
-  it("warns when stackBy is missing", () => {
-    const consoleSpy = jest.spyOn(console, "warn").mockImplementation()
-
+  it("shows error when stackBy is missing", () => {
     const { container } = render(
       <TooltipProvider>
         <StackedBarChart data={sampleData} stackBy={undefined as any} />
       </TooltipProvider>
     )
 
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("stackBy prop is required"))
-    consoleSpy.mockRestore()
+    const errorEl = container.querySelector("[role='alert']")
+    expect(errorEl).toBeTruthy()
+    expect(errorEl!.textContent).toContain("stackBy")
   })
 
   it("applies custom width and height", () => {

@@ -8,6 +8,8 @@ import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
+import ChartError from "../shared/ChartError"
+import { validateArrayData } from "../shared/validateChartData"
 import type { PieceTypeSettings } from "../../types/ordinalTypes"
 
 /**
@@ -243,10 +245,15 @@ export function DonutChart<TDatum extends Record<string, any> = Record<string, a
   }, [categoryAccessor, valueAccessor])
 
   // Validate data (after all hooks)
-  if (safeData.length === 0) {
-    console.warn("DonutChart: data prop is required and should not be empty")
-    return null
-  }
+  const error = validateArrayData({
+    componentName: "DonutChart",
+    data: safeData,
+    accessors: {
+      categoryAccessor,
+      valueAccessor,
+    },
+  })
+  if (error) return <ChartError componentName="DonutChart" message={error} width={width} height={height} />
 
   // Build OrdinalFrame props
   const ordinalFrameProps: OrdinalFrameProps = {

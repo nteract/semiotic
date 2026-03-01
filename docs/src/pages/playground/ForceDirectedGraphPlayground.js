@@ -172,7 +172,7 @@ export default function ForceDirectedGraphPlayground() {
         { label: "Force Directed Graph", path: "/playground/force-directed-graph" },
       ]}
       prevPage={{ title: "Scatterplot Playground", path: "/playground/scatterplot" }}
-      nextPage={{ title: "XY Frame", path: "/frames/xy-frame" }}
+      nextPage={{ title: "Sankey Diagram Playground", path: "/playground/sankey-diagram" }}
       chartComponent={ForceDirectedGraph}
       componentName="ForceDirectedGraph"
       controls={controls}
