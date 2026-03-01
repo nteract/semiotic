@@ -186,8 +186,15 @@ describe("OrdinalFrame", () => {
         expect(parseInt(svgAnnotationOR.getAttribute("y"))).toEqual(
           y + yMods[index]
         )
-        expect(htmlAnnotationStyle.left).toEqual(`${x}px`)
-        expect(htmlAnnotationStyle.top).toEqual(`${y}px`)
+        // Tooltip flips to right-positioning when past chart center
+        const containerWidth = parseFloat(
+          htmlAnnotationOR.parentElement.style.width
+        )
+        const resolvedX = htmlAnnotationStyle.left
+          ? parseFloat(htmlAnnotationStyle.left)
+          : containerWidth - parseFloat(htmlAnnotationStyle.right)
+        expect(Math.round(resolvedX)).toEqual(x)
+        expect(parseInt(htmlAnnotationStyle.top)).toEqual(y)
       })
     })
   })

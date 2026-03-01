@@ -793,7 +793,8 @@ function defaultXYHTMLRule(
       content,
       screenCoordinates,
       i,
-      d
+      d,
+      adjustedSize
     })
   }
   return null

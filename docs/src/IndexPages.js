@@ -313,6 +313,21 @@ export function PlaygroundIndex() {
           title="Force Directed Graph"
           thumbnail={new URL("../public/assets/img/force.png", import.meta.url)}
         />
+        <PageLink
+          href="/playground/sankey-diagram"
+          title="Sankey Diagram"
+          thumbnail={new URL("../public/assets/img/link.png", import.meta.url)}
+        />
+        <PageLink
+          href="/playground/realtime-line-chart"
+          title="Realtime Line / Waterfall"
+          thumbnail={new URL("../public/assets/img/sparkline.png", import.meta.url)}
+        />
+        <PageLink
+          href="/playground/realtime-bar-chart"
+          title="Realtime Bar / Swarm"
+          thumbnail={new URL("../public/assets/img/bar-chart.png", import.meta.url)}
+        />
       </div>
     </div>
   )

@@ -5,7 +5,7 @@ import NetworkFrame from "../../NetworkFrame"
 import type { NetworkFrameProps } from "../../types/networkTypes"
 import { getColor } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
-import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { validateNetworkData } from "../shared/validateChartData"
@@ -361,6 +361,80 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
     return config
   }, [nodeAlign, orientation, nodePaddingRatio, nodeWidth, edgeSort])
 
+  // Tooltip content renderer for Sankey nodes and edges
+  const renderTooltip = useMemo(() => {
+    return (d: Record<string, any>) => {
+      const isEdge = !!d.edge || (d.source && d.target && !d.degree && d.degree !== 0)
+
+      if (isEdge) {
+        const sourceId = d.source?.id ?? d.edge?.source?.id ?? "?"
+        const targetId = d.target?.id ?? d.edge?.target?.id ?? "?"
+        const val = d.value ?? d.weight
+        return (
+          <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+            <div style={{ fontWeight: "bold" }}>{sourceId} → {targetId}</div>
+            {val != null && (
+              <div style={{ marginTop: 4 }}>
+                Value: {typeof val === "number" ? val.toLocaleString() : String(val)}
+              </div>
+            )}
+          </div>
+        )
+      }
+
+      // Node tooltip
+      const accessor = nodeIdAccessor as string | ((...args: any[]) => any)
+      const nodeId = typeof accessor === "function"
+        ? accessor(d)
+        : d[accessor] ?? d.id
+      const val = d.value
+      return (
+        <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+          <div style={{ fontWeight: "bold" }}>{String(nodeId)}</div>
+          {val != null && (
+            <div style={{ marginTop: 4 }}>
+              Total: {typeof val === "number" ? val.toLocaleString() : String(val)}
+            </div>
+          )}
+          {d.degree != null && (
+            <div style={{ marginTop: 2 }}>
+              Degree: {d.degree}{d.inDegree != null ? ` (${d.inDegree} in, ${d.outDegree} out)` : ""}
+            </div>
+          )}
+        </div>
+      )
+    }
+  }, [nodeIdAccessor])
+
+  // Use htmlAnnotationRules to handle frame-hover annotations directly.
+  // This is checked before tooltipContent in the annotation pipeline,
+  // ensuring the custom Sankey tooltip always renders.
+  const tooltipFn = typeof tooltip === "function" ? tooltip : renderTooltip
+  const htmlAnnotationRules = useMemo(() => {
+    return ({ d, i, adjustedSize }: { d: Record<string, any>; i: number; adjustedSize?: number[]; [key: string]: any }) => {
+      if (d.type !== "frame-hover") return null
+      const flipped = adjustedSize && d.x > adjustedSize[0] / 2
+      const tooltipStyle: React.CSSProperties = {
+        position: "absolute",
+        top: `${d.y}px`
+      }
+      if (flipped) {
+        tooltipStyle.right = `${adjustedSize[0] - d.x}px`
+      } else {
+        tooltipStyle.left = `${d.x}px`
+      }
+      return (
+        <div
+          key={`network-annotation-label-${i}`}
+          className={`annotation annotation-network-label ${d.className || ""}`}
+          style={tooltipStyle}
+        >
+          {tooltipFn(d)}
+        </div>
+      )
+    }
+  }, [tooltipFn])
+
   // Validate data (after all hooks)
   const error = validateNetworkData({
     componentName: "SankeyDiagram",
@@ -387,8 +461,8 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
     ...(nodeLabelFn && { nodeLabels: nodeLabelFn }),
     ...(className && { className }),
     ...(title && { title }),
-    // Add tooltip support
-    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
+    // Use htmlAnnotationRules for direct tooltip rendering (checked before tooltipContent)
+    htmlAnnotationRules,
     // Allow frameProps to override defaults
     transition: true,
     ...frameProps,

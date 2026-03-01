@@ -439,19 +439,28 @@ export const htmlTooltipAnnotation = ({
   content,
   screenCoordinates,
   i,
-  d
+  d,
+  adjustedSize
 }) => {
   //To string because React gives a DOM error if it gets a date
+
+  const flipped = adjustedSize && screenCoordinates[0] > adjustedSize[0] / 2
+  const tooltipStyle: React.CSSProperties = {
+    position: "absolute",
+    top: `${screenCoordinates[1]}px`
+  }
+
+  if (flipped) {
+    tooltipStyle.right = `${adjustedSize[0] - screenCoordinates[0]}px`
+  } else {
+    tooltipStyle.left = `${screenCoordinates[0]}px`
+  }
 
   return (
     <div
       key={`xylabel-${i}`}
       className={`annotation annotation-xy-label ${d.className || ""} `}
-      style={{
-        position: "absolute",
-        top: `${screenCoordinates[1]}px`,
-        left: `${screenCoordinates[0]}px`
-      }}
+      style={tooltipStyle}
     >
       {content}
     </div>

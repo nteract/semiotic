@@ -509,7 +509,8 @@ function defaultNetworkHTMLRule(
       optimizeCustomTooltipPosition,
       nodes: projectedNodes,
       edges: projectedEdges,
-      nodeIDAccessor
+      nodeIDAccessor,
+      adjustedSize
     })
   }
   return null

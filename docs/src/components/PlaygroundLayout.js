@@ -123,7 +123,12 @@ export default function PlaygroundLayout({
 
       {/* Chart preview */}
       <div ref={vizRef} className="playground-chart-container">
-        {containerWidth ? <ChartComponent {...chartProps} /> : null}
+        {containerWidth ? (
+          <ChartComponent
+            key={`chart-hover-${values.enableHover}`}
+            {...chartProps}
+          />
+        ) : null}
       </div>
 
       {/* Controls */}
@@ -143,12 +148,18 @@ export default function PlaygroundLayout({
 
 function generateCode(componentName, controls, values, defaults, dataset) {
   let code = `import { ${componentName} } from "semiotic"\n\n`
-  code += `const data = ${dataset.codeString || "[\n  // your data here\n]"}\n\n`
+
+  // Use proper variable names for network vs array data
+  if (dataset.nodes || dataset.edges) {
+    code += `const edges = ${dataset.codeString || "[\n  // your edges here\n]"}\n\n`
+  } else {
+    code += `const data = ${dataset.codeString || "[\n  // your data here\n]"}\n\n`
+  }
+
   code += `<${componentName}\n`
 
-  // For network charts use nodes={...} edges={...}, otherwise data={data}
-  if (dataset.nodes) {
-    code += `  nodes={nodes}\n`
+  if (dataset.nodes || dataset.edges) {
+    if (dataset.nodes) code += `  nodes={nodes}\n`
     code += `  edges={edges}\n`
   } else {
     code += `  data={data}\n`

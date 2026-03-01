@@ -83,6 +83,47 @@ function defaultTickFormat(v: number): string {
   return String(Math.round(v * 100) / 100)
 }
 
+/** Colors resolved from CSS custom properties for theme-aware canvas rendering */
+interface ThemeColors {
+  axisStroke: string   // axis lines and tick marks
+  tickText: string     // tick label text
+  crosshair: string    // crosshair lines
+  hoverFill: string    // hover highlight fill
+  hoverStroke: string  // hover highlight stroke
+  pointRing: string    // ring around hover point indicator
+}
+
+const LIGHT_THEME: ThemeColors = {
+  axisStroke: "#ccc",
+  tickText: "#666",
+  crosshair: "rgba(0, 0, 0, 0.25)",
+  hoverFill: "rgba(255, 255, 255, 0.3)",
+  hoverStroke: "rgba(0, 0, 0, 0.4)",
+  pointRing: "white"
+}
+
+/** Read CSS custom properties from an element to build theme-aware colors */
+function resolveThemeColors(el: HTMLElement | null): ThemeColors {
+  if (!el) return LIGHT_THEME
+  const style = getComputedStyle(el)
+  const textSecondary = style.getPropertyValue("--text-secondary").trim()
+  const textPrimary = style.getPropertyValue("--text-primary").trim()
+  const surface3 = style.getPropertyValue("--surface-3").trim()
+  const surface0 = style.getPropertyValue("--surface-0").trim()
+
+  // If no CSS custom properties are found, fall back to light defaults
+  if (!textSecondary && !textPrimary) return LIGHT_THEME
+
+  return {
+    axisStroke: surface3 || LIGHT_THEME.axisStroke,
+    tickText: textSecondary || LIGHT_THEME.tickText,
+    crosshair: textSecondary ? `${textSecondary}66` : LIGHT_THEME.crosshair,
+    hoverFill: surface0 ? `${surface0}4D` : LIGHT_THEME.hoverFill,
+    hoverStroke: textSecondary ? `${textSecondary}99` : LIGHT_THEME.hoverStroke,
+    pointRing: surface0 || LIGHT_THEME.pointRing
+  }
+}
+
 function drawAxes(
   ctx: CanvasRenderingContext2D,
   arrowOfTime: ArrowOfTime,
@@ -91,14 +132,16 @@ function drawAxes(
   width: number,
   height: number,
   tickFormatTime?: (value: number) => string,
-  tickFormatValue?: (value: number) => string
+  tickFormatValue?: (value: number) => string,
+  theme?: ThemeColors
 ) {
   const timeAxis = getTimeAxis(arrowOfTime)
   const fmtValue = tickFormatValue || defaultTickFormat
+  const colors = theme || LIGHT_THEME
 
-  ctx.strokeStyle = "#ccc"
+  ctx.strokeStyle = colors.axisStroke
   ctx.lineWidth = 1
-  ctx.fillStyle = "#666"
+  ctx.fillStyle = colors.tickText
   ctx.font = "10px sans-serif"
   ctx.textAlign = "center"
   ctx.textBaseline = "top"
@@ -214,14 +257,16 @@ function drawCrosshair(
   width: number,
   height: number,
   config: HoverAnnotationConfig,
-  pointColor: string
+  pointColor: string,
+  theme?: ThemeColors
 ) {
   const showCrosshair = config.crosshair !== false
   if (!showCrosshair) return
+  const colors = theme || LIGHT_THEME
 
   ctx.save()
   const crossStyle = typeof config.crosshair === "object" ? config.crosshair : {}
-  ctx.strokeStyle = crossStyle.stroke || "rgba(0, 0, 0, 0.25)"
+  ctx.strokeStyle = crossStyle.stroke || colors.crosshair
   ctx.lineWidth = crossStyle.strokeWidth || 1
   if (crossStyle.strokeDasharray) {
     ctx.setLineDash(crossStyle.strokeDasharray.split(/[\s,]+/).map(Number))
@@ -248,7 +293,7 @@ function drawCrosshair(
   ctx.arc(hover.x, hover.y, 4, 0, Math.PI * 2)
   ctx.fillStyle = pointColor
   ctx.fill()
-  ctx.strokeStyle = "white"
+  ctx.strokeStyle = colors.pointRing
   ctx.lineWidth = 2
   ctx.stroke()
 }
@@ -655,6 +700,9 @@ const RealtimeFrame = forwardRef<RealtimeFrameHandle, RealtimeFrameProps>(
 
       ctx.clearRect(-margin.left, -margin.top, size[0], size[1])
 
+      // Resolve theme colors from CSS custom properties for theme-aware rendering
+      const theme = resolveThemeColors(canvas)
+
       if (background) {
         ctx.fillStyle = background
         ctx.fillRect(0, 0, adjustedWidth, adjustedHeight)
@@ -662,7 +710,7 @@ const RealtimeFrame = forwardRef<RealtimeFrameHandle, RealtimeFrameProps>(
 
       if (showAxes) {
         ctx.save()
-        drawAxes(ctx, arrowOfTime, scales.time, scales.value, adjustedWidth, adjustedHeight, tickFormatTime, tickFormatValue)
+        drawAxes(ctx, arrowOfTime, scales.time, scales.value, adjustedWidth, adjustedHeight, tickFormatTime, tickFormatValue, theme)
         ctx.restore()
       }
 
@@ -725,9 +773,9 @@ const RealtimeFrame = forwardRef<RealtimeFrameHandle, RealtimeFrameProps>(
             const yTop = scales.value(segTop)
             const ry = Math.min(yBot, yTop)
             const rh = Math.abs(yBot - yTop)
-            ctx.fillStyle = "rgba(255, 255, 255, 0.3)"
+            ctx.fillStyle = theme.hoverFill
             ctx.fillRect(x0, ry, x1 - x0, rh)
-            ctx.strokeStyle = "rgba(0, 0, 0, 0.4)"
+            ctx.strokeStyle = theme.hoverStroke
             ctx.lineWidth = 1
             ctx.setLineDash([])
             ctx.strokeRect(x0, ry, x1 - x0, rh)
@@ -740,9 +788,9 @@ const RealtimeFrame = forwardRef<RealtimeFrameHandle, RealtimeFrameProps>(
             const xRight = scales.value(segTop)
             const rx = Math.min(xLeft, xRight)
             const rw = Math.abs(xRight - xLeft)
-            ctx.fillStyle = "rgba(255, 255, 255, 0.3)"
+            ctx.fillStyle = theme.hoverFill
             ctx.fillRect(rx, y0, rw, y1 - y0)
-            ctx.strokeStyle = "rgba(0, 0, 0, 0.4)"
+            ctx.strokeStyle = theme.hoverStroke
             ctx.lineWidth = 1
             ctx.setLineDash([])
             ctx.strokeRect(rx, y0, rw, y1 - y0)
@@ -760,7 +808,8 @@ const RealtimeFrame = forwardRef<RealtimeFrameHandle, RealtimeFrameProps>(
           adjustedWidth,
           adjustedHeight,
           config,
-          lineStyle.stroke || "#007bff"
+          lineStyle.stroke || "#007bff",
+          theme
         )
       }
 

@@ -205,15 +205,22 @@ describe("XYFrame", () => {
     "circle.annotation.xy"
   )
 
-  const htmlAnnotationStyle = xyFrameRender.container.querySelector(
+  const htmlAnnotationEl = xyFrameRender.container.querySelector(
     "div.annotation.annotation-xy-label"
-  ).style
+  )
+  const htmlAnnotationStyle = htmlAnnotationEl.style
 
   const x = 333
   const y = 295
 
-  const htmlX = parseInt(htmlAnnotationStyle.left.split("px")[0])
-  const htmlY = parseInt(htmlAnnotationStyle.top.split("px")[0])
+  // Tooltip flips to right-positioning when past chart center
+  const containerWidth = parseFloat(
+    htmlAnnotationEl.parentElement.style.width
+  )
+  const htmlX = htmlAnnotationStyle.left
+    ? parseFloat(htmlAnnotationStyle.left)
+    : containerWidth - parseFloat(htmlAnnotationStyle.right)
+  const htmlY = parseFloat(htmlAnnotationStyle.top)
 
   const svgX = Math.floor(svgAnnotationXY.getAttribute("cx"))
   const svgY = Math.floor(svgAnnotationXY.getAttribute("cy"))
@@ -221,7 +228,7 @@ describe("XYFrame", () => {
   it("html and svg annotations have the same x & y positions for each", () => {
     expect(svgX).toEqual(x)
     expect(svgY).toEqual(y)
-    expect(htmlX).toEqual(x)
-    expect(htmlY).toEqual(y)
+    expect(Math.floor(htmlX)).toEqual(x)
+    expect(Math.floor(htmlY)).toEqual(y)
   })
 })
