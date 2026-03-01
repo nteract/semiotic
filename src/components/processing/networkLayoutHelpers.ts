@@ -12,20 +12,9 @@ import {
   sankeyArrowGenerator
 } from "../svg/networkDrawing"
 
-import {
-  sankeyLeft,
-  sankeyRight,
-  sankeyCenter,
-  sankeyJustify
-} from "d3-sankey-circular"
-
-import {
-  tree,
-  pack,
-  cluster,
-  treemap,
-  partition
-} from "d3-hierarchy"
+// Re-export from new locations for backwards compatibility
+export { hierarchicalTypeHash } from "./layouts/hierarchyLayout"
+export { sankeyOrientHash } from "./layouts/sankeyLayout"
 
 export function determineNodeIcon(baseCustomNodeIcon, networkSettings, size, nodes) {
   if (baseCustomNodeIcon) return baseCustomNodeIcon
@@ -111,15 +100,6 @@ export const edgePointHash = {
   }
 }
 
-export const hierarchicalTypeHash = {
-  dendrogram: tree,
-  tree,
-  circlepack: pack,
-  cluster,
-  treemap,
-  partition
-}
-
 export const hierarchicalProjectable = {
   partition: true,
   cluster: true,
@@ -132,11 +112,4 @@ export const radialProjectable = {
   cluster: true,
   tree: true,
   dendrogram: true
-}
-
-export const sankeyOrientHash = {
-  left: sankeyLeft,
-  right: sankeyRight,
-  center: sankeyCenter,
-  justify: sankeyJustify
 }

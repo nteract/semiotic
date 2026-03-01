@@ -33,6 +33,7 @@ import { scaleLinear } from "d3-scale"
 
 import { calculateNetworkFrame } from "./processing/network"
 import { createNetworkPipelineCache, NetworkPipelineCache } from "./data/networkPipelineCache"
+import { allNetworkLayouts } from "./processing/layouts"
 
 const blankArray = []
 
@@ -106,13 +107,13 @@ export function NetworkFrameInner<TNode = Record<string, any>, TEdge = Record<st
   const initialState = useMemo(
     () => ({
       ...baseState,
-      ...calculateNetworkFrame(props as NetworkFrameProps, baseState, pipelineCacheRef.current)
+      ...calculateNetworkFrame(props as NetworkFrameProps, baseState, pipelineCacheRef.current, (props as NetworkFrameProps)._layoutMap || allNetworkLayouts)
     } as NetworkFrameState),
     []
   )
 
   const state = useDerivedStateFromProps(
-    (nextProps, prevState) => deriveNetworkFrameState(nextProps as NetworkFrameProps, prevState, pipelineCacheRef.current),
+    (nextProps, prevState) => deriveNetworkFrameState(nextProps as NetworkFrameProps, prevState, pipelineCacheRef.current, (nextProps as NetworkFrameProps)._layoutMap || allNetworkLayouts),
     props as NetworkFrameProps,
     initialState
   )
@@ -263,7 +264,8 @@ export function NetworkFrameInner<TNode = Record<string, any>, TEdge = Record<st
 function deriveNetworkFrameState(
   nextProps: NetworkFrameProps,
   prevState: NetworkFrameState,
-  cache?: NetworkPipelineCache
+  cache?: NetworkPipelineCache,
+  layoutMap?: Record<string, any>
 ) {
   const { props } = prevState
 
@@ -284,7 +286,7 @@ function deriveNetworkFrameState(
     (!prevState.projectedNodes && !prevState.projectedEdges)
   ) {
     return {
-      ...calculateNetworkFrame(nextProps, prevState, cache),
+      ...calculateNetworkFrame(nextProps, prevState, cache, layoutMap),
       props: nextProps
     }
   }
@@ -292,7 +294,7 @@ function deriveNetworkFrameState(
   // Full data recalculation needed if data-affecting props changed
   if (dataPropsChanged) {
     return {
-      ...calculateNetworkFrame(nextProps, prevState, cache),
+      ...calculateNetworkFrame(nextProps, prevState, cache, layoutMap),
       props: nextProps
     }
   }
@@ -301,7 +303,7 @@ function deriveNetworkFrameState(
   // Note: For network layouts (especially force), size changes might affect positioning
   if (sizeChanged || scalePropsChanged) {
     return {
-      ...calculateNetworkFrame(nextProps, prevState, cache),
+      ...calculateNetworkFrame(nextProps, prevState, cache, layoutMap),
       props: nextProps
     }
   }
