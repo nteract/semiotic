@@ -144,7 +144,7 @@ function renderNote(
   }
 
   let noteLine = null
-  if (title || label) {
+  if ((title || label) && (dx !== 0 || dy !== 0)) {
     if (orientation === "topBottom") {
       const lineWidth = Math.min(wrap, 120)
       let x1 = 0
