@@ -8,6 +8,7 @@ import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
+import { forceLayout } from "../../processing/layouts/forceLayout"
 
 /**
  * ForceDirectedGraph component props
@@ -385,7 +386,8 @@ export function ForceDirectedGraph<TNode extends Record<string, any> = Record<st
     ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
     // Allow frameProps to override defaults
     transition: true,
-    ...frameProps
+    ...frameProps,
+    _layoutMap: { force: forceLayout }
   }
 
   return <NetworkFrame {...networkFrameProps} />

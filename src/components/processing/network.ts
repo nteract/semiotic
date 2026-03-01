@@ -1,13 +1,5 @@
 import * as React from "react"
 
-import {
-  forceSimulation,
-  forceX,
-  forceY,
-  forceLink,
-  forceManyBody
-} from "d3-force"
-
 import { scaleLinear } from "d3-scale"
 
 import { min, max } from "d3-array"
@@ -18,25 +10,17 @@ import {
 
 import { pointOnArcAtAngle } from "../svg/pieceDrawing"
 
-import pathBounds from "svg-path-bounding-box"
-
 import { NetworkPipelineCache } from "../data/networkPipelineCache"
 
 import {
   drawNodes,
   drawEdges,
-  topologicalSort,
   softStack,
   areaLink,
   ribbonLink,
   circularAreaLink,
   radialLabelGenerator
 } from "../svg/networkDrawing"
-
-import { sankeyCircular } from "d3-sankey-circular"
-
-import { chord, ribbon } from "d3-chord"
-import { arc } from "d3-shape"
 
 import { hierarchy } from "d3-hierarchy"
 
@@ -47,18 +31,20 @@ import {
   NodeType
 } from "../types/networkTypes"
 
-
+import { NetworkLayoutMap } from "./layouts/types"
 
 import { baseNodeProps, baseNetworkSettings, baseGraphSettings, emptyArray } from "./networkDefaults"
-import { determineNodeIcon, determineEdgeIcon, basicMiddle, edgePointHash, hierarchicalTypeHash, hierarchicalProjectable, radialProjectable, sankeyOrientHash } from "./networkLayoutHelpers"
-import { recursiveIDAccessor, defaultHierarchicalIDAccessor, nodesEdgesFromHierarchy, breadthFirstCompontents, matrixify } from "./hierarchyUtils"
+import { determineNodeIcon, determineEdgeIcon, basicMiddle, edgePointHash, hierarchicalProjectable, radialProjectable } from "./networkLayoutHelpers"
+import { hierarchicalTypeHash } from "./layouts/hierarchyLayout"
+import { recursiveIDAccessor, defaultHierarchicalIDAccessor, nodesEdgesFromHierarchy } from "./hierarchyUtils"
 
 export { nodesEdgesFromHierarchy } from "./hierarchyUtils"
 
 export const calculateNetworkFrame = (
   currentProps: NetworkFrameProps,
   prevState: NetworkFrameState,
-  cache: NetworkPipelineCache
+  cache: NetworkPipelineCache,
+  layoutMap?: NetworkLayoutMap
 ) => {
   const {
     graph,
@@ -412,13 +398,6 @@ export const calculateNetworkFrame = (
     graph
   })
 
-  if (
-    (networkSettings.type === "sankey" ||
-      networkSettings.type === "flowchart") &&
-    topologicalSort(projectedNodes, projectedEdges) === null
-  ) {
-    networkSettings.customSankey = sankeyCircular
-  }
   networkSettings.width = size[0]
   networkSettings.height = size[1]
 
@@ -493,8 +472,6 @@ export const calculateNetworkFrame = (
     })
   }
 
-  let generateEphemeralEdges = false
-
   if (
     networkSettings.type !== "static" &&
     (changedData || networkSettingsChanged)
@@ -506,397 +483,24 @@ export const calculateNetworkFrame = (
       }
     ]
 
-    if (networkSettings.type === "chord") {
-      const radius = adjustedSize[1] / 2
+    const layoutType = typeof networkSettings.type === "string" ? networkSettings.type : "custom"
+    const handler = layoutMap?.[layoutType]
 
-      const { groupWidth = 20, padAngle = 0.01, sortGroups } = networkSettings
-      const arcGenerator = arc()
-        .innerRadius(radius - groupWidth)
-        .outerRadius(radius)
-
-      const ribbonGenerator = ribbon().radius(radius - groupWidth)
-
-      const matrixifiedNetwork = matrixify({
-        edgeHash: edgeHash,
-        nodes: projectedNodes,
+    if (handler) {
+      const result = handler({
+        projectedNodes,
+        projectedEdges,
+        networkSettings,
+        adjustedSize,
+        edgeHash,
+        nodeIDAccessor,
         edgeWidthAccessor,
-        nodeIDAccessor
+        nodeSizeAccessor,
+        size
       })
-
-      const chordLayout = chord().padAngle(padAngle)
-
-      if (sortGroups) {
-        chordLayout.sortGroups(sortGroups)
-      }
-
-      const chords = chordLayout(matrixifiedNetwork)
-      const groups = chords.groups
-
-      groups.forEach((group) => {
-        const groupCentroid = arcGenerator.centroid(group)
-        const groupD = arcGenerator(group)
-        const groupNode = projectedNodes[group.index]
-        groupNode.d = groupD
-        groupNode.index = group.index
-        groupNode.x = groupCentroid[0] + adjustedSize[0] / 2
-        groupNode.y = groupCentroid[1] + adjustedSize[1] / 2
-      })
-
-      chords.forEach((generatedChord) => {
-        const chordD = ribbonGenerator(generatedChord)
-
-        const nodeSourceID = nodeIDAccessor(
-          projectedNodes[generatedChord.source.index]
-        )
-        const nodeTargetID = nodeIDAccessor(
-          projectedNodes[generatedChord.target.index]
-        )
-        // d3-chord always emits source.index < target.index, which may
-        // not match the original edge direction. Try both key orders.
-        const chordEdge =
-          edgeHash.get(`${nodeSourceID}|${nodeTargetID}`) ||
-          edgeHash.get(`${nodeTargetID}|${nodeSourceID}`)
-        if (chordEdge) {
-          chordEdge.d = chordD
-          const chordBounds = pathBounds(chordD)
-          chordEdge.x =
-            adjustedSize[0] / 2 + (chordBounds.x1 + chordBounds.x2) / 2
-          chordEdge.y =
-            adjustedSize[1] / 2 + (chordBounds.y1 + chordBounds.y2) / 2
-        }
-      })
-    } else if (
-      networkSettings.type === "sankey" ||
-      networkSettings.type === "flowchart"
-    ) {
-      const {
-        orient = "center",
-        iterations = 100,
-        nodePadding,
-        nodePaddingRatio = nodePadding ? undefined : 0.5,
-        nodeWidth = networkSettings.type === "flowchart" ? 2 : 24,
-        customSankey,
-        direction = "right",
-        showArrows = false
-      } = networkSettings
-
-      const sankeyOrient = sankeyOrientHash[orient]
-
-      const actualSankey = customSankey || sankeyCircular
-
-      let frameExtent = [[0, 0], adjustedSize]
-
-      if (
-        networkSettings.direction === "up" ||
-        networkSettings.direction === "down"
-      ) {
-        frameExtent = [
-          [0, 0],
-          [adjustedSize[1], adjustedSize[0]]
-        ]
-      }
-
-      //CREATE FAKE EDGES TO GET UP TO PASSED VALUE
-      generateEphemeralEdges = projectedNodes.some(
-        (n) => !n.createdByFrame && n.value > 0
-      )
-      if (generateEphemeralEdges) {
-        const edgeValueMap = new Map()
-        for (const edge of projectedEdges) {
-          if (!edgeValueMap.has(edge.source.id)) {
-            edgeValueMap.set(edge.source.id, {
-              source: 0,
-              target: 0
-            })
-          }
-          if (!edgeValueMap.has(edge.target.id)) {
-            edgeValueMap.set(edge.target.id, {
-              source: 0,
-              target: 0
-            })
-          }
-          edgeValueMap.get(edge.source.id).source += edge.value
-          edgeValueMap.get(edge.target.id).target += edge.value
-        }
-        for (const node of projectedNodes) {
-          if (!node.createdByFrame) {
-            let maxEdgeValue = 0
-            if (edgeValueMap.has(node.id)) {
-              maxEdgeValue = Math.max(
-                edgeValueMap.get(node.id).source,
-                edgeValueMap.get(node.id).target
-              )
-            }
-            if (node.value > maxEdgeValue) {
-              projectedEdges.push({
-                source: node,
-                target: node,
-                value: node.value - maxEdgeValue,
-                ephemeral: true
-              })
-            }
-          }
-        }
-      }
-
-      const frameSankey = actualSankey()
-        .extent(frameExtent)
-        .links(projectedEdges)
-        .nodes(projectedNodes)
-        .nodeAlign(sankeyOrient)
-        .nodeId(nodeIDAccessor)
-        .nodeWidth(nodeWidth)
-        .iterations(iterations)
-
-      if (generateEphemeralEdges) {
-        projectedEdges = projectedEdges.filter((e) => !e.ephemeral)
-      }
-
-      if (frameSankey.nodePaddingRatio && nodePaddingRatio) {
-        frameSankey.nodePaddingRatio(nodePaddingRatio)
-      } else if (nodePadding) {
-        frameSankey.nodePadding(nodePadding)
-      }
-
-      frameSankey()
-
-      projectedNodes.forEach((d) => {
-        d.height = d.y1 - d.y0
-        d.width = d.x1 - d.x0
-        d.x = d.x0 + d.width / 2
-        d.y = d.y0 + d.height / 2
-        d.radius = d.height / 2
-        d.direction = direction
-      })
-
-      projectedEdges.forEach((d) => {
-        d.showArrows = showArrows
-        d.sankeyWidth = d.width
-        d.direction = direction
-        d.width = undefined
-      })
-    } else if (networkSettings.type === "force") {
-      // Adaptive iteration count for force layout: reduce iterations for large networks
-      // - Small networks (<30 nodes): 300 iterations (full quality)
-      // - Medium networks (30-150 nodes): Gradual reduction
-      // - Large networks (>150 nodes): 50 iterations (fast but stable)
-      const nodeCount = projectedNodes.length
-      const adaptiveIterations = Math.max(
-        50,
-        Math.min(300, Math.floor(300 - (nodeCount - 30) * 2))
-      )
-
-      const {
-        iterations = adaptiveIterations,
-        edgeStrength = 0.1,
-        distanceMax = Infinity,
-        edgeDistance,
-        forceManyBody: nsForceMB = (d) => -25 * nodeSizeAccessor(d)
-      } = networkSettings
-
-      // Set deterministic initial positions for nodes that don't have x/y yet.
-      // d3-force uses Math.random() for unpositioned nodes which produces
-      // different layouts on every render. A phyllotaxis spiral gives
-      // evenly-distributed starting positions based on index alone.
-      const cx = adjustedSize[0] / 2
-      const cy = adjustedSize[1] / 2
-      const goldenAngle = Math.PI * (3 - Math.sqrt(5))
-      projectedNodes.forEach((node, i) => {
-        if (node.x == null || node.y == null) {
-          const r = Math.sqrt(i + 0.5) * 10
-          const theta = i * goldenAngle
-          node.x = cx + r * Math.cos(theta)
-          node.y = cy + r * Math.sin(theta)
-        }
-      })
-
-      const linkForce = forceLink().strength((d) =>
-        Math.min(2.5, d.weight ? d.weight * edgeStrength : edgeStrength)
-      )
-
-      if (edgeDistance) {
-        linkForce.distance(edgeDistance)
-      }
-
-      const simulation =
-        networkSettings.simulation ||
-        forceSimulation().force(
-          "charge",
-          forceManyBody().distanceMax(distanceMax).strength(nsForceMB)
-        )
-
-      simulation.nodes(projectedNodes)
-
-      const forceMod = adjustedSize[1] / adjustedSize[0]
-
-      if (!simulation.force("x")) {
-        simulation.force(
-          "x",
-          forceX(adjustedSize[0] / 2).strength(forceMod * 0.1)
-        )
-      }
-      if (!simulation.force("y")) {
-        simulation.force("y", forceY(adjustedSize[1] / 2).strength(0.1))
-      }
-
-      if (projectedEdges.length !== 0 && !simulation.force("link")) {
-        simulation.force("link", linkForce)
-        simulation.force("link").links(projectedEdges)
-      }
-
-      //reset alpha if it's too cold
-      if (simulation.alpha() < 0.1) {
-        simulation.alpha(1)
-      }
-
-      simulation.stop()
-
-      for (let i = 0; i < iterations; ++i) {
-        simulation.tick()
-      }
-
-    } else if (networkSettings.type === "motifs") {
-      const componentMap = new Map()
-      projectedEdges.forEach((edge) => {
-        ;[edge.source, edge.target].forEach((node) => {
-          if (!componentMap.get(node)) {
-            componentMap.set(node, {
-              node,
-              component: -99,
-              connectedNodes: [],
-              edges: []
-            })
-          }
-        })
-
-        componentMap.get(edge.source).connectedNodes.push(edge.target)
-        componentMap.get(edge.target).connectedNodes.push(edge.source)
-        componentMap.get(edge.source).edges.push(edge)
-      })
-
-      components = breadthFirstCompontents(projectedNodes, componentMap)
-
-      const largestComponent = Math.max(
-        projectedNodes.length / 3,
-        components[0].componentNodes.length
-      )
-
-      const layoutSize = size[0] > size[1] ? size[1] : size[0]
-      const layoutDirection = size[0] > size[1] ? "horizontal" : "vertical"
-
-      // Adaptive iteration count for motifs layout (same as force layout)
-      const nodeCount = projectedNodes.length
-      const adaptiveIterations = Math.max(
-        50,
-        Math.min(300, Math.floor(300 - (nodeCount - 30) * 2))
-      )
-
-      const {
-        iterations = adaptiveIterations,
-        edgeStrength = 0.1,
-        edgeDistance,
-        padding = 0
-      } = networkSettings
-
-      let currentX = padding
-      let currentY = padding
-
-      components.forEach(({ componentNodes, componentEdges }) => {
-        const linkForce = forceLink().strength((d) =>
-          Math.min(2.5, d.weight ? d.weight * edgeStrength : edgeStrength)
-        )
-
-        if (edgeDistance) {
-          linkForce.distance(edgeDistance)
-        }
-
-        const componentLayoutSize =
-          Math.max(componentNodes.length / largestComponent, 0.2) * layoutSize
-
-        const xBound = componentLayoutSize + currentX
-        const yBound = componentLayoutSize + currentY
-
-        if (layoutDirection === "horizontal") {
-          if (yBound > size[1]) {
-            currentX = componentLayoutSize + currentX + padding
-            currentY = componentLayoutSize + padding
-          } else {
-            currentY = componentLayoutSize + currentY + padding
-          }
-        } else {
-          if (xBound > size[0]) {
-            currentY = componentLayoutSize + currentY + padding
-            currentX = componentLayoutSize + padding
-          } else {
-            currentX = componentLayoutSize + currentX + padding
-          }
-        }
-
-        const xCenter = currentX - componentLayoutSize / 2
-        const yCenter = currentY - componentLayoutSize / 2
-
-        const simulation = forceSimulation()
-          .force(
-            "charge",
-            forceManyBody().strength(
-              networkSettings.forceManyBody ||
-                ((d) => -25 * nodeSizeAccessor(d))
-            )
-          )
-          .force("link", linkForce)
-
-        simulation
-          .force("x", forceX(xCenter))
-          .force("y", forceY(yCenter))
-          .nodes(componentNodes)
-
-        simulation.force("link").links(componentEdges)
-
-        simulation.stop()
-
-        for (let i = 0; i < iterations; ++i) simulation.tick()
-
-        const maxX = max(componentNodes.map((d) => d.x))
-        const maxY = max(componentNodes.map((d) => d.y))
-        const minX = min(componentNodes.map((d) => d.x))
-        const minY = min(componentNodes.map((d) => d.y))
-
-        const resetX = scaleLinear()
-          .domain([minX, maxX])
-          .range([currentX - componentLayoutSize, currentX - 20])
-        const resetY = scaleLinear()
-          .domain([minY, maxY])
-          .range([currentY - componentLayoutSize, currentY - 20])
-
-        componentNodes.forEach((node) => {
-          node.x = resetX(node.x)
-          node.y = resetY(node.y)
-        })
-      })
-    } else if (networkSettings.type === "matrix") {
-      if (networkSettings.sort) {
-        projectedNodes = projectedNodes.sort(networkSettings.sort)
-      }
-
-      const gridSize = Math.min(...adjustedSize)
-
-      const stepSize = gridSize / (projectedNodes.length + 1)
-
-      projectedNodes.forEach((node, index) => {
-        node.x = 0
-        node.y = (index + 1) * stepSize
-      })
-    } else if (networkSettings.type === "arc") {
-      if (networkSettings.sort) {
-        projectedNodes = projectedNodes.sort(networkSettings.sort)
-      }
-
-      const stepSize = adjustedSize[0] / (projectedNodes.length + 2)
-
-      projectedNodes.forEach((node, index) => {
-        node.x = (index + 1) * stepSize
-        node.y = adjustedSize[1] / 2
-      })
+      projectedNodes = result.projectedNodes
+      projectedEdges = result.projectedEdges
+      if (result.components) components = result.components
     } else if (typeof networkSettings.type === "function") {
       networkSettings.type({
         nodes: projectedNodes,
@@ -1053,7 +657,7 @@ export const calculateNetworkFrame = (
   } else if (
     networkSettings.zoom !== false &&
     networkSettings.type === "sankey" &&
-    (projectedEdges.some((e) => e.circular) || generateEphemeralEdges)
+    projectedEdges.some((e) => e.circular)
   ) {
     const circularLinks = projectedEdges.filter((e) => e.circular)
     const xMinEdge =

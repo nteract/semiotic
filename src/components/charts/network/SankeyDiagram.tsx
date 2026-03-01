@@ -7,6 +7,7 @@ import { getColor } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
+import { sankeyLayout } from "../../processing/layouts/sankeyLayout"
 
 /**
  * SankeyDiagram component props
@@ -386,7 +387,8 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
     ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
     // Allow frameProps to override defaults
     transition: true,
-    ...frameProps
+    ...frameProps,
+    _layoutMap: { sankey: sankeyLayout, flowchart: sankeyLayout }
   }
 
   return <NetworkFrame {...networkFrameProps} />

@@ -7,6 +7,7 @@ import { getColor, COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
+import { chordLayout } from "../../processing/layouts/chordLayout"
 
 /**
  * ChordDiagram component props
@@ -365,7 +366,8 @@ export function ChordDiagram<TNode extends Record<string, any> = Record<string, 
     ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
     // Allow frameProps to override defaults
     transition: true,
-    ...frameProps
+    ...frameProps,
+    _layoutMap: { chord: chordLayout }
   }
 
   return <NetworkFrame {...networkFrameProps} />
