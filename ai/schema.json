@@ -1,0 +1,1178 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "semiotic",
+  "version": "3.0.0",
+  "description": "React data visualization library for charts, networks, and beyond",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "LineChart",
+        "description": "Line traces with curve interpolation, area fill, and point markers. Use for time series, trends, and continuous data.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": { "type": "object" },
+              "description": "Array of data objects"
+            },
+            "xAccessor": {
+              "type": "string",
+              "description": "Key or accessor function for x-axis values",
+              "default": "x"
+            },
+            "yAccessor": {
+              "type": "string",
+              "description": "Key or accessor function for y-axis values",
+              "default": "y"
+            },
+            "lineBy": {
+              "type": "string",
+              "description": "Key to group data into separate lines"
+            },
+            "lineDataAccessor": {
+              "type": "string",
+              "description": "Key for the coordinates array within each line object",
+              "default": "coordinates"
+            },
+            "colorBy": {
+              "type": "string",
+              "description": "Key to determine color encoding per line/group"
+            },
+            "colorScheme": {
+              "type": ["string", "array"],
+              "description": "Named d3 color scheme or array of color strings",
+              "default": "category10"
+            },
+            "curve": {
+              "type": "string",
+              "enum": ["linear", "monotoneX", "monotoneY", "step", "stepAfter", "stepBefore", "basis", "cardinal", "catmullRom"],
+              "description": "Curve interpolation method",
+              "default": "linear"
+            },
+            "lineWidth": {
+              "type": "number",
+              "description": "Stroke width of the line",
+              "default": 2
+            },
+            "showPoints": {
+              "type": "boolean",
+              "description": "Show data point markers on the line",
+              "default": false
+            },
+            "pointRadius": {
+              "type": "number",
+              "description": "Radius of point markers when showPoints is true",
+              "default": 3
+            },
+            "fillArea": {
+              "type": "boolean",
+              "description": "Fill the area under the line",
+              "default": false
+            },
+            "areaOpacity": {
+              "type": "number",
+              "description": "Opacity of the filled area (0-1)",
+              "default": 0.3
+            },
+            "xLabel": {
+              "type": "string",
+              "description": "Label for the x-axis"
+            },
+            "yLabel": {
+              "type": "string",
+              "description": "Label for the y-axis"
+            },
+            "title": {
+              "type": "string",
+              "description": "Chart title"
+            },
+            "width": {
+              "type": "number",
+              "description": "Chart width in pixels",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "description": "Chart height in pixels",
+              "default": 400
+            },
+            "enableHover": {
+              "type": "boolean",
+              "description": "Enable hover interactions",
+              "default": true
+            },
+            "showLegend": {
+              "type": "boolean",
+              "description": "Show color legend"
+            },
+            "showGrid": {
+              "type": "boolean",
+              "description": "Show grid lines",
+              "default": false
+            },
+            "margin": {
+              "type": "object",
+              "description": "Chart margins {top, right, bottom, left}"
+            },
+            "className": {
+              "type": "string",
+              "description": "CSS class name"
+            }
+          },
+          "required": ["data"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "AreaChart",
+        "description": "Filled area chart with optional stroke line. Use for showing volume or magnitude over time.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": { "type": "object" },
+              "description": "Array of data objects"
+            },
+            "xAccessor": {
+              "type": "string",
+              "description": "Key for x-axis values",
+              "default": "x"
+            },
+            "yAccessor": {
+              "type": "string",
+              "description": "Key for y-axis values",
+              "default": "y"
+            },
+            "areaBy": {
+              "type": "string",
+              "description": "Key to group data into separate areas"
+            },
+            "lineDataAccessor": {
+              "type": "string",
+              "description": "Key for the coordinates array within each area object",
+              "default": "coordinates"
+            },
+            "colorBy": {
+              "type": "string",
+              "description": "Key to determine color encoding"
+            },
+            "colorScheme": {
+              "type": ["string", "array"],
+              "description": "Named d3 color scheme or array of color strings",
+              "default": "category10"
+            },
+            "curve": {
+              "type": "string",
+              "enum": ["linear", "monotoneX", "monotoneY", "step", "stepAfter", "stepBefore", "basis", "cardinal", "catmullRom"],
+              "default": "monotoneX"
+            },
+            "areaOpacity": {
+              "type": "number",
+              "description": "Area fill opacity (0-1)",
+              "default": 0.7
+            },
+            "showLine": {
+              "type": "boolean",
+              "description": "Show stroke line on top of area",
+              "default": true
+            },
+            "lineWidth": {
+              "type": "number",
+              "default": 2
+            },
+            "xLabel": { "type": "string" },
+            "yLabel": { "type": "string" },
+            "title": { "type": "string" },
+            "width": { "type": "number", "default": 600 },
+            "height": { "type": "number", "default": 400 },
+            "enableHover": { "type": "boolean", "default": true },
+            "showLegend": { "type": "boolean" },
+            "showGrid": { "type": "boolean", "default": false },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": ["data"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "StackedAreaChart",
+        "description": "Stacked area chart with optional normalization to 100%. Use for part-to-whole trends over time.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": { "type": "object" },
+              "description": "Array of data objects"
+            },
+            "xAccessor": { "type": "string", "default": "x" },
+            "yAccessor": { "type": "string", "default": "y" },
+            "areaBy": {
+              "type": "string",
+              "description": "Key to group data into stacked areas"
+            },
+            "lineDataAccessor": { "type": "string", "default": "coordinates" },
+            "colorBy": { "type": "string" },
+            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "curve": {
+              "type": "string",
+              "enum": ["linear", "monotoneX", "monotoneY", "step", "stepAfter", "stepBefore", "basis", "cardinal", "catmullRom"],
+              "default": "monotoneX"
+            },
+            "areaOpacity": { "type": "number", "default": 0.7 },
+            "showLine": { "type": "boolean", "default": true },
+            "lineWidth": { "type": "number", "default": 2 },
+            "normalize": {
+              "type": "boolean",
+              "description": "Normalize stacks to 100%",
+              "default": false
+            },
+            "xLabel": { "type": "string" },
+            "yLabel": { "type": "string" },
+            "title": { "type": "string" },
+            "width": { "type": "number", "default": 600 },
+            "height": { "type": "number", "default": 400 },
+            "enableHover": { "type": "boolean", "default": true },
+            "showLegend": { "type": "boolean" },
+            "showGrid": { "type": "boolean", "default": false },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": ["data"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "Scatterplot",
+        "description": "Individual data points plotted by x/y position with optional size and color encoding.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": { "type": "object" },
+              "description": "Array of data objects"
+            },
+            "xAccessor": { "type": "string", "default": "x" },
+            "yAccessor": { "type": "string", "default": "y" },
+            "colorBy": { "type": "string", "description": "Key to determine point color" },
+            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "sizeBy": {
+              "type": "string",
+              "description": "Key for variable point sizing"
+            },
+            "sizeRange": {
+              "type": "array",
+              "items": { "type": "number" },
+              "description": "Min and max radius for sizeBy scaling",
+              "default": [3, 15]
+            },
+            "pointRadius": { "type": "number", "description": "Fixed point radius", "default": 5 },
+            "pointOpacity": { "type": "number", "default": 0.8 },
+            "xLabel": { "type": "string" },
+            "yLabel": { "type": "string" },
+            "title": { "type": "string" },
+            "width": { "type": "number", "default": 600 },
+            "height": { "type": "number", "default": 400 },
+            "enableHover": { "type": "boolean", "default": true },
+            "showLegend": { "type": "boolean" },
+            "showGrid": { "type": "boolean", "default": false },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": ["data"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "BubbleChart",
+        "description": "Scatterplot with required size dimension for three-variable comparison. Bubble area encodes a numeric value.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": { "type": "object" },
+              "description": "Array of data objects"
+            },
+            "sizeBy": {
+              "type": "string",
+              "description": "Key for bubble size (required)"
+            },
+            "xAccessor": { "type": "string", "default": "x" },
+            "yAccessor": { "type": "string", "default": "y" },
+            "sizeRange": {
+              "type": "array",
+              "items": { "type": "number" },
+              "default": [5, 40]
+            },
+            "colorBy": { "type": "string" },
+            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "bubbleOpacity": { "type": "number", "default": 0.6 },
+            "bubbleStrokeWidth": { "type": "number", "default": 1 },
+            "bubbleStrokeColor": { "type": "string", "default": "white" },
+            "xLabel": { "type": "string" },
+            "yLabel": { "type": "string" },
+            "title": { "type": "string" },
+            "width": { "type": "number", "default": 600 },
+            "height": { "type": "number", "default": 400 },
+            "enableHover": { "type": "boolean", "default": true },
+            "showLegend": { "type": "boolean" },
+            "showGrid": { "type": "boolean", "default": false },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": ["data", "sizeBy"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "Heatmap",
+        "description": "Grid/matrix visualization with color-encoded cell values. Use for correlation matrices, time-frequency analysis.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": { "type": "object" },
+              "description": "Array of data objects with x, y, and value"
+            },
+            "xAccessor": { "type": "string", "default": "x" },
+            "yAccessor": { "type": "string", "default": "y" },
+            "valueAccessor": {
+              "type": "string",
+              "description": "Key for the cell value",
+              "default": "value"
+            },
+            "colorScheme": {
+              "type": "string",
+              "enum": ["blues", "reds", "greens", "viridis", "custom"],
+              "default": "blues"
+            },
+            "showValues": {
+              "type": "boolean",
+              "description": "Display numeric values in cells",
+              "default": false
+            },
+            "cellBorderColor": { "type": "string", "default": "#fff" },
+            "cellBorderWidth": { "type": "number", "default": 1 },
+            "xLabel": { "type": "string" },
+            "yLabel": { "type": "string" },
+            "title": { "type": "string" },
+            "width": { "type": "number", "default": 600 },
+            "height": { "type": "number", "default": 400 },
+            "enableHover": { "type": "boolean", "default": true },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": ["data"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "BarChart",
+        "description": "Vertical or horizontal bars for categorical comparisons.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": { "type": "object" },
+              "description": "Array of data objects"
+            },
+            "categoryAccessor": {
+              "type": "string",
+              "description": "Key for category labels",
+              "default": "category"
+            },
+            "valueAccessor": {
+              "type": "string",
+              "description": "Key for bar values",
+              "default": "value"
+            },
+            "orientation": {
+              "type": "string",
+              "enum": ["vertical", "horizontal"],
+              "default": "vertical"
+            },
+            "colorBy": { "type": "string" },
+            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "sort": {
+              "type": ["boolean", "string"],
+              "description": "Sort bars: false, true, 'asc', 'desc', or comparator function",
+              "default": false
+            },
+            "barPadding": { "type": "number", "default": 5 },
+            "categoryLabel": { "type": "string" },
+            "valueLabel": { "type": "string" },
+            "title": { "type": "string" },
+            "width": { "type": "number", "default": 600 },
+            "height": { "type": "number", "default": 400 },
+            "enableHover": { "type": "boolean", "default": true },
+            "showLegend": { "type": "boolean" },
+            "showGrid": { "type": "boolean", "default": false },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": ["data"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "StackedBarChart",
+        "description": "Stacked bars for part-to-whole comparisons across categories. Requires stackBy to define the stacking dimension.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": { "type": "object" },
+              "description": "Array of data objects"
+            },
+            "stackBy": {
+              "type": "string",
+              "description": "Key to define the stacking dimension (required)"
+            },
+            "categoryAccessor": { "type": "string", "default": "category" },
+            "valueAccessor": { "type": "string", "default": "value" },
+            "orientation": {
+              "type": "string",
+              "enum": ["vertical", "horizontal"],
+              "default": "vertical"
+            },
+            "colorBy": { "type": "string" },
+            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "normalize": {
+              "type": "boolean",
+              "description": "Normalize stacks to 100%",
+              "default": false
+            },
+            "barPadding": { "type": "number", "default": 5 },
+            "categoryLabel": { "type": "string" },
+            "valueLabel": { "type": "string" },
+            "title": { "type": "string" },
+            "width": { "type": "number", "default": 600 },
+            "height": { "type": "number", "default": 400 },
+            "enableHover": { "type": "boolean", "default": true },
+            "showLegend": { "type": "boolean", "default": true },
+            "showGrid": { "type": "boolean", "default": false },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": ["data", "stackBy"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "GroupedBarChart",
+        "description": "Side-by-side bars for comparing sub-categories within categories. Requires groupBy to define grouping.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": { "type": "object" },
+              "description": "Array of data objects"
+            },
+            "groupBy": {
+              "type": "string",
+              "description": "Key to define the grouping dimension (required)"
+            },
+            "categoryAccessor": { "type": "string", "default": "category" },
+            "valueAccessor": { "type": "string", "default": "value" },
+            "orientation": {
+              "type": "string",
+              "enum": ["vertical", "horizontal"],
+              "default": "vertical"
+            },
+            "colorBy": { "type": "string" },
+            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "barPadding": { "type": "number", "default": 5 },
+            "categoryLabel": { "type": "string" },
+            "valueLabel": { "type": "string" },
+            "title": { "type": "string" },
+            "width": { "type": "number", "default": 600 },
+            "height": { "type": "number", "default": 400 },
+            "enableHover": { "type": "boolean", "default": true },
+            "showLegend": { "type": "boolean", "default": true },
+            "showGrid": { "type": "boolean", "default": false },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": ["data", "groupBy"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "SwarmPlot",
+        "description": "Beeswarm/jittered dot plot showing individual data points within categories. Good for distributions.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": { "type": "object" },
+              "description": "Array of data objects"
+            },
+            "categoryAccessor": { "type": "string", "default": "category" },
+            "valueAccessor": { "type": "string", "default": "value" },
+            "orientation": {
+              "type": "string",
+              "enum": ["vertical", "horizontal"],
+              "default": "vertical"
+            },
+            "colorBy": { "type": "string" },
+            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "sizeBy": { "type": "string", "description": "Key for variable point sizing" },
+            "sizeRange": {
+              "type": "array",
+              "items": { "type": "number" },
+              "default": [3, 8]
+            },
+            "pointRadius": { "type": "number", "default": 4 },
+            "pointOpacity": { "type": "number", "default": 0.7 },
+            "categoryPadding": { "type": "number", "default": 20 },
+            "categoryLabel": { "type": "string" },
+            "valueLabel": { "type": "string" },
+            "title": { "type": "string" },
+            "width": { "type": "number", "default": 600 },
+            "height": { "type": "number", "default": 400 },
+            "enableHover": { "type": "boolean", "default": true },
+            "showLegend": { "type": "boolean" },
+            "showGrid": { "type": "boolean", "default": false },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": ["data"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "BoxPlot",
+        "description": "Box-and-whisker plots showing statistical distribution (median, quartiles, outliers) per category.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": { "type": "object" },
+              "description": "Array of data objects"
+            },
+            "categoryAccessor": { "type": "string", "default": "category" },
+            "valueAccessor": { "type": "string", "default": "value" },
+            "orientation": {
+              "type": "string",
+              "enum": ["vertical", "horizontal"],
+              "default": "vertical"
+            },
+            "colorBy": { "type": "string" },
+            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "showOutliers": {
+              "type": "boolean",
+              "description": "Show outlier points",
+              "default": true
+            },
+            "outlierRadius": { "type": "number", "default": 3 },
+            "categoryPadding": { "type": "number", "default": 20 },
+            "categoryLabel": { "type": "string" },
+            "valueLabel": { "type": "string" },
+            "title": { "type": "string" },
+            "width": { "type": "number", "default": 600 },
+            "height": { "type": "number", "default": 400 },
+            "enableHover": { "type": "boolean", "default": true },
+            "showLegend": { "type": "boolean" },
+            "showGrid": { "type": "boolean", "default": false },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": ["data"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "DotPlot",
+        "description": "Cleveland-style dot plot for comparing values across categories. Sorted by default.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": { "type": "object" },
+              "description": "Array of data objects"
+            },
+            "categoryAccessor": { "type": "string", "default": "category" },
+            "valueAccessor": { "type": "string", "default": "value" },
+            "orientation": {
+              "type": "string",
+              "enum": ["vertical", "horizontal"],
+              "default": "horizontal"
+            },
+            "colorBy": { "type": "string" },
+            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "sort": {
+              "type": ["boolean", "string"],
+              "description": "Sort dots: true, false, 'asc', 'desc'",
+              "default": true
+            },
+            "dotRadius": { "type": "number", "default": 5 },
+            "categoryPadding": { "type": "number", "default": 10 },
+            "categoryLabel": { "type": "string" },
+            "valueLabel": { "type": "string" },
+            "title": { "type": "string" },
+            "width": { "type": "number", "default": 600 },
+            "height": { "type": "number", "default": 400 },
+            "enableHover": { "type": "boolean", "default": true },
+            "showLegend": { "type": "boolean" },
+            "showGrid": { "type": "boolean", "default": true },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": ["data"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "PieChart",
+        "description": "Proportional slices in a circle for part-to-whole relationships.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": { "type": "object" },
+              "description": "Array of data objects"
+            },
+            "categoryAccessor": { "type": "string", "default": "category" },
+            "valueAccessor": { "type": "string", "default": "value" },
+            "colorBy": { "type": "string" },
+            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "startAngle": {
+              "type": "number",
+              "description": "Starting angle in radians",
+              "default": 0
+            },
+            "slicePadding": { "type": "number", "default": 2 },
+            "title": { "type": "string" },
+            "width": { "type": "number", "default": 400 },
+            "height": { "type": "number", "default": 400 },
+            "enableHover": { "type": "boolean", "default": true },
+            "showLegend": { "type": "boolean", "default": true },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": ["data"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "DonutChart",
+        "description": "Pie chart with a hole in the center. Supports center content like summary statistics.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": { "type": "object" },
+              "description": "Array of data objects"
+            },
+            "categoryAccessor": { "type": "string", "default": "category" },
+            "valueAccessor": { "type": "string", "default": "value" },
+            "innerRadius": {
+              "type": "number",
+              "description": "Inner radius of the donut hole in pixels",
+              "default": 60
+            },
+            "centerContent": {
+              "type": "string",
+              "description": "React node to render in the center of the donut (accepts string key or JSX)"
+            },
+            "colorBy": { "type": "string" },
+            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "startAngle": { "type": "number", "default": 0 },
+            "slicePadding": { "type": "number", "default": 2 },
+            "title": { "type": "string" },
+            "width": { "type": "number", "default": 400 },
+            "height": { "type": "number", "default": 400 },
+            "enableHover": { "type": "boolean", "default": true },
+            "showLegend": { "type": "boolean", "default": true },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": ["data"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "ForceDirectedGraph",
+        "description": "Physics-based node-link diagram. Use for relationships, social networks, knowledge graphs.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "nodes": {
+              "type": "array",
+              "items": { "type": "object" },
+              "description": "Array of node objects"
+            },
+            "edges": {
+              "type": "array",
+              "items": { "type": "object" },
+              "description": "Array of edge objects with source and target"
+            },
+            "nodeIDAccessor": {
+              "type": "string",
+              "description": "Key for node unique identifier",
+              "default": "id"
+            },
+            "sourceAccessor": {
+              "type": "string",
+              "description": "Key for edge source node ID",
+              "default": "source"
+            },
+            "targetAccessor": {
+              "type": "string",
+              "description": "Key for edge target node ID",
+              "default": "target"
+            },
+            "nodeLabel": {
+              "type": "string",
+              "description": "Key or accessor for node labels"
+            },
+            "colorBy": { "type": "string" },
+            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "nodeSize": {
+              "type": ["number", "string"],
+              "description": "Fixed node radius or key for variable sizing",
+              "default": 8
+            },
+            "nodeSizeRange": {
+              "type": "array",
+              "items": { "type": "number" },
+              "default": [5, 20]
+            },
+            "edgeWidth": {
+              "type": ["number", "string"],
+              "description": "Fixed edge width or key for variable width",
+              "default": 1
+            },
+            "edgeColor": { "type": "string", "default": "#999" },
+            "edgeOpacity": { "type": "number", "default": 0.6 },
+            "iterations": {
+              "type": "number",
+              "description": "Force simulation iterations",
+              "default": 300
+            },
+            "forceStrength": { "type": "number", "default": 0.1 },
+            "showLabels": { "type": "boolean", "default": false },
+            "title": { "type": "string" },
+            "width": { "type": "number", "default": 600 },
+            "height": { "type": "number", "default": 600 },
+            "enableHover": { "type": "boolean", "default": true },
+            "showLegend": { "type": "boolean", "default": true },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": ["nodes", "edges"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "SankeyDiagram",
+        "description": "Flow diagram showing weighted connections between nodes. Use for flows, budgets, process mapping.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "edges": {
+              "type": "array",
+              "items": { "type": "object" },
+              "description": "Array of edge objects with source, target, and value"
+            },
+            "nodes": {
+              "type": "array",
+              "items": { "type": "object" },
+              "description": "Optional array of node objects (auto-derived from edges if omitted)"
+            },
+            "sourceAccessor": { "type": "string", "default": "source" },
+            "targetAccessor": { "type": "string", "default": "target" },
+            "valueAccessor": {
+              "type": "string",
+              "description": "Key for edge flow value",
+              "default": "value"
+            },
+            "nodeIdAccessor": { "type": "string", "default": "id" },
+            "colorBy": { "type": "string" },
+            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "edgeColorBy": {
+              "type": "string",
+              "enum": ["source", "target", "gradient"],
+              "description": "How to color edges",
+              "default": "source"
+            },
+            "orientation": {
+              "type": "string",
+              "enum": ["horizontal", "vertical"],
+              "default": "horizontal"
+            },
+            "nodeAlign": {
+              "type": "string",
+              "enum": ["justify", "left", "right", "center"],
+              "default": "justify"
+            },
+            "nodePaddingRatio": { "type": "number", "default": 0.05 },
+            "nodeWidth": { "type": "number", "default": 15 },
+            "nodeLabel": { "type": "string", "description": "Key for node labels" },
+            "showLabels": { "type": "boolean", "default": true },
+            "edgeOpacity": { "type": "number", "default": 0.5 },
+            "title": { "type": "string" },
+            "width": { "type": "number", "default": 800 },
+            "height": { "type": "number", "default": 600 },
+            "enableHover": { "type": "boolean", "default": true },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": ["edges"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "ChordDiagram",
+        "description": "Circular diagram showing inter-relationships and flow volumes between groups.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "edges": {
+              "type": "array",
+              "items": { "type": "object" },
+              "description": "Array of edge objects with source, target, and value"
+            },
+            "nodes": {
+              "type": "array",
+              "items": { "type": "object" },
+              "description": "Optional array of node objects"
+            },
+            "sourceAccessor": { "type": "string", "default": "source" },
+            "targetAccessor": { "type": "string", "default": "target" },
+            "valueAccessor": { "type": "string", "default": "value" },
+            "nodeIdAccessor": { "type": "string", "default": "id" },
+            "colorBy": { "type": "string" },
+            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "edgeColorBy": {
+              "type": "string",
+              "enum": ["source", "target"],
+              "default": "source"
+            },
+            "padAngle": { "type": "number", "default": 0.01 },
+            "groupWidth": { "type": "number", "default": 20 },
+            "nodeLabel": { "type": "string" },
+            "showLabels": { "type": "boolean", "default": true },
+            "edgeOpacity": { "type": "number", "default": 0.5 },
+            "title": { "type": "string" },
+            "width": { "type": "number", "default": 600 },
+            "height": { "type": "number", "default": 600 },
+            "enableHover": { "type": "boolean", "default": true },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": ["edges"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "TreeDiagram",
+        "description": "Hierarchical tree layout. Supports tree, cluster, partition, and radial orientations. Data is a single root node with children.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "object",
+              "description": "Root node object with nested children"
+            },
+            "layout": {
+              "type": "string",
+              "enum": ["tree", "cluster", "partition", "treemap", "circlepack"],
+              "default": "tree"
+            },
+            "orientation": {
+              "type": "string",
+              "enum": ["vertical", "horizontal", "radial"],
+              "default": "vertical"
+            },
+            "childrenAccessor": {
+              "type": "string",
+              "description": "Key for the children array in each node",
+              "default": "children"
+            },
+            "valueAccessor": { "type": "string", "default": "value" },
+            "nodeIdAccessor": { "type": "string", "default": "name" },
+            "colorBy": { "type": "string" },
+            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "colorByDepth": {
+              "type": "boolean",
+              "description": "Color nodes by their depth in the hierarchy",
+              "default": false
+            },
+            "edgeStyle": {
+              "type": "string",
+              "enum": ["line", "curve"],
+              "default": "curve"
+            },
+            "nodeLabel": { "type": "string" },
+            "showLabels": { "type": "boolean", "default": true },
+            "nodeSize": { "type": "number", "default": 5 },
+            "title": { "type": "string" },
+            "width": { "type": "number", "default": 600 },
+            "height": { "type": "number", "default": 600 },
+            "enableHover": { "type": "boolean", "default": true },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": ["data"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "Treemap",
+        "description": "Space-filling rectangular hierarchy visualization. Data is a single root node with nested children.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "object",
+              "description": "Root node object with nested children"
+            },
+            "childrenAccessor": { "type": "string", "default": "children" },
+            "valueAccessor": { "type": "string", "default": "value" },
+            "nodeIdAccessor": { "type": "string", "default": "name" },
+            "colorBy": { "type": "string" },
+            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "colorByDepth": { "type": "boolean", "default": false },
+            "showLabels": { "type": "boolean", "default": true },
+            "nodeLabel": { "type": "string" },
+            "title": { "type": "string" },
+            "width": { "type": "number", "default": 600 },
+            "height": { "type": "number", "default": 600 },
+            "enableHover": { "type": "boolean", "default": true },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": ["data"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "CirclePack",
+        "description": "Nested circles representing hierarchical data. Data is a single root node with nested children.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "object",
+              "description": "Root node object with nested children"
+            },
+            "childrenAccessor": { "type": "string", "default": "children" },
+            "valueAccessor": { "type": "string", "default": "value" },
+            "nodeIdAccessor": { "type": "string", "default": "name" },
+            "colorBy": { "type": "string" },
+            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "colorByDepth": { "type": "boolean", "default": false },
+            "showLabels": { "type": "boolean", "default": true },
+            "nodeLabel": { "type": "string" },
+            "circleOpacity": { "type": "number", "default": 0.7 },
+            "title": { "type": "string" },
+            "width": { "type": "number", "default": 600 },
+            "height": { "type": "number", "default": 600 },
+            "enableHover": { "type": "boolean", "default": true },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": ["data"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "RealtimeLineChart",
+        "description": "Streaming line chart rendered on canvas. Uses ref-based push API for high-frequency data.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "size": {
+              "type": "array",
+              "items": { "type": "number" },
+              "description": "[width, height] in pixels",
+              "default": [500, 300]
+            },
+            "timeAccessor": { "type": "string", "description": "Key for time/x values" },
+            "valueAccessor": { "type": "string", "description": "Key for y values" },
+            "windowSize": {
+              "type": "number",
+              "description": "Number of data points visible",
+              "default": 200
+            },
+            "windowMode": {
+              "type": "string",
+              "enum": ["sliding", "stepping"],
+              "default": "sliding"
+            },
+            "arrowOfTime": {
+              "type": "string",
+              "enum": ["left", "right"],
+              "default": "right"
+            },
+            "stroke": { "type": "string", "default": "#007bff" },
+            "strokeWidth": { "type": "number", "default": 2 },
+            "showAxes": { "type": "boolean", "default": true },
+            "background": { "type": "string" },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "RealtimeBarChart",
+        "description": "Streaming bar chart with binned aggregation. Uses ref-based push API.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "binSize": {
+              "type": "number",
+              "description": "Time bin size in milliseconds (required)"
+            },
+            "size": {
+              "type": "array",
+              "items": { "type": "number" },
+              "default": [500, 300]
+            },
+            "timeAccessor": { "type": "string" },
+            "valueAccessor": { "type": "string" },
+            "categoryAccessor": { "type": "string", "description": "Key for category grouping" },
+            "colors": { "type": "object", "description": "Map of category to color string" },
+            "windowSize": { "type": "number", "default": 200 },
+            "windowMode": { "type": "string", "enum": ["sliding", "stepping"], "default": "sliding" },
+            "arrowOfTime": { "type": "string", "enum": ["left", "right"], "default": "right" },
+            "fill": { "type": "string" },
+            "stroke": { "type": "string" },
+            "gap": { "type": "number" },
+            "showAxes": { "type": "boolean", "default": true },
+            "background": { "type": "string" },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": ["binSize"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "RealtimeSwarmChart",
+        "description": "Streaming swarm/scatter chart showing individual data points over time.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "size": {
+              "type": "array",
+              "items": { "type": "number" },
+              "default": [500, 300]
+            },
+            "timeAccessor": { "type": "string" },
+            "valueAccessor": { "type": "string" },
+            "categoryAccessor": { "type": "string" },
+            "colors": { "type": "object" },
+            "windowSize": { "type": "number", "default": 200 },
+            "windowMode": { "type": "string", "enum": ["sliding", "stepping"], "default": "sliding" },
+            "arrowOfTime": { "type": "string", "enum": ["left", "right"], "default": "right" },
+            "radius": { "type": "number" },
+            "fill": { "type": "string" },
+            "opacity": { "type": "number" },
+            "stroke": { "type": "string" },
+            "showAxes": { "type": "boolean", "default": true },
+            "background": { "type": "string" },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "RealtimeWaterfallChart",
+        "description": "Streaming waterfall chart showing positive/negative changes over time.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "size": {
+              "type": "array",
+              "items": { "type": "number" },
+              "default": [500, 300]
+            },
+            "timeAccessor": { "type": "string" },
+            "valueAccessor": { "type": "string" },
+            "windowSize": { "type": "number", "default": 200 },
+            "windowMode": { "type": "string", "enum": ["sliding", "stepping"], "default": "sliding" },
+            "arrowOfTime": { "type": "string", "enum": ["left", "right"], "default": "right" },
+            "positiveColor": { "type": "string" },
+            "negativeColor": { "type": "string" },
+            "connectorStroke": { "type": "string" },
+            "connectorWidth": { "type": "number" },
+            "gap": { "type": "number" },
+            "stroke": { "type": "string" },
+            "showAxes": { "type": "boolean", "default": true },
+            "background": { "type": "string" },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": []
+        }
+      }
+    }
+  ]
+}

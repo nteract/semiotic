@@ -6,6 +6,10 @@
   "module": "dist/semiotic.module.min.js",
   "types": "dist/semiotic.d.ts",
   "sideEffects": false,
+  "bin": {
+    "semiotic-ai": "./ai/cli.js",
+    "semiotic-mcp": "./ai/dist/ai/mcp-server.js"
+  },
   "exports": {
     ".": {
       "types": "./dist/semiotic.d.ts",
@@ -43,12 +47,24 @@
       "require": "./dist/server.min.js",
       "default": "./dist/server.module.min.js"
     },
+    "./ai": {
+      "types": "./dist/semiotic-ai.d.ts",
+      "import": "./dist/semiotic-ai.module.min.js",
+      "require": "./dist/semiotic-ai.min.js",
+      "default": "./dist/semiotic-ai.module.min.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
     "dist/*.js",
     "dist/*.js.map",
     "dist/**/*.d.ts",
+    "ai/schema.json",
+    "ai/system-prompt.md",
+    "ai/examples.md",
+    "ai/cli.js",
+    "ai/dist/**/*.js",
+    "CLAUDE.md",
     "README.md",
     "LICENSE"
   ],
@@ -76,6 +92,7 @@
     "website:start": "npm run dist:prod && parcel serve --target website --no-cache",
     "website:start:clean": "npm run clean && npm run dist:prod && parcel serve --target website --no-cache",
     "website:build": "npm run dist:prod && parcel build --target website",
+    "build:mcp": "tsc -p tsconfig.mcp.json",
     "typescript": "tsc --noEmit",
     "prepublishOnly": "node scripts/build.mjs --production"
   },
@@ -159,6 +176,7 @@
     "react-dom": "^18.1.0"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
     "d3-array": "3.2.4",
     "d3-brush": "3.0.0",
     "d3-chord": "3.0.1",

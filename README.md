@@ -36,11 +36,22 @@ Frame API without giving up the simpler interface.
 Sankey diagrams, chord diagrams, tree layouts, treemaps, and circle packing
 are all React components with the same clean prop API as LineChart.
 
-**When to use something else.** Need a line chart for a dashboard?
-[Recharts](https://recharts.org) is simpler and has a larger ecosystem.
-Semiotic is built for projects that need network diagrams, statistical
-summaries, annotation systems, or custom mark rendering alongside
-standard charts — all in one library.
+**What Semiotic does that other libraries don't:**
+- Force-directed graphs, Sankey diagrams, chord diagrams, treemaps, and circle packing — as React components with the same clean API as LineChart
+- Real-time streaming charts rendered on canvas at 60fps
+- Built-in annotation system with hover, click, and custom annotation types
+- Server-side SVG rendering for email, OG images, and PDFs
+
+**When to use something else.** Need a standard line or bar chart for a dashboard?
+[Recharts](https://recharts.org) has a larger ecosystem and more community examples.
+Semiotic is built for projects that need network visualization, statistical summaries,
+or custom mark rendering — capabilities that general-purpose charting libraries don't offer.
+
+**AI-ready.** Semiotic ships with structured schemas (`ai/schema.json`), an
+`import from "semiotic/ai"` entry point, and an MCP server — all designed for
+LLM code generation. AI coding assistants can generate correct Semiotic code on
+the first try. Run `npx semiotic-ai --help` for CLI options or add `semiotic-mcp`
+to your MCP client config for tool-based chart rendering.
 
 ## Install
 
@@ -145,6 +156,7 @@ Import only what you need:
 import { LineChart } from "semiotic/xy"        // 125 KB (vs 218 KB full)
 import { BarChart } from "semiotic/ordinal"     // 140 KB
 import { ForceDirectedGraph } from "semiotic/network"  // 133 KB
+import { LineChart } from "semiotic/ai"           // HOC-only surface for AI generation
 ```
 
 ## TypeScript

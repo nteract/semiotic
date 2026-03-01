@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+#### AI Enablement — Phase 2
+
+Five features to deepen AI integration with Semiotic.
+
+**Compact System Prompt** (`ai/system-prompt.md`):
+- ~30-line prompt listing all 24 components grouped by data shape (flat array, hierarchical, network, realtime)
+- Marks required and distinguishing props per component
+- Designed for pasting into custom instructions or system prompts
+
+**Embeddings-Friendly Examples** (`ai/examples.md`):
+- Copy-paste-ready examples for 13 chart types covering all 4 data shapes
+- Each example includes import, realistic inline data, and key props annotation
+- Covers: LineChart (single + multi-line), Scatterplot, Heatmap, BarChart, StackedBarChart, GroupedBarChart, TreeDiagram, Treemap, CirclePack, ForceDirectedGraph, SankeyDiagram, ChordDiagram
+
+**`validateProps` Function** (exported from `semiotic/ai`):
+- `validateProps(componentName, props)` returns `{ valid: boolean, errors: string[] }`
+- Validates: component name, required props, prop types, enum values, unknown props (typo detection)
+- Delegates data shape validation to existing `validateArrayData`/`validateObjectData`/`validateNetworkData`
+- Static validation map covering all 24 components with per-prop type and enum constraints
+
+**CLI Tool** (`ai/cli.js`):
+- `npx semiotic-ai` — dumps CLAUDE.md to stdout
+- `npx semiotic-ai --schema` — dumps ai/schema.json
+- `npx semiotic-ai --compact` — dumps ai/system-prompt.md
+- `npx semiotic-ai --examples` — dumps ai/examples.md
+- Plain Node.js, no dependencies, no build step
+
+**MCP Server** (`ai/mcp-server.ts`):
+- Exposes 20 SVG-renderable chart components as MCP tools
+- Renders to static SVG via `ReactDOMServer.renderToStaticMarkup`
+- Uses `ai/schema.json` for tool definitions, `validateProps` for error reporting
+- Component registry maps names to React components
+- Separate build: `npm run build:mcp` (TypeScript → `ai/dist/`)
+- Usage: `npx semiotic-mcp` in Claude Desktop or any MCP client
+
+---
+
 ## [3.0.0-beta.1] - 2026-02-28
 
 ### Added
