@@ -42,10 +42,10 @@ are all React components with the same clean prop API as LineChart.
 - Built-in annotation system with hover, click, and custom annotation types
 - Server-side SVG rendering for email, OG images, and PDFs
 
-**When to use something else.** Need a standard line or bar chart for a dashboard?
+**When to use something else.** Need a standard line or bar chart for a dashboard that you'll never need to make more interesting?
 [Recharts](https://recharts.org) has a larger ecosystem and more community examples.
 Semiotic is built for projects that need network visualization, statistical summaries,
-or custom mark rendering — capabilities that general-purpose charting libraries don't offer.
+or custom charting — capabilities that general-purpose charting libraries don't offer.
 
 **AI-ready.** Semiotic ships with structured schemas (`ai/schema.json`), an
 `import from "semiotic/ai"` entry point, and an MCP server — all designed for

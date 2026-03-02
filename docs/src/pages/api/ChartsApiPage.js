@@ -115,6 +115,36 @@ const boxPlotKeyProps = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any OrdinalFrame prop." },
 ]
 
+const pieChartKeyProps = [
+  { name: "data", type: "array", required: true, default: null, description: "Array of data points with category and value fields." },
+  { name: "categoryAccessor", type: "string | function", required: false, default: '"category"', description: "Field name or function to access slice labels." },
+  { name: "valueAccessor", type: "string | function", required: false, default: '"value"', description: "Field name or function to access slice values." },
+  { name: "colorBy", type: "string | function", required: false, default: null, description: "Determine slice color by field or function." },
+  { name: "startAngle", type: "number", required: false, default: "0", description: "Starting angle in degrees." },
+  { name: "slicePadding", type: "number", required: false, default: "2", description: "Padding between slices in pixels." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any OrdinalFrame prop." },
+]
+
+const donutChartKeyProps = [
+  { name: "data", type: "array", required: true, default: null, description: "Array of data points with category and value fields." },
+  { name: "categoryAccessor", type: "string | function", required: false, default: '"category"', description: "Field name or function to access slice labels." },
+  { name: "valueAccessor", type: "string | function", required: false, default: '"value"', description: "Field name or function to access slice values." },
+  { name: "innerRadius", type: "number", required: false, default: "60", description: "Inner radius of the donut hole in pixels." },
+  { name: "centerContent", type: "ReactNode", required: false, default: null, description: "Content rendered in the center of the donut." },
+  { name: "colorBy", type: "string | function", required: false, default: null, description: "Determine slice color by field or function." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any OrdinalFrame prop." },
+]
+
+const groupedBarChartKeyProps = [
+  { name: "data", type: "array", required: true, default: null, description: "Array of data points with category, group, and value fields." },
+  { name: "categoryAccessor", type: "string | function", required: false, default: '"category"', description: "Field name or function to access category values." },
+  { name: "groupBy", type: "string | function", required: true, default: null, description: "Field name or function for sub-category grouping." },
+  { name: "valueAccessor", type: "string | function", required: false, default: '"value"', description: "Field name or function to access numeric values." },
+  { name: "orientation", type: '"vertical" | "horizontal"', required: false, default: '"vertical"', description: "Chart orientation." },
+  { name: "colorBy", type: "string | function", required: false, default: null, description: "Determine bar color by field or function." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any OrdinalFrame prop." },
+]
+
 const dotPlotKeyProps = [
   { name: "data", type: "array", required: true, default: null, description: "Array of data points with category and value fields." },
   { name: "categoryAccessor", type: "string | function", required: false, default: '"category"', description: "Field name or function to access category values." },
@@ -168,6 +198,27 @@ const treeDiagramKeyProps = [
   { name: "valueAccessor", type: "string | function", required: false, default: '"value"', description: "Field name or function to access node value (for treemap/circlepack sizing)." },
   { name: "colorBy", type: "string | function", required: false, default: null, description: "Determine node color by field or function." },
   { name: "showLabels", type: "boolean", required: false, default: "true", description: "Show node labels." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any NetworkFrame prop." },
+]
+
+const treemapKeyProps = [
+  { name: "data", type: "object", required: true, default: null, description: "Hierarchical data object with a children property." },
+  { name: "childrenAccessor", type: "string | function", required: false, default: '"children"', description: "Field name or function to access children array." },
+  { name: "valueAccessor", type: "string | function", required: false, default: '"value"', description: "Field name or function to access node value for sizing." },
+  { name: "colorBy", type: "string | function", required: false, default: null, description: "Determine rectangle color by field or function." },
+  { name: "colorByDepth", type: "boolean", required: false, default: "false", description: "Color nodes by their depth in the hierarchy." },
+  { name: "showLabels", type: "boolean", required: false, default: "true", description: "Show text labels on rectangles." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any NetworkFrame prop." },
+]
+
+const circlePackKeyProps = [
+  { name: "data", type: "object", required: true, default: null, description: "Hierarchical data object with a children property." },
+  { name: "childrenAccessor", type: "string | function", required: false, default: '"children"', description: "Field name or function to access children array." },
+  { name: "valueAccessor", type: "string | function", required: false, default: '"value"', description: "Field name or function to access node value for sizing." },
+  { name: "colorBy", type: "string | function", required: false, default: null, description: "Determine circle color by field or function." },
+  { name: "colorByDepth", type: "boolean", required: false, default: "false", description: "Color nodes by their depth in the hierarchy." },
+  { name: "circleOpacity", type: "number", required: false, default: "0.7", description: "Opacity of the circles." },
+  { name: "showLabels", type: "boolean", required: false, default: "true", description: "Show text labels on circles." },
   { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any NetworkFrame prop." },
 ]
 
@@ -312,6 +363,27 @@ const chartCategories = [
         description: "Minimal Cleveland dot plot for precise value comparison across categories.",
         keyProps: dotPlotKeyProps,
       },
+      {
+        name: "PieChart",
+        slug: "pie-chart",
+        importStatement: 'import { PieChart } from "semiotic"',
+        description: "Proportional slices in a circle for part-to-whole comparison.",
+        keyProps: pieChartKeyProps,
+      },
+      {
+        name: "DonutChart",
+        slug: "donut-chart",
+        importStatement: 'import { DonutChart } from "semiotic"',
+        description: "Pie chart with a center hole, supports center content.",
+        keyProps: donutChartKeyProps,
+      },
+      {
+        name: "GroupedBarChart",
+        slug: "grouped-bar-chart",
+        importStatement: 'import { GroupedBarChart } from "semiotic"',
+        description: "Side-by-side bars for comparing sub-categories within categories.",
+        keyProps: groupedBarChartKeyProps,
+      },
     ],
   },
   {
@@ -346,6 +418,20 @@ const chartCategories = [
         importStatement: 'import { TreeDiagram } from "semiotic"',
         description: "Hierarchical layout: tree, cluster, treemap, circlepack, or partition.",
         keyProps: treeDiagramKeyProps,
+      },
+      {
+        name: "Treemap",
+        slug: "treemap",
+        importStatement: 'import { Treemap } from "semiotic"',
+        description: "Space-filling rectangular hierarchy visualization.",
+        keyProps: treemapKeyProps,
+      },
+      {
+        name: "CirclePack",
+        slug: "circle-pack",
+        importStatement: 'import { CirclePack } from "semiotic"',
+        description: "Nested circles representing hierarchical data.",
+        keyProps: circlePackKeyProps,
       },
     ],
   },

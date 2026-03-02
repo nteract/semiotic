@@ -393,7 +393,7 @@ function PageLink({ href, title, thumbnail }) {
       <Link to={href}>
         <p>{title}</p>
         <div className="page-image">
-          <img src={thumbnail} />
+          <img src={thumbnail} alt={title} />
         </div>
       </Link>
     </div>
