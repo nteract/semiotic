@@ -84,6 +84,12 @@ A producer-consumer coordination system for cross-highlighting, brushing-and-lin
 - **`createStore` updater bug** — the internal `set` function in `createStore` passed itself instead of the current state to updater callbacks (`fn(set)` → `fn(state)`). This caused `clearClause` in the SelectionStore to silently fail (accessing `.selections` on a function), so linked hover selections were never actually cleared. `setClause` worked by coincidence because `new Map(undefined)` produces an empty map.
 - **Treemap/CirclePack hover overlays** — fixed broken hover overlays for all area-based NetworkFrame types (treemap, circlepack, partition, chord). After the Mark component removal in v3, overlay entries spread `.props` from node generators which produced `<path>` elements without a `d` attribute. Now passes `renderElement` directly for `React.cloneElement`.
 - **CirclePack rendering as force-directed** — CirclePack defaulted all circles to 10px diameter because the node size accessor ignored d3 pack layout's `r` property. Now uses `nodeSizeAccessor: (d) => d.r || 5`.
+- **ViolinPlot crash (`curve is not a function`)** — the ViolinPlot HOC passed the string `"catmullRom"` to `bucketizedRenderer` which calls `.curve()` directly expecting a d3 curve function. Now resolves curve strings via `curveHash` with case-insensitive lookup.
+- **Axis label floating-point noise** — default tick format was identity (`d => d`), producing labels like `0.30000000000000004`. New `smartTickFormat` default cleans floating-point noise, adds K/M/B suffixes for large numbers, and limits precision to 6 significant digits.
+- **Axis label overlap** — added collision-aware filtering in `axisLabels()` that skips overlapping tick labels using estimated character widths for horizontal axes and line-height spacing for vertical axes.
+- **Histogram always horizontal** — histograms now always render horizontally. The `orientation` prop is deprecated and ignored.
+- **Histogram tooltip showing "Count 0"** — the Frame's annotation pipeline overwrote the summary hover datum's `pieces` array with an empty column lookup. Histogram tooltip now reads `d.value` (the bin count from the renderer) instead.
+- **ViolinPlot tooltip empty stats** — same `pieces` overwrite issue. ViolinPlot tooltip now falls back to `column.pieceData` when `pieces` is empty.
 
 ### Removed
 

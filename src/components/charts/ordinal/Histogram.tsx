@@ -283,17 +283,19 @@ export function Histogram<TDatum extends Record<string, any> = Record<string, an
   )
 
   // Default tooltip for summary hover (histogram bins)
+  // The hover datum has: key (category), value (bin count), pieces (bin data)
+  // Note: the frame's tooltipContentArgs may overwrite `pieces` with column-level
+  // data, so we use `value` for the bin count which survives the spread.
   const defaultTooltipContent = useMemo(() => {
     return (d: Record<string, any>) => {
-      const pieces = d.pieces || []
-      const count = pieces.length
+      const count = d.value ?? (d.pieces || []).length
 
       return (
         <div className="semiotic-tooltip" style={defaultTooltipStyle}>
           <div style={{ fontWeight: "bold", marginBottom: "4px" }}>{String(d.key)}</div>
           <div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}>
             <span>Count</span>
-            <span>{count.toLocaleString()}</span>
+            <span>{typeof count === "number" ? count.toLocaleString() : String(count)}</span>
           </div>
         </div>
       )

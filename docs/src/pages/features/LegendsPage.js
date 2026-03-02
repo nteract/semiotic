@@ -154,7 +154,7 @@ export default function LegendsPage() {
         { label: "Features", path: "/features" },
         { label: "Legends", path: "/features/legends" },
       ]}
-      prevPage={{ title: "Styling", path: "/features/styling" }}
+      prevPage={{ title: "Theming", path: "/features/theming" }}
       nextPage={null}
     >
       <p>

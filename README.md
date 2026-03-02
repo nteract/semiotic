@@ -144,7 +144,7 @@ chartRef.current.push({ time: Date.now(), value: reading })
 | Category | Components |
 |---|---|
 | **XY** | `LineChart` `AreaChart` `StackedAreaChart` `Scatterplot` `BubbleChart` `Heatmap` |
-| **Categorical** | `BarChart` `StackedBarChart` `GroupedBarChart` `SwarmPlot` `BoxPlot` `DotPlot` `PieChart` `DonutChart` |
+| **Categorical** | `BarChart` `StackedBarChart` `GroupedBarChart` `SwarmPlot` `BoxPlot` `Histogram` `ViolinPlot` `DotPlot` `PieChart` `DonutChart` |
 | **Network** | `ForceDirectedGraph` `ChordDiagram` `SankeyDiagram` `TreeDiagram` `Treemap` `CirclePack` |
 | **Realtime** | `RealtimeLineChart` `RealtimeBarChart` `RealtimeSwarmChart` `RealtimeWaterfallChart` |
 | **Coordination** | `LinkedCharts` `ScatterplotMatrix` |

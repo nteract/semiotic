@@ -90,6 +90,7 @@ const navData = [
       { title: "Sparklines", path: "/features/sparklines" },
       { title: "Linked Charts", path: "/features/small-multiples" },
       { title: "Styling", path: "/features/styling" },
+      { title: "Theming", path: "/features/theming" },
       { title: "Legends", path: "/features/legends" }
     ]
   },

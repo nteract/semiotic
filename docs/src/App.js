@@ -96,6 +96,7 @@ import CanvasRenderingPage from "./pages/features/CanvasRenderingPage"
 import SparklinesPage from "./pages/features/SparklinesPage"
 import SmallMultiplesPage from "./pages/features/SmallMultiplesPage"
 import StylingPage from "./pages/features/StylingPage"
+import ThemingPage from "./pages/features/ThemingPage"
 import LegendsPage from "./pages/features/LegendsPage"
 
 // New cookbook pages
@@ -398,6 +399,7 @@ export default function DocsApp() {
               <Route path="sparklines" element={<SparklinesPage />} />
               <Route path="small-multiples" element={<SmallMultiplesPage />} />
               <Route path="styling" element={<StylingPage />} />
+              <Route path="theming" element={<ThemingPage />} />
               <Route path="legends" element={<LegendsPage />} />
             </Route>
 

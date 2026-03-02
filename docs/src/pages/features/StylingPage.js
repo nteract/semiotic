@@ -109,7 +109,7 @@ export default function StylingPage() {
         title: "Linked Charts",
         path: "/features/small-multiples",
       }}
-      nextPage={{ title: "Legends", path: "/features/legends" }}
+      nextPage={{ title: "Theming", path: "/features/theming" }}
     >
       <p>
         Semiotic provides multiple layers of styling control, from simple inline

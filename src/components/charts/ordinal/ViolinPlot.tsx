@@ -311,12 +311,19 @@ export function ViolinPlot<TDatum extends Record<string, any> = Record<string, a
   )
 
   // Default tooltip for summary hover (violin distribution info)
+  // The frame's tooltipContentArgs may overwrite `pieces` with column-level data.
+  // Fall back to column.pieceData if pieces is empty.
   const defaultTooltipContent = useMemo(() => {
     const getVal = resolveAccessor<number>(valueAccessor)
 
     return (d: Record<string, any>) => {
-      const pieces = d.pieces || []
-      const values = pieces.map((p: Record<string, any>) => Number(getVal(p))).filter((v: number) => !isNaN(v)).sort((a: number, b: number) => a - b)
+      let rawPieces = d.pieces || []
+      // If pieces is empty, try column.pieceData (the frame may have failed
+      // to resolve the column, leaving pieces as [])
+      if (rawPieces.length === 0 && d.column?.pieceData) {
+        rawPieces = d.column.pieceData.map((p: any) => p.data)
+      }
+      const values = rawPieces.map((p: Record<string, any>) => Number(getVal(p))).filter((v: number) => !isNaN(v)).sort((a: number, b: number) => a - b)
       const n = values.length
 
       const fmt = (v: unknown) => typeof v === "number" ? v.toLocaleString() : String(v ?? "")
