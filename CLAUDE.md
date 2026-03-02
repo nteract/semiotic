@@ -498,7 +498,9 @@ Props: `selections` (Record<string, { resolution?: "union"|"intersect"|"crossfil
 - `useFilteredData(data, selectionName, clientId?)` → filtered T[]
 
 #### ScatterplotMatrix
-N×N grid of scatterplots with built-in crossfilter brushing. Diagonal shows histograms.
+N×N grid of scatterplots for exploring multi-dimensional data. Diagonal shows histograms.
+Two mutually exclusive interaction modes: hover (default) cross-highlights the same datum
+across all cells with a tooltip; brush mode enables crossfilter region selection.
 
 Props: `data` (TDatum[], required), `fields` (string[], required),
   `fieldLabels` (Record<string, string>),
@@ -507,18 +509,29 @@ Props: `data` (TDatum[], required), `fields` (string[], required),
   `pointRadius` (number, 2), `pointOpacity` (number, 0.5),
   `diagonal` ("histogram"|"density"|"label", "histogram"),
   `histogramBins` (number, 20),
-  `brushMode` ("crossfilter"|"intersect"|false, "crossfilter"),
-  `hoverMode` (boolean, true), `unselectedOpacity` (number, 0.1),
+  `hoverMode` (boolean, true — cross-highlight with tooltip above hovered point),
+  `brushMode` ("crossfilter"|"intersect"|false, "crossfilter" — active when hoverMode is false),
+  `unselectedOpacity` (number, 0.1),
   `showGrid` (boolean, false), `tooltip` (fn), `showLegend` (boolean),
   `width` (number), `height` (number), `className` (string)
 
 ```jsx
+// Hover mode (default): cross-highlight on hover with tooltip
+<ScatterplotMatrix
+  data={iris}
+  fields={["sepalLength", "sepalWidth", "petalLength", "petalWidth"]}
+  colorBy="species"
+  fieldLabels={{ sepalLength: "Sepal Length", sepalWidth: "Sepal Width", petalLength: "Petal Length", petalWidth: "Petal Width" }}
+  cellSize={160}
+/>
+
+// Brush mode: crossfilter region selection
 <ScatterplotMatrix
   data={iris}
   fields={["sepalLength", "sepalWidth", "petalLength", "petalWidth"]}
   colorBy="species"
   cellSize={160}
-  diagonal="histogram"
+  hoverMode={false}
   brushMode="crossfilter"
 />
 ```
@@ -592,11 +605,21 @@ const edges = [{ source: "A", target: "B", value: 10 }, { source: "B", target: "
 
 ### ScatterplotMatrix (SPLOM)
 ```jsx
+// Hover cross-highlight (default)
 <ScatterplotMatrix
   data={iris}
   fields={["sepalLength", "sepalWidth", "petalLength", "petalWidth"]}
   colorBy="species"
+  fieldLabels={{ sepalLength: "Sepal Length", sepalWidth: "Sepal Width" }}
   cellSize={160}
+/>
+// Crossfilter brushing
+<ScatterplotMatrix
+  data={iris}
+  fields={["sepalLength", "sepalWidth", "petalLength", "petalWidth"]}
+  colorBy="species"
+  hoverMode={false}
+  brushMode="crossfilter"
 />
 ```
 

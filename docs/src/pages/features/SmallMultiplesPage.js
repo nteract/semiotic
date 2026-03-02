@@ -1,8 +1,5 @@
 import React from "react"
 import {
-  FacetController,
-  XYFrame,
-  OrdinalFrame,
   LinkedCharts,
   ScatterplotMatrix,
   Scatterplot,
@@ -16,66 +13,6 @@ import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PropTable from "../../components/PropTable"
 import { Link } from "react-router-dom"
-
-// ---------------------------------------------------------------------------
-// Sample data for FacetController (legacy)
-// ---------------------------------------------------------------------------
-
-const theme = [
-  "#ac58e5",
-  "#E0488B",
-  "#9fd0cb",
-  "#e0d33a",
-  "#7566ff",
-  "#533f82",
-]
-
-const categoriesA = [
-  { column: "Q1", color: theme[0], step: 1, value: 15 },
-  { column: "Q2", color: theme[0], step: 2, value: 25 },
-  { column: "Q3", color: theme[0], step: 3, value: 5 },
-  { column: "Q4", color: theme[0], step: 4, value: 8 },
-]
-
-const categoriesB = [
-  { column: "Q1", color: theme[1], step: 1, value: 15 },
-  { column: "Q2", color: theme[1], step: 2, value: 15 },
-  { column: "Q3", color: theme[1], step: 3, value: 7 },
-  { column: "Q4", color: theme[1], step: 4, value: 15 },
-]
-
-const ordinalDataSet1 = categoriesA.concat(categoriesB)
-const ordinalDataSet2 = categoriesA
-  .concat(categoriesB)
-  .map((d) => ({ ...d, value: Math.round(d.value * Math.random() * 4) }))
-
-const xyDataSet1 = [
-  {
-    color: theme[1],
-    coordinates: categoriesB.map((d) => ({ ...d })),
-  },
-  {
-    color: theme[0],
-    coordinates: categoriesA.map((d) => ({ ...d })),
-  },
-]
-
-const xyDataSet2 = [
-  {
-    color: theme[1],
-    coordinates: categoriesB.map((d) => ({
-      ...d,
-      value: Math.round(d.value * Math.random() * 2),
-    })),
-  },
-  {
-    color: theme[0],
-    coordinates: categoriesA.map((d) => ({
-      ...d,
-      value: Math.round(d.value * Math.random() * 2),
-    })),
-  },
-]
 
 // ---------------------------------------------------------------------------
 // Sample data for LinkedCharts
@@ -188,73 +125,6 @@ const splomProps = [
   },
 ]
 
-const facetControllerProps = [
-  {
-    name: "sharedXExtent",
-    type: "boolean",
-    required: false,
-    default: "false",
-    description:
-      "When true, all child XYFrames share the same x-axis extent, computed from the min/max of all sibling data.",
-  },
-  {
-    name: "sharedYExtent",
-    type: "boolean",
-    required: false,
-    default: "false",
-    description:
-      "When true, all child XYFrames share the same y-axis extent.",
-  },
-  {
-    name: "sharedRExtent",
-    type: "boolean",
-    required: false,
-    default: "false",
-    description:
-      "When true, all child OrdinalFrames share the same r-axis (value) extent.",
-  },
-  {
-    name: "hoverAnnotation",
-    type: "boolean",
-    required: false,
-    default: "false",
-    description:
-      "When true, hovering over a data element in one frame will show a coordinated tooltip in all sibling frames. Requires lineIDAccessor or pieceIDAccessor to be set for cross-frame matching.",
-  },
-  {
-    name: "pieceHoverAnnotation",
-    type: "boolean",
-    required: false,
-    default: "false",
-    description:
-      "When true, enables coordinated hover tooltips across OrdinalFrame children.",
-  },
-  {
-    name: "react15Wrapper",
-    type: "JSX.Element",
-    required: false,
-    default: "null",
-    description:
-      "A wrapper element for the child frames. Useful for layout, e.g., <div style={{ display: 'flex' }} />.",
-  },
-  {
-    name: "size",
-    type: "array",
-    required: false,
-    default: "null",
-    description:
-      "Shared [width, height] applied to all child frames.",
-  },
-  {
-    name: "margin",
-    type: "object",
-    required: false,
-    default: "null",
-    description:
-      "Shared margin applied to all child frames.",
-  },
-]
-
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -271,10 +141,9 @@ export default function SmallMultiplesPage() {
       nextPage={{ title: "Styling", path: "/features/styling" }}
     >
       <p>
-        Semiotic provides two systems for coordinating multiple charts:{" "}
-        <strong>LinkedCharts</strong> (recommended) for modern
-        producer-consumer coordination, and the legacy{" "}
-        <code>FacetController</code> for cloneElement-based small multiples.
+        Semiotic provides <strong>LinkedCharts</strong> for modern
+        producer-consumer coordination between charts, enabling
+        cross-highlighting, brushing-and-linking, and cross-filtering.
       </p>
 
       {/* ----------------------------------------------------------------- */}
@@ -488,82 +357,6 @@ const { brushInteraction, predicate, isActive, clear } =
 // useFilteredData — derived filtered array
 const filtered = useFilteredData(data, "mySelection")`}
         language="jsx"
-      />
-
-      {/* ----------------------------------------------------------------- */}
-      {/* Legacy FacetController */}
-      {/* ----------------------------------------------------------------- */}
-      <h2 id="facet-controller">FacetController (Legacy)</h2>
-      <p>
-        <code>FacetController</code> is the original small multiples system.
-        It uses <code>cloneElement</code> to inject shared props into direct
-        Frame children. It works with Frame components (XYFrame, OrdinalFrame,
-        NetworkFrame) but not HOC chart components. For new code, prefer{" "}
-        <code>LinkedCharts</code>.
-      </p>
-
-      <h3 id="basic-faceting">Basic Faceting</h3>
-      <div style={{ marginBottom: 32 }}>
-        <FacetController
-          size={[280, 280]}
-          margin={{ top: 40, left: 55, bottom: 40, right: 10 }}
-          xAccessor="step"
-          yAccessor="value"
-          lineStyle={(d) => ({ stroke: d.color })}
-          hoverAnnotation={true}
-          lineIDAccessor="color"
-          axes={[{ orient: "left" }, { orient: "bottom", ticks: 4 }]}
-          sharedXExtent={true}
-          sharedYExtent={true}
-          oPadding={5}
-          oAccessor="column"
-          rAccessor="value"
-          type="bar"
-          style={(d) => ({ fill: d.color })}
-          pieceHoverAnnotation={true}
-          pieceIDAccessor="color"
-          sharedRExtent={true}
-          react15Wrapper={
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: "12px",
-              }}
-            />
-          }
-        >
-          <OrdinalFrame data={ordinalDataSet1} title="Dataset 1 (Bar)" />
-          <OrdinalFrame data={ordinalDataSet2} title="Dataset 2 (Bar)" />
-          <XYFrame title="Dataset 1 (Line)" lines={xyDataSet1} />
-          <XYFrame title="Dataset 2 (Line)" lines={xyDataSet2} />
-        </FacetController>
-      </div>
-
-      <CodeBlock
-        code={`import { FacetController, OrdinalFrame, XYFrame } from "semiotic"
-
-<FacetController
-  size={[280, 280]}
-  sharedXExtent={true}
-  sharedYExtent={true}
-  sharedRExtent={true}
-  hoverAnnotation={true}
-  lineIDAccessor="color"
-  react15Wrapper={<div style={{ display: "flex", gap: "12px" }} />}
->
-  <OrdinalFrame data={dataA} title="Dataset 1" />
-  <OrdinalFrame data={dataB} title="Dataset 2" />
-  <XYFrame lines={linesA} title="Lines A" />
-  <XYFrame lines={linesB} title="Lines B" />
-</FacetController>`}
-        language="jsx"
-      />
-
-      <h3 id="facet-controller-props">FacetController Props</h3>
-      <PropTable
-        componentName="FacetController"
-        props={facetControllerProps}
       />
 
       {/* ----------------------------------------------------------------- */}
