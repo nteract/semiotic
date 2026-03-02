@@ -783,13 +783,12 @@ export const htmlFrameHoverRule = ({
   const flipped = adjustedSize && xPos > adjustedSize[0] / 2
   const tooltipStyle: React.CSSProperties = {
     position: "absolute",
-    top: `${parseInt(screenCoordinates[1])}px`
+    top: `${parseInt(screenCoordinates[1])}px`,
+    left: `${xPos}px`
   }
 
   if (flipped) {
-    tooltipStyle.right = `${adjustedSize[0] - xPos}px`
-  } else {
-    tooltipStyle.left = `${xPos}px`
+    tooltipStyle.transform = "translateX(-100%)"
   }
 
   return (
@@ -893,13 +892,12 @@ export const htmlColumnHoverRule = ({
   const flipped = adjustedSize && xPos > adjustedSize[0] / 2
   const tooltipStyle: React.CSSProperties = {
     position: "absolute",
-    top: `${parseInt(yPosition)}px`
+    top: `${parseInt(yPosition)}px`,
+    left: `${xPos}px`
   }
 
   if (flipped) {
-    tooltipStyle.right = `${adjustedSize[0] - xPos}px`
-  } else {
-    tooltipStyle.left = `${xPos}px`
+    tooltipStyle.transform = "translateX(-100%)"
   }
 
   return (

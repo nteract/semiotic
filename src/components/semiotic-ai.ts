@@ -22,6 +22,8 @@ export { StackedBarChart } from "./charts/ordinal/StackedBarChart"
 export { GroupedBarChart } from "./charts/ordinal/GroupedBarChart"
 export { SwarmPlot } from "./charts/ordinal/SwarmPlot"
 export { BoxPlot } from "./charts/ordinal/BoxPlot"
+export { Histogram } from "./charts/ordinal/Histogram"
+export { ViolinPlot } from "./charts/ordinal/ViolinPlot"
 export { DotPlot } from "./charts/ordinal/DotPlot"
 export { PieChart } from "./charts/ordinal/PieChart"
 export { DonutChart } from "./charts/ordinal/DonutChart"
@@ -43,6 +45,12 @@ export { RealtimeWaterfallChart } from "./charts/realtime/RealtimeWaterfallChart
 // Essential utilities
 export { TooltipProvider } from "./store/TooltipStore"
 export { MultiLineTooltip } from "./Tooltip/Tooltip"
+
+// Theme
+export { ThemeProvider, useTheme } from "./ThemeProvider"
+
+// Export utility
+export { exportChart } from "./export/exportChart"
 
 // AI validation
 export { validateProps } from "./charts/shared/validateProps"

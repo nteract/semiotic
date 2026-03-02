@@ -285,6 +285,41 @@ const VALIDATION_MAP: Record<string, ComponentSpec> = {
     },
   },
 
+  Histogram: {
+    required: ["data"],
+    dataShape: "array",
+    dataAccessors: ["categoryAccessor", "valueAccessor"],
+    props: {
+      ...commonProps,
+      ...ordinalAxisProps,
+      data: { type: "array" },
+      categoryAccessor: { type: ["string", "function"] },
+      valueAccessor: { type: ["string", "function"] },
+      orientation: { type: "string", enum: orientationEnum as unknown as string[] },
+      bins: { type: "number" },
+      relative: { type: "boolean" },
+      categoryPadding: { type: "number" },
+    },
+  },
+
+  ViolinPlot: {
+    required: ["data"],
+    dataShape: "array",
+    dataAccessors: ["categoryAccessor", "valueAccessor"],
+    props: {
+      ...commonProps,
+      ...ordinalAxisProps,
+      data: { type: "array" },
+      categoryAccessor: { type: ["string", "function"] },
+      valueAccessor: { type: ["string", "function"] },
+      orientation: { type: "string", enum: orientationEnum as unknown as string[] },
+      bins: { type: "number" },
+      curve: { type: "string" },
+      showIQR: { type: "boolean" },
+      categoryPadding: { type: "number" },
+    },
+  },
+
   DotPlot: {
     required: ["data"],
     dataShape: "array",

@@ -193,6 +193,65 @@ const data = [
 
 Key props: **`groupBy`** (required), side-by-side bars within each category
 
+### Histogram
+
+```jsx
+import { Histogram } from "semiotic/ai"
+
+const data = [
+  { category: "Group A", value: 12 },
+  { category: "Group A", value: 15 },
+  { category: "Group A", value: 18 },
+  { category: "Group A", value: 22 },
+  { category: "Group A", value: 25 },
+  { category: "Group B", value: 30 },
+  { category: "Group B", value: 35 },
+  { category: "Group B", value: 28 },
+  { category: "Group B", value: 42 },
+  { category: "Group B", value: 38 }
+]
+
+<Histogram
+  data={data}
+  categoryAccessor="category"
+  valueAccessor="value"
+  bins={10}
+  colorBy="category"
+  valueLabel="Frequency"
+/>
+```
+
+Key props: `bins` (default 25), `relative` (normalize per-category)
+
+### ViolinPlot
+
+```jsx
+import { ViolinPlot } from "semiotic/ai"
+
+const data = [
+  { department: "Engineering", salary: 95000 },
+  { department: "Engineering", salary: 110000 },
+  { department: "Engineering", salary: 125000 },
+  { department: "Engineering", salary: 140000 },
+  { department: "Marketing", salary: 65000 },
+  { department: "Marketing", salary: 75000 },
+  { department: "Marketing", salary: 85000 },
+  { department: "Marketing", salary: 95000 }
+]
+
+<ViolinPlot
+  data={data}
+  categoryAccessor="department"
+  valueAccessor="salary"
+  colorBy="department"
+  showIQR
+  categoryLabel="Department"
+  valueLabel="Salary ($)"
+/>
+```
+
+Key props: `bins`, `curve` (default "catmullRom"), `showIQR` (default true)
+
 ---
 
 ## Hierarchical Data — Single Root Object

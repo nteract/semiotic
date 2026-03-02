@@ -9,6 +9,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### New Chart Types
+
+**Histogram** — Binned frequency distribution chart:
+- Uses OrdinalFrame's `summaryType: "histogram"` for automatic binning
+- Configurable bin count (`bins`, default 25) and per-category normalization (`relative`)
+- Follows the same pattern as BoxPlot with full selection/coordination support
+
+**ViolinPlot** — Kernel density visualization per category:
+- Uses OrdinalFrame's `summaryType: "violin"` for symmetric density shapes
+- Configurable bin count, interpolation curve (`curve`, default "catmullRom"), and IQR lines (`showIQR`)
+- Full selection/coordination support
+
+#### ThemeProvider
+
+Global theming system for Semiotic charts:
+- `ThemeProvider` wraps charts and injects CSS custom properties
+- `useTheme()` hook for reading the current theme
+- Built-in presets: `"light"` (default) and `"dark"` with high-contrast categorical palette
+- Custom theme support via partial overrides
+- Non-breaking: falls back to current defaults when no provider exists
+
+#### Data Transform Helpers (`semiotic/data`)
+
+New entry point with pure helper functions:
+- `bin()` — bin continuous data into histogram-ready format
+- `rollup()` — group and aggregate data (sum, mean, count, min, max)
+- `groupBy()` — group flat rows into nested line-chart-ready format
+- `pivot()` — convert wide data to long format
+
+#### Browser Export
+
+`exportChart()` utility for downloading charts as SVG or PNG:
+- Clones SVG, inlines computed styles for standalone rendering
+- PNG mode renders to canvas with configurable retina scale
+- No new dependencies — uses native browser APIs
+
+#### ChartErrorBoundary
+
+React Error Boundary wrapper for charts:
+- Catches render errors and shows a friendly fallback
+- Default fallback uses the existing `ChartError` component
+- Supports custom fallback (ReactNode or render function) and `onError` callback
+
 #### Coordinated Views & ScatterplotMatrix
 
 A producer-consumer coordination system for cross-highlighting, brushing-and-linking, and cross-filtering between charts. Replaces FacetController.

@@ -48,6 +48,12 @@ export type { SwarmPlotProps } from "./ordinal/SwarmPlot"
 export { BoxPlot } from "./ordinal/BoxPlot"
 export type { BoxPlotProps } from "./ordinal/BoxPlot"
 
+export { Histogram } from "./ordinal/Histogram"
+export type { HistogramProps } from "./ordinal/Histogram"
+
+export { ViolinPlot } from "./ordinal/ViolinPlot"
+export type { ViolinPlotProps } from "./ordinal/ViolinPlot"
+
 export { DotPlot } from "./ordinal/DotPlot"
 export type { DotPlotProps } from "./ordinal/DotPlot"
 

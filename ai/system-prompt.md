@@ -14,6 +14,8 @@ Use `import { ComponentName } from "semiotic/ai"` for all components below.
 - **GroupedBarChart** — `categoryAccessor`, `valueAccessor`, **`groupBy`** (required)
 - **SwarmPlot** — `categoryAccessor`, `valueAccessor`, `pointRadius`
 - **BoxPlot** — `categoryAccessor`, `valueAccessor`, `showOutliers`
+- **Histogram** — `categoryAccessor`, `valueAccessor`, `bins` (default 25), `relative`
+- **ViolinPlot** — `categoryAccessor`, `valueAccessor`, `bins`, `curve`, `showIQR`
 - **DotPlot** — `categoryAccessor`, `valueAccessor`, `sort`, `dotRadius`
 - **PieChart** — `categoryAccessor`, `valueAccessor`
 - **DonutChart** — `categoryAccessor`, `valueAccessor`, `innerRadius`, `centerContent`
