@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### New Chart Types
 
+**RealtimeSankey** — Streaming Sankey diagram with push API:
+- Topology grows over time via `ref.current.push({ source, target, value })`
+- Dual-layer rendering: SVG for nodes/links/labels, canvas overlay for animated particles
+- Tension model batches relayouts — topology changes (new nodes/edges) trigger immediately, weight-only changes accumulate until threshold
+- Animated transitions with ease-out cubic interpolation when layout changes
+- Particle system with object pool, bezier path evaluation, and chord-based perpendicular offset
+- Supports circular/cyclic flows via d3-sankey-circular
+- Configurable particle style, tension thresholds, node alignment, and orientation
+- Ref handle: `push()`, `pushMany()`, `clear()`, `getTopology()`, `relayout()`, `getTension()`
+
 **Histogram** — Binned frequency distribution chart:
 - Uses OrdinalFrame's `summaryType: "histogram"` for automatic binning
 - Configurable bin count (`bins`, default 25) and per-category normalization (`relative`)
