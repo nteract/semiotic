@@ -5,13 +5,18 @@ import XYFrame from "../../XYFrame"
 import type { XYFrameProps } from "../../types/xyTypes"
 import { getColor } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
-import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { type TooltipProp } from "../../Tooltip/Tooltip"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import { LinkedCharts } from "../../LinkedCharts"
 import { useSelection, useBrushSelection } from "../../store/useSelection"
+import { useSelectionSelector } from "../../store/SelectionStore"
 
 // Internal field used to identify datums across cells
 const SPLOM_IDX = "__splomIdx"
+
+// Shared clientId for all hover writers — ensures each new hover REPLACES
+// the previous one (same key in the clause Map) instead of accumulating.
+const HOVER_CLIENT_ID = "splom-hover-source"
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -71,6 +76,8 @@ interface CellProps {
   tooltip?: TooltipProp
   /** "brush" or "hover" — mutually exclusive */
   mode: "brush" | "hover"
+  /** Callback when a point is hovered (hover mode only). Called with null on clear. */
+  onPointHover?: (datum: Record<string, any> | null) => void
 }
 
 function ScatterplotCell({
@@ -88,7 +95,8 @@ function ScatterplotCell({
   unselectedOpacity,
   showGrid,
   tooltip,
-  mode
+  mode,
+  onPointHover
 }: CellProps) {
   const clientId = `splom-${xField}-${yField}`
 
@@ -105,48 +113,30 @@ function ScatterplotCell({
     yField
   })
 
-  // Hover selection — only used in hover mode.
-  // Single hook for both reading and writing.
+  // Hover selection — all cells share HOVER_CLIENT_ID so each new hover
+  // REPLACES the previous cell's clause instead of accumulating.
   const hoverHook = useSelection({
     name: hoverSelectionName,
-    clientId,
+    clientId: HOVER_CLIENT_ID,
     fields: [SPLOM_IDX]
   })
 
-  // Extract stable function references so the callback doesn't depend on the
-  // entire hook return object (which is a new reference every render).
   const hoverSelectPoints = hoverHook.selectPoints
-  const hoverClear = hoverHook.clear
-
-  // Track hovered datum locally for our own tooltip rendering.
-  // We render our own tooltip because XYFrame's internal tooltip gets orphaned:
-  // hover → selection store update → all cells re-render → voronoi DOM recreated
-  // → mouseLeave never fires on old cells → XYFrame tooltip stuck forever.
-  const [hoveredDatum, setHoveredDatum] = useState<Record<string, any> | null>(null)
 
   const customHoverBehavior = useCallback(
     (d: Record<string, any> | undefined) => {
       if (!d) {
-        hoverClear()
-        setHoveredDatum(null)
+        onPointHover?.(null)
         return
       }
       const idx = d[SPLOM_IDX]
       if (idx !== undefined) {
         hoverSelectPoints({ [SPLOM_IDX]: [idx] })
-        setHoveredDatum(d)
+        onPointHover?.(d)
       }
     },
-    [hoverSelectPoints, hoverClear]
+    [hoverSelectPoints, onPointHover]
   )
-
-  // Stable wrapper div onMouseLeave — this div is never unmounted by React
-  // during re-renders, so its mouseLeave always fires even when the voronoi
-  // cells inside XYFrame get recreated.
-  const handleMouseLeave = useCallback(() => {
-    hoverClear()
-    setHoveredDatum(null)
-  }, [hoverClear])
 
   const pointStyle = useCallback(
     (d: Record<string, any>) => {
@@ -190,39 +180,6 @@ function ScatterplotCell({
     { orient: "bottom", ticks: 3, tickFormat: () => "", ...(showGrid && { tickLineGenerator: () => null }) }
   ], [showGrid])
 
-  // Tooltip content — rendered by us, positioned in the wrapper div
-  const xLabel = fieldLabels[xField] || xField
-  const yLabel = fieldLabels[yField] || yField
-  const tooltipElement = useMemo(() => {
-    if (!hoveredDatum || mode !== "hover") return null
-    const d = hoveredDatum
-    const label = colorBy
-      ? typeof colorBy === "function" ? (colorBy as Function)(d) : d[colorBy as string]
-      : null
-    return (
-      <div
-        style={{
-          position: "absolute",
-          top: 4,
-          right: 4,
-          background: "rgba(255,255,255,0.95)",
-          border: "1px solid #ddd",
-          borderRadius: 3,
-          padding: "4px 8px",
-          fontSize: 11,
-          lineHeight: 1.4,
-          whiteSpace: "nowrap",
-          pointerEvents: "none",
-          zIndex: 10
-        }}
-      >
-        {label != null && <div style={{ fontWeight: "bold", marginBottom: 2 }}>{String(label)}</div>}
-        <div>{xLabel}: {d[xField] != null ? Number(d[xField]).toFixed(1) : "–"}</div>
-        <div>{yLabel}: {d[yField] != null ? Number(d[yField]).toFixed(1) : "–"}</div>
-      </div>
-    )
-  }, [hoveredDatum, mode, colorBy, xField, yField, xLabel, yLabel])
-
   // Suppress XYFrame's internal tooltip by using hoverAnnotation: [() => null].
   // This creates the voronoi overlay (truthy) and fires customHoverBehavior,
   // but the () => null function produces no tooltip annotation:
@@ -248,12 +205,7 @@ function ScatterplotCell({
     })
   }
 
-  return (
-    <div style={{ position: "relative" }} onMouseLeave={handleMouseLeave}>
-      <XYFrame {...xyFrameProps} />
-      {tooltipElement}
-    </div>
-  )
+  return <XYFrame {...xyFrameProps} />
 }
 
 // ── Diagonal Cell (Histogram) ──────────────────────────────────────────────
@@ -438,6 +390,26 @@ function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<stri
   // Brush and hover are mutually exclusive: hover wins when enabled
   const cellMode: "brush" | "hover" = hoverMode ? "hover" : (brushMode ? "brush" : "hover")
 
+  // Grid-level hover state — single tooltip for the entire matrix
+  const clearSelection = useSelectionSelector((s: any) => s.clearSelection)
+  const [hoveredInfo, setHoveredInfo] = useState<{
+    datum: Record<string, any>
+    xField: string
+    yField: string
+    colIndex: number
+    rowIndex: number
+    /** Pixel x of the point within its cell (from voronoiX) */
+    px: number
+    /** Pixel y of the point within its cell (from voronoiY) */
+    py: number
+  } | null>(null)
+
+  // Clear all hover state when mouse leaves the grid
+  const handleGridMouseLeave = useCallback(() => {
+    clearSelection(hoverSelectionName)
+    setHoveredInfo(null)
+  }, [clearSelection, hoverSelectionName])
+
   // Stamp each datum with a stable index for cross-cell identity matching
   const indexedData = useMemo(() => {
     return ((data || []) as Record<string, any>[]).map((d, i) => {
@@ -495,7 +467,7 @@ function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<stri
           ))}
         </div>
       )}
-      <div style={gridStyle}>
+      <div style={gridStyle} onMouseLeave={cellMode === "hover" ? handleGridMouseLeave : undefined}>
         {fields.map((rowField, row) => (
           <React.Fragment key={`row-${rowField}`}>
             {/* Row label */}
@@ -563,6 +535,21 @@ function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<stri
                   showGrid={showGrid}
                   tooltip={tooltip}
                   mode={cellMode}
+                  onPointHover={cellMode === "hover" ? (datum) => {
+                    if (datum) {
+                      setHoveredInfo({
+                        datum,
+                        xField: colField,
+                        yField: rowField,
+                        colIndex: col,
+                        rowIndex: row,
+                        px: datum.voronoiX ?? 0,
+                        py: datum.voronoiY ?? 0
+                      })
+                    } else {
+                      setHoveredInfo(null)
+                    }
+                  } : undefined}
                 />
               )
             })}
@@ -587,6 +574,44 @@ function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<stri
           </div>
         ))}
       </div>
+      {/* Single tooltip for the entire matrix — positioned above the hovered point */}
+      {hoveredInfo && cellMode === "hover" && (() => {
+        const d = hoveredInfo.datum
+        const xLabel = fieldLabels[hoveredInfo.xField] || hoveredInfo.xField
+        const yLabel = fieldLabels[hoveredInfo.yField] || hoveredInfo.yField
+        const label = colorBy
+          ? typeof colorBy === "function" ? (colorBy as Function)(d) : d[colorBy as string]
+          : null
+        // Cell origin in grid coordinates (account for legend height via relative positioning)
+        const cellLeft = labelWidth + hoveredInfo.colIndex * (cellSize + cellGap)
+        const cellTop = hoveredInfo.rowIndex * (cellSize + cellGap)
+        // Point position within the cell (voronoiX/Y are pixel coords within the Frame)
+        const tooltipLeft = cellLeft + hoveredInfo.px
+        const tooltipTop = cellTop + hoveredInfo.py - 8  // 8px above the point
+        return (
+          <div
+            style={{
+              position: "absolute",
+              left: tooltipLeft,
+              top: tooltipTop,
+              transform: "translate(-50%, -100%)",
+              background: "rgba(255,255,255,0.95)",
+              border: "1px solid #ddd",
+              borderRadius: 3,
+              padding: "4px 8px",
+              fontSize: 11,
+              lineHeight: 1.4,
+              whiteSpace: "nowrap",
+              pointerEvents: "none",
+              zIndex: 10
+            }}
+          >
+            {label != null && <div style={{ fontWeight: "bold", marginBottom: 2 }}>{String(label)}</div>}
+            <div>{xLabel}: {d[hoveredInfo.xField] != null ? Number(d[hoveredInfo.xField]).toFixed(1) : "–"}</div>
+            <div>{yLabel}: {d[hoveredInfo.yField] != null ? Number(d[hoveredInfo.yField]).toFixed(1) : "–"}</div>
+          </div>
+        )
+      })()}
     </div>
   )
 }
