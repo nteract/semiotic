@@ -203,7 +203,7 @@
     "d3-time-format": "^4.1.0",
     "dequal": "^2.0.3",
     "labella": "1.1.4",
-    "memoize-one": "^5.1.1",
+    "memoize-one": "^6.0.0",
     "polygon-offset": "0.3.2",
     "regression": "^2.0.1",
     "svg-path-bounding-box": "1.0.4"
