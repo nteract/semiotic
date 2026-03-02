@@ -349,3 +349,4 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
 
   return <OrdinalFrame {...ordinalFrameProps} />
 }
+BarChart.displayName = "BarChart"

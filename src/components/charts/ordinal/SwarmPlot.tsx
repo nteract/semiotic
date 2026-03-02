@@ -404,3 +404,4 @@ export function SwarmPlot<TDatum extends Record<string, any> = Record<string, an
 
   return <OrdinalFrame {...ordinalFrameProps} />
 }
+SwarmPlot.displayName = "SwarmPlot"

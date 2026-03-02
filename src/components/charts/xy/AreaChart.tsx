@@ -398,3 +398,4 @@ export function AreaChart<TDatum extends Record<string, any> = Record<string, an
 
   return <XYFrame {...xyFrameProps} />
 }
+AreaChart.displayName = "AreaChart"

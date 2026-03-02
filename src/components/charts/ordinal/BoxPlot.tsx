@@ -404,3 +404,4 @@ export function BoxPlot<TDatum extends Record<string, any> = Record<string, any>
 
   return <OrdinalFrame {...ordinalFrameProps} />
 }
+BoxPlot.displayName = "BoxPlot"

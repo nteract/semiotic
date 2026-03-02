@@ -192,3 +192,4 @@ export const RealtimeWaterfallChart = forwardRef<RealtimeFrameHandle, RealtimeWa
     )
   }
 )
+RealtimeWaterfallChart.displayName = "RealtimeWaterfallChart"

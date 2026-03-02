@@ -344,14 +344,18 @@ Props: `data` (TNode, required — single root node with children),
 ```
 
 #### Treemap
-Space-filling rectangular hierarchy visualization.
+Space-filling rectangular hierarchy visualization. Labels are centered in cells.
+Hover shows ancestor breadcrumb path (grandparent → parent → **node**) with outline.
+`colorByDepth` uses a pastel palette keyed to hierarchy depth.
 
 Props: `data` (TNode, required — single root node with children),
   `childrenAccessor` (string|fn, "children"), `valueAccessor` (string|fn, "value"),
   `nodeIdAccessor` (string|fn, "name"),
   `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
   `colorByDepth` (boolean, false),
-  `showLabels` (boolean, true), `nodeLabel` (string|fn),
+  `showLabels` (boolean, true), `labelMode` ("leaf"|"parent"|"all", "leaf"),
+  `nodeLabel` (string|fn),
+  `padding` (number, 4), `paddingTop` (number, 0 — auto 18 when labelMode="parent"),
   `title` (string), `width` (number, 600), `height` (number, 600),
   `enableHover` (boolean, true), `tooltip` (fn),
   `margin` (object), `className` (string), `frameProps` (object)

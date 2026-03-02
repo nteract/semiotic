@@ -376,3 +376,4 @@ export function ChordDiagram<TNode extends Record<string, any> = Record<string, 
 
   return <NetworkFrame {...networkFrameProps} />
 }
+ChordDiagram.displayName = "ChordDiagram"

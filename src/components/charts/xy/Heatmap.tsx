@@ -392,3 +392,4 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
 
   return <XYFrame {...xyFrameProps} />
 }
+Heatmap.displayName = "Heatmap"

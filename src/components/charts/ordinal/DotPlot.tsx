@@ -363,3 +363,4 @@ export function DotPlot<TDatum extends Record<string, any> = Record<string, any>
 
   return <OrdinalFrame {...ordinalFrameProps} />
 }
+DotPlot.displayName = "DotPlot"

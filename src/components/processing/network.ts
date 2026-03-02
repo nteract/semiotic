@@ -877,12 +877,12 @@ export const calculateNetworkFrame = (
     if (hoverAnnotation !== "edge") {
       const renderedNodeOverlays = projectedNodes.map((d, i) => ({
         overlayData: d,
-        ...customNodeIcon({
+        renderElement: customNodeIcon({
           d,
           i,
           transform: `translate(${d.x},${d.y})`,
           styleFn: () => ({ opacity: 0 })
-        }).props
+        })
       }))
 
       overlay.push(...renderedNodeOverlays)
@@ -903,7 +903,7 @@ export const calculateNetworkFrame = (
               y: d.y === undefined ? (d.source.y + d.target.y) / 2 : d.y,
               edge: true
             },
-            ...generatedIcon.props
+            renderElement: generatedIcon
           })
         }
       })

@@ -471,3 +471,4 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
 
   return <NetworkFrame {...networkFrameProps} />
 }
+SankeyDiagram.displayName = "SankeyDiagram"

@@ -174,3 +174,4 @@ export const RealtimeLineChart = forwardRef<RealtimeFrameHandle, RealtimeLineCha
     )
   }
 )
+RealtimeLineChart.displayName = "RealtimeLineChart"

@@ -405,3 +405,4 @@ export function StackedAreaChart<TDatum extends Record<string, any> = Record<str
 
   return <XYFrame {...xyFrameProps} />
 }
+StackedAreaChart.displayName = "StackedAreaChart"
