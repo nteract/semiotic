@@ -180,7 +180,7 @@ function buildDeclarations() {
 
 async function build() {
   const minify = isProduction
-  const analyze = isProduction || isAnalyze
+  const analyze = isAnalyze
 
   const bundles = [
     { input: "src/components/semiotic.ts", name: "semiotic", analyze, minify },
