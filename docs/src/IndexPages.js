@@ -129,7 +129,7 @@ export function GuidesIndex() {
         />
         <PageLink
           href="/guides/small-multiples"
-          title="Small Multiples"
+          title="Linked Charts"
           thumbnail={new URL("../public/assets/img/facet.png", import.meta.url)}
         />
         <PageLink

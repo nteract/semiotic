@@ -591,8 +591,8 @@ function InteractiveChart({ data }) {
           patterns, and visual encodings
         </li>
         <li>
-          <Link to="/features/small-multiples">Small Multiples</Link> — shared
-          legends across multiple coordinated frames
+          <Link to="/features/small-multiples">Linked Charts</Link> — shared
+          legends across multiple coordinated charts
         </li>
       </ul>
     </PageLayout>

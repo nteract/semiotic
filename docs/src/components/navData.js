@@ -86,7 +86,7 @@ const navData = [
       { title: "Accessibility", path: "/features/accessibility" },
       { title: "Canvas Rendering", path: "/features/canvas-rendering" },
       { title: "Sparklines", path: "/features/sparklines" },
-      { title: "Small Multiples", path: "/features/small-multiples" },
+      { title: "Linked Charts", path: "/features/small-multiples" },
       { title: "Styling", path: "/features/styling" },
       { title: "Legends", path: "/features/legends" }
     ]

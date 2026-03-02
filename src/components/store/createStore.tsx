@@ -46,7 +46,7 @@ function createSource(fn) {
   let state = fn(set)
 
   function set(fn) {
-    state = Object.assign(state, fn(set))
+    state = Object.assign(state, fn(state))
     events.dispatchEvent(new CustomEvent("update"))
   }
 

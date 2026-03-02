@@ -13,7 +13,7 @@ import { LegendProps } from "./types/legendTypes"
 import { ScaleLinear } from "d3-scale"
 import { AdvancedInteractionSettings } from "./types/interactionTypes"
 
-import { TooltipProvider } from "./store/TooltipStore"
+import { TooltipProvider, useTooltip } from "./store/TooltipStore"
 
 type VizDataLayerKeys =
   | "pieces"
@@ -96,6 +96,30 @@ const defaultFrameRenderOrder = [
 ]
 
 const defaultZeroMargin = { top: 0, bottom: 0, left: 0, right: 0 }
+
+function FrameMouseLeaveHandler({
+  customHoverBehavior,
+  children
+}: {
+  customHoverBehavior?: Function
+  children: React.ReactNode
+}) {
+  const changeTooltip = useTooltip((state) => state.changeTooltip)
+
+  const handleMouseLeave = useCallback(() => {
+    changeTooltip(null)
+    if (customHoverBehavior) customHoverBehavior(undefined)
+  }, [changeTooltip, customHoverBehavior])
+
+  return (
+    <div
+      onMouseLeave={handleMouseLeave}
+      style={{ position: "relative", width: "100%", height: "100%" }}
+    >
+      {children}
+    </div>
+  )
+}
 
 export default function Frame(props) {
   const {
@@ -265,6 +289,7 @@ export default function Frame(props) {
         style={{ height: `${size[1]}px`, width: `${size[0]}px` }}
       >
         <TooltipProvider>
+          <FrameMouseLeaveHandler customHoverBehavior={customHoverBehavior}>
           <div
             className="visualization-layer"
             style={{ position: "absolute" }}
@@ -367,6 +392,7 @@ export default function Frame(props) {
             advancedSettings={interactionSettings}
           />
           {annotationLayer}
+          </FrameMouseLeaveHandler>
         </TooltipProvider>
       </div>
       {afterElements && (

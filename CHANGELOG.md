@@ -35,6 +35,13 @@ A producer-consumer coordination system for cross-highlighting, brushing-and-lin
 - Tooltip positioned above the hovered point with colorBy label
 - `colorBy`, `fieldLabels`, `cellSize`, `pointRadius`, `showLegend` props
 
+### Fixed
+
+- **Hover state persisting on mouseout** — tooltip and linked highlight now reliably clear when the mouse leaves the chart area. Added a `mouseLeave` handler on the Frame wrapper (inside `TooltipProvider`) that clears both the tooltip and any active `customHoverBehavior` selection.
+- **`createStore` updater bug** — the internal `set` function in `createStore` passed itself instead of the current state to updater callbacks (`fn(set)` → `fn(state)`). This caused `clearClause` in the SelectionStore to silently fail (accessing `.selections` on a function), so linked hover selections were never actually cleared. `setClause` worked by coincidence because `new Map(undefined)` produces an empty map.
+- **Treemap/CirclePack hover overlays** — fixed broken hover overlays for all area-based NetworkFrame types (treemap, circlepack, partition, chord). After the Mark component removal in v3, overlay entries spread `.props` from node generators which produced `<path>` elements without a `d` attribute. Now passes `renderElement` directly for `React.cloneElement`.
+- **CirclePack rendering as force-directed** — CirclePack defaulted all circles to 10px diameter because the node size accessor ignored d3 pack layout's `r` property. Now uses `nodeSizeAccessor: (d) => d.r || 5`.
+
 ### Removed
 
 - **FacetController** — replaced entirely by `LinkedCharts`. The `cloneElement`-based approach had no HOC support and only worked with direct Frame children.
