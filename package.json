@@ -7,8 +7,8 @@
   "types": "dist/semiotic.d.ts",
   "sideEffects": false,
   "bin": {
-    "semiotic-ai": "./ai/cli.js",
-    "semiotic-mcp": "./ai/dist/ai/mcp-server.js"
+    "semiotic-ai": "ai/cli.js",
+    "semiotic-mcp": "ai/dist/ai/mcp-server.js"
   },
   "exports": {
     ".": {
@@ -110,7 +110,10 @@
   "alias": {
     "semiotic": "."
   },
-  "repository": "nteract/semiotic",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nteract/semiotic.git"
+  },
   "author": {
     "name": "Elijah Meeks",
     "email": "elijahmeeks@gmail.com"
