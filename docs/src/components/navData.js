@@ -132,7 +132,12 @@ const navData = [
       { title: "Force Directed Graph", path: "/playground/force-directed-graph" },
       { title: "Sankey Diagram", path: "/playground/sankey-diagram" },
       { title: "Realtime Line / Waterfall", path: "/playground/realtime-line-chart" },
-      { title: "Realtime Bar / Swarm", path: "/playground/realtime-bar-chart" }
+      { title: "Realtime Bar / Swarm", path: "/playground/realtime-bar-chart" },
+      { title: "Bubble Chart", path: "/playground/bubble-chart" },
+      { title: "Stacked Area Chart", path: "/playground/stacked-area-chart" },
+      { title: "Donut Chart", path: "/playground/donut-chart" },
+      { title: "Treemap", path: "/playground/treemap" },
+      { title: "Circle Pack", path: "/playground/circle-pack" }
     ]
   },
   {

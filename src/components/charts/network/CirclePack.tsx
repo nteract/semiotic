@@ -243,13 +243,13 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
     nodeStyle: nodeStyleFn,
     edgeStyle: () => ({ fill: "none", stroke: "none" }),
     nodeIDAccessor: nodeIdAccessor,
-    networkType: { type: "circlepack" },
+    networkType: {
+      type: "circlepack",
+      ...(hierarchyChildren && { hierarchyChildren: hierarchyChildren as Function }),
+      ...(hierarchySum && { hierarchySum: hierarchySum as Function }),
+    },
     hoverAnnotation: enableHover,
     margin,
-    ...(hierarchyChildren && {
-      hierarchyChildren: hierarchyChildren as Function
-    }),
-    ...(hierarchySum && { hierarchySum: hierarchySum as Function }),
     ...(nodeLabelFn && { nodeLabels: nodeLabelFn as (args: Record<string, any>) => string }),
     ...(className && { className }),
     ...(title && { title }),

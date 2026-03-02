@@ -127,8 +127,14 @@ import ForceDirectedGraphPlayground from "./pages/playground/ForceDirectedGraphP
 import SankeyDiagramPlayground from "./pages/playground/SankeyDiagramPlayground"
 import RealtimeLineChartPlayground from "./pages/playground/RealtimeLineChartPlayground"
 import RealtimeBarChartPlayground from "./pages/playground/RealtimeBarChartPlayground"
+import BubbleChartPlayground from "./pages/playground/BubbleChartPlayground"
+import StackedAreaChartPlayground from "./pages/playground/StackedAreaChartPlayground"
+import DonutChartPlayground from "./pages/playground/DonutChartPlayground"
+import TreemapPlayground from "./pages/playground/TreemapPlayground"
+import CirclePackPlayground from "./pages/playground/CirclePackPlayground"
 
-import semioticLogo from "../public/assets/img/semiotic.png"
+const semioticLogo = new URL("../public/assets/img/semiotic.png", import.meta.url).href
+const semioticLogoDark = new URL("../public/assets/img/semiotic-darkmode.png", import.meta.url).href
 
 function NotFoundPage() {
   return (
@@ -147,26 +153,10 @@ function NotFoundPage() {
 import { useScrollRestoration } from "./useScrollRestoration"
 
 // Theme toggle component
-function ThemeToggle() {
-  const [theme, setTheme] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("semiotic-theme") || "dark"
-    }
-    return "dark"
-  })
-
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme)
-    localStorage.setItem("semiotic-theme", theme)
-  }, [theme])
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"))
-  }
-
+function ThemeToggle({ theme, onToggle }) {
   return (
     <button
-      onClick={toggleTheme}
+      onClick={onToggle}
       aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
       style={{
         background: "none",
@@ -213,6 +203,21 @@ export default function DocsApp() {
   useScrollRestoration()
   useJsonLd()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [theme, setTheme] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("semiotic-theme") || "dark"
+    }
+    return "dark"
+  })
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme)
+    localStorage.setItem("semiotic-theme", theme)
+  }, [theme])
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"))
+  }
 
   return (
     <div className="App">
@@ -220,18 +225,14 @@ export default function DocsApp() {
         <SidebarToggle onClick={() => setSidebarOpen((prev) => !prev)} />
         <div className="logo">
           <Link to="/">
-            <img src={semioticLogo} alt="Semiotic" />
+            <img src={theme === "dark" ? semioticLogoDark : semioticLogo} alt="Semiotic" />
           </Link>
         </div>
         <div className="flex space-between">
-          <h1>
-            <Link to="/" style={{ color: "inherit", textDecoration: "none", fontWeight: 600 }}>
-              Semiotic
-            </Link>
-          </h1>
-
+        {/* We don't need to repeat the name because the logo is the name */}
+          <div />
           <div className="flex" style={{ alignItems: "center", gap: "12px" }}>
-            <ThemeToggle />
+            <ThemeToggle theme={theme} onToggle={toggleTheme} />
             <div className="github-links">
               <p className="no-margin">
                 <a
@@ -369,6 +370,11 @@ export default function DocsApp() {
               <Route path="sankey-diagram" element={<SankeyDiagramPlayground />} />
               <Route path="realtime-line-chart" element={<RealtimeLineChartPlayground />} />
               <Route path="realtime-bar-chart" element={<RealtimeBarChartPlayground />} />
+              <Route path="bubble-chart" element={<BubbleChartPlayground />} />
+              <Route path="stacked-area-chart" element={<StackedAreaChartPlayground />} />
+              <Route path="donut-chart" element={<DonutChartPlayground />} />
+              <Route path="treemap" element={<TreemapPlayground />} />
+              <Route path="circle-pack" element={<CirclePackPlayground />} />
             </Route>
 
             {/* Frames routes */}

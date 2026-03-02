@@ -54,36 +54,36 @@ describe("Treemap", () => {
     expect(frame).toBeFalsy()
   })
 
-  it("sets treemap network type", () => {
+  it("sets treemap network type with hierarchy accessors", () => {
     render(
       <TooltipProvider>
         <Treemap data={sampleData} />
       </TooltipProvider>
     )
 
-    expect(lastNetworkFrameProps.networkType).toEqual({ type: "treemap" })
+    expect(lastNetworkFrameProps.networkType.type).toBe("treemap")
+    expect(typeof lastNetworkFrameProps.networkType.hierarchyChildren).toBe("function")
+    expect(typeof lastNetworkFrameProps.networkType.hierarchySum).toBe("function")
   })
 
-  it("sets hierarchySum from valueAccessor", () => {
+  it("sets hierarchySum from valueAccessor inside networkType", () => {
     render(
       <TooltipProvider>
         <Treemap data={sampleData} />
       </TooltipProvider>
     )
 
-    expect(typeof lastNetworkFrameProps.hierarchySum).toBe("function")
-    expect(lastNetworkFrameProps.hierarchySum({ value: 42 })).toBe(42)
+    expect(lastNetworkFrameProps.networkType.hierarchySum({ value: 42 })).toBe(42)
   })
 
-  it("sets hierarchyChildren from childrenAccessor", () => {
+  it("sets hierarchyChildren from childrenAccessor inside networkType", () => {
     render(
       <TooltipProvider>
         <Treemap data={sampleData} />
       </TooltipProvider>
     )
 
-    expect(typeof lastNetworkFrameProps.hierarchyChildren).toBe("function")
-    expect(lastNetworkFrameProps.hierarchyChildren({ children: [1, 2] })).toEqual([1, 2])
+    expect(lastNetworkFrameProps.networkType.hierarchyChildren({ children: [1, 2] })).toEqual([1, 2])
   })
 
   it("defaults to square dimensions", () => {
@@ -127,8 +127,8 @@ describe("Treemap", () => {
     )
 
     expect(lastNetworkFrameProps.nodeIDAccessor).toBe("id")
-    expect(lastNetworkFrameProps.hierarchyChildren({ items: [1] })).toEqual([1])
-    expect(lastNetworkFrameProps.hierarchySum({ size: 42 })).toBe(42)
+    expect(lastNetworkFrameProps.networkType.hierarchyChildren({ items: [1] })).toEqual([1])
+    expect(lastNetworkFrameProps.networkType.hierarchySum({ size: 42 })).toBe(42)
   })
 
   it("passes edges as the data", () => {

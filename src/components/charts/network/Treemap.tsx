@@ -236,13 +236,13 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>,
     nodeStyle: nodeStyleFn,
     edgeStyle: () => ({ fill: "none", stroke: "none" }),
     nodeIDAccessor: nodeIdAccessor,
-    networkType: { type: "treemap" },
+    networkType: {
+      type: "treemap",
+      ...(hierarchyChildren && { hierarchyChildren: hierarchyChildren as Function }),
+      ...(hierarchySum && { hierarchySum: hierarchySum as Function }),
+    },
     hoverAnnotation: enableHover,
     margin,
-    ...(hierarchyChildren && {
-      hierarchyChildren: hierarchyChildren as Function
-    }),
-    ...(hierarchySum && { hierarchySum: hierarchySum as Function }),
     ...(nodeLabelFn && { nodeLabels: nodeLabelFn as (args: Record<string, any>) => string }),
     ...(className && { className }),
     ...(title && { title }),

@@ -311,9 +311,60 @@ function TopLevelLink({ to, children, onNavigate, end }) {
 
 // --- Main Component ---
 
+// Search keywords mapped to nav paths for deep matching
+const searchIndex = (() => {
+  const index = []
+  function walk(items, parentTitle) {
+    for (const item of items) {
+      if (item.path) {
+        // Include title and common prop/keyword associations
+        index.push({
+          path: item.path,
+          title: item.title,
+          parent: parentTitle || "",
+          text: (item.title + " " + (parentTitle || "")).toLowerCase(),
+        })
+      }
+      if (item.children) {
+        walk(item.children, item.title || parentTitle)
+      }
+    }
+  }
+  walk(navData, "")
+  return index
+})()
+
+function filterNavData(data, query) {
+  if (!query) return data
+  const q = query.toLowerCase()
+  // Find all paths that match
+  const matchingPaths = new Set(
+    searchIndex
+      .filter((entry) => entry.text.includes(q) || entry.title.toLowerCase().includes(q))
+      .map((entry) => entry.path)
+  )
+  // Recursively prune navData to only include matching items
+  function prune(items) {
+    return items
+      .map((item) => {
+        if (item.path && matchingPaths.has(item.path)) return item
+        if (item.children) {
+          const filtered = prune(item.children)
+          if (filtered.length > 0) return { ...item, children: filtered }
+        }
+        // Also match section titles
+        if (item.title && item.title.toLowerCase().includes(q)) return item
+        return null
+      })
+      .filter(Boolean)
+  }
+  return prune(data)
+}
+
 export default function Sidebar({ isOpen, onClose }) {
   const location = useLocation()
   const [isMobile, setIsMobile] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
   const sidebarRef = useRef(null)
 
   // Detect mobile
@@ -356,6 +407,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
   // Determine which section is active for default expansion
   const activeSection = findOpenSection(location.pathname)
+  const filteredNav = filterNavData(navData, searchQuery)
 
   // Render a top-level nav item
   function renderNavItem(item) {
@@ -374,7 +426,7 @@ export default function Sidebar({ isOpen, onClose }) {
     }
 
     // Top-level item with children -- collapsible section
-    const isDefaultOpen = activeSection === item.title
+    const isDefaultOpen = searchQuery ? true : activeSection === item.title
 
     // Check if children are category groups (have their own children) or direct pages
     const hasCategories = item.children.some((child) => child.category && child.children)
@@ -421,6 +473,8 @@ export default function Sidebar({ isOpen, onClose }) {
       <input
         type="text"
         placeholder="Search docs..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
         style={styles.searchBox}
         aria-label="Search documentation"
         onFocus={(e) => {
@@ -430,7 +484,7 @@ export default function Sidebar({ isOpen, onClose }) {
           e.target.style.borderColor = "var(--border, #e5e7eb)"
         }}
       />
-      {navData.map(renderNavItem)}
+      {filteredNav.map(renderNavItem)}
     </nav>
   )
 

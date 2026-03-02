@@ -71,6 +71,7 @@ interface FacetControllerProps {
   sharedRExtent: boolean
   sharedXExtent: boolean
   sharedYExtent: boolean
+  react15Wrapper?: React.ReactElement
 }
 
 type Props = FacetControllerProps & OrdinalFrameProps & XYFrameProps
@@ -334,18 +335,20 @@ export default function FacetController(props: Props) {
   const [facetHoverAnnotations, changeFacetHoverAnnotations] =
     useState(undefined)
 
-  return (
-    <React.Fragment>
-      {processFacetController(props, {
-        extents,
-        rawExtents,
-        facetHover,
-        facetHoverAnnotations,
-        changeFacetHoverAnnotations,
-        changeExtents,
-        changeRawExtents,
-        changeFacetHover
-      })}
-    </React.Fragment>
-  )
+  const children = processFacetController(props, {
+    extents,
+    rawExtents,
+    facetHover,
+    facetHoverAnnotations,
+    changeFacetHoverAnnotations,
+    changeExtents,
+    changeRawExtents,
+    changeFacetHover
+  })
+
+  if (props.react15Wrapper) {
+    return React.cloneElement(props.react15Wrapper, {}, children)
+  }
+
+  return <React.Fragment>{children}</React.Fragment>
 }
