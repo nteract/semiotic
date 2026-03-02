@@ -469,6 +469,60 @@ Props: `size` ([number, number], [500, 300]),
 <RealtimeWaterfallChart ref={chartRef} timeAccessor="time" valueAccessor="delta" />
 ```
 
+### Coordinated Views (import from "semiotic" or "semiotic/ai")
+
+#### LinkedCharts
+Context provider for coordinated chart views. Wraps any number of charts at any depth.
+
+Props: `selections` (Record<string, { resolution?: "union"|"intersect"|"crossfilter" }>)
+
+```jsx
+<LinkedCharts selections={{ dash: { resolution: "crossfilter" } }}>
+  <Scatterplot data={d} xAccessor="x" yAccessor="y"
+    linkedHover={{ name: "hl", fields: ["cat"] }}
+    selection={{ name: "hl" }} />
+  <BarChart data={agg} categoryAccessor="cat" valueAccessor="total"
+    selection={{ name: "hl" }} />
+</LinkedCharts>
+```
+
+**Chart coordination props** (available on all XY and ordinal HOCs inside LinkedCharts):
+- `selection` ({ name, unselectedOpacity?, unselectedStyle?, selectedStyle? }) — consume a named selection
+- `linkedHover` (boolean | string | { name?, fields }) — produce hover selections
+- `linkedBrush` (string | { name, xField?, yField? }) — produce brush selections (Scatterplot, BubbleChart only)
+
+**Hooks** (for custom coordinated views):
+- `useSelection({ name, clientId?, fields? })` → { predicate, isActive, selectPoints, selectInterval, clear }
+- `useLinkedHover({ name?, fields })` → { onHover, predicate, isActive }
+- `useBrushSelection({ name, xField?, yField? })` → { brushInteraction, predicate, isActive, clear }
+- `useFilteredData(data, selectionName, clientId?)` → filtered T[]
+
+#### ScatterplotMatrix
+N×N grid of scatterplots with built-in crossfilter brushing. Diagonal shows histograms.
+
+Props: `data` (TDatum[], required), `fields` (string[], required),
+  `fieldLabels` (Record<string, string>),
+  `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
+  `cellSize` (number, 150), `cellGap` (number, 4),
+  `pointRadius` (number, 2), `pointOpacity` (number, 0.5),
+  `diagonal` ("histogram"|"density"|"label", "histogram"),
+  `histogramBins` (number, 20),
+  `brushMode` ("crossfilter"|"intersect"|false, "crossfilter"),
+  `linkedHoverEnabled` (boolean, true), `unselectedOpacity` (number, 0.1),
+  `showGrid` (boolean, false), `tooltip` (fn), `showLegend` (boolean),
+  `width` (number), `height` (number), `className` (string)
+
+```jsx
+<ScatterplotMatrix
+  data={iris}
+  fields={["sepalLength", "sepalWidth", "petalLength", "petalWidth"]}
+  colorBy="species"
+  cellSize={160}
+  diagonal="histogram"
+  brushMode="crossfilter"
+/>
+```
+
 ## Common Patterns
 
 ### Color encoding
@@ -523,8 +577,32 @@ const edges = [{ source: "A", target: "B", value: 10 }, { source: "B", target: "
 <SankeyDiagram nodes={nodes} edges={edges} valueAccessor="value" />
 ```
 
+### Coordinated views
+```jsx
+// Cross-highlighting: hover one chart, highlight matching data in others
+<LinkedCharts>
+  <Scatterplot data={d} xAccessor="x" yAccessor="y" colorBy="region"
+    linkedHover={{ name: "hl", fields: ["region"] }}
+    selection={{ name: "hl" }} />
+  <BarChart data={agg} categoryAccessor="region" valueAccessor="total"
+    linkedHover={{ name: "hl", fields: ["region"] }}
+    selection={{ name: "hl" }} />
+</LinkedCharts>
+```
+
+### ScatterplotMatrix (SPLOM)
+```jsx
+<ScatterplotMatrix
+  data={iris}
+  fields={["sepalLength", "sepalWidth", "petalLength", "petalWidth"]}
+  colorBy="species"
+  cellSize={160}
+/>
+```
+
 ## What Semiotic Does That Others Don't
 - Network visualization: ForceDirectedGraph, SankeyDiagram, ChordDiagram, TreeDiagram, Treemap, CirclePack
 - Streaming data: RealtimeLineChart, RealtimeBarChart (canvas-based, high frequency)
+- Coordinated views: LinkedCharts, ScatterplotMatrix with crossfilter brushing — no other React chart library has this built in
 - Annotation system: built-in hover, click, and custom annotations
 - Server-side SVG: `renderToStaticSVG()` for email/OG images (import from "semiotic/server")

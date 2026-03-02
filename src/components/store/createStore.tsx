@@ -21,6 +21,10 @@ function useSyncExternalStoreShim<T>(
 
 export function createStore(fn) {
   let Ctx = createContext(null)
+  // Shared fallback source for when there's no provider in the tree.
+  // This allows hooks to be called unconditionally (rules of hooks)
+  // without crashing. The fallback state is inert (empty selections, etc.).
+  let fallbackSource = createSource(fn)
 
   function Provider({ children }) {
     let source = useMemo(() => createSource(fn), [])
@@ -29,9 +33,9 @@ export function createStore(fn) {
   }
 
   let useSelector = (selector) => {
-    let source = useContext(Ctx)
+    let source = useContext(Ctx) ?? fallbackSource
     let getSnapshot = () => selector(source.getState())
-    return useSyncExternalStoreShim(source?.subscribe, getSnapshot)
+    return useSyncExternalStoreShim(source.subscribe, getSnapshot)
   }
 
   return [Provider, useSelector]

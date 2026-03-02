@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, useCallback } from "react"
 import OrdinalFrame from "../../OrdinalFrame"
 import type { OrdinalFrameProps } from "../../types/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
@@ -10,6 +10,9 @@ import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
 import { validateArrayData } from "../shared/validateChartData"
+import { normalizeLinkedHover, wrapStyleWithSelection } from "../shared/selectionUtils"
+import { useSelection } from "../../store/useSelection"
+import { useLinkedHover } from "../../store/useSelection"
 
 /**
  * BoxPlot component props
@@ -171,16 +174,36 @@ export function BoxPlot<TDatum extends Record<string, any> = Record<string, any>
     showGrid = false,
     showLegend,
     tooltip,
-    frameProps = {}
+    frameProps = {},
+    selection,
+    linkedHover
   } = props
 
   const safeData = data || []
+
+  // ── Selection hooks (always called) ────────────────────────────────────
+
+  const hoverConfig = normalizeLinkedHover(linkedHover, colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [typeof categoryAccessor === "string" ? categoryAccessor : ""])
+
+  const selectionHook = useSelection({
+    name: selection?.name || "__unused__",
+    fields: []
+  })
+
+  const linkedHoverHook = useLinkedHover({
+    name: hoverConfig?.name || "hover",
+    fields: hoverConfig?.fields || []
+  })
+
+  const activeSelectionHook = selection ? { isActive: selectionHook.isActive, predicate: selectionHook.predicate } : null
+
+  // ── Core chart logic ───────────────────────────────────────────────────
 
   // Create color scale if colorBy is specified
   const colorScale = useColorScale(safeData, colorBy, colorScheme)
 
   // Summary style function for boxes
-  const summaryStyle = useMemo(() => {
+  const baseSummaryStyle = useMemo(() => {
     return (d: Record<string, any>) => {
       const color = colorBy ? getColor(d, colorBy, colorScale) : DEFAULT_COLOR
 
@@ -191,6 +214,11 @@ export function BoxPlot<TDatum extends Record<string, any> = Record<string, any>
       }
     }
   }, [colorBy, colorScale])
+
+  const summaryStyle = useMemo(
+    () => wrapStyleWithSelection(baseSummaryStyle, activeSelectionHook, selection),
+    [baseSummaryStyle, activeSelectionHook, selection]
+  )
 
   // Point style function for outliers
   const pointStyle = useMemo(() => {
@@ -280,6 +308,17 @@ export function BoxPlot<TDatum extends Record<string, any> = Record<string, any>
     return finalMargin
   }, [userMargin, legend])
 
+  // ── Hover behavior ─────────────────────────────────────────────────────
+
+  const customHoverBehavior = useCallback(
+    (d: Record<string, any> | null) => {
+      if (linkedHover) {
+        linkedHoverHook.onHover(d)
+      }
+    },
+    [linkedHover, linkedHoverHook]
+  )
+
   // Default tooltip for summary hover (boxplot quartile points)
   const defaultTooltipContent = useMemo(() => {
     const getVal = resolveAccessor<number>(valueAccessor)
@@ -357,6 +396,7 @@ export function BoxPlot<TDatum extends Record<string, any> = Record<string, any>
     ...(title && { title }),
     // Add tooltip support
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as Function,
+    ...(linkedHover && { customHoverBehavior }),
     // Allow frameProps to override defaults
     transition: true,
     ...frameProps

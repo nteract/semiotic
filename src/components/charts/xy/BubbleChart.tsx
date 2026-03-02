@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, useCallback } from "react"
 import XYFrame from "../../XYFrame"
 import type { XYFrameProps } from "../../types/xyTypes"
 import { getColor, getSize } from "../shared/colorUtils"
@@ -10,6 +10,10 @@ import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
 import { validateArrayData } from "../shared/validateChartData"
+import { normalizeLinkedHover, normalizeLinkedBrush, wrapStyleWithSelection } from "../shared/selectionUtils"
+import { useSelection } from "../../store/useSelection"
+import { useLinkedHover } from "../../store/useSelection"
+import { useBrushSelection } from "../../store/useSelection"
 
 /**
  * BubbleChart component props
@@ -203,10 +207,39 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
     showGrid = false,
     showLegend,
     tooltip,
-    frameProps = {}
+    frameProps = {},
+    selection,
+    linkedHover,
+    linkedBrush
   } = props
 
   const safeData = data || []
+
+  // ── Selection hooks (always called, conditional logic inside) ──────────
+
+  const hoverConfig = normalizeLinkedHover(linkedHover, colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [])
+  const brushConfig = normalizeLinkedBrush(linkedBrush)
+
+  const selectionHook = useSelection({
+    name: selection?.name || "__unused__",
+    fields: []
+  })
+
+  const linkedHoverHook = useLinkedHover({
+    name: hoverConfig?.name || "hover",
+    fields: hoverConfig?.fields || []
+  })
+
+  const brushHook = useBrushSelection({
+    name: brushConfig?.name || "__unused_brush__",
+    xField: brushConfig?.xField || (typeof xAccessor === "string" ? xAccessor : undefined),
+    yField: brushConfig?.yField || (typeof yAccessor === "string" ? yAccessor : undefined)
+  })
+
+  // Only use the hooks when the corresponding props are provided
+  const activeSelectionHook = selection ? { isActive: selectionHook.isActive, predicate: selectionHook.predicate } : null
+
+  // ── Core chart logic ───────────────────────────────────────────────────
 
   // Create color scale if colorBy is specified
   const colorScale = useColorScale(safeData, colorBy, colorScheme)
@@ -224,7 +257,7 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
   }, [safeData, sizeBy])
 
   // Point style function
-  const pointStyle = useMemo(() => {
+  const basePointStyle = useMemo(() => {
     return (d: Record<string, any>) => {
       const baseStyle: Record<string, string | number> = {
         fillOpacity: bubbleOpacity,
@@ -245,6 +278,11 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
       return baseStyle
     }
   }, [colorBy, colorScale, sizeBy, sizeRange, sizeDomain, bubbleOpacity, bubbleStrokeWidth, bubbleStrokeColor])
+
+  const pointStyle = useMemo(
+    () => wrapStyleWithSelection(basePointStyle, activeSelectionHook, selection),
+    [basePointStyle, activeSelectionHook, selection]
+  )
 
   // Build axes configuration
   const axes = useMemo(() => {
@@ -299,6 +337,17 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
     return finalMargin
   }, [userMargin, legend])
 
+  // ── Hover behavior ─────────────────────────────────────────────────────
+
+  const customHoverBehavior = useCallback(
+    (d: Record<string, any> | null) => {
+      if (linkedHover) {
+        linkedHoverHook.onHover(d)
+      }
+    },
+    [linkedHover, linkedHoverHook]
+  )
+
   // Validate data (after all hooks)
   const error = validateArrayData({
     componentName: "BubbleChart",
@@ -326,6 +375,8 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
     ...(title && { title }),
     // Add tooltip support
     ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
+    ...(linkedHover && { customHoverBehavior }),
+    ...(linkedBrush && { interaction: brushHook.brushInteraction }),
     // Allow frameProps to override defaults
     transition: true,
     ...frameProps

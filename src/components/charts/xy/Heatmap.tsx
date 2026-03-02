@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, useCallback } from "react"
 import { scaleSequential } from "d3-scale"
 import { interpolateBlues, interpolateReds, interpolateGreens, interpolateViridis } from "d3-scale-chromatic"
 import XYFrame from "../../XYFrame"
@@ -10,6 +10,9 @@ import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
 import { validateArrayData } from "../shared/validateChartData"
+import { normalizeLinkedHover, wrapStyleWithSelection } from "../shared/selectionUtils"
+import { useSelection } from "../../store/useSelection"
+import { useLinkedHover } from "../../store/useSelection"
 
 /**
  * Heatmap component props
@@ -199,10 +202,31 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
     cellBorderWidth = 1,
     enableHover = true,
     tooltip,
-    frameProps = {}
+    frameProps = {},
+    selection,
+    linkedHover
   } = props
 
   const safeData = data || []
+
+  // ── Selection hooks (always called, conditional logic inside) ──────────
+
+  const hoverConfig = normalizeLinkedHover(linkedHover, [])
+
+  const selectionHook = useSelection({
+    name: selection?.name || "__unused__",
+    fields: []
+  })
+
+  const linkedHoverHook = useLinkedHover({
+    name: hoverConfig?.name || "hover",
+    fields: hoverConfig?.fields || []
+  })
+
+  // Only use the hooks when the corresponding props are provided
+  const activeSelectionHook = selection ? { isActive: selectionHook.isActive, predicate: selectionHook.predicate } : null
+
+  // ── Core chart logic ───────────────────────────────────────────────────
 
   // Get value accessor function
   const getValueFn = useMemo(() => {
@@ -252,7 +276,7 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
   }, [safeData])
 
   // Summary style function
-  const summaryStyle = useMemo(() => {
+  const baseSummaryStyle = useMemo(() => {
     return (d: Record<string, any>) => {
       const value = getValueFn(d)
       return {
@@ -262,6 +286,11 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
       }
     }
   }, [getValueFn, colorScale, cellBorderColor, cellBorderWidth])
+
+  const summaryStyle = useMemo(
+    () => wrapStyleWithSelection(baseSummaryStyle, activeSelectionHook, selection),
+    [baseSummaryStyle, activeSelectionHook, selection]
+  )
 
   // Summary render function (for value labels)
   const summaryRenderMode = useMemo(() => {
@@ -307,6 +336,17 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
     return axesConfig
   }, [xLabel, yLabel, xFormat, yFormat])
 
+  // ── Hover behavior ─────────────────────────────────────────────────────
+
+  const customHoverBehavior = useCallback(
+    (d: Record<string, any> | null) => {
+      if (linkedHover) {
+        linkedHoverHook.onHover(d)
+      }
+    },
+    [linkedHover, linkedHoverHook]
+  )
+
   // Validate data (after all hooks)
   const error = validateArrayData({
     componentName: "Heatmap",
@@ -344,6 +384,7 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
     ...(title && { title }),
     // Add tooltip support
     ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
+    ...(linkedHover && { customHoverBehavior }),
     // Allow frameProps to override defaults
     transition: true,
     ...frameProps
