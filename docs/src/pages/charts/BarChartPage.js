@@ -72,7 +72,7 @@ export default function BarChartPage() {
         { label: "Ordinal Charts", path: "/charts" },
         { label: "BarChart", path: "/charts/bar-chart" },
       ]}
-      prevPage={{ title: "Heatmap", path: "/charts/heatmap" }}
+      prevPage={{ title: "Scatterplot Matrix", path: "/charts/scatterplot-matrix" }}
       nextPage={{ title: "Stacked Bar Chart", path: "/charts/stacked-bar-chart" }}
     >
       <ComponentMeta

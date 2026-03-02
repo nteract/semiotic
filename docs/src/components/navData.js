@@ -21,7 +21,8 @@ const navData = [
           { title: "Stacked Area Chart", path: "/charts/stacked-area-chart" },
           { title: "Scatterplot", path: "/charts/scatterplot" },
           { title: "Bubble Chart", path: "/charts/bubble-chart" },
-          { title: "Heatmap", path: "/charts/heatmap" }
+          { title: "Heatmap", path: "/charts/heatmap" },
+          { title: "Scatterplot Matrix", path: "/charts/scatterplot-matrix" }
         ]
       },
       {

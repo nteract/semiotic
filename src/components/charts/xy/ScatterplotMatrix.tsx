@@ -1,16 +1,17 @@
 "use client"
 import * as React from "react"
-import { useMemo, useCallback, useId, useRef, useEffect } from "react"
+import { useMemo, useCallback, useState } from "react"
 import XYFrame from "../../XYFrame"
 import type { XYFrameProps } from "../../types/xyTypes"
 import { getColor } from "../shared/colorUtils"
-import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import { LinkedCharts } from "../../LinkedCharts"
-import { useSelection, useBrushSelection, useLinkedHover } from "../../store/useSelection"
-import { buildPredicate } from "../../store/SelectionStore"
+import { useSelection, useBrushSelection } from "../../store/useSelection"
+
+// Internal field used to identify datums across cells
+const SPLOM_IDX = "__splomIdx"
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -39,8 +40,8 @@ export interface ScatterplotMatrixProps<TDatum extends Record<string, any> = Rec
   histogramBins?: number
   /** Brush interaction mode @default "crossfilter" */
   brushMode?: "crossfilter" | "intersect" | false
-  /** Enable linked hover @default true */
-  linkedHoverEnabled?: boolean
+  /** Enable hover cross-highlighting @default true */
+  hoverMode?: boolean
   /** Opacity for unselected points @default 0.1 */
   unselectedOpacity?: number
   /** Show grid lines @default false */
@@ -57,44 +58,95 @@ interface CellProps {
   data: Record<string, any>[]
   xField: string
   yField: string
+  fieldLabels: Record<string, string>
   cellSize: number
   pointRadius: number
   pointOpacity: number
   colorBy?: ChartAccessor<any, string>
   colorScale?: (v: string) => string
-  selectionName: string
+  brushSelectionName: string
+  hoverSelectionName: string
   unselectedOpacity: number
   showGrid: boolean
   tooltip?: TooltipProp
+  /** "brush" or "hover" — mutually exclusive */
+  mode: "brush" | "hover"
 }
 
 function ScatterplotCell({
   data,
   xField,
   yField,
+  fieldLabels,
   cellSize,
   pointRadius,
   pointOpacity,
   colorBy,
   colorScale,
-  selectionName,
+  brushSelectionName,
+  hoverSelectionName,
   unselectedOpacity,
   showGrid,
-  tooltip
+  tooltip,
+  mode
 }: CellProps) {
   const clientId = `splom-${xField}-${yField}`
 
-  const selectionHook = useSelection({
-    name: selectionName,
+  // Brush selection (crossfilter) — only used in brush mode
+  const brushSelectionHook = useSelection({
+    name: brushSelectionName,
     clientId,
     fields: [xField, yField]
   })
 
   const brushHook = useBrushSelection({
-    name: selectionName,
+    name: brushSelectionName,
     xField,
     yField
   })
+
+  // Hover selection — only used in hover mode.
+  // Single hook for both reading and writing.
+  const hoverHook = useSelection({
+    name: hoverSelectionName,
+    clientId,
+    fields: [SPLOM_IDX]
+  })
+
+  // Extract stable function references so the callback doesn't depend on the
+  // entire hook return object (which is a new reference every render).
+  const hoverSelectPoints = hoverHook.selectPoints
+  const hoverClear = hoverHook.clear
+
+  // Track hovered datum locally for our own tooltip rendering.
+  // We render our own tooltip because XYFrame's internal tooltip gets orphaned:
+  // hover → selection store update → all cells re-render → voronoi DOM recreated
+  // → mouseLeave never fires on old cells → XYFrame tooltip stuck forever.
+  const [hoveredDatum, setHoveredDatum] = useState<Record<string, any> | null>(null)
+
+  const customHoverBehavior = useCallback(
+    (d: Record<string, any> | undefined) => {
+      if (!d) {
+        hoverClear()
+        setHoveredDatum(null)
+        return
+      }
+      const idx = d[SPLOM_IDX]
+      if (idx !== undefined) {
+        hoverSelectPoints({ [SPLOM_IDX]: [idx] })
+        setHoveredDatum(d)
+      }
+    },
+    [hoverSelectPoints, hoverClear]
+  )
+
+  // Stable wrapper div onMouseLeave — this div is never unmounted by React
+  // during re-renders, so its mouseLeave always fires even when the voronoi
+  // cells inside XYFrame get recreated.
+  const handleMouseLeave = useCallback(() => {
+    hoverClear()
+    setHoveredDatum(null)
+  }, [hoverClear])
 
   const pointStyle = useCallback(
     (d: Record<string, any>) => {
@@ -109,20 +161,75 @@ function ScatterplotCell({
         style.fill = DEFAULT_COLOR
       }
 
-      if (selectionHook.isActive && !selectionHook.predicate(d)) {
-        style.fillOpacity = unselectedOpacity
-        style.strokeOpacity = unselectedOpacity
+      if (mode === "hover") {
+        const hoverHighlighted = hoverHook.isActive && hoverHook.predicate(d)
+        if (hoverHighlighted) {
+          style.fillOpacity = 1
+          style.r = pointRadius * 2.5
+          style.stroke = "#333"
+          style.strokeWidth = 1.5
+        } else if (hoverHook.isActive) {
+          style.fillOpacity = pointOpacity * 0.6
+        }
+      } else {
+        // brush mode
+        const brushDimmed = brushSelectionHook.isActive && !brushSelectionHook.predicate(d)
+        if (brushDimmed) {
+          style.fillOpacity = unselectedOpacity
+          style.strokeOpacity = unselectedOpacity
+        }
       }
 
       return style
     },
-    [colorBy, colorScale, pointOpacity, pointRadius, selectionHook.isActive, selectionHook.predicate, unselectedOpacity]
+    [colorBy, colorScale, pointOpacity, pointRadius, mode, brushSelectionHook.isActive, brushSelectionHook.predicate, hoverHook.isActive, hoverHook.predicate, unselectedOpacity]
   )
 
   const axes = useMemo((): Array<Record<string, unknown>> => [
     { orient: "left", ticks: 3, tickFormat: () => "", ...(showGrid && { tickLineGenerator: () => null }) },
     { orient: "bottom", ticks: 3, tickFormat: () => "", ...(showGrid && { tickLineGenerator: () => null }) }
   ], [showGrid])
+
+  // Tooltip content — rendered by us, positioned in the wrapper div
+  const xLabel = fieldLabels[xField] || xField
+  const yLabel = fieldLabels[yField] || yField
+  const tooltipElement = useMemo(() => {
+    if (!hoveredDatum || mode !== "hover") return null
+    const d = hoveredDatum
+    const label = colorBy
+      ? typeof colorBy === "function" ? (colorBy as Function)(d) : d[colorBy as string]
+      : null
+    return (
+      <div
+        style={{
+          position: "absolute",
+          top: 4,
+          right: 4,
+          background: "rgba(255,255,255,0.95)",
+          border: "1px solid #ddd",
+          borderRadius: 3,
+          padding: "4px 8px",
+          fontSize: 11,
+          lineHeight: 1.4,
+          whiteSpace: "nowrap",
+          pointerEvents: "none",
+          zIndex: 10
+        }}
+      >
+        {label != null && <div style={{ fontWeight: "bold", marginBottom: 2 }}>{String(label)}</div>}
+        <div>{xLabel}: {d[xField] != null ? Number(d[xField]).toFixed(1) : "–"}</div>
+        <div>{yLabel}: {d[yField] != null ? Number(d[yField]).toFixed(1) : "–"}</div>
+      </div>
+    )
+  }, [hoveredDatum, mode, colorBy, xField, yField, xLabel, yLabel])
+
+  // Suppress XYFrame's internal tooltip by using hoverAnnotation: [() => null].
+  // This creates the voronoi overlay (truthy) and fires customHoverBehavior,
+  // but the () => null function produces no tooltip annotation:
+  //   changeVoronoi maps [() => null] → filters out falsy → voronoiHover([])
+  //   AnnotationLayer: annotations.concat([]) → no tooltip rendered.
+  // This also actively clears any stuck tooltip on each hover event.
+  const noTooltipHoverAnnotation = useMemo(() => [() => null], [])
 
   const xyFrameProps: XYFrameProps = {
     size: [cellSize, cellSize],
@@ -131,13 +238,22 @@ function ScatterplotCell({
     yAccessor: yField,
     pointStyle,
     axes: axes as any,
-    hoverAnnotation: true,
-    interaction: brushHook.brushInteraction,
     margin: { top: 4, bottom: 4, left: 4, right: 4 },
-    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function })
+    ...(mode === "brush" && { interaction: brushHook.brushInteraction }),
+    // Hover mode: voronoi for detection + customHoverBehavior for cross-highlight.
+    // noTooltipHoverAnnotation suppresses XYFrame's internal tooltip.
+    ...(mode === "hover" && {
+      hoverAnnotation: noTooltipHoverAnnotation,
+      customHoverBehavior
+    })
   }
 
-  return <XYFrame {...xyFrameProps} />
+  return (
+    <div style={{ position: "relative" }} onMouseLeave={handleMouseLeave}>
+      <XYFrame {...xyFrameProps} />
+      {tooltipElement}
+    </div>
+  )
 }
 
 // ── Diagonal Cell (Histogram) ──────────────────────────────────────────────
@@ -150,8 +266,11 @@ interface DiagonalCellProps {
   bins: number
   colorBy?: ChartAccessor<any, string>
   colorScale?: (v: string) => string
-  selectionName: string
+  brushSelectionName: string
+  hoverSelectionName: string
   unselectedOpacity: number
+  /** "brush" or "hover" — matches parent mode */
+  mode: "brush" | "hover"
 }
 
 function DiagonalCell({
@@ -162,14 +281,27 @@ function DiagonalCell({
   bins,
   colorBy,
   colorScale,
-  selectionName,
-  unselectedOpacity
+  brushSelectionName,
+  hoverSelectionName,
+  unselectedOpacity,
+  mode
 }: DiagonalCellProps) {
-  const selectionHook = useSelection({
-    name: selectionName,
+  const brushHook = useSelection({
+    name: brushSelectionName,
     clientId: `splom-diag-${field}`,
     fields: [field]
   })
+
+  const hoverHook = useSelection({
+    name: hoverSelectionName,
+    clientId: `splom-diag-${field}-hover`,
+    fields: [SPLOM_IDX]
+  })
+
+  // Use the active mode's predicate
+  const activeHook = mode === "hover" ? hoverHook : brushHook
+  const isActive = activeHook.isActive
+  const activePredicate = activeHook.predicate
 
   const histogram = useMemo(() => {
     const values = data.map((d) => d[field]).filter((v) => v != null && !isNaN(v))
@@ -187,7 +319,7 @@ function DiagonalCell({
       if (v == null || isNaN(v)) continue
       const idx = Math.min(Math.floor((v - min) / binWidth), bins - 1)
       counts[idx]++
-      if (!selectionHook.isActive || selectionHook.predicate(d)) {
+      if (!isActive || activePredicate(d)) {
         selectedCounts[idx]++
       }
     }
@@ -209,7 +341,7 @@ function DiagonalCell({
       })),
       max: maxCount
     }
-  }, [data, field, bins, cellSize, selectionHook.isActive, selectionHook.predicate])
+  }, [data, field, bins, cellSize, isActive, activePredicate])
 
   return (
     <svg width={cellSize} height={cellSize} style={{ overflow: "hidden" }}>
@@ -232,11 +364,11 @@ function DiagonalCell({
           width={Math.max(bar.w, 1)}
           height={bar.h}
           fill="#ccc"
-          opacity={selectionHook.isActive ? 0.3 : 0.6}
+          opacity={isActive ? 0.3 : 0.6}
         />
       ))}
       {/* Selected distribution */}
-      {selectionHook.isActive &&
+      {isActive &&
         histogram.selectedBars.map((bar, i) => (
           <rect
             key={`sel-${i}`}
@@ -290,7 +422,7 @@ function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<stri
     diagonal = "histogram",
     histogramBins = 20,
     brushMode = "crossfilter",
-    linkedHoverEnabled = true,
+    hoverMode = true,
     unselectedOpacity = 0.1,
     showGrid = false,
     tooltip,
@@ -300,15 +432,24 @@ function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<stri
     className
   } = props
 
-  const safeData = (data || []) as Record<string, any>[]
-  const selectionName = "splom"
+  const brushSelectionName = "splom"
+  const hoverSelectionName = "splom-hover"
 
-  const colorScale = useColorScale(safeData, colorBy, colorScheme)
+  // Brush and hover are mutually exclusive: hover wins when enabled
+  const cellMode: "brush" | "hover" = hoverMode ? "hover" : (brushMode ? "brush" : "hover")
+
+  // Stamp each datum with a stable index for cross-cell identity matching
+  const indexedData = useMemo(() => {
+    return ((data || []) as Record<string, any>[]).map((d, i) => {
+      if (d[SPLOM_IDX] !== undefined) return d
+      return { ...d, [SPLOM_IDX]: i }
+    })
+  }, [data])
+
+  const colorScale = useColorScale(indexedData, colorBy, colorScheme)
 
   const n = fields.length
   const labelWidth = 40
-  const totalWidth = n * cellSize + (n - 1) * cellGap + labelWidth
-  const totalHeight = n * cellSize + (n - 1) * cellGap + labelWidth
 
   // Legend
   const shouldShowLegend = showLegend !== undefined ? showLegend : !!colorBy
@@ -316,12 +457,12 @@ function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<stri
     if (!shouldShowLegend || !colorBy) return null
     const colorField = typeof colorBy === "string" ? colorBy : null
     if (!colorField) return null
-    const categories = [...new Set(safeData.map((d) => d[colorField]))]
+    const categories = [...new Set(indexedData.map((d) => d[colorField]))]
     return categories.map((cat) => ({
       label: String(cat),
       color: colorScale ? colorScale(String(cat)) : DEFAULT_COLOR
     }))
-  }, [shouldShowLegend, colorBy, safeData, colorScale])
+  }, [shouldShowLegend, colorBy, indexedData, colorScale])
 
   const gridStyle = useMemo(
     () => ({
@@ -389,15 +530,17 @@ function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<stri
                 return (
                   <DiagonalCell
                     key={`diag-${rowField}`}
-                    data={safeData}
+                    data={indexedData}
                     field={rowField}
                     label={fieldLabels[rowField] || rowField}
                     cellSize={cellSize}
                     bins={histogramBins}
                     colorBy={colorBy}
                     colorScale={colorScale}
-                    selectionName={selectionName}
+                    brushSelectionName={brushSelectionName}
+                    hoverSelectionName={hoverSelectionName}
                     unselectedOpacity={unselectedOpacity}
+                    mode={cellMode}
                   />
                 )
               }
@@ -405,18 +548,21 @@ function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<stri
               return (
                 <ScatterplotCell
                   key={`cell-${rowField}-${colField}`}
-                  data={safeData}
+                  data={indexedData}
                   xField={colField}
                   yField={rowField}
+                  fieldLabels={fieldLabels}
                   cellSize={cellSize}
                   pointRadius={pointRadius}
                   pointOpacity={pointOpacity}
                   colorBy={colorBy}
                   colorScale={colorScale}
-                  selectionName={selectionName}
+                  brushSelectionName={brushSelectionName}
+                  hoverSelectionName={hoverSelectionName}
                   unselectedOpacity={unselectedOpacity}
                   showGrid={showGrid}
                   tooltip={tooltip}
+                  mode={cellMode}
                 />
               )
             })}
@@ -449,9 +595,16 @@ function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<stri
  * ScatterplotMatrix (SPLOM) — multi-dimensional scatter visualization
  *
  * Renders an N×N grid of scatterplots for all pairwise combinations of the
- * specified fields. Diagonal cells show histograms. Built-in brush-and-link
- * with crossfilter support: brushing one cell highlights matching points
- * across all other cells.
+ * specified fields. Diagonal cells show histograms. Supports two interaction
+ * modes:
+ *
+ * - **Hover** (default): hover a point to cross-highlight the same datum
+ *   in every cell. Set `hoverMode={true}` (the default).
+ * - **Brush**: drag to select a region in one cell; matching points are
+ *   highlighted across all cells (crossfilter: the brushed cell excludes
+ *   its own filter). Set `hoverMode={false}` to enable brush mode.
+ *
+ * The two modes are mutually exclusive — hover takes priority when enabled.
  *
  * @example
  * ```tsx
@@ -467,11 +620,15 @@ function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<stri
 export function ScatterplotMatrix<TDatum extends Record<string, any> = Record<string, any>>(
   props: ScatterplotMatrixProps<TDatum>
 ) {
-  const { brushMode = "crossfilter" } = props
+  const { brushMode = "crossfilter", hoverMode = true } = props
 
-  const selectionConfig = brushMode
-    ? { splom: { resolution: brushMode as "crossfilter" | "intersect" } }
-    : undefined
+  const selectionConfig: Record<string, { resolution?: "union" | "intersect" | "crossfilter" }> = {}
+  if (!hoverMode && brushMode) {
+    selectionConfig.splom = { resolution: brushMode as "crossfilter" | "intersect" }
+  }
+  if (hoverMode) {
+    selectionConfig["splom-hover"] = { resolution: "union" }
+  }
 
   return (
     <LinkedCharts selections={selectionConfig}>

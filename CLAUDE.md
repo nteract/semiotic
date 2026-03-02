@@ -508,7 +508,7 @@ Props: `data` (TDatum[], required), `fields` (string[], required),
   `diagonal` ("histogram"|"density"|"label", "histogram"),
   `histogramBins` (number, 20),
   `brushMode` ("crossfilter"|"intersect"|false, "crossfilter"),
-  `linkedHoverEnabled` (boolean, true), `unselectedOpacity` (number, 0.1),
+  `hoverMode` (boolean, true), `unselectedOpacity` (number, 0.1),
   `showGrid` (boolean, false), `tooltip` (fn), `showLegend` (boolean),
   `width` (number), `height` (number), `className` (string)
 

@@ -101,7 +101,7 @@ export default function HeatmapPage() {
         { label: "Heatmap", path: "/charts/heatmap" },
       ]}
       prevPage={{ title: "Bubble Chart", path: "/charts/bubble-chart" }}
-      nextPage={{ title: "Bar Chart", path: "/charts/bar-chart" }}
+      nextPage={{ title: "Scatterplot Matrix", path: "/charts/scatterplot-matrix" }}
     >
       <ComponentMeta
         componentName="Heatmap"

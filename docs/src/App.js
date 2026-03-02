@@ -58,6 +58,7 @@ import StackedAreaChartPage from "./pages/charts/StackedAreaChartPage"
 import ScatterplotPage from "./pages/charts/ScatterplotPage"
 import BubbleChartPage from "./pages/charts/BubbleChartPage"
 import HeatmapPage from "./pages/charts/HeatmapPage"
+import ScatterplotMatrixPage from "./pages/charts/ScatterplotMatrixPage"
 import BarChartPage from "./pages/charts/BarChartPage"
 import StackedBarChartPage from "./pages/charts/StackedBarChartPage"
 import SwarmPlotPage from "./pages/charts/SwarmPlotPage"
@@ -418,6 +419,7 @@ export default function DocsApp() {
               <Route path="scatterplot" element={<ScatterplotPage />} />
               <Route path="bubble-chart" element={<BubbleChartPage />} />
               <Route path="heatmap" element={<HeatmapPage />} />
+              <Route path="scatterplot-matrix" element={<ScatterplotMatrixPage />} />
               {/* Categorical Charts */}
               <Route path="bar-chart" element={<BarChartPage />} />
               <Route path="stacked-bar-chart" element={<StackedBarChartPage />} />
