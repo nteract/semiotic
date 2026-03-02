@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, useCallback } from "react"
 import OrdinalFrame from "../../OrdinalFrame"
 import type { OrdinalFrameProps } from "../../types/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
@@ -10,6 +10,9 @@ import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
 import { validateArrayData } from "../shared/validateChartData"
+import { normalizeLinkedHover, wrapStyleWithSelection } from "../shared/selectionUtils"
+import { useSelection } from "../../store/useSelection"
+import { useLinkedHover } from "../../store/useSelection"
 
 /**
  * StackedBarChart component props
@@ -165,13 +168,33 @@ export function StackedBarChart<TDatum extends Record<string, any> = Record<stri
     showGrid = false,
     showLegend = true,
     tooltip,
-    frameProps = {}
+    frameProps = {},
+    selection,
+    linkedHover
   } = props
 
   const safeData = data || []
 
   // Use stackBy as colorBy if not specified
   const actualColorBy = colorBy || stackBy
+
+  // ── Selection hooks (always called) ────────────────────────────────────
+
+  const hoverConfig = normalizeLinkedHover(linkedHover, actualColorBy ? [typeof actualColorBy === "string" ? actualColorBy : ""] : [])
+
+  const selectionHook = useSelection({
+    name: selection?.name || "__unused__",
+    fields: []
+  })
+
+  const linkedHoverHook = useLinkedHover({
+    name: hoverConfig?.name || "hover",
+    fields: hoverConfig?.fields || []
+  })
+
+  const activeSelectionHook = selection ? { isActive: selectionHook.isActive, predicate: selectionHook.predicate } : null
+
+  // ── Core chart logic ───────────────────────────────────────────────────
 
   // Get unique stack values for legend
   const stackValues = useMemo(() => {
@@ -183,7 +206,7 @@ export function StackedBarChart<TDatum extends Record<string, any> = Record<stri
   const colorScale = useColorScale(safeData, actualColorBy, colorScheme)
 
   // Piece style function
-  const pieceStyle = useMemo(() => {
+  const basePieceStyle = useMemo(() => {
     return (d: Record<string, any>) => {
       const baseStyle: Record<string, string | number> = {}
 
@@ -197,6 +220,11 @@ export function StackedBarChart<TDatum extends Record<string, any> = Record<stri
       return baseStyle
     }
   }, [actualColorBy, colorScale])
+
+  const pieceStyle = useMemo(
+    () => wrapStyleWithSelection(basePieceStyle, activeSelectionHook, selection),
+    [basePieceStyle, activeSelectionHook, selection]
+  )
 
   // Build axes configuration
   const axes = useMemo(() => {
@@ -262,6 +290,17 @@ export function StackedBarChart<TDatum extends Record<string, any> = Record<stri
     return finalMargin
   }, [userMargin, legend])
 
+  // ── Hover behavior ─────────────────────────────────────────────────────
+
+  const customHoverBehavior = useCallback(
+    (d: Record<string, any> | null) => {
+      if (linkedHover) {
+        linkedHoverHook.onHover(d)
+      }
+    },
+    [linkedHover, linkedHoverHook]
+  )
+
   // Default tooltip function for piece hover
   const defaultTooltipContent = useMemo(() => {
     const getStack = resolveAccessor(stackBy)
@@ -325,6 +364,7 @@ export function StackedBarChart<TDatum extends Record<string, any> = Record<stri
     ...(title && { title }),
     // Add tooltip support
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as Function,
+    ...(linkedHover && { customHoverBehavior }),
     // Allow frameProps to override defaults
     transition: true,
     ...frameProps

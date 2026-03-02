@@ -13,6 +13,21 @@ import { Link } from "react-router-dom"
 // Sample data
 // ---------------------------------------------------------------------------
 
+const forecastData = [
+  { month: 1, value: 120, upper: 15, lower: 10 },
+  { month: 2, value: 135, upper: 18, lower: 12 },
+  { month: 3, value: 128, upper: 20, lower: 14 },
+  { month: 4, value: 145, upper: 22, lower: 16 },
+  { month: 5, value: 160, upper: 25, lower: 18 },
+  { month: 6, value: 155, upper: 28, lower: 20 },
+  { month: 7, value: 170, upper: 30, lower: 22 },
+  { month: 8, value: 185, upper: 32, lower: 24 },
+  { month: 9, value: 178, upper: 35, lower: 26 },
+  { month: 10, value: 195, upper: 38, lower: 28 },
+  { month: 11, value: 210, upper: 40, lower: 30 },
+  { month: 12, value: 225, upper: 42, lower: 32 },
+]
+
 const simpleData = [
   { month: 1, revenue: 12000 },
   { month: 2, revenue: 18000 },
@@ -227,6 +242,78 @@ export default function LineChartPage() {
         }}
         hiddenProps={{}}
       />
+
+      <h3 id="confidence-bands">Confidence Bands (lineBounds)</h3>
+      <p>
+        Use <code>frameProps</code> with XYFrame's <code>summaryType</code> to
+        add confidence intervals or error bands around your line. The{" "}
+        <code>linebounds</code> summary type takes a{" "}
+        <code>boundingAccessor</code> (or separate{" "}
+        <code>topBoundingAccessor</code> / <code>bottomBoundingAccessor</code>)
+        that returns how far the band extends above and below each point.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: forecastData,
+          xAccessor: "month",
+          yAccessor: "value",
+          curve: "monotoneX",
+          showPoints: true,
+          pointRadius: 3,
+          xLabel: "Month",
+          yLabel: "Forecast",
+          frameProps: {
+            summaries: [{ coordinates: forecastData }],
+            summaryType: {
+              type: "linebounds",
+              topBoundingAccessor: d => d.upper,
+              bottomBoundingAccessor: d => d.lower,
+            },
+            summaryStyle: {
+              fill: "#6366f1",
+              fillOpacity: 0.15,
+              stroke: "#6366f1",
+              strokeOpacity: 0.3,
+              strokeWidth: 1,
+            },
+          },
+        }}
+        type={LineChart}
+        overrideProps={{
+          data: `[
+  { month: 1, value: 120, upper: 15, lower: 10 },
+  { month: 2, value: 135, upper: 18, lower: 12 },
+  { month: 3, value: 128, upper: 20, lower: 14 },
+  // ...data with upper/lower bounds per point
+]`,
+          frameProps: `{
+  summaries: [{ coordinates: forecastData }],
+  summaryType: {
+    type: "linebounds",
+    topBoundingAccessor: d => d.upper,
+    bottomBoundingAccessor: d => d.lower,
+  },
+  summaryStyle: {
+    fill: "#6366f1",
+    fillOpacity: 0.15,
+    stroke: "#6366f1",
+    strokeOpacity: 0.3,
+    strokeWidth: 1,
+  },
+}`,
+        }}
+        hiddenProps={{}}
+      />
+
+      <p>
+        The <code>boundingAccessor</code> receives each raw data point and
+        returns a pixel offset. Use separate <code>topBoundingAccessor</code>{" "}
+        and <code>bottomBoundingAccessor</code> for asymmetric bands (e.g.,
+        when your confidence interval isn't centered on the line). This is
+        useful for forecasts, measurement uncertainty, or any scenario where
+        you want to show a range around a trend.
+      </p>
 
       {/* ----------------------------------------------------------------- */}
       {/* Props */}

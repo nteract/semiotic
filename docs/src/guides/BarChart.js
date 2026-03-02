@@ -230,7 +230,7 @@ const rAccessor = ["tweets", "retweets", "favorites"]
         
 ## Cluster / Grouped Bar Chart using the Same Data Model
 
-Change the type to \`"clusterbar"\` to see the bars side-by-side instead of stacked. This example includes a comment in the code on how to use the \`rName\` prop (v1.19.6+) of the item rather than the index-based approach above to get the name of the accessors in your array.
+Change the type to \`"clusterbar"\` to see the bars side-by-side instead of stacked. This example includes a comment in the code on how to use the \`rName\` prop of the item rather than the index-based approach above to get the name of the accessors in your array.
 
 _This only works if you send accessors that are simple strings, if you send a function then its name will simple be \`function-{index}\`._
     
@@ -261,7 +261,7 @@ const rAccessor = ["tweets", "retweets", "favorites"]
           rAccessor: 'rAccessor',
           style: `d => {
 
-          // in v1.19.6+ a d.rName is exposed so instead
+          // d.rName is exposed so instead
           // you can call return { fill: colorHash[d.rName], stroke: "white" }
           return { fill: colorHash[rAccessor[d.rIndex]], stroke: "white" }
         }`

@@ -1,7 +1,0 @@
-{
-  "rewrites": [
-    { "source": "/guides/(.*)", "destination": "/index.html" },
-    { "source": "/examples/(.*)", "destination": "/index.html" },
-    { "source": "/api/(.*)", "destination": "/index.html" }
-  ]
-}

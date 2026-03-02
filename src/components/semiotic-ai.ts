@@ -10,6 +10,11 @@ export { StackedAreaChart } from "./charts/xy/StackedAreaChart"
 export { Scatterplot } from "./charts/xy/Scatterplot"
 export { BubbleChart } from "./charts/xy/BubbleChart"
 export { Heatmap } from "./charts/xy/Heatmap"
+export { ScatterplotMatrix } from "./charts/xy/ScatterplotMatrix"
+
+// Coordinated Views
+export { LinkedCharts } from "./LinkedCharts"
+export { useSelection, useLinkedHover, useBrushSelection, useFilteredData } from "./LinkedCharts"
 
 // Ordinal Charts
 export { BarChart } from "./charts/ordinal/BarChart"

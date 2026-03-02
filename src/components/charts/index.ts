@@ -29,6 +29,9 @@ export type { HeatmapProps } from "./xy/Heatmap"
 export { BubbleChart } from "./xy/BubbleChart"
 export type { BubbleChartProps } from "./xy/BubbleChart"
 
+export { ScatterplotMatrix } from "./xy/ScatterplotMatrix"
+export type { ScatterplotMatrixProps } from "./xy/ScatterplotMatrix"
+
 // ============================================================================
 // Ordinal Charts (based on OrdinalFrame)
 // ============================================================================

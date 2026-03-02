@@ -1,6 +1,40 @@
 import type { MarginType } from "../../types/generalTypes"
 
 /**
+ * Selection consumption config — makes this chart react to a named selection
+ */
+export interface SelectionConfig {
+  /** Name of the selection to consume */
+  name: string
+  /** Opacity for unselected elements (default 0.2) */
+  unselectedOpacity?: number
+  /** Style overrides for unselected elements */
+  unselectedStyle?: Record<string, any>
+  /** Style overrides for selected elements */
+  selectedStyle?: Record<string, any>
+}
+
+/**
+ * Linked hover config
+ * - `true` → auto-detect fields, selection name "hover"
+ * - `"myName"` → custom selection name, auto-detect fields
+ * - `{ name, fields }` → explicit config
+ */
+export type LinkedHoverProp =
+  | boolean
+  | string
+  | { name?: string; fields: string[] }
+
+/**
+ * Linked brush config
+ * - `"selectionName"` → basic brush
+ * - `{ name, xField?, yField? }` → explicit field mapping
+ */
+export type LinkedBrushProp =
+  | string
+  | { name: string; xField?: string; yField?: string }
+
+/**
  * Base props shared across all chart components
  */
 export interface BaseChartProps {
@@ -14,6 +48,12 @@ export interface BaseChartProps {
   className?: string
   /** Chart title displayed at the top */
   title?: string
+  /** Consume a named selection — dims unselected elements */
+  selection?: SelectionConfig
+  /** Produce hover-based selections for cross-highlighting */
+  linkedHover?: LinkedHoverProp
+  /** Produce brush-based selections for cross-filtering */
+  linkedBrush?: LinkedBrushProp
 }
 
 /**

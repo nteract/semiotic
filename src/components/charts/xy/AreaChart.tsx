@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, useCallback } from "react"
 import {
   curveLinear,
   curveMonotoneX,
@@ -21,6 +21,9 @@ import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
 import { validateArrayData } from "../shared/validateChartData"
+import { normalizeLinkedHover, wrapStyleWithSelection } from "../shared/selectionUtils"
+import { useSelection } from "../../store/useSelection"
+import { useLinkedHover } from "../../store/useSelection"
 
 /** Map of curve name strings to d3-shape curve functions */
 const CURVE_MAP = {
@@ -199,10 +202,31 @@ export function AreaChart<TDatum extends Record<string, any> = Record<string, an
     showGrid = false,
     showLegend,
     tooltip,
-    frameProps = {}
+    frameProps = {},
+    selection,
+    linkedHover
   } = props
 
   const safeData = data || []
+
+  // ── Selection hooks (always called, conditional logic inside) ──────────
+
+  const hoverConfig = normalizeLinkedHover(linkedHover, colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [])
+
+  const selectionHook = useSelection({
+    name: selection?.name || "__unused__",
+    fields: []
+  })
+
+  const linkedHoverHook = useLinkedHover({
+    name: hoverConfig?.name || "hover",
+    fields: hoverConfig?.fields || []
+  })
+
+  // Only use the hooks when the corresponding props are provided
+  const activeSelectionHook = selection ? { isActive: selectionHook.isActive, predicate: selectionHook.predicate } : null
+
+  // ── Core chart logic ───────────────────────────────────────────────────
 
   // Check if data is in area objects format (has lineDataAccessor field)
   const isAreaObjectFormat = safeData[0]?.[lineDataAccessor] !== undefined
@@ -244,7 +268,7 @@ export function AreaChart<TDatum extends Record<string, any> = Record<string, an
   const curveFunction = CURVE_MAP[curve] || curveMonotoneX
 
   // Area/line style function
-  const lineStyle = useMemo(() => {
+  const baseLineStyle = useMemo(() => {
     return (d: Record<string, any>) => {
       const baseStyle: Record<string, string | number> = {}
 
@@ -264,6 +288,11 @@ export function AreaChart<TDatum extends Record<string, any> = Record<string, an
       return baseStyle
     }
   }, [colorBy, colorScale, areaOpacity, showLine, lineWidth])
+
+  const lineStyle = useMemo(
+    () => wrapStyleWithSelection(baseLineStyle, activeSelectionHook, selection),
+    [baseLineStyle, activeSelectionHook, selection]
+  )
 
   // Build axes configuration
   const axes = useMemo(() => {
@@ -322,6 +351,17 @@ export function AreaChart<TDatum extends Record<string, any> = Record<string, an
     return finalMargin
   }, [userMargin, legend])
 
+  // ── Hover behavior ─────────────────────────────────────────────────────
+
+  const customHoverBehavior = useCallback(
+    (d: Record<string, any> | null) => {
+      if (linkedHover) {
+        linkedHoverHook.onHover(d)
+      }
+    },
+    [linkedHover, linkedHoverHook]
+  )
+
   // Validate data (after all hooks)
   const error = validateArrayData({
     componentName: "AreaChart",
@@ -350,6 +390,7 @@ export function AreaChart<TDatum extends Record<string, any> = Record<string, an
     ...(title && { title }),
     // Add tooltip support
     ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
+    ...(linkedHover && { customHoverBehavior }),
     // Allow frameProps to override defaults
     transition: true,
     ...frameProps

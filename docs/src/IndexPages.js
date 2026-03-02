@@ -364,12 +364,6 @@ export function ApiIndex() {
           title="SparkFrame"
           thumbnail={new URL("../public/assets/img/sparkline.png", import.meta.url)}
         />
-        <PageLink
-          href="/api/facetcontroller"
-          title="FacetController"
-          thumbnail={new URL("../public/assets/img/facet.png", import.meta.url)}
-        />
-
         <div className="sub-header">Sub-Components</div>
 
         <PageLink
@@ -393,7 +387,7 @@ function PageLink({ href, title, thumbnail }) {
       <Link to={href}>
         <p>{title}</p>
         <div className="page-image">
-          <img src={thumbnail} />
+          <img src={thumbnail} alt={title} />
         </div>
       </Link>
     </div>

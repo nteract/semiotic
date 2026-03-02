@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, useCallback } from "react"
 import OrdinalFrame from "../../OrdinalFrame"
 import type { OrdinalFrameProps } from "../../types/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
@@ -10,6 +10,9 @@ import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
 import { validateArrayData } from "../shared/validateChartData"
+import { normalizeLinkedHover, wrapStyleWithSelection } from "../shared/selectionUtils"
+import { useSelection } from "../../store/useSelection"
+import { useLinkedHover } from "../../store/useSelection"
 
 /**
  * BarChart component props
@@ -163,10 +166,30 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
     showGrid = false,
     showLegend,
     tooltip,
-    frameProps = {}
+    frameProps = {},
+    selection,
+    linkedHover
   } = props
 
   const safeData = data || []
+
+  // ── Selection hooks (always called) ────────────────────────────────────
+
+  const hoverConfig = normalizeLinkedHover(linkedHover, colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [])
+
+  const selectionHook = useSelection({
+    name: selection?.name || "__unused__",
+    fields: []
+  })
+
+  const linkedHoverHook = useLinkedHover({
+    name: hoverConfig?.name || "hover",
+    fields: hoverConfig?.fields || []
+  })
+
+  const activeSelectionHook = selection ? { isActive: selectionHook.isActive, predicate: selectionHook.predicate } : null
+
+  // ── Core chart logic ───────────────────────────────────────────────────
 
   // Sort data if requested
   const sortedData = useSortedData(safeData, sort, valueAccessor)
@@ -175,7 +198,7 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
   const colorScale = useColorScale(safeData, colorBy, colorScheme)
 
   // Piece style function
-  const pieceStyle = useMemo(() => {
+  const basePieceStyle = useMemo(() => {
     return (d: Record<string, any>) => {
       const baseStyle: Record<string, string | number> = {}
 
@@ -189,6 +212,11 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
       return baseStyle
     }
   }, [colorBy, colorScale])
+
+  const pieceStyle = useMemo(
+    () => wrapStyleWithSelection(basePieceStyle, activeSelectionHook, selection),
+    [basePieceStyle, activeSelectionHook, selection]
+  )
 
   // Build axes configuration
   const axes = useMemo(() => {
@@ -257,6 +285,17 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
     return finalMargin
   }, [userMargin, legend])
 
+  // ── Hover behavior ─────────────────────────────────────────────────────
+
+  const customHoverBehavior = useCallback(
+    (d: Record<string, any> | null) => {
+      if (linkedHover) {
+        linkedHoverHook.onHover(d)
+      }
+    },
+    [linkedHover, linkedHoverHook]
+  )
+
   // Default tooltip function for piece hover
   const defaultTooltipContent = useMemo(() => {
     return (d: Record<string, any>) => {
@@ -302,6 +341,7 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
     ...(title && { title }),
     // Add tooltip support
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as Function,
+    ...(linkedHover && { customHoverBehavior }),
     // Allow frameProps to override defaults
     transition: true,
     ...frameProps

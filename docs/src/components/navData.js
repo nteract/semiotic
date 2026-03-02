@@ -21,7 +21,8 @@ const navData = [
           { title: "Stacked Area Chart", path: "/charts/stacked-area-chart" },
           { title: "Scatterplot", path: "/charts/scatterplot" },
           { title: "Bubble Chart", path: "/charts/bubble-chart" },
-          { title: "Heatmap", path: "/charts/heatmap" }
+          { title: "Heatmap", path: "/charts/heatmap" },
+          { title: "Scatterplot Matrix", path: "/charts/scatterplot-matrix" }
         ]
       },
       {
@@ -132,7 +133,12 @@ const navData = [
       { title: "Force Directed Graph", path: "/playground/force-directed-graph" },
       { title: "Sankey Diagram", path: "/playground/sankey-diagram" },
       { title: "Realtime Line / Waterfall", path: "/playground/realtime-line-chart" },
-      { title: "Realtime Bar / Swarm", path: "/playground/realtime-bar-chart" }
+      { title: "Realtime Bar / Swarm", path: "/playground/realtime-bar-chart" },
+      { title: "Bubble Chart", path: "/playground/bubble-chart" },
+      { title: "Stacked Area Chart", path: "/playground/stacked-area-chart" },
+      { title: "Donut Chart", path: "/playground/donut-chart" },
+      { title: "Treemap", path: "/playground/treemap" },
+      { title: "Circle Pack", path: "/playground/circle-pack" }
     ]
   },
   {

@@ -38,14 +38,15 @@ are all React components with the same clean prop API as LineChart.
 
 **What Semiotic does that other libraries don't:**
 - Force-directed graphs, Sankey diagrams, chord diagrams, treemaps, and circle packing — as React components with the same clean API as LineChart
+- Coordinated views: `LinkedCharts` for cross-highlighting and brushing-and-linking between any charts; `ScatterplotMatrix` with crossfilter brushing
 - Real-time streaming charts rendered on canvas at 60fps
 - Built-in annotation system with hover, click, and custom annotation types
 - Server-side SVG rendering for email, OG images, and PDFs
 
-**When to use something else.** Need a standard line or bar chart for a dashboard?
+**When to use something else.** Need a standard line or bar chart for a dashboard that you'll never need to make more interesting?
 [Recharts](https://recharts.org) has a larger ecosystem and more community examples.
 Semiotic is built for projects that need network visualization, statistical summaries,
-or custom mark rendering — capabilities that general-purpose charting libraries don't offer.
+or custom charting — capabilities that general-purpose charting libraries don't offer.
 
 **AI-ready.** Semiotic ships with structured schemas (`ai/schema.json`), an
 `import from "semiotic/ai"` entry point, and an MCP server — all designed for
@@ -146,6 +147,7 @@ chartRef.current.push({ time: Date.now(), value: reading })
 | **Categorical** | `BarChart` `StackedBarChart` `GroupedBarChart` `SwarmPlot` `BoxPlot` `DotPlot` `PieChart` `DonutChart` |
 | **Network** | `ForceDirectedGraph` `ChordDiagram` `SankeyDiagram` `TreeDiagram` `Treemap` `CirclePack` |
 | **Realtime** | `RealtimeLineChart` `RealtimeBarChart` `RealtimeSwarmChart` `RealtimeWaterfallChart` |
+| **Coordination** | `LinkedCharts` `ScatterplotMatrix` |
 | **Frames** | `XYFrame` `OrdinalFrame` `NetworkFrame` `RealtimeFrame` |
 
 ## Smaller Bundles

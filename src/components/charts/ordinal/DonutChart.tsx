@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, useCallback } from "react"
 import OrdinalFrame from "../../OrdinalFrame"
 import type { OrdinalFrameProps } from "../../types/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
@@ -11,6 +11,9 @@ import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../T
 import ChartError from "../shared/ChartError"
 import { validateArrayData } from "../shared/validateChartData"
 import type { PieceTypeSettings } from "../../types/ordinalTypes"
+import { normalizeLinkedHover, wrapStyleWithSelection } from "../shared/selectionUtils"
+import { useSelection } from "../../store/useSelection"
+import { useLinkedHover } from "../../store/useSelection"
 
 /**
  * DonutChart component props
@@ -134,7 +137,9 @@ export function DonutChart<TDatum extends Record<string, any> = Record<string, a
     enableHover = true,
     showLegend = true,
     tooltip,
-    frameProps = {}
+    frameProps = {},
+    selection,
+    linkedHover
   } = props
 
   const safeData = data || []
@@ -142,11 +147,29 @@ export function DonutChart<TDatum extends Record<string, any> = Record<string, a
   // Default colorBy to categoryAccessor for donut charts
   const actualColorBy = colorBy || categoryAccessor
 
+  // ── Selection hooks (always called) ────────────────────────────────────
+
+  const hoverConfig = normalizeLinkedHover(linkedHover, actualColorBy ? [typeof actualColorBy === "string" ? actualColorBy : ""] : [])
+
+  const selectionHook = useSelection({
+    name: selection?.name || "__unused__",
+    fields: []
+  })
+
+  const linkedHoverHook = useLinkedHover({
+    name: hoverConfig?.name || "hover",
+    fields: hoverConfig?.fields || []
+  })
+
+  const activeSelectionHook = selection ? { isActive: selectionHook.isActive, predicate: selectionHook.predicate } : null
+
+  // ── Core chart logic ───────────────────────────────────────────────────
+
   // Create color scale
   const colorScale = useColorScale(safeData, actualColorBy, colorScheme)
 
   // Piece style function
-  const pieceStyle = useMemo(() => {
+  const basePieceStyle = useMemo(() => {
     return (d: Record<string, any>) => {
       const baseStyle: Record<string, string | number> = {}
 
@@ -159,6 +182,11 @@ export function DonutChart<TDatum extends Record<string, any> = Record<string, a
       return baseStyle
     }
   }, [actualColorBy, colorScale])
+
+  const pieceStyle = useMemo(
+    () => wrapStyleWithSelection(basePieceStyle, activeSelectionHook, selection),
+    [basePieceStyle, activeSelectionHook, selection]
+  )
 
   // Build legend if needed
   const legend = useMemo(() => {
@@ -228,6 +256,17 @@ export function DonutChart<TDatum extends Record<string, any> = Record<string, a
     )
   }, [centerContent, width, height, innerRadius])
 
+  // ── Hover behavior ─────────────────────────────────────────────────────
+
+  const customHoverBehavior = useCallback(
+    (d: Record<string, any> | null) => {
+      if (linkedHover) {
+        linkedHoverHook.onHover(d)
+      }
+    },
+    [linkedHover, linkedHoverHook]
+  )
+
   // Default tooltip
   const defaultTooltipContent = useMemo(() => {
     return (d: Record<string, any>) => {
@@ -272,6 +311,7 @@ export function DonutChart<TDatum extends Record<string, any> = Record<string, a
     ...(className && { className }),
     ...(title && { title }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as Function,
+    ...(linkedHover && { customHoverBehavior }),
     transition: true,
     ...frameProps
   }

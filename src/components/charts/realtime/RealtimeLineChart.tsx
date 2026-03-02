@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useRef, useEffect, useImperativeHandle, forwardRef } from "react"
+import { useRef, useEffect, useImperativeHandle, forwardRef, useCallback } from "react"
 import RealtimeFrame from "../../realtime/RealtimeFrame"
 import type {
   ArrowOfTime,
@@ -11,6 +11,8 @@ import type {
   AnnotationContext
 } from "../../realtime/types"
 import type { ReactNode } from "react"
+import { normalizeLinkedHover } from "../shared/selectionUtils"
+import { useLinkedHover } from "../../store/useSelection"
 
 export interface RealtimeLineChartProps {
   /** Chart dimensions as [width, height] */
@@ -61,6 +63,8 @@ export interface RealtimeLineChartProps {
   tickFormatTime?: (value: number) => string
   /** Custom formatter for value axis ticks */
   tickFormatValue?: (value: number) => string
+  /** Enable linked hover selection events for cross-chart highlighting */
+  linkedHover?: boolean | string | { name?: string; fields: string[] }
 }
 
 /**
@@ -108,10 +112,28 @@ export const RealtimeLineChart = forwardRef<RealtimeFrameHandle, RealtimeLineCha
       annotations,
       svgAnnotationRules,
       tickFormatTime,
-      tickFormatValue
+      tickFormatValue,
+      linkedHover
     } = props
 
     const frameRef = useRef<RealtimeFrameHandle>(null)
+
+    // ── Linked hover hooks (always called, conditional logic inside) ──
+    const hoverConfig = normalizeLinkedHover(linkedHover)
+    const linkedHoverHook = useLinkedHover({
+      name: hoverConfig?.name || "hover",
+      fields: hoverConfig?.fields || []
+    })
+
+    const combinedHoverBehavior = useCallback(
+      (d: HoverData | null) => {
+        if (onHover) onHover(d)
+        if (linkedHover) {
+          linkedHoverHook.onHover(d ? (d.data || d) : null)
+        }
+      },
+      [onHover, linkedHover, linkedHoverHook]
+    )
 
     useImperativeHandle(ref, () => ({
       push: (point) => frameRef.current?.push(point),
@@ -143,7 +165,7 @@ export const RealtimeLineChart = forwardRef<RealtimeFrameHandle, RealtimeLineCha
         background={background}
         hoverAnnotation={enableHover}
         tooltipContent={tooltipContent}
-        customHoverBehavior={onHover}
+        customHoverBehavior={combinedHoverBehavior}
         annotations={annotations}
         svgAnnotationRules={svgAnnotationRules}
         tickFormatTime={tickFormatTime}

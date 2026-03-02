@@ -15,7 +15,6 @@ import Networkframe from "./markdown/networkframe.mdx"
 import Realtimeframe from "./markdown/realtimeframe.mdx"
 import Responsiveframes from "./markdown/responsiveframes.mdx"
 import Sparkframes from "./markdown/sparkframes.mdx"
-import Facetcontroller from "./markdown/facetcontroller.mdx"
 
 import LineChart from "./guides/LineChart.mdx"
 import AreaChart from "./guides/AreaChart"
@@ -58,6 +57,7 @@ import StackedAreaChartPage from "./pages/charts/StackedAreaChartPage"
 import ScatterplotPage from "./pages/charts/ScatterplotPage"
 import BubbleChartPage from "./pages/charts/BubbleChartPage"
 import HeatmapPage from "./pages/charts/HeatmapPage"
+import ScatterplotMatrixPage from "./pages/charts/ScatterplotMatrixPage"
 import BarChartPage from "./pages/charts/BarChartPage"
 import StackedBarChartPage from "./pages/charts/StackedBarChartPage"
 import SwarmPlotPage from "./pages/charts/SwarmPlotPage"
@@ -127,32 +127,36 @@ import ForceDirectedGraphPlayground from "./pages/playground/ForceDirectedGraphP
 import SankeyDiagramPlayground from "./pages/playground/SankeyDiagramPlayground"
 import RealtimeLineChartPlayground from "./pages/playground/RealtimeLineChartPlayground"
 import RealtimeBarChartPlayground from "./pages/playground/RealtimeBarChartPlayground"
+import BubbleChartPlayground from "./pages/playground/BubbleChartPlayground"
+import StackedAreaChartPlayground from "./pages/playground/StackedAreaChartPlayground"
+import DonutChartPlayground from "./pages/playground/DonutChartPlayground"
+import TreemapPlayground from "./pages/playground/TreemapPlayground"
+import CirclePackPlayground from "./pages/playground/CirclePackPlayground"
 
-import semioticLogo from "../public/assets/img/semiotic.png"
+const semioticLogo = new URL("../public/assets/img/semiotic.png", import.meta.url).href
+const semioticLogoDark = new URL("../public/assets/img/semiotic-darkmode.png", import.meta.url).href
+
+function NotFoundPage() {
+  return (
+    <div style={{ padding: "60px 20px", textAlign: "center" }}>
+      <h1>404 — Page Not Found</h1>
+      <p style={{ marginTop: "16px", color: "var(--text-secondary)" }}>
+        The page you're looking for doesn't exist.
+      </p>
+      <p style={{ marginTop: "24px" }}>
+        <Link to="/" style={{ color: "var(--accent)" }}>Back to home</Link>
+      </p>
+    </div>
+  )
+}
 
 import { useScrollRestoration } from "./useScrollRestoration"
 
 // Theme toggle component
-function ThemeToggle() {
-  const [theme, setTheme] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("semiotic-theme") || "dark"
-    }
-    return "dark"
-  })
-
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme)
-    localStorage.setItem("semiotic-theme", theme)
-  }, [theme])
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"))
-  }
-
+function ThemeToggle({ theme, onToggle }) {
   return (
     <button
-      onClick={toggleTheme}
+      onClick={onToggle}
       aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
       style={{
         background: "none",
@@ -186,7 +190,7 @@ function useJsonLd() {
       applicationCategory: "DeveloperApplication",
       operatingSystem: "Any",
       programmingLanguage: "JavaScript",
-      url: "https://semiotic.nteract.io",
+      url: "https://semiotic3.nteract.io",
       codeRepository: "https://github.com/nteract/semiotic",
       license: "https://opensource.org/licenses/Apache-2.0",
       offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
@@ -199,6 +203,21 @@ export default function DocsApp() {
   useScrollRestoration()
   useJsonLd()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [theme, setTheme] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("semiotic-theme") || "dark"
+    }
+    return "dark"
+  })
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme)
+    localStorage.setItem("semiotic-theme", theme)
+  }, [theme])
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"))
+  }
 
   return (
     <div className="App">
@@ -206,18 +225,14 @@ export default function DocsApp() {
         <SidebarToggle onClick={() => setSidebarOpen((prev) => !prev)} />
         <div className="logo">
           <Link to="/">
-            <img src={semioticLogo} alt="Semiotic" />
+            <img src={theme === "dark" ? semioticLogoDark : semioticLogo} alt="Semiotic" />
           </Link>
         </div>
         <div className="flex space-between">
-          <h1>
-            <Link to="/" style={{ color: "inherit", textDecoration: "none", fontWeight: 600 }}>
-              Semiotic
-            </Link>
-          </h1>
-
+        {/* We don't need to repeat the name because the logo is the name */}
+          <div />
           <div className="flex" style={{ alignItems: "center", gap: "12px" }}>
-            <ThemeToggle />
+            <ThemeToggle theme={theme} onToggle={toggleTheme} />
             <div className="github-links">
               <p className="no-margin">
                 <a
@@ -303,7 +318,6 @@ export default function DocsApp() {
               <Route path="realtime-frame" element={<Realtimeframe />} />
               <Route path="responsiveframe" element={<Responsiveframes />} />
               <Route path="sparkFrame" element={<Sparkframes />} />
-              <Route path="facetcontroller" element={<Facetcontroller />} />
               <Route path="dividedline" element={<DividedLine />} />
             </Route>
 
@@ -355,6 +369,11 @@ export default function DocsApp() {
               <Route path="sankey-diagram" element={<SankeyDiagramPlayground />} />
               <Route path="realtime-line-chart" element={<RealtimeLineChartPlayground />} />
               <Route path="realtime-bar-chart" element={<RealtimeBarChartPlayground />} />
+              <Route path="bubble-chart" element={<BubbleChartPlayground />} />
+              <Route path="stacked-area-chart" element={<StackedAreaChartPlayground />} />
+              <Route path="donut-chart" element={<DonutChartPlayground />} />
+              <Route path="treemap" element={<TreemapPlayground />} />
+              <Route path="circle-pack" element={<CirclePackPlayground />} />
             </Route>
 
             {/* Frames routes */}
@@ -386,6 +405,9 @@ export default function DocsApp() {
             {/* Getting Started */}
             <Route path="getting-started" element={<GettingStartedPage />} />
 
+            {/* 404 catch-all */}
+            <Route path="*" element={<NotFoundPage />} />
+
             {/* New Charts routes */}
             <Route path="charts" element={<Outlet />}>
               {/* XY Charts */}
@@ -395,6 +417,7 @@ export default function DocsApp() {
               <Route path="scatterplot" element={<ScatterplotPage />} />
               <Route path="bubble-chart" element={<BubbleChartPage />} />
               <Route path="heatmap" element={<HeatmapPage />} />
+              <Route path="scatterplot-matrix" element={<ScatterplotMatrixPage />} />
               {/* Categorical Charts */}
               <Route path="bar-chart" element={<BarChartPage />} />
               <Route path="stacked-bar-chart" element={<StackedBarChartPage />} />

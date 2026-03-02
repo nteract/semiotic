@@ -568,6 +568,19 @@ export const calculateDataExtent = ({
       data: projectedSummaries,
       defined
     })
+
+    // Expand y extent to include the bounds so they aren't clipped
+    if (!(actualYExtent && actualYExtent.length === 2)) {
+      for (const summary of projectedSummaries) {
+        for (const coord of summary._xyfCoordinates) {
+          const yVal = coord[1] as number
+          if (yVal !== undefined && isFinite(yVal)) {
+            if (yVal < finalYExtent[0]) finalYExtent[0] = yVal
+            if (yVal > finalYExtent[1]) finalYExtent[1] = yVal
+          }
+        }
+      }
+    }
   } else if (summaryType.type && summaryType.type === "hexbin") {
     projectedSummaries = hexbinning({
       summaryType,

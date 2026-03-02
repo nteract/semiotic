@@ -377,14 +377,14 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
     nodeStyle: nodeStyleFn,
     edgeStyle: edgeStyleFn,
     nodeIDAccessor: nodeIdAccessor,
-    networkType,
+    networkType: {
+      ...networkType,
+      ...(hierarchyChildren && { hierarchyChildren: hierarchyChildren as Function }),
+      ...(hierarchySum && { hierarchySum: hierarchySum as Function }),
+    },
     hoverAnnotation: enableHover,
     margin,
     nodeSizeAccessor: () => nodeSize,
-    ...(hierarchyChildren && {
-      hierarchyChildren: hierarchyChildren as Function
-    }),
-    ...(hierarchySum && { hierarchySum: hierarchySum as Function }),
     ...(className && { className }),
     ...(title && { title }),
     // Add tooltip support

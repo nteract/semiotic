@@ -13,9 +13,6 @@ import VisualizationLayer from "./VisualizationLayer"
 import NetworkFrame from "./NetworkFrame"
 import { funnelize } from "./svg/lineDrawing"
 import { calculateDataExtent } from "./data/dataFunctions"
-
-import FacetController from "./FacetController"
-
 import { ResponsiveNetworkFrame } from "./ResponsiveNetworkFrame"
 import { ResponsiveMinimapXYFrame } from "./ResponsiveMinimapXYFrame"
 import { ResponsiveXYFrame } from "./ResponsiveXYFrame"
@@ -30,7 +27,10 @@ import { hexbinning, heatmapping } from "./svg/areaDrawing"
 import { nodesEdgesFromHierarchy } from "./processing/network"
 
 // Higher-order chart components
-import { Scatterplot, LineChart, AreaChart, StackedAreaChart, Heatmap, BubbleChart, BarChart, StackedBarChart, SwarmPlot, BoxPlot, DotPlot, PieChart, DonutChart, GroupedBarChart, ForceDirectedGraph, ChordDiagram, SankeyDiagram, TreeDiagram, Treemap, CirclePack } from "./charts"
+import { Scatterplot, LineChart, AreaChart, StackedAreaChart, Heatmap, BubbleChart, BarChart, StackedBarChart, SwarmPlot, BoxPlot, DotPlot, PieChart, DonutChart, GroupedBarChart, ForceDirectedGraph, ChordDiagram, SankeyDiagram, TreeDiagram, Treemap, CirclePack, ScatterplotMatrix } from "./charts"
+
+// Coordinated views
+import { LinkedCharts } from "./LinkedCharts"
 
 // Tooltip utilities
 import { Tooltip, MultiLineTooltip, normalizeTooltip } from "./Tooltip/Tooltip"
@@ -69,7 +69,6 @@ export {
   Legend,
   funnelize,
   calculateDataExtent,
-  FacetController,
   hexbinning,
   heatmapping,
   nodesEdgesFromHierarchy,
@@ -94,6 +93,9 @@ export {
   GroupedBarChart,
   Treemap,
   CirclePack,
+  ScatterplotMatrix,
+  // Coordinated views
+  LinkedCharts,
   // Tooltip utilities
   Tooltip,
   MultiLineTooltip,
@@ -219,11 +221,44 @@ export {
   TreeDiagramProps,
   TreemapProps,
   CirclePackProps,
+  ScatterplotMatrixProps,
   BaseChartProps,
   AxisConfig,
   Accessor,
   ChartAccessor
 } from "./charts"
+
+// Coordinated views types
+export type {
+  SelectionConfig,
+  LinkedHoverProp,
+  LinkedBrushProp
+} from "./charts/shared/types"
+
+export type { LinkedChartsProps } from "./LinkedCharts"
+
+// Selection hooks (for building custom coordinated views)
+export {
+  useSelection,
+  useLinkedHover,
+  useBrushSelection,
+  useFilteredData
+} from "./LinkedCharts"
+
+export type {
+  UseSelectionOptions,
+  UseSelectionResult,
+  UseLinkedHoverOptions,
+  UseLinkedHoverResult,
+  UseBrushSelectionOptions,
+  UseBrushSelectionResult
+} from "./LinkedCharts"
+
+export type {
+  ResolutionMode,
+  SelectionClause,
+  Selection
+} from "./store/SelectionStore"
 
 // Tooltip types
 export type {

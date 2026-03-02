@@ -9,6 +9,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### Coordinated Views & ScatterplotMatrix
+
+A producer-consumer coordination system for cross-highlighting, brushing-and-linking, and cross-filtering between charts. Replaces FacetController.
+
+**LinkedCharts** — React Context provider for coordinated chart views:
+- Wraps any number of charts at any depth (no `cloneElement` limitations)
+- Named selections with configurable resolution: `union`, `intersect`, or `crossfilter`
+- Crossfilter mode excludes the requesting chart's own clause (standard SPLOM pattern)
+
+**Selection hooks** for custom coordinated views:
+- `useSelection` — primary hook for reading/writing selections
+- `useLinkedHover` — convenience hook for hover cross-highlighting
+- `useBrushSelection` — convenience hook for brush-and-link
+- `useFilteredData` — returns data filtered by a named selection
+
+**Chart integration** — new props on all XY and ordinal HOCs:
+- `selection` — consume a named selection (dims unselected points)
+- `linkedHover` — produce hover selections for cross-highlighting
+- `linkedBrush` — produce brush selections (Scatterplot, BubbleChart)
+
+**ScatterplotMatrix (SPLOM)** — N×N scatterplot grid with built-in coordination:
+- Diagonal cells show histograms (or labels)
+- Two interaction modes: hover (cross-highlight with tooltip) or brush (crossfilter)
+- Tooltip positioned above the hovered point with colorBy label
+- `colorBy`, `fieldLabels`, `cellSize`, `pointRadius`, `showLegend` props
+
+### Removed
+
+- **FacetController** — replaced entirely by `LinkedCharts`. The `cloneElement`-based approach had no HOC support and only worked with direct Frame children.
+
+---
+
 #### AI Enablement — Phase 2
 
 Five features to deepen AI integration with Semiotic.

@@ -13,9 +13,6 @@ import VisualizationLayer from "./VisualizationLayer"
 import NetworkFrame from "./NetworkFrame"
 import { funnelize } from "./svg/lineDrawing"
 import { calculateDataExtent } from "./data/dataFunctions"
-
-import FacetController from "./FacetController"
-
 import { ResponsiveNetworkFrame } from "./ResponsiveNetworkFrame"
 import { ResponsiveMinimapXYFrame } from "./ResponsiveMinimapXYFrame"
 import { ResponsiveXYFrame } from "./ResponsiveXYFrame"
@@ -80,7 +77,6 @@ export default {
   SparkNetworkFrame,
   SparkXYFrame,
   Legend,
-  FacetController,
   funnelize,
   calculateDataExtent,
   hexbinning,
@@ -140,7 +136,6 @@ export {
   Legend,
   funnelize,
   calculateDataExtent,
-  FacetController,
   hexbinning,
   heatmapping,
   nodesEdgesFromHierarchy,

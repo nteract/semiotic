@@ -274,56 +274,131 @@ export default function GettingStartedPage() {
       <h2 id="choosing-the-right-component">Choosing the Right Component</h2>
 
       <p>
-        Use this table to find the right component for your visualization
-        needs:
+        Use this decision matrix to find the right component. Start with your
+        data shape, then pick based on what you want to show:
       </p>
 
       <table style={styles.table}>
         <thead>
           <tr>
-            <th style={styles.th}>Use Case</th>
-            <th style={styles.th}>Recommended Components</th>
+            <th style={styles.th}>Data Shape</th>
+            <th style={styles.th}>Goal</th>
+            <th style={styles.th}>Component</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td style={styles.td}>Time series and trends</td>
-            <td style={styles.td}>
-              <Link to="/charts/line-chart">LineChart</Link>,{" "}
-              <Link to="/charts/area-chart">AreaChart</Link>
-            </td>
+            <td style={{ ...styles.td, fontWeight: 600 }} rowSpan={6}>Flat array<br /><code style={{ fontSize: "12px", fontWeight: 400 }}>[{"{x, y}"}]</code></td>
+            <td style={styles.td}>Trends over time</td>
+            <td style={styles.td}><Link to="/charts/line-chart">LineChart</Link>, <Link to="/charts/area-chart">AreaChart</Link></td>
           </tr>
           <tr>
-            <td style={styles.td}>Comparisons and categories</td>
-            <td style={styles.td}>
-              <Link to="/charts/bar-chart">BarChart</Link>,{" "}
-              <Link to="/charts/dot-plot">DotPlot</Link>
-            </td>
+            <td style={styles.td}>Part-to-whole over time</td>
+            <td style={styles.td}><Link to="/charts/stacked-area-chart">StackedAreaChart</Link></td>
           </tr>
           <tr>
-            <td style={styles.td}>Relationships and distributions</td>
-            <td style={styles.td}>
-              <Link to="/charts/scatterplot">Scatterplot</Link>,{" "}
-              <Link to="/charts/bubble-chart">BubbleChart</Link>
-            </td>
+            <td style={styles.td}>Correlations</td>
+            <td style={styles.td}><Link to="/charts/scatterplot">Scatterplot</Link>, <Link to="/charts/bubble-chart">BubbleChart</Link></td>
           </tr>
           <tr>
-            <td style={styles.td}>Hierarchies and flows</td>
-            <td style={styles.td}>
-              <Link to="/charts/sankey-diagram">SankeyDiagram</Link>,{" "}
-              <Link to="/charts/tree-diagram">TreeDiagram</Link>,{" "}
-              <Link to="/charts/force-directed-graph">ForceDirectedGraph</Link>
-            </td>
+            <td style={styles.td}>Compare categories</td>
+            <td style={styles.td}><Link to="/charts/bar-chart">BarChart</Link>, <Link to="/charts/dot-plot">DotPlot</Link></td>
           </tr>
           <tr>
-            <td style={styles.td}>Real-time data</td>
-            <td style={styles.td}>
-              <Link to="/charts/realtime-line-chart">RealtimeLineChart</Link>,{" "}
-              <Link to="/charts/realtime-bar-chart">RealtimeBarChart</Link>
-            </td>
+            <td style={styles.td}>Part-to-whole (categorical)</td>
+            <td style={styles.td}><Link to="/charts/stacked-bar-chart">StackedBarChart</Link>, <Link to="/charts/pie-chart">PieChart</Link>, <Link to="/charts/donut-chart">DonutChart</Link></td>
+          </tr>
+          <tr>
+            <td style={styles.td}>Distributions</td>
+            <td style={styles.td}><Link to="/charts/box-plot">BoxPlot</Link>, <Link to="/charts/swarm-plot">SwarmPlot</Link></td>
+          </tr>
+          <tr>
+            <td style={{ ...styles.td, fontWeight: 600 }} rowSpan={3}>Hierarchical<br /><code style={{ fontSize: "12px", fontWeight: 400 }}>{"{ children: [...] }"}</code></td>
+            <td style={styles.td}>Tree/org structure</td>
+            <td style={styles.td}><Link to="/charts/tree-diagram">TreeDiagram</Link></td>
+          </tr>
+          <tr>
+            <td style={styles.td}>Proportional sizing</td>
+            <td style={styles.td}><Link to="/charts/treemap">Treemap</Link>, <Link to="/charts/circle-pack">CirclePack</Link></td>
+          </tr>
+          <tr>
+            <td style={styles.td}>Matrix / density</td>
+            <td style={styles.td}><Link to="/charts/heatmap">Heatmap</Link></td>
+          </tr>
+          <tr>
+            <td style={{ ...styles.td, fontWeight: 600 }} rowSpan={3}>Nodes + edges<br /><code style={{ fontSize: "12px", fontWeight: 400 }}>{"[{id}], [{source, target}]"}</code></td>
+            <td style={styles.td}>Relationships</td>
+            <td style={styles.td}><Link to="/charts/force-directed-graph">ForceDirectedGraph</Link></td>
+          </tr>
+          <tr>
+            <td style={styles.td}>Flows and budgets</td>
+            <td style={styles.td}><Link to="/charts/sankey-diagram">SankeyDiagram</Link></td>
+          </tr>
+          <tr>
+            <td style={styles.td}>Inter-group connections</td>
+            <td style={styles.td}><Link to="/charts/chord-diagram">ChordDiagram</Link></td>
+          </tr>
+          <tr>
+            <td style={{ ...styles.td, fontWeight: 600 }} rowSpan={2}>Streaming<br /><code style={{ fontSize: "12px", fontWeight: 400 }}>ref.push({"{ time, value }"})</code></td>
+            <td style={styles.td}>Live trends</td>
+            <td style={styles.td}><Link to="/charts/realtime-line-chart">RealtimeLineChart</Link></td>
+          </tr>
+          <tr>
+            <td style={styles.td}>Live aggregates</td>
+            <td style={styles.td}><Link to="/charts/realtime-bar-chart">RealtimeBarChart</Link>, <Link to="/charts/realtime-swarm-chart">RealtimeSwarmChart</Link></td>
           </tr>
         </tbody>
       </table>
+
+      <h3 id="chart-vs-frame">Chart vs Frame: When to Graduate</h3>
+
+      <table style={styles.table}>
+        <thead>
+          <tr>
+            <th style={styles.th}></th>
+            <th style={{ ...styles.th, color: "var(--tier-charts, #22c55e)" }}>Chart</th>
+            <th style={{ ...styles.th, color: "var(--tier-frames, #a855f7)" }}>Frame</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style={{ ...styles.td, fontWeight: 600 }}>Lines of code</td>
+            <td style={styles.td}>5-15</td>
+            <td style={styles.td}>20-80+</td>
+          </tr>
+          <tr>
+            <td style={{ ...styles.td, fontWeight: 600 }}>Custom marks</td>
+            <td style={styles.td}>No</td>
+            <td style={styles.td}>Yes</td>
+          </tr>
+          <tr>
+            <td style={{ ...styles.td, fontWeight: 600 }}>Annotations</td>
+            <td style={styles.td}>Via <code>frameProps</code></td>
+            <td style={styles.td}>Direct prop</td>
+          </tr>
+          <tr>
+            <td style={{ ...styles.td, fontWeight: 600 }}>Custom tooltips</td>
+            <td style={styles.td}>Yes</td>
+            <td style={styles.td}>Yes</td>
+          </tr>
+          <tr>
+            <td style={{ ...styles.td, fontWeight: 600 }}>Custom rendering</td>
+            <td style={styles.td}>No</td>
+            <td style={styles.td}>Full SVG/Canvas control</td>
+          </tr>
+          <tr>
+            <td style={{ ...styles.td, fontWeight: 600 }}>Best for</td>
+            <td style={styles.td}>Standard charts, dashboards, quick prototypes</td>
+            <td style={styles.td}>Bespoke visualizations, novel encodings</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style={styles.note}>
+        <strong>Tip:</strong> Start with a Chart. Use <code>frameProps</code> for
+        one-off customizations. Only graduate to a Frame when you need full
+        control over marks, layout, or rendering.
+      </div>
 
       {/* --------------------------------------------------------------- */}
       {/* Next Steps */}
