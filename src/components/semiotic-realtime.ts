@@ -21,6 +21,8 @@ import { RealtimeLineChart } from "./charts/realtime/RealtimeLineChart"
 import { RealtimeBarChart } from "./charts/realtime/RealtimeBarChart"
 import { RealtimeSwarmChart } from "./charts/realtime/RealtimeSwarmChart"
 import { RealtimeWaterfallChart } from "./charts/realtime/RealtimeWaterfallChart"
+import { RealtimeSankey } from "./charts/realtime/RealtimeSankey"
+import RealtimeNetworkFrame from "./realtime-network/RealtimeNetworkFrame"
 
 export {
   RealtimeFrame,
@@ -35,13 +37,16 @@ export {
   RealtimeLineChart,
   RealtimeBarChart,
   RealtimeSwarmChart,
-  RealtimeWaterfallChart
+  RealtimeWaterfallChart,
+  RealtimeSankey,
+  RealtimeNetworkFrame
 }
 
 export type { RealtimeLineChartProps } from "./charts/realtime/RealtimeLineChart"
 export type { RealtimeBarChartProps } from "./charts/realtime/RealtimeBarChart"
 export type { RealtimeSwarmChartProps } from "./charts/realtime/RealtimeSwarmChart"
 export type { RealtimeWaterfallChartProps } from "./charts/realtime/RealtimeWaterfallChart"
+export type { RealtimeSankeyProps, RealtimeNetworkFrameProps, RealtimeNetworkFrameHandle } from "./realtime-network/types"
 
 // Export types
 export type {

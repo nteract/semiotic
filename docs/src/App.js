@@ -73,6 +73,7 @@ import RealtimeLineChartPage from "./pages/charts/RealtimeLineChartPage"
 import RealtimeBarChartPage from "./pages/charts/RealtimeBarChartPage"
 import RealtimeSwarmChartPage from "./pages/charts/RealtimeSwarmChartPage"
 import RealtimeWaterfallChartPage from "./pages/charts/RealtimeWaterfallChartPage"
+import RealtimeSankeyPage from "./pages/charts/RealtimeSankeyPage"
 import PieChartPage from "./pages/charts/PieChartPage"
 import DonutChartPage from "./pages/charts/DonutChartPage"
 import GroupedBarChartPage from "./pages/charts/GroupedBarChartPage"
@@ -445,6 +446,7 @@ export default function DocsApp() {
               <Route path="realtime-bar-chart" element={<RealtimeBarChartPage />} />
               <Route path="realtime-swarm-chart" element={<RealtimeSwarmChartPage />} />
               <Route path="realtime-waterfall-chart" element={<RealtimeWaterfallChartPage />} />
+              <Route path="realtime-sankey" element={<RealtimeSankeyPage />} />
             </Route>
           </Routes>
         </div>

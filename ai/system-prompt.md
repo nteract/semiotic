@@ -35,6 +35,7 @@ Use `import { ComponentName } from "semiotic/ai"` for all components below.
 - **RealtimeBarChart** — **`binSize`** (required), `timeAccessor`, `valueAccessor`
 - **RealtimeSwarmChart** — `timeAccessor`, `valueAccessor`, `categoryAccessor`
 - **RealtimeWaterfallChart** — `timeAccessor`, `valueAccessor`, `positiveColor`, `negativeColor`
+- **RealtimeSankey** — `ref.current.push({ source, target, value })`, `sourceAccessor`, `targetAccessor`, `valueAccessor`, `showParticles`, `tensionConfig`
 
 ## Common Props (all components)
 `width`, `height`, `margin`, `title`, `colorBy`, `colorScheme`, `enableHover`, `tooltip`, `showLegend`, `className`, `frameProps`

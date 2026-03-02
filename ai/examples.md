@@ -451,3 +451,39 @@ const edges = [
 ```
 
 Key props: **`edges`** (required), shows bidirectional relationships in a circle
+
+---
+
+## Realtime — Push API via Ref
+
+### RealtimeSankey
+
+```jsx
+import { useRef, useEffect } from "react"
+import { RealtimeSankey } from "semiotic/ai"
+
+const chartRef = useRef()
+
+// Push edges at any frequency
+useEffect(() => {
+  const edges = [
+    { source: "Salary", target: "Budget", value: 5000 },
+    { source: "Freelance", target: "Budget", value: 1500 },
+    { source: "Budget", target: "Rent", value: 2000 },
+    { source: "Budget", target: "Food", value: 800 },
+    { source: "Budget", target: "Savings", value: 1500 }
+  ]
+  for (const edge of edges) {
+    chartRef.current.push(edge)
+  }
+}, [])
+
+<RealtimeSankey
+  ref={chartRef}
+  size={[800, 400]}
+  showParticles
+  edgeOpacity={0.4}
+/>
+```
+
+Key props: push via ref (`push`, `pushMany`, `clear`), `showParticles`, `tensionConfig`, `particleStyle`

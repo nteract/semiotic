@@ -60,7 +60,8 @@ const navData = [
           { title: "Realtime Line Chart", path: "/charts/realtime-line-chart" },
           { title: "Realtime Bar Chart", path: "/charts/realtime-bar-chart" },
           { title: "Realtime Swarm Chart", path: "/charts/realtime-swarm-chart" },
-          { title: "Realtime Waterfall Chart", path: "/charts/realtime-waterfall-chart" }
+          { title: "Realtime Waterfall Chart", path: "/charts/realtime-waterfall-chart" },
+          { title: "Realtime Sankey", path: "/charts/realtime-sankey" }
         ]
       }
     ]

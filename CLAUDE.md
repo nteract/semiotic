@@ -3,7 +3,7 @@
 ## Quick Start
 - Install: `npm install semiotic`
 - Import from `semiotic` or granular: `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`, `semiotic/realtime`, `semiotic/ai`, `semiotic/data`
-- `semiotic/ai` exports the 26 HOC chart components + TooltipProvider + MultiLineTooltip + ThemeProvider + exportChart + `validateProps`
+- `semiotic/ai` exports the 27 HOC chart components + TooltipProvider + MultiLineTooltip + ThemeProvider + exportChart + `validateProps`
 - `semiotic/data` exports data transform helpers: `bin`, `rollup`, `groupBy`, `pivot`
 - `validateProps(componentName, props)` — validate props before rendering, returns `{ valid, errors }`
 - CLI: `npx semiotic-ai [--schema|--compact|--examples]` — dump AI context to stdout
@@ -510,6 +510,36 @@ Props: `size` ([number, number], [500, 300]),
 
 ```jsx
 <RealtimeWaterfallChart ref={chartRef} timeAccessor="time" valueAccessor="delta" />
+```
+
+#### RealtimeSankey
+Streaming Sankey diagram where topology grows over time via push API. Particles animate along links
+proportional to flow value. Tension model batches relayouts for smooth performance.
+
+Props: `size` ([number, number], [800, 600]),
+  `sourceAccessor` (string, "source"), `targetAccessor` (string, "target"),
+  `valueAccessor` (string, "value"),
+  `orientation` ("horizontal"|"vertical", "horizontal"),
+  `nodeAlign` ("justify"|"left"|"right"|"center", "justify"),
+  `nodePaddingRatio` (number, 0.05), `nodeWidth` (number, 15),
+  `showParticles` (boolean, true),
+  `particleStyle` ({ radius?, color?, opacity?, speedMultiplier?, maxPerEdge?, spawnRate? }),
+  `tensionConfig` ({ threshold?, newNode?, newEdge?, weightChange?, transitionDuration? }),
+  `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
+  `edgeColorBy` ("source"|"target"|fn, "source"), `edgeOpacity` (number, 0.5),
+  `nodeLabel` (string|fn), `showLabels` (boolean, true),
+  `enableHover` (boolean, true), `tooltipContent` (fn),
+  `onTopologyChange` (fn), `background` (string),
+  `margin` (object), `className` (string)
+
+Ref handle: `push({ source, target, value })`, `pushMany(edges)`, `clear()`,
+  `getTopology()`, `relayout()`, `getTension()`
+
+```jsx
+const chartRef = useRef()
+chartRef.current.push({ source: "Salary", target: "Budget", value: 5000 })
+
+<RealtimeSankey ref={chartRef} size={[800, 400]} showParticles edgeOpacity={0.4} />
 ```
 
 ### Coordinated Views (import from "semiotic" or "semiotic/ai")
