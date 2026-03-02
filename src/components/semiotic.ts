@@ -27,10 +27,19 @@ import { hexbinning, heatmapping } from "./svg/areaDrawing"
 import { nodesEdgesFromHierarchy } from "./processing/network"
 
 // Higher-order chart components
-import { Scatterplot, LineChart, AreaChart, StackedAreaChart, Heatmap, BubbleChart, BarChart, StackedBarChart, SwarmPlot, BoxPlot, DotPlot, PieChart, DonutChart, GroupedBarChart, ForceDirectedGraph, ChordDiagram, SankeyDiagram, TreeDiagram, Treemap, CirclePack, ScatterplotMatrix } from "./charts"
+import { Scatterplot, LineChart, AreaChart, StackedAreaChart, Heatmap, BubbleChart, BarChart, StackedBarChart, SwarmPlot, BoxPlot, Histogram, ViolinPlot, DotPlot, PieChart, DonutChart, GroupedBarChart, ForceDirectedGraph, ChordDiagram, SankeyDiagram, TreeDiagram, Treemap, CirclePack, ScatterplotMatrix } from "./charts"
 
 // Coordinated views
 import { LinkedCharts } from "./LinkedCharts"
+
+// Theme
+import { ThemeProvider, useTheme } from "./ThemeProvider"
+
+// Export utility
+import { exportChart } from "./export/exportChart"
+
+// Error boundary
+import { ChartErrorBoundary } from "./ChartErrorBoundary"
 
 // Tooltip utilities
 import { Tooltip, MultiLineTooltip, normalizeTooltip } from "./Tooltip/Tooltip"
@@ -83,6 +92,8 @@ export {
   StackedBarChart,
   SwarmPlot,
   BoxPlot,
+  Histogram,
+  ViolinPlot,
   DotPlot,
   ForceDirectedGraph,
   ChordDiagram,
@@ -96,6 +107,13 @@ export {
   ScatterplotMatrix,
   // Coordinated views
   LinkedCharts,
+  // Theme
+  ThemeProvider,
+  useTheme,
+  // Export utility
+  exportChart,
+  // Error boundary
+  ChartErrorBoundary,
   // Tooltip utilities
   Tooltip,
   MultiLineTooltip,
@@ -211,6 +229,8 @@ export {
   StackedBarChartProps,
   SwarmPlotProps,
   BoxPlotProps,
+  HistogramProps,
+  ViolinPlotProps,
   DotPlotProps,
   PieChartProps,
   DonutChartProps,
@@ -259,6 +279,16 @@ export type {
   SelectionClause,
   Selection
 } from "./store/SelectionStore"
+
+// Theme types
+export type { SemioticTheme } from "./ThemeProvider"
+export { LIGHT_THEME, DARK_THEME } from "./ThemeProvider"
+
+// Error boundary types
+export type { ChartErrorBoundaryProps } from "./ChartErrorBoundary"
+
+// Format utilities
+export { smartTickFormat } from "./charts/shared/formatUtils"
 
 // Tooltip types
 export type {

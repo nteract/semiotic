@@ -64,13 +64,12 @@ export const htmlFrameHoverRule = ({
   const flipped = adjustedSize && d.x > adjustedSize[0] / 2
   const tooltipStyle: React.CSSProperties = {
     position: "absolute",
-    top: `${d.y}px`
+    top: `${d.y}px`,
+    left: `${d.x}px`
   }
 
   if (flipped) {
-    tooltipStyle.right = `${adjustedSize[0] - d.x}px`
-  } else {
-    tooltipStyle.left = `${d.x}px`
+    tooltipStyle.transform = "translateX(-100%)"
   }
 
   return (

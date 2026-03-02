@@ -62,6 +62,8 @@ import BarChartPage from "./pages/charts/BarChartPage"
 import StackedBarChartPage from "./pages/charts/StackedBarChartPage"
 import SwarmPlotPage from "./pages/charts/SwarmPlotPage"
 import BoxPlotPage from "./pages/charts/BoxPlotPage"
+import HistogramPage from "./pages/charts/HistogramPage"
+import ViolinPlotPage from "./pages/charts/ViolinPlotPage"
 import DotPlotPage from "./pages/charts/DotPlotPage"
 import ForceDirectedGraphPage from "./pages/charts/ForceDirectedGraphPage"
 import ChordDiagramPage from "./pages/charts/ChordDiagramPage"
@@ -94,6 +96,7 @@ import CanvasRenderingPage from "./pages/features/CanvasRenderingPage"
 import SparklinesPage from "./pages/features/SparklinesPage"
 import SmallMultiplesPage from "./pages/features/SmallMultiplesPage"
 import StylingPage from "./pages/features/StylingPage"
+import ThemingPage from "./pages/features/ThemingPage"
 import LegendsPage from "./pages/features/LegendsPage"
 
 // New cookbook pages
@@ -396,6 +399,7 @@ export default function DocsApp() {
               <Route path="sparklines" element={<SparklinesPage />} />
               <Route path="small-multiples" element={<SmallMultiplesPage />} />
               <Route path="styling" element={<StylingPage />} />
+              <Route path="theming" element={<ThemingPage />} />
               <Route path="legends" element={<LegendsPage />} />
             </Route>
 
@@ -423,6 +427,8 @@ export default function DocsApp() {
               <Route path="stacked-bar-chart" element={<StackedBarChartPage />} />
               <Route path="swarm-plot" element={<SwarmPlotPage />} />
               <Route path="box-plot" element={<BoxPlotPage />} />
+              <Route path="histogram" element={<HistogramPage />} />
+              <Route path="violin-plot" element={<ViolinPlotPage />} />
               <Route path="dot-plot" element={<DotPlotPage />} />
               <Route path="pie-chart" element={<PieChartPage />} />
               <Route path="donut-chart" element={<DonutChartPage />} />

@@ -2,8 +2,9 @@
 
 ## Quick Start
 - Install: `npm install semiotic`
-- Import from `semiotic` or granular: `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`, `semiotic/realtime`, `semiotic/ai`
-- `semiotic/ai` exports the 24 HOC chart components + TooltipProvider + MultiLineTooltip + `validateProps`
+- Import from `semiotic` or granular: `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`, `semiotic/realtime`, `semiotic/ai`, `semiotic/data`
+- `semiotic/ai` exports the 26 HOC chart components + TooltipProvider + MultiLineTooltip + ThemeProvider + exportChart + `validateProps`
+- `semiotic/data` exports data transform helpers: `bin`, `rollup`, `groupBy`, `pivot`
 - `validateProps(componentName, props)` — validate props before rendering, returns `{ valid, errors }`
 - CLI: `npx semiotic-ai [--schema|--compact|--examples]` — dump AI context to stdout
 - MCP: `npx semiotic-mcp` — MCP server that renders charts to static SVG
@@ -213,6 +214,41 @@ Props: `data` (TDatum[], required), `categoryAccessor` (string|fn, "category"), 
 
 ```jsx
 <BoxPlot data={scores} categoryAccessor="subject" valueAccessor="score" showOutliers />
+```
+
+#### Histogram
+Binned frequency distribution chart showing how values are distributed across bins per category. Always renders horizontally.
+
+Props: `data` (TDatum[], required), `categoryAccessor` (string|fn, "category"), `valueAccessor` (string|fn, "value"),
+  `bins` (number, 25), `relative` (boolean, false),
+  `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
+  `categoryPadding` (number, 20),
+  `categoryLabel` (string), `valueLabel` (string), `valueFormat` (fn),
+  `title` (string), `width` (number, 600), `height` (number, 400),
+  `enableHover` (boolean, true), `tooltip` (fn),
+  `showLegend` (boolean), `showGrid` (boolean, false),
+  `margin` (object), `className` (string), `frameProps` (object)
+
+```jsx
+<Histogram data={measurements} categoryAccessor="group" valueAccessor="value" bins={15} />
+```
+
+#### ViolinPlot
+Violin plots showing full distribution shape (kernel density) per category with optional IQR lines.
+
+Props: `data` (TDatum[], required), `categoryAccessor` (string|fn, "category"), `valueAccessor` (string|fn, "value"),
+  `orientation` ("vertical"|"horizontal", "vertical"),
+  `bins` (number, 25), `curve` (string, "catmullRom"), `showIQR` (boolean, true),
+  `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
+  `categoryPadding` (number, 20),
+  `categoryLabel` (string), `valueLabel` (string), `valueFormat` (fn),
+  `title` (string), `width` (number, 600), `height` (number, 400),
+  `enableHover` (boolean, true), `tooltip` (fn),
+  `showLegend` (boolean), `showGrid` (boolean, false),
+  `margin` (object), `className` (string), `frameProps` (object)
+
+```jsx
+<ViolinPlot data={salaries} categoryAccessor="department" valueAccessor="salary" showIQR colorBy="department" />
 ```
 
 #### DotPlot
@@ -630,9 +666,64 @@ const edges = [{ source: "A", target: "B", value: 10 }, { source: "B", target: "
 />
 ```
 
+### ThemeProvider (import from "semiotic" or "semiotic/ai")
+
+Global theming for all Semiotic charts. Opt-in — no changes to existing behavior without wrapping.
+
+```jsx
+import { ThemeProvider } from "semiotic"
+
+// Dark mode preset
+<ThemeProvider theme="dark">
+  <LineChart data={d} xAccessor="x" yAccessor="y" />
+</ThemeProvider>
+
+// Custom theme
+<ThemeProvider theme={{ colors: { primary: "#e41a1c", background: "#f5f5f5" } }}>
+  <BarChart data={d} categoryAccessor="cat" valueAccessor="val" />
+</ThemeProvider>
+```
+
+Presets: `"light"` (default), `"dark"`. Use `useTheme()` hook to read the current theme.
+
+### Data Transforms (import from "semiotic/data")
+
+Pure helper functions for common data transformations:
+
+```jsx
+import { bin, rollup, groupBy, pivot } from "semiotic/data"
+
+bin(data, { field: "age", bins: 10 })          // → histogram-ready { category, value }[]
+rollup(data, { groupBy: "region", value: "sales", agg: "sum" })  // → aggregated rows
+groupBy(data, { key: "region" })               // → [{ id, coordinates }] for LineChart
+pivot(data, { columns: ["q1", "q2", "q3"] })   // → wide-to-long format
+```
+
+### Browser Export (import from "semiotic" or "semiotic/ai")
+
+```jsx
+import { exportChart } from "semiotic"
+
+// Export chart container to SVG or PNG
+await exportChart(containerElement, { format: "png", scale: 2 })
+await exportChart(containerElement, { format: "svg", filename: "my-chart" })
+```
+
+### ChartErrorBoundary (import from "semiotic")
+
+```jsx
+import { ChartErrorBoundary } from "semiotic"
+
+<ChartErrorBoundary fallback={<div>Chart error</div>} onError={logError}>
+  <LineChart data={data} xAccessor="x" yAccessor="y" />
+</ChartErrorBoundary>
+```
+
 ## What Semiotic Does That Others Don't
 - Network visualization: ForceDirectedGraph, SankeyDiagram, ChordDiagram, TreeDiagram, Treemap, CirclePack
 - Streaming data: RealtimeLineChart, RealtimeBarChart (canvas-based, high frequency)
 - Coordinated views: LinkedCharts, ScatterplotMatrix with crossfilter brushing — no other React chart library has this built in
 - Annotation system: built-in hover, click, and custom annotations
 - Server-side SVG: `renderToStaticSVG()` for email/OG images (import from "semiotic/server")
+- Browser export: `exportChart()` for SVG/PNG download
+- Global theming: `ThemeProvider` with dark mode support

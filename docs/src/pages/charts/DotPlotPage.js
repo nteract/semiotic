@@ -77,7 +77,7 @@ export default function DotPlotPage() {
         { label: "Ordinal Charts", path: "/charts" },
         { label: "DotPlot", path: "/charts/dot-plot" },
       ]}
-      prevPage={{ title: "Box Plot", path: "/charts/box-plot" }}
+      prevPage={{ title: "Violin Plot", path: "/charts/violin-plot" }}
       nextPage={{ title: "Force-Directed Graph", path: "/charts/force-directed-graph" }}
     >
       <ComponentMeta

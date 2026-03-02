@@ -189,7 +189,8 @@ async function build() {
     { input: "src/components/semiotic-network.ts", name: "network", analyze: false, minify },
     { input: "src/components/semiotic-realtime.ts", name: "realtime", analyze: false, minify },
     { input: "src/components/semiotic-server.ts", name: "server", analyze: false, minify },
-    { input: "src/components/semiotic-ai.ts", name: "semiotic-ai", analyze: false, minify }
+    { input: "src/components/semiotic-ai.ts", name: "semiotic-ai", analyze: false, minify },
+    { input: "src/components/semiotic-data.ts", name: "semiotic-data", analyze: false, minify }
   ]
 
   await Promise.all([

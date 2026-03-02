@@ -447,13 +447,12 @@ export const htmlTooltipAnnotation = ({
   const flipped = adjustedSize && screenCoordinates[0] > adjustedSize[0] / 2
   const tooltipStyle: React.CSSProperties = {
     position: "absolute",
-    top: `${screenCoordinates[1]}px`
+    top: `${screenCoordinates[1]}px`,
+    left: `${screenCoordinates[0]}px`
   }
 
   if (flipped) {
-    tooltipStyle.right = `${adjustedSize[0] - screenCoordinates[0]}px`
-  } else {
-    tooltipStyle.left = `${screenCoordinates[0]}px`
+    tooltipStyle.transform = "translateX(-100%)"
   }
 
   return (

@@ -53,6 +53,12 @@
       "require": "./dist/semiotic-ai.min.js",
       "default": "./dist/semiotic-ai.module.min.js"
     },
+    "./data": {
+      "types": "./dist/semiotic-data.d.ts",
+      "import": "./dist/semiotic-data.module.min.js",
+      "require": "./dist/semiotic-data.min.js",
+      "default": "./dist/semiotic-data.module.min.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [

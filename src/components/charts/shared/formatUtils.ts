@@ -150,6 +150,39 @@ export function formatLargeNumber(value: number, decimals: number = 1): string {
 }
 
 /**
+ * Smart default tick format for axis labels.
+ *
+ * Handles the common problems with raw number-to-string conversion:
+ * - Floating-point noise (0.30000000000000004 → "0.3")
+ * - Excessive precision (62.123456789 → "62.1235")
+ * - Large numbers (1500000 → "1.5M")
+ * - Strings/non-numbers pass through unchanged
+ *
+ * Used as the default axis tickFormat when no explicit format is provided.
+ */
+export function smartTickFormat(value: any): string {
+  if (value == null) return ""
+  if (typeof value !== "number") return String(value)
+  if (!isFinite(value)) return String(value)
+  if (value === 0) return "0"
+
+  // Clean floating-point noise (e.g., 0.30000000000000004 → 0.3)
+  const cleaned = parseFloat(value.toPrecision(12))
+  const abs = Math.abs(cleaned)
+
+  // Large numbers: compact suffixes
+  if (abs >= 1e9) return `${parseFloat((cleaned / 1e9).toPrecision(3))}B`
+  if (abs >= 1e6) return `${parseFloat((cleaned / 1e6).toPrecision(3))}M`
+  if (abs >= 1e4) return `${parseFloat((cleaned / 1e3).toPrecision(3))}K`
+
+  // Integers: no decimals needed
+  if (Number.isInteger(cleaned)) return String(cleaned)
+
+  // Floats: up to 6 significant digits, trailing zeros stripped
+  return String(parseFloat(cleaned.toPrecision(6)))
+}
+
+/**
  * Truncates text to specified length with ellipsis
  *
  * @param text - Text to truncate

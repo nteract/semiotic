@@ -616,6 +616,102 @@
     {
       "type": "function",
       "function": {
+        "name": "Histogram",
+        "description": "Binned frequency distribution chart. Shows how data values are distributed across bins within categories.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": { "type": "object" },
+              "description": "Array of data objects"
+            },
+            "categoryAccessor": { "type": "string", "default": "category" },
+            "valueAccessor": { "type": "string", "default": "value" },
+            "bins": {
+              "type": "number",
+              "description": "Number of bins for the histogram",
+              "default": 25
+            },
+            "relative": {
+              "type": "boolean",
+              "description": "Normalize counts per category to show relative frequency",
+              "default": false
+            },
+            "colorBy": { "type": "string" },
+            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "categoryPadding": { "type": "number", "default": 20 },
+            "categoryLabel": { "type": "string" },
+            "valueLabel": { "type": "string" },
+            "title": { "type": "string" },
+            "width": { "type": "number", "default": 600 },
+            "height": { "type": "number", "default": 400 },
+            "enableHover": { "type": "boolean", "default": true },
+            "showLegend": { "type": "boolean" },
+            "showGrid": { "type": "boolean", "default": false },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": ["data"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "ViolinPlot",
+        "description": "Violin plots showing the full distribution shape (kernel density) per category. Combines density estimation with optional IQR lines.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": { "type": "object" },
+              "description": "Array of data objects"
+            },
+            "categoryAccessor": { "type": "string", "default": "category" },
+            "valueAccessor": { "type": "string", "default": "value" },
+            "orientation": {
+              "type": "string",
+              "enum": ["vertical", "horizontal"],
+              "default": "vertical"
+            },
+            "bins": {
+              "type": "number",
+              "description": "Number of bins for density estimation",
+              "default": 25
+            },
+            "curve": {
+              "type": "string",
+              "description": "Interpolation curve for the violin shape",
+              "default": "catmullRom"
+            },
+            "showIQR": {
+              "type": "boolean",
+              "description": "Show interquartile range lines",
+              "default": true
+            },
+            "colorBy": { "type": "string" },
+            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "categoryPadding": { "type": "number", "default": 20 },
+            "categoryLabel": { "type": "string" },
+            "valueLabel": { "type": "string" },
+            "title": { "type": "string" },
+            "width": { "type": "number", "default": 600 },
+            "height": { "type": "number", "default": 400 },
+            "enableHover": { "type": "boolean", "default": true },
+            "showLegend": { "type": "boolean" },
+            "showGrid": { "type": "boolean", "default": false },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": ["data"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
         "name": "DotPlot",
         "description": "Cleveland-style dot plot for comparing values across categories. Sorted by default.",
         "parameters": {

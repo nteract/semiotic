@@ -16,6 +16,10 @@ import AnnotationLayer from "./AnnotationLayer/AnnotationLayer"
 // Utility functions
 import { calculateDataExtent } from "./data/dataFunctions"
 
+// HOC chart components
+import { Histogram } from "./charts/ordinal/Histogram"
+import { ViolinPlot } from "./charts/ordinal/ViolinPlot"
+
 // Export components
 export {
   OrdinalFrame,
@@ -27,7 +31,10 @@ export {
   Annotation,
   AnnotationLayer,
   // Utility functions
-  calculateDataExtent
+  calculateDataExtent,
+  // HOC chart components
+  Histogram,
+  ViolinPlot
 }
 
 // Export types

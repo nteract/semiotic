@@ -239,8 +239,61 @@ export const axisLabels = ({
   center = false,
   orient
 }) => {
-  return axisParts.map((axisPart, i) => {
-    let renderedValue = tickFormat(axisPart.value, i)
+  // Pre-format all values
+  const entries = axisParts.map((axisPart, i) => ({
+    axisPart,
+    i,
+    formatted: tickFormat(axisPart.value, i)
+  }))
+
+  // Collision-aware filtering: skip labels that would overlap.
+  // Only applies to non-rotated text labels (rotation changes bounding box).
+  const isHorizontal = orient === "top" || orient === "bottom"
+  const isVertical = orient === "left" || orient === "right"
+  let visible = entries
+
+  if (!rotate && entries.length > 1) {
+    const CHAR_WIDTH = 8
+    const LINE_HEIGHT = 14
+    const MIN_GAP = 8
+
+    const textOf = (formatted) => {
+      if (typeof formatted === "string") return formatted
+      if (typeof formatted === "number") return String(formatted)
+      return null // React element — can't estimate width, always keep
+    }
+
+    if (isHorizontal) {
+      const sorted = [...entries].sort((a, b) => a.axisPart.tx - b.axisPart.tx)
+      let lastRight = -Infinity
+      const keep = new Set()
+
+      for (const entry of sorted) {
+        const text = textOf(entry.formatted)
+        if (!text) { keep.add(entry.i); continue }
+        const halfW = (text.length * CHAR_WIDTH) / 2
+        if (entry.axisPart.tx - halfW >= lastRight + MIN_GAP) {
+          keep.add(entry.i)
+          lastRight = entry.axisPart.tx + halfW
+        }
+      }
+      visible = entries.filter((e) => keep.has(e.i))
+    } else if (isVertical) {
+      const sorted = [...entries].sort((a, b) => a.axisPart.ty - b.axisPart.ty)
+      let lastBottom = -Infinity
+      const keep = new Set()
+
+      for (const entry of sorted) {
+        if (entry.axisPart.ty >= lastBottom + LINE_HEIGHT + MIN_GAP) {
+          keep.add(entry.i)
+          lastBottom = entry.axisPart.ty
+        }
+      }
+      visible = entries.filter((e) => keep.has(e.i))
+    }
+  }
+
+  return visible.map(({ axisPart, i, formatted: renderedValue }) => {
     if (typeof renderedValue !== "object" || renderedValue instanceof Date) {
       renderedValue = (
         <text textAnchor={axisPart.defaultAnchor} className="axis-label">
