@@ -318,3 +318,4 @@ export function DonutChart<TDatum extends Record<string, any> = Record<string, a
 
   return <OrdinalFrame {...ordinalFrameProps} />
 }
+DonutChart.displayName = "DonutChart"

@@ -394,3 +394,4 @@ export function ForceDirectedGraph<TNode extends Record<string, any> = Record<st
 
   return <NetworkFrame {...networkFrameProps} />
 }
+ForceDirectedGraph.displayName = "ForceDirectedGraph"

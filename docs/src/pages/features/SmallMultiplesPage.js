@@ -15,24 +15,29 @@ import PropTable from "../../components/PropTable"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
-// Sample data for LinkedCharts
+// Sample data for LinkedCharts live example
 // ---------------------------------------------------------------------------
 
-const linkedData = [
-  { x: 10, y: 45, region: "North", income: 52 },
-  { x: 20, y: 55, region: "North", income: 61 },
-  { x: 30, y: 65, region: "South", income: 48 },
-  { x: 40, y: 35, region: "South", income: 39 },
-  { x: 50, y: 72, region: "East", income: 75 },
-  { x: 60, y: 62, region: "East", income: 68 },
-  { x: 70, y: 48, region: "West", income: 54 },
-  { x: 80, y: 58, region: "West", income: 62 },
+const salesData = [
+  { month: "Jan", revenue: 42, region: "North", spend: 18 },
+  { month: "Feb", revenue: 51, region: "North", spend: 22 },
+  { month: "Mar", revenue: 65, region: "South", spend: 28 },
+  { month: "Apr", revenue: 38, region: "South", spend: 15 },
+  { month: "May", revenue: 72, region: "East", spend: 35 },
+  { month: "Jun", revenue: 60, region: "East", spend: 30 },
+  { month: "Jul", revenue: 48, region: "West", spend: 20 },
+  { month: "Aug", revenue: 55, region: "West", spend: 24 },
+  { month: "Sep", revenue: 67, region: "North", spend: 31 },
+  { month: "Oct", revenue: 58, region: "South", spend: 26 },
+  { month: "Nov", revenue: 74, region: "East", spend: 38 },
+  { month: "Dec", revenue: 63, region: "West", spend: 29 },
 ]
 
-const barAgg = ["North", "South", "East", "West"].map((region) => ({
-  category: region,
-  total: linkedData.filter((d) => d.region === region).reduce((s, d) => s + d.income, 0),
+const regionTotals = ["North", "South", "East", "West"].map((region) => ({
   region,
+  total: salesData
+    .filter((d) => d.region === region)
+    .reduce((s, d) => s + d.revenue, 0),
 }))
 
 // ---------------------------------------------------------------------------
@@ -132,59 +137,131 @@ const splomProps = [
 export default function SmallMultiplesPage() {
   return (
     <PageLayout
-      title="Small Multiples & Coordinated Views"
+      title="Linked Charts"
       breadcrumbs={[
         { label: "Features", path: "/features" },
-        { label: "Small Multiples", path: "/features/small-multiples" },
+        { label: "Linked Charts", path: "/features/small-multiples" },
       ]}
       prevPage={{ title: "Sparklines", path: "/features/sparklines" }}
       nextPage={{ title: "Styling", path: "/features/styling" }}
     >
       <p>
-        Semiotic provides <strong>LinkedCharts</strong> for modern
-        producer-consumer coordination between charts, enabling
-        cross-highlighting, brushing-and-linking, and cross-filtering.
+        <strong>LinkedCharts</strong> is a React Context provider that enables
+        cross-highlighting, brushing-and-linking, and cross-filtering between
+        any Semiotic chart components at any depth in the tree. Charts opt in
+        via the <code>selection</code>, <code>linkedHover</code>, and{" "}
+        <code>linkedBrush</code> props.
       </p>
 
       {/* ----------------------------------------------------------------- */}
-      {/* LinkedCharts */}
+      {/* Live example */}
       {/* ----------------------------------------------------------------- */}
-      <h2 id="linked-charts">LinkedCharts (Recommended)</h2>
+      <h2 id="example">Example</h2>
 
       <p>
-        <code>LinkedCharts</code> uses React Context to enable cross-highlighting,
-        brushing-and-linking, and cross-filtering between any chart components
-        at any depth in the tree. Charts opt in via the <code>selection</code>,{" "}
-        <code>linkedHover</code>, and <code>linkedBrush</code> props.
+        Hover over a point in the scatterplot to highlight the matching region
+        in the bar chart, and vice versa:
       </p>
 
-      <h3 id="cross-highlighting">Cross-Highlighting</h3>
-      <p>
-        Hover over a point in one chart to highlight matching data in all
-        linked charts:
-      </p>
+      <div style={{ marginBottom: 32 }}>
+        <LinkedCharts>
+          <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+            <Scatterplot
+              data={salesData}
+              xAccessor="revenue"
+              yAccessor="spend"
+              colorBy="region"
+              pointRadius={6}
+              width={360}
+              height={300}
+              xLabel="Revenue"
+              yLabel="Spend"
+              linkedHover={{ name: "hl", fields: ["region"] }}
+              selection={{ name: "hl" }}
+            />
+            <BarChart
+              data={regionTotals}
+              categoryAccessor="region"
+              valueAccessor="total"
+              colorBy="region"
+              width={320}
+              height={300}
+              valueLabel="Total Revenue"
+              linkedHover={{ name: "hl", fields: ["region"] }}
+              selection={{ name: "hl" }}
+            />
+          </div>
+        </LinkedCharts>
+      </div>
 
       <CodeBlock
         code={`import { LinkedCharts, Scatterplot, BarChart } from "semiotic"
 
+const salesData = [
+  { month: "Jan", revenue: 42, region: "North", spend: 18 },
+  { month: "Feb", revenue: 51, region: "North", spend: 22 },
+  // ...
+]
+
+const regionTotals = ["North", "South", "East", "West"].map(region => ({
+  region,
+  total: salesData
+    .filter(d => d.region === region)
+    .reduce((s, d) => s + d.revenue, 0),
+}))
+
 <LinkedCharts>
   <Scatterplot
-    data={data}
-    xAccessor="x"
-    yAccessor="y"
+    data={salesData}
+    xAccessor="revenue"
+    yAccessor="spend"
     colorBy="region"
     linkedHover={{ name: "hl", fields: ["region"] }}
     selection={{ name: "hl" }}
   />
   <BarChart
-    data={barData}
-    categoryAccessor="category"
+    data={regionTotals}
+    categoryAccessor="region"
     valueAccessor="total"
     colorBy="region"
     linkedHover={{ name: "hl", fields: ["region"] }}
     selection={{ name: "hl" }}
   />
 </LinkedCharts>`}
+        language="jsx"
+      />
+
+      {/* ----------------------------------------------------------------- */}
+      {/* How it works */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="how-it-works">How It Works</h2>
+
+      <p>
+        <code>LinkedCharts</code> wraps your charts in a shared selection
+        store. Each chart can <strong>produce</strong> selections (via{" "}
+        <code>linkedHover</code> or <code>linkedBrush</code>) and{" "}
+        <strong>consume</strong> them (via <code>selection</code>). When a
+        selection is active, non-matching elements are dimmed.
+      </p>
+
+      <h3 id="selection-props">Selection Props on Charts</h3>
+      <p>
+        All HOC chart components accept these coordination props when used
+        inside <code>LinkedCharts</code>:
+      </p>
+
+      <CodeBlock
+        code={`// selection — consume a named selection (dims unmatched elements)
+selection={{ name: "mySelection", unselectedOpacity: 0.2 }}
+
+// linkedHover — produce hover-based selections
+linkedHover={{ name: "hl", fields: ["category"] }}
+linkedHover={true}          // shorthand: name="hover", auto-detect fields
+linkedHover="myHoverName"   // shorthand: custom name, auto-detect fields
+
+// linkedBrush — produce brush-based selections (Scatterplot, BubbleChart only)
+linkedBrush={{ name: "brush", xField: "x", yField: "y" }}
+linkedBrush="selectionName" // shorthand`}
         language="jsx"
       />
 
@@ -214,7 +291,7 @@ function FilteredDetail({ data }) {
         language="jsx"
       />
 
-      <h3 id="cross-filtering">Cross-Filtering Dashboard</h3>
+      <h3 id="cross-filtering">Cross-Filtering</h3>
       <p>
         With <code>resolution: "crossfilter"</code>, each chart's own brush is
         excluded from its filter — the standard SPLOM interaction model:
@@ -246,31 +323,6 @@ function FilteredDetail({ data }) {
       />
 
       {/* ----------------------------------------------------------------- */}
-      {/* Selection Props */}
-      {/* ----------------------------------------------------------------- */}
-      <h3 id="selection-props">Selection Props on Charts</h3>
-      <p>
-        All HOC chart components (Scatterplot, BarChart, LineChart, etc.)
-        accept these coordination props when used inside{" "}
-        <code>LinkedCharts</code>:
-      </p>
-
-      <CodeBlock
-        code={`// selection — consume a named selection (dims unmatched elements)
-selection={{ name: "mySelection", unselectedOpacity: 0.2 }}
-
-// linkedHover — produce hover-based selections
-linkedHover={{ name: "hl", fields: ["category"] }}
-linkedHover={true}          // shorthand: name="hover", auto-detect fields
-linkedHover="myHoverName"   // shorthand: custom name, auto-detect fields
-
-// linkedBrush — produce brush-based selections (Scatterplot, BubbleChart only)
-linkedBrush={{ name: "brush", xField: "x", yField: "y" }}
-linkedBrush="selectionName" // shorthand`}
-        language="jsx"
-      />
-
-      {/* ----------------------------------------------------------------- */}
       {/* ScatterplotMatrix */}
       {/* ----------------------------------------------------------------- */}
       <h2 id="scatterplot-matrix">ScatterplotMatrix</h2>
@@ -279,7 +331,7 @@ linkedBrush="selectionName" // shorthand`}
         The <code>ScatterplotMatrix</code> (SPLOM) renders an N x N grid of
         scatterplots with built-in cross-filter brushing. Diagonal cells
         show histograms. Brushing one cell highlights matching points in
-        all other cells.
+        all other cells. It uses <code>LinkedCharts</code> internally.
       </p>
 
       <div style={{ marginBottom: 32 }}>
@@ -383,7 +435,7 @@ const filtered = useFilteredData(data, "mySelection")`}
         </li>
         <li>
           <Link to="/features/legends">Legends</Link> — adding legends to your
-          small multiple layouts
+          coordinated chart layouts
         </li>
       </ul>
     </PageLayout>

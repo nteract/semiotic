@@ -595,6 +595,7 @@ function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<stri
               left: tooltipLeft,
               top: tooltipTop,
               transform: "translate(-50%, -100%)",
+              color: "#333",
               background: "rgba(255,255,255,0.95)",
               border: "1px solid #ddd",
               borderRadius: 3,
@@ -661,3 +662,4 @@ export function ScatterplotMatrix<TDatum extends Record<string, any> = Record<st
     </LinkedCharts>
   )
 }
+ScatterplotMatrix.displayName = "ScatterplotMatrix"

@@ -372,3 +372,4 @@ export function StackedBarChart<TDatum extends Record<string, any> = Record<stri
 
   return <OrdinalFrame {...ordinalFrameProps} />
 }
+StackedBarChart.displayName = "StackedBarChart"

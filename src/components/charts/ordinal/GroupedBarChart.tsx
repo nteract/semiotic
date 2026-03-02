@@ -342,3 +342,4 @@ export function GroupedBarChart<TDatum extends Record<string, any> = Record<stri
 
   return <OrdinalFrame {...ordinalFrameProps} />
 }
+GroupedBarChart.displayName = "GroupedBarChart"

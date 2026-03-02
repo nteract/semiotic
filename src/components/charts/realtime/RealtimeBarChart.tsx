@@ -209,3 +209,4 @@ export const RealtimeBarChart = forwardRef<RealtimeFrameHandle, RealtimeBarChart
     )
   }
 )
+RealtimeBarChart.displayName = "RealtimeBarChart"

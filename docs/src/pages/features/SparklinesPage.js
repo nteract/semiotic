@@ -128,7 +128,7 @@ export default function SparklinesPage() {
         path: "/features/canvas-rendering",
       }}
       nextPage={{
-        title: "Small Multiples",
+        title: "Linked Charts",
         path: "/features/small-multiples",
       }}
     >
@@ -504,7 +504,7 @@ export default function SparklinesPage() {
           frame that SparkNetworkFrame wraps
         </li>
         <li>
-          <Link to="/features/small-multiples">Small Multiples</Link> —
+          <Link to="/features/small-multiples">Linked Charts</Link> —
           coordinated grid layouts for comparing multiple visualizations
         </li>
         <li>

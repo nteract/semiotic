@@ -268,3 +268,4 @@ export function PieChart<TDatum extends Record<string, any> = Record<string, any
 
   return <OrdinalFrame {...ordinalFrameProps} />
 }
+PieChart.displayName = "PieChart"

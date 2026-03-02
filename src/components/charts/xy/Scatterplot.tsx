@@ -216,3 +216,4 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
 
   return <XYFrame {...xyFrameProps} />
 }
+Scatterplot.displayName = "Scatterplot"

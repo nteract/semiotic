@@ -56,7 +56,10 @@ const treemapProps = [
   { name: "colorScheme", type: "string | array", required: false, default: '"category10"', description: "Color scheme for nodes or custom colors array." },
   { name: "colorByDepth", type: "boolean", required: false, default: "false", description: "Color nodes by hierarchy depth level." },
   { name: "showLabels", type: "boolean", required: false, default: "true", description: "Show labels on treemap cells." },
+  { name: "labelMode", type: '"leaf" | "parent" | "all"', required: false, default: '"leaf"', description: 'Which nodes to label. "leaf" labels only leaf nodes, "parent" labels depth-1 group headers, "all" labels everything.' },
   { name: "nodeLabel", type: "string | function", required: false, default: "nodeIdAccessor", description: "Node label accessor." },
+  { name: "padding", type: "number", required: false, default: "4", description: "Padding between parent and child rectangles (pixels). Makes parent containers visible." },
+  { name: "paddingTop", type: "number", required: false, default: '0 (18 when labelMode="parent")', description: "Extra padding at the top of parent nodes. Provides space for parent label text." },
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover annotations." },
   { name: "tooltip", type: "object | function", required: false, default: null, description: "Tooltip configuration or render function." },
   { name: "width", type: "number", required: false, default: "600", description: "Chart width in pixels." },
@@ -172,6 +175,31 @@ export default function TreemapPage() {
         overrideProps={{
           data: "hierarchyData",
           colorByDepth: "true",
+        }}
+        hiddenProps={{}}
+      />
+
+      <h3 id="parent-labels">Parent Labels</h3>
+      <p>
+        Use <code>labelMode="parent"</code> to label only the top-level groups.
+        This automatically adds <code>paddingTop</code> for header space.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: sampleData,
+          nodeIdAccessor: "name",
+          valueAccessor: "value",
+          colorBy: "name",
+          labelMode: "parent",
+          padding: 3,
+        }}
+        type={Treemap}
+        overrideProps={{
+          data: "hierarchyData",
+          colorBy: '"name"',
+          labelMode: '"parent"',
+          padding: "3",
         }}
         hiddenProps={{}}
       />

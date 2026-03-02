@@ -504,3 +504,4 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
 
   return <XYFrame {...xyFrameProps} />
 }
+LineChart.displayName = "LineChart"

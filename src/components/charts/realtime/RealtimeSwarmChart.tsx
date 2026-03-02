@@ -195,3 +195,4 @@ export const RealtimeSwarmChart = forwardRef<RealtimeFrameHandle, RealtimeSwarmC
     )
   }
 )
+RealtimeSwarmChart.displayName = "RealtimeSwarmChart"

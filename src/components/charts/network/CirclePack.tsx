@@ -84,6 +84,12 @@ export interface CirclePackProps<TNode extends Record<string, any> = Record<stri
   circleOpacity?: number
 
   /**
+   * Padding between circles (pixels).
+   * @default 4
+   */
+  padding?: number
+
+  /**
    * Enable hover annotations
    * @default true
    */
@@ -139,6 +145,7 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
     showLabels = true,
     nodeLabel,
     circleOpacity = 0.7,
+    padding: paddingProp = 4,
     enableHover = true,
     tooltip,
     frameProps = {}
@@ -162,15 +169,20 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
     return nodes
   }, [data, childrenAccessor])
 
+  // Pastel palette for depth-based coloring (shared with Treemap)
+  const DEPTH_PASTELS = [
+    "#f0f0f0",   // depth 0 (root) — near-white
+    "#b5d4ea",   // depth 1 — soft blue
+    "#f4c2a1",   // depth 2 — peach
+    "#b8dab2",   // depth 3 — sage
+    "#d4b5e0",   // depth 4 — lavender
+    "#f9e0a2",   // depth 5 — butter
+    "#a8d8d8",   // depth 6 — mint
+  ]
+
   // Create color scale
   const colorScale = useMemo(() => {
-    if (colorByDepth) {
-      return createColorScale(
-        allNodes.map((_, idx) => ({ depth: idx % 5 })),
-        "depth",
-        colorScheme
-      )
-    }
+    if (colorByDepth) return undefined // handled inline with DEPTH_PASTELS
 
     if (!colorBy || typeof colorBy === "function") {
       return undefined
@@ -190,7 +202,8 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
       }
 
       if (colorByDepth) {
-        baseStyle.fill = getColor({ depth: d.depth || 0 }, "depth", colorScale)
+        const depth = d.depth || 0
+        baseStyle.fill = DEPTH_PASTELS[depth % DEPTH_PASTELS.length]
       } else if (colorBy) {
         baseStyle.fill = getColor(d, colorBy as string | ((d: any) => string), colorScale)
       } else {
@@ -216,18 +229,116 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
     return (d: Record<string, any>) => d[valueAccessor] || 1
   }, [valueAccessor])
 
-  // Node label function
+  // Node label function — returns centered React elements
   const nodeLabelFn = useMemo(() => {
     if (!showLabels) return undefined
 
-    if (nodeLabel) {
-      if (typeof nodeLabel === "function") return nodeLabel
-      return (d: Record<string, any>) => d[nodeLabel]
-    }
+    // Build the raw label accessor
+    const rawLabel = nodeLabel
+      ? (typeof nodeLabel === "function" ? nodeLabel : (d: Record<string, any>) => d[nodeLabel])
+      : (typeof nodeIdAccessor === "function" ? nodeIdAccessor : (d: Record<string, any>) => d[nodeIdAccessor])
 
+    return (d: Record<string, any>) => {
+      const text = rawLabel(d as any)
+      if (!text) return null
+
+      const radius = d.r || d.nodeSize || 5
+      const hasChildren = d.children && d.children.length > 0
+
+      // Skip labels on circles too small to read
+      if (radius < 15) return null
+
+      if (hasChildren) {
+        // Parent node: label at top-center, white-outlined black text
+        return (
+          <text
+            textAnchor="middle"
+            y={-radius + 14}
+            fontSize={11}
+            fontWeight={600}
+            fill="#333"
+            stroke="white"
+            strokeWidth={3}
+            paintOrder="stroke"
+            style={{ pointerEvents: "none" }}
+          >
+            {String(text)}
+          </text>
+        )
+      }
+
+      // Leaf node: centered label
+      return (
+        <text
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fontSize={11}
+          fill="#333"
+          style={{ pointerEvents: "none" }}
+        >
+          {String(text)}
+        </text>
+      )
+    }
+  }, [showLabels, nodeLabel, nodeIdAccessor])
+
+  // Resolve the nodeIdAccessor into a function for use in tooltip
+  const nodeIdFn = useMemo(() => {
     if (typeof nodeIdAccessor === "function") return nodeIdAccessor
     return (d: Record<string, any>) => d[nodeIdAccessor]
-  }, [showLabels, nodeLabel, nodeIdAccessor])
+  }, [nodeIdAccessor])
+
+  // Default tooltip: show ancestor path as grandparent → parent → **this node**
+  const defaultTooltipContent = useMemo(() => {
+    return (d: Record<string, any>) => {
+      // Walk up the parent chain (skip root)
+      const ancestors: string[] = []
+      let current = d
+      while (current) {
+        const name = nodeIdFn(current.data || current)
+        if (name) ancestors.unshift(String(name))
+        current = current.parent
+      }
+      // Remove root (first element) from breadcrumb
+      if (ancestors.length > 1) ancestors.shift()
+
+      const last = ancestors.length - 1
+      return (
+        <div className="tooltip-content" style={{ padding: "4px 8px", fontSize: 12, lineHeight: 1.5 }}>
+          <p style={{ margin: 0 }}>
+            {ancestors.map((name, i) => (
+              <span key={i}>
+                {i > 0 && <span style={{ margin: "0 3px", opacity: 0.5 }}>{" → "}</span>}
+                {i === last ? <strong>{name}</strong> : <span style={{ opacity: 0.7 }}>{name}</span>}
+              </span>
+            ))}
+          </p>
+          {d.value != null && (
+            <p style={{ margin: "2px 0 0", opacity: 0.7 }}>{d.value.toLocaleString()}</p>
+          )}
+        </div>
+      )
+    }
+  }, [nodeIdFn])
+
+  // SVG annotation rule: draw a highlight outline circle on hovered node
+  const svgAnnotationRules = useMemo(() => {
+    return ({ d }: Record<string, any>) => {
+      if (d.type !== "frame-hover" || d.r === undefined) return null
+      return (
+        <circle
+          key="circlepack-hover-outline"
+          cx={d.x}
+          cy={d.y}
+          r={d.r}
+          fill="none"
+          stroke="#333"
+          strokeWidth={2}
+          style={{ pointerEvents: "none" }}
+        />
+      )
+    }
+  }, [])
 
   // Validate data (after all hooks)
   const error = validateObjectData({
@@ -243,17 +354,20 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
     nodeStyle: nodeStyleFn,
     edgeStyle: () => ({ fill: "none", stroke: "none" }),
     nodeIDAccessor: nodeIdAccessor,
+    nodeSizeAccessor: (d: Record<string, any>) => d.r || 5,
     networkType: {
       type: "circlepack",
       ...(hierarchyChildren && { hierarchyChildren: hierarchyChildren as Function }),
       ...(hierarchySum && { hierarchySum: hierarchySum as Function }),
+      padding: paddingProp,
     },
     hoverAnnotation: enableHover,
     margin,
-    ...(nodeLabelFn && { nodeLabels: nodeLabelFn as (args: Record<string, any>) => string }),
+    ...(nodeLabelFn && { nodeLabels: nodeLabelFn as unknown as (args: Record<string, any>) => string }),
     ...(className && { className }),
     ...(title && { title }),
-    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
+    tooltipContent: tooltip ? normalizeTooltip(tooltip) as Function : defaultTooltipContent,
+    svgAnnotationRules: enableHover ? svgAnnotationRules as any : undefined,
     transition: true,
     ...frameProps,
     _layoutMap: { circlepack: hierarchyLayouts.circlepack }
@@ -261,3 +375,4 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
 
   return <NetworkFrame {...networkFrameProps} />
 }
+CirclePack.displayName = "CirclePack"

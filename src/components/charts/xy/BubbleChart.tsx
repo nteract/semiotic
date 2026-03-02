@@ -384,3 +384,4 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
 
   return <XYFrame {...xyFrameProps} />
 }
+BubbleChart.displayName = "BubbleChart"

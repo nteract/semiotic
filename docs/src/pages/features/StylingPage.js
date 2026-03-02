@@ -106,7 +106,7 @@ export default function StylingPage() {
         { label: "Styling", path: "/features/styling" },
       ]}
       prevPage={{
-        title: "Small Multiples",
+        title: "Linked Charts",
         path: "/features/small-multiples",
       }}
       nextPage={{ title: "Legends", path: "/features/legends" }}
