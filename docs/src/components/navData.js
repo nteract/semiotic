@@ -33,6 +33,8 @@ const navData = [
           { title: "Stacked Bar Chart", path: "/charts/stacked-bar-chart" },
           { title: "Swarm Plot", path: "/charts/swarm-plot" },
           { title: "Box Plot", path: "/charts/box-plot" },
+          { title: "Histogram", path: "/charts/histogram" },
+          { title: "Violin Plot", path: "/charts/violin-plot" },
           { title: "Dot Plot", path: "/charts/dot-plot" },
           { title: "Pie Chart", path: "/charts/pie-chart" },
           { title: "Donut Chart", path: "/charts/donut-chart" },

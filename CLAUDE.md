@@ -217,10 +217,9 @@ Props: `data` (TDatum[], required), `categoryAccessor` (string|fn, "category"), 
 ```
 
 #### Histogram
-Binned frequency distribution chart showing how values are distributed across bins per category.
+Binned frequency distribution chart showing how values are distributed across bins per category. Always renders horizontally.
 
 Props: `data` (TDatum[], required), `categoryAccessor` (string|fn, "category"), `valueAccessor` (string|fn, "value"),
-  `orientation` ("vertical"|"horizontal", "vertical"),
   `bins` (number, 25), `relative` (boolean, false),
   `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
   `categoryPadding` (number, 20),

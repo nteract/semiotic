@@ -295,7 +295,6 @@ const VALIDATION_MAP: Record<string, ComponentSpec> = {
       data: { type: "array" },
       categoryAccessor: { type: ["string", "function"] },
       valueAccessor: { type: ["string", "function"] },
-      orientation: { type: "string", enum: orientationEnum as unknown as string[] },
       bins: { type: "number" },
       relative: { type: "boolean" },
       categoryPadding: { type: "number" },

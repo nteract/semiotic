@@ -45,10 +45,11 @@ export interface HistogramProps<TDatum extends Record<string, any> = Record<stri
   valueAccessor?: ChartAccessor<TDatum, number>
 
   /**
-   * Chart orientation
-   * @default "vertical"
+   * Chart orientation. Histograms are always horizontal.
+   * @default "horizontal"
+   * @deprecated Histograms are always horizontal. This prop is ignored.
    */
-  orientation?: "vertical" | "horizontal"
+  orientation?: "horizontal"
 
   /**
    * Number of histogram bins
@@ -162,7 +163,7 @@ export function Histogram<TDatum extends Record<string, any> = Record<string, an
     title,
     categoryAccessor = "category",
     valueAccessor = "value",
-    orientation = "vertical",
+    orientation: _orientation,
     bins = 25,
     relative = false,
     categoryLabel,
@@ -221,44 +222,26 @@ export function Histogram<TDatum extends Record<string, any> = Record<string, an
     [baseSummaryStyle, activeSelectionHook, selection]
   )
 
-  // Build axes configuration
+  // Build axes configuration (always horizontal)
   const axes = useMemo(() => {
     const axesConfig: Array<Record<string, unknown>> = []
 
-    if (orientation === "vertical") {
-      // Vertical: category on bottom, value on left
+    if (categoryLabel) {
       axesConfig.push({
         orient: "left",
-        label: valueLabel,
-        tickFormat: valueFormat,
-        ...(showGrid && { tickLineGenerator: () => null })
-      })
-
-      if (categoryLabel) {
-        axesConfig.push({
-          orient: "bottom",
-          label: categoryLabel
-        })
-      }
-    } else {
-      // Horizontal: category on left, value on bottom
-      if (categoryLabel) {
-        axesConfig.push({
-          orient: "left",
-          label: categoryLabel
-        })
-      }
-
-      axesConfig.push({
-        orient: "bottom",
-        label: valueLabel,
-        tickFormat: valueFormat,
-        ...(showGrid && { tickLineGenerator: () => null })
+        label: categoryLabel
       })
     }
 
+    axesConfig.push({
+      orient: "bottom",
+      label: valueLabel,
+      tickFormat: valueFormat,
+      ...(showGrid && { tickLineGenerator: () => null })
+    })
+
     return axesConfig
-  }, [orientation, categoryLabel, valueLabel, valueFormat, showGrid])
+  }, [categoryLabel, valueLabel, valueFormat, showGrid])
 
   // Determine if we should show legend
   const shouldShowLegend = showLegend !== undefined ? showLegend : !!colorBy
@@ -336,7 +319,7 @@ export function Histogram<TDatum extends Record<string, any> = Record<string, an
     rAccessor: valueAccessor,
     summaryType: { type: "histogram", bins: bins ?? 25, relative } as any,
     summaryStyle,
-    projection: orientation === "horizontal" ? "horizontal" : "vertical",
+    projection: "horizontal",
     axes: axes as any,
     summaryHoverAnnotation: enableHover,
     margin,

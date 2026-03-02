@@ -11,6 +11,8 @@ import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../T
 import ChartError from "../shared/ChartError"
 import { validateArrayData } from "../shared/validateChartData"
 import { normalizeLinkedHover, wrapStyleWithSelection } from "../shared/selectionUtils"
+import { curveHash } from "../../visualizationLayerBehavior/general"
+import { curveCatmullRom } from "d3-shape"
 import { useSelection } from "../../store/useSelection"
 import { useLinkedHover } from "../../store/useSelection"
 
@@ -367,10 +369,17 @@ export function ViolinPlot<TDatum extends Record<string, any> = Record<string, a
 
   // Build summaryType config
   const summaryType = useMemo(() => {
+    // Resolve curve string to d3 curve function — the violin renderer
+    // in bucketizedRenderer calls .curve(type.curve) directly without
+    // a curveHash lookup, so we must pass an actual function.
+    const resolvedCurve = typeof curve === "string"
+      ? curveHash[curve.toLowerCase()] || curveCatmullRom
+      : curveCatmullRom
+
     const config: Record<string, any> = {
       type: "violin",
       bins: bins ?? 25,
-      curve: curve ?? "catmullRom"
+      curve: resolvedCurve
     }
     if (showIQR) {
       config.showIQR = true

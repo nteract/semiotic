@@ -628,11 +628,6 @@
             },
             "categoryAccessor": { "type": "string", "default": "category" },
             "valueAccessor": { "type": "string", "default": "value" },
-            "orientation": {
-              "type": "string",
-              "enum": ["vertical", "horizontal"],
-              "default": "vertical"
-            },
             "bins": {
               "type": "number",
               "description": "Number of bins for the histogram",

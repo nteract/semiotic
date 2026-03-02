@@ -287,6 +287,9 @@ export { LIGHT_THEME, DARK_THEME } from "./ThemeProvider"
 // Error boundary types
 export type { ChartErrorBoundaryProps } from "./ChartErrorBoundary"
 
+// Format utilities
+export { smartTickFormat } from "./charts/shared/formatUtils"
+
 // Tooltip types
 export type {
   TooltipProp,

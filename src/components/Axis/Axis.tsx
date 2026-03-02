@@ -11,6 +11,7 @@ import SummaryGraphic from "./summaryGraphic"
 import AxisTitle from "./axisTitle"
 
 import { AxisProps } from "./../types/annotationTypes"
+import { smartTickFormat } from "./../charts/shared/formatUtils"
 
 import {
   drawSummaries,
@@ -63,7 +64,7 @@ export default function Axis(props: AxisProps) {
     dynamicLabelPosition,
     orient = "left",
     marginalSummaryType,
-    tickFormat = marginalSummaryType ? () => "" : (d) => d,
+    tickFormat = marginalSummaryType ? () => "" : smartTickFormat,
     size,
     width = (size && size[0]) || 0,
     height = (size && size[1]) || 0,
