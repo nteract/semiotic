@@ -130,6 +130,20 @@ import RealtimeBarChartPlayground from "./pages/playground/RealtimeBarChartPlayg
 
 import semioticLogo from "../public/assets/img/semiotic.png"
 
+function NotFoundPage() {
+  return (
+    <div style={{ padding: "60px 20px", textAlign: "center" }}>
+      <h1>404 — Page Not Found</h1>
+      <p style={{ marginTop: "16px", color: "var(--text-secondary)" }}>
+        The page you're looking for doesn't exist.
+      </p>
+      <p style={{ marginTop: "24px" }}>
+        <Link to="/" style={{ color: "var(--accent)" }}>Back to home</Link>
+      </p>
+    </div>
+  )
+}
+
 import { useScrollRestoration } from "./useScrollRestoration"
 
 // Theme toggle component
@@ -186,7 +200,7 @@ function useJsonLd() {
       applicationCategory: "DeveloperApplication",
       operatingSystem: "Any",
       programmingLanguage: "JavaScript",
-      url: "https://semiotic.nteract.io",
+      url: "https://semiotic3.nteract.io",
       codeRepository: "https://github.com/nteract/semiotic",
       license: "https://opensource.org/licenses/Apache-2.0",
       offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
@@ -385,6 +399,9 @@ export default function DocsApp() {
 
             {/* Getting Started */}
             <Route path="getting-started" element={<GettingStartedPage />} />
+
+            {/* 404 catch-all */}
+            <Route path="*" element={<NotFoundPage />} />
 
             {/* New Charts routes */}
             <Route path="charts" element={<Outlet />}>
