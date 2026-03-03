@@ -310,17 +310,20 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       storeRef.current = new PipelineStore(pipelineConfig)
     }
 
-    // Update config when it changes
-    useEffect(() => {
-      storeRef.current?.updateConfig(pipelineConfig)
-    }, [pipelineConfig])
-
     // ── Stable scheduleRender ────────────────────────────────────────────
 
     const scheduleRender = useCallback(() => {
       if (rafRef.current) return
       rafRef.current = requestAnimationFrame(() => renderFnRef.current())
     }, [])
+
+    // Update config when it changes — also schedule re-render since style
+    // callbacks (pointStyle, areaStyle, etc.) may have changed.
+    useEffect(() => {
+      storeRef.current?.updateConfig(pipelineConfig)
+      dirtyRef.current = true
+      scheduleRender()
+    }, [pipelineConfig, scheduleRender])
 
     // ── DataSourceAdapter ────────────────────────────────────────────────
 

@@ -1,8 +1,10 @@
 "use client"
 import * as React from "react"
-import { useMemo, useCallback, useState } from "react"
-import XYFrame from "../../XYFrame"
-import type { XYFrameProps } from "../../types/xyTypes"
+import { useMemo, useCallback, useState, useRef, useEffect } from "react"
+import StreamXYFrame from "../../stream/StreamXYFrame"
+import type { StreamXYFrameHandle, HoverData } from "../../stream/types"
+import { brush as d3Brush } from "d3-brush"
+import { select as d3Select } from "d3-selection"
 import { getColor } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { type TooltipProp } from "../../Tooltip/Tooltip"
@@ -17,6 +19,8 @@ const SPLOM_IDX = "__splomIdx"
 // Shared clientId for all hover writers — ensures each new hover REPLACES
 // the previous one (same key in the clause Map) instead of accumulating.
 const HOVER_CLIENT_ID = "splom-hover-source"
+
+const CELL_MARGIN = { top: 4, bottom: 4, left: 4, right: 4 }
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -57,6 +61,71 @@ export interface ScatterplotMatrixProps<TDatum extends Record<string, any> = Rec
   showLegend?: boolean
 }
 
+// ── Cell Brush Overlay ────────────────────────────────────────────────────
+
+interface CellBrushOverlayProps {
+  frameRef: React.RefObject<StreamXYFrameHandle | null>
+  cellSize: number
+  xField: string
+  yField: string
+  onBrush: (extent: [number, number][] | null) => void
+}
+
+function CellBrushOverlay({ frameRef, cellSize, xField, yField, onBrush }: CellBrushOverlayProps) {
+  const svgRef = useRef<SVGSVGElement>(null)
+
+  const chartW = cellSize - CELL_MARGIN.left - CELL_MARGIN.right
+  const chartH = cellSize - CELL_MARGIN.top - CELL_MARGIN.bottom
+
+  useEffect(() => {
+    if (!svgRef.current) return
+
+    const g = d3Select(svgRef.current).select<SVGGElement>(".brush-g")
+    const brush = d3Brush()
+      .extent([[0, 0], [chartW, chartH]])
+      .on("brush end", (event: any) => {
+        const scales = frameRef.current?.getScales()
+        if (!scales) return
+
+        if (!event.selection) {
+          onBrush(null)
+          return
+        }
+
+        const [[px0, py0], [px1, py1]] = event.selection
+        const dataExtent: [number, number][] = [
+          [scales.x.invert(px0), scales.y.invert(py0)],
+          [scales.x.invert(px1), scales.y.invert(py1)]
+        ]
+        onBrush(dataExtent)
+      })
+
+    g.call(brush as any)
+
+    // Style the brush
+    g.select(".selection")
+      .attr("fill", "steelblue")
+      .attr("fill-opacity", 0.15)
+      .attr("stroke", "steelblue")
+      .attr("stroke-width", 1)
+
+    return () => {
+      brush.on("brush end", null)
+    }
+  }, [chartW, chartH, frameRef, onBrush])
+
+  return (
+    <svg
+      ref={svgRef}
+      width={cellSize}
+      height={cellSize}
+      style={{ position: "absolute", top: 0, left: 0 }}
+    >
+      <g className="brush-g" transform={`translate(${CELL_MARGIN.left},${CELL_MARGIN.top})`} />
+    </svg>
+  )
+}
+
 // ── Scatterplot Cell ───────────────────────────────────────────────────────
 
 interface CellProps {
@@ -76,8 +145,8 @@ interface CellProps {
   tooltip?: TooltipProp
   /** "brush" or "hover" — mutually exclusive */
   mode: "brush" | "hover"
-  /** Callback when a point is hovered (hover mode only). Called with null on clear. */
-  onPointHover?: (datum: Record<string, any> | null) => void
+  /** Callback when a point is hovered (hover mode only). */
+  onPointHover?: (datum: Record<string, any> | null, px?: number, py?: number) => void
 }
 
 function ScatterplotCell({
@@ -98,6 +167,7 @@ function ScatterplotCell({
   mode,
   onPointHover
 }: CellProps) {
+  const frameRef = useRef<StreamXYFrameHandle>(null)
   const clientId = `splom-${xField}-${yField}`
 
   // Brush selection (crossfilter) — only used in brush mode
@@ -123,16 +193,29 @@ function ScatterplotCell({
 
   const hoverSelectPoints = hoverHook.selectPoints
 
+  // Brush callback: convert d3-brush data-space extent to useBrushSelection format
+  const handleBrush = useCallback(
+    (extent: [number, number][] | null) => {
+      if (!extent) {
+        brushHook.brushInteraction.end(null)
+        return
+      }
+      brushHook.brushInteraction.during(extent)
+    },
+    [brushHook.brushInteraction]
+  )
+
   const customHoverBehavior = useCallback(
-    (d: Record<string, any> | undefined) => {
-      if (!d) {
+    (hover: HoverData | null) => {
+      if (!hover) {
         onPointHover?.(null)
         return
       }
-      const idx = d[SPLOM_IDX]
+      const d = hover.data
+      const idx = d?.[SPLOM_IDX]
       if (idx !== undefined) {
         hoverSelectPoints({ [SPLOM_IDX]: [idx] })
-        onPointHover?.(d)
+        onPointHover?.(d, hover.x + CELL_MARGIN.left, hover.y + CELL_MARGIN.top)
       }
     },
     [hoverSelectPoints, onPointHover]
@@ -141,7 +224,7 @@ function ScatterplotCell({
   const pointStyle = useCallback(
     (d: Record<string, any>) => {
       const style: Record<string, any> = {
-        fillOpacity: pointOpacity,
+        opacity: pointOpacity,
         r: pointRadius
       }
 
@@ -154,19 +237,18 @@ function ScatterplotCell({
       if (mode === "hover") {
         const hoverHighlighted = hoverHook.isActive && hoverHook.predicate(d)
         if (hoverHighlighted) {
-          style.fillOpacity = 1
+          style.opacity = 1
           style.r = pointRadius * 2.5
           style.stroke = "#333"
           style.strokeWidth = 1.5
         } else if (hoverHook.isActive) {
-          style.fillOpacity = pointOpacity * 0.6
+          style.opacity = pointOpacity * 0.6
         }
       } else {
         // brush mode
         const brushDimmed = brushSelectionHook.isActive && !brushSelectionHook.predicate(d)
         if (brushDimmed) {
-          style.fillOpacity = unselectedOpacity
-          style.strokeOpacity = unselectedOpacity
+          style.opacity = unselectedOpacity
         }
       }
 
@@ -175,37 +257,32 @@ function ScatterplotCell({
     [colorBy, colorScale, pointOpacity, pointRadius, mode, brushSelectionHook.isActive, brushSelectionHook.predicate, hoverHook.isActive, hoverHook.predicate, unselectedOpacity]
   )
 
-  const axes = useMemo((): Array<Record<string, unknown>> => [
-    { orient: "left", ticks: 3, tickFormat: () => "", ...(showGrid && { tickLineGenerator: () => null }) },
-    { orient: "bottom", ticks: 3, tickFormat: () => "", ...(showGrid && { tickLineGenerator: () => null }) }
-  ], [showGrid])
-
-  // Suppress XYFrame's internal tooltip by using hoverAnnotation: [() => null].
-  // This creates the voronoi overlay (truthy) and fires customHoverBehavior,
-  // but the () => null function produces no tooltip annotation:
-  //   changeVoronoi maps [() => null] → filters out falsy → voronoiHover([])
-  //   AnnotationLayer: annotations.concat([]) → no tooltip rendered.
-  // This also actively clears any stuck tooltip on each hover event.
-  const noTooltipHoverAnnotation = useMemo(() => [() => null], [])
-
-  const xyFrameProps: XYFrameProps = {
-    size: [cellSize, cellSize],
-    points: data,
-    xAccessor: xField,
-    yAccessor: yField,
-    pointStyle,
-    axes: axes as any,
-    margin: { top: 4, bottom: 4, left: 4, right: 4 },
-    ...(mode === "brush" && { interaction: brushHook.brushInteraction }),
-    // Hover mode: voronoi for detection + customHoverBehavior for cross-highlight.
-    // noTooltipHoverAnnotation suppresses XYFrame's internal tooltip.
-    ...(mode === "hover" && {
-      hoverAnnotation: noTooltipHoverAnnotation,
-      customHoverBehavior
-    })
-  }
-
-  return <XYFrame {...xyFrameProps} />
+  return (
+    <div style={{ position: "relative", width: cellSize, height: cellSize }}>
+      <StreamXYFrame
+        ref={frameRef}
+        chartType="scatter"
+        data={data}
+        size={[cellSize, cellSize]}
+        xAccessor={xField}
+        yAccessor={yField}
+        pointStyle={pointStyle}
+        margin={CELL_MARGIN}
+        showAxes={false}
+        enableHover={mode === "hover"}
+        customHoverBehavior={mode === "hover" ? customHoverBehavior : undefined}
+      />
+      {mode === "brush" && (
+        <CellBrushOverlay
+          frameRef={frameRef}
+          cellSize={cellSize}
+          xField={xField}
+          yField={yField}
+          onBrush={handleBrush}
+        />
+      )}
+    </div>
+  )
 }
 
 // ── Diagonal Cell (Histogram) ──────────────────────────────────────────────
@@ -398,9 +475,9 @@ function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<stri
     yField: string
     colIndex: number
     rowIndex: number
-    /** Pixel x of the point within its cell (from voronoiX) */
+    /** Pixel x of the point within its cell */
     px: number
-    /** Pixel y of the point within its cell (from voronoiY) */
+    /** Pixel y of the point within its cell */
     py: number
   } | null>(null)
 
@@ -535,7 +612,7 @@ function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<stri
                   showGrid={showGrid}
                   tooltip={tooltip}
                   mode={cellMode}
-                  onPointHover={cellMode === "hover" ? (datum) => {
+                  onPointHover={cellMode === "hover" ? (datum, px, py) => {
                     if (datum) {
                       setHoveredInfo({
                         datum,
@@ -543,8 +620,8 @@ function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<stri
                         yField: rowField,
                         colIndex: col,
                         rowIndex: row,
-                        px: datum.voronoiX ?? 0,
-                        py: datum.voronoiY ?? 0
+                        px: px ?? 0,
+                        py: py ?? 0
                       })
                     } else {
                       setHoveredInfo(null)
@@ -582,10 +659,10 @@ function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<stri
         const label = colorBy
           ? typeof colorBy === "function" ? (colorBy as Function)(d) : d[colorBy as string]
           : null
-        // Cell origin in grid coordinates (account for legend height via relative positioning)
+        // Cell origin in grid coordinates
         const cellLeft = labelWidth + hoveredInfo.colIndex * (cellSize + cellGap)
         const cellTop = hoveredInfo.rowIndex * (cellSize + cellGap)
-        // Point position within the cell (voronoiX/Y are pixel coords within the Frame)
+        // Point position within the cell
         const tooltipLeft = cellLeft + hoveredInfo.px
         const tooltipTop = cellTop + hoveredInfo.py - 8  // 8px above the point
         return (
