@@ -1,6 +1,6 @@
 import React from "react"
 import DocumentFrame from "../DocumentFrame"
-import { XYFrame, DividedLine } from "semiotic"
+import { StreamXYFrame, DividedLine } from "semiotic"
 import { scaleTime } from "d3-scale"
 import theme from "../theme"
 
@@ -113,15 +113,18 @@ const annotations = [
 
 const frameProps = {
   size: [700, 300],
+  chartType: "line",
   xScaleType: scaleTime(),
   xAccessor: (d) => new Date(d.date),
   yAccessor: "close",
   yExtent: [0],
   customLineMark: thresholdLine,
-  axes: chartAxes,
+  showAxes: true,
+  xLabel: "",
+  yLabel: "",
   annotations: annotations,
   margin: { top: 50, left: 40, right: 20, bottom: 40 },
-  hoverAnnotation: true,
+  enableHover: true,
   tooltipContent: (d) => (
     <div className="tooltip-content">
       <p>Date: {d.date}</p>
@@ -247,7 +250,8 @@ export class AnnotationsDocumentFrame extends React.Component {
     import("../../public/data/applestock.json").then((data) => {
       this.setState({
         ...frameProps,
-        lines: [{ label: "Apple Stock", coordinates: data }],
+        data: [{ label: "Apple Stock", coordinates: data }],
+        lineDataAccessor: "coordinates",
       })
     })
   }
@@ -257,7 +261,7 @@ export class AnnotationsDocumentFrame extends React.Component {
       <DocumentFrame
         frameProps={this.state || {}}
         overrideProps={overrideProps}
-        type={XYFrame}
+        type={StreamXYFrame}
         pre={`import { scaleTime } from "d3-scale"
 import { DividedLine } from "semiotic"
       `}

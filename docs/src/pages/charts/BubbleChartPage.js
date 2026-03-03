@@ -1,12 +1,13 @@
-import React from "react"
-import { XYFrame } from "semiotic"
-import { BubbleChart } from "semiotic"
+import React, { useRef, useEffect } from "react"
+import { BubbleChart, RealtimeSwarmChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -68,6 +69,77 @@ const bubbleChartProps = [
 ]
 
 // ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const streamingBubbleCode = `import { useRef, useEffect } from "react"
+import { RealtimeSwarmChart } from "semiotic"
+
+function StreamingCountryData() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+  const continents = ["Americas", "Europe", "Asia"]
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          time: i,
+          value: 60 + Math.random() * 25,
+          category: continents[i % continents.length],
+        })
+      }
+    }, 80)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <RealtimeSwarmChart
+      ref={chartRef}
+      size={[600, 280]}
+      categoryAccessor="category"
+      opacity={0.5}
+      radius={4}
+      windowSize={200}
+      showAxes
+    />
+  )
+}`
+
+function StreamingBubbleDemo({ width }) {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+  const continents = ["Americas", "Europe", "Asia"]
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          time: i,
+          value: 60 + Math.random() * 25,
+          category: continents[i % continents.length],
+        })
+      }
+    }, 80)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <RealtimeSwarmChart
+      ref={chartRef}
+      size={[width, 280]}
+      categoryAccessor="category"
+      opacity={0.5}
+      radius={4}
+      windowSize={200}
+      showAxes={true}
+    />
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -116,27 +188,37 @@ export default function BubbleChartPage() {
         <code>yAccessor</code>, and <code>sizeBy</code>.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: countryData,
-          xAccessor: "gdp",
-          yAccessor: "lifeExpectancy",
-          sizeBy: "population",
-          xLabel: "GDP per Capita ($)",
-          yLabel: "Life Expectancy (years)",
-        }}
-        type={BubbleChart}
-        startHidden={false}
-        overrideProps={{
-          data: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              data: countryData,
+              xAccessor: "gdp",
+              yAccessor: "lifeExpectancy",
+              sizeBy: "population",
+              xLabel: "GDP per Capita ($)",
+              yLabel: "Life Expectancy (years)",
+            }}
+            type={BubbleChart}
+            startHidden={false}
+            overrideProps={{
+              data: `[
   { gdp: 12000, lifeExpectancy: 72, population: 45, country: "Brazil" },
   { gdp: 42000, lifeExpectancy: 79, population: 33, country: "Canada" },
   { gdp: 8500, lifeExpectancy: 76, population: 140, country: "China" },
   // ...more data points
 ]`,
-          sizeBy: '"population"',
-        }}
-        hiddenProps={{}}
+              sizeBy: '"population"',
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingBubbleDemo width={w} />}
+            code={streamingBubbleCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}

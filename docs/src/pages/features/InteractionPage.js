@@ -1,8 +1,6 @@
 import React, { useState } from "react"
-import { XYFrame, OrdinalFrame, MinimapChart } from "semiotic"
+import { StreamXYFrame, OrdinalFrame, MinimapChart } from "semiotic"
 import { LineChart, BarChart } from "semiotic"
-import { curveMonotoneX } from "d3-shape"
-
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PropTable from "../../components/PropTable"
@@ -177,19 +175,19 @@ export default function InteractionPage() {
 
       <LiveExample
         frameProps={{
-          lines: frameLineData,
+          data: frameLineData,
+          chartType: "line",
           xAccessor: "step",
           yAccessor: "value",
+          lineDataAccessor: "coordinates",
           lineStyle: (d, i) => ({
             stroke: colors[i],
             strokeWidth: 2,
             fill: "none",
           }),
           margin: { top: 20, bottom: 50, left: 50, right: 20 },
-          axes: [
-            { orient: "left" },
-            { orient: "bottom" },
-          ],
+          showAxes: true,
+          enableHover: true,
           hoverAnnotation: [
             {
               type: "highlight",
@@ -204,7 +202,7 @@ export default function InteractionPage() {
           ],
           lineIDAccessor: "title",
         }}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={{
           lines: `[
   { title: "Widget", coordinates: [...] },
@@ -232,8 +230,10 @@ export default function InteractionPage() {
       </p>
 
       <CodeBlock
-        code={`<XYFrame
-  lines={data}
+        code={`<StreamXYFrame
+  data={data}
+  chartType="line"
+  lineDataAccessor="coordinates"
   hoverAnnotation={[
     {
       type: "desaturation-layer",
@@ -262,7 +262,7 @@ export default function InteractionPage() {
 
       <CodeBlock
         code={`import React, { useState } from "react"
-import { XYFrame } from "semiotic"
+import { StreamXYFrame } from "semiotic"
 
 function CoordinatedViews() {
   const [annotations, setAnnotations] = useState([])
@@ -281,17 +281,21 @@ function CoordinatedViews() {
 
   return (
     <div style={{ display: "flex", gap: 16 }}>
-      <XYFrame
-        lines={revenueData}
-        hoverAnnotation={true}
+      <StreamXYFrame
+        data={revenueData}
+        chartType="line"
+        lineDataAccessor="coordinates"
+        enableHover={true}
         customHoverBehavior={handleHover}
         annotations={annotations}
         lineIDAccessor="title"
         size={[400, 300]}
       />
-      <XYFrame
-        lines={profitData}
-        hoverAnnotation={true}
+      <StreamXYFrame
+        data={profitData}
+        chartType="line"
+        lineDataAccessor="coordinates"
+        enableHover={true}
         customHoverBehavior={handleHover}
         annotations={annotations}
         lineIDAccessor="title"
@@ -306,21 +310,23 @@ function CoordinatedViews() {
 
       <h3 id="xy-brushing">XY Brushing</h3>
       <p>
-        The <code>interaction</code> prop on <code>XYFrame</code> enables
+        The <code>interaction</code> prop on <code>StreamXYFrame</code> enables
         brushing for selecting regions of the chart. Choose between{" "}
         <code>xBrush</code>, <code>yBrush</code>, or <code>xyBrush</code>:
       </p>
 
       <CodeBlock
         code={`import React, { useState } from "react"
-import { XYFrame } from "semiotic"
+import { StreamXYFrame } from "semiotic"
 
 function BrushExample() {
   const [extent, setExtent] = useState([2, 8])
 
   return (
-    <XYFrame
-      lines={data}
+    <StreamXYFrame
+      data={data}
+      chartType="line"
+      lineDataAccessor="coordinates"
       xAccessor="step"
       yAccessor="value"
       interaction={{
@@ -451,7 +457,7 @@ function OrdinalBrushExample() {
       {/* ----------------------------------------------------------------- */}
       <h2 id="configuration">Configuration</h2>
 
-      <h3 id="interaction-prop">interaction Prop (XYFrame)</h3>
+      <h3 id="interaction-prop">interaction Prop (StreamXYFrame)</h3>
 
       <PropTable componentName="interaction" props={interactionProps} />
 
@@ -483,7 +489,7 @@ function OrdinalBrushExample() {
       </table>
 
       <CodeBlock
-        code={`<XYFrame
+        code={`<StreamXYFrame
   customHoverBehavior={(d) => {
     // d is the data point on hover, null on hover-out
     if (d) {
@@ -545,7 +551,7 @@ function OrdinalBrushExample() {
           configuration that works alongside hover interactions
         </li>
         <li>
-          <Link to="/frames/xy-frame">XYFrame</Link> — brushing, minimap,
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> — brushing, minimap,
           and point-based interactions
         </li>
         <li>

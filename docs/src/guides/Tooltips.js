@@ -1,7 +1,7 @@
 import React from "react"
 import Tooltips from "../markdown/tooltips.mdx"
 import DocumentFrame, { propertyToString } from "../DocumentFrame"
-import { XYFrame, OrdinalFrame, Tooltip, MultiLineTooltip } from "semiotic"
+import { StreamXYFrame, OrdinalFrame, Tooltip, MultiLineTooltip } from "semiotic"
 import lines from "./sharedTooltipData"
 import { scaleTime } from "d3-scale"
 import { timeFormat } from "d3-time-format"
@@ -35,31 +35,31 @@ const colorHash = {
 // Simplified tooltip examples using new utilities with Frame components
 const simpleTooltipScatter = {
   size: [600, 400],
-  points: scatterData,
+  chartType: "scatter",
+  data: scatterData,
   xAccessor: "x",
   yAccessor: "y",
   pointStyle: (d) => ({ fill: colorHash[d.category], r: 5 }),
-  axes: [
-    { orient: "left", label: "Y Value" },
-    { orient: "bottom", label: "X Value" }
-  ],
+  showAxes: true,
+  xLabel: "X Value",
+  yLabel: "Y Value",
   margin: { top: 50, bottom: 60, left: 60, right: 20 },
-  hoverAnnotation: true,
+  enableHover: true,
   tooltipContent: Tooltip({ title: "category" })
 }
 
 const multiFieldTooltipScatter = {
   size: [600, 400],
-  points: scatterData,
+  chartType: "scatter",
+  data: scatterData,
   xAccessor: "x",
   yAccessor: "y",
   pointStyle: (d) => ({ fill: colorHash[d.category], r: 5 }),
-  axes: [
-    { orient: "left", label: "Y Value" },
-    { orient: "bottom", label: "X Value" }
-  ],
+  showAxes: true,
+  xLabel: "X Value",
+  yLabel: "Y Value",
   margin: { top: 50, bottom: 60, left: 60, right: 20 },
-  hoverAnnotation: true,
+  enableHover: true,
   tooltipContent: MultiLineTooltip({
     title: "category",
     fields: ["x", "y", "value"]
@@ -106,12 +106,13 @@ const tooltipStyles = {
 
 const sharedTooltipChart = {
   size: [700, 300],
+  chartType: "line",
   className: "sharedTooltip",
   lineDataAccessor: "data",
   xAccessor: (d) => new Date(d.x),
   xScaleType: scaleTime(),
   yAccessor: "y",
-  lines: lines,
+  data: lines,
   lineStyle: (d) => {
     return { stroke: d.color, strokeWidth: "2px", fill: "none" }
   },
@@ -275,7 +276,7 @@ Show a single field from your data:
       />
       <DocumentFrame
         frameProps={simpleTooltipScatter}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={{
           points: `[
   { x: 10, y: 20, category: "A", value: 100 },
@@ -288,7 +289,7 @@ Show a single field from your data:
           pointStyle: `d => ({ fill: colorHash[d.category], r: 5 })`,
           tooltipContent: `Tooltip({ title: "category" })`
         }}
-        pre={`import { XYFrame, Tooltip } from "semiotic"
+        pre={`import { StreamXYFrame, Tooltip } from "semiotic"
 
 const colorHash = {
   A: "#00a2ce",
@@ -306,7 +307,7 @@ Show multiple fields with automatic formatting:
       />
       <DocumentFrame
         frameProps={multiFieldTooltipScatter}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={{
           points: `[
   { x: 10, y: 20, category: "A", value: 100 },
@@ -322,7 +323,7 @@ Show multiple fields with automatic formatting:
   fields: ["x", "y", "value"]
 })`
         }}
-        pre={`import { XYFrame, MultiLineTooltip } from "semiotic"
+        pre={`import { StreamXYFrame, MultiLineTooltip } from "semiotic"
 
 const colorHash = {
   A: "#00a2ce",
@@ -378,7 +379,7 @@ This example shows how to create a shared tooltip across multiple lines using th
       />
       <DocumentFrame
         frameProps={sharedTooltipChart}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={overrideProps}
         pre={`import { scaleTime } from "d3-scale"
 import { timeFormat } from "d3-time-format"
@@ -420,8 +421,8 @@ Create a simple tooltip showing a single value.
 
 **Usage with Frame Components:**
 \`\`\`jsx
-<XYFrame
-  hoverAnnotation={true}
+<StreamXYFrame
+  enableHover={true}
   tooltipContent={Tooltip({ title: "name", format: v => v.toUpperCase() })}
   ...
 />
@@ -451,8 +452,8 @@ Create a multi-field tooltip with labels and formatting.
 
 **Usage with Frame Components:**
 \`\`\`jsx
-<XYFrame
-  hoverAnnotation={true}
+<StreamXYFrame
+  enableHover={true}
   tooltipContent={MultiLineTooltip({
     title: "product",
     fields: [
@@ -485,8 +486,8 @@ Create a multi-field tooltip with labels and formatting.
 For complete control, pass a custom function to \`tooltipContent\` (or \`tooltip\` for higher-order components):
 
 \`\`\`jsx
-<XYFrame
-  hoverAnnotation={true}
+<StreamXYFrame
+  enableHover={true}
   tooltipContent={data => (
     <div className="my-tooltip">
       <h3>{data.title}</h3>

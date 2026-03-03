@@ -1,12 +1,13 @@
-import React from "react"
-import { XYFrame } from "semiotic"
-import { AreaChart } from "semiotic"
+import React, { useRef, useEffect } from "react"
+import { AreaChart, RealtimeLineChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -79,6 +80,72 @@ const areaChartProps = [
 ]
 
 // ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const streamingAreaCode = `import { useRef, useEffect } from "react"
+import { RealtimeLineChart } from "semiotic"
+
+function StreamingSales() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          time: i,
+          value: 5000 + Math.sin(i * 0.03) * 2000
+            + (Math.random() - 0.5) * 1500,
+        })
+      }
+    }, 80)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <RealtimeLineChart
+      ref={chartRef}
+      size={[600, 280]}
+      stroke="#10b981"
+      strokeWidth={2}
+      windowSize={150}
+      showAxes
+    />
+  )
+}`
+
+function StreamingAreaDemo({ width }) {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          time: i,
+          value: 5000 + Math.sin(i * 0.03) * 2000 + (Math.random() - 0.5) * 1500,
+        })
+      }
+    }, 80)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <RealtimeLineChart
+      ref={chartRef}
+      size={[width, 280]}
+      stroke="#10b981"
+      strokeWidth={2}
+      windowSize={150}
+      showAxes={true}
+    />
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -126,25 +193,35 @@ export default function AreaChartPage() {
         <code>xAccessor</code>, and <code>yAccessor</code>.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: simpleData,
-          xAccessor: "month",
-          yAccessor: "sales",
-          xLabel: "Month",
-          yLabel: "Sales ($)",
-        }}
-        type={AreaChart}
-        startHidden={false}
-        overrideProps={{
-          data: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              data: simpleData,
+              xAccessor: "month",
+              yAccessor: "sales",
+              xLabel: "Month",
+              yLabel: "Sales ($)",
+            }}
+            type={AreaChart}
+            startHidden={false}
+            overrideProps={{
+              data: `[
   { month: 1, sales: 4200 },
   { month: 2, sales: 5800 },
   { month: 3, sales: 4900 },
   // ...more data points
 ]`,
-        }}
-        hiddenProps={{}}
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingAreaDemo width={w} />}
+            code={streamingAreaCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}

@@ -2,7 +2,7 @@ import React from "react"
 import DocumentFrame from "../DocumentFrame"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
-import { XYFrame } from "semiotic"
+import { StreamXYFrame } from "semiotic"
 
 const dataSeeds = [40, 40]
 
@@ -28,7 +28,9 @@ const overrideProps = {
 }
 
 const chartSettings = {
-  lines: generatedData,
+  data: generatedData,
+  chartType: "line",
+  lineDataAccessor: "coordinates",
   lineStyle: { stroke: theme[1] },
   pointStyle: { fill: theme[1] },
   xAccessor: "step",
@@ -55,9 +57,10 @@ export default function AxisSettings() {
 - \`showOutboundTickLines\` (boolean): Display tick lines outside the chart to accompany the tick labels
 `}
       />
-      <XYFrame
+      {/* TODO: migrate axes config to StreamXYFrame showAxes/xLabel/yLabel */}
+      <StreamXYFrame
         {...chartSettings}
-        lines={[generatedData[0]]}
+        data={[generatedData[0]]}
         axes={[{ orient: "left", label: "Amount of Sales" }]}
       />
       <MarkdownText
@@ -71,10 +74,10 @@ If you set \`jaggedBase\` to true, a tick at the minimum point in your dataset w
         frameProps={{
           ...chartSettings,
           size: undefined,
-          lines: generatedData[0],
+          data: [generatedData[0]],
           axes: [{ orient: "left", baseline: false, jaggedBase: true }],
         }}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={overrideProps}
       />
       <MarkdownText
@@ -86,8 +89,7 @@ Axes can take a \`tickLineGenerator\` prop which you can use to draw whatever ki
       <DocumentFrame
         frameProps={{
           ...chartSettings,
-          lines: generatedData[0],
-          showLinePoints: true,
+          data: [generatedData[0]],
           axes: [
             {
               orient: "left",
@@ -107,7 +109,7 @@ Axes can take a \`tickLineGenerator\` prop which you can use to draw whatever ki
             },
           ],
         }}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={{
           ...overrideProps,
           axes: `[
@@ -140,7 +142,7 @@ If you set the \`axisAnnotationFunction\` it will turn on a region on the axis t
       <DocumentFrame
         frameProps={{
           ...chartSettings,
-          lines: generatedData[0],
+          data: [generatedData[0]],
           axes: [
             {
               orient: "left",
@@ -151,7 +153,7 @@ If you set the \`axisAnnotationFunction\` it will turn on a region on the axis t
             },
           ],
         }}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={overrideProps}
         startHidden
       />
@@ -165,10 +167,10 @@ If you set the \`axisAnnotationFunction\` it will turn on a region on the axis t
       <DocumentFrame
         frameProps={{
           ...chartSettings,
-          lines: generatedData[0],
+          data: [generatedData[0]],
           axes: [{ orient: "left", label: "Amount of Sales", showOutboundTickLines: true }],
         }}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={overrideProps}
       />
     </div>

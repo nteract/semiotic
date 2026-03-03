@@ -1,5 +1,5 @@
 import React from "react"
-import { XYFrame, OrdinalFrame } from "semiotic"
+import { StreamXYFrame, OrdinalFrame } from "semiotic"
 import { LineChart, BarChart } from "semiotic"
 
 import LiveExample from "../../components/LiveExample"
@@ -129,19 +129,20 @@ export default function AccessibilityPage() {
 
       <LiveExample
         frameProps={{
-          lines: frameLineData,
+          data: frameLineData,
+          chartType: "line",
+          lineDataAccessor: "coordinates",
           xAccessor: "step",
           yAccessor: "value",
           lineStyle: { stroke: "#6366f1", strokeWidth: 2 },
           margin: { top: 40, bottom: 60, left: 70, right: 20 },
-          axes: [
-            { orient: "left", label: "Revenue ($)" },
-            { orient: "bottom", label: "Month" },
-          ],
+          showAxes: true,
+          xLabel: "Month",
+          yLabel: "Revenue ($)",
           title: "Monthly Revenue Trend",
-          hoverAnnotation: true,
+          enableHover: true,
         }}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={{
           lines: `[{
   label: "Revenue",
@@ -162,12 +163,14 @@ export default function AccessibilityPage() {
       </p>
 
       <CodeBlock
-        code={`// Keyboard navigation is enabled automatically when hoverAnnotation is true
-<XYFrame
-  lines={data}
+        code={`// Keyboard navigation is enabled automatically when enableHover is true
+<StreamXYFrame
+  data={data}
+  chartType="line"
+  lineDataAccessor="coordinates"
   xAccessor="step"
   yAccessor="value"
-  hoverAnnotation={true}
+  enableHover={true}
   tooltipContent={d => (
     <div role="tooltip">
       <strong>Month {d.step}</strong>
@@ -308,9 +311,11 @@ export default function AccessibilityPage() {
       <CodeBlock
         code={`// Provide a text alternative alongside the chart
 <figure>
-  <XYFrame
+  <StreamXYFrame
     title="Monthly Revenue Trend"
-    lines={data}
+    data={data}
+    chartType="line"
+    lineDataAccessor="coordinates"
     {...otherProps}
   />
   <figcaption>
@@ -346,8 +351,8 @@ export default function AccessibilityPage() {
       </p>
 
       <CodeBlock
-        code={`<XYFrame
-  hoverAnnotation={true}
+        code={`<StreamXYFrame
+  enableHover={true}
   tooltipContent={d => (
     <div
       role="tooltip"
@@ -417,7 +422,7 @@ export default function AccessibilityPage() {
           layouts that work across devices
         </li>
         <li>
-          <Link to="/frames/xy-frame">XYFrame</Link> — title and
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> — title and
           accessibility props on XY visualizations
         </li>
         <li>

@@ -1,12 +1,13 @@
-import React from "react"
-import { XYFrame } from "semiotic"
-import { Scatterplot } from "semiotic"
+import React, { useRef, useEffect } from "react"
+import { Scatterplot, RealtimeSwarmChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -90,6 +91,73 @@ const scatterplotProps = [
 ]
 
 // ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const streamingScatterCode = `import { useRef, useEffect } from "react"
+import { RealtimeSwarmChart } from "semiotic"
+
+function StreamingMeasurements() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          time: i,
+          value: 155 + Math.random() * 35,
+        })
+      }
+    }, 80)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <RealtimeSwarmChart
+      ref={chartRef}
+      size={[600, 280]}
+      fill="#6366f1"
+      opacity={0.6}
+      radius={3}
+      windowSize={200}
+      showAxes
+    />
+  )
+}`
+
+function StreamingScatterDemo({ width }) {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          time: i,
+          value: 155 + Math.random() * 35,
+        })
+      }
+    }, 80)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <RealtimeSwarmChart
+      ref={chartRef}
+      size={[width, 280]}
+      fill="#6366f1"
+      opacity={0.6}
+      radius={3}
+      windowSize={200}
+      showAxes={true}
+    />
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -137,25 +205,35 @@ export default function ScatterplotPage() {
         <code>xAccessor</code>, and <code>yAccessor</code>.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: simpleData,
-          xAccessor: "height",
-          yAccessor: "weight",
-          xLabel: "Height (cm)",
-          yLabel: "Weight (kg)",
-        }}
-        type={Scatterplot}
-        startHidden={false}
-        overrideProps={{
-          data: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              data: simpleData,
+              xAccessor: "height",
+              yAccessor: "weight",
+              xLabel: "Height (cm)",
+              yLabel: "Weight (kg)",
+            }}
+            type={Scatterplot}
+            startHidden={false}
+            overrideProps={{
+              data: `[
   { height: 160, weight: 55 },
   { height: 165, weight: 62 },
   { height: 170, weight: 68 },
   // ...more data points
 ]`,
-        }}
-        hiddenProps={{}}
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingScatterDemo width={w} />}
+            code={streamingScatterCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}

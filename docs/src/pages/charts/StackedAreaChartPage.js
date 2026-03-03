@@ -1,12 +1,13 @@
-import React from "react"
-import { XYFrame } from "semiotic"
-import { StackedAreaChart } from "semiotic"
+import React, { useRef, useEffect } from "react"
+import { StackedAreaChart, RealtimeBarChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -63,6 +64,77 @@ const stackedAreaChartProps = [
 ]
 
 // ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const streamingStackedCode = `import { useRef, useEffect } from "react"
+import { RealtimeBarChart } from "semiotic"
+
+function StreamingRevenue() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+  const regions = ["North", "South", "East", "West"]
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        const region = regions[i % regions.length]
+        chartRef.current.push({
+          time: Math.floor(i / regions.length),
+          value: 5000 + Math.random() * 10000,
+          category: region,
+        })
+      }
+    }, 80)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <RealtimeBarChart
+      ref={chartRef}
+      size={[600, 280]}
+      binSize={1}
+      categoryAccessor="category"
+      windowSize={100}
+      showAxes
+    />
+  )
+}`
+
+function StreamingStackedDemo({ width }) {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+  const regions = ["North", "South", "East", "West"]
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        const region = regions[i % regions.length]
+        chartRef.current.push({
+          time: Math.floor(i / regions.length),
+          value: 5000 + Math.random() * 10000,
+          category: region,
+        })
+      }
+    }, 80)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <RealtimeBarChart
+      ref={chartRef}
+      size={[width, 280]}
+      binSize={1}
+      categoryAccessor="category"
+      windowSize={100}
+      showAxes={true}
+    />
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -113,29 +185,39 @@ export default function StackedAreaChartPage() {
         <code>areaBy</code> to group data into stacks.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: stackedData,
-          xAccessor: "quarter",
-          yAccessor: "revenue",
-          areaBy: "region",
-          colorBy: "region",
-          xLabel: "Quarter",
-          yLabel: "Revenue ($)",
-        }}
-        type={StackedAreaChart}
-        startHidden={false}
-        overrideProps={{
-          data: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              data: stackedData,
+              xAccessor: "quarter",
+              yAccessor: "revenue",
+              areaBy: "region",
+              colorBy: "region",
+              xLabel: "Quarter",
+              yLabel: "Revenue ($)",
+            }}
+            type={StackedAreaChart}
+            startHidden={false}
+            overrideProps={{
+              data: `[
   { quarter: 1, revenue: 12000, region: "North" },
   { quarter: 2, revenue: 15000, region: "North" },
   { quarter: 1, revenue: 8000, region: "South" },
   // ...more data points grouped by region
 ]`,
-          areaBy: '"region"',
-          colorBy: '"region"',
-        }}
-        hiddenProps={{}}
+              areaBy: '"region"',
+              colorBy: '"region"',
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingStackedDemo width={w} />}
+            code={streamingStackedCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}

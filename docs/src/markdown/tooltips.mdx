@@ -25,8 +25,8 @@ circle.frame-hover {
 Semiotic automatically creates a voronoi of hover regions on your chart. For \`ORFrame\`, it defaults to hovering for the entire column, if you'd prefer to have hover enabled for individual pieces, you can set `pieceHoverAnnotation` to `true`.
 
 ```jsx
-// Point hovering for XYFrame or NetworkFrame and column hovering for ORFrame
-<XYFrame
+// Point hovering for StreamXYFrame or NetworkFrame and column hovering for ORFrame
+<StreamXYFrame
    hoverAnnotation={true}
 />
 
@@ -46,7 +46,7 @@ As you hover over the chart, you will see an HTML tooltip as well as an SVG circ
 By default, tooltips will show minimal information. If you want to adjust the content of a tooltip, use the `tooltipContent` prop to pass HTML JSX elements to the tooltip:
 
 ```jsx
-<XYFrame
+<StreamXYFrame
   tooltipContent={d => (
     <div className="tooltip-content">
       <p>Name: {d.name}</p>
@@ -60,7 +60,7 @@ By default, tooltips will show minimal information. If you want to adjust the co
 If you're ambitious, you could even drop another frame in the tooltip to show data visualization on hover:
 
 ```jsx
-<XYFrame
+<StreamXYFrame
   tooltipContent={d => (
     <div>
       <p>Bar Chart for: {d.name}</p>

@@ -1,8 +1,8 @@
 import React, { useState } from "react"
 import MarkdownText from "../MarkdownText"
 import DocumentFrame from "../DocumentFrame"
-import { MinimapChart, XYFrame } from "semiotic"
-import { curveMonotoneX } from "d3-shape"
+import { MinimapChart, StreamXYFrame } from "semiotic"
+
 import theme from "../theme"
 
 const colors = theme
@@ -27,18 +27,14 @@ const generatedData = dataSeeds.map((s, i) => {
 })
 
 const xyFrameSettings = {
-  lines: generatedData,
-  lineType: { type: "line", interpolator: curveMonotoneX },
+  data: generatedData,
+  chartType: "line",
+  curve: "monotoneX",
+  lineDataAccessor: "coordinates",
   xAccessor: "step",
   yAccessor: "value",
   lineStyle: d => ({ stroke: d.label, fillOpacity: 0.75 }),
-  axes: [
-    { orient: "left" },
-    {
-      orient: "bottom",
-      ticks: 6
-    }
-  ]
+  showAxes: true
 }
 
 const xyInteraction = {
@@ -122,7 +118,7 @@ You can turn any \`XYFrame\` into an interactive region with a brush by using th
               extent: this.state.extent
             }
           }}
-          type={XYFrame}
+          type={StreamXYFrame}
           overrideProps={interactionOverride}
           pre={pre}
           hiddenProps={{ interaction: true }}
@@ -134,7 +130,7 @@ export default class CreateXYBrushes extends React.Component {
   }
 
   render() {
-    return <XYFrame {...frameProps} interaction={{
+    return <StreamXYFrame {...frameProps} interaction={{
       end: e => {
         this.setState({ extent: e })
       },

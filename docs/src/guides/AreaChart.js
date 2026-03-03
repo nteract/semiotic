@@ -1,6 +1,6 @@
 import React from "react"
 import DocumentFrame from "../DocumentFrame"
-import { XYFrame, ResponsiveXYFrame } from "semiotic"
+import { StreamXYFrame } from "semiotic"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
 import { lines, threeTitles } from "./LineChart"
@@ -17,26 +17,18 @@ const frameProps = {
       <tspan fill={theme[1]}>Far from the Madding Crowd</tspan>
     </text>
   ),
-  axes: [
-    {
-      orient: "left",
-      label: "Number of Theaters",
-      tickFormat: d => d / 1000 + "k"
-    },
-    {
-      orient: "bottom",
-      label: { name: "Weeks from Opening Day", locationDistance: 55 }
-    }
-  ],
+  showAxes: true,
+  xLabel: "Weeks from Opening Day",
+  yLabel: "Number of Theaters",
   margin: { left: 80, bottom: 90, right: 10, top: 40 },
-  lines,
+  data: lines,
   lineStyle: (d, i) => ({
     stroke: theme[i],
     strokeWidth: 2,
     fill: theme[i],
     fillOpacity: 0.6
   }),
-  lineType: "area"
+  chartType: "area"
 }
 
 const overrideProps = {
@@ -56,38 +48,25 @@ const overrideProps = {
 
 const linePercent = {
   ...frameProps,
-  lines: threeTitles,
-  lineType: "linepercent",
-  axes: [
-    {
-      orient: "left",
-      label: "Number of Theaters",
-      tickFormat: d => d * 100 + "%"
-    },
-    {
-      orient: "bottom",
-      label: { name: "Weeks from Opening Day", locationDistance: 55 }
-    }
-  ]
+  data: threeTitles,
+  chartType: "linepercent"
 }
 
 const withHoverFrameProps = {
   ...frameProps,
-  lineType: "stackedarea"
-  // hoverAnnotation: true
+  chartType: "stackedarea"
+  // enableHover: true
 }
 
 const stackedpercent = {
   ...frameProps,
-  lineType: "stackedpercent",
-  axes: linePercent.axes,
-  lines: threeTitles
+  chartType: "stackedpercent",
+  data: threeTitles
 }
 const bumparea = {
   ...frameProps,
-  lines: threeTitles,
-  lineType: "bumparea"
-  // axes: linePercent.axes
+  data: threeTitles,
+  chartType: "bumparea"
 }
 
 //add in curve example
@@ -120,7 +99,7 @@ Your accessors can be a string key to access the property or a function.
       />
       <DocumentFrame
         frameProps={frameProps}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={overrideProps}
       />
       <MarkdownText
@@ -133,7 +112,7 @@ Similarly, you can change \`lineType="stackedarea"\` to turn your chart into a s
       />
       <DocumentFrame
         frameProps={withHoverFrameProps}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={overrideProps}
         startHidden
       />
@@ -147,7 +126,7 @@ If you want to emphasize change in rank with your area chart you can use the \`l
       />
       <DocumentFrame
         frameProps={bumparea}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={overrideProps}
         startHidden
       />
@@ -161,7 +140,7 @@ Changing the \`lineType="stackedpercent"\` and XYFrame will automatically sum ea
       />
       <DocumentFrame
         frameProps={stackedpercent}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={overrideProps}
         startHidden
       />
@@ -174,8 +153,8 @@ To add tooltips, you simply set \`hoverAnnotation={true}\`. By default the toolt
 `}
       />
       <DocumentFrame
-        frameProps={{ ...frameProps, hoverAnnotation: true }}
-        type={XYFrame}
+        frameProps={{ ...frameProps, enableHover: true }}
+        type={StreamXYFrame}
         overrideProps={overrideProps}
         startHidden
       />
@@ -189,10 +168,10 @@ To make your chart responsive, instead of using \`XYFrame\` use \`ResponsiveXYFr
       <DocumentFrame
         frameProps={{
           ...frameProps,
-          hoverAnnotation: true,
+          enableHover: true,
           responsiveWidth: true
         }}
-        type={ResponsiveXYFrame}
+        type={StreamXYFrame}
         overrideProps={overrideProps}
         startHidden
       />

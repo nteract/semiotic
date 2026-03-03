@@ -1,5 +1,5 @@
 import React from "react"
-import { XYFrame } from "semiotic"
+import { StreamXYFrame } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
@@ -210,18 +210,18 @@ const xyFrameProps = [
 export default function XYFramePage() {
   return (
     <PageLayout
-      title="XYFrame"
+      title="StreamXYFrame"
       tier="frames"
       breadcrumbs={[
         { label: "Frames", path: "/frames" },
-        { label: "XYFrame", path: "/frames/xy-frame" },
+        { label: "StreamXYFrame", path: "/frames/xy-frame" },
       ]}
       prevPage={null}
       nextPage={{ title: "OrdinalFrame", path: "/frames/ordinal-frame" }}
     >
       <ComponentMeta
-        componentName="XYFrame"
-        importStatement='import { XYFrame } from "semiotic"'
+        componentName="StreamXYFrame"
+        importStatement='import { StreamXYFrame } from "semiotic"'
         tier="frames"
         related={[
           { name: "LineChart", path: "/charts/line-chart" },
@@ -231,10 +231,10 @@ export default function XYFramePage() {
       />
 
       <p>
-        XYFrame is the foundational frame for all continuous x/y data
+        StreamXYFrame is the foundational frame for all continuous x/y data
         visualization in Semiotic. It renders <strong>points</strong>,{" "}
         <strong>lines</strong>, and <strong>summaries</strong> (areas, contours,
-        heatmaps) in a single coordinate space. Use XYFrame directly when you
+        heatmaps) in a single coordinate space. Use StreamXYFrame directly when you
         need full control over mark rendering, multi-layer compositions, custom
         annotations, or brush interactions that go beyond what the simpler Chart
         components offer.
@@ -246,7 +246,7 @@ export default function XYFramePage() {
       <h2 id="concepts">Concepts</h2>
 
       <p>
-        XYFrame processes data through a pipeline that transforms raw arrays
+        StreamXYFrame processes data through a pipeline that transforms raw arrays
         into positioned SVG or Canvas marks:
       </p>
 
@@ -264,7 +264,7 @@ export default function XYFramePage() {
           array from each line object.
         </li>
         <li>
-          <strong>Scale computation</strong> -- XYFrame auto-computes extents
+          <strong>Scale computation</strong> -- StreamXYFrame auto-computes extents
           from your data (or uses <code>xExtent</code>/<code>yExtent</code>)
           and builds d3 scales to map data space to pixel space.
         </li>
@@ -286,7 +286,7 @@ export default function XYFramePage() {
       <h2 id="quick-start">Quick Start</h2>
 
       <p>
-        The simplest XYFrame needs <code>lines</code> (or <code>points</code>),{" "}
+        The simplest StreamXYFrame needs <code>lines</code> (or <code>points</code>),{" "}
         <code>xAccessor</code>, <code>yAccessor</code>, and a{" "}
         <code>lineStyle</code>.
       </p>
@@ -305,7 +305,7 @@ export default function XYFramePage() {
           hoverAnnotation: true,
           margin: { top: 20, bottom: 60, left: 80, right: 20 },
         }}
-        type={XYFrame}
+        type={StreamXYFrame}
         startHidden={false}
         overrideProps={{
           lines: `[{
@@ -359,7 +359,7 @@ export default function XYFramePage() {
           hoverAnnotation: true,
           margin: { top: 20, bottom: 60, left: 80, right: 20 },
         }}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={{
           lines: `[
   { title: "Widget", coordinates: [...] },
@@ -406,7 +406,7 @@ export default function XYFramePage() {
           hoverAnnotation: true,
           margin: { top: 20, bottom: 60, left: 60, right: 20 },
         }}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={{
           points: `[
   { x: 1, y: 3, size: 8 },
@@ -453,7 +453,7 @@ export default function XYFramePage() {
           hoverAnnotation: true,
           margin: { top: 20, bottom: 60, left: 80, right: 20 },
         }}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={{
           lines: `[
   { title: "Product A", coordinates: [...] },
@@ -476,7 +476,7 @@ export default function XYFramePage() {
       {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
-      <PropTable componentName="XYFrame" props={xyFrameProps} />
+      <PropTable componentName="StreamXYFrame" props={xyFrameProps} />
 
       {/* ----------------------------------------------------------------- */}
       {/* Related */}
@@ -486,7 +486,7 @@ export default function XYFramePage() {
       <ul>
         <li>
           <Link to="/charts/line-chart">LineChart</Link> -- simplified Chart
-          component that wraps XYFrame for line visualizations
+          component that wraps StreamXYFrame for line visualizations
         </li>
         <li>
           <Link to="/charts/area-chart">AreaChart</Link> -- simplified Chart

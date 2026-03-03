@@ -1,12 +1,13 @@
-import React from "react"
-import { XYFrame } from "semiotic"
-import { LineChart } from "semiotic"
+import React, { useRef, useEffect } from "react"
+import { LineChart, RealtimeLineChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -96,6 +97,72 @@ const lineChartProps = [
 ]
 
 // ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const streamingLineCode = `import { useRef, useEffect } from "react"
+import { RealtimeLineChart } from "semiotic"
+
+function StreamingRevenue() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          time: i,
+          value: 20000 + Math.sin(i * 0.04) * 8000
+            + (Math.random() - 0.5) * 3000,
+        })
+      }
+    }, 80)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <RealtimeLineChart
+      ref={chartRef}
+      size={[600, 280]}
+      stroke="#6366f1"
+      strokeWidth={2}
+      windowSize={150}
+      showAxes
+    />
+  )
+}`
+
+function StreamingLineDemo({ width }) {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          time: i,
+          value: 20000 + Math.sin(i * 0.04) * 8000 + (Math.random() - 0.5) * 3000,
+        })
+      }
+    }, 80)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <RealtimeLineChart
+      ref={chartRef}
+      size={[width, 280]}
+      stroke="#6366f1"
+      strokeWidth={2}
+      windowSize={150}
+      showAxes={true}
+    />
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -141,25 +208,35 @@ export default function LineChartPage() {
         <code>xAccessor</code>, and <code>yAccessor</code>.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: simpleData,
-          xAccessor: "month",
-          yAccessor: "revenue",
-          xLabel: "Month",
-          yLabel: "Revenue ($)",
-        }}
-        type={LineChart}
-        startHidden={false}
-        overrideProps={{
-          data: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              data: simpleData,
+              xAccessor: "month",
+              yAccessor: "revenue",
+              xLabel: "Month",
+              yLabel: "Revenue ($)",
+            }}
+            type={LineChart}
+            startHidden={false}
+            overrideProps={{
+              data: `[
   { month: 1, revenue: 12000 },
   { month: 2, revenue: 18000 },
   { month: 3, revenue: 14000 },
   // ...more data points
 ]`,
-        }}
-        hiddenProps={{}}
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingLineDemo width={w} />}
+            code={streamingLineCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}

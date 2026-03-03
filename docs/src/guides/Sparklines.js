@@ -1,9 +1,9 @@
 import React from "react"
 import DocumentFrame from "../DocumentFrame"
-import { SparkXYFrame, SparkOrdinalFrame, SparkNetworkFrame } from "semiotic"
+import { StreamXYFrame, SparkOrdinalFrame, SparkNetworkFrame } from "semiotic"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
-import { curveMonotoneX } from "d3-shape"
+
 
 const dataSeeds = [40, 40]
 
@@ -52,26 +52,29 @@ export const summarySample = [
 
 export const negativeChart = {
   size: [100, 20],
-  lines: generatedData,
-  lineType: { type: "stackedarea", interpolator: curveMonotoneX },
+  data: generatedData,
+  chartType: "stackedarea",
+  curve: "monotoneX",
+  lineDataAccessor: "coordinates",
   xAccessor: "step",
   yAccessor: "value",
   lineStyle: (d) => ({ fill: d.label, stroke: d.label, fillOpacity: 0.75 }),
-  axes: [{ orient: "left" }],
+  showAxes: true,
 }
 
 export const overrideProps = {
-  lineType: `{ type: "stackedarea", interpolator: curveMonotoneX }`,
+  chartType: `"stackedarea"`,
+  curve: `"monotoneX"`,
 }
 
 export function SparkXYExample1() {
   return (
-    <SparkXYFrame
+    <StreamXYFrame
       {...negativeChart}
       lineRenderMode="sketchy"
-      lineType="line"
-      lines={[generatedData[0]]}
-      hoverAnnotation={true}
+      chartType="line"
+      data={[generatedData[0]]}
+      enableHover={true}
     />
   )
 }
@@ -121,7 +124,7 @@ export function SparkNetworkExample2() {
 }
 
 export function SparkXYExample2() {
-  return <SparkXYFrame {...negativeChart} renderKey={(d) => d.label} />
+  return <StreamXYFrame {...negativeChart} renderKey={(d) => d.label} />
 }
 
 export function SparkOrdinalExample1() {

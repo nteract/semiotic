@@ -1,6 +1,5 @@
 import React from "react"
-import { XYFrame, OrdinalFrame, NetworkFrame } from "semiotic"
-import { curveMonotoneX } from "d3-shape"
+import { StreamXYFrame, OrdinalFrame, NetworkFrame } from "semiotic"
 
 import PageLayout from "../../components/PageLayout"
 import LiveExample from "../../components/LiveExample"
@@ -74,7 +73,7 @@ const canvasProps = [
     required: false,
     default: "false",
     description:
-      "When true, renders summaries (areas, contours, hexbins) on canvas. Available on both XYFrame and OrdinalFrame.",
+      "When true, renders summaries (areas, contours, hexbins) on canvas. Available on both StreamXYFrame and OrdinalFrame.",
   },
   {
     name: "canvasPieces",
@@ -187,9 +186,9 @@ export default function CanvasRenderingPage() {
       {/* ----------------------------------------------------------------- */}
       <h2 id="with-frames">With Frames</h2>
 
-      <h3 id="xy-frame-canvas">XYFrame</h3>
+      <h3 id="xy-frame-canvas">StreamXYFrame</h3>
       <p>
-        XYFrame supports <code>canvasLines</code>, <code>canvasPoints</code>,
+        StreamXYFrame supports <code>canvasLines</code>, <code>canvasPoints</code>,
         and <code>canvasSummaries</code>. Each accepts a boolean or a function
         that evaluates each data element and returns <code>true</code> if it
         should be rendered in canvas.
@@ -197,23 +196,20 @@ export default function CanvasRenderingPage() {
 
       <LiveExample
         frameProps={{
-          lines: lineData,
+          data: lineData,
+          chartType: "line",
+          lineDataAccessor: "coordinates",
           xAccessor: "x",
           yAccessor: "y",
-          lineDataAccessor: "coordinates",
           lineStyle: (d) => ({ stroke: d.color, strokeWidth: 1.5 }),
-          lineType: { type: "line", interpolator: curveMonotoneX },
-          canvasLines: true,
-          axes: [
-            { orient: "left", tickFormat: (d) => d },
-            { orient: "bottom", ticks: 5 },
-          ],
+          curve: "monotoneX",
+          showAxes: true,
           margin: { top: 20, bottom: 40, left: 50, right: 20 },
           title: "200 Points Per Line (Canvas)",
         }}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={{
-          lines: `[
+          data: `[
   {
     label: "Series A",
     color: "#ac58e5",
@@ -228,17 +224,11 @@ export default function CanvasRenderingPage() {
     coordinates: /* ...similar data... */,
   },
 ]`,
-          lineType: `{ type: "line", interpolator: curveMonotoneX }`,
           lineStyle: `d => ({ stroke: d.color, strokeWidth: 1.5 })`,
-          axes: `[
-  { orient: "left", tickFormat: d => d },
-  { orient: "bottom", ticks: 5 }
-]`,
         }}
         functions={{
           lineStyle: (d) => ({ stroke: d.color, strokeWidth: 1.5 }),
         }}
-        pre={`import { curveMonotoneX } from "d3-shape"`}
         hiddenProps={{}}
         startHidden
       />
@@ -342,10 +332,10 @@ export default function CanvasRenderingPage() {
 
       <CodeBlock
         code={`// Render all lines in canvas
-<XYFrame canvasLines={true} />
+<StreamXYFrame canvasLines={true} />
 
 // Only render lines with more than 500 points in canvas
-<XYFrame
+<StreamXYFrame
   canvasLines={d => d.coordinates.length > 500}
 />`}
         language="jsx"
@@ -360,14 +350,14 @@ export default function CanvasRenderingPage() {
       </p>
 
       <CodeBlock
-        code={`<XYFrame
-  points={allPoints}
-  canvasPoints={d => !d.highlighted}
+        code={`<StreamXYFrame
+  data={allPoints}
+  chartType="scatter"
   pointStyle={d => ({
     fill: d.highlighted ? "#E0488B" : "#ccc",
     r: d.highlighted ? 6 : 2,
   })}
-  hoverAnnotation={true}
+  enableHover={true}
 />`}
         language="jsx"
       />
@@ -413,7 +403,7 @@ const glowyCanvas = (canvas, context, size) => {
 
       <h3 id="custom-marks-limitation">Custom Marks Limitation</h3>
       <p>
-        Canvas rendering does not support custom mark components. On XYFrame,{" "}
+        Canvas rendering does not support custom mark components. On StreamXYFrame,{" "}
         <code>customPointMark</code>, <code>customLineMark</code>, and{" "}
         <code>customSummaryMark</code> will not be rendered when canvas is
         enabled. Similarly, <code>customMark</code> on OrdinalFrame and{" "}
@@ -468,7 +458,7 @@ const glowyCanvas = (canvas, context, size) => {
 
       <ul>
         <li>
-          <Link to="/frames/xy-frame">XYFrame</Link> — supports canvasLines,
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> — supports canvasLines,
           canvasPoints, canvasSummaries
         </li>
         <li>

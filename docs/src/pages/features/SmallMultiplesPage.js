@@ -418,7 +418,7 @@ const filtered = useFilteredData(data, "mySelection")`}
 
       <ul>
         <li>
-          <Link to="/frames/xy-frame">XYFrame</Link> — child frame type for
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> — child frame type for
           lines, areas, and scatterplots
         </li>
         <li>

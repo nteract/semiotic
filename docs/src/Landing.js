@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react"
 import { Link } from "react-router-dom"
-import { XYFrame, OrdinalFrame, NetworkFrame, RealtimeBarChart } from "semiotic"
+import { StreamXYFrame, OrdinalFrame, NetworkFrame, RealtimeBarChart } from "semiotic"
 
 const tierSnippets = {
   charts: `import { LineChart } from "semiotic"
@@ -10,15 +10,16 @@ const tierSnippets = {
   xAccessor="month"
   yAccessor="revenue"
 />`,
-  frames: `import { XYFrame } from "semiotic"
+  frames: `import { StreamXYFrame } from "semiotic"
 
-<XYFrame
-  lines={data}
+<StreamXYFrame
+  data={data}
+  chartType="line"
   xAccessor="date"
   yAccessor="value"
   lineStyle={d => ({ stroke: colorScale(d.key) })}
-  hoverAnnotation={true}
-  axes={[{ orient: "left" }, { orient: "bottom" }]}
+  enableHover={true}
+  showAxes={true}
 />`,
   utilities: `import { Axis, Legend, DividedLine } from "semiotic"
 
@@ -194,24 +195,18 @@ function MiniCodeBlock({ code, language = "jsx", showCopy = false }) {
 // ---------------------------------------------------------------------------
 
 const galleryLineData = [
-  {
-    label: "Revenue",
-    coordinates: [
-      { month: 1, value: 42 }, { month: 2, value: 58 }, { month: 3, value: 53 },
-      { month: 4, value: 71 }, { month: 5, value: 64 }, { month: 6, value: 88 },
-      { month: 7, value: 79 }, { month: 8, value: 95 }, { month: 9, value: 102 },
-      { month: 10, value: 89 }, { month: 11, value: 110 }, { month: 12, value: 124 },
-    ],
-  },
-  {
-    label: "Costs",
-    coordinates: [
-      { month: 1, value: 35 }, { month: 2, value: 38 }, { month: 3, value: 41 },
-      { month: 4, value: 44 }, { month: 5, value: 48 }, { month: 6, value: 52 },
-      { month: 7, value: 50 }, { month: 8, value: 55 }, { month: 9, value: 58 },
-      { month: 10, value: 54 }, { month: 11, value: 60 }, { month: 12, value: 63 },
-    ],
-  },
+  { month: 1, value: 42, series: "Revenue" }, { month: 2, value: 58, series: "Revenue" },
+  { month: 3, value: 53, series: "Revenue" }, { month: 4, value: 71, series: "Revenue" },
+  { month: 5, value: 64, series: "Revenue" }, { month: 6, value: 88, series: "Revenue" },
+  { month: 7, value: 79, series: "Revenue" }, { month: 8, value: 95, series: "Revenue" },
+  { month: 9, value: 102, series: "Revenue" }, { month: 10, value: 89, series: "Revenue" },
+  { month: 11, value: 110, series: "Revenue" }, { month: 12, value: 124, series: "Revenue" },
+  { month: 1, value: 35, series: "Costs" }, { month: 2, value: 38, series: "Costs" },
+  { month: 3, value: 41, series: "Costs" }, { month: 4, value: 44, series: "Costs" },
+  { month: 5, value: 48, series: "Costs" }, { month: 6, value: 52, series: "Costs" },
+  { month: 7, value: 50, series: "Costs" }, { month: 8, value: 55, series: "Costs" },
+  { month: 9, value: 58, series: "Costs" }, { month: 10, value: 54, series: "Costs" },
+  { month: 11, value: 60, series: "Costs" }, { month: 12, value: 63, series: "Costs" },
 ]
 
 const galleryBarData = [
@@ -229,22 +224,14 @@ const galleryScatterData = Array.from({ length: 40 }, (_, i) => ({
 }))
 
 const galleryAreaData = [
-  {
-    label: "Desktop",
-    coordinates: [
-      { week: 1, users: 120 }, { week: 2, users: 135 }, { week: 3, users: 142 },
-      { week: 4, users: 128 }, { week: 5, users: 155 }, { week: 6, users: 168 },
-      { week: 7, users: 160 }, { week: 8, users: 172 },
-    ],
-  },
-  {
-    label: "Mobile",
-    coordinates: [
-      { week: 1, users: 80 }, { week: 2, users: 95 }, { week: 3, users: 110 },
-      { week: 4, users: 105 }, { week: 5, users: 130 }, { week: 6, users: 145 },
-      { week: 7, users: 155 }, { week: 8, users: 170 },
-    ],
-  },
+  { week: 1, users: 120, series: "Desktop" }, { week: 2, users: 135, series: "Desktop" },
+  { week: 3, users: 142, series: "Desktop" }, { week: 4, users: 128, series: "Desktop" },
+  { week: 5, users: 155, series: "Desktop" }, { week: 6, users: 168, series: "Desktop" },
+  { week: 7, users: 160, series: "Desktop" }, { week: 8, users: 172, series: "Desktop" },
+  { week: 1, users: 80, series: "Mobile" }, { week: 2, users: 95, series: "Mobile" },
+  { week: 3, users: 110, series: "Mobile" }, { week: 4, users: 105, series: "Mobile" },
+  { week: 5, users: 130, series: "Mobile" }, { week: 6, users: 145, series: "Mobile" },
+  { week: 7, users: 155, series: "Mobile" }, { week: 8, users: 170, series: "Mobile" },
 ]
 
 const galleryNetworkNodes = [
@@ -261,25 +248,26 @@ const galleryNetworkEdges = [
 ]
 
 const galleryColors = ["#6366f1", "#ec4899", "#f97316", "#10b981", "#06b6d4"]
+const galleryLineColors = { Revenue: "#6366f1", Costs: "#ec4899" }
+const galleryAreaColors = { Desktop: "#6366f1", Mobile: "#10b981" }
+const galleryScatterColors = { A: "#6366f1", B: "#ec4899", C: "#f97316" }
 
 const galleryItems = [
   {
     title: "Line Chart",
     path: "/charts/line-chart",
     render: (w, h) => (
-      <XYFrame
+      <StreamXYFrame
         size={[w, h]}
-        lines={galleryLineData}
+        chartType="line"
+        data={galleryLineData}
         xAccessor="month"
         yAccessor="value"
-        lineDataAccessor="coordinates"
-        lineStyle={(d, i) => ({ stroke: galleryColors[i], strokeWidth: 2, fill: "none" })}
-        axes={[
-          { orient: "left", tickFormat: d => d, ticks: 5 },
-          { orient: "bottom", ticks: 6 },
-        ]}
+        groupAccessor="series"
+        lineStyle={(d, group) => ({ stroke: galleryLineColors[group] || galleryColors[0], strokeWidth: 2 })}
+        showAxes={true}
         margin={{ top: 16, right: 16, bottom: 36, left: 44 }}
-        hoverAnnotation={true}
+        enableHover={true}
       />
     ),
   },
@@ -315,21 +303,20 @@ const galleryItems = [
     title: "Scatterplot",
     path: "/charts/scatterplot",
     render: (w, h) => (
-      <XYFrame
+      <StreamXYFrame
         size={[w, h]}
-        points={galleryScatterData}
+        chartType="scatter"
+        data={galleryScatterData}
         xAccessor="x"
         yAccessor="y"
-        pointStyle={d => {
-          const gi = ["A", "B", "C"].indexOf(d.group)
-          return { fill: galleryColors[gi], fillOpacity: 0.7, r: d.size }
-        }}
-        axes={[
-          { orient: "left", ticks: 5 },
-          { orient: "bottom", ticks: 5 },
-        ]}
+        pointStyle={d => ({
+          fill: galleryScatterColors[d.group] || galleryColors[0],
+          fillOpacity: 0.7,
+          r: d.size,
+        })}
+        showAxes={true}
         margin={{ top: 16, right: 16, bottom: 36, left: 44 }}
-        hoverAnnotation={true}
+        enableHover={true}
       />
     ),
   },
@@ -337,18 +324,20 @@ const galleryItems = [
     title: "Stacked Area",
     path: "/charts/area-chart",
     render: (w, h) => (
-      <XYFrame
+      <StreamXYFrame
         size={[w, h]}
-        lines={galleryAreaData}
+        chartType="stackedarea"
+        data={galleryAreaData}
         xAccessor="week"
         yAccessor="users"
-        lineDataAccessor="coordinates"
-        lineType={{ type: "stackedarea" }}
-        lineStyle={(d, i) => ({ fill: galleryColors[i], fillOpacity: 0.6, stroke: galleryColors[i], strokeWidth: 2 })}
-        axes={[
-          { orient: "left", ticks: 5 },
-          { orient: "bottom", ticks: 4 },
-        ]}
+        groupAccessor="series"
+        lineStyle={(d, group) => ({
+          fill: galleryAreaColors[group] || galleryColors[0],
+          fillOpacity: 0.6,
+          stroke: galleryAreaColors[group] || galleryColors[0],
+          strokeWidth: 2,
+        })}
+        showAxes={true}
         margin={{ top: 16, right: 16, bottom: 36, left: 44 }}
       />
     ),

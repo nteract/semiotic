@@ -1,5 +1,5 @@
 import React from "react"
-import { XYFrame, OrdinalFrame } from "semiotic"
+import { StreamXYFrame, OrdinalFrame } from "semiotic"
 import { LineChart, BarChart } from "semiotic"
 
 import LiveExample from "../../components/LiveExample"
@@ -139,23 +139,23 @@ export default function AnnotationsPage() {
 
       <LiveExample
         frameProps={{
-          points: scatterData,
+          data: scatterData,
+          chartType: "scatter",
           xAccessor: "x",
           yAccessor: "y",
           pointStyle: { fill: "#6366f1", r: 5 },
           margin: { top: 30, bottom: 60, left: 60, right: 40 },
-          axes: [
-            { orient: "left", label: "Y Value" },
-            { orient: "bottom", label: "X Value" },
-          ],
+          showAxes: true,
+          xLabel: "X Value",
+          yLabel: "Y Value",
           annotations: [
             { type: "xy", x: 55, y: 45, label: "Peak" },
             { type: "y", y: 35, label: "Target", color: "#f97316", disable: ["connector"] },
           ],
         }}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={{
-          points: `[
+          data: `[
   { x: 10, y: 20, label: "A" },
   { x: 25, y: 35, label: "B" },
   { x: 40, y: 15, label: "C" },
@@ -180,15 +180,15 @@ export default function AnnotationsPage() {
 
       <LiveExample
         frameProps={{
-          points: scatterData,
+          data: scatterData,
+          chartType: "scatter",
           xAccessor: "x",
           yAccessor: "y",
           pointStyle: { fill: "#6366f1", r: 5 },
           margin: { top: 30, bottom: 60, left: 60, right: 40 },
-          axes: [
-            { orient: "left", label: "Y Value" },
-            { orient: "bottom", label: "X Value" },
-          ],
+          showAxes: true,
+          xLabel: "X Value",
+          yLabel: "Y Value",
           annotations: [
             {
               type: "enclose",
@@ -202,7 +202,7 @@ export default function AnnotationsPage() {
             },
           ],
         }}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={{
           points: "scatterData",
           annotations: `[{
@@ -229,8 +229,10 @@ export default function AnnotationsPage() {
       </p>
 
       <CodeBlock
-        code={`<XYFrame
-  lines={data}
+        code={`<StreamXYFrame
+  data={data}
+  chartType="line"
+  lineDataAccessor="coordinates"
   hoverAnnotation={[
     { type: "desaturation-layer", style: { fill: "white", opacity: 0.6 } },
     {
@@ -320,10 +322,10 @@ export default function AnnotationsPage() {
             ["highlight", "All", "Redraws mark on annotation layer with custom style"],
             ["desaturation-layer", "All", "Semi-transparent overlay for focus+context"],
             ["enclose / enclose-rect / enclose-hull", "All", "Enclose data points with circle, rect, or convex hull"],
-            ["xy", "XYFrame", "Circle at a data point"],
-            ["x / y", "XYFrame", "Threshold line along x or y axis"],
-            ["bounds", "XYFrame", "Rectangle bounding box"],
-            ["horizontal-points / vertical-points", "XYFrame", "Show all points along an axis"],
+            ["xy", "StreamXYFrame", "Circle at a data point"],
+            ["x / y", "StreamXYFrame", "Threshold line along x or y axis"],
+            ["bounds", "StreamXYFrame", "Rectangle bounding box"],
+            ["horizontal-points / vertical-points", "StreamXYFrame", "Show all points along an axis"],
             ["or", "OrdinalFrame", "Circle at a data point"],
             ["r", "OrdinalFrame", "Threshold along r axis"],
             ["category", "OrdinalFrame", "Bracket annotation around columns"],
@@ -346,7 +348,7 @@ export default function AnnotationsPage() {
       </p>
 
       <CodeBlock
-        code={`<XYFrame
+        code={`<StreamXYFrame
   annotationSettings={{
     type: "marginalia",        // "bump" or "marginalia"
     orient: "right",           // "nearest", "left", "right", "top", "bottom"
@@ -371,7 +373,7 @@ export default function AnnotationsPage() {
       </p>
 
       <CodeBlock
-        code={`<XYFrame
+        code={`<StreamXYFrame
   svgAnnotationRules={({ d, xScale, yScale, adjustedSize }) => {
     if (d.type === "custom-threshold") {
       const y = yScale(d.value)
@@ -422,10 +424,10 @@ export default function AnnotationsPage() {
 
       <CodeBlock
         code={`// Simple hover tooltip
-<XYFrame hoverAnnotation={true} />
+<StreamXYFrame enableHover={true} />
 
 // Multiple hover annotations
-<XYFrame
+<StreamXYFrame
   hoverAnnotation={[
     { type: "frame-hover" },                    // Tooltip
     { type: "x", disable: ["connector", "note"] }, // Vertical guide line
@@ -451,7 +453,7 @@ export default function AnnotationsPage() {
           cross-highlighting, and brushing
         </li>
         <li>
-          <Link to="/frames/xy-frame">XYFrame</Link> — XY annotations, threshold
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> — XY annotations, threshold
           lines, and point-based annotations
         </li>
         <li>

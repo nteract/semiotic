@@ -1,4 +1,4 @@
-import { SparkXYFrame, SparkNetworkFrame, SparkOrdinalFrame } from "semiotic"
+import { StreamXYFrame, SparkNetworkFrame, SparkOrdinalFrame } from "semiotic"
 import {
   negativeChart,
   generatedData,
@@ -21,7 +21,7 @@ import DocumentFrame from "../DocumentFrame"
 
 # Sparklines
 
-Sparklines are made with the `SparkXYFrame`, `SparkOrdinalFrame` and `SparkNetworkFrame`. They
+Sparklines are made with the `StreamXYFrame`, `SparkOrdinalFrame` and `SparkNetworkFrame`. They
 create frames using spans instead of divs so they can be embedded in paragraphs based on the
 inherited `line-height` property.
 
@@ -46,7 +46,7 @@ the&nbsp;<SparkNetworkExample4 /> or a <SparkNetworkExample5 />.
     size: undefined,
     lines: generatedData[0],
   }}
-  type={SparkXYFrame}
+  type={StreamXYFrame}
   overrideProps={overrideProps}
   pre={`import { curveMonotoneX } from "d3-shape"`}
   showExpanded
@@ -62,7 +62,7 @@ Sometimes the default size isn't the aspect ratio you need, you can still pass a
     ...negativeChart,
     lines: generatedData[0],
   }}
-  type={SparkXYFrame}
+  type={StreamXYFrame}
   overrideProps={overrideProps}
   pre={`import { curveMonotoneX } from "d3-shape"`}
   startHidden

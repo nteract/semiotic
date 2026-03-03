@@ -1,6 +1,6 @@
 import React from "react"
 import DocumentFrame from "../DocumentFrame"
-import { XYFrame } from "semiotic"
+import { StreamXYFrame } from "semiotic"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
 
@@ -55,7 +55,7 @@ Marginal Graphics are useful for visualizing the density of datapoints along an 
 
       <DocumentFrame
         frameProps={frameProps}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={overrideProps}
         useExpanded
       />

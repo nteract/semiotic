@@ -1,6 +1,6 @@
 import React from "react"
 import DocumentFrame from "../DocumentFrame"
-import { XYFrame } from "semiotic"
+import { StreamXYFrame } from "semiotic"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
 import { scaleLinear } from "d3-scale"
@@ -16,6 +16,7 @@ const colors = {
   "The Longest Ride": theme[2]
 }
 
+// TODO: migrate summary to StreamXYFrame - summaries/summaryType not directly supported
 const frameProps = {
   size: [700, 400],
   summaries: [{ coordinates: points }],
@@ -147,7 +148,7 @@ In this example, we pass a single summary object, and set to \`summaryType: "hea
       />
       <DocumentFrame
         frameProps={frameProps}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={overrideProps}
         pre={`import { scaleLinear } from "d3-scale"
 const steps = ["white", "${theme[3]}"]
@@ -196,7 +197,7 @@ This example is the same as the heatmap except we are passing \`"hexbin"\` as th
       />
       <DocumentFrame
         frameProps={hexbinProps}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={overrideProps}
         startHidden
         pre={`import { scaleLinear } from "d3-scale"
@@ -243,7 +244,7 @@ This example is the same as the heatmap except we are passing \`"contour"\` as t
       />
       <DocumentFrame
         frameProps={contourProps}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={overrideProps}
         startHidden
         pre={`const colors = {
@@ -278,7 +279,7 @@ You can draw a trend line using the \`trendline\` summary type.
       />
       <DocumentFrame
         frameProps={trendlineProps}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={{ ...overrideProps, title: null }}
         startHidden
         pre={`const colors = {

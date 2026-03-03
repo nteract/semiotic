@@ -3,11 +3,11 @@
 - _**string type**_: Creates an annotation using built-in SVG rendering. Supported types: `"label"` (default), `"callout"`, `"callout-circle"`, `"callout-rect"`, `"callout-custom"`, `"xy-threshold"`, `"bracket"`. Automatically transforms any properties on the annotation that match with your accessor functions.
 
 ```jsx
-import { XYFrame } from "semiotic"
+import { StreamXYFrame } from "semiotic"
 
 export default function() {
   return (
-    <XYFrame
+    <StreamXYFrame
       annotations={[
         { type: "label", label: "a note", y: 100 },
         {
@@ -36,11 +36,11 @@ export default function() {
 
 - `frame-hover`: Creates a tooltip, which is a div centered on the datapoint populated with the values derived for that data point, you can use a separate prop `tooltipContent` to customize the value, see the [tooltips](/guides/tooltips) page for details.
 
-### XYFrame
+### StreamXYFrame
 
 - `xy`: creates a circle, use `style` and `label` to customize
-- `x`: creates an xy-threshold annotation along the x axis, you must pass a prop that matches the `xAccessor` used for the `XYFrame`
-- `y`: creates an xy-threshold annotation along the y axis, you must pass a prop that matches the `yAccessor` used for the `XYFrame`
+- `x`: creates an xy-threshold annotation along the x axis, you must pass a prop that matches the `xAccessor` used for the `StreamXYFrame`
+- `y`: creates an xy-threshold annotation along the y axis, you must pass a prop that matches the `yAccessor` used for the `StreamXYFrame`
 - `bounds`: Has a `bounds` property of format `[{left-x, top-y},{right-x, bottom-y}]` and will draw a rectangle around that bounding box. If any values are missing (x or y) in either of the bounds then it defaults to the full size of the viz along that measure.
 - `line`: Has a `coordinates` array with objects in the data format of the frame and will connect the line in the order or the coordinates. If passed a label it places it between the first two points
 - `area`: Has a `coordinates` array with objects in the data format of the frame and will draw an area with the coordinates in that array in the order passed, and add text with the a `label` prop positioned at the center of the polygon.
@@ -59,7 +59,7 @@ const variousAnnotations = [
 { type: 'enclose', coordinates: [ {score: 3, attendance: 4}, {score: 5, attendance: 3} ], label: 'An enclosure' }
 ]
 
-<XYFrame
+<StreamXYFrame
 annotations={variousAnnotations}
 xAccessor="score"
 yAccessor="attendance"
@@ -68,7 +68,7 @@ yAccessor="attendance"
 
 ### ORFrame
 
-- `or`: a circle annotation with a `"label"` (like "xy" for XYFrame)
+- `or`: a circle annotation with a `"label"` (like "xy" for StreamXYFrame)
 - `r`: an xy-threshold annotation at the r value
 
 - `category`: A bracket annotation with the passed "title" and/or "label" based on the passed "categories" array (you pass an array of strings that correspond to the oAccessor category names and the bracket is drawn to surround them, which means it will encompass other columns if they are spread apart). Honors the following props:
@@ -124,7 +124,7 @@ Use `svgAnnotationRules` or `htmlAnnotationRules` depending on the type of JSX e
 The custom rules expose the datapoint hovered, scales, and other properties of the frame.
 
 - NetworkFrame: `d, i, networkFrameProps, networkFrameState, nodes, edges, voronoiHover, screenCoordinates, adjustedPosition, adjustedSize, annotationLayer`
-- XYFrame: `d, i, xyFrameProps, xyFrameState, xScale, yScale, xAccessor, yAccessor, summaries, points, lines, voronoiHover, screenCoordinates, adjustedPosition, adjustedSize, annotationLayer`
+- StreamXYFrame: `d, i, xyFrameProps, xyFrameState, xScale, yScale, xAccessor, yAccessor, summaries, points, lines, voronoiHover, screenCoordinates, adjustedPosition, adjustedSize, annotationLayer`
 - ORFrame: `d, i, orFrameProps, orFrameState, oScale, rScale, oAccessor, rAccessor, categories, voronoiHover, screenCoordinates, adjustedPosition, adjustedSize, annotationLayer`
 
 ## svgAnnotationRules { _function_ }
@@ -136,7 +136,7 @@ This function is run on every item in the annotation array, in addition to any h
 - return `false` if you only want to process your custom rules
 
 ```jsx
-<XYFrame
+<StreamXYFrame
   svgAnnotationRules={d => {
     // Catch annotation with type="r"
     if (d.d.type === "r") {

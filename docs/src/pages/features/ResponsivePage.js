@@ -1,5 +1,5 @@
 import React from "react"
-import { XYFrame, OrdinalFrame, ResponsiveXYFrame, ResponsiveOrdinalFrame } from "semiotic"
+import { StreamXYFrame, OrdinalFrame, ResponsiveOrdinalFrame } from "semiotic"
 import { LineChart, BarChart } from "semiotic"
 
 import LiveExample from "../../components/LiveExample"
@@ -107,23 +107,24 @@ export default function ResponsivePage() {
       />
 
       <p>
-        Alternatively, use the <code>ResponsiveXYFrame</code> directly for
+        Alternatively, use the <code>StreamXYFrame</code> directly for
         full control:
       </p>
 
       <CodeBlock
-        code={`import { ResponsiveXYFrame } from "semiotic"
+        code={`import { StreamXYFrame } from "semiotic"
 
 <div style={{ width: "100%", height: 400 }}>
-  <ResponsiveXYFrame
-    lines={[{ coordinates: salesData }]}
+  <StreamXYFrame
+    data={[{ coordinates: salesData }]}
+    chartType="line"
+    lineDataAccessor="coordinates"
     xAccessor="month"
     yAccessor="revenue"
     lineStyle={{ stroke: "#6366f1", strokeWidth: 2 }}
-    axes={[
-      { orient: "left", label: "Revenue" },
-      { orient: "bottom", label: "Month" }
-    ]}
+    showAxes={true}
+    xLabel="Revenue"
+    yLabel="Month"
     responsiveWidth={true}
     size={[800, 400]}
   />
@@ -136,32 +137,32 @@ export default function ResponsivePage() {
       {/* ----------------------------------------------------------------- */}
       <h2 id="with-frames">With Frames</h2>
 
-      <h3 id="responsive-xy">ResponsiveXYFrame</h3>
+      <h3 id="responsive-xy">StreamXYFrame (Responsive)</h3>
       <p>
-        <code>ResponsiveXYFrame</code> wraps <code>XYFrame</code> and
-        observes its container's dimensions. Set{" "}
-        <code>responsiveWidth</code> and/or <code>responsiveHeight</code> to{" "}
-        <code>true</code>. The <code>size</code> prop still provides the
+        <code>StreamXYFrame</code> supports responsive behavior through{" "}
+        <code>responsiveWidth</code> and/or <code>responsiveHeight</code> props.
+        The <code>size</code> prop still provides the
         initial dimensions and aspect ratio.
       </p>
 
       <LiveExample
         frameProps={{
-          lines: frameLineData,
+          data: frameLineData,
+          chartType: "line",
+          lineDataAccessor: "coordinates",
           xAccessor: "step",
           yAccessor: "value",
           lineStyle: { stroke: "#6366f1", strokeWidth: 2 },
           responsiveWidth: true,
           margin: { top: 20, bottom: 60, left: 70, right: 20 },
-          axes: [
-            { orient: "left", label: "Revenue ($)" },
-            { orient: "bottom", label: "Month" },
-          ],
+          showAxes: true,
+          xLabel: "Month",
+          yLabel: "Revenue ($)",
         }}
-        type={ResponsiveXYFrame}
+        type={StreamXYFrame}
         startHidden={false}
         overrideProps={{
-          lines: `[{
+          data: `[{
   label: "Revenue",
   coordinates: [
     { step: 1, value: 12000 },
@@ -225,11 +226,13 @@ export default function ResponsivePage() {
       <CodeBlock
         code={`// Container must have explicit height for responsiveHeight to work
 <div style={{ width: "100%", height: "50vh" }}>
-  <ResponsiveXYFrame
+  <StreamXYFrame
+    data={data}
+    chartType="line"
+    lineDataAccessor="coordinates"
     responsiveWidth={true}
     responsiveHeight={true}
     size={[800, 400]}
-    lines={data}
     xAccessor="step"
     yAccessor="value"
   />
@@ -253,7 +256,7 @@ export default function ResponsivePage() {
         </thead>
         <tbody>
           {[
-            ["ResponsiveXYFrame", "XYFrame"],
+            ["StreamXYFrame", "StreamXYFrame (replaces XYFrame + ResponsiveXYFrame)"],
             ["ResponsiveOrdinalFrame", "OrdinalFrame"],
             ["ResponsiveNetworkFrame", "NetworkFrame"],
           ].map(([responsive, wraps], i) => (
@@ -273,13 +276,13 @@ export default function ResponsivePage() {
 
       <CodeBlock
         code={`import {
-  ResponsiveXYFrame,
+  StreamXYFrame,
   ResponsiveOrdinalFrame,
   ResponsiveNetworkFrame
 } from "semiotic"
 
 // Width-only responsive (most common)
-<ResponsiveXYFrame
+<StreamXYFrame
   responsiveWidth={true}
   size={[800, 400]}  // Height stays fixed at 400
   {...otherProps}
@@ -287,7 +290,7 @@ export default function ResponsivePage() {
 
 // Both width and height responsive
 <div style={{ width: "100%", height: "60vh" }}>
-  <ResponsiveXYFrame
+  <StreamXYFrame
     responsiveWidth={true}
     responsiveHeight={true}
     size={[800, 400]}  // Used as initial/fallback dimensions
@@ -348,10 +351,10 @@ export default function ResponsivePage() {
   min-height: 300px;
 }
 
-/* Each ResponsiveXYFrame fills its card */
+/* Each StreamXYFrame fills its card */
 <div className="dashboard">
   <div className="chart-card">
-    <ResponsiveXYFrame responsiveWidth={true} size={[400, 300]} ... />
+    <StreamXYFrame responsiveWidth={true} size={[400, 300]} ... />
   </div>
   <div className="chart-card">
     <ResponsiveOrdinalFrame responsiveWidth={true} size={[400, 300]} ... />
@@ -367,8 +370,8 @@ export default function ResponsivePage() {
 
       <ul>
         <li>
-          <Link to="/frames/xy-frame">XYFrame</Link> — the base frame that
-          ResponsiveXYFrame wraps
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> — the canvas-first
+          XY frame with built-in responsive support
         </li>
         <li>
           <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — the base

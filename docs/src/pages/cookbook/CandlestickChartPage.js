@@ -1,9 +1,107 @@
-import React from "react"
+import React, { useRef, useEffect } from "react"
+import { StreamXYFrame } from "semiotic"
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 import CandlestickChart from "../../examples/CandlestickChart"
+
+// ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const streamingCandlestickCode = `import { useRef, useEffect } from "react"
+import { StreamXYFrame } from "semiotic"
+
+function StreamingCandlestick() {
+  const chartRef = useRef()
+  const priceRef = useRef(350)
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        const open = priceRef.current
+        const change = (Math.random() - 0.48) * 10
+        const close = open + change
+        const high = Math.max(open, close) + Math.random() * 5
+        const low = Math.min(open, close) - Math.random() * 5
+        priceRef.current = close
+
+        chartRef.current.push({
+          time: i, open, high, low, close,
+        })
+      }
+    }, 500)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamXYFrame
+      ref={chartRef}
+      chartType="candlestick"
+      size={[600, 300]}
+      openAccessor="open"
+      highAccessor="high"
+      lowAccessor="low"
+      closeAccessor="close"
+      candlestickStyle={{
+        upColor: "#4daf4a",
+        downColor: "#e41a1c",
+        wickColor: "#333",
+      }}
+      windowSize={40}
+      showAxes
+    />
+  )
+}`
+
+function StreamingCandlestickDemo({ width }) {
+  const chartRef = useRef()
+  const priceRef = useRef(350)
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        const open = priceRef.current
+        const change = (Math.random() - 0.48) * 10
+        const close = open + change
+        const high = Math.max(open, close) + Math.random() * 5
+        const low = Math.min(open, close) - Math.random() * 5
+        priceRef.current = close
+
+        chartRef.current.push({
+          time: i, open, high, low, close,
+        })
+      }
+    }, 500)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamXYFrame
+      ref={chartRef}
+      chartType="candlestick"
+      size={[width, 300]}
+      openAccessor="open"
+      highAccessor="high"
+      lowAccessor="low"
+      closeAccessor="close"
+      candlestickStyle={{
+        upColor: "#4daf4a",
+        downColor: "#e41a1c",
+        wickColor: "#333",
+      }}
+      windowSize={40}
+      showAxes={true}
+    />
+  )
+}
 
 export default function CandlestickChartPage() {
   return (
@@ -24,16 +122,26 @@ export default function CandlestickChartPage() {
       </p>
 
       <h2 id="the-visualization">The Visualization</h2>
-      <div
-        style={{
-          background: "var(--surface-1)",
-          borderRadius: "8px",
-          padding: "16px",
-          border: "1px solid var(--surface-3)",
-        }}
-      >
-        <CandlestickChart />
-      </div>
+      <StreamingToggle
+        staticContent={
+          <div
+            style={{
+              background: "var(--surface-1)",
+              borderRadius: "8px",
+              padding: "16px",
+              border: "1px solid var(--surface-3)",
+            }}
+          >
+            <CandlestickChart />
+          </div>
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingCandlestickDemo width={w} />}
+            code={streamingCandlestickCode}
+          />
+        }
+      />
 
       <h2 id="how-it-works">How It Works</h2>
       <p>

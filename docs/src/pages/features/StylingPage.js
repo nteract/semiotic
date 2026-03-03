@@ -1,5 +1,5 @@
 import React from "react"
-import { OrdinalFrame, XYFrame } from "semiotic"
+import { OrdinalFrame, StreamXYFrame } from "semiotic"
 
 import PageLayout from "../../components/PageLayout"
 import LiveExample from "../../components/LiveExample"
@@ -220,7 +220,7 @@ export default function StylingPage() {
       </p>
       <ul>
         <li>
-          <strong>XYFrame:</strong> <code>pointRenderMode</code>,{" "}
+          <strong>StreamXYFrame:</strong> <code>pointRenderMode</code>,{" "}
           <code>lineRenderMode</code>, <code>summaryRenderMode</code>
         </li>
         <li>
@@ -327,15 +327,13 @@ export default function StylingPage() {
 
       <LiveExample
         frameProps={{
-          lines: lineData,
+          data: lineData,
+          chartType: "line",
+          lineDataAccessor: "coordinates",
           xAccessor: "month",
           yAccessor: "value",
-          lineDataAccessor: "coordinates",
           lineStyle: () => ({ stroke: theme[0], strokeWidth: 2.5 }),
-          axes: [
-            { orient: "left" },
-            { orient: "bottom", ticks: 8 },
-          ],
+          showAxes: true,
           margin: { top: 30, bottom: 40, left: 50, right: 20 },
           backgroundGraphics: (
             <g>
@@ -362,7 +360,7 @@ export default function StylingPage() {
           ),
           title: "With Background & Foreground Layers",
         }}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={{
           lines: `[{
   label: "Revenue",
@@ -440,10 +438,10 @@ export default function StylingPage() {
 
       <CodeBlock
         code={`// Static class
-<XYFrame lineClass="revenue-line" />
+<StreamXYFrame lineClass="revenue-line" />
 
 // Dynamic class function
-<XYFrame
+<StreamXYFrame
   lineClass={d => \`line-\${d.category}\`}
   pointClass={d => d.highlighted ? "point-active" : "point-default"}
 />
@@ -463,7 +461,7 @@ export default function StylingPage() {
       </p>
 
       <CodeBlock
-        code={`<XYFrame
+        code={`<StreamXYFrame
   backgroundGraphics={({ size, margin }) => (
     <rect
       x={margin.left}
@@ -520,7 +518,7 @@ export default function StylingPage() {
 
       <ul>
         <li>
-          <Link to="/frames/xy-frame">XYFrame</Link> — lineStyle, pointStyle,
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> — lineStyle, pointStyle,
           summaryStyle, and render mode props
         </li>
         <li>

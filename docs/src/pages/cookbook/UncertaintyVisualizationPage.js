@@ -1,9 +1,78 @@
-import React from "react"
+import React, { useRef, useEffect } from "react"
+import { RealtimeLineChart } from "semiotic"
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 import UncertaintyVisualization from "../../examples/UncertaintyVisualization"
+
+// ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const streamingForecastCode = `import { useRef, useEffect } from "react"
+import { RealtimeLineChart } from "semiotic"
+
+function StreamingForecast() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          time: i,
+          value: 100 + Math.sin(i * 0.02) * 30
+            + (Math.random() - 0.5) * 15,
+        })
+      }
+    }, 80)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <RealtimeLineChart
+      ref={chartRef}
+      size={[600, 280]}
+      stroke="#f59e0b"
+      strokeWidth={2}
+      windowSize={150}
+      showAxes
+    />
+  )
+}`
+
+function StreamingForecastDemo({ width }) {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          time: i,
+          value: 100 + Math.sin(i * 0.02) * 30 + (Math.random() - 0.5) * 15,
+        })
+      }
+    }, 80)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <RealtimeLineChart
+      ref={chartRef}
+      size={[width, 280]}
+      stroke="#f59e0b"
+      strokeWidth={2}
+      windowSize={150}
+      showAxes={true}
+    />
+  )
+}
 
 export default function UncertaintyVisualizationPage() {
   return (
@@ -33,16 +102,26 @@ export default function UncertaintyVisualizationPage() {
       </p>
 
       <h2 id="the-visualization">The Visualization</h2>
-      <div
-        style={{
-          background: "var(--surface-1)",
-          borderRadius: "8px",
-          padding: "16px",
-          border: "1px solid var(--surface-3)",
-        }}
-      >
-        <UncertaintyVisualization />
-      </div>
+      <StreamingToggle
+        staticContent={
+          <div
+            style={{
+              background: "var(--surface-1)",
+              borderRadius: "8px",
+              padding: "16px",
+              border: "1px solid var(--surface-3)",
+            }}
+          >
+            <UncertaintyVisualization />
+          </div>
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingForecastDemo width={w} />}
+            code={streamingForecastCode}
+          />
+        }
+      />
 
       <h2 id="how-it-works">How It Works</h2>
       <p>

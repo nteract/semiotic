@@ -1,12 +1,10 @@
 import React from "react"
 import {
-  SparkXYFrame,
+  StreamXYFrame,
   SparkOrdinalFrame,
   SparkNetworkFrame,
-  XYFrame,
   OrdinalFrame,
 } from "semiotic"
-import { curveMonotoneX } from "d3-shape"
 
 import PageLayout from "../../components/PageLayout"
 import LiveExample from "../../components/LiveExample"
@@ -78,12 +76,12 @@ const fullLineData = [
 
 const sparkProps = [
   {
-    name: "SparkXYFrame",
+    name: "StreamXYFrame",
     type: "component",
     required: false,
     default: null,
     description:
-      "A span-based XYFrame designed to be embedded inline in text. Inherits line-height for sizing. Accepts all XYFrame props.",
+      "StreamXYFrame with small size can be used for inline sparkline-style charts. Use a small size prop like [80, 20].",
   },
   {
     name: "SparkOrdinalFrame",
@@ -134,7 +132,7 @@ export default function SparklinesPage() {
     >
       <p>
         Sparklines are small, word-sized graphics embedded directly in text.
-        Semiotic provides three sparkline components — <code>SparkXYFrame</code>
+        Semiotic provides sparkline components — <code>StreamXYFrame</code> (with small size)
         , <code>SparkOrdinalFrame</code>, and <code>SparkNetworkFrame</code> —
         that render inside <code>&lt;span&gt;</code> elements instead of{" "}
         <code>&lt;div&gt;</code> elements, so they flow naturally within
@@ -145,11 +143,13 @@ export default function SparklinesPage() {
 
       <p style={{ fontSize: "18px", lineHeight: "2.4" }}>
         You can embed a tiny line chart{" "}
-        <SparkXYFrame
-          lines={sparkLineData}
-          lineType="line"
+        <StreamXYFrame
+          data={sparkLineData}
+          chartType="line"
+          lineDataAccessor="coordinates"
           xAccessor="step"
           yAccessor="value"
+          size={[80, 20]}
           lineStyle={() => ({
             stroke: "#ac58e5",
             strokeWidth: 1.5,
@@ -211,16 +211,18 @@ export default function SparklinesPage() {
       {/* ----------------------------------------------------------------- */}
       <h2 id="with-frames">With Frames</h2>
 
-      <h3 id="spark-xy-frame">SparkXYFrame</h3>
+      <h3 id="spark-xy-frame">StreamXYFrame as Sparkline</h3>
       <p>
-        <code>SparkXYFrame</code> accepts all the same props as{" "}
-        <code>XYFrame</code>. The most common use is a simple line sparkline.
+        <code>StreamXYFrame</code> with a small <code>size</code> can serve as
+        a sparkline. The most common use is a simple line sparkline.
       </p>
 
       <LiveExample
         frameProps={{
-          lines: sparkLineData,
-          lineType: { type: "line", interpolator: curveMonotoneX },
+          data: sparkLineData,
+          chartType: "line",
+          lineDataAccessor: "coordinates",
+          curve: "monotoneX",
           xAccessor: "step",
           yAccessor: "value",
           lineStyle: () => ({
@@ -230,13 +232,12 @@ export default function SparklinesPage() {
           }),
           size: [100, 20],
         }}
-        type={SparkXYFrame}
+        type={StreamXYFrame}
         overrideProps={{
-          lines: `[{
+          data: `[{
   label: "Series A",
   coordinates: generatePoints(40, 40),
 }]`,
-          lineType: `{ type: "line", interpolator: curveMonotoneX }`,
           lineStyle: `() => ({
   stroke: "#ac58e5",
   strokeWidth: 1.5,
@@ -250,7 +251,6 @@ export default function SparklinesPage() {
             fill: "none",
           }),
         }}
-        pre={`import { curveMonotoneX } from "d3-shape"`}
         hiddenProps={{}}
         startHidden={false}
       />
@@ -263,8 +263,10 @@ export default function SparklinesPage() {
 
       <LiveExample
         frameProps={{
-          lines: sparkStackedData,
-          lineType: { type: "stackedarea", interpolator: curveMonotoneX },
+          data: sparkStackedData,
+          chartType: "stackedarea",
+          lineDataAccessor: "coordinates",
+          curve: "monotoneX",
           xAccessor: "step",
           yAccessor: "value",
           lineStyle: (d) => ({
@@ -274,13 +276,12 @@ export default function SparklinesPage() {
           }),
           size: [100, 20],
         }}
-        type={SparkXYFrame}
+        type={StreamXYFrame}
         overrideProps={{
-          lines: `[
+          data: `[
   { label: "#ac58e5", coordinates: generatePoints(40, 40) },
   { label: "#E0488B", coordinates: generatePoints(40, 40) },
 ]`,
-          lineType: `{ type: "stackedarea", interpolator: curveMonotoneX }`,
           lineStyle: `d => ({
   fill: d.label,
   stroke: d.label,
@@ -294,7 +295,6 @@ export default function SparklinesPage() {
             fillOpacity: 0.75,
           }),
         }}
-        pre={`import { curveMonotoneX } from "d3-shape"`}
         hiddenProps={{}}
         startHidden
       />
@@ -372,16 +372,21 @@ export default function SparklinesPage() {
       </p>
 
       <CodeBlock
-        code={`// Default: sizes from line-height
-<SparkXYFrame
-  lines={data}
+        code={`// Small size for sparkline effect
+<StreamXYFrame
+  data={data}
+  chartType="line"
+  lineDataAccessor="coordinates"
   xAccessor="step"
   yAccessor="value"
+  size={[80, 20]}
 />
 
 // Explicit size override
-<SparkXYFrame
-  lines={data}
+<StreamXYFrame
+  data={data}
+  chartType="line"
+  lineDataAccessor="coordinates"
   xAccessor="step"
   yAccessor="value"
   size={[120, 24]}
@@ -399,19 +404,23 @@ export default function SparklinesPage() {
       <CodeBlock
         code={`<p>
   Revenue has been trending upward{" "}
-  <SparkXYFrame
-    lines={[{ coordinates: revenueData }]}
+  <StreamXYFrame
+    data={[{ coordinates: revenueData }]}
+    chartType="line"
+    lineDataAccessor="coordinates"
     xAccessor="day"
     yAccessor="revenue"
-    lineType="line"
+    size={[80, 20]}
     lineStyle={() => ({ stroke: "#4CAF50", fill: "none" })}
   />{" "}
   while costs remain stable{" "}
-  <SparkXYFrame
-    lines={[{ coordinates: costData }]}
+  <StreamXYFrame
+    data={[{ coordinates: costData }]}
+    chartType="line"
+    lineDataAccessor="coordinates"
     xAccessor="day"
     yAccessor="cost"
-    lineType="line"
+    size={[80, 20]}
     lineStyle={() => ({ stroke: "#F44336", fill: "none" })}
   />.
 </p>`}
@@ -440,11 +449,12 @@ export default function SparklinesPage() {
         <td>{product.name}</td>
         <td>\${product.total.toLocaleString()}</td>
         <td>
-          <SparkXYFrame
-            lines={[{ coordinates: product.dailyRevenue }]}
+          <StreamXYFrame
+            data={[{ coordinates: product.dailyRevenue }]}
+            chartType="line"
+            lineDataAccessor="coordinates"
             xAccessor="day"
             yAccessor="revenue"
-            lineType="line"
             size={[80, 20]}
             lineStyle={() => ({
               stroke: product.trending > 0 ? "#4CAF50" : "#F44336",
@@ -469,13 +479,16 @@ export default function SparklinesPage() {
 
       <CodeBlock
         code={`// Sparkline with hover annotation
-<SparkXYFrame
-  lines={data}
+<StreamXYFrame
+  data={data}
+  chartType="line"
+  lineDataAccessor="coordinates"
   xAccessor="step"
   yAccessor="value"
-  hoverAnnotation={true}
+  size={[100, 20]}
+  enableHover={true}
   lineRenderMode="sketchy"
-  lineType={{ type: "line", interpolator: curveMonotoneX }}
+  curve="monotoneX"
   lineStyle={() => ({
     stroke: "#ac58e5",
     strokeWidth: 1.5,
@@ -492,8 +505,8 @@ export default function SparklinesPage() {
 
       <ul>
         <li>
-          <Link to="/frames/xy-frame">XYFrame</Link> — the full-size frame that
-          SparkXYFrame wraps
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> — the full-size frame
+          for XY visualizations
         </li>
         <li>
           <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — the full-size

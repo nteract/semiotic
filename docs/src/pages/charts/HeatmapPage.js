@@ -1,5 +1,4 @@
 import React from "react"
-import { XYFrame } from "semiotic"
 import { Heatmap } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -156,6 +155,11 @@ export default function HeatmapPage() {
         }}
         hiddenProps={{}}
       />
+
+      <p style={{ fontSize: 13, color: "var(--text-2)", fontStyle: "italic", marginTop: 8 }}>
+        Streaming: No realtime heatmap component exists. Update Heatmap's{" "}
+        <code>data</code> prop directly for live updates.
+      </p>
 
       {/* ----------------------------------------------------------------- */}
       {/* Examples */}
