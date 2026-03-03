@@ -50,7 +50,7 @@ export type { RealtimeLineChartProps } from "./charts/realtime/RealtimeLineChart
 export type { RealtimeBarChartProps } from "./charts/realtime/RealtimeBarChart"
 export type { RealtimeSwarmChartProps } from "./charts/realtime/RealtimeSwarmChart"
 export type { RealtimeWaterfallChartProps } from "./charts/realtime/RealtimeWaterfallChart"
-export type { RealtimeSankeyProps, RealtimeNetworkFrameProps, RealtimeNetworkFrameHandle } from "./realtime-network/types"
+export type { RealtimeSankeyProps, RealtimeNetworkFrameProps, RealtimeNetworkFrameHandle } from "./stream/networkTypes"
 
 // Export types
 export type {

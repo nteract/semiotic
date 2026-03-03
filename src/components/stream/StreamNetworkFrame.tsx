@@ -22,7 +22,7 @@ import type {
 import {
   DEFAULT_TENSION_CONFIG,
   DEFAULT_PARTICLE_STYLE
-} from "../realtime-network/types"
+} from "./networkTypes"
 import { NetworkPipelineStore } from "./NetworkPipelineStore"
 import {
   findNearestNetworkNode,

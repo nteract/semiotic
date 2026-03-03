@@ -1,6 +1,6 @@
-import type { ParticlePool } from "../../realtime-network/ParticlePool"
+import type { ParticlePool } from "../ParticlePool"
 import type { RealtimeEdge, ParticleStyle } from "../networkTypes"
-import { DEFAULT_PARTICLE_STYLE } from "../../realtime-network/types"
+import { DEFAULT_PARTICLE_STYLE } from "../networkTypes"
 
 /**
  * Canvas particle renderer for sankey — ported directly from realtime-network.

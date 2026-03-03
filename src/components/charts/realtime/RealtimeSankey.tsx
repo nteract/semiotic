@@ -4,10 +4,10 @@ import { useRef, useCallback, useImperativeHandle, forwardRef } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type {
   StreamNetworkFrameHandle,
-  EdgePush
+  EdgePush,
+  RealtimeSankeyProps,
+  RealtimeNetworkFrameHandle
 } from "../../stream/networkTypes"
-import type { RealtimeSankeyProps } from "../../realtime-network/types"
-import type { RealtimeNetworkFrameHandle } from "../../realtime-network/types"
 
 /**
  * RealtimeSankey — Simplified wrapper for streaming Sankey diagrams.

@@ -1,31 +1,162 @@
 import type { ReactNode } from "react"
-import type {
-  TensionConfig,
-  RealtimeNode,
-  RealtimeEdge,
-  EdgePush,
-  BezierCache,
-  BezierPoint,
-  Particle,
-  ParticleStyle,
-  RealtimeNetworkFrameHandle
-} from "../realtime-network/types"
 import type { HoverData, AnnotationContext } from "../realtime/types"
 import type { LegendGroup } from "../types/legendTypes"
 import type { Style } from "./types"
 
-// ── Re-export realtime-network types we reuse directly ───────────────────
+// ── Tension configuration ──────────────────────────────────────────────
 
-export type {
-  TensionConfig,
-  RealtimeNode,
-  RealtimeEdge,
-  EdgePush,
-  BezierCache,
-  BezierPoint,
-  Particle,
-  ParticleStyle,
-  HoverData
+export interface TensionConfig {
+  weightChange: number
+  newEdge: number
+  newNode: number
+  threshold: number
+  transitionDuration: number
+}
+
+export const DEFAULT_TENSION_CONFIG: TensionConfig = {
+  weightChange: 0.1,
+  newEdge: 0.5,
+  newNode: 1.0,
+  threshold: 3.0,
+  transitionDuration: 500
+}
+
+// ── Graph topology types ───────────────────────────────────────────────
+
+export interface RealtimeNode {
+  id: string
+  x0: number
+  x1: number
+  y0: number
+  y1: number
+  x: number
+  y: number
+  width: number
+  height: number
+  _prevX0?: number
+  _prevX1?: number
+  _prevY0?: number
+  _prevY1?: number
+  _targetX0?: number
+  _targetX1?: number
+  _targetY0?: number
+  _targetY1?: number
+  value: number
+  depth?: number
+  data?: Record<string, any>
+  createdByFrame?: boolean
+  sourceLinks?: RealtimeEdge[]
+  targetLinks?: RealtimeEdge[]
+}
+
+export interface RealtimeEdge {
+  source: RealtimeNode | string
+  target: RealtimeNode | string
+  value: number
+  y0: number
+  y1: number
+  sankeyWidth: number
+  _prevY0?: number
+  _prevY1?: number
+  _prevSankeyWidth?: number
+  _targetY0?: number
+  _targetY1?: number
+  _targetSankeyWidth?: number
+  direction?: string
+  circular?: boolean
+  circularPathData?: any
+  bezier?: BezierCache
+  data?: Record<string, any>
+}
+
+// ── Bezier cache ───────────────────────────────────────────────────────
+
+export interface BezierPoint {
+  x: number
+  y: number
+}
+
+export interface BezierCache {
+  circular: boolean
+  points?: [BezierPoint, BezierPoint, BezierPoint, BezierPoint]
+  segments?: Array<[BezierPoint, BezierPoint, BezierPoint, BezierPoint]>
+  halfWidth: number
+}
+
+// ── Particle system ────────────────────────────────────────────────────
+
+export interface Particle {
+  t: number
+  offset: number
+  edgeIndex: number
+  active: boolean
+  x: number
+  y: number
+}
+
+export interface ParticleStyle {
+  radius?: number
+  color?: string | ((edge: RealtimeEdge, node: RealtimeNode) => string)
+  opacity?: number
+  speedMultiplier?: number
+  maxPerEdge?: number
+  spawnRate?: number
+}
+
+export const DEFAULT_PARTICLE_STYLE: Required<
+  Pick<ParticleStyle, "radius" | "opacity" | "speedMultiplier" | "maxPerEdge" | "spawnRate">
+> = {
+  radius: 3,
+  opacity: 0.7,
+  speedMultiplier: 1,
+  maxPerEdge: 50,
+  spawnRate: 0.1
+}
+
+// ── Push API ───────────────────────────────────────────────────────────
+
+export interface EdgePush {
+  source: string
+  target: string
+  value: number
+}
+
+// ── Re-export HoverData ────────────────────────────────────────────────
+
+export type { HoverData }
+
+// ── Backwards-compat aliases for old RealtimeNetworkFrame types ────────
+
+export type RealtimeNetworkFrameHandle = StreamNetworkFrameHandle
+
+export interface RealtimeNetworkFrameProps {
+  initialEdges?: EdgePush[]
+  size?: [number, number]
+  margin?: { top?: number; right?: number; bottom?: number; left?: number }
+  orientation?: "horizontal" | "vertical"
+  nodeAlign?: "justify" | "left" | "right" | "center"
+  nodePaddingRatio?: number
+  nodeWidth?: number
+  tensionConfig?: Partial<TensionConfig>
+  showParticles?: boolean
+  particleStyle?: ParticleStyle
+  colorBy?: string | ((d: RealtimeNode) => string)
+  colorScheme?: string | string[]
+  edgeColorBy?: "source" | "target" | ((d: RealtimeEdge) => string)
+  edgeOpacity?: number
+  nodeLabel?: string | ((d: RealtimeNode) => string)
+  showLabels?: boolean
+  enableHover?: boolean
+  tooltipContent?: (d: { type: "node" | "edge"; data: any }) => ReactNode
+  onTopologyChange?: (nodes: RealtimeNode[], edges: RealtimeEdge[]) => void
+  background?: string
+  className?: string
+}
+
+export interface RealtimeSankeyProps extends Omit<RealtimeNetworkFrameProps, never> {
+  sourceAccessor?: string
+  targetAccessor?: string
+  valueAccessor?: string
 }
 
 // ── Chart types ────────────────────────────────────────────────────────

@@ -1,4 +1,4 @@
-import type { Particle, RealtimeEdge, BezierCache, BezierPoint } from "./types"
+import type { Particle, RealtimeEdge, BezierCache, BezierPoint } from "./networkTypes"
 
 /**
  * Object-pool particle manager for high-performance canvas rendering.

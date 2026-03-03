@@ -1,5 +1,5 @@
 import { interpolateNumber } from "d3-interpolate"
-import { ParticlePool } from "../realtime-network/ParticlePool"
+import { ParticlePool } from "./ParticlePool"
 import { getLayoutPlugin } from "./layouts"
 import type {
   NetworkChartType,
@@ -17,7 +17,7 @@ import type {
 import {
   DEFAULT_TENSION_CONFIG,
   DEFAULT_PARTICLE_STYLE
-} from "../realtime-network/types"
+} from "./networkTypes"
 
 const CURVATURE = 0.5
 
