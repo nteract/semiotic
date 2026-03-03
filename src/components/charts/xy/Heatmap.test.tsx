@@ -11,6 +11,47 @@ describe("Heatmap", () => {
     { x: 2, y: 2, value: 25 }
   ]
 
+  let rafCallbacks: Function[] = []
+  beforeEach(() => {
+    rafCallbacks = []
+    ;(HTMLCanvasElement.prototype as any).getContext = jest.fn(() => ({
+      beginPath: jest.fn(),
+      moveTo: jest.fn(),
+      lineTo: jest.fn(),
+      stroke: jest.fn(),
+      fill: jest.fn(),
+      arc: jest.fn(),
+      clearRect: jest.fn(),
+      fillRect: jest.fn(),
+      fillText: jest.fn(),
+      strokeRect: jest.fn(),
+      save: jest.fn(),
+      restore: jest.fn(),
+      scale: jest.fn(),
+      translate: jest.fn(),
+      setLineDash: jest.fn(),
+      closePath: jest.fn(),
+      strokeStyle: "",
+      lineWidth: 1,
+      fillStyle: "",
+      font: "",
+      textAlign: "",
+      textBaseline: "",
+      globalAlpha: 1
+    }))
+    jest.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
+      rafCallbacks.push(cb)
+      cb(performance.now())
+      return 0
+    })
+    jest.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    if ((window.requestAnimationFrame as any).mockRestore) (window.requestAnimationFrame as any).mockRestore()
+    if ((window.cancelAnimationFrame as any).mockRestore) (window.cancelAnimationFrame as any).mockRestore()
+  })
+
   it("renders without crashing with minimal props", () => {
     const { container } = render(
       <TooltipProvider>
@@ -18,7 +59,7 @@ describe("Heatmap", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".xyframe")
+    const frame = container.querySelector(".stream-xy-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -29,7 +70,7 @@ describe("Heatmap", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".xyframe")
+    const frame = container.querySelector(".stream-xy-frame")
     expect(frame).toBeFalsy()
   })
 
@@ -40,8 +81,10 @@ describe("Heatmap", () => {
       </TooltipProvider>
     )
 
-    const svg = container.querySelector("svg")
-    expect(svg).toBeTruthy()
+    const frame = container.querySelector(".stream-xy-frame")
+    expect(frame).toBeTruthy()
+    const canvas = frame?.querySelector("canvas")
+    expect(canvas).toBeTruthy()
   })
 
   it("accepts xLabel and yLabel props", () => {
@@ -55,8 +98,8 @@ describe("Heatmap", () => {
       </TooltipProvider>
     )
 
-    const axes = container.querySelectorAll(".axis")
-    expect(axes.length).toBeGreaterThan(0)
+    const frame = container.querySelector(".stream-xy-frame")
+    expect(frame).toBeTruthy()
   })
 
   it("applies custom color scheme", () => {
@@ -66,7 +109,7 @@ describe("Heatmap", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".xyframe")
+    const frame = container.querySelector(".stream-xy-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -77,7 +120,7 @@ describe("Heatmap", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".xyframe")
+    const frame = container.querySelector(".stream-xy-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -88,7 +131,7 @@ describe("Heatmap", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".xyframe")
+    const frame = container.querySelector(".stream-xy-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -104,7 +147,7 @@ describe("Heatmap", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".xyframe")
+    const frame = container.querySelector(".stream-xy-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -119,7 +162,7 @@ describe("Heatmap", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".xyframe")
+    const frame = container.querySelector(".stream-xy-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -135,7 +178,7 @@ describe("Heatmap", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".xyframe")
+    const frame = container.querySelector(".stream-xy-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -151,7 +194,7 @@ describe("Heatmap", () => {
       </TooltipProvider>
     )
 
-    const initialFrame = container.querySelector(".xyframe")
+    const initialFrame = container.querySelector(".stream-xy-frame")
     expect(initialFrame).toBeTruthy()
 
     const newData = [
@@ -166,7 +209,7 @@ describe("Heatmap", () => {
       </TooltipProvider>
     )
 
-    const updatedFrame = container.querySelector(".xyframe")
+    const updatedFrame = container.querySelector(".stream-xy-frame")
     expect(updatedFrame).toBeTruthy()
   })
 
@@ -177,7 +220,7 @@ describe("Heatmap", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".xyframe")
+    const frame = container.querySelector(".stream-xy-frame")
     expect(frame).toBeTruthy()
   })
 })

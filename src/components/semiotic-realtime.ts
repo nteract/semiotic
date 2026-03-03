@@ -4,6 +4,7 @@
  */
 
 import RealtimeFrame from "./realtime/RealtimeFrame"
+import StreamXYFrame from "./stream/StreamXYFrame"
 
 // Reusable data structures
 import { RingBuffer } from "./realtime/RingBuffer"
@@ -26,6 +27,7 @@ import RealtimeNetworkFrame from "./realtime-network/RealtimeNetworkFrame"
 
 export {
   RealtimeFrame,
+  StreamXYFrame,
   RingBuffer,
   IncrementalExtent,
   lineRenderer,

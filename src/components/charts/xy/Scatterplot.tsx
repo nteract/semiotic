@@ -1,8 +1,8 @@
 "use client"
 import * as React from "react"
 import { useMemo, useCallback } from "react"
-import XYFrame from "../../XYFrame"
-import type { XYFrameProps } from "../../types/xyTypes"
+import StreamXYFrame from "../../stream/StreamXYFrame"
+import type { StreamXYFrameProps } from "../../stream/types"
 import { getColor, getSize } from "../shared/colorUtils"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
@@ -46,7 +46,7 @@ export interface ScatterplotProps<TDatum extends Record<string, any> = Record<st
   /** Tooltip configuration */
   tooltip?: TooltipProp
   /** Additional XYFrame props for advanced customization */
-  frameProps?: Partial<Omit<XYFrameProps, "points" | "size">>
+  frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size">>
 }
 
 /**
@@ -145,21 +145,6 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
     [basePointStyle, activeSelectionHook, selection]
   )
 
-  const axes = useMemo((): Array<Record<string, unknown>> => [
-    {
-      orient: "left",
-      label: yLabel,
-      tickFormat: yFormat,
-      ...(showGrid && { tickLineGenerator: () => null })
-    },
-    {
-      orient: "bottom",
-      label: xLabel,
-      tickFormat: xFormat,
-      ...(showGrid && { tickLineGenerator: () => null })
-    }
-  ], [xLabel, yLabel, xFormat, yFormat, showGrid])
-
   const shouldShowLegend = showLegend !== undefined ? showLegend : !!colorBy
 
   const legend = useMemo(() => {
@@ -195,25 +180,33 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
   })
   if (error) return <ChartError componentName="Scatterplot" message={error} width={width} height={height} />
 
-  const xyFrameProps: XYFrameProps = {
-    size: [width, height],
-    points: safeData,
+  const streamProps: StreamXYFrameProps = {
+    chartType: "scatter",
+    data: safeData,
     xAccessor,
     yAccessor,
+    colorAccessor: colorBy || undefined,
+    sizeAccessor: sizeBy || undefined,
+    sizeRange,
     pointStyle,
-    axes: axes as any,
-    hoverAnnotation: enableHover,
+    colorScheme,
+    size: [width, height],
     margin,
-    ...(legend && { legend }),
-    ...(className && { className }),
+    showAxes: true,
+    xLabel,
+    yLabel,
+    xFormat,
+    yFormat,
+    enableHover,
+    showGrid,
+    ...(legend && { legend: legend as any }),
     ...(title && { title }),
-    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
+    ...(className && { className }),
+    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as any }),
     ...(linkedHover && { customHoverBehavior }),
-    ...(linkedBrush && { interaction: brushHook.brushInteraction }),
-    transition: true,
     ...frameProps
   }
 
-  return <XYFrame {...xyFrameProps} />
+  return <StreamXYFrame {...streamProps} />
 }
 Scatterplot.displayName = "Scatterplot"

@@ -4,6 +4,7 @@
  */
 
 import XYFrame from "./XYFrame"
+import StreamXYFrame from "./stream/StreamXYFrame"
 import MinimapXYFrame from "./MinimapXYFrame"
 import { ResponsiveXYFrame } from "./ResponsiveXYFrame"
 import { SparkXYFrame } from "./SparkXYFrame"
@@ -25,6 +26,7 @@ import { hexbinning, heatmapping } from "./svg/areaDrawing"
 // Export components
 export {
   XYFrame,
+  StreamXYFrame,
   MinimapXYFrame,
   ResponsiveXYFrame,
   SparkXYFrame,

@@ -1,8 +1,8 @@
 "use client"
 import * as React from "react"
 import { useMemo, useCallback } from "react"
-import XYFrame from "../../XYFrame"
-import type { XYFrameProps } from "../../types/xyTypes"
+import StreamXYFrame from "../../stream/StreamXYFrame"
+import type { StreamXYFrameProps } from "../../stream/types"
 import { getColor, getSize } from "../shared/colorUtils"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
@@ -118,7 +118,7 @@ export interface BubbleChartProps<TDatum extends Record<string, any> = Record<st
    * For full control, consider using XYFrame directly
    * @see https://semiotic.nteract.io/guides/xy-frame
    */
-  frameProps?: Partial<Omit<XYFrameProps, "points" | "size">>
+  frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size">>
 }
 
 /**
@@ -284,29 +284,6 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
     [basePointStyle, activeSelectionHook, selection]
   )
 
-  // Build axes configuration
-  const axes = useMemo(() => {
-    const axesConfig: Array<Record<string, unknown>> = []
-
-    // Y axis (left)
-    axesConfig.push({
-      orient: "left",
-      label: yLabel,
-      tickFormat: yFormat,
-      ...(showGrid && { tickLineGenerator: () => null })
-    })
-
-    // X axis (bottom)
-    axesConfig.push({
-      orient: "bottom",
-      label: xLabel,
-      tickFormat: xFormat,
-      ...(showGrid && { tickLineGenerator: () => null })
-    })
-
-    return axesConfig
-  }, [xLabel, yLabel, xFormat, yFormat, showGrid])
-
   // Determine if we should show legend
   const shouldShowLegend = showLegend !== undefined ? showLegend : !!colorBy
 
@@ -360,28 +337,34 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
   })
   if (error) return <ChartError componentName="BubbleChart" message={error} width={width} height={height} />
 
-  // Build XYFrame props
-  const xyFrameProps: XYFrameProps = {
-    size: [width, height],
-    points: safeData,
+  // Build StreamXYFrame props
+  const streamProps: StreamXYFrameProps = {
+    chartType: "bubble",
+    data: safeData,
     xAccessor,
     yAccessor,
+    colorAccessor: colorBy || undefined,
+    sizeAccessor: sizeBy,
+    sizeRange,
     pointStyle,
-    axes: axes as any,
-    hoverAnnotation: enableHover,
+    colorScheme,
+    size: [width, height],
     margin,
-    ...(legend && { legend }),
-    ...(className && { className }),
+    showAxes: true,
+    xLabel,
+    yLabel,
+    xFormat,
+    yFormat,
+    enableHover,
+    showGrid,
+    ...(legend && { legend: legend as any }),
     ...(title && { title }),
-    // Add tooltip support
-    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
+    ...(className && { className }),
+    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as any }),
     ...(linkedHover && { customHoverBehavior }),
-    ...(linkedBrush && { interaction: brushHook.brushInteraction }),
-    // Allow frameProps to override defaults
-    transition: true,
     ...frameProps
   }
 
-  return <XYFrame {...xyFrameProps} />
+  return <StreamXYFrame {...streamProps} />
 }
 BubbleChart.displayName = "BubbleChart"

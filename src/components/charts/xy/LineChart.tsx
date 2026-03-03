@@ -1,20 +1,8 @@
 "use client"
 import * as React from "react"
 import { useMemo, useCallback } from "react"
-import {
-  curveLinear,
-  curveMonotoneX,
-  curveMonotoneY,
-  curveStep,
-  curveStepAfter,
-  curveStepBefore,
-  curveBasis,
-  curveCardinal,
-  curveCatmullRom
-} from "d3-shape"
-import XYFrame from "../../XYFrame"
-import type { XYFrameProps } from "../../types/xyTypes"
-import type { LineTypeSettings } from "../../types/generalTypes"
+import StreamXYFrame from "../../stream/StreamXYFrame"
+import type { StreamXYFrameProps } from "../../stream/types"
 import { getColor } from "../shared/colorUtils"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
@@ -25,19 +13,6 @@ import { validateArrayData } from "../shared/validateChartData"
 import { normalizeLinkedHover, wrapStyleWithSelection } from "../shared/selectionUtils"
 import { useSelection } from "../../store/useSelection"
 import { useLinkedHover } from "../../store/useSelection"
-
-/** Map of curve name strings to d3-shape curve functions */
-const CURVE_MAP = {
-  linear: curveLinear,
-  monotoneX: curveMonotoneX,
-  monotoneY: curveMonotoneY,
-  step: curveStep,
-  stepAfter: curveStepAfter,
-  stepBefore: curveStepBefore,
-  basis: curveBasis,
-  cardinal: curveCardinal,
-  catmullRom: curveCatmullRom
-} as const
 
 /**
  * LineChart component props
@@ -168,7 +143,7 @@ export interface LineChartProps<TDatum extends Record<string, any> = Record<stri
    * For full control, consider using XYFrame directly
    * @see https://semiotic.nteract.io/guides/xy-frame
    */
-  frameProps?: Partial<Omit<XYFrameProps, "lines" | "size">>
+  frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size">>
 }
 
 /**
@@ -335,9 +310,6 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
   // Create color scale if colorBy is specified
   const colorScale = useColorScale(safeData, colorBy, colorScheme)
 
-  // Curve function from module-level map
-  const curveFunction = CURVE_MAP[curve] || curveLinear
-
   // Line style function
   const baseLineStyle = useMemo(() => {
     return (d: Record<string, any>) => {
@@ -388,42 +360,8 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     }
   }, [showPoints, pointRadius, colorBy, colorScale])
 
-  // Build axes configuration
-  const axes = useMemo(() => {
-    const axesConfig: Array<Record<string, unknown>> = []
-
-    // Y axis (left)
-    axesConfig.push({
-      orient: "left",
-      label: yLabel,
-      tickFormat: yFormat,
-      ...(showGrid && { tickLineGenerator: () => null })
-    })
-
-    // X axis (bottom)
-    axesConfig.push({
-      orient: "bottom",
-      label: xLabel,
-      tickFormat: xFormat,
-      ...(showGrid && { tickLineGenerator: () => null })
-    })
-
-    return axesConfig
-  }, [xLabel, yLabel, xFormat, yFormat, showGrid])
-
-  // Determine line type
-  const lineType = useMemo(() => {
-    const lineTypeConfig: LineTypeSettings = {
-      type: fillArea ? "area" : "line",
-      interpolator: curveFunction
-    }
-
-    if (fillArea) {
-      lineTypeConfig.simpleLine = false
-    }
-
-    return lineTypeConfig
-  }, [fillArea, curveFunction])
+  // Determine chart type for StreamXYFrame
+  const chartType = fillArea ? "area" as const : "line" as const
 
   // Determine if we should show legend
   const shouldShowLegend = showLegend !== undefined ? showLegend : lineData.length > 1
@@ -475,33 +413,49 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
   })
   if (error) return <ChartError componentName="LineChart" message={error} width={width} height={height} />
 
-  // Build XYFrame props
-  const xyFrameProps: XYFrameProps = {
-    size: [width, height],
-    lines: lineData,
+  // Flatten line data into a single array for StreamXYFrame
+  const flattenedData = useMemo(() => {
+    if (isLineObjectFormat || lineBy) {
+      // Already grouped into line objects — flatten coordinates out
+      return lineData.flatMap((line: Record<string, any>) => {
+        const coords = line[lineDataAccessor] || []
+        // Carry grouping field onto each datum
+        if (lineBy && typeof lineBy === "string") {
+          return coords.map((c: Record<string, any>) => ({ ...c, [lineBy]: line[lineBy] }))
+        }
+        return coords
+      })
+    }
+    return safeData
+  }, [lineData, lineDataAccessor, isLineObjectFormat, lineBy, safeData])
+
+  // Build StreamXYFrame props
+  const streamProps: StreamXYFrameProps = {
+    chartType,
+    data: flattenedData,
     xAccessor,
     yAccessor,
-    lineDataAccessor,
-    lineType,
+    groupAccessor: lineBy || undefined,
+    curve,
     lineStyle,
-    axes: axes as any,
-    hoverAnnotation: enableHover,
+    ...(showPoints && { pointStyle }),
+    size: [width, height],
     margin,
-    ...(showPoints && {
-      showLinePoints: true,
-      pointStyle
-    }),
-    ...(legend && { legend }),
-    ...(className && { className }),
+    showAxes: true,
+    xLabel,
+    yLabel,
+    xFormat,
+    yFormat,
+    enableHover,
+    showGrid,
+    ...(legend && { legend: legend as any }),
     ...(title && { title }),
-    // Add tooltip support
-    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
+    ...(className && { className }),
+    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as any }),
     ...(linkedHover && { customHoverBehavior }),
-    // Allow frameProps to override defaults
-    transition: true,
     ...frameProps
   }
 
-  return <XYFrame {...xyFrameProps} />
+  return <StreamXYFrame {...streamProps} />
 }
 LineChart.displayName = "LineChart"

@@ -1,15 +1,16 @@
 import * as React from "react"
 import { useRef, useImperativeHandle, forwardRef, useCallback } from "react"
-import RealtimeFrame from "../../realtime/RealtimeFrame"
+import StreamXYFrame from "../../stream/StreamXYFrame"
 import type {
   ArrowOfTime,
   WindowMode,
   BarStyle,
   HoverAnnotationConfig,
   HoverData,
-  RealtimeFrameHandle,
-  AnnotationContext
-} from "../../realtime/types"
+  AnnotationContext,
+  StreamXYFrameHandle
+} from "../../stream/types"
+import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { ReactNode } from "react"
 import { normalizeLinkedHover } from "../shared/selectionUtils"
 import { useLinkedHover } from "../../store/useSelection"
@@ -84,8 +85,8 @@ export interface RealtimeBarChartProps {
 /**
  * RealtimeBarChart - Simplified wrapper for streaming temporal histograms.
  *
- * Wraps RealtimeFrame with `chartType="bar"` and exposes bar styling as
- * top-level props. Supports both simple and stacked (categorical) modes.
+ * Wraps StreamXYFrame with `chartType="bar"` and `runtimeMode="streaming"`,
+ * exposing bar styling as top-level props. Supports both simple and stacked (categorical) modes.
  *
  * Edge bins that only partially fall within the visible time window are
  * rendered at proportionally narrower widths (Datadog-style).
@@ -144,7 +145,7 @@ export const RealtimeBarChart = forwardRef<RealtimeFrameHandle, RealtimeBarChart
       linkedHover
     } = props
 
-    const frameRef = useRef<RealtimeFrameHandle>(null)
+    const frameRef = useRef<StreamXYFrameHandle>(null)
 
     // ── Linked hover hooks (always called, conditional logic inside) ──
     const hoverConfig = normalizeLinkedHover(linkedHover)
@@ -177,9 +178,10 @@ export const RealtimeBarChart = forwardRef<RealtimeFrameHandle, RealtimeBarChart
     if (gap != null) barStyle.gap = gap
 
     return (
-      <RealtimeFrame
+      <StreamXYFrame
         ref={frameRef}
         chartType="bar"
+        runtimeMode="streaming"
         size={size}
         margin={margin}
         className={className}
@@ -189,8 +191,8 @@ export const RealtimeBarChart = forwardRef<RealtimeFrameHandle, RealtimeBarChart
         data={data}
         timeAccessor={timeAccessor}
         valueAccessor={valueAccessor}
-        timeExtent={timeExtent}
-        valueExtent={valueExtent}
+        xExtent={timeExtent}
+        yExtent={valueExtent}
         extentPadding={extentPadding}
         binSize={binSize}
         categoryAccessor={categoryAccessor}

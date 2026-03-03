@@ -44,6 +44,9 @@ import { ChartErrorBoundary } from "./ChartErrorBoundary"
 // Tooltip utilities
 import { Tooltip, MultiLineTooltip, normalizeTooltip } from "./Tooltip/Tooltip"
 
+// StreamXYFrame (unified canvas-first XY frame)
+import StreamXYFrame from "./stream/StreamXYFrame"
+
 // Realtime
 import RealtimeFrame from "./realtime/RealtimeFrame"
 import { RingBuffer } from "./realtime/RingBuffer"
@@ -120,6 +123,8 @@ export {
   Tooltip,
   MultiLineTooltip,
   normalizeTooltip,
+  // StreamXYFrame
+  StreamXYFrame,
   // Realtime
   RealtimeFrame,
   RingBuffer,
@@ -323,6 +328,22 @@ export type {
 } from "./realtime/types"
 
 export type { RendererFn, RendererOptions } from "./realtime/renderers/types"
+
+// StreamXYFrame types
+export type {
+  StreamXYFrameProps,
+  StreamXYFrameHandle,
+  StreamChartType,
+  RuntimeMode,
+  SceneNode,
+  Changeset,
+  StreamScales,
+  StreamLayout,
+  CurveType,
+  CanvasRendererFn
+} from "./stream/types"
+
+export type { StreamRendererFn } from "./stream/renderers/types"
 
 // Realtime chart component types
 export type { RealtimeLineChartProps } from "./charts/realtime/RealtimeLineChart"

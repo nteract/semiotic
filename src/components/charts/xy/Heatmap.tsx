@@ -3,8 +3,8 @@ import * as React from "react"
 import { useMemo, useCallback } from "react"
 import { scaleSequential } from "d3-scale"
 import { interpolateBlues, interpolateReds, interpolateGreens, interpolateViridis } from "d3-scale-chromatic"
-import XYFrame from "../../XYFrame"
-import type { XYFrameProps } from "../../types/xyTypes"
+import StreamXYFrame from "../../stream/StreamXYFrame"
+import type { StreamXYFrameProps } from "../../stream/types"
 import { DEFAULT_COLOR, resolveAccessor } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -119,7 +119,7 @@ export interface HeatmapProps<TDatum extends Record<string, any> = Record<string
    * For full control, consider using XYFrame directly
    * @see https://semiotic.nteract.io/guides/xy-frame
    */
-  frameProps?: Partial<Omit<XYFrameProps, "summaries" | "size">>
+  frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size">>
 }
 
 /**
@@ -315,27 +315,6 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
     }
   }, [showValues, getValueFn, valueFormat, valueDomain])
 
-  // Build axes configuration
-  const axes = useMemo(() => {
-    const axesConfig: Array<Record<string, unknown>> = []
-
-    // Y axis (left)
-    axesConfig.push({
-      orient: "left",
-      label: yLabel,
-      tickFormat: yFormat
-    })
-
-    // X axis (bottom)
-    axesConfig.push({
-      orient: "bottom",
-      label: xLabel,
-      tickFormat: xFormat
-    })
-
-    return axesConfig
-  }, [xLabel, yLabel, xFormat, yFormat])
-
   // ── Hover behavior ─────────────────────────────────────────────────────
 
   const customHoverBehavior = useCallback(
@@ -359,37 +338,28 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
   })
   if (error) return <ChartError componentName="Heatmap" message={error} width={width} height={height} />
 
-  // Build XYFrame props
-  const xyFrameProps: XYFrameProps = {
-    size: [width, height],
-    summaries: summaryData,
+  // Build StreamXYFrame props
+  const streamProps: StreamXYFrameProps = {
+    chartType: "heatmap",
+    data: safeData,
     xAccessor,
     yAccessor,
-    summaryType: {
-      type: "heatmap",
-      xBins: xBinCount,
-      yBins: yBinCount,
-      binValue: (items: Array<Record<string, any>>) => {
-        if (items.length === 0) return 0
-        const sum = items.reduce((acc, item) => acc + getValueFn(item), 0)
-        return sum / items.length
-      }
-    },
-    summaryStyle,
-    axes: axes as any,
-    hoverAnnotation: enableHover,
+    valueAccessor,
+    size: [width, height],
     margin,
-    ...(summaryRenderMode && { summaryRenderMode }),
-    ...(className && { className }),
+    showAxes: true,
+    xLabel,
+    yLabel,
+    xFormat,
+    yFormat,
+    enableHover,
     ...(title && { title }),
-    // Add tooltip support
-    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
+    ...(className && { className }),
+    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as any }),
     ...(linkedHover && { customHoverBehavior }),
-    // Allow frameProps to override defaults
-    transition: true,
     ...frameProps
   }
 
-  return <XYFrame {...xyFrameProps} />
+  return <StreamXYFrame {...streamProps} />
 }
 Heatmap.displayName = "Heatmap"
