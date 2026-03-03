@@ -423,6 +423,9 @@ export default function DocsApp() {
               <Route path="bubble-chart" element={<BubbleChartPage />} />
               <Route path="heatmap" element={<HeatmapPage />} />
               <Route path="scatterplot-matrix" element={<ScatterplotMatrixPage />} />
+              <Route path="realtime-line-chart" element={<RealtimeLineChartPage />} />
+              <Route path="realtime-swarm-chart" element={<RealtimeSwarmChartPage />} />
+              <Route path="realtime-waterfall-chart" element={<RealtimeWaterfallChartPage />} />
               {/* Categorical Charts */}
               <Route path="bar-chart" element={<BarChartPage />} />
               <Route path="stacked-bar-chart" element={<StackedBarChartPage />} />
@@ -434,6 +437,7 @@ export default function DocsApp() {
               <Route path="pie-chart" element={<PieChartPage />} />
               <Route path="donut-chart" element={<DonutChartPage />} />
               <Route path="grouped-bar-chart" element={<GroupedBarChartPage />} />
+              <Route path="realtime-bar-chart" element={<RealtimeBarChartPage />} />
               {/* Network Charts */}
               <Route path="force-directed-graph" element={<ForceDirectedGraphPage />} />
               <Route path="chord-diagram" element={<ChordDiagramPage />} />
@@ -441,11 +445,6 @@ export default function DocsApp() {
               <Route path="tree-diagram" element={<TreeDiagramPage />} />
               <Route path="treemap" element={<TreemapPage />} />
               <Route path="circle-pack" element={<CirclePackPage />} />
-              {/* Realtime Charts */}
-              <Route path="realtime-line-chart" element={<RealtimeLineChartPage />} />
-              <Route path="realtime-bar-chart" element={<RealtimeBarChartPage />} />
-              <Route path="realtime-swarm-chart" element={<RealtimeSwarmChartPage />} />
-              <Route path="realtime-waterfall-chart" element={<RealtimeWaterfallChartPage />} />
               <Route path="realtime-sankey" element={<RealtimeSankeyPage />} />
             </Route>
           </Routes>

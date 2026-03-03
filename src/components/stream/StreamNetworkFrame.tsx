@@ -89,6 +89,49 @@ function DefaultNetworkTooltip({
   }
 
   const node = data.data
+
+  // Hierarchy nodes have a __hierarchyNode with a .parent chain.
+  // Show ancestor breadcrumb: grandparent → parent → **node**
+  const hNode = node?.__hierarchyNode
+  if (hNode) {
+    const ancestors: string[] = []
+    let cur = hNode
+    while (cur) {
+      const name = cur.data?.name ?? cur.data?.id ?? node.id
+      if (name != null) ancestors.unshift(String(name))
+      cur = cur.parent
+    }
+    // Drop root (first entry) from the breadcrumb — it's usually unnamed
+    if (ancestors.length > 1) ancestors.shift()
+
+    const last = ancestors.length - 1
+    return (
+      <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+        <div>
+          {ancestors.map((name, i) => (
+            <span key={i}>
+              {i > 0 && (
+                <span style={{ margin: "0 3px", opacity: 0.5 }}>{" → "}</span>
+              )}
+              {i === last ? (
+                <strong>{name}</strong>
+              ) : (
+                <span style={{ opacity: 0.7 }}>{name}</span>
+              )}
+            </span>
+          ))}
+        </div>
+        {node.value != null && node.value > 0 && (
+          <div style={{ marginTop: 4, opacity: 0.8 }}>
+            {typeof node.value === "number"
+              ? node.value.toLocaleString()
+              : String(node.value)}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="semiotic-tooltip" style={defaultTooltipStyle}>
       <div style={{ fontWeight: 600 }}>{node.id}</div>

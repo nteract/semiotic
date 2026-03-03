@@ -88,7 +88,7 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
       if (colorByDepth) {
         baseStyle.fill = DEPTH_PASTELS[(d.depth || 0) % DEPTH_PASTELS.length]
       } else if (colorBy) {
-        baseStyle.fill = getColor(d, colorBy as string | ((d: any) => string), colorScale)
+        baseStyle.fill = getColor(d.data || d, colorBy as string | ((d: any) => string), colorScale)
       } else {
         baseStyle.fill = DEFAULT_COLOR
       }

@@ -76,12 +76,12 @@ export function ForceDirectedGraph<TNode extends Record<string, any> = Record<st
 
   const colorScale = useColorScale(safeNodes, colorBy, colorScheme)
 
-  // Node style function
+  // Node style function — d is a RealtimeNode, user data on d.data
   const nodeStyle = useMemo(() => {
     return (d: Record<string, any>) => {
       const baseStyle: Record<string, string | number> = {}
       if (colorBy) {
-        baseStyle.fill = getColor(d, colorBy, colorScale)
+        baseStyle.fill = getColor(d.data || d, colorBy, colorScale)
       } else {
         baseStyle.fill = DEFAULT_COLOR
       }

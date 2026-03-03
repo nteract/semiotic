@@ -81,13 +81,14 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
     return createColorScale(allNodes, colorBy as string, colorScheme)
   }, [allNodes, colorBy, colorByDepth, colorScheme])
 
+  // d is a RealtimeNode — user data on d.data, depth on d.depth
   const nodeStyleFn = useMemo(() => {
     return (d: Record<string, any>) => {
       const baseStyle: Record<string, string | number> = { stroke: "black", strokeWidth: 1 }
       if (colorByDepth) {
         baseStyle.fill = getColor({ depth: d.depth || 0 }, "depth", colorScale)
       } else if (colorBy) {
-        baseStyle.fill = getColor(d, colorBy as string | ((d: any) => string), colorScale)
+        baseStyle.fill = getColor(d.data || d, colorBy as string | ((d: any) => string), colorScale)
       } else {
         baseStyle.fill = DEFAULT_COLOR
       }

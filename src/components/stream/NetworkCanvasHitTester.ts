@@ -27,13 +27,24 @@ export function findNearestNetworkNode(
   py: number,
   maxDistance = 30
 ): NetworkHitResult | null {
-  // Check nodes first
+  // Check nodes — for nested rects (treemap) we want the smallest
+  // containing rect, so we track rect hits by area separately.
   let bestNode: NetworkHitResult | null = null
   let bestDist = maxDistance
+  let bestRectArea = Infinity
 
   for (const node of sceneNodes) {
     const result = hitTestNode(node, px, py)
-    if (result && result.distance < bestDist) {
+    if (!result) continue
+
+    if (node.type === "rect") {
+      // For rects: prefer the smallest area (deepest cell)
+      const area = (node as NetworkRectNode).w * (node as NetworkRectNode).h
+      if (area < bestRectArea) {
+        bestNode = result
+        bestRectArea = area
+      }
+    } else if (result.distance < bestDist) {
       bestNode = result
       bestDist = result.distance
     }

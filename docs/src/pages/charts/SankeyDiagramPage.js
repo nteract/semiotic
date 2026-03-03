@@ -146,6 +146,32 @@ export default function SankeyDiagramPage() {
         hiddenProps={{}}
       />
 
+      <h3 id="streaming">Streaming</h3>
+      <p>
+        SankeyDiagram also supports streaming data via the{" "}
+        <Link to="/charts/realtime-sankey">RealtimeSankey</Link> wrapper.
+        Push edges imperatively and watch the topology grow with animated
+        particles.
+      </p>
+
+      <CodeBlock
+        code={`import { RealtimeSankey } from "semiotic"
+
+const chartRef = useRef()
+
+// Push edges at any frequency
+chartRef.current.push({ source: "Budget", target: "Rent", value: 2000 })
+chartRef.current.push({ source: "Budget", target: "Food", value: 800 })
+
+<RealtimeSankey
+  ref={chartRef}
+  size={[800, 400]}
+  showParticles
+  edgeOpacity={0.4}
+/>`}
+        language="jsx"
+      />
+
       {/* ----------------------------------------------------------------- */}
       {/* Examples */}
       {/* ----------------------------------------------------------------- */}

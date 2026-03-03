@@ -100,6 +100,7 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
   const colorScale = useColorScale(inferredNodes, colorBy, colorScheme)
 
   // Node style function
+  // d is a RealtimeNode — user data lives on d.data
   const nodeStyle = useMemo(() => {
     return (d: Record<string, any>) => {
       const baseStyle: Record<string, string | number> = {
@@ -108,7 +109,7 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
       }
 
       if (colorBy) {
-        baseStyle.fill = getColor(d, colorBy, colorScale)
+        baseStyle.fill = getColor(d.data || d, colorBy, colorScale)
       } else {
         baseStyle.fill = "#4d430c"
       }
@@ -118,6 +119,7 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
   }, [colorBy, colorScale])
 
   // Edge style function
+  // d is a RealtimeEdge — d.source/d.target are RealtimeNode objects
   const edgeStyle = useMemo(() => {
     return (d: Record<string, any>) => {
       const baseStyle: Record<string, string | number> = {
@@ -129,16 +131,18 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
       if (typeof edgeColorBy === "function") {
         baseStyle.fill = edgeColorBy(d)
       } else if (edgeColorBy === "source") {
-        if (colorBy && d.source) {
-          baseStyle.fill = getColor(d.source, colorBy, colorScale)
-        } else if (d.source) {
-          baseStyle.fill = nodeStyle(d.source).fill
+        const src = typeof d.source === "object" ? d.source : null
+        if (colorBy && src) {
+          baseStyle.fill = getColor(src.data || src, colorBy, colorScale)
+        } else if (src) {
+          baseStyle.fill = nodeStyle(src).fill
         }
       } else if (edgeColorBy === "target") {
-        if (colorBy && d.target) {
-          baseStyle.fill = getColor(d.target, colorBy, colorScale)
-        } else if (d.target) {
-          baseStyle.fill = nodeStyle(d.target).fill
+        const tgt = typeof d.target === "object" ? d.target : null
+        if (colorBy && tgt) {
+          baseStyle.fill = getColor(tgt.data || tgt, colorBy, colorScale)
+        } else if (tgt) {
+          baseStyle.fill = nodeStyle(tgt).fill
         }
       } else if (edgeColorBy === "gradient") {
         baseStyle.fill = "#999"

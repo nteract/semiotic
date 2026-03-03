@@ -176,12 +176,16 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
     }
 
     // ── Build ribbon edges ───────────────────────────────────────────
+    // d3-chord ribbon paths are centered at (0,0). Offset every
+    // coordinate by (cx, cy) so they align with the arc nodes.
     for (const edge of edges) {
       const chordData = (edge as any).chordData
       if (!chordData) continue
 
-      const pathD = ribbonGenerator(chordData)
-      if (!pathD) continue
+      const rawPath = ribbonGenerator(chordData)
+      if (!rawPath) continue
+
+      const pathD = translateSvgPath(rawPath, cx, cy)
 
       const userStyle = edgeStyleFn(edge)
       const style: Style = {
@@ -253,4 +257,99 @@ function resolveValueAccessor(
   if (!valueAccessor) return (d: any) => d.value ?? 1
   if (typeof valueAccessor === "function") return valueAccessor
   return (d: any) => d[valueAccessor] ?? 1
+}
+
+/**
+ * Translate all absolute coordinates in an SVG path string by (dx, dy).
+ *
+ * d3-chord ribbon() produces paths using only M, C, Q, L, A, and Z commands
+ * with absolute coordinates. We parse the numeric values and offset the
+ * positional ones. For arc (A) commands the positional values are the last
+ * two numbers in each 7-parameter group.
+ */
+function translateSvgPath(d: string, dx: number, dy: number): string {
+  // Tokenize: split into command letters and number tokens
+  const tokens = d.match(/[a-zA-Z]|[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?/g)
+  if (!tokens) return d
+
+  const out: string[] = []
+  let i = 0
+
+  while (i < tokens.length) {
+    const cmd = tokens[i]
+
+    if (cmd === "M" || cmd === "L") {
+      out.push(cmd)
+      i++
+      // Pairs of (x, y) follow
+      while (i < tokens.length && !isNaN(Number(tokens[i]))) {
+        out.push(String(Number(tokens[i]) + dx))
+        i++
+        if (i < tokens.length && !isNaN(Number(tokens[i]))) {
+          out.push(String(Number(tokens[i]) + dy))
+          i++
+        }
+      }
+    } else if (cmd === "C") {
+      out.push(cmd)
+      i++
+      // Triplets of (x,y) control points
+      while (i < tokens.length && !isNaN(Number(tokens[i]))) {
+        for (let p = 0; p < 3 && i < tokens.length; p++) {
+          if (isNaN(Number(tokens[i]))) break
+          out.push(String(Number(tokens[i]) + dx))
+          i++
+          if (i < tokens.length && !isNaN(Number(tokens[i]))) {
+            out.push(String(Number(tokens[i]) + dy))
+            i++
+          }
+        }
+      }
+    } else if (cmd === "Q") {
+      out.push(cmd)
+      i++
+      // Pairs of (x,y) — 2 pairs per Q
+      while (i < tokens.length && !isNaN(Number(tokens[i]))) {
+        for (let p = 0; p < 2 && i < tokens.length; p++) {
+          if (isNaN(Number(tokens[i]))) break
+          out.push(String(Number(tokens[i]) + dx))
+          i++
+          if (i < tokens.length && !isNaN(Number(tokens[i]))) {
+            out.push(String(Number(tokens[i]) + dy))
+            i++
+          }
+        }
+      }
+    } else if (cmd === "A") {
+      out.push(cmd)
+      i++
+      // Arc: rx ry x-rotation large-arc-flag sweep-flag x y
+      while (i < tokens.length && !isNaN(Number(tokens[i]))) {
+        // rx, ry — no offset
+        out.push(tokens[i++])
+        if (i < tokens.length) out.push(tokens[i++]) // ry
+        if (i < tokens.length) out.push(tokens[i++]) // x-rotation
+        if (i < tokens.length) out.push(tokens[i++]) // large-arc-flag
+        if (i < tokens.length) out.push(tokens[i++]) // sweep-flag
+        // x, y — offset
+        if (i < tokens.length) {
+          out.push(String(Number(tokens[i]) + dx))
+          i++
+        }
+        if (i < tokens.length) {
+          out.push(String(Number(tokens[i]) + dy))
+          i++
+        }
+      }
+    } else if (cmd === "Z" || cmd === "z") {
+      out.push(cmd)
+      i++
+    } else {
+      // Unknown or lowercase relative command — pass through
+      out.push(tokens[i])
+      i++
+    }
+  }
+
+  return out.join(" ")
 }

@@ -143,6 +143,32 @@ export default function ChordDiagramPage() {
         hiddenProps={{}}
       />
 
+      <h3 id="streaming">Streaming</h3>
+      <p>
+        Use <code>StreamNetworkFrame</code> directly for streaming chord
+        diagrams. Push edges via ref and the chord layout recomputes
+        automatically.
+      </p>
+
+      <CodeBlock
+        code={`import { StreamNetworkFrame } from "semiotic"
+
+const chartRef = useRef()
+
+// Push edges to grow relationships
+chartRef.current.push({ source: "US", target: "EU", value: 500 })
+chartRef.current.push({ source: "EU", target: "Asia", value: 300 })
+
+<StreamNetworkFrame
+  ref={chartRef}
+  chartType="chord"
+  size={[600, 600]}
+  enableHover
+  showLabels
+/>`}
+        language="jsx"
+      />
+
       {/* ----------------------------------------------------------------- */}
       {/* Examples */}
       {/* ----------------------------------------------------------------- */}

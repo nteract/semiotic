@@ -151,6 +151,31 @@ export default function ForceDirectedGraphPage() {
         hiddenProps={{}}
       />
 
+      <h3 id="streaming">Streaming</h3>
+      <p>
+        Use <code>StreamNetworkFrame</code> directly for streaming
+        force-directed graphs. Push nodes and edges via ref and the layout
+        updates automatically.
+      </p>
+
+      <CodeBlock
+        code={`import { StreamNetworkFrame } from "semiotic"
+
+const chartRef = useRef()
+
+// Push edges to grow the network
+chartRef.current.push({ source: "Alice", target: "Bob", value: 1 })
+chartRef.current.push({ source: "Bob", target: "Carol", value: 1 })
+
+<StreamNetworkFrame
+  ref={chartRef}
+  chartType="force"
+  size={[600, 600]}
+  enableHover
+/>`}
+        language="jsx"
+      />
+
       {/* ----------------------------------------------------------------- */}
       {/* Examples */}
       {/* ----------------------------------------------------------------- */}

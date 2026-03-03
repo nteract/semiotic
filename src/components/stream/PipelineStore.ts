@@ -531,6 +531,26 @@ export class PipelineStore {
     const bins = computeBins(data, this.getX, this.getY, this.config.binSize, this.getCategory)
     if (bins.size === 0) return []
 
+    // Establish a global category order that is stable across frames.
+    // Use barColors keys first (preserves user-specified order), then any
+    // additional categories sorted alphabetically.  This prevents flicker
+    // when bins partially exit the sliding window and their per-category
+    // values shrink/disappear — without a fixed order the Map iteration
+    // order shifts and stacked segments jump around.
+    let categoryOrder: string[] | null = null
+    if (this.getCategory) {
+      const allCategories = new Set<string>()
+      for (const bin of bins.values()) {
+        for (const cat of bin.categories.keys()) {
+          allCategories.add(cat)
+        }
+      }
+      const colorKeys = this.config.barColors ? Object.keys(this.config.barColors) : []
+      const listed = new Set(colorKeys)
+      const unlisted = Array.from(allCategories).filter(c => !listed.has(c)).sort()
+      categoryOrder = [...colorKeys.filter(k => allCategories.has(k)), ...unlisted]
+    }
+
     const nodes: SceneNode[] = []
     const scales = this.scales!
     const [domainMin, domainMax] = scales.x.domain() as [number, number]
@@ -548,9 +568,10 @@ export class PipelineStore {
       const barWidth = x1 - x0
       if (barWidth <= 0) continue
 
-      if (this.getCategory && bin.categories.size > 0) {
+      if (categoryOrder && bin.categories.size > 0) {
         let cumulativeBase = 0
-        for (const [cat, catVal] of bin.categories) {
+        for (const cat of categoryOrder) {
+          const catVal = bin.categories.get(cat) || 0
           if (catVal === 0) continue
           const yBottom = scales.y(cumulativeBase)
           const yTop = scales.y(cumulativeBase + catVal)

@@ -22,7 +22,10 @@ const navData = [
           { title: "Scatterplot", path: "/charts/scatterplot" },
           { title: "Bubble Chart", path: "/charts/bubble-chart" },
           { title: "Heatmap", path: "/charts/heatmap" },
-          { title: "Scatterplot Matrix", path: "/charts/scatterplot-matrix" }
+          { title: "Scatterplot Matrix", path: "/charts/scatterplot-matrix" },
+          { title: "Realtime Line Chart", path: "/charts/realtime-line-chart" },
+          { title: "Realtime Swarm Chart", path: "/charts/realtime-swarm-chart" },
+          { title: "Realtime Waterfall Chart", path: "/charts/realtime-waterfall-chart" }
         ]
       },
       {
@@ -38,7 +41,8 @@ const navData = [
           { title: "Dot Plot", path: "/charts/dot-plot" },
           { title: "Pie Chart", path: "/charts/pie-chart" },
           { title: "Donut Chart", path: "/charts/donut-chart" },
-          { title: "Grouped Bar Chart", path: "/charts/grouped-bar-chart" }
+          { title: "Grouped Bar Chart", path: "/charts/grouped-bar-chart" },
+          { title: "Realtime Bar Chart", path: "/charts/realtime-bar-chart" }
         ]
       },
       {
@@ -50,17 +54,7 @@ const navData = [
           { title: "Sankey Diagram", path: "/charts/sankey-diagram" },
           { title: "Tree Diagram", path: "/charts/tree-diagram" },
           { title: "Treemap", path: "/charts/treemap" },
-          { title: "Circle Pack", path: "/charts/circle-pack" }
-        ]
-      },
-      {
-        title: "Realtime",
-        category: "realtime",
-        children: [
-          { title: "Realtime Line Chart", path: "/charts/realtime-line-chart" },
-          { title: "Realtime Bar Chart", path: "/charts/realtime-bar-chart" },
-          { title: "Realtime Swarm Chart", path: "/charts/realtime-swarm-chart" },
-          { title: "Realtime Waterfall Chart", path: "/charts/realtime-waterfall-chart" },
+          { title: "Circle Pack", path: "/charts/circle-pack" },
           { title: "Realtime Sankey", path: "/charts/realtime-sankey" }
         ]
       }

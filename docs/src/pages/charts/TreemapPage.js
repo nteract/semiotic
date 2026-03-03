@@ -153,6 +153,26 @@ export default function TreemapPage() {
         hiddenProps={{}}
       />
 
+      <h3 id="streaming">Streaming</h3>
+      <p>
+        For streaming treemap data, use <code>StreamNetworkFrame</code>{" "}
+        directly. The frame re-renders when the <code>data</code> prop changes.
+      </p>
+
+      <CodeBlock
+        code={`import { StreamNetworkFrame } from "semiotic"
+
+<StreamNetworkFrame
+  chartType="treemap"
+  data={hierarchyRoot}
+  size={[600, 600]}
+  childrenAccessor="children"
+  nodeIDAccessor="name"
+  enableHover
+/>`}
+        language="jsx"
+      />
+
       {/* ----------------------------------------------------------------- */}
       {/* Examples */}
       {/* ----------------------------------------------------------------- */}

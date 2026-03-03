@@ -248,16 +248,34 @@ export class NetworkPipelineStore {
     const plugin = getLayoutPlugin(this.config.chartType)
     if (!plugin) return
 
-    const nodesArr = Array.from(this.nodes.values())
-    const edgesArr = Array.from(this.edges.values())
+    let nodesArr = Array.from(this.nodes.values())
+    let edgesArr = Array.from(this.edges.values())
 
-    if (nodesArr.length === 0) return
+    // For hierarchical plugins the store's Maps are empty — the plugin
+    // populates the nodes/edges arrays itself from config.__hierarchyRoot.
+    // Skip the early exit so the plugin gets called.
+    if (nodesArr.length === 0 && !plugin.hierarchical) return
 
     // Save previous positions for transition
     this.prepareForRelayout()
 
-    // Execute layout
+    // Execute layout — hierarchical plugins push into the arrays directly
     plugin.computeLayout(nodesArr, edgesArr, this.config, size)
+
+    // After hierarchical layout, sync the populated arrays back into the
+    // store's Maps so buildScene and getLayoutData work correctly.
+    if (plugin.hierarchical && nodesArr.length > 0) {
+      this.nodes.clear()
+      this.edges.clear()
+      for (const node of nodesArr) {
+        this.nodes.set(node.id, node)
+      }
+      for (const edge of edgesArr) {
+        const srcId = typeof edge.source === "string" ? edge.source : edge.source.id
+        const tgtId = typeof edge.target === "string" ? edge.target : edge.target.id
+        this.edges.set(`${srcId}\0${tgtId}`, edge)
+      }
+    }
 
     // Finalize — update derived properties and bezier caches
     this.finalizeLayout()
@@ -380,10 +398,24 @@ export class NetworkPipelineStore {
     const direction = this.config.orientation === "vertical" ? "down" : "right"
 
     for (const node of this.nodes.values()) {
-      node.width = node.x1 - node.x0
-      node.height = node.y1 - node.y0
-      node.x = node.x0 + node.width / 2
-      node.y = node.y0 + node.height / 2
+      // Sankey/treemap/partition set x0/x1/y0/y1 — derive x/y from those.
+      // Force/chord set x/y directly — derive x0/x1 from x/y.
+      const hasBox = node.x0 !== 0 || node.x1 !== 0 || node.y0 !== 0 || node.y1 !== 0
+      if (hasBox) {
+        node.width = node.x1 - node.x0
+        node.height = node.y1 - node.y0
+        node.x = node.x0 + node.width / 2
+        node.y = node.y0 + node.height / 2
+      } else {
+        // x/y already set by layout (force, chord) — synthesize a bounding box
+        const r = 5
+        node.x0 = node.x - r
+        node.x1 = node.x + r
+        node.y0 = node.y - r
+        node.y1 = node.y + r
+        node.width = r * 2
+        node.height = r * 2
+      }
     }
 
     for (const edge of this.edges.values()) {

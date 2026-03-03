@@ -172,6 +172,29 @@ export default function TreeDiagramPage() {
         hiddenProps={{}}
       />
 
+      <h3 id="streaming">Streaming</h3>
+      <p>
+        For streaming hierarchical data, use <code>StreamNetworkFrame</code>{" "}
+        directly. The frame accepts the same <code>data</code> prop and
+        re-renders when it changes.
+      </p>
+
+      <CodeBlock
+        code={`import { StreamNetworkFrame } from "semiotic"
+
+// Pass hierarchy data directly — re-renders on prop change
+<StreamNetworkFrame
+  chartType="tree"
+  data={hierarchyRoot}
+  size={[600, 600]}
+  childrenAccessor="children"
+  nodeIDAccessor="name"
+  showLabels
+  enableHover
+/>`}
+        language="jsx"
+      />
+
       {/* ----------------------------------------------------------------- */}
       {/* Examples */}
       {/* ----------------------------------------------------------------- */}

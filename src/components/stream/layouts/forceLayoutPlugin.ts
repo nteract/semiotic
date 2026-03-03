@@ -53,13 +53,14 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
     // d3-force uses Math.random() for unpositioned nodes which produces
     // different layouts on every render. A phyllotaxis spiral gives
     // evenly-distributed starting positions based on index alone.
+    // RealtimeNode initialises x/y to 0, so we treat (0,0) as "unpositioned".
     const cx = size[0] / 2
     const cy = size[1] / 2
     const goldenAngle = Math.PI * (3 - Math.sqrt(5))
 
     for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i]
-      if (node.x == null || node.y == null) {
+      if (node.x == null || node.y == null || (node.x === 0 && node.y === 0)) {
         const r = Math.sqrt(i + 0.5) * 10
         const theta = i * goldenAngle
         node.x = cx + r * Math.cos(theta)

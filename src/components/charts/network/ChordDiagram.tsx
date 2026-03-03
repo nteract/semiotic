@@ -85,7 +85,7 @@ export function ChordDiagram<TNode extends Record<string, any> = Record<string, 
 
   const colorScale = useColorScale(inferredNodes, colorBy, colorScheme)
 
-  // Node style function
+  // Node style function — d is a RealtimeNode, user data on d.data
   const nodeStyle = useMemo(() => {
     return (d: Record<string, any>, i?: number) => {
       const baseStyle: Record<string, string | number> = {
@@ -93,7 +93,7 @@ export function ChordDiagram<TNode extends Record<string, any> = Record<string, 
         strokeWidth: 1
       }
       if (colorBy) {
-        baseStyle.fill = getColor(d, colorBy, colorScale)
+        baseStyle.fill = getColor(d.data || d, colorBy, colorScale)
       } else {
         const palette = Array.isArray(colorScheme) ? colorScheme : (COLOR_SCHEMES[colorScheme] || DEFAULT_COLORS)
         const colors = Array.isArray(palette) ? palette : DEFAULT_COLORS
@@ -104,7 +104,7 @@ export function ChordDiagram<TNode extends Record<string, any> = Record<string, 
     }
   }, [colorBy, colorScale, colorScheme])
 
-  // Edge style function
+  // Edge style function — d is a RealtimeEdge
   const edgeStyle = useMemo(() => {
     return (d: Record<string, any>) => {
       const baseStyle: Record<string, string | number> = {
@@ -115,17 +115,19 @@ export function ChordDiagram<TNode extends Record<string, any> = Record<string, 
       }
       if (typeof edgeColorBy === "function") {
         baseStyle.fill = edgeColorBy(d)
-      } else if (edgeColorBy === "source" && d.source) {
-        if (colorBy) {
-          baseStyle.fill = getColor(d.source, colorBy, colorScale)
-        } else {
-          baseStyle.fill = nodeStyle(d.source, d.source.index).fill
+      } else if (edgeColorBy === "source") {
+        const src = typeof d.source === "object" ? d.source : null
+        if (colorBy && src) {
+          baseStyle.fill = getColor(src.data || src, colorBy, colorScale)
+        } else if (src) {
+          baseStyle.fill = nodeStyle(src, src.index).fill
         }
-      } else if (edgeColorBy === "target" && d.target) {
-        if (colorBy) {
-          baseStyle.fill = getColor(d.target, colorBy, colorScale)
-        } else {
-          baseStyle.fill = nodeStyle(d.target, d.target.index).fill
+      } else if (edgeColorBy === "target") {
+        const tgt = typeof d.target === "object" ? d.target : null
+        if (colorBy && tgt) {
+          baseStyle.fill = getColor(tgt.data || tgt, colorBy, colorScale)
+        } else if (tgt) {
+          baseStyle.fill = nodeStyle(tgt, tgt.index).fill
         }
       }
       return baseStyle
