@@ -31,6 +31,7 @@ import { barCanvasRenderer } from "./renderers/barCanvasRenderer"
 import { swarmCanvasRenderer } from "./renderers/swarmCanvasRenderer"
 import { waterfallCanvasRenderer } from "./renderers/waterfallCanvasRenderer"
 import { heatmapCanvasRenderer } from "./renderers/heatmapCanvasRenderer"
+import { candlestickCanvasRenderer } from "./renderers/candlestickCanvasRenderer"
 import type { StreamRendererFn } from "./renderers/types"
 
 // ── Renderer dispatch ──────────────────────────────────────────────────
@@ -44,7 +45,8 @@ const RENDERERS: Record<StreamChartType, StreamRendererFn[]> = {
   heatmap: [heatmapCanvasRenderer],
   bar: [barCanvasRenderer],
   swarm: [swarmCanvasRenderer],
-  waterfall: [waterfallCanvasRenderer]
+  waterfall: [waterfallCanvasRenderer],
+  candlestick: [candlestickCanvasRenderer]
 }
 
 // ── Defaults ───────────────────────────────────────────────────────────
@@ -207,6 +209,11 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       colorScheme,
       boundsAccessor,
       boundsStyle,
+      openAccessor,
+      highAccessor,
+      lowAccessor,
+      closeAccessor,
+      candlestickStyle,
       showAxes = true,
       xLabel,
       yLabel,
@@ -278,6 +285,11 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       normalize,
       boundsAccessor,
       boundsStyle,
+      openAccessor,
+      highAccessor,
+      lowAccessor,
+      closeAccessor,
+      candlestickStyle,
       lineStyle,
       pointStyle,
       areaStyle,
@@ -289,6 +301,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       colorAccessor, sizeAccessor, groupAccessor, categoryAccessor,
       lineDataAccessor, xExtent, yExtent, sizeRange, binSize, normalize,
       boundsAccessor, boundsStyle,
+      openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle,
       lineStyle, pointStyle, areaStyle, colorScheme, barColors, isStreaming
     ])
 

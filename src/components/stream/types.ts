@@ -24,6 +24,7 @@ export type StreamChartType =
   | "bar"
   | "swarm"
   | "waterfall"
+  | "candlestick"
 
 export type RuntimeMode = "bounded" | "streaming"
 
@@ -44,6 +45,7 @@ export type SceneNode =
   | PointSceneNode
   | RectSceneNode
   | HeatcellSceneNode
+  | CandlestickSceneNode
 
 export interface LineSceneNode {
   type: "line"
@@ -92,6 +94,32 @@ export interface HeatcellSceneNode {
   h: number
   fill: string
   datum: any
+}
+
+export interface CandlestickSceneNode {
+  type: "candlestick"
+  x: number
+  openY: number
+  closeY: number
+  highY: number
+  lowY: number
+  bodyWidth: number
+  upColor: string
+  downColor: string
+  wickColor: string
+  wickWidth: number
+  isUp: boolean
+  datum: any
+}
+
+// ── Candlestick style ──────────────────────────────────────────────────
+
+export interface CandlestickStyle {
+  upColor?: string
+  downColor?: string
+  wickColor?: string
+  bodyWidth?: number
+  wickWidth?: number
 }
 
 // ── Changeset ──────────────────────────────────────────────────────────
@@ -160,6 +188,13 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
    * If omitted, defaults to the line color at 0.2 opacity.
    */
   boundsStyle?: Style | ((d: T, group?: string) => Style)
+
+  // ── Candlestick specifics ───────────────────────
+  openAccessor?: string | ((d: T) => number)
+  highAccessor?: string | ((d: T) => number)
+  lowAccessor?: string | ((d: T) => number)
+  closeAccessor?: string | ((d: T) => number)
+  candlestickStyle?: CandlestickStyle
 
   // ── Bar/time-binned specifics ────────────────────
   binSize?: number

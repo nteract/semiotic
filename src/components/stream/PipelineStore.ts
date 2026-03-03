@@ -10,6 +10,8 @@ import type {
   StreamLayout,
   SceneNode,
   AreaSceneNode,
+  CandlestickSceneNode,
+  CandlestickStyle,
   Style,
   ArrowOfTime,
   WindowMode
@@ -79,6 +81,13 @@ export interface PipelineConfig {
   binSize?: number
   normalize?: boolean
 
+  // Candlestick accessors
+  openAccessor?: string | ((d: any) => number)
+  highAccessor?: string | ((d: any) => number)
+  lowAccessor?: string | ((d: any) => number)
+  closeAccessor?: string | ((d: any) => number)
+  candlestickStyle?: CandlestickStyle
+
   // Bounds/uncertainty
   boundsAccessor?: string | ((d: any) => number)
   boundsStyle?: any
@@ -105,6 +114,10 @@ export class PipelineStore {
   private getGroup: ((d: any) => string) | undefined
   private getCategory: ((d: any) => string) | undefined
   private getBounds: ((d: any) => number) | undefined
+  private getOpen: ((d: any) => number) | undefined
+  private getHigh: ((d: any) => number) | undefined
+  private getLow: ((d: any) => number) | undefined
+  private getClose: ((d: any) => number) | undefined
 
   scales: StreamScales | null = null
   scene: SceneNode[] = []
@@ -133,6 +146,14 @@ export class PipelineStore {
     this.getBounds = config.boundsAccessor
       ? resolveAccessor(config.boundsAccessor, "bounds")
       : undefined
+
+    // Candlestick accessors
+    if (config.chartType === "candlestick") {
+      this.getOpen = resolveAccessor(config.openAccessor, "open")
+      this.getHigh = resolveAccessor(config.highAccessor, "high")
+      this.getLow = resolveAccessor(config.lowAccessor, "low")
+      this.getClose = resolveAccessor(config.closeAccessor, "close")
+    }
   }
 
   /**
@@ -149,7 +170,12 @@ export class PipelineStore {
       for (const d of changeset.inserts) {
         this.buffer.push(d)
         this.xExtent.push(this.getX(d))
-        this.yExtent.push(this.getY(d))
+        if (this.config.chartType === "candlestick" && this.getHigh && this.getLow) {
+          this.yExtent.push(this.getHigh(d))
+          this.yExtent.push(this.getLow(d))
+        } else {
+          this.yExtent.push(this.getY(d))
+        }
       }
     } else {
       // Streaming append
@@ -161,11 +187,21 @@ export class PipelineStore {
 
         const evicted = this.buffer.push(d)
         this.xExtent.push(this.getX(d))
-        this.yExtent.push(this.getY(d))
+        if (this.config.chartType === "candlestick" && this.getHigh && this.getLow) {
+          this.yExtent.push(this.getHigh(d))
+          this.yExtent.push(this.getLow(d))
+        } else {
+          this.yExtent.push(this.getY(d))
+        }
 
         if (evicted != null) {
           this.xExtent.evict(this.getX(evicted))
-          this.yExtent.evict(this.getY(evicted))
+          if (this.config.chartType === "candlestick" && this.getHigh && this.getLow) {
+            this.yExtent.evict(this.getHigh(evicted))
+            this.yExtent.evict(this.getLow(evicted))
+          } else {
+            this.yExtent.evict(this.getY(evicted))
+          }
         }
       }
     }
@@ -335,6 +371,8 @@ export class PipelineStore {
         return this.buildSwarmScene(data)
       case "waterfall":
         return this.buildWaterfallScene(data, layout)
+      case "candlestick":
+        return this.buildCandlestickScene(data, layout)
       default:
         return []
     }
@@ -606,6 +644,67 @@ export class PipelineStore {
       ))
 
       baseline = cumEnd
+    }
+
+    return nodes
+  }
+
+  private buildCandlestickScene(data: Record<string, any>[], layout: StreamLayout): SceneNode[] {
+    if (!this.getOpen || !this.getHigh || !this.getLow || !this.getClose || !this.scales) return []
+
+    const nodes: SceneNode[] = []
+    const cs = this.config.candlestickStyle || {}
+    const upColor = cs.upColor || "#28a745"
+    const downColor = cs.downColor || "#dc3545"
+    const wickColor = cs.wickColor || "#333"
+    const wickWidth = cs.wickWidth || 1
+
+    // Compute body width from data spacing
+    const sortedX = data
+      .map(d => this.getX(d))
+      .filter(x => x != null && !Number.isNaN(x))
+      .sort((a, b) => a - b)
+
+    let bodyWidth = cs.bodyWidth || 6
+    if (!cs.bodyWidth && sortedX.length > 1) {
+      // Auto-size: 60% of the minimum gap between adjacent x values
+      let minGap = Infinity
+      for (let i = 1; i < sortedX.length; i++) {
+        const gap = Math.abs(this.scales!.x(sortedX[i]) - this.scales!.x(sortedX[i - 1]))
+        if (gap > 0 && gap < minGap) minGap = gap
+      }
+      if (minGap !== Infinity) {
+        bodyWidth = Math.max(2, Math.min(minGap * 0.6, 20))
+      }
+    }
+
+    for (const d of data) {
+      const xVal = this.getX(d)
+      if (xVal == null || Number.isNaN(xVal)) continue
+
+      const open = this.getOpen(d)
+      const high = this.getHigh(d)
+      const low = this.getLow(d)
+      const close = this.getClose(d)
+      if ([open, high, low, close].some(v => v == null || Number.isNaN(v))) continue
+
+      const isUp = close >= open
+
+      nodes.push({
+        type: "candlestick",
+        x: this.scales!.x(xVal),
+        openY: this.scales!.y(open),
+        closeY: this.scales!.y(close),
+        highY: this.scales!.y(high),
+        lowY: this.scales!.y(low),
+        bodyWidth,
+        upColor,
+        downColor,
+        wickColor,
+        wickWidth,
+        isUp,
+        datum: d
+      } as CandlestickSceneNode)
     }
 
     return nodes

@@ -1,9 +1,8 @@
 import React from "react"
 import DocumentFrame from "../DocumentFrame"
-import { XYFrame } from "semiotic"
+import { StreamXYFrame } from "semiotic"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
-import { scaleTime } from "d3-scale"
 
 const nflx = [
   { date: "09/14/2018", open: 368, high: 371, low: 363, close: 364.56 },
@@ -73,102 +72,67 @@ const nflx = [
   { date: "06/14/2018", open: 384, high: 395, low: 383, close: 392.87 }
 ]
 
-const colors = [theme[7], theme[2], theme[1], theme[6]]
+function formatDate(d) {
+  const date = new Date(d)
+  return `${date.getMonth() + 1}/${date.getDate()}`
+}
+
 const frameProps = {
-  title: (
-    <text textAnchor="middle">
-      Netflix Stock Price: <tspan fill={theme[2]}>High</tspan>,{" "}
-      <tspan fill={theme[1]}>Low</tspan>, <tspan fill={theme[7]}>Open</tspan>{" "}
-      <tspan fill={theme[6]}>Close</tspan>
-    </text>
-  ),
+  chartType: "candlestick",
+  data: nflx,
+  xAccessor: d => new Date(d.date).getTime(),
+  openAccessor: "open",
+  highAccessor: "high",
+  lowAccessor: "low",
+  closeAccessor: "close",
+  candlestickStyle: {
+    upColor: theme[2],
+    downColor: theme[1],
+    wickColor: "#333",
+  },
   size: [700, 400],
-  points: nflx,
-  pointStyle: (d, i, yi) => ({ fill: colors[yi] }),
-  hoverAnnotation: true,
-  xScaleType: scaleTime(),
-  xAccessor: d => new Date(d.date),
-  yAccessor: d => [d.open, d.high, d.low, d.close],
   margin: { left: 80, bottom: 50, right: 10, top: 40 },
-  axes: [
-    {
-      orient: "left"
-    },
-    {
-      orient: "bottom",
-      tickFormat: d => `${d.getMonth()}/${d.getDate()}`
-    }
-  ]
+  showAxes: true,
+  xFormat: formatDate,
+  yLabel: "Price ($)",
+  enableHover: true,
+  tooltipContent: d => {
+    const datum = d.data || {}
+    return (
+      <div className="tooltip-content">
+        <p style={{ fontWeight: 600 }}>{datum.date}</p>
+        <p>Open: ${datum.open}</p>
+        <p>High: ${datum.high}</p>
+        <p>Low: ${datum.low}</p>
+        <p>Close: ${datum.close}</p>
+      </div>
+    )
+  },
+  title: "Netflix Stock Price (NFLX)"
 }
 
 const overrideProps = {
-  xScaleType: `scaleTime()`,
-  title: `<text textAnchor="middle">
-      Netflix Stock Price: <tspan fill={theme[2]}>High</tspan>,{" "}
-      <tspan fill={theme[1]}>Low</tspan>, <tspan fill={theme[7]}>Open</tspan>{" "}
-      <tspan fill={theme[6]}>Close</tspan>
-      </text>`
-}
-
-const customMarkProps = {
-  ...frameProps,
-  customPointMark: ({ d, xy, yScale }) => {
-    const middle = yScale(xy.yMiddle)
-
-    const openY = yScale(d.open) - middle
-    const closeY = yScale(d.close) - middle
-    const minY = yScale(d.low) - middle
-    const maxY = yScale(d.high) - middle
+  tooltipContent: `d => {
+    const datum = d.data || {}
     return (
-      <g>
-        <line width={2} y1={minY} y2={maxY} stroke="black" />
-        <rect
-          width={4}
-          x={-2}
-          height={Math.abs(openY - closeY)}
-          y={Math.min(openY, closeY)}
-          fill={d.open > d.close ? theme[1] : theme[2]}
-        />
-      </g>
-    )
-  },
-  title: (
-    <text textAnchor="middle">
-      Netflix Stock Price: <tspan fill={theme[2]}>Close &gt; Open</tspan> vs.{" "}
-      <tspan fill={theme[1]}>Close &lt; Open</tspan>
-    </text>
-  )
-}
-
-const customMarkOverride = {
-  ...overrideProps,
-  customPointMark: `({ d, xy, yScale }) => {
-    const middle = yScale(xy.yMiddle)
-
-    const openY = yScale(d.open) - middle
-    const closeY = yScale(d.close) - middle
-    const minY = yScale(d.low) - middle
-    const maxY = yScale(d.high) - middle
-    return (
-      <g>
-        <line width={2} y1={minY} y2={maxY} stroke="black" />
-        <rect
-          width={4}
-          x={-2}
-          height={Math.abs(openY - closeY)}
-          y={Math.min(openY, closeY)}
-          fill={d.open > d.close ? theme[1] : theme[2]}
-        />
-      </g>
+      <div className="tooltip-content">
+        <p style={{ fontWeight: 600 }}>{datum.date}</p>
+        <p>Open: \${datum.open}</p>
+        <p>High: \${datum.high}</p>
+        <p>Low: \${datum.low}</p>
+        <p>Close: \${datum.close}</p>
+      </div>
     )
   }`,
-  title: `<text textAnchor="middle">
-      Netflix Stock Price: <tspan fill={theme[2]}>Close &gt; Open</tspan> vs.{" "}
-      <tspan fill={theme[1]}>Close &lt; Open</tspan>
-    </text>`
+  xAccessor: `d => new Date(d.date).getTime()`,
+  candlestickStyle: `{
+    upColor: theme[2],  // green for up days
+    downColor: theme[1], // red for down days
+    wickColor: "#333",
+  }`
 }
 
-const DotPlot = () => {
+const CandlestickChart = () => {
   return (
     <div>
       <MarkdownText
@@ -176,42 +140,38 @@ const DotPlot = () => {
 
 The Candlestick Chart is a financial chart that summarizes the open, close, high, and low for a stock.
 
-Standard candlestick charts have two colors 
+Standard candlestick charts have two colors
 - one color denotes a day where the stock closed higher than it opened
 - the other color denotes when it closed lower than it opened.
-`}
-      />
-      <DocumentFrame
-        frameProps={customMarkProps}
-        overrideProps={customMarkOverride}
-        type={XYFrame}
-        useExpanded
-        pre={`import { scaleTime } from "d3-scale"
 
-const colors = [theme[7], theme[2], theme[1], theme[6]]
-        `}
-      />
+StreamXYFrame supports candlestick charts as a first-class chart type with dedicated accessors for \`open\`, \`high\`, \`low\`, and \`close\` values:
 
-      <MarkdownText
-        text={`
-## Customization
-
-This chart takes advantage of the multiAccessor functionality in Semiotic, in this case each individual data point has all four attributes for a day, so you can specify the \`yAccessor: d => [d.open, d.high, d.low, d.close]\`. Using this with the \`customPointMark\` property in \`XYFrame\` allows you to create the candlestick shape, without it the chart above would be rendered with each value represented as a circle:
-
+\`\`\`jsx
+<StreamXYFrame
+  chartType="candlestick"
+  data={data}
+  xAccessor={d => new Date(d.date).getTime()}
+  openAccessor="open"
+  highAccessor="high"
+  lowAccessor="low"
+  closeAccessor="close"
+  candlestickStyle={{
+    upColor: "#4daf4a",   // close > open
+    downColor: "#e41a1c", // close < open
+    wickColor: "#333",
+  }}
+/>
+\`\`\`
 `}
       />
       <DocumentFrame
         frameProps={frameProps}
         overrideProps={overrideProps}
-        type={XYFrame}
-        startHidden
-        pre={`import { scaleTime } from "d3-scale"
-        
-const colors = [theme[7], theme[2], theme[1], theme[6]]
-        `}
+        type={StreamXYFrame}
+        useExpanded
       />
     </div>
   )
 }
 
-export default DotPlot
+export default CandlestickChart

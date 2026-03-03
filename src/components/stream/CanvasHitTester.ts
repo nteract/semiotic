@@ -1,4 +1,4 @@
-import type { SceneNode, PointSceneNode, RectSceneNode, LineSceneNode, AreaSceneNode, HeatcellSceneNode, StreamScales } from "./types"
+import type { SceneNode, PointSceneNode, RectSceneNode, LineSceneNode, AreaSceneNode, HeatcellSceneNode, CandlestickSceneNode, StreamScales } from "./types"
 import type { RingBuffer } from "../realtime/RingBuffer"
 
 export interface HitResult {
@@ -42,6 +42,9 @@ export function findNearestNode(
         if (node.interactive === false) break
         // Areas are hit-tested by finding nearest x on the top path
         result = hitTestAreaPath(node, px, py)
+        break
+      case "candlestick":
+        result = hitTestCandlestick(node, px, py)
         break
     }
 
@@ -99,6 +102,24 @@ function hitTestHeatcell(node: HeatcellSceneNode, px: number, py: number): HitRe
     const cx = node.x + node.w / 2
     const cy = node.y + node.h / 2
     return { node, datum: node.datum, x: cx, y: cy, distance: 0 }
+  }
+  return null
+}
+
+function hitTestCandlestick(node: CandlestickSceneNode, px: number, py: number): HitResult | null {
+  const halfBody = node.bodyWidth / 2
+  // Hit the body area (wider target)
+  const bodyTop = Math.min(node.openY, node.closeY)
+  const bodyBottom = Math.max(node.openY, node.closeY)
+  const bodyHeight = Math.max(bodyBottom - bodyTop, 1)
+
+  if (px >= node.x - halfBody - 3 && px <= node.x + halfBody + 3 &&
+      py >= node.highY - 3 && py <= node.lowY + 3) {
+    // Hover target: center of the body
+    const cy = bodyTop + bodyHeight / 2
+    const dx = px - node.x
+    const dy = py - cy
+    return { node, datum: node.datum, x: node.x, y: cy, distance: Math.sqrt(dx * dx + dy * dy) }
   }
   return null
 }
