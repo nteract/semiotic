@@ -34,6 +34,8 @@ const budgetData = [
 // ---------------------------------------------------------------------------
 
 const budgetCategories = ["Engineering", "Marketing", "Sales", "Operations", "HR"]
+const donutColors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
+const donutColorMap = Object.fromEntries(budgetCategories.map((s, i) => [s, donutColors[i]]))
 
 const streamingDonutCode = `import { useRef, useEffect } from "react"
 import { StreamOrdinalFrame } from "semiotic"
@@ -67,6 +69,7 @@ function StreamingDonutDemo() {
       rAccessor="value"
       windowSize={200}
       showAxes={false}
+      pieceStyle={d => ({ fill: donutColorMap[d.category] || "#007bff" })}
     />
   )
 }`
@@ -101,6 +104,7 @@ function StreamingDonutDemo({ width }) {
       rAccessor="value"
       windowSize={200}
       showAxes={false}
+      pieceStyle={d => ({ fill: donutColorMap[d.category] || "#007bff" })}
     />
   )
 }

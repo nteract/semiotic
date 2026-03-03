@@ -22,6 +22,8 @@ export type OrdinalChartType =
   | "boxplot"
   | "violin"
   | "histogram"
+  | "ridgeline"
+  | "timeline"
 
 // ── Scales ─────────────────────────────────────────────────────────────
 
@@ -74,11 +76,24 @@ export interface ViolinSceneNode {
   /** Translation for the path */
   translateX: number
   translateY: number
+  /** Bounding box for hit testing */
+  bounds?: { x: number; y: number; width: number; height: number }
   /** Optional IQR line overlay */
   iqrLine?: { q1Pos: number; medianPos: number; q3Pos: number }
   style: Style
   datum: any
   category?: string
+}
+
+export interface ConnectorSceneNode {
+  type: "connector"
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+  style: Style
+  datum: any
+  group?: string
 }
 
 // Re-export scene node types from XY that we reuse
@@ -91,6 +106,7 @@ export type OrdinalSceneNode =
   | WedgeSceneNode
   | BoxplotSceneNode
   | ViolinSceneNode
+  | ConnectorSceneNode
 
 // ── Projected column ───────────────────────────────────────────────────
 
@@ -118,12 +134,15 @@ export interface OrdinalPipelineConfig {
   extentPadding: number
   projection: "vertical" | "horizontal" | "radial"
 
-  // Accessors
+  // Accessors — rAccessor can be an array for multiAxis support
   oAccessor?: string | ((d: any) => string)
-  rAccessor?: string | ((d: any) => number)
+  rAccessor?: string | ((d: any) => number) | Array<string | ((d: any) => number)>
   colorAccessor?: string | ((d: any) => string)
   stackBy?: string | ((d: any) => string)
   groupBy?: string | ((d: any) => string)
+
+  // Multi-axis: each rAccessor gets an independent scale
+  multiAxis?: boolean
 
   // Streaming accessors (aliases)
   timeAccessor?: string | ((d: any) => number)
@@ -144,9 +163,17 @@ export interface OrdinalPipelineConfig {
   bins?: number
   showOutliers?: boolean
   showIQR?: boolean
+  amplitude?: number
 
   // Sort
   oSort?: ((a: string, b: string) => number) | boolean | "asc" | "desc"
+
+  // Connectors
+  connectorAccessor?: string | ((d: any) => string)
+  connectorStyle?: Style | ((d: any) => Style)
+
+  // Dynamic column width
+  dynamicColumnWidth?: string | ((data: any[]) => number)
 
   // Style
   pieceStyle?: (d: any, category?: string) => Style
@@ -162,12 +189,15 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
   runtimeMode?: "bounded" | "streaming"
   data?: T[]
 
-  // Accessors
+  // Accessors — rAccessor can be an array for multiAxis
   oAccessor?: string | ((d: T) => string)
-  rAccessor?: string | ((d: T) => number)
+  rAccessor?: string | ((d: T) => number) | Array<string | ((d: T) => number)>
   colorAccessor?: string | ((d: T) => string)
   stackBy?: string | ((d: T) => string)
   groupBy?: string | ((d: T) => string)
+
+  // Multi-axis: each rAccessor gets an independent scale
+  multiAxis?: boolean
 
   // Streaming accessors
   timeAccessor?: string | ((d: T) => number)
@@ -184,11 +214,13 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
   innerRadius?: number
   normalize?: boolean
   startAngle?: number
+  dynamicColumnWidth?: string | ((data: T[]) => number)
 
   // Summary config
   bins?: number
   showOutliers?: boolean
   showIQR?: boolean
+  amplitude?: number
 
   // Extents
   rExtent?: [number?, number?]
@@ -202,6 +234,10 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
   arrowOfTime?: ArrowOfTime
   windowMode?: WindowMode
   windowSize?: number
+
+  // Connectors
+  connectorAccessor?: string | ((d: T) => string)
+  connectorStyle?: Style | ((d: any) => Style)
 
   // Style
   pieceStyle?: (d: any, category?: string) => Style

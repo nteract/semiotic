@@ -8,13 +8,10 @@ import BarToParallel from "../../examples/BarToParallel"
 export default function BarToParallelPage() {
   return (
     <PageLayout
-      title="Bar to Parallel Coordinates"
+      title="Funnel Chart"
       breadcrumbs={[
         { label: "Cookbook", path: "/cookbook" },
-        {
-          label: "Bar to Parallel Coordinates",
-          path: "/cookbook/bar-to-parallel",
-        },
+        { label: "Funnel Chart", path: "/cookbook/bar-to-parallel" },
       ]}
       prevPage={{
         title: "Bar + Line Chart",
@@ -26,12 +23,10 @@ export default function BarToParallelPage() {
       }}
     >
       <p>
-        Complex chart types like parallel coordinates can be intimidating for
-        stakeholders. This recipe demonstrates how Semiotic's unified data
-        model lets you iterate from a simple bar chart through stacked bars,
-        connected slopegraphs, swarm plots, and finally a brushable parallel
-        coordinates chart -- all by changing OrdinalFrame settings, not the
-        underlying data.
+        Funnel charts show how a population moves through sequential stages.
+        Each bar represents a step in the process, with height proportional to
+        the count at that stage. Stacking by a grouping dimension (e.g. country
+        or region) reveals which segments drop off at each step.
       </p>
 
       <h2 id="the-visualization">The Visualization</h2>
@@ -48,85 +43,37 @@ export default function BarToParallelPage() {
 
       <h2 id="how-it-works">How It Works</h2>
       <p>
-        The component steps through a series of OrdinalFrame configurations,
-        all operating on the same funnel dataset. The progression starts with a
-        basic bar chart and evolves by toggling <code>type</code>,{" "}
-        <code>connectorType</code>, <code>rAccessor</code>, and{" "}
-        <code>interaction</code> settings. Here is the key transition from bars
-        to connected points:
+        Use <code>chartType="bar"</code> with <code>stackBy</code> to stack
+        segments within each funnel step:
       </p>
       <CodeBlock
-        code={`// Step 3: Connected stacked bars
-{
-  type: "bar",
-  oPadding: 40,
-  connectorType: d => d.country,
-  connectorStyle: d => ({
-    fill: regionColors[d.source.region],
-    stroke: regionColors[d.source.region]
-  })
-}
-
-// Step 4: Slopegraph (bars become points)
-{
-  type: "point",
-  connectorType: d => d.country,
-  connectorStyle: d => ({
-    fill: regionColors[d.source.region],
-    stroke: regionColors[d.source.region]
-  })
-}`}
+        code={`<StreamOrdinalFrame
+  chartType="bar"
+  data={funnelData}
+  oAccessor="step"
+  rAccessor="people"
+  stackBy="country"
+  pieceStyle={d => ({
+    fill: stepColors[d.step],
+    stroke: stepColors[d.step]
+  })}
+  showAxes
+/>`}
         language="jsx"
       />
-      <p>
-        The final step adds column brushing to create a fully interactive
-        parallel coordinates chart. The <code>interaction</code> prop with{" "}
-        <code>columnsBrush</code> enables brush selection on each axis,
-        filtering paths that fall outside the selected range:
-      </p>
-      <CodeBlock
-        code={`interaction: {
-  columnsBrush: true,
-  end: this.brushing,
-  extent: this.state.columnExtent
-}`}
-        language="jsx"
-      />
-
-      <h2 id="key-takeaways">Key Takeaways</h2>
-      <ul>
-        <li>
-          Semiotic's unified data model means the same dataset works across bar,
-          point, swarm, and parallel coordinate views.
-        </li>
-        <li>
-          The <code>connectorType</code> prop draws paths between pieces that
-          share an identity, creating slopegraph or parallel-coordinate
-          connections.
-        </li>
-        <li>
-          <code>columnsBrush</code> in the <code>interaction</code> prop
-          enables axis-level brushing for filtering multi-dimensional data.
-        </li>
-        <li>
-          Iterative design -- starting simple and adding complexity -- is a
-          natural workflow when the chart type is just a configuration change.
-        </li>
-      </ul>
 
       <h2 id="related">Related</h2>
       <ul>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — the frame
-          powering all ordinal layout types
+          <Link to="/charts/bar-chart">BarChart</Link> — simple bar chart
         </li>
         <li>
-          <Link to="/charts/bar-chart">BarChart</Link> — the starting point of
-          this progression
+          <Link to="/charts/stacked-bar-chart">StackedBarChart</Link> — stacked
+          bar chart
         </li>
         <li>
-          <Link to="/cookbook/slope-chart">Slope Chart</Link> — another
-          connected ordinal visualization
+          <Link to="/cookbook/slope-chart">Slope Chart</Link> — connected ordinal
+          visualization
         </li>
       </ul>
     </PageLayout>

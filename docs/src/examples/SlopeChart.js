@@ -1,6 +1,6 @@
 import React from "react"
 import DocumentFrame from "../DocumentFrame"
-import { OrdinalFrame } from "semiotic"
+import { StreamOrdinalFrame } from "semiotic"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
 
@@ -8,7 +8,7 @@ const frameProps = {
   size: [500, 450],
   oAccessor: "year",
   rAccessor: "value",
-  rExtent: [0],
+  rExtent: [0, undefined],
   margin: { left: 40, top: 50, bottom: 75, right: 120 },
   title: "% of Adults Who Binge Drink",
   data: [
@@ -23,31 +23,20 @@ const frameProps = {
     { name: "Denver", color: theme[3], year: 2015, value: 26.6 },
     { name: "Oakland", color: theme[4], year: 2015, value: 37.2 }
   ],
-  axes: [
-    {
-      orient: "left",
-      tickFormat: d => `${d}%`,
-      baseline: false,
-      label: { name: "Adults Who Binge Drink" }
-    },
-    { tickFormat: d => `${d}%`, baseline: false, orient: "right" }
-  ],
-  style: d => ({
+  showAxes: true,
+  pieceStyle: d => ({
     fill: d.color,
     stroke: "white",
     strokeOpacity: 0.5
   }),
-  connectorStyle: d => {
-    return {
-      fill: d.source.color,
-      stroke: d.source.color,
-      strokeOpacity: 0.5,
-      fillOpacity: 0.5
-    }
-  },
+  connectorStyle: d => ({
+    stroke: d.color,
+    strokeWidth: 2,
+    opacity: 0.5
+  }),
   oLabel: true,
-  type: { type: "point", r: () => 5 },
-  connectorType: d => d.name,
+  chartType: "point",
+  connectorAccessor: d => d.name,
   foregroundGraphics: [
     <g transform="translate(440, 73)" key="legend">
       <text key={1} fill={theme[0]}>
@@ -104,7 +93,7 @@ A slope chart is a common way to show change between two points in time. This da
       <DocumentFrame
         frameProps={frameProps}
         overrideProps={overrideProps}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         useExpanded
       />
     </div>

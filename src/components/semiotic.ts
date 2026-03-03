@@ -21,7 +21,7 @@ import { hexbinning, heatmapping } from "./svg/areaDrawing"
 import { nodesEdgesFromHierarchy } from "./processing/network"
 
 // Higher-order chart components
-import { Scatterplot, LineChart, AreaChart, StackedAreaChart, Heatmap, BubbleChart, BarChart, StackedBarChart, SwarmPlot, BoxPlot, Histogram, ViolinPlot, DotPlot, PieChart, DonutChart, GroupedBarChart, ForceDirectedGraph, ChordDiagram, SankeyDiagram, TreeDiagram, Treemap, CirclePack, ScatterplotMatrix, MinimapChart } from "./charts"
+import { Scatterplot, LineChart, AreaChart, StackedAreaChart, Heatmap, BubbleChart, BarChart, StackedBarChart, SwarmPlot, BoxPlot, Histogram, ViolinPlot, RidgelinePlot, DotPlot, PieChart, DonutChart, GroupedBarChart, ForceDirectedGraph, ChordDiagram, SankeyDiagram, TreeDiagram, Treemap, CirclePack, ScatterplotMatrix, MinimapChart } from "./charts"
 
 // Coordinated views
 import { LinkedCharts } from "./LinkedCharts"
@@ -90,6 +90,7 @@ export {
   BoxPlot,
   Histogram,
   ViolinPlot,
+  RidgelinePlot,
   DotPlot,
   ForceDirectedGraph,
   ChordDiagram,

@@ -48,6 +48,7 @@ const regionData = [
 
 const quarters = ["Q1", "Q2", "Q3", "Q4"]
 const products = ["Widgets", "Gadgets", "Gizmos"]
+const stackColors = { Widgets: "#6366f1", Gadgets: "#f59e0b", Gizmos: "#10b981" }
 
 const streamingStackedBarCode = `import { useRef, useEffect } from "react"
 import { StreamOrdinalFrame } from "semiotic"
@@ -81,7 +82,16 @@ function StreamingStackedBarDemo() {
       stackBy="product"
       windowSize={200}
       showAxes
-      colorScheme={["#6366f1", "#f59e0b", "#10b981"]}
+      pieceStyle={d => ({ fill: stackColors[d.product] || "#007bff" })}
+      tooltipContent={d => {
+        const datum = d.data || d
+        return (
+          <div style={{ background: "rgba(0,0,0,0.85)", color: "white", padding: "6px 10px", borderRadius: 4, fontSize: 13 }}>
+            <div style={{ fontWeight: "bold" }}>{datum.quarter}</div>
+            <div>{datum.product}: {typeof datum.sales === "number" ? datum.sales.toLocaleString() : datum.sales}</div>
+          </div>
+        )
+      }}
     />
   )
 }`
@@ -115,7 +125,16 @@ function StreamingStackedBarDemo({ width }) {
       stackBy="product"
       windowSize={200}
       showAxes
-      colorScheme={["#6366f1", "#f59e0b", "#10b981"]}
+      pieceStyle={d => ({ fill: stackColors[d.product] || "#007bff" })}
+      tooltipContent={d => {
+        const datum = d.data || d
+        return (
+          <div style={{ background: "rgba(0,0,0,0.85)", color: "white", padding: "6px 10px", borderRadius: 4, fontSize: 13 }}>
+            <div style={{ fontWeight: "bold" }}>{datum.quarter}</div>
+            <div>{datum.product}: {typeof datum.sales === "number" ? datum.sales.toLocaleString() : datum.sales}</div>
+          </div>
+        )
+      }}
     />
   )
 }

@@ -32,19 +32,27 @@ import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
 import { wedgeCanvasRenderer } from "./renderers/wedgeCanvasRenderer"
 import { boxplotCanvasRenderer } from "./renderers/boxplotCanvasRenderer"
 import { violinCanvasRenderer } from "./renderers/violinCanvasRenderer"
+import { connectorCanvasRenderer } from "./renderers/connectorCanvasRenderer"
 
 // ── Renderer dispatch ──────────────────────────────────────────────────
 
+// Connectors are built into the scene graph by the store, so every
+// chart type includes the connector renderer to paint them.
+const withConnectors = (renderers: OrdinalRendererFn[]): OrdinalRendererFn[] =>
+  [connectorCanvasRenderer as any, ...renderers]
+
 const RENDERERS: Record<OrdinalChartType, OrdinalRendererFn[]> = {
-  bar: [barCanvasRenderer as any],
-  clusterbar: [barCanvasRenderer as any],
-  point: [pointCanvasRenderer as any],
-  swarm: [pointCanvasRenderer as any],
+  bar: withConnectors([barCanvasRenderer as any]),
+  clusterbar: withConnectors([barCanvasRenderer as any]),
+  point: withConnectors([pointCanvasRenderer as any]),
+  swarm: withConnectors([pointCanvasRenderer as any]),
   pie: [wedgeCanvasRenderer as any],
   donut: [wedgeCanvasRenderer as any],
-  boxplot: [boxplotCanvasRenderer as any, pointCanvasRenderer as any],
-  violin: [violinCanvasRenderer as any],
-  histogram: [barCanvasRenderer as any]
+  boxplot: withConnectors([boxplotCanvasRenderer as any, pointCanvasRenderer as any]),
+  violin: withConnectors([violinCanvasRenderer as any]),
+  histogram: withConnectors([barCanvasRenderer as any]),
+  ridgeline: withConnectors([violinCanvasRenderer as any]),
+  timeline: withConnectors([barCanvasRenderer as any])
 }
 
 // ── Defaults ───────────────────────────────────────────────────────────
@@ -67,13 +75,43 @@ const defaultTooltipStyle: React.CSSProperties = {
 
 function DefaultOrdinalTooltip({ hover }: { hover: HoverData }) {
   const d = hover.data || {}
-  const category = d.category || d.name || ""
-  const value = hover.value
+
+  // For summary types (boxplot, violin), datum is an array of pieces
+  if (Array.isArray(d)) {
+    const category = d[0]?.category || ""
+    const n = d.length
+    return (
+      <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+        {category && <div style={{ fontWeight: "bold" }}>{String(category)}</div>}
+        <div>{n} items</div>
+      </div>
+    )
+  }
+
+  // For histogram bins
+  if (d.bin != null && d.count != null) {
+    const range = d.range || []
+    return (
+      <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+        {d.category && <div style={{ fontWeight: "bold" }}>{String(d.category)}</div>}
+        <div>Count: {d.count}</div>
+        {range.length === 2 && (
+          <div style={{ opacity: 0.8 }}>
+            {Number(range[0]).toFixed(1)} – {Number(range[1]).toFixed(1)}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // For regular pieces — extract category and value from common field names
+  const category = d.category || d.name || d.group || d.__rName || ""
+  const value = d.value ?? d.__rValue ?? d.pct ?? ""
 
   return (
     <div className="semiotic-tooltip" style={defaultTooltipStyle}>
       {category && <div style={{ fontWeight: "bold" }}>{String(category)}</div>}
-      <div>{typeof value === "number" ? value.toLocaleString() : String(value ?? "")}</div>
+      {value !== "" && <div>{typeof value === "number" ? value.toLocaleString() : String(value)}</div>}
     </div>
   )
 }
@@ -91,6 +129,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       colorAccessor,
       stackBy,
       groupBy,
+      multiAxis,
       timeAccessor,
       valueAccessor,
       categoryAccessor,
@@ -101,9 +140,13 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       innerRadius,
       normalize,
       startAngle,
+      dynamicColumnWidth,
       bins,
       showOutliers,
       showIQR,
+      amplitude,
+      connectorAccessor,
+      connectorStyle,
       rExtent,
       oExtent,
       extentPadding = 0.05,
@@ -176,8 +219,9 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       colorAccessor,
       stackBy,
       groupBy,
+      multiAxis,
       timeAccessor: isStreaming ? timeAccessor : undefined,
-      valueAccessor: isStreaming ? (valueAccessor || rAccessor) : undefined,
+      valueAccessor: isStreaming ? (valueAccessor || (typeof rAccessor === "string" || typeof rAccessor === "function" ? rAccessor : undefined)) : undefined,
       categoryAccessor: isStreaming ? (categoryAccessor || oAccessor) : undefined,
       rExtent,
       oExtent,
@@ -185,9 +229,13 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       innerRadius,
       normalize,
       startAngle,
+      dynamicColumnWidth,
       bins,
       showOutliers,
       showIQR,
+      amplitude,
+      connectorAccessor,
+      connectorStyle,
       oSort,
       pieceStyle,
       summaryStyle,
@@ -195,10 +243,11 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       barColors
     }), [
       chartType, windowSize, windowMode, extentPadding, projection,
-      oAccessor, rAccessor, colorAccessor, stackBy, groupBy,
+      oAccessor, rAccessor, colorAccessor, stackBy, groupBy, multiAxis,
       timeAccessor, valueAccessor, categoryAccessor,
       rExtent, oExtent, barPadding, innerRadius, normalize, startAngle,
-      bins, showOutliers, showIQR, oSort,
+      dynamicColumnWidth,
+      bins, showOutliers, showIQR, amplitude, connectorAccessor, connectorStyle, oSort,
       pieceStyle, summaryStyle, colorScheme, barColors, isStreaming
     ])
 

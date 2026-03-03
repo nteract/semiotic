@@ -1,6 +1,6 @@
 import React from "react"
 import DocumentFrame from "../DocumentFrame"
-import { OrdinalFrame } from "semiotic"
+import { StreamOrdinalFrame } from "semiotic"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
 import boxofficeData from "../../public/data/boxofficetotals.json"
@@ -11,93 +11,28 @@ const frameProps = {
   projection: "horizontal",
   oAccessor: "none",
   rAccessor: "total",
-  rExtent: [0],
+  rExtent: [0, undefined],
   margin: { left: 20, top: 50, bottom: 75, right: 20 },
-  title: (
-    <text textAnchor="middle">
-      Weekly(1-52) Box Office Totals from <tspan fill={theme[0]}>2016</tspan> -
-      mid <tspan fill={theme[2]}>2017</tspan>
-    </text>
-  ),
-  axes: [
-    {
-      orient: "bottom",
-      label: "Box office total",
-      ticks: 8,
-      tickFormat: d => d / 1000000 + "m"
-    }
-  ],
-  type: {
-    type: "swarm",
-    r: 14,
-    customMark: d => {
-      const [year, week] = d.date.split("-")
-      return (
-        <g>
-          <circle
-            r={11}
-            stroke={year === "2016" ? theme[0] : theme[2]}
-            fill={year === "2016" ? theme[0] : theme[2]}
-          />
-          <text
-            fill={year === "2016" ? "white" : "black"}
-            fontWeight="bold"
-            textAnchor="middle"
-            y=".4em"
-          >
-            {week}
-          </text>
-        </g>
-      )
-    }
+  title: "Weekly(1-52) Box Office Totals from 2016 - mid 2017",
+  showAxes: true,
+  chartType: "swarm",
+  tooltipContent: d => {
+    const datum = d.data || d
+    return (
+      <div className="tooltip-content">
+        {datum.date} - {Math.round(datum.total / 1000000)}m
+      </div>
+    )
   },
-  tooltipContent: d => (
-    <div className="tooltip-content">
-      {d.date} - {Math.round(d.total / 1000000)}m
-    </div>
-  ),
-  pieceHoverAnnotation: true
+  enableHover: true
 }
 
 const overrideProps = {
-  title: `(
-    <text textAnchor="middle">
-      Weekly(1-52) Box Office Totals from <tspan fill={
-        theme[0]}
-      >2016</tspan> -
-      mid <tspan fill={theme[2]}>2017</tspan>
-    </text>
-  )`,
   tooltipContent: `d => (
     <div className="tooltip-content">
       {d.date} - {Math.round(d.total / 1000000)}m
     </div>
   )
-  `,
-  type: `{
-    type: "swarm",
-    r: 14,
-    customMark: d => {
-      const [year, week] = d.date.split("-");
-      return (
-        <g>
-          <circle
-            r={11}
-            stroke={year === "2016" ? theme[0] : theme[2]}
-            fill={year === "2016" ? theme[0] : theme[2]}
-          />
-          <text
-            fill={year === "2016" ? "white" : "black"}
-            fontWeight="bold"
-            textAnchor="middle"
-            y=".4em"
-          >
-            {week}
-          </text>
-        </g>
-      );
-    }
-  }
   `
 }
 
@@ -115,7 +50,7 @@ This page uses box office data from [Box Office Mojo](https://www.boxofficemojo.
       <DocumentFrame
         frameProps={frameProps}
         overrideProps={overrideProps}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         useExpanded
       />
     </div>

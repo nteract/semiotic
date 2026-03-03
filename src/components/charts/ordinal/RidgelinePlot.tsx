@@ -14,12 +14,14 @@ import { normalizeLinkedHover, wrapStyleWithSelection } from "../shared/selectio
 import { useSelection } from "../../store/useSelection"
 import { useLinkedHover } from "../../store/useSelection"
 
-export interface HistogramProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+export interface RidgelinePlotProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   data: TDatum[]
   categoryAccessor?: ChartAccessor<TDatum, string>
   valueAccessor?: ChartAccessor<TDatum, number>
+  orientation?: "vertical" | "horizontal"
   bins?: number
-  relative?: boolean
+  /** Amplitude factor controlling how far density extends (>1 allows overlap) @default 1.5 */
+  amplitude?: number
   categoryLabel?: string
   valueLabel?: string
   valueFormat?: (d: number | string) => string
@@ -33,13 +35,19 @@ export interface HistogramProps<TDatum extends Record<string, any> = Record<stri
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
-export function Histogram<TDatum extends Record<string, any> = Record<string, any>>(props: HistogramProps<TDatum>) {
+/**
+ * RidgelinePlot - Visualize distributions as overlapping one-sided density curves.
+ *
+ * Each category shows its value distribution as a filled area extending from a
+ * baseline. The amplitude prop controls overlap between rows.
+ */
+export function RidgelinePlot<TDatum extends Record<string, any> = Record<string, any>>(props: RidgelinePlotProps<TDatum>) {
   const {
     data, width = 600, height = 400, margin: userMargin, className, title,
     categoryAccessor = "category", valueAccessor = "value",
-    bins = 25, relative = false,
+    orientation = "horizontal", bins = 20, amplitude = 1.5,
     categoryLabel, valueLabel, valueFormat,
-    colorBy, colorScheme = "category10", categoryPadding = 20,
+    colorBy, colorScheme = "category10", categoryPadding = 5,
     enableHover = true, showGrid = false, showLegend, tooltip,
     frameProps = {}, selection, linkedHover
   } = props
@@ -56,7 +64,7 @@ export function Histogram<TDatum extends Record<string, any> = Record<string, an
   const baseSummaryStyle = useMemo(() => {
     return (d: Record<string, any>) => {
       const color = colorBy ? getColor(d, colorBy, colorScale) : DEFAULT_COLOR
-      return { fill: color, stroke: color, fillOpacity: 0.8 }
+      return { fill: color, stroke: color, fillOpacity: 0.5 }
     }
   }, [colorBy, colorScale])
 
@@ -72,10 +80,10 @@ export function Histogram<TDatum extends Record<string, any> = Record<string, an
   }, [shouldShowLegend, colorBy, safeData, colorScale])
 
   const margin = useMemo(() => {
-    const finalMargin = { top: 50, bottom: 60, left: 70, right: 40, ...userMargin }
+    const finalMargin = { top: 50, bottom: 60, left: orientation === "horizontal" ? 120 : 70, right: 40, ...userMargin }
     if (legend && finalMargin.right < 120) finalMargin.right = 120
     return finalMargin
-  }, [userMargin, legend])
+  }, [userMargin, legend, orientation])
 
   const customHoverBehavior = useCallback(
     (d: Record<string, any> | null) => { if (linkedHover) linkedHoverHook.onHover(d) },
@@ -86,37 +94,28 @@ export function Histogram<TDatum extends Record<string, any> = Record<string, an
     return (d: Record<string, any>) => {
       const datum = d.data || d
       const category = datum.category || d.category || ""
-      const count = datum.count
-      const range = datum.range
       return (
         <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-          {category && <div style={{ fontWeight: "bold" }}>{String(category)}</div>}
-          {count != null && <div>Count: {count}</div>}
-          {range && range.length === 2 && (
-            <div style={{ opacity: 0.8 }}>
-              {Number(range[0]).toFixed(1)} – {Number(range[1]).toFixed(1)}
-            </div>
-          )}
+          <div style={{ fontWeight: "bold" }}>{String(category)}</div>
         </div>
       )
     }
   }, [])
 
   const error = validateArrayData({
-    componentName: "Histogram", data: safeData,
+    componentName: "RidgelinePlot", data: safeData,
     accessors: { categoryAccessor, valueAccessor },
   })
-  if (error) return <ChartError componentName="Histogram" message={error} width={width} height={height} />
+  if (error) return <ChartError componentName="RidgelinePlot" message={error} width={width} height={height} />
 
   const streamProps: StreamOrdinalFrameProps = {
-    chartType: "histogram",
+    chartType: "ridgeline",
     data: safeData,
     oAccessor: categoryAccessor,
     rAccessor: valueAccessor,
-    projection: "horizontal",
+    projection: orientation === "horizontal" ? "horizontal" : "vertical",
     summaryStyle,
     bins,
-    normalize: relative,
     size: [width, height],
     margin,
     barPadding: categoryPadding,
@@ -126,14 +125,18 @@ export function Histogram<TDatum extends Record<string, any> = Record<string, an
     rLabel: valueLabel,
     rFormat: valueFormat as any,
     showGrid,
+    oSort: false,
     ...(legend && { legend }),
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
     ...(linkedHover && { customHoverBehavior }),
     ...frameProps
-  }
+  } as any
+
+  // Pass amplitude through (not in typed props, handled by store cast)
+  ;(streamProps as any).amplitude = amplitude
 
   return <StreamOrdinalFrame {...streamProps} />
 }
-Histogram.displayName = "Histogram"
+RidgelinePlot.displayName = "RidgelinePlot"

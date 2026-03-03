@@ -28,6 +28,8 @@ const sampleData = [
 // ---------------------------------------------------------------------------
 
 const marketSegments = ["Electronics", "Clothing", "Grocery", "Furniture", "Books"]
+const pieColors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
+const pieColorMap = Object.fromEntries(marketSegments.map((s, i) => [s, pieColors[i]]))
 
 const streamingPieCode = `import { useRef, useEffect } from "react"
 import { StreamOrdinalFrame } from "semiotic"
@@ -60,6 +62,7 @@ function StreamingPieDemo() {
       rAccessor="value"
       windowSize={200}
       showAxes={false}
+      pieceStyle={d => ({ fill: pieColorMap[d.category] || "#007bff" })}
     />
   )
 }`
@@ -93,6 +96,7 @@ function StreamingPieDemo({ width }) {
       rAccessor="value"
       windowSize={200}
       showAxes={false}
+      pieceStyle={d => ({ fill: pieColorMap[d.category] || "#007bff" })}
     />
   )
 }

@@ -57,6 +57,9 @@ export type { HistogramProps } from "./ordinal/Histogram"
 export { ViolinPlot } from "./ordinal/ViolinPlot"
 export type { ViolinPlotProps } from "./ordinal/ViolinPlot"
 
+export { RidgelinePlot } from "./ordinal/RidgelinePlot"
+export type { RidgelinePlotProps } from "./ordinal/RidgelinePlot"
+
 export { DotPlot } from "./ordinal/DotPlot"
 export type { DotPlotProps } from "./ordinal/DotPlot"
 

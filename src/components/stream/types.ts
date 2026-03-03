@@ -37,6 +37,10 @@ export interface Style {
   fill?: string
   fillOpacity?: number
   opacity?: number
+  /** For icon/isotype bars: an image to stamp instead of filling */
+  icon?: HTMLImageElement | HTMLCanvasElement
+  /** Padding between stamped icons */
+  iconPadding?: number
 }
 
 export type SceneNode =

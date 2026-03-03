@@ -1,6 +1,6 @@
 import React from "react"
 import DocumentFrame from "../DocumentFrame"
-import { OrdinalFrame } from "semiotic"
+import { StreamOrdinalFrame } from "semiotic"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
 
@@ -56,30 +56,29 @@ const frameProps = {
   size: [500, 450],
   oAccessor: "attribute",
   rAccessor: "value",
-  rExtent: [0],
+  rExtent: [0, undefined],
   margin: { left: 40, top: 50, bottom: 75, right: 120 },
   title: "Pokemon Base Stats",
-  axes: true,
+  showAxes: true,
   data,
 
-  style: d => ({
+  pieceStyle: d => ({
     fill: d.color,
     stroke: "white",
     strokeOpacity: 0.5
   }),
-  connectorStyle: d => {
-    return {
-      fill: d.source.color,
-      stroke: d.source.color,
-      strokeOpacity: 0.5,
-      fillOpacity: 0.5
-    }
-  },
+  connectorStyle: d => ({
+    fill: d.color,
+    fillOpacity: 0.15,
+    stroke: d.color,
+    strokeWidth: 2,
+    opacity: 0.5
+  }),
   oLabel: true,
-  type: "point",
+  chartType: "point",
   projection: "radial",
-  pieceHoverAnnotation: true,
-  connectorType: d => d.name,
+  enableHover: true,
+  connectorAccessor: d => d.name,
   foregroundGraphics: [
     <g transform="translate(400, 73)" key="legend">
       <text key={1} fill={theme[3]}>
@@ -100,21 +99,18 @@ const frameProps = {
 
 const overrideProps = {
   foregroundGraphics: ` [
-    <g transform="translate(440, 73)" key="legend">
-      <text key={1} fill={theme[0]}>
-        New York
+    <g transform="translate(400, 73)" key="legend">
+      <text key={1} fill={theme[3]}>
+        Pikachu
       </text>
-      <text key={1} y={20} fill={theme[1]}>
-        Las Vegas
+      <text key={1} y={20} fill={theme[2]}>
+        Bulbasaur
       </text>
-      <text key={1} y={40} fill={theme[2]}>
-        San Diego
+      <text key={1} y={40} fill={theme[1]}>
+        Charmander
       </text>
-      <text key={1} y={60} fill={theme[3]}>
-        Denver
-      </text>
-      <text key={1} y={80} fill={theme[4]}>
-        Oakland
+      <text key={1} y={60} fill={theme[4]}>
+        Squirtle
       </text>
     </g>
   ]`
@@ -132,7 +128,7 @@ A comparison of attributes across multiple attributes. This data is from [Pokemo
       <DocumentFrame
         frameProps={frameProps}
         overrideProps={overrideProps}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         useExpanded
       />
     </div>

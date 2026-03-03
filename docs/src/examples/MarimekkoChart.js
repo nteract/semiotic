@@ -1,6 +1,6 @@
 import React from "react"
 import DocumentFrame from "../DocumentFrame"
-import { OrdinalFrame } from "semiotic"
+import { StreamOrdinalFrame } from "semiotic"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
 
@@ -63,16 +63,14 @@ const frameProps = {
   size: [700, 400],
   rAccessor: "pct",
   oAccessor: "market",
+  showAxes: true,
+  chartType: "bar",
   dynamicColumnWidth: "value",
-  axes: [
-    { orient: "left", tickFormat: d => Math.floor(d * 100) + "%" },
-    { orient: "top", tickFormat: d => d / 1000 + "k" }
-  ],
-  type: "bar",
-  oLabel: d => <text transform="rotate(45)">{d}</text>,
+  stackBy: "segment",
+  oLabel: true,
   margin: { left: 45, top: 40, bottom: 80, right: 50 },
   data,
-  style: d => {
+  pieceStyle: d => {
     return {
       fill: colors[d.segment],
       stroke: "white",
@@ -82,7 +80,7 @@ const frameProps = {
 }
 
 const overrideProps = {
-  oLabel: `d => <text transform="rotate(45)">{d}</text>`
+  oLabel: `true`
 }
 
 const MarimekkoChart = () => {
@@ -91,7 +89,7 @@ const MarimekkoChart = () => {
       <MarkdownText
         text={`
 
-The Marimekko chart allows you to encode data along both the x and y axis. It uses the \`dynamicColumnWidth\` setting to encode one value, raw value of sales in a region, and the \`rAccessor\` for a separate value, percent of sales in a region by brand.
+The Marimekko chart encodes data along both the x and y axis. Column widths are proportional to the total market value via the \`dynamicColumnWidth\` prop, while bars within each column show segment percentages.
 
 This data is randomly generated.
 
@@ -100,7 +98,7 @@ This data is randomly generated.
       <DocumentFrame
         frameProps={frameProps}
         overrideProps={overrideProps}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         pre={`const colors = {
   "Almond lovers": theme[0],
   "Berry buyers": theme[1],

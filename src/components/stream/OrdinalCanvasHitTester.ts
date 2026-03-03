@@ -155,23 +155,17 @@ function hitTestBoxplot(node: BoxplotSceneNode, px: number, py: number): Ordinal
 }
 
 function hitTestViolin(node: ViolinSceneNode, px: number, py: number): OrdinalHitResult | null {
-  // Approximate with bounding box from the path
-  // A more precise test would use Path2D.isPointInPath but that requires canvas context
-  // For now, use a generous bounding box
-  const tx = px - node.translateX
-  const ty = py - node.translateY
+  if (!node.bounds) return null
 
-  // Parse rough bounds from path string — check if point is within
-  // the column area. This is a rough approximation.
-  // The violin path is symmetric around the column middle, so we check
-  // if the point is reasonably close.
-  if (node.iqrLine) {
-    const medianPos = node.iqrLine.medianPos
+  const { x, y, width, height } = node.bounds
+
+  if (px >= x && px <= x + width && py >= y && py <= y + height) {
+    // Return center of bounds for tooltip positioning
     return {
       datum: node.datum,
-      x: tx,
-      y: medianPos,
-      distance: 10, // Give it moderate priority
+      x: x + width / 2,
+      y: y + height / 2,
+      distance: 0,
       category: node.category
     }
   }

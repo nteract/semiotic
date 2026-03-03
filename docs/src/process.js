@@ -40,13 +40,20 @@ export const processNodes = [
       "lineType",
       "type",
       "connectorType",
+      "connectorAccessor",
       "summaryType",
       "networkType",
       "projection",
       "oPadding",
+      "barPadding",
       "dynamicColumnWidth",
       "pixelColumnWidth",
-      "zoom"
+      "zoom",
+      "stackBy",
+      "groupBy",
+      "multiAxis",
+      "innerRadius",
+      "startAngle"
     ]
   },
   {
@@ -84,7 +91,13 @@ export const processNodes = [
       "windowMode",
       "arrowOfTime",
       "binSize",
+      "bins",
       "normalize",
+      "showOutliers",
+      "showIQR",
+      "amplitude",
+      "runtimeMode",
+      "extentPadding",
       "nodeIDAccessor",
       "sourceAccessor",
       "targetAccessor"
@@ -94,6 +107,7 @@ export const processNodes = [
     label: "Customize",
     keys: [
       "style",
+      "pieceStyle",
       "connectorStyle",
       "summaryStyle",
       "pointStyle",
@@ -170,6 +184,7 @@ export const processNodes = [
       "customDoubleClickBehavior",
       "hoverAnnotation",
       "enableHover",
+      "linkedHover",
       "pieceHoverAnnotation",
       "summaryHoverAnnotation",
       "interaction"
@@ -185,7 +200,11 @@ export const processNodes = [
       "htmlAnnotationRules",
       "tooltipContent",
       "oLabel",
-      "nodeLabels"
+      "rLabel",
+      "oFormat",
+      "rFormat",
+      "nodeLabels",
+      "centerContent"
     ]
   }
 ]

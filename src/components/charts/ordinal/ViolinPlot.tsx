@@ -89,9 +89,19 @@ export function ViolinPlot<TDatum extends Record<string, any> = Record<string, a
     return (d: Record<string, any>) => {
       const datum = d.data || d
       const category = datum.category || d.category || ""
+      // datum is the array of piece data for the column
+      const pieces = Array.isArray(datum) ? datum : []
+      const values = pieces.map((p: any) => {
+        const v = typeof valueAccessor === "function" ? (valueAccessor as Function)(p) : p[valueAccessor as string]
+        return Number(v)
+      }).filter((v: number) => !isNaN(v)).sort((a: number, b: number) => a - b)
+      const n = values.length
+      const median = n > 0 ? values[Math.floor(n / 2)] : null
       return (
         <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-          <div style={{ fontWeight: "bold" }}>{String(category)}</div>
+          {category && <div style={{ fontWeight: "bold" }}>{String(category)}</div>}
+          {n > 0 && <div>n = {n}</div>}
+          {median != null && <div>Median: {median.toLocaleString()}</div>}
         </div>
       )
     }
