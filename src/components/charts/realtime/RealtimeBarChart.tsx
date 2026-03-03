@@ -15,7 +15,7 @@ import type { ReactNode } from "react"
 import { normalizeLinkedHover } from "../shared/selectionUtils"
 import { useLinkedHover } from "../../store/useSelection"
 
-export interface RealtimeBarChartProps {
+export interface RealtimeTemporalHistogramProps {
   /** Time interval for binning */
   binSize: number
   /** Chart dimensions as [width, height] */
@@ -83,10 +83,11 @@ export interface RealtimeBarChartProps {
 }
 
 /**
- * RealtimeBarChart - Simplified wrapper for streaming temporal histograms.
+ * RealtimeTemporalHistogram - Streaming temporal histogram.
  *
  * Wraps StreamXYFrame with `chartType="bar"` and `runtimeMode="streaming"`,
- * exposing bar styling as top-level props. Supports both simple and stacked (categorical) modes.
+ * binning pushed data points into time-windowed bars. Supports both simple
+ * and stacked (categorical) modes.
  *
  * Edge bins that only partially fall within the visible time window are
  * rendered at proportionally narrower widths (Datadog-style).
@@ -94,7 +95,7 @@ export interface RealtimeBarChartProps {
  * @example
  * ```tsx
  * // Simple histogram
- * <RealtimeBarChart
+ * <RealtimeTemporalHistogram
  *   ref={ref}
  *   binSize={20}
  *   fill="#007bff"
@@ -102,7 +103,7 @@ export interface RealtimeBarChartProps {
  * />
  *
  * // Stacked by category
- * <RealtimeBarChart
+ * <RealtimeTemporalHistogram
  *   ref={ref}
  *   binSize={25}
  *   categoryAccessor="category"
@@ -111,8 +112,8 @@ export interface RealtimeBarChartProps {
  * />
  * ```
  */
-export const RealtimeBarChart = forwardRef<RealtimeFrameHandle, RealtimeBarChartProps>(
-  function RealtimeBarChart(props, ref) {
+export const RealtimeTemporalHistogram = forwardRef<RealtimeFrameHandle, RealtimeTemporalHistogramProps>(
+  function RealtimeTemporalHistogram(props, ref) {
     const {
       binSize,
       size = [500, 300],
@@ -211,4 +212,9 @@ export const RealtimeBarChart = forwardRef<RealtimeFrameHandle, RealtimeBarChart
     )
   }
 )
-RealtimeBarChart.displayName = "RealtimeBarChart"
+RealtimeTemporalHistogram.displayName = "RealtimeTemporalHistogram"
+
+/** @deprecated Use RealtimeTemporalHistogram instead */
+export const RealtimeBarChart = RealtimeTemporalHistogram
+/** @deprecated Use RealtimeTemporalHistogramProps instead */
+export type RealtimeBarChartProps = RealtimeTemporalHistogramProps

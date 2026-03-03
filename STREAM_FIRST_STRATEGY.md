@@ -209,28 +209,28 @@ The `LinkedCharts` coordination system, `useSelection`, and `useBrushSelection` 
 - RealtimeNetworkFrame (canvas+SVG hybrid, push API, network topology)
 - 27 HOC chart components wrapping the above
 
-### Phase 1: Unified XY Stream Frame
+### Phase 1: Unified XY Stream Frame (DONE)
 
-Build `StreamXYFrame` — a canvas-first XY frame that handles both bounded and unbounded data.
+`StreamXYFrame` — canvas-first XY frame handling both bounded and unbounded data.
 
-**What it replaces:** XYFrame (for line, area, scatter, heatmap) + RealtimeFrame (for streaming line, bar, swarm, waterfall)
+**Replaces:** XYFrame (for line, area, scatter, heatmap) + RealtimeFrame (for streaming line, bar, swarm, waterfall)
 
-**Key work:**
-- Source adapter that accepts `data` prop OR `push()` API (or both)
-- Port `RingBuffer` + `IncrementalExtent` to be the internal store for all XY data
-- Canvas renderer for lines, areas, points, bars (port from RealtimeFrame's renderer system)
-- SVG annotation overlay (port from XYFrame's annotation pipeline)
-- Windowing as a first-class prop (`window: { type: "sliding", size: 200 }`)
-- Hover via canvas hit-testing (port from RealtimeFrame)
-- Progressive rendering for large bounded datasets (chunked ingestion with watermark)
+**Completed:**
+- DataSourceAdapter: accepts `data` prop, `push()` API, or both; progressive chunking for large datasets
+- PipelineStore: RingBuffer + IncrementalExtent + scene graph building for line, area, stackedarea, scatter, bubble, heatmap, bar, swarm, waterfall, candlestick
+- Canvas renderers for all chart types
+- SVG annotation overlay (axes, grid, legend, annotations)
+- Canvas hit-testing for hover/tooltip
+- Windowing via `windowSize` + `windowMode`
+- Progressive rendering for large bounded datasets (>5K items chunked across rAFs)
 
-**HOC migration:** `LineChart`, `AreaChart`, `Scatterplot`, `BubbleChart`, `Heatmap` switch from XYFrame to StreamXYFrame. `RealtimeLineChart`, `RealtimeBarChart`, `RealtimeSwarmChart`, `RealtimeWaterfallChart` also switch. Props APIs stay the same — HOCs absorb the difference.
+**HOC migration (complete):** `LineChart`, `AreaChart`, `StackedAreaChart`, `Scatterplot`, `BubbleChart`, `Heatmap` use StreamXYFrame. `RealtimeLineChart`, `RealtimeBarChart`, `RealtimeSwarmChart`, `RealtimeWaterfallChart` use StreamXYFrame with `runtimeMode="streaming"`.
 
-**Compatibility:** XYFrame continues to exist but is marked deprecated. New features only go into StreamXYFrame.
+**Status:** XYFrame and RealtimeFrame still exist but are deprecated. All HOCs use StreamXYFrame.
 
-### Phase 2: Unified Ordinal Stream Frame
+### Phase 2: Unified Ordinal Stream Frame (DONE)
 
-Build `StreamOrdinalFrame` — canvas-first ordinal frame.
+`StreamOrdinalFrame` — canvas-first ordinal frame.
 
 **What it replaces:** OrdinalFrame
 
@@ -240,11 +240,20 @@ Build `StreamOrdinalFrame` — canvas-first ordinal frame.
 - Summary type renderers ported to canvas (violin, boxplot, histogram, swarm)
 - Canvas-based column overlays for interaction
 
-**HOC migration:** `BarChart`, `StackedBarChart`, `GroupedBarChart`, `SwarmPlot`, `BoxPlot`, `Histogram`, `ViolinPlot`, `DotPlot`, `PieChart`, `DonutChart` switch.
+**Completed:**
+- OrdinalPipelineStore: RingBuffer + category tracking + ScaleBand/ScaleLinear + scene graph building for bar, clusterbar, point, swarm, pie, donut, boxplot, violin, histogram
+- Canvas renderers: wedge (pie/donut), boxplot, violin; reuses bar and point renderers from StreamXYFrame
+- OrdinalSVGOverlay: band-scale category axis, value axis, grid, legend, annotations
+- OrdinalCanvasHitTester: rect, point, wedge, boxplot, violin hit testing
+- Radial projection for pie/donut with canvas centering and donut centerContent
 
-**New capability:** Streaming ordinal charts — push categorical observations and watch distributions update live. A streaming violin plot, streaming histogram, etc. This doesn't exist today and is a differentiator.
+**HOC migration (complete):** `BarChart`, `StackedBarChart`, `GroupedBarChart`, `SwarmPlot`, `BoxPlot`, `Histogram`, `ViolinPlot`, `DotPlot`, `PieChart`, `DonutChart` all use StreamOrdinalFrame.
 
-**Marginal graphics:** XYFrame's `marginalSummaryType` axis prop renders ordinal summaries (ridgeline, heatmap, histogram, etc.) along scatter axes. This requires ordinal summary renderers inside an XY context — it depends on StreamOrdinalFrame's summary type canvas renderers being available as a shared library that StreamXYFrame can import. The cookbook/marginal-graphics page is currently broken because StreamXYFrame doesn't support legacy `marginalSummaryType`. This should be addressed as part of Phase 2: port ordinal summary renderers to canvas, expose them as importable utilities, then add `marginalSummaryType` support to StreamXYFrame's axis rendering.
+**Status:** OrdinalFrame still exists but is deprecated. All ordinal HOCs use StreamOrdinalFrame.
+
+**Future capability:** Streaming ordinal charts — push categorical observations and watch distributions update live. A streaming violin plot, streaming histogram, etc. The push API is already wired in StreamOrdinalFrame; category discovery is incremental. This is a differentiator.
+
+**Marginal graphics (TODO):** XYFrame's `marginalSummaryType` axis prop renders ordinal summaries (ridgeline, heatmap, histogram, etc.) along scatter axes. This requires ordinal summary renderers inside an XY context. Now that StreamOrdinalFrame's canvas summary renderers exist, they can be extracted as shared utilities and imported by StreamXYFrame for marginal rendering. The cookbook/marginal-graphics page is currently broken pending this work.
 
 ### Phase 3: Unified Network Stream Frame
 
@@ -272,7 +281,7 @@ Build `StreamNetworkFrame` — generalizes RealtimeNetworkFrame to handle all ne
 ### Phase 4: Deprecation and Cleanup
 
 - Remove legacy XYFrame, OrdinalFrame, NetworkFrame
-- Remove RealtimeFrame (absorbed by StreamXYFrame)
+- Remove RealtimeFrame (absorbed by StreamXYFrame — already deprecated, no HOCs use it)
 - Remove RealtimeNetworkFrame (absorbed by StreamNetworkFrame)
 - Single codebase, single set of patterns
 - `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`, `semiotic/realtime` entry points still work but all resolve to unified internals

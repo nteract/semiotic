@@ -1,5 +1,5 @@
-import React from "react"
-import { OrdinalFrame } from "semiotic"
+import React, { useRef, useEffect } from "react"
+import { OrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { Histogram } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -7,6 +7,8 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -78,6 +80,87 @@ const colorData = [
   { category: "Region C", value: 62, zone: "Rural" },
   { category: "Region C", value: 70, zone: "Rural" },
 ]
+
+// ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const histGroups = ["Morning", "Afternoon", "Evening"]
+
+const streamingHistogramCode = `import { useRef, useEffect } from "react"
+import { StreamOrdinalFrame } from "semiotic"
+
+function StreamingHistogramDemo() {
+  const chartRef = useRef()
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const group = histGroups[Math.floor(Math.random() * 3)]
+        const base = group === "Morning" ? 63
+          : group === "Afternoon" ? 83 : 47
+        const spread = 14
+        const noise = (Math.random() + Math.random() + Math.random()) / 3 - 0.5
+        chartRef.current.push({
+          category: group,
+          value: Math.round(base + noise * spread * 2),
+        })
+      }
+    }, 100)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="histogram"
+      runtimeMode="streaming"
+      size={[600, 300]}
+      oAccessor="category"
+      rAccessor="value"
+      windowSize={300}
+      showAxes
+      bins={15}
+      summaryStyle={() => ({ fill: "#6366f1", stroke: "#6366f1", fillOpacity: 0.8 })}
+    />
+  )
+}`
+
+function StreamingHistogramDemo({ width }) {
+  const chartRef = useRef()
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const group = histGroups[Math.floor(Math.random() * 3)]
+        const base = group === "Morning" ? 63
+          : group === "Afternoon" ? 83 : 47
+        const spread = 14
+        const noise = (Math.random() + Math.random() + Math.random()) / 3 - 0.5
+        chartRef.current.push({
+          category: group,
+          value: Math.round(base + noise * spread * 2),
+        })
+      }
+    }, 100)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="histogram"
+      runtimeMode="streaming"
+      size={[width, 300]}
+      oAccessor="category"
+      rAccessor="value"
+      windowSize={300}
+      showAxes
+      bins={15}
+      summaryStyle={() => ({ fill: "#6366f1", stroke: "#6366f1", fillOpacity: 0.8 })}
+    />
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Props definition for PropTable
@@ -156,18 +239,20 @@ export default function HistogramPage() {
         points per category and the component bins them automatically.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: sampleData,
-          categoryAccessor: "category",
-          valueAccessor: "value",
-          categoryLabel: "Time of Day",
-          valueLabel: "Frequency",
-        }}
-        type={Histogram}
-        startHidden={false}
-        overrideProps={{
-          data: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              data: sampleData,
+              categoryAccessor: "category",
+              valueAccessor: "value",
+              categoryLabel: "Time of Day",
+              valueLabel: "Frequency",
+            }}
+            type={Histogram}
+            startHidden={false}
+            overrideProps={{
+              data: `[
   { category: "Morning", value: 62 },
   { category: "Morning", value: 58 },
   { category: "Morning", value: 71 },
@@ -176,8 +261,16 @@ export default function HistogramPage() {
   { category: "Afternoon", value: 85 },
   // ...more data points
 ]`,
-        }}
-        hiddenProps={{}}
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingHistogramDemo width={w} />}
+            code={streamingHistogramCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}

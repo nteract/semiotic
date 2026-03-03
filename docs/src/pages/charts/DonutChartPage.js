@@ -1,5 +1,5 @@
-import React from "react"
-import { OrdinalFrame } from "semiotic"
+import React, { useRef, useEffect } from "react"
+import { OrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { DonutChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -7,6 +7,8 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -26,6 +28,82 @@ const budgetData = [
   { category: "Operations", value: 180000 },
   { category: "HR", value: 120000 },
 ]
+
+// ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const budgetCategories = ["Engineering", "Marketing", "Sales", "Operations", "HR"]
+
+const streamingDonutCode = `import { useRef, useEffect } from "react"
+import { StreamOrdinalFrame } from "semiotic"
+
+function StreamingDonutDemo() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          category: budgetCategories[i % 5],
+          value: Math.round(50000 + Math.random() * 400000),
+        })
+      }
+    }, 600)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="donut"
+      runtimeMode="streaming"
+      projection="radial"
+      innerRadius={60}
+      size={[400, 400]}
+      oAccessor="category"
+      rAccessor="value"
+      windowSize={200}
+      showAxes={false}
+    />
+  )
+}`
+
+function StreamingDonutDemo({ width }) {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          category: budgetCategories[i % 5],
+          value: Math.round(50000 + Math.random() * 400000),
+        })
+      }
+    }, 600)
+    return () => clearInterval(id)
+  }, [])
+
+  const size = Math.min(width, 400)
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="donut"
+      runtimeMode="streaming"
+      projection="radial"
+      innerRadius={60}
+      size={[size, size]}
+      oAccessor="category"
+      rAccessor="value"
+      windowSize={200}
+      showAxes={false}
+    />
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Props definition for PropTable
@@ -100,24 +178,34 @@ export default function DonutChartPage() {
         inner radius is 60 pixels.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: sampleData,
-          categoryAccessor: "category",
-          valueAccessor: "value",
-          colorScheme: ["#22c55e", "#f59e0b", "#e2e4e8"],
-        }}
-        type={DonutChart}
-        startHidden={false}
-        overrideProps={{
-          data: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              data: sampleData,
+              categoryAccessor: "category",
+              valueAccessor: "value",
+              colorScheme: ["#22c55e", "#f59e0b", "#e2e4e8"],
+            }}
+            type={DonutChart}
+            startHidden={false}
+            overrideProps={{
+              data: `[
   { category: "Complete", value: 72 },
   { category: "In Progress", value: 18 },
   { category: "Not Started", value: 10 }
 ]`,
-          colorScheme: '["#22c55e", "#f59e0b", "#e2e4e8"]',
-        }}
-        hiddenProps={{}}
+              colorScheme: '["#22c55e", "#f59e0b", "#e2e4e8"]',
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingDonutDemo width={w} />}
+            code={streamingDonutCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}

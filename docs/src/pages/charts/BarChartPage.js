@@ -1,5 +1,5 @@
-import React from "react"
-import { OrdinalFrame } from "semiotic"
+import React, { useRef, useEffect } from "react"
+import { OrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { BarChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -7,6 +7,8 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -30,6 +32,79 @@ const colorData = [
   { category: "Toys", value: 4100, region: "South" },
   { category: "Books", value: 3800, region: "East" },
 ]
+
+// ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const departments = ["Engineering", "Marketing", "Sales", "Operations", "HR", "Design"]
+
+const streamingBarCode = `import { useRef, useEffect } from "react"
+import { StreamOrdinalFrame } from "semiotic"
+
+function StreamingBarDemo() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          category: departments[i % 6],
+          value: Math.round(2000 + Math.random() * 10000),
+        })
+      }
+    }, 500)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="bar"
+      runtimeMode="streaming"
+      size={[600, 300]}
+      oAccessor="category"
+      rAccessor="value"
+      windowSize={200}
+      showAxes
+      pieceStyle={() => ({ fill: "#6366f1" })}
+    />
+  )
+}`
+
+function StreamingBarDemo({ width }) {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          category: departments[i % 6],
+          value: Math.round(2000 + Math.random() * 10000),
+        })
+      }
+    }, 500)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="bar"
+      runtimeMode="streaming"
+      size={[width, 300]}
+      oAccessor="category"
+      rAccessor="value"
+      windowSize={200}
+      showAxes
+      pieceStyle={() => ({ fill: "#6366f1" })}
+    />
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Props definition for PropTable
@@ -107,25 +182,35 @@ export default function BarChartPage() {
         <code>value</code> fields.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: sampleData,
-          categoryAccessor: "category",
-          valueAccessor: "value",
-          categoryLabel: "Department",
-          valueLabel: "Sales ($)",
-        }}
-        type={BarChart}
-        startHidden={false}
-        overrideProps={{
-          data: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              data: sampleData,
+              categoryAccessor: "category",
+              valueAccessor: "value",
+              categoryLabel: "Department",
+              valueLabel: "Sales ($)",
+            }}
+            type={BarChart}
+            startHidden={false}
+            overrideProps={{
+              data: `[
   { category: "Electronics", value: 12400 },
   { category: "Clothing", value: 8700 },
   { category: "Grocery", value: 15300 },
   // ...more data points
 ]`,
-        }}
-        hiddenProps={{}}
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingBarDemo width={w} />}
+            code={streamingBarCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}

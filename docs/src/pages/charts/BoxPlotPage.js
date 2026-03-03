@@ -1,5 +1,5 @@
-import React from "react"
-import { OrdinalFrame } from "semiotic"
+import React, { useRef, useEffect } from "react"
+import { OrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { BoxPlot } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -7,6 +7,8 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -60,6 +62,88 @@ const colorData = [
   { category: "Region C", value: 68, zone: "Rural" },
   { category: "Region C", value: 75, zone: "Rural" },
 ]
+
+// ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const timeSlots = ["Morning", "Afternoon", "Evening"]
+
+const streamingBoxPlotCode = `import { useRef, useEffect } from "react"
+import { StreamOrdinalFrame } from "semiotic"
+
+function StreamingBoxPlotDemo() {
+  const chartRef = useRef()
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const slot = timeSlots[Math.floor(Math.random() * 3)]
+        // Different distributions per time slot
+        const base = slot === "Morning" ? 65
+          : slot === "Afternoon" ? 82 : 47
+        const spread = 15
+        const noise = (Math.random() + Math.random() + Math.random()) / 3 - 0.5
+        chartRef.current.push({
+          category: slot,
+          value: Math.round(base + noise * spread * 2),
+        })
+      }
+    }, 100)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="boxplot"
+      runtimeMode="streaming"
+      size={[600, 300]}
+      oAccessor="category"
+      rAccessor="value"
+      windowSize={300}
+      showAxes
+      showOutliers
+      summaryStyle={() => ({ fill: "#6366f1", stroke: "#6366f1", fillOpacity: 0.8 })}
+    />
+  )
+}`
+
+function StreamingBoxPlotDemo({ width }) {
+  const chartRef = useRef()
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const slot = timeSlots[Math.floor(Math.random() * 3)]
+        const base = slot === "Morning" ? 65
+          : slot === "Afternoon" ? 82 : 47
+        const spread = 15
+        const noise = (Math.random() + Math.random() + Math.random()) / 3 - 0.5
+        chartRef.current.push({
+          category: slot,
+          value: Math.round(base + noise * spread * 2),
+        })
+      }
+    }, 100)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="boxplot"
+      runtimeMode="streaming"
+      size={[width, 300]}
+      oAccessor="category"
+      rAccessor="value"
+      windowSize={300}
+      showAxes
+      showOutliers
+      summaryStyle={() => ({ fill: "#6366f1", stroke: "#6366f1", fillOpacity: 0.8 })}
+    />
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Props definition for PropTable
@@ -137,18 +221,20 @@ export default function BoxPlotPage() {
         points per category and the component computes quartiles automatically.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: sampleData,
-          categoryAccessor: "category",
-          valueAccessor: "value",
-          categoryLabel: "Time of Day",
-          valueLabel: "Response Time (ms)",
-        }}
-        type={BoxPlot}
-        startHidden={false}
-        overrideProps={{
-          data: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              data: sampleData,
+              categoryAccessor: "category",
+              valueAccessor: "value",
+              categoryLabel: "Time of Day",
+              valueLabel: "Response Time (ms)",
+            }}
+            type={BoxPlot}
+            startHidden={false}
+            overrideProps={{
+              data: `[
   { category: "Morning", value: 62 },
   { category: "Morning", value: 58 },
   { category: "Morning", value: 71 },
@@ -157,8 +243,16 @@ export default function BoxPlotPage() {
   { category: "Afternoon", value: 85 },
   // ...more data points
 ]`,
-        }}
-        hiddenProps={{}}
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingBoxPlotDemo width={w} />}
+            code={streamingBoxPlotCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}

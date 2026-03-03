@@ -1,5 +1,5 @@
-import React from "react"
-import { OrdinalFrame } from "semiotic"
+import React, { useRef, useEffect } from "react"
+import { OrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { StackedBarChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -7,6 +7,8 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -39,6 +41,84 @@ const regionData = [
   { category: "2024", region: "Europe", value: 350 },
   { category: "2024", region: "Asia", value: 330 },
 ]
+
+// ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const quarters = ["Q1", "Q2", "Q3", "Q4"]
+const products = ["Widgets", "Gadgets", "Gizmos"]
+
+const streamingStackedBarCode = `import { useRef, useEffect } from "react"
+import { StreamOrdinalFrame } from "semiotic"
+
+function StreamingStackedBarDemo() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          quarter: quarters[i % 4],
+          product: products[Math.floor(Math.random() * 3)],
+          sales: Math.round(3000 + Math.random() * 15000),
+        })
+      }
+    }, 500)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="bar"
+      runtimeMode="streaming"
+      size={[600, 300]}
+      oAccessor="quarter"
+      rAccessor="sales"
+      stackBy="product"
+      windowSize={200}
+      showAxes
+      colorScheme={["#6366f1", "#f59e0b", "#10b981"]}
+    />
+  )
+}`
+
+function StreamingStackedBarDemo({ width }) {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          quarter: quarters[i % 4],
+          product: products[Math.floor(Math.random() * 3)],
+          sales: Math.round(3000 + Math.random() * 15000),
+        })
+      }
+    }, 500)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="bar"
+      runtimeMode="streaming"
+      size={[width, 300]}
+      oAccessor="quarter"
+      rAccessor="sales"
+      stackBy="product"
+      windowSize={200}
+      showAxes
+      colorScheme={["#6366f1", "#f59e0b", "#10b981"]}
+    />
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Props definition for PropTable
@@ -115,26 +195,36 @@ export default function StackedBarChartPage() {
         <code>stackBy</code> — the field that defines how bars are subdivided.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: sampleData,
-          categoryAccessor: "category",
-          stackBy: "product",
-          valueAccessor: "value",
-          categoryLabel: "Quarter",
-          valueLabel: "Revenue ($)",
-        }}
-        type={StackedBarChart}
-        startHidden={false}
-        overrideProps={{
-          data: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              data: sampleData,
+              categoryAccessor: "category",
+              stackBy: "product",
+              valueAccessor: "value",
+              categoryLabel: "Quarter",
+              valueLabel: "Revenue ($)",
+            }}
+            type={StackedBarChart}
+            startHidden={false}
+            overrideProps={{
+              data: `[
   { category: "Q1", product: "Widgets", value: 12000 },
   { category: "Q1", product: "Gadgets", value: 8000 },
   { category: "Q1", product: "Gizmos", value: 5000 },
   // ...more data points
 ]`,
-        }}
-        hiddenProps={{}}
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingStackedBarDemo width={w} />}
+            code={streamingStackedBarCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}

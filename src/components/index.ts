@@ -42,6 +42,7 @@ import {
   Treemap,
   CirclePack,
   RealtimeLineChart,
+  RealtimeTemporalHistogram,
   RealtimeBarChart,
   RealtimeSwarmChart,
   RealtimeWaterfallChart,
@@ -94,6 +95,7 @@ export default {
   CirclePack,
   // Realtime chart components
   RealtimeLineChart,
+  RealtimeTemporalHistogram,
   RealtimeBarChart,
   RealtimeSwarmChart,
   RealtimeWaterfallChart,
@@ -146,6 +148,7 @@ export {
   CirclePack,
   // Realtime chart components
   RealtimeLineChart,
+  RealtimeTemporalHistogram,
   RealtimeBarChart,
   RealtimeSwarmChart,
   RealtimeWaterfallChart,

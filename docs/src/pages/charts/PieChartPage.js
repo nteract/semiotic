@@ -1,5 +1,5 @@
-import React from "react"
-import { OrdinalFrame } from "semiotic"
+import React, { useRef, useEffect } from "react"
+import { OrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { PieChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -7,6 +7,8 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -20,6 +22,80 @@ const sampleData = [
   { category: "Furniture", value: 180 },
   { category: "Books", value: 120 },
 ]
+
+// ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const marketSegments = ["Electronics", "Clothing", "Grocery", "Furniture", "Books"]
+
+const streamingPieCode = `import { useRef, useEffect } from "react"
+import { StreamOrdinalFrame } from "semiotic"
+
+function StreamingPieDemo() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          category: marketSegments[i % 5],
+          value: Math.round(50 + Math.random() * 400),
+        })
+      }
+    }, 600)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="pie"
+      runtimeMode="streaming"
+      projection="radial"
+      size={[400, 400]}
+      oAccessor="category"
+      rAccessor="value"
+      windowSize={200}
+      showAxes={false}
+    />
+  )
+}`
+
+function StreamingPieDemo({ width }) {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          category: marketSegments[i % 5],
+          value: Math.round(50 + Math.random() * 400),
+        })
+      }
+    }, 600)
+    return () => clearInterval(id)
+  }, [])
+
+  const size = Math.min(width, 400)
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="pie"
+      runtimeMode="streaming"
+      projection="radial"
+      size={[size, size]}
+      oAccessor="category"
+      rAccessor="value"
+      windowSize={200}
+      showAxes={false}
+    />
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Props definition for PropTable
@@ -92,24 +168,34 @@ export default function PieChartPage() {
         <code>value</code> fields. Each unique category becomes one slice.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: sampleData,
-          categoryAccessor: "category",
-          valueAccessor: "value",
-        }}
-        type={PieChart}
-        startHidden={false}
-        overrideProps={{
-          data: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              data: sampleData,
+              categoryAccessor: "category",
+              valueAccessor: "value",
+            }}
+            type={PieChart}
+            startHidden={false}
+            overrideProps={{
+              data: `[
   { category: "Electronics", value: 340 },
   { category: "Clothing", value: 210 },
   { category: "Grocery", value: 450 },
   { category: "Furniture", value: 180 },
   { category: "Books", value: 120 }
 ]`,
-        }}
-        hiddenProps={{}}
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingPieDemo width={w} />}
+            code={streamingPieCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}

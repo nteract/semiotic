@@ -1,5 +1,5 @@
-import React from "react"
-import { OrdinalFrame } from "semiotic"
+import React, { useRef, useEffect } from "react"
+import { OrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { DotPlot } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -7,6 +7,8 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -34,6 +36,79 @@ const colorData = [
   { category: "Japan", value: 72.1, continent: "Asia" },
   { category: "Brazil", value: 65.8, continent: "Americas" },
 ]
+
+// ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const countries = ["Norway", "Switzerland", "Australia", "Germany", "Canada", "Japan", "Brazil", "USA"]
+
+const streamingDotPlotCode = `import { useRef, useEffect } from "react"
+import { StreamOrdinalFrame } from "semiotic"
+
+function StreamingDotPlotDemo() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          category: countries[i % 8],
+          value: Math.round((60 + Math.random() * 30) * 10) / 10,
+        })
+      }
+    }, 500)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="point"
+      runtimeMode="streaming"
+      size={[600, 300]}
+      oAccessor="category"
+      rAccessor="value"
+      windowSize={200}
+      showAxes
+      pieceStyle={() => ({ fill: "#6366f1", r: 5 })}
+    />
+  )
+}`
+
+function StreamingDotPlotDemo({ width }) {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          category: countries[i % 8],
+          value: Math.round((60 + Math.random() * 30) * 10) / 10,
+        })
+      }
+    }, 500)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="point"
+      runtimeMode="streaming"
+      size={[width, 300]}
+      oAccessor="category"
+      rAccessor="value"
+      windowSize={200}
+      showAxes
+      pieceStyle={() => ({ fill: "#6366f1", r: 5 })}
+    />
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Props definition for PropTable
@@ -111,25 +186,35 @@ export default function DotPlotPage() {
         sorted by value automatically with a horizontal layout.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: sampleData,
-          categoryAccessor: "category",
-          valueAccessor: "value",
-          categoryLabel: "Country",
-          valueLabel: "Quality of Life Index",
-        }}
-        type={DotPlot}
-        startHidden={false}
-        overrideProps={{
-          data: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              data: sampleData,
+              categoryAccessor: "category",
+              valueAccessor: "value",
+              categoryLabel: "Country",
+              valueLabel: "Quality of Life Index",
+            }}
+            type={DotPlot}
+            startHidden={false}
+            overrideProps={{
+              data: `[
   { category: "Norway", value: 82.4 },
   { category: "Switzerland", value: 81.9 },
   { category: "Australia", value: 80.5 },
   // ...more data points
 ]`,
-        }}
-        hiddenProps={{}}
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingDotPlotDemo width={w} />}
+            code={streamingDotPlotCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}

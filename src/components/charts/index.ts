@@ -98,8 +98,8 @@ export type { CirclePackProps } from "./network/CirclePack"
 export { RealtimeLineChart } from "./realtime/RealtimeLineChart"
 export type { RealtimeLineChartProps } from "./realtime/RealtimeLineChart"
 
-export { RealtimeBarChart } from "./realtime/RealtimeBarChart"
-export type { RealtimeBarChartProps } from "./realtime/RealtimeBarChart"
+export { RealtimeTemporalHistogram, RealtimeBarChart } from "./realtime/RealtimeBarChart"
+export type { RealtimeTemporalHistogramProps, RealtimeBarChartProps } from "./realtime/RealtimeBarChart"
 
 export { RealtimeSwarmChart } from "./realtime/RealtimeSwarmChart"
 export type { RealtimeSwarmChartProps } from "./realtime/RealtimeSwarmChart"

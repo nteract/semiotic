@@ -1,5 +1,5 @@
-import React from "react"
-import { OrdinalFrame } from "semiotic"
+import React, { useRef, useEffect } from "react"
+import { OrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { SwarmPlot } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -7,6 +7,8 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -57,6 +59,82 @@ const sizedData = [
   { category: "Team C", value: 77, importance: 4 },
   { category: "Team C", value: 93, importance: 9 },
 ]
+
+// ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const swarmGroups = ["Control", "Treatment", "Placebo"]
+
+const streamingSwarmCode = `import { useRef, useEffect } from "react"
+import { StreamOrdinalFrame } from "semiotic"
+
+function StreamingSwarmDemo() {
+  const chartRef = useRef()
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const group = swarmGroups[Math.floor(Math.random() * 3)]
+        // Normal-ish distribution via central limit theorem
+        const base = group === "Treatment" ? 34 : 24
+        const noise = (Math.random() + Math.random() + Math.random()) / 3 - 0.5
+        chartRef.current.push({
+          category: group,
+          value: Math.round((base + noise * 16) * 10) / 10,
+        })
+      }
+    }, 100)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="swarm"
+      runtimeMode="streaming"
+      size={[600, 300]}
+      oAccessor="category"
+      rAccessor="value"
+      windowSize={200}
+      showAxes
+      pieceStyle={() => ({ fill: "#6366f1", opacity: 0.7 })}
+    />
+  )
+}`
+
+function StreamingSwarmDemo({ width }) {
+  const chartRef = useRef()
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const group = swarmGroups[Math.floor(Math.random() * 3)]
+        const base = group === "Treatment" ? 34 : 24
+        const noise = (Math.random() + Math.random() + Math.random()) / 3 - 0.5
+        chartRef.current.push({
+          category: group,
+          value: Math.round((base + noise * 16) * 10) / 10,
+        })
+      }
+    }, 100)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="swarm"
+      runtimeMode="streaming"
+      size={[width, 300]}
+      oAccessor="category"
+      rAccessor="value"
+      windowSize={200}
+      showAxes
+      pieceStyle={() => ({ fill: "#6366f1", opacity: 0.7 })}
+    />
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Props definition for PropTable
@@ -136,25 +214,35 @@ export default function SwarmPlotPage() {
         automatically spread to avoid overlap.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: sampleData,
-          categoryAccessor: "category",
-          valueAccessor: "value",
-          categoryLabel: "Group",
-          valueLabel: "Response",
-        }}
-        type={SwarmPlot}
-        startHidden={false}
-        overrideProps={{
-          data: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              data: sampleData,
+              categoryAccessor: "category",
+              valueAccessor: "value",
+              categoryLabel: "Group",
+              valueLabel: "Response",
+            }}
+            type={SwarmPlot}
+            startHidden={false}
+            overrideProps={{
+              data: `[
   { category: "Control", value: 23 },
   { category: "Control", value: 27 },
   { category: "Treatment", value: 35 },
   // ...more data points per category
 ]`,
-        }}
-        hiddenProps={{}}
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingSwarmDemo width={w} />}
+            code={streamingSwarmCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}

@@ -40,15 +40,17 @@ import { Tooltip, MultiLineTooltip, normalizeTooltip } from "./Tooltip/Tooltip"
 
 // StreamXYFrame (unified canvas-first XY frame)
 import StreamXYFrame from "./stream/StreamXYFrame"
+// StreamOrdinalFrame (unified canvas-first ordinal frame)
+import StreamOrdinalFrame from "./stream/StreamOrdinalFrame"
 
-// Realtime
+// Realtime (deprecated — use StreamXYFrame or StreamOrdinalFrame instead)
 import RealtimeFrame from "./realtime/RealtimeFrame"
 import { RingBuffer } from "./realtime/RingBuffer"
 import { IncrementalExtent } from "./realtime/IncrementalExtent"
 
 // Realtime chart components
 import { RealtimeLineChart } from "./charts/realtime/RealtimeLineChart"
-import { RealtimeBarChart } from "./charts/realtime/RealtimeBarChart"
+import { RealtimeTemporalHistogram, RealtimeBarChart } from "./charts/realtime/RealtimeBarChart"
 import { RealtimeSwarmChart } from "./charts/realtime/RealtimeSwarmChart"
 import { RealtimeWaterfallChart } from "./charts/realtime/RealtimeWaterfallChart"
 import { RealtimeSankey } from "./charts/realtime/RealtimeSankey"
@@ -114,12 +116,15 @@ export {
   normalizeTooltip,
   // StreamXYFrame
   StreamXYFrame,
+  // StreamOrdinalFrame
+  StreamOrdinalFrame,
   // Realtime
   RealtimeFrame,
   RingBuffer,
   IncrementalExtent,
   // Realtime chart components
   RealtimeLineChart,
+  RealtimeTemporalHistogram,
   RealtimeBarChart,
   RealtimeSwarmChart,
   RealtimeWaterfallChart,
@@ -333,9 +338,18 @@ export type {
 
 export type { StreamRendererFn } from "./stream/renderers/types"
 
+// StreamOrdinalFrame types
+export type {
+  StreamOrdinalFrameProps,
+  StreamOrdinalFrameHandle,
+  OrdinalChartType,
+  OrdinalScales,
+  OrdinalSceneNode
+} from "./stream/ordinalTypes"
+
 // Realtime chart component types
 export type { RealtimeLineChartProps } from "./charts/realtime/RealtimeLineChart"
-export type { RealtimeBarChartProps } from "./charts/realtime/RealtimeBarChart"
+export type { RealtimeTemporalHistogramProps, RealtimeBarChartProps } from "./charts/realtime/RealtimeBarChart"
 export type { RealtimeSwarmChartProps } from "./charts/realtime/RealtimeSwarmChart"
 export type { RealtimeWaterfallChartProps } from "./charts/realtime/RealtimeWaterfallChart"
 export type { RealtimeSankeyProps, RealtimeNetworkFrameProps, RealtimeNetworkFrameHandle } from "./realtime-network/types"

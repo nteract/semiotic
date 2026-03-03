@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from "react"
-import { RealtimeBarChart } from "semiotic"
+import { RealtimeTemporalHistogram } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
@@ -55,7 +55,7 @@ function BasicBarDemo() {
   return (
     <div ref={containerRef} style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "hidden" }}>
       {containerWidth && (
-        <RealtimeBarChart
+        <RealtimeTemporalHistogram
           ref={chartRef}
           size={[containerWidth, 280]}
           binSize={20}
@@ -93,7 +93,7 @@ function StackedBarDemo() {
   return (
     <div ref={containerRef} style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "hidden" }}>
       {containerWidth && (
-        <RealtimeBarChart
+        <RealtimeTemporalHistogram
           ref={chartRef}
           size={[containerWidth, 280]}
           binSize={20}
@@ -128,7 +128,7 @@ function StyledBarDemo() {
   return (
     <div ref={containerRef} style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "hidden" }}>
       {containerWidth && (
-        <RealtimeBarChart
+        <RealtimeTemporalHistogram
           ref={chartRef}
           size={[containerWidth, 280]}
           binSize={20}
@@ -185,7 +185,7 @@ const realtimeBarChartProps = [
 export default function RealtimeBarChartPage() {
   return (
     <PageLayout
-      title="RealtimeBarChart"
+      title="RealtimeTemporalHistogram"
       tier="charts"
       breadcrumbs={[
         { label: "Charts", path: "/charts" },
@@ -251,7 +251,7 @@ function StreamingBars() {
   }, [])
 
   return (
-    <RealtimeBarChart
+    <RealtimeTemporalHistogram
       ref={chartRef}
       binSize={20}
       fill="#007bff"
@@ -293,7 +293,7 @@ useEffect(() => {
   return () => clearInterval(id)
 }, [])
 
-<RealtimeBarChart
+<RealtimeTemporalHistogram
   ref={chartRef}
   binSize={20}
   categoryAccessor="category"
@@ -324,7 +324,7 @@ useEffect(() => {
   return () => clearInterval(id)
 }, [])
 
-<RealtimeBarChart
+<RealtimeTemporalHistogram
   ref={chartRef}
   binSize={20}
   fill="#28a745"
@@ -362,7 +362,7 @@ useEffect(() => {
           <CodeBlock
             code={`import { RealtimeBarChart } from "semiotic"
 
-<RealtimeBarChart
+<RealtimeTemporalHistogram
   ref={chartRef}
   data={eventStream}
   binSize={5000}

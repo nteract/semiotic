@@ -1,5 +1,5 @@
-import React from "react"
-import { OrdinalFrame } from "semiotic"
+import React, { useRef, useEffect } from "react"
+import { OrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { GroupedBarChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -7,6 +7,8 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -27,6 +29,84 @@ const sampleData = [
   { category: "Q4", product: "Beta", value: 140 },
   { category: "Q4", product: "Gamma", value: 190 },
 ]
+
+// ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const years = ["2021", "2022", "2023", "2024"]
+const groupProducts = ["Alpha", "Beta", "Gamma"]
+
+const streamingGroupedBarCode = `import { useRef, useEffect } from "react"
+import { StreamOrdinalFrame } from "semiotic"
+
+function StreamingGroupedBarDemo() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          year: years[i % 4],
+          product: groupProducts[Math.floor(Math.random() * 3)],
+          revenue: Math.round(50 + Math.random() * 150),
+        })
+      }
+    }, 500)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="clusterbar"
+      runtimeMode="streaming"
+      size={[600, 300]}
+      oAccessor="year"
+      rAccessor="revenue"
+      groupBy="product"
+      windowSize={200}
+      showAxes
+      colorScheme={["#6366f1", "#22c55e", "#f59e0b"]}
+    />
+  )
+}`
+
+function StreamingGroupedBarDemo({ width }) {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          year: years[i % 4],
+          product: groupProducts[Math.floor(Math.random() * 3)],
+          revenue: Math.round(50 + Math.random() * 150),
+        })
+      }
+    }, 500)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="clusterbar"
+      runtimeMode="streaming"
+      size={[width, 300]}
+      oAccessor="year"
+      rAccessor="revenue"
+      groupBy="product"
+      windowSize={200}
+      showAxes
+      colorScheme={["#6366f1", "#22c55e", "#f59e0b"]}
+    />
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Props definition for PropTable
@@ -105,27 +185,37 @@ export default function GroupedBarChartPage() {
         creates side-by-side bars within each category.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: sampleData,
-          categoryAccessor: "category",
-          groupBy: "product",
-          valueAccessor: "value",
-          categoryLabel: "Quarter",
-          valueLabel: "Units Sold",
-        }}
-        type={GroupedBarChart}
-        startHidden={false}
-        overrideProps={{
-          data: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              data: sampleData,
+              categoryAccessor: "category",
+              groupBy: "product",
+              valueAccessor: "value",
+              categoryLabel: "Quarter",
+              valueLabel: "Units Sold",
+            }}
+            type={GroupedBarChart}
+            startHidden={false}
+            overrideProps={{
+              data: `[
   { category: "Q1", product: "Alpha", value: 120 },
   { category: "Q1", product: "Beta", value: 90 },
   { category: "Q1", product: "Gamma", value: 150 },
   // ...more data points
 ]`,
-          groupBy: '"product"',
-        }}
-        hiddenProps={{}}
+              groupBy: '"product"',
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingGroupedBarDemo width={w} />}
+            code={streamingGroupedBarCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}
