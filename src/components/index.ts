@@ -1,8 +1,6 @@
 import AnnotationLayer from "./AnnotationLayer"
 import DividedLine from "./DividedLine"
-import XYFrame from "./XYFrame"
 import OrdinalFrame from "./OrdinalFrame"
-// MinimapXYFrame and MiniMap removed — replaced by MinimapChart HOC
 import Axis from "./Axis"
 import Legend from "./Legend"
 import Annotation from "./Annotation"
@@ -13,11 +11,8 @@ import NetworkFrame from "./NetworkFrame"
 import { funnelize } from "./svg/lineDrawing"
 import { calculateDataExtent } from "./data/dataFunctions"
 import { ResponsiveNetworkFrame } from "./ResponsiveNetworkFrame"
-// ResponsiveMinimapXYFrame removed — replaced by MinimapChart HOC
-import { ResponsiveXYFrame } from "./ResponsiveXYFrame"
 import { ResponsiveOrdinalFrame } from "./ResponsiveOrdinalFrame"
 
-import { SparkXYFrame } from "./SparkXYFrame"
 import { SparkOrdinalFrame } from "./SparkOrdinalFrame"
 import { SparkNetworkFrame } from "./SparkNetworkFrame"
 
@@ -59,7 +54,6 @@ import { Tooltip, MultiLineTooltip, normalizeTooltip } from "./Tooltip/Tooltip"
 export default {
   AnnotationLayer,
   DividedLine,
-  XYFrame,
   MinimapChart,
   Brush,
   Axis,
@@ -70,10 +64,8 @@ export default {
   NetworkFrame,
   ResponsiveOrdinalFrame,
   ResponsiveNetworkFrame,
-  ResponsiveXYFrame,
   SparkOrdinalFrame,
   SparkNetworkFrame,
-  SparkXYFrame,
   Legend,
   funnelize,
   calculateDataExtent,
@@ -114,7 +106,6 @@ export default {
 export {
   AnnotationLayer,
   DividedLine,
-  XYFrame,
   MinimapChart,
   Brush,
   Axis,
@@ -125,10 +116,8 @@ export {
   NetworkFrame,
   ResponsiveOrdinalFrame,
   ResponsiveNetworkFrame,
-  ResponsiveXYFrame,
   SparkOrdinalFrame,
   SparkNetworkFrame,
-  SparkXYFrame,
   Legend,
   funnelize,
   calculateDataExtent,

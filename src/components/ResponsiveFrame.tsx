@@ -3,7 +3,6 @@ import * as React from "react"
 import { useState, useLayoutEffect, useRef } from "react"
 
 import { OrdinalFrameProps } from "./types/ordinalTypes"
-import { XYFrameProps } from "./types/xyTypes"
 import { NetworkFrameProps } from "./types/networkTypes"
 
 import { useBoundingRect } from "./useBoundingRect"
@@ -21,7 +20,7 @@ export interface ResponsiveFrameState {
   containerWidth?: number
 }
 
-type ActualFrameProps = OrdinalFrameProps | XYFrameProps | NetworkFrameProps
+type ActualFrameProps = OrdinalFrameProps | NetworkFrameProps
 
 const createResponsiveFrame = (ParticularFrame) => {
   function ResponsiveFrame(props: ResponsiveFrameProps & ActualFrameProps) {

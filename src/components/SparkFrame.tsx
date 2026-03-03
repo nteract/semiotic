@@ -2,10 +2,9 @@
 import * as React from "react"
 import { useCallback, useState } from "react"
 import { OrdinalFrameProps } from "./types/ordinalTypes"
-import { XYFrameProps } from "./types/xyTypes"
 import { NetworkFrameProps } from "./types/networkTypes"
 
-type ActualFrameProps = OrdinalFrameProps | XYFrameProps | NetworkFrameProps
+type ActualFrameProps = OrdinalFrameProps | NetworkFrameProps
 
 const allFrameDefaults = {
   margin: 0
