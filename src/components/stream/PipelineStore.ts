@@ -183,7 +183,36 @@ export class PipelineStore {
     let yDomain = config.yExtent || this.yExtent.extent
 
     // Chart-type specific extent adjustments
-    if (config.chartType === "bar" && config.binSize && !config.yExtent && buffer.size > 0) {
+    if (config.chartType === "stackedarea" && !config.yExtent && buffer.size > 0) {
+      // Stacked areas: y-extent must cover the cumulative sums, not raw values
+      if (config.normalize) {
+        // Normalized: all stacks sum to 1.0
+        yDomain = [0, 1 + config.extentPadding]
+      } else {
+        const data = buffer.toArray()
+        const groups = this.groupData(data)
+
+        // Build per-x-value totals across all groups
+        const xTotals = new Map<number, number>()
+        for (const g of groups) {
+          for (const d of g.data) {
+            const x = this.getX(d)
+            const y = this.getY(d)
+            if (x != null && y != null && !Number.isNaN(x) && !Number.isNaN(y)) {
+              xTotals.set(x, (xTotals.get(x) || 0) + y)
+            }
+          }
+        }
+
+        let maxStacked = 0
+        for (const total of xTotals.values()) {
+          if (total > maxStacked) maxStacked = total
+        }
+
+        const pad = maxStacked > 0 ? maxStacked * config.extentPadding : 1
+        yDomain = [0, maxStacked + pad]
+      }
+    } else if (config.chartType === "bar" && config.binSize && !config.yExtent && buffer.size > 0) {
       const [, maxTotal] = computeBinExtent(
         buffer, this.getX, this.getY, config.binSize, this.getCategory
       )
@@ -274,7 +303,7 @@ export class PipelineStore {
     const nodes: SceneNode[] = []
 
     for (const g of groups) {
-      const style = this.resolveLineStyle(g.key)
+      const style = this.resolveLineStyle(g.key, g.data[0])
       nodes.push(buildLineNode(g.data, this.scales!, this.getX, this.getY, style, g.key))
     }
 
@@ -285,9 +314,13 @@ export class PipelineStore {
     const groups = this.groupData(data)
     const nodes: SceneNode[] = []
 
+    // Use the bottom of the y domain as the baseline so areas fill to the chart edge
+    const yDomain = this.scales!.y.domain() as [number, number]
+    const baseline = yDomain[0]
+
     for (const g of groups) {
-      const style = this.resolveAreaStyle(g.key)
-      nodes.push(buildAreaNode(g.data, this.scales!, this.getX, this.getY, 0, style, g.key))
+      const style = this.resolveAreaStyle(g.key, g.data[0])
+      nodes.push(buildAreaNode(g.data, this.scales!, this.getX, this.getY, baseline, style, g.key))
     }
 
     return nodes
@@ -295,7 +328,8 @@ export class PipelineStore {
 
   private buildStackedAreaScene(data: Record<string, any>[]): SceneNode[] {
     const groups = this.groupData(data)
-    const styleFn = (group: string) => this.resolveAreaStyle(group)
+    const styleFn = (group: string, sampleDatum?: Record<string, any>) =>
+      this.resolveAreaStyle(group, sampleDatum)
     return buildStackedAreaNodes(
       groups,
       this.scales!,
@@ -544,10 +578,10 @@ export class PipelineStore {
     return Array.from(groups.entries()).map(([key, data]) => ({ key, data }))
   }
 
-  private resolveLineStyle(group: string): Style {
+  private resolveLineStyle(group: string, sampleDatum?: Record<string, any>): Style {
     const ls = this.config.lineStyle
     if (typeof ls === "function") {
-      return ls({}, group)
+      return ls(sampleDatum || {}, group)
     }
     if (ls && typeof ls === "object") {
       return {
@@ -559,9 +593,22 @@ export class PipelineStore {
     return { stroke: "#007bff", strokeWidth: 2 }
   }
 
-  private resolveAreaStyle(group: string): Style {
+  private resolveAreaStyle(group: string, sampleDatum?: Record<string, any>): Style {
     if (this.config.areaStyle) {
-      return this.config.areaStyle({})
+      return this.config.areaStyle(sampleDatum || {})
+    }
+    // Fall back to lineStyle — AreaChart passes area styling via lineStyle
+    const ls = this.config.lineStyle
+    if (typeof ls === "function") {
+      return ls(sampleDatum || {}, group)
+    }
+    if (ls && typeof ls === "object") {
+      return {
+        fill: ls.fill || ls.stroke || "#4e79a7",
+        fillOpacity: ls.fillOpacity ?? 0.7,
+        stroke: ls.stroke || "#4e79a7",
+        strokeWidth: ls.strokeWidth || 2
+      }
     }
     return { fill: "#4e79a7", fillOpacity: 0.7, stroke: "#4e79a7", strokeWidth: 2 }
   }

@@ -3,6 +3,8 @@ import * as React from "react"
 import { useMemo } from "react"
 import type { StreamScales, AnnotationContext } from "./types"
 import type { ReactNode } from "react"
+import Legend from "../Legend"
+import type { LegendGroup } from "../types/legendTypes"
 
 interface SVGOverlayProps {
   width: number
@@ -26,7 +28,7 @@ interface SVGOverlayProps {
   title?: string | ReactNode
 
   // Legend
-  legend?: ReactNode
+  legend?: ReactNode | { legendGroups: LegendGroup[] }
 
   // Annotations
   annotations?: Record<string, any>[]
@@ -38,6 +40,15 @@ interface SVGOverlayProps {
   annotationFrame?: number
 
   children?: ReactNode
+}
+
+function isLegendConfig(value: unknown): value is { legendGroups: LegendGroup[] } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !React.isValidElement(value) &&
+    "legendGroups" in value
+  )
 }
 
 function defaultTickFormat(v: number): string {
@@ -234,7 +245,9 @@ export function SVGOverlay(props: SVGOverlayProps) {
       {/* Legend */}
       {legend && (
         <g transform={`translate(${totalWidth - margin.right + 10}, ${margin.top})`}>
-          {legend}
+          {isLegendConfig(legend)
+            ? <Legend legendGroups={legend.legendGroups} title="" width={100} />
+            : (legend as ReactNode)}
         </g>
       )}
     </svg>

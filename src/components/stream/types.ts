@@ -205,7 +205,7 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
 
   // ── Grid / legend ────────────────────────────────
   showGrid?: boolean
-  legend?: ReactNode
+  legend?: ReactNode | { legendGroups: any[] }
 
   // ── Title ────────────────────────────────────────
   title?: string | ReactNode

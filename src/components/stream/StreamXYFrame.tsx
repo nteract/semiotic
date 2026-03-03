@@ -238,6 +238,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     const dirtyRef = useRef(false)
     const [annotationFrame, setAnnotationFrame] = useState(0)
 
+    // Scales state: updated after each scene computation so SVGOverlay re-renders
+    const [currentScales, setCurrentScales] = useState<StreamScales | null>(null)
+
     // Hover state: ref for canvas (sync), React state for tooltip (async)
     const hoverRef = useRef<HoverData | null>(null)
     const [hoverPoint, setHoverPoint] = useState<HoverData | null>(null)
@@ -482,6 +485,11 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       const wasDirty = dirtyRef.current
       dirtyRef.current = false
 
+      // Push scales into React state so SVGOverlay renders axes/grid
+      if (wasDirty && store.scales) {
+        setCurrentScales(store.scales)
+      }
+
       // Trigger React re-render for SVG annotations
       if (wasDirty && annotations && annotations.length > 0 && svgAnnotationRules) {
         setAnnotationFrame(f => f + 1)
@@ -554,7 +562,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           totalWidth={size[0]}
           totalHeight={size[1]}
           margin={margin}
-          scales={storeRef.current?.scales ?? null}
+          scales={currentScales}
           showAxes={showAxes}
           xLabel={xLabel}
           yLabel={yLabel}

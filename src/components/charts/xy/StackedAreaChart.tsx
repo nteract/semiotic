@@ -356,7 +356,7 @@ export function StackedAreaChart<TDatum extends Record<string, any> = Record<str
     yFormat,
     enableHover,
     showGrid,
-    ...(legend && { legend: legend as any }),
+    ...(legend && { legend }),
     ...(title && { title }),
     ...(className && { className }),
     ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as any }),

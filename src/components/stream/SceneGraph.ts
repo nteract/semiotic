@@ -57,7 +57,7 @@ export function buildStackedAreaNodes(
   scales: StreamScales,
   xGet: (d: Record<string, any>) => number,
   yGet: (d: Record<string, any>) => number,
-  styleFn: (group: string) => Style,
+  styleFn: (group: string, sampleDatum?: Record<string, any>) => Style,
   normalize?: boolean
 ): AreaSceneNode[] {
   // Collect all unique x values
@@ -126,7 +126,7 @@ export function buildStackedAreaNodes(
       type: "area",
       topPath,
       bottomPath,
-      style: styleFn(g.key),
+      style: styleFn(g.key, g.data[0]),
       datum: g.data,
       group: g.key
     })

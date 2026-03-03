@@ -349,7 +349,7 @@ export function AreaChart<TDatum extends Record<string, any> = Record<string, an
     yFormat,
     enableHover,
     showGrid,
-    ...(legend && { legend: legend as any }),
+    ...(legend && { legend }),
     ...(title && { title }),
     ...(className && { className }),
     ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as any }),

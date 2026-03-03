@@ -349,7 +349,7 @@ export function StackedBarChart<TDatum extends Record<string, any> = Record<stri
     data: safeData,
     oAccessor: categoryAccessor,
     rAccessor: valueAccessor,
-    type: "bar",
+    type: normalize ? "barpercent" : "bar",
     projection: orientation === "horizontal" ? "horizontal" : "vertical",
     style: pieceStyle,
     axes: axes as any,
@@ -358,7 +358,6 @@ export function StackedBarChart<TDatum extends Record<string, any> = Record<stri
     oPadding: barPadding,
     // Configure stacking
     pieceIDAccessor: stackBy,
-    ...(normalize && { rExtent: [0, 1] }),
     ...(legend && { legend }),
     ...(className && { className }),
     ...(title && { title }),
