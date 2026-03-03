@@ -244,6 +244,8 @@ Build `StreamOrdinalFrame` — canvas-first ordinal frame.
 
 **New capability:** Streaming ordinal charts — push categorical observations and watch distributions update live. A streaming violin plot, streaming histogram, etc. This doesn't exist today and is a differentiator.
 
+**Marginal graphics:** XYFrame's `marginalSummaryType` axis prop renders ordinal summaries (ridgeline, heatmap, histogram, etc.) along scatter axes. This requires ordinal summary renderers inside an XY context — it depends on StreamOrdinalFrame's summary type canvas renderers being available as a shared library that StreamXYFrame can import. The cookbook/marginal-graphics page is currently broken because StreamXYFrame doesn't support legacy `marginalSummaryType`. This should be addressed as part of Phase 2: port ordinal summary renderers to canvas, expose them as importable utilities, then add `marginalSummaryType` support to StreamXYFrame's axis rendering.
+
 ### Phase 3: Unified Network Stream Frame
 
 Build `StreamNetworkFrame` — generalizes RealtimeNetworkFrame to handle all network types.

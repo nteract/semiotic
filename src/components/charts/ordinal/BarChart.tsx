@@ -298,19 +298,28 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
 
   // Default tooltip function for piece hover
   const defaultTooltipContent = useMemo(() => {
+    const showColorField = colorBy && colorBy !== categoryAccessor
     return (d: Record<string, any>) => {
       const cat = typeof categoryAccessor === "function" ? categoryAccessor(d as TDatum) : d[categoryAccessor]
       const val = typeof valueAccessor === "function" ? valueAccessor(d as TDatum) : d[valueAccessor]
+      const colorVal = showColorField
+        ? (typeof colorBy === "function" ? (colorBy as Function)(d) : d[colorBy as string])
+        : null
       return (
         <div className="semiotic-tooltip" style={defaultTooltipStyle}>
           <div style={{ fontWeight: "bold" }}>{String(cat)}</div>
           <div style={{ marginTop: "4px" }}>
             {typeof val === "number" ? val.toLocaleString() : String(val)}
           </div>
+          {colorVal != null && (
+            <div style={{ marginTop: "2px", opacity: 0.8 }}>
+              {typeof colorBy === "string" ? colorBy : "group"}: {String(colorVal)}
+            </div>
+          )}
         </div>
       )
     }
-  }, [categoryAccessor, valueAccessor])
+  }, [categoryAccessor, valueAccessor, colorBy])
 
   // Validate data (after all hooks)
   const error = validateArrayData({

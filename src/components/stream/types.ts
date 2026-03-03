@@ -127,6 +127,8 @@ export interface CandlestickStyle {
 export interface Changeset<T = Record<string, any>> {
   inserts: T[]
   bounded: boolean
+  /** Hint: total dataset size when progressively chunking bounded data */
+  totalSize?: number
 }
 
 // ── Scales ─────────────────────────────────────────────────────────────

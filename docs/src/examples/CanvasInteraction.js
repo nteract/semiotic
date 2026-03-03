@@ -22,7 +22,7 @@ const frameProps = {
   size: [700, 500],
   xAccessor: "x",
   yAccessor: "y",
-  pointStyle: (d) => ({ fill: d.color, fillOpacity: 0.9 }),
+  pointStyle: (d) => ({ fill: d.color, fillOpacity: 0.9, r: d.size }),
   margin: { top: 60, bottom: 50, left: 60, right: 60 },
   enableHover: true,
   showAxes: true,
@@ -33,8 +33,8 @@ const frameProps = {
   tooltipContent: (d) => {
     return (
       <div className="tooltip-content" data-testid="tooltip-content">
-        <p>Price: ${d.value}</p>
-        <p>Carat: {d.time}</p>
+        <p>Price: ${d.data?.y != null ? Number(d.data.y).toLocaleString() : "–"}</p>
+        <p>Carat: {d.data?.x != null ? Number(d.data.x).toFixed(2) : "–"}</p>
       </div>
     )
   },
@@ -44,8 +44,8 @@ const overrideProps = {
   tooltipContent: `d => {
     return (
       <div className="tooltip-content">
-        <p>Price: \${d.value}</p>
-        <p>Carat: {d.time}</p>
+        <p>Price: \${d.data?.y != null ? Number(d.data.y).toLocaleString() : "–"}</p>
+        <p>Carat: {d.data?.x != null ? Number(d.data.x).toFixed(2) : "–"}</p>
       </div>
     );
   }
@@ -64,7 +64,7 @@ const CanvasInteraction = () => {
           parsedDiamonds.push({
             y: +d.price,
             x: +d.carat,
-            size: +d.table,
+            size: 1,
             color: cutHash[d.cut],
             clarity: d.clarity,
           })
@@ -78,7 +78,9 @@ const CanvasInteraction = () => {
     <div>
       <MarkdownText
         text={`
-This page uses the classic diamond dataset of nearly 54,000 diamonds source from the [ggplot2](https://github.com/tidyverse/ggplot2/blob/master/data-raw/diamonds.csv) project.
+This page uses the classic diamond dataset of nearly 54,000 diamonds from the [ggplot2](https://github.com/tidyverse/ggplot2/blob/master/data-raw/diamonds.csv) project.
+
+StreamXYFrame uses the same streaming architecture for both live and static data. When a large bounded dataset is passed via the \`data\` prop, the frame automatically chunks it and renders progressively across animation frames — the first batch appears immediately and the rest fill in over subsequent frames. No special configuration is needed; just pass your data and the frame handles the rest.
 
 `}
       />

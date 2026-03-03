@@ -56,6 +56,7 @@ function getTimeAxis(arrowOfTime: ArrowOfTime): "x" | "y" {
 
 export interface PipelineConfig {
   chartType: StreamChartType
+  runtimeMode?: "streaming" | "bounded"
   windowSize: number
   windowMode: WindowMode
   arrowOfTime: ArrowOfTime
@@ -128,10 +129,13 @@ export class PipelineStore {
     this.buffer = new RingBuffer(config.windowSize)
     this.growingCap = config.windowSize
 
-    // Resolve accessors based on chart type
-    const isStreaming = ["bar", "swarm", "waterfall"].includes(config.chartType)
-    if (isStreaming && config.timeAccessor) {
-      this.getX = resolveAccessor(config.timeAccessor, "time")
+    // Resolve accessors based on streaming vs bounded mode.
+    // Streaming types use time/value defaults; bounded types use x/y defaults.
+    const isStreamingType = ["bar", "swarm", "waterfall"].includes(config.chartType)
+    const useStreamingDefaults = isStreamingType || config.runtimeMode === "streaming"
+
+    if (useStreamingDefaults) {
+      this.getX = resolveAccessor(config.timeAccessor || config.xAccessor, "time")
       this.getY = resolveAccessor(
         config.valueAccessor || config.yAccessor,
         "value"
@@ -166,6 +170,14 @@ export class PipelineStore {
       this.buffer.clear()
       this.xExtent.clear()
       this.yExtent.clear()
+
+      // Auto-resize buffer to fit all bounded data.
+      // totalSize is set when data is progressively chunked — pre-allocate
+      // for the full dataset so subsequent append chunks don't evict.
+      const targetSize = changeset.totalSize || changeset.inserts.length
+      if (targetSize > this.buffer.capacity) {
+        this.buffer.resize(targetSize)
+      }
 
       for (const d of changeset.inserts) {
         this.buffer.push(d)
@@ -220,7 +232,16 @@ export class PipelineStore {
       this.xExtent.recalculate(buffer, this.getX)
     }
     if (this.yExtent.dirty) {
-      this.yExtent.recalculate(buffer, this.getY)
+      if (config.chartType === "candlestick" && this.getHigh && this.getLow) {
+        // Candlestick y-extent spans high→low, not a single y accessor
+        this.yExtent.clear()
+        for (const d of buffer) {
+          this.yExtent.push(this.getHigh(d))
+          this.yExtent.push(this.getLow(d))
+        }
+      } else {
+        this.yExtent.recalculate(buffer, this.getY)
+      }
     }
 
     // Resolve domains — merge user-specified extents with data extents

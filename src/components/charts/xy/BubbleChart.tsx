@@ -8,6 +8,7 @@ import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { validateArrayData } from "../shared/validateChartData"
 import { normalizeLinkedHover, normalizeLinkedBrush, wrapStyleWithSelection } from "../shared/selectionUtils"
@@ -325,6 +326,14 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
     [linkedHover, linkedHoverHook]
   )
 
+  // Default tooltip showing all configured fields
+  const defaultTooltipContent = useMemo(() => buildDefaultTooltip([
+    { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x" },
+    { label: yLabel || accessorName(yAccessor), accessor: yAccessor, role: "y" },
+    { label: accessorName(sizeBy), accessor: sizeBy, role: "size" },
+    ...(colorBy ? [{ label: accessorName(colorBy), accessor: colorBy, role: "color" as const }] : []),
+  ]), [xAccessor, yAccessor, xLabel, yLabel, sizeBy, colorBy])
+
   // Validate data (after all hooks)
   const error = validateArrayData({
     componentName: "BubbleChart",
@@ -360,7 +369,7 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
     ...(legend && { legend }),
     ...(title && { title }),
     ...(className && { className }),
-    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as any }),
+    tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
     ...(linkedHover && { customHoverBehavior }),
     ...frameProps
   }

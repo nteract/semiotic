@@ -27,6 +27,26 @@ export default function MarginalGraphicsPage() {
         each dimension.
       </p>
 
+      <div
+        style={{
+          background: "var(--warning-bg, #fff8e1)",
+          border: "1px solid var(--warning-border, #ffe082)",
+          borderRadius: 8,
+          padding: "12px 16px",
+          marginBottom: 16,
+          fontSize: 14,
+          lineHeight: 1.5,
+        }}
+      >
+        <strong>Work in progress:</strong> Marginal graphics depend on ordinal
+        summary renderers (ridgeline, heatmap) which have not yet been ported to
+        the canvas-first StreamXYFrame. This visualization is currently
+        non-functional and will be restored once StreamOrdinalFrame lands and its
+        summary renderers are available as shared utilities. See the{" "}
+        <Link to="/frames/xy-frame">XYFrame</Link> docs for the legacy SVG
+        implementation.
+      </div>
+
       <h2 id="the-visualization">The Visualization</h2>
       <div
         style={{

@@ -265,6 +265,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     const pipelineConfig = useMemo((): PipelineConfig => ({
       chartType,
+      runtimeMode: isStreaming ? "streaming" : "bounded",
       windowSize,
       windowMode,
       arrowOfTime: isStreaming ? arrowOfTime : "right",
@@ -538,25 +539,27 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     // ── Tooltip positioning ──────────────────────────────────────────────
 
-    const tooltipElement = effectiveHoverAnnotation && hoverPoint ? (
+    const tooltipRendered = effectiveHoverAnnotation && hoverPoint
+      ? (tooltipContent ? tooltipContent(hoverPoint) : <DefaultTooltip hover={hoverPoint} />)
+      : null
+
+    const tooltipElement = tooltipRendered ? (
       <div
         className="stream-frame-tooltip"
         style={{
           position: "absolute",
-          left: margin.left + hoverPoint.x,
-          top: margin.top + hoverPoint.y,
+          left: margin.left + hoverPoint!.x,
+          top: margin.top + hoverPoint!.y,
           transform: `translate(${
-            hoverPoint.x > adjustedWidth * 0.7 ? "calc(-100% - 12px)" : "12px"
+            hoverPoint!.x > adjustedWidth * 0.7 ? "calc(-100% - 12px)" : "12px"
           }, ${
-            hoverPoint.y < adjustedHeight * 0.3 ? "4px" : "calc(-100% - 4px)"
+            hoverPoint!.y < adjustedHeight * 0.3 ? "4px" : "calc(-100% - 4px)"
           })`,
           pointerEvents: "none",
           zIndex: 1
         }}
       >
-        {tooltipContent
-          ? tooltipContent(hoverPoint)
-          : <DefaultTooltip hover={hoverPoint} />}
+        {tooltipRendered}
       </div>
     ) : null
 

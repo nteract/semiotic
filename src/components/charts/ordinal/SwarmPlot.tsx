@@ -350,6 +350,12 @@ export function SwarmPlot<TDatum extends Record<string, any> = Record<string, an
       const val = getVal(d)
       const pieces = d.pieces || []
       const showCount = pieces.length > 1
+      const colorVal = colorBy
+        ? (typeof colorBy === "function" ? (colorBy as Function)(d) : d[colorBy as string])
+        : null
+      const sizeVal = sizeBy
+        ? (typeof sizeBy === "function" ? (sizeBy as Function)(d) : d[sizeBy as string])
+        : null
 
       return (
         <div className="semiotic-tooltip" style={defaultTooltipStyle}>
@@ -357,6 +363,16 @@ export function SwarmPlot<TDatum extends Record<string, any> = Record<string, an
           <div style={{ marginTop: "4px" }}>
             {typeof val === "number" ? val.toLocaleString() : String(val)}
           </div>
+          {colorVal != null && (
+            <div style={{ marginTop: "2px", opacity: 0.8 }}>
+              {typeof colorBy === "string" ? colorBy : "color"}: {String(colorVal)}
+            </div>
+          )}
+          {sizeVal != null && (
+            <div style={{ marginTop: "2px", opacity: 0.8 }}>
+              {typeof sizeBy === "string" ? sizeBy : "size"}: {typeof sizeVal === "number" ? sizeVal.toLocaleString() : String(sizeVal)}
+            </div>
+          )}
           {showCount && (
             <div style={{ marginTop: "2px", opacity: 0.8 }}>
               {pieces.length} points in group
@@ -365,7 +381,7 @@ export function SwarmPlot<TDatum extends Record<string, any> = Record<string, an
         </div>
       )
     }
-  }, [categoryAccessor, valueAccessor])
+  }, [categoryAccessor, valueAccessor, colorBy, sizeBy])
 
   // Validate data (after all hooks)
   const error = validateArrayData({

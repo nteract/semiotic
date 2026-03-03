@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react"
-import { RealtimeLineChart } from "semiotic"
+import { StreamXYFrame } from "semiotic"
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
 import StreamingToggle from "../../components/StreamingToggle"
@@ -13,7 +13,7 @@ import UncertaintyVisualization from "../../examples/UncertaintyVisualization"
 // ---------------------------------------------------------------------------
 
 const streamingForecastCode = `import { useRef, useEffect } from "react"
-import { RealtimeLineChart } from "semiotic"
+import { StreamXYFrame } from "semiotic"
 
 function StreamingForecast() {
   const chartRef = useRef()
@@ -23,10 +23,13 @@ function StreamingForecast() {
     const id = setInterval(() => {
       if (chartRef.current) {
         const i = indexRef.current++
+        // Uncertainty grows with a noisy sine pattern
+        const uncertainty = 5 + Math.abs(Math.sin(i * 0.01)) * 20
         chartRef.current.push({
           time: i,
           value: 100 + Math.sin(i * 0.02) * 30
             + (Math.random() - 0.5) * 15,
+          uncertainty,
         })
       }
     }, 80)
@@ -34,11 +37,18 @@ function StreamingForecast() {
   }, [])
 
   return (
-    <RealtimeLineChart
+    <StreamXYFrame
       ref={chartRef}
+      chartType="line"
+      runtimeMode="streaming"
       size={[600, 280]}
-      stroke="#f59e0b"
-      strokeWidth={2}
+      lineStyle={{ stroke: "#f59e0b", strokeWidth: 2 }}
+      boundsAccessor="uncertainty"
+      boundsStyle={{
+        fill: "#f59e0b",
+        fillOpacity: 0.15,
+        stroke: "none",
+      }}
       windowSize={150}
       showAxes
     />
@@ -53,9 +63,11 @@ function StreamingForecastDemo({ width }) {
     const id = setInterval(() => {
       if (chartRef.current) {
         const i = indexRef.current++
+        const uncertainty = 5 + Math.abs(Math.sin(i * 0.01)) * 20
         chartRef.current.push({
           time: i,
           value: 100 + Math.sin(i * 0.02) * 30 + (Math.random() - 0.5) * 15,
+          uncertainty,
         })
       }
     }, 80)
@@ -63,11 +75,18 @@ function StreamingForecastDemo({ width }) {
   }, [])
 
   return (
-    <RealtimeLineChart
+    <StreamXYFrame
       ref={chartRef}
+      chartType="line"
+      runtimeMode="streaming"
       size={[width, 280]}
-      stroke="#f59e0b"
-      strokeWidth={2}
+      lineStyle={{ stroke: "#f59e0b", strokeWidth: 2 }}
+      boundsAccessor="uncertainty"
+      boundsStyle={{
+        fill: "#f59e0b",
+        fillOpacity: 0.15,
+        stroke: "none",
+      }}
       windowSize={150}
       showAxes={true}
     />

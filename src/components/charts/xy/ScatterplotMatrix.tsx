@@ -59,6 +59,8 @@ export interface ScatterplotMatrixProps<TDatum extends Record<string, any> = Rec
   tooltip?: TooltipProp
   /** Show legend @default true when colorBy is set */
   showLegend?: boolean
+  /** Field or function to identify each data point in tooltips. Defaults to "Row {index}" */
+  idAccessor?: string | ((d: TDatum) => string)
 }
 
 // ── Cell Brush Overlay ────────────────────────────────────────────────────
@@ -271,6 +273,7 @@ function ScatterplotCell({
         showAxes={false}
         enableHover={mode === "hover"}
         customHoverBehavior={mode === "hover" ? customHoverBehavior : undefined}
+        tooltipContent={mode === "hover" ? (() => null) : undefined}
       />
       {mode === "brush" && (
         <CellBrushOverlay
@@ -456,6 +459,7 @@ function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<stri
     showGrid = false,
     tooltip,
     showLegend,
+    idAccessor,
     width,
     height,
     className
@@ -654,11 +658,15 @@ function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<stri
       {/* Single tooltip for the entire matrix — positioned above the hovered point */}
       {hoveredInfo && cellMode === "hover" && (() => {
         const d = hoveredInfo.datum
-        const xLabel = fieldLabels[hoveredInfo.xField] || hoveredInfo.xField
-        const yLabel = fieldLabels[hoveredInfo.yField] || hoveredInfo.yField
-        const label = colorBy
+        const xFieldLabel = fieldLabels[hoveredInfo.xField] || hoveredInfo.xField
+        const yFieldLabel = fieldLabels[hoveredInfo.yField] || hoveredInfo.yField
+        const colorLabel = colorBy
           ? typeof colorBy === "function" ? (colorBy as Function)(d) : d[colorBy as string]
           : null
+        // Resolve ID for header
+        const idLabel = idAccessor
+          ? (typeof idAccessor === "function" ? (idAccessor as Function)(d) : d[idAccessor as string])
+          : `Row ${d[SPLOM_IDX]}`
         // Cell origin in grid coordinates
         const cellLeft = labelWidth + hoveredInfo.colIndex * (cellSize + cellGap)
         const cellTop = hoveredInfo.rowIndex * (cellSize + cellGap)
@@ -684,9 +692,10 @@ function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<stri
               zIndex: 10
             }}
           >
-            {label != null && <div style={{ fontWeight: "bold", marginBottom: 2 }}>{String(label)}</div>}
-            <div>{xLabel}: {d[hoveredInfo.xField] != null ? Number(d[hoveredInfo.xField]).toFixed(1) : "–"}</div>
-            <div>{yLabel}: {d[hoveredInfo.yField] != null ? Number(d[hoveredInfo.yField]).toFixed(1) : "–"}</div>
+            <div style={{ fontWeight: "bold", marginBottom: 2 }}>{String(idLabel)}</div>
+            <div>{xFieldLabel}: {d[hoveredInfo.xField] != null ? Number(d[hoveredInfo.xField]).toFixed(1) : "–"}</div>
+            <div>{yFieldLabel}: {d[hoveredInfo.yField] != null ? Number(d[hoveredInfo.yField]).toFixed(1) : "–"}</div>
+            {colorLabel != null && <div style={{ opacity: 0.8 }}>{typeof colorBy === "string" ? colorBy : "group"}: {String(colorLabel)}</div>}
           </div>
         )
       })()}

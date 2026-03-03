@@ -43,6 +43,7 @@ function StreamingCandlestick() {
     <StreamXYFrame
       ref={chartRef}
       chartType="candlestick"
+      runtimeMode="streaming"
       size={[600, 300]}
       openAccessor="open"
       highAccessor="high"
@@ -87,6 +88,7 @@ function StreamingCandlestickDemo({ width }) {
     <StreamXYFrame
       ref={chartRef}
       chartType="candlestick"
+      runtimeMode="streaming"
       size={[width, 300]}
       openAccessor="open"
       highAccessor="high"
