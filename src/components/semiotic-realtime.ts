@@ -23,7 +23,9 @@ import { RealtimeBarChart } from "./charts/realtime/RealtimeBarChart"
 import { RealtimeSwarmChart } from "./charts/realtime/RealtimeSwarmChart"
 import { RealtimeWaterfallChart } from "./charts/realtime/RealtimeWaterfallChart"
 import { RealtimeSankey } from "./charts/realtime/RealtimeSankey"
-import RealtimeNetworkFrame from "./realtime-network/RealtimeNetworkFrame"
+import StreamNetworkFrame from "./stream/StreamNetworkFrame"
+// RealtimeNetworkFrame is now an alias for StreamNetworkFrame
+const RealtimeNetworkFrame = StreamNetworkFrame
 
 export {
   RealtimeFrame,

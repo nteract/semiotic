@@ -1,18 +1,19 @@
 "use client"
 import * as React from "react"
 import { useRef, useCallback, useImperativeHandle, forwardRef } from "react"
-import RealtimeNetworkFrame from "../../realtime-network/RealtimeNetworkFrame"
+import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type {
-  RealtimeSankeyProps,
-  RealtimeNetworkFrameHandle,
+  StreamNetworkFrameHandle,
   EdgePush
-} from "../../realtime-network/types"
+} from "../../stream/networkTypes"
+import type { RealtimeSankeyProps } from "../../realtime-network/types"
+import type { RealtimeNetworkFrameHandle } from "../../realtime-network/types"
 
 /**
  * RealtimeSankey — Simplified wrapper for streaming Sankey diagrams.
  *
- * Wraps RealtimeNetworkFrame with Sankey-specific accessor normalization
- * and ref forwarding.
+ * Now wraps StreamNetworkFrame (canvas-first, unified) instead of the legacy
+ * RealtimeNetworkFrame. The push API and ref handle remain identical.
  *
  * @example
  * ```tsx
@@ -38,7 +39,7 @@ export const RealtimeSankey = forwardRef<RealtimeNetworkFrameHandle, RealtimeSan
       ...frameProps
     } = props
 
-    const frameRef = useRef<RealtimeNetworkFrameHandle>(null)
+    const frameRef = useRef<StreamNetworkFrameHandle>(null)
 
     // Normalize initial edges through accessors
     const initialEdges = React.useMemo(() => {
@@ -69,9 +70,11 @@ export const RealtimeSankey = forwardRef<RealtimeNetworkFrameHandle, RealtimeSan
     }), [normalizeEdge])
 
     return (
-      <RealtimeNetworkFrame
+      <StreamNetworkFrame
         ref={frameRef}
+        chartType="sankey"
         initialEdges={initialEdges}
+        showParticles={frameProps.showParticles ?? true}
         {...frameProps}
       />
     )

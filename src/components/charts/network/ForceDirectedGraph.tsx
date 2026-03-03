@@ -1,8 +1,8 @@
 "use client"
 import * as React from "react"
 import { useMemo } from "react"
-import NetworkFrame from "../../NetworkFrame"
-import type { NetworkFrameProps } from "../../types/networkTypes"
+import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
+import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
 import { getColor, getSize } from "../shared/colorUtils"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
@@ -10,214 +10,37 @@ import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { validateNetworkData } from "../shared/validateChartData"
-import { forceLayout } from "../../processing/layouts/forceLayout"
 
 /**
  * ForceDirectedGraph component props
  */
 export interface ForceDirectedGraphProps<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>> extends BaseChartProps {
-  /**
-   * Array of nodes. Each node should have an id property.
-   * @example
-   * ```ts
-   * [{id: 'A', label: 'Node A'}, {id: 'B', label: 'Node B'}]
-   * ```
-   */
   nodes: TNode[]
-
-  /**
-   * Array of edges connecting nodes.
-   * @example
-   * ```ts
-   * [{source: 'A', target: 'B'}, {source: 'B', target: 'C'}]
-   * ```
-   */
   edges: TEdge[]
-
-  /**
-   * Field name or function to access node IDs
-   * @default "id"
-   */
   nodeIDAccessor?: ChartAccessor<TNode, string>
-
-  /**
-   * Field name or function to access edge source IDs
-   * @default "source"
-   */
   sourceAccessor?: ChartAccessor<TEdge, string>
-
-  /**
-   * Field name or function to access edge target IDs
-   * @default "target"
-   */
   targetAccessor?: ChartAccessor<TEdge, string>
-
-  /**
-   * Field name or function to determine node labels
-   * @example
-   * ```ts
-   * nodeLabel="label"  // Use label field
-   * nodeLabel={d => d.name}  // Use function
-   * ```
-   */
   nodeLabel?: ChartAccessor<TNode, string>
-
-  /**
-   * Field name or function to determine node color
-   * @example
-   * ```ts
-   * colorBy="group"
-   * colorBy={d => d.value > 10 ? 'red' : 'blue'}
-   * ```
-   */
   colorBy?: ChartAccessor<TNode, string>
-
-  /**
-   * Color scheme for categorical data or custom colors array
-   * @default "category10"
-   */
   colorScheme?: string | string[]
-
-  /**
-   * Field name, number, or function to determine node size
-   * @example
-   * ```ts
-   * nodeSize={5}  // Fixed size
-   * nodeSize="importance"  // Use field
-   * nodeSize={d => d.connections * 2}  // Use function
-   * ```
-   */
   nodeSize?: number | ChartAccessor<TNode, number>
-
-  /**
-   * Min and max radius for nodes when using dynamic sizing
-   * @default [5, 20]
-   */
   nodeSizeRange?: [number, number]
-
-  /**
-   * Field name, number, or function to determine edge width
-   * @default 1
-   */
   edgeWidth?: number | ChartAccessor<TEdge, number>
-
-  /**
-   * Edge color
-   * @default "#999"
-   */
   edgeColor?: string
-
-  /**
-   * Edge opacity
-   * @default 0.6
-   */
   edgeOpacity?: number
-
-  /**
-   * Number of force simulation iterations
-   * @default 300
-   */
   iterations?: number
-
-  /**
-   * Strength of the force simulation
-   * Lower values create looser layouts
-   * @default 0.1
-   */
   forceStrength?: number
-
-  /**
-   * Enable node labels
-   * @default false
-   */
   showLabels?: boolean
-
-  /**
-   * Enable hover annotations
-   * @default true
-   */
   enableHover?: boolean
-
-  /**
-   * Show legend
-   * @default true (when colorBy is specified)
-   */
   showLegend?: boolean
-
-  /**
-   * Tooltip configuration
-   */
   tooltip?: TooltipProp
-
-  /**
-   * Additional NetworkFrame props for advanced customization
-   * For full control, consider using NetworkFrame directly
-   * @see https://semiotic.nteract.io/guides/network-frame
-   */
-  frameProps?: Partial<Omit<NetworkFrameProps, "nodes" | "edges" | "size">>
+  frameProps?: Partial<Omit<StreamNetworkFrameProps, "nodes" | "edges" | "size">>
 }
 
 /**
  * ForceDirectedGraph - Visualize network relationships with force-directed layout
  *
- * A simplified wrapper around NetworkFrame for creating force-directed graphs.
- * Perfect for visualizing connections, communities, and network structures.
- *
- * @example
- * ```tsx
- * // Simple force-directed graph
- * <ForceDirectedGraph
- *   nodes={[
- *     {id: 'A', label: 'Node A'},
- *     {id: 'B', label: 'Node B'},
- *     {id: 'C', label: 'Node C'}
- *   ]}
- *   edges={[
- *     {source: 'A', target: 'B'},
- *     {source: 'B', target: 'C'}
- *   ]}
- * />
- * ```
- *
- * @example
- * ```tsx
- * // With color and size encoding
- * <ForceDirectedGraph
- *   nodes={nodes}
- *   edges={edges}
- *   colorBy="group"
- *   nodeSize="connections"
- *   nodeSizeRange={[5, 25]}
- *   showLabels={true}
- *   iterations={500}
- * />
- * ```
- *
- * @example
- * ```tsx
- * // Advanced: Override NetworkFrame props
- * <ForceDirectedGraph
- *   nodes={nodes}
- *   edges={edges}
- *   frameProps={{
- *     networkType: { type: "force", iterations: 500, edgeStrength: 2 },
- *     customNodeIcon: ({ d }) => <circle r={10} fill="gold" />
- *   }}
- * />
- * ```
- *
- * @remarks
- * This component wraps {@link NetworkFrame} with sensible defaults for force-directed graphs.
- * For more advanced features like custom layouts, hierarchical networks, or complex interactions,
- * use NetworkFrame directly.
- *
- * **Breadcrumb to advanced usage:**
- * - Use the `frameProps` prop to pass any NetworkFrame prop
- * - See NetworkFrame documentation: https://semiotic.nteract.io/guides/network-frame
- * - All NetworkFrame props are available via `frameProps`
- *
- * @param props - ForceDirectedGraph configuration
- * @returns Rendered force-directed graph
+ * Now wraps StreamNetworkFrame (canvas-first) instead of legacy NetworkFrame.
  */
 export function ForceDirectedGraph<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: ForceDirectedGraphProps<TNode, TEdge>) {
   const {
@@ -248,115 +71,61 @@ export function ForceDirectedGraph<TNode extends Record<string, any> = Record<st
     frameProps = {}
   } = props
 
-  // Safe data defaults (hooks must always run)
   const safeNodes = nodes || []
   const safeEdges = edges || []
 
-  // Create color scale if colorBy is specified
   const colorScale = useColorScale(safeNodes, colorBy, colorScheme)
-
-  // Calculate node size domain if dynamic sizing
-  const nodeSizeDomain = useMemo(() => {
-    if (typeof nodeSize === "number") return undefined
-    if (!nodeSize) return undefined
-
-    const sizes = safeNodes.map((d) => {
-      if (typeof nodeSize === "function") {
-        return nodeSize(d)
-      }
-      return d[nodeSize]
-    })
-
-    return [Math.min(...sizes), Math.max(...sizes)] as [number, number]
-  }, [safeNodes, nodeSize])
 
   // Node style function
   const nodeStyle = useMemo(() => {
     return (d: Record<string, any>) => {
       const baseStyle: Record<string, string | number> = {}
-
-      // Apply color
       if (colorBy) {
         baseStyle.fill = getColor(d, colorBy, colorScale)
       } else {
         baseStyle.fill = DEFAULT_COLOR
       }
-
-      // Apply size
       if (typeof nodeSize === "number") {
         baseStyle.r = nodeSize
-      } else if (nodeSize) {
-        baseStyle.r = getSize(d, nodeSize, nodeSizeRange, nodeSizeDomain)
-      } else {
-        baseStyle.r = 8
       }
-
       return baseStyle
     }
-  }, [colorBy, colorScale, nodeSize, nodeSizeRange, nodeSizeDomain])
+  }, [colorBy, colorScale, nodeSize])
 
   // Edge style function
   const edgeStyle = useMemo(() => {
-    return (d: Record<string, any>) => {
-      const baseStyle: Record<string, string | number> = {
-        stroke: edgeColor,
-        strokeOpacity: edgeOpacity
-      }
-
-      // Apply width
-      if (typeof edgeWidth === "number") {
-        baseStyle.strokeWidth = edgeWidth
-      } else if (typeof edgeWidth === "function") {
-        baseStyle.strokeWidth = edgeWidth(d as TEdge)
-      } else if (edgeWidth) {
-        baseStyle.strokeWidth = d[edgeWidth]
-      }
-
-      return baseStyle
-    }
+    return (d: Record<string, any>) => ({
+      stroke: edgeColor,
+      strokeWidth: typeof edgeWidth === "number" ? edgeWidth : typeof edgeWidth === "function" ? edgeWidth(d as TEdge) : d[edgeWidth] || 1,
+      opacity: edgeOpacity
+    })
   }, [edgeWidth, edgeColor, edgeOpacity])
 
   // Node label function
   const nodeLabelFn = useMemo(() => {
     if (!showLabels || !nodeLabel) return undefined
-
-    return (d: Record<string, any>) => {
-      if (typeof nodeLabel === "function") {
-        return nodeLabel(d as TNode)
-      }
-      return d[nodeLabel]
-    }
+    if (typeof nodeLabel === "function") return nodeLabel
+    return (d: Record<string, any>) => d[nodeLabel]
   }, [showLabels, nodeLabel])
 
-  // Determine if we should show legend
+  // Legend
   const shouldShowLegend = showLegend !== undefined ? showLegend : !!colorBy
-
-  // Build legend if needed
   const legend = useMemo(() => {
     if (!shouldShowLegend || !colorBy) return undefined
-
-    return createLegend({
-      data: safeNodes,
-      colorBy,
-      colorScale,
-      getColor
-    })
+    return createLegend({ data: safeNodes, colorBy, colorScale, getColor })
   }, [shouldShowLegend, colorBy, safeNodes, colorScale])
 
-  // Adjust margin for legend if present
+  // Adjust margin for legend
   const margin = useMemo(() => {
     const defaultMargin = { top: 20, bottom: 20, left: 20, right: 20 }
     const finalMargin = { ...defaultMargin, ...userMargin }
-
-    // If legend is present and right margin is too small, increase it
     if (legend && finalMargin.right < 120) {
       finalMargin.right = 120
     }
-
     return finalMargin
   }, [userMargin, legend])
 
-  // Validate data (after all hooks)
+  // Validate
   const error = validateNetworkData({
     componentName: "ForceDirectedGraph",
     nodes,
@@ -367,31 +136,33 @@ export function ForceDirectedGraph<TNode extends Record<string, any> = Record<st
   })
   if (error) return <ChartError componentName="ForceDirectedGraph" message={error} width={width} height={height} />
 
-  // Build NetworkFrame props
-  const networkFrameProps: NetworkFrameProps = {
-    size: [width, height],
-    nodes: safeNodes,
-    edges: safeEdges,
-    nodeIDAccessor,
-    sourceAccessor,
-    targetAccessor,
-    networkType: { type: "force", iterations, edgeStrength: forceStrength },
-    nodeStyle,
-    edgeStyle,
-    hoverAnnotation: enableHover,
-    margin,
-    ...(legend && { legend }),
-    ...(nodeLabelFn && { nodeLabels: nodeLabelFn }),
-    ...(className && { className }),
-    ...(title && { title }),
-    // Add tooltip support
-    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
-    // Allow frameProps to override defaults
-    transition: true,
-    ...frameProps,
-    _layoutMap: { force: forceLayout }
-  }
-
-  return <NetworkFrame {...networkFrameProps} />
+  return (
+    <StreamNetworkFrame
+      chartType="force"
+      nodes={safeNodes}
+      edges={safeEdges}
+      size={[width, height]}
+      margin={margin}
+      nodeIDAccessor={nodeIDAccessor}
+      sourceAccessor={sourceAccessor}
+      targetAccessor={targetAccessor}
+      iterations={iterations}
+      forceStrength={forceStrength}
+      nodeStyle={nodeStyle}
+      edgeStyle={edgeStyle}
+      colorBy={colorBy}
+      colorScheme={colorScheme}
+      nodeSize={nodeSize}
+      nodeSizeRange={nodeSizeRange}
+      nodeLabel={nodeLabelFn}
+      showLabels={showLabels}
+      enableHover={enableHover}
+      tooltipContent={tooltip ? (d) => (normalizeTooltip(tooltip) as Function)(d.data) : undefined}
+      legend={legend}
+      className={className}
+      title={title}
+      {...frameProps}
+    />
+  )
 }
 ForceDirectedGraph.displayName = "ForceDirectedGraph"

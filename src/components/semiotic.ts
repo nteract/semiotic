@@ -40,6 +40,8 @@ import { Tooltip, MultiLineTooltip, normalizeTooltip } from "./Tooltip/Tooltip"
 
 // StreamXYFrame (unified canvas-first XY frame)
 import StreamXYFrame from "./stream/StreamXYFrame"
+// StreamNetworkFrame (unified canvas-first network frame)
+import StreamNetworkFrame from "./stream/StreamNetworkFrame"
 // Realtime (deprecated — use StreamXYFrame or StreamOrdinalFrame instead)
 import RealtimeFrame from "./realtime/RealtimeFrame"
 import { RingBuffer } from "./realtime/RingBuffer"
@@ -51,7 +53,8 @@ import { RealtimeTemporalHistogram, RealtimeBarChart } from "./charts/realtime/R
 import { RealtimeSwarmChart } from "./charts/realtime/RealtimeSwarmChart"
 import { RealtimeWaterfallChart } from "./charts/realtime/RealtimeWaterfallChart"
 import { RealtimeSankey } from "./charts/realtime/RealtimeSankey"
-import RealtimeNetworkFrame from "./realtime-network/RealtimeNetworkFrame"
+// RealtimeNetworkFrame is now an alias for StreamNetworkFrame
+const RealtimeNetworkFrame = StreamNetworkFrame
 
 export {
   AnnotationLayer,
@@ -116,6 +119,8 @@ export {
   StreamXYFrame,
   // StreamOrdinalFrame
   StreamOrdinalFrame,
+  // StreamNetworkFrame
+  StreamNetworkFrame,
   // Realtime
   RealtimeFrame,
   RingBuffer,
@@ -344,6 +349,16 @@ export type {
   OrdinalScales,
   OrdinalSceneNode
 } from "./stream/ordinalTypes"
+
+// StreamNetworkFrame types
+export type {
+  StreamNetworkFrameProps,
+  StreamNetworkFrameHandle,
+  NetworkChartType,
+  NetworkSceneNode,
+  NetworkSceneEdge,
+  NetworkLabel
+} from "./stream/networkTypes"
 
 // Realtime chart component types
 export type { RealtimeLineChartProps } from "./charts/realtime/RealtimeLineChart"

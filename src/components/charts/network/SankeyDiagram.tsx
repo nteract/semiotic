@@ -1,225 +1,46 @@
 "use client"
 import * as React from "react"
 import { useMemo } from "react"
-import NetworkFrame from "../../NetworkFrame"
-import type { NetworkFrameProps } from "../../types/networkTypes"
+import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
+import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
 import { getColor } from "../shared/colorUtils"
+import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { validateNetworkData } from "../shared/validateChartData"
-import { sankeyLayout } from "../../processing/layouts/sankeyLayout"
 
 /**
  * SankeyDiagram component props
  */
 export interface SankeyDiagramProps<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>> extends BaseChartProps {
-  /**
-   * Array of nodes (optional - will be inferred from edges if not provided)
-   * @example
-   * ```ts
-   * [{id: 'A', category: 'Source'}, {id: 'B', category: 'Target'}]
-   * ```
-   */
   nodes?: TNode[]
-
-  /**
-   * Array of edges (links) with source, target, and value
-   * @example
-   * ```ts
-   * [
-   *   {source: 'A', target: 'B', value: 100},
-   *   {source: 'B', target: 'C', value: 80}
-   * ]
-   * ```
-   */
   edges: TEdge[]
-
-  /**
-   * Field name or function to access source node identifier
-   * @default "source"
-   */
   sourceAccessor?: ChartAccessor<TEdge, string>
-
-  /**
-   * Field name or function to access target node identifier
-   * @default "target"
-   */
   targetAccessor?: ChartAccessor<TEdge, string>
-
-  /**
-   * Field name or function to access edge value (flow width)
-   * @default "value"
-   */
   valueAccessor?: ChartAccessor<TEdge, number>
-
-  /**
-   * Field name or function to access node identifier
-   * @default "id"
-   */
   nodeIdAccessor?: ChartAccessor<TNode, string>
-
-  /**
-   * Field name or function to determine node color
-   * @example
-   * ```ts
-   * colorBy="category"
-   * colorBy={d => d.type}
-   * ```
-   */
   colorBy?: ChartAccessor<TNode, string>
-
-  /**
-   * Color scheme for nodes or custom colors array
-   * @default "category10"
-   */
   colorScheme?: string | string[]
-
-  /**
-   * Edge color strategy
-   * - "source": color edges by source node
-   * - "target": color edges by target node
-   * - "gradient": gradient from source to target
-   * - function: custom coloring function
-   * @default "source"
-   */
   edgeColorBy?: "source" | "target" | "gradient" | ((d: any) => string)
-
-  /**
-   * Layout orientation
-   * @default "horizontal"
-   */
   orientation?: "horizontal" | "vertical"
-
-  /**
-   * Node alignment strategy
-   * - "justify": spread nodes evenly
-   * - "left": align nodes to the left
-   * - "right": align nodes to the right
-   * - "center": center nodes
-   * @default "justify"
-   */
   nodeAlign?: "justify" | "left" | "right" | "center"
-
-  /**
-   * Padding between nodes (ratio of node height)
-   * @default 0.05
-   */
   nodePaddingRatio?: number
-
-  /**
-   * Fixed width of nodes in pixels
-   * @default 15
-   */
   nodeWidth?: number
-
-  /**
-   * Label accessor for nodes
-   * @default Uses nodeIdAccessor
-   */
   nodeLabel?: ChartAccessor<TNode, string>
-
-  /**
-   * Show node labels
-   * @default true
-   */
   showLabels?: boolean
-
-  /**
-   * Enable hover annotations
-   * @default true
-   */
   enableHover?: boolean
-
-  /**
-   * Edge opacity
-   * @default 0.5
-   */
   edgeOpacity?: number
-
-  /**
-   * Sort function for edges
-   * @example
-   * ```ts
-   * edgeSort={(a, b) => b.value - a.value}
-   * ```
-   */
   edgeSort?: (a: any, b: any) => number
-
-  /**
-   * Tooltip configuration
-   */
   tooltip?: TooltipProp
-
-  /**
-   * Additional NetworkFrame props for advanced customization
-   * For full control, consider using NetworkFrame directly
-   * @see https://semiotic.nteract.io/guides/network-frame
-   */
-  frameProps?: Partial<Omit<NetworkFrameProps, "edges" | "size">>
+  frameProps?: Partial<Omit<StreamNetworkFrameProps, "edges" | "size">>
 }
 
 /**
  * SankeyDiagram - Visualize flow and magnitude of movement between nodes
  *
- * A simplified wrapper around NetworkFrame for creating Sankey diagrams.
- * Perfect for showing material, energy, cost, or any other quantity
- * flowing through a system.
- *
- * @example
- * ```tsx
- * // Simple Sankey diagram
- * <SankeyDiagram
- *   edges={[
- *     {source: 'A', target: 'B', value: 100},
- *     {source: 'A', target: 'C', value: 50},
- *     {source: 'B', target: 'D', value: 80}
- *   ]}
- * />
- * ```
- *
- * @example
- * ```tsx
- * // With custom styling and orientation
- * <SankeyDiagram
- *   edges={edges}
- *   nodes={nodes}
- *   colorBy="category"
- *   edgeColorBy="gradient"
- *   orientation="vertical"
- *   nodeAlign="center"
- * />
- * ```
- *
- * @example
- * ```tsx
- * // With sorting and padding
- * <SankeyDiagram
- *   edges={edges}
- *   nodeWidth={20}
- *   nodePaddingRatio={0.1}
- *   edgeSort={(a, b) => b.value - a.value}
- * />
- * ```
- *
- * @remarks
- * This component wraps {@link NetworkFrame} with sensible defaults for Sankey diagrams.
- * Sankey diagrams are used for directed acyclic graphs (DAGs).
- *
- * **Data Requirements:**
- * - Edges must have source, target, and value properties
- * - Graph should be acyclic (no cycles)
- * - If cycles are detected, consider using a force-directed layout instead
- *
- * **Breadcrumb to advanced usage:**
- * - Use the `frameProps` prop to pass any NetworkFrame prop
- * - See NetworkFrame documentation: https://semiotic.nteract.io/guides/network-frame
- * - All NetworkFrame props are available via `frameProps`
- * - For circular Sankey diagrams, use the `customSankey` prop via frameProps
- *
- * @param props - SankeyDiagram configuration
- * @returns Rendered Sankey diagram
+ * Now wraps StreamNetworkFrame (canvas-first) instead of legacy NetworkFrame.
  */
 export function SankeyDiagram<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: SankeyDiagramProps<TNode, TEdge>) {
   const {
@@ -286,11 +107,9 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
         strokeWidth: 1
       }
 
-      // Apply color
       if (colorBy) {
         baseStyle.fill = getColor(d, colorBy, colorScale)
       } else {
-        // Default color
         baseStyle.fill = "#4d430c"
       }
 
@@ -302,13 +121,11 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
   const edgeStyle = useMemo(() => {
     return (d: Record<string, any>) => {
       const baseStyle: Record<string, string | number> = {
-        stroke: "black",
-        strokeWidth: 0.5,
-        fillOpacity: edgeOpacity,
-        strokeOpacity: 0.3
+        stroke: "none",
+        strokeWidth: 0,
+        fillOpacity: edgeOpacity
       }
 
-      // Apply color based on edge coloring strategy
       if (typeof edgeColorBy === "function") {
         baseStyle.fill = edgeColorBy(d)
       } else if (edgeColorBy === "source") {
@@ -324,8 +141,6 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
           baseStyle.fill = nodeStyle(d.target).fill
         }
       } else if (edgeColorBy === "gradient") {
-        // For gradient, use a semi-transparent gray
-        // (actual gradients would require SVG gradient definitions)
         baseStyle.fill = "#999"
         baseStyle.fillOpacity = edgeOpacity * 0.7
       }
@@ -334,106 +149,19 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
     }
   }, [edgeColorBy, colorBy, colorScale, nodeStyle, edgeOpacity])
 
-  // Node label function
+  // Node label accessor
   const nodeLabelFn = useMemo(() => {
     if (!showLabels) return undefined
     const accessor = nodeLabel || nodeIdAccessor
-    return (d: Record<string, any>) => {
-      if (typeof accessor === "function") return accessor(d as TNode)
-      return d[accessor]
-    }
+    if (typeof accessor === "function") return accessor
+    return (d: Record<string, any>) => d[accessor]
   }, [showLabels, nodeLabel, nodeIdAccessor])
 
-  // Build network type configuration
-  const networkType = useMemo(() => {
-    const config: Record<string, unknown> = {
-      type: "sankey",
-      orient: nodeAlign,
-      direction: orientation === "horizontal" ? undefined : "down",
-      nodePaddingRatio,
-      nodeWidth
-    }
-
-    if (edgeSort) {
-      config.edgeSort = edgeSort
-    }
-
-    return config
-  }, [nodeAlign, orientation, nodePaddingRatio, nodeWidth, edgeSort])
-
-  // Tooltip content renderer for Sankey nodes and edges
-  const renderTooltip = useMemo(() => {
-    return (d: Record<string, any>) => {
-      const isEdge = !!d.edge || (d.source && d.target && !d.degree && d.degree !== 0)
-
-      if (isEdge) {
-        const sourceId = d.source?.id ?? d.edge?.source?.id ?? "?"
-        const targetId = d.target?.id ?? d.edge?.target?.id ?? "?"
-        const val = d.value ?? d.weight
-        return (
-          <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-            <div style={{ fontWeight: "bold" }}>{sourceId} → {targetId}</div>
-            {val != null && (
-              <div style={{ marginTop: 4 }}>
-                Value: {typeof val === "number" ? val.toLocaleString() : String(val)}
-              </div>
-            )}
-          </div>
-        )
-      }
-
-      // Node tooltip
-      const accessor = nodeIdAccessor as string | ((...args: any[]) => any)
-      const nodeId = typeof accessor === "function"
-        ? accessor(d)
-        : d[accessor] ?? d.id
-      const val = d.value
-      return (
-        <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-          <div style={{ fontWeight: "bold" }}>{String(nodeId)}</div>
-          {val != null && (
-            <div style={{ marginTop: 4 }}>
-              Total: {typeof val === "number" ? val.toLocaleString() : String(val)}
-            </div>
-          )}
-          {d.degree != null && (
-            <div style={{ marginTop: 2 }}>
-              Degree: {d.degree}{d.inDegree != null ? ` (${d.inDegree} in, ${d.outDegree} out)` : ""}
-            </div>
-          )}
-        </div>
-      )
-    }
-  }, [nodeIdAccessor])
-
-  // Use htmlAnnotationRules to handle frame-hover annotations directly.
-  // This is checked before tooltipContent in the annotation pipeline,
-  // ensuring the custom Sankey tooltip always renders.
-  const tooltipFn = typeof tooltip === "function" ? tooltip : renderTooltip
-  const htmlAnnotationRules = useMemo(() => {
-    return ({ d, i, adjustedSize }: { d: Record<string, any>; i: number; adjustedSize?: number[]; [key: string]: any }) => {
-      if (d.type !== "frame-hover") return null
-      const flipped = adjustedSize && d.x > adjustedSize[0] / 2
-      const tooltipStyle: React.CSSProperties = {
-        position: "absolute",
-        top: `${d.y}px`
-      }
-      if (flipped) {
-        tooltipStyle.right = `${adjustedSize[0] - d.x}px`
-      } else {
-        tooltipStyle.left = `${d.x}px`
-      }
-      return (
-        <div
-          key={`network-annotation-label-${i}`}
-          className={`annotation annotation-network-label ${d.className || ""}`}
-          style={tooltipStyle}
-        >
-          {tooltipFn(d)}
-        </div>
-      )
-    }
-  }, [tooltipFn])
+  // Tooltip
+  const tooltipFn = useMemo(() => {
+    if (typeof tooltip === "function") return tooltip
+    return undefined
+  }, [tooltip])
 
   // Validate data (after all hooks)
   const error = validateNetworkData({
@@ -443,32 +171,36 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
   })
   if (error) return <ChartError componentName="SankeyDiagram" message={error} width={width} height={height} />
 
-  // Build NetworkFrame props
-  const networkFrameProps: NetworkFrameProps = {
-    size: [width, height],
-    nodes: inferredNodes,
-    edges: safeEdges,
-    nodeStyle,
-    edgeStyle,
-    nodeIDAccessor: nodeIdAccessor,
-    sourceAccessor,
-    targetAccessor,
-    edgeWidthAccessor: valueAccessor,
-    networkType,
-    hoverAnnotation: enableHover,
-    margin,
-    nodeSizeAccessor: () => 5, // Small size for hover target
-    ...(nodeLabelFn && { nodeLabels: nodeLabelFn }),
-    ...(className && { className }),
-    ...(title && { title }),
-    // Use htmlAnnotationRules for direct tooltip rendering (checked before tooltipContent)
-    htmlAnnotationRules,
-    // Allow frameProps to override defaults
-    transition: true,
-    ...frameProps,
-    _layoutMap: { sankey: sankeyLayout, flowchart: sankeyLayout }
-  }
-
-  return <NetworkFrame {...networkFrameProps} />
+  return (
+    <StreamNetworkFrame
+      chartType="sankey"
+      nodes={inferredNodes}
+      edges={safeEdges}
+      size={[width, height]}
+      margin={margin}
+      nodeIDAccessor={nodeIdAccessor}
+      sourceAccessor={sourceAccessor}
+      targetAccessor={targetAccessor}
+      valueAccessor={valueAccessor}
+      orientation={orientation}
+      nodeAlign={nodeAlign}
+      nodePaddingRatio={nodePaddingRatio}
+      nodeWidth={nodeWidth}
+      nodeStyle={nodeStyle}
+      edgeStyle={edgeStyle}
+      colorBy={colorBy}
+      colorScheme={colorScheme}
+      edgeColorBy={edgeColorBy}
+      edgeOpacity={edgeOpacity}
+      edgeSort={edgeSort}
+      nodeLabel={nodeLabelFn}
+      showLabels={showLabels}
+      enableHover={enableHover}
+      tooltipContent={tooltipFn ? (d) => tooltipFn(d.data) : undefined}
+      className={className}
+      title={title}
+      {...frameProps}
+    />
+  )
 }
 SankeyDiagram.displayName = "SankeyDiagram"
