@@ -1,13 +1,11 @@
 import React from "react"
 import { render, screen } from "@testing-library/react"
 import { ResponsiveNetworkFrame } from "./ResponsiveNetworkFrame"
-import { ResponsiveOrdinalFrame } from "./ResponsiveOrdinalFrame"
 
 global.ResizeObserver = require("resize-observer-polyfill")
 
 const ResponsiveFrameComponents = {
-  ResponsiveNetworkFrame: ResponsiveNetworkFrame,
-  ResponsiveOrdinalFrame: ResponsiveOrdinalFrame
+  ResponsiveNetworkFrame: ResponsiveNetworkFrame
 }
 
 describe("ResponsiveFrameComponents", () => {

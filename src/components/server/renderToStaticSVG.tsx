@@ -2,10 +2,6 @@ import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
 
 import { scaleLinear } from "d3-scale"
-import { scaleBand } from "d3-scale"
-
-import { calculateOrdinalFrame } from "../processing/ordinal"
-import { createOrdinalPipelineCache } from "../data/ordinalPipelineCache"
 
 import { calculateNetworkFrame } from "../processing/network"
 import { createNetworkPipelineCache } from "../data/networkPipelineCache"
@@ -13,7 +9,7 @@ import { createNetworkPipelineCache } from "../data/networkPipelineCache"
 import { generateFinalDefs } from "../constants/jsx"
 import { generateFrameTitle } from "../svg/frameFunctions"
 
-import { stringToFn, stringToArrayFn } from "../data/dataFunctions"
+import { stringToFn } from "../data/dataFunctions"
 import { genericFunction } from "../generic_utilities/functions"
 
 import { PipelineStore, type PipelineConfig } from "../stream/PipelineStore"
@@ -30,13 +26,11 @@ import type {
   StreamLayout
 } from "../stream/types"
 
-import { OrdinalFrameProps, OrdinalFrameState } from "../types/ordinalTypes"
 import { NetworkFrameProps, NetworkFrameState } from "../types/networkTypes"
 import { RenderPipelineType } from "../types/generalTypes"
 
 type FrameType = "xy" | "ordinal" | "network"
 
-const ordinalProjectedCoordinateNames = { y: "y", x: "x" }
 const networkProjectedCoordinateNames = { y: "y", x: "x" }
 
 const defaultFrameRenderOrder = [
@@ -378,41 +372,6 @@ function runVisualizationPipeline(
   return renderedElements
 }
 
-function buildOrdinalBaseState(props: OrdinalFrameProps): OrdinalFrameState {
-  return {
-    adjustedPosition: [],
-    adjustedSize: [],
-    backgroundGraphics: undefined,
-    foregroundGraphics: undefined,
-    axisData: undefined,
-    renderNumber: 0,
-    oLabels: { labels: [] },
-    oAccessor: stringToArrayFn<string>("renderKey"),
-    rAccessor: stringToArrayFn<number>("value"),
-    oScale: scaleBand(),
-    rScale: scaleLinear(),
-    axes: undefined,
-    calculatedOExtent: [],
-    calculatedRExtent: [0, 1],
-    columnOverlays: [],
-    dataVersion: undefined,
-    legendSettings: undefined,
-    margin: { top: 0, bottom: 0, left: 0, right: 0 },
-    oExtent: [],
-    oScaleType: scaleBand(),
-    orFrameRender: {},
-    pieceDataXY: [],
-    pieceIDAccessor: stringToFn<string>("semioticPieceID"),
-    projectedColumns: {},
-    rExtent: [],
-    rScaleType: scaleLinear(),
-    summaryType: { type: "none" },
-    title: {},
-    type: { type: "none" },
-    props
-  } as OrdinalFrameState
-}
-
 function buildNetworkBaseState(props: NetworkFrameProps): NetworkFrameState {
   return {
     dataVersion: undefined,
@@ -447,67 +406,6 @@ function buildNetworkBaseState(props: NetworkFrameProps): NetworkFrameState {
     title: { title: undefined },
     props
   } as NetworkFrameState
-}
-
-function renderOrdinalFrame(props: OrdinalFrameProps): string {
-  const ordinalDefaultProps: Partial<OrdinalFrameProps> = {
-    annotations: [],
-    foregroundGraphics: [],
-    projection: "vertical",
-    size: [500, 500],
-    className: "",
-    data: [],
-    type: "none"
-  }
-  const mergedProps = { ...ordinalDefaultProps, ...props } as OrdinalFrameProps
-  const cache = createOrdinalPipelineCache()
-  const baseState = buildOrdinalBaseState(mergedProps)
-
-  const state = {
-    ...baseState,
-    ...calculateOrdinalFrame(mergedProps, baseState, cache)
-  } as OrdinalFrameState
-
-  const {
-    margin,
-    adjustedSize,
-    orFrameRender,
-    axes,
-    axesTickLines,
-    title
-  } = state
-
-  const size = [
-    adjustedSize[0] + margin.left + margin.right,
-    adjustedSize[1] + margin.top + margin.bottom
-  ]
-
-  const oXScale = scaleLinear()
-  const oYScale = scaleLinear()
-  const renderOrder = mergedProps.renderOrder || []
-  const frameRenderOrder = mergedProps.frameRenderOrder || defaultFrameRenderOrder
-
-  const renderedElements = runVisualizationPipeline(
-    orFrameRender,
-    renderOrder,
-    oXScale,
-    oYScale,
-    ordinalProjectedCoordinateNames
-  )
-
-  return assembleAndRender({
-    size,
-    margin,
-    renderedElements,
-    axes,
-    axesTickLines,
-    title,
-    frameRenderOrder,
-    additionalDefs: mergedProps.additionalDefs,
-    name: "ordinalframe",
-    matte: mergedProps.matte,
-    frameKey: "static"
-  })
 }
 
 function renderNetworkFrame(props: NetworkFrameProps): string {
@@ -667,13 +565,15 @@ function assembleAndRender({
 
 export function renderToStaticSVG(
   frameType: FrameType,
-  props: StreamXYFrameProps | OrdinalFrameProps | NetworkFrameProps
+  props: StreamXYFrameProps | NetworkFrameProps
 ): string {
   switch (frameType) {
     case "xy":
       return renderStreamXYFrame(props as StreamXYFrameProps)
     case "ordinal":
-      return renderOrdinalFrame(props as OrdinalFrameProps)
+      throw new Error(
+        `Legacy ordinal SSR has been removed. Use StreamOrdinalFrame for ordinal charts.`
+      )
     case "network":
       return renderNetworkFrame(props as NetworkFrameProps)
     default:
@@ -687,8 +587,10 @@ export function renderXYToStaticSVG(props: StreamXYFrameProps): string {
   return renderStreamXYFrame(props)
 }
 
-export function renderOrdinalToStaticSVG(props: OrdinalFrameProps): string {
-  return renderOrdinalFrame(props)
+export function renderOrdinalToStaticSVG(_props: unknown): string {
+  throw new Error(
+    `Legacy ordinal SSR has been removed. Use StreamOrdinalFrame for ordinal charts.`
+  )
 }
 
 export function renderNetworkToStaticSVG(props: NetworkFrameProps): string {

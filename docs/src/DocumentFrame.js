@@ -1,5 +1,5 @@
 import React from "react"
-import { OrdinalFrame } from "semiotic"
+import { StreamOrdinalFrame } from "semiotic"
 import { processNodes } from "./process"
 import theme from "./theme"
 
@@ -190,7 +190,7 @@ class DocumentFrame extends React.Component {
   onCopy() {
     const {
       frameProps,
-      type = OrdinalFrame,
+      type = StreamOrdinalFrame,
       overrideProps = {},
       functions = {},
       pre,
@@ -227,7 +227,7 @@ class DocumentFrame extends React.Component {
   render() {
     const {
       frameProps,
-      type = OrdinalFrame,
+      type = StreamOrdinalFrame,
       overrideProps = {},
       functions = {},
       pre,

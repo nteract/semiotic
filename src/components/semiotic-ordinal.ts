@@ -3,9 +3,10 @@
  * Import this instead of the full semiotic bundle to reduce bundle size
  */
 
-import OrdinalFrame from "./OrdinalFrame"
-import { ResponsiveOrdinalFrame } from "./ResponsiveOrdinalFrame"
-import { SparkOrdinalFrame } from "./SparkOrdinalFrame"
+import StreamOrdinalFrame from "./stream/StreamOrdinalFrame"
+const OrdinalFrame = StreamOrdinalFrame
+const ResponsiveOrdinalFrame = StreamOrdinalFrame
+const SparkOrdinalFrame = StreamOrdinalFrame
 
 // Common utilities used with OrdinalFrame
 import Axis from "./Axis"

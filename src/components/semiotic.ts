@@ -1,6 +1,9 @@
 import AnnotationLayer from "./AnnotationLayer/AnnotationLayer"
 import DividedLine from "./DividedLine"
-import OrdinalFrame from "./OrdinalFrame"
+import StreamOrdinalFrame from "./stream/StreamOrdinalFrame"
+const OrdinalFrame = StreamOrdinalFrame
+const ResponsiveOrdinalFrame = StreamOrdinalFrame
+const SparkOrdinalFrame = StreamOrdinalFrame
 import Axis from "./Axis"
 import Legend from "./Legend"
 import Annotation from "./Annotation"
@@ -11,9 +14,6 @@ import NetworkFrame from "./NetworkFrame"
 import { funnelize } from "./svg/lineDrawing"
 import { calculateDataExtent } from "./data/dataFunctions"
 import { ResponsiveNetworkFrame } from "./ResponsiveNetworkFrame"
-import { ResponsiveOrdinalFrame } from "./ResponsiveOrdinalFrame"
-
-import { SparkOrdinalFrame } from "./SparkOrdinalFrame"
 import { SparkNetworkFrame } from "./SparkNetworkFrame"
 
 import { hexbinning, heatmapping } from "./svg/areaDrawing"
@@ -40,9 +40,6 @@ import { Tooltip, MultiLineTooltip, normalizeTooltip } from "./Tooltip/Tooltip"
 
 // StreamXYFrame (unified canvas-first XY frame)
 import StreamXYFrame from "./stream/StreamXYFrame"
-// StreamOrdinalFrame (unified canvas-first ordinal frame)
-import StreamOrdinalFrame from "./stream/StreamOrdinalFrame"
-
 // Realtime (deprecated — use StreamXYFrame or StreamOrdinalFrame instead)
 import RealtimeFrame from "./realtime/RealtimeFrame"
 import { RingBuffer } from "./realtime/RingBuffer"
@@ -65,11 +62,11 @@ export {
   InteractionLayer,
   VisualizationLayer,
   OrdinalFrame,
+  ResponsiveOrdinalFrame,
+  SparkOrdinalFrame,
   Annotation,
   NetworkFrame,
-  ResponsiveOrdinalFrame,
   ResponsiveNetworkFrame,
-  SparkOrdinalFrame,
   SparkNetworkFrame,
   Legend,
   funnelize,

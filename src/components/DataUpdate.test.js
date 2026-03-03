@@ -1,6 +1,7 @@
 import React from "react"
 import { render } from "@testing-library/react"
-import OrdinalFrame from "./OrdinalFrame"
+import StreamOrdinalFrame from "./stream/StreamOrdinalFrame"
+const OrdinalFrame = StreamOrdinalFrame
 import NetworkFrame from "./NetworkFrame"
 import { TooltipProvider } from "./store/TooltipStore"
 

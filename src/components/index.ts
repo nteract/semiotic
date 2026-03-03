@@ -1,6 +1,9 @@
 import AnnotationLayer from "./AnnotationLayer"
 import DividedLine from "./DividedLine"
-import OrdinalFrame from "./OrdinalFrame"
+import StreamOrdinalFrame from "./stream/StreamOrdinalFrame"
+const OrdinalFrame = StreamOrdinalFrame
+const ResponsiveOrdinalFrame = StreamOrdinalFrame
+const SparkOrdinalFrame = StreamOrdinalFrame
 import Axis from "./Axis"
 import Legend from "./Legend"
 import Annotation from "./Annotation"
@@ -11,9 +14,6 @@ import NetworkFrame from "./NetworkFrame"
 import { funnelize } from "./svg/lineDrawing"
 import { calculateDataExtent } from "./data/dataFunctions"
 import { ResponsiveNetworkFrame } from "./ResponsiveNetworkFrame"
-import { ResponsiveOrdinalFrame } from "./ResponsiveOrdinalFrame"
-
-import { SparkOrdinalFrame } from "./SparkOrdinalFrame"
 import { SparkNetworkFrame } from "./SparkNetworkFrame"
 
 import { hexbinning, heatmapping } from "./svg/areaDrawing"
@@ -61,11 +61,11 @@ export default {
   InteractionLayer,
   VisualizationLayer,
   OrdinalFrame,
+  ResponsiveOrdinalFrame,
+  SparkOrdinalFrame,
   Annotation,
   NetworkFrame,
-  ResponsiveOrdinalFrame,
   ResponsiveNetworkFrame,
-  SparkOrdinalFrame,
   SparkNetworkFrame,
   Legend,
   funnelize,
@@ -114,11 +114,11 @@ export {
   InteractionLayer,
   VisualizationLayer,
   OrdinalFrame,
+  ResponsiveOrdinalFrame,
+  SparkOrdinalFrame,
   Annotation,
   NetworkFrame,
-  ResponsiveOrdinalFrame,
   ResponsiveNetworkFrame,
-  SparkOrdinalFrame,
   SparkNetworkFrame,
   Legend,
   funnelize,
