@@ -5,7 +5,7 @@
 
 import XYFrame from "./XYFrame"
 import StreamXYFrame from "./stream/StreamXYFrame"
-import MinimapXYFrame from "./MinimapXYFrame"
+import { MinimapChart } from "./charts/xy/MinimapChart"
 import { ResponsiveXYFrame } from "./ResponsiveXYFrame"
 import { SparkXYFrame } from "./SparkXYFrame"
 
@@ -15,7 +15,7 @@ import Legend from "./Legend"
 import Annotation from "./Annotation"
 import AnnotationLayer from "./AnnotationLayer/AnnotationLayer"
 import Brush from "./Brush"
-import MiniMap from "./MiniMap"
+// MiniMap removed — replaced by MinimapChart
 import DividedLine from "./DividedLine"
 
 // Utility functions
@@ -27,7 +27,7 @@ import { hexbinning, heatmapping } from "./svg/areaDrawing"
 export {
   XYFrame,
   StreamXYFrame,
-  MinimapXYFrame,
+  MinimapChart,
   ResponsiveXYFrame,
   SparkXYFrame,
   // Common utilities
@@ -36,7 +36,6 @@ export {
   Annotation,
   AnnotationLayer,
   Brush,
-  MiniMap,
   DividedLine,
   // Utility functions
   funnelize,

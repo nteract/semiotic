@@ -1,4 +1,4 @@
-import type { SceneNode, PointSceneNode, RectSceneNode, LineSceneNode, HeatcellSceneNode, StreamScales } from "./types"
+import type { SceneNode, PointSceneNode, RectSceneNode, LineSceneNode, AreaSceneNode, HeatcellSceneNode, StreamScales } from "./types"
 import type { RingBuffer } from "../realtime/RingBuffer"
 
 export interface HitResult {
@@ -38,6 +38,8 @@ export function findNearestNode(
         result = hitTestHeatcell(node, px, py)
         break
       case "area":
+        // Skip non-interactive areas (e.g. decorative bounds bands)
+        if (node.interactive === false) break
         // Areas are hit-tested by finding nearest x on the top path
         result = hitTestAreaPath(node, px, py)
         break

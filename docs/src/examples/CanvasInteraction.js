@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react"
 import DocumentFrame from "../DocumentFrame"
-import { XYFrame } from "semiotic"
+import { StreamXYFrame } from "semiotic"
 import { csvParse } from "d3-dsv"
 
 import theme from "../theme"
@@ -18,33 +18,23 @@ const cutHash = {
 }
 
 const frameProps = {
+  chartType: "scatter",
   size: [700, 500],
   xAccessor: "x",
   yAccessor: "y",
   pointStyle: (d) => ({ fill: d.color, fillOpacity: 0.9 }),
-  canvasPoints: true,
   margin: { top: 60, bottom: 50, left: 60, right: 60 },
-  hoverAnnotation: true,
-  axes: [
-    { orient: "bottom", label: "Carat" },
-    {
-      label: "Price",
-      orient: "left",
-      tickFormat: (d) => `$${d / 1000}k`,
-    },
-  ],
+  enableHover: true,
+  showAxes: true,
+  xLabel: "Carat",
+  yLabel: "Price",
+  yFormat: (d) => `$${d / 1000}k`,
   title: "Diamonds: Carat vs Price",
   tooltipContent: (d) => {
     return (
       <div className="tooltip-content" data-testid="tooltip-content">
-        <p>Price: ${d.y}</p>
-        <p>Caret: {d.x}</p>
-        <p>
-          {d.coincidentPoints.length > 1 &&
-            `+${d.coincidentPoints.length - 1} more diamond${
-              (d.coincidentPoints.length > 2 && "s") || ""
-            } here`}
-        </p>
+        <p>Price: ${d.value}</p>
+        <p>Carat: {d.time}</p>
       </div>
     )
   },
@@ -54,15 +44,8 @@ const overrideProps = {
   tooltipContent: `d => {
     return (
       <div className="tooltip-content">
-        <p>Price: \${d.y}</p>
-        <p>Caret: {d.x}</p>
-        <p>
-          {d.coincidentPoints.length > 1 &&
-            \`+\${d.coincidentPoints.length - 1} more diamond\${(d.coincidentPoints
-              .length > 2 &&
-              "s") ||
-              ""} here\`}
-        </p>
+        <p>Price: \${d.value}</p>
+        <p>Carat: {d.time}</p>
       </div>
     );
   }
@@ -103,9 +86,9 @@ This page uses the classic diamond dataset of nearly 54,000 diamonds source from
         <div>Loading...</div>
       ) : (
         <DocumentFrame
-          frameProps={{ ...frameProps, points }}
+          frameProps={{ ...frameProps, data: points }}
           overrideProps={overrideProps}
-          type={XYFrame}
+          type={StreamXYFrame}
           useExpanded
         />
       )}

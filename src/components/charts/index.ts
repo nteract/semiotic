@@ -32,6 +32,9 @@ export type { BubbleChartProps } from "./xy/BubbleChart"
 export { ScatterplotMatrix } from "./xy/ScatterplotMatrix"
 export type { ScatterplotMatrixProps } from "./xy/ScatterplotMatrix"
 
+export { MinimapChart } from "./xy/MinimapChart"
+export type { MinimapChartProps, MinimapConfig } from "./xy/MinimapChart"
+
 // ============================================================================
 // Ordinal Charts (based on OrdinalFrame)
 // ============================================================================

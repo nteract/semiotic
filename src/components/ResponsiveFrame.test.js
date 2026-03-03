@@ -1,7 +1,6 @@
 import React from "react"
 import { render, screen } from "@testing-library/react"
 import { ResponsiveNetworkFrame } from "./ResponsiveNetworkFrame"
-import { ResponsiveMinimapXYFrame } from "./ResponsiveMinimapXYFrame"
 import { ResponsiveXYFrame } from "./ResponsiveXYFrame"
 import { ResponsiveOrdinalFrame } from "./ResponsiveOrdinalFrame"
 
@@ -9,7 +8,6 @@ global.ResizeObserver = require("resize-observer-polyfill")
 
 const ResponsiveFrameComponents = {
   ResponsiveXYFrame: ResponsiveXYFrame,
-  ResponsiveMinimapXYFrame: ResponsiveMinimapXYFrame,
   ResponsiveNetworkFrame: ResponsiveNetworkFrame,
   ResponsiveOrdinalFrame: ResponsiveOrdinalFrame
 }

@@ -30,6 +30,9 @@ interface SVGOverlayProps {
   // Legend
   legend?: ReactNode | { legendGroups: LegendGroup[] }
 
+  // Foreground graphics (rendered on top in SVG overlay)
+  foregroundGraphics?: ReactNode
+
   // Annotations
   annotations?: Record<string, any>[]
   svgAnnotationRules?: (
@@ -71,6 +74,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
     showGrid,
     title,
     legend,
+    foregroundGraphics,
     annotations,
     svgAnnotationRules,
     annotationFrame,
@@ -112,7 +116,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [annotations, svgAnnotationRules, width, height, annotationFrame])
 
-  const hasContent = showAxes || title || legend || (renderedAnnotations && renderedAnnotations.length > 0) || showGrid || children
+  const hasContent = showAxes || title || legend || foregroundGraphics || (renderedAnnotations && renderedAnnotations.length > 0) || showGrid || children
 
   if (!hasContent) return null
 
@@ -223,6 +227,9 @@ export function SVGOverlay(props: SVGOverlayProps) {
 
         {/* Annotations */}
         {renderedAnnotations}
+
+        {/* Foreground graphics */}
+        {foregroundGraphics}
 
         {children}
       </g>

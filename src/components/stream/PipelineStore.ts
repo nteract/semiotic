@@ -9,6 +9,7 @@ import type {
   StreamScales,
   StreamLayout,
   SceneNode,
+  AreaSceneNode,
   Style,
   ArrowOfTime,
   WindowMode
@@ -69,14 +70,18 @@ export interface PipelineConfig {
   categoryAccessor?: string | ((d: any) => string)
   lineDataAccessor?: string
 
-  // Fixed extents
-  xExtent?: [number, number]
-  yExtent?: [number, number]
+  // Fixed extents (partial: [min] or [min, undefined] to set only min)
+  xExtent?: [number | undefined, number | undefined] | [number]
+  yExtent?: [number | undefined, number | undefined] | [number]
   sizeRange?: [number, number]
 
   // Bar/heatmap specifics
   binSize?: number
   normalize?: boolean
+
+  // Bounds/uncertainty
+  boundsAccessor?: string | ((d: any) => number)
+  boundsStyle?: any
 
   // Style
   lineStyle?: any
@@ -99,6 +104,7 @@ export class PipelineStore {
   private getY: (d: any) => number
   private getGroup: ((d: any) => string) | undefined
   private getCategory: ((d: any) => string) | undefined
+  private getBounds: ((d: any) => number) | undefined
 
   scales: StreamScales | null = null
   scene: SceneNode[] = []
@@ -124,6 +130,9 @@ export class PipelineStore {
 
     this.getGroup = resolveStringAccessor(config.groupAccessor)
     this.getCategory = resolveStringAccessor(config.categoryAccessor)
+    this.getBounds = config.boundsAccessor
+      ? resolveAccessor(config.boundsAccessor, "bounds")
+      : undefined
   }
 
   /**
@@ -178,12 +187,28 @@ export class PipelineStore {
       this.yExtent.recalculate(buffer, this.getY)
     }
 
-    // Resolve domains
-    let xDomain = config.xExtent || this.xExtent.extent
-    let yDomain = config.yExtent || this.yExtent.extent
+    // Resolve domains — merge user-specified extents with data extents
+    const dataXDomain = this.xExtent.extent
+    const dataYDomain = this.yExtent.extent
+    let xDomain: [number, number] = config.xExtent
+      ? [
+          config.xExtent[0] ?? dataXDomain[0],
+          config.xExtent[1] ?? dataXDomain[1]
+        ]
+      : dataXDomain
+    let yDomain: [number, number] = config.yExtent
+      ? [
+          config.yExtent[0] ?? dataYDomain[0],
+          config.yExtent[1] ?? dataYDomain[1]
+        ]
+      : dataYDomain
+
+    // Determine if extents are fully user-specified (no padding needed)
+    const yFullySpecified = config.yExtent && config.yExtent[0] != null && config.yExtent[1] != null
+    const xFullySpecified = config.xExtent && config.xExtent[0] != null && config.xExtent[1] != null
 
     // Chart-type specific extent adjustments
-    if (config.chartType === "stackedarea" && !config.yExtent && buffer.size > 0) {
+    if (config.chartType === "stackedarea" && !yFullySpecified && buffer.size > 0) {
       // Stacked areas: y-extent must cover the cumulative sums, not raw values
       if (config.normalize) {
         // Normalized: all stacks sum to 1.0
@@ -212,12 +237,12 @@ export class PipelineStore {
         const pad = maxStacked > 0 ? maxStacked * config.extentPadding : 1
         yDomain = [0, maxStacked + pad]
       }
-    } else if (config.chartType === "bar" && config.binSize && !config.yExtent && buffer.size > 0) {
+    } else if (config.chartType === "bar" && config.binSize && !yFullySpecified && buffer.size > 0) {
       const [, maxTotal] = computeBinExtent(
         buffer, this.getX, this.getY, config.binSize, this.getCategory
       )
       yDomain = [0, maxTotal + maxTotal * config.extentPadding]
-    } else if (config.chartType === "waterfall" && !config.yExtent && buffer.size > 0) {
+    } else if (config.chartType === "waterfall" && !yFullySpecified && buffer.size > 0) {
       const [minCum, maxCum] = computeWaterfallExtent(buffer, this.getY)
       const range = maxCum - minCum
       const pad = range > 0 ? range * config.extentPadding : 1
@@ -225,10 +250,27 @@ export class PipelineStore {
         Math.min(0, minCum - Math.abs(pad)),
         Math.max(0, maxCum + Math.abs(pad))
       ]
-    } else if (!config.yExtent && yDomain[0] !== Infinity) {
+    } else if (!yFullySpecified && yDomain[0] !== Infinity) {
+      // Expand extent to include bounds/uncertainty offsets
+      if (this.getBounds) {
+        const data = buffer.toArray()
+        for (const d of data) {
+          const y = this.getY(d)
+          const offset = this.getBounds(d)
+          if (y == null || Number.isNaN(y) || !offset) continue
+          if (y + offset > yDomain[1]) yDomain[1] = y + offset
+          if (y - offset < yDomain[0]) yDomain[0] = y - offset
+        }
+      }
       const range = yDomain[1] - yDomain[0]
       const pad = range > 0 ? range * config.extentPadding : 1
-      yDomain = [yDomain[0] - pad, yDomain[1] + pad]
+      // Only pad the data-derived side; preserve user-specified bounds
+      const userMin = config.yExtent?.[0]
+      const userMax = config.yExtent?.[1]
+      yDomain = [
+        userMin != null ? yDomain[0] : yDomain[0] - pad,
+        userMax != null ? yDomain[1] : yDomain[1] + pad
+      ]
     }
 
     // Handle degenerate extents
@@ -301,6 +343,14 @@ export class PipelineStore {
   private buildLineScene(data: Record<string, any>[]): SceneNode[] {
     const groups = this.groupData(data)
     const nodes: SceneNode[] = []
+
+    // Build bounds areas first so they render behind lines
+    if (this.getBounds) {
+      for (const g of groups) {
+        const boundsNode = this.buildBoundsForGroup(g.data, g.key)
+        if (boundsNode) nodes.push(boundsNode)
+      }
+    }
 
     for (const g of groups) {
       const style = this.resolveLineStyle(g.key, g.data[0])
@@ -559,6 +609,63 @@ export class PipelineStore {
     }
 
     return nodes
+  }
+
+  // ── Bounds helpers ───────────────────────────────────────────────────
+
+  private buildBoundsForGroup(data: Record<string, any>[], group: string): AreaSceneNode | null {
+    if (!this.getBounds || !this.scales) return null
+
+    const topPath: [number, number][] = []
+    const bottomPath: [number, number][] = []
+
+    for (const d of data) {
+      const x = this.getX(d)
+      const y = this.getY(d)
+      if (x == null || y == null || Number.isNaN(x) || Number.isNaN(y)) continue
+
+      const offset = this.getBounds(d)
+      const px = this.scales!.x(x)
+
+      if (!offset || offset === 0) {
+        // No bounds at this point — collapse to the line
+        const py = this.scales!.y(y)
+        topPath.push([px, py])
+        bottomPath.push([px, py])
+      } else {
+        topPath.push([px, this.scales!.y(y + offset)])
+        bottomPath.push([px, this.scales!.y(y - offset)])
+      }
+    }
+
+    if (topPath.length < 2) return null
+
+    return {
+      type: "area",
+      topPath,
+      bottomPath,
+      style: this.resolveBoundsStyle(group, data[0]),
+      datum: data,
+      group,
+      interactive: false
+    }
+  }
+
+  private resolveBoundsStyle(group: string, sampleDatum?: Record<string, any>): Style {
+    const bs = this.config.boundsStyle
+    if (typeof bs === "function") {
+      return bs(sampleDatum || {}, group)
+    }
+    if (bs && typeof bs === "object") {
+      return bs
+    }
+    // Default: match line color with low opacity
+    const lineStyle = this.resolveLineStyle(group, sampleDatum)
+    return {
+      fill: lineStyle.stroke || "#4e79a7",
+      fillOpacity: 0.2,
+      stroke: "none"
+    }
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────

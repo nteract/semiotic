@@ -35,16 +35,16 @@ import type { StreamRendererFn } from "./renderers/types"
 
 // ── Renderer dispatch ──────────────────────────────────────────────────
 
-const RENDERERS: Record<StreamChartType, StreamRendererFn> = {
-  line: lineCanvasRenderer,
-  area: areaCanvasRenderer,
-  stackedarea: areaCanvasRenderer,
-  scatter: pointCanvasRenderer,
-  bubble: pointCanvasRenderer,
-  heatmap: heatmapCanvasRenderer,
-  bar: barCanvasRenderer,
-  swarm: swarmCanvasRenderer,
-  waterfall: waterfallCanvasRenderer
+const RENDERERS: Record<StreamChartType, StreamRendererFn[]> = {
+  line: [areaCanvasRenderer, lineCanvasRenderer],
+  area: [areaCanvasRenderer],
+  stackedarea: [areaCanvasRenderer],
+  scatter: [pointCanvasRenderer],
+  bubble: [pointCanvasRenderer],
+  heatmap: [heatmapCanvasRenderer],
+  bar: [barCanvasRenderer],
+  swarm: [swarmCanvasRenderer],
+  waterfall: [waterfallCanvasRenderer]
 }
 
 // ── Defaults ───────────────────────────────────────────────────────────
@@ -205,6 +205,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       swarmStyle,
       barColors,
       colorScheme,
+      boundsAccessor,
+      boundsStyle,
       showAxes = true,
       xLabel,
       yLabel,
@@ -220,6 +222,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       svgAnnotationRules,
       showGrid,
       legend,
+      backgroundGraphics,
+      foregroundGraphics,
       title,
       categoryAccessor
     } = props
@@ -272,6 +276,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       sizeRange,
       binSize,
       normalize,
+      boundsAccessor,
+      boundsStyle,
       lineStyle,
       pointStyle,
       areaStyle,
@@ -282,6 +288,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       xAccessor, yAccessor, timeAccessor, valueAccessor,
       colorAccessor, sizeAccessor, groupAccessor, categoryAccessor,
       lineDataAccessor, xExtent, yExtent, sizeRange, binSize, normalize,
+      boundsAccessor, boundsStyle,
       lineStyle, pointStyle, areaStyle, colorScheme, barColors, isStreaming
     ])
 
@@ -456,15 +463,17 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         ctx.fillRect(0, 0, adjustedWidth, adjustedHeight)
       }
 
-      // Render data marks via canvas renderer
-      const renderer = RENDERERS[chartType]
-      if (renderer && store.scales) {
-        renderer(
-          ctx,
-          store.scene,
-          store.scales,
-          { width: adjustedWidth, height: adjustedHeight }
-        )
+      // Render data marks via canvas renderers
+      const renderers = RENDERERS[chartType]
+      if (renderers && store.scales) {
+        for (const renderer of renderers) {
+          renderer(
+            ctx,
+            store.scene,
+            store.scales,
+            { width: adjustedWidth, height: adjustedHeight }
+          )
+        }
       }
 
       // Draw crosshair on hover
@@ -548,6 +557,20 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         onMouseMove={effectiveHoverAnnotation ? onMouseMove : undefined}
         onMouseLeave={effectiveHoverAnnotation ? onMouseLeave : undefined}
       >
+        {backgroundGraphics && (
+          <svg
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              width: size[0],
+              height: size[1],
+              pointerEvents: "none"
+            }}
+          >
+            {backgroundGraphics}
+          </svg>
+        )}
         <canvas
           ref={canvasRef}
           style={{
@@ -571,6 +594,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           showGrid={showGrid}
           title={title}
           legend={legend}
+          foregroundGraphics={foregroundGraphics}
           annotations={annotations}
           svgAnnotationRules={svgAnnotationRules}
           annotationFrame={annotationFrame}

@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { XYFrame, OrdinalFrame, MinimapXYFrame } from "semiotic"
+import { XYFrame, OrdinalFrame, MinimapChart } from "semiotic"
 import { LineChart, BarChart } from "semiotic"
 import { curveMonotoneX } from "d3-shape"
 
@@ -336,32 +336,30 @@ function BrushExample() {
         language="jsx"
       />
 
-      <h3 id="minimap">MinimapXYFrame</h3>
+      <h3 id="minimap">MinimapChart</h3>
       <p>
-        <code>MinimapXYFrame</code> automates the common pattern of a main
+        <code>MinimapChart</code> automates the common pattern of a main
         chart with a smaller brush-enabled overview below it. It manages
         brush state internally and updates the main chart's extent
         automatically:
       </p>
 
       <CodeBlock
-        code={`import { MinimapXYFrame } from "semiotic"
+        code={`import { MinimapChart } from "semiotic"
 
-<MinimapXYFrame
-  lines={data}
+<MinimapChart
+  data={data}
   xAccessor="step"
   yAccessor="value"
-  lineType={{ type: "line", interpolator: curveMonotoneX }}
-  size={[700, 300]}
+  lineBy="series"
+  colorBy="series"
+  curve="monotoneX"
+  width={700}
+  height={300}
   margin={{ left: 50, top: 10, bottom: 40, right: 20 }}
-  matte={true}
   minimap={{
-    brushEnd: (e) => handleExtentChange(e),
-    yBrushable: false,
-    xBrushExtent: selectedExtent,
-    margin: { left: 50, top: 0, bottom: 10, right: 20 },
-    axes: [{ orient: "left", ticks: 2 }],
-    size: [700, 50]
+    height: 50,
+    margin: { left: 50, top: 0, bottom: 10, right: 20 }
   }}
 />`}
         language="jsx"
@@ -507,30 +505,28 @@ function OrdinalBrushExample() {
         language="jsx"
       />
 
-      <h3 id="minimap-config">MinimapXYFrame Configuration</h3>
+      <h3 id="minimap-config">MinimapChart Configuration</h3>
       <p>
-        The <code>minimap</code> prop on <code>MinimapXYFrame</code> accepts
-        the following additional properties beyond standard XYFrame props:
+        The <code>minimap</code> prop on <code>MinimapChart</code> configures
+        the overview chart and brush behavior:
       </p>
 
       <CodeBlock
         code={`minimap={{
-  // Brush behavior
-  xBrushable: true,       // Enable horizontal brushing
-  yBrushable: false,      // Enable vertical brushing
-  xBrushExtent: [5, 15],  // Initial/controlled horizontal extent
-  yBrushExtent: [0, 100], // Initial/controlled vertical extent
-
-  // Brush callbacks
-  brushStart: (e) => {},  // Start of brush
-  brush: (e) => {},       // During brush
-  brushEnd: (e) => {},    // End of brush
-
-  // Override any XYFrame prop for the minimap rendering
-  size: [700, 50],
+  height: 50,               // Height of the overview chart
+  brushDirection: "x",      // "x" (default) or "y"
+  showAxes: false,          // Show axes in overview (default: false)
+  background: "#f5f5f5",    // Background color for overview
   margin: { left: 50, top: 0, bottom: 10, right: 20 },
-  axes: [{ orient: "left", ticks: 2 }]
-}}`}
+  lineStyle: (d) => ({ stroke: d.color, strokeWidth: 1 })
+}}
+
+// Controlled brush state:
+<MinimapChart
+  brushExtent={[startDate, endDate]}
+  onBrush={(extent) => setExtent(extent)}
+  ...
+/>`}
         language="jsx"
       />
 

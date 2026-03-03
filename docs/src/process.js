@@ -8,7 +8,9 @@ export const processNodes = [
       "summaries",
       "nodes",
       "edges",
-      "graph"
+      "graph",
+      "chartType",
+      "groupAccessor"
     ]
   },
   {
@@ -16,6 +18,7 @@ export const processNodes = [
     keys: [
       "size",
       "margin",
+      "background",
       "NetworkFrame",
       "OrdinalFrame",
       "XYFrame",
@@ -25,7 +28,7 @@ export const processNodes = [
       "ResponsiveNetworkFrame",
       "ResponsiveOrdinalFrame",
       "ResponsiveXYFrame",
-      "MinimapXYFrame",
+      "MinimapChart",
       "responsiveWidth",
       "responsiveHeight"
     ]
@@ -61,12 +64,23 @@ export const processNodes = [
       "yExtent",
       "xExtent",
       "rExtent",
+      "boundsAccessor",
       "invertX",
       "invertY",
       "invertO",
       "invertR",
       "lineDataAccessor",
       "summaryDataAccessor",
+      "timeAccessor",
+      "valueAccessor",
+      "colorAccessor",
+      "sizeAccessor",
+      "categoryAccessor",
+      "windowSize",
+      "windowMode",
+      "arrowOfTime",
+      "binSize",
+      "normalize",
       "nodeIDAccessor",
       "sourceAccessor",
       "targetAccessor"
@@ -89,6 +103,7 @@ export const processNodes = [
       "summaryClass",
       "nodeClass",
       "edgeClass",
+      "boundsStyle",
       "additionalDefs",
       "renderKey",
       "renderFn",
@@ -97,7 +112,14 @@ export const processNodes = [
       "lineRenderMode",
       "summaryRenderMode",
       "title",
+      "showAxes",
+      "showGrid",
+      "xLabel",
+      "yLabel",
+      "xFormat",
+      "yFormat",
       "foregroundGraphics",
+      "backgroundGraphics",
       "backgroundGraphics",
       "axes",
       "axis",
@@ -142,6 +164,7 @@ export const processNodes = [
       "customClickBehavior",
       "customDoubleClickBehavior",
       "hoverAnnotation",
+      "enableHover",
       "pieceHoverAnnotation",
       "summaryHoverAnnotation",
       "interaction"

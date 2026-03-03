@@ -60,6 +60,8 @@ export interface AreaSceneNode {
   style: Style
   datum: any
   group?: string
+  /** When false, skip hit testing (used for decorative bounds areas) */
+  interactive?: boolean
 }
 
 export interface PointSceneNode {
@@ -146,6 +148,19 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   curve?: CurveType
   normalize?: boolean
 
+  // ── Bounds/uncertainty ─────────────────────────
+  /**
+   * Accessor returning a symmetric uncertainty offset per datum.
+   * When set, an uncertainty band is drawn ± this offset from the line.
+   */
+  boundsAccessor?: string | ((d: T) => number)
+
+  /**
+   * Style for bounds/uncertainty areas.
+   * If omitted, defaults to the line color at 0.2 opacity.
+   */
+  boundsStyle?: Style | ((d: T, group?: string) => Style)
+
   // ── Bar/time-binned specifics ────────────────────
   binSize?: number
 
@@ -159,8 +174,8 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   timeAccessor?: string | ((d: T) => number)
 
   // ── Extents ──────────────────────────────────────
-  xExtent?: [number, number]
-  yExtent?: [number, number]
+  xExtent?: [number | undefined, number | undefined] | [number]
+  yExtent?: [number | undefined, number | undefined] | [number]
   extentPadding?: number
   sizeRange?: [number, number]
 
@@ -206,6 +221,12 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   // ── Grid / legend ────────────────────────────────
   showGrid?: boolean
   legend?: ReactNode | { legendGroups: any[] }
+
+  // ── Background / foreground graphics ───────────
+  /** SVG elements rendered behind the canvas (in pixel space) */
+  backgroundGraphics?: ReactNode
+  /** SVG elements rendered on top of everything (in SVG overlay) */
+  foregroundGraphics?: ReactNode
 
   // ── Title ────────────────────────────────────────
   title?: string | ReactNode

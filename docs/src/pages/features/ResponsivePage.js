@@ -256,7 +256,6 @@ export default function ResponsivePage() {
             ["ResponsiveXYFrame", "XYFrame"],
             ["ResponsiveOrdinalFrame", "OrdinalFrame"],
             ["ResponsiveNetworkFrame", "NetworkFrame"],
-            ["ResponsiveMinimapXYFrame", "MinimapXYFrame"],
           ].map(([responsive, wraps], i) => (
             <tr key={responsive} style={{ background: i % 2 ? "var(--surface-1)" : "transparent" }}>
               <td style={{ padding: "8px 16px", borderBottom: "1px solid var(--surface-3)", fontFamily: "var(--font-code)", fontSize: "0.9em" }}>{responsive}</td>
@@ -276,8 +275,7 @@ export default function ResponsivePage() {
         code={`import {
   ResponsiveXYFrame,
   ResponsiveOrdinalFrame,
-  ResponsiveNetworkFrame,
-  ResponsiveMinimapXYFrame
+  ResponsiveNetworkFrame
 } from "semiotic"
 
 // Width-only responsive (most common)

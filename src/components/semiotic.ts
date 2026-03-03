@@ -2,8 +2,7 @@ import AnnotationLayer from "./AnnotationLayer/AnnotationLayer"
 import DividedLine from "./DividedLine"
 import XYFrame from "./XYFrame"
 import OrdinalFrame from "./OrdinalFrame"
-import MinimapXYFrame from "./MinimapXYFrame"
-import MiniMap from "./MiniMap"
+// MinimapXYFrame and MiniMap removed — replaced by MinimapChart HOC
 import Axis from "./Axis"
 import Legend from "./Legend"
 import Annotation from "./Annotation"
@@ -14,7 +13,7 @@ import NetworkFrame from "./NetworkFrame"
 import { funnelize } from "./svg/lineDrawing"
 import { calculateDataExtent } from "./data/dataFunctions"
 import { ResponsiveNetworkFrame } from "./ResponsiveNetworkFrame"
-import { ResponsiveMinimapXYFrame } from "./ResponsiveMinimapXYFrame"
+// ResponsiveMinimapXYFrame removed — replaced by MinimapChart HOC
 import { ResponsiveXYFrame } from "./ResponsiveXYFrame"
 import { ResponsiveOrdinalFrame } from "./ResponsiveOrdinalFrame"
 
@@ -27,7 +26,7 @@ import { hexbinning, heatmapping } from "./svg/areaDrawing"
 import { nodesEdgesFromHierarchy } from "./processing/network"
 
 // Higher-order chart components
-import { Scatterplot, LineChart, AreaChart, StackedAreaChart, Heatmap, BubbleChart, BarChart, StackedBarChart, SwarmPlot, BoxPlot, Histogram, ViolinPlot, DotPlot, PieChart, DonutChart, GroupedBarChart, ForceDirectedGraph, ChordDiagram, SankeyDiagram, TreeDiagram, Treemap, CirclePack, ScatterplotMatrix } from "./charts"
+import { Scatterplot, LineChart, AreaChart, StackedAreaChart, Heatmap, BubbleChart, BarChart, StackedBarChart, SwarmPlot, BoxPlot, Histogram, ViolinPlot, DotPlot, PieChart, DonutChart, GroupedBarChart, ForceDirectedGraph, ChordDiagram, SankeyDiagram, TreeDiagram, Treemap, CirclePack, ScatterplotMatrix, MinimapChart } from "./charts"
 
 // Coordinated views
 import { LinkedCharts } from "./LinkedCharts"
@@ -64,8 +63,7 @@ export {
   AnnotationLayer,
   DividedLine,
   XYFrame,
-  MinimapXYFrame,
-  MiniMap,
+  MinimapChart,
   Brush,
   Axis,
   InteractionLayer,
@@ -73,7 +71,6 @@ export {
   OrdinalFrame,
   Annotation,
   NetworkFrame,
-  ResponsiveMinimapXYFrame,
   ResponsiveOrdinalFrame,
   ResponsiveNetworkFrame,
   ResponsiveXYFrame,
@@ -251,6 +248,8 @@ export {
   TreemapProps,
   CirclePackProps,
   ScatterplotMatrixProps,
+  MinimapChartProps,
+  MinimapConfig,
   BaseChartProps,
   AxisConfig,
   Accessor,
