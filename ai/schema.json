@@ -1270,5 +1270,60 @@
         }
       }
     }
+    ,
+    {
+      "type": "function",
+      "function": {
+        "name": "RealtimeSankey",
+        "description": "Streaming Sankey diagram where topology grows over time via push API. Particles animate along links proportional to flow value. Tension model batches relayouts for smooth performance.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "size": {
+              "type": "array",
+              "items": { "type": "number" },
+              "default": [800, 600]
+            },
+            "sourceAccessor": { "type": "string", "default": "source" },
+            "targetAccessor": { "type": "string", "default": "target" },
+            "valueAccessor": { "type": "string", "default": "value" },
+            "orientation": { "type": "string", "enum": ["horizontal", "vertical"], "default": "horizontal" },
+            "nodeAlign": { "type": "string", "enum": ["justify", "left", "right", "center"], "default": "justify" },
+            "nodePaddingRatio": { "type": "number", "default": 0.05 },
+            "nodeWidth": { "type": "number", "default": 15 },
+            "showParticles": { "type": "boolean", "default": true },
+            "particleStyle": {
+              "type": "object",
+              "properties": {
+                "radius": { "type": "number", "default": 3 },
+                "opacity": { "type": "number", "default": 0.7 },
+                "spawnRate": { "type": "number", "default": 0.1 },
+                "speedMultiplier": { "type": "number", "default": 1 },
+                "maxPerEdge": { "type": "number", "default": 50 }
+              }
+            },
+            "tensionConfig": {
+              "type": "object",
+              "properties": {
+                "threshold": { "type": "number", "default": 3.0 },
+                "newNode": { "type": "number", "default": 1.0 },
+                "newEdge": { "type": "number", "default": 0.5 },
+                "weightChange": { "type": "number", "default": 0.1 }
+              }
+            },
+            "colorBy": { "type": "string" },
+            "colorScheme": { "type": ["string", "array"], "default": "category10" },
+            "edgeColorBy": { "type": "string", "enum": ["source", "target"], "default": "source" },
+            "edgeOpacity": { "type": "number", "default": 0.5 },
+            "showLabels": { "type": "boolean", "default": true },
+            "enableHover": { "type": "boolean", "default": true },
+            "background": { "type": "string" },
+            "margin": { "type": "object" },
+            "className": { "type": "string" }
+          },
+          "required": []
+        }
+      }
+    }
   ]
 }
