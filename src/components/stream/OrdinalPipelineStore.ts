@@ -577,8 +577,8 @@ export class OrdinalPipelineStore {
     if (this.config.barColors && category) {
       return { fill: this.config.barColors[category] || "#007bff" }
     }
-    // Use colorScheme to generate colors by category/group
-    if (this.config.colorScheme && category) {
+    // Use colorScheme (or default palette) to generate colors by category
+    if (category) {
       return { fill: this.getColorFromScheme(category) }
     }
     return { fill: "#007bff" }
