@@ -62,8 +62,7 @@
     "./package.json": "./package.json"
   },
   "files": [
-    "dist/*.js",
-    "dist/*.js.map",
+    "dist/*.min.js",
     "dist/**/*.d.ts",
     "ai/schema.json",
     "ai/system-prompt.md",
