@@ -44,7 +44,8 @@ leave you to build from scratch.
 
 **Statistical summaries.** Box plots, violin plots, swarm plots, ridgeline
 plots, histograms — the distribution charts that data scientists need and
-most charting libraries skip.
+most charting libraries skip. Add marginal distribution graphics (histogram,
+violin, ridgeline, boxplot) to scatterplot margins with a single prop.
 
 ### Start simple, go deep
 

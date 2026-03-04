@@ -2,7 +2,7 @@
 import * as React from "react"
 import { useMemo, useCallback } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import type { StreamXYFrameProps } from "../../stream/types"
+import type { StreamXYFrameProps, MarginalGraphicsConfig } from "../../stream/types"
 import { getColor, getSize } from "../shared/colorUtils"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
@@ -46,6 +46,8 @@ export interface ScatterplotProps<TDatum extends Record<string, any> = Record<st
   showLegend?: boolean
   /** Tooltip configuration */
   tooltip?: TooltipProp
+  /** Marginal distribution plots in axis margins */
+  marginalGraphics?: MarginalGraphicsConfig
   /** Additional StreamXYFrame props for advanced customization */
   frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size">>
 }
@@ -86,6 +88,7 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
     showGrid = false,
     showLegend,
     tooltip,
+    marginalGraphics,
     frameProps = {},
     selection,
     linkedHover,
@@ -213,6 +216,7 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
     ...(linkedHover && { customHoverBehavior }),
+    ...(marginalGraphics && { marginalGraphics }),
     ...frameProps
   }
 

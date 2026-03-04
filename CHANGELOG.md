@@ -22,6 +22,14 @@ Every frame supports a ref-based push API for streaming data.
 
 ### Added
 
+#### Marginal Graphics
+- `marginalGraphics` prop on `StreamXYFrame`, `Scatterplot`, and `BubbleChart` renders distribution plots in chart margins
+- Four types: **histogram**, **violin**, **ridgeline**, **boxplot** — each configurable with `bins`, `fill`, `fillOpacity`, `stroke`, `strokeWidth`
+- String shorthand (`{ top: "histogram" }`) or full config object (`{ top: { type: "histogram", bins: 30, fill: "red" } }`)
+- Margins auto-expand to 60px minimum when marginals are configured
+- Rendered as SVG in the overlay layer — aligns bin positions to the chart's own scales
+- Cookbook page at `/cookbook/marginal-graphics`
+
 #### Realtime Visual Encoding System
 - `decay` prop — configurable opacity fade for older data (linear, exponential, step modes)
 - `pulse` prop — glow flash effect on newly inserted data points with configurable duration/color
@@ -78,6 +86,7 @@ Every frame supports a ref-based push API for streaming data.
 
 ### Fixed
 
+- Home page gallery: charts not rendering when arrowing between two adjacent StreamXYFrame examples (added key to force remount)
 - Chord diagram arc/ribbon angle alignment (d3-chord 12-o'clock → canvas 3-o'clock offset)
 - Stacked bar color encoding — `barColors` now maps by stack key, not category name
 - Stacked bar streaming aggregation — one rect per stack group instead of one per datum

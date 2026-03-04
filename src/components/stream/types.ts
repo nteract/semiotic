@@ -51,6 +51,31 @@ export interface StalenessConfig {
   badgePosition?: "top-left" | "top-right" | "bottom-left" | "bottom-right"
 }
 
+// ── Marginal graphics ─────────────────────────────────────────────────
+
+export type MarginalType = "histogram" | "violin" | "ridgeline" | "boxplot"
+
+export interface MarginalConfig {
+  type: MarginalType
+  /** Number of bins for histogram/violin/ridgeline @default 20 */
+  bins?: number
+  /** Fill color @default "#4e79a7" */
+  fill?: string
+  /** Fill opacity @default 0.5 */
+  fillOpacity?: number
+  /** Stroke color @default "none" */
+  stroke?: string
+  /** Stroke width @default 1 */
+  strokeWidth?: number
+}
+
+export interface MarginalGraphicsConfig {
+  top?: MarginalConfig | MarginalType
+  bottom?: MarginalConfig | MarginalType
+  left?: MarginalConfig | MarginalType
+  right?: MarginalConfig | MarginalType
+}
+
 // ── Chart types ────────────────────────────────────────────────────────
 
 export type StreamChartType =
@@ -369,6 +394,10 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   transition?: TransitionConfig
   /** Frame-level data liveness indicator */
   staleness?: StalenessConfig
+
+  // ── Marginal graphics ────────────────────────────────
+  /** Marginal distribution plots in axis margins (histogram, violin, ridgeline, boxplot) */
+  marginalGraphics?: MarginalGraphicsConfig
 
   // ── Streaming heatmap ─────────────────────────────
   /** Aggregation mode for streaming heatmap (count, sum, mean) */

@@ -85,6 +85,7 @@ Props: `data` (TDatum[], required), `xAccessor` (string|fn, "x"), `yAccessor` (s
   `title` (string), `width` (number, 600), `height` (number, 400),
   `enableHover` (boolean, true), `tooltip` (fn),
   `showLegend` (boolean), `showGrid` (boolean, false),
+  `marginalGraphics` ({ top?, bottom?, left?, right? } — each "histogram"|"violin"|"ridgeline"|"boxplot" or { type, bins?, fill?, fillOpacity?, stroke?, strokeWidth? }),
   `margin` (object), `className` (string), `frameProps` (object)
 
 ```jsx
@@ -103,6 +104,7 @@ Props: `data` (TDatum[], required), `sizeBy` (string|fn, **required**),
   `title` (string), `width` (number, 600), `height` (number, 400),
   `enableHover` (boolean, true), `tooltip` (fn),
   `showLegend` (boolean), `showGrid` (boolean, false),
+  `marginalGraphics` ({ top?, bottom?, left?, right? } — each "histogram"|"violin"|"ridgeline"|"boxplot" or { type, bins?, fill?, fillOpacity?, stroke?, strokeWidth? }),
   `margin` (object), `className` (string), `frameProps` (object)
 
 ```jsx
@@ -679,6 +681,20 @@ Automatic when `colorBy` is set. Control with `showLegend`.
 <LineChart ... showGrid={true} />
 ```
 
+### Marginal graphics
+```jsx
+// Add distribution plots in the margins of scatter/bubble charts
+<Scatterplot data={iris} xAccessor="sepalLength" yAccessor="petalLength"
+  marginalGraphics={{ top: "histogram", right: "violin" }} />
+
+// With custom config
+<Scatterplot data={data} xAccessor="x" yAccessor="y"
+  marginalGraphics={{
+    top: { type: "ridgeline", fill: "#e41a1c", fillOpacity: 0.6 },
+    left: { type: "boxplot", fill: "#377eb8" }
+  }} />
+```
+
 ### Multi-line data
 ```jsx
 // Array of line objects, each with a coordinates array:
@@ -803,7 +819,7 @@ When choosing between Semiotic and other React chart libraries (Recharts, Nivo, 
 - **Streaming data** — RealtimeLineChart, RealtimeTemporalHistogram, RealtimeSwarmChart, RealtimeWaterfallChart, RealtimeHeatmap (canvas-based, 60fps push API). Plus StreamNetworkFrame with `chartType="sankey"` for streaming Sankey diagrams with animated particles.
 - **Realtime visual encoding** — decay (old data fades), pulse (new data flashes), transitions (smooth interpolation), staleness (stale feed detection with badge). These communicate *change over time*, not just current state.
 - **Coordinated views** — LinkedCharts for cross-highlighting and brushing-and-linking between any charts. ScatterplotMatrix with crossfilter brushing. No other React chart library ships this built in.
-- **Statistical summaries** — BoxPlot, ViolinPlot, SwarmPlot, Histogram, RidgelinePlot for distribution analysis.
+- **Statistical summaries** — BoxPlot, ViolinPlot, SwarmPlot, Histogram, RidgelinePlot for distribution analysis. Marginal graphics on Scatterplot/BubbleChart via `marginalGraphics` prop.
 - **Annotation system** — built-in hover, click, and custom annotations
 - **Server-side SVG** — `renderToStaticSVG()` for email/OG images (import from "semiotic/server")
 - **Browser export** — `exportChart()` for SVG/PNG download
