@@ -4,10 +4,9 @@ import { useMemo } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
 import { getColor, getSize } from "../shared/colorUtils"
-import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { validateNetworkData } from "../shared/validateChartData"
 
@@ -108,22 +107,15 @@ export function ForceDirectedGraph<TNode extends Record<string, any> = Record<st
     return (d: Record<string, any>) => d[nodeLabel]
   }, [showLabels, nodeLabel])
 
-  // Legend
-  const shouldShowLegend = showLegend !== undefined ? showLegend : !!colorBy
-  const legend = useMemo(() => {
-    if (!shouldShowLegend || !colorBy) return undefined
-    return createLegend({ data: safeNodes, colorBy, colorScale, getColor })
-  }, [shouldShowLegend, colorBy, safeNodes, colorScale])
-
-  // Adjust margin for legend
-  const margin = useMemo(() => {
-    const defaultMargin = { top: 20, bottom: 20, left: 20, right: 20 }
-    const finalMargin = { ...defaultMargin, ...userMargin }
-    if (legend && finalMargin.right < 120) {
-      finalMargin.right = 120
-    }
-    return finalMargin
-  }, [userMargin, legend])
+  // Legend & margin
+  const { legend, margin } = useChartLegendAndMargin({
+    data: safeNodes,
+    colorBy,
+    colorScale,
+    showLegend,
+    userMargin,
+    defaults: { top: 20, bottom: 20, left: 20, right: 20 }
+  })
 
   // Validate
   const error = validateNetworkData({

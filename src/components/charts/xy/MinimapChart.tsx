@@ -6,8 +6,7 @@ import { select } from "d3-selection"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamScales } from "../../stream/types"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
-import { createLegend } from "../shared/legendUtils"
+import { useColorScale, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
@@ -350,23 +349,15 @@ export function MinimapChart<TDatum extends Record<string, any> = Record<string,
     }
   }, [showPoints, pointRadius, colorBy, colorScale])
 
-  // ── Legend ───────────────────────────────────────────────────────────
+  // ── Legend + Margins ──────────────────────────────────────────────────
 
-  const shouldShowLegend = showLegend !== undefined ? showLegend : lineData.length > 1
-
-  const legend = useMemo(() => {
-    if (!shouldShowLegend || !colorBy) return undefined
-    return createLegend({ data: lineData, colorBy, colorScale, getColor })
-  }, [shouldShowLegend, colorBy, lineData, colorScale])
-
-  // ── Margins ─────────────────────────────────────────────────────────
-
-  const mainMargin = useMemo(() => {
-    const def = { top: 50, bottom: 60, left: 70, right: 40 }
-    const m = { ...def, ...userMargin }
-    if (legend && m.right < 120) m.right = 120
-    return m
-  }, [userMargin, legend])
+  const { legend, margin: mainMargin } = useChartLegendAndMargin({
+    data: lineData,
+    colorBy,
+    colorScale,
+    showLegend,
+    userMargin
+  })
 
   const minimapHeight = minimapConfig.height || 60
   const minimapMargin = useMemo(() => {

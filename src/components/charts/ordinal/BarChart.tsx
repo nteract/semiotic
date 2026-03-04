@@ -1,18 +1,15 @@
 "use client"
 import * as React from "react"
-import { useMemo, useCallback } from "react"
+import { useMemo } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useSortedData, DEFAULT_COLOR } from "../shared/hooks"
-import { createLegend } from "../shared/legendUtils"
+import { useColorScale, useSortedData, useChartSelection, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
 import { validateArrayData } from "../shared/validateChartData"
-import { normalizeLinkedHover, wrapStyleWithSelection } from "../shared/selectionUtils"
-import { useSelection } from "../../store/useSelection"
-import { useLinkedHover } from "../../store/useSelection"
+import { wrapStyleWithSelection } from "../shared/selectionUtils"
 
 /**
  * BarChart component props
@@ -70,19 +67,11 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
 
   // ── Selection hooks (always called) ────────────────────────────────────
 
-  const hoverConfig = normalizeLinkedHover(linkedHover, colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [])
-
-  const selectionHook = useSelection({
-    name: selection?.name || "__unused__",
-    fields: []
+  const { activeSelectionHook, customHoverBehavior } = useChartSelection({
+    selection, linkedHover,
+    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
+    unwrapData: true
   })
-
-  const linkedHoverHook = useLinkedHover({
-    name: hoverConfig?.name || "hover",
-    fields: hoverConfig?.fields || []
-  })
-
-  const activeSelectionHook = selection ? { isActive: selectionHook.isActive, predicate: selectionHook.predicate } : null
 
   // ── Core chart logic ───────────────────────────────────────────────────
 
@@ -106,27 +95,9 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
     [basePieceStyle, activeSelectionHook, selection]
   )
 
-  const shouldShowLegend = showLegend !== undefined ? showLegend : !!colorBy
-
-  const legend = useMemo(() => {
-    if (!shouldShowLegend || !colorBy) return undefined
-    return createLegend({ data: sortedData, colorBy, colorScale, getColor })
-  }, [shouldShowLegend, colorBy, sortedData, colorScale])
-
-  const margin = useMemo(() => {
-    const finalMargin = { top: 50, bottom: 60, left: 70, right: 40, ...userMargin }
-    if (legend && finalMargin.right < 120) finalMargin.right = 120
-    return finalMargin
-  }, [userMargin, legend])
-
-  // ── Hover behavior ─────────────────────────────────────────────────────
-
-  const customHoverBehavior = useCallback(
-    (d: Record<string, any> | null) => {
-      if (linkedHover) linkedHoverHook.onHover(d ? (d.data || d) : null)
-    },
-    [linkedHover, linkedHoverHook]
-  )
+  const { legend, margin } = useChartLegendAndMargin({
+    data: sortedData, colorBy, colorScale, showLegend, userMargin
+  })
 
   // Default tooltip
   const defaultTooltipContent = useMemo(() => {

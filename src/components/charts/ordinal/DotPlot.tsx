@@ -1,18 +1,15 @@
 "use client"
 import * as React from "react"
-import { useMemo, useCallback } from "react"
+import { useMemo } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useSortedData, DEFAULT_COLOR } from "../shared/hooks"
-import { createLegend } from "../shared/legendUtils"
+import { useColorScale, useSortedData, useChartSelection, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
 import { validateArrayData } from "../shared/validateChartData"
-import { normalizeLinkedHover, wrapStyleWithSelection } from "../shared/selectionUtils"
-import { useSelection } from "../../store/useSelection"
-import { useLinkedHover } from "../../store/useSelection"
+import { wrapStyleWithSelection } from "../shared/selectionUtils"
 
 export interface DotPlotProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   data: TDatum[]
@@ -46,10 +43,11 @@ export function DotPlot<TDatum extends Record<string, any> = Record<string, any>
 
   const safeData = data || []
 
-  const hoverConfig = normalizeLinkedHover(linkedHover, colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [typeof categoryAccessor === "string" ? categoryAccessor : ""])
-  const selectionHook = useSelection({ name: selection?.name || "__unused__", fields: [] })
-  const linkedHoverHook = useLinkedHover({ name: hoverConfig?.name || "hover", fields: hoverConfig?.fields || [] })
-  const activeSelectionHook = selection ? { isActive: selectionHook.isActive, predicate: selectionHook.predicate } : null
+  const { activeSelectionHook, customHoverBehavior } = useChartSelection({
+    selection, linkedHover,
+    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [typeof categoryAccessor === "string" ? categoryAccessor : ""],
+    unwrapData: true
+  })
 
   const sortedData = useSortedData(safeData, sort, valueAccessor)
   const colorScale = useColorScale(safeData, colorBy, colorScheme)
@@ -67,22 +65,10 @@ export function DotPlot<TDatum extends Record<string, any> = Record<string, any>
     [basePieceStyle, activeSelectionHook, selection]
   )
 
-  const shouldShowLegend = showLegend !== undefined ? showLegend : !!colorBy
-  const legend = useMemo(() => {
-    if (!shouldShowLegend || !colorBy) return undefined
-    return createLegend({ data: sortedData, colorBy, colorScale, getColor })
-  }, [shouldShowLegend, colorBy, sortedData, colorScale])
-
-  const margin = useMemo(() => {
-    const finalMargin = { top: 50, bottom: 60, left: 120, right: 40, ...userMargin }
-    if (legend && finalMargin.right < 120) finalMargin.right = 120
-    return finalMargin
-  }, [userMargin, legend])
-
-  const customHoverBehavior = useCallback(
-    (d: Record<string, any> | null) => { if (linkedHover) linkedHoverHook.onHover(d) },
-    [linkedHover, linkedHoverHook]
-  )
+  const { legend, margin } = useChartLegendAndMargin({
+    data: sortedData, colorBy, colorScale, showLegend, userMargin,
+    defaults: { top: 50, bottom: 60, left: 120, right: 40 }
+  })
 
   const defaultTooltipContent = useMemo(() => {
     return (d: Record<string, any>) => {
