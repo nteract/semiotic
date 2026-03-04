@@ -1,5 +1,6 @@
 import { chord, ribbon } from "d3-chord"
 import { arc } from "d3-shape"
+import { schemeCategory10, schemeTableau10 } from "d3-scale-chromatic"
 import type {
   NetworkLayoutPlugin,
   NetworkPipelineConfig,
@@ -12,6 +13,8 @@ import type {
   RealtimeEdge
 } from "../networkTypes"
 import type { Style } from "../types"
+
+const DEFAULT_PALETTE = schemeCategory10 as readonly string[]
 
 /**
  * Chord layout plugin — uses d3-chord for layout computation.
@@ -95,6 +98,18 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
       }
     }
 
+    // ── Resolve edge source/target to node references ─────────────────
+    // The HOC edge style functions need d.source/d.target as node objects
+    // (not string IDs) so they can look up colors via d.source.data.
+    for (const edge of edges) {
+      const srcId = typeof edge.source === "string" ? edge.source : edge.source.id
+      const tgtId = typeof edge.target === "string" ? edge.target : edge.target.id
+      const srcNode = nodes.find((n) => n.id === srcId)
+      const tgtNode = nodes.find((n) => n.id === tgtId)
+      if (srcNode) edge.source = srcNode
+      if (tgtNode) edge.target = tgtNode
+    }
+
     // ── Stash chord data on edges for buildScene ─────────────────────
     for (const generatedChord of chords) {
       const sourceId = nodes[generatedChord.source.index].id
@@ -136,10 +151,19 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
     const cx = size[0] / 2
     const cy = size[1] / 2
 
-    const nodeStyleFn =
-      config.nodeStyle || ((): Record<string, any> => ({ fill: "#4d430c" }))
-    const edgeStyleFn =
-      config.edgeStyle || ((): Record<string, any> => ({}))
+    const nodeStyleFn = config.nodeStyle
+    const edgeStyleFn = config.edgeStyle
+    const edgeColorBy = config.edgeColorBy || "source"
+
+    // Auto-color palette: used when no nodeStyle is provided
+    const palette = Array.isArray(config.colorScheme)
+      ? config.colorScheme
+      : DEFAULT_PALETTE
+    // Build a node-id → color map for consistent coloring
+    const nodeColorMap = new Map<string, string>()
+    nodes.forEach((n, i) => {
+      nodeColorMap.set(n.id, palette[i % palette.length])
+    })
 
     const ribbonGenerator = ribbon<any, any>().radius(innerRadius)
 
@@ -148,15 +172,24 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
     const labels: NetworkLabel[] = []
 
     // ── Build arc nodes ──────────────────────────────────────────────
-    for (const node of nodes) {
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i]
       const arcData = (node as any).arcData
       if (!arcData) continue
 
-      const userStyle = nodeStyleFn(node)
+      let fill: string
+      if (nodeStyleFn) {
+        const userStyle = nodeStyleFn(node)
+        fill = userStyle.fill || nodeColorMap.get(node.id) || palette[i % palette.length]
+      } else {
+        fill = nodeColorMap.get(node.id) || palette[i % palette.length]
+      }
+
+      const userStyle = nodeStyleFn ? nodeStyleFn(node) : {}
       const style: Style = {
-        fill: userStyle.fill || "#4d430c",
-        stroke: userStyle.stroke,
-        strokeWidth: userStyle.strokeWidth,
+        fill,
+        stroke: userStyle.stroke || "black",
+        strokeWidth: userStyle.strokeWidth ?? 1,
         opacity: userStyle.opacity
       }
 
@@ -187,9 +220,26 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
 
       const pathD = translateSvgPath(rawPath, cx, cy)
 
-      const userStyle = edgeStyleFn(edge)
+      // Resolve edge fill — use edgeStyle if provided, otherwise
+      // inherit from source or target node color
+      let fill = "#999"
+      if (edgeStyleFn) {
+        const userStyle = edgeStyleFn(edge)
+        fill = userStyle.fill || fill
+      } else {
+        // Auto-color by source or target node
+        const srcNode = typeof edge.source === "object" ? edge.source : null
+        const tgtNode = typeof edge.target === "object" ? edge.target : null
+        if (edgeColorBy === "target" && tgtNode) {
+          fill = nodeColorMap.get(tgtNode.id) || fill
+        } else if (srcNode) {
+          fill = nodeColorMap.get(srcNode.id) || fill
+        }
+      }
+
+      const userStyle = edgeStyleFn ? edgeStyleFn(edge) : {}
       const style: Style = {
-        fill: userStyle.fill || "#999",
+        fill,
         fillOpacity: userStyle.fillOpacity ?? edgeOpacity,
         stroke: userStyle.stroke || "none",
         strokeWidth: userStyle.strokeWidth,

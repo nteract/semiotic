@@ -1,12 +1,15 @@
 import React from "react"
 import { NetworkFrame } from "semiotic"
 import { SankeyDiagram } from "semiotic"
+import { RealtimeSankey } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -80,6 +83,83 @@ const sankeyDiagramProps = [
 ]
 
 // ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const streamingSankeyCode = `import { useRef } from "react"
+import { RealtimeSankey } from "semiotic"
+
+function StreamingSankey() {
+  const chartRef = useRef()
+
+  const pushBudget = () => {
+    chartRef.current?.push({ source: "Budget", target: "Engineering", value: 400 })
+    chartRef.current?.push({ source: "Budget", target: "Marketing", value: 250 })
+    chartRef.current?.push({ source: "Engineering", target: "Salaries", value: 300 })
+    chartRef.current?.push({ source: "Marketing", target: "Advertising", value: 150 })
+  }
+
+  return (
+    <>
+      <button onClick={pushBudget}>Push Budget Data</button>
+      <RealtimeSankey
+        ref={chartRef}
+        size={[800, 400]}
+        showParticles
+        edgeOpacity={0.4}
+      />
+    </>
+  )
+}`
+
+function StreamingSankeyDemo({ width }) {
+  const chartRef = React.useRef()
+  const [pushed, setPushed] = React.useState(false)
+
+  const pushData = () => {
+    if (!chartRef.current) return
+    const edges = [
+      { source: "Budget", target: "Engineering", value: 400 },
+      { source: "Budget", target: "Marketing", value: 250 },
+      { source: "Budget", target: "Operations", value: 150 },
+      { source: "Engineering", target: "Salaries", value: 300 },
+      { source: "Engineering", target: "Tools", value: 100 },
+      { source: "Marketing", target: "Advertising", value: 150 },
+      { source: "Marketing", target: "Events", value: 100 },
+      { source: "Operations", target: "Salaries", value: 100 },
+      { source: "Operations", target: "Facilities", value: 50 },
+    ]
+    edges.forEach(e => chartRef.current.push(e))
+    setPushed(true)
+  }
+
+  const addMore = () => {
+    if (!chartRef.current) return
+    chartRef.current.push({
+      source: "Budget",
+      target: "Insurance",
+      value: Math.round(Math.random() * 200 + 50)
+    })
+  }
+
+  return (
+    <div>
+      <div style={{ marginBottom: 8, display: "flex", gap: 8 }}>
+        <button className="demo-button" onClick={pushData}>Load Budget</button>
+        <button className="demo-button" onClick={addMore} disabled={!pushed}>Add Edge</button>
+        <button className="demo-button" onClick={() => { chartRef.current?.clear(); setPushed(false) }}>Clear</button>
+      </div>
+      <RealtimeSankey
+        ref={chartRef}
+        size={[width, 350]}
+        showParticles
+        edgeOpacity={0.4}
+      />
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -129,47 +209,31 @@ export default function SankeyDiagramPage() {
         properties. Nodes are inferred automatically from the edges.
       </p>
 
-      <LiveExample
-        frameProps={{
-          edges: edgeData,
-        }}
-        type={SankeyDiagram}
-        startHidden={false}
-        overrideProps={{
-          edges: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              edges: edgeData,
+            }}
+            type={SankeyDiagram}
+            startHidden={false}
+            overrideProps={{
+              edges: `[
   { source: "Budget", target: "Engineering", value: 400 },
   { source: "Budget", target: "Marketing", value: 250 },
   { source: "Engineering", target: "Salaries", value: 300 },
   // ...more edges with value
 ]`,
-        }}
-        hiddenProps={{}}
-      />
-
-      <h3 id="streaming">Streaming</h3>
-      <p>
-        SankeyDiagram also supports streaming data via the{" "}
-        <Link to="/charts/realtime-sankey">RealtimeSankey</Link> wrapper.
-        Push edges imperatively and watch the topology grow with animated
-        particles.
-      </p>
-
-      <CodeBlock
-        code={`import { RealtimeSankey } from "semiotic"
-
-const chartRef = useRef()
-
-// Push edges at any frequency
-chartRef.current.push({ source: "Budget", target: "Rent", value: 2000 })
-chartRef.current.push({ source: "Budget", target: "Food", value: 800 })
-
-<RealtimeSankey
-  ref={chartRef}
-  size={[800, 400]}
-  showParticles
-  edgeOpacity={0.4}
-/>`}
-        language="jsx"
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingSankeyDemo width={w} />}
+            code={streamingSankeyCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}

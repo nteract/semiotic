@@ -1,12 +1,15 @@
 import React from "react"
 import { NetworkFrame } from "semiotic"
 import { ChordDiagram } from "semiotic"
+import { StreamNetworkFrame } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -78,6 +81,57 @@ const chordDiagramProps = [
 ]
 
 // ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const streamingChordCode = `import { useRef } from "react"
+import { StreamNetworkFrame } from "semiotic"
+
+function StreamingChord() {
+  const chartRef = useRef()
+
+  chartRef.current?.push({ source: "US", target: "EU", value: 500 })
+
+  return (
+    <StreamNetworkFrame
+      ref={chartRef}
+      chartType="chord"
+      size={[600, 600]}
+      enableHover
+      showLabels
+    />
+  )
+}`
+
+function StreamingChordDemo({ width }) {
+  const chartRef = React.useRef()
+  const regions = ["US", "EU", "Asia", "Africa", "SA"]
+
+  const addTrade = () => {
+    if (!chartRef.current) return
+    const src = regions[Math.floor(Math.random() * regions.length)]
+    let tgt = regions[Math.floor(Math.random() * regions.length)]
+    chartRef.current.push({ source: src, target: tgt, value: Math.round(Math.random() * 500 + 100) })
+  }
+
+  return (
+    <div>
+      <div style={{ marginBottom: 8, display: "flex", gap: 8 }}>
+        <button className="demo-button" onClick={addTrade}>Add Trade</button>
+        <button className="demo-button" onClick={() => chartRef.current?.clear()}>Clear</button>
+      </div>
+      <StreamNetworkFrame
+        ref={chartRef}
+        chartType="chord"
+        size={[Math.min(width, 500), Math.min(width, 500)]}
+        enableHover
+        showLabels
+      />
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -126,47 +180,31 @@ export default function ChordDiagramPage() {
         properties. Nodes are inferred automatically from the edges.
       </p>
 
-      <LiveExample
-        frameProps={{
-          edges: edgeData,
-        }}
-        type={ChordDiagram}
-        startHidden={false}
-        overrideProps={{
-          edges: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              edges: edgeData,
+            }}
+            type={ChordDiagram}
+            startHidden={false}
+            overrideProps={{
+              edges: `[
   { source: "Engineering", target: "Design", value: 40 },
   { source: "Design", target: "Engineering", value: 25 },
   { source: "Engineering", target: "Marketing", value: 15 },
   // ...more edges with value
 ]`,
-        }}
-        hiddenProps={{}}
-      />
-
-      <h3 id="streaming">Streaming</h3>
-      <p>
-        Use <code>StreamNetworkFrame</code> directly for streaming chord
-        diagrams. Push edges via ref and the chord layout recomputes
-        automatically.
-      </p>
-
-      <CodeBlock
-        code={`import { StreamNetworkFrame } from "semiotic"
-
-const chartRef = useRef()
-
-// Push edges to grow relationships
-chartRef.current.push({ source: "US", target: "EU", value: 500 })
-chartRef.current.push({ source: "EU", target: "Asia", value: 300 })
-
-<StreamNetworkFrame
-  ref={chartRef}
-  chartType="chord"
-  size={[600, 600]}
-  enableHover
-  showLabels
-/>`}
-        language="jsx"
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingChordDemo width={w} />}
+            code={streamingChordCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}

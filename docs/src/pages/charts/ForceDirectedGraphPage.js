@@ -1,12 +1,15 @@
 import React from "react"
 import { NetworkFrame } from "semiotic"
 import { ForceDirectedGraph } from "semiotic"
+import { StreamNetworkFrame } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -80,6 +83,59 @@ const forceDirectedGraphProps = [
 ]
 
 // ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const streamingForceCode = `import { useRef } from "react"
+import { StreamNetworkFrame } from "semiotic"
+
+function StreamingForce() {
+  const chartRef = useRef()
+
+  chartRef.current?.push({ source: "Alice", target: "Bob", value: 1 })
+
+  return (
+    <StreamNetworkFrame
+      ref={chartRef}
+      chartType="force"
+      size={[600, 400]}
+      enableHover
+    />
+  )
+}`
+
+function StreamingForceDemo({ width }) {
+  const chartRef = React.useRef()
+  const indexRef = React.useRef(0)
+
+  const names = ["Alice", "Bob", "Carol", "Dave", "Eve", "Frank", "Grace", "Heidi"]
+  const addEdge = () => {
+    if (!chartRef.current) return
+    const i = indexRef.current++
+    chartRef.current.push({
+      source: names[i % names.length],
+      target: names[(i + 1 + Math.floor(Math.random() * 3)) % names.length],
+      value: 1,
+    })
+  }
+
+  return (
+    <div>
+      <div style={{ marginBottom: 8, display: "flex", gap: 8 }}>
+        <button className="demo-button" onClick={addEdge}>Add Edge</button>
+        <button className="demo-button" onClick={() => { chartRef.current?.clear(); indexRef.current = 0 }}>Clear</button>
+      </div>
+      <StreamNetworkFrame
+        ref={chartRef}
+        chartType="force"
+        size={[width, 400]}
+        enableHover
+      />
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -128,52 +184,37 @@ export default function ForceDirectedGraphPage() {
         <code>edges</code>.
       </p>
 
-      <LiveExample
-        frameProps={{
-          nodes: nodeData,
-          edges: edgeData,
-        }}
-        type={ForceDirectedGraph}
-        startHidden={false}
-        overrideProps={{
-          nodes: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              nodes: nodeData,
+              edges: edgeData,
+            }}
+            type={ForceDirectedGraph}
+            startHidden={false}
+            overrideProps={{
+              nodes: `[
   { id: "Alice", group: "Engineering" },
   { id: "Bob", group: "Engineering" },
   { id: "Carol", group: "Design" },
   // ...more nodes
 ]`,
-          edges: `[
+              edges: `[
   { source: "Alice", target: "Bob" },
   { source: "Alice", target: "Carol" },
   // ...more edges
 ]`,
-        }}
-        hiddenProps={{}}
-      />
-
-      <h3 id="streaming">Streaming</h3>
-      <p>
-        Use <code>StreamNetworkFrame</code> directly for streaming
-        force-directed graphs. Push nodes and edges via ref and the layout
-        updates automatically.
-      </p>
-
-      <CodeBlock
-        code={`import { StreamNetworkFrame } from "semiotic"
-
-const chartRef = useRef()
-
-// Push edges to grow the network
-chartRef.current.push({ source: "Alice", target: "Bob", value: 1 })
-chartRef.current.push({ source: "Bob", target: "Carol", value: 1 })
-
-<StreamNetworkFrame
-  ref={chartRef}
-  chartType="force"
-  size={[600, 600]}
-  enableHover
-/>`}
-        language="jsx"
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingForceDemo width={w} />}
+            code={streamingForceCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}

@@ -44,6 +44,8 @@ import { DEFAULT_COLORS } from "../charts/shared/colorUtils"
 // ── Defaults ───────────────────────────────────────────────────────────
 
 const DEFAULT_MARGIN = { top: 20, right: 80, bottom: 20, left: 80 }
+const CENTERED_MARGIN = { top: 40, right: 40, bottom: 40, left: 40 }
+const CENTERED_TYPES = new Set(["chord", "force", "circlepack"])
 const DEFAULT_SIZE: [number, number] = [800, 600]
 
 // ── Tooltip ────────────────────────────────────────────────────────────
@@ -208,7 +210,8 @@ const StreamNetworkFrame = forwardRef<
     backgroundGraphics
   } = props
 
-  const margin = { ...DEFAULT_MARGIN, ...marginProp }
+  const baseMargin = CENTERED_TYPES.has(chartType) ? CENTERED_MARGIN : DEFAULT_MARGIN
+  const margin = { ...baseMargin, ...marginProp }
   const adjustedWidth = size[0] - margin.left - margin.right
   const adjustedHeight = size[1] - margin.top - margin.bottom
 

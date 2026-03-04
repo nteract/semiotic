@@ -7,6 +7,8 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -70,6 +72,40 @@ const treemapProps = [
 ]
 
 // ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const streamingTreemapCode = `import { Treemap } from "semiotic"
+
+// Update data prop to trigger re-render
+<Treemap data={currentData} childrenAccessor="children" valueAccessor="value" />`
+
+function StreamingTreemapDemo({ width }) {
+  const makeTree = () => ({
+    name: "root",
+    children: [
+      { name: "A", value: Math.round(Math.random() * 200 + 50) },
+      { name: "B", value: Math.round(Math.random() * 200 + 50) },
+      { name: "C", children: [
+        { name: "C1", value: Math.round(Math.random() * 100 + 20) },
+        { name: "C2", value: Math.round(Math.random() * 100 + 20) },
+      ]},
+      { name: "D", value: Math.round(Math.random() * 200 + 50) },
+    ]
+  })
+  const [tree, setTree] = React.useState(makeTree)
+
+  return (
+    <div>
+      <div style={{ marginBottom: 8 }}>
+        <button className="demo-button" onClick={() => setTree(makeTree())}>Randomize Values</button>
+      </div>
+      <Treemap data={tree} width={width} height={400} childrenAccessor="children" valueAccessor="value" nodeIdAccessor="name" colorByDepth />
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -118,17 +154,19 @@ export default function TreemapPage() {
         each cell proportionally.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: sampleData,
-          nodeIdAccessor: "name",
-          valueAccessor: "value",
-          colorBy: "name",
-        }}
-        type={Treemap}
-        startHidden={false}
-        overrideProps={{
-          data: `{
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              data: sampleData,
+              nodeIdAccessor: "name",
+              valueAccessor: "value",
+              colorBy: "name",
+            }}
+            type={Treemap}
+            startHidden={false}
+            overrideProps={{
+              data: `{
   name: "Budget",
   children: [
     { name: "Engineering", children: [
@@ -148,29 +186,17 @@ export default function TreemapPage() {
     { name: "HR", value: 120 }
   ]
 }`,
-          colorBy: '"name"',
-        }}
-        hiddenProps={{}}
-      />
-
-      <h3 id="streaming">Streaming</h3>
-      <p>
-        For streaming treemap data, use <code>StreamNetworkFrame</code>{" "}
-        directly. The frame re-renders when the <code>data</code> prop changes.
-      </p>
-
-      <CodeBlock
-        code={`import { StreamNetworkFrame } from "semiotic"
-
-<StreamNetworkFrame
-  chartType="treemap"
-  data={hierarchyRoot}
-  size={[600, 600]}
-  childrenAccessor="children"
-  nodeIDAccessor="name"
-  enableHover
-/>`}
-        language="jsx"
+              colorBy: '"name"',
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingTreemapDemo width={w} />}
+            code={streamingTreemapCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}

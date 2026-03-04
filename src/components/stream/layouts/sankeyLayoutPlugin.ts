@@ -6,6 +6,7 @@ import {
   sankeyJustify
 } from "d3-sankey-circular"
 import { interpolateNumber } from "d3-interpolate"
+import { schemeCategory10 } from "d3-scale-chromatic"
 import { areaLink, circularAreaLink } from "../../svg/sankeyLinks"
 import type {
   NetworkLayoutPlugin,
@@ -144,9 +145,19 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
     labels: NetworkLabel[]
   } {
     const direction = config.orientation === "vertical" ? "down" : "right"
-    const nodeStyleFn = config.nodeStyle || ((): Record<string, any> => ({ fill: "#4d430c" }))
-    const edgeStyleFn = config.edgeStyle || ((): Record<string, any> => ({}))
+    const nodeStyleFn = config.nodeStyle
+    const edgeStyleFn = config.edgeStyle
     const edgeOpacity = config.edgeOpacity ?? 0.5
+    const edgeColorBy = config.edgeColorBy || "source"
+
+    // Auto-color palette for when no nodeStyle is provided
+    const palette = Array.isArray(config.colorScheme)
+      ? config.colorScheme
+      : (schemeCategory10 as readonly string[])
+    const nodeColorMap = new Map<string, string>()
+    nodes.forEach((n, i) => {
+      nodeColorMap.set(n.id, palette[i % palette.length])
+    })
 
     const sceneNodes: NetworkRectNode[] = []
     const sceneEdges: NetworkBezierEdge[] = []
@@ -158,9 +169,9 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
       const h = node.y1 - node.y0
       if (w <= 0 || h <= 0) continue
 
-      const userStyle = nodeStyleFn(node)
+      const userStyle = nodeStyleFn ? nodeStyleFn(node) : {}
       const style: Style = {
-        fill: userStyle.fill || "#4d430c",
+        fill: userStyle.fill || nodeColorMap.get(node.id) || "#4d430c",
         stroke: userStyle.stroke,
         strokeWidth: userStyle.strokeWidth,
         opacity: userStyle.opacity
@@ -200,9 +211,21 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
         pathD = areaLink(edge)
       }
 
-      const userStyle = edgeStyleFn(edge)
+      // Resolve edge fill — use edgeStyle if provided, otherwise
+      // inherit from source or target node color
+      let fill = "#999"
+      if (edgeStyleFn) {
+        const userStyle = edgeStyleFn(edge)
+        fill = userStyle.fill || fill
+      } else if (edgeColorBy === "target" && targetNode) {
+        fill = nodeColorMap.get(targetNode.id) || fill
+      } else if (sourceNode) {
+        fill = nodeColorMap.get(sourceNode.id) || fill
+      }
+
+      const userStyle = edgeStyleFn ? edgeStyleFn(edge) : {}
       const style: Style = {
-        fill: userStyle.fill || "#999",
+        fill,
         fillOpacity: userStyle.fillOpacity ?? edgeOpacity,
         stroke: userStyle.stroke || "none",
         strokeWidth: userStyle.strokeWidth,

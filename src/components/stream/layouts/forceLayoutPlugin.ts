@@ -7,6 +7,7 @@ import {
 } from "d3-force"
 import { scaleLinear } from "d3-scale"
 import { min, max } from "d3-array"
+import { schemeCategory10 } from "d3-scale-chromatic"
 import type {
   NetworkLayoutPlugin,
   NetworkPipelineConfig,
@@ -119,7 +120,18 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       simulation.tick()
     }
 
-    // Positions are mutated in-place on the node objects by d3-force
+    // Resolve edge source/target to node object references so that
+    // HOC style functions can access d.source.data for color lookups.
+    for (const edge of edges) {
+      if (typeof edge.source === "string") {
+        const n = nodes.find((nd) => nd.id === edge.source)
+        if (n) edge.source = n
+      }
+      if (typeof edge.target === "string") {
+        const n = nodes.find((nd) => nd.id === (edge.target as any))
+        if (n) edge.target = n
+      }
+    }
   },
 
   buildScene(
@@ -132,15 +144,22 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
     sceneEdges: NetworkSceneEdge[]
     labels: NetworkLabel[]
   } {
-    const nodeStyleFn =
-      config.nodeStyle || ((): Record<string, any> => ({ fill: "#4d430c" }))
-    const edgeStyleFn =
-      config.edgeStyle || ((): Record<string, any> => ({}))
+    const nodeStyleFn = config.nodeStyle
+    const edgeStyleFn = config.edgeStyle
     const nodeSizeFn = resolveNodeSizeFn(
       config.nodeSize,
       config.nodeSizeRange,
       nodes
     )
+
+    // Auto-color palette for when no nodeStyle is provided
+    const palette = Array.isArray(config.colorScheme)
+      ? config.colorScheme
+      : (schemeCategory10 as readonly string[])
+    const nodeColorMap = new Map<string, string>()
+    nodes.forEach((n, i) => {
+      nodeColorMap.set(n.id, palette[i % palette.length])
+    })
 
     const sceneNodes: NetworkCircleNode[] = []
     const sceneEdges: NetworkLineEdge[] = []
@@ -151,11 +170,11 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       if (node.x == null || node.y == null) continue
 
       const r = nodeSizeFn(node)
-      const userStyle = nodeStyleFn(node)
+      const userStyle = nodeStyleFn ? nodeStyleFn(node) : {}
       const style: Style = {
-        fill: userStyle.fill || "#4d430c",
-        stroke: userStyle.stroke,
-        strokeWidth: userStyle.strokeWidth,
+        fill: userStyle.fill || nodeColorMap.get(node.id) || "#007bff",
+        stroke: userStyle.stroke || "#fff",
+        strokeWidth: userStyle.strokeWidth ?? 2,
         opacity: userStyle.opacity
       }
 
@@ -181,7 +200,7 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       if (sourceNode.x == null || sourceNode.y == null) continue
       if (targetNode.x == null || targetNode.y == null) continue
 
-      const userStyle = edgeStyleFn(edge)
+      const userStyle = edgeStyleFn ? edgeStyleFn(edge) : {}
       const style: Style = {
         stroke: userStyle.stroke || "#999",
         strokeWidth: userStyle.strokeWidth ?? 1,
