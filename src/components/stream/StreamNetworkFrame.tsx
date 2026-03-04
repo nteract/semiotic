@@ -134,15 +134,26 @@ function DefaultNetworkTooltip({
     )
   }
 
+  // Compute degree centrality from source/target links
+  const degree = (node.sourceLinks?.length || 0) + (node.targetLinks?.length || 0)
+  const weightedDegree = (node.sourceLinks || []).reduce((s: number, e: any) => s + (e.value || 0), 0)
+    + (node.targetLinks || []).reduce((s: number, e: any) => s + (e.value || 0), 0)
+
   return (
     <div className="semiotic-tooltip" style={defaultTooltipStyle}>
       <div style={{ fontWeight: 600 }}>{node.id}</div>
-      {node.value != null && (
+      {node.value != null && node.value > 0 && (
         <div style={{ marginTop: 4, opacity: 0.8 }}>
           Total:{" "}
           {typeof node.value === "number"
             ? node.value.toLocaleString()
             : String(node.value)}
+        </div>
+      )}
+      {degree > 0 && (
+        <div style={{ marginTop: 4, opacity: 0.8 }}>
+          Connections: {degree}
+          {weightedDegree !== degree && ` (weighted: ${weightedDegree.toLocaleString()})`}
         </div>
       )}
     </div>
@@ -388,6 +399,23 @@ const StreamNetworkFrame = forwardRef<
     [edgeColorBy, getNodeColor]
   )
 
+  const getParticleColor = useCallback(
+    (edge: RealtimeEdge): string => {
+      const colorByMode = particleStyle.colorBy || "source"
+      const sourceNode = typeof edge.source === "object" ? edge.source : null
+      const targetNode = typeof edge.target === "object" ? edge.target : null
+
+      if (colorByMode === "target" && targetNode) {
+        return getNodeColor(targetNode)
+      }
+      if (sourceNode) {
+        return getNodeColor(sourceNode)
+      }
+      return "#999"
+    },
+    [particleStyle.colorBy, getNodeColor]
+  )
+
   // ── Stable scheduleRender ────────────────────────────────────────────
 
   const isContinuous =
@@ -520,7 +548,7 @@ const StreamNetworkFrame = forwardRef<
       dirtyRef.current = true
       scheduleRender()
     }
-  }, [nodesProp, edgesProp, dataProp, hierarchyRoot, isHierarchical, adjustedWidth, adjustedHeight, scheduleRender])
+  }, [nodesProp, edgesProp, dataProp, hierarchyRoot, isHierarchical, adjustedWidth, adjustedHeight, pipelineConfig, scheduleRender])
 
   // ── Initial streaming data ───────────────────────────────────────────
 
@@ -677,7 +705,7 @@ const StreamNetworkFrame = forwardRef<
           store.particlePool,
           edges,
           particleStyle,
-          getEdgeColor
+          getParticleColor
         )
       }
     }

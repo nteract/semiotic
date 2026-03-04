@@ -38,6 +38,9 @@ export class OrdinalPipelineStore {
 
   /** Discovered categories in insertion order */
   private categories = new Set<string>()
+  /** Lazy color map built from colorScheme for resolvePieceStyle */
+  private _colorSchemeMap: Map<string, string> | null = null
+  private _colorSchemeIndex = 0
 
   // ── Pulse tracking ──────────────────────────────────────────────────
   private timestampBuffer: RingBuffer<number> | null = null
@@ -1249,7 +1252,25 @@ export class OrdinalPipelineStore {
     if (this.config.barColors && category) {
       return { fill: this.config.barColors[category] || "#007bff" }
     }
+    // Use colorScheme to generate colors by category/group
+    if (this.config.colorScheme && category) {
+      return { fill: this.getColorFromScheme(category) }
+    }
     return { fill: "#007bff" }
+  }
+
+  private getColorFromScheme(key: string): string {
+    if (!this._colorSchemeMap) this._colorSchemeMap = new Map()
+    const existing = this._colorSchemeMap.get(key)
+    if (existing) return existing
+
+    const palette = Array.isArray(this.config.colorScheme)
+      ? this.config.colorScheme
+      : ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f", "#edc948", "#b07aa1", "#ff9da7", "#9c755f", "#bab0ac"]
+    const color = palette[this._colorSchemeIndex % palette.length]
+    this._colorSchemeIndex++
+    this._colorSchemeMap.set(key, color)
+    return color
   }
 
   private resolveSummaryStyle(d: any, category?: string): Style {
@@ -1500,6 +1521,10 @@ export class OrdinalPipelineStore {
   }
 
   updateConfig(config: Partial<OrdinalPipelineConfig>): void {
+    if (config.colorScheme !== this.config.colorScheme) {
+      this._colorSchemeMap = null
+      this._colorSchemeIndex = 0
+    }
     Object.assign(this.config, config)
   }
 }

@@ -410,6 +410,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       lineStyle,
       pointStyle,
       areaStyle,
+      swarmStyle,
       colorScheme,
       barColors,
       annotations,
@@ -427,7 +428,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       lineDataAccessor, xExtent, yExtent, sizeRange, binSize, normalize,
       boundsAccessor, boundsStyle,
       openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle,
-      lineStyle, pointStyle, areaStyle, colorScheme, barColors, annotations,
+      lineStyle, pointStyle, areaStyle, swarmStyle, colorScheme, barColors, annotations,
       decay, pulse, transition, staleness,
       heatmapAggregation, heatmapXBins, heatmapYBins,
       isStreaming

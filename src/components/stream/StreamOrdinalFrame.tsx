@@ -108,6 +108,23 @@ function DefaultOrdinalTooltip({ hover }: { hover: HoverData }) {
   const category = d.category || d.name || d.group || d.__rName || ""
   const value = d.value ?? d.__rValue ?? d.pct ?? ""
 
+  // If standard fields didn't match, show all non-internal fields from the datum
+  if (!category && value === "") {
+    const entries = Object.entries(d).filter(
+      ([k]) => !k.startsWith("_") && k !== "data"
+    )
+    return (
+      <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+        {entries.map(([k, v]) => (
+          <div key={k}>
+            <span style={{ opacity: 0.7 }}>{k}:</span>{" "}
+            {typeof v === "number" ? v.toLocaleString() : String(v)}
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div className="semiotic-tooltip" style={defaultTooltipStyle}>
       {category && <div style={{ fontWeight: "bold" }}>{String(category)}</div>}

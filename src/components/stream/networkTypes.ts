@@ -97,6 +97,8 @@ export interface Particle {
 export interface ParticleStyle {
   radius?: number
   color?: string | ((edge: RealtimeEdge, node: RealtimeNode) => string)
+  /** Color particles by source or target node (default: "source") */
+  colorBy?: "source" | "target"
   opacity?: number
   speedMultiplier?: number
   maxPerEdge?: number

@@ -81,6 +81,7 @@ export interface PipelineConfig {
   lineStyle?: any
   pointStyle?: (d: any) => Style & { r?: number }
   areaStyle?: (d: any) => Style
+  swarmStyle?: { radius?: number; fill?: string; opacity?: number; stroke?: string; strokeWidth?: number }
   colorScheme?: string | string[]
   barColors?: Record<string, string>
 
@@ -811,8 +812,12 @@ export class PipelineStore {
 
   private buildSwarmScene(data: Record<string, any>[]): SceneNode[] {
     const nodes: SceneNode[] = []
-    const ss = this.config
-    const radius = 3
+    const swarm = this.config.swarmStyle || {}
+    const radius = swarm.radius ?? 3
+    const defaultFill = swarm.fill ?? "#007bff"
+    const opacity = swarm.opacity ?? 0.7
+    const stroke = swarm.stroke
+    const strokeWidth = swarm.strokeWidth
 
     for (const d of data) {
       const xVal = this.getX(d)
@@ -822,16 +827,16 @@ export class PipelineStore {
       const x = this.scales!.x(xVal)
       const y = this.scales!.y(yVal)
 
-      let fill = "#007bff"
+      let fill = defaultFill
       if (this.getCategory) {
         const cat = this.getCategory(d)
-        fill = ss.barColors?.[cat] || "#4e79a7"
+        fill = this.config.barColors?.[cat] || fill
       }
 
       nodes.push({
         type: "point",
         x, y, r: radius,
-        style: { fill, opacity: 0.7 },
+        style: { fill, opacity, stroke, strokeWidth },
         datum: d
       })
     }
