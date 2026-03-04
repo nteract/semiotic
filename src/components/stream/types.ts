@@ -12,6 +12,45 @@ import type {
   AnnotationContext
 } from "../realtime/types"
 
+// ── Realtime encoding configs ─────────────────────────────────────────
+
+export interface DecayConfig {
+  type: "linear" | "exponential" | "step"
+  /** Exponential: half-life in buffer positions (default: bufferSize/2) */
+  halfLife?: number
+  /** Minimum opacity floor (default: 0.1) */
+  minOpacity?: number
+  /** Step: positions from newest before fading (default: bufferSize*0.5) */
+  stepThreshold?: number
+}
+
+export interface PulseConfig {
+  /** Duration of the pulse glow in ms (default: 500) */
+  duration?: number
+  /** Glow color (default: "rgba(255,255,255,0.6)") */
+  color?: string
+  /** Extra px radius for glow ring on points (default: 4) */
+  glowRadius?: number
+}
+
+export interface TransitionConfig {
+  /** Animation duration in ms (default: 300) */
+  duration?: number
+  /** Easing function (default: "ease-out") */
+  easing?: "ease-out" | "linear"
+}
+
+export interface StalenessConfig {
+  /** ms without data before "stale" (default: 5000) */
+  threshold?: number
+  /** Canvas alpha when stale (default: 0.5) */
+  dimOpacity?: number
+  /** Render LIVE/STALE badge (default: false) */
+  showBadge?: boolean
+  /** Badge position (default: "top-right") */
+  badgePosition?: "top-left" | "top-right" | "bottom-left" | "bottom-right"
+}
+
 // ── Chart types ────────────────────────────────────────────────────────
 
 export type StreamChartType =
@@ -87,6 +126,10 @@ export interface PointSceneNode {
   r: number
   style: Style
   datum: any
+  /** Pulse glow intensity 0–1 (set by PipelineStore when pulse is active) */
+  _pulseIntensity?: number
+  /** Pulse glow color */
+  _pulseColor?: string
 }
 
 export interface RectSceneNode {
@@ -98,6 +141,8 @@ export interface RectSceneNode {
   style: Style
   datum: any
   group?: string
+  _pulseIntensity?: number
+  _pulseColor?: string
 }
 
 export interface HeatcellSceneNode {
@@ -108,6 +153,8 @@ export interface HeatcellSceneNode {
   h: number
   fill: string
   datum: any
+  _pulseIntensity?: number
+  _pulseColor?: string
 }
 
 export interface CandlestickSceneNode {
@@ -124,6 +171,8 @@ export interface CandlestickSceneNode {
   wickWidth: number
   isUp: boolean
   datum: any
+  _pulseIntensity?: number
+  _pulseColor?: string
 }
 
 // ── Candlestick style ──────────────────────────────────────────────────
@@ -261,6 +310,15 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   customHoverBehavior?: (d: HoverData | null) => void
   enableHover?: boolean
 
+  // ── Brush ─────────────────────────────────────────
+  /** Brush configuration — when provided, an SVG brush overlay is rendered */
+  brush?: {
+    /** Which dimension(s) to brush: "x", "y", or "xy" (default "xy") */
+    dimension?: "x" | "y" | "xy"
+  }
+  /** Callback when brush selection changes. Called with data-space extent, or null when cleared. */
+  onBrush?: (extent: { x: [number, number]; y: [number, number] } | null) => void
+
   // ── Annotations ──────────────────────────────────
   annotations?: Record<string, any>[]
   svgAnnotationRules?: (
@@ -284,6 +342,24 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
 
   // ── Category accessor (streaming bar/swarm) ──────
   categoryAccessor?: string | ((d: T) => string)
+
+  // ── Realtime encoding ─────────────────────────────
+  /** Configurable opacity decay for older data points */
+  decay?: DecayConfig
+  /** Flash effect on newly inserted data points */
+  pulse?: PulseConfig
+  /** Smooth position transitions on data change */
+  transition?: TransitionConfig
+  /** Frame-level data liveness indicator */
+  staleness?: StalenessConfig
+
+  // ── Streaming heatmap ─────────────────────────────
+  /** Aggregation mode for streaming heatmap (count, sum, mean) */
+  heatmapAggregation?: "count" | "sum" | "mean"
+  /** Number of x-axis bins for streaming heatmap (default: 20) */
+  heatmapXBins?: number
+  /** Number of y-axis bins for streaming heatmap (default: 20) */
+  heatmapYBins?: number
 }
 
 // ── StreamXYFrame ref handle ───────────────────────────────────────────

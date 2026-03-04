@@ -46,7 +46,7 @@ export interface ScatterplotProps<TDatum extends Record<string, any> = Record<st
   showLegend?: boolean
   /** Tooltip configuration */
   tooltip?: TooltipProp
-  /** Additional XYFrame props for advanced customization */
+  /** Additional StreamXYFrame props for advanced customization */
   frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size">>
 }
 

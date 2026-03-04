@@ -176,7 +176,11 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       title,
       className,
       background,
-      centerContent
+      centerContent,
+      decay,
+      pulse,
+      transition,
+      staleness
     } = props
 
     // ── Layout ───────────────────────────────────────────────────────────
@@ -198,6 +202,7 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     const [hoverPoint, setHoverPoint] = useState<HoverData | null>(null)
     const [currentScales, setCurrentScales] = useState<OrdinalScales | null>(null)
     const [annotationFrame, setAnnotationFrame] = useState(0)
+    const [isStale, setIsStale] = useState(false)
 
     // ── Hover config ─────────────────────────────────────────────────────
 
@@ -240,7 +245,11 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       pieceStyle,
       summaryStyle,
       colorScheme,
-      barColors
+      barColors,
+      decay,
+      pulse,
+      transition,
+      staleness
     }), [
       chartType, windowSize, windowMode, extentPadding, projection,
       oAccessor, rAccessor, colorAccessor, stackBy, groupBy, multiAxis,
@@ -248,7 +257,9 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       rExtent, oExtent, barPadding, innerRadius, normalize, startAngle,
       dynamicColumnWidth,
       bins, showOutliers, showIQR, amplitude, connectorAccessor, connectorStyle, oSort,
-      pieceStyle, summaryStyle, colorScheme, barColors, isStreaming
+      pieceStyle, summaryStyle, colorScheme, barColors,
+      decay, pulse, transition, staleness,
+      isStreaming
     ])
 
     const storeRef = useRef<OrdinalPipelineStore | null>(null)
@@ -407,8 +418,13 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       const store = storeRef.current
       if (!store) return
 
+      const now = typeof performance !== "undefined" ? performance.now() : Date.now()
+
+      // Advance transition animation
+      const isTransitioning = store.advanceTransition(now)
+
       const wasDirty = dirtyRef.current
-      if (wasDirty) {
+      if (wasDirty && !isTransitioning) {
         store.computeScene({ width: adjustedWidth, height: adjustedHeight })
         dirtyRef.current = false
       }
@@ -423,6 +439,15 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
 
       // Clear
       ctx.clearRect(0, 0, size[0], size[1])
+
+      // Staleness dimming
+      const staleThreshold = staleness?.threshold ?? 5000
+      const currentlyStale = staleness && store.lastIngestTime > 0 &&
+        (now - store.lastIngestTime) > staleThreshold
+
+      if (currentlyStale) {
+        ctx.globalAlpha = staleness?.dimOpacity ?? 0.5
+      }
 
       // Background
       if (background) {
@@ -452,10 +477,25 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
         ctx.restore()
       }
 
+      // Reset alpha after staleness dimming
+      if (currentlyStale) {
+        ctx.globalAlpha = 1
+      }
+
       // Push scales to React state for SVG overlay
       if (wasDirty && store.scales) {
         setCurrentScales(store.scales)
         setAnnotationFrame(f => f + 1)
+      }
+
+      // Update staleness badge state
+      if (staleness?.showBadge) {
+        setIsStale(!!currentlyStale)
+      }
+
+      // Schedule next frame for pulse/transition continuous rendering
+      if (isTransitioning || store.hasActivePulses) {
+        rafRef.current = requestAnimationFrame(() => renderFnRef.current())
       }
     }
 
@@ -472,6 +512,24 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
       dirtyRef.current = true
       scheduleRender()
     }, [chartType, adjustedWidth, adjustedHeight, showAxes, background, scheduleRender])
+
+    // Staleness check timer
+    useEffect(() => {
+      if (!staleness) return
+      const interval = setInterval(() => {
+        const store = storeRef.current
+        if (!store || store.lastIngestTime === 0) return
+        const now = typeof performance !== "undefined" ? performance.now() : Date.now()
+        const threshold = staleness.threshold ?? 5000
+        const stale = (now - store.lastIngestTime) > threshold
+        if (stale !== isStale) {
+          setIsStale(stale)
+          dirtyRef.current = true
+          scheduleRender()
+        }
+      }, 1000)
+      return () => clearInterval(interval)
+    }, [staleness, isStale, scheduleRender])
 
     // ── Tooltip positioning ──────────────────────────────────────────────
 
@@ -587,6 +645,27 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           </div>
         )}
 
+        {staleness?.showBadge && (
+          <div
+            className="stream-staleness-badge"
+            style={{
+              position: "absolute",
+              ...(staleness.badgePosition === "top-left" ? { top: 4, left: 4 } :
+                staleness.badgePosition === "bottom-left" ? { bottom: 4, left: 4 } :
+                staleness.badgePosition === "bottom-right" ? { bottom: 4, right: 4 } :
+                { top: 4, right: 4 }),
+              padding: "2px 8px",
+              borderRadius: 4,
+              fontSize: 11,
+              fontWeight: 600,
+              pointerEvents: "none",
+              background: isStale ? "#dc3545" : "#28a745",
+              color: "white"
+            }}
+          >
+            {isStale ? "STALE" : "LIVE"}
+          </div>
+        )}
         {tooltipElement}
       </div>
     )

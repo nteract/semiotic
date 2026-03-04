@@ -34,7 +34,7 @@ export interface TreemapProps<TNode extends Record<string, any> = Record<string,
 /**
  * Treemap - Visualize hierarchical data as nested rectangles.
  *
- * Now wraps StreamNetworkFrame (canvas-first) instead of legacy NetworkFrame.
+ * Wraps StreamNetworkFrame (canvas-first) for treemap visualization.
  */
 export function Treemap<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: TreemapProps<TNode, TEdge>) {
   const {

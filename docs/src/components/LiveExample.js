@@ -299,10 +299,13 @@ export default function LiveExample({
     responsiveFrameProps.width = containerWidth
   }
 
-  // Visualization element
+  // Visualization element — render with fallback size if container hasn't been measured yet
   const visualization = (
     <div ref={vizContainerRef} style={styles.vizContainer}>
-      {containerWidth ? <Frame {...responsiveFrameProps} /> : null}
+      {containerWidth
+        ? <Frame {...responsiveFrameProps} />
+        : <Frame {...frameProps} />
+      }
     </div>
   )
 

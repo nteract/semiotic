@@ -1,16 +1,7 @@
 import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
 
-import { scaleLinear } from "d3-scale"
-
-import { calculateNetworkFrame } from "../processing/network"
-import { createNetworkPipelineCache } from "../data/networkPipelineCache"
-
-import { generateFinalDefs } from "../constants/jsx"
-import { generateFrameTitle } from "../svg/frameFunctions"
-
-import { stringToFn } from "../data/dataFunctions"
-import { genericFunction } from "../generic_utilities/functions"
+import { arc as d3Arc } from "d3-shape"
 
 import { PipelineStore, type PipelineConfig } from "../stream/PipelineStore"
 import type {
@@ -26,20 +17,26 @@ import type {
   StreamLayout
 } from "../stream/types"
 
-import { NetworkFrameProps, NetworkFrameState } from "../types/networkTypes"
-import { RenderPipelineType } from "../types/generalTypes"
+import { getLayoutPlugin } from "../stream/layouts"
+import type {
+  NetworkPipelineConfig,
+  RealtimeNode,
+  RealtimeEdge,
+  NetworkSceneNode,
+  NetworkSceneEdge,
+  NetworkLabel,
+  StreamNetworkFrameProps,
+  NetworkChartType,
+  NetworkCircleNode,
+  NetworkRectNode,
+  NetworkArcNode,
+  NetworkLineEdge,
+  NetworkBezierEdge,
+  NetworkRibbonEdge,
+  NetworkCurvedEdge
+} from "../stream/networkTypes"
 
 type FrameType = "xy" | "ordinal" | "network"
-
-const networkProjectedCoordinateNames = { y: "y", x: "x" }
-
-const defaultFrameRenderOrder = [
-  "axes-tick-lines",
-  "viz-layer",
-  "matte",
-  "axes-labels",
-  "labels"
-]
 
 // ── Scene graph → SVG conversion ──────────────────────────────────────────
 
@@ -327,234 +324,349 @@ function renderStreamXYFrame(props: StreamXYFrameProps): string {
   return ReactDOMServer.renderToStaticMarkup(svgElement)
 }
 
-// ── Legacy frame renderers (ordinal, network) ─────────────────────────────
+// ── Network scene graph → SVG conversion ──────────────────────────────────
 
-function runVisualizationPipeline(
-  renderPipeline: RenderPipelineType,
-  renderOrder: ReadonlyArray<string>,
-  xScale: Function,
-  yScale: Function,
-  projectedCoordinateNames: object
-): React.ReactNode[] {
-  const renderedElements: React.ReactNode[] = []
-  const renderVizKeys = Object.keys(renderPipeline)
-  const renderKeys = [
-    ...renderOrder,
-    ...renderVizKeys.filter((d) => renderOrder.indexOf(d) === -1)
-  ]
-
-  renderKeys.forEach((k) => {
-    const pipe = renderPipeline[k]
-    if (
-      pipe &&
-      ((pipe.data &&
-        typeof pipe.data === "object" &&
-        !Array.isArray(pipe.data)) ||
-        (pipe.data && (pipe.data as any[]).length > 0))
-    ) {
-      const renderedPipe = pipe.behavior({
-        xScale,
-        yScale,
-        canvasDrawing: [],
-        projectedCoordinateNames,
-        ...pipe
-      })
-
-      if (renderedPipe && renderedPipe.length > 0) {
-        renderedElements.push(
-          <g key={k} className={k} role="group">
-            {renderedPipe}
-          </g>
-        )
-      }
+function networkSceneNodeToSVG(node: NetworkSceneNode, i: number): React.ReactNode {
+  switch (node.type) {
+    case "circle": {
+      const n = node as NetworkCircleNode
+      return (
+        <circle
+          key={`net-circle-${i}`}
+          cx={n.cx}
+          cy={n.cy}
+          r={n.r}
+          fill={n.style.fill || "#4e79a7"}
+          stroke={n.style.stroke}
+          strokeWidth={n.style.strokeWidth}
+          opacity={n.style.opacity}
+        />
+      )
     }
-  })
-  return renderedElements
-}
-
-function buildNetworkBaseState(props: NetworkFrameProps): NetworkFrameState {
-  return {
-    dataVersion: undefined,
-    nodeData: [],
-    edgeData: [],
-    adjustedPosition: [],
-    adjustedSize: [],
-    backgroundGraphics: null,
-    foregroundGraphics: null,
-    projectedNodes: [],
-    projectedEdges: [],
-    renderNumber: 0,
-    nodeLabelAnnotations: [],
-    graphSettings: {
-      type: "empty-start",
-      nodes: [],
-      edges: [],
-      nodeHash: new Map(),
-      edgeHash: new Map(),
-      hierarchicalNetwork: false
-    },
-    edgeWidthAccessor: stringToFn<number>("weight"),
-    legendSettings: undefined,
-    margin: { top: 0, left: 0, right: 0, bottom: 0 },
-    networkFrameRender: {},
-    nodeIDAccessor: stringToFn<string>("id"),
-    nodeSizeAccessor: genericFunction(5),
-    overlay: [],
-    projectedXYPoints: [],
-    sourceAccessor: stringToFn<string | Record<string, any>>("source"),
-    targetAccessor: stringToFn<string | Record<string, any>>("target"),
-    title: { title: undefined },
-    props
-  } as NetworkFrameState
-}
-
-function renderNetworkFrame(props: NetworkFrameProps): string {
-  const networkDefaultProps = {
-    annotations: [],
-    foregroundGraphics: [],
-    size: [500, 500] as number[],
-    className: "",
-    name: "networkframe",
-    networkType: { type: "force", iterations: 500 }
+    case "rect": {
+      const n = node as NetworkRectNode
+      return (
+        <rect
+          key={`net-rect-${i}`}
+          x={n.x}
+          y={n.y}
+          width={n.w}
+          height={n.h}
+          fill={n.style.fill || "#4e79a7"}
+          stroke={n.style.stroke}
+          strokeWidth={n.style.strokeWidth}
+          opacity={n.style.opacity}
+        />
+      )
+    }
+    case "arc": {
+      const n = node as NetworkArcNode
+      const arcPath = d3Arc<any>()
+        .innerRadius(n.innerR)
+        .outerRadius(n.outerR)
+        .startAngle(n.startAngle)
+        .endAngle(n.endAngle)({} as any) || ""
+      return (
+        <path
+          key={`net-arc-${i}`}
+          d={arcPath}
+          transform={`translate(${n.cx},${n.cy})`}
+          fill={n.style.fill || "#4e79a7"}
+          stroke={n.style.stroke}
+          strokeWidth={n.style.strokeWidth}
+          opacity={n.style.opacity}
+        />
+      )
+    }
+    default:
+      return null
   }
-  const mergedProps = { ...networkDefaultProps, ...props }
-  const cache = createNetworkPipelineCache()
-  const baseState = buildNetworkBaseState(mergedProps)
+}
 
-  const state = {
-    ...baseState,
-    ...calculateNetworkFrame(mergedProps, baseState, cache)
-  } as NetworkFrameState
+function networkSceneEdgeToSVG(edge: NetworkSceneEdge, i: number): React.ReactNode {
+  switch (edge.type) {
+    case "line": {
+      const e = edge as NetworkLineEdge
+      return (
+        <line
+          key={`net-edge-line-${i}`}
+          x1={e.x1}
+          y1={e.y1}
+          x2={e.x2}
+          y2={e.y2}
+          stroke={e.style.stroke || "#999"}
+          strokeWidth={e.style.strokeWidth || 1}
+          opacity={e.style.opacity}
+        />
+      )
+    }
+    case "bezier": {
+      const e = edge as NetworkBezierEdge
+      return (
+        <path
+          key={`net-edge-bezier-${i}`}
+          d={e.pathD}
+          fill={e.style.fill || "#999"}
+          fillOpacity={e.style.fillOpacity}
+          stroke={e.style.stroke || "none"}
+          strokeWidth={e.style.strokeWidth}
+          opacity={e.style.opacity}
+        />
+      )
+    }
+    case "ribbon": {
+      const e = edge as NetworkRibbonEdge
+      return (
+        <path
+          key={`net-edge-ribbon-${i}`}
+          d={e.pathD}
+          fill={e.style.fill || "#999"}
+          fillOpacity={e.style.fillOpacity}
+          stroke={e.style.stroke || "none"}
+          strokeWidth={e.style.strokeWidth}
+          opacity={e.style.opacity}
+        />
+      )
+    }
+    case "curved": {
+      const e = edge as NetworkCurvedEdge
+      return (
+        <path
+          key={`net-edge-curved-${i}`}
+          d={e.pathD}
+          fill={e.style.fill || "none"}
+          stroke={e.style.stroke || "#999"}
+          strokeWidth={e.style.strokeWidth || 1}
+          opacity={e.style.opacity}
+        />
+      )
+    }
+    default:
+      return null
+  }
+}
 
-  const {
-    margin,
-    networkFrameRender,
-    title,
-    graphSettings
-  } = state
+function networkLabelToSVG(label: NetworkLabel, i: number): React.ReactNode {
+  return (
+    <text
+      key={`net-label-${i}`}
+      x={label.x}
+      y={label.y}
+      textAnchor={label.anchor || "middle"}
+      dominantBaseline={(label.baseline || "auto") as any}
+      fontSize={label.fontSize || 11}
+      fontWeight={label.fontWeight}
+      fill={label.fill || "#333"}
+      stroke={label.stroke}
+      strokeWidth={label.strokeWidth}
+      paintOrder={label.paintOrder}
+    >
+      {label.text}
+    </text>
+  )
+}
 
-  const size = mergedProps.size || [500, 500]
+// ── Helper functions for building RealtimeNodes/Edges from props ──────────
 
-  const nXScale = scaleLinear()
-  const nYScale = scaleLinear()
+function resolveAccessor(
+  accessor: string | ((d: any) => any) | undefined,
+  defaultKey: string
+): (d: any) => any {
+  if (!accessor) return (d: any) => d[defaultKey]
+  if (typeof accessor === "function") return accessor
+  return (d: any) => d[accessor]
+}
 
-  const matrixRenderOrder: ReadonlyArray<string> = ["nodes", "edges"]
-  const generalRenderOrder: ReadonlyArray<string> = ["edges", "nodes"]
-  const renderOrder = mergedProps.renderOrder ||
-    (graphSettings && graphSettings.type === "matrix"
-      ? matrixRenderOrder
-      : generalRenderOrder)
-  const frameRenderOrder = mergedProps.frameRenderOrder || defaultFrameRenderOrder
+function buildRealtimeNodes(
+  propsNodes: any[],
+  config: NetworkPipelineConfig
+): RealtimeNode[] {
+  const nodeIDFn = resolveAccessor(config.nodeIDAccessor, "id")
+  return propsNodes.map((d) => ({
+    id: String(nodeIDFn(d)),
+    x: 0,
+    y: 0,
+    x0: 0,
+    x1: 0,
+    y0: 0,
+    y1: 0,
+    width: 0,
+    height: 0,
+    value: 0,
+    data: d
+  }))
+}
 
-  const renderedElements = runVisualizationPipeline(
-    networkFrameRender,
-    renderOrder,
-    nXScale,
-    nYScale,
-    networkProjectedCoordinateNames
+function buildRealtimeEdges(
+  propsEdges: any[],
+  config: NetworkPipelineConfig
+): RealtimeEdge[] {
+  const sourceFn = resolveAccessor(config.sourceAccessor, "source")
+  const targetFn = resolveAccessor(config.targetAccessor, "target")
+  const valueFn = resolveAccessor(config.valueAccessor, "value")
+  return propsEdges.map((d) => ({
+    source: String(sourceFn(d)),
+    target: String(targetFn(d)),
+    value: Number(valueFn(d)) || 1,
+    y0: 0,
+    y1: 0,
+    sankeyWidth: 0,
+    data: d
+  }))
+}
+
+// ── Stream-first network renderer ─────────────────────────────────────────
+
+const HIERARCHICAL_TYPES: Set<string> = new Set([
+  "tree",
+  "cluster",
+  "treemap",
+  "circlepack",
+  "partition"
+])
+
+function renderNetworkFrame(props: StreamNetworkFrameProps): string {
+  const chartType: NetworkChartType = props.chartType || "force"
+  const size: [number, number] = props.size || [500, 500]
+  const defaultMargin = { top: 20, right: 20, bottom: 20, left: 20 }
+  const margin = { ...defaultMargin, ...props.margin }
+  const innerWidth = size[0] - margin.left - margin.right
+  const innerHeight = size[1] - margin.top - margin.bottom
+
+  const plugin = getLayoutPlugin(chartType)
+  if (!plugin) {
+    throw new Error(
+      `No layout plugin found for chart type: "${chartType}". ` +
+      `Supported types: force, sankey, chord, tree, cluster, treemap, circlepack, partition.`
+    )
+  }
+
+  // Build pipeline config from props
+  const config: NetworkPipelineConfig = {
+    chartType,
+    nodeIDAccessor: props.nodeIDAccessor,
+    sourceAccessor: props.sourceAccessor,
+    targetAccessor: props.targetAccessor,
+    valueAccessor: props.valueAccessor,
+    childrenAccessor: props.childrenAccessor,
+    hierarchySum: props.hierarchySum,
+    orientation: props.orientation,
+    nodeAlign: props.nodeAlign,
+    nodePaddingRatio: props.nodePaddingRatio,
+    nodeWidth: props.nodeWidth,
+    iterations: props.iterations,
+    forceStrength: props.forceStrength,
+    padAngle: props.padAngle,
+    groupWidth: props.groupWidth,
+    sortGroups: props.sortGroups,
+    edgeSort: props.edgeSort,
+    treeOrientation: props.treeOrientation,
+    edgeType: props.edgeType,
+    padding: props.padding,
+    paddingTop: props.paddingTop,
+    nodeStyle: props.nodeStyle,
+    edgeStyle: props.edgeStyle,
+    nodeLabel: props.nodeLabel,
+    showLabels: props.showLabels,
+    colorBy: props.colorBy,
+    colorScheme: props.colorScheme,
+    edgeColorBy: props.edgeColorBy,
+    edgeOpacity: props.edgeOpacity,
+    colorByDepth: props.colorByDepth,
+    nodeSize: props.nodeSize,
+    nodeSizeRange: props.nodeSizeRange
+  }
+
+  let nodes: RealtimeNode[]
+  let edges: RealtimeEdge[]
+
+  if (HIERARCHICAL_TYPES.has(chartType)) {
+    // Hierarchical layouts: single root object from props.data or props.edges
+    const hierarchyRoot = props.data || props.edges
+    if (!hierarchyRoot || Array.isArray(hierarchyRoot)) {
+      // No valid hierarchy root — return empty SVG
+      return ReactDOMServer.renderToStaticMarkup(
+        <svg xmlns="http://www.w3.org/2000/svg" className="stream-network-frame" width={size[0]} height={size[1]} />
+      )
+    }
+    // The hierarchy plugin expects the root via config.__hierarchyRoot
+    ;(config as any).__hierarchyRoot = hierarchyRoot
+    // computeLayout will populate these arrays from the hierarchy
+    nodes = []
+    edges = []
+  } else {
+    // Graph layouts (force, sankey, chord): nodes + edges arrays
+    const propsNodes = props.nodes || []
+    const propsEdges = Array.isArray(props.edges) ? props.edges : []
+
+    if (propsNodes.length === 0 && propsEdges.length === 0) {
+      return ReactDOMServer.renderToStaticMarkup(
+        <svg xmlns="http://www.w3.org/2000/svg" className="stream-network-frame" width={size[0]} height={size[1]} />
+      )
+    }
+
+    nodes = buildRealtimeNodes(propsNodes, config)
+    edges = buildRealtimeEdges(propsEdges, config)
+  }
+
+  // Run layout
+  plugin.computeLayout(nodes, edges, config, [innerWidth, innerHeight])
+
+  // Build scene graph
+  const { sceneNodes, sceneEdges, labels } = plugin.buildScene(
+    nodes,
+    edges,
+    config,
+    [innerWidth, innerHeight]
   )
 
-  return assembleAndRender({
-    size,
-    margin,
-    renderedElements,
-    title,
-    frameRenderOrder,
-    additionalDefs: mergedProps.additionalDefs,
-    name: "networkframe",
-    matte: mergedProps.matte,
-    frameKey: "static"
-  })
-}
+  // Convert scene graph to SVG elements
+  const edgeElements = sceneEdges
+    .map((edge, i) => networkSceneEdgeToSVG(edge, i))
+    .filter(Boolean)
 
-interface AssembleOptions {
-  size: number[]
-  margin: { top: number; bottom: number; left: number; right: number }
-  renderedElements: React.ReactNode[]
-  axes?: React.ReactNode[]
-  axesTickLines?: React.ReactNode | Object[]
-  title?: any
-  frameRenderOrder: string[]
-  additionalDefs?: React.ReactNode
-  name: string
-  matte?: any
-  frameKey: string
-}
+  const nodeElements = sceneNodes
+    .map((node, i) => networkSceneNodeToSVG(node, i))
+    .filter(Boolean)
 
-function assembleAndRender({
-  size,
-  margin,
-  renderedElements,
-  axes,
-  axesTickLines,
-  title,
-  frameRenderOrder,
-  additionalDefs,
-  name,
-  matte,
-  frameKey
-}: AssembleOptions): string {
-  const renderHash: Record<string, React.ReactNode> = {
-    "axes-tick-lines": axesTickLines ? (
-      <g
-        key="visualization-tick-lines"
-        className="axis axis-tick-lines"
-        aria-hidden={true}
+  const labelElements = labels
+    .map((label, i) => networkLabelToSVG(label, i))
+    .filter(Boolean)
+
+  // Title
+  const title =
+    props.title && typeof props.title === "string" ? (
+      <text
+        x={size[0] / 2}
+        y={16}
+        textAnchor="middle"
+        fontSize={14}
+        fontWeight="bold"
+        fill="#333"
       >
-        {axesTickLines as React.ReactNode}
-      </g>
-    ) : null,
-    "axes-labels": axes ? (
-      <g key="visualization-axis-labels" className="axis axis-labels">
-        {axes}
-      </g>
-    ) : null,
-    "viz-layer":
-      renderedElements && renderedElements.length > 0
-        ? renderedElements
-        : null
-  }
+        {props.title}
+      </text>
+    ) : null
 
-  const orderedElements: React.ReactNode[] = []
-  frameRenderOrder.forEach((r) => {
-    if (renderHash[r]) {
-      orderedElements.push(renderHash[r])
-    }
-  })
-
-  const generatedTitle = generateFrameTitle({
-    title: title || { title: undefined },
-    size
-  })
-
-  const { defs } = generateFinalDefs({
-    matte: null,
-    size,
-    margin,
-    frameKey,
-    additionalDefs,
-    name
-  })
+  // Background
+  const bg = props.background ? (
+    <rect x={0} y={0} width={innerWidth} height={innerHeight} fill={props.background} />
+  ) : null
 
   const svgElement = (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      className={`${name} frame`}
+      className={`stream-network-frame${props.className ? ` ${props.className}` : ""}`}
       width={size[0]}
       height={size[1]}
     >
-      {defs}
-      {orderedElements.length > 0 && (
-        <g
-          className="data-visualization"
-          key="visualization-clip-path"
-          role="group"
-          transform={`translate(${margin.left},${margin.top})`}
-        >
-          {orderedElements}
-        </g>
-      )}
-      {generatedTitle && <g className="frame-title">{generatedTitle}</g>}
+      <g transform={`translate(${margin.left},${margin.top})`}>
+        {bg}
+        {edgeElements}
+        {nodeElements}
+        {labelElements}
+      </g>
+      {title}
     </svg>
   )
 
@@ -565,7 +677,7 @@ function assembleAndRender({
 
 export function renderToStaticSVG(
   frameType: FrameType,
-  props: StreamXYFrameProps | NetworkFrameProps
+  props: StreamXYFrameProps | StreamNetworkFrameProps
 ): string {
   switch (frameType) {
     case "xy":
@@ -575,7 +687,7 @@ export function renderToStaticSVG(
         `Legacy ordinal SSR has been removed. Use StreamOrdinalFrame for ordinal charts.`
       )
     case "network":
-      return renderNetworkFrame(props as NetworkFrameProps)
+      return renderNetworkFrame(props as StreamNetworkFrameProps)
     default:
       throw new Error(
         `Unknown frame type: ${frameType}. Must be "xy", "ordinal", or "network".`
@@ -593,6 +705,6 @@ export function renderOrdinalToStaticSVG(_props: unknown): string {
   )
 }
 
-export function renderNetworkToStaticSVG(props: NetworkFrameProps): string {
+export function renderNetworkToStaticSVG(props: StreamNetworkFrameProps): string {
   return renderNetworkFrame(props)
 }

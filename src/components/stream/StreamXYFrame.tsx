@@ -18,6 +18,8 @@ import type {
   SceneNode,
   StreamScales
 } from "./types"
+import { brush as d3Brush, brushX as d3BrushX, brushY as d3BrushY } from "d3-brush"
+import { select as d3Select } from "d3-selection"
 import { DataSourceAdapter } from "./DataSourceAdapter"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
 import { findNearestNode, type HitResult } from "./CanvasHitTester"
@@ -169,6 +171,108 @@ function drawCrosshair(
   ctx.stroke()
 }
 
+// ── Brush Overlay ─────────────────────────────────────────────────────
+
+interface BrushOverlayProps {
+  width: number
+  height: number
+  totalWidth: number
+  totalHeight: number
+  margin: { top: number; right: number; bottom: number; left: number }
+  dimension: "x" | "y" | "xy"
+  scales: StreamScales | null
+  onBrush: (extent: { x: [number, number]; y: [number, number] } | null) => void
+}
+
+function BrushOverlay({
+  width,
+  height,
+  totalWidth,
+  totalHeight,
+  margin,
+  dimension,
+  scales,
+  onBrush
+}: BrushOverlayProps) {
+  const svgRef = useRef<SVGSVGElement>(null)
+  const brushRef = useRef<any>(null)
+
+  useEffect(() => {
+    if (!svgRef.current) return
+
+    const g = d3Select(svgRef.current).select<SVGGElement>(".brush-g")
+
+    const brushFn =
+      dimension === "x"
+        ? d3BrushX()
+        : dimension === "y"
+          ? d3BrushY()
+          : d3Brush()
+
+    brushFn.extent([[0, 0], [width, height]])
+
+    brushFn.on("brush end", (event: any) => {
+      if (!scales) return
+
+      if (!event.selection) {
+        onBrush(null)
+        return
+      }
+
+      let xRange: [number, number]
+      let yRange: [number, number]
+
+      if (dimension === "x") {
+        const [px0, px1] = event.selection as [number, number]
+        xRange = [scales.x.invert(px0), scales.x.invert(px1)]
+        yRange = [scales.y.invert(height), scales.y.invert(0)]
+      } else if (dimension === "y") {
+        const [py0, py1] = event.selection as [number, number]
+        xRange = [scales.x.invert(0), scales.x.invert(width)]
+        yRange = [scales.y.invert(py1), scales.y.invert(py0)]
+      } else {
+        const [[px0, py0], [px1, py1]] = event.selection as [[number, number], [number, number]]
+        xRange = [scales.x.invert(px0), scales.x.invert(px1)]
+        yRange = [scales.y.invert(py1), scales.y.invert(py0)]
+      }
+
+      onBrush({ x: xRange, y: yRange })
+    })
+
+    g.call(brushFn as any)
+    brushRef.current = brushFn
+
+    // Style the brush selection rectangle
+    g.select(".selection")
+      .attr("fill", "steelblue")
+      .attr("fill-opacity", 0.15)
+      .attr("stroke", "steelblue")
+      .attr("stroke-width", 1)
+
+    return () => {
+      brushFn.on("brush end", null)
+      brushRef.current = null
+    }
+  }, [width, height, dimension, scales, onBrush])
+
+  return (
+    <svg
+      ref={svgRef}
+      width={totalWidth}
+      height={totalHeight}
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        // Allow pointer events only on the brush overlay itself
+        pointerEvents: "all"
+      }}
+    >
+      <g className="brush-g" transform={`translate(${margin.left},${margin.top})`} />
+    </svg>
+  )
+}
+
 // ── StreamXYFrame ──────────────────────────────────────────────────────
 
 const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
@@ -232,7 +336,16 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       backgroundGraphics,
       foregroundGraphics,
       title,
-      categoryAccessor
+      categoryAccessor,
+      brush,
+      onBrush,
+      decay,
+      pulse,
+      transition,
+      staleness,
+      heatmapAggregation,
+      heatmapXBins,
+      heatmapYBins
     } = props
 
     const margin = { ...DEFAULT_MARGIN, ...marginProp }
@@ -255,6 +368,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // Hover state: ref for canvas (sync), React state for tooltip (async)
     const hoverRef = useRef<HoverData | null>(null)
     const [hoverPoint, setHoverPoint] = useState<HoverData | null>(null)
+
+    // Staleness state
+    const [isStale, setIsStale] = useState(false)
 
     // Render function ref (always-fresh closure)
     const renderFnRef = useRef<() => void>(() => {})
@@ -296,7 +412,14 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       areaStyle,
       colorScheme,
       barColors,
-      annotations
+      annotations,
+      decay,
+      pulse,
+      transition,
+      staleness,
+      heatmapAggregation,
+      heatmapXBins,
+      heatmapYBins
     }), [
       chartType, windowSize, windowMode, arrowOfTime, extentPadding,
       xAccessor, yAccessor, timeAccessor, valueAccessor,
@@ -304,7 +427,10 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       lineDataAccessor, xExtent, yExtent, sizeRange, binSize, normalize,
       boundsAccessor, boundsStyle,
       openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle,
-      lineStyle, pointStyle, areaStyle, colorScheme, barColors, annotations, isStreaming
+      lineStyle, pointStyle, areaStyle, colorScheme, barColors, annotations,
+      decay, pulse, transition, staleness,
+      heatmapAggregation, heatmapXBins, heatmapYBins,
+      isStreaming
     ])
 
     const storeRef = useRef<PipelineStore | null>(null)
@@ -460,8 +586,15 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       const store = storeRef.current
       if (!store) return
 
-      // Compute scene graph (scales + scene nodes)
-      store.computeScene({ width: adjustedWidth, height: adjustedHeight })
+      const now = typeof performance !== "undefined" ? performance.now() : Date.now()
+
+      // Advance transition animation (before scene rebuild)
+      const isTransitioning = store.advanceTransition(now)
+
+      // Compute scene graph (scales + scene nodes) — skip if mid-transition
+      if (!isTransitioning) {
+        store.computeScene({ width: adjustedWidth, height: adjustedHeight })
+      }
 
       // DPR setup
       const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1
@@ -474,6 +607,15 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       ctx.clearRect(-margin.left, -margin.top, size[0], size[1])
 
       const theme = resolveThemeColors(canvas)
+
+      // Staleness dimming
+      const staleThreshold = staleness?.threshold ?? 5000
+      const currentlyStale = staleness && store.lastIngestTime > 0 &&
+        (now - store.lastIngestTime) > staleThreshold
+
+      if (currentlyStale) {
+        ctx.globalAlpha = staleness?.dimOpacity ?? 0.5
+      }
 
       // Background
       if (background) {
@@ -492,6 +634,11 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             { width: adjustedWidth, height: adjustedHeight }
           )
         }
+      }
+
+      // Reset alpha after staleness dimming
+      if (currentlyStale) {
+        ctx.globalAlpha = 1
       }
 
       // Draw crosshair on hover
@@ -521,6 +668,16 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       if (wasDirty && annotations && annotations.length > 0 && svgAnnotationRules) {
         setAnnotationFrame(f => f + 1)
       }
+
+      // Update staleness React state for badge
+      if (staleness?.showBadge) {
+        setIsStale(!!currentlyStale)
+      }
+
+      // Schedule next frame for continuous rendering (pulse/transitions)
+      if (isTransitioning || store.hasActivePulses) {
+        rafRef.current = requestAnimationFrame(() => renderFnRef.current())
+      }
     }
 
     // ── Lifecycle ────────────────────────────────────────────────────────
@@ -537,6 +694,24 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       dirtyRef.current = true
       scheduleRender()
     }, [chartType, adjustedWidth, adjustedHeight, showAxes, background, lineStyle, scheduleRender])
+
+    // Staleness check timer
+    useEffect(() => {
+      if (!staleness) return
+      const interval = setInterval(() => {
+        const store = storeRef.current
+        if (!store || store.lastIngestTime === 0) return
+        const now = typeof performance !== "undefined" ? performance.now() : Date.now()
+        const threshold = staleness.threshold ?? 5000
+        const stale = (now - store.lastIngestTime) > threshold
+        if (stale !== isStale) {
+          setIsStale(stale)
+          dirtyRef.current = true
+          scheduleRender()
+        }
+      }, 1000)
+      return () => clearInterval(interval)
+    }, [staleness, isStale, scheduleRender])
 
     // ── Tooltip positioning ──────────────────────────────────────────────
 
@@ -619,6 +794,39 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           svgAnnotationRules={svgAnnotationRules}
           annotationFrame={annotationFrame}
         />
+        {(brush || onBrush) && (
+          <BrushOverlay
+            width={adjustedWidth}
+            height={adjustedHeight}
+            totalWidth={size[0]}
+            totalHeight={size[1]}
+            margin={margin}
+            dimension={brush?.dimension ?? "xy"}
+            scales={currentScales}
+            onBrush={onBrush ?? (() => {})}
+          />
+        )}
+        {staleness?.showBadge && (
+          <div
+            className="stream-staleness-badge"
+            style={{
+              position: "absolute",
+              ...(staleness.badgePosition === "top-left" ? { top: 4, left: 4 } :
+                staleness.badgePosition === "bottom-left" ? { bottom: 4, left: 4 } :
+                staleness.badgePosition === "bottom-right" ? { bottom: 4, right: 4 } :
+                { top: 4, right: 4 }),
+              padding: "2px 8px",
+              borderRadius: 4,
+              fontSize: 11,
+              fontWeight: 600,
+              pointerEvents: "none",
+              background: isStale ? "#dc3545" : "#28a745",
+              color: "white"
+            }}
+          >
+            {isStale ? "STALE" : "LIVE"}
+          </div>
+        )}
         {tooltipElement}
       </div>
     )

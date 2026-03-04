@@ -15,7 +15,7 @@ import type {
   ConnectorSceneNode,
   OrdinalChartType
 } from "./ordinalTypes"
-import type { Changeset, Style, PointSceneNode, RectSceneNode } from "./types"
+import type { Changeset, Style, PointSceneNode, RectSceneNode, DecayConfig } from "./types"
 
 // ── Accessor resolution ────────────────────────────────────────────────
 
@@ -59,6 +59,16 @@ export class OrdinalPipelineStore {
   /** Discovered categories in insertion order */
   private categories = new Set<string>()
 
+  // ── Pulse tracking ──────────────────────────────────────────────────
+  private timestampBuffer: RingBuffer<number> | null = null
+
+  // ── Transition animation ────────────────────────────────────────────
+  activeTransition: { startTime: number; duration: number } | null = null
+  private prevPositionMap = new Map<string, { x: number; y: number; w?: number; h?: number; r?: number }>()
+
+  // ── Staleness tracking ──────────────────────────────────────────────
+  lastIngestTime = 0
+
   scales: OrdinalScales | null = null
   /** Per-accessor scales for multiAxis */
   multiScales: (ScaleLinear<number, number>)[] = []
@@ -98,23 +108,35 @@ export class OrdinalPipelineStore {
     this.getGroup = resolveStringAccessor(config.groupBy)
     this.getColor = resolveStringAccessor(config.colorAccessor)
     this.getConnector = resolveStringAccessor(config.connectorAccessor)
+
+    if (config.pulse) {
+      this.timestampBuffer = new RingBuffer(config.windowSize)
+    }
   }
 
   // ── Data ingestion ───────────────────────────────────────────────────
 
   ingest(changeset: Changeset): boolean {
+    const now = typeof performance !== "undefined" ? performance.now() : Date.now()
+    this.lastIngestTime = now
+
     if (changeset.bounded) {
       this.buffer.clear()
       this.rExtent.clear()
       this.categories.clear()
+      if (this.timestampBuffer) this.timestampBuffer.clear()
 
       const targetSize = changeset.totalSize || changeset.inserts.length
       if (targetSize > this.buffer.capacity) {
         this.buffer.resize(targetSize)
+        if (this.timestampBuffer && targetSize > this.timestampBuffer.capacity) {
+          this.timestampBuffer.resize(targetSize)
+        }
       }
 
       for (const d of changeset.inserts) {
         this.buffer.push(d)
+        if (this.timestampBuffer) this.timestampBuffer.push(now)
         this.categories.add(this.getO(d))
         this.pushValueExtent(d)
       }
@@ -122,6 +144,7 @@ export class OrdinalPipelineStore {
       // Streaming append
       for (const d of changeset.inserts) {
         const evicted = this.buffer.push(d)
+        if (this.timestampBuffer) this.timestampBuffer.push(now)
         this.categories.add(this.getO(d))
         this.pushValueExtent(d)
 
@@ -271,8 +294,27 @@ export class OrdinalPipelineStore {
     // 4. Build projected columns
     this.columns = this.buildColumns(expandedData, oExtent, oScale, projection, layout)
 
+    // Snapshot positions for transition animation
+    if (this.config.transition && this.scene.length > 0) {
+      this.snapshotPositions()
+    }
+
     // 5. Build scene graph
     this.scene = this.buildSceneNodes(expandedData, layout)
+
+    // Apply decay/pulse to discrete scene nodes
+    if (this.config.decay) {
+      this.applyDecay(this.scene, data)
+    }
+    if (this.config.pulse) {
+      this.applyPulse(this.scene, data)
+    }
+
+    // Start transition animation
+    if (this.config.transition && this.prevPositionMap.size > 0) {
+      this.startTransition()
+    }
+
     this.version++
   }
 
@@ -286,6 +328,12 @@ export class OrdinalPipelineStore {
   private resolveCategories(data: Record<string, any>[]): string[] {
     const cats = Array.from(this.categories)
     const sort = this.config.oSort
+
+    // In streaming mode, preserve insertion order by default to avoid
+    // jarring category shuffling as values fluctuate in the sliding window
+    if (this.config.runtimeMode === "streaming" && sort === undefined) {
+      return cats
+    }
 
     if (sort === false) return cats
 
@@ -340,8 +388,21 @@ export class OrdinalPipelineStore {
 
       for (const s of posSums.values()) if (s > max) max = s
       for (const s of negSums.values()) if (s < min) min = s
-    } else if (chartType === "bar" || chartType === "clusterbar") {
-      // Simple bars: extent of individual values
+    } else if (chartType === "bar") {
+      // Non-stacked bars: pieces within each category are summed,
+      // so the domain must cover the per-category total
+      const catSums = new Map<string, number>()
+      for (const d of data) {
+        const cat = this.getO(d)
+        const val = this.getR(d)
+        catSums.set(cat, (catSums.get(cat) || 0) + val)
+      }
+      for (const s of catSums.values()) {
+        if (s > max) max = s
+        if (s < min) min = s
+      }
+    } else if (chartType === "clusterbar") {
+      // Cluster bars: individual values (side-by-side)
       for (const d of data) {
         const val = this.getR(d)
         if (val > max) max = val
@@ -522,67 +583,70 @@ export class OrdinalPipelineStore {
     const getStack = this.getStack
 
     for (const col of Object.values(this.columns)) {
-      // Group pieces by stack key if stacking
-      const stacks = new Map<string, Record<string, any>[]>()
+      // Group pieces by stack key if stacking, and aggregate values per group
+      const stacks = new Map<string, { total: number; pieces: Record<string, any>[] }>()
       for (const d of col.pieceData) {
         const key = getStack ? getStack(d) : "_default"
-        if (!stacks.has(key)) stacks.set(key, [])
-        stacks.get(key)!.push(d)
+        if (!stacks.has(key)) stacks.set(key, { total: 0, pieces: [] })
+        const group = stacks.get(key)!
+        group.total += this.getR(d)
+        group.pieces.push(d)
       }
 
       // Compute totals for normalization
       let colTotal = 0
       if (normalize) {
-        for (const d of col.pieceData) colTotal += Math.abs(this.getR(d))
+        for (const g of stacks.values()) colTotal += Math.abs(g.total)
       }
 
       let posOffset = 0
       let negOffset = 0
 
-      for (const [stackKey, pieces] of stacks) {
-        for (const d of pieces) {
-          let val = this.getR(d)
-          if (normalize && colTotal > 0) val = val / colTotal
+      for (const [stackKey, group] of stacks) {
+        // Use the aggregated total for the stack group (one rect per group)
+        let val = group.total
+        if (normalize && colTotal > 0) val = val / colTotal
 
-          const style = this.resolvePieceStyle(d, col.name)
+        // Use the first piece for styling (representative datum)
+        const style = this.resolvePieceStyle(group.pieces[0], col.name)
+        // Build a synthetic datum that includes the aggregate info
+        const aggDatum = {
+          ...group.pieces[0],
+          __aggregateValue: group.total,
+          __pieceCount: group.pieces.length,
+          category: col.name
+        }
 
-          if (isVertical) {
-            const zeroY = rScale(0)
-            const valY = rScale(val >= 0 ? posOffset + val : negOffset + val)
-            const barY = Math.min(zeroY - (val >= 0 ? posOffset : 0) * (rScale(0) - rScale(1)), valY)
-            const barH = Math.abs(rScale(0) - rScale(val))
+        if (isVertical) {
+          const actualY = val >= 0
+            ? rScale(posOffset + val)
+            : rScale(negOffset)
+          const actualH = val >= 0
+            ? rScale(posOffset) - rScale(posOffset + val)
+            : rScale(negOffset + val) - rScale(negOffset)
 
-            const actualY = val >= 0
-              ? rScale(posOffset + val)
-              : rScale(negOffset)
-            const actualH = val >= 0
-              ? rScale(posOffset) - rScale(posOffset + val)
-              : rScale(negOffset + val) - rScale(negOffset)
+          nodes.push(buildRectNode(
+            col.x, actualY, col.width, Math.abs(actualH),
+            style, aggDatum, stackKey
+          ))
 
-            nodes.push(buildRectNode(
-              col.x, actualY, col.width, Math.abs(actualH),
-              style, d, stackKey
-            ))
+          if (val >= 0) posOffset += val
+          else negOffset += val
+        } else if (isHorizontal) {
+          const actualX = val >= 0
+            ? rScale(posOffset)
+            : rScale(negOffset + val)
+          const actualW = val >= 0
+            ? rScale(posOffset + val) - rScale(posOffset)
+            : rScale(negOffset) - rScale(negOffset + val)
 
-            if (val >= 0) posOffset += val
-            else negOffset += val
-          } else if (isHorizontal) {
-            const zeroX = rScale(0)
-            const actualX = val >= 0
-              ? rScale(posOffset)
-              : rScale(negOffset + val)
-            const actualW = val >= 0
-              ? rScale(posOffset + val) - rScale(posOffset)
-              : rScale(negOffset) - rScale(negOffset + val)
+          nodes.push(buildRectNode(
+            actualX, col.x, Math.abs(actualW), col.width,
+            style, aggDatum, stackKey
+          ))
 
-            nodes.push(buildRectNode(
-              actualX, col.x, Math.abs(actualW), col.width,
-              style, d, stackKey
-            ))
-
-            if (val >= 0) posOffset += val
-            else negOffset += val
-          }
+          if (val >= 0) posOffset += val
+          else negOffset += val
         }
       }
     }
@@ -1216,6 +1280,203 @@ export class OrdinalPipelineStore {
     return { fill: "#007bff", fillOpacity: 0.6, stroke: "#007bff", strokeWidth: 1 }
   }
 
+  // ── Decay ────────────────────────────────────────────────────────────
+
+  computeDecayOpacity(bufferIndex: number, bufferSize: number): number {
+    const decay = this.config.decay
+    if (!decay || bufferSize <= 1) return 1
+
+    const minOpacity = decay.minOpacity ?? 0.1
+    const age = bufferSize - 1 - bufferIndex
+
+    switch (decay.type) {
+      case "linear": {
+        const t = 1 - age / (bufferSize - 1)
+        return minOpacity + t * (1 - minOpacity)
+      }
+      case "exponential": {
+        const halfLife = decay.halfLife ?? bufferSize / 2
+        const t = Math.pow(0.5, age / halfLife)
+        return minOpacity + t * (1 - minOpacity)
+      }
+      case "step": {
+        const threshold = decay.stepThreshold ?? bufferSize * 0.5
+        return age < threshold ? 1 : minOpacity
+      }
+      default:
+        return 1
+    }
+  }
+
+  private applyDecay(nodes: OrdinalSceneNode[], data: Record<string, any>[]): void {
+    if (!this.config.decay) return
+    const bufferSize = data.length
+    if (bufferSize <= 1) return
+
+    const indexMap = new Map<any, number>()
+    for (let i = 0; i < data.length; i++) {
+      indexMap.set(data[i], i)
+    }
+
+    for (const node of nodes) {
+      if (node.type === "connector" || node.type === "violin" || node.type === "boxplot" || node.type === "wedge") continue
+      const idx = indexMap.get(node.datum)
+      if (idx == null) continue
+      const decayOpacity = this.computeDecayOpacity(idx, bufferSize)
+      const baseOpacity = node.style?.opacity ?? 1
+      ;(node as any).style = { ...(node as any).style, opacity: baseOpacity * decayOpacity }
+    }
+  }
+
+  // ── Pulse ───────────────────────────────────────────────────────────
+
+  private applyPulse(nodes: OrdinalSceneNode[], data: Record<string, any>[]): void {
+    if (!this.config.pulse || !this.timestampBuffer) return
+    const now = typeof performance !== "undefined" ? performance.now() : Date.now()
+    const duration = this.config.pulse.duration ?? 500
+    const pulseColor = this.config.pulse.color ?? "rgba(255,255,255,0.6)"
+
+    const indexMap = new Map<any, number>()
+    for (let i = 0; i < data.length; i++) {
+      indexMap.set(data[i], i)
+    }
+
+    for (const node of nodes) {
+      if (node.type === "connector" || node.type === "violin" || node.type === "boxplot" || node.type === "wedge") continue
+      const idx = indexMap.get(node.datum)
+      if (idx == null) continue
+      const insertTime = this.timestampBuffer.get(idx)
+      if (insertTime == null) continue
+      const age = now - insertTime
+      if (age < duration) {
+        const intensity = 1 - age / duration
+        ;(node as any)._pulseIntensity = intensity
+        ;(node as any)._pulseColor = pulseColor
+      }
+    }
+  }
+
+  get hasActivePulses(): boolean {
+    if (!this.config.pulse || !this.timestampBuffer || this.timestampBuffer.size === 0) return false
+    const now = typeof performance !== "undefined" ? performance.now() : Date.now()
+    const duration = this.config.pulse.duration ?? 500
+    const newest = this.timestampBuffer.peek()
+    return newest != null && (now - newest) < duration
+  }
+
+  // ── Transitions ─────────────────────────────────────────────────────
+
+  private snapshotPositions(): void {
+    this.prevPositionMap.clear()
+    for (let i = 0; i < this.scene.length; i++) {
+      const node = this.scene[i]
+      if (node.type === "point") {
+        this.prevPositionMap.set(`p:${i}`, { x: node.x, y: node.y, r: node.r })
+      } else if (node.type === "rect") {
+        const key = `r:${node.group || ""}:${node.datum?.category ?? i}`
+        this.prevPositionMap.set(key, { x: node.x, y: node.y, w: node.w, h: node.h })
+      }
+    }
+  }
+
+  private startTransition(): void {
+    if (!this.config.transition || this.prevPositionMap.size === 0) return
+    const duration = this.config.transition.duration ?? 300
+
+    let hasChanges = false
+    for (let i = 0; i < this.scene.length; i++) {
+      const node = this.scene[i]
+      let key: string | null = null
+      if (node.type === "point") {
+        key = `p:${i}`
+      } else if (node.type === "rect") {
+        key = `r:${node.group || ""}:${node.datum?.category ?? i}`
+      }
+      if (!key) continue
+      const prev = this.prevPositionMap.get(key)
+      if (!prev) continue
+
+      if (node.type === "point") {
+        if (prev.x !== node.x || prev.y !== node.y) {
+          ;(node as any)._targetX = node.x
+          ;(node as any)._targetY = node.y
+          node.x = prev.x
+          node.y = prev.y
+          hasChanges = true
+        }
+      } else if (node.type === "rect") {
+        if (prev.x !== node.x || prev.y !== node.y || prev.w !== node.w || prev.h !== node.h) {
+          ;(node as any)._targetX = node.x
+          ;(node as any)._targetY = node.y
+          ;(node as any)._targetW = node.w
+          ;(node as any)._targetH = node.h
+          node.x = prev.x
+          node.y = prev.y
+          node.w = prev.w ?? node.w
+          node.h = prev.h ?? node.h
+          hasChanges = true
+        }
+      }
+    }
+
+    if (hasChanges) {
+      this.activeTransition = {
+        startTime: typeof performance !== "undefined" ? performance.now() : Date.now(),
+        duration
+      }
+    }
+  }
+
+  advanceTransition(now: number): boolean {
+    if (!this.activeTransition) return false
+
+    const elapsed = now - this.activeTransition.startTime
+    const rawT = Math.min(elapsed / this.activeTransition.duration, 1)
+    const t = this.config.transition?.easing === "linear"
+      ? rawT
+      : 1 - Math.pow(1 - rawT, 3)
+
+    for (const node of this.scene) {
+      const targetX = (node as any)._targetX
+      if (targetX === undefined) continue
+
+      if (node.type === "point" || node.type === "rect") {
+        const key = node.type === "point" ? `p:${0}` : `r:${(node as any).group || ""}:${node.datum?.category ?? 0}`
+        const prev = this.prevPositionMap.get(key)
+        if (!prev) continue
+        node.x = prev.x + (targetX - prev.x) * t
+        node.y = prev.y + ((node as any)._targetY - prev.y) * t
+        if (node.type === "rect" && prev.w !== undefined) {
+          node.w = prev.w + ((node as any)._targetW - prev.w) * t
+          node.h = prev.h! + ((node as any)._targetH - prev.h!) * t
+        }
+      }
+    }
+
+    if (rawT >= 1) {
+      for (const node of this.scene) {
+        if ((node as any)._targetX === undefined) continue
+        if (node.type === "point") {
+          node.x = (node as any)._targetX
+          node.y = (node as any)._targetY
+        } else if (node.type === "rect") {
+          node.x = (node as any)._targetX
+          node.y = (node as any)._targetY
+          node.w = (node as any)._targetW
+          node.h = (node as any)._targetH
+        }
+        delete (node as any)._targetX
+        delete (node as any)._targetY
+        delete (node as any)._targetW
+        delete (node as any)._targetH
+      }
+      this.activeTransition = null
+      return false
+    }
+
+    return true
+  }
+
   // ── Public accessors ─────────────────────────────────────────────────
 
   getData(): Record<string, any>[] {
@@ -1226,6 +1487,10 @@ export class OrdinalPipelineStore {
     this.buffer.clear()
     this.rExtent.clear()
     this.categories.clear()
+    if (this.timestampBuffer) this.timestampBuffer.clear()
+    this.prevPositionMap.clear()
+    this.activeTransition = null
+    this.lastIngestTime = 0
     this.scales = null
     this.scene = []
     this.columns = {}

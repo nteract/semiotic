@@ -140,8 +140,8 @@ export interface LineChartProps<TDatum extends Record<string, any> = Record<stri
   tooltip?: TooltipProp
 
   /**
-   * Additional XYFrame props for advanced customization
-   * For full control, consider using XYFrame directly
+   * Additional StreamXYFrame props for advanced customization
+   * For full control, consider using StreamXYFrame directly
    * @see https://semiotic.nteract.io/guides/xy-frame
    */
   frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size">>
@@ -150,7 +150,7 @@ export interface LineChartProps<TDatum extends Record<string, any> = Record<stri
 /**
  * LineChart - Visualize trends and time series data with lines
  *
- * A simplified wrapper around XYFrame for creating line charts. Perfect for
+ * A simplified wrapper around StreamXYFrame for creating line charts. Perfect for
  * showing trends, comparisons, and temporal patterns in your data.
  *
  * @example
@@ -198,7 +198,7 @@ export interface LineChartProps<TDatum extends Record<string, any> = Record<stri
  *
  * @example
  * ```tsx
- * // Advanced: Override XYFrame props
+ * // Advanced: Override StreamXYFrame props
  * <LineChart
  *   data={data}
  *   frameProps={{
@@ -209,14 +209,14 @@ export interface LineChartProps<TDatum extends Record<string, any> = Record<stri
  * ```
  *
  * @remarks
- * This component wraps {@link XYFrame} with sensible defaults for line charts.
+ * This component wraps {@link StreamXYFrame} with sensible defaults for line charts.
  * For more advanced features like custom marks, annotations, or complex interactions,
- * use XYFrame directly.
+ * use StreamXYFrame directly.
  *
  * **Breadcrumb to advanced usage:**
- * - Use the `frameProps` prop to pass any XYFrame prop
- * - See XYFrame documentation: https://semiotic.nteract.io/guides/xy-frame
- * - All XYFrame props are available via `frameProps`
+ * - Use the `frameProps` prop to pass any StreamXYFrame prop
+ * - See StreamXYFrame documentation: https://semiotic.nteract.io/guides/xy-frame
+ * - All StreamXYFrame props are available via `frameProps`
  *
  * @param props - LineChart configuration
  * @returns Rendered line chart

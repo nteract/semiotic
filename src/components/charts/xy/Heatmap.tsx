@@ -116,8 +116,8 @@ export interface HeatmapProps<TDatum extends Record<string, any> = Record<string
   tooltip?: TooltipProp
 
   /**
-   * Additional XYFrame props for advanced customization
-   * For full control, consider using XYFrame directly
+   * Additional StreamXYFrame props for advanced customization
+   * For full control, consider using StreamXYFrame directly
    * @see https://semiotic.nteract.io/guides/xy-frame
    */
   frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size">>
@@ -126,7 +126,7 @@ export interface HeatmapProps<TDatum extends Record<string, any> = Record<string
 /**
  * Heatmap - Visualize matrix data with color-encoded cells
  *
- * A simplified wrapper around XYFrame for creating heatmaps. Perfect for
+ * A simplified wrapper around StreamXYFrame for creating heatmaps. Perfect for
  * showing patterns, correlations, and distributions in 2D data.
  *
  * @example
@@ -168,14 +168,14 @@ export interface HeatmapProps<TDatum extends Record<string, any> = Record<string
  * ```
  *
  * @remarks
- * This component wraps {@link XYFrame} with sensible defaults for heatmaps.
+ * This component wraps {@link StreamXYFrame} with sensible defaults for heatmaps.
  * For more advanced features like hexbins, contours, or custom summaries,
- * use XYFrame directly.
+ * use StreamXYFrame directly.
  *
  * **Breadcrumb to advanced usage:**
- * - Use the `frameProps` prop to pass any XYFrame prop
- * - See XYFrame documentation: https://semiotic.nteract.io/guides/xy-frame
- * - All XYFrame props are available via `frameProps`
+ * - Use the `frameProps` prop to pass any StreamXYFrame prop
+ * - See StreamXYFrame documentation: https://semiotic.nteract.io/guides/xy-frame
+ * - All StreamXYFrame props are available via `frameProps`
  *
  * @param props - Heatmap configuration
  * @returns Rendered heatmap
@@ -271,7 +271,7 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
     }
   }, [safeData, xAccessor, yAccessor])
 
-  // Transform data to summary format for XYFrame
+  // Transform data to summary format for StreamXYFrame
   const summaryData = useMemo(() => {
     return { coordinates: safeData }
   }, [safeData])

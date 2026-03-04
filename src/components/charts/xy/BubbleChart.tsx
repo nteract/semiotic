@@ -115,8 +115,8 @@ export interface BubbleChartProps<TDatum extends Record<string, any> = Record<st
   tooltip?: TooltipProp
 
   /**
-   * Additional XYFrame props for advanced customization
-   * For full control, consider using XYFrame directly
+   * Additional StreamXYFrame props for advanced customization
+   * For full control, consider using StreamXYFrame directly
    * @see https://semiotic.nteract.io/guides/xy-frame
    */
   frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size">>
@@ -125,7 +125,7 @@ export interface BubbleChartProps<TDatum extends Record<string, any> = Record<st
 /**
  * BubbleChart - Visualize three dimensions of data using x, y, and size
  *
- * A simplified wrapper around XYFrame for creating bubble charts. Perfect for
+ * A simplified wrapper around StreamXYFrame for creating bubble charts. Perfect for
  * showing relationships between three continuous variables or comparing
  * magnitudes across categories.
  *
@@ -160,7 +160,7 @@ export interface BubbleChartProps<TDatum extends Record<string, any> = Record<st
  *
  * @example
  * ```tsx
- * // Advanced: Override XYFrame props
+ * // Advanced: Override StreamXYFrame props
  * <BubbleChart
  *   data={data}
  *   sizeBy="value"
@@ -171,14 +171,14 @@ export interface BubbleChartProps<TDatum extends Record<string, any> = Record<st
  * ```
  *
  * @remarks
- * This component wraps {@link XYFrame} with sensible defaults for bubble charts.
+ * This component wraps {@link StreamXYFrame} with sensible defaults for bubble charts.
  * For more advanced features like custom marks, annotations, or complex interactions,
- * use XYFrame directly.
+ * use StreamXYFrame directly.
  *
  * **Breadcrumb to advanced usage:**
- * - Use the `frameProps` prop to pass any XYFrame prop
- * - See XYFrame documentation: https://semiotic.nteract.io/guides/xy-frame
- * - All XYFrame props are available via `frameProps`
+ * - Use the `frameProps` prop to pass any StreamXYFrame prop
+ * - See StreamXYFrame documentation: https://semiotic.nteract.io/guides/xy-frame
+ * - All StreamXYFrame props are available via `frameProps`
  *
  * @param props - BubbleChart configuration
  * @returns Rendered bubble chart

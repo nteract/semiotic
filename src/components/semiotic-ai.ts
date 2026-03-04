@@ -41,6 +41,7 @@ export { RealtimeLineChart } from "./charts/realtime/RealtimeLineChart"
 export { RealtimeHistogram } from "./charts/realtime/RealtimeHistogram"
 export { RealtimeSwarmChart } from "./charts/realtime/RealtimeSwarmChart"
 export { RealtimeWaterfallChart } from "./charts/realtime/RealtimeWaterfallChart"
+export { RealtimeHeatmap } from "./charts/realtime/RealtimeHeatmap"
 // Essential utilities
 export { TooltipProvider } from "./store/TooltipStore"
 export { MultiLineTooltip } from "./Tooltip/Tooltip"

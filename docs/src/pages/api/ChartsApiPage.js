@@ -269,6 +269,19 @@ const realtimeWaterfallChartKeyProps = [
   { name: "enableHover", type: "boolean | object", required: false, default: null, description: "Enable hover annotations on bars." },
 ]
 
+const realtimeHeatmapKeyProps = [
+  { name: "data", type: "array", required: false, default: "[]", description: "Controlled data array with x/y coordinates." },
+  { name: "timeAccessor", type: "string | function", required: false, default: '"time"', description: "Field name or function to access the x-axis value." },
+  { name: "valueAccessor", type: "string | function", required: false, default: '"value"', description: "Field name or function to access the y-axis value." },
+  { name: "size", type: "[number, number]", required: false, default: "[500, 300]", description: "Chart dimensions as [width, height]." },
+  { name: "windowMode", type: '"sliding" | "growing"', required: false, default: '"sliding"', description: 'Data retention strategy.' },
+  { name: "heatmapXBins", type: "number", required: false, default: "20", description: "Number of bins along the x-axis." },
+  { name: "heatmapYBins", type: "number", required: false, default: "20", description: "Number of bins along the y-axis." },
+  { name: "aggregation", type: '"count" | "sum" | "mean"', required: false, default: '"count"', description: "How values are aggregated per cell." },
+  { name: "decay", type: "DecayConfig", required: false, default: null, description: "Opacity decay for older data cells." },
+  { name: "enableHover", type: "boolean | object", required: false, default: null, description: "Enable hover annotations on cells." },
+]
+
 // ---------------------------------------------------------------------------
 // Chart registry -- the single source of truth for the index
 // ---------------------------------------------------------------------------
@@ -467,6 +480,13 @@ const chartCategories = [
         importStatement: 'import { RealtimeWaterfallChart } from "semiotic"',
         description: "Cumulative delta bars that update with streaming data.",
         keyProps: realtimeWaterfallChartKeyProps,
+      },
+      {
+        name: "RealtimeHeatmap",
+        slug: "realtime-heatmap",
+        importStatement: 'import { RealtimeHeatmap } from "semiotic"',
+        description: "Streaming 2D heatmap with grid binning and configurable aggregation.",
+        keyProps: realtimeHeatmapKeyProps,
       },
     ],
   },

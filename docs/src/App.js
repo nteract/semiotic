@@ -71,6 +71,7 @@ import RealtimeLineChartPage from "./pages/charts/RealtimeLineChartPage"
 import RealtimeHistogramPage from "./pages/charts/RealtimeHistogramPage"
 import RealtimeSwarmChartPage from "./pages/charts/RealtimeSwarmChartPage"
 import RealtimeWaterfallChartPage from "./pages/charts/RealtimeWaterfallChartPage"
+import RealtimeHeatmapPage from "./pages/charts/RealtimeHeatmapPage"
 // RealtimeSankey has been merged into the SankeyDiagram page
 import PieChartPage from "./pages/charts/PieChartPage"
 import DonutChartPage from "./pages/charts/DonutChartPage"
@@ -96,6 +97,7 @@ import SmallMultiplesPage from "./pages/features/SmallMultiplesPage"
 import StylingPage from "./pages/features/StylingPage"
 import ThemingPage from "./pages/features/ThemingPage"
 import LegendsPage from "./pages/features/LegendsPage"
+import RealtimeEncodingPage from "./pages/features/RealtimeEncodingPage"
 
 // New cookbook pages
 import CandlestickChartPage from "./pages/cookbook/CandlestickChartPage"
@@ -396,6 +398,7 @@ export default function DocsApp() {
               <Route path="styling" element={<StylingPage />} />
               <Route path="theming" element={<ThemingPage />} />
               <Route path="legends" element={<LegendsPage />} />
+              <Route path="realtime-encoding" element={<RealtimeEncodingPage />} />
             </Route>
 
             {/* Using Server-Side Rendering */}
@@ -420,6 +423,7 @@ export default function DocsApp() {
               <Route path="realtime-line-chart" element={<RealtimeLineChartPage />} />
               <Route path="realtime-swarm-chart" element={<RealtimeSwarmChartPage />} />
               <Route path="realtime-waterfall-chart" element={<RealtimeWaterfallChartPage />} />
+              <Route path="realtime-heatmap" element={<RealtimeHeatmapPage />} />
               {/* Categorical Charts */}
               <Route path="bar-chart" element={<BarChartPage />} />
               <Route path="stacked-bar-chart" element={<StackedBarChartPage />} />
