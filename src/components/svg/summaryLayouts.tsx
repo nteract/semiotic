@@ -2,18 +2,7 @@ import * as React from "react"
 
 import { ProjectionTypes } from "../types/generalTypes"
 
-import { boxplotRenderFn } from "./boxplotRenderer"
-import { ckBinsRenderFn } from "./ckbinsRenderer"
-import { contourRenderFn } from "./contourRenderer"
-import { bucketizedRenderingFn } from "./bucketizedRenderer"
-
-// Re-export renderer functions so existing imports from this module continue to work
-export { boxplotRenderFn } from "./boxplotRenderer"
-export { ckBinsRenderFn } from "./ckbinsRenderer"
-export { contourRenderFn } from "./contourRenderer"
-export { bucketizedRenderingFn } from "./bucketizedRenderer"
-
-type SummaryType = { type: string }
+type SummaryType = { type: string | Function }
 
 type ORFrameSummaryRendererTypes = {
   data: Array<object>
@@ -29,17 +18,6 @@ type ORFrameSummaryRendererTypes = {
   axisCreator?: Function
 }
 
-const summaryRenderHash = {
-  contour: contourRenderFn,
-  boxplot: boxplotRenderFn,
-  violin: bucketizedRenderingFn,
-  heatmap: bucketizedRenderingFn,
-  ridgeline: bucketizedRenderingFn,
-  histogram: bucketizedRenderingFn,
-  horizon: bucketizedRenderingFn,
-  ckbins: ckBinsRenderFn
-}
-
 export function orFrameSummaryRenderer({
   data,
   type,
@@ -53,34 +31,25 @@ export function orFrameSummaryRenderer({
   margin,
   axisCreator
 }: ORFrameSummaryRendererTypes) {
-  let summaryRenderFn
   if (typeof type.type === "function") {
-    summaryRenderFn = type.type
-  } else if (summaryRenderHash[type.type]) {
-    summaryRenderFn = summaryRenderHash[type.type]
-  } else {
-    console.error(
-      `Invalid summary type: ${
-        type.type
-      } - Must be a function or one of the following strings: ${Object.keys(
-        summaryRenderHash
-      ).join(", ")}`
-    )
-    return {}
+    return type.type({
+      data,
+      type,
+      renderMode,
+      eventListenersGenerator,
+      styleFn,
+      classFn,
+      projection,
+      adjustedSize,
+      chartSize,
+      margin,
+      axisCreator
+    })
   }
-  return summaryRenderFn({
-    data,
-    type,
-    renderMode,
-    eventListenersGenerator,
-    styleFn,
-    classFn,
-    projection,
-    adjustedSize,
-    chartSize,
-    margin,
-    axisCreator
-  })
+  console.error(
+    `Invalid summary type: ${type.type} - Must be a function`
+  )
+  return {}
 }
 
 /**

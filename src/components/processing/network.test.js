@@ -1,4 +1,4 @@
-import { nodesEdgesFromHierarchy } from "./network"
+import { nodesEdgesFromHierarchy } from "./hierarchyUtils"
 
 const hierarchy = {
     key: "root",

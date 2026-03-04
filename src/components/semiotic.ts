@@ -13,7 +13,7 @@ import Brush from "./Brush"
 import { funnelize } from "./svg/lineDrawing"
 import { calculateDataExtent } from "./data/dataFunctions"
 import { hexbinning, heatmapping } from "./svg/areaDrawing"
-import { nodesEdgesFromHierarchy } from "./processing/network"
+import { nodesEdgesFromHierarchy } from "./processing/hierarchyUtils"
 
 // ── Chart HOCs ─────────────────────────────────────────────────────────
 import { Scatterplot, LineChart, AreaChart, StackedAreaChart, Heatmap, BubbleChart, BarChart, StackedBarChart, SwarmPlot, BoxPlot, Histogram, ViolinPlot, RidgelinePlot, DotPlot, PieChart, DonutChart, GroupedBarChart, ForceDirectedGraph, ChordDiagram, SankeyDiagram, TreeDiagram, Treemap, CirclePack, ScatterplotMatrix, MinimapChart } from "./charts"
