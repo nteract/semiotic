@@ -14,7 +14,11 @@ import type {
   CandlestickStyle,
   Style,
   ArrowOfTime,
-  WindowMode
+  WindowMode,
+  DecayConfig,
+  PulseConfig,
+  TransitionConfig,
+  StalenessConfig
 } from "./types"
 import {
   buildLineNode,
@@ -102,6 +106,17 @@ export interface PipelineConfig {
 
   // Annotations (threshold coloring uses these)
   annotations?: Record<string, any>[]
+
+  // Realtime encoding
+  decay?: DecayConfig
+  pulse?: PulseConfig
+  transition?: TransitionConfig
+  staleness?: StalenessConfig
+
+  // Streaming heatmap
+  heatmapAggregation?: "count" | "sum" | "mean"
+  heatmapXBins?: number
+  heatmapYBins?: number
 }
 
 // ── PipelineStore ──────────────────────────────────────────────────────
@@ -122,6 +137,16 @@ export class PipelineStore {
   private getHigh: ((d: any) => number) | undefined
   private getLow: ((d: any) => number) | undefined
   private getClose: ((d: any) => number) | undefined
+
+  // ── Pulse tracking ──────────────────────────────────────────────────
+  private timestampBuffer: RingBuffer<number> | null = null
+
+  // ── Transition animation ────────────────────────────────────────────
+  activeTransition: { startTime: number; duration: number } | null = null
+  private prevPositionMap = new Map<string, { x: number; y: number; w?: number; h?: number; r?: number }>()
+
+  // ── Staleness tracking ──────────────────────────────────────────────
+  lastIngestTime = 0
 
   scales: StreamScales | null = null
   scene: SceneNode[] = []
@@ -161,6 +186,11 @@ export class PipelineStore {
       this.getLow = resolveAccessor(config.lowAccessor, "low")
       this.getClose = resolveAccessor(config.closeAccessor, "close")
     }
+
+    // Pulse: parallel timestamp buffer
+    if (config.pulse) {
+      this.timestampBuffer = new RingBuffer(config.windowSize)
+    }
   }
 
   /**
@@ -168,11 +198,15 @@ export class PipelineStore {
    * Returns true if the scene needs re-rendering.
    */
   ingest(changeset: Changeset): boolean {
+    const now = typeof performance !== "undefined" ? performance.now() : Date.now()
+    this.lastIngestTime = now
+
     if (changeset.bounded) {
       // Full replacement for bounded data
       this.buffer.clear()
       this.xExtent.clear()
       this.yExtent.clear()
+      if (this.timestampBuffer) this.timestampBuffer.clear()
 
       // Auto-resize buffer to fit all bounded data.
       // totalSize is set when data is progressively chunked — pre-allocate
@@ -180,10 +214,14 @@ export class PipelineStore {
       const targetSize = changeset.totalSize || changeset.inserts.length
       if (targetSize > this.buffer.capacity) {
         this.buffer.resize(targetSize)
+        if (this.timestampBuffer && targetSize > this.timestampBuffer.capacity) {
+          this.timestampBuffer.resize(targetSize)
+        }
       }
 
       for (const d of changeset.inserts) {
         this.buffer.push(d)
+        if (this.timestampBuffer) this.timestampBuffer.push(now)
         this.xExtent.push(this.getX(d))
         if (this.config.chartType === "candlestick" && this.getHigh && this.getLow) {
           this.yExtent.push(this.getHigh(d))
@@ -198,9 +236,11 @@ export class PipelineStore {
         if (this.config.windowMode === "growing" && this.buffer.full) {
           this.growingCap *= 2
           this.buffer.resize(this.growingCap)
+          if (this.timestampBuffer) this.timestampBuffer.resize(this.growingCap)
         }
 
         const evicted = this.buffer.push(d)
+        if (this.timestampBuffer) this.timestampBuffer.push(now)
         this.xExtent.push(this.getX(d))
         if (this.config.chartType === "candlestick" && this.getHigh && this.getLow) {
           this.yExtent.push(this.getHigh(d))
@@ -366,8 +406,30 @@ export class PipelineStore {
       }
     }
 
+    // Snapshot positions for transition animation (before rebuild)
+    if (this.config.transition && this.scene.length > 0) {
+      this.snapshotPositions()
+    }
+
     // Build scene graph based on chart type
+    const data = buffer.toArray()
     this.scene = this.buildSceneNodes(layout)
+
+    // Apply decay opacity to discrete nodes
+    if (this.config.decay) {
+      this.applyDecay(this.scene, data)
+    }
+
+    // Apply pulse glow to discrete nodes
+    if (this.config.pulse) {
+      this.applyPulse(this.scene, data)
+    }
+
+    // Start transition animation from old to new positions
+    if (this.config.transition && this.prevPositionMap.size > 0) {
+      this.startTransition()
+    }
+
     this.version++
   }
 
@@ -482,6 +544,12 @@ export class PipelineStore {
 
   private buildHeatmapScene(data: Record<string, any>[], layout: StreamLayout): SceneNode[] {
     const nodes: SceneNode[] = []
+
+    // Streaming heatmap: 2D grid binning with aggregation
+    if (this.config.heatmapAggregation) {
+      return this.buildStreamingHeatmapScene(data, layout)
+    }
+
     const getVal = resolveAccessor(this.config.valueAccessor, "value")
 
     // Determine grid dimensions from unique x/y values
@@ -537,6 +605,91 @@ export class PipelineStore {
           entry.datum
         ))
       }
+    }
+
+    return nodes
+  }
+
+  /**
+   * Streaming heatmap: discretize continuous x/y into a grid and aggregate.
+   */
+  private buildStreamingHeatmapScene(data: Record<string, any>[], layout: StreamLayout): SceneNode[] {
+    const nodes: SceneNode[] = []
+    const xBins = this.config.heatmapXBins ?? 20
+    const yBins = this.config.heatmapYBins ?? 20
+    const agg = this.config.heatmapAggregation ?? "count"
+    const getVal = resolveAccessor(this.config.valueAccessor, "value")
+
+    if (!this.scales || data.length === 0) return nodes
+
+    const [xMin, xMax] = this.scales.x.domain() as [number, number]
+    const [yMin, yMax] = this.scales.y.domain() as [number, number]
+    const xRange = xMax - xMin || 1
+    const yRange = yMax - yMin || 1
+    const xBinSize = xRange / xBins
+    const yBinSize = yRange / yBins
+
+    // Grid cells: [xi][yi] → { sum, count }
+    const grid = new Map<string, { sum: number; count: number; data: any[] }>()
+
+    for (const d of data) {
+      const xVal = this.getX(d)
+      const yVal = this.getY(d)
+      const xi = Math.min(Math.floor((xVal - xMin) / xBinSize), xBins - 1)
+      const yi = Math.min(Math.floor((yVal - yMin) / yBinSize), yBins - 1)
+      if (xi < 0 || yi < 0) continue
+
+      const key = `${xi}_${yi}`
+      let cell = grid.get(key)
+      if (!cell) {
+        cell = { sum: 0, count: 0, data: [] }
+        grid.set(key, cell)
+      }
+      cell.count++
+      cell.sum += getVal(d)
+      cell.data.push(d)
+    }
+
+    // Compute aggregated values and find range
+    let minVal = Infinity
+    let maxVal = -Infinity
+    const cellValues = new Map<string, number>()
+    for (const [key, cell] of grid) {
+      let val: number
+      switch (agg) {
+        case "sum": val = cell.sum; break
+        case "mean": val = cell.count > 0 ? cell.sum / cell.count : 0; break
+        default: val = cell.count; break
+      }
+      cellValues.set(key, val)
+      if (val < minVal) minVal = val
+      if (val > maxVal) maxVal = val
+    }
+    const valRange = maxVal - minVal || 1
+
+    const cellW = layout.width / xBins
+    const cellH = layout.height / yBins
+
+    for (const [key, val] of cellValues) {
+      const [xiStr, yiStr] = key.split("_")
+      const xi = +xiStr
+      const yi = +yiStr
+
+      const t = (val - minVal) / valRange
+      const r = Math.round(220 - 180 * t)
+      const g = Math.round(220 - 100 * t)
+      const b = Math.round(255 - 50 * t)
+      const fill = `rgb(${r},${g},${b})`
+
+      const cell = grid.get(key)!
+      nodes.push(buildHeatcellNode(
+        xi * cellW,
+        (yBins - 1 - yi) * cellH,
+        cellW,
+        cellH,
+        fill,
+        { xi, yi, value: val, count: cell.count, sum: cell.sum, data: cell.data }
+      ))
     }
 
     return nodes
@@ -826,6 +979,326 @@ export class PipelineStore {
     }
   }
 
+  // ── Decay ────────────────────────────────────────────────────────────
+
+  /**
+   * Compute decay opacity for a datum at `bufferIndex` out of `bufferSize` items.
+   * Index 0 = oldest, bufferSize-1 = newest. Returns 0–1.
+   */
+  computeDecayOpacity(bufferIndex: number, bufferSize: number): number {
+    const decay = this.config.decay
+    if (!decay || bufferSize <= 1) return 1
+
+    const minOpacity = decay.minOpacity ?? 0.1
+    // age: 0 = newest, bufferSize-1 = oldest
+    const age = bufferSize - 1 - bufferIndex
+
+    switch (decay.type) {
+      case "linear": {
+        const t = 1 - age / (bufferSize - 1)
+        return minOpacity + t * (1 - minOpacity)
+      }
+      case "exponential": {
+        const halfLife = decay.halfLife ?? bufferSize / 2
+        const t = Math.pow(0.5, age / halfLife)
+        return minOpacity + t * (1 - minOpacity)
+      }
+      case "step": {
+        const threshold = decay.stepThreshold ?? bufferSize * 0.5
+        return age < threshold ? 1 : minOpacity
+      }
+      default:
+        return 1
+    }
+  }
+
+  /**
+   * Apply decay opacity to a list of discrete scene nodes.
+   * Uses the datum's index in the buffer data array.
+   */
+  private applyDecay(nodes: SceneNode[], data: Record<string, any>[]): void {
+    if (!this.config.decay) return
+    const bufferSize = data.length
+    if (bufferSize <= 1) return
+
+    // Build datum→index lookup
+    const indexMap = new Map<any, number>()
+    for (let i = 0; i < data.length; i++) {
+      indexMap.set(data[i], i)
+    }
+
+    for (const node of nodes) {
+      if (node.type === "line" || node.type === "area") continue
+      const idx = indexMap.get(node.datum)
+      if (idx == null) continue
+      const decayOpacity = this.computeDecayOpacity(idx, bufferSize)
+      if (node.type === "heatcell") {
+        ;(node as any).style = { opacity: decayOpacity }
+      } else if (node.type === "candlestick") {
+        // Candlestick doesn't have a style object — store opacity for renderer
+        ;(node as any)._decayOpacity = decayOpacity
+      } else {
+        const baseOpacity = node.style?.opacity ?? 1
+        node.style = { ...node.style, opacity: baseOpacity * decayOpacity }
+      }
+    }
+  }
+
+  // ── Pulse ───────────────────────────────────────────────────────────
+
+  /**
+   * Compute pulse intensity for a datum inserted at `insertTime`.
+   * Returns 0–1 (1 = just inserted, 0 = pulse expired).
+   */
+  private computePulseIntensity(insertTime: number, now: number): number {
+    const pulse = this.config.pulse
+    if (!pulse) return 0
+    const duration = pulse.duration ?? 500
+    const age = now - insertTime
+    if (age >= duration) return 0
+    return 1 - age / duration
+  }
+
+  /**
+   * Apply pulse glow to discrete scene nodes.
+   */
+  private applyPulse(nodes: SceneNode[], data: Record<string, any>[]): void {
+    if (!this.config.pulse || !this.timestampBuffer) return
+    const now = typeof performance !== "undefined" ? performance.now() : Date.now()
+    const pulseColor = this.config.pulse.color ?? "rgba(255,255,255,0.6)"
+
+    // Build datum→index lookup
+    const indexMap = new Map<any, number>()
+    for (let i = 0; i < data.length; i++) {
+      indexMap.set(data[i], i)
+    }
+
+    for (const node of nodes) {
+      if (node.type === "line" || node.type === "area") continue
+      const idx = indexMap.get(node.datum)
+      if (idx == null) continue
+      const insertTime = this.timestampBuffer.get(idx)
+      if (insertTime == null) continue
+      const intensity = this.computePulseIntensity(insertTime, now)
+      if (intensity > 0) {
+        (node as any)._pulseIntensity = intensity
+        ;(node as any)._pulseColor = pulseColor
+      }
+    }
+  }
+
+  /**
+   * Returns true if there are active pulse animations that need continuous rendering.
+   */
+  get hasActivePulses(): boolean {
+    if (!this.config.pulse || !this.timestampBuffer || this.timestampBuffer.size === 0) return false
+    const now = typeof performance !== "undefined" ? performance.now() : Date.now()
+    const duration = this.config.pulse.duration ?? 500
+    const newest = this.timestampBuffer.peek()
+    return newest != null && (now - newest) < duration
+  }
+
+  // ── Transitions ─────────────────────────────────────────────────────
+
+  /**
+   * Snapshot current scene node positions before rebuild.
+   */
+  private snapshotPositions(): void {
+    this.prevPositionMap.clear()
+    for (let i = 0; i < this.scene.length; i++) {
+      const node = this.scene[i]
+      const key = this.getNodeIdentity(node, i)
+      if (!key) continue
+      if (node.type === "point") {
+        this.prevPositionMap.set(key, { x: node.x, y: node.y, r: node.r })
+      } else if (node.type === "rect") {
+        this.prevPositionMap.set(key, { x: node.x, y: node.y, w: node.w, h: node.h })
+      } else if (node.type === "heatcell") {
+        this.prevPositionMap.set(key, { x: node.x, y: node.y, w: node.w, h: node.h })
+      } else if (node.type === "candlestick") {
+        this.prevPositionMap.set(key, { x: node.x, y: node.openY })
+      }
+    }
+  }
+
+  /**
+   * Get a stable identity key for a scene node.
+   */
+  private getNodeIdentity(node: SceneNode, index: number): string | null {
+    switch (node.type) {
+      case "point":
+        return `p:${node.datum === undefined ? index : this.getX(node.datum)}_${this.getY(node.datum)}`
+      case "rect":
+        return `r:${node.group || ""}:${node.datum?.binStart ?? node.datum?.category ?? index}`
+      case "heatcell":
+        return `h:${node.x}_${node.y}`
+      case "candlestick":
+        return `c:${this.getX(node.datum)}`
+      default:
+        return null
+    }
+  }
+
+  /**
+   * After scene rebuild, set up transition from old to new positions.
+   */
+  private startTransition(): void {
+    if (!this.config.transition || this.prevPositionMap.size === 0) return
+    const duration = this.config.transition.duration ?? 300
+
+    let hasChanges = false
+    for (let i = 0; i < this.scene.length; i++) {
+      const node = this.scene[i]
+      const key = this.getNodeIdentity(node, i)
+      if (!key) continue
+      const prev = this.prevPositionMap.get(key)
+      if (!prev) continue
+
+      // Store target positions and restore previous for animation start
+      if (node.type === "point") {
+        const target = { x: node.x, y: node.y, r: node.r }
+        if (prev.x !== target.x || prev.y !== target.y) {
+          ;(node as any)._targetX = target.x
+          ;(node as any)._targetY = target.y
+          ;(node as any)._targetR = target.r
+          node.x = prev.x
+          node.y = prev.y
+          node.r = prev.r ?? node.r
+          hasChanges = true
+        }
+      } else if (node.type === "rect") {
+        const target = { x: node.x, y: node.y, w: node.w, h: node.h }
+        if (prev.x !== target.x || prev.y !== target.y || prev.w !== target.w || prev.h !== target.h) {
+          ;(node as any)._targetX = target.x
+          ;(node as any)._targetY = target.y
+          ;(node as any)._targetW = target.w
+          ;(node as any)._targetH = target.h
+          node.x = prev.x
+          node.y = prev.y
+          node.w = prev.w ?? node.w
+          node.h = prev.h ?? node.h
+          hasChanges = true
+        }
+      } else if (node.type === "heatcell") {
+        const target = { x: node.x, y: node.y, w: node.w, h: node.h }
+        if (prev.x !== target.x || prev.y !== target.y) {
+          ;(node as any)._targetX = target.x
+          ;(node as any)._targetY = target.y
+          ;(node as any)._targetW = target.w
+          ;(node as any)._targetH = target.h
+          node.x = prev.x
+          node.y = prev.y
+          node.w = prev.w ?? node.w
+          node.h = prev.h ?? node.h
+          hasChanges = true
+        }
+      }
+    }
+
+    if (hasChanges) {
+      this.activeTransition = {
+        startTime: typeof performance !== "undefined" ? performance.now() : Date.now(),
+        duration
+      }
+    }
+  }
+
+  /**
+   * Advance the transition animation. Returns true if still animating.
+   */
+  advanceTransition(now: number): boolean {
+    if (!this.activeTransition) return false
+
+    const elapsed = now - this.activeTransition.startTime
+    const rawT = Math.min(elapsed / this.activeTransition.duration, 1)
+    // Ease-out cubic (or linear)
+    const t = this.config.transition?.easing === "linear"
+      ? rawT
+      : 1 - Math.pow(1 - rawT, 3)
+
+    for (const node of this.scene) {
+      const targetX = (node as any)._targetX
+      if (targetX === undefined) continue
+
+      if (node.type === "point") {
+        const startX = node.x
+        const startY = node.y
+        node.x = startX + (targetX - startX) * (t === 1 ? 1 : t / (t + 0.001))
+        // Actually, we need to interpolate from the *original* prev, not current
+        // The prev is stored as the node's current value at animation start
+        // and target is in _target*. We need to compute from the original positions.
+      }
+    }
+
+    // Simpler approach: interpolate using prevPositionMap and _target fields directly
+    for (const node of this.scene) {
+      const targetX = (node as any)._targetX
+      if (targetX === undefined) continue
+
+      if (node.type === "point") {
+        const key = this.getNodeIdentity(node, 0)
+        if (!key) continue
+        const prev = this.prevPositionMap.get(key)
+        if (!prev) continue
+        node.x = prev.x + (targetX - prev.x) * t
+        node.y = prev.y + ((node as any)._targetY - prev.y) * t
+        if ((node as any)._targetR !== undefined && prev.r !== undefined) {
+          node.r = prev.r + ((node as any)._targetR - prev.r) * t
+        }
+      } else if (node.type === "rect") {
+        const key = this.getNodeIdentity(node, 0)
+        if (!key) continue
+        const prev = this.prevPositionMap.get(key)
+        if (!prev) continue
+        node.x = prev.x + (targetX - prev.x) * t
+        node.y = prev.y + ((node as any)._targetY - prev.y) * t
+        if (prev.w !== undefined) node.w = prev.w + ((node as any)._targetW - prev.w) * t
+        if (prev.h !== undefined) node.h = prev.h + ((node as any)._targetH - prev.h) * t
+      } else if (node.type === "heatcell") {
+        const key = this.getNodeIdentity(node, 0)
+        if (!key) continue
+        const prev = this.prevPositionMap.get(key)
+        if (!prev) continue
+        node.x = prev.x + (targetX - prev.x) * t
+        node.y = prev.y + ((node as any)._targetY - prev.y) * t
+        if (prev.w !== undefined) node.w = prev.w + ((node as any)._targetW - prev.w) * t
+        if (prev.h !== undefined) node.h = prev.h + ((node as any)._targetH - prev.h) * t
+      }
+    }
+
+    if (rawT >= 1) {
+      // Snap to targets and clear transition
+      for (const node of this.scene) {
+        const targetX = (node as any)._targetX
+        if (targetX === undefined) continue
+        if (node.type === "point") {
+          node.x = targetX
+          node.y = (node as any)._targetY
+          if ((node as any)._targetR !== undefined) node.r = (node as any)._targetR
+        } else if (node.type === "rect") {
+          node.x = targetX
+          node.y = (node as any)._targetY
+          node.w = (node as any)._targetW
+          node.h = (node as any)._targetH
+        } else if (node.type === "heatcell") {
+          node.x = targetX
+          node.y = (node as any)._targetY
+          node.w = (node as any)._targetW
+          node.h = (node as any)._targetH
+        }
+        delete (node as any)._targetX
+        delete (node as any)._targetY
+        delete (node as any)._targetW
+        delete (node as any)._targetH
+        delete (node as any)._targetR
+      }
+      this.activeTransition = null
+      return false
+    }
+
+    return true
+  }
+
   // ── Helpers ──────────────────────────────────────────────────────────
 
   private groupData(data: Record<string, any>[]): { key: string; data: Record<string, any>[] }[] {
@@ -899,6 +1372,10 @@ export class PipelineStore {
     this.buffer.clear()
     this.xExtent.clear()
     this.yExtent.clear()
+    if (this.timestampBuffer) this.timestampBuffer.clear()
+    this.prevPositionMap.clear()
+    this.activeTransition = null
+    this.lastIngestTime = 0
     this.scales = null
     this.scene = []
     this.version++

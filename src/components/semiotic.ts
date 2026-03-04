@@ -42,6 +42,7 @@ import { RealtimeLineChart } from "./charts/realtime/RealtimeLineChart"
 import { RealtimeTemporalHistogram, RealtimeHistogram } from "./charts/realtime/RealtimeHistogram"
 import { RealtimeSwarmChart } from "./charts/realtime/RealtimeSwarmChart"
 import { RealtimeWaterfallChart } from "./charts/realtime/RealtimeWaterfallChart"
+import { RealtimeHeatmap } from "./charts/realtime/RealtimeHeatmap"
 
 export {
   // Stream Frames
@@ -107,7 +108,8 @@ export {
   RealtimeTemporalHistogram,
   RealtimeHistogram,
   RealtimeSwarmChart,
-  RealtimeWaterfallChart
+  RealtimeWaterfallChart,
+  RealtimeHeatmap
 }
 
 // ── Chart HOC prop types ───────────────────────────────────────────────
@@ -258,3 +260,4 @@ export type { RealtimeLineChartProps } from "./charts/realtime/RealtimeLineChart
 export type { RealtimeTemporalHistogramProps, RealtimeHistogramProps } from "./charts/realtime/RealtimeHistogram"
 export type { RealtimeSwarmChartProps } from "./charts/realtime/RealtimeSwarmChart"
 export type { RealtimeWaterfallChartProps } from "./charts/realtime/RealtimeWaterfallChart"
+export type { RealtimeHeatmapProps } from "./charts/realtime/RealtimeHeatmap"

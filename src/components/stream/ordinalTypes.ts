@@ -7,7 +7,14 @@ import type {
   HoverData,
   AnnotationContext
 } from "../realtime/types"
-import type { Style, Changeset } from "./types"
+import type {
+  Style,
+  Changeset,
+  DecayConfig,
+  PulseConfig,
+  TransitionConfig,
+  StalenessConfig
+} from "./types"
 import type { LegendGroup } from "../types/legendTypes"
 
 // ── Chart types ────────────────────────────────────────────────────────
@@ -180,6 +187,12 @@ export interface OrdinalPipelineConfig {
   summaryStyle?: (d: any, category?: string) => Style
   colorScheme?: string | string[]
   barColors?: Record<string, string>
+
+  // Realtime encoding
+  decay?: DecayConfig
+  pulse?: PulseConfig
+  transition?: TransitionConfig
+  staleness?: StalenessConfig
 }
 
 // ── Component props ────────────────────────────────────────────────────
@@ -277,6 +290,12 @@ export interface StreamOrdinalFrameProps<T = Record<string, any>> {
 
   // Donut center content
   centerContent?: ReactNode
+
+  // Realtime encoding
+  decay?: DecayConfig
+  pulse?: PulseConfig
+  transition?: TransitionConfig
+  staleness?: StalenessConfig
 }
 
 // ── Ref handle ─────────────────────────────────────────────────────────

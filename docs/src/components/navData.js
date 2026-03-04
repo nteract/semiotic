@@ -25,7 +25,8 @@ const navData = [
           { title: "Scatterplot Matrix", path: "/charts/scatterplot-matrix" },
           { title: "Realtime Line Chart", path: "/charts/realtime-line-chart" },
           { title: "Realtime Swarm Chart", path: "/charts/realtime-swarm-chart" },
-          { title: "Realtime Waterfall Chart", path: "/charts/realtime-waterfall-chart" }
+          { title: "Realtime Waterfall Chart", path: "/charts/realtime-waterfall-chart" },
+          { title: "Realtime Heatmap", path: "/charts/realtime-heatmap" }
         ]
       },
       {
