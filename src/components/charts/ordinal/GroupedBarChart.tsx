@@ -4,9 +4,10 @@ import { useMemo } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, DEFAULT_COLOR, resolveAccessor } from "../shared/hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
-import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
+import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
@@ -67,22 +68,14 @@ export function GroupedBarChart<TDatum extends Record<string, any> = Record<stri
     data: safeData, colorBy: actualColorBy, colorScale, showLegend, userMargin
   })
 
-  const defaultTooltipContent = useMemo(() => {
-    const getGroup = resolveAccessor(groupBy)
-    const getCat = resolveAccessor(categoryAccessor)
-    const getVal = resolveAccessor<number>(valueAccessor)
-    return (d: Record<string, any>) => {
-      const datum = d.data || d
-      return (
-        <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-          <div style={{ fontWeight: "bold" }}>{String(getGroup(datum))}</div>
-          <div style={{ marginTop: "4px" }}>
-            {String(getCat(datum))} &middot; {Number(getVal(datum)).toLocaleString()}
-          </div>
-        </div>
-      )
-    }
-  }, [groupBy, categoryAccessor, valueAccessor])
+  const defaultTooltipContent = useMemo(
+    () => buildOrdinalTooltip({
+      categoryAccessor: groupBy,
+      valueAccessor,
+      groupAccessor: categoryAccessor,
+    }),
+    [groupBy, categoryAccessor, valueAccessor]
+  )
 
   const error = validateArrayData({
     componentName: "GroupedBarChart", data: safeData,

@@ -4,9 +4,10 @@ import { useMemo } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, DEFAULT_COLOR, resolveAccessor } from "../shared/hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
-import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
+import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
@@ -69,22 +70,14 @@ export function StackedBarChart<TDatum extends Record<string, any> = Record<stri
     defaults: { top: 50, bottom: 60, left: 70, right: 120 }
   })
 
-  const defaultTooltipContent = useMemo(() => {
-    const getStack = resolveAccessor(stackBy)
-    const getCat = resolveAccessor(categoryAccessor)
-    const getVal = resolveAccessor<number>(valueAccessor)
-    return (d: Record<string, any>) => {
-      const datum = d.data || d
-      return (
-        <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-          <div style={{ fontWeight: "bold" }}>{String(getStack(datum))}</div>
-          <div style={{ marginTop: "4px" }}>
-            {String(getCat(datum))} &middot; {Number(getVal(datum)).toLocaleString()}
-          </div>
-        </div>
-      )
-    }
-  }, [stackBy, categoryAccessor, valueAccessor])
+  const defaultTooltipContent = useMemo(
+    () => buildOrdinalTooltip({
+      categoryAccessor: stackBy,
+      valueAccessor,
+      groupAccessor: categoryAccessor,
+    }),
+    [stackBy, categoryAccessor, valueAccessor]
+  )
 
   const error = validateArrayData({
     componentName: "StackedBarChart", data: safeData,

@@ -4,9 +4,10 @@ import { useMemo } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, DEFAULT_COLOR, resolveAccessor } from "../shared/hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
-import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
+import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
@@ -65,33 +66,16 @@ export function DonutChart<TDatum extends Record<string, any> = Record<string, a
     defaults: { top: 20, bottom: 20, left: 20, right: 20 }
   })
 
-  const defaultTooltipContent = useMemo(() => {
-    const getCat = resolveAccessor(categoryAccessor)
-    const getVal = resolveAccessor<number>(valueAccessor)
-    const getColorVal = colorBy ? resolveAccessor(colorBy) : undefined
-    const showColorField = colorBy && colorBy !== categoryAccessor
-    return (d: Record<string, any>) => {
-      const datum = d.data?.[0] || d.data || d
-      const cat = getCat(datum)
-      const val = getVal(datum)
-      const colorVal = showColorField
-        ? (getColorVal ? getColorVal(datum) : undefined)
-        : null
-      return (
-        <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-          <div style={{ fontWeight: "bold" }}>{String(cat)}</div>
-          <div style={{ marginTop: "4px" }}>
-            {typeof val === "number" ? val.toLocaleString() : String(val)}
-          </div>
-          {colorVal != null && (
-            <div style={{ marginTop: "2px", opacity: 0.8 }}>
-              {typeof colorBy === "string" ? colorBy : "group"}: {String(colorVal)}
-            </div>
-          )}
-        </div>
-      )
-    }
-  }, [categoryAccessor, valueAccessor, colorBy])
+  const defaultTooltipContent = useMemo(
+    () => buildOrdinalTooltip({
+      categoryAccessor,
+      valueAccessor,
+      groupAccessor: colorBy && colorBy !== categoryAccessor ? colorBy : undefined,
+      groupLabel: typeof colorBy === "string" ? colorBy : "group",
+      pieData: true
+    }),
+    [categoryAccessor, valueAccessor, colorBy]
+  )
 
   const error = validateArrayData({
     componentName: "DonutChart", data: safeData,

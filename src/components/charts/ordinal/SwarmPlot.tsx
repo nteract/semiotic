@@ -4,9 +4,10 @@ import { useMemo } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps } from "../../stream/ordinalTypes"
 import { getColor, getSize } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, DEFAULT_COLOR, resolveAccessor } from "../shared/hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
-import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
+import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
@@ -78,39 +79,14 @@ export function SwarmPlot<TDatum extends Record<string, any> = Record<string, an
     data: safeData, colorBy, colorScale, showLegend, userMargin
   })
 
-  const defaultTooltipContent = useMemo(() => {
-    const getVal = resolveAccessor<number>(valueAccessor)
-    const getCat = resolveAccessor(categoryAccessor)
-    return (d: Record<string, any>) => {
-      const datum = d.data || d
-      const cat = getCat(datum)
-      const val = getVal(datum)
-      const colorVal = colorBy
-        ? (typeof colorBy === "function" ? (colorBy as Function)(datum) : datum[colorBy as string])
-        : null
-      const sizeVal = sizeBy
-        ? (typeof sizeBy === "function" ? (sizeBy as Function)(datum) : datum[sizeBy as string])
-        : null
-      return (
-        <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-          <div style={{ fontWeight: "bold" }}>{String(cat)}</div>
-          <div style={{ marginTop: "4px" }}>
-            {typeof val === "number" ? val.toLocaleString() : String(val)}
-          </div>
-          {colorVal != null && (
-            <div style={{ marginTop: "2px", opacity: 0.8 }}>
-              {typeof colorBy === "string" ? colorBy : "color"}: {String(colorVal)}
-            </div>
-          )}
-          {sizeVal != null && (
-            <div style={{ marginTop: "2px", opacity: 0.8 }}>
-              {typeof sizeBy === "string" ? sizeBy : "size"}: {typeof sizeVal === "number" ? sizeVal.toLocaleString() : String(sizeVal)}
-            </div>
-          )}
-        </div>
-      )
-    }
-  }, [categoryAccessor, valueAccessor, colorBy, sizeBy])
+  const defaultTooltipContent = useMemo(
+    () => buildOrdinalTooltip({
+      categoryAccessor,
+      valueAccessor,
+      groupAccessor: colorBy ? colorBy : undefined,
+    }),
+    [categoryAccessor, valueAccessor, colorBy]
+  )
 
   const error = validateArrayData({
     componentName: "SwarmPlot", data: safeData,
