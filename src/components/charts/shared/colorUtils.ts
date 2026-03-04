@@ -37,6 +37,14 @@ export const COLOR_SCHEMES = {
 export const DEFAULT_COLORS = schemeCategory10
 
 /**
+ * Pastel palette for depth-based hierarchy coloring (Treemap, CirclePack, TreeDiagram).
+ * Index corresponds to hierarchy depth, wraps via modulo.
+ */
+export const DEPTH_PALETTE_COLORS = [
+  "#f0f0f0", "#b5d4ea", "#f4c2a1", "#b8dab2", "#d4b5e0", "#f9e0a2", "#a8d8d8"
+]
+
+/**
  * Gets a color for a data point based on the colorBy configuration
  *
  * @param dataPoint - The data point
