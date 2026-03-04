@@ -1,5 +1,5 @@
 import React from "react"
-import { StreamXYFrame, OrdinalFrame } from "semiotic"
+import { StreamXYFrame, StreamOrdinalFrame } from "semiotic"
 import { LineChart, BarChart } from "semiotic"
 
 import LiveExample from "../../components/LiveExample"
@@ -215,7 +215,7 @@ export default function AccessibilityPage() {
           title: "Quarterly Revenue",
           hoverAnnotation: true,
         }}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         overrideProps={{
           data: `[
   { category: "Q1", revenue: 24000 },
@@ -283,7 +283,7 @@ export default function AccessibilityPage() {
 
       <CodeBlock
         code={`// Use patterns or labels in addition to color
-<OrdinalFrame
+<StreamOrdinalFrame
   style={d => ({
     fill: colorScale(d.category),
     // Add pattern fills for color-blind accessibility
@@ -426,7 +426,7 @@ export default function AccessibilityPage() {
           accessibility props on XY visualizations
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — title and
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — title and
           accessibility props on ordinal visualizations
         </li>
       </ul>

@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { NetworkFrame } from "semiotic"
+import { StreamNetworkFrame } from "semiotic"
 
 const sampleNodes = [
   { id: "Alice", label: "Alice", group: "Engineering", connections: 4 },
@@ -109,7 +109,7 @@ export default function NetworkExplorer({
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <NetworkFrame
+        <StreamNetworkFrame
           size={[width, height]}
           nodes={nodes}
           edges={edges}

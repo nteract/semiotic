@@ -1,7 +1,7 @@
 import React from "react"
 import MarkdownText from "../MarkdownText"
 import DocumentFrame from "../DocumentFrame"
-import { NetworkFrame } from "semiotic"
+import { StreamNetworkFrame } from "semiotic"
 import theme from "../theme"
 import flareData from "../../public/data/flare.json"
 
@@ -282,7 +282,7 @@ const HierarchicalDiagrams = () => {
     <div>
       <MarkdownText
         text={`
-\`NetworkFrame\` allows you to render several hierarchical data visualizations. For these examples you just pass an \`edges\` list and no \`nodes\`. Edges should be an object with an array of \`children\` containing objects with \`children\` all the way down the hierarchy. The assumption is that each child's \`id\` property is unique. These types of hierarchies can be created easily from a parent/child  list with d3's [stratify](https://github.com/d3/d3-hierarchy#stratify) functionality.
+\`StreamNetworkFrame\` allows you to render several hierarchical data visualizations. For these examples you just pass an \`edges\` list and no \`nodes\`. Edges should be an object with an array of \`children\` containing objects with \`children\` all the way down the hierarchy. The assumption is that each child's \`id\` property is unique. These types of hierarchies can be created easily from a parent/child  list with d3's [stratify](https://github.com/d3/d3-hierarchy#stratify) functionality.
 
 The built-in hierarchical types are \`tree\`, \`cluster\`, \`circlepack\`, \`treemap\`, and \`partition\`
 
@@ -298,7 +298,7 @@ In this example, we pass a hierarchical edge object and set \`networkType="tree"
       <DocumentFrame
         frameProps={{ ...tree, edges: flareData }}
         overrideProps={treeOverride}
-        type={NetworkFrame}
+        type={StreamNetworkFrame}
       />
       <MarkdownText
         text={`
@@ -332,7 +332,7 @@ This example is the same as the dendrogram except we are passing \`networkType="
       <DocumentFrame
         frameProps={{ ...circlepack, edges: flareData }}
         overrideProps={circlepackOverrideProps}
-        type={NetworkFrame}
+        type={StreamNetworkFrame}
         startHidden
       />
 
@@ -368,7 +368,7 @@ This example is the same as the dendrogram except we are passing \`networkType="
       <DocumentFrame
         frameProps={{ ...treemap, edges: flareData }}
         overrideProps={treemapOverrideProps}
-        type={NetworkFrame}
+        type={StreamNetworkFrame}
         startHidden
       />
 
@@ -406,7 +406,7 @@ This example is the same as the dendrogram except we are passing \`networkType="
       <DocumentFrame
         frameProps={{ ...partition, edges: flareData }}
         overrideProps={partitionOverrideProps}
-        type={NetworkFrame}
+        type={StreamNetworkFrame}
         startHidden
       />
       <MarkdownText
@@ -444,7 +444,7 @@ This uses the same settings as the parition above but instead of just sending \`
       <DocumentFrame
         frameProps={{ ...sunburst, edges: flareData }}
         overrideProps={overrideProps}
-        type={NetworkFrame}
+        type={StreamNetworkFrame}
         startHidden
       />
     </div>

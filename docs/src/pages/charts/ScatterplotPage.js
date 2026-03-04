@@ -87,7 +87,7 @@ const scatterplotProps = [
   { name: "xLabel", type: "string", required: false, default: null, description: "Label for the x-axis." },
   { name: "yLabel", type: "string", required: false, default: null, description: "Label for the y-axis." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Additional XYFrame props for advanced customization. Escape hatch to the full Frame API." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamXYFrame props for advanced customization. Escape hatch to the full Frame API." },
 ]
 
 // ---------------------------------------------------------------------------
@@ -178,12 +178,12 @@ export default function ScatterplotPage() {
         componentName="Scatterplot"
         importStatement='import { Scatterplot } from "semiotic"'
         tier="charts"
-        wraps="XYFrame"
+        wraps="StreamXYFrame"
         wrapsPath="/frames/xy-frame"
         related={[
           { name: "BubbleChart", path: "/charts/bubble-chart" },
           { name: "LineChart", path: "/charts/line-chart" },
-          { name: "XYFrame", path: "/frames/xy-frame" },
+          { name: "StreamXYFrame", path: "/frames/xy-frame" },
         ]}
       />
 
@@ -336,9 +336,9 @@ export default function ScatterplotPage() {
 
       <p>
         When you need more control — custom marks, complex annotations,
-        regression lines — graduate to <Link to="/frames/xy-frame">XYFrame</Link>{" "}
+        regression lines — graduate to <Link to="/frames/xy-frame">StreamXYFrame</Link>{" "}
         directly. Every <code>Scatterplot</code> is just a configured{" "}
-        <code>XYFrame</code> under the hood.
+        <code>StreamXYFrame</code> under the hood.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>
@@ -362,9 +362,9 @@ export default function ScatterplotPage() {
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-frames)" }}>Frame (full control)</h4>
           <CodeBlock
-            code={`import { XYFrame } from "semiotic"
+            code={`import { StreamXYFrame } from "semiotic"
 
-<XYFrame
+<StreamXYFrame
   points={measurements}
   xAccessor="height"
   yAccessor="weight"
@@ -389,7 +389,7 @@ export default function ScatterplotPage() {
       </div>
 
       <p>
-        The <code>frameProps</code> prop on Scatterplot lets you pass any XYFrame
+        The <code>frameProps</code> prop on Scatterplot lets you pass any StreamXYFrame
         prop without fully graduating:
       </p>
 
@@ -428,7 +428,7 @@ export default function ScatterplotPage() {
           lines to show trends
         </li>
         <li>
-          <Link to="/frames/xy-frame">XYFrame</Link> — the underlying Frame with
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> — the underlying Frame with
           full control over every rendering detail
         </li>
         <li>

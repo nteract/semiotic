@@ -1,5 +1,5 @@
 import React from "react"
-import { StreamXYFrame, OrdinalFrame, ResponsiveOrdinalFrame } from "semiotic"
+import { StreamXYFrame, StreamOrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { LineChart, BarChart } from "semiotic"
 
 import LiveExample from "../../components/LiveExample"
@@ -175,9 +175,9 @@ export default function ResponsivePage() {
         title="Responsive Width (resize your browser to see it adapt)"
       />
 
-      <h3 id="responsive-ordinal">ResponsiveOrdinalFrame</h3>
+      <h3 id="responsive-ordinal">StreamOrdinalFrame</h3>
       <p>
-        <code>ResponsiveOrdinalFrame</code> works the same way for bar
+        <code>StreamOrdinalFrame</code> works the same way for bar
         charts, swarm plots, and other ordinal visualizations:
       </p>
 
@@ -199,7 +199,7 @@ export default function ResponsivePage() {
             },
           ],
         }}
-        type={ResponsiveOrdinalFrame}
+        type={StreamOrdinalFrame}
         overrideProps={{
           data: `[
   { category: "Q1", revenue: 24000 },
@@ -256,9 +256,9 @@ export default function ResponsivePage() {
         </thead>
         <tbody>
           {[
-            ["StreamXYFrame", "StreamXYFrame (replaces XYFrame + ResponsiveXYFrame)"],
-            ["ResponsiveOrdinalFrame", "OrdinalFrame"],
-            ["ResponsiveNetworkFrame", "NetworkFrame"],
+            ["StreamXYFrame", "StreamXYFrame (replaces StreamXYFrame + StreamXYFrame)"],
+            ["StreamOrdinalFrame", "StreamOrdinalFrame"],
+            ["StreamNetworkFrame", "StreamNetworkFrame"],
           ].map(([responsive, wraps], i) => (
             <tr key={responsive} style={{ background: i % 2 ? "var(--surface-1)" : "transparent" }}>
               <td style={{ padding: "8px 16px", borderBottom: "1px solid var(--surface-3)", fontFamily: "var(--font-code)", fontSize: "0.9em" }}>{responsive}</td>
@@ -277,8 +277,8 @@ export default function ResponsivePage() {
       <CodeBlock
         code={`import {
   StreamXYFrame,
-  ResponsiveOrdinalFrame,
-  ResponsiveNetworkFrame
+  StreamOrdinalFrame,
+  StreamNetworkFrame
 } from "semiotic"
 
 // Width-only responsive (most common)
@@ -300,7 +300,7 @@ export default function ResponsivePage() {
 
 // Height-only responsive (rare)
 <div style={{ width: 600, height: "100%" }}>
-  <ResponsiveOrdinalFrame
+  <StreamOrdinalFrame
     responsiveHeight={true}
     size={[600, 400]}  // Width stays fixed at 600
     {...otherProps}
@@ -357,7 +357,7 @@ export default function ResponsivePage() {
     <StreamXYFrame responsiveWidth={true} size={[400, 300]} ... />
   </div>
   <div className="chart-card">
-    <ResponsiveOrdinalFrame responsiveWidth={true} size={[400, 300]} ... />
+    <StreamOrdinalFrame responsiveWidth={true} size={[400, 300]} ... />
   </div>
 </div>`}
         language="jsx"
@@ -374,12 +374,12 @@ export default function ResponsivePage() {
           XY frame with built-in responsive support
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — the base
-          frame that ResponsiveOrdinalFrame wraps
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the base
+          frame that StreamOrdinalFrame wraps
         </li>
         <li>
-          <Link to="/frames/network-frame">NetworkFrame</Link> — the base
-          frame that ResponsiveNetworkFrame wraps
+          <Link to="/frames/network-frame">StreamNetworkFrame</Link> — the base
+          frame that StreamNetworkFrame wraps
         </li>
         <li>
           <Link to="/features/axes">Axes</Link> — axis configuration remains

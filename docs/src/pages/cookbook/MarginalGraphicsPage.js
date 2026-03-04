@@ -82,7 +82,7 @@ export default function MarginalGraphicsPage() {
       />
       <p>
         The <code>marginalSummaryType</code> accepts any of the summary types
-        available in OrdinalFrame (ridgeline, histogram, heatmap, violin, etc.),
+        available in StreamOrdinalFrame (ridgeline, histogram, heatmap, violin, etc.),
         making it easy to swap between different distribution representations
         without changing the underlying data.
       </p>
@@ -91,10 +91,10 @@ export default function MarginalGraphicsPage() {
       <ul>
         <li>
           The <code>marginalSummaryType</code> on axis objects creates density
-          visualizations in the margins of XYFrame scatter plots.
+          visualizations in the margins of StreamXYFrame scatter plots.
         </li>
         <li>
-          You can use any OrdinalFrame summary type (ridgeline, heatmap,
+          You can use any StreamOrdinalFrame summary type (ridgeline, heatmap,
           histogram, violin) as a marginal graphic.
         </li>
         <li>
@@ -110,7 +110,7 @@ export default function MarginalGraphicsPage() {
       <h2 id="related">Related</h2>
       <ul>
         <li>
-          <Link to="/frames/xy-frame">XYFrame</Link> — the underlying frame
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> — the underlying frame
           with marginal graphics support
         </li>
         <li>
@@ -119,7 +119,7 @@ export default function MarginalGraphicsPage() {
         </li>
         <li>
           <Link to="/cookbook/ridgeline-plot">Ridgeline Plot</Link> — full
-          ridgeline chart using OrdinalFrame
+          ridgeline chart using StreamOrdinalFrame
         </li>
       </ul>
     </PageLayout>

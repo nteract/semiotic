@@ -25,7 +25,7 @@ export default function BarLineChartPage() {
       <p>
         Dashboards frequently need to overlay two metrics with different scales
         on the same chart -- for example, bar heights for one metric and a
-        connected line for another. This recipe uses OrdinalFrame's multi-axis
+        connected line for another. This recipe uses StreamOrdinalFrame's multi-axis
         support and custom marks to combine bars and dots-with-connectors in a
         single visualization.
       </p>
@@ -117,7 +117,7 @@ axes: [
       <h2 id="related">Related</h2>
       <ul>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — the underlying
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the underlying
           frame with multiAxis support
         </li>
         <li>

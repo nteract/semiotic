@@ -3,7 +3,7 @@ import MarkdownText from "../MarkdownText"
 import theme from "../theme"
 import DocumentFrame, { propertyToString } from "../DocumentFrame"
 import { network_data, or_data } from "./pathData"
-import { NetworkFrame } from "semiotic"
+import { StreamNetworkFrame } from "semiotic"
 import dagre from "dagre"
 import { scaleLinear } from "d3-scale"
 
@@ -158,7 +158,7 @@ export default () => {
       <MarkdownText
         text={`
 
-\`NetworkFrame\` allows you to render several data visualizations with calculated positions for nodes based on the complexity of the edges/paths that connect them. For these examples you can pass a \`nodes\` and an \`edges\` list, or just an \`edges\` list and nodes with be inferred.
+\`StreamNetworkFrame\` allows you to render several data visualizations with calculated positions for nodes based on the complexity of the edges/paths that connect them. For these examples you can pass a \`nodes\` and an \`edges\` list, or just an \`edges\` list and nodes with be inferred.
 
 Edges can either be an array of objects with a \`source\` and a \`target\` property, or a hierarchical object with an array of \`children\` containing objects with \`children\` all the way down the hierarchy. The assumption is that each child's \`id\` property is unique, you can use the \`nodeIdAccessor\` to specify a different key for the id if needed. These types of hierarchies can be created easily from a parent/child  list with d3's [stratify](https://github.com/d3/d3-hierarchy#stratify) functionality.
 
@@ -174,7 +174,7 @@ The data on this page use the [UK Department of Energy & Climate Change](https:/
 
       <DocumentFrame
         frameProps={frameprops}
-        type={NetworkFrame}
+        type={StreamNetworkFrame}
         overrideProps={overrideProps}
         pre={colorPre}
       />
@@ -209,7 +209,7 @@ This example is the same as the sankey except we are passing \`networkType="arc"
       />
       <DocumentFrame
         frameProps={arc}
-        type={NetworkFrame}
+        type={StreamNetworkFrame}
         startHidden
         overrideProps={overrideProps}
         pre={colorPre}
@@ -238,7 +238,7 @@ This example is the same as the sankey except we are passing \`networkType="chor
       />
       <DocumentFrame
         frameProps={chord}
-        type={NetworkFrame}
+        type={StreamNetworkFrame}
         startHidden
         pre={colorPre}
         overrideProps={chordOverrideProps}
@@ -267,7 +267,7 @@ networkType={{
 
 This layout uses the [dagrejs](https://github.com/dagrejs/dagre) library for positioning the nodes and edges. To set up this layout, you pass a \`dagre.grahlib.Graph\` as a \`graph\` prop and set \`networkType="dagre"\`.
 
-When you are setting up a dagre graph you must iterate over the nodes and edges prior to sending them to \`NetworkFrame\`, see code block below for details. During setup you can also specify [layout settings](https://github.com/dagrejs/dagre/wiki#configuring-the-layout).
+When you are setting up a dagre graph you must iterate over the nodes and edges prior to sending them to \`StreamNetworkFrame\`, see code block below for details. During setup you can also specify [layout settings](https://github.com/dagrejs/dagre/wiki#configuring-the-layout).
 
     `}
       />
@@ -288,7 +288,7 @@ When you are setting up a dagre graph you must iterate over the nodes and edges 
             </text>
           )
         }}
-        type={NetworkFrame}
+        type={StreamNetworkFrame}
         overrideProps={overrideProps}
         pre={pre}
       />

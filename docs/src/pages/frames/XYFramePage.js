@@ -217,7 +217,7 @@ export default function XYFramePage() {
         { label: "StreamXYFrame", path: "/frames/xy-frame" },
       ]}
       prevPage={null}
-      nextPage={{ title: "OrdinalFrame", path: "/frames/ordinal-frame" }}
+      nextPage={{ title: "StreamOrdinalFrame", path: "/frames/ordinal-frame" }}
     >
       <ComponentMeta
         componentName="StreamXYFrame"
@@ -497,11 +497,11 @@ export default function XYFramePage() {
           component for point-based visualizations
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> -- for
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> -- for
           categorical data (bar charts, violin plots, etc.)
         </li>
         <li>
-          <Link to="/frames/network-frame">NetworkFrame</Link> -- for
+          <Link to="/frames/network-frame">StreamNetworkFrame</Link> -- for
           topological data (force layouts, hierarchies, etc.)
         </li>
         <li>

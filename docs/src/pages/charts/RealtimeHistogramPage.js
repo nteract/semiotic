@@ -147,7 +147,7 @@ function StyledBarDemo() {
 // Props definition for PropTable
 // ---------------------------------------------------------------------------
 
-const realtimeBarChartProps = [
+const RealtimeHistogramProps = [
   { name: "binSize", type: "number", required: true, default: null, description: "Time interval for binning data points into bars. Points within the same bin are aggregated." },
   { name: "data", type: "array", required: false, default: "[]", description: "Controlled data array. Each object should contain fields matched by timeAccessor and valueAccessor." },
   { name: "timeAccessor", type: "string | function", required: false, default: '"time"', description: "Field name or function to access the time value from each data point." },
@@ -182,7 +182,7 @@ const realtimeBarChartProps = [
 // Component
 // ---------------------------------------------------------------------------
 
-export default function RealtimeBarChartPage() {
+export default function RealtimeHistogramPage() {
   return (
     <PageLayout
       title="RealtimeTemporalHistogram"
@@ -190,30 +190,30 @@ export default function RealtimeBarChartPage() {
       breadcrumbs={[
         { label: "Charts", path: "/charts" },
         { label: "Realtime", path: "/charts" },
-        { label: "RealtimeBarChart", path: "/charts/realtime-bar-chart" },
+        { label: "RealtimeHistogram", path: "/charts/realtime-bar-chart" },
       ]}
       prevPage={{ title: "Realtime Line Chart", path: "/charts/realtime-line-chart" }}
       nextPage={{ title: "Realtime Swarm Chart", path: "/charts/realtime-swarm-chart" }}
     >
       <ComponentMeta
-        componentName="RealtimeBarChart"
-        importStatement='import { RealtimeBarChart } from "semiotic"'
+        componentName="RealtimeHistogram"
+        importStatement='import { RealtimeHistogram } from "semiotic"'
         tier="charts"
-        wraps="RealtimeFrame"
+        wraps="StreamXYFrame"
         wrapsPath="/frames/realtime-frame"
         related={[
           { name: "RealtimeLineChart", path: "/charts/realtime-line-chart" },
           { name: "RealtimeSwarmChart", path: "/charts/realtime-swarm-chart" },
           { name: "RealtimeWaterfallChart", path: "/charts/realtime-waterfall-chart" },
-          { name: "RealtimeFrame", path: "/frames/realtime-frame" },
+          { name: "StreamXYFrame", path: "/frames/realtime-frame" },
         ]}
       />
 
       <p>
-        RealtimeBarChart renders a streaming temporal histogram. Incoming data
+        RealtimeHistogram renders a streaming temporal histogram. Incoming data
         points are binned by time interval and rendered as bars that scroll
         across the chart. It wraps{" "}
-        <Link to="/frames/realtime-frame">RealtimeFrame</Link> with{" "}
+        <Link to="/frames/realtime-frame">StreamXYFrame</Link> with{" "}
         <code>chartType="bar"</code> and supports both simple and stacked
         (categorical) modes. Edge bins that only partially fall within the
         visible time window are rendered at proportionally narrower widths.
@@ -226,14 +226,14 @@ export default function RealtimeBarChartPage() {
 
       <p>
         Create a ref, push data points on an interval, and
-        RealtimeBarChart bins and renders them as bars. The{" "}
+        RealtimeHistogram bins and renders them as bars. The{" "}
         <code>binSize</code> prop defines the time interval for aggregation.
       </p>
 
       <BasicBarDemo />
       <div style={{ marginTop: 8 }}>
         <CodeBlock
-          code={`import { RealtimeBarChart } from "semiotic"
+          code={`import { RealtimeHistogram } from "semiotic"
 import { useRef, useEffect } from "react"
 
 function StreamingBars() {
@@ -341,7 +341,7 @@ useEffect(() => {
       {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
-      <PropTable componentName="RealtimeBarChart" props={realtimeBarChartProps} />
+      <PropTable componentName="RealtimeHistogram" props={RealtimeHistogramProps} />
 
       {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
@@ -351,16 +351,16 @@ useEffect(() => {
       <p>
         When you need more control — custom bin aggregation, mixed chart
         types, or advanced annotation logic — graduate to{" "}
-        <Link to="/frames/realtime-frame">RealtimeFrame</Link> directly.
-        Every <code>RealtimeBarChart</code> is just a configured{" "}
-        <code>RealtimeFrame</code> under the hood.
+        <Link to="/frames/realtime-frame">StreamXYFrame</Link> directly.
+        Every <code>RealtimeHistogram</code> is just a configured{" "}
+        <code>StreamXYFrame</code> under the hood.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-charts)" }}>Chart (simple)</h4>
           <CodeBlock
-            code={`import { RealtimeBarChart } from "semiotic"
+            code={`import { RealtimeHistogram } from "semiotic"
 
 <RealtimeTemporalHistogram
   ref={chartRef}
@@ -378,9 +378,9 @@ useEffect(() => {
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-frames)" }}>Frame (full control)</h4>
           <CodeBlock
-            code={`import { RealtimeFrame } from "semiotic"
+            code={`import { StreamXYFrame } from "semiotic"
 
-<RealtimeFrame
+<StreamXYFrame
   ref={frameRef}
   chartType="bar"
   data={eventStream}
@@ -402,8 +402,8 @@ useEffect(() => {
 
       <p>
         The <code>categoryAccessor</code> and <code>colors</code> props on
-        RealtimeBarChart map directly to <code>categoryAccessor</code> and{" "}
-        <code>barColors</code> on RealtimeFrame for stacked bar support.
+        RealtimeHistogram map directly to <code>categoryAccessor</code> and{" "}
+        <code>barColors</code> on StreamXYFrame for stacked bar support.
       </p>
 
       {/* ----------------------------------------------------------------- */}
@@ -425,7 +425,7 @@ useEffect(() => {
           cumulative deltas as connected rising and falling bars
         </li>
         <li>
-          <Link to="/frames/realtime-frame">RealtimeFrame</Link> — the
+          <Link to="/frames/realtime-frame">StreamXYFrame</Link> — the
           underlying Frame with full control over every rendering detail
         </li>
         <li>

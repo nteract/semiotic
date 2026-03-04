@@ -1,5 +1,5 @@
 import React from "react"
-import { StreamXYFrame, OrdinalFrame, NetworkFrame } from "semiotic"
+import { StreamXYFrame, StreamOrdinalFrame, StreamNetworkFrame } from "semiotic"
 
 import PageLayout from "../../components/PageLayout"
 import LiveExample from "../../components/LiveExample"
@@ -73,7 +73,7 @@ const canvasProps = [
     required: false,
     default: "false",
     description:
-      "When true, renders summaries (areas, contours, hexbins) on canvas. Available on both StreamXYFrame and OrdinalFrame.",
+      "When true, renders summaries (areas, contours, hexbins) on canvas. Available on both StreamXYFrame and StreamOrdinalFrame.",
   },
   {
     name: "canvasPieces",
@@ -81,7 +81,7 @@ const canvasProps = [
     required: false,
     default: "false",
     description:
-      "OrdinalFrame only. When true, renders pieces (bars, points, swarm items) on canvas.",
+      "StreamOrdinalFrame only. When true, renders pieces (bars, points, swarm items) on canvas.",
   },
   {
     name: "canvasConnectors",
@@ -89,7 +89,7 @@ const canvasProps = [
     required: false,
     default: "false",
     description:
-      "OrdinalFrame only. When true, renders connectors between ordinal pieces on canvas.",
+      "StreamOrdinalFrame only. When true, renders connectors between ordinal pieces on canvas.",
   },
   {
     name: "canvasNodes",
@@ -97,7 +97,7 @@ const canvasProps = [
     required: false,
     default: "false",
     description:
-      "NetworkFrame only. When true, renders nodes on canvas.",
+      "StreamNetworkFrame only. When true, renders nodes on canvas.",
   },
   {
     name: "canvasEdges",
@@ -105,7 +105,7 @@ const canvasProps = [
     required: false,
     default: "false",
     description:
-      "NetworkFrame only. When true, renders edges on canvas.",
+      "StreamNetworkFrame only. When true, renders edges on canvas.",
   },
   {
     name: "canvasPostProcess",
@@ -233,9 +233,9 @@ export default function CanvasRenderingPage() {
         startHidden
       />
 
-      <h3 id="ordinal-frame-canvas">OrdinalFrame</h3>
+      <h3 id="ordinal-frame-canvas">StreamOrdinalFrame</h3>
       <p>
-        OrdinalFrame supports <code>canvasPieces</code>,{" "}
+        StreamOrdinalFrame supports <code>canvasPieces</code>,{" "}
         <code>canvasSummaries</code>, and <code>canvasConnectors</code>. This
         is useful when you have hundreds of bars or a swarm plot with many
         items.
@@ -254,7 +254,7 @@ export default function CanvasRenderingPage() {
           axes: [{ orient: "left" }],
           title: "50 Bars (Canvas)",
         }}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         overrideProps={{
           data: `Array.from({ length: 50 }, (_, i) => ({
   category: "Item " + (i + 1),
@@ -270,9 +270,9 @@ export default function CanvasRenderingPage() {
         startHidden
       />
 
-      <h3 id="network-frame-canvas">NetworkFrame</h3>
+      <h3 id="network-frame-canvas">StreamNetworkFrame</h3>
       <p>
-        NetworkFrame supports <code>canvasNodes</code> and{" "}
+        StreamNetworkFrame supports <code>canvasNodes</code> and{" "}
         <code>canvasEdges</code>. This is especially valuable for large
         force-directed graphs where hundreds of nodes and edges would create
         prohibitive numbers of SVG elements.
@@ -291,7 +291,7 @@ export default function CanvasRenderingPage() {
           margin: 20,
           title: "40 Nodes, 60 Edges (Canvas)",
         }}
-        type={NetworkFrame}
+        type={StreamNetworkFrame}
         overrideProps={{
           nodes: `Array.from({ length: 40 }, (_, i) => ({
   id: "node-" + i,
@@ -372,7 +372,7 @@ export default function CanvasRenderingPage() {
 
       <CodeBlock
         code={`// Built-in Chuck Close filter
-<OrdinalFrame
+<StreamOrdinalFrame
   canvasPieces={true}
   canvasPostProcess="chuckClose"
 />
@@ -393,7 +393,7 @@ const glowyCanvas = (canvas, context, size) => {
   }
 }
 
-<OrdinalFrame
+<StreamOrdinalFrame
   canvasPieces={true}
   canvasPostProcess={glowyCanvas}
 />`}
@@ -406,9 +406,9 @@ const glowyCanvas = (canvas, context, size) => {
         Canvas rendering does not support custom mark components. On StreamXYFrame,{" "}
         <code>customPointMark</code>, <code>customLineMark</code>, and{" "}
         <code>customSummaryMark</code> will not be rendered when canvas is
-        enabled. Similarly, <code>customMark</code> on OrdinalFrame and{" "}
+        enabled. Similarly, <code>customMark</code> on StreamOrdinalFrame and{" "}
         <code>customNodeIcon</code> / <code>customEdgeIcon</code> on
-        NetworkFrame are not honored for canvas-rendered elements.
+        StreamNetworkFrame are not honored for canvas-rendered elements.
       </p>
 
       <h3 id="when-to-use">When to Use Canvas</h3>
@@ -462,11 +462,11 @@ const glowyCanvas = (canvas, context, size) => {
           canvasPoints, canvasSummaries
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — supports
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — supports
           canvasPieces, canvasSummaries, canvasConnectors
         </li>
         <li>
-          <Link to="/frames/network-frame">NetworkFrame</Link> — supports
+          <Link to="/frames/network-frame">StreamNetworkFrame</Link> — supports
           canvasNodes, canvasEdges
         </li>
         <li>

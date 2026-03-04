@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react"
-import { OrdinalFrame } from "semiotic"
+import { StreamOrdinalFrame } from "semiotic"
 import { processNodes } from "../process"
 import theme from "../theme"
 
@@ -161,7 +161,7 @@ ${render}`
 
 export default function LiveExample({
   frameProps,
-  type = OrdinalFrame,
+  type = StreamOrdinalFrame,
   overrideProps = {},
   functions = {},
   pre,
@@ -288,7 +288,7 @@ export default function LiveExample({
   }
 
   // Build responsive frame props.
-  // Raw frames (XYFrame, OrdinalFrame, NetworkFrame) use a `size` array.
+  // Raw frames (StreamXYFrame, StreamOrdinalFrame, StreamNetworkFrame) use a `size` array.
   // Chart wrappers (LineChart, BarChart, …) use `width` / `height` props.
   // Realtime charts use `size` but have no displayName.
   // Set both so each component type picks up the one it needs.

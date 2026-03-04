@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react"
-import { OrdinalFrame, StreamOrdinalFrame } from "semiotic"
+import { StreamOrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { SwarmPlot } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -163,7 +163,7 @@ const swarmPlotProps = [
   { name: "height", type: "number", required: false, default: "400", description: "Chart height in pixels." },
   { name: "margin", type: "object", required: false, default: "{ top: 50, bottom: 60, left: 70, right: 40 }", description: "Margin around the chart area." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Additional OrdinalFrame props for advanced customization. Escape hatch to the full Frame API." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamOrdinalFrame props for advanced customization. Escape hatch to the full Frame API." },
 ]
 
 // ---------------------------------------------------------------------------
@@ -187,12 +187,12 @@ export default function SwarmPlotPage() {
         componentName="SwarmPlot"
         importStatement='import { SwarmPlot } from "semiotic"'
         tier="charts"
-        wraps="OrdinalFrame"
+        wraps="StreamOrdinalFrame"
         wrapsPath="/frames/ordinal-frame"
         related={[
           { name: "BoxPlot", path: "/charts/box-plot" },
           { name: "BarChart", path: "/charts/bar-chart" },
-          { name: "OrdinalFrame", path: "/frames/ordinal-frame" },
+          { name: "StreamOrdinalFrame", path: "/frames/ordinal-frame" },
         ]}
       />
 
@@ -344,8 +344,8 @@ export default function SwarmPlotPage() {
       <p>
         When you need more control — custom point marks, mixed summary types,
         annotations — graduate to{" "}
-        <Link to="/frames/ordinal-frame">OrdinalFrame</Link> directly. Every{" "}
-        <code>SwarmPlot</code> is just a configured <code>OrdinalFrame</code>{" "}
+        <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> directly. Every{" "}
+        <code>SwarmPlot</code> is just a configured <code>StreamOrdinalFrame</code>{" "}
         under the hood.
       </p>
 
@@ -370,9 +370,9 @@ export default function SwarmPlotPage() {
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-frames)" }}>Frame (full control)</h4>
           <CodeBlock
-            code={`import { OrdinalFrame } from "semiotic"
+            code={`import { StreamOrdinalFrame } from "semiotic"
 
-<OrdinalFrame
+<StreamOrdinalFrame
   data={experimentData}
   oAccessor="category"
   rAccessor="value"
@@ -398,7 +398,7 @@ export default function SwarmPlotPage() {
 
       <p>
         The <code>frameProps</code> prop on SwarmPlot lets you pass any
-        OrdinalFrame prop without fully graduating:
+        StreamOrdinalFrame prop without fully graduating:
       </p>
 
       <CodeBlock
@@ -433,7 +433,7 @@ export default function SwarmPlotPage() {
           comparisons
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — the underlying
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the underlying
           Frame with full control over every rendering detail
         </li>
         <li>

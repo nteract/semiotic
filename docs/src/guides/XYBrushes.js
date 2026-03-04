@@ -97,7 +97,7 @@ export default class CreateXYBrushes extends React.Component {
       <div>
         <MarkdownText
           text={`
-You can turn any \`XYFrame\` into an interactive region with a brush by using the \`interaction\` prop. Interaction settings:
+You can turn any \`StreamXYFrame\` into an interactive region with a brush by using the \`interaction\` prop. Interaction settings:
 
 - \`start\`: The function to run on the start of a brush
 - \`during\`: The function to run at the during a brush

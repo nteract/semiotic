@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react"
 import { Link } from "react-router-dom"
-import { StreamXYFrame, OrdinalFrame, NetworkFrame, RealtimeBarChart } from "semiotic"
+import { StreamXYFrame, StreamOrdinalFrame, StreamNetworkFrame, RealtimeHistogram } from "semiotic"
 
 const tierSnippets = {
   charts: `import { LineChart } from "semiotic"
@@ -275,7 +275,7 @@ const galleryItems = [
     title: "Bar Chart",
     path: "/charts/bar-chart",
     render: (w, h) => (
-      <OrdinalFrame
+      <StreamOrdinalFrame
         size={[w, h]}
         data={galleryBarData.flatMap(d =>
           [
@@ -346,7 +346,7 @@ const galleryItems = [
     title: "Network Graph",
     path: "/charts/force-directed-graph",
     render: (w, h) => (
-      <NetworkFrame
+      <StreamNetworkFrame
         size={[w, h]}
         nodes={galleryNetworkNodes}
         edges={galleryNetworkEdges}
@@ -389,7 +389,7 @@ function GalleryRealtimeBars({ width, height }) {
   }, [])
 
   return (
-    <RealtimeBarChart
+    <RealtimeHistogram
       ref={chartRef}
       size={[width, height]}
       categoryAccessor="category"

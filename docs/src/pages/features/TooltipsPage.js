@@ -1,5 +1,5 @@
 import React from "react"
-import { StreamXYFrame, OrdinalFrame, Tooltip, MultiLineTooltip } from "semiotic"
+import { StreamXYFrame, StreamOrdinalFrame, Tooltip, MultiLineTooltip } from "semiotic"
 import { LineChart, BarChart } from "semiotic"
 
 import LiveExample from "../../components/LiveExample"
@@ -211,7 +211,7 @@ export default function TooltipsPage() {
             ],
           }),
         }}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         overrideProps={{
           data: `[
   { category: "Product A", sales: 450, profit: 120, units: 230 },
@@ -230,7 +230,7 @@ export default function TooltipsPage() {
 })`,
         }}
         hiddenProps={{}}
-        pre={`import { OrdinalFrame, MultiLineTooltip } from "semiotic"`}
+        pre={`import { StreamOrdinalFrame, MultiLineTooltip } from "semiotic"`}
       />
 
       <h3 id="custom-tooltip">Custom Tooltip Function</h3>
@@ -377,10 +377,10 @@ hoverAnnotation={[
   { type: "desaturation-layer", style: { fill: "white", opacity: 0.5 } }
 ]}
 
-// For OrdinalFrame, use pieceHoverAnnotation for individual pieces
+// For StreamOrdinalFrame, use pieceHoverAnnotation for individual pieces
 // vs hoverAnnotation for entire columns
-<OrdinalFrame pieceHoverAnnotation={true} />
-<OrdinalFrame hoverAnnotation={true} />  // column-level hover`}
+<StreamOrdinalFrame pieceHoverAnnotation={true} />
+<StreamOrdinalFrame hoverAnnotation={true} />  // column-level hover`}
         language="jsx"
       />
 
@@ -413,7 +413,7 @@ hoverAnnotation={[
           tooltips with Voronoi hover
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — piece-level
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — piece-level
           and column-level hover annotations
         </li>
         <li>

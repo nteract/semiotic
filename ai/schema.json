@@ -1171,7 +1171,7 @@
     {
       "type": "function",
       "function": {
-        "name": "RealtimeBarChart",
+        "name": "RealtimeHistogram",
         "description": "Streaming bar chart with binned aggregation. Uses ref-based push API.",
         "parameters": {
           "type": "object",

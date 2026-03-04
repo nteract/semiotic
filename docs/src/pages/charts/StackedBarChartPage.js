@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react"
-import { OrdinalFrame, StreamOrdinalFrame } from "semiotic"
+import { StreamOrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { StackedBarChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -164,7 +164,7 @@ const stackedBarChartProps = [
   { name: "height", type: "number", required: false, default: "400", description: "Chart height in pixels." },
   { name: "margin", type: "object", required: false, default: "{ top: 50, bottom: 60, left: 70, right: 120 }", description: "Margin around the chart area." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Additional OrdinalFrame props for advanced customization. Escape hatch to the full Frame API." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamOrdinalFrame props for advanced customization. Escape hatch to the full Frame API." },
 ]
 
 // ---------------------------------------------------------------------------
@@ -188,12 +188,12 @@ export default function StackedBarChartPage() {
         componentName="StackedBarChart"
         importStatement='import { StackedBarChart } from "semiotic"'
         tier="charts"
-        wraps="OrdinalFrame"
+        wraps="StreamOrdinalFrame"
         wrapsPath="/frames/ordinal-frame"
         related={[
           { name: "BarChart", path: "/charts/bar-chart" },
           { name: "DotPlot", path: "/charts/dot-plot" },
-          { name: "OrdinalFrame", path: "/frames/ordinal-frame" },
+          { name: "StreamOrdinalFrame", path: "/frames/ordinal-frame" },
         ]}
       />
 
@@ -343,9 +343,9 @@ export default function StackedBarChartPage() {
       <p>
         When you need more control — custom marks, mixed piece types,
         annotations — graduate to{" "}
-        <Link to="/frames/ordinal-frame">OrdinalFrame</Link> directly. Every{" "}
+        <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> directly. Every{" "}
         <code>StackedBarChart</code> is just a configured{" "}
-        <code>OrdinalFrame</code> under the hood.
+        <code>StreamOrdinalFrame</code> under the hood.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>
@@ -368,9 +368,9 @@ export default function StackedBarChartPage() {
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-frames)" }}>Frame (full control)</h4>
           <CodeBlock
-            code={`import { OrdinalFrame } from "semiotic"
+            code={`import { StreamOrdinalFrame } from "semiotic"
 
-<OrdinalFrame
+<StreamOrdinalFrame
   data={quarterlyData}
   oAccessor="category"
   rAccessor="value"
@@ -403,7 +403,7 @@ export default function StackedBarChartPage() {
 
       <p>
         The <code>frameProps</code> prop on StackedBarChart lets you pass any
-        OrdinalFrame prop without fully graduating:
+        StreamOrdinalFrame prop without fully graduating:
       </p>
 
       <CodeBlock
@@ -436,7 +436,7 @@ export default function StackedBarChartPage() {
           for comparing values across categories
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — the underlying
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the underlying
           Frame with full control over every rendering detail
         </li>
         <li>

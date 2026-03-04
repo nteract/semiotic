@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react"
-import { OrdinalFrame, StreamOrdinalFrame } from "semiotic"
+import { StreamOrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { DonutChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -130,7 +130,7 @@ const donutChartProps = [
   { name: "height", type: "number", required: false, default: "400", description: "Chart height in pixels." },
   { name: "margin", type: "object", required: false, default: "{ top: 20, bottom: 20, left: 20, right: 20 }", description: "Margin around the chart area." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Additional OrdinalFrame props for advanced customization." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamOrdinalFrame props for advanced customization." },
 ]
 
 // ---------------------------------------------------------------------------
@@ -154,12 +154,12 @@ export default function DonutChartPage() {
         componentName="DonutChart"
         importStatement='import { DonutChart } from "semiotic"'
         tier="charts"
-        wraps="OrdinalFrame"
+        wraps="StreamOrdinalFrame"
         wrapsPath="/frames/ordinal-frame"
         related={[
           { name: "PieChart", path: "/charts/pie-chart" },
           { name: "BarChart", path: "/charts/bar-chart" },
-          { name: "OrdinalFrame", path: "/frames/ordinal-frame" },
+          { name: "StreamOrdinalFrame", path: "/frames/ordinal-frame" },
         ]}
       />
 
@@ -168,7 +168,7 @@ export default function DonutChartPage() {
         <code>innerRadius</code> prop controls the hole size, and{" "}
         <code>centerContent</code> lets you place a label or value in the
         center. Like <Link to="/charts/pie-chart">PieChart</Link>, it wraps{" "}
-        <Link to="/frames/ordinal-frame">OrdinalFrame</Link> with radial
+        <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> with radial
         projection.
       </p>
 
@@ -257,7 +257,7 @@ export default function DonutChartPage() {
 
       <p>
         For full control, use{" "}
-        <Link to="/frames/ordinal-frame">OrdinalFrame</Link> directly with{" "}
+        <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> directly with{" "}
         <code>projection="radial"</code> and{" "}
         <code>type={`{{ type: "bar", innerRadius: 60 }}`}</code>.
       </p>
@@ -281,9 +281,9 @@ export default function DonutChartPage() {
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-frames)" }}>Frame (full control)</h4>
           <CodeBlock
-            code={`import { OrdinalFrame } from "semiotic"
+            code={`import { StreamOrdinalFrame } from "semiotic"
 
-<OrdinalFrame
+<StreamOrdinalFrame
   data={progressData}
   oAccessor="category"
   rAccessor="value"
@@ -313,7 +313,7 @@ export default function DonutChartPage() {
           comparing values across categories
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — the underlying
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the underlying
           Frame with full control over every rendering detail
         </li>
       </ul>

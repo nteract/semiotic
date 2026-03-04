@@ -117,7 +117,7 @@ export default function UncertaintyVisualizationPage() {
         Forecasts are only useful when they communicate how confident you are in
         the prediction. This recipe shows how to visualize a time series with a
         forecasted segment and a confidence interval cone, stitching together
-        observed data and projected values in a single XYFrame.
+        observed data and projected values in a single StreamXYFrame.
       </p>
 
       <h2 id="the-visualization">The Visualization</h2>
@@ -204,7 +204,7 @@ summaryClass: "uncertainty_cone"`}
       <h2 id="related">Related</h2>
       <ul>
         <li>
-          <Link to="/frames/xy-frame">XYFrame</Link> — the underlying frame for
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> — the underlying frame for
           line and summary rendering
         </li>
         <li>

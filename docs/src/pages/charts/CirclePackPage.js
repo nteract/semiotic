@@ -1,5 +1,5 @@
 import React from "react"
-import { NetworkFrame } from "semiotic"
+import { StreamNetworkFrame } from "semiotic"
 import { CirclePack } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -64,7 +64,7 @@ const circlePackProps = [
   { name: "height", type: "number", required: false, default: "600", description: "Chart height in pixels." },
   { name: "margin", type: "object", required: false, default: "{ top: 10, bottom: 10, left: 10, right: 10 }", description: "Margin around the chart area." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Additional NetworkFrame props for advanced customization." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamNetworkFrame props for advanced customization." },
 ]
 
 // ---------------------------------------------------------------------------
@@ -88,12 +88,12 @@ export default function CirclePackPage() {
         componentName="CirclePack"
         importStatement='import { CirclePack } from "semiotic"'
         tier="charts"
-        wraps="NetworkFrame"
+        wraps="StreamNetworkFrame"
         wrapsPath="/frames/network-frame"
         related={[
           { name: "Treemap", path: "/charts/treemap" },
           { name: "TreeDiagram", path: "/charts/tree-diagram" },
-          { name: "NetworkFrame", path: "/frames/network-frame" },
+          { name: "StreamNetworkFrame", path: "/frames/network-frame" },
         ]}
       />
 
@@ -101,7 +101,7 @@ export default function CirclePackPage() {
         CirclePack visualizes hierarchical data as nested circles. Each
         circle's area is proportional to its value, and nesting shows the
         hierarchy. It wraps{" "}
-        <Link to="/frames/network-frame">NetworkFrame</Link> with{" "}
+        <Link to="/frames/network-frame">StreamNetworkFrame</Link> with{" "}
         <code>networkType="circlepack"</code>. Use{" "}
         <code>circleOpacity</code> to control transparency so nested circles
         remain visible.
@@ -193,7 +193,7 @@ export default function CirclePackPage() {
 
       <p>
         For full control, use{" "}
-        <Link to="/frames/network-frame">NetworkFrame</Link> directly with{" "}
+        <Link to="/frames/network-frame">StreamNetworkFrame</Link> directly with{" "}
         <code>{`networkType={{ type: "circlepack" }}`}</code>.
       </p>
 
@@ -215,9 +215,9 @@ export default function CirclePackPage() {
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-frames)" }}>Frame (full control)</h4>
           <CodeBlock
-            code={`import { NetworkFrame } from "semiotic"
+            code={`import { StreamNetworkFrame } from "semiotic"
 
-<NetworkFrame
+<StreamNetworkFrame
   edges={hierarchyData}
   networkType={{ type: "circlepack" }}
   nodeIDAccessor="name"
@@ -251,7 +251,7 @@ export default function CirclePackPage() {
           diagrams for showing structural relationships
         </li>
         <li>
-          <Link to="/frames/network-frame">NetworkFrame</Link> — the
+          <Link to="/frames/network-frame">StreamNetworkFrame</Link> — the
           underlying Frame with full control over every rendering detail
         </li>
       </ul>

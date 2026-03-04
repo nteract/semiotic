@@ -292,13 +292,13 @@ export default function RealtimeLineChartPage() {
         componentName="RealtimeLineChart"
         importStatement='import { RealtimeLineChart } from "semiotic"'
         tier="charts"
-        wraps="RealtimeFrame"
+        wraps="StreamXYFrame"
         wrapsPath="/frames/realtime-frame"
         related={[
-          { name: "RealtimeBarChart", path: "/charts/realtime-bar-chart" },
+          { name: "RealtimeHistogram", path: "/charts/realtime-bar-chart" },
           { name: "RealtimeSwarmChart", path: "/charts/realtime-swarm-chart" },
           { name: "RealtimeWaterfallChart", path: "/charts/realtime-waterfall-chart" },
-          { name: "RealtimeFrame", path: "/frames/realtime-frame" },
+          { name: "StreamXYFrame", path: "/frames/realtime-frame" },
           { name: "LineChart", path: "/charts/line-chart" },
         ]}
       />
@@ -306,7 +306,7 @@ export default function RealtimeLineChartPage() {
       <p>
         RealtimeLineChart renders a continuously updating line from streaming
         data. It wraps{" "}
-        <Link to="/frames/realtime-frame">RealtimeFrame</Link> with{" "}
+        <Link to="/frames/realtime-frame">StreamXYFrame</Link> with{" "}
         <code>chartType="line"</code> and promotes stroke styling to top-level
         props. Create a ref and call <code>ref.current.push(point)</code> in a{" "}
         <code>setInterval</code> to stream data in.
@@ -481,9 +481,9 @@ function StreamingLine() {
       <p>
         When you need full control — custom canvas rendering, multiple
         overlapping chart types, or advanced annotation logic — graduate to{" "}
-        <Link to="/frames/realtime-frame">RealtimeFrame</Link> directly.
+        <Link to="/frames/realtime-frame">StreamXYFrame</Link> directly.
         Every <code>RealtimeLineChart</code> is just a configured{" "}
-        <code>RealtimeFrame</code> under the hood.
+        <code>StreamXYFrame</code> under the hood.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>
@@ -505,9 +505,9 @@ function StreamingLine() {
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-frames)" }}>Frame (full control)</h4>
           <CodeBlock
-            code={`import { RealtimeFrame } from "semiotic"
+            code={`import { StreamXYFrame } from "semiotic"
 
-<RealtimeFrame
+<StreamXYFrame
   ref={frameRef}
   chartType="line"
   windowSize={150}
@@ -530,7 +530,7 @@ function StreamingLine() {
 
       <ul>
         <li>
-          <Link to="/charts/realtime-bar-chart">RealtimeBarChart</Link> —
+          <Link to="/charts/realtime-bar-chart">RealtimeHistogram</Link> —
           streaming temporal histograms with binned bars
         </li>
         <li>
@@ -542,7 +542,7 @@ function StreamingLine() {
           cumulative deltas as connected rising and falling bars
         </li>
         <li>
-          <Link to="/frames/realtime-frame">RealtimeFrame</Link> — the
+          <Link to="/frames/realtime-frame">StreamXYFrame</Link> — the
           underlying Frame with full control over every rendering detail
         </li>
         <li>

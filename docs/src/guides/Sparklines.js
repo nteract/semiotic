@@ -1,6 +1,6 @@
 import React from "react"
 import DocumentFrame from "../DocumentFrame"
-import { StreamXYFrame, SparkOrdinalFrame, SparkNetworkFrame } from "semiotic"
+import { StreamXYFrame, StreamOrdinalFrame, StreamNetworkFrame } from "semiotic"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
 
@@ -81,7 +81,7 @@ export function SparkXYExample1() {
 
 export function SparkNetworkExample1() {
   return (
-    <SparkNetworkFrame
+    <StreamNetworkFrame
       size={[40, 20]}
       edges={[
         { source: "a", target: "b" },
@@ -103,7 +103,7 @@ export function SparkNetworkExample1() {
 
 export function SparkNetworkExample2() {
   return (
-    <SparkNetworkFrame
+    <StreamNetworkFrame
       size={[60, 20]}
       edges={[
         { source: "a", target: "b" },
@@ -129,7 +129,7 @@ export function SparkXYExample2() {
 
 export function SparkOrdinalExample1() {
   return (
-    <SparkOrdinalFrame
+    <StreamOrdinalFrame
       data={[8, 4, 12, 3, 4, 5, 6, 7]}
       style={{ fill: theme[2], stroke: "rgb(77, 67, 12)" }}
       type="bar"
@@ -139,7 +139,7 @@ export function SparkOrdinalExample1() {
 
 export function SparkOrdinalExample2() {
   return (
-    <SparkOrdinalFrame
+    <StreamOrdinalFrame
       data={summarySample}
       style={(d) => ({ fill: stackedColors[d.o] })}
       oAccessor="s"
@@ -153,7 +153,7 @@ export function SparkOrdinalExample2() {
 
 export function SparkOrdinalExample3() {
   return (
-    <SparkOrdinalFrame
+    <StreamOrdinalFrame
       data={summarySample}
       oAccessor={(d) => (d.o === "a" ? "a" : "o")}
       rAccessor="v"
@@ -167,7 +167,7 @@ export function SparkOrdinalExample3() {
 
 export function SparkOrdinalExample4() {
   return (
-    <SparkOrdinalFrame
+    <StreamOrdinalFrame
       size={[50, 100]}
       data={summarySample}
       oAccessor="-"
@@ -184,7 +184,7 @@ export function SparkOrdinalExample4() {
 
 export function SparkOrdinalExample5() {
   return (
-    <SparkOrdinalFrame
+    <StreamOrdinalFrame
       size={[50, 100]}
       data={summarySample}
       oAccessor="-"
@@ -203,7 +203,7 @@ export function SparkOrdinalExample5() {
 
 export function SparkOrdinalExample6() {
   return (
-    <SparkOrdinalFrame
+    <StreamOrdinalFrame
       data={summarySample}
       size={[50, 100]}
       oAccessor="-"
@@ -222,7 +222,7 @@ export function SparkOrdinalExample6() {
 
 export function SparkNetworkExample3() {
   return (
-    <SparkNetworkFrame
+    <StreamNetworkFrame
       size={[100]}
       edges={[
         { source: "a", target: "b", value: 2 },
@@ -246,7 +246,7 @@ export function SparkNetworkExample3() {
 
 export function SparkNetworkExample4() {
   return (
-    <SparkNetworkFrame
+    <StreamNetworkFrame
       size={60}
       edges={{
         id: "root",
@@ -272,7 +272,7 @@ export function SparkNetworkExample4() {
 
 export function SparkNetworkExample5() {
   return (
-    <SparkNetworkFrame
+    <StreamNetworkFrame
       edges={[
         { source: "b", target: "b", weight: 5 },
         { source: "a", target: "c", weight: 2 },

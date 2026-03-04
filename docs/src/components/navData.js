@@ -42,7 +42,7 @@ const navData = [
           { title: "Pie Chart", path: "/charts/pie-chart" },
           { title: "Donut Chart", path: "/charts/donut-chart" },
           { title: "Grouped Bar Chart", path: "/charts/grouped-bar-chart" },
-          { title: "Realtime Bar Chart", path: "/charts/realtime-bar-chart" }
+          { title: "Realtime Histogram", path: "/charts/realtime-bar-chart" }
         ]
       },
       {
@@ -64,9 +64,9 @@ const navData = [
     path: "/frames",
     tier: "frames",
     children: [
-      { title: "XY Frame", path: "/frames/xy-frame" },
-      { title: "Ordinal Frame", path: "/frames/ordinal-frame" },
-      { title: "Network Frame", path: "/frames/network-frame" }
+      { title: "StreamXYFrame", path: "/frames/xy-frame" },
+      { title: "StreamOrdinalFrame", path: "/frames/ordinal-frame" },
+      { title: "StreamNetworkFrame", path: "/frames/network-frame" }
     ]
   },
   {
@@ -144,11 +144,7 @@ const navData = [
     title: "API Reference",
     path: "/api",
     children: [
-      { title: "Charts", path: "/api/charts" },
-      { title: "XYFrame", path: "/api/xyframe" },
-      { title: "OrdinalFrame", path: "/api/ordinalframe" },
-      { title: "NetworkFrame", path: "/api/networkframe" },
-      { title: "RealtimeFrame", path: "/api/realtime-frame" }
+      { title: "Charts", path: "/api/charts" }
     ]
   }
 ]

@@ -202,13 +202,13 @@ export default function RealtimeSwarmChartPage() {
         componentName="RealtimeSwarmChart"
         importStatement='import { RealtimeSwarmChart } from "semiotic"'
         tier="charts"
-        wraps="RealtimeFrame"
+        wraps="StreamXYFrame"
         wrapsPath="/frames/realtime-frame"
         related={[
           { name: "RealtimeLineChart", path: "/charts/realtime-line-chart" },
-          { name: "RealtimeBarChart", path: "/charts/realtime-bar-chart" },
+          { name: "RealtimeHistogram", path: "/charts/realtime-bar-chart" },
           { name: "RealtimeWaterfallChart", path: "/charts/realtime-waterfall-chart" },
-          { name: "RealtimeFrame", path: "/frames/realtime-frame" },
+          { name: "StreamXYFrame", path: "/frames/realtime-frame" },
         ]}
       />
 
@@ -216,7 +216,7 @@ export default function RealtimeSwarmChartPage() {
         RealtimeSwarmChart renders individual data points as dots at their
         (time, value) coordinates, creating a streaming scatter or swarm
         visualization. It wraps{" "}
-        <Link to="/frames/realtime-frame">RealtimeFrame</Link> with{" "}
+        <Link to="/frames/realtime-frame">StreamXYFrame</Link> with{" "}
         <code>chartType="swarm"</code> and promotes dot styling to top-level
         props. Create a ref and call <code>ref.current.push(point)</code> in a{" "}
         <code>setInterval</code> to stream data in. Supports category-based
@@ -369,9 +369,9 @@ useEffect(() => {
       <p>
         When you need full control — threshold coloring, combined chart types,
         or custom canvas marks — graduate to{" "}
-        <Link to="/frames/realtime-frame">RealtimeFrame</Link> directly.
+        <Link to="/frames/realtime-frame">StreamXYFrame</Link> directly.
         Every <code>RealtimeSwarmChart</code> is just a configured{" "}
-        <code>RealtimeFrame</code> under the hood.
+        <code>StreamXYFrame</code> under the hood.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>
@@ -400,9 +400,9 @@ useEffect(() => {
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-frames)" }}>Frame (full control)</h4>
           <CodeBlock
-            code={`import { RealtimeFrame } from "semiotic"
+            code={`import { StreamXYFrame } from "semiotic"
 
-<RealtimeFrame
+<StreamXYFrame
   ref={frameRef}
   chartType="swarm"
   data={sensorStream}
@@ -428,7 +428,7 @@ useEffect(() => {
 
       <p>
         Note that <code>colors</code> on RealtimeSwarmChart maps to{" "}
-        <code>barColors</code> on RealtimeFrame, and dot styling props are
+        <code>barColors</code> on StreamXYFrame, and dot styling props are
         grouped into a <code>swarmStyle</code> object at the Frame level.
       </p>
 
@@ -443,7 +443,7 @@ useEffect(() => {
           streaming continuous line for time-series data
         </li>
         <li>
-          <Link to="/charts/realtime-bar-chart">RealtimeBarChart</Link> —
+          <Link to="/charts/realtime-bar-chart">RealtimeHistogram</Link> —
           streaming temporal histograms with binned bars
         </li>
         <li>
@@ -451,7 +451,7 @@ useEffect(() => {
           cumulative deltas as connected rising and falling bars
         </li>
         <li>
-          <Link to="/frames/realtime-frame">RealtimeFrame</Link> — the
+          <Link to="/frames/realtime-frame">StreamXYFrame</Link> — the
           underlying Frame with full control over every rendering detail
         </li>
         <li>

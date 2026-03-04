@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react"
 import MarkdownText from "../MarkdownText"
 import DocumentFrame from "../DocumentFrame"
-import { NetworkFrame, nodesEdgesFromHierarchy } from "semiotic"
+import { StreamNetworkFrame, nodesEdgesFromHierarchy } from "semiotic"
 import theme from "../theme"
 
 import { forceSimulation, forceY, forceCollide } from "d3-force"
@@ -98,7 +98,7 @@ const ForceLayouts = () => {
       <MarkdownText
         text={`
 
-\`NetworkFrame\` allows you to render several data visualizations using a force layout created with [d3-force](https://github.com/d3/d3-force). For these examples you can pass a \`nodes\` and an \`edges\` list, or just an \`edges\` list and nodes with be inferred.
+\`StreamNetworkFrame\` allows you to render several data visualizations using a force layout created with [d3-force](https://github.com/d3/d3-force). For these examples you can pass a \`nodes\` and an \`edges\` list, or just an \`edges\` list and nodes with be inferred.
 
 Edges can either be an array of objects with a \`source\` and a \`target\` property, or a hierarchical object with an array of \`children\` containing objects with \`children\` all the way down the hierarchy. The assumption is that each child's \`id\` property is unique, you can use the \`nodeIdAccessor\` to specify a different key for the id if needed. These types of hierarchies can be created easily from a parent/child  list with d3's [stratify](https://github.com/d3/d3-hierarchy#stratify) functionality.
 
@@ -122,7 +122,7 @@ The data on this page use the [Flare visualization toolkit](https://github.com/p
             nodes: `hierarchy.nodes`,
             edges: `hierarchy.edges`,
           }}
-          type={NetworkFrame}
+          type={StreamNetworkFrame}
         />
       ) : (
         <div
@@ -156,7 +156,7 @@ This example is the same as the example above with the additional prop \`edgeTyp
           overrideProps={{
             edges: `flareData`,
           }}
-          type={NetworkFrame}
+          type={StreamNetworkFrame}
           startHidden
         />
       ) : (
@@ -221,7 +221,7 @@ const customSimulation = forceSimulation().force(
     .strength(-100)
 )
 
-<NetworkFrame
+<StreamNetworkFrame
   edges={data}
   networkType={{
     type: "force",
@@ -252,7 +252,7 @@ The following example uses a custom simulation, and it shows and example with th
         <DocumentFrame
           frameProps={bubbleProps}
           overrideProps={bubbleOverrideProps}
-          type={NetworkFrame}
+          type={StreamNetworkFrame}
           pre={pre}
         />
       ) : (

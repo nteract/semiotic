@@ -521,7 +521,7 @@ const VALIDATION_MAP: Record<string, ComponentSpec> = {
     },
   },
 
-  RealtimeBarChart: {
+  RealtimeHistogram: {
     required: ["binSize"],
     dataShape: "realtime",
     dataAccessors: [],

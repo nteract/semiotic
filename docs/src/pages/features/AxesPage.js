@@ -1,5 +1,5 @@
 import React from "react"
-import { StreamXYFrame, OrdinalFrame } from "semiotic"
+import { StreamXYFrame, StreamOrdinalFrame } from "semiotic"
 import { LineChart, BarChart } from "semiotic"
 
 import PropTable from "../../components/PropTable"
@@ -317,9 +317,9 @@ export default function AxesPage() {
         language="jsx"
       />
 
-      <h3 id="ordinal-axes">Axes on OrdinalFrame</h3>
+      <h3 id="ordinal-axes">Axes on StreamOrdinalFrame</h3>
       <p>
-        <code>OrdinalFrame</code> also supports the <code>axes</code> prop
+        <code>StreamOrdinalFrame</code> also supports the <code>axes</code> prop
         for its quantitative (r) axis. Category labels are controlled
         separately via the <code>oLabel</code> prop.
       </p>
@@ -341,7 +341,7 @@ export default function AxesPage() {
             },
           ],
         }}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         overrideProps={{
           data: `[
   { category: "Q1", revenue: 24000 },
@@ -465,7 +465,7 @@ export default function AxesPage() {
           for line, area, and point visualizations
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — the
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the
           underlying Frame for bar, swarm, and categorical visualizations
         </li>
         <li>

@@ -73,7 +73,7 @@ export class BarToParallel extends React.Component {
         <p>
           This simplified example shows funnel data as a bar chart using StreamOrdinalFrame.
           The original interactive stepper (bar → stacked bar → connectors → point → swarm →
-          percent → brush/parallel coordinates → radial) relied on OrdinalFrame features
+          percent → brush/parallel coordinates → radial) relied on StreamOrdinalFrame features
           not yet available in StreamOrdinalFrame (connectorType, interaction.columnsBrush,
           dynamic type switching).
         </p>

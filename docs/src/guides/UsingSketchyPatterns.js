@@ -1,7 +1,7 @@
 import React from "react"
 import MarkdownText from "../MarkdownText"
 import DocumentFrame from "../DocumentFrame"
-import { OrdinalFrame } from "semiotic"
+import { StreamOrdinalFrame } from "semiotic"
 import theme from "../theme"
 
 const glowyCanvas = (canvas, context, size) => {
@@ -83,7 +83,7 @@ Textures are added to the \`additionalDefs\` property of the frame and then refe
       />
       <DocumentFrame
         frameProps={frameProps}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         useExpanded
         overrideProps={overrideProps}
       />
@@ -93,15 +93,15 @@ Textures are added to the \`additionalDefs\` property of the frame and then refe
       
 Under the hood, Semiotic uses the [semiotic-mark](https://github.com/emeeks/semiotic-mark) library, which allows you to set \`renderMode\` for \`"sketchy"\` rendering. You can also send a function that takes the item and returns "sketchy". Sketchy fill density reflects the fillOpacity sent to the object, with higher opacity giving more fill lines.
 
-- \`XYFrame\`: pointRenderMode, summaryRenderMode, lineRenderMode
-- \`OrdinalFrame\`: renderMode, summaryRenderMode
-- \`NetworkFrame\`: nodeRenderMode, edgeRenderMode
+- \`StreamXYFrame\`: pointRenderMode, summaryRenderMode, lineRenderMode
+- \`StreamOrdinalFrame\`: renderMode, summaryRenderMode
+- \`StreamNetworkFrame\`: nodeRenderMode, edgeRenderMode
       
       `}
       />
       <DocumentFrame
         frameProps={sketchyFrameProps}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         startHidden
         overrideProps={overrideProps}
       />
@@ -111,15 +111,15 @@ Under the hood, Semiotic uses the [semiotic-mark](https://github.com/emeeks/semi
       
 Except for summary types and custom shape types, frames can render their graphics in canvas. This can be useful to reduce the number of nodes in the DOM, which can show performance gains. Canvas graphics will not be animated.
 
-- \`XYFrame\`: canvasPoints, canvasSummaries, canvasLines
-- \`OrdinalFrame\`: canvasPieces
-- \`NetworkFrame\`: canvasNodes, canvasEdges
+- \`StreamXYFrame\`: canvasPoints, canvasSummaries, canvasLines
+- \`StreamOrdinalFrame\`: canvasPieces
+- \`StreamNetworkFrame\`: canvasNodes, canvasEdges
 
 Additionally the canvas itself can be used for post-processing effects using the frames \`canvasPostProcess\` property, which will be sent (canvas, context, size) is shown below using the demo "chuckClose" restyling (which does a fun Chuck Close style filter) and also a custom glow filter.
       `}
       />
 
-      <OrdinalFrame
+      <StreamOrdinalFrame
         {...frameProps}
         style={{
           fill: theme[0],
@@ -128,7 +128,7 @@ Additionally the canvas itself can be used for post-processing effects using the
         canvasPieces={true}
         canvasPostProcess={"chuckClose"}
       />
-      <OrdinalFrame
+      <StreamOrdinalFrame
         {...frameProps}
         style={{ fill: theme[0] }}
         canvasPieces={true}

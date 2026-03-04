@@ -1,9 +1,9 @@
 import React from "react"
 import {
   StreamXYFrame,
-  SparkOrdinalFrame,
-  SparkNetworkFrame,
-  OrdinalFrame,
+  StreamOrdinalFrame,
+  StreamNetworkFrame,
+  StreamOrdinalFrame,
 } from "semiotic"
 
 import PageLayout from "../../components/PageLayout"
@@ -84,20 +84,20 @@ const sparkProps = [
       "StreamXYFrame with small size can be used for inline sparkline-style charts. Use a small size prop like [80, 20].",
   },
   {
-    name: "SparkOrdinalFrame",
+    name: "StreamOrdinalFrame",
     type: "component",
     required: false,
     default: null,
     description:
-      "A span-based OrdinalFrame for inline ordinal visualizations. Accepts all OrdinalFrame props.",
+      "A span-based StreamOrdinalFrame for inline ordinal visualizations. Accepts all StreamOrdinalFrame props.",
   },
   {
-    name: "SparkNetworkFrame",
+    name: "StreamNetworkFrame",
     type: "component",
     required: false,
     default: null,
     description:
-      "A span-based NetworkFrame for inline network diagrams. Accepts all NetworkFrame props.",
+      "A span-based StreamNetworkFrame for inline network diagrams. Accepts all StreamNetworkFrame props.",
   },
   {
     name: "size",
@@ -133,7 +133,7 @@ export default function SparklinesPage() {
       <p>
         Sparklines are small, word-sized graphics embedded directly in text.
         Semiotic provides sparkline components — <code>StreamXYFrame</code> (with small size)
-        , <code>SparkOrdinalFrame</code>, and <code>SparkNetworkFrame</code> —
+        , <code>StreamOrdinalFrame</code>, and <code>StreamNetworkFrame</code> —
         that render inside <code>&lt;span&gt;</code> elements instead of{" "}
         <code>&lt;div&gt;</code> elements, so they flow naturally within
         paragraphs. They inherit their height from the surrounding{" "}
@@ -157,13 +157,13 @@ export default function SparklinesPage() {
           })}
         />{" "}
         right in your text, or a small bar chart{" "}
-        <SparkOrdinalFrame
+        <StreamOrdinalFrame
           data={sparkBarData}
           style={{ fill: "#E0488B", stroke: "none" }}
           type="bar"
         />{" "}
         alongside your analysis, or even a network diagram{" "}
-        <SparkNetworkFrame
+        <StreamNetworkFrame
           size={[40, 20]}
           edges={sparkNetworkEdges}
           edgeStyle={{ stroke: "#333" }}
@@ -299,9 +299,9 @@ export default function SparklinesPage() {
         startHidden
       />
 
-      <h3 id="spark-ordinal-frame">SparkOrdinalFrame</h3>
+      <h3 id="spark-ordinal-frame">StreamOrdinalFrame</h3>
       <p>
-        <code>SparkOrdinalFrame</code> supports bars, boxplots, violins, and
+        <code>StreamOrdinalFrame</code> supports bars, boxplots, violins, and
         all other ordinal visualization types at sparkline size.
       </p>
 
@@ -311,7 +311,7 @@ export default function SparklinesPage() {
           style: { fill: "#E0488B", stroke: "none" },
           type: "bar",
         }}
-        type={SparkOrdinalFrame}
+        type={StreamOrdinalFrame}
         overrideProps={{
           data: "[8, 4, 12, 3, 4, 5, 6, 7]",
         }}
@@ -319,9 +319,9 @@ export default function SparklinesPage() {
         startHidden={false}
       />
 
-      <h3 id="spark-network-frame">SparkNetworkFrame</h3>
+      <h3 id="spark-network-frame">StreamNetworkFrame</h3>
       <p>
-        <code>SparkNetworkFrame</code> lets you embed force-directed graphs,
+        <code>StreamNetworkFrame</code> lets you embed force-directed graphs,
         dendrograms, sankey diagrams, and other network layouts inline.
       </p>
 
@@ -337,7 +337,7 @@ export default function SparklinesPage() {
             stroke: "#333",
           }),
         }}
-        type={SparkNetworkFrame}
+        type={StreamNetworkFrame}
         overrideProps={{
           edges: `{
   id: "root",
@@ -509,12 +509,12 @@ export default function SparklinesPage() {
           for XY visualizations
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — the full-size
-          frame that SparkOrdinalFrame wraps
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the full-size
+          frame that StreamOrdinalFrame wraps
         </li>
         <li>
-          <Link to="/frames/network-frame">NetworkFrame</Link> — the full-size
-          frame that SparkNetworkFrame wraps
+          <Link to="/frames/network-frame">StreamNetworkFrame</Link> — the full-size
+          frame that StreamNetworkFrame wraps
         </li>
         <li>
           <Link to="/features/small-multiples">Linked Charts</Link> —

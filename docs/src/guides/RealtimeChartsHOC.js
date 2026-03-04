@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from "react"
 import {
   RealtimeLineChart,
-  RealtimeBarChart,
+  RealtimeHistogram,
   RealtimeSwarmChart,
   RealtimeWaterfallChart
 } from "semiotic"
@@ -106,7 +106,7 @@ function BarChartDemo() {
   }, [])
 
   return (
-    <RealtimeBarChart
+    <RealtimeHistogram
       ref={ref}
       binSize={20}
       fill="#007bff"
@@ -136,7 +136,7 @@ function StackedBarChartDemo() {
   }, [])
 
   return (
-    <RealtimeBarChart
+    <RealtimeHistogram
       ref={ref}
       binSize={25}
       windowSize={400}
@@ -248,7 +248,7 @@ export default function RealtimeChartsHOC() {
 
       <MarkdownText
         text={`
-Higher-order realtime chart components provide simplified APIs for common streaming chart types based on \`RealtimeFrame\`. These components handle the complexity of RealtimeFrame configuration while providing intuitive prop names — no need to assemble \`lineStyle\`, \`barStyle\`, or \`waterfallStyle\` objects yourself.
+Higher-order realtime chart components provide simplified APIs for common streaming chart types based on \`StreamXYFrame\`. These components handle the complexity of StreamXYFrame configuration while providing intuitive prop names — no need to assemble \`lineStyle\`, \`barStyle\`, or \`waterfallStyle\` objects yourself.
 
 ## Benefits
 
@@ -256,7 +256,7 @@ Higher-order realtime chart components provide simplified APIs for common stream
 - **Smart Defaults**: Pre-configured sizing, window modes, and styling
 - **Same Imperative API**: \`push()\`, \`pushMany()\`, \`clear()\`, \`getData()\` via ref
 - **Full TypeScript Support**: Dedicated prop interfaces for each chart type
-- **Passthrough**: All RealtimeFrame capabilities remain accessible
+- **Passthrough**: All StreamXYFrame capabilities remain accessible
 
 All four components share the same base props (\`size\`, \`margin\`, \`arrowOfTime\`, \`windowMode\`, \`windowSize\`, \`data\`, \`timeAccessor\`, \`valueAccessor\`, \`enableHover\`, etc.) and differ only in their chart-specific styling props.
 
@@ -299,9 +299,9 @@ useEffect(() => {
 - \`tooltipContent\`: Custom tooltip renderer
 - \`onHover\`: Hover callback
 
-**Equivalent RealtimeFrame:**
+**Equivalent StreamXYFrame:**
 \`\`\`jsx
-<RealtimeFrame chartType="line" lineStyle={{ stroke: "#007bff", strokeWidth: 2 }} ... />
+<StreamXYFrame chartType="line" lineStyle={{ stroke: "#007bff", strokeWidth: 2 }} ... />
 \`\`\`
 
 ---
@@ -327,10 +327,10 @@ useEffect(() => {
       <MarkdownText text={`---`} />
 
       <ExampleContainer
-        title="RealtimeBarChart"
-        code={`import { RealtimeBarChart } from "semiotic"
+        title="RealtimeHistogram"
+        code={`import { RealtimeHistogram } from "semiotic"
 
-<RealtimeBarChart
+<RealtimeHistogram
   ref={ref}
   binSize={20}
   fill="#007bff"
@@ -355,9 +355,9 @@ useEffect(() => {
 
 Edge bins that only partially fall within the visible time window render at proportionally narrower widths — e.g., if only 25% of a bin's time range is visible, it renders at 25% of the normal bar width.
 
-**Equivalent RealtimeFrame:**
+**Equivalent StreamXYFrame:**
 \`\`\`jsx
-<RealtimeFrame
+<StreamXYFrame
   chartType="bar"
   binSize={20}
   barStyle={{ fill: "#007bff" }}
@@ -370,10 +370,10 @@ Edge bins that only partially fall within the visible time window render at prop
       />
 
       <ExampleContainer
-        title="Stacked RealtimeBarChart"
-        code={`import { RealtimeBarChart } from "semiotic"
+        title="Stacked RealtimeHistogram"
+        code={`import { RealtimeHistogram } from "semiotic"
 
-<RealtimeBarChart
+<RealtimeHistogram
   ref={ref}
   binSize={25}
   windowSize={400}
@@ -417,9 +417,9 @@ Edge bins that only partially fall within the visible time window render at prop
 
 Supports threshold coloring via \`annotations\` — dots crossing a value boundary are recolored automatically.
 
-**Equivalent RealtimeFrame:**
+**Equivalent StreamXYFrame:**
 \`\`\`jsx
-<RealtimeFrame
+<StreamXYFrame
   chartType="swarm"
   swarmStyle={{ radius: 3, opacity: 0.7 }}
   barColors={{ sensor1: "#007bff", ... }}
@@ -460,9 +460,9 @@ Supports threshold coloring via \`annotations\` — dots crossing a value bounda
 - \`gap\`: Gap between bars (pixels)
 - \`stroke\`, \`strokeWidth\`: Bar border
 
-**Equivalent RealtimeFrame:**
+**Equivalent StreamXYFrame:**
 \`\`\`jsx
-<RealtimeFrame
+<StreamXYFrame
   chartType="waterfall"
   waterfallStyle={{
     positiveColor: "#28a745",
@@ -538,14 +538,14 @@ All realtime chart components accept these common props:
 | \`clear()\` | Clear all data |
 | \`getData()\` | Get current data as array |
 
-## When to Use HOC vs RealtimeFrame
+## When to Use HOC vs StreamXYFrame
 
 Use **HOC components** when you want:
 - Flat, intuitive props for a single chart type
 - Quick setup with sensible defaults
 - Cleaner JSX without nested style objects
 
-Use **RealtimeFrame directly** when you need:
+Use **StreamXYFrame directly** when you need:
 - Dynamic chart type switching at runtime
 - Custom renderers
 - Access to internal renderer options not exposed by HOCs
@@ -553,7 +553,7 @@ Use **RealtimeFrame directly** when you need:
 
 ## Next Steps
 
-- [RealtimeFrame →](/guides/realtime-frame) for the full low-level API
+- [StreamXYFrame →](/guides/realtime-frame) for the full low-level API
 - [XY Chart Components →](/guides/xy-charts-hoc) for static XY charts
 - [Ordinal Chart Components →](/guides/ordinal-charts-hoc) for categorical data
 `}

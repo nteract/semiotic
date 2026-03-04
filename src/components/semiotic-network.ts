@@ -1,46 +1,51 @@
 /**
- * NetworkFrame entry point - for network graphs, trees, sankey diagrams, etc.
- * Import this instead of the full semiotic bundle to reduce bundle size
+ * Network entry point — for force graphs, sankey, chord, trees, etc.
+ * Import from "semiotic/network" instead of the full bundle to reduce bundle size.
  */
 
-import NetworkFrame from "./NetworkFrame"
-import { ResponsiveNetworkFrame } from "./ResponsiveNetworkFrame"
-import { SparkNetworkFrame } from "./SparkNetworkFrame"
+import StreamNetworkFrame from "./stream/StreamNetworkFrame"
 
-// Common utilities used with NetworkFrame
+// Common utilities
 import Axis from "./Axis"
 import Legend from "./Legend"
 import Annotation from "./Annotation"
 import AnnotationLayer from "./AnnotationLayer/AnnotationLayer"
-
-// Utility functions
 import { calculateDataExtent } from "./data/dataFunctions"
 import { nodesEdgesFromHierarchy } from "./processing/network"
 
-// Export components
+// Chart HOCs
+import { ForceDirectedGraph } from "./charts/network/ForceDirectedGraph"
+import { SankeyDiagram } from "./charts/network/SankeyDiagram"
+import { ChordDiagram } from "./charts/network/ChordDiagram"
+import { TreeDiagram } from "./charts/network/TreeDiagram"
+import { Treemap } from "./charts/network/Treemap"
+import { CirclePack } from "./charts/network/CirclePack"
+
 export {
-  NetworkFrame,
-  ResponsiveNetworkFrame,
-  SparkNetworkFrame,
-  // Common utilities
+  StreamNetworkFrame,
+  ForceDirectedGraph,
+  SankeyDiagram,
+  ChordDiagram,
+  TreeDiagram,
+  Treemap,
+  CirclePack,
   Axis,
   Legend,
   Annotation,
   AnnotationLayer,
-  // Utility functions
   calculateDataExtent,
   nodesEdgesFromHierarchy
 }
 
-// Export types
-export {
-  NodeType,
-  EdgeType,
-  GraphSettingsType,
-  NetworkSettingsType,
-  NetworkFrameState,
-  NetworkFrameProps
-} from "./types/networkTypes"
+// Types
+export type {
+  StreamNetworkFrameProps,
+  StreamNetworkFrameHandle,
+  NetworkChartType,
+  NetworkSceneNode,
+  NetworkSceneEdge,
+  NetworkLabel
+} from "./stream/networkTypes"
 
 export {
   AnnotationType,

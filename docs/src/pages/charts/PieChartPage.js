@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react"
-import { OrdinalFrame, StreamOrdinalFrame } from "semiotic"
+import { StreamOrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { PieChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -120,7 +120,7 @@ const pieChartProps = [
   { name: "height", type: "number", required: false, default: "400", description: "Chart height in pixels." },
   { name: "margin", type: "object", required: false, default: "{ top: 20, bottom: 20, left: 20, right: 20 }", description: "Margin around the chart area." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Additional OrdinalFrame props for advanced customization." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamOrdinalFrame props for advanced customization." },
 ]
 
 // ---------------------------------------------------------------------------
@@ -144,19 +144,19 @@ export default function PieChartPage() {
         componentName="PieChart"
         importStatement='import { PieChart } from "semiotic"'
         tier="charts"
-        wraps="OrdinalFrame"
+        wraps="StreamOrdinalFrame"
         wrapsPath="/frames/ordinal-frame"
         related={[
           { name: "DonutChart", path: "/charts/donut-chart" },
           { name: "BarChart", path: "/charts/bar-chart" },
-          { name: "OrdinalFrame", path: "/frames/ordinal-frame" },
+          { name: "StreamOrdinalFrame", path: "/frames/ordinal-frame" },
         ]}
       />
 
       <p>
         PieChart visualizes proportions as slices of a circle. Each slice's
         arc size is proportional to its value relative to the total. It wraps{" "}
-        <Link to="/frames/ordinal-frame">OrdinalFrame</Link> with radial
+        <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> with radial
         projection, so all ordinal annotations and interactions work out of the
         box.
       </p>
@@ -263,8 +263,8 @@ export default function PieChartPage() {
       <p>
         When you need more control — custom annotations, label positioning,
         exploded slices — graduate to{" "}
-        <Link to="/frames/ordinal-frame">OrdinalFrame</Link> directly. Every{" "}
-        <code>PieChart</code> is just a configured <code>OrdinalFrame</code>{" "}
+        <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> directly. Every{" "}
+        <code>PieChart</code> is just a configured <code>StreamOrdinalFrame</code>{" "}
         with <code>projection="radial"</code>.
       </p>
 
@@ -287,9 +287,9 @@ export default function PieChartPage() {
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-frames)" }}>Frame (full control)</h4>
           <CodeBlock
-            code={`import { OrdinalFrame } from "semiotic"
+            code={`import { StreamOrdinalFrame } from "semiotic"
 
-<OrdinalFrame
+<StreamOrdinalFrame
   data={salesData}
   oAccessor="category"
   rAccessor="value"
@@ -321,7 +321,7 @@ export default function PieChartPage() {
           comparing values across categories
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — the underlying
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the underlying
           Frame with full control over every rendering detail
         </li>
       </ul>

@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react"
-import { OrdinalFrame, StreamOrdinalFrame } from "semiotic"
+import { StreamOrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { GroupedBarChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -132,7 +132,7 @@ const groupedBarChartProps = [
   { name: "height", type: "number", required: false, default: "400", description: "Chart height in pixels." },
   { name: "margin", type: "object", required: false, default: "{ top: 50, bottom: 60, left: 70, right: 40 }", description: "Margin around the chart area." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Additional OrdinalFrame props for advanced customization." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamOrdinalFrame props for advanced customization." },
 ]
 
 // ---------------------------------------------------------------------------
@@ -156,19 +156,19 @@ export default function GroupedBarChartPage() {
         componentName="GroupedBarChart"
         importStatement='import { GroupedBarChart } from "semiotic"'
         tier="charts"
-        wraps="OrdinalFrame"
+        wraps="StreamOrdinalFrame"
         wrapsPath="/frames/ordinal-frame"
         related={[
           { name: "BarChart", path: "/charts/bar-chart" },
           { name: "StackedBarChart", path: "/charts/stacked-bar-chart" },
-          { name: "OrdinalFrame", path: "/frames/ordinal-frame" },
+          { name: "StreamOrdinalFrame", path: "/frames/ordinal-frame" },
         ]}
       />
 
       <p>
         GroupedBarChart displays bars side by side within each category,
         making it easy to compare values across groups. It wraps{" "}
-        <Link to="/frames/ordinal-frame">OrdinalFrame</Link> with{" "}
+        <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> with{" "}
         <code>type="clusterbar"</code>. While{" "}
         <Link to="/charts/stacked-bar-chart">StackedBarChart</Link> shows
         part-to-whole relationships, GroupedBarChart emphasizes direct
@@ -286,7 +286,7 @@ export default function GroupedBarChartPage() {
 
       <p>
         For full control, use{" "}
-        <Link to="/frames/ordinal-frame">OrdinalFrame</Link> directly with{" "}
+        <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> directly with{" "}
         <code>type="clusterbar"</code> and <code>pieceIDAccessor</code>.
       </p>
 
@@ -310,9 +310,9 @@ export default function GroupedBarChartPage() {
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-frames)" }}>Frame (full control)</h4>
           <CodeBlock
-            code={`import { OrdinalFrame } from "semiotic"
+            code={`import { StreamOrdinalFrame } from "semiotic"
 
-<OrdinalFrame
+<StreamOrdinalFrame
   data={quarterlyData}
   oAccessor="quarter"
   rAccessor="sales"
@@ -343,7 +343,7 @@ export default function GroupedBarChartPage() {
           categorical data
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — the underlying
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the underlying
           Frame with full control over every rendering detail
         </li>
       </ul>

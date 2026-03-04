@@ -62,11 +62,10 @@ body:
         - Treemap
         - CirclePack
         - RealtimeLineChart
-        - RealtimeBarChart
+        - RealtimeHistogram
         - RealtimeSwarmChart
         - RealtimeWaterfallChart
-        - XYFrame
-        - OrdinalFrame
-        - NetworkFrame
-        - RealtimeFrame
+        - StreamXYFrame
+        - StreamOrdinalFrame
+        - StreamNetworkFrame
         - Other

@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { StreamXYFrame, OrdinalFrame, MinimapChart } from "semiotic"
+import { StreamXYFrame, StreamOrdinalFrame, MinimapChart } from "semiotic"
 import { LineChart, BarChart } from "semiotic"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
@@ -83,7 +83,7 @@ const interactionProps = [
   { name: "during", type: "function", required: false, default: null, description: "Callback fired during brushing. Receives the extent." },
   { name: "end", type: "function", required: false, default: null, description: "Callback fired at the end of a brush. Receives the extent." },
   { name: "extent", type: "array", required: false, default: null, description: "Initial or controlled brush extent. Format depends on brush type." },
-  { name: "columnsBrush", type: "boolean", required: false, default: "false", description: "For OrdinalFrame: enable per-column brushes (parallel coordinates style)." },
+  { name: "columnsBrush", type: "boolean", required: false, default: "false", description: "For StreamOrdinalFrame: enable per-column brushes (parallel coordinates style)." },
 ]
 
 // ---------------------------------------------------------------------------
@@ -373,14 +373,14 @@ function BrushExample() {
 
       <h3 id="ordinal-brushing">Ordinal Brushing</h3>
       <p>
-        <code>OrdinalFrame</code> supports brushing within columns using the{" "}
+        <code>StreamOrdinalFrame</code> supports brushing within columns using the{" "}
         <code>interaction</code> prop with <code>columnsBrush: true</code>.
         This is useful for parallel-coordinates-style filtering:
       </p>
 
       <CodeBlock
         code={`import React, { useState } from "react"
-import { OrdinalFrame } from "semiotic"
+import { StreamOrdinalFrame } from "semiotic"
 
 function OrdinalBrushExample() {
   const [selectedCount, setSelectedCount] = useState(data.length)
@@ -395,7 +395,7 @@ function OrdinalBrushExample() {
   return (
     <>
       <p>Points in brushed region: {selectedCount}</p>
-      <OrdinalFrame
+      <StreamOrdinalFrame
         data={data}
         rAccessor="value"
         oAccessor={() => "singleColumn"}
@@ -415,16 +415,16 @@ function OrdinalBrushExample() {
         showLineNumbers
       />
 
-      <h3 id="ordinal-highlighting">OrdinalFrame Highlighting</h3>
+      <h3 id="ordinal-highlighting">StreamOrdinalFrame Highlighting</h3>
       <p>
-        In <code>OrdinalFrame</code>, use{" "}
+        In <code>StreamOrdinalFrame</code>, use{" "}
         <code>pieceHoverAnnotation</code> for individual piece highlighting,
         or <code>hoverAnnotation</code> for column-level highlighting. Define
         a <code>pieceIDAccessor</code> to target specific pieces:
       </p>
 
       <CodeBlock
-        code={`<OrdinalFrame
+        code={`<StreamOrdinalFrame
   data={stackedData}
   oAccessor="category"
   rAccessor="value"
@@ -555,7 +555,7 @@ function OrdinalBrushExample() {
           and point-based interactions
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — column
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — column
           brushes, piece hover, and ordinal highlighting
         </li>
         <li>

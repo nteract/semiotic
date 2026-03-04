@@ -164,7 +164,6 @@ function binarySearchPath(path: [number, number][], targetX: number): number {
 
 /**
  * Binary search for nearest point by time value in a RingBuffer.
- * Port from RealtimeFrame.tsx:225-252.
  */
 export function findNearestIndex(
   buf: RingBuffer<Record<string, any>>,

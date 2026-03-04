@@ -1,5 +1,5 @@
 import React from "react"
-import { StreamXYFrame, OrdinalFrame, NetworkFrame } from "semiotic"
+import { StreamXYFrame, StreamOrdinalFrame, StreamNetworkFrame } from "semiotic"
 
 import PageLayout from "../../components/PageLayout"
 import LiveExample from "../../components/LiveExample"
@@ -317,7 +317,7 @@ export default function LegendsPage() {
           },
           title: "Quarterly Sales by Region",
         }}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         overrideProps={{
           data: `[
   { category: "Q1", value: 35, region: "North" },
@@ -580,11 +580,11 @@ function InteractiveChart({ data }) {
           lines, areas, and points
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — legend
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — legend
           support for bars, swarms, and distributions
         </li>
         <li>
-          <Link to="/frames/network-frame">NetworkFrame</Link> — legend
+          <Link to="/frames/network-frame">StreamNetworkFrame</Link> — legend
           support for nodes and edges
         </li>
         <li>

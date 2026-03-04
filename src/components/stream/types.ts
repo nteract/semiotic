@@ -218,7 +218,7 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   // ── Heatmap specifics ────────────────────────────
   valueAccessor?: string | ((d: T) => number)
 
-  // ── Streaming specifics (from RealtimeFrame) ─────
+  // ── Streaming specifics ─────
   arrowOfTime?: ArrowOfTime
   windowMode?: WindowMode
   windowSize?: number

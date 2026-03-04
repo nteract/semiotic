@@ -60,7 +60,7 @@ Flink's windows (tumbling, sliding, session) map naturally to time-series visual
 
 | Window type | Viz analog | Current Semiotic |
 |---|---|---|
-| Tumbling | Time-bucketed bars (`RealtimeBarChart.binSize`) | `binSize` prop |
+| Tumbling | Time-bucketed bars (`RealtimeHistogram.binSize`) | `binSize` prop |
 | Sliding | Rolling average / moving statistics | Not supported |
 | Session | Activity-based grouping | Not supported |
 | Global + custom trigger | "Accumulate all, render on signal" = batch | `data` prop |
@@ -224,7 +224,7 @@ The `LinkedCharts` coordination system, `useSelection`, and `useBrushSelection` 
 - Windowing via `windowSize` + `windowMode`
 - Progressive rendering for large bounded datasets (>5K items chunked across rAFs)
 
-**HOC migration (complete):** `LineChart`, `AreaChart`, `StackedAreaChart`, `Scatterplot`, `BubbleChart`, `Heatmap` use StreamXYFrame. `RealtimeLineChart`, `RealtimeBarChart`, `RealtimeSwarmChart`, `RealtimeWaterfallChart` use StreamXYFrame with `runtimeMode="streaming"`.
+**HOC migration (complete):** `LineChart`, `AreaChart`, `StackedAreaChart`, `Scatterplot`, `BubbleChart`, `Heatmap` use StreamXYFrame. `RealtimeLineChart`, `RealtimeHistogram`, `RealtimeSwarmChart`, `RealtimeWaterfallChart` use StreamXYFrame with `runtimeMode="streaming"`.
 
 **Status:** XYFrame and RealtimeFrame still exist but are deprecated. All HOCs use StreamXYFrame.
 

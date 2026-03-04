@@ -146,9 +146,9 @@ chartRef.current.push({ time: Date.now(), value: reading })
 | **XY** | `LineChart` `AreaChart` `StackedAreaChart` `Scatterplot` `BubbleChart` `Heatmap` |
 | **Categorical** | `BarChart` `StackedBarChart` `GroupedBarChart` `SwarmPlot` `BoxPlot` `Histogram` `ViolinPlot` `DotPlot` `PieChart` `DonutChart` |
 | **Network** | `ForceDirectedGraph` `ChordDiagram` `SankeyDiagram` `TreeDiagram` `Treemap` `CirclePack` |
-| **Realtime** | `RealtimeLineChart` `RealtimeBarChart` `RealtimeSwarmChart` `RealtimeWaterfallChart` `RealtimeSankey` |
+| **Realtime** | `RealtimeLineChart` `RealtimeHistogram` `RealtimeSwarmChart` `RealtimeWaterfallChart` `RealtimeSankey` |
 | **Coordination** | `LinkedCharts` `ScatterplotMatrix` |
-| **Frames** | `XYFrame` `OrdinalFrame` `NetworkFrame` `RealtimeFrame` |
+| **Frames** | `StreamXYFrame` `StreamOrdinalFrame` `StreamNetworkFrame` |
 
 ## Smaller Bundles
 

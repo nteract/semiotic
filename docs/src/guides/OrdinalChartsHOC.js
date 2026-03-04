@@ -125,7 +125,7 @@ export default function OrdinalChartsHOC() {
 
       <MarkdownText
         text={`
-Higher-order ordinal chart components provide simplified APIs for categorical data visualization based on \`OrdinalFrame\`. These components handle the complexity of ordinal data layout while providing intuitive prop names.
+Higher-order ordinal chart components provide simplified APIs for categorical data visualization based on \`StreamOrdinalFrame\`. These components handle the complexity of ordinal data layout while providing intuitive prop names.
 
 ## Benefits
 
@@ -177,7 +177,7 @@ const barData = [
 - \`tooltip\`: Tooltip configuration
 
 **Advanced:**
-Pass any \`OrdinalFrame\` prop for complete control. [See OrdinalFrame API →](/api/ordinalframe)
+Pass any \`StreamOrdinalFrame\` prop for complete control. [See StreamOrdinalFrame API →](/api/ordinalframe)
 
 ---
 `}
@@ -225,7 +225,7 @@ const stackedBarData = [
 - \`tooltip\`: Tooltip configuration
 
 **Advanced:**
-Pass \`type\` settings or other \`OrdinalFrame\` props for customization.
+Pass \`type\` settings or other \`StreamOrdinalFrame\` props for customization.
 
 ---
 `}
@@ -275,7 +275,7 @@ const swarmData = [
 Swarm plots (beeswarm) show distribution of values within categories using force simulation to prevent overlap.
 
 **Advanced:**
-Pass \`type\` settings or other \`OrdinalFrame\` props for customization.
+Pass \`type\` settings or other \`StreamOrdinalFrame\` props for customization.
 
 ---
 `}
@@ -341,7 +341,7 @@ const boxPlotData = [
 Box plots show statistical distribution (quartiles, median, outliers) for each category.
 
 **Advanced:**
-Pass \`summaryType\` settings or other \`OrdinalFrame\` props for customization.
+Pass \`summaryType\` settings or other \`StreamOrdinalFrame\` props for customization.
 
 ---
 `}
@@ -396,7 +396,7 @@ const dotPlotData = [
 Dot plots (Cleveland plots) are excellent for comparing values across categories. Add \`rangeBy\` to show ranges.
 
 **Advanced:**
-Pass \`type\` settings or other \`OrdinalFrame\` props for customization.
+Pass \`type\` settings or other \`StreamOrdinalFrame\` props for customization.
 
 ---
 
@@ -484,7 +484,7 @@ const props: BarChartProps = {
 - [XY Chart Components →](/guides/xy-charts-hoc) for continuous data
 - [Network Chart Components →](/guides/network-charts-hoc) for relationships
 - [Tooltips Guide →](/guides/tooltips) for advanced tooltip customization
-- [OrdinalFrame API →](/api/ordinalframe) for complete Frame control
+- [StreamOrdinalFrame API →](/api/ordinalframe) for complete Frame control
 `}
       />
     </div>

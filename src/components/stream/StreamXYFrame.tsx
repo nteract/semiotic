@@ -53,7 +53,7 @@ const RENDERERS: Record<StreamChartType, StreamRendererFn[]> = {
 
 const DEFAULT_MARGIN = { top: 20, right: 20, bottom: 30, left: 40 }
 
-// ── Theme (from RealtimeFrame) ─────────────────────────────────────────
+// ── Theme  ─────────────────────────────────────────
 
 interface ThemeColors {
   axisStroke: string

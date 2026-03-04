@@ -95,14 +95,14 @@ export { CirclePack } from "./network/CirclePack"
 export type { CirclePackProps } from "./network/CirclePack"
 
 // ============================================================================
-// Realtime Charts (based on RealtimeFrame)
+// Realtime Charts
 // ============================================================================
 
 export { RealtimeLineChart } from "./realtime/RealtimeLineChart"
 export type { RealtimeLineChartProps } from "./realtime/RealtimeLineChart"
 
-export { RealtimeTemporalHistogram, RealtimeBarChart } from "./realtime/RealtimeBarChart"
-export type { RealtimeTemporalHistogramProps, RealtimeBarChartProps } from "./realtime/RealtimeBarChart"
+export { RealtimeTemporalHistogram, RealtimeHistogram } from "./realtime/RealtimeHistogram"
+export type { RealtimeTemporalHistogramProps, RealtimeHistogramProps } from "./realtime/RealtimeHistogram"
 
 export { RealtimeSwarmChart } from "./realtime/RealtimeSwarmChart"
 export type { RealtimeSwarmChartProps } from "./realtime/RealtimeSwarmChart"

@@ -21,23 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### New Chart Types
 
-**RealtimeSankey** — Streaming Sankey diagram with push API:
-- Topology grows over time via `ref.current.push({ source, target, value })`
-- Dual-layer rendering: SVG for nodes/links/labels, canvas overlay for animated particles
-- Tension model batches relayouts — topology changes (new nodes/edges) trigger immediately, weight-only changes accumulate until threshold
-- Animated transitions with ease-out cubic interpolation when layout changes
-- Particle system with object pool, bezier path evaluation, and chord-based perpendicular offset
-- Supports circular/cyclic flows via d3-sankey-circular
-- Configurable particle style, tension thresholds, node alignment, and orientation
-- Ref handle: `push()`, `pushMany()`, `clear()`, `getTopology()`, `relayout()`, `getTension()`
-
 **Histogram** — Binned frequency distribution chart:
-- Uses OrdinalFrame's `summaryType: "histogram"` for automatic binning
+- Uses StreamOrdinalFrame's `summaryType: "histogram"` for automatic binning
 - Configurable bin count (`bins`, default 25) and per-category normalization (`relative`)
 - Follows the same pattern as BoxPlot with full selection/coordination support
 
 **ViolinPlot** — Kernel density visualization per category:
-- Uses OrdinalFrame's `summaryType: "violin"` for symmetric density shapes
+- Uses StreamOrdinalFrame's `summaryType: "violin"` for symmetric density shapes
 - Configurable bin count, interpolation curve (`curve`, default "catmullRom"), and IQR lines (`showIQR`)
 - Full selection/coordination support
 
@@ -175,6 +165,10 @@ simple prop APIs. These are the recommended entry point for most users.
 - `Scatterplot` — point clouds with color and size encoding
 - `BubbleChart` — sized circles with optional labels
 - `Heatmap` — 2D binned density visualization
+- `RealtimeWaterfallChart` — canvas-based streaming waterfall/candlestick
+- `RealtimeLineChart` — canvas-based streaming line
+- `RealtimeHistogram` — canvas-based streaming histogram bars
+- `RealtimeSwarmChart` — canvas-based streaming scatter
 
 **Ordinal Charts** (wrap OrdinalFrame):
 - `BarChart` — vertical/horizontal bars with sort and color encoding
@@ -194,35 +188,12 @@ simple prop APIs. These are the recommended entry point for most users.
 - `Treemap` — space-filling hierarchical rectangles
 - `CirclePack` — nested circle packing
 
-**Realtime Charts** (wrap RealtimeFrame):
-- `RealtimeLineChart` — canvas-based streaming line
-- `RealtimeBarChart` — canvas-based streaming histogram bars
-- `RealtimeSwarmChart` — canvas-based streaming scatter
-- `RealtimeWaterfallChart` — canvas-based streaming waterfall/candlestick
-
 All chart components feature:
 - Full TypeScript generics (`LineChart<TDatum>`)
 - Sensible defaults for width, height, margins, colors, hover
 - `frameProps` escape hatch for accessing the underlying Frame API
 - Automatic legend rendering when `colorBy` is set
 - Smart margin expansion to accommodate legends and axis labels
-
-#### RealtimeFrame
-
-A new core Frame for streaming and real-time data visualization, built on
-canvas rendering for high-frequency updates.
-
-- Canvas-first rendering with SVG annotation overlay
-- `RingBuffer<T>` — O(1) circular buffer for data windowing
-- `IncrementalExtent` — efficient min/max tracking without full recalculation
-- `BinAccumulator` — aggregation for histogram bars
-- Imperative handle via `useRef`: `push()`, `pushMany()`, `clear()`, `getData()`
-- Five chart types: line, bar, swarm, candlestick, waterfall
-- Configurable time dimension: up, down, left, right
-- Window modes: sliding (fixed buffer) and growing (accumulating)
-- Canvas-drawn axes with custom tick formatting
-- Hover annotations with crosshairs
-- Five dedicated canvas renderers in `src/components/realtime/renderers/`
 
 #### Server-Side Rendering
 
@@ -292,7 +263,7 @@ Interactive playground pages for live chart exploration:
 
 - `SankeyDiagramPlayground` — orientation, alignment, padding, node width, edge opacity
 - `RealtimeLineChartPlayground` — line and waterfall modes with live signal generators
-- `RealtimeBarChartPlayground` — stacked time bars and swarm plots with live data
+- `RealtimeHistogramPlayground` — stacked time bars and swarm plots with live data
 
 ### Changed
 

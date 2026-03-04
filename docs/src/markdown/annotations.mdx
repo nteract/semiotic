@@ -28,7 +28,7 @@ export default function() {
 }
 ```
 
-- `enclose`, `enclose-rect`, `enclose-hull`: Takes an object with a `coordinates` property containing an array of data objects and encloses them with a circle, rectangle, or convex hull labeled with the passed label. For `NetworkFrame` this is not `coordinates` but rather an array named `ids` that has id values corresponding to the `nodeIDAccessor` setting. The annotation will also honor a `padding` prop that determines the space in pixels to pad the enclosure. Enclose-hull accepts a `strokeWidth` prop that determines the thickness of the hull stroking.
+- `enclose`, `enclose-rect`, `enclose-hull`: Takes an object with a `coordinates` property containing an array of data objects and encloses them with a circle, rectangle, or convex hull labeled with the passed label. For `StreamNetworkFrame` this is not `coordinates` but rather an array named `ids` that has id values corresponding to the `nodeIDAccessor` setting. The annotation will also honor a `padding` prop that determines the space in pixels to pad the enclosure. Enclose-hull accepts a `strokeWidth` prop that determines the thickness of the hull stroking.
 
 * `highlight`: redraws the mark but with the passed style function or object, this with the desaturation-layer below allow for easy highlight and cross-highlight behavior. See the [highlighting](/guides/highlighting) page for details.
 
@@ -88,7 +88,7 @@ yAccessor="attendance"
   - `radius`: The radius of displayed points
 - `column-hover`: Like `frame-hover` but the entire column/row is passed to the function.
 
-### NetworkFrame
+### StreamNetworkFrame
 
 - `node`: Creates a callout-circle annotation centered on the node with an id corresponding to the "id" prop in the annotation
 - `basic-node-label`: Places the "label" prop at the center of the node (label can be SVG JSX)
@@ -123,7 +123,7 @@ Use `svgAnnotationRules` or `htmlAnnotationRules` depending on the type of JSX e
 
 The custom rules expose the datapoint hovered, scales, and other properties of the frame.
 
-- NetworkFrame: `d, i, networkFrameProps, networkFrameState, nodes, edges, voronoiHover, screenCoordinates, adjustedPosition, adjustedSize, annotationLayer`
+- StreamNetworkFrame: `d, i, networkFrameProps, networkFrameState, nodes, edges, voronoiHover, screenCoordinates, adjustedPosition, adjustedSize, annotationLayer`
 - StreamXYFrame: `d, i, xyFrameProps, xyFrameState, xScale, yScale, xAccessor, yAccessor, summaries, points, lines, voronoiHover, screenCoordinates, adjustedPosition, adjustedSize, annotationLayer`
 - ORFrame: `d, i, orFrameProps, orFrameState, oScale, rScale, oAccessor, rAccessor, categories, voronoiHover, screenCoordinates, adjustedPosition, adjustedSize, annotationLayer`
 

@@ -1,5 +1,5 @@
 import React from "react"
-import { NetworkFrame } from "semiotic"
+import { StreamNetworkFrame } from "semiotic"
 import { Treemap } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -66,7 +66,7 @@ const treemapProps = [
   { name: "height", type: "number", required: false, default: "600", description: "Chart height in pixels." },
   { name: "margin", type: "object", required: false, default: "{ top: 10, bottom: 10, left: 10, right: 10 }", description: "Margin around the chart area." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Additional NetworkFrame props for advanced customization." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamNetworkFrame props for advanced customization." },
 ]
 
 // ---------------------------------------------------------------------------
@@ -90,12 +90,12 @@ export default function TreemapPage() {
         componentName="Treemap"
         importStatement='import { Treemap } from "semiotic"'
         tier="charts"
-        wraps="NetworkFrame"
+        wraps="StreamNetworkFrame"
         wrapsPath="/frames/network-frame"
         related={[
           { name: "CirclePack", path: "/charts/circle-pack" },
           { name: "TreeDiagram", path: "/charts/tree-diagram" },
-          { name: "NetworkFrame", path: "/frames/network-frame" },
+          { name: "StreamNetworkFrame", path: "/frames/network-frame" },
         ]}
       />
 
@@ -103,7 +103,7 @@ export default function TreemapPage() {
         Treemap visualizes hierarchical data as nested rectangles. Each
         rectangle's area is proportional to its value, making it easy to spot
         the largest and smallest items in a hierarchy. It wraps{" "}
-        <Link to="/frames/network-frame">NetworkFrame</Link> with{" "}
+        <Link to="/frames/network-frame">StreamNetworkFrame</Link> with{" "}
         <code>networkType="treemap"</code>.
       </p>
 
@@ -219,7 +219,7 @@ export default function TreemapPage() {
       <p>
         For full control — custom node rendering, filtered nodes, edge
         display — graduate to{" "}
-        <Link to="/frames/network-frame">NetworkFrame</Link> directly with{" "}
+        <Link to="/frames/network-frame">StreamNetworkFrame</Link> directly with{" "}
         <code>{`networkType={{ type: "treemap" }}`}</code>.
       </p>
 
@@ -241,9 +241,9 @@ export default function TreemapPage() {
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-frames)" }}>Frame (full control)</h4>
           <CodeBlock
-            code={`import { NetworkFrame } from "semiotic"
+            code={`import { StreamNetworkFrame } from "semiotic"
 
-<NetworkFrame
+<StreamNetworkFrame
   edges={hierarchyData}
   networkType={{ type: "treemap" }}
   nodeIDAccessor="name"
@@ -276,7 +276,7 @@ export default function TreemapPage() {
           diagrams for showing structural relationships
         </li>
         <li>
-          <Link to="/frames/network-frame">NetworkFrame</Link> — the
+          <Link to="/frames/network-frame">StreamNetworkFrame</Link> — the
           underlying Frame with full control over every rendering detail
         </li>
       </ul>

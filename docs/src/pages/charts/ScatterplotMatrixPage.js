@@ -134,12 +134,12 @@ export default function ScatterplotMatrixPage() {
         componentName="ScatterplotMatrix"
         importStatement='import { ScatterplotMatrix } from "semiotic"'
         tier="charts"
-        wraps="XYFrame"
+        wraps="StreamXYFrame"
         wrapsPath="/frames/xy-frame"
         related={[
           { name: "Scatterplot", path: "/charts/scatterplot" },
           { name: "Heatmap", path: "/charts/heatmap" },
-          { name: "XYFrame", path: "/frames/xy-frame" },
+          { name: "StreamXYFrame", path: "/frames/xy-frame" },
           { name: "Interaction", path: "/features/interaction" },
         ]}
       />
@@ -318,7 +318,7 @@ export default function ScatterplotMatrixPage() {
           and linked selection across charts
         </li>
         <li>
-          <Link to="/frames/xy-frame">XYFrame</Link> — the underlying Frame
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> — the underlying Frame
           powering each cell in the matrix
         </li>
       </ul>

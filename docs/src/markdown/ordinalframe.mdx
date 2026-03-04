@@ -3,16 +3,16 @@ along the _range_(numerical) axis. Examples include [bar charts](/guides/bar-cha
 [pie charts](/guides/pie-chart), [violin plots](/guides/ordinal-summaries), and
 [timelines](/cookbook/timeline)
 
-`<OrdinalFrame>` charts render [pieces](#piece-rendering) and [summaries](#summary-rendering).
+`<StreamOrdinalFrame>` charts render [pieces](#piece-rendering) and [summaries](#summary-rendering).
 
-`OrdinalFrame` data elements are accessible by tabbing to the data group (pieces or summaries) and
+`StreamOrdinalFrame` data elements are accessible by tabbing to the data group (pieces or summaries) and
 hitting enter to arrow-key navigate through the data elements.
 
 ```jsx
-import { OrdinalFrame } from "semiotic"
+import { StreamOrdinalFrame } from "semiotic"
 
 export default () => (
-  <OrdinalFrame
+  <StreamOrdinalFrame
     data={[
       { department: "art", students: 50 },
       { department: "science", students: 8 },
@@ -93,7 +93,7 @@ must contain two numbers which represents the width and height, respectively. Si
 `[500,500]`.
 
 ```jsx
-<OrdinalFrame size={[500, 500]} />
+<StreamOrdinalFrame size={[500, 500]} />
 ```
 
 ### rAccessor: { _string_ | _function_ }
@@ -103,11 +103,11 @@ Determines how _range_ values are accessed from the data array.
 ```jsx
 /*String option
 e.g. data=[{value: 1, column: 1}, {value: 4, column: 2}, ... ]*/
-<OrdinalFrame rAccessor={"value"} />
+<StreamOrdinalFrame rAccessor={"value"} />
 
 /*Function option
 e.g. data=[[1, "art"], [2, "science"], ... ]*/
-<OrdinalFrame rAccessor={d => d[0]} />
+<StreamOrdinalFrame rAccessor={d => d[0]} />
 ```
 
 ### oAccessor: { _string_ | _function_ }
@@ -117,11 +117,11 @@ Determines how _ordinal_ values are accessed from the data array.
 ```jsx
 /*String option
 e.g. data=[{value: 1, column: 1}, {value: 4, column: 2}, ... ]*/
-<OrdinalFrame oAccessor={"column"} />
+<StreamOrdinalFrame oAccessor={"column"} />
 
 /*Function option
 e.g. data=[[1, "art"], [2, "science"], ... ]*/
-<OrdinalFrame oAccessor={d => d[1]} />
+<StreamOrdinalFrame oAccessor={d => d[1]} />
 ```
 
 ### oSort: { _function_ }
@@ -133,7 +133,7 @@ ordinal values.
 
 ```jsx
 //sorts by alphabetical order
-<OrdinalFrame oSort={(a, b) => a < b} />
+<StreamOrdinalFrame oSort={(a, b) => a < b} />
 ```
 
 ### projection: { _string_ }
@@ -142,7 +142,7 @@ If _projection_ is specified, sets the orientation of the chart. The three possi
 "horizontal", "vertical" or "radial". Defaults to "vertical".
 
 ```jsx
-<OrdinalFrame projection={"horizontal"} />
+<StreamOrdinalFrame projection={"horizontal"} />
 ```
 
 ### title: { _string_ | _JSX_ }
@@ -151,10 +151,10 @@ Centers this title at the top of the chart.
 
 ```jsx
 /*String option*/
-<OrdinalFrame title={"Chart Title"} />
+<StreamOrdinalFrame title={"Chart Title"} />
 
 /*JSX option*/
-<OrdinalFrame title={<g><circle r={5} /><text>Chart Title</text></g>} />
+<StreamOrdinalFrame title={<g><circle r={5} /><text>Chart Title</text></g>} />
 ```
 
 ### margin: { _number_ | _object_ }
@@ -163,10 +163,10 @@ The margin can be set to one number, which is applied equally to all sides, or a
 
 ```jsx
 /*Single number option*/
-<OrdinalFrame margin={10} />
+<StreamOrdinalFrame margin={10} />
 
 /*Object option*/
-<OrdinalFrame margin={{ top: 5, bottom: 10, left: 15, right: 20 }} />
+<StreamOrdinalFrame margin={{ top: 5, bottom: 10, left: 15, right: 20 }} />
 ```
 
 ### rScaleType: { _d3-scale_ }
@@ -175,7 +175,7 @@ Custom [d3-scale](https://github.com/d3/d3-scale#d3-scale) for the range. Defaul
 [scaleLinear()](https://github.com/d3/d3-scale#scaleLinear).
 
 ```jsx
-<OrdinalFrame rScaleType={d3.scaleTime()} />
+<StreamOrdinalFrame rScaleType={d3.scaleTime()} />
 ```
 
 ### oScaleType: { _d3-scale_ }
@@ -183,7 +183,7 @@ Custom [d3-scale](https://github.com/d3/d3-scale#d3-scale) for the range. Defaul
 Custom [D3 scale](https://github.com/d3/d3-scale#d3-scale) for the ordinal values.
 
 ```jsx
-<OrdinalFrame oScaleType={d3.scaleThreshold()} />
+<StreamOrdinalFrame oScaleType={d3.scaleThreshold()} />
 ```
 
 ### rExtent: { [_min_, _max_] | _object_ }
@@ -196,16 +196,16 @@ The extent exposes an `onChange` callback function that updates with the calcula
 
 ```jsx
 /*min and max values set*/
-<OrdinalFrame rExtent={[20,250]} />
+<StreamOrdinalFrame rExtent={[20,250]} />
 
 /*only min value set*/
-<OrdinalFrame rExtent={[20, undefined]} />
+<StreamOrdinalFrame rExtent={[20, undefined]} />
 
 /*log calculated extent*/
-<OrdinalFrame rExtent={{ onChange: d => console.info("calculated extent: ", d) }} />
+<StreamOrdinalFrame rExtent={{ onChange: d => console.info("calculated extent: ", d) }} />
 
 /*log calculated extent and set extent*/
-<OrdinalFrame
+<StreamOrdinalFrame
    rExtent={{ extent: [20, undefined], onChange: d => console.info("calculated extent: ", d) }} />
 ```
 
@@ -218,7 +218,7 @@ Inverts the _range_ axis such that the _min_ and _max_ values are transposed.
 The distance in pixels between each column.
 
 ```jsx
-<OrdinalFrame oPadding={5} />
+<StreamOrdinalFrame oPadding={5} />
 ```
 
 ### dynamicColumnWidth: { _string_ | _func_ }
@@ -231,10 +231,10 @@ array of pieces in that column which you can measure in any way you want.
 
 ```jsx
 /*String option*/
-<OrdinalFrame dynamicColumnWidth={"value"} />
+<StreamOrdinalFrame dynamicColumnWidth={"value"} />
 
 /*Function option*/
-<OrdinalFrame dynamicColumnWidth={pieces => max(pieces.map(p => p.value))} />
+<StreamOrdinalFrame dynamicColumnWidth={pieces => max(pieces.map(p => p.value))} />
 ```
 
 ### pixelColumnWidth: { _number_ }
@@ -245,7 +245,7 @@ ignored as the height or width of the chart will be based on the number of colum
 value.
 
 ```jsx
-<OrdinalFrame pixelColumnWidth={40} />
+<StreamOrdinalFrame pixelColumnWidth={40} />
 ```
 
 ### renderKey: { _string_ | _function_ }
@@ -257,12 +257,12 @@ takes `(datapoint,index)` and returns a string to be used.
 
 ```jsx
 /* string option */
-<OrdinalFrame renderKey="somePropToBeUsedAsAKey" />
+<StreamOrdinalFrame renderKey="somePropToBeUsedAsAKey" />
 ```
 
 ```jsx
 /* function option defaulting to array position if no key on datapoint.renderKeyID exists */
-<OrdinalFrame renderKey={(datapoint, index) => datapoint.renderKeyID || i} />
+<StreamOrdinalFrame renderKey={(datapoint, index) => datapoint.renderKeyID || i} />
 ```
 
 ## Piece Rendering
@@ -275,16 +275,16 @@ bar chart, or one of the circles in a swarm plot.
 
 A string (`"bar"`, `"timeline"`, `"clusterbar"`, `"swarm"`, `"point"`, `"none"`) or object with
 `type` equal to one of those strings to use method-specific options such as
-`{ type: "swarm", r: 8 }`, or a function that takes data and the `OrdinalFrame` calculated settings
+`{ type: "swarm", r: 8 }`, or a function that takes data and the `StreamOrdinalFrame` calculated settings
 and creates JSX elements. See the [Waterfall Chart](/cookbook/waterfall-chart) in the examples to
 see how to use custom type functions.
 
 ```jsx
 // basic
-<OrdinalFrame type="bar" />
+<StreamOrdinalFrame type="bar" />
 
 // with options
-<OrdinalFrame type={{ type: "swarm", r: 20, customMark: d => <circle r={20} fill: "red" /> }} />
+<StreamOrdinalFrame type={{ type: "swarm", r: 20, customMark: d => <circle r={20} fill: "red" /> }} />
 ```
 
 **Type Settings**
@@ -325,11 +325,11 @@ see how to use custom type functions.
 ### data: { _array_ }
 
 An _array_ of objects or numerical values used to render both summary and piece visualizations in
-`OrdinalFrame`. The column of the data is based on its `oAccessor` value, while its position or
+`StreamOrdinalFrame`. The column of the data is based on its `oAccessor` value, while its position or
 height is determined by its `rAccessor` value.
 
 ```jsx
-<OrdinalFrame
+<StreamOrdinalFrame
   data={[
     { column: "a", value: 5 },
     { column: "b", value: 3 },
@@ -344,10 +344,10 @@ is passed the piece data and returns a JSX style object.
 
 ```jsx
 // object
-<OrdinalFrame style={{ fill: "red" }} />
+<StreamOrdinalFrame style={{ fill: "red" }} />
 
 // function
-<OrdinalFrame style={d => ({ fill: d.color })} />
+<StreamOrdinalFrame style={d => ({ fill: d.color })} />
 ```
 
 ### pieceClass: { _string_ | _function_ }
@@ -357,10 +357,10 @@ the point data and returns a string.
 
 ```jsx
 // object
-<OrdinalFrame pieceClass="cool-piece" />
+<StreamOrdinalFrame pieceClass="cool-piece" />
 
 // function
-<OrdinalFrame pieceClass={d => d.classSettings} />
+<StreamOrdinalFrame pieceClass={d => d.classSettings} />
 ```
 
 ### canvasPieces: { _boolean_ | _function_ }
@@ -373,9 +373,9 @@ whether or not to render the piece to
 
 ```jsx
 /*Boolean option */
-<OrdinalFrame canvasPieces="{" true } ... />
+<StreamOrdinalFrame canvasPieces="{" true } ... />
 
-/*Function option */ <OrdinalFrame canvasPieces={ (d, i) => } ... />
+/*Function option */ <StreamOrdinalFrame canvasPieces={ (d, i) => } ... />
 ```
 
 ### renderMode: { _string_ | _function_ | _object_ }
@@ -387,10 +387,10 @@ and returns a string or object such as that. Sketchy render mode is honored in c
 
 ````jsx
 /*Boolean option */
-<OrdinalFrame renderMode={ "sketchy" } ... />
+<StreamOrdinalFrame renderMode={ "sketchy" } ... />
 
 /* Object option */
-<OrdinalFrame renderMode={ {
+<StreamOrdinalFrame renderMode={ {
   renderMode: "sketchy",
   fillWeight: 3,
   hachureGap: 3.5,
@@ -398,18 +398,18 @@ and returns a string or object such as that. Sketchy render mode is honored in c
 } } ... />
 
 /*Function option */
-<OrdinalFrame renderMode={ d => d.uncertain === true && "sketchy" } ... />
+<StreamOrdinalFrame renderMode={ d => d.uncertain === true && "sketchy" } ... />
 
 ### connectorType: { _string_ | _function_ }
 
-Connectors in `OrdinalFrame` allow you to draw connections between elements in adjacent columns. The current, limited implementation is a simple test that if it returns true draws a link. This function is run on every piece, and it only tests for links to the next column (left to right in vertical, top to bottom in horizonal and clockwise in radial). For "bar" it draws a filled area, for "point" and "swarm" it draws a line.
+Connectors in `StreamOrdinalFrame` allow you to draw connections between elements in adjacent columns. The current, limited implementation is a simple test that if it returns true draws a link. This function is run on every piece, and it only tests for links to the next column (left to right in vertical, top to bottom in horizonal and clockwise in radial). For "bar" it draws a filled area, for "point" and "swarm" it draws a line.
 
 You can use this functionality to create [slope chart](/cookbook/slope-chart) or funnel diagrams.
 
 The following code will draw a connection between elements in adjoining columns that has the same `category` value. It will only draw a link to the first matching item in the next column so this cannot be used to draw branching paths or other multi-link connections from one piece to many pieces.
 
 ```jsx
-<OrdinalFrame connectorType={d => d.category} />
+<StreamOrdinalFrame connectorType={d => d.category} />
 ````
 
 ### connectorStyle: { _object_ | _function_ }
@@ -421,7 +421,7 @@ Since this is connecting two pieces you have access to both the `source` piece a
 piece for styling.
 
 ```jsx
-<OrdinalFrame
+<StreamOrdinalFrame
   connectorType={(d) => d.type}
   connectorStyle={(d) => {
     return {
@@ -444,9 +444,9 @@ determines whether or not to render the connector to
 
 ```jsx
 /*Boolean option */
-<OrdinalFrame canvasConnectors={ true } ... />
+<StreamOrdinalFrame canvasConnectors={ true } ... />
 
-/*Function option */ <OrdinalFrame canvasConnectors={ (d, i) => } ... />
+/*Function option */ <StreamOrdinalFrame canvasConnectors={ (d, i) => } ... />
 ```
 
 ### connectorRenderMode: { _string_ | _function_ | _object_ }
@@ -459,10 +459,10 @@ rendering.
 
 ```jsx
 /*Boolean option */
-<OrdinalFrame connectorRenderMode={ "sketchy" } ... />
+<StreamOrdinalFrame connectorRenderMode={ "sketchy" } ... />
 
 /* Object option */
-<OrdinalFrame connectorRenderMode={ {
+<StreamOrdinalFrame connectorRenderMode={ {
   renderMode: "sketchy",
   fillWeight: 3,
   hachureGap: 3.5,
@@ -470,7 +470,7 @@ rendering.
 } } ... />
 
 /*Function option */
-<OrdinalFrame connectorRenderMode={ d => d.uncertain === true && "sketchy" } ... />
+<StreamOrdinalFrame connectorRenderMode={ d => d.uncertain === true && "sketchy" } ... />
 
 ```
 
@@ -485,19 +485,19 @@ histogram.
 A string (`"heatmap"`, `"boxplot"`, `"histogram"`, `"ridgeline"`, `"contour"`, `"violin"`) or object
 with `type` equal to one of those strings (with further method-specific settings such as
 `{ type: "contour", bandwidth: 15 }` or `{ type: "ridgeline", amplitude: 30 }`, or a function that
-takes data and the OrdinalFrame calculated settings and creates JSX elements.
+takes data and the StreamOrdinalFrame calculated settings and creates JSX elements.
 
 See [ordinal summaries](/guides/ordinal-summaries) for more details on how to use the extended
 settings.
 
 ```jsx
-<OrdinalFrame summaryType={"contour"} />
+<StreamOrdinalFrame summaryType={"contour"} />
 ```
 
 Or send custom settings to adjust the number of contouring thresholds:
 
 ```jsx
-<OrdinalFrame summaryType={{ type: "contour", thresholds: 5 }} />
+<StreamOrdinalFrame summaryType={{ type: "contour", thresholds: 5 }} />
 ```
 
 ## Custom Settings by Type
@@ -539,10 +539,10 @@ generate your own boxplot.
 
 ```jsx
 // string
-<OrdinalFrame summaryType="violin" />
+<StreamOrdinalFrame summaryType="violin" />
 
 // object
-<OrdinalFrame summaryType={{ type: "ridgeline", amplitude: 30 }} />
+<StreamOrdinalFrame summaryType={{ type: "ridgeline", amplitude: 30 }} />
 ```
 
 ### summaryStyle: { _object_ | _function_ }
@@ -552,10 +552,10 @@ This is applied to each piece.
 
 ```jsx
 // object
-<OrdinalFrame summaryStyle={{ fill: "red" }} />
+<StreamOrdinalFrame summaryStyle={{ fill: "red" }} />
 
 // function
-<OrdinalFrame summaryStyle={d => ({ fill: d.color })} />
+<StreamOrdinalFrame summaryStyle={d => ({ fill: d.color })} />
 ```
 
 ### summaryClass: { _string_ | _function_ }
@@ -564,10 +564,10 @@ A string or function that takes a piece and returns a string that is assigned to
 
 ```jsx
 // string
-<OrdinalFrame summaryClass="cool-class" />
+<StreamOrdinalFrame summaryClass="cool-class" />
 
 // function
-<OrdinalFrame summaryClass={d => d.customClass} />
+<StreamOrdinalFrame summaryClass={d => d.customClass} />
 ```
 
 ### summaryPosition: { _function_ }
@@ -586,9 +586,9 @@ determines whether or not to render the summary to
 
 ```jsx
 /*Boolean option */
-<OrdinalFrame canvasSummaries={ true } ... />
+<StreamOrdinalFrame canvasSummaries={ true } ... />
 
-/*Function option */ <OrdinalFrame canvasSummaries={ (d, i) => } ... />
+/*Function option */ <StreamOrdinalFrame canvasSummaries={ (d, i) => } ... />
 ```
 
 ### summaryRenderMode: { _string_ | _function_ | _object_ }
@@ -601,10 +601,10 @@ rendering.
 
 ```jsx
 /*Boolean option */
-<OrdinalFrame summaryRenderMode={ "sketchy" } ... />
+<StreamOrdinalFrame summaryRenderMode={ "sketchy" } ... />
 
 /* Object option */
-<OrdinalFrame summaryRenderMode={ {
+<StreamOrdinalFrame summaryRenderMode={ {
   renderMode: "sketchy",
   fillWeight: 3,
   hachureGap: 3.5,
@@ -612,7 +612,7 @@ rendering.
 } } ... />
 
 /*Function option */
-<OrdinalFrame summaryRenderMode={ d => d.uncertain === true && "sketchy" } ... />
+<StreamOrdinalFrame summaryRenderMode={ d => d.uncertain === true && "sketchy" } ... />
 
 ```
 
@@ -627,7 +627,7 @@ hovered point, so take that into account when using CSS to style the position an
 elements. You can drop any HTML into this floating div, including another frame.
 
 ```jsx
-<OrdinalFrame
+<StreamOrdinalFrame
   pieceHoverAnnotation={true}
   tooltipContent={(d) => (
     <div className="tooltip-content">
@@ -645,7 +645,7 @@ An array of objects that defines axes. These objects roughly correspond to the o
 labels for the columns.
 
 ```jsx
-<OrdinalFrame axes={{ orient: "left" }} />
+<StreamOrdinalFrame axes={{ orient: "left" }} />
 ```
 
 ### oLabel: { _bool_ | _function_ | _object_ }
@@ -660,13 +660,13 @@ determines the outset or inset of a label in radial mode.
 
 ```jsx
 // boolean
-<OrdinalFrame oLabel={true} />
+<StreamOrdinalFrame oLabel={true} />
 
 // function
-<OrdinalFrame oLabel={d => <text fontSize={36}>{d}</text> } />
+<StreamOrdinalFrame oLabel={d => <text fontSize={36}>{d}</text> } />
 
 // object
-<OrdinalFrame oLabel={
+<StreamOrdinalFrame oLabel={
    { label: true,
      orient: "stem",
      padding: -5  }
@@ -681,7 +681,7 @@ An array of objects to be processed using the frame's
 data properties that your data has will be automatically placed in the transformed o/r space.
 
 ```jsx
-<OrdinalFrame
+<StreamOrdinalFrame
    annotations={[
       { type: "or", valueL 5, category: "tomatoes", label: "5 of these tomatoes" }
    ]}
@@ -707,7 +707,7 @@ An object with `{ layout, pointSizeFunction, labelSizeFunction }` containing
 each others' way or placing them in the margins.
 
 ```jsx
-<OrdinalFrame
+<StreamOrdinalFrame
   annotationSettings={{
     layout: {
       type: "marginalia",
@@ -728,7 +728,7 @@ Whether to turn on a matte (a border that covers the margin area to hide overflo
 matte.
 
 ```jsx
-<OrdinalFrame matte={true} />
+<StreamOrdinalFrame matte={true} />
 ```
 
 ### backgroundGraphics: { _array_ | _JSX_ }
@@ -760,7 +760,7 @@ generating the overlay based on summaries.
 A function to fire on hover that passes the column or piece being hovered over.
 
 ```jsx
-<OrdinalFrame
+<StreamOrdinalFrame
   customHoverBehavior={(d) => {
     this.setState({ hoveredOn: d })
   }}
@@ -772,7 +772,7 @@ A function to fire on hover that passes the column or piece being hovered over.
 A function to fire on click that passes the column or piece being hovered over.
 
 ```jsx
-<OrdinalFrame
+<StreamOrdinalFrame
   customClickBehavior={(d) => {
     this.setState({ clickedOn: d })
   }}
@@ -784,7 +784,7 @@ A function to fire on click that passes the column or piece being hovered over.
 A function to fire on doubleclick that passes the column or piece being hovered over.
 
 ```jsx
-<OrdinalFrame
+<StreamOrdinalFrame
   customDoubleClickBehavior={(d) => {
     this.setState({ doubleclicked: d })
   }}
@@ -807,7 +807,7 @@ events. See the [Ordinal Brushes](/guides/ordinal-brushes) example.
   brush with
 
 ```jsx
-<OrdinalFrame
+<StreamOrdinalFrame
   interaction={{
     columnsBrush: true,
     extent: { singleColumn: this.state.extent },
@@ -833,7 +833,7 @@ A JSX or array of JSX to be injected into the visualization layer's SVG `defs`. 
 or other SVG material typically defined in defs.
 
 ```jsx
-<OrdinalFrame
+<StreamOrdinalFrame
   additionalDefs={
     <linearGradient y2="1" id="paleWoodGradient">
       <stop stopColor="#8E0E00" offset="0%" />

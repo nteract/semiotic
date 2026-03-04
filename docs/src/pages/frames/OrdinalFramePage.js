@@ -1,5 +1,5 @@
 import React from "react"
-import { OrdinalFrame } from "semiotic"
+import { StreamOrdinalFrame } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
@@ -134,36 +134,36 @@ const ordinalFrameProps = [
 // Component
 // ---------------------------------------------------------------------------
 
-export default function OrdinalFramePage() {
+export default function StreamOrdinalFramePage() {
   return (
     <PageLayout
-      title="OrdinalFrame"
+      title="StreamOrdinalFrame"
       tier="frames"
       breadcrumbs={[
         { label: "Frames", path: "/frames" },
-        { label: "OrdinalFrame", path: "/frames/ordinal-frame" },
+        { label: "StreamOrdinalFrame", path: "/frames/ordinal-frame" },
       ]}
-      prevPage={{ title: "XYFrame", path: "/frames/xy-frame" }}
-      nextPage={{ title: "NetworkFrame", path: "/frames/network-frame" }}
+      prevPage={{ title: "StreamXYFrame", path: "/frames/xy-frame" }}
+      nextPage={{ title: "StreamNetworkFrame", path: "/frames/network-frame" }}
     >
       <ComponentMeta
-        componentName="OrdinalFrame"
-        importStatement='import { OrdinalFrame } from "semiotic"'
+        componentName="StreamOrdinalFrame"
+        importStatement='import { StreamOrdinalFrame } from "semiotic"'
         tier="frames"
         related={[
           { name: "BarChart", path: "/charts/bar-chart" },
           { name: "PieChart", path: "/charts/pie-chart" },
-          { name: "XYFrame", path: "/frames/xy-frame" },
+          { name: "StreamXYFrame", path: "/frames/xy-frame" },
         ]}
       />
 
       <p>
-        OrdinalFrame displays categorical data along the{" "}
+        StreamOrdinalFrame displays categorical data along the{" "}
         <strong>ordinal</strong> (categorical) axis and continuous data along
         the <strong>range</strong> (numerical) axis. It powers bar charts,
         clustered bars, timelines, swarm plots, pie charts, and a rich set of
         statistical summaries (violin plots, boxplots, ridgeline plots, and
-        more). Use OrdinalFrame directly when you need full control over piece
+        more). Use StreamOrdinalFrame directly when you need full control over piece
         rendering, summary overlays, connectors between columns, or brush
         interactions.
       </p>
@@ -174,7 +174,7 @@ export default function OrdinalFramePage() {
       <h2 id="concepts">Concepts</h2>
 
       <p>
-        OrdinalFrame processes data through a pipeline designed for categorical
+        StreamOrdinalFrame processes data through a pipeline designed for categorical
         grouping:
       </p>
 
@@ -232,7 +232,7 @@ export default function OrdinalFramePage() {
           oPadding: 8,
           margin: { top: 20, bottom: 60, left: 80, right: 20 },
         }}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         startHidden={false}
         overrideProps={{
           data: `[
@@ -279,7 +279,7 @@ export default function OrdinalFramePage() {
           ),
           pieceHoverAnnotation: true,
         }}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         overrideProps={{
           data: `[
   { region: "North", revenue: 12000, product: "Widget" },
@@ -316,7 +316,7 @@ export default function OrdinalFramePage() {
           margin: { top: 20, bottom: 50, left: 60, right: 20 },
           pieceHoverAnnotation: true,
         }}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         overrideProps={{
           data: `[
   { quarter: "Q1", value: 42 },
@@ -350,7 +350,7 @@ export default function OrdinalFramePage() {
           axes: [{ orient: "bottom", label: "Value" }],
           margin: { top: 20, bottom: 50, left: 100, right: 20 },
         }}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         overrideProps={{
           data: `[
   { group: "Control", value: 42 },
@@ -374,7 +374,7 @@ export default function OrdinalFramePage() {
       {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
-      <PropTable componentName="OrdinalFrame" props={ordinalFrameProps} />
+      <PropTable componentName="StreamOrdinalFrame" props={ordinalFrameProps} />
 
       {/* ----------------------------------------------------------------- */}
       {/* Related */}
@@ -384,18 +384,18 @@ export default function OrdinalFramePage() {
       <ul>
         <li>
           <Link to="/charts/bar-chart">BarChart</Link> -- simplified Chart
-          component that wraps OrdinalFrame for bar visualizations
+          component that wraps StreamOrdinalFrame for bar visualizations
         </li>
         <li>
           <Link to="/charts/pie-chart">PieChart</Link> -- simplified Chart
           component for radial projection bar charts
         </li>
         <li>
-          <Link to="/frames/xy-frame">XYFrame</Link> -- for continuous x/y
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> -- for continuous x/y
           data (line charts, scatterplots, etc.)
         </li>
         <li>
-          <Link to="/frames/network-frame">NetworkFrame</Link> -- for
+          <Link to="/frames/network-frame">StreamNetworkFrame</Link> -- for
           topological data (force layouts, hierarchies, etc.)
         </li>
         <li>

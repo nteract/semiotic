@@ -215,6 +215,6 @@ export const RealtimeTemporalHistogram = forwardRef<RealtimeFrameHandle, Realtim
 RealtimeTemporalHistogram.displayName = "RealtimeTemporalHistogram"
 
 /** @deprecated Use RealtimeTemporalHistogram instead */
-export const RealtimeBarChart = RealtimeTemporalHistogram
+export const RealtimeHistogram = RealtimeTemporalHistogram
 /** @deprecated Use RealtimeTemporalHistogramProps instead */
-export type RealtimeBarChartProps = RealtimeTemporalHistogramProps
+export type RealtimeHistogramProps = RealtimeTemporalHistogramProps

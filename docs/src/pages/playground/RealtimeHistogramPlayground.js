@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react"
-import { RealtimeBarChart, RealtimeSwarmChart } from "semiotic"
+import { RealtimeHistogram, RealtimeSwarmChart } from "semiotic"
 import PageLayout from "../../components/PageLayout"
 import PropControls from "../../components/PropControls"
 import CodeBlock from "../../components/CodeBlock"
@@ -110,7 +110,7 @@ const generators = [
 // Component
 // ---------------------------------------------------------------------------
 
-export default function RealtimeBarChartPlayground() {
+export default function RealtimeHistogramPlayground() {
   const [chartType, setChartType] = useState("bar")
 
   const controls = chartType === "bar"
@@ -260,7 +260,7 @@ export default function RealtimeBarChartPlayground() {
       <div ref={vizRef} className="playground-chart-container">
         {containerWidth ? (
           chartType === "bar" ? (
-            <RealtimeBarChart
+            <RealtimeHistogram
               key={chartKey}
               ref={chartRef}
               size={[chartWidth, chartHeight]}
@@ -317,7 +317,7 @@ export default function RealtimeBarChartPlayground() {
 }
 
 function generateCode(chartType, controls, values, defaults, hasCategories) {
-  const componentName = chartType === "bar" ? "RealtimeBarChart" : "RealtimeSwarmChart"
+  const componentName = chartType === "bar" ? "RealtimeHistogram" : "RealtimeSwarmChart"
   let code = `import { ${componentName} } from "semiotic"\nimport { useRef } from "react"\n\n`
   code += `const chartRef = useRef()\n\n`
   code += `// Push individual data points\n`

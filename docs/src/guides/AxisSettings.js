@@ -42,7 +42,7 @@ export default function AxisSettings() {
   return (
     <div>
       <MarkdownText
-        text={`\`OrdinalFrame\` and \`XYFrame\`  both take an \`axes\` prop that takes an array of objects that determine how your axes are displayed:
+        text={`\`StreamOrdinalFrame\` and \`StreamXYFrame\`  both take an \`axes\` prop that takes an array of objects that determine how your axes are displayed:
 - \`orient\`: the only required prop, determines where to place the axis (\`left\`, \`right\`, \`top\`, \`bottom\`).
 - \`ticks\`: guidance for a prefered number of ticks to display
 - \`tickValues\`: an array of explicit tick values to use

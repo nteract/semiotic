@@ -140,7 +140,7 @@ This page uses box office data from [Box Office Mojo](https://www.boxofficemojo.
 
 ## Heatmap
 
-\`XYFrame\` takes \`summaries\` as an array of objects. Each object takes an array of \`coordinates\` to summarize. 
+\`StreamXYFrame\` takes \`summaries\` as an array of objects. Each object takes an array of \`coordinates\` to summarize. 
 
 In this example, we pass a single summary object, and set to \`summaryType: "heatmap" \`.
 

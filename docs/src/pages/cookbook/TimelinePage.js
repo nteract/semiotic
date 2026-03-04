@@ -19,7 +19,7 @@ export default function TimelinePage() {
       <p>
         Timeline and Gantt charts visualize events or tasks across time,
         showing duration and sequence at a glance. This recipe uses
-        OrdinalFrame's built-in <code>timeline</code> type to display U.S.
+        StreamOrdinalFrame's built-in <code>timeline</code> type to display U.S.
         presidential terms, with each row representing a president and bar
         length representing their time in office.
       </p>
@@ -77,7 +77,7 @@ oLabel: (d, i) => (
       <h2 id="key-takeaways">Key Takeaways</h2>
       <ul>
         <li>
-          The <code>timeline</code> type in OrdinalFrame renders range-based
+          The <code>timeline</code> type in StreamOrdinalFrame renders range-based
           bars from a two-element array accessor.
         </li>
         <li>
@@ -97,7 +97,7 @@ oLabel: (d, i) => (
       <h2 id="related">Related</h2>
       <ul>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — the underlying
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the underlying
           frame with timeline type support
         </li>
         <li>

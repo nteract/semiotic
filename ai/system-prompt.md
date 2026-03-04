@@ -32,7 +32,7 @@ Use `import { ComponentName } from "semiotic/ai"` for all components below.
 
 ## Realtime (ref-based push API, canvas)
 - **RealtimeLineChart** — `ref.current.push(datum)`, `timeAccessor`, `valueAccessor`, `windowSize`
-- **RealtimeBarChart** — **`binSize`** (required), `timeAccessor`, `valueAccessor`
+- **RealtimeHistogram** — **`binSize`** (required), `timeAccessor`, `valueAccessor`
 - **RealtimeSwarmChart** — `timeAccessor`, `valueAccessor`, `categoryAccessor`
 - **RealtimeWaterfallChart** — `timeAccessor`, `valueAccessor`, `positiveColor`, `negativeColor`
 - **RealtimeSankey** — `ref.current.push({ source, target, value })`, `sourceAccessor`, `targetAccessor`, `valueAccessor`, `showParticles`, `tensionConfig`

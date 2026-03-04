@@ -16,11 +16,11 @@ export default function CustomLayoutPage() {
       prevPage={{ title: "Adjacency Matrix", path: "/cookbook/matrix" }}
     >
       <p>
-        Semiotic's NetworkFrame ships with force, tree, cluster, and other
+        Semiotic's StreamNetworkFrame ships with force, tree, cluster, and other
         built-in layout algorithms. But sometimes you need a specialized layout
         -- perhaps one from d3's ecosystem or a custom algorithm. This recipe
         demonstrates how to plug in d3-flextree, a layout that supports
-        variable-sized nodes in a tree, using NetworkFrame's custom layout and
+        variable-sized nodes in a tree, using StreamNetworkFrame's custom layout and
         zoom capabilities.
       </p>
 
@@ -126,7 +126,7 @@ export default function CustomLayoutPage() {
       <h2 id="related">Related</h2>
       <ul>
         <li>
-          <Link to="/frames/network-frame">NetworkFrame</Link> — the underlying
+          <Link to="/frames/network-frame">StreamNetworkFrame</Link> — the underlying
           frame for all network visualizations
         </li>
         <li>

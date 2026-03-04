@@ -1,5 +1,5 @@
 import React from "react"
-import { NetworkFrame } from "semiotic"
+import { StreamNetworkFrame } from "semiotic"
 import { TreeDiagram } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -96,7 +96,7 @@ const treeDiagramProps = [
   { name: "height", type: "number", required: false, default: "600", description: "Chart height in pixels." },
   { name: "margin", type: "object", required: false, default: "{ top: 50, bottom: 50, left: 50, right: 50 }", description: "Margin around the chart area." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Additional NetworkFrame props for advanced customization. Escape hatch to the full Frame API." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamNetworkFrame props for advanced customization. Escape hatch to the full Frame API." },
 ]
 
 // ---------------------------------------------------------------------------
@@ -120,12 +120,12 @@ export default function TreeDiagramPage() {
         componentName="TreeDiagram"
         importStatement='import { TreeDiagram } from "semiotic"'
         tier="charts"
-        wraps="NetworkFrame"
+        wraps="StreamNetworkFrame"
         wrapsPath="/frames/network-frame"
         related={[
           { name: "ForceDirectedGraph", path: "/charts/force-directed-graph" },
           { name: "SankeyDiagram", path: "/charts/sankey-diagram" },
-          { name: "NetworkFrame", path: "/frames/network-frame" },
+          { name: "StreamNetworkFrame", path: "/frames/network-frame" },
         ]}
       />
 
@@ -281,9 +281,9 @@ export default function TreeDiagramPage() {
       <p>
         When you need more control — custom node rendering, animations, or
         mixed layouts — graduate to{" "}
-        <Link to="/frames/network-frame">NetworkFrame</Link> directly. Every{" "}
+        <Link to="/frames/network-frame">StreamNetworkFrame</Link> directly. Every{" "}
         <code>TreeDiagram</code> is just a configured{" "}
-        <code>NetworkFrame</code> under the hood.
+        <code>StreamNetworkFrame</code> under the hood.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>
@@ -306,9 +306,9 @@ export default function TreeDiagramPage() {
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-frames)" }}>Frame (full control)</h4>
           <CodeBlock
-            code={`import { NetworkFrame } from "semiotic"
+            code={`import { StreamNetworkFrame } from "semiotic"
 
-<NetworkFrame
+<StreamNetworkFrame
   edges={hierarchyData}
   nodeIDAccessor="name"
   networkType={{
@@ -337,7 +337,7 @@ export default function TreeDiagramPage() {
 
       <p>
         The <code>frameProps</code> prop on TreeDiagram lets you pass any
-        NetworkFrame prop without fully graduating:
+        StreamNetworkFrame prop without fully graduating:
       </p>
 
       <CodeBlock
@@ -382,7 +382,7 @@ export default function TreeDiagramPage() {
           for showing bidirectional flow between entities
         </li>
         <li>
-          <Link to="/frames/network-frame">NetworkFrame</Link> — the underlying
+          <Link to="/frames/network-frame">StreamNetworkFrame</Link> — the underlying
           Frame with full control over every rendering detail
         </li>
         <li>

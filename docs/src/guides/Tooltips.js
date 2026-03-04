@@ -1,7 +1,7 @@
 import React from "react"
 import Tooltips from "../markdown/tooltips.mdx"
 import DocumentFrame, { propertyToString } from "../DocumentFrame"
-import { StreamXYFrame, OrdinalFrame, Tooltip, MultiLineTooltip } from "semiotic"
+import { StreamXYFrame, StreamOrdinalFrame, Tooltip, MultiLineTooltip } from "semiotic"
 import lines from "./sharedTooltipData"
 import { scaleTime } from "d3-scale"
 import { timeFormat } from "d3-time-format"
@@ -341,7 +341,7 @@ Use field objects to customize labels and formatting:
       />
       <DocumentFrame
         frameProps={formattedTooltipBar}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         overrideProps={{
           data: `[
   { category: "Product A", sales: 450, profit: 120, units: 230 },
@@ -359,7 +359,7 @@ Use field objects to customize labels and formatting:
   ]
 })`
         }}
-        pre={`import { OrdinalFrame, MultiLineTooltip } from "semiotic"`}
+        pre={`import { StreamOrdinalFrame, MultiLineTooltip } from "semiotic"`}
       />
 
       <MarkdownText

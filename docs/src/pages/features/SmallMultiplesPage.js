@@ -422,11 +422,11 @@ const filtered = useFilteredData(data, "mySelection")`}
           lines, areas, and scatterplots
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — child frame
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — child frame
           type for bars, swarms, and distributions
         </li>
         <li>
-          <Link to="/frames/network-frame">NetworkFrame</Link> — child frame
+          <Link to="/frames/network-frame">StreamNetworkFrame</Link> — child frame
           type for network diagrams
         </li>
         <li>

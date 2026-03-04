@@ -1,5 +1,5 @@
 import React from "react"
-import { OrdinalFrame, StreamXYFrame } from "semiotic"
+import { StreamOrdinalFrame, StreamXYFrame } from "semiotic"
 
 import PageLayout from "../../components/PageLayout"
 import LiveExample from "../../components/LiveExample"
@@ -195,7 +195,7 @@ export default function StylingPage() {
           margin: { top: 20, bottom: 20, left: 40, right: 20 },
           title: "Sketchy Bar Chart",
         }}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         overrideProps={{
           data: "[5, 8, 2, 3, 10, 5, 8, 2, 3, 10]",
           style: `(d, i) => ({
@@ -224,11 +224,11 @@ export default function StylingPage() {
           <code>lineRenderMode</code>, <code>summaryRenderMode</code>
         </li>
         <li>
-          <strong>OrdinalFrame:</strong> <code>renderMode</code>,{" "}
+          <strong>StreamOrdinalFrame:</strong> <code>renderMode</code>,{" "}
           <code>summaryRenderMode</code>
         </li>
         <li>
-          <strong>NetworkFrame:</strong> <code>nodeRenderMode</code>,{" "}
+          <strong>StreamNetworkFrame:</strong> <code>nodeRenderMode</code>,{" "}
           <code>edgeRenderMode</code>
         </li>
       </ul>
@@ -239,7 +239,7 @@ export default function StylingPage() {
 
       <CodeBlock
         code={`// Only render items above a threshold as sketchy
-<OrdinalFrame
+<StreamOrdinalFrame
   renderMode={d => d.value > 5 ? "sketchy" : undefined}
   // ...other props
 />`}
@@ -289,7 +289,7 @@ export default function StylingPage() {
           margin: 20,
           title: "Patterns and Gradients",
         }}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         overrideProps={{
           data: "[5, 8, 2, 3, 10, 5, 8, 2, 3, 10]",
           style: `(d, i) => ({
@@ -414,12 +414,12 @@ export default function StylingPage() {
 
       <CodeBlock
         code={`// Static style object (same for all bars)
-<OrdinalFrame
+<StreamOrdinalFrame
   style={{ fill: "#ac58e5", stroke: "white" }}
 />
 
 // Dynamic style function (data-driven)
-<OrdinalFrame
+<StreamOrdinalFrame
   style={(d, i) => ({
     fill: d.value > 10 ? "#E0488B" : "#9fd0cb",
     stroke: "white",
@@ -522,11 +522,11 @@ export default function StylingPage() {
           summaryStyle, and render mode props
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — style,
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — style,
           renderMode, summaryStyle, and pattern support
         </li>
         <li>
-          <Link to="/frames/network-frame">NetworkFrame</Link> — nodeStyle,
+          <Link to="/frames/network-frame">StreamNetworkFrame</Link> — nodeStyle,
           edgeStyle, and render mode props
         </li>
         <li>

@@ -19,7 +19,7 @@ export default function RadarPlotPage() {
       <p>
         Radar charts (also called spider or star charts) compare multiple
         quantitative attributes across several entities, making it easy to spot
-        which entity excels in which dimension. This recipe uses OrdinalFrame's
+        which entity excels in which dimension. This recipe uses StreamOrdinalFrame's
         radial projection with connectors to create a Pokemon stat comparison
         chart.
       </p>
@@ -38,7 +38,7 @@ export default function RadarPlotPage() {
 
       <h2 id="how-it-works">How It Works</h2>
       <p>
-        The radar chart is simply an OrdinalFrame with{" "}
+        The radar chart is simply an StreamOrdinalFrame with{" "}
         <code>projection: "radial"</code>. Each attribute (attack, defense,
         speed, etc.) becomes an ordinal category arranged around the circle,
         and each Pokemon's stats become connected points:
@@ -86,7 +86,7 @@ foregroundGraphics: [
       <h2 id="key-takeaways">Key Takeaways</h2>
       <ul>
         <li>
-          Setting <code>projection: "radial"</code> on OrdinalFrame turns any
+          Setting <code>projection: "radial"</code> on StreamOrdinalFrame turns any
           ordinal layout into a circular (radar) chart.
         </li>
         <li>
@@ -106,7 +106,7 @@ foregroundGraphics: [
       <h2 id="related">Related</h2>
       <ul>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — the underlying
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the underlying
           frame with radial projection
         </li>
         <li>

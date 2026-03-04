@@ -1,6 +1,6 @@
 import React from "react"
 import DocumentFrame from "../DocumentFrame"
-import { NetworkFrame } from "semiotic"
+import { StreamNetworkFrame } from "semiotic"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
 import flextree from "d3-flextree-v4"
@@ -158,13 +158,13 @@ export default function CustomLayout() {
       <MarkdownText
         text={`
 
-This example shows how you can use \`NetworkFrame\` with a custom \`layout\` function to position \`nodes\` and \`edges\`.
+This example shows how you can use \`StreamNetworkFrame\` with a custom \`layout\` function to position \`nodes\` and \`edges\`.
 `}
       />
       <DocumentFrame
         frameProps={frameProps}
         overrideProps={overrideProps}
-        type={NetworkFrame}
+        type={StreamNetworkFrame}
         useExpanded
       />
     </div>

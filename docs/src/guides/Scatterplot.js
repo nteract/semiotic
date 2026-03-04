@@ -274,13 +274,13 @@ export default function CreateALineChart() {
     <div>
       <MarkdownText
         text={`
-Creating a scatterplot, and scatterplot using a custom point with \`XYFrame\` and hover behavior and styling.
+Creating a scatterplot, and scatterplot using a custom point with \`StreamXYFrame\` and hover behavior and styling.
 
 This page uses box office data from [Box Office Mojo](https://www.boxofficemojo.com/).
 
 ## Scatterplot
 
-The \`XYFrame\` takes \`points\` as an array of objects. Each object represents a point. 
+The \`StreamXYFrame\` takes \`points\` as an array of objects. Each object represents a point. 
 
 In this example, we pass a \`xExtent={[0]}\` and \`yExtent={[0]}\` to set the lower bound of the xAxis and yAxis to zero, otherwise it would create an exent based on the minimum and maximum values on your  \`xAccessor\` and \`yAccessor\`. Your accessors can be a string key to access the property or a function.
 
@@ -296,7 +296,7 @@ In this example, we pass a \`xExtent={[0]}\` and \`yExtent={[0]}\` to set the lo
         text={`
 ## Scatterplot with Custom Points
 
-XYFrame takes a \`customPointMark\` which allows you to render the points with custom logic. 
+StreamXYFrame takes a \`customPointMark\` which allows you to render the points with custom logic. 
 
 \`customPointMark={({ d }) => {
   return (
@@ -337,7 +337,7 @@ Enabeling the \`hoverAnnotation={true}\` prop  gives you default tooltips based 
         text={`
 ## Scatterplot with ResponsiveWidth
 
-To make your chart responsive, instead of using \`XYFrame\` use \`ResponsiveXYFrame\` and set the \`responsiveWidth={true}\`.
+To make your chart responsive, instead of using \`StreamXYFrame\` use \`StreamXYFrame\` and set the \`responsiveWidth={true}\`.
 `}
       />
       <DocumentFrame

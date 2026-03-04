@@ -77,19 +77,19 @@ export default function CreateALineChart() {
     <div>
       <MarkdownText
         text={`
-A guide for creating an area, stacked area, bump area, and stacked percent chart using \`XYFrame\`.
+A guide for creating an area, stacked area, bump area, and stacked percent chart using \`StreamXYFrame\`.
 
 This page uses box office data from [Box Office Mojo](https://www.boxofficemojo.com/).
 
 ## Area Chart
 
-\`XYFrame\` takes \`lines\` as an object or an array of objects. Each object represents a line. 
+\`StreamXYFrame\` takes \`lines\` as an object or an array of objects. Each object represents a line. 
 
 Every object needs a \`coordinates\` property with the array of points for that line. The points will be rendered in the order of that array.
 
 You can use a key other than \`coordinates\` by chaging the \`lineDataAccessor\` props.
 
-The default setting for XYFrame when you send it lines is to show them as a line chart. You can override this by adding in the prop \`lineType="area"\` to turn your chart in to areas.
+The default setting for StreamXYFrame when you send it lines is to show them as a line chart. You can override this by adding in the prop \`lineType="area"\` to turn your chart in to areas.
 
 In this example, we also pass \`yExtent={[0]}\` to set the lower bound of the yAxis to zero, otherwise it would create an exent based on the minimum and maximum values derived from your \`yAccessor\`.
 
@@ -134,7 +134,7 @@ If you want to emphasize change in rank with your area chart you can use the \`l
         text={`
 ## Stacked Area Percent Chart
 
-Changing the \`lineType="stackedpercent"\` and XYFrame will automatically sum each data point as a % of the total for each \`xAccessor\` value as the y data position instead of using the raw values.
+Changing the \`lineType="stackedpercent"\` and StreamXYFrame will automatically sum each data point as a % of the total for each \`xAccessor\` value as the y data position instead of using the raw values.
 
 `}
       />
@@ -162,7 +162,7 @@ To add tooltips, you simply set \`hoverAnnotation={true}\`. By default the toolt
         text={`
 ## Area Chart with Responsive Width
 
-To make your chart responsive, instead of using \`XYFrame\` use \`ResponsiveXYFrame\` and set the \`responsiveWidth={true}\`.
+To make your chart responsive, instead of using \`StreamXYFrame\` use \`StreamXYFrame\` and set the \`responsiveWidth={true}\`.
 `}
       />
       <DocumentFrame

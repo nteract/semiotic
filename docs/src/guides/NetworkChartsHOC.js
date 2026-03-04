@@ -117,7 +117,7 @@ export default function NetworkChartsHOC() {
 
       <MarkdownText
         text={`
-Higher-order network chart components provide simplified APIs for visualizing relationships and hierarchies based on \`NetworkFrame\`. These components handle the complexity of network layouts while providing intuitive prop names.
+Higher-order network chart components provide simplified APIs for visualizing relationships and hierarchies based on \`StreamNetworkFrame\`. These components handle the complexity of network layouts while providing intuitive prop names.
 
 ## Benefits
 
@@ -183,7 +183,7 @@ const edges = [
 Force-directed graphs show network relationships with nodes repelling and edges attracting for natural clustering.
 
 **Advanced:**
-Pass any \`NetworkFrame\` prop for complete control. [See NetworkFrame API →](/api/networkframe)
+Pass any \`StreamNetworkFrame\` prop for complete control. [See StreamNetworkFrame API →](/api/networkframe)
 
 ---
 `}
@@ -231,7 +231,7 @@ const chordData = [
 Chord diagrams show relationships between entities in a circular layout, with ribbon thickness indicating strength.
 
 **Advanced:**
-Pass \`networkType\` settings or other \`NetworkFrame\` props for customization.
+Pass \`networkType\` settings or other \`StreamNetworkFrame\` props for customization.
 
 ---
 `}
@@ -289,7 +289,7 @@ const links = [
 Sankey diagrams show flow quantities between stages, with link width proportional to value.
 
 **Advanced:**
-Pass \`networkType\` settings or other \`NetworkFrame\` props for customization.
+Pass \`networkType\` settings or other \`StreamNetworkFrame\` props for customization.
 
 ---
 `}
@@ -349,7 +349,7 @@ const treeData = {
 Tree diagrams show hierarchical relationships with various layout options.
 
 **Advanced:**
-Pass \`networkType\` settings or other \`NetworkFrame\` props for customization.
+Pass \`networkType\` settings or other \`StreamNetworkFrame\` props for customization.
 
 ---
 
@@ -478,7 +478,7 @@ const props: ForceDirectedGraphProps = {
 - [XY Chart Components →](/guides/xy-charts-hoc) for continuous data
 - [Ordinal Chart Components →](/guides/ordinal-charts-hoc) for categorical data
 - [Tooltips Guide →](/guides/tooltips) for advanced tooltip customization
-- [NetworkFrame API →](/api/networkframe) for complete Frame control
+- [StreamNetworkFrame API →](/api/networkframe) for complete Frame control
 `}
       />
     </div>

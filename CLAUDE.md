@@ -451,7 +451,7 @@ Props: `size` ([number, number], [500, 300]),
 ```
 
 #### RealtimeTemporalHistogram
-Streaming temporal histogram with time-binned aggregation. (Previously RealtimeBarChart.)
+Streaming temporal histogram with time-binned aggregation. (Previously RealtimeHistogram.)
 
 Props: `binSize` (number, **required**),
   `size` ([number, number], [500, 300]),

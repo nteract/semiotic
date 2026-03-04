@@ -1,5 +1,5 @@
 import React from "react"
-import { OrdinalFrame } from "semiotic"
+import { StreamOrdinalFrame } from "semiotic"
 import DocumentFrame from "../DocumentFrame"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
@@ -111,23 +111,23 @@ Creating a pie chart, donut chart, nightingale chart, tooltips, and labels using
 
 ## Basic Pie Chart
 
-\`OrdinalFrame\` takes \`data\` as an array of objects. The \`oAccessor\` prop defines which property on the object to use as categorical data, the \`dynamicColumnWidth\` defines which property to use for numerical data, and for pie charts you must also set your \`projection="radial"\`.  
+\`StreamOrdinalFrame\` takes \`data\` as an array of objects. The \`oAccessor\` prop defines which property on the object to use as categorical data, the \`dynamicColumnWidth\` defines which property to use for numerical data, and for pie charts you must also set your \`projection="radial"\`.  
 
       `}
       />
 
-      <DocumentFrame frameProps={frameProps} type={OrdinalFrame} useExpanded />
+      <DocumentFrame frameProps={frameProps} type={StreamOrdinalFrame} useExpanded />
 
       <MarkdownText
         text={`
     
 ### Donut Chart
 
-Change your \`type="bar"\` to an object \`type={{"type": "bar", innerRadius: 50 }}\` to OrdinalFrame to make a donut chart. 
+Change your \`type="bar"\` to an object \`type={{"type": "bar", innerRadius: 50 }}\` to StreamOrdinalFrame to make a donut chart. 
 
     `}
       />
-      <DocumentFrame frameProps={donut} type={OrdinalFrame} startHidden />
+      <DocumentFrame frameProps={donut} type={StreamOrdinalFrame} startHidden />
       <MarkdownText
         text={`
   
@@ -139,7 +139,7 @@ Instead of using your pie slice angle for your numerical data you could instead 
       />
       <DocumentFrame
         frameProps={windRose}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         startHidden
         pre={pre}
         overrideProps={overrideProps}
@@ -155,7 +155,7 @@ Instead of just showing tweet count, you can change your wind rose into a nighti
       />
       <DocumentFrame
         frameProps={nightingale}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         startHidden
         pre={pre}
         overrideProps={nightingaleOverrideProps}
@@ -172,7 +172,7 @@ Another approach is flattening your data so that you have a property called acti
       />
       <DocumentFrame
         frameProps={nightingale}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         startHidden
         pre={`import { scaleSqrt} from "d3-scale"`}
         overrideProps={nightingaleOverrideProps}
@@ -199,7 +199,7 @@ You can also pass a \`oSort\` property to change the order for your ordinal data
       />
       <DocumentFrame
         frameProps={sortednightingale}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         startHidden
         pre={pre}
         overrideProps={nightingaleOverrideProps}
@@ -216,7 +216,7 @@ Adding the property \`hoverAnnotation\` gives tooltips to each of the columns. T
       <p />
       <DocumentFrame
         frameProps={{ ...nightingale, hoverAnnotation: true }}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         startHidden
         overrideProps={overrideProps}
       />
@@ -233,7 +233,7 @@ Adding the property \`pieceHoverAnnotation\` gives tooltips to each of the indiv
           ...nightingale,
           pieceHoverAnnotation: true
         }}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         pre={pre}
         startHidden
         overrideProps={nightingaleOverrideProps}

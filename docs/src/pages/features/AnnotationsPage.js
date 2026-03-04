@@ -1,5 +1,5 @@
 import React from "react"
-import { StreamXYFrame, OrdinalFrame } from "semiotic"
+import { StreamXYFrame, StreamOrdinalFrame } from "semiotic"
 import { LineChart, BarChart } from "semiotic"
 
 import LiveExample from "../../components/LiveExample"
@@ -247,7 +247,7 @@ export default function AnnotationsPage() {
 
       <h3 id="ordinal-annotations">Ordinal Frame Annotations</h3>
       <p>
-        <code>OrdinalFrame</code> supports annotation types like{" "}
+        <code>StreamOrdinalFrame</code> supports annotation types like{" "}
         <code>or</code> (circle at a data point), <code>r</code> (threshold
         along the r axis), <code>category</code> (bracket around columns),
         and <code>column-hover</code> (tooltip for an entire column).
@@ -274,7 +274,7 @@ export default function AnnotationsPage() {
             },
           ],
         }}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         overrideProps={{
           data: `[
   { product: "Alpha", units: 450 },
@@ -326,11 +326,11 @@ export default function AnnotationsPage() {
             ["x / y", "StreamXYFrame", "Threshold line along x or y axis"],
             ["bounds", "StreamXYFrame", "Rectangle bounding box"],
             ["horizontal-points / vertical-points", "StreamXYFrame", "Show all points along an axis"],
-            ["or", "OrdinalFrame", "Circle at a data point"],
-            ["r", "OrdinalFrame", "Threshold along r axis"],
-            ["category", "OrdinalFrame", "Bracket annotation around columns"],
-            ["column-hover", "OrdinalFrame", "Tooltip for entire column"],
-            ["node", "NetworkFrame", "Callout annotation centered on a node"],
+            ["or", "StreamOrdinalFrame", "Circle at a data point"],
+            ["r", "StreamOrdinalFrame", "Threshold along r axis"],
+            ["category", "StreamOrdinalFrame", "Bracket annotation around columns"],
+            ["column-hover", "StreamOrdinalFrame", "Tooltip for entire column"],
+            ["node", "StreamNetworkFrame", "Callout annotation centered on a node"],
           ].map(([type, frame, desc], i) => (
             <tr key={type} style={{ background: i % 2 ? "var(--surface-1)" : "transparent" }}>
               <td style={{ padding: "8px 16px", borderBottom: "1px solid var(--surface-3)", fontFamily: "var(--font-code)", fontSize: "0.9em" }}>{type}</td>
@@ -457,11 +457,11 @@ export default function AnnotationsPage() {
           lines, and point-based annotations
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — category
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — category
           brackets, ordinal line annotations
         </li>
         <li>
-          <Link to="/frames/network-frame">NetworkFrame</Link> — node
+          <Link to="/frames/network-frame">StreamNetworkFrame</Link> — node
           annotations and enclosures
         </li>
       </ul>
