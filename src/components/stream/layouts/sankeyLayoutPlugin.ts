@@ -7,7 +7,7 @@ import {
 } from "d3-sankey-circular"
 import { interpolateNumber } from "d3-interpolate"
 import { schemeCategory10 } from "d3-scale-chromatic"
-import { areaLink, circularAreaLink } from "../../svg/sankeyLinks"
+import { areaLink, circularAreaLink } from "../../geometry/sankeyLinks"
 import type {
   NetworkLayoutPlugin,
   NetworkPipelineConfig,

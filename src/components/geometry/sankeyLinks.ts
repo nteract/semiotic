@@ -251,7 +251,7 @@ function linearRibbon() {
 
 const curvature = 0.5
 
-export const ribbonLink = (d) => {
+const ribbonLink = (d) => {
   const diff =
     d.direction === "down"
       ? Math.abs(d.target.y - d.source.y)

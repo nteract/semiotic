@@ -6,29 +6,36 @@ import summary from "../../public/assets/img/or-summary.png"
 
 Looking for 1.x documentation? Visit https://semioticv1.nteract.io.
 
-## Semiotic is a data visualization framework for React.
+## A React data visualization library for charts, networks, and beyond.
 
-Semiotic provides two ways to create charts:
+Semiotic gives you standard charts (line, bar, scatter, area) with sensible
+defaults — plus the visualizations that other React charting libraries don't
+offer: network graphs, streaming data, coordinated views, and statistical
+summaries.
 
-### Higher-Order Chart Components (Recommended)
+### What sets Semiotic apart
 
-Simplified components with intuitive APIs for common chart types:
+- **Network visualization** — `ForceDirectedGraph`, `SankeyDiagram`, `ChordDiagram`, `TreeDiagram`, `Treemap`, `CirclePack` as React components with the same clean API as `LineChart` - [Guide →](/guides/network-charts-hoc)
+- **Streaming data** — Canvas-rendered realtime charts with a ref-based push API. Visual encodings for change: old data fades (decay), new data flashes (pulse), stale feeds are flagged - [Guide →](/charts/realtime-line-chart)
+- **Coordinated views** — `LinkedCharts` for cross-highlighting and brushing-and-linking between any charts; `ScatterplotMatrix` with crossfilter brushing - [Guide →](/features/linked-charts)
+- **Statistical charts** — `BoxPlot`, `ViolinPlot`, `SwarmPlot`, `Histogram`, `RidgelinePlot` for distribution analysis - [Guide →](/guides/ordinal-charts-hoc)
 
-- **XY Charts**: `Scatterplot`, `LineChart`, `AreaChart`, `BubbleChart`, `Heatmap` - [Guide →](/guides/xy-charts-hoc)
-- **Ordinal Charts**: `BarChart`, `StackedBarChart`, `SwarmPlot`, `BoxPlot`, `DotPlot` - [Guide →](/guides/ordinal-charts-hoc)
-- **Network Charts**: `ForceDirectedGraph`, `ChordDiagram`, `SankeyDiagram`, `TreeDiagram` - [Guide →](/guides/network-charts-hoc)
+### All 28 chart components
 
-These components offer smart defaults, built-in tooltips, and an easy-to-learn API.
+- **XY Charts**: `Scatterplot`, `LineChart`, `AreaChart`, `StackedAreaChart`, `BubbleChart`, `Heatmap` - [Guide →](/guides/xy-charts-hoc)
+- **Ordinal Charts**: `BarChart`, `StackedBarChart`, `GroupedBarChart`, `SwarmPlot`, `BoxPlot`, `Histogram`, `ViolinPlot`, `DotPlot`, `PieChart`, `DonutChart` - [Guide →](/guides/ordinal-charts-hoc)
+- **Network Charts**: `ForceDirectedGraph`, `ChordDiagram`, `SankeyDiagram`, `TreeDiagram`, `Treemap`, `CirclePack` - [Guide →](/guides/network-charts-hoc)
+- **Realtime Charts**: `RealtimeLineChart`, `RealtimeTemporalHistogram`, `RealtimeSwarmChart`, `RealtimeWaterfallChart`, `RealtimeHeatmap`
 
-### Frame Components (Advanced)
+### Two levels of control
 
-Powerful, flexible frame types for custom visualizations:
+**Chart components** (recommended) give you sensible defaults, built-in
+tooltips, and automatic legends. Every chart accepts a `frameProps` prop
+to access the full Frame API without leaving the simpler interface.
 
-- `StreamXYFrame` - XY data (line charts, scatterplots, area charts)
-- `StreamOrdinalFrame` - Categorical data (bar charts, violin plots, parallel coordinates)
-- `StreamNetworkFrame` - Topological and network data (flow diagrams, hierarchies)
-
-Frames provide complete control over every aspect of your visualization.
+**Frame components** (`StreamXYFrame`, `StreamOrdinalFrame`,
+`StreamNetworkFrame`) give you complete control over rendering,
+interaction, and layout when you need it.
 
 <img src={summary} alt="Overview of Semiotic chart types showing ordinal, XY, and network visualizations" />
 
