@@ -261,6 +261,15 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   customHoverBehavior?: (d: HoverData | null) => void
   enableHover?: boolean
 
+  // ── Brush ─────────────────────────────────────────
+  /** Brush configuration — when provided, an SVG brush overlay is rendered */
+  brush?: {
+    /** Which dimension(s) to brush: "x", "y", or "xy" (default "xy") */
+    dimension?: "x" | "y" | "xy"
+  }
+  /** Callback when brush selection changes. Called with data-space extent, or null when cleared. */
+  onBrush?: (extent: { x: [number, number]; y: [number, number] } | null) => void
+
   // ── Annotations ──────────────────────────────────
   annotations?: Record<string, any>[]
   svgAnnotationRules?: (

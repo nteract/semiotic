@@ -35,7 +35,7 @@ export interface TreeDiagramProps<TNode extends Record<string, any> = Record<str
 /**
  * TreeDiagram - Visualize hierarchical data structures
  *
- * Now wraps StreamNetworkFrame (canvas-first) instead of legacy NetworkFrame.
+ * Wraps StreamNetworkFrame (canvas-first) for hierarchical tree visualization.
  */
 export function TreeDiagram<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: TreeDiagramProps<TNode, TEdge>) {
   const {

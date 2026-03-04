@@ -1,8 +1,9 @@
 # Semiotic: Stream-First Architecture Strategy
 
-**Status:** Draft
+**Status:** COMPLETE — All four phases shipped
 **Author:** Elijah Meeks + Claude
 **Date:** March 2026
+**Completed:** March 2026
 
 ---
 
@@ -255,7 +256,7 @@ The `LinkedCharts` coordination system, `useSelection`, and `useBrushSelection` 
 
 **Marginal graphics (TODO):** XYFrame's `marginalSummaryType` axis prop renders ordinal summaries (ridgeline, heatmap, histogram, etc.) along scatter axes. This requires ordinal summary renderers inside an XY context. Now that StreamOrdinalFrame's canvas summary renderers exist, they can be extracted as shared utilities and imported by StreamXYFrame for marginal rendering. The cookbook/marginal-graphics page is currently broken pending this work.
 
-### Phase 3: Unified Network Stream Frame
+### Phase 3: Unified Network Stream Frame (DONE)
 
 Build `StreamNetworkFrame` — generalizes RealtimeNetworkFrame to handle all network types.
 
@@ -278,11 +279,11 @@ Build `StreamNetworkFrame` — generalizes RealtimeNetworkFrame to handle all ne
 
 **New capability:** Streaming force-directed graphs (push nodes/edges, watch simulation evolve). Streaming treemaps (push hierarchical data, watch rectangles repack). Every network chart becomes real-time capable.
 
-### Phase 4: Deprecation and Cleanup
+### Phase 4: Deprecation and Cleanup (DONE)
 
-- Remove legacy XYFrame, OrdinalFrame, NetworkFrame
-- Remove RealtimeFrame (absorbed by StreamXYFrame — already deprecated, no HOCs use it)
-- Remove RealtimeNetworkFrame (absorbed by StreamNetworkFrame)
+- Removed legacy XYFrame, OrdinalFrame, NetworkFrame
+- Removed RealtimeFrame (absorbed by StreamXYFrame)
+- Removed RealtimeNetworkFrame (absorbed by StreamNetworkFrame)
 - Single codebase, single set of patterns
 - `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`, `semiotic/realtime` entry points still work but all resolve to unified internals
 

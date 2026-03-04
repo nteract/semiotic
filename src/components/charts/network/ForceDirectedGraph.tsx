@@ -40,7 +40,7 @@ export interface ForceDirectedGraphProps<TNode extends Record<string, any> = Rec
 /**
  * ForceDirectedGraph - Visualize network relationships with force-directed layout
  *
- * Now wraps StreamNetworkFrame (canvas-first) instead of legacy NetworkFrame.
+ * Wraps StreamNetworkFrame (canvas-first) for force-directed network visualization.
  */
 export function ForceDirectedGraph<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: ForceDirectedGraphProps<TNode, TEdge>) {
   const {

@@ -18,6 +18,8 @@ import type {
   SceneNode,
   StreamScales
 } from "./types"
+import { brush as d3Brush, brushX as d3BrushX, brushY as d3BrushY } from "d3-brush"
+import { select as d3Select } from "d3-selection"
 import { DataSourceAdapter } from "./DataSourceAdapter"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
 import { findNearestNode, type HitResult } from "./CanvasHitTester"
@@ -169,6 +171,108 @@ function drawCrosshair(
   ctx.stroke()
 }
 
+// ── Brush Overlay ─────────────────────────────────────────────────────
+
+interface BrushOverlayProps {
+  width: number
+  height: number
+  totalWidth: number
+  totalHeight: number
+  margin: { top: number; right: number; bottom: number; left: number }
+  dimension: "x" | "y" | "xy"
+  scales: StreamScales | null
+  onBrush: (extent: { x: [number, number]; y: [number, number] } | null) => void
+}
+
+function BrushOverlay({
+  width,
+  height,
+  totalWidth,
+  totalHeight,
+  margin,
+  dimension,
+  scales,
+  onBrush
+}: BrushOverlayProps) {
+  const svgRef = useRef<SVGSVGElement>(null)
+  const brushRef = useRef<any>(null)
+
+  useEffect(() => {
+    if (!svgRef.current) return
+
+    const g = d3Select(svgRef.current).select<SVGGElement>(".brush-g")
+
+    const brushFn =
+      dimension === "x"
+        ? d3BrushX()
+        : dimension === "y"
+          ? d3BrushY()
+          : d3Brush()
+
+    brushFn.extent([[0, 0], [width, height]])
+
+    brushFn.on("brush end", (event: any) => {
+      if (!scales) return
+
+      if (!event.selection) {
+        onBrush(null)
+        return
+      }
+
+      let xRange: [number, number]
+      let yRange: [number, number]
+
+      if (dimension === "x") {
+        const [px0, px1] = event.selection as [number, number]
+        xRange = [scales.x.invert(px0), scales.x.invert(px1)]
+        yRange = [scales.y.invert(height), scales.y.invert(0)]
+      } else if (dimension === "y") {
+        const [py0, py1] = event.selection as [number, number]
+        xRange = [scales.x.invert(0), scales.x.invert(width)]
+        yRange = [scales.y.invert(py1), scales.y.invert(py0)]
+      } else {
+        const [[px0, py0], [px1, py1]] = event.selection as [[number, number], [number, number]]
+        xRange = [scales.x.invert(px0), scales.x.invert(px1)]
+        yRange = [scales.y.invert(py1), scales.y.invert(py0)]
+      }
+
+      onBrush({ x: xRange, y: yRange })
+    })
+
+    g.call(brushFn as any)
+    brushRef.current = brushFn
+
+    // Style the brush selection rectangle
+    g.select(".selection")
+      .attr("fill", "steelblue")
+      .attr("fill-opacity", 0.15)
+      .attr("stroke", "steelblue")
+      .attr("stroke-width", 1)
+
+    return () => {
+      brushFn.on("brush end", null)
+      brushRef.current = null
+    }
+  }, [width, height, dimension, scales, onBrush])
+
+  return (
+    <svg
+      ref={svgRef}
+      width={totalWidth}
+      height={totalHeight}
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        // Allow pointer events only on the brush overlay itself
+        pointerEvents: "all"
+      }}
+    >
+      <g className="brush-g" transform={`translate(${margin.left},${margin.top})`} />
+    </svg>
+  )
+}
+
 // ── StreamXYFrame ──────────────────────────────────────────────────────
 
 const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
@@ -232,7 +336,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       backgroundGraphics,
       foregroundGraphics,
       title,
-      categoryAccessor
+      categoryAccessor,
+      brush,
+      onBrush
     } = props
 
     const margin = { ...DEFAULT_MARGIN, ...marginProp }
@@ -619,6 +725,18 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           svgAnnotationRules={svgAnnotationRules}
           annotationFrame={annotationFrame}
         />
+        {(brush || onBrush) && (
+          <BrushOverlay
+            width={adjustedWidth}
+            height={adjustedHeight}
+            totalWidth={size[0]}
+            totalHeight={size[1]}
+            margin={margin}
+            dimension={brush?.dimension ?? "xy"}
+            scales={currentScales}
+            onBrush={onBrush ?? (() => {})}
+          />
+        )}
         {tooltipElement}
       </div>
     )

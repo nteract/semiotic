@@ -127,8 +127,8 @@ export interface StackedAreaChartProps<TDatum extends Record<string, any> = Reco
   tooltip?: TooltipProp
 
   /**
-   * Additional XYFrame props for advanced customization
-   * For full control, consider using XYFrame directly
+   * Additional StreamXYFrame props for advanced customization
+   * For full control, consider using StreamXYFrame directly
    * @see https://semiotic.nteract.io/guides/xy-frame
    */
   frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size">>

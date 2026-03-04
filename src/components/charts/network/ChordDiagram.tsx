@@ -37,7 +37,7 @@ export interface ChordDiagramProps<TNode extends Record<string, any> = Record<st
 /**
  * ChordDiagram - Visualize directed relationships with circular chord layout
  *
- * Now wraps StreamNetworkFrame (canvas-first) instead of legacy NetworkFrame.
+ * Wraps StreamNetworkFrame (canvas-first) for chord relationship visualization.
  */
 export function ChordDiagram<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: ChordDiagramProps<TNode, TEdge>) {
   const {

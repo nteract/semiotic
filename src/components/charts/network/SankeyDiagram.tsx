@@ -40,7 +40,7 @@ export interface SankeyDiagramProps<TNode extends Record<string, any> = Record<s
 /**
  * SankeyDiagram - Visualize flow and magnitude of movement between nodes
  *
- * Now wraps StreamNetworkFrame (canvas-first) instead of legacy NetworkFrame.
+ * Wraps StreamNetworkFrame (canvas-first) for Sankey flow visualization.
  */
 export function SankeyDiagram<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: SankeyDiagramProps<TNode, TEdge>) {
   const {

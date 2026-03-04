@@ -33,7 +33,7 @@ export interface CirclePackProps<TNode extends Record<string, any> = Record<stri
 /**
  * CirclePack - Visualize hierarchical data as nested circles.
  *
- * Now wraps StreamNetworkFrame (canvas-first) instead of legacy NetworkFrame.
+ * Wraps StreamNetworkFrame (canvas-first) for circle-pack visualization.
  */
 export function CirclePack<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: CirclePackProps<TNode, TEdge>) {
   const {
