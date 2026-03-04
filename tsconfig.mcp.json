@@ -11,17 +11,15 @@
     "lib": ["esnext", "dom", "dom.iterable"],
     "jsx": "react",
     "declaration": false,
-    "rootDir": "."
+    "rootDir": "./ai",
+    "baseUrl": ".",
+    "paths": {
+      "semiotic/ai": ["./dist/semiotic-ai.d.ts"]
+    }
   },
   "include": [
     "./ai/mcp-server.ts",
     "./ai/renderHOCToSVG.tsx",
-    "./ai/componentRegistry.ts",
-    "./src/**/*.ts",
-    "./src/**/*.tsx"
-  ],
-  "exclude": [
-    "./src/docs/**/*",
-    "./src/**/*.test.*"
+    "./ai/componentRegistry.ts"
   ]
 }

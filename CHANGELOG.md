@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0-beta.3] - 2026-03-04
+
+### Changed
+
+- **MCP server imports refactored** — replaced 20 relative `../src/` imports with a single barrel import from `"semiotic/ai"`, eliminating 1.4MB of duplicated source files from the npm package
+- **Package size reduced** — packed size 870 KB → 668 KB, unpacked 3.6 MB → 2.5 MB (30% reduction)
+- `tsconfig.mcp.json` no longer compiles `src/` — MCP build output is 3 flat files in `ai/dist/`
+
+---
+
 ## [3.0.0-beta.2] - 2026-03-04
 
 ### Stream-First Architecture

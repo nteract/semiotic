@@ -7,7 +7,7 @@
 import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
 import { COMPONENT_REGISTRY } from "./componentRegistry"
-import { validateProps } from "../src/components/charts/shared/validateProps"
+import { validateProps } from "semiotic/ai"
 
 export interface RenderResult {
   svg: string | null

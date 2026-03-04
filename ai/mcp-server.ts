@@ -25,7 +25,7 @@ import { renderHOCToSVG } from "./renderHOCToSVG"
 import { COMPONENT_REGISTRY } from "./componentRegistry"
 
 // Load schema.json for tool definitions
-const schemaPath = path.resolve(__dirname, "schema.json")
+const schemaPath = path.resolve(__dirname, "../schema.json")
 const schema = JSON.parse(fs.readFileSync(schemaPath, "utf-8"))
 
 interface SchemaToolDef {
