@@ -4,28 +4,12 @@
  */
 import type { ComponentType } from "react"
 
-import { LineChart } from "../src/components/charts/xy/LineChart"
-import { AreaChart } from "../src/components/charts/xy/AreaChart"
-import { StackedAreaChart } from "../src/components/charts/xy/StackedAreaChart"
-import { Scatterplot } from "../src/components/charts/xy/Scatterplot"
-import { BubbleChart } from "../src/components/charts/xy/BubbleChart"
-import { Heatmap } from "../src/components/charts/xy/Heatmap"
-
-import { BarChart } from "../src/components/charts/ordinal/BarChart"
-import { StackedBarChart } from "../src/components/charts/ordinal/StackedBarChart"
-import { GroupedBarChart } from "../src/components/charts/ordinal/GroupedBarChart"
-import { SwarmPlot } from "../src/components/charts/ordinal/SwarmPlot"
-import { BoxPlot } from "../src/components/charts/ordinal/BoxPlot"
-import { DotPlot } from "../src/components/charts/ordinal/DotPlot"
-import { PieChart } from "../src/components/charts/ordinal/PieChart"
-import { DonutChart } from "../src/components/charts/ordinal/DonutChart"
-
-import { ForceDirectedGraph } from "../src/components/charts/network/ForceDirectedGraph"
-import { ChordDiagram } from "../src/components/charts/network/ChordDiagram"
-import { SankeyDiagram } from "../src/components/charts/network/SankeyDiagram"
-import { TreeDiagram } from "../src/components/charts/network/TreeDiagram"
-import { Treemap } from "../src/components/charts/network/Treemap"
-import { CirclePack } from "../src/components/charts/network/CirclePack"
+import {
+  LineChart, AreaChart, StackedAreaChart, Scatterplot, BubbleChart, Heatmap,
+  BarChart, StackedBarChart, GroupedBarChart, SwarmPlot, BoxPlot, DotPlot,
+  PieChart, DonutChart,
+  ForceDirectedGraph, ChordDiagram, SankeyDiagram, TreeDiagram, Treemap, CirclePack
+} from "semiotic/ai"
 
 export interface RegistryEntry {
   component: ComponentType<any>

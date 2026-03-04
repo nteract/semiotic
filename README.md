@@ -69,6 +69,18 @@ Semiotic is for projects that outgrow those libraries — when you need
 network graphs alongside time series, streaming data alongside static
 snapshots, or coordinated views across chart types.
 
+### Bundle size comparison
+
+| Library | Packed | Unpacked | What you get |
+|---|---|---|---|
+| Victory | 393 KB | 2.3 MB | Charts only |
+| Lightweight Charts | 586 KB | 3.0 MB | Financial charts only |
+| **Semiotic** | **668 KB** | **2.5 MB** | **Charts + networks + streaming + coordination** |
+| Recharts | 1.4 MB | 6.4 MB | Charts only |
+| Chart.js | 1.6 MB | 6.2 MB | Charts only, no React |
+| ApexCharts | 1.8 MB | 8.4 MB | Charts only |
+| ECharts | 11.4 MB | 57.6 MB | Everything, no React |
+
 **AI-ready.** Semiotic ships with structured schemas (`ai/schema.json`), an
 `import from "semiotic/ai"` entry point, and an MCP server — all designed for
 LLM code generation. AI coding assistants can generate correct Semiotic code on
@@ -78,7 +90,7 @@ to your MCP client config for tool-based chart rendering.
 ## Install
 
 ```bash
-npm install semiotic@3.0.0-beta.2
+npm install semiotic@3.0.0-beta.3
 ```
 
 Requires React 18.1 or later.
