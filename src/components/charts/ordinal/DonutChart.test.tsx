@@ -5,12 +5,12 @@ import { TooltipProvider } from "../../store/TooltipStore"
 
 // Mock OrdinalFrame to capture props
 let lastOrdinalFrameProps: any = null
-jest.mock("../../OrdinalFrame", () => {
+jest.mock("../../stream/StreamOrdinalFrame", () => {
   return {
     __esModule: true,
     default: (props: any) => {
       lastOrdinalFrameProps = props
-      return <div className="ordinalframe"><svg /></div>
+      return <div className="stream-ordinal-frame"><svg /></div>
     }
   }
 })
@@ -33,7 +33,7 @@ describe("DonutChart", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -44,7 +44,7 @@ describe("DonutChart", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeFalsy()
   })
 
@@ -58,14 +58,14 @@ describe("DonutChart", () => {
     expect(lastOrdinalFrameProps.projection).toBe("radial")
   })
 
-  it("includes innerRadius in type config", () => {
+  it("includes innerRadius as a direct prop", () => {
     render(
       <TooltipProvider>
         <DonutChart data={sampleData} />
       </TooltipProvider>
     )
 
-    expect(lastOrdinalFrameProps.type.innerRadius).toBe(60)
+    expect(lastOrdinalFrameProps.innerRadius).toBe(60)
   })
 
   it("accepts custom innerRadius", () => {
@@ -75,10 +75,10 @@ describe("DonutChart", () => {
       </TooltipProvider>
     )
 
-    expect(lastOrdinalFrameProps.type.innerRadius).toBe(100)
+    expect(lastOrdinalFrameProps.innerRadius).toBe(100)
   })
 
-  it("renders centerContent via foregroundGraphics", () => {
+  it("renders centerContent via centerContent prop", () => {
     render(
       <TooltipProvider>
         <DonutChart
@@ -88,17 +88,17 @@ describe("DonutChart", () => {
       </TooltipProvider>
     )
 
-    expect(lastOrdinalFrameProps.foregroundGraphics).toBeDefined()
+    expect(lastOrdinalFrameProps.centerContent).toBeDefined()
   })
 
-  it("does not render foregroundGraphics without centerContent", () => {
+  it("does not set centerContent without centerContent prop", () => {
     render(
       <TooltipProvider>
         <DonutChart data={sampleData} />
       </TooltipProvider>
     )
 
-    expect(lastOrdinalFrameProps.foregroundGraphics).toBeUndefined()
+    expect(lastOrdinalFrameProps.centerContent).toBeUndefined()
   })
 
   it("defaults to square dimensions", () => {
@@ -136,11 +136,11 @@ describe("DonutChart", () => {
       <TooltipProvider>
         <DonutChart
           data={sampleData}
-          frameProps={{ oLabel: true }}
+          frameProps={{ oLabel: "category" }}
         />
       </TooltipProvider>
     )
 
-    expect(lastOrdinalFrameProps.oLabel).toBe(true)
+    expect(lastOrdinalFrameProps.oLabel).toBe("category")
   })
 })

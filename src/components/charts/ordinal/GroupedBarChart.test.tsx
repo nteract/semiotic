@@ -5,12 +5,12 @@ import { TooltipProvider } from "../../store/TooltipStore"
 
 // Mock OrdinalFrame to capture props
 let lastOrdinalFrameProps: any = null
-jest.mock("../../OrdinalFrame", () => {
+jest.mock("../../stream/StreamOrdinalFrame", () => {
   return {
     __esModule: true,
     default: (props: any) => {
       lastOrdinalFrameProps = props
-      return <div className="ordinalframe"><svg /></div>
+      return <div className="stream-ordinal-frame"><svg /></div>
     }
   }
 })
@@ -34,7 +34,7 @@ describe("GroupedBarChart", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -45,7 +45,7 @@ describe("GroupedBarChart", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeFalsy()
   })
 
@@ -56,7 +56,7 @@ describe("GroupedBarChart", () => {
       </TooltipProvider>
     )
 
-    expect(lastOrdinalFrameProps.type).toBe("clusterbar")
+    expect(lastOrdinalFrameProps.chartType).toBe("clusterbar")
   })
 
   it("sets pieceIDAccessor from groupBy", () => {
@@ -66,7 +66,7 @@ describe("GroupedBarChart", () => {
       </TooltipProvider>
     )
 
-    expect(lastOrdinalFrameProps.pieceIDAccessor).toBe("product")
+    expect(lastOrdinalFrameProps.groupBy).toBe("product")
   })
 
   it("supports vertical orientation (default)", () => {
@@ -108,7 +108,7 @@ describe("GroupedBarChart", () => {
 
     expect(lastOrdinalFrameProps.oAccessor).toBe("group")
     expect(lastOrdinalFrameProps.rAccessor).toBe("count")
-    expect(lastOrdinalFrameProps.pieceIDAccessor).toBe("series")
+    expect(lastOrdinalFrameProps.groupBy).toBe("series")
   })
 
   it("shows legend by default", () => {
@@ -147,11 +147,11 @@ describe("GroupedBarChart", () => {
         <GroupedBarChart
           data={sampleData}
           groupBy="product"
-          frameProps={{ oLabel: true }}
+          frameProps={{ oLabel: "category" }}
         />
       </TooltipProvider>
     )
 
-    expect(lastOrdinalFrameProps.oLabel).toBe(true)
+    expect(lastOrdinalFrameProps.oLabel).toBe("category")
   })
 })

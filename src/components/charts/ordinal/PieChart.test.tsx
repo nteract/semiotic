@@ -5,12 +5,12 @@ import { TooltipProvider } from "../../store/TooltipStore"
 
 // Mock OrdinalFrame to capture props
 let lastOrdinalFrameProps: any = null
-jest.mock("../../OrdinalFrame", () => {
+jest.mock("../../stream/StreamOrdinalFrame", () => {
   return {
     __esModule: true,
     default: (props: any) => {
       lastOrdinalFrameProps = props
-      return <div className="ordinalframe"><svg /></div>
+      return <div className="stream-ordinal-frame"><svg /></div>
     }
   }
 })
@@ -33,7 +33,7 @@ describe("PieChart", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -44,7 +44,7 @@ describe("PieChart", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeFalsy()
   })
 
@@ -58,24 +58,24 @@ describe("PieChart", () => {
     expect(lastOrdinalFrameProps.projection).toBe("radial")
   })
 
-  it("sets bar type", () => {
+  it("sets pie chartType", () => {
     render(
       <TooltipProvider>
         <PieChart data={sampleData} />
       </TooltipProvider>
     )
 
-    expect(lastOrdinalFrameProps.type).toEqual({ type: "bar" })
+    expect(lastOrdinalFrameProps.chartType).toBe("pie")
   })
 
-  it("passes startAngle as offsetAngle", () => {
+  it("passes startAngle prop", () => {
     render(
       <TooltipProvider>
         <PieChart data={sampleData} startAngle={90} />
       </TooltipProvider>
     )
 
-    expect(lastOrdinalFrameProps.type.offsetAngle).toBe(90)
+    expect(lastOrdinalFrameProps.startAngle).toBe(90)
   })
 
   it("defaults to square dimensions", () => {
@@ -153,11 +153,11 @@ describe("PieChart", () => {
       <TooltipProvider>
         <PieChart
           data={sampleData}
-          frameProps={{ oLabel: true }}
+          frameProps={{ oLabel: "category" }}
         />
       </TooltipProvider>
     )
 
-    expect(lastOrdinalFrameProps.oLabel).toBe(true)
+    expect(lastOrdinalFrameProps.oLabel).toBe("category")
   })
 })
