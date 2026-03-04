@@ -67,6 +67,7 @@ const frameProps = {
   chartType: "bar",
   dynamicColumnWidth: "value",
   stackBy: "segment",
+  barPadding: 8,
   oLabel: true,
   margin: { left: 45, top: 40, bottom: 80, right: 50 },
   data,

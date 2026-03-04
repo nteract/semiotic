@@ -385,6 +385,7 @@ export type TooltipProp =
   | ((data: Record<string, unknown>) => React.ReactNode)
   | ReturnType<typeof Tooltip>
   | ReturnType<typeof MultiLineTooltip>
+  | TooltipConfig
 
 /**
  * Convert a tooltip prop to the format Semiotic expects
@@ -405,6 +406,12 @@ export function normalizeTooltip(tooltip: TooltipProp): boolean | Function {
     return false
   }
 
-  // Should not reach here but return the value as-is
-  return tooltip
+  // Config object with fields/title — convert to a tooltip function
+  if (typeof tooltip === "object" && tooltip !== null && ("fields" in tooltip || "title" in tooltip)) {
+    const config = tooltip as TooltipConfig
+    return Tooltip(config)
+  }
+
+  // Should not reach here but return true to enable default tooltip
+  return true
 }

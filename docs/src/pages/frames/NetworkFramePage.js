@@ -217,9 +217,11 @@ export default function NetworkFramePage() {
           nodeIDAccessor: "name",
           showLabels: true,
           nodeLabel: "name",
-          colorBy: "depth",
+          colorByDepth: true,
+          colorScheme: ["#6366f1", "#f59e0b", "#10b981", "#ec4899"],
           enableHover: true,
-          size: [500, 400],
+          size: [500, 450],
+          margin: { top: 20, right: 20, bottom: 60, left: 20 },
         }}
         type={StreamNetworkFrame}
         overrideProps={{

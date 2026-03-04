@@ -607,8 +607,10 @@ export class OrdinalPipelineStore {
         let val = group.total
         if (normalize && colTotal > 0) val = val / colTotal
 
-        // Use the first piece for styling (representative datum)
-        const style = this.resolvePieceStyle(group.pieces[0], col.name)
+        // Use the first piece for styling — look up barColors by stack key (not category)
+        const style = getStack
+          ? this.resolvePieceStyle(group.pieces[0], stackKey)
+          : this.resolvePieceStyle(group.pieces[0], col.name)
         // Build a synthetic datum that includes the aggregate info
         const aggDatum = {
           ...group.pieces[0],

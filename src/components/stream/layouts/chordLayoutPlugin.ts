@@ -193,14 +193,16 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
         opacity: userStyle.opacity
       }
 
+      // d3-chord angles start at 12 o'clock; canvas arc() starts at 3 o'clock
+      // Offset by -PI/2 to align arcs with labels and ribbons
       sceneNodes.push({
         type: "arc",
         cx,
         cy,
         innerR: innerRadius,
         outerR: radius,
-        startAngle: arcData.startAngle,
-        endAngle: arcData.endAngle,
+        startAngle: arcData.startAngle - Math.PI / 2,
+        endAngle: arcData.endAngle - Math.PI / 2,
         style,
         datum: node,
         id: node.id,
@@ -215,7 +217,12 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
       const chordData = (edge as any).chordData
       if (!chordData) continue
 
-      const rawPath = ribbonGenerator(chordData)
+      // Offset chord angles by -PI/2 to match arc offset (12 o'clock → 3 o'clock)
+      const offsetChord = {
+        source: { ...chordData.source, startAngle: chordData.source.startAngle - Math.PI / 2, endAngle: chordData.source.endAngle - Math.PI / 2 },
+        target: { ...chordData.target, startAngle: chordData.target.startAngle - Math.PI / 2, endAngle: chordData.target.endAngle - Math.PI / 2 }
+      }
+      const rawPath = ribbonGenerator(offsetChord)
       if (!rawPath) continue
 
       const pathD = translateSvgPath(rawPath, cx, cy)

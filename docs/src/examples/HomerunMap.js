@@ -38,7 +38,8 @@ const frameProps = {
   },
   margin: { left: 25, right: 25, top: 25, bottom: 25 },
   showAxes: false,
-  backgroundGraphics: fieldGraphic
+  backgroundGraphics: fieldGraphic,
+  pulse: { duration: 600, color: "rgba(255,255,255,0.5)", glowRadius: 5 }
 }
 
 const overrideProps = {

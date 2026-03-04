@@ -44,7 +44,7 @@ const frameProps = {
 
 const overrideProps = {}
 
-const HomerunMap = () => {
+const MarginalGraphics = () => {
   return (
     <div>
       <MarkdownText
@@ -63,4 +63,4 @@ Marginal Graphics are useful for visualizing the density of datapoints along an 
   )
 }
 
-export default HomerunMap
+export default MarginalGraphics

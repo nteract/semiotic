@@ -12,60 +12,26 @@ import { Link } from "react-router-dom"
 // Sample data
 // ---------------------------------------------------------------------------
 
+// Flat data — StreamXYFrame needs flat arrays with groupAccessor, not nested coordinates
 const lineData = [
-  {
-    id: "Revenue",
-    coordinates: [
-      { month: 1, value: 12000 },
-      { month: 2, value: 18000 },
-      { month: 3, value: 14000 },
-      { month: 4, value: 22000 },
-      { month: 5, value: 19000 },
-      { month: 6, value: 27000 },
-      { month: 7, value: 24000 },
-      { month: 8, value: 31000 },
-      { month: 9, value: 28000 },
-      { month: 10, value: 35000 },
-      { month: 11, value: 32000 },
-      { month: 12, value: 41000 },
-    ],
-  },
+  { group: "Revenue", month: 1, value: 12000 },
+  { group: "Revenue", month: 2, value: 18000 },
+  { group: "Revenue", month: 3, value: 14000 },
+  { group: "Revenue", month: 4, value: 22000 },
+  { group: "Revenue", month: 5, value: 19000 },
+  { group: "Revenue", month: 6, value: 27000 },
+  { group: "Revenue", month: 7, value: 24000 },
+  { group: "Revenue", month: 8, value: 31000 },
+  { group: "Revenue", month: 9, value: 28000 },
+  { group: "Revenue", month: 10, value: 35000 },
+  { group: "Revenue", month: 11, value: 32000 },
+  { group: "Revenue", month: 12, value: 41000 },
 ]
 
 const multiLineData = [
-  {
-    id: "Widget",
-    coordinates: [
-      { month: 1, value: 12000 },
-      { month: 2, value: 18000 },
-      { month: 3, value: 14000 },
-      { month: 4, value: 22000 },
-      { month: 5, value: 19000 },
-      { month: 6, value: 27000 },
-    ],
-  },
-  {
-    id: "Gadget",
-    coordinates: [
-      { month: 1, value: 8000 },
-      { month: 2, value: 11000 },
-      { month: 3, value: 15000 },
-      { month: 4, value: 13000 },
-      { month: 5, value: 17000 },
-      { month: 6, value: 21000 },
-    ],
-  },
-  {
-    id: "Doohickey",
-    coordinates: [
-      { month: 1, value: 5000 },
-      { month: 2, value: 7000 },
-      { month: 3, value: 9000 },
-      { month: 4, value: 8000 },
-      { month: 5, value: 12000 },
-      { month: 6, value: 14000 },
-    ],
-  },
+  ...[1,2,3,4,5,6].map(m => ({ group: "Widget", month: m, value: [12000,18000,14000,22000,19000,27000][m-1] })),
+  ...[1,2,3,4,5,6].map(m => ({ group: "Gadget", month: m, value: [8000,11000,15000,13000,17000,21000][m-1] })),
+  ...[1,2,3,4,5,6].map(m => ({ group: "Doohickey", month: m, value: [5000,7000,9000,8000,12000,14000][m-1] })),
 ]
 
 const scatterData = [
@@ -77,30 +43,9 @@ const scatterData = [
 ]
 
 const stackedData = [
-  {
-    id: "Product A",
-    coordinates: [
-      { month: 1, value: 5000 }, { month: 2, value: 7000 },
-      { month: 3, value: 6000 }, { month: 4, value: 8000 },
-      { month: 5, value: 9000 }, { month: 6, value: 11000 },
-    ],
-  },
-  {
-    id: "Product B",
-    coordinates: [
-      { month: 1, value: 3000 }, { month: 2, value: 4000 },
-      { month: 3, value: 5000 }, { month: 4, value: 6000 },
-      { month: 5, value: 5000 }, { month: 6, value: 7000 },
-    ],
-  },
-  {
-    id: "Product C",
-    coordinates: [
-      { month: 1, value: 2000 }, { month: 2, value: 3000 },
-      { month: 3, value: 2000 }, { month: 4, value: 4000 },
-      { month: 5, value: 3000 }, { month: 6, value: 5000 },
-    ],
-  },
+  ...[1,2,3,4,5,6].map(m => ({ group: "Product A", month: m, value: [5000,7000,6000,8000,9000,11000][m-1] })),
+  ...[1,2,3,4,5,6].map(m => ({ group: "Product B", month: m, value: [3000,4000,5000,6000,5000,7000][m-1] })),
+  ...[1,2,3,4,5,6].map(m => ({ group: "Product C", month: m, value: [2000,3000,2000,4000,3000,5000][m-1] })),
 ]
 
 // ---------------------------------------------------------------------------
@@ -184,8 +129,7 @@ export default function XYFramePage() {
           data: lineData,
           xAccessor: "month",
           yAccessor: "value",
-          lineDataAccessor: "coordinates",
-          groupAccessor: "id",
+          groupAccessor: "group",
           lineStyle: { stroke: "#6366f1", strokeWidth: 2 },
           showAxes: true,
           enableHover: true,
@@ -195,14 +139,11 @@ export default function XYFramePage() {
         type={StreamXYFrame}
         startHidden={false}
         overrideProps={{
-          data: `[{
-  id: "Revenue",
-  coordinates: [
-    { month: 1, value: 12000 },
-    { month: 2, value: 18000 },
-    // ...more data
-  ]
-}]`,
+          data: `[
+  { group: "Revenue", month: 1, value: 12000 },
+  { group: "Revenue", month: 2, value: 18000 },
+  // ...more data
+]`,
         }}
         hiddenProps={{}}
       />
@@ -225,8 +166,7 @@ export default function XYFramePage() {
           data: multiLineData,
           xAccessor: "month",
           yAccessor: "value",
-          lineDataAccessor: "coordinates",
-          groupAccessor: "id",
+          groupAccessor: "group",
           lineStyle: (d, group) => ({
             stroke: group === "Widget" ? "#6366f1" : group === "Gadget" ? "#f59e0b" : "#10b981",
             strokeWidth: 2,
@@ -239,9 +179,10 @@ export default function XYFramePage() {
         type={StreamXYFrame}
         overrideProps={{
           data: `[
-  { id: "Widget", coordinates: [...] },
-  { id: "Gadget", coordinates: [...] },
-  { id: "Doohickey", coordinates: [...] }
+  { group: "Widget", month: 1, value: 12000 },
+  { group: "Widget", month: 2, value: 18000 },
+  { group: "Gadget", month: 1, value: 8000 },
+  // ...flat data with group field
 ]`,
           lineStyle: `(d, group) => ({
   stroke: group === "Widget" ? "#6366f1"
@@ -302,8 +243,7 @@ export default function XYFramePage() {
           data: stackedData,
           xAccessor: "month",
           yAccessor: "value",
-          lineDataAccessor: "coordinates",
-          groupAccessor: "id",
+          groupAccessor: "group",
           lineStyle: (d, group) => ({
             fill: group === "Product A" ? "#6366f1" : group === "Product B" ? "#f59e0b" : "#10b981",
             fillOpacity: 0.6,

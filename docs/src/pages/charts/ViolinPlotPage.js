@@ -15,49 +15,22 @@ import { Link } from "react-router-dom"
 // Sample data
 // ---------------------------------------------------------------------------
 
+// Generate dense sample data for visible distribution shapes
+function generateNormal(mean, std, n) {
+  const data = []
+  for (let i = 0; i < n; i++) {
+    const u1 = Math.random()
+    const u2 = Math.random()
+    const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2)
+    data.push(Math.round(mean + z * std))
+  }
+  return data
+}
+
 const sampleData = [
-  { category: "Morning", value: 62 },
-  { category: "Morning", value: 58 },
-  { category: "Morning", value: 71 },
-  { category: "Morning", value: 66 },
-  { category: "Morning", value: 55 },
-  { category: "Morning", value: 73 },
-  { category: "Morning", value: 60 },
-  { category: "Morning", value: 68 },
-  { category: "Morning", value: 50 },
-  { category: "Morning", value: 64 },
-  { category: "Morning", value: 57 },
-  { category: "Morning", value: 75 },
-  { category: "Morning", value: 63 },
-  { category: "Morning", value: 69 },
-  { category: "Afternoon", value: 78 },
-  { category: "Afternoon", value: 85 },
-  { category: "Afternoon", value: 72 },
-  { category: "Afternoon", value: 90 },
-  { category: "Afternoon", value: 81 },
-  { category: "Afternoon", value: 76 },
-  { category: "Afternoon", value: 88 },
-  { category: "Afternoon", value: 83 },
-  { category: "Afternoon", value: 95 },
-  { category: "Afternoon", value: 79 },
-  { category: "Afternoon", value: 86 },
-  { category: "Afternoon", value: 92 },
-  { category: "Afternoon", value: 84 },
-  { category: "Afternoon", value: 77 },
-  { category: "Evening", value: 45 },
-  { category: "Evening", value: 52 },
-  { category: "Evening", value: 48 },
-  { category: "Evening", value: 39 },
-  { category: "Evening", value: 55 },
-  { category: "Evening", value: 42 },
-  { category: "Evening", value: 50 },
-  { category: "Evening", value: 46 },
-  { category: "Evening", value: 35 },
-  { category: "Evening", value: 58 },
-  { category: "Evening", value: 41 },
-  { category: "Evening", value: 53 },
-  { category: "Evening", value: 44 },
-  { category: "Evening", value: 49 },
+  ...generateNormal(63, 8, 80).map(v => ({ category: "Morning", value: v })),
+  ...generateNormal(83, 6, 80).map(v => ({ category: "Afternoon", value: v })),
+  ...generateNormal(47, 10, 80).map(v => ({ category: "Evening", value: v })),
 ]
 
 const colorData = [

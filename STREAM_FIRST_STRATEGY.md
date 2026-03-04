@@ -1,6 +1,6 @@
 # Semiotic: Stream-First Architecture Strategy
 
-**Status:** COMPLETE — All four phases shipped
+**Status:** COMPLETE — All four phases shipped + realtime encoding system
 **Author:** Elijah Meeks + Claude
 **Date:** March 2026
 **Completed:** March 2026
@@ -12,16 +12,6 @@
 Streaming visualization is a superset of static visualization. A static chart is a streaming chart whose data source happens to be bounded — all points arrive at once, the stream terminates, and the visualization finalizes. Apache Flink proved this for data processing: batch is a special case of streaming, not a separate paradigm. Semiotic should adopt the same principle.
 
 Today Semiotic has two parallel worlds: the legacy SVG Frames (XYFrame, OrdinalFrame, NetworkFrame) with props-driven derivation, and the new canvas-first realtime Frames (RealtimeFrame, RealtimeNetworkFrame) with push APIs. These share almost no code. The strategy is to converge on a single stream-first core where the legacy Frames are eventually reimplemented as bounded-stream configurations of unified streaming Frames.
-
----
-
-## Why
-
-**The current architecture has a split personality.** Static Frames use `useDerivedStateFromProps()` to diff prop categories, funnel through monolithic calculate functions (`calculateXYFrame`, `calculateOrdinalFrame`, `calculateNetworkFrame`), and produce SVG render pipelines. Realtime Frames use ref-based mutable stores, rAF loops, and canvas renderers. Annotations, hover, tooltips, scales, and color utilities are largely duplicated or incompatible between the two.
-
-**Users want hybrid charts.** The most common real-world pattern is: load historical data (bounded), render a static chart, then seamlessly transition to live updates (unbounded). Today this requires choosing between a static Frame (no streaming) or a Realtime Frame (no rich annotation/summary support). There's no path between them.
-
-**Canvas should be the default.** SVG is correct for publication-quality static output, server-side rendering, and accessibility annotations. But for interactive, animated, or data-dense charts, canvas is strictly better. The current Frames default to SVG and opt-in to canvas per layer (`canvasLines`, `canvasPoints`). This should invert: canvas-first with SVG for annotations and export.
 
 ---
 
@@ -77,7 +67,7 @@ For Semiotic, the analog is a **reactive data store** that:
 2. Maintains derived state incrementally (scales, extents, aggregations, layout positions)
 3. Emits a scene graph that the renderer consumes
 
-This is what `TopologyStore` does for RealtimeNetworkFrame and what `RingBuffer + IncrementalExtent` do for RealtimeFrame. The legacy Frames do the same thing but eagerly and monolithically via their calculate functions. Unification means making the store pattern the single internal model.
+This is what `TopologyStore` does for StreamNetworkFrame and what `RingBuffer + IncrementalExtent` do for StreamXYFrame and StreamOrdinalFrame. The legacy Frames do the same thing but eagerly and monolithically via their calculate functions. Unification means making the store pattern the single internal model.
 
 ---
 
@@ -86,29 +76,33 @@ This is what `TopologyStore` does for RealtimeNetworkFrame and what `RingBuffer 
 ### Layer Diagram
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     HOC Chart Components                     │
-│  LineChart  BarChart  SankeyDiagram  RealtimeSankey  ...    │
-│  (thin wrappers with accessor normalization)                 │
-├─────────────────────────────────────────────────────────────┤
-│                     Unified Frame                            │
+┌────────────────────────────────────────────────────────────┐
+│                     HOC Chart Components                   │
+│  LineChart  BarChart  SankeyDiagram  RealtimeSankey  ...   │
+│  (thin wrappers with accessor normalization)               │
+├────────────────────────────────────────────────────────────┤
+│                     Unified Frame                          │
 │  ┌──────────┐  ┌────────────┐  ┌─────────────────────────┐ │
-│  │  Source   │  │  Pipeline  │  │       Renderer          │ │
-│  │ Adapter   │→ │   Store    │→ │  ┌───────┐ ┌────────┐  │ │
-│  │          │  │            │  │  │Canvas │ │SVG     │  │ │
-│  │ bounded  │  │ scales     │  │  │(data) │ │(annot) │  │ │
-│  │ unbounded│  │ extents    │  │  └───────┘ └────────┘  │ │
-│  │ hybrid   │  │ layout     │  │  ┌─────────────────┐   │ │
-│  │          │  │ aggregation│  │  │  Interaction     │   │ │
-│  │          │  │ scene graph│  │  │  (hover, brush,  │   │ │
-│  └──────────┘  └────────────┘  │  │   tooltip, zoom) │   │ │
-│                                │  └─────────────────┘   │ │
+│  │  Source  │  │  Pipeline  │  │       Renderer          │ │
+│  │ Adapter  │→ │   Store    │→ │  ┌───────┐ ┌────────┐   │ │
+│  │          │  │            │  │  │Canvas │ │SVG     │   │ │
+│  │ bounded  │  │ scales     │  │  │(data) │ │(annot) │   │ │
+│  │ unbounded│  │ extents    │  │  └───────┘ └────────┘   │ │
+│  │ hybrid   │  │ layout     │  │  ┌─────────────────┐    │ │
+│  │          │  │ aggregation│  │  │  Interaction    │    │ │
+│  │          │  │ scene graph│  │  │  (hover, brush, │    │ │
+│  └──────────┘  └────────────┘  │  │   tooltip, zoom)│    │ │
+│                                │  └─────────────────┘    │ │
 │                                └─────────────────────────┘ │
-├─────────────────────────────────────────────────────────────┤
-│                     Shared Infrastructure                    │
-│  RingBuffer  IncrementalExtent  ParticlePool  BezierCache   │
-│  ColorScale  AnnotationEngine  ExportEngine  ThemeContext   │
-└─────────────────────────────────────────────────────────────┘
+├────────────────────────────────────────────────────────────┤
+│                     Realtime Encoding Layer                │
+│  Decay (linear/exp/step)  Pulse (glow/overlay)             │
+│  Transitions (ease-out cubic)  Staleness (dim + badge)     │
+├────────────────────────────────────────────────────────────┤
+│                     Shared Infrastructure                  │
+│  RingBuffer  IncrementalExtent  ParticlePool  BezierCache  │
+│  ColorScale  AnnotationEngine  ExportEngine  ThemeContext  │
+└────────────────────────────────────────────────────────────┘
 ```
 
 ### Source Adapter
@@ -130,8 +124,6 @@ interface Changeset<T> {
 - **Hybrid adapter**: First processes props (bounded backfill), then switches to push (unbounded live). The transition is seamless — the store doesn't care where changesets come from.
 
 ### Pipeline Store
-
-Replaces both `useDerivedStateFromProps()` (legacy) and `TopologyStore` / `RingBuffer` (realtime) with a unified reactive store:
 
 ```typescript
 interface PipelineStore<TDatum> {
@@ -286,6 +278,103 @@ Build `StreamNetworkFrame` — generalizes RealtimeNetworkFrame to handle all ne
 - Removed RealtimeNetworkFrame (absorbed by StreamNetworkFrame)
 - Single codebase, single set of patterns
 - `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`, `semiotic/realtime` entry points still work but all resolve to unified internals
+
+### Phase 5: Realtime Visual Encoding (DONE)
+
+With the stream-first architecture complete (Phases 1–4), the pipeline knows *what* data is and *when* it arrived. Phase 5 adds the visual layer that communicates *change* — the encodings that make streaming data legible.
+
+This work is grounded in the taxonomy from Elijah Meeks' presentation on real-time data visualization at Confluent, which identifies animation as a primary encoding channel for live data — not decoration, but information. The core principle: "Live things move (or pulse). When the feed stops, the motion stops, and that absence itself becomes information."
+
+**Implemented features:**
+
+| Feature | Encoding principle | What it communicates |
+|---|---|---|
+| **Decay** | Flow density / accretion | Age and recency — older data fades, creating a visual trail of data flow |
+| **Pulse** | Update pulse | "This just changed" — draws the eye to newly arrived data without requiring memory of previous state |
+| **Transitions** | Smooth interpolation | Continuity — positions morph rather than jump, preserving object constancy |
+| **Staleness** | Liveness indicator | Feed health — is the data current, recent, or stale? |
+
+**Decay** — Configurable opacity fade for older data points. Three modes:
+- `linear` — opacity decreases proportionally with age in the buffer
+- `exponential` — half-life curve (more natural perception of recency)
+- `step` — full opacity within a threshold, then drops (binary recent/old)
+
+Applied to all discrete node types (point, rect, heatcell, candlestick). Lines and areas are continuous and don't benefit from per-point fading.
+
+**Pulse** — Recently inserted data points flash with a glow effect. Implementation uses a parallel `RingBuffer<number>` of insertion timestamps, synced 1:1 with the data buffer. Points get an expanding glow ring; bars and heatmap cells get a white overlay flash. Intensity decays linearly from 1→0 over the configured duration. When active pulses exist, the rAF loop runs continuously (same pattern as `StreamNetworkFrame` particle animation).
+
+**Transitions** — Scene nodes interpolate from old to new positions on data change. Follows the `NetworkPipelineStore.advanceTransition()` pattern exactly: snapshot positions before scene rebuild, save targets after, restore previous positions, then interpolate with ease-out cubic (`t = 1 - (1-rawT)^3`). Identity matching keys nodes across rebuilds (points by x/y, rects by group+category, heatcells by grid position).
+
+**Staleness** — Frame-level data liveness indicator. Tracks `lastIngestTime` on every `ingest()` call. A 1-second interval timer checks elapsed time against a configurable threshold. When stale: canvas `globalAlpha` dims the entire visualization, and an optional positioned badge renders "LIVE" (green) or "STALE" (red).
+
+**Streaming Heatmap** — New `RealtimeHeatmap` HOC wrapping `StreamXYFrame` with `chartType="heatmap"` and `runtimeMode="streaming"`. Adds 2D grid binning: discretizes continuous x/y values into configurable bins (`heatmapXBins` × `heatmapYBins`) and aggregates per cell (count, sum, or mean). The existing bounded heatmap path (unique x/y values) is preserved; streaming binning activates only when `heatmapAggregation` is set.
+
+**Streaming bubble encoding** — `PipelineStore.buildPointScene` now resolves `sizeAccessor` and `colorAccessor` directly, computing a dynamic size scale and color map from the current buffer data. Previously, streaming bubbles rendered with fixed default size and color because only `pointStyle` was consulted.
+
+**Category stability** — `OrdinalPipelineStore.resolveCategories` now preserves insertion order in streaming mode by default. Previously, categories were re-sorted by value sum on every frame, causing jarring visual shuffling as values fluctuated within the sliding window.
+
+**Stacked bar aggregation** — `OrdinalPipelineStore.buildBarScene` now aggregates values per stack group within each column, producing one rect per group instead of one rect per datum. This eliminates the micro-gap visual artifact in streaming stacked bars and ensures `computeValueDomain` covers per-category totals rather than individual datum values.
+
+**Architecture integration:**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Pipeline Store                           │
+│                                                             │
+│  ingest() ──→ buffer + timestampBuffer                      │
+│           ──→ lastIngestTime (staleness)                    │
+│                                                             │
+│  computeScene() ──→ snapshotPositions()                     │
+│                 ──→ buildSceneNodes()                        │
+│                 ──→ applyDecay(nodes, data)                  │
+│                 ──→ applyPulse(nodes, data)                  │
+│                 ──→ startTransition()                        │
+│                                                             │
+│  advanceTransition(now) ──→ interpolate positions            │
+│  hasActivePulses ──→ continuous rAF flag                     │
+└─────────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────┐
+│                     Frame Component                          │
+│                                                             │
+│  rAF loop:                                                  │
+│    1. advanceTransition(now)                                │
+│    2. computeScene() (if not mid-transition)                │
+│    3. if staleness: ctx.globalAlpha = dimOpacity            │
+│    4. dispatch to canvas renderers                          │
+│    5. if staleness: ctx.globalAlpha = 1                     │
+│    6. if transitioning || hasActivePulses: schedule next rAF│
+│                                                             │
+│  Staleness timer: setInterval(1000) checks lastIngestTime   │
+│  Badge: React state → positioned div overlay                │
+└─────────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────┐
+│                     Canvas Renderers                         │
+│                                                             │
+│  pointCanvasRenderer: if _pulseIntensity > 0, draw glow    │
+│  barCanvasRenderer: if _pulseIntensity > 0, draw overlay    │
+│  heatmapCanvasRenderer: read style.opacity (decay),         │
+│                         if _pulseIntensity > 0, draw overlay│
+└─────────────────────────────────────────────────────────────┘
+```
+
+These features compose freely: decay + pulse on a streaming scatter creates a data trail with flash-on-arrival. Staleness works orthogonally — it monitors the feed regardless of what visual encodings are active. Transitions work on bounded data too (re-render with new data → positions animate).
+
+**Remaining work from the encoding taxonomy:**
+
+| Priority | Feature | Status |
+|---|---|---|
+| P0 | Declarative data binding with change detection | **DONE** (DataSourceAdapter, PipelineStore) |
+| P0 | Smooth transition system (enter/update/exit) | **DONE** (transition config) |
+| P0 | Pulse/flash on update | **DONE** (pulse config) |
+| P1 | Trajectory indicators (arrows, deltas, color shifts) | Not yet implemented |
+| P1 | Staleness/liveness indicators | **DONE** (staleness config) |
+| P1 | Configurable decay/accretion for streaming data | **DONE** (decay config) |
+| P2 | Hierarchical time-context composition | Not yet implemented |
+| P2 | Uncertainty/confidence band animation | Partial — `boundsAccessor` exists but not animated |
+| P2 | Graph/network flow animation | **DONE** (StreamNetworkFrame particles) |
+| P3 | Attention budget system | Not yet implemented |
 
 ---
 
