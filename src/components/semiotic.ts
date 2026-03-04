@@ -10,8 +10,6 @@ import Axis from "./Axis"
 import Legend from "./Legend"
 import Annotation from "./Annotation"
 import Brush from "./Brush"
-import InteractionLayer from "./InteractionLayer"
-import VisualizationLayer from "./VisualizationLayer"
 import { funnelize } from "./svg/lineDrawing"
 import { calculateDataExtent } from "./data/dataFunctions"
 import { hexbinning, heatmapping } from "./svg/areaDrawing"
@@ -55,8 +53,6 @@ export {
   DividedLine,
   Brush,
   Axis,
-  InteractionLayer,
-  VisualizationLayer,
   Annotation,
   Legend,
   funnelize,

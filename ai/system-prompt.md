@@ -35,7 +35,7 @@ Use `import { ComponentName } from "semiotic/ai"` for all components below.
 - **RealtimeHistogram** — **`binSize`** (required), `timeAccessor`, `valueAccessor`
 - **RealtimeSwarmChart** — `timeAccessor`, `valueAccessor`, `categoryAccessor`
 - **RealtimeWaterfallChart** — `timeAccessor`, `valueAccessor`, `positiveColor`, `negativeColor`
-- **RealtimeSankey** — `ref.current.push({ source, target, value })`, `sourceAccessor`, `targetAccessor`, `valueAccessor`, `showParticles`, `tensionConfig`
+- **StreamNetworkFrame** (`chartType="sankey"`) — `ref.current.push({ source, target, value })`, `sourceAccessor`, `targetAccessor`, `valueAccessor` (import from `semiotic`)
 
 ## Common Props (all components)
 `width`, `height`, `margin`, `title`, `colorBy`, `colorScheme`, `enableHover`, `tooltip`, `showLegend`, `className`, `frameProps`

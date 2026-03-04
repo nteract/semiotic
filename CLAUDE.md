@@ -11,8 +11,8 @@
 
 ## Architecture
 - **HOC Charts** (recommended): Simple props, sensible defaults — use these
-- **Frames** (advanced): Full control — only when HOCs aren't enough
-- Every HOC accepts `frameProps` to pass through to the underlying Frame
+- **Stream Frames** (advanced): `StreamXYFrame`, `StreamOrdinalFrame`, `StreamNetworkFrame` — full control, only when HOCs aren't enough
+- Every HOC accepts `frameProps` to pass through to the underlying Stream Frame
 
 ## Component Reference
 
@@ -512,11 +512,16 @@ Props: `size` ([number, number], [500, 300]),
 <RealtimeWaterfallChart ref={chartRef} timeAccessor="time" valueAccessor="delta" />
 ```
 
-#### RealtimeSankey
-Streaming Sankey diagram where topology grows over time via push API. Particles animate along links
-proportional to flow value. Tension model batches relayouts for smooth performance.
+#### Streaming Sankey
+Streaming Sankey diagram using `StreamNetworkFrame` with `chartType="sankey"`. Topology grows
+over time via push API. Particles animate along links proportional to flow value. Tension model
+batches relayouts for smooth performance.
 
-Props: `size` ([number, number], [800, 600]),
+Use `StreamNetworkFrame` directly with `chartType="sankey"` and `showParticles` for streaming
+Sankey visualizations.
+
+Props (on `StreamNetworkFrame`): `chartType` ("sankey", **required for streaming sankey**),
+  `size` ([number, number], [800, 600]),
   `sourceAccessor` (string, "source"), `targetAccessor` (string, "target"),
   `valueAccessor` (string, "value"),
   `orientation` ("horizontal"|"vertical", "horizontal"),
@@ -536,10 +541,12 @@ Ref handle: `push({ source, target, value })`, `pushMany(edges)`, `clear()`,
   `getTopology()`, `relayout()`, `getTension()`
 
 ```jsx
+import { StreamNetworkFrame } from "semiotic"
+
 const chartRef = useRef()
 chartRef.current.push({ source: "Salary", target: "Budget", value: 5000 })
 
-<RealtimeSankey ref={chartRef} size={[800, 400]} showParticles edgeOpacity={0.4} />
+<StreamNetworkFrame ref={chartRef} chartType="sankey" size={[800, 400]} showParticles edgeOpacity={0.4} />
 ```
 
 ### Coordinated Views (import from "semiotic" or "semiotic/ai")
@@ -751,7 +758,7 @@ import { ChartErrorBoundary } from "semiotic"
 
 ## What Semiotic Does That Others Don't
 - Network visualization: ForceDirectedGraph, SankeyDiagram, ChordDiagram, TreeDiagram, Treemap, CirclePack
-- Streaming data: RealtimeLineChart, RealtimeTemporalHistogram (canvas-based, high frequency)
+- Streaming data: RealtimeLineChart, RealtimeTemporalHistogram (canvas-based, high frequency), StreamNetworkFrame with `chartType="sankey"` for streaming Sankey diagrams
 - Coordinated views: LinkedCharts, ScatterplotMatrix with crossfilter brushing — no other React chart library has this built in
 - Annotation system: built-in hover, click, and custom annotations
 - Server-side SVG: `renderToStaticSVG()` for email/OG images (import from "semiotic/server")
