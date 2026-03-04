@@ -85,7 +85,8 @@ const navData = [
       { title: "Linked Charts", path: "/features/small-multiples" },
       { title: "Styling", path: "/features/styling" },
       { title: "Theming", path: "/features/theming" },
-      { title: "Legends", path: "/features/legends" }
+      { title: "Legends", path: "/features/legends" },
+      { title: "Realtime Encoding", path: "/features/realtime-encoding" }
     ]
   },
   {

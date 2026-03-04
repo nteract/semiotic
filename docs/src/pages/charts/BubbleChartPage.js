@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react"
-import { BubbleChart, RealtimeSwarmChart } from "semiotic"
+import { BubbleChart, StreamXYFrame } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
@@ -73,7 +73,7 @@ const bubbleChartProps = [
 // ---------------------------------------------------------------------------
 
 const streamingBubbleCode = `import { useRef, useEffect } from "react"
-import { RealtimeSwarmChart } from "semiotic"
+import StreamXYFrame from "semiotic/StreamXYFrame"
 
 function StreamingCountryData() {
   const chartRef = useRef()
@@ -84,10 +84,12 @@ function StreamingCountryData() {
     const id = setInterval(() => {
       if (chartRef.current) {
         const i = indexRef.current++
+        const continent = continents[i % continents.length]
         chartRef.current.push({
           time: i,
           value: 60 + Math.random() * 25,
-          category: continents[i % continents.length],
+          population: 10 + Math.random() * 50,
+          continent,
         })
       }
     }, 80)
@@ -95,12 +97,14 @@ function StreamingCountryData() {
   }, [])
 
   return (
-    <RealtimeSwarmChart
+    <StreamXYFrame
       ref={chartRef}
+      chartType="bubble"
+      runtimeMode="streaming"
       size={[600, 280]}
-      categoryAccessor="category"
-      opacity={0.5}
-      radius={4}
+      sizeAccessor="population"
+      sizeRange={[4, 20]}
+      colorAccessor="continent"
       windowSize={200}
       showAxes
     />
@@ -116,10 +120,12 @@ function StreamingBubbleDemo({ width }) {
     const id = setInterval(() => {
       if (chartRef.current) {
         const i = indexRef.current++
+        const continent = continents[i % continents.length]
         chartRef.current.push({
           time: i,
           value: 60 + Math.random() * 25,
-          category: continents[i % continents.length],
+          population: 10 + Math.random() * 50,
+          continent,
         })
       }
     }, 80)
@@ -127,12 +133,14 @@ function StreamingBubbleDemo({ width }) {
   }, [])
 
   return (
-    <RealtimeSwarmChart
+    <StreamXYFrame
       ref={chartRef}
+      chartType="bubble"
+      runtimeMode="streaming"
       size={[width, 280]}
-      categoryAccessor="category"
-      opacity={0.5}
-      radius={4}
+      sizeAccessor="population"
+      sizeRange={[4, 20]}
+      colorAccessor="continent"
       windowSize={200}
       showAxes={true}
     />

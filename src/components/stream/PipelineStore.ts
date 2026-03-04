@@ -132,6 +132,8 @@ export class PipelineStore {
   private getY: (d: any) => number
   private getGroup: ((d: any) => string) | undefined
   private getCategory: ((d: any) => string) | undefined
+  private getSize: ((d: any) => number) | undefined
+  private getColor: ((d: any) => string) | undefined
   private getBounds: ((d: any) => number) | undefined
   private getOpen: ((d: any) => number) | undefined
   private getHigh: ((d: any) => number) | undefined
@@ -175,6 +177,10 @@ export class PipelineStore {
 
     this.getGroup = resolveStringAccessor(config.groupAccessor)
     this.getCategory = resolveStringAccessor(config.categoryAccessor)
+    this.getSize = config.sizeAccessor
+      ? resolveAccessor(config.sizeAccessor, "size")
+      : undefined
+    this.getColor = resolveStringAccessor(config.colorAccessor)
     this.getBounds = config.boundsAccessor
       ? resolveAccessor(config.boundsAccessor, "bounds")
       : undefined
@@ -531,10 +537,60 @@ export class PipelineStore {
   private buildPointScene(data: Record<string, any>[]): SceneNode[] {
     const nodes: SceneNode[] = []
     const defaultR = this.config.chartType === "bubble" ? 10 : 5
+    const sizeRange = this.config.sizeRange || [3, 15]
+
+    // Compute size scale if sizeAccessor is set and no pointStyle handles it
+    let sizeScale: ((v: number) => number) | null = null
+    if (this.getSize && !this.config.pointStyle) {
+      const sizes = data.map(d => this.getSize!(d)).filter(s => s != null && !Number.isNaN(s))
+      if (sizes.length > 0) {
+        const minSize = Math.min(...sizes)
+        const maxSize = Math.max(...sizes)
+        sizeScale = (s: number) => {
+          if (minSize === maxSize) return (sizeRange[0] + sizeRange[1]) / 2
+          return sizeRange[0] + ((s - minSize) / (maxSize - minSize)) * (sizeRange[1] - sizeRange[0])
+        }
+      }
+    }
+
+    // Build color map from colorAccessor if no pointStyle handles it
+    let colorMap: Map<string, string> | null = null
+    if (this.getColor && !this.config.pointStyle) {
+      const categories = new Set<string>()
+      for (const d of data) {
+        const c = this.getColor(d)
+        if (c) categories.add(c)
+      }
+      const palette = Array.isArray(this.config.colorScheme) ? this.config.colorScheme
+        : ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f", "#edc948", "#b07aa1", "#ff9da7", "#9c755f", "#bab0ac"]
+      colorMap = new Map()
+      let ci = 0
+      for (const cat of categories) {
+        colorMap.set(cat, palette[ci % palette.length])
+        ci++
+      }
+    }
 
     for (const d of data) {
-      const style = this.config.pointStyle ? this.config.pointStyle(d) : { fill: "#4e79a7", opacity: 0.8 }
-      const r = style.r || defaultR
+      let style = this.config.pointStyle ? this.config.pointStyle(d) : { fill: "#4e79a7", opacity: 0.8 }
+
+      // Apply size from accessor if pointStyle doesn't provide it
+      let r = style.r || defaultR
+      if (sizeScale && this.getSize) {
+        const sizeVal = this.getSize(d)
+        if (sizeVal != null && !Number.isNaN(sizeVal)) {
+          r = sizeScale(sizeVal)
+        }
+      }
+
+      // Apply color from accessor if pointStyle doesn't provide a custom fill
+      if (colorMap && this.getColor) {
+        const colorVal = this.getColor(d)
+        if (colorVal && colorMap.has(colorVal)) {
+          style = { ...style, fill: colorMap.get(colorVal)! }
+        }
+      }
+
       const node = buildPointNode(d, this.scales!, this.getX, this.getY, r, style)
       if (node) nodes.push(node)
     }

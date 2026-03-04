@@ -329,6 +329,12 @@ export class OrdinalPipelineStore {
     const cats = Array.from(this.categories)
     const sort = this.config.oSort
 
+    // In streaming mode, preserve insertion order by default to avoid
+    // jarring category shuffling as values fluctuate in the sliding window
+    if (this.config.runtimeMode === "streaming" && sort === undefined) {
+      return cats
+    }
+
     if (sort === false) return cats
 
     if (typeof sort === "function") {
@@ -382,8 +388,21 @@ export class OrdinalPipelineStore {
 
       for (const s of posSums.values()) if (s > max) max = s
       for (const s of negSums.values()) if (s < min) min = s
-    } else if (chartType === "bar" || chartType === "clusterbar") {
-      // Simple bars: extent of individual values
+    } else if (chartType === "bar") {
+      // Non-stacked bars: pieces within each category are summed,
+      // so the domain must cover the per-category total
+      const catSums = new Map<string, number>()
+      for (const d of data) {
+        const cat = this.getO(d)
+        const val = this.getR(d)
+        catSums.set(cat, (catSums.get(cat) || 0) + val)
+      }
+      for (const s of catSums.values()) {
+        if (s > max) max = s
+        if (s < min) min = s
+      }
+    } else if (chartType === "clusterbar") {
+      // Cluster bars: individual values (side-by-side)
       for (const d of data) {
         const val = this.getR(d)
         if (val > max) max = val
@@ -564,67 +583,70 @@ export class OrdinalPipelineStore {
     const getStack = this.getStack
 
     for (const col of Object.values(this.columns)) {
-      // Group pieces by stack key if stacking
-      const stacks = new Map<string, Record<string, any>[]>()
+      // Group pieces by stack key if stacking, and aggregate values per group
+      const stacks = new Map<string, { total: number; pieces: Record<string, any>[] }>()
       for (const d of col.pieceData) {
         const key = getStack ? getStack(d) : "_default"
-        if (!stacks.has(key)) stacks.set(key, [])
-        stacks.get(key)!.push(d)
+        if (!stacks.has(key)) stacks.set(key, { total: 0, pieces: [] })
+        const group = stacks.get(key)!
+        group.total += this.getR(d)
+        group.pieces.push(d)
       }
 
       // Compute totals for normalization
       let colTotal = 0
       if (normalize) {
-        for (const d of col.pieceData) colTotal += Math.abs(this.getR(d))
+        for (const g of stacks.values()) colTotal += Math.abs(g.total)
       }
 
       let posOffset = 0
       let negOffset = 0
 
-      for (const [stackKey, pieces] of stacks) {
-        for (const d of pieces) {
-          let val = this.getR(d)
-          if (normalize && colTotal > 0) val = val / colTotal
+      for (const [stackKey, group] of stacks) {
+        // Use the aggregated total for the stack group (one rect per group)
+        let val = group.total
+        if (normalize && colTotal > 0) val = val / colTotal
 
-          const style = this.resolvePieceStyle(d, col.name)
+        // Use the first piece for styling (representative datum)
+        const style = this.resolvePieceStyle(group.pieces[0], col.name)
+        // Build a synthetic datum that includes the aggregate info
+        const aggDatum = {
+          ...group.pieces[0],
+          __aggregateValue: group.total,
+          __pieceCount: group.pieces.length,
+          category: col.name
+        }
 
-          if (isVertical) {
-            const zeroY = rScale(0)
-            const valY = rScale(val >= 0 ? posOffset + val : negOffset + val)
-            const barY = Math.min(zeroY - (val >= 0 ? posOffset : 0) * (rScale(0) - rScale(1)), valY)
-            const barH = Math.abs(rScale(0) - rScale(val))
+        if (isVertical) {
+          const actualY = val >= 0
+            ? rScale(posOffset + val)
+            : rScale(negOffset)
+          const actualH = val >= 0
+            ? rScale(posOffset) - rScale(posOffset + val)
+            : rScale(negOffset + val) - rScale(negOffset)
 
-            const actualY = val >= 0
-              ? rScale(posOffset + val)
-              : rScale(negOffset)
-            const actualH = val >= 0
-              ? rScale(posOffset) - rScale(posOffset + val)
-              : rScale(negOffset + val) - rScale(negOffset)
+          nodes.push(buildRectNode(
+            col.x, actualY, col.width, Math.abs(actualH),
+            style, aggDatum, stackKey
+          ))
 
-            nodes.push(buildRectNode(
-              col.x, actualY, col.width, Math.abs(actualH),
-              style, d, stackKey
-            ))
+          if (val >= 0) posOffset += val
+          else negOffset += val
+        } else if (isHorizontal) {
+          const actualX = val >= 0
+            ? rScale(posOffset)
+            : rScale(negOffset + val)
+          const actualW = val >= 0
+            ? rScale(posOffset + val) - rScale(posOffset)
+            : rScale(negOffset) - rScale(negOffset + val)
 
-            if (val >= 0) posOffset += val
-            else negOffset += val
-          } else if (isHorizontal) {
-            const zeroX = rScale(0)
-            const actualX = val >= 0
-              ? rScale(posOffset)
-              : rScale(negOffset + val)
-            const actualW = val >= 0
-              ? rScale(posOffset + val) - rScale(posOffset)
-              : rScale(negOffset) - rScale(negOffset + val)
+          nodes.push(buildRectNode(
+            actualX, col.x, Math.abs(actualW), col.width,
+            style, aggDatum, stackKey
+          ))
 
-            nodes.push(buildRectNode(
-              actualX, col.x, Math.abs(actualW), col.width,
-              style, d, stackKey
-            ))
-
-            if (val >= 0) posOffset += val
-            else negOffset += val
-          }
+          if (val >= 0) posOffset += val
+          else negOffset += val
         }
       }
     }

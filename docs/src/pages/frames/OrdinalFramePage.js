@@ -13,128 +13,60 @@ import { Link } from "react-router-dom"
 // ---------------------------------------------------------------------------
 
 const barData = [
-  { department: "Engineering", employees: 52, color: "#6366f1" },
-  { department: "Design", employees: 28, color: "#f59e0b" },
-  { department: "Marketing", employees: 34, color: "#10b981" },
-  { department: "Sales", employees: 41, color: "#ef4444" },
-  { department: "Support", employees: 19, color: "#8b5cf6" },
-  { department: "HR", employees: 12, color: "#ec4899" },
+  { department: "Engineering", employees: 42 },
+  { department: "Sales", employees: 28 },
+  { department: "Marketing", employees: 19 },
+  { department: "Support", employees: 35 },
+  { department: "Design", employees: 12 },
 ]
 
-const stackedBarData = [
-  { region: "North", revenue: 12000, product: "Widget" },
-  { region: "North", revenue: 8000, product: "Gadget" },
-  { region: "North", revenue: 5000, product: "Doohickey" },
-  { region: "South", revenue: 9000, product: "Widget" },
-  { region: "South", revenue: 11000, product: "Gadget" },
-  { region: "South", revenue: 3000, product: "Doohickey" },
-  { region: "East", revenue: 15000, product: "Widget" },
-  { region: "East", revenue: 6000, product: "Gadget" },
-  { region: "East", revenue: 7000, product: "Doohickey" },
-  { region: "West", revenue: 7000, product: "Widget" },
-  { region: "West", revenue: 13000, product: "Gadget" },
-  { region: "West", revenue: 9000, product: "Doohickey" },
+const stackedData = [
+  { region: "North", product: "Widget", revenue: 12000 },
+  { region: "North", product: "Gadget", revenue: 8000 },
+  { region: "South", product: "Widget", revenue: 9000 },
+  { region: "South", product: "Gadget", revenue: 11000 },
+  { region: "East", product: "Widget", revenue: 7000 },
+  { region: "East", product: "Gadget", revenue: 14000 },
 ]
 
-const swarmData = []
-const categories = ["Q1", "Q2", "Q3", "Q4"]
-categories.forEach((cat) => {
-  for (let i = 0; i < 30; i++) {
-    swarmData.push({
-      quarter: cat,
-      value: Math.random() * 80 + 10 + (categories.indexOf(cat) * 15),
-    })
-  }
+const swarmData = Array.from({ length: 80 }, (_, i) => {
+  const dept = ["Eng", "Sales", "Marketing", "Support"][i % 4]
+  const base = dept === "Eng" ? 90 : dept === "Sales" ? 70 : dept === "Marketing" ? 60 : 80
+  return { department: dept, score: base + (Math.random() - 0.5) * 40 }
 })
-
-const violinData = []
-const groups = ["Control", "Treatment A", "Treatment B"]
-groups.forEach((group) => {
-  const center = group === "Control" ? 50 : group === "Treatment A" ? 65 : 75
-  for (let i = 0; i < 60; i++) {
-    violinData.push({
-      group,
-      value: center + (Math.random() - 0.5) * 40 + (Math.random() - 0.5) * 20,
-    })
-  }
-})
-
-const productColors = { Widget: "#6366f1", Gadget: "#f59e0b", Doohickey: "#10b981" }
 
 // ---------------------------------------------------------------------------
-// Props definition for PropTable
+// Props definition
 // ---------------------------------------------------------------------------
 
 const ordinalFrameProps = [
-  // --- General ---
-  { name: "size", type: "array", required: false, default: "[500, 500]", description: "Sets the width and height of the frame as [width, height]." },
-  { name: "data", type: "array", required: true, default: "[]", description: "Array of data objects. Each object's column is based on oAccessor, height on rAccessor." },
-  { name: "oAccessor", type: "string | function", required: false, default: null, description: "Determines how ordinal (categorical) values are accessed from the data." },
-  { name: "rAccessor", type: "string | function", required: false, default: null, description: "Determines how range (numerical) values are accessed from the data." },
-  { name: "oSort", type: "function", required: false, default: null, description: "Sorting function for columns. Receives ordinal string values." },
-  { name: "projection", type: "string", required: false, default: '"vertical"', description: 'Orientation of the chart: "vertical", "horizontal", or "radial".' },
-  { name: "title", type: "string | JSX", required: false, default: null, description: "Centers a title at the top of the chart." },
-  { name: "margin", type: "number | object", required: false, default: null, description: "Margin around the chart area." },
-  { name: "rScaleType", type: "function", required: false, default: "scaleLinear()", description: "Custom d3-scale for the range axis." },
-  { name: "oScaleType", type: "function", required: false, default: "scaleBand()", description: "Custom d3-scale for ordinal values." },
-  { name: "rExtent", type: "array | object", required: false, default: null, description: "Sets min/max for the range axis. Supports [min, max] or { extent, onChange }." },
-  { name: "invertR", type: "boolean", required: false, default: "false", description: "Inverts the range axis." },
-  { name: "oPadding", type: "number", required: false, default: null, description: "Distance in pixels between each column." },
-  { name: "dynamicColumnWidth", type: "string | function", required: false, default: null, description: "Column width proportional to a data property (Marimekko-style) or a function." },
-  { name: "pixelColumnWidth", type: "number", required: false, default: null, description: "Fixed pixel width for each column. Overrides the size setting for that dimension." },
-  { name: "renderKey", type: "string | function", required: false, default: null, description: "Key for animated transitions." },
-
-  // --- Piece Rendering ---
-  { name: "type", type: "string | object", required: false, default: '"none"', description: 'Piece type: "bar", "clusterbar", "point", "swarm", "timeline", "barpercent", or "none". Object form adds type-specific options.' },
-  { name: "style", type: "object | function", required: false, default: null, description: "Inline style for each piece element." },
-  { name: "pieceClass", type: "string | function", required: false, default: null, description: "CSS class for each piece element." },
-  { name: "canvasPieces", type: "boolean | function", required: false, default: "false", description: "Render pieces to Canvas instead of SVG." },
-  { name: "renderMode", type: "string | object | function", required: false, default: null, description: 'Non-photorealistic render mode for pieces (e.g. "sketchy").' },
-  { name: "connectorType", type: "function", required: false, default: null, description: "Function returning a key for connecting elements in adjacent columns (slope charts, funnels)." },
-  { name: "connectorStyle", type: "object | function", required: false, default: null, description: "Inline style for connector elements. Has access to source and target data." },
-  { name: "canvasConnectors", type: "boolean | function", required: false, default: "false", description: "Render connectors to Canvas instead of SVG." },
-  { name: "connectorRenderMode", type: "string | object | function", required: false, default: null, description: "Non-photorealistic render mode for connectors." },
-
-  // --- Summary Rendering ---
-  { name: "summaryType", type: "string | object", required: false, default: null, description: 'Summary visualization: "violin", "boxplot", "histogram", "ridgeline", "contour", "heatmap". Object form adds type-specific options.' },
-  { name: "summaryStyle", type: "object | function", required: false, default: null, description: "Inline style for summary elements." },
-  { name: "summaryClass", type: "string | function", required: false, default: null, description: "CSS class for summary elements." },
-  { name: "summaryPosition", type: "function", required: false, default: null, description: "Function to position summaries within their column." },
-  { name: "canvasSummaries", type: "boolean | function", required: false, default: "false", description: "Render summaries to Canvas instead of SVG." },
-  { name: "summaryRenderMode", type: "string | object | function", required: false, default: null, description: "Non-photorealistic render mode for summaries." },
-
-  // --- Annotation & Decoration ---
-  { name: "axes", type: "array | object", required: false, default: null, description: "Axis configuration objects for the range axis. Use oLabel for column labels." },
-  { name: "oLabel", type: "boolean | function | object", required: false, default: "false", description: "Column labels. Boolean for simple labels, function for custom JSX, object for placement options." },
-  { name: "annotations", type: "array", required: false, default: "[]", description: "Array of annotation objects positioned in o/r data space." },
-  { name: "tooltipContent", type: "function", required: false, default: null, description: "Custom tooltip renderer for hovered pieces or columns." },
-  { name: "svgAnnotationRules", type: "function", required: false, default: null, description: "Custom SVG annotation renderer." },
-  { name: "htmlAnnotationRules", type: "function", required: false, default: null, description: "Custom HTML annotation renderer." },
-  { name: "annotationSettings", type: "object", required: false, default: null, description: "Layout settings for annotation collision avoidance." },
-  { name: "matte", type: "boolean", required: false, default: "false", description: "Adds a border matte to hide overflow." },
-  { name: "backgroundGraphics", type: "JSX | array", required: false, default: null, description: "JSX rendered behind the chart." },
-  { name: "foregroundGraphics", type: "JSX | array", required: false, default: null, description: "JSX rendered in front of the chart." },
-  { name: "additionalDefs", type: "JSX", required: false, default: null, description: "SVG defs injected into the visualization layer." },
-
-  // --- Interaction ---
-  { name: "hoverAnnotation", type: "boolean", required: false, default: "false", description: "Enable automatic column-level tooltips." },
-  { name: "pieceHoverAnnotation", type: "boolean | object", required: false, default: "false", description: "Enable tooltips for individual pieces with voronoi overlay." },
-  { name: "customHoverBehavior", type: "function", required: false, default: null, description: "Callback fired on hover." },
-  { name: "customClickBehavior", type: "function", required: false, default: null, description: "Callback fired on click." },
-  { name: "customDoubleClickBehavior", type: "function", required: false, default: null, description: "Callback fired on double-click." },
-  { name: "interaction", type: "object", required: false, default: null, description: "Column brush configuration: { columnsBrush, start, during, end, extent }." },
-
-  // --- Miscellaneous ---
-  { name: "name", type: "string", required: false, default: null, description: "Internal name for linking frames together." },
-  { name: "multiAxis", type: "boolean", required: false, default: "false", description: "Enable multiple axes for the frame." },
-  { name: "renderOrder", type: "array", required: false, default: null, description: 'Rendering order of data layers: ["pieces", "summaries", "connectors"].' },
+  { name: "chartType", type: "string", required: true, default: null, description: '"bar", "clusterbar", "point", "swarm", "pie", "donut", "boxplot", "violin", "histogram", "ridgeline", "timeline".' },
+  { name: "runtimeMode", type: '"bounded" | "streaming"', required: false, default: '"bounded"', description: "Whether data is static (bounded) or pushed via ref (streaming)." },
+  { name: "data", type: "array", required: false, default: null, description: "Array of data objects." },
+  { name: "size", type: "[number, number]", required: false, default: "[600, 400]", description: "Chart dimensions as [width, height]." },
+  { name: "oAccessor", type: "string | function", required: false, default: '"category"', description: "Accessor for the ordinal (category) dimension." },
+  { name: "rAccessor", type: "string | function | array", required: false, default: '"value"', description: "Accessor for the range (value) dimension. Array for multi-axis." },
+  { name: "projection", type: '"vertical" | "horizontal" | "radial"', required: false, default: '"vertical"', description: "Chart projection direction." },
+  { name: "stackBy", type: "string | function", required: false, default: null, description: "Stack pieces within each category by this field." },
+  { name: "groupBy", type: "string | function", required: false, default: null, description: "Group pieces side-by-side within each category." },
+  { name: "barPadding", type: "number", required: false, default: null, description: "Padding between category bands in pixels." },
+  { name: "normalize", type: "boolean", required: false, default: "false", description: "Normalize stacked values to 100%." },
+  { name: "showAxes", type: "boolean", required: false, default: "true", description: "Show axes on the chart." },
+  { name: "oLabel", type: "string", required: false, default: null, description: "Label for the ordinal axis." },
+  { name: "rLabel", type: "string", required: false, default: null, description: "Label for the range axis." },
+  { name: "pieceStyle", type: "function", required: false, default: null, description: "Style for bar/point marks. (datum, category) => Style." },
+  { name: "summaryStyle", type: "function", required: false, default: null, description: "Style for summary marks (boxplot, violin). (datum, category) => Style." },
+  { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover tooltips." },
+  { name: "margin", type: "object", required: false, default: "{ top: 50, right: 40, bottom: 60, left: 70 }", description: "Chart margins." },
+  { name: "colorScheme", type: "string | string[]", required: false, default: null, description: "Color scheme for multi-series." },
+  { name: "barColors", type: "object", required: false, default: null, description: "Category-to-color mapping." },
 ]
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
-export default function StreamOrdinalFramePage() {
+export default function OrdinalFramePage() {
   return (
     <PageLayout
       title="StreamOrdinalFrame"
@@ -152,63 +84,18 @@ export default function StreamOrdinalFramePage() {
         tier="frames"
         related={[
           { name: "BarChart", path: "/charts/bar-chart" },
-          { name: "PieChart", path: "/charts/pie-chart" },
-          { name: "StreamXYFrame", path: "/frames/xy-frame" },
+          { name: "SwarmPlot", path: "/charts/swarm-plot" },
+          { name: "BoxPlot", path: "/charts/box-plot" },
         ]}
       />
 
       <p>
-        StreamOrdinalFrame displays categorical data along the{" "}
-        <strong>ordinal</strong> (categorical) axis and continuous data along
-        the <strong>range</strong> (numerical) axis. It powers bar charts,
-        clustered bars, timelines, swarm plots, pie charts, and a rich set of
-        statistical summaries (violin plots, boxplots, ridgeline plots, and
-        more). Use StreamOrdinalFrame directly when you need full control over piece
-        rendering, summary overlays, connectors between columns, or brush
-        interactions.
+        StreamOrdinalFrame is the foundational frame for all categorical data
+        visualization. It handles bar charts, stacked bars, cluster bars, swarm
+        plots, pie/donut charts, boxplots, violins, histograms, and more. Use it
+        directly when you need full control over styling and layout beyond what
+        the simpler Chart components provide.
       </p>
-
-      {/* ----------------------------------------------------------------- */}
-      {/* Concepts */}
-      {/* ----------------------------------------------------------------- */}
-      <h2 id="concepts">Concepts</h2>
-
-      <p>
-        StreamOrdinalFrame processes data through a pipeline designed for categorical
-        grouping:
-      </p>
-
-      <ol>
-        <li>
-          <strong>Data input</strong> -- A single <code>data</code> array is
-          split into columns based on <code>oAccessor</code> (the ordinal
-          accessor) and measured by <code>rAccessor</code> (the range
-          accessor).
-        </li>
-        <li>
-          <strong>Column layout</strong> -- Columns are evenly distributed
-          across the available space (controlled by <code>oPadding</code>,{" "}
-          <code>dynamicColumnWidth</code>, and <code>pixelColumnWidth</code>).
-          The <code>projection</code> prop flips the layout to horizontal or
-          radial.
-        </li>
-        <li>
-          <strong>Piece rendering</strong> -- The <code>type</code> prop
-          determines how data is drawn within each column: bars, clustered
-          bars, points, swarm plots, or timelines. Each "piece" is one bar
-          segment, one dot, or one timeline block.
-        </li>
-        <li>
-          <strong>Summary rendering</strong> -- <code>summaryType</code>{" "}
-          overlays statistical summaries on each column: violin plots,
-          boxplots, histograms, ridgelines, contours, or heatmaps.
-        </li>
-        <li>
-          <strong>Connectors</strong> -- <code>connectorType</code> draws links
-          between pieces in adjacent columns, useful for slope charts and
-          funnel diagrams.
-        </li>
-      </ol>
 
       {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
@@ -216,32 +103,32 @@ export default function StreamOrdinalFramePage() {
       <h2 id="quick-start">Quick Start</h2>
 
       <p>
-        A basic bar chart needs <code>data</code>, <code>oAccessor</code>,{" "}
-        <code>rAccessor</code>, and <code>type="bar"</code>.
+        Provide <code>chartType</code>, <code>data</code>,{" "}
+        <code>oAccessor</code> (category), and <code>rAccessor</code> (value).
       </p>
 
       <LiveExample
         frameProps={{
+          chartType: "bar",
           data: barData,
           oAccessor: "department",
           rAccessor: "employees",
-          type: "bar",
-          style: (d) => ({ fill: d.color }),
-          oLabel: true,
-          axes: [{ orient: "left", label: "Employees" }],
-          oPadding: 8,
-          margin: { top: 20, bottom: 60, left: 80, right: 20 },
+          showAxes: true,
+          enableHover: true,
+          pieceStyle: () => ({ fill: "#6366f1" }),
+          margin: { top: 20, bottom: 60, left: 70, right: 20 },
+          size: [500, 300],
         }}
         type={StreamOrdinalFrame}
         startHidden={false}
         overrideProps={{
           data: `[
-  { department: "Engineering", employees: 52, color: "#6366f1" },
-  { department: "Design", employees: 28, color: "#f59e0b" },
-  { department: "Marketing", employees: 34, color: "#10b981" },
-  // ...more departments
+  { department: "Engineering", employees: 42 },
+  { department: "Sales", employees: 28 },
+  { department: "Marketing", employees: 19 },
+  { department: "Support", employees: 35 },
+  { department: "Design", employees: 12 },
 ]`,
-          style: `(d) => ({ fill: d.color })`,
         }}
         hiddenProps={{}}
       />
@@ -253,118 +140,58 @@ export default function StreamOrdinalFramePage() {
 
       <h3 id="stacked-bar">Stacked Bar Chart</h3>
       <p>
-        When multiple data objects share the same ordinal value, bars are
-        automatically stacked. Use a function for <code>style</code> to
-        color each segment by category.
+        Use <code>stackBy</code> to stack pieces within each category.
+        Use <code>barColors</code> to map stack groups to colors.
       </p>
 
       <LiveExample
         frameProps={{
-          data: stackedBarData,
+          chartType: "bar",
+          data: stackedData,
           oAccessor: "region",
           rAccessor: "revenue",
-          type: "bar",
-          style: (d) => ({
-            fill: productColors[d.product] || "#999",
-          }),
-          oLabel: true,
-          oPadding: 12,
-          axes: [{ orient: "left", label: "Revenue ($)" }],
-          margin: { top: 20, bottom: 60, left: 80, right: 20 },
-          hoverAnnotation: true,
-          tooltipContent: (d) => (
-            <div style={{ background: "var(--surface-1)", padding: "8px 12px", border: "1px solid var(--surface-3)", borderRadius: 4, fontSize: 13 }}>
-              <strong>{d.product}</strong>: ${d.revenue.toLocaleString()}
-            </div>
-          ),
-          pieceHoverAnnotation: true,
+          stackBy: "product",
+          barColors: { Widget: "#6366f1", Gadget: "#f59e0b" },
+          showAxes: true,
+          enableHover: true,
+          margin: { top: 20, bottom: 60, left: 70, right: 20 },
+          size: [500, 300],
         }}
         type={StreamOrdinalFrame}
         overrideProps={{
           data: `[
-  { region: "North", revenue: 12000, product: "Widget" },
-  { region: "North", revenue: 8000, product: "Gadget" },
-  // ...more data with shared region values
+  { region: "North", product: "Widget", revenue: 12000 },
+  { region: "North", product: "Gadget", revenue: 8000 },
+  // ...
 ]`,
-          style: `(d) => ({ fill: productColors[d.product] })`,
-          tooltipContent: `(d) => (
-  <div>
-    <strong>{d.product}</strong>: \${d.revenue.toLocaleString()}
-  </div>
-)`,
         }}
         hiddenProps={{}}
       />
 
       <h3 id="swarm-plot">Swarm Plot</h3>
       <p>
-        Set <code>type</code> to <code>"swarm"</code> to display individual
-        data points as a beeswarm within each column. This is useful for
-        showing distributions while preserving individual observations.
+        Use <code>chartType="swarm"</code> to display individual data points
+        within categories. Points are jittered to avoid overlap.
       </p>
 
       <LiveExample
         frameProps={{
+          chartType: "swarm",
           data: swarmData,
-          oAccessor: "quarter",
-          rAccessor: "value",
-          type: { type: "swarm", r: 4 },
-          style: { fill: "#6366f1", fillOpacity: 0.7, stroke: "#6366f1", strokeWidth: 0.5 },
-          oLabel: true,
-          oPadding: 16,
-          axes: [{ orient: "left", label: "Score" }],
-          margin: { top: 20, bottom: 50, left: 60, right: 20 },
-          pieceHoverAnnotation: true,
+          oAccessor: "department",
+          rAccessor: "score",
+          pieceStyle: () => ({ fill: "#10b981", opacity: 0.7, r: 4 }),
+          showAxes: true,
+          enableHover: true,
+          margin: { top: 20, bottom: 60, left: 70, right: 20 },
+          size: [500, 300],
         }}
         type={StreamOrdinalFrame}
         overrideProps={{
-          data: `[
-  { quarter: "Q1", value: 42 },
-  { quarter: "Q1", value: 67 },
-  // ...30 points per quarter
-]`,
-          type: '{ type: "swarm", r: 4 }',
-        }}
-        hiddenProps={{}}
-      />
-
-      <h3 id="horizontal-with-summaries">Horizontal Projection with Violin Summaries</h3>
-      <p>
-        Set <code>projection="horizontal"</code> and add a{" "}
-        <code>summaryType</code> to overlay statistical summaries. This example
-        shows violin plots with the underlying data points visible.
-      </p>
-
-      <LiveExample
-        frameProps={{
-          data: violinData,
-          oAccessor: "group",
-          rAccessor: "value",
-          projection: "horizontal",
-          type: { type: "point", r: 2 },
-          style: { fill: "#6366f1", fillOpacity: 0.4 },
-          summaryType: "violin",
-          summaryStyle: { fill: "#6366f1", fillOpacity: 0.15, stroke: "#6366f1", strokeWidth: 1 },
-          oLabel: true,
-          oPadding: 20,
-          axes: [{ orient: "bottom", label: "Value" }],
-          margin: { top: 20, bottom: 50, left: 100, right: 20 },
-        }}
-        type={StreamOrdinalFrame}
-        overrideProps={{
-          data: `[
-  { group: "Control", value: 42 },
-  { group: "Treatment A", value: 71 },
-  // ...60 observations per group
-]`,
-          type: '{ type: "point", r: 2 }',
-          summaryType: '"violin"',
-          summaryStyle: `{
-  fill: "#6366f1",
-  fillOpacity: 0.15,
-  stroke: "#6366f1",
-  strokeWidth: 1
-}`,
+          data: `Array.from({ length: 80 }, (_, i) => ({
+  department: ["Eng", "Sales", "Marketing", "Support"][i % 4],
+  score: base + (Math.random() - 0.5) * 40
+}))`,
         }}
         hiddenProps={{}}
       />
@@ -384,23 +211,22 @@ export default function StreamOrdinalFramePage() {
       <ul>
         <li>
           <Link to="/charts/bar-chart">BarChart</Link> -- simplified Chart
-          component that wraps StreamOrdinalFrame for bar visualizations
+          component for bar visualizations
         </li>
         <li>
-          <Link to="/charts/pie-chart">PieChart</Link> -- simplified Chart
-          component for radial projection bar charts
+          <Link to="/charts/swarm-plot">SwarmPlot</Link> -- simplified Chart
+          component for swarm/beeswarm plots
         </li>
         <li>
-          <Link to="/frames/xy-frame">StreamXYFrame</Link> -- for continuous x/y
-          data (line charts, scatterplots, etc.)
+          <Link to="/charts/box-plot">BoxPlot</Link> -- statistical boxplots
+        </li>
+        <li>
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> -- for continuous
+          x/y data (line, area, scatter)
         </li>
         <li>
           <Link to="/frames/network-frame">StreamNetworkFrame</Link> -- for
-          topological data (force layouts, hierarchies, etc.)
-        </li>
-        <li>
-          <Link to="/features/annotations">Annotations</Link> -- adding
-          callouts, highlights, and notes to any visualization
+          topological data (force layouts, hierarchies)
         </li>
       </ul>
     </PageLayout>
