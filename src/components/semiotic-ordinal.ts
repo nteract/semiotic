@@ -1,43 +1,41 @@
 /**
- * OrdinalFrame entry point - for bar charts, pie charts, timelines, etc.
- * Import this instead of the full semiotic bundle to reduce bundle size
+ * Ordinal entry point — for bar charts, pie charts, timelines, etc.
+ * Import from "semiotic/ordinal" instead of the full bundle to reduce bundle size.
  */
 
-import OrdinalFrame from "./OrdinalFrame"
-import { ResponsiveOrdinalFrame } from "./ResponsiveOrdinalFrame"
-import { SparkOrdinalFrame } from "./SparkOrdinalFrame"
+import StreamOrdinalFrame from "./stream/StreamOrdinalFrame"
 
-// Common utilities used with OrdinalFrame
+// Common utilities
 import Axis from "./Axis"
 import Legend from "./Legend"
 import Annotation from "./Annotation"
 import AnnotationLayer from "./AnnotationLayer/AnnotationLayer"
-
-// Utility functions
 import { calculateDataExtent } from "./data/dataFunctions"
 
-// HOC chart components
+// Chart HOCs
 import { Histogram } from "./charts/ordinal/Histogram"
 import { ViolinPlot } from "./charts/ordinal/ViolinPlot"
 
-// Export components
 export {
-  OrdinalFrame,
-  ResponsiveOrdinalFrame,
-  SparkOrdinalFrame,
-  // Common utilities
+  StreamOrdinalFrame,
   Axis,
   Legend,
   Annotation,
   AnnotationLayer,
-  // Utility functions
   calculateDataExtent,
-  // HOC chart components
   Histogram,
   ViolinPlot
 }
 
-// Export types
+// Types
+export type {
+  StreamOrdinalFrameProps,
+  StreamOrdinalFrameHandle,
+  OrdinalChartType,
+  OrdinalScales,
+  OrdinalSceneNode
+} from "./stream/ordinalTypes"
+
 export {
   OExtentObject,
   PieceTypes,

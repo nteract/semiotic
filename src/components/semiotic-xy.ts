@@ -1,20 +1,17 @@
 /**
- * XYFrame entry point - for line, area, and scatter plots
+ * XY entry point - for line, area, and scatter plots
  * Import this instead of the full semiotic bundle to reduce bundle size
  */
 
-import XYFrame from "./XYFrame"
-import MinimapXYFrame from "./MinimapXYFrame"
-import { ResponsiveXYFrame } from "./ResponsiveXYFrame"
-import { SparkXYFrame } from "./SparkXYFrame"
+import StreamXYFrame from "./stream/StreamXYFrame"
+import { MinimapChart } from "./charts/xy/MinimapChart"
 
-// Common utilities used with XYFrame
+// Common utilities used with XY charts
 import Axis from "./Axis"
 import Legend from "./Legend"
 import Annotation from "./Annotation"
 import AnnotationLayer from "./AnnotationLayer/AnnotationLayer"
 import Brush from "./Brush"
-import MiniMap from "./MiniMap"
 import DividedLine from "./DividedLine"
 
 // Utility functions
@@ -24,17 +21,14 @@ import { hexbinning, heatmapping } from "./svg/areaDrawing"
 
 // Export components
 export {
-  XYFrame,
-  MinimapXYFrame,
-  ResponsiveXYFrame,
-  SparkXYFrame,
+  StreamXYFrame,
+  MinimapChart,
   // Common utilities
   Axis,
   Legend,
   Annotation,
   AnnotationLayer,
   Brush,
-  MiniMap,
   DividedLine,
   // Utility functions
   funnelize,
@@ -45,9 +39,6 @@ export {
 
 // Export types
 export {
-  XYFrameProps,
-  AnnotatedSettingsProps,
-  XYFrameState,
   SummaryLayoutType
 } from "./types/xyTypes"
 

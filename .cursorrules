@@ -404,7 +404,7 @@ Props: `size` ([number, number], [500, 300]),
 <RealtimeLineChart ref={chartRef} timeAccessor="time" valueAccessor="value" windowSize={200} />
 ```
 
-#### RealtimeBarChart
+#### RealtimeHistogram
 Streaming bar chart with binned aggregation.
 
 Props: `binSize` (number, **required**),
@@ -422,7 +422,7 @@ Props: `binSize` (number, **required**),
   `margin` (object), `className` (string)
 
 ```jsx
-<RealtimeBarChart ref={chartRef} binSize={1000} timeAccessor="time" valueAccessor="count" />
+<RealtimeHistogram ref={chartRef} binSize={1000} timeAccessor="time" valueAccessor="count" />
 ```
 
 #### RealtimeSwarmChart
@@ -522,6 +522,6 @@ const edges = [{ source: "A", target: "B", value: 10 }, { source: "B", target: "
 
 ## What Semiotic Does That Others Don't
 - Network visualization: ForceDirectedGraph, SankeyDiagram, ChordDiagram, TreeDiagram, Treemap, CirclePack
-- Streaming data: RealtimeLineChart, RealtimeBarChart (canvas-based, high frequency)
+- Streaming data: RealtimeLineChart, RealtimeHistogram (canvas-based, high frequency)
 - Annotation system: built-in hover, click, and custom annotations
 - Server-side SVG: `renderToStaticSVG()` for email/OG images (import from "semiotic/server")

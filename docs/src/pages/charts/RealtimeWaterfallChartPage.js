@@ -199,13 +199,13 @@ export default function RealtimeWaterfallChartPage() {
         componentName="RealtimeWaterfallChart"
         importStatement='import { RealtimeWaterfallChart } from "semiotic"'
         tier="charts"
-        wraps="RealtimeFrame"
+        wraps="StreamXYFrame"
         wrapsPath="/frames/realtime-frame"
         related={[
           { name: "RealtimeLineChart", path: "/charts/realtime-line-chart" },
-          { name: "RealtimeBarChart", path: "/charts/realtime-bar-chart" },
+          { name: "RealtimeHistogram", path: "/charts/realtime-bar-chart" },
           { name: "RealtimeSwarmChart", path: "/charts/realtime-swarm-chart" },
-          { name: "RealtimeFrame", path: "/frames/realtime-frame" },
+          { name: "StreamXYFrame", path: "/frames/realtime-frame" },
         ]}
       />
 
@@ -214,7 +214,7 @@ export default function RealtimeWaterfallChartPage() {
         that rise and fall from a running baseline. Positive values appear as
         gain bars and negative values as loss bars, with optional connector
         lines linking consecutive bars. It wraps{" "}
-        <Link to="/frames/realtime-frame">RealtimeFrame</Link> with{" "}
+        <Link to="/frames/realtime-frame">StreamXYFrame</Link> with{" "}
         <code>chartType="waterfall"</code> and promotes waterfall styling to
         top-level props. Create a ref and call{" "}
         <code>ref.current.push(point)</code> in a <code>setInterval</code> to
@@ -333,9 +333,9 @@ function StreamingWaterfall() {
       <p>
         When you need more control — custom connector rendering, mixed chart
         types, or complex annotation logic — graduate to{" "}
-        <Link to="/frames/realtime-frame">RealtimeFrame</Link> directly.
+        <Link to="/frames/realtime-frame">StreamXYFrame</Link> directly.
         Every <code>RealtimeWaterfallChart</code> is just a configured{" "}
-        <code>RealtimeFrame</code> under the hood.
+        <code>StreamXYFrame</code> under the hood.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>
@@ -358,9 +358,9 @@ function StreamingWaterfall() {
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-frames)" }}>Frame (full control)</h4>
           <CodeBlock
-            code={`import { RealtimeFrame } from "semiotic"
+            code={`import { StreamXYFrame } from "semiotic"
 
-<RealtimeFrame
+<StreamXYFrame
   ref={frameRef}
   chartType="waterfall"
   windowSize={300}
@@ -382,7 +382,7 @@ function StreamingWaterfall() {
         The waterfall styling props (<code>positiveColor</code>,{" "}
         <code>negativeColor</code>, <code>connectorStroke</code>, etc.) map
         directly to fields within the <code>waterfallStyle</code> object on
-        RealtimeFrame.
+        StreamXYFrame.
       </p>
 
       {/* ----------------------------------------------------------------- */}
@@ -396,7 +396,7 @@ function StreamingWaterfall() {
           streaming continuous line for time-series data
         </li>
         <li>
-          <Link to="/charts/realtime-bar-chart">RealtimeBarChart</Link> —
+          <Link to="/charts/realtime-bar-chart">RealtimeHistogram</Link> —
           streaming temporal histograms with binned bars
         </li>
         <li>
@@ -404,12 +404,12 @@ function StreamingWaterfall() {
           individual data points as a streaming scatter/swarm
         </li>
         <li>
-          <Link to="/frames/realtime-frame">RealtimeFrame</Link> — the
+          <Link to="/frames/realtime-frame">StreamXYFrame</Link> — the
           underlying Frame with full control over every rendering detail
         </li>
         <li>
           <Link to="/cookbook/waterfall-chart">Waterfall Chart (Cookbook)</Link> —
-          static waterfall chart recipe using OrdinalFrame
+          static waterfall chart recipe using StreamOrdinalFrame
         </li>
       </ul>
     </PageLayout>

@@ -1,5 +1,5 @@
-import React from "react"
-import { OrdinalFrame } from "semiotic"
+import React, { useRef, useEffect } from "react"
+import { StreamOrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { DonutChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -7,6 +7,8 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -26,6 +28,86 @@ const budgetData = [
   { category: "Operations", value: 180000 },
   { category: "HR", value: 120000 },
 ]
+
+// ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const budgetCategories = ["Engineering", "Marketing", "Sales", "Operations", "HR"]
+const donutColors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
+const donutColorMap = Object.fromEntries(budgetCategories.map((s, i) => [s, donutColors[i]]))
+
+const streamingDonutCode = `import { useRef, useEffect } from "react"
+import { StreamOrdinalFrame } from "semiotic"
+
+function StreamingDonutDemo() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          category: budgetCategories[i % 5],
+          value: Math.round(50000 + Math.random() * 400000),
+        })
+      }
+    }, 600)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="donut"
+      runtimeMode="streaming"
+      projection="radial"
+      innerRadius={60}
+      size={[400, 400]}
+      oAccessor="category"
+      rAccessor="value"
+      windowSize={200}
+      showAxes={false}
+      pieceStyle={d => ({ fill: donutColorMap[d.category] || "#007bff" })}
+    />
+  )
+}`
+
+function StreamingDonutDemo({ width }) {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          category: budgetCategories[i % 5],
+          value: Math.round(50000 + Math.random() * 400000),
+        })
+      }
+    }, 600)
+    return () => clearInterval(id)
+  }, [])
+
+  const size = Math.min(width, 400)
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="donut"
+      runtimeMode="streaming"
+      projection="radial"
+      innerRadius={60}
+      size={[size, size]}
+      oAccessor="category"
+      rAccessor="value"
+      windowSize={200}
+      showAxes={false}
+      pieceStyle={d => ({ fill: donutColorMap[d.category] || "#007bff" })}
+    />
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Props definition for PropTable
@@ -48,7 +130,7 @@ const donutChartProps = [
   { name: "height", type: "number", required: false, default: "400", description: "Chart height in pixels." },
   { name: "margin", type: "object", required: false, default: "{ top: 20, bottom: 20, left: 20, right: 20 }", description: "Margin around the chart area." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Additional OrdinalFrame props for advanced customization." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamOrdinalFrame props for advanced customization." },
 ]
 
 // ---------------------------------------------------------------------------
@@ -72,12 +154,12 @@ export default function DonutChartPage() {
         componentName="DonutChart"
         importStatement='import { DonutChart } from "semiotic"'
         tier="charts"
-        wraps="OrdinalFrame"
+        wraps="StreamOrdinalFrame"
         wrapsPath="/frames/ordinal-frame"
         related={[
           { name: "PieChart", path: "/charts/pie-chart" },
           { name: "BarChart", path: "/charts/bar-chart" },
-          { name: "OrdinalFrame", path: "/frames/ordinal-frame" },
+          { name: "StreamOrdinalFrame", path: "/frames/ordinal-frame" },
         ]}
       />
 
@@ -86,7 +168,7 @@ export default function DonutChartPage() {
         <code>innerRadius</code> prop controls the hole size, and{" "}
         <code>centerContent</code> lets you place a label or value in the
         center. Like <Link to="/charts/pie-chart">PieChart</Link>, it wraps{" "}
-        <Link to="/frames/ordinal-frame">OrdinalFrame</Link> with radial
+        <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> with radial
         projection.
       </p>
 
@@ -100,24 +182,34 @@ export default function DonutChartPage() {
         inner radius is 60 pixels.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: sampleData,
-          categoryAccessor: "category",
-          valueAccessor: "value",
-          colorScheme: ["#22c55e", "#f59e0b", "#e2e4e8"],
-        }}
-        type={DonutChart}
-        startHidden={false}
-        overrideProps={{
-          data: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              data: sampleData,
+              categoryAccessor: "category",
+              valueAccessor: "value",
+              colorScheme: ["#22c55e", "#f59e0b", "#e2e4e8"],
+            }}
+            type={DonutChart}
+            startHidden={false}
+            overrideProps={{
+              data: `[
   { category: "Complete", value: 72 },
   { category: "In Progress", value: 18 },
   { category: "Not Started", value: 10 }
 ]`,
-          colorScheme: '["#22c55e", "#f59e0b", "#e2e4e8"]',
-        }}
-        hiddenProps={{}}
+              colorScheme: '["#22c55e", "#f59e0b", "#e2e4e8"]',
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingDonutDemo width={w} />}
+            code={streamingDonutCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}
@@ -165,7 +257,7 @@ export default function DonutChartPage() {
 
       <p>
         For full control, use{" "}
-        <Link to="/frames/ordinal-frame">OrdinalFrame</Link> directly with{" "}
+        <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> directly with{" "}
         <code>projection="radial"</code> and{" "}
         <code>type={`{{ type: "bar", innerRadius: 60 }}`}</code>.
       </p>
@@ -189,9 +281,9 @@ export default function DonutChartPage() {
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-frames)" }}>Frame (full control)</h4>
           <CodeBlock
-            code={`import { OrdinalFrame } from "semiotic"
+            code={`import { StreamOrdinalFrame } from "semiotic"
 
-<OrdinalFrame
+<StreamOrdinalFrame
   data={progressData}
   oAccessor="category"
   rAccessor="value"
@@ -221,7 +313,7 @@ export default function DonutChartPage() {
           comparing values across categories
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — the underlying
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the underlying
           Frame with full control over every rendering detail
         </li>
       </ul>

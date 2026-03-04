@@ -1,9 +1,109 @@
-import React from "react"
+import React, { useRef, useEffect } from "react"
+import { StreamXYFrame } from "semiotic"
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 import CandlestickChart from "../../examples/CandlestickChart"
+
+// ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const streamingCandlestickCode = `import { useRef, useEffect } from "react"
+import { StreamXYFrame } from "semiotic"
+
+function StreamingCandlestick() {
+  const chartRef = useRef()
+  const priceRef = useRef(350)
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        const open = priceRef.current
+        const change = (Math.random() - 0.48) * 10
+        const close = open + change
+        const high = Math.max(open, close) + Math.random() * 5
+        const low = Math.min(open, close) - Math.random() * 5
+        priceRef.current = close
+
+        chartRef.current.push({
+          time: i, open, high, low, close,
+        })
+      }
+    }, 500)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamXYFrame
+      ref={chartRef}
+      chartType="candlestick"
+      runtimeMode="streaming"
+      size={[600, 300]}
+      openAccessor="open"
+      highAccessor="high"
+      lowAccessor="low"
+      closeAccessor="close"
+      candlestickStyle={{
+        upColor: "#4daf4a",
+        downColor: "#e41a1c",
+        wickColor: "#333",
+      }}
+      windowSize={40}
+      showAxes
+    />
+  )
+}`
+
+function StreamingCandlestickDemo({ width }) {
+  const chartRef = useRef()
+  const priceRef = useRef(350)
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        const open = priceRef.current
+        const change = (Math.random() - 0.48) * 10
+        const close = open + change
+        const high = Math.max(open, close) + Math.random() * 5
+        const low = Math.min(open, close) - Math.random() * 5
+        priceRef.current = close
+
+        chartRef.current.push({
+          time: i, open, high, low, close,
+        })
+      }
+    }, 500)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamXYFrame
+      ref={chartRef}
+      chartType="candlestick"
+      runtimeMode="streaming"
+      size={[width, 300]}
+      openAccessor="open"
+      highAccessor="high"
+      lowAccessor="low"
+      closeAccessor="close"
+      candlestickStyle={{
+        upColor: "#4daf4a",
+        downColor: "#e41a1c",
+        wickColor: "#333",
+      }}
+      windowSize={40}
+      showAxes={true}
+    />
+  )
+}
 
 export default function CandlestickChartPage() {
   return (
@@ -18,78 +118,135 @@ export default function CandlestickChartPage() {
       <p>
         Financial data often requires showing open, high, low, and close values
         for each time period. A standard line chart cannot capture all four
-        dimensions at once. This recipe demonstrates how to build a candlestick
-        chart using XYFrame's multi-accessor support and custom point marks.
+        dimensions at once. StreamXYFrame supports candlestick charts as a
+        first-class chart type with dedicated accessors for each price
+        dimension.
       </p>
 
       <h2 id="the-visualization">The Visualization</h2>
-      <div
-        style={{
-          background: "var(--surface-1)",
-          borderRadius: "8px",
-          padding: "16px",
-          border: "1px solid var(--surface-3)",
-        }}
-      >
-        <CandlestickChart />
-      </div>
+      <StreamingToggle
+        staticContent={
+          <div
+            style={{
+              background: "var(--surface-1)",
+              borderRadius: "8px",
+              padding: "16px",
+              border: "1px solid var(--surface-3)",
+            }}
+          >
+            <CandlestickChart />
+          </div>
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingCandlestickDemo width={w} />}
+            code={streamingCandlestickCode}
+          />
+        }
+      />
 
       <h2 id="how-it-works">How It Works</h2>
       <p>
-        The key insight is that <code>yAccessor</code> in XYFrame can accept an
-        array of accessor functions, allowing each data point to project multiple
-        y-values. Here, each row contains open, high, low, and close prices, and
-        we extract all four simultaneously:
+        Set <code>chartType="candlestick"</code> and provide four accessors for
+        the OHLC values. StreamXYFrame automatically computes the y-extent from
+        the high/low range and sizes the candle bodies based on data spacing:
       </p>
       <CodeBlock
-        code={`yAccessor: d => [d.open, d.high, d.low, d.close]`}
+        code={`<StreamXYFrame
+  chartType="candlestick"
+  data={data}
+  xAccessor={d => new Date(d.date).getTime()}
+  openAccessor="open"
+  highAccessor="high"
+  lowAccessor="low"
+  closeAccessor="close"
+  candlestickStyle={{
+    upColor: "#4daf4a",   // close >= open
+    downColor: "#e41a1c", // close < open
+    wickColor: "#333",
+  }}
+/>`}
         language="jsx"
       />
       <p>
-        This gives XYFrame enough information to position each point, but the
-        default rendering would draw four circles per data point. To get the
-        classic candlestick shape, we use a <code>customPointMark</code> that
-        reads the raw data and the y-scale to draw a vertical wick (high to low)
-        and a filled rectangle (open to close), colored by whether the day was
-        positive or negative:
+        The <code>candlestickStyle</code> prop controls colors for up days
+        (close &ge; open), down days (close &lt; open), and the wick line.
+        You can also set <code>bodyWidth</code> and <code>wickWidth</code> for
+        fine-grained control.
       </p>
-      <CodeBlock
-        code={`customPointMark: ({ d, xy, yScale }) => {
-  const middle = yScale(xy.yMiddle)
-  const openY = yScale(d.open) - middle
-  const closeY = yScale(d.close) - middle
-  const minY = yScale(d.low) - middle
-  const maxY = yScale(d.high) - middle
-  return (
-    <g>
-      <line width={2} y1={minY} y2={maxY} stroke="black" />
-      <rect
-        width={4}
-        x={-2}
-        height={Math.abs(openY - closeY)}
-        y={Math.min(openY, closeY)}
-        fill={d.open > d.close ? theme[1] : theme[2]}
-      />
-    </g>
-  )
-}`}
-        language="jsx"
-      />
+
+      <h2 id="customization">Customization</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Prop</th>
+            <th>Type</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>openAccessor</code></td>
+            <td>string | function</td>
+            <td>Accessor for the opening price</td>
+          </tr>
+          <tr>
+            <td><code>highAccessor</code></td>
+            <td>string | function</td>
+            <td>Accessor for the high price</td>
+          </tr>
+          <tr>
+            <td><code>lowAccessor</code></td>
+            <td>string | function</td>
+            <td>Accessor for the low price</td>
+          </tr>
+          <tr>
+            <td><code>closeAccessor</code></td>
+            <td>string | function</td>
+            <td>Accessor for the closing price</td>
+          </tr>
+          <tr>
+            <td><code>candlestickStyle.upColor</code></td>
+            <td>string</td>
+            <td>Fill color for up days (default: "#4daf4a")</td>
+          </tr>
+          <tr>
+            <td><code>candlestickStyle.downColor</code></td>
+            <td>string</td>
+            <td>Fill color for down days (default: "#e41a1c")</td>
+          </tr>
+          <tr>
+            <td><code>candlestickStyle.wickColor</code></td>
+            <td>string</td>
+            <td>Wick stroke color (default: "#333")</td>
+          </tr>
+          <tr>
+            <td><code>candlestickStyle.bodyWidth</code></td>
+            <td>number</td>
+            <td>Override auto-computed candle body width in pixels</td>
+          </tr>
+          <tr>
+            <td><code>candlestickStyle.wickWidth</code></td>
+            <td>number</td>
+            <td>Wick line width in pixels (default: 1)</td>
+          </tr>
+        </tbody>
+      </table>
 
       <h2 id="key-takeaways">Key Takeaways</h2>
       <ul>
         <li>
-          Use an array-returning <code>yAccessor</code> to project multiple
-          values per data point in XYFrame.
+          Use <code>chartType="candlestick"</code> with <code>openAccessor</code>,{" "}
+          <code>highAccessor</code>, <code>lowAccessor</code>, and{" "}
+          <code>closeAccessor</code> for a complete OHLC chart.
         </li>
         <li>
-          The <code>customPointMark</code> property gives you full control over
-          the rendered glyph, receiving the raw data, computed xy position, and
-          the scale functions.
+          Body width is automatically computed from data spacing — no manual
+          sizing needed.
         </li>
         <li>
-          Combine <code>scaleTime</code> on the x-axis with date parsing to
-          produce a properly spaced time axis.
+          Hover interaction works out of the box with <code>enableHover</code>{" "}
+          and <code>tooltipContent</code>.
         </li>
         <li>
           Color-coding open vs. close direction is a convention that makes the
@@ -100,16 +257,8 @@ export default function CandlestickChartPage() {
       <h2 id="related">Related</h2>
       <ul>
         <li>
-          <Link to="/frames/xy-frame">XYFrame</Link> — the underlying frame
-          used for all XY-based visualizations
-        </li>
-        <li>
           <Link to="/charts/line-chart">LineChart</Link> — simpler time-series
           line visualization
-        </li>
-        <li>
-          <Link to="/features/custom-mark">Custom Marks</Link> — more on
-          customPointMark and customLineMark
         </li>
       </ul>
     </PageLayout>

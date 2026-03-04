@@ -20,14 +20,12 @@ Requires Node 18+. See `.node-version`.
 ```
 src/
   components/
-    XYFrame.tsx, OrdinalFrame.tsx, NetworkFrame.tsx   # core Frames
+    StreamXYFrame.tsx, StreamOrdinalFrame.tsx, StreamNetworkFrame.tsx   # core Frames
     charts/
       xy/         # LineChart, AreaChart, Scatterplot, etc.
       ordinal/    # BarChart, StackedBarChart, PieChart, etc.
       network/    # ForceDirectedGraph, SankeyDiagram, TreeDiagram, etc.
-      realtime/   # RealtimeLineChart, RealtimeBarChart, etc.
       shared/     # colorUtils, hooks, validateChartData, validateProps
-    realtime/     # RealtimeFrame, RingBuffer, renderers
     server/       # renderToStaticSVG
   processing/     # data pipelines and layout algorithms
 ai/               # schema.json, MCP server, CLI, system prompt, examples

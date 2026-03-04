@@ -18,25 +18,25 @@
       "default": "./dist/semiotic.module.min.js"
     },
     "./xy": {
-      "types": "./dist/XYFrame.d.ts",
+      "types": "./dist/semiotic-xy.d.ts",
       "import": "./dist/xy.module.min.js",
       "require": "./dist/xy.min.js",
       "default": "./dist/xy.module.min.js"
     },
     "./ordinal": {
-      "types": "./dist/OrdinalFrame.d.ts",
+      "types": "./dist/semiotic-ordinal.d.ts",
       "import": "./dist/ordinal.module.min.js",
       "require": "./dist/ordinal.min.js",
       "default": "./dist/ordinal.module.min.js"
     },
     "./network": {
-      "types": "./dist/NetworkFrame.d.ts",
+      "types": "./dist/semiotic-network.d.ts",
       "import": "./dist/network.module.min.js",
       "require": "./dist/network.min.js",
       "default": "./dist/network.module.min.js"
     },
     "./realtime": {
-      "types": "./dist/RealtimeFrame.d.ts",
+      "types": "./dist/semiotic-realtime.d.ts",
       "import": "./dist/realtime.module.min.js",
       "require": "./dist/realtime.min.js",
       "default": "./dist/realtime.module.min.js"

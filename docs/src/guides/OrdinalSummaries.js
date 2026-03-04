@@ -1,6 +1,6 @@
 import React from "react"
 import DocumentFrame from "../DocumentFrame"
-import { OrdinalFrame } from "semiotic"
+import { StreamOrdinalFrame } from "semiotic"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
 import { points } from "./Scatterplot"
@@ -108,7 +108,7 @@ This page uses box office data from [Box Office Mojo](https://www.boxofficemojo.
 
 ## Violin
 
-OrdinalFrame takes \`points\` as an array of objects. 
+StreamOrdinalFrame takes \`points\` as an array of objects. 
 
 In this example, we pass those points and set \`summaryType: "violin" \`.
 
@@ -116,7 +116,7 @@ In this example, we pass those points and set \`summaryType: "violin" \`.
       />
       <DocumentFrame
         frameProps={frameProps}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         overrideProps={overrideProps}
         pre={pre}
       />
@@ -147,7 +147,7 @@ This example is the same as the heatmap except we are passing \`"heatmap"\` as t
       />
       <DocumentFrame
         frameProps={heatmapProps}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         overrideProps={overrideProps}
         startHidden
         pre={pre}
@@ -179,7 +179,7 @@ This example is the same as the heatmap except we are passing \`"boxplot"\` as t
       />
       <DocumentFrame
         frameProps={boxplot}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         overrideProps={overrideProps}
         startHidden
         pre={pre}
@@ -213,7 +213,7 @@ This example is the same as the heatmap except we are passing \`"histogram"\` as
       />
       <DocumentFrame
         frameProps={histogram}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         overrideProps={overrideProps}
         startHidden
         pre={pre}
@@ -245,7 +245,7 @@ This example is the same as the heatmap except we are passing \`"contour"\` as t
       />
       <DocumentFrame
         frameProps={contour}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         overrideProps={overrideProps}
         startHidden
         pre={pre}
@@ -274,7 +274,7 @@ This example is the same as the heatmap except we are passing \`"ridgeline"\` as
       />
       <DocumentFrame
         frameProps={ridgeline}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         overrideProps={overrideProps}
         startHidden
         pre={pre}
@@ -306,7 +306,7 @@ This example is the same as the heatmap except we are passing \`"horizon"\` as t
 `} />
       <DocumentFrame
         frameProps={horizon}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         overrideProps={overrideProps}
         startHidden
         pre={pre}

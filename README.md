@@ -26,7 +26,7 @@ import { LineChart } from "semiotic"
 | Layer | For | Example |
 |---|---|---|
 | **Charts** | Common visualizations with sensible defaults | `<LineChart data={d} xAccessor="x" yAccessor="y" />` |
-| **Frames** | Full control over rendering, interaction, and layout | `<XYFrame lines={d} customLineMark={...} />` |
+| **Frames** | Full control over rendering, interaction, and layout | `<StreamXYFrame lines={d} customLineMark={...} />` |
 | **Utilities** | Standalone axes, legends, annotations, brushes | `<Annotation type="react" />` |
 
 Every Chart component accepts a `frameProps` prop to access the underlying
@@ -121,7 +121,7 @@ import { SankeyDiagram } from "semiotic"
 />
 ```
 
-### Streaming Data
+### Streaming Line
 
 ```jsx
 import { RealtimeLineChart } from "semiotic"
@@ -139,6 +139,24 @@ chartRef.current.push({ time: Date.now(), value: reading })
 />
 ```
 
+### Streaming Sankey
+
+```jsx
+import { StreamNetworkFrame } from "semiotic"
+
+const chartRef = useRef()
+
+// Push edges to grow the topology
+chartRef.current.push({ source: "Budget", target: "Rent", value: 2000 })
+
+<StreamNetworkFrame
+  ref={chartRef}
+  chartType="sankey"
+  showParticles
+  enableHover
+/>
+```
+
 ## All Chart Components
 
 | Category | Components |
@@ -146,9 +164,9 @@ chartRef.current.push({ time: Date.now(), value: reading })
 | **XY** | `LineChart` `AreaChart` `StackedAreaChart` `Scatterplot` `BubbleChart` `Heatmap` |
 | **Categorical** | `BarChart` `StackedBarChart` `GroupedBarChart` `SwarmPlot` `BoxPlot` `Histogram` `ViolinPlot` `DotPlot` `PieChart` `DonutChart` |
 | **Network** | `ForceDirectedGraph` `ChordDiagram` `SankeyDiagram` `TreeDiagram` `Treemap` `CirclePack` |
-| **Realtime** | `RealtimeLineChart` `RealtimeBarChart` `RealtimeSwarmChart` `RealtimeWaterfallChart` `RealtimeSankey` |
+| **Realtime** | `RealtimeLineChart` `RealtimeHistogram` `RealtimeSwarmChart` `RealtimeWaterfallChart` |
 | **Coordination** | `LinkedCharts` `ScatterplotMatrix` |
-| **Frames** | `XYFrame` `OrdinalFrame` `NetworkFrame` `RealtimeFrame` |
+| **Frames** | `StreamXYFrame` `StreamOrdinalFrame` `StreamNetworkFrame` |
 
 ## Smaller Bundles
 
@@ -197,7 +215,7 @@ Works with Next.js App Router, Remix, and Astro via `"use client"` directives.
 [Interactive docs and examples](https://semiotic.nteract.io)
 
 - [Getting Started](https://semiotic.nteract.io/getting-started)
-- [Charts](https://semiotic.nteract.io/charts) — all 24 chart types with live examples
+- [Charts](https://semiotic.nteract.io/charts) — all 27 chart types with live examples
 - [Frames](https://semiotic.nteract.io/frames) — full Frame API reference
 - [Features](https://semiotic.nteract.io/features) — axes, annotations, tooltips, styling
 - [Cookbook](https://semiotic.nteract.io/cookbook) — advanced patterns and recipes

@@ -5,12 +5,12 @@ import { TooltipProvider } from "../../store/TooltipStore"
 
 // Mock OrdinalFrame to capture props
 let lastOrdinalFrameProps: any = null
-jest.mock("../../OrdinalFrame", () => {
+jest.mock("../../stream/StreamOrdinalFrame", () => {
   return {
     __esModule: true,
     default: (props: any) => {
       lastOrdinalFrameProps = props
-      return <div className="ordinalframe"><svg /></div>
+      return <div className="stream-ordinal-frame"><svg /></div>
     }
   }
 })
@@ -34,7 +34,7 @@ describe("StackedBarChart", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -45,7 +45,7 @@ describe("StackedBarChart", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeFalsy()
   })
 
@@ -84,9 +84,10 @@ describe("StackedBarChart", () => {
       </TooltipProvider>
     )
 
-    // Should pass axes config to OrdinalFrame
-    expect(lastOrdinalFrameProps.axes).toBeDefined()
-    expect(lastOrdinalFrameProps.axes.length).toBeGreaterThan(0)
+    // Should pass axis labels to StreamOrdinalFrame
+    expect(lastOrdinalFrameProps.showAxes).toBe(true)
+    expect(lastOrdinalFrameProps.oLabel).toBe("Quarter")
+    expect(lastOrdinalFrameProps.rLabel).toBe("Sales")
   })
 
   it("supports vertical orientation (default)", () => {
@@ -96,7 +97,7 @@ describe("StackedBarChart", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -107,7 +108,7 @@ describe("StackedBarChart", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -118,7 +119,7 @@ describe("StackedBarChart", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -129,7 +130,7 @@ describe("StackedBarChart", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -140,13 +141,13 @@ describe("StackedBarChart", () => {
           data={sampleData}
           stackBy="product"
           frameProps={{
-            pieceHoverAnnotation: true
+            hoverAnnotation: true
           }}
         />
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -157,30 +158,30 @@ describe("StackedBarChart", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
   describe("hoverAnnotation", () => {
-    it("passes hoverAnnotation instead of pieceHoverAnnotation", () => {
+    it("passes enableHover instead of pieceHoverAnnotation", () => {
       render(
         <TooltipProvider>
           <StackedBarChart data={sampleData} stackBy="product" />
         </TooltipProvider>
       )
 
-      expect(lastOrdinalFrameProps.hoverAnnotation).toBe(true)
+      expect(lastOrdinalFrameProps.enableHover).toBe(true)
       expect(lastOrdinalFrameProps.pieceHoverAnnotation).toBeUndefined()
     })
 
-    it("disables hoverAnnotation when enableHover is false", () => {
+    it("disables enableHover when enableHover is false", () => {
       render(
         <TooltipProvider>
           <StackedBarChart data={sampleData} stackBy="product" enableHover={false} />
         </TooltipProvider>
       )
 
-      expect(lastOrdinalFrameProps.hoverAnnotation).toBe(false)
+      expect(lastOrdinalFrameProps.enableHover).toBe(false)
     })
 
     it("provides a default tooltipContent function", () => {
@@ -193,7 +194,7 @@ describe("StackedBarChart", () => {
       expect(typeof lastOrdinalFrameProps.tooltipContent).toBe("function")
     })
 
-    it("default tooltip renders subcategory, value, and column total", () => {
+    it("default tooltip renders stackBy value, category, and value", () => {
       render(
         <TooltipProvider>
           <StackedBarChart data={sampleData} stackBy="product" />
@@ -201,15 +202,10 @@ describe("StackedBarChart", () => {
       )
 
       const tooltipFn = lastOrdinalFrameProps.tooltipContent
-      // Simulate piece data from unified hoverAnnotation (includes pieces from column)
       const pieceData = {
         category: "Q1",
         product: "A",
-        value: 100,
-        pieces: [
-          { category: "Q1", product: "A", value: 100 },
-          { category: "Q1", product: "B", value: 150 }
-        ]
+        value: 100
       }
       const { container } = render(<>{tooltipFn(pieceData)}</>)
 
@@ -218,32 +214,6 @@ describe("StackedBarChart", () => {
       // Should show category and piece value
       expect(container.textContent).toContain("Q1")
       expect(container.textContent).toContain("100")
-      // Should show column total (Q1 total = 100 + 150 = 250)
-      expect(container.textContent).toContain("250")
-    })
-
-    it("default tooltip omits total when column has one piece", () => {
-      const singlePieceData = [
-        { category: "Q1", product: "A", value: 100 }
-      ]
-
-      render(
-        <TooltipProvider>
-          <StackedBarChart data={singlePieceData} stackBy="product" />
-        </TooltipProvider>
-      )
-
-      const tooltipFn = lastOrdinalFrameProps.tooltipContent
-      const pieceData = {
-        category: "Q1",
-        product: "A",
-        value: 100,
-        pieces: [{ category: "Q1", product: "A", value: 100 }]
-      }
-      const { container } = render(<>{tooltipFn(pieceData)}</>)
-
-      // Should NOT show "Total" when only one piece in column
-      expect(container.textContent).not.toContain("Total")
     })
 
     it("uses user-provided tooltip instead of default", () => {

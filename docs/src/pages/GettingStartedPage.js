@@ -232,7 +232,7 @@ export default function GettingStartedPage() {
             <span className="tier-badge frames">Frames</span>
           </h3>
           <p style={styles.cardDescription}>
-            <strong>XYFrame, OrdinalFrame, NetworkFrame, and RealtimeFrame.</strong>{" "}
+            <strong>StreamXYFrame, StreamOrdinalFrame, StreamNetworkFrame, and StreamXYFrame.</strong>{" "}
             Full creative control over every aspect of rendering, interaction,
             and layout. Use when Charts are not enough.
           </p>
@@ -345,7 +345,7 @@ export default function GettingStartedPage() {
           </tr>
           <tr>
             <td style={styles.td}>Live aggregates</td>
-            <td style={styles.td}><Link to="/charts/realtime-bar-chart">RealtimeBarChart</Link>, <Link to="/charts/realtime-swarm-chart">RealtimeSwarmChart</Link></td>
+            <td style={styles.td}><Link to="/charts/realtime-bar-chart">RealtimeHistogram</Link>, <Link to="/charts/realtime-swarm-chart">RealtimeSwarmChart</Link></td>
           </tr>
         </tbody>
       </table>
@@ -428,7 +428,7 @@ export default function GettingStartedPage() {
         </li>
         <li>
           <Link to="/frames/xy-frame" style={styles.nextStepLink}>
-            XYFrame
+            StreamXYFrame
             <span style={styles.nextStepDescription}>
               Full control over XY-based visualizations
             </span>

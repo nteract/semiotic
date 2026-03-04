@@ -172,6 +172,74 @@ function FixedExtentDemo() {
   )
 }
 
+function ThresholdDemo() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+  const [containerRef, containerWidth] = useContainerWidth()
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          time: i,
+          value: Math.sin(i * 0.05) * 50 + 100 + (Math.random() - 0.5) * 20,
+        })
+      }
+    }, 50)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <div ref={containerRef} style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "hidden" }}>
+      {containerWidth && (
+        <RealtimeLineChart
+          ref={chartRef}
+          size={[containerWidth, 280]}
+          stroke="#f59e0b"
+          strokeWidth={2}
+          windowSize={200}
+          showAxes={true}
+          annotations={[
+            { type: "threshold", value: 130, label: "High", color: "#ef4444" },
+            { type: "threshold", value: 70, label: "Low", color: "#6366f1", thresholdType: "lesser" },
+          ]}
+          svgAnnotationRules={(annotation, i, context) => {
+            if (annotation.type === "threshold" && context && context.scales) {
+              const y = context.scales.value(annotation.value)
+              const lineColor = annotation.color || "#ef4444"
+              return (
+                <g key={`threshold-${i}`}>
+                  <line
+                    x1={0}
+                    x2={context.width}
+                    y1={y}
+                    y2={y}
+                    stroke={lineColor}
+                    strokeWidth={1.5}
+                    strokeDasharray="6,3"
+                  />
+                  <text
+                    x={context.width - 4}
+                    y={y - 6}
+                    textAnchor="end"
+                    fill={lineColor}
+                    fontSize={11}
+                    fontWeight="bold"
+                  >
+                    {annotation.label}: {annotation.value}
+                  </text>
+                </g>
+              )
+            }
+            return null
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
 // ---------------------------------------------------------------------------
 // Props definition for PropTable
 // ---------------------------------------------------------------------------
@@ -224,13 +292,13 @@ export default function RealtimeLineChartPage() {
         componentName="RealtimeLineChart"
         importStatement='import { RealtimeLineChart } from "semiotic"'
         tier="charts"
-        wraps="RealtimeFrame"
+        wraps="StreamXYFrame"
         wrapsPath="/frames/realtime-frame"
         related={[
-          { name: "RealtimeBarChart", path: "/charts/realtime-bar-chart" },
+          { name: "RealtimeHistogram", path: "/charts/realtime-bar-chart" },
           { name: "RealtimeSwarmChart", path: "/charts/realtime-swarm-chart" },
           { name: "RealtimeWaterfallChart", path: "/charts/realtime-waterfall-chart" },
-          { name: "RealtimeFrame", path: "/frames/realtime-frame" },
+          { name: "StreamXYFrame", path: "/frames/realtime-frame" },
           { name: "LineChart", path: "/charts/line-chart" },
         ]}
       />
@@ -238,7 +306,7 @@ export default function RealtimeLineChartPage() {
       <p>
         RealtimeLineChart renders a continuously updating line from streaming
         data. It wraps{" "}
-        <Link to="/frames/realtime-frame">RealtimeFrame</Link> with{" "}
+        <Link to="/frames/realtime-frame">StreamXYFrame</Link> with{" "}
         <code>chartType="line"</code> and promotes stroke styling to top-level
         props. Create a ref and call <code>ref.current.push(point)</code> in a{" "}
         <code>setInterval</code> to stream data in.
@@ -353,6 +421,51 @@ function StreamingLine() {
         />
       </div>
 
+      <h3 id="annotations-thresholds">Annotations and Thresholds</h3>
+      <p>
+        Use <code>annotations</code> and <code>svgAnnotationRules</code> to
+        draw threshold lines, callouts, or any custom SVG annotation over the
+        streaming line. Annotations are rendered in an SVG overlay on top of
+        the canvas so they stay crisp at any scale.
+      </p>
+
+      <ThresholdDemo />
+      <div style={{ marginTop: 8 }}>
+        <CodeBlock
+          code={`<RealtimeLineChart
+  ref={chartRef}
+  stroke="#f59e0b"
+  strokeWidth={2}
+  windowSize={200}
+  annotations={[
+    { type: "threshold", value: 130, label: "High", color: "#ef4444" },
+    { type: "threshold", value: 70, label: "Low", color: "#6366f1",
+      thresholdType: "lesser" }
+  ]}
+  svgAnnotationRules={(annotation, i, context) => {
+    if (annotation.type === "threshold" && context?.scales) {
+      const y = context.scales.value(annotation.value)
+      return (
+        <g key={\`threshold-\${i}\`}>
+          <line x1={0} x2={context.width}
+                y1={y} y2={y}
+                stroke={annotation.color}
+                strokeDasharray="6,3" />
+          <text x={context.width - 4} y={y - 6}
+                textAnchor="end" fill={annotation.color}
+                fontSize={11} fontWeight="bold">
+            {annotation.label}: {annotation.value}
+          </text>
+        </g>
+      )
+    }
+    return null
+  }}
+/>`}
+          language="jsx"
+        />
+      </div>
+
       {/* ----------------------------------------------------------------- */}
       {/* Props */}
       {/* ----------------------------------------------------------------- */}
@@ -368,9 +481,9 @@ function StreamingLine() {
       <p>
         When you need full control — custom canvas rendering, multiple
         overlapping chart types, or advanced annotation logic — graduate to{" "}
-        <Link to="/frames/realtime-frame">RealtimeFrame</Link> directly.
+        <Link to="/frames/realtime-frame">StreamXYFrame</Link> directly.
         Every <code>RealtimeLineChart</code> is just a configured{" "}
-        <code>RealtimeFrame</code> under the hood.
+        <code>StreamXYFrame</code> under the hood.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>
@@ -392,9 +505,9 @@ function StreamingLine() {
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-frames)" }}>Frame (full control)</h4>
           <CodeBlock
-            code={`import { RealtimeFrame } from "semiotic"
+            code={`import { StreamXYFrame } from "semiotic"
 
-<RealtimeFrame
+<StreamXYFrame
   ref={frameRef}
   chartType="line"
   windowSize={150}
@@ -417,7 +530,7 @@ function StreamingLine() {
 
       <ul>
         <li>
-          <Link to="/charts/realtime-bar-chart">RealtimeBarChart</Link> —
+          <Link to="/charts/realtime-bar-chart">RealtimeHistogram</Link> —
           streaming temporal histograms with binned bars
         </li>
         <li>
@@ -429,7 +542,7 @@ function StreamingLine() {
           cumulative deltas as connected rising and falling bars
         </li>
         <li>
-          <Link to="/frames/realtime-frame">RealtimeFrame</Link> — the
+          <Link to="/frames/realtime-frame">StreamXYFrame</Link> — the
           underlying Frame with full control over every rendering detail
         </li>
         <li>

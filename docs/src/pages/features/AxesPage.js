@@ -1,5 +1,5 @@
 import React from "react"
-import { XYFrame, OrdinalFrame } from "semiotic"
+import { StreamXYFrame, StreamOrdinalFrame } from "semiotic"
 import { LineChart, BarChart } from "semiotic"
 
 import PropTable from "../../components/PropTable"
@@ -152,20 +152,21 @@ export default function AxesPage() {
 
       <LiveExample
         frameProps={{
-          lines: frameLineData,
+          data: frameLineData,
+          chartType: "line",
+          lineDataAccessor: "coordinates",
           xAccessor: "step",
           yAccessor: "value",
           lineStyle: { stroke: "#6366f1", strokeWidth: 2 },
           margin: { top: 20, bottom: 60, left: 70, right: 20 },
-          axes: [
-            { orient: "left", label: "Sales ($)" },
-            { orient: "bottom", label: "Month" },
-          ],
+          showAxes: true,
+          xLabel: "Month",
+          yLabel: "Sales ($)",
         }}
-        type={XYFrame}
+        type={StreamXYFrame}
         startHidden={false}
         overrideProps={{
-          lines: `[{
+          data: `[{
   label: "Revenue",
   coordinates: [
     { step: 1, value: 4200 },
@@ -173,10 +174,6 @@ export default function AxesPage() {
     // ...more coordinates
   ]
 }]`,
-          axes: `[
-  { orient: "left", label: "Sales ($)" },
-  { orient: "bottom", label: "Month" }
-]`,
         }}
         hiddenProps={{}}
       />
@@ -189,11 +186,17 @@ export default function AxesPage() {
 
       <LiveExample
         frameProps={{
-          lines: frameLineData,
+          data: frameLineData,
+          chartType: "line",
+          lineDataAccessor: "coordinates",
           xAccessor: "step",
           yAccessor: "value",
           lineStyle: { stroke: "#6366f1", strokeWidth: 2 },
           margin: { top: 20, bottom: 60, left: 80, right: 20 },
+          showAxes: true,
+          xLabel: "Month",
+          yLabel: "Revenue",
+          // TODO: migrate custom tickFormat to StreamXYFrame API
           axes: [
             {
               orient: "left",
@@ -208,9 +211,9 @@ export default function AxesPage() {
             },
           ],
         }}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={{
-          lines: `[{ label: "Revenue", coordinates: salesData }]`,
+          data: `[{ label: "Revenue", coordinates: salesData }]`,
           axes: `[
   {
     orient: "left",
@@ -234,10 +237,13 @@ export default function AxesPage() {
       </p>
 
       <CodeBlock
-        code={`<XYFrame
-  lines={data}
+        code={`<StreamXYFrame
+  data={data}
+  chartType="line"
+  lineDataAccessor="coordinates"
   xAccessor="step"
   yAccessor="value"
+  showAxes={true}
   axes={[
     { orient: "left", label: "Primary Scale" },
     { orient: "right", label: "Secondary Scale" },
@@ -259,19 +265,22 @@ export default function AxesPage() {
 
       <LiveExample
         frameProps={{
-          lines: frameLineData,
+          data: frameLineData,
+          chartType: "line",
+          lineDataAccessor: "coordinates",
           xAccessor: "step",
           yAccessor: "value",
           lineStyle: { stroke: "#6366f1", strokeWidth: 2 },
           margin: { top: 20, bottom: 60, left: 70, right: 20 },
+          showAxes: true,
           axes: [
             { orient: "left", baseline: false, jaggedBase: true },
             { orient: "bottom" },
           ],
         }}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={{
-          lines: `[{ label: "Revenue", coordinates: salesData }]`,
+          data: `[{ label: "Revenue", coordinates: salesData }]`,
           axes: `[
   { orient: "left", baseline: false, jaggedBase: true },
   { orient: "bottom" }
@@ -287,7 +296,7 @@ export default function AxesPage() {
       </p>
 
       <CodeBlock
-        code={`<XYFrame
+        code={`<StreamXYFrame
   axes={[
     {
       orient: "left",
@@ -308,9 +317,9 @@ export default function AxesPage() {
         language="jsx"
       />
 
-      <h3 id="ordinal-axes">Axes on OrdinalFrame</h3>
+      <h3 id="ordinal-axes">Axes on StreamOrdinalFrame</h3>
       <p>
-        <code>OrdinalFrame</code> also supports the <code>axes</code> prop
+        <code>StreamOrdinalFrame</code> also supports the <code>axes</code> prop
         for its quantitative (r) axis. Category labels are controlled
         separately via the <code>oLabel</code> prop.
       </p>
@@ -332,7 +341,7 @@ export default function AxesPage() {
             },
           ],
         }}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         overrideProps={{
           data: `[
   { category: "Q1", revenue: 24000 },
@@ -389,7 +398,7 @@ export default function AxesPage() {
       </p>
 
       <CodeBlock
-        code={`<XYFrame
+        code={`<StreamXYFrame
   axes={[
     { orient: "left", label: "Value", showOutboundTickLines: true }
   ]}
@@ -406,7 +415,7 @@ export default function AxesPage() {
       </p>
 
       <CodeBlock
-        code={`<XYFrame
+        code={`<StreamXYFrame
   axes={[
     {
       orient: "left",
@@ -428,7 +437,7 @@ export default function AxesPage() {
       </p>
 
       <CodeBlock
-        code={`<XYFrame
+        code={`<StreamXYFrame
   axes={[
     {
       orient: "left",
@@ -452,11 +461,11 @@ export default function AxesPage() {
 
       <ul>
         <li>
-          <Link to="/frames/xy-frame">XYFrame</Link> — the underlying Frame
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> — the underlying Frame
           for line, area, and point visualizations
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — the
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the
           underlying Frame for bar, swarm, and categorical visualizations
         </li>
         <li>

@@ -1,15 +1,16 @@
 import * as React from "react"
 import { useRef, useImperativeHandle, forwardRef, useCallback } from "react"
-import RealtimeFrame from "../../realtime/RealtimeFrame"
+import StreamXYFrame from "../../stream/StreamXYFrame"
 import type {
   ArrowOfTime,
   WindowMode,
   WaterfallStyle,
   HoverAnnotationConfig,
   HoverData,
-  RealtimeFrameHandle,
-  AnnotationContext
-} from "../../realtime/types"
+  AnnotationContext,
+  StreamXYFrameHandle
+} from "../../stream/types"
+import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { ReactNode } from "react"
 import { normalizeLinkedHover } from "../shared/selectionUtils"
 import { useLinkedHover } from "../../store/useSelection"
@@ -78,9 +79,9 @@ export interface RealtimeWaterfallChartProps {
 /**
  * RealtimeWaterfallChart - Simplified wrapper for streaming waterfall charts.
  *
- * Wraps RealtimeFrame with `chartType="waterfall"` and exposes waterfall styling
- * as top-level props. Visualizes cumulative deltas as connected bars rising and
- * falling from a running baseline.
+ * Wraps StreamXYFrame with `chartType="waterfall"` and `runtimeMode="streaming"`,
+ * exposing waterfall styling as top-level props. Visualizes cumulative deltas as
+ * connected bars rising and falling from a running baseline.
  *
  * @example
  * ```tsx
@@ -127,7 +128,7 @@ export const RealtimeWaterfallChart = forwardRef<RealtimeFrameHandle, RealtimeWa
       linkedHover
     } = props
 
-    const frameRef = useRef<RealtimeFrameHandle>(null)
+    const frameRef = useRef<StreamXYFrameHandle>(null)
 
     // ── Linked hover hooks (always called, conditional logic inside) ──
     const hoverConfig = normalizeLinkedHover(linkedHover)
@@ -163,9 +164,10 @@ export const RealtimeWaterfallChart = forwardRef<RealtimeFrameHandle, RealtimeWa
     if (strokeWidth != null) waterfallStyle.strokeWidth = strokeWidth
 
     return (
-      <RealtimeFrame
+      <StreamXYFrame
         ref={frameRef}
         chartType="waterfall"
+        runtimeMode="streaming"
         size={size}
         margin={margin}
         className={className}
@@ -175,8 +177,8 @@ export const RealtimeWaterfallChart = forwardRef<RealtimeFrameHandle, RealtimeWa
         data={data}
         timeAccessor={timeAccessor}
         valueAccessor={valueAccessor}
-        timeExtent={timeExtent}
-        valueExtent={valueExtent}
+        xExtent={timeExtent}
+        yExtent={valueExtent}
         extentPadding={extentPadding}
         waterfallStyle={waterfallStyle}
         showAxes={showAxes}

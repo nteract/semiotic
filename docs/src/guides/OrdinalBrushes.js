@@ -1,7 +1,7 @@
 import React from "react"
 import MarkdownText from "../MarkdownText"
 import DocumentFrame from "../DocumentFrame"
-import { OrdinalFrame } from "semiotic"
+import { StreamOrdinalFrame } from "semiotic"
 import theme from "../theme"
 
 const data = Array.from(Array(200), () => ({
@@ -54,7 +54,7 @@ export default class CreateOrdinalBrush extends React.Component {
       <div>
         <MarkdownText
           text={`
-You can turn any \`OrdinalFrame\` into an interactive region with a brush by using the \`interaction\` prop. Interaction settings:
+You can turn any \`StreamOrdinalFrame\` into an interactive region with a brush by using the \`interaction\` prop. Interaction settings:
 
 - \`start\`: The function with parameters (e,column) to run on the start of a brush where e is the array of the range of the brush and column is the column name of the brush
 - \`during\`: The function with parameters (e,column) to run at the during a brush
@@ -71,7 +71,7 @@ You can turn any \`OrdinalFrame\` into an interactive region with a brush by usi
 
         <DocumentFrame
           frameProps={frameProps}
-          type={OrdinalFrame}
+          type={StreamOrdinalFrame}
           useExpanded
           hiddenProps={{ interaction: true }}
           overrideRender={`export default class CreateOrdinalBrush extends React.Component {
@@ -90,7 +90,7 @@ You can turn any \`OrdinalFrame\` into an interactive region with a brush by usi
     }
     render() {
       return (
-        <OrdinalFrame {...frameProps} interaction={{
+        <StreamOrdinalFrame {...frameProps} interaction={{
           columnsBrush: true,
           extent: { singleColumn: this.state.extent },
           end: this.changeExtent

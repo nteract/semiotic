@@ -42,7 +42,7 @@ export default function CanvasInteractionPage() {
       <h2 id="how-it-works">How It Works</h2>
       <p>
         The entire trick is the <code>canvasPoints</code> prop. When set to{" "}
-        <code>true</code>, XYFrame draws points to a canvas element instead of
+        <code>true</code>, StreamXYFrame draws points to a canvas element instead of
         creating individual SVG circles. The interaction layer still uses an SVG
         overlay with a Voronoi tessellation, so hover and click behaviors work
         seamlessly:
@@ -106,7 +106,7 @@ export default function CanvasInteractionPage() {
       <h2 id="related">Related</h2>
       <ul>
         <li>
-          <Link to="/frames/xy-frame">XYFrame</Link> — the underlying frame
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> — the underlying frame
           with canvas rendering support
         </li>
         <li>

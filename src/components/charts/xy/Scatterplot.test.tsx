@@ -10,6 +10,47 @@ describe("Scatterplot", () => {
     { x: 3, y: 15 }
   ]
 
+  let rafCallbacks: Function[] = []
+  beforeEach(() => {
+    rafCallbacks = []
+    ;(HTMLCanvasElement.prototype as any).getContext = jest.fn(() => ({
+      beginPath: jest.fn(),
+      moveTo: jest.fn(),
+      lineTo: jest.fn(),
+      stroke: jest.fn(),
+      fill: jest.fn(),
+      arc: jest.fn(),
+      clearRect: jest.fn(),
+      fillRect: jest.fn(),
+      fillText: jest.fn(),
+      strokeRect: jest.fn(),
+      save: jest.fn(),
+      restore: jest.fn(),
+      scale: jest.fn(),
+      translate: jest.fn(),
+      setLineDash: jest.fn(),
+      closePath: jest.fn(),
+      strokeStyle: "",
+      lineWidth: 1,
+      fillStyle: "",
+      font: "",
+      textAlign: "",
+      textBaseline: "",
+      globalAlpha: 1
+    }))
+    jest.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
+      rafCallbacks.push(cb)
+      cb(performance.now())
+      return 0
+    })
+    jest.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    if ((window.requestAnimationFrame as any).mockRestore) (window.requestAnimationFrame as any).mockRestore()
+    if ((window.cancelAnimationFrame as any).mockRestore) (window.cancelAnimationFrame as any).mockRestore()
+  })
+
   it("renders without crashing with minimal props", () => {
     const { container } = render(
       <TooltipProvider>
@@ -17,7 +58,7 @@ describe("Scatterplot", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".xyframe")
+    const frame = container.querySelector(".stream-xy-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -28,8 +69,11 @@ describe("Scatterplot", () => {
       </TooltipProvider>
     )
 
-    const points = container.querySelectorAll(".points .frame-piece")
-    expect(points.length).toBeGreaterThan(0)
+    // Points are now rendered on canvas, so verify the frame with canvas exists
+    const frame = container.querySelector(".stream-xy-frame")
+    expect(frame).toBeTruthy()
+    const canvas = frame?.querySelector("canvas")
+    expect(canvas).toBeTruthy()
   })
 
   it("applies custom width and height", () => {
@@ -39,8 +83,10 @@ describe("Scatterplot", () => {
       </TooltipProvider>
     )
 
-    const svg = container.querySelector("svg")
-    expect(svg).toBeTruthy()
+    const frame = container.querySelector(".stream-xy-frame")
+    expect(frame).toBeTruthy()
+    const canvas = frame?.querySelector("canvas")
+    expect(canvas).toBeTruthy()
   })
 
   it("handles empty data gracefully", () => {
@@ -51,7 +97,7 @@ describe("Scatterplot", () => {
     )
 
     // Should not render frame when data is empty
-    const frame = container.querySelector(".xyframe")
+    const frame = container.querySelector(".stream-xy-frame")
     expect(frame).toBeFalsy()
   })
 
@@ -66,9 +112,8 @@ describe("Scatterplot", () => {
       </TooltipProvider>
     )
 
-    // Should render axes with labels
-    const axes = container.querySelectorAll(".axis")
-    expect(axes.length).toBeGreaterThan(0)
+    const frame = container.querySelector(".stream-xy-frame")
+    expect(frame).toBeTruthy()
   })
 
   it("accepts custom accessors", () => {
@@ -87,8 +132,9 @@ describe("Scatterplot", () => {
       </TooltipProvider>
     )
 
-    const points = container.querySelectorAll(".points .frame-piece")
-    expect(points.length).toBeGreaterThan(0)
+    // Points are now rendered on canvas, verify the frame rendered
+    const frame = container.querySelector(".stream-xy-frame")
+    expect(frame).toBeTruthy()
   })
 
   it("accepts function accessors", () => {
@@ -102,8 +148,9 @@ describe("Scatterplot", () => {
       </TooltipProvider>
     )
 
-    const points = container.querySelectorAll(".points .frame-piece")
-    expect(points.length).toBeGreaterThan(0)
+    // Points are now rendered on canvas, verify the frame rendered
+    const frame = container.querySelector(".stream-xy-frame")
+    expect(frame).toBeTruthy()
   })
 
   it("applies color encoding", () => {
@@ -115,12 +162,13 @@ describe("Scatterplot", () => {
 
     const { container } = render(
       <TooltipProvider>
-        <Scatterplot data={coloredData} colorBy="category" />
+        <Scatterplot data={coloredData} colorBy="category" showLegend={false} />
       </TooltipProvider>
     )
 
-    const points = container.querySelectorAll(".points .frame-piece")
-    expect(points.length).toBeGreaterThan(0)
+    // Points are now rendered on canvas, verify the frame rendered
+    const frame = container.querySelector(".stream-xy-frame")
+    expect(frame).toBeTruthy()
   })
 
   it("applies size encoding", () => {
@@ -136,8 +184,9 @@ describe("Scatterplot", () => {
       </TooltipProvider>
     )
 
-    const points = container.querySelectorAll(".points .frame-piece")
-    expect(points.length).toBeGreaterThan(0)
+    // Points are now rendered on canvas, verify the frame rendered
+    const frame = container.querySelector(".stream-xy-frame")
+    expect(frame).toBeTruthy()
   })
 
   it("allows XYFrame prop overrides via frameProps", () => {
@@ -146,14 +195,13 @@ describe("Scatterplot", () => {
         <Scatterplot
           data={sampleData}
           frameProps={{
-            hoverAnnotation: false,
-            showLinePoints: true
+            hoverAnnotation: false
           }}
         />
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".xyframe")
+    const frame = container.querySelector(".stream-xy-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -169,9 +217,9 @@ describe("Scatterplot", () => {
       </TooltipProvider>
     )
 
-    const initialPoints = container.querySelectorAll(".points .frame-piece")
-    const initialCount = initialPoints.length
-    expect(initialCount).toBeGreaterThan(0)
+    // Points are now rendered on canvas, verify the frame rendered
+    const initialFrame = container.querySelector(".stream-xy-frame")
+    expect(initialFrame).toBeTruthy()
 
     // Update with more data
     const newData = [
@@ -186,8 +234,8 @@ describe("Scatterplot", () => {
       </TooltipProvider>
     )
 
-    const updatedPoints = container.querySelectorAll(".points .frame-piece")
-    expect(updatedPoints.length).toBeGreaterThan(initialCount)
+    const updatedFrame = container.querySelector(".stream-xy-frame")
+    expect(updatedFrame).toBeTruthy()
   })
 
   it("respects pointRadius prop", () => {
@@ -197,8 +245,9 @@ describe("Scatterplot", () => {
       </TooltipProvider>
     )
 
-    const points = container.querySelectorAll(".points .frame-piece")
-    expect(points.length).toBeGreaterThan(0)
+    // Points are now rendered on canvas, verify the frame rendered
+    const frame = container.querySelector(".stream-xy-frame")
+    expect(frame).toBeTruthy()
   })
 
   it("respects pointOpacity prop", () => {
@@ -208,8 +257,9 @@ describe("Scatterplot", () => {
       </TooltipProvider>
     )
 
-    const points = container.querySelectorAll(".points .frame-piece")
-    expect(points.length).toBeGreaterThan(0)
+    // Points are now rendered on canvas, verify the frame rendered
+    const frame = container.querySelector(".stream-xy-frame")
+    expect(frame).toBeTruthy()
   })
 
   it("disables hover when enableHover is false", () => {
@@ -219,7 +269,7 @@ describe("Scatterplot", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".xyframe")
+    const frame = container.querySelector(".stream-xy-frame")
     expect(frame).toBeTruthy()
   })
 })

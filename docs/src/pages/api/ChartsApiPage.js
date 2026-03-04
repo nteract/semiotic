@@ -18,7 +18,7 @@ const lineChartKeyProps = [
   { name: "curve", type: "string", required: false, default: '"linear"', description: 'Interpolation: "linear", "monotoneX", "step", "basis", etc.' },
   { name: "showPoints", type: "boolean", required: false, default: "false", description: "Show data points on the line." },
   { name: "fillArea", type: "boolean", required: false, default: "false", description: "Fill the area under the line." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any XYFrame prop." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any StreamXYFrame prop." },
 ]
 
 const areaChartKeyProps = [
@@ -29,7 +29,7 @@ const areaChartKeyProps = [
   { name: "colorBy", type: "string | function", required: false, default: null, description: "Determine area color by field or function." },
   { name: "curve", type: "string", required: false, default: '"monotoneX"', description: 'Interpolation: "linear", "monotoneX", "step", etc.' },
   { name: "areaOpacity", type: "number", required: false, default: "0.7", description: "Opacity of the filled area." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any XYFrame prop." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any StreamXYFrame prop." },
 ]
 
 const stackedAreaChartKeyProps = [
@@ -39,7 +39,7 @@ const stackedAreaChartKeyProps = [
   { name: "areaBy", type: "string | function", required: false, default: null, description: "Group data into multiple stacked areas." },
   { name: "colorBy", type: "string | function", required: false, default: null, description: "Determine area color for each stack." },
   { name: "normalize", type: "boolean", required: false, default: "false", description: "Normalize to 100% stacked (proportional) areas." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any XYFrame prop." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any StreamXYFrame prop." },
 ]
 
 const scatterplotKeyProps = [
@@ -50,7 +50,7 @@ const scatterplotKeyProps = [
   { name: "sizeBy", type: "string | function", required: false, default: null, description: "Determine point size by field or function." },
   { name: "sizeRange", type: "[number, number]", required: false, default: "[3, 15]", description: "Min and max radius when sizeBy is specified." },
   { name: "pointRadius", type: "number", required: false, default: "5", description: "Default point radius when sizeBy is not specified." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any XYFrame prop." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any StreamXYFrame prop." },
 ]
 
 const bubbleChartKeyProps = [
@@ -61,7 +61,7 @@ const bubbleChartKeyProps = [
   { name: "sizeRange", type: "[number, number]", required: false, default: "[5, 40]", description: "Min and max radius for bubbles." },
   { name: "colorBy", type: "string | function", required: false, default: null, description: "Determine bubble color by field or function." },
   { name: "bubbleOpacity", type: "number", required: false, default: "0.6", description: "Opacity of the bubbles." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any XYFrame prop." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any StreamXYFrame prop." },
 ]
 
 const heatmapKeyProps = [
@@ -71,7 +71,7 @@ const heatmapKeyProps = [
   { name: "valueAccessor", type: "string | function", required: false, default: '"value"', description: "Field name or function to access cell values for color encoding." },
   { name: "colorScheme", type: "string", required: false, default: '"blues"', description: '"blues", "reds", "greens", "viridis", or "custom".' },
   { name: "showValues", type: "boolean", required: false, default: "false", description: "Show values as text labels in cells." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any XYFrame prop." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any StreamXYFrame prop." },
 ]
 
 const barChartKeyProps = [
@@ -81,7 +81,7 @@ const barChartKeyProps = [
   { name: "orientation", type: '"vertical" | "horizontal"', required: false, default: '"vertical"', description: "Chart orientation." },
   { name: "colorBy", type: "string | function", required: false, default: null, description: "Determine bar color by field or function." },
   { name: "sort", type: "boolean | string | function", required: false, default: "false", description: 'Sort bars: true, "asc", "desc", or custom comparator.' },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any OrdinalFrame prop." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any StreamOrdinalFrame prop." },
 ]
 
 const stackedBarChartKeyProps = [
@@ -91,7 +91,7 @@ const stackedBarChartKeyProps = [
   { name: "valueAccessor", type: "string | function", required: false, default: '"value"', description: "Field name or function to access numeric values." },
   { name: "orientation", type: '"vertical" | "horizontal"', required: false, default: '"vertical"', description: "Chart orientation." },
   { name: "normalize", type: "boolean", required: false, default: "false", description: "Normalize to 100% (percentage stacked)." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any OrdinalFrame prop." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any StreamOrdinalFrame prop." },
 ]
 
 const swarmPlotKeyProps = [
@@ -102,7 +102,7 @@ const swarmPlotKeyProps = [
   { name: "colorBy", type: "string | function", required: false, default: null, description: "Determine point color by field or function." },
   { name: "sizeBy", type: "string | function", required: false, default: null, description: "Determine point size by field or function." },
   { name: "pointRadius", type: "number", required: false, default: "4", description: "Default point radius." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any OrdinalFrame prop." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any StreamOrdinalFrame prop." },
 ]
 
 const boxPlotKeyProps = [
@@ -112,7 +112,7 @@ const boxPlotKeyProps = [
   { name: "orientation", type: '"vertical" | "horizontal"', required: false, default: '"vertical"', description: "Chart orientation." },
   { name: "colorBy", type: "string | function", required: false, default: null, description: "Determine box color by field or function." },
   { name: "showOutliers", type: "boolean", required: false, default: "true", description: "Show outlier points beyond the whiskers." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any OrdinalFrame prop." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any StreamOrdinalFrame prop." },
 ]
 
 const pieChartKeyProps = [
@@ -122,7 +122,7 @@ const pieChartKeyProps = [
   { name: "colorBy", type: "string | function", required: false, default: null, description: "Determine slice color by field or function." },
   { name: "startAngle", type: "number", required: false, default: "0", description: "Starting angle in degrees." },
   { name: "slicePadding", type: "number", required: false, default: "2", description: "Padding between slices in pixels." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any OrdinalFrame prop." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any StreamOrdinalFrame prop." },
 ]
 
 const donutChartKeyProps = [
@@ -132,7 +132,7 @@ const donutChartKeyProps = [
   { name: "innerRadius", type: "number", required: false, default: "60", description: "Inner radius of the donut hole in pixels." },
   { name: "centerContent", type: "ReactNode", required: false, default: null, description: "Content rendered in the center of the donut." },
   { name: "colorBy", type: "string | function", required: false, default: null, description: "Determine slice color by field or function." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any OrdinalFrame prop." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any StreamOrdinalFrame prop." },
 ]
 
 const groupedBarChartKeyProps = [
@@ -142,7 +142,7 @@ const groupedBarChartKeyProps = [
   { name: "valueAccessor", type: "string | function", required: false, default: '"value"', description: "Field name or function to access numeric values." },
   { name: "orientation", type: '"vertical" | "horizontal"', required: false, default: '"vertical"', description: "Chart orientation." },
   { name: "colorBy", type: "string | function", required: false, default: null, description: "Determine bar color by field or function." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any OrdinalFrame prop." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any StreamOrdinalFrame prop." },
 ]
 
 const dotPlotKeyProps = [
@@ -153,7 +153,7 @@ const dotPlotKeyProps = [
   { name: "colorBy", type: "string | function", required: false, default: null, description: "Determine dot color by field or function." },
   { name: "sort", type: "boolean | string | function", required: false, default: "true", description: 'Sort by value: true, "asc", "desc", or custom comparator.' },
   { name: "dotRadius", type: "number", required: false, default: "5", description: "Radius of the dots." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any OrdinalFrame prop." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any StreamOrdinalFrame prop." },
 ]
 
 const forceDirectedGraphKeyProps = [
@@ -164,7 +164,7 @@ const forceDirectedGraphKeyProps = [
   { name: "nodeSize", type: "number | string | function", required: false, default: "8", description: "Fixed size, field name, or function for node radius." },
   { name: "nodeSizeRange", type: "[number, number]", required: false, default: "[5, 20]", description: "Min and max radius for dynamic node sizing." },
   { name: "showLabels", type: "boolean", required: false, default: "false", description: "Show text labels on each node." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any NetworkFrame prop." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any StreamNetworkFrame prop." },
 ]
 
 const chordDiagramKeyProps = [
@@ -175,7 +175,7 @@ const chordDiagramKeyProps = [
   { name: "valueAccessor", type: "string | function", required: false, default: '"value"', description: "Field name or function to access edge value (chord width)." },
   { name: "colorBy", type: "string | function", required: false, default: null, description: "Determine node color by field or function." },
   { name: "showLabels", type: "boolean", required: false, default: "true", description: "Show labels around the circumference." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any NetworkFrame prop." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any StreamNetworkFrame prop." },
 ]
 
 const sankeyDiagramKeyProps = [
@@ -187,7 +187,7 @@ const sankeyDiagramKeyProps = [
   { name: "orientation", type: '"horizontal" | "vertical"', required: false, default: '"horizontal"', description: "Layout orientation." },
   { name: "nodeAlign", type: '"justify" | "left" | "right" | "center"', required: false, default: '"justify"', description: "Node alignment strategy." },
   { name: "showLabels", type: "boolean", required: false, default: "true", description: "Show node labels." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any NetworkFrame prop." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any StreamNetworkFrame prop." },
 ]
 
 const treeDiagramKeyProps = [
@@ -198,7 +198,7 @@ const treeDiagramKeyProps = [
   { name: "valueAccessor", type: "string | function", required: false, default: '"value"', description: "Field name or function to access node value (for treemap/circlepack sizing)." },
   { name: "colorBy", type: "string | function", required: false, default: null, description: "Determine node color by field or function." },
   { name: "showLabels", type: "boolean", required: false, default: "true", description: "Show node labels." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any NetworkFrame prop." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any StreamNetworkFrame prop." },
 ]
 
 const treemapKeyProps = [
@@ -208,7 +208,7 @@ const treemapKeyProps = [
   { name: "colorBy", type: "string | function", required: false, default: null, description: "Determine rectangle color by field or function." },
   { name: "colorByDepth", type: "boolean", required: false, default: "false", description: "Color nodes by their depth in the hierarchy." },
   { name: "showLabels", type: "boolean", required: false, default: "true", description: "Show text labels on rectangles." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any NetworkFrame prop." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any StreamNetworkFrame prop." },
 ]
 
 const circlePackKeyProps = [
@@ -219,7 +219,7 @@ const circlePackKeyProps = [
   { name: "colorByDepth", type: "boolean", required: false, default: "false", description: "Color nodes by their depth in the hierarchy." },
   { name: "circleOpacity", type: "number", required: false, default: "0.7", description: "Opacity of the circles." },
   { name: "showLabels", type: "boolean", required: false, default: "true", description: "Show text labels on circles." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any NetworkFrame prop." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch to pass any StreamNetworkFrame prop." },
 ]
 
 const realtimeLineChartKeyProps = [
@@ -233,7 +233,7 @@ const realtimeLineChartKeyProps = [
   { name: "enableHover", type: "boolean | object", required: false, default: null, description: "Enable hover annotations." },
 ]
 
-const realtimeBarChartKeyProps = [
+const RealtimeHistogramKeyProps = [
   { name: "binSize", type: "number", required: true, default: null, description: "Time interval for binning data points into bars." },
   { name: "data", type: "array", required: false, default: "[]", description: "Controlled data array with time and value fields." },
   { name: "timeAccessor", type: "string | function", required: false, default: '"time"', description: "Field name or function to access the time value." },
@@ -277,7 +277,7 @@ const chartCategories = [
   {
     id: "xy-charts",
     title: "XY Charts",
-    description: "Continuous data plotted on x/y axes. All XY charts wrap XYFrame.",
+    description: "Continuous data plotted on x/y axes. All XY charts wrap StreamXYFrame.",
     charts: [
       {
         name: "LineChart",
@@ -326,7 +326,7 @@ const chartCategories = [
   {
     id: "categorical-charts",
     title: "Categorical Charts",
-    description: "Discrete/ordinal data. All categorical charts wrap OrdinalFrame.",
+    description: "Discrete/ordinal data. All categorical charts wrap StreamOrdinalFrame.",
     charts: [
       {
         name: "BarChart",
@@ -389,7 +389,7 @@ const chartCategories = [
   {
     id: "network-charts",
     title: "Network Charts",
-    description: "Relational and hierarchical data. All network charts wrap NetworkFrame.",
+    description: "Relational and hierarchical data. All network charts wrap StreamNetworkFrame.",
     charts: [
       {
         name: "ForceDirectedGraph",
@@ -438,7 +438,7 @@ const chartCategories = [
   {
     id: "realtime-charts",
     title: "Realtime Charts",
-    description: "Canvas-rendered charts optimized for streaming data. All realtime charts wrap RealtimeFrame.",
+    description: "Canvas-rendered charts optimized for streaming data. All realtime charts wrap StreamXYFrame.",
     charts: [
       {
         name: "RealtimeLineChart",
@@ -448,11 +448,11 @@ const chartCategories = [
         keyProps: realtimeLineChartKeyProps,
       },
       {
-        name: "RealtimeBarChart",
+        name: "RealtimeHistogram",
         slug: "realtime-bar-chart",
-        importStatement: 'import { RealtimeBarChart } from "semiotic"',
+        importStatement: 'import { RealtimeHistogram } from "semiotic"',
         description: "Binned bar chart that updates as new data arrives.",
-        keyProps: realtimeBarChartKeyProps,
+        keyProps: RealtimeHistogramKeyProps,
       },
       {
         name: "RealtimeSwarmChart",

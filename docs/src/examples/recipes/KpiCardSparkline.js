@@ -1,5 +1,5 @@
 import React from "react"
-import { XYFrame } from "semiotic"
+import { StreamXYFrame } from "semiotic"
 
 const sampleData = [
   {
@@ -59,12 +59,14 @@ function KpiCard({ label, value, previousValue, unit, trend }) {
         <span className={`recipe-kpi-change ${isPositive ? "positive" : "negative"}`}>
           {isPositive ? "+" : ""}{change.toFixed(1)}%
         </span>
-        <XYFrame
+        <StreamXYFrame
+          chartType="line"
           size={[120, 40]}
-          lines={[{ coordinates: trend }]}
+          data={trend}
           xAccessor="day"
           yAccessor="value"
-          lineStyle={{ stroke: sparkColor, strokeWidth: 2, fill: "none" }}
+          lineStyle={{ stroke: sparkColor, strokeWidth: 2 }}
+          showAxes={false}
           margin={{ top: 4, bottom: 4, left: 0, right: 0 }}
         />
       </div>

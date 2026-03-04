@@ -1,6 +1,6 @@
 import React from "react"
 import DocumentFrame from "../DocumentFrame"
-import { NetworkFrame } from "semiotic"
+import { StreamNetworkFrame } from "semiotic"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
 
@@ -391,7 +391,7 @@ This is a remake of [an example](https://bost.ocks.org/mike/miserables/) by Mike
       <DocumentFrame
         frameProps={frameProps}
         overrideProps={overrideProps}
-        type={NetworkFrame}
+        type={StreamNetworkFrame}
         useExpanded
       />
     </div>

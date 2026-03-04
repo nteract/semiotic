@@ -1,5 +1,5 @@
-import React from "react"
-import { OrdinalFrame } from "semiotic"
+import React, { useRef, useEffect } from "react"
+import { StreamOrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { ViolinPlot } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -7,6 +7,8 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -92,6 +94,88 @@ const colorData = [
 ]
 
 // ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const violinTimeSlots = ["Morning", "Afternoon", "Evening"]
+
+const streamingViolinCode = `import { useRef, useEffect } from "react"
+import { StreamOrdinalFrame } from "semiotic"
+
+function StreamingViolinDemo() {
+  const chartRef = useRef()
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const slot = violinTimeSlots[Math.floor(Math.random() * 3)]
+        // Different distributions per time slot
+        const base = slot === "Morning" ? 63
+          : slot === "Afternoon" ? 83 : 47
+        const spread = 12
+        const noise = (Math.random() + Math.random() + Math.random()) / 3 - 0.5
+        chartRef.current.push({
+          category: slot,
+          value: Math.round(base + noise * spread * 2),
+        })
+      }
+    }, 100)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="violin"
+      runtimeMode="streaming"
+      size={[600, 300]}
+      oAccessor="category"
+      rAccessor="value"
+      windowSize={300}
+      showAxes
+      showIQR
+      summaryStyle={() => ({ fill: "#6366f1", stroke: "#6366f1", fillOpacity: 0.6 })}
+    />
+  )
+}`
+
+function StreamingViolinDemo({ width }) {
+  const chartRef = useRef()
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const slot = violinTimeSlots[Math.floor(Math.random() * 3)]
+        const base = slot === "Morning" ? 63
+          : slot === "Afternoon" ? 83 : 47
+        const spread = 12
+        const noise = (Math.random() + Math.random() + Math.random()) / 3 - 0.5
+        chartRef.current.push({
+          category: slot,
+          value: Math.round(base + noise * spread * 2),
+        })
+      }
+    }, 100)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="violin"
+      runtimeMode="streaming"
+      size={[width, 300]}
+      oAccessor="category"
+      rAccessor="value"
+      windowSize={300}
+      showAxes
+      showIQR
+      summaryStyle={() => ({ fill: "#6366f1", stroke: "#6366f1", fillOpacity: 0.6 })}
+    />
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Props definition for PropTable
 // ---------------------------------------------------------------------------
 
@@ -117,7 +201,7 @@ const violinPlotProps = [
   { name: "height", type: "number", required: false, default: "400", description: "Chart height in pixels." },
   { name: "margin", type: "object", required: false, default: "{ top: 50, bottom: 60, left: 70, right: 40 }", description: "Margin around the chart area." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Additional OrdinalFrame props for advanced customization. Escape hatch to the full Frame API." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamOrdinalFrame props for advanced customization. Escape hatch to the full Frame API." },
 ]
 
 // ---------------------------------------------------------------------------
@@ -141,13 +225,13 @@ export default function ViolinPlotPage() {
         componentName="ViolinPlot"
         importStatement='import { ViolinPlot } from "semiotic"'
         tier="charts"
-        wraps="OrdinalFrame"
+        wraps="StreamOrdinalFrame"
         wrapsPath="/frames/ordinal-frame"
         related={[
           { name: "Histogram", path: "/charts/histogram" },
           { name: "BoxPlot", path: "/charts/box-plot" },
           { name: "SwarmPlot", path: "/charts/swarm-plot" },
-          { name: "OrdinalFrame", path: "/frames/ordinal-frame" },
+          { name: "StreamOrdinalFrame", path: "/frames/ordinal-frame" },
         ]}
       />
 
@@ -171,18 +255,20 @@ export default function ViolinPlotPage() {
         automatically.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: sampleData,
-          categoryAccessor: "category",
-          valueAccessor: "value",
-          categoryLabel: "Time of Day",
-          valueLabel: "Response Time (ms)",
-        }}
-        type={ViolinPlot}
-        startHidden={false}
-        overrideProps={{
-          data: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              data: sampleData,
+              categoryAccessor: "category",
+              valueAccessor: "value",
+              categoryLabel: "Time of Day",
+              valueLabel: "Response Time (ms)",
+            }}
+            type={ViolinPlot}
+            startHidden={false}
+            overrideProps={{
+              data: `[
   { category: "Morning", value: 62 },
   { category: "Morning", value: 58 },
   { category: "Morning", value: 71 },
@@ -191,8 +277,16 @@ export default function ViolinPlotPage() {
   { category: "Afternoon", value: 85 },
   // ...more data points
 ]`,
-        }}
-        hiddenProps={{}}
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingViolinDemo width={w} />}
+            code={streamingViolinCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}
@@ -311,7 +405,7 @@ export default function ViolinPlotPage() {
       <p>
         When you need more control — custom density rendering, overlaid data
         points, annotations — graduate to{" "}
-        <Link to="/frames/ordinal-frame">OrdinalFrame</Link> directly.
+        <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> directly.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>
@@ -334,9 +428,9 @@ export default function ViolinPlotPage() {
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-frames)" }}>Frame (full control)</h4>
           <CodeBlock
-            code={`import { OrdinalFrame } from "semiotic"
+            code={`import { StreamOrdinalFrame } from "semiotic"
 
-<OrdinalFrame
+<StreamOrdinalFrame
   data={responseTimeData}
   oAccessor="category"
   rAccessor="value"
@@ -383,7 +477,7 @@ export default function ViolinPlotPage() {
           data point as non-overlapping circles
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — the underlying
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the underlying
           Frame with full control over every rendering detail
         </li>
       </ul>

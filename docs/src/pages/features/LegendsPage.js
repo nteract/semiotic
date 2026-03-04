@@ -1,5 +1,5 @@
 import React from "react"
-import { XYFrame, OrdinalFrame, NetworkFrame } from "semiotic"
+import { StreamXYFrame, StreamOrdinalFrame, StreamNetworkFrame } from "semiotic"
 
 import PageLayout from "../../components/PageLayout"
 import LiveExample from "../../components/LiveExample"
@@ -214,9 +214,9 @@ export default function LegendsPage() {
       {/* ----------------------------------------------------------------- */}
       <h2 id="with-frames">With Frames</h2>
 
-      <h3 id="auto-legend-xy">Auto-Generated Legend (XYFrame)</h3>
+      <h3 id="auto-legend-xy">Auto-Generated Legend (StreamXYFrame)</h3>
       <p>
-        On <code>XYFrame</code>, setting <code>legend={`{true}`}</code>{" "}
+        On <code>StreamXYFrame</code>, setting <code>legend={`{true}`}</code>{" "}
         automatically creates legend items from the lines in your data. The
         legend type (line swatch vs. fill swatch) is determined by the line
         type: stacked area types use fill swatches, while regular lines use
@@ -226,21 +226,21 @@ export default function LegendsPage() {
 
       <LiveExample
         frameProps={{
-          lines: multiLineData,
+          data: multiLineData,
+          chartType: "line",
+          lineDataAccessor: "coordinates",
           xAccessor: "month",
           yAccessor: "value",
-          lineDataAccessor: "coordinates",
           lineStyle: (d) => ({ stroke: d.color, strokeWidth: 2 }),
           lineIDAccessor: "label",
-          axes: [
-            { orient: "left", label: "Value" },
-            { orient: "bottom", label: "Month" },
-          ],
+          showAxes: true,
+          xLabel: "Month",
+          yLabel: "Value",
           margin: { top: 20, bottom: 50, left: 60, right: 120 },
           legend: true,
           title: "Revenue, Costs, and Profit",
         }}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={{
           lines: `[
   {
@@ -317,7 +317,7 @@ export default function LegendsPage() {
           },
           title: "Quarterly Sales by Region",
         }}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         overrideProps={{
           data: `[
   { category: "Q1", value: 35, region: "North" },
@@ -376,7 +376,7 @@ export default function LegendsPage() {
       </p>
 
       <CodeBlock
-        code={`<XYFrame
+        code={`<StreamXYFrame
   legend={{
     title: "Legend",
     legendGroups: [
@@ -458,7 +458,7 @@ export default function LegendsPage() {
       </p>
 
       <CodeBlock
-        code={`<XYFrame
+        code={`<StreamXYFrame
   legend={{
     orientation: "horizontal",
     title: false,         // hide title for horizontal layout
@@ -509,11 +509,12 @@ function InteractiveChart({ data }) {
   )
 
   return (
-    <XYFrame
-      lines={visibleLines}
+    <StreamXYFrame
+      data={visibleLines}
+      chartType="line"
+      lineDataAccessor="coordinates"
       xAccessor="month"
       yAccessor="value"
-      lineDataAccessor="coordinates"
       lineStyle={d => ({ stroke: d.color, strokeWidth: 2 })}
       lineIDAccessor="label"
       legend={{
@@ -575,15 +576,15 @@ function InteractiveChart({ data }) {
           multi-line charts
         </li>
         <li>
-          <Link to="/frames/xy-frame">XYFrame</Link> — legend support for
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> — legend support for
           lines, areas, and points
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — legend
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — legend
           support for bars, swarms, and distributions
         </li>
         <li>
-          <Link to="/frames/network-frame">NetworkFrame</Link> — legend
+          <Link to="/frames/network-frame">StreamNetworkFrame</Link> — legend
           support for nodes and edges
         </li>
         <li>

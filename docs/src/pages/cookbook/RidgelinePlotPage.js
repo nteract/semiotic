@@ -20,7 +20,7 @@ export default function RidgelinePlotPage() {
         Ridgeline plots (also called joy plots) show the distribution of a
         quantitative variable across several categories, stacking density
         curves vertically with controlled overlap. This recipe recreates the
-        famous "Perceptions of Probability" visualization using OrdinalFrame's
+        famous "Perceptions of Probability" visualization using StreamOrdinalFrame's
         ridgeline summary type.
       </p>
 
@@ -106,7 +106,7 @@ oLabel: d => (
       <h2 id="related">Related</h2>
       <ul>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — the underlying
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the underlying
           frame with summary type support
         </li>
         <li>
@@ -115,7 +115,7 @@ oLabel: d => (
         </li>
         <li>
           <Link to="/cookbook/marginal-graphics">Marginal Graphics</Link> —
-          ridgeline used as a marginal distribution on XYFrame
+          ridgeline used as a marginal distribution on StreamXYFrame
         </li>
       </ul>
     </PageLayout>

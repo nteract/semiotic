@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from "react"
 import DocumentFrame from "../DocumentFrame"
-import { OrdinalFrame } from "semiotic"
+import { StreamOrdinalFrame } from "semiotic"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
 
@@ -63,42 +63,24 @@ const colorHash = {
 }
 
 const makeFrameProps = (adjustedWidth) => {
-  // adjustedWidth = size[0] - margin.left(10) - margin.right(80)
   const aw = adjustedWidth || 610
   return {
     size: [aw + 90, 368],
     data: vizzers,
-    type: {
-      type: "bar",
-      icon: d => iconHash[d.type],
-      iconPadding: 2,
-      resize: "fixed"
-    },
+    chartType: "bar",
     projection: "vertical",
     oAccessor: "writeviz",
     oSort: (a, b) => parseFloat(a) - parseFloat(b),
     rAccessor: "number",
-    style: d => ({
+    pieceStyle: d => ({
       fill: colorHash[d.type],
       stroke: colorHash[d.type],
       fillOpacity: 1,
       strokeWidth: 1.5
     }),
     margin: { top: 60, bottom: 70, left: 10, right: 80 },
-    oPadding: 2,
-    annotations: [
-      {
-        writeviz: 0.25,
-        number: 2,
-        dx: -0.01,
-        dy: -50,
-        color: theme[1],
-        type: "callout",
-        note: { title: "Data viz peep who discovered her love for writing" }
-      }
-    ],
-    hoverAnnotation: true,
-    renderMode: "sketchy",
+    barPadding: 2,
+    enableHover: true,
     foregroundGraphics: (
       <g>
         <g transform="translate(20,165)">
@@ -143,12 +125,7 @@ const makeFrameProps = (adjustedWidth) => {
 const frameProps = makeFrameProps(610)
 
 const overrideProps = {
-  type: `{
-    type: "bar",
-    icon: d => iconHash[d.type],
-    iconPadding: 2,
-    resize: "fixed"
-  }`,
+  chartType: `"bar"`,
   foregroundGraphics: `(
     <g>
       <g transform="translate(20,165)">
@@ -186,18 +163,7 @@ const overrideProps = {
         </text>
       </g>
     </g>
-  )`,
-  annotations: `[
-    {
-      writeviz: 0.25,
-      number: 2,
-      dx: -0.01,
-      dy: -50,
-      color: theme[1],
-      type: "callout",
-      note: { title: "Data viz peep who discovered her love for writing" }
-    }
-  ]`
+  )`
 }
 
 export default function SwarmPlot() {
@@ -226,7 +192,7 @@ export default function SwarmPlot() {
         text={`
 Based on a [beautiful icon chart by Lisa Charlotte Rost](https://lisacharlotterost.github.io/2017/10/24/Frustrating-Data-Vis/). I called her little icons Rostos in her honor.
 
-This example also shows how \`renderMode\` is honored by icon shapes.
+Based on a [beautiful icon chart by Lisa Charlotte Rost](https://lisacharlotterost.github.io/2017/10/24/Frustrating-Data-Vis/). I called her little icons Rostos in her honor.
 `}
       />
       {containerWidth && <DocumentFrame
@@ -236,9 +202,8 @@ This example also shows how \`renderMode\` is honored by icon shapes.
 const colorHash = {
   journalist: theme[2],
   viz: theme[1]
-}
-const iconHash = ${JSON.stringify(iconHash)}`}
-        type={OrdinalFrame}
+}`}
+        type={StreamOrdinalFrame}
         useExpanded
       />}
     </div>

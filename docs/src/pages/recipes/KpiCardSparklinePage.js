@@ -4,7 +4,7 @@ import RecipeLayout from "../../components/RecipeLayout"
 import KpiCardSparkline from "../../examples/recipes/KpiCardSparkline"
 
 const fullSourceCode = `import React from "react"
-import { XYFrame } from "semiotic"
+import { StreamXYFrame } from "semiotic"
 
 function formatValue(value, unit) {
   if (unit === "$") return \`$\${value.toLocaleString()}\`
@@ -41,7 +41,7 @@ function KpiCard({ label, value, previousValue, unit, trend }) {
         }}>
           {isPositive ? "+" : ""}{change.toFixed(1)}%
         </span>
-        <XYFrame
+        <StreamXYFrame
           size={[120, 40]}
           lines={[{ coordinates: trend }]}
           xAccessor="day"
@@ -89,7 +89,7 @@ export default function KpiCardSparklinePage() {
       <p>
         A dashboard KPI card that shows a metric's current value, percent change
         from the previous period, and an inline sparkline trend. Uses Semiotic's
-        <code>XYFrame</code> at minimal size with no axes for the sparkline.
+        <code>StreamXYFrame</code> at minimal size with no axes for the sparkline.
       </p>
 
       <h2 id="preview">Preview</h2>
@@ -115,7 +115,7 @@ export default function KpiCardSparklinePage() {
           </tr>
           <tr>
             <td>Sparkline size</td>
-            <td><code>XYFrame size</code></td>
+            <td><code>StreamXYFrame size</code></td>
             <td>Adjust the <code>[width, height]</code> array</td>
           </tr>
           <tr>
@@ -138,7 +138,7 @@ export default function KpiCardSparklinePage() {
 
       <h2 id="how-it-works">How It Works</h2>
       <p>
-        Each KPI card renders an <code>XYFrame</code> with <code>lines</code> containing
+        Each KPI card renders an <code>StreamXYFrame</code> with <code>lines</code> containing
         a single series. The frame uses zero-margin axes and a tiny size to create an
         inline sparkline. The <code>xAccessor</code> and <code>yAccessor</code> props
         map to the <code>day</code> and <code>value</code> fields of each trend data point.
@@ -150,7 +150,7 @@ export default function KpiCardSparklinePage() {
 
       <h2 id="related">Related</h2>
       <ul>
-        <li><Link to="/frames/xy-frame">XYFrame</Link> — underlying frame for sparklines</li>
+        <li><Link to="/frames/xy-frame">StreamXYFrame</Link> — underlying frame for sparklines</li>
         <li><Link to="/features/sparklines">Sparklines</Link> — more sparkline patterns</li>
         <li><Link to="/charts/line-chart">Line Chart</Link> — full-size line visualizations</li>
       </ul>

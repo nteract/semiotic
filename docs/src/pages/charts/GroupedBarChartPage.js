@@ -1,5 +1,5 @@
-import React from "react"
-import { OrdinalFrame } from "semiotic"
+import React, { useRef, useEffect } from "react"
+import { StreamOrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { GroupedBarChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -7,6 +7,8 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -27,6 +29,84 @@ const sampleData = [
   { category: "Q4", product: "Beta", value: 140 },
   { category: "Q4", product: "Gamma", value: 190 },
 ]
+
+// ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const years = ["2021", "2022", "2023", "2024"]
+const groupProducts = ["Alpha", "Beta", "Gamma"]
+
+const streamingGroupedBarCode = `import { useRef, useEffect } from "react"
+import { StreamOrdinalFrame } from "semiotic"
+
+function StreamingGroupedBarDemo() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          year: years[i % 4],
+          product: groupProducts[Math.floor(Math.random() * 3)],
+          revenue: Math.round(50 + Math.random() * 150),
+        })
+      }
+    }, 500)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="clusterbar"
+      runtimeMode="streaming"
+      size={[600, 300]}
+      oAccessor="year"
+      rAccessor="revenue"
+      groupBy="product"
+      windowSize={200}
+      showAxes
+      colorScheme={["#6366f1", "#22c55e", "#f59e0b"]}
+    />
+  )
+}`
+
+function StreamingGroupedBarDemo({ width }) {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          year: years[i % 4],
+          product: groupProducts[Math.floor(Math.random() * 3)],
+          revenue: Math.round(50 + Math.random() * 150),
+        })
+      }
+    }, 500)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="clusterbar"
+      runtimeMode="streaming"
+      size={[width, 300]}
+      oAccessor="year"
+      rAccessor="revenue"
+      groupBy="product"
+      windowSize={200}
+      showAxes
+      colorScheme={["#6366f1", "#22c55e", "#f59e0b"]}
+    />
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Props definition for PropTable
@@ -52,7 +132,7 @@ const groupedBarChartProps = [
   { name: "height", type: "number", required: false, default: "400", description: "Chart height in pixels." },
   { name: "margin", type: "object", required: false, default: "{ top: 50, bottom: 60, left: 70, right: 40 }", description: "Margin around the chart area." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Additional OrdinalFrame props for advanced customization." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamOrdinalFrame props for advanced customization." },
 ]
 
 // ---------------------------------------------------------------------------
@@ -76,19 +156,19 @@ export default function GroupedBarChartPage() {
         componentName="GroupedBarChart"
         importStatement='import { GroupedBarChart } from "semiotic"'
         tier="charts"
-        wraps="OrdinalFrame"
+        wraps="StreamOrdinalFrame"
         wrapsPath="/frames/ordinal-frame"
         related={[
           { name: "BarChart", path: "/charts/bar-chart" },
           { name: "StackedBarChart", path: "/charts/stacked-bar-chart" },
-          { name: "OrdinalFrame", path: "/frames/ordinal-frame" },
+          { name: "StreamOrdinalFrame", path: "/frames/ordinal-frame" },
         ]}
       />
 
       <p>
         GroupedBarChart displays bars side by side within each category,
         making it easy to compare values across groups. It wraps{" "}
-        <Link to="/frames/ordinal-frame">OrdinalFrame</Link> with{" "}
+        <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> with{" "}
         <code>type="clusterbar"</code>. While{" "}
         <Link to="/charts/stacked-bar-chart">StackedBarChart</Link> shows
         part-to-whole relationships, GroupedBarChart emphasizes direct
@@ -105,27 +185,37 @@ export default function GroupedBarChartPage() {
         creates side-by-side bars within each category.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: sampleData,
-          categoryAccessor: "category",
-          groupBy: "product",
-          valueAccessor: "value",
-          categoryLabel: "Quarter",
-          valueLabel: "Units Sold",
-        }}
-        type={GroupedBarChart}
-        startHidden={false}
-        overrideProps={{
-          data: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              data: sampleData,
+              categoryAccessor: "category",
+              groupBy: "product",
+              valueAccessor: "value",
+              categoryLabel: "Quarter",
+              valueLabel: "Units Sold",
+            }}
+            type={GroupedBarChart}
+            startHidden={false}
+            overrideProps={{
+              data: `[
   { category: "Q1", product: "Alpha", value: 120 },
   { category: "Q1", product: "Beta", value: 90 },
   { category: "Q1", product: "Gamma", value: 150 },
   // ...more data points
 ]`,
-          groupBy: '"product"',
-        }}
-        hiddenProps={{}}
+              groupBy: '"product"',
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingGroupedBarDemo width={w} />}
+            code={streamingGroupedBarCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}
@@ -196,7 +286,7 @@ export default function GroupedBarChartPage() {
 
       <p>
         For full control, use{" "}
-        <Link to="/frames/ordinal-frame">OrdinalFrame</Link> directly with{" "}
+        <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> directly with{" "}
         <code>type="clusterbar"</code> and <code>pieceIDAccessor</code>.
       </p>
 
@@ -220,9 +310,9 @@ export default function GroupedBarChartPage() {
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-frames)" }}>Frame (full control)</h4>
           <CodeBlock
-            code={`import { OrdinalFrame } from "semiotic"
+            code={`import { StreamOrdinalFrame } from "semiotic"
 
-<OrdinalFrame
+<StreamOrdinalFrame
   data={quarterlyData}
   oAccessor="quarter"
   rAccessor="sales"
@@ -253,7 +343,7 @@ export default function GroupedBarChartPage() {
           categorical data
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — the underlying
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the underlying
           Frame with full control over every rendering detail
         </li>
       </ul>

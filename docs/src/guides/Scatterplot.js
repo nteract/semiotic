@@ -1,6 +1,6 @@
 import React from "react"
 import DocumentFrame from "../DocumentFrame"
-import { XYFrame, ResponsiveXYFrame } from "semiotic"
+import { StreamXYFrame } from "semiotic"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
 import { scaleSqrt } from "d3-scale"
@@ -182,6 +182,7 @@ const rScale = scaleSqrt()
 
 const frameProps = {
   size: [700, 400],
+  chartType: "scatter",
   xAccessor: "theaterCount",
   yAccessor: "rank",
   yExtent: [0],
@@ -193,16 +194,9 @@ const frameProps = {
       <tspan fill={theme[2]}>The Longest Ride</tspan>
     </text>
   ),
-  axes: [
-    {
-      orient: "left",
-      label: "Rank"
-    },
-    {
-      orient: "bottom",
-      label: { name: "Theaters", locationDistance: 55 }
-    }
-  ],
+  showAxes: true,
+  xLabel: "Theaters",
+  yLabel: "Rank",
   pointStyle: d => {
     return {
       r: 5,
@@ -216,7 +210,7 @@ const frameProps = {
   },
 
   margin: { left: 60, bottom: 90, right: 10, top: 40 },
-  points
+  data: points
 }
 
 const overrideProps = {
@@ -272,8 +266,7 @@ const customPointProps = {
 
 const withHoverFrameProps = {
   ...frameProps,
-  // lineType: "stackedarea"
-  hoverAnnotation: true
+  enableHover: true
 }
 
 export default function CreateALineChart() {
@@ -281,13 +274,13 @@ export default function CreateALineChart() {
     <div>
       <MarkdownText
         text={`
-Creating a scatterplot, and scatterplot using a custom point with \`XYFrame\` and hover behavior and styling.
+Creating a scatterplot, and scatterplot using a custom point with \`StreamXYFrame\` and hover behavior and styling.
 
 This page uses box office data from [Box Office Mojo](https://www.boxofficemojo.com/).
 
 ## Scatterplot
 
-The \`XYFrame\` takes \`points\` as an array of objects. Each object represents a point. 
+The \`StreamXYFrame\` takes \`points\` as an array of objects. Each object represents a point. 
 
 In this example, we pass a \`xExtent={[0]}\` and \`yExtent={[0]}\` to set the lower bound of the xAxis and yAxis to zero, otherwise it would create an exent based on the minimum and maximum values on your  \`xAccessor\` and \`yAccessor\`. Your accessors can be a string key to access the property or a function.
 
@@ -295,7 +288,7 @@ In this example, we pass a \`xExtent={[0]}\` and \`yExtent={[0]}\` to set the lo
       />
       <DocumentFrame
         frameProps={frameProps}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={overrideProps}
         useExpanded
       />
@@ -303,7 +296,7 @@ In this example, we pass a \`xExtent={[0]}\` and \`yExtent={[0]}\` to set the lo
         text={`
 ## Scatterplot with Custom Points
 
-XYFrame takes a \`customPointMark\` which allows you to render the points with custom logic. 
+StreamXYFrame takes a \`customPointMark\` which allows you to render the points with custom logic. 
 
 \`customPointMark={({ d }) => {
   return (
@@ -317,7 +310,7 @@ XYFrame takes a \`customPointMark\` which allows you to render the points with c
       />
       <DocumentFrame
         frameProps={customPointProps}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={overrideProps}
         startHidden
         pre={`import { scaleSqrt } from "d3-scale"
@@ -335,7 +328,7 @@ Enabeling the \`hoverAnnotation={true}\` prop  gives you default tooltips based 
       />
       <DocumentFrame
         frameProps={withHoverFrameProps}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={overrideProps}
         startHidden
       />
@@ -344,12 +337,12 @@ Enabeling the \`hoverAnnotation={true}\` prop  gives you default tooltips based 
         text={`
 ## Scatterplot with ResponsiveWidth
 
-To make your chart responsive, instead of using \`XYFrame\` use \`ResponsiveXYFrame\` and set the \`responsiveWidth={true}\`.
+To make your chart responsive, instead of using \`StreamXYFrame\` use \`StreamXYFrame\` and set the \`responsiveWidth={true}\`.
 `}
       />
       <DocumentFrame
         frameProps={{ ...withHoverFrameProps, responsiveWidth: true }}
-        type={ResponsiveXYFrame}
+        type={StreamXYFrame}
         overrideProps={overrideProps}
         startHidden
       />

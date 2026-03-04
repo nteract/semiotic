@@ -2,17 +2,17 @@ A frame that displays continuous data along the _x_ and _y_ axis. Examples inclu
 [line charts](/guides/line-chart), [scatterplots](/guides/scatterplot), and
 [area charts](/guides/area-chart).
 
-`<XYFrame>` charts render [points](#point-rendering), [lines](#line-rendering), and
+`<StreamXYFrame>` charts render [points](#point-rendering), [lines](#line-rendering), and
 [summary](#summary-rendering) elements. Rendering and styling is based on each element's
 corresponding properties.
 
-`XYFrame` data elements are accessible by tabbing to the data group (points, lines, or summaries)
+`StreamXYFrame` data elements are accessible by tabbing to the data group (points, lines, or summaries)
 and hitting enter to arrow-key navigate through the data elements.
 
 ```jsx
-import { XYFrame } from 'semiotic'
+import { StreamXYFrame } from 'semiotic'
 
-export default () => <XYFrame
+export default () => <StreamXYFrame
    points={[{price: 1.25, size: 15}, {price: 2.25, size: 12}, ...]}
    pointStyle={{ fill: "blue" }}
    xAccessor={"price"}
@@ -96,7 +96,7 @@ must contain two numbers which represents the width and height, respectively. Si
 `[500,500]`.
 
 ```jsx
-<XYFrame size={ [500,500] } ... />
+<StreamXYFrame size={ [500,500] } ... />
 ```
 
 ### xAccessor: { _string_ | _function_ }
@@ -106,11 +106,11 @@ Determines how _x_ values are accessed from the data array.
 ```jsx
 /* String option
 e.g. data=[{x: 1, y: 2}, {x:2, y: 4}, ... ] */
-<XYFrame xAccessor={ "x" } ... />
+<StreamXYFrame xAccessor={ "x" } ... />
 
 /* Function option
 e.g. data=[[1, 2], [2, 4], ... ] */
-<XYFrame xAccessor={ d => d[0] } ... />
+<StreamXYFrame xAccessor={ d => d[0] } ... />
 ```
 
 ### yAccessor: { _string_ | _function_ }
@@ -120,11 +120,11 @@ Determines how _y_ values are accessed from the data array
 ```jsx
 /*String option
 e.g. data=[{x: 1, y: 2}, {x: 2, y: 4}, ... ] */
-<XYFrame yAccessor={ "y" } ... />
+<StreamXYFrame yAccessor={ "y" } ... />
 
 /*Function option
 e.g. data=[[1, 2], [2, 4], ... ] */
-<XYFrame yAccessor={ d => d[1] } ... />
+<StreamXYFrame yAccessor={ d => d[1] } ... />
 ```
 
 ### title: { _string_ | _JSX_ }
@@ -133,10 +133,10 @@ Centers this title at the top of the chart.
 
 ```jsx
 /*String option */
-<XYFrame title={ "Chart Title" } ... />
+<StreamXYFrame title={ "Chart Title" } ... />
 
 /*JSX option */
-<XYFrame title={ <text fontSize={30} fill="gold">"Chart Title"</text> } ... />
+<StreamXYFrame title={ <text fontSize={30} fill="gold">"Chart Title"</text> } ... />
 ```
 
 ### margin: { _number_ | _object_ }
@@ -145,10 +145,10 @@ The margin can be set to one number, which is applied equally to all sides, or a
 
 ```jsx
 /*Single number option */
-<XYFrame margin={ 10 } ... />
+<StreamXYFrame margin={ 10 } ... />
 
 /*Object option */
-<XYFrame margin={ { top: 5, bottom: 10, left: 15, right: 20 } } ... />
+<StreamXYFrame margin={ { top: 5, bottom: 10, left: 15, right: 20 } } ... />
 ```
 
 ### xScaleType: { _d3-scale_ }
@@ -157,7 +157,7 @@ Custom [d3-scale](https://github.com/d3/d3-scale#d3-scale) for the _x_ axis. Def
 [`scaleLinear()`](https://github.com/d3/d3-scale#scaleLinear).
 
 ```jsx
-<XYFrame xScaleType={ d3.scaleTime() } ... />
+<StreamXYFrame xScaleType={ d3.scaleTime() } ... />
 ```
 
 ### yScaleType: { _d3-scale_ }
@@ -166,7 +166,7 @@ Custom [d3-scale](https://github.com/d3/d3-scale#d3-scale) for the _y_ axis. Def
 [`scaleLinear()`](https://github.com/d3/d3-scale#scaleLinear).
 
 ```jsx
-<XYFrame yScaleType={ d3.scaleLinear() } ... />
+<StreamXYFrame yScaleType={ d3.scaleLinear() } ... />
 ```
 
 ### xExtent: { [_min_, _max_] }
@@ -179,16 +179,16 @@ The extent exposes an `onChange` callback function that updates with the calcula
 
 ```jsx
 /*min and max values set */
-<XYFrame xExtent={ [20,250] } ... />
+<StreamXYFrame xExtent={ [20,250] } ... />
 
 /*only min value set */
-<XYFrame xExtent={ [20, undefined] } ... />
+<StreamXYFrame xExtent={ [20, undefined] } ... />
 
 /*onChange without setting extent */
-<XYFrame xExtent={ { onChange: d => { console.info(d) } } } ... />
+<StreamXYFrame xExtent={ { onChange: d => { console.info(d) } } } ... />
 
 /*onChange with setting extent */
-<XYFrame xExtent={ { extent: [20, undefined], onChange: d => { console.info(d) } } } ... />
+<StreamXYFrame xExtent={ { extent: [20, undefined], onChange: d => { console.info(d) } } } ... />
 ```
 
 ### yExtent: { [_min_, _max_] }
@@ -201,16 +201,16 @@ The extent exposes an `onChange` callback function that updates with the calcula
 
 ```jsx
 /*min and max values set */
-<XYFrame yExtent={ [0,500] } ... />
+<StreamXYFrame yExtent={ [0,500] } ... />
 
 /*only max value set */
-<XYFrame yExtent={ [undefined, 350] } ... />
+<StreamXYFrame yExtent={ [undefined, 350] } ... />
 
 /*onChange without setting extent */
-<XYFrame yExtent={ { onChange: d => { console.info(d) } } } ... />
+<StreamXYFrame yExtent={ { onChange: d => { console.info(d) } } } ... />
 
 /*onChange with setting extent */
-<XYFrame yExtent={ { extent: [undefined, 350], onChange: d => { console.info(d) } } } ... />
+<StreamXYFrame yExtent={ { extent: [undefined, 350], onChange: d => { console.info(d) } } } ... />
 ```
 
 ### invertX: { _boolean_ }
@@ -218,7 +218,7 @@ The extent exposes an `onChange` callback function that updates with the calcula
 Inverts the _x_ axis such that the _min_ and _max_ values are transposed.
 
 ```jsx
-<XYFrame invertX={ true } ... />
+<StreamXYFrame invertX={ true } ... />
 ```
 
 ### invertY: { _boolean_ }
@@ -226,7 +226,7 @@ Inverts the _x_ axis such that the _min_ and _max_ values are transposed.
 Inverts the _y_ axis such that the _min_ and _max_ values are transposed.
 
 ```jsx
-<XYFrame invertY={ true } ... />
+<StreamXYFrame invertY={ true } ... />
 ```
 
 ### showLinePoints: { _boolean_ }
@@ -237,7 +237,7 @@ will be styled just like points that are added to the `points` array using `poin
 property that will point to the line or summary that this point is a part of.
 
 ```jsx
-<XYFrame showLinePoints={ true } ... />
+<StreamXYFrame showLinePoints={ true } ... />
 ```
 
 ### showSummaryPoints: { _boolean_ }
@@ -247,7 +247,7 @@ elements. These points will be styled just like points that are added to the `po
 `pointStyle` or `pointClass`.
 
 ```jsx
-<XYFrame showSummaryPoints={ true } ... />
+<StreamXYFrame showSummaryPoints={ true } ... />
 ```
 
 ### renderKey: { _string_ | _function_ }
@@ -259,12 +259,12 @@ takes `(datapoint,index)` and returns a string to be used.
 
 ```jsx
 /* string option */
-<XYFrame renderKey="somePropToBeUsedAsAKey" />
+<StreamXYFrame renderKey="somePropToBeUsedAsAKey" />
 ```
 
 ```jsx
 /* function option defaulting to array position if no key on datapoint.renderKeyID exists */
-<XYFrame renderKey={(datapoint, index) => datapoint.renderKeyID || i} />
+<StreamXYFrame renderKey={(datapoint, index) => datapoint.renderKeyID || i} />
 ```
 
 ## Point Rendering
@@ -286,7 +286,7 @@ var points = [
 ]
 
 function MyScatterPlot() {
-  return <XYFrame xAccessor={(d) => d[0]} yAccessor={(d) => d[1]} points={points} />
+  return <StreamXYFrame xAccessor={(d) => d[0]} yAccessor={(d) => d[1]} points={points} />
 }
 
 var points = [
@@ -296,7 +296,7 @@ var points = [
 ]
 
 function MyScatterPlot() {
-  return <XYFrame xAccessor={"week"} yAccessor={"value"} points={points} />
+  return <StreamXYFrame xAccessor={"week"} yAccessor={"value"} points={points} />
 }
 ```
 
@@ -307,10 +307,10 @@ is passed the point data and returns a JSX style object.
 
 ```jsx
 /*Object option */
-<XYFrame pointStyle={ { fill: "red", stroke: "grey", strokeWidth: 1 } } ... />
+<StreamXYFrame pointStyle={ { fill: "red", stroke: "grey", strokeWidth: 1 } } ... />
 
 /*Function option */
-<XYFrame
+<StreamXYFrame
   ...
   pointStyle={ d => ({ fill: d.fill, stroke: d.stroke, strokeWidth: d.strWidth }) }
 />
@@ -323,10 +323,10 @@ the point data and returns a string.
 
 ```jsx
 /*String option */
-<XYFrame pointClass={ "scatter-points" } ... />
+<StreamXYFrame pointClass={ "scatter-points" } ... />
 
 /*Function option */
-<XYFrame pointClass={ d => d.className } ... />
+<StreamXYFrame pointClass={ d => d.className } ... />
 ```
 
 ### canvasPoints: { _boolean_ | _function_ }
@@ -338,10 +338,10 @@ boolean or a function that evaluates each point and returns a boolean.
 
 ```jsx
 /*Boolean option */
-<XYFrame canvasPoints={ true } ... />
+<StreamXYFrame canvasPoints={ true } ... />
 
 /*Function option rendering only points with a size value of smaller than 5 with canvas */
-<XYFrame canvasPoints={ d => d.size < 5 } ... />
+<StreamXYFrame canvasPoints={ d => d.size < 5 } ... />
 ```
 
 ### customPointMark: { _JSX_ | _function_ }
@@ -368,10 +368,10 @@ A function taking the point data and returning SVG JSX representation of the poi
 
 ```jsx
 /*JSX option */
-<XYFrame customPointMark={ <Mark markType="rect" /> } ... />
+<StreamXYFrame customPointMark={ <Mark markType="rect" /> } ... />
 
 /*Function option */
-<XYFrame customPointMark={ d => (<Mark markType="rect" />) } ... />
+<StreamXYFrame customPointMark={ d => (<Mark markType="rect" />) } ... />
 ```
 
 ### pointRenderMode: { _string_ | _function_ | _object_ }
@@ -383,10 +383,10 @@ and returns a string or object such as that. Sketchy render mode is honored in c
 
 ```jsx
 /*Boolean option */
-<XYFrame pointRenderMode={ "sketchy" } ... />
+<StreamXYFrame pointRenderMode={ "sketchy" } ... />
 
 /* Object option */
-<XYFrame pointRenderMode={ {
+<StreamXYFrame pointRenderMode={ {
   renderMode: "sketchy",
   fillWeight: 3,
   hachureGap: 3.5,
@@ -394,7 +394,7 @@ and returns a string or object such as that. Sketchy render mode is honored in c
 } } ... />
 
 /*Function option */
-<XYFrame pointRenderMode={ d => d.uncertain === true && "sketchy" } ... />
+<StreamXYFrame pointRenderMode={ d => d.uncertain === true && "sketchy" } ... />
 
 ```
 
@@ -409,7 +409,7 @@ points along the line, use the [`showLinePoints`](#showlinepoints-boolean) prope
 var lines = [[[1, 2], [3, 4], [5, 8], [7, 16], [9, 32], [11, 64], [13, 128]]]
 
 function MyLineChart() {
-  return <XYFrame xAccessor={d => d[0]} yAccessor={d => d[1]} lines={lines} />
+  return <StreamXYFrame xAccessor={d => d[0]} yAccessor={d => d[1]} lines={lines} />
 }
 
 var lines = [{ coordinates:[
@@ -419,7 +419,7 @@ var lines = [{ coordinates:[
 ]]
 
 function MyLineChart() {
-  return <XYFrame xAccessor={"week"} yAccessor={"value"} lines={lines} />
+  return <StreamXYFrame xAccessor={"week"} yAccessor={"value"} lines={lines} />
 ```
 
 ### lineDataAccessor: { _string_ | _function_ }
@@ -429,10 +429,10 @@ array passed to the [`lines`](#lines--data-) attribute. Defaults to `d => d.coor
 
 ```jsx
 /*String option */
-<XYFrame lineDataAccessor={ "lineValues" } ... />
+<StreamXYFrame lineDataAccessor={ "lineValues" } ... />
 
 /*Function option */
-<XYFrame lineDataAccessor={ d => d.lineValues } ... />
+<StreamXYFrame lineDataAccessor={ d => d.lineValues } ... />
 ```
 
 ### lineType: { _string_ | _object_ }
@@ -448,10 +448,10 @@ with a `type` key and _string_ value corresponding to one of the supported line 
 
 ```jsx
 /*String option */
-<XYFrame lineType={ "stackedarea" } ... />
+<StreamXYFrame lineType={ "stackedarea" } ... />
 
 /*Object option */
-<XYFrame lineType={ { type: "stackedarea", sort: (a,b) => a.level - b.level } } ... />
+<StreamXYFrame lineType={ { type: "stackedarea", sort: (a,b) => a.level - b.level } } ... />
 ```
 
 - Shared settings
@@ -473,10 +473,10 @@ function that takes the line data and returns a JSX style object.
 
 ```jsx
 /*Object option */
-<XYFrame lineStyle={ { stroke: "#e3e3e3", strokeWidth: 2 } } ... />
+<StreamXYFrame lineStyle={ { stroke: "#e3e3e3", strokeWidth: 2 } } ... />
 
 /*Function option */
-<XYFrame
+<StreamXYFrame
   ...
   lineStyle={ d => ({ stroke: d.stroke, strokeWidth: d.strWidth }) }
 />
@@ -489,10 +489,10 @@ function that evaluates the line data and returns a string.
 
 ```jsx
 /*String option */
-<XYFrame lineClass={ "line" } ... />
+<StreamXYFrame lineClass={ "line" } ... />
 
 /*Function option */
-<XYFrame lineClass={ d => d.className } ... />
+<StreamXYFrame lineClass={ d => d.className } ... />
 ```
 
 ### lineIDAccessor: { _string_ | _function_ }
@@ -503,10 +503,10 @@ accepts a _string_ or a _function_ that returns a _string_ indicating the `id` n
 
 ```jsx
 /*String option */
-<XYFrame lineIDAccessor={ "myLineId" } ... />
+<StreamXYFrame lineIDAccessor={ "myLineId" } ... />
 
 /*Function option */
-<XYFrame lineIDAccessor={ d => d.id } ... />
+<StreamXYFrame lineIDAccessor={ d => d.id } ... />
 ```
 
 ### customLineMark: { _function_ }
@@ -534,7 +534,7 @@ advantage of the `<Frame>`'s settings.
 - margin
 
 ```jsx
-<XYFrame customLineMark={ d => (<DividedLines ... />) } ... />
+<StreamXYFrame customLineMark={ d => (<DividedLines ... />) } ... />
 ```
 
 ### canvasLines: { _boolean_ | _function_ }
@@ -547,10 +547,10 @@ or not to render the line to Canvas instead of
 
 ```jsx
 /*Boolean option */
-<XYFrame canvasLines={ true } ... />
+<StreamXYFrame canvasLines={ true } ... />
 
 /*Function option drawing only the even lines with canvas */
-<XYFrame canvasLines={ (d, i) => i%2 === 0 } ... />
+<StreamXYFrame canvasLines={ (d, i) => i%2 === 0 } ... />
 ```
 
 ### lineRenderMode: { _string_ | _function_ | _object_ }
@@ -562,10 +562,10 @@ and returns a string or object such as that. Sketchy render mode is honored in c
 
 ```jsx
 /*Boolean option */
-<XYFrame lineRenderMode={ "sketchy" } ... />
+<StreamXYFrame lineRenderMode={ "sketchy" } ... />
 
 /* Object option */
-<XYFrame lineRenderMode={ {
+<StreamXYFrame lineRenderMode={ {
   renderMode: "sketchy",
   fillWeight: 3,
   hachureGap: 3.5,
@@ -573,7 +573,7 @@ and returns a string or object such as that. Sketchy render mode is honored in c
 } } ... />
 
 /*Function option */
-<XYFrame lineRenderMode={ d => d.uncertain === true && "sketchy" } ... />
+<StreamXYFrame lineRenderMode={ d => d.uncertain === true && "sketchy" } ... />
 
 ```
 
@@ -585,7 +585,7 @@ Similar to
 will be rendered with gaps where there is no defined data.
 
 ```jsx
-<XYFrame defined={ d => !isNaN(d[1]) } ... />
+<StreamXYFrame defined={ d => !isNaN(d[1]) } ... />
 ```
 
 ## Summary Rendering
@@ -607,7 +607,7 @@ var points = [
 ]
 
 function MyAreaChart() {
-  return <XYFrame xAccessor={(d) => d[0]} yAccessor={(d) => d[1]} summaries={points} />
+  return <StreamXYFrame xAccessor={(d) => d[0]} yAccessor={(d) => d[1]} summaries={points} />
 }
 ```
 
@@ -617,8 +617,8 @@ If _summaryDataAccessor_ is specified, determines how summary coordinates are ac
 array passed to the summaries attribute. Defaults to `coordinates`.
 
 ```html
-/*String option */ <XYFrame summaryDataAccessor={ "areaValues" } ... /> /*Function option */
-<XYFrame summaryDataAccessor={ d => d.areaValues } ... />
+/*String option */ <StreamXYFrame summaryDataAccessor={ "areaValues" } ... /> /*Function option */
+<StreamXYFrame summaryDataAccessor={ d => d.areaValues } ... />
 ```
 
 ### summaryStyle: { _function_ | _object_ }
@@ -626,8 +626,8 @@ array passed to the summaries attribute. Defaults to `coordinates`.
 If _summaryStyle_ is specified, sets the inline css style of each summary element.
 
 ```html
-/*Object option */ <XYFrame summaryStyle={ { fill: "#e3e3e3", stroke: "#e3e3e3" } } ... />
-/*Function option */ <XYFrame ... summaryStyle={ d => ({ fill: d.fill, stroke: d.stroke }) } />
+/*Object option */ <StreamXYFrame summaryStyle={ { fill: "#e3e3e3", stroke: "#e3e3e3" } } ... />
+/*Function option */ <StreamXYFrame ... summaryStyle={ d => ({ fill: d.fill, stroke: d.stroke }) } />
 ```
 
 ### summaryClass: { _string_ | _function_ }
@@ -635,7 +635,7 @@ If _summaryStyle_ is specified, sets the inline css style of each summary elemen
 If _summaryClass_ is specified, sets the css class of each summary element.
 
 ```html
-/*String option */ <XYFrame summaryClass={ "area" } ... /> /*Function option */ <XYFrame
+/*String option */ <StreamXYFrame summaryClass={ "area" } ... /> /*Function option */ <StreamXYFrame
 summaryClass={ d => d.className } ... />
 ```
 
@@ -655,10 +655,10 @@ optional keys are shown below in shared settings and for particular summary type
 
 ```jsx
 /*String option */
-<XYFrame summaryType={ "hexbin" } ... />
+<StreamXYFrame summaryType={ "hexbin" } ... />
 
 /*Object option */
-<XYFrame summaryType={ { type: "hexbin", bins: 0.1 } } ... />
+<StreamXYFrame summaryType={ { type: "hexbin", bins: 0.1 } } ... />
 ```
 
 ### customSummaryMark: { _JSX_ | _function_ }
@@ -684,10 +684,10 @@ A function taking the summary datapoint and returning SVG JSX representation of 
 
 ```jsx
 /*JSX option */
-<XYFrame customSummaryMark={ <Mark markType="rect" /> } ... />
+<StreamXYFrame customSummaryMark={ <Mark markType="rect" /> } ... />
 
 /*Function option */
-<XYFrame customSummaryMark={ d => (<Mark markType="rect" />) } ... />
+<StreamXYFrame customSummaryMark={ d => (<Mark markType="rect" />) } ... />
 ```
 
 ### canvasSummaries: { _boolean_ | _function_ }
@@ -700,9 +700,9 @@ determines whether or not to render the summary to
 
 ```jsx
 /*Boolean option */
-<XYFrame canvasSummaries="{" true } ... />
+<StreamXYFrame canvasSummaries="{" true } ... />
 
-/*Function option */ <XYFrame canvasSummaries={ (d, i) => } ... />
+/*Function option */ <StreamXYFrame canvasSummaries={ (d, i) => } ... />
 ```
 
 ### summaryRenderMode: { _string_ | _function_ | _object_ }
@@ -715,10 +715,10 @@ rendering.
 
 ```jsx
 /*Boolean option */
-<XYFrame summaryRenderMode={ "sketchy" } ... />
+<StreamXYFrame summaryRenderMode={ "sketchy" } ... />
 
 /* Object option */
-<XYFrame summaryRenderMode={ {
+<StreamXYFrame summaryRenderMode={ {
   renderMode: "sketchy",
   fillWeight: 3,
   hachureGap: 3.5,
@@ -726,7 +726,7 @@ rendering.
 } } ... />
 
 /*Function option */
-<XYFrame summaryRenderMode={ d => d.uncertain === true && "sketchy" } ... />
+<StreamXYFrame summaryRenderMode={ d => d.uncertain === true && "sketchy" } ... />
 
 ```
 
@@ -742,7 +742,7 @@ when using CSS to style the position and any additional elements. You can drop a
 floating div, including another frame.
 
 ```jsx
-<XYFrame
+<StreamXYFrame
   hoverAnnotation={true}
   tooltipContent={(d) => (
     <div className="tooltip-content">
@@ -767,7 +767,7 @@ data properties that your data has will be automatically placed in the transform
 
 ```jsx
 /*boolean option */
-<XYFrame
+<StreamXYFrame
   annotations={[
     { type: "xy", label: "A sample XY Annotation", day: 5, value: 105 },
     { type: "x", label: "A sample X Threshold Annotation", day: 5 },
@@ -782,7 +782,7 @@ A function that takes an annotation object and returns a JSX SVG element. The fu
 `{ d, i, screenCoordinates, xScale, yScale, xAccessor, yAccessor, xyFrameProps, xyFrameState, summaries, points, lines, adjustedPosition, adjustedSize, annotationLayer, voronoiHover }`
 
 ```jsx
-<XYFrame svgAnnotationRules={({ d, screenCoordinates }) => {
+<StreamXYFrame svgAnnotationRules={({ d, screenCoordinates }) => {
    if (d.type === "myCustomType") {
       return <g transform={`translate(${screenCoordinates})`}>
       <circle r={10} fill="red" />
@@ -803,7 +803,7 @@ Elements can be placed using CSS `left` and `top` and will overlay on the chart.
 default annotation for tooltips uses this method.
 
 ```jsx
-<XYFrame
+<StreamXYFrame
   svgAnnotationRules={({ d, screenCoordinates }) => {
     if (d.type === "myCustomType") {
       return (
@@ -838,7 +838,7 @@ y-coordinate of `size[1] - margin.bottom`. If you want to add another 10px paddi
 x-axis, then set `axisMarginOverride={ bottom:-10 }`
 
 ```jsx
-<XYFrame
+<StreamXYFrame
   annotationSettings={{
     layout: {
       type: "marginalia",
@@ -859,7 +859,7 @@ Whether to turn on a matte (a border that covers the margin area to hide overflo
 matte.
 
 ```jsx
-<XYFrame matte={true} />
+<StreamXYFrame matte={true} />
 ```
 
 ### backgroundGraphics: { _array_ | _JSX_ }
@@ -867,7 +867,7 @@ matte.
 A JSX or array of JSX to display behind the chart.
 
 ```jsx
-<XYFrame backgroundGraphics={<image src="amazing.gif" />} />
+<StreamXYFrame backgroundGraphics={<image src="amazing.gif" />} />
 ```
 
 ### foregroundGraphics: { _array_ | _JSX_ }
@@ -875,7 +875,7 @@ A JSX or array of JSX to display behind the chart.
 A JSX or array of JSX to display in front of the chart.
 
 ```jsx
-<XYFrame foregroundGraphics={<image src="copyright.png" />} />
+<StreamXYFrame foregroundGraphics={<image src="copyright.png" />} />
 ```
 
 ### canvasPostProcess: { _"chuckClose"_ | _function_ }
@@ -886,12 +886,12 @@ custom function.
 
 ```jsx
 //Chuck Close
-<XYFrame
+<StreamXYFrame
    canvasPostProcess="chuckClose"
 />
 
 //function option creating a glowing effect
-<XYFrame
+<StreamXYFrame
    canvasPostProcess={(canvas, context, size) => {
   const dataURL = canvas.toDataURL("image/png")
   const baseImage = document.createElement("img")
@@ -922,12 +922,12 @@ highlighting behavior.
 
 ```jsx
 // boolean
-<XYFrame
+<StreamXYFrame
 hoverAnnotation={true}
 />
 
 // boolean
-<XYFrame
+<StreamXYFrame
 hoverAnnotation={[
    { type: "frame-hover" },
    { type: "highlight" },
@@ -941,7 +941,7 @@ hoverAnnotation={[
 A function to fire on hover that passes the data being hovered over.
 
 ```jsx
-<XYFrame
+<StreamXYFrame
   customHoverBehavior={(d) => {
     this.setState({ hoveredOn: d })
   }}
@@ -953,7 +953,7 @@ A function to fire on hover that passes the data being hovered over.
 A function to fire on click that passes the data being hovered over.
 
 ```jsx
-<XYFrame
+<StreamXYFrame
   customClickBehavior={(d) => {
     this.setState({ clickedOn: d })
   }}
@@ -965,7 +965,7 @@ A function to fire on click that passes the data being hovered over.
 A function to fire on doubleclick that passes the data being hovered over.
 
 ```jsx
-<XYFrame
+<StreamXYFrame
   customDoubleClickBehavior={(d) => {
     this.setState({ doubleclicked: d })
   }}
@@ -976,7 +976,7 @@ A function to fire on doubleclick that passes the data being hovered over.
 
 An object passed to the interaction layer that is currently only used to determine whether to
 activate the XY brush, its settings, and the actions to fire on its start, brush and end events.
-Used under the hood in `MinimapXYFrame` to enable the functionality in the minimap. See the
+Used for brush interactions. For a higher-level minimap experience, see `MinimapChart`. See the
 [XY Brushes](/guides/xy-brushes) example.
 
 - `start`: The function to run on the start of a brush
@@ -987,7 +987,7 @@ Used under the hood in `MinimapXYFrame` to enable the functionality in the minim
   brush with
 
 ```jsx
-<XYFrame
+<StreamXYFrame
   interaction={{
     start: startBrushingFunction,
     during: whileBrushingFunction,
@@ -1002,7 +1002,7 @@ Used under the hood in `MinimapXYFrame` to enable the functionality in the minim
 
 ### dataVersion: { _string_ }
 
-A simple optimization option. If you set dataVersion (a string) then XYFrame will not update the
+A simple optimization option. If you set dataVersion (a string) then StreamXYFrame will not update the
 visualization layer until it receives a different string. This allows you to manage rendering when
 your code is making React re-render your chart all the time. This is a crude method and what you
 should do for optimization is make sure that any functions or data you're sending to your frame only
@@ -1020,7 +1020,7 @@ A JSX or array of JSX to be injected into the visualization layer's SVG `defs`. 
 or other SVG material typically defined in defs.
 
 ```jsx
-<XYFrame
+<StreamXYFrame
   additionalDefs={
     <linearGradient y2="1" id="paleWoodGradient">
       <stop stopColor="#8E0E00" offset="0%" />

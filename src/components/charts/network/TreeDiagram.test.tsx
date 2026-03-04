@@ -35,7 +35,7 @@ describe("TreeDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -46,7 +46,7 @@ describe("TreeDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeFalsy()
   })
 
@@ -57,8 +57,8 @@ describe("TreeDiagram", () => {
       </TooltipProvider>
     )
 
-    const svg = container.querySelector("svg")
-    expect(svg).toBeTruthy()
+    const frame = container.querySelector(".stream-network-frame")
+    expect(frame).toBeTruthy()
   })
 
   it("supports tree layout (default)", () => {
@@ -68,7 +68,7 @@ describe("TreeDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -79,7 +79,7 @@ describe("TreeDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -90,7 +90,7 @@ describe("TreeDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -101,7 +101,7 @@ describe("TreeDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -112,7 +112,7 @@ describe("TreeDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -123,7 +123,7 @@ describe("TreeDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -134,7 +134,7 @@ describe("TreeDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -145,7 +145,7 @@ describe("TreeDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -165,7 +165,7 @@ describe("TreeDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -176,7 +176,7 @@ describe("TreeDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -187,7 +187,7 @@ describe("TreeDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -210,7 +210,7 @@ describe("TreeDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -225,7 +225,7 @@ describe("TreeDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -234,14 +234,12 @@ describe("TreeDiagram", () => {
       <TooltipProvider>
         <TreeDiagram
           data={sampleHierarchy}
-          frameProps={{
-            nodeSizeAccessor: () => 10
-          }}
+          nodeSize={10}
         />
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -252,7 +250,7 @@ describe("TreeDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -267,7 +265,7 @@ describe("TreeDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 })

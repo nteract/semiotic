@@ -22,7 +22,10 @@ const navData = [
           { title: "Scatterplot", path: "/charts/scatterplot" },
           { title: "Bubble Chart", path: "/charts/bubble-chart" },
           { title: "Heatmap", path: "/charts/heatmap" },
-          { title: "Scatterplot Matrix", path: "/charts/scatterplot-matrix" }
+          { title: "Scatterplot Matrix", path: "/charts/scatterplot-matrix" },
+          { title: "Realtime Line Chart", path: "/charts/realtime-line-chart" },
+          { title: "Realtime Swarm Chart", path: "/charts/realtime-swarm-chart" },
+          { title: "Realtime Waterfall Chart", path: "/charts/realtime-waterfall-chart" }
         ]
       },
       {
@@ -38,7 +41,8 @@ const navData = [
           { title: "Dot Plot", path: "/charts/dot-plot" },
           { title: "Pie Chart", path: "/charts/pie-chart" },
           { title: "Donut Chart", path: "/charts/donut-chart" },
-          { title: "Grouped Bar Chart", path: "/charts/grouped-bar-chart" }
+          { title: "Grouped Bar Chart", path: "/charts/grouped-bar-chart" },
+          { title: "Realtime Histogram", path: "/charts/realtime-bar-chart" }
         ]
       },
       {
@@ -52,17 +56,6 @@ const navData = [
           { title: "Treemap", path: "/charts/treemap" },
           { title: "Circle Pack", path: "/charts/circle-pack" }
         ]
-      },
-      {
-        title: "Realtime",
-        category: "realtime",
-        children: [
-          { title: "Realtime Line Chart", path: "/charts/realtime-line-chart" },
-          { title: "Realtime Bar Chart", path: "/charts/realtime-bar-chart" },
-          { title: "Realtime Swarm Chart", path: "/charts/realtime-swarm-chart" },
-          { title: "Realtime Waterfall Chart", path: "/charts/realtime-waterfall-chart" },
-          { title: "Realtime Sankey", path: "/charts/realtime-sankey" }
-        ]
       }
     ]
   },
@@ -71,10 +64,9 @@ const navData = [
     path: "/frames",
     tier: "frames",
     children: [
-      { title: "XY Frame", path: "/frames/xy-frame" },
-      { title: "Ordinal Frame", path: "/frames/ordinal-frame" },
-      { title: "Network Frame", path: "/frames/network-frame" },
-      { title: "Realtime Frame", path: "/frames/realtime-frame" }
+      { title: "StreamXYFrame", path: "/frames/xy-frame" },
+      { title: "StreamOrdinalFrame", path: "/frames/ordinal-frame" },
+      { title: "StreamNetworkFrame", path: "/frames/network-frame" }
     ]
   },
   {
@@ -115,7 +107,6 @@ const navData = [
       { title: "Timeline", path: "/cookbook/timeline" },
       { title: "Radar Plot", path: "/cookbook/radar-plot" },
       { title: "Isotype Chart", path: "/cookbook/isotype-chart" },
-      { title: "Matrix", path: "/cookbook/matrix" }
     ]
   },
   {
@@ -153,11 +144,7 @@ const navData = [
     title: "API Reference",
     path: "/api",
     children: [
-      { title: "Charts", path: "/api/charts" },
-      { title: "XYFrame", path: "/api/xyframe" },
-      { title: "OrdinalFrame", path: "/api/ordinalframe" },
-      { title: "NetworkFrame", path: "/api/networkframe" },
-      { title: "RealtimeFrame", path: "/api/realtime-frame" }
+      { title: "Charts", path: "/api/charts" }
     ]
   }
 ]

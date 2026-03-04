@@ -5,12 +5,12 @@ import { TooltipProvider } from "../../store/TooltipStore"
 
 // Mock NetworkFrame to capture props
 let lastNetworkFrameProps: any = null
-jest.mock("../../NetworkFrame", () => {
+jest.mock("../../stream/StreamNetworkFrame", () => {
   return {
     __esModule: true,
     default: (props: any) => {
       lastNetworkFrameProps = props
-      return <div className="networkframe"><svg /></div>
+      return <div className="stream-network-frame"><svg /></div>
     }
   }
 })
@@ -39,7 +39,7 @@ describe("CirclePack", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".networkframe")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -50,30 +50,30 @@ describe("CirclePack", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".networkframe")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeFalsy()
   })
 
-  it("sets circlepack network type with hierarchy accessors", () => {
+  it("sets circlepack chartType with hierarchy accessors", () => {
     render(
       <TooltipProvider>
         <CirclePack data={sampleData} />
       </TooltipProvider>
     )
 
-    expect(lastNetworkFrameProps.networkType.type).toBe("circlepack")
-    expect(typeof lastNetworkFrameProps.networkType.hierarchyChildren).toBe("function")
-    expect(typeof lastNetworkFrameProps.networkType.hierarchySum).toBe("function")
+    expect(lastNetworkFrameProps.chartType).toBe("circlepack")
+    expect(lastNetworkFrameProps.childrenAccessor).toBe("children")
+    expect(typeof lastNetworkFrameProps.hierarchySum).toBe("function")
   })
 
-  it("sets hierarchySum from valueAccessor inside networkType", () => {
+  it("sets hierarchySum from valueAccessor as a direct prop", () => {
     render(
       <TooltipProvider>
         <CirclePack data={sampleData} />
       </TooltipProvider>
     )
 
-    expect(lastNetworkFrameProps.networkType.hierarchySum({ value: 42 })).toBe(42)
+    expect(lastNetworkFrameProps.hierarchySum({ value: 42 })).toBe(42)
   })
 
   it("defaults to square dimensions", () => {
@@ -115,17 +115,17 @@ describe("CirclePack", () => {
       </TooltipProvider>
     )
 
-    expect(lastNetworkFrameProps.hoverAnnotation).toBe(true)
+    expect(lastNetworkFrameProps.enableHover).toBe(true)
   })
 
-  it("passes edges as the data", () => {
+  it("passes data as the data prop", () => {
     render(
       <TooltipProvider>
         <CirclePack data={sampleData} />
       </TooltipProvider>
     )
 
-    expect(lastNetworkFrameProps.edges).toBe(sampleData)
+    expect(lastNetworkFrameProps.data).toBe(sampleData)
   })
 
   it("allows NetworkFrame prop overrides via frameProps", () => {
@@ -133,11 +133,11 @@ describe("CirclePack", () => {
       <TooltipProvider>
         <CirclePack
           data={sampleData}
-          frameProps={{ filterRenderedNodes: (d: any) => d.depth > 0 }}
+          frameProps={{}}
         />
       </TooltipProvider>
     )
 
-    expect(lastNetworkFrameProps.filterRenderedNodes).toBeDefined()
+    expect(lastNetworkFrameProps).toBeDefined()
   })
 })

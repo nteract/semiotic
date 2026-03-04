@@ -41,7 +41,7 @@ describe("ChordDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -52,7 +52,7 @@ describe("ChordDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeFalsy()
   })
 
@@ -63,8 +63,8 @@ describe("ChordDiagram", () => {
       </TooltipProvider>
     )
 
-    const svg = container.querySelector("svg")
-    expect(svg).toBeTruthy()
+    const frame = container.querySelector(".stream-network-frame")
+    expect(frame).toBeTruthy()
   })
 
   it("accepts nodes prop", () => {
@@ -74,7 +74,7 @@ describe("ChordDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -85,7 +85,7 @@ describe("ChordDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -96,7 +96,7 @@ describe("ChordDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -107,7 +107,7 @@ describe("ChordDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -118,7 +118,7 @@ describe("ChordDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -129,7 +129,7 @@ describe("ChordDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -140,7 +140,7 @@ describe("ChordDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -154,7 +154,7 @@ describe("ChordDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -165,7 +165,7 @@ describe("ChordDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -174,14 +174,12 @@ describe("ChordDiagram", () => {
       <TooltipProvider>
         <ChordDiagram
           edges={sampleEdges}
-          frameProps={{
-            nodeSizeAccessor: () => 10
-          }}
+          groupWidth={25}
         />
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -192,7 +190,7 @@ describe("ChordDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -213,7 +211,7 @@ describe("ChordDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 })

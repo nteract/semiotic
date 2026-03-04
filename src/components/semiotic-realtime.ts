@@ -1,54 +1,38 @@
 /**
- * RealtimeFrame entry point - for streaming/realtime canvas-first visualizations
- * Import this instead of the full semiotic bundle to reduce bundle size
+ * Realtime entry point — for streaming/realtime canvas-first visualizations.
+ * Import from "semiotic/realtime" instead of the full bundle to reduce bundle size.
  */
 
-import RealtimeFrame from "./realtime/RealtimeFrame"
+import StreamXYFrame from "./stream/StreamXYFrame"
+import StreamNetworkFrame from "./stream/StreamNetworkFrame"
 
-// Reusable data structures
+// Data structures
 import { RingBuffer } from "./realtime/RingBuffer"
 import { IncrementalExtent } from "./realtime/IncrementalExtent"
 
-// Renderers
-import { lineRenderer } from "./realtime/renderers/lineRenderer"
-import { swarmRenderer } from "./realtime/renderers/swarmRenderer"
-import { candlestickRenderer } from "./realtime/renderers/candlestickRenderer"
-import { waterfallRenderer } from "./realtime/renderers/waterfallRenderer"
-import { barRenderer } from "./realtime/renderers/barRenderer"
-
-// Higher-order chart components
+// Chart HOCs
 import { RealtimeLineChart } from "./charts/realtime/RealtimeLineChart"
-import { RealtimeBarChart } from "./charts/realtime/RealtimeBarChart"
+import { RealtimeHistogram } from "./charts/realtime/RealtimeHistogram"
 import { RealtimeSwarmChart } from "./charts/realtime/RealtimeSwarmChart"
 import { RealtimeWaterfallChart } from "./charts/realtime/RealtimeWaterfallChart"
-import { RealtimeSankey } from "./charts/realtime/RealtimeSankey"
-import RealtimeNetworkFrame from "./realtime-network/RealtimeNetworkFrame"
 
 export {
-  RealtimeFrame,
+  StreamXYFrame,
+  StreamNetworkFrame,
   RingBuffer,
   IncrementalExtent,
-  lineRenderer,
-  swarmRenderer,
-  candlestickRenderer,
-  waterfallRenderer,
-  barRenderer,
-  // Higher-order chart components
   RealtimeLineChart,
-  RealtimeBarChart,
+  RealtimeHistogram,
   RealtimeSwarmChart,
-  RealtimeWaterfallChart,
-  RealtimeSankey,
-  RealtimeNetworkFrame
+  RealtimeWaterfallChart
 }
 
+// Types
 export type { RealtimeLineChartProps } from "./charts/realtime/RealtimeLineChart"
-export type { RealtimeBarChartProps } from "./charts/realtime/RealtimeBarChart"
+export type { RealtimeHistogramProps } from "./charts/realtime/RealtimeHistogram"
 export type { RealtimeSwarmChartProps } from "./charts/realtime/RealtimeSwarmChart"
 export type { RealtimeWaterfallChartProps } from "./charts/realtime/RealtimeWaterfallChart"
-export type { RealtimeSankeyProps, RealtimeNetworkFrameProps, RealtimeNetworkFrameHandle } from "./realtime-network/types"
 
-// Export types
 export type {
   ArrowOfTime,
   WindowMode,
@@ -60,12 +44,17 @@ export type {
   AnnotationContext,
   CrosshairStyle,
   HoverAnnotationConfig,
-  HoverData,
-  RealtimeFrameProps,
-  RealtimeFrameHandle,
-  RealtimeScales,
-  RealtimeLayout,
-  RealtimeAccessors
+  HoverData
 } from "./realtime/types"
 
-export type { RendererFn, RendererOptions } from "./realtime/renderers/types"
+export type {
+  StreamXYFrameProps,
+  StreamXYFrameHandle,
+  StreamChartType
+} from "./stream/types"
+
+export type {
+  StreamNetworkFrameProps,
+  StreamNetworkFrameHandle,
+  NetworkChartType
+} from "./stream/networkTypes"

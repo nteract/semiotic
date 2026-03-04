@@ -1,9 +1,8 @@
 import React from "react"
 import DocumentFrame from "../DocumentFrame"
-import { OrdinalFrame } from "semiotic"
+import { StreamOrdinalFrame } from "semiotic"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
-const dotRadius = 8
 
 const data = [
   { region: "Developed regions", y1990: 7.6, y2013: 3.4 },
@@ -22,88 +21,68 @@ const data = [
   { region: "Sub-Saharan Africa", y1990: 45.5, y2013: 31.1 }
 ]
 
-const lineAnnotations = data.map(d => Object.assign({ type: "range" }, d))
-
-function drawRange({ d, rScale, orFrameState }) {
-  if (d.type === "range") {
-    const start = rScale(d.y1990) + dotRadius
-    const end = rScale(d.y2013) - dotRadius
-    const y = orFrameState.projectedColumns[d.region].middle
-    return (
-      <line
-        x1={start}
-        x2={end}
-        y1={y}
-        y2={y}
-        style={{ stroke: "black", strokeWidth: 2 }}
-      />
-    )
-  }
-  return null
-}
+const color1990 = theme[0]
+const color2013 = theme[5]
 
 const frameProps = {
   size: [700, 500],
   rAccessor: ["y1990", "y2013"],
   oAccessor: "region",
   projection: "horizontal",
-  axes: [{ orient: "bottom", tickFormat: d => `${d}%` }],
-  type: { type: "point", r: dotRadius },
-  rExtent: [0],
-  invertR: true,
+  showAxes: true,
+  chartType: "point",
+  multiAxis: false,
+  rExtent: [0, undefined],
   oLabel: true,
   margin: { left: 235, top: 50, bottom: 40, right: 10 },
-  oPadding: 10,
+  barPadding: 10,
   data,
-  annotations: lineAnnotations,
-  svgAnnotationRules: drawRange,
-  title: (
-    <text textAnchor="middle">
-      Neonatal Mortality Rate by Region from <tspan fill={theme[0]}>1990</tspan>{" "}
-      to <tspan fill={theme[5]}>2013</tspan>
-    </text>
-  ),
-  style: (d, i) => {
-    return {
-      fill: (i > 1 && (d.rIndex === 0 ? theme[0] : theme[5])) || "white",
-      stroke: (i <= 1 && (d.rIndex === 0 ? theme[0] : theme[5])) || "white",
-      strokeWidth: i <= 1 ? 3 : 1
-    }
+  title: "Neonatal Mortality Rate by Region from 1990 to 2013",
+  connectorAccessor: d => d.region,
+  connectorStyle: d => ({
+    stroke: d.y1990 > d.y2013 ? "#28a745" : "#dc3545",
+    strokeWidth: 2,
+    opacity: 0.4
+  }),
+  pieceStyle: d => ({
+    fill: d.__rIndex === 0 ? color1990 : color2013,
+    r: 8,
+  }),
+  enableHover: true,
+  tooltipContent: d => {
+    const datum = d.data || d
+    const year = datum.__rIndex === 0 ? "1990" : "2013"
+    const value = datum.__rValue != null ? datum.__rValue : ""
+    return (
+      <div className="tooltip-content" style={{ background: "rgba(0,0,0,0.85)", color: "white", padding: "6px 10px", borderRadius: 4, fontSize: 13 }}>
+        <div style={{ fontWeight: "bold" }}>{datum.region}</div>
+        <div>{year}: {typeof value === "number" ? value.toFixed(1) : value}%</div>
+      </div>
+    )
   }
 }
 
 const overrideProps = {
-  style: `(d, i) => {
-    return {
-      fill: (i > 1 && (d.rIndex === 0 ? theme[0] : theme[5])) || "white",
-      stroke: (i <= 1 && (d.rIndex === 0 ? theme[0] : theme[5])) || "white",
-      strokeWidth: i <= 1 ? 3 : 1
-    }
-  }`,
-  title: `(
-    <text textAnchor="middle">
-      Neonatal Mortality Rate by Region from <tspan fill={theme[0]}>1990</tspan>{" "}
-      to <tspan fill={theme[5]}>2013</tspan>
-    </text>
-  )`,
-  svgAnnotationRules: `({ d, rScale, orFrameState }) => {
-    if (d.type === "range") {
-      const start = rScale(d.y1990) + dotRadius
-      const end = rScale(d.y2013) - dotRadius
-      const y = orFrameState.projectedColumns[d.region].middle
-      return (
-        <line
-          x1={start}
-          x2={end}
-          y1={y}
-          y2={y}
-          style={{ stroke: "black", strokeWidth: 2 }}
-        />
-      )
-    }
-    return null
-  }
-  `
+  pieceStyle: `d => ({
+    fill: d.__rIndex === 0 ? "${color1990}" : "${color2013}",
+    r: 8,
+  })`,
+  connectorStyle: `d => ({
+    stroke: d.y1990 > d.y2013 ? "#28a745" : "#dc3545",
+    strokeWidth: 2,
+    opacity: 0.4
+  })`,
+  tooltipContent: `d => {
+    const datum = d.data || d
+    const year = datum.__rIndex === 0 ? "1990" : "2013"
+    const value = datum.__rValue
+    return (
+      <div className="tooltip-content">
+        <div>{datum.region}</div>
+        <div>{year}: {value?.toFixed(1)}%</div>
+      </div>
+    )
+  }`
 }
 
 const DotPlot = () => {
@@ -112,9 +91,7 @@ const DotPlot = () => {
       <MarkdownText
         text={`
 
-The Dot Plot compares changes between two values across categories. The initial data array was converted into an array of points with a start and end value, which are connected with a custom \`svgAnnotationRules\`, go to [custom annotation rules](/guides/annotations#custom-annotation-rules) for details.
-
-Because annotations are drawn on top of the visualization layer, we need to account for the size of each dot in where we draw the lines so they don't overlap. We also adjust the labels to line up with the dots.
+The Dot Plot compares changes between two values across categories. Each region has two dots — <span style="color: ${color1990}">●</span> 1990 and <span style="color: ${color2013}">●</span> 2013 — connected by a line colored by whether the rate improved (green) or worsened (red).
 
 This data is from [Unicef](https://data.unicef.org/topic/child-survival/neonatal-mortality/).
 
@@ -123,8 +100,7 @@ This data is from [Unicef](https://data.unicef.org/topic/child-survival/neonatal
       <DocumentFrame
         frameProps={frameProps}
         overrideProps={overrideProps}
-        type={OrdinalFrame}
-        pre={`const dotRadius = 8`}
+        type={StreamOrdinalFrame}
         useExpanded
       />
     </div>

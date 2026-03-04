@@ -1,5 +1,5 @@
-import React from "react"
-import { OrdinalFrame } from "semiotic"
+import React, { useRef, useEffect } from "react"
+import { StreamOrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { DotPlot } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -7,6 +7,8 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -36,6 +38,79 @@ const colorData = [
 ]
 
 // ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const countries = ["Norway", "Switzerland", "Australia", "Germany", "Canada", "Japan", "Brazil", "USA"]
+
+const streamingDotPlotCode = `import { useRef, useEffect } from "react"
+import { StreamOrdinalFrame } from "semiotic"
+
+function StreamingDotPlotDemo() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          category: countries[i % 8],
+          value: Math.round((60 + Math.random() * 30) * 10) / 10,
+        })
+      }
+    }, 500)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="point"
+      runtimeMode="streaming"
+      size={[600, 300]}
+      oAccessor="category"
+      rAccessor="value"
+      windowSize={200}
+      showAxes
+      pieceStyle={() => ({ fill: "#6366f1", r: 5 })}
+    />
+  )
+}`
+
+function StreamingDotPlotDemo({ width }) {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          category: countries[i % 8],
+          value: Math.round((60 + Math.random() * 30) * 10) / 10,
+        })
+      }
+    }, 500)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="point"
+      runtimeMode="streaming"
+      size={[width, 300]}
+      oAccessor="category"
+      rAccessor="value"
+      windowSize={200}
+      showAxes
+      pieceStyle={() => ({ fill: "#6366f1", r: 5 })}
+    />
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Props definition for PropTable
 // ---------------------------------------------------------------------------
 
@@ -60,7 +135,7 @@ const dotPlotProps = [
   { name: "height", type: "number", required: false, default: "400", description: "Chart height in pixels." },
   { name: "margin", type: "object", required: false, default: "{ top: 50, bottom: 60, left: 120, right: 40 }", description: "Margin around the chart area. Left margin is larger to accommodate category labels." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Additional OrdinalFrame props for advanced customization. Escape hatch to the full Frame API." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamOrdinalFrame props for advanced customization. Escape hatch to the full Frame API." },
 ]
 
 // ---------------------------------------------------------------------------
@@ -84,12 +159,12 @@ export default function DotPlotPage() {
         componentName="DotPlot"
         importStatement='import { DotPlot } from "semiotic"'
         tier="charts"
-        wraps="OrdinalFrame"
+        wraps="StreamOrdinalFrame"
         wrapsPath="/frames/ordinal-frame"
         related={[
           { name: "BarChart", path: "/charts/bar-chart" },
           { name: "SwarmPlot", path: "/charts/swarm-plot" },
-          { name: "OrdinalFrame", path: "/frames/ordinal-frame" },
+          { name: "StreamOrdinalFrame", path: "/frames/ordinal-frame" },
         ]}
       />
 
@@ -111,25 +186,35 @@ export default function DotPlotPage() {
         sorted by value automatically with a horizontal layout.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: sampleData,
-          categoryAccessor: "category",
-          valueAccessor: "value",
-          categoryLabel: "Country",
-          valueLabel: "Quality of Life Index",
-        }}
-        type={DotPlot}
-        startHidden={false}
-        overrideProps={{
-          data: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              data: sampleData,
+              categoryAccessor: "category",
+              valueAccessor: "value",
+              categoryLabel: "Country",
+              valueLabel: "Quality of Life Index",
+            }}
+            type={DotPlot}
+            startHidden={false}
+            overrideProps={{
+              data: `[
   { category: "Norway", value: 82.4 },
   { category: "Switzerland", value: 81.9 },
   { category: "Australia", value: 80.5 },
   // ...more data points
 ]`,
-        }}
-        hiddenProps={{}}
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingDotPlotDemo width={w} />}
+            code={streamingDotPlotCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}
@@ -233,9 +318,9 @@ export default function DotPlotPage() {
 
       <p>
         When you need more control — custom marks, range lines, annotations —
-        graduate to <Link to="/frames/ordinal-frame">OrdinalFrame</Link>{" "}
+        graduate to <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link>{" "}
         directly. Every <code>DotPlot</code> is just a configured{" "}
-        <code>OrdinalFrame</code> under the hood.
+        <code>StreamOrdinalFrame</code> under the hood.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>
@@ -259,9 +344,9 @@ export default function DotPlotPage() {
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-frames)" }}>Frame (full control)</h4>
           <CodeBlock
-            code={`import { OrdinalFrame } from "semiotic"
+            code={`import { StreamOrdinalFrame } from "semiotic"
 
-<OrdinalFrame
+<StreamOrdinalFrame
   data={countryData}
   oAccessor="category"
   rAccessor="value"
@@ -288,7 +373,7 @@ export default function DotPlotPage() {
 
       <p>
         The <code>frameProps</code> prop on DotPlot lets you pass any
-        OrdinalFrame prop without fully graduating:
+        StreamOrdinalFrame prop without fully graduating:
       </p>
 
       <CodeBlock
@@ -323,7 +408,7 @@ export default function DotPlotPage() {
           with multiple points per category
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — the underlying
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the underlying
           Frame with full control over every rendering detail
         </li>
         <li>

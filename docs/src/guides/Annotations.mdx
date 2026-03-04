@@ -1,4 +1,4 @@
-import { XYFrame, ResponsiveXYFrame } from "semiotic"
+import { StreamXYFrame } from "semiotic"
 import { AnnotationsDocumentFrame } from "./Annotations.js"
 import Annotations from "../markdown/annotations.mdx"
 
@@ -11,7 +11,7 @@ automatic label adjustment using [labella.js](http://twitter.github.io/labella.j
 All frames takes a prop `annotations` which is an array of annotation objects:
 
 ```jsx
-<XYFrame annotations={[{ type: "label", label: "a note" }]} />
+<StreamXYFrame annotations={[{ type: "label", label: "a note" }]} />
 ```
 
 This array of annotations is sent to **both** an:
@@ -33,7 +33,7 @@ Otherwise, you can pass your own `htmlAnnotationRules` and `svgAnnotationRules` 
 Each of the following options is a type of annotation that can be passed to the `annotations` prop:
 
 ```jsx
-<XYFrame annotations={[{ type: "label", label: "a note" }, {type: "highlight"}]} />
+<StreamXYFrame annotations={[{ type: "label", label: "a note" }, {type: "highlight"}]} />
 ```
 
 A detailed example of a single chart with annotations and rich information display. It leverages the

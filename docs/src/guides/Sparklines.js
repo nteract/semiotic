@@ -1,9 +1,9 @@
 import React from "react"
 import DocumentFrame from "../DocumentFrame"
-import { SparkXYFrame, SparkOrdinalFrame, SparkNetworkFrame } from "semiotic"
+import { StreamXYFrame, StreamOrdinalFrame, StreamNetworkFrame } from "semiotic"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
-import { curveMonotoneX } from "d3-shape"
+
 
 const dataSeeds = [40, 40]
 
@@ -52,33 +52,36 @@ export const summarySample = [
 
 export const negativeChart = {
   size: [100, 20],
-  lines: generatedData,
-  lineType: { type: "stackedarea", interpolator: curveMonotoneX },
+  data: generatedData,
+  chartType: "stackedarea",
+  curve: "monotoneX",
+  lineDataAccessor: "coordinates",
   xAccessor: "step",
   yAccessor: "value",
   lineStyle: (d) => ({ fill: d.label, stroke: d.label, fillOpacity: 0.75 }),
-  axes: [{ orient: "left" }],
+  showAxes: true,
 }
 
 export const overrideProps = {
-  lineType: `{ type: "stackedarea", interpolator: curveMonotoneX }`,
+  chartType: `"stackedarea"`,
+  curve: `"monotoneX"`,
 }
 
 export function SparkXYExample1() {
   return (
-    <SparkXYFrame
+    <StreamXYFrame
       {...negativeChart}
       lineRenderMode="sketchy"
-      lineType="line"
-      lines={[generatedData[0]]}
-      hoverAnnotation={true}
+      chartType="line"
+      data={[generatedData[0]]}
+      enableHover={true}
     />
   )
 }
 
 export function SparkNetworkExample1() {
   return (
-    <SparkNetworkFrame
+    <StreamNetworkFrame
       size={[40, 20]}
       edges={[
         { source: "a", target: "b" },
@@ -100,7 +103,7 @@ export function SparkNetworkExample1() {
 
 export function SparkNetworkExample2() {
   return (
-    <SparkNetworkFrame
+    <StreamNetworkFrame
       size={[60, 20]}
       edges={[
         { source: "a", target: "b" },
@@ -121,12 +124,12 @@ export function SparkNetworkExample2() {
 }
 
 export function SparkXYExample2() {
-  return <SparkXYFrame {...negativeChart} renderKey={(d) => d.label} />
+  return <StreamXYFrame {...negativeChart} renderKey={(d) => d.label} />
 }
 
 export function SparkOrdinalExample1() {
   return (
-    <SparkOrdinalFrame
+    <StreamOrdinalFrame
       data={[8, 4, 12, 3, 4, 5, 6, 7]}
       style={{ fill: theme[2], stroke: "rgb(77, 67, 12)" }}
       type="bar"
@@ -136,7 +139,7 @@ export function SparkOrdinalExample1() {
 
 export function SparkOrdinalExample2() {
   return (
-    <SparkOrdinalFrame
+    <StreamOrdinalFrame
       data={summarySample}
       style={(d) => ({ fill: stackedColors[d.o] })}
       oAccessor="s"
@@ -150,7 +153,7 @@ export function SparkOrdinalExample2() {
 
 export function SparkOrdinalExample3() {
   return (
-    <SparkOrdinalFrame
+    <StreamOrdinalFrame
       data={summarySample}
       oAccessor={(d) => (d.o === "a" ? "a" : "o")}
       rAccessor="v"
@@ -164,7 +167,7 @@ export function SparkOrdinalExample3() {
 
 export function SparkOrdinalExample4() {
   return (
-    <SparkOrdinalFrame
+    <StreamOrdinalFrame
       size={[50, 100]}
       data={summarySample}
       oAccessor="-"
@@ -181,7 +184,7 @@ export function SparkOrdinalExample4() {
 
 export function SparkOrdinalExample5() {
   return (
-    <SparkOrdinalFrame
+    <StreamOrdinalFrame
       size={[50, 100]}
       data={summarySample}
       oAccessor="-"
@@ -200,7 +203,7 @@ export function SparkOrdinalExample5() {
 
 export function SparkOrdinalExample6() {
   return (
-    <SparkOrdinalFrame
+    <StreamOrdinalFrame
       data={summarySample}
       size={[50, 100]}
       oAccessor="-"
@@ -219,7 +222,7 @@ export function SparkOrdinalExample6() {
 
 export function SparkNetworkExample3() {
   return (
-    <SparkNetworkFrame
+    <StreamNetworkFrame
       size={[100]}
       edges={[
         { source: "a", target: "b", value: 2 },
@@ -243,7 +246,7 @@ export function SparkNetworkExample3() {
 
 export function SparkNetworkExample4() {
   return (
-    <SparkNetworkFrame
+    <StreamNetworkFrame
       size={60}
       edges={{
         id: "root",
@@ -269,7 +272,7 @@ export function SparkNetworkExample4() {
 
 export function SparkNetworkExample5() {
   return (
-    <SparkNetworkFrame
+    <StreamNetworkFrame
       edges={[
         { source: "b", target: "b", weight: 5 },
         { source: "a", target: "c", weight: 2 },

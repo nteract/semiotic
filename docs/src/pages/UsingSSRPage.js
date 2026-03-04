@@ -118,14 +118,14 @@ export default async function DashboardPage() {
       </p>
 
       <CodeBlock
-        code={`// Only includes XYFrame and its dependencies
-import { XYFrame, ResponsiveXYFrame } from "semiotic/xy"
+        code={`// Only includes StreamXYFrame and its dependencies
+import { StreamXYFrame } from "semiotic/xy"
 
-// Only includes OrdinalFrame
-import { OrdinalFrame } from "semiotic/ordinal"
+// Only includes StreamOrdinalFrame
+import { StreamOrdinalFrame } from "semiotic/ordinal"
 
-// Only includes NetworkFrame
-import { NetworkFrame } from "semiotic/network"`}
+// Only includes StreamNetworkFrame
+import { StreamNetworkFrame } from "semiotic/network"`}
         language="jsx"
       />
 
@@ -412,7 +412,7 @@ export async function GET(request: Request) {
         </li>
         <li>
           <strong>Responsive sizing</strong> — you must provide an explicit{" "}
-          <code>size</code> prop; <code>ResponsiveXYFrame</code> and friends are
+          <code>size</code> prop; <code>StreamXYFrame</code> responsive mode and friends are
           client-only.
         </li>
         <li>
@@ -432,8 +432,8 @@ export async function GET(request: Request) {
       <p>
         The server rendering functions accept the same props as their
         corresponding Frame components. You can pass any prop that{" "}
-        <code>XYFrame</code>, <code>OrdinalFrame</code>, or{" "}
-        <code>NetworkFrame</code> accepts — the data pipeline is identical.
+        <code>StreamXYFrame</code>, <code>StreamOrdinalFrame</code>, or{" "}
+        <code>StreamNetworkFrame</code> accepts — the data pipeline is identical.
       </p>
 
       <p>
@@ -491,15 +491,15 @@ renderNetworkToStaticSVG(networkProps)       // => string`}
 
       <ul>
         <li>
-          <Link to="/frames/xy-frame">XYFrame</Link> — full API reference for
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> — full API reference for
           XY chart props
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — full API
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — full API
           reference for ordinal chart props
         </li>
         <li>
-          <Link to="/frames/network-frame">NetworkFrame</Link> — full API
+          <Link to="/frames/network-frame">StreamNetworkFrame</Link> — full API
           reference for network chart props
         </li>
         <li>

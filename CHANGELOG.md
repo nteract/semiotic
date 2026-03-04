@@ -7,107 +7,84 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Stream-First Architecture
+
+All frames are now canvas-first with SVG overlays for labels, axes, and annotations.
+Legacy frame names (`XYFrame`, `OrdinalFrame`, `NetworkFrame`) have been removed entirely.
+
+| Frame | Purpose |
+|---|---|
+| `StreamXYFrame` | Line, area, scatter, heatmap, candlestick charts |
+| `StreamOrdinalFrame` | Bar, pie, boxplot, violin, swarm charts |
+| `StreamNetworkFrame` | Force, sankey, chord, tree, treemap, circlepack |
+
+Every frame supports a ref-based push API for streaming data.
+
 ### Added
 
-#### New Chart Types
+#### StreamNetworkFrame
+- Unified canvas-first network frame replacing both legacy NetworkFrame and RealtimeNetworkFrame
+- Layout plugins: sankey, force, chord, tree, cluster, treemap, circlepack, partition
+- Push API: `ref.current.push({ source, target, value })`
+- Tension-based relayout batching for high-frequency streaming
+- Particle animation for sankey flows
+- Auto-coloring by node index when no explicit style is provided
+- Hierarchy tooltip with ancestor breadcrumb path (grandparent → parent → **node**)
 
-**RealtimeSankey** — Streaming Sankey diagram with push API:
-- Topology grows over time via `ref.current.push({ source, target, value })`
-- Dual-layer rendering: SVG for nodes/links/labels, canvas overlay for animated particles
-- Tension model batches relayouts — topology changes (new nodes/edges) trigger immediately, weight-only changes accumulate until threshold
-- Animated transitions with ease-out cubic interpolation when layout changes
-- Particle system with object pool, bezier path evaluation, and chord-based perpendicular offset
-- Supports circular/cyclic flows via d3-sankey-circular
-- Configurable particle style, tension thresholds, node alignment, and orientation
-- Ref handle: `push()`, `pushMany()`, `clear()`, `getTopology()`, `relayout()`, `getTension()`
+#### Threshold-based line coloring
+- Streaming line charts change color at threshold crossings
+- Annotations with `type: "threshold"` automatically split the line into colored segments
+- Interpolates exact crossing points between data samples
 
-**Histogram** — Binned frequency distribution chart:
-- Uses OrdinalFrame's `summaryType: "histogram"` for automatic binning
-- Configurable bin count (`bins`, default 25) and per-category normalization (`relative`)
-- Follows the same pattern as BoxPlot with full selection/coordination support
-
-**ViolinPlot** — Kernel density visualization per category:
-- Uses OrdinalFrame's `summaryType: "violin"` for symmetric density shapes
-- Configurable bin count, interpolation curve (`curve`, default "catmullRom"), and IQR lines (`showIQR`)
-- Full selection/coordination support
+#### New chart types
+- **Histogram** — binned frequency distribution
+- **ViolinPlot** — kernel density per category
+- **ScatterplotMatrix** — N×N grid with hover cross-highlight or crossfilter brushing
 
 #### ThemeProvider
-
-Global theming system for Semiotic charts:
 - `ThemeProvider` wraps charts and injects CSS custom properties
-- `useTheme()` hook for reading the current theme
-- Built-in presets: `"light"` (default) and `"dark"` with high-contrast categorical palette
-- Custom theme support via partial overrides
-- Non-breaking: falls back to current defaults when no provider exists
+- Presets: `"light"` (default) and `"dark"`
+- `useTheme()` hook
 
-#### Data Transform Helpers (`semiotic/data`)
+#### LinkedCharts (coordinated views)
+- Cross-highlighting, brushing-and-linking, and crossfilter between any charts
+- Selection hooks: `useSelection`, `useLinkedHover`, `useBrushSelection`, `useFilteredData`
 
-New entry point with pure helper functions:
-- `bin()` — bin continuous data into histogram-ready format
-- `rollup()` — group and aggregate data (sum, mean, count, min, max)
-- `groupBy()` — group flat rows into nested line-chart-ready format
-- `pivot()` — convert wide data to long format
-
-#### Browser Export
-
-`exportChart()` utility for downloading charts as SVG or PNG:
-- Clones SVG, inlines computed styles for standalone rendering
-- PNG mode renders to canvas with configurable retina scale
-- No new dependencies — uses native browser APIs
-
-#### ChartErrorBoundary
-
-React Error Boundary wrapper for charts:
-- Catches render errors and shows a friendly fallback
-- Default fallback uses the existing `ChartError` component
-- Supports custom fallback (ReactNode or render function) and `onError` callback
-
-#### Coordinated Views & ScatterplotMatrix
-
-A producer-consumer coordination system for cross-highlighting, brushing-and-linking, and cross-filtering between charts. Replaces FacetController.
-
-**LinkedCharts** — React Context provider for coordinated chart views:
-- Wraps any number of charts at any depth (no `cloneElement` limitations)
-- Named selections with configurable resolution: `union`, `intersect`, or `crossfilter`
-- Crossfilter mode excludes the requesting chart's own clause (standard SPLOM pattern)
-
-**Selection hooks** for custom coordinated views:
-- `useSelection` — primary hook for reading/writing selections
-- `useLinkedHover` — convenience hook for hover cross-highlighting
-- `useBrushSelection` — convenience hook for brush-and-link
-- `useFilteredData` — returns data filtered by a named selection
-
-**Chart integration** — new props on all XY and ordinal HOCs:
-- `selection` — consume a named selection (dims unselected points)
-- `linkedHover` — produce hover selections for cross-highlighting
-- `linkedBrush` — produce brush selections (Scatterplot, BubbleChart)
-
-**ScatterplotMatrix (SPLOM)** — N×N scatterplot grid with built-in coordination:
-- Diagonal cells show histograms (or labels)
-- Two interaction modes: hover (cross-highlight with tooltip) or brush (crossfilter)
-- Tooltip positioned above the hovered point with colorBy label
-- `colorBy`, `fieldLabels`, `cellSize`, `pointRadius`, `showLegend` props
+#### Other
+- `exportChart()` — download charts as SVG or PNG
+- `ChartErrorBoundary` — React error boundary for charts
+- Data transform helpers (`semiotic/data`): `bin`, `rollup`, `groupBy`, `pivot`
 
 ### Fixed
 
-- **Hover state persisting on mouseout** — tooltip and linked highlight now reliably clear when the mouse leaves the chart area. Added a `mouseLeave` handler on the Frame wrapper (inside `TooltipProvider`) that clears both the tooltip and any active `customHoverBehavior` selection.
-- **`createStore` updater bug** — the internal `set` function in `createStore` passed itself instead of the current state to updater callbacks (`fn(set)` → `fn(state)`). This caused `clearClause` in the SelectionStore to silently fail (accessing `.selections` on a function), so linked hover selections were never actually cleared. `setClause` worked by coincidence because `new Map(undefined)` produces an empty map.
-- **Treemap/CirclePack hover overlays** — fixed broken hover overlays for all area-based NetworkFrame types (treemap, circlepack, partition, chord). After the Mark component removal in v3, overlay entries spread `.props` from node generators which produced `<path>` elements without a `d` attribute. Now passes `renderElement` directly for `React.cloneElement`.
-- **CirclePack rendering as force-directed** — CirclePack defaulted all circles to 10px diameter because the node size accessor ignored d3 pack layout's `r` property. Now uses `nodeSizeAccessor: (d) => d.r || 5`.
-- **ViolinPlot crash (`curve is not a function`)** — the ViolinPlot HOC passed the string `"catmullRom"` to `bucketizedRenderer` which calls `.curve()` directly expecting a d3 curve function. Now resolves curve strings via `curveHash` with case-insensitive lookup.
-- **Axis label floating-point noise** — default tick format was identity (`d => d`), producing labels like `0.30000000000000004`. New `smartTickFormat` default cleans floating-point noise, adds K/M/B suffixes for large numbers, and limits precision to 6 significant digits.
-- **Axis label overlap** — added collision-aware filtering in `axisLabels()` that skips overlapping tick labels using estimated character widths for horizontal axes and line-height spacing for vertical axes.
-- **Histogram always horizontal** — histograms now always render horizontally. The `orientation` prop is deprecated and ignored.
-- **Histogram tooltip showing "Count 0"** — the Frame's annotation pipeline overwrote the summary hover datum's `pieces` array with an empty column lookup. Histogram tooltip now reads `d.value` (the bin count from the renderer) instead.
-- **ViolinPlot tooltip empty stats** — same `pieces` overwrite issue. ViolinPlot tooltip now falls back to `column.pieceData` when `pieces` is empty.
+- Stacked bar category flicker during streaming (stable global category order)
+- Chord ribbon centering (paths translated to chart center)
+- Force layout initial positions (phyllotaxis spiral instead of origin singularity)
+- Hierarchy charts rendering (store now handles hierarchical plugin data flow)
+- Treemap hover (smallest containing rect wins, not first/root)
+- Tree tooltip suppresses zero values
+- `colorBy`/`edgeColorBy` on all network charts (style functions now access `d.data`)
+- Hover state persisting on mouseout
+- Axis label floating-point noise and overlap
+- Histogram always horizontal; tooltip shows correct count
 
 ### Removed
 
-- **FacetController** — replaced entirely by `LinkedCharts`. The `cloneElement`-based approach had no HOC support and only worked with direct Frame children.
+- **`NetworkFrame`** — deleted entirely. Use `StreamNetworkFrame`.
+- **`Frame`**, **`InteractionLayer`**, **`VisualizationLayer`** — deleted (old SVG internals)
+- **`ResponsiveNetworkFrame`**, **`SparkNetworkFrame`**, **`ResponsiveFrame`**, **`SparkFrame`** — deleted
+- **`RealtimeSankey`** — use `StreamNetworkFrame` with `chartType="sankey"` and `showParticles`
+- **`RealtimeNetworkFrame`** — use `StreamNetworkFrame`
+- **`realtime-network/`** directory — `ParticlePool` and types moved to `stream/`
+- **`FacetController`** — use `LinkedCharts`
+- **Matrix cookbook recipe** — removed
+- **Legacy frame aliases** (`OrdinalFrame`, `ResponsiveOrdinalFrame`, `SparkOrdinalFrame`, etc.) — no longer exported. Use `StreamOrdinalFrame`, `StreamXYFrame`, `StreamNetworkFrame` directly.
+- **`RealtimeFrame` docs page** — content merged into chart pages
+- **`baseMarkProps`**, **`ProcessViz`**, **`Mark`** — removed in earlier v3 work
 
 ---
 
-#### AI Enablement — Phase 2
+#### AI Enablement
 
 Five features to deepen AI integration with Semiotic.
 
@@ -153,15 +130,19 @@ Five features to deepen AI integration with Semiotic.
 Twenty-four higher-order chart components that wrap the core Frames with curated,
 simple prop APIs. These are the recommended entry point for most users.
 
-**XY Charts** (wrap XYFrame):
+**XY Charts** (wrap StreamXYFrame):
 - `LineChart` — line traces with curve interpolation, area fill, and point markers
 - `AreaChart` — filled area beneath a line
 - `StackedAreaChart` — multiple stacked area series
 - `Scatterplot` — point clouds with color and size encoding
 - `BubbleChart` — sized circles with optional labels
 - `Heatmap` — 2D binned density visualization
+- `RealtimeWaterfallChart` — canvas-based streaming waterfall/candlestick
+- `RealtimeLineChart` — canvas-based streaming line
+- `RealtimeHistogram` — canvas-based streaming histogram bars
+- `RealtimeSwarmChart` — canvas-based streaming scatter
 
-**Ordinal Charts** (wrap OrdinalFrame):
+**Ordinal Charts** (wrap StreamOrdinalFrame):
 - `BarChart` — vertical/horizontal bars with sort and color encoding
 - `StackedBarChart` — stacked categorical bars
 - `GroupedBarChart` — side-by-side grouped bars
@@ -171,7 +152,7 @@ simple prop APIs. These are the recommended entry point for most users.
 - `PieChart` — proportional slices
 - `DonutChart` — ring variant of PieChart
 
-**Network Charts** (wrap NetworkFrame):
+**Network Charts** (wrap StreamNetworkFrame):
 - `ForceDirectedGraph` — force-simulation node-link diagrams
 - `ChordDiagram` — circular connection matrix
 - `SankeyDiagram` — flow diagrams with weighted edges
@@ -179,35 +160,12 @@ simple prop APIs. These are the recommended entry point for most users.
 - `Treemap` — space-filling hierarchical rectangles
 - `CirclePack` — nested circle packing
 
-**Realtime Charts** (wrap RealtimeFrame):
-- `RealtimeLineChart` — canvas-based streaming line
-- `RealtimeBarChart` — canvas-based streaming histogram bars
-- `RealtimeSwarmChart` — canvas-based streaming scatter
-- `RealtimeWaterfallChart` — canvas-based streaming waterfall/candlestick
-
 All chart components feature:
 - Full TypeScript generics (`LineChart<TDatum>`)
 - Sensible defaults for width, height, margins, colors, hover
 - `frameProps` escape hatch for accessing the underlying Frame API
 - Automatic legend rendering when `colorBy` is set
 - Smart margin expansion to accommodate legends and axis labels
-
-#### RealtimeFrame
-
-A new core Frame for streaming and real-time data visualization, built on
-canvas rendering for high-frequency updates.
-
-- Canvas-first rendering with SVG annotation overlay
-- `RingBuffer<T>` — O(1) circular buffer for data windowing
-- `IncrementalExtent` — efficient min/max tracking without full recalculation
-- `BinAccumulator` — aggregation for histogram bars
-- Imperative handle via `useRef`: `push()`, `pushMany()`, `clear()`, `getData()`
-- Five chart types: line, bar, swarm, candlestick, waterfall
-- Configurable time dimension: up, down, left, right
-- Window modes: sliding (fixed buffer) and growing (accumulating)
-- Canvas-drawn axes with custom tick formatting
-- Hover annotations with crosshairs
-- Five dedicated canvas renderers in `src/components/realtime/renderers/`
 
 #### Server-Side Rendering
 
@@ -277,7 +235,7 @@ Interactive playground pages for live chart exploration:
 
 - `SankeyDiagramPlayground` — orientation, alignment, padding, node width, edge opacity
 - `RealtimeLineChartPlayground` — line and waterfall modes with live signal generators
-- `RealtimeBarChartPlayground` — stacked time bars and swarm plots with live data
+- `RealtimeHistogramPlayground` — stacked time bars and swarm plots with live data
 
 ### Changed
 

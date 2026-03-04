@@ -1,5 +1,5 @@
 import React from "react"
-import { NetworkFrame } from "semiotic"
+import { StreamNetworkFrame } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
@@ -156,35 +156,35 @@ const networkFrameProps = [
 // Component
 // ---------------------------------------------------------------------------
 
-export default function NetworkFramePage() {
+export default function StreamNetworkFramePage() {
   return (
     <PageLayout
-      title="NetworkFrame"
+      title="StreamNetworkFrame"
       tier="frames"
       breadcrumbs={[
         { label: "Frames", path: "/frames" },
-        { label: "NetworkFrame", path: "/frames/network-frame" },
+        { label: "StreamNetworkFrame", path: "/frames/network-frame" },
       ]}
-      prevPage={{ title: "OrdinalFrame", path: "/frames/ordinal-frame" }}
-      nextPage={{ title: "RealtimeFrame", path: "/frames/realtime-frame" }}
+      prevPage={{ title: "StreamOrdinalFrame", path: "/frames/ordinal-frame" }}
+      nextPage={{ title: "StreamXYFrame", path: "/frames/realtime-frame" }}
     >
       <ComponentMeta
-        componentName="NetworkFrame"
-        importStatement='import { NetworkFrame } from "semiotic"'
+        componentName="StreamNetworkFrame"
+        importStatement='import { StreamNetworkFrame } from "semiotic"'
         tier="frames"
         related={[
-          { name: "XYFrame", path: "/frames/xy-frame" },
-          { name: "OrdinalFrame", path: "/frames/ordinal-frame" },
+          { name: "StreamXYFrame", path: "/frames/xy-frame" },
+          { name: "StreamOrdinalFrame", path: "/frames/ordinal-frame" },
         ]}
       />
 
       <p>
-        NetworkFrame displays topological data where relationships between
+        StreamNetworkFrame displays topological data where relationships between
         entities matter more than absolute x/y position. It supports a wide
         range of layout algorithms: force-directed graphs, Sankey flow
         diagrams, chord diagrams, arc diagrams, hierarchical trees, treemaps,
         circle packing, partition layouts, and adjacency matrices. Use
-        NetworkFrame when your data has <strong>nodes</strong> and{" "}
+        StreamNetworkFrame when your data has <strong>nodes</strong> and{" "}
         <strong>edges</strong> (or a hierarchical structure) rather than
         continuous coordinates.
       </p>
@@ -195,7 +195,7 @@ export default function NetworkFramePage() {
       <h2 id="concepts">Concepts</h2>
 
       <p>
-        NetworkFrame processes data through a layout pipeline:
+        StreamNetworkFrame processes data through a layout pipeline:
       </p>
 
       <ol>
@@ -258,7 +258,7 @@ export default function NetworkFramePage() {
           hoverAnnotation: true,
           margin: 40,
         }}
-        type={NetworkFrame}
+        type={StreamNetworkFrame}
         startHidden={false}
         overrideProps={{
           nodes: `[
@@ -333,7 +333,7 @@ export default function NetworkFramePage() {
           hoverAnnotation: true,
           margin: { top: 20, bottom: 20, left: 20, right: 20 },
         }}
-        type={NetworkFrame}
+        type={StreamNetworkFrame}
         overrideProps={{
           nodes: `[
   { id: "Organic" },
@@ -404,7 +404,7 @@ export default function NetworkFramePage() {
           hoverAnnotation: true,
           margin: 10,
         }}
-        type={NetworkFrame}
+        type={StreamNetworkFrame}
         overrideProps={{
           edges: `{
   id: "Company",
@@ -475,7 +475,7 @@ export default function NetworkFramePage() {
           hoverAnnotation: true,
           margin: { top: 60, bottom: 40, left: 40, right: 40 },
         }}
-        type={NetworkFrame}
+        type={StreamNetworkFrame}
         overrideProps={{
           networkType: '"arc"',
           nodeStyle: `(d) => ({
@@ -498,7 +498,7 @@ export default function NetworkFramePage() {
       {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
-      <PropTable componentName="NetworkFrame" props={networkFrameProps} />
+      <PropTable componentName="StreamNetworkFrame" props={networkFrameProps} />
 
       {/* ----------------------------------------------------------------- */}
       {/* Related */}
@@ -507,15 +507,15 @@ export default function NetworkFramePage() {
 
       <ul>
         <li>
-          <Link to="/frames/xy-frame">XYFrame</Link> -- for continuous x/y
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> -- for continuous x/y
           data (line charts, scatterplots, areas)
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> -- for
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> -- for
           categorical data (bar charts, swarm plots, violin plots)
         </li>
         <li>
-          <Link to="/frames/realtime-frame">RealtimeFrame</Link> -- for
+          <Link to="/frames/realtime-frame">StreamXYFrame</Link> -- for
           streaming canvas-based visualizations
         </li>
         <li>

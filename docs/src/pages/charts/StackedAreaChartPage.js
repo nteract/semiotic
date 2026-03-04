@@ -1,12 +1,13 @@
-import React from "react"
-import { XYFrame } from "semiotic"
-import { StackedAreaChart } from "semiotic"
+import React, { useRef, useEffect } from "react"
+import { StackedAreaChart, RealtimeHistogram } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -59,8 +60,79 @@ const stackedAreaChartProps = [
   { name: "xLabel", type: "string", required: false, default: null, description: "Label for the x-axis." },
   { name: "yLabel", type: "string", required: false, default: null, description: "Label for the y-axis." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Additional XYFrame props for advanced customization. Escape hatch to the full Frame API." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamXYFrame props for advanced customization. Escape hatch to the full Frame API." },
 ]
+
+// ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const streamingStackedCode = `import { useRef, useEffect } from "react"
+import { RealtimeHistogram } from "semiotic"
+
+function StreamingRevenue() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+  const regions = ["North", "South", "East", "West"]
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        const region = regions[i % regions.length]
+        chartRef.current.push({
+          time: Math.floor(i / regions.length),
+          value: 5000 + Math.random() * 10000,
+          category: region,
+        })
+      }
+    }, 80)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <RealtimeHistogram
+      ref={chartRef}
+      size={[600, 280]}
+      binSize={1}
+      categoryAccessor="category"
+      windowSize={100}
+      showAxes
+    />
+  )
+}`
+
+function StreamingStackedDemo({ width }) {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+  const regions = ["North", "South", "East", "West"]
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        const region = regions[i % regions.length]
+        chartRef.current.push({
+          time: Math.floor(i / regions.length),
+          value: 5000 + Math.random() * 10000,
+          category: region,
+        })
+      }
+    }, 80)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <RealtimeHistogram
+      ref={chartRef}
+      size={[width, 280]}
+      binSize={1}
+      categoryAccessor="category"
+      windowSize={100}
+      showAxes={true}
+    />
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Component
@@ -83,12 +155,12 @@ export default function StackedAreaChartPage() {
         componentName="StackedAreaChart"
         importStatement='import { StackedAreaChart } from "semiotic"'
         tier="charts"
-        wraps="XYFrame"
+        wraps="StreamXYFrame"
         wrapsPath="/frames/xy-frame"
         related={[
           { name: "AreaChart", path: "/charts/area-chart" },
           { name: "LineChart", path: "/charts/line-chart" },
-          { name: "XYFrame", path: "/frames/xy-frame" },
+          { name: "StreamXYFrame", path: "/frames/xy-frame" },
         ]}
       />
 
@@ -113,29 +185,39 @@ export default function StackedAreaChartPage() {
         <code>areaBy</code> to group data into stacks.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: stackedData,
-          xAccessor: "quarter",
-          yAccessor: "revenue",
-          areaBy: "region",
-          colorBy: "region",
-          xLabel: "Quarter",
-          yLabel: "Revenue ($)",
-        }}
-        type={StackedAreaChart}
-        startHidden={false}
-        overrideProps={{
-          data: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              data: stackedData,
+              xAccessor: "quarter",
+              yAccessor: "revenue",
+              areaBy: "region",
+              colorBy: "region",
+              xLabel: "Quarter",
+              yLabel: "Revenue ($)",
+            }}
+            type={StackedAreaChart}
+            startHidden={false}
+            overrideProps={{
+              data: `[
   { quarter: 1, revenue: 12000, region: "North" },
   { quarter: 2, revenue: 15000, region: "North" },
   { quarter: 1, revenue: 8000, region: "South" },
   // ...more data points grouped by region
 ]`,
-          areaBy: '"region"',
-          colorBy: '"region"',
-        }}
-        hiddenProps={{}}
+              areaBy: '"region"',
+              colorBy: '"region"',
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingStackedDemo width={w} />}
+            code={streamingStackedCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}
@@ -241,9 +323,9 @@ export default function StackedAreaChartPage() {
 
       <p>
         When you need more control — custom marks, complex annotations,
-        dual-axis layouts — graduate to <Link to="/frames/xy-frame">XYFrame</Link>{" "}
+        dual-axis layouts — graduate to <Link to="/frames/xy-frame">StreamXYFrame</Link>{" "}
         directly. Every <code>StackedAreaChart</code> is just a configured{" "}
-        <code>XYFrame</code> under the hood.
+        <code>StreamXYFrame</code> under the hood.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>
@@ -268,9 +350,9 @@ export default function StackedAreaChartPage() {
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-frames)" }}>Frame (full control)</h4>
           <CodeBlock
-            code={`import { XYFrame } from "semiotic"
+            code={`import { StreamXYFrame } from "semiotic"
 
-<XYFrame
+<StreamXYFrame
   lines={[
     { region: "North", coordinates: northData },
     { region: "South", coordinates: southData }
@@ -302,7 +384,7 @@ export default function StackedAreaChartPage() {
 
       <p>
         The <code>frameProps</code> prop on StackedAreaChart lets you pass any
-        XYFrame prop without fully graduating:
+        StreamXYFrame prop without fully graduating:
       </p>
 
       <CodeBlock
@@ -337,7 +419,7 @@ export default function StackedAreaChartPage() {
           fill for trend comparison
         </li>
         <li>
-          <Link to="/frames/xy-frame">XYFrame</Link> — the underlying Frame with
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> — the underlying Frame with
           full control over every rendering detail
         </li>
         <li>

@@ -5,12 +5,12 @@ import { TooltipProvider } from "../../store/TooltipStore"
 
 // Mock OrdinalFrame to capture props
 let lastOrdinalFrameProps: any = null
-jest.mock("../../OrdinalFrame", () => {
+jest.mock("../../stream/StreamOrdinalFrame", () => {
   return {
     __esModule: true,
     default: (props: any) => {
       lastOrdinalFrameProps = props
-      return <div className="ordinalframe"><svg /></div>
+      return <div className="stream-ordinal-frame"><svg /></div>
     }
   }
 })
@@ -33,7 +33,7 @@ describe("BarChart", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -45,7 +45,7 @@ describe("BarChart", () => {
     )
 
     // Should not render frame when data is empty
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeFalsy()
   })
 
@@ -71,9 +71,10 @@ describe("BarChart", () => {
       </TooltipProvider>
     )
 
-    // Should pass axes config to OrdinalFrame
-    expect(lastOrdinalFrameProps.axes).toBeDefined()
-    expect(lastOrdinalFrameProps.axes.length).toBeGreaterThan(0)
+    // Should pass axis labels to StreamOrdinalFrame
+    expect(lastOrdinalFrameProps.showAxes).toBe(true)
+    expect(lastOrdinalFrameProps.oLabel).toBe("Category")
+    expect(lastOrdinalFrameProps.rLabel).toBe("Value")
   })
 
   it("accepts custom accessors", () => {
@@ -92,7 +93,7 @@ describe("BarChart", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -103,7 +104,7 @@ describe("BarChart", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -114,7 +115,7 @@ describe("BarChart", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -125,7 +126,7 @@ describe("BarChart", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -136,7 +137,7 @@ describe("BarChart", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -150,7 +151,7 @@ describe("BarChart", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -161,7 +162,7 @@ describe("BarChart", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -176,7 +177,7 @@ describe("BarChart", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -187,7 +188,7 @@ describe("BarChart", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -197,14 +198,14 @@ describe("BarChart", () => {
         <BarChart
           data={sampleData}
           frameProps={{
-            pieceHoverAnnotation: true,
-            oLabel: true
+            hoverAnnotation: true,
+            oLabel: "category"
           }}
         />
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -220,7 +221,7 @@ describe("BarChart", () => {
       </TooltipProvider>
     )
 
-    const initialFrame = container.querySelector(".ordinalframe")
+    const initialFrame = container.querySelector(".stream-ordinal-frame")
     expect(initialFrame).toBeTruthy()
 
     // Update with more data
@@ -236,7 +237,7 @@ describe("BarChart", () => {
       </TooltipProvider>
     )
 
-    const updatedFrame = container.querySelector(".ordinalframe")
+    const updatedFrame = container.querySelector(".stream-ordinal-frame")
     expect(updatedFrame).toBeTruthy()
   })
 
@@ -247,7 +248,7 @@ describe("BarChart", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -258,7 +259,7 @@ describe("BarChart", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -326,25 +327,25 @@ describe("BarChart", () => {
   })
 
   describe("hoverAnnotation", () => {
-    it("passes hoverAnnotation instead of pieceHoverAnnotation", () => {
+    it("passes enableHover instead of pieceHoverAnnotation", () => {
       render(
         <TooltipProvider>
           <BarChart data={sampleData} />
         </TooltipProvider>
       )
 
-      expect(lastOrdinalFrameProps.hoverAnnotation).toBe(true)
+      expect(lastOrdinalFrameProps.enableHover).toBe(true)
       expect(lastOrdinalFrameProps.pieceHoverAnnotation).toBeUndefined()
     })
 
-    it("disables hoverAnnotation when enableHover is false", () => {
+    it("disables enableHover when enableHover is false", () => {
       render(
         <TooltipProvider>
           <BarChart data={sampleData} enableHover={false} />
         </TooltipProvider>
       )
 
-      expect(lastOrdinalFrameProps.hoverAnnotation).toBe(false)
+      expect(lastOrdinalFrameProps.enableHover).toBe(false)
     })
 
     it("provides a default tooltipContent function", () => {

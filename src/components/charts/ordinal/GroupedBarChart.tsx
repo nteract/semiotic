@@ -1,8 +1,8 @@
 "use client"
 import * as React from "react"
 import { useMemo, useCallback } from "react"
-import OrdinalFrame from "../../OrdinalFrame"
-import type { OrdinalFrameProps } from "../../types/ordinalTypes"
+import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
+import type { StreamOrdinalFrameProps } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
 import { useColorScale, DEFAULT_COLOR, resolveAccessor } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
@@ -14,195 +14,49 @@ import { normalizeLinkedHover, wrapStyleWithSelection } from "../shared/selectio
 import { useSelection } from "../../store/useSelection"
 import { useLinkedHover } from "../../store/useSelection"
 
-/**
- * GroupedBarChart component props
- */
 export interface GroupedBarChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
-  /**
-   * Array of data points with category, group, and value.
-   * @example
-   * ```ts
-   * [
-   *   {category: 'Q1', product: 'A', value: 100},
-   *   {category: 'Q1', product: 'B', value: 150},
-   *   {category: 'Q2', product: 'A', value: 120},
-   *   {category: 'Q2', product: 'B', value: 180}
-   * ]
-   * ```
-   */
   data: TDatum[]
-
-  /**
-   * Field name or function to access category values
-   * @default "category"
-   */
   categoryAccessor?: ChartAccessor<TDatum, string>
-
-  /**
-   * Field name or function to access group values (for grouping bars side by side)
-   */
   groupBy: ChartAccessor<TDatum, string>
-
-  /**
-   * Field name or function to access numeric values
-   * @default "value"
-   */
   valueAccessor?: ChartAccessor<TDatum, number>
-
-  /**
-   * Chart orientation
-   * @default "vertical"
-   */
   orientation?: "vertical" | "horizontal"
-
-  /**
-   * Label for the category axis
-   */
   categoryLabel?: string
-
-  /**
-   * Label for the value axis
-   */
   valueLabel?: string
-
-  /**
-   * Format function for value axis tick labels
-   */
   valueFormat?: (d: number | string) => string
-
-  /**
-   * Field name or function to determine bar color
-   * @default groupBy value
-   */
   colorBy?: ChartAccessor<TDatum, string>
-
-  /**
-   * Color scheme for categorical data or custom colors array
-   * @default "category10"
-   */
   colorScheme?: string | string[]
-
-  /**
-   * Padding between bar groups (in pixels)
-   * @default 5
-   */
   barPadding?: number
-
-  /**
-   * Enable hover annotations
-   * @default true
-   */
   enableHover?: boolean
-
-  /**
-   * Show grid lines
-   * @default false
-   */
   showGrid?: boolean
-
-  /**
-   * Show legend for groups
-   * @default true
-   */
   showLegend?: boolean
-
-  /**
-   * Tooltip configuration
-   */
   tooltip?: TooltipProp
-
-  /**
-   * Additional OrdinalFrame props for advanced customization
-   * For full control, consider using OrdinalFrame directly
-   */
-  frameProps?: Partial<Omit<OrdinalFrameProps, "data" | "size">>
+  frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
-/**
- * GroupedBarChart - Visualize comparisons across categories with side-by-side bars.
- *
- * A simplified wrapper around OrdinalFrame using clusterbar type.
- *
- * @example
- * ```tsx
- * <GroupedBarChart
- *   data={[
- *     {category: 'Q1', product: 'A', value: 100},
- *     {category: 'Q1', product: 'B', value: 150},
- *     {category: 'Q2', product: 'A', value: 120},
- *     {category: 'Q2', product: 'B', value: 180}
- *   ]}
- *   groupBy="product"
- *   categoryLabel="Quarter"
- *   valueLabel="Sales"
- * />
- * ```
- */
 export function GroupedBarChart<TDatum extends Record<string, any> = Record<string, any>>(props: GroupedBarChartProps<TDatum>) {
   const {
-    data,
-    width = 600,
-    height = 400,
-    margin: userMargin,
-    className,
-    title,
-    categoryAccessor = "category",
-    groupBy,
-    valueAccessor = "value",
-    orientation = "vertical",
-    categoryLabel,
-    valueLabel,
-    valueFormat,
-    colorBy,
-    colorScheme = "category10",
-    barPadding = 5,
-    enableHover = true,
-    showGrid = false,
-    showLegend = true,
-    tooltip,
-    frameProps = {},
-    selection,
-    linkedHover
+    data, width = 600, height = 400, margin: userMargin, className, title,
+    categoryAccessor = "category", groupBy, valueAccessor = "value",
+    orientation = "vertical", categoryLabel, valueLabel, valueFormat,
+    colorBy, colorScheme = "category10", barPadding = 5,
+    enableHover = true, showGrid = false, showLegend = true, tooltip,
+    frameProps = {}, selection, linkedHover
   } = props
 
   const safeData = data || []
-
-  // Default colorBy to groupBy for grouped bar charts
   const actualColorBy = colorBy || groupBy
 
-  // ── Selection hooks (always called) ────────────────────────────────────
-
   const hoverConfig = normalizeLinkedHover(linkedHover, actualColorBy ? [typeof actualColorBy === "string" ? actualColorBy : ""] : [])
-
-  const selectionHook = useSelection({
-    name: selection?.name || "__unused__",
-    fields: []
-  })
-
-  const linkedHoverHook = useLinkedHover({
-    name: hoverConfig?.name || "hover",
-    fields: hoverConfig?.fields || []
-  })
-
+  const selectionHook = useSelection({ name: selection?.name || "__unused__", fields: [] })
+  const linkedHoverHook = useLinkedHover({ name: hoverConfig?.name || "hover", fields: hoverConfig?.fields || [] })
   const activeSelectionHook = selection ? { isActive: selectionHook.isActive, predicate: selectionHook.predicate } : null
 
-  // ── Core chart logic ───────────────────────────────────────────────────
-
-  // Create color scale
   const colorScale = useColorScale(safeData, actualColorBy, colorScheme)
 
-  // Piece style function
   const basePieceStyle = useMemo(() => {
     return (d: Record<string, any>) => {
-      const baseStyle: Record<string, string | number> = {}
-
-      if (actualColorBy) {
-        baseStyle.fill = getColor(d, actualColorBy, colorScale)
-      } else {
-        baseStyle.fill = DEFAULT_COLOR
-      }
-
-      return baseStyle
+      if (actualColorBy) return { fill: getColor(d, actualColorBy, colorScale) }
+      return { fill: DEFAULT_COLOR }
     }
   }, [actualColorBy, colorScale])
 
@@ -211,135 +65,70 @@ export function GroupedBarChart<TDatum extends Record<string, any> = Record<stri
     [basePieceStyle, activeSelectionHook, selection]
   )
 
-  // Build axes configuration
-  const axes = useMemo(() => {
-    const axesConfig: Array<Record<string, unknown>> = []
-
-    if (orientation === "vertical") {
-      axesConfig.push({
-        orient: "left",
-        label: valueLabel,
-        tickFormat: valueFormat,
-        ...(showGrid && { tickLineGenerator: () => null })
-      })
-
-      if (categoryLabel) {
-        axesConfig.push({
-          orient: "bottom",
-          label: categoryLabel
-        })
-      }
-    } else {
-      if (categoryLabel) {
-        axesConfig.push({
-          orient: "left",
-          label: categoryLabel
-        })
-      }
-
-      axesConfig.push({
-        orient: "bottom",
-        label: valueLabel,
-        tickFormat: valueFormat,
-        ...(showGrid && { tickLineGenerator: () => null })
-      })
-    }
-
-    return axesConfig
-  }, [orientation, categoryLabel, valueLabel, valueFormat, showGrid])
-
-  // Build legend if needed
   const legend = useMemo(() => {
     if (!showLegend) return undefined
-
-    return createLegend({
-      data: safeData,
-      colorBy: actualColorBy,
-      colorScale,
-      getColor
-    })
+    return createLegend({ data: safeData, colorBy: actualColorBy, colorScale, getColor })
   }, [showLegend, safeData, actualColorBy, colorScale])
 
-  // Adjust margin for legend if present
   const margin = useMemo(() => {
-    const defaultMargin = { top: 50, bottom: 60, left: 70, right: 40 }
-    const finalMargin = { ...defaultMargin, ...userMargin }
-
-    if (legend && finalMargin.right < 120) {
-      finalMargin.right = 120
-    }
-
+    const finalMargin = { top: 50, bottom: 60, left: 70, right: 40, ...userMargin }
+    if (legend && finalMargin.right < 120) finalMargin.right = 120
     return finalMargin
   }, [userMargin, legend])
 
-  // ── Hover behavior ─────────────────────────────────────────────────────
-
   const customHoverBehavior = useCallback(
-    (d: Record<string, any> | null) => {
-      if (linkedHover) {
-        linkedHoverHook.onHover(d)
-      }
-    },
+    (d: Record<string, any> | null) => { if (linkedHover) linkedHoverHook.onHover(d) },
     [linkedHover, linkedHoverHook]
   )
 
-  // Default tooltip
   const defaultTooltipContent = useMemo(() => {
     const getGroup = resolveAccessor(groupBy)
     const getCat = resolveAccessor(categoryAccessor)
     const getVal = resolveAccessor<number>(valueAccessor)
-
     return (d: Record<string, any>) => {
-      const groupValue = String(getGroup(d))
-      const cat = String(getCat(d))
-      const val = Number(getVal(d))
-
+      const datum = d.data || d
       return (
         <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-          <div style={{ fontWeight: "bold" }}>{groupValue}</div>
+          <div style={{ fontWeight: "bold" }}>{String(getGroup(datum))}</div>
           <div style={{ marginTop: "4px" }}>
-            {cat} &middot; {val.toLocaleString()}
+            {String(getCat(datum))} &middot; {Number(getVal(datum)).toLocaleString()}
           </div>
         </div>
       )
     }
   }, [groupBy, categoryAccessor, valueAccessor])
 
-  // Validate data (after all hooks)
   const error = validateArrayData({
-    componentName: "GroupedBarChart",
-    data: safeData,
-    accessors: {
-      categoryAccessor,
-      valueAccessor,
-    },
-    requiredProps: { groupBy },
+    componentName: "GroupedBarChart", data: safeData,
+    accessors: { categoryAccessor, valueAccessor }, requiredProps: { groupBy },
   })
   if (error) return <ChartError componentName="GroupedBarChart" message={error} width={width} height={height} />
 
-  // Build OrdinalFrame props
-  const ordinalFrameProps: OrdinalFrameProps = {
-    size: [width, height],
+  const streamProps: StreamOrdinalFrameProps = {
+    chartType: "clusterbar",
     data: safeData,
     oAccessor: categoryAccessor,
     rAccessor: valueAccessor,
-    type: "clusterbar",
+    groupBy,
     projection: orientation === "horizontal" ? "horizontal" : "vertical",
-    style: pieceStyle,
-    axes: axes as any,
-    hoverAnnotation: enableHover,
+    pieceStyle,
+    size: [width, height],
     margin,
-    oPadding: barPadding,
-    pieceIDAccessor: groupBy,
+    barPadding,
+    enableHover,
+    showAxes: true,
+    oLabel: categoryLabel,
+    rLabel: valueLabel,
+    rFormat: valueFormat as any,
+    showGrid,
     ...(legend && { legend }),
-    ...(className && { className }),
     ...(title && { title }),
-    tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as Function,
+    ...(className && { className }),
+    tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
     ...(linkedHover && { customHoverBehavior }),
-    transition: true,
     ...frameProps
   }
 
-  return <OrdinalFrame {...ordinalFrameProps} />
+  return <StreamOrdinalFrame {...streamProps} />
 }
 GroupedBarChart.displayName = "GroupedBarChart"

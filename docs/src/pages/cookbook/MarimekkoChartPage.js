@@ -20,7 +20,7 @@ export default function MarimekkoChartPage() {
         Standard stacked bar charts encode only one quantitative dimension in
         the column width. A Marimekko (or mosaic) chart encodes a second
         dimension by varying column widths, so both the height proportion and
-        the column width carry meaning. This recipe uses OrdinalFrame's{" "}
+        the column width carry meaning. This recipe uses StreamOrdinalFrame's{" "}
         <code>dynamicColumnWidth</code> to create a variable-width stacked bar
         chart showing market segments across regions.
       </p>
@@ -39,7 +39,7 @@ export default function MarimekkoChartPage() {
 
       <h2 id="how-it-works">How It Works</h2>
       <p>
-        The <code>dynamicColumnWidth</code> prop tells OrdinalFrame to size
+        The <code>dynamicColumnWidth</code> prop tells StreamOrdinalFrame to size
         each column proportionally to a data field. Here, the raw{" "}
         <code>value</code> (total sales) determines column width, while{" "}
         <code>pct</code> (percentage of sales by segment) determines bar
@@ -98,7 +98,7 @@ export default function MarimekkoChartPage() {
       <h2 id="related">Related</h2>
       <ul>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — the underlying
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the underlying
           frame with dynamicColumnWidth support
         </li>
         <li>

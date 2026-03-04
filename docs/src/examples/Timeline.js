@@ -1,6 +1,6 @@
 import React from "react"
 import DocumentFrame from "../DocumentFrame"
-import { OrdinalFrame } from "semiotic"
+import { StreamOrdinalFrame } from "semiotic"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
 
@@ -200,26 +200,15 @@ const frameProps = {
   rAccessor: d => [d.start, d.end],
   oAccessor: "name",
   projection: "horizontal",
-  axes: [{ orient: "bottom", ticks: 10 }],
-  type: "timeline",
-  oLabel: (d, i) => {
-    return (
-      <text
-        y={3}
-        textAnchor="end"
-        fontSize="11"
-        fill={theme[colors[i[0].party] || 0]}
-      >
-        {d}
-      </text>
-    )
-  },
+  showAxes: true,
+  chartType: "timeline",
+  oLabel: true,
   margin: { left: 200, top: 40, bottom: 50, right: 20 },
-  oPadding: 2,
+  barPadding: 2,
   data,
 
   title: "U.S. Presidential Terms",
-  style: d => ({
+  pieceStyle: d => ({
     fill: theme[colors[d.party] || 0],
     stroke: theme[(colors[d.party] || 0) + 5]
   }),
@@ -236,15 +225,11 @@ const frameProps = {
 }
 
 const overrideProps = {
-  style: `d => ({
+  pieceStyle: `d => ({
     fill: theme[colors[d.party] || 0],
     stroke: theme[(colors[d.party] || 0) + 5]
   })`,
-  oLabel: ` d => (
-    <text textAnchor="end" fontSize="11">
-      {d}
-    </text>
-  )`,
+  oLabel: `true`,
   foregroundGraphics: `Object.keys(colors)
   .concat(["Other"])
   .map((d, i) => (
@@ -269,7 +254,7 @@ This data is from the [List of Presidents of the United States](https://en.wikip
       <DocumentFrame
         frameProps={frameProps}
         overrideProps={overrideProps}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         pre={`const colors = {
   Democratic: 4,
   Republican: 1,

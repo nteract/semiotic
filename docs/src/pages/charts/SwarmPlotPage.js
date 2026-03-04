@@ -1,5 +1,5 @@
-import React from "react"
-import { OrdinalFrame } from "semiotic"
+import React, { useRef, useEffect } from "react"
+import { StreamOrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { SwarmPlot } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -7,6 +7,8 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -59,6 +61,82 @@ const sizedData = [
 ]
 
 // ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const swarmGroups = ["Control", "Treatment", "Placebo"]
+
+const streamingSwarmCode = `import { useRef, useEffect } from "react"
+import { StreamOrdinalFrame } from "semiotic"
+
+function StreamingSwarmDemo() {
+  const chartRef = useRef()
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const group = swarmGroups[Math.floor(Math.random() * 3)]
+        // Normal-ish distribution via central limit theorem
+        const base = group === "Treatment" ? 34 : 24
+        const noise = (Math.random() + Math.random() + Math.random()) / 3 - 0.5
+        chartRef.current.push({
+          category: group,
+          value: Math.round((base + noise * 16) * 10) / 10,
+        })
+      }
+    }, 100)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="swarm"
+      runtimeMode="streaming"
+      size={[600, 300]}
+      oAccessor="category"
+      rAccessor="value"
+      windowSize={200}
+      showAxes
+      pieceStyle={() => ({ fill: "#6366f1", opacity: 0.7 })}
+    />
+  )
+}`
+
+function StreamingSwarmDemo({ width }) {
+  const chartRef = useRef()
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const group = swarmGroups[Math.floor(Math.random() * 3)]
+        const base = group === "Treatment" ? 34 : 24
+        const noise = (Math.random() + Math.random() + Math.random()) / 3 - 0.5
+        chartRef.current.push({
+          category: group,
+          value: Math.round((base + noise * 16) * 10) / 10,
+        })
+      }
+    }, 100)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="swarm"
+      runtimeMode="streaming"
+      size={[width, 300]}
+      oAccessor="category"
+      rAccessor="value"
+      windowSize={200}
+      showAxes
+      pieceStyle={() => ({ fill: "#6366f1", opacity: 0.7 })}
+    />
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Props definition for PropTable
 // ---------------------------------------------------------------------------
 
@@ -85,7 +163,7 @@ const swarmPlotProps = [
   { name: "height", type: "number", required: false, default: "400", description: "Chart height in pixels." },
   { name: "margin", type: "object", required: false, default: "{ top: 50, bottom: 60, left: 70, right: 40 }", description: "Margin around the chart area." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Additional OrdinalFrame props for advanced customization. Escape hatch to the full Frame API." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamOrdinalFrame props for advanced customization. Escape hatch to the full Frame API." },
 ]
 
 // ---------------------------------------------------------------------------
@@ -109,12 +187,12 @@ export default function SwarmPlotPage() {
         componentName="SwarmPlot"
         importStatement='import { SwarmPlot } from "semiotic"'
         tier="charts"
-        wraps="OrdinalFrame"
+        wraps="StreamOrdinalFrame"
         wrapsPath="/frames/ordinal-frame"
         related={[
           { name: "BoxPlot", path: "/charts/box-plot" },
           { name: "BarChart", path: "/charts/bar-chart" },
-          { name: "OrdinalFrame", path: "/frames/ordinal-frame" },
+          { name: "StreamOrdinalFrame", path: "/frames/ordinal-frame" },
         ]}
       />
 
@@ -136,25 +214,35 @@ export default function SwarmPlotPage() {
         automatically spread to avoid overlap.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: sampleData,
-          categoryAccessor: "category",
-          valueAccessor: "value",
-          categoryLabel: "Group",
-          valueLabel: "Response",
-        }}
-        type={SwarmPlot}
-        startHidden={false}
-        overrideProps={{
-          data: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              data: sampleData,
+              categoryAccessor: "category",
+              valueAccessor: "value",
+              categoryLabel: "Group",
+              valueLabel: "Response",
+            }}
+            type={SwarmPlot}
+            startHidden={false}
+            overrideProps={{
+              data: `[
   { category: "Control", value: 23 },
   { category: "Control", value: 27 },
   { category: "Treatment", value: 35 },
   // ...more data points per category
 ]`,
-        }}
-        hiddenProps={{}}
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingSwarmDemo width={w} />}
+            code={streamingSwarmCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}
@@ -256,8 +344,8 @@ export default function SwarmPlotPage() {
       <p>
         When you need more control — custom point marks, mixed summary types,
         annotations — graduate to{" "}
-        <Link to="/frames/ordinal-frame">OrdinalFrame</Link> directly. Every{" "}
-        <code>SwarmPlot</code> is just a configured <code>OrdinalFrame</code>{" "}
+        <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> directly. Every{" "}
+        <code>SwarmPlot</code> is just a configured <code>StreamOrdinalFrame</code>{" "}
         under the hood.
       </p>
 
@@ -282,9 +370,9 @@ export default function SwarmPlotPage() {
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-frames)" }}>Frame (full control)</h4>
           <CodeBlock
-            code={`import { OrdinalFrame } from "semiotic"
+            code={`import { StreamOrdinalFrame } from "semiotic"
 
-<OrdinalFrame
+<StreamOrdinalFrame
   data={experimentData}
   oAccessor="category"
   rAccessor="value"
@@ -310,7 +398,7 @@ export default function SwarmPlotPage() {
 
       <p>
         The <code>frameProps</code> prop on SwarmPlot lets you pass any
-        OrdinalFrame prop without fully graduating:
+        StreamOrdinalFrame prop without fully graduating:
       </p>
 
       <CodeBlock
@@ -345,7 +433,7 @@ export default function SwarmPlotPage() {
           comparisons
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — the underlying
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the underlying
           Frame with full control over every rendering detail
         </li>
         <li>

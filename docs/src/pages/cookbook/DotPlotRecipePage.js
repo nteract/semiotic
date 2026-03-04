@@ -20,7 +20,7 @@ export default function DotPlotRecipePage() {
         Cleveland dot plots are ideal for comparing values across many
         categories, especially when showing change between two time points.
         Unlike grouped bar charts, they reduce visual clutter and draw attention
-        to the magnitude and direction of change. This recipe uses OrdinalFrame
+        to the magnitude and direction of change. This recipe uses StreamOrdinalFrame
         with custom annotation rules to draw connecting lines between paired
         data points representing neonatal mortality rates in 1990 and 2013.
       </p>
@@ -104,7 +104,7 @@ invertR: true`}
       <h2 id="related">Related</h2>
       <ul>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — the underlying
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the underlying
           frame for dot plot rendering
         </li>
         <li>

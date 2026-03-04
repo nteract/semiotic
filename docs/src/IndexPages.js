@@ -5,7 +5,7 @@ export function GuidesIndex() {
   return (
     <div className="margin-bottom">
       <div className="subpages">
-        <div className="sub-header">XYFrame</div>
+        <div className="sub-header">StreamXYFrame</div>
 
         <PageLink
           href="/guides/line-chart"
@@ -33,7 +33,7 @@ export function GuidesIndex() {
           thumbnail={new URL("../public/assets/img/xy-brush.png", import.meta.url)}
         />
 
-        <div className="sub-header">OrdinalFrame</div>
+        <div className="sub-header">StreamOrdinalFrame</div>
 
         <PageLink
           href="/guides/bar-chart"
@@ -56,7 +56,7 @@ export function GuidesIndex() {
           thumbnail={new URL("../public/assets/img/or-brush.png", import.meta.url)}
         />
 
-        <div className="sub-header">NetworkFrame</div>
+        <div className="sub-header">StreamNetworkFrame</div>
 
         <PageLink
           href="/guides/force-layouts"
@@ -92,11 +92,11 @@ export function GuidesIndex() {
           thumbnail={new URL("../public/assets/img/force.png", import.meta.url)}
         />
 
-        <div className="sub-header">RealtimeFrame</div>
+        <div className="sub-header">StreamXYFrame</div>
 
         <PageLink
           href="/guides/realtime-frame"
-          title="RealtimeFrame"
+          title="StreamXYFrame"
           thumbnail={new URL("../public/assets/img/canvas-interaction.png", import.meta.url)}
         />
 
@@ -161,7 +161,7 @@ export function ExamplesIndex() {
   return (
     <div className="margin-bottom">
       <div className="subpages">
-        <div className="sub-header">XYFrame</div>
+        <div className="sub-header">StreamXYFrame</div>
 
         <PageLink
           href="/cookbook/candlestick-chart"
@@ -189,7 +189,7 @@ export function ExamplesIndex() {
           thumbnail={new URL("../public/assets/img/marginal-graphics.png", import.meta.url)}
         />
 
-        <div className="sub-header">OrdinalFrame</div>
+        <div className="sub-header">StreamOrdinalFrame</div>
 
         <PageLink
           href="/cookbook/bar-line-chart"
@@ -247,7 +247,7 @@ export function ExamplesIndex() {
           thumbnail={new URL("../public/assets/img/isotype.png", import.meta.url)}
         />
 
-        <div className="sub-header">NetworkFrame</div>
+        <div className="sub-header">StreamNetworkFrame</div>
 
         <PageLink
           href="/cookbook/matrix"
@@ -341,17 +341,17 @@ export function ApiIndex() {
 
         <PageLink
           href="/api/xyframe"
-          title="XYFrame"
+          title="StreamXYFrame"
           thumbnail={new URL("../public/assets/img/scatterplot.png", import.meta.url)}
         />
         <PageLink
           href="/api/ordinalframe"
-          title="OrdinalFrame"
+          title="StreamOrdinalFrame"
           thumbnail={new URL("../public/assets/img/bar-chart.png", import.meta.url)}
         />
         <PageLink
           href="/api/networkframe"
-          title="NetworkFrame"
+          title="StreamNetworkFrame"
           thumbnail={new URL("../public/assets/img/force.png", import.meta.url)}
         />
         <PageLink

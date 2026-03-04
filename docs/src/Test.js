@@ -1,5 +1,5 @@
 import React from "react"
-import { XYFrame } from "semiotic"
+import { StreamXYFrame } from "semiotic"
 const frameProps = {
   lines: {
     label: "#ac58e5", coordinates: [{ step: 0, value: 40 },
@@ -71,5 +71,5 @@ const frameProps = {
 }
 
 export default () => {
-  return <XYFrame {...frameProps} />
+  return <StreamXYFrame {...frameProps} />
 }

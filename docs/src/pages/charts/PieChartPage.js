@@ -1,5 +1,5 @@
-import React from "react"
-import { OrdinalFrame } from "semiotic"
+import React, { useRef, useEffect } from "react"
+import { StreamOrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { PieChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -7,6 +7,8 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -20,6 +22,84 @@ const sampleData = [
   { category: "Furniture", value: 180 },
   { category: "Books", value: 120 },
 ]
+
+// ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const marketSegments = ["Electronics", "Clothing", "Grocery", "Furniture", "Books"]
+const pieColors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
+const pieColorMap = Object.fromEntries(marketSegments.map((s, i) => [s, pieColors[i]]))
+
+const streamingPieCode = `import { useRef, useEffect } from "react"
+import { StreamOrdinalFrame } from "semiotic"
+
+function StreamingPieDemo() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          category: marketSegments[i % 5],
+          value: Math.round(50 + Math.random() * 400),
+        })
+      }
+    }, 600)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="pie"
+      runtimeMode="streaming"
+      projection="radial"
+      size={[400, 400]}
+      oAccessor="category"
+      rAccessor="value"
+      windowSize={200}
+      showAxes={false}
+      pieceStyle={d => ({ fill: pieColorMap[d.category] || "#007bff" })}
+    />
+  )
+}`
+
+function StreamingPieDemo({ width }) {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          category: marketSegments[i % 5],
+          value: Math.round(50 + Math.random() * 400),
+        })
+      }
+    }, 600)
+    return () => clearInterval(id)
+  }, [])
+
+  const size = Math.min(width, 400)
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="pie"
+      runtimeMode="streaming"
+      projection="radial"
+      size={[size, size]}
+      oAccessor="category"
+      rAccessor="value"
+      windowSize={200}
+      showAxes={false}
+      pieceStyle={d => ({ fill: pieColorMap[d.category] || "#007bff" })}
+    />
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Props definition for PropTable
@@ -40,7 +120,7 @@ const pieChartProps = [
   { name: "height", type: "number", required: false, default: "400", description: "Chart height in pixels." },
   { name: "margin", type: "object", required: false, default: "{ top: 20, bottom: 20, left: 20, right: 20 }", description: "Margin around the chart area." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Additional OrdinalFrame props for advanced customization." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamOrdinalFrame props for advanced customization." },
 ]
 
 // ---------------------------------------------------------------------------
@@ -64,19 +144,19 @@ export default function PieChartPage() {
         componentName="PieChart"
         importStatement='import { PieChart } from "semiotic"'
         tier="charts"
-        wraps="OrdinalFrame"
+        wraps="StreamOrdinalFrame"
         wrapsPath="/frames/ordinal-frame"
         related={[
           { name: "DonutChart", path: "/charts/donut-chart" },
           { name: "BarChart", path: "/charts/bar-chart" },
-          { name: "OrdinalFrame", path: "/frames/ordinal-frame" },
+          { name: "StreamOrdinalFrame", path: "/frames/ordinal-frame" },
         ]}
       />
 
       <p>
         PieChart visualizes proportions as slices of a circle. Each slice's
         arc size is proportional to its value relative to the total. It wraps{" "}
-        <Link to="/frames/ordinal-frame">OrdinalFrame</Link> with radial
+        <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> with radial
         projection, so all ordinal annotations and interactions work out of the
         box.
       </p>
@@ -92,24 +172,34 @@ export default function PieChartPage() {
         <code>value</code> fields. Each unique category becomes one slice.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: sampleData,
-          categoryAccessor: "category",
-          valueAccessor: "value",
-        }}
-        type={PieChart}
-        startHidden={false}
-        overrideProps={{
-          data: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              data: sampleData,
+              categoryAccessor: "category",
+              valueAccessor: "value",
+            }}
+            type={PieChart}
+            startHidden={false}
+            overrideProps={{
+              data: `[
   { category: "Electronics", value: 340 },
   { category: "Clothing", value: 210 },
   { category: "Grocery", value: 450 },
   { category: "Furniture", value: 180 },
   { category: "Books", value: 120 }
 ]`,
-        }}
-        hiddenProps={{}}
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingPieDemo width={w} />}
+            code={streamingPieCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}
@@ -173,8 +263,8 @@ export default function PieChartPage() {
       <p>
         When you need more control — custom annotations, label positioning,
         exploded slices — graduate to{" "}
-        <Link to="/frames/ordinal-frame">OrdinalFrame</Link> directly. Every{" "}
-        <code>PieChart</code> is just a configured <code>OrdinalFrame</code>{" "}
+        <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> directly. Every{" "}
+        <code>PieChart</code> is just a configured <code>StreamOrdinalFrame</code>{" "}
         with <code>projection="radial"</code>.
       </p>
 
@@ -197,9 +287,9 @@ export default function PieChartPage() {
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-frames)" }}>Frame (full control)</h4>
           <CodeBlock
-            code={`import { OrdinalFrame } from "semiotic"
+            code={`import { StreamOrdinalFrame } from "semiotic"
 
-<OrdinalFrame
+<StreamOrdinalFrame
   data={salesData}
   oAccessor="category"
   rAccessor="value"
@@ -231,7 +321,7 @@ export default function PieChartPage() {
           comparing values across categories
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — the underlying
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the underlying
           Frame with full control over every rendering detail
         </li>
       </ul>

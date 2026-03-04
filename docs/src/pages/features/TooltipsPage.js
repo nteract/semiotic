@@ -1,5 +1,5 @@
 import React from "react"
-import { XYFrame, OrdinalFrame, Tooltip, MultiLineTooltip } from "semiotic"
+import { StreamXYFrame, StreamOrdinalFrame, Tooltip, MultiLineTooltip } from "semiotic"
 import { LineChart, BarChart } from "semiotic"
 
 import LiveExample from "../../components/LiveExample"
@@ -159,21 +159,21 @@ export default function TooltipsPage() {
 
       <LiveExample
         frameProps={{
-          points: scatterData,
+          data: scatterData,
+          chartType: "scatter",
           xAccessor: "x",
           yAccessor: "y",
           pointStyle: (d) => ({ fill: colorHash[d.category], r: 5 }),
           margin: { top: 30, bottom: 60, left: 60, right: 20 },
-          axes: [
-            { orient: "left", label: "Y Value" },
-            { orient: "bottom", label: "X Value" },
-          ],
-          hoverAnnotation: true,
+          showAxes: true,
+          xLabel: "X Value",
+          yLabel: "Y Value",
+          enableHover: true,
           tooltipContent: Tooltip({ title: "category" }),
         }}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={{
-          points: `[
+          data: `[
   { x: 10, y: 20, category: "A", value: 100 },
   { x: 25, y: 35, category: "B", value: 150 },
   // ...more points
@@ -182,7 +182,7 @@ export default function TooltipsPage() {
           tooltipContent: `Tooltip({ title: "category" })`,
         }}
         hiddenProps={{}}
-        pre={`import { XYFrame, Tooltip } from "semiotic"`}
+        pre={`import { StreamXYFrame, Tooltip } from "semiotic"`}
       />
 
       <h3 id="multi-field-tooltip">Multi-Field Tooltip</h3>
@@ -211,7 +211,7 @@ export default function TooltipsPage() {
             ],
           }),
         }}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         overrideProps={{
           data: `[
   { category: "Product A", sales: 450, profit: 120, units: 230 },
@@ -230,7 +230,7 @@ export default function TooltipsPage() {
 })`,
         }}
         hiddenProps={{}}
-        pre={`import { OrdinalFrame, MultiLineTooltip } from "semiotic"`}
+        pre={`import { StreamOrdinalFrame, MultiLineTooltip } from "semiotic"`}
       />
 
       <h3 id="custom-tooltip">Custom Tooltip Function</h3>
@@ -241,8 +241,10 @@ export default function TooltipsPage() {
       </p>
 
       <CodeBlock
-        code={`<XYFrame
-  hoverAnnotation={true}
+        code={`<StreamXYFrame
+  data={data}
+  chartType="scatter"
+  enableHover={true}
   tooltipContent={d => (
     <div style={{
       background: "var(--surface-1)",
@@ -257,7 +259,6 @@ export default function TooltipsPage() {
       <div>Value: {d.value.toLocaleString()}</div>
     </div>
   )}
-  points={data}
   xAccessor="x"
   yAccessor="y"
 />`}
@@ -273,22 +274,22 @@ export default function TooltipsPage() {
 
       <LiveExample
         frameProps={{
-          points: scatterData,
+          data: scatterData,
+          chartType: "scatter",
           xAccessor: "x",
           yAccessor: "y",
           pointStyle: (d) => ({ fill: colorHash[d.category], r: 5 }),
           margin: { top: 30, bottom: 60, left: 60, right: 20 },
-          axes: [
-            { orient: "left", label: "Y Value" },
-            { orient: "bottom", label: "X Value" },
-          ],
+          showAxes: true,
+          xLabel: "X Value",
+          yLabel: "Y Value",
           hoverAnnotation: [
             { type: "x", disable: ["connector", "note"] },
             { type: "y", disable: ["connector", "note"] },
             { type: "frame-hover" },
           ],
         }}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={{
           points: "scatterData",
           pointStyle: `d => ({ fill: colorHash[d.category], r: 5 })`,
@@ -376,10 +377,10 @@ hoverAnnotation={[
   { type: "desaturation-layer", style: { fill: "white", opacity: 0.5 } }
 ]}
 
-// For OrdinalFrame, use pieceHoverAnnotation for individual pieces
+// For StreamOrdinalFrame, use pieceHoverAnnotation for individual pieces
 // vs hoverAnnotation for entire columns
-<OrdinalFrame pieceHoverAnnotation={true} />
-<OrdinalFrame hoverAnnotation={true} />  // column-level hover`}
+<StreamOrdinalFrame pieceHoverAnnotation={true} />
+<StreamOrdinalFrame hoverAnnotation={true} />  // column-level hover`}
         language="jsx"
       />
 
@@ -388,7 +389,7 @@ hoverAnnotation={[
         Tooltips are positioned automatically near the hovered data point.
         They render in an HTML layer above the SVG visualization, so they
         can contain any HTML content. For point-based data,{" "}
-        <code>XYFrame</code> uses Voronoi tesselation to determine the
+        <code>StreamXYFrame</code> uses Voronoi tesselation to determine the
         nearest data point on hover, providing smooth and responsive tooltip
         behavior even when points are small.
       </p>
@@ -408,11 +409,11 @@ hoverAnnotation={[
           cross-highlighting, and custom click/hover behaviors
         </li>
         <li>
-          <Link to="/frames/xy-frame">XYFrame</Link> — point, line, and area
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> — point, line, and area
           tooltips with Voronoi hover
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — piece-level
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — piece-level
           and column-level hover annotations
         </li>
         <li>

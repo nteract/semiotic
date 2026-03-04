@@ -25,7 +25,7 @@ export default function SlopeChartPage() {
       <p>
         Slope charts are excellent for comparing values between two time periods
         or conditions. They make it immediately clear which categories improved,
-        declined, or stayed stable. This recipe uses OrdinalFrame's{" "}
+        declined, or stayed stable. This recipe uses StreamOrdinalFrame's{" "}
         <code>connectorType</code> to draw lines between points across two
         ordinal columns, creating an effective before-and-after comparison of
         binge drinking rates across U.S. cities.
@@ -45,7 +45,7 @@ export default function SlopeChartPage() {
 
       <h2 id="how-it-works">How It Works</h2>
       <p>
-        The data contains one row per city per year. OrdinalFrame groups these
+        The data contains one row per city per year. StreamOrdinalFrame groups these
         into columns by <code>year</code>. The <code>connectorType</code>{" "}
         function returns the city name, so pieces sharing the same city name
         across columns get connected with a filled path:
@@ -116,7 +116,7 @@ export default function SlopeChartPage() {
       <h2 id="related">Related</h2>
       <ul>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — the underlying
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the underlying
           frame for slope chart rendering
         </li>
         <li>

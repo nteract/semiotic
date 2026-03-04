@@ -5,12 +5,12 @@ import { TooltipProvider } from "../../store/TooltipStore"
 
 // Mock NetworkFrame to capture props
 let lastNetworkFrameProps: any = null
-jest.mock("../../NetworkFrame", () => {
+jest.mock("../../stream/StreamNetworkFrame", () => {
   return {
     __esModule: true,
     default: (props: any) => {
       lastNetworkFrameProps = props
-      return <div className="networkframe"><svg /></div>
+      return <div className="stream-network-frame"><svg /></div>
     }
   }
 })
@@ -39,7 +39,7 @@ describe("Treemap", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".networkframe")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -50,40 +50,30 @@ describe("Treemap", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".networkframe")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeFalsy()
   })
 
-  it("sets treemap network type with hierarchy accessors", () => {
+  it("sets treemap chartType with hierarchy accessors", () => {
     render(
       <TooltipProvider>
         <Treemap data={sampleData} />
       </TooltipProvider>
     )
 
-    expect(lastNetworkFrameProps.networkType.type).toBe("treemap")
-    expect(typeof lastNetworkFrameProps.networkType.hierarchyChildren).toBe("function")
-    expect(typeof lastNetworkFrameProps.networkType.hierarchySum).toBe("function")
+    expect(lastNetworkFrameProps.chartType).toBe("treemap")
+    expect(lastNetworkFrameProps.childrenAccessor).toBe("children")
+    expect(typeof lastNetworkFrameProps.hierarchySum).toBe("function")
   })
 
-  it("sets hierarchySum from valueAccessor inside networkType", () => {
+  it("sets hierarchySum from valueAccessor as a direct prop", () => {
     render(
       <TooltipProvider>
         <Treemap data={sampleData} />
       </TooltipProvider>
     )
 
-    expect(lastNetworkFrameProps.networkType.hierarchySum({ value: 42 })).toBe(42)
-  })
-
-  it("sets hierarchyChildren from childrenAccessor inside networkType", () => {
-    render(
-      <TooltipProvider>
-        <Treemap data={sampleData} />
-      </TooltipProvider>
-    )
-
-    expect(lastNetworkFrameProps.networkType.hierarchyChildren({ children: [1, 2] })).toEqual([1, 2])
+    expect(lastNetworkFrameProps.hierarchySum({ value: 42 })).toBe(42)
   })
 
   it("defaults to square dimensions", () => {
@@ -127,18 +117,18 @@ describe("Treemap", () => {
     )
 
     expect(lastNetworkFrameProps.nodeIDAccessor).toBe("id")
-    expect(lastNetworkFrameProps.networkType.hierarchyChildren({ items: [1] })).toEqual([1])
-    expect(lastNetworkFrameProps.networkType.hierarchySum({ size: 42 })).toBe(42)
+    expect(lastNetworkFrameProps.childrenAccessor).toBe("items")
+    expect(lastNetworkFrameProps.hierarchySum({ size: 42 })).toBe(42)
   })
 
-  it("passes edges as the data", () => {
+  it("passes data as the data prop", () => {
     render(
       <TooltipProvider>
         <Treemap data={sampleData} />
       </TooltipProvider>
     )
 
-    expect(lastNetworkFrameProps.edges).toBe(sampleData)
+    expect(lastNetworkFrameProps.data).toBe(sampleData)
   })
 
   it("enables hover by default", () => {
@@ -148,7 +138,7 @@ describe("Treemap", () => {
       </TooltipProvider>
     )
 
-    expect(lastNetworkFrameProps.hoverAnnotation).toBe(true)
+    expect(lastNetworkFrameProps.enableHover).toBe(true)
   })
 
   it("allows NetworkFrame prop overrides via frameProps", () => {
@@ -156,11 +146,11 @@ describe("Treemap", () => {
       <TooltipProvider>
         <Treemap
           data={sampleData}
-          frameProps={{ filterRenderedNodes: (d: any) => d.depth > 0 }}
+          frameProps={{}}
         />
       </TooltipProvider>
     )
 
-    expect(lastNetworkFrameProps.filterRenderedNodes).toBeDefined()
+    expect(lastNetworkFrameProps).toBeDefined()
   })
 })

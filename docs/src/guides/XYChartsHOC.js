@@ -110,7 +110,7 @@ export default function XYChartsHOC() {
 
       <MarkdownText
         text={`
-Higher-order XY chart components provide simplified APIs for common chart types based on \`XYFrame\`. These components handle the complexity of XYFrame configuration while providing intuitive prop names.
+Higher-order XY chart components provide simplified APIs for common chart types based on \`StreamXYFrame\`. These components handle the complexity of StreamXYFrame configuration while providing intuitive prop names.
 
 ## Benefits
 
@@ -166,7 +166,7 @@ const scatterData = [
 - \`tooltip\`: Tooltip configuration (\`Tooltip()\` or \`MultiLineTooltip()\`)
 
 **Advanced:**
-Pass any \`XYFrame\` prop for complete control. [See XYFrame API →](/api/xyframe)
+Pass any \`StreamXYFrame\` prop for complete control. [See StreamXYFrame API →](/api/xyframe)
 
 ---
 `}
@@ -215,7 +215,7 @@ const lineData = [
 - \`tooltip\`: Tooltip configuration
 
 **Advanced:**
-Pass \`lineType\`, \`lineStyle\`, or other \`XYFrame\` props for customization.
+Pass \`lineType\`, \`lineStyle\`, or other \`StreamXYFrame\` props for customization.
 
 ---
 `}
@@ -268,7 +268,7 @@ const areaData = [
 For stacked areas, use \`StackedAreaChart\` below.
 
 **Advanced:**
-Pass \`lineType\` settings or other \`XYFrame\` props for complete control.
+Pass \`lineType\` settings or other \`StreamXYFrame\` props for complete control.
 
 ---
 `}
@@ -320,7 +320,7 @@ const areaData = [
 - \`tooltip\`: Tooltip configuration
 
 **Advanced:**
-Pass \`lineType\` settings or other \`XYFrame\` props for complete control.
+Pass \`lineType\` settings or other \`StreamXYFrame\` props for complete control.
 
 ---
 `}
@@ -375,7 +375,7 @@ const bubbleData = [
 - \`tooltip\`: Tooltip configuration
 
 **Advanced:**
-Pass \`pointStyle\` or other \`XYFrame\` props for styling control.
+Pass \`pointStyle\` or other \`StreamXYFrame\` props for styling control.
 
 ---
 `}
@@ -423,7 +423,7 @@ for (let x = 0; x < 7; x++) {
 - \`tooltip\`: Tooltip configuration
 
 **Advanced:**
-Pass \`summaryType\` settings or other \`XYFrame\` props for customization.
+Pass \`summaryType\` settings or other \`StreamXYFrame\` props for customization.
 
 ---
 
@@ -494,7 +494,7 @@ const props: ScatterplotProps = {
 - [Ordinal Chart Components →](/guides/ordinal-charts-hoc) for categorical data
 - [Network Chart Components →](/guides/network-charts-hoc) for relationships
 - [Tooltips Guide →](/guides/tooltips) for advanced tooltip customization
-- [XYFrame API →](/api/xyframe) for complete Frame control
+- [StreamXYFrame API →](/api/xyframe) for complete Frame control
 `}
       />
     </div>

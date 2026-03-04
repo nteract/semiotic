@@ -1,15 +1,16 @@
 import * as React from "react"
 import { useRef, useEffect, useImperativeHandle, forwardRef, useCallback } from "react"
-import RealtimeFrame from "../../realtime/RealtimeFrame"
+import StreamXYFrame from "../../stream/StreamXYFrame"
 import type {
   ArrowOfTime,
   WindowMode,
   LineStyle,
   HoverAnnotationConfig,
   HoverData,
-  RealtimeFrameHandle,
-  AnnotationContext
-} from "../../realtime/types"
+  AnnotationContext,
+  StreamXYFrameHandle
+} from "../../stream/types"
+import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { ReactNode } from "react"
 import { normalizeLinkedHover } from "../shared/selectionUtils"
 import { useLinkedHover } from "../../store/useSelection"
@@ -70,8 +71,8 @@ export interface RealtimeLineChartProps {
 /**
  * RealtimeLineChart - Simplified wrapper for streaming line charts.
  *
- * Wraps RealtimeFrame with `chartType="line"` and exposes stroke/strokeWidth
- * as top-level props instead of requiring a `lineStyle` object.
+ * Wraps StreamXYFrame with `chartType="line"` and `runtimeMode="streaming"`,
+ * exposing stroke/strokeWidth as top-level props instead of requiring a `lineStyle` object.
  *
  * @example
  * ```tsx
@@ -116,7 +117,7 @@ export const RealtimeLineChart = forwardRef<RealtimeFrameHandle, RealtimeLineCha
       linkedHover
     } = props
 
-    const frameRef = useRef<RealtimeFrameHandle>(null)
+    const frameRef = useRef<StreamXYFrameHandle>(null)
 
     // ── Linked hover hooks (always called, conditional logic inside) ──
     const hoverConfig = normalizeLinkedHover(linkedHover)
@@ -145,9 +146,10 @@ export const RealtimeLineChart = forwardRef<RealtimeFrameHandle, RealtimeLineCha
     const lineStyle: LineStyle = { stroke, strokeWidth, strokeDasharray }
 
     return (
-      <RealtimeFrame
+      <StreamXYFrame
         ref={frameRef}
         chartType="line"
+        runtimeMode="streaming"
         size={size}
         margin={margin}
         className={className}
@@ -157,8 +159,8 @@ export const RealtimeLineChart = forwardRef<RealtimeFrameHandle, RealtimeLineCha
         data={data}
         timeAccessor={timeAccessor}
         valueAccessor={valueAccessor}
-        timeExtent={timeExtent}
-        valueExtent={valueExtent}
+        xExtent={timeExtent}
+        yExtent={valueExtent}
         extentPadding={extentPadding}
         lineStyle={lineStyle}
         showAxes={showAxes}

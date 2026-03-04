@@ -27,7 +27,7 @@ export default function SwarmPlotRecipePage() {
         plotting them as a strip results in severe overplotting. A beeswarm
         (or swarm) plot applies a collision force to spread points vertically
         while preserving their quantitative position. This recipe uses
-        OrdinalFrame's <code>swarm</code> type with custom marks to create a
+        StreamOrdinalFrame's <code>swarm</code> type with custom marks to create a
         labeled beeswarm of weekly box office totals.
       </p>
 
@@ -113,7 +113,7 @@ rExtent: [0]`}
       <h2 id="related">Related</h2>
       <ul>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — the underlying
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the underlying
           frame with swarm type support
         </li>
         <li>

@@ -39,9 +39,9 @@ describe("ScatterplotMatrix", () => {
 
     // 3 fields = 3x3 = 9 cells
     // 3 diagonal (histograms) + 6 scatterplots
-    // Each scatterplot renders an XYFrame (.xyframe)
-    const xyFrames = container.querySelectorAll(".xyframe")
-    expect(xyFrames.length).toBe(6) // 3x3 - 3 diagonal = 6
+    // Each scatterplot renders a StreamXYFrame (.stream-xy-frame)
+    const streamFrames = container.querySelectorAll(".stream-xy-frame")
+    expect(streamFrames.length).toBe(6) // 3x3 - 3 diagonal = 6
   })
 
   it("renders diagonal histograms as SVGs", () => {
@@ -57,7 +57,7 @@ describe("ScatterplotMatrix", () => {
 
     // 2 diagonal cells should be SVG histograms
     const svgs = container.querySelectorAll("svg")
-    // At least 2 SVGs from diagonal cells (XYFrames also have SVGs)
+    // At least 2 SVGs from diagonal cells (StreamXYFrames also have SVGs)
     expect(svgs.length).toBeGreaterThanOrEqual(2)
   })
 
@@ -176,7 +176,7 @@ describe("ScatterplotMatrix", () => {
     )
 
     // 1 field = only diagonal, no scatterplot cells
-    const xyFrames = container.querySelectorAll(".xyframe")
-    expect(xyFrames.length).toBe(0)
+    const streamFrames = container.querySelectorAll(".stream-xy-frame")
+    expect(streamFrames.length).toBe(0)
   })
 })

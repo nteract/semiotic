@@ -4,7 +4,7 @@ import RecipeLayout from "../../components/RecipeLayout"
 import NetworkExplorer from "../../examples/recipes/NetworkExplorer"
 
 const fullSourceCode = `import React, { useState } from "react"
-import { NetworkFrame } from "semiotic"
+import { StreamNetworkFrame } from "semiotic"
 
 const groupColors = {
   Engineering: "#6366f1",
@@ -76,7 +76,7 @@ export default function NetworkExplorer({ nodes, edges, width = 500, height = 40
             fontSize: "14px", outline: "none",
           }}
         />
-        <NetworkFrame
+        <StreamNetworkFrame
           size={[width, height]}
           nodes={nodes}
           edges={edges}
@@ -148,7 +148,7 @@ export default function NetworkExplorerPage() {
       <p>
         An interactive force-directed network graph with search filtering,
         click-to-select nodes, and a detail sidebar. Uses Semiotic's
-        <code>NetworkFrame</code> with <code>customClickBehavior</code> and
+        <code>StreamNetworkFrame</code> with <code>customClickBehavior</code> and
         <code>customHoverBehavior</code> for full interaction control.
       </p>
 
@@ -198,7 +198,7 @@ export default function NetworkExplorerPage() {
 
       <h2 id="how-it-works">How It Works</h2>
       <p>
-        <code>NetworkFrame</code> with <code>networkType: &#123; type: "force" &#125;</code>
+        <code>StreamNetworkFrame</code> with <code>networkType: &#123; type: "force" &#125;</code>
         runs a force simulation to position nodes. The <code>customClickBehavior</code>
         callback stores the selected node in state, while <code>customHoverBehavior</code>
         provides hover feedback.
@@ -215,7 +215,7 @@ export default function NetworkExplorerPage() {
 
       <h2 id="related">Related</h2>
       <ul>
-        <li><Link to="/frames/network-frame">NetworkFrame</Link> — the underlying frame</li>
+        <li><Link to="/frames/network-frame">StreamNetworkFrame</Link> — the underlying frame</li>
         <li><Link to="/charts/force-directed-graph">Force Directed Graph</Link> — basic force layout chart</li>
         <li><Link to="/features/interaction">Interaction</Link> — click and hover patterns</li>
       </ul>

@@ -1,6 +1,6 @@
 import React from "react"
 import MarkdownText from "../MarkdownText"
-import { XYFrame, OrdinalFrame } from "semiotic"
+import { StreamXYFrame, StreamOrdinalFrame } from "semiotic"
 import theme from "../theme"
 
 import { frameProps, linePercent, cumulativeLine } from "./LineChart"
@@ -42,7 +42,7 @@ Highlighting is a type of [annnotation](/guides/annotations), \`{type:"highlight
 If you want the highlight only on hover, instead of passing \`hoverAnnotation={true}\` on your frame, you can pass an object \`hoverAnnotation=[{ type: "highlight", style: {strokeWidth: 10} }]\`
 
 
-In \`XYFrame\` it uses the function in \`lineIDAccessor\` to evaluate what objects to highlight and will render that shape (or shapes) in the AnnotationLayer with style and class defined by the annotation. 
+In \`StreamXYFrame\` it uses the function in \`lineIDAccessor\` to evaluate what objects to highlight and will render that shape (or shapes) in the AnnotationLayer with style and class defined by the annotation. 
 
 
 Move your mouse over the chart to see the line highlighted.
@@ -51,7 +51,7 @@ This page uses box office data from [Box Office Mojo](https://www.boxofficemojo.
 
       `}
         />
-        <XYFrame
+        <StreamXYFrame
           {...frameProps}
           hoverAnnotation={[
             {
@@ -64,7 +64,7 @@ This page uses box office data from [Box Office Mojo](https://www.boxofficemojo.
         <MarkdownText
           text={`
 \`\`\`jsx
-<XYFrame
+<StreamXYFrame
   {...frameProps}
   hoverAnnotation={[
     {
@@ -81,7 +81,7 @@ For highlighting regardless of interactions, send an annotation to the annotatio
       `}
         />
 
-        <XYFrame
+        <StreamXYFrame
           {...frameProps}
           annotations={[
             {
@@ -105,7 +105,7 @@ You can also maintain the default \`hoverAnnotation\` tooltip behavior by also p
 
     `}
         />
-        <XYFrame
+        <StreamXYFrame
           {...frameProps}
           hoverAnnotation={[
             {
@@ -125,7 +125,7 @@ You can also maintain the default \`hoverAnnotation\` tooltip behavior by also p
         <MarkdownText
           text={`
 \`\`\`jsx
-<XYFrame
+<StreamXYFrame
   {...frameProps}
   hoverAnnotation={[
       type: "highlight",
@@ -145,7 +145,7 @@ Using the \`highlight\` annotation in tandem with the \`deaturation-layer\` anno
   `}
         />
 
-        <XYFrame
+        <StreamXYFrame
           {...frameProps}
           hoverAnnotation={[
             {
@@ -166,7 +166,7 @@ Using the \`highlight\` annotation in tandem with the \`deaturation-layer\` anno
           text={`
 
 \`\`\`jsx
-<XYFrame
+<StreamXYFrame
   {...frameProps}
   hoverAnnotation={[
       type: "highlight",
@@ -188,7 +188,7 @@ Frames have custom interaction using \`customHoverBehavior\`, \`customClickBehav
     `}
         />
         <div className="flex">
-          <XYFrame
+          <StreamXYFrame
             customHoverBehavior={this.hoverBehavior}
             {...linePercent}
             hoverAnnotation={true}
@@ -196,7 +196,7 @@ Frames have custom interaction using \`customHoverBehavior\`, \`customClickBehav
             size={[400, 300]}
             lineIDAccessor="title"
           />
-          <XYFrame
+          <StreamXYFrame
             {...cumulativeLine}
             size={[400, 300]}
             hoverAnnotation={true}
@@ -237,7 +237,7 @@ export default class CreateCrossHighlighting extends React.Component {
 
   render () {
    return <div>
-    <XYFrame
+    <StreamXYFrame
     {...linePercent}
       size={[400, 300]}
       hoverAnnotation={true}
@@ -245,7 +245,7 @@ export default class CreateCrossHighlighting extends React.Component {
       annotations={this.state.annotations}
       lineIDAccessor="title"
     />
-    <XYFrame
+    <StreamXYFrame
       {...cumulativeLine}
       size={[400, 300]}
       hoverAnnotation={true}
@@ -263,7 +263,7 @@ Highlight annotations will return all points, lines and areas that match the id 
 
     `}
         />
-        <XYFrame
+        <StreamXYFrame
           {...frameProps}
           hoverAnnotation={[
             {
@@ -284,7 +284,7 @@ Highlight annotations will return all points, lines and areas that match the id 
         <MarkdownText
           text={`
 \`\`\`jsx
-<XYFrame
+<StreamXYFrame
   {...frameProps}
   hoverAnnotation={[
       type: "highlight",
@@ -302,8 +302,8 @@ Highlight annotations will return all points, lines and areas that match the id 
 />
 \`\`\`
 
-## OrdinalFrame Highlighting
-\`OrdinalFrames\` unlike in \`XYFrame\`, already has a built-in id accessor: \`oAccessor\`, additionally if you define a \`pieceIDAccessor\` you can use that to highlight individual pieces (this is the same property used to annotate specific pieces with other OrdinalFrame annotations). Without a \`pieceIDAccessor\` defined, all items in a column/row will be highlighted. To enable highlighting on hover for a piece use \`pieceHoverAnnotation\`, for the entire column/row use \`hoverAnnotation\`
+## StreamOrdinalFrame Highlighting
+\`OrdinalFrames\` unlike in \`StreamXYFrame\`, already has a built-in id accessor: \`oAccessor\`, additionally if you define a \`pieceIDAccessor\` you can use that to highlight individual pieces (this is the same property used to annotate specific pieces with other StreamOrdinalFrame annotations). Without a \`pieceIDAccessor\` defined, all items in a column/row will be highlighted. To enable highlighting on hover for a piece use \`pieceHoverAnnotation\`, for the entire column/row use \`hoverAnnotation\`
 
 Highlighting is not available for custom graphics or summary graphics.
 
@@ -312,7 +312,7 @@ You don't have to send annotations with valid oAccessor or pieceIDAccessor trait
     `}
         />
 
-        <OrdinalFrame
+        <StreamOrdinalFrame
           {...stackedFrameProps}
           pieceHoverAnnotation={[
             {
@@ -344,7 +344,7 @@ You don't have to send annotations with valid oAccessor or pieceIDAccessor trait
 
 \`\`\`jsx
 
-<OrdinalFrame
+<StreamOrdinalFrame
   {...frameProps}
   pieceHoverAnnotation={[
     {

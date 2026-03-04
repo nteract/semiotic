@@ -12,7 +12,6 @@ import Accessibility from "./markdown/accessibility.mdx"
 import Xyframe from "./markdown/xyframe.mdx"
 import Ordinalframe from "./markdown/ordinalframe.mdx"
 import Networkframe from "./markdown/networkframe.mdx"
-import Realtimeframe from "./markdown/realtimeframe.mdx"
 import Responsiveframes from "./markdown/responsiveframes.mdx"
 import Sparkframes from "./markdown/sparkframes.mdx"
 
@@ -41,7 +40,6 @@ import AxisSettings from "./guides/AxisSettings"
 import XYChartsHOC from "./guides/XYChartsHOC"
 import OrdinalChartsHOC from "./guides/OrdinalChartsHOC"
 import NetworkChartsHOC from "./guides/NetworkChartsHOC"
-import RealtimeFrameGuide from "./guides/RealtimeFrame"
 import RealtimeChartsHOC from "./guides/RealtimeChartsHOC"
 
 import DividedLine from "./sub-components/DividedLine"
@@ -70,10 +68,10 @@ import ChordDiagramPage from "./pages/charts/ChordDiagramPage"
 import SankeyDiagramPage from "./pages/charts/SankeyDiagramPage"
 import TreeDiagramPage from "./pages/charts/TreeDiagramPage"
 import RealtimeLineChartPage from "./pages/charts/RealtimeLineChartPage"
-import RealtimeBarChartPage from "./pages/charts/RealtimeBarChartPage"
+import RealtimeHistogramPage from "./pages/charts/RealtimeHistogramPage"
 import RealtimeSwarmChartPage from "./pages/charts/RealtimeSwarmChartPage"
 import RealtimeWaterfallChartPage from "./pages/charts/RealtimeWaterfallChartPage"
-import RealtimeSankeyPage from "./pages/charts/RealtimeSankeyPage"
+// RealtimeSankey has been merged into the SankeyDiagram page
 import PieChartPage from "./pages/charts/PieChartPage"
 import DonutChartPage from "./pages/charts/DonutChartPage"
 import GroupedBarChartPage from "./pages/charts/GroupedBarChartPage"
@@ -81,10 +79,9 @@ import TreemapPage from "./pages/charts/TreemapPage"
 import CirclePackPage from "./pages/charts/CirclePackPage"
 
 // New frame pages
-import XYFramePage from "./pages/frames/XYFramePage"
-import OrdinalFramePage from "./pages/frames/OrdinalFramePage"
-import NetworkFramePage from "./pages/frames/NetworkFramePage"
-import RealtimeFramePage from "./pages/frames/RealtimeFramePage"
+import StreamXYFramePage from "./pages/frames/XYFramePage"
+import StreamOrdinalFramePage from "./pages/frames/OrdinalFramePage"
+import StreamNetworkFramePage from "./pages/frames/NetworkFramePage"
 
 // New feature pages
 import AxesPage from "./pages/features/AxesPage"
@@ -117,7 +114,7 @@ import DotPlotRecipePage from "./pages/cookbook/DotPlotRecipePage"
 import TimelineCookbookPage from "./pages/cookbook/TimelinePage"
 import RadarPlotPage from "./pages/cookbook/RadarPlotPage"
 import IsotypeChartPage from "./pages/cookbook/IsotypeChartPage"
-import MatrixCookbookPage from "./pages/cookbook/MatrixPage"
+// MatrixCookbookPage removed — matrix recipe no longer supported
 import KpiCardSparklinePage from "./pages/recipes/KpiCardSparklinePage"
 import TimeSeriesBrushPage from "./pages/recipes/TimeSeriesBrushPage"
 import NetworkExplorerPage from "./pages/recipes/NetworkExplorerPage"
@@ -130,7 +127,7 @@ import ScatterplotPlayground from "./pages/playground/ScatterplotPlayground"
 import ForceDirectedGraphPlayground from "./pages/playground/ForceDirectedGraphPlayground"
 import SankeyDiagramPlayground from "./pages/playground/SankeyDiagramPlayground"
 import RealtimeLineChartPlayground from "./pages/playground/RealtimeLineChartPlayground"
-import RealtimeBarChartPlayground from "./pages/playground/RealtimeBarChartPlayground"
+import RealtimeHistogramPlayground from "./pages/playground/RealtimeHistogramPlayground"
 import BubbleChartPlayground from "./pages/playground/BubbleChartPlayground"
 import StackedAreaChartPlayground from "./pages/playground/StackedAreaChartPlayground"
 import DonutChartPlayground from "./pages/playground/DonutChartPlayground"
@@ -300,7 +297,6 @@ export default function DocsApp() {
               <Route path="xy-charts-hoc" element={<XYChartsHOC />} />
               <Route path="ordinal-charts-hoc" element={<OrdinalChartsHOC />} />
               <Route path="network-charts-hoc" element={<NetworkChartsHOC />} />
-              <Route path="realtime-frame" element={<RealtimeFrameGuide />} />
               <Route path="realtime-charts-hoc" element={<RealtimeChartsHOC />} />
             </Route>
 
@@ -319,7 +315,6 @@ export default function DocsApp() {
               <Route path="xyframe" element={<Xyframe />} />
               <Route path="ordinalframe" element={<Ordinalframe />} />
               <Route path="networkframe" element={<Networkframe />} />
-              <Route path="realtime-frame" element={<Realtimeframe />} />
               <Route path="responsiveframe" element={<Responsiveframes />} />
               <Route path="sparkFrame" element={<Sparkframes />} />
               <Route path="dividedline" element={<DividedLine />} />
@@ -352,7 +347,6 @@ export default function DocsApp() {
               <Route path="timeline" element={<TimelineCookbookPage />} />
               <Route path="radar-plot" element={<RadarPlotPage />} />
               <Route path="isotype-chart" element={<IsotypeChartPage />} />
-              <Route path="matrix" element={<MatrixCookbookPage />} />
             </Route>
 
             {/* Recipes routes */}
@@ -372,7 +366,7 @@ export default function DocsApp() {
               <Route path="force-directed-graph" element={<ForceDirectedGraphPlayground />} />
               <Route path="sankey-diagram" element={<SankeyDiagramPlayground />} />
               <Route path="realtime-line-chart" element={<RealtimeLineChartPlayground />} />
-              <Route path="realtime-bar-chart" element={<RealtimeBarChartPlayground />} />
+              <Route path="realtime-bar-chart" element={<RealtimeHistogramPlayground />} />
               <Route path="bubble-chart" element={<BubbleChartPlayground />} />
               <Route path="stacked-area-chart" element={<StackedAreaChartPlayground />} />
               <Route path="donut-chart" element={<DonutChartPlayground />} />
@@ -382,10 +376,10 @@ export default function DocsApp() {
 
             {/* Frames routes */}
             <Route path="frames" element={<Outlet />}>
-              <Route path="xy-frame" element={<XYFramePage />} />
-              <Route path="ordinal-frame" element={<OrdinalFramePage />} />
-              <Route path="network-frame" element={<NetworkFramePage />} />
-              <Route path="realtime-frame" element={<RealtimeFramePage />} />
+              <Route path="xy-frame" element={<StreamXYFramePage />} />
+              <Route path="ordinal-frame" element={<StreamOrdinalFramePage />} />
+              <Route path="network-frame" element={<StreamNetworkFramePage />} />
+              {/* StreamXYFrame page removed — content merged into chart pages */}
             </Route>
 
             {/* Features routes */}
@@ -423,6 +417,9 @@ export default function DocsApp() {
               <Route path="bubble-chart" element={<BubbleChartPage />} />
               <Route path="heatmap" element={<HeatmapPage />} />
               <Route path="scatterplot-matrix" element={<ScatterplotMatrixPage />} />
+              <Route path="realtime-line-chart" element={<RealtimeLineChartPage />} />
+              <Route path="realtime-swarm-chart" element={<RealtimeSwarmChartPage />} />
+              <Route path="realtime-waterfall-chart" element={<RealtimeWaterfallChartPage />} />
               {/* Categorical Charts */}
               <Route path="bar-chart" element={<BarChartPage />} />
               <Route path="stacked-bar-chart" element={<StackedBarChartPage />} />
@@ -434,6 +431,7 @@ export default function DocsApp() {
               <Route path="pie-chart" element={<PieChartPage />} />
               <Route path="donut-chart" element={<DonutChartPage />} />
               <Route path="grouped-bar-chart" element={<GroupedBarChartPage />} />
+              <Route path="realtime-bar-chart" element={<RealtimeHistogramPage />} />
               {/* Network Charts */}
               <Route path="force-directed-graph" element={<ForceDirectedGraphPage />} />
               <Route path="chord-diagram" element={<ChordDiagramPage />} />
@@ -441,12 +439,6 @@ export default function DocsApp() {
               <Route path="tree-diagram" element={<TreeDiagramPage />} />
               <Route path="treemap" element={<TreemapPage />} />
               <Route path="circle-pack" element={<CirclePackPage />} />
-              {/* Realtime Charts */}
-              <Route path="realtime-line-chart" element={<RealtimeLineChartPage />} />
-              <Route path="realtime-bar-chart" element={<RealtimeBarChartPage />} />
-              <Route path="realtime-swarm-chart" element={<RealtimeSwarmChartPage />} />
-              <Route path="realtime-waterfall-chart" element={<RealtimeWaterfallChartPage />} />
-              <Route path="realtime-sankey" element={<RealtimeSankeyPage />} />
             </Route>
           </Routes>
         </div>

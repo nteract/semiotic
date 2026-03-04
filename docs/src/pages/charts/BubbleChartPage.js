@@ -1,12 +1,13 @@
-import React from "react"
-import { XYFrame } from "semiotic"
-import { BubbleChart } from "semiotic"
+import React, { useRef, useEffect } from "react"
+import { BubbleChart, RealtimeSwarmChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -64,8 +65,79 @@ const bubbleChartProps = [
   { name: "xLabel", type: "string", required: false, default: null, description: "Label for the x-axis." },
   { name: "yLabel", type: "string", required: false, default: null, description: "Label for the y-axis." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Additional XYFrame props for advanced customization. Escape hatch to the full Frame API." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamXYFrame props for advanced customization. Escape hatch to the full Frame API." },
 ]
+
+// ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const streamingBubbleCode = `import { useRef, useEffect } from "react"
+import { RealtimeSwarmChart } from "semiotic"
+
+function StreamingCountryData() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+  const continents = ["Americas", "Europe", "Asia"]
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          time: i,
+          value: 60 + Math.random() * 25,
+          category: continents[i % continents.length],
+        })
+      }
+    }, 80)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <RealtimeSwarmChart
+      ref={chartRef}
+      size={[600, 280]}
+      categoryAccessor="category"
+      opacity={0.5}
+      radius={4}
+      windowSize={200}
+      showAxes
+    />
+  )
+}`
+
+function StreamingBubbleDemo({ width }) {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+  const continents = ["Americas", "Europe", "Asia"]
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          time: i,
+          value: 60 + Math.random() * 25,
+          category: continents[i % continents.length],
+        })
+      }
+    }, 80)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <RealtimeSwarmChart
+      ref={chartRef}
+      size={[width, 280]}
+      categoryAccessor="category"
+      opacity={0.5}
+      radius={4}
+      windowSize={200}
+      showAxes={true}
+    />
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Component
@@ -88,12 +160,12 @@ export default function BubbleChartPage() {
         componentName="BubbleChart"
         importStatement='import { BubbleChart } from "semiotic"'
         tier="charts"
-        wraps="XYFrame"
+        wraps="StreamXYFrame"
         wrapsPath="/frames/xy-frame"
         related={[
           { name: "Scatterplot", path: "/charts/scatterplot" },
           { name: "Heatmap", path: "/charts/heatmap" },
-          { name: "XYFrame", path: "/frames/xy-frame" },
+          { name: "StreamXYFrame", path: "/frames/xy-frame" },
         ]}
       />
 
@@ -116,27 +188,37 @@ export default function BubbleChartPage() {
         <code>yAccessor</code>, and <code>sizeBy</code>.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: countryData,
-          xAccessor: "gdp",
-          yAccessor: "lifeExpectancy",
-          sizeBy: "population",
-          xLabel: "GDP per Capita ($)",
-          yLabel: "Life Expectancy (years)",
-        }}
-        type={BubbleChart}
-        startHidden={false}
-        overrideProps={{
-          data: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              data: countryData,
+              xAccessor: "gdp",
+              yAccessor: "lifeExpectancy",
+              sizeBy: "population",
+              xLabel: "GDP per Capita ($)",
+              yLabel: "Life Expectancy (years)",
+            }}
+            type={BubbleChart}
+            startHidden={false}
+            overrideProps={{
+              data: `[
   { gdp: 12000, lifeExpectancy: 72, population: 45, country: "Brazil" },
   { gdp: 42000, lifeExpectancy: 79, population: 33, country: "Canada" },
   { gdp: 8500, lifeExpectancy: 76, population: 140, country: "China" },
   // ...more data points
 ]`,
-          sizeBy: '"population"',
-        }}
-        hiddenProps={{}}
+              sizeBy: '"population"',
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingBubbleDemo width={w} />}
+            code={streamingBubbleCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}
@@ -242,8 +324,8 @@ export default function BubbleChartPage() {
       <p>
         When you need more control — custom marks, complex annotations,
         force-directed layouts — graduate to{" "}
-        <Link to="/frames/xy-frame">XYFrame</Link> directly. Every{" "}
-        <code>BubbleChart</code> is just a configured <code>XYFrame</code> under
+        <Link to="/frames/xy-frame">StreamXYFrame</Link> directly. Every{" "}
+        <code>BubbleChart</code> is just a configured <code>StreamXYFrame</code> under
         the hood.
       </p>
 
@@ -269,9 +351,9 @@ export default function BubbleChartPage() {
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-frames)" }}>Frame (full control)</h4>
           <CodeBlock
-            code={`import { XYFrame } from "semiotic"
+            code={`import { StreamXYFrame } from "semiotic"
 
-<XYFrame
+<StreamXYFrame
   points={countryData}
   xAccessor="gdp"
   yAccessor="lifeExpectancy"
@@ -298,7 +380,7 @@ export default function BubbleChartPage() {
       </div>
 
       <p>
-        The <code>frameProps</code> prop on BubbleChart lets you pass any XYFrame
+        The <code>frameProps</code> prop on BubbleChart lets you pass any StreamXYFrame
         prop without fully graduating:
       </p>
 
@@ -334,7 +416,7 @@ export default function BubbleChartPage() {
           into color-encoded cells
         </li>
         <li>
-          <Link to="/frames/xy-frame">XYFrame</Link> — the underlying Frame with
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> — the underlying Frame with
           full control over every rendering detail
         </li>
         <li>

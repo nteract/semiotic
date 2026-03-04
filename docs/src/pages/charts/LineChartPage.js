@@ -1,12 +1,13 @@
-import React from "react"
-import { XYFrame } from "semiotic"
-import { LineChart } from "semiotic"
+import React, { useRef, useEffect } from "react"
+import { LineChart, RealtimeLineChart } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -92,8 +93,74 @@ const lineChartProps = [
   { name: "xLabel", type: "string", required: false, default: null, description: "Label for the x-axis." },
   { name: "yLabel", type: "string", required: false, default: null, description: "Label for the y-axis." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Additional XYFrame props for advanced customization. Escape hatch to the full Frame API." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamXYFrame props for advanced customization. Escape hatch to the full Frame API." },
 ]
+
+// ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const streamingLineCode = `import { useRef, useEffect } from "react"
+import { RealtimeLineChart } from "semiotic"
+
+function StreamingRevenue() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          time: i,
+          value: 20000 + Math.sin(i * 0.04) * 8000
+            + (Math.random() - 0.5) * 3000,
+        })
+      }
+    }, 80)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <RealtimeLineChart
+      ref={chartRef}
+      size={[600, 280]}
+      stroke="#6366f1"
+      strokeWidth={2}
+      windowSize={150}
+      showAxes
+    />
+  )
+}`
+
+function StreamingLineDemo({ width }) {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          time: i,
+          value: 20000 + Math.sin(i * 0.04) * 8000 + (Math.random() - 0.5) * 3000,
+        })
+      }
+    }, 80)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <RealtimeLineChart
+      ref={chartRef}
+      size={[width, 280]}
+      stroke="#6366f1"
+      strokeWidth={2}
+      windowSize={150}
+      showAxes={true}
+    />
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Component
@@ -116,12 +183,12 @@ export default function LineChartPage() {
         componentName="LineChart"
         importStatement='import { LineChart } from "semiotic"'
         tier="charts"
-        wraps="XYFrame"
+        wraps="StreamXYFrame"
         wrapsPath="/frames/xy-frame"
         related={[
           { name: "AreaChart", path: "/charts/area-chart" },
           { name: "Scatterplot", path: "/charts/scatterplot" },
-          { name: "XYFrame", path: "/frames/xy-frame" },
+          { name: "StreamXYFrame", path: "/frames/xy-frame" },
         ]}
       />
 
@@ -141,25 +208,35 @@ export default function LineChartPage() {
         <code>xAccessor</code>, and <code>yAccessor</code>.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: simpleData,
-          xAccessor: "month",
-          yAccessor: "revenue",
-          xLabel: "Month",
-          yLabel: "Revenue ($)",
-        }}
-        type={LineChart}
-        startHidden={false}
-        overrideProps={{
-          data: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              data: simpleData,
+              xAccessor: "month",
+              yAccessor: "revenue",
+              xLabel: "Month",
+              yLabel: "Revenue ($)",
+            }}
+            type={LineChart}
+            startHidden={false}
+            overrideProps={{
+              data: `[
   { month: 1, revenue: 12000 },
   { month: 2, revenue: 18000 },
   { month: 3, revenue: 14000 },
   // ...more data points
 ]`,
-        }}
-        hiddenProps={{}}
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingLineDemo width={w} />}
+            code={streamingLineCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}
@@ -245,7 +322,7 @@ export default function LineChartPage() {
 
       <h3 id="confidence-bands">Confidence Bands (lineBounds)</h3>
       <p>
-        Use <code>frameProps</code> with XYFrame's <code>summaryType</code> to
+        Use <code>frameProps</code> with StreamXYFrame's <code>summaryType</code> to
         add confidence intervals or error bands around your line. The{" "}
         <code>linebounds</code> summary type takes a{" "}
         <code>boundingAccessor</code> (or separate{" "}
@@ -329,9 +406,9 @@ export default function LineChartPage() {
 
       <p>
         When you need more control — custom marks, complex annotations,
-        dual-axis layouts — graduate to <Link to="/frames/xy-frame">XYFrame</Link>{" "}
+        dual-axis layouts — graduate to <Link to="/frames/xy-frame">StreamXYFrame</Link>{" "}
         directly. Every <code>LineChart</code> is just a configured{" "}
-        <code>XYFrame</code> under the hood.
+        <code>StreamXYFrame</code> under the hood.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>
@@ -355,9 +432,9 @@ export default function LineChartPage() {
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-frames)" }}>Frame (full control)</h4>
           <CodeBlock
-            code={`import { XYFrame } from "semiotic"
+            code={`import { StreamXYFrame } from "semiotic"
 
-<XYFrame
+<StreamXYFrame
   lines={[{ coordinates: salesData }]}
   xAccessor="month"
   yAccessor="revenue"
@@ -382,7 +459,7 @@ export default function LineChartPage() {
       </div>
 
       <p>
-        The <code>frameProps</code> prop on LineChart lets you pass any XYFrame
+        The <code>frameProps</code> prop on LineChart lets you pass any StreamXYFrame
         prop without fully graduating:
       </p>
 
@@ -417,7 +494,7 @@ export default function LineChartPage() {
           visualizations
         </li>
         <li>
-          <Link to="/frames/xy-frame">XYFrame</Link> — the underlying Frame with
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> — the underlying Frame with
           full control over every rendering detail
         </li>
         <li>

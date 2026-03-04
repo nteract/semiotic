@@ -6,16 +6,17 @@ This guide covers upgrading from Semiotic v1.x or v2.x to v3.
 
 | Area | Impact |
 |---|---|
-| Core Frame APIs | **No breaking changes** — `XYFrame`, `OrdinalFrame`, `NetworkFrame` props are unchanged |
+| Core Frames | `StreamXYFrame`, `StreamOrdinalFrame`, `StreamNetworkFrame` replace the legacy SVG frames. Legacy names (`XYFrame`, `OrdinalFrame`, `NetworkFrame`) are aliased for backwards compatibility. |
 | React version | **React 18.1+** required (was 16+ in v1, 17+ in v2) |
+| Rendering | All frames are **canvas-first** with SVG overlays for axes, labels, and annotations |
+| Streaming | Every frame supports a ref-based push API for high-frequency data |
+| Removed components | `RealtimeSankey`, `RealtimeNetworkFrame`, `ProcessViz`, `Mark`, `SpanOrDiv`, `FacetController` |
 | Removed props | `baseMarkProps` removed from all Frames |
-| Removed components | `ProcessViz`, `Mark`, `SpanOrDiv` removed |
-| New features | 24 chart HOCs, RealtimeFrame, SSR, code splitting |
+| New features | 27 chart HOCs, streaming support on all chart types, SSR, code splitting |
 | TypeScript | Built-in types ship with the package |
 | Bundle size | 62% smaller (minified), up to 78% smaller with code splitting |
 
-**For most users:** install v3 and your existing code works as-is. Then
-optionally adopt the new chart components for simpler code.
+**For most users:** install v3, replace bare Frame imports with the Stream versions (or use the chart HOCs), and your code works. The legacy `XYFrame`, `OrdinalFrame`, and `NetworkFrame` names are aliased to the Stream versions for backwards compatibility.
 
 ---
 
@@ -36,52 +37,136 @@ If you are on React 16 or 17, you must upgrade first. See the
 npm install semiotic@3
 ```
 
-## Step 3: Check for Removed APIs
+## Step 3: Understand the Frame Changes
+
+### Stream-First Architecture
+
+All frames are now canvas-first:
+
+| Legacy (aliased) | Current | Purpose |
+|---|---|---|
+| `StreamXYFrame` | Line, area, scatter, heatmap, candlestick charts |
+| `StreamOrdinalFrame` | Bar, pie, boxplot, violin, swarm charts |
+| `StreamNetworkFrame` | Force, sankey, chord, tree, treemap, circlepack |
+
+The legacy names are exported as aliases, so existing imports continue to work:
+
+```jsx
+// Both of these work — they resolve to the same component
+import { XYFrame } from "semiotic"
+import { StreamXYFrame } from "semiotic"
+```
+
+### What Changed in the Frames
+
+- **Canvas rendering** — data marks are drawn on canvas instead of SVG. Axes, labels, annotations, and legends remain in an SVG overlay.
+- **Push API** — every frame exposes `ref.current.push(datum)` for streaming data.
+- **No more `ResponsiveXYFrame`** — all frames handle responsive sizing via container measurement. `ResponsiveXYFrame` is aliased to `StreamXYFrame`.
+
+### NetworkFrame → StreamNetworkFrame
+
+`StreamNetworkFrame` is the biggest change. It unifies the old `NetworkFrame` (SVG, all layout types) and `RealtimeNetworkFrame` (streaming sankey only) into a single canvas-first frame with layout plugins:
+
+```jsx
+import { StreamNetworkFrame } from "semiotic"
+
+// Bounded sankey (replaces NetworkFrame with networkType="sankey")
+<StreamNetworkFrame
+  chartType="sankey"
+  nodes={nodes}
+  edges={edges}
+  nodeIDAccessor="id"
+  sourceAccessor="source"
+  targetAccessor="target"
+  valueAccessor="value"
+  showLabels
+  enableHover
+/>
+
+// Streaming sankey with particles (replaces RealtimeSankey/RealtimeNetworkFrame)
+<StreamNetworkFrame
+  ref={chartRef}
+  chartType="sankey"
+  showParticles
+  enableHover
+/>
+// chartRef.current.push({ source: "A", target: "B", value: 100 })
+
+// Force-directed graph
+<StreamNetworkFrame chartType="force" nodes={nodes} edges={edges} />
+
+// Hierarchy (tree, treemap, circlepack, partition)
+<StreamNetworkFrame chartType="treemap" data={hierarchyRoot} />
+```
+
+**Prop mapping from legacy NetworkFrame:**
+
+| Legacy NetworkFrame | StreamNetworkFrame |
+|---|---|
+| `networkType: { type: "force" }` | `chartType="force"` |
+| `networkType: { type: "sankey" }` | `chartType="sankey"` |
+| `hoverAnnotation` | `enableHover` |
+| `edges` (single object for hierarchy) | `data` (hierarchy root) |
+| `nodeStyle` / `edgeStyle` | Same — but `d` is a `RealtimeNode` with user data on `d.data` |
+
+## Step 4: Check for Removed APIs
+
+### `RealtimeSankey` (removed)
+
+Use `StreamNetworkFrame` with `chartType="sankey"` directly:
+
+```diff
+- import { RealtimeSankey } from "semiotic"
+- <RealtimeSankey ref={chartRef} size={[800, 400]} showParticles />
++ import { StreamNetworkFrame } from "semiotic"
++ <StreamNetworkFrame ref={chartRef} chartType="sankey" size={[800, 400]} showParticles />
+```
+
+The push API is identical: `ref.current.push({ source, target, value })`.
+
+### `RealtimeNetworkFrame` (removed)
+
+Alias for `StreamNetworkFrame` — the export still works but the component is gone:
+
+```diff
+- import { RealtimeNetworkFrame } from "semiotic"
++ import { StreamNetworkFrame } from "semiotic"
+```
+
+### `FacetController` (removed)
+
+Replaced by `LinkedCharts`:
+
+```diff
+- import { FacetController } from "semiotic"
+- <FacetController>
+-   <XYFrame ... />
+-   <OrdinalFrame ... />
+- </FacetController>
++ import { LinkedCharts } from "semiotic"
++ <LinkedCharts>
++   <LineChart ... linkedHover={{ name: "hl", fields: ["id"] }} selection={{ name: "hl" }} />
++   <BarChart ... selection={{ name: "hl" }} />
++ </LinkedCharts>
+```
 
 ### `baseMarkProps` (removed)
 
-**Before (v1/v2):**
-```jsx
-<XYFrame
-  baseMarkProps={{ transitionDuration: { fill: 500 } }}
-  // ...
-/>
-```
-
-**After (v3):**
-Use `lineStyle`, `pointStyle`, or `summaryStyle` props instead:
-```jsx
-<XYFrame
-  lineStyle={{ transition: "fill 500ms" }}
-  // ...
-/>
-```
-
-### `ProcessViz` (removed)
-
-This was a development/debugging component. Remove any imports:
 ```diff
-- import { ProcessViz } from "semiotic"
+- <XYFrame baseMarkProps={{ transitionDuration: { fill: 500 } }} />
++ <StreamXYFrame lineStyle={{ transition: "fill 500ms" }} />
 ```
 
-### `Mark` component (removed)
+### `ProcessViz`, `Mark`, `SpanOrDiv` (removed)
 
-Use direct SVG elements:
-```diff
-- import { Mark } from "semiotic"
-- <Mark markType="rect" width={10} height={20} />
-+ <rect width={10} height={20} />
-```
+Remove any imports. Use direct SVG/HTML elements instead.
 
-## Step 4: Adopt New Features (Optional)
+## Step 5: Adopt Chart HOCs (Recommended)
 
-### Use Chart Components Instead of Frames
+The simplest way to use Semiotic v3 is through the chart HOC components.
+They wrap the Stream frames with sensible defaults.
 
-The biggest v3 addition is 24 chart components with simplified APIs. These
-are optional — Frames continue to work — but they dramatically reduce code
-for common chart types.
-
-**Before (Frame):**
+**Before (legacy Frame):**
 ```jsx
 import { XYFrame } from "semiotic"
 
@@ -91,19 +176,12 @@ import { XYFrame } from "semiotic"
   yAccessor="revenue"
   lineDataAccessor="coordinates"
   lineType={{ type: "line", interpolator: curveMonotoneX }}
-  showLinePoints={true}
-  pointStyle={{ fill: "#6366f1", r: 3 }}
-  lineStyle={{ stroke: "#6366f1", strokeWidth: 2 }}
-  axes={[
-    { orient: "left", label: "Revenue" },
-    { orient: "bottom", label: "Month" },
-  ]}
   hoverAnnotation={true}
   size={[600, 400]}
 />
 ```
 
-**After (Chart):**
+**After (Chart HOC):**
 ```jsx
 import { LineChart } from "semiotic"
 
@@ -112,14 +190,21 @@ import { LineChart } from "semiotic"
   xAccessor="month"
   yAccessor="revenue"
   curve="monotoneX"
-  showPoints={true}
   xLabel="Month"
   yLabel="Revenue"
 />
 ```
 
-Both approaches continue to work. Use `frameProps` on any chart component
-to access the full Frame API without giving up the simpler interface:
+**Available chart components:**
+
+| Category | Components |
+|---|---|
+| XY | `LineChart`, `AreaChart`, `StackedAreaChart`, `Scatterplot`, `BubbleChart`, `Heatmap`, `ScatterplotMatrix` |
+| Ordinal | `BarChart`, `StackedBarChart`, `GroupedBarChart`, `SwarmPlot`, `BoxPlot`, `Histogram`, `ViolinPlot`, `DotPlot`, `PieChart`, `DonutChart` |
+| Network | `ForceDirectedGraph`, `ChordDiagram`, `SankeyDiagram`, `TreeDiagram`, `Treemap`, `CirclePack` |
+| Streaming XY | `RealtimeLineChart`, `RealtimeTemporalHistogram`, `RealtimeSwarmChart`, `RealtimeWaterfallChart` |
+
+Every chart HOC accepts a `frameProps` escape hatch for full frame control:
 
 ```jsx
 <LineChart
@@ -132,66 +217,15 @@ to access the full Frame API without giving up the simpler interface:
 />
 ```
 
-**Available chart components:**
+## Step 6: Use Streaming (Optional)
 
-| Category | Components |
-|---|---|
-| XY | `LineChart`, `AreaChart`, `StackedAreaChart`, `Scatterplot`, `BubbleChart`, `Heatmap` |
-| Ordinal | `BarChart`, `StackedBarChart`, `GroupedBarChart`, `SwarmPlot`, `BoxPlot`, `DotPlot`, `PieChart`, `DonutChart` |
-| Network | `ForceDirectedGraph`, `ChordDiagram`, `SankeyDiagram`, `TreeDiagram`, `Treemap`, `CirclePack` |
-| Realtime | `RealtimeLineChart`, `RealtimeBarChart`, `RealtimeSwarmChart`, `RealtimeWaterfallChart` |
-
-### Use Granular Imports for Smaller Bundles
-
-If you only use one type of visualization, import from the specific entry
-point to reduce your bundle by 36-43%:
-
-```diff
-- import { XYFrame, LineChart } from "semiotic"      // 218 KB
-+ import { XYFrame, LineChart } from "semiotic/xy"    // 125 KB
-```
-
-```diff
-- import { OrdinalFrame, BarChart } from "semiotic"           // 218 KB
-+ import { OrdinalFrame, BarChart } from "semiotic/ordinal"   // 140 KB
-```
-
-```diff
-- import { NetworkFrame } from "semiotic"                  // 218 KB
-+ import { NetworkFrame } from "semiotic/network"          // 133 KB
-```
-
-Each granular entry point includes the relevant Frame, its chart components,
-and shared utilities (Axis, Legend, Annotation, Brush).
-
-### Use Server-Side Rendering
-
-For static SVG generation (email, OG images, PDF, static sites):
-
-```jsx
-import { renderToStaticSVG } from "semiotic/server"
-
-const svg = renderToStaticSVG("xy", {
-  lines: [{ coordinates: data }],
-  xAccessor: "date",
-  yAccessor: "value",
-  size: [600, 400],
-  axes: [{ orient: "left" }, { orient: "bottom" }],
-})
-
-// svg is a string of static SVG markup
-```
-
-### Use RealtimeFrame for Streaming Data
-
-For high-frequency data (monitoring, IoT, financial):
+Every chart type supports streaming via the ref push API:
 
 ```jsx
 import { RealtimeLineChart } from "semiotic"
 
 const chartRef = useRef()
 
-// Push data imperatively
 useEffect(() => {
   const interval = setInterval(() => {
     chartRef.current.push({ time: Date.now(), value: Math.random() })
@@ -201,14 +235,86 @@ useEffect(() => {
 
 <RealtimeLineChart
   ref={chartRef}
-  timeAccessor="time"
-  valueAccessor="value"
+  stroke="#6366f1"
   windowSize={200}
-  size={[600, 300]}
 />
 ```
 
-## Step 5: TypeScript (Optional)
+For streaming network charts, use `StreamNetworkFrame` directly:
+
+```jsx
+import { StreamNetworkFrame } from "semiotic"
+
+const chartRef = useRef()
+
+// Push edges to grow the topology
+chartRef.current.push({ source: "A", target: "B", value: 100 })
+
+<StreamNetworkFrame
+  ref={chartRef}
+  chartType="sankey"
+  showParticles
+/>
+```
+
+### Threshold Annotations
+
+Streaming line charts support threshold-based line coloring — the line changes color when it crosses a threshold value:
+
+```jsx
+<RealtimeLineChart
+  ref={chartRef}
+  stroke="#f59e0b"
+  annotations={[
+    { type: "threshold", value: 80, label: "High", color: "#ef4444" },
+    { type: "threshold", value: 20, label: "Low", color: "#6366f1", thresholdType: "lesser" }
+  ]}
+  svgAnnotationRules={(annotation, i, context) => {
+    if (annotation.type === "threshold" && context?.scales) {
+      const y = context.scales.value(annotation.value)
+      return (
+        <g key={`threshold-${i}`}>
+          <line x1={0} x2={context.width} y1={y} y2={y}
+                stroke={annotation.color} strokeDasharray="6,3" />
+          <text x={context.width - 4} y={y - 6}
+                textAnchor="end" fill={annotation.color}
+                fontSize={11} fontWeight="bold">
+            {annotation.label}: {annotation.value}
+          </text>
+        </g>
+      )
+    }
+    return null
+  }}
+/>
+```
+
+## Step 7: Use Granular Imports for Smaller Bundles
+
+If you only use one type of visualization, import from the specific entry
+point to reduce your bundle:
+
+```diff
+- import { LineChart } from "semiotic"             // full bundle
++ import { LineChart } from "semiotic/xy"           // XY charts only
+```
+
+```diff
+- import { BarChart } from "semiotic"               // full bundle
++ import { BarChart } from "semiotic/ordinal"       // ordinal charts only
+```
+
+```diff
+- import { SankeyDiagram } from "semiotic"          // full bundle
++ import { SankeyDiagram } from "semiotic/network"  // network charts only
+```
+
+```diff
+- import { RealtimeLineChart } from "semiotic"            // full bundle
++ import { RealtimeLineChart } from "semiotic/realtime"   // realtime charts only
+```
+
+## Step 8: TypeScript (Optional)
 
 Semiotic v3 ships its own type definitions. Remove any community types:
 
@@ -219,7 +325,8 @@ Semiotic v3 ships its own type definitions. Remove any community types:
 All components support generics:
 
 ```tsx
-import { LineChart, LineChartProps } from "semiotic"
+import { LineChart } from "semiotic"
+import type { LineChartProps } from "semiotic"
 
 interface SalesPoint {
   month: number
@@ -233,7 +340,7 @@ interface SalesPoint {
 />
 ```
 
-## Step 6: Next.js / SSR Frameworks
+## Step 9: Next.js / SSR Frameworks
 
 Semiotic v3 includes `"use client"` directives on all interactive components.
 No special configuration is needed for Next.js App Router, Remix, or other
@@ -249,29 +356,49 @@ export default function DashboardPage() {
 }
 ```
 
+For static SVG generation (email, OG images, PDF):
+
+```jsx
+import { renderToStaticSVG } from "semiotic/server"
+
+const svg = renderToStaticSVG("xy", {
+  lines: [{ coordinates: data }],
+  xAccessor: "date",
+  yAccessor: "value",
+  size: [600, 400],
+})
+```
+
 ---
 
 ## FAQ
 
 ### Do I need to change my existing Frame code?
 
-No. `XYFrame`, `OrdinalFrame`, and `NetworkFrame` have the same prop API as
-v1/v2. Your existing code should work without changes (minus the three
-removed features listed above).
+The legacy names (`XYFrame`, `OrdinalFrame`, `NetworkFrame`) are aliased to the Stream versions, so existing imports work. However, there are behavioral differences:
+
+- Rendering is now canvas-based (marks are painted on canvas, not SVG elements)
+- Custom `nodeStyle`/`edgeStyle` functions on network charts receive `RealtimeNode` objects where user data is on `d.data` instead of directly on `d`
+- `ResponsiveXYFrame` and similar responsive wrappers are aliased to the base Stream frames (responsive sizing is built in)
 
 ### Should I switch from Frames to Chart components?
 
 For new code, yes — the chart components handle data transformation, axis
 configuration, legends, and hover interactions automatically. For existing
-Frame code that works well, there is no urgency to migrate.
+Frame code that works well, migrate at your own pace.
 
 ### Can I mix Frames and Chart components?
 
 Yes. They are independent components that can coexist on the same page.
+Chart HOCs wrap Stream frames internally.
+
+### What happened to RealtimeSankey?
+
+Removed. Use `StreamNetworkFrame` with `chartType="sankey"` and `showParticles`. The push API is identical. Streaming sankey examples are in the SankeyDiagram docs page.
 
 ### What happened to v2?
 
 Version 2 was a series of release candidates (up to `2.0.0-rc.12`) that
 began the internal refactoring to functional components and TypeScript. It
 was never promoted to a stable release. v3 completes that work and adds
-the chart components, RealtimeFrame, SSR, and code splitting.
+the chart components, stream-first frames, SSR, and code splitting.

@@ -456,11 +456,11 @@ Key props: **`edges`** (required), shows bidirectional relationships in a circle
 
 ## Realtime — Push API via Ref
 
-### RealtimeSankey
+### Streaming Sankey (StreamNetworkFrame)
 
 ```jsx
 import { useRef, useEffect } from "react"
-import { RealtimeSankey } from "semiotic/ai"
+import { StreamNetworkFrame } from "semiotic"
 
 const chartRef = useRef()
 
@@ -478,12 +478,12 @@ useEffect(() => {
   }
 }, [])
 
-<RealtimeSankey
+<StreamNetworkFrame
   ref={chartRef}
+  chartType="sankey"
   size={[800, 400]}
-  showParticles
   edgeOpacity={0.4}
 />
 ```
 
-Key props: push via ref (`push`, `pushMany`, `clear`), `showParticles`, `tensionConfig`, `particleStyle`
+Key props: push via ref (`push`, `pushMany`, `clear`), `chartType="sankey"`, uses `StreamNetworkFrame` from `semiotic`

@@ -43,7 +43,7 @@ describe("SankeyDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -54,7 +54,7 @@ describe("SankeyDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeFalsy()
   })
 
@@ -65,8 +65,8 @@ describe("SankeyDiagram", () => {
       </TooltipProvider>
     )
 
-    const svg = container.querySelector("svg")
-    expect(svg).toBeTruthy()
+    const frame = container.querySelector(".stream-network-frame")
+    expect(frame).toBeTruthy()
   })
 
   it("accepts nodes prop", () => {
@@ -76,7 +76,7 @@ describe("SankeyDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -87,7 +87,7 @@ describe("SankeyDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -98,7 +98,7 @@ describe("SankeyDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -109,7 +109,7 @@ describe("SankeyDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -120,7 +120,7 @@ describe("SankeyDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -131,7 +131,7 @@ describe("SankeyDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -142,7 +142,7 @@ describe("SankeyDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -153,7 +153,7 @@ describe("SankeyDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -164,7 +164,7 @@ describe("SankeyDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -175,7 +175,7 @@ describe("SankeyDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -186,7 +186,7 @@ describe("SankeyDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -197,7 +197,7 @@ describe("SankeyDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -208,7 +208,7 @@ describe("SankeyDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -222,7 +222,7 @@ describe("SankeyDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -231,14 +231,12 @@ describe("SankeyDiagram", () => {
       <TooltipProvider>
         <SankeyDiagram
           edges={sampleEdges}
-          frameProps={{
-            nodeSizeAccessor: () => 10
-          }}
+          nodeWidth={20}
         />
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -249,7 +247,7 @@ describe("SankeyDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -270,43 +268,21 @@ describe("SankeyDiagram", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".frame")
+    const frame = container.querySelector(".stream-network-frame")
     expect(frame).toBeTruthy()
   })
 
   describe("tooltip", () => {
-    // Mock NetworkFrame to capture props from SankeyDiagram
-    let capturedProps: any = null
-    beforeAll(() => {
-      jest.doMock("../../NetworkFrame", () => {
-        const MockNF = React.forwardRef((props: any, ref: any) => {
-          capturedProps = props
-          return <div data-testid="mock-nf" />
-        })
-        MockNF.displayName = "NetworkFrame"
-        return { __esModule: true, default: MockNF }
-      })
-    })
-    afterAll(() => {
-      jest.restoreAllMocks()
-    })
-    beforeEach(() => {
-      capturedProps = null
-    })
-
-    it("passes htmlAnnotationRules for tooltip handling", () => {
-      // Re-require after mock
-      const { SankeyDiagram: SD } = jest.requireActual("./SankeyDiagram")
-      render(
+    it("renders with tooltip prop without crashing", () => {
+      const customTooltip = (d: any) => <div>custom tooltip</div>
+      const { container } = render(
         <TooltipProvider>
-          <SD edges={sampleEdges} />
+          <SankeyDiagram edges={sampleEdges} tooltip={customTooltip} />
         </TooltipProvider>
       )
-      // htmlAnnotationRules is set on the real component's networkFrameProps
-      // Even without the mock, the real render passes the rule
-      const frame = document.querySelector(".frame")
-      // Verify it renders (integration)
-      expect(frame || document.querySelector("[data-testid]")).toBeTruthy()
+
+      const frame = container.querySelector(".stream-network-frame")
+      expect(frame).toBeTruthy()
     })
   })
 })

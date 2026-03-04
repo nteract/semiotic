@@ -1,5 +1,5 @@
-import React from "react"
-import { OrdinalFrame } from "semiotic"
+import React, { useRef, useEffect } from "react"
+import { StreamOrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import { BoxPlot } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -7,6 +7,8 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -62,6 +64,88 @@ const colorData = [
 ]
 
 // ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const timeSlots = ["Morning", "Afternoon", "Evening"]
+
+const streamingBoxPlotCode = `import { useRef, useEffect } from "react"
+import { StreamOrdinalFrame } from "semiotic"
+
+function StreamingBoxPlotDemo() {
+  const chartRef = useRef()
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const slot = timeSlots[Math.floor(Math.random() * 3)]
+        // Different distributions per time slot
+        const base = slot === "Morning" ? 65
+          : slot === "Afternoon" ? 82 : 47
+        const spread = 15
+        const noise = (Math.random() + Math.random() + Math.random()) / 3 - 0.5
+        chartRef.current.push({
+          category: slot,
+          value: Math.round(base + noise * spread * 2),
+        })
+      }
+    }, 100)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="boxplot"
+      runtimeMode="streaming"
+      size={[600, 300]}
+      oAccessor="category"
+      rAccessor="value"
+      windowSize={300}
+      showAxes
+      showOutliers
+      summaryStyle={() => ({ fill: "#6366f1", stroke: "#6366f1", fillOpacity: 0.8 })}
+    />
+  )
+}`
+
+function StreamingBoxPlotDemo({ width }) {
+  const chartRef = useRef()
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const slot = timeSlots[Math.floor(Math.random() * 3)]
+        const base = slot === "Morning" ? 65
+          : slot === "Afternoon" ? 82 : 47
+        const spread = 15
+        const noise = (Math.random() + Math.random() + Math.random()) / 3 - 0.5
+        chartRef.current.push({
+          category: slot,
+          value: Math.round(base + noise * spread * 2),
+        })
+      }
+    }, 100)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamOrdinalFrame
+      ref={chartRef}
+      chartType="boxplot"
+      runtimeMode="streaming"
+      size={[width, 300]}
+      oAccessor="category"
+      rAccessor="value"
+      windowSize={300}
+      showAxes
+      showOutliers
+      summaryStyle={() => ({ fill: "#6366f1", stroke: "#6366f1", fillOpacity: 0.8 })}
+    />
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Props definition for PropTable
 // ---------------------------------------------------------------------------
 
@@ -86,7 +170,7 @@ const boxPlotProps = [
   { name: "height", type: "number", required: false, default: "400", description: "Chart height in pixels." },
   { name: "margin", type: "object", required: false, default: "{ top: 50, bottom: 60, left: 70, right: 40 }", description: "Margin around the chart area." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Additional OrdinalFrame props for advanced customization. Escape hatch to the full Frame API." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamOrdinalFrame props for advanced customization. Escape hatch to the full Frame API." },
 ]
 
 // ---------------------------------------------------------------------------
@@ -110,12 +194,12 @@ export default function BoxPlotPage() {
         componentName="BoxPlot"
         importStatement='import { BoxPlot } from "semiotic"'
         tier="charts"
-        wraps="OrdinalFrame"
+        wraps="StreamOrdinalFrame"
         wrapsPath="/frames/ordinal-frame"
         related={[
           { name: "SwarmPlot", path: "/charts/swarm-plot" },
           { name: "BarChart", path: "/charts/bar-chart" },
-          { name: "OrdinalFrame", path: "/frames/ordinal-frame" },
+          { name: "StreamOrdinalFrame", path: "/frames/ordinal-frame" },
         ]}
       />
 
@@ -137,18 +221,20 @@ export default function BoxPlotPage() {
         points per category and the component computes quartiles automatically.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: sampleData,
-          categoryAccessor: "category",
-          valueAccessor: "value",
-          categoryLabel: "Time of Day",
-          valueLabel: "Response Time (ms)",
-        }}
-        type={BoxPlot}
-        startHidden={false}
-        overrideProps={{
-          data: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              data: sampleData,
+              categoryAccessor: "category",
+              valueAccessor: "value",
+              categoryLabel: "Time of Day",
+              valueLabel: "Response Time (ms)",
+            }}
+            type={BoxPlot}
+            startHidden={false}
+            overrideProps={{
+              data: `[
   { category: "Morning", value: 62 },
   { category: "Morning", value: 58 },
   { category: "Morning", value: 71 },
@@ -157,8 +243,16 @@ export default function BoxPlotPage() {
   { category: "Afternoon", value: 85 },
   // ...more data points
 ]`,
-        }}
-        hiddenProps={{}}
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingBoxPlotDemo width={w} />}
+            code={streamingBoxPlotCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}
@@ -256,8 +350,8 @@ export default function BoxPlotPage() {
       <p>
         When you need more control — custom summary rendering, overlaid swarm
         points, annotations — graduate to{" "}
-        <Link to="/frames/ordinal-frame">OrdinalFrame</Link> directly. Every{" "}
-        <code>BoxPlot</code> is just a configured <code>OrdinalFrame</code>{" "}
+        <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> directly. Every{" "}
+        <code>BoxPlot</code> is just a configured <code>StreamOrdinalFrame</code>{" "}
         under the hood.
       </p>
 
@@ -281,9 +375,9 @@ export default function BoxPlotPage() {
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-frames)" }}>Frame (full control)</h4>
           <CodeBlock
-            code={`import { OrdinalFrame } from "semiotic"
+            code={`import { StreamOrdinalFrame } from "semiotic"
 
-<OrdinalFrame
+<StreamOrdinalFrame
   data={responseTimeData}
   oAccessor="category"
   rAccessor="value"
@@ -312,7 +406,7 @@ export default function BoxPlotPage() {
 
       <p>
         The <code>frameProps</code> prop on BoxPlot lets you pass any
-        OrdinalFrame prop without fully graduating:
+        StreamOrdinalFrame prop without fully graduating:
       </p>
 
       <CodeBlock
@@ -348,7 +442,7 @@ export default function BoxPlotPage() {
           comparisons
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — the underlying
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the underlying
           Frame with full control over every rendering detail
         </li>
         <li>

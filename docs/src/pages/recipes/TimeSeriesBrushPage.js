@@ -3,9 +3,8 @@ import { Link } from "react-router-dom"
 import RecipeLayout from "../../components/RecipeLayout"
 import TimeSeriesBrush from "../../examples/recipes/TimeSeriesBrush"
 
-const fullSourceCode = `import React, { useState } from "react"
-import { MinimapXYFrame } from "semiotic"
-import { curveMonotoneX } from "d3-shape"
+const fullSourceCode = `import React from "react"
+import { MinimapChart } from "semiotic"
 
 function formatDate(d) {
   const date = new Date(d)
@@ -14,56 +13,41 @@ function formatDate(d) {
 }
 
 export default function TimeSeriesBrush({ data, width = 700, height = 350 }) {
-  const [selectedExtent, setSelectedExtent] = useState(undefined)
-
-  const handleBrushEnd = (e) => {
-    if (e) {
-      setSelectedExtent(e)
-    }
-  }
-
   return (
-    <MinimapXYFrame
-      size={[width, height]}
-      lines={data}
-      lineType={{ type: "line", interpolator: curveMonotoneX }}
+    <MinimapChart
+      data={data}
+      width={width}
+      height={height}
       xAccessor="date"
       yAccessor="value"
-      lineStyle={(d) => ({ stroke: d.color, strokeWidth: 2, fill: "none" })}
-      xExtent={selectedExtent}
-      matte={true}
-      axes={[
-        { orient: "left", ticks: 5 },
-        { orient: "bottom", ticks: 6, tickFormat: formatDate },
-      ]}
+      lineBy="series"
+      colorBy="series"
+      colorScheme={["#6366f1", "#22c55e", "#f59e0b"]}
+      curve="monotoneX"
+      lineWidth={2}
+      enableHover={true}
+      xFormat={formatDate}
       margin={{ left: 60, top: 10, bottom: 40, right: 20 }}
       minimap={{
-        brushEnd: handleBrushEnd,
-        yBrushable: false,
-        xBrushExtent: selectedExtent,
+        height: 60,
         margin: { left: 60, top: 0, bottom: 20, right: 20 },
-        axes: [{ orient: "left", ticks: 2 }],
-        size: [width, 60],
-        lineStyle: (d) => ({ stroke: d.color, strokeWidth: 1, fill: "none" }),
       }}
-      hoverAnnotation={true}
-      tooltipContent={(d) => (
-        <div style={{
-          background: "#1a1a25", border: "1px solid #252530",
-          borderRadius: "6px", padding: "8px 12px", fontSize: "13px", color: "#f0f0f5",
-        }}>
-          <div style={{ fontWeight: 600 }}>{d.parentLine.label}</div>
-          <div>{formatDate(d.date)}: {d.value}</div>
-        </div>
-      )}
+      tooltip={{
+        title: "series",
+        fields: [
+          { field: "date", label: "Date", format: formatDate },
+          { field: "value", label: "Value" }
+        ]
+      }}
     />
   )
 }
 
-// Usage:
+// Usage with flat data:
 // const data = [
-//   { label: "Series A", color: "#6366f1",
-//     coordinates: [{ date: 1704067200000, value: 100 }, ...] },
+//   { date: 1704067200000, value: 100, series: "A", color: "#6366f1" },
+//   { date: 1704153600000, value: 102, series: "A", color: "#6366f1" },
+//   ...
 // ]
 // <TimeSeriesBrush data={data} width={700} height={350} />`
 
@@ -77,13 +61,14 @@ export default function TimeSeriesBrushPage() {
       ]}
       prevPage={{ title: "KPI Card + Sparkline", path: "/recipes/kpi-card-sparkline" }}
       nextPage={{ title: "Network Explorer", path: "/recipes/network-explorer" }}
-      dependencies={["semiotic", "react", "d3-shape"]}
+      dependencies={["semiotic", "react"]}
       fullSourceCode={fullSourceCode}
     >
       <p>
         A multi-series time series chart with a brush minimap for zooming into
-        a date range. Uses Semiotic's <code>MinimapXYFrame</code> which
-        automatically manages the main chart and brush minimap together.
+        a date range. Uses Semiotic's <code>MinimapChart</code> which
+        renders a main chart and an overview minimap with d3-brush for
+        selecting a date range.
       </p>
 
       <h2 id="preview">Preview</h2>
@@ -104,51 +89,49 @@ export default function TimeSeriesBrushPage() {
         <tbody>
           <tr>
             <td>Line colors</td>
-            <td><code>data[].color</code></td>
-            <td>Set the <code>color</code> field on each series object</td>
+            <td><code>colorScheme</code></td>
+            <td>Pass an array of color strings</td>
           </tr>
           <tr>
             <td>Curve interpolation</td>
-            <td><code>lineType.interpolator</code></td>
-            <td>Swap <code>curveMonotoneX</code> for any d3-shape curve</td>
+            <td><code>curve</code></td>
+            <td>Use "monotoneX", "step", "basis", etc.</td>
           </tr>
           <tr>
             <td>Date formatting</td>
-            <td><code>formatDate</code> function</td>
-            <td>Adjust the format string for your locale</td>
+            <td><code>xFormat</code></td>
+            <td>Pass a formatter function for the x-axis</td>
           </tr>
           <tr>
             <td>Minimap height</td>
-            <td><code>minimap.size</code></td>
-            <td>Change the second value in <code>[width, 60]</code></td>
+            <td><code>minimap.height</code></td>
+            <td>Change the height value (default: 60)</td>
           </tr>
           <tr>
             <td>Initial zoom</td>
-            <td><code>useState</code> default</td>
-            <td>Pass an initial <code>[startDate, endDate]</code> extent</td>
+            <td><code>brushExtent</code></td>
+            <td>Pass an initial <code>[startDate, endDate]</code> for controlled brushing</td>
           </tr>
         </tbody>
       </table>
 
       <h2 id="how-it-works">How It Works</h2>
       <p>
-        <code>MinimapXYFrame</code> renders two coordinated XYFrames: a main chart
-        and a smaller minimap below it. The minimap's <code>brushEnd</code> callback
-        updates the <code>selectedExtent</code> state, which is passed to both
-        <code>xExtent</code> (to zoom the main chart) and <code>xBrushExtent</code>
-        (to reflect the selection in the minimap).
+        <code>MinimapChart</code> renders two coordinated StreamXYFrames: a main chart
+        and a smaller overview below it. The overview has a d3-brush overlay that
+        controls the <code>xExtent</code> of the main chart. Drag the brush to zoom
+        into a date range, or drag the brush edges to resize the selection.
       </p>
       <p>
-        The <code>matte</code> prop adds a semi-transparent overlay to areas outside
-        the selected range in the main chart. Line data uses timestamp numbers for the
-        x-axis, formatted by the <code>tickFormat</code> function on the bottom axis.
+        The <code>minimap</code> prop configures the overview chart's height, margins,
+        and styling. Use <code>brushExtent</code> and <code>onBrush</code> for
+        controlled brush state.
       </p>
 
       <h2 id="related">Related</h2>
       <ul>
-        <li><Link to="/frames/xy-frame">XYFrame</Link> — the base frame for line charts</li>
+        <li><Link to="/charts/line-chart">Line Chart</Link> — simpler line chart</li>
         <li><Link to="/features/interaction">Interaction</Link> — brush and interaction patterns</li>
-        <li><Link to="/charts/line-chart">Line Chart</Link> — simpler line chart recipe</li>
       </ul>
     </RecipeLayout>
   )

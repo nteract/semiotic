@@ -1,5 +1,5 @@
 import React from "react"
-import { OrdinalFrame, XYFrame } from "semiotic"
+import { StreamOrdinalFrame, StreamXYFrame } from "semiotic"
 
 import PageLayout from "../../components/PageLayout"
 import LiveExample from "../../components/LiveExample"
@@ -195,7 +195,7 @@ export default function StylingPage() {
           margin: { top: 20, bottom: 20, left: 40, right: 20 },
           title: "Sketchy Bar Chart",
         }}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         overrideProps={{
           data: "[5, 8, 2, 3, 10, 5, 8, 2, 3, 10]",
           style: `(d, i) => ({
@@ -220,15 +220,15 @@ export default function StylingPage() {
       </p>
       <ul>
         <li>
-          <strong>XYFrame:</strong> <code>pointRenderMode</code>,{" "}
+          <strong>StreamXYFrame:</strong> <code>pointRenderMode</code>,{" "}
           <code>lineRenderMode</code>, <code>summaryRenderMode</code>
         </li>
         <li>
-          <strong>OrdinalFrame:</strong> <code>renderMode</code>,{" "}
+          <strong>StreamOrdinalFrame:</strong> <code>renderMode</code>,{" "}
           <code>summaryRenderMode</code>
         </li>
         <li>
-          <strong>NetworkFrame:</strong> <code>nodeRenderMode</code>,{" "}
+          <strong>StreamNetworkFrame:</strong> <code>nodeRenderMode</code>,{" "}
           <code>edgeRenderMode</code>
         </li>
       </ul>
@@ -239,7 +239,7 @@ export default function StylingPage() {
 
       <CodeBlock
         code={`// Only render items above a threshold as sketchy
-<OrdinalFrame
+<StreamOrdinalFrame
   renderMode={d => d.value > 5 ? "sketchy" : undefined}
   // ...other props
 />`}
@@ -289,7 +289,7 @@ export default function StylingPage() {
           margin: 20,
           title: "Patterns and Gradients",
         }}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         overrideProps={{
           data: "[5, 8, 2, 3, 10, 5, 8, 2, 3, 10]",
           style: `(d, i) => ({
@@ -327,15 +327,13 @@ export default function StylingPage() {
 
       <LiveExample
         frameProps={{
-          lines: lineData,
+          data: lineData,
+          chartType: "line",
+          lineDataAccessor: "coordinates",
           xAccessor: "month",
           yAccessor: "value",
-          lineDataAccessor: "coordinates",
           lineStyle: () => ({ stroke: theme[0], strokeWidth: 2.5 }),
-          axes: [
-            { orient: "left" },
-            { orient: "bottom", ticks: 8 },
-          ],
+          showAxes: true,
           margin: { top: 30, bottom: 40, left: 50, right: 20 },
           backgroundGraphics: (
             <g>
@@ -362,7 +360,7 @@ export default function StylingPage() {
           ),
           title: "With Background & Foreground Layers",
         }}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={{
           lines: `[{
   label: "Revenue",
@@ -416,12 +414,12 @@ export default function StylingPage() {
 
       <CodeBlock
         code={`// Static style object (same for all bars)
-<OrdinalFrame
+<StreamOrdinalFrame
   style={{ fill: "#ac58e5", stroke: "white" }}
 />
 
 // Dynamic style function (data-driven)
-<OrdinalFrame
+<StreamOrdinalFrame
   style={(d, i) => ({
     fill: d.value > 10 ? "#E0488B" : "#9fd0cb",
     stroke: "white",
@@ -440,10 +438,10 @@ export default function StylingPage() {
 
       <CodeBlock
         code={`// Static class
-<XYFrame lineClass="revenue-line" />
+<StreamXYFrame lineClass="revenue-line" />
 
 // Dynamic class function
-<XYFrame
+<StreamXYFrame
   lineClass={d => \`line-\${d.category}\`}
   pointClass={d => d.highlighted ? "point-active" : "point-default"}
 />
@@ -463,7 +461,7 @@ export default function StylingPage() {
       </p>
 
       <CodeBlock
-        code={`<XYFrame
+        code={`<StreamXYFrame
   backgroundGraphics={({ size, margin }) => (
     <rect
       x={margin.left}
@@ -520,15 +518,15 @@ export default function StylingPage() {
 
       <ul>
         <li>
-          <Link to="/frames/xy-frame">XYFrame</Link> — lineStyle, pointStyle,
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> — lineStyle, pointStyle,
           summaryStyle, and render mode props
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — style,
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — style,
           renderMode, summaryStyle, and pattern support
         </li>
         <li>
-          <Link to="/frames/network-frame">NetworkFrame</Link> — nodeStyle,
+          <Link to="/frames/network-frame">StreamNetworkFrame</Link> — nodeStyle,
           edgeStyle, and render mode props
         </li>
         <li>

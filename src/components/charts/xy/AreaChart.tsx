@@ -1,42 +1,19 @@
 "use client"
 import * as React from "react"
 import { useMemo, useCallback } from "react"
-import {
-  curveLinear,
-  curveMonotoneX,
-  curveMonotoneY,
-  curveStep,
-  curveStepAfter,
-  curveStepBefore,
-  curveBasis,
-  curveCardinal,
-  curveCatmullRom
-} from "d3-shape"
-import XYFrame from "../../XYFrame"
-import type { XYFrameProps } from "../../types/xyTypes"
+import StreamXYFrame from "../../stream/StreamXYFrame"
+import type { StreamXYFrameProps } from "../../stream/types"
 import { getColor } from "../shared/colorUtils"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { validateArrayData } from "../shared/validateChartData"
 import { normalizeLinkedHover, wrapStyleWithSelection } from "../shared/selectionUtils"
 import { useSelection } from "../../store/useSelection"
 import { useLinkedHover } from "../../store/useSelection"
-
-/** Map of curve name strings to d3-shape curve functions */
-const CURVE_MAP = {
-  linear: curveLinear,
-  monotoneX: curveMonotoneX,
-  monotoneY: curveMonotoneY,
-  step: curveStep,
-  stepAfter: curveStepAfter,
-  stepBefore: curveStepBefore,
-  basis: curveBasis,
-  cardinal: curveCardinal,
-  catmullRom: curveCatmullRom
-} as const
 
 /**
  * AreaChart component props
@@ -149,7 +126,7 @@ export interface AreaChartProps<TDatum extends Record<string, any> = Record<stri
    * For full control, consider using XYFrame directly
    * @see https://semiotic.nteract.io/guides/xy-frame
    */
-  frameProps?: Partial<Omit<XYFrameProps, "lines" | "size">>
+  frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size">>
 }
 
 /**
@@ -264,9 +241,6 @@ export function AreaChart<TDatum extends Record<string, any> = Record<string, an
   // Create color scale if colorBy is specified
   const colorScale = useColorScale(safeData, colorBy, colorScheme)
 
-  // Curve function from module-level map
-  const curveFunction = CURVE_MAP[curve] || curveMonotoneX
-
   // Area/line style function
   const baseLineStyle = useMemo(() => {
     return (d: Record<string, any>) => {
@@ -293,35 +267,6 @@ export function AreaChart<TDatum extends Record<string, any> = Record<string, an
     () => wrapStyleWithSelection(baseLineStyle, activeSelectionHook, selection),
     [baseLineStyle, activeSelectionHook, selection]
   )
-
-  // Build axes configuration
-  const axes = useMemo(() => {
-    const axesConfig: Array<Record<string, unknown>> = []
-
-    // Y axis (left)
-    axesConfig.push({
-      orient: "left",
-      label: yLabel,
-      tickFormat: yFormat,
-      ...(showGrid && { tickLineGenerator: () => null })
-    })
-
-    // X axis (bottom)
-    axesConfig.push({
-      orient: "bottom",
-      label: xLabel,
-      tickFormat: xFormat,
-      ...(showGrid && { tickLineGenerator: () => null })
-    })
-
-    return axesConfig
-  }, [xLabel, yLabel, xFormat, yFormat, showGrid])
-
-  // Determine line type — always overlapping areas
-  const lineType = useMemo(() => ({
-    type: "area" as const,
-    interpolator: curveFunction
-  }), [curveFunction])
 
   // Determine if we should show legend
   const shouldShowLegend = showLegend !== undefined ? showLegend : areaData.length > 1
@@ -362,6 +307,14 @@ export function AreaChart<TDatum extends Record<string, any> = Record<string, an
     [linkedHover, linkedHoverHook]
   )
 
+  // Default tooltip showing all configured fields
+  const groupField = areaBy || colorBy
+  const defaultTooltipContent = useMemo(() => buildDefaultTooltip([
+    { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x" },
+    { label: yLabel || accessorName(yAccessor), accessor: yAccessor, role: "y" },
+    ...(groupField ? [{ label: accessorName(groupField), accessor: groupField, role: "group" as const }] : []),
+  ]), [xAccessor, yAccessor, xLabel, yLabel, groupField])
+
   // Validate data (after all hooks)
   const error = validateArrayData({
     componentName: "AreaChart",
@@ -373,29 +326,46 @@ export function AreaChart<TDatum extends Record<string, any> = Record<string, an
   })
   if (error) return <ChartError componentName="AreaChart" message={error} width={width} height={height} />
 
-  // Build XYFrame props
-  const xyFrameProps: XYFrameProps = {
-    size: [width, height],
-    lines: areaData,
+  // Flatten area data into a single array for StreamXYFrame
+  const flattenedData = useMemo(() => {
+    if (isAreaObjectFormat || areaBy) {
+      return areaData.flatMap((area: Record<string, any>) => {
+        const coords = area[lineDataAccessor] || []
+        if (areaBy && typeof areaBy === "string") {
+          return coords.map((c: Record<string, any>) => ({ ...c, [areaBy]: area[areaBy] }))
+        }
+        return coords
+      })
+    }
+    return safeData
+  }, [areaData, lineDataAccessor, isAreaObjectFormat, areaBy, safeData])
+
+  // Build StreamXYFrame props
+  const streamProps: StreamXYFrameProps = {
+    chartType: "area",
+    data: flattenedData,
     xAccessor,
     yAccessor,
-    lineDataAccessor,
-    lineType,
+    groupAccessor: areaBy || undefined,
+    curve,
     lineStyle,
-    axes: axes as any,
-    hoverAnnotation: enableHover,
+    size: [width, height],
     margin,
+    showAxes: true,
+    xLabel,
+    yLabel,
+    xFormat,
+    yFormat,
+    enableHover,
+    showGrid,
     ...(legend && { legend }),
-    ...(className && { className }),
     ...(title && { title }),
-    // Add tooltip support
-    ...(tooltip && { tooltipContent: normalizeTooltip(tooltip) as Function }),
+    ...(className && { className }),
+    tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
     ...(linkedHover && { customHoverBehavior }),
-    // Allow frameProps to override defaults
-    transition: true,
     ...frameProps
   }
 
-  return <XYFrame {...xyFrameProps} />
+  return <StreamXYFrame {...streamProps} />
 }
 AreaChart.displayName = "AreaChart"

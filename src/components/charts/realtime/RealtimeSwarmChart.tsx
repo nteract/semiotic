@@ -1,15 +1,16 @@
 import * as React from "react"
 import { useRef, useImperativeHandle, forwardRef, useCallback } from "react"
-import RealtimeFrame from "../../realtime/RealtimeFrame"
+import StreamXYFrame from "../../stream/StreamXYFrame"
 import type {
   ArrowOfTime,
   WindowMode,
   SwarmStyle,
   HoverAnnotationConfig,
   HoverData,
-  RealtimeFrameHandle,
-  AnnotationContext
-} from "../../realtime/types"
+  AnnotationContext,
+  StreamXYFrameHandle
+} from "../../stream/types"
+import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { ReactNode } from "react"
 import { normalizeLinkedHover } from "../shared/selectionUtils"
 import { useLinkedHover } from "../../store/useSelection"
@@ -78,9 +79,9 @@ export interface RealtimeSwarmChartProps {
 /**
  * RealtimeSwarmChart - Simplified wrapper for streaming dot/swarm charts.
  *
- * Wraps RealtimeFrame with `chartType="swarm"` and exposes dot styling as
- * top-level props. Each data point renders as an individual dot at its
- * (time, value) coordinates.
+ * Wraps StreamXYFrame with `chartType="swarm"` and `runtimeMode="streaming"`,
+ * exposing dot styling as top-level props. Each data point renders as an individual
+ * dot at its (time, value) coordinates.
  *
  * Supports threshold coloring via annotations to recolor dots that cross
  * value boundaries.
@@ -130,7 +131,7 @@ export const RealtimeSwarmChart = forwardRef<RealtimeFrameHandle, RealtimeSwarmC
       linkedHover
     } = props
 
-    const frameRef = useRef<RealtimeFrameHandle>(null)
+    const frameRef = useRef<StreamXYFrameHandle>(null)
 
     // ── Linked hover hooks (always called, conditional logic inside) ──
     const hoverConfig = normalizeLinkedHover(linkedHover)
@@ -164,9 +165,10 @@ export const RealtimeSwarmChart = forwardRef<RealtimeFrameHandle, RealtimeSwarmC
     if (strokeWidth != null) swarmStyle.strokeWidth = strokeWidth
 
     return (
-      <RealtimeFrame
+      <StreamXYFrame
         ref={frameRef}
         chartType="swarm"
+        runtimeMode="streaming"
         size={size}
         margin={margin}
         className={className}
@@ -176,8 +178,8 @@ export const RealtimeSwarmChart = forwardRef<RealtimeFrameHandle, RealtimeSwarmC
         data={data}
         timeAccessor={timeAccessor}
         valueAccessor={valueAccessor}
-        timeExtent={timeExtent}
-        valueExtent={valueExtent}
+        xExtent={timeExtent}
+        yExtent={valueExtent}
         extentPadding={extentPadding}
         categoryAccessor={categoryAccessor}
         barColors={colors}

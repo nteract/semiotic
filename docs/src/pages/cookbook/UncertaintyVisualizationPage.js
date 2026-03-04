@@ -1,9 +1,97 @@
-import React from "react"
+import React, { useRef, useEffect } from "react"
+import { StreamXYFrame } from "semiotic"
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 import UncertaintyVisualization from "../../examples/UncertaintyVisualization"
+
+// ---------------------------------------------------------------------------
+// Streaming demo
+// ---------------------------------------------------------------------------
+
+const streamingForecastCode = `import { useRef, useEffect } from "react"
+import { StreamXYFrame } from "semiotic"
+
+function StreamingForecast() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        // Uncertainty grows with a noisy sine pattern
+        const uncertainty = 5 + Math.abs(Math.sin(i * 0.01)) * 20
+        chartRef.current.push({
+          time: i,
+          value: 100 + Math.sin(i * 0.02) * 30
+            + (Math.random() - 0.5) * 15,
+          uncertainty,
+        })
+      }
+    }, 80)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamXYFrame
+      ref={chartRef}
+      chartType="line"
+      runtimeMode="streaming"
+      size={[600, 280]}
+      lineStyle={{ stroke: "#f59e0b", strokeWidth: 2 }}
+      boundsAccessor="uncertainty"
+      boundsStyle={{
+        fill: "#f59e0b",
+        fillOpacity: 0.15,
+        stroke: "none",
+      }}
+      windowSize={150}
+      showAxes
+    />
+  )
+}`
+
+function StreamingForecastDemo({ width }) {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        const uncertainty = 5 + Math.abs(Math.sin(i * 0.01)) * 20
+        chartRef.current.push({
+          time: i,
+          value: 100 + Math.sin(i * 0.02) * 30 + (Math.random() - 0.5) * 15,
+          uncertainty,
+        })
+      }
+    }, 80)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamXYFrame
+      ref={chartRef}
+      chartType="line"
+      runtimeMode="streaming"
+      size={[width, 280]}
+      lineStyle={{ stroke: "#f59e0b", strokeWidth: 2 }}
+      boundsAccessor="uncertainty"
+      boundsStyle={{
+        fill: "#f59e0b",
+        fillOpacity: 0.15,
+        stroke: "none",
+      }}
+      windowSize={150}
+      showAxes={true}
+    />
+  )
+}
 
 export default function UncertaintyVisualizationPage() {
   return (
@@ -29,20 +117,30 @@ export default function UncertaintyVisualizationPage() {
         Forecasts are only useful when they communicate how confident you are in
         the prediction. This recipe shows how to visualize a time series with a
         forecasted segment and a confidence interval cone, stitching together
-        observed data and projected values in a single XYFrame.
+        observed data and projected values in a single StreamXYFrame.
       </p>
 
       <h2 id="the-visualization">The Visualization</h2>
-      <div
-        style={{
-          background: "var(--surface-1)",
-          borderRadius: "8px",
-          padding: "16px",
-          border: "1px solid var(--surface-3)",
-        }}
-      >
-        <UncertaintyVisualization />
-      </div>
+      <StreamingToggle
+        staticContent={
+          <div
+            style={{
+              background: "var(--surface-1)",
+              borderRadius: "8px",
+              padding: "16px",
+              border: "1px solid var(--surface-3)",
+            }}
+          >
+            <UncertaintyVisualization />
+          </div>
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingForecastDemo width={w} />}
+            code={streamingForecastCode}
+          />
+        }
+      />
 
       <h2 id="how-it-works">How It Works</h2>
       <p>
@@ -106,7 +204,7 @@ summaryClass: "uncertainty_cone"`}
       <h2 id="related">Related</h2>
       <ul>
         <li>
-          <Link to="/frames/xy-frame">XYFrame</Link> — the underlying frame for
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> — the underlying frame for
           line and summary rendering
         </li>
         <li>

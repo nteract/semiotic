@@ -19,7 +19,7 @@ export default function IsotypeChartPage() {
       <p>
         Isotype charts (pictogram charts) replace abstract bar lengths with
         repeated icons, making quantities more tangible and engaging. This
-        recipe uses OrdinalFrame's icon bar type to display a survey of data
+        recipe uses StreamOrdinalFrame's icon bar type to display a survey of data
         visualization practitioners and journalists, with each person
         represented by a small person-shaped SVG path.
       </p>
@@ -105,7 +105,7 @@ style: d => ({
       <h2 id="related">Related</h2>
       <ul>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — the underlying
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — the underlying
           frame with icon bar support
         </li>
         <li>
@@ -114,7 +114,7 @@ style: d => ({
         </li>
         <li>
           <Link to="/cookbook/waterfall-chart">Waterfall Chart</Link> — another
-          custom rendering approach in OrdinalFrame
+          custom rendering approach in StreamOrdinalFrame
         </li>
       </ul>
     </PageLayout>

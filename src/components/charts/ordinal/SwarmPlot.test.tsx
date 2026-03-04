@@ -24,7 +24,7 @@ describe("SwarmPlot", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -35,7 +35,7 @@ describe("SwarmPlot", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeFalsy()
   })
 
@@ -61,7 +61,7 @@ describe("SwarmPlot", () => {
       </TooltipProvider>
     )
 
-    const axes = container.querySelectorAll(".axis")
+    const axes = container.querySelectorAll("canvas")
     expect(axes.length).toBeGreaterThan(0)
   })
 
@@ -72,7 +72,7 @@ describe("SwarmPlot", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -83,7 +83,7 @@ describe("SwarmPlot", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -94,7 +94,7 @@ describe("SwarmPlot", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -106,7 +106,7 @@ describe("SwarmPlot", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -117,7 +117,7 @@ describe("SwarmPlot", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -127,13 +127,13 @@ describe("SwarmPlot", () => {
         <SwarmPlot
           data={sampleData}
           frameProps={{
-            pieceHoverAnnotation: true
+            hoverAnnotation: true
           }}
         />
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -144,7 +144,7 @@ describe("SwarmPlot", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 
@@ -165,7 +165,7 @@ describe("SwarmPlot", () => {
       </TooltipProvider>
     )
 
-    const frame = container.querySelector(".ordinalframe")
+    const frame = container.querySelector(".stream-ordinal-frame")
     expect(frame).toBeTruthy()
   })
 })

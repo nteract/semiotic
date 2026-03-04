@@ -10,7 +10,7 @@ You can set the `hoverAnnotation` property (and [[ORFrame]] has a `pieceHoverAnn
 If you want more control over what happens on interaction, for instance if you want to update state, you can define custom events for the frame using `customClickBehavior`, `customHoverBehavior` and `customDoubleclick` behavior. The click and doubleclick are pretty straightforward, they pass the associated datapoint to whatever function you define, while the hover passes the datapoint on `onMouseEnter` and passes undefined to that function on `onMouseLeave`.
 
 ```jsx
-<XYFrame
+<StreamXYFrame
   hoverAnnotation={true}
   customClickBehavior={d => {
     this.setState({ clicked: d.id });

@@ -1,5 +1,5 @@
 import React from "react"
-import { OrdinalFrame, ResponsiveOrdinalFrame } from "semiotic"
+import { StreamOrdinalFrame, StreamOrdinalFrame } from "semiotic"
 import DocumentFrame from "../DocumentFrame"
 import theme from "../theme"
 import MarkdownText from "../MarkdownText"
@@ -141,12 +141,12 @@ an axis in Semiotic.
 
 ## Basic Bar Chart
 
-\`OrdinalFrame\` takes \`data\` as an array of objects. The \`oAccessor\` prop defines which property on the object to use as categorical data, and the \`rAccessor\` defines which property to use for numerical data.  
+\`StreamOrdinalFrame\` takes \`data\` as an array of objects. The \`oAccessor\` prop defines which property on the object to use as categorical data, and the \`rAccessor\` defines which property to use for numerical data.  
 
       `}
       />
 
-      <DocumentFrame frameProps={frameProps} type={OrdinalFrame} useExpanded />
+      <DocumentFrame frameProps={frameProps} type={StreamOrdinalFrame} useExpanded />
       <MarkdownText
         text={`
       
@@ -158,7 +158,7 @@ Change the bar chart orientation to horizontal by specifying \`projection={"hori
 
       <DocumentFrame
         frameProps={{ ...frameProps, ...horizontalBar }}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         startHidden
       />
       <MarkdownText
@@ -178,7 +178,7 @@ You can also send an \`axes=true\`
 
       <DocumentFrame
         frameProps={{ ...frameProps, ...titleAndSpacing }}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         startHidden
       />
       <MarkdownText
@@ -196,7 +196,7 @@ label: "<- Retweets vs. Tweets -> " }}\`
 
       <DocumentFrame
         frameProps={{ ...frameProps, ...diffBar }}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         startHidden
       />
 
@@ -213,7 +213,7 @@ dataset and create a stacked bar. Change the rAccessor into an array of data pro
 
       <DocumentFrame
         frameProps={stackedFrameProps}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         startHidden
         pre={`const colorHash = {
   tweets: theme[0],
@@ -246,7 +246,7 @@ _This only works if you send accessors that are simple strings, if you send a fu
             return { fill: colorHash[rAccessor[d.rIndex]], stroke: "white" }
           }
         }}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         startHidden
         pre={`const colorHash = {
   tweets: theme[0],
@@ -277,7 +277,7 @@ Another approach is flattening your data so that you have a property called acti
 
       <DocumentFrame
         frameProps={stackedFramePropsFlattened}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         overrideProps={flattenedOverrideProps}
         pre={`const colorHash = {
   tweets: theme[0],
@@ -297,7 +297,7 @@ Adding the property \`hoverAnnotation\` gives tooltips to each of the columns. T
       <p />
       <DocumentFrame
         frameProps={{ ...stackedFramePropsFlattened, hoverAnnotation: true }}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         overrideProps={flattenedOverrideProps}
         pre={`const colorHash = {
   tweets: theme[0],
@@ -327,14 +327,14 @@ Adding the property \`pieceHoverAnnotation\` gives tooltips to each of the indiv
   favorites: theme[1]
 }
 `}
-        type={OrdinalFrame}
+        type={StreamOrdinalFrame}
         startHidden
       />
       <MarkdownText
         text={`
 ## Stacked bar chart with Responsive Width
 
-To make your chart responsive, instead of using \`OrdinalFrame\` use \`ResponsiveOrdinalFrame\` and set the \`responsiveWidth={true}\`.
+To make your chart responsive, instead of using \`StreamOrdinalFrame\` use \`StreamOrdinalFrame\` and set the \`responsiveWidth={true}\`.
   `}
       />
 
@@ -351,7 +351,7 @@ retweets: theme[2],
 favorites: theme[1]
 }
 `}
-        type={ResponsiveOrdinalFrame}
+        type={StreamOrdinalFrame}
         startHidden
       />
     </div>

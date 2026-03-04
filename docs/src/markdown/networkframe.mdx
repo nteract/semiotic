@@ -4,9 +4,9 @@ x and y position are less important than connections and enclosures.
 Supported visualization types include [path diagrams](/guides/path-diagrams),
 [force layouts](/guides/force-layouts) and [hierarchical diagrams](/guides/hierarchical).
 
-`NetworkFrame` renders [nodes](#node-rendering) and [edges](#edge-rendering) from arrays of nodes
+`StreamNetworkFrame` renders [nodes](#node-rendering) and [edges](#edge-rendering) from arrays of nodes
 (which are optional) and arrays of edges (which are optional). Rendering and styling is based on
-each element's corresponding properties. NetworkFrame data elements are accessible by tabbing to the
+each element's corresponding properties. StreamNetworkFrame data elements are accessible by tabbing to the
 data group (nodes or edges) and hitting enter to arrow-key navigate through the data elements.
 
 Nodes are automatically generated from edge references to source or target that do not exist. Nodes
@@ -14,8 +14,8 @@ are also decorated with a `degree` attribute, which is simple degree centrality 
 connections).
 
 ```jsx
-import { NetworkFrame } from "semiotic"
-;<NetworkFrame
+import { StreamNetworkFrame } from "semiotic"
+;<StreamNetworkFrame
   nodes={[{ name: "Susie" }, { name: "Shirley" }]}
   edges={[
     { source: "Susie", target: "Xianlin" },
@@ -87,7 +87,7 @@ must contain two numbers which represents the width and height, respectively. Si
 `[500,500]`.
 
 ```jsx
-<NetworkFrame size={[500, 500]} />
+<StreamNetworkFrame size={[500, 500]} />
 ```
 
 ### networkType: {_string_ | _object_ | _function_ }
@@ -98,14 +98,14 @@ data differently: `"force"`, `"motifs"`, `"sankey"`, `"arc"`, `"chord"`, `"dagre
 
 Another advanced setting for a hierarchical networkType is `hierarchyChildren`, which takes a
 function. By default this is equivalent to `d => d.children`. By setting it to `d => d.values`, for
-example, one can then use NetworkFrame with a hierarchy as returned by function of d3-rollup.
+example, one can then use StreamNetworkFrame with a hierarchy as returned by function of d3-rollup.
 
 ```jsx
 <!-- String option -->
-<NetworkFrame networkType={"motifs"} />
+<StreamNetworkFrame networkType={"motifs"} />
 
 <!-- Object option -->
-<NetworkFrame networkType={{ type: "treemap" , padding: 10, projection: "vertical" }} />
+<StreamNetworkFrame networkType={{ type: "treemap" , padding: 10, projection: "vertical" }} />
 ```
 
 See the following pages for detailed information about settings for each `networkType`:
@@ -122,10 +122,10 @@ Centers this title at the top of the chart.
 
 ```jsx
 <!-- String option -->
-<NetworkFrame title={"Chart Title"} />
+<StreamNetworkFrame title={"Chart Title"} />
 
 <!-- JSX option -->
-<NetworkFrame title={<g><circle r={5} /><text>Chart Title</text></g>} />
+<StreamNetworkFrame title={<g><circle r={5} /><text>Chart Title</text></g>} />
 ```
 
 ### margin: {_number_ | _object_}
@@ -134,10 +134,10 @@ The margin can be set to one number, which is applied equally to all sides, or a
 
 ```jsx
 <!-- Single number option -->
-<NetworkFrame margin={10} />
+<StreamNetworkFrame margin={10} />
 
 <!-- Object option -->
-<NetworkFrame margin={{ top: 5, bottom: 10, left: 15, right: 20 }} />
+<StreamNetworkFrame margin={{ top: 5, bottom: 10, left: 15, right: 20 }} />
 ```
 
 ### renderKey: { _string_ | _function_ }
@@ -149,12 +149,12 @@ takes `(datapoint,index)` and returns a string to be used.
 
 ```jsx
 /* string option */
-<NetworkFrame renderKey="somePropToBeUsedAsAKey" />
+<StreamNetworkFrame renderKey="somePropToBeUsedAsAKey" />
 ```
 
 ```jsx
 /* function option defaulting to array position if no key on datapoint.renderKeyID exists */
-<NetworkFrame renderKey={(datapoint, index) => datapoint.renderKeyID || i} />
+<StreamNetworkFrame renderKey={(datapoint, index) => datapoint.renderKeyID || i} />
 ```
 
 ## Node Rendering
@@ -170,11 +170,11 @@ function can also be used to access the _id_ value(s).
 ```jsx
 <!-- String option -->
 <!-- e.g. data=[{employee: "Red"}, {employee: "Andy"} ] -->
-<NetworkFrame nodeIDAccessor={"employee"} />
+<StreamNetworkFrame nodeIDAccessor={"employee"} />
 
 <!-- Function option -->
 <!-- e.g. data=[{employee: "Red"}, {employee: "Andy"} ] -->
-<NetworkFrame nodeIDAccessor={d => d.employee} />
+<StreamNetworkFrame nodeIDAccessor={d => d.employee} />
 ```
 
 ### nodeStyle: {_object_ | _function_}
@@ -184,10 +184,10 @@ object or a function that takes the node datapoint and returns a React style obj
 
 ```jsx
 <!-- Object option -->
-<NetworkFrame nodeStyle={{ stroke: "white", fill: "blue" }} />
+<StreamNetworkFrame nodeStyle={{ stroke: "white", fill: "blue" }} />
 
 <!-- Function option -->
-<NetworkFrame nodeStyle={d => ({ stroke: "white", fill: d.color })} />
+<StreamNetworkFrame nodeStyle={d => ({ stroke: "white", fill: d.color })} />
 ```
 
 ### nodeClass: {_string_ | _function_}
@@ -197,10 +197,10 @@ function that takes the node datapoint and returns a string.
 
 ```jsx
 // Object option
-<NetworkFrame nodeClass="friend" />
+<StreamNetworkFrame nodeClass="friend" />
 
 // Function option
-<NetworkFrame nodeClass={d => d.friendType} />
+<StreamNetworkFrame nodeClass={d => d.friendType} />
 ```
 
 ### nodeRenderMode: { _string_ | _function_ | _object_ }
@@ -210,10 +210,10 @@ If nodeRenderMode is specified, determines the renderMode of the underlying Mark
 
 ```jsx
 // String option
-<NetworkFrame nodeRenderMode="sketchy" />
+<StreamNetworkFrame nodeRenderMode="sketchy" />
 
 // Object option
-<NetworkFrame nodeRenderMode={ {
+<StreamNetworkFrame nodeRenderMode={ {
   renderMode: "sketchy",
   fillWeight: 3,
   hachureGap: 3.5,
@@ -221,7 +221,7 @@ If nodeRenderMode is specified, determines the renderMode of the underlying Mark
 } } />
 
 // Function option
-<NetworkFrame nodeRenderMode={d => d.friendshipLevel === "no so great" ? "sketchy" : undefined} />
+<StreamNetworkFrame nodeRenderMode={d => d.friendshipLevel === "no so great" ? "sketchy" : undefined} />
 ```
 
 ### canvasNodes: { _boolean_ | _function_ }
@@ -233,10 +233,10 @@ instead of [`SVG`](https://developer.mozilla.org/en-US/docs/Web/SVG).
 
 ```jsx
 /*Boolean option */
-<NetworkFrame canvasNodes={ true } ... />
+<StreamNetworkFrame canvasNodes={ true } ... />
 
 /*Function option */
-<NetworkFrame canvasNodes={ (d, i) => } ... />
+<StreamNetworkFrame canvasNodes={ (d, i) => } ... />
 ```
 
 ### nodeLabels: { _boolean_ | _function_ }
@@ -246,10 +246,10 @@ also accept a function that takes the node and returns SVG JSX to be placed in t
 
 ```jsx
 <!-- Boolean option -->
-<NetworkFrame nodeLabels={true} />
+<StreamNetworkFrame nodeLabels={true} />
 
 <!-- Function option -->
-<NetworkFrame nodeLabels={d => d.degree > 5 ? <text>{d.id}</text> : null} />
+<StreamNetworkFrame nodeLabels={d => d.degree > 5 ? <text>{d.id}</text> : null} />
 ```
 
 ### nodeSizeAccessor: { _number_ | _function_ }
@@ -259,10 +259,10 @@ set a fixed size (with a number) or a dynamic size (with a function).
 
 ```jsx
 <!-- Number option -->
-<NetworkFrame nodeSizeAccessor={10} />
+<StreamNetworkFrame nodeSizeAccessor={10} />
 
 <!-- Function option -->
-<NetworkFrame nodeSizeAccessor={d => d.degree * 5} />
+<StreamNetworkFrame nodeSizeAccessor={d => d.degree * 5} />
 ```
 
 ### customNodeIcon { _function_ }
@@ -288,7 +288,7 @@ A function taking the node datapoint and returning SVG JSX representation of the
 - margin
 
 ```jsx
-<NetworkFrame
+<StreamNetworkFrame
   customNodeIcon={(d) => (
     <rect
       width={d.degree}
@@ -316,11 +316,11 @@ _source_ value(s). A function can also be used to access the _source_ value(s).
 ```jsx
 <!-- String option -->
 <!-- e.g. data=[{manager: "Red", report: "Andy"}, {manager: "Warden", report: "Red"}, ... ] -->
-<NetworkFrame sourceAccessor={"manager"} />
+<StreamNetworkFrame sourceAccessor={"manager"} />
 
 <!-- Function option -->
 <!-- e.g. data=[["Red", "Andy"], ["Warden", "Red"], ... ] -->
-<NetworkFrame sourceAccessor={d => d[0]} />
+<StreamNetworkFrame sourceAccessor={d => d[0]} />
 ```
 
 ### targetAccessor: {_string_ | _function_}
@@ -332,11 +332,11 @@ _target_ value(s). A function can also be used to access the _target_ value(s).
 ```jsx
 <!-- String option -->
 <!-- e.g. data=[{manager: "Red", report: "Andy"}, {manager: "Warden", report: "Red"}, ... ] -->
-<NetworkFrame targetAccessor={"report"} />
+<StreamNetworkFrame targetAccessor={"report"} />
 
 <!-- Function option -->
 <!-- e.g. data=[["Red", "Andy"], ["Warden", "Red"], ... ] -->
-<NetworkFrame sourceAccessor={d => d[1]} />
+<StreamNetworkFrame sourceAccessor={d => d[1]} />
 ```
 
 ### edgeStyle: {_object_ | _function_}
@@ -346,10 +346,10 @@ edge datapoint and returns a React style object.
 
 ```jsx
 <!-- Object option -->
-<NetworkFrame edgeStyle={{ stroke: "red", fill: "darkred" }} />
+<StreamNetworkFrame edgeStyle={{ stroke: "red", fill: "darkred" }} />
 
 <!-- Function option -->
-<NetworkFrame edgeStyle={d => ({ stroke: "white", fill: d.source.color })} />
+<StreamNetworkFrame edgeStyle={d => ({ stroke: "white", fill: d.source.color })} />
 ```
 
 ### edgeClass: {_string_ | _function_}
@@ -359,10 +359,10 @@ datapoint and returns a string.
 
 ```jsx
 // Object option
-<NetworkFrame edgeClass="friend" />
+<StreamNetworkFrame edgeClass="friend" />
 
 // Function option
-<NetworkFrame edgeClass={d => d.friendType} />
+<StreamNetworkFrame edgeClass={d => d.friendType} />
 ```
 
 ### edgeRenderMode: {_string_ | _function_}
@@ -372,10 +372,10 @@ If edgeRenderMode is specified, determines the renderMode of the underlying Mark
 
 ```jsx
 // Object option
-<NetworkFrame edgeRenderMode="sketchy" />
+<StreamNetworkFrame edgeRenderMode="sketchy" />
 
 // Object option
-<NetworkFrame edgeRenderMode={ {
+<StreamNetworkFrame edgeRenderMode={ {
   renderMode: "sketchy",
   fillWeight: 3,
   hachureGap: 3.5,
@@ -383,7 +383,7 @@ If edgeRenderMode is specified, determines the renderMode of the underlying Mark
 } } />
 
 // Function option
-<NetworkFrame edgeRenderMode={d => d.friendshipLevel === "no so great" ? "sketchy" : undefined} />
+<StreamNetworkFrame edgeRenderMode={d => d.friendshipLevel === "no so great" ? "sketchy" : undefined} />
 ```
 
 ### canvasEdges: { _boolean_ | _function_ }
@@ -395,10 +395,10 @@ instead of [`SVG`](https://developer.mozilla.org/en-US/docs/Web/SVG).
 
 ```jsx
 /*Boolean option */
-<NetworkFrame canvasEdges={ true } ... />
+<StreamNetworkFrame canvasEdges={ true } ... />
 
 /*Function option */
-<NetworkFrame canvasEdges={ (d, i) => } ... />
+<StreamNetworkFrame canvasEdges={ (d, i) => } ... />
 ```
 
 ### edgeType { _string_ | _object_ | _function_ }
@@ -411,10 +411,10 @@ connection between two edges.
 
 ```jsx
 <!-- String option -->
-<NetworkFrame edgeType="halfarrow" />
+<StreamNetworkFrame edgeType="halfarrow" />
 
 <!-- Function option -->
-<NetworkFrame edgeType={d => <line
+<StreamNetworkFrame edgeType={d => <line
     x1={d.source.x}
     x2={d.target.x}
     y1={d.source.y}
@@ -459,7 +459,7 @@ to style the position and any additional elements. You can drop any HTML into th
 including another frame.
 
 ```jsx
-<NetworkFrame
+<StreamNetworkFrame
   hoverAnnotation={true}
   tooltipContent={(d) => (
     <div className="tooltip-content">
@@ -474,7 +474,7 @@ including another frame.
 
 An array of objects to be processed using the frame's
 [built-in annotation](/guides/annotations#built-in-annotation-types) rules or the
-[custom defined rules](/guides/annotations#custom-annotation-rules). By default `NetworkFrame`
+[custom defined rules](/guides/annotations#custom-annotation-rules). By default `StreamNetworkFrame`
 supports the following annotation types:
 
 ### svgAnnotationRules: { _function_ }
@@ -496,7 +496,7 @@ An object with `{ layout, pointSizeFunction, labelSizeFunction }` containing
 each others' way or placing them in the margins.
 
 ```jsx
-<NetworkFrame
+<StreamNetworkFrame
   annotationSettings={{
     layout: {
       type: "marginalia",
@@ -517,7 +517,7 @@ Whether to turn on a matte (a border that covers the margin area to hide overflo
 matte.
 
 ```jsx
-<NetworkFrame matte={true} />
+<StreamNetworkFrame matte={true} />
 ```
 
 ### backgroundGraphics: { _array_ | _JSX_ }
@@ -540,7 +540,7 @@ the id value and can be customized with `tooltipContent`.
 A function to fire on hover of the node being hovered over.
 
 ```jsx
-<NetworkFrame
+<StreamNetworkFrame
   customHoverBehavior={(d) => {
     this.setState({ hoveredOn: d })
   }}
@@ -552,7 +552,7 @@ A function to fire on hover of the node being hovered over.
 A function to fire on click of the node being hovered over.
 
 ```jsx
-<NetworkFrame
+<StreamNetworkFrame
   customClickBehavior={(d) => {
     this.setState({ clickedOn: d })
   }}
@@ -564,7 +564,7 @@ A function to fire on click of the node being hovered over.
 A function to fire on doubleclick of the node being hovered over.
 
 ```jsx
-<NetworkFrame
+<StreamNetworkFrame
   customDoubleClickBehavior={(d) => {
     this.setState({ doubleclicked: d })
   }}
@@ -590,7 +590,7 @@ A JSX or array of JSX to be injected into the visualization layer's SVG `defs`. 
 or other SVG material typically defined in defs.
 
 ```jsx
-<NetworkFrame
+<StreamNetworkFrame
   additionalDefs={
     <linearGradient y2="1" id="paleWoodGradient">
       <stop stopColor="#8E0E00" offset="0%" />

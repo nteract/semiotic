@@ -32,6 +32,9 @@ export type { BubbleChartProps } from "./xy/BubbleChart"
 export { ScatterplotMatrix } from "./xy/ScatterplotMatrix"
 export type { ScatterplotMatrixProps } from "./xy/ScatterplotMatrix"
 
+export { MinimapChart } from "./xy/MinimapChart"
+export type { MinimapChartProps, MinimapConfig } from "./xy/MinimapChart"
+
 // ============================================================================
 // Ordinal Charts (based on OrdinalFrame)
 // ============================================================================
@@ -53,6 +56,9 @@ export type { HistogramProps } from "./ordinal/Histogram"
 
 export { ViolinPlot } from "./ordinal/ViolinPlot"
 export type { ViolinPlotProps } from "./ordinal/ViolinPlot"
+
+export { RidgelinePlot } from "./ordinal/RidgelinePlot"
+export type { RidgelinePlotProps } from "./ordinal/RidgelinePlot"
 
 export { DotPlot } from "./ordinal/DotPlot"
 export type { DotPlotProps } from "./ordinal/DotPlot"
@@ -89,22 +95,20 @@ export { CirclePack } from "./network/CirclePack"
 export type { CirclePackProps } from "./network/CirclePack"
 
 // ============================================================================
-// Realtime Charts (based on RealtimeFrame)
+// Realtime Charts
 // ============================================================================
 
 export { RealtimeLineChart } from "./realtime/RealtimeLineChart"
 export type { RealtimeLineChartProps } from "./realtime/RealtimeLineChart"
 
-export { RealtimeBarChart } from "./realtime/RealtimeBarChart"
-export type { RealtimeBarChartProps } from "./realtime/RealtimeBarChart"
+export { RealtimeTemporalHistogram, RealtimeHistogram } from "./realtime/RealtimeHistogram"
+export type { RealtimeTemporalHistogramProps, RealtimeHistogramProps } from "./realtime/RealtimeHistogram"
 
 export { RealtimeSwarmChart } from "./realtime/RealtimeSwarmChart"
 export type { RealtimeSwarmChartProps } from "./realtime/RealtimeSwarmChart"
 
 export { RealtimeWaterfallChart } from "./realtime/RealtimeWaterfallChart"
 export type { RealtimeWaterfallChartProps } from "./realtime/RealtimeWaterfallChart"
-
-export { RealtimeSankey } from "./realtime/RealtimeSankey"
 
 // ============================================================================
 // Shared Utilities

@@ -1,8 +1,8 @@
 "use client"
 import * as React from "react"
 import { useMemo, useCallback } from "react"
-import OrdinalFrame from "../../OrdinalFrame"
-import type { OrdinalFrameProps } from "../../types/ordinalTypes"
+import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
+import type { StreamOrdinalFrameProps } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
 import { useColorScale, useSortedData, DEFAULT_COLOR } from "../shared/hooks"
 import { createLegend } from "../shared/legendUtils"
@@ -18,131 +18,26 @@ import { useLinkedHover } from "../../store/useSelection"
  * BarChart component props
  */
 export interface BarChartProps<TDatum extends Record<string, any> = Record<string, any>> extends BaseChartProps {
-  /**
-   * Array of data points. Each point should have a category and value.
-   * @example
-   * ```ts
-   * [{category: 'A', value: 10}, {category: 'B', value: 20}]
-   * ```
-   */
   data: TDatum[]
-
-  /**
-   * Field name or function to access category values
-   * @default "category"
-   */
   categoryAccessor?: ChartAccessor<TDatum, string>
-
-  /**
-   * Field name or function to access numeric values
-   * @default "value"
-   */
   valueAccessor?: ChartAccessor<TDatum, number>
-
-  /**
-   * Chart orientation
-   * @default "vertical"
-   */
   orientation?: "vertical" | "horizontal"
-
-  /**
-   * Label for the category axis
-   */
   categoryLabel?: string
-
-  /**
-   * Label for the value axis
-   */
   valueLabel?: string
-
-  /**
-   * Format function for value axis tick labels
-   */
   valueFormat?: (d: number | string) => string
-
-  /**
-   * Field name or function to determine bar color
-   * @example
-   * ```ts
-   * colorBy="category"  // Use category field
-   * colorBy={d => d.value > 10 ? 'green' : 'red'}  // Use function
-   * ```
-   */
   colorBy?: ChartAccessor<TDatum, string>
-
-  /**
-   * Color scheme for categorical data or custom colors array
-   * @default "category10"
-   */
   colorScheme?: string | string[]
-
-  /**
-   * Sort bars by value
-   * @default false
-   * @example
-   * ```ts
-   * sort="asc"  // Ascending
-   * sort="desc"  // Descending
-   * sort={true}  // Descending (default)
-   * sort={(a, b) => a.value - b.value}  // Custom function
-   * ```
-   */
   sort?: boolean | "asc" | "desc" | ((a: Record<string, any>, b: Record<string, any>) => number)
-
-  /**
-   * Padding between bars (in pixels)
-   * @default 5
-   */
   barPadding?: number
-
-  /**
-   * Enable hover annotations
-   * @default true
-   */
   enableHover?: boolean
-
-  /**
-   * Show grid lines
-   * @default false
-   */
   showGrid?: boolean
-
-  /**
-   * Show legend
-   * @default true (when colorBy is specified)
-   */
   showLegend?: boolean
-
-  /**
-   * Tooltip configuration
-   */
   tooltip?: TooltipProp
-
-  /**
-   * Additional OrdinalFrame props for advanced customization
-   * For full control, consider using OrdinalFrame directly
-   * @see https://semiotic.nteract.io/guides/ordinal-frame
-   */
-  frameProps?: Partial<Omit<OrdinalFrameProps, "data" | "size">>
+  frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
 /**
  * BarChart - Visualize categorical data with bars.
- *
- * A simplified wrapper around OrdinalFrame for creating bar charts.
- *
- * @example
- * ```tsx
- * <BarChart
- *   data={[
- *     {category: 'A', value: 10},
- *     {category: 'B', value: 20},
- *     {category: 'C', value: 15}
- *   ]}
- *   categoryLabel="Category"
- *   valueLabel="Value"
- * />
- * ```
  */
 export function BarChart<TDatum extends Record<string, any> = Record<string, any>>(props: BarChartProps<TDatum>) {
   const {
@@ -191,24 +86,17 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
 
   // ── Core chart logic ───────────────────────────────────────────────────
 
-  // Sort data if requested
   const sortedData = useSortedData(safeData, sort, valueAccessor)
-
-  // Create color scale if colorBy is specified
   const colorScale = useColorScale(safeData, colorBy, colorScheme)
 
-  // Piece style function
   const basePieceStyle = useMemo(() => {
     return (d: Record<string, any>) => {
       const baseStyle: Record<string, string | number> = {}
-
-      // Apply color
       if (colorBy) {
         baseStyle.fill = getColor(d, colorBy, colorScale)
       } else {
         baseStyle.fill = DEFAULT_COLOR
       }
-
       return baseStyle
     }
   }, [colorBy, colorScale])
@@ -218,70 +106,16 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
     [basePieceStyle, activeSelectionHook, selection]
   )
 
-  // Build axes configuration
-  const axes = useMemo(() => {
-    const axesConfig: Array<Record<string, unknown>> = []
-
-    if (orientation === "vertical") {
-      // Vertical bars: category on bottom, value on left
-      axesConfig.push({
-        orient: "left",
-        label: valueLabel,
-        tickFormat: valueFormat,
-        ...(showGrid && { tickLineGenerator: () => null })
-      })
-
-      if (categoryLabel) {
-        axesConfig.push({
-          orient: "bottom",
-          label: categoryLabel
-        })
-      }
-    } else {
-      // Horizontal bars: category on left, value on bottom
-      if (categoryLabel) {
-        axesConfig.push({
-          orient: "left",
-          label: categoryLabel
-        })
-      }
-
-      axesConfig.push({
-        orient: "bottom",
-        label: valueLabel,
-        tickFormat: valueFormat,
-        ...(showGrid && { tickLineGenerator: () => null })
-      })
-    }
-
-    return axesConfig
-  }, [orientation, categoryLabel, valueLabel, valueFormat, showGrid])
-
-  // Determine if we should show legend
   const shouldShowLegend = showLegend !== undefined ? showLegend : !!colorBy
 
-  // Build legend if needed
   const legend = useMemo(() => {
     if (!shouldShowLegend || !colorBy) return undefined
-
-    return createLegend({
-      data: sortedData,
-      colorBy,
-      colorScale,
-      getColor
-    })
+    return createLegend({ data: sortedData, colorBy, colorScale, getColor })
   }, [shouldShowLegend, colorBy, sortedData, colorScale])
 
-  // Adjust margin for legend if present
   const margin = useMemo(() => {
-    const defaultMargin = { top: 50, bottom: 60, left: 70, right: 40 }
-    const finalMargin = { ...defaultMargin, ...userMargin }
-
-    // If legend is present and right margin is too small, increase it
-    if (legend && finalMargin.right < 120) {
-      finalMargin.right = 120
-    }
-
+    const finalMargin = { top: 50, bottom: 60, left: 70, right: 40, ...userMargin }
+    if (legend && finalMargin.right < 120) finalMargin.right = 120
     return finalMargin
   }, [userMargin, legend])
 
@@ -289,64 +123,70 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
 
   const customHoverBehavior = useCallback(
     (d: Record<string, any> | null) => {
-      if (linkedHover) {
-        linkedHoverHook.onHover(d)
-      }
+      if (linkedHover) linkedHoverHook.onHover(d)
     },
     [linkedHover, linkedHoverHook]
   )
 
-  // Default tooltip function for piece hover
+  // Default tooltip
   const defaultTooltipContent = useMemo(() => {
+    const showColorField = colorBy && colorBy !== categoryAccessor
     return (d: Record<string, any>) => {
-      const cat = typeof categoryAccessor === "function" ? categoryAccessor(d as TDatum) : d[categoryAccessor]
-      const val = typeof valueAccessor === "function" ? valueAccessor(d as TDatum) : d[valueAccessor]
+      const datum = d.data || d
+      const cat = typeof categoryAccessor === "function" ? categoryAccessor(datum as TDatum) : datum[categoryAccessor]
+      const val = typeof valueAccessor === "function" ? valueAccessor(datum as TDatum) : datum[valueAccessor]
+      const colorVal = showColorField
+        ? (typeof colorBy === "function" ? (colorBy as Function)(datum) : datum[colorBy as string])
+        : null
       return (
         <div className="semiotic-tooltip" style={defaultTooltipStyle}>
           <div style={{ fontWeight: "bold" }}>{String(cat)}</div>
           <div style={{ marginTop: "4px" }}>
             {typeof val === "number" ? val.toLocaleString() : String(val)}
           </div>
+          {colorVal != null && (
+            <div style={{ marginTop: "2px", opacity: 0.8 }}>
+              {typeof colorBy === "string" ? colorBy : "group"}: {String(colorVal)}
+            </div>
+          )}
         </div>
       )
     }
-  }, [categoryAccessor, valueAccessor])
+  }, [categoryAccessor, valueAccessor, colorBy])
 
   // Validate data (after all hooks)
   const error = validateArrayData({
     componentName: "BarChart",
     data: safeData,
-    accessors: {
-      categoryAccessor,
-      valueAccessor,
-    },
+    accessors: { categoryAccessor, valueAccessor },
   })
   if (error) return <ChartError componentName="BarChart" message={error} width={width} height={height} />
 
-  // Build OrdinalFrame props
-  const ordinalFrameProps: OrdinalFrameProps = {
-    size: [width, height],
+  const streamProps: StreamOrdinalFrameProps = {
+    chartType: "bar",
     data: sortedData,
     oAccessor: categoryAccessor,
     rAccessor: valueAccessor,
-    type: "bar",
     projection: orientation === "horizontal" ? "horizontal" : "vertical",
-    style: pieceStyle,
-    axes: axes as any,
-    hoverAnnotation: enableHover,
+    pieceStyle,
+    size: [width, height],
     margin,
-    oPadding: barPadding,
+    barPadding,
+    enableHover,
+    showAxes: true,
+    oLabel: categoryLabel,
+    rLabel: valueLabel,
+    rFormat: valueFormat as any,
+    showGrid,
+    oSort: sort as any,
     ...(legend && { legend }),
-    ...(className && { className }),
     ...(title && { title }),
-    // Add tooltip support
-    tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as Function,
+    ...(className && { className }),
+    tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
     ...(linkedHover && { customHoverBehavior }),
-    // Allow frameProps to override defaults
-    transition: true,
     ...frameProps
   }
 
-  return <OrdinalFrame {...ordinalFrameProps} />
+  return <StreamOrdinalFrame {...streamProps} />
 }
 BarChart.displayName = "BarChart"

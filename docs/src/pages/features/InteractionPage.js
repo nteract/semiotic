@@ -1,8 +1,6 @@
 import React, { useState } from "react"
-import { XYFrame, OrdinalFrame, MinimapXYFrame } from "semiotic"
+import { StreamXYFrame, StreamOrdinalFrame, MinimapChart } from "semiotic"
 import { LineChart, BarChart } from "semiotic"
-import { curveMonotoneX } from "d3-shape"
-
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PropTable from "../../components/PropTable"
@@ -85,7 +83,7 @@ const interactionProps = [
   { name: "during", type: "function", required: false, default: null, description: "Callback fired during brushing. Receives the extent." },
   { name: "end", type: "function", required: false, default: null, description: "Callback fired at the end of a brush. Receives the extent." },
   { name: "extent", type: "array", required: false, default: null, description: "Initial or controlled brush extent. Format depends on brush type." },
-  { name: "columnsBrush", type: "boolean", required: false, default: "false", description: "For OrdinalFrame: enable per-column brushes (parallel coordinates style)." },
+  { name: "columnsBrush", type: "boolean", required: false, default: "false", description: "For StreamOrdinalFrame: enable per-column brushes (parallel coordinates style)." },
 ]
 
 // ---------------------------------------------------------------------------
@@ -177,19 +175,19 @@ export default function InteractionPage() {
 
       <LiveExample
         frameProps={{
-          lines: frameLineData,
+          data: frameLineData,
+          chartType: "line",
           xAccessor: "step",
           yAccessor: "value",
+          lineDataAccessor: "coordinates",
           lineStyle: (d, i) => ({
             stroke: colors[i],
             strokeWidth: 2,
             fill: "none",
           }),
           margin: { top: 20, bottom: 50, left: 50, right: 20 },
-          axes: [
-            { orient: "left" },
-            { orient: "bottom" },
-          ],
+          showAxes: true,
+          enableHover: true,
           hoverAnnotation: [
             {
               type: "highlight",
@@ -204,7 +202,7 @@ export default function InteractionPage() {
           ],
           lineIDAccessor: "title",
         }}
-        type={XYFrame}
+        type={StreamXYFrame}
         overrideProps={{
           lines: `[
   { title: "Widget", coordinates: [...] },
@@ -232,8 +230,10 @@ export default function InteractionPage() {
       </p>
 
       <CodeBlock
-        code={`<XYFrame
-  lines={data}
+        code={`<StreamXYFrame
+  data={data}
+  chartType="line"
+  lineDataAccessor="coordinates"
   hoverAnnotation={[
     {
       type: "desaturation-layer",
@@ -262,7 +262,7 @@ export default function InteractionPage() {
 
       <CodeBlock
         code={`import React, { useState } from "react"
-import { XYFrame } from "semiotic"
+import { StreamXYFrame } from "semiotic"
 
 function CoordinatedViews() {
   const [annotations, setAnnotations] = useState([])
@@ -281,17 +281,21 @@ function CoordinatedViews() {
 
   return (
     <div style={{ display: "flex", gap: 16 }}>
-      <XYFrame
-        lines={revenueData}
-        hoverAnnotation={true}
+      <StreamXYFrame
+        data={revenueData}
+        chartType="line"
+        lineDataAccessor="coordinates"
+        enableHover={true}
         customHoverBehavior={handleHover}
         annotations={annotations}
         lineIDAccessor="title"
         size={[400, 300]}
       />
-      <XYFrame
-        lines={profitData}
-        hoverAnnotation={true}
+      <StreamXYFrame
+        data={profitData}
+        chartType="line"
+        lineDataAccessor="coordinates"
+        enableHover={true}
         customHoverBehavior={handleHover}
         annotations={annotations}
         lineIDAccessor="title"
@@ -306,21 +310,23 @@ function CoordinatedViews() {
 
       <h3 id="xy-brushing">XY Brushing</h3>
       <p>
-        The <code>interaction</code> prop on <code>XYFrame</code> enables
+        The <code>interaction</code> prop on <code>StreamXYFrame</code> enables
         brushing for selecting regions of the chart. Choose between{" "}
         <code>xBrush</code>, <code>yBrush</code>, or <code>xyBrush</code>:
       </p>
 
       <CodeBlock
         code={`import React, { useState } from "react"
-import { XYFrame } from "semiotic"
+import { StreamXYFrame } from "semiotic"
 
 function BrushExample() {
   const [extent, setExtent] = useState([2, 8])
 
   return (
-    <XYFrame
-      lines={data}
+    <StreamXYFrame
+      data={data}
+      chartType="line"
+      lineDataAccessor="coordinates"
       xAccessor="step"
       yAccessor="value"
       interaction={{
@@ -336,32 +342,30 @@ function BrushExample() {
         language="jsx"
       />
 
-      <h3 id="minimap">MinimapXYFrame</h3>
+      <h3 id="minimap">MinimapChart</h3>
       <p>
-        <code>MinimapXYFrame</code> automates the common pattern of a main
+        <code>MinimapChart</code> automates the common pattern of a main
         chart with a smaller brush-enabled overview below it. It manages
         brush state internally and updates the main chart's extent
         automatically:
       </p>
 
       <CodeBlock
-        code={`import { MinimapXYFrame } from "semiotic"
+        code={`import { MinimapChart } from "semiotic"
 
-<MinimapXYFrame
-  lines={data}
+<MinimapChart
+  data={data}
   xAccessor="step"
   yAccessor="value"
-  lineType={{ type: "line", interpolator: curveMonotoneX }}
-  size={[700, 300]}
+  lineBy="series"
+  colorBy="series"
+  curve="monotoneX"
+  width={700}
+  height={300}
   margin={{ left: 50, top: 10, bottom: 40, right: 20 }}
-  matte={true}
   minimap={{
-    brushEnd: (e) => handleExtentChange(e),
-    yBrushable: false,
-    xBrushExtent: selectedExtent,
-    margin: { left: 50, top: 0, bottom: 10, right: 20 },
-    axes: [{ orient: "left", ticks: 2 }],
-    size: [700, 50]
+    height: 50,
+    margin: { left: 50, top: 0, bottom: 10, right: 20 }
   }}
 />`}
         language="jsx"
@@ -369,14 +373,14 @@ function BrushExample() {
 
       <h3 id="ordinal-brushing">Ordinal Brushing</h3>
       <p>
-        <code>OrdinalFrame</code> supports brushing within columns using the{" "}
+        <code>StreamOrdinalFrame</code> supports brushing within columns using the{" "}
         <code>interaction</code> prop with <code>columnsBrush: true</code>.
         This is useful for parallel-coordinates-style filtering:
       </p>
 
       <CodeBlock
         code={`import React, { useState } from "react"
-import { OrdinalFrame } from "semiotic"
+import { StreamOrdinalFrame } from "semiotic"
 
 function OrdinalBrushExample() {
   const [selectedCount, setSelectedCount] = useState(data.length)
@@ -391,7 +395,7 @@ function OrdinalBrushExample() {
   return (
     <>
       <p>Points in brushed region: {selectedCount}</p>
-      <OrdinalFrame
+      <StreamOrdinalFrame
         data={data}
         rAccessor="value"
         oAccessor={() => "singleColumn"}
@@ -411,16 +415,16 @@ function OrdinalBrushExample() {
         showLineNumbers
       />
 
-      <h3 id="ordinal-highlighting">OrdinalFrame Highlighting</h3>
+      <h3 id="ordinal-highlighting">StreamOrdinalFrame Highlighting</h3>
       <p>
-        In <code>OrdinalFrame</code>, use{" "}
+        In <code>StreamOrdinalFrame</code>, use{" "}
         <code>pieceHoverAnnotation</code> for individual piece highlighting,
         or <code>hoverAnnotation</code> for column-level highlighting. Define
         a <code>pieceIDAccessor</code> to target specific pieces:
       </p>
 
       <CodeBlock
-        code={`<OrdinalFrame
+        code={`<StreamOrdinalFrame
   data={stackedData}
   oAccessor="category"
   rAccessor="value"
@@ -453,7 +457,7 @@ function OrdinalBrushExample() {
       {/* ----------------------------------------------------------------- */}
       <h2 id="configuration">Configuration</h2>
 
-      <h3 id="interaction-prop">interaction Prop (XYFrame)</h3>
+      <h3 id="interaction-prop">interaction Prop (StreamXYFrame)</h3>
 
       <PropTable componentName="interaction" props={interactionProps} />
 
@@ -485,7 +489,7 @@ function OrdinalBrushExample() {
       </table>
 
       <CodeBlock
-        code={`<XYFrame
+        code={`<StreamXYFrame
   customHoverBehavior={(d) => {
     // d is the data point on hover, null on hover-out
     if (d) {
@@ -507,30 +511,28 @@ function OrdinalBrushExample() {
         language="jsx"
       />
 
-      <h3 id="minimap-config">MinimapXYFrame Configuration</h3>
+      <h3 id="minimap-config">MinimapChart Configuration</h3>
       <p>
-        The <code>minimap</code> prop on <code>MinimapXYFrame</code> accepts
-        the following additional properties beyond standard XYFrame props:
+        The <code>minimap</code> prop on <code>MinimapChart</code> configures
+        the overview chart and brush behavior:
       </p>
 
       <CodeBlock
         code={`minimap={{
-  // Brush behavior
-  xBrushable: true,       // Enable horizontal brushing
-  yBrushable: false,      // Enable vertical brushing
-  xBrushExtent: [5, 15],  // Initial/controlled horizontal extent
-  yBrushExtent: [0, 100], // Initial/controlled vertical extent
-
-  // Brush callbacks
-  brushStart: (e) => {},  // Start of brush
-  brush: (e) => {},       // During brush
-  brushEnd: (e) => {},    // End of brush
-
-  // Override any XYFrame prop for the minimap rendering
-  size: [700, 50],
+  height: 50,               // Height of the overview chart
+  brushDirection: "x",      // "x" (default) or "y"
+  showAxes: false,          // Show axes in overview (default: false)
+  background: "#f5f5f5",    // Background color for overview
   margin: { left: 50, top: 0, bottom: 10, right: 20 },
-  axes: [{ orient: "left", ticks: 2 }]
-}}`}
+  lineStyle: (d) => ({ stroke: d.color, strokeWidth: 1 })
+}}
+
+// Controlled brush state:
+<MinimapChart
+  brushExtent={[startDate, endDate]}
+  onBrush={(extent) => setExtent(extent)}
+  ...
+/>`}
         language="jsx"
       />
 
@@ -549,11 +551,11 @@ function OrdinalBrushExample() {
           configuration that works alongside hover interactions
         </li>
         <li>
-          <Link to="/frames/xy-frame">XYFrame</Link> — brushing, minimap,
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> — brushing, minimap,
           and point-based interactions
         </li>
         <li>
-          <Link to="/frames/ordinal-frame">OrdinalFrame</Link> — column
+          <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — column
           brushes, piece hover, and ordinal highlighting
         </li>
         <li>

@@ -1,13 +1,37 @@
-import React from "react"
-import { NetworkFrame } from "semiotic"
-import { SankeyDiagram } from "semiotic"
+import React, { useRef, useEffect, useState } from "react"
+import { SankeyDiagram, StreamNetworkFrame } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
+import StreamingToggle from "../../components/StreamingToggle"
+import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
+
+// ---------------------------------------------------------------------------
+// Responsive container hook
+// ---------------------------------------------------------------------------
+
+function useContainerWidth() {
+  const ref = useRef(null)
+  const [width, setWidth] = useState(null)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setWidth(entry.contentRect.width)
+      }
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  return [ref, width]
+}
 
 // ---------------------------------------------------------------------------
 // Sample data
@@ -49,6 +73,32 @@ const conversionEdges = [
 ]
 
 // ---------------------------------------------------------------------------
+// Streaming data sets
+// ---------------------------------------------------------------------------
+
+const BUDGET_EDGES = [
+  { source: "Salary", target: "Budget", value: 5000 },
+  { source: "Freelance", target: "Budget", value: 1500 },
+  { source: "Budget", target: "Rent", value: 2000 },
+  { source: "Budget", target: "Food", value: 800 },
+  { source: "Budget", target: "Transport", value: 400 },
+  { source: "Budget", target: "Savings", value: 1500 },
+  { source: "Budget", target: "Entertainment", value: 500 },
+  { source: "Savings", target: "Stocks", value: 1000 },
+  { source: "Savings", target: "Emergency", value: 500 }
+]
+
+const MORE_EDGES = [
+  { source: "Budget", target: "Insurance", value: 300 },
+  { source: "Budget", target: "Utilities", value: 200 },
+  { source: "Freelance", target: "Taxes", value: 500 },
+  { source: "Entertainment", target: "Streaming", value: 50 },
+  { source: "Entertainment", target: "Dining", value: 250 },
+  { source: "Food", target: "Groceries", value: 500 },
+  { source: "Food", target: "Dining", value: 300 }
+]
+
+// ---------------------------------------------------------------------------
 // Props definition for PropTable
 // ---------------------------------------------------------------------------
 
@@ -76,8 +126,238 @@ const sankeyDiagramProps = [
   { name: "height", type: "number", required: false, default: "600", description: "Chart height in pixels." },
   { name: "margin", type: "object", required: false, default: "{ top: 50, bottom: 50, left: 50, right: 50 }", description: "Margin around the chart area." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
-  { name: "frameProps", type: "object", required: false, default: null, description: "Additional NetworkFrame props for advanced customization. Escape hatch to the full Frame API." },
+  { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamNetworkFrame props for advanced customization." },
 ]
+
+// ---------------------------------------------------------------------------
+// Streaming Quick Start demo
+// ---------------------------------------------------------------------------
+
+const streamingSankeyCode = `import { useRef } from "react"
+import { StreamNetworkFrame } from "semiotic"
+
+function StreamingSankey() {
+  const chartRef = useRef()
+
+  const pushBudget = () => {
+    chartRef.current?.push({ source: "Budget", target: "Engineering", value: 400 })
+    chartRef.current?.push({ source: "Budget", target: "Marketing", value: 250 })
+    chartRef.current?.push({ source: "Engineering", target: "Salaries", value: 300 })
+    chartRef.current?.push({ source: "Marketing", target: "Advertising", value: 150 })
+  }
+
+  return (
+    <>
+      <button onClick={pushBudget}>Push Budget Data</button>
+      <StreamNetworkFrame
+        ref={chartRef}
+        chartType="sankey"
+        size={[800, 400]}
+        showParticles
+        edgeOpacity={0.4}
+      />
+    </>
+  )
+}`
+
+function StreamingSankeyDemo({ width }) {
+  const chartRef = useRef()
+  const [pushed, setPushed] = useState(false)
+
+  const pushData = () => {
+    if (!chartRef.current) return
+    BUDGET_EDGES.forEach(e => chartRef.current.push(e))
+    setPushed(true)
+  }
+
+  const addMore = () => {
+    if (!chartRef.current) return
+    chartRef.current.push({
+      source: "Budget",
+      target: "Insurance",
+      value: Math.round(Math.random() * 200 + 50)
+    })
+  }
+
+  return (
+    <div>
+      <div style={{ marginBottom: 8, display: "flex", gap: 8 }}>
+        <button className="demo-button" onClick={pushData}>Load Budget</button>
+        <button className="demo-button" onClick={addMore} disabled={!pushed}>Add Edge</button>
+        <button className="demo-button" onClick={() => { chartRef.current?.clear(); setPushed(false) }}>Clear</button>
+      </div>
+      <StreamNetworkFrame
+        ref={chartRef}
+        chartType="sankey"
+        size={[width, 350]}
+        showParticles
+        edgeOpacity={0.4}
+      />
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Interactive push demo (from former RealtimeSankey page)
+// ---------------------------------------------------------------------------
+
+function PushApiDemo() {
+  const chartRef = useRef()
+  const [containerRef, containerWidth] = useContainerWidth()
+  const [edgeCount, setEdgeCount] = useState(0)
+
+  const pushInitial = () => {
+    if (!chartRef.current) return
+    chartRef.current.clear()
+    for (const edge of BUDGET_EDGES) {
+      chartRef.current.push(edge)
+    }
+    setEdgeCount(BUDGET_EDGES.length)
+  }
+
+  const pushMore = () => {
+    if (!chartRef.current) return
+    const edge = MORE_EDGES[edgeCount % MORE_EDGES.length]
+    chartRef.current.push(edge)
+    setEdgeCount((c) => c + 1)
+  }
+
+  const pushIncrement = () => {
+    if (!chartRef.current) return
+    const randomEdge = BUDGET_EDGES[Math.floor(Math.random() * BUDGET_EDGES.length)]
+    chartRef.current.push({
+      source: randomEdge.source,
+      target: randomEdge.target,
+      value: Math.round(Math.random() * 200 + 50)
+    })
+  }
+
+  return (
+    <div>
+      <div style={{ marginBottom: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <button className="demo-button" onClick={pushInitial}>
+          Load Budget Data
+        </button>
+        <button className="demo-button" onClick={pushMore}>
+          Add Edge
+        </button>
+        <button className="demo-button" onClick={pushIncrement}>
+          Increment Random Edge
+        </button>
+        <button className="demo-button" onClick={() => { chartRef.current?.clear(); setEdgeCount(0) }}>
+          Clear
+        </button>
+      </div>
+      <div
+        ref={containerRef}
+        style={{
+          background: "var(--surface-1)",
+          borderRadius: 8,
+          padding: 16,
+          border: "1px solid var(--surface-3)",
+          overflow: "hidden"
+        }}
+      >
+        {containerWidth && (
+          <StreamNetworkFrame
+            ref={chartRef}
+            chartType="sankey"
+            size={[containerWidth, 400]}
+            showParticles
+            edgeOpacity={0.4}
+            particleStyle={{
+              radius: 2.5,
+              opacity: 0.6,
+              spawnRate: 0.05,
+              speedMultiplier: 0.8
+            }}
+          />
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Continuous streaming demo (from former RealtimeSankey page)
+// ---------------------------------------------------------------------------
+
+function ContinuousStreamDemo() {
+  const chartRef = useRef()
+  const [containerRef, containerWidth] = useContainerWidth()
+  const [running, setRunning] = useState(false)
+
+  const PIPELINE = [
+    { source: "Ingest", target: "Validate", w: 3 },
+    { source: "Validate", target: "Process", w: 3 },
+    { source: "Validate", target: "Reject", w: 1 },
+    { source: "Process", target: "Store", w: 2 },
+    { source: "Process", target: "Cache", w: 2 },
+    { source: "Store", target: "Serve", w: 2 },
+    { source: "Cache", target: "Serve", w: 3 },
+    { source: "Serve", target: "Ingest", w: 1 }
+  ]
+
+  useEffect(() => {
+    if (!running) return
+    const totalW = PIPELINE.reduce((s, l) => s + l.w, 0)
+    const id = setInterval(() => {
+      if (!chartRef.current) return
+      let r = Math.random() * totalW
+      let link = PIPELINE[0]
+      for (const l of PIPELINE) {
+        r -= l.w
+        if (r <= 0) { link = l; break }
+      }
+      chartRef.current.push({
+        source: link.source,
+        target: link.target,
+        value: Math.round(Math.random() * 80 + 20)
+      })
+    }, 350)
+    return () => clearInterval(id)
+  }, [running])
+
+  return (
+    <div>
+      <div style={{ marginBottom: 12, display: "flex", gap: 8 }}>
+        <button className="demo-button" onClick={() => setRunning(!running)}>
+          {running ? "Stop" : "Start"} Streaming
+        </button>
+        <button className="demo-button" onClick={() => { chartRef.current?.clear(); setRunning(false) }}>
+          Clear
+        </button>
+      </div>
+      <div
+        ref={containerRef}
+        style={{
+          background: "var(--surface-1)",
+          borderRadius: 8,
+          padding: 16,
+          border: "1px solid var(--surface-3)",
+          overflow: "hidden"
+        }}
+      >
+        {containerWidth && (
+          <StreamNetworkFrame
+            ref={chartRef}
+            chartType="sankey"
+            size={[containerWidth, 450]}
+            showParticles
+            edgeOpacity={0.35}
+            particleStyle={{
+              radius: 2,
+              opacity: 0.5,
+              spawnRate: 0.03,
+              speedMultiplier: 1.2
+            }}
+            tensionConfig={{ threshold: 2.0 }}
+          />
+        )}
+      </div>
+    </div>
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Component
@@ -100,13 +380,13 @@ export default function SankeyDiagramPage() {
         componentName="SankeyDiagram"
         importStatement='import { SankeyDiagram } from "semiotic"'
         tier="charts"
-        wraps="NetworkFrame"
+        wraps="StreamNetworkFrame"
         wrapsPath="/frames/network-frame"
         related={[
           { name: "ChordDiagram", path: "/charts/chord-diagram" },
           { name: "ForceDirectedGraph", path: "/charts/force-directed-graph" },
           { name: "TreeDiagram", path: "/charts/tree-diagram" },
-          { name: "NetworkFrame", path: "/frames/network-frame" },
+          { name: "StreamNetworkFrame", path: "/frames/network-frame" },
         ]}
       />
 
@@ -115,7 +395,9 @@ export default function SankeyDiagramPage() {
         nodes in a directed acyclic graph. Nodes are arranged in columns and
         connected by ribbons whose width encodes the flow value. Sankey
         diagrams are ideal for budget allocation, conversion funnels, energy
-        flows, and any data that moves through stages.
+        flows, and any data that moves through stages. They also support
+        streaming data — push edges imperatively and watch the topology grow
+        with animated particles.
       </p>
 
       {/* ----------------------------------------------------------------- */}
@@ -129,21 +411,31 @@ export default function SankeyDiagramPage() {
         properties. Nodes are inferred automatically from the edges.
       </p>
 
-      <LiveExample
-        frameProps={{
-          edges: edgeData,
-        }}
-        type={SankeyDiagram}
-        startHidden={false}
-        overrideProps={{
-          edges: `[
+      <StreamingToggle
+        staticContent={
+          <LiveExample
+            frameProps={{
+              edges: edgeData,
+            }}
+            type={SankeyDiagram}
+            startHidden={false}
+            overrideProps={{
+              edges: `[
   { source: "Budget", target: "Engineering", value: 400 },
   { source: "Budget", target: "Marketing", value: 250 },
   { source: "Engineering", target: "Salaries", value: 300 },
   // ...more edges with value
 ]`,
-        }}
-        hiddenProps={{}}
+            }}
+            hiddenProps={{}}
+          />
+        }
+        streamingContent={
+          <StreamingDemo
+            renderChart={(w) => <StreamingSankeyDemo width={w} />}
+            code={streamingSankeyCode}
+          />
+        }
       />
 
       {/* ----------------------------------------------------------------- */}
@@ -235,6 +527,89 @@ export default function SankeyDiagramPage() {
       />
 
       {/* ----------------------------------------------------------------- */}
+      {/* Streaming */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="streaming">Streaming</h2>
+
+      <p>
+        Use <code>StreamNetworkFrame</code> with <code>chartType="sankey"</code>{" "}
+        to build streaming Sankey diagrams. Push edges imperatively via a ref and
+        watch nodes, links, and animated particles appear. The tension model
+        batches relayouts for smooth performance during high-frequency updates.
+      </p>
+
+      <h3 id="push-api">Interactive Push API</h3>
+      <p>
+        Click <strong>Load Budget Data</strong> to seed the Sankey with a personal budget flow.
+        Then click <strong>Add Edge</strong> to grow the topology or <strong>Increment Random Edge</strong> to
+        increase flow on an existing link. Particles animate along links proportional to their value.
+      </p>
+      <PushApiDemo />
+
+      <CodeBlock
+        code={`const chartRef = useRef()
+
+// Push edges at any frequency
+chartRef.current.push({ source: "Salary", target: "Budget", value: 5000 })
+chartRef.current.push({ source: "Budget", target: "Rent", value: 2000 })
+
+<StreamNetworkFrame
+  ref={chartRef}
+  chartType="sankey"
+  size={[800, 400]}
+  showParticles
+  edgeOpacity={0.4}
+/>`}
+        language="jsx"
+      />
+
+      <h3 id="continuous-streaming">Continuous Streaming</h3>
+      <p>
+        Click <strong>Start Streaming</strong> to continuously push random edges between
+        infrastructure nodes. The tension model automatically triggers relayouts as the
+        topology evolves. Includes a feedback cycle (Serve → Ingest) to demonstrate
+        circular link handling.
+      </p>
+      <ContinuousStreamDemo />
+
+      <CodeBlock
+        code={`useEffect(() => {
+  const id = setInterval(() => {
+    chartRef.current.push({
+      source: randomNode(),
+      target: randomNode(),
+      value: Math.round(Math.random() * 100)
+    })
+  }, 300)
+  return () => clearInterval(id)
+}, [])`}
+        language="jsx"
+      />
+
+      <h3 id="push-ref-handle">Push API Reference</h3>
+      <p>Access these methods via a React ref on <code>StreamNetworkFrame</code>:</p>
+      <ul>
+        <li><code>push(edge)</code> — push a single edge <code>{`{ source, target, value }`}</code></li>
+        <li><code>pushMany(edges)</code> — batch push multiple edges</li>
+        <li><code>clear()</code> — reset the graph</li>
+        <li><code>getTopology()</code> — get current <code>{`{ nodes, edges }`}</code></li>
+        <li><code>relayout()</code> — force a full relayout</li>
+        <li><code>getTension()</code> — current accumulated tension value</li>
+      </ul>
+
+      <h3 id="tension-model">Tension Model</h3>
+      <p>
+        Each push adds tension proportional to topological disruption. When tension exceeds
+        the threshold, a full d3-sankey relayout runs with smooth ease-out animation.
+      </p>
+      <ul>
+        <li>New node: +1.0 tension</li>
+        <li>New edge: +0.5 tension</li>
+        <li>Weight change: +0.1 tension</li>
+        <li>Default threshold: 3.0</li>
+      </ul>
+
+      {/* ----------------------------------------------------------------- */}
       {/* Props */}
       {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
@@ -249,9 +624,9 @@ export default function SankeyDiagramPage() {
       <p>
         When you need more control — custom node rendering, drag
         interactions, or complex Sankey configuration — graduate to{" "}
-        <Link to="/frames/network-frame">NetworkFrame</Link> directly. Every{" "}
-        <code>SankeyDiagram</code> is just a configured{" "}
-        <code>NetworkFrame</code> under the hood.
+        <Link to="/frames/network-frame">StreamNetworkFrame</Link> directly.
+        Every <code>SankeyDiagram</code> is just a configured{" "}
+        <code>StreamNetworkFrame</code> under the hood.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>
@@ -274,66 +649,28 @@ export default function SankeyDiagramPage() {
         <div>
           <h4 style={{ marginTop: 0, color: "var(--tier-frames)" }}>Frame (full control)</h4>
           <CodeBlock
-            code={`import { NetworkFrame } from "semiotic"
+            code={`import { StreamNetworkFrame } from "semiotic"
 
-<NetworkFrame
+<StreamNetworkFrame
+  chartType="sankey"
   nodes={nodeData}
   edges={flowData}
   nodeIDAccessor="id"
   sourceAccessor="source"
   targetAccessor="target"
-  edgeWidthAccessor="value"
-  networkType={{
-    type: "sankey",
-    orient: "justify",
-    nodePaddingRatio: 0.05,
-    nodeWidth: 20
-  }}
-  nodeStyle={d => ({
-    fill: colorScale(d.category),
-    stroke: "black"
-  })}
-  edgeStyle={d => ({
-    fill: colorScale(d.source.category),
-    fillOpacity: 0.5,
-    stroke: "black",
-    strokeWidth: 0.5
-  })}
-  nodeLabels={d => d.id}
-  hoverAnnotation={true}
+  valueAccessor="value"
+  nodeAlign="justify"
+  nodePaddingRatio={0.05}
+  nodeWidth={20}
+  showLabels
+  enableHover
+  showParticles
   size={[800, 600]}
 />`}
             language="jsx"
           />
         </div>
       </div>
-
-      <p>
-        The <code>frameProps</code> prop on SankeyDiagram lets you pass any
-        NetworkFrame prop without fully graduating:
-      </p>
-
-      <CodeBlock
-        code={`// Use frameProps as an escape hatch
-<SankeyDiagram
-  edges={flowData}
-  colorBy="category"
-  frameProps={{
-    annotations: [
-      { type: "node", id: "Engineering", label: "Largest department" }
-    ],
-    customNodeIcon: ({ d }) => (
-      <rect
-        width={15}
-        height={d.nodeHeight}
-        fill={colorScale(d.category)}
-        rx={3}
-      />
-    )
-  }}
-/>`}
-        language="jsx"
-      />
 
       {/* ----------------------------------------------------------------- */}
       {/* Related */}
@@ -354,8 +691,8 @@ export default function SankeyDiagramPage() {
           layouts for tree-structured data
         </li>
         <li>
-          <Link to="/frames/network-frame">NetworkFrame</Link> — the underlying
-          Frame with full control over every rendering detail
+          <Link to="/frames/network-frame">StreamNetworkFrame</Link> — the
+          underlying Frame with full control over every rendering detail
         </li>
         <li>
           <Link to="/features/tooltips">Tooltips</Link> — custom tooltip content

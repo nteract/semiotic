@@ -1,0 +1,806 @@
+"use client"
+import * as React from "react"
+import {
+  useRef,
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useImperativeHandle,
+  forwardRef
+} from "react"
+import type {
+  StreamNetworkFrameProps,
+  StreamNetworkFrameHandle,
+  NetworkChartType,
+  NetworkPipelineConfig,
+  RealtimeNode,
+  RealtimeEdge,
+  EdgePush,
+  ParticleStyle
+} from "./networkTypes"
+import {
+  DEFAULT_TENSION_CONFIG,
+  DEFAULT_PARTICLE_STYLE
+} from "./networkTypes"
+import { NetworkPipelineStore } from "./NetworkPipelineStore"
+import {
+  findNearestNetworkNode,
+  type NetworkHitResult
+} from "./NetworkCanvasHitTester"
+import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
+
+// Canvas renderers
+import { networkRectRenderer } from "./renderers/networkRectRenderer"
+import { networkCircleRenderer } from "./renderers/networkCircleRenderer"
+import { networkArcRenderer } from "./renderers/networkArcRenderer"
+import { networkEdgeRenderer } from "./renderers/networkEdgeRenderer"
+import {
+  renderNetworkParticles,
+  spawnNetworkParticles
+} from "./renderers/networkParticleRenderer"
+import { DEFAULT_COLORS } from "../charts/shared/colorUtils"
+
+// ── Defaults ───────────────────────────────────────────────────────────
+
+const DEFAULT_MARGIN = { top: 20, right: 80, bottom: 20, left: 80 }
+const CENTERED_MARGIN = { top: 40, right: 40, bottom: 40, left: 40 }
+const CENTERED_TYPES = new Set(["chord", "force", "circlepack"])
+const DEFAULT_SIZE: [number, number] = [800, 600]
+
+// ── Tooltip ────────────────────────────────────────────────────────────
+
+const defaultTooltipStyle: React.CSSProperties = {
+  background: "rgba(0, 0, 0, 0.85)",
+  color: "white",
+  padding: "6px 10px",
+  borderRadius: 4,
+  fontSize: 12,
+  lineHeight: 1.5,
+  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+  pointerEvents: "none",
+  whiteSpace: "nowrap"
+}
+
+function DefaultNetworkTooltip({
+  data
+}: {
+  data: { type: "node" | "edge"; data: any }
+}) {
+  if (data.type === "edge") {
+    const edge = data.data
+    const sourceId =
+      typeof edge.source === "object" ? edge.source.id : edge.source
+    const targetId =
+      typeof edge.target === "object" ? edge.target.id : edge.target
+    return (
+      <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+        <div style={{ fontWeight: 600 }}>
+          {sourceId} → {targetId}
+        </div>
+        {edge.value != null && (
+          <div style={{ marginTop: 4, opacity: 0.8 }}>
+            Value:{" "}
+            {typeof edge.value === "number"
+              ? edge.value.toLocaleString()
+              : String(edge.value)}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  const node = data.data
+
+  // Hierarchy nodes have a __hierarchyNode with a .parent chain.
+  // Show ancestor breadcrumb: grandparent → parent → **node**
+  const hNode = node?.__hierarchyNode
+  if (hNode) {
+    const ancestors: string[] = []
+    let cur = hNode
+    while (cur) {
+      const name = cur.data?.name ?? cur.data?.id ?? node.id
+      if (name != null) ancestors.unshift(String(name))
+      cur = cur.parent
+    }
+    // Drop root (first entry) from the breadcrumb — it's usually unnamed
+    if (ancestors.length > 1) ancestors.shift()
+
+    const last = ancestors.length - 1
+    return (
+      <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+        <div>
+          {ancestors.map((name, i) => (
+            <span key={i}>
+              {i > 0 && (
+                <span style={{ margin: "0 3px", opacity: 0.5 }}>{" → "}</span>
+              )}
+              {i === last ? (
+                <strong>{name}</strong>
+              ) : (
+                <span style={{ opacity: 0.7 }}>{name}</span>
+              )}
+            </span>
+          ))}
+        </div>
+        {node.value != null && node.value > 0 && (
+          <div style={{ marginTop: 4, opacity: 0.8 }}>
+            {typeof node.value === "number"
+              ? node.value.toLocaleString()
+              : String(node.value)}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+      <div style={{ fontWeight: 600 }}>{node.id}</div>
+      {node.value != null && (
+        <div style={{ marginTop: 4, opacity: 0.8 }}>
+          Total:{" "}
+          {typeof node.value === "number"
+            ? node.value.toLocaleString()
+            : String(node.value)}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── StreamNetworkFrame ─────────────────────────────────────────────────
+
+const StreamNetworkFrame = forwardRef<
+  StreamNetworkFrameHandle,
+  StreamNetworkFrameProps
+>(function StreamNetworkFrame(props, ref) {
+  const {
+    chartType,
+    nodes: nodesProp,
+    edges: edgesProp,
+    data: dataProp,
+    initialEdges,
+    nodeIDAccessor = "id",
+    sourceAccessor = "source",
+    targetAccessor = "target",
+    valueAccessor = "value",
+    childrenAccessor,
+    hierarchySum,
+    orientation = "horizontal",
+    nodeAlign = "justify",
+    nodePaddingRatio = 0.05,
+    nodeWidth = 15,
+    iterations = 300,
+    forceStrength = 0.1,
+    padAngle = 0.01,
+    groupWidth = 20,
+    sortGroups,
+    edgeSort,
+    treeOrientation = "vertical",
+    edgeType = "curve",
+    padding,
+    paddingTop,
+    tensionConfig: tensionConfigProp,
+    showParticles = false,
+    particleStyle: particleStyleProp,
+    nodeStyle,
+    edgeStyle,
+    colorBy,
+    colorScheme = "category10",
+    edgeColorBy = "source",
+    edgeOpacity = 0.5,
+    colorByDepth = false,
+    nodeSize = 8,
+    nodeSizeRange = [5, 20],
+    nodeLabel,
+    showLabels = true,
+    size = DEFAULT_SIZE,
+    margin: marginProp,
+    className,
+    background,
+    enableHover = true,
+    tooltipContent,
+    onTopologyChange,
+    annotations,
+    svgAnnotationRules,
+    legend,
+    title,
+    foregroundGraphics,
+    backgroundGraphics
+  } = props
+
+  const baseMargin = CENTERED_TYPES.has(chartType) ? CENTERED_MARGIN : DEFAULT_MARGIN
+  const margin = { ...baseMargin, ...marginProp }
+  const adjustedWidth = size[0] - margin.left - margin.right
+  const adjustedHeight = size[1] - margin.top - margin.bottom
+
+  const tensionConfig = useMemo(
+    () => ({ ...DEFAULT_TENSION_CONFIG, ...tensionConfigProp }),
+    [tensionConfigProp]
+  )
+
+  const particleStyle = useMemo(
+    () => ({ ...DEFAULT_PARTICLE_STYLE, ...particleStyleProp }),
+    [particleStyleProp]
+  )
+
+  // ── Pipeline config ──────────────────────────────────────────────────
+
+  const pipelineConfig = useMemo(
+    (): NetworkPipelineConfig => ({
+      chartType,
+      nodeIDAccessor,
+      sourceAccessor,
+      targetAccessor,
+      valueAccessor,
+      childrenAccessor,
+      hierarchySum,
+      orientation,
+      nodeAlign,
+      nodePaddingRatio,
+      nodeWidth,
+      iterations,
+      forceStrength,
+      padAngle,
+      groupWidth,
+      sortGroups,
+      edgeSort,
+      treeOrientation,
+      edgeType,
+      padding,
+      paddingTop,
+      tensionConfig,
+      showParticles,
+      particleStyle,
+      nodeStyle,
+      edgeStyle,
+      nodeLabel,
+      showLabels,
+      colorBy,
+      colorScheme,
+      edgeColorBy,
+      edgeOpacity,
+      colorByDepth,
+      nodeSize,
+      nodeSizeRange
+    }),
+    [
+      chartType,
+      nodeIDAccessor,
+      sourceAccessor,
+      targetAccessor,
+      valueAccessor,
+      childrenAccessor,
+      hierarchySum,
+      orientation,
+      nodeAlign,
+      nodePaddingRatio,
+      nodeWidth,
+      iterations,
+      forceStrength,
+      padAngle,
+      groupWidth,
+      sortGroups,
+      edgeSort,
+      treeOrientation,
+      edgeType,
+      padding,
+      paddingTop,
+      tensionConfig,
+      showParticles,
+      particleStyle,
+      nodeStyle,
+      edgeStyle,
+      nodeLabel,
+      showLabels,
+      colorBy,
+      colorScheme,
+      edgeColorBy,
+      edgeOpacity,
+      colorByDepth,
+      nodeSize,
+      nodeSizeRange
+    ]
+  )
+
+  // ── Refs ─────────────────────────────────────────────────────────────
+
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const rafRef = useRef(0)
+  const lastFrameTimeRef = useRef(0)
+  const dirtyRef = useRef(true)
+  const renderFnRef = useRef<() => void>(() => {})
+
+  // ── Store ────────────────────────────────────────────────────────────
+
+  const storeRef = useRef<NetworkPipelineStore | null>(null)
+  if (!storeRef.current) {
+    storeRef.current = new NetworkPipelineStore(pipelineConfig)
+  }
+
+  // ── State ────────────────────────────────────────────────────────────
+
+  const [hoverData, setHoverData] = useState<{
+    type: "node" | "edge"
+    data: any
+    x: number
+    y: number
+  } | null>(null)
+  const [layoutVersion, setLayoutVersion] = useState(0)
+  const [annotationFrame, setAnnotationFrame] = useState(0)
+
+  const hoverRef = useRef<typeof hoverData>(null)
+
+  // ── Color functions ──────────────────────────────────────────────────
+
+  const nodeColorMap = useRef(new Map<string, string>())
+  const colorIndexRef = useRef(0)
+
+  const getNodeColor = useCallback(
+    (node: RealtimeNode): string => {
+      if (typeof colorBy === "function") return colorBy(node)
+      if (typeof colorBy === "string" && node.data) {
+        const val = node.data[colorBy]
+        if (val !== undefined) {
+          if (!nodeColorMap.current.has(String(val))) {
+            const colors = Array.isArray(colorScheme)
+              ? colorScheme
+              : DEFAULT_COLORS
+            nodeColorMap.current.set(
+              String(val),
+              colors[colorIndexRef.current++ % colors.length]
+            )
+          }
+          return nodeColorMap.current.get(String(val))!
+        }
+      }
+      if (!nodeColorMap.current.has(node.id)) {
+        const colors = Array.isArray(colorScheme)
+          ? colorScheme
+          : DEFAULT_COLORS
+        nodeColorMap.current.set(
+          node.id,
+          colors[colorIndexRef.current++ % colors.length]
+        )
+      }
+      return nodeColorMap.current.get(node.id)!
+    },
+    [colorBy, colorScheme]
+  )
+
+  const getEdgeColor = useCallback(
+    (edge: RealtimeEdge): string => {
+      if (typeof edgeColorBy === "function") return edgeColorBy(edge)
+      const sourceNode =
+        typeof edge.source === "object" ? edge.source : null
+      const targetNode =
+        typeof edge.target === "object" ? edge.target : null
+
+      if (edgeColorBy === "target" && targetNode) {
+        return getNodeColor(targetNode)
+      }
+      if (sourceNode) {
+        return getNodeColor(sourceNode)
+      }
+      return "#999"
+    },
+    [edgeColorBy, getNodeColor]
+  )
+
+  // ── Stable scheduleRender ────────────────────────────────────────────
+
+  const isContinuous =
+    chartType === "sankey" && showParticles
+
+  const scheduleRender = useCallback(() => {
+    if (rafRef.current && !isContinuous) return
+    if (!rafRef.current) {
+      rafRef.current = requestAnimationFrame(() => renderFnRef.current())
+    }
+  }, [isContinuous])
+
+  // Update config when props change
+  useEffect(() => {
+    storeRef.current?.updateConfig(pipelineConfig)
+    dirtyRef.current = true
+    scheduleRender()
+  }, [pipelineConfig, scheduleRender])
+
+  // ── Layout execution ─────────────────────────────────────────────────
+
+  const runLayout = useCallback(() => {
+    const store = storeRef.current
+    if (!store) return
+
+    store.runLayout([adjustedWidth, adjustedHeight])
+    store.buildScene([adjustedWidth, adjustedHeight])
+    dirtyRef.current = true
+
+    setLayoutVersion(store.layoutVersion)
+
+    if (onTopologyChange) {
+      const { nodes, edges } = store.getLayoutData()
+      onTopologyChange(nodes, edges)
+    }
+  }, [adjustedWidth, adjustedHeight, onTopologyChange])
+
+  // ── Push API ─────────────────────────────────────────────────────────
+
+  const pushEdge = useCallback(
+    (edge: EdgePush) => {
+      const store = storeRef.current
+      if (!store) return
+      const needsRelayout = store.ingestEdge(edge)
+      if (needsRelayout) {
+        runLayout()
+      }
+      scheduleRender()
+    },
+    [runLayout, scheduleRender]
+  )
+
+  const pushManyEdges = useCallback(
+    (edges: EdgePush[]) => {
+      const store = storeRef.current
+      if (!store) return
+      let needsRelayout = false
+      for (const edge of edges) {
+        if (store.ingestEdge(edge)) {
+          needsRelayout = true
+        }
+      }
+      if (needsRelayout) {
+        runLayout()
+      }
+      scheduleRender()
+    },
+    [runLayout, scheduleRender]
+  )
+
+  const clearAll = useCallback(() => {
+    storeRef.current?.clear()
+    nodeColorMap.current.clear()
+    colorIndexRef.current = 0
+    setLayoutVersion(0)
+    setHoverData(null)
+    hoverRef.current = null
+    dirtyRef.current = true
+    scheduleRender()
+  }, [scheduleRender])
+
+  const forceRelayout = useCallback(() => {
+    const store = storeRef.current
+    if (!store) return
+    store.tension += 999
+    runLayout()
+    scheduleRender()
+  }, [runLayout, scheduleRender])
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      push: pushEdge,
+      pushMany: pushManyEdges,
+      clear: clearAll,
+      getTopology: () =>
+        storeRef.current?.getLayoutData() ?? { nodes: [], edges: [] },
+      relayout: forceRelayout,
+      getTension: () => storeRef.current?.tension ?? 0
+    }),
+    [pushEdge, pushManyEdges, clearAll, forceRelayout]
+  )
+
+  // ── Bounded data ingestion ───────────────────────────────────────────
+
+  // Determine if this is a hierarchical chart type
+  const isHierarchical = ["tree", "cluster", "treemap", "circlepack", "partition"].includes(chartType)
+  // Resolve hierarchy root: `data` prop or single-object `edges` prop
+  const hierarchyRoot = isHierarchical ? (dataProp || (!Array.isArray(edgesProp) ? edgesProp : undefined)) : undefined
+
+  useEffect(() => {
+    const store = storeRef.current
+    if (!store) return
+
+    if (isHierarchical && hierarchyRoot) {
+      // Hierarchy data: single root object
+      store.ingestHierarchy(hierarchyRoot, [adjustedWidth, adjustedHeight])
+      store.buildScene([adjustedWidth, adjustedHeight])
+      dirtyRef.current = true
+      scheduleRender()
+    } else {
+      // Graph data: nodes + edges arrays
+      const rawNodes = nodesProp || []
+      const rawEdges = Array.isArray(edgesProp) ? edgesProp : []
+
+      if (rawNodes.length === 0 && rawEdges.length === 0) return
+
+      store.ingestBounded(rawNodes, rawEdges, [adjustedWidth, adjustedHeight])
+      store.buildScene([adjustedWidth, adjustedHeight])
+      dirtyRef.current = true
+      scheduleRender()
+    }
+  }, [nodesProp, edgesProp, dataProp, hierarchyRoot, isHierarchical, adjustedWidth, adjustedHeight, scheduleRender])
+
+  // ── Initial streaming data ───────────────────────────────────────────
+
+  useEffect(() => {
+    if (initialEdges && initialEdges.length > 0) {
+      pushManyEdges(initialEdges)
+    }
+    // Only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // ── Hover handlers ───────────────────────────────────────────────────
+
+  const hoverHandlerRef = useRef<(e: React.MouseEvent) => void>(() => {})
+  const hoverLeaveRef = useRef<() => void>(() => {})
+
+  hoverHandlerRef.current = (e: React.MouseEvent) => {
+    if (!enableHover) return
+
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const rect = canvas.getBoundingClientRect()
+
+    const chartX = e.clientX - rect.left - margin.left
+    const chartY = e.clientY - rect.top - margin.top
+
+    if (
+      chartX < 0 ||
+      chartX > adjustedWidth ||
+      chartY < 0 ||
+      chartY > adjustedHeight
+    ) {
+      if (hoverRef.current) {
+        hoverRef.current = null
+        setHoverData(null)
+        scheduleRender()
+      }
+      return
+    }
+
+    const store = storeRef.current
+    if (!store) return
+
+    const hit = findNearestNetworkNode(
+      store.sceneNodes,
+      store.sceneEdges,
+      chartX,
+      chartY
+    )
+
+    if (!hit) {
+      if (hoverRef.current) {
+        hoverRef.current = null
+        setHoverData(null)
+        scheduleRender()
+      }
+      return
+    }
+
+    const hover = {
+      type: hit.type,
+      data: hit.datum,
+      x: hit.x,
+      y: hit.y
+    }
+
+    hoverRef.current = hover
+    setHoverData(hover)
+    scheduleRender()
+  }
+
+  hoverLeaveRef.current = () => {
+    if (hoverRef.current) {
+      hoverRef.current = null
+      setHoverData(null)
+      scheduleRender()
+    }
+  }
+
+  const onMouseMove = useCallback(
+    (e: React.MouseEvent) => hoverHandlerRef.current(e),
+    []
+  )
+  const onMouseLeave = useCallback(
+    () => hoverLeaveRef.current(),
+    []
+  )
+
+  // ── Render function ──────────────────────────────────────────────────
+
+  renderFnRef.current = () => {
+    rafRef.current = 0
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return
+
+    const store = storeRef.current
+    if (!store) return
+
+    const now = performance.now()
+    const deltaTime = lastFrameTimeRef.current
+      ? Math.min((now - lastFrameTimeRef.current) / 1000, 0.1)
+      : 0.016
+    lastFrameTimeRef.current = now
+
+    // Advance transition animation
+    const isTransitioning = store.advanceTransition(now)
+    if (isTransitioning || dirtyRef.current) {
+      // Rebuild scene for current positions
+      store.buildScene([adjustedWidth, adjustedHeight])
+    }
+
+    // DPR setup
+    const dpr =
+      typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1
+    canvas.width = size[0] * dpr
+    canvas.height = size[1] * dpr
+    canvas.style.width = `${size[0]}px`
+    canvas.style.height = `${size[1]}px`
+    ctx.scale(dpr, dpr)
+    ctx.translate(margin.left, margin.top)
+    ctx.clearRect(-margin.left, -margin.top, size[0], size[1])
+
+    // Background
+    if (background) {
+      ctx.fillStyle = background
+      ctx.fillRect(0, 0, adjustedWidth, adjustedHeight)
+    }
+
+    // Render edges first (they go behind nodes)
+    networkEdgeRenderer(ctx, store.sceneEdges)
+
+    // Render nodes
+    networkRectRenderer(ctx, store.sceneNodes)
+    networkCircleRenderer(ctx, store.sceneNodes)
+    networkArcRenderer(ctx, store.sceneNodes)
+
+    // Render particles (sankey only)
+    if (showParticles && store.particlePool) {
+      const edges = Array.from(store.edges.values())
+      if (edges.length > 0) {
+        spawnNetworkParticles(
+          store.particlePool,
+          edges,
+          deltaTime,
+          particleStyle
+        )
+        const speed = (particleStyle.speedMultiplier ?? 1) * 0.5
+        store.particlePool.step(deltaTime, speed, edges)
+        renderNetworkParticles(
+          ctx,
+          store.particlePool,
+          edges,
+          particleStyle,
+          getEdgeColor
+        )
+      }
+    }
+
+    const wasDirty = dirtyRef.current
+    dirtyRef.current = false
+
+    // Update SVG overlay when layout changes
+    if (wasDirty || isTransitioning) {
+      setAnnotationFrame((f) => f + 1)
+    }
+
+    // Schedule next frame for continuous rendering (particles/transitions)
+    if (isContinuous || isTransitioning) {
+      rafRef.current = requestAnimationFrame(() => renderFnRef.current())
+    }
+  }
+
+  // ── Lifecycle ────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    scheduleRender()
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    }
+  }, [scheduleRender])
+
+  useEffect(() => {
+    dirtyRef.current = true
+    scheduleRender()
+  }, [chartType, adjustedWidth, adjustedHeight, background, scheduleRender])
+
+  // ── Tooltip ──────────────────────────────────────────────────────────
+
+  const tooltipElement =
+    enableHover && hoverData ? (
+      <div
+        className="stream-network-tooltip"
+        style={{
+          position: "absolute",
+          left: margin.left + hoverData.x,
+          top: margin.top + hoverData.y,
+          transform: `translate(${
+            hoverData.x > adjustedWidth * 0.6
+              ? "calc(-100% - 12px)"
+              : "12px"
+          }, ${
+            hoverData.y < adjustedHeight * 0.3
+              ? "4px"
+              : "calc(-100% - 4px)"
+          })`,
+          pointerEvents: "none",
+          zIndex: 2
+        }}
+      >
+        {tooltipContent ? (
+          tooltipContent(hoverData)
+        ) : (
+          <DefaultNetworkTooltip data={hoverData} />
+        )}
+      </div>
+    ) : null
+
+  // ── Render ───────────────────────────────────────────────────────────
+
+  const store = storeRef.current
+
+  return (
+    <div
+      className={`stream-network-frame${className ? ` ${className}` : ""}`}
+      style={{
+        position: "relative",
+        width: size[0],
+        height: size[1]
+      }}
+      onMouseMove={enableHover ? onMouseMove : undefined}
+      onMouseLeave={enableHover ? onMouseLeave : undefined}
+    >
+      {backgroundGraphics && (
+        <svg
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: size[0],
+            height: size[1],
+            pointerEvents: "none"
+          }}
+        >
+          <g transform={`translate(${margin.left},${margin.top})`}>
+            {backgroundGraphics}
+          </g>
+        </svg>
+      )}
+
+      <canvas
+        ref={canvasRef}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0
+        }}
+      />
+
+      <NetworkSVGOverlay
+        width={adjustedWidth}
+        height={adjustedHeight}
+        totalWidth={size[0]}
+        totalHeight={size[1]}
+        margin={margin}
+        labels={store?.labels || []}
+        title={title}
+        legend={legend}
+        foregroundGraphics={foregroundGraphics}
+        annotations={annotations}
+        svgAnnotationRules={svgAnnotationRules}
+        annotationFrame={annotationFrame}
+      />
+
+      {tooltipElement}
+    </div>
+  )
+})
+
+StreamNetworkFrame.displayName = "StreamNetworkFrame"
+export default StreamNetworkFrame
