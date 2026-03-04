@@ -34,7 +34,7 @@ If you are on React 16 or 17, you must upgrade first. See the
 ## Step 2: Install Semiotic v3
 
 ```bash
-npm install semiotic@3
+npm install semiotic@3.0.0-beta.2
 ```
 
 ## Step 3: Understand the Frame Changes

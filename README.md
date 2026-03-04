@@ -78,7 +78,7 @@ to your MCP client config for tool-based chart rendering.
 ## Install
 
 ```bash
-npm install semiotic
+npm install semiotic@3.0.0-beta.2
 ```
 
 Requires React 18.1 or later.

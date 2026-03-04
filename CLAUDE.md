@@ -1,7 +1,7 @@
 # Semiotic — AI Assistant Guide
 
 ## Quick Start
-- Install: `npm install semiotic`
+- Install: `npm install semiotic@3.0.0-beta.2`
 - Import from `semiotic` or granular: `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`, `semiotic/realtime`, `semiotic/ai`, `semiotic/data`
 - `semiotic/ai` exports the 28 HOC chart components (including RealtimeHeatmap) + TooltipProvider + MultiLineTooltip + ThemeProvider + exportChart + `validateProps`
 - `semiotic/data` exports data transform helpers: `bin`, `rollup`, `groupBy`, `pivot`
