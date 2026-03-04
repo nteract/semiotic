@@ -131,25 +131,43 @@ describe("ViolinPlot", () => {
     expect(lastOrdinalFrameProps.showIQR).toBe(true)
   })
 
-  it("applies color encoding (colorBy)", () => {
+  it("applies color encoding with summaryStyle function and legend", () => {
     render(
       <TooltipProvider>
         <ViolinPlot data={sampleData} colorBy="category" />
       </TooltipProvider>
     )
 
-    expect(lastOrdinalFrameProps).toBeTruthy()
     expect(typeof lastOrdinalFrameProps.summaryStyle).toBe("function")
+    const style = lastOrdinalFrameProps.summaryStyle({ category: "A" })
+    expect(style.fill).toBeTruthy()
+    expect(typeof style.fill).toBe("string")
+    expect(lastOrdinalFrameProps.legend).toBeTruthy()
   })
 
-  it("shows legend with colorBy", () => {
+  it("hides legend when showLegend is false", () => {
     render(
       <TooltipProvider>
-        <ViolinPlot data={sampleData} colorBy="category" />
+        <ViolinPlot data={sampleData} colorBy="category" showLegend={false} />
       </TooltipProvider>
     )
 
-    expect(lastOrdinalFrameProps.legend).toBeTruthy()
+    expect(lastOrdinalFrameProps.legend).toBeFalsy()
+  })
+
+  it("accepts function accessors", () => {
+    render(
+      <TooltipProvider>
+        <ViolinPlot
+          data={sampleData}
+          categoryAccessor={(d: any) => d.category}
+          valueAccessor={(d: any) => d.value}
+        />
+      </TooltipProvider>
+    )
+
+    expect(typeof lastOrdinalFrameProps.oAccessor).toBe("function")
+    expect(typeof lastOrdinalFrameProps.rAccessor).toBe("function")
   })
 
   it("renders with custom categoryPadding", () => {

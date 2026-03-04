@@ -4,9 +4,7 @@ import { RealtimeLineChart } from "./RealtimeLineChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 
 describe("RealtimeLineChart", () => {
-  let rafCallbacks: Function[] = []
   beforeEach(() => {
-    rafCallbacks = []
     ;(HTMLCanvasElement.prototype as any).getContext = jest.fn(() => ({
       beginPath: jest.fn(),
       moveTo: jest.fn(),
@@ -33,7 +31,6 @@ describe("RealtimeLineChart", () => {
       globalAlpha: 1
     }))
     jest.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
-      rafCallbacks.push(cb)
       cb(performance.now())
       return 0
     })
@@ -45,79 +42,18 @@ describe("RealtimeLineChart", () => {
     if ((window.cancelAnimationFrame as any).mockRestore) (window.cancelAnimationFrame as any).mockRestore()
   })
 
-  it("renders without crashing with minimal props", () => {
-    const ref = React.createRef<any>()
+  it("renders a canvas-based frame", () => {
     const { container } = render(
       <TooltipProvider>
-        <RealtimeLineChart ref={ref} />
+        <RealtimeLineChart />
       </TooltipProvider>
     )
     const frame = container.querySelector(".stream-xy-frame")
     expect(frame).toBeTruthy()
+    expect(frame?.querySelector("canvas")).toBeTruthy()
   })
 
-  it("renders with size prop", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeLineChart size={[600, 400]} />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("renders with width and height props", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeLineChart width={600} height={400} />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("renders with tooltip alias", () => {
-    const tooltipFn = jest.fn(() => <div>tooltip</div>)
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeLineChart tooltip={tooltipFn} />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("accepts custom accessors", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeLineChart timeAccessor="ts" valueAccessor="val" />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("accepts windowSize and windowMode", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeLineChart windowSize={500} windowMode="growing" />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("accepts arrowOfTime", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeLineChart arrowOfTime="left" />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("supports ref push API", () => {
+  it("ref exposes push, pushMany, getData, and clear", () => {
     const ref = React.createRef<any>()
     render(
       <TooltipProvider>
@@ -125,57 +61,86 @@ describe("RealtimeLineChart", () => {
       </TooltipProvider>
     )
     expect(ref.current).toBeTruthy()
-    expect(() => ref.current.push({ time: 1, value: 10 })).not.toThrow()
-    expect(() => ref.current.clear()).not.toThrow()
+    expect(typeof ref.current.push).toBe("function")
+    expect(typeof ref.current.pushMany).toBe("function")
+    expect(typeof ref.current.getData).toBe("function")
+    expect(typeof ref.current.clear).toBe("function")
   })
 
-  it("accepts decay config", () => {
-    const { container } = render(
+  it("push adds data retrievable via getData", () => {
+    const ref = React.createRef<any>()
+    render(
       <TooltipProvider>
-        <RealtimeLineChart decay={{ type: "linear" }} />
+        <RealtimeLineChart ref={ref} timeAccessor="t" valueAccessor="v" />
       </TooltipProvider>
     )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
+    ref.current.push({ t: 1, v: 10 })
+    ref.current.push({ t: 2, v: 20 })
+    const data = ref.current.getData()
+    expect(data.length).toBe(2)
   })
 
-  it("accepts pulse config", () => {
-    const { container } = render(
+  it("clear empties the data buffer", () => {
+    const ref = React.createRef<any>()
+    render(
       <TooltipProvider>
-        <RealtimeLineChart pulse={{ duration: 500 }} />
+        <RealtimeLineChart ref={ref} timeAccessor="t" valueAccessor="v" />
       </TooltipProvider>
     )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
+    ref.current.push({ t: 1, v: 10 })
+    ref.current.clear()
+    expect(ref.current.getData().length).toBe(0)
   })
 
-  it("accepts staleness config", () => {
-    const { container } = render(
+  it("pushMany adds multiple points", () => {
+    const ref = React.createRef<any>()
+    render(
       <TooltipProvider>
-        <RealtimeLineChart staleness={{ threshold: 5000 }} />
+        <RealtimeLineChart ref={ref} timeAccessor="t" valueAccessor="v" />
       </TooltipProvider>
     )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
+    ref.current.pushMany([
+      { t: 1, v: 10 },
+      { t: 2, v: 20 },
+      { t: 3, v: 30 }
+    ])
+    expect(ref.current.getData().length).toBe(3)
   })
 
-  it("applies custom className", () => {
+  it("accepts all line-specific props without crashing", () => {
     const { container } = render(
       <TooltipProvider>
-        <RealtimeLineChart className="my-chart" />
+        <RealtimeLineChart
+          stroke="#ff0000"
+          strokeWidth={3}
+          strokeDasharray="4,2"
+          width={800}
+          height={400}
+          timeAccessor="ts"
+          valueAccessor="val"
+          windowSize={500}
+          arrowOfTime="left"
+          showAxes={false}
+          className="my-chart"
+          decay={{ type: "exponential", halfLife: 50 }}
+          pulse={{ duration: 300, color: "red" }}
+          staleness={{ threshold: 3000, showBadge: true }}
+        />
       </TooltipProvider>
     )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
+    expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
   })
 
-  it("accepts stroke, strokeWidth, and strokeDasharray props", () => {
+  it("renders with controlled data prop", () => {
+    const data = [
+      { time: 1, value: 10 },
+      { time: 2, value: 20 }
+    ]
     const { container } = render(
       <TooltipProvider>
-        <RealtimeLineChart stroke="#ff0000" strokeWidth={3} strokeDasharray="4,2" />
+        <RealtimeLineChart data={data} timeAccessor="time" valueAccessor="value" />
       </TooltipProvider>
     )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
+    expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
   })
 })

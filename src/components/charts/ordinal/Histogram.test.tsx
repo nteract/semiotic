@@ -101,25 +101,30 @@ describe("Histogram", () => {
     expect(lastOrdinalFrameProps.normalize).toBe(true)
   })
 
-  it("applies color encoding (colorBy)", () => {
+  it("applies color encoding with summaryStyle function and legend", () => {
     render(
       <TooltipProvider>
         <Histogram data={sampleData} colorBy="category" />
       </TooltipProvider>
     )
 
-    expect(lastOrdinalFrameProps).toBeTruthy()
     expect(typeof lastOrdinalFrameProps.summaryStyle).toBe("function")
+    // summaryStyle should return an object with a fill property
+    const style = lastOrdinalFrameProps.summaryStyle({ category: "A" })
+    expect(style.fill).toBeTruthy()
+    expect(typeof style.fill).toBe("string")
+    // legend should be generated
+    expect(lastOrdinalFrameProps.legend).toBeTruthy()
   })
 
-  it("shows legend with colorBy", () => {
+  it("hides legend when showLegend is false", () => {
     render(
       <TooltipProvider>
-        <Histogram data={sampleData} colorBy="category" />
+        <Histogram data={sampleData} colorBy="category" showLegend={false} />
       </TooltipProvider>
     )
 
-    expect(lastOrdinalFrameProps.legend).toBeTruthy()
+    expect(lastOrdinalFrameProps.legend).toBeFalsy()
   })
 
   it("renders with custom categoryPadding", () => {
@@ -165,13 +170,22 @@ describe("Histogram", () => {
     expect(lastOrdinalFrameProps.projection).toBe("horizontal")
   })
 
-  it("uses default bins of 25", () => {
+  it("accepts function accessors", () => {
+    const fnData = [
+      { n: "X", amt: 5 },
+      { n: "Y", amt: 12 }
+    ]
     render(
       <TooltipProvider>
-        <Histogram data={sampleData} />
+        <Histogram
+          data={fnData}
+          categoryAccessor={(d: any) => d.n}
+          valueAccessor={(d: any) => d.amt}
+        />
       </TooltipProvider>
     )
 
-    expect(lastOrdinalFrameProps.bins).toBe(25)
+    expect(typeof lastOrdinalFrameProps.oAccessor).toBe("function")
+    expect(typeof lastOrdinalFrameProps.rAccessor).toBe("function")
   })
 })

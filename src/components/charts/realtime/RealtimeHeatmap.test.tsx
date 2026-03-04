@@ -4,36 +4,18 @@ import { RealtimeHeatmap } from "./RealtimeHeatmap"
 import { TooltipProvider } from "../../store/TooltipStore"
 
 describe("RealtimeHeatmap", () => {
-  let rafCallbacks: Function[] = []
   beforeEach(() => {
-    rafCallbacks = []
     ;(HTMLCanvasElement.prototype as any).getContext = jest.fn(() => ({
-      beginPath: jest.fn(),
-      moveTo: jest.fn(),
-      lineTo: jest.fn(),
-      stroke: jest.fn(),
-      fill: jest.fn(),
-      arc: jest.fn(),
-      clearRect: jest.fn(),
-      fillRect: jest.fn(),
-      fillText: jest.fn(),
-      strokeRect: jest.fn(),
-      save: jest.fn(),
-      restore: jest.fn(),
-      scale: jest.fn(),
-      translate: jest.fn(),
-      setLineDash: jest.fn(),
+      beginPath: jest.fn(), moveTo: jest.fn(), lineTo: jest.fn(),
+      stroke: jest.fn(), fill: jest.fn(), arc: jest.fn(),
+      clearRect: jest.fn(), fillRect: jest.fn(), fillText: jest.fn(),
+      strokeRect: jest.fn(), save: jest.fn(), restore: jest.fn(),
+      scale: jest.fn(), translate: jest.fn(), setLineDash: jest.fn(),
       closePath: jest.fn(),
-      strokeStyle: "",
-      lineWidth: 1,
-      fillStyle: "",
-      font: "",
-      textAlign: "",
-      textBaseline: "",
-      globalAlpha: 1
+      strokeStyle: "", lineWidth: 1, fillStyle: "", font: "",
+      textAlign: "", textBaseline: "", globalAlpha: 1
     }))
     jest.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
-      rafCallbacks.push(cb)
       cb(performance.now())
       return 0
     })
@@ -45,147 +27,70 @@ describe("RealtimeHeatmap", () => {
     if ((window.cancelAnimationFrame as any).mockRestore) (window.cancelAnimationFrame as any).mockRestore()
   })
 
-  it("renders without crashing with minimal props", () => {
+  it("renders a canvas-based frame", () => {
+    const { container } = render(
+      <TooltipProvider><RealtimeHeatmap /></TooltipProvider>
+    )
+    const frame = container.querySelector(".stream-xy-frame")
+    expect(frame).toBeTruthy()
+    expect(frame?.querySelector("canvas")).toBeTruthy()
+  })
+
+  it("ref exposes push, pushMany, getData, and clear", () => {
     const ref = React.createRef<any>()
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeHeatmap ref={ref} />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
+    render(<TooltipProvider><RealtimeHeatmap ref={ref} /></TooltipProvider>)
+    expect(typeof ref.current.push).toBe("function")
+    expect(typeof ref.current.pushMany).toBe("function")
+    expect(typeof ref.current.getData).toBe("function")
+    expect(typeof ref.current.clear).toBe("function")
   })
 
-  it("renders with size prop", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeHeatmap size={[600, 400]} />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("renders with width and height props", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeHeatmap width={600} height={400} />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("renders with tooltip alias", () => {
-    const tooltipFn = jest.fn(() => <div>tooltip</div>)
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeHeatmap tooltip={tooltipFn} />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("accepts custom accessors", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeHeatmap timeAccessor="ts" valueAccessor="val" />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("accepts windowSize and windowMode", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeHeatmap windowSize={500} windowMode="growing" />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("accepts arrowOfTime", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeHeatmap arrowOfTime="left" />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("supports ref push API", () => {
+  it("push and getData track data", () => {
     const ref = React.createRef<any>()
-    render(
-      <TooltipProvider>
-        <RealtimeHeatmap ref={ref} />
-      </TooltipProvider>
-    )
-    expect(ref.current).toBeTruthy()
-    expect(() => ref.current.push({ time: 1, value: 10 })).not.toThrow()
-    expect(() => ref.current.clear()).not.toThrow()
+    render(<TooltipProvider><RealtimeHeatmap ref={ref} timeAccessor="t" valueAccessor="v" /></TooltipProvider>)
+    ref.current.push({ t: 1, v: 5 })
+    ref.current.push({ t: 2, v: 10 })
+    expect(ref.current.getData().length).toBe(2)
   })
 
-  it("accepts decay config", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeHeatmap decay={{ type: "linear" }} />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
+  it("clear empties the buffer", () => {
+    const ref = React.createRef<any>()
+    render(<TooltipProvider><RealtimeHeatmap ref={ref} timeAccessor="t" valueAccessor="v" /></TooltipProvider>)
+    ref.current.push({ t: 1, v: 5 })
+    ref.current.clear()
+    expect(ref.current.getData().length).toBe(0)
   })
 
-  it("accepts pulse config", () => {
+  it("accepts all heatmap-specific props without crashing", () => {
     const { container } = render(
       <TooltipProvider>
-        <RealtimeHeatmap pulse={{ duration: 500 }} />
+        <RealtimeHeatmap
+          heatmapXBins={30}
+          heatmapYBins={15}
+          aggregation="sum"
+          width={800}
+          height={400}
+          timeAccessor="ts"
+          valueAccessor="val"
+          decay={{ type: "exponential", halfLife: 80 }}
+          pulse={{ duration: 300 }}
+          staleness={{ threshold: 3000 }}
+        />
       </TooltipProvider>
     )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
+    expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
   })
 
-  it("accepts staleness config", () => {
+  it("renders with controlled data prop", () => {
     const { container } = render(
       <TooltipProvider>
-        <RealtimeHeatmap staleness={{ threshold: 5000 }} />
+        <RealtimeHeatmap
+          data={[{ time: 1, value: 5 }, { time: 2, value: 10 }]}
+          timeAccessor="time"
+          valueAccessor="value"
+        />
       </TooltipProvider>
     )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("applies custom className", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeHeatmap className="my-heatmap" />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("accepts heatmapXBins and heatmapYBins props", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeHeatmap heatmapXBins={30} heatmapYBins={15} />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("accepts aggregation prop", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeHeatmap aggregation="sum" />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
+    expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
   })
 })

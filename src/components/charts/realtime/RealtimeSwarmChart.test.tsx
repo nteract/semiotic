@@ -4,36 +4,18 @@ import { RealtimeSwarmChart } from "./RealtimeSwarmChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 
 describe("RealtimeSwarmChart", () => {
-  let rafCallbacks: Function[] = []
   beforeEach(() => {
-    rafCallbacks = []
     ;(HTMLCanvasElement.prototype as any).getContext = jest.fn(() => ({
-      beginPath: jest.fn(),
-      moveTo: jest.fn(),
-      lineTo: jest.fn(),
-      stroke: jest.fn(),
-      fill: jest.fn(),
-      arc: jest.fn(),
-      clearRect: jest.fn(),
-      fillRect: jest.fn(),
-      fillText: jest.fn(),
-      strokeRect: jest.fn(),
-      save: jest.fn(),
-      restore: jest.fn(),
-      scale: jest.fn(),
-      translate: jest.fn(),
-      setLineDash: jest.fn(),
+      beginPath: jest.fn(), moveTo: jest.fn(), lineTo: jest.fn(),
+      stroke: jest.fn(), fill: jest.fn(), arc: jest.fn(),
+      clearRect: jest.fn(), fillRect: jest.fn(), fillText: jest.fn(),
+      strokeRect: jest.fn(), save: jest.fn(), restore: jest.fn(),
+      scale: jest.fn(), translate: jest.fn(), setLineDash: jest.fn(),
       closePath: jest.fn(),
-      strokeStyle: "",
-      lineWidth: 1,
-      fillStyle: "",
-      font: "",
-      textAlign: "",
-      textBaseline: "",
-      globalAlpha: 1
+      strokeStyle: "", lineWidth: 1, fillStyle: "", font: "",
+      textAlign: "", textBaseline: "", globalAlpha: 1
     }))
     jest.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
-      rafCallbacks.push(cb)
       cb(performance.now())
       return 0
     })
@@ -45,153 +27,65 @@ describe("RealtimeSwarmChart", () => {
     if ((window.cancelAnimationFrame as any).mockRestore) (window.cancelAnimationFrame as any).mockRestore()
   })
 
-  it("renders without crashing with minimal props", () => {
+  it("renders a canvas-based frame", () => {
+    const { container } = render(
+      <TooltipProvider><RealtimeSwarmChart /></TooltipProvider>
+    )
+    const frame = container.querySelector(".stream-xy-frame")
+    expect(frame).toBeTruthy()
+    expect(frame?.querySelector("canvas")).toBeTruthy()
+  })
+
+  it("ref exposes push, pushMany, getData, and clear", () => {
     const ref = React.createRef<any>()
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeSwarmChart ref={ref} />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
+    render(<TooltipProvider><RealtimeSwarmChart ref={ref} /></TooltipProvider>)
+    expect(typeof ref.current.push).toBe("function")
+    expect(typeof ref.current.pushMany).toBe("function")
+    expect(typeof ref.current.getData).toBe("function")
+    expect(typeof ref.current.clear).toBe("function")
   })
 
-  it("renders with size prop", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeSwarmChart size={[600, 400]} />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("renders with width and height props", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeSwarmChart width={600} height={400} />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("renders with tooltip alias", () => {
-    const tooltipFn = jest.fn(() => <div>tooltip</div>)
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeSwarmChart tooltip={tooltipFn} />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("accepts custom accessors", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeSwarmChart timeAccessor="ts" valueAccessor="val" />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("accepts windowSize and windowMode", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeSwarmChart windowSize={500} windowMode="growing" />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("accepts arrowOfTime", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeSwarmChart arrowOfTime="left" />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("supports ref push API", () => {
+  it("push and getData track data", () => {
     const ref = React.createRef<any>()
-    render(
-      <TooltipProvider>
-        <RealtimeSwarmChart ref={ref} />
-      </TooltipProvider>
-    )
-    expect(ref.current).toBeTruthy()
-    expect(() => ref.current.push({ time: 1, value: 10 })).not.toThrow()
-    expect(() => ref.current.clear()).not.toThrow()
+    render(<TooltipProvider><RealtimeSwarmChart ref={ref} timeAccessor="t" valueAccessor="v" /></TooltipProvider>)
+    ref.current.pushMany([{ t: 1, v: 10 }, { t: 2, v: 20 }, { t: 3, v: 30 }])
+    expect(ref.current.getData().length).toBe(3)
+    ref.current.clear()
+    expect(ref.current.getData().length).toBe(0)
   })
 
-  it("accepts decay config", () => {
-    const props: any = { decay: { type: "linear" } }
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeSwarmChart {...props} />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("accepts pulse config", () => {
-    const props: any = { pulse: { duration: 500 } }
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeSwarmChart {...props} />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("accepts staleness config", () => {
-    const props: any = { staleness: { threshold: 5000 } }
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeSwarmChart {...props} />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("applies custom className", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeSwarmChart className="my-swarm" />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("accepts radius, fill, opacity, and stroke props", () => {
-    const { container } = render(
-      <TooltipProvider>
-        <RealtimeSwarmChart radius={6} fill="#28a745" opacity={0.8} stroke="#000" />
-      </TooltipProvider>
-    )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
-  })
-
-  it("accepts categoryAccessor and colors props", () => {
+  it("accepts all swarm-specific props without crashing", () => {
     const { container } = render(
       <TooltipProvider>
         <RealtimeSwarmChart
+          radius={6}
+          fill="#28a745"
+          opacity={0.8}
+          stroke="#000"
+          strokeWidth={1}
+          width={800}
+          height={400}
           categoryAccessor="sensor"
           colors={{ sensor1: "#007bff", sensor2: "#28a745" }}
+          windowSize={300}
+          arrowOfTime="left"
+          showAxes={false}
         />
       </TooltipProvider>
     )
-    const frame = container.querySelector(".stream-xy-frame")
-    expect(frame).toBeTruthy()
+    expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
+  })
+
+  it("renders with controlled data prop", () => {
+    const { container } = render(
+      <TooltipProvider>
+        <RealtimeSwarmChart
+          data={[{ time: 1, value: 5 }, { time: 2, value: 10 }]}
+          timeAccessor="time"
+          valueAccessor="value"
+        />
+      </TooltipProvider>
+    )
+    expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
   })
 })
