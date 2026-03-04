@@ -40,6 +40,7 @@ import AxisSettings from "./guides/AxisSettings"
 import XYChartsHOC from "./guides/XYChartsHOC"
 import OrdinalChartsHOC from "./guides/OrdinalChartsHOC"
 import NetworkChartsHOC from "./guides/NetworkChartsHOC"
+import RealtimeChartsHOC from "./guides/RealtimeChartsHOC"
 
 import DividedLine from "./sub-components/DividedLine"
 

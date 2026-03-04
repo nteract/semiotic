@@ -277,6 +277,7 @@ const galleryItems = [
     render: (w, h) => (
       <StreamOrdinalFrame
         size={[w, h]}
+        chartType="clusterbar"
         data={galleryBarData.flatMap(d =>
           [
             { region: d.region, quarter: "Q1", value: d.q1 },
@@ -287,14 +288,14 @@ const galleryItems = [
         )}
         oAccessor="region"
         rAccessor="value"
-        type="clusterbar"
-        style={d => {
+        groupBy="quarter"
+        pieceStyle={d => {
           const qi = ["Q1", "Q2", "Q3", "Q4"].indexOf(d.quarter)
           return { fill: galleryColors[qi], stroke: "none" }
         }}
-        oLabel={true}
-        oPadding={8}
-        axes={[{ orient: "left", ticks: 5 }]}
+        showAxes={true}
+        oLabel="region"
+        barPadding={8}
         margin={{ top: 16, right: 16, bottom: 36, left: 44 }}
       />
     ),
@@ -331,10 +332,10 @@ const galleryItems = [
         xAccessor="week"
         yAccessor="users"
         groupAccessor="series"
-        lineStyle={(d, group) => ({
-          fill: galleryAreaColors[group] || galleryColors[0],
+        areaStyle={(d) => ({
+          fill: galleryAreaColors[d.series] || galleryColors[0],
           fillOpacity: 0.6,
-          stroke: galleryAreaColors[group] || galleryColors[0],
+          stroke: galleryAreaColors[d.series] || galleryColors[0],
           strokeWidth: 2,
         })}
         showAxes={true}
@@ -348,14 +349,15 @@ const galleryItems = [
     render: (w, h) => (
       <StreamNetworkFrame
         size={[w, h]}
+        chartType="force"
         nodes={galleryNetworkNodes}
         edges={galleryNetworkEdges}
-        networkType={{ type: "force", iterations: 300 }}
-        nodeSizeAccessor={5}
-        nodeStyle={(d, i) => ({ fill: galleryColors[i % galleryColors.length], stroke: "#fff", strokeWidth: 1.5 })}
+        iterations={300}
+        nodeSize={5}
+        nodeStyle={(d) => ({ fill: galleryColors[galleryNetworkNodes.findIndex(n => n.id === d.id) % galleryColors.length], stroke: "#fff", strokeWidth: 1.5 })}
         edgeStyle={() => ({ stroke: "var(--text-secondary)", strokeWidth: 1, opacity: 0.4 })}
         nodeIDAccessor="id"
-        margin={16}
+        margin={{ top: 16, right: 16, bottom: 16, left: 16 }}
       />
     ),
   },

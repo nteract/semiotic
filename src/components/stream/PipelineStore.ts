@@ -852,7 +852,10 @@ export class PipelineStore {
       return {
         stroke: ls.stroke || "#007bff",
         strokeWidth: ls.strokeWidth || 2,
-        strokeDasharray: ls.strokeDasharray
+        strokeDasharray: ls.strokeDasharray,
+        fill: ls.fill,
+        fillOpacity: ls.fillOpacity,
+        opacity: ls.opacity
       }
     }
     return { stroke: "#007bff", strokeWidth: 2 }

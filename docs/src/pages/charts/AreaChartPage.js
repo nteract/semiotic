@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react"
-import { AreaChart, RealtimeLineChart } from "semiotic"
+import { AreaChart, StreamXYFrame } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
@@ -84,9 +84,9 @@ const areaChartProps = [
 // ---------------------------------------------------------------------------
 
 const streamingAreaCode = `import { useRef, useEffect } from "react"
-import { RealtimeLineChart } from "semiotic"
+import { StreamXYFrame } from "semiotic"
 
-function StreamingSales() {
+function StreamingArea() {
   const chartRef = useRef()
   const indexRef = useRef(0)
 
@@ -105,11 +105,17 @@ function StreamingSales() {
   }, [])
 
   return (
-    <RealtimeLineChart
+    <StreamXYFrame
       ref={chartRef}
+      chartType="line"
+      runtimeMode="streaming"
       size={[600, 280]}
-      stroke="#10b981"
-      strokeWidth={2}
+      lineStyle={{
+        stroke: "#10b981",
+        strokeWidth: 2,
+        fill: "#10b981",
+        fillOpacity: 0.3
+      }}
       windowSize={150}
       showAxes
     />
@@ -134,11 +140,17 @@ function StreamingAreaDemo({ width }) {
   }, [])
 
   return (
-    <RealtimeLineChart
+    <StreamXYFrame
       ref={chartRef}
+      chartType="line"
+      runtimeMode="streaming"
       size={[width, 280]}
-      stroke="#10b981"
-      strokeWidth={2}
+      lineStyle={{
+        stroke: "#10b981",
+        strokeWidth: 2,
+        fill: "#10b981",
+        fillOpacity: 0.3
+      }}
       windowSize={150}
       showAxes={true}
     />
