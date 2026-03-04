@@ -26,37 +26,10 @@ const lineData = [
   { month: 6, revenue: 21000, product: "Gadget" },
 ]
 
+// Flat data for StreamXYFrame line examples
 const frameLineData = [
-  {
-    title: "Widget",
-    coordinates: [
-      { step: 1, value: 12 },
-      { step: 2, value: 18 },
-      { step: 3, value: 14 },
-      { step: 4, value: 22 },
-      { step: 5, value: 19 },
-      { step: 6, value: 27 },
-      { step: 7, value: 24 },
-      { step: 8, value: 31 },
-      { step: 9, value: 28 },
-      { step: 10, value: 35 },
-    ],
-  },
-  {
-    title: "Gadget",
-    coordinates: [
-      { step: 1, value: 8 },
-      { step: 2, value: 11 },
-      { step: 3, value: 15 },
-      { step: 4, value: 13 },
-      { step: 5, value: 17 },
-      { step: 6, value: 21 },
-      { step: 7, value: 19 },
-      { step: 8, value: 25 },
-      { step: 9, value: 22 },
-      { step: 10, value: 29 },
-    ],
-  },
+  ...[1,2,3,4,5,6,7,8,9,10].map(s => ({ group: "Widget", step: s, value: [12,18,14,22,19,27,24,31,28,35][s-1] })),
+  ...[1,2,3,4,5,6,7,8,9,10].map(s => ({ group: "Gadget", step: s, value: [8,11,15,13,17,21,19,25,22,29][s-1] })),
 ]
 
 const barData = [
@@ -179,28 +152,16 @@ export default function InteractionPage() {
           chartType: "line",
           xAccessor: "step",
           yAccessor: "value",
-          lineDataAccessor: "coordinates",
-          lineStyle: (d, i) => ({
-            stroke: colors[i],
+          groupAccessor: "group",
+          lineStyle: (d, group) => ({
+            stroke: group === "Widget" ? colors[0] : colors[1],
             strokeWidth: 2,
             fill: "none",
           }),
           margin: { top: 20, bottom: 50, left: 50, right: 20 },
           showAxes: true,
           enableHover: true,
-          hoverAnnotation: [
-            {
-              type: "highlight",
-              style: (d) => ({
-                strokeWidth: 6,
-                stroke: d.parentLine
-                  ? colors[frameLineData.findIndex((l) => l.title === d.parentLine.title)]
-                  : colors[frameLineData.findIndex((l) => l.title === d.title)],
-              }),
-            },
-            { type: "frame-hover" },
-          ],
-          lineIDAccessor: "title",
+          size: [500, 300],
         }}
         type={StreamXYFrame}
         overrideProps={{

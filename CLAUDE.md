@@ -3,7 +3,7 @@
 ## Quick Start
 - Install: `npm install semiotic`
 - Import from `semiotic` or granular: `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`, `semiotic/realtime`, `semiotic/ai`, `semiotic/data`
-- `semiotic/ai` exports the 27 HOC chart components + TooltipProvider + MultiLineTooltip + ThemeProvider + exportChart + `validateProps`
+- `semiotic/ai` exports the 28 HOC chart components (including RealtimeHeatmap) + TooltipProvider + MultiLineTooltip + ThemeProvider + exportChart + `validateProps`
 - `semiotic/data` exports data transform helpers: `bin`, `rollup`, `groupBy`, `pivot`
 - `validateProps(componentName, props)` — validate props before rendering, returns `{ valid, errors }`
 - CLI: `npx semiotic-ai [--schema|--compact|--examples]` — dump AI context to stdout
@@ -512,6 +512,25 @@ Props: `size` ([number, number], [500, 300]),
 <RealtimeWaterfallChart ref={chartRef} timeAccessor="time" valueAccessor="delta" />
 ```
 
+#### RealtimeHeatmap
+Streaming 2D heatmap with grid binning and configurable aggregation (count, sum, mean).
+
+Props: `size` ([number, number], [500, 300]),
+  `timeAccessor` (string|fn), `valueAccessor` (string|fn),
+  `heatmapXBins` (number, 20), `heatmapYBins` (number, 20),
+  `aggregation` ("count"|"sum"|"mean", "count"),
+  `windowSize` (number, 200), `windowMode` ("sliding"|"stepping", "sliding"),
+  `arrowOfTime` ("left"|"right", "right"),
+  `timeExtent` ([number, number]), `valueExtent` ([number, number]), `extentPadding` (number),
+  `showAxes` (boolean, true), `background` (string),
+  `enableHover` (boolean|object), `tooltipContent` (fn), `onHover` (fn),
+  `decay` (DecayConfig), `pulse` (PulseConfig), `staleness` (StalenessConfig),
+  `margin` (object), `className` (string)
+
+```jsx
+<RealtimeHeatmap ref={chartRef} timeAccessor="x" valueAccessor="y" heatmapXBins={20} aggregation="count" />
+```
+
 #### Streaming Sankey
 Streaming Sankey diagram using `StreamNetworkFrame` with `chartType="sankey"`. Topology grows
 over time via push API. Particles animate along links proportional to flow value. Tension model
@@ -615,6 +634,26 @@ Props: `data` (TDatum[], required), `fields` (string[], required),
   brushMode="crossfilter"
 />
 ```
+
+### Realtime Visual Encoding
+
+All streaming charts support visual encodings that communicate change over time:
+
+```jsx
+// Decay: older data fades out (linear, exponential, or step)
+<StreamXYFrame decay={{ type: "exponential", halfLife: 100, minOpacity: 0.1 }} />
+
+// Pulse: newly inserted data flashes with a glow
+<StreamXYFrame pulse={{ duration: 500, color: "rgba(255,255,255,0.6)", glowRadius: 4 }} />
+
+// Transitions: smooth position interpolation on data change
+<StreamXYFrame transition={{ duration: 300, easing: "ease-out" }} />
+
+// Staleness: dim chart + show badge when data feed stops
+<StreamXYFrame staleness={{ threshold: 5000, dimOpacity: 0.5, showBadge: true }} />
+```
+
+Works on StreamXYFrame, StreamOrdinalFrame, and all realtime HOCs. Features compose freely.
 
 ## Common Patterns
 
@@ -758,7 +797,8 @@ import { ChartErrorBoundary } from "semiotic"
 
 ## What Semiotic Does That Others Don't
 - Network visualization: ForceDirectedGraph, SankeyDiagram, ChordDiagram, TreeDiagram, Treemap, CirclePack
-- Streaming data: RealtimeLineChart, RealtimeTemporalHistogram (canvas-based, high frequency), StreamNetworkFrame with `chartType="sankey"` for streaming Sankey diagrams
+- Streaming data: RealtimeLineChart, RealtimeTemporalHistogram, RealtimeHeatmap (canvas-based, high frequency), StreamNetworkFrame with `chartType="sankey"` for streaming Sankey diagrams
+- Realtime visual encoding: decay (opacity fade), pulse (glow on update), transitions (smooth interpolation), staleness (feed health indicator)
 - Coordinated views: LinkedCharts, ScatterplotMatrix with crossfilter brushing — no other React chart library has this built in
 - Annotation system: built-in hover, click, and custom annotations
 - Server-side SVG: `renderToStaticSVG()` for email/OG images (import from "semiotic/server")

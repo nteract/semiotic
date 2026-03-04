@@ -13,8 +13,9 @@ export const pointCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout
     ctx.beginPath()
     ctx.arc(node.x, node.y, node.r, 0, Math.PI * 2)
 
-    if (node.style.opacity != null) {
-      ctx.globalAlpha = node.style.opacity
+    const alpha = node.style.opacity ?? node.style.fillOpacity
+    if (alpha != null) {
+      ctx.globalAlpha = alpha
     }
 
     ctx.fillStyle = node.style.fill || "#4e79a7"

@@ -39,7 +39,7 @@ are all React components with the same clean prop API as LineChart.
 **What Semiotic does that other libraries don't:**
 - Force-directed graphs, Sankey diagrams, chord diagrams, treemaps, and circle packing — as React components with the same clean API as LineChart
 - Coordinated views: `LinkedCharts` for cross-highlighting and brushing-and-linking between any charts; `ScatterplotMatrix` with crossfilter brushing
-- Real-time streaming charts rendered on canvas at 60fps
+- Real-time streaming charts rendered on canvas at 60fps, with visual encodings for change (decay, pulse, transitions, staleness)
 - Built-in annotation system with hover, click, and custom annotation types
 - Server-side SVG rendering for email, OG images, and PDFs
 
@@ -164,7 +164,7 @@ chartRef.current.push({ source: "Budget", target: "Rent", value: 2000 })
 | **XY** | `LineChart` `AreaChart` `StackedAreaChart` `Scatterplot` `BubbleChart` `Heatmap` |
 | **Categorical** | `BarChart` `StackedBarChart` `GroupedBarChart` `SwarmPlot` `BoxPlot` `Histogram` `ViolinPlot` `DotPlot` `PieChart` `DonutChart` |
 | **Network** | `ForceDirectedGraph` `ChordDiagram` `SankeyDiagram` `TreeDiagram` `Treemap` `CirclePack` |
-| **Realtime** | `RealtimeLineChart` `RealtimeHistogram` `RealtimeSwarmChart` `RealtimeWaterfallChart` |
+| **Realtime** | `RealtimeLineChart` `RealtimeHistogram` `RealtimeSwarmChart` `RealtimeWaterfallChart` `RealtimeHeatmap` |
 | **Coordination** | `LinkedCharts` `ScatterplotMatrix` |
 | **Frames** | `StreamXYFrame` `StreamOrdinalFrame` `StreamNetworkFrame` |
 

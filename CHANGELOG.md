@@ -22,6 +22,27 @@ Every frame supports a ref-based push API for streaming data.
 
 ### Added
 
+#### Realtime Visual Encoding System
+- `decay` prop — configurable opacity fade for older data (linear, exponential, step modes)
+- `pulse` prop — glow flash effect on newly inserted data points with configurable duration/color
+- `transition` prop — smooth position interpolation with ease-out cubic easing
+- `staleness` prop — canvas dimming + optional LIVE/STALE badge when data feed stops
+- All four features work on StreamXYFrame, StreamOrdinalFrame, and all realtime HOCs
+- Features compose freely (e.g., decay + pulse creates a data trail with flash-on-arrival)
+
+#### RealtimeHeatmap
+- New HOC for streaming 2D heatmaps with grid binning
+- Configurable bin counts (`heatmapXBins`, `heatmapYBins`) and aggregation modes (count, sum, mean)
+- Supports decay, pulse, and staleness realtime encodings
+- Docs page at `/charts/realtime-heatmap` with three live demos
+
+#### Streaming Bubble Encoding
+- `sizeAccessor` and `colorAccessor` now work in streaming mode on scatter/bubble charts
+- PipelineStore computes dynamic size scale and color map from current buffer data
+
+#### Realtime Encoding Docs
+- New feature page at `/features/realtime-encoding` with interactive demos for all four encodings
+
 #### StreamNetworkFrame
 - Unified canvas-first network frame replacing both legacy NetworkFrame and RealtimeNetworkFrame
 - Layout plugins: sankey, force, chord, tree, cluster, treemap, circlepack, partition
@@ -57,6 +78,19 @@ Every frame supports a ref-based push API for streaming data.
 
 ### Fixed
 
+- Chord diagram arc/ribbon angle alignment (d3-chord 12-o'clock → canvas 3-o'clock offset)
+- Stacked bar color encoding — `barColors` now maps by stack key, not category name
+- Stacked bar streaming aggregation — one rect per stack group instead of one per datum
+- Bar chart scale overflow — non-stacked bar domain covers per-category totals
+- Swarm category stability — streaming mode preserves insertion order by default
+- Bubble/scatter opacity — renderer now reads both `opacity` and `fillOpacity`
+- Histogram baseline alignment — bars grow from baseline, not centered
+- Tooltip config objects — `normalizeTooltip` handles `{ title, fields }` objects
+- LinkedCharts BarChart hover — extracts `d.data` before passing to linked hover hook
+- Frame docs pages rewritten to use correct StreamFrame API
+- LiveExample renders with fallback size before ResizeObserver fires
+- Stacked area streaming demo replaced (was incorrectly using RealtimeHistogram)
+- Feature pages (sparklines, responsive, interaction, tooltips, annotations) fixed from v1 to v2 API
 - Stacked bar category flicker during streaming (stable global category order)
 - Chord ribbon centering (paths translated to chart center)
 - Force layout initial positions (phyllotaxis spiral instead of origin singularity)
@@ -76,6 +110,10 @@ Every frame supports a ref-based push API for streaming data.
 - **`RealtimeSankey`** — use `StreamNetworkFrame` with `chartType="sankey"` and `showParticles`
 - **`RealtimeNetworkFrame`** — use `StreamNetworkFrame`
 - **`realtime-network/`** directory — `ParticlePool` and types moved to `stream/`
+- **`features/canvas-rendering`** page — canvas is now the default rendering surface
+- **`cookbook/bar-line-chart`** page
+- **`cookbook/waterfall-chart`** page — replaced by RealtimeWaterfallChart
+- **`features/axes`** StreamOrdinalFrame axes section
 - **`FacetController`** — use `LinkedCharts`
 - **Matrix cookbook recipe** — removed
 - **Legacy frame aliases** (`OrdinalFrame`, `ResponsiveOrdinalFrame`, `SparkOrdinalFrame`, etc.) — no longer exported. Use `StreamOrdinalFrame`, `StreamXYFrame`, `StreamNetworkFrame` directly.
