@@ -18,6 +18,10 @@ import { useLinkedHover } from "../../store/useSelection"
 export interface RealtimeWaterfallChartProps {
   /** Chart dimensions as [width, height] */
   size?: [number, number]
+  /** Chart width (alternative to size) */
+  width?: number
+  /** Chart height (alternative to size) */
+  height?: number
   /** Chart margins */
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
   /** CSS class name */
@@ -72,6 +76,8 @@ export interface RealtimeWaterfallChartProps {
   tickFormatTime?: (value: number) => string
   /** Custom formatter for value axis ticks */
   tickFormatValue?: (value: number) => string
+  /** Custom tooltip renderer (alias for tooltipContent) */
+  tooltip?: (d: HoverData) => ReactNode
   /** Enable linked hover selection events for cross-chart highlighting */
   linkedHover?: boolean | string | { name?: string; fields: string[] }
 }
@@ -97,7 +103,9 @@ export interface RealtimeWaterfallChartProps {
 export const RealtimeWaterfallChart = forwardRef<RealtimeFrameHandle, RealtimeWaterfallChartProps>(
   function RealtimeWaterfallChart(props, ref) {
     const {
-      size = [500, 300],
+      size,
+      width,
+      height,
       margin,
       className,
       arrowOfTime = "right",
@@ -120,6 +128,7 @@ export const RealtimeWaterfallChart = forwardRef<RealtimeFrameHandle, RealtimeWa
       background,
       enableHover,
       tooltipContent,
+      tooltip,
       onHover,
       annotations,
       svgAnnotationRules,
@@ -127,6 +136,11 @@ export const RealtimeWaterfallChart = forwardRef<RealtimeFrameHandle, RealtimeWa
       tickFormatValue,
       linkedHover
     } = props
+
+    const resolvedSize: [number, number] = width != null && height != null
+      ? [width, height]
+      : size || [500, 300]
+    const resolvedTooltip = tooltipContent ?? tooltip
 
     const frameRef = useRef<StreamXYFrameHandle>(null)
 
@@ -168,7 +182,7 @@ export const RealtimeWaterfallChart = forwardRef<RealtimeFrameHandle, RealtimeWa
         ref={frameRef}
         chartType="waterfall"
         runtimeMode="streaming"
-        size={size}
+        size={resolvedSize}
         margin={margin}
         className={className}
         arrowOfTime={arrowOfTime}
@@ -184,7 +198,7 @@ export const RealtimeWaterfallChart = forwardRef<RealtimeFrameHandle, RealtimeWa
         showAxes={showAxes}
         background={background}
         hoverAnnotation={enableHover}
-        tooltipContent={tooltipContent}
+        tooltipContent={resolvedTooltip}
         customHoverBehavior={combinedHoverBehavior}
         annotations={annotations}
         svgAnnotationRules={svgAnnotationRules}

@@ -16,27 +16,7 @@ import type {
   OrdinalChartType
 } from "./ordinalTypes"
 import type { Changeset, Style, PointSceneNode, RectSceneNode, DecayConfig } from "./types"
-
-// ── Accessor resolution ────────────────────────────────────────────────
-
-function resolveAccessor<T>(
-  accessor: string | ((d: T) => number) | undefined,
-  fallback: string
-): (d: T) => number {
-  if (typeof accessor === "function") return (d: T) => +accessor(d)
-  const key = accessor || fallback
-  return (d: T) => +(d as any)[key]
-}
-
-function resolveStringAccessor<T>(
-  accessor: string | ((d: T) => string) | undefined,
-  fallback?: string
-): ((d: T) => string) | undefined {
-  if (typeof accessor === "function") return accessor
-  if (accessor) return (d: T) => String((d as any)[accessor])
-  if (fallback) return (d: T) => String((d as any)[fallback])
-  return undefined
-}
+import { resolveAccessor, resolveStringAccessor } from "./accessorUtils"
 
 // ── OrdinalPipelineStore ───────────────────────────────────────────────
 
@@ -1400,18 +1380,18 @@ export class OrdinalPipelineStore {
 
       if (node.type === "point") {
         if (prev.x !== node.x || prev.y !== node.y) {
-          ;(node as any)._targetX = node.x
-          ;(node as any)._targetY = node.y
+          node._targetX = node.x
+          node._targetY = node.y
           node.x = prev.x
           node.y = prev.y
           hasChanges = true
         }
       } else if (node.type === "rect") {
         if (prev.x !== node.x || prev.y !== node.y || prev.w !== node.w || prev.h !== node.h) {
-          ;(node as any)._targetX = node.x
-          ;(node as any)._targetY = node.y
-          ;(node as any)._targetW = node.w
-          ;(node as any)._targetH = node.h
+          node._targetX = node.x
+          node._targetY = node.y
+          node._targetW = node.w
+          node._targetH = node.h
           node.x = prev.x
           node.y = prev.y
           node.w = prev.w ?? node.w
@@ -1439,38 +1419,46 @@ export class OrdinalPipelineStore {
       : 1 - Math.pow(1 - rawT, 3)
 
     for (const node of this.scene) {
-      const targetX = (node as any)._targetX
-      if (targetX === undefined) continue
-
-      if (node.type === "point" || node.type === "rect") {
-        const key = node.type === "point" ? `p:${0}` : `r:${(node as any).group || ""}:${node.datum?.category ?? 0}`
+      if (node.type === "point") {
+        if (node._targetX === undefined) continue
+        const key = `p:${0}`
         const prev = this.prevPositionMap.get(key)
         if (!prev) continue
-        node.x = prev.x + (targetX - prev.x) * t
-        node.y = prev.y + ((node as any)._targetY - prev.y) * t
-        if (node.type === "rect" && prev.w !== undefined) {
-          node.w = prev.w + ((node as any)._targetW - prev.w) * t
-          node.h = prev.h! + ((node as any)._targetH - prev.h!) * t
+        node.x = prev.x + (node._targetX - prev.x) * t
+        node.y = prev.y + (node._targetY! - prev.y) * t
+      } else if (node.type === "rect") {
+        if (node._targetX === undefined) continue
+        const key = `r:${node.group || ""}:${node.datum?.category ?? 0}`
+        const prev = this.prevPositionMap.get(key)
+        if (!prev) continue
+        node.x = prev.x + (node._targetX - prev.x) * t
+        node.y = prev.y + (node._targetY! - prev.y) * t
+        if (prev.w !== undefined) {
+          node.w = prev.w + (node._targetW! - prev.w) * t
+          node.h = prev.h! + (node._targetH! - prev.h!) * t
         }
       }
     }
 
     if (rawT >= 1) {
       for (const node of this.scene) {
-        if ((node as any)._targetX === undefined) continue
         if (node.type === "point") {
-          node.x = (node as any)._targetX
-          node.y = (node as any)._targetY
+          if (node._targetX === undefined) continue
+          node.x = node._targetX
+          node.y = node._targetY!
+          node._targetX = undefined
+          node._targetY = undefined
         } else if (node.type === "rect") {
-          node.x = (node as any)._targetX
-          node.y = (node as any)._targetY
-          node.w = (node as any)._targetW
-          node.h = (node as any)._targetH
+          if (node._targetX === undefined) continue
+          node.x = node._targetX
+          node.y = node._targetY!
+          node.w = node._targetW!
+          node.h = node._targetH!
+          node._targetX = undefined
+          node._targetY = undefined
+          node._targetW = undefined
+          node._targetH = undefined
         }
-        delete (node as any)._targetX
-        delete (node as any)._targetY
-        delete (node as any)._targetW
-        delete (node as any)._targetH
       }
       this.activeTransition = null
       return false

@@ -130,6 +130,11 @@ export interface PointSceneNode {
   _pulseIntensity?: number
   /** Pulse glow color */
   _pulseColor?: string
+  /** Animation target fields (set during transitions) */
+  _targetX?: number
+  _targetY?: number
+  _targetR?: number
+  _decayOpacity?: number
 }
 
 export interface RectSceneNode {
@@ -143,6 +148,12 @@ export interface RectSceneNode {
   group?: string
   _pulseIntensity?: number
   _pulseColor?: string
+  /** Animation target fields (set during transitions) */
+  _targetX?: number
+  _targetY?: number
+  _targetW?: number
+  _targetH?: number
+  _decayOpacity?: number
 }
 
 export interface HeatcellSceneNode {
@@ -155,6 +166,12 @@ export interface HeatcellSceneNode {
   datum: any
   _pulseIntensity?: number
   _pulseColor?: string
+  /** Animation target fields (set during transitions) */
+  _targetX?: number
+  _targetY?: number
+  _targetW?: number
+  _targetH?: number
+  _decayOpacity?: number
 }
 
 export interface CandlestickSceneNode {

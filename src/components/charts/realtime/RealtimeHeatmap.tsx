@@ -18,6 +18,10 @@ import type { ReactNode } from "react"
 export interface RealtimeHeatmapProps {
   /** Chart dimensions as [width, height] */
   size?: [number, number]
+  /** Chart width (alternative to size) */
+  width?: number
+  /** Chart height (alternative to size) */
+  height?: number
   /** Chart margins */
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
   /** CSS class name */
@@ -72,6 +76,8 @@ export interface RealtimeHeatmapProps {
   pulse?: PulseConfig
   /** Frame-level data liveness indicator */
   staleness?: StalenessConfig
+  /** Custom tooltip renderer (alias for tooltipContent) */
+  tooltip?: (d: HoverData) => ReactNode
 }
 
 /**
@@ -98,7 +104,9 @@ export interface RealtimeHeatmapProps {
 export const RealtimeHeatmap = forwardRef<RealtimeFrameHandle, RealtimeHeatmapProps>(
   function RealtimeHeatmap(props, ref) {
     const {
-      size = [500, 300],
+      size,
+      width,
+      height,
       margin,
       className,
       arrowOfTime = "right",
@@ -118,6 +126,7 @@ export const RealtimeHeatmap = forwardRef<RealtimeFrameHandle, RealtimeHeatmapPr
       background,
       enableHover,
       tooltipContent,
+      tooltip,
       onHover,
       annotations,
       svgAnnotationRules,
@@ -127,6 +136,11 @@ export const RealtimeHeatmap = forwardRef<RealtimeFrameHandle, RealtimeHeatmapPr
       pulse,
       staleness
     } = props
+
+    const resolvedSize: [number, number] = width != null && height != null
+      ? [width, height]
+      : size || [500, 300]
+    const resolvedTooltip = tooltipContent ?? tooltip
 
     const frameRef = useRef<StreamXYFrameHandle>(null)
 
@@ -142,7 +156,7 @@ export const RealtimeHeatmap = forwardRef<RealtimeFrameHandle, RealtimeHeatmapPr
         ref={frameRef}
         chartType="heatmap"
         runtimeMode="streaming"
-        size={size}
+        size={resolvedSize}
         margin={margin}
         className={className}
         arrowOfTime={arrowOfTime}
@@ -161,7 +175,7 @@ export const RealtimeHeatmap = forwardRef<RealtimeFrameHandle, RealtimeHeatmapPr
         showAxes={showAxes}
         background={background}
         hoverAnnotation={enableHover}
-        tooltipContent={tooltipContent}
+        tooltipContent={resolvedTooltip}
         customHoverBehavior={onHover}
         annotations={annotations}
         svgAnnotationRules={svgAnnotationRules}

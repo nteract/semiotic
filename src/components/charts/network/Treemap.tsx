@@ -13,7 +13,7 @@ import { validateObjectData } from "../shared/validateChartData"
 /**
  * Treemap component props
  */
-export interface TreemapProps<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+export interface TreemapProps<TNode extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   data: TNode
   childrenAccessor?: ChartAccessor<TNode, TNode[]>
   valueAccessor?: Accessor<number>
@@ -36,7 +36,7 @@ export interface TreemapProps<TNode extends Record<string, any> = Record<string,
  *
  * Wraps StreamNetworkFrame (canvas-first) for treemap visualization.
  */
-export function Treemap<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: TreemapProps<TNode, TEdge>) {
+export function Treemap<TNode extends Record<string, any> = Record<string, any>>(props: TreemapProps<TNode>) {
   const {
     data,
     width = 600,

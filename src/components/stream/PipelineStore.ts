@@ -28,27 +28,7 @@ import {
   buildRectNode,
   buildHeatcellNode
 } from "./SceneGraph"
-
-// ── Accessor resolution ────────────────────────────────────────────────
-
-function resolveAccessor<T>(
-  accessor: string | ((d: T) => number) | undefined,
-  fallback: string
-): (d: T) => number {
-  if (typeof accessor === "function") return (d: T) => +accessor(d)
-  const key = accessor || fallback
-  return (d: T) => +(d as any)[key]
-}
-
-function resolveStringAccessor<T>(
-  accessor: string | ((d: T) => string) | undefined,
-  fallback?: string
-): ((d: T) => string) | undefined {
-  if (typeof accessor === "function") return accessor
-  if (accessor) return (d: T) => String((d as any)[accessor])
-  if (fallback) return (d: T) => String((d as any)[fallback])
-  return undefined
-}
+import { resolveAccessor, resolveStringAccessor } from "./accessorUtils"
 
 // ── Axis direction helpers ─────────────────────────────────────────────
 
@@ -1214,9 +1194,9 @@ export class PipelineStore {
       if (node.type === "point") {
         const target = { x: node.x, y: node.y, r: node.r }
         if (prev.x !== target.x || prev.y !== target.y) {
-          ;(node as any)._targetX = target.x
-          ;(node as any)._targetY = target.y
-          ;(node as any)._targetR = target.r
+          node._targetX = target.x
+          node._targetY = target.y
+          node._targetR = target.r
           node.x = prev.x
           node.y = prev.y
           node.r = prev.r ?? node.r
@@ -1225,10 +1205,10 @@ export class PipelineStore {
       } else if (node.type === "rect") {
         const target = { x: node.x, y: node.y, w: node.w, h: node.h }
         if (prev.x !== target.x || prev.y !== target.y || prev.w !== target.w || prev.h !== target.h) {
-          ;(node as any)._targetX = target.x
-          ;(node as any)._targetY = target.y
-          ;(node as any)._targetW = target.w
-          ;(node as any)._targetH = target.h
+          node._targetX = target.x
+          node._targetY = target.y
+          node._targetW = target.w
+          node._targetH = target.h
           node.x = prev.x
           node.y = prev.y
           node.w = prev.w ?? node.w
@@ -1238,10 +1218,10 @@ export class PipelineStore {
       } else if (node.type === "heatcell") {
         const target = { x: node.x, y: node.y, w: node.w, h: node.h }
         if (prev.x !== target.x || prev.y !== target.y) {
-          ;(node as any)._targetX = target.x
-          ;(node as any)._targetY = target.y
-          ;(node as any)._targetW = target.w
-          ;(node as any)._targetH = target.h
+          node._targetX = target.x
+          node._targetY = target.y
+          node._targetW = target.w
+          node._targetH = target.h
           node.x = prev.x
           node.y = prev.y
           node.w = prev.w ?? node.w
@@ -1273,80 +1253,72 @@ export class PipelineStore {
       : 1 - Math.pow(1 - rawT, 3)
 
     for (const node of this.scene) {
-      const targetX = (node as any)._targetX
-      if (targetX === undefined) continue
-
       if (node.type === "point") {
-        const startX = node.x
-        const startY = node.y
-        node.x = startX + (targetX - startX) * (t === 1 ? 1 : t / (t + 0.001))
-        // Actually, we need to interpolate from the *original* prev, not current
-        // The prev is stored as the node's current value at animation start
-        // and target is in _target*. We need to compute from the original positions.
-      }
-    }
-
-    // Simpler approach: interpolate using prevPositionMap and _target fields directly
-    for (const node of this.scene) {
-      const targetX = (node as any)._targetX
-      if (targetX === undefined) continue
-
-      if (node.type === "point") {
+        if (node._targetX === undefined) continue
         const key = this.getNodeIdentity(node, 0)
         if (!key) continue
         const prev = this.prevPositionMap.get(key)
         if (!prev) continue
-        node.x = prev.x + (targetX - prev.x) * t
-        node.y = prev.y + ((node as any)._targetY - prev.y) * t
-        if ((node as any)._targetR !== undefined && prev.r !== undefined) {
-          node.r = prev.r + ((node as any)._targetR - prev.r) * t
+        node.x = prev.x + (node._targetX - prev.x) * t
+        node.y = prev.y + (node._targetY! - prev.y) * t
+        if (node._targetR !== undefined && prev.r !== undefined) {
+          node.r = prev.r + (node._targetR - prev.r) * t
         }
       } else if (node.type === "rect") {
+        if (node._targetX === undefined) continue
         const key = this.getNodeIdentity(node, 0)
         if (!key) continue
         const prev = this.prevPositionMap.get(key)
         if (!prev) continue
-        node.x = prev.x + (targetX - prev.x) * t
-        node.y = prev.y + ((node as any)._targetY - prev.y) * t
-        if (prev.w !== undefined) node.w = prev.w + ((node as any)._targetW - prev.w) * t
-        if (prev.h !== undefined) node.h = prev.h + ((node as any)._targetH - prev.h) * t
+        node.x = prev.x + (node._targetX - prev.x) * t
+        node.y = prev.y + (node._targetY! - prev.y) * t
+        if (prev.w !== undefined) node.w = prev.w + (node._targetW! - prev.w) * t
+        if (prev.h !== undefined) node.h = prev.h + (node._targetH! - prev.h) * t
       } else if (node.type === "heatcell") {
+        if (node._targetX === undefined) continue
         const key = this.getNodeIdentity(node, 0)
         if (!key) continue
         const prev = this.prevPositionMap.get(key)
         if (!prev) continue
-        node.x = prev.x + (targetX - prev.x) * t
-        node.y = prev.y + ((node as any)._targetY - prev.y) * t
-        if (prev.w !== undefined) node.w = prev.w + ((node as any)._targetW - prev.w) * t
-        if (prev.h !== undefined) node.h = prev.h + ((node as any)._targetH - prev.h) * t
+        node.x = prev.x + (node._targetX - prev.x) * t
+        node.y = prev.y + (node._targetY! - prev.y) * t
+        if (prev.w !== undefined) node.w = prev.w + (node._targetW! - prev.w) * t
+        if (prev.h !== undefined) node.h = prev.h + (node._targetH! - prev.h) * t
       }
     }
 
     if (rawT >= 1) {
       // Snap to targets and clear transition
       for (const node of this.scene) {
-        const targetX = (node as any)._targetX
-        if (targetX === undefined) continue
         if (node.type === "point") {
-          node.x = targetX
-          node.y = (node as any)._targetY
-          if ((node as any)._targetR !== undefined) node.r = (node as any)._targetR
+          if (node._targetX === undefined) continue
+          node.x = node._targetX
+          node.y = node._targetY!
+          if (node._targetR !== undefined) node.r = node._targetR
+          node._targetX = undefined
+          node._targetY = undefined
+          node._targetR = undefined
         } else if (node.type === "rect") {
-          node.x = targetX
-          node.y = (node as any)._targetY
-          node.w = (node as any)._targetW
-          node.h = (node as any)._targetH
+          if (node._targetX === undefined) continue
+          node.x = node._targetX
+          node.y = node._targetY!
+          node.w = node._targetW!
+          node.h = node._targetH!
+          node._targetX = undefined
+          node._targetY = undefined
+          node._targetW = undefined
+          node._targetH = undefined
         } else if (node.type === "heatcell") {
-          node.x = targetX
-          node.y = (node as any)._targetY
-          node.w = (node as any)._targetW
-          node.h = (node as any)._targetH
+          if (node._targetX === undefined) continue
+          node.x = node._targetX
+          node.y = node._targetY!
+          node.w = node._targetW!
+          node.h = node._targetH!
+          node._targetX = undefined
+          node._targetY = undefined
+          node._targetW = undefined
+          node._targetH = undefined
         }
-        delete (node as any)._targetX
-        delete (node as any)._targetY
-        delete (node as any)._targetW
-        delete (node as any)._targetH
-        delete (node as any)._targetR
       }
       this.activeTransition = null
       return false

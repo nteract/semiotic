@@ -13,7 +13,7 @@ import { validateObjectData } from "../shared/validateChartData"
 /**
  * TreeDiagram component props
  */
-export interface TreeDiagramProps<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+export interface TreeDiagramProps<TNode extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   data: TNode
   layout?: "tree" | "cluster" | "partition" | "treemap" | "circlepack"
   orientation?: "vertical" | "horizontal" | "radial"
@@ -37,7 +37,7 @@ export interface TreeDiagramProps<TNode extends Record<string, any> = Record<str
  *
  * Wraps StreamNetworkFrame (canvas-first) for hierarchical tree visualization.
  */
-export function TreeDiagram<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: TreeDiagramProps<TNode, TEdge>) {
+export function TreeDiagram<TNode extends Record<string, any> = Record<string, any>>(props: TreeDiagramProps<TNode>) {
   const {
     data,
     width = 600,
