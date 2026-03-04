@@ -3,7 +3,12 @@ import React from "react"
 import { createRoot } from "react-dom/client"
 import { lineData, scatterData, areaData, colors } from "../test-data.js"
 
-const { XYFrame } = Semiotic
+const {
+  LineChart,
+  AreaChart,
+  Scatterplot,
+  BubbleChart
+} = Semiotic
 
 const TestCase = ({ title, children, testId }) =>
   React.createElement(
@@ -14,170 +19,121 @@ const TestCase = ({ title, children, testId }) =>
   )
 
 const examples = [
-  // 1. Basic Line Chart - SVG
+  // 1. Basic Line Chart
   TestCase({
-    title: "Line Chart - SVG",
-    testId: "xy-line-svg",
-    children: React.createElement(XYFrame, {
-      size: [400, 300],
-      lines: [
-        { coordinates: lineData.filter((d) => d.series === "A") },
-        { coordinates: lineData.filter((d) => d.series === "B") }
-      ],
-      lineType: "line",
+    title: "Line Chart",
+    testId: "xy-line",
+    children: React.createElement(LineChart, {
+      data: lineData,
       xAccessor: "x",
       yAccessor: "value",
-      lineStyle: (d, i) => ({ stroke: colors[i], strokeWidth: 2, fill: "none" }),
-      axes: [
-        { orient: "left" },
-        { orient: "bottom" }
-      ],
-      margin: { left: 50, bottom: 50, right: 10, top: 10 }
+      lineBy: "series",
+      colorBy: "series",
+      width: 400,
+      height: 300,
+      colorScheme: colors
     })
   }),
 
-  // 2. Line Chart - Canvas
+  // 2. Line Chart with Points
   TestCase({
-    title: "Line Chart - Canvas",
-    testId: "xy-line-canvas",
-    children: React.createElement(XYFrame, {
-      size: [400, 300],
-      lines: [
-        { coordinates: lineData.filter((d) => d.series === "A") },
-        { coordinates: lineData.filter((d) => d.series === "B") }
-      ],
-      lineType: "line",
+    title: "Line Chart with Points",
+    testId: "xy-line-points",
+    children: React.createElement(LineChart, {
+      data: lineData,
       xAccessor: "x",
       yAccessor: "value",
-      lineStyle: (d, i) => ({ stroke: colors[i], strokeWidth: 2, fill: "none" }),
-      canvasLines: true,
-      axes: [
-        { orient: "left" },
-        { orient: "bottom", tickFormat: (d) => d }
-      ],
-      margin: { left: 50, bottom: 50, right: 10, top: 10 }
+      lineBy: "series",
+      colorBy: "series",
+      showPoints: true,
+      pointRadius: 4,
+      curve: "monotoneX",
+      width: 400,
+      height: 300,
+      colorScheme: colors
     })
   }),
 
-  // 3. Area Chart - SVG
+  // 3. Area Chart
   TestCase({
-    title: "Area Chart - SVG",
-    testId: "xy-area-svg",
-    children: React.createElement(XYFrame, {
-      size: [400, 300],
-      lines: [{ coordinates: areaData }],
-      lineType: { type: "area", y1: (d) => d.y2 },
+    title: "Area Chart",
+    testId: "xy-area",
+    children: React.createElement(AreaChart, {
+      data: areaData,
       xAccessor: "x",
       yAccessor: "y",
-      lineStyle: { fill: colors[0], fillOpacity: 0.5, stroke: colors[1] },
-      axes: [{ orient: "left" }, { orient: "bottom" }],
-      margin: { left: 50, bottom: 50, right: 10, top: 10 }
+      areaBy: "series",
+      colorBy: "series",
+      width: 400,
+      height: 300,
+      colorScheme: colors
     })
   }),
 
-  // 4. Scatter Plot - SVG
+  // 4. Scatter Plot
   TestCase({
-    title: "Scatter Plot - SVG",
-    testId: "xy-scatter-svg",
-    children: React.createElement(XYFrame, {
-      size: [400, 300],
-      points: scatterData,
+    title: "Scatter Plot",
+    testId: "xy-scatter",
+    children: React.createElement(Scatterplot, {
+      data: scatterData,
       xAccessor: "x",
       yAccessor: "y",
-      pointStyle: (d) => ({
-        fill: colors[d.category === "A" ? 0 : d.category === "B" ? 1 : 2],
-        r: 5
-      }),
-      axes: [{ orient: "left" }, { orient: "bottom" }],
-      margin: { left: 50, bottom: 50, right: 10, top: 10 },
-      hoverAnnotation: true
+      colorBy: "category",
+      pointRadius: 5,
+      width: 400,
+      height: 300,
+      colorScheme: colors
     })
   }),
 
-  // 5. Scatter Plot - Canvas
+  // 5. Bubble Chart
   TestCase({
-    title: "Scatter Plot - Canvas",
-    testId: "xy-scatter-canvas",
-    children: React.createElement(XYFrame, {
-      size: [400, 300],
-      points: scatterData,
+    title: "Bubble Chart",
+    testId: "xy-bubble",
+    children: React.createElement(BubbleChart, {
+      data: scatterData,
       xAccessor: "x",
       yAccessor: "y",
-      pointStyle: (d) => ({
-        fill: colors[d.category === "A" ? 0 : d.category === "B" ? 1 : 2],
-        r: 5
-      }),
-      canvasPoints: true,
-      axes: [{ orient: "left" }, { orient: "bottom" }],
-      margin: { left: 50, bottom: 50, right: 10, top: 10 }
+      sizeBy: "size",
+      colorBy: "category",
+      sizeRange: [3, 20],
+      width: 400,
+      height: 300,
+      colorScheme: colors
     })
   }),
 
-  // 6. Combo: Lines + Points - SVG
+  // 6. Line Chart with Fill Area
   TestCase({
-    title: "Lines + Points - SVG",
-    testId: "xy-combo-svg",
-    children: React.createElement(XYFrame, {
-      size: [400, 300],
-      lines: [{ coordinates: lineData.filter((d) => d.series === "A") }],
-      points: lineData.filter((d) => d.series === "A"),
-      lineType: "line",
+    title: "Line with Fill Area",
+    testId: "xy-line-fill",
+    children: React.createElement(LineChart, {
+      data: lineData.filter((d) => d.series === "A"),
       xAccessor: "x",
       yAccessor: "value",
-      lineStyle: { stroke: colors[0], strokeWidth: 2, fill: "none" },
-      pointStyle: { fill: colors[1], r: 4 },
-      showLinePoints: true,
-      axes: [{ orient: "left" }, { orient: "bottom" }],
-      margin: { left: 50, bottom: 50, right: 10, top: 10 }
+      fillArea: true,
+      areaOpacity: 0.3,
+      curve: "monotoneX",
+      width: 400,
+      height: 300,
+      colorScheme: colors
     })
   }),
 
-  // 7. With Hover Interaction
+  // 7. Scatter Plot with Hover
   TestCase({
     title: "Scatter with Hover",
     testId: "xy-scatter-hover",
-    children: React.createElement(XYFrame, {
-      size: [400, 300],
-      points: scatterData.slice(0, 20),
+    children: React.createElement(Scatterplot, {
+      data: scatterData.slice(0, 20),
       xAccessor: "x",
       yAccessor: "y",
-      pointStyle: (d) => ({
-        fill: colors[d.category === "A" ? 0 : d.category === "B" ? 1 : 2],
-        r: 6
-      }),
-      hoverAnnotation: true,
-      tooltipContent: (d) =>
-        React.createElement(
-          "div",
-          { className: "tooltip-content", "data-testid": "tooltip-content" },
-          `X: ${d.x.toFixed(1)}, Y: ${d.y.toFixed(1)}`
-        ),
-      axes: [{ orient: "left" }, { orient: "bottom" }],
-      margin: { left: 50, bottom: 50, right: 10, top: 10 }
-    })
-  }),
-
-  // 8. With Annotations
-  TestCase({
-    title: "Line with Annotations",
-    testId: "xy-line-annotations",
-    children: React.createElement(XYFrame, {
-      size: [400, 300],
-      lines: [{ coordinates: lineData.filter((d) => d.series === "A") }],
-      lineType: "line",
-      xAccessor: "x",
-      yAccessor: "value",
-      lineStyle: { stroke: colors[0], strokeWidth: 2, fill: "none" },
-      annotations: [
-        {
-          type: "xy",
-          x: 2,
-          value: 12,
-          note: { label: "Important Point" }
-        }
-      ],
-      axes: [{ orient: "left" }, { orient: "bottom" }],
-      margin: { left: 50, bottom: 50, right: 10, top: 10 }
+      colorBy: "category",
+      pointRadius: 6,
+      enableHover: true,
+      width: 400,
+      height: 300,
+      colorScheme: colors
     })
   })
 ]

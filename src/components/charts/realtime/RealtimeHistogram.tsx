@@ -20,6 +20,10 @@ export interface RealtimeTemporalHistogramProps {
   binSize: number
   /** Chart dimensions as [width, height] */
   size?: [number, number]
+  /** Chart width (alternative to size) */
+  width?: number
+  /** Chart height (alternative to size) */
+  height?: number
   /** Chart margins */
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
   /** CSS class name */
@@ -78,6 +82,8 @@ export interface RealtimeTemporalHistogramProps {
   tickFormatTime?: (value: number) => string
   /** Custom formatter for value axis ticks */
   tickFormatValue?: (value: number) => string
+  /** Custom tooltip renderer (alias for tooltipContent) */
+  tooltip?: (d: HoverData) => ReactNode
   /** Enable linked hover selection events for cross-chart highlighting */
   linkedHover?: boolean | string | { name?: string; fields: string[] }
 }
@@ -116,7 +122,9 @@ export const RealtimeTemporalHistogram = forwardRef<RealtimeFrameHandle, Realtim
   function RealtimeTemporalHistogram(props, ref) {
     const {
       binSize,
-      size = [500, 300],
+      size,
+      width,
+      height,
       margin,
       className,
       arrowOfTime = "right",
@@ -138,6 +146,7 @@ export const RealtimeTemporalHistogram = forwardRef<RealtimeFrameHandle, Realtim
       background,
       enableHover,
       tooltipContent,
+      tooltip,
       onHover,
       annotations,
       svgAnnotationRules,
@@ -145,6 +154,11 @@ export const RealtimeTemporalHistogram = forwardRef<RealtimeFrameHandle, Realtim
       tickFormatValue,
       linkedHover
     } = props
+
+    const resolvedSize: [number, number] = width != null && height != null
+      ? [width, height]
+      : size || [500, 300]
+    const resolvedTooltip = tooltipContent ?? tooltip
 
     const frameRef = useRef<StreamXYFrameHandle>(null)
 
@@ -183,7 +197,7 @@ export const RealtimeTemporalHistogram = forwardRef<RealtimeFrameHandle, Realtim
         ref={frameRef}
         chartType="bar"
         runtimeMode="streaming"
-        size={size}
+        size={resolvedSize}
         margin={margin}
         className={className}
         arrowOfTime={arrowOfTime}
@@ -202,7 +216,7 @@ export const RealtimeTemporalHistogram = forwardRef<RealtimeFrameHandle, Realtim
         showAxes={showAxes}
         background={background}
         hoverAnnotation={enableHover}
-        tooltipContent={tooltipContent}
+        tooltipContent={resolvedTooltip}
         customHoverBehavior={combinedHoverBehavior}
         annotations={annotations}
         svgAnnotationRules={svgAnnotationRules}

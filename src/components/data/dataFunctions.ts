@@ -1,4 +1,4 @@
-import { projectLineData, projectSummaryData } from "../svg/lineDrawing"
+import { projectLineData, projectSummaryData } from "../geometry/lineDrawing"
 import {
   projectedX,
   projectedY,
@@ -15,7 +15,7 @@ import {
   bumpChart,
   lineChart,
   cumulativeLine
-} from "../svg/lineDrawing"
+} from "../geometry/lineDrawing"
 
 import {
   contouring,
@@ -23,7 +23,7 @@ import {
   heatmapping,
   trendlining,
   lineBounding
-} from "../svg/areaDrawing"
+} from "../geometry/areaDrawing"
 import { max, min } from "d3-array"
 
 import { extentValue } from "./unflowedFunctions"

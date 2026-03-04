@@ -8,7 +8,11 @@ import type {
   HoverAnnotationConfig,
   HoverData,
   AnnotationContext,
-  StreamXYFrameHandle
+  StreamXYFrameHandle,
+  DecayConfig,
+  PulseConfig,
+  StalenessConfig,
+  TransitionConfig
 } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { ReactNode } from "react"
@@ -18,6 +22,10 @@ import { useLinkedHover } from "../../store/useSelection"
 export interface RealtimeLineChartProps {
   /** Chart dimensions as [width, height] */
   size?: [number, number]
+  /** Chart width (alternative to size) */
+  width?: number
+  /** Chart height (alternative to size) */
+  height?: number
   /** Chart margins */
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
   /** CSS class name */
@@ -64,6 +72,16 @@ export interface RealtimeLineChartProps {
   tickFormatTime?: (value: number) => string
   /** Custom formatter for value axis ticks */
   tickFormatValue?: (value: number) => string
+  /** Custom tooltip renderer (alias for tooltipContent) */
+  tooltip?: (d: HoverData) => ReactNode
+  /** Configurable opacity decay for older data */
+  decay?: DecayConfig
+  /** Flash effect on newly inserted data */
+  pulse?: PulseConfig
+  /** Frame-level data liveness indicator */
+  staleness?: StalenessConfig
+  /** Smooth position interpolation on data change */
+  transition?: TransitionConfig
   /** Enable linked hover selection events for cross-chart highlighting */
   linkedHover?: boolean | string | { name?: string; fields: string[] }
 }
@@ -90,7 +108,9 @@ export interface RealtimeLineChartProps {
 export const RealtimeLineChart = forwardRef<RealtimeFrameHandle, RealtimeLineChartProps>(
   function RealtimeLineChart(props, ref) {
     const {
-      size = [500, 300],
+      size,
+      width,
+      height,
       margin,
       className,
       arrowOfTime = "right",
@@ -109,13 +129,23 @@ export const RealtimeLineChart = forwardRef<RealtimeFrameHandle, RealtimeLineCha
       background,
       enableHover,
       tooltipContent,
+      tooltip,
       onHover,
       annotations,
       svgAnnotationRules,
       tickFormatTime,
       tickFormatValue,
+      decay,
+      pulse,
+      staleness,
+      transition,
       linkedHover
     } = props
+
+    const resolvedSize: [number, number] = width != null && height != null
+      ? [width, height]
+      : size || [500, 300]
+    const resolvedTooltip = tooltipContent ?? tooltip
 
     const frameRef = useRef<StreamXYFrameHandle>(null)
 
@@ -150,7 +180,7 @@ export const RealtimeLineChart = forwardRef<RealtimeFrameHandle, RealtimeLineCha
         ref={frameRef}
         chartType="line"
         runtimeMode="streaming"
-        size={size}
+        size={resolvedSize}
         margin={margin}
         className={className}
         arrowOfTime={arrowOfTime}
@@ -166,12 +196,16 @@ export const RealtimeLineChart = forwardRef<RealtimeFrameHandle, RealtimeLineCha
         showAxes={showAxes}
         background={background}
         hoverAnnotation={enableHover}
-        tooltipContent={tooltipContent}
+        tooltipContent={resolvedTooltip}
         customHoverBehavior={combinedHoverBehavior}
         annotations={annotations}
         svgAnnotationRules={svgAnnotationRules}
         tickFormatTime={tickFormatTime}
         tickFormatValue={tickFormatValue}
+        decay={decay}
+        pulse={pulse}
+        staleness={staleness}
+        transition={transition}
       />
     )
   }

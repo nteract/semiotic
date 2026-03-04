@@ -2,7 +2,7 @@ import * as React from "react"
 
 import { line, curveLinear } from "d3-shape"
 
-import { dividedLine, projectLineData } from "./svg/lineDrawing"
+import { dividedLine, projectLineData } from "./geometry/lineDrawing"
 
 // components
 

@@ -1,9 +1,5 @@
-import { arc, line, curveLinearClosed } from "d3-shape"
 import { interpolateNumber } from "d3-interpolate"
-
-const emptyObjectReturnFn = () => ({})
-
-const twoPI = Math.PI * 2
+import { line, curveLinearClosed } from "d3-shape"
 
 const dedupeRibbonPoints =
   (weight = 1) =>
@@ -19,168 +15,7 @@ const dedupeRibbonPoints =
     return p
   }
 
-export const arcTweener = (oldProps, newProps) => {
-  const innerRadiusInterpolator = interpolateNumber(
-    oldProps.innerRadius,
-    newProps.innerRadius
-  )
-  const outerRadiusInterpolator = interpolateNumber(
-    oldProps.outerRadius,
-    newProps.outerRadius
-  )
-  const startAngleInterpolator = interpolateNumber(
-    oldProps.startAngle,
-    newProps.startAngle
-  )
-  const endAngleInterpolator = interpolateNumber(
-    oldProps.endAngle,
-    newProps.endAngle
-  )
-
-  return (t) => {
-    const sliceGenerator = arc()
-      .innerRadius(innerRadiusInterpolator(t))
-      .outerRadius(outerRadiusInterpolator(t))
-    return sliceGenerator({
-      startAngle: startAngleInterpolator(t),
-      endAngle: endAngleInterpolator(t)
-    })
-  }
-}
-
-export const drawAreaConnector = ({
-  x1,
-  x2,
-  y1,
-  y2,
-  sizeX1,
-  sizeY1,
-  sizeX2,
-  sizeY2
-}) => {
-  return `M${x1},${y1}L${x2},${y2}L${x2 + sizeX2},${y2 + sizeY2}L${
-    x1 + sizeX1
-  },${y1 + sizeY1}Z`
-}
-
-export const groupBarMark = ({
-  bins,
-  binMax,
-  relativeBuckets,
-  columnWidth,
-  projection,
-  adjustedSize,
-  summaryI,
-  summary,
-  summaryStyle,
-  type
-}) => {
-  const mappedBins = []
-  const mappedPoints = []
-  const actualMax = (relativeBuckets && relativeBuckets[summary.name]) || binMax
-
-  const summaryElementStylingFn = type.elementStyleFn || emptyObjectReturnFn
-  const barPadding = type.padding || 0
-
-  bins.forEach((d, i) => {
-    const opacity = d.value / actualMax
-    const additionalStyle = summaryElementStylingFn(d.value, opacity, d.pieces)
-    const finalStyle =
-      type.type === "heatmap"
-        ? { opacity: opacity, fill: summaryStyle.fill, ...additionalStyle }
-        : { ...summaryStyle, ...additionalStyle }
-
-    const thickness = Math.max(1, d.y1 - barPadding * 2)
-
-    const finalColumnWidth =
-      type.type === "heatmap" ? columnWidth : columnWidth * opacity
-    let yProp = d.y + barPadding
-    let xProp =
-      type.type === "heatmap" || type.flip
-        ? -columnWidth / 2
-        : columnWidth / 2 - finalColumnWidth
-    let height = thickness
-    let width = finalColumnWidth
-    let xOffset =
-      type.type === "heatmap" ? finalColumnWidth / 2 : finalColumnWidth
-    let yOffset = d.y1 / 2
-
-    if (projection === "horizontal") {
-      yProp =
-        type.type === "heatmap"
-          ? -columnWidth / 2
-          : type.flip
-          ? -columnWidth / 2
-          : columnWidth / 2 - finalColumnWidth
-      xProp = d.y - d.y1 + barPadding
-      height = finalColumnWidth
-      width = thickness
-      yOffset =
-        type.type === "heatmap" ? finalColumnWidth / 2 : finalColumnWidth
-      xOffset = d.y1 / 2
-    } else if (projection === "radial") {
-      const arcGenerator = arc()
-        .innerRadius(d.y / 2)
-        .outerRadius((d.y + d.y1) / 2)
-
-      const angle = summary.pct - summary.pct_padding
-      let startAngle = summary.pct_middle - summary.pct_padding
-
-      let endAngle =
-        type.type === "heatmap"
-          ? startAngle + angle
-          : startAngle + angle * opacity
-      startAngle *= twoPI
-      endAngle *= twoPI
-
-      const arcAdjustX = adjustedSize[0] / 2
-      const arcAdjustY = adjustedSize[1] / 2
-
-      const arcTranslate = `translate(${arcAdjustX},${arcAdjustY})`
-      const arcCenter = arcGenerator.centroid({ startAngle, endAngle })
-      mappedPoints.push({
-        key: summary.name,
-        value: d.value,
-        pieces: d.pieces.map((p) => p.piece),
-        label: "Heatmap",
-        x: arcCenter[0] + arcAdjustX,
-        y: arcCenter[1] + arcAdjustY
-      })
-      mappedBins.push({
-        markType: "path",
-        transform: arcTranslate,
-        key: `groupIcon-${summaryI}-${i}`,
-        d: arcGenerator({ startAngle, endAngle }),
-        style: finalStyle
-      })
-    }
-    if (projection !== "radial") {
-      mappedPoints.push({
-        key: summary.name,
-        value: d.value,
-        pieces: d.pieces.map((p) => p.piece),
-        label: "Heatmap",
-        x: xProp + xOffset,
-        y: yProp + yOffset
-      })
-
-      mappedBins.push({
-        markType: "rect",
-        key: `groupIcon-${summaryI}-${i}`,
-        x: xProp,
-        y: yProp,
-        height: height,
-        width: width,
-        style: finalStyle
-      })
-    }
-  })
-
-  return { marks: mappedBins, points: mappedPoints }
-}
-
-// FROM d3-svg-ribbon
-export function linearRibbon() {
+function linearRibbon() {
   const _lineConstructor = line()
   let _xAccessor = function (d) {
     return d.x
@@ -412,4 +247,154 @@ export function linearRibbon() {
 
     return result
   }
+}
+
+const curvature = 0.5
+
+const ribbonLink = (d) => {
+  const diff =
+    d.direction === "down"
+      ? Math.abs(d.target.y - d.source.y)
+      : Math.abs(d.source.x - d.target.x)
+  // const halfWidth = d.width / 2
+  const testCoordinates =
+    d.direction === "down"
+      ? [
+          {
+            x: d.y0,
+            y: d.source.y
+          },
+          {
+            x: d.y0,
+            y: d.source.y + diff / 3
+          },
+          {
+            x: d.y1,
+            y: d.target.y - diff / 3
+          },
+          {
+            x: d.y1,
+            y: d.target.y
+          }
+        ]
+      : [
+          {
+            x: d.source.x0,
+            y: d.y0
+          },
+          {
+            x: d.source.x0 + diff / 3,
+            y: d.y0
+          },
+          {
+            x: d.target.x0 - diff / 3,
+            y: d.y1
+          },
+          {
+            x: d.target.x0,
+            y: d.y1
+          }
+        ]
+
+  const linkGenerator = linearRibbon()
+
+  linkGenerator.x((d) => d.x)
+  linkGenerator.y((d) => d.y)
+  linkGenerator.r(() => d.sankeyWidth / 2)
+
+  return linkGenerator(testCoordinates)
+}
+
+export const areaLink = (d) => {
+  let x0, x1, x2, x3, y0, y1, xi, y2, y3
+
+  if (d.direction === "down") {
+    x0 = d.y0 - d.sankeyWidth / 2
+    x1 = d.y1 - d.sankeyWidth / 2
+    x2 = d.y1 + d.sankeyWidth / 2
+    x3 = d.y0 + d.sankeyWidth / 2
+    y0 = d.source.y1
+    y1 = d.target.y0
+    xi = interpolateNumber(y0, y1)
+    y2 = xi(curvature)
+    y3 = xi(1 - curvature)
+
+    return `M${x0},${y0}C${x0},${y2} ${x1},${y3} ${x1},${y1}L${x2},${y1}C${x2},${y3} ${x3},${y2} ${x3},${y0}Z`
+  }
+  ;(x0 = d.source.x1), // eslint-disable-line no-sequences
+    (x1 = d.target.x0),
+    (xi = interpolateNumber(x0, x1)),
+    (x2 = xi(curvature)),
+    (x3 = xi(1 - curvature)),
+    (y0 = d.y0 - d.sankeyWidth / 2),
+    (y1 = d.y1 - d.sankeyWidth / 2),
+    (y2 = d.y1 + d.sankeyWidth / 2),
+    (y3 = d.y0 + d.sankeyWidth / 2)
+
+  return `M${x0},${y0}C${x2},${y0} ${x3},${y1} ${x1},${y1}L${x1},${y2}C${x3},${y2} ${x2},${y3} ${x0},${y3}Z`
+}
+
+export function circularAreaLink(link) {
+  const linkGenerator = linearRibbon()
+
+  linkGenerator.x((d) => d.x)
+  linkGenerator.y((d) => d.y)
+  linkGenerator.r(() => link.sankeyWidth / 2)
+
+  const xyForLink =
+    link.direction === "down"
+      ? [
+          {
+            x: link.circularPathData.sourceY,
+            y: link.circularPathData.sourceX
+          },
+          {
+            x: link.circularPathData.sourceY,
+            y: link.circularPathData.leftFullExtent
+          },
+          {
+            x: link.circularPathData.verticalFullExtent,
+            y: link.circularPathData.leftFullExtent
+          },
+          {
+            x: link.circularPathData.verticalFullExtent,
+            y: link.circularPathData.rightFullExtent
+          },
+          {
+            x: link.circularPathData.targetY,
+            y: link.circularPathData.rightFullExtent
+          },
+          {
+            x: link.circularPathData.targetY,
+            y: link.circularPathData.targetX
+          }
+        ]
+      : [
+          {
+            x: link.circularPathData.sourceX,
+            y: link.circularPathData.sourceY
+          },
+          {
+            x: link.circularPathData.leftFullExtent,
+            y: link.circularPathData.sourceY
+          },
+          {
+            x: link.circularPathData.leftFullExtent,
+            y: link.circularPathData.verticalFullExtent
+          },
+          {
+            x: link.circularPathData.rightFullExtent,
+            y: link.circularPathData.verticalFullExtent
+          },
+          {
+            x: link.circularPathData.rightFullExtent,
+            y: link.circularPathData.targetY
+          },
+          {
+            x: link.circularPathData.targetX,
+            y: link.circularPathData.targetY
+          }
+        ]
+
+  return linkGenerator(xyForLink)
 }

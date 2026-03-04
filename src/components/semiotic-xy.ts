@@ -15,9 +15,9 @@ import Brush from "./Brush"
 import DividedLine from "./DividedLine"
 
 // Utility functions
-import { funnelize } from "./svg/lineDrawing"
+import { funnelize } from "./geometry/lineDrawing"
 import { calculateDataExtent } from "./data/dataFunctions"
-import { hexbinning, heatmapping } from "./svg/areaDrawing"
+import { hexbinning, heatmapping } from "./geometry/areaDrawing"
 
 // Export components
 export {

@@ -51,6 +51,31 @@ export interface StalenessConfig {
   badgePosition?: "top-left" | "top-right" | "bottom-left" | "bottom-right"
 }
 
+// ── Marginal graphics ─────────────────────────────────────────────────
+
+export type MarginalType = "histogram" | "violin" | "ridgeline" | "boxplot"
+
+export interface MarginalConfig {
+  type: MarginalType
+  /** Number of bins for histogram/violin/ridgeline @default 20 */
+  bins?: number
+  /** Fill color @default "#4e79a7" */
+  fill?: string
+  /** Fill opacity @default 0.5 */
+  fillOpacity?: number
+  /** Stroke color @default "none" */
+  stroke?: string
+  /** Stroke width @default 1 */
+  strokeWidth?: number
+}
+
+export interface MarginalGraphicsConfig {
+  top?: MarginalConfig | MarginalType
+  bottom?: MarginalConfig | MarginalType
+  left?: MarginalConfig | MarginalType
+  right?: MarginalConfig | MarginalType
+}
+
 // ── Chart types ────────────────────────────────────────────────────────
 
 export type StreamChartType =
@@ -130,6 +155,11 @@ export interface PointSceneNode {
   _pulseIntensity?: number
   /** Pulse glow color */
   _pulseColor?: string
+  /** Animation target fields (set during transitions) */
+  _targetX?: number
+  _targetY?: number
+  _targetR?: number
+  _decayOpacity?: number
 }
 
 export interface RectSceneNode {
@@ -143,6 +173,12 @@ export interface RectSceneNode {
   group?: string
   _pulseIntensity?: number
   _pulseColor?: string
+  /** Animation target fields (set during transitions) */
+  _targetX?: number
+  _targetY?: number
+  _targetW?: number
+  _targetH?: number
+  _decayOpacity?: number
 }
 
 export interface HeatcellSceneNode {
@@ -155,6 +191,12 @@ export interface HeatcellSceneNode {
   datum: any
   _pulseIntensity?: number
   _pulseColor?: string
+  /** Animation target fields (set during transitions) */
+  _targetX?: number
+  _targetY?: number
+  _targetW?: number
+  _targetH?: number
+  _decayOpacity?: number
 }
 
 export interface CandlestickSceneNode {
@@ -352,6 +394,10 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
   transition?: TransitionConfig
   /** Frame-level data liveness indicator */
   staleness?: StalenessConfig
+
+  // ── Marginal graphics ────────────────────────────────
+  /** Marginal distribution plots in axis margins (histogram, violin, ridgeline, boxplot) */
+  marginalGraphics?: MarginalGraphicsConfig
 
   // ── Streaming heatmap ─────────────────────────────
   /** Aggregation mode for streaming heatmap (count, sum, mean) */

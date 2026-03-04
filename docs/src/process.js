@@ -140,6 +140,7 @@ export const processNodes = [
       "foregroundGraphics",
       "backgroundGraphics",
       "backgroundGraphics",
+      "marginalGraphics",
       "axes",
       "axis",
       "multiAxis",

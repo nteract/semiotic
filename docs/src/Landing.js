@@ -433,7 +433,7 @@ function HeroGallery() {
           color: "var(--text-primary)",
         }}
       >
-        {width && item.render(width, chartHeight)}
+        {width && <React.Fragment key={index}>{item.render(width, chartHeight)}</React.Fragment>}
       </div>
       <div
         style={{

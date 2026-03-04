@@ -16,7 +16,7 @@ import { smartTickFormat } from "./../charts/shared/formatUtils"
 import {
   drawSummaries,
   summaryInstructionsToMarks
-} from "./../svg/summaryLayouts"
+} from "./../geometry/summaryLayouts"
 import { AxisSummaryTypeSettings } from "./../types/generalTypes"
 
 // components

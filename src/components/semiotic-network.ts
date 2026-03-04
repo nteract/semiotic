@@ -11,7 +11,7 @@ import Legend from "./Legend"
 import Annotation from "./Annotation"
 import AnnotationLayer from "./AnnotationLayer/AnnotationLayer"
 import { calculateDataExtent } from "./data/dataFunctions"
-import { nodesEdgesFromHierarchy } from "./processing/network"
+import { nodesEdgesFromHierarchy } from "./processing/hierarchyUtils"
 
 // Chart HOCs
 import { ForceDirectedGraph } from "./charts/network/ForceDirectedGraph"

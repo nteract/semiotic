@@ -18,6 +18,10 @@ import { useLinkedHover } from "../../store/useSelection"
 export interface RealtimeSwarmChartProps {
   /** Chart dimensions as [width, height] */
   size?: [number, number]
+  /** Chart width (alternative to size) */
+  width?: number
+  /** Chart height (alternative to size) */
+  height?: number
   /** Chart margins */
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
   /** CSS class name */
@@ -72,6 +76,8 @@ export interface RealtimeSwarmChartProps {
   tickFormatTime?: (value: number) => string
   /** Custom formatter for value axis ticks */
   tickFormatValue?: (value: number) => string
+  /** Custom tooltip renderer (alias for tooltipContent) */
+  tooltip?: (d: HoverData) => ReactNode
   /** Enable linked hover selection events for cross-chart highlighting */
   linkedHover?: boolean | string | { name?: string; fields: string[] }
 }
@@ -100,7 +106,9 @@ export interface RealtimeSwarmChartProps {
 export const RealtimeSwarmChart = forwardRef<RealtimeFrameHandle, RealtimeSwarmChartProps>(
   function RealtimeSwarmChart(props, ref) {
     const {
-      size = [500, 300],
+      size,
+      width,
+      height,
       margin,
       className,
       arrowOfTime = "right",
@@ -123,6 +131,7 @@ export const RealtimeSwarmChart = forwardRef<RealtimeFrameHandle, RealtimeSwarmC
       background,
       enableHover,
       tooltipContent,
+      tooltip,
       onHover,
       annotations,
       svgAnnotationRules,
@@ -130,6 +139,11 @@ export const RealtimeSwarmChart = forwardRef<RealtimeFrameHandle, RealtimeSwarmC
       tickFormatValue,
       linkedHover
     } = props
+
+    const resolvedSize: [number, number] = width != null && height != null
+      ? [width, height]
+      : size || [500, 300]
+    const resolvedTooltip = tooltipContent ?? tooltip
 
     const frameRef = useRef<StreamXYFrameHandle>(null)
 
@@ -169,7 +183,7 @@ export const RealtimeSwarmChart = forwardRef<RealtimeFrameHandle, RealtimeSwarmC
         ref={frameRef}
         chartType="swarm"
         runtimeMode="streaming"
-        size={size}
+        size={resolvedSize}
         margin={margin}
         className={className}
         arrowOfTime={arrowOfTime}
@@ -187,7 +201,7 @@ export const RealtimeSwarmChart = forwardRef<RealtimeFrameHandle, RealtimeSwarmC
         showAxes={showAxes}
         background={background}
         hoverAnnotation={enableHover}
-        tooltipContent={tooltipContent}
+        tooltipContent={resolvedTooltip}
         customHoverBehavior={combinedHoverBehavior}
         annotations={annotations}
         svgAnnotationRules={svgAnnotationRules}

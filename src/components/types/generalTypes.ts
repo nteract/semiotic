@@ -1,6 +1,10 @@
 import { CustomHoverType, AnnotationHandling } from "./annotationTypes"
-import { TitleType } from "../svg/frameFunctions"
 import { Interactivity, AdvancedInteractionSettings } from "./interactionTypes"
+
+export type TitleType =
+  | string
+  | Element
+  | { title?: string | Element; orient?: string }
 import { LegendProps } from "./legendTypes"
 import { AxisProps } from "./annotationTypes"
 

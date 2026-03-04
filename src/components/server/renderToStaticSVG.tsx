@@ -36,6 +36,17 @@ import type {
   NetworkCurvedEdge
 } from "../stream/networkTypes"
 
+import { OrdinalPipelineStore } from "../stream/OrdinalPipelineStore"
+import type {
+  OrdinalPipelineConfig,
+  OrdinalSceneNode,
+  StreamOrdinalFrameProps,
+  WedgeSceneNode,
+  BoxplotSceneNode,
+  ViolinSceneNode,
+  ConnectorSceneNode
+} from "../stream/ordinalTypes"
+
 type FrameType = "xy" | "ordinal" | "network"
 
 // ── Scene graph → SVG conversion ──────────────────────────────────────────
@@ -673,19 +684,419 @@ function renderNetworkFrame(props: StreamNetworkFrameProps): string {
   return ReactDOMServer.renderToStaticMarkup(svgElement)
 }
 
+// ── Ordinal scene graph → SVG conversion ─────────────────────────────
+
+function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.ReactNode {
+  switch (node.type) {
+    case "rect": {
+      const n = node as RectSceneNode
+      return (
+        <rect
+          key={`ord-rect-${i}`}
+          x={n.x}
+          y={n.y}
+          width={n.w}
+          height={n.h}
+          fill={n.style.fill || "#4e79a7"}
+          opacity={n.style.opacity}
+          stroke={n.style.stroke}
+          strokeWidth={n.style.strokeWidth}
+        />
+      )
+    }
+    case "point": {
+      const n = node as PointSceneNode
+      return (
+        <circle
+          key={`ord-point-${i}`}
+          cx={n.x}
+          cy={n.y}
+          r={n.r}
+          fill={n.style.fill || "#4e79a7"}
+          opacity={n.style.opacity ?? 0.8}
+          stroke={n.style.stroke}
+          strokeWidth={n.style.strokeWidth}
+        />
+      )
+    }
+    case "wedge": {
+      const n = node as WedgeSceneNode
+      const arcPath = d3Arc<any>()
+        .innerRadius(n.innerRadius)
+        .outerRadius(n.outerRadius)
+        .startAngle(n.startAngle)
+        .endAngle(n.endAngle)({} as any) || ""
+      return (
+        <path
+          key={`ord-wedge-${i}`}
+          d={arcPath}
+          transform={`translate(${n.cx},${n.cy})`}
+          fill={n.style.fill || "#4e79a7"}
+          stroke={n.style.stroke}
+          strokeWidth={n.style.strokeWidth}
+          opacity={n.style.opacity}
+        />
+      )
+    }
+    case "boxplot": {
+      const n = node as BoxplotSceneNode
+      const halfW = n.columnWidth / 2
+      if (n.projection === "vertical") {
+        return (
+          <g key={`ord-boxplot-${i}`}>
+            {/* Whisker line */}
+            <line
+              x1={n.x} y1={n.minPos} x2={n.x} y2={n.maxPos}
+              stroke={n.style.stroke || "#333"} strokeWidth={1}
+            />
+            {/* Box */}
+            <rect
+              x={n.x - halfW} y={Math.min(n.q1Pos, n.q3Pos)}
+              width={n.columnWidth}
+              height={Math.abs(n.q3Pos - n.q1Pos)}
+              fill={n.style.fill || "#4e79a7"}
+              fillOpacity={n.style.fillOpacity ?? 0.6}
+              stroke={n.style.stroke || "#333"}
+              strokeWidth={1}
+            />
+            {/* Median line */}
+            <line
+              x1={n.x - halfW} y1={n.medianPos} x2={n.x + halfW} y2={n.medianPos}
+              stroke={n.style.stroke || "#333"} strokeWidth={2}
+            />
+            {/* Min/Max caps */}
+            <line x1={n.x - halfW * 0.5} y1={n.minPos} x2={n.x + halfW * 0.5} y2={n.minPos} stroke={n.style.stroke || "#333"} strokeWidth={1} />
+            <line x1={n.x - halfW * 0.5} y1={n.maxPos} x2={n.x + halfW * 0.5} y2={n.maxPos} stroke={n.style.stroke || "#333"} strokeWidth={1} />
+          </g>
+        )
+      } else {
+        // horizontal
+        return (
+          <g key={`ord-boxplot-${i}`}>
+            <line
+              x1={n.minPos} y1={n.y} x2={n.maxPos} y2={n.y}
+              stroke={n.style.stroke || "#333"} strokeWidth={1}
+            />
+            <rect
+              x={Math.min(n.q1Pos, n.q3Pos)} y={n.y - halfW}
+              width={Math.abs(n.q3Pos - n.q1Pos)}
+              height={n.columnWidth}
+              fill={n.style.fill || "#4e79a7"}
+              fillOpacity={n.style.fillOpacity ?? 0.6}
+              stroke={n.style.stroke || "#333"}
+              strokeWidth={1}
+            />
+            <line
+              x1={n.medianPos} y1={n.y - halfW} x2={n.medianPos} y2={n.y + halfW}
+              stroke={n.style.stroke || "#333"} strokeWidth={2}
+            />
+            <line x1={n.minPos} y1={n.y - halfW * 0.5} x2={n.minPos} y2={n.y + halfW * 0.5} stroke={n.style.stroke || "#333"} strokeWidth={1} />
+            <line x1={n.maxPos} y1={n.y - halfW * 0.5} x2={n.maxPos} y2={n.y + halfW * 0.5} stroke={n.style.stroke || "#333"} strokeWidth={1} />
+          </g>
+        )
+      }
+    }
+    case "violin": {
+      const n = node as ViolinSceneNode
+      const elements: React.ReactNode[] = [
+        <path
+          key={`ord-violin-path-${i}`}
+          d={n.pathString}
+          transform={n.translateX || n.translateY ? `translate(${n.translateX},${n.translateY})` : undefined}
+          fill={n.style.fill || "#4e79a7"}
+          fillOpacity={n.style.fillOpacity ?? 0.6}
+          stroke={n.style.stroke || "#333"}
+          strokeWidth={n.style.strokeWidth || 1}
+        />
+      ]
+      if (n.iqrLine && n.bounds) {
+        const b = n.bounds
+        const midX = b.x + b.width / 2
+        const midY = b.y + b.height / 2
+        const isVerticalViolin = b.height > b.width
+        if (isVerticalViolin) {
+          elements.push(
+            <line key={`ord-violin-iqr-${i}`}
+              x1={midX} y1={n.iqrLine.q1Pos} x2={midX} y2={n.iqrLine.q3Pos}
+              stroke={n.style.stroke || "#333"} strokeWidth={2}
+            />,
+            <circle key={`ord-violin-med-${i}`}
+              cx={midX} cy={n.iqrLine.medianPos} r={3}
+              fill="white" stroke={n.style.stroke || "#333"} strokeWidth={1}
+            />
+          )
+        } else {
+          elements.push(
+            <line key={`ord-violin-iqr-${i}`}
+              x1={n.iqrLine.q1Pos} y1={midY} x2={n.iqrLine.q3Pos} y2={midY}
+              stroke={n.style.stroke || "#333"} strokeWidth={2}
+            />,
+            <circle key={`ord-violin-med-${i}`}
+              cx={n.iqrLine.medianPos} cy={midY} r={3}
+              fill="white" stroke={n.style.stroke || "#333"} strokeWidth={1}
+            />
+          )
+        }
+      }
+      return <g key={`ord-violin-${i}`}>{elements}</g>
+    }
+    case "connector": {
+      const n = node as ConnectorSceneNode
+      return (
+        <line
+          key={`ord-conn-${i}`}
+          x1={n.x1}
+          y1={n.y1}
+          x2={n.x2}
+          y2={n.y2}
+          stroke={n.style.stroke || "#999"}
+          strokeWidth={n.style.strokeWidth || 1}
+          opacity={n.style.opacity ?? 0.5}
+        />
+      )
+    }
+    default:
+      return null
+  }
+}
+
+function generateOrdinalAxesSVG(
+  store: OrdinalPipelineStore,
+  layout: { width: number; height: number },
+  props: StreamOrdinalFrameProps
+): React.ReactNode {
+  const scales = store.scales
+  if (!scales) return null
+
+  // Skip axes for radial projection (pie/donut)
+  if (scales.projection === "radial") return null
+
+  const isVertical = scales.projection === "vertical"
+  const columns = store.columns
+
+  const categoryTicks = Object.values(columns).map(col => ({
+    pixel: col.middle,
+    label: (props.oFormat || String)(col.name)
+  }))
+
+  const rTicks = scales.r.ticks(5).map(v => ({
+    pixel: scales.r(v),
+    label: (props.rFormat || defaultTickFormat)(v)
+  }))
+
+  if (isVertical) {
+    // Vertical: categories on x-axis, values on y-axis
+    return (
+      <g className="ordinal-axes">
+        {/* Category axis (bottom) */}
+        <line x1={0} y1={layout.height} x2={layout.width} y2={layout.height} stroke="#ccc" strokeWidth={1} />
+        {categoryTicks.map((tick, i) => (
+          <g key={`oxtick-${i}`} transform={`translate(${tick.pixel},${layout.height})`}>
+            <line y2={5} stroke="#ccc" strokeWidth={1} />
+            <text y={18} textAnchor="middle" fontSize={10} fill="#666">{tick.label}</text>
+          </g>
+        ))}
+        {props.oLabel && (
+          <text x={layout.width / 2} y={layout.height + 40} textAnchor="middle" fontSize={12} fill="#333">
+            {props.oLabel}
+          </text>
+        )}
+
+        {/* Value axis (left) */}
+        <line x1={0} y1={0} x2={0} y2={layout.height} stroke="#ccc" strokeWidth={1} />
+        {rTicks.map((tick, i) => (
+          <g key={`oytick-${i}`} transform={`translate(0,${tick.pixel})`}>
+            <line x2={-5} stroke="#ccc" strokeWidth={1} />
+            <text x={-8} textAnchor="end" dominantBaseline="middle" fontSize={10} fill="#666">
+              {tick.label}
+            </text>
+          </g>
+        ))}
+        {props.rLabel && (
+          <text
+            x={-(props.margin?.left ?? 40) + 15}
+            y={layout.height / 2}
+            textAnchor="middle"
+            fontSize={12}
+            fill="#333"
+            transform={`rotate(-90, ${-(props.margin?.left ?? 40) + 15}, ${layout.height / 2})`}
+          >
+            {props.rLabel}
+          </text>
+        )}
+      </g>
+    )
+  } else {
+    // Horizontal: categories on y-axis, values on x-axis
+    return (
+      <g className="ordinal-axes">
+        {/* Value axis (bottom) */}
+        <line x1={0} y1={layout.height} x2={layout.width} y2={layout.height} stroke="#ccc" strokeWidth={1} />
+        {rTicks.map((tick, i) => (
+          <g key={`oxtick-${i}`} transform={`translate(${tick.pixel},${layout.height})`}>
+            <line y2={5} stroke="#ccc" strokeWidth={1} />
+            <text y={18} textAnchor="middle" fontSize={10} fill="#666">{tick.label}</text>
+          </g>
+        ))}
+        {props.rLabel && (
+          <text x={layout.width / 2} y={layout.height + 40} textAnchor="middle" fontSize={12} fill="#333">
+            {props.rLabel}
+          </text>
+        )}
+
+        {/* Category axis (left) */}
+        <line x1={0} y1={0} x2={0} y2={layout.height} stroke="#ccc" strokeWidth={1} />
+        {categoryTicks.map((tick, i) => (
+          <g key={`oytick-${i}`} transform={`translate(0,${tick.pixel})`}>
+            <line x2={-5} stroke="#ccc" strokeWidth={1} />
+            <text x={-8} textAnchor="end" dominantBaseline="middle" fontSize={10} fill="#666">
+              {tick.label}
+            </text>
+          </g>
+        ))}
+        {props.oLabel && (
+          <text
+            x={-(props.margin?.left ?? 40) + 15}
+            y={layout.height / 2}
+            textAnchor="middle"
+            fontSize={12}
+            fill="#333"
+            transform={`rotate(-90, ${-(props.margin?.left ?? 40) + 15}, ${layout.height / 2})`}
+          >
+            {props.oLabel}
+          </text>
+        )}
+      </g>
+    )
+  }
+}
+
+// ── StreamOrdinalFrame SSR ───────────────────────────────────────────
+
+function renderOrdinalFrame(props: StreamOrdinalFrameProps): string {
+  const defaultMargin = { top: 20, right: 20, bottom: 30, left: 40 }
+  const size = props.size || [500, 400]
+  const margin = { ...defaultMargin, ...props.margin }
+  const width = size[0] - margin.left - margin.right
+  const height = size[1] - margin.top - margin.bottom
+
+  const projection = props.projection || "vertical"
+  const isRadial = projection === "radial"
+
+  const pipelineConfig: OrdinalPipelineConfig = {
+    chartType: props.chartType,
+    windowSize: props.windowSize ?? 10000,
+    windowMode: props.windowMode ?? "sliding",
+    extentPadding: props.extentPadding ?? 0.05,
+    projection,
+    oAccessor: props.oAccessor,
+    rAccessor: props.rAccessor,
+    colorAccessor: props.colorAccessor,
+    stackBy: props.stackBy,
+    groupBy: props.groupBy,
+    categoryAccessor: props.categoryAccessor,
+    valueAccessor: props.valueAccessor,
+    timeAccessor: props.timeAccessor,
+    rExtent: props.rExtent,
+    oExtent: props.oExtent,
+    barPadding: props.barPadding,
+    innerRadius: props.innerRadius,
+    normalize: props.normalize,
+    startAngle: props.startAngle,
+    bins: props.bins,
+    showOutliers: props.showOutliers,
+    showIQR: props.showIQR,
+    amplitude: props.amplitude,
+    oSort: props.oSort,
+    connectorAccessor: props.connectorAccessor,
+    connectorStyle: props.connectorStyle,
+    dynamicColumnWidth: props.dynamicColumnWidth,
+    pieceStyle: props.pieceStyle,
+    summaryStyle: props.summaryStyle,
+    colorScheme: props.colorScheme,
+    barColors: props.barColors
+  }
+
+  const store = new OrdinalPipelineStore(pipelineConfig)
+
+  // Ingest bounded data
+  if (props.data) {
+    store.ingest({ inserts: props.data, bounded: true })
+  }
+
+  // Compute scene graph
+  store.computeScene({ width, height })
+
+  if (!store.scales || store.scene.length === 0) {
+    return ReactDOMServer.renderToStaticMarkup(
+      <svg xmlns="http://www.w3.org/2000/svg" className="stream-ordinal-frame" width={size[0]} height={size[1]} />
+    )
+  }
+
+  // Convert scene nodes to SVG
+  const dataMarks = store.scene
+    .map((node, i) => ordinalSceneNodeToSVG(node, i))
+    .filter(Boolean)
+
+  // Generate axes
+  const showAxes = props.showAxes !== false
+  const axes = showAxes
+    ? generateOrdinalAxesSVG(store, { width, height }, props)
+    : null
+
+  // Title
+  const title = props.title && typeof props.title === "string" ? (
+    <text
+      x={size[0] / 2}
+      y={16}
+      textAnchor="middle"
+      fontSize={14}
+      fontWeight="bold"
+      fill="#333"
+    >
+      {props.title}
+    </text>
+  ) : null
+
+  // Background
+  const bg = props.background ? (
+    <rect x={0} y={0} width={width} height={height} fill={props.background} />
+  ) : null
+
+  // For radial projection, translate to center
+  const translateX = isRadial ? margin.left + width / 2 : margin.left
+  const translateY = isRadial ? margin.top + height / 2 : margin.top
+
+  const svgElement = (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className={`stream-ordinal-frame${props.className ? ` ${props.className}` : ""}`}
+      width={size[0]}
+      height={size[1]}
+    >
+      <g transform={`translate(${translateX},${translateY})`}>
+        {bg}
+        {dataMarks}
+        {axes}
+      </g>
+      {title}
+    </svg>
+  )
+
+  return ReactDOMServer.renderToStaticMarkup(svgElement)
+}
+
 // ── Public API ────────────────────────────────────────────────────────────
 
 export function renderToStaticSVG(
   frameType: FrameType,
-  props: StreamXYFrameProps | StreamNetworkFrameProps
+  props: StreamXYFrameProps | StreamNetworkFrameProps | StreamOrdinalFrameProps
 ): string {
   switch (frameType) {
     case "xy":
       return renderStreamXYFrame(props as StreamXYFrameProps)
     case "ordinal":
-      throw new Error(
-        `Legacy ordinal SSR has been removed. Use StreamOrdinalFrame for ordinal charts.`
-      )
+      return renderOrdinalFrame(props as StreamOrdinalFrameProps)
     case "network":
       return renderNetworkFrame(props as StreamNetworkFrameProps)
     default:
@@ -699,10 +1110,8 @@ export function renderXYToStaticSVG(props: StreamXYFrameProps): string {
   return renderStreamXYFrame(props)
 }
 
-export function renderOrdinalToStaticSVG(_props: unknown): string {
-  throw new Error(
-    `Legacy ordinal SSR has been removed. Use StreamOrdinalFrame for ordinal charts.`
-  )
+export function renderOrdinalToStaticSVG(props: StreamOrdinalFrameProps): string {
+  return renderOrdinalFrame(props)
 }
 
 export function renderNetworkToStaticSVG(props: StreamNetworkFrameProps): string {

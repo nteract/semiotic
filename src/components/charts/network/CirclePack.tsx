@@ -13,7 +13,7 @@ import { validateObjectData } from "../shared/validateChartData"
 /**
  * CirclePack component props
  */
-export interface CirclePackProps<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>> extends BaseChartProps {
+export interface CirclePackProps<TNode extends Record<string, any> = Record<string, any>> extends BaseChartProps {
   data: TNode
   childrenAccessor?: ChartAccessor<TNode, TNode[]>
   valueAccessor?: Accessor<number>
@@ -35,7 +35,7 @@ export interface CirclePackProps<TNode extends Record<string, any> = Record<stri
  *
  * Wraps StreamNetworkFrame (canvas-first) for circle-pack visualization.
  */
-export function CirclePack<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: CirclePackProps<TNode, TEdge>) {
+export function CirclePack<TNode extends Record<string, any> = Record<string, any>>(props: CirclePackProps<TNode>) {
   const {
     data,
     width = 600,

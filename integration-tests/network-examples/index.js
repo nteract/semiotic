@@ -1,9 +1,16 @@
 import * as Semiotic from "../../dist/semiotic.module.js"
 import React from "react"
 import { createRoot } from "react-dom/client"
-import { networkData, hierarchyData, colors } from "../test-data.js"
+import { networkData, hierarchyData, chordData, colors } from "../test-data.js"
 
-const { NetworkFrame } = Semiotic
+const {
+  ForceDirectedGraph,
+  TreeDiagram,
+  Treemap,
+  CirclePack,
+  SankeyDiagram,
+  ChordDiagram
+} = Semiotic
 
 const TestCase = ({ title, children, testId }) =>
   React.createElement(
@@ -14,189 +21,121 @@ const TestCase = ({ title, children, testId }) =>
   )
 
 const examples = [
-  // 1. Force-Directed Network
+  // 1. Force-Directed Graph
   TestCase({
-    title: "Force-Directed Network",
-    testId: "network-force-svg",
-    children: React.createElement(NetworkFrame, {
-      size: [400, 300],
+    title: "Force-Directed Graph",
+    testId: "network-force",
+    children: React.createElement(ForceDirectedGraph, {
       nodes: networkData.nodes,
       edges: networkData.edges,
+      nodeIDAccessor: "id",
       sourceAccessor: "source",
       targetAccessor: "target",
-      networkType: { type: "force", iterations: 500 },
-      nodeStyle: (d, i) => ({
-        fill: colors[i % colors.length],
-        stroke: "black",
-        strokeWidth: 1
-      }),
-      edgeStyle: { stroke: "#999", strokeWidth: 1 },
-      nodeIDAccessor: "id",
-      nodeSizeAccessor: 5,
-      margin: { left: 10, bottom: 10, right: 10, top: 10 }
+      nodeSize: 8,
+      iterations: 500,
+      width: 400,
+      height: 400,
+      colorScheme: colors
     })
   }),
 
-  // 2. Tree Layout
+  // 2. Tree Diagram
   TestCase({
-    title: "Tree Layout",
-    testId: "network-tree-svg",
-    children: React.createElement(NetworkFrame, {
-      size: [400, 300],
-      edges: hierarchyData,
-      networkType: { type: "tree", projection: "horizontal" },
-      nodeStyle: (d) => ({
-        fill: colors[d.depth % colors.length],
-        stroke: "black",
-        strokeWidth: 1
-      }),
-      edgeStyle: { stroke: "#999", strokeWidth: 1 },
-      nodeIDAccessor: "name",
-      nodeSizeAccessor: 3,
-      margin: { left: 50, bottom: 10, right: 50, top: 10 }
+    title: "Tree Diagram",
+    testId: "network-tree",
+    children: React.createElement(TreeDiagram, {
+      data: hierarchyData,
+      childrenAccessor: "children",
+      nodeIdAccessor: "name",
+      orientation: "horizontal",
+      nodeSize: 5,
+      showLabels: true,
+      width: 400,
+      height: 400,
+      colorByDepth: true
     })
   }),
 
-  // 3. Treemap Layout
+  // 3. Treemap
   TestCase({
-    title: "Treemap Layout",
-    testId: "network-treemap-svg",
-    children: React.createElement(NetworkFrame, {
-      size: [400, 300],
-      edges: hierarchyData,
-      networkType: { type: "treemap", hierarchySum: (d) => d.value },
-      nodeStyle: (d) => ({
-        fill: colors[d.depth % colors.length],
-        fillOpacity: 0.7,
-        stroke: "white",
-        strokeWidth: 2
-      }),
-      nodeIDAccessor: "name",
-      margin: { left: 10, bottom: 10, right: 10, top: 10 }
+    title: "Treemap",
+    testId: "network-treemap",
+    children: React.createElement(Treemap, {
+      data: hierarchyData,
+      childrenAccessor: "children",
+      valueAccessor: "value",
+      nodeIdAccessor: "name",
+      colorByDepth: true,
+      showLabels: true,
+      width: 400,
+      height: 400
     })
   }),
 
-  // 4. Partition/Sunburst Layout
+  // 4. Circle Pack
   TestCase({
-    title: "Partition Layout",
-    testId: "network-partition-svg",
-    children: React.createElement(NetworkFrame, {
-      size: [400, 300],
-      edges: hierarchyData,
-      networkType: {
-        type: "partition",
-        projection: "radial",
-        hierarchySum: (d) => d.value
-      },
-      nodeStyle: (d) => ({
-        fill: colors[d.depth % colors.length],
-        fillOpacity: 0.8,
-        stroke: "white",
-        strokeWidth: 1
-      }),
-      nodeIDAccessor: "name",
-      margin: { left: 10, bottom: 10, right: 10, top: 10 }
+    title: "Circle Pack",
+    testId: "network-circlepack",
+    children: React.createElement(CirclePack, {
+      data: hierarchyData,
+      childrenAccessor: "children",
+      valueAccessor: "value",
+      nodeIdAccessor: "name",
+      colorByDepth: true,
+      showLabels: true,
+      width: 400,
+      height: 400
     })
   }),
 
-  // 5. Circle Pack Layout
-  TestCase({
-    title: "Circle Pack Layout",
-    testId: "network-circlepack-svg",
-    children: React.createElement(NetworkFrame, {
-      size: [400, 300],
-      edges: hierarchyData,
-      networkType: { type: "circlepack", hierarchySum: (d) => d.value },
-      nodeStyle: (d) => ({
-        fill: colors[d.depth % colors.length],
-        fillOpacity: 0.5,
-        stroke: "black",
-        strokeWidth: 1
-      }),
-      nodeIDAccessor: "name",
-      margin: { left: 10, bottom: 10, right: 10, top: 10 }
-    })
-  }),
-
-  // 6. Sankey Diagram
+  // 5. Sankey Diagram
   TestCase({
     title: "Sankey Diagram",
-    testId: "network-sankey-svg",
-    children: React.createElement(NetworkFrame, {
-      size: [400, 300],
+    testId: "network-sankey",
+    children: React.createElement(SankeyDiagram, {
       nodes: networkData.nodes,
       edges: networkData.edges.map((e) => ({ ...e, value: e.weight })),
       sourceAccessor: "source",
       targetAccessor: "target",
-      networkType: { type: "sankey", iterations: 100 },
-      nodeStyle: (d, i) => ({
-        fill: colors[i % colors.length],
-        stroke: "black",
-        strokeWidth: 1
-      }),
-      edgeStyle: (d, i) => ({
-        fill: colors[i % colors.length],
-        fillOpacity: 0.3,
-        stroke: colors[i % colors.length]
-      }),
-      nodeIDAccessor: "id",
-      margin: { left: 10, bottom: 10, right: 10, top: 10 }
+      valueAccessor: "value",
+      nodeIdAccessor: "id",
+      width: 400,
+      height: 400,
+      colorScheme: colors
     })
   }),
 
-  // 7. Chord Diagram
+  // 6. Chord Diagram
   TestCase({
     title: "Chord Diagram",
-    testId: "network-chord-svg",
-    children: React.createElement(NetworkFrame, {
-      size: [400, 300],
-      edges: [
-        { source: "A", target: "B", value: 5 },
-        { source: "A", target: "C", value: 3 },
-        { source: "B", target: "C", value: 7 },
-        { source: "B", target: "D", value: 4 },
-        { source: "C", target: "D", value: 2 }
-      ],
+    testId: "network-chord",
+    children: React.createElement(ChordDiagram, {
+      edges: chordData,
       sourceAccessor: "source",
       targetAccessor: "target",
-      networkType: { type: "chord" },
-      edgeStyle: (d, i) => ({
-        fill: colors[i % colors.length],
-        fillOpacity: 0.5,
-        stroke: colors[i % colors.length]
-      }),
-      nodeIDAccessor: (d) => d,
-      margin: { left: 50, bottom: 50, right: 50, top: 50 }
+      valueAccessor: "value",
+      width: 400,
+      height: 400,
+      colorScheme: colors
     })
   }),
 
-  // 8. Force Network with Hover
+  // 7. Force-Directed Graph with Hover
   TestCase({
-    title: "Force Network with Hover",
+    title: "Force Graph with Hover",
     testId: "network-force-hover",
-    children: React.createElement(NetworkFrame, {
-      size: [400, 300],
+    children: React.createElement(ForceDirectedGraph, {
       nodes: networkData.nodes,
       edges: networkData.edges,
+      nodeIDAccessor: "id",
       sourceAccessor: "source",
       targetAccessor: "target",
-      networkType: { type: "force", iterations: 500 },
-      nodeStyle: (d, i) => ({
-        fill: colors[i % colors.length],
-        stroke: "black",
-        strokeWidth: 1
-      }),
-      edgeStyle: { stroke: "#999", strokeWidth: 1 },
-      hoverAnnotation: true,
-      tooltipContent: (d) =>
-        React.createElement(
-          "div",
-          { className: "tooltip-content", "data-testid": "tooltip-content" },
-          d.id || d.label
-        ),
-      nodeIDAccessor: "id",
-      nodeSizeAccessor: 6,
-      margin: { left: 10, bottom: 10, right: 10, top: 10 }
+      nodeSize: 8,
+      iterations: 500,
+      enableHover: true,
+      width: 400,
+      height: 400,
+      colorScheme: colors
     })
   })
 ]

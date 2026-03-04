@@ -1,9 +1,25 @@
 import * as Semiotic from "../../dist/semiotic.module.js"
 import React from "react"
 import { createRoot } from "react-dom/client"
-import { barData, timelineData, colors } from "../test-data.js"
+import {
+  barData,
+  stackedBarData,
+  groupedBarData,
+  statisticalData,
+  colors
+} from "../test-data.js"
 
-const { OrdinalFrame } = Semiotic
+const {
+  BarChart,
+  StackedBarChart,
+  GroupedBarChart,
+  PieChart,
+  DonutChart,
+  SwarmPlot,
+  BoxPlot,
+  ViolinPlot,
+  Histogram
+} = Semiotic
 
 const TestCase = ({ title, children, testId }) =>
   React.createElement(
@@ -14,172 +30,170 @@ const TestCase = ({ title, children, testId }) =>
   )
 
 const examples = [
-  // 1. Vertical Bar Chart - SVG
+  // 1. Vertical Bar Chart
   TestCase({
-    title: "Vertical Bars - SVG",
-    testId: "ordinal-bars-vertical-svg",
-    children: React.createElement(OrdinalFrame, {
-      size: [400, 300],
+    title: "Vertical Bars",
+    testId: "ordinal-bars-vertical",
+    children: React.createElement(BarChart, {
       data: barData,
-      oAccessor: "category",
-      rAccessor: "value",
-      type: "bar",
-      style: { fill: colors[0], stroke: colors[1], strokeWidth: 1 },
-      axes: [{ orient: "left" }],
-      margin: { left: 50, bottom: 50, right: 10, top: 10 },
-      oPadding: 5
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      width: 400,
+      height: 300,
+      colorScheme: colors
     })
   }),
 
-  // 2. Horizontal Bar Chart - SVG
+  // 2. Horizontal Bar Chart
   TestCase({
-    title: "Horizontal Bars - SVG",
-    testId: "ordinal-bars-horizontal-svg",
-    children: React.createElement(OrdinalFrame, {
-      size: [400, 300],
+    title: "Horizontal Bars",
+    testId: "ordinal-bars-horizontal",
+    children: React.createElement(BarChart, {
       data: barData,
-      projection: "horizontal",
-      oAccessor: "category",
-      rAccessor: "value",
-      type: "bar",
-      style: { fill: colors[2], stroke: colors[3], strokeWidth: 1 },
-      axes: [{ orient: "left" }],
-      margin: { left: 100, bottom: 50, right: 10, top: 10 },
-      oPadding: 5
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      orientation: "horizontal",
+      width: 400,
+      height: 300,
+      colorScheme: colors
     })
   }),
 
   // 3. Stacked Bar Chart
   TestCase({
-    title: "Stacked Bars - SVG",
+    title: "Stacked Bars",
     testId: "ordinal-bars-stacked",
-    children: React.createElement(OrdinalFrame, {
-      size: [400, 300],
-      data: [
-        { category: "A", value: 10, type: "X" },
-        { category: "A", value: 15, type: "Y" },
-        { category: "B", value: 20, type: "X" },
-        { category: "B", value: 10, type: "Y" },
-        { category: "C", value: 15, type: "X" },
-        { category: "C", value: 25, type: "Y" }
-      ],
-      oAccessor: "category",
-      rAccessor: "value",
-      type: "bar",
-      style: (d) => ({
-        fill: d.type === "X" ? colors[0] : colors[1],
-        stroke: "white",
-        strokeWidth: 1
-      }),
-      axes: [{ orient: "left" }],
-      margin: { left: 50, bottom: 50, right: 10, top: 10 },
-      oPadding: 5
+    children: React.createElement(StackedBarChart, {
+      data: stackedBarData,
+      categoryAccessor: "category",
+      stackBy: "type",
+      valueAccessor: "value",
+      colorBy: "type",
+      width: 400,
+      height: 300,
+      colorScheme: colors
     })
   }),
 
-  // 4. Pie Chart
+  // 4. Grouped Bar Chart
   TestCase({
-    title: "Pie Chart - SVG",
-    testId: "ordinal-pie-svg",
-    children: React.createElement(OrdinalFrame, {
-      size: [400, 300],
-      data: barData.slice(0, 4),
-      projection: "radial",
-      type: "bar",
-      oAccessor: "category",
-      rAccessor: () => 1,
-      dynamicColumnWidth: "value",
-      style: (d, i) => ({
-        fill: colors[i],
-        stroke: "white",
-        strokeWidth: 2
-      }),
-      margin: { left: 50, bottom: 50, right: 50, top: 50 },
-      oLabel: true
+    title: "Grouped Bars",
+    testId: "ordinal-bars-grouped",
+    children: React.createElement(GroupedBarChart, {
+      data: groupedBarData,
+      categoryAccessor: "category",
+      groupBy: "product",
+      valueAccessor: "value",
+      colorBy: "product",
+      width: 400,
+      height: 300,
+      colorScheme: colors
     })
   }),
 
-  // 5. Timeline Chart
+  // 5. Pie Chart
   TestCase({
-    title: "Timeline - SVG",
-    testId: "ordinal-timeline-svg",
-    children: React.createElement(OrdinalFrame, {
-      size: [400, 300],
-      data: timelineData,
-      projection: "horizontal",
-      oAccessor: "task",
-      rAccessor: (d) => [d.start, d.end],
-      type: { type: "timeline", sort: null },
-      style: (d, i) => ({
-        fill: colors[i],
-        stroke: "black",
-        strokeWidth: 1
-      }),
-      axes: [{ orient: "bottom" }],
-      margin: { left: 120, bottom: 50, right: 10, top: 10 },
-      oPadding: 10
+    title: "Pie Chart",
+    testId: "ordinal-pie",
+    children: React.createElement(PieChart, {
+      data: barData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      width: 400,
+      height: 400,
+      colorScheme: colors
     })
   }),
 
-  // 6. Swarm Plot
+  // 6. Donut Chart
   TestCase({
-    title: "Swarm Plot - SVG",
-    testId: "ordinal-swarm-svg",
-    children: React.createElement(OrdinalFrame, {
-      size: [400, 300],
-      data: Array.from({ length: 30 }, (_, i) => ({
-        category: ["A", "B", "C"][i % 3],
-        value: Math.random() * 50 + 10
-      })),
-      oAccessor: "category",
-      rAccessor: "value",
-      type: "swarm",
-      style: { fill: colors[0], fillOpacity: 0.6, stroke: colors[1] },
-      axes: [{ orient: "left" }],
-      margin: { left: 50, bottom: 50, right: 10, top: 10 },
-      oPadding: 5
+    title: "Donut Chart",
+    testId: "ordinal-donut",
+    children: React.createElement(DonutChart, {
+      data: barData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      innerRadius: 60,
+      width: 400,
+      height: 400,
+      colorScheme: colors
     })
   }),
 
-  // 7. Bar Chart with Hover
+  // 7. Swarm Plot
   TestCase({
-    title: "Bars with Hover - SVG",
+    title: "Swarm Plot",
+    testId: "ordinal-swarm",
+    children: React.createElement(SwarmPlot, {
+      data: statisticalData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      colorBy: "category",
+      width: 400,
+      height: 300,
+      colorScheme: colors
+    })
+  }),
+
+  // 8. Box Plot
+  TestCase({
+    title: "Box Plot",
+    testId: "ordinal-boxplot",
+    children: React.createElement(BoxPlot, {
+      data: statisticalData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      colorBy: "category",
+      showOutliers: true,
+      width: 400,
+      height: 300,
+      colorScheme: colors
+    })
+  }),
+
+  // 9. Violin Plot
+  TestCase({
+    title: "Violin Plot",
+    testId: "ordinal-violin",
+    children: React.createElement(ViolinPlot, {
+      data: statisticalData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      colorBy: "category",
+      showIQR: true,
+      width: 400,
+      height: 300,
+      colorScheme: colors
+    })
+  }),
+
+  // 10. Histogram
+  TestCase({
+    title: "Histogram",
+    testId: "ordinal-histogram",
+    children: React.createElement(Histogram, {
+      data: statisticalData,
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      bins: 15,
+      width: 400,
+      height: 300,
+      colorScheme: colors
+    })
+  }),
+
+  // 11. Bar Chart with Hover
+  TestCase({
+    title: "Bars with Hover",
     testId: "ordinal-bars-hover",
-    children: React.createElement(OrdinalFrame, {
-      size: [400, 300],
+    children: React.createElement(BarChart, {
       data: barData,
-      oAccessor: "category",
-      rAccessor: "value",
-      type: "bar",
-      style: { fill: colors[0], stroke: colors[1], strokeWidth: 1 },
-      hoverAnnotation: true,
-      tooltipContent: (d) =>
-        React.createElement(
-          "div",
-          { className: "tooltip-content", "data-testid": "tooltip-content" },
-          `${d.category}: ${d.value}`
-        ),
-      axes: [{ orient: "left" }],
-      margin: { left: 50, bottom: 50, right: 10, top: 10 },
-      oPadding: 5
-    })
-  }),
-
-  // 8. Bar Chart - Canvas
-  TestCase({
-    title: "Vertical Bars - Canvas",
-    testId: "ordinal-bars-canvas",
-    children: React.createElement(OrdinalFrame, {
-      size: [400, 300],
-      data: barData,
-      oAccessor: "category",
-      rAccessor: "value",
-      type: "bar",
-      style: { fill: colors[4], stroke: colors[0], strokeWidth: 1 },
-      canvasPieces: true,
-      axes: [{ orient: "left" }],
-      margin: { left: 50, bottom: 50, right: 10, top: 10 },
-      oPadding: 5
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      enableHover: true,
+      width: 400,
+      height: 300,
+      colorScheme: colors
     })
   })
 ]

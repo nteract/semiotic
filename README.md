@@ -21,32 +21,53 @@ import { LineChart } from "semiotic"
 
 ## Why Semiotic
 
-**Start simple, go deep.** Semiotic has three layers of abstraction:
+Most React charting libraries give you bar charts, line charts, and pie charts.
+Semiotic gives you those too — but it's built for the projects where those
+aren't enough.
+
+### When you need more than standard charts
+
+**Network visualization.** Show how things connect — org charts,
+dependency graphs, budget flows, taxonomies. Semiotic has force-directed
+graphs, Sankey diagrams, chord diagrams, tree layouts, treemaps, and circle
+packing as React components with the same prop API as LineChart.
+
+**Streaming data.** Monitor live systems — server metrics, sensor feeds,
+financial tickers. Semiotic's realtime charts render on canvas at 60fps with
+a ref-based push API. Old data fades out (decay), new data flashes in
+(pulse), and stale feeds are flagged automatically.
+
+**Coordinated dashboards.** Hover one chart, highlight matching data in
+others. Brush a scatterplot, filter a bar chart. Semiotic's `LinkedCharts`
+and `ScatterplotMatrix` provide crossfilter coordination that other libraries
+leave you to build from scratch.
+
+**Statistical summaries.** Box plots, violin plots, swarm plots, ridgeline
+plots, histograms — the distribution charts that data scientists need and
+most charting libraries skip. Add marginal distribution graphics (histogram,
+violin, ridgeline, boxplot) to scatterplot margins with a single prop.
+
+### Start simple, go deep
 
 | Layer | For | Example |
 |---|---|---|
 | **Charts** | Common visualizations with sensible defaults | `<LineChart data={d} xAccessor="x" yAccessor="y" />` |
-| **Frames** | Full control over rendering, interaction, and layout | `<StreamXYFrame lines={d} customLineMark={...} />` |
-| **Utilities** | Standalone axes, legends, annotations, brushes | `<Annotation type="react" />` |
+| **Frames** | Full control over rendering, interaction, and layout | `<StreamXYFrame chartType="line" lineStyle={...} />` |
 
 Every Chart component accepts a `frameProps` prop to access the underlying
-Frame API without giving up the simpler interface.
+Frame API without leaving the simpler interface.
 
-**Network visualization as a first-class citizen.** Force-directed graphs,
-Sankey diagrams, chord diagrams, tree layouts, treemaps, and circle packing
-are all React components with the same clean prop API as LineChart.
+### When to use something else
 
-**What Semiotic does that other libraries don't:**
-- Force-directed graphs, Sankey diagrams, chord diagrams, treemaps, and circle packing — as React components with the same clean API as LineChart
-- Coordinated views: `LinkedCharts` for cross-highlighting and brushing-and-linking between any charts; `ScatterplotMatrix` with crossfilter brushing
-- Real-time streaming charts rendered on canvas at 60fps, with visual encodings for change (decay, pulse, transitions, staleness)
-- Built-in annotation system with hover, click, and custom annotation types
-- Server-side SVG rendering for email, OG images, and PDFs
+Need a standard bar or line chart for a dashboard you'll never need to
+customize beyond colors and labels? [Recharts](https://recharts.org) has a
+larger ecosystem and more community examples. Need GPU-accelerated rendering
+for millions of data points? [Apache ECharts](https://echarts.apache.org)
+handles that scale.
 
-**When to use something else.** Need a standard line or bar chart for a dashboard that you'll never need to make more interesting?
-[Recharts](https://recharts.org) has a larger ecosystem and more community examples.
-Semiotic is built for projects that need network visualization, statistical summaries,
-or custom charting — capabilities that general-purpose charting libraries don't offer.
+Semiotic is for projects that outgrow those libraries — when you need
+network graphs alongside time series, streaming data alongside static
+snapshots, or coordinated views across chart types.
 
 **AI-ready.** Semiotic ships with structured schemas (`ai/schema.json`), an
 `import from "semiotic/ai"` entry point, and an MCP server — all designed for
@@ -64,96 +85,80 @@ Requires React 18.1 or later.
 
 ## Quick Examples
 
-### Line Chart
+### Coordinated Dashboard
+
+Hover one chart, highlight the same data in another — zero wiring:
 
 ```jsx
-import { LineChart } from "semiotic"
+import { LinkedCharts, Scatterplot, BarChart } from "semiotic"
 
-<LineChart
-  data={salesData}
-  xAccessor="month"
-  yAccessor="revenue"
-  curve="monotoneX"
-  showPoints={true}
-  xLabel="Month"
-  yLabel="Revenue"
-/>
+<LinkedCharts>
+  <Scatterplot
+    data={data} xAccessor="age" yAccessor="income" colorBy="region"
+    linkedHover={{ name: "hl", fields: ["region"] }}
+    selection={{ name: "hl" }}
+  />
+  <BarChart
+    data={summary} categoryAccessor="region" valueAccessor="total"
+    selection={{ name: "hl" }}
+  />
+</LinkedCharts>
 ```
 
-### Bar Chart
+### Streaming Metrics with Decay
 
-```jsx
-import { BarChart } from "semiotic"
-
-<BarChart
-  data={categoryData}
-  categoryAccessor="department"
-  valueAccessor="sales"
-  orientation="horizontal"
-  colorBy="region"
-/>
-```
-
-### Force-Directed Graph
-
-```jsx
-import { ForceDirectedGraph } from "semiotic"
-
-<ForceDirectedGraph
-  nodes={teamMembers}
-  edges={connections}
-  colorBy="department"
-  nodeSize={8}
-  showLabels={true}
-/>
-```
-
-### Sankey Diagram
-
-```jsx
-import { SankeyDiagram } from "semiotic"
-
-<SankeyDiagram
-  nodes={entities}
-  edges={flows}
-  colorBy="category"
-  nodeLabel="name"
-/>
-```
-
-### Streaming Line
+Live data fades old points, flashes new ones, flags stale feeds:
 
 ```jsx
 import { RealtimeLineChart } from "semiotic"
 
 const chartRef = useRef()
-
-// Push data at any frequency
-chartRef.current.push({ time: Date.now(), value: reading })
+chartRef.current.push({ time: Date.now(), value: cpuLoad })
 
 <RealtimeLineChart
   ref={chartRef}
   timeAccessor="time"
   valueAccessor="value"
-  windowSize={200}
+  decay={{ type: "exponential", halfLife: 100 }}
+  staleness={{ threshold: 5000, showBadge: true }}
 />
 ```
 
-### Streaming Sankey
+### Network Graphs
+
+Force-directed graphs and Sankey diagrams — same API as LineChart:
 
 ```jsx
-import { StreamNetworkFrame } from "semiotic"
+import { ForceDirectedGraph, SankeyDiagram } from "semiotic"
 
-const chartRef = useRef()
+<ForceDirectedGraph
+  nodes={people} edges={friendships}
+  colorBy="team" nodeSize={8} showLabels
+/>
 
-// Push edges to grow the topology
-chartRef.current.push({ source: "Budget", target: "Rent", value: 2000 })
+<SankeyDiagram
+  edges={budgetFlows}
+  sourceAccessor="from" targetAccessor="to" valueAccessor="amount"
+/>
+```
 
-<StreamNetworkFrame
-  ref={chartRef}
-  chartType="sankey"
-  showParticles
-  enableHover
+### Standard Charts
+
+Line, bar, scatter, area — all the basics, with sensible defaults:
+
+```jsx
+import { LineChart, BarChart } from "semiotic"
+
+<LineChart
+  data={salesData}
+  xAccessor="month" yAccessor="revenue"
+  curve="monotoneX" showPoints
+/>
+
+<BarChart
+  data={categoryData}
+  categoryAccessor="department" valueAccessor="sales"
+  orientation="horizontal" colorBy="region"
 />
 ```
 

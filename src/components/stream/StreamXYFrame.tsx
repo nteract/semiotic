@@ -16,7 +16,8 @@ import type {
   HoverData,
   HoverAnnotationConfig,
   SceneNode,
-  StreamScales
+  StreamScales,
+  MarginalGraphicsConfig
 } from "./types"
 import { brush as d3Brush, brushX as d3BrushX, brushY as d3BrushY } from "d3-brush"
 import { select as d3Select } from "d3-selection"
@@ -345,10 +346,21 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       staleness,
       heatmapAggregation,
       heatmapXBins,
-      heatmapYBins
+      heatmapYBins,
+      marginalGraphics
     } = props
 
     const margin = { ...DEFAULT_MARGIN, ...marginProp }
+
+    // Auto-expand margins to at least 60px when marginals are configured
+    if (marginalGraphics) {
+      const MIN_MARGINAL = 60
+      if (marginalGraphics.top && margin.top < MIN_MARGINAL) margin.top = MIN_MARGINAL
+      if (marginalGraphics.bottom && margin.bottom < MIN_MARGINAL) margin.bottom = MIN_MARGINAL
+      if (marginalGraphics.left && margin.left < MIN_MARGINAL) margin.left = MIN_MARGINAL
+      if (marginalGraphics.right && margin.right < MIN_MARGINAL) margin.right = MIN_MARGINAL
+    }
+
     const adjustedWidth = size[0] - margin.left - margin.right
     const adjustedHeight = size[1] - margin.top - margin.bottom
 
@@ -371,6 +383,11 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     // Staleness state
     const [isStale, setIsStale] = useState(false)
+
+    // Marginal data values
+    const [marginalXValues, setMarginalXValues] = useState<number[]>([])
+    const [marginalYValues, setMarginalYValues] = useState<number[]>([])
+
 
     // Render function ref (always-fresh closure)
     const renderFnRef = useRef<() => void>(() => {})
@@ -410,6 +427,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       lineStyle,
       pointStyle,
       areaStyle,
+      swarmStyle,
       colorScheme,
       barColors,
       annotations,
@@ -427,7 +445,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       lineDataAccessor, xExtent, yExtent, sizeRange, binSize, normalize,
       boundsAccessor, boundsStyle,
       openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle,
-      lineStyle, pointStyle, areaStyle, colorScheme, barColors, annotations,
+      lineStyle, pointStyle, areaStyle, swarmStyle, colorScheme, barColors, annotations,
       decay, pulse, transition, staleness,
       heatmapAggregation, heatmapXBins, heatmapYBins,
       isStreaming
@@ -662,6 +680,19 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       // Push scales into React state so SVGOverlay renders axes/grid
       if (wasDirty && store.scales) {
         setCurrentScales(store.scales)
+
+        // Extract x/y values for marginal graphics
+        if (marginalGraphics) {
+          const rawData = store.getData()
+          const getX = typeof xAccessor === "function"
+            ? xAccessor
+            : (d: Record<string, any>) => d[xAccessor || "x"]
+          const getY = typeof yAccessor === "function"
+            ? yAccessor
+            : (d: Record<string, any>) => d[yAccessor || "y"]
+          setMarginalXValues(rawData.map(d => getX(d)).filter((v): v is number => typeof v === "number" && isFinite(v)))
+          setMarginalYValues(rawData.map(d => getY(d)).filter((v): v is number => typeof v === "number" && isFinite(v)))
+        }
       }
 
       // Trigger React re-render for SVG annotations
@@ -790,6 +821,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           title={title}
           legend={legend}
           foregroundGraphics={foregroundGraphics}
+          marginalGraphics={marginalGraphics}
+          xValues={marginalXValues}
+          yValues={marginalYValues}
           annotations={annotations}
           svgAnnotationRules={svgAnnotationRules}
           annotationFrame={annotationFrame}

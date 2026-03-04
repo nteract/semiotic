@@ -1,10 +1,11 @@
 "use client"
 import * as React from "react"
 import { useMemo } from "react"
-import type { StreamScales, AnnotationContext } from "./types"
+import type { StreamScales, AnnotationContext, MarginalGraphicsConfig, MarginalConfig, MarginalType } from "./types"
 import type { ReactNode } from "react"
 import Legend from "../Legend"
 import type { LegendGroup } from "../types/legendTypes"
+import { MarginalGraphics, normalizeMarginalConfig } from "./MarginalGraphics"
 
 interface SVGOverlayProps {
   width: number
@@ -32,6 +33,11 @@ interface SVGOverlayProps {
 
   // Foreground graphics (rendered on top in SVG overlay)
   foregroundGraphics?: ReactNode
+
+  // Marginal graphics
+  marginalGraphics?: MarginalGraphicsConfig
+  xValues?: number[]
+  yValues?: number[]
 
   // Annotations
   annotations?: Record<string, any>[]
@@ -75,6 +81,9 @@ export function SVGOverlay(props: SVGOverlayProps) {
     title,
     legend,
     foregroundGraphics,
+    marginalGraphics,
+    xValues,
+    yValues,
     annotations,
     svgAnnotationRules,
     annotationFrame,
@@ -116,7 +125,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [annotations, svgAnnotationRules, width, height, annotationFrame])
 
-  const hasContent = showAxes || title || legend || foregroundGraphics || (renderedAnnotations && renderedAnnotations.length > 0) || showGrid || children
+  const hasContent = showAxes || title || legend || foregroundGraphics || marginalGraphics || (renderedAnnotations && renderedAnnotations.length > 0) || showGrid || children
 
   if (!hasContent) return null
 
@@ -227,6 +236,60 @@ export function SVGOverlay(props: SVGOverlayProps) {
 
         {/* Annotations */}
         {renderedAnnotations}
+
+        {/* Marginal graphics */}
+        {marginalGraphics && scales && xValues && yValues && (
+          <>
+            {marginalGraphics.top && (
+              <g transform={`translate(0, 0)`}>
+                <MarginalGraphics
+                  orient="top"
+                  config={normalizeMarginalConfig(marginalGraphics.top)}
+                  values={xValues}
+                  scale={scales.x}
+                  size={margin.top}
+                  length={width}
+                />
+              </g>
+            )}
+            {marginalGraphics.bottom && (
+              <g transform={`translate(0, ${height})`}>
+                <MarginalGraphics
+                  orient="bottom"
+                  config={normalizeMarginalConfig(marginalGraphics.bottom)}
+                  values={xValues}
+                  scale={scales.x}
+                  size={margin.bottom}
+                  length={width}
+                />
+              </g>
+            )}
+            {marginalGraphics.left && (
+              <g transform={`translate(0, 0)`}>
+                <MarginalGraphics
+                  orient="left"
+                  config={normalizeMarginalConfig(marginalGraphics.left)}
+                  values={yValues}
+                  scale={scales.y}
+                  size={margin.left}
+                  length={height}
+                />
+              </g>
+            )}
+            {marginalGraphics.right && (
+              <g transform={`translate(${width}, 0)`}>
+                <MarginalGraphics
+                  orient="right"
+                  config={normalizeMarginalConfig(marginalGraphics.right)}
+                  values={yValues}
+                  scale={scales.y}
+                  size={margin.right}
+                  length={height}
+                />
+              </g>
+            )}
+          </>
+        )}
 
         {/* Foreground graphics */}
         {foregroundGraphics}

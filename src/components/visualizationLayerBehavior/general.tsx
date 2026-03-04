@@ -17,7 +17,7 @@ import {
   curveNatural
 } from "d3-shape"
 
-import { shapeBounds } from "../svg/areaDrawing"
+import { shapeBounds } from "../geometry/areaDrawing"
 import { ProjectedSummary } from "../types/generalTypes"
 import { ScaleLinear } from "d3-scale"
 

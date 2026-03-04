@@ -1162,7 +1162,14 @@
             "showAxes": { "type": "boolean", "default": true },
             "background": { "type": "string" },
             "margin": { "type": "object" },
-            "className": { "type": "string" }
+            "className": { "type": "string" },
+            "width": { "type": "number", "description": "Alias for size[0]" },
+            "height": { "type": "number", "description": "Alias for size[1]" },
+            "tooltip": { "type": ["function", "object"], "description": "Tooltip content function or config" },
+            "decay": { "type": "object", "description": "Decay config: { type, halfLife, minOpacity }" },
+            "pulse": { "type": "object", "description": "Pulse config: { duration, color, glowRadius }" },
+            "staleness": { "type": "object", "description": "Staleness config: { threshold, dimOpacity, showBadge }" },
+            "transition": { "type": "object", "description": "Transition config: { duration, easing }" }
           },
           "required": []
         }
@@ -1198,7 +1205,14 @@
             "showAxes": { "type": "boolean", "default": true },
             "background": { "type": "string" },
             "margin": { "type": "object" },
-            "className": { "type": "string" }
+            "className": { "type": "string" },
+            "width": { "type": "number", "description": "Alias for size[0]" },
+            "height": { "type": "number", "description": "Alias for size[1]" },
+            "tooltip": { "type": ["function", "object"], "description": "Tooltip content function or config" },
+            "decay": { "type": "object", "description": "Decay config: { type, halfLife, minOpacity }" },
+            "pulse": { "type": "object", "description": "Pulse config: { duration, color, glowRadius }" },
+            "staleness": { "type": "object", "description": "Staleness config: { threshold, dimOpacity, showBadge }" },
+            "transition": { "type": "object", "description": "Transition config: { duration, easing }" }
           },
           "required": ["binSize"]
         }
@@ -1231,7 +1245,14 @@
             "showAxes": { "type": "boolean", "default": true },
             "background": { "type": "string" },
             "margin": { "type": "object" },
-            "className": { "type": "string" }
+            "className": { "type": "string" },
+            "width": { "type": "number", "description": "Alias for size[0]" },
+            "height": { "type": "number", "description": "Alias for size[1]" },
+            "tooltip": { "type": ["function", "object"], "description": "Tooltip content function or config" },
+            "decay": { "type": "object", "description": "Decay config: { type, halfLife, minOpacity }" },
+            "pulse": { "type": "object", "description": "Pulse config: { duration, color, glowRadius }" },
+            "staleness": { "type": "object", "description": "Staleness config: { threshold, dimOpacity, showBadge }" },
+            "transition": { "type": "object", "description": "Transition config: { duration, easing }" }
           },
           "required": []
         }
@@ -1264,7 +1285,50 @@
             "showAxes": { "type": "boolean", "default": true },
             "background": { "type": "string" },
             "margin": { "type": "object" },
-            "className": { "type": "string" }
+            "className": { "type": "string" },
+            "width": { "type": "number", "description": "Alias for size[0]" },
+            "height": { "type": "number", "description": "Alias for size[1]" },
+            "tooltip": { "type": ["function", "object"], "description": "Tooltip content function or config" },
+            "decay": { "type": "object", "description": "Decay config: { type, halfLife, minOpacity }" },
+            "pulse": { "type": "object", "description": "Pulse config: { duration, color, glowRadius }" },
+            "staleness": { "type": "object", "description": "Staleness config: { threshold, dimOpacity, showBadge }" },
+            "transition": { "type": "object", "description": "Transition config: { duration, easing }" }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "RealtimeHeatmap",
+        "description": "Streaming 2D heatmap with grid binning and configurable aggregation (count, sum, mean). Uses ref-based push API.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "size": {
+              "type": "array",
+              "items": { "type": "number" },
+              "default": [500, 300]
+            },
+            "timeAccessor": { "type": "string" },
+            "valueAccessor": { "type": "string" },
+            "heatmapXBins": { "type": "number", "default": 20, "description": "Number of horizontal bins" },
+            "heatmapYBins": { "type": "number", "default": 20, "description": "Number of vertical bins" },
+            "aggregation": { "type": "string", "enum": ["count", "sum", "mean"], "default": "count" },
+            "windowSize": { "type": "number", "default": 200 },
+            "windowMode": { "type": "string", "enum": ["sliding", "stepping"], "default": "sliding" },
+            "arrowOfTime": { "type": "string", "enum": ["left", "right"], "default": "right" },
+            "showAxes": { "type": "boolean", "default": true },
+            "background": { "type": "string" },
+            "margin": { "type": "object" },
+            "className": { "type": "string" },
+            "width": { "type": "number", "description": "Alias for size[0]" },
+            "height": { "type": "number", "description": "Alias for size[1]" },
+            "tooltip": { "type": ["function", "object"], "description": "Tooltip content function or config" },
+            "decay": { "type": "object", "description": "Decay config: { type, halfLife, minOpacity }" },
+            "pulse": { "type": "object", "description": "Pulse config: { duration, color, glowRadius }" },
+            "staleness": { "type": "object", "description": "Staleness config: { threshold, dimOpacity, showBadge }" }
           },
           "required": []
         }

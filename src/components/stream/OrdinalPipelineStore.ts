@@ -1,41 +1,36 @@
 import { scaleBand, scaleLinear, type ScaleBand, type ScaleLinear } from "d3-scale"
-import { quantile as d3Quantile } from "d3-array"
 import { RingBuffer } from "../realtime/RingBuffer"
 import { IncrementalExtent } from "../realtime/IncrementalExtent"
-import { buildRectNode } from "./SceneGraph"
 import type {
   OrdinalPipelineConfig,
   OrdinalScales,
   OrdinalSceneNode,
   OrdinalColumn,
   OrdinalLayout,
-  WedgeSceneNode,
-  BoxplotSceneNode,
-  ViolinSceneNode,
-  ConnectorSceneNode,
   OrdinalChartType
 } from "./ordinalTypes"
-import type { Changeset, Style, PointSceneNode, RectSceneNode, DecayConfig } from "./types"
+import type { Changeset, Style, DecayConfig } from "./types"
+import { resolveAccessor, resolveStringAccessor } from "./accessorUtils"
+import { buildBarScene, buildClusterBarScene } from "./ordinalSceneBuilders/barScene"
+import { buildPointScene, buildSwarmScene } from "./ordinalSceneBuilders/pointScene"
+import { buildPieScene } from "./ordinalSceneBuilders/pieScene"
+import { buildBoxplotScene, buildViolinScene, buildHistogramScene, buildRidgelineScene } from "./ordinalSceneBuilders/statisticalScene"
+import { buildTimelineScene } from "./ordinalSceneBuilders/timelineScene"
+import { buildConnectors } from "./ordinalSceneBuilders/connectorScene"
+import type { OrdinalSceneContext, SceneBuilderFn } from "./ordinalSceneBuilders/types"
 
-// ── Accessor resolution ────────────────────────────────────────────────
-
-function resolveAccessor<T>(
-  accessor: string | ((d: T) => number) | undefined,
-  fallback: string
-): (d: T) => number {
-  if (typeof accessor === "function") return (d: T) => +accessor(d)
-  const key = accessor || fallback
-  return (d: T) => +(d as any)[key]
-}
-
-function resolveStringAccessor<T>(
-  accessor: string | ((d: T) => string) | undefined,
-  fallback?: string
-): ((d: T) => string) | undefined {
-  if (typeof accessor === "function") return accessor
-  if (accessor) return (d: T) => String((d as any)[accessor])
-  if (fallback) return (d: T) => String((d as any)[fallback])
-  return undefined
+const SCENE_BUILDERS: Record<string, SceneBuilderFn> = {
+  bar: buildBarScene,
+  clusterbar: buildClusterBarScene,
+  point: buildPointScene,
+  swarm: buildSwarmScene,
+  pie: buildPieScene,
+  donut: buildPieScene,
+  boxplot: buildBoxplotScene,
+  violin: buildViolinScene,
+  histogram: buildHistogramScene,
+  ridgeline: buildRidgelineScene,
+  timeline: buildTimelineScene,
 }
 
 // ── OrdinalPipelineStore ───────────────────────────────────────────────
@@ -58,6 +53,9 @@ export class OrdinalPipelineStore {
 
   /** Discovered categories in insertion order */
   private categories = new Set<string>()
+  /** Lazy color map built from colorScheme for resolvePieceStyle */
+  private _colorSchemeMap: Map<string, string> | null = null
+  private _colorSchemeIndex = 0
 
   // ── Pulse tracking ──────────────────────────────────────────────────
   private timestampBuffer: RingBuffer<number> | null = null
@@ -531,730 +529,40 @@ export class OrdinalPipelineStore {
 
   // ── Scene graph building ─────────────────────────────────────────────
 
-  private buildSceneNodes(data: Record<string, any>[], layout: OrdinalLayout): OrdinalSceneNode[] {
-    const chartType = this.config.chartType
-    let nodes: OrdinalSceneNode[]
-
-    switch (chartType) {
-      case "bar":
-        nodes = this.buildBarScene(layout); break
-      case "clusterbar":
-        nodes = this.buildClusterBarScene(layout); break
-      case "point":
-        nodes = this.buildPointScene(layout); break
-      case "swarm":
-        nodes = this.buildSwarmScene(layout); break
-      case "pie":
-      case "donut":
-        nodes = this.buildPieScene(layout); break
-      case "boxplot":
-        nodes = this.buildBoxplotScene(layout); break
-      case "violin":
-        nodes = this.buildViolinScene(layout); break
-      case "histogram":
-        nodes = this.buildHistogramScene(layout); break
-      case "ridgeline":
-        nodes = this.buildRidgelineScene(layout); break
-      case "timeline":
-        nodes = this.buildTimelineScene(layout); break
-      default:
-        nodes = []
+  private getSceneContext(): OrdinalSceneContext {
+    return {
+      scales: this.scales!,
+      columns: this.columns,
+      config: this.config,
+      getR: this.getR,
+      getStack: this.getStack,
+      getGroup: this.getGroup,
+      getColor: this.getColor,
+      getConnector: this.getConnector,
+      getO: this.getO,
+      multiScales: this.multiScales,
+      rAccessors: this.rAccessors,
+      resolvePieceStyle: (d: any, category?: string) => this.resolvePieceStyle(d, category),
+      resolveSummaryStyle: (d: any, category?: string) => this.resolveSummaryStyle(d, category),
+      getRawRange: (d: any) => this.getRawRange(d)
     }
+  }
+
+  private buildSceneNodes(data: Record<string, any>[], layout: OrdinalLayout): OrdinalSceneNode[] {
+    if (!this.scales) return []
+
+    const ctx = this.getSceneContext()
+    const builder = SCENE_BUILDERS[this.config.chartType]
+    let nodes = builder ? builder(ctx, layout) : []
 
     // Build connectors if configured
     if (this.getConnector && this.scales) {
-      const connectors = this.buildConnectors(nodes, layout)
+      const connectorNodes = buildConnectors(ctx, nodes, layout)
       // Connectors render behind pieces
-      nodes = [...connectors, ...nodes]
+      nodes = [...connectorNodes, ...nodes]
     }
 
     return nodes
-  }
-
-  // ── Bar scene ────────────────────────────────────────────────────────
-
-  private buildBarScene(layout: OrdinalLayout): OrdinalSceneNode[] {
-    if (!this.scales) return []
-    const { r: rScale, projection } = this.scales
-    const nodes: OrdinalSceneNode[] = []
-    const isVertical = projection === "vertical"
-    const isHorizontal = projection === "horizontal"
-    const normalize = this.config.normalize
-    const getStack = this.getStack
-
-    for (const col of Object.values(this.columns)) {
-      // Group pieces by stack key if stacking, and aggregate values per group
-      const stacks = new Map<string, { total: number; pieces: Record<string, any>[] }>()
-      for (const d of col.pieceData) {
-        const key = getStack ? getStack(d) : "_default"
-        if (!stacks.has(key)) stacks.set(key, { total: 0, pieces: [] })
-        const group = stacks.get(key)!
-        group.total += this.getR(d)
-        group.pieces.push(d)
-      }
-
-      // Compute totals for normalization
-      let colTotal = 0
-      if (normalize) {
-        for (const g of stacks.values()) colTotal += Math.abs(g.total)
-      }
-
-      let posOffset = 0
-      let negOffset = 0
-
-      for (const [stackKey, group] of stacks) {
-        // Use the aggregated total for the stack group (one rect per group)
-        let val = group.total
-        if (normalize && colTotal > 0) val = val / colTotal
-
-        // Use the first piece for styling — look up barColors by stack key (not category)
-        const style = getStack
-          ? this.resolvePieceStyle(group.pieces[0], stackKey)
-          : this.resolvePieceStyle(group.pieces[0], col.name)
-        // Build a synthetic datum that includes the aggregate info
-        const aggDatum = {
-          ...group.pieces[0],
-          __aggregateValue: group.total,
-          __pieceCount: group.pieces.length,
-          category: col.name
-        }
-
-        if (isVertical) {
-          const actualY = val >= 0
-            ? rScale(posOffset + val)
-            : rScale(negOffset)
-          const actualH = val >= 0
-            ? rScale(posOffset) - rScale(posOffset + val)
-            : rScale(negOffset + val) - rScale(negOffset)
-
-          nodes.push(buildRectNode(
-            col.x, actualY, col.width, Math.abs(actualH),
-            style, aggDatum, stackKey
-          ))
-
-          if (val >= 0) posOffset += val
-          else negOffset += val
-        } else if (isHorizontal) {
-          const actualX = val >= 0
-            ? rScale(posOffset)
-            : rScale(negOffset + val)
-          const actualW = val >= 0
-            ? rScale(posOffset + val) - rScale(posOffset)
-            : rScale(negOffset) - rScale(negOffset + val)
-
-          nodes.push(buildRectNode(
-            actualX, col.x, Math.abs(actualW), col.width,
-            style, aggDatum, stackKey
-          ))
-
-          if (val >= 0) posOffset += val
-          else negOffset += val
-        }
-      }
-    }
-
-    return nodes
-  }
-
-  // ── Cluster bar scene ────────────────────────────────────────────────
-
-  private buildClusterBarScene(layout: OrdinalLayout): OrdinalSceneNode[] {
-    if (!this.scales) return []
-    const { r: rScale, projection } = this.scales
-    const nodes: OrdinalSceneNode[] = []
-    const isVertical = projection === "vertical"
-    const getGroup = this.getGroup
-
-    // Discover all group keys
-    const groupKeys: string[] = []
-    const groupSet = new Set<string>()
-    for (const col of Object.values(this.columns)) {
-      for (const d of col.pieceData) {
-        const key = getGroup ? getGroup(d) : "_default"
-        if (!groupSet.has(key)) {
-          groupSet.add(key)
-          groupKeys.push(key)
-        }
-      }
-    }
-    const groupCount = groupKeys.length || 1
-
-    for (const col of Object.values(this.columns)) {
-      const subWidth = col.width / groupCount
-      const grouped = new Map<string, Record<string, any>[]>()
-      for (const d of col.pieceData) {
-        const key = getGroup ? getGroup(d) : "_default"
-        if (!grouped.has(key)) grouped.set(key, [])
-        grouped.get(key)!.push(d)
-      }
-
-      for (let gi = 0; gi < groupKeys.length; gi++) {
-        const groupData = grouped.get(groupKeys[gi]) || []
-        for (const d of groupData) {
-          const val = this.getR(d)
-          const style = this.resolvePieceStyle(d, col.name)
-
-          if (isVertical) {
-            const barX = col.x + gi * subWidth
-            const zeroY = rScale(0)
-            const valY = rScale(val)
-            nodes.push(buildRectNode(
-              barX, Math.min(zeroY, valY), subWidth, Math.abs(zeroY - valY),
-              style, d, groupKeys[gi]
-            ))
-          } else {
-            const barY = col.x + gi * subWidth
-            const zeroX = rScale(0)
-            const valX = rScale(val)
-            nodes.push(buildRectNode(
-              Math.min(zeroX, valX), barY, Math.abs(valX - zeroX), subWidth,
-              style, d, groupKeys[gi]
-            ))
-          }
-        }
-      }
-    }
-
-    return nodes
-  }
-
-  // ── Point scene ──────────────────────────────────────────────────────
-
-  private buildPointScene(layout: OrdinalLayout): OrdinalSceneNode[] {
-    if (!this.scales) return []
-    const { r: rScale, projection } = this.scales
-    const nodes: OrdinalSceneNode[] = []
-    const isVertical = projection === "vertical"
-    const isRadial = projection === "radial"
-    const hasMultiAxis = this.multiScales.length > 0
-
-    const twoPi = Math.PI * 2
-    const startAngleOffset = -Math.PI / 2
-
-    for (const col of Object.values(this.columns)) {
-      for (const d of col.pieceData) {
-        const rIndex = d.__rIndex ?? 0
-        const val = d.__rValue ?? this.getR(d)
-        const scale = hasMultiAxis ? (this.multiScales[rIndex] || rScale) : rScale
-        const style = this.resolvePieceStyle(d, col.name)
-        const r = (style as any).r || 5
-
-        let px: number, py: number
-
-        if (isRadial) {
-          // Radial: angle from category position, radius from value
-          const midAngle = startAngleOffset + (col.pctStart + col.pct / 2) * twoPi
-          const radius = scale(val)
-          px = Math.cos(midAngle) * radius
-          py = Math.sin(midAngle) * radius
-        } else if (isVertical) {
-          px = col.middle
-          py = scale(val)
-        } else {
-          px = scale(val)
-          py = col.middle
-        }
-
-        nodes.push({ type: "point", x: px, y: py, r, style, datum: d })
-      }
-    }
-
-    return nodes
-  }
-
-  // ── Swarm scene ──────────────────────────────────────────────────────
-
-  private buildSwarmScene(layout: OrdinalLayout): OrdinalSceneNode[] {
-    // Swarm uses force simulation — placeholder for Phase 3
-    // For now, fall back to point layout with jitter
-    if (!this.scales) return []
-    const { r: rScale, projection } = this.scales
-    const nodes: OrdinalSceneNode[] = []
-    const isVertical = projection === "vertical"
-
-    for (const col of Object.values(this.columns)) {
-      // Simple jittered placement (real force sim in Phase 3)
-      const halfWidth = col.width / 2
-      for (let i = 0; i < col.pieceData.length; i++) {
-        const d = col.pieceData[i]
-        const val = this.getR(d)
-        const style = this.resolvePieceStyle(d, col.name)
-        const r = (style as any).r || 4
-
-        // Deterministic jitter based on index
-        const jitter = (((i * 7919) % 100) / 100 - 0.5) * halfWidth * 0.8
-
-        const px = isVertical ? col.middle + jitter : rScale(val)
-        const py = isVertical ? rScale(val) : col.middle + jitter
-
-        nodes.push({ type: "point", x: px, y: py, r, style, datum: d })
-      }
-    }
-
-    return nodes
-  }
-
-  // ── Pie/donut scene ──────────────────────────────────────────────────
-
-  private buildPieScene(layout: OrdinalLayout): WedgeSceneNode[] {
-    if (!this.scales) return []
-    const nodes: WedgeSceneNode[] = []
-    // cx/cy are 0 because StreamOrdinalFrame translates the canvas
-    // to the center of the chart area for radial projection
-    const cx = 0
-    const cy = 0
-    const outerRadius = Math.min(layout.width, layout.height) / 2 - 4
-    const innerRadius = this.config.chartType === "donut" ? (this.config.innerRadius || 60) : 0
-    // Start from 12 o'clock (-π/2) plus any user offset
-    const startAngleOffset = -Math.PI / 2 + ((this.config.startAngle || 0) * Math.PI) / 180
-
-    const twoPi = Math.PI * 2
-
-    for (const col of Object.values(this.columns)) {
-      const startAngle = startAngleOffset + col.pctStart * twoPi
-      const endAngle = startAngleOffset + (col.pctStart + col.pct) * twoPi
-      const style = this.resolvePieceStyle(col.pieceData[0], col.name)
-
-      nodes.push({
-        type: "wedge",
-        cx, cy,
-        innerRadius,
-        outerRadius,
-        startAngle,
-        endAngle,
-        style,
-        datum: col.pieceData,
-        category: col.name
-      })
-    }
-
-    return nodes
-  }
-
-  // ── Boxplot scene ────────────────────────────────────────────────────
-
-  private buildBoxplotScene(layout: OrdinalLayout): OrdinalSceneNode[] {
-    if (!this.scales) return []
-    const { r: rScale, projection } = this.scales
-    const nodes: OrdinalSceneNode[] = []
-    const isVertical = projection === "vertical"
-    const showOutliers = this.config.showOutliers !== false
-
-    for (const col of Object.values(this.columns)) {
-      const values = col.pieceData
-        .map(d => this.getR(d))
-        .filter(v => v != null && !isNaN(v))
-        .sort((a, b) => a - b)
-
-      if (values.length === 0) continue
-
-      const min = values[0]
-      const max = values[values.length - 1]
-      const q1 = d3Quantile(values, 0.25) ?? min
-      const median = d3Quantile(values, 0.5) ?? (min + max) / 2
-      const q3 = d3Quantile(values, 0.75) ?? max
-
-      // IQR-based whiskers
-      const iqr = q3 - q1
-      const lowerFence = q1 - 1.5 * iqr
-      const upperFence = q3 + 1.5 * iqr
-      const whiskerMin = values.find(v => v >= lowerFence) ?? min
-      const whiskerMax = [...values].reverse().find(v => v <= upperFence) ?? max
-
-      const style = this.resolveSummaryStyle(col.pieceData[0], col.name)
-
-      const outliers: BoxplotSceneNode["outliers"] = []
-      if (showOutliers) {
-        for (const d of col.pieceData) {
-          const v = this.getR(d)
-          if (v < lowerFence || v > upperFence) {
-            const px = isVertical ? col.middle : rScale(v)
-            const py = isVertical ? rScale(v) : col.middle
-            outliers.push({ px, py, value: v, datum: d })
-          }
-        }
-      }
-
-      nodes.push({
-        type: "boxplot",
-        x: isVertical ? col.middle : 0,
-        y: isVertical ? 0 : col.middle,
-        projection: isVertical ? "vertical" : "horizontal",
-        columnWidth: col.width * 0.6,
-        minPos: rScale(whiskerMin),
-        q1Pos: rScale(q1),
-        medianPos: rScale(median),
-        q3Pos: rScale(q3),
-        maxPos: rScale(whiskerMax),
-        stats: { min: whiskerMin, q1, median, q3, max: whiskerMax },
-        style,
-        datum: col.pieceData,
-        category: col.name,
-        outliers
-      } as BoxplotSceneNode)
-
-      // Add outlier points
-      if (showOutliers) {
-        for (const o of outliers) {
-          nodes.push({
-            type: "point",
-            x: o.px,
-            y: o.py,
-            r: 3,
-            style: { fill: style.fill || "#999", opacity: 0.6 },
-            datum: o.datum
-          })
-        }
-      }
-    }
-
-    return nodes
-  }
-
-  // ── Violin scene ─────────────────────────────────────────────────────
-
-  private buildViolinScene(layout: OrdinalLayout): OrdinalSceneNode[] {
-    if (!this.scales) return []
-    const { r: rScale, projection } = this.scales
-    const nodes: OrdinalSceneNode[] = []
-    const isVertical = projection === "vertical"
-    const bins = this.config.bins || 20
-    const showIQR = this.config.showIQR !== false
-
-    for (const col of Object.values(this.columns)) {
-      const values = col.pieceData
-        .map(d => this.getR(d))
-        .filter(v => v != null && !isNaN(v))
-        .sort((a, b) => a - b)
-
-      if (values.length < 2) continue
-
-      const vMin = values[0]
-      const vMax = values[values.length - 1]
-      const binWidth = (vMax - vMin) / bins || 1
-
-      // Build histogram bins
-      const counts = new Array(bins).fill(0)
-      for (const v of values) {
-        const idx = Math.min(Math.floor((v - vMin) / binWidth), bins - 1)
-        counts[idx]++
-      }
-      const maxCount = Math.max(...counts, 1)
-
-      // Build symmetric violin path
-      const halfWidth = col.width / 2 * 0.9
-      let pathStr = ""
-
-      if (isVertical) {
-        // Right side (top to bottom)
-        for (let i = 0; i < bins; i++) {
-          const y = rScale(vMin + (i + 0.5) * binWidth)
-          const w = (counts[i] / maxCount) * halfWidth
-          pathStr += i === 0 ? `M ${col.middle + w} ${y}` : ` L ${col.middle + w} ${y}`
-        }
-        // Left side (bottom to top)
-        for (let i = bins - 1; i >= 0; i--) {
-          const y = rScale(vMin + (i + 0.5) * binWidth)
-          const w = (counts[i] / maxCount) * halfWidth
-          pathStr += ` L ${col.middle - w} ${y}`
-        }
-        pathStr += " Z"
-      } else {
-        // Top side (left to right)
-        for (let i = 0; i < bins; i++) {
-          const x = rScale(vMin + (i + 0.5) * binWidth)
-          const w = (counts[i] / maxCount) * halfWidth
-          pathStr += i === 0 ? `M ${x} ${col.middle - w}` : ` L ${x} ${col.middle - w}`
-        }
-        // Bottom side (right to left)
-        for (let i = bins - 1; i >= 0; i--) {
-          const x = rScale(vMin + (i + 0.5) * binWidth)
-          const w = (counts[i] / maxCount) * halfWidth
-          pathStr += ` L ${x} ${col.middle + w}`
-        }
-        pathStr += " Z"
-      }
-
-      const style = this.resolveSummaryStyle(col.pieceData[0], col.name)
-
-      // IQR overlay
-      let iqrLine: ViolinSceneNode["iqrLine"]
-      if (showIQR && values.length >= 4) {
-        const q1 = d3Quantile(values, 0.25) ?? vMin
-        const median = d3Quantile(values, 0.5) ?? (vMin + vMax) / 2
-        const q3 = d3Quantile(values, 0.75) ?? vMax
-        iqrLine = {
-          q1Pos: rScale(q1),
-          medianPos: rScale(median),
-          q3Pos: rScale(q3)
-        }
-      }
-
-      const violinBounds = isVertical
-        ? { x: col.x, y: Math.min(rScale(vMax), rScale(vMin)), width: col.width, height: Math.abs(rScale(vMax) - rScale(vMin)) }
-        : { x: Math.min(rScale(vMin), rScale(vMax)), y: col.x, width: Math.abs(rScale(vMax) - rScale(vMin)), height: col.width }
-
-      nodes.push({
-        type: "violin",
-        pathString: pathStr,
-        translateX: 0,
-        translateY: 0,
-        bounds: violinBounds,
-        iqrLine,
-        style,
-        datum: col.pieceData,
-        category: col.name
-      } as ViolinSceneNode)
-    }
-
-    return nodes
-  }
-
-  // ── Ridgeline scene ──────────────────────────────────────────────────
-
-  private buildRidgelineScene(layout: OrdinalLayout): OrdinalSceneNode[] {
-    if (!this.scales) return []
-    const { r: rScale, projection } = this.scales
-    const nodes: OrdinalSceneNode[] = []
-    const numBins = this.config.bins || 20
-    const isHorizontal = projection === "horizontal"
-    // Amplitude controls how far the density extends (can overlap neighbors)
-    const amplitude = (this.config as any).amplitude || 1.5
-
-    for (const col of Object.values(this.columns)) {
-      const values = col.pieceData
-        .map(d => this.getR(d))
-        .filter(v => v != null && !isNaN(v))
-        .sort((a, b) => a - b)
-
-      if (values.length < 2) continue
-
-      const vMin = values[0]
-      const vMax = values[values.length - 1]
-      const binWidth = (vMax - vMin) / numBins || 1
-
-      // Build histogram bins
-      const counts = new Array(numBins).fill(0)
-      for (const v of values) {
-        const idx = Math.min(Math.floor((v - vMin) / binWidth), numBins - 1)
-        counts[idx]++
-      }
-      const maxCount = Math.max(...counts, 1)
-
-      const style = this.resolveSummaryStyle(col.pieceData[0], col.name)
-      const halfBand = col.width * amplitude
-
-      // Build one-sided area path (density extends in one direction from baseline)
-      let pathStr = ""
-
-      if (isHorizontal) {
-        // Horizontal: categories on y, values on x
-        // Baseline is the bottom of the column band, density extends upward
-        const baseline = col.x + col.width
-
-        // Start at baseline
-        pathStr = `M ${rScale(vMin)} ${baseline}`
-        // Density curve going upward (negative y)
-        for (let i = 0; i < numBins; i++) {
-          const x = rScale(vMin + (i + 0.5) * binWidth)
-          const h = (counts[i] / maxCount) * halfBand
-          pathStr += ` L ${x} ${baseline - h}`
-        }
-        // Close back to baseline
-        pathStr += ` L ${rScale(vMax)} ${baseline} Z`
-      } else {
-        // Vertical: categories on x, values on y
-        // Baseline is the left of the column band, density extends rightward
-        const baseline = col.x
-
-        pathStr = `M ${baseline} ${rScale(vMin)}`
-        for (let i = 0; i < numBins; i++) {
-          const y = rScale(vMin + (i + 0.5) * binWidth)
-          const w = (counts[i] / maxCount) * halfBand
-          pathStr += ` L ${baseline + w} ${y}`
-        }
-        pathStr += ` L ${baseline} ${rScale(vMax)} Z`
-      }
-
-      const ridgeBounds = isHorizontal
-        ? { x: Math.min(rScale(vMin), rScale(vMax)), y: col.x, width: Math.abs(rScale(vMax) - rScale(vMin)), height: col.width }
-        : { x: col.x, y: Math.min(rScale(vMax), rScale(vMin)), width: col.width, height: Math.abs(rScale(vMax) - rScale(vMin)) }
-
-      nodes.push({
-        type: "violin",
-        pathString: pathStr,
-        translateX: 0,
-        translateY: 0,
-        bounds: ridgeBounds,
-        style: { ...style, fillOpacity: style.fillOpacity ?? 0.5 },
-        datum: col.pieceData,
-        category: col.name
-      } as ViolinSceneNode)
-    }
-
-    return nodes
-  }
-
-  // ── Histogram scene ──────────────────────────────────────────────────
-
-  private buildHistogramScene(layout: OrdinalLayout): OrdinalSceneNode[] {
-    if (!this.scales) return []
-    const { r: rScale } = this.scales
-    const nodes: OrdinalSceneNode[] = []
-    const numBins = this.config.bins || 25
-    const isRelative = this.config.normalize
-
-    // Histograms always render horizontally: categories on y-axis, value bins on x-axis
-    for (const col of Object.values(this.columns)) {
-      const values = col.pieceData
-        .map(d => this.getR(d))
-        .filter(v => v != null && !isNaN(v))
-
-      if (values.length === 0) continue
-
-      const vMin = Math.min(...values)
-      const vMax = Math.max(...values)
-      const binWidth = (vMax - vMin) / numBins || 1
-
-      const counts = new Array(numBins).fill(0)
-      for (const v of values) {
-        const idx = Math.min(Math.floor((v - vMin) / binWidth), numBins - 1)
-        counts[idx]++
-      }
-
-      const total = values.length
-      const maxCount = Math.max(...counts, 1)
-
-      const style = this.resolveSummaryStyle(col.pieceData[0], col.name)
-
-      for (let i = 0; i < numBins; i++) {
-        if (counts[i] === 0) continue
-
-        const normCount = isRelative ? counts[i] / total : counts[i] / maxCount
-        // Bar height proportional to count, within the column band
-        const barH = normCount * col.width * 0.9
-
-        // Bin position on the value (x) axis
-        const binStart = rScale(vMin + i * binWidth)
-        const binEnd = rScale(vMin + (i + 1) * binWidth)
-        const x = Math.min(binStart, binEnd)
-        const w = Math.abs(binEnd - binStart)
-
-        // Align bar to baseline (bottom of the column band)
-        const y = col.x + col.width - barH
-
-        nodes.push(buildRectNode(
-          x, y, w, barH,
-          style,
-          { bin: i, count: counts[i], range: [vMin + i * binWidth, vMin + (i + 1) * binWidth], category: col.name },
-          col.name
-        ))
-      }
-    }
-
-    return nodes
-  }
-
-  // ── Timeline scene ───────────────────────────────────────────────────
-
-  private buildTimelineScene(layout: OrdinalLayout): OrdinalSceneNode[] {
-    if (!this.scales) return []
-    const { r: rScale, projection } = this.scales
-    const nodes: OrdinalSceneNode[] = []
-    const isHorizontal = projection === "horizontal"
-
-    for (const col of Object.values(this.columns)) {
-      for (const d of col.pieceData) {
-        const range = this.getRawRange(d)
-        if (!range) continue
-
-        const [start, end] = range
-        const style = this.resolvePieceStyle(d, col.name)
-
-        if (isHorizontal) {
-          const x0 = rScale(Math.min(start, end))
-          const x1 = rScale(Math.max(start, end))
-          nodes.push(buildRectNode(
-            x0, col.x, x1 - x0, col.width,
-            style, d, col.name
-          ))
-        } else {
-          const y0 = rScale(Math.max(start, end))
-          const y1 = rScale(Math.min(start, end))
-          nodes.push(buildRectNode(
-            col.x, y0, col.width, y1 - y0,
-            style, d, col.name
-          ))
-        }
-      }
-    }
-
-    return nodes
-  }
-
-  // ── Connectors ───────────────────────────────────────────────────────
-
-  private buildConnectors(pieceNodes: OrdinalSceneNode[], layout: OrdinalLayout): ConnectorSceneNode[] {
-    if (!this.getConnector || !this.scales) return []
-    const connectors: ConnectorSceneNode[] = []
-    const { projection } = this.scales
-
-    // Group pieces by connector key
-    const groups = new Map<string, { x: number; y: number; datum: any; category: string }[]>()
-
-    for (const node of pieceNodes) {
-      if (node.type !== "point" && node.type !== "rect") continue
-      const datum = node.datum
-      if (!datum) continue
-
-      const key = this.getConnector(datum)
-      if (!key) continue
-
-      let cx: number, cy: number
-      if (node.type === "point") {
-        cx = node.x
-        cy = node.y
-      } else {
-        // rect: use center
-        cx = node.x + node.w / 2
-        cy = node.y + (projection === "vertical" ? 0 : node.h / 2)
-      }
-
-      if (!groups.has(key)) groups.set(key, [])
-      groups.get(key)!.push({ x: cx, y: cy, datum, category: this.getO(datum) })
-    }
-
-    // Draw lines connecting pieces with the same connector key, sorted by category order
-    const oExtent = this.scales.o.domain()
-    const resolveConnStyle = this.config.connectorStyle
-
-    for (const [key, points] of groups) {
-      if (points.length < 2) continue
-
-      // Sort by category order
-      points.sort((a, b) => oExtent.indexOf(a.category) - oExtent.indexOf(b.category))
-
-      for (let i = 0; i < points.length - 1; i++) {
-        const from = points[i]
-        const to = points[i + 1]
-        const style: Style = typeof resolveConnStyle === "function"
-          ? resolveConnStyle(from.datum)
-          : (resolveConnStyle || { stroke: "#999", strokeWidth: 1, opacity: 0.5 })
-
-        connectors.push({
-          type: "connector",
-          x1: from.x,
-          y1: from.y,
-          x2: to.x,
-          y2: to.y,
-          style,
-          datum: from.datum,
-          group: key
-        })
-      }
-    }
-
-    return connectors
   }
 
   // ── Style resolution ─────────────────────────────────────────────────
@@ -1269,7 +577,25 @@ export class OrdinalPipelineStore {
     if (this.config.barColors && category) {
       return { fill: this.config.barColors[category] || "#007bff" }
     }
+    // Use colorScheme (or default palette) to generate colors by category
+    if (category) {
+      return { fill: this.getColorFromScheme(category) }
+    }
     return { fill: "#007bff" }
+  }
+
+  private getColorFromScheme(key: string): string {
+    if (!this._colorSchemeMap) this._colorSchemeMap = new Map()
+    const existing = this._colorSchemeMap.get(key)
+    if (existing) return existing
+
+    const palette = Array.isArray(this.config.colorScheme)
+      ? this.config.colorScheme
+      : ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f", "#edc948", "#b07aa1", "#ff9da7", "#9c755f", "#bab0ac"]
+    const color = palette[this._colorSchemeIndex % palette.length]
+    this._colorSchemeIndex++
+    this._colorSchemeMap.set(key, color)
+    return color
   }
 
   private resolveSummaryStyle(d: any, category?: string): Style {
@@ -1400,18 +726,18 @@ export class OrdinalPipelineStore {
 
       if (node.type === "point") {
         if (prev.x !== node.x || prev.y !== node.y) {
-          ;(node as any)._targetX = node.x
-          ;(node as any)._targetY = node.y
+          node._targetX = node.x
+          node._targetY = node.y
           node.x = prev.x
           node.y = prev.y
           hasChanges = true
         }
       } else if (node.type === "rect") {
         if (prev.x !== node.x || prev.y !== node.y || prev.w !== node.w || prev.h !== node.h) {
-          ;(node as any)._targetX = node.x
-          ;(node as any)._targetY = node.y
-          ;(node as any)._targetW = node.w
-          ;(node as any)._targetH = node.h
+          node._targetX = node.x
+          node._targetY = node.y
+          node._targetW = node.w
+          node._targetH = node.h
           node.x = prev.x
           node.y = prev.y
           node.w = prev.w ?? node.w
@@ -1439,38 +765,46 @@ export class OrdinalPipelineStore {
       : 1 - Math.pow(1 - rawT, 3)
 
     for (const node of this.scene) {
-      const targetX = (node as any)._targetX
-      if (targetX === undefined) continue
-
-      if (node.type === "point" || node.type === "rect") {
-        const key = node.type === "point" ? `p:${0}` : `r:${(node as any).group || ""}:${node.datum?.category ?? 0}`
+      if (node.type === "point") {
+        if (node._targetX === undefined) continue
+        const key = `p:${0}`
         const prev = this.prevPositionMap.get(key)
         if (!prev) continue
-        node.x = prev.x + (targetX - prev.x) * t
-        node.y = prev.y + ((node as any)._targetY - prev.y) * t
-        if (node.type === "rect" && prev.w !== undefined) {
-          node.w = prev.w + ((node as any)._targetW - prev.w) * t
-          node.h = prev.h! + ((node as any)._targetH - prev.h!) * t
+        node.x = prev.x + (node._targetX - prev.x) * t
+        node.y = prev.y + (node._targetY! - prev.y) * t
+      } else if (node.type === "rect") {
+        if (node._targetX === undefined) continue
+        const key = `r:${node.group || ""}:${node.datum?.category ?? 0}`
+        const prev = this.prevPositionMap.get(key)
+        if (!prev) continue
+        node.x = prev.x + (node._targetX - prev.x) * t
+        node.y = prev.y + (node._targetY! - prev.y) * t
+        if (prev.w !== undefined) {
+          node.w = prev.w + (node._targetW! - prev.w) * t
+          node.h = prev.h! + (node._targetH! - prev.h!) * t
         }
       }
     }
 
     if (rawT >= 1) {
       for (const node of this.scene) {
-        if ((node as any)._targetX === undefined) continue
         if (node.type === "point") {
-          node.x = (node as any)._targetX
-          node.y = (node as any)._targetY
+          if (node._targetX === undefined) continue
+          node.x = node._targetX
+          node.y = node._targetY!
+          node._targetX = undefined
+          node._targetY = undefined
         } else if (node.type === "rect") {
-          node.x = (node as any)._targetX
-          node.y = (node as any)._targetY
-          node.w = (node as any)._targetW
-          node.h = (node as any)._targetH
+          if (node._targetX === undefined) continue
+          node.x = node._targetX
+          node.y = node._targetY!
+          node.w = node._targetW!
+          node.h = node._targetH!
+          node._targetX = undefined
+          node._targetY = undefined
+          node._targetW = undefined
+          node._targetH = undefined
         }
-        delete (node as any)._targetX
-        delete (node as any)._targetY
-        delete (node as any)._targetW
-        delete (node as any)._targetH
       }
       this.activeTransition = null
       return false
@@ -1512,6 +846,10 @@ export class OrdinalPipelineStore {
   }
 
   updateConfig(config: Partial<OrdinalPipelineConfig>): void {
+    if (config.colorScheme !== this.config.colorScheme) {
+      this._colorSchemeMap = null
+      this._colorSchemeIndex = 0
+    }
     Object.assign(this.config, config)
   }
 }
