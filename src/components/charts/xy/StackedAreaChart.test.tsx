@@ -77,8 +77,7 @@ describe("StackedAreaChart", () => {
     expect(frame).toBeFalsy()
   })
 
-  // Skip normalized stacked test due to XYFrame internal aria label issue with stackedpercent-area type
-  it.skip("supports normalized (100%) stacked areas", () => {
+  it("supports normalized (100%) stacked areas", () => {
     const { container } = render(
       <TooltipProvider>
         <StackedAreaChart

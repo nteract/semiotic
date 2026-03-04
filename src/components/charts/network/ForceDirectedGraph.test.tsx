@@ -170,8 +170,7 @@ describe("ForceDirectedGraph", () => {
     expect(frame).toBeTruthy()
   })
 
-  // Skip label test due to jsdom limitations with SVG text measurement
-  it.skip("shows labels when showLabels is true", () => {
+  it("shows labels when showLabels is true", () => {
     const { container } = render(
       <TooltipProvider>
         <ForceDirectedGraph

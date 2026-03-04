@@ -431,8 +431,7 @@ describe("BubbleChart", () => {
       expect(frame).toBeTruthy()
     })
 
-    // Skip: StreamXYFrame legend rendering passes raw legendGroups object instead of ReactNode
-    it.skip("respects showLegend=true without errors", () => {
+    it("respects showLegend=true without errors", () => {
       const { container } = render(
         <TooltipProvider>
           <BubbleChart
@@ -449,8 +448,7 @@ describe("BubbleChart", () => {
       expect(frame).toBeTruthy()
     })
 
-    // Skip: StreamXYFrame legend rendering passes raw legendGroups object instead of ReactNode
-    it.skip("adjusts margin without errors when legend configuration is present", () => {
+    it("adjusts margin without errors when legend configuration is present", () => {
       const { container } = render(
         <TooltipProvider>
           <BubbleChart
@@ -466,8 +464,7 @@ describe("BubbleChart", () => {
       expect(frame).toBeTruthy()
     })
 
-    // Skip: StreamXYFrame legend rendering passes raw legendGroups object instead of ReactNode
-    it.skip("allows user to override margin even with legend", () => {
+    it("allows user to override margin even with legend", () => {
       const { container } = render(
         <TooltipProvider>
           <BubbleChart
