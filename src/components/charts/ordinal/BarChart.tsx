@@ -123,7 +123,7 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
 
   const customHoverBehavior = useCallback(
     (d: Record<string, any> | null) => {
-      if (linkedHover) linkedHoverHook.onHover(d)
+      if (linkedHover) linkedHoverHook.onHover(d ? (d.data || d) : null)
     },
     [linkedHover, linkedHoverHook]
   )

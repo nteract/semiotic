@@ -196,12 +196,11 @@ export default function TooltipsPage() {
           data: barData,
           oAccessor: "category",
           rAccessor: "sales",
-          type: "bar",
-          style: { fill: "#6366f1", stroke: "white" },
-          oLabel: true,
+          chartType: "bar",
+          pieceStyle: () => ({ fill: "#6366f1", stroke: "white" }),
+          showAxes: true,
           margin: { top: 20, bottom: 80, left: 60, right: 20 },
-          axes: [{ orient: "left", label: "Sales ($)" }],
-          hoverAnnotation: true,
+          enableHover: true,
           tooltipContent: MultiLineTooltip({
             title: "category",
             fields: [

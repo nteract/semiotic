@@ -1,5 +1,5 @@
 import React from "react"
-import { StreamXYFrame, StreamOrdinalFrame, StreamOrdinalFrame } from "semiotic"
+import { StreamXYFrame, StreamOrdinalFrame } from "semiotic"
 import { LineChart, BarChart } from "semiotic"
 
 import LiveExample from "../../components/LiveExample"
@@ -186,18 +186,10 @@ export default function ResponsivePage() {
           data: barData,
           oAccessor: "category",
           rAccessor: "revenue",
-          type: "bar",
-          style: { fill: "#6366f1", stroke: "white" },
-          oLabel: true,
-          responsiveWidth: true,
+          chartType: "bar",
+          pieceStyle: () => ({ fill: "#6366f1", stroke: "white" }),
+          showAxes: true,
           margin: { top: 20, bottom: 60, left: 80, right: 20 },
-          axes: [
-            {
-              orient: "left",
-              label: "Revenue ($)",
-              tickFormat: (d) => `$${(d / 1000).toFixed(0)}k`,
-            },
-          ],
         }}
         type={StreamOrdinalFrame}
         overrideProps={{

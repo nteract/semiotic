@@ -38,7 +38,7 @@ const sparkStackedData = [
   { label: "#E0488B", coordinates: generatePoints(40, 40) },
 ]
 
-const sparkBarData = [8, 4, 12, 3, 4, 5, 6, 7]
+const sparkBarData = [8, 4, 12, 3, 4, 5, 6, 7].map((v, i) => ({ category: String(i), value: v }))
 
 const sparkNetworkEdges = [
   { source: "a", target: "b" },
@@ -159,8 +159,10 @@ export default function SparklinesPage() {
         right in your text, or a small bar chart{" "}
         <StreamOrdinalFrame
           data={sparkBarData}
-          style={{ fill: "#E0488B", stroke: "none" }}
-          type="bar"
+          chartType="bar"
+          oAccessor="category"
+          rAccessor="value"
+          pieceStyle={() => ({ fill: "#E0488B" })}
         />{" "}
         alongside your analysis, or even a network diagram{" "}
         <StreamNetworkFrame
@@ -308,8 +310,10 @@ export default function SparklinesPage() {
       <LiveExample
         frameProps={{
           data: sparkBarData,
-          style: { fill: "#E0488B", stroke: "none" },
-          type: "bar",
+          chartType: "bar",
+          oAccessor: "category",
+          rAccessor: "value",
+          pieceStyle: () => ({ fill: "#E0488B" }),
         }}
         type={StreamOrdinalFrame}
         overrideProps={{
@@ -327,15 +331,10 @@ export default function SparklinesPage() {
 
       <LiveExample
         frameProps={{
+          chartType: "tree",
           edges: treeData,
-          edgeStyle: { stroke: "#ac58e5" },
-          networkType: { type: "dendrogram" },
-          margin: 4,
-          size: [60, 60],
-          nodeStyle: () => ({
-            fill: "#533f82",
-            stroke: "#333",
-          }),
+          nodeIDAccessor: "id",
+          size: [120, 80],
         }}
         type={StreamNetworkFrame}
         overrideProps={{
@@ -347,11 +346,6 @@ export default function SparklinesPage() {
     { id: "c", children: [{ id: "ca" }] },
   ],
 }`,
-          networkType: `{ type: "dendrogram" }`,
-          nodeStyle: `() => ({ fill: "#533f82", stroke: "#333" })`,
-        }}
-        functions={{
-          nodeStyle: () => ({ fill: "#533f82", stroke: "#333" }),
         }}
         hiddenProps={{}}
         startHidden

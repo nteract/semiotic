@@ -91,7 +91,6 @@ import TooltipsPage from "./pages/features/TooltipsPage"
 import InteractionPage from "./pages/features/InteractionPage"
 import ResponsivePage from "./pages/features/ResponsivePage"
 import AccessibilityPage from "./pages/features/AccessibilityPage"
-import CanvasRenderingPage from "./pages/features/CanvasRenderingPage"
 import SparklinesPage from "./pages/features/SparklinesPage"
 import SmallMultiplesPage from "./pages/features/SmallMultiplesPage"
 import StylingPage from "./pages/features/StylingPage"
@@ -105,9 +104,7 @@ import HomerunMapPage from "./pages/cookbook/HomerunMapPage"
 import CanvasInteractionPage from "./pages/cookbook/CanvasInteractionPage"
 import UncertaintyVisualizationPage from "./pages/cookbook/UncertaintyVisualizationPage"
 import MarginalGraphicsPage from "./pages/cookbook/MarginalGraphicsPage"
-import BarLineChartPage from "./pages/cookbook/BarLineChartPage"
 import BarToParallelPage from "./pages/cookbook/BarToParallelPage"
-import WaterfallChartPage from "./pages/cookbook/WaterfallChartPage"
 import SlopeChartPage from "./pages/cookbook/SlopeChartPage"
 import MarimekkoChartPage from "./pages/cookbook/MarimekkoChartPage"
 import SwarmPlotRecipePage from "./pages/cookbook/SwarmPlotRecipePage"
@@ -338,9 +335,7 @@ export default function DocsApp() {
               <Route path="canvas-interaction" element={<CanvasInteractionPage />} />
               <Route path="uncertainty-visualization" element={<UncertaintyVisualizationPage />} />
               <Route path="marginal-graphics" element={<MarginalGraphicsPage />} />
-              <Route path="bar-line-chart" element={<BarLineChartPage />} />
               <Route path="bar-to-parallel-coordinates" element={<BarToParallelPage />} />
-              <Route path="waterfall-chart" element={<WaterfallChartPage />} />
               <Route path="slope-chart" element={<SlopeChartPage />} />
               <Route path="marimekko-chart" element={<MarimekkoChartPage />} />
               <Route path="swarm-plot" element={<SwarmPlotRecipePage />} />
@@ -392,7 +387,6 @@ export default function DocsApp() {
               <Route path="interaction" element={<InteractionPage />} />
               <Route path="responsive" element={<ResponsivePage />} />
               <Route path="accessibility" element={<AccessibilityPage />} />
-              <Route path="canvas-rendering" element={<CanvasRenderingPage />} />
               <Route path="sparklines" element={<SparklinesPage />} />
               <Route path="small-multiples" element={<SmallMultiplesPage />} />
               <Route path="styling" element={<StylingPage />} />

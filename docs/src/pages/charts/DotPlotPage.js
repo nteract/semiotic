@@ -74,6 +74,8 @@ function StreamingDotPlotDemo() {
       windowSize={200}
       showAxes
       pieceStyle={() => ({ fill: "#6366f1", r: 5 })}
+      decay={{ type: "exponential", halfLife: 80, minOpacity: 0.1 }}
+      pulse={{ duration: 400, color: "rgba(99, 102, 241, 0.5)" }}
     />
   )
 }`
@@ -106,6 +108,8 @@ function StreamingDotPlotDemo({ width }) {
       windowSize={200}
       showAxes
       pieceStyle={() => ({ fill: "#6366f1", r: 5 })}
+      decay={{ type: "exponential", halfLife: 80, minOpacity: 0.1 }}
+      pulse={{ duration: 400, color: "rgba(99, 102, 241, 0.5)" }}
     />
   )
 }

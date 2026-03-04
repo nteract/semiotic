@@ -607,8 +607,10 @@ export class OrdinalPipelineStore {
         let val = group.total
         if (normalize && colTotal > 0) val = val / colTotal
 
-        // Use the first piece for styling (representative datum)
-        const style = this.resolvePieceStyle(group.pieces[0], col.name)
+        // Use the first piece for styling — look up barColors by stack key (not category)
+        const style = getStack
+          ? this.resolvePieceStyle(group.pieces[0], stackKey)
+          : this.resolvePieceStyle(group.pieces[0], col.name)
         // Build a synthetic datum that includes the aggregate info
         const aggDatum = {
           ...group.pieces[0],
@@ -1138,8 +1140,8 @@ export class OrdinalPipelineStore {
         const x = Math.min(binStart, binEnd)
         const w = Math.abs(binEnd - binStart)
 
-        // Center the bar vertically within the column band
-        const y = col.x + (col.width - barH) / 2
+        // Align bar to baseline (bottom of the column band)
+        const y = col.x + col.width - barH
 
         nodes.push(buildRectNode(
           x, y, w, barH,

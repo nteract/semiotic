@@ -317,47 +317,6 @@ export default function AxesPage() {
         language="jsx"
       />
 
-      <h3 id="ordinal-axes">Axes on StreamOrdinalFrame</h3>
-      <p>
-        <code>StreamOrdinalFrame</code> also supports the <code>axes</code> prop
-        for its quantitative (r) axis. Category labels are controlled
-        separately via the <code>oLabel</code> prop.
-      </p>
-
-      <LiveExample
-        frameProps={{
-          data: barData,
-          oAccessor: "category",
-          rAccessor: "revenue",
-          type: "bar",
-          style: { fill: "#6366f1", stroke: "white" },
-          oLabel: true,
-          margin: { top: 20, bottom: 60, left: 80, right: 20 },
-          axes: [
-            {
-              orient: "left",
-              label: "Revenue ($)",
-              tickFormat: (d) => `$${(d / 1000).toFixed(0)}k`,
-            },
-          ],
-        }}
-        type={StreamOrdinalFrame}
-        overrideProps={{
-          data: `[
-  { category: "Q1", revenue: 24000 },
-  { category: "Q2", revenue: 31000 },
-  { category: "Q3", revenue: 28000 },
-  { category: "Q4", revenue: 36000 }
-]`,
-          axes: `[{
-  orient: "left",
-  label: "Revenue ($)",
-  tickFormat: d => \`$\${(d / 1000).toFixed(0)}k\`
-}]`,
-        }}
-        hiddenProps={{}}
-      />
-
       {/* ----------------------------------------------------------------- */}
       {/* Configuration */}
       {/* ----------------------------------------------------------------- */}

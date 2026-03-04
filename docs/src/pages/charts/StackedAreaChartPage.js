@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react"
-import { StackedAreaChart, RealtimeHistogram } from "semiotic"
+import { StackedAreaChart, StreamXYFrame } from "semiotic"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
@@ -68,12 +68,13 @@ const stackedAreaChartProps = [
 // ---------------------------------------------------------------------------
 
 const streamingStackedCode = `import { useRef, useEffect } from "react"
-import { RealtimeHistogram } from "semiotic"
+import { StreamXYFrame } from "semiotic"
 
 function StreamingRevenue() {
   const chartRef = useRef()
   const indexRef = useRef(0)
   const regions = ["North", "South", "East", "West"]
+  const colors = { North: "#6366f1", South: "#f59e0b", East: "#10b981", West: "#ef4444" }
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -83,7 +84,7 @@ function StreamingRevenue() {
         chartRef.current.push({
           time: Math.floor(i / regions.length),
           value: 5000 + Math.random() * 10000,
-          category: region,
+          region,
         })
       }
     }, 80)
@@ -91,16 +92,25 @@ function StreamingRevenue() {
   }, [])
 
   return (
-    <RealtimeHistogram
+    <StreamXYFrame
       ref={chartRef}
+      chartType="stackedarea"
+      runtimeMode="streaming"
       size={[600, 280]}
-      binSize={1}
-      categoryAccessor="category"
+      groupAccessor="region"
+      lineStyle={(d, group) => ({
+        fill: colors[group] || "#6366f1",
+        fillOpacity: 0.7,
+        stroke: colors[group] || "#6366f1",
+        strokeWidth: 1,
+      })}
       windowSize={100}
       showAxes
     />
   )
 }`
+
+const stackColors = { North: "#6366f1", South: "#f59e0b", East: "#10b981", West: "#ef4444" }
 
 function StreamingStackedDemo({ width }) {
   const chartRef = useRef()
@@ -115,7 +125,7 @@ function StreamingStackedDemo({ width }) {
         chartRef.current.push({
           time: Math.floor(i / regions.length),
           value: 5000 + Math.random() * 10000,
-          category: region,
+          region,
         })
       }
     }, 80)
@@ -123,11 +133,18 @@ function StreamingStackedDemo({ width }) {
   }, [])
 
   return (
-    <RealtimeHistogram
+    <StreamXYFrame
       ref={chartRef}
+      chartType="stackedarea"
+      runtimeMode="streaming"
       size={[width, 280]}
-      binSize={1}
-      categoryAccessor="category"
+      groupAccessor="region"
+      lineStyle={(d, group) => ({
+        fill: stackColors[group] || "#6366f1",
+        fillOpacity: 0.7,
+        stroke: stackColors[group] || "#6366f1",
+        strokeWidth: 1,
+      })}
       windowSize={100}
       showAxes={true}
     />
