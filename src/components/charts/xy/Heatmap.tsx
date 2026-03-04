@@ -5,7 +5,7 @@ import { scaleSequential } from "d3-scale"
 import { interpolateBlues, interpolateReds, interpolateGreens, interpolateViridis } from "d3-scale-chromatic"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps } from "../../stream/types"
-import { DEFAULT_COLOR, resolveAccessor, useChartSelection } from "../shared/hooks"
+import { DEFAULT_COLOR, resolveAccessor, useChartSelection, useChartLegendAndMargin } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
@@ -183,7 +183,7 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
     data,
     width = 600,
     height = 400,
-    margin = { top: 50, bottom: 60, left: 70, right: 80 },
+    margin: userMargin,
     className,
     title,
     xAccessor = "x",
@@ -207,6 +207,12 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
   } = props
 
   const safeData = data || []
+
+  const { margin } = useChartLegendAndMargin({
+    data: safeData, colorBy: undefined, colorScale: undefined,
+    showLegend: false, userMargin,
+    defaults: { top: 50, bottom: 60, left: 70, right: 80 }
+  })
 
   // ── Selection hooks (always called, conditional logic inside) ──────────
 

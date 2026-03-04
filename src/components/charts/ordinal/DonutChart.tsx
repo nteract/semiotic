@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, DEFAULT_COLOR, resolveAccessor } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
@@ -66,13 +66,16 @@ export function DonutChart<TDatum extends Record<string, any> = Record<string, a
   })
 
   const defaultTooltipContent = useMemo(() => {
+    const getCat = resolveAccessor(categoryAccessor)
+    const getVal = resolveAccessor<number>(valueAccessor)
+    const getColorVal = colorBy ? resolveAccessor(colorBy) : undefined
     const showColorField = colorBy && colorBy !== categoryAccessor
     return (d: Record<string, any>) => {
       const datum = d.data?.[0] || d.data || d
-      const cat = typeof categoryAccessor === "function" ? categoryAccessor(datum as TDatum) : datum[categoryAccessor]
-      const val = typeof valueAccessor === "function" ? valueAccessor(datum as TDatum) : datum[valueAccessor]
+      const cat = getCat(datum)
+      const val = getVal(datum)
       const colorVal = showColorField
-        ? (typeof colorBy === "function" ? (colorBy as Function)(datum) : datum[colorBy as string])
+        ? (getColorVal ? getColorVal(datum) : undefined)
         : null
       return (
         <div className="semiotic-tooltip" style={defaultTooltipStyle}>

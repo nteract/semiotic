@@ -8,7 +8,11 @@ import type {
   HoverAnnotationConfig,
   HoverData,
   AnnotationContext,
-  StreamXYFrameHandle
+  StreamXYFrameHandle,
+  DecayConfig,
+  PulseConfig,
+  StalenessConfig,
+  TransitionConfig
 } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { ReactNode } from "react"
@@ -85,6 +89,14 @@ export interface RealtimeTemporalHistogramProps {
   tooltip?: (d: HoverData) => ReactNode
   /** Enable linked hover selection events for cross-chart highlighting */
   linkedHover?: boolean | string | { name?: string; fields: string[] }
+  /** Configurable opacity decay for older data */
+  decay?: DecayConfig
+  /** Flash effect on newly inserted data */
+  pulse?: PulseConfig
+  /** Frame-level data liveness indicator */
+  staleness?: StalenessConfig
+  /** Smooth position interpolation on data change */
+  transition?: TransitionConfig
 }
 
 /**
@@ -151,7 +163,11 @@ export const RealtimeTemporalHistogram = forwardRef<RealtimeFrameHandle, Realtim
       svgAnnotationRules,
       tickFormatTime,
       tickFormatValue,
-      linkedHover
+      linkedHover,
+      decay,
+      pulse,
+      staleness,
+      transition
     } = props
 
     const resolvedSize: [number, number] = width != null && height != null
@@ -217,6 +233,10 @@ export const RealtimeTemporalHistogram = forwardRef<RealtimeFrameHandle, Realtim
         svgAnnotationRules={svgAnnotationRules}
         tickFormatTime={tickFormatTime}
         tickFormatValue={tickFormatValue}
+        decay={decay}
+        pulse={pulse}
+        staleness={staleness}
+        transition={transition}
       />
     )
   }

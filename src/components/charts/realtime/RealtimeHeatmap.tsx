@@ -14,6 +14,7 @@ import type {
 } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { ReactNode } from "react"
+import { useChartSelection } from "../shared/hooks"
 
 export interface RealtimeHeatmapProps {
   /** Chart dimensions as [width, height] */
@@ -78,6 +79,8 @@ export interface RealtimeHeatmapProps {
   staleness?: StalenessConfig
   /** Custom tooltip renderer (alias for tooltipContent) */
   tooltip?: (d: HoverData) => ReactNode
+  /** Enable linked hover selection events for cross-chart highlighting */
+  linkedHover?: boolean | string | { name?: string; fields: string[] }
 }
 
 /**
@@ -134,7 +137,8 @@ export const RealtimeHeatmap = forwardRef<RealtimeFrameHandle, RealtimeHeatmapPr
       tickFormatValue,
       decay,
       pulse,
-      staleness
+      staleness,
+      linkedHover
     } = props
 
     const resolvedSize: [number, number] = width != null && height != null
@@ -143,6 +147,19 @@ export const RealtimeHeatmap = forwardRef<RealtimeFrameHandle, RealtimeHeatmapPr
     const resolvedTooltip = tooltipContent ?? tooltip
 
     const frameRef = useRef<StreamXYFrameHandle>(null)
+
+    // ── Linked hover via shared hook ──
+    const { customHoverBehavior: linkedHoverBehavior } = useChartSelection({
+      linkedHover, unwrapData: true
+    })
+
+    const combinedHoverBehavior = useCallback(
+      (d: HoverData | null) => {
+        if (onHover) onHover(d)
+        linkedHoverBehavior(d)
+      },
+      [onHover, linkedHoverBehavior]
+    )
 
     useImperativeHandle(ref, () => ({
       push: (point) => frameRef.current?.push(point),
@@ -176,7 +193,7 @@ export const RealtimeHeatmap = forwardRef<RealtimeFrameHandle, RealtimeHeatmapPr
         background={background}
         hoverAnnotation={enableHover}
         tooltipContent={resolvedTooltip}
-        customHoverBehavior={onHover}
+        customHoverBehavior={combinedHoverBehavior}
         annotations={annotations}
         svgAnnotationRules={svgAnnotationRules}
         tickFormatTime={tickFormatTime}
