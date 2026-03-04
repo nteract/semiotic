@@ -110,8 +110,6 @@ export type { RealtimeSwarmChartProps } from "./realtime/RealtimeSwarmChart"
 export { RealtimeWaterfallChart } from "./realtime/RealtimeWaterfallChart"
 export type { RealtimeWaterfallChartProps } from "./realtime/RealtimeWaterfallChart"
 
-export { RealtimeSankey } from "./realtime/RealtimeSankey"
-
 // ============================================================================
 // Shared Utilities
 // ============================================================================

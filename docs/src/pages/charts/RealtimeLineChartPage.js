@@ -172,6 +172,74 @@ function FixedExtentDemo() {
   )
 }
 
+function ThresholdDemo() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+  const [containerRef, containerWidth] = useContainerWidth()
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          time: i,
+          value: Math.sin(i * 0.05) * 50 + 100 + (Math.random() - 0.5) * 20,
+        })
+      }
+    }, 50)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <div ref={containerRef} style={{ background: "var(--surface-1)", borderRadius: 8, padding: 16, border: "1px solid var(--surface-3)", overflow: "hidden" }}>
+      {containerWidth && (
+        <RealtimeLineChart
+          ref={chartRef}
+          size={[containerWidth, 280]}
+          stroke="#f59e0b"
+          strokeWidth={2}
+          windowSize={200}
+          showAxes={true}
+          annotations={[
+            { type: "threshold", value: 130, label: "High", color: "#ef4444" },
+            { type: "threshold", value: 70, label: "Low", color: "#6366f1", thresholdType: "lesser" },
+          ]}
+          svgAnnotationRules={(annotation, i, context) => {
+            if (annotation.type === "threshold" && context && context.scales) {
+              const y = context.scales.value(annotation.value)
+              const lineColor = annotation.color || "#ef4444"
+              return (
+                <g key={`threshold-${i}`}>
+                  <line
+                    x1={0}
+                    x2={context.width}
+                    y1={y}
+                    y2={y}
+                    stroke={lineColor}
+                    strokeWidth={1.5}
+                    strokeDasharray="6,3"
+                  />
+                  <text
+                    x={context.width - 4}
+                    y={y - 6}
+                    textAnchor="end"
+                    fill={lineColor}
+                    fontSize={11}
+                    fontWeight="bold"
+                  >
+                    {annotation.label}: {annotation.value}
+                  </text>
+                </g>
+              )
+            }
+            return null
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
 // ---------------------------------------------------------------------------
 // Props definition for PropTable
 // ---------------------------------------------------------------------------
@@ -348,6 +416,51 @@ function StreamingLine() {
   strokeWidth={2}
   valueExtent={[0, 100]}
   windowSize={150}
+/>`}
+          language="jsx"
+        />
+      </div>
+
+      <h3 id="annotations-thresholds">Annotations and Thresholds</h3>
+      <p>
+        Use <code>annotations</code> and <code>svgAnnotationRules</code> to
+        draw threshold lines, callouts, or any custom SVG annotation over the
+        streaming line. Annotations are rendered in an SVG overlay on top of
+        the canvas so they stay crisp at any scale.
+      </p>
+
+      <ThresholdDemo />
+      <div style={{ marginTop: 8 }}>
+        <CodeBlock
+          code={`<RealtimeLineChart
+  ref={chartRef}
+  stroke="#f59e0b"
+  strokeWidth={2}
+  windowSize={200}
+  annotations={[
+    { type: "threshold", value: 130, label: "High", color: "#ef4444" },
+    { type: "threshold", value: 70, label: "Low", color: "#6366f1",
+      thresholdType: "lesser" }
+  ]}
+  svgAnnotationRules={(annotation, i, context) => {
+    if (annotation.type === "threshold" && context?.scales) {
+      const y = context.scales.value(annotation.value)
+      return (
+        <g key={\`threshold-\${i}\`}>
+          <line x1={0} x2={context.width}
+                y1={y} y2={y}
+                stroke={annotation.color}
+                strokeDasharray="6,3" />
+          <text x={context.width - 4} y={y - 6}
+                textAnchor="end" fill={annotation.color}
+                fontSize={11} fontWeight="bold">
+            {annotation.label}: {annotation.value}
+          </text>
+        </g>
+      )
+    }
+    return null
+  }}
 />`}
           language="jsx"
         />

@@ -51,9 +51,19 @@ export type SceneNode =
   | HeatcellSceneNode
   | CandlestickSceneNode
 
+export interface LineColorThreshold {
+  value: number
+  color: string
+  thresholdType: "greater" | "lesser"
+}
+
 export interface LineSceneNode {
   type: "line"
   path: [number, number][]
+  /** Raw y-values corresponding to each path point (for threshold coloring) */
+  rawValues?: number[]
+  /** Threshold-based color segments */
+  colorThresholds?: LineColorThreshold[]
   style: Style
   datum: any
   group?: string

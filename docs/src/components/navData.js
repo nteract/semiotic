@@ -54,8 +54,7 @@ const navData = [
           { title: "Sankey Diagram", path: "/charts/sankey-diagram" },
           { title: "Tree Diagram", path: "/charts/tree-diagram" },
           { title: "Treemap", path: "/charts/treemap" },
-          { title: "Circle Pack", path: "/charts/circle-pack" },
-          { title: "Realtime Sankey", path: "/charts/realtime-sankey" }
+          { title: "Circle Pack", path: "/charts/circle-pack" }
         ]
       }
     ]
@@ -67,8 +66,7 @@ const navData = [
     children: [
       { title: "XY Frame", path: "/frames/xy-frame" },
       { title: "Ordinal Frame", path: "/frames/ordinal-frame" },
-      { title: "Network Frame", path: "/frames/network-frame" },
-      { title: "Realtime Frame", path: "/frames/realtime-frame" }
+      { title: "Network Frame", path: "/frames/network-frame" }
     ]
   },
   {
@@ -109,7 +107,6 @@ const navData = [
       { title: "Timeline", path: "/cookbook/timeline" },
       { title: "Radar Plot", path: "/cookbook/radar-plot" },
       { title: "Isotype Chart", path: "/cookbook/isotype-chart" },
-      { title: "Matrix", path: "/cookbook/matrix" }
     ]
   },
   {

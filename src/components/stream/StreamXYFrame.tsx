@@ -295,7 +295,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       pointStyle,
       areaStyle,
       colorScheme,
-      barColors
+      barColors,
+      annotations
     }), [
       chartType, windowSize, windowMode, arrowOfTime, extentPadding,
       xAccessor, yAccessor, timeAccessor, valueAccessor,
@@ -303,7 +304,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       lineDataAccessor, xExtent, yExtent, sizeRange, binSize, normalize,
       boundsAccessor, boundsStyle,
       openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle,
-      lineStyle, pointStyle, areaStyle, colorScheme, barColors, isStreaming
+      lineStyle, pointStyle, areaStyle, colorScheme, barColors, annotations, isStreaming
     ])
 
     const storeRef = useRef<PipelineStore | null>(null)

@@ -153,11 +153,6 @@ export interface RealtimeNetworkFrameProps {
   className?: string
 }
 
-export interface RealtimeSankeyProps extends Omit<RealtimeNetworkFrameProps, never> {
-  sourceAccessor?: string
-  targetAccessor?: string
-  valueAccessor?: string
-}
 
 // ── Chart types ────────────────────────────────────────────────────────
 

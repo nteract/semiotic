@@ -21,13 +21,15 @@ export function buildLineNode(
   group?: string
 ): LineSceneNode {
   const path: [number, number][] = []
+  const rawValues: number[] = []
   for (const d of data) {
     const xVal = xGet(d)
     const yVal = yGet(d)
     if (xVal == null || yVal == null || Number.isNaN(xVal) || Number.isNaN(yVal)) continue
     path.push([scales.x(xVal), scales.y(yVal)])
+    rawValues.push(yVal)
   }
-  return { type: "line", path, style, datum: data, group }
+  return { type: "line", path, rawValues, style, datum: data, group }
 }
 
 export function buildAreaNode(

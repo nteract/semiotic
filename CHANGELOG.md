@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### StreamNetworkFrame — Canvas-first unified network frame
+- Replaces both legacy NetworkFrame (SVG) and RealtimeNetworkFrame (streaming sankey only)
+- Canvas-first rendering with SVG overlay for labels/annotations
+- Layout plugins: sankey, force, chord, tree, cluster, treemap, circlepack, partition
+- Push API for streaming network data via `ref.current.push({ source, target, value })`
+- Tension-based relayout batching for high-frequency streaming
+- Particle animation for sankey flows
+- Auto-coloring by node index when no explicit style provided
+- Threshold-based line coloring for streaming line charts (line segments change color at threshold crossings)
+
 #### New Chart Types
 
 **RealtimeSankey** — Streaming Sankey diagram with push API:
@@ -103,6 +113,11 @@ A producer-consumer coordination system for cross-highlighting, brushing-and-lin
 
 ### Removed
 
+- **RealtimeSankey** component — use `StreamNetworkFrame` with `chartType="sankey"` and `showParticles` directly. Streaming sankey examples are now in the SankeyDiagram docs page.
+- **RealtimeNetworkFrame** component — replaced by `StreamNetworkFrame`. Exported as an alias for backwards compatibility.
+- **`realtime-network/`** directory — `ParticlePool` and types moved to `stream/`.
+- **RealtimeFrame docs page** — content merged into individual chart pages (threshold example moved to RealtimeLineChart).
+- **Matrix cookbook recipe** — no longer supported.
 - **FacetController** — replaced entirely by `LinkedCharts`. The `cloneElement`-based approach had no HOC support and only worked with direct Frame children.
 
 ---

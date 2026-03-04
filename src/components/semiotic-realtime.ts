@@ -22,7 +22,7 @@ import { RealtimeLineChart } from "./charts/realtime/RealtimeLineChart"
 import { RealtimeBarChart } from "./charts/realtime/RealtimeBarChart"
 import { RealtimeSwarmChart } from "./charts/realtime/RealtimeSwarmChart"
 import { RealtimeWaterfallChart } from "./charts/realtime/RealtimeWaterfallChart"
-import { RealtimeSankey } from "./charts/realtime/RealtimeSankey"
+// RealtimeSankey removed — use StreamNetworkFrame with chartType="sankey" directly
 import StreamNetworkFrame from "./stream/StreamNetworkFrame"
 // RealtimeNetworkFrame is now an alias for StreamNetworkFrame
 const RealtimeNetworkFrame = StreamNetworkFrame
@@ -42,7 +42,6 @@ export {
   RealtimeBarChart,
   RealtimeSwarmChart,
   RealtimeWaterfallChart,
-  RealtimeSankey,
   RealtimeNetworkFrame
 }
 
@@ -50,7 +49,7 @@ export type { RealtimeLineChartProps } from "./charts/realtime/RealtimeLineChart
 export type { RealtimeBarChartProps } from "./charts/realtime/RealtimeBarChart"
 export type { RealtimeSwarmChartProps } from "./charts/realtime/RealtimeSwarmChart"
 export type { RealtimeWaterfallChartProps } from "./charts/realtime/RealtimeWaterfallChart"
-export type { RealtimeSankeyProps, RealtimeNetworkFrameProps, RealtimeNetworkFrameHandle } from "./stream/networkTypes"
+export type { RealtimeNetworkFrameProps, RealtimeNetworkFrameHandle } from "./stream/networkTypes"
 
 // Export types
 export type {

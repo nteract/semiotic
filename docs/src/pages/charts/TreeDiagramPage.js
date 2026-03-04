@@ -7,8 +7,6 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
-import StreamingToggle from "../../components/StreamingToggle"
-import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -102,52 +100,6 @@ const treeDiagramProps = [
 ]
 
 // ---------------------------------------------------------------------------
-// Streaming demo
-// ---------------------------------------------------------------------------
-
-const streamingTreeCode = `import { TreeDiagram } from "semiotic"
-
-// Update data prop to re-render
-<TreeDiagram
-  data={currentTree}
-  childrenAccessor="children"
-  nodeIdAccessor="name"
-  showLabels
-/>`
-
-function StreamingTreeDemo({ width }) {
-  const trees = [
-    { name: "Root", children: [
-      { name: "A", children: [{ name: "A1" }, { name: "A2" }] },
-      { name: "B" }
-    ]},
-    { name: "Root", children: [
-      { name: "A", children: [{ name: "A1" }, { name: "A2" }, { name: "A3" }] },
-      { name: "B", children: [{ name: "B1" }] },
-      { name: "C" }
-    ]}
-  ]
-  const [treeIndex, setTreeIndex] = React.useState(0)
-  const tree = trees[treeIndex % trees.length]
-
-  return (
-    <div>
-      <div style={{ marginBottom: 8 }}>
-        <button className="demo-button" onClick={() => setTreeIndex(i => i + 1)}>Update Tree</button>
-      </div>
-      <TreeDiagram
-        data={tree}
-        width={width}
-        height={400}
-        childrenAccessor="children"
-        nodeIdAccessor="name"
-        showLabels
-      />
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -195,16 +147,14 @@ export default function TreeDiagramPage() {
         nested <code>children</code> arrays.
       </p>
 
-      <StreamingToggle
-        staticContent={
-          <LiveExample
-            frameProps={{
-              data: orgData,
-            }}
-            type={TreeDiagram}
-            startHidden={false}
-            overrideProps={{
-              data: `{
+      <LiveExample
+        frameProps={{
+          data: orgData,
+        }}
+        type={TreeDiagram}
+        startHidden={false}
+        overrideProps={{
+          data: `{
   name: "CEO",
   children: [
     {
@@ -218,16 +168,8 @@ export default function TreeDiagramPage() {
     { name: "VP Marketing", children: [...] },
   ],
 }`,
-            }}
-            hiddenProps={{}}
-          />
-        }
-        streamingContent={
-          <StreamingDemo
-            renderChart={(w) => <StreamingTreeDemo width={w} />}
-            code={streamingTreeCode}
-          />
-        }
+        }}
+        hiddenProps={{}}
       />
 
       {/* ----------------------------------------------------------------- */}

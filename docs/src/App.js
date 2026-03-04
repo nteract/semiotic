@@ -73,7 +73,7 @@ import RealtimeLineChartPage from "./pages/charts/RealtimeLineChartPage"
 import RealtimeBarChartPage from "./pages/charts/RealtimeBarChartPage"
 import RealtimeSwarmChartPage from "./pages/charts/RealtimeSwarmChartPage"
 import RealtimeWaterfallChartPage from "./pages/charts/RealtimeWaterfallChartPage"
-import RealtimeSankeyPage from "./pages/charts/RealtimeSankeyPage"
+// RealtimeSankey has been merged into the SankeyDiagram page
 import PieChartPage from "./pages/charts/PieChartPage"
 import DonutChartPage from "./pages/charts/DonutChartPage"
 import GroupedBarChartPage from "./pages/charts/GroupedBarChartPage"
@@ -84,7 +84,7 @@ import CirclePackPage from "./pages/charts/CirclePackPage"
 import XYFramePage from "./pages/frames/XYFramePage"
 import OrdinalFramePage from "./pages/frames/OrdinalFramePage"
 import NetworkFramePage from "./pages/frames/NetworkFramePage"
-import RealtimeFramePage from "./pages/frames/RealtimeFramePage"
+// RealtimeFramePage removed — examples moved to RealtimeLineChartPage
 
 // New feature pages
 import AxesPage from "./pages/features/AxesPage"
@@ -117,7 +117,7 @@ import DotPlotRecipePage from "./pages/cookbook/DotPlotRecipePage"
 import TimelineCookbookPage from "./pages/cookbook/TimelinePage"
 import RadarPlotPage from "./pages/cookbook/RadarPlotPage"
 import IsotypeChartPage from "./pages/cookbook/IsotypeChartPage"
-import MatrixCookbookPage from "./pages/cookbook/MatrixPage"
+// MatrixCookbookPage removed — matrix recipe no longer supported
 import KpiCardSparklinePage from "./pages/recipes/KpiCardSparklinePage"
 import TimeSeriesBrushPage from "./pages/recipes/TimeSeriesBrushPage"
 import NetworkExplorerPage from "./pages/recipes/NetworkExplorerPage"
@@ -352,7 +352,6 @@ export default function DocsApp() {
               <Route path="timeline" element={<TimelineCookbookPage />} />
               <Route path="radar-plot" element={<RadarPlotPage />} />
               <Route path="isotype-chart" element={<IsotypeChartPage />} />
-              <Route path="matrix" element={<MatrixCookbookPage />} />
             </Route>
 
             {/* Recipes routes */}
@@ -385,7 +384,7 @@ export default function DocsApp() {
               <Route path="xy-frame" element={<XYFramePage />} />
               <Route path="ordinal-frame" element={<OrdinalFramePage />} />
               <Route path="network-frame" element={<NetworkFramePage />} />
-              <Route path="realtime-frame" element={<RealtimeFramePage />} />
+              {/* RealtimeFrame page removed — content merged into chart pages */}
             </Route>
 
             {/* Features routes */}
@@ -445,7 +444,6 @@ export default function DocsApp() {
               <Route path="tree-diagram" element={<TreeDiagramPage />} />
               <Route path="treemap" element={<TreemapPage />} />
               <Route path="circle-pack" element={<CirclePackPage />} />
-              <Route path="realtime-sankey" element={<RealtimeSankeyPage />} />
             </Route>
           </Routes>
         </div>

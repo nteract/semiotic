@@ -7,8 +7,6 @@ import PropTable from "../../components/PropTable"
 import LiveExample from "../../components/LiveExample"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
-import StreamingToggle from "../../components/StreamingToggle"
-import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -70,40 +68,6 @@ const circlePackProps = [
 ]
 
 // ---------------------------------------------------------------------------
-// Streaming demo
-// ---------------------------------------------------------------------------
-
-const streamingCirclePackCode = `import { CirclePack } from "semiotic"
-
-// Update data prop to trigger re-render
-<CirclePack data={currentData} childrenAccessor="children" valueAccessor="value" />`
-
-function StreamingCirclePackDemo({ width }) {
-  const makeTree = () => ({
-    name: "root",
-    children: [
-      { name: "A", value: Math.round(Math.random() * 200 + 50) },
-      { name: "B", children: [
-        { name: "B1", value: Math.round(Math.random() * 100 + 20) },
-        { name: "B2", value: Math.round(Math.random() * 100 + 20) },
-      ]},
-      { name: "C", value: Math.round(Math.random() * 200 + 50) },
-      { name: "D", value: Math.round(Math.random() * 200 + 50) },
-    ]
-  })
-  const [tree, setTree] = React.useState(makeTree)
-
-  return (
-    <div>
-      <div style={{ marginBottom: 8 }}>
-        <button className="demo-button" onClick={() => setTree(makeTree())}>Randomize Values</button>
-      </div>
-      <CirclePack data={tree} width={Math.min(width, 500)} height={Math.min(width, 500)} childrenAccessor="children" valueAccessor="value" nodeIdAccessor="name" colorByDepth />
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -153,19 +117,17 @@ export default function CirclePackPage() {
         <code>value</code> fields on leaf nodes.
       </p>
 
-      <StreamingToggle
-        staticContent={
-          <LiveExample
-            frameProps={{
-              data: sampleData,
-              nodeIdAccessor: "name",
-              valueAccessor: "value",
-              colorByDepth: true,
-            }}
-            type={CirclePack}
-            startHidden={false}
-            overrideProps={{
-              data: `{
+      <LiveExample
+        frameProps={{
+          data: sampleData,
+          nodeIdAccessor: "name",
+          valueAccessor: "value",
+          colorByDepth: true,
+        }}
+        type={CirclePack}
+        startHidden={false}
+        overrideProps={{
+          data: `{
   name: "Languages",
   children: [
     { name: "Frontend", children: [
@@ -185,17 +147,9 @@ export default function CirclePackPage() {
     ]}
   ]
 }`,
-              colorByDepth: "true",
-            }}
-            hiddenProps={{}}
-          />
-        }
-        streamingContent={
-          <StreamingDemo
-            renderChart={(w) => <StreamingCirclePackDemo width={w} />}
-            code={streamingCirclePackCode}
-          />
-        }
+          colorByDepth: "true",
+        }}
+        hiddenProps={{}}
       />
 
       {/* ----------------------------------------------------------------- */}

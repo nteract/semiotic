@@ -99,6 +99,9 @@ export interface PipelineConfig {
   areaStyle?: (d: any) => Style
   colorScheme?: string | string[]
   barColors?: Record<string, string>
+
+  // Annotations (threshold coloring uses these)
+  annotations?: Record<string, any>[]
 }
 
 // ── PipelineStore ──────────────────────────────────────────────────────
@@ -403,6 +406,15 @@ export class PipelineStore {
     const groups = this.groupData(data)
     const nodes: SceneNode[] = []
 
+    // Extract color thresholds from annotations (if any)
+    const colorThresholds = this.config.annotations
+      ?.filter((a: any) => a.type === "threshold" && a.color)
+      .map((a: any) => ({
+        value: a.value as number,
+        color: a.color as string,
+        thresholdType: (a.thresholdType || "greater") as "greater" | "lesser"
+      }))
+
     // Build bounds areas first so they render behind lines
     if (this.getBounds) {
       for (const g of groups) {
@@ -413,7 +425,12 @@ export class PipelineStore {
 
     for (const g of groups) {
       const style = this.resolveLineStyle(g.key, g.data[0])
-      nodes.push(buildLineNode(g.data, this.scales!, this.getX, this.getY, style, g.key))
+      const lineNode = buildLineNode(g.data, this.scales!, this.getX, this.getY, style, g.key)
+      // Attach threshold info for the renderer
+      if (colorThresholds && colorThresholds.length > 0) {
+        lineNode.colorThresholds = colorThresholds
+      }
+      nodes.push(lineNode)
     }
 
     return nodes
