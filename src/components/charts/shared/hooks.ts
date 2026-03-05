@@ -88,6 +88,7 @@ export function useChartSelection({
 }): {
   activeSelectionHook: SelectionHookResult | null
   customHoverBehavior: (d: Record<string, any> | null) => void
+  customClickBehavior: (d: Record<string, any> | null) => void
 } {
   const hoverConfig = normalizeLinkedHover(linkedHover, fallbackFields)
 
@@ -145,7 +146,35 @@ export function useChartSelection({
     [linkedHover, linkedHoverHook, onObservation, chartType, chartId, pushObservation]
   )
 
-  return { activeSelectionHook, customHoverBehavior }
+  const customClickBehavior = useCallback(
+    (d: Record<string, any> | null) => {
+      if (onObservation || pushObservation) {
+        const now = Date.now()
+        const base = { timestamp: now, chartType: chartType || "unknown", chartId }
+
+        if (d) {
+          let datum = d.data || d.datum || d
+          if (Array.isArray(datum)) datum = datum[0]
+          const obs: ChartObservation = {
+            ...base,
+            type: "click",
+            datum: datum || {},
+            x: d.x ?? 0,
+            y: d.y ?? 0,
+          }
+          if (onObservation) onObservation(obs)
+          if (pushObservation) pushObservation(obs)
+        } else {
+          const obs: ChartObservation = { ...base, type: "click-end" }
+          if (onObservation) onObservation(obs)
+          if (pushObservation) pushObservation(obs)
+        }
+      }
+    },
+    [onObservation, pushObservation, chartType, chartId]
+  )
+
+  return { activeSelectionHook, customHoverBehavior, customClickBehavior }
 }
 
 /**

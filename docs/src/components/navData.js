@@ -90,7 +90,8 @@ const navData = [
       { title: "Chart Modes", path: "/features/chart-modes" },
       { title: "AI Observation Hooks", path: "/features/observation-hooks" },
       { title: "Serialization", path: "/features/serialization" },
-      { title: "Vega-Lite Translator", path: "/features/vega-lite" }
+      { title: "Vega-Lite Translator", path: "/features/vega-lite" },
+      { title: "Streaming System Model", path: "/features/streaming-system-model" }
     ]
   },
   {

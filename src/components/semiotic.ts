@@ -38,6 +38,9 @@ import { ChartErrorBoundary } from "./ChartErrorBoundary"
 // ── Chart container ───────────────────────────────────────────────────
 import { ChartContainer } from "./ChartContainer"
 
+// ── Details panel ────────────────────────────────────────────────────
+import { DetailsPanel } from "./DetailsPanel"
+
 // ── Tooltip utilities ──────────────────────────────────────────────────
 import { Tooltip, MultiLineTooltip, normalizeTooltip } from "./Tooltip/Tooltip"
 
@@ -117,6 +120,8 @@ export {
   ChartErrorBoundary,
   // Chart container
   ChartContainer,
+  // Details panel
+  DetailsPanel,
   // Tooltip
   Tooltip,
   MultiLineTooltip,
@@ -203,7 +208,8 @@ export type {
   NetworkChartType,
   NetworkSceneNode,
   NetworkSceneEdge,
-  NetworkLabel
+  NetworkLabel,
+  ThresholdAlertConfig
 } from "./stream/networkTypes"
 
 // ── Coordinated views types ────────────────────────────────────────────
@@ -264,6 +270,7 @@ export type { ChartErrorBoundaryProps } from "./ChartErrorBoundary"
 // ── Chart container types ─────────────────────────────────────────────
 
 export type { ChartContainerProps, ChartContainerHandle } from "./ChartContainer"
+export type { DetailsPanelProps } from "./DetailsPanel"
 
 // ── Chart state serialization types ───────────────────────────────────
 

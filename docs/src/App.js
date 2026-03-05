@@ -102,6 +102,7 @@ import ChartModesPage from "./pages/features/ChartModesPage"
 import ObservationHooksPage from "./pages/features/ObservationHooksPage"
 import SerializationPage from "./pages/features/SerializationPage"
 import VegaLiteTranslatorPage from "./pages/features/VegaLiteTranslatorPage"
+import StreamingSystemModelPage from "./pages/features/StreamingSystemModelPage"
 
 // New cookbook pages
 import CandlestickChartPage from "./pages/cookbook/CandlestickChartPage"
@@ -405,6 +406,7 @@ export default function DocsApp() {
               <Route path="observation-hooks" element={<ObservationHooksPage />} />
               <Route path="serialization" element={<SerializationPage />} />
               <Route path="vega-lite" element={<VegaLiteTranslatorPage />} />
+              <Route path="streaming-system-model" element={<StreamingSystemModelPage />} />
             </Route>
 
             {/* Using Server-Side Rendering */}

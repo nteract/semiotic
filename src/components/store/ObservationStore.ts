@@ -39,6 +39,17 @@ export interface SelectionEndObservation extends ObservationBase {
   selection: { name: string }
 }
 
+export interface ClickObservation extends ObservationBase {
+  type: "click"
+  datum: Record<string, any>
+  x: number
+  y: number
+}
+
+export interface ClickEndObservation extends ObservationBase {
+  type: "click-end"
+}
+
 export type ChartObservation =
   | HoverObservation
   | HoverEndObservation
@@ -46,6 +57,8 @@ export type ChartObservation =
   | BrushEndObservation
   | SelectionObservation
   | SelectionEndObservation
+  | ClickObservation
+  | ClickEndObservation
 
 export type OnObservationCallback = (observation: ChartObservation) => void
 

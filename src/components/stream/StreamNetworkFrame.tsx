@@ -17,7 +17,8 @@ import type {
   RealtimeNode,
   RealtimeEdge,
   EdgePush,
-  ParticleStyle
+  ParticleStyle,
+  ThresholdAlertConfig
 } from "./networkTypes"
 import {
   DEFAULT_TENSION_CONFIG,
@@ -212,7 +213,10 @@ const StreamNetworkFrame = forwardRef<
     background,
     enableHover = true,
     tooltipContent,
-    customHoverBehavior,
+    customHoverBehavior: customHoverBehaviorProp,
+    customClickBehavior: customClickBehaviorProp,
+    onObservation,
+    chartId,
     onTopologyChange,
     annotations,
     svgAnnotationRules,
@@ -222,7 +226,8 @@ const StreamNetworkFrame = forwardRef<
     backgroundGraphics,
     decay,
     pulse,
-    staleness
+    staleness,
+    thresholds
   } = props
 
   const baseMargin = CENTERED_TYPES.has(chartType) ? CENTERED_MARGIN : DEFAULT_MARGIN
@@ -281,7 +286,8 @@ const StreamNetworkFrame = forwardRef<
       nodeSizeRange,
       decay,
       pulse,
-      staleness
+      staleness,
+      thresholds
     }),
     [
       chartType,
@@ -321,7 +327,8 @@ const StreamNetworkFrame = forwardRef<
       nodeSizeRange,
       decay,
       pulse,
-      staleness
+      staleness,
+      thresholds
     ]
   )
 
@@ -548,6 +555,16 @@ const StreamNetworkFrame = forwardRef<
       clear: clearAll,
       getTopology: () =>
         storeRef.current?.getLayoutData() ?? { nodes: [], edges: [] },
+      getTopologyDiff: () => {
+        const store = storeRef.current
+        if (!store) return { addedNodes: [], removedNodes: [], addedEdges: [], removedEdges: [] }
+        return {
+          addedNodes: Array.from(store.addedNodes),
+          removedNodes: Array.from(store.removedNodes),
+          addedEdges: Array.from(store.addedEdges),
+          removedEdges: Array.from(store.removedEdges),
+        }
+      },
       relayout: forceRelayout,
       getTension: () => storeRef.current?.tension ?? 0
     }),
@@ -608,6 +625,38 @@ const StreamNetworkFrame = forwardRef<
     // Only run on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // ── Observation wrappers ─────────────────────────────────────────────
+
+  const customHoverBehavior = useCallback(
+    (d: { type: "node" | "edge"; data: any; x: number; y: number } | null) => {
+      if (customHoverBehaviorProp) customHoverBehaviorProp(d)
+      if (onObservation) {
+        const now = Date.now()
+        if (d) {
+          onObservation({ type: "hover", datum: d.data || {}, x: d.x, y: d.y, timestamp: now, chartType: "StreamNetworkFrame", chartId })
+        } else {
+          onObservation({ type: "hover-end", timestamp: now, chartType: "StreamNetworkFrame", chartId })
+        }
+      }
+    },
+    [customHoverBehaviorProp, onObservation, chartId]
+  )
+
+  const customClickBehavior = useCallback(
+    (d: { type: "node" | "edge"; data: any; x: number; y: number } | null) => {
+      if (customClickBehaviorProp) customClickBehaviorProp(d)
+      if (onObservation) {
+        const now = Date.now()
+        if (d) {
+          onObservation({ type: "click", datum: d.data || {}, x: d.x, y: d.y, timestamp: now, chartType: "StreamNetworkFrame", chartId })
+        } else {
+          onObservation({ type: "click-end", timestamp: now, chartType: "StreamNetworkFrame", chartId })
+        }
+      }
+    },
+    [customClickBehaviorProp, onObservation, chartId]
+  )
 
   // ── Hover handlers ───────────────────────────────────────────────────
 
@@ -681,12 +730,61 @@ const StreamNetworkFrame = forwardRef<
     }
   }
 
+  // ── Click handler ────────────────────────────────────────────────────
+
+  const clickHandlerRef = useRef<(e: React.MouseEvent) => void>(() => {})
+
+  clickHandlerRef.current = (e: React.MouseEvent) => {
+    if (!customClickBehaviorProp && !onObservation) return
+
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const rect = canvas.getBoundingClientRect()
+
+    const chartX = e.clientX - rect.left - margin.left
+    const chartY = e.clientY - rect.top - margin.top
+
+    if (
+      chartX < 0 ||
+      chartX > adjustedWidth ||
+      chartY < 0 ||
+      chartY > adjustedHeight
+    ) {
+      return
+    }
+
+    const store = storeRef.current
+    if (!store) return
+
+    const hit = findNearestNetworkNode(
+      store.sceneNodes,
+      store.sceneEdges,
+      chartX,
+      chartY
+    )
+
+    if (hit) {
+      customClickBehavior({
+        type: hit.type,
+        data: hit.datum,
+        x: hit.x,
+        y: hit.y
+      })
+    } else {
+      customClickBehavior(null)
+    }
+  }
+
   const onMouseMove = useCallback(
     (e: React.MouseEvent) => hoverHandlerRef.current(e),
     []
   )
   const onMouseLeave = useCallback(
     () => hoverLeaveRef.current(),
+    []
+  )
+  const onClick = useCallback(
+    (e: React.MouseEvent) => clickHandlerRef.current(e),
     []
   )
 
@@ -733,13 +831,19 @@ const StreamNetworkFrame = forwardRef<
       ctx.fillRect(0, 0, adjustedWidth, adjustedHeight)
     }
 
-    // Apply realtime encoding (pulse/decay)
+    // Apply realtime encoding (pulse/decay/thresholds)
     if (decay) {
       store.applyDecay()
     }
     if (pulse) {
       store.applyPulse(now)
     }
+    if (thresholds) {
+      store.applyThresholds(now)
+    }
+
+    // Topology diff highlighting (always active for streaming)
+    store.applyTopologyDiff(now)
 
     // Staleness dimming
     const staleThreshold = staleness?.threshold ?? 5000
@@ -758,8 +862,8 @@ const StreamNetworkFrame = forwardRef<
     networkCircleRenderer(ctx, store.sceneNodes)
     networkArcRenderer(ctx, store.sceneNodes)
 
-    // Render particles (sankey only)
-    if (showParticles && store.particlePool) {
+    // Render particles (sankey only) — stop entirely when stale
+    if (showParticles && store.particlePool && !currentlyStale) {
       const edges = Array.from(store.edges.values())
       if (edges.length > 0) {
         spawnNetworkParticles(
@@ -769,7 +873,19 @@ const StreamNetworkFrame = forwardRef<
           particleStyle
         )
         const speed = (particleStyle.speedMultiplier ?? 1) * 0.5
-        store.particlePool.step(deltaTime, speed, edges)
+
+        // Compute per-edge speed multipliers for proportional flow rate
+        let edgeSpeedMultipliers: number[] | undefined
+        if (particleStyle.proportionalSpeed) {
+          const maxValue = edges.reduce((max, e) => Math.max(max, e.value || 1), 1)
+          edgeSpeedMultipliers = edges.map(e => {
+            const ratio = (e.value || 1) / maxValue
+            // Scale between 0.3x and 2x so low-value edges still move
+            return 0.3 + ratio * 1.7
+          })
+        }
+
+        store.particlePool.step(deltaTime, speed, edges, edgeSpeedMultipliers)
         renderNetworkParticles(
           ctx,
           store.particlePool,
@@ -793,8 +909,8 @@ const StreamNetworkFrame = forwardRef<
       setAnnotationFrame((f) => f + 1)
     }
 
-    // Schedule next frame for continuous rendering (particles/transitions/pulses)
-    if (isContinuous || isTransitioning || store.hasActivePulses) {
+    // Schedule next frame for continuous rendering (particles/transitions/pulses/thresholds/diffs)
+    if (isContinuous || isTransitioning || store.hasActivePulses || store.hasActiveThresholds || store.hasActiveTopologyDiff) {
       rafRef.current = requestAnimationFrame(() => renderFnRef.current())
     }
   }
@@ -877,6 +993,7 @@ const StreamNetworkFrame = forwardRef<
       }}
       onMouseMove={enableHover ? onMouseMove : undefined}
       onMouseLeave={enableHover ? onMouseLeave : undefined}
+      onClick={(customClickBehaviorProp || onObservation) ? onClick : undefined}
     >
       {backgroundGraphics && (
         <svg

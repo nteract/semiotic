@@ -42,6 +42,9 @@ export interface ChartContainerProps {
   /** Status indicator (wired to streaming staleness) */
   status?: "live" | "stale" | "paused" | "error" | "static"
 
+  /** Details panel rendered alongside the chart (e.g. DetailsPanel component) */
+  detailsPanel?: React.ReactNode
+
   /** CSS class for the outer container */
   className?: string
   /** Inline style overrides */
@@ -134,6 +137,7 @@ export const ChartContainer = React.forwardRef<
     error,
     errorBoundary = false,
     status,
+    detailsPanel,
     className,
     style,
   },
@@ -392,10 +396,12 @@ export const ChartContainer = React.forwardRef<
           ref={chartBodyRef}
           style={{
             position: "relative",
+            overflow: "hidden",
             ...(isFullscreen ? { flex: 1 } : { height }),
           }}
         >
           {chartContent}
+          {detailsPanel}
         </div>
 
       </div>

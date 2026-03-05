@@ -66,6 +66,21 @@ export class NetworkPipelineStore {
   private nodeTimestamps: Map<string, number> = new Map()
   private edgeTimestamps: Map<string, number> = new Map()
 
+  // ── Topology diffing ───────────────────────────────────────────────────
+
+  /** Node IDs added in the most recent layout */
+  addedNodes: Set<string> = new Set()
+  /** Node IDs removed in the most recent layout */
+  removedNodes: Set<string> = new Set()
+  /** Edge keys added in the most recent layout */
+  addedEdges: Set<string> = new Set()
+  /** Edge keys removed in the most recent layout */
+  removedEdges: Set<string> = new Set()
+  /** Timestamp of last topology change */
+  lastTopologyChangeTime = 0
+  private previousNodeIds: Set<string> = new Set()
+  private previousEdgeKeys: Set<string> = new Set()
+
   constructor(config: NetworkPipelineConfig) {
     this.config = config
     this.tensionConfig = {
@@ -311,6 +326,36 @@ export class NetworkPipelineStore {
         duration: this.tensionConfig.transitionDuration
       }
     }
+
+    // Compute topology diff
+    const currentNodeIds = new Set(this.nodes.keys())
+    const currentEdgeKeys = new Set(this.edges.keys())
+
+    this.addedNodes = new Set<string>()
+    this.removedNodes = new Set<string>()
+    this.addedEdges = new Set<string>()
+    this.removedEdges = new Set<string>()
+
+    for (const id of currentNodeIds) {
+      if (!this.previousNodeIds.has(id)) this.addedNodes.add(id)
+    }
+    for (const id of this.previousNodeIds) {
+      if (!currentNodeIds.has(id)) this.removedNodes.add(id)
+    }
+    for (const key of currentEdgeKeys) {
+      if (!this.previousEdgeKeys.has(key)) this.addedEdges.add(key)
+    }
+    for (const key of this.previousEdgeKeys) {
+      if (!currentEdgeKeys.has(key)) this.removedEdges.add(key)
+    }
+
+    if (this.addedNodes.size > 0 || this.removedNodes.size > 0 ||
+        this.addedEdges.size > 0 || this.removedEdges.size > 0) {
+      this.lastTopologyChangeTime = typeof performance !== "undefined" ? performance.now() : Date.now()
+    }
+
+    this.previousNodeIds = currentNodeIds
+    this.previousEdgeKeys = currentEdgeKeys
 
     this.layoutVersion++
   }
@@ -697,6 +742,95 @@ export class NetworkPipelineStore {
       const baseOpacity = node.style?.opacity ?? 1
       node.style = { ...node.style, opacity: baseOpacity * opacity }
     }
+  }
+
+  /**
+   * Apply topology diff highlight — newly added nodes glow briefly.
+   * Duration: 2 seconds from lastTopologyChangeTime.
+   */
+  applyTopologyDiff(now: number): void {
+    if (this.addedNodes.size === 0) return
+
+    const age = now - this.lastTopologyChangeTime
+    const duration = 2000
+    if (age >= duration) return
+
+    const intensity = 1 - age / duration
+
+    for (const sceneNode of this.sceneNodes) {
+      const nodeId = sceneNode.id
+      if (!nodeId || !this.addedNodes.has(nodeId)) continue
+      ;(sceneNode as any)._pulseIntensity = Math.max(
+        (sceneNode as any)._pulseIntensity ?? 0,
+        intensity
+      )
+      ;(sceneNode as any)._pulseColor = "rgba(34, 197, 94, 0.7)"
+      ;(sceneNode as any)._pulseGlowRadius = 8
+    }
+  }
+
+  /** Whether there is an active topology diff animation */
+  get hasActiveTopologyDiff(): boolean {
+    if (this.addedNodes.size === 0) return false
+    const now = typeof performance !== "undefined" ? performance.now() : Date.now()
+    return (now - this.lastTopologyChangeTime) < 2000
+  }
+
+  /**
+   * Apply threshold alerting to scene nodes.
+   * Overrides fill color and adds pulse for nodes exceeding thresholds.
+   */
+  applyThresholds(now: number): void {
+    const thresholds = this.config.thresholds
+    if (!thresholds) return
+
+    const warningColor = thresholds.warningColor ?? "#f59e0b"
+    const criticalColor = thresholds.criticalColor ?? "#ef4444"
+    const shouldPulse = thresholds.pulse !== false
+
+    for (const sceneNode of this.sceneNodes) {
+      const nodeId = sceneNode.id
+      if (!nodeId) continue
+      const realtimeNode = this.nodes.get(nodeId)
+      if (!realtimeNode) continue
+
+      const value = thresholds.metric(realtimeNode)
+      let alertColor: string | null = null
+
+      if (thresholds.critical !== undefined && value >= thresholds.critical) {
+        alertColor = criticalColor
+      } else if (thresholds.warning !== undefined && value >= thresholds.warning) {
+        alertColor = warningColor
+      }
+
+      if (alertColor) {
+        sceneNode.style = { ...sceneNode.style, fill: alertColor }
+        if (shouldPulse) {
+          ;(sceneNode as any)._pulseIntensity = 0.6 + 0.4 * Math.sin(now / 300)
+          ;(sceneNode as any)._pulseColor = alertColor
+          ;(sceneNode as any)._pulseGlowRadius = 6
+        }
+      }
+    }
+  }
+
+  /**
+   * Whether there are active threshold alerts on any node.
+   */
+  get hasActiveThresholds(): boolean {
+    const thresholds = this.config.thresholds
+    if (!thresholds) return false
+
+    for (const node of this.nodes.values()) {
+      const value = thresholds.metric(node)
+      if (
+        (thresholds.warning !== undefined && value >= thresholds.warning) ||
+        (thresholds.critical !== undefined && value >= thresholds.critical)
+      ) {
+        return true
+      }
+    }
+    return false
   }
 
   /**

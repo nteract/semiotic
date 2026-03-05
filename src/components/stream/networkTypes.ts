@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import type { OnObservationCallback } from "../store/ObservationStore"
 import type { HoverData, AnnotationContext } from "../realtime/types"
 import type { LegendGroup } from "../types/legendTypes"
 import type { Style, DecayConfig, PulseConfig, StalenessConfig } from "./types"
@@ -103,6 +104,8 @@ export interface ParticleStyle {
   speedMultiplier?: number
   maxPerEdge?: number
   spawnRate?: number
+  /** Scale particle speed proportional to edge value (higher value = faster). Default: false */
+  proportionalSpeed?: boolean
 }
 
 export const DEFAULT_PARTICLE_STYLE: Required<
@@ -319,6 +322,23 @@ export interface NetworkLayoutPlugin {
   hierarchical: boolean
 }
 
+// ── Threshold alerting ────────────────────────────────────────────────
+
+/** Threshold alerting configuration for streaming network nodes */
+export interface ThresholdAlertConfig {
+  /** Function that extracts the metric value from a node for threshold comparison */
+  metric: (node: RealtimeNode) => number
+  /** Warning threshold — node enters "warning" state when metric >= this value */
+  warning?: number
+  /** Critical threshold — node enters "critical" state when metric >= this value */
+  critical?: number
+  /** Colors for threshold states */
+  warningColor?: string
+  criticalColor?: string
+  /** Whether to pulse nodes that cross a threshold. Default: true */
+  pulse?: boolean
+}
+
 // ── Pipeline config ──────────────────────────────────────────────────
 
 export interface NetworkPipelineConfig {
@@ -382,6 +402,9 @@ export interface NetworkPipelineConfig {
   decay?: DecayConfig
   pulse?: PulseConfig
   staleness?: StalenessConfig
+
+  // ── Threshold alerting ────────────────────────────
+  thresholds?: ThresholdAlertConfig
 }
 
 // ── Component props ─────────────────────────────────────────────────
@@ -457,6 +480,11 @@ export interface StreamNetworkFrameProps<T = Record<string, any>> {
   enableHover?: boolean
   tooltipContent?: (d: { type: "node" | "edge"; data: any; x: number; y: number }) => ReactNode
   customHoverBehavior?: (d: { type: "node" | "edge"; data: any; x: number; y: number } | null) => void
+  customClickBehavior?: (d: { type: "node" | "edge"; data: any; x: number; y: number } | null) => void
+  /** Observation callback — emits hover/click events to the ObservationStore and this callback */
+  onObservation?: OnObservationCallback
+  /** Chart instance identifier for observation filtering */
+  chartId?: string
   onTopologyChange?: (nodes: RealtimeNode[], edges: RealtimeEdge[]) => void
 
   // ── Annotations ──────────────────────────────────
@@ -477,6 +505,9 @@ export interface StreamNetworkFrameProps<T = Record<string, any>> {
   decay?: DecayConfig
   pulse?: PulseConfig
   staleness?: StalenessConfig
+
+  // ── Threshold alerting ────────────────────────────
+  thresholds?: ThresholdAlertConfig
 }
 
 // ── Ref handle ──────────────────────────────────────────────────────
@@ -486,6 +517,7 @@ export interface StreamNetworkFrameHandle {
   pushMany(edges: EdgePush[]): void
   clear(): void
   getTopology(): { nodes: RealtimeNode[]; edges: RealtimeEdge[] }
+  getTopologyDiff(): { addedNodes: string[]; removedNodes: string[]; addedEdges: string[]; removedEdges: string[] }
   relayout(): void
   getTension(): number
 }

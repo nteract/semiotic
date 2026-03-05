@@ -56,6 +56,10 @@ export { exportChart } from "./export/exportChart"
 export { ChartContainer } from "./ChartContainer"
 export type { ChartContainerProps, ChartContainerHandle } from "./ChartContainer"
 
+// Details panel
+export { DetailsPanel } from "./DetailsPanel"
+export type { DetailsPanelProps } from "./DetailsPanel"
+
 // AI validation
 export { validateProps } from "./charts/shared/validateProps"
 export type { ValidationResult } from "./charts/shared/validateProps"
@@ -81,5 +85,7 @@ export type {
   BrushObservation,
   BrushEndObservation,
   SelectionObservation,
-  SelectionEndObservation
+  SelectionEndObservation,
+  ClickObservation,
+  ClickEndObservation
 } from "./store/ObservationStore"

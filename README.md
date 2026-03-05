@@ -92,6 +92,11 @@ translates them to Semiotic chart configs — instant onboarding from notebooks,
 dashboards, or AI-generated specs. Composes with `configToJSX()`,
 `copyConfig()`, and `toURL()` for full round-trip interop.
 
+**Streaming system models.** Turn a streaming Sankey into a live system monitor:
+click-to-inspect `DetailsPanel`, particle speed proportional to edge throughput,
+threshold alerting with animated glow, and automatic topology diffing that
+highlights new services as they appear. Visualization as product navigation.
+
 ## Install
 
 ```bash
@@ -157,6 +162,31 @@ import { ForceDirectedGraph, SankeyDiagram } from "semiotic"
   edges={budgetFlows}
   sourceAccessor="from" targetAccessor="to" valueAccessor="amount"
 />
+```
+
+### Streaming System Monitor
+
+Live service topology with threshold alerting and click-to-inspect:
+
+```jsx
+import { StreamNetworkFrame, ChartContainer, DetailsPanel, LinkedCharts } from "semiotic"
+
+const chartRef = useRef()
+chartRef.current.push({ source: "API", target: "Orders", value: 15 })
+
+<LinkedCharts>
+  <ChartContainer title="System Monitor" status="live"
+    detailsPanel={
+      <DetailsPanel position="right" trigger="click">
+        {(datum) => <div>{datum.id}: {datum.value} req/s</div>}
+      </DetailsPanel>
+    }>
+    <StreamNetworkFrame ref={chartRef} chartType="sankey"
+      showParticles particleStyle={{ proportionalSpeed: true }}
+      thresholds={{ metric: n => n.value, warning: 100, critical: 250 }}
+    />
+  </ChartContainer>
+</LinkedCharts>
 ```
 
 ### Standard Charts

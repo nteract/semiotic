@@ -48,8 +48,9 @@ export class ParticlePool {
   /**
    * Advance all active particles by deltaTime.
    * Recycles particles that have completed their journey (t >= 1).
+   * @param edgeSpeedMultipliers - optional per-edge speed scaling (for proportional flow rate)
    */
-  step(deltaTime: number, speed: number, edges: RealtimeEdge[]): void {
+  step(deltaTime: number, speed: number, edges: RealtimeEdge[], edgeSpeedMultipliers?: number[]): void {
     for (let i = 0; i < this.capacity; i++) {
       const p = this.particles[i]
       if (!p.active) continue
@@ -61,7 +62,8 @@ export class ParticlePool {
       }
 
       // Advance t — speed is normalized so 1.0 = traverse full path in 1 second
-      p.t += deltaTime * speed
+      const edgeSpeed = edgeSpeedMultipliers ? (edgeSpeedMultipliers[p.edgeIndex] ?? 1) : 1
+      p.t += deltaTime * speed * edgeSpeed
 
       if (p.t >= 1) {
         p.active = false

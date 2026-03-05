@@ -3,7 +3,7 @@
 ## Quick Start
 - Install: `npm install semiotic@3.0.0-beta.3`
 - Import from `semiotic` or granular: `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`, `semiotic/realtime`, `semiotic/ai`, `semiotic/data`
-- `semiotic/ai` exports the 28 HOC chart components (including RealtimeHeatmap) + TooltipProvider + MultiLineTooltip + ThemeProvider + exportChart + `validateProps` + `useChartObserver`
+- `semiotic/ai` exports the 28 HOC chart components (including RealtimeHeatmap) + TooltipProvider + MultiLineTooltip + ThemeProvider + exportChart + `validateProps` + `useChartObserver` + `DetailsPanel` + `ChartContainer`
 - `semiotic/data` exports data transform helpers: `bin`, `rollup`, `groupBy`, `pivot`
 - `validateProps(componentName, props)` — validate props before rendering, returns `{ valid, errors }`
 - CLI: `npx semiotic-ai [--schema|--compact|--examples]` — dump AI context to stdout
@@ -551,17 +551,18 @@ Props (on `StreamNetworkFrame`): `chartType` ("sankey", **required for streaming
   `nodeAlign` ("justify"|"left"|"right"|"center", "justify"),
   `nodePaddingRatio` (number, 0.05), `nodeWidth` (number, 15),
   `showParticles` (boolean, true),
-  `particleStyle` ({ radius?, color?, opacity?, speedMultiplier?, maxPerEdge?, spawnRate? }),
+  `particleStyle` ({ radius?, color?, opacity?, speedMultiplier?, maxPerEdge?, spawnRate?, proportionalSpeed? }),
   `tensionConfig` ({ threshold?, newNode?, newEdge?, weightChange?, transitionDuration? }),
   `colorBy` (string|fn), `colorScheme` (string|string[], "category10"),
   `edgeColorBy` ("source"|"target"|fn, "source"), `edgeOpacity` (number, 0.5),
   `nodeLabel` (string|fn), `showLabels` (boolean, true),
   `enableHover` (boolean, true), `tooltipContent` (fn),
+  `thresholds` ({ metric: fn, warning?: number, critical?: number, warningColor?, criticalColor?, pulse? }),
   `onTopologyChange` (fn), `background` (string),
   `margin` (object), `className` (string)
 
 Ref handle: `push({ source, target, value })`, `pushMany(edges)`, `clear()`,
-  `getTopology()`, `relayout()`, `getTension()`
+  `getTopology()`, `getTopologyDiff()`, `relayout()`, `getTension()`
 
 ```jsx
 import { StreamNetworkFrame } from "semiotic"
@@ -816,6 +817,8 @@ Every HOC chart accepts `onObservation` — a callback that emits structured eve
 type ChartObservation =
   | { type: "hover",         datum, x, y, timestamp, chartType, chartId? }
   | { type: "hover-end",     timestamp, chartType, chartId? }
+  | { type: "click",         datum, x, y, timestamp, chartType, chartId? }
+  | { type: "click-end",     timestamp, chartType, chartId? }
   | { type: "brush",         extent: { x: [min,max], y: [min,max] }, timestamp, chartType, chartId? }
   | { type: "brush-end",     timestamp, chartType, chartId? }
   | { type: "selection",     selection: { name, fields }, timestamp, chartType, chartId? }
@@ -904,6 +907,34 @@ const config = toConfig("Scatterplot", props, { selections: serialized })
 </ChartContainer>
 ```
 
+### DetailsPanel (import from "semiotic" or "semiotic/ai")
+
+Generic selection-driven detail panel. Consumes click observations via `useChartObserver` internally.
+Works inside `LinkedCharts`. Place inside `ChartContainer` via the `detailsPanel` prop.
+
+Props: `children` ((datum, observation) => ReactNode, required — render function),
+  `position` ("right"|"bottom"|"overlay", "right"),
+  `size` (number, 300 — width for right, height for bottom),
+  `trigger` ("click"|"hover", "click"),
+  `chartId` (string — filter observations by chart ID),
+  `dismissOnEmpty` (boolean, true), `showClose` (boolean, true),
+  `onToggle` ((open: boolean) => void),
+  `className` (string), `style` (object)
+
+```jsx
+import { ChartContainer, DetailsPanel, SankeyDiagram, LinkedCharts } from "semiotic"
+
+<LinkedCharts>
+  <ChartContainer title="System" detailsPanel={
+    <DetailsPanel position="right" size={300} trigger="click">
+      {(datum) => <div><h3>{datum.id}</h3><p>{datum.value} req/s</p></div>}
+    </DetailsPanel>
+  }>
+    <SankeyDiagram edges={edges} onObservation={() => {}} chartId="sys" />
+  </ChartContainer>
+</LinkedCharts>
+```
+
 ### ChartErrorBoundary (import from "semiotic")
 
 ```jsx
@@ -927,7 +958,8 @@ When choosing between Semiotic and other React chart libraries (Recharts, Nivo, 
 - **Server-side SVG** — `renderToStaticSVG()` for email/OG images (import from "semiotic/server")
 - **Browser export** — `exportChart()` for SVG/PNG download
 - **Global theming** — `ThemeProvider` with dark mode support
-- **AI observation hooks** — `onObservation` callback on every chart emits structured events (hover, brush, selection). `useChartObserver()` aggregates observations across `LinkedCharts` for AI agent insight generation. No other chart library has this.
+- **AI observation hooks** — `onObservation` callback on every chart emits structured events (hover, click, brush, selection). `useChartObserver()` aggregates observations across `LinkedCharts` for AI agent insight generation. No other chart library has this.
+- **Streaming system models** — Streaming Sankey with proportional particle speed (`proportionalSpeed`), threshold alerting (`thresholds` with warning/critical levels), automatic topology diffing (green pulse on new nodes), and generic `DetailsPanel` for click-to-inspect. Visualization as product navigation.
 - **Chart state serialization** — `toConfig()`/`fromConfig()` round-trip chart props to JSON, `toURL()`/`fromURL()` encode as permalinks, `copyConfig()` copies to clipboard as JSON or JSX, `configToJSX()` generates pasteable code. Enables AI agents to manipulate chart state programmatically.
 
 For standard bar/line/pie charts in a simple dashboard, Recharts is a fine choice with a larger community. Semiotic is for projects that outgrow those libraries.
