@@ -101,32 +101,36 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
     // ── Resolve edge source/target to node references ─────────────────
     // The HOC edge style functions need d.source/d.target as node objects
     // (not string IDs) so they can look up colors via d.source.data.
+    const nodeMap = new Map<string, RealtimeNode>()
+    for (const n of nodes) nodeMap.set(n.id, n)
+
     for (const edge of edges) {
       const srcId = typeof edge.source === "string" ? edge.source : edge.source.id
       const tgtId = typeof edge.target === "string" ? edge.target : edge.target.id
-      const srcNode = nodes.find((n) => n.id === srcId)
-      const tgtNode = nodes.find((n) => n.id === tgtId)
+      const srcNode = nodeMap.get(srcId)
+      const tgtNode = nodeMap.get(tgtId)
       if (srcNode) edge.source = srcNode
       if (tgtNode) edge.target = tgtNode
     }
 
     // ── Stash chord data on edges for buildScene ─────────────────────
+    // Build bidirectional edge lookup (chord may emit in either direction)
+    const edgeLookup = new Map<string, RealtimeEdge>()
+    for (const e of edges) {
+      const eSrc = typeof e.source === "string" ? e.source : e.source.id
+      const eTgt = typeof e.target === "string" ? e.target : e.target.id
+      edgeLookup.set(`${eSrc}\0${eTgt}`, e)
+    }
+
     for (const generatedChord of chords) {
       const sourceId = nodes[generatedChord.source.index].id
       const targetId = nodes[generatedChord.target.index].id
 
       // d3-chord always emits source.index < target.index, which may
       // not match the original edge direction. Try both key orders.
-      const matchedEdge = edges.find((e) => {
-        const eSrc =
-          typeof e.source === "string" ? e.source : e.source.id
-        const eTgt =
-          typeof e.target === "string" ? e.target : e.target.id
-        return (
-          (eSrc === sourceId && eTgt === targetId) ||
-          (eSrc === targetId && eTgt === sourceId)
-        )
-      })
+      const matchedEdge =
+        edgeLookup.get(`${sourceId}\0${targetId}`) ||
+        edgeLookup.get(`${targetId}\0${sourceId}`)
 
       if (matchedEdge) {
         ;(matchedEdge as any).chordData = generatedChord
