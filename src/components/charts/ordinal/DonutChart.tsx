@@ -36,6 +36,7 @@ export function DonutChart<TDatum extends Record<string, any> = Record<string, a
     enableHover: props.enableHover,
     showLegend: props.showLegend,
     title: props.title,
+    linkedHover: props.linkedHover,
   })
 
   const {

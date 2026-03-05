@@ -134,7 +134,8 @@ const navData = [
       { title: "Stacked Area Chart", path: "/playground/stacked-area-chart" },
       { title: "Donut Chart", path: "/playground/donut-chart" },
       { title: "Treemap", path: "/playground/treemap" },
-      { title: "Circle Pack", path: "/playground/circle-pack" }
+      { title: "Circle Pack", path: "/playground/circle-pack" },
+      { title: "Statistical Annotations", path: "/playground/statistical-annotations" }
     ]
   },
   {

@@ -1,13 +1,13 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, useCallback } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
 import { getColor, createColorScale, DEPTH_PALETTE_COLORS } from "../shared/colorUtils"
 import { flattenHierarchy, resolveHierarchySum } from "../shared/networkUtils"
 import type { BaseChartProps, ChartAccessor, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
+import { useChartMode, useChartSelection, DEFAULT_COLOR } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { validateObjectData } from "../shared/validateChartData"
 
@@ -44,6 +44,7 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
     enableHover: props.enableHover,
     showLabels: props.showLabels,
     title: props.title,
+    linkedHover: props.linkedHover,
   }, { width: 600, height: 600 })
 
   const {
@@ -61,7 +62,9 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
     padding: paddingProp = 4,
     paddingTop: paddingTopProp,
     tooltip,
-    frameProps = {}
+    frameProps = {},
+    selection,
+    linkedHover
   } = props
 
   const width = resolved.width
@@ -70,6 +73,25 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
   const showLabels = resolved.showLabels ?? true
   const title = resolved.title
 
+  const { activeSelectionHook, customHoverBehavior: baseHoverBehavior } = useChartSelection({
+    selection,
+    linkedHover,
+    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
+  })
+
+  // Network frame hover: { type, data: sceneNode, x, y }
+  // sceneNode.data = original datum for this hierarchy node
+  // Pass it as { data: originalDatum } so useChartSelection unwraps correctly
+  const customHoverBehavior = useCallback(
+    (d: Record<string, any> | null) => {
+      if (!d) return baseHoverBehavior(null)
+      const sceneNode = d.data || d
+      const originalDatum = sceneNode?.data || sceneNode
+      baseHoverBehavior({ data: originalDatum })
+    },
+    [baseHoverBehavior]
+  )
+
   const allNodes = useMemo(() => {
     return flattenHierarchy(data, childrenAccessor as string | ((d: any) => any[]))
   }, [data, childrenAccessor])
@@ -77,7 +99,11 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
   const colorScale = useMemo(() => {
     if (colorByDepth) return undefined
     if (!colorBy || typeof colorBy === "function") return undefined
-    return createColorScale(allNodes, colorBy as string, colorScheme)
+    // Filter to nodes that have the colorBy field so root/parent nodes without
+    // it don't consume a color slot and shift the palette
+    const field = colorBy as string
+    const nodesWithField = allNodes.filter(n => n[field] != null)
+    return createColorScale(nodesWithField, field, colorScheme)
   }, [allNodes, colorBy, colorByDepth, colorScheme])
 
   const nodeStyleFn = useMemo(() => {
@@ -93,6 +119,26 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
       return baseStyle
     }
   }, [colorBy, colorByDepth, colorScale])
+
+  // Wrap node style with selection — unwrap hierarchy .data for predicate matching
+  const nodeStyle = useMemo(() => {
+    if (!activeSelectionHook) return nodeStyleFn
+    return (d: Record<string, any>) => {
+      const style = { ...nodeStyleFn(d) }
+      if (activeSelectionHook.isActive) {
+        const datum = d.data || d
+        const matches = activeSelectionHook.predicate(datum)
+        if (matches) {
+          if (selection?.selectedStyle) Object.assign(style, selection.selectedStyle)
+        } else {
+          style.fillOpacity = selection?.unselectedOpacity ?? 0.2
+          style.strokeOpacity = selection?.unselectedOpacity ?? 0.2
+          if (selection?.unselectedStyle) Object.assign(style, selection.unselectedStyle)
+        }
+      }
+      return style
+    }
+  }, [nodeStyleFn, activeSelectionHook, selection])
 
   const hierarchySumFn = useMemo(() => {
     return resolveHierarchySum(valueAccessor)
@@ -120,7 +166,7 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
       hierarchySum={hierarchySumFn}
       padding={paddingProp}
       paddingTop={resolvedPaddingTop}
-      nodeStyle={nodeStyleFn}
+      nodeStyle={nodeStyle}
       colorBy={colorBy as any}
       colorScheme={colorScheme}
       colorByDepth={colorByDepth}
@@ -128,6 +174,7 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
       showLabels={showLabels}
       enableHover={enableHover}
       tooltipContent={tooltip ? (d) => (normalizeTooltip(tooltip) as Function)(d.data) : undefined}
+      {...(linkedHover && { customHoverBehavior })}
       className={className}
       title={title}
       {...frameProps}

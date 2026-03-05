@@ -441,6 +441,7 @@ export interface StreamNetworkFrameProps<T = Record<string, any>> {
   // ── Interaction ──────────────────────────────────
   enableHover?: boolean
   tooltipContent?: (d: { type: "node" | "edge"; data: any; x: number; y: number }) => ReactNode
+  customHoverBehavior?: (d: { type: "node" | "edge"; data: any; x: number; y: number } | null) => void
   onTopologyChange?: (nodes: RealtimeNode[], edges: RealtimeEdge[]) => void
 
   // ── Annotations ──────────────────────────────────

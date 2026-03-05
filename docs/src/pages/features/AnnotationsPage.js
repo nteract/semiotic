@@ -41,6 +41,24 @@ const scatterData = [
   { x: 85, y: 50, label: "F" },
 ]
 
+// Noisy data with clear outliers for anomaly-band demo
+const anomalyData = [
+  { x: 1, y: 22 }, { x: 2, y: 25 }, { x: 3, y: 19 }, { x: 4, y: 23 },
+  { x: 5, y: 21 }, { x: 6, y: 24 }, { x: 7, y: 20 }, { x: 8, y: 55 },
+  { x: 9, y: 22 }, { x: 10, y: 26 }, { x: 11, y: 18 }, { x: 12, y: 3 },
+  { x: 13, y: 24 }, { x: 14, y: 21 }, { x: 15, y: 23 }, { x: 16, y: 60 },
+  { x: 17, y: 20 }, { x: 18, y: 25 }, { x: 19, y: 19 }, { x: 20, y: 22 },
+]
+
+// Non-linear noisy data for LOESS demo
+const loessData = [
+  { x: 1, y: 5 }, { x: 2, y: 8 }, { x: 3, y: 14 }, { x: 4, y: 11 },
+  { x: 5, y: 18 }, { x: 6, y: 22 }, { x: 7, y: 28 }, { x: 8, y: 25 },
+  { x: 9, y: 30 }, { x: 10, y: 35 }, { x: 11, y: 32 }, { x: 12, y: 28 },
+  { x: 13, y: 24 }, { x: 14, y: 20 }, { x: 15, y: 18 }, { x: 16, y: 22 },
+  { x: 17, y: 26 }, { x: 18, y: 30 }, { x: 19, y: 34 }, { x: 20, y: 38 },
+]
+
 // ---------------------------------------------------------------------------
 // Streaming annotation demo
 // ---------------------------------------------------------------------------
@@ -247,6 +265,100 @@ function StreamingCalloutDemo({ width }) {
         ]}
       />
     </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Streaming anomaly band demo
+// ---------------------------------------------------------------------------
+
+const streamingAnomalyCode = `import { useRef, useEffect } from "react"
+import { StreamXYFrame } from "semiotic"
+
+function StreamingAnomalyDemo() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        // Mostly normal values ~50, with occasional spikes
+        const isSpike = Math.random() < 0.08
+        const value = isSpike
+          ? 50 + (Math.random() > 0.5 ? 1 : -1) * (35 + Math.random() * 15)
+          : 50 + (Math.random() - 0.5) * 20
+        chartRef.current.push({ time: i, value })
+      }
+    }, 80)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamXYFrame
+      ref={chartRef}
+      chartType="scatter"
+      runtimeMode="streaming"
+      size={[600, 300]}
+      timeAccessor="time"
+      valueAccessor="value"
+      windowSize={150}
+      showAxes
+      pointStyle={() => ({ fill: "#6366f1", r: 3, opacity: 0.6 })}
+      annotations={[
+        {
+          type: "anomaly-band",
+          threshold: 2,
+          fill: "#6366f1",
+          anomalyColor: "#ef4444",
+          anomalyRadius: 6,
+          label: "±2σ",
+        },
+      ]}
+    />
+  )
+}`
+
+function StreamingAnomalyDemo({ width }) {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        const isSpike = Math.random() < 0.08
+        const value = isSpike
+          ? 50 + (Math.random() > 0.5 ? 1 : -1) * (35 + Math.random() * 15)
+          : 50 + (Math.random() - 0.5) * 20
+        chartRef.current.push({ time: i, value })
+      }
+    }, 80)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamXYFrame
+      ref={chartRef}
+      chartType="scatter"
+      runtimeMode="streaming"
+      size={[width || 600, 300]}
+      timeAccessor="time"
+      valueAccessor="value"
+      windowSize={150}
+      showAxes
+      pointStyle={() => ({ fill: "#6366f1", r: 3, opacity: 0.6 })}
+      annotations={[
+        {
+          type: "anomaly-band",
+          threshold: 2,
+          fill: "#6366f1",
+          anomalyColor: "#ef4444",
+          anomalyRadius: 6,
+          label: "±2σ",
+        },
+      ]}
+    />
   )
 }
 
@@ -531,6 +643,195 @@ export default function AnnotationsPage() {
       />
 
       {/* ----------------------------------------------------------------- */}
+      {/* Anomaly Band */}
+      {/* ----------------------------------------------------------------- */}
+      <h3 id="anomaly-band">Anomaly Band</h3>
+
+      <p>
+        The <code>anomaly-band</code> annotation computes the mean and standard
+        deviation of your y-values, shades the "normal" range (mean ± N×σ), and
+        highlights individual outlier points that fall outside. Adjust{" "}
+        <code>threshold</code> to control how many standard deviations define
+        the boundary — the default is 2.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: anomalyData,
+          xAccessor: "x",
+          yAccessor: "y",
+          xLabel: "Sample",
+          yLabel: "Value",
+          annotations: [
+            {
+              type: "anomaly-band",
+              threshold: 2,
+              fill: "#6366f1",
+              fillOpacity: 0.1,
+              anomalyColor: "#ef4444",
+              anomalyRadius: 6,
+              label: "±2σ",
+            },
+          ],
+        }}
+        type={Scatterplot}
+        startHidden={false}
+        overrideProps={{
+          data: `[
+  { x: 1, y: 22 }, { x: 2, y: 25 }, { x: 3, y: 19 }, { x: 4, y: 23 },
+  { x: 5, y: 21 }, { x: 6, y: 24 }, { x: 7, y: 20 }, { x: 8, y: 55 },
+  { x: 9, y: 22 }, { x: 10, y: 26 }, { x: 11, y: 18 }, { x: 12, y: 3 },
+  { x: 13, y: 24 }, { x: 14, y: 21 }, { x: 15, y: 23 }, { x: 16, y: 60 },
+  { x: 17, y: 20 }, { x: 18, y: 25 }, { x: 19, y: 19 }, { x: 20, y: 22 }
+]`,
+          annotations: `[
+  {
+    type: "anomaly-band",
+    threshold: 2,
+    fill: "#6366f1",
+    fillOpacity: 0.1,
+    anomalyColor: "#ef4444",
+    anomalyRadius: 6,
+    label: "±2σ"
+  }
+]`,
+        }}
+        hiddenProps={{}}
+      />
+
+      {/* ----------------------------------------------------------------- */}
+      {/* LOESS Regression */}
+      {/* ----------------------------------------------------------------- */}
+      <h3 id="loess">LOESS Smoothing</h3>
+
+      <p>
+        For non-linear data, use <code>method: "loess"</code> on a{" "}
+        <code>trend</code> annotation. LOESS (Locally Weighted Scatterplot
+        Smoothing) fits a local weighted regression at each point, producing a
+        smooth curve that follows complex patterns better than a straight line.
+        The <code>bandwidth</code> prop (0–1) controls smoothness — lower values
+        track the data more closely, higher values smooth more aggressively.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: loessData,
+          xAccessor: "x",
+          yAccessor: "y",
+          xLabel: "X",
+          yLabel: "Y",
+          annotations: [
+            {
+              type: "trend",
+              method: "loess",
+              bandwidth: 0.3,
+              color: "#8b5cf6",
+              strokeWidth: 2.5,
+              label: "LOESS",
+            },
+            {
+              type: "trend",
+              method: "linear",
+              color: "#94a3b8",
+              strokeDasharray: "4,4",
+              label: "Linear",
+            },
+          ],
+        }}
+        type={Scatterplot}
+        startHidden={false}
+        overrideProps={{
+          data: `[
+  { x: 1, y: 5 }, { x: 2, y: 8 }, { x: 3, y: 14 }, { x: 4, y: 11 },
+  { x: 5, y: 18 }, { x: 6, y: 22 }, { x: 7, y: 28 }, { x: 8, y: 25 },
+  { x: 9, y: 30 }, { x: 10, y: 35 }, { x: 11, y: 32 }, { x: 12, y: 28 },
+  { x: 13, y: 24 }, { x: 14, y: 20 }, { x: 15, y: 18 }, { x: 16, y: 22 },
+  { x: 17, y: 26 }, { x: 18, y: 30 }, { x: 19, y: 34 }, { x: 20, y: 38 }
+]`,
+          annotations: `[
+  {
+    type: "trend",
+    method: "loess",
+    bandwidth: 0.3,
+    color: "#8b5cf6",
+    strokeWidth: 2.5,
+    label: "LOESS"
+  },
+  {
+    type: "trend",
+    method: "linear",
+    color: "#94a3b8",
+    strokeDasharray: "4,4",
+    label: "Linear"
+  }
+]`,
+        }}
+        hiddenProps={{}}
+      />
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Forecast Region */}
+      {/* ----------------------------------------------------------------- */}
+      <h3 id="forecast">Forecast Region</h3>
+
+      <p>
+        The <code>forecast</code> annotation fits a regression to your data and
+        extrapolates a configurable number of steps into the future. A widening
+        confidence envelope communicates increasing uncertainty. Use{" "}
+        <code>steps</code> to control the projection distance and{" "}
+        <code>confidence</code> (0–1) to set the interval width.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: lineData,
+          xAccessor: "week",
+          yAccessor: "score",
+          xLabel: "Week",
+          yLabel: "Score",
+          annotations: [
+            {
+              type: "forecast",
+              steps: 4,
+              confidence: 0.95,
+              fill: "#6366f1",
+              fillOpacity: 0.15,
+              strokeColor: "#6366f1",
+              label: "Forecast",
+            },
+          ],
+        }}
+        type={LineChart}
+        startHidden={false}
+        overrideProps={{
+          data: `[
+  { week: 1, score: 12 },
+  { week: 2, score: 18 },
+  { week: 3, score: 15 },
+  { week: 4, score: 24 },
+  { week: 5, score: 20 },
+  { week: 6, score: 28 },
+  { week: 7, score: 32 },
+  { week: 8, score: 27 },
+  { week: 9, score: 35 },
+  { week: 10, score: 30 }
+]`,
+          annotations: `[
+  {
+    type: "forecast",
+    steps: 4,
+    confidence: 0.95,
+    fill: "#6366f1",
+    fillOpacity: 0.15,
+    strokeColor: "#6366f1",
+    label: "Forecast"
+  }
+]`,
+        }}
+        hiddenProps={{}}
+      />
+
+      {/* ----------------------------------------------------------------- */}
       {/* Ordinal Charts */}
       {/* ----------------------------------------------------------------- */}
       <h2 id="ordinal-charts">Ordinal Charts</h2>
@@ -599,6 +900,20 @@ export default function AnnotationsPage() {
       <StreamingDemo
         renderChart={(w) => <StreamingCalloutDemo width={w} />}
         code={streamingCalloutCode}
+      />
+
+      <h3 id="streaming-anomaly">Streaming Anomaly Detection</h3>
+
+      <p>
+        Statistical annotations like <code>anomaly-band</code> work naturally
+        on streaming charts — the band recomputes from the current window buffer
+        each frame, so the "normal" range adapts as data arrives. Outlier points
+        are highlighted in real time as they enter the window.
+      </p>
+
+      <StreamingDemo
+        renderChart={(w) => <StreamingAnomalyDemo width={w} />}
+        code={streamingAnomalyCode}
       />
 
       {/* ----------------------------------------------------------------- */}
@@ -675,8 +990,10 @@ export default function AnnotationsPage() {
             ["enclose", "All", "coordinates, label, padding", "Circle enclosing a set of data points"],
             ["rect-enclose", "All", "coordinates, label, padding", "Rectangle enclosing a set of data points"],
             ["enclose-hull", "All", "coordinates, label", "Convex hull enclosing data points"],
-            ["trend", "XY", "method, color, label", "Linear regression line computed from data"],
+            ["trend", "XY", "method, color, bandwidth, label", "Regression line (linear, polynomial, or loess)"],
             ["band", "XY", "y0, y1, fill, fillOpacity, label", "Shaded horizontal band between two values"],
+            ["anomaly-band", "XY", "threshold, fill, anomalyColor, label", "Mean ± N×σ band with highlighted outliers"],
+            ["forecast", "XY", "steps, confidence, method, fill, label", "Extrapolated trend with widening confidence envelope"],
             ["highlight", "All", "style", "Redraws a mark on annotation layer with custom style"],
             ["desaturation-layer", "All", "style", "Semi-transparent overlay for focus+context"],
             ["frame-hover", "All", "(none)", "Tooltip div centered on the hovered data point"],

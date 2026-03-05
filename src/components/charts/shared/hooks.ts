@@ -102,7 +102,9 @@ export function useChartSelection({
       if (linkedHover) {
         // Stream frames wrap the raw datum in { data: datum, time, value, x, y }.
         // Always unwrap .data/.datum so onHover sees the original data fields.
-        const datum = d ? (d.data || d.datum || d) : d
+        let datum = d ? (d.data || d.datum || d) : d
+        // Ordinal pie/donut wraps datum in an array — unwrap first element
+        if (Array.isArray(datum)) datum = datum[0]
         linkedHoverHook.onHover(datum)
       }
     },
@@ -189,6 +191,8 @@ interface ChartModeInput {
   yLabel?: string
   categoryLabel?: string
   valueLabel?: string
+  /** When truthy, enableHover is forced true regardless of mode (LinkedCharts needs hover) */
+  linkedHover?: any
 }
 
 interface ChartModeResult {
@@ -225,7 +229,7 @@ export function useChartMode(
     height: userProps.height ?? defaultHeight,
     showAxes: m.showAxes,
     showGrid: userProps.showGrid ?? m.showGrid,
-    enableHover: userProps.enableHover ?? m.enableHover,
+    enableHover: userProps.enableHover ?? (userProps.linkedHover ? true : m.enableHover),
     showLegend: userProps.showLegend ?? m.showLegend,
     showLabels: userProps.showLabels ?? m.showLabels,
     title: suppressLabels ? undefined : userProps.title,

@@ -262,11 +262,25 @@ function ModeToggleDemo() {
 // Linked context + primary demo
 // ---------------------------------------------------------------------------
 
+// Shared color palette — same order as channels appear in data.
+// Using a single array ensures Email, Search, Social, Display get consistent
+// colors across all charts regardless of data shape.
+const channelColors = ["#e15759", "#4e79a7", "#59a14f", "#b07aa1"]
+
 const channelTreeData = {
   name: "Channels",
   children: [
     {
+      name: "Email",
+      channel: "Email",
+      children: [
+        { name: "Newsletter", value: 500, channel: "Email" },
+        { name: "Drip", value: 400, channel: "Email" },
+      ],
+    },
+    {
       name: "Search",
+      channel: "Search",
       children: [
         { name: "Brand", value: 1200, channel: "Search" },
         { name: "Non-Brand", value: 900, channel: "Search" },
@@ -274,20 +288,15 @@ const channelTreeData = {
     },
     {
       name: "Social",
+      channel: "Social",
       children: [
         { name: "Organic", value: 600, channel: "Social" },
         { name: "Paid", value: 700, channel: "Social" },
       ],
     },
     {
-      name: "Email",
-      children: [
-        { name: "Newsletter", value: 500, channel: "Email" },
-        { name: "Drip", value: 400, channel: "Email" },
-      ],
-    },
-    {
       name: "Display",
+      channel: "Display",
       children: [
         { name: "Retargeting", value: 250, channel: "Display" },
         { name: "Prospecting", value: 150, channel: "Display" },
@@ -308,6 +317,7 @@ function LinkedDashboardDemo() {
           xAccessor="spend"
           yAccessor="roi"
           colorBy="channel"
+          colorScheme={channelColors}
           xLabel="Ad Spend ($K)"
           yLabel="ROI"
           linkedHover={{ name: "dash", fields: ["channel"] }}
@@ -324,9 +334,12 @@ function LinkedDashboardDemo() {
               valueAccessor="value"
               nodeIdAccessor="name"
               colorBy="channel"
+              colorScheme={channelColors}
               mode="context"
               width={300}
               height={200}
+              linkedHover={{ name: "dash", fields: ["channel"] }}
+              selection={{ name: "dash" }}
             />
           </div>
           <div style={{ flex: 1 }}>
@@ -335,14 +348,15 @@ function LinkedDashboardDemo() {
             </div>
             <DonutChart
               data={[
-                { channel: "Email", spend: 62 },
-                { channel: "Search", spend: 143 },
-                { channel: "Social", spend: 77 },
-                { channel: "Display", spend: 26 },
+                { channel: "Email", spend: 62, name: "Email" },
+                { channel: "Search", spend: 143, name: "Search" },
+                { channel: "Social", spend: 77, name: "Social" },
+                { channel: "Display", spend: 26, name: "Display" },
               ]}
               categoryAccessor="channel"
               valueAccessor="spend"
               colorBy="channel"
+              colorScheme={channelColors}
               mode="context"
               width={200}
               height={200}
@@ -485,9 +499,9 @@ export default function ChartModesPage() {
       <p>
         Pair a primary detail view with context-mode summary charts underneath.
         Wrap in <code>LinkedCharts</code> for cross-highlighting — hover a
-        channel in the scatterplot and the donut highlights to match. The
-        treemap provides a hierarchical breakdown that exposes users to a richer
-        chart type they might not have tried on its own.
+        channel in any chart and all three highlight to match. The treemap
+        provides a hierarchical breakdown that exposes users to a richer chart
+        type they might not have tried on its own.
       </p>
 
       <LinkedDashboardDemo />
@@ -507,6 +521,8 @@ export default function ChartModesPage() {
     <Treemap
       data={channelTree} childrenAccessor="children" valueAccessor="value"
       colorBy="channel" mode="context" width={300} height={200}
+      linkedHover={{ name: "dash", fields: ["channel"] }}
+      selection={{ name: "dash" }}
     />
     <DonutChart
       data={spendBreakdown} categoryAccessor="channel" valueAccessor="spend"

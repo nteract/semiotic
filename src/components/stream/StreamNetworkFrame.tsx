@@ -212,6 +212,7 @@ const StreamNetworkFrame = forwardRef<
     background,
     enableHover = true,
     tooltipContent,
+    customHoverBehavior,
     onTopologyChange,
     annotations,
     svgAnnotationRules,
@@ -622,6 +623,7 @@ const StreamNetworkFrame = forwardRef<
       if (hoverRef.current) {
         hoverRef.current = null
         setHoverData(null)
+        if (customHoverBehavior) customHoverBehavior(null)
         scheduleRender()
       }
       return
@@ -641,6 +643,7 @@ const StreamNetworkFrame = forwardRef<
       if (hoverRef.current) {
         hoverRef.current = null
         setHoverData(null)
+        if (customHoverBehavior) customHoverBehavior(null)
         scheduleRender()
       }
       return
@@ -655,6 +658,7 @@ const StreamNetworkFrame = forwardRef<
 
     hoverRef.current = hover
     setHoverData(hover)
+    if (customHoverBehavior) customHoverBehavior(hover)
     scheduleRender()
   }
 
@@ -662,6 +666,7 @@ const StreamNetworkFrame = forwardRef<
     if (hoverRef.current) {
       hoverRef.current = null
       setHoverData(null)
+      if (customHoverBehavior) customHoverBehavior(null)
       scheduleRender()
     }
   }
