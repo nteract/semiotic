@@ -71,8 +71,8 @@ describe("Tooltip", () => {
 
   it("returns null for null/undefined data", () => {
     const tooltipFn = Tooltip({ title: "category" })
-    expect(tooltipFn(null)).toBeNull()
-    expect(tooltipFn(undefined)).toBeNull()
+    expect(tooltipFn(null as any)).toBeNull()
+    expect(tooltipFn(undefined as any)).toBeNull()
   })
 
   it("applies custom style", () => {
@@ -131,8 +131,8 @@ describe("MultiLineTooltip", () => {
 
   it("returns null for null/undefined data", () => {
     const tooltipFn = MultiLineTooltip({ fields: ["x"] })
-    expect(tooltipFn(null)).toBeNull()
-    expect(tooltipFn(undefined)).toBeNull()
+    expect(tooltipFn(null as any)).toBeNull()
+    expect(tooltipFn(undefined as any)).toBeNull()
   })
 })
 

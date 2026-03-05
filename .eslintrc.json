@@ -1,24 +1,37 @@
 {
   "root": true,
-  "plugins": [],
-  "extends": [
-    "netflix-dea"
-],
   "env": {
+    "browser": true,
+    "es2020": true,
     "jest": true
   },
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended"
+  ],
+  "parserOptions": {
+    "ecmaVersion": 2020,
+    "sourceType": "module",
+    "ecmaFeatures": { "jsx": true }
+  },
+  "settings": {
+    "react": { "version": "detect" }
+  },
   "rules": {
-    "no-template-curly-in-string": "off",
-    "quotes": "off",
-    "react/jsx-no-bind": "off",
-    "no-extra-parens": "off",
-    "curly": "off",
-    "class-methods-use-this": "off",
-    "react/no-did-mount-set-state": "off",
-    "indent": "off",
-    "no-empty-function": "off",
-    "react/prefer-stateless-function": "off",
-    "no-shadow": "off",
-    "quote-props": "off"
-  }
+    "no-unused-vars": "off",
+    "react/prop-types": "off",
+    "react/display-name": "off",
+    "react/no-children-prop": "off",
+    "no-empty-function": "off"
+  },
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx"],
+      "parser": "@typescript-eslint/parser",
+      "plugins": ["@typescript-eslint"],
+      "rules": {
+        "no-undef": "off"
+      }
+    }
+  ]
 }
