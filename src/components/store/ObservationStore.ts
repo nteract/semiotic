@@ -65,29 +65,36 @@ export type OnObservationCallback = (observation: ChartObservation) => void
 // ── Store ────────────────────────────────────────────────────────────────
 
 export interface ObservationStoreState {
+  /** Ring buffer of recent observations (newest last). Mutated in place for perf. */
   observations: ChartObservation[]
   maxObservations: number
+  /** Monotonic counter incremented on each push — use as change signal */
+  version: number
   pushObservation: (observation: ChartObservation) => void
   clearObservations: () => void
 }
 
-export const [ObservationProvider, useObservationSelector] = createStore(
-  (set: Function) => ({
-    observations: [] as ChartObservation[],
+export const [ObservationProvider, useObservationSelector] = createStore<ObservationStoreState>(
+  (set) => ({
+    observations: [],
     maxObservations: 100,
+    version: 0,
 
     pushObservation(observation: ChartObservation) {
-      set((current: ObservationStoreState) => {
-        const next = [...current.observations, observation]
-        if (next.length > current.maxObservations) {
-          return { observations: next.slice(next.length - current.maxObservations) }
+      set((current) => {
+        const obs = current.observations
+        obs.push(observation)
+        if (obs.length > current.maxObservations) {
+          obs.shift()
         }
-        return { observations: next }
+        // Bump version to signal change — array identity stays the same
+        // which avoids O(n) copies on every hover event
+        return { version: current.version + 1 }
       })
     },
 
     clearObservations() {
-      set(() => ({ observations: [] as ChartObservation[] }))
+      set(() => ({ observations: [], version: 0 }))
     }
   })
 )

@@ -611,6 +611,8 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
     return (
       <div
         className={`stream-ordinal-frame${className ? ` ${className}` : ""}`}
+        role="img"
+        aria-label={typeof title === "string" ? title : "Ordinal chart"}
         style={{
           position: "relative",
           width: size[0],

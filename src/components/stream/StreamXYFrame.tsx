@@ -857,6 +857,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     return (
       <div
         className={`stream-xy-frame${className ? ` ${className}` : ""}`}
+        role="img"
+        aria-label={typeof title === "string" ? title : "XY chart"}
         style={{
           position: "relative",
           width: size[0],

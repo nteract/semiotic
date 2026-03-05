@@ -2,12 +2,18 @@
  * Validates chart data and accessors at render time.
  * Returns null if data is valid, or an error message string if not.
  *
- * Validation is intentionally lightweight — it checks the first data point
- * to catch common mistakes (wrong field names, missing data) without
- * iterating the entire dataset.
+ * Samples first, last, and a middle element to catch common mistakes
+ * (wrong field names, missing data) without iterating the entire dataset.
  */
 
 type AccessorLike = string | ((...args: any[]) => any)
+
+/** Pick a few representative rows to validate without scanning everything */
+function sampleRows(data: any[]): any[] {
+  if (data.length <= 3) return data
+  const mid = Math.floor(data.length / 2)
+  return [data[0], data[mid], data[data.length - 1]]
+}
 
 interface ArrayDataValidation {
   componentName: string
@@ -54,10 +60,10 @@ export function validateArrayData({
     return "No data provided. Pass a non-empty array to the data prop."
   }
 
-  // Check accessors against the first data point
+  // Check accessors against a sample of data points
   if (accessors) {
-    const sample = data[0]
-    if (sample && typeof sample === "object") {
+    for (const sample of sampleRows(data)) {
+      if (!sample || typeof sample !== "object") continue
       for (const [label, accessor] of Object.entries(accessors)) {
         if (!accessor) continue
         if (typeof accessor === "string" && !(accessor in sample)) {
@@ -106,19 +112,17 @@ export function validateNetworkData({
     return "No nodes provided. Pass a non-empty array to the nodes prop."
   }
 
-  // Check accessors against first data point
-  if (accessors) {
-    if (nodes && nodes.length > 0) {
-      const sample = nodes[0]
-      if (sample && typeof sample === "object") {
-        for (const [label, accessor] of Object.entries(accessors)) {
-          if (!accessor) continue
-          if (typeof accessor === "string" && !(accessor in sample)) {
-            return (
-              `${label} "${accessor}" not found in node data. ` +
-              `Available fields: ${Object.keys(sample).join(", ")}.`
-            )
-          }
+  // Check accessors against a sample of node data
+  if (accessors && nodes && nodes.length > 0) {
+    for (const sample of sampleRows(nodes)) {
+      if (!sample || typeof sample !== "object") continue
+      for (const [label, accessor] of Object.entries(accessors)) {
+        if (!accessor) continue
+        if (typeof accessor === "string" && !(accessor in sample)) {
+          return (
+            `${label} "${accessor}" not found in node data. ` +
+            `Available fields: ${Object.keys(sample).join(", ")}.`
+          )
         }
       }
     }

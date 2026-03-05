@@ -1,7 +1,7 @@
 "use client"
 import { useMemo } from "react"
 import { useObservationSelector } from "./ObservationStore"
-import type { ChartObservation } from "./ObservationStore"
+import type { ChartObservation, ObservationStoreState } from "./ObservationStore"
 
 export interface UseChartObserverOptions {
   /** Max observations to return (default 50) */
@@ -26,13 +26,18 @@ export function useChartObserver(
 ): UseChartObserverResult {
   const { limit = 50, types, chartId } = options
 
+  // Subscribe to version (cheap number comparison) rather than the array
+  const version = useObservationSelector(
+    (state: ObservationStoreState) => state.version
+  )
+
   const allObservations = useObservationSelector(
-    (state: any) => state.observations
-  ) as ChartObservation[]
+    (state: ObservationStoreState) => state.observations
+  )
 
   const clearObservations = useObservationSelector(
-    (state: any) => state.clearObservations
-  ) as () => void
+    (state: ObservationStoreState) => state.clearObservations
+  )
 
   const filtered = useMemo(() => {
     let result = allObservations
@@ -51,7 +56,8 @@ export function useChartObserver(
     }
 
     return result
-  }, [allObservations, types, chartId, limit])
+    // version triggers recompute when new observations are pushed
+  }, [allObservations, types, chartId, limit, version]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const latest = filtered.length > 0 ? filtered[filtered.length - 1] : null
 

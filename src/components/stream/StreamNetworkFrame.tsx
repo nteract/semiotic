@@ -986,6 +986,8 @@ const StreamNetworkFrame = forwardRef<
   return (
     <div
       className={`stream-network-frame${className ? ` ${className}` : ""}`}
+      role="img"
+      aria-label={typeof title === "string" ? title : "Network chart"}
       style={{
         position: "relative",
         width: size[0],
