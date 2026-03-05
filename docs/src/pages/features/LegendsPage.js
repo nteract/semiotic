@@ -20,44 +20,47 @@ const theme = [
   "#533f82",
 ]
 
-const multiLineData = [
-  {
-    label: "Revenue",
-    color: theme[0],
-    coordinates: [
-      { month: 1, value: 12 },
-      { month: 2, value: 18 },
-      { month: 3, value: 14 },
-      { month: 4, value: 22 },
-      { month: 5, value: 19 },
-      { month: 6, value: 27 },
-    ],
-  },
-  {
-    label: "Costs",
-    color: theme[1],
-    coordinates: [
-      { month: 1, value: 8 },
-      { month: 2, value: 11 },
-      { month: 3, value: 10 },
-      { month: 4, value: 14 },
-      { month: 5, value: 13 },
-      { month: 6, value: 16 },
-    ],
-  },
-  {
-    label: "Profit",
-    color: theme[2],
-    coordinates: [
-      { month: 1, value: 4 },
-      { month: 2, value: 7 },
-      { month: 3, value: 4 },
-      { month: 4, value: 8 },
-      { month: 5, value: 6 },
-      { month: 6, value: 11 },
-    ],
-  },
+const multiLineSeriesData = [
+  { label: "Revenue", color: theme[0] },
+  { label: "Costs", color: theme[1] },
+  { label: "Profit", color: theme[2] },
 ]
+
+const multiLineColorMap = Object.fromEntries(
+  multiLineSeriesData.map((s) => [s.label, s.color])
+)
+
+const multiLineData = [
+  { label: "Revenue", color: theme[0], coordinates: [
+    { month: 1, value: 12 },
+    { month: 2, value: 18 },
+    { month: 3, value: 14 },
+    { month: 4, value: 22 },
+    { month: 5, value: 19 },
+    { month: 6, value: 27 },
+  ]},
+  { label: "Costs", color: theme[1], coordinates: [
+    { month: 1, value: 8 },
+    { month: 2, value: 11 },
+    { month: 3, value: 10 },
+    { month: 4, value: 14 },
+    { month: 5, value: 13 },
+    { month: 6, value: 16 },
+  ]},
+  { label: "Profit", color: theme[2], coordinates: [
+    { month: 1, value: 4 },
+    { month: 2, value: 7 },
+    { month: 3, value: 4 },
+    { month: 4, value: 8 },
+    { month: 5, value: 6 },
+    { month: 6, value: 11 },
+  ]},
+]
+
+// Flattened data for StreamXYFrame (which expects flat arrays, not nested line objects)
+const flatLineData = multiLineData.flatMap((line) =>
+  line.coordinates.map((c) => ({ ...c, label: line.label, color: line.color }))
+)
 
 const barData = [
   { category: "Q1", value: 35, region: "North" },
@@ -226,51 +229,60 @@ export default function LegendsPage() {
 
       <LiveExample
         frameProps={{
-          data: multiLineData,
+          data: flatLineData,
           chartType: "line",
-          lineDataAccessor: "coordinates",
           xAccessor: "month",
           yAccessor: "value",
-          lineStyle: (d) => ({ stroke: d.color, strokeWidth: 2 }),
-          lineIDAccessor: "label",
+          groupAccessor: "label",
+          lineStyle: (d) => ({ stroke: multiLineColorMap[d.label] || d.color, strokeWidth: 2 }),
           showAxes: true,
           xLabel: "Month",
           yLabel: "Value",
           margin: { top: 20, bottom: 50, left: 60, right: 120 },
-          legend: true,
+          legend: {
+            title: "Series",
+            legendGroups: [
+              {
+                type: "line",
+                label: "",
+                styleFn: (d) => ({
+                  stroke: d.color,
+                  strokeWidth: 2,
+                  fill: "none",
+                }),
+                items: multiLineSeriesData.map((s) => ({
+                  label: s.label,
+                  color: s.color,
+                })),
+              },
+            ],
+          },
           title: "Revenue, Costs, and Profit",
         }}
         type={StreamXYFrame}
         overrideProps={{
-          lines: `[
-  {
-    label: "Revenue",
-    color: "#ac58e5",
-    coordinates: [
-      { month: 1, value: 12 },
-      { month: 2, value: 18 },
-      // ...more data
+          data: `[
+  { month: 1, value: 12, label: "Revenue", color: "#ac58e5" },
+  { month: 2, value: 18, label: "Revenue", color: "#ac58e5" },
+  // ...more flat data points for Revenue, Costs, Profit
+]`,
+          lineStyle: `(d) => ({ stroke: colorMap[d.label] || d.color, strokeWidth: 2 })`,
+          legend: `{
+  title: "Series",
+  legendGroups: [{
+    type: "line",
+    label: "",
+    styleFn: d => ({ stroke: d.color, strokeWidth: 2, fill: "none" }),
+    items: [
+      { label: "Revenue", color: "#ac58e5" },
+      { label: "Costs", color: "#E0488B" },
+      { label: "Profit", color: "#9fd0cb" },
     ],
-  },
-  {
-    label: "Costs",
-    color: "#E0488B",
-    coordinates: [/* ... */],
-  },
-  {
-    label: "Profit",
-    color: "#9fd0cb",
-    coordinates: [/* ... */],
-  },
-]`,
-          lineStyle: `d => ({ stroke: d.color, strokeWidth: 2 })`,
-          axes: `[
-  { orient: "left", label: "Value" },
-  { orient: "bottom", label: "Month" }
-]`,
+  }],
+}`,
         }}
         functions={{
-          lineStyle: (d) => ({ stroke: d.color, strokeWidth: 2 }),
+          lineStyle: (d) => ({ stroke: multiLineColorMap[d.label] || d.color, strokeWidth: 2 }),
         }}
         hiddenProps={{}}
         startHidden={false}
@@ -288,14 +300,15 @@ export default function LegendsPage() {
           data: barData,
           oAccessor: "category",
           rAccessor: "value",
-          type: "clusterbar",
-          style: (d) => ({
+          chartType: "clusterbar",
+          pieceStyle: (d) => ({
             fill: regionColors[d.region],
             stroke: "white",
             strokeWidth: 1,
           }),
           oPadding: 10,
-          axes: [{ orient: "left", label: "Sales ($K)" }],
+          showAxes: true,
+          rLabel: "Sales ($K)",
           margin: { top: 20, bottom: 40, left: 60, right: 130 },
           legend: {
             title: "Region",
@@ -324,7 +337,7 @@ export default function LegendsPage() {
   { category: "Q2", value: 42, region: "North" },
   // ...more data for North, South, East
 ]`,
-          style: `d => ({
+          pieceStyle: `d => ({
   fill: regionColors[d.region],
   stroke: "white",
   strokeWidth: 1,
@@ -347,10 +360,9 @@ export default function LegendsPage() {
     },
   ],
 }`,
-          axes: `[{ orient: "left", label: "Sales ($K)" }]`,
         }}
         functions={{
-          style: (d) => ({
+          pieceStyle: (d) => ({
             fill: regionColors[d.region],
             stroke: "white",
             strokeWidth: 1,

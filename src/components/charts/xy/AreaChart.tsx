@@ -1,19 +1,16 @@
 "use client"
 import * as React from "react"
-import { useMemo, useCallback } from "react"
+import { useMemo } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps } from "../../stream/types"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
-import { createLegend } from "../shared/legendUtils"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { validateArrayData } from "../shared/validateChartData"
-import { normalizeLinkedHover, wrapStyleWithSelection } from "../shared/selectionUtils"
-import { useSelection } from "../../store/useSelection"
-import { useLinkedHover } from "../../store/useSelection"
+import { wrapStyleWithSelection } from "../shared/selectionUtils"
 
 /**
  * AreaChart component props
@@ -188,20 +185,11 @@ export function AreaChart<TDatum extends Record<string, any> = Record<string, an
 
   // ── Selection hooks (always called, conditional logic inside) ──────────
 
-  const hoverConfig = normalizeLinkedHover(linkedHover, colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [])
-
-  const selectionHook = useSelection({
-    name: selection?.name || "__unused__",
-    fields: []
+  const { activeSelectionHook, customHoverBehavior } = useChartSelection({
+    selection,
+    linkedHover,
+    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : []
   })
-
-  const linkedHoverHook = useLinkedHover({
-    name: hoverConfig?.name || "hover",
-    fields: hoverConfig?.fields || []
-  })
-
-  // Only use the hooks when the corresponding props are provided
-  const activeSelectionHook = selection ? { isActive: selectionHook.isActive, predicate: selectionHook.predicate } : null
 
   // ── Core chart logic ───────────────────────────────────────────────────
 
@@ -268,44 +256,14 @@ export function AreaChart<TDatum extends Record<string, any> = Record<string, an
     [baseLineStyle, activeSelectionHook, selection]
   )
 
-  // Determine if we should show legend
-  const shouldShowLegend = showLegend !== undefined ? showLegend : areaData.length > 1
-
-  // Build legend if needed
-  const legend = useMemo(() => {
-    if (!shouldShowLegend || !colorBy) return undefined
-
-    return createLegend({
-      data: areaData,
-      colorBy,
-      colorScale,
-      getColor
-    })
-  }, [shouldShowLegend, colorBy, areaData, colorScale])
-
-  // Adjust margin for legend if present
-  const margin = useMemo(() => {
-    const defaultMargin = { top: 50, bottom: 60, left: 70, right: 40 }
-    const finalMargin = { ...defaultMargin, ...userMargin }
-
-    // If legend is present and right margin is too small, increase it
-    if (legend && finalMargin.right < 120) {
-      finalMargin.right = 120
-    }
-
-    return finalMargin
-  }, [userMargin, legend])
-
-  // ── Hover behavior ─────────────────────────────────────────────────────
-
-  const customHoverBehavior = useCallback(
-    (d: Record<string, any> | null) => {
-      if (linkedHover) {
-        linkedHoverHook.onHover(d)
-      }
-    },
-    [linkedHover, linkedHoverHook]
-  )
+  // Legend + margin
+  const { legend, margin } = useChartLegendAndMargin({
+    data: areaData,
+    colorBy,
+    colorScale,
+    showLegend,
+    userMargin
+  })
 
   // Default tooltip showing all configured fields
   const groupField = areaBy || colorBy

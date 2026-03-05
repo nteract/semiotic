@@ -6,6 +6,7 @@ import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
 import { getColor, COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { inferNodesFromEdges, createEdgeStyleFn } from "../shared/networkUtils"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { validateNetworkData } from "../shared/validateChartData"
@@ -69,19 +70,10 @@ export function ChordDiagram<TNode extends Record<string, any> = Record<string, 
   const safeEdges = edges || []
 
   // Infer nodes from edges if not provided
-  const inferredNodes = useMemo(() => {
-    if (nodes && nodes.length > 0) return nodes
-
-    const nodeSet = new Set<string>()
-    safeEdges.forEach((edge) => {
-      const sourceId = typeof sourceAccessor === "function" ? sourceAccessor(edge) : edge[sourceAccessor]
-      const targetId = typeof targetAccessor === "function" ? targetAccessor(edge) : edge[targetAccessor]
-      nodeSet.add(sourceId)
-      nodeSet.add(targetId)
-    })
-
-    return Array.from(nodeSet).map((id) => ({ id }))
-  }, [nodes, safeEdges, sourceAccessor, targetAccessor])
+  const inferredNodes = useMemo(
+    () => inferNodesFromEdges(nodes, safeEdges, sourceAccessor, targetAccessor),
+    [nodes, safeEdges, sourceAccessor, targetAccessor]
+  )
 
   const colorScale = useColorScale(inferredNodes, colorBy, colorScheme)
 
@@ -105,34 +97,14 @@ export function ChordDiagram<TNode extends Record<string, any> = Record<string, 
   }, [colorBy, colorScale, colorScheme])
 
   // Edge style function — d is a RealtimeEdge
-  const edgeStyle = useMemo(() => {
-    return (d: Record<string, any>) => {
-      const baseStyle: Record<string, string | number> = {
-        stroke: "black",
-        strokeWidth: 0.5,
-        fillOpacity: edgeOpacity,
-        strokeOpacity: edgeOpacity
-      }
-      if (typeof edgeColorBy === "function") {
-        baseStyle.fill = edgeColorBy(d)
-      } else if (edgeColorBy === "source") {
-        const src = typeof d.source === "object" ? d.source : null
-        if (colorBy && src) {
-          baseStyle.fill = getColor(src.data || src, colorBy, colorScale)
-        } else if (src) {
-          baseStyle.fill = nodeStyle(src, src.index).fill
-        }
-      } else if (edgeColorBy === "target") {
-        const tgt = typeof d.target === "object" ? d.target : null
-        if (colorBy && tgt) {
-          baseStyle.fill = getColor(tgt.data || tgt, colorBy, colorScale)
-        } else if (tgt) {
-          baseStyle.fill = nodeStyle(tgt, tgt.index).fill
-        }
-      }
-      return baseStyle
-    }
-  }, [edgeColorBy, colorBy, colorScale, nodeStyle, edgeOpacity])
+  const edgeStyle = useMemo(() => createEdgeStyleFn({
+    edgeColorBy,
+    colorBy,
+    colorScale,
+    nodeStyleFn: nodeStyle,
+    edgeOpacity,
+    baseStyle: { stroke: "black", strokeWidth: 0.5, strokeOpacity: edgeOpacity }
+  }), [edgeColorBy, colorBy, colorScale, nodeStyle, edgeOpacity])
 
   // Node label accessor
   const nodeLabelFn = useMemo(() => {

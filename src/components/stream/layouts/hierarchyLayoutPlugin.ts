@@ -364,6 +364,11 @@ function buildTreeScene(
   const cy = size[1] / 2
   const defaultNodeSize = resolveDefaultNodeSize(config.nodeSize)
 
+  const depthPalette = [
+    "#e8d5b7", "#b8d4e3", "#d4e3b8", "#e3c4d4",
+    "#d4d4e3", "#e3d4b8", "#b8e3d4", "#e3b8b8"
+  ]
+
   // Build circle nodes
   for (const node of nodes) {
     let nx = node.x
@@ -376,8 +381,15 @@ function buildTreeScene(
     }
 
     const userStyle = nodeStyleFn(node)
+    let fill = userStyle.fill || "#4d430c"
+
+    // Color by depth if enabled
+    if (config.colorByDepth && node.depth !== undefined) {
+      fill = depthPalette[node.depth % depthPalette.length]
+    }
+
     const style: Style = {
-      fill: userStyle.fill || "#4d430c",
+      fill,
       stroke: userStyle.stroke || "#fff",
       strokeWidth: userStyle.strokeWidth ?? 1,
       opacity: userStyle.opacity

@@ -79,12 +79,19 @@ const LIGHT_THEME: ThemeColors = {
 function resolveThemeColors(el: HTMLElement | null): ThemeColors {
   if (!el) return LIGHT_THEME
   const style = getComputedStyle(el)
-  const textSecondary = style.getPropertyValue("--text-secondary").trim()
-  const textPrimary = style.getPropertyValue("--text-primary").trim()
-  const surface3 = style.getPropertyValue("--surface-3").trim()
-  const surface0 = style.getPropertyValue("--surface-0").trim()
 
-  if (!textSecondary && !textPrimary) return LIGHT_THEME
+  // Check for semiotic ThemeProvider CSS custom properties first
+  const semioticBorder = style.getPropertyValue("--semiotic-border").trim()
+  const semioticTextSecondary = style.getPropertyValue("--semiotic-text-secondary").trim()
+  const semioticBg = style.getPropertyValue("--semiotic-bg").trim()
+
+  // Fall back to docs shell CSS vars
+  const textSecondary = semioticTextSecondary || style.getPropertyValue("--text-secondary").trim()
+  const textPrimary = style.getPropertyValue("--text-primary").trim()
+  const surface3 = semioticBorder || style.getPropertyValue("--surface-3").trim()
+  const surface0 = semioticBg || style.getPropertyValue("--surface-0").trim()
+
+  if (!textSecondary && !textPrimary && !semioticBorder) return LIGHT_THEME
 
   return {
     axisStroke: surface3 || LIGHT_THEME.axisStroke,
@@ -170,6 +177,45 @@ function drawCrosshair(
   ctx.strokeStyle = theme.pointRing
   ctx.lineWidth = 2
   ctx.stroke()
+}
+
+// ── Line highlight on hover ───────────────────────────────────────────
+
+function drawLineHighlight(
+  ctx: CanvasRenderingContext2D,
+  scene: SceneNode[],
+  hoveredNode: SceneNode | null,
+  highlightConfig: { style?: Record<string, any> | ((d: any) => Record<string, any>) }
+) {
+  if (!hoveredNode) return
+
+  // Find the group of the hovered line
+  const hoveredGroup = (hoveredNode as any).group
+  if (hoveredGroup === undefined) return
+
+  // Re-draw all lines in the same group with highlight style
+  for (const node of scene) {
+    if (node.type !== "line") continue
+    if (node.group !== hoveredGroup) continue
+    if (node.path.length < 2) continue
+
+    // Resolve style
+    const rawStyle = typeof highlightConfig.style === "function"
+      ? highlightConfig.style(node.datum)
+      : (highlightConfig.style || {})
+
+    ctx.save()
+    ctx.beginPath()
+    ctx.moveTo(node.path[0][0], node.path[0][1])
+    for (let i = 1; i < node.path.length; i++) {
+      ctx.lineTo(node.path[i][0], node.path[i][1])
+    }
+    ctx.strokeStyle = rawStyle.stroke || node.style.stroke || "#007bff"
+    ctx.lineWidth = rawStyle.strokeWidth || (node.style.strokeWidth || 2) + 2
+    ctx.globalAlpha = rawStyle.opacity ?? 1
+    ctx.stroke()
+    ctx.restore()
+  }
 }
 
 // ── Brush Overlay ─────────────────────────────────────────────────────
@@ -320,6 +366,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       closeAccessor,
       candlestickStyle,
       showAxes = true,
+      axes: axesConfig,
       xLabel,
       yLabel,
       xFormat,
@@ -379,6 +426,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     // Hover state: ref for canvas (sync), React state for tooltip (async)
     const hoverRef = useRef<HoverData | null>(null)
+    const hoveredNodeRef = useRef<SceneNode | null>(null)
     const [hoverPoint, setHoverPoint] = useState<HoverData | null>(null)
 
     // Staleness state
@@ -428,6 +476,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       pointStyle,
       areaStyle,
       swarmStyle,
+      waterfallStyle,
       colorScheme,
       barColors,
       annotations,
@@ -445,7 +494,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       lineDataAccessor, xExtent, yExtent, sizeRange, binSize, normalize,
       boundsAccessor, boundsStyle,
       openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle,
-      lineStyle, pointStyle, areaStyle, swarmStyle, colorScheme, barColors, annotations,
+      lineStyle, pointStyle, areaStyle, swarmStyle, waterfallStyle, colorScheme, barColors, annotations,
       decay, pulse, transition, staleness,
       heatmapAggregation, heatmapXBins, heatmapYBins,
       isStreaming
@@ -537,6 +586,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       if (chartX < 0 || chartX > adjustedWidth || chartY < 0 || chartY > adjustedHeight) {
         if (hoverRef.current) {
           hoverRef.current = null
+          hoveredNodeRef.current = null
           setHoverPoint(null)
           if (customHoverBehavior) customHoverBehavior(null)
           scheduleRender()
@@ -552,6 +602,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       if (!hit) {
         if (hoverRef.current) {
           hoverRef.current = null
+          hoveredNodeRef.current = null
           setHoverPoint(null)
           if (customHoverBehavior) customHoverBehavior(null)
           scheduleRender()
@@ -568,6 +619,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       }
 
       hoverRef.current = hover
+      hoveredNodeRef.current = hit.node
       setHoverPoint(hover)
       if (customHoverBehavior) customHoverBehavior(hover)
       scheduleRender()
@@ -576,6 +628,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     hoverLeaveRef.current = () => {
       if (hoverRef.current) {
         hoverRef.current = null
+        hoveredNodeRef.current = null
         setHoverPoint(null)
         if (customHoverBehavior) customHoverBehavior(null)
         scheduleRender()
@@ -635,10 +688,24 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         ctx.globalAlpha = staleness?.dimOpacity ?? 0.5
       }
 
-      // Background
-      if (background) {
-        ctx.fillStyle = background
-        ctx.fillRect(0, 0, adjustedWidth, adjustedHeight)
+      // Background — use explicit prop, or fall back to semiotic theme background
+      const bgColor = background || (theme !== LIGHT_THEME ? theme.axisStroke : null)
+      const semioticBg = canvas
+        ? getComputedStyle(canvas).getPropertyValue("--semiotic-bg").trim()
+        : ""
+      const effectiveBg = background || (semioticBg && semioticBg !== "transparent" ? semioticBg : null)
+      if (effectiveBg) {
+        ctx.fillStyle = effectiveBg
+        ctx.fillRect(-margin.left, -margin.top, size[0], size[1])
+      }
+
+      // Clip rendering to the chart area so data constrained by xExtent/yExtent
+      // does not draw into the margin region
+      ctx.save()
+      if (typeof ctx.rect === "function") {
+        ctx.beginPath()
+        ctx.rect(0, 0, adjustedWidth, adjustedHeight)
+        ctx.clip()
       }
 
       // Render data marks via canvas renderers
@@ -653,6 +720,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           )
         }
       }
+
+      ctx.restore()
 
       // Reset alpha after staleness dimming
       if (currentlyStale) {
@@ -672,6 +741,16 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           "#007bff",
           theme
         )
+      }
+
+      // Draw line highlight on hover when hoverAnnotation includes { type: "highlight" }
+      if (hoveredNodeRef.current && Array.isArray(hoverAnnotation)) {
+        const highlightEntry = hoverAnnotation.find(
+          (a: any) => a && typeof a === "object" && a.type === "highlight"
+        )
+        if (highlightEntry) {
+          drawLineHighlight(ctx, store.scene, hoveredNodeRef.current, highlightEntry)
+        }
       }
 
       const wasDirty = dirtyRef.current
@@ -813,6 +892,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           margin={margin}
           scales={currentScales}
           showAxes={showAxes}
+          axes={axesConfig}
           xLabel={xLabel}
           yLabel={yLabel}
           xFormat={xFormat || tickFormatTime}

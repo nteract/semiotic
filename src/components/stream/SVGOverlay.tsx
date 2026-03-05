@@ -7,6 +7,56 @@ import Legend from "../Legend"
 import type { LegendGroup } from "../types/legendTypes"
 import { MarginalGraphics, normalizeMarginalConfig } from "./MarginalGraphics"
 
+// ── Axis config ───────────────────────────────────────────────────────────
+export interface AxisConfig {
+  orient: "left" | "right" | "top" | "bottom"
+  label?: string
+  ticks?: number
+  tickFormat?: (d: any) => string
+  baseline?: boolean | "under"
+  jaggedBase?: boolean
+}
+
+// ── Jagged baseline helper ────────────────────────────────────────────────
+
+function jaggedBaselinePath(
+  orient: "left" | "right" | "top" | "bottom",
+  width: number,
+  height: number
+): string {
+  const TOOTH_WIDTH = 8
+  const TOOTH_HEIGHT = 4
+
+  if (orient === "left" || orient === "right") {
+    // Horizontal zigzag along x-axis at the bottom (y = height) for "left",
+    // or top (y = 0) for "right"
+    const y = orient === "left" ? height : 0
+    const mod = orient === "left" ? -1 : 1
+    const teeth = Math.ceil(width / TOOTH_WIDTH)
+    let d = `M0,${y}`
+    for (let i = 0; i < teeth; i++) {
+      const x1 = i * TOOTH_WIDTH + TOOTH_WIDTH / 2
+      const x2 = (i + 1) * TOOTH_WIDTH
+      d += `L${Math.min(x1, width)},${y + TOOTH_HEIGHT * mod}`
+      d += `L${Math.min(x2, width)},${y}`
+    }
+    return d
+  } else {
+    // Vertical zigzag along y-axis at x = 0 for "bottom", or x = width for "top"
+    const x = orient === "bottom" ? 0 : width
+    const mod = orient === "bottom" ? 1 : -1
+    const teeth = Math.ceil(height / TOOTH_WIDTH)
+    let d = `M${x},0`
+    for (let i = 0; i < teeth; i++) {
+      const y1 = i * TOOTH_WIDTH + TOOTH_WIDTH / 2
+      const y2 = (i + 1) * TOOTH_WIDTH
+      d += `L${x + TOOTH_HEIGHT * mod},${Math.min(y1, height)}`
+      d += `L${x},${Math.min(y2, height)}`
+    }
+    return d
+  }
+}
+
 interface SVGOverlayProps {
   width: number
   height: number
@@ -17,6 +67,7 @@ interface SVGOverlayProps {
 
   // Axes
   showAxes?: boolean
+  axes?: AxisConfig[]
   xLabel?: string
   yLabel?: string
   xFormat?: (d: any) => string
@@ -73,6 +124,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
     margin,
     scales,
     showAxes,
+    axes,
     xLabel,
     yLabel,
     xFormat,
@@ -151,7 +203,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
                 y1={0}
                 x2={tick.pixel}
                 y2={height}
-                stroke="#e0e0e0"
+                stroke="var(--semiotic-grid, #e0e0e0)"
                 strokeWidth={1}
               />
             ))}
@@ -162,7 +214,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
                 y1={tick.pixel}
                 x2={width}
                 y2={tick.pixel}
-                stroke="#e0e0e0"
+                stroke="var(--semiotic-grid, #e0e0e0)"
                 strokeWidth={1}
               />
             ))}
@@ -170,18 +222,36 @@ export function SVGOverlay(props: SVGOverlayProps) {
         )}
 
         {/* Axes */}
-        {showAxes && scales && (
+        {showAxes && scales && (() => {
+          // Resolve per-axis config from the axes array
+          const leftAxis = axes?.find(a => a.orient === "left")
+          const bottomAxis = axes?.find(a => a.orient === "bottom")
+          const showLeftBaseline = leftAxis ? leftAxis.baseline !== false : true
+          const showBottomBaseline = bottomAxis ? bottomAxis.baseline !== false : true
+          const leftJagged = leftAxis?.jaggedBase || false
+          const bottomJagged = bottomAxis?.jaggedBase || false
+
+          const axisStroke = "var(--semiotic-border, #ccc)"
+          const tickColor = "var(--semiotic-text-secondary, #666)"
+          const labelColor = "var(--semiotic-text, #333)"
+
+          return (
           <g className="stream-axes">
-            {/* X axis */}
-            <line x1={0} y1={height} x2={width} y2={height} stroke="#ccc" strokeWidth={1} />
+            {/* X axis baseline */}
+            {showBottomBaseline && !bottomJagged && (
+              <line x1={0} y1={height} x2={width} y2={height} stroke={axisStroke} strokeWidth={1} />
+            )}
+            {bottomJagged && (
+              <path d={jaggedBaselinePath("bottom", width, height)} fill="none" stroke={axisStroke} strokeWidth={1} />
+            )}
             {xTicks.map((tick, i) => (
               <g key={`xtick-${i}`} transform={`translate(${tick.pixel},${height})`}>
-                <line y2={5} stroke="#ccc" strokeWidth={1} />
+                <line y2={5} stroke={axisStroke} strokeWidth={1} />
                 <text
                   y={18}
                   textAnchor="middle"
                   fontSize={10}
-                  fill="#666"
+                  fill={tickColor}
                   style={{ userSelect: "none" }}
                 >
                   {tick.label}
@@ -194,24 +264,29 @@ export function SVGOverlay(props: SVGOverlayProps) {
                 y={height + 40}
                 textAnchor="middle"
                 fontSize={12}
-                fill="#333"
+                fill={labelColor}
                 style={{ userSelect: "none" }}
               >
                 {xLabel}
               </text>
             )}
 
-            {/* Y axis */}
-            <line x1={0} y1={0} x2={0} y2={height} stroke="#ccc" strokeWidth={1} />
+            {/* Y axis baseline */}
+            {showLeftBaseline && !leftJagged && (
+              <line x1={0} y1={0} x2={0} y2={height} stroke={axisStroke} strokeWidth={1} />
+            )}
+            {leftJagged && (
+              <path d={jaggedBaselinePath("left", width, height)} fill="none" stroke={axisStroke} strokeWidth={1} />
+            )}
             {yTicks.map((tick, i) => (
               <g key={`ytick-${i}`} transform={`translate(0,${tick.pixel})`}>
-                <line x2={-5} stroke="#ccc" strokeWidth={1} />
+                <line x2={-5} stroke={axisStroke} strokeWidth={1} />
                 <text
                   x={-8}
                   textAnchor="end"
                   dominantBaseline="middle"
                   fontSize={10}
-                  fill="#666"
+                  fill={tickColor}
                   style={{ userSelect: "none" }}
                 >
                   {tick.label}
@@ -224,7 +299,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
                 y={height / 2}
                 textAnchor="middle"
                 fontSize={12}
-                fill="#333"
+                fill={labelColor}
                 transform={`rotate(-90, ${-margin.left + 15}, ${height / 2})`}
                 style={{ userSelect: "none" }}
               >
@@ -232,7 +307,8 @@ export function SVGOverlay(props: SVGOverlayProps) {
               </text>
             )}
           </g>
-        )}
+          )
+        })()}
 
         {/* Annotations */}
         {renderedAnnotations}
@@ -305,7 +381,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
           textAnchor="middle"
           fontSize={14}
           fontWeight="bold"
-          fill="#333"
+          fill="var(--semiotic-text, #333)"
           style={{ userSelect: "none" }}
         >
           {typeof title === "string" ? title : null}

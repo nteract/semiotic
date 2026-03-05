@@ -37,8 +37,21 @@ const sampleData = [
 const years = ["2021", "2022", "2023", "2024"]
 const groupProducts = ["Alpha", "Beta", "Gamma"]
 
+const groupColorMap = { Alpha: "#6366f1", Beta: "#22c55e", Gamma: "#f59e0b" }
+const groupLegend = {
+  legendGroups: [{
+    styleFn: d => ({ fill: d.color, stroke: d.color }),
+    type: "fill",
+    items: groupProducts.map(p => ({ label: p, color: groupColorMap[p] })),
+    label: ""
+  }]
+}
+
 const streamingGroupedBarCode = `import { useRef, useEffect } from "react"
 import { StreamOrdinalFrame } from "semiotic"
+
+const groupProducts = ["Alpha", "Beta", "Gamma"]
+const groupColorMap = { Alpha: "#6366f1", Beta: "#22c55e", Gamma: "#f59e0b" }
 
 function StreamingGroupedBarDemo() {
   const chartRef = useRef()
@@ -69,7 +82,16 @@ function StreamingGroupedBarDemo() {
       groupBy="product"
       windowSize={200}
       showAxes
-      colorScheme={["#6366f1", "#22c55e", "#f59e0b"]}
+      pieceStyle={d => ({ fill: groupColorMap[d.product] || "#007bff" })}
+      margin={{ top: 10, bottom: 40, left: 50, right: 120 }}
+      legend={{
+        legendGroups: [{
+          styleFn: d => ({ fill: d.color, stroke: d.color }),
+          type: "fill",
+          items: groupProducts.map(p => ({ label: p, color: groupColorMap[p] })),
+          label: ""
+        }]
+      }}
     />
   )
 }`
@@ -103,7 +125,9 @@ function StreamingGroupedBarDemo({ width }) {
       groupBy="product"
       windowSize={200}
       showAxes
-      colorScheme={["#6366f1", "#22c55e", "#f59e0b"]}
+      pieceStyle={d => ({ fill: groupColorMap[d.product] || "#007bff" })}
+      margin={{ top: 10, bottom: 40, left: 50, right: 120 }}
+      legend={groupLegend}
     />
   )
 }
@@ -193,6 +217,7 @@ export default function GroupedBarChartPage() {
               categoryAccessor: "category",
               groupBy: "product",
               valueAccessor: "value",
+              barPadding: 8,
               categoryLabel: "Quarter",
               valueLabel: "Units Sold",
             }}

@@ -16,14 +16,14 @@ export function accessorName(acc: string | Function): string {
   return typeof acc === "string" ? acc : "value"
 }
 
-function formatVal(v: unknown): string {
+export function formatVal(v: unknown): string {
   if (v == null) return "–"
   if (typeof v === "number") return v.toLocaleString()
   if (v instanceof Date) return v.toLocaleDateString()
   return String(v)
 }
 
-function resolveValue(d: Record<string, any>, acc: string | ((d: Record<string, any>) => any)): unknown {
+export function resolveValue(d: Record<string, any>, acc: string | ((d: Record<string, any>) => any)): unknown {
   return typeof acc === "function" ? acc(d) : d[acc]
 }
 
@@ -53,6 +53,49 @@ export function buildDefaultTooltip(
             </div>
           )
         })}
+      </div>
+    )
+  }
+}
+
+/**
+ * Build a default tooltip for ordinal charts (BarChart, DotPlot, SwarmPlot, etc.).
+ * Shows a bold category header, formatted value, and optional group field.
+ *
+ * @param pieData - If true, extracts datum via `d.data?.[0] || d.data || d`
+ *   (PieChart/DonutChart wrap data in arrays). Default: `d.data || d`.
+ */
+export function buildOrdinalTooltip({
+  categoryAccessor,
+  valueAccessor,
+  groupAccessor,
+  groupLabel,
+  pieData = false,
+}: {
+  categoryAccessor: string | ((d: any) => any)
+  valueAccessor: string | ((d: any) => any)
+  groupAccessor?: string | ((d: any) => any)
+  groupLabel?: string
+  pieData?: boolean
+}): (d: Record<string, any>) => React.ReactNode {
+  return (d: Record<string, any>) => {
+    const datum = pieData
+      ? (d.data?.[0] || d.data || d)
+      : (d.data || d)
+
+    const cat = resolveValue(datum, categoryAccessor)
+    const val = resolveValue(datum, valueAccessor)
+    const group = groupAccessor ? resolveValue(datum, groupAccessor) : undefined
+
+    return (
+      <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+        <div style={{ fontWeight: "bold" }}>{formatVal(cat)}</div>
+        <div style={{ marginTop: 4 }}>{formatVal(val)}</div>
+        {group != null && (
+          <div style={{ marginTop: 2, opacity: 0.8 }}>
+            {groupLabel || accessorName(groupAccessor!)}: {formatVal(group)}
+          </div>
+        )}
       </div>
     )
   }

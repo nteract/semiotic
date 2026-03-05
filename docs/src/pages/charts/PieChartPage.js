@@ -31,8 +31,21 @@ const marketSegments = ["Electronics", "Clothing", "Grocery", "Furniture", "Book
 const pieColors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
 const pieColorMap = Object.fromEntries(marketSegments.map((s, i) => [s, pieColors[i]]))
 
+const pieLegend = {
+  legendGroups: [{
+    styleFn: d => ({ fill: d.color, stroke: d.color }),
+    type: "fill",
+    items: marketSegments.map(s => ({ label: s, color: pieColorMap[s] })),
+    label: ""
+  }]
+}
+
 const streamingPieCode = `import { useRef, useEffect } from "react"
 import { StreamOrdinalFrame } from "semiotic"
+
+const marketSegments = ["Electronics", "Clothing", "Grocery", "Furniture", "Books"]
+const pieColors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
+const pieColorMap = Object.fromEntries(marketSegments.map((s, i) => [s, pieColors[i]]))
 
 function StreamingPieDemo() {
   const chartRef = useRef()
@@ -63,6 +76,15 @@ function StreamingPieDemo() {
       windowSize={200}
       showAxes={false}
       pieceStyle={d => ({ fill: pieColorMap[d.category] || "#007bff" })}
+      margin={{ top: 20, bottom: 20, left: 20, right: 120 }}
+      legend={{
+        legendGroups: [{
+          styleFn: d => ({ fill: d.color, stroke: d.color }),
+          type: "fill",
+          items: marketSegments.map(s => ({ label: s, color: pieColorMap[s] })),
+          label: ""
+        }]
+      }}
     />
   )
 }`
@@ -97,6 +119,8 @@ function StreamingPieDemo({ width }) {
       windowSize={200}
       showAxes={false}
       pieceStyle={d => ({ fill: pieColorMap[d.category] || "#007bff" })}
+      margin={{ top: 20, bottom: 20, left: 20, right: 120 }}
+      legend={pieLegend}
     />
   )
 }

@@ -270,6 +270,7 @@ export default function AxesPage() {
           lineDataAccessor: "coordinates",
           xAccessor: "step",
           yAccessor: "value",
+          yExtent: [4000, undefined],
           lineStyle: { stroke: "#6366f1", strokeWidth: 2 },
           margin: { top: 20, bottom: 60, left: 70, right: 20 },
           showAxes: true,
@@ -281,6 +282,7 @@ export default function AxesPage() {
         type={StreamXYFrame}
         overrideProps={{
           data: `[{ label: "Revenue", coordinates: salesData }]`,
+          yExtent: `[4000, undefined]`,
           axes: `[
   { orient: "left", baseline: false, jaggedBase: true },
   { orient: "bottom" }

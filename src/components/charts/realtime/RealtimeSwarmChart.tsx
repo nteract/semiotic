@@ -12,8 +12,7 @@ import type {
 } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { ReactNode } from "react"
-import { normalizeLinkedHover } from "../shared/selectionUtils"
-import { useLinkedHover } from "../../store/useSelection"
+import { useChartSelection } from "../shared/hooks"
 
 export interface RealtimeSwarmChartProps {
   /** Chart dimensions as [width, height] */
@@ -147,21 +146,17 @@ export const RealtimeSwarmChart = forwardRef<RealtimeFrameHandle, RealtimeSwarmC
 
     const frameRef = useRef<StreamXYFrameHandle>(null)
 
-    // ── Linked hover hooks (always called, conditional logic inside) ──
-    const hoverConfig = normalizeLinkedHover(linkedHover)
-    const linkedHoverHook = useLinkedHover({
-      name: hoverConfig?.name || "hover",
-      fields: hoverConfig?.fields || []
+    // ── Linked hover via shared hook ──
+    const { customHoverBehavior: linkedHoverBehavior } = useChartSelection({
+      linkedHover, unwrapData: true
     })
 
     const combinedHoverBehavior = useCallback(
       (d: HoverData | null) => {
         if (onHover) onHover(d)
-        if (linkedHover) {
-          linkedHoverHook.onHover(d ? (d.data || d) : null)
-        }
+        linkedHoverBehavior(d)
       },
-      [onHover, linkedHover, linkedHoverHook]
+      [onHover, linkedHoverBehavior]
     )
 
     useImperativeHandle(ref, () => ({

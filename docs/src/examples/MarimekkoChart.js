@@ -59,6 +59,11 @@ const data = [
   { market: "Durham, NC", segment: "Delicious-n-new", value: 400, pct: 0.22 }
 ]
 
+// KNOWN LIMITATION: StreamOrdinalFrame's category axis ticks use the uniform
+// band scale, which does not reflect dynamicColumnWidth. Category tick marks
+// appear at equal-width positions rather than at the actual variable-width
+// column centers. The oLabel prop correctly positions per-column labels using
+// computed column positions. The value (rAccessor) axis on the left is unaffected.
 const frameProps = {
   size: [700, 400],
   rAccessor: "pct",
@@ -69,6 +74,7 @@ const frameProps = {
   stackBy: "segment",
   barPadding: 8,
   oLabel: true,
+  rFormat: d => Math.floor(d * 100) + "%",
   margin: { left: 45, top: 40, bottom: 80, right: 50 },
   data,
   pieceStyle: d => {

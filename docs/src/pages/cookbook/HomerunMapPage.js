@@ -85,6 +85,7 @@ function StreamingHomerunMap() {
         enableHover
         showAxes={false}
         backgroundGraphics={fieldGraphic}
+        pulse={{ duration: 600, color: "rgba(255,255,0,0.8)", glowRadius: 6 }}
         margin={{ left: 25, right: 25, top: 25, bottom: 25 }}
       />
     </div>
@@ -136,6 +137,7 @@ function StreamingHomerunDemo({ width }) {
         enableHover
         showAxes={false}
         backgroundGraphics={fieldGraphic}
+        pulse={{ duration: 600, color: "rgba(255,255,0,0.8)", glowRadius: 6 }}
         margin={{ left: 25, right: 25, top: 25, bottom: 25 }}
       />
     </div>

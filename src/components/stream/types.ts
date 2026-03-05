@@ -155,6 +155,8 @@ export interface PointSceneNode {
   _pulseIntensity?: number
   /** Pulse glow color */
   _pulseColor?: string
+  /** Pulse glow radius in px (default: 4) */
+  _pulseGlowRadius?: number
   /** Animation target fields (set during transitions) */
   _targetX?: number
   _targetY?: number
@@ -339,6 +341,14 @@ export interface StreamXYFrameProps<T = Record<string, any>> {
 
   // ── Axes ─────────────────────────────────────────
   showAxes?: boolean
+  axes?: Array<{
+    orient: "left" | "right" | "top" | "bottom"
+    label?: string
+    ticks?: number
+    tickFormat?: (d: any) => string
+    baseline?: boolean | "under"
+    jaggedBase?: boolean
+  }>
   xLabel?: string
   yLabel?: string
   xFormat?: (d: any) => string

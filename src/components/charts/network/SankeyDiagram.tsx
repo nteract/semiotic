@@ -6,7 +6,8 @@ import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
 import { getColor } from "../shared/colorUtils"
 import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
-import { defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
+import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
+import { inferNodesFromEdges, createEdgeStyleFn } from "../shared/networkUtils"
 import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { validateNetworkData } from "../shared/validateChartData"
@@ -75,26 +76,10 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
   const safeEdges = edges || []
 
   // Infer nodes from edges if not provided
-  const inferredNodes = useMemo(() => {
-    if (nodes && nodes.length > 0) return nodes
-
-    const nodeSet = new Set<string>()
-    safeEdges.forEach((edge) => {
-      const sourceId =
-        typeof sourceAccessor === "function"
-          ? sourceAccessor(edge)
-          : edge[sourceAccessor]
-      const targetId =
-        typeof targetAccessor === "function"
-          ? targetAccessor(edge)
-          : edge[targetAccessor]
-
-      nodeSet.add(sourceId)
-      nodeSet.add(targetId)
-    })
-
-    return Array.from(nodeSet).map((id) => ({ id }))
-  }, [nodes, safeEdges, sourceAccessor, targetAccessor])
+  const inferredNodes = useMemo(
+    () => inferNodesFromEdges(nodes, safeEdges, sourceAccessor, targetAccessor),
+    [nodes, safeEdges, sourceAccessor, targetAccessor]
+  )
 
   // Create color scale if colorBy is specified
   const colorScale = useColorScale(inferredNodes, colorBy, colorScheme)
@@ -120,38 +105,14 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
 
   // Edge style function
   // d is a RealtimeEdge — d.source/d.target are RealtimeNode objects
-  const edgeStyle = useMemo(() => {
-    return (d: Record<string, any>) => {
-      const baseStyle: Record<string, string | number> = {
-        stroke: "none",
-        strokeWidth: 0,
-        fillOpacity: edgeOpacity
-      }
-
-      if (typeof edgeColorBy === "function") {
-        baseStyle.fill = edgeColorBy(d)
-      } else if (edgeColorBy === "source") {
-        const src = typeof d.source === "object" ? d.source : null
-        if (colorBy && src) {
-          baseStyle.fill = getColor(src.data || src, colorBy, colorScale)
-        } else if (src) {
-          baseStyle.fill = nodeStyle(src).fill
-        }
-      } else if (edgeColorBy === "target") {
-        const tgt = typeof d.target === "object" ? d.target : null
-        if (colorBy && tgt) {
-          baseStyle.fill = getColor(tgt.data || tgt, colorBy, colorScale)
-        } else if (tgt) {
-          baseStyle.fill = nodeStyle(tgt).fill
-        }
-      } else if (edgeColorBy === "gradient") {
-        baseStyle.fill = "#999"
-        baseStyle.fillOpacity = edgeOpacity * 0.7
-      }
-
-      return baseStyle
-    }
-  }, [edgeColorBy, colorBy, colorScale, nodeStyle, edgeOpacity])
+  const edgeStyle = useMemo(() => createEdgeStyleFn({
+    edgeColorBy,
+    colorBy,
+    colorScale,
+    nodeStyleFn: nodeStyle,
+    edgeOpacity,
+    baseStyle: { stroke: "none", strokeWidth: 0 }
+  }), [edgeColorBy, colorBy, colorScale, nodeStyle, edgeOpacity])
 
   // Node label accessor
   const nodeLabelFn = useMemo(() => {
@@ -160,12 +121,6 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
     if (typeof accessor === "function") return accessor
     return (d: Record<string, any>) => d[accessor]
   }, [showLabels, nodeLabel, nodeIdAccessor])
-
-  // Tooltip
-  const tooltipFn = useMemo(() => {
-    if (typeof tooltip === "function") return tooltip
-    return undefined
-  }, [tooltip])
 
   // Validate data (after all hooks)
   const error = validateNetworkData({
@@ -200,7 +155,7 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
       nodeLabel={nodeLabelFn}
       showLabels={showLabels}
       enableHover={enableHover}
-      tooltipContent={tooltipFn ? (d) => tooltipFn(d.data) : undefined}
+      tooltipContent={tooltip ? (d: any) => (normalizeTooltip(tooltip) as Function)(d.data) : undefined}
       className={className}
       title={title}
       {...frameProps}

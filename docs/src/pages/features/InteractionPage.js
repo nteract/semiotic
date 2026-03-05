@@ -105,7 +105,7 @@ export default function InteractionPage() {
             hoverAnnotation: [
               {
                 type: "highlight",
-                style: { strokeWidth: 8 },
+                style: { strokeWidth: 3 },
               },
               { type: "frame-hover" },
             ],
@@ -122,7 +122,7 @@ export default function InteractionPage() {
 ]`,
           frameProps: `{
   hoverAnnotation: [
-    { type: "highlight", style: { strokeWidth: 8 } },
+    { type: "highlight", style: { strokeWidth: 3 } },
     { type: "frame-hover" }
   ],
   lineIDAccessor: "product"
@@ -161,6 +161,25 @@ export default function InteractionPage() {
           margin: { top: 20, bottom: 50, left: 50, right: 20 },
           showAxes: true,
           enableHover: true,
+          hoverAnnotation: [
+            {
+              type: "highlight",
+              style: (d) => ({
+                strokeWidth: 3,
+                stroke: d.parentLine?.group === "Widget" ? colors[0] : colors[1],
+              }),
+            },
+            {
+              type: "frame-hover",
+              r: 8,
+              style: (d) => ({
+                fill: d.parentLine?.group === "Widget" ? colors[0] : colors[1],
+                stroke: "white",
+                strokeWidth: 2,
+              }),
+            },
+          ],
+          lineIDAccessor: "group",
           size: [500, 300],
         }}
         type={StreamXYFrame}
@@ -174,11 +193,19 @@ export default function InteractionPage() {
   {
     type: "highlight",
     style: d => ({
-      strokeWidth: 6,
+      strokeWidth: 3,
       stroke: colorForLine(d)
     })
   },
-  { type: "frame-hover" }
+  {
+    type: "frame-hover",
+    r: 8,
+    style: d => ({
+      fill: colorForLine(d),
+      stroke: "white",
+      strokeWidth: 2
+    })
+  }
 ]`,
         }}
         hiddenProps={{}}

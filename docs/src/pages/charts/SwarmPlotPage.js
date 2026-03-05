@@ -99,6 +99,8 @@ function StreamingSwarmDemo() {
       windowSize={200}
       showAxes
       pieceStyle={() => ({ fill: "#6366f1", opacity: 0.7 })}
+      decay={{ type: "exponential", halfLife: 100, minOpacity: 0.1 }}
+      pulse={{ duration: 500, color: "rgba(99, 102, 241, 0.5)", glowRadius: 4 }}
     />
   )
 }`
@@ -132,6 +134,8 @@ function StreamingSwarmDemo({ width }) {
       windowSize={200}
       showAxes
       pieceStyle={() => ({ fill: "#6366f1", opacity: 0.7 })}
+      decay={{ type: "exponential", halfLife: 100, minOpacity: 0.1 }}
+      pulse={{ duration: 500, color: "rgba(99, 102, 241, 0.5)", glowRadius: 4 }}
     />
   )
 }

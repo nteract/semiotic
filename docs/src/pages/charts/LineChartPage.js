@@ -320,14 +320,12 @@ export default function LineChartPage() {
         hiddenProps={{}}
       />
 
-      <h3 id="confidence-bands">Confidence Bands (lineBounds)</h3>
+      <h3 id="confidence-bands">Confidence Bands (boundsAccessor)</h3>
       <p>
-        Use <code>frameProps</code> with StreamXYFrame's <code>summaryType</code> to
-        add confidence intervals or error bands around your line. The{" "}
-        <code>linebounds</code> summary type takes a{" "}
-        <code>boundingAccessor</code> (or separate{" "}
-        <code>topBoundingAccessor</code> / <code>bottomBoundingAccessor</code>)
-        that returns how far the band extends above and below each point.
+        Use <code>frameProps</code> with StreamXYFrame's{" "}
+        <code>boundsAccessor</code> to add confidence intervals or error bands
+        around your line. The accessor receives each data point and returns how
+        far the band extends above and below the line value.
       </p>
 
       <LiveExample
@@ -341,18 +339,11 @@ export default function LineChartPage() {
           xLabel: "Month",
           yLabel: "Forecast",
           frameProps: {
-            summaries: [{ coordinates: forecastData }],
-            summaryType: {
-              type: "linebounds",
-              topBoundingAccessor: d => d.upper,
-              bottomBoundingAccessor: d => d.lower,
-            },
-            summaryStyle: {
+            boundsAccessor: d => Math.max(d.upper, d.lower),
+            boundsStyle: {
               fill: "#6366f1",
               fillOpacity: 0.15,
-              stroke: "#6366f1",
-              strokeOpacity: 0.3,
-              strokeWidth: 1,
+              stroke: "none",
             },
           },
         }}
@@ -365,18 +356,11 @@ export default function LineChartPage() {
   // ...data with upper/lower bounds per point
 ]`,
           frameProps: `{
-  summaries: [{ coordinates: forecastData }],
-  summaryType: {
-    type: "linebounds",
-    topBoundingAccessor: d => d.upper,
-    bottomBoundingAccessor: d => d.lower,
-  },
-  summaryStyle: {
+  boundsAccessor: d => Math.max(d.upper, d.lower),
+  boundsStyle: {
     fill: "#6366f1",
     fillOpacity: 0.15,
-    stroke: "#6366f1",
-    strokeOpacity: 0.3,
-    strokeWidth: 1,
+    stroke: "none",
   },
 }`,
         }}
@@ -384,12 +368,13 @@ export default function LineChartPage() {
       />
 
       <p>
-        The <code>boundingAccessor</code> receives each raw data point and
-        returns a pixel offset. Use separate <code>topBoundingAccessor</code>{" "}
-        and <code>bottomBoundingAccessor</code> for asymmetric bands (e.g.,
-        when your confidence interval isn't centered on the line). This is
-        useful for forecasts, measurement uncertainty, or any scenario where
-        you want to show a range around a trend.
+        The <code>boundsAccessor</code> receives each raw data point and
+        returns an offset value. The band is drawn symmetrically at{" "}
+        <code>y +/- offset</code> around the line. For asymmetric
+        confidence intervals, use the larger of the two bounds to ensure
+        the full range is covered. This is useful for forecasts, measurement
+        uncertainty, or any scenario where you want to show a range around a
+        trend.
       </p>
 
       {/* ----------------------------------------------------------------- */}

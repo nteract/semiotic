@@ -401,7 +401,12 @@ const StreamNetworkFrame = forwardRef<
 
   const getParticleColor = useCallback(
     (edge: RealtimeEdge): string => {
-      const colorByMode = particleStyle.colorBy || "source"
+      // When the user hasn't explicitly set particleStyle.colorBy,
+      // inherit the edge color so particles match their edge's fill.
+      if (!particleStyleProp?.colorBy) {
+        return getEdgeColor(edge)
+      }
+      const colorByMode = particleStyle.colorBy!
       const sourceNode = typeof edge.source === "object" ? edge.source : null
       const targetNode = typeof edge.target === "object" ? edge.target : null
 
@@ -413,7 +418,7 @@ const StreamNetworkFrame = forwardRef<
       }
       return "#999"
     },
-    [particleStyle.colorBy, getNodeColor]
+    [particleStyleProp?.colorBy, particleStyle.colorBy, getNodeColor, getEdgeColor]
   )
 
   // ── Stable scheduleRender ────────────────────────────────────────────
@@ -445,13 +450,32 @@ const StreamNetworkFrame = forwardRef<
     store.buildScene([adjustedWidth, adjustedHeight])
     dirtyRef.current = true
 
+    // Sync the component's node color map with the scene builder's
+    // color assignments. The scene builder (layout plugin) assigns
+    // node colors by iteration order, while this component's
+    // getNodeColor assigns lazily. Without syncing, particle colors
+    // diverge from the rendered edge band colors.
+    // We only ADD missing entries (never overwrite) so that existing
+    // streaming color assignments remain stable.
+    const colors = Array.isArray(colorScheme)
+      ? colorScheme
+      : DEFAULT_COLORS
+    const layoutNodes = Array.from(store.nodes.values())
+    for (let i = 0; i < layoutNodes.length; i++) {
+      const node = layoutNodes[i]
+      if (!nodeColorMap.current.has(node.id)) {
+        nodeColorMap.current.set(node.id, colors[i % colors.length])
+      }
+    }
+    colorIndexRef.current = layoutNodes.length
+
     setLayoutVersion(store.layoutVersion)
 
     if (onTopologyChange) {
       const { nodes, edges } = store.getLayoutData()
       onTopologyChange(nodes, edges)
     }
-  }, [adjustedWidth, adjustedHeight, onTopologyChange])
+  }, [adjustedWidth, adjustedHeight, onTopologyChange, colorScheme])
 
   // ── Push API ─────────────────────────────────────────────────────────
 
@@ -545,10 +569,24 @@ const StreamNetworkFrame = forwardRef<
 
       store.ingestBounded(rawNodes, rawEdges, [adjustedWidth, adjustedHeight])
       store.buildScene([adjustedWidth, adjustedHeight])
+
+      // Sync component node color map (same logic as runLayout sync)
+      const colors = Array.isArray(colorScheme)
+        ? colorScheme
+        : DEFAULT_COLORS
+      const layoutNodes = Array.from(store.nodes.values())
+      for (let i = 0; i < layoutNodes.length; i++) {
+        const node = layoutNodes[i]
+        if (!nodeColorMap.current.has(node.id)) {
+          nodeColorMap.current.set(node.id, colors[i % colors.length])
+        }
+      }
+      colorIndexRef.current = layoutNodes.length
+
       dirtyRef.current = true
       scheduleRender()
     }
-  }, [nodesProp, edgesProp, dataProp, hierarchyRoot, isHierarchical, adjustedWidth, adjustedHeight, pipelineConfig, scheduleRender])
+  }, [nodesProp, edgesProp, dataProp, hierarchyRoot, isHierarchical, adjustedWidth, adjustedHeight, pipelineConfig, scheduleRender, colorScheme])
 
   // ── Initial streaming data ───────────────────────────────────────────
 

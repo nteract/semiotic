@@ -1,19 +1,17 @@
 "use client"
 import * as React from "react"
-import { useMemo, useCallback } from "react"
+import { useMemo } from "react"
 import { scaleSequential } from "d3-scale"
 import { interpolateBlues, interpolateReds, interpolateGreens, interpolateViridis } from "d3-scale-chromatic"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps } from "../../stream/types"
-import { DEFAULT_COLOR, resolveAccessor } from "../shared/hooks"
+import { DEFAULT_COLOR, resolveAccessor, useChartSelection, useChartLegendAndMargin } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { validateArrayData } from "../shared/validateChartData"
-import { normalizeLinkedHover, wrapStyleWithSelection } from "../shared/selectionUtils"
-import { useSelection } from "../../store/useSelection"
-import { useLinkedHover } from "../../store/useSelection"
+import { wrapStyleWithSelection } from "../shared/selectionUtils"
 
 /**
  * Heatmap component props
@@ -185,7 +183,7 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
     data,
     width = 600,
     height = 400,
-    margin = { top: 50, bottom: 60, left: 70, right: 80 },
+    margin: userMargin,
     className,
     title,
     xAccessor = "x",
@@ -210,22 +208,19 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
 
   const safeData = data || []
 
+  const { margin } = useChartLegendAndMargin({
+    data: safeData, colorBy: undefined, colorScale: undefined,
+    showLegend: false, userMargin,
+    defaults: { top: 50, bottom: 60, left: 70, right: 80 }
+  })
+
   // ── Selection hooks (always called, conditional logic inside) ──────────
 
-  const hoverConfig = normalizeLinkedHover(linkedHover, [])
-
-  const selectionHook = useSelection({
-    name: selection?.name || "__unused__",
-    fields: []
+  const { activeSelectionHook, customHoverBehavior } = useChartSelection({
+    selection,
+    linkedHover,
+    fallbackFields: []
   })
-
-  const linkedHoverHook = useLinkedHover({
-    name: hoverConfig?.name || "hover",
-    fields: hoverConfig?.fields || []
-  })
-
-  // Only use the hooks when the corresponding props are provided
-  const activeSelectionHook = selection ? { isActive: selectionHook.isActive, predicate: selectionHook.predicate } : null
 
   // ── Core chart logic ───────────────────────────────────────────────────
 
@@ -315,17 +310,6 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
       )
     }
   }, [showValues, getValueFn, valueFormat, valueDomain])
-
-  // ── Hover behavior ─────────────────────────────────────────────────────
-
-  const customHoverBehavior = useCallback(
-    (d: Record<string, any> | null) => {
-      if (linkedHover) {
-        linkedHoverHook.onHover(d)
-      }
-    },
-    [linkedHover, linkedHoverHook]
-  )
 
   // Default tooltip showing x, y, and value
   const defaultTooltipContent = useMemo(() => buildDefaultTooltip([

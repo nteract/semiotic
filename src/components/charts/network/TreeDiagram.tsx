@@ -3,7 +3,8 @@ import * as React from "react"
 import { useMemo } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
-import { getColor, createColorScale } from "../shared/colorUtils"
+import { getColor, createColorScale, DEPTH_PALETTE_COLORS } from "../shared/colorUtils"
+import { flattenHierarchy, resolveHierarchySum } from "../shared/networkUtils"
 import type { BaseChartProps, ChartAccessor, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { DEFAULT_COLOR } from "../shared/hooks"
@@ -64,19 +65,11 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
 
   // Node style function
   const allNodes = useMemo(() => {
-    if (!data) return []
-    const nodes: Array<Record<string, any>> = []
-    const traverse = (node: Record<string, any>) => {
-      nodes.push(node)
-      const children = typeof childrenAccessor === "function" ? childrenAccessor(node as TNode) : node[childrenAccessor]
-      if (children && Array.isArray(children)) children.forEach(traverse)
-    }
-    traverse(data)
-    return nodes
+    return flattenHierarchy(data, childrenAccessor as string | ((d: any) => any[]))
   }, [data, childrenAccessor])
 
   const colorScale = useMemo(() => {
-    if (colorByDepth) return createColorScale(allNodes.map((_, idx) => ({ depth: idx % 5 })), "depth", colorScheme)
+    if (colorByDepth) return undefined
     if (!colorBy || typeof colorBy === "function") return undefined
     return createColorScale(allNodes, colorBy as string, colorScheme)
   }, [allNodes, colorBy, colorByDepth, colorScheme])
@@ -86,7 +79,7 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
     return (d: Record<string, any>) => {
       const baseStyle: Record<string, string | number> = { stroke: "black", strokeWidth: 1 }
       if (colorByDepth) {
-        baseStyle.fill = getColor({ depth: d.depth || 0 }, "depth", colorScale)
+        baseStyle.fill = DEPTH_PALETTE_COLORS[(d.depth || 0) % DEPTH_PALETTE_COLORS.length]
       } else if (colorBy) {
         baseStyle.fill = getColor(d.data || d, colorBy as string | ((d: any) => string), colorScale)
       } else {
@@ -102,8 +95,7 @@ export function TreeDiagram<TNode extends Record<string, any> = Record<string, a
 
   const hierarchySumFn = useMemo(() => {
     if (layout === "treemap" || layout === "circlepack" || layout === "partition") {
-      if (typeof valueAccessor === "function") return valueAccessor
-      return (d: Record<string, any>) => d[valueAccessor] || 1
+      return resolveHierarchySum(valueAccessor)
     }
     return undefined
   }, [layout, valueAccessor])

@@ -8,12 +8,15 @@ import type {
   HoverAnnotationConfig,
   HoverData,
   AnnotationContext,
-  StreamXYFrameHandle
+  StreamXYFrameHandle,
+  DecayConfig,
+  PulseConfig,
+  StalenessConfig,
+  TransitionConfig
 } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { ReactNode } from "react"
-import { normalizeLinkedHover } from "../shared/selectionUtils"
-import { useLinkedHover } from "../../store/useSelection"
+import { useChartSelection } from "../shared/hooks"
 
 export interface RealtimeTemporalHistogramProps {
   /** Time interval for binning */
@@ -86,6 +89,14 @@ export interface RealtimeTemporalHistogramProps {
   tooltip?: (d: HoverData) => ReactNode
   /** Enable linked hover selection events for cross-chart highlighting */
   linkedHover?: boolean | string | { name?: string; fields: string[] }
+  /** Configurable opacity decay for older data */
+  decay?: DecayConfig
+  /** Flash effect on newly inserted data */
+  pulse?: PulseConfig
+  /** Frame-level data liveness indicator */
+  staleness?: StalenessConfig
+  /** Smooth position interpolation on data change */
+  transition?: TransitionConfig
 }
 
 /**
@@ -152,7 +163,11 @@ export const RealtimeTemporalHistogram = forwardRef<RealtimeFrameHandle, Realtim
       svgAnnotationRules,
       tickFormatTime,
       tickFormatValue,
-      linkedHover
+      linkedHover,
+      decay,
+      pulse,
+      staleness,
+      transition
     } = props
 
     const resolvedSize: [number, number] = width != null && height != null
@@ -162,21 +177,17 @@ export const RealtimeTemporalHistogram = forwardRef<RealtimeFrameHandle, Realtim
 
     const frameRef = useRef<StreamXYFrameHandle>(null)
 
-    // ── Linked hover hooks (always called, conditional logic inside) ──
-    const hoverConfig = normalizeLinkedHover(linkedHover)
-    const linkedHoverHook = useLinkedHover({
-      name: hoverConfig?.name || "hover",
-      fields: hoverConfig?.fields || []
+    // ── Linked hover via shared hook ──
+    const { customHoverBehavior: linkedHoverBehavior } = useChartSelection({
+      linkedHover, unwrapData: true
     })
 
     const combinedHoverBehavior = useCallback(
       (d: HoverData | null) => {
         if (onHover) onHover(d)
-        if (linkedHover) {
-          linkedHoverHook.onHover(d ? (d.data || d) : null)
-        }
+        linkedHoverBehavior(d)
       },
-      [onHover, linkedHover, linkedHoverHook]
+      [onHover, linkedHoverBehavior]
     )
 
     useImperativeHandle(ref, () => ({
@@ -222,6 +233,10 @@ export const RealtimeTemporalHistogram = forwardRef<RealtimeFrameHandle, Realtim
         svgAnnotationRules={svgAnnotationRules}
         tickFormatTime={tickFormatTime}
         tickFormatValue={tickFormatValue}
+        decay={decay}
+        pulse={pulse}
+        staleness={staleness}
+        transition={transition}
       />
     )
   }

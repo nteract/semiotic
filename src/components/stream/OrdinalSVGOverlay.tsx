@@ -145,7 +145,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                 y1={isHorizontal ? 0 : tick.pixel}
                 x2={isHorizontal ? tick.pixel : width}
                 y2={isHorizontal ? height : tick.pixel}
-                stroke="#e0e0e0"
+                stroke="var(--semiotic-grid, #e0e0e0)"
                 strokeWidth={1}
               />
             ))}
@@ -159,16 +159,16 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
               <>
                 {/* Horizontal: categories on left, values on bottom */}
                 {/* Category axis (left) */}
-                <line x1={0} y1={0} x2={0} y2={height} stroke="#ccc" strokeWidth={1} />
+                <line x1={0} y1={0} x2={0} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
                 {categoryTicks.map((tick, i) => (
                   <g key={`cat-${i}`} transform={`translate(0,${tick.pixel})`}>
-                    <line x2={-5} stroke="#ccc" strokeWidth={1} />
+                    <line x2={-5} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
                     <text
                       x={-8}
                       textAnchor="end"
                       dominantBaseline="middle"
                       fontSize={10}
-                      fill="#666"
+                      fill="var(--semiotic-text-secondary, #666)"
                       style={{ userSelect: "none" }}
                     >
                       {tick.label}
@@ -181,7 +181,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                     y={height / 2}
                     textAnchor="middle"
                     fontSize={12}
-                    fill="#333"
+                    fill="var(--semiotic-text, #333)"
                     transform={`rotate(-90, ${-margin.left + 15}, ${height / 2})`}
                     style={{ userSelect: "none" }}
                   >
@@ -190,15 +190,15 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                 )}
 
                 {/* Value axis (bottom) */}
-                <line x1={0} y1={height} x2={width} y2={height} stroke="#ccc" strokeWidth={1} />
+                <line x1={0} y1={height} x2={width} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
                 {valueTicks.map((tick, i) => (
                   <g key={`val-${i}`} transform={`translate(${tick.pixel},${height})`}>
-                    <line y2={5} stroke="#ccc" strokeWidth={1} />
+                    <line y2={5} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
                     <text
                       y={18}
                       textAnchor="middle"
                       fontSize={10}
-                      fill="#666"
+                      fill="var(--semiotic-text-secondary, #666)"
                       style={{ userSelect: "none" }}
                     >
                       {tick.label}
@@ -211,7 +211,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                     y={height + 40}
                     textAnchor="middle"
                     fontSize={12}
-                    fill="#333"
+                    fill="var(--semiotic-text, #333)"
                     style={{ userSelect: "none" }}
                   >
                     {rLabel}
@@ -222,15 +222,15 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
               <>
                 {/* Vertical: categories on bottom, values on left */}
                 {/* Category axis (bottom) */}
-                <line x1={0} y1={height} x2={width} y2={height} stroke="#ccc" strokeWidth={1} />
+                <line x1={0} y1={height} x2={width} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
                 {categoryTicks.map((tick, i) => (
                   <g key={`cat-${i}`} transform={`translate(${tick.pixel},${height})`}>
-                    <line y2={5} stroke="#ccc" strokeWidth={1} />
+                    <line y2={5} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
                     <text
                       y={18}
                       textAnchor="middle"
                       fontSize={10}
-                      fill="#666"
+                      fill="var(--semiotic-text-secondary, #666)"
                       style={{ userSelect: "none" }}
                     >
                       {tick.label}
@@ -243,7 +243,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                     y={height + 40}
                     textAnchor="middle"
                     fontSize={12}
-                    fill="#333"
+                    fill="var(--semiotic-text, #333)"
                     style={{ userSelect: "none" }}
                   >
                     {oLabel}
@@ -251,16 +251,16 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                 )}
 
                 {/* Value axis (left) */}
-                <line x1={0} y1={0} x2={0} y2={height} stroke="#ccc" strokeWidth={1} />
+                <line x1={0} y1={0} x2={0} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
                 {valueTicks.map((tick, i) => (
                   <g key={`val-${i}`} transform={`translate(0,${tick.pixel})`}>
-                    <line x2={-5} stroke="#ccc" strokeWidth={1} />
+                    <line x2={-5} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
                     <text
                       x={-8}
                       textAnchor="end"
                       dominantBaseline="middle"
                       fontSize={10}
-                      fill="#666"
+                      fill="var(--semiotic-text-secondary, #666)"
                       style={{ userSelect: "none" }}
                     >
                       {tick.label}
@@ -273,7 +273,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                     y={height / 2}
                     textAnchor="middle"
                     fontSize={12}
-                    fill="#333"
+                    fill="var(--semiotic-text, #333)"
                     transform={`rotate(-90, ${-margin.left + 15}, ${height / 2})`}
                     style={{ userSelect: "none" }}
                   >
@@ -302,7 +302,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
           textAnchor="middle"
           fontSize={14}
           fontWeight="bold"
-          fill="#333"
+          fill="var(--semiotic-text, #333)"
           style={{ userSelect: "none" }}
         >
           {typeof title === "string" ? title : null}
