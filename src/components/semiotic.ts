@@ -148,7 +148,8 @@ export {
   BaseChartProps,
   AxisConfig,
   Accessor,
-  ChartAccessor
+  ChartAccessor,
+  ChartMode
 } from "./charts"
 
 // ── StreamXYFrame types ────────────────────────────────────────────────

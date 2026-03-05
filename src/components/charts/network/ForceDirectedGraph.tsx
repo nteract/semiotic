@@ -6,7 +6,7 @@ import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
 import { getColor, getSize } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { useColorScale, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartLegendAndMargin, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { validateNetworkData } from "../shared/validateChartData"
 
@@ -42,14 +42,20 @@ export interface ForceDirectedGraphProps<TNode extends Record<string, any> = Rec
  * Wraps StreamNetworkFrame (canvas-first) for force-directed network visualization.
  */
 export function ForceDirectedGraph<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: ForceDirectedGraphProps<TNode, TEdge>) {
+  const resolved = useChartMode(props.mode, {
+    width: props.width,
+    height: props.height,
+    enableHover: props.enableHover,
+    showLegend: props.showLegend,
+    showLabels: props.showLabels,
+    title: props.title,
+  }, { width: 600, height: 600 })
+
   const {
     nodes,
     edges,
-    width = 600,
-    height = 600,
     margin: userMargin,
     className,
-    title,
     nodeIDAccessor = "id",
     sourceAccessor = "source",
     targetAccessor = "target",
@@ -63,12 +69,16 @@ export function ForceDirectedGraph<TNode extends Record<string, any> = Record<st
     edgeOpacity = 0.6,
     iterations = 300,
     forceStrength = 0.1,
-    showLabels = false,
-    enableHover = true,
-    showLegend,
     tooltip,
     frameProps = {}
   } = props
+
+  const width = resolved.width
+  const height = resolved.height
+  const enableHover = resolved.enableHover
+  const showLegend = resolved.showLegend
+  const showLabels = resolved.showLabels ?? false
+  const title = resolved.title
 
   const safeNodes = nodes || []
   const safeEdges = edges || []
@@ -114,7 +124,7 @@ export function ForceDirectedGraph<TNode extends Record<string, any> = Record<st
     colorScale,
     showLegend,
     userMargin,
-    defaults: { top: 20, bottom: 20, left: 20, right: 20 }
+    defaults: resolved.marginDefaults
   })
 
   // Validate

@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, MarginalGraphicsConfig } from "../../stream/types"
 import { getColor, getSize } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
@@ -194,15 +194,21 @@ export interface BubbleChartProps<TDatum extends Record<string, any> = Record<st
  * @returns Rendered bubble chart
  */
 export function BubbleChart<TDatum extends Record<string, any> = Record<string, any>>(props: BubbleChartProps<TDatum>) {
+  const resolved = useChartMode(props.mode, {
+    width: props.width,
+    height: props.height,
+    showGrid: props.showGrid,
+    enableHover: props.enableHover,
+    showLegend: props.showLegend,
+    title: props.title,
+    xLabel: props.xLabel,
+    yLabel: props.yLabel,
+  })
+
   const {
     data,
-    width = 600,
-    height = 400,
     margin: userMargin,
     className,
-    title,
-    xLabel,
-    yLabel,
     xFormat,
     yFormat,
     xAccessor = "x",
@@ -214,9 +220,6 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
     bubbleOpacity = 0.6,
     bubbleStrokeWidth = 1,
     bubbleStrokeColor = "white",
-    enableHover = true,
-    showGrid = false,
-    showLegend,
     tooltip,
     marginalGraphics,
     pointIdAccessor,
@@ -226,6 +229,15 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
     linkedHover,
     linkedBrush
   } = props
+
+  const width = resolved.width
+  const height = resolved.height
+  const enableHover = resolved.enableHover
+  const showGrid = resolved.showGrid
+  const showLegend = resolved.showLegend
+  const title = resolved.title
+  const xLabel = resolved.xLabel
+  const yLabel = resolved.yLabel
 
   const safeData = data || []
 
@@ -296,7 +308,8 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
     colorBy,
     colorScale,
     showLegend,
-    userMargin
+    userMargin,
+    defaults: resolved.marginDefaults,
   })
 
   // Default tooltip showing all configured fields
@@ -332,7 +345,7 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
     colorScheme,
     size: [width, height],
     margin,
-    showAxes: true,
+    showAxes: resolved.showAxes,
     xLabel,
     yLabel,
     xFormat,

@@ -4,7 +4,7 @@ import { createLegend } from "./legendUtils"
 import { normalizeLinkedHover } from "./selectionUtils"
 import type { SelectionHookResult } from "./selectionUtils"
 import { useSelection, useLinkedHover } from "../../store/useSelection"
-import type { Accessor, SelectionConfig, LinkedHoverProp } from "./types"
+import type { Accessor, SelectionConfig, LinkedHoverProp, ChartMode } from "./types"
 import type { MarginType } from "../../types/generalTypes"
 
 /**
@@ -149,4 +149,90 @@ export function useChartLegendAndMargin({
   }, [defaults, userMargin, legend])
 
   return { legend, margin }
+}
+
+// ── Mode defaults ──────────────────────────────────────────────────────
+
+const MODE_DEFAULTS = {
+  primary: {
+    width: 600, height: 400,
+    showAxes: true, showGrid: false, enableHover: true,
+    showLegend: undefined as boolean | undefined,
+    showLabels: undefined as boolean | undefined,
+    marginDefaults: { top: 50, bottom: 60, left: 70, right: 40 },
+  },
+  context: {
+    width: 400, height: 250,
+    showAxes: false, showGrid: false, enableHover: false,
+    showLegend: false as boolean | undefined,
+    showLabels: false as boolean | undefined,
+    marginDefaults: { top: 10, bottom: 10, left: 10, right: 10 },
+  },
+  sparkline: {
+    width: 120, height: 24,
+    showAxes: false, showGrid: false, enableHover: false,
+    showLegend: false as boolean | undefined,
+    showLabels: false as boolean | undefined,
+    marginDefaults: { top: 2, bottom: 2, left: 0, right: 0 },
+  },
+}
+
+interface ChartModeInput {
+  width?: number
+  height?: number
+  showGrid?: boolean
+  enableHover?: boolean
+  showLegend?: boolean
+  showLabels?: boolean
+  title?: string
+  xLabel?: string
+  yLabel?: string
+  categoryLabel?: string
+  valueLabel?: string
+}
+
+interface ChartModeResult {
+  width: number
+  height: number
+  showAxes: boolean
+  showGrid: boolean
+  enableHover: boolean
+  showLegend: boolean | undefined
+  showLabels: boolean | undefined
+  title: string | undefined
+  xLabel: string | undefined
+  yLabel: string | undefined
+  categoryLabel: string | undefined
+  valueLabel: string | undefined
+  marginDefaults: { top: number; bottom: number; left: number; right: number }
+}
+
+/**
+ * Resolve chart display mode into concrete prop defaults.
+ * User-provided values always override mode defaults.
+ */
+export function useChartMode(
+  mode: ChartMode | undefined,
+  userProps: ChartModeInput,
+  primaryDefaults?: { width?: number; height?: number }
+): ChartModeResult {
+  const m = MODE_DEFAULTS[mode || "primary"]
+  const suppressLabels = mode === "context" || mode === "sparkline"
+  const defaultWidth = (!mode || mode === "primary") && primaryDefaults?.width ? primaryDefaults.width : m.width
+  const defaultHeight = (!mode || mode === "primary") && primaryDefaults?.height ? primaryDefaults.height : m.height
+  return {
+    width: userProps.width ?? defaultWidth,
+    height: userProps.height ?? defaultHeight,
+    showAxes: m.showAxes,
+    showGrid: userProps.showGrid ?? m.showGrid,
+    enableHover: userProps.enableHover ?? m.enableHover,
+    showLegend: userProps.showLegend ?? m.showLegend,
+    showLabels: userProps.showLabels ?? m.showLabels,
+    title: suppressLabels && userProps.title === undefined ? undefined : userProps.title,
+    xLabel: suppressLabels && userProps.xLabel === undefined ? undefined : userProps.xLabel,
+    yLabel: suppressLabels && userProps.yLabel === undefined ? undefined : userProps.yLabel,
+    categoryLabel: suppressLabels && userProps.categoryLabel === undefined ? undefined : userProps.categoryLabel,
+    valueLabel: suppressLabels && userProps.valueLabel === undefined ? undefined : userProps.valueLabel,
+    marginDefaults: m.marginDefaults,
+  }
 }

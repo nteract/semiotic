@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps } from "../../stream/types"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
@@ -156,15 +156,21 @@ export interface AreaChartProps<TDatum extends Record<string, any> = Record<stri
  * ```
  */
 export function AreaChart<TDatum extends Record<string, any> = Record<string, any>>(props: AreaChartProps<TDatum>) {
+  const resolved = useChartMode(props.mode, {
+    width: props.width,
+    height: props.height,
+    showGrid: props.showGrid,
+    enableHover: props.enableHover,
+    showLegend: props.showLegend,
+    title: props.title,
+    xLabel: props.xLabel,
+    yLabel: props.yLabel,
+  })
+
   const {
     data,
-    width = 600,
-    height = 400,
     margin: userMargin,
     className,
-    title,
-    xLabel,
-    yLabel,
     xFormat,
     yFormat,
     xAccessor = "x",
@@ -177,15 +183,21 @@ export function AreaChart<TDatum extends Record<string, any> = Record<string, an
     areaOpacity = 0.7,
     showLine = true,
     lineWidth = 2,
-    enableHover = true,
-    showGrid = false,
-    showLegend,
     tooltip,
     annotations,
     frameProps = {},
     selection,
     linkedHover
   } = props
+
+  const width = resolved.width
+  const height = resolved.height
+  const enableHover = resolved.enableHover
+  const showGrid = resolved.showGrid
+  const showLegend = resolved.showLegend
+  const title = resolved.title
+  const xLabel = resolved.xLabel
+  const yLabel = resolved.yLabel
 
   const safeData = data || []
 
@@ -268,7 +280,8 @@ export function AreaChart<TDatum extends Record<string, any> = Record<string, an
     colorBy,
     colorScale,
     showLegend,
-    userMargin
+    userMargin,
+    defaults: resolved.marginDefaults,
   })
 
   // Default tooltip showing all configured fields
@@ -315,7 +328,7 @@ export function AreaChart<TDatum extends Record<string, any> = Record<string, an
     lineStyle,
     size: [width, height],
     margin,
-    showAxes: true,
+    showAxes: resolved.showAxes,
     xLabel,
     yLabel,
     xFormat,

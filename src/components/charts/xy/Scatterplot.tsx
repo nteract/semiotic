@@ -7,7 +7,7 @@ import { getColor, getSize } from "../shared/colorUtils"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { validateArrayData } from "../shared/validateChartData"
 import { normalizeLinkedBrush, wrapStyleWithSelection } from "../shared/selectionUtils"
@@ -66,15 +66,21 @@ export interface ScatterplotProps<TDatum extends Record<string, any> = Record<st
  * ```
  */
 export function Scatterplot<TDatum extends Record<string, any> = Record<string, any>>(props: ScatterplotProps<TDatum>) {
+  const resolved = useChartMode(props.mode, {
+    width: props.width,
+    height: props.height,
+    showGrid: props.showGrid,
+    enableHover: props.enableHover,
+    showLegend: props.showLegend,
+    title: props.title,
+    xLabel: props.xLabel,
+    yLabel: props.yLabel,
+  })
+
   const {
     data,
-    width = 600,
-    height = 400,
     margin: userMargin,
     className,
-    title,
-    xLabel,
-    yLabel,
     xFormat,
     yFormat,
     xAccessor = "x",
@@ -85,9 +91,6 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
     sizeRange = [3, 15],
     pointRadius = 5,
     pointOpacity = 0.8,
-    enableHover = true,
-    showGrid = false,
-    showLegend,
     tooltip,
     marginalGraphics,
     pointIdAccessor,
@@ -97,6 +100,15 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
     linkedHover,
     linkedBrush
   } = props
+
+  const width = resolved.width
+  const height = resolved.height
+  const enableHover = resolved.enableHover
+  const showGrid = resolved.showGrid
+  const showLegend = resolved.showLegend
+  const title = resolved.title
+  const xLabel = resolved.xLabel
+  const yLabel = resolved.yLabel
 
   const safeData = data || []
 
@@ -150,7 +162,8 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
     colorBy,
     colorScale,
     showLegend,
-    userMargin
+    userMargin,
+    defaults: resolved.marginDefaults,
   })
 
   // Default tooltip showing all configured fields
@@ -184,7 +197,7 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
     colorScheme,
     size: [width, height],
     margin,
-    showAxes: true,
+    showAxes: resolved.showAxes,
     xLabel,
     yLabel,
     xFormat,

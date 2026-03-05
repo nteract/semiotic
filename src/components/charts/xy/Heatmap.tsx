@@ -5,7 +5,7 @@ import { scaleSequential } from "d3-scale"
 import { interpolateBlues, interpolateReds, interpolateGreens, interpolateViridis } from "d3-scale-chromatic"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps } from "../../stream/types"
-import { DEFAULT_COLOR, resolveAccessor, useChartSelection, useChartLegendAndMargin } from "../shared/hooks"
+import { DEFAULT_COLOR, resolveAccessor, useChartSelection, useChartLegendAndMargin, useChartMode } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
@@ -184,18 +184,24 @@ export interface HeatmapProps<TDatum extends Record<string, any> = Record<string
  * @returns Rendered heatmap
  */
 export function Heatmap<TDatum extends Record<string, any> = Record<string, any>>(props: HeatmapProps<TDatum>) {
+  const resolved = useChartMode(props.mode, {
+    width: props.width,
+    height: props.height,
+    showGrid: undefined,
+    enableHover: props.enableHover,
+    showLegend: undefined,
+    title: props.title,
+    xLabel: props.xLabel,
+    yLabel: props.yLabel,
+  })
+
   const {
     data,
-    width = 600,
-    height = 400,
     margin: userMargin,
     className,
-    title,
     xAccessor = "x",
     yAccessor = "y",
     valueAccessor = "value",
-    xLabel,
-    yLabel,
     xFormat,
     yFormat,
     colorScheme = "blues",
@@ -204,7 +210,6 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
     valueFormat,
     cellBorderColor = "#fff",
     cellBorderWidth = 1,
-    enableHover = true,
     tooltip,
     annotations,
     frameProps = {},
@@ -212,12 +217,19 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
     linkedHover
   } = props
 
+  const width = resolved.width
+  const height = resolved.height
+  const enableHover = resolved.enableHover
+  const title = resolved.title
+  const xLabel = resolved.xLabel
+  const yLabel = resolved.yLabel
+
   const safeData = data || []
 
   const { margin } = useChartLegendAndMargin({
     data: safeData, colorBy: undefined, colorScale: undefined,
     showLegend: false, userMargin,
-    defaults: { top: 50, bottom: 60, left: 70, right: 80 }
+    defaults: resolved.marginDefaults,
   })
 
   // ── Selection hooks (always called, conditional logic inside) ──────────
@@ -345,7 +357,7 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
     valueAccessor,
     size: [width, height],
     margin,
-    showAxes: true,
+    showAxes: resolved.showAxes,
     xLabel,
     yLabel,
     xFormat,

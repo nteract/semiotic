@@ -7,7 +7,7 @@ import { getColor, COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { inferNodesFromEdges, createEdgeStyleFn } from "../shared/networkUtils"
-import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { validateNetworkData } from "../shared/validateChartData"
 
@@ -41,14 +41,19 @@ export interface ChordDiagramProps<TNode extends Record<string, any> = Record<st
  * Wraps StreamNetworkFrame (canvas-first) for chord relationship visualization.
  */
 export function ChordDiagram<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: ChordDiagramProps<TNode, TEdge>) {
+  const resolved = useChartMode(props.mode, {
+    width: props.width,
+    height: props.height,
+    enableHover: props.enableHover,
+    showLabels: props.showLabels,
+    title: props.title,
+  }, { width: 600, height: 600 })
+
   const {
     nodes,
     edges,
-    width = 600,
-    height = 600,
-    margin = { top: 50, bottom: 50, left: 50, right: 50 },
+    margin: userMargin,
     className,
-    title,
     sourceAccessor = "source",
     targetAccessor = "target",
     valueAccessor = "value",
@@ -60,12 +65,16 @@ export function ChordDiagram<TNode extends Record<string, any> = Record<string, 
     groupWidth = 20,
     sortGroups,
     nodeLabel,
-    showLabels = true,
-    enableHover = true,
     edgeOpacity = 0.5,
     tooltip,
     frameProps = {}
   } = props
+
+  const width = resolved.width
+  const height = resolved.height
+  const enableHover = resolved.enableHover
+  const showLabels = resolved.showLabels ?? true
+  const title = resolved.title
 
   const safeEdges = edges || []
 
@@ -113,6 +122,9 @@ export function ChordDiagram<TNode extends Record<string, any> = Record<string, 
     if (typeof accessor === "function") return accessor
     return (d: Record<string, any>) => d[accessor]
   }, [showLabels, nodeLabel, nodeIdAccessor])
+
+  // Margin
+  const margin = { ...resolved.marginDefaults, ...userMargin }
 
   // Validate
   const error = validateNetworkData({

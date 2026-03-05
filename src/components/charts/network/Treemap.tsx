@@ -7,7 +7,7 @@ import { getColor, createColorScale, DEPTH_PALETTE_COLORS } from "../shared/colo
 import { flattenHierarchy, resolveHierarchySum } from "../shared/networkUtils"
 import type { BaseChartProps, ChartAccessor, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { DEFAULT_COLOR } from "../shared/hooks"
+import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { validateObjectData } from "../shared/validateChartData"
 
@@ -38,28 +38,37 @@ export interface TreemapProps<TNode extends Record<string, any> = Record<string,
  * Wraps StreamNetworkFrame (canvas-first) for treemap visualization.
  */
 export function Treemap<TNode extends Record<string, any> = Record<string, any>>(props: TreemapProps<TNode>) {
+  const resolved = useChartMode(props.mode, {
+    width: props.width,
+    height: props.height,
+    enableHover: props.enableHover,
+    showLabels: props.showLabels,
+    title: props.title,
+  }, { width: 600, height: 600 })
+
   const {
     data,
-    width = 600,
-    height = 600,
-    margin = { top: 10, bottom: 10, left: 10, right: 10 },
+    margin: userMargin,
     className,
-    title,
     childrenAccessor = "children",
     valueAccessor = "value",
     nodeIdAccessor = "name",
     colorBy,
     colorScheme = "category10",
     colorByDepth = false,
-    showLabels = true,
     labelMode = "leaf",
     nodeLabel,
     padding: paddingProp = 4,
     paddingTop: paddingTopProp,
-    enableHover = true,
     tooltip,
     frameProps = {}
   } = props
+
+  const width = resolved.width
+  const height = resolved.height
+  const enableHover = resolved.enableHover
+  const showLabels = resolved.showLabels ?? true
+  const title = resolved.title
 
   const allNodes = useMemo(() => {
     return flattenHierarchy(data, childrenAccessor as string | ((d: any) => any[]))
@@ -92,6 +101,9 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
   const resolvedPaddingTop = paddingTopProp !== undefined
     ? paddingTopProp
     : (showLabels && labelMode === "parent" ? 18 : undefined)
+
+  // Margin
+  const margin = { ...resolved.marginDefaults, ...userMargin }
 
   // Validate
   const error = validateObjectData({ componentName: "Treemap", data })

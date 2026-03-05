@@ -7,7 +7,7 @@ import { getColor, createColorScale, DEPTH_PALETTE_COLORS } from "../shared/colo
 import { flattenHierarchy, resolveHierarchySum } from "../shared/networkUtils"
 import type { BaseChartProps, ChartAccessor, Accessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { DEFAULT_COLOR } from "../shared/hooks"
+import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { validateObjectData } from "../shared/validateChartData"
 
@@ -37,27 +37,36 @@ export interface CirclePackProps<TNode extends Record<string, any> = Record<stri
  * Wraps StreamNetworkFrame (canvas-first) for circle-pack visualization.
  */
 export function CirclePack<TNode extends Record<string, any> = Record<string, any>>(props: CirclePackProps<TNode>) {
+  const resolved = useChartMode(props.mode, {
+    width: props.width,
+    height: props.height,
+    enableHover: props.enableHover,
+    showLabels: props.showLabels,
+    title: props.title,
+  }, { width: 600, height: 600 })
+
   const {
     data,
-    width = 600,
-    height = 600,
-    margin = { top: 10, bottom: 10, left: 10, right: 10 },
+    margin: userMargin,
     className,
-    title,
     childrenAccessor = "children",
     valueAccessor = "value",
     nodeIdAccessor = "name",
     colorBy,
     colorScheme = "category10",
     colorByDepth = false,
-    showLabels = true,
     nodeLabel,
     circleOpacity = 0.7,
     padding: paddingProp = 4,
-    enableHover = true,
     tooltip,
     frameProps = {}
   } = props
+
+  const width = resolved.width
+  const height = resolved.height
+  const enableHover = resolved.enableHover
+  const showLabels = resolved.showLabels ?? true
+  const title = resolved.title
 
   const allNodes = useMemo(() => {
     return flattenHierarchy(data, childrenAccessor as string | ((d: any) => any[]))
@@ -91,6 +100,9 @@ export function CirclePack<TNode extends Record<string, any> = Record<string, an
   const hierarchySumFn = useMemo(() => {
     return resolveHierarchySum(valueAccessor)
   }, [valueAccessor])
+
+  // Margin
+  const margin = { ...resolved.marginDefaults, ...userMargin }
 
   // Validate
   const error = validateObjectData({ componentName: "CirclePack", data })

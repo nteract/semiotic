@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps } from "../../stream/ordinalTypes"
 import { getColor } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildOrdinalTooltip } from "../shared/tooltipUtils"
@@ -30,14 +30,28 @@ export interface DonutChartProps<TDatum extends Record<string, any> = Record<str
 }
 
 export function DonutChart<TDatum extends Record<string, any> = Record<string, any>>(props: DonutChartProps<TDatum>) {
+  const resolved = useChartMode(props.mode, {
+    width: props.width ?? 400,
+    height: props.height ?? 400,
+    enableHover: props.enableHover,
+    showLegend: props.showLegend ?? true,
+    title: props.title,
+  })
+
   const {
-    data, width = 400, height = 400, margin: userMargin, className, title,
+    data, margin: userMargin, className,
     categoryAccessor = "category", valueAccessor = "value",
     innerRadius = 60, centerContent,
     colorBy, colorScheme = "category10", startAngle = 0, slicePadding = 2,
-    enableHover = true, showLegend = true, tooltip, annotations, frameProps = {},
+    tooltip, annotations, frameProps = {},
     selection, linkedHover
   } = props
+
+  const width = resolved.width
+  const height = resolved.height
+  const enableHover = resolved.enableHover
+  const showLegend = resolved.showLegend
+  const title = resolved.title
 
   const safeData = data || []
   const actualColorBy = colorBy || categoryAccessor
@@ -64,7 +78,7 @@ export function DonutChart<TDatum extends Record<string, any> = Record<string, a
 
   const { legend, margin } = useChartLegendAndMargin({
     data: safeData, colorBy: actualColorBy, colorScale, showLegend, userMargin,
-    defaults: { top: 20, bottom: 20, left: 20, right: 20 }
+    defaults: resolved.marginDefaults,
   })
 
   const defaultTooltipContent = useMemo(

@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps } from "../../stream/ordinalTypes"
 import { getColor, getSize } from "../shared/colorUtils"
-import { useColorScale, useChartSelection, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartSelection, useChartLegendAndMargin, useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildOrdinalTooltip } from "../shared/tooltipUtils"
@@ -36,15 +36,34 @@ export interface SwarmPlotProps<TDatum extends Record<string, any> = Record<stri
 }
 
 export function SwarmPlot<TDatum extends Record<string, any> = Record<string, any>>(props: SwarmPlotProps<TDatum>) {
+  const resolved = useChartMode(props.mode, {
+    width: props.width,
+    height: props.height,
+    showGrid: props.showGrid,
+    enableHover: props.enableHover,
+    showLegend: props.showLegend,
+    title: props.title,
+    categoryLabel: props.categoryLabel,
+    valueLabel: props.valueLabel,
+  })
+
   const {
-    data, width = 600, height = 400, margin: userMargin, className, title,
+    data, margin: userMargin, className,
     categoryAccessor = "category", valueAccessor = "value",
-    orientation = "vertical", categoryLabel, valueLabel, valueFormat,
+    orientation = "vertical", valueFormat,
     colorBy, colorScheme = "category10",
     sizeBy, sizeRange = [3, 8], pointRadius = 4, pointOpacity = 0.7,
-    categoryPadding = 20, enableHover = true, showGrid = false, showLegend,
-    tooltip, annotations, frameProps = {}, selection, linkedHover
+    categoryPadding = 20, tooltip, annotations, frameProps = {}, selection, linkedHover
   } = props
+
+  const width = resolved.width
+  const height = resolved.height
+  const enableHover = resolved.enableHover
+  const showGrid = resolved.showGrid
+  const showLegend = resolved.showLegend
+  const title = resolved.title
+  const categoryLabel = resolved.categoryLabel
+  const valueLabel = resolved.valueLabel
 
   const safeData = data || []
 
@@ -77,7 +96,8 @@ export function SwarmPlot<TDatum extends Record<string, any> = Record<string, an
   )
 
   const { legend, margin } = useChartLegendAndMargin({
-    data: safeData, colorBy, colorScale, showLegend, userMargin
+    data: safeData, colorBy, colorScale, showLegend, userMargin,
+    defaults: resolved.marginDefaults,
   })
 
   const defaultTooltipContent = useMemo(
@@ -106,7 +126,7 @@ export function SwarmPlot<TDatum extends Record<string, any> = Record<string, an
     margin,
     barPadding: categoryPadding,
     enableHover,
-    showAxes: true,
+    showAxes: resolved.showAxes,
     oLabel: categoryLabel,
     rLabel: valueLabel,
     rFormat: valueFormat as any,

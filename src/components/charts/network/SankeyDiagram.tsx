@@ -8,7 +8,7 @@ import { createLegend } from "../shared/legendUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 import { inferNodesFromEdges, createEdgeStyleFn } from "../shared/networkUtils"
-import { useColorScale, DEFAULT_COLOR } from "../shared/hooks"
+import { useColorScale, useChartMode, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { validateNetworkData } from "../shared/validateChartData"
 
@@ -44,14 +44,19 @@ export interface SankeyDiagramProps<TNode extends Record<string, any> = Record<s
  * Wraps StreamNetworkFrame (canvas-first) for Sankey flow visualization.
  */
 export function SankeyDiagram<TNode extends Record<string, any> = Record<string, any>, TEdge extends Record<string, any> = Record<string, any>>(props: SankeyDiagramProps<TNode, TEdge>) {
+  const resolved = useChartMode(props.mode, {
+    width: props.width,
+    height: props.height,
+    enableHover: props.enableHover,
+    showLabels: props.showLabels,
+    title: props.title,
+  }, { width: 800, height: 600 })
+
   const {
     nodes,
     edges,
-    width = 800,
-    height = 600,
-    margin = { top: 50, bottom: 50, left: 50, right: 50 },
+    margin: userMargin,
     className,
-    title,
     sourceAccessor = "source",
     targetAccessor = "target",
     valueAccessor = "value",
@@ -64,13 +69,17 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
     nodePaddingRatio = 0.05,
     nodeWidth = 15,
     nodeLabel,
-    showLabels = true,
-    enableHover = true,
     edgeOpacity = 0.5,
     edgeSort,
     tooltip,
     frameProps = {}
   } = props
+
+  const width = resolved.width
+  const height = resolved.height
+  const enableHover = resolved.enableHover
+  const showLabels = resolved.showLabels ?? true
+  const title = resolved.title
 
   // Safe data defaults (hooks must always run)
   const safeEdges = edges || []
@@ -121,6 +130,9 @@ export function SankeyDiagram<TNode extends Record<string, any> = Record<string,
     if (typeof accessor === "function") return accessor
     return (d: Record<string, any>) => d[accessor]
   }, [showLabels, nodeLabel, nodeIdAccessor])
+
+  // Margin
+  const margin = { ...resolved.marginDefaults, ...userMargin }
 
   // Validate data (after all hooks)
   const error = validateNetworkData({
