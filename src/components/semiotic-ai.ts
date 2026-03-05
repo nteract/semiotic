@@ -52,6 +52,10 @@ export { ThemeProvider, useTheme } from "./ThemeProvider"
 // Export utility
 export { exportChart } from "./export/exportChart"
 
+// Chart container
+export { ChartContainer } from "./ChartContainer"
+export type { ChartContainerProps, ChartContainerHandle } from "./ChartContainer"
+
 // AI validation
 export { validateProps } from "./charts/shared/validateProps"
 export type { ValidationResult } from "./charts/shared/validateProps"

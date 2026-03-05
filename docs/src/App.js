@@ -97,6 +97,7 @@ import StylingPage from "./pages/features/StylingPage"
 import ThemingPage from "./pages/features/ThemingPage"
 import LegendsPage from "./pages/features/LegendsPage"
 import RealtimeEncodingPage from "./pages/features/RealtimeEncodingPage"
+import ChartContainersPage from "./pages/features/ChartContainersPage"
 
 // New cookbook pages
 import CandlestickChartPage from "./pages/cookbook/CandlestickChartPage"
@@ -393,6 +394,7 @@ export default function DocsApp() {
               <Route path="theming" element={<ThemingPage />} />
               <Route path="legends" element={<LegendsPage />} />
               <Route path="realtime-encoding" element={<RealtimeEncodingPage />} />
+              <Route path="chart-container" element={<ChartContainersPage />} />
             </Route>
 
             {/* Using Server-Side Rendering */}

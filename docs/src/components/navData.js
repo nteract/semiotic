@@ -85,7 +85,8 @@ const navData = [
       { title: "Styling", path: "/features/styling" },
       { title: "Theming", path: "/features/theming" },
       { title: "Legends", path: "/features/legends" },
-      { title: "Realtime Encoding", path: "/features/realtime-encoding" }
+      { title: "Realtime Encoding", path: "/features/realtime-encoding" },
+      { title: "Chart Container", path: "/features/chart-container" }
     ]
   },
   {

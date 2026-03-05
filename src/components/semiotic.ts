@@ -30,6 +30,9 @@ import { exportChart } from "./export/exportChart"
 // ── Error boundary ─────────────────────────────────────────────────────
 import { ChartErrorBoundary } from "./ChartErrorBoundary"
 
+// ── Chart container ───────────────────────────────────────────────────
+import { ChartContainer } from "./ChartContainer"
+
 // ── Tooltip utilities ──────────────────────────────────────────────────
 import { Tooltip, MultiLineTooltip, normalizeTooltip } from "./Tooltip/Tooltip"
 
@@ -96,6 +99,8 @@ export {
   exportChart,
   // Error boundary
   ChartErrorBoundary,
+  // Chart container
+  ChartContainer,
   // Tooltip
   Tooltip,
   MultiLineTooltip,
@@ -224,6 +229,10 @@ export { LIGHT_THEME, DARK_THEME } from "./ThemeProvider"
 // ── Error boundary types ───────────────────────────────────────────────
 
 export type { ChartErrorBoundaryProps } from "./ChartErrorBoundary"
+
+// ── Chart container types ─────────────────────────────────────────────
+
+export type { ChartContainerProps, ChartContainerHandle } from "./ChartContainer"
 
 // ── Format utilities ───────────────────────────────────────────────────
 
