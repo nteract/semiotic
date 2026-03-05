@@ -83,9 +83,13 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
     // Execute layout
     sankey()
 
+    // Build node lookup map
+    const nodeMap = new Map<string, RealtimeNode>()
+    for (const n of nodes) nodeMap.set(n.id, n)
+
     // Write computed positions back to original nodes
     for (const sn of sankeyNodes) {
-      const original = nodes.find((n) => n.id === sn.id)
+      const original = nodeMap.get(sn.id)
       if (original) {
         original.x0 = sn.x0
         original.x1 = sn.x1
@@ -103,6 +107,14 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
       }
     }
 
+    // Build edge lookup map (source\0target → edge)
+    const edgeMap = new Map<string, RealtimeEdge>()
+    for (const e of edges) {
+      const eSrc = typeof e.source === "string" ? e.source : e.source.id
+      const eTgt = typeof e.target === "string" ? e.target : e.target.id
+      edgeMap.set(`${eSrc}\0${eTgt}`, e)
+    }
+
     // Write computed positions back to original edges
     for (const se of sankeyEdges) {
       const src = se.source as any
@@ -110,12 +122,7 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
       const sourceId = typeof src === "object" && src !== null ? src.id : String(src)
       const targetId = typeof tgt === "object" && tgt !== null ? tgt.id : String(tgt)
 
-      // Find matching original edge
-      const original = edges.find((e) => {
-        const eSrc = typeof e.source === "string" ? e.source : e.source.id
-        const eTgt = typeof e.target === "string" ? e.target : e.target.id
-        return eSrc === sourceId && eTgt === targetId
-      })
+      const original = edgeMap.get(`${sourceId}\0${targetId}`)
 
       if (original) {
         original.y0 = (se as any).y0
@@ -126,8 +133,8 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
         original.direction = direction
 
         // Resolve source/target to node references
-        const srcNode = nodes.find((n) => n.id === sourceId)
-        const tgtNode = nodes.find((n) => n.id === targetId)
+        const srcNode = nodeMap.get(sourceId)
+        const tgtNode = nodeMap.get(targetId)
         if (srcNode) original.source = srcNode
         if (tgtNode) original.target = tgtNode
       }
@@ -206,10 +213,11 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
       // Generate SVG path string using existing helpers
       let pathD: string
       if (edge.circular && edge.circularPathData) {
-        pathD = circularAreaLink(edge)
+        pathD = circularAreaLink(edge) as string
       } else {
-        pathD = areaLink(edge)
+        pathD = areaLink(edge) as string
       }
+      if (!pathD) continue
 
       // Resolve edge fill — use edgeStyle if provided, otherwise
       // inherit from source or target node color

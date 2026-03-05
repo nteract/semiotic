@@ -1,1 +1,0 @@
-export type ContextType = { getContext: Function, width: number, height: number, style: { width: number, height: number } } | null

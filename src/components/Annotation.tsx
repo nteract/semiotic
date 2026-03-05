@@ -534,8 +534,8 @@ export default function SemioticAnnotation(props: AnnotationProps) {
   const eventListeners = noteData.eventListeners || noteData.events || {}
 
   if (noteData.coordinates && screenCoordinates) {
-    const setNX = noteData.nx || screenCoordinates[0][0] + noteData.dx
-    const setNY = noteData.ny || screenCoordinates[0][1] + noteData.dy
+    const setNX = noteData.nx || screenCoordinates[0][0] + (noteData.dx ?? 0)
+    const setNY = noteData.ny || screenCoordinates[0][1] + (noteData.dy ?? 0)
     const notes = screenCoordinates.map((d, i) => {
       const subjectNote = Object.assign({}, noteData, {
         note: i === 0 ? noteData.note : { label: "" },

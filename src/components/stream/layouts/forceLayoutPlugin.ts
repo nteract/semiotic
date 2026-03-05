@@ -122,13 +122,16 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
 
     // Resolve edge source/target to node object references so that
     // HOC style functions can access d.source.data for color lookups.
+    const nodeMap = new Map<string, RealtimeNode>()
+    for (const n of nodes) nodeMap.set(n.id, n)
+
     for (const edge of edges) {
       if (typeof edge.source === "string") {
-        const n = nodes.find((nd) => nd.id === edge.source)
+        const n = nodeMap.get(edge.source)
         if (n) edge.source = n
       }
       if (typeof edge.target === "string") {
-        const n = nodes.find((nd) => nd.id === (edge.target as any))
+        const n = nodeMap.get(edge.target as string)
         if (n) edge.target = n
       }
     }
@@ -190,12 +193,16 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       })
     }
 
+    // Build node lookup for edge resolution
+    const nodeMap = new Map<string, RealtimeNode>()
+    for (const n of nodes) nodeMap.set(n.id, n)
+
     // Build line edges
     for (const edge of edges) {
       const sourceNode =
-        typeof edge.source === "object" ? edge.source : findNode(nodes, edge.source)
+        typeof edge.source === "object" ? edge.source : nodeMap.get(edge.source)
       const targetNode =
-        typeof edge.target === "object" ? edge.target : findNode(nodes, edge.target)
+        typeof edge.target === "object" ? edge.target : nodeMap.get(edge.target)
       if (!sourceNode || !targetNode) continue
       if (sourceNode.x == null || sourceNode.y == null) continue
       if (targetNode.x == null || targetNode.y == null) continue
@@ -246,13 +253,6 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────
-
-function findNode(
-  nodes: RealtimeNode[],
-  id: string
-): RealtimeNode | undefined {
-  return nodes.find((n) => n.id === id)
-}
 
 function resolveLabelFn(
   nodeLabel: string | ((d: any) => string) | undefined

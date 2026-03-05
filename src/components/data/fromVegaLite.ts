@@ -178,7 +178,7 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
           const key = String(d[groupField.field])
           counts.set(key, (counts.get(key) || 0) + 1)
         }
-        data = Array.from(counts, ([k, v]) => ({ [groupField.field]: k, value: v }))
+        data = Array.from(counts, ([k, v]) => ({ [groupField.field as string]: k, value: v }))
       }
     }
   }

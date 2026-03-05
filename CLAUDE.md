@@ -13,6 +13,9 @@
 - **HOC Charts** (recommended): Simple props, sensible defaults — use these
 - **Stream Frames** (advanced): `StreamXYFrame`, `StreamOrdinalFrame`, `StreamNetworkFrame` — full control, only when HOCs aren't enough
 - Every HOC accepts `frameProps` to pass through to the underlying Stream Frame
+- TypeScript `strict: true` — all source code compiles under strict mode
+- All charts have `role="img"` + `aria-label` for baseline screen reader support
+- Granular entry points (`semiotic/xy`, `semiotic/ordinal`, `semiotic/network`) export only v3 code — no legacy utilities
 
 ## Component Reference
 

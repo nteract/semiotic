@@ -98,7 +98,7 @@ export function ChordDiagram<TNode extends Record<string, any> = Record<string, 
       if (colorBy) {
         baseStyle.fill = getColor(d.data || d, colorBy, colorScale)
       } else {
-        const palette = Array.isArray(colorScheme) ? colorScheme : (COLOR_SCHEMES[colorScheme] || DEFAULT_COLORS)
+        const palette = Array.isArray(colorScheme) ? colorScheme : (COLOR_SCHEMES[colorScheme as keyof typeof COLOR_SCHEMES] || DEFAULT_COLORS)
         const colors = Array.isArray(palette) ? palette : DEFAULT_COLORS
         const index = (d as any).index ?? i ?? 0
         baseStyle.fill = colors[index % colors.length]

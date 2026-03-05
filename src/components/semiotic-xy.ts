@@ -1,101 +1,24 @@
 /**
- * XY entry point - for line, area, and scatter plots
- * Import this instead of the full semiotic bundle to reduce bundle size
+ * XY entry point — line, area, scatter, heatmap, and bubble charts.
+ * Import from "semiotic/xy" instead of the full bundle to reduce bundle size.
  */
 
 import StreamXYFrame from "./stream/StreamXYFrame"
-import { MinimapChart } from "./charts/xy/MinimapChart"
 
-// Common utilities used with XY charts
-import Axis from "./Axis"
-import Legend from "./Legend"
-import Annotation from "./Annotation"
-import AnnotationLayer from "./AnnotationLayer/AnnotationLayer"
-import Brush from "./Brush"
-import DividedLine from "./DividedLine"
+export { StreamXYFrame }
 
-// Utility functions
-import { funnelize } from "./geometry/lineDrawing"
-import { calculateDataExtent } from "./data/dataFunctions"
-import { hexbinning, heatmapping } from "./geometry/areaDrawing"
+// Chart HOCs
+export { LineChart } from "./charts/xy/LineChart"
+export { AreaChart } from "./charts/xy/AreaChart"
+export { StackedAreaChart } from "./charts/xy/StackedAreaChart"
+export { Scatterplot } from "./charts/xy/Scatterplot"
+export { BubbleChart } from "./charts/xy/BubbleChart"
+export { Heatmap } from "./charts/xy/Heatmap"
+export { ScatterplotMatrix } from "./charts/xy/ScatterplotMatrix"
+export { MinimapChart } from "./charts/xy/MinimapChart"
 
-// Export components
-export {
-  StreamXYFrame,
-  MinimapChart,
-  // Common utilities
-  Axis,
-  Legend,
-  Annotation,
-  AnnotationLayer,
-  Brush,
-  DividedLine,
-  // Utility functions
-  funnelize,
-  calculateDataExtent,
-  hexbinning,
-  heatmapping
-}
-
-// Export types
-export {
-  SummaryLayoutType
-} from "./types/xyTypes"
-
-export {
-  AnnotationType,
-  CustomHoverType,
-  AnnotationTypes,
-  AnnotationHandling,
-  AnnotationProps,
-  AxisProps,
-  AxisGeneratingFunction
-} from "./types/annotationTypes"
-
-export {
-  GenericObject,
-  MarginType,
-  ProjectionTypes,
-  ExtentType,
-  ProjectedPoint,
-  PieceLayoutType,
-  ProjectedLine,
-  ProjectedSummary,
-  RoughType,
-  CanvasPostProcessTypes,
-  ExtentSettingsType,
-  accessorType,
-  DataAccessor,
-  AccessorFnType,
-  BasicLineTypes,
-  LineTypeSettings,
-  BasicSummaryTypes,
-  SummaryTypeSettings,
-  RawLine,
-  RawSummary,
-  RawPoint,
-  CustomAreaMarkProps,
-  ProjectedBin,
-  GenericAccessor,
-  VizLayerTypes,
-  RenderPipelineType,
-  GeneralFrameProps,
-  GeneralFrameState
-} from "./types/generalTypes"
-
-export {
-  AdvancedInteractionSettings,
-  Interactivity,
-  InteractionLayerProps,
-  VoronoiEntryType,
-  BaseColumnType,
-  InteractionLayerState
-} from "./types/interactionTypes"
-
-export {
-  SupportedLegendGlyphs,
-  ItemType,
-  LegendItem,
-  LegendGroup,
-  LegendProps
-} from "./types/legendTypes"
+// Stream Frame types
+export type {
+  StreamXYFrameProps,
+  StreamXYFrameHandle
+} from "./stream/types"

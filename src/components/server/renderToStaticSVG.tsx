@@ -372,7 +372,7 @@ function networkSceneNodeToSVG(node: NetworkSceneNode, i: number): React.ReactNo
     }
     case "arc": {
       const n = node as NetworkArcNode
-      const arcPath = d3Arc<any>()
+      const arcPath = d3Arc()
         .innerRadius(n.innerR)
         .outerRadius(n.outerR)
         .startAngle(n.startAngle)
@@ -721,7 +721,7 @@ function ordinalSceneNodeToSVG(node: OrdinalSceneNode, i: number): React.ReactNo
     }
     case "wedge": {
       const n = node as WedgeSceneNode
-      const arcPath = d3Arc<any>()
+      const arcPath = d3Arc()
         .innerRadius(n.innerRadius)
         .outerRadius(n.outerRadius)
         .startAngle(n.startAngle)

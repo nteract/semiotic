@@ -3,7 +3,7 @@ import { createStore } from "./createStore"
 
 let [TooltipProvider, useTooltip] = createStore((set) => ({
   tooltip: null,
-  changeTooltip(tooltip) {
+  changeTooltip(tooltip: any) {
     set(() => ({ tooltip }))
   }
 }))

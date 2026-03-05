@@ -254,15 +254,19 @@ for color, size, aggregation, and binning.
 Import only what you need:
 
 ```jsx
-import { LineChart } from "semiotic/xy"        // 125 KB (vs 218 KB full)
-import { BarChart } from "semiotic/ordinal"     // 140 KB
-import { ForceDirectedGraph } from "semiotic/network"  // 133 KB
-import { LineChart } from "semiotic/ai"           // HOC-only surface for AI generation
+import { LineChart } from "semiotic/xy"                 // 123 KB
+import { BarChart } from "semiotic/ordinal"              // 118 KB
+import { ForceDirectedGraph } from "semiotic/network"    // 127 KB
+import { LineChart } from "semiotic/ai"                  // HOC-only surface for AI generation
 ```
+
+Granular entry points export only v3 Stream Frames and HOC charts — no legacy
+utilities or backwards-compatibility shims.
 
 ## TypeScript
 
-Full type definitions ship with the package. Generics for type-safe accessors:
+Built with `strict: true`. Full type definitions ship with the package.
+Generics for type-safe accessors:
 
 ```tsx
 interface Sale { month: number; revenue: number }

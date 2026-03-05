@@ -8,8 +8,13 @@ import {
   useLayoutEffect
 } from "react"
 
+interface Source<T> {
+  getState(): T
+  subscribe: (cb: () => void) => () => void
+}
+
 function useSyncExternalStoreShim<T>(
-  subscribe: (cb: Function) => () => void,
+  subscribe: (cb: () => void) => () => void,
   getSnapshot: () => T
 ): T {
   const [value, setValue] = useState<T>(getSnapshot)
@@ -19,38 +24,38 @@ function useSyncExternalStoreShim<T>(
   return value
 }
 
-export function createStore(fn) {
-  let Ctx = createContext(null)
-  // Shared fallback source for when there's no provider in the tree.
-  // This allows hooks to be called unconditionally (rules of hooks)
-  // without crashing. The fallback state is inert (empty selections, etc.).
-  let fallbackSource = createSource(fn)
+export function createStore<T>(
+  fn: (set: (updater: (current: T) => Partial<T>) => void) => T
+): [React.FC<{ children: React.ReactNode }>, <R>(selector: (state: T) => R) => R] {
+  const Ctx = createContext<Source<T> | null>(null)
+  const fallbackSource = createSource(fn)
 
-  function Provider({ children }) {
-    let source = useMemo(() => createSource(fn), [])
-
+  function Provider({ children }: { children: React.ReactNode }) {
+    const source = useMemo(() => createSource(fn), [])
     return <Ctx.Provider value={source} children={children} />
   }
 
-  let useSelector = (selector) => {
-    let source = useContext(Ctx) ?? fallbackSource
-    let getSnapshot = () => selector(source.getState())
+  const useSelector = <R,>(selector: (state: T) => R): R => {
+    const source = useContext(Ctx) ?? fallbackSource
+    const getSnapshot = () => selector(source.getState())
     return useSyncExternalStoreShim(source.subscribe, getSnapshot)
   }
 
   return [Provider, useSelector]
 }
 
-function createSource(fn) {
-  let events = new EventTarget()
+function createSource<T>(
+  fn: (set: (updater: (current: T) => Partial<T>) => void) => T
+): Source<T> {
+  const events = new EventTarget()
   let state = fn(set)
 
-  function set(fn) {
-    state = Object.assign(state, fn(state))
+  function set(updater: (current: T) => Partial<T>) {
+    state = { ...state, ...updater(state) } as T
     events.dispatchEvent(new CustomEvent("update"))
   }
 
-  function subscribe(cb) {
+  function subscribe(cb: () => void) {
     events.addEventListener("update", cb)
     return () => events.removeEventListener("update", cb)
   }

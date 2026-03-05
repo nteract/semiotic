@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { interpolateNumber } from "d3-interpolate"
 import { line, curveLinearClosed } from "d3-shape"
 

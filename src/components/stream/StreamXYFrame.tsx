@@ -248,7 +248,7 @@ function BrushOverlay({
   useEffect(() => {
     if (!svgRef.current) return
 
-    const g = d3Select(svgRef.current).select<SVGGElement>(".brush-g")
+    const g = d3Select(svgRef.current).select(".brush-g")
 
     const brushFn =
       dimension === "x"
@@ -857,6 +857,8 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     return (
       <div
         className={`stream-xy-frame${className ? ` ${className}` : ""}`}
+        role="img"
+        aria-label={typeof title === "string" ? title : "XY chart"}
         style={{
           position: "relative",
           width: size[0],

@@ -142,7 +142,7 @@ export default function SmallMultiplesPage() {
         { label: "Features", path: "/features" },
         { label: "Linked Charts", path: "/features/small-multiples" },
       ]}
-      prevPage={{ title: "Sparklines", path: "/features/sparklines" }}
+      prevPage={{ title: "Accessibility", path: "/features/accessibility" }}
       nextPage={{ title: "Styling", path: "/features/styling" }}
     >
       <p>

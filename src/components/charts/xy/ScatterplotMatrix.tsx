@@ -82,7 +82,7 @@ function CellBrushOverlay({ frameRef, cellSize, xField, yField, onBrush }: CellB
   useEffect(() => {
     if (!svgRef.current) return
 
-    const g = d3Select(svgRef.current).select<SVGGElement>(".brush-g")
+    const g = d3Select(svgRef.current).select(".brush-g")
     const brush = d3Brush()
       .extent([[0, 0], [chartW, chartH]])
       .on("brush end", (event: any) => {

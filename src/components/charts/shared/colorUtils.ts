@@ -113,7 +113,7 @@ export function createColorScale(
       .unknown("#999") as (v: any) => string
   }
 
-  const colorScheme = COLOR_SCHEMES[scheme] || COLOR_SCHEMES.category10
+  const colorScheme = COLOR_SCHEMES[scheme as keyof typeof COLOR_SCHEMES] || COLOR_SCHEMES.category10
 
   if (isNumeric && typeof colorScheme === "function") {
     // Use sequential scale for numeric data
