@@ -18,6 +18,7 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { ReactNode } from "react"
 import { useChartSelection, useChartMode } from "../shared/hooks"
 import type { ChartMode } from "../shared/types"
+import type { OnObservationCallback } from "../../store/ObservationStore"
 
 export interface RealtimeTemporalHistogramProps {
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
@@ -34,6 +35,8 @@ export interface RealtimeTemporalHistogramProps {
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
   /** CSS class name */
   className?: string
+  onObservation?: OnObservationCallback
+  chartId?: string
   /** Direction time flows */
   arrowOfTime?: ArrowOfTime
   /** Data retention strategy */
@@ -174,7 +177,9 @@ export const RealtimeTemporalHistogram = forwardRef<RealtimeFrameHandle, Realtim
       decay,
       pulse,
       staleness,
-      transition
+      transition,
+      onObservation,
+      chartId
     } = props
 
     const showAxes = resolved.showAxes
@@ -187,7 +192,8 @@ export const RealtimeTemporalHistogram = forwardRef<RealtimeFrameHandle, Realtim
 
     // ── Linked hover via shared hook ──
     const { customHoverBehavior: linkedHoverBehavior } = useChartSelection({
-      linkedHover, unwrapData: true
+      linkedHover, unwrapData: true,
+      onObservation, chartType: "RealtimeTemporalHistogram", chartId
     })
 
     const combinedHoverBehavior = useCallback(

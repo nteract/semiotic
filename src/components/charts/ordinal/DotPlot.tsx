@@ -50,7 +50,8 @@ export function DotPlot<TDatum extends Record<string, any> = Record<string, any>
     categoryAccessor = "category", valueAccessor = "value",
     orientation = "horizontal", valueFormat,
     colorBy, colorScheme = "category10", sort = true, dotRadius = 5,
-    categoryPadding = 10, tooltip, annotations, frameProps = {}, selection, linkedHover
+    categoryPadding = 10, tooltip, annotations, frameProps = {}, selection, linkedHover,
+    onObservation, chartId
   } = props
 
   const width = resolved.width
@@ -67,7 +68,8 @@ export function DotPlot<TDatum extends Record<string, any> = Record<string, any>
   const { activeSelectionHook, customHoverBehavior } = useChartSelection({
     selection, linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [typeof categoryAccessor === "string" ? categoryAccessor : ""],
-    unwrapData: true
+    unwrapData: true,
+    onObservation, chartType: "DotPlot", chartId
   })
 
   const sortedData = useSortedData(safeData, sort, valueAccessor)
@@ -123,7 +125,7 @@ export function DotPlot<TDatum extends Record<string, any> = Record<string, any>
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
-    ...(linkedHover && { customHoverBehavior }),
+    ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }

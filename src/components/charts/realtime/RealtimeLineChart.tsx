@@ -18,6 +18,7 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { ReactNode } from "react"
 import { useChartSelection, useChartMode } from "../shared/hooks"
 import type { ChartMode } from "../shared/types"
+import type { OnObservationCallback } from "../../store/ObservationStore"
 
 export interface RealtimeLineChartProps {
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
@@ -32,6 +33,8 @@ export interface RealtimeLineChartProps {
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
   /** CSS class name */
   className?: string
+  onObservation?: OnObservationCallback
+  chartId?: string
   /** Direction time flows */
   arrowOfTime?: ArrowOfTime
   /** Data retention strategy */
@@ -145,7 +148,9 @@ export const RealtimeLineChart = forwardRef<RealtimeFrameHandle, RealtimeLineCha
       pulse,
       staleness,
       transition,
-      linkedHover
+      linkedHover,
+      onObservation,
+      chartId
     } = props
 
     const showAxes = resolved.showAxes
@@ -158,7 +163,8 @@ export const RealtimeLineChart = forwardRef<RealtimeFrameHandle, RealtimeLineCha
 
     // ── Linked hover via shared hook ──
     const { customHoverBehavior: linkedHoverBehavior } = useChartSelection({
-      linkedHover, unwrapData: true
+      linkedHover, unwrapData: true,
+      onObservation, chartType: "RealtimeLineChart", chartId
     })
 
     const combinedHoverBehavior = useCallback(

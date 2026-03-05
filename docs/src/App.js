@@ -99,6 +99,7 @@ import LegendsPage from "./pages/features/LegendsPage"
 import RealtimeEncodingPage from "./pages/features/RealtimeEncodingPage"
 import ChartContainersPage from "./pages/features/ChartContainersPage"
 import ChartModesPage from "./pages/features/ChartModesPage"
+import ObservationHooksPage from "./pages/features/ObservationHooksPage"
 
 // New cookbook pages
 import CandlestickChartPage from "./pages/cookbook/CandlestickChartPage"
@@ -399,6 +400,7 @@ export default function DocsApp() {
               <Route path="realtime-encoding" element={<RealtimeEncodingPage />} />
               <Route path="chart-container" element={<ChartContainersPage />} />
               <Route path="chart-modes" element={<ChartModesPage />} />
+              <Route path="observation-hooks" element={<ObservationHooksPage />} />
             </Route>
 
             {/* Using Server-Side Rendering */}

@@ -59,3 +59,17 @@ export type { ChartContainerProps, ChartContainerHandle } from "./ChartContainer
 // AI validation
 export { validateProps } from "./charts/shared/validateProps"
 export type { ValidationResult } from "./charts/shared/validateProps"
+
+// AI Observation hooks
+export { useChartObserver } from "./store/useObservation"
+export type { UseChartObserverOptions, UseChartObserverResult } from "./store/useObservation"
+export type {
+  ChartObservation,
+  OnObservationCallback,
+  HoverObservation,
+  HoverEndObservation,
+  BrushObservation,
+  BrushEndObservation,
+  SelectionObservation,
+  SelectionEndObservation
+} from "./store/ObservationStore"

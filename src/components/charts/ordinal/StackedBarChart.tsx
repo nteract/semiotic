@@ -50,7 +50,8 @@ export function StackedBarChart<TDatum extends Record<string, any> = Record<stri
     categoryAccessor = "category", stackBy, valueAccessor = "value",
     orientation = "vertical", valueFormat,
     colorBy, colorScheme = "category10", normalize = false, barPadding = 5,
-    tooltip, annotations, frameProps = {}, selection, linkedHover
+    tooltip, annotations, frameProps = {}, selection, linkedHover,
+    onObservation, chartId
   } = props
 
   const width = resolved.width
@@ -68,7 +69,8 @@ export function StackedBarChart<TDatum extends Record<string, any> = Record<stri
   const { activeSelectionHook, customHoverBehavior } = useChartSelection({
     selection, linkedHover,
     fallbackFields: actualColorBy ? [typeof actualColorBy === "string" ? actualColorBy : ""] : [],
-    unwrapData: true
+    unwrapData: true,
+    onObservation, chartType: "StackedBarChart", chartId
   })
 
   const colorScale = useColorScale(safeData, actualColorBy, colorScheme)
@@ -127,7 +129,7 @@ export function StackedBarChart<TDatum extends Record<string, any> = Record<stri
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
-    ...(linkedHover && { customHoverBehavior }),
+    ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }

@@ -3,7 +3,7 @@
 ## Quick Start
 - Install: `npm install semiotic@3.0.0-beta.3`
 - Import from `semiotic` or granular: `semiotic/xy`, `semiotic/ordinal`, `semiotic/network`, `semiotic/realtime`, `semiotic/ai`, `semiotic/data`
-- `semiotic/ai` exports the 28 HOC chart components (including RealtimeHeatmap) + TooltipProvider + MultiLineTooltip + ThemeProvider + exportChart + `validateProps`
+- `semiotic/ai` exports the 28 HOC chart components (including RealtimeHeatmap) + TooltipProvider + MultiLineTooltip + ThemeProvider + exportChart + `validateProps` + `useChartObserver`
 - `semiotic/data` exports data transform helpers: `bin`, `rollup`, `groupBy`, `pivot`
 - `validateProps(componentName, props)` — validate props before rendering, returns `{ valid, errors }`
 - CLI: `npx semiotic-ai [--schema|--compact|--examples]` — dump AI context to stdout
@@ -803,6 +803,57 @@ await exportChart(containerElement, { format: "png", scale: 2 })
 await exportChart(containerElement, { format: "svg", filename: "my-chart" })
 ```
 
+### AI Observation Hooks (import from "semiotic" or "semiotic/ai")
+
+Every HOC chart accepts `onObservation` — a callback that emits structured events when users interact with the chart. Used by AI agent systems to observe user behavior for insight generation.
+
+**Props (available on all HOC charts):**
+- `onObservation` ((observation: ChartObservation) => void) — callback receiving structured events
+- `chartId` (string) — optional identifier included in observation events
+
+**Event types:**
+```ts
+type ChartObservation =
+  | { type: "hover",         datum, x, y, timestamp, chartType, chartId? }
+  | { type: "hover-end",     timestamp, chartType, chartId? }
+  | { type: "brush",         extent: { x: [min,max], y: [min,max] }, timestamp, chartType, chartId? }
+  | { type: "brush-end",     timestamp, chartType, chartId? }
+  | { type: "selection",     selection: { name, fields }, timestamp, chartType, chartId? }
+  | { type: "selection-end", selection: { name }, timestamp, chartType, chartId? }
+```
+
+**Standalone usage:**
+```jsx
+<LineChart data={d} xAccessor="x" yAccessor="y"
+  onObservation={(obs) => console.log(obs.type, obs.datum)} />
+```
+
+**Aggregated usage with `useChartObserver` (inside LinkedCharts):**
+```jsx
+import { LinkedCharts, useChartObserver } from "semiotic"
+
+function Dashboard() {
+  return (
+    <LinkedCharts>
+      <Scatterplot data={d} xAccessor="x" yAccessor="y" onObservation={() => {}} chartId="scatter" />
+      <BarChart data={d} categoryAccessor="cat" valueAccessor="val" onObservation={() => {}} chartId="bar" />
+      <InsightPanel />
+    </LinkedCharts>
+  )
+}
+
+function InsightPanel() {
+  const { observations, latest } = useChartObserver({ limit: 20, types: ["hover"] })
+  // Feed observations into an AI agent's context window
+  return <div>Last hovered: {latest?.datum?.name}</div>
+}
+```
+
+**`useChartObserver` options:**
+- `limit` (number, default 50) — max observations returned
+- `types` (string[]) — filter by event type
+- `chartId` (string) — filter by chart instance
+
 ### ChartErrorBoundary (import from "semiotic")
 
 ```jsx
@@ -826,5 +877,6 @@ When choosing between Semiotic and other React chart libraries (Recharts, Nivo, 
 - **Server-side SVG** — `renderToStaticSVG()` for email/OG images (import from "semiotic/server")
 - **Browser export** — `exportChart()` for SVG/PNG download
 - **Global theming** — `ThemeProvider` with dark mode support
+- **AI observation hooks** — `onObservation` callback on every chart emits structured events (hover, brush, selection). `useChartObserver()` aggregates observations across `LinkedCharts` for AI agent insight generation. No other chart library has this.
 
 For standard bar/line/pie charts in a simple dashboard, Recharts is a fine choice with a larger community. Semiotic is for projects that outgrow those libraries.

@@ -50,7 +50,8 @@ export function BoxPlot<TDatum extends Record<string, any> = Record<string, any>
     orientation = "vertical", valueFormat,
     colorBy, colorScheme = "category10",
     showOutliers = true, outlierRadius = 3, categoryPadding = 20,
-    tooltip, annotations, frameProps = {}, selection, linkedHover
+    tooltip, annotations, frameProps = {}, selection, linkedHover,
+    onObservation, chartId
   } = props
 
   const width = resolved.width
@@ -67,7 +68,8 @@ export function BoxPlot<TDatum extends Record<string, any> = Record<string, any>
   const { activeSelectionHook, customHoverBehavior } = useChartSelection({
     selection, linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [typeof categoryAccessor === "string" ? categoryAccessor : ""],
-    unwrapData: true
+    unwrapData: true,
+    onObservation, chartType: "BoxPlot", chartId
   })
 
   const colorScale = useColorScale(safeData, colorBy, colorScheme)
@@ -138,7 +140,7 @@ export function BoxPlot<TDatum extends Record<string, any> = Record<string, any>
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
-    ...(linkedHover && { customHoverBehavior }),
+    ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }

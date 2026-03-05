@@ -462,7 +462,9 @@ function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<stri
     idAccessor,
     width,
     height,
-    className
+    className,
+    onObservation,
+    chartId
   } = props
 
   const brushSelectionName = "splom"
@@ -627,8 +629,14 @@ function ScatterplotMatrixInner<TDatum extends Record<string, any> = Record<stri
                         px: px ?? 0,
                         py: py ?? 0
                       })
+                      if (onObservation) {
+                        onObservation({ type: "hover", datum, x: px ?? 0, y: py ?? 0, timestamp: Date.now(), chartType: "ScatterplotMatrix", chartId })
+                      }
                     } else {
                       setHoveredInfo(null)
+                      if (onObservation) {
+                        onObservation({ type: "hover-end", timestamp: Date.now(), chartType: "ScatterplotMatrix", chartId })
+                      }
                     }
                   } : undefined}
                 />

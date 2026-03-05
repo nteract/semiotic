@@ -4,6 +4,8 @@ import { createLegend } from "./legendUtils"
 import { normalizeLinkedHover } from "./selectionUtils"
 import type { SelectionHookResult } from "./selectionUtils"
 import { useSelection, useLinkedHover } from "../../store/useSelection"
+import { useObservationSelector } from "../../store/ObservationStore"
+import type { OnObservationCallback, ChartObservation } from "../../store/ObservationStore"
 import type { Accessor, SelectionConfig, LinkedHoverProp, ChartMode } from "./types"
 import type { MarginType } from "../../types/generalTypes"
 
@@ -72,11 +74,17 @@ export function useChartSelection({
   linkedHover,
   fallbackFields = [],
   unwrapData = false,
+  onObservation,
+  chartType,
+  chartId,
 }: {
   selection?: SelectionConfig
   linkedHover?: LinkedHoverProp
   fallbackFields?: string[]
   unwrapData?: boolean
+  onObservation?: OnObservationCallback
+  chartType?: string
+  chartId?: string
 }): {
   activeSelectionHook: SelectionHookResult | null
   customHoverBehavior: (d: Record<string, any> | null) => void
@@ -93,22 +101,48 @@ export function useChartSelection({
     fields: hoverConfig?.fields || []
   })
 
+  const pushObservation = useObservationSelector(
+    (state: any) => state.pushObservation
+  ) as ((obs: ChartObservation) => void) | undefined
+
   const activeSelectionHook = selection
     ? { isActive: selectionHook.isActive, predicate: selectionHook.predicate }
     : null
 
   const customHoverBehavior = useCallback(
     (d: Record<string, any> | null) => {
+      // Existing linked hover logic
       if (linkedHover) {
-        // Stream frames wrap the raw datum in { data: datum, time, value, x, y }.
-        // Always unwrap .data/.datum so onHover sees the original data fields.
         let datum = d ? (d.data || d.datum || d) : d
-        // Ordinal pie/donut wraps datum in an array — unwrap first element
         if (Array.isArray(datum)) datum = datum[0]
         linkedHoverHook.onHover(datum)
       }
+
+      // Emit observation events
+      if (onObservation || pushObservation) {
+        const now = Date.now()
+        const base = { timestamp: now, chartType: chartType || "unknown", chartId }
+
+        if (d) {
+          let datum = d.data || d.datum || d
+          if (Array.isArray(datum)) datum = datum[0]
+          const obs: ChartObservation = {
+            ...base,
+            type: "hover",
+            datum: datum || {},
+            x: d.x ?? 0,
+            y: d.y ?? 0,
+          }
+          if (onObservation) onObservation(obs)
+          if (pushObservation) pushObservation(obs)
+        } else {
+          const obs: ChartObservation = { ...base, type: "hover-end" }
+          if (onObservation) onObservation(obs)
+          if (pushObservation) pushObservation(obs)
+        }
+      }
     },
-    [linkedHover, linkedHoverHook]
+    [linkedHover, linkedHoverHook, onObservation, chartType, chartId, pushObservation]
   )
 
   return { activeSelectionHook, customHoverBehavior }

@@ -64,7 +64,9 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
     tooltip,
     frameProps = {},
     selection,
-    linkedHover
+    linkedHover,
+    onObservation,
+    chartId
   } = props
 
   const width = resolved.width
@@ -77,6 +79,7 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
     selection,
     linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
+    onObservation, chartType: "Treemap", chartId
   })
 
   // Network frame hover: { type, data: sceneNode, x, y }
@@ -174,7 +177,7 @@ export function Treemap<TNode extends Record<string, any> = Record<string, any>>
       showLabels={showLabels}
       enableHover={enableHover}
       tooltipContent={tooltip ? (d) => (normalizeTooltip(tooltip) as Function)(d.data) : undefined}
-      {...(linkedHover && { customHoverBehavior })}
+      {...((linkedHover || onObservation) && { customHoverBehavior })}
       className={className}
       title={title}
       {...frameProps}

@@ -227,7 +227,9 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
     frameProps = {},
     selection,
     linkedHover,
-    linkedBrush
+    linkedBrush,
+    onObservation,
+    chartId
   } = props
 
   const width = resolved.width
@@ -246,7 +248,8 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
   const { activeSelectionHook, customHoverBehavior } = useChartSelection({
     selection,
     linkedHover,
-    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : []
+    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
+    onObservation, chartType: "BubbleChart", chartId
   })
 
   const brushConfig = normalizeLinkedBrush(linkedBrush)
@@ -356,7 +359,7 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
-    ...(linkedHover && { customHoverBehavior }),
+    ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(marginalGraphics && { marginalGraphics }),
     ...(pointIdAccessor && { pointIdAccessor }),
     ...(annotations && annotations.length > 0 && { annotations }),

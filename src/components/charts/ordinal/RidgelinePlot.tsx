@@ -57,7 +57,8 @@ export function RidgelinePlot<TDatum extends Record<string, any> = Record<string
     orientation = "horizontal", bins = 20, amplitude = 1.5,
     valueFormat,
     colorBy, colorScheme = "category10", categoryPadding = 5,
-    tooltip, annotations, frameProps = {}, selection, linkedHover
+    tooltip, annotations, frameProps = {}, selection, linkedHover,
+    onObservation, chartId
   } = props
 
   const width = resolved.width
@@ -74,7 +75,8 @@ export function RidgelinePlot<TDatum extends Record<string, any> = Record<string
   const { activeSelectionHook, customHoverBehavior } = useChartSelection({
     selection, linkedHover,
     fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [typeof categoryAccessor === "string" ? categoryAccessor : ""],
-    unwrapData: true
+    unwrapData: true,
+    onObservation, chartType: "RidgelinePlot", chartId
   })
 
   const colorScale = useColorScale(safeData, colorBy, colorScheme)
@@ -150,7 +152,7 @@ export function RidgelinePlot<TDatum extends Record<string, any> = Record<string
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
-    ...(linkedHover && { customHoverBehavior }),
+    ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   } as any

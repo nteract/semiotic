@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, useCallback } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
 import { getColor, COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"
@@ -67,7 +67,9 @@ export function ChordDiagram<TNode extends Record<string, any> = Record<string, 
     nodeLabel,
     edgeOpacity = 0.5,
     tooltip,
-    frameProps = {}
+    frameProps = {},
+    onObservation,
+    chartId
   } = props
 
   const width = resolved.width
@@ -126,6 +128,19 @@ export function ChordDiagram<TNode extends Record<string, any> = Record<string, 
   // Margin
   const margin = { ...resolved.marginDefaults, ...userMargin }
 
+  const observationHoverBehavior = useCallback(
+    (d: { type: "node" | "edge"; data: any; x: number; y: number } | null) => {
+      if (!onObservation) return
+      const now = Date.now()
+      if (d) {
+        onObservation({ type: "hover", datum: d.data || {}, x: d.x, y: d.y, timestamp: now, chartType: "ChordDiagram", chartId })
+      } else {
+        onObservation({ type: "hover-end", timestamp: now, chartType: "ChordDiagram", chartId })
+      }
+    },
+    [onObservation, chartId]
+  )
+
   // Validate
   const error = validateNetworkData({
     componentName: "ChordDiagram",
@@ -158,6 +173,7 @@ export function ChordDiagram<TNode extends Record<string, any> = Record<string, 
       showLabels={showLabels}
       enableHover={enableHover}
       tooltipContent={tooltip ? (d) => (normalizeTooltip(tooltip) as Function)(d.data) : undefined}
+      customHoverBehavior={onObservation ? observationHoverBehavior : undefined}
       className={className}
       title={title}
       {...frameProps}

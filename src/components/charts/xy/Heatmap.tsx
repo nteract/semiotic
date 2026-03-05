@@ -214,7 +214,9 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
     annotations,
     frameProps = {},
     selection,
-    linkedHover
+    linkedHover,
+    onObservation,
+    chartId
   } = props
 
   const width = resolved.width
@@ -237,7 +239,8 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
   const { activeSelectionHook, customHoverBehavior } = useChartSelection({
     selection,
     linkedHover,
-    fallbackFields: []
+    fallbackFields: [],
+    onObservation, chartType: "Heatmap", chartId
   })
 
   // ── Core chart logic ───────────────────────────────────────────────────
@@ -366,7 +369,7 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
-    ...(linkedHover && { customHoverBehavior }),
+    ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }

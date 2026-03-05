@@ -41,7 +41,8 @@ export function PieChart<TDatum extends Record<string, any> = Record<string, any
     categoryAccessor = "category", valueAccessor = "value",
     colorBy, colorScheme = "category10", startAngle = 0, slicePadding = 2,
     tooltip, annotations, frameProps = {},
-    selection, linkedHover
+    selection, linkedHover,
+    onObservation, chartId
   } = props
 
   const width = resolved.width
@@ -56,7 +57,8 @@ export function PieChart<TDatum extends Record<string, any> = Record<string, any
   const { activeSelectionHook, customHoverBehavior } = useChartSelection({
     selection, linkedHover,
     fallbackFields: actualColorBy ? [typeof actualColorBy === "string" ? actualColorBy : ""] : [],
-    unwrapData: true
+    unwrapData: true,
+    onObservation, chartType: "PieChart", chartId
   })
 
   const colorScale = useColorScale(safeData, actualColorBy, colorScheme)
@@ -111,7 +113,7 @@ export function PieChart<TDatum extends Record<string, any> = Record<string, any
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
-    ...(linkedHover && { customHoverBehavior }),
+    ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }

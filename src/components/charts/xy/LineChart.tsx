@@ -261,7 +261,9 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     annotations,
     frameProps = {},
     selection,
-    linkedHover
+    linkedHover,
+    onObservation,
+    chartId
   } = props
 
   const width = resolved.width
@@ -280,7 +282,8 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
   const { activeSelectionHook, customHoverBehavior } = useChartSelection({
     selection,
     linkedHover,
-    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : []
+    fallbackFields: colorBy ? [typeof colorBy === "string" ? colorBy : ""] : [],
+    onObservation, chartType: "LineChart", chartId
   })
 
   // ── Core chart logic ───────────────────────────────────────────────────
@@ -447,7 +450,7 @@ export function LineChart<TDatum extends Record<string, any> = Record<string, an
     ...(title && { title }),
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
-    ...(linkedHover && { customHoverBehavior }),
+    ...((linkedHover || onObservation) && { customHoverBehavior }),
     ...(pointIdAccessor && { pointIdAccessor }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps

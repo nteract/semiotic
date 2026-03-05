@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, useCallback } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
 import { getColor, getSize } from "../shared/colorUtils"
@@ -70,7 +70,9 @@ export function ForceDirectedGraph<TNode extends Record<string, any> = Record<st
     iterations = 300,
     forceStrength = 0.1,
     tooltip,
-    frameProps = {}
+    frameProps = {},
+    onObservation,
+    chartId
   } = props
 
   const width = resolved.width
@@ -127,6 +129,19 @@ export function ForceDirectedGraph<TNode extends Record<string, any> = Record<st
     defaults: resolved.marginDefaults
   })
 
+  const observationHoverBehavior = useCallback(
+    (d: { type: "node" | "edge"; data: any; x: number; y: number } | null) => {
+      if (!onObservation) return
+      const now = Date.now()
+      if (d) {
+        onObservation({ type: "hover", datum: d.data || {}, x: d.x, y: d.y, timestamp: now, chartType: "ForceDirectedGraph", chartId })
+      } else {
+        onObservation({ type: "hover-end", timestamp: now, chartType: "ForceDirectedGraph", chartId })
+      }
+    },
+    [onObservation, chartId]
+  )
+
   // Validate
   const error = validateNetworkData({
     componentName: "ForceDirectedGraph",
@@ -160,6 +175,7 @@ export function ForceDirectedGraph<TNode extends Record<string, any> = Record<st
       showLabels={showLabels}
       enableHover={enableHover}
       tooltipContent={tooltip ? (d) => (normalizeTooltip(tooltip) as Function)(d.data) : undefined}
+      customHoverBehavior={onObservation ? observationHoverBehavior : undefined}
       legend={legend}
       className={className}
       title={title}

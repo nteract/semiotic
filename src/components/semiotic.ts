@@ -216,6 +216,20 @@ export type {
   UseBrushSelectionResult
 } from "./LinkedCharts"
 
+export {
+  useChartObserver
+} from "./LinkedCharts"
+
+export type {
+  UseChartObserverOptions,
+  UseChartObserverResult
+} from "./LinkedCharts"
+
+export type {
+  ChartObservation,
+  OnObservationCallback
+} from "./store/ObservationStore"
+
 export type {
   ResolutionMode,
   SelectionClause,
