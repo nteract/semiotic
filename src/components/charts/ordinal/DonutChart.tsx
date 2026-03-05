@@ -25,6 +25,7 @@ export interface DonutChartProps<TDatum extends Record<string, any> = Record<str
   enableHover?: boolean
   showLegend?: boolean
   tooltip?: TooltipProp
+  annotations?: Record<string, any>[]
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
@@ -34,7 +35,7 @@ export function DonutChart<TDatum extends Record<string, any> = Record<string, a
     categoryAccessor = "category", valueAccessor = "value",
     innerRadius = 60, centerContent,
     colorBy, colorScheme = "category10", startAngle = 0, slicePadding = 2,
-    enableHover = true, showLegend = true, tooltip, frameProps = {},
+    enableHover = true, showLegend = true, tooltip, annotations, frameProps = {},
     selection, linkedHover
   } = props
 
@@ -102,6 +103,7 @@ export function DonutChart<TDatum extends Record<string, any> = Record<string, a
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
     ...(linkedHover && { customHoverBehavior }),
+    ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }
 

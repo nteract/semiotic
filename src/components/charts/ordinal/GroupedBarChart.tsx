@@ -28,6 +28,7 @@ export interface GroupedBarChartProps<TDatum extends Record<string, any> = Recor
   showGrid?: boolean
   showLegend?: boolean
   tooltip?: TooltipProp
+  annotations?: Record<string, any>[]
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
@@ -38,7 +39,7 @@ export function GroupedBarChart<TDatum extends Record<string, any> = Record<stri
     orientation = "vertical", categoryLabel, valueLabel, valueFormat,
     colorBy, colorScheme = "category10", barPadding = 5,
     enableHover = true, showGrid = false, showLegend = true, tooltip,
-    frameProps = {}, selection, linkedHover
+    annotations, frameProps = {}, selection, linkedHover
   } = props
 
   const safeData = data || []
@@ -105,6 +106,7 @@ export function GroupedBarChart<TDatum extends Record<string, any> = Record<stri
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
     ...(linkedHover && { customHoverBehavior }),
+    ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }
 

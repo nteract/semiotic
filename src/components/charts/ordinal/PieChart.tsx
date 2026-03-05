@@ -23,6 +23,7 @@ export interface PieChartProps<TDatum extends Record<string, any> = Record<strin
   enableHover?: boolean
   showLegend?: boolean
   tooltip?: TooltipProp
+  annotations?: Record<string, any>[]
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
@@ -31,7 +32,7 @@ export function PieChart<TDatum extends Record<string, any> = Record<string, any
     data, width = 400, height = 400, margin: userMargin, className, title,
     categoryAccessor = "category", valueAccessor = "value",
     colorBy, colorScheme = "category10", startAngle = 0, slicePadding = 2,
-    enableHover = true, showLegend = true, tooltip, frameProps = {},
+    enableHover = true, showLegend = true, tooltip, annotations, frameProps = {},
     selection, linkedHover
   } = props
 
@@ -97,6 +98,7 @@ export function PieChart<TDatum extends Record<string, any> = Record<string, any
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
     ...(linkedHover && { customHoverBehavior }),
+    ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }
 

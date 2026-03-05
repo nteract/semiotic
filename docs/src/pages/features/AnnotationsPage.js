@@ -1,10 +1,9 @@
-import React from "react"
-import { StreamXYFrame, StreamOrdinalFrame } from "semiotic"
-import { LineChart, BarChart } from "semiotic"
+import React, { useRef, useEffect } from "react"
+import { LineChart, BarChart, Scatterplot, StreamXYFrame } from "semiotic"
 
 import LiveExample from "../../components/LiveExample"
+import StreamingDemo from "../../components/StreamingDemo"
 import CodeBlock from "../../components/CodeBlock"
-import PropTable from "../../components/PropTable"
 import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
 
@@ -33,13 +32,6 @@ const barData = [
   { product: "Epsilon", units: 610 },
 ]
 
-const frameLineData = [
-  {
-    label: "Performance",
-    coordinates: lineData,
-  },
-]
-
 const scatterData = [
   { x: 10, y: 20, label: "A" },
   { x: 25, y: 35, label: "B" },
@@ -48,6 +40,87 @@ const scatterData = [
   { x: 70, y: 30, label: "E" },
   { x: 85, y: 50, label: "F" },
 ]
+
+// ---------------------------------------------------------------------------
+// Streaming annotation demo
+// ---------------------------------------------------------------------------
+
+const streamingAnnotationCode = `import { useRef, useEffect } from "react"
+import { StreamXYFrame } from "semiotic"
+
+function StreamingAnnotatedChart() {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          time: i,
+          value: 50 + Math.sin(i * 0.05) * 25 + (Math.random() - 0.5) * 10,
+        })
+      }
+    }, 80)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamXYFrame
+      ref={chartRef}
+      chartType="line"
+      runtimeMode="streaming"
+      size={[600, 300]}
+      timeAccessor="time"
+      valueAccessor="value"
+      windowSize={150}
+      showAxes
+      lineStyle={{ stroke: "#6366f1", strokeWidth: 2 }}
+      annotations={[
+        { type: "y-threshold", y: 70, label: "Warning", color: "#f97316" },
+        { type: "y-threshold", y: 30, label: "Low", color: "#ef4444" },
+        { type: "band", y0: 40, y1: 60, fill: "#22c55e", fillOpacity: 0.1, label: "Normal range" },
+      ]}
+    />
+  )
+}`
+
+function StreamingAnnotatedChart({ width }) {
+  const chartRef = useRef()
+  const indexRef = useRef(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (chartRef.current) {
+        const i = indexRef.current++
+        chartRef.current.push({
+          time: i,
+          value: 50 + Math.sin(i * 0.05) * 25 + (Math.random() - 0.5) * 10,
+        })
+      }
+    }, 80)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <StreamXYFrame
+      ref={chartRef}
+      chartType="line"
+      runtimeMode="streaming"
+      size={[width || 600, 300]}
+      timeAccessor="time"
+      valueAccessor="value"
+      windowSize={150}
+      showAxes
+      lineStyle={{ stroke: "#6366f1", strokeWidth: 2 }}
+      annotations={[
+        { type: "y-threshold", y: 70, label: "Warning", color: "#f97316" },
+        { type: "y-threshold", y: 30, label: "Low", color: "#ef4444" },
+        { type: "band", y0: 40, y1: 60, fill: "#22c55e", fillOpacity: 0.1, label: "Normal range" },
+      ]}
+    />
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Component
@@ -65,22 +138,24 @@ export default function AnnotationsPage() {
       nextPage={{ title: "Tooltips", path: "/features/tooltips" }}
     >
       <p>
-        Annotations are first-class citizens in Semiotic. Every Frame supports
-        an <code>annotations</code> prop that accepts an array of annotation
-        objects. Built-in types include labels, callouts, thresholds,
-        enclosures, highlights, and more. You can also write custom annotation
-        rules for complete control over rendering.
+        Annotations are first-class citizens in Semiotic. Every chart component
+        accepts an <code>annotations</code> prop — an array of annotation
+        objects that are rendered automatically based on their{" "}
+        <code>type</code>. Built-in types like thresholds, labels, callouts,
+        enclosures, trend lines, and bands all work out of the box. No{" "}
+        <code>frameProps</code> wrapping needed.
       </p>
 
       {/* ----------------------------------------------------------------- */}
-      {/* With Charts */}
+      {/* Thresholds */}
       {/* ----------------------------------------------------------------- */}
-      <h2 id="with-charts">With Charts</h2>
+      <h2 id="thresholds">Thresholds</h2>
 
       <p>
-        Chart components support annotations through the{" "}
-        <code>frameProps</code> escape hatch. Pass your annotation objects in
-        the <code>annotations</code> array:
+        Thresholds are the most common annotation type. Use{" "}
+        <code>y-threshold</code> for a horizontal reference line at a target
+        value, and <code>x-threshold</code> for a vertical line at a specific
+        data point.
       </p>
 
       <LiveExample
@@ -90,17 +165,10 @@ export default function AnnotationsPage() {
           yAccessor: "score",
           xLabel: "Week",
           yLabel: "Score",
-          frameProps: {
-            annotations: [
-              {
-                type: "x",
-                week: 7,
-                label: "Peak week",
-                color: "#f97316",
-                disable: ["connector"],
-              },
-            ],
-          },
+          annotations: [
+            { type: "y-threshold", y: 25, label: "Target", color: "#22c55e" },
+            { type: "x-threshold", week: 7, label: "Launch", color: "#6366f1" },
+          ],
         }}
         type={LineChart}
         startHidden={false}
@@ -108,52 +176,49 @@ export default function AnnotationsPage() {
           data: `[
   { week: 1, score: 12 },
   { week: 2, score: 18 },
-  // ...more data points
+  { week: 3, score: 15 },
+  { week: 4, score: 24 },
+  { week: 5, score: 20 },
+  { week: 6, score: 28 },
+  { week: 7, score: 32 },
+  { week: 8, score: 27 },
+  { week: 9, score: 35 },
+  { week: 10, score: 30 }
 ]`,
-          frameProps: `{
-  annotations: [
-    { type: "x", week: 7, label: "Peak week", color: "#f97316", disable: ["connector"] }
-  ]
-}`,
+          annotations: `[
+  { type: "y-threshold", y: 25, label: "Target", color: "#22c55e" },
+  { type: "x-threshold", week: 7, label: "Launch", color: "#6366f1" }
+]`,
         }}
         hiddenProps={{}}
       />
 
       {/* ----------------------------------------------------------------- */}
-      {/* With Frames */}
+      {/* Labels & Callouts */}
       {/* ----------------------------------------------------------------- */}
-      <h2 id="with-frames">With Frames</h2>
+      <h2 id="labels-callouts">Labels & Callouts</h2>
 
       <p>
-        Frame components give you direct access to the full annotation system.
-        Pass an array of annotation objects to the <code>annotations</code>{" "}
-        prop.
-      </p>
-
-      <h3 id="xy-annotations">XY Annotations</h3>
-      <p>
-        The <code>xy</code> type creates a simple circle annotation at a data
-        point. The <code>x</code> and <code>y</code> types create threshold
-        lines across the chart.
+        Point annotations let you call attention to individual data points. Use{" "}
+        <code>label</code> for a text annotation with a connector line, or{" "}
+        <code>callout</code> for a callout with a circular subject highlight.
+        Offset the label position with <code>dx</code> and <code>dy</code>.
       </p>
 
       <LiveExample
         frameProps={{
           data: scatterData,
-          chartType: "scatter",
           xAccessor: "x",
           yAccessor: "y",
-          pointStyle: { fill: "#6366f1", r: 5 },
-          margin: { top: 30, bottom: 60, left: 60, right: 40 },
-          showAxes: true,
           xLabel: "X Value",
           yLabel: "Y Value",
           annotations: [
-            { type: "xy", x: 55, y: 45, label: "Peak" },
-            { type: "y", y: 35, label: "Target", color: "#f97316", disable: ["connector"] },
+            { type: "label", x: 55, y: 45, label: "Outlier", dx: 30, dy: -30 },
+            { type: "callout", x: 85, y: 50, label: "Peak", radius: 15 },
           ],
         }}
-        type={StreamXYFrame}
+        type={Scatterplot}
+        startHidden={false}
         overrideProps={{
           data: `[
   { x: 10, y: 20, label: "A" },
@@ -164,29 +229,30 @@ export default function AnnotationsPage() {
   { x: 85, y: 50, label: "F" }
 ]`,
           annotations: `[
-  { type: "xy", x: 55, y: 45, label: "Peak" },
-  { type: "y", y: 35, label: "Target", color: "#f97316", disable: ["connector"] }
+  { type: "label", x: 55, y: 45, label: "Outlier", dx: 30, dy: -30 },
+  { type: "callout", x: 85, y: 50, label: "Peak", radius: 15 }
 ]`,
         }}
         hiddenProps={{}}
       />
 
-      <h3 id="enclose-annotations">Enclosure Annotations</h3>
+      {/* ----------------------------------------------------------------- */}
+      {/* Enclosures */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="enclosures">Enclosures</h2>
+
       <p>
-        The <code>enclose</code> type draws a circle around a set of data
-        points. Pass a <code>coordinates</code> array with the data points to
-        enclose.
+        Enclosure annotations group clusters of data points visually. Use{" "}
+        <code>enclose</code> to draw a circle around a set of points, or{" "}
+        <code>rect-enclose</code> for a rectangular bounding box. Pass a{" "}
+        <code>coordinates</code> array with the data points to enclose.
       </p>
 
       <LiveExample
         frameProps={{
           data: scatterData,
-          chartType: "scatter",
           xAccessor: "x",
           yAccessor: "y",
-          pointStyle: { fill: "#6366f1", r: 5 },
-          margin: { top: 30, bottom: 60, left: 60, right: 40 },
-          showAxes: true,
           xLabel: "X Value",
           yLabel: "Y Value",
           annotations: [
@@ -200,80 +266,160 @@ export default function AnnotationsPage() {
               label: "High performers",
               padding: 10,
             },
+            {
+              type: "rect-enclose",
+              coordinates: [
+                { x: 10, y: 20 },
+                { x: 25, y: 35 },
+              ],
+              label: "Early stage",
+              padding: 8,
+            },
           ],
         }}
-        type={StreamXYFrame}
+        type={Scatterplot}
+        startHidden={false}
         overrideProps={{
-          points: "scatterData",
-          annotations: `[{
-  type: "enclose",
-  coordinates: [
-    { x: 55, y: 45 },
-    { x: 70, y: 30 },
-    { x: 85, y: 50 }
-  ],
-  label: "High performers",
-  padding: 10
-}]`,
+          data: `[
+  { x: 10, y: 20, label: "A" },
+  { x: 25, y: 35, label: "B" },
+  { x: 40, y: 15, label: "C" },
+  { x: 55, y: 45, label: "D" },
+  { x: 70, y: 30, label: "E" },
+  { x: 85, y: 50, label: "F" }
+]`,
+          annotations: `[
+  {
+    type: "enclose",
+    coordinates: [
+      { x: 55, y: 45 },
+      { x: 70, y: 30 },
+      { x: 85, y: 50 }
+    ],
+    label: "High performers",
+    padding: 10
+  },
+  {
+    type: "rect-enclose",
+    coordinates: [
+      { x: 10, y: 20 },
+      { x: 25, y: 35 }
+    ],
+    label: "Early stage",
+    padding: 8
+  }
+]`,
         }}
         hiddenProps={{}}
       />
 
-      <h3 id="highlight-annotations">Highlight Annotations</h3>
+      {/* ----------------------------------------------------------------- */}
+      {/* Analytical Annotations */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="analytical-annotations">Analytical Annotations</h2>
+
       <p>
-        The <code>highlight</code> type redraws a mark on the annotation layer
-        with custom styling. Combined with <code>desaturation-layer</code>,
-        this creates a focus+context effect. See the{" "}
-        <Link to="/features/interaction">Interaction</Link> page for more on
-        cross-highlighting.
+        Semiotic includes built-in analytical annotations that compute derived
+        visuals from your data. Use <code>trend</code> for a linear regression
+        line on a scatterplot, or <code>band</code> for a shaded target range
+        on a line chart.
       </p>
 
-      <CodeBlock
-        code={`<StreamXYFrame
-  data={data}
-  chartType="line"
-  lineDataAccessor="coordinates"
-  hoverAnnotation={[
-    { type: "desaturation-layer", style: { fill: "white", opacity: 0.6 } },
-    {
-      type: "highlight",
-      style: d => ({ stroke: colorScale(d.key), strokeWidth: 5 })
-    }
-  ]}
-  lineIDAccessor="title"
-/>`}
-        language="jsx"
+      <h3 id="trend-line">Trend Line</h3>
+
+      <LiveExample
+        frameProps={{
+          data: scatterData,
+          xAccessor: "x",
+          yAccessor: "y",
+          xLabel: "X Value",
+          yLabel: "Y Value",
+          annotations: [
+            { type: "trend", method: "linear", color: "#ef4444", label: "Trend" },
+          ],
+        }}
+        type={Scatterplot}
+        startHidden={false}
+        overrideProps={{
+          data: `[
+  { x: 10, y: 20, label: "A" },
+  { x: 25, y: 35, label: "B" },
+  { x: 40, y: 15, label: "C" },
+  { x: 55, y: 45, label: "D" },
+  { x: 70, y: 30, label: "E" },
+  { x: 85, y: 50, label: "F" }
+]`,
+          annotations: `[
+  { type: "trend", method: "linear", color: "#ef4444", label: "Trend" }
+]`,
+        }}
+        hiddenProps={{}}
       />
 
-      <h3 id="ordinal-annotations">Ordinal Frame Annotations</h3>
+      <h3 id="target-band">Target Band</h3>
+
+      <LiveExample
+        frameProps={{
+          data: lineData,
+          xAccessor: "week",
+          yAccessor: "score",
+          xLabel: "Week",
+          yLabel: "Score",
+          annotations: [
+            {
+              type: "band",
+              y0: 20,
+              y1: 30,
+              fill: "#22c55e",
+              fillOpacity: 0.15,
+              label: "Target range",
+            },
+          ],
+        }}
+        type={LineChart}
+        startHidden={false}
+        overrideProps={{
+          data: `[
+  { week: 1, score: 12 },
+  { week: 2, score: 18 },
+  // ...more data points
+]`,
+          annotations: `[
+  {
+    type: "band",
+    y0: 20,
+    y1: 30,
+    fill: "#22c55e",
+    fillOpacity: 0.15,
+    label: "Target range"
+  }
+]`,
+        }}
+        hiddenProps={{}}
+      />
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Ordinal Charts */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="ordinal-charts">Ordinal Charts</h2>
+
       <p>
-        <code>StreamOrdinalFrame</code> supports annotation types like{" "}
-        <code>or</code> (circle at a data point), <code>r</code> (threshold
-        along the r axis), <code>category</code> (bracket around columns),
-        and <code>column-hover</code> (tooltip for an entire column).
+        Ordinal chart components like <code>BarChart</code> also accept
+        the <code>annotations</code> prop directly. A common use is adding a
+        goal line with <code>y-threshold</code>.
       </p>
 
       <LiveExample
         frameProps={{
           data: barData,
-          oAccessor: "product",
-          rAccessor: "units",
-          chartType: "bar",
-          pieceStyle: () => ({ fill: "#6366f1", stroke: "white" }),
-          showAxes: true,
-          margin: { top: 20, bottom: 60, left: 60, right: 20 },
+          categoryAccessor: "product",
+          valueAccessor: "units",
           annotations: [
-            {
-              type: "category",
-              categories: ["Alpha", "Beta", "Gamma"],
-              label: "Original Products",
-              position: "top",
-              depth: 30,
-              offset: 10,
-            },
+            { type: "y-threshold", y: 400, label: "Goal", color: "#f97316" },
           ],
         }}
-        type={StreamOrdinalFrame}
+        type={BarChart}
+        startHidden={false}
         overrideProps={{
           data: `[
   { product: "Alpha", units: 450 },
@@ -282,159 +428,120 @@ export default function AnnotationsPage() {
   { product: "Delta", units: 290 },
   { product: "Epsilon", units: 610 }
 ]`,
-          annotations: `[{
-  type: "category",
-  categories: ["Alpha", "Beta", "Gamma"],
-  label: "Original Products",
-  position: "top",
-  depth: 30,
-  offset: 10
-}]`,
+          annotations: `[
+  { type: "y-threshold", y: 400, label: "Goal", color: "#f97316" }
+]`,
         }}
         hiddenProps={{}}
       />
 
       {/* ----------------------------------------------------------------- */}
-      {/* Configuration */}
+      {/* Streaming Charts */}
       {/* ----------------------------------------------------------------- */}
-      <h2 id="configuration">Configuration</h2>
-
-      <h3 id="built-in-types">Built-in Annotation Types</h3>
+      <h2 id="streaming">Streaming Charts</h2>
 
       <p>
-        The following types are recognized by all Frame components:
+        Annotations work identically on streaming charts. Thresholds and bands
+        stay fixed while data scrolls past them — useful for monitoring
+        dashboards where reference lines mark normal operating ranges, warning
+        levels, or SLA targets.
+      </p>
+
+      <StreamingDemo
+        renderChart={(w) => <StreamingAnnotatedChart width={w} />}
+        code={streamingAnnotationCode}
+      />
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Custom Rules */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="custom-rules">Custom Rules</h2>
+
+      <p>
+        For cases where the built-in types are not enough, use the{" "}
+        <code>frameProps</code> escape hatch to pass{" "}
+        <code>svgAnnotationRules</code> or <code>htmlAnnotationRules</code>.
+        These receive the annotation data, scales, and frame state. Return
+        JSX for custom rendering, or <code>null</code> to fall through to
+        default handling.
+      </p>
+
+      <CodeBlock
+        code={`<LineChart
+  data={lineData}
+  xAccessor="week"
+  yAccessor="score"
+  annotations={[
+    { type: "custom-marker", week: 5, score: 20, note: "Review" }
+  ]}
+  frameProps={{
+    svgAnnotationRules: ({ d, xScale, yScale }) => {
+      if (d.type === "custom-marker") {
+        const cx = xScale(d.week)
+        const cy = yScale(d.score)
+        return (
+          <g>
+            <circle cx={cx} cy={cy} r={12} fill="none" stroke="#ef4444" strokeWidth={2} />
+            <text x={cx} y={cy - 18} textAnchor="middle" fill="#ef4444" fontSize={12}>
+              {d.note}
+            </text>
+          </g>
+        )
+      }
+      return null  // Fall through to default handling
+    }
+  }}
+/>`}
+        language="jsx"
+      />
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Built-in Types Reference */}
+      {/* ----------------------------------------------------------------- */}
+      <h2 id="built-in-types">Built-in Types Reference</h2>
+
+      <p>
+        The following annotation types are recognized automatically by chart
+        and frame components. Pass them in the <code>annotations</code> array
+        with the corresponding <code>type</code> value.
       </p>
 
       <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 24 }}>
         <thead>
           <tr style={{ background: "var(--surface-2)" }}>
-            <th style={{ padding: "12px 16px", textAlign: "left", borderBottom: "1px solid var(--surface-3)" }}>Type</th>
-            <th style={{ padding: "12px 16px", textAlign: "left", borderBottom: "1px solid var(--surface-3)" }}>Frame</th>
-            <th style={{ padding: "12px 16px", textAlign: "left", borderBottom: "1px solid var(--surface-3)" }}>Description</th>
+            <th style={thStyle}>Type</th>
+            <th style={thStyle}>Charts</th>
+            <th style={thStyle}>Key Props</th>
+            <th style={thStyle}>Description</th>
           </tr>
         </thead>
         <tbody>
           {[
-            ["label", "All", "SVG annotation with note and connector"],
-            ["callout / callout-circle / callout-rect", "All", "Callout annotations with different subject shapes"],
-            ["frame-hover", "All", "Tooltip div centered on data point"],
-            ["highlight", "All", "Redraws mark on annotation layer with custom style"],
-            ["desaturation-layer", "All", "Semi-transparent overlay for focus+context"],
-            ["enclose / enclose-rect / enclose-hull", "All", "Enclose data points with circle, rect, or convex hull"],
-            ["xy", "StreamXYFrame", "Circle at a data point"],
-            ["x / y", "StreamXYFrame", "Threshold line along x or y axis"],
-            ["bounds", "StreamXYFrame", "Rectangle bounding box"],
-            ["horizontal-points / vertical-points", "StreamXYFrame", "Show all points along an axis"],
-            ["or", "StreamOrdinalFrame", "Circle at a data point"],
-            ["r", "StreamOrdinalFrame", "Threshold along r axis"],
-            ["category", "StreamOrdinalFrame", "Bracket annotation around columns"],
-            ["column-hover", "StreamOrdinalFrame", "Tooltip for entire column"],
-            ["node", "StreamNetworkFrame", "Callout annotation centered on a node"],
-          ].map(([type, frame, desc], i) => (
+            ["y-threshold", "All", "y, label, color", "Horizontal reference line at a value"],
+            ["x-threshold", "XY", "x (or data key), label, color", "Vertical reference line at a data point"],
+            ["label", "All", "x, y, label, dx, dy", "Text annotation with connector line"],
+            ["callout", "All", "x, y, label, radius", "Callout with circular subject highlight"],
+            ["callout-circle", "All", "x, y, label, radius", "Same as callout with explicit circle subject"],
+            ["callout-rect", "All", "x, y, label, width, height", "Callout with rectangular subject"],
+            ["enclose", "All", "coordinates, label, padding", "Circle enclosing a set of data points"],
+            ["rect-enclose", "All", "coordinates, label, padding", "Rectangle enclosing a set of data points"],
+            ["enclose-hull", "All", "coordinates, label", "Convex hull enclosing data points"],
+            ["trend", "XY", "method, color, label", "Linear regression line computed from data"],
+            ["band", "XY", "y0, y1, fill, fillOpacity, label", "Shaded horizontal band between two values"],
+            ["highlight", "All", "style", "Redraws a mark on annotation layer with custom style"],
+            ["desaturation-layer", "All", "style", "Semi-transparent overlay for focus+context"],
+            ["frame-hover", "All", "(none)", "Tooltip div centered on the hovered data point"],
+            ["category", "Ordinal", "categories, label, position, depth", "Bracket annotation around columns"],
+          ].map(([type, charts, props, desc], i) => (
             <tr key={type} style={{ background: i % 2 ? "var(--surface-1)" : "transparent" }}>
-              <td style={{ padding: "8px 16px", borderBottom: "1px solid var(--surface-3)", fontFamily: "var(--font-code)", fontSize: "0.9em" }}>{type}</td>
-              <td style={{ padding: "8px 16px", borderBottom: "1px solid var(--surface-3)" }}>{frame}</td>
-              <td style={{ padding: "8px 16px", borderBottom: "1px solid var(--surface-3)" }}>{desc}</td>
+              <td style={tdCodeStyle}>{type}</td>
+              <td style={tdStyle}>{charts}</td>
+              <td style={tdCodeStyle}>{props}</td>
+              <td style={tdStyle}>{desc}</td>
             </tr>
           ))}
         </tbody>
       </table>
-
-      <h3 id="annotation-settings">Annotation Settings</h3>
-      <p>
-        Use the <code>annotationSettings</code> prop to control automatic
-        positioning of annotations:
-      </p>
-
-      <CodeBlock
-        code={`<StreamXYFrame
-  annotationSettings={{
-    type: "marginalia",        // "bump" or "marginalia"
-    orient: "right",           // "nearest", "left", "right", "top", "bottom"
-    characterWidth: 8,         // Approximate character width in pixels
-    lineHeight: 20,            // Line height for annotation text
-    padding: 2,                // Padding around annotations (bump mode)
-    iterations: 500,           // Force simulation iterations (bump mode)
-    marginOffset: 15           // Additional margin offset (marginalia mode)
-  }}
-  annotations={annotations}
-/>`}
-        language="jsx"
-      />
-
-      <h3 id="custom-annotation-rules">Custom Annotation Rules</h3>
-      <p>
-        Use <code>svgAnnotationRules</code> for SVG-layer annotations and{" "}
-        <code>htmlAnnotationRules</code> for HTML-layer annotations. Each
-        receives the annotation data, scales, and frame state. Return{" "}
-        <code>null</code> to fall through to default handling, or JSX to
-        render custom content.
-      </p>
-
-      <CodeBlock
-        code={`<StreamXYFrame
-  svgAnnotationRules={({ d, xScale, yScale, adjustedSize }) => {
-    if (d.type === "custom-threshold") {
-      const y = yScale(d.value)
-      return (
-        <g>
-          <line
-            x1={0}
-            x2={adjustedSize[0]}
-            y1={y}
-            y2={y}
-            stroke="#f97316"
-            strokeDasharray="4 4"
-          />
-          <text x={adjustedSize[0]} y={y - 5} textAnchor="end" fill="#f97316">
-            {d.label}
-          </text>
-        </g>
-      )
-    }
-    return null  // Fall through to default handling
-  }}
-  htmlAnnotationRules={({ d, screenCoordinates }) => {
-    if (d.type === "custom-tooltip") {
-      return (
-        <div style={{ position: "absolute", left: screenCoordinates[0], top: screenCoordinates[1] }}>
-          <strong>{d.title}</strong>
-          <p>{d.description}</p>
-        </div>
-      )
-    }
-    return null
-  }}
-  annotations={[
-    { type: "custom-threshold", value: 100, label: "Target" },
-    { type: "custom-tooltip", x: 50, y: 200, title: "Important", description: "Details here" }
-  ]}
-/>`}
-        language="jsx"
-        showLineNumbers
-      />
-
-      <h3 id="hover-annotations">Using with hoverAnnotation</h3>
-      <p>
-        The <code>hoverAnnotation</code> prop can be a boolean or an array of
-        annotation types that fire on hover. This integrates with the
-        annotation system to create rich hover interactions:
-      </p>
-
-      <CodeBlock
-        code={`// Simple hover tooltip
-<StreamXYFrame enableHover={true} />
-
-// Multiple hover annotations
-<StreamXYFrame
-  hoverAnnotation={[
-    { type: "frame-hover" },                    // Tooltip
-    { type: "x", disable: ["connector", "note"] }, // Vertical guide line
-    { type: "vertical-points", threshold: 0.1, r: () => 5 }  // Highlight nearby points
-  ]}
-/>`}
-        language="jsx"
-      />
 
       {/* ----------------------------------------------------------------- */}
       {/* Related */}
@@ -452,12 +559,12 @@ export default function AnnotationsPage() {
           cross-highlighting, and brushing
         </li>
         <li>
-          <Link to="/frames/xy-frame">StreamXYFrame</Link> — XY annotations, threshold
-          lines, and point-based annotations
+          <Link to="/frames/xy-frame">StreamXYFrame</Link> — full annotation
+          system with custom rules and hover annotations
         </li>
         <li>
           <Link to="/frames/ordinal-frame">StreamOrdinalFrame</Link> — category
-          brackets, ordinal line annotations
+          brackets and ordinal annotations
         </li>
         <li>
           <Link to="/frames/network-frame">StreamNetworkFrame</Link> — node
@@ -466,4 +573,27 @@ export default function AnnotationsPage() {
       </ul>
     </PageLayout>
   )
+}
+
+// ---------------------------------------------------------------------------
+// Table styles
+// ---------------------------------------------------------------------------
+
+const thStyle = {
+  padding: "12px 16px",
+  textAlign: "left",
+  borderBottom: "1px solid var(--surface-3)",
+  fontWeight: 600,
+}
+
+const tdStyle = {
+  padding: "8px 16px",
+  borderBottom: "1px solid var(--surface-3)",
+}
+
+const tdCodeStyle = {
+  padding: "8px 16px",
+  borderBottom: "1px solid var(--surface-3)",
+  fontFamily: "var(--font-code)",
+  fontSize: "0.9em",
 }

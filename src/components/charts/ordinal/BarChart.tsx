@@ -31,6 +31,7 @@ export interface BarChartProps<TDatum extends Record<string, any> = Record<strin
   showGrid?: boolean
   showLegend?: boolean
   tooltip?: TooltipProp
+  annotations?: Record<string, any>[]
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
@@ -59,6 +60,7 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
     showGrid = false,
     showLegend,
     tooltip,
+    annotations,
     frameProps = {},
     selection,
     linkedHover
@@ -141,6 +143,7 @@ export function BarChart<TDatum extends Record<string, any> = Record<string, any
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
     ...(linkedHover && { customHoverBehavior }),
+    ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }
 

@@ -29,6 +29,7 @@ export interface ViolinPlotProps<TDatum extends Record<string, any> = Record<str
   showGrid?: boolean
   showLegend?: boolean
   tooltip?: TooltipProp
+  annotations?: Record<string, any>[]
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
@@ -40,7 +41,7 @@ export function ViolinPlot<TDatum extends Record<string, any> = Record<string, a
     categoryLabel, valueLabel, valueFormat,
     colorBy, colorScheme = "category10", categoryPadding = 20,
     enableHover = true, showGrid = false, showLegend, tooltip,
-    frameProps = {}, selection, linkedHover
+    annotations, frameProps = {}, selection, linkedHover
   } = props
 
   const safeData = data || []
@@ -121,6 +122,7 @@ export function ViolinPlot<TDatum extends Record<string, any> = Record<string, a
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
     ...(linkedHover && { customHoverBehavior }),
+    ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }
 

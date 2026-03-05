@@ -1,11 +1,13 @@
 "use client"
 import * as React from "react"
 import { useMemo } from "react"
-import type { StreamScales, AnnotationContext, MarginalGraphicsConfig, MarginalConfig, MarginalType } from "./types"
+import type { StreamScales, MarginalGraphicsConfig, MarginalConfig, MarginalType } from "./types"
+import type { AnnotationContext } from "../realtime/types"
 import type { ReactNode } from "react"
 import Legend from "../Legend"
 import type { LegendGroup } from "../types/legendTypes"
 import { MarginalGraphics, normalizeMarginalConfig } from "./MarginalGraphics"
+import { createDefaultAnnotationRules } from "../charts/shared/annotationRules"
 
 // ── Axis config ───────────────────────────────────────────────────────────
 export interface AxisConfig {
@@ -99,6 +101,11 @@ interface SVGOverlayProps {
   ) => ReactNode
   annotationFrame?: number
 
+  // Annotation context enrichment
+  xAccessor?: string
+  yAccessor?: string
+  annotationData?: Record<string, any>[]
+
   children?: ReactNode
 }
 
@@ -139,6 +146,9 @@ export function SVGOverlay(props: SVGOverlayProps) {
     annotations,
     svgAnnotationRules,
     annotationFrame,
+    xAccessor: annXAccessor,
+    yAccessor: annYAccessor,
+    annotationData,
     children
   } = props
 
@@ -163,19 +173,36 @@ export function SVGOverlay(props: SVGOverlayProps) {
 
   // Render annotations
   const renderedAnnotations = useMemo(() => {
-    if (!annotations || annotations.length === 0 || !svgAnnotationRules) return null
+    if (!annotations || annotations.length === 0) return null
+
+    const defaultRules = createDefaultAnnotationRules("xy")
+
+    const context: AnnotationContext = {
+      scales: scales
+        ? { x: scales.x, y: scales.y, time: scales.x, value: scales.y }
+        : null,
+      timeAxis: "x",
+      xAccessor: annXAccessor,
+      yAccessor: annYAccessor,
+      width,
+      height,
+      data: annotationData,
+      frameType: "xy"
+    }
+
     return annotations
-      .map((annotation, i) =>
-        svgAnnotationRules(annotation, i, {
-          scales: scales ? { time: scales.x, value: scales.y } : null,
-          timeAxis: "x",
-          width,
-          height
-        })
-      )
+      .map((annotation, i) => {
+        if (svgAnnotationRules) {
+          // Try user rules first, fall back to defaults
+          const userResult = svgAnnotationRules(annotation, i, context)
+          if (userResult !== null && userResult !== undefined) return userResult
+          return defaultRules(annotation, i, context)
+        }
+        return defaultRules(annotation, i, context)
+      })
       .filter(Boolean)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [annotations, svgAnnotationRules, width, height, annotationFrame])
+  }, [annotations, svgAnnotationRules, width, height, annotationFrame, annXAccessor, annYAccessor, annotationData])
 
   const hasContent = showAxes || title || legend || foregroundGraphics || marginalGraphics || (renderedAnnotations && renderedAnnotations.length > 0) || showGrid || children
 

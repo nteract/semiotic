@@ -775,7 +775,7 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       }
 
       // Trigger React re-render for SVG annotations
-      if (wasDirty && annotations && annotations.length > 0 && svgAnnotationRules) {
+      if (wasDirty && annotations && annotations.length > 0) {
         setAnnotationFrame(f => f + 1)
       }
 
@@ -907,6 +907,9 @@ const StreamXYFrame = forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           annotations={annotations}
           svgAnnotationRules={svgAnnotationRules}
           annotationFrame={annotationFrame}
+          xAccessor={typeof xAccessor === "string" ? xAccessor : undefined}
+          yAccessor={typeof yAccessor === "string" ? yAccessor : undefined}
+          annotationData={storeRef.current?.getData()}
         />
         {(brush || onBrush) && (
           <BrushOverlay

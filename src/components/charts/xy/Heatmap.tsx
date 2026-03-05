@@ -114,6 +114,11 @@ export interface HeatmapProps<TDatum extends Record<string, any> = Record<string
   tooltip?: TooltipProp
 
   /**
+   * Annotation objects to render on the chart
+   */
+  annotations?: Record<string, any>[]
+
+  /**
    * Additional StreamXYFrame props for advanced customization
    * For full control, consider using StreamXYFrame directly
    * @see https://semiotic.nteract.io/guides/xy-frame
@@ -201,6 +206,7 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
     cellBorderWidth = 1,
     enableHover = true,
     tooltip,
+    annotations,
     frameProps = {},
     selection,
     linkedHover
@@ -349,6 +355,7 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
     ...(linkedHover && { customHoverBehavior }),
+    ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }
 

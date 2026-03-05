@@ -648,6 +648,9 @@ const StreamOrdinalFrame = forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFra
           annotations={annotations}
           svgAnnotationRules={svgAnnotationRules}
           annotationFrame={annotationFrame}
+          xAccessor={typeof oAccessor === "string" ? oAccessor : undefined}
+          yAccessor={typeof rAccessor === "string" ? rAccessor : undefined}
+          annotationData={storeRef.current?.getData()}
         />
 
         {/* Donut center content */}

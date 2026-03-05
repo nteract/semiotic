@@ -29,6 +29,7 @@ export interface RidgelinePlotProps<TDatum extends Record<string, any> = Record<
   showGrid?: boolean
   showLegend?: boolean
   tooltip?: TooltipProp
+  annotations?: Record<string, any>[]
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
@@ -46,7 +47,7 @@ export function RidgelinePlot<TDatum extends Record<string, any> = Record<string
     categoryLabel, valueLabel, valueFormat,
     colorBy, colorScheme = "category10", categoryPadding = 5,
     enableHover = true, showGrid = false, showLegend, tooltip,
-    frameProps = {}, selection, linkedHover
+    annotations, frameProps = {}, selection, linkedHover
   } = props
 
   const safeData = data || []
@@ -117,6 +118,7 @@ export function RidgelinePlot<TDatum extends Record<string, any> = Record<string
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
     ...(linkedHover && { customHoverBehavior }),
+    ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   } as any
 

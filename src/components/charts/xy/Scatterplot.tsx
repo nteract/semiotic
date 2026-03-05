@@ -45,6 +45,8 @@ export interface ScatterplotProps<TDatum extends Record<string, any> = Record<st
   tooltip?: TooltipProp
   /** Marginal distribution plots in axis margins */
   marginalGraphics?: MarginalGraphicsConfig
+  /** Annotation objects to render on the chart */
+  annotations?: Record<string, any>[]
   /** Additional StreamXYFrame props for advanced customization */
   frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size">>
 }
@@ -86,6 +88,7 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
     showLegend,
     tooltip,
     marginalGraphics,
+    annotations,
     frameProps = {},
     selection,
     linkedHover,
@@ -191,6 +194,7 @@ export function Scatterplot<TDatum extends Record<string, any> = Record<string, 
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
     ...(linkedHover && { customHoverBehavior }),
     ...(marginalGraphics && { marginalGraphics }),
+    ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }
 

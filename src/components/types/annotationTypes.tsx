@@ -91,11 +91,17 @@ export interface AnnotationProps {
     ny?: number
     dx?: number
     dy?: number
-    // TODO: What should this be typed as?
-    note: { label?: string; title?: string }
+    note: { label?: string; title?: string; wrap?: number; orientation?: string; align?: string; noWrap?: boolean }
     i?: number
     fixedPosition?: boolean
     label?: string
+    // Annotation renderer fields passed through via spread
+    connector?: any
+    subject?: any
+    color?: string
+    className?: string
+    disable?: string[]
+    [key: string]: any
   }
 }
 

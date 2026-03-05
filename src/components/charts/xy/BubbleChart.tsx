@@ -117,6 +117,11 @@ export interface BubbleChartProps<TDatum extends Record<string, any> = Record<st
   marginalGraphics?: MarginalGraphicsConfig
 
   /**
+   * Annotation objects to render on the chart
+   */
+  annotations?: Record<string, any>[]
+
+  /**
    * Additional StreamXYFrame props for advanced customization
    * For full control, consider using StreamXYFrame directly
    * @see https://semiotic.nteract.io/guides/xy-frame
@@ -211,6 +216,7 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
     showLegend,
     tooltip,
     marginalGraphics,
+    annotations,
     frameProps = {},
     selection,
     linkedHover,
@@ -335,6 +341,7 @@ export function BubbleChart<TDatum extends Record<string, any> = Record<string, 
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
     ...(linkedHover && { customHoverBehavior }),
     ...(marginalGraphics && { marginalGraphics }),
+    ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }
 

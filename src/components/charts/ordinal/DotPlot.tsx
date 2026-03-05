@@ -29,6 +29,7 @@ export interface DotPlotProps<TDatum extends Record<string, any> = Record<string
   showGrid?: boolean
   showLegend?: boolean
   tooltip?: TooltipProp
+  annotations?: Record<string, any>[]
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
@@ -39,7 +40,7 @@ export function DotPlot<TDatum extends Record<string, any> = Record<string, any>
     orientation = "horizontal", categoryLabel, valueLabel, valueFormat,
     colorBy, colorScheme = "category10", sort = true, dotRadius = 5,
     categoryPadding = 10, enableHover = true, showGrid = true, showLegend,
-    tooltip, frameProps = {}, selection, linkedHover
+    tooltip, annotations, frameProps = {}, selection, linkedHover
   } = props
 
   const safeData = data || []
@@ -104,6 +105,7 @@ export function DotPlot<TDatum extends Record<string, any> = Record<string, any>
     ...(className && { className }),
     tooltipContent: (tooltip ? normalizeTooltip(tooltip) : defaultTooltipContent) as any,
     ...(linkedHover && { customHoverBehavior }),
+    ...(annotations && annotations.length > 0 && { annotations }),
     ...frameProps
   }
 
