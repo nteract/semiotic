@@ -1,6 +1,8 @@
 "use client"
 import * as React from "react"
 import { exportChart } from "./export/exportChart"
+import { copyConfig as copyConfigFn } from "./export/chartConfig"
+import type { ChartConfig, CopyFormat } from "./export/chartConfig"
 import { ChartErrorBoundary } from "./ChartErrorBoundary"
 
 export interface ChartContainerProps {
@@ -22,7 +24,11 @@ export interface ChartContainerProps {
       | boolean
       | { format?: "svg" | "png"; scale?: number; filename?: string }
     fullscreen?: boolean
+    /** Enable "Copy Config" action button. Requires chartConfig prop. */
+    copyConfig?: boolean | { format?: CopyFormat }
   }
+  /** Chart configuration for serialization. Enables the "Copy Config" toolbar action. */
+  chartConfig?: ChartConfig
   /** Additional controls rendered in the toolbar after built-in actions */
   controls?: React.ReactNode
 
@@ -51,6 +57,8 @@ export interface ChartContainerHandle {
   }) => Promise<void>
   /** Toggle fullscreen */
   toggleFullscreen: () => void
+  /** Copy chart config to clipboard */
+  copyConfig: (format?: CopyFormat) => Promise<void>
   /** The chart container DOM element */
   element: HTMLDivElement | null
 }
@@ -120,6 +128,7 @@ export const ChartContainer = React.forwardRef<
     width = "100%",
     height = 400,
     actions,
+    chartConfig,
     controls,
     loading = false,
     error,
@@ -137,9 +146,13 @@ export const ChartContainer = React.forwardRef<
   const showExport = actions?.export !== false && actions?.export !== undefined
   const showFullscreen =
     actions?.fullscreen !== false && actions?.fullscreen !== undefined
+  const showCopyConfig =
+    actions?.copyConfig !== false && actions?.copyConfig !== undefined && chartConfig
 
   const exportConfig =
     typeof actions?.export === "object" ? actions.export : {}
+  const copyConfigFormat =
+    typeof actions?.copyConfig === "object" ? actions.copyConfig.format : "json"
 
   const handleExport = React.useCallback(async (options?: {
     format?: "svg" | "png"
@@ -162,6 +175,11 @@ export const ChartContainer = React.forwardRef<
     }
   }, [])
 
+  const handleCopyConfig = React.useCallback(async (format?: CopyFormat) => {
+    if (!chartConfig) return
+    await copyConfigFn(chartConfig, format || copyConfigFormat || "json")
+  }, [chartConfig, copyConfigFormat])
+
   React.useEffect(() => {
     const handleChange = () => {
       setIsFullscreen(!!document.fullscreenElement)
@@ -175,12 +193,13 @@ export const ChartContainer = React.forwardRef<
     () => ({
       export: handleExport,
       toggleFullscreen,
+      copyConfig: handleCopyConfig,
       element: containerRef.current,
     }),
-    [handleExport, toggleFullscreen]
+    [handleExport, toggleFullscreen, handleCopyConfig]
   )
 
-  const hasHeader = title || subtitle || controls || showExport || showFullscreen || status
+  const hasHeader = title || subtitle || controls || showExport || showFullscreen || showCopyConfig || status
 
   const chartContent = loading ? (
     <Skeleton height={height} />
@@ -321,6 +340,28 @@ export const ChartContainer = React.forwardRef<
                         <path d="M5 13H1V9" />
                       </>
                     )}
+                  </svg>
+                </button>
+              )}
+              {showCopyConfig && (
+                <button
+                  className="semiotic-chart-action"
+                  onClick={() => handleCopyConfig()}
+                  title="Copy config"
+                  style={actionButtonStyle}
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 14 14"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="5" y="5" width="8" height="8" rx="1" />
+                    <path d="M9 5V2a1 1 0 00-1-1H2a1 1 0 00-1 1v6a1 1 0 001 1h3" />
                   </svg>
                 </button>
               )}

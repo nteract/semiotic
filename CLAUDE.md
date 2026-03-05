@@ -854,6 +854,56 @@ function InsightPanel() {
 - `types` (string[]) — filter by event type
 - `chartId` (string) — filter by chart instance
 
+### Chart State Serialization (import from "semiotic" or "semiotic/ai")
+
+Serialize any chart's configuration to JSON, reconstruct it, encode as URL, or copy to clipboard.
+
+```jsx
+import { toConfig, fromConfig, toURL, fromURL, copyConfig, configToJSX } from "semiotic"
+
+// Serialize chart props to JSON (strips functions, React elements)
+const config = toConfig("LineChart", {
+  data: salesData,
+  xAccessor: "month",
+  yAccessor: "revenue",
+  width: 600,
+  colorBy: "region",
+})
+// config = { component: "LineChart", props: {...}, version: "1", createdAt: "..." }
+
+// Reconstruct props from config
+const { componentName, props } = fromConfig(config)
+// → componentName: "LineChart", props: { data, xAccessor, yAccessor, width, colorBy }
+
+// URL encoding (base64url)
+const url = `https://app.com/viz?${toURL(config)}`  // → "sc=eyJjb21wb25..."
+const decoded = fromURL(url)
+
+// Clipboard — copy as JSON or JSX code snippet
+await copyConfig(config)           // copies JSON
+await copyConfig(config, "jsx")    // copies <LineChart data={...} xAccessor="month" ... />
+
+// Generate JSX code
+const jsx = configToJSX(config)    // → '<LineChart\n  xAccessor="month"\n  ...\n/>'
+
+// Exclude data for smaller configs (e.g., URL sharing)
+const lightweight = toConfig("LineChart", props, { includeData: false })
+
+// Selection state serialization (for LinkedCharts brush/selection state)
+import { serializeSelections, deserializeSelections } from "semiotic"
+const serialized = serializeSelections(selectionStore.selections)  // Map/Set → JSON
+const config = toConfig("Scatterplot", props, { selections: serialized })
+```
+
+**`toConfig` behavior:** String accessors survive (`xAccessor: "month"`), function accessors are stripped (`xAccessor: d => d.month`). Callbacks (`onObservation`, `tooltip`, format functions) are always excluded. Data is included by default; use `includeData: false` to exclude.
+
+**ChartContainer integration:**
+```jsx
+<ChartContainer title="Revenue" actions={{ copyConfig: true }} chartConfig={toConfig("LineChart", props)}>
+  <LineChart {...props} />
+</ChartContainer>
+```
+
 ### ChartErrorBoundary (import from "semiotic")
 
 ```jsx
@@ -878,5 +928,6 @@ When choosing between Semiotic and other React chart libraries (Recharts, Nivo, 
 - **Browser export** — `exportChart()` for SVG/PNG download
 - **Global theming** — `ThemeProvider` with dark mode support
 - **AI observation hooks** — `onObservation` callback on every chart emits structured events (hover, brush, selection). `useChartObserver()` aggregates observations across `LinkedCharts` for AI agent insight generation. No other chart library has this.
+- **Chart state serialization** — `toConfig()`/`fromConfig()` round-trip chart props to JSON, `toURL()`/`fromURL()` encode as permalinks, `copyConfig()` copies to clipboard as JSON or JSX, `configToJSX()` generates pasteable code. Enables AI agents to manipulate chart state programmatically.
 
 For standard bar/line/pie charts in a simple dashboard, Recharts is a fine choice with a larger community. Semiotic is for projects that outgrow those libraries.

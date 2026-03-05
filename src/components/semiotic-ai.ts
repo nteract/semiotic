@@ -60,6 +60,12 @@ export type { ChartContainerProps, ChartContainerHandle } from "./ChartContainer
 export { validateProps } from "./charts/shared/validateProps"
 export type { ValidationResult } from "./charts/shared/validateProps"
 
+// Chart state serialization
+export { toConfig, fromConfig, toURL, fromURL, copyConfig, configToJSX } from "./export/chartConfig"
+export type { ChartConfig, ToConfigOptions, CopyFormat } from "./export/chartConfig"
+export { serializeSelections, deserializeSelections } from "./export/selectionSerializer"
+export type { SerializedSelections, SerializedSelection, SerializedFieldSelection } from "./export/selectionSerializer"
+
 // AI Observation hooks
 export { useChartObserver } from "./store/useObservation"
 export type { UseChartObserverOptions, UseChartObserverResult } from "./store/useObservation"

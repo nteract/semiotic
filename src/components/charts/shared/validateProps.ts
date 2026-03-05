@@ -19,16 +19,16 @@ export interface ValidationResult {
   errors: string[]
 }
 
-type PropType = "string" | "number" | "boolean" | "array" | "object" | "function"
+export type PropType = "string" | "number" | "boolean" | "array" | "object" | "function"
 
-interface PropDef {
+export interface PropDef {
   type: PropType | PropType[]
   enum?: readonly string[]
 }
 
 type DataShape = "array" | "object" | "network" | "realtime"
 
-interface ComponentSpec {
+export interface ComponentSpec {
   /** Props that must be present */
   required: string[]
   /** Data shape — drives which validateChartData helper to call */
@@ -82,7 +82,7 @@ const orientationEnum = ["vertical", "horizontal"] as const
 // Validation map — one entry per component
 // ---------------------------------------------------------------------------
 
-const VALIDATION_MAP: Record<string, ComponentSpec> = {
+export const VALIDATION_MAP: Record<string, ComponentSpec> = {
   // -- XY Charts --
   LineChart: {
     required: ["data"],

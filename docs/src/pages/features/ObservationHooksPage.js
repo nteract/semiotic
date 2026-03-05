@@ -219,7 +219,7 @@ export default function ObservationHooksPage() {
         { label: "AI Observation Hooks", path: "/features/observation-hooks" },
       ]}
       prevPage={{ title: "Chart Modes", path: "/features/chart-modes" }}
-      nextPage={{ title: "Candlestick Chart", path: "/cookbook/candlestick-chart" }}
+      nextPage={{ title: "Serialization", path: "/features/serialization" }}
     >
       <p>
         Every Semiotic chart accepts an <code>onObservation</code> callback that

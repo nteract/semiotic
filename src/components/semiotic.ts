@@ -27,6 +27,10 @@ import { ThemeProvider, useTheme } from "./ThemeProvider"
 // ── Export utility ─────────────────────────────────────────────────────
 import { exportChart } from "./export/exportChart"
 
+// ── Chart state serialization ─────────────────────────────────────────
+import { toConfig, fromConfig, toURL, fromURL, copyConfig, configToJSX } from "./export/chartConfig"
+import { serializeSelections, deserializeSelections } from "./export/selectionSerializer"
+
 // ── Error boundary ─────────────────────────────────────────────────────
 import { ChartErrorBoundary } from "./ChartErrorBoundary"
 
@@ -97,6 +101,15 @@ export {
   useTheme,
   // Export utility
   exportChart,
+  // Chart state serialization
+  toConfig,
+  fromConfig,
+  toURL,
+  fromURL,
+  copyConfig,
+  configToJSX,
+  serializeSelections,
+  deserializeSelections,
   // Error boundary
   ChartErrorBoundary,
   // Chart container
@@ -248,6 +261,11 @@ export type { ChartErrorBoundaryProps } from "./ChartErrorBoundary"
 // ── Chart container types ─────────────────────────────────────────────
 
 export type { ChartContainerProps, ChartContainerHandle } from "./ChartContainer"
+
+// ── Chart state serialization types ───────────────────────────────────
+
+export type { ChartConfig, ToConfigOptions, CopyFormat } from "./export/chartConfig"
+export type { SerializedSelections, SerializedSelection, SerializedFieldSelection } from "./export/selectionSerializer"
 
 // ── Format utilities ───────────────────────────────────────────────────
 

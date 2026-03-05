@@ -88,7 +88,8 @@ const navData = [
       { title: "Realtime Encoding", path: "/features/realtime-encoding" },
       { title: "Chart Container", path: "/features/chart-container" },
       { title: "Chart Modes", path: "/features/chart-modes" },
-      { title: "AI Observation Hooks", path: "/features/observation-hooks" }
+      { title: "AI Observation Hooks", path: "/features/observation-hooks" },
+      { title: "Serialization", path: "/features/serialization" }
     ]
   },
   {
