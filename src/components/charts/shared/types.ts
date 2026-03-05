@@ -91,11 +91,13 @@ export interface AxisConfig {
 export type Accessor<T = any> = string | ((d: any, i?: number) => T)
 
 /**
- * Generic accessor type that provides autocomplete when TDatum is specified
+ * Generic accessor type that provides autocomplete when TDatum is specified.
+ * Uses Record<string, any> in the function param so HOC charts can pass
+ * accessors to Stream Frames without contravariance errors under strict mode.
  */
 export type ChartAccessor<TDatum, T> =
   | (keyof TDatum & string)
-  | ((d: TDatum, i?: number) => T)
+  | ((d: Record<string, any>, i?: number) => T)
 
 /**
  * Color configuration

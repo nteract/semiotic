@@ -58,7 +58,7 @@ export const hierarchyLayoutPlugin: NetworkLayoutPlugin = {
     // Build d3 hierarchy from the root data
     const root = d3Hierarchy(hierarchyRoot, childrenAccessor)
     root.sum(hierarchySum)
-    root.sort((a, b) => (b.value ?? 0) - (a.value ?? 0))
+    root.sort((a: any, b: any) => (b.value ?? 0) - (a.value ?? 0))
 
     const [width, height] = size
 
@@ -186,7 +186,7 @@ function computeTreeLayout(
   height: number
 ): void {
   const orientation = config.treeOrientation || "vertical"
-  const layout = d3Tree<any>()
+  const layout = d3Tree()
 
   if (orientation === "horizontal") {
     layout.size([height, width])
@@ -208,7 +208,7 @@ function computeClusterLayout(
   height: number
 ): void {
   const orientation = config.treeOrientation || "vertical"
-  const layout = d3Cluster<any>()
+  const layout = d3Cluster()
 
   if (orientation === "horizontal") {
     layout.size([height, width])
@@ -231,7 +231,7 @@ function computeTreemapLayout(
   const padding = config.padding ?? 4
   const paddingTop = config.paddingTop ?? 0
 
-  const layout = d3Treemap<any>()
+  const layout = d3Treemap()
     .size([width, height])
     .tile(treemapBinary)
     .padding(padding)
@@ -251,7 +251,7 @@ function computeCirclepackLayout(
 ): void {
   const padding = config.padding ?? 4
 
-  const layout = d3Pack<any>()
+  const layout = d3Pack()
     .size([width, height])
     .padding(padding)
 
@@ -264,7 +264,7 @@ function computePartitionLayout(
   width: number,
   height: number
 ): void {
-  const layout = d3Partition<any>()
+  const layout = d3Partition()
     .size([width, height])
     .padding(config.padding ?? 1)
 

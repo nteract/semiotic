@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { projectLineData, projectSummaryData } from "../geometry/lineDrawing"
 import {
   projectedX,

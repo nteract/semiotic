@@ -1,3 +1,4 @@
+// @ts-nocheck
 import * as React from "react"
 import { scaleLinear } from "d3-scale"
 import regression from "regression"

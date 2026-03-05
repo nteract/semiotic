@@ -1,1 +1,1 @@
-export const genericFunction = value => () => value
+export const genericFunction = (value: any) => () => value

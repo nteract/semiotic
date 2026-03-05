@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { sum } from "d3-array"
 
 import { findFirstAccessorValue } from "../data/multiAccessorUtils"

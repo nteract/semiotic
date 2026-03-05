@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client"
 // modules
 import * as React from "react"

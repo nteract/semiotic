@@ -248,7 +248,7 @@ function BrushOverlay({
   useEffect(() => {
     if (!svgRef.current) return
 
-    const g = d3Select(svgRef.current).select<SVGGElement>(".brush-g")
+    const g = d3Select(svgRef.current).select(".brush-g")
 
     const brushFn =
       dimension === "x"

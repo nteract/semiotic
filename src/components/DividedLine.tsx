@@ -18,7 +18,7 @@ interface DividedLineProps {
   searchIterations?: number
 }
 
-const createLineSegments = (props) => {
+const createLineSegments = (props: any) => {
   const {
     parameters,
     className,
@@ -50,8 +50,8 @@ const createLineSegments = (props) => {
 
   const lineRender = line()
     .curve(interpolate)
-    .x((d) => d.x)
-    .y((d) => d.y)
+    .x((d: any) => d.x)
+    .y((d: any) => d.y)
 
   return lines.map((d, i) => (
     <path {...rest}

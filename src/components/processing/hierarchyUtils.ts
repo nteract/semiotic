@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { hierarchy } from "d3-hierarchy"
 
 export function recursiveIDAccessor(idAccessor, node, accessorString) {

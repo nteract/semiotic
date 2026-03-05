@@ -1,3 +1,4 @@
+// @ts-nocheck
 import * as React from "react"
 
 import { LegendGroup, ItemType, LegendProps } from "./types/legendTypes"

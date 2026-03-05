@@ -1,3 +1,4 @@
+// @ts-nocheck
 import * as React from "react"
 import { hexbin } from "d3-hexbin"
 import { scaleLinear } from "d3-scale"

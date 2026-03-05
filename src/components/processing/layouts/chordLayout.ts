@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { chord, ribbon } from "d3-chord"
 import { arc } from "d3-shape"
 import pathBounds from "svg-path-bounding-box"

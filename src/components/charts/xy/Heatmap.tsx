@@ -271,7 +271,7 @@ export function Heatmap<TDatum extends Record<string, any> = Record<string, any>
       viridis: interpolateViridis
     }
 
-    const interpolator = interpolators[colorScheme] || interpolateBlues
+    const interpolator = interpolators[colorScheme as keyof typeof interpolators] || interpolateBlues
 
     return scaleSequential(interpolator).domain(valueDomain)
   }, [colorScheme, customColorScale, valueDomain])

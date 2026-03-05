@@ -1,4 +1,4 @@
-export const findFirstAccessorValue = (accessorArray, data) => {
+export const findFirstAccessorValue = (accessorArray: any[], data: any) => {
   for (let i = 0; i < accessorArray.length; i++) {
     const valueCheck = accessorArray[i](data)
     if (

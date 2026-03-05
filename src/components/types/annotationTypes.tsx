@@ -152,7 +152,7 @@ export interface AxisProps {
   margin?: MarginType
   center?: boolean
   axisParts?: AxisPart[]
-  annotationFunction?: (args) => void
+  annotationFunction?: (args: any) => void
   glyphFunction?: (args: GlyphProps) => SVGElement
   axis?: object
   extentOverride?: number[]

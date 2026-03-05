@@ -10,7 +10,8 @@
     "skipLibCheck": true,
     "lib": ["esnext", "dom", "dom.iterable"],
     "jsx": "react",
-    "types": ["node", "jest"]
+    "types": ["node", "jest"],
+    "strict": true
   },
   "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/**/*"],
   "exclude": ["./src/docs/**/*", "./src/**/*.test.*", "*.png"]

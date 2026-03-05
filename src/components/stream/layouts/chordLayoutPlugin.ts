@@ -79,7 +79,7 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
     const groups = chords.groups
 
     // ── Arc generator for centroid calculation ────────────────────────
-    const arcGenerator = arc<any>()
+    const arcGenerator = arc()
       .innerRadius(innerRadius)
       .outerRadius(radius)
 
@@ -169,7 +169,7 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
       nodeColorMap.set(n.id, palette[i % palette.length])
     })
 
-    const ribbonGenerator = ribbon<any, any>().radius(innerRadius)
+    const ribbonGenerator = ribbon().radius(innerRadius)
 
     const sceneNodes: NetworkArcNode[] = []
     const sceneEdges: NetworkRibbonEdge[] = []

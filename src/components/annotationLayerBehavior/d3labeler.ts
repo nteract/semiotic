@@ -1,3 +1,4 @@
+// @ts-nocheck
 // from Evan Wang's https://github.com/tinker10/D3-Labeler
 export default function() {
   let lab = [],

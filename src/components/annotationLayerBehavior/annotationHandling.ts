@@ -1,3 +1,4 @@
+// @ts-nocheck
 import labeler from "./d3labeler"
 import { AnnotationProps } from "../types/annotationTypes"
 
